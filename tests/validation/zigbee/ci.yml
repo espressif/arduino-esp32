@@ -1,0 +1,18 @@
+tags:
+  - two_duts
+
+multi_device:
+  device0:
+    sketch: coordinator
+    fqbn_append: PartitionScheme=zigbee_zczr,ZigbeeMode=zczr
+  device1:
+    sketch: end_device
+    fqbn_append: PartitionScheme=zigbee,ZigbeeMode=ed
+
+platforms:
+  wokwi: false
+  qemu: false
+
+requires:
+  - CONFIG_ZB_ENABLED=y
+  - CONFIG_SOC_IEEE802154_SUPPORTED=y

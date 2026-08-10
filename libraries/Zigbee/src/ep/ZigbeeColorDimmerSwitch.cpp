@@ -128,9 +128,11 @@ void ZigbeeColorDimmerSwitch::lightToggle() {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
     log_v("Sending 'light toggle' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -145,9 +147,11 @@ void ZigbeeColorDimmerSwitch::lightToggle(uint16_t group_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
     log_v("Sending 'light toggle' command to group address 0x%x", group_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -163,9 +167,11 @@ void ZigbeeColorDimmerSwitch::lightToggle(uint8_t endpoint, uint16_t short_addr)
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
     log_v("Sending 'light toggle' command to endpoint %u, address 0x%x", endpoint, short_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -184,9 +190,11 @@ void ZigbeeColorDimmerSwitch::lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t i
       "Sending 'light toggle' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
       ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -200,9 +208,11 @@ void ZigbeeColorDimmerSwitch::lightOn() {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
     log_v("Sending 'light on' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -217,9 +227,11 @@ void ZigbeeColorDimmerSwitch::lightOn(uint16_t group_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
     log_v("Sending 'light on' command to group address 0x%x", group_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -235,9 +247,11 @@ void ZigbeeColorDimmerSwitch::lightOn(uint8_t endpoint, uint16_t short_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
     log_v("Sending 'light on' command to endpoint %u, address 0x%x", endpoint, short_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -256,9 +270,11 @@ void ZigbeeColorDimmerSwitch::lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_
       "Sending 'light on' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
       ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -272,9 +288,11 @@ void ZigbeeColorDimmerSwitch::lightOff() {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
     log_v("Sending 'light off' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -289,9 +307,11 @@ void ZigbeeColorDimmerSwitch::lightOff(uint16_t group_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
     log_v("Sending 'light off' command to group address 0x%x", group_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -307,9 +327,11 @@ void ZigbeeColorDimmerSwitch::lightOff(uint8_t endpoint, uint16_t short_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
     log_v("Sending 'light off' command to endpoint %u, address 0x%x", endpoint, short_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -328,9 +350,11 @@ void ZigbeeColorDimmerSwitch::lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee
       "Sending 'light off' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
       ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -345,9 +369,11 @@ void ZigbeeColorDimmerSwitch::lightOffWithEffect(uint8_t effect_id, uint8_t effe
     cmd_req.effect_id = effect_id;
     cmd_req.effect_variant = effect_variant;
     log_v("Sending 'light off with effect' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_off_with_effect_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -360,9 +386,11 @@ void ZigbeeColorDimmerSwitch::lightOnWithSceneRecall() {
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     log_v("Sending 'light on with scene recall' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_on_with_recall_global_scene_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -378,9 +406,11 @@ void ZigbeeColorDimmerSwitch::lightOnWithTimedOff(uint8_t on_off_control, uint16
     cmd_req.on_time = time_on;
     cmd_req.off_wait_time = time_off;
     log_v("Sending 'light on with time off' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_on_with_timed_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -395,9 +425,11 @@ void ZigbeeColorDimmerSwitch::setLightLevel(uint8_t level) {
     cmd_req.level = level;
     cmd_req.transition_time = 0xffff;
     log_v("Sending 'set light level' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_level_move_to_level_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -413,9 +445,11 @@ void ZigbeeColorDimmerSwitch::setLightLevel(uint8_t level, uint16_t group_addr) 
     cmd_req.level = level;
     cmd_req.transition_time = 0xffff;
     log_v("Sending 'set light level' command to group address 0x%x", group_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_level_move_to_level_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -432,9 +466,11 @@ void ZigbeeColorDimmerSwitch::setLightLevel(uint8_t level, uint8_t endpoint, uin
     cmd_req.level = level;
     cmd_req.transition_time = 0xffff;
     log_v("Sending 'set light level' command to endpoint %u, address 0x%x", endpoint, short_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_level_move_to_level_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -454,9 +490,11 @@ void ZigbeeColorDimmerSwitch::setLightLevel(uint8_t level, uint8_t endpoint, esp
       "Sending 'set light level' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
       ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_level_move_to_level_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -474,9 +512,11 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
     cmd_req.color_y = xy_color.y;
     cmd_req.transition_time = 0;
     log_v("Sending 'set light color' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_color_move_to_color_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -495,9 +535,11 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
     cmd_req.color_y = xy_color.y;
     cmd_req.transition_time = 0;
     log_v("Sending 'set light color' command to group address 0x%x", group_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_color_move_to_color_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -517,9 +559,11 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
     cmd_req.color_y = xy_color.y;
     cmd_req.transition_time = 0;
     log_v("Sending 'set light color' command to endpoint %u, address 0x%x", endpoint, short_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_color_move_to_color_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -542,9 +586,11 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
       "Sending 'set light color' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
       ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_color_move_to_color_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -560,9 +606,9 @@ void ZigbeeColorDimmerSwitch::getLightState() {
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light state command");
+    }
   }
 }
 
@@ -577,9 +623,9 @@ void ZigbeeColorDimmerSwitch::getLightState(uint16_t group_addr) {
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light state command");
+    }
   }
 }
 
@@ -595,9 +641,9 @@ void ZigbeeColorDimmerSwitch::getLightState(uint8_t endpoint, uint16_t short_add
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light state command");
+    }
   }
 }
 
@@ -613,9 +659,9 @@ void ZigbeeColorDimmerSwitch::getLightState(uint8_t endpoint, esp_zb_ieee_addr_t
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light state command");
+    }
   }
 }
 
@@ -629,9 +675,9 @@ void ZigbeeColorDimmerSwitch::getLightLevel() {
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light level command");
+    }
   }
 }
 
@@ -646,9 +692,9 @@ void ZigbeeColorDimmerSwitch::getLightLevel(uint16_t group_addr) {
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light level command");
+    }
   }
 }
 
@@ -664,9 +710,9 @@ void ZigbeeColorDimmerSwitch::getLightLevel(uint8_t endpoint, uint16_t short_add
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light level command");
+    }
   }
 }
 
@@ -682,9 +728,9 @@ void ZigbeeColorDimmerSwitch::getLightLevel(uint8_t endpoint, esp_zb_ieee_addr_t
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light level command");
+    }
   }
 }
 
@@ -698,9 +744,9 @@ void ZigbeeColorDimmerSwitch::getLightColor() {
     read_req.attr_number = 2;
     uint16_t attr_id[] = {ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID};
     read_req.attr_field = attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light color command");
+    }
   }
 }
 
@@ -715,9 +761,9 @@ void ZigbeeColorDimmerSwitch::getLightColor(uint16_t group_addr) {
     read_req.attr_number = 2;
     uint16_t attr_id[] = {ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID};
     read_req.attr_field = attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light color command");
+    }
   }
 }
 
@@ -733,9 +779,9 @@ void ZigbeeColorDimmerSwitch::getLightColor(uint8_t endpoint, uint16_t short_add
     read_req.attr_number = 2;
     uint16_t attr_id[] = {ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID};
     read_req.attr_field = attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light color command");
+    }
   }
 }
 
@@ -751,9 +797,9 @@ void ZigbeeColorDimmerSwitch::getLightColor(uint8_t endpoint, esp_zb_ieee_addr_t
     read_req.attr_number = 2;
     uint16_t attr_id[] = {ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID};
     read_req.attr_field = attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light color command");
+    }
   }
 }
 
@@ -767,9 +813,9 @@ void ZigbeeColorDimmerSwitch::getLightColorHS() {
     read_req.attr_number = 2;
     uint16_t attr_id[] = {ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID};
     read_req.attr_field = attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light color (hue/saturation) command");
+    }
   }
 }
 
@@ -784,9 +830,9 @@ void ZigbeeColorDimmerSwitch::getLightColorHS(uint16_t group_addr) {
     read_req.attr_number = 2;
     uint16_t attr_id[] = {ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID};
     read_req.attr_field = attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light color (hue/saturation) command");
+    }
   }
 }
 
@@ -802,9 +848,9 @@ void ZigbeeColorDimmerSwitch::getLightColorHS(uint8_t endpoint, uint16_t short_a
     read_req.attr_number = 2;
     uint16_t attr_id[] = {ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID};
     read_req.attr_field = attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light color (hue/saturation) command");
+    }
   }
 }
 
@@ -820,9 +866,9 @@ void ZigbeeColorDimmerSwitch::getLightColorHS(uint8_t endpoint, esp_zb_ieee_addr
     read_req.attr_number = 2;
     uint16_t attr_id[] = {ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID};
     read_req.attr_field = attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light color (hue/saturation) command");
+    }
   }
 }
 
@@ -835,9 +881,11 @@ void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection directi
     cmd_req.step_mode = (uint8_t)direction;
     cmd_req.step_size = step_size;
     cmd_req.transition_time = transition_time;
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_level_step_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   }
 }
 
@@ -851,9 +899,11 @@ void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection directi
     cmd_req.step_mode = (uint8_t)direction;
     cmd_req.step_size = step_size;
     cmd_req.transition_time = transition_time;
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_level_step_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   }
 }
 
@@ -870,9 +920,11 @@ void ZigbeeColorDimmerSwitch::setLightLevelStep(
     cmd_req.step_mode = (uint8_t)direction;
     cmd_req.step_size = step_size;
     cmd_req.transition_time = transition_time;
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_level_step_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   }
 }
 
@@ -889,9 +941,11 @@ void ZigbeeColorDimmerSwitch::setLightLevelStep(
     cmd_req.step_mode = (uint8_t)direction;
     cmd_req.step_size = step_size;
     cmd_req.transition_time = transition_time;
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_level_step_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   }
 }
 

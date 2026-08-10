@@ -1,0 +1,17 @@
+tags:
+  - two_duts
+
+fqbn_append: PartitionScheme=huge_app,OThreadMode=ot_rcp
+
+multi_device:
+  device0: leader
+  device1: child
+
+platforms:
+  wokwi: false
+  qemu: false
+
+# No two_duts runners using ESP-Hosted
+requires:
+  - CONFIG_OPENTHREAD_ENABLED=y
+  - CONFIG_SOC_IEEE802154_SUPPORTED=y

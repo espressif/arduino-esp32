@@ -138,7 +138,7 @@ The coap_lamp example consists of the following main components:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(false)`
    - Initializes OpenThread CLI
-   - Sets CLI timeout
+   - Sets CLI read timeout via `OThreadCLI.setTimeout()` (inherited from Arduino `Stream`, not a CLI-specific method)
    - Calls `setupNode()` to configure the device
 
 5. **`loop()`**:
@@ -147,18 +147,24 @@ The coap_lamp example consists of the following main components:
 
 ## Troubleshooting
 
-- **LED stays red**: Setup failed. Check Serial Monitor for error messages. Verify network configuration.
-- **Lamp not responding to switch**: Ensure both devices use the same network key, channel, multicast address, and resource name. Check that Switch device is running.
-- **Device not becoming Leader**: Clear NVS or ensure this is the first device started. Check network configuration.
-- **CoAP requests not received**: Verify multicast address matches between Lamp and Switch devices. Check Thread network connectivity.
-- **No serial output**: Check baudrate (115200) and USB connection
+> **Native API equivalent:** [CoAP Light Switch (Native API)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch) uses realm-local multicast `ff03::abcd` on channel **15**. This CLI sketch uses `ff05::abcd` on channel **24** — do not mix CLI and Native boards on the same test without aligning channel, network key, and multicast scope.
+
+**Startup order:** Flash this **lamp (Leader + CoAP server)** sketch first and wait until the RGB LED turns **green**. Then flash [CLI CoAP switch (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_switch) with matching key, channel, multicast address, and resource name.
+
+| Symptom | Likely cause |
+| --- | --- |
+| LED stays red | Setup failed — check Serial for CLI errors; ensure this board forms Leader before switch starts. |
+| Switch cannot join | Switch started before lamp was Leader — reset switch after lamp LED is green. |
+| Lamp not responding to switch | Multicast address or resource name mismatch; verify `OT_MCAST_ADDR` and `OT_COAP_RESOURCE_NAME` match switch. |
+| Device not becoming Leader | Clear NVS or ensure this is the first board started on the network. |
+| CoAP requests not received | Thread not attached or multicast not configured — verify green LED and Serial `OpenThread setup done`. |
+| No serial output | Serial Monitor not at **115200** or USB disconnected. |
 
 ## Related Documentation
 
 - [OpenThread CLI Helper Functions API](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_cli.html)
 - [OpenThread Core API](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_core.html)
 - [OpenThread Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread.html)
-- [CoAP Protocol](https://coap.technology/)
 
 ## License
 

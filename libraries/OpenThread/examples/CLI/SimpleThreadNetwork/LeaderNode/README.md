@@ -134,10 +134,15 @@ The LeaderNode example consists of the following main components:
 
 ## Troubleshooting
 
-- **Device not becoming Leader**: Ensure this is the first device started, or clear NVS to start fresh
-- **Network key/channel mismatch**: Verify all devices use the same network key and channel
-- **No network information**: Wait for the device to become Leader (may take a few seconds)
-- **No serial output**: Check baudrate (115200) and USB connection
+**Startup order:** Start this Leader sketch first on the network. Other Router/Child boards must use the **same network key and channel** and should be flashed **after** this board reports `Role: Leader`.
+
+| Symptom | Likely cause |
+| --- | --- |
+| Device not becoming Leader | Another device already Leader on same channel, or stale NVS — clear NVS or power off other Thread nodes first. |
+| Network key/channel mismatch on joiners | Verify `CLI_NETWORK_KEY` and `CLI_NETWORK_CHANNEL` match on all boards. |
+| No network information in loop | Wait a few seconds after `thread start` for Leader role. |
+| Joiner board stuck Detached | Leader not ready when joiner booted — reset joiner after Leader is up. |
+| No serial output | Serial Monitor not at **115200** or USB disconnected. |
 
 ## Related Documentation
 

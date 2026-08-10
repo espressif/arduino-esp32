@@ -1,0 +1,9 @@
+tags:
+  - ethernet
+
+platforms:
+  wokwi: false # Wokwi does not support Ethernet
+  qemu: false
+
+requires:
+  - CONFIG_ETH_USE_ESP32_EMAC=y

@@ -8,17 +8,17 @@ About
 The ``DataSet`` class provides a convenient way to create, configure, and manage Thread operational datasets. An operational dataset contains all the parameters needed to join or form a Thread network, including network name, channel, PAN ID, network key, and extended PAN ID.
 
 **Key Features:**
-* Create new operational datasets
-* Configure dataset parameters
-* Apply datasets to the Thread network
-* Retrieve dataset parameters
-* Clear and reset datasets
+* Create new operational datasets.
+* Configure dataset parameters.
+* Apply datasets to the Thread network.
+* Retrieve dataset parameters.
+* Clear and reset datasets.
 
 **Use Cases:**
-* Creating new Thread networks
-* Joining existing Thread networks
-* Configuring network parameters
-* Network migration and reconfiguration
+* Creating new Thread networks.
+* Joining existing Thread networks.
+* Configuring network parameters.
+* Network migration and reconfiguration.
 
 API Reference
 -------------
@@ -62,7 +62,7 @@ Initializes a new operational dataset.
 
 This function creates a new operational dataset with randomly generated values for network key, extended PAN ID, and other parameters. The dataset will be ready to form a new Thread network.
 
-**Note:** OpenThread must be started (``OpenThread::begin()``) before calling this function.
+**Note:** OpenThread must be initialized with ``OpenThread::begin()`` before calling this function.
 
 **Example:**
 
@@ -98,7 +98,7 @@ Sets the network name.
 
     void setNetworkName(const char *name);
 
-* ``name`` - The network name string (maximum 16 characters)
+* ``name`` - The network name string (maximum 16 characters).
 
 This function sets the network name for the Thread network. The network name is a human-readable identifier for the network.
 
@@ -117,7 +117,7 @@ Sets the extended PAN ID.
 
     void setExtendedPanId(const uint8_t *extPanId);
 
-* ``extPanId`` - Pointer to an 8-byte array containing the extended PAN ID
+* ``extPanId`` - Pointer to an 8-byte array containing the extended PAN ID.
 
 This function sets the extended PAN ID, which uniquely identifies the Thread network partition.
 
@@ -137,7 +137,7 @@ Sets the network key.
 
     void setNetworkKey(const uint8_t *key);
 
-* ``key`` - Pointer to a 16-byte array containing the network key
+* ``key`` - Pointer to a 16-byte array containing the network key.
 
 This function sets the network key, which is used for encryption and authentication in the Thread network.
 
@@ -158,7 +158,7 @@ Sets the Thread channel.
 
     void setChannel(uint8_t channel);
 
-* ``channel`` - The Thread channel number (11-26)
+* ``channel`` - The Thread channel number (11-26).
 
 This function sets the IEEE 802.15.4 channel used by the Thread network. Valid channels are 11 through 26.
 
@@ -177,7 +177,7 @@ Sets the PAN ID.
 
     void setPanId(uint16_t panId);
 
-* ``panId`` - The PAN ID (16-bit value)
+* ``panId`` - The PAN ID (16-bit value).
 
 This function sets the PAN (Personal Area Network) ID for the Thread network.
 
@@ -267,7 +267,7 @@ Applies the dataset to an OpenThread instance.
 
     void apply(otInstance *instance);
 
-* ``instance`` - Pointer to the OpenThread instance
+* ``instance`` - Pointer to the OpenThread instance.
 
 This function applies the dataset to the specified OpenThread instance, making it the active operational dataset.
 
@@ -321,8 +321,8 @@ Creating a New Network
 
         // Apply dataset and start network
         OThread.commitDataSet(dataset);
-        OThread.start();
         OThread.networkInterfaceUp();
+        OThread.start();
 
         Serial.println("New Thread network created");
     }
@@ -364,8 +364,8 @@ Joining an Existing Network
 
         // Apply dataset and start network
         OThread.commitDataSet(dataset);
-        OThread.start();
         OThread.networkInterfaceUp();
+        OThread.start();
 
         Serial.println("Joining existing Thread network");
     }
@@ -430,32 +430,32 @@ Best Practices
 Dataset Security
 ****************
 
-* **Network Key**: Keep the network key secure and never expose it in logs or serial output
-* **Extended PAN ID**: Use unique extended PAN IDs to avoid network conflicts
-* **Channel Selection**: Choose channels that avoid interference with Wi-Fi networks (channels 11, 15, 20, 25 are often good choices)
+* **Network Key**: Keep the network key secure and never expose it in logs or serial output.
+* **Extended PAN ID**: Use unique extended PAN IDs to avoid network conflicts.
+* **Channel Selection**: Choose channels that avoid interference with Wi-Fi networks (channels 11, 15, 20, 25 are often good choices).
 
 Required Parameters
 *******************
 
 For a dataset to be valid and usable, you typically need:
 
-* **Network Name**: Required for human identification
-* **Network Key**: Required for security (16 bytes)
-* **Channel**: Required for radio communication (11-26)
-* **Extended PAN ID**: Recommended for network identification (8 bytes)
-* **PAN ID**: Optional, will be assigned if not set
+* **Network Name**: Required for human identification.
+* **Network Key**: Required for security (16 bytes).
+* **Channel**: Required for radio communication (11-26).
+* **Extended PAN ID**: Recommended for network identification (8 bytes).
+* **PAN ID**: Optional, will be assigned if not set.
 
 Parameter Validation
 ********************
 
 The DataSet class performs basic validation:
 
-* Network name length is checked (maximum 16 characters)
-* Channel range is validated (11-26)
-* Null pointer checks for array parameters
+* Network name length is checked (maximum 16 characters).
+* Channel range is validated (11-26).
+* Null pointer checks for array parameters.
 
 However, it's your responsibility to ensure:
 
-* Network key is properly generated (use ``initNew()`` for random generation)
-* Extended PAN ID is unique within your network environment
-* All required parameters are set before applying the dataset
+* Network key is properly generated (use ``initNew()`` for random generation).
+* Extended PAN ID is unique within your network environment.
+* All required parameters are set before applying the dataset.

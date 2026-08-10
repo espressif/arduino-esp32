@@ -29,7 +29,7 @@
   "connections": [
     [ "esp32:RX", "$serialMonitor:TX", "", [] ],
     [ "esp32:TX", "$serialMonitor:RX", "", [] ],
-    [ "btn1:1.l", "esp32:0", "blue", [ "h-19.2", "v48", "h-38.4" ] ],
+    [ "btn1:1.l", "esp32:14", "blue", [ "h-19.2", "v48", "h-38.4" ] ],
     [ "btn1:2.r", "esp32:GND.1", "black", [ "h19.4", "v57.8", "h-240", "v-76.8" ] ],
     [ "esp32:GND.2", "led1:C", "black", [ "v0" ] ],
     [ "esp32:4", "led1:A", "green", [ "h0" ] ]

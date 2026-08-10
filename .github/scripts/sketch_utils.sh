@@ -1,12 +1,7 @@
 #!/bin/bash
 
-if [ -d "$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs" ]; then
-    SDKCONFIG_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
-elif [ -d "$GITHUB_WORKSPACE/tools/esp32-arduino-libs" ]; then
-    SDKCONFIG_DIR="$GITHUB_WORKSPACE/tools/esp32-arduino-libs"
-else
-    SDKCONFIG_DIR="tools/esp32-arduino-libs"
-fi
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPTS_DIR}/env.sh"
 
 function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
     local sketchdir=$1
@@ -56,7 +51,138 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
         fi
     fi
 
-    echo $has_requirements
+    echo "$has_requirements"
+}
+
+# Join FQBN menu options, dropping empty entries and keeping only the last value
+# given for each menu key. Callers list options lowest priority first, so a test
+# can override a per-target default instead of emitting the same key twice, which
+# arduino-cli does not resolve predictably. Each key keeps the position of its
+# first appearance, so the resulting FQBN stays stable.
+function _normalize_fqbn_opts {
+    echo "$1" | tr ',' '\n' | awk '
+        {
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "")
+            if ($0 == "") {
+                next
+            }
+            eq = index($0, "=")
+            key = (eq ? substr($0, 1, eq - 1) : $0)
+            if (!(key in value)) {
+                order[++count] = key
+            }
+            value[key] = $0
+        }
+        END {
+            for (i = 1; i <= count; i++) {
+                printf "%s%s", (i > 1 ? "," : ""), value[order[i]]
+            }
+            printf "\n"
+        }
+    '
+}
+
+function default_fqbn_for_target {
+    local target="$1"
+    local options_override="${2:-}"
+    local debug_level="${3:-}"
+    local extra_opts="${4:-}"
+    local pkg="${5:-espressif:esp32}"
+    local fqbn_append="${6:-}"
+
+    local opt=""
+
+    # Lowest priority first: per-target defaults, then the test's fqbn_append,
+    # then options the caller asked for, then the debug level from the command
+    # line. Duplicate menu keys are resolved by _normalize_fqbn_opts.
+    local overrides="${fqbn_append},${extra_opts},${debug_level}"
+
+    local esp32_opts esp32s2_opts esp32s3_opts esp32c3_opts esp32c6_opts esp32h2_opts esp32p4_opts esp32c5_opts
+    esp32_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${overrides}")
+    esp32s2_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${overrides}")
+    esp32s3_opts=$(_normalize_fqbn_opts "PSRAM=opi,USBMode=default,${overrides}")
+    esp32c3_opts=$(_normalize_fqbn_opts "${overrides}")
+    esp32c6_opts=$(_normalize_fqbn_opts "${overrides}")
+    esp32h2_opts=$(_normalize_fqbn_opts "${overrides}")
+    esp32p4_opts=$(_normalize_fqbn_opts "PSRAM=enabled,USBMode=default,ChipVariant=postv3,${overrides}")
+    esp32c5_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${overrides}")
+
+    case "$target" in
+        esp32)
+            [ -n "${options_override:-$esp32_opts}" ] && opt=":${options_override:-$esp32_opts}"
+            echo "${pkg}:esp32${opt}"
+            ;;
+        esp32s2)
+            [ -n "${options_override:-$esp32s2_opts}" ] && opt=":${options_override:-$esp32s2_opts}"
+            echo "${pkg}:esp32s2${opt}"
+            ;;
+        esp32c3)
+            [ -n "${options_override:-$esp32c3_opts}" ] && opt=":${options_override:-$esp32c3_opts}"
+            echo "${pkg}:esp32c3${opt}"
+            ;;
+        esp32s3)
+            [ -n "${options_override:-$esp32s3_opts}" ] && opt=":${options_override:-$esp32s3_opts}"
+            echo "${pkg}:esp32s3${opt}"
+            ;;
+        esp32c6)
+            [ -n "${options_override:-$esp32c6_opts}" ] && opt=":${options_override:-$esp32c6_opts}"
+            echo "${pkg}:esp32c6${opt}"
+            ;;
+        esp32h2)
+            [ -n "${options_override:-$esp32h2_opts}" ] && opt=":${options_override:-$esp32h2_opts}"
+            echo "${pkg}:esp32h2${opt}"
+            ;;
+        esp32p4)
+            [ -n "${options_override:-$esp32p4_opts}" ] && opt=":${options_override:-$esp32p4_opts}"
+            echo "${pkg}:esp32p4${opt}"
+            ;;
+        esp32c5)
+            [ -n "${options_override:-$esp32c5_opts}" ] && opt=":${options_override:-$esp32c5_opts}"
+            echo "${pkg}:esp32c5${opt}"
+            ;;
+        *)
+            echo "ERROR: Invalid chip: $target" >&2
+            return 1
+            ;;
+    esac
+}
+
+# Read the fqbn_append options a ci.yml requests for one target. The field is
+# either a string applied to every target, or a map of per-target entries with an
+# optional "default" entry. Map entries are merged with "default", the per-target
+# entry winning, so a test only has to spell out what differs on that target.
+# The field defaults to the top level fqbn_append, but any path can be given so
+# that the per-device fields of a multi-device test resolve the same way.
+function fqbn_append_for_target { # fqbn_append_for_target <ci_yml> <target> [yq_path]
+    local ci_yml="$1"
+    local target="$2"
+    local path="${3:-.fqbn_append}"
+
+    if [ ! -f "$ci_yml" ]; then
+        return 0
+    fi
+
+    local value
+    if [ "$(yq eval "${path} | type" "$ci_yml" 2>/dev/null)" == "!!map" ]; then
+        local common specific
+        common=$(yq eval "${path}.default // \"\"" "$ci_yml" 2>/dev/null)
+        specific=$(yq eval "${path}.\"${target}\" // \"\"" "$ci_yml" 2>/dev/null)
+        value="${common},${specific}"
+    else
+        value=$(yq eval "${path} // \"\"" "$ci_yml" 2>/dev/null)
+    fi
+
+    _normalize_fqbn_opts "$value"
+}
+
+function default_upload_test_fqbn {
+    default_fqbn_for_target "$1" "" "" "UploadSpeed=115200" "${2:-espressif:esp32}"
+}
+
+function split_fqbn_for_cli {
+    local fqbn="$1"
+    CLI_FQBN_OPTIONS=$(echo "$fqbn" | cut -d':' -f4-)
+    CLI_FQBN_BASE=$(echo "$fqbn" | cut -d':' -f1-3)
 }
 
 function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [extra-options]
@@ -105,6 +231,13 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         -bn )
             shift
             build_name=$1
+            ;;
+        -fa )
+            shift
+            fqbn_append_override=$1
+            ;;
+        --arduino-cli )
+            use_arduino_cli=1
             ;;
         * )
             break
@@ -162,72 +295,17 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
 
             len=1
 
+            # Options passed with -fa are merged on top of the ones the ci.yml
+            # asks for, so a single device of a multi-device test can add to or
+            # override them without losing the ones shared by the whole test.
             if [ -n "$ci_yml_for_build" ]; then
-                fqbn_append=$(yq eval '.fqbn_append' "$ci_yml_for_build" 2>/dev/null)
-                if [ "$fqbn_append" == "null" ]; then
-                    fqbn_append=""
-                fi
+                fqbn_append=$(fqbn_append_for_target "$ci_yml_for_build" "$target")
+            fi
+            if [ -n "${fqbn_append_override:-}" ]; then
+                fqbn_append=$(_normalize_fqbn_opts "${fqbn_append},${fqbn_append_override}")
             fi
 
-            # Default FQBN options if none were passed in the command line.
-            # Replace any double commas with a single one and strip leading and
-            # trailing commas.
-
-            esp32_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-            esp32s2_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-            esp32s3_opts=$(echo "PSRAM=opi,USBMode=default,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-            esp32c3_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-            esp32c6_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-            esp32h2_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-            esp32p4_opts=$(echo "PSRAM=enabled,USBMode=default,ChipVariant=postv3,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-            esp32c5_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-
-            # Select the common part of the FQBN based on the target.  The rest will be
-            # appended depending on the passed options.
-
-            opt=""
-
-            case "$target" in
-                "esp32")
-                    [ -n "${options:-$esp32_opts}" ] && opt=":${options:-$esp32_opts}"
-                    fqbn="espressif:esp32:esp32$opt"
-                ;;
-                "esp32s2")
-                    [ -n "${options:-$esp32s2_opts}" ] && opt=":${options:-$esp32s2_opts}"
-                    fqbn="espressif:esp32:esp32s2$opt"
-                ;;
-                "esp32c3")
-                    [ -n "${options:-$esp32c3_opts}" ] && opt=":${options:-$esp32c3_opts}"
-                    fqbn="espressif:esp32:esp32c3$opt"
-                ;;
-                "esp32s3")
-                    [ -n "${options:-$esp32s3_opts}" ] && opt=":${options:-$esp32s3_opts}"
-                    fqbn="espressif:esp32:esp32s3$opt"
-                ;;
-                "esp32c6")
-                    [ -n "${options:-$esp32c6_opts}" ] && opt=":${options:-$esp32c6_opts}"
-                    fqbn="espressif:esp32:esp32c6$opt"
-                ;;
-                "esp32h2")
-                    [ -n "${options:-$esp32h2_opts}" ] && opt=":${options:-$esp32h2_opts}"
-                    fqbn="espressif:esp32:esp32h2$opt"
-                ;;
-                "esp32p4")
-                    [ -n "${options:-$esp32p4_opts}" ] && opt=":${options:-$esp32p4_opts}"
-                    fqbn="espressif:esp32:esp32p4$opt"
-                ;;
-                "esp32c5")
-                    [ -n "${options:-$esp32c5_opts}" ] && opt=":${options:-$esp32c5_opts}"
-                    fqbn="espressif:esp32:esp32c5$opt"
-                ;;
-                *)
-                    echo "ERROR: Invalid chip: $target"
-                    exit 1
-                ;;
-            esac
-
-            # Make it look like a JSON array.
-
+            fqbn=$(default_fqbn_for_target "$target" "$options" "${debug_level:-}" "" "espressif:esp32" "$fqbn_append") || exit 1
             fqbn="[\"$fqbn\"]"
         fi
     else
@@ -292,107 +370,80 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         else
             build_dir="$HOME/.arduino/tests/$target/$build_output_name/build$i.tmp"
         fi
-        rm -rf "$build_dir"
         mkdir -p "$build_dir"
 
         currfqbn=$(echo "$fqbn" | jq -r --argjson i "$i" '.[$i]')
 
-        if [ -f "$ide_path/arduino-cli" ]; then
+        if [ "${use_arduino_cli:-0}" -eq 1 ] && [ -f "$ide_path/arduino-cli" ]; then
             echo "Building $sketchname with arduino-cli and FQBN=$currfqbn"
-
-            curroptions=$(echo "$currfqbn" | cut -d':' -f4)
-            currfqbn=$(echo "$currfqbn" | cut -d':' -f1-3)
+            split_fqbn_for_cli "$currfqbn"
+            local curroptions="$CLI_FQBN_OPTIONS"
+            local currcli_fqbn="$CLI_FQBN_BASE"
             "$ide_path"/arduino-cli compile \
-                --fqbn "$currfqbn" \
+                --fqbn "$currcli_fqbn" \
                 --board-options "$curroptions" \
                 --warnings "all" \
                 --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
                 --build-path "$build_dir" \
                 "${xtra_opts[@]}" "${sketchdir}" \
                 2>&1 | tee "$output_file"
+        elif [ "${use_arduino_cmake:-0}" -eq 0 ] && [ -f "$REPO_ROOT/tools/arduino_cmake.py" ]; then
+            echo "Building $sketchname with arduino_cmake.py and FQBN=$currfqbn"
+            python3 "$REPO_ROOT/tools/arduino_cmake.py" compile \
+                --fqbn "$currfqbn" \
+                --warnings "all" \
+                --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
+                --build-path "$build_dir" \
+                "${xtra_opts[@]}" --sketch "${sketchdir}" \
+                2>&1 | tee "$output_file"
+        else
+            echo "ERROR: Requested build tool not found (arduino-cli or arduino_cmake.py)"
+            exit 1
+        fi
 
-            exit_status=${PIPESTATUS[0]}
-            if [ "$exit_status" -ne 0 ]; then
-                echo "ERROR: Compilation failed with error code $exit_status"
-                exit "$exit_status"
-            fi
+        exit_status=${PIPESTATUS[0]}
+        if [ "$exit_status" -ne 0 ]; then
+            echo "ERROR: Compilation failed with error code $exit_status"
+            exit "$exit_status"
+        fi
 
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
-            # For multi-device tests, ci.yml lives in the parent test directory (-td),
-            # not in individual sketch directories.
-            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
-            if [ -f "$ci_yml_source/ci.yml" ]; then
-                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
-            fi
+        # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+        # For multi-device tests, ci.yml lives in the parent test directory (-td),
+        # not in individual sketch directories.
+        local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+        if [ -f "$ci_yml_source/ci.yml" ]; then
+            cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+        fi
 
-            if [ -n "$COMPILE_COMMANDS_DIR" ] && [ -f "$build_dir/compile_commands.json" ]; then
-                mkdir -p "$COMPILE_COMMANDS_DIR"
-                jq --arg t "$target" '[.[] | . + {_target: $t}]' \
-                    "$build_dir/compile_commands.json" > "$COMPILE_COMMANDS_DIR/${target}_${sketchname}.json"
-            fi
+        if [ -n "$COMPILE_COMMANDS_DIR" ] && [ -f "$build_dir/compile_commands.json" ]; then
+            mkdir -p "$COMPILE_COMMANDS_DIR"
+            # Use a path-based unique name to avoid collisions when multiple sketches share
+            # the same basename (e.g. two sketches both named LeaderNode in different subdirs).
+            # Strip the prefix up to and including the first occurrence of "/libraries/" so
+            # the result is relative and readable; fall back to the full path if not found.
+            local sketch_relpath="${sketchdir#*/libraries/}"
+            local sketch_safe="${sketch_relpath//\//_}"  # replace all '/' with '_'
+            sketch_safe="${sketch_safe#_}"               # strip any leading underscore
+            jq --arg t "$target" '[.[] | . + {_target: $t}]' \
+                "$build_dir/compile_commands.json" > "$COMPILE_COMMANDS_DIR/${target}_${sketch_safe}.json"
+        fi
 
-            if [ -n "$log_compilation" ]; then
-                #Extract the program storage space and dynamic memory usage in bytes and percentage in separate variables from the output, just the value without the string
-                flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' "$output_file" | awk '{print $3}')
-                flash_percentage=$(grep -oE 'Sketch uses ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $5}' | tr -d '(%)')
-                ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' "$output_file" | awk '{print $4}')
-                ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $6}' | tr -d '(%)')
+        if [ -n "$log_compilation" ]; then
+            flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' "$output_file" | awk '{print $3}')
+            flash_percentage=$(grep -oE 'Sketch uses ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $5}' | tr -d '(%)')
+            ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' "$output_file" | awk '{print $4}')
+            ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $6}' | tr -d '(%)')
 
-                # Extract the directory path excluding the filename
-                directory_path=$(dirname "$sketch")
-                # Define the constant part
-                constant_part="/home/runner/Arduino/hardware/espressif/esp32/libraries/"
-                # Extract the desired substring
-                lib_sketch_name="${directory_path#"$constant_part"}"
-                #append json file where key is fqbn, sketch name, sizes -> extracted values
-                echo "{\"name\": \"$lib_sketch_name\",
-                    \"sizes\": [{
-                            \"flash_bytes\": $flash_bytes,
-                            \"flash_percentage\": $flash_percentage,
-                            \"ram_bytes\": $ram_bytes,
-                            \"ram_percentage\": $ram_percentage
-                            }]
-                    }," >> "$sizes_file"
-            fi
-
-        elif [ -f "$ide_path/arduino-builder" ]; then
-            echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
-            echo "Build path = $build_dir"
-
-            "$ide_path"/arduino-builder -compile -logger=human -core-api-version=10810 \
-                -fqbn=\""$currfqbn"\" \
-                -warnings="all" \
-                -tools "$ide_path/tools-builder" \
-                -hardware "$user_path/hardware" \
-                -libraries "$user_path/libraries" \
-                -build-cache "$ARDUINO_CACHE_DIR" \
-                -build-path "$build_dir" \
-                "${xtra_opts[@]}" "${sketchdir}/${sketchname}.ino"
-
-            exit_status=$?
-            if [ $exit_status -ne 0 ]; then
-                echo "ERROR: Compilation failed with error code $exit_status"
-                exit $exit_status
-            fi
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
-            # For multi-device tests, ci.yml lives in the parent test directory (-td),
-            # not in individual sketch directories.
-            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
-            if [ -f "$ci_yml_source/ci.yml" ]; then
-                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
-            fi
-            # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
-            #     -fqbn=\"$currfqbn\" \
-            #     -warnings="all" \
-            #     -tools "$ide_path/tools-builder" \
-            #     -tools "$ide_path/tools" \
-            #     -built-in-libraries "$ide_path/libraries" \
-            #     -hardware "$ide_path/hardware" \
-            #     -hardware "$user_path/hardware" \
-            #     -libraries "$user_path/libraries" \
-            #     -build-cache "$ARDUINO_CACHE_DIR" \
-            #     -build-path "$build_dir" \
-            #     $xtra_opts "${sketchdir}/${sketchname}.ino"
+            constant_part="/home/runner/Arduino/hardware/espressif/esp32/libraries/"
+            lib_sketch_name="${sketchdir#"$constant_part"}"
+            echo "{\"name\": \"$lib_sketch_name\",
+                \"sizes\": [{
+                        \"flash_bytes\": $flash_bytes,
+                        \"flash_percentage\": $flash_percentage,
+                        \"ram_bytes\": $ram_bytes,
+                        \"ram_percentage\": $ram_percentage
+                        }]
+                }," >> "$sizes_file"
         fi
     done
 
@@ -516,6 +567,9 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
             shift
             debug_level="$1"
             args+=("-d" "$debug_level")
+            ;;
+        --arduino-cli )
+            args+=("--arduino-cli")
             ;;
         * )
             break
@@ -657,7 +711,7 @@ print_err_warnings() {
     fi
 }
 
-function install_libs { # install_libs <ide_path> <sketchdir> [-v]
+function install_libs { # install_libs [-ai <cli_path>] -s <sketchdir> [-v]
     local ide_path=""
     local sketchdir=""
     local verbose=false
@@ -669,25 +723,16 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
         -v  ) verbose=true ;;
         * )
             echo "ERROR: Unknown argument: $1" >&2
-            echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
+            echo "USAGE: install_libs [-ai <cli_path>] -s <sketchdir> [-v]" >&2
             return 1
             ;;
         esac
         shift
     done
 
-    if [ -z "$ide_path" ]; then
-        echo "ERROR: IDE path not provided" >&2
-        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
-        return 1
-    fi
     if [ -z "$sketchdir" ]; then
         echo "ERROR: Sketch directory not provided" >&2
-        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
-        return 1
-    fi
-    if [ ! -f "$ide_path/arduino-cli" ]; then
-        echo "ERROR: arduino-cli not found at $ide_path/arduino-cli" >&2
+        echo "USAGE: install_libs [-ai <cli_path>] -s <sketchdir> [-v]" >&2
         return 1
     fi
 
@@ -715,6 +760,16 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
     if [ "$libs_count" -eq 0 ]; then
         [ "$verbose" = true ] && echo "libs array is empty in ci.yml, skipping library installation"
         return 0
+    fi
+
+    if [ -z "$ide_path" ] || [ ! -f "$ide_path/arduino-cli" ]; then
+        echo "arduino-cli not found, installing for library support..."
+        source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+        ide_path="$ARDUINO_IDE_PATH"
+        if [ ! -f "$ide_path/arduino-cli" ]; then
+            echo "ERROR: Failed to install arduino-cli" >&2
+            return 1
+        fi
     fi
 
     echo "Installing $libs_count libraries from $sketchdir/ci.yml"
@@ -804,6 +859,8 @@ Available commands:
     chunk_build: Build a chunk of sketches.
     check_requirements: Check if target meets sketch requirements.
     install_libs: Install libraries from ci.yml file.
+    default_upload_test_fqbn: Print default mock-upload FQBN for a SoC (target [pkg_prefix]).
+    fqbn_append: Print the fqbn_append options a ci.yml sets for a target (ci_yml target [yq_path]).
 "
 
 cmd=$1
@@ -825,8 +882,12 @@ case "$cmd" in
     ;;
     "install_libs") install_libs "$@"
     ;;
+    "default_upload_test_fqbn") default_upload_test_fqbn "$@"
+    ;;
+    "fqbn_append") fqbn_append_for_target "$@"
+    ;;
     *)
         echo "ERROR: Unrecognized command"
         echo "$USAGE"
         exit 2
-esac
+    esac

@@ -158,6 +158,7 @@ The library provides specialized endpoint classes for different device types. Ea
 * ``MatterWaterFreezeDetector``: Water freeze detector (detected/not detected state)
 * ``MatterRainSensor``: Rain sensor (detected/not detected state)
 * ``MatterOccupancySensor``: Occupancy sensor (occupied/unoccupied state)
+* ``MatterLightSensor``: Light sensor (read-only)
 
 **Control Endpoints:**
 
@@ -167,7 +168,7 @@ The library provides specialized endpoint classes for different device types. Ea
 * ``MatterThermostat``: Thermostat with temperature control and setpoints
 * ``MatterOnOffPlugin``: On/off plugin unit (power outlet/relay)
 * ``MatterDimmablePlugin``: Dimmable plugin unit (power outlet/relay with brightness control)
-* ``MatterGenericSwitch``: Generic switch endpoint (smart button)
+* ``MatterGenericSwitch``: Generic switch endpoint (smart button with optional long-press and multi-press)
 * ``MatterWindowCovering``: Window covering with lift and tilt control (blinds, shades)
 
 .. toctree::
@@ -209,6 +210,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter Water Leak Detector** - Creates a Matter-compatible water leak detector device with automatic simulation of water leak detection state changes. `View Matter Water Leak Detector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterWaterLeakDetector>`_
 * **Matter Water Freeze Detector** - Creates a Matter-compatible water freeze detector device with automatic simulation of water freeze detection state changes. `View Matter Water Freeze Detector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterWaterFreezeDetector>`_
 * **Matter Rain Sensor** - Creates a Matter-compatible rain sensor device with automatic simulation of rain detection state changes. `View Matter Rain Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterRainSensor>`_
+* **Matter Light Sensor** - Creates a Matter-compatible light (illuminance) sensor device with automatic simulation of illuminance readings. `View Matter Light Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterLightSensor>`_
 
 **Control Examples:**
 
@@ -218,7 +220,8 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter Temperature Controlled Cabinet Levels** - Creates a Matter-compatible temperature controlled cabinet device using predefined temperature levels (temperature_level mode). `View Matter Temperature Controlled Cabinet Levels code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterTemperatureControlledCabinetLevels>`_
 * **Matter On/Off Plugin** - Creates a Matter-compatible on/off plugin unit (power relay) device with state persistence for power control applications. `View Matter On/Off Plugin code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterOnOffPlugin>`_
 * **Matter Dimmable Plugin** - Creates a Matter-compatible dimmable plugin unit (power outlet with level control) device with state persistence for dimmable power control applications. `View Matter Dimmable Plugin code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterDimmablePlugin>`_
-* **Matter Smart Button** - Creates a Matter-compatible smart button (generic switch) device that sends button click events to smart home ecosystems and triggers automations. `View Matter Smart Button code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButton>`_
+* **Matter Smart Button** - Creates a Matter-compatible smart button (generic switch) with simple short-click support (`InitialPress` + `ShortRelease`). `View Matter Smart Button code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButton>`_
+* **Matter Enhanced Smart Button** - Full gesture support: short click, long press, and multi-press (double/triple click). `View Matter Enhanced Smart Button code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedSmartButton>`_
 * **Matter Window Covering** - Creates a Matter-compatible window covering device with lift and tilt control (blinds, shades) with manual control using a physical button. `View Matter Window Covering code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterWindowCovering>`_
 * **Matter Simple Blinds** - A minimal example that only controls lift percentage using a single onGoToLiftPercentage() callback. `View Matter Simple Blinds code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSimpleBlinds>`_
 

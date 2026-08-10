@@ -83,17 +83,17 @@ bool MatterDimmablePlugin::begin(bool initialState, uint8_t level) {
     return false;
   }
 
-  dimmable_plugin_unit::config_t plugin_config;
+  dimmable_plug_in_unit::config_t plugin_config;
   plugin_config.on_off.on_off = initialState;
-  plugin_config.on_off.lighting.start_up_on_off = nullptr;
+  plugin_config.on_off_lighting.start_up_on_off = nullptr;
   onOffState = initialState;
 
   plugin_config.level_control.current_level = level;
-  plugin_config.level_control.lighting.start_up_current_level = nullptr;
+  plugin_config.level_control_lighting.start_up_current_level = nullptr;
   this->level = level;
 
   // endpoint handles can be used to add/modify clusters.
-  endpoint_t *endpoint = dimmable_plugin_unit::create(node::get(), &plugin_config, ENDPOINT_FLAG_NONE, (void *)this);
+  endpoint_t *endpoint = dimmable_plug_in_unit::create(node::get(), &plugin_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create dimmable plugin endpoint");
     return false;

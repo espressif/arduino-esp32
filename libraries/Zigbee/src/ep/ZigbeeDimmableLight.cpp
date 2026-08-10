@@ -74,27 +74,19 @@ bool ZigbeeDimmableLight::setLight(bool state, uint8_t level) {
   lightChanged();
 
   log_v("Updating on/off light state to %d", state);
-  /* Update light clusters */
-  esp_zb_lock_acquire(portMAX_DELAY);
-  // set on/off state
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false
-  );
+  ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    goto unlock_and_return;
+    return false;
   }
-  // set level
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
+  ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light level: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    goto unlock_and_return;
+    return false;
   }
-unlock_and_return:
-  esp_zb_lock_release();
-  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
+  return true;
 }
 
 bool ZigbeeDimmableLight::setLightState(bool state) {

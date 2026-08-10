@@ -72,19 +72,20 @@ BLEEddystoneURL::BLEEddystoneURL() {
 }  // BLEEddystoneURL
 
 BLEEddystoneURL::BLEEddystoneURL(BLEAdvertisedDevice *advertisedDevice) {
-  const char *payload = (char *)advertisedDevice->getPayload();
+  const uint8_t *payload = advertisedDevice->getPayload();
+  const size_t payloadLength = advertisedDevice->getPayloadLength();
   memset(m_eddystoneData.url, 0, sizeof(m_eddystoneData.url));
   lengthURL = 0;
   m_eddystoneData.advertisedTxPower = 0;
-  for (int i = 0; i < advertisedDevice->getPayloadLength(); ++i) {
-    if (payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i + 2 + sizeof(m_eddystoneData) && payload[i + 1] == 0xAA && payload[i + 2] == 0xFE
-        && payload[i + 3] == 0x10) {
-      lengthURL = payload[i - 1] - 5;  // Subtracting 5 Bytes containing header and other data which are not actual URL data
-      m_eddystoneData.advertisedTxPower = payload[i + 1];
-      if (lengthURL <= 18) {
-        setData(String(payload + i + 4, lengthURL + 1));
+  for (size_t i = 1; i < payloadLength; ++i) {
+    const size_t fieldLength = payload[i - 1];
+    if (fieldLength >= 6 && fieldLength <= payloadLength - i && payload[i] == 0x16 && payload[i + 1] == 0xAA && payload[i + 2] == 0xFE
+        && payload[i + 3] == EDDYSTONE_URL_FRAME_TYPE) {
+      const size_t urlLength = fieldLength - 5;
+      if (urlLength <= sizeof(m_eddystoneData.url)) {
+        setData(String((const char *)(payload + i + 4), urlLength + 1));
       } else {
-        log_e("Too long URL %u", lengthURL);
+        log_e("Too long URL %u", (unsigned int)urlLength);
       }
     }
   }
@@ -125,7 +126,7 @@ String BLEEddystoneURL::getPrefix() {
 }
 
 String BLEEddystoneURL::getSuffix() {
-  if (m_eddystoneData.url[lengthURL - 1] <= 0x0D) {
+  if (lengthURL > 0 && m_eddystoneData.url[lengthURL - 1] <= 0x0D) {
     return EDDYSTONE_URL_SUFFIX[m_eddystoneData.url[lengthURL - 1]];
   } else {
     return "";

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This script is used to re-package the esptool if needed and update the JSON file
-# for the Arduino ESP32 platform.
+# and tests/requirements.txt for the Arduino ESP32 platform.
 #
 # The script has only been tested on macOS.
 #
@@ -31,6 +31,7 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -39,6 +40,31 @@ import zipfile
 import hashlib
 import requests
 from pathlib import Path
+
+def ensure_v_prefix(version):
+    if version.startswith("v"):
+        return version
+    return f"v{version}"
+
+def strip_v_prefix(version):
+    if version.startswith("v"):
+        return version[1:]
+    return version
+
+def update_tests_requirements(requirements_path, version):
+    version = strip_v_prefix(version)
+    requirements_path = Path(requirements_path)
+    content = requirements_path.read_text()
+    new_content, count = re.subn(
+        r"^esptool==\S+",
+        f"esptool=={version}",
+        content,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if count == 0:
+        raise RuntimeError(f"No esptool== line found in {requirements_path}")
+    requirements_path.write_text(new_content)
 
 def compute_sha256(filepath):
     sha256 = hashlib.sha256()
@@ -122,7 +148,7 @@ def create_archives(version, base_folder):
         base = dirpath.name[len("esptool-"):]
 
         if "windows" in dirpath.name:
-            zipfile_name = f"esptool-v{version}-{base}.zip"
+            zipfile_name = f"esptool-{ensure_v_prefix(version)}-{base}.zip"
             print(f"Creating {zipfile_name} from {dirpath} ...")
             with zipfile.ZipFile(zipfile_name, "w", zipfile.ZIP_DEFLATED) as zipf:
                 for root, _, files in os.walk(dirpath):
@@ -131,7 +157,7 @@ def create_archives(version, base_folder):
                         zipf.write(full_path, os.path.relpath(full_path, start=dirpath))
             archive_files.append(zipfile_name)
         else:
-            tarfile_name = f"esptool-v{version}-{base}.tar.gz"
+            tarfile_name = f"esptool-{ensure_v_prefix(version)}-{base}.tar.gz"
             print(f"Creating {tarfile_name} from {dirpath} ...")
             for root, dirs, files in os.walk(dirpath):
                 for name in dirs + files:
@@ -197,12 +223,12 @@ def update_json_from_release(tmp_json_path, version, release_info):
                 update_json_for_host(tmp_json_path, version, host, asset_url, asset_fname, asset_checksum, asset_size)
 
 def get_release_info(version):
-    url = f"https://api.github.com/repos/espressif/esptool/releases/tags/v{version}"
+    url = f"https://api.github.com/repos/espressif/esptool/releases/tags/{ensure_v_prefix(version)}"
     response = requests.get(url)
     response.raise_for_status()
     return response.json()
 
-def create_branch_and_commit(version, json_path):
+def create_branch_and_commit(version, *paths):
     """Create a new branch and commit the changes to it."""
     branch_name = f"update-esptool-{version}"
     commit_message = f"change(esptool): Upgrade to version {version}"
@@ -212,9 +238,9 @@ def create_branch_and_commit(version, json_path):
         subprocess.run(["git", "checkout", "-b", branch_name], check=True, capture_output=True, text=True)
         print(f"Created and switched to new branch: {branch_name}")
 
-        # Stage the JSON file
-        subprocess.run(["git", "add", str(json_path)], check=True, capture_output=True, text=True)
-        print(f"Staged file: {json_path}")
+        for path in paths:
+            subprocess.run(["git", "add", str(path)], check=True, capture_output=True, text=True)
+            print(f"Staged file: {path}")
 
         # Commit the changes
         subprocess.run(["git", "commit", "-m", commit_message], check=True, capture_output=True, text=True)
@@ -229,11 +255,12 @@ def main():
     parser = argparse.ArgumentParser(description="Repack esptool and update JSON metadata.")
     parser.add_argument("version", help="Version of the esptool (e.g. 5.0.dev1)")
     parser.add_argument("-l", "--local", dest="base_folder", help="Enable local build mode and set the base folder with unpacked artifacts")
-    parser.add_argument("-c", "--commit", action="store_true", help="Automatically create a new branch and commit the JSON file changes")
+    parser.add_argument("-c", "--commit", action="store_true", help="Automatically create a new branch and commit the updated files")
     args = parser.parse_args()
 
     script_dir = Path(__file__).resolve().parent
     json_path = (script_dir / "../../package/package_esp32_index.template.json").resolve()
+    requirements_path = (script_dir / "../../tests/requirements.txt").resolve()
     tmp_json_path = Path(str(json_path) + ".tmp")
     shutil.copy(json_path, tmp_json_path)
 
@@ -257,10 +284,14 @@ def main():
     shutil.move(tmp_json_path, json_path)
     print(f"Done. JSON updated at {json_path}")
 
+    print(f"Updating esptool pin in {requirements_path}")
+    update_tests_requirements(requirements_path, args.version)
+    print(f"Done. requirements.txt updated at {requirements_path}")
+
     # Auto-commit if requested
     if args.commit:
         print("Auto-commit enabled. Creating branch and committing changes...")
-        create_branch_and_commit(args.version, json_path)
+        create_branch_and_commit(args.version, json_path, requirements_path)
 
 if __name__ == "__main__":
     main()

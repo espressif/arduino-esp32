@@ -61,6 +61,7 @@ extern const uint8_t KeyboardLayout_pt_PT[];
 extern const uint8_t KeyboardLayout_sv_SE[];
 extern const uint8_t KeyboardLayout_da_DK[];
 extern const uint8_t KeyboardLayout_hu_HU[];
+extern const uint8_t KeyboardLayout_ja_JP[];
 extern const uint8_t KeyboardLayout_pt_BR[];
 
 #define KEY_LEFT_CTRL   0x80

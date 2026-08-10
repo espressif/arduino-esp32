@@ -92,26 +92,15 @@ bool ZigbeePM25Sensor::setReporting(uint16_t min_interval, uint16_t max_interval
   float delta_f = delta;
   memcpy(&reporting_info.u.send_info.delta.s32, &delta_f, sizeof(float));
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  return setClusterReporting(&reporting_info);
 }
 
 bool ZigbeePM25Sensor::setPM25(float pm25) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Updating PM2.5 sensor value...");
-  /* Update PM2.5 sensor measured value */
   log_d("Setting PM2.5 to %0.1f", pm25);
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_PM2_5_MEASUREMENT_MEASURED_VALUE_ID, &pm25, false
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_PM2_5_MEASUREMENT_MEASURED_VALUE_ID, &pm25, false
   );
-  esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set PM2.5: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -130,11 +119,8 @@ bool ZigbeePM25Sensor::report() {
   report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
   report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send PM2.5 report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send PM2.5 report");
     return false;
   }
   log_v("PM2.5 report sent");

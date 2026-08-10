@@ -45,14 +45,10 @@ void ZigbeeDoorWindowHandle::setIASClientEndpoint(uint8_t ep_number) {
 }
 
 bool ZigbeeDoorWindowHandle::setClosed() {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Setting Door/Window handle to closed");
   uint8_t closed = 0;  // ALARM1 = 0, ALARM2 = 0
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &closed, false
-  );
-  esp_zb_lock_release();
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &closed, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set door/window handle to closed: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -62,14 +58,10 @@ bool ZigbeeDoorWindowHandle::setClosed() {
 }
 
 bool ZigbeeDoorWindowHandle::setOpen() {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Setting Door/Window handle to open");
   uint8_t open = ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2;  // ALARM1 = 1, ALARM2 = 1
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false
-  );
-  esp_zb_lock_release();
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set door/window handle to open: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -79,14 +71,10 @@ bool ZigbeeDoorWindowHandle::setOpen() {
 }
 
 bool ZigbeeDoorWindowHandle::setTilted() {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Setting Door/Window handle to tilted");
   uint8_t tilted = ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1;  // ALARM1 = 1, ALARM2 = 0
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &tilted, false
-  );
-  esp_zb_lock_release();
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &tilted, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set door/window handle to tilted: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -97,23 +85,29 @@ bool ZigbeeDoorWindowHandle::setTilted() {
 
 bool ZigbeeDoorWindowHandle::report() {
   /* Send IAS Zone status changed notification command */
+  if (_enrolled) {
+    esp_zb_zcl_ias_zone_status_change_notif_cmd_t status_change_notif_cmd;
+    status_change_notif_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+    status_change_notif_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
+    status_change_notif_cmd.zcl_basic_cmd.dst_endpoint = _ias_cie_endpoint;  //default is 1
+    memcpy(status_change_notif_cmd.zcl_basic_cmd.dst_addr_u.addr_long, _ias_cie_addr, sizeof(esp_zb_ieee_addr_t));
 
-  esp_zb_zcl_ias_zone_status_change_notif_cmd_t status_change_notif_cmd;
-  status_change_notif_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
-  status_change_notif_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  status_change_notif_cmd.zcl_basic_cmd.dst_endpoint = _ias_cie_endpoint;  //default is 1
-  memcpy(status_change_notif_cmd.zcl_basic_cmd.dst_addr_u.addr_long, _ias_cie_addr, sizeof(esp_zb_ieee_addr_t));
+    status_change_notif_cmd.zone_status = _zone_status;
+    status_change_notif_cmd.extend_status = 0;
+    status_change_notif_cmd.zone_id = _zone_id;
+    status_change_notif_cmd.delay = 0;
 
-  status_change_notif_cmd.zone_status = _zone_status;
-  status_change_notif_cmd.extend_status = 0;
-  status_change_notif_cmd.zone_id = _zone_id;
-  status_change_notif_cmd.delay = 0;
-
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);  //return transaction sequence number, ignore it
-  esp_zb_lock_release();
-  log_v("IAS Zone status changed notification sent");
-  return true;
+    if (!acquireCommandLock()) {
+      return false;
+    }
+    esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);  //return transaction sequence number, ignore it
+    releaseCommandLock();
+    log_v("IAS Zone status changed notification sent");
+    return true;
+  } else {
+    log_e("Failed to report: IAS Zone not enrolled");
+    return false;
+  }
 }
 
 void ZigbeeDoorWindowHandle::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {
@@ -121,15 +115,12 @@ void ZigbeeDoorWindowHandle::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_e
     log_v("IAS Zone Enroll Response: zone id(%u), status(%u)", message->zone_id, message->response_code);
     if (message->response_code == ESP_ZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS) {
       log_v("IAS Zone Enroll Response: success");
-      esp_zb_lock_acquire(portMAX_DELAY);
-      memcpy(
-        _ias_cie_addr,
-        (*(esp_zb_ieee_addr_t *)
-            esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID)
-              ->data_p),
-        sizeof(esp_zb_ieee_addr_t)
-      );
-      esp_zb_lock_release();
+      esp_zb_zcl_attr_t *ias_cie_attr =
+        esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID);
+      if (ias_cie_attr == nullptr || ias_cie_attr->data_p == nullptr) {
+        return;
+      }
+      memcpy(_ias_cie_addr, ias_cie_attr->data_p, sizeof(_ias_cie_addr));
       _zone_id = message->zone_id;
       _enrolled = true;
     }
@@ -145,32 +136,26 @@ bool ZigbeeDoorWindowHandle::requestIASZoneEnroll() {
   enroll_request.zone_type = ESP_ZB_ZCL_IAS_ZONE_ZONETYPE_DOOR_WINDOW_HANDLE;
   enroll_request.manuf_code = 0;
 
-  esp_zb_lock_acquire(portMAX_DELAY);
+  if (!acquireCommandLock()) {
+    return false;
+  }
   esp_zb_zcl_ias_zone_enroll_cmd_req(&enroll_request);  //return transaction sequence number, ignore it
-  esp_zb_lock_release();
+  releaseCommandLock();
   log_v("IAS Zone enroll request sent");
   return true;
 }
 
 bool ZigbeeDoorWindowHandle::restoreIASZoneEnroll() {
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_attr_t *ias_cie_attr =
-    esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID);
-  esp_zb_zcl_attr_t *zone_id_attr =
-    esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID);
-  esp_zb_lock_release();
-
-  if (ias_cie_attr == NULL || ias_cie_attr->data_p == NULL) {
+  if (!getClusterAttribute(
+        ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, _ias_cie_addr, sizeof(_ias_cie_addr)
+      )) {
     log_e("Failed to restore IAS Zone enroll: ias cie address attribute not found");
     return false;
   }
-  if (zone_id_attr == NULL || zone_id_attr->data_p == NULL) {
+  if (!getClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID, &_zone_id, sizeof(_zone_id))) {
     log_e("Failed to restore IAS Zone enroll: zone id attribute not found");
     return false;
   }
-
-  memcpy(_ias_cie_addr, (esp_zb_ieee_addr_t *)ias_cie_attr->data_p, sizeof(esp_zb_ieee_addr_t));
-  _zone_id = (*(uint8_t *)zone_id_attr->data_p);
 
   log_d(
     "Restored IAS Zone enroll: zone id(%u), ias cie address(%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X)", _zone_id, _ias_cie_addr[0], _ias_cie_addr[1],

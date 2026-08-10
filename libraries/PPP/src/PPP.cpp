@@ -7,7 +7,17 @@
 #include <string>
 #include "driver/uart.h"
 #include "hal/uart_ll.h"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 1, 0)
 #include "esp_private/uart_share_hw_ctrl.h"
+#else
+#include "soc/soc_caps.h"
+#include "esp_private/periph_ctrl.h"
+#if SOC_PERIPH_CLK_CTRL_SHARED
+#define HP_UART_SRC_CLK_ATOMIC() PERIPH_RCC_ATOMIC()
+#else
+#define HP_UART_SRC_CLK_ATOMIC()
+#endif
+#endif
 
 #define PPP_CMD_MODE_CHECK(x)                                    \
   if (_dce == NULL) {                                            \
@@ -550,7 +560,7 @@ int PPPClass::BER() const {
 String PPPClass::IMSI() const {
   PPP_CMD_MODE_CHECK(String());
 
-  char imsi[32];
+  char imsi[CONFIG_ESP_MODEM_C_API_STR_MAX];
   esp_err_t err = esp_modem_get_imsi(_dce, imsi);
   if (err != ESP_OK) {
     log_e("esp_modem_get_imsi failed with %d %s", err, esp_err_to_name(err));
@@ -563,7 +573,7 @@ String PPPClass::IMSI() const {
 String PPPClass::IMEI() const {
   PPP_CMD_MODE_CHECK(String());
 
-  char imei[32];
+  char imei[CONFIG_ESP_MODEM_C_API_STR_MAX];
   esp_err_t err = esp_modem_get_imei(_dce, imei);
   if (err != ESP_OK) {
     log_e("esp_modem_get_imei failed with %d %s", err, esp_err_to_name(err));
@@ -576,7 +586,7 @@ String PPPClass::IMEI() const {
 String PPPClass::moduleName() const {
   PPP_CMD_MODE_CHECK(String());
 
-  char name[32];
+  char name[CONFIG_ESP_MODEM_C_API_STR_MAX];
   esp_err_t err = esp_modem_get_module_name(_dce, name);
   if (err != ESP_OK) {
     log_e("esp_modem_get_module_name failed with %d %s", err, esp_err_to_name(err));
@@ -589,7 +599,7 @@ String PPPClass::moduleName() const {
 String PPPClass::operatorName() const {
   PPP_CMD_MODE_CHECK(String());
 
-  char oper[32];
+  char oper[CONFIG_ESP_MODEM_C_API_STR_MAX];
   int act = 0;
   esp_err_t err = esp_modem_get_operator_name(_dce, oper, &act);
   if (err != ESP_OK) {

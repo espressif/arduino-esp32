@@ -22,7 +22,8 @@ The application acts as a CoAP client that sends PUT requests to a lamp device, 
 - CoAP client implementation on Thread network
 - Button-based control of remote lamp device
 - Router/Child node configuration using CLI Helper Functions API
-- CoAP PUT request sending with confirmation
+- Confirmable (CON) CoAP PUT to the multicast group via the CLI `con` keyword
+  (the sketch waits for a `coap response from …` line on Serial)
 - Automatic network join with retry mechanism
 - Visual status indication using RGB LED (Red = failed, Blue = ready)
 - Button debouncing for reliable input
@@ -49,7 +50,7 @@ The application acts as a CoAP client that sends PUT requests to a lamp device, 
 Before uploading the sketch, you can modify the network and CoAP configuration:
 
 ```cpp
-#define USER_BUTTON           9  // C6/H2 Boot button (change if needed)
+#define USER_BUTTON           BOOT_PIN  // C6/H2 Boot button (change if needed)
 #define OT_CHANNEL            "24"
 #define OT_NETWORK_KEY        "00112233445566778899aabbccddeeff"
 #define OT_MCAST_ADDR         "ff05::abcd"
@@ -100,9 +101,19 @@ The switch device automatically:
 ### Button Control
 
 - **Press the button**: Toggles the lamp state (ON/OFF)
-- The switch sends CoAP PUT requests to the lamp:
-  - Payload "1" = Turn lamp ON
-  - Payload "0" = Turn lamp OFF
+- The switch sends **confirmable (CON)** CoAP PUT requests to the lamp multicast
+  group (CLI command form: `coap put ff05::abcd Lamp con 0` or `… con 1`):
+  - Payload `1` = turn lamp ON
+  - Payload `0` = turn lamp OFF
+- OpenThread CLI defaults to **non-confirmable (NON)** when `con` is omitted; this
+  sketch adds `con` explicitly and treats a missing `coap response from …` line as
+  failure (LED red, setup retry).
+
+> **RFC note:** RFC 7252 §8.1 discourages confirmable multicast. This CLI demo keeps
+> `con` for teaching CLI syntax and Serial confirmation parsing. For production-style
+> group control, prefer the Native rewrite
+> [CoAP Light Switch (Native API)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch) — it uses
+> `sendNonBlocking()` (NON, fire-and-forget) and realm-local `ff03::abcd`.
 
 ### Visual Status Indication
 
@@ -134,10 +145,10 @@ The coap_switch example consists of the following main components:
    - Calls `otDeviceSetup()` with Router/Child role configuration
 
 3. **`otCoapPUT()` function**:
-   - Sends CoAP PUT request to the lamp device
-   - Waits for CoAP confirmation response
-   - Returns success/failure status
-   - Uses CLI Helper Functions to send commands and read responses
+   - Builds and sends `coap put <OT_MCAST_ADDR> <OT_COAP_RESOURCE_NAME> con 0|1`
+   - Waits for a `coap response from …` line plus CLI `Done` on Serial
+   - Returns success/failure (failure triggers setup retry)
+   - Uses `OThreadCLI` to send the command and read responses
 
 4. **`checkUserButton()` function**:
    - Monitors button state with debouncing
@@ -149,7 +160,7 @@ The coap_switch example consists of the following main components:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(false)`
    - Initializes OpenThread CLI
-   - Sets CLI timeout
+   - Sets CLI read timeout via `OThreadCLI.setTimeout()` (inherited from Arduino `Stream`, not a CLI-specific method)
    - Calls `setupNode()` to configure the device
 
 6. **`loop()`**:
@@ -158,18 +169,24 @@ The coap_switch example consists of the following main components:
 
 ## Troubleshooting
 
-- **LED stays red**: Setup failed. Check Serial Monitor for error messages. Verify network configuration matches Lamp device.
-- **Button press doesn't toggle lamp**: Ensure Lamp device is running and both devices are on the same Thread network. Check that network key, channel, multicast address, and resource name match.
-- **Device not joining network**: Ensure Lamp device (Leader) is running first. Verify network key and channel match exactly.
-- **CoAP request timeout**: Check Thread network connectivity. Verify multicast address and resource name match the Lamp device. Ensure Lamp device is responding.
-- **No serial output**: Check baudrate (115200) and USB connection
+**Startup order:** Start [CLI CoAP lamp (Leader + server)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_lamp) first and wait for green LED (Leader ready). Then flash this switch sketch with **matching** network key, channel, multicast address, and resource name. Reset this board if it booted before the lamp was ready.
+
+| Symptom | Likely cause |
+| --- | --- |
+| LED stays red | Lamp (Leader) not running or credentials mismatch — start lamp first, then reset switch. |
+| Button press doesn't toggle lamp | Network key, channel, `OT_MCAST_ADDR`, or `OT_COAP_RESOURCE_NAME` mismatch with lamp. |
+| Device not joining network | Lamp Leader must be running first with same key/channel — reset switch after lamp is green. |
+| CoAP request timeout | Lamp not listening, switch on stale network, or no reply to CON multicast — reset switch after lamp is fully up. For reliable group commands use the Native [CoAP Light Switch (Native API)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch) client (`sendNonBlocking`, no response expected). |
+| Booted before lamp was ready | Press **reset** on switch after lamp LED turns green. |
+| No serial output | Serial Monitor not at **115200** or USB disconnected. |
 
 ## Related Documentation
 
+- [CoAP Light Switch (Native API)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch) — same scenario with `OThreadCoAPClient` / `OThreadCoAPServer` (recommended for new projects)
+- [OpenThread CoAP API](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_coap.html)
 - [OpenThread CLI Helper Functions API](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_cli.html)
 - [OpenThread Core API](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_core.html)
 - [OpenThread Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread.html)
-- [CoAP Protocol](https://coap.technology/)
 
 ## License
 

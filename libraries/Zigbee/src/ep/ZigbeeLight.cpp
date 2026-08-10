@@ -49,17 +49,13 @@ void ZigbeeLight::lightChanged() {
 }
 
 bool ZigbeeLight::setLight(bool state) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   _current_state = state;
   lightChanged();
 
   log_v("Updating on/off light state to %u", state);
   /* Update on/off light state */
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false
-  );
-  esp_zb_lock_release();
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
 
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));

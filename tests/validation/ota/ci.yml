@@ -1,0 +1,12 @@
+tags:
+  - wifi_router
+
+platforms:
+  wokwi: false # Wokwi's Public Gateway no longer reaches the host's LAN HTTP server (regression on Wokwi's side, confirmed by re-running the same esp32p4 command that passed on 2026-05-25)
+  qemu: false
+  hardware:
+    esp32p4: false # No wifi_router runners using ESP-Hosted
+
+requires_any:
+  - CONFIG_SOC_WIFI_SUPPORTED=y
+  - CONFIG_ESP_HOSTED_ENABLED=y

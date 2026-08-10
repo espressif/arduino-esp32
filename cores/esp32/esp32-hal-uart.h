@@ -33,6 +33,12 @@ extern "C" {
 struct uart_struct_t;
 typedef struct uart_struct_t uart_t;
 
+// IrDA Direction types
+typedef enum {
+  ESP32_UART_IRDA_RX = 0,
+  ESP32_UART_IRDA_TX = 1
+} esp32_uart_irda_direction_t;
+
 bool _testUartBegin(
   uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint32_t rx_buffer_size, uint32_t tx_buffer_size, bool inverted,
   uint8_t rxfifo_full_thrhd
@@ -106,6 +112,15 @@ bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t thr
 //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
 bool uartSetMode(uart_t *uart, uart_mode_t mode);
 
+// Used to select the UART IrDA mode direction (TX or RX).
+// IrDA is exclusive: TX mode disables RX and vice versa.
+// The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
+// Parameters:
+//   irdaDirection: ESP32_UART_IRDA_TX to select IRDA TX mode, ESP32_UART_IRDA_RX to select IRDA RX direction
+// It can only be used after uartSetMode(UART_MODE_IRDA) is called.
+// Returns: true if mode was set successfully, false otherwise.
+bool uartSetIrdaDirection(uart_t *uart, esp32_uart_irda_direction_t irdaDirection);
+
 // Used to set the UART clock source mode. It must be set before calling uartBegin(), otherwise it won't have any effect.
 // Not all clock source are available to every SoC. The compatible option are listed here:
 // UART_SCLK_DEFAULT      :: any SoC - it will set whatever IDF defines as the default UART Clock Source
@@ -118,6 +133,9 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode);
 // UART_SCLK_REF_TICK     :: ESP32 and ESP32-S2
 // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only LP_UART_SCLK_LP_FAST (RTC_FAST) or LP_UART_SCLK_XTAL_D2 (XTAL/2) as Clock Source
 bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc);
+
+// Must be set before uartBegin(); no effect after the driver is running
+bool uartEnableRxInternalPull(uint8_t uartNum, bool enable);
 
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);

@@ -145,11 +145,15 @@ The RouterNode example consists of the following main components:
 
 ## Troubleshooting
 
-- **Device not joining network**: Ensure the Leader node is running first. Verify network key and channel match the Leader exactly.
-- **Role stuck as "Detached"**: Wait a few seconds for the device to join. Check that network key and channel match the Leader.
-- **Network key/channel mismatch**: Double-check that both Leader and Router/Child nodes use identical network key and channel values.
-- **No network information**: Wait for the device to join the network (may take 10-30 seconds)
-- **No serial output**: Check baudrate (115200) and USB connection
+**Startup order:** Start the [CLI LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode) sketch first and wait for `Role: Leader`. Then flash this Router/Child sketch. If this board booted before the Leader was ready, press **reset** after the Leader is up.
+
+| Symptom | Likely cause |
+| --- | --- |
+| Device not joining network | Leader not running, or network key/channel mismatch — start Leader first, then reset this board. |
+| Role stuck as Detached | Wait 10–30 s; verify `CLI_NETWORK_KEY` and `CLI_NETWORK_CHANNEL` match Leader exactly. |
+| No network information | Device has not joined yet — check Leader Serial and RF range. |
+| Booted before Leader was ready | Press **reset** on this board after Leader reports attached. |
+| No serial output | Serial Monitor not at **115200** or USB disconnected. |
 
 ## Related Documentation
 

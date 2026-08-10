@@ -1,0 +1,2 @@
+def test_adc_pwm(dut):
+    dut.expect_unity_test_output(timeout=120)

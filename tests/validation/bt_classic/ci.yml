@@ -1,0 +1,17 @@
+tags:
+  - two_duts
+
+multi_device:
+  device0: server
+  device1: client
+
+platforms:
+  wokwi: false
+  qemu: false
+
+fqbn_append: PartitionScheme=huge_app
+
+requires:
+  - CONFIG_BT_ENABLED=y
+  - CONFIG_BLUEDROID_ENABLED=y
+  - CONFIG_BT_SPP_ENABLED=y

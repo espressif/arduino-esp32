@@ -146,11 +146,15 @@ The ExtendedRouterNode example consists of the following main components:
 
 ## Troubleshooting
 
-- **Device not joining network**: Ensure the Leader node is running first. Verify network key and channel match the Leader exactly.
-- **Timeout error**: The device waits 90 seconds to join. If timeout occurs, check network key and channel match the Leader.
-- **Network key/channel mismatch**: Double-check that both Leader and Router/Child nodes use identical network key and channel values.
-- **Setup failed message**: Check Serial Monitor for specific error messages. Verify Leader node is running and within range.
-- **No serial output**: Check baudrate (115200) and USB connection
+**Startup order:** Start the [CLI LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode) sketch first and wait for `Role: Leader`. Then flash this sketch. If setup times out, reset this board after the Leader is fully up.
+
+| Symptom | Likely cause |
+| --- | --- |
+| Device not joining network | Leader not running or credentials mismatch — start Leader first, then reset this board. |
+| Setup timeout (90 s) | Leader down, wrong network key/channel, or out of range — verify Leader Serial. |
+| Setup failed message in loop | Check setup() errors; Leader must be running before this sketch starts. |
+| Booted before Leader was ready | Press **reset** after Leader reports `Role: Leader`. |
+| No serial output | Serial Monitor not at **115200** or USB disconnected. |
 
 ## Related Documentation
 

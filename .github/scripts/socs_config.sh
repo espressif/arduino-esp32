@@ -142,8 +142,22 @@ IDF_V6_0_TARGETS=(
     "esp32s3"
 )
 
+# IDF v6.1 supported targets
+IDF_V6_1_TARGETS=(
+    "esp32"
+    "esp32c2"
+    "esp32c3"
+    "esp32c5"
+    "esp32c6"
+    "esp32c61"
+    "esp32h2"
+    "esp32p4"
+    "esp32s2"
+    "esp32s3"
+)
+
 # Default IDF component targets (latest version)
-IDF_COMPONENT_TARGETS=("${IDF_V6_0_TARGETS[@]}")
+IDF_COMPONENT_TARGETS=("${IDF_V6_1_TARGETS[@]}")
 
 # ==============================================================================
 # Helper Functions for Array to String Conversion
@@ -206,6 +220,19 @@ is_qemu_supported() {
     return 1
 }
 
+# Check if SoC is supported by Wokwi
+# Usage: is_wokwi_supported "esp32c3"
+# Returns: 0 if supported, 1 otherwise
+is_wokwi_supported() {
+    local soc="$1"
+    for target in "${WOKWI_TEST_TARGETS[@]}"; do
+        if [ "$target" = "$soc" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 # ==============================================================================
 # IDF Specific Configuration
 # ==============================================================================
@@ -226,6 +253,9 @@ get_targets_for_idf_version() {
             ;;
         release-v6.0)
             array_to_csv "${IDF_V6_0_TARGETS[@]}"
+            ;;
+        release-v6.1)
+            array_to_csv "${IDF_V6_1_TARGETS[@]}"
             ;;
         *)
             echo ""

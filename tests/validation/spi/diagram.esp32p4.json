@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "author": "lucasssvaz",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-p4-function-ev",
+      "id": "esp32",
+      "top": -66.32,
+      "left": -277.63,
+      "attrs": {}
+    },
+    { "type": "chip-echo", "id": "chip1", "top": -75.78, "left": -283.2, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp32:38", "$serialMonitor:TX", "", [] ],
+    [ "esp32:37", "$serialMonitor:RX", "", [] ],
+    [ "chip1:VCC", "esp32:3V3.1", "red", [ "h0" ] ],
+    [ "esp32:GND.6", "chip1:GND", "black", [ "v0" ] ],
+    [ "esp32:26", "chip1:CS", "green", [ "v28.8", "h-336", "v-19.2" ] ],
+    [ "esp32:32", "chip1:MOSI", "#8f4814", [ "v-28.8", "h-336", "v38.4" ] ],
+    [ "esp32:33", "chip1:MISO", "gold", [ "v-48", "h-345.6", "v38.4" ] ],
+    [ "esp32:36", "chip1:SCK", "blue", [ "v-48", "h-307.2", "v38.4" ] ]
+  ],
+  "dependencies": {}
+}

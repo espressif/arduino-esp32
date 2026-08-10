@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "author": "lucasssvaz",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-h2-devkitm-1",
+      "id": "esp32",
+      "top": -57.6,
+      "left": -177.56,
+      "attrs": {}
+    },
+    { "type": "chip-echo", "id": "chip1", "top": -18.18, "left": -43.2, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp32:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp32:TX", "$serialMonitor:RX", "", [] ],
+    [ "chip1:GND", "esp32:GND.6", "black", [ "v0", "h11.41", "v-38.4" ] ],
+    [ "chip1:VCC", "esp32:3V3", "red", [ "h21.01", "v-76.8", "h-268.8", "v36.17" ] ],
+    [ "esp32:0", "chip1:CS", "green", [ "h-19.54", "v-64.97", "h144", "v96" ] ],
+    [ "esp32:25", "chip1:MOSI", "#8f4814", [ "h26.98", "v-7.37" ] ],
+    [ "chip1:MISO", "esp32:11", "blue", [ "h-28.8", "v9.6" ] ],
+    [ "chip1:SCK", "esp32:10", "orange", [ "h-38.4", "v9.6" ] ]
+  ],
+  "dependencies": {}
+}

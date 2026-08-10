@@ -1244,7 +1244,7 @@ int HTTPClient::handleHeaderResponse() {
         }
 
         if (_collectAllHeaders && headerName.length() > 0) {
-          _currentHeaders.emplace_back(headerName, headerValue);
+          _currentHeaders.push_back({headerName, headerValue});
         } else {
           for (size_t i = 0; i < _currentHeaders.size(); ++i) {
             if (_currentHeaders[i].key.equalsIgnoreCase(headerName)) {

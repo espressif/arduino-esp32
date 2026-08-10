@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sdkconfig.h"
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
 #warning "ESP-NOW is only supported in SoCs with native Wi-Fi support"
 #else
 

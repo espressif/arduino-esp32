@@ -109,6 +109,26 @@ void test_sd_basic(void) {
     SPITestConfig &config = *ref;
     config.begin();
     TEST_ASSERT_TRUE_MESSAGE(config.sd->exists("/"), "Root directory should exist");
+
+    File f = config.sd->open("/basic_test.txt", FILE_WRITE);
+    TEST_ASSERT_TRUE_MESSAGE(f, "Failed to open file for write");
+    size_t written = f.print("SD_OK");
+    TEST_ASSERT_EQUAL(5, written);
+    f.close();
+
+    f = config.sd->open("/basic_test.txt", FILE_READ);
+    TEST_ASSERT_TRUE_MESSAGE(f, "Failed to open file for read");
+    String content = f.readString();
+    TEST_ASSERT_EQUAL_STRING("SD_OK", content.c_str());
+    f.close();
+
+    TEST_ASSERT_TRUE(config.sd->remove("/basic_test.txt"));
+
+    uint64_t totalBytes = config.sd->totalBytes();
+    TEST_ASSERT_GREATER_THAN(0, totalBytes);
+    uint64_t usedBytes = config.sd->usedBytes();
+    TEST_ASSERT_LESS_OR_EQUAL(totalBytes, usedBytes);
+
     config.end();
   }
 }

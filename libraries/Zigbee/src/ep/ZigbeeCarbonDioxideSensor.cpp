@@ -100,28 +100,17 @@ bool ZigbeeCarbonDioxideSensor::setReporting(uint16_t min_interval, uint16_t max
   float delta_f = delta / 1000000.0f;
   memcpy(&reporting_info.u.send_info.delta.s32, &delta_f, sizeof(float));
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  return setClusterReporting(&reporting_info);
 }
 
 bool ZigbeeCarbonDioxideSensor::setCarbonDioxide(float carbon_dioxide) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   float zb_carbon_dioxide = carbon_dioxide / 1000000.0f;
   log_v("Updating carbon dioxide sensor value...");
-  /* Update carbon dioxide sensor measured value */
   log_d("Setting carbon dioxide to %0.1f", carbon_dioxide);
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MEASURED_VALUE_ID,
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MEASURED_VALUE_ID,
     &zb_carbon_dioxide, false
   );
-  esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set carbon dioxide: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -140,11 +129,8 @@ bool ZigbeeCarbonDioxideSensor::report() {
   report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
   report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send carbon dioxide report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send carbon dioxide report");
     return false;
   }
   log_v("Carbon dioxide report sent");

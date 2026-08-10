@@ -6,14 +6,14 @@
 #define USB_VID          0x303A
 #define USB_PID          0x82D1
 #define USB_MANUFACTURER "senseBox"
-#define USB_PRODUCT      "Eye"
+#define USB_PRODUCT      "MCU Eye"
 #define USB_SERIAL       ""  // Empty string for MAC address
 
 // Default USB FirmwareMSC Settings
-#define USB_FW_MSC_VENDOR_ID        "senseBox"      // max 8 chars
-#define USB_FW_MSC_PRODUCT_ID       "Eye"           // max 16 chars
-#define USB_FW_MSC_PRODUCT_REVISION "1.4"           // max 4 chars
-#define USB_FW_MSC_VOLUME_NAME      "senseBox_Eye"  // max 11 chars
+#define USB_FW_MSC_VENDOR_ID        "senseBox"         // max 8 chars
+#define USB_FW_MSC_PRODUCT_ID       "MCU Eye ESP32S3"  // max 16 chars
+#define USB_FW_MSC_PRODUCT_REVISION "1.5"              // max 4 chars
+#define USB_FW_MSC_VOLUME_NAME      "senseBox"         // max 11 chars
 #define USB_FW_MSC_SERIAL_NUMBER    0x00000000
 
 #define PIN_RGB_LED 45  // RGB LED
@@ -59,8 +59,11 @@ static const uint8_t D48 = PIN_IO48;  // Digital
 static const uint8_t T48 = PIN_IO48;  // Touch
 
 // Button
-#define PIN_BUTTON 47
-#define BUTTON     47
+#ifndef SENSEBOX_EYE_BUTTON_PIN
+#define SENSEBOX_EYE_BUTTON_PIN 21
+#endif
+#define PIN_BUTTON SENSEBOX_EYE_BUTTON_PIN
+#define BUTTON     SENSEBOX_EYE_BUTTON_PIN
 
 // =============================================
 // SD Card

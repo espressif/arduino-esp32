@@ -155,8 +155,13 @@ OpenThread APIs
 
     openthread/openthread
     openthread/openthread_cli
+    openthread/openthread_helper_functions
+    openthread/Multicasting
     openthread/openthread_core
     openthread/openthread_dataset
+    openthread/openthread_scan
+    openthread/openthread_udp
+    openthread/openthread_coap
 
 Zigbee APIs
 -----------

@@ -16,7 +16,10 @@
 #include "OThreadCLI.h"
 #include "OThreadCLI_Util.h"
 
-#define USER_BUTTON           9  // C6/H2 Boot button
+#ifndef USER_BUTTON
+#define USER_BUTTON BOOT_PIN  // BOOT button GPIO provided by Arduino.h
+#endif
+
 #define OT_CHANNEL            "24"
 #define OT_NETWORK_KEY        "00112233445566778899aabbccddeeff"
 #define OT_MCAST_ADDR         "ff05::abcd"

@@ -6,7 +6,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -242,7 +242,9 @@ STAClass::STAClass()
 }
 
 STAClass::~STAClass() {
-  end();
+  // Calling end() here causes a lot of WiFi code to be linked to the final executable by just including "WiFi.h"
+  // If globals are disabled, then the user should call WiFi.STA.end() before destroying the WiFi object
+  // end();
   _sta_network_if = NULL;
 }
 

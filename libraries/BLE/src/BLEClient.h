@@ -97,7 +97,8 @@ public:
    *                            Common public properties                     *
    ***************************************************************************/
 
-  uint16_t m_appId;
+  /** GATT application id passed to esp_ble_gattc_app_register / used as peer map key. */
+  uint16_t m_gattAppId;
 
   /***************************************************************************
    *                           Common public declarations                    *

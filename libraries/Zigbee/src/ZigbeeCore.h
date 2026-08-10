@@ -110,6 +110,7 @@ private:
 
   esp_zb_ep_list_t *_zb_ep_list;
   zigbee_role_t _role;
+  bool _initialized;
   bool _started;
   bool _connected;
 
@@ -142,12 +143,16 @@ public:
   void stop();
   void start();
 
+  bool initialized() {
+    return _initialized;
+  }
   bool started() {
     return _started;
   }
   bool connected() {
     return _connected;
   }
+
   zigbee_role_t getRole() {
     return _role;
   }

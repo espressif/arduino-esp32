@@ -4,5 +4,6 @@
 ignore-words-list = ba,licence,ot,dout,als,exten,emac
 skip = ./.git,./.licenses,__pycache__,.clang-format,.codespellrc,.editorconfig,.flake8,.prettierignore,.yamllint.yml,.gitignore,boards.txt,platform.txt,programmers.txt
 builtin = clear,informal,en-GB_to_en-US
+ignore-multiline-regex = codespell:ignore-begin.*?codespell:ignore-end
 check-filenames =
 check-hidden =

@@ -351,7 +351,13 @@ bool ZigbeeMultistate::setMultistateOutputStates(const char * const states[], ui
 
 //set attribute method -> method overridden in child class
 void ZigbeeMultistate::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
-  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT) {
+  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT) {
+    if (message->attribute.id == ESP_ZB_ZCL_ATTR_MULTI_INPUT_PRESENT_VALUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
+      _input_state = *(uint16_t *)message->attribute.data.value;
+    } else {
+      log_w("Received message ignored. Attribute ID: %u not supported for Multistate Input", message->attribute.id);
+    }
+  } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT) {
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_PRESENT_VALUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
       _output_state = *(uint16_t *)message->attribute.data.value;
       multistateOutputChanged();
@@ -372,36 +378,30 @@ void ZigbeeMultistate::multistateOutputChanged() {
 }
 
 bool ZigbeeMultistate::setMultistateInput(uint16_t state) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   if (!(_multistate_clusters & MULTISTATE_INPUT)) {
     log_e("Multistate Input cluster not added");
     return false;
   }
   log_d("Setting multistate input to %u", state);
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_INPUT_PRESENT_VALUE_ID, &state, false
-  );
-  esp_zb_lock_release();
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_INPUT_PRESENT_VALUE_ID, &state, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set multistate input: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
+  _input_state = state;
   return true;
 }
 
 bool ZigbeeMultistate::setMultistateOutput(uint16_t state) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   _output_state = state;
   multistateOutputChanged();
 
   log_v("Updating multistate output to %u", state);
   /* Update multistate output */
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
   );
-  esp_zb_lock_release();
 
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set multistate output: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
@@ -421,11 +421,8 @@ bool ZigbeeMultistate::reportMultistateInput() {
   report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
   report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send Multistate Input report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send Multistate Input report: 0x%x: %s");
     return false;
   }
   log_v("Multistate Input report sent");
@@ -443,11 +440,8 @@ bool ZigbeeMultistate::reportMultistateOutput() {
   report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
   report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send Multistate Output report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send Multistate Output report: 0x%x: %s");
     return false;
   }
   log_v("Multistate Output report sent");

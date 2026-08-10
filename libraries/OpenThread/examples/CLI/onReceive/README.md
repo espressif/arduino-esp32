@@ -77,6 +77,15 @@ The example demonstrates the callback-based CLI interaction pattern:
 3. **Response Processing**: The callback function `otReceivedLine()` processes responses asynchronously
 4. **Non-blocking**: The main loop continues while CLI responses are processed in the callback
 
+### OpenThread worker task (important)
+
+`onReceive()` runs on the **OpenThread worker task**, not in `loop()`. Keep the
+callback short: do not block, sleep, or call synchronous CLI helpers such as
+`otGetRespCmd()` or `otExecCommand()` from inside `otReceivedLine()` — they can
+deadlock waiting on the same task. Parse or copy data in the callback and defer
+heavier work (including those helpers) to `loop()` or another task. See
+`OThreadCLI.h` and the OpenThread CLI documentation for the full note.
+
 ### Device State Monitoring
 
 The example continuously monitors the device state:
@@ -114,10 +123,14 @@ The onReceive example consists of the following main components:
 
 ## Troubleshooting
 
-- **No callback responses**: Ensure the callback is registered in setup. Check that OpenThread CLI is initialized.
-- **Empty lines in output**: The callback filters empty lines, which is normal behavior
-- **State not changing**: Wait for the device to join the Thread network. First device becomes Leader, subsequent devices become Router or Child.
-- **No serial output**: Check baudrate (115200) and USB connection
+**Startup order (multi-board):** Flash the **first board** first — it becomes Leader and forms the network. Flash additional boards only after the first is attached. All boards must share the same network key and channel; reset any board that booted before the Leader was ready.
+
+| Symptom | Likely cause |
+| --- | --- |
+| No callback responses | Callback not registered in `setup()`, or `OThreadCLI` not initialized. |
+| Empty lines filtered from output | Normal — callback skips EOL-only lines. |
+| State not changing | Wait for attach — first device becomes Leader, subsequent devices Router/Child; send `state` only after `OThread.begin()`. |
+| No serial output | Serial Monitor not at **115200** or USB disconnected. |
 
 ## Related Documentation
 

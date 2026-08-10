@@ -8,8 +8,9 @@ About
 The ``MatterWindowCovering`` class provides a window covering endpoint for Matter networks. This endpoint implements the Matter window covering standard for motorized blinds, shades, and other window coverings with lift and tilt control.
 
 **Features:**
-* Lift position and percentage control (0-100%)
-* Tilt position and percentage control (0-100%)
+* Lift position and percentage control (0-100%, Matter: 0 = open, 100 = closed)
+* Lift and tilt percent100ths control (0-10000, direct Matter attribute mapping)
+* Local motor calibration for physical-unit to percentage conversion
 * Multiple window covering types support
 * Callback support for open, close, lift, tilt, and stop commands
 * Integration with Apple HomeKit, Amazon Alexa, and Google Home
@@ -55,19 +56,39 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter window covering endpoint with optional initial positions and covering type.
+Initializes the Matter window covering endpoint with optional initial positions, covering type, and local motor calibration.
 
 .. code-block:: arduino
 
-    bool begin(uint8_t liftPercent = 100, uint8_t tiltPercent = 0, WindowCoveringType_t coveringType = ROLLERSHADE);
+    bool begin(
+      uint8_t liftPercent = 0,
+      uint8_t tiltPercent = 0,
+      WindowCoveringType_t coveringType = ROLLERSHADE,
+      const PositionCalibration *liftCalibration = nullptr,
+      const PositionCalibration *tiltCalibration = nullptr
+    );
 
-* ``liftPercent`` - Initial lift percentage (0-100, default: 100 = fully open)
-* ``tiltPercent`` - Initial tilt percentage (0-100, default: 0)
+* ``liftPercent`` - Initial lift percentage (0-100, default: 0 = fully open)
+* ``tiltPercent`` - Initial tilt percentage (0-100, default: 0 = fully open)
 * ``coveringType`` - Window covering type (default: ROLLERSHADE). This determines which features (lift, tilt, or both) are enabled.
+* ``liftCalibration`` - Optional local motor range for lift (open/closed physical units). Not exposed as a Matter attribute in ESP-Matter 1.5.
+* ``tiltCalibration`` - Optional local motor range for tilt. Not exposed as a Matter attribute in ESP-Matter 1.5.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** Lift percentage 0 means fully closed, 100 means fully open. Tilt percentage 0 means fully closed, 100 means fully open. The covering type must be specified during initialization to ensure the correct features (lift and/or tilt) are enabled.
+**Note:** Matter percentage semantics apply throughout this API: **0 = fully open**, **100 = fully closed**. The covering type must be specified during initialization to ensure the correct features (lift and/or tilt) are enabled.
+
+PositionCalibration
+^^^^^^^^^^^^^^^^^^^
+
+Local motor range used to convert between physical motor units and Matter percentages. This is stored in firmware only and is **not** published as a Matter cluster attribute in ESP-Matter 1.5.
+
+.. code-block:: arduino
+
+    struct PositionCalibration {
+      uint16_t open = 0;
+      uint16_t closed = 65534;
+    };
 
 end
 ^^^
@@ -84,13 +105,13 @@ Lift Position Control
 setLiftPosition
 ^^^^^^^^^^^^^^^
 
-Sets the window covering lift position.
+Sets the window covering lift position in local motor units. Converts to Matter percent100ths using the local motor calibration range.
 
 .. code-block:: arduino
 
     bool setLiftPosition(uint16_t liftPosition);
 
-* ``liftPosition`` - Lift position value
+* ``liftPosition`` - Lift position in local motor units (e.g. centimeters)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -114,11 +135,11 @@ Sets the window covering lift position as a percentage. This method updates the 
 
     bool setLiftPercentage(uint8_t liftPercent);
 
-* ``liftPercent`` - Lift percentage (0-100, where 0 is fully closed, 100 is fully open)
+* ``liftPercent`` - Lift percentage (0-100, where 0 is fully open, 100 is fully closed)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** When the device reaches the target position, call ``setOperationalState(LIFT, STALL)`` to indicate that movement is complete.
+**Note:** When the device reaches the target position, call ``setOperationalState(LIFT, STALL)`` to indicate that movement is complete. Prefer ``setCurrentLiftPercent100ths()`` when sub-percent precision is needed.
 
 getLiftPercentage
 ^^^^^^^^^^^^^^^^^
@@ -129,7 +150,27 @@ Gets the current lift percentage.
 
     uint8_t getLiftPercentage();
 
-This function will return the current lift percentage (0-100).
+This function will return the current lift percentage (0-100, Matter semantics).
+
+setCurrentLiftPercent100ths
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sets the current lift position using Matter percent100ths (0-10000). This is the primary API for reporting actual position to commissioners.
+
+.. code-block:: arduino
+
+    bool setCurrentLiftPercent100ths(uint16_t liftPercent100ths);
+
+* ``liftPercent100ths`` - Current lift position (0 = open, 10000 = closed)
+
+getCurrentLiftPercent100ths
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Gets the current lift position in percent100ths.
+
+.. code-block:: arduino
+
+    uint16_t getCurrentLiftPercent100ths();
 
 Tilt Position Control
 *********************
@@ -167,11 +208,11 @@ Sets the window covering tilt position as a percentage. This method updates the 
 
     bool setTiltPercentage(uint8_t tiltPercent);
 
-* ``tiltPercent`` - Tilt percentage (0-100, where 0 is fully closed, 100 is fully open)
+* ``tiltPercent`` - Tilt percentage (0-100, where 0 is fully open, 100 is fully closed)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** When the device reaches the target position, call ``setOperationalState(TILT, STALL)`` to indicate that movement is complete.
+**Note:** When the device reaches the target position, call ``setOperationalState(TILT, STALL)`` to indicate that movement is complete. Prefer ``setCurrentTiltPercent100ths()`` when sub-percent precision is needed.
 
 getTiltPercentage
 ^^^^^^^^^^^^^^^^^
@@ -182,7 +223,25 @@ Gets the current tilt percentage.
 
     uint8_t getTiltPercentage();
 
-This function will return the current tilt percentage (0-100).
+This function will return the current tilt percentage (0-100, Matter semantics).
+
+setCurrentTiltPercent100ths
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sets the current tilt position using Matter percent100ths (0-10000).
+
+.. code-block:: arduino
+
+    bool setCurrentTiltPercent100ths(uint16_t tiltPercent100ths);
+
+getCurrentTiltPercent100ths
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Gets the current tilt position in percent100ths.
+
+.. code-block:: arduino
+
+    uint16_t getCurrentTiltPercent100ths();
 
 Window Covering Type
 ********************
@@ -214,105 +273,143 @@ This function will return the current window covering type.
 Installed Limit Control
 ***********************
 
+These methods configure **local motor calibration** for converting between physical motor units and Matter percentages. They are **not** exposed as Matter cluster attributes in ESP-Matter 1.5. Prefer ``setLiftCalibration()`` / ``setTiltCalibration()`` or pass ``PositionCalibration`` to ``begin()``.
+
+setLiftCalibration
+^^^^^^^^^^^^^^^^^^
+
+Sets the local lift motor calibration range.
+
+.. code-block:: arduino
+
+    bool setLiftCalibration(const PositionCalibration &calibration);
+
+getLiftCalibration
+^^^^^^^^^^^^^^^^^^
+
+Gets the local lift motor calibration range.
+
+.. code-block:: arduino
+
+    PositionCalibration getLiftCalibration();
+
+setTiltCalibration
+^^^^^^^^^^^^^^^^^^
+
+Sets the local tilt motor calibration range.
+
+.. code-block:: arduino
+
+    bool setTiltCalibration(const PositionCalibration &calibration);
+
+getTiltCalibration
+^^^^^^^^^^^^^^^^^^
+
+Gets the local tilt motor calibration range.
+
+.. code-block:: arduino
+
+    PositionCalibration getTiltCalibration();
+
 setInstalledOpenLimitLift
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the installed open limit for lift (centimeters). This defines the physical position when the window covering is fully open.
+Sets the local open limit for lift motor calibration (physical units when fully open).
 
 .. code-block:: arduino
 
     bool setInstalledOpenLimitLift(uint16_t openLimit);
 
-* ``openLimit`` - Open limit position (centimeters)
+* ``openLimit`` - Open limit position in your motor units (e.g. centimeters)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
 getInstalledOpenLimitLift
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Gets the installed open limit for lift.
+Gets the local open limit for lift motor calibration.
 
 .. code-block:: arduino
 
     uint16_t getInstalledOpenLimitLift();
 
-This function will return the installed open limit for lift (centimeters).
+This function will return the open limit for lift motor calibration.
 
 setInstalledClosedLimitLift
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the installed closed limit for lift (centimeters). This defines the physical position when the window covering is fully closed.
+Sets the local closed limit for lift motor calibration (physical units when fully closed).
 
 .. code-block:: arduino
 
     bool setInstalledClosedLimitLift(uint16_t closedLimit);
 
-* ``closedLimit`` - Closed limit position (centimeters)
+* ``closedLimit`` - Closed limit position in your motor units (e.g. centimeters)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
 getInstalledClosedLimitLift
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Gets the installed closed limit for lift.
+Gets the local closed limit for lift motor calibration.
 
 .. code-block:: arduino
 
     uint16_t getInstalledClosedLimitLift();
 
-This function will return the installed closed limit for lift (centimeters).
+This function will return the closed limit for lift motor calibration.
 
 setInstalledOpenLimitTilt
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the installed open limit for tilt (absolute value for conversion, not a physical unit). This is used for converting between absolute position and percentage.
+Sets the local open limit for tilt motor calibration.
 
 .. code-block:: arduino
 
     bool setInstalledOpenLimitTilt(uint16_t openLimit);
 
-* ``openLimit`` - Open limit absolute value
+* ``openLimit`` - Open limit value for tilt conversion
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** Tilt is a rotation, not a linear measurement. These limits are used for position conversion only.
+**Note:** Tilt is a rotation, not a linear measurement. These limits are used for local position conversion only.
 
 getInstalledOpenLimitTilt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Gets the installed open limit for tilt.
+Gets the local open limit for tilt motor calibration.
 
 .. code-block:: arduino
 
     uint16_t getInstalledOpenLimitTilt();
 
-This function will return the installed open limit for tilt (absolute value).
+This function will return the open limit for tilt motor calibration.
 
 setInstalledClosedLimitTilt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the installed closed limit for tilt (absolute value for conversion, not a physical unit). This is used for converting between absolute position and percentage.
+Sets the local closed limit for tilt motor calibration.
 
 .. code-block:: arduino
 
     bool setInstalledClosedLimitTilt(uint16_t closedLimit);
 
-* ``closedLimit`` - Closed limit absolute value
+* ``closedLimit`` - Closed limit value for tilt conversion
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** Tilt is a rotation, not a linear measurement. These limits are used for position conversion only.
+**Note:** Tilt is a rotation, not a linear measurement. These limits are used for local position conversion only.
 
 getInstalledClosedLimitTilt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Gets the installed closed limit for tilt.
+Gets the local closed limit for tilt motor calibration.
 
 .. code-block:: arduino
 
     uint16_t getInstalledClosedLimitTilt();
 
-This function will return the installed closed limit for tilt (absolute value).
+This function will return the closed limit for tilt motor calibration.
 
 Target Position Control
 ***********************
@@ -320,7 +417,7 @@ Target Position Control
 setTargetLiftPercent100ths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the target lift position in percent100ths (0-10000, where 0 is fully closed, 10000 is fully open).
+Sets the target lift position in percent100ths (0-10000, where 0 is fully open, 10000 is fully closed).
 
 .. code-block:: arduino
 
@@ -346,7 +443,7 @@ This function will return the current target lift position in percent100ths (0-1
 setTargetTiltPercent100ths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the target tilt position in percent100ths (0-10000, where 0 is fully closed, 10000 is fully open).
+Sets the target tilt position in percent100ths (0-10000, where 0 is fully open, 10000 is fully closed).
 
 .. code-block:: arduino
 
@@ -504,7 +601,7 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t liftPercent);
 
-* ``liftPercent`` - Target lift percentage (0-100, where 0 is fully closed, 100 is fully open)
+* ``liftPercent`` - Target lift percentage (0-100, where 0 is fully open, 100 is fully closed)
 
 onGoToTiltPercentage
 ^^^^^^^^^^^^^^^^^^^^
@@ -530,7 +627,7 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t tiltPercent);
 
-* ``tiltPercent`` - Target tilt percentage (0-100, where 0 is fully closed, 100 is fully open)
+* ``tiltPercent`` - Target tilt percentage (0-100, where 0 is fully open, 100 is fully closed)
 
 onStop
 ^^^^^^

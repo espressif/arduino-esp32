@@ -290,7 +290,10 @@ bool verifyRollbackLater() {
 
 #if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && SOC_BT_SUPPORTED && __has_include("esp_bt.h")
 // declared here, defined in esp32-hal-bt.c (weak so users can override)
+extern bool _btInUse_default(void);
 extern bool btInUse(void);
+extern bool btClassicInUse(void);
+extern bool bleInUse(void);
 #endif
 
 #if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
@@ -342,9 +345,13 @@ void initArduino() {
   if (err) {
     log_e("Failed to initialize NVS! Error: %d", err);
   }
-#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && SOC_BT_SUPPORTED && __has_include("esp_bt.h")
-  if (!btInUse()) {
-    esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && CONFIG_BT_CONTROLLER_ENABLED && SOC_BT_SUPPORTED && __has_include("esp_bt.h")
+  bool userOverriddenBtInUse = ((void *)btInUse != (void *)_btInUse_default);
+  if (!btClassicInUse() && !(userOverriddenBtInUse && btInUse())) {
+    btMemRelease(BT_MODE_CLASSIC_BT);
+  }
+  if (!bleInUse() && !(userOverriddenBtInUse && btInUse())) {
+    btMemRelease(BT_MODE_BLE);
   }
 #endif
   init();

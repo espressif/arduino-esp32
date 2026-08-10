@@ -1,28 +1,78 @@
-name: ESP32 Arduino Release
+name: Release ESP32 Arduino package
 
 on:
-  release:
-    types: published
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 3.3.10)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark release as a pre-release"
+        type: boolean
+        default: false
+      ref:
+        description: "Git branch to build and tag from (e.g. master, release/3.3.x)"
+        type: string
+        default: "master"
+      dry-run:
+        description: "Dry-run"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
   pages: write
+  actions: read
 
 env:
-  ENABLE_S3: false # Set to true to upload libs to S3 rather than GitHub releases
+  ENABLE_S3: false
 
 jobs:
   build:
     name: Build Release Package
     runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.vars.outputs.release_tag }}
 
     steps:
+      - name: Validate ref is a remote branch
+        env:
+          REF: ${{ inputs.ref }}
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+        run: |
+          ref="${REF#refs/heads/}"
+          if [[ -z "$ref" ]]; then
+            echo "ERROR: ref must be a branch name" >&2
+            exit 1
+          fi
+          if [[ "$ref" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+            echo "ERROR: ref must be a branch name, not a commit SHA ($ref)" >&2
+            exit 1
+          fi
+          if ! gh api "repos/${GITHUB_REPOSITORY}/branches/${ref}" --silent 2>/dev/null; then
+            echo "ERROR: ref is not a remote branch: $ref" >&2
+            exit 1
+          fi
+          echo "Release branch: $ref"
+
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
-          ref: ${{ github.event.release.target_commitish }}
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
+
+      - name: Set release variables
+        id: vars
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          echo "release_tag=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
+          echo "BUILD_REF=${{ inputs.ref }}" >> "$GITHUB_ENV"
+          echo "DRY_RUN=${{ inputs.dry-run }}" >> "$GITHUB_ENV"
 
       - name: Set up Python
         uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
@@ -32,21 +82,27 @@ jobs:
       - name: Install dependencies
         run: pip install packaging pyserial
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
-        if: ${{ env.ENABLE_S3 == 'true' && vars.S3_BUCKET_NAME != '' && vars.S3_BUCKET_REGION != '' }}
-        with:
-          aws-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.S3_BUCKET_REGION }}
+      - name: Build release packages
+        run: bash ./.github/scripts/release/build-packages.sh
 
-      - name: Build Release
-        env:
-          ENABLE_S3: ${{ env.ENABLE_S3 }}
-          S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
-          S3_BUCKET_REGION: ${{ vars.S3_BUCKET_REGION }}
-          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
-        run: bash ./.github/scripts/on-release.sh
+      - name: Upload release packages
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-packages
+          path: |
+            ${{ github.workspace }}/build/*.zip
+            ${{ github.workspace }}/build/*.tar.xz
+          if-no-files-found: error
+
+      - name: Upload release metadata
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-metadata
+          path: |
+            ${{ github.workspace }}/build/manifest.json
+            ${{ github.workspace }}/build/package-libs-template.json
+            ${{ github.workspace }}/build/package-rvfix-template.json
+          if-no-files-found: error
 
       - name: Upload hosted binaries
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -55,28 +111,151 @@ jobs:
           if-no-files-found: ignore
           path: ${{ github.workspace }}/hosted
 
-      - name: Upload build JSONs for testing
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: build-output
-          path: ${{ github.workspace }}/build
-          if-no-files-found: error
-
-  test-package:
-    name: Test Package on ${{ matrix.os }}
+  create-draft-release:
+    name: Create Draft Release
     needs: build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.draft.outputs.release_id }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
-          ref: ${{ github.event.release.target_commitish }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Set release variables
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
+          echo "BUILD_REF=${{ inputs.ref }}" >> "$GITHUB_ENV"
+          if [ "${{ inputs.dry-run }}" = "true" ]; then
+            echo "DRY_RUN=true" >> "$GITHUB_ENV"
+            echo "DRAFT_RELEASE_TAG=${VERSION}-dry-run-${{ github.run_id }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Download release packages
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: release-packages
+          path: ${{ github.workspace }}/build
+
+      - name: Download release metadata
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: release-metadata
+          path: ${{ github.workspace }}/build
+
+      - name: Create draft release and upload assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+        run: bash ./.github/scripts/release/github-release.sh draft
+
+      - name: Export draft release id
+        id: draft
+        if: always()
+        run: |
+          if [ -f build/draft-assets.json ]; then
+            echo "release_id=$(jq -r .release_id build/draft-assets.json)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload draft assets metadata
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: draft-assets
+          path: ${{ github.workspace }}/build/draft-assets.json
+          if-no-files-found: error
+
+  generate-test-json:
+    name: Generate Test Package JSON
+    needs: [build, create-draft-release]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          ref: ${{ inputs.ref }}
+
+      - name: Set release variables
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
+          echo "DRY_RUN=false" >> "$GITHUB_ENV"
+          echo "JSON_MODE=final" >> "$GITHUB_ENV"
+
+      - name: Download release packages
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: release-packages
+          path: ${{ github.workspace }}/build
+
+      - name: Download release metadata
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: release-metadata
+          path: ${{ github.workspace }}/build
+
+      - name: Download draft assets
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: draft-assets
+          path: ${{ github.workspace }}/build
+
+      - name: Generate package JSON
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+        run: bash ./.github/scripts/release/generate-package-json.sh
+
+      - name: Stage package JSON artifacts
+        run: |
+          mkdir -p staging-json
+          cp build/package_esp32_dev_index.json staging-json/
+          cp build/package_esp32_dev_index_cn.json staging-json/
+          if [ "${{ inputs.prerelease }}" != "true" ]; then
+            cp build/package_esp32_index.json staging-json/
+            cp build/package_esp32_index_cn.json staging-json/
+          fi
+
+      - name: Upload test package JSON
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: test-package-json
+          path: staging-json/
+          if-no-files-found: error
+
+  test-pre-release:
+    name: Pre-release Test on ${{ matrix.os }}
+    needs: [build, generate-test-json]
+    if: ${{ always() && needs.build.result == 'success' && needs.generate-test-json.result == 'success' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-26-intel]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          ref: ${{ inputs.ref }}
+
+      - name: Set release variables
+        shell: bash
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
 
       - name: Set up Python
         uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
@@ -86,20 +265,66 @@ jobs:
       - name: Install pyserial
         run: pip install pyserial
 
-      - name: Download build artifacts
+      - name: Install xvfb (Linux IDE v1)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Install esp32-mock-bootloader
+        run: pip install esp32-mock-bootloader
+
+      - name: Prepare clean output directory
+        shell: bash
+        run: rm -rf build && mkdir -p build
+
+      - name: Download release packages
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
-          name: build-output
+          name: release-packages
           path: ${{ github.workspace }}/build
 
-      - name: Test package installation
-        env:
-          RELEASE_PRE: ${{ github.event.release.prerelease }}
-        run: bash ./.github/scripts/test-package-json.sh
+      - name: Download test package JSON
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: test-package-json
+          path: ${{ github.workspace }}/build
 
-  upload-and-finalize:
-    name: Upload Package JSONs and Finalize Release
-    needs: [build, test-package]
+      - name: Download draft assets metadata
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: draft-assets
+          path: ${{ github.workspace }}/build
+
+      - name: Run pre-release tests
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+        run: bash ./.github/scripts/release/test-package-install.sh pre
+
+  cleanup-draft-release:
+    name: Cleanup Draft Release
+    needs: [build, create-draft-release, generate-test-json, test-pre-release]
+    if: >-
+      ${{
+        always() &&
+        needs.build.result == 'success' &&
+        (
+          needs.create-draft-release.result == 'failure' ||
+          (
+            needs.create-draft-release.result == 'success' &&
+            inputs.dry-run &&
+            (
+              needs.generate-test-json.result == 'failure' ||
+              needs.test-pre-release.result == 'success' ||
+              needs.test-pre-release.result == 'failure'
+            )
+          ) ||
+          (
+            needs.create-draft-release.result == 'success' &&
+            !inputs.dry-run &&
+            needs.test-pre-release.result == 'failure'
+          )
+        )
+      }}
     runs-on: ubuntu-latest
 
     steps:
@@ -107,54 +332,267 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
-          ref: ${{ github.event.release.target_commitish }}
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
-        with:
-          name: build-output
-          path: ${{ github.workspace }}/build
+      - name: Set release variables
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          if [ "${{ inputs.dry-run }}" = "true" ]; then
+            echo "DRAFT_RELEASE_TAG=${VERSION}-dry-run-${{ github.run_id }}" >> "$GITHUB_ENV"
+          fi
 
-      - name: Upload package JSONs to release and GitHub Pages
+      - name: Delete draft release
         env:
           GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-          RELEASE_PRE: ${{ github.event.release.prerelease }}
-          RELEASE_ID: ${{ github.event.release.id }}
-        run: bash ./.github/scripts/upload-release-assets.sh
+          RELEASE_ID: ${{ needs.create-draft-release.outputs.release_id }}
+        run: bash ./.github/scripts/release/github-release.sh delete-resources
 
-  upload-hosted-binaries:
-    name: Upload hosted binaries
-    needs: build
+  publish-release:
+    name: Publish Release
+    needs: [test-pre-release, create-draft-release, generate-test-json, build]
+    if: ${{ !inputs.dry-run && needs.test-pre-release.result == 'success' }}
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout gh-pages branch
+      - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: gh-pages
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Set release variables
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          echo "BUILD_REF=${{ inputs.ref }}" >> "$GITHUB_ENV"
+
+      - name: Commit version bump and tag release
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+        run: bash ./.github/scripts/release/github-release.sh tag
+
+      - name: Download draft assets
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: draft-assets
+          path: ${{ github.workspace }}/build
+
+      - name: Publish draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+        run: bash ./.github/scripts/release/github-release.sh publish
+
+      - name: Upload published draft assets
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: draft-assets
+          path: ${{ github.workspace }}/build/draft-assets.json
+          overwrite: true
+
+  upload-candidate-json:
+    name: Upload Candidate Package JSON
+    needs: [publish-release, build, generate-test-json]
+    if: ${{ !inputs.dry-run }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Set release variables
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip install packaging
+
+      - name: Download release packages
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: release-packages
+          path: ${{ github.workspace }}/build
+
+      - name: Download release metadata
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: release-metadata
+          path: ${{ github.workspace }}/build
+
+      - name: Download draft assets
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: draft-assets
+          path: ${{ github.workspace }}/build
+
+      - name: Regenerate package JSON with published URLs
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          JSON_MODE: final
+          DRY_RUN: false
+        run: bash ./.github/scripts/release/generate-package-json.sh
+
+      - name: Stage final package JSON artifacts
+        run: |
+          mkdir -p staging-json
+          cp build/package_esp32_dev_index.json staging-json/
+          cp build/package_esp32_dev_index_cn.json staging-json/
+          if [ "${{ inputs.prerelease }}" != "true" ]; then
+            cp build/package_esp32_index.json staging-json/
+            cp build/package_esp32_index_cn.json staging-json/
+          fi
+
+      - name: Upload candidate package JSON to release-staging
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+        run: bash ./.github/scripts/release/github-release.sh candidate
+
+      - name: Upload final package JSON
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: final-package-json
+          path: staging-json/
+          if-no-files-found: error
+
+  test-post-release:
+    name: Post-release Test on ${{ matrix.os }}
+    needs: upload-candidate-json
+    if: ${{ !inputs.dry-run }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-26-intel]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set release variables
+        shell: bash
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
+
+      - name: Run post-release tests
+        shell: bash
+        run: bash ./.github/scripts/release/test-package-install.sh post
+
+  promote-release:
+    name: Promote Release
+    needs: [test-post-release, upload-candidate-json]
+    if: ${{ !inputs.dry-run && needs.test-post-release.result == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          ref: ${{ inputs.ref }}
+
+      - name: Set release variables
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
+
+      - name: Download final package JSON
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: final-package-json
+          path: ${{ github.workspace }}/build
 
       - name: Download hosted binaries
+        continue-on-error: true
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           name: hosted
           path: ${{ github.workspace }}/hosted-latest
 
-      - name: Copy hosted binaries to proper directory and commit
+      - name: Promote package JSON to gh-pages root
         env:
           GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          HOSTED_ARTIFACT_DIR: ${{ github.workspace }}/hosted-latest
+        run: bash ./.github/scripts/release/github-release.sh promote
+
+  rollback-release:
+    name: Rollback Release
+    needs: [upload-candidate-json, test-post-release, create-draft-release]
+    if: >-
+      ${{
+        always() &&
+        !inputs.dry-run &&
+        needs.upload-candidate-json.result == 'success' &&
+        needs.test-post-release.result == 'failure'
+      }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Set release variables
         run: |
-          # Create hosted directory if it doesn't exist
-          mkdir -p ${{ github.workspace }}/hosted
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "RELEASE_TAG=$VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
 
-          # Copy hosted binaries to proper directory without overwriting existing files
-          cp --update=none ${{ github.workspace }}/hosted-latest/*.bin ${{ github.workspace }}/hosted/
+      - name: Download draft assets
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: draft-assets
+          path: ${{ github.workspace }}/build
 
-          # Commit the changes
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add hosted/*.bin
-          if ! git diff --cached --quiet; then
-            git commit -m "Add new esp-hosted slave binaries"
-            git push origin HEAD:gh-pages
-          fi
+      - name: Roll back release-staging JSON and published release
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          RELEASE_ID: ${{ needs.create-draft-release.outputs.release_id }}
+        run: bash ./.github/scripts/release/github-release.sh rollback
+
+  notify-discord:
+    name: Notify Discord
+    needs: [promote-release, build]
+    if: ${{ !inputs.dry-run && needs.promote-release.result == 'success' }}
+    continue-on-error: true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Notify Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          RELEASE_TAG: ${{ inputs.version }}
+        run: bash ./.github/scripts/release/notify-discord.sh

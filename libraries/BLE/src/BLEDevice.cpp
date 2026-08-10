@@ -61,7 +61,7 @@
 
 #if defined(ARDUINO_ARCH_ESP32)
 #include "esp32-hal-bt.h"
-#include "esp32-hal-bt-mem.h"
+#include "esp32-hal-alloc-ble-mem.h"
 #endif
 
 #include "esp32-hal-log.h"
@@ -193,7 +193,7 @@ BLEServer *BLEDevice::createServer() {
 
   if (m_pServer == nullptr) {
     m_pServer = new BLEServer();
-    m_pServer->createApp(m_appId++);
+    m_pServer->createApp(getNextAppId());
 #if defined(CONFIG_NIMBLE_ENABLED)
     ble_gatts_reset();
     ble_svc_gap_init();
@@ -293,6 +293,14 @@ bool BLEDevice::init(String deviceName) {
   log_i("Initializing BLE stack: %s", getBLEStackString().c_str());
 
   esp_err_t errRc = ESP_OK;
+
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+  if (btMemReleased(BT_MODE_BLE)) {
+    log_e("BLE memory has been released. Cannot initialize BLE.");
+    return false;
+  }
+#endif
+
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #if defined(ARDUINO_ARCH_ESP32)
   if (!btStart()) {
@@ -313,10 +321,6 @@ bool BLEDevice::init(String deviceName) {
     log_e("nvs_flash_init: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
     return false;
   }
-
-#ifndef CONFIG_BT_CLASSIC_ENABLED
-  esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
-#endif
 
   esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
   errRc = esp_bt_controller_init(&bt_cfg);
@@ -1039,20 +1043,16 @@ BLEClient *BLEDevice::getClientByAddress(BLEAddress address) {
   return nullptr;
 }
 
-void BLEDevice::updatePeerDevice(void *peer, bool _client, uint16_t conn_id) {
-  log_d("update conn_id: %u, GATT role: %s", conn_id, _client ? "client" : "server");
-  std::map<uint16_t, conn_status_t>::iterator it = m_connectedClientsMap.find(ESP_GATT_IF_NONE);
-  if (it != m_connectedClientsMap.end()) {
-    std::swap(m_connectedClientsMap[conn_id], it->second);
-    m_connectedClientsMap.erase(it);
-  } else {
-    it = m_connectedClientsMap.find(conn_id);
-    if (it != m_connectedClientsMap.end()) {
-      conn_status_t _st = it->second;
-      _st.peer_device = peer;
-      std::swap(m_connectedClientsMap[conn_id], _st);
-    }
+uint16_t BLEDevice::getNextAppId() {
+  portENTER_CRITICAL(&mux);
+  uint16_t id = m_appId++;
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  if (m_appId > ESP_APP_ID_MAX) {
+    m_appId = 0;
   }
+#endif
+  portEXIT_CRITICAL(&mux);
+  return id;
 }
 
 void BLEDevice::addPeerDevice(void *peer, bool _client, uint16_t conn_id) {
@@ -1141,9 +1141,8 @@ void BLEDevice::deinit(bool release_memory) {
   // Only release memory if requested (this prevents reinitialization)
   if (release_memory) {
 #ifdef ARDUINO_ARCH_ESP32
-    // Require tests because we released classic BT memory and this can cause crash (most likely not, esp-idf takes care of it)
 #if CONFIG_BT_CONTROLLER_ENABLED
-    esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
+    btMemRelease(BT_MODE_BLE);
 #endif
 #endif
   }
@@ -1268,10 +1267,16 @@ void BLEDevice::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t
     default: break;
   }  // switch
   for (auto &myPair : BLEDevice::getPeerDevices(true)) {
-    conn_status_t conn_status = (conn_status_t)myPair.second;
-    if (((BLEClient *)conn_status.peer_device)->getGattcIf() == gattc_if || ((BLEClient *)conn_status.peer_device)->getGattcIf() == ESP_GATT_IF_NONE
-        || gattc_if == ESP_GATT_IF_NONE) {
-      ((BLEClient *)conn_status.peer_device)->gattClientEventHandler(event, gattc_if, param);
+    BLEClient *client = (BLEClient *)myPair.second.peer_device;
+    esp_gatt_if_t client_if = client->getGattcIf();
+    bool dispatch = false;
+    if (client_if != ESP_GATT_IF_NONE && client_if == gattc_if) {
+      dispatch = true;
+    } else if (event == ESP_GATTC_REG_EVT && myPair.first == param->reg.app_id) {
+      dispatch = true;
+    }
+    if (dispatch) {
+      client->gattClientEventHandler(event, gattc_if, param);
     }
   }
 

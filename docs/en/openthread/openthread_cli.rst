@@ -7,10 +7,12 @@ About
 
 The OpenThread CLI (Command-Line Interface) provides two ways to interact with the OpenThread stack through CLI commands:
 
-* **CLI Helper Functions API**: Utility functions that execute CLI commands and parse responses
-* **OpenThreadCLI Class**: Stream-based interface for interactive CLI access
+* **CLI Helper Functions API**: Utility functions that execute CLI commands and parse responses.
+* **OpenThreadCLI Class**: Stream-based interface for interactive CLI access.
 
 The CLI Helper Functions API is useful for programmatic control using OpenThread CLI commands, while the ``OpenThreadCLI`` class provides a Stream interface for interactive console access.
+
+See also :doc:`openthread_helper_functions` (and `helper_functions.md <https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/helper_functions.md>`_ in the repo) for a walkthrough of the same helpers with example sketches.
 
 CLI Helper Functions API
 ************************
@@ -24,13 +26,16 @@ Executes a CLI command and gets the response.
 
 .. code-block:: arduino
 
-    bool otGetRespCmd(const char *cmd, char *resp = NULL, uint32_t respTimeout = 5000);
+    bool otGetRespCmd(const char *cmd, char *resp = NULL, size_t respBufSize = 0, uint32_t respTimeout = 5000);
 
-* ``cmd`` - The CLI command to execute (e.g., ``"state"``, ``"networkname"``)
-* ``resp`` - Buffer to store the response (optional, can be ``NULL``)
-* ``respTimeout`` - Timeout in milliseconds for waiting for response (default: 5000 ms)
+* ``cmd`` - The CLI command to execute (e.g., ``"state"``, ``"networkname"``).
+* ``resp`` - Buffer to store the response (optional, can be ``NULL``).
+* ``respBufSize`` - Size of ``resp`` in bytes including the terminating NUL. Required for raw ``char*`` buffers; for stack arrays use the two-argument form below (size deduced automatically).
+* ``respTimeout`` - Timeout in milliseconds for waiting for response (default: 5000 ms).
 
-This function executes a CLI command and collects all response lines until "Done" or "Error" is received. If ``resp`` is not ``NULL``, the response is stored in the buffer.
+This function executes a CLI command and collects all response lines until "Done" or "Error" is received. Stale lines left in the CLI RX queue from a prior timed-out command are discarded before sending ``cmd`` (50 ms idle window). When ``resp`` is provided, the accumulated response text is copied into the buffer; if the response is longer than ``respBufSize - 1`` bytes it is truncated and a warning is logged.
+
+For a fixed-size stack buffer, pass only ``cmd`` and ``resp`` — buffer size and default timeout are applied automatically. A custom timeout on a stack buffer: ``otGetRespCmd(cmd, resp, timeoutMs)``. For a raw ``char*`` with a known size: ``otGetRespCmd(cmd, ptr, len)`` or ``otGetRespCmd(cmd, ptr, len, timeoutMs)``. Legacy raw-pointer calls with unknown buffer size (``respBufSize`` = 0) copy the full response without bounds checking.
 
 **Returns:** ``true`` if command executed successfully, ``false`` on error or timeout.
 
@@ -54,13 +59,14 @@ Executes a CLI command with arguments.
 
 .. code-block:: arduino
 
-    bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode = NULL);
+    bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode = NULL, uint32_t respTimeout = 5000);
 
-* ``cmd`` - The CLI command to execute (e.g., ``"networkname"``, ``"channel"``)
-* ``arg`` - The command argument (can be ``NULL`` for commands without arguments)
-* ``returnCode`` - Pointer to ``ot_cmd_return_t`` structure to receive error information (optional)
+* ``cmd`` - The CLI command to execute. (e.g., ``"networkname"``, ``"channel"``).
+* ``arg`` - The command argument. (can be ``NULL`` for commands without arguments).
+* ``returnCode`` - Pointer to ``ot_cmd_return_t`` structure to receive error information. (optional).
+* ``respTimeout`` - Timeout in milliseconds for waiting for Done/Error (default: 5000 ms).
 
-This function executes a CLI command with an optional argument and returns the success status. If ``returnCode`` is provided, it will be populated with error information on failure.
+This function executes a CLI command with an optional argument and returns the success status. The RX queue is drained before sending the command. If ``returnCode`` is provided, it will be populated with error information on failure.
 
 **Returns:** ``true`` if command executed successfully, ``false`` on error.
 
@@ -105,9 +111,9 @@ Executes a CLI command and prints the response to a Stream.
 
     bool otPrintRespCLI(const char *cmd, Stream &output, uint32_t respTimeout);
 
-* ``cmd`` - The CLI command to execute
-* ``output`` - The Stream object to print responses to (e.g., ``Serial``)
-* ``respTimeout`` - Timeout in milliseconds per response line (default: 5000 ms)
+* ``cmd`` - The CLI command to execute.
+* ``output`` - The Stream object to print responses to (e.g., ``Serial``).
+* ``respTimeout`` - Timeout in milliseconds per response line (default: 5000 ms).
 
 This function executes a CLI command and prints all response lines to the specified Stream until "Done" or "Error" is received.
 
@@ -146,7 +152,7 @@ Initializes the OpenThread CLI.
 
 This function initializes the OpenThread CLI interface. It must be called after ``OpenThread::begin()`` and before using any CLI functions.
 
-**Note:** The OpenThread stack must be started before initializing the CLI.
+**Note:** The OpenThread stack must be initialized with ``OpenThread::begin()`` before initializing the CLI. The Thread protocol itself may still be stopped while CLI commands configure the dataset.
 
 end
 ^^^
@@ -171,9 +177,9 @@ Starts an interactive console for CLI access.
 
     void startConsole(Stream &otStream, bool echoback = true, const char *prompt = "ot> ");
 
-* ``otStream`` - The Stream object for console I/O (e.g., ``Serial``)
-* ``echoback`` - If ``true``, echo characters back to the console (default: ``true``)
-* ``prompt`` - The console prompt string (default: ``"ot> "``, can be ``NULL`` for no prompt)
+* ``otStream`` - The Stream object for console I/O (e.g., ``Serial``).
+* ``echoback`` - If ``true``, echo characters back to the console (default: ``true``).
+* ``prompt`` - The console prompt string (default: ``"ot> "``, can be ``NULL`` for no prompt).
 
 This function starts an interactive console task that allows you to type CLI commands directly. The console will echo input and display responses.
 
@@ -203,7 +209,7 @@ Changes the console Stream object.
 
     void setStream(Stream &otStream);
 
-* ``otStream`` - The new Stream object for console I/O
+* ``otStream`` - The new Stream object for console I/O.
 
 This function changes the Stream object used by the console.
 
@@ -216,7 +222,7 @@ Changes the echo back setting.
 
     void setEchoBack(bool echoback);
 
-* ``echoback`` - If ``true``, echo characters back to the console
+* ``echoback`` - If ``true``, echo characters back to the console.
 
 This function changes whether characters are echoed back to the console.
 
@@ -229,7 +235,7 @@ Changes the console prompt.
 
     void setPrompt(char *prompt);
 
-* ``prompt`` - The new prompt string (can be ``NULL`` for no prompt)
+* ``prompt`` - The new prompt string (can be ``NULL`` for no prompt).
 
 This function changes the console prompt string.
 
@@ -242,9 +248,13 @@ Sets a callback function for CLI responses.
 
     void onReceive(OnReceiveCb_t func);
 
-* ``func`` - Callback function to call when a complete line of output is received
+* ``func`` - Callback function to call when a complete line of output is received.
 
 The callback function is called whenever a complete line of output is received from the OpenThread CLI. This allows you to process CLI responses asynchronously.
+
+.. note::
+
+   The callback runs on the **OpenThread worker task**, not in `loop()`. Keep it minimal: read available bytes with ``OThreadCLI.read()`` and return quickly. Do **not** block, call ``otGetRespCmd()`` / ``otExecCommand()``, or start console I/O from the callback (that can stall the mainloop or deadlock). Defer parsing and follow-up commands to ``loop()`` or a dedicated task.
 
 **Callback Signature:**
 
@@ -277,7 +287,7 @@ Sets the transmit buffer size.
 
     size_t setTxBufferSize(size_t tx_queue_len);
 
-* ``tx_queue_len`` - The size of the transmit buffer in bytes (default: 256)
+* ``tx_queue_len`` - The size of the transmit buffer in bytes (default: 256).
 
 This function sets the size of the transmit buffer used for sending CLI commands.
 
@@ -292,7 +302,7 @@ Sets the receive buffer size.
 
     size_t setRxBufferSize(size_t rx_queue_len);
 
-* ``rx_queue_len`` - The size of the receive buffer in bytes (default: 1024)
+* ``rx_queue_len`` - The size of the receive buffer in bytes (default: 1024).
 
 This function sets the size of the receive buffer used for receiving CLI responses.
 
@@ -312,7 +322,7 @@ Writes a byte to the CLI.
 
     size_t write(uint8_t c);
 
-* ``c`` - The byte to write
+* ``c`` - The byte to write.
 
 This function writes a single byte to the CLI transmit buffer.
 
@@ -562,19 +572,19 @@ Common OpenThread CLI Commands
 
 Here are some commonly used OpenThread CLI commands:
 
-* ``state`` - Get the current Thread state
-* ``networkname <name>`` - Set or get the network name
-* ``channel <channel>`` - Set or get the channel (11-26)
-* ``panid <panid>`` - Set or get the PAN ID
-* ``extpanid <extpanid>`` - Set or get the extended PAN ID
-* ``networkkey <key>`` - Set or get the network key
-* ``ifconfig up`` - Bring the network interface up
-* ``ifconfig down`` - Bring the network interface down
-* ``ipaddr`` - List all IPv6 addresses
-* ``ipmaddr`` - List all multicast addresses
-* ``rloc16`` - Get the RLOC16
-* ``leaderdata`` - Get leader data
-* ``router table`` - Get router table
-* ``child table`` - Get child table
+* ``state`` - Get the current Thread state.
+* ``networkname <name>`` - Set or get the network name.
+* ``channel <channel>`` - Set or get the channel (11-26).
+* ``panid <panid>`` - Set or get the PAN ID.
+* ``extpanid <extpanid>`` - Set or get the extended PAN ID.
+* ``networkkey <key>`` - Set or get the network key.
+* ``ifconfig up`` - Bring the network interface up.
+* ``ifconfig down`` - Bring the network interface down.
+* ``ipaddr`` - List all IPv6 addresses.
+* ``ipmaddr`` - List all multicast addresses.
+* ``rloc16`` - Get the RLOC16.
+* ``leaderdata`` - Get leader data.
+* ``router table`` - Get router table.
+* ``child table`` - Get child table.
 
 For a complete list of OpenThread CLI commands, refer to the `OpenThread CLI Reference <https://openthread.io/reference/cli>`_.

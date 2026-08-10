@@ -10,7 +10,7 @@ Note: This sketch takes up a lot of space for the app and may not be able to fla
 
 #include <Arduino.h>
 #include "sdkconfig.h"
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
 #error "WiFiProv is only supported in SoCs with native Wi-Fi support"
 #endif
 

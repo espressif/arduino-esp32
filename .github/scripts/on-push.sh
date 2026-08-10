@@ -21,7 +21,7 @@ function build {
     local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
     local BUILD_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
 
-    local args=("-ai" "$ARDUINO_IDE_PATH" "-au" "$ARDUINO_USR_PATH" "-t" "$target")
+    local args=("-au" "$ARDUINO_USR_PATH" "-t" "$target")
 
     if [ "$OS_IS_LINUX" == "1" ]; then
         args+=("-p" "$ARDUINO_ESP32_PATH/libraries" "-i" "$chunk_index" "-m" "$chunks_cnt" "-d" "$log_level")
@@ -51,8 +51,7 @@ function build {
     fi
 }
 
-if [ -z "$GITHUB_WORKSPACE" ]; then
-    export GITHUB_WORKSPACE="$PWD"
+if [ -z "$GITHUB_REPOSITORY" ]; then
     export GITHUB_REPOSITORY="espressif/arduino-esp32"
 fi
 
@@ -75,7 +74,7 @@ fi
 #echo "Updating submodules ..."
 #git -C "$GITHUB_WORKSPACE" submodule update --init --recursive > /dev/null 2>&1
 
-source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+source "${SCRIPTS_DIR}/env.sh"
 source "${SCRIPTS_DIR}/install-arduino-core-esp32.sh"
 
 SKETCHES_ESP32=(

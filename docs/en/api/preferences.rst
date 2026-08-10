@@ -9,10 +9,19 @@ The Preferences library is unique to arduino-esp32. It should be considered as t
 
 It uses a portion of the on-board non-volatile memory (NVS) of the ESP32 to store data. This data is retained across restarts and loss of power events to the system.
 
-Preferences works best for storing many small values, rather than a few large values. If large amounts of data are to be stored, consider using a file system library such as LitteFS.
+Namespaces, Keys and Values
+***************************
+
+Preferences data is stored in a "namespace" which operates on "key-value" pairs. Namespaces and keys are ASCII strings with a maximum length of 15 characters currently.
+
+Note
+****
+
+Preferences works best for storing many small values, rather than a few large values. If large amounts of data are to be stored, consider using a file system library such as LittleFS.
 
 The Preferences library is usable by all ESP32 variants.
 
+See also the `Preferences Tutorial <https://docs.espressif.com/projects/arduino-esp32/en/latest/tutorials/preferences.html>`__.
 
 Header File
 -----------

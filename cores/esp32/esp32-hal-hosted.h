@@ -16,7 +16,7 @@
 #define MAIN_ESP32_HAL_HOSTED_H_
 
 #include "sdkconfig.h"
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED)
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED)
 
 #include "stdint.h"
 #include "stdbool.h"
@@ -46,8 +46,9 @@ bool hostedSetPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8
 void hostedGetPins(int8_t *clk, int8_t *cmd, int8_t *d0, int8_t *d1, int8_t *d2, int8_t *d3, int8_t *rst);
 void hostedGetHostVersion(uint32_t *major, uint32_t *minor, uint32_t *patch);
 void hostedGetSlaveVersion(uint32_t *major, uint32_t *minor, uint32_t *patch);
+const char *hostedGetSlaveTargetName();
 bool hostedHasUpdate();
-char *hostedGetUpdateURL();
+const char *hostedGetUpdateURL();
 bool hostedBeginUpdate();
 bool hostedWriteUpdate(uint8_t *buf, uint32_t len);
 bool hostedEndUpdate();
@@ -57,5 +58,5 @@ bool hostedActivateUpdate();
 }
 #endif
 
-#endif /* defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED) */
+#endif /* defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED) */
 #endif /* MAIN_ESP32_HAL_HOSTED_H_ */

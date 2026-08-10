@@ -149,6 +149,13 @@ public:
   // Register a privilege command to intercept standard cluster commands before the stack processes them
   void addPrivilegeCommand(uint16_t cluster_id, uint16_t command_id);
 
+  // Send an IAS Zone Enroll Response (CIE/coordinator side) to a device that issued an enroll request.
+  // Typically called from within a zbIASZoneEnrollRequest() override using the request message src address/endpoint.
+  bool sendIASZoneEnrollResponse(
+    uint16_t dst_short_addr, uint8_t dst_endpoint, uint8_t zone_id,
+    esp_zb_zcl_ias_zone_enroll_response_code_t response_code = ESP_ZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS
+  );
+
   // findEndpoint may be implemented by EPs to find and bind devices
   virtual void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
 
@@ -163,6 +170,7 @@ public:
   virtual void zbWindowCoveringMovementCmd(const esp_zb_zcl_window_covering_movement_message_t *message) {};
   virtual void zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
+  virtual void zbIASZoneEnrollRequest(const esp_zb_zcl_ias_zone_enroll_request_message_t *message) {};
   virtual void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {};
   virtual void zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message);  //already implemented
   virtual void zbPrivilegeCommand(const esp_zb_zcl_privilege_command_message_t *message);
@@ -226,6 +234,18 @@ protected:
   SemaphoreHandle_t lock;
   zb_power_source_t _power_source;
   uint8_t _time_status;
+
+  // Thread-safe outgoing ZCL helpers (not related to stack callbacks).
+  esp_zb_zcl_status_t setClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, bool check = false);
+  bool getClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, uint16_t value_size);
+  bool reportClusterAttribute(esp_zb_zcl_report_attr_cmd_t *report_attr_cmd);
+  bool readClusterAttribute(esp_zb_zcl_read_attr_cmd_t *read_req);
+  bool setClusterReporting(esp_zb_zcl_reporting_info_t *reporting_info);
+  bool configureClusterReporting(esp_zb_zcl_config_report_cmd_t *report_cmd);
+
+  // Acquire/release pair for outgoing ZCL/ZDO commands (caller invokes SDK between them).
+  bool acquireCommandLock();
+  void releaseCommandLock();
 
   // Friend class declaration to allow access to protected members
   friend class ZigbeeCore;

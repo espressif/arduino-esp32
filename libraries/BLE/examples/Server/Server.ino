@@ -26,6 +26,7 @@ void setup() {
 
   BLEServer *pServer = BLEDevice::createServer();
   BLEService *pService = pServer->createService(SERVICE_UUID);
+  pServer->advertiseOnDisconnect(true);
   BLECharacteristic *pCharacteristic =
     pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
 

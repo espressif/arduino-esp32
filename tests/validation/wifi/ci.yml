@@ -15,7 +15,11 @@ fqbn:
 
 platforms:
   qemu: false
+  hardware:
+    esp32p4: false # No wifi_router runners using ESP-Hosted
+  wokwi:
+    esp32p4: false # For some reason this test crashes on Wokwi
 
 requires_any:
   - CONFIG_SOC_WIFI_SUPPORTED=y
-  - CONFIG_ESP_WIFI_REMOTE_ENABLED=y
+  - CONFIG_ESP_HOSTED_ENABLED=y

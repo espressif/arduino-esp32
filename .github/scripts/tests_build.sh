@@ -17,6 +17,9 @@ USAGE:
     ${0} -clean
         Remove build and test generated files
 
+    Options:
+        --arduino-cli   Use arduino-cli for compilation instead of arduino_cmake.py
+
     If no -t target is specified, builds for all BUILD_TEST_TARGETS
     If no -s sketch is specified, builds all sketches (chunk mode)
 "
@@ -106,8 +109,21 @@ function build_multi_device_test {
     local sketch_name
     local sketch_path
     local sketch_dir
+    local device_fqbn_append
     for device in $devices; do
-        sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
+        # multi_device values can be either a scalar (sketch name) or a map
+        # with "sketch" and optional "fqbn_append" keys.
+        local device_type
+        device_type=$(yq eval ".multi_device.$device | type" "$test_dir/ci.yml" 2>/dev/null)
+
+        if [ "$device_type" == "!!map" ]; then
+            sketch_name=$(yq eval ".multi_device.$device.sketch" "$test_dir/ci.yml" 2>/dev/null)
+            device_fqbn_append=$(${SKETCH_UTILS} fqbn_append "$test_dir/ci.yml" "$target" ".multi_device.$device.fqbn_append")
+        else
+            sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
+            device_fqbn_append=""
+        fi
+
         sketch_path="$test_dir/$sketch_name/$sketch_name.ino"
         sketch_dir="$test_dir/$sketch_name"
 
@@ -120,8 +136,13 @@ function build_multi_device_test {
 
         # -td: ci.yml lives in the parent test directory
         # -bn: sets the parent build dir to the test name (nested: $test_name/$sketch_name/build.tmp)
+        local fa_args=()
+        if [ -n "$device_fqbn_append" ]; then
+            fa_args=(-fa "$device_fqbn_append")
+        fi
+
         ${SKETCH_UTILS} build "${build_args[@]}" -s "$sketch_dir" \
-            -td "$test_dir" -bn "$test_name"
+            -td "$test_dir" -bn "$test_name" "${fa_args[@]}"
         result=$?
         if [ $result -ne 0 ]; then
             echo "ERROR: Failed to build sketch $sketch_name for test $test_name"
@@ -162,6 +183,9 @@ while [ -n "$1" ]; do
         clean
         exit 0
         ;;
+    --arduino-cli )
+        use_arduino_cli=1
+        ;;
     * )
         break
         ;;
@@ -170,12 +194,18 @@ while [ -n "$1" ]; do
 done
 
 set -e
-source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+source "${SCRIPTS_DIR}/env.sh"
+if [ "${use_arduino_cli:-0}" -eq 1 ]; then
+    source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+fi
 source "${SCRIPTS_DIR}/install-arduino-core-esp32.sh"
 source "${SCRIPTS_DIR}/tests_utils.sh"
 set +e
 
-args=("-ai" "$ARDUINO_IDE_PATH" "-au" "$ARDUINO_USR_PATH")
+args=("-au" "$ARDUINO_USR_PATH")
+if [ "${use_arduino_cli:-0}" -eq 1 ]; then
+    args+=("-ai" "$ARDUINO_IDE_PATH" "--arduino-cli")
+fi
 
 # Parse comma-separated targets
 if [ -n "$target" ]; then
@@ -207,7 +237,7 @@ fi
 
 if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
     if [ ${#sketches_to_build[@]} -eq 1 ]; then
-        detect_test_type_and_folder "$sketch"
+        detect_test_type_and_folder "$sketch" || exit 1
     else
         test_folder="$PWD/tests"
     fi
@@ -258,13 +288,10 @@ for current_target in "${targets_to_build[@]}"; do
 
             # Find test folder for this sketch if needed
             if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
-                tmp_sketch_path=$(find tests -name "$current_sketch".ino)
-                if [ -z "$tmp_sketch_path" ]; then
-                    echo "ERROR: Sketch $current_sketch not found"
+                if ! detect_test_type_and_folder "$current_sketch"; then
                     continue
                 fi
-                sketch_test_type=$(basename "$(dirname "$(dirname "$tmp_sketch_path")")")
-                sketch_test_folder="$PWD/tests/$sketch_test_type"
+                sketch_test_folder="$test_folder"
             else
                 sketch_test_folder="$test_folder"
             fi

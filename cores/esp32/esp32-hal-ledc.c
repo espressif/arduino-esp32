@@ -26,6 +26,13 @@
 #include <math.h>
 #endif
 
+#include "esp_idf_version.h"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 1, 0)
+#define LEDC_LL_GET_HW_FN() LEDC_LL_GET_HW()
+#else
+#define LEDC_LL_GET_HW_FN() LEDC_LL_GET_HW(0)
+#endif
+
 #ifdef SOC_LEDC_SUPPORT_HS_MODE
 #define LEDC_CHANNELS (SOC_LEDC_CHANNEL_NUM << 1)
 #else
@@ -272,7 +279,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   //get resolution of selected channel when used
   if (channel_used) {
     uint32_t channel_resolution = 0;
-    ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &channel_resolution);
+    ledc_ll_get_duty_resolution(LEDC_LL_GET_HW_FN(), group, timer, &channel_resolution);
     log_i("Channel %u frequency: %" PRIu32 ", resolution: %" PRIu32, channel, ledc_get_freq(group, timer), channel_resolution);
     handle->channel_resolution = (uint8_t)channel_resolution;
   } else {
@@ -336,7 +343,7 @@ bool ledcWrite(uint8_t pin, uint32_t duty) {
     //Fixing if all bits in resolution is set = LEDC FULL ON
     uint32_t max_duty = (1 << bus->channel_resolution) - 1;
 
-    if ((duty == max_duty) && (max_duty != 1)) {
+    if ((duty >= max_duty) && (max_duty != 1)) {
       duty = max_duty + 1;
     }
 
@@ -364,15 +371,15 @@ bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
   ledc_timer_t timer;
 
   // Get the actual timer being used by this channel
-  ledc_ll_get_channel_timer(LEDC_LL_GET_HW(), group, (channel % SOC_LEDC_CHANNEL_NUM), &timer);
+  ledc_ll_get_channel_timer(LEDC_LL_GET_HW_FN(), group, (channel % SOC_LEDC_CHANNEL_NUM), &timer);
 
   //Fixing if all bits in resolution is set = LEDC FULL ON
   uint32_t resolution = 0;
-  ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &resolution);
+  ledc_ll_get_duty_resolution(LEDC_LL_GET_HW_FN(), group, timer, &resolution);
 
   uint32_t max_duty = (1 << resolution) - 1;
 
-  if ((duty == max_duty) && (max_duty != 1)) {
+  if ((duty >= max_duty) && (max_duty != 1)) {
     duty = max_duty + 1;
   }
 
@@ -435,6 +442,7 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq) {
     }
     bus->channel_resolution = 10;
 
+    bus->freq_hz = freq;
     uint32_t res_freq = ledc_get_freq(group, bus->timer_num);
     ledcWrite(pin, 0x1FF);
     return res_freq;
@@ -491,6 +499,7 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution) {
       return 0;
     }
     bus->channel_resolution = resolution;
+    bus->freq_hz = freq;
     return ledc_get_freq(group, bus->timer_num);
   }
   return 0;
@@ -573,9 +582,9 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
     //Fixing if all bits in resolution is set = LEDC FULL ON
     uint32_t max_duty = (1 << bus->channel_resolution) - 1;
 
-    if ((target_duty == max_duty) && (max_duty != 1)) {
+    if ((target_duty >= max_duty) && (max_duty != 1)) {
       target_duty = max_duty + 1;
-    } else if ((start_duty == max_duty) && (max_duty != 1)) {
+    } else if ((start_duty >= max_duty) && (max_duty != 1)) {
       start_duty = max_duty + 1;
     }
 
@@ -585,13 +594,58 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
 
     if (ledc_set_duty_and_update(group, channel, start_duty, 0) != ESP_OK) {
       log_e("ledc_set_duty_and_update failed");
+#ifndef SOC_LEDC_SUPPORT_FADE_STOP
+#if !CONFIG_DISABLE_HAL_LOCKS
+      if (bus->lock != NULL) {
+        xSemaphoreGive(bus->lock);
+      }
+#endif
+#endif
       return false;
     }
-    // Wait for LEDCs next PWM cycle to update duty (~ 1-2 ms)
-    while (ledc_get_duty(group, channel) != start_duty);
+
+#ifndef SOC_LEDC_SUPPORT_FADE_STOP
+    // ESP32-classic: wait for the start duty to latch before starting the fade.
+    // ledc_set_fade_time_and_start() and its ISR busy-wait on duty_start with
+    // interrupts disabled; an unlatched start duty corrupts the fade and trips
+    // interrupt watchdog. Abort if duty_start does not clear within the timeout.
+    uint32_t fade_freq = ledc_get_freq(group, bus->timer_num);
+    if (fade_freq == 0) {
+      log_e("LEDC timer not running on pin %u", pin);
+#if !CONFIG_DISABLE_HAL_LOCKS
+      if (bus->lock != NULL) {
+        xSemaphoreGive(bus->lock);
+      }
+#endif
+      return false;
+    }
+    // Timeout: two PWM periods (ceil ms) plus 5 ms margin. duty_start clears
+    // after one period; the extra period covers clock rounding and delay(1) steps.
+    uint32_t settle_timeout_ms = ((2000U + fade_freq - 1U) / fade_freq) + 5U;
+    uint32_t settle_start = millis();
+    while ((LEDC_LL_GET_HW_FN())->channel_group[group].channel[channel].conf1.duty_start) {
+      if (millis() - settle_start > settle_timeout_ms) {
+        log_e("LEDC pin %u: start duty did not latch within %u ms, aborting fade", pin, settle_timeout_ms);
+#if !CONFIG_DISABLE_HAL_LOCKS
+        if (bus->lock != NULL) {
+          xSemaphoreGive(bus->lock);
+        }
+#endif
+        return false;
+      }
+      delay(1);
+    }
+#endif
 
     if (ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) != ESP_OK) {
       log_e("ledc_set_fade_time_and_start failed");
+#ifndef SOC_LEDC_SUPPORT_FADE_STOP
+#if !CONFIG_DISABLE_HAL_LOCKS
+      if (bus->lock != NULL) {
+        xSemaphoreGive(bus->lock);
+      }
+#endif
+#endif
       return false;
     }
   } else {

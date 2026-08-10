@@ -14,10 +14,9 @@
 // Array of pointers to active HardwareSerial objects used by HAL to call end() when pins are detached
 static HardwareSerial *uart_instances[SOC_UART_NUM] = {nullptr};
 
-// Register the last HardwareSerial object started with begin
+// Register the HardwareSerial object for HAL termination callbacks
 static void uart_register(uint8_t uart_num, HardwareSerial *serial) {
-  // only register it once
-  if (uart_num < SOC_UART_NUM && uart_instances[uart_num] == nullptr) {
+  if (uart_num < SOC_UART_NUM) {
     uart_instances[uart_num] = serial;
   }
 }
@@ -502,11 +501,17 @@ void HardwareSerial::updateBaudRate(unsigned long baud) {
 void HardwareSerial::end() {
   // default Serial.end() will completely disable HardwareSerial,
   // including any tasks or debug message channel (log_x()) - but not for IDF log messages!
+  if (_uart == NULL) {
+    return;
+  }
   _onReceiveCB = NULL;
   _onReceiveErrorCB = NULL;
   _rxFIFOFull = 0;
+  _destroyEventTask();  // stop task before deleting the UART driver event queue
   uartEnd(_uart_nr);    // fully detach all pins and delete the UART driver
-  _destroyEventTask();  // when IDF uart driver is deleted, _eventTask must finish too
+  if (_uart_nr < SOC_UART_NUM) {
+    uart_instances[_uart_nr] = nullptr;
+  }
   _uart = NULL;
 }
 
@@ -635,6 +640,15 @@ bool HardwareSerial::setMode(SerialMode mode) {
   return uartSetMode(_uart, mode);
 }
 
+// Sets the UART IrDA direction to TX or RX.
+// IrDA works in exclusive directions: TX OR RX, never both simultaneously.
+// The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
+// It can only be used after setMode(UART_MODE_IRDA) is called.
+// Parameters: ESP32_UART_IRDA_TX (value 1, transmit mode) or ESP32_UART_IRDA_RX (value 0, receive mode)
+bool HardwareSerial::setIrdaDirection(esp32_uart_irda_direction_t irdaDirection) {
+  return uartSetIrdaDirection(_uart, irdaDirection);
+}
+
 // Sets the UART Clock Source based on the compatible SoC options
 // This method must be called before starting UART using begin(), otherwise it won't have any effect.
 // Clock Source Options are:
@@ -653,6 +667,15 @@ bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
   }
   return uartSetClockSource(_uart_nr, (uart_sclk_t)clkSrc);
 }
+
+bool HardwareSerial::enableRxInternalPull(bool enable) {
+  if (_uart) {
+    log_e("RX internal pull can't be changed when Serial is already running. Set it before calling begin().");
+    return false;
+  }
+  return uartEnableRxInternalPull(_uart_nr, enable);
+}
+
 // minimum total RX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1. IDF imposition.
 // LP UART has FIFO of 16 bytes
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {

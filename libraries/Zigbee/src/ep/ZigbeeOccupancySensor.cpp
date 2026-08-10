@@ -54,15 +54,12 @@ bool ZigbeeOccupancySensor::setSensorType(uint8_t sensor_type) {
 }
 
 bool ZigbeeOccupancySensor::setOccupancy(bool occupied) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Updating occupancy sensor value...");
   /* Update occupancy sensor value */
   log_d("Setting occupancy to %d", occupied);
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_ID, &occupied, false
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_ID, &occupied, false
   );
-  esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set occupancy: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -81,11 +78,8 @@ bool ZigbeeOccupancySensor::report() {
   report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
   report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send occupancy report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send occupancy report: 0x%x: %s");
     return false;
   }
   log_v("Occupancy report sent");

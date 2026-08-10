@@ -100,17 +100,17 @@ bool MatterColorTemperatureLight::begin(bool initialState, uint8_t brightness, u
 
   color_temperature_light::config_t light_config;
   light_config.on_off.on_off = initialState;
-  light_config.on_off.lighting.start_up_on_off = nullptr;
+  light_config.on_off_lighting.start_up_on_off = nullptr;
   onOffState = initialState;
 
   light_config.level_control.current_level = brightness;
-  light_config.level_control.lighting.start_up_current_level = nullptr;
+  light_config.level_control_lighting.start_up_current_level = nullptr;
   brightnessLevel = brightness;
 
   light_config.color_control.color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
   light_config.color_control.enhanced_color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
-  light_config.color_control.color_temperature.color_temperature_mireds = ColorTemperature;
-  light_config.color_control.color_temperature.startup_color_temperature_mireds = nullptr;
+  light_config.color_control_color_temperature.color_temperature_mireds = ColorTemperature;
+  light_config.color_control_color_temperature.start_up_color_temperature_mireds = nullptr;
   colorTemperatureLevel = ColorTemperature;
 
   // endpoint handles can be used to add/modify clusters.

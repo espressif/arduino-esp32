@@ -23,26 +23,37 @@ This structure represents the return status of an OpenThread CLI command:
 ### Function: `otGetDeviceRole()`
 
 - Returns the current role of the device as an `ot_device_role_t` value.
+- **Member of `OpenThread`:** call as `OThread.otGetDeviceRole()` (global `OThread` instance).
 
 ### Function: `otGetStringDeviceRole()`
 
 - Returns a human-readable string representation of the device role (e.g., "Child," "Router," etc.).
+- **Member of `OpenThread`:** call as `OThread.otGetStringDeviceRole()`.
 
-### Function: `otGetRespCmd(const char* cmd, char* resp = NULL, uint32_t respTimeout = 5000)`
+### CLI Helper Functions (`OThreadCLI_Util.h`)
+
+The following are **free functions** for programmatic CLI automation (not methods on `OThread`):
+
+### Function: `otGetRespCmd(const char* cmd, char* resp = NULL, size_t respBufSize = 0, uint32_t respTimeout = 5000)`
 
 - Executes an OpenThread CLI command and retrieves the response.
 - Parameters:
   - `cmd`: The OpenThread CLI command to execute.
   - `resp`: Optional buffer to store the response (if provided).
+  - `respBufSize`: Size of `resp` in bytes including NUL. Required for raw `char*` buffers; stack arrays should use the two-argument form (size deduced automatically).
   - `respTimeout`: Timeout (in milliseconds) for waiting for the response.
+- **Stack buffer (recommended):** `otGetRespCmd("state", resp)` or `otGetRespCmd("state", resp, 10000)` for a custom timeout.
+- **Raw pointer:** `otGetRespCmd("state", ptr, len)` or `otGetRespCmd("state", ptr, len, timeout)`.
+- When the response exceeds `respBufSize - 1` bytes it is truncated and a warning is logged.
 
-### Function: `otExecCommand(const char* cmd, const char* arg, ot_cmd_return_t* returnCode = NULL)`
+### Function: `otExecCommand(const char* cmd, const char* arg, ot_cmd_return_t* returnCode = NULL, uint32_t respTimeout = 5000)`
 
 - Executes an OpenThread CLI command with an argument.
 - Parameters:
   - `cmd`: The OpenThread CLI command to execute.
   - `arg`: The argument for the command.
   - `returnCode`: Optional pointer to an `ot_cmd_return_t` structure to store the return status.
+  - `respTimeout`: Timeout (in milliseconds) for Done/Error.
 
 ### Function: `otPrintRespCLI(const char* cmd, Stream& output, uint32_t respTimeout)`
 
@@ -52,8 +63,9 @@ This structure represents the return status of an OpenThread CLI command:
   - `output`: The output stream (e.g., Serial) to print the response.
   - `respTimeout`: Timeout (in milliseconds) for waiting for the response.
 
-### Function: `otPrintNetworkInformation(Stream& output)`
+### Function: `OpenThread::otPrintNetworkInformation(Stream& output)`
 
-- Prints information about the current Thread network to the specified output stream.
-- Parameters:
-  - `output`: The output stream (e.g., Serial) to print the network information.
+- **Static method on `OpenThread`:** prints role, network name, channel, PAN ID, keys, and IP addresses to the given stream.
+- Requires `OThread.begin()` and, for CLI-sourced fields, `OThreadCLI.begin()` if you rely on CLI-backed queries in your build.
+- Example: `OThread.otPrintNetworkInformation(Serial);`
+- This is **not** a free helper in `OThreadCLI_Util.h` (do not call `otPrintNetworkInformation()` without the `OThread.` prefix).

@@ -1,75 +1,62 @@
-# OpenThread Router/Child Node Example (Native API)
+# RouterNode - Thread Router/Child Joiner (Native API)
 
-This example demonstrates how to create an OpenThread Router or Child node that joins an existing Thread network using the Classes API (native OpenThread API).\
-The Router/Child node joins a network created by a Leader node and can route messages or operate as an end device. This example shows how to configure a Router/Child node using the `OpenThread` and `DataSet` classes.
+Client side of the [Simple Thread Network demo](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/README.md). This sketch:
+
+* starts OpenThread with `begin(false)` (no NVS auto-load),
+* commits a minimal `DataSet` containing **only the network key** (matching the
+  Leader),
+* calls `networkInterfaceUp()` + `start()` to join the existing network,
+* learns channel, PAN ID, extended PAN ID, and network name from the Leader,
+* prints the active dataset, role, RLOC, and addresses every 5 seconds.
+
+It is the counterpart of [LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode).
 
 ## Supported Targets
 
-| SoC | Thread | Status |
-| --- | ------ | ------ |
-| ESP32-H2 | ✅ | Fully supported |
-| ESP32-C6 | ✅ | Fully supported |
-| ESP32-C5 | ✅ | Fully supported |
+| SoC      | Thread | Status    |
+| -------- | ------ | --------- |
+| ESP32-H2 | yes    | Supported |
+| ESP32-C6 | yes    | Supported |
+| ESP32-C5 | yes    | Supported |
 
-### Note on Thread Support:
+## Required IDF features (sdkconfig)
 
-- Thread support must be enabled in the ESP-IDF configuration (`CONFIG_OPENTHREAD_ENABLED`). This is done automatically when using the ESP32 Arduino OpenThread library.
-- This example uses the Classes API (`OpenThread` and `DataSet` classes) instead of CLI Helper Functions.
-- This example uses `OpenThread.begin(false)` which does not use NVS dataset information, allowing fresh configuration.
-- **Important:** A Leader node must be running before starting this Router/Child node.
+| Feature                              | Why                                              |
+| ------------------------------------ | ------------------------------------------------ |
+| `CONFIG_OPENTHREAD_ENABLED=y`        | Build the OpenThread stack.                      |
+| `CONFIG_SOC_IEEE802154_SUPPORTED=y`  | Ensure the SoC has the 802.15.4 radio.           |
 
-## Features
+## Prerequisites
 
-- Router/Child node configuration using Classes API
-- Dataset configuration using `DataSet` class
-- Joins an existing Thread network created by a Leader node
-- Network information display using `OpenThread` class methods
-- Active dataset retrieval and display
-- Comprehensive network status monitoring
+[LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode) must already be running as **Leader** on the same
+RF range.
 
-## Hardware Requirements
+The **network key** in this sketch must match the Leader's key **exactly** (16
+bytes). Only the key is required locally — other operational parameters are
+learned after attach.
 
-- ESP32 compatible development board with Thread support (ESP32-H2, ESP32-C6, or ESP32-C5)
-- USB cable for Serial communication
-- A Leader node must be running on the same network
+Flash the Leader first and wait for `Role: Leader`, then flash this sketch.
+Reset this board if it booted before the Leader was ready.
 
-## Software Setup
-
-### Prerequisites
-
-1. Install the Arduino IDE (2.0 or newer recommended)
-2. Install ESP32 Arduino Core with OpenThread support
-3. ESP32 Arduino libraries:
-   - `OpenThread`
-
-### Configuration
-
-Before uploading the sketch, configure the network parameters to match the Leader node:
+## What the sketch does
 
 ```cpp
-uint8_t networkKey[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+// 1) Start stack without NVS dataset.
+threadChildNode.begin(false);
+
+// 2) Commit ONLY the network key (must match Leader).
+dataset.clear();
 dataset.setNetworkKey(networkKey);
+threadChildNode.commitDataSet(dataset);
+threadChildNode.networkInterfaceUp();
+threadChildNode.start();
+
+// 3) loop(): print active dataset + runtime addresses every 5 s
 ```
 
-**Important:**
-- The network key **must match** the Leader node's network key exactly
-- The network key must be a 16-byte array
-- Only the network key is required to join (other parameters are learned from the Leader)
-- **Start the Leader node first** before starting this Router/Child node
+## Expected serial output
 
-## Building and Flashing
-
-1. **First, start the Leader node** using the LeaderNode example (Native API)
-2. Open the `RouterNode.ino` sketch in the Arduino IDE.
-3. Select your ESP32 board from the **Tools > Board** menu (ESP32-H2, ESP32-C6, or ESP32-C5).
-4. Connect your ESP32 board to your computer via USB.
-5. Click the **Upload** button to compile and flash the sketch.
-
-## Expected Output
-
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. You should see output similar to the following:
-
-```
+```text
 ==============================================
 OpenThread Network Information (Active Dataset):
 Role: Router
@@ -79,96 +66,51 @@ Channel: 15
 PAN ID: 0x1234
 Extended PAN ID: dead00beef00cafe
 Network Key: 00112233445566778899aabbccddeeff
-Mesh Local EID: fd00:db8:a0:0:0:ff:fe00:fc00
-Node RLOC: fd00:db8:a0:0:0:ff:fe00:fc00
-Leader RLOC: fd00:db8:a0:0:0:ff:fe00:0
+Mesh Local EID: fdde:ad00:beef:0:....
+Node RLOC: fdde:ad00:beef:0:....
+Leader RLOC: fdde:ad00:beef:0:0:ff:fe00:0
 ```
 
-The device will join as either a **Router** (if network needs more routers) or **Child** (end device).
+Before attach:
 
-## Using the Device
+```text
+Thread Node Status: Detached - Waiting for thread network start...
+```
 
-### Router/Child Node Setup
+## Customization
 
-The Router/Child node is automatically configured in `setup()` using the Classes API:
+The only required local configuration is the **network key** in `setup()`:
 
-1. **Initialize OpenThread**: `threadChildNode.begin(false)` - Starts OpenThread stack without using NVS
-2. **Clear dataset**: `dataset.clear()` - Clears any existing dataset
-3. **Configure dataset**: Sets only the network key (must match Leader)
-4. **Apply dataset**: `threadChildNode.commitDataSet(dataset)` - Applies the dataset
-5. **Start network**: `threadChildNode.networkInterfaceUp()` and `threadChildNode.start()` - Starts the Thread network and joins existing network
+```cpp
+uint8_t networkKey[OT_NETWORK_KEY_SIZE] = {
+  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+  0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
+};
+dataset.setNetworkKey(networkKey);
+```
 
-### Network Information
-
-The `loop()` function displays network information using Classes API methods:
-- Device role and RLOC16
-- Active dataset information (retrieved using `threadChildNode.getCurrentDataSet()`):
-  - Network name, channel, PAN ID
-  - Extended PAN ID and network key
-- Runtime information:
-  - Mesh Local EID, Node RLOC, Leader RLOC
-
-### Active Dataset Retrieval
-
-This example demonstrates how to retrieve the active dataset:
-- Uses `threadChildNode.getCurrentDataSet()` to get the current active dataset
-- Displays dataset parameters that were learned from the Leader node
-- Shows that only the network key needs to be configured to join
-
-### Multi-Device Network
-
-To create a multi-device Thread network:
-
-1. Start the Leader node first (using Native API LeaderNode example)
-2. Start Router/Child nodes (using this example)
-3. All devices will form a mesh network
-4. Routers extend network range and route messages
-5. Children are end devices that can sleep
-
-## Code Structure
-
-The RouterNode example consists of the following main components:
-
-1. **`setup()`**:
-   - Initializes Serial communication
-   - Starts OpenThread stack with `OpenThread.begin(false)`
-   - Creates and configures a `DataSet` object:
-     - `dataset.clear()` - Clear existing dataset
-     - `dataset.setNetworkKey()` - Set network key (must match Leader)
-   - Applies dataset: `threadChildNode.commitDataSet(dataset)`
-   - Starts network: `threadChildNode.networkInterfaceUp()` and `threadChildNode.start()`
-
-2. **`loop()`**:
-   - Gets current device role using `threadChildNode.otGetDeviceRole()`
-   - Retrieves active dataset using `threadChildNode.getCurrentDataSet()`
-   - Displays network information using Classes API methods:
-     - `threadChildNode.otGetStringDeviceRole()` - Device role as string
-     - `threadChildNode.getRloc16()` - RLOC16
-     - `activeDataset.getNetworkName()` - Network name from dataset
-     - `activeDataset.getChannel()` - Channel from dataset
-     - `activeDataset.getPanId()` - PAN ID from dataset
-     - `activeDataset.getExtendedPanId()` - Extended PAN ID from dataset
-     - `activeDataset.getNetworkKey()` - Network key from dataset
-     - `threadChildNode.getMeshLocalEid()` - Mesh Local EID
-     - `threadChildNode.getRloc()` - Node RLOC
-     - `threadChildNode.getLeaderRloc()` - Leader RLOC
-   - Updates every 5 seconds
+This byte array must match [LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode) exactly.
 
 ## Troubleshooting
 
-- **Device not joining network**: Ensure the Leader node is running first. Verify network key matches the Leader exactly.
-- **Role stuck as "Detached"**: Wait a few seconds for the device to join. Check that network key matches the Leader.
-- **Network key mismatch**: Double-check that both Leader and Router/Child nodes use identical network key values.
-- **No network information**: Wait for the device to join the network (may take 10-30 seconds)
-- **Active dataset empty**: Ensure device has successfully joined the network before checking dataset
-- **No serial output**: Check baudrate (115200) and USB connection
+**Startup order:** Start [LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode) first and wait for
+`Role: Leader`. Then flash this Router sketch. Reset if it booted before the
+Leader was up.
 
-## Related Documentation
+| Symptom | Likely cause |
+| --- | --- |
+| Stuck as Detached | Leader not running or network key mismatch — verify key bytes match Leader. |
+| Wrong network name/channel after attach | Joined a different partition — erase flash on both boards and retry. |
+| Attaches as Child instead of Router | Normal on small networks — role may upgrade over time. |
+| Changed key has no effect | Stale NVS — erase flash; both sketches use `begin(false)` but prior datasets may linger. |
 
-- [OpenThread Core API](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_core.html)
-- [OpenThread Dataset API](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_dataset.html)
-- [OpenThread Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread.html)
+## See also
+
+* [Simple Thread Network — group overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/README.md) — two-board bring-up and shared dataset table.
+* [Simple Thread Network — LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode) — companion Leader network former.
+* [Thread Commissioning — JoinerNode](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode) — join without pre-sharing the network key.
+* [CLI Router Node](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode) — CLI equivalent.
 
 ## License
 
-This example is licensed under the Apache License, Version 2.0.
+Apache License 2.0.

@@ -6,7 +6,7 @@
 
 #include <Arduino.h>
 #include "sdkconfig.h"
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
 #error "WPA-Enterprise is only supported in SoCs with native Wi-Fi support"
 #endif
 
@@ -17,7 +17,6 @@
 #else
 #include "esp_wpa2.h"
 #endif
-#include <Wire.h>
 #define EAP_IDENTITY "identity"  //if connecting from another corporation, use identity@organization.domain in Eduroam
 #define EAP_PASSWORD "password"  //your Eduroam password
 const char *ssid = "eduroam";    // Eduroam SSID

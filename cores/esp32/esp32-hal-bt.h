@@ -33,14 +33,33 @@ typedef enum {
 
 // Returns true if BT memory should be kept, false to release it (~36KB).
 // Default (weak): returns false unless a BT library is linked.
-// BT libraries include esp32-hal-bt-mem.h which automatically sets a flag.
-// Users may also provide their own strong btInUse() to override.
+// BT libraries include esp32-hal-alloc-ble-mem.h and esp32-hal-alloc-bt-classic-mem.h which set
+// _bleLibraryInUse and _btClassicLibraryInUse to true via constructor.
+// Users may also provide their own strong *InUse() to override.
+bool _btInUse_default(void);
 bool btInUse(void);
+bool btClassicInUse(void);
+bool bleInUse(void);
 
 bool btStarted();
 bool btStart();
 bool btStartMode(bt_mode mode);
 bool btStop();
+
+// Release BT memory for the given mode and track the release.
+// ESP-IDF provides no API to query whether memory has been released,
+// so this function maintains the state internally.
+// Returns true on success or if memory was already released.
+bool btMemRelease(bt_mode mode);
+
+// Returns true if BT memory for the given mode has already been released.
+bool btMemReleased(bt_mode mode);
+
+// Mark BT memory for the given mode as released without calling ESP-IDF.
+// Use this when an external component (e.g. the ESP-IDF Matter stack) has
+// already released BT memory on its own, so that btMemReleased() reflects
+// the true state and btMemRelease() does not attempt a double-release.
+void btMarkMemReleased(bt_mode mode);
 
 #ifdef __cplusplus
 }

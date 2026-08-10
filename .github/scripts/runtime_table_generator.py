@@ -4,7 +4,7 @@ import logging
 import sys
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 
 # Configure logging
@@ -13,6 +13,8 @@ logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s', s
 SUCCESS_SYMBOL = ":white_check_mark:"
 FAILURE_SYMBOL = ":x:"
 ERROR_SYMBOL = ":fire:"
+
+CACHE_STALE_DAYS = 7
 
 
 def _natural_sort_key(s):
@@ -34,6 +36,79 @@ def _junit_status(junit):
     if junit and junit["failures"] > 0:
         return "Failure", FAILURE_SYMBOL
     return "Success", SUCCESS_SYMBOL
+
+
+def _load_previous_results(path):
+    """Load previous test_results.json; return its dict or {} on any error."""
+    if not path:
+        return {}
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return {}
+        return data
+    except (OSError, json.JSONDecodeError) as e:
+        logging.debug(f"Could not read previous results from {path}: {e}")
+        return {}
+
+
+def _load_build_failure_cells(path):
+    """Load per-cell build failures: set of (platform, test_name, target)."""
+    if not path or not os.path.isfile(path):
+        return set()
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            return set()
+        cells = set()
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            platform = item.get("platform")
+            target = item.get("target")
+            sketch = item.get("sketch")
+            if platform and target and sketch:
+                cells.add((platform, sketch, target))
+        return cells
+    except (OSError, json.JSONDecodeError) as e:
+        logging.debug(f"Could not read build failure cells from {path}: {e}")
+        return set()
+
+
+def _is_cache_fresh(entry):
+    """Return True if the cache entry timestamp is within CACHE_STALE_DAYS."""
+    if not entry or "timestamp" not in entry:
+        return False
+    try:
+        ts = datetime.fromisoformat(entry["timestamp"])
+        # Make timezone-aware if naive (assume UTC)
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - ts) < timedelta(days=CACHE_STALE_DAYS)
+    except (ValueError, TypeError) as e:
+        logging.debug(f"Failed to parse cache timestamp: {e}")
+        return False
+
+
+def _make_cache_entry(total, failures, commit_sha):
+    """Build a fresh cache entry dict for a validation test cell."""
+    return {
+        "total": total,
+        "failures": failures,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "commit_sha": commit_sha,
+    }
+
+
+def _render_cached_cell(entry):
+    """Return the markdown cell text for a cached (stale-runner) result."""
+    total = entry.get("total", 0)
+    failures = entry.get("failures", 0)
+    passed = total - failures
+    symbol = FAILURE_SYMBOL if failures > 0 else SUCCESS_SYMBOL
+    return f"|{passed}/{total} {symbol}\\*"
 
 
 def _parse_performance_json(data, test_name_from_path=None):
@@ -145,6 +220,12 @@ parser = argparse.ArgumentParser(description="Generate runtime test results repo
 parser.add_argument("--results", required=True, help="Path to the unity_results.json file")
 parser.add_argument("--sha", default=None, help="Commit SHA (falls back to GITHUB_SHA env var)")
 parser.add_argument("--perf-dir", default=None, help="Path to directory containing performance result_*.json files")
+parser.add_argument("--previous-results", default=None, help="Path to previous test_results.json (used to seed the result cache)")
+parser.add_argument(
+    "--build-failure-cells",
+    default=None,
+    help="Path to build_failure_cells.json (cells with no build artifact; show errors, not cache)",
+)
 args = parser.parse_args()
 
 with open(args.results, "r") as f:
@@ -155,6 +236,14 @@ commit_sha = args.sha or os.environ.get("GITHUB_SHA")
 performance_data_dir = args.perf_dir.rstrip(os.sep) if args.perf_dir else None
 if not commit_sha:
     parser.error("Commit SHA is required: provide via --sha or set the GITHUB_SHA environment variable.")
+
+# Load persistent result cache from previous run
+previous_results = _load_previous_results(args.previous_results)
+raw_result_cache = previous_results.get("cache", {})
+result_cache = raw_result_cache if isinstance(raw_result_cache, dict) else {}        # platform -> test_name -> target -> entry
+raw_perf_cache = previous_results.get("perf_cache", {})
+perf_cache = raw_perf_cache if isinstance(raw_perf_cache, dict) else {}     # test_name -> target -> entry
+build_failure_cells = _load_build_failure_cells(args.build_failure_cells)
 
 # Generate the table
 
@@ -230,6 +319,7 @@ for test in tests:
     proc_test_data[platform][test_name][target]["errors"] += test["errors"]
 
 # Render only executed tests grouped by platform/target/test
+any_cached_cell = False
 for platform in proc_test_data:
     print("")
     print(f"#### {platform.capitalize()}")
@@ -251,14 +341,29 @@ for platform in proc_test_data:
     print("-" + "|:-:" * len(target_list))
 
     platform_executed = proc_test_data.get(platform, {})
+    plat_cache = result_cache.setdefault(platform, {})
     for test_name in sorted(platform_executed.keys()):
+        test_cache = plat_cache.setdefault(test_name, {})
         print(f"{test_name}", end="")
         for target in target_list:
             executed_cell = platform_executed.get(test_name, {}).get(target)
             if executed_cell:
                 if executed_cell["errors"] > 0:
-                    print(f"|Error {ERROR_SYMBOL}", end="")
+                    # Test did not run — cache only when runner unavailable, not when build failed
+                    cached = test_cache.get(target)
+                    build_failed_cell = (platform, test_name, target) in build_failure_cells
+                    if not build_failed_cell and cached and _is_cache_fresh(cached):
+                        print(_render_cached_cell(cached), end="")
+                        any_cached_cell = True
+                    else:
+                        print(f"|Error {ERROR_SYMBOL}", end="")
                 else:
+                    # Test ran successfully (pass or fail) — update cache
+                    test_cache[target] = _make_cache_entry(
+                        executed_cell["total"],
+                        executed_cell["failures"],
+                        commit_sha,
+                    )
                     print(f"|{executed_cell['total']-executed_cell['failures']}/{executed_cell['total']}", end="")
                     if executed_cell["failures"] > 0:
                         print(f" {FAILURE_SYMBOL}", end="")
@@ -290,26 +395,62 @@ if tests_with_targets:
 
     for test_name in sorted(tests_with_targets.keys()):
         print(f"- **{test_name}**")
+        test_perf_cache = perf_cache.setdefault(test_name, {})
         for target in sorted(tests_with_targets[test_name].keys()):
             entry = tests_with_targets[test_name][target]
-            status_label, status_symbol = _junit_status(perf_junit_status.get((target, test_name)))
-            print(f"  - {_display_target(target)} - {status_label} - {status_symbol}")
-
-            if entry:
-                settings_str = entry.get("settings") or ""
-                runs = entry["runs"]
-                runs_line = f"{settings_str} - {runs} runs" if settings_str else f"{runs} runs"
-                print(f"    - {runs_line}:")
-                for mname in sorted(entry["metrics"].keys(), key=_natural_sort_key):
-                    agg = entry["metrics"][mname]
-                    avg = agg["avg"]
-                    unit = agg.get("unit", "")
-                    unit_str = f" {unit}" if unit else ""
-                    print(f"      - {mname}: {avg}{unit_str}")
+            junit = perf_junit_status.get((target, test_name))
+            if junit and junit["errors"] > 0:
+                # Test did not run — cache only when runner unavailable, not when build failed
+                cached = test_perf_cache.get(target)
+                cached_status = cached.get("status") if cached else None
+                build_failed_cell = ("hardware", test_name, target) in build_failure_cells
+                if not build_failed_cell and cached and _is_cache_fresh(cached) and cached_status:
+                    status_label = cached_status.capitalize()
+                    status_symbol = SUCCESS_SYMBOL if cached_status == "success" else FAILURE_SYMBOL
+                    print(f"  - {_display_target(target)} - {status_label} - {status_symbol}\\*")
+                    any_cached_cell = True
+                    if cached.get("metrics"):
+                        settings_str = cached.get("settings") or ""
+                        runs = cached.get("runs", 0)
+                        runs_line = f"{settings_str} - {runs} runs" if settings_str else f"{runs} runs"
+                        print(f"    - {runs_line} (cached):")
+                        for mname in sorted(cached["metrics"].keys(), key=_natural_sort_key):
+                            agg = cached["metrics"][mname]
+                            avg = agg["avg"]
+                            unit = agg.get("unit", "")
+                            unit_str = f" {unit}" if unit else ""
+                            print(f"      - {mname}: {avg}{unit_str}")
+                else:
+                    print(f"  - {_display_target(target)} - Error - {ERROR_SYMBOL}")
+            else:
+                status_label, status_symbol = _junit_status(junit)
+                print(f"  - {_display_target(target)} - {status_label} - {status_symbol}")
+                # Update performance cache entry
+                perf_entry = {
+                    "status": status_label.lower(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "commit_sha": commit_sha,
+                }
+                if entry:
+                    settings_str = entry.get("settings") or ""
+                    runs = entry["runs"]
+                    runs_line = f"{settings_str} - {runs} runs" if settings_str else f"{runs} runs"
+                    print(f"    - {runs_line}:")
+                    for mname in sorted(entry["metrics"].keys(), key=_natural_sort_key):
+                        agg = entry["metrics"][mname]
+                        avg = agg["avg"]
+                        unit = agg.get("unit", "")
+                        unit_str = f" {unit}" if unit else ""
+                        print(f"      - {mname}: {avg}{unit_str}")
+                    perf_entry.update({"runs": entry["runs"], "settings": entry.get("settings", ""), "metrics": entry["metrics"]})
+                test_perf_cache[target] = perf_entry
         print("")
 
 print("\n")
-print(f"Generated on: {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}")
+if any_cached_cell:
+    print("> \\* Result from last successful run (runner currently unavailable)")
+    print("")
+print(f"Generated on: {datetime.now(timezone.utc).strftime('%Y/%m/%d %H:%M:%S UTC')}")
 print("")
 
 try:
@@ -330,7 +471,9 @@ results_data = {
     "commit_sha": commit_sha,
     "tests_failed": os.environ.get("IS_FAILING") == "true",
     "test_data": proc_test_data,
-    "generated_at": datetime.now().isoformat()
+    "generated_at": datetime.now(timezone.utc).isoformat(),
+    "cache": result_cache,
+    "perf_cache": perf_cache,
 }
 if tests_with_targets:
     perf_out = {}

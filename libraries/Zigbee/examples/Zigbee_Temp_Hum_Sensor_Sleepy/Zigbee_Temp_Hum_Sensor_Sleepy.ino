@@ -185,7 +185,7 @@ void setup() {
   Serial.println("Successfully connected to Zigbee network");
 
   // Start Temperature sensor reading task
-  xTaskCreate(meausureAndSleep, "temp_sensor_update", 2048, NULL, 10, NULL);
+  xTaskCreate(meausureAndSleep, "temp_sensor_update", 3072, NULL, 10, NULL);
 }
 
 void loop() {

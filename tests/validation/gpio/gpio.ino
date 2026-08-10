@@ -8,7 +8,13 @@
 #include <Arduino.h>
 #include <unity.h>
 
-#define BTN 0
+#if CONFIG_IDF_TARGET_ESP32P4
+#define BTN 2
+#elif CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#define BTN 14
+#else
+#define BTN 10
+#endif
 #define LED 4
 
 volatile int interruptCounter = 0;
@@ -76,6 +82,7 @@ void test_write_basic(void) {
 
   digitalWrite(LED, LOW);
   Serial.println("LED set to LOW");
+  waitForSyncAck();  // sync ack W3 -- pytest verifies LOW
 }
 
 void test_interrupt_attach_detach(void) {
@@ -206,6 +213,36 @@ void test_interrupt_with_arg(void) {
   waitForSyncAck();
 }
 
+void test_read_pulldown(void) {
+  pinMode(BTN, INPUT_PULLDOWN);
+  delay(10);
+  TEST_ASSERT_EQUAL(LOW, digitalRead(BTN));
+  Serial.println("BTN read as LOW after pinMode INPUT_PULLDOWN");
+
+  pinMode(BTN, INPUT_PULLUP);
+  delay(10);
+  TEST_ASSERT_EQUAL(HIGH, digitalRead(BTN));
+  Serial.println("BTN back to HIGH after INPUT_PULLUP");
+}
+
+void test_pin_mode_switch(void) {
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
+  Serial.println("LED OUTPUT HIGH");
+  waitForSyncAck();  // sync ack MS1 -- pytest verifies HIGH
+
+  pinMode(LED, INPUT_PULLUP);
+  int val = digitalRead(LED);
+  TEST_ASSERT_EQUAL(HIGH, val);
+  Serial.println("LED switched to INPUT_PULLUP reads HIGH");
+  waitForSyncAck();  // sync ack MS2
+
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, LOW);
+  Serial.println("LED back to OUTPUT LOW");
+  waitForSyncAck();  // sync ack MS3 -- pytest verifies LOW
+}
+
 void setup() {
   Serial.begin(115200);
   while (!Serial) {}
@@ -215,6 +252,8 @@ void setup() {
   Serial.println("GPIO test START");
   RUN_TEST(test_read_basic);
   RUN_TEST(test_write_basic);
+  RUN_TEST(test_read_pulldown);
+  RUN_TEST(test_pin_mode_switch);
 
   Serial.println("GPIO interrupt START");
   RUN_TEST(test_interrupt_attach_detach);

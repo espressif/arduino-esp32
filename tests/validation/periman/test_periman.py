@@ -27,7 +27,10 @@ def test_periman(dut):
         if has_deinit:
             pending_tests.add(f"{name}_deinit")
 
-    pattern = rb"(?:\b[\w_]+\b test: This should(?: not)? be printed|Peripheral Manager test done)"
+    names_pattern = "|".join(sorted(pending_tests, key=len, reverse=True))
+    pattern = (
+        rb"(?:(?:" + names_pattern.encode() + rb") test: This should(?: not)? be printed|Peripheral Manager test done)"
+    )
 
     while True:
         try:

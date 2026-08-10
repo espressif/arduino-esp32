@@ -78,7 +78,7 @@
 // -----------------------------------------------------------------------------
 // Includes
 // -----------------------------------------------------------------------------
-#include "esp32-hal-bt-mem.h"
+#include "esp32-hal-alloc-bt-classic-mem.h"
 #include "esp32-hal-bt.h"
 #include "esp_bt.h"
 #include "esp_bt_device.h"

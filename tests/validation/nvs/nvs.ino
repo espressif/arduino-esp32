@@ -1,150 +1,352 @@
+/*
+ * NVS/Preferences Validation Test
+ *
+ * Covers: all typed put/get (Char, UChar, Short, UShort, Int, UInt, Long,
+ * ULong, Long64, ULong64, Float, Double, Bool), String (String + char*),
+ * Bytes/struct, isKey, getType, freeEntries, remove, clear,
+ * multi-namespace isolation, and persistence across reboots.
+ *
+ * Persistence test: Python restarts the device after phase 1 and
+ * the sketch detects the boot count to run phase 2 verification.
+ */
+
 #include <Arduino.h>
 #include <Preferences.h>
+
+#include <unity.h>
+
+Preferences prefs;
 
 struct TestData {
   uint8_t id;
   uint16_t value;
 };
 
-Preferences preferences;
+void setUp(void) {}
+void tearDown(void) {}
 
-void validate_types() {
-  assert(preferences.getType("char") == PT_I8);
-  assert(preferences.getType("uchar") == PT_U8);
-  assert(preferences.getType("short") == PT_I16);
-  assert(preferences.getType("ushort") == PT_U16);
-  assert(preferences.getType("int") == PT_I32);
-  assert(preferences.getType("uint") == PT_U32);
-  assert(preferences.getType("long") == PT_I32);
-  assert(preferences.getType("ulong") == PT_U32);
-  assert(preferences.getType("long64") == PT_I64);
-  assert(preferences.getType("ulong64") == PT_U64);
-  assert(preferences.getType("float") == PT_BLOB);
-  assert(preferences.getType("double") == PT_BLOB);
-  assert(preferences.getType("bool") == PT_U8);
-  assert(preferences.getType("str") == PT_STR);
-  assert(preferences.getType("strLen") == PT_STR);
-  assert(preferences.getType("struct") == PT_BLOB);
+// ==================== Typed Put/Get ====================
+
+void test_char(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putChar("c", 'Z'));
+  TEST_ASSERT_EQUAL('Z', prefs.getChar("c", 0));
+  prefs.end();
 }
 
-// Function to increment string values
-void incrementStringValues(String &val_string, char *val_string_buf, size_t buf_size) {
-  // Extract the number from string and increment it
-  val_string = "str" + String(val_string.substring(3).toInt() + 1);
+void test_uchar(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putUChar("uc", 200));
+  TEST_ASSERT_EQUAL(200, prefs.getUChar("uc", 0));
+  prefs.end();
+}
 
-  // Extract the number from strLen and increment it
-  String strLen_str = String(val_string_buf);
-  int strLen_num = strLen_str.substring(6).toInt();
-  snprintf(val_string_buf, buf_size, "strLen%d", strLen_num + 1);
+void test_short(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putShort("s", -1234));
+  TEST_ASSERT_EQUAL(-1234, prefs.getShort("s", 0));
+  prefs.end();
+}
+
+void test_ushort(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putUShort("us", 50000));
+  TEST_ASSERT_EQUAL(50000, prefs.getUShort("us", 0));
+  prefs.end();
+}
+
+void test_int(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putInt("i", -100000));
+  TEST_ASSERT_EQUAL(-100000, prefs.getInt("i", 0));
+  prefs.end();
+}
+
+void test_uint(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putUInt("ui", 3000000000U));
+  TEST_ASSERT_EQUAL(3000000000U, prefs.getUInt("ui", 0));
+  prefs.end();
+}
+
+void test_long(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putLong("l", -999999));
+  TEST_ASSERT_EQUAL(-999999, prefs.getLong("l", 0));
+  prefs.end();
+}
+
+void test_ulong(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putULong("ul", 4000000000U));
+  TEST_ASSERT_EQUAL(4000000000U, prefs.getULong("ul", 0));
+  prefs.end();
+}
+
+void test_long64(void) {
+  prefs.begin("test-types", false);
+  int64_t val = -1234567890123LL;
+  TEST_ASSERT_TRUE(prefs.putLong64("l64", val));
+  int64_t got = prefs.getLong64("l64", 0);
+  TEST_ASSERT_TRUE_MESSAGE(val == got, "Long64 read-back mismatch");
+  prefs.end();
+}
+
+void test_ulong64(void) {
+  prefs.begin("test-types", false);
+  uint64_t val = 9876543210123ULL;
+  TEST_ASSERT_TRUE(prefs.putULong64("ul64", val));
+  uint64_t got = prefs.getULong64("ul64", 0);
+  TEST_ASSERT_TRUE_MESSAGE(val == got, "ULong64 read-back mismatch");
+  prefs.end();
+}
+
+void test_float(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putFloat("f", 3.14f));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 3.14f, prefs.getFloat("f", 0.0f));
+  prefs.end();
+}
+
+void test_double(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putDouble("d", 2.718281828));
+  TEST_ASSERT_DOUBLE_WITHIN(0.000001, 2.718281828, prefs.getDouble("d", 0.0));
+  prefs.end();
+}
+
+void test_bool(void) {
+  prefs.begin("test-types", false);
+  TEST_ASSERT_TRUE(prefs.putBool("b", true));
+  TEST_ASSERT_TRUE(prefs.getBool("b", false));
+  TEST_ASSERT_TRUE(prefs.putBool("b", false));
+  TEST_ASSERT_FALSE(prefs.getBool("b", true));
+  prefs.end();
+}
+
+// ==================== String ====================
+
+void test_string_object(void) {
+  prefs.begin("test-str", false);
+  String val = "Hello Preferences!";
+  TEST_ASSERT_TRUE(prefs.putString("so", val));
+  TEST_ASSERT_EQUAL_STRING(val.c_str(), prefs.getString("so", "").c_str());
+  prefs.end();
+}
+
+void test_string_cstr(void) {
+  prefs.begin("test-str", false);
+  const char *val = "C-string test";
+  TEST_ASSERT_TRUE(prefs.putString("sc", val));
+  char buf[32] = {0};
+  size_t len = prefs.getString("sc", buf, sizeof(buf));
+  TEST_ASSERT_GREATER_THAN(0, len);
+  TEST_ASSERT_EQUAL_STRING(val, buf);
+  prefs.end();
+}
+
+// ==================== Bytes / Struct ====================
+
+void test_bytes(void) {
+  prefs.begin("test-blob", false);
+  uint8_t wbuf[] = {0xDE, 0xAD, 0xBE, 0xEF, 0x42};
+  TEST_ASSERT_EQUAL(sizeof(wbuf), prefs.putBytes("raw", wbuf, sizeof(wbuf)));
+  uint8_t rbuf[8] = {0};
+  size_t len = prefs.getBytes("raw", rbuf, sizeof(rbuf));
+  TEST_ASSERT_EQUAL(sizeof(wbuf), len);
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(wbuf, rbuf, sizeof(wbuf));
+  prefs.end();
+}
+
+void test_struct(void) {
+  prefs.begin("test-blob", false);
+  TestData wd = {42, 1234};
+  TEST_ASSERT_EQUAL(sizeof(wd), prefs.putBytes("st", &wd, sizeof(wd)));
+  TestData rd = {0, 0};
+  size_t len = prefs.getBytes("st", &rd, sizeof(rd));
+  TEST_ASSERT_EQUAL(sizeof(rd), len);
+  TEST_ASSERT_EQUAL(42, rd.id);
+  TEST_ASSERT_EQUAL(1234, rd.value);
+  prefs.end();
+}
+
+// ==================== isKey / getType ====================
+
+void test_is_key(void) {
+  prefs.begin("test-key", false);
+  prefs.clear();
+  TEST_ASSERT_FALSE(prefs.isKey("nokey"));
+  prefs.putInt("exists", 99);
+  TEST_ASSERT_TRUE(prefs.isKey("exists"));
+  prefs.end();
+}
+
+void test_get_type(void) {
+  prefs.begin("test-key", false);
+  prefs.putChar("tc", 'A');
+  TEST_ASSERT_EQUAL(PT_I8, prefs.getType("tc"));
+  prefs.putUInt("tu", 1);
+  TEST_ASSERT_EQUAL(PT_U32, prefs.getType("tu"));
+  prefs.putString("ts", "hi");
+  TEST_ASSERT_EQUAL(PT_STR, prefs.getType("ts"));
+  TEST_ASSERT_EQUAL(PT_INVALID, prefs.getType("nope"));
+  prefs.end();
+}
+
+// ==================== freeEntries ====================
+
+void test_free_entries(void) {
+  prefs.begin("test-free", false);
+  prefs.clear();
+  size_t before = prefs.freeEntries();
+  TEST_ASSERT_GREATER_THAN(0, before);
+  prefs.putInt("k1", 1);
+  prefs.putInt("k2", 2);
+  size_t after = prefs.freeEntries();
+  TEST_ASSERT_LESS_THAN(before, after);
+  prefs.end();
+}
+
+// ==================== remove ====================
+
+void test_remove(void) {
+  prefs.begin("test-rm", false);
+  prefs.clear();
+  prefs.putInt("rmkey", 123);
+  TEST_ASSERT_TRUE(prefs.isKey("rmkey"));
+  TEST_ASSERT_TRUE(prefs.remove("rmkey"));
+  TEST_ASSERT_FALSE(prefs.isKey("rmkey"));
+  TEST_ASSERT_EQUAL(0, prefs.getInt("rmkey", 0));
+  prefs.end();
+}
+
+// ==================== clear ====================
+
+void test_clear(void) {
+  prefs.begin("test-clr", false);
+  prefs.putInt("a", 1);
+  prefs.putInt("b", 2);
+  prefs.putString("c", "val");
+  TEST_ASSERT_TRUE(prefs.clear());
+  TEST_ASSERT_FALSE(prefs.isKey("a"));
+  TEST_ASSERT_FALSE(prefs.isKey("b"));
+  TEST_ASSERT_FALSE(prefs.isKey("c"));
+  prefs.end();
+}
+
+// ==================== Namespace isolation ====================
+
+void test_namespace_isolation(void) {
+  prefs.begin("ns-alpha", false);
+  prefs.clear();
+  prefs.putInt("shared", 111);
+  prefs.end();
+
+  prefs.begin("ns-beta", false);
+  prefs.clear();
+  prefs.putInt("shared", 222);
+  prefs.end();
+
+  prefs.begin("ns-alpha", false);
+  TEST_ASSERT_EQUAL(111, prefs.getInt("shared", 0));
+  prefs.end();
+
+  prefs.begin("ns-beta", false);
+  TEST_ASSERT_EQUAL(222, prefs.getInt("shared", 0));
+  prefs.end();
+}
+
+// ==================== Read-only mode ====================
+
+void test_readonly(void) {
+  prefs.begin("test-ro", false);
+  prefs.putInt("rokey", 77);
+  prefs.end();
+
+  prefs.begin("test-ro", true);
+  TEST_ASSERT_EQUAL(77, prefs.getInt("rokey", 0));
+  TEST_ASSERT_FALSE(prefs.putInt("rokey", 88));
+  TEST_ASSERT_EQUAL(77, prefs.getInt("rokey", 0));
+  prefs.end();
+}
+
+// ==================== Default values for missing keys ====================
+
+void test_defaults(void) {
+  prefs.begin("test-def", false);
+  prefs.clear();
+  TEST_ASSERT_EQUAL(42, prefs.getInt("missing", 42));
+  TEST_ASSERT_EQUAL_STRING("default", prefs.getString("missing", "default").c_str());
+  TEST_ASSERT_EQUAL(0, prefs.getBytes("missing", NULL, 0));
+  prefs.end();
+}
+
+// ==================== Persistence across reboot ====================
+
+void test_persistence_write(void) {
+  prefs.begin("test-persist", false);
+  prefs.clear();
+  prefs.putInt("counter", 100);
+  prefs.putString("msg", "survived");
+  prefs.end();
+}
+
+void test_persistence_verify(void) {
+  prefs.begin("test-persist", true);
+  TEST_ASSERT_EQUAL(100, prefs.getInt("counter", 0));
+  TEST_ASSERT_EQUAL_STRING("survived", prefs.getString("msg", "").c_str());
+  prefs.end();
+}
+
+// ==================== Main ====================
+
+static bool is_persistence_verify_phase() {
+  prefs.begin("test-persist", true);
+  bool has_data = prefs.isKey("counter");
+  prefs.end();
+  return has_data;
 }
 
 void setup() {
   Serial.begin(115200);
   while (!Serial) {
-    ;
+    delay(10);
   }
 
-  preferences.begin("my-app", false);
+  UNITY_BEGIN();
 
-  // Get the preferences value and if not exists, use default parameter
-  char val_char = preferences.getChar("char", 'A');
-  unsigned char val_uchar = preferences.getUChar("uchar", 0);
-  int16_t val_short = preferences.getShort("short", 0);
-  uint16_t val_ushort = preferences.getUShort("ushort", 0);
-  int32_t val_int = preferences.getInt("int", 0);
-  uint32_t val_uint = preferences.getUInt("uint", 0);
-  int32_t val_long = preferences.getLong("long", 0);
-  uint32_t val_ulong = preferences.getULong("ulong", 0);
-  int64_t val_long64 = preferences.getLong64("long64", 0);
-  uint64_t val_ulong64 = preferences.getULong64("ulong64", 0);
-  float val_float = preferences.getFloat("float", 0.0f);
-  double val_double = preferences.getDouble("double", 0.0);
-  bool val_bool = preferences.getBool("bool", false);
-
-  // Strings
-  String val_string = preferences.getString("str", "str0");
-  char val_string_buf[20] = "strLen0";
-  preferences.getString("strLen", val_string_buf, sizeof(val_string_buf));
-
-  // Structure data
-  TestData test_data = {0, 0};
-
-  size_t struct_size = preferences.getBytes("struct", &test_data, sizeof(test_data));
-  if (struct_size == 0) {
-    // First time - set initial values using parameter names
-    test_data.id = 1;
-    test_data.value = 100;
+  if (is_persistence_verify_phase()) {
+    RUN_TEST(test_persistence_verify);
+  } else {
+    RUN_TEST(test_char);
+    RUN_TEST(test_uchar);
+    RUN_TEST(test_short);
+    RUN_TEST(test_ushort);
+    RUN_TEST(test_int);
+    RUN_TEST(test_uint);
+    RUN_TEST(test_long);
+    RUN_TEST(test_ulong);
+    RUN_TEST(test_long64);
+    RUN_TEST(test_ulong64);
+    RUN_TEST(test_float);
+    RUN_TEST(test_double);
+    RUN_TEST(test_bool);
+    RUN_TEST(test_string_object);
+    RUN_TEST(test_string_cstr);
+    RUN_TEST(test_bytes);
+    RUN_TEST(test_struct);
+    RUN_TEST(test_is_key);
+    RUN_TEST(test_get_type);
+    RUN_TEST(test_free_entries);
+    RUN_TEST(test_remove);
+    RUN_TEST(test_clear);
+    RUN_TEST(test_namespace_isolation);
+    RUN_TEST(test_readonly);
+    RUN_TEST(test_defaults);
+    RUN_TEST(test_persistence_write);
   }
 
-  // Output is split into multiple lines. Call Serial.flush() after each printf so the UART FIFO does not
-  // retain bytes across back-to-back writes. Without that, Wokwi runs can stall (see validation/sdcard) and
-  // pytest expect_exact on full lines may time out with truncated serial.
-  Serial.printf(
-    "Values from Preferences: char: %c | uchar: %u | short: %d | ushort: %u | int: %" PRIi32 " | uint: %" PRIu32 "\n", val_char, val_uchar, val_short,
-    val_ushort, val_int, val_uint
-  );
-  Serial.flush();
-  Serial.printf(
-    "long: %" PRIi32 " | ulong: %" PRIu32 " | long64: %" PRIi64 " | ulong64: %" PRIu64 " | float: %.2f | double: %.2f\n", val_long, val_ulong, val_long64,
-    val_ulong64, val_float, val_double
-  );
-  Serial.flush();
-  Serial.printf(
-    "bool: %s | str: %s | strLen: %s | struct: {id:%u,val:%u}\n", val_bool ? "true" : "false", val_string.c_str(), val_string_buf, test_data.id, test_data.value
-  );
-  Serial.flush();  // Drain the UART FIFO before flash writes occupy the CPU
-
-  // Increment the values
-  val_char += 1;  // Increment char A -> B
-  val_uchar += 1;
-  val_short += 1;
-  val_ushort += 1;
-  val_int += 1;
-  val_uint += 1;
-  val_long += 1;
-  val_ulong += 1;
-  val_long64 += 1;
-  val_ulong64 += 1;
-  val_float += 1.1f;
-  val_double += 1.1;
-  val_bool = !val_bool;  // Toggle boolean value
-
-  // Increment string values using function
-  incrementStringValues(val_string, val_string_buf, sizeof(val_string_buf));
-
-  test_data.id += 1;
-  test_data.value += 10;
-
-  // Store the updated values back to Preferences
-  preferences.putChar("char", val_char);
-  preferences.putUChar("uchar", val_uchar);
-  preferences.putShort("short", val_short);
-  preferences.putUShort("ushort", val_ushort);
-  preferences.putInt("int", val_int);
-  preferences.putUInt("uint", val_uint);
-  preferences.putLong("long", val_long);
-  preferences.putULong("ulong", val_ulong);
-  preferences.putLong64("long64", val_long64);
-  preferences.putULong64("ulong64", val_ulong64);
-  preferences.putFloat("float", val_float);
-  preferences.putDouble("double", val_double);
-  preferences.putBool("bool", val_bool);
-  preferences.putString("str", val_string);
-  preferences.putString("strLen", val_string_buf);
-  preferences.putBytes("struct", &test_data, sizeof(test_data));
-
-  // Check if the keys exist
-  assert(preferences.isKey("char"));
-  assert(preferences.isKey("struct"));
-
-  // Validate the types of the keys
-  validate_types();
-
-  // Close the Preferences, wait and restart
-  preferences.end();
-  Serial.flush();
-  delay(1000);
-  ESP.restart();
+  UNITY_END();
 }
 
 void loop() {}

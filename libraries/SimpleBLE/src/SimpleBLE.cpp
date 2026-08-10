@@ -21,7 +21,8 @@
 #include "esp32-hal-log.h"
 
 #if defined(ARDUINO_ARCH_ESP32)
-#include "esp32-hal-bt-mem.h"
+#include "esp32-hal-bt.h"
+#include "esp32-hal-alloc-ble-mem.h"
 #endif
 
 #if defined(SOC_BLE_SUPPORTED)
@@ -174,6 +175,13 @@ static bool _init_gap(const char *name) {
     log_d("BLE already initialized, skipping");
     return true;
   }
+
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+  if (btMemReleased(BT_MODE_BLE)) {
+    log_e("BLE memory has been released. Cannot initialize BLE.");
+    return false;
+  }
+#endif
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
   if (!btStarted() && !btStart()) {
