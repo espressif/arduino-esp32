@@ -65,14 +65,14 @@
 #define WS_IO_EXT_SCL  9
 #define WS_IO_EXT_ADDR 0x24
 
-#define WS_EXIO_DI0      0
-#define WS_EXIO_TP_RST   1
-#define WS_EXIO_LCD_BL   2
-#define WS_EXIO_PA_EN    3
-#define WS_EXIO_SD_CS    4
-#define WS_EXIO_DI1      5
-#define WS_EXIO_DO0      6
-#define WS_EXIO_DO1      7
+#define WS_EXIO_DI0    0
+#define WS_EXIO_TP_RST 1
+#define WS_EXIO_LCD_BL 2
+#define WS_EXIO_PA_EN  3
+#define WS_EXIO_SD_CS  4
+#define WS_EXIO_DI1    5
+#define WS_EXIO_DO0    6
+#define WS_EXIO_DO1    7
 
 // The board exposes native USB but no dedicated UART or SPI pins.
 static const uint8_t TX = -1;
