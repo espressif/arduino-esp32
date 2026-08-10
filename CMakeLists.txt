@@ -194,7 +194,8 @@ set(ARDUINO_LIBRARY_OpenThread_SRCS
   libraries/OpenThread/src/OThreadUDP.cpp
   libraries/OpenThread/src/OThreadCoAP.cpp
   libraries/OpenThread/src/OThreadCLI_Util.cpp
-  libraries/OpenThread/src/OThreadScan.cpp)
+  libraries/OpenThread/src/OThreadScan.cpp
+  libraries/OpenThread/src/OThreadDNSSD.cpp)
 
 set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterGenericSwitch.cpp
