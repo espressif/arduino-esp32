@@ -23,10 +23,10 @@
 
 // Addressable RGB LEDs use the encoded built-in LED pin in Arduino APIs.
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
-#define BUILTIN_LED LED_BUILTIN
-#define LED_BUILTIN LED_BUILTIN
-#define RGB_BUILTIN LED_BUILTIN
-#define RGB_BRIGHTNESS 64
+#define BUILTIN_LED                 LED_BUILTIN
+#define LED_BUILTIN                 LED_BUILTIN
+#define RGB_BUILTIN                 LED_BUILTIN
+#define RGB_BRIGHTNESS              64
 #define RGB_BUILTIN_LED_COLOR_ORDER LED_COLOR_ORDER_RGB
 
 static const uint8_t TX = 11;
