@@ -76,7 +76,7 @@ sdkconfig capabilities
      - Second board can advertise to it
 
 Compared to Wi-Fi MDNS
----------------------
+----------------------
 
 .. list-table::
    :header-rows: 1
