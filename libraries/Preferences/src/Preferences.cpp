@@ -282,6 +282,10 @@ size_t Preferences::putString(const char *key, const String value) {
   return putString(key, value.c_str());
 }
 
+size_t Preferences::putStdString(const char *key, const std::string value) {
+  return putString(key, value.c_str());
+}
+
 size_t Preferences::putBytes(const char *key, const void *value, size_t len) {
   if (!_started || !key || !value || !len || _readOnly) {
     return 0;
@@ -514,6 +518,27 @@ String Preferences::getString(const char *key, const String defaultValue) {
     return String(defaultValue);
   }
   return String(buf);
+}
+
+std::string Preferences::getStdString(const char *key, const std::string defaultValue) {
+  char *value = NULL;
+  size_t len = 0;
+  if (!_started || !key) {
+    return std::string(defaultValue);
+  }
+  esp_err_t err = nvs_get_str(_handle, key, value, &len);
+  if (err) {
+    log_e("nvs_get_str len fail: %s %s", key, nvs_error(err));
+    return std::string(defaultValue);
+  }
+  char buf[len];
+  value = buf;
+  err = nvs_get_str(_handle, key, value, &len);
+  if (err) {
+    log_e("nvs_get_str fail: %s %s", key, nvs_error(err));
+    return std::tring(defaultValue);
+  }
+  return std::string(buf);
 }
 
 size_t Preferences::getStringLength(const char *key) {
