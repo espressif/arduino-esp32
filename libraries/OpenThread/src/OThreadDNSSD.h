@@ -81,6 +81,20 @@
 #define OT_DNSSD_MAX_QUERY_RESULTS 16
 #endif
 
+/* Pool sizes are indexed/counted with uint8_t throughout OThreadDNSSD. */
+#if OT_DNSSD_MAX_SERVICES < 1 || OT_DNSSD_MAX_SERVICES > 255
+#error "OT_DNSSD_MAX_SERVICES must be in the range 1..255"
+#endif
+#if OT_DNSSD_MAX_TXT_ENTRIES < 1 || OT_DNSSD_MAX_TXT_ENTRIES > 255
+#error "OT_DNSSD_MAX_TXT_ENTRIES must be in the range 1..255"
+#endif
+#if OT_DNSSD_MAX_SUBTYPES < 1 || OT_DNSSD_MAX_SUBTYPES > 255
+#error "OT_DNSSD_MAX_SUBTYPES must be in the range 1..255"
+#endif
+#if OT_DNSSD_MAX_QUERY_RESULTS < 1 || OT_DNSSD_MAX_QUERY_RESULTS > 255
+#error "OT_DNSSD_MAX_QUERY_RESULTS must be in the range 1..255 (stored in uint8_t)"
+#endif
+
 /** @brief Max host label length (excluding domain), bytes. */
 #ifndef OT_DNSSD_HOST_NAME_MAX
 #define OT_DNSSD_HOST_NAME_MAX 63
