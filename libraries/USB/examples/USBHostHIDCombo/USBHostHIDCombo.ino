@@ -7,23 +7,11 @@
  * If gamepad stays "no", the descriptor may not match USBHostHIDGamepad heuristics — try
  * the standalone USBHostGamepad example or enable **Core Debug Level → Verbose** for `log_v` / `log_buf_v` traces.
  *
- * Same hardware / USB Mode requirements as USBHostMouse / USBHostKeyboard / USBHostGamepad.
+ * Same hardware requirements as USBHostMouse / USBHostKeyboard / USBHostGamepad
+ * (ESP32-S2 / S3 / P4 with USB OTG host).
  */
 
 #include <Arduino.h>
-
-#if !SOC_USB_OTG_SUPPORTED
-#error This SoC has no USB OTG use ESP32-S2 / S3 / P4 with host support.
-#elif (ARDUINO_USB_MODE != 1) && !defined(ARDUINO_ESP32_S3_USB_OTG)
-#warning USB host: set USB Mode (e.g. Hardware CDC) OR use board ESP32-S3-USB-OTG.
-void setup() {
-  Serial.begin(115200);
-  delay(500);
-  Serial.println(F("USB host: Tools -> USB Mode -> Hardware CDC, or board ESP32-S3-USB-OTG."));
-}
-void loop() {}
-#else
-
 #include <USBHost.h>
 #include <USBHostHID.h>
 #include <USBHostHIDReportMapDump.h>
@@ -208,4 +196,3 @@ void loop() {
 
   delay(2);
 }
-#endif /* host build allowed */

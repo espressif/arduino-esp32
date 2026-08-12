@@ -117,9 +117,12 @@ public:
     return _cdc_idx;
   }
 
-  /** @deprecated Prefer `read(uint8_t*, size_t)` (same as `USBCDC`). */
-  uint32_t readBytes(uint8_t *buf, uint32_t len) {
-    return (uint32_t)read(buf, (size_t)len);
+  /* Prefer bulk `read()` over Stream's byte-at-a-time timed path. */
+  size_t readBytes(char *buffer, size_t length) override {
+    return read((uint8_t *)buffer, length);
+  }
+  size_t readBytes(uint8_t *buffer, size_t length) override {
+    return read(buffer, length);
   }
 
   /** @deprecated Prefer `write(const uint8_t*, size_t)`. */

@@ -55,10 +55,8 @@ bool USBHostClass::tuhBackgroundActive() const {
 
 bool USBHostClass::begin() {
   if (_started) {
-    log_v("[USBHost] begin(): already started");
     return true;
   }
-  log_v("[USBHost] begin(): initializing TinyUSB host...");
   /*
    * ESP32-S3-USB-OTG: host mux + VBUS before host controller init (same as device_info).
    * Drive GPIO here — do not call usbHostEnable/usbHostPower from core: those live in
@@ -77,14 +75,13 @@ bool USBHostClass::begin() {
   pinMode(LIMIT_EN, OUTPUT);
   digitalWrite(LIMIT_EN, HIGH);
   delay(10);
-  log_v("[USBHost] OTG host mux + VBUS enabled");
 #endif
   tinyusb_host_config_t host_config = {
     .rhport = 0,
   };
   esp_err_t err = tinyusb_host_init(&host_config);
   if (err != ESP_OK) {
-    log_v("[USBHost] begin() failed: 0x%x (%s)", (unsigned)err, esp_err_to_name(err));
+    log_e("[USBHost] begin() failed: 0x%x (%s)", (unsigned)err, esp_err_to_name(err));
     return false;
   }
   _started = true;
@@ -98,22 +95,14 @@ bool USBHostClass::begin() {
 #endif
     if (ok != pdPASS) {
       s_tuh_worker = nullptr;
-      log_v("[USBHost] begin(): tuh worker task create failed — use USBHost.task() in loop");
-    } else {
-      log_v("[USBHost] begin(): tuh_task() runs in background task \"usbhTuh\"");
     }
   }
 
-  log_v("[USBHost] begin(): started OK");
   return true;
 }
 
 void USBHostClass::task() {
   if (_started) {
-    if (!_task_logged) {
-      log_v("[USBHost] task(): running (first call)");
-      _task_logged = true;
-    }
     /* When the worker exists, tuh_task runs there; calling here would race the same stack. */
     if (s_tuh_worker == nullptr) {
       tuh_task();

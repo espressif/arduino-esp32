@@ -1,8 +1,7 @@
 /*
  * USB Host serial (CDC ACM / CP210x / CH34x / FTDI via TinyUSB host CDC driver).
  *
- * Same host setup as other USBHost examples: USB Mode for host (e.g. Hardware CDC),
- * USBHost.begin(), USBHost.task() in loop.
+ * Same host setup as other USBHost examples: USBHost.begin(), USBHost.task() in loop.
  *
  * USBHostSerial follows the same Stream-style API as device-side USBCDC (begin/read/write/flush).
  *
@@ -10,17 +9,6 @@
  */
 
 #include <Arduino.h>
-
-#if !SOC_USB_OTG_SUPPORTED
-#error USB host requires ESP32-S2 / S3 / P4 with OTG.
-#elif (ARDUINO_USB_MODE != 1) && !defined(ARDUINO_ESP32_S3_USB_OTG)
-#warning Set Tools -> USB Mode for host (e.g. Hardware CDC) or use ESP32-S3-USB-OTG.
-void setup() {
-  Serial.begin(115200);
-}
-void loop() {}
-#else
-
 #include <USBHost.h>
 #include <USBHostSerial.h>
 
@@ -78,5 +66,3 @@ void loop() {
 
   delay(1);
 }
-
-#endif

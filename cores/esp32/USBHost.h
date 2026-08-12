@@ -63,7 +63,6 @@ public:
 
 private:
   bool _started = false;
-  bool _task_logged = false;
 };
 
 extern USBHostClass USBHost;

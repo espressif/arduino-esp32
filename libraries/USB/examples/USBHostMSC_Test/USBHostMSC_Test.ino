@@ -1,26 +1,13 @@
 /*
  * USB Host MSC — filesystem test (based on SD/examples/SD_Test/SD_Test.ino)
  *
- * Requires ESP32-S2 / S3 / P4 with USB OTG in host mode, FAT-formatted USB flash drive.
+ * Requires ESP32-S2 / S3 / P4 with USB OTG and a FAT-formatted USB flash drive.
  * Wiring: connect the drive to the USB host port; on ESP32-S3-USB-OTG enable VBUS (sketch below).
  *
  * Flow: USBHost.begin() → wait for MSC → USBMSCFS.begin("/usb") → same File API tests as SD_Test.
  */
 
 #include <Arduino.h>
-
-#if !SOC_USB_OTG_SUPPORTED
-#error This SoC has no USB OTG use ESP32-S2 / S3 / P4 with host support.
-#elif (ARDUINO_USB_MODE != 1) && !defined(ARDUINO_ESP32_S3_USB_OTG)
-#warning USB host: set USB Mode (e.g. Hardware CDC) OR use ESP32-S3-USB-OTG board.
-void setup() {
-  Serial.begin(115200);
-  delay(500);
-  Serial.println(F("USB host: Tools -> USB Mode -> Hardware CDC, or board ESP32-S3-USB-OTG."));
-}
-void loop() {}
-#else
-
 #include <inttypes.h>
 #include <USBHost.h>
 #include <USBHostMSC.h>
@@ -152,43 +139,44 @@ void deleteFile(fs::FS &fs, const char *path) {
 }
 
 void testFileIO(fs::FS &fs, const char *path) {
-  File file = fs.open(path);
   static uint8_t buf[512];
-  size_t len = 0;
-  uint32_t start = millis();
-  uint32_t end = start;
-  if (file) {
-    len = file.size();
-    size_t flen = len;
-    start = millis();
-    while (len) {
-      size_t toRead = len;
-      if (toRead > 512) {
-        toRead = 512;
-      }
-      file.read(buf, toRead);
-      len -= toRead;
-    }
-    end = millis() - start;
-    Serial.printf("%lu bytes read for %" PRIu32 " ms\n", (unsigned long)flen, end);
-    file.close();
-  } else {
-    Serial.println("Failed to open file for reading");
-  }
+  Serial.print("Starting 1Mb write test...");
 
-  file = fs.open(path, FILE_WRITE);
+  File file = fs.open(path, FILE_WRITE);
   if (!file) {
     Serial.println("Failed to open file for writing");
     return;
   }
 
   size_t i;
-  start = millis();
+  uint32_t start = millis();
   for (i = 0; i < 2048; i++) {
     file.write(buf, 512);
   }
-  end = millis() - start;
+  uint32_t end = millis() - start;
   Serial.printf("%u bytes written for %" PRIu32 " ms\n", 2048 * 512, end);
+  file.close();
+
+  Serial.print("Starting 1Mb read test...");
+  file = fs.open(path);
+  if (!file) {
+    Serial.println("Failed to open file for reading");
+    return;
+  }
+
+  size_t len = file.size();
+  size_t flen = len;
+  start = millis();
+  while (len) {
+    size_t toRead = len;
+    if (toRead > 512) {
+      toRead = 512;
+    }
+    file.read(buf, toRead);
+    len -= toRead;
+  }
+  end = millis() - start;
+  Serial.printf("%lu bytes read for %" PRIu32 " ms\n", (unsigned long)flen, end);
   file.close();
 }
 
@@ -265,4 +253,3 @@ void loop() {
   delay(50);
 }
 
-#endif /* host build */

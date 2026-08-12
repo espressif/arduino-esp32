@@ -2,7 +2,7 @@
  * Example: USB host — serial (CDC) + flash drive (MSC) + mouse and keyboard (HID)
  *
  * What you need:
- *   - ESP32-S2, S3, or P4 with USB OTG, and Arduino "USB Mode" set for **USB host** (often "Hardware CDC").
+ *   - ESP32-S2, S3, or P4 with USB OTG; disable CDC/MSC/DFU on boot when using USB-OTG mode.
  *   - Call USBHost.begin() once, then USBHost.task() often (here: every loop).
  *
  * What this sketch does:
@@ -15,11 +15,6 @@
  */
 
 #include <Arduino.h>
-
-#if !SOC_USB_OTG_SUPPORTED
-#error Use a board with USB OTG (ESP32-S2 / S3 / P4).
-#else
-
 #include <USBHost.h>
 #include <USBHostSerial.h>
 #include <USBHostMSC.h>
@@ -34,6 +29,7 @@ static const unsigned long kHostSerialBaud = 115200;
 static const char *kUsbMountPath = "/usb";
 
 static bool s_usb_stick_mounted = false;
+static bool s_usb_mount_attempted = false;
 static bool s_printed_cdc_ready = false;
 
 static void onKeyboardReport(uint8_t modifiers, const uint8_t keys[6], void *) {
@@ -64,7 +60,12 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
+  Serial.printf(
+    "build flags: USB_MODE=%d CDC_ON_BOOT=%d MSC_ON_BOOT=%d DFU_ON_BOOT=%d\n",
+    (int)ARDUINO_USB_MODE, (int)ARDUINO_USB_CDC_ON_BOOT, (int)ARDUINO_USB_MSC_ON_BOOT, (int)ARDUINO_USB_DFU_ON_BOOT);
+  Serial.println(F("(Host: in USB-OTG mode set all *_ON_BOOT=0; use ESP-Prog/UART or Hardware CDC for Serial Monitor.)"));
   Serial.println();
+
   Serial.println(F("=== USB host: CDC + MSC + HID (starter example) ==="));
   Serial.println(F("Plug a USB serial adapter, a FAT flash drive, and/or a mouse or keyboard (hub is OK)."));
   Serial.println();
@@ -119,7 +120,8 @@ void loop() {
 
   // --- MSC: USB flash drive as a FAT volume ---
   if (USBHostMSC.mounted()) {
-    if (!s_usb_stick_mounted) {
+    if (!s_usb_stick_mounted && !s_usb_mount_attempted) {
+      s_usb_mount_attempted = true;
       if (USBMSCFS.begin(kUsbMountPath, 10, false)) {
         s_usb_stick_mounted = true;
         unsigned long mb = (unsigned long)(USBMSCFS.cardSize() / (1024UL * 1024UL));
@@ -131,6 +133,7 @@ void loop() {
       }
     }
   } else {
+    s_usb_mount_attempted = false;
     if (s_usb_stick_mounted) {
       USBMSCFS.end();
       s_usb_stick_mounted = false;
@@ -153,5 +156,3 @@ void loop() {
 
   delay(2);
 }
-
-#endif /* host build */

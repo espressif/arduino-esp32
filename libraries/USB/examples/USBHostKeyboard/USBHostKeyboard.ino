@@ -9,19 +9,6 @@
  */
 
 #include <Arduino.h>
-
-#if !SOC_USB_OTG_SUPPORTED
-#error This SoC has no USB OTG use ESP32-S2 / S3 / P4 with host support.
-#elif (ARDUINO_USB_MODE != 1) && !defined(ARDUINO_ESP32_S3_USB_OTG)
-#warning USB host: set USB Mode (e.g. Hardware CDC) OR use board ESP32-S3-USB-OTG.
-void setup() {
-  Serial.begin(115200);
-  delay(500);
-  Serial.println(F("USB host: Tools -> USB Mode -> Hardware CDC, or board ESP32-S3-USB-OTG."));
-}
-void loop() {}
-#else
-
 #include <USBHost.h>
 #include <USBHostHID.h>
 #include <USBHostHIDReportMapDump.h>
@@ -114,4 +101,3 @@ void loop() {
   USBHost.task();
   delay(2);
 }
-#endif /* host build allowed */

@@ -8,10 +8,7 @@
  * Requirements: same as USBHostMouse (CFG_TUH_HID, USB Host board).
  */
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32P4)
-#error "USB Host is supported on ESP32-S2, S3, and P4"
-#endif
-
+#include <Arduino.h>
 #include <USBHost.h>
 #include <USBHostHID.h>
 #include <USBHostHIDReportMapDump.h>

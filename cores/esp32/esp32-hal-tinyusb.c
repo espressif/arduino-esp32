@@ -229,7 +229,10 @@ void deinit_usb_hal() {
 #endif
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
-  init_usb_hal(config->external_phy);
+  esp_err_t hal_err = init_usb_hal(config->external_phy);
+  if (hal_err != ESP_OK) {
+    return hal_err;
+  }
   tusb_rhport_init_t tinit;
   memset(&tinit, 0, sizeof(tusb_rhport_init_t));
   tinit.role = TUSB_ROLE_DEVICE;
@@ -767,9 +770,6 @@ static bool tinyusb_load_enabled_interfaces() {
     //usb_persist_enabled = true;
     //log_d("USB Persist enabled");
   }
-  log_d(
-    "Load Done: if_num: %u, descr_len: %u, if_mask: 0x%" PRIx32, tinyusb_loaded_interfaces_num, tinyusb_config_descriptor_len, tinyusb_loaded_interfaces_mask
-  );
   return true;
 }
 
