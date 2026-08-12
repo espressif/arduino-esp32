@@ -13,6 +13,25 @@ String serverName = "";
 static bool deviceConnected = false;
 static int connectionCount = 0;
 
+// Malformed AD structures used to regression-test BLEAdvertisedDevice parsing.
+// They are split across two advertising windows because the terminator and the
+// oversize guard both stop the parse loop, so each one has to be the last
+// structure in its own payload to be observable.
+//
+// Window 1: guards that skip a single structure, followed by the oversize guard.
+// 16-bit UUID list with a trailing partial octet (3 data bytes, not a multiple of 2).
+static char badUuid16List[] = {0x04, 0x03, 0x0D, 0x18, 0x99};
+// 128-bit UUID structure carrying fewer than 16 data bytes.
+static char badUuid128[] = {0x03, 0x07, 0x11, 0x22};
+// AD length claims 20 bytes (type + data) but only 3 bytes follow.
+static char oversizeAd[] = {20, (char)0xFF, 0x01, 0x02};
+//
+// Window 2: the 32-bit guard, then a terminator that must end the parse.
+// 32-bit UUID list with a trailing partial group (5 data bytes, not a multiple of 4).
+static char badUuid32List[] = {0x06, 0x05, 0x01, 0x02, 0x03, 0x04, 0x05};
+// Zero-length AD ends the payload; the manufacturer data behind it must be ignored.
+static char terminatedAd[] = {0x00, 0x03, (char)0xFF, (char)0xAA, (char)0xBB};
+
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
     deviceConnected = true;
@@ -175,8 +194,9 @@ void setup() {
   // Start service
   pService->start();
 
-  // Start advertising. Scan response carries the name plus a deliberately oversized
-  // AD structure: length claims 20 bytes (type+data) but only 3 bytes follow.
+  // Start advertising. The scan response carries the name plus the window 1
+  // malformed AD structures (see above); the primary advertisement is left to
+  // the library so the service UUID still round-trips normally.
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(true);
@@ -185,7 +205,8 @@ void setup() {
 
   BLEAdvertisementData scanResponse;
   scanResponse.setName(serverName);
-  char oversizeAd[] = {20, (char)0xFF, 0x01, 0x02};
+  scanResponse.addData(badUuid16List, sizeof(badUuid16List));
+  scanResponse.addData(badUuid128, sizeof(badUuid128));
   scanResponse.addData(oversizeAd, sizeof(oversizeAd));
   pAdvertising->setScanResponseData(scanResponse);
 
@@ -195,7 +216,32 @@ void setup() {
   Serial.printf("[SERVER] Service UUID: %s\n", SERVICE_UUID);
 }
 
+// Swap the scan response for the window 2 payload (32-bit guard + terminator).
+void startAdvertisingPhase2() {
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->stop();
+
+  BLEAdvertisementData scanResponse;
+  scanResponse.setName(serverName);
+  scanResponse.addData(badUuid32List, sizeof(badUuid32List));
+  scanResponse.addData(terminatedAd, sizeof(terminatedAd));
+  pAdvertising->setScanResponseData(scanResponse);
+
+  BLEDevice::startAdvertising();
+  // Configuring the payload is asynchronous on both stacks.
+  delay(500);
+  Serial.println("[SERVER] AD phase 2 advertising");
+}
+
 void loop() {
+  if (Serial.available()) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    if (command == "ADPHASE2") {
+      startAdvertisingPhase2();
+    }
+  }
+
   static unsigned long lastStatus = 0;
   if (millis() - lastStatus > 3000) {
     lastStatus = millis();
