@@ -1159,6 +1159,7 @@ IPAddress OThreadDNSSDClass::resolveAddressFqdn(const char *fqdn, uint32_t timeo
 
   TickType_t ticks = (timeoutMs == UINT32_MAX) ? portMAX_DELAY : pdMS_TO_TICKS(timeoutMs);
   if (xSemaphoreTake(_dnsSem, ticks) != pdTRUE) {
+    _queryAbandoned = true;
     _lastError = OT_ERROR_RESPONSE_TIMEOUT;
     return IPAddress(IPv6);
   }
@@ -1203,7 +1204,10 @@ bool OThreadDNSSDClass::resolveMissingServiceDetails(const char *serviceFqdn) {
     }
 
     if (xSemaphoreTake(_dnsSem, pdMS_TO_TICKS(dnsResponseWaitMs(inst))) != pdTRUE) {
+      _queryAbandoned = true;
       _lastError = OT_ERROR_RESPONSE_TIMEOUT;
+      _dnsServiceResolveIdx = -1;
+      break;
     }
     _dnsServiceResolveIdx = -1;
   }
@@ -1258,6 +1262,7 @@ int OThreadDNSSDClass::queryService(const char *service, const char *proto) {
   }
 
   if (xSemaphoreTake(_dnsSem, pdMS_TO_TICKS(dnsResponseWaitMs(inst))) != pdTRUE) {
+    _queryAbandoned = true;
     _lastError = OT_ERROR_RESPONSE_TIMEOUT;
     log_w("OThreadDNSSD: Browse timeout");
     clearQueryOp();
