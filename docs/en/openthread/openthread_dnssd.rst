@@ -197,13 +197,32 @@ Fixed memory caps
 
 Override **before** ``#include <OThreadDNSSD.h>``:
 
+**Pools** (indexed with ``uint8_t``; each must be in ``1..255`` or the
+header fails to compile):
+
 * ``OT_DNSSD_MAX_SERVICES`` (default 5)
 * ``OT_DNSSD_MAX_TXT_ENTRIES`` (default 4 per service)
 * ``OT_DNSSD_MAX_SUBTYPES`` (default 4 per service)
 * ``OT_DNSSD_MAX_QUERY_RESULTS`` (default 16)
-* ``OT_DNSSD_QUERY_TIMEOUT_MS`` (default 10000 for browse; must exceed the
-  OpenThread DNS client wait so empty Discovery Proxy answers are not cut short)
-* Name / TXT length macros (``OT_DNSSD_HOST_NAME_MAX``, ``OT_DNSSD_TXT_VALUE_MAX``, …)
+
+**Timeouts:**
+
+* ``OT_DNSSD_QUERY_TIMEOUT_MS`` (default 10000 for browse / host resolve;
+  must exceed the OpenThread DNS client wait so empty Discovery Proxy
+  answers are not cut short)
+
+**Name / TXT lengths:**
+
+* ``OT_DNSSD_HOST_NAME_MAX``, ``OT_DNSSD_INSTANCE_NAME_MAX``
+* ``OT_DNSSD_LABEL_MAX`` (default 15) — max length of each ``service`` /
+  ``proto`` input label (with or without a leading ``_``)
+* ``OT_DNSSD_SERVICE_NAME_MAX`` — max length of the encoded ``_type._proto``
+  string. Default is ``2 * OT_DNSSD_LABEL_MAX + 3`` so a full-length type and
+  proto always fit. If you override either macro, keep
+  ``OT_DNSSD_SERVICE_NAME_MAX >= 2 * OT_DNSSD_LABEL_MAX + 3`` (the header
+  ``#error``\ s otherwise). Do not keep an older literal ``32`` when
+  ``OT_DNSSD_LABEL_MAX`` is ``15``.
+* ``OT_DNSSD_TXT_KEY_MAX``, ``OT_DNSSD_TXT_VALUE_MAX``, ``OT_DNSSD_SUBTYPE_MAX``
 
 Full pools return ``false`` / capped counts (fail closed). Strings are copied into
 fixed slots; sketch temporaries are never stored as pointers for OpenThread.
