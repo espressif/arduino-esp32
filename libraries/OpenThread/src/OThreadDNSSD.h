@@ -137,8 +137,16 @@ typedef enum {
 /**
  * @brief Service registration event callback.
  *
- * Invoked on the OpenThread task. Do not call other OThreadDNSSD methods from
- * inside the callback (set flags / copy state only).
+ * Context depends on the event source:
+ * - @ref OT_DNSSD_EVENT_ANNOUNCED, @ref OT_DNSSD_EVENT_ERROR, and
+ *   @ref OT_DNSSD_EVENT_REMOVED from the SRP client callback run on the
+ *   OpenThread task.
+ * - @ref OT_DNSSD_EVENT_REMOVED from @ref OThreadDNSSDClass::end runs on the
+ *   caller task (e.g. Arduino `loop()` / `setup()`).
+ *
+ * In all cases, do not call other OThreadDNSSD methods from inside the
+ * callback (set flags / copy state only). Do not assume OT-task-only APIs
+ * are safe for every delivery.
  *
  * @param event   Event type.
  * @param error   OpenThread error (`OT_ERROR_NONE` on success).
@@ -210,7 +218,8 @@ public:
   /**
    * @brief Unregister host/services, stop SRP client, clear query results.
    *
-   * Also called from `OThread.end()`.
+   * Also called from `OThread.end()`. Delivers @ref OT_DNSSD_EVENT_REMOVED via
+   * @ref onServiceEvent on the **caller** task (not the OpenThread task).
    */
   void end();
 

@@ -815,6 +815,16 @@ void OThreadDNSSDClass::handleDnsBrowseCallback(otError aError, const otDnsBrows
 }
 
 void OThreadDNSSDClass::onDnsBrowseCallback(otError aError, const otDnsBrowseResponse *aResponse) {
+  // end() may have abandoned the query while this browse was in flight; do not
+  // repopulate results or clobber lastError after teardown.
+  if (_queryAbandoned || !_started) {
+    _dnsDone = true;
+    if (_dnsSem) {
+      xSemaphoreGive(_dnsSem);
+    }
+    return;
+  }
+
   _dnsOpError = aError;
   _lastError = aError;
   if (aError == OT_ERROR_NONE && aResponse) {
@@ -899,6 +909,14 @@ void OThreadDNSSDClass::handleDnsAddressCallback(otError aError, const otDnsAddr
 }
 
 void OThreadDNSSDClass::onDnsAddressCallback(otError aError, const otDnsAddressResponse *aResponse) {
+  if (_queryAbandoned || !_started) {
+    _dnsDone = true;
+    if (_dnsSem) {
+      xSemaphoreGive(_dnsSem);
+    }
+    return;
+  }
+
   _dnsOpError = aError;
   _lastError = aError;
   _dnsResolvedAddr = IPAddress(IPv6);
@@ -933,6 +951,14 @@ void OThreadDNSSDClass::handleDnsServiceCallback(otError aError, const otDnsServ
 }
 
 void OThreadDNSSDClass::onDnsServiceCallback(otError aError, const otDnsServiceResponse *aResponse) {
+  if (_queryAbandoned || !_started) {
+    _dnsDone = true;
+    if (_dnsSem) {
+      xSemaphoreGive(_dnsSem);
+    }
+    return;
+  }
+
   _dnsOpError = aError;
   _lastError = aError;
   int finishedIdx = _dnsServiceResolveIdx;
@@ -1017,7 +1043,8 @@ bool OThreadDNSSDClass::buildHostFqdn(char *dst, size_t dstSize, const char *hos
   if (strchr(host, '.') != nullptr) {
     return copyCString(dst, dstSize, host);
   }
-  return snprintf(dst, dstSize, "%s.%s", host, kDnssdDomain) > 0;
+  int n = snprintf(dst, dstSize, "%s.%s", host, kDnssdDomain);
+  return n > 0 && (size_t)n < dstSize;
 }
 
 bool OThreadDNSSDClass::slotNeedsDetailResolve(const QueryResultSlot &slot) const {
