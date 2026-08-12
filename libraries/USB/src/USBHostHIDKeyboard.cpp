@@ -98,6 +98,8 @@ bool USBHostHIDKeyboard::_sameAsLastNotified() const {
 }
 
 void USBHostHIDKeyboard::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) {
+  (void)dev_addr;
+  (void)idx;
   const uint8_t *boot = report;
   uint16_t boot_len = len;
 
@@ -108,15 +110,12 @@ void USBHostHIDKeyboard::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *
   }
 
   if (boot_len < 8u) {
-    log_v("[USBHostKeyboard] report len=%u (need 8-byte boot or 9 with ID)", (unsigned)len);
-    tuh_hid_receive_report(dev_addr, idx);
     return;
   }
 
   _applyBootReport(boot, boot_len);
 
   if (_notify_on_change_only && _sameAsLastNotified()) {
-    tuh_hid_receive_report(dev_addr, idx);
     return;
   }
 
@@ -130,12 +129,6 @@ void USBHostHIDKeyboard::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *
     getKeys(kcopy);
     _report_cb(_modifiers, kcopy, _report_cb_arg);
   }
-  log_v("[USBHostKeyboard] mod=0x%02x keys %02x %02x %02x %02x %02x %02x",
-        (unsigned)_modifiers,
-        (unsigned)_keys[0], (unsigned)_keys[1], (unsigned)_keys[2],
-        (unsigned)_keys[3], (unsigned)_keys[4], (unsigned)_keys[5]);
-
-  tuh_hid_receive_report(dev_addr, idx);
 }
 
 bool USBHostHIDKeyboard::available() {

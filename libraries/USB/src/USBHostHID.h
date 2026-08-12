@@ -25,11 +25,6 @@
 #define CFG_TUH_HID 0
 #endif
 
-// Class is always defined here so the type is visible in USBHostHID.cpp regardless of
-// SOC_USB_OTG_SUPPORTED at library compile time. Implementation is guarded in .cpp.
-// Forward declarations
-class USBHostHID;
-
 /**
  * @brief Base class for a USB Host HID device handler (mouse, keyboard, etc.).
  * Implement claim(), onUnmount(), and onReport(); register with USBHostHID via addDevice().
@@ -54,11 +49,15 @@ public:
 
   /**
    * @brief Called when an INPUT report is received for this interface.
-   * Implementation must call tuh_hid_receive_report(dev_addr, idx) to re-submit for next report.
+   * Do not call tuh_hid_receive_report() here — USBHostHID resubmits on the host task
+   * after this returns (avoids re-queueing IN during disconnect).
    */
   virtual void onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) = 0;
 
-  /** @brief True if this handler currently has a claimed interface (verified against TinyUSB). */
+  /**
+   * @brief True if this handler has a claimed interface (Arduino-side cache).
+   * Safe from loop(): does not call into TinyUSB (host stack is not thread-safe with usbhTuh).
+   */
   bool mounted() const;
 
   /** @brief Device address of the claimed interface (0 if not mounted). */
@@ -78,8 +77,7 @@ public:
 protected:
   /**
    * After claim() heuristics pass, record USB bInterfaceNumber and bind (dev_addr, idx).
-   * mounted() then verifies tuh_hid_itf_get_index(dev_addr, itf_num) == idx so topology
-   * changes cannot leave stale "yes" for the wrong interface.
+   * Fails if this handler already owns a different interface (one device per singleton).
    */
   bool bindHidInterface(uint8_t dev_addr, uint8_t idx);
   void clearHidInterfaceBinding();
@@ -106,31 +104,51 @@ public:
   bool addDevice(USBHostHIDDevice *dev);
 
   /**
-   * @brief Start the first interrupt IN transfer if a handler just claimed an interface
-   * (internal: also run at end of TinyUSB HID mount). Safe to call from loop via
-   * USBHostHIDMouse/Keyboard::available() — redundant but harmless.
+   * @brief Start the first interrupt IN if a handler just claimed an interface.
+   * Called from the host task; sketches normally use serviceReceives() / available().
    */
   void startReceiveIfPending();
 
   /**
-   * Sync handler state with TinyUSB, retry legacy single-slot pending submit, and resubmit
-   * interrupt IN for every registered handler whose endpoint is idle. Call from task loop
-   * (via each handler's available()) so multiple HID interfaces keep receiving.
+   * @brief Safe from loop / available(): no-ops when the USB host background worker owns
+   * TinyUSB. Without a worker, arms interrupt IN on the caller.
    */
   void serviceReceives();
+
+  /**
+   * @brief Run only on the TinyUSB host task (usbhTuh worker or USBHost.task without worker).
+   * Syncs mount state, starts pending receives, and re-arms idle/stuck interrupt INs.
+   */
+  void serviceReceivesFromHostTask();
 
   // Called from TinyUSB HID callbacks (same translation unit as .cpp); do not use from user code.
   void _onMount(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc, uint16_t desc_len);
   void _onUnmount(uint8_t dev_addr, uint8_t idx);
+  /** Drop every handler bound to this device address (tuh_umount_cb / missed iface umount). */
+  void _onDeviceUnmount(uint8_t dev_addr);
   void _onReport(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len);
 
 private:
+  /**
+   * After a new HID claim, optionally schedule abort+rearm of *peer* interfaces only
+   * (hub enum can leave them busy-forever). Never aborts the newly claimed iface.
+   */
+  void requestPeerRearm(uint8_t new_dev_addr, uint8_t new_idx);
+  bool hasOtherMounted(uint8_t dev_addr, uint8_t idx) const;
+  void clearPendingIf(uint8_t dev_addr, uint8_t idx);
+  /** Abort busy IN (if any) then notify handler — call while TinyUSB iface still open. */
+  void releaseClaimedInterface(USBHostHIDDevice *dev, uint8_t dev_addr, uint8_t idx);
+
   static const size_t MAX_DEVICES = 8;
   USBHostHIDDevice *_devices[MAX_DEVICES];
   size_t _num_devices;
   bool _start_receive_pending;
   uint8_t _pending_dev_addr;
   uint8_t _pending_idx;
+  bool _rearm_peers;
+  uint32_t _rearm_after_ms;
+  uint8_t _rearm_skip_addr;
+  uint8_t _rearm_skip_idx;
 };
 
 /** Single global instance. Defined in USBHostHID.cpp when CFG_TUH_HID. */

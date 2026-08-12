@@ -23,6 +23,24 @@
 #include "Arduino.h"
 #include "esp32-hal-log.h"
 
+/** True if collection looks like a Generic Desktop Mouse (usage 0x02). */
+static bool desc_is_desktop_mouse(const uint8_t *d, uint16_t len) {
+  if (d == nullptr || len < 4) {
+    return false;
+  }
+  for (uint16_t i = 0; i + 3 < len; i++) {
+    if (d[i] == 0x05 && d[i + 1] == 0x01 && d[i + 2] == 0x09 && d[i + 3] == 0x02) {
+      return true;
+    }
+  }
+  for (uint16_t i = 0; i + 4 < len; i++) {
+    if (d[i] == 0x06 && d[i + 1] == 0x01 && d[i + 2] == 0x00 && d[i + 3] == 0x09 && d[i + 4] == 0x02) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** True if report descriptor declares Generic Desktop Game Pad or Joystick. */
 static bool desc_is_gamepad_or_joystick(const uint8_t *d, uint16_t len) {
   if (d == nullptr || len < 4) {
@@ -179,12 +197,11 @@ bool USBHostHIDGamepad::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
   if (protocol == HID_ITF_PROTOCOL_MOUSE || protocol == HID_ITF_PROTOCOL_KEYBOARD) {
     return false;
   }
+  /* Broad gamepad heuristics also match many report-protocol mice — never steal those. */
+  if (desc_is_desktop_mouse(report_desc, desc_len)) {
+    return false;
+  }
   if (!desc_should_claim_gamepad(report_desc, desc_len)) {
-    log_v("[USBHostGamepad] skip iface dev=%u idx=%u protocol=%u desc_len=%u",
-          (unsigned)dev_addr, (unsigned)idx, (unsigned)protocol, (unsigned)desc_len);
-    if (report_desc != nullptr && desc_len > 0) {
-      log_buf_v(report_desc, (size_t)(desc_len < 48u ? desc_len : 48u));
-    }
     return false;
   }
   if (!bindHidInterface(dev_addr, idx)) {
@@ -194,7 +211,7 @@ bool USBHostHIDGamepad::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
   _report_len = 0;
   _last_notified_len = 0;
   memset(_last_notified, 0, sizeof(_last_notified));
-  log_v("[USBHostGamepad] CLAIMED dev=%u idx=%u protocol=%u desc_len=%u",
+  log_v("[USBHostGamepad] claim dev=%u idx=%u protocol=%u desc_len=%u",
         (unsigned)dev_addr, (unsigned)idx, (unsigned)protocol, (unsigned)desc_len);
   return true;
 }
@@ -210,12 +227,13 @@ void USBHostHIDGamepad::onUnmount(uint8_t dev_addr, uint8_t idx) {
 }
 
 void USBHostHIDGamepad::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) {
+  (void)dev_addr;
+  (void)idx;
   if (len > REPORT_CAP) {
     len = REPORT_CAP;
   }
   if (_notify_on_change_only && _last_notified_len == len &&
       len > 0 && memcmp(_last_notified, report, len) == 0) {
-    tuh_hid_receive_report(dev_addr, idx);
     return;
   }
   memcpy(_report, report, len);
@@ -228,11 +246,6 @@ void USBHostHIDGamepad::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *r
     memcpy(_last_notified, _report, len);
     _last_notified_len = len;
   }
-  if (len > 0) {
-    log_v("[USBHostGamepad] report len=%u", (unsigned)len);
-    log_buf_v(_report, (size_t)(len < 16u ? len : 16u));
-  }
-  tuh_hid_receive_report(dev_addr, idx);
 }
 
 bool USBHostHIDGamepad::available() {

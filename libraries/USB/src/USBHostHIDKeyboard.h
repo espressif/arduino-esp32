@@ -57,7 +57,7 @@ public:
   void onUnmount(uint8_t dev_addr, uint8_t idx) override;
   void onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) override;
 
-  /** True if a report is waiting (poll after USBHost.task()). Also runs startReceiveIfPending(). */
+  /** True if a report is waiting. Also calls USBHostHID.serviceReceives() (no-op with host worker). */
   bool available();
 
   /** Modifier bitmask (USBHOST_KEY_MOD_*). */

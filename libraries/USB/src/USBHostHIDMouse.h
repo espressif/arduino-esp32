@@ -62,8 +62,8 @@ public:
   void onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) override;
 
   /**
-   * @brief Check if a mouse report has been received since last read.
-   * Also calls USBHostHID.startReceiveIfPending() (redundant after mount; cheap).
+   * @brief Check if a mouse report has been received since last clear().
+   * Also calls USBHostHID.serviceReceives() (no-op when the host worker is active).
    */
   bool available();
 

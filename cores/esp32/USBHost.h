@@ -23,6 +23,14 @@
 #include "tusb.h"
 #include "tusb_config.h"
 
+#if CFG_TUH_ENABLED
+/**
+ * @brief Optional HID host service hook (weak in core; USBHostHID provides strong).
+ * Called on the TinyUSB host task after tuh_task() — arm interrupt IN transfers there.
+ */
+extern "C" void arduino_usb_host_hid_service(void);
+#endif
+
 /**
  * @brief USB Host controller (Arduino API).
  * Call begin() once in setup(), then task() in loop() so that
@@ -38,15 +46,14 @@ public:
 
   /**
    * @brief Process USB host events. Must be called repeatedly (e.g. from loop()).
-   * If tuhBackgroundActive() is true, tuh_task() runs from an internal FreeRTOS task
-   * and this call is optional (still safe to call).
+   * If tuhBackgroundActive() is true, tuh_task() and HID receive arming run from an
+   * internal FreeRTOS task — this call must not touch TinyUSB host transfer APIs.
    */
   void task();
 
   /**
    * @brief True when TinyUSB host is serviced by a background task (after begin()).
-   * Needed so MSC sync SCSI wait can yield without calling tuh_task() on the same stack
-   * (avoids DWC2 bulk-OUT deadlocks during FatFS writes).
+   * Class drivers (MSC, HID) must not call tuh_task() / submit transfers from loop() then.
    */
   bool tuhBackgroundActive() const;
 

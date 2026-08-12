@@ -159,6 +159,8 @@ void USBHostHIDMouse::onUnmount(uint8_t dev_addr, uint8_t idx) {
 }
 
 void USBHostHIDMouse::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) {
+  (void)dev_addr;
+  (void)idx;
   const uint8_t *p = report;
   uint16_t n = len;
   if (_strip_report_id && n > 3u) {
@@ -175,12 +177,7 @@ void USBHostHIDMouse::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *rep
     if (_report_cb) {
       _report_cb(_x, _y, _buttons, _wheel, _report_cb_arg);
     }
-    log_v("[USBHostMouse] report len=%u x=%d y=%d btns=0x%02x wheel=%d",
-          (unsigned)len, (int)_x, (int)_y, (unsigned)_buttons, (int)_wheel);
-  } else {
-    log_v("[USBHostMouse] report len=%u (ignored, need >= 3)", (unsigned)len);
   }
-  tuh_hid_receive_report(dev_addr, idx);
 }
 
 bool USBHostHIDMouse::available() {

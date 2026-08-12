@@ -26,13 +26,36 @@
 #include "tusb.h"
 #include "class/hid/hid.h"
 #include "Arduino.h"
+#include "USBHost.h"
 
 USBHostHID::USBHostHID()
   : _num_devices(0), _start_receive_pending(false),
-    _pending_dev_addr(0), _pending_idx(0) {
+    _pending_dev_addr(0), _pending_idx(0), _rearm_peers(false), _rearm_after_ms(0),
+    _rearm_skip_addr(0), _rearm_skip_idx(0) {
   for (size_t i = 0; i < MAX_DEVICES; i++) {
     _devices[i] = nullptr;
   }
+}
+
+bool USBHostHID::hasOtherMounted(uint8_t dev_addr, uint8_t idx) const {
+  for (size_t i = 0; i < _num_devices; i++) {
+    USBHostHIDDevice *dev = _devices[i];
+    if (dev != nullptr && dev->mounted() && !dev->matches(dev_addr, idx)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void USBHostHID::requestPeerRearm(uint8_t new_dev_addr, uint8_t new_idx) {
+  if (!hasOtherMounted(new_dev_addr, new_idx)) {
+    return; /* Sole device: startReceiveIfPending is enough; aborting it crashes DWC2. */
+  }
+  /* Deferred: aborting peers in the same tuh_task window as enum races the HCD. */
+  _rearm_peers = true;
+  _rearm_skip_addr = new_dev_addr;
+  _rearm_skip_idx = new_idx;
+  _rearm_after_ms = millis() + 150;
 }
 
 bool USBHostHID::addDevice(USBHostHIDDevice *dev) {
@@ -47,10 +70,19 @@ void USBHostHID::startReceiveIfPending() {
   if (!_start_receive_pending || _pending_dev_addr == 0) {
     return;
   }
-  log_v("[USBHostHID] start receive dev=%u idx=%u",
-        (unsigned)_pending_dev_addr, (unsigned)_pending_idx);
+  const uint8_t a = _pending_dev_addr;
+  const uint8_t x = _pending_idx;
+  if (!tuh_mounted(a) || !tuh_hid_mounted(a, x)) {
+    _start_receive_pending = false;
+    _pending_dev_addr = 0;
+    _pending_idx = 0;
+    return;
+  }
+  log_v("[USBHostHID] start receive dev=%u idx=%u", (unsigned)a, (unsigned)x);
   _start_receive_pending = false;
-  tuh_hid_receive_report(_pending_dev_addr, _pending_idx);
+  _pending_dev_addr = 0;
+  _pending_idx = 0;
+  (void)tuh_hid_receive_report(a, x);
 }
 
 void USBHostHID::_onMount(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc, uint16_t desc_len) {
@@ -63,6 +95,7 @@ void USBHostHID::_onMount(uint8_t dev_addr, uint8_t idx, uint8_t const *report_d
       _start_receive_pending = true;
       _pending_dev_addr = dev_addr;
       _pending_idx = idx;
+      requestPeerRearm(dev_addr, idx);
       return;
     }
   }
@@ -70,27 +103,69 @@ void USBHostHID::_onMount(uint8_t dev_addr, uint8_t idx, uint8_t const *report_d
         (unsigned)dev_addr, (unsigned)idx, (unsigned)protocol);
 }
 
+void USBHostHID::clearPendingIf(uint8_t dev_addr, uint8_t idx) {
+  if (_pending_dev_addr == dev_addr && _pending_idx == idx) {
+    _start_receive_pending = false;
+    _pending_dev_addr = 0;
+    _pending_idx = 0;
+  }
+}
+
+void USBHostHID::releaseClaimedInterface(USBHostHIDDevice *dev, uint8_t dev_addr, uint8_t idx) {
+  if (dev == nullptr) {
+    return;
+  }
+  /*
+   * tuh_umount_cb runs before class-driver close — iface is still open. Aborting a busy
+   * interrupt IN here frees the DWC2 channel so the next plug can enumerate.
+   * (Do not abort peer devices here.)
+   */
+  if (tuh_hid_mounted(dev_addr, idx) && !tuh_hid_receive_ready(dev_addr, idx)) {
+    log_v("[USBHostHID] abort IN on unmount dev=%u idx=%u", (unsigned)dev_addr, (unsigned)idx);
+    (void)tuh_hid_receive_abort(dev_addr, idx);
+  }
+  if (_rearm_skip_addr == dev_addr && _rearm_skip_idx == idx) {
+    _rearm_peers = false;
+    _rearm_skip_addr = 0;
+    _rearm_skip_idx = 0;
+  }
+  clearPendingIf(dev_addr, idx);
+  log_v("[USBHostHID] unmount dev=%u idx=%u", (unsigned)dev_addr, (unsigned)idx);
+  dev->onUnmount(dev_addr, idx);
+}
+
 void USBHostHID::_onUnmount(uint8_t dev_addr, uint8_t idx) {
   for (size_t i = 0; i < _num_devices; i++) {
     USBHostHIDDevice *dev = _devices[i];
     if (dev != nullptr && dev->matches(dev_addr, idx)) {
-      log_v("[USBHostHID] unmount dev=%u idx=%u", (unsigned)dev_addr, (unsigned)idx);
-      dev->onUnmount(dev_addr, idx);
-      if (_pending_dev_addr == dev_addr && _pending_idx == idx) {
-        _start_receive_pending = false;
-        _pending_dev_addr = 0;
-        _pending_idx = 0;
-      }
+      releaseClaimedInterface(dev, dev_addr, idx);
       return;
     }
   }
 }
 
+void USBHostHID::_onDeviceUnmount(uint8_t dev_addr) {
+  for (size_t i = 0; i < _num_devices; i++) {
+    USBHostHIDDevice *dev = _devices[i];
+    if (dev == nullptr || dev->devAddr() != dev_addr) {
+      continue;
+    }
+    releaseClaimedInterface(dev, dev_addr, dev->interfaceIndex());
+  }
+}
+
 void USBHostHID::_onReport(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len) {
+  /* TinyUSB may deliver a failed/short IN during remove — never resubmit then. */
+  if (!tuh_hid_mounted(dev_addr, idx)) {
+    return;
+  }
   for (size_t i = 0; i < _num_devices; i++) {
     USBHostHIDDevice *dev = _devices[i];
     if (dev != nullptr && dev->matches(dev_addr, idx)) {
       dev->onReport(dev_addr, idx, report, len);
+      if (tuh_hid_mounted(dev_addr, idx) && tuh_hid_receive_ready(dev_addr, idx)) {
+        (void)tuh_hid_receive_report(dev_addr, idx);
+      }
       return;
     }
   }
@@ -103,45 +178,25 @@ extern "C" {
 
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc, uint16_t desc_len) {
   USBHostHIDInstance._onMount(dev_addr, idx, report_desc, desc_len);
-  /* Retry pending submit and arm IN for all registered handlers (multi-HID). */
-  USBHostHIDInstance.serviceReceives();
+  /* Receive arming runs after tuh_task() returns (usbhTuh / USBHost.task). */
 }
 
 void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t idx) {
   USBHostHIDInstance._onUnmount(dev_addr, idx);
 }
 
+void tuh_umount_cb(uint8_t daddr) {
+  /* Fires before class-driver close — clear all handlers for this address. */
+  USBHostHIDInstance._onDeviceUnmount(daddr);
+}
+
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len) {
   USBHostHIDInstance._onReport(dev_addr, idx, report, len);
 }
 
-void tuh_hid_report_sent_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len) {
-  (void)dev_addr;
-  (void)idx;
-  (void)report;
-  (void)len;
-}
-
-void tuh_hid_get_report_complete_cb(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, uint16_t len) {
-  (void)dev_addr;
-  (void)idx;
-  (void)report_id;
-  (void)report_type;
-  (void)len;
-}
-
-void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, uint16_t len) {
-  (void)dev_addr;
-  (void)idx;
-  (void)report_id;
-  (void)report_type;
-  (void)len;
-}
-
-void tuh_hid_set_protocol_complete_cb(uint8_t dev_addr, uint8_t idx, uint8_t protocol) {
-  (void)dev_addr;
-  (void)idx;
-  (void)protocol;
+/** Strong override of core weak stub — keeps HID arming on the host task. */
+void arduino_usb_host_hid_service(void) {
+  USBHostHIDInstance.serviceReceivesFromHostTask();
 }
 
 }  // extern "C"
@@ -155,6 +210,11 @@ void USBHostHIDDevice::clearHidInterfaceBinding() {
 }
 
 bool USBHostHIDDevice::bindHidInterface(uint8_t dev_addr, uint8_t idx) {
+  /* Global singletons: do not steal from an already-claimed device (e.g. 2nd mouse). */
+  if (_mounted && _itf_binding_valid && (_dev_addr != dev_addr || _idx != idx)) {
+    log_v("[USBHostHID] bind refused: already own dev=%u idx=%u", (unsigned)_dev_addr, (unsigned)_idx);
+    return false;
+  }
   tuh_itf_info_t info;
   if (!tuh_hid_itf_get_info(dev_addr, idx, &info)) {
     return false;
@@ -171,7 +231,8 @@ void USBHostHIDDevice::syncHostMountState() {
   if (!_mounted || !_itf_binding_valid || _dev_addr == 0) {
     return;
   }
-  if (!tuh_hid_mounted(_dev_addr, _idx)) {
+  /* Host-task only: TinyUSB queries are not safe from loop() / other cores. */
+  if (!tuh_mounted(_dev_addr) || !tuh_hid_mounted(_dev_addr, _idx)) {
     onUnmount(_dev_addr, _idx);
     return;
   }
@@ -182,29 +243,39 @@ void USBHostHIDDevice::syncHostMountState() {
 }
 
 bool USBHostHIDDevice::mounted() const {
-  if (!_mounted || !_itf_binding_valid || _dev_addr == 0) {
-    return false;
-  }
-  if (!tuh_hid_mounted(_dev_addr, _idx)) {
-    return false;
-  }
-  const uint8_t idx_now = tuh_hid_itf_get_index(_dev_addr, _itf_number);
-  return (idx_now != TUSB_INDEX_INVALID_8 && idx_now == _idx);
+  /* Cache only — loop/stats must not call TinyUSB while usbhTuh owns the stack. */
+  return _mounted && _itf_binding_valid && _dev_addr != 0;
 }
 
 void USBHostHID::serviceReceives() {
+  /* Loop/available() must not submit/abort while usbhTuh owns the host controller. */
+  if (USBHost.tuhBackgroundActive()) {
+    return;
+  }
+  serviceReceivesFromHostTask();
+}
+
+void USBHostHID::serviceReceivesFromHostTask() {
   for (size_t i = 0; i < _num_devices; i++) {
     USBHostHIDDevice *dev = _devices[i];
     if (dev != nullptr) {
       dev->syncHostMountState();
     }
   }
-  if (_pending_dev_addr != 0 && !tuh_hid_mounted(_pending_dev_addr, _pending_idx)) {
+  if (_pending_dev_addr != 0 &&
+      (!tuh_mounted(_pending_dev_addr) || !tuh_hid_mounted(_pending_dev_addr, _pending_idx))) {
     _start_receive_pending = false;
     _pending_dev_addr = 0;
     _pending_idx = 0;
   }
   startReceiveIfPending();
+
+  bool rearm_peers = false;
+  if (_rearm_peers && (int32_t)(millis() - _rearm_after_ms) >= 0) {
+    rearm_peers = true;
+    _rearm_peers = false;
+  }
+
   for (size_t i = 0; i < _num_devices; i++) {
     USBHostHIDDevice *dev = _devices[i];
     if (dev == nullptr || !dev->mounted()) {
@@ -212,9 +283,23 @@ void USBHostHID::serviceReceives() {
     }
     const uint8_t a = dev->devAddr();
     const uint8_t x = dev->interfaceIndex();
-    if (tuh_hid_receive_ready(a, x)) {
-      (void)tuh_hid_receive_report(a, x);
+    /* Re-check stack state — never abort/submit on an address mid-remove. */
+    if (!tuh_mounted(a) || !tuh_hid_mounted(a, x)) {
+      continue;
     }
+    const bool is_new = (a == _rearm_skip_addr && x == _rearm_skip_idx);
+    if (!tuh_hid_receive_ready(a, x)) {
+      /* Abort only stuck peers — never the interface that just claimed/started IN. */
+      if (!rearm_peers || is_new) {
+        continue;
+      }
+      log_v("[USBHostHID] peer rearm abort+receive dev=%u idx=%u", (unsigned)a, (unsigned)x);
+      (void)tuh_hid_receive_abort(a, x);
+      if (!tuh_mounted(a) || !tuh_hid_mounted(a, x) || !tuh_hid_receive_ready(a, x)) {
+        continue;
+      }
+    }
+    (void)tuh_hid_receive_report(a, x);
   }
 }
 

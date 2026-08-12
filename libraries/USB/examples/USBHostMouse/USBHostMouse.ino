@@ -1,23 +1,13 @@
 /*
  * USB Host Mouse Example
  *
- * Connect a boot-protocol USB HID mouse (ESP32-S2 / S3 / P4, USB host).
- * Same flow as USBHostGamepad: register before begin(), VBUS on S3-USB-OTG.
- *
- * If enumeration crashes (IntegerDivideByZero in TinyUSB), see
- * libraries/USB/patches/README.md when rebuilding Arduino ESP32 libs.
+ * Boot- or report-protocol USB HID mouse (ESP32-S2 / S3 / P4, USB host).
+ * Register before USBHost.begin(); on ESP32-S3-USB-OTG, begin() enables VBUS.
  */
 
 #include <Arduino.h>
 #include <USBHost.h>
-#include <USBHostHID.h>
-#include <USBHostHIDReportMapDump.h>
 #include <USBHostHIDMouse.h>
-
-#if CFG_TUH_HID
-/** Registered first: prints usbhid_parse_report_map() for each HID interface, then yields to the mouse handler. */
-static USBHostHIDReportMapDumper s_hidReportMapDumper(&Serial);
-#endif
 
 /** 1 = print only when movement, wheel, or buttons change (fewer idle lines). */
 #ifndef MOUSE_PRINT_ON_ACTIVITY_ONLY
@@ -33,9 +23,6 @@ void setup() {
   delay(1000);
   Serial.println("USB Host Mouse example");
 
-#if CFG_TUH_HID
-  USBHostHID.addDevice(&s_hidReportMapDumper);
-#endif
   USBHostMouse.registerWithHost();
 
 #if defined(USB_HOST_EN) && defined(DEV_VBUS_EN)
@@ -49,7 +36,7 @@ void setup() {
     Serial.println("USBHost.begin() failed");
     return;
   }
-  Serial.println(F("Host ready. Plug mouse after boot or replug; hub helps some boards."));
+  Serial.println(F("Host ready. Plug a mouse (hub OK if direct attach fails)."));
 }
 
 void loop() {

@@ -25,13 +25,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#if CFG_TUH_HID && __has_include("USBHostHID.h")
-#include "USBHostHID.h"
-#undef USBHostHID
-#define ARDUINO_USBHOST_HAS_HID_SERVICE 1
-#else
-#define ARDUINO_USBHOST_HAS_HID_SERVICE 0
-#endif
+/*
+ * Core must not #include USBHostHID.h — library headers are often absent from the
+ * core compile include path, so __has_include would silently disable HID arming.
+ * USBHostHID.cpp provides a strong arduino_usb_host_hid_service() instead.
+ */
+extern "C" void arduino_usb_host_hid_service(void) __attribute__((weak));
+extern "C" void arduino_usb_host_hid_service(void) {}
 
 static TaskHandle_t s_tuh_worker = nullptr;
 
@@ -40,11 +40,10 @@ static void arduino_usb_host_tuh_worker(void *arg) {
   for (;;) {
     tuh_task();
     /*
-     * Do not call USBHostHID serviceReceives() here every tick: it submits HID IN transfers
-     * and can saturate the DWC2 host controller, starving control transfers used for hub
-     * port power / reset and downstream enumeration (symptom: nothing powers on hub ports).
-     * HID servicing runs from USBHost.task() in loop() and from each handler's available().
+     * HID interrupt IN arm/re-arm only here (after tuh_task), never from loop().
+     * Concurrent TinyUSB xfers from loop race DWC2 and can freeze the hub.
      */
+    arduino_usb_host_hid_service();
     vTaskDelay(pdMS_TO_TICKS(1));
   }
 }
@@ -102,14 +101,13 @@ bool USBHostClass::begin() {
 }
 
 void USBHostClass::task() {
-  if (_started) {
-    /* When the worker exists, tuh_task runs there; calling here would race the same stack. */
-    if (s_tuh_worker == nullptr) {
-      tuh_task();
-    }
-#if ARDUINO_USBHOST_HAS_HID_SERVICE
-    USBHostHIDInstance.serviceReceives();
-#endif
+  if (!_started) {
+    return;
+  }
+  /* When the worker exists, never call tuh_task / HID xfers here — that races usbhTuh. */
+  if (s_tuh_worker == nullptr) {
+    tuh_task();
+    arduino_usb_host_hid_service();
   }
 }
 

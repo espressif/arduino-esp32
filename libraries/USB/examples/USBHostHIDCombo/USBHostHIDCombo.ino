@@ -4,8 +4,8 @@
  * Flash once, then plug mice (boot or typical report-protocol), keyboards, and/or gamepads (hub OK).
  * Serial tags: [mouse] [keyboard] [gamepad]. Periodic [status] shows which handlers claimed a device.
  *
- * If gamepad stays "no", the descriptor may not match USBHostHIDGamepad heuristics — try
- * the standalone USBHostGamepad example or enable **Core Debug Level → Verbose** for `log_v` / `log_buf_v` traces.
+ * If gamepad stays "no", try the standalone USBHostGamepad example or set
+ * COMBO_DUMP_HID_DESCRIPTOR to 1 to print the report descriptor.
  *
  * Same hardware requirements as USBHostMouse / USBHostKeyboard / USBHostGamepad
  * (ESP32-S2 / S3 / P4 with USB OTG host).
@@ -137,9 +137,9 @@ void setup() {
 }
 
 void loop() {
-  USBHost.task();
+  USBHost.task(); /* HID IN arming runs on usbhTuh worker after tuh_task() */
 
-  /* available() runs startReceiveIfPending() and returns true when a report is waiting. */
+  /* available() returns true when a report is waiting. */
   const bool mouse_ready = USBHostMouse.available();
   const bool pad_ready = USBHostGamepad.available();
 

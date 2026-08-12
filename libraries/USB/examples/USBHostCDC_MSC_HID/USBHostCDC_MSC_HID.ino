@@ -32,6 +32,27 @@ static bool s_usb_stick_mounted = false;
 static bool s_usb_mount_attempted = false;
 static bool s_printed_cdc_ready = false;
 
+static void listUsbRoot() {
+  /* Paths are volume-relative: mount is at /usb in VFS, but open("/") not open("/usb"). */
+  File root = USBMSCFS.open("/");
+  if (!root || !root.isDirectory()) {
+    Serial.println(F("[msc] open(\"/\") failed"));
+    return;
+  }
+  Serial.println(F("[msc] root listing:"));
+  for (File f = root.openNextFile(); f; f = root.openNextFile()) {
+    Serial.print(f.isDirectory() ? F("  DIR  ") : F("  FILE "));
+    Serial.print(f.name());
+    if (!f.isDirectory()) {
+      Serial.print(F("  "));
+      Serial.print(f.size());
+    }
+    Serial.println();
+    f.close();
+  }
+  root.close();
+}
+
 static void onKeyboardReport(uint8_t modifiers, const uint8_t keys[6], void *) {
   bool any = modifiers != 0;
   for (int i = 0; i < 6 && !any; i++) {
@@ -130,6 +151,9 @@ void loop() {
         Serial.print(F(" MB. Mount path: "));
         Serial.print(kUsbMountPath);
         Serial.println(F(" — use the File API like SD (open/read/write on USBMSCFS)."));
+        listUsbRoot();
+      } else {
+        Serial.println(F("[msc] USBMSCFS.begin() failed (need FAT16/FAT32; see log_e). Unplug/replug to retry."));
       }
     }
   } else {

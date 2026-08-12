@@ -1,22 +1,13 @@
 /*
  * USB Host Mouse Example (callback style)
  *
- * Same as USBHostMouse but uses setReportCallback() so you get direct callbacks
- * when the mouse sends a report (move, button press, wheel). No need to poll
- * available() in loop().
- *
- * Requirements: same as USBHostMouse (CFG_TUH_HID, USB Host board).
+ * Same as USBHostMouse but uses setReportCallback() for each report
+ * (move, button, wheel). No need to poll available() in loop().
  */
 
 #include <Arduino.h>
 #include <USBHost.h>
-#include <USBHostHID.h>
-#include <USBHostHIDReportMapDump.h>
 #include <USBHostHIDMouse.h>
-
-#if CFG_TUH_HID
-static USBHostHIDReportMapDumper s_hidReportMapDumper(&Serial);
-#endif
 
 static void onMouseReport(int8_t x, int8_t y, uint8_t buttons, int8_t wheel, void *arg) {
   (void)arg;
@@ -28,10 +19,8 @@ void setup() {
   delay(1000);
   Serial.println("USB Host Mouse (callback) example");
 
-#if CFG_TUH_HID
-  USBHostHID.addDevice(&s_hidReportMapDumper);
-#endif
   USBHostMouse.registerWithHost();
+  USBHostMouse.setReportCallback(onMouseReport, nullptr);
 
 #if defined(USB_HOST_EN) && defined(DEV_VBUS_EN)
   usbHostEnable(true);
@@ -44,9 +33,6 @@ void setup() {
     Serial.println("USBHost.begin() failed");
     return;
   }
-
-  // Get callbacks for every mouse report (movement, buttons, wheel)
-  USBHostMouse.setReportCallback(onMouseReport, nullptr);
 
   Serial.println("USB Host started. Plug in a USB mouse.");
 }

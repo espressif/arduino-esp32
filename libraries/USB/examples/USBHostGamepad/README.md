@@ -26,4 +26,4 @@ You can also poll `available()` / `reportData()`; with notify-on-change, `availa
 
 Some gamepads work more reliably **through a USB hub** than when plugged directly into the OTG port.
 
-With **Tools → Core Debug Level → Verbose**, the library emits **`log_v`** / **`log_buf_v`** traces (`[USBHostGamepad]` CLAIMED, skipped-interface descriptor dumps, report bytes). Old pads (e.g. Genius) are matched via Desktop+Button page, Rx/Ry, hat, or multiple axes — not only “Game Pad” usage.
+Claim matching uses Desktop + Button page, Rx/Ry, hat, or multiple axes — not only “Game Pad” usage. For descriptor dumps while debugging, use `USBHostHIDCombo` / `USBHostHID_MultiTest` with their dump flag set to `1`.

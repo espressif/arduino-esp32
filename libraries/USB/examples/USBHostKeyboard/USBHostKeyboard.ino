@@ -2,7 +2,7 @@
  * USB Host Keyboard Example
  *
  * Boot-protocol USB HID keyboard (ESP32-S2 / S3 / P4, USB host).
- * Register before USBHost.begin(); VBUS on S3-USB-OTG if needed.
+ * Register before USBHost.begin(); on ESP32-S3-USB-OTG, begin() enables VBUS.
  *
  * Log line shows modifiers + decoded text (US layout) when possible, else HID usage or
  * Arduino virtual key (KEY_*) for specials (arrows, F-keys, …).
@@ -10,14 +10,8 @@
 
 #include <Arduino.h>
 #include <USBHost.h>
-#include <USBHostHID.h>
-#include <USBHostHIDReportMapDump.h>
 #include <USBHostHIDKeyboard.h>
 #include <USBHostHIDKeyboardDecode.h>
-
-#if CFG_TUH_HID
-static USBHostHIDReportMapDumper s_hidReportMapDumper(&Serial);
-#endif
 
 #ifndef KEYBOARD_NOTIFY_ON_CHANGE_ONLY
 #define KEYBOARD_NOTIFY_ON_CHANGE_ONLY 1
@@ -76,9 +70,6 @@ void setup() {
   delay(1000);
   Serial.println("USB Host Keyboard example");
 
-#if CFG_TUH_HID
-  USBHostHID.addDevice(&s_hidReportMapDumper);
-#endif
   USBHostKeyboard.registerWithHost();
   USBHostKeyboard.setNotifyOnChangeOnly(KEYBOARD_NOTIFY_ON_CHANGE_ONLY != 0);
   USBHostKeyboard.setReportCallback(onKeyboardReport, nullptr);
@@ -94,7 +85,7 @@ void setup() {
     Serial.println("USBHost.begin() failed");
     return;
   }
-  Serial.println(F("Host ready. Plug keyboard after boot or replug; hub helps some boards."));
+  Serial.println(F("Host ready. Plug a keyboard (hub OK if direct attach fails)."));
 }
 
 void loop() {
