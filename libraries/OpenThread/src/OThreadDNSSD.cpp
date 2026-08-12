@@ -1047,6 +1047,14 @@ bool OThreadDNSSDClass::buildHostFqdn(char *dst, size_t dstSize, const char *hos
   return n > 0 && (size_t)n < dstSize;
 }
 
+bool OThreadDNSSDClass::buildServiceFqdn(char *dst, size_t dstSize, const char *shortName) const {
+  if (!dst || dstSize == 0 || !shortName || shortName[0] == '\0') {
+    return false;
+  }
+  int n = snprintf(dst, dstSize, "%s.%s", shortName, kDnssdDomain);
+  return n > 0 && (size_t)n < dstSize;
+}
+
 bool OThreadDNSSDClass::slotNeedsDetailResolve(const QueryResultSlot &slot) const {
   if (!slot.used) {
     return false;
@@ -1228,7 +1236,7 @@ int OThreadDNSSDClass::queryService(const char *service, const char *proto) {
   if (!buildServiceName(shortName, sizeof(shortName), service, proto)) {
     return 0;
   }
-  if (snprintf(_dnsServiceFqdn, sizeof(_dnsServiceFqdn), "%s.%s", shortName, kDnssdDomain) < 0) {
+  if (!buildServiceFqdn(_dnsServiceFqdn, sizeof(_dnsServiceFqdn), shortName)) {
     return 0;
   }
 
@@ -1315,7 +1323,7 @@ bool OThreadDNSSDClass::startQueryService(const char *service, const char *proto
   if (!buildServiceName(shortName, sizeof(shortName), service, proto)) {
     return false;
   }
-  if (snprintf(_dnsServiceFqdn, sizeof(_dnsServiceFqdn), "%s.%s", shortName, kDnssdDomain) < 0) {
+  if (!buildServiceFqdn(_dnsServiceFqdn, sizeof(_dnsServiceFqdn), shortName)) {
     return false;
   }
 

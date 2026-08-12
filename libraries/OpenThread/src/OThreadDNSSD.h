@@ -549,6 +549,7 @@ private:
   /** Wait long enough for OT DNS (+ Discovery Proxy empty) before local abort. */
   uint32_t dnsResponseWaitMs(otInstance *inst) const;
   bool buildHostFqdn(char *dst, size_t dstSize, const char *host) const;
+  bool buildServiceFqdn(char *dst, size_t dstSize, const char *shortName) const;
   bool slotNeedsDetailResolve(const QueryResultSlot &slot) const;
   bool startDetailResolveAt(uint8_t startIdx);
   void finishAsyncQuery(otError error);
