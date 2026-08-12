@@ -82,7 +82,7 @@ void setup() {
 void loop() {
   Serial.println();
   Serial.printf("queryHost(\"%s\")...\r\n", kPeerHost);
-  IPAddress addr = OThreadDNSSD.queryHost(kPeerHost, 3000);
+  IPAddress addr = OThreadDNSSD.queryHost(kPeerHost);
   if (isEmptyV6(addr)) {
     Serial.printf("FAIL: no address (lastError=%d) — is Advertise board registered?\r\n", (int)OThreadDNSSD.lastError());
   } else {
