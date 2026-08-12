@@ -105,14 +105,21 @@
 #define OT_DNSSD_INSTANCE_NAME_MAX 63
 #endif
 
-/** @brief Max encoded service name (`_type._proto`), bytes. */
-#ifndef OT_DNSSD_SERVICE_NAME_MAX
-#define OT_DNSSD_SERVICE_NAME_MAX 32
-#endif
-
 /** @brief Max single DNS label for service/proto inputs, bytes. */
 #ifndef OT_DNSSD_LABEL_MAX
 #define OT_DNSSD_LABEL_MAX 15
+#endif
+
+/** @brief Max encoded service name (`_type._proto`), bytes. */
+#ifndef OT_DNSSD_SERVICE_NAME_MAX
+#define OT_DNSSD_SERVICE_NAME_MAX (2 * OT_DNSSD_LABEL_MAX + 3)
+#endif
+
+#if OT_DNSSD_LABEL_MAX < 1 || OT_DNSSD_LABEL_MAX > 63
+#error "OT_DNSSD_LABEL_MAX must be in the range 1..63"
+#endif
+#if OT_DNSSD_SERVICE_NAME_MAX < (2 * OT_DNSSD_LABEL_MAX + 3)
+#error "OT_DNSSD_SERVICE_NAME_MAX must be >= 2*OT_DNSSD_LABEL_MAX+3 (\"_type._proto\")"
 #endif
 
 /** @brief Max TXT key length stored in a slot, bytes. */
