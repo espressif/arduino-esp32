@@ -41,9 +41,13 @@ struct OtLock {
   OtLock &operator=(const OtLock &) = delete;
 };
 
-void stripLeadingUnderscore(char *label) {
-  if (label[0] == '_') {
-    memmove(label, label + 1, strlen(label));
+void stripLeadingUnderscores(char *label) {
+  size_t i = 0;
+  while (label[i] == '_') {
+    ++i;
+  }
+  if (i > 0) {
+    memmove(label, label + i, strlen(label + i) + 1);
   }
 }
 
@@ -167,8 +171,11 @@ bool OThreadDNSSDClass::buildServiceName(char *dst, size_t dstSize, const char *
   if (!copyCString(svc, sizeof(svc), service) || !copyCString(prt, sizeof(prt), proto)) {
     return false;
   }
-  stripLeadingUnderscore(svc);
-  stripLeadingUnderscore(prt);
+  stripLeadingUnderscores(svc);
+  stripLeadingUnderscores(prt);
+  if (svc[0] == '\0' || prt[0] == '\0') {
+    return false;
+  }
   int n = snprintf(dst, dstSize, "_%s._%s", svc, prt);
   return n > 0 && (size_t)n < dstSize;
 }
@@ -489,7 +496,10 @@ bool OThreadDNSSDClass::addServiceSubtype(const char *service, const char *proto
   if (!copyCString(dst, OT_DNSSD_SUBTYPE_MAX + 1, subtype)) {
     return false;
   }
-  stripLeadingUnderscore(dst);
+  stripLeadingUnderscores(dst);
+  if (dst[0] == '\0') {
+    return false;
+  }
   slot.numSubtypes++;
   return updateServiceOnOt(slot);
 }
@@ -1229,7 +1239,6 @@ bool OThreadDNSSDClass::resolveMissingServiceDetails(const char *serviceFqdn) {
 }
 
 int OThreadDNSSDClass::queryService(const char *service, const char *proto) {
-  resetQueryResults();
   if (!_started) {
     log_e("OThreadDNSSD: queryService without begin()");
     return 0;
@@ -1251,6 +1260,7 @@ int OThreadDNSSDClass::queryService(const char *service, const char *proto) {
     return 0;
   }
 
+  resetQueryResults();
   while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
   }
   _dnsDone = false;
@@ -1315,7 +1325,6 @@ IPAddress OThreadDNSSDClass::queryHost(const char *host, uint32_t timeoutMs) {
 }
 
 bool OThreadDNSSDClass::startQueryService(const char *service, const char *proto) {
-  resetQueryResults();
   if (!_started) {
     log_e("OThreadDNSSD: startQueryService without begin()");
     return false;
@@ -1337,6 +1346,7 @@ bool OThreadDNSSDClass::startQueryService(const char *service, const char *proto
     return false;
   }
 
+  resetQueryResults();
   while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
   }
   _dnsDone = false;
