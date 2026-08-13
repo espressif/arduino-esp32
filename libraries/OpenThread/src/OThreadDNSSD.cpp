@@ -85,8 +85,9 @@ OThreadDNSSDClass::OThreadDNSSDClass()
     _dnsServiceResolveIdx(-1),
     _queryInProgress(false),
     _queryAsync(false),
-    _queryAbandoned(false),
     _queryKind(OT_DNSSD_QUERY_SERVICE),
+    _queryGen(0),
+    _queryActiveGen(0),
     _queryCb(nullptr),
     _queryCtx(nullptr)
 #endif
@@ -339,10 +340,7 @@ void OThreadDNSSDClass::end() {
   _instanceNameSet = false;
 #if defined(CONFIG_OPENTHREAD_DNS_CLIENT) && CONFIG_OPENTHREAD_DNS_CLIENT
   resetQueryResults();
-  _queryAbandoned = true;
-  _queryInProgress = false;
-  _queryAsync = false;
-  _dnsServiceResolveIdx = -1;
+  clearQueryOp();
   if (_dnsSem) {
     xSemaphoreGive(_dnsSem);
   }
@@ -815,13 +813,9 @@ void OThreadDNSSDClass::handleDnsBrowseCallback(otError aError, const otDnsBrows
 }
 
 void OThreadDNSSDClass::onDnsBrowseCallback(otError aError, const otDnsBrowseResponse *aResponse) {
-  // end() may have abandoned the query while this browse was in flight; do not
-  // repopulate results or clobber lastError after teardown.
-  if (_queryAbandoned || !_started) {
-    _dnsDone = true;
-    if (_dnsSem) {
-      xSemaphoreGive(_dnsSem);
-    }
+  const uint32_t gen = _queryActiveGen;
+  if (!isQueryCallbackCurrent(gen)) {
+    wakeDnsWaiter();
     return;
   }
 
@@ -878,11 +872,8 @@ void OThreadDNSSDClass::onDnsBrowseCallback(otError aError, const otDnsBrowseRes
     }
   }
 
-  if (_queryAbandoned) {
-    _dnsDone = true;
-    if (_dnsSem) {
-      xSemaphoreGive(_dnsSem);
-    }
+  if (!isQueryCallbackCurrent(gen)) {
+    wakeDnsWaiter();
     return;
   }
 
@@ -898,10 +889,7 @@ void OThreadDNSSDClass::onDnsBrowseCallback(otError aError, const otDnsBrowseRes
     return;
   }
 
-  _dnsDone = true;
-  if (_dnsSem) {
-    xSemaphoreGive(_dnsSem);
-  }
+  wakeDnsWaiter();
 }
 
 void OThreadDNSSDClass::handleDnsAddressCallback(otError aError, const otDnsAddressResponse *aResponse, void *aContext) {
@@ -909,11 +897,9 @@ void OThreadDNSSDClass::handleDnsAddressCallback(otError aError, const otDnsAddr
 }
 
 void OThreadDNSSDClass::onDnsAddressCallback(otError aError, const otDnsAddressResponse *aResponse) {
-  if (_queryAbandoned || !_started) {
-    _dnsDone = true;
-    if (_dnsSem) {
-      xSemaphoreGive(_dnsSem);
-    }
+  const uint32_t gen = _queryActiveGen;
+  if (!isQueryCallbackCurrent(gen)) {
+    wakeDnsWaiter();
     return;
   }
 
@@ -927,11 +913,8 @@ void OThreadDNSSDClass::onDnsAddressCallback(otError aError, const otDnsAddressR
     }
   }
 
-  if (_queryAbandoned) {
-    _dnsDone = true;
-    if (_dnsSem) {
-      xSemaphoreGive(_dnsSem);
-    }
+  if (!isQueryCallbackCurrent(gen)) {
+    wakeDnsWaiter();
     return;
   }
 
@@ -940,10 +923,7 @@ void OThreadDNSSDClass::onDnsAddressCallback(otError aError, const otDnsAddressR
     return;
   }
 
-  _dnsDone = true;
-  if (_dnsSem) {
-    xSemaphoreGive(_dnsSem);
-  }
+  wakeDnsWaiter();
 }
 
 void OThreadDNSSDClass::handleDnsServiceCallback(otError aError, const otDnsServiceResponse *aResponse, void *aContext) {
@@ -951,11 +931,9 @@ void OThreadDNSSDClass::handleDnsServiceCallback(otError aError, const otDnsServ
 }
 
 void OThreadDNSSDClass::onDnsServiceCallback(otError aError, const otDnsServiceResponse *aResponse) {
-  if (_queryAbandoned || !_started) {
-    _dnsDone = true;
-    if (_dnsSem) {
-      xSemaphoreGive(_dnsSem);
-    }
+  const uint32_t gen = _queryActiveGen;
+  if (!isQueryCallbackCurrent(gen)) {
+    wakeDnsWaiter();
     return;
   }
 
@@ -996,11 +974,8 @@ void OThreadDNSSDClass::onDnsServiceCallback(otError aError, const otDnsServiceR
   }
   _dnsServiceResolveIdx = -1;
 
-  if (_queryAbandoned) {
-    _dnsDone = true;
-    if (_dnsSem) {
-      xSemaphoreGive(_dnsSem);
-    }
+  if (!isQueryCallbackCurrent(gen)) {
+    wakeDnsWaiter();
     return;
   }
 
@@ -1013,10 +988,7 @@ void OThreadDNSSDClass::onDnsServiceCallback(otError aError, const otDnsServiceR
     return;
   }
 
-  _dnsDone = true;
-  if (_dnsSem) {
-    xSemaphoreGive(_dnsSem);
-  }
+  wakeDnsWaiter();
 }
 
 uint32_t OThreadDNSSDClass::dnsResponseWaitMs(otInstance *inst) const {
@@ -1099,10 +1071,38 @@ bool OThreadDNSSDClass::startDetailResolveAt(uint8_t startIdx) {
   return false;
 }
 
+void OThreadDNSSDClass::armQueryOp(bool async, ot_dnssd_query_kind_t kind) {
+  _queryGen++;
+  if (_queryGen == 0) {
+    _queryGen = 1;
+  }
+  _queryActiveGen = _queryGen;
+  _queryInProgress = true;
+  _queryAsync = async;
+  _queryKind = kind;
+  _dnsServiceResolveIdx = -1;
+}
+
 void OThreadDNSSDClass::clearQueryOp() {
+  _queryActiveGen = 0;
+  _queryGen++;
+  if (_queryGen == 0) {
+    _queryGen = 1;
+  }
   _queryInProgress = false;
   _queryAsync = false;
   _dnsServiceResolveIdx = -1;
+}
+
+bool OThreadDNSSDClass::isQueryCallbackCurrent(uint32_t gen) const {
+  return _started && gen != 0 && gen == _queryActiveGen;
+}
+
+void OThreadDNSSDClass::wakeDnsWaiter() {
+  _dnsDone = true;
+  if (_dnsSem) {
+    xSemaphoreGive(_dnsSem);
+  }
 }
 
 void OThreadDNSSDClass::notifyQueryEvent(ot_dnssd_query_event_t event, otError error, int count) {
@@ -1137,46 +1137,54 @@ void OThreadDNSSDClass::onQueryEvent(OThreadDNSSDQueryCallback callback, void *c
 }
 
 IPAddress OThreadDNSSDClass::resolveAddressFqdn(const char *fqdn, uint32_t timeoutMs) {
-  _dnsResolvedAddr = IPAddress(IPv6);
-  if (!_started || !fqdn || fqdn[0] == '\0') {
-    return _dnsResolvedAddr;
+  IPAddress empty(IPv6);
+  _dnsResolvedAddr = empty;
+  // Caller must armQueryOp() first (blocking queryHost).
+  if (!_started || !fqdn || fqdn[0] == '\0' || _queryActiveGen == 0) {
+    return empty;
   }
   otInstance *inst = OThread.getInstance();
   if (!inst || !ensureDnsSem()) {
-    return _dnsResolvedAddr;
+    clearQueryOp();
+    _dnsResolvedAddr = empty;
+    return empty;
   }
 
   while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
   }
   _dnsDone = false;
   _dnsOpError = OT_ERROR_NONE;
-  _queryAbandoned = false;
 
   {
     OtLock lock;
     if (!lock) {
-      return _dnsResolvedAddr;
+      clearQueryOp();
+      _dnsResolvedAddr = empty;
+      return empty;
     }
     otError err = otDnsClientResolveAddress(inst, fqdn, handleDnsAddressCallback, this, nullptr);
     if (err != OT_ERROR_NONE) {
       _lastError = err;
       _dnsOpError = err;
-      return _dnsResolvedAddr;
+      clearQueryOp();
+      _dnsResolvedAddr = empty;
+      return empty;
     }
   }
 
   TickType_t ticks = (timeoutMs == UINT32_MAX) ? portMAX_DELAY : pdMS_TO_TICKS(timeoutMs);
   if (xSemaphoreTake(_dnsSem, ticks) != pdTRUE) {
-    _queryAbandoned = true;
     _lastError = OT_ERROR_RESPONSE_TIMEOUT;
-    return IPAddress(IPv6);
+    clearQueryOp();
+    _dnsResolvedAddr = empty;
+    return empty;
   }
   return _dnsResolvedAddr;
 }
 
 bool OThreadDNSSDClass::resolveMissingServiceDetails(const char *serviceFqdn) {
   otInstance *inst = OThread.getInstance();
-  if (!inst || !serviceFqdn || !ensureDnsSem()) {
+  if (!inst || !serviceFqdn || !ensureDnsSem() || _queryActiveGen == 0) {
     return false;
   }
   if (serviceFqdn != _dnsServiceFqdn) {
@@ -1192,7 +1200,6 @@ bool OThreadDNSSDClass::resolveMissingServiceDetails(const char *serviceFqdn) {
     }
     _dnsDone = false;
     _dnsOpError = OT_ERROR_NONE;
-    _queryAbandoned = false;
 
     {
       OtLock lock;
@@ -1212,9 +1219,8 @@ bool OThreadDNSSDClass::resolveMissingServiceDetails(const char *serviceFqdn) {
     }
 
     if (xSemaphoreTake(_dnsSem, pdMS_TO_TICKS(dnsResponseWaitMs(inst))) != pdTRUE) {
-      _queryAbandoned = true;
       _lastError = OT_ERROR_RESPONSE_TIMEOUT;
-      _dnsServiceResolveIdx = -1;
+      clearQueryOp();
       break;
     }
     _dnsServiceResolveIdx = -1;
@@ -1249,10 +1255,7 @@ int OThreadDNSSDClass::queryService(const char *service, const char *proto) {
   }
   _dnsDone = false;
   _dnsOpError = OT_ERROR_NONE;
-  _queryAbandoned = false;
-  _queryInProgress = true;
-  _queryAsync = false;
-  _queryKind = OT_DNSSD_QUERY_SERVICE;
+  armQueryOp(false, OT_DNSSD_QUERY_SERVICE);
 
   {
     OtLock lock;
@@ -1270,15 +1273,17 @@ int OThreadDNSSDClass::queryService(const char *service, const char *proto) {
   }
 
   if (xSemaphoreTake(_dnsSem, pdMS_TO_TICKS(dnsResponseWaitMs(inst))) != pdTRUE) {
-    _queryAbandoned = true;
     _lastError = OT_ERROR_RESPONSE_TIMEOUT;
     log_w("OThreadDNSSD: Browse timeout");
     clearQueryOp();
-    return (int)_queryResultCount;
+    resetQueryResults();
+    return 0;
   }
 
   (void)resolveMissingServiceDetails(_dnsServiceFqdn);
-  clearQueryOp();
+  if (_queryActiveGen != 0) {
+    clearQueryOp();
+  }
   return (int)_queryResultCount;
 }
 
@@ -1301,11 +1306,11 @@ IPAddress OThreadDNSSDClass::queryHost(const char *host, uint32_t timeoutMs) {
     return empty;
   }
 
-  _queryInProgress = true;
-  _queryAsync = false;
-  _queryKind = OT_DNSSD_QUERY_HOST;
+  armQueryOp(false, OT_DNSSD_QUERY_HOST);
   IPAddress addr = resolveAddressFqdn(fqdn, timeoutMs);
-  clearQueryOp();
+  if (_queryActiveGen != 0) {
+    clearQueryOp();
+  }
   return addr;
 }
 
@@ -1336,10 +1341,7 @@ bool OThreadDNSSDClass::startQueryService(const char *service, const char *proto
   }
   _dnsDone = false;
   _dnsOpError = OT_ERROR_NONE;
-  _queryAbandoned = false;
-  _queryInProgress = true;
-  _queryAsync = true;
-  _queryKind = OT_DNSSD_QUERY_SERVICE;
+  armQueryOp(true, OT_DNSSD_QUERY_SERVICE);
 
   {
     OtLock lock;
@@ -1386,10 +1388,7 @@ bool OThreadDNSSDClass::startQueryHost(const char *host) {
   }
   _dnsDone = false;
   _dnsOpError = OT_ERROR_NONE;
-  _queryAbandoned = false;
-  _queryInProgress = true;
-  _queryAsync = true;
-  _queryKind = OT_DNSSD_QUERY_HOST;
+  armQueryOp(true, OT_DNSSD_QUERY_HOST);
 
   {
     OtLock lock;

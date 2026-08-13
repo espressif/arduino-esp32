@@ -192,6 +192,16 @@ API summary
   ``lastError == OT_ERROR_NONE`` once the DNS/Discovery Proxy reply arrives
   (often several seconds; not a failure timeout).
 
+**Discover results lifetime.** After a discover **timeout**, ``end()``, or before the
+next ``queryService`` / ``queryHost`` / ``startQuery*`` call, do **not** rely on
+result getters (``queryResultCount()``, ``instanceName(i)``, ``resolvedAddress()``,
+etc.) as stable. An in-flight OpenThread DNS callback may still complete; the
+library invalidates that operation so it does not apply to a **new** query, but
+sketches should copy what they need when the call returns (or on
+``OT_DNSSD_QUERY_DONE``) and start a fresh query for updated data. Prefer
+``lastError()`` to distinguish timeout (``OT_ERROR_RESPONSE_TIMEOUT``) from an
+empty successful browse (``OT_ERROR_NONE`` with count ``0``).
+
 Fixed memory caps
 -----------------
 

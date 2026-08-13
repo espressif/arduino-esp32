@@ -73,6 +73,15 @@ port, host, and addresses. Stock OTBR CLI can **list** these entries; it does
 Prefer unique hostnames when multiple nodes share one OTBR. The library reports
 conflicts; it does not rename for you.
 
+## Discover results
+
+Copy browse/resolve results when `queryService` / `queryHost` returns, or on
+`OT_DNSSD_QUERY_DONE` for async APIs. After a **timeout**, `end()`, or before the
+next query, do not treat getters (`queryResultCount`, `instanceName`,
+`resolvedAddress`, …) as stable — start a new query for updated data. Use
+`lastError()` to tell timeout (`OT_ERROR_RESPONSE_TIMEOUT`) from an empty
+successful browse (`OT_ERROR_NONE` with count 0).
+
 ## Pass / fail
 
 - **Pass:** Serial prints that the service was announced (`ANNOUNCED` / `announced OK`), or Query finds instances / resolves an address.

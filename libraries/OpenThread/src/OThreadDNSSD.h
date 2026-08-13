@@ -51,6 +51,10 @@
  *   IPAddress a = OThreadDNSSD.queryHost("sensor-1");
  *   // Async: onQueryEvent + startQueryService / startQueryHost
  *
+ * After a discover timeout, end(), or before the next query, do not treat
+ * result getters as stable — copy results when the call returns (or on
+ * OT_DNSSD_QUERY_DONE). In-flight DNS callbacks are invalidated for new ops.
+ *
  * Name conflicts (`OT_ERROR_DUPLICATED`) are reported to the sketch; the library
  * does not rename. Prefer unique hostnames and keep NVS across reflash.
  *
@@ -241,6 +245,8 @@ public:
    *
    * Also called from `OThread.end()`. Delivers @ref OT_DNSSD_EVENT_REMOVED via
    * @ref onServiceEvent on the **caller** task (not the OpenThread task).
+   * Invalidates any in-flight discover; do not use query result getters until
+   * a new @ref begin and query.
    */
   void end();
 
@@ -354,6 +360,10 @@ public:
    * Fills a fixed result pool (max @ref OT_DNSSD_MAX_QUERY_RESULTS).
    * Requires @ref begin so SRP auto-start can select the DNS/SRP server.
    *
+   * On success or empty browse, read getters before starting another discover.
+   * After a timeout (`lastError` == `OT_ERROR_RESPONSE_TIMEOUT`) or @ref end,
+   * do not rely on getters until a new query; copy what you need on return.
+   *
    * @return Number of results stored (0 on failure / none found).
    */
   int queryService(const char *service, const char *proto);
@@ -371,6 +381,10 @@ public:
    * contains a domain). Returns an empty IPv6 `IPAddress` on failure.
    * Requires @ref begin.
    *
+   * Use the returned `IPAddress` (or @ref resolvedAddress right after a
+   * successful call). After a timeout or @ref end, do not rely on
+   * @ref resolvedAddress until a new resolve.
+   *
    * @param host      Host label or FQDN.
    * @param timeoutMs Max wait for the DNS response (default @ref OT_DNSSD_QUERY_TIMEOUT_MS).
    */
@@ -386,7 +400,9 @@ public:
    * @brief Register async discover callback (optional).
    *
    * Used with @ref startQueryService / @ref startQueryHost. Do not call other
-   * OThreadDNSSD methods from the callback.
+   * OThreadDNSSD methods from the callback. On @ref OT_DNSSD_QUERY_DONE, copy
+   * results in `loop()`; after timeout / @ref end, do not rely on getters until
+   * a new query.
    */
   void onQueryEvent(OThreadDNSSDQueryCallback callback, void *context = nullptr);
 
@@ -554,7 +570,12 @@ private:
   bool startDetailResolveAt(uint8_t startIdx);
   void finishAsyncQuery(otError error);
   void notifyQueryEvent(ot_dnssd_query_event_t event, otError error, int count);
+  /** Begin a discover op; invalidates any prior in-flight DNS callback. */
+  void armQueryOp(bool async, ot_dnssd_query_kind_t kind);
+  /** End the current discover op; late DNS callbacks become no-ops. */
   void clearQueryOp();
+  bool isQueryCallbackCurrent(uint32_t gen) const;
+  void wakeDnsWaiter();
 
   static void handleDnsBrowseCallback(otError aError, const otDnsBrowseResponse *aResponse, void *aContext);
   void onDnsBrowseCallback(otError aError, const otDnsBrowseResponse *aResponse);
@@ -588,8 +609,11 @@ private:
   char _dnsServiceFqdn[OT_DNS_MAX_NAME_SIZE];
   bool _queryInProgress;
   bool _queryAsync;
-  bool _queryAbandoned;
   ot_dnssd_query_kind_t _queryKind;
+  /** Monotonic counter; bumped on arm/clear so stale callbacks cannot match. */
+  volatile uint32_t _queryGen;
+  /** Generation of the armed op (0 = none). Callbacks must match this value. */
+  volatile uint32_t _queryActiveGen;
   OThreadDNSSDQueryCallback _queryCb;
   void *_queryCtx;
 #endif
