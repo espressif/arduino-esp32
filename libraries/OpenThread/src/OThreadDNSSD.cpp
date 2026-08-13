@@ -1148,7 +1148,6 @@ void OThreadDNSSDClass::onQueryEvent(OThreadDNSSDQueryCallback callback, void *c
 
 IPAddress OThreadDNSSDClass::resolveAddressFqdn(const char *fqdn, uint32_t timeoutMs) {
   IPAddress empty(IPv6);
-  _dnsResolvedAddr = empty;
   // Caller must armQueryOp() first (blocking queryHost).
   if (!_started || !fqdn || fqdn[0] == '\0' || _queryActiveGen == 0) {
     return empty;
@@ -1156,10 +1155,10 @@ IPAddress OThreadDNSSDClass::resolveAddressFqdn(const char *fqdn, uint32_t timeo
   otInstance *inst = OThread.getInstance();
   if (!inst || !ensureDnsSem()) {
     clearQueryOp();
-    _dnsResolvedAddr = empty;
     return empty;
   }
 
+  _dnsResolvedAddr = empty;
   while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
   }
   _dnsDone = false;
@@ -1169,7 +1168,6 @@ IPAddress OThreadDNSSDClass::resolveAddressFqdn(const char *fqdn, uint32_t timeo
     OtLock lock;
     if (!lock) {
       clearQueryOp();
-      _dnsResolvedAddr = empty;
       return empty;
     }
     otError err = otDnsClientResolveAddress(inst, fqdn, handleDnsAddressCallback, this, nullptr);
@@ -1177,7 +1175,6 @@ IPAddress OThreadDNSSDClass::resolveAddressFqdn(const char *fqdn, uint32_t timeo
       _lastError = err;
       _dnsOpError = err;
       clearQueryOp();
-      _dnsResolvedAddr = empty;
       return empty;
     }
   }
@@ -1371,7 +1368,6 @@ bool OThreadDNSSDClass::startQueryService(const char *service, const char *proto
 }
 
 bool OThreadDNSSDClass::startQueryHost(const char *host) {
-  _dnsResolvedAddr = IPAddress(IPv6);
   if (!_started) {
     log_e("OThreadDNSSD: startQueryHost without begin()");
     return false;
@@ -1394,6 +1390,7 @@ bool OThreadDNSSDClass::startQueryHost(const char *host) {
     return false;
   }
 
+  _dnsResolvedAddr = IPAddress(IPv6);
   while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
   }
   _dnsDone = false;
