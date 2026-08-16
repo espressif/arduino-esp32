@@ -333,7 +333,9 @@ void loop() {
     Serial.println("[CLIENT] Starting Write-NR burst");
     if (pRemoteWriteNrCharacteristic && pRemoteWriteNrCharacteristic->canWriteNoResponse()) {
       for (int i = 0; i < 3; i++) {
-        bool ok = pRemoteWriteNrCharacteristic->writeValue(const_cast<uint8_t *>(WRITE_NR_BURST[i]), 3, false);
+        uint8_t buf[3];
+        memcpy(buf, WRITE_NR_BURST[i], sizeof(buf));
+        bool ok = pRemoteWriteNrCharacteristic->writeValue(buf, sizeof(buf), false);
         Serial.printf("[CLIENT] Write-NR packet %d/3 %s\n", i + 1, ok ? "queued" : "FAILED");
       }
       Serial.println("[CLIENT] Write-NR burst sent");
