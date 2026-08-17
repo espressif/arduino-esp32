@@ -282,9 +282,11 @@ size_t Preferences::putString(const char *key, const String value) {
   return putString(key, value.c_str());
 }
 
+#ifdef USE_STD_STRING
 size_t Preferences::putStdString(const char *key, const std::string value) {
   return putString(key, value.c_str());
 }
+#endif
 
 size_t Preferences::putBytes(const char *key, const void *value, size_t len) {
   if (!_started || !key || !value || !len || _readOnly) {
@@ -520,6 +522,7 @@ String Preferences::getString(const char *key, const String defaultValue) {
   return String(buf);
 }
 
+#ifdef USE_STD_STRING
 std::string Preferences::getStdString(const char *key, const std::string defaultValue) {
   char *value = NULL;
   size_t len = 0;
@@ -540,6 +543,7 @@ std::string Preferences::getStdString(const char *key, const std::string default
   }
   return std::string(buf);
 }
+#endif
 
 size_t Preferences::getStringLength(const char *key) {
   size_t len = 0;
