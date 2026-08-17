@@ -25,6 +25,8 @@ Validates BLE secure connection between a server and client using Numeric Compar
 | Server initialization | Start BLE server with Numeric Comparison security, advertise with a unique name |
 | Insecure characteristic | Serve read/write on an unprotected characteristic |
 | Secure characteristic | Serve read/write requiring MITM authentication |
+| Write-NR characteristic | Serve Write / Write-Without-Response; capture burst payloads in `onWrite()` (issue #12815) |
+| Heap integrity | `heap_caps_check_integrity_all()` before and after `BLEDevice::init()` (issue #12821) |
 | Numeric Comparison PIN | Display and auto-confirm pairing PIN |
 | IRK retrieval | Retrieve and print the peer's Identity Resolving Key after authentication |
 
@@ -38,6 +40,8 @@ Validates BLE secure connection between a server and client using Numeric Compar
 | Numeric Comparison PIN | Display and auto-confirm pairing PIN (must match server) |
 | IRK retrieval | Retrieve and print the peer's Identity Resolving Key after authentication |
 | Write/read operations | Write and read back values on both secure and insecure characteristics |
+| Write-NR burst | Three back-to-back Write-Without-Response packets (`AA`, `BB`, `CC`) with no delay (issue #12815) |
+| Heap integrity | `heap_caps_check_integrity_all()` before and after `BLEDevice::init()` (issue #12821) |
 
 ## Requirements
 
@@ -57,6 +61,8 @@ Validates BLE secure connection between a server and client using Numeric Compar
 7. Both devices display and confirm the same PIN
 8. Authentication completes; both devices retrieve peer IRK
 9. Client performs write/read on both characteristics
+10. Client sends a 3-packet Write-Without-Response burst; server must report `AA AA AA`, `BB BB BB`, `CC CC CC`
+11. Heap integrity is checked around `BLEDevice::init()` on both devices (and again on the server after the burst)
 
 ## Notes
 

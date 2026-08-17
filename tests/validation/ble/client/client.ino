@@ -2,13 +2,20 @@
 #include "BLEDevice.h"
 #include "BLESecurity.h"
 #include "nvs_flash.h"
+#include <esp_heap_caps.h>
 
 static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static BLEUUID insecureCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 static BLEUUID secureCharUUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
+static BLEUUID writeNrCharUUID("d7c1aa01-36e1-4688-b7f5-ea07361b26a8");
 
 static const int RECONNECT_CYCLES = 10;
 static const uint16_t APPID_PRESEED_GATT_IF_NONE = 250;  // crosses ESP_GATT_IF_NONE (0xFF on Bluedroid)
+static const uint8_t WRITE_NR_BURST[3][3] = {
+  {0xAA, 0xAA, 0xAA},
+  {0xBB, 0xBB, 0xBB},
+  {0xCC, 0xCC, 0xCC},
+};
 
 String targetServerName = "";
 static boolean doConnect = false;
@@ -18,7 +25,13 @@ static boolean testCompleted = false;
 static BLEClient *pClient = nullptr;
 static BLERemoteCharacteristic *pRemoteInsecureCharacteristic = nullptr;
 static BLERemoteCharacteristic *pRemoteSecureCharacteristic = nullptr;
+static BLERemoteCharacteristic *pRemoteWriteNrCharacteristic = nullptr;
 static BLEAdvertisedDevice *myDevice = nullptr;
+
+static void printHeapIntegrity(const char *when) {
+  bool clean = heap_caps_check_integrity_all(true);
+  Serial.printf("[CLIENT] Heap %s: %s\n", when, clean ? "clean" : "CORRUPT");
+}
 
 class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient *pclient) {
@@ -119,6 +132,14 @@ bool connectToServer() {
     return false;
   }
   Serial.println("[CLIENT] Found secure characteristic");
+
+  pRemoteWriteNrCharacteristic = pRemoteService->getCharacteristic(writeNrCharUUID);
+  if (pRemoteWriteNrCharacteristic == nullptr) {
+    Serial.println("[CLIENT] ERROR: Failed to find Write-NR characteristic");
+    pClient->disconnect();
+    return false;
+  }
+  Serial.println("[CLIENT] Found Write-NR characteristic");
 
   // Read insecure characteristic
   if (pRemoteInsecureCharacteristic->canRead()) {
@@ -236,7 +257,10 @@ void setup() {
   nvs_flash_erase();
   nvs_flash_init();
 
+  // Issue #12821: BLEDevice::init() must not overflow a heap block / destroy the tail canary.
+  printHeapIntegrity("before BLEDevice::init()");
   BLEDevice::init("BLE_Test_Client");
+  printHeapIntegrity("after BLEDevice::init()");
 
   // Configure security for Numeric Comparison
   BLESecurity *pSecurity = new BLESecurity();
@@ -302,6 +326,23 @@ void loop() {
     }
 
     Serial.println("[CLIENT] Test operations completed");
+
+    // --- Write-Without-Response burst (issue #12815) ---
+    // Three back-to-back Write Commands with distinct payloads. The server must
+    // deliver each original packet to onWrite(), not three copies of the last one.
+    Serial.println("[CLIENT] Starting Write-NR burst");
+    if (pRemoteWriteNrCharacteristic && pRemoteWriteNrCharacteristic->canWriteNoResponse()) {
+      for (int i = 0; i < 3; i++) {
+        uint8_t buf[3];
+        memcpy(buf, WRITE_NR_BURST[i], sizeof(buf));
+        bool ok = pRemoteWriteNrCharacteristic->writeValue(buf, sizeof(buf), false);
+        Serial.printf("[CLIENT] Write-NR packet %d/3 %s\n", i + 1, ok ? "queued" : "FAILED");
+      }
+      Serial.println("[CLIENT] Write-NR burst sent");
+    } else {
+      Serial.println("[CLIENT] ERROR: Write-NR characteristic missing or cannot write without response");
+    }
+    delay(1000);
 
     // --- Reconnection stress test (app_id collision regression) ---
     // Disconnect from the current connection first
