@@ -7,7 +7,7 @@ About
 
 .. note:: This is a work in progress project and this section is still missing. If you want to contribute, please see the `Contributions Guide <../contributing.html>`_.
 
-The BLE library wraps the ESP-IDF NimBLE host stack with an Arduino-style API.
+The BLE library wraps the ESP-IDF host stack with an Arduino-style API.
 
 If you use the ``BLE`` library (for example ``BLEDevice::init()``), the core keeps the
 Bluetooth memory regions reserved automatically.
