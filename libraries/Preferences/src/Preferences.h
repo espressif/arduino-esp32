@@ -16,7 +16,7 @@
 
 #include "Arduino.h"
 
-#ifdef __has_include(<string>) 
+#if __has_include(<string>) 
   #define USE_STD_STRING 1
 #endif
 
