@@ -17,7 +17,6 @@
 
 #include <MatterEndPoint.h>
 #include <MatterTags.h>
-#include <app/server/Server.h>
 #include <string.h>
 
 using namespace chip::app::Clusters;

@@ -17,7 +17,6 @@
 
 #include <inttypes.h>
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterLightSensor.h>
 
 using namespace esp_matter;

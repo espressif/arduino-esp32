@@ -17,7 +17,6 @@
 
 #include <string.h>
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterTemperatureControlledCabinet.h>
 #include <esp_matter_attribute.h>
 
