@@ -26,4 +26,4 @@ You can also poll `available()` / `reportData()`; with notify-on-change, `availa
 
 Some gamepads work more reliably **through a USB hub** than when plugged directly into the OTG port.
 
-Claim matching uses Desktop + Button page, Rx/Ry, hat, or multiple axes — not only “Game Pad” usage. For descriptor dumps while debugging, use `USBHostHIDCombo` / `USBHostHID_MultiTest` with their dump flag set to `1`.
+Claim matching uses Desktop + Button page, Rx/Ry, hat, or multiple axes — not only “Game Pad” usage. For descriptor dumps while debugging, use `USBHostHIDCombo` with its dump flag set to `1`.

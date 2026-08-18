@@ -25,6 +25,16 @@
 #define CFG_TUH_HID 0
 #endif
 
+/* TinyUSB / host-worker hooks are C linkage — declare before friend so we do not
+ * introduce conflicting C++ linkage names in this header. */
+extern "C" {
+void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc, uint16_t desc_len);
+void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t idx);
+void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len);
+void tuh_umount_cb(uint8_t daddr);
+void arduino_usb_host_hid_service(void);
+}
+
 class USBHostHIDClass;
 
 /**

@@ -13,4 +13,4 @@ Reads a USB HID mouse (boot protocol, or report-protocol with Generic Desktop Mo
 
 - **`MOUSE_PRINT_ON_ACTIVITY_ONLY`** (default `1`): skip Serial lines when the report is idle and buttons unchanged. Set to `0` to print every report.
 
-For descriptor dumps while debugging claim issues, use `USBHostHIDCombo` or `USBHostHID_MultiTest` with their dump flag set to `1`.
+For descriptor dumps while debugging claim issues, use `USBHostHIDCombo` with its dump flag set to `1`.

@@ -259,14 +259,18 @@ set(ARDUINO_LIBRARY_Update_SRCS
 set(ARDUINO_LIBRARY_USB_SRCS
   libraries/USB/src/USBAudioCard.cpp
   libraries/USB/src/USBHID.cpp
+  libraries/USB/src/USBHIDReportMapParse.c
   libraries/USB/src/USBMIDI.cpp
   libraries/USB/src/USBHIDMouse.cpp
   libraries/USB/src/USBHostHID.cpp
   libraries/USB/src/USBHostHIDMouse.cpp
   libraries/USB/src/USBHostHIDGamepad.cpp
   libraries/USB/src/USBHostHIDKeyboard.cpp
+  libraries/USB/src/USBHostHIDKeyboardDecode.cpp
+  libraries/USB/src/USBHostHIDReportMapDump.cpp
   libraries/USB/src/USBHostMSC.cpp
   libraries/USB/src/USBHostSerial.cpp
+  libraries/USB/src/USBMSCFS.cpp
   libraries/USB/src/USBHIDKeyboard.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_da_DK.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_de_DE.cpp
