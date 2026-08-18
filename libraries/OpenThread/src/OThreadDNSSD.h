@@ -662,7 +662,6 @@ private:
   uint8_t _queryResultCount;
   SemaphoreHandle_t _dnsSem;
   volatile bool _dnsDone;
-  otError _dnsOpError;
   IPAddress _dnsResolvedAddr;
   int _dnsServiceResolveIdx;
   char _dnsServiceFqdn[OT_DNS_MAX_NAME_SIZE];

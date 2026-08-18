@@ -88,7 +88,6 @@ OThreadDNSSDClass::OThreadDNSSDClass()
     _queryResultCount(0),
     _dnsSem(nullptr),
     _dnsDone(false),
-    _dnsOpError(OT_ERROR_NONE),
     _dnsServiceResolveIdx(-1),
     _queryInProgress(false),
     _queryAsync(false),
@@ -908,7 +907,6 @@ void OThreadDNSSDClass::onDnsBrowseCallback(otError aError, const otDnsBrowseRes
     return;
   }
 
-  _dnsOpError = aError;
   _lastError = aError;
   if (aError == OT_ERROR_NONE && aResponse) {
     for (uint16_t i = 0; i < OT_DNSSD_MAX_QUERY_RESULTS; ++i) {
@@ -1001,7 +999,6 @@ void OThreadDNSSDClass::onDnsAddressCallback(otError aError, const otDnsAddressR
     return;
   }
 
-  _dnsOpError = aError;
   _lastError = aError;
   _dnsResolvedAddr = IPAddress(IPv6);
   if (aError == OT_ERROR_NONE && aResponse) {
@@ -1039,7 +1036,6 @@ void OThreadDNSSDClass::onDnsServiceCallback(otError aError, const otDnsServiceR
     return;
   }
 
-  _dnsOpError = aError;
   _lastError = aError;
   int finishedIdx = _dnsServiceResolveIdx;
   if (aError == OT_ERROR_NONE && aResponse && finishedIdx >= 0 && finishedIdx < (int)_queryResultCount) {
@@ -1320,7 +1316,6 @@ IPAddress OThreadDNSSDClass::resolveAddressFqdn(const char *fqdn, uint32_t timeo
   while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
   }
   _dnsDone = false;
-  _dnsOpError = OT_ERROR_NONE;
 
   {
     OtLock lock;
@@ -1337,7 +1332,6 @@ IPAddress OThreadDNSSDClass::resolveAddressFqdn(const char *fqdn, uint32_t timeo
     if (err != OT_ERROR_NONE) {
       freeDnsCbCtx(ctx);
       _lastError = err;
-      _dnsOpError = err;
       clearQueryOp();
       return empty;
     }
@@ -1372,7 +1366,6 @@ bool OThreadDNSSDClass::resolveMissingServiceDetails(const char *serviceFqdn) {
     while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
     }
     _dnsDone = false;
-    _dnsOpError = OT_ERROR_NONE;
 
     {
       OtLock lock;
@@ -1433,7 +1426,6 @@ int OThreadDNSSDClass::queryService(const char *service, const char *proto) {
   while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
   }
   _dnsDone = false;
-  _dnsOpError = OT_ERROR_NONE;
   armQueryOp(false, OT_DNSSD_QUERY_SERVICE);
 
   {
@@ -1527,7 +1519,6 @@ bool OThreadDNSSDClass::startQueryService(const char *service, const char *proto
   while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
   }
   _dnsDone = false;
-  _dnsOpError = OT_ERROR_NONE;
   armQueryOp(true, OT_DNSSD_QUERY_SERVICE);
 
   {
@@ -1581,7 +1572,6 @@ bool OThreadDNSSDClass::startQueryHost(const char *host) {
   while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
   }
   _dnsDone = false;
-  _dnsOpError = OT_ERROR_NONE;
   armQueryOp(true, OT_DNSSD_QUERY_HOST);
 
   {
