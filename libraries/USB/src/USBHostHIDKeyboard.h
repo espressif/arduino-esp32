@@ -1,4 +1,4 @@
-// Copyright 2015-2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/** Boot keyboard modifier bits (USB HID keyboard). */
 #define USBHOST_KEY_MOD_LEFT_CTRL   0x01
 #define USBHOST_KEY_MOD_LEFT_SHIFT  0x02
 #define USBHOST_KEY_MOD_LEFT_ALT    0x04
@@ -40,51 +39,47 @@
 #define USBHOST_KEY_MOD_RIGHT_ALT   0x40
 #define USBHOST_KEY_MOD_RIGHT_GUI   0x80
 
-/** Optional callback when a boot keyboard report is received. */
 typedef void (*USBHostHIDKeyboardReportCb)(uint8_t modifiers, const uint8_t keys[6], void *arg);
 
 /**
- * @brief USB Host HID boot keyboard (Arduino API).
- * Claims HID interfaces with boot protocol Keyboard. Parses the standard 8-byte
- * boot report (optionally prefixed by a 1-byte report ID).
+ * @brief USB Host HID boot keyboard.
+ *
+ * Claims boot-protocol keyboard interfaces and parses the 8-byte boot report
+ * (optional leading report ID). Call registerWithHost() before USBHost.begin().
  */
 class USBHostHIDKeyboard : public USBHostHIDDevice {
 public:
   USBHostHIDKeyboard();
 
-  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
-             const uint8_t *report_desc, uint16_t desc_len) override;
+  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc,
+             uint16_t desc_len) override;
   void onUnmount(uint8_t dev_addr, uint8_t idx) override;
   void onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) override;
 
-  /** True if a report is waiting. Also calls USBHostHID.serviceReceives() (no-op with host worker). */
   bool available();
-
-  /** Modifier bitmask (USBHOST_KEY_MOD_*). */
-  uint8_t getModifiers() const { return _modifiers; }
-
-  /** Up to six non-modifier key usages (HID key codes); 0 = empty slot. */
+  uint8_t getModifiers() const {
+    return _modifiers;
+  }
   void getKeys(uint8_t keys[6]) const;
-
-  /** True if @p hid_usage appears in the current key slots. */
   bool isKeyDown(uint8_t hid_usage) const;
-
   void clear();
 
-  /**
-   * If true, identical boot reports do not set available() or invoke the callback
-   * (reduces spam while a key is held). Default false for backward compatibility.
-   */
-  void setNotifyOnChangeOnly(bool enable) { _notify_on_change_only = enable; }
-  bool notifyOnChangeOnly() const { return _notify_on_change_only; }
+  /** Skip identical held-key reports (default false). */
+  void setNotifyOnChangeOnly(bool enable) {
+    _notify_on_change_only = enable;
+  }
+  bool notifyOnChangeOnly() const {
+    return _notify_on_change_only;
+  }
 
   void setReportCallback(USBHostHIDKeyboardReportCb cb, void *arg = nullptr) {
     _report_cb = cb;
     _report_cb_arg = arg;
   }
 
-  /** Call in setup() before USBHost.begin() if the keyboard may enumerate before loop(). */
-  void registerWithHost() { _ensureRegistered(); }
+  void registerWithHost() {
+    _ensureRegistered();
+  }
 
 private:
   void _ensureRegistered();

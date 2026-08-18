@@ -1,4 +1,4 @@
-// Copyright 2015-2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,11 +25,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-/*
- * Core must not #include USBHostHID.h — library headers are often absent from the
- * core compile include path, so __has_include would silently disable HID arming.
- * USBHostHID.cpp provides a strong arduino_usb_host_hid_service() instead.
- */
+/* Do not #include USBHostHID.h here — library paths are often missing from core builds.
+ * HID provides a strong arduino_usb_host_hid_service() instead. */
 extern "C" void arduino_usb_host_hid_service(void) __attribute__((weak));
 extern "C" void arduino_usb_host_hid_service(void) {}
 
@@ -39,10 +36,7 @@ static void arduino_usb_host_tuh_worker(void *arg) {
   (void)arg;
   for (;;) {
     tuh_task();
-    /*
-     * HID interrupt IN arm/re-arm only here (after tuh_task), never from loop().
-     * Concurrent TinyUSB xfers from loop race DWC2 and can freeze the hub.
-     */
+    /* HID IN arm/re-arm only after tuh_task — never from loop() (DWC2 race). */
     arduino_usb_host_hid_service();
     vTaskDelay(pdMS_TO_TICKS(1));
   }
@@ -56,11 +50,8 @@ bool USBHostClass::begin() {
   if (_started) {
     return true;
   }
-  /*
-   * ESP32-S3-USB-OTG: host mux + VBUS before host controller init (same as device_info).
-   * Drive GPIO here — do not call usbHostEnable/usbHostPower from core: those live in
-   * variant.cpp and may not link into the same archive as USBHost.cpp in some builds.
-   */
+
+  /* ESP32-S3-USB-OTG host mux + VBUS (GPIO here; variant helpers may not link into core). */
 #if defined(USB_HOST_EN) && defined(DEV_VBUS_EN) && defined(LIMIT_EN)
 #  if defined(BOOST_EN)
   pinMode(BOOST_EN, OUTPUT);
@@ -75,8 +66,9 @@ bool USBHostClass::begin() {
   digitalWrite(LIMIT_EN, HIGH);
   delay(10);
 #endif
+
   tinyusb_host_config_t host_config = {
-    .rhport = 0,
+    .rhport = 0, /* P4 remaps 0 → HS rhport 1 inside tinyusb_host_init() */
   };
   esp_err_t err = tinyusb_host_init(&host_config);
   if (err != ESP_OK) {
@@ -86,11 +78,12 @@ bool USBHostClass::begin() {
   _started = true;
 
   if (s_tuh_worker == nullptr) {
-    /* Priority well above Arduino loop (~1) so bulk OUT / MSC completions make progress while FatFS waits. */
+    /* Above Arduino loop priority so MSC/FatFs waits still make progress. */
 #if defined(CONFIG_FREERTOS_UNICORE) && CONFIG_FREERTOS_UNICORE
     const BaseType_t ok = xTaskCreate(arduino_usb_host_tuh_worker, "usbhTuh", 8192, nullptr, 17, &s_tuh_worker);
 #else
-    const BaseType_t ok = xTaskCreatePinnedToCore(arduino_usb_host_tuh_worker, "usbhTuh", 8192, nullptr, 17, &s_tuh_worker, 0);
+    const BaseType_t ok =
+      xTaskCreatePinnedToCore(arduino_usb_host_tuh_worker, "usbhTuh", 8192, nullptr, 17, &s_tuh_worker, 0);
 #endif
     if (ok != pdPASS) {
       s_tuh_worker = nullptr;
@@ -104,7 +97,6 @@ void USBHostClass::task() {
   if (!_started) {
     return;
   }
-  /* When the worker exists, never call tuh_task / HID xfers here — that races usbhTuh. */
   if (s_tuh_worker == nullptr) {
     tuh_task();
     arduino_usb_host_hid_service();
@@ -118,12 +110,10 @@ bool USBHostClass::tuhBackgroundActive() const {
 }
 
 bool USBHostClass::begin() {
-  (void)0;
   return false;
 }
 
-void USBHostClass::task() {
-}
+void USBHostClass::task() {}
 
 #endif /* CFG_TUH_ENABLED */
 

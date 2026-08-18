@@ -49,13 +49,8 @@ void USBHostSerialClass::ensureTxMutex() {
 }
 
 bool USBHostSerialClass::mounted() const {
-  if (!_binding_valid) {
-    return false;
-  }
-  if (!tuh_cdc_mounted(_cdc_idx)) {
-    return false;
-  }
-  return tuh_cdc_itf_get_index(_dev_addr, _itf_num) == _cdc_idx;
+  /* Cache only — TinyUSB is not thread-safe with the host worker. */
+  return _mounted && _binding_valid;
 }
 
 void USBHostSerialClass::begin(unsigned long baud) {
@@ -157,19 +152,6 @@ void USBHostSerialClass::flush() {
   xSemaphoreGive(s_usb_host_serial_tx_mutex);
 }
 
-uint32_t USBHostSerialClass::writeFlush() {
-  if (!mounted()) {
-    return 0;
-  }
-  ensureTxMutex();
-  if (xSemaphoreTake(s_usb_host_serial_tx_mutex, pdMS_TO_TICKS(_tx_timeout_ms)) != pdPASS) {
-    return 0;
-  }
-  uint32_t n = tuh_cdc_write_flush(_cdc_idx);
-  xSemaphoreGive(s_usb_host_serial_tx_mutex);
-  return n;
-}
-
 size_t USBHostSerialClass::write(uint8_t c) {
   return write(&c, 1);
 }
@@ -267,6 +249,8 @@ void USBHostSerialClass::onCdcUnmount(uint8_t idx) {
   (void)idx;
   _mounted = false;
   _binding_valid = false;
+  _dev_addr = 0;
+  _itf_num = 0;
   log_v("HOST CDC unmounted");
 }
 

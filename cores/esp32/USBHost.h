@@ -1,4 +1,4 @@
-// Copyright 2015-2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,46 +24,30 @@
 #include "tusb_config.h"
 
 #if CFG_TUH_ENABLED
-/**
- * @brief Optional HID host service hook (weak in core; USBHostHID provides strong).
- * Called on the TinyUSB host task after tuh_task() — arm interrupt IN transfers there.
- */
+/** Weak in core; USBHostHID provides the strong definition (HID arm after tuh_task). */
 extern "C" void arduino_usb_host_hid_service(void);
 #endif
 
 /**
- * @brief USB Host controller (Arduino API).
- * Call begin() once in setup(), then task() in loop() so that
- * TinyUSB host stack can enumerate and communicate with devices.
+ * @brief USB Host controller.
+ *
+ * Call begin() once in setup(), then task() in loop().
+ * After begin(), TinyUSB runs on a background worker — task() is then a no-op for transfers.
  */
 class USBHostClass {
 public:
-  /**
-   * @brief Start USB in host mode.
-   * @return true on success.
-   */
+  /** Start USB host mode. @return true on success. */
   bool begin();
 
-  /**
-   * @brief Process USB host events. Must be called repeatedly (e.g. from loop()).
-   * If tuhBackgroundActive() is true, tuh_task() and HID receive arming run from an
-   * internal FreeRTOS task — this call must not touch TinyUSB host transfer APIs.
-   */
+  /** Process host events (or no-op when the background worker is running). */
   void task();
 
-  /**
-   * @brief True when TinyUSB host is serviced by a background task (after begin()).
-   * Class drivers (MSC, HID) must not call tuh_task() / submit transfers from loop() then.
-   */
+  /** True when TinyUSB is serviced by the background worker (do not call tuh_* from loop()). */
   bool tuhBackgroundActive() const;
 
-  /**
-   * @brief Check if host stack is running.
-   */
   bool started() const {
     return _started;
   }
-
   operator bool() const {
     return _started;
   }

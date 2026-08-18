@@ -39,7 +39,7 @@ void USBHostHIDKeyboard::_ensureRegistered() {
   static bool registered = false;
   if (!registered) {
     registered = true;
-    USBHostHIDInstance.addDevice(this);
+    USBHostHID.addDevice(this);
   }
 }
 
@@ -133,7 +133,7 @@ void USBHostHIDKeyboard::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *
 
 bool USBHostHIDKeyboard::available() {
   _ensureRegistered();
-  USBHostHIDInstance.serviceReceives();
+  USBHostHID.serviceReceives();
   return _has_report;
 }
 

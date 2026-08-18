@@ -1,4 +1,4 @@
-// Copyright 2015-2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -119,7 +119,7 @@ void USBHostHIDMouse::_ensureRegistered() {
   static bool registered = false;
   if (!registered) {
     registered = true;
-    USBHostHIDInstance.addDevice(this);
+    USBHostHID.addDevice(this);
   }
 }
 
@@ -182,7 +182,7 @@ void USBHostHIDMouse::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *rep
 
 bool USBHostHIDMouse::available() {
   _ensureRegistered();
-  USBHostHIDInstance.serviceReceives();
+  USBHostHID.serviceReceives();
   return _has_report;
 }
 

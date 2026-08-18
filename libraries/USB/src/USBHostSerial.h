@@ -1,4 +1,4 @@
-// Copyright 2015-2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,34 +30,23 @@
 #include "Stream.h"
 
 /**
- * @brief USB Host CDC serial — Stream API aligned with device-side @ref USBCDC.
- *
- * Same usage pattern as `USBCDC` / `USBSerial` for byte I/O: `begin()`, `available()`,
- * `read()`, `write()`, `flush()`, `availableForWrite()`, `baudRate()`, `operator bool`.
- * Still requires `USBHost.begin()` and `USBHost.task()` in `loop()` (TinyUSB host).
- *
- * Pool size follows `CFG_TUH_CDC` in `tusb_config.h` (prebuilt libs: 1 → index 0 only).
- *
- * @note Device `USBCDC` is **gadget** (PC talks to ESP32). This class is **host** (ESP32 talks
- *       to a USB serial adapter or CDC gadget). Events (`onEvent`) are not replicated here.
+ * USB Host CDC serial — Stream API like device USBCDC / USBSerial.
+ * Needs USBHost.begin() and USBHost.task() in loop().
+ * CFG_TUH_CDC sets the host CDC pool size (prebuilt often 1).
  */
 class USBHostSerialClass : public Stream {
 public:
   USBHostSerialClass();
   ~USBHostSerialClass();
 
-  /** True when a CDC data interface is bound and the TinyUSB host stack reports it mounted. */
+  /** Arduino-side mount cache (loop-safe; does not call TinyUSB). */
   bool mounted() const;
 
-  /** Like `USBCDC::operator bool` — true when a host CDC session is active (`mounted()`). */
   operator bool() const {
     return mounted();
   }
 
-  /**
-   * Store default line coding for the next attach (and apply immediately if already mounted).
-   * @param baud Bit rate for `SET_LINE_CODING` (0 = do not auto-apply line coding on attach).
-   */
+  /** Default line coding for next attach (0 = skip auto SET_LINE_CODING). */
   void begin(unsigned long baud = 0);
   void end();
 
@@ -99,25 +88,19 @@ public:
     return write((uint8_t)n);
   }
 
-  /** Last known line coding bit rate from the device (0 if unknown / not mounted). */
   uint32_t baudRate();
 
-  /** USB device address of the bound CDC data interface. */
   uint8_t devAddr() const {
     return _dev_addr;
   }
-
-  /** Configuration `bInterfaceNumber` for the bound CDC data interface. */
   uint8_t interfaceNumber() const {
     return _itf_num;
   }
-
-  /** TinyUSB CDC host pool index (`tuh_cdc_*` first argument). */
   uint8_t cdcIndex() const {
     return _cdc_idx;
   }
 
-  /* Prefer bulk `read()` over Stream's byte-at-a-time timed path. */
+  /* Prefer bulk read() over Stream's timed byte loop. */
   size_t readBytes(char *buffer, size_t length) override {
     return read((uint8_t *)buffer, length);
   }
@@ -125,24 +108,14 @@ public:
     return read(buffer, length);
   }
 
-  /** @deprecated Prefer `write(const uint8_t*, size_t)`. */
-  uint32_t writeBytes(const uint8_t *buf, uint32_t len) {
-    return (uint32_t)write(buf, (size_t)len);
-  }
-
-  /** @deprecated Prefer `flush()`; returns TinyUSB flush count when useful. */
-  uint32_t writeFlush();
-
-  bool readClear();
-
   bool setLineCoding(uint32_t baudrate, uint8_t stop_bits, uint8_t parity, uint8_t data_bits);
   bool setControlLineState(uint16_t line_state);
   bool connectDefault();
   bool disconnectControl();
+  bool readClear();
 
-  /** @internal TinyUSB CDC mount (pool index). */
+  /** @internal TinyUSB CDC mount / umount. */
   void onCdcMount(uint8_t idx);
-  /** @internal TinyUSB CDC umount. */
   void onCdcUnmount(uint8_t idx);
 
 private:

@@ -188,7 +188,7 @@ void USBHostHIDGamepad::_ensureRegistered() {
   static bool registered = false;
   if (!registered) {
     registered = true;
-    USBHostHIDInstance.addDevice(this);
+    USBHostHID.addDevice(this);
   }
 }
 
@@ -250,7 +250,7 @@ void USBHostHIDGamepad::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *r
 
 bool USBHostHIDGamepad::available() {
   _ensureRegistered();
-  USBHostHIDInstance.serviceReceives();
+  USBHostHID.serviceReceives();
   return _has_report;
 }
 
