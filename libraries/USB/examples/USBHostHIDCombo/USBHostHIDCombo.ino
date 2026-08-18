@@ -144,8 +144,8 @@ void loop() {
   const bool pad_ready = USBHostGamepad.available();
 
   if (USBHostMouse.mounted() && mouse_ready) {
-    int8_t dx = USBHostMouse.getX();
-    int8_t dy = USBHostMouse.getY();
+    int16_t dx = USBHostMouse.getX();
+    int16_t dy = USBHostMouse.getY();
     uint8_t btns = USBHostMouse.getButtons();
     int8_t wh = USBHostMouse.getWheel();
 

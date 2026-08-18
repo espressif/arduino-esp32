@@ -9,7 +9,7 @@
 #include <USBHost.h>
 #include <USBHostHIDMouse.h>
 
-static void onMouseReport(int8_t x, int8_t y, uint8_t buttons, int8_t wheel, void *arg) {
+static void onMouseReport(int16_t x, int16_t y, uint8_t buttons, int8_t wheel, void *arg) {
   (void)arg;
   Serial.printf("mouse: dx=%d dy=%d btns=0x%02x wheel=%d\n", (int)x, (int)y, (unsigned)buttons, (int)wheel);
 }

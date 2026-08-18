@@ -37,7 +37,7 @@
 #define MOUSE_BACKWARD 0x08
 #define MOUSE_FORWARD  0x10
 
-typedef void (*USBHostHIDMouseReportCb)(int8_t x, int8_t y, uint8_t buttons, int8_t wheel, void *arg);
+typedef void (*USBHostHIDMouseReportCb)(int16_t x, int16_t y, uint8_t buttons, int8_t wheel, void *arg);
 
 /**
  * @brief USB Host HID mouse.
@@ -45,6 +45,9 @@ typedef void (*USBHostHIDMouseReportCb)(int8_t x, int8_t y, uint8_t buttons, int
  * Claims boot-protocol mice and many report-protocol mice (Generic Desktop + Mouse).
  * Skips descriptors that look like gamepad/joystick. Call registerWithHost() before
  * USBHost.begin().
+ *
+ * Supports common 8-bit and 16-bit X/Y layouts. Boot protocol is switched to
+ * Report protocol on claim (boot mouse reports have no wheel byte).
  */
 class USBHostHIDMouse : public USBHostHIDDevice {
 public:
@@ -56,10 +59,10 @@ public:
   void onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) override;
 
   bool available();
-  int8_t getX() const {
+  int16_t getX() const {
     return _x;
   }
-  int8_t getY() const {
+  int16_t getY() const {
     return _y;
   }
   uint8_t getButtons() const {
@@ -83,12 +86,13 @@ public:
 private:
   void _ensureRegistered();
 
-  volatile int8_t _x;
-  volatile int8_t _y;
+  volatile int16_t _x;
+  volatile int16_t _y;
   volatile uint8_t _buttons;
   volatile int8_t _wheel;
   volatile bool _has_report;
-  bool _strip_report_id;  ///< report-protocol mice often prefix a report ID
+  bool _strip_report_id;  ///< report ID byte before button field
+  uint8_t _xy_bytes;      ///< 1 (boot-like) or 2 (16-bit axes); wheel follows X/Y
   USBHostHIDMouseReportCb _report_cb;
   void *_report_cb_arg;
 };
