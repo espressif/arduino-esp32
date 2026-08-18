@@ -104,6 +104,7 @@ set(ARDUINO_ALL_LIBRARIES
   Hash
   HTTPClient
   HTTPUpdate
+  HTTPUpdateServer
   Insights
   LittleFS
   Matter
