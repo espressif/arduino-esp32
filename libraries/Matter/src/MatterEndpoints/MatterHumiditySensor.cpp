@@ -71,11 +71,6 @@ bool MatterHumiditySensor::begin(uint16_t _rawHumidity) {
   rawHumidity = _rawHumidity;
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Humidity Sensor endpoint %u", getEndPointId());
-    return false;
-  }
-
   log_i("Humidity Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;

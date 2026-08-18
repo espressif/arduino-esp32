@@ -248,11 +248,6 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
   }
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Occupancy Sensor endpoint %u", getEndPointId());
-    return false;
-  }
-
   occupancyState = _occupancyState;
 
   // Register AttributeAccessInterface for OccupancySensing cluster if not already registered

@@ -63,11 +63,6 @@ bool MatterRainSensor::begin(bool _rainState) {
   rainState = _rainState;
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Rain Sensor endpoint %u", getEndPointId());
-    return false;
-  }
-
   log_i("Rain Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;

@@ -72,11 +72,6 @@ bool MatterLightSensor::begin(uint16_t _rawIlluminance) {
   rawIlluminance = _rawIlluminance;
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Light Sensor endpoint %u", getEndPointId());
-    return false;
-  }
-
   log_i("Light Sensor created with endpoint_id %d", getEndPointId());
 
   started = true;

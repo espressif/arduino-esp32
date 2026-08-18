@@ -63,11 +63,6 @@ bool MatterWaterLeakDetector::begin(bool _leakState) {
   leakState = _leakState;
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Water Leak Detector endpoint %u", getEndPointId());
-    return false;
-  }
-
   log_i("Water Leak Detector created with endpoint_id %u", getEndPointId());
 
   started = true;

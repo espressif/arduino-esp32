@@ -112,11 +112,6 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
 
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Fan endpoint %u", getEndPointId());
-    return false;
-  }
-
   log_i("Fan created with endpoint_id %u", getEndPointId());
 
   started = true;

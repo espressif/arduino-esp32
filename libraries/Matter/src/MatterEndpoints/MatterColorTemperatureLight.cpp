@@ -122,11 +122,6 @@ bool MatterColorTemperatureLight::begin(bool initialState, uint8_t brightness, u
 
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Temperature Light endpoint %u", getEndPointId());
-    return false;
-  }
-
   log_i("Temperature Light created with endpoint_id %u", getEndPointId());
 
   /* Mark deferred persistence for some attributes that might be changed rapidly */

@@ -10,6 +10,7 @@ The Matter library provides support for creating Matter-compatible devices inclu
 * Support for Wi-Fi and Thread connectivity
 * Matter commissioning via QR code or manual pairing code
 * Multiple endpoint types for various device categories
+* Semantic tags (Descriptor cluster TagList) via ``MatterEndPoint::setTagList()`` to disambiguate sibling endpoints
 * Event monitoring and callback support
 * Integration with Apple HomeKit, Amazon Alexa, and Google Home
 * Smart home ecosystem compatibility

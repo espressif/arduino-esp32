@@ -63,11 +63,6 @@ bool MatterContactSensor::begin(bool _contactState) {
   contactState = _contactState;
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Contact Sensor endpoint %u", getEndPointId());
-    return false;
-  }
-
   log_i("Contact Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;

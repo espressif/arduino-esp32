@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Two Matter smart buttons — On and Off — sharing the same Generic Switch device type.
-// The Descriptor cluster TagList attribute is used to tag each button (On/Off),
-// so a Matter controller can tell them apart without relying on endpoint order alone.
+// Three Matter smart buttons — On, Off, and a custom-labeled Scene — sharing the same
+// Generic Switch device type. The Descriptor cluster TagList attribute is used to tag
+// each button so a Matter controller can tell them apart without relying on endpoint order.
+// On/Off use standard Switches tags; Scene uses Switches::createCustomTag() with a label.
 // Mirrors the tag usage from the esp-matter generic_switch example:
 // https://github.com/espressif/esp-matter/tree/main/examples/generic_switch
 // For gesture support (long-press, multi-press) see MatterEnhancedSmartButton.
@@ -28,9 +29,10 @@
 #endif
 
 // List of Matter Endpoints for this Node
-// Two Generic Switch Endpoints - work as independent On/Off smart buttons
+// Three Generic Switch Endpoints - independent On, Off, and custom-labeled Scene buttons
 MatterGenericSwitch ButtonOn;
 MatterGenericSwitch ButtonOff;
+MatterGenericSwitch ButtonScene;
 
 // CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
 #if !CONFIG_ENABLE_CHIPOBLE
@@ -42,6 +44,7 @@ const char *password = "your-password";  // Change this to your WiFi password
 // set your board pins here
 const uint8_t buttonOnPin = 4;                   // On button GPIO — change to match your wiring
 const uint8_t buttonOffPin = 5;                  // Off button GPIO — change to match your wiring
+const uint8_t buttonScenePin = 2;                // Scene button GPIO — LED/strapping on some ESP32 boards; change to match your wiring
 const uint8_t decommissionButtonPin = BOOT_PIN;  // hold this button for 5s to decommission
 
 // Per-button debouncing state
@@ -51,6 +54,7 @@ struct ButtonState {
 };
 ButtonState onButtonState;
 ButtonState offButtonState;
+ButtonState sceneButtonState;
 
 const uint32_t debounceTime = 250;             // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the decommission button pressed for 5s, or longer
@@ -77,9 +81,10 @@ static void handleButton(uint8_t pin, ButtonState &state, MatterGenericSwitch &s
 }
 
 void setup() {
-  // Initialize the On/Off buttons and the dedicated decommissioning button
+  // Initialize the On/Off/Scene buttons and the dedicated decommissioning button
   pinMode(buttonOnPin, INPUT_PULLUP);
   pinMode(buttonOffPin, INPUT_PULLUP);
+  pinMode(buttonScenePin, INPUT_PULLUP);
   pinMode(decommissionButtonPin, INPUT_PULLUP);
 
   Serial.begin(115200);
@@ -107,13 +112,16 @@ void setup() {
   // FEATURE_SIMPLE (default): momentary switch + short release for a single click
   ButtonOn.begin();
   ButtonOff.begin();
+  ButtonScene.begin();
 
-  // Tag each button so Matter controllers can tell them apart, since both share the same
-  // Generic Switch device type. Must be called after begin(). MatterTags (see MatterTags.h)
-  // provides named constants for the common Matter semantic tag namespaces, so sketches
-  // don't need to hardcode namespace/tag numbers.
+  // Tag each button so Matter controllers can tell them apart, since they share the same
+  // Generic Switch device type. Must be called after begin() and before Matter.begin().
+  // MatterTags (see MatterTags.h) provides named constants for the common Matter semantic
+  // tag namespaces, so sketches don't need to hardcode namespace/tag numbers.
   ButtonOn.setTagList({MatterTags::Switches::On});
   ButtonOff.setTagList({MatterTags::Switches::Off});
+  // Switches Custom tag with a user-visible label (string literal must outlive the endpoint)
+  ButtonScene.setTagList({MatterTags::Switches::createCustomTag("Scene 1")});
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
@@ -143,9 +151,10 @@ void loop() {
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
   }
 
-  // Two independent buttons are used to trigger events to the Matter Controller
+  // Three independent buttons are used to trigger events to the Matter Controller
   handleButton(buttonOnPin, onButtonState, ButtonOn, "On");
   handleButton(buttonOffPin, offButtonState, ButtonOff, "Off");
+  handleButton(buttonScenePin, sceneButtonState, ButtonScene, "Scene 1");
 
   // A dedicated button is kept pressed for longer than 5 seconds in order to decommission matter node
   if (digitalRead(decommissionButtonPin) == LOW) {

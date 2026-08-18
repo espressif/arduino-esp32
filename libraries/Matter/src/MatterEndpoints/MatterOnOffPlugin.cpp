@@ -80,11 +80,6 @@ bool MatterOnOffPlugin::begin(bool initialState) {
   onOffState = initialState;
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on On-Off Plugin endpoint %u", getEndPointId());
-    return false;
-  }
-
   log_i("On-Off Plugin created with endpoint_id %u", getEndPointId());
 
   started = true;

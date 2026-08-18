@@ -16,6 +16,7 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <MatterEndPoint.h>
+#include <MatterTags.h>
 #include <app/server/Server.h>
 #include <string.h>
 
@@ -149,8 +150,11 @@ void MatterEndPoint::onIdentify(EndPointIdentifyCB onEndPointIdentifyCB) {
 
 // Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.
 bool MatterEndPoint::enableTagList() {
+  if (tagListEnabled) {
+    return true;
+  }
   if (endpoint_id == 0) {
-    log_e("Endpoint ID is not set");
+    log_e("Endpoint ID is not set. Call the endpoint begin() first.");
     return false;
   }
   endpoint_t *ep = endpoint::get(node::get(), endpoint_id);
@@ -167,17 +171,42 @@ bool MatterEndPoint::enableTagList() {
     log_e("Failed to enable TagList feature on endpoint %u", endpoint_id);
     return false;
   }
+  tagListEnabled = true;
   return true;
 }
 
 // Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
 bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
   if (endpoint_id == 0) {
-    log_e("Endpoint ID is not set");
+    log_e("setTagList() requires the endpoint begin() to be called first.");
     return false;
   }
   if (tagList == nullptr || count == 0) {
     log_e("setTagList() requires a non-empty tag list.");
+    return false;
+  }
+  if (count > MAX_TAG_LIST_SIZE) {
+    log_e("setTagList() accepts at most %u tags", MAX_TAG_LIST_SIZE);
+    return false;
+  }
+
+  for (uint8_t i = 0; i < count; i++) {
+    const bool emptyLabel = (tagList[i].label == nullptr || tagList[i].label[0] == '\0');
+    if (tagList[i].namespaceId == MatterTags::Switches::NS && tagList[i].tag == MatterTags::Switches::Custom && emptyLabel) {
+      log_e("Switches Custom tag requires a non-empty label. Use MatterTags::Switches::createCustomTag().");
+      return false;
+    }
+    if (tagList[i].namespaceId == MatterTags::Position::NS && tagList[i].tag == MatterTags::Position::Row && emptyLabel) {
+      log_e("Position Row tag requires a numeric label. Use MatterTags::Position::createRowTag().");
+      return false;
+    }
+    if (tagList[i].namespaceId == MatterTags::Position::NS && tagList[i].tag == MatterTags::Position::Column && emptyLabel) {
+      log_e("Position Column tag requires a numeric label. Use MatterTags::Position::createColumnTag().");
+      return false;
+    }
+  }
+
+  if (!enableTagList()) {
     return false;
   }
 
@@ -187,7 +216,7 @@ bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
     return false;
   }
 
-  Globals::Structs::SemanticTagStruct::Type *tags = new Globals::Structs::SemanticTagStruct::Type[count];
+  Globals::Structs::SemanticTagStruct::Type tags[MAX_TAG_LIST_SIZE] = {};
   for (uint8_t i = 0; i < count; i++) {
     tags[i].mfgCode.SetNull();
     tags[i].namespaceID = tagList[i].namespaceId;
@@ -198,8 +227,6 @@ bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
   }
 
   esp_err_t err = endpoint::set_semantic_tags(ep, tags, count);
-  delete[] tags;
-
   if (err != ESP_OK) {
     log_e("Failed to set TagList attribute: %s", esp_err_to_name(err));
     return false;
@@ -209,6 +236,10 @@ bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
 
 // Convenience overload: ButtonOn.setTagList({MatterTags::Switches::On});
 bool MatterEndPoint::setTagList(std::initializer_list<MatterTag> tagList) {
+  if (tagList.size() > MAX_TAG_LIST_SIZE) {
+    log_e("setTagList() accepts at most %u tags", MAX_TAG_LIST_SIZE);
+    return false;
+  }
   return setTagList(tagList.begin(), static_cast<uint8_t>(tagList.size()));
 }
 

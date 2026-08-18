@@ -207,6 +207,13 @@ Multi-press (double/triple click) follows the ESP-Matter generic switch pattern:
 4. Second release → ``ShortRelease``
 5. Window expires → ``MultiPressComplete`` (total count)
 
+Semantic Tags
+-------------
+
+Sibling Generic Switch endpoints share the same Matter device type, so a controller cannot tell them apart from device type alone. Use ``MatterEndPoint::setTagList()`` after ``begin()`` and before ``Matter.begin()`` to write the Descriptor cluster ``TagList`` attribute.
+
+Named presets are in ``MatterTags::Switches`` (``On``, ``Off``, ``Toggle``, ``Up``, ``Down``, ``Next``, ``Previous``, ``Select``). For a user-visible custom label, use ``MatterTags::Switches::createCustomTag("Scene 1")``. See :doc:`matter_ep` for the full TagList API.
+
 Examples
 --------
 
@@ -223,3 +230,10 @@ Enhanced Smart Button
 Full gesture support with long press and multi-press.
 
 `View Matter Enhanced Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedSmartButton>`_
+
+Tagged Smart Buttons
+********************
+
+Two On/Off buttons plus a custom-labeled Scene button, using Descriptor ``TagList`` so a controller can tell the endpoints apart.
+
+`View Matter Smart Buttons TagList example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButtonsTagList>`_

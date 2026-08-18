@@ -156,11 +156,6 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
 
   setEndPointId(endpoint::get_id(endpoint));
 
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Temperature Controlled Cabinet endpoint %u", getEndPointId());
-    return false;
-  }
-
   log_i("Temperature Controlled Cabinet created with temperature_number feature, endpoint_id %u", getEndPointId());
 
   // Workaround: Manually create Step attribute if it wasn't created automatically
@@ -263,11 +258,6 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
   rawStep = 0;
 
   setEndPointId(endpoint::get_id(endpoint));
-
-  if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Temperature Level Controlled Cabinet endpoint %u", getEndPointId());
-    return false;
-  }
 
   log_i("Temperature Level Controlled Cabinet created with temperature_level feature, endpoint_id %u", getEndPointId());
 

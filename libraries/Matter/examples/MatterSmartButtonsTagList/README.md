@@ -1,7 +1,7 @@
 # Matter Smart Buttons with TagList Example
 
-This example demonstrates how to create two Matter-compatible smart buttons (Generic Switch), On and Off, on the same ESP32 SoC microcontroller, and how to use the Descriptor cluster `TagList` attribute to disambiguate them.\
-Both buttons expose the same Matter device type (Generic Switch), so without tagging, a controller has no standard way to tell which one is "On" and which one is "Off". Tagging each endpoint with a semantic tag (On/Off) solves this.
+This example demonstrates how to create three Matter-compatible smart buttons (Generic Switch) — On, Off, and a custom-labeled Scene — on the same ESP32 SoC microcontroller, and how to use the Descriptor cluster `TagList` attribute to disambiguate them.\
+All three buttons expose the same Matter device type (Generic Switch), so without tagging, a controller has no standard way to tell them apart. Tagging each endpoint with a semantic tag (On/Off, or a Custom tag with a label) solves this.
 
 ## Supported Targets
 
@@ -23,8 +23,9 @@ Both buttons expose the same Matter device type (Generic Switch), so without tag
 
 ## Features
 
-- Two independent Matter Generic Switch endpoints (On and Off) on a single Matter node
+- Three independent Matter Generic Switch endpoints (On, Off, and Scene) on a single Matter node
 - Disambiguates sibling endpoints using the Descriptor cluster `TagList` attribute (`MatterEndPoint::setTagList()`)
+- Shows both standard Switches tags (`On`/`Off`) and a labeled Custom tag (`MatterTags::Switches::createCustomTag()`)
 - Support for both Wi-Fi and Thread(*) connectivity
 - **Simple short-click** gesture per button: `InitialPress` on press, `ShortRelease` on release
 - Dedicated button for factory reset (decommission)
@@ -37,13 +38,14 @@ For gesture support (long-press, multi-press), see the [MatterEnhancedSmartButto
 ## Hardware Requirements
 
 - ESP32 compatible development board (see supported targets table)
-- Two push buttons for On/Off events (default pins: GPIO4 and GPIO5)
-- A third button (uses BOOT button by default) to trigger factory reset / decommissioning
+- Three push buttons for On/Off/Scene events (default pins: GPIO4, GPIO5, and GPIO2)
+- A fourth button (uses BOOT button by default) to trigger factory reset / decommissioning
 
 ## Pin Configuration
 
 - **On button**: GPIO4 by default (`buttonOnPin`)
 - **Off button**: GPIO5 by default (`buttonOffPin`)
+- **Scene button**: GPIO2 by default (`buttonScenePin`) — on some ESP32 boards this is the onboard LED / a strapping pin; change it if needed
 - **Decommission button**: `BOOT_PIN` by default (`decommissionButtonPin`)
 
 ## Software Setup
@@ -70,6 +72,7 @@ Before uploading the sketch, configure the following:
    ```cpp
    const uint8_t buttonOnPin = 4;                   // Set your On button pin here
    const uint8_t buttonOffPin = 5;                  // Set your Off button pin here
+   const uint8_t buttonScenePin = 2;                // Set your Scene button pin here
    const uint8_t decommissionButtonPin = BOOT_PIN;  // Set your decommission button pin here
    ```
 
@@ -107,6 +110,8 @@ On button pressed. Sending InitialPress to the Matter Controller!
 On button released. Sending ShortRelease to the Matter Controller!
 Off button pressed. Sending InitialPress to the Matter Controller!
 Off button released. Sending ShortRelease to the Matter Controller!
+Scene 1 button pressed. Sending InitialPress to the Matter Controller!
+Scene 1 button released. Sending ShortRelease to the Matter Controller!
 ```
 
 ## Using the Device
@@ -121,39 +126,46 @@ Each button is a **simple implementation** — short click only:
 
 ### Tagging the Buttons (TagList)
 
-Both `ButtonOn` and `ButtonOff` are `MatterGenericSwitch` endpoints, so they expose the same Matter device type. To let a controller tell them apart, each endpoint is tagged right after `begin()`, using a `MatterTag` entry. `setTagList()` is defined on the shared `MatterEndPoint` base class, so it is available on any endpoint type, not just `MatterGenericSwitch`.
+`ButtonOn`, `ButtonOff`, and `ButtonScene` are `MatterGenericSwitch` endpoints, so they expose the same Matter device type. To let a controller tell them apart, each endpoint is tagged right after `begin()`, using a `MatterTag` entry. `setTagList()` is defined on the shared `MatterEndPoint` base class, so it is available on any endpoint type, not just `MatterGenericSwitch`.
 
 The `MatterTags` namespace (see `MatterTags.h`) provides named constants for the common Matter semantic tag namespaces — no need to hardcode namespace/tag numbers from the Matter [Standard Namespaces specification](https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces):
 
 ```cpp
 ButtonOn.begin();
 ButtonOn.setTagList({MatterTags::Switches::On});
+
+ButtonOff.begin();
+ButtonOff.setTagList({MatterTags::Switches::Off});
+
+// Switches Custom tag with a user-visible label (string literal must outlive the endpoint)
+ButtonScene.begin();
+ButtonScene.setTagList({MatterTags::Switches::createCustomTag("Scene 1")});
 ```
 
-`ButtonOff` is tagged the same way, using `MatterTags::Switches::Off` instead. `setTagList()` must be called after `begin()`, since the endpoint (and its Descriptor cluster) must already exist. For a tag outside the predefined namespaces, or a custom label, use `MatterTags::make(namespaceId, tag, label)`. A `setTagList(const MatterTag *tagList, uint8_t count)` overload is also available for building the list at runtime (e.g. a size known only at runtime, or a list shared and reused across endpoints).
+`setTagList()` must be called after `begin()` and before `Matter.begin()`. This example uses Generic Switch, which already enables TagList during `begin()`; on other endpoint types the first `setTagList()` call enables it. At most 3 tags are accepted per endpoint (`MatterEndPoint::MAX_TAG_LIST_SIZE`, matching esp-matter). For a tag outside the predefined namespaces, or a custom label in another namespace, use `MatterTags::createTag(namespaceId, tag, label)`. A `setTagList(const MatterTag *tagList, uint8_t count)` overload is also available for building the list at runtime (e.g. a size known only at runtime, or a list shared and reused across endpoints).
 
 ### Smart Home Integration
 
-Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device. After commissioning, both buttons appear as separate switch endpoints that you can use to trigger automations — the tags help the controller's UI label them correctly (e.g. "On"/"Off") instead of showing two indistinguishable switches.
+Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device. After commissioning, the three buttons appear as separate switch endpoints that you can use to trigger automations — the tags help the controller's UI label them correctly (e.g. "On"/"Off"/"Scene 1") instead of showing indistinguishable switches.
 
 ## Code Structure
 
 The MatterSmartButtonsTagList example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (both buttons and the decommission button), configures Wi-Fi (if needed), initializes both Matter Generic Switch endpoints, tags them with `setTagList()`, and starts the Matter stack.
+1. **`setup()`**: Initializes hardware (On, Off, Scene, and the decommission button), configures Wi-Fi (if needed), initializes the three Matter Generic Switch endpoints, tags them with `setTagList()`, and starts the Matter stack.
 
-2. **`loop()`**: Checks the Matter commissioning state, handles both buttons' input via `handleButton()`, and checks the dedicated decommission button.
+2. **`loop()`**: Checks the Matter commissioning state, handles all three buttons' input via `handleButton()`, and checks the dedicated decommission button.
 
 3. **Button Event Handling** (`handleButton()`):
    - Detects button press and release with debouncing (250 ms)
    - Sends `InitialPress` on press down and `ShortRelease` on release
-   - Shared between both buttons, parameterized by pin, endpoint, and name
+   - Shared between the buttons, parameterized by pin, endpoint, and name
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Button clicks not registering**: Check Serial Monitor for "button pressed" and "button released" messages. Verify button wiring and debounce time
-- **Both buttons show as identical/unlabeled in the controller app**: Not all Matter controllers render semantic tags in their UI; the tags are still present in the TagList attribute and can be read by controllers that support it
+- **Buttons show as identical/unlabeled in the controller app**: Not all Matter controllers render semantic tags in their UI; the tags are still present in the TagList attribute and can be read by controllers that support it
 - **Failed to commission**: Try factory resetting the device by holding the decommission button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection
 

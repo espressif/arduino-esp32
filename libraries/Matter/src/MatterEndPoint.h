@@ -30,7 +30,7 @@ using namespace esp_matter;
 // namespaceId/tag values come from the Matter "Standard Namespaces" specification:
 // https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
 // See MatterTags.h for named constants covering the common namespaces (no magic numbers required)
-// and MatterTags::make() for a custom namespace/tag/label combination.
+// and MatterTags::createTag() for a custom namespace/tag/label combination.
 struct MatterTag {
   uint8_t namespaceId;
   uint8_t tag;
@@ -82,8 +82,15 @@ public:
   // User callback for the Identify Cluster functionality
   void onIdentify(EndPointIdentifyCB onEndPointIdentifyCB);
 
+  // Maximum number of Descriptor TagList entries per endpoint.
+  // Matches esp-matter ESP_MATTER_MAX_SEMANTIC_TAG_COUNT.
+  static constexpr uint8_t MAX_TAG_LIST_SIZE = 3;
+
   // Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
-  // The endpoint subclass must have called enableTagList() during its begin() for this to succeed.
+  // Enables the TagList feature on first use. Call after the endpoint begin() and before Matter.begin().
+  // At most MAX_TAG_LIST_SIZE entries are accepted.
+  // Switches Custom and Position Row/Column tags require a non-empty label;
+  // use createCustomTag(), createRowTag(), or createColumnTag().
   // Each entry's optional `label` pointer, if set, must remain valid for as long as this endpoint is running
   // (it is not copied).
   bool setTagList(const MatterTag *tagList, uint8_t count);
@@ -97,10 +104,12 @@ protected:
   // main endpoint ID
   uint16_t endpoint_id = 0;
   EndPointIdentifyCB _onEndPointIdentifyCB = nullptr;
+  bool tagListEnabled = false;
 
   // Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.
-  // Endpoint subclasses that want to support setTagList() must call this once from begin(), after
-  // the endpoint has been created and setEndPointId() has been called.
+  // Called automatically by setTagList(). Idempotent.
+  // Subclasses that want TagList advertised even when the sketch never calls setTagList()
+  // (Generic Switch) may call this from begin() after setEndPointId().
   bool enableTagList();
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
