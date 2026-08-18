@@ -7,6 +7,8 @@ Browse for `_ot._udp` service instances via `OThreadDNSSD.queryService()`.
 1. OTBR with SRP **and** DNS in Network Data (typical OTBR).
 2. Board A: flash [ThreadDNSSD_Advertise](../ThreadDNSSD_Advertise/) (`sensor-1`).
 3. Board B: this sketch (`browser`). Same `OT_NETKEY` on both.
+   `begin("browser")` still registers that SRP host — use a unique name if
+   more than one query board shares the OTBR.
 4. Prefer **Erase Flash: Sketch Only**.
 
 ## Expected Serial (Board B)

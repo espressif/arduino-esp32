@@ -160,8 +160,8 @@ a Border Router so they can be discovered from the Thread mesh and (via the BR) 
 infrastructure network.
 
 * **Familiar API**: ``begin``, ``addService``, ``addServiceTxt``, ``waitForAnnounce``,
-  ``isAnnounceComplete``, ``queryService``, ``queryHost``, ``startQueryService``,
-  ``startQueryHost``, ``onQueryEvent``.
+  ``isAnnounceComplete``, ``onServiceEvent``, ``queryService``, ``queryHost``,
+  ``startQueryService``, ``startQueryHost``, ``onQueryEvent``.
 * **Auto SRP / DNS**: finds the on-mesh / BR SRP server from Network Data; DNS
   default server follows for discover.
 * **Live announce status**: ``isAnnounceComplete()`` reflects local SRP client

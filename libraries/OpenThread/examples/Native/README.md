@@ -191,7 +191,7 @@ int n = OThreadDNSSD.queryService("ot", "udp");
 ```
 
 See [Native ThreadDNSSD examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD)
-(advertise / callback / remove / query / queryHost).
+(advertise / callback / remove / query / queryHost / query callback / UDP Light).
 
 ## Native vs CLI: quick comparison
 
@@ -283,6 +283,8 @@ Some examples also require:
 - Use [ThreadScan_Async](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async) for non-blocking discovery polling in `loop()`.
 - Use [ThreadScan_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Callback) for per-network streaming callbacks.
 - Use [ThreadDNSSD_Advertise](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise) to register a service with a Border Router SRP server.
+- Use [ThreadDNSSD_Query](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query) / [ThreadDNSSD_QueryHost](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost) / [ThreadDNSSD_Query_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback) to browse or resolve (pair with Advertise).
+- Use [ThreadDNSSD_UDP_Light](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light) for an SRP + UDP lamp with an optional WiFi web UI.
 
 ## Practical guidance
 

@@ -15,6 +15,8 @@ For a minimal blocking example, see [ThreadDNSSD_Advertise](../ThreadDNSSD_Adver
    - lost attach → re-advertise when attached again
    - `isAnnounceComplete()` (live OT `Registered` state) goes false after success
 4. Recovery: `end()` + `begin()` + `addService()`, with a 15 s cooldown.
+   `end()` synthesizes `OT_DNSSD_EVENT_REMOVED` on the caller; the sketch
+   ignores that local event so recovery does not immediately re-queue.
 5. `OT_ERROR_DUPLICATED` / `OT_ERROR_SECURITY` are reported and **not** auto-retried with the same hostname.
 
 ## Expected Serial output

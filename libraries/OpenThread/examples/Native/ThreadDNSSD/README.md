@@ -70,8 +70,9 @@ port, host, and addresses. Stock OTBR CLI can **list** these entries; it does
 | **Second board with the same hostname** | Name conflict (`OT_ERROR_DUPLICATED`). Use unique names (e.g. include MAC). |
 | **`end()` / Remove example** on the device that registered | Proper client-side unregister; confirm with `srp server service`. |
 
-Prefer unique hostnames when multiple nodes share one OTBR. The library reports
-conflicts; it does not rename for you.
+Prefer unique hostnames when multiple nodes share one OTBR, including
+discover-only sketches (`begin("browser")` still registers that SRP host).
+The library reports conflicts; it does not rename for you.
 
 ## Discover results
 

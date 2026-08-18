@@ -42,7 +42,7 @@
  *
  * Advertise (ESPmDNS-like):
  *   OThreadDNSSD.begin("sensor-1");
- *   OThreadDNSSD.addService("ot", "udp", 12345);
+ *   OThreadDNSSD.addService("ot", "udp", 12345);  // "_ot" / "_udp" also OK
  *   OThreadDNSSD.waitForAnnounce(30000);
  *
  * Discover (ESPmDNS-like; needs `CONFIG_OPENTHREAD_DNS_CLIENT`):
@@ -53,7 +53,8 @@
  *
  * After a discover timeout, end(), or before the next query, do not treat
  * result getters as stable — copy results when the call returns (or on
- * OT_DNSSD_QUERY_DONE). In-flight DNS callbacks are invalidated for new ops.
+ * OT_DNSSD_QUERY_DONE). Each DNS request tags its OpenThread callback with a
+ * generation so a late response cannot apply to a newer query.
  *
  * Name conflicts (`OT_ERROR_DUPLICATED`) are reported to the sketch; the library
  * does not rename. Prefer unique hostnames and keep NVS across reflash.
@@ -85,6 +86,19 @@
 #define OT_DNSSD_MAX_QUERY_RESULTS 16
 #endif
 
+/**
+ * @brief In-flight OpenThread DNS callback contexts.
+ *
+ * A slot stays reserved until OpenThread invokes the DNS callback — including
+ * after a local query timeout or @ref OThreadDNSSDClass::end. Short
+ * `queryHost` timeouts therefore accumulate slots until the stack's DNS wait
+ * (typically several seconds) completes. Must be large enough for overlapping
+ * abandoned requests; 4 is too small for a tight timeout loop.
+ */
+#ifndef OT_DNSSD_MAX_DNS_CB_CTX
+#define OT_DNSSD_MAX_DNS_CB_CTX 16
+#endif
+
 /* Pool sizes are indexed/counted with uint8_t throughout OThreadDNSSD. */
 #if OT_DNSSD_MAX_SERVICES < 1 || OT_DNSSD_MAX_SERVICES > 255
 #error "OT_DNSSD_MAX_SERVICES must be in the range 1..255"
@@ -97,6 +111,9 @@
 #endif
 #if OT_DNSSD_MAX_QUERY_RESULTS < 1 || OT_DNSSD_MAX_QUERY_RESULTS > 255
 #error "OT_DNSSD_MAX_QUERY_RESULTS must be in the range 1..255 (stored in uint8_t)"
+#endif
+#if OT_DNSSD_MAX_DNS_CB_CTX < 1 || OT_DNSSD_MAX_DNS_CB_CTX > 255
+#error "OT_DNSSD_MAX_DNS_CB_CTX must be in the range 1..255"
 #endif
 
 /** @brief Max host label length (excluding domain), bytes. */
@@ -155,7 +172,7 @@
 /** @brief Events delivered to @ref OThreadDNSSDClass::onServiceEvent. */
 typedef enum {
   OT_DNSSD_EVENT_ANNOUNCED = 0,  ///< Host + services registered with SRP server.
-  OT_DNSSD_EVENT_REMOVED = 1,    ///< Host/services removed (or cleared).
+  OT_DNSSD_EVENT_REMOVED = 1,    ///< Host gone, last local service gone, or @ref OThreadDNSSDClass::end.
   OT_DNSSD_EVENT_ERROR = 2,      ///< Registration/update failed (see error code).
 } ot_dnssd_event_t;
 
@@ -165,7 +182,9 @@ typedef enum {
  * Context depends on the event source:
  * - @ref OT_DNSSD_EVENT_ANNOUNCED, @ref OT_DNSSD_EVENT_ERROR, and
  *   @ref OT_DNSSD_EVENT_REMOVED from the SRP client callback run on the
- *   OpenThread task.
+ *   OpenThread task. One SRP callback delivers at most one of ERROR, REMOVED,
+ *   or ANNOUNCED (REMOVED is host-gone or last local service gone — not a
+ *   partial service delete that still leaves others registered).
  * - @ref OT_DNSSD_EVENT_REMOVED from @ref OThreadDNSSDClass::end runs on the
  *   caller task (e.g. Arduino `loop()` / `setup()`).
  *
@@ -195,9 +214,11 @@ typedef enum {
 /**
  * @brief Async discover event callback.
  *
- * Invoked on the OpenThread task. Do not call other OThreadDNSSD methods from
- * inside the callback (set flags / copy state only). Read results from `loop()`
- * via the indexed getters or @ref OThreadDNSSDClass::resolvedAddress.
+ * Invoked on the OpenThread task for DNS completion. @ref OThreadDNSSDClass::end
+ * may invoke it on the **caller** task with @ref OT_DNSSD_QUERY_ERROR /
+ * `OT_ERROR_ABORT` if a discover was in flight. Do not call other OThreadDNSSD
+ * methods from inside the callback (set flags / copy state only). Read results
+ * from `loop()` via the indexed getters or @ref OThreadDNSSDClass::resolvedAddress.
  *
  * @param kind    Service browse vs host resolve.
  * @param event   Done or error.
@@ -245,6 +266,8 @@ public:
    *
    * Also called from `OThread.end()`. Delivers @ref OT_DNSSD_EVENT_REMOVED via
    * @ref onServiceEvent on the **caller** task (not the OpenThread task).
+   * If an async discover is in flight, also delivers @ref OT_DNSSD_QUERY_ERROR
+   * with `OT_ERROR_ABORT` via @ref onQueryEvent (caller task) before REMOVED.
    * Invalidates any in-flight discover; do not use query result getters until
    * a new @ref begin and query.
    */
@@ -273,48 +296,65 @@ public:
   /**
    * @brief Advertise a service (ESPmDNS-style).
    *
-   * @param service Service type without leading underscore, e.g. `"http"` or `"ot"`.
-   * @param proto   Protocol without leading underscore, e.g. `"tcp"` or `"udp"`.
+   * @param service Service type, with or without a leading underscore, e.g. `"http"` or `"_ot"`.
+   *                All leading underscores are stripped; the result must be a non-empty label.
+   * @param proto   Protocol, with or without a leading underscore, e.g. `"tcp"` or `"_udp"`.
    * @param port    Service port.
-   * @return true if queued for registration; false if full, not started, or invalid.
+   * @return true if queued for registration; false if full, not started, invalid, or the
+   *         matching slot is still being removed (@ref removeService).
    *
    * Calling again with the same service+proto updates the existing slot
-   * (idempotent).
+   * (idempotent) unless a remove of that slot is still in flight.
    */
   bool addService(const char *service, const char *proto, uint16_t port);
   bool addService(char *service, char *proto, uint16_t port) {
     return addService((const char *)service, (const char *)proto, port);
+  }
+  bool addService(const String &service, const String &proto, uint16_t port) {
+    return addService(service.c_str(), proto.c_str(), port);
   }
 
   /**
    * @brief Add a TXT key/value to an existing service.
    *
    * Service must already exist via @ref addService. Fixed TXT slots per service.
+   * Rejected if the service is still being removed.
    */
   bool addServiceTxt(const char *service, const char *proto, const char *key, const char *value);
   bool addServiceTxt(char *service, char *proto, char *key, char *value) {
     return addServiceTxt((const char *)service, (const char *)proto, (const char *)key, (const char *)value);
   }
+  bool addServiceTxt(const String &service, const String &proto, const String &key, const String &value) {
+    return addServiceTxt(service.c_str(), proto.c_str(), key.c_str(), value.c_str());
+  }
 
   /**
    * @brief Add a DNS-SD subtype label (Advanced; fixed per-service cap).
    *
-   * @param service Service type without leading underscore.
-   * @param proto   Protocol without leading underscore.
-   * @param subtype Subtype label (leading underscore optional).
-   * @return true if stored and queued for update; false if full or invalid.
+   * @param service Service type (leading underscores optional; stripped).
+   * @param proto   Protocol (leading underscores optional; stripped).
+   * @param subtype Subtype label (leading underscores optional; stripped). Empty after
+   *                strip is rejected. Adding an existing subtype is idempotent.
+   * @return true if stored and queued for update (or already present); false if full or invalid.
    */
   bool addServiceSubtype(const char *service, const char *proto, const char *subtype);
+  bool addServiceSubtype(const String &service, const String &proto, const String &subtype) {
+    return addServiceSubtype(service.c_str(), proto.c_str(), subtype.c_str());
+  }
 
   /**
    * @brief Request removal of one service from the SRP server.
-   * @return true if remove was queued (or cleared locally).
+   * @return true if remove was queued (or already in flight / cleared locally).
    *
    * Slot string buffers stay valid until OpenThread reports the service
    * removed (callback) or @ref end clears the client. Do not assume the
-   * slot is free for reuse immediately after this returns.
+   * slot is free for reuse immediately after this returns; @ref addService
+   * of the same type returns false until the slot is reclaimed.
    */
   bool removeService(const char *service, const char *proto);
+  bool removeService(const String &service, const String &proto) {
+    return removeService(service.c_str(), proto.c_str());
+  }
 
   /**
    * @brief Register event callback (optional).
@@ -387,6 +427,9 @@ public:
    *
    * @param host      Host label or FQDN.
    * @param timeoutMs Max wait for the DNS response (default @ref OT_DNSSD_QUERY_TIMEOUT_MS).
+   *                 The default is also raised to the OpenThread DNS client wait if that
+   *                 is longer. An explicit value is honored as-is (including short fail-fast
+   *                 and UINT32_MAX for forever).
    */
   IPAddress queryHost(const char *host, uint32_t timeoutMs = OT_DNSSD_QUERY_TIMEOUT_MS);
   IPAddress queryHost(char *host, uint32_t timeoutMs = OT_DNSSD_QUERY_TIMEOUT_MS) {
@@ -460,6 +503,8 @@ public:
 
   /**
    * @brief Host label from the last @ref queryService result at @p idx.
+   *
+   * Distinct from @ref hostname() with no arguments (local SRP host from @ref begin).
    * @return Empty string if @p idx is out of range.
    */
   const char *hostname(int idx) const;
@@ -564,9 +609,12 @@ private:
   IPAddress resolveAddressFqdn(const char *fqdn, uint32_t timeoutMs);
   /** Wait long enough for OT DNS (+ Discovery Proxy empty) before local abort. */
   uint32_t dnsResponseWaitMs(otInstance *inst) const;
+  /** Blocking host wait: default uses @ref dnsResponseWaitMs; explicit timeoutMs is honored. */
+  uint32_t hostResolveWaitMs(otInstance *inst, uint32_t timeoutMs) const;
   bool buildHostFqdn(char *dst, size_t dstSize, const char *host) const;
   bool buildServiceFqdn(char *dst, size_t dstSize, const char *shortName) const;
   bool slotNeedsDetailResolve(const QueryResultSlot &slot) const;
+  bool anySlotNeedsDetailResolve() const;
   bool startDetailResolveAt(uint8_t startIdx);
   void finishAsyncQuery(otError error);
   void notifyQueryEvent(ot_dnssd_query_event_t event, otError error, int count);
@@ -576,15 +624,26 @@ private:
   void clearQueryOp();
   bool isQueryCallbackCurrent(uint32_t gen) const;
   void wakeDnsWaiter();
+  /** After a semaphore timeout: true if the op did not complete (caller must fail). */
+  bool abandonIfBlockingWaitTimedOut();
+
+  struct DnsCbCtx {
+    OThreadDNSSDClass *self;
+    uint32_t gen;
+    bool used;
+  };
+  static constexpr uint8_t kDnsCbCtxCount = OT_DNSSD_MAX_DNS_CB_CTX;
+  DnsCbCtx *allocDnsCbCtx();
+  void freeDnsCbCtx(DnsCbCtx *ctx);
 
   static void handleDnsBrowseCallback(otError aError, const otDnsBrowseResponse *aResponse, void *aContext);
-  void onDnsBrowseCallback(otError aError, const otDnsBrowseResponse *aResponse);
+  void onDnsBrowseCallback(otError aError, const otDnsBrowseResponse *aResponse, uint32_t gen);
 
   static void handleDnsAddressCallback(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
-  void onDnsAddressCallback(otError aError, const otDnsAddressResponse *aResponse);
+  void onDnsAddressCallback(otError aError, const otDnsAddressResponse *aResponse, uint32_t gen);
 
   static void handleDnsServiceCallback(otError aError, const otDnsServiceResponse *aResponse, void *aContext);
-  void onDnsServiceCallback(otError aError, const otDnsServiceResponse *aResponse);
+  void onDnsServiceCallback(otError aError, const otDnsServiceResponse *aResponse, uint32_t gen);
 #endif
 
   bool _started;
@@ -612,8 +671,9 @@ private:
   ot_dnssd_query_kind_t _queryKind;
   /** Monotonic counter; bumped on arm/clear so stale callbacks cannot match. */
   volatile uint32_t _queryGen;
-  /** Generation of the armed op (0 = none). Callbacks must match this value. */
+  /** Generation of the armed op (0 = none). OT callbacks carry the gen from dispatch. */
   volatile uint32_t _queryActiveGen;
+  DnsCbCtx _dnsCbCtx[kDnsCbCtxCount];
   OThreadDNSSDQueryCallback _queryCb;
   void *_queryCtx;
 #endif

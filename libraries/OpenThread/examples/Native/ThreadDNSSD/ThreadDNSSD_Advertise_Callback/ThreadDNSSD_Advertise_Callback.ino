@@ -39,6 +39,7 @@ static const uint32_t kReadvertiseCooldownMs = 15000;
 static volatile bool s_gotEvent = false;
 static volatile ot_dnssd_event_t s_event = OT_DNSSD_EVENT_ERROR;
 static volatile otError s_err = OT_ERROR_NONE;
+static volatile bool s_ignoreLocalRemoved = false;
 
 static bool s_attached = false;
 static bool s_wasAttached = false;
@@ -49,7 +50,10 @@ static uint32_t s_lastAdvertiseMs = 0;
 
 static void onDnsEvent(ot_dnssd_event_t event, otError error, void *context) {
   (void)context;
-  // OpenThread task: flags only — no OThreadDNSSD / Serial calls here.
+  // OpenThread task (or caller task for end()-generated REMOVED): flags only.
+  if (event == OT_DNSSD_EVENT_REMOVED && s_ignoreLocalRemoved) {
+    return;
+  }
   s_event = event;
   s_err = error;
   s_gotEvent = true;
@@ -74,7 +78,9 @@ static bool waitAttached(uint32_t timeoutMs) {
 static bool startAdvertise(const char *reason) {
   Serial.printf("Advertise (%s) as %s...\r\n", reason, kHostName);
 
+  s_ignoreLocalRemoved = true;
   OThreadDNSSD.end();
+  s_ignoreLocalRemoved = false;
   s_announced = false;
 
   if (!OThreadDNSSD.begin(kHostName)) {

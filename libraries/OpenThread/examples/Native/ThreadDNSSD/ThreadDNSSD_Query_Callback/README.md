@@ -10,6 +10,8 @@ Covers the same lab as [ThreadDNSSD_Query](../ThreadDNSSD_Query/) and
 1. OTBR with SRP **and** DNS in Network Data.
 2. Board A: [ThreadDNSSD_Advertise](../ThreadDNSSD_Advertise/) (`sensor-1`).
 3. Board B: this sketch (`browser-cb`). Same `OT_NETKEY`.
+   `begin("browser-cb")` registers that SRP host — keep it unique if several
+   query boards share the OTBR.
 4. Prefer **Erase Flash: Sketch Only**.
 
 ## Expected Serial (Board B)

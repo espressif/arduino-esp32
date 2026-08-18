@@ -154,18 +154,29 @@ API summary
 
 * ``bool begin(const char *hostName)`` — configure host, auto addresses, auto-start.
   Prefer a per-device unique label when several nodes share one OTBR.
+  Discover-only sketches also register this host (SRP auto-start selects the DNS server).
 * ``const char *hostname()`` — local host label from ``begin()``.
+  After a browse, ``hostname(i)`` is the **discovered** host at index ``i``.
 * ``void end()`` — unregister locally and stop the SRP client (also called from
-  ``OThread.end()``).
+  ``OThread.end()``). If an async discover is in flight, ``onQueryEvent`` gets
+  ``OT_DNSSD_QUERY_ERROR`` / ``OT_ERROR_ABORT`` first (caller task), then
+  ``OT_DNSSD_EVENT_REMOVED``.
+* ``bool started()`` — true after a successful ``begin()`` and before ``end()``.
 * ``void setInstanceName(const char *name)`` — instance label for services
   (default = host name).
 * ``bool addService(service, proto, port)`` — e.g. ``"ot", "udp", 12345``.
-  Same service+proto updates in place (idempotent).
+  Leading underscores are stripped; empty labels after strip are rejected.
+  Same service+proto updates in place (idempotent) unless a remove of that
+  slot is still in flight.
 * ``bool addServiceTxt(service, proto, key, value)`` — TXT record on an existing service.
-* ``bool addServiceSubtype(service, proto, subtype)`` — optional DNS-SD subtype.
-* ``bool removeService(service, proto)`` — remove one service.
+* ``bool addServiceSubtype(service, proto, subtype)`` — optional DNS-SD subtype
+  (leading underscores stripped; duplicates are idempotent).
+* ``bool removeService(service, proto)`` — remove one service. The slot is not
+  reusable until OpenThread reports it removed.
 * ``void onServiceEvent(callback, context)`` — ``OT_DNSSD_EVENT_ANNOUNCED`` /
-  ``REMOVED`` / ``ERROR``. Do **not** call other ``OThreadDNSSD`` methods from the
+  ``REMOVED`` / ``ERROR``. One SRP callback delivers at most one of these.
+  ``REMOVED`` means the host or the last local service is gone (or ``end()``),
+  not a partial service delete. Do **not** call other ``OThreadDNSSD`` methods from the
   callback.
 * ``bool isAnnounceComplete()`` — live read of local SRP client item state
   (host + services ``Registered``). Reflects OpenThread as soon as the server
@@ -179,7 +190,8 @@ API summary
 * ``int queryService(service, proto)`` — DNS browse; fills a fixed result pool
   (needs ``CONFIG_OPENTHREAD_DNS_CLIENT``).
 * ``IPAddress queryHost(host, timeoutMs)`` — resolve host AAAA
-  (default ``OT_DNSSD_QUERY_TIMEOUT_MS``).
+  (default ``OT_DNSSD_QUERY_TIMEOUT_MS``; that default is also raised to the
+  OpenThread DNS client wait if longer. An explicit timeout is not changed).
 * ``void onQueryEvent(callback, context)`` — async discover events
   (``OT_DNSSD_QUERY_DONE`` / ``OT_DNSSD_QUERY_ERROR``).
 * ``bool startQueryService(service, proto)`` / ``bool startQueryHost(host)`` —
@@ -196,8 +208,9 @@ API summary
 next ``queryService`` / ``queryHost`` / ``startQuery*`` call, do **not** rely on
 result getters (``queryResultCount()``, ``instanceName(i)``, ``resolvedAddress()``,
 etc.) as stable. An in-flight OpenThread DNS callback may still complete; the
-library invalidates that operation so it does not apply to a **new** query, but
-sketches should copy what they need when the call returns (or on
+library invalidates that operation (each DNS request carries the generation
+from dispatch, so a late OpenThread callback cannot apply to a **new** query),
+but sketches should copy what they need when the call returns (or on
 ``OT_DNSSD_QUERY_DONE``) and start a fresh query for updated data. Prefer
 ``lastError()`` to distinguish timeout (``OT_ERROR_RESPONSE_TIMEOUT``) from an
 empty successful browse (``OT_ERROR_NONE`` with count ``0``).
@@ -214,18 +227,25 @@ header fails to compile):
 * ``OT_DNSSD_MAX_TXT_ENTRIES`` (default 4 per service)
 * ``OT_DNSSD_MAX_SUBTYPES`` (default 4 per service)
 * ``OT_DNSSD_MAX_QUERY_RESULTS`` (default 16)
+* ``OT_DNSSD_MAX_DNS_CB_CTX`` (default 16) — in-flight OpenThread DNS callback
+  contexts. A slot stays reserved until OpenThread invokes the callback,
+  including after a local query timeout or ``end()``. Increase this if a sketch
+  issues many short ``queryHost`` timeouts before those callbacks fire.
 
 **Timeouts:**
 
-* ``OT_DNSSD_QUERY_TIMEOUT_MS`` (default 10000 for browse / host resolve;
-  must exceed the OpenThread DNS client wait so empty Discovery Proxy
-  answers are not cut short)
+* ``OT_DNSSD_QUERY_TIMEOUT_MS`` (default 10000 for browse and for the
+  ``queryHost`` default). Browse always waits at least this long, and also
+  at least the OpenThread DNS client wait + 1 s. ``queryHost`` applies that
+  same floor only when the caller uses the default; an explicit timeout is
+  honored as-is.
 
 **Name / TXT lengths:**
 
 * ``OT_DNSSD_HOST_NAME_MAX``, ``OT_DNSSD_INSTANCE_NAME_MAX``
 * ``OT_DNSSD_LABEL_MAX`` (default 15) — max length of each ``service`` /
-  ``proto`` input label (with or without a leading ``_``)
+  ``proto`` input (including any leading underscores). All leading ``_``
+  characters are then stripped; the remaining label must be non-empty.
 * ``OT_DNSSD_SERVICE_NAME_MAX`` — max length of the encoded ``_type._proto``
   string. Default is ``2 * OT_DNSSD_LABEL_MAX + 3`` so a full-length type and
   proto always fit. If you override either macro, keep

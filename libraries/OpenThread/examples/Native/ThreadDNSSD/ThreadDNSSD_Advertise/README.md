@@ -19,6 +19,7 @@ Waiting to attach...
 Attached as Child
 Waiting for SRP announce (need OTBR SRP server)...
 PASS: announced OK as sensor-1
+announceComplete=1 role=Child
 ```
 
 ## How to test

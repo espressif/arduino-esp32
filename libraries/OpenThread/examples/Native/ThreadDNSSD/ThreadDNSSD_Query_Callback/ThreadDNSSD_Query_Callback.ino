@@ -157,11 +157,14 @@ void loop() {
   if (s_gotQuery) {
     s_gotQuery = false;
     ot_dnssd_query_kind_t kind = s_kind;
+    ot_dnssd_query_event_t qevent = s_event;
     int count = s_count;
 
     if (kind == OT_DNSSD_QUERY_SERVICE && s_phase == Phase::WaitService) {
       printServiceResults(count);
-      if (!startHostResolve()) {
+      if (qevent == OT_DNSSD_QUERY_DONE && startHostResolve()) {
+        // host resolve started
+      } else {
         s_delayUntilMs = millis() + kCycleDelayMs;
         s_phase = Phase::Delay;
       }
