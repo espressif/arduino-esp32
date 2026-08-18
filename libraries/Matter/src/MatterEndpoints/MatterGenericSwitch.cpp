@@ -113,8 +113,7 @@ bool MatterGenericSwitch::begin(uint32_t featureFlags, uint8_t multiPressMax) {
   setEndPointId(endpoint::get_id(endpoint));
 
   if (!enableTagList()) {
-    log_e("Failed to enable TagList support on Generic Switch endpoint %u", getEndPointId());
-    return false;
+    log_w("Failed to enable TagList support on Generic Switch endpoint %u; switch will still work", getEndPointId());
   }
 
   log_i("Generic Switch created with endpoint_id %u (feature_flags=0x%02" PRIX32 ")", getEndPointId(), featureFlags);
