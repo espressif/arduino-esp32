@@ -42,9 +42,10 @@ Serial.begin(baud, config, rxPin, txPin, invert, timeout_ms, rxfifo_full_thrhd)
 
 ### Baud Rate Range
 
-The baud rate detection works over a wide range of speeds (typically from 300 baud up to high-speed rates such as 921600 baud). The detected value is rounded to the nearest entry in the core’s internal baud-rate table used by `uartDetectBaudrate()`.
+Detected values are rounded to the nearest entry in the core’s internal baud-rate table used by `uartDetectBaudrate()`:
 
-Examples of baud rates that can be detected include: 300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, and others defined by the core.
+300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, and 3686400.
+
 ## How Baud Rate Detection Works
 
 1. **Detection Phase**:
@@ -79,22 +80,24 @@ It can also detect the baud rate from the UART1 `Serial1` (ESP32 / ESP32-S2) or 
 
 ## How to Use
 
-1. Open the Arduino IDE
-2. Open `BaudRateDetect_Demo.ino`
-3. Connect your ESP32 to the USB cable
-4. Select the correct board and COM port
-5. Upload the sketch
-6. Open the Serial Monitor
-7. Set the Serial Monitor to any baud rate (e.g., 115200)
-8. Type and send characters - the sketch will detect the baud rate
+1. Open the Arduino IDE.
+2. Open `BaudRateDetect_Demo.ino`.
+3. Connect your ESP32 to the USB cable.
+4. Select the correct board and COM port.
+5. Upload the sketch.
+6. **During the first ~20 seconds after reset**, send data on UART0 (`Serial`) so detection can succeed:
+   - Open Serial Monitor at a known baud rate (e.g. **115200**) and type characters, **or**
+   - Connect an external device to RX0 that is already transmitting.
+7. Read the result printed in `setup()` — the sketch’s `loop()` is empty.
+
+If nothing valid is received within the timeout, the sketch falls back to **115200** baud and prints a detection-failed message.
 
 ### Example Usage Scenario
 
-- ESP32 is connected to an external device sending data at an unknown baud rate
-- Upload the sketch to start listening
-- The ESP32 will automatically detect the baud rate of the incoming data
-- Once detected, the sketch prints the detected baud rate to the console
-- If detection fails after 20 seconds, the sketch falls back to 115200 baud
+- ESP32 is connected to an external device (or USB Serial Monitor) sending data on UART0 at an unknown baud rate.
+- Upload the sketch and send characters **during the detection window in `setup()`** (default 20 seconds).
+- The sketch prints the detected baud rate, then stops (`loop()` is empty).
+- If detection fails, it reopens `Serial` at **115200** baud and logs an error.
 
 ## Code Explanation
 

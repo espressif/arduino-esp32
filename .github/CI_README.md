@@ -177,7 +177,7 @@ The script sources `socs_config.sh` and uses `BUILD_TEST_TARGETS` to determine w
 
 **Trigger:**
 - Push to `master` or `release/*` branches
-- Pull requests modifying upload-related paths (`platform.txt`, `boards.txt`, `tools/flasher.py`, mock upload scripts, `CIBoardsTest/**`, etc.)
+- Pull requests modifying upload-related paths (`platform.txt`, `boards.txt`, `tools/flasher.py`, mock upload scripts, `find_boards.sh`, etc.)
 - Manual workflow dispatch
 
 **Purpose:** Validate `upload.pattern` → `flasher.py` → esptool on every supported SoC, using a mock bootloader. Each tool uploads the same sketch **twice** per SoC (second flash exercises `--diff-with`).
@@ -191,7 +191,20 @@ The checked-out core is installed via `install-arduino-core-esp32.sh` (symlink +
 
 **Jobs:**
 
+#### `should-run`
+**Runs on:** Ubuntu-latest
+
+**Purpose:** Skip the expensive mock-upload matrix when a PR only changes non-official `boards.txt` entries.
+
+**Logic:**
+- Non-PR (`push`, `workflow_dispatch`): always run
+- PR: `tj-actions/changed-files` with `files_yaml` categories `boards` / `upload` (`**` minus `boards.txt`)
+  - run `find_boards.sh official` only when `boards_any_changed`
+  - run mock upload if official `CORE_SOCS` boards changed (`FQBNS` non-empty) **or** `upload_any_changed`
+
 #### `mock-upload`
+**Conditions:** Only if `should-run.outputs.should_run == 'true'`
+
 **Matrix:** `ubuntu-latest`, `windows-latest`, `macos-26-intel` (3 parallel jobs)
 
 Each job loops all `CORE_SOCS` (8 chips): `start_mock_bootloader` (chip auto-detect by default) → cli twice → builder twice → `stop_mock_bootloader`.
@@ -662,8 +675,25 @@ Defines test requirements and platform support:
 - `soc_tags: {chip: [tag1]}` - Per-SoC hardware runner tags (see below)
 - `multi_device: {device0: sketchA, device1: sketchB}` - Multi-DUT test mapping
 - `requires: [CONFIG_X=y]` - Required sdkconfig settings
-- `requires_or: [CONFIG_A=y, CONFIG_B=y]` - Alternative requirements
+- `requires_any: [CONFIG_A=y, CONFIG_B=y]` - Alternative requirements (at least one must match)
 - `libs: [Library1, Library2]` - Required libraries
+- `fqbn_append: Menu=value,...` - Menu options added to the default FQBN of every target
+- `fqbn_append: {default: ..., chip: ...}` - Same, when the options differ per target
+- `fqbn: {chip: [full FQBN, ...]}` - Replaces the default FQBN, one build per entry
+
+**FQBN options (`fqbn_append`):**
+Each menu key is kept only once, so a key set in `fqbn_append` replaces the default value for that key rather than being listed twice. This is how a test disables an option that is on by default, such as `PSRAM=disabled` on ESP32. Options are applied lowest priority first: the target default, then `fqbn_append`, then the per-device `fqbn_append` of a multi-device test, then the debug level passed with `-d`.
+
+Use the map form when the options differ per target. The `default` entry applies to every target and the entry matching the target is merged on top of it, so only the difference has to be spelled out. This is required for menus that do not exist on every target — ESP32-C3, ESP32-C6 and ESP32-H2 have no PSRAM menu, and `arduino-cli` rejects the whole build with `invalid option 'PSRAM'` if they are given `PSRAM=disabled`:
+
+```yaml
+fqbn_append:
+  default: PartitionScheme=huge_app
+  esp32: PSRAM=disabled
+  esp32s3: PSRAM=disabled
+```
+
+Use `fqbn` instead only when a test needs several builds per target (for example with and without PSRAM); it lists complete FQBNs and ignores `fqbn_append`.
 
 Example:
 ```yaml
@@ -790,7 +820,7 @@ Each device entry can be either:
 - A **scalar** (just the sketch directory name): `device0: sender`
 - A **map** with `sketch` (required) and `fqbn_append` (optional): useful when devices need different compile-time options (e.g., different Zigbee roles or partition schemes)
 
-When `fqbn_append` is specified per device, it overrides the parent `ci.yml`'s `fqbn_append` for that device's build only.
+A per-device `fqbn_append` is merged on top of the test's top-level `fqbn_append` for that device's build only, so a device adds to the options shared by the whole test and overrides only the menu keys it sets itself. It takes the same forms as the top-level field, including the per-target map.
 
 **How it works:**
 - `tests_build.sh` builds each device sketch separately and stores artifacts under `~/.arduino/tests/<target>/<test>/<sketch>/build.tmp`.
@@ -979,14 +1009,14 @@ For each affected example, the script checks if the current target is supported 
 1. Checkout repository
 2. **Get board name** from PR changes:
    ```bash
-   bash .github/scripts/find_new_boards.sh ${{ github.repository }} ${{ github.base_ref }}
+   bash .github/scripts/find_boards.sh new ${{ github.repository }} ${{ github.base_ref }} --output-format=matrix
    ```
 
 **Detection Logic:**
-The script fetches `boards.txt` from both the base branch and PR branch, extracts board names from each, then compares to find additions and modifications. Only boards that are new or have changed definitions are flagged for testing.
+The script fetches `boards.txt` from the base branch, diffs it against the PR `boards.txt`, and extracts board IDs from added/removed lines. Only boards that are new or have changed definitions are flagged for testing. Output format is selected with `--output-format` (`matrix` → `{"fqbn":[...]}` for the job matrix).
 
 **Outputs:**
-- `fqbns` - JSON array of board FQBNs to test
+- `fqbns` - JSON matrix object of board FQBNs to test (`{"fqbn":[...]}`)
 
 ##### 2. `test-boards`
 **Runs on:** Ubuntu-latest
@@ -1122,7 +1152,7 @@ The file lists popular Arduino libraries with their names, which examples to tes
 ##### 1. `find-boards`
 **Steps:**
 - Lists all boards from `boards.txt`
-- Uses `find_all_boards.sh` script
+- Uses `find_boards.sh all --output-format=array`
 - Skips boards in `SKIP_LIB_BUILD_SOCS`
 
 ##### 2. `setup-chunks`
@@ -1143,7 +1173,7 @@ The file lists popular Arduino libraries with their names, which examples to tes
   - Push to `master` or `release/v2.x` (docs or workflow file changes)
   - Pull requests modifying `docs/**` or the workflow file
 - `docs_deploy.yml`:
-  - `workflow_run` after **ESP32 Arduino Release**
+  - `workflow_run` after **Release ESP32 Arduino package**
   - Push to `master` or `release/v2.x` when docs change
 
 **Purpose:** Build and deploy Sphinx documentation to the production docs server
@@ -1242,6 +1272,7 @@ bash .github/scripts/ci_testing/release_validation.sh 3.3.10
 |--------|---------|
 | `ci_testing/test_ide_v1_docker.sh` | IDE v1 install/compile via Docker (linux/windows containers) |
 | `ci_testing/test_mock_bootloader.py` | flasher.py + socket:// integration (protocol tests in [esp32-mock-bootloader](https://github.com/espressif/esp32-mock-bootloader)) |
+| `ci_testing/test_find_boards.py` | Local unit tests for `find_boards.sh` (all/new/official + formats) |
 | `ci_testing/mock_upload_validation.sh` | Local wrapper for `test-mock-upload.sh` |
 | `test-mock-upload.sh` | PR/push mock upload CI entry (cli + builder) |
 | `mock_upload_lib.sh` | Mock upload helpers (bootloader, twice-upload, logging) |
@@ -1564,13 +1595,22 @@ bash .github/scripts/check_official_variants.sh \
 
 ### Board Scripts
 
-#### `find_all_boards.sh`
-**Purpose:** List all board FQBNs for testing
+#### `find_boards.sh`
+**Purpose:** Unified board FQBN discovery for CI
 
-**Filter:** Uses `should_skip_lib_build()` to exclude boards without pre-built libs
+**Subcommands:**
+- `all` — list all boards with `.tarch=` (skips `SKIP_LIB_BUILD_SOCS`)
+- `new <owner/repo> <base_ref>` — boards changed vs base-branch `boards.txt`
+- `official <owner/repo> <base_ref>` — same as `new`, filtered to `CORE_SOCS` board IDs (used by `upload-tests.yml`)
 
-#### `find_new_boards.sh`
-**Purpose:** Detect boards modified in PR
+**Output format** (required): `--output-format=array|matrix` (`--format` alias)
+- `array` → `["espressif:esp32:…", …]` (for `allboards.yml` chunking)
+- `matrix` → `{"fqbn":[…]}` (for `boards.yml` matrix)
+
+Writes `FQBNS` (and `BOARD-COUNT`) to `$GITHUB_ENV` when set.
+
+**Local testing:** `python3 .github/scripts/ci_testing/test_find_boards.py`
+For offline `new`/`official` runs, set `FIND_BOARDS_BASE_FILE` to a local base `boards.txt` (skips curl).
 
 #### `validate_board.sh`
 **Purpose:** Validate board definition completeness

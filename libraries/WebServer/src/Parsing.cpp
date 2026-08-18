@@ -21,6 +21,7 @@
 
 #include <Arduino.h>
 #include <esp32-hal-log.h>
+#include <new>
 #include "NetworkServer.h"
 #include "NetworkClient.h"
 #include "WebServer.h"
@@ -73,10 +74,126 @@ static char *readBytesWithTimeout(NetworkClient &client, size_t maxLength, size_
   return buf;
 }
 
+// Answer a request that is being dropped part-way through. The peer is usually
+// still sending, and closing a connection with unread input resets it, which
+// discards the response we just queued. Drain what already arrived first so the
+// status actually reaches the client. The drain is bounded: a peer that keeps
+// streaming is cut off.
+static void sendErrorResponse(NetworkClient &client, const char *status) {
+  client.printf("HTTP/1.1 %s\r\nContent-Length: 0\r\nConnection: close\r\n\r\n", status);
+
+  const size_t maxDrain = 2 * WEBSERVER_MAX_LINE_LEN;
+  uint8_t discard[64];
+  size_t drained = 0;
+  unsigned long lastData = millis();
+  while (drained < maxDrain && millis() - lastData < 50) {
+    int available = client.available();
+    if (available <= 0) {
+      yield();
+      continue;
+    }
+    size_t wanted = (size_t)available < sizeof(discard) ? (size_t)available : sizeof(discard);
+    int read = client.read(discard, wanted);
+    if (read <= 0) {
+      break;
+    }
+    drained += (size_t)read;
+    lastData = millis();
+  }
+}
+
+enum class LineStatus {
+  Ok,
+  TooLong,   // reached maxLength before any line terminator
+  TimedOut,  // took longer than the per-line or the caller's phase budget
+};
+
+// Read one CRLF-terminated protocol line, consuming the terminator.
+//
+// Stream::readStringUntil() bounds neither the length of the line nor the total
+// time it may take: it only requires that another byte arrive within the stream
+// timeout. A peer that never sends a terminator therefore grows the String until
+// the heap is gone, and a peer that sends one byte just inside every timeout
+// keeps the read alive for as long as it likes. Both keep handleClient() from
+// returning.
+//
+// This bounds all three: the length of the line, the time one line may take, and
+// (through phaseBudget) the time the caller's whole parse phase may take. The
+// phase budget is what catches a peer that keeps sending complete but tiny lines,
+// since each of those restarts the per-line budget.
+static LineStatus readLineWithLimit(NetworkClient &client, String &line, size_t maxLength, unsigned long phaseStart = 0, unsigned long phaseBudget = 0) {
+  line = "";
+  const unsigned long idleTimeout = client.getTimeout();
+  const unsigned long lineStart = millis();
+  unsigned long lastActivity = lineStart;
+
+  while (millis() - lastActivity < idleTimeout) {
+#if WEBSERVER_MAX_LINE_WAIT > 0
+    if (millis() - lineStart >= WEBSERVER_MAX_LINE_WAIT) {
+      log_e("Protocol line still incomplete after %u ms", (unsigned)WEBSERVER_MAX_LINE_WAIT);
+      return LineStatus::TimedOut;
+    }
+#endif
+    if (phaseBudget && millis() - phaseStart >= phaseBudget) {
+      log_e("Request headers still incomplete after %u ms", (unsigned)phaseBudget);
+      return LineStatus::TimedOut;
+    }
+
+    int c = client.read();
+    if (c < 0) {
+      yield();
+      continue;
+    }
+    lastActivity = millis();
+    if (c == '\r') {
+      // Consume the paired LF, waiting for it as readStringUntil('\n') would.
+      while (millis() - lastActivity < idleTimeout) {
+        int next = client.peek();
+        if (next < 0) {
+          yield();
+          continue;
+        }
+        if (next == '\n') {
+          client.read();
+        }
+        break;
+      }
+      return LineStatus::Ok;
+    }
+    if (line.length() >= maxLength) {
+      log_e("Protocol line longer than %u bytes", (unsigned)maxLength);
+      return LineStatus::TooLong;
+    }
+    line += (char)c;
+  }
+  // The peer stopped sending part-way through a line, so there is no complete
+  // request to act on.
+  return LineStatus::TimedOut;
+}
+
 bool WebServer::_parseRequest(NetworkClient &client) {
+  // Upload, raw and multipart field state all belong to a single request. Drop
+  // anything left over from an earlier request on this connection so it cannot
+  // poison arg()/hasArg() lookups or be reported as an active upload.
+  if (_postArgs) {
+    delete[] _postArgs;
+    _postArgs = nullptr;
+    _postArgsLen = 0;
+  }
+  _currentUpload.reset();
+  _currentRaw.reset();
+
+  // The request line and the headers share one deadline. Only the body is
+  // allowed to take longer, so a slow upload is not affected.
+  const unsigned long headerPhaseStart = millis();
+
   // Read the first line of HTTP request
-  String req = client.readStringUntil('\r');
-  client.readStringUntil('\n');
+  String req;
+  switch (readLineWithLimit(client, req, WEBSERVER_MAX_LINE_LEN, headerPhaseStart, WEBSERVER_MAX_HEADER_WAIT)) {
+    case LineStatus::TooLong:  sendErrorResponse(client, "414 URI Too Long"); return false;
+    case LineStatus::TimedOut: sendErrorResponse(client, "408 Request Timeout"); return false;
+    case LineStatus::Ok:       break;
+  }
   //reset header value
   if (_collectAllHeaders) {
     // clear previous headers
@@ -110,6 +227,17 @@ bool WebServer::_parseRequest(NetworkClient &client) {
   _currentUri = url;
   _chunked = false;
   _clientContentLength = 0;  // not known yet, or invalid
+
+  // Bound the request-target before it reaches route matching and argument
+  // parsing. Answer with 414 so the peer sees why it was refused instead of
+  // just having the connection dropped.
+#if WEBSERVER_MAX_URI_LEN > 0
+  if (url.length() + searchStr.length() > WEBSERVER_MAX_URI_LEN) {
+    log_e("Request-target too long (%u bytes, max %u)", (unsigned)(url.length() + searchStr.length()), (unsigned)WEBSERVER_MAX_URI_LEN);
+    sendErrorResponse(client, "414 URI Too Long");
+    return false;
+  }
+#endif
 
   HTTPMethod method = HTTP_ANY;
   size_t num_methods = sizeof(_http_method_str) / sizeof(const char *);
@@ -146,8 +274,11 @@ bool WebServer::_parseRequest(NetworkClient &client) {
     bool isEncoded = false;
     //parse headers
     while (1) {
-      req = client.readStringUntil('\r');
-      client.readStringUntil('\n');
+      switch (readLineWithLimit(client, req, WEBSERVER_MAX_LINE_LEN, headerPhaseStart, WEBSERVER_MAX_HEADER_WAIT)) {
+        case LineStatus::TooLong:  sendErrorResponse(client, "431 Request Header Fields Too Large"); return false;
+        case LineStatus::TimedOut: sendErrorResponse(client, "408 Request Timeout"); return false;
+        case LineStatus::Ok:       break;
+      }
       if (req == "") {
         break;  //no moar headers
       }
@@ -223,7 +354,7 @@ bool WebServer::_parseRequest(NetworkClient &client) {
           searchStr += plainBuf;
         }
         _parseArguments(searchStr);
-        if (!isEncoded) {
+        if (!isEncoded && _currentArgs) {
           //plain post json or other data
           RequestArgument &arg = _currentArgs[_currentArgCount++];
           arg.key = F("plain");
@@ -248,8 +379,11 @@ bool WebServer::_parseRequest(NetworkClient &client) {
     String headerValue;
     //parse headers
     while (1) {
-      req = client.readStringUntil('\r');
-      client.readStringUntil('\n');
+      switch (readLineWithLimit(client, req, WEBSERVER_MAX_LINE_LEN, headerPhaseStart, WEBSERVER_MAX_HEADER_WAIT)) {
+        case LineStatus::TooLong:  sendErrorResponse(client, "431 Request Header Fields Too Large"); return false;
+        case LineStatus::TimedOut: sendErrorResponse(client, "408 Request Timeout"); return false;
+        case LineStatus::Ok:       break;
+      }
       if (req == "") {
         break;  //no moar headers
       }
@@ -308,24 +442,40 @@ void WebServer::_parseArguments(const String &data) {
     delete[] _currentArgs;
   }
   _currentArgs = 0;
+  _currentArgCount = 0;
   if (data.length() == 0) {
-    _currentArgCount = 0;
-    _currentArgs = new RequestArgument[1];
+    _currentArgs = new (std::nothrow) RequestArgument[1];
     return;
   }
-  _currentArgCount = 1;
 
-  for (int i = 0; i < (int)data.length();) {
-    i = data.indexOf('&', i);
-    if (i == -1) {
+  // Size the allocation from the number of arguments the parse loop below will
+  // actually accept, not from the number of separators. Counting separators
+  // lets a body of bare '&'s request an arbitrarily large allocation while
+  // yielding no arguments at all.
+  for (int pos = 0; pos <= (int)data.length();) {
+    int next_arg_index = data.indexOf('&', pos);
+    int equal_sign_index = data.indexOf('=', pos);
+    if (equal_sign_index != -1 && (next_arg_index == -1 || equal_sign_index < next_arg_index)) {
+      ++_currentArgCount;
+      if (_currentArgCount >= WEBSERVER_MAX_QUERY_ARGS) {
+        log_w("Argument count capped at %u, ignoring the rest", (unsigned)WEBSERVER_MAX_QUERY_ARGS);
+        break;
+      }
+    }
+    if (next_arg_index == -1) {
       break;
     }
-    ++i;
-    ++_currentArgCount;
+    pos = next_arg_index + 1;
   }
   log_v("args count: %d", _currentArgCount);
 
-  _currentArgs = new RequestArgument[_currentArgCount + 1];
+  _currentArgs = new (std::nothrow) RequestArgument[_currentArgCount + 1];
+  if (!_currentArgs) {
+    log_e("Failed to allocate %d request arguments", _currentArgCount);
+    _currentArgCount = 0;
+    _currentArgs = new (std::nothrow) RequestArgument[1];
+    return;
+  }
   int pos = 0;
   int iarg;
   for (iarg = 0; iarg < _currentArgCount;) {
@@ -415,18 +565,26 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
   String line;
   int retry = 0;
   do {
-    line = client.readStringUntil('\r');
+    if (readLineWithLimit(client, line, WEBSERVER_MAX_LINE_LEN) != LineStatus::Ok) {
+      return false;
+    }
     ++retry;
   } while (line.length() == 0 && retry < 3);
 
-  client.readStringUntil('\n');
   //start reading the form
   if (line == ("--" + boundary)) {
     if (_postArgs) {
       delete[] _postArgs;
     }
-    _postArgs = new RequestArgument[WEBSERVER_MAX_POST_ARGS];
+    _postArgs = new (std::nothrow) RequestArgument[WEBSERVER_MAX_POST_ARGS];
+    if (!_postArgs) {
+      log_e("Failed to allocate post arguments");
+      return false;
+    }
     _postArgsLen = 0;
+    size_t skippedLines = 0;
+    bool inEmptyRun = false;
+    uint32_t emptyRunStart = 0;
     while (1) {
       String argName;
       String argValue;
@@ -434,9 +592,36 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
       String argFilename;
       bool argIsFile = false;
 
-      line = client.readStringUntil('\r');
-      client.readStringUntil('\n');
+      // Exit when the client is gone or timed out instead of spinning forever
+      // on empty reads after a truncated multipart body.
+      if (!client.connected() && !client.available()) {
+        log_e("Multipart parse aborted: client disconnected");
+        return _parseFormUploadAborted();
+      }
+
+      if (readLineWithLimit(client, line, WEBSERVER_MAX_LINE_LEN) != LineStatus::Ok) {
+        return _parseFormUploadAborted();
+      }
+      if (line.length() == 0) {
+        // A bare CRLF is tolerated, but an unbroken run of empty reads means the
+        // body was truncated or the peer stalled. Reads block for the client
+        // timeout, so bound the run by time as well as by count.
+        if (!inEmptyRun) {
+          inEmptyRun = true;
+          emptyRunStart = millis();
+        } else if (millis() - emptyRunStart > HTTP_MAX_POST_WAIT) {
+          log_e("Multipart parse aborted: no data for %u ms", (unsigned)HTTP_MAX_POST_WAIT);
+          return _parseFormUploadAborted();
+        }
+        if (++skippedLines > WEBSERVER_MAX_MULTIPART_SKIP_LINES) {
+          log_e("Multipart parse aborted: %u blank lines without a part", (unsigned)skippedLines);
+          return _parseFormUploadAborted();
+        }
+        continue;
+      }
+      inEmptyRun = false;
       if (line.length() > (size_t)19 && line.substring(0, 19).equalsIgnoreCase(F("Content-Disposition"))) {
+        skippedLines = 0;
         int nameStart = line.indexOf('=');
         if (nameStart != -1) {
           argName = line.substring(nameStart + 2);
@@ -456,23 +641,33 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
           log_v("PostArg Name: %s", argName.c_str());
           using namespace mime;
           argType = FPSTR(mimeTable[txt].mimeType);
-          line = client.readStringUntil('\r');
-          client.readStringUntil('\n');
+          if (readLineWithLimit(client, line, WEBSERVER_MAX_LINE_LEN) != LineStatus::Ok) {
+            return _parseFormUploadAborted();
+          }
           while (line.length() > 0) {
             if (line.length() > (size_t)12 && line.substring(0, 12).equalsIgnoreCase(FPSTR(Content_Type))) {
               argType = line.substring(line.indexOf(':') + 2);
             }
             //skip over any other headers
-            line = client.readStringUntil('\r');
-            client.readStringUntil('\n');
+            if (readLineWithLimit(client, line, WEBSERVER_MAX_LINE_LEN) != LineStatus::Ok) {
+              return _parseFormUploadAborted();
+            }
           }
           log_v("PostArg Type: %s", argType.c_str());
           if (!argIsFile) {
             while (1) {
-              line = client.readStringUntil('\r');
-              client.readStringUntil('\n');
+              // Field values are the one place a long line is legitimate, so the
+              // cap is its own, more generous limit. The time bound still applies.
+              if (readLineWithLimit(client, line, WEBSERVER_MAX_POST_ARG_LEN) != LineStatus::Ok) {
+                log_e("Multipart parse aborted: field value too long or too slow");
+                return _parseFormUploadAborted();
+              }
               if (line.startsWith("--" + boundary)) {
                 break;
+              }
+              if (!client.connected() && !client.available() && line.length() == 0) {
+                log_e("Multipart parse aborted: truncated field value");
+                return _parseFormUploadAborted();
               }
               if (argValue.length() > (size_t)0) {
                 argValue += "\n";
@@ -490,7 +685,7 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
               break;
             } else if (_postArgsLen >= WEBSERVER_MAX_POST_ARGS) {
               log_e("Too many PostArgs (max: %u) in request.", WEBSERVER_MAX_POST_ARGS);
-              return false;
+              return _parseFormUploadAborted();
             }
           } else {
             _currentUpload.reset(new HTTPUpload());
@@ -552,8 +747,9 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
             if (!client.connected()) {
               return _parseFormUploadAborted();
             }
-            line = client.readStringUntil('\r');
-            client.readStringUntil('\n');
+            if (readLineWithLimit(client, line, WEBSERVER_MAX_LINE_LEN) != LineStatus::Ok) {
+              return _parseFormUploadAborted();
+            }
             if (line == "--") {  // extra two dashes mean we reached the end of all form fields
               log_v("Done Parsing POST");
               break;
@@ -561,6 +757,13 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
             continue;
           }
         }
+      } else if (line == ("--" + boundary + "--")) {
+        break;
+      } else if (++skippedLines > WEBSERVER_MAX_MULTIPART_SKIP_LINES) {
+        // A preamble or epilogue around the parts is legal (RFC 2046), so
+        // unrecognized lines are skipped -- but not indefinitely.
+        log_e("Multipart parse aborted: %u lines without a part", (unsigned)skippedLines);
+        return _parseFormUploadAborted();
       }
     }
 
@@ -574,7 +777,10 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
     if (_currentArgs) {
       delete[] _currentArgs;
     }
-    _currentArgs = new RequestArgument[_postArgsLen];
+    _currentArgs = new (std::nothrow) RequestArgument[_postArgsLen ? _postArgsLen : 1];
+    if (!_currentArgs) {
+      return _parseFormUploadAborted();
+    }
     for (iarg = 0; iarg < _postArgsLen; iarg++) {
       RequestArgument &arg = _currentArgs[iarg];
       arg.key = _postArgs[iarg].key;
@@ -618,9 +824,18 @@ String WebServer::urlDecode(const String &text) {
 }
 
 bool WebServer::_parseFormUploadAborted() {
-  _currentUpload->status = UPLOAD_FILE_ABORTED;
-  if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
-    _currentHandler->upload(*this, _currentUri, *_currentUpload);
+  if (_currentUpload) {
+    _currentUpload->status = UPLOAD_FILE_ABORTED;
+    if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
+      _currentHandler->upload(*this, _currentUri, *_currentUpload);
+    }
+  }
+  // Drop any fields collected before the abort so they cannot shadow later
+  // requests via arg()/hasArg().
+  if (_postArgs) {
+    delete[] _postArgs;
+    _postArgs = nullptr;
+    _postArgsLen = 0;
   }
   return false;
 }

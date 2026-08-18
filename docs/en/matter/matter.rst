@@ -12,7 +12,7 @@ The Matter library provides support for creating Matter-compatible devices inclu
 * Multiple endpoint types for various device categories
 * Semantic tags (Descriptor cluster TagList) via ``MatterEndPoint::setTagList()`` to disambiguate sibling endpoints
 * Event monitoring and callback support
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 * Smart home ecosystem compatibility
 
 The Matter library is built on top of `ESP Matter SDK <https://github.com/espressif/esp-matter>`_ and provides a high-level Arduino-style interface for creating Matter devices.
