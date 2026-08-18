@@ -30,9 +30,9 @@
  * USB Host MSC block device (TinyUSB host).
  * Pair with USBMSCFS for SD-like FatFS access.
  */
-class USBHostMSCCard {
+class USBHostMSCClass {
 public:
-  USBHostMSCCard();
+  USBHostMSCClass();
 
   bool mounted() const {
     return _mounted;
@@ -76,7 +76,7 @@ private:
   uint32_t _block_size;
 };
 
-extern USBHostMSCCard USBHostMSC;
+extern USBHostMSCClass USBHostMSC;
 
 #endif /* CFG_TUH_ENABLED && CFG_TUH_MSC */
 #endif /* CONFIG_TINYUSB_ENABLED */

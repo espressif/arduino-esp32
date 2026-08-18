@@ -221,11 +221,11 @@ static bool wait_scsi(uint32_t timeout_ms, const char *op_tag) {
   return false;
 }
 
-USBHostMSCCard::USBHostMSCCard()
+USBHostMSCClass::USBHostMSCClass()
   : _mounted(false), _dev_addr(0), _lun(0), _itf_num(0), _ep_in(0), _ep_out(0), _block_count(0), _block_size(0) {
 }
 
-bool USBHostMSCCard::cacheEndpoints(uint8_t dev_addr) {
+bool USBHostMSCClass::cacheEndpoints(uint8_t dev_addr) {
   _itf_num = 0;
   _ep_in = 0;
   _ep_out = 0;
@@ -298,7 +298,7 @@ static bool msc_clear_halt(uint8_t daddr, uint8_t ep) {
   return msc_control_xfer(daddr, &clr);
 }
 
-bool USBHostMSCCard::recoverBot(const char *reason) {
+bool USBHostMSCClass::recoverBot(const char *reason) {
   if (_dev_addr == 0) {
     return false;
   }
@@ -337,7 +337,7 @@ bool USBHostMSCCard::recoverBot(const char *reason) {
   return ready;
 }
 
-void USBHostMSCCard::onMscMount(uint8_t dev_addr) {
+void USBHostMSCClass::onMscMount(uint8_t dev_addr) {
   _dev_addr = dev_addr;
   _lun = 0;
   _itf_num = 0;
@@ -350,7 +350,7 @@ void USBHostMSCCard::onMscMount(uint8_t dev_addr) {
         (unsigned)dev_addr, (unsigned)_block_count, (unsigned)_block_size);
 }
 
-void USBHostMSCCard::onMscUnmount(uint8_t dev_addr) {
+void USBHostMSCClass::onMscUnmount(uint8_t dev_addr) {
   if (dev_addr != _dev_addr) {
     return;
   }
@@ -381,7 +381,7 @@ static bool msc_submit_rw(bool is_write, uint8_t dev, uint8_t lun, void *buf, ui
   return false;
 }
 
-bool USBHostMSCCard::xferBlocks(bool is_write, uint32_t lba, void *buffer, uint32_t blocks) {
+bool USBHostMSCClass::xferBlocks(bool is_write, uint32_t lba, void *buffer, uint32_t blocks) {
   if (!_mounted || buffer == nullptr || blocks == 0 || _block_size == 0) {
     return false;
   }
@@ -464,19 +464,19 @@ bool USBHostMSCCard::xferBlocks(bool is_write, uint32_t lba, void *buffer, uint3
   return ok;
 }
 
-bool USBHostMSCCard::readBlocks(uint32_t lba, void *buffer, uint32_t blocks) {
+bool USBHostMSCClass::readBlocks(uint32_t lba, void *buffer, uint32_t blocks) {
   return xferBlocks(false, lba, buffer, blocks);
 }
 
-bool USBHostMSCCard::writeBlocks(uint32_t lba, const void *buffer, uint32_t blocks) {
+bool USBHostMSCClass::writeBlocks(uint32_t lba, const void *buffer, uint32_t blocks) {
   return xferBlocks(true, lba, (void *)buffer, blocks);
 }
 
-bool USBHostMSCCard::sync(void) {
+bool USBHostMSCClass::sync(void) {
   return mounted();
 }
 
-USBHostMSCCard USBHostMSC;
+USBHostMSCClass USBHostMSC;
 
 extern "C" {
 
