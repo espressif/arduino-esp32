@@ -27,6 +27,7 @@ Validates BLE secure connection between a server and client using Numeric Compar
 | Secure characteristic | Serve read/write requiring MITM authentication |
 | Numeric Comparison PIN | Display and auto-confirm pairing PIN |
 | IRK retrieval | Retrieve and print the peer's Identity Resolving Key after authentication |
+| Malformed advertisement data | Advertise deliberately malformed AD structures so the client can prove its parser rejects them |
 
 ### Client (`client/client.ino`)
 
@@ -38,6 +39,26 @@ Validates BLE secure connection between a server and client using Numeric Compar
 | Numeric Comparison PIN | Display and auto-confirm pairing PIN (must match server) |
 | IRK retrieval | Retrieve and print the peer's Identity Resolving Key after authentication |
 | Write/read operations | Write and read back values on both secure and insecure characteristics |
+| Advertisement parsing | Verify malformed AD structures are rejected instead of turned into fields (`ADCHK1` / `ADCHK2`) |
+
+## Advertisement Parsing Regression
+
+`BLEAdvertisedDevice::parseAdvertisement` must reject malformed AD structures
+rather than read past the valid payload or accept a truncated list. The server
+advertises them in two windows, because the terminator and the oversize guard
+both stop the parse loop and so each one has to be the last structure in its own
+payload to be observable.
+
+| Window | Malformed structure | Expected result |
+|---|---|---|
+| 1 | 16-bit UUID list with a trailing partial octet | `svc16=0` (list rejected whole) |
+| 1 | 128-bit UUID structure with fewer than 16 data bytes | `svcCount=1` (no UUID built from an over-read) |
+| 1 | AD length larger than the remaining payload | `mfg=0` (structure rejected) |
+| 2 | 32-bit UUID list with a trailing partial group | `svc32=0` (list rejected whole) |
+| 2 | Manufacturer data behind a zero-length terminator | `mfg=0` (parsing stops at the terminator) |
+
+Window 2 is entered on demand: pytest sends `ADPHASE2` to the server, waits for
+it to re-advertise, then sends `ADPHASE2` to the client to trigger a rescan.
 
 ## Requirements
 
@@ -57,6 +78,7 @@ Validates BLE secure connection between a server and client using Numeric Compar
 7. Both devices display and confirm the same PIN
 8. Authentication completes; both devices retrieve peer IRK
 9. Client performs write/read on both characteristics
+10. pytest sends `ADPHASE2` to both devices to run the second advertisement parsing window
 
 ## Notes
 
