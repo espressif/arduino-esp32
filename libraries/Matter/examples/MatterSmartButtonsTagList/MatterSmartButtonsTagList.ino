@@ -125,7 +125,7 @@ void setup() {
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
-  // This may be a restart of a already commissioned Matter accessory
+  // This may be a restart of an already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
   }
