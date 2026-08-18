@@ -592,10 +592,17 @@ bool OThreadDNSSDClass::removeService(const char *service, const char *proto) {
     if (err != OT_ERROR_NONE) {
       log_e("OThreadDNSSD: RemoveService failed (%d)", (int)err);
       _lastError = err;
-      // ClearService drops OT's pointer immediately — safe to free the slot.
-      (void)otSrpClientClearService(inst, &slot.otService);
+      // Drop the client-list entry without a server update. OT documents only
+      // NONE (pointer released) or NOT_FOUND (never tracked). Either is safe
+      // to memset; any other error means the stack may still hold the slot.
+      otError cerr = otSrpClientClearService(inst, &slot.otService);
+      if (cerr != OT_ERROR_NONE && cerr != OT_ERROR_NOT_FOUND) {
+        log_e("OThreadDNSSD: ClearService failed (%d)", (int)cerr);
+        _lastError = cerr;
+        return false;
+      }
       memset(&slot, 0, sizeof(slot));
-      return true;
+      return true;  // cleared locally (see removeService() contract)
     }
     // RemoveService is asynchronous: OT keeps using name/TXT pointers in this
     // slot until the service appears in aRemovedServices. Do not memset yet.
