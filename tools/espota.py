@@ -595,7 +595,9 @@ def parse_args(unparsed_args):
     parser = argparse.ArgumentParser(description="Transmit image over the air to the ESP32 module with OTA support.")
 
     # destination ip and port
-    parser.add_argument("-i", "--ip", dest="esp_ip", action="store", help="ESP32 IP Address (IPv4 or IPv6).", default=False)
+    parser.add_argument(
+        "-i", "--ip", dest="esp_ip", action="store", help="ESP32 IP Address (IPv4 or IPv6).", default=False
+    )
     parser.add_argument(
         "-I",
         "--host_ip",

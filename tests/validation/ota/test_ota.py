@@ -160,9 +160,7 @@ def _run_espota(
     LOGGER.info("Running espota: %s", " ".join(cmd))
     # espota -t is 30s per socket op; full upload needs headroom beyond that.
     try:
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, cwd=str(ESP32_ROOT), timeout=120
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(ESP32_ROOT), timeout=120)
     except subprocess.TimeoutExpired as e:
         if e.stdout:
             LOGGER.info("espota stdout (timed out):\n%s", e.stdout)
@@ -177,9 +175,7 @@ def _run_espota(
         pytest.fail(f"espota failed (exit {result.returncode}) for {dut_ip}:{dut_port}")
 
 
-def _expect_unity_with_arduino_ota(
-    dut, firmware: Path, host_ip: str, host_ipv6: str, timeout: float = 300
-) -> None:
+def _expect_unity_with_arduino_ota(dut, firmware: Path, host_ip: str, host_ipv6: str, timeout: float = 300) -> None:
     """Expect Unity output while serving ArduinoOTA uploads via espota.py."""
     deadline = time.time() + timeout
     log = b""

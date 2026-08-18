@@ -135,9 +135,7 @@ static bool runArduinoOtaUpload(const char *auth, const IPAddress &listen_ip) {
 
   // Pytest watches for this line and runs tools/espota.py.
   // IPv6 addresses may contain ':' — fields are space-separated.
-  Serial.printf(
-    "ARDUINO_OTA_BEGIN %s %u %s\n", listen_ip.toString().c_str(), ARDUINO_OTA_PORT, (auth && auth[0]) ? auth : "NONE"
-  );
+  Serial.printf("ARDUINO_OTA_BEGIN %s %u %s\n", listen_ip.toString().c_str(), ARDUINO_OTA_PORT, (auth && auth[0]) ? auth : "NONE");
 
   unsigned long start = millis();
   while (!s_ota_done && (millis() - start) < ARDUINO_OTA_TIMEOUT_MS) {
@@ -235,9 +233,7 @@ void test_arduino_ota_ipv4_with_ipv6_enabled(void) {
   if (!ensureIPv6Enabled()) {
     TEST_IGNORE_MESSAGE("Failed to enable IPv6 on DUT");
   }
-  TEST_ASSERT_TRUE_MESSAGE(
-    runArduinoOtaUpload(nullptr, WiFi.localIP()), "IPv4 ArduinoOTA failed while IPv6 was enabled"
-  );
+  TEST_ASSERT_TRUE_MESSAGE(runArduinoOtaUpload(nullptr, WiFi.localIP()), "IPv4 ArduinoOTA failed while IPv6 was enabled");
 #endif
 }
 
@@ -259,9 +255,7 @@ void test_arduino_ota_ipv4_after_ipv6(void) {
 
   IPAddress v6 = WiFi.globalIPv6();
   TEST_ASSERT_TRUE_MESSAGE(runArduinoOtaUpload(nullptr, v6), "IPv6 upload (setup for v4-after-v6) failed");
-  TEST_ASSERT_TRUE_MESSAGE(
-    runArduinoOtaUpload(nullptr, WiFi.localIP()), "IPv4 ArduinoOTA failed after a prior IPv6 upload"
-  );
+  TEST_ASSERT_TRUE_MESSAGE(runArduinoOtaUpload(nullptr, WiFi.localIP()), "IPv4 ArduinoOTA failed after a prior IPv6 upload");
 #endif
 }
 
@@ -380,9 +374,7 @@ void test_httpupdate_download_ipv6(void) {
   httpUpdate.rebootOnUpdate(false);
   String url = "http://[" + server_host_v6 + "]:" + String(server_port_v6) + "/ota.ino.bin";
   HTTPUpdateResult ret = httpUpdate.update(client, url);
-  TEST_ASSERT_TRUE_MESSAGE(
-    ret == HTTP_UPDATE_OK || ret == HTTP_UPDATE_NO_UPDATES, "HTTPUpdate IPv6 download failed"
-  );
+  TEST_ASSERT_TRUE_MESSAGE(ret == HTTP_UPDATE_OK || ret == HTTP_UPDATE_NO_UPDATES, "HTTPUpdate IPv6 download failed");
 #endif
 }
 
