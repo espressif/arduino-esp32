@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 // Any endpoint accepts any of these tags — they're presets, not a gate tied to a specific device type.
 // Use MatterTags::createTag() for a tag outside these namespaces, or a custom label.
 // For the Switches Custom tag, use MatterTags::Switches::createCustomTag(label).
-// For Position Row/Column (label required), use MatterTags::Position::createRowTag() / createColumnTag().
+// For Position Row/Column (non-empty label required), use MatterTags::Position::createRowTag() / createColumnTag().
 // Position and Location tag values use CHIP Globals::PositionTag / LocationTag (same pattern as
 // MatterFan's FanModeEnum). Number, Switches, and namespace IDs have no CHIP constants in this SDK.
 namespace MatterTags {
@@ -43,7 +43,8 @@ static constexpr MatterTag Right = {NS, (uint8_t)PositionTag::kRight};
 static constexpr MatterTag Top = {NS, (uint8_t)PositionTag::kTop};
 static constexpr MatterTag Bottom = {NS, (uint8_t)PositionTag::kBottom};
 static constexpr MatterTag Middle = {NS, (uint8_t)PositionTag::kMiddle};
-// Row and Column require a numeric label (e.g. "1"); the string must outlive the endpoint.
+// Row and Column require a non-empty label (Matter spec: Arabic numeral, first row/column is "1");
+// the string must outlive the endpoint.
 static constexpr uint8_t Row = (uint8_t)PositionTag::kRow;
 static constexpr uint8_t Column = (uint8_t)PositionTag::kColumn;
 constexpr MatterTag createRowTag(const char *label) {

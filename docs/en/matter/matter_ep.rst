@@ -177,7 +177,7 @@ Call ``setTagList()`` after the endpoint ``begin()`` and before ``Matter.begin()
 
 At most ``MatterEndPoint::MAX_TAG_LIST_SIZE`` (3) tags are accepted. That limit comes from esp-matter (``ESP_MATTER_MAX_SEMANTIC_TAG_COUNT``). Optional ``label`` pointers are not copied and must remain valid for as long as the endpoint is running (string literals are fine).
 
-Named presets live in ``MatterTags`` (see ``MatterTags.h``): ``Position``, ``Number``, ``Switches``, and ``Location``. Use ``MatterTags::createTag(namespaceId, tag, label)`` for a custom namespace/tag/label combination. For a Switches Custom tag with a user-visible label, use ``MatterTags::Switches::createCustomTag(label)``. Position Row/Column tags also require a label (an Arabic numeral such as ``"1"``); use ``MatterTags::Position::createRowTag(label)`` and ``createColumnTag(label)``.
+Named presets live in ``MatterTags`` (see ``MatterTags.h``): ``Position``, ``Number``, ``Switches``, and ``Location``. Use ``MatterTags::createTag(namespaceId, tag, label)`` for a custom namespace/tag/label combination. For a Switches Custom tag with a user-visible label, use ``MatterTags::Switches::createCustomTag(label)``. Position Row/Column tags require a non-empty label; the Matter spec uses an Arabic numeral such as ``"1"`` for the first row/column. Use ``MatterTags::Position::createRowTag(label)`` and ``createColumnTag(label)``.
 
 setTagList
 ^^^^^^^^^^
@@ -206,7 +206,7 @@ Example usage:
     Light2.setTagList({MatterTags::Position::Middle, MatterTags::Number::Two});
     Light3.setTagList({MatterTags::Location::Outdoor, MatterTags::Position::Bottom});
 
-    // Position Row/Column require a numeric label (first row/column is "1")
+    // Position Row/Column require a non-empty label (spec uses "1" for the first row/column)
     GridCell.setTagList({MatterTags::Position::createRowTag("1"), MatterTags::Position::createColumnTag("2")});
 
     ButtonOn.begin();

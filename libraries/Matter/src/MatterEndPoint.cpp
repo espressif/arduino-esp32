@@ -197,11 +197,11 @@ bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
       return false;
     }
     if (tagList[i].namespaceId == MatterTags::Position::NS && tagList[i].tag == MatterTags::Position::Row && emptyLabel) {
-      log_e("Position Row tag requires a numeric label. Use MatterTags::Position::createRowTag().");
+      log_e("Position Row tag requires a non-empty label. Use MatterTags::Position::createRowTag().");
       return false;
     }
     if (tagList[i].namespaceId == MatterTags::Position::NS && tagList[i].tag == MatterTags::Position::Column && emptyLabel) {
-      log_e("Position Column tag requires a numeric label. Use MatterTags::Position::createColumnTag().");
+      log_e("Position Column tag requires a non-empty label. Use MatterTags::Position::createColumnTag().");
       return false;
     }
   }
