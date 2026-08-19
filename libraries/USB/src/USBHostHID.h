@@ -14,9 +14,11 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <cstddef>
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
+#include "sdkconfig.h"
+#if CONFIG_TINYUSB_ENABLED
 
 #if __has_include("tusb_config.h")
 #include "tusb_config.h"
@@ -24,6 +26,12 @@
 #ifndef CFG_TUH_HID
 #define CFG_TUH_HID 0
 #endif
+
+#if CFG_TUH_ENABLED && CFG_TUH_HID
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <cstddef>
 
 /* TinyUSB / host-worker hooks are C linkage — declare before friend so we do not
  * introduce conflicting C++ linkage names in this header. */
@@ -139,3 +147,7 @@ private:
 };
 
 extern USBHostHIDClass USBHostHID;
+
+#endif /* CFG_TUH_ENABLED && CFG_TUH_HID */
+#endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */
