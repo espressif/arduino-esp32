@@ -228,7 +228,8 @@ void OThreadDNSSDClass::wireOtService(ServiceSlot &slot) {
     }
     otDnsTxtEntry &e = slot.txtEntries[slot.numTxt];
     e.mKey = slot.txt[i].key;
-    e.mValue = slot.txt[i].value;
+    // NULL mValue => boolean TXT "key"; non-NULL + length 0 => "key=".
+    e.mValue = (slot.txt[i].valueLen > 0) ? slot.txt[i].value : nullptr;
     e.mValueLength = slot.txt[i].valueLen;
     slot.numTxt++;
   }
