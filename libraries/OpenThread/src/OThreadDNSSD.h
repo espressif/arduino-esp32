@@ -256,8 +256,7 @@ public:
    * @return true if configured successfully; false on missing stack, bad name,
    *         or OpenThread error. False is local/config, not "SRP server not
    *         ready". Do not call addService / query APIs until a later successful
-   *         begin(). Arduino `return` from `setup()` still runs `loop()` —
-   *         typical sketches halt instead of returning.
+   *         begin().
    */
   bool begin(const char *hostName);
   bool begin(const String &hostName) {

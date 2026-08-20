@@ -45,7 +45,7 @@ OThread.start();
 
 OThreadDNSSD.begin("ot-light");
 OThreadDNSSD.addService("otlight", "udp", LIGHT_PORT);
-OThreadDNSSD.waitForAnnounce(60000);
+OThreadDNSSD.waitForAnnounce(60000);  // timeout is not fatal — loop polls isAnnounceComplete()
 
 OtUdp.begin(LIGHT_PORT);
 // loop: parsePacket -> ON/OFF/TOGGLE/STATUS -> unicast ACK/STATE
@@ -75,6 +75,8 @@ RX [fd..]:xxxxx <- 'TOGGLE'
 role=Child announce=1 lamp=ON
 ```
 
+If SRP is late, expect `FAIL: announce timeout` then `UDP listening`, and later `PASS: announced` once `isAnnounceComplete()` becomes true. Switch/web cannot discover the lamp until that `PASS`.
+
 ## Customization
 
 | Constant     | Purpose                                      |
@@ -92,7 +94,7 @@ If you change `kHostName` or `LIGHT_PORT`, mirror the service type / port on
 | ------- | ------------ |
 | `FAIL: not attached` | Wrong Network Key vs OTBR (sketch **halts**) |
 | `FAIL: OThreadDNSSD.begin` / `addService` / `UDP begin` | Local/config error (sketch **halts**) |
-| `FAIL: announce` / timeout | No SRP server; wait longer; check `srp server service` on OTBR (sketch **halts** — lamp UDP is not started) |
+| `FAIL: announce timeout` | No SRP server yet — UDP still listens; `loop()` polls `isAnnounceComplete()` (same as Advertise) |
 | `OT_ERROR_DUPLICATED` | Name conflict — unique hostname, Sketch Only erase, or clear OTBR SRP |
 | No `RX` lines when switch presses BOOT | Switch not discovering this host, or different Thread network |
 

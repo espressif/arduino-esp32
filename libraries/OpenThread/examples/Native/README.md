@@ -192,8 +192,6 @@ int n = OThreadDNSSD.queryService("ot", "udp");
 
 See [Native ThreadDNSSD examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD)
 (advertise / callback / remove / query / queryHost / query callback / UDP Light).
-Those sketches halt on a failed `begin()` instead of returning from `setup()`
-(Arduino still runs `loop()`).
 
 ## Native vs CLI: quick comparison
 

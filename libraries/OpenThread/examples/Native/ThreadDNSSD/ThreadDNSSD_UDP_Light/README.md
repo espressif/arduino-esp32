@@ -68,7 +68,7 @@ troubleshooting.
 | Symptom | Likely cause |
 | --- | --- |
 | Light `not attached` / `FAIL: OThreadDNSSD.begin` | Wrong `OT_NETKEY` vs OTBR, or local DNSSD setup (sketches **halt**) |
-| Light `announce timeout` | No SRP server in Network Data (light **halts**; UDP lamp is not started) |
+| Light `announce timeout` | No SRP server yet — UDP still listens; `loop()` polls `isAnnounceComplete()` |
 | `OT_ERROR_DUPLICATED` | SRP name held by another key — unique hostname, Sketch Only erase, or clear OTBR SRP soft state |
 | Switch finds 0 instances | Light not announced; no DNS on OTBR; wrong network |
 | Web `FAIL: WiFi connect` / `FAIL: MDNS.begin` / `FAIL: WiFiUDP begin` | Fatal setup — sketch **halts** so HTTP is not served without a socket |

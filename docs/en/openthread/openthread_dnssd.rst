@@ -129,11 +129,14 @@ Quick start (advertise)
       if (OThreadDNSSD.waitForAnnounce(30000)) {
         Serial.println("Service announced");
       } else {
-        Serial.println("Announce timed out (no SRP server / not attached?)");
+        Serial.println("Announce timed out (no SRP server yet?) — keep polling");
       }
     }
 
-    void loop() {}
+    void loop() {
+      delay(5000);
+      Serial.printf("announceComplete=%d\r\n", OThreadDNSSD.isAnnounceComplete());
+    }
 
 Quick start (discover)
 ----------------------
@@ -155,8 +158,10 @@ Quick start (discover)
     IPAddress a = OThreadDNSSD.queryHost("sensor-1");
 
 Pair a second board running ``ThreadDNSSD_Advertise`` on the same Network Key.
-``return`` from ``setup()`` still runs ``loop()``; Native examples halt on a
-failed ``begin()`` so discover is not retried without a client.
+A failed ``begin()`` is local/config — do not call query APIs until it succeeds.
+Arduino ``return`` from ``setup()`` still runs ``loop()``; see the Native
+ThreadDNSSD examples (simple sketches halt; ``ThreadDNSSD_Advertise_Callback``
+retries ``begin()`` from ``loop()``).
 
 API summary
 -----------
@@ -165,8 +170,7 @@ API summary
   Prefer a per-device unique label when several nodes share one OTBR.
   Discover-only sketches also register this host (SRP auto-start selects the DNS server).
   ``false`` is a local/config failure, not "SRP server not ready". Do not call
-  advertise/query APIs until a later successful ``begin()``. Arduino ``return``
-  from ``setup()`` still runs ``loop()`` — Native examples halt instead.
+  advertise/query APIs until a later successful ``begin()``.
 * ``const char *hostname()`` — local host label from ``begin()``.
   After a browse, ``hostname(i)`` is the **discovered** host at index ``i``.
 * ``void end()`` — unregister locally and stop the SRP client (also called from
@@ -196,8 +200,9 @@ API summary
 * ``bool waitForAnnounce(timeoutMs)`` — success, terminal error, or timeout.
   ``OT_ERROR_DUPLICATED`` / ``OT_ERROR_SECURITY`` end the wait with ``false``
   (library does not rename); the sketch chooses the next action. Transient
-  errors keep waiting until the timeout. After a terminal failure, poll
-  ``isAnnounceComplete()`` if OpenThread may still reach ``Registered`` later.
+  errors keep waiting until the timeout. Timeout is not terminal — poll
+  ``isAnnounceComplete()`` if OpenThread may still reach ``Registered`` later
+  (same after a name-conflict fail if the OTBR later frees the name).
 * ``otError lastError()`` — last SRP or DNS callback error.
 * ``int queryService(service, proto)`` — DNS browse; fills a fixed result pool
   (needs ``CONFIG_OPENTHREAD_DNS_CLIENT``).

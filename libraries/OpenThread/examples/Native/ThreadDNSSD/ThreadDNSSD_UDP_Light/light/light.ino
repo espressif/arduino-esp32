@@ -38,6 +38,7 @@ OThreadUDP OtUdp;
 static bool lampOn = false;
 static uint8_t s_currentLevel = 0;
 static bool s_ready = false;
+static bool s_announcedLogged = false;
 
 static void fadeTo(uint8_t target) {
   if (s_currentLevel == target) {
@@ -75,7 +76,7 @@ static bool waitAttached(uint32_t timeoutMs) {
   return false;
 }
 
-// Returning from setup() still runs loop(); halt so UDP is not served without announce.
+// Returning from setup() still runs loop(); halt on attach / begin / UDP bind only.
 static void halt(const char *msg) {
   Serial.println(msg);
   while (true) {
@@ -112,12 +113,15 @@ void setup() {
   (void)OThreadDNSSD.addServiceTxt("otlight", "udp", "cmds", "on,off,toggle,status");
 
   Serial.println("Waiting for SRP announce...");
-  if (!OThreadDNSSD.waitForAnnounce(60000)) {
-    char msg[48];
-    snprintf(msg, sizeof(msg), "FAIL: announce (lastError=%d)", (int)OThreadDNSSD.lastError());
-    halt(msg);
+  if (OThreadDNSSD.waitForAnnounce(60000)) {
+    Serial.printf("PASS: announced as %s _otlight._udp:%u\r\n", OThreadDNSSD.hostname(), LIGHT_PORT);
+    s_announcedLogged = true;
+  } else {
+    Serial.printf(
+      "FAIL: announce timeout (lastError=%d) — starting UDP anyway; polling isAnnounceComplete()\r\n",
+      (int)OThreadDNSSD.lastError()
+    );
   }
-  Serial.printf("PASS: announced as %s _otlight._udp:%u\r\n", OThreadDNSSD.hostname(), LIGHT_PORT);
 
   if (!OtUdp.begin(LIGHT_PORT)) {
     halt("FAIL: UDP begin");
@@ -158,6 +162,10 @@ void loop() {
   }
 
   static uint32_t lastPrint = 0;
+  if (!s_announcedLogged && OThreadDNSSD.isAnnounceComplete()) {
+    s_announcedLogged = true;
+    Serial.printf("PASS: announced as %s _otlight._udp:%u\r\n", OThreadDNSSD.hostname(), LIGHT_PORT);
+  }
   if (millis() - lastPrint > 10000) {
     lastPrint = millis();
     Serial.printf(
