@@ -113,6 +113,7 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
   setEndPointId(endpoint::get_id(endpoint));
   log_i("Fan created with endpoint_id %u", getEndPointId());
 
+  // Feature Map
   attribute_t *attr = getAttribute(FanControl::Id, Globals::Attributes::FeatureMap::Id);
   if (attr != nullptr) {
     esp_matter_attr_val_t featureMapVal = esp_matter_invalid(NULL);
@@ -125,7 +126,28 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
     }
   } else {
     log_e("Failed to get Fan Feature Map Attribute.");
-  } 
+  }
+
+  // Rock Support
+  attr = getAttribute(FanControl::Id, FanControl::Attributes::RockSupport::Id);
+  if (attr != nullptr) {
+    esp_matter_attr_val_t rockSupportVal = esp_matter_invalid(NULL);
+    attribute::get_val(attr, &rockSupportVal);
+    log_d("Fan Rock Support: 0x%08x", rockSupportVal.val.u32);
+  }
+  else {
+    log_e("Failed to get Fan Rock Support Attribute.");
+    cluster_t *cluster = cluster::get(endpoint, FanControl::Id);
+    if (cluster == nullptr) {
+      log_e("Failed to get FanControl Cluster.");
+      return false;
+    }
+    attr = fan_control::attribute::create_rock_support(cluster, static_cast<uint8_t>(FanControl::RockBitmap::kRockUpDown));
+    if (attr == nullptr) {
+      log_e("Failed to create Fan Rock Support Attribute.");
+      return false;
+    }
+  }
 
   started = true;
   return true;
