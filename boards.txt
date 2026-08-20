@@ -61002,3 +61002,111 @@ es32lab.menu.DebugLevel.verbose.build.code_debug=5
 es32lab.menu.EraseFlash.none=Disabled
 es32lab.menu.EraseFlash.all=Enabled
 es32lab.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+edge_dalton.name=Edge Dalton (ESP32C3)
+
+edge_dalton.bootloader.tool=esptool_py
+edge_dalton.bootloader.tool.default=esptool_py
+
+edge_dalton.upload.tool=esptool_py
+edge_dalton.upload.tool.default=esptool_py
+edge_dalton.upload.tool.network=esp_ota
+
+edge_dalton.upload.maximum_size=1310720
+edge_dalton.upload.maximum_data_size=327680
+edge_dalton.upload.flags=
+edge_dalton.upload.extra_flags=
+edge_dalton.upload.use_1200bps_touch=false
+edge_dalton.upload.wait_for_upload_port=false
+edge_dalton.upload.erase_cmd=
+
+edge_dalton.serial.disableDTR=false
+edge_dalton.serial.disableRTS=false
+
+# --- Core Architecture for C3 ---
+edge_dalton.build.tarch=riscv32
+edge_dalton.build.target=esp
+edge_dalton.build.mcu=esp32c3
+edge_dalton.build.core=esp32
+edge_dalton.build.variant=edge_dalton
+edge_dalton.build.board=ESP32C3_DEV
+edge_dalton.build.bootloader_addr=0x0
+
+edge_dalton.build.cdc_on_boot=0
+edge_dalton.build.f_cpu=160000000L
+edge_dalton.build.flash_size=4MB
+edge_dalton.build.flash_freq=80m
+edge_dalton.build.flash_mode=dio
+edge_dalton.build.boot=dio
+edge_dalton.build.partitions=default
+edge_dalton.build.defines=
+
+# --- USB CDC On Boot Menu (Native USB) ---
+edge_dalton.menu.CDCOnBoot.default=Disabled
+edge_dalton.menu.CDCOnBoot.default.build.cdc_on_boot=0
+edge_dalton.menu.CDCOnBoot.cdc=Enabled
+edge_dalton.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+# --- Partition Scheme Menu ---
+edge_dalton.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+edge_dalton.menu.PartitionScheme.default.build.partitions=default
+edge_dalton.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+edge_dalton.menu.PartitionScheme.minimal.build.partitions=minimal
+edge_dalton.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+edge_dalton.menu.PartitionScheme.no_ota.build.partitions=no_ota
+edge_dalton.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+edge_dalton.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+edge_dalton.menu.PartitionScheme.huge_app.build.partitions=huge_app
+edge_dalton.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+# --- CPU Frequency Menu ---
+edge_dalton.menu.CPUFreq.160=160MHz (WiFi)
+edge_dalton.menu.CPUFreq.160.build.f_cpu=160000000L
+edge_dalton.menu.CPUFreq.80=80MHz (WiFi)
+edge_dalton.menu.CPUFreq.80.build.f_cpu=80000000L
+edge_dalton.menu.CPUFreq.40=40MHz
+edge_dalton.menu.CPUFreq.40.build.f_cpu=40000000L
+
+# --- Flash Mode Menu ---
+edge_dalton.menu.FlashMode.qio=QIO
+edge_dalton.menu.FlashMode.qio.build.flash_mode=dio
+edge_dalton.menu.FlashMode.qio.build.boot=qio
+edge_dalton.menu.FlashMode.dio=DIO
+edge_dalton.menu.FlashMode.dio.build.flash_mode=dio
+edge_dalton.menu.FlashMode.dio.build.boot=dio
+
+# --- Flash Frequency Menu ---
+edge_dalton.menu.FlashFreq.80=80MHz
+edge_dalton.menu.FlashFreq.80.build.flash_freq=80m
+edge_dalton.menu.FlashFreq.40=40MHz
+edge_dalton.menu.FlashFreq.40.build.flash_freq=40m
+
+# --- Upload Speed Menu ---
+edge_dalton.menu.UploadSpeed.921600=921600
+edge_dalton.menu.UploadSpeed.921600.upload.speed=921600
+edge_dalton.menu.UploadSpeed.115200=115200
+edge_dalton.menu.UploadSpeed.115200.upload.speed=115200
+edge_dalton.menu.UploadSpeed.460800=460800
+edge_dalton.menu.UploadSpeed.460800.upload.speed=460800
+
+# --- Core Debug Level Menu ---
+edge_dalton.menu.DebugLevel.none=None
+edge_dalton.menu.DebugLevel.none.build.code_debug=0
+edge_dalton.menu.DebugLevel.error=Error
+edge_dalton.menu.DebugLevel.error.build.code_debug=1
+edge_dalton.menu.DebugLevel.warn=Warn
+edge_dalton.menu.DebugLevel.warn.build.code_debug=2
+edge_dalton.menu.DebugLevel.info=Info
+edge_dalton.menu.DebugLevel.info.build.code_debug=3
+edge_dalton.menu.DebugLevel.debug=Debug
+edge_dalton.menu.DebugLevel.debug.build.code_debug=4
+edge_dalton.menu.DebugLevel.verbose=Verbose
+edge_dalton.menu.DebugLevel.verbose.build.code_debug=5
+
+# --- Erase Flash Menu ---
+edge_dalton.menu.EraseFlash.none=Disabled
+edge_dalton.menu.EraseFlash.none.upload.erase_cmd=
+edge_dalton.menu.EraseFlash.all=Enabled
+edge_dalton.menu.EraseFlash.all.upload.erase_cmd=-e
+##############################################################
