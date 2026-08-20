@@ -76,17 +76,17 @@ esp_matter::attribute_t *MatterEndPoint::getAttribute(uint32_t cluster_id, uint3
   }
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   if (endpoint == nullptr) {
-    log_e("Endpoint [%]u not found", endpoint_id);
+    log_e("Endpoint [%" PRIu16 "] not found", endpoint_id);
     return nullptr;
   }
   cluster_t *cluster = cluster::get(endpoint, cluster_id);
   if (cluster == nullptr) {
-    log_e("Cluster [%]" PRIu32 " not found", cluster_id);
+    log_e("Cluster [%" PRIu32 "] not found", cluster_id);
     return nullptr;
   }
   esp_matter::attribute_t *attribute = attribute::get(cluster, attribute_id);
   if (attribute == nullptr) {
-    log_e("Attribute [%]" PRIu32 " not found", attribute_id);
+    log_e("Attribute [%" PRIu32 "] not found", attribute_id);
     return nullptr;
   }
   return attribute;
