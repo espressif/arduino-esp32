@@ -206,7 +206,7 @@ const char *getClockSourceName(uint8_t source) {
 }
 
 const char *getSupportedCpuFrequencyMhz(uint8_t xtal) {
-  const size_t buf_size = 256;
+  constexpr size_t buf_size = 256;
   static char buf[buf_size];
   int pos = 0;
 
