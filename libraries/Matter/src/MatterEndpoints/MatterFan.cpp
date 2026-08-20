@@ -74,8 +74,8 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
         if (ret == true) {
           // change setting speed percent
           currentPercent = val->val.u8;
-          setAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, val);
-          setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, val);
+          //setAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, val);
+          //setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, val);
         }
         break;
     }
