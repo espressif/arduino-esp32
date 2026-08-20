@@ -19,8 +19,23 @@
 #include <Arduino.h>
 #include <esp_matter.h>
 #include <functional>
+#include <initializer_list>
 
 using namespace esp_matter;
+
+// A single Matter semantic tag (Descriptor cluster TagList entry). Tags disambiguate sibling
+// endpoints that expose the same device type, or otherwise clarify an endpoint's role/position
+// (e.g. tagging 3 buttons with Number (One/Two/Three) and Position (Top/Middle/Bottom) tags so a
+// controller can tell them apart).
+// namespaceId/tag values come from the Matter "Standard Namespaces" specification:
+// https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
+// See MatterTags.h for named constants covering the common namespaces (no magic numbers required)
+// and MatterTags::createTag() for a custom namespace/tag/label combination.
+struct MatterTag {
+  uint8_t namespaceId;
+  uint8_t tag;
+  const char *label = nullptr;  // optional, nullptr = no label
+};
 
 // Matter Endpoint Base Class. Controls the endpoint ID and allows the child class to overwrite attribute change call
 class MatterEndPoint {
@@ -67,11 +82,34 @@ public:
   // User callback for the Identify Cluster functionality
   void onIdentify(EndPointIdentifyCB onEndPointIdentifyCB);
 
+  // Maximum number of Descriptor TagList entries per endpoint.
+  // Matches esp-matter ESP_MATTER_MAX_SEMANTIC_TAG_COUNT.
+  static constexpr uint8_t MAX_TAG_LIST_SIZE = 3;
+
+  // Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
+  // Enables the TagList feature on first use. Call after the endpoint begin() and before Matter.begin().
+  // At most MAX_TAG_LIST_SIZE entries are accepted.
+  // Switches Custom and Position Row/Column tags require a non-empty label;
+  // use createCustomTag(), createRowTag(), or createColumnTag().
+  // Each entry's optional `label` pointer, if set, must remain valid for as long as this endpoint is running
+  // (it is not copied).
+  bool setTagList(const MatterTag *tagList, uint8_t count);
+
+  // Convenience overload: Light1.setTagList({MatterTags::Position::Top, MatterTags::Number::One});
+  bool setTagList(std::initializer_list<MatterTag> tagList);
+
 protected:
   // used for secondary network interface endpoints
   static uint16_t secondary_network_endpoint_id;
   // main endpoint ID
   uint16_t endpoint_id = 0;
   EndPointIdentifyCB _onEndPointIdentifyCB = nullptr;
+  bool tagListEnabled = false;
+
+  // Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.
+  // Called automatically by setTagList(). Idempotent.
+  // Subclasses that want TagList advertised even when the sketch never calls setTagList()
+  // (Generic Switch) may call this from begin() after setEndPointId().
+  bool enableTagList();
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterWaterLeakDetector.h>
 
 using namespace esp_matter;
@@ -62,6 +61,7 @@ bool MatterWaterLeakDetector::begin(bool _leakState) {
   }
   leakState = _leakState;
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Water Leak Detector created with endpoint_id %u", getEndPointId());
 
   started = true;

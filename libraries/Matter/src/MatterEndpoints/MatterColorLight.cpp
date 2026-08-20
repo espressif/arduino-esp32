@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterColorLight.h>
 
 using namespace esp_matter;
@@ -177,6 +176,7 @@ bool MatterColorLight::begin(bool initialState, espHsvColor_t _colorHSV) {
   color_control::feature::hue_saturation::add(color_control_cluster, &hs_config);
 
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("RGB Color Light created with endpoint_id %u", getEndPointId());
 
   /* Mark deferred persistence for some attributes that might be changed rapidly */

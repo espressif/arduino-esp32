@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterDimmableLight.h>
 
 using namespace esp_matter;
@@ -100,6 +99,7 @@ bool MatterDimmableLight::begin(bool initialState, uint8_t brightness) {
   }
 
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Dimmable Light created with endpoint_id %u", getEndPointId());
 
   /* Mark deferred persistence for some attributes that might be changed rapidly */
