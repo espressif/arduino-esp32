@@ -13,7 +13,7 @@ Each Matter device type is represented by a C++ class under `src/MatterEndpoints
 
 This library is built on ESP-Matter, which uses an Ember-based attribute store. The attribute store is the protocol-level source of truth: when a Matter controller reads an attribute, it reads from this store.
 
-All endpoint setters and getters **must** follow one of the two patterns below.
+Most endpoint setters and getters **must** follow one of the two Ember store patterns below. Boolean State sensors are the exception: their `StateValue` is internally managed in ESP-Matter 1.5+ and cannot be written with `updateAttributeVal()`.
 
 ### Setter Pattern
 
@@ -64,6 +64,29 @@ int MyEndpoint::getValue() {
 
 This is consistent across all endpoints. Since setters only update internal state after the attribute store succeeds, the getter always reflects the last successfully committed value.
 
+### Boolean State Sensors (ESP-Matter 1.5+)
+
+`MatterContactSensor`, `MatterWaterLeakDetector`, `MatterWaterFreezeDetector`, and `MatterRainSensor` use the code-driven Boolean State cluster. `attribute::update()` returns `ESP_ERR_NOT_SUPPORTED` (262) for `StateValue`. Those setters call `MatterEndPoint::setBooleanStateValue()`, which looks up the live cluster and uses `BooleanStateCluster::SetStateValue()`.
+
+```cpp
+bool MatterWaterLeakDetector::setLeak(bool _leakState) {
+  if (leakState == _leakState) {
+    return true;
+  }
+  if (!setBooleanStateValue(_leakState)) {
+    log_e("Failed to update Water Leak Detector Attribute.");
+    return false;
+  }
+  leakState = _leakState;
+  return true;
+}
+```
+
+Key rules:
+- **`begin()` takes no initial state.** The cluster always starts at `false`. Do not write `config.boolean_state.state_value`; CHIP does not apply that config to the live cluster.
+- **Call the setter after `Matter.begin()`.** The cluster instance is not available before the stack starts. Sketches should `begin()` the endpoint, then `Matter.begin()`, then `setLeak()` / `setFreeze()` / `setRain()` / `setContact()` with the real sensor reading.
+- Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
+
 ### Controller-Originated Changes (attributeChangeCB)
 
 When a Matter controller changes an attribute (e.g., turning a light on via an app), the flow is:
@@ -93,6 +116,8 @@ bool MyEndpoint::begin(bool initialState, uint8_t brightness) {
   // ...
 }
 ```
+
+Boolean State sensors (`MatterContactSensor`, `MatterWaterLeakDetector`, `MatterWaterFreezeDetector`, `MatterRainSensor`) are the exception: `begin()` takes no arguments, does not set `config.boolean_state.state_value`, and forces the local cache to `false`. Apply the real sensor with the setter after `Matter.begin()`.
 
 ### updateAttributeVal vs setAttributeVal
 
