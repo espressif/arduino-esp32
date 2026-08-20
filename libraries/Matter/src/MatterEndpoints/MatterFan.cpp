@@ -112,7 +112,20 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
 
   setEndPointId(endpoint::get_id(endpoint));
   log_i("Fan created with endpoint_id %u", getEndPointId());
-  
+
+  attribute_t *attr = getAttribute(FanControl::Id, Globals::Attributes::FeatureMap::Id);
+  if (attr != nullptr) {
+    esp_matter_attr_val_t featureMapVal = esp_matter_invalid(NULL);
+    attribute::get_val(attr, &featureMapVal);
+    log_d("Fan Feature Map: 0x%08x", featureMapVal.val.u32);
+    featureMapVal.val.u32 |= static_cast<uint32_t>(FanControl::Feature::kAuto) | static_cast<uint32_t>(FanControl::Feature::kMultiSpeed) | static_cast<uint32_t>(FanControl::Feature::kRocking);
+    log_d("Fan Feature Map updated to: 0x%08x", featureMapVal.val.u32);
+    if (attribute::set_val(attr, &featureMapVal, false) != ESP_OK) {
+      log_e("Failed to update Fan Feature Map Attribute.");
+    }
+  } else {
+    log_e("Failed to get Fan Feature Map Attribute.");
+  } 
 
   started = true;
   return true;
