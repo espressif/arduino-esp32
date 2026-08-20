@@ -49,7 +49,13 @@ static volatile bool s_ota_ok = false;
 static volatile int s_ota_error = -1;
 
 void setUp(void) {}
-void tearDown(void) {}
+void tearDown(void) {
+  httpUpdate.setMD5sum("");
+  httpUpdate.setSHA256sum("");
+  if (Update.isRunning()) {
+    Update.abort();
+  }
+}
 
 static bool connectWiFi() {
   if (WiFi.STA.status() == WL_CONNECTED) {
@@ -174,6 +180,13 @@ void test_update_error_no_begin(void) {
 void test_update_md5_check(void) {
   TEST_ASSERT_TRUE(Update.begin(1024));
   Update.setMD5("d41d8cd98f00b204e9800998ecf8427e");
+  Update.abort();
+}
+
+void test_update_sha256_format(void) {
+  TEST_ASSERT_TRUE(Update.begin(1024));
+  TEST_ASSERT_FALSE(Update.setSHA256("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b85z"));
+  TEST_ASSERT_TRUE(Update.setSHA256("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
   Update.abort();
 }
 
@@ -343,6 +356,39 @@ void test_httpupdate_invalid_url_ipv6(void) {
 #endif
 }
 
+void test_httpupdate_invalid_checksums_abort(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  String url = server_url + "/ota.ino.bin";
+
+  httpUpdate.setMD5sum("invalid");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, url));
+  TEST_ASSERT_FALSE(Update.isRunning());
+  httpUpdate.setMD5sum("");
+
+  httpUpdate.setSHA256sum("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b85z");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, url));
+  TEST_ASSERT_FALSE(Update.isRunning());
+  httpUpdate.setSHA256sum("");
+}
+
+void test_httpupdate_wrong_sha256_has_no_digest(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sum("0000000000000000000000000000000000000000000000000000000000000000");
+  String url = server_url + "/ota.ino.bin";
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, url));
+  TEST_ASSERT_FALSE(Update.isRunning());
+  TEST_ASSERT_TRUE(Update.sha256String().isEmpty());
+  httpUpdate.setSHA256sum("");
+}
+
 void test_httpupdate_download(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
   TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
@@ -352,7 +398,8 @@ void test_httpupdate_download(void) {
   String url = server_url + "/ota.ino.bin";
   HTTPUpdateResult ret = httpUpdate.update(client, url);
 
-  TEST_ASSERT_TRUE_MESSAGE(ret == HTTP_UPDATE_OK || ret == HTTP_UPDATE_NO_UPDATES, "HTTPUpdate could not connect to server or download failed");
+  TEST_ASSERT_EQUAL_MESSAGE(HTTP_UPDATE_OK, ret, "HTTPUpdate could not connect to server or download failed");
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
 }
 
 void test_httpupdate_download_ipv6(void) {
@@ -479,9 +526,12 @@ void setup() {
   RUN_TEST(test_update_begin_abort);
   RUN_TEST(test_update_error_no_begin);
   RUN_TEST(test_update_md5_check);
+  RUN_TEST(test_update_sha256_format);
   RUN_TEST(test_arduino_ota_begin_end);
   RUN_TEST(test_httpupdate_invalid_url);
   RUN_TEST(test_httpupdate_invalid_url_ipv6);
+  RUN_TEST(test_httpupdate_invalid_checksums_abort);
+  RUN_TEST(test_httpupdate_wrong_sha256_has_no_digest);
   // ArduinoOTA uploads before HTTPUpdate download so partition state stays predictable.
   // Keep all no-auth cases before any setPassword() so leftover hashes cannot force AUTH.
   RUN_TEST(test_arduino_ota_upload_no_auth);
