@@ -318,6 +318,9 @@ public:
    *
    * Service must already exist via @ref addService. Fixed TXT slots per service.
    * Rejected if the service is still being removed.
+   * Values are C strings (`strlen`); an empty value is a boolean TXT key.
+   * Embedded NUL in the value is not supported. Discover getters (`txt` / `txtKey`)
+   * also return `String` (NUL-terminated).
    */
   bool addServiceTxt(const char *service, const char *proto, const char *key, const char *value);
   bool addServiceTxt(const String &service, const String &proto, const String &key, const String &value) {

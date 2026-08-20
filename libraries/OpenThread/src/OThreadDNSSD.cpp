@@ -350,6 +350,8 @@ void OThreadDNSSDClass::end() {
       otSrpClientClearHostAndServices(inst);
       otSrpClientStop(inst);
       otSrpClientSetCallback(inst, nullptr, nullptr);
+    } else if (inst && !lock) {
+      log_e("OThreadDNSSD: end() failed to acquire OT lock; clearing local state anyway");
     }
 #if defined(CONFIG_OPENTHREAD_DNS_CLIENT) && CONFIG_OPENTHREAD_DNS_CLIENT
     abortAsync = _queryInProgress && _queryAsync;

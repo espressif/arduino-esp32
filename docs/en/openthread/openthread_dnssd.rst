@@ -187,6 +187,8 @@ API summary
   Same service+proto updates in place (idempotent) unless a remove of that
   slot is still in flight.
 * ``bool addServiceTxt(service, proto, key, value)`` — TXT record on an existing service.
+  Values are C strings; empty value is a boolean key. Embedded NUL is not supported
+  (discover ``txt`` / ``txtKey`` also return ``String``).
 * ``bool addServiceSubtype(service, proto, subtype)`` — optional DNS-SD subtype
   (leading underscores stripped; duplicates are idempotent).
 * ``bool removeService(service, proto)`` — remove one service. The slot is not
