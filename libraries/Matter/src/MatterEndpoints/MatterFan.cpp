@@ -119,7 +119,8 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
     esp_matter_attr_val_t featureMapVal = esp_matter_invalid(NULL);
     attribute::get_val(attr, &featureMapVal);
     log_d("Fan Feature Map: 0x%08x", featureMapVal.val.u32);
-    featureMapVal.val.u32 |= static_cast<uint32_t>(FanControl::Feature::kAuto) | static_cast<uint32_t>(FanControl::Feature::kMultiSpeed) | static_cast<uint32_t>(FanControl::Feature::kRocking);
+    featureMapVal.val.u32 |= static_cast<uint32_t>(FanControl::Feature::kAuto) | static_cast<uint32_t>(FanControl::Feature::kMultiSpeed)
+                             | static_cast<uint32_t>(FanControl::Feature::kRocking);
     log_d("Fan Feature Map updated to: 0x%08x", featureMapVal.val.u32);
     if (attribute::set_val(attr, &featureMapVal, false) != ESP_OK) {
       log_e("Failed to update Fan Feature Map Attribute.");
@@ -134,8 +135,7 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
     esp_matter_attr_val_t rockSupportVal = esp_matter_invalid(NULL);
     attribute::get_val(attr, &rockSupportVal);
     log_d("Fan Rock Support: 0x%08x", rockSupportVal.val.u32);
-  }
-  else {
+  } else {
     log_e("Failed to get Fan Rock Support Attribute.");
     cluster_t *cluster = cluster::get(endpoint, FanControl::Id);
     if (cluster == nullptr) {
@@ -147,6 +147,20 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
       log_e("Failed to create Fan Rock Support Attribute.");
       return false;
     }
+  }
+
+  // Speed Max
+  cluster_t *cluster = cluster::get(endpoint, FanControl::Id);
+  attr = fan_control::attribute::create_speed_max(cluster, 5);
+  if (attr == nullptr) {
+    log_e("Failed to create Fan Speed Max Attribute.");
+    return false;
+  }
+
+  attr = fan_control::attribute::create_speed_setting(cluster, percent);
+  if (attr == nullptr) {
+    log_e("Failed to create Fan Speed Setting Attribute.");
+    return false;
   }
 
   started = true;
