@@ -412,6 +412,14 @@
                         "ram_percentage": 15
                         }]
                 },
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureBuiltinCACertBundle",
+                "sizes": [{
+                        "flash_bytes": 1191733,
+                        "flash_percentage": 38,
+                        "ram_bytes": 49636,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                 "sizes": [{
                         "flash_bytes": 1157803,
@@ -449,14 +457,6 @@
                         "flash_bytes": 1200293,
                         "flash_percentage": 92,
                         "ram_bytes": 47320,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
-                "sizes": [{
-                        "flash_bytes": 1201985,
-                        "flash_percentage": 92,
-                        "ram_bytes": 47296,
                         "ram_percentage": 14
                         }]
                 }
@@ -601,6 +601,14 @@
                         "ram_percentage": 13
                         }]
                 },
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureBuiltinCACertBundle",
+                "sizes": [{
+                        "flash_bytes": 1143772,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42880,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                 "sizes": [{
                         "flash_bytes": 1109862,
@@ -622,14 +630,6 @@
                         "flash_bytes": 1107414,
                         "flash_percentage": 84,
                         "ram_bytes": 42912,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
-                "sizes": [{
-                        "flash_bytes": 1085664,
-                        "flash_percentage": 83,
-                        "ram_bytes": 42904,
                         "ram_percentage": 13
                         }]
                 }

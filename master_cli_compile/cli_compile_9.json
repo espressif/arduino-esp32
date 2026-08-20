@@ -231,6 +231,14 @@
                         "ram_percentage": 11
                         }]
                 },
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureBuiltinCACertBundle",
+                "sizes": [{
+                        "flash_bytes": 1119467,
+                        "flash_percentage": 36,
+                        "ram_bytes": 36868,
+                        "ram_percentage": 11
+                        }]
+                },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                 "sizes": [{
                         "flash_bytes": 1085261,
@@ -278,20 +286,20 @@
                         "ram_bytes": 36000,
                         "ram_percentage": 11
                         }]
-                },
-{"name": "libraries/Preferences/examples/Prefs2Struct",
-                "sizes": [{
-                        "flash_bytes": 286996,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13224,
-                        "ram_percentage": 4
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet/client",
+                "sizes": [{
+                        "flash_bytes": 1070171,
+                        "flash_percentage": 82,
+                        "ram_bytes": 46772,
+                        "ram_percentage": 14
+                        }]
+                },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet/server",
                 "sizes": [{
                         "flash_bytes": 1076365,
@@ -451,20 +459,20 @@
                         "ram_bytes": 54100,
                         "ram_percentage": 17
                         }]
-                },
-{"name": "libraries/RainMaker/examples/RMakerSwitch",
-                "sizes": [{
-                        "flash_bytes": 1955851,
-                        "flash_percentage": 48,
-                        "ram_bytes": 53828,
-                        "ram_percentage": 16
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
+                "sizes": [{
+                        "flash_bytes": 1011658,
+                        "flash_percentage": 77,
+                        "ram_bytes": 50536,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_server",
                 "sizes": [{
                         "flash_bytes": 1020602,
@@ -624,14 +632,6 @@
                         "ram_bytes": 47512,
                         "ram_percentage": 14
                         }]
-                },
-{"name": "libraries/RainMaker/examples/RMakerCustomAirCooler",
-                "sizes": [{
-                        "flash_bytes": 1835350,
-                        "flash_percentage": 45,
-                        "ram_bytes": 47648,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
@@ -755,6 +755,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
+                "sizes": [{
+                        "flash_bytes": 1012380,
+                        "flash_percentage": 77,
+                        "ram_bytes": 32176,
+                        "ram_percentage": 10
+                        }]
+                },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                 "sizes": [{
                         "flash_bytes": 1054040,
@@ -866,24 +874,24 @@
                         "ram_bytes": 31512,
                         "ram_percentage": 10
                         }]
-                },
-{"name": "libraries/Ticker/examples/Blinker",
-                "sizes": [{
-                        "flash_bytes": 313864,
-                        "flash_percentage": 24,
-                        "ram_bytes": 23704,
-                        "ram_percentage": 7
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/RainMaker/examples/RMakerSwitch",
+                "sizes": [{
+                        "flash_bytes": 1329432,
+                        "flash_percentage": 33,
+                        "ram_bytes": 44724,
+                        "ram_percentage": 14
+                        }]
+                },
 {"name": "libraries/SD/examples/SD_Test",
                 "sizes": [{
-                        "flash_bytes": 320729,
-                        "flash_percentage": 24,
+                        "flash_bytes": 320761,
+                        "flash_percentage": 8,
                         "ram_bytes": 17836,
                         "ram_percentage": 5
                         }]
@@ -1015,14 +1023,6 @@
                         "ram_bytes": 49416,
                         "ram_percentage": 15
                         }]
-                },
-{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
-                "sizes": [{
-                        "flash_bytes": 296272,
-                        "flash_percentage": 23,
-                        "ram_bytes": 49416,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
@@ -1034,6 +1034,14 @@
                         "flash_bytes": 950634,
                         "flash_percentage": 30,
                         "ram_bytes": 46460,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureBuiltinCACertBundle",
+                "sizes": [{
+                        "flash_bytes": 1019662,
+                        "flash_percentage": 32,
+                        "ram_bytes": 46468,
                         "ram_percentage": 14
                         }]
                 },
@@ -1171,14 +1179,6 @@
                         "flash_percentage": 74,
                         "ram_bytes": 46700,
                         "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
-                "sizes": [{
-                        "flash_bytes": 298168,
-                        "flash_percentage": 23,
-                        "ram_bytes": 22688,
-                        "ram_percentage": 7
                         }]
                 }
 ]
