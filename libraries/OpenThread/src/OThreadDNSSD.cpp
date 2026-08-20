@@ -326,6 +326,7 @@ bool OThreadDNSSDClass::begin(const char *hostName) {
     return false;
   }
 
+  // SRP auto-start also updates the DNS client default server when DNS is built in.
   otSrpClientEnableAutoStartMode(inst, nullptr, nullptr);
   _started = true;
   return true;

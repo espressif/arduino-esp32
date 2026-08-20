@@ -66,7 +66,7 @@ port, host, and addresses. Stock OTBR CLI can **list** these entries; it does
 | Arduino IDE **Tools → Erase Flash: "Sketch Only"** | Keeps NVS (SRP ECDSA key). Same hostname usually re-registers OK. |
 | **"All Flash Contents"** (or any erase that clears NVS) | New SRP key. OTBR may still hold the old name → `OT_ERROR_DUPLICATED` until key-lease expires, you use a new hostname, or the OTBR SRP DB is cleared. |
 | **SoC reset** (button / power cycle, no full erase) | NVS kept; same key; refresh/re-register with the same name is OK. |
-| **OTBR / `otbr-agent` restart** | Typical OTBR drops in-memory SRP entries (`srp server service` empty). Sketch must advertise again (`ThreadDNSSD_Advertise_Callback` does this). After a prior `DUPLICATED`, poll `isAnnounceComplete()` if OpenThread retries once the name is free. Discover boards see empty until re-advertise. |
+| **OTBR / `otbr-agent` restart** | Typical OTBR drops in-memory SRP entries (`srp server service` empty). Sketch must advertise again (`ThreadDNSSD_Advertise_Callback` and UDP Light do this). After a prior `DUPLICATED`, poll `isAnnounceComplete()` if OpenThread retries once the name is free. Discover boards see empty until re-advertise. |
 | **Second board with the same hostname** | Name conflict (`OT_ERROR_DUPLICATED`). Use unique names (e.g. include MAC). |
 | **`end()` / Remove example** on the device that registered | Proper client-side unregister; confirm with `srp server service`. |
 

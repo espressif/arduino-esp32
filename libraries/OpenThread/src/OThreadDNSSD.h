@@ -271,7 +271,9 @@ public:
    * If an async discover is in flight, also delivers @ref OT_DNSSD_QUERY_ERROR
    * with `OT_ERROR_ABORT` via @ref onQueryEvent (caller task) before REMOVED.
    * Invalidates any in-flight discover; do not use query result getters until
-   * a new @ref begin and query.
+   * a new @ref begin and query. If the OpenThread lock cannot be acquired, SRP
+   * unregister toward the server may not run; local state is still cleared and
+   * REMOVED is still delivered.
    */
   void end();
 
@@ -378,8 +380,9 @@ public:
    * Retryable errors (e.g. response timeout) do not abort the wait. Name
    * conflicts (`OT_ERROR_DUPLICATED`) and security rejects end the wait with
    * false; check @ref lastError and decide in the sketch (new name, etc.).
-   * After a terminal failure, later OpenThread retries may still reach
-   * Registered — poll @ref isAnnounceComplete from `loop()` if needed.
+   * Timeout also returns false but is not terminal. After timeout or a
+   * terminal failure, later OpenThread retries may still reach Registered —
+   * poll @ref isAnnounceComplete from `loop()` if needed.
    *
    * @param timeoutMs Max wait (pass UINT32_MAX for forever).
    * @return true if announced successfully.

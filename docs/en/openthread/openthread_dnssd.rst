@@ -162,7 +162,7 @@ Pair a second board running ``ThreadDNSSD_Advertise`` on the same Network Key.
 A failed ``begin()`` is local/config — do not call query APIs until it succeeds.
 Arduino ``return`` from ``setup()`` still runs ``loop()``; see the Native
 ThreadDNSSD examples (simple sketches halt; ``ThreadDNSSD_Advertise_Callback``
-retries ``begin()`` from ``loop()``).
+and ``ThreadDNSSD_UDP_Light`` retry ``begin()`` from ``loop()``).
 
 API summary
 -----------
@@ -178,7 +178,9 @@ API summary
 * ``void end()`` — unregister locally and stop the SRP client (also called from
   ``OThread.end()``). If an async discover is in flight, ``onQueryEvent`` gets
   ``OT_DNSSD_QUERY_ERROR`` / ``OT_ERROR_ABORT`` first (caller task), then
-  ``OT_DNSSD_EVENT_REMOVED``.
+  ``OT_DNSSD_EVENT_REMOVED``. If the OpenThread lock cannot be acquired, SRP
+  unregister toward the server may not run; local state is still cleared and
+  ``REMOVED`` is still delivered.
 * ``bool started()`` — true after a successful ``begin()`` and before ``end()``.
 * ``void setInstanceName(const char *name)`` — instance label for services
   (default = host name).
@@ -290,7 +292,8 @@ Native examples under ``libraries/OpenThread/examples/Native/ThreadDNSSD/``:
 * ``ThreadDNSSD_QueryHost`` — resolve a host label (pair with Advertise)
 * ``ThreadDNSSD_Query_Callback`` — async ``startQueryService`` then ``startQueryHost`` via ``onQueryEvent``
 * ``ThreadDNSSD_UDP_Light`` — application lab: Thread light + switch + WiFi web UI
-  (``_otlight._udp`` over UDP; WiFi discovers the light via OTBR Advertising Proxy mDNS)
+  (``_otlight._udp`` over UDP; light re-advertises after OTBR restart / lost attach;
+  WiFi discovers the light via OTBR Advertising Proxy mDNS)
 
 See each example README in that folder for OTBR lab setup and expected Serial
 output. Related overview: :doc:`openthread`.
@@ -333,7 +336,8 @@ clearing the OTBR's in-memory database (see reset below).
      - NVS kept. SRP client can refresh the same names with the same key.
    * - **OTBR / otbr-agent reset**
      - SRP service list often becomes empty. Device must **advertise again**
-       (see ``ThreadDNSSD_Advertise_Callback`` recovery). If a prior
+       (see ``ThreadDNSSD_Advertise_Callback`` and ``ThreadDNSSD_UDP_Light``
+       recovery). If a prior
        ``OT_ERROR_DUPLICATED`` wait already failed, OpenThread may still retry
        once the name is free — poll ``isAnnounceComplete()`` (live local SRP
        ``Registered`` state). Discover boards see empty results until re-advertise.
