@@ -206,8 +206,9 @@ const char *getClockSourceName(uint8_t source) {
 }
 
 const char *getSupportedCpuFrequencyMhz(uint8_t xtal) {
-  constexpr size_t buf_size = 256;
-  static char buf[buf_size];
+  #define SUP_CPU_FREQ_BUF_SIZE 256
+  const size_t buf_size = SUP_CPU_FREQ_BUF_SIZE;
+  static char buf[SUP_CPU_FREQ_BUF_SIZE];
   int pos = 0;
 
 #if TARGET_CPU_FREQ_MAX_400
