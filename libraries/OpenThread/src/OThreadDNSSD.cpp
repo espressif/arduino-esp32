@@ -286,6 +286,7 @@ bool OThreadDNSSDClass::begin(const char *hostName) {
     return false;
   }
   if (!ensureAnnounceSem()) {
+    _hostName[0] = '\0';
     return false;
   }
 
@@ -297,6 +298,7 @@ bool OThreadDNSSDClass::begin(const char *hostName) {
   OtLock lock;
   if (!lock) {
     log_e("OThreadDNSSD: failed to acquire OT lock");
+    _hostName[0] = '\0';
     return false;
   }
 
@@ -309,6 +311,7 @@ bool OThreadDNSSDClass::begin(const char *hostName) {
     log_e("OThreadDNSSD: SetHostName failed (%d)", (int)err);
     otSrpClientSetCallback(inst, nullptr, nullptr);
     _lastError = err;
+    _hostName[0] = '\0';
     return false;
   }
 
@@ -318,6 +321,7 @@ bool OThreadDNSSDClass::begin(const char *hostName) {
     otSrpClientClearHostAndServices(inst);
     otSrpClientSetCallback(inst, nullptr, nullptr);
     _lastError = err;
+    _hostName[0] = '\0';
     return false;
   }
 

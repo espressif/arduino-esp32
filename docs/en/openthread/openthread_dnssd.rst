@@ -152,10 +152,11 @@ Quick start (discover)
     int n = OThreadDNSSD.queryService("ot", "udp");
     for (int i = 0; i < n; i++) {
       Serial.println(OThreadDNSSD.instanceName(i));
-      Serial.println(OThreadDNSSD.address(i));
+      Serial.println(OThreadDNSSD.address(i).toString());
       Serial.println(OThreadDNSSD.port(i));
     }
     IPAddress a = OThreadDNSSD.queryHost("sensor-1");
+    Serial.println(a.toString());
 
 Pair a second board running ``ThreadDNSSD_Advertise`` on the same Network Key.
 A failed ``begin()`` is local/config — do not call query APIs until it succeeds.
@@ -171,8 +172,9 @@ API summary
   Discover-only sketches also register this host (SRP auto-start selects the DNS server).
   ``false`` is a local/config failure, not "SRP server not ready". Do not call
   advertise/query APIs until a later successful ``begin()``.
-* ``const char *hostname()`` — local host label from ``begin()``.
-  After a browse, ``hostname(i)`` is the **discovered** host at index ``i``.
+* ``const char *hostname()`` — local host label from a successful ``begin()``
+  (empty if not started). After a browse, ``hostname(i)`` is the **discovered**
+  host at index ``i``.
 * ``void end()`` — unregister locally and stop the SRP client (also called from
   ``OThread.end()``). If an async discover is in flight, ``onQueryEvent`` gets
   ``OT_DNSSD_QUERY_ERROR`` / ``OT_ERROR_ABORT`` first (caller task), then

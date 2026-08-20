@@ -280,7 +280,7 @@ public:
     return _started;
   }
 
-  /** @brief Local host label from @ref begin (advertise side). */
+  /** @brief Local host label from a successful @ref begin (advertise side). Empty if not started. */
   const char *hostname() const {
     return _hostName;
   }
