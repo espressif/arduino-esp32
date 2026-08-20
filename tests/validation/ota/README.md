@@ -10,6 +10,7 @@ Validates the `Update` API, `HTTPUpdate` library, and `ArduinoOTA` for unsigned 
 | `test_update_error_no_begin` | `Update.write` without `begin` returns 0 |
 | `test_update_md5_check` | `setMD5` on an active update session |
 | `test_update_sha256_format` | `setSHA256` accepts a 64-character hex digest and rejects non-hex input |
+| `test_update_sha256_roundtrip` | Local (no network) `begin`/`write`/`end` round trip: correct digest succeeds, wrong digest fails with `UPDATE_ERROR_SHA256`, MD5+SHA-256 combined |
 | `test_arduino_ota_begin_end` | `ArduinoOTA.begin` / `getHostname` / `end` |
 | `test_httpupdate_invalid_url` | `HTTPUpdate` to unreachable IPv4 URL (192.0.2.1) |
 | `test_httpupdate_invalid_url_ipv6` | `HTTPUpdate` to unreachable bracketed IPv6 URL (`[2001:db8::1]`) |

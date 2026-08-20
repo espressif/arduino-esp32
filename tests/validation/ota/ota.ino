@@ -190,6 +190,45 @@ void test_update_sha256_format(void) {
   Update.abort();
 }
 
+// Local (network-independent) round trip for the write -> end -> digest-compare path.
+// Uses U_SPIFFS so the payload does not need to be a valid/bootable ESP app image.
+void test_update_sha256_roundtrip(void) {
+  static const uint8_t data[64] = {
+    0xE9, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+    0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
+    0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F
+  };
+  // sha256sum/md5sum of the 64 bytes above, precomputed offline.
+  const char *correctSha256 = "ac4a16884561961261469a1a0d7dd650eb0beb0e7dd9ade9d85d0af56bcdb061";
+  const char *wrongSha256 = "0000000000000000000000000000000000000000000000000000000000000000";
+  const char *correctMd5 = "89f3ce2a19779ce37dc6b27f3f57eb18";
+
+  // Correct digest: full write+end succeeds and exposes the right hash.
+  TEST_ASSERT_TRUE(Update.begin(sizeof(data), U_SPIFFS));
+  TEST_ASSERT_TRUE(Update.setSHA256(correctSha256));
+  TEST_ASSERT_EQUAL(sizeof(data), Update.write((uint8_t *)data, sizeof(data)));
+  TEST_ASSERT_TRUE(Update.end());
+  TEST_ASSERT_TRUE(String(correctSha256).equalsIgnoreCase(Update.sha256String()));
+
+  // Wrong digest: end() fails, error code set, no digest exposed.
+  TEST_ASSERT_TRUE(Update.begin(sizeof(data), U_SPIFFS));
+  Update.setSHA256(wrongSha256);
+  Update.write((uint8_t *)data, sizeof(data));
+  TEST_ASSERT_FALSE(Update.end());
+  TEST_ASSERT_EQUAL(UPDATE_ERROR_SHA256, Update.getError());
+  TEST_ASSERT_TRUE(Update.sha256String().isEmpty());
+
+  // MD5 + SHA-256 together: both verified independently.
+  TEST_ASSERT_TRUE(Update.begin(sizeof(data), U_SPIFFS));
+  TEST_ASSERT_TRUE(Update.setMD5(correctMd5));
+  TEST_ASSERT_TRUE(Update.setSHA256(correctSha256));
+  TEST_ASSERT_EQUAL(sizeof(data), Update.write((uint8_t *)data, sizeof(data)));
+  TEST_ASSERT_TRUE(Update.end());
+  TEST_ASSERT_TRUE(String(correctMd5).equalsIgnoreCase(Update.md5String()));
+  TEST_ASSERT_TRUE(String(correctSha256).equalsIgnoreCase(Update.sha256String()));
+}
+
 // ==================== ArduinoOTA Tests ====================
 
 void test_arduino_ota_begin_end(void) {
@@ -527,6 +566,7 @@ void setup() {
   RUN_TEST(test_update_error_no_begin);
   RUN_TEST(test_update_md5_check);
   RUN_TEST(test_update_sha256_format);
+  RUN_TEST(test_update_sha256_roundtrip);
   RUN_TEST(test_arduino_ota_begin_end);
   RUN_TEST(test_httpupdate_invalid_url);
   RUN_TEST(test_httpupdate_invalid_url_ipv6);
