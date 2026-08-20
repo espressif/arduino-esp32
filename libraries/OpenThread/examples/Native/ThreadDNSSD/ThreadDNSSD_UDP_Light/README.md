@@ -42,7 +42,7 @@ DNS-SD service type: `_otlight._udp` (instance / host `ot-light` by default).
 2. Set `OT_NETKEY` in [light](light/) and [switch](switch/) to the OTBR Network
    Key. Prefer **Tools → Erase Flash: Sketch Only** so the SRP key in NVS is kept.
 3. Flash [light](light/) on a Thread SoC (ESP32-H2 / C6 / C5). Wait for
-   `PASS: announced` and `UDP listening`.
+   `UDP listening` and `PASS: ANNOUNCED`.
 4. Flash [switch](switch/) on a second Thread board. Press **BOOT** to toggle.
 5. Optional: set WiFi credentials in [web](web/), flash a WiFi SoC, open
    `http://otlight-ui.local`.
@@ -67,9 +67,11 @@ troubleshooting.
 
 | Symptom | Likely cause |
 | --- | --- |
-| Light `not attached` / `FAIL: OThreadDNSSD.begin` | Wrong `OT_NETKEY` vs OTBR, or local DNSSD setup (sketches **halt**) |
-| Light `announce timeout` | No SRP server yet — UDP still listens; `loop()` polls `isAnnounceComplete()` |
-| `OT_ERROR_DUPLICATED` | SRP name held by another key — unique hostname, Sketch Only erase, or clear OTBR SRP soft state |
+| Light `not attached` / `FAIL: UDP begin` | Wrong `OT_NETKEY` vs OTBR, or UDP bind (sketch **halts**) |
+| Light `FAIL: OThreadDNSSD.begin` during recovery | Retried from `loop()` after 15 s (same as Advertise_Callback) |
+| No `PASS: ANNOUNCED` | No SRP server yet — UDP still listens |
+| `OT_ERROR_DUPLICATED` | SRP name held by another key — unique hostname, Sketch Only erase, or clear OTBR SRP soft state (light does not auto-retry) |
+| Switch finds 0 after OTBR restart | Wait for light `Advertise (recovery)` / another `PASS` |
 | Switch finds 0 instances | Light not announced; no DNS on OTBR; wrong network |
 | Web `FAIL: WiFi connect` / `FAIL: MDNS.begin` / `FAIL: WiFiUDP begin` | Fatal setup — sketch **halts** so HTTP is not served without a socket |
 | Web `Found 0` / empty AAAA | Adv Proxy off or flaky LAN mDNS — set `LIGHT_IPV6_FALLBACK` (see [web/README](web/README.md)) |
