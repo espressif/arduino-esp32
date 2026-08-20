@@ -83,7 +83,7 @@ bool MatterWaterLeakDetector::setLeak(bool _leakState) {
 ```
 
 Key rules:
-- **`begin()` takes no initial state.** The cluster always starts at `false`. Do not write `config.boolean_state.state_value`; CHIP does not apply that config to the live cluster.
+- **`begin()` takes no initial state.** Value-initialize the config and set `config.boolean_state.state_value = false` so Ember `create()` gets a deterministic default. CHIP's live `BooleanStateCluster` ignores that field and always starts at `false`. A real sensor that is not false must be applied with the setter after `Matter.begin()`.
 - **Call the setter after `Matter.begin()`.** The cluster instance is not available before the stack starts. Sketches should `begin()` the endpoint, then `Matter.begin()`, then `setLeak()` / `setFreeze()` / `setRain()` / `setContact()` with the real sensor reading.
 - Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
 
@@ -117,7 +117,7 @@ bool MyEndpoint::begin(bool initialState, uint8_t brightness) {
 }
 ```
 
-Boolean State sensors (`MatterContactSensor`, `MatterWaterLeakDetector`, `MatterWaterFreezeDetector`, `MatterRainSensor`) are the exception: `begin()` takes no arguments, does not set `config.boolean_state.state_value`, and forces the local cache to `false`. Apply the real sensor with the setter after `Matter.begin()`.
+Boolean State sensors (`MatterContactSensor`, `MatterWaterLeakDetector`, `MatterWaterFreezeDetector`, `MatterRainSensor`) are the exception: `begin()` takes no arguments, value-initializes the config, sets `config.boolean_state.state_value = false` (Ember create only; the live cluster ignores this field and starts at `false`), and forces the local cache to `false`. Apply the real sensor with the setter after `Matter.begin()`.
 
 ### updateAttributeVal vs setAttributeVal
 
