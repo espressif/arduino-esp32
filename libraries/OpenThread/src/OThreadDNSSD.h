@@ -310,9 +310,6 @@ public:
    * (idempotent) unless a remove of that slot is still in flight.
    */
   bool addService(const char *service, const char *proto, uint16_t port);
-  bool addService(char *service, char *proto, uint16_t port) {
-    return addService((const char *)service, (const char *)proto, port);
-  }
   bool addService(const String &service, const String &proto, uint16_t port) {
     return addService(service.c_str(), proto.c_str(), port);
   }
@@ -324,9 +321,6 @@ public:
    * Rejected if the service is still being removed.
    */
   bool addServiceTxt(const char *service, const char *proto, const char *key, const char *value);
-  bool addServiceTxt(char *service, char *proto, char *key, char *value) {
-    return addServiceTxt((const char *)service, (const char *)proto, (const char *)key, (const char *)value);
-  }
   bool addServiceTxt(const String &service, const String &proto, const String &key, const String &value) {
     return addServiceTxt(service.c_str(), proto.c_str(), key.c_str(), value.c_str());
   }
@@ -410,9 +404,6 @@ public:
    * @return Number of results stored (0 on failure / none found).
    */
   int queryService(const char *service, const char *proto);
-  int queryService(char *service, char *proto) {
-    return queryService((const char *)service, (const char *)proto);
-  }
   int queryService(const String &service, const String &proto) {
     return queryService(service.c_str(), proto.c_str());
   }
@@ -435,9 +426,6 @@ public:
    *                 and UINT32_MAX for forever).
    */
   IPAddress queryHost(const char *host, uint32_t timeoutMs = OT_DNSSD_QUERY_TIMEOUT_MS);
-  IPAddress queryHost(char *host, uint32_t timeoutMs = OT_DNSSD_QUERY_TIMEOUT_MS) {
-    return queryHost((const char *)host, timeoutMs);
-  }
   IPAddress queryHost(const String &host, uint32_t timeoutMs = OT_DNSSD_QUERY_TIMEOUT_MS) {
     return queryHost(host.c_str(), timeoutMs);
   }
@@ -461,9 +449,6 @@ public:
    * @return true if the browse was started; false if busy, not started, or invalid.
    */
   bool startQueryService(const char *service, const char *proto);
-  bool startQueryService(char *service, char *proto) {
-    return startQueryService((const char *)service, (const char *)proto);
-  }
   bool startQueryService(const String &service, const String &proto) {
     return startQueryService(service.c_str(), proto.c_str());
   }
@@ -476,9 +461,6 @@ public:
    * @return true if the resolve was started; false if busy, not started, or invalid.
    */
   bool startQueryHost(const char *host);
-  bool startQueryHost(char *host) {
-    return startQueryHost((const char *)host);
-  }
   bool startQueryHost(const String &host) {
     return startQueryHost(host.c_str());
   }
