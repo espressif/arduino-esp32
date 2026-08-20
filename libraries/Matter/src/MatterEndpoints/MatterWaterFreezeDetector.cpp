@@ -51,8 +51,10 @@ bool MatterWaterFreezeDetector::begin() {
     return false;
   }
 
-  water_freeze_detector::config_t water_freeze_detector_config;
-  // BooleanStateCluster always starts at false; apply the real sensor with setFreeze() after Matter.begin().
+  water_freeze_detector::config_t water_freeze_detector_config{};
+  water_freeze_detector_config.boolean_state.state_value = false;
+  // CHIP BooleanStateCluster still starts at false regardless of this field;
+  // apply the real sensor with setFreeze() after Matter.begin().
 
   endpoint_t *endpoint = water_freeze_detector::create(node::get(), &water_freeze_detector_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
