@@ -33,3 +33,6 @@ Host resolve done: count=1 (event=0 error=0)
 
 Flags are set in the OpenThread-task callback; printing and the next
 `startQuery*` run from `loop()`. Cycle repeats every 10 s.
+
+`FAIL: not attached` / `FAIL: OThreadDNSSD.begin` halt the sketch (`while (true)`).
+Returning from `setup()` would still run `loop()`.

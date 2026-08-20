@@ -49,6 +49,14 @@ static bool waitAttached(uint32_t timeoutMs) {
   return false;
 }
 
+// Returning from setup() still runs loop(); halt so idle status is not printed after a failed demo.
+static void halt(const char *msg) {
+  Serial.println(msg);
+  while (true) {
+    delay(1000);
+  }
+}
+
 static void printStatus(const char *tag) {
   Serial.printf(
     "  [%s] announceComplete=%d lastError=%d role=%s\r\n", tag, OThreadDNSSD.isAnnounceComplete(),
@@ -110,15 +118,13 @@ void setup() {
 
   Serial.println("Waiting to attach...");
   if (!waitAttached(60000)) {
-    Serial.println("FAIL: not attached (check Network Key vs OTBR)");
-    return;
+    halt("FAIL: not attached (check Network Key vs OTBR)");
   }
   Serial.printf("Attached as %s\r\n", OThread.otGetStringDeviceRole());
 
   Serial.printf("OThreadDNSSD.begin(\"%s\")\r\n", kHostName);
   if (!OThreadDNSSD.begin(kHostName)) {
-    Serial.println("FAIL: OThreadDNSSD.begin");
-    return;
+    halt("FAIL: OThreadDNSSD.begin");
   }
   printStatus("after begin");
 
@@ -127,7 +133,7 @@ void setup() {
     Serial.printf("======== add/remove cycle %u / %u ========\r\n", (unsigned)cycle, (unsigned)kAddRemoveCycles);
 
     if (!advertiseService()) {
-      return;
+      halt("FAIL: advertise cycle");
     }
 
     Serial.printf("Holding advertised for %lu ms...\r\n", (unsigned long)kHoldAdvertisedMs);
@@ -135,7 +141,7 @@ void setup() {
     printStatus("before remove");
 
     if (!removeServiceOnly()) {
-      return;
+      halt("FAIL: remove cycle");
     }
 
     if (cycle < kAddRemoveCycles) {

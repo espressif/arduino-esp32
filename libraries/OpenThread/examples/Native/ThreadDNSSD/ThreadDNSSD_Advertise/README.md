@@ -35,7 +35,8 @@ See the [category README](../README.md) for flash-erase vs SoC reset vs OTBR res
 
 | Symptom | Likely cause |
 |---------|----------------|
-| `not attached` | Wrong Network Key vs OTBR |
-| `announce timeout` | No SRP server in Network Data |
+| `not attached` | Wrong Network Key vs OTBR (sketch **halts**; `loop()` does not poll announce) |
+| `FAIL: OThreadDNSSD.begin` / `addService` | Local/config error (sketch **halts**) |
+| `announce timeout` | No SRP server in Network Data (`loop()` still polls `isAnnounceComplete()`) |
 | `OT_ERROR_DUPLICATED` | Name held by another SRP key — unique hostname, Sketch Only erase, or restart OTBR / wait for key-lease |
 | `announceComplete` later becomes `1` after a fail | OpenThread retried and reached `Registered` (e.g. OTBR was cleared). `isAnnounceComplete()` reads live SRP client state. |

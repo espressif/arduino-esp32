@@ -254,7 +254,10 @@ public:
    * @param hostName Host label (no domain), e.g. `"sensor-1"`. Prefer a
    *                 per-device unique label when multiple nodes share an OTBR.
    * @return true if configured successfully; false on missing stack, bad name,
-   *         or OpenThread error.
+   *         or OpenThread error. False is local/config, not "SRP server not
+   *         ready". Do not call addService / query APIs until a later successful
+   *         begin(). Arduino `return` from `setup()` still runs `loop()` —
+   *         typical sketches halt instead of returning.
    */
   bool begin(const char *hostName);
   bool begin(const String &hostName) {

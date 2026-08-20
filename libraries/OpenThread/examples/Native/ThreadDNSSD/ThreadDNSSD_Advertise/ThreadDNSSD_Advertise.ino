@@ -41,6 +41,14 @@ static bool waitAttached(uint32_t timeoutMs) {
   return false;
 }
 
+// Returning from setup() still runs loop(); halt so loop() does not poll announce without begin().
+static void halt(const char *msg) {
+  Serial.println(msg);
+  while (true) {
+    delay(1000);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -57,22 +65,18 @@ void setup() {
 
   Serial.println("Waiting to attach...");
   if (!waitAttached(60000)) {
-    Serial.println("FAIL: not attached (check Network Key vs OTBR)");
-    return;
+    halt("FAIL: not attached (check Network Key vs OTBR)");
   }
   Serial.printf("Attached as %s\r\n", OThread.otGetStringDeviceRole());
 
   if (!OThreadDNSSD.begin("sensor-1")) {
-    Serial.println("FAIL: OThreadDNSSD.begin");
-    return;
+    halt("FAIL: OThreadDNSSD.begin");
   }
   if (!OThreadDNSSD.addService("ot", "udp", 12345)) {
-    Serial.println("FAIL: addService");
-    return;
+    halt("FAIL: addService");
   }
   if (!OThreadDNSSD.addServiceTxt("ot", "udp", "path", "/status")) {
-    Serial.println("FAIL: addServiceTxt");
-    return;
+    halt("FAIL: addServiceTxt");
   }
 
   Serial.println("Waiting for SRP announce (need OTBR SRP server)...");

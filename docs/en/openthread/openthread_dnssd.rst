@@ -119,7 +119,9 @@ Quick start (advertise)
 
       if (!OThreadDNSSD.begin("sensor-1")) {
         Serial.println("OThreadDNSSD.begin failed");
-        return;
+        while (true) {
+          delay(1000);  // do not return from setup() — loop() would still run
+        }
       }
       OThreadDNSSD.addService("ot", "udp", 12345);
       OThreadDNSSD.addServiceTxt("ot", "udp", "path", "/status");
@@ -138,7 +140,12 @@ Quick start (discover)
 
 .. code-block:: arduino
 
-    OThreadDNSSD.begin("browser");
+    if (!OThreadDNSSD.begin("browser")) {
+      Serial.println("OThreadDNSSD.begin failed");
+      while (true) {
+        delay(1000);  // do not return from setup() — loop() would still run
+      }
+    }
     int n = OThreadDNSSD.queryService("ot", "udp");
     for (int i = 0; i < n; i++) {
       Serial.println(OThreadDNSSD.instanceName(i));
@@ -148,6 +155,8 @@ Quick start (discover)
     IPAddress a = OThreadDNSSD.queryHost("sensor-1");
 
 Pair a second board running ``ThreadDNSSD_Advertise`` on the same Network Key.
+``return`` from ``setup()`` still runs ``loop()``; Native examples halt on a
+failed ``begin()`` so discover is not retried without a client.
 
 API summary
 -----------
@@ -155,6 +164,9 @@ API summary
 * ``bool begin(const char *hostName)`` — configure host, auto addresses, auto-start.
   Prefer a per-device unique label when several nodes share one OTBR.
   Discover-only sketches also register this host (SRP auto-start selects the DNS server).
+  ``false`` is a local/config failure, not "SRP server not ready". Do not call
+  advertise/query APIs until a later successful ``begin()``. Arduino ``return``
+  from ``setup()`` still runs ``loop()`` — Native examples halt instead.
 * ``const char *hostname()`` — local host label from ``begin()``.
   After a browse, ``hostname(i)`` is the **discovered** host at index ``i``.
 * ``void end()`` — unregister locally and stop the SRP client (also called from

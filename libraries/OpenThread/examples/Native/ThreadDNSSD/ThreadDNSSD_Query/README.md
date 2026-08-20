@@ -29,3 +29,7 @@ after a few seconds (Discovery Proxy empty answer) — not a timeout error.
 
 Re-run queries every 10 s. After OTBR restart, results may be empty until
 Board A re-advertises.
+
+`FAIL: not attached` / `FAIL: OThreadDNSSD.begin` halt the sketch (`while (true)`).
+Returning from `setup()` would still run `loop()` and look like a live browse
+with no DNS-SD client.

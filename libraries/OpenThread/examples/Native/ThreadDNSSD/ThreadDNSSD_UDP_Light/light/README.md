@@ -90,8 +90,9 @@ If you change `kHostName` or `LIGHT_PORT`, mirror the service type / port on
 
 | Symptom | Likely cause |
 | ------- | ------------ |
-| `FAIL: not attached` | Wrong Network Key vs OTBR |
-| `FAIL: announce` / timeout | No SRP server; wait longer; check `srp server service` on OTBR |
+| `FAIL: not attached` | Wrong Network Key vs OTBR (sketch **halts**) |
+| `FAIL: OThreadDNSSD.begin` / `addService` / `UDP begin` | Local/config error (sketch **halts**) |
+| `FAIL: announce` / timeout | No SRP server; wait longer; check `srp server service` on OTBR (sketch **halts** — lamp UDP is not started) |
 | `OT_ERROR_DUPLICATED` | Name conflict — unique hostname, Sketch Only erase, or clear OTBR SRP |
 | No `RX` lines when switch presses BOOT | Switch not discovering this host, or different Thread network |
 

@@ -87,6 +87,7 @@ successful browse (`OT_ERROR_NONE` with count 0).
 
 - **Pass:** Serial prints that the service was announced (`ANNOUNCED` / `announced OK`), or Query finds instances / resolves an address.
 - **Fail / timeout:** not attached (wrong Network Key), or no SRP/DNS server on the network.
+- **Fatal setup:** `FAIL: not attached` / `FAIL: OThreadDNSSD.begin` (and similar) **halt** the sketch (`while (true) { delay(1000); }`). Returning from `setup()` still runs `loop()`, which would look like a live browse/announce with no client. `waitForAnnounce()` timeout in Advertise is **not** fatal — `loop()` polls `isAnnounceComplete()`. `ThreadDNSSD_Advertise_Callback` retries `begin()` from `loop()` after the initial attach.
 - **Name conflict:** `OT_ERROR_DUPLICATED` — change hostname, keep NVS on reflash, or clear OTBR soft state (restart OTBR) / wait for key-lease.
 - After a conflict fail, if you clear the OTBR and OpenThread retries successfully, `isAnnounceComplete()` (live local `Registered` state) can become true without resetting the board — poll it from `loop()`.
 

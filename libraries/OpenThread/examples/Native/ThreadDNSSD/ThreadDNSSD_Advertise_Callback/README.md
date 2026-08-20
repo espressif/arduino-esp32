@@ -44,7 +44,8 @@ Do not call other `OThreadDNSSD` APIs from inside the callback (flags only).
 
 | Symptom | Likely cause |
 |---------|----------------|
-| `not attached` | Wrong Network Key vs OTBR |
+| `not attached` | Wrong Network Key vs OTBR (sketch **halts** after the initial wait) |
 | No ANNOUNCED | No SRP server in Network Data |
+| `FAIL: OThreadDNSSD.begin` during recovery | Retried from `loop()` after the 15 s cooldown (not a halt) |
 | Name conflict | Unique hostname, keep NVS, or clear OTBR soft state |
 | Rapid ERROR then recovery spam | Cooldown is 15 s; wait for OTBR SRP to come back |

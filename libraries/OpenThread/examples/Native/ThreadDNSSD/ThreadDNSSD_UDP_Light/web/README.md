@@ -96,6 +96,8 @@ Empty `v4`/`v6` after browse is common; the sketch then queries AAAA or uses
 
 | Symptom | Likely cause |
 | ------- | ------------ |
+| `FAIL: WiFi connect` / `FAIL: MDNS.begin` / `FAIL: WiFiUDP begin` | Fatal setup — sketch **halts** (`while (true)`); `loop()` does not serve HTTP |
+| `FAIL: CONFIG_LWIP_IPV6 is off` | Rebuild with IPv6 (needed for Thread OMR) |
 | `Found 0` | Adv Proxy off; not on OTBR WiFi; flaky mDNS |
 | `err=261` / no AAAA | Adv Proxy without address records — set `LIGHT_IPV6_FALLBACK` |
 | `endPacket failed` | IPv4-only UDP socket — use latest sketch (`Udp.begin(IPAddress(IPv6), 0)`) |

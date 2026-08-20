@@ -55,6 +55,14 @@ static uint32_t s_lastDiscoverMs = 0;
 static volatile bool s_gotIp4 = false;
 static volatile bool s_gotIp6 = false;
 
+// Returning from setup() still runs loop(); halt so HTTP/UDP are not served without WiFi/UDP.
+static void halt(const char *msg) {
+  Serial.println(msg);
+  while (true) {
+    delay(1000);
+  }
+}
+
 #if CONFIG_LWIP_IPV6
 // Matches libraries/WiFi/examples/WiFiIPv6 — IPv6 events run on another task.
 static void onWiFiEvent(WiFiEvent_t event) {
@@ -340,7 +348,7 @@ void setup() {
     Serial.println("WARN: WiFi.enableIPv6() failed");
   }
 #else
-  Serial.println("FAIL: CONFIG_LWIP_IPV6 is off — cannot reach Thread OMR addresses");
+  halt("FAIL: CONFIG_LWIP_IPV6 is off — cannot reach Thread OMR addresses");
 #endif
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.printf("WiFi connecting to %s", WIFI_SSID);
@@ -351,8 +359,7 @@ void setup() {
   }
   Serial.println();
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("FAIL: WiFi connect");
-    return;
+    halt("FAIL: WiFi connect");
   }
   Serial.print("WiFi IPv4: ");
   Serial.println(WiFi.localIP());
@@ -384,17 +391,15 @@ void setup() {
 #endif
 
   if (!MDNS.begin("otlight-ui")) {
-    Serial.println("FAIL: MDNS.begin(otlight-ui)");
-  } else {
-    Serial.println("Open http://otlight-ui.local");
+    halt("FAIL: MDNS.begin(otlight-ui)");
   }
+  Serial.println("Open http://otlight-ui.local");
   MDNS.addService("http", "tcp", 80);
 
   // Must be AF_INET6: light AAAA is Thread OMR (fdxx:…). Udp.begin(0) opens IPv4-only
   // and endPacket(sendto IPv6) then fails even when mDNS resolves correctly.
   if (!Udp.begin(IPAddress(IPv6), 0)) {
-    Serial.println("FAIL: WiFiUDP begin(IPv6)");
-    return;
+    halt("FAIL: WiFiUDP begin(IPv6)");
   }
   Serial.println("UDP socket: AF_INET6 (required for Thread OMR)");
 

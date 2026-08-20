@@ -42,6 +42,14 @@ static bool waitAttached(uint32_t timeoutMs) {
   return false;
 }
 
+// Returning from setup() still runs loop(); halt so queryHost is not called without begin().
+static void halt(const char *msg) {
+  Serial.println(msg);
+  while (true) {
+    delay(1000);
+  }
+}
+
 static bool isEmptyV6(const IPAddress &addr) {
   for (int i = 0; i < 16; ++i) {
     if (addr[i] != 0) {
@@ -67,14 +75,12 @@ void setup() {
 
   Serial.println("Waiting to attach...");
   if (!waitAttached(60000)) {
-    Serial.println("FAIL: not attached (check Network Key vs OTBR)");
-    return;
+    halt("FAIL: not attached (check Network Key vs OTBR)");
   }
   Serial.printf("Attached as %s\r\n", OThread.otGetStringDeviceRole());
 
   if (!OThreadDNSSD.begin("resolver")) {
-    Serial.println("FAIL: OThreadDNSSD.begin");
-    return;
+    halt("FAIL: OThreadDNSSD.begin");
   }
   delay(2000);
 }

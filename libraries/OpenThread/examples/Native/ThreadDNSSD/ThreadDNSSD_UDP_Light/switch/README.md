@@ -79,6 +79,7 @@ TX STATUS -> STATE ON
 
 | Symptom | Likely cause |
 | ------- | ------------ |
+| `FAIL: not attached` / `FAIL: OThreadDNSSD.begin` / `FAIL: UDP begin` | Fatal setup — sketch **halts** (`while (true)`); `loop()` does not browse |
 | `Found 0 instance(s)` | Light not announced; no DNS on OTBR; wrong Network Key |
 | BOOT: no ACK | Wrong address/port, light down, or RF range |
 | Discovers then loses light | Re-browse on interval; check light still `announce=1` |

@@ -72,6 +72,14 @@ static bool waitAttached(uint32_t timeoutMs) {
   return false;
 }
 
+// Returning from setup() still runs loop(); halt so startQuery* is not called without begin().
+static void halt(const char *msg) {
+  Serial.println(msg);
+  while (true) {
+    delay(1000);
+  }
+}
+
 static void printServiceResults(int n) {
   Serial.printf("Service browse done: %d instance(s) (event=%d error=%d)\r\n", n, (int)s_event, (int)s_err);
   for (int i = 0; i < n; ++i) {
@@ -133,14 +141,12 @@ void setup() {
 
   Serial.println("Waiting to attach...");
   if (!waitAttached(60000)) {
-    Serial.println("FAIL: not attached (check Network Key vs OTBR)");
-    return;
+    halt("FAIL: not attached (check Network Key vs OTBR)");
   }
   Serial.printf("Attached as %s\r\n", OThread.otGetStringDeviceRole());
 
   if (!OThreadDNSSD.begin("browser-cb")) {
-    Serial.println("FAIL: OThreadDNSSD.begin");
-    return;
+    halt("FAIL: OThreadDNSSD.begin");
   }
   OThreadDNSSD.onQueryEvent(onQueryEvent, nullptr);
   delay(2000);

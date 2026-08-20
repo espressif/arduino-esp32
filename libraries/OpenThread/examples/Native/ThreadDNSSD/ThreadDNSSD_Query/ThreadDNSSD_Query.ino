@@ -42,6 +42,14 @@ static bool waitAttached(uint32_t timeoutMs) {
   return false;
 }
 
+// Returning from setup() still runs loop(); halt so queryService is not called without begin().
+static void halt(const char *msg) {
+  Serial.println(msg);
+  while (true) {
+    delay(1000);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -58,15 +66,13 @@ void setup() {
 
   Serial.println("Waiting to attach...");
   if (!waitAttached(60000)) {
-    Serial.println("FAIL: not attached (check Network Key vs OTBR)");
-    return;
+    halt("FAIL: not attached (check Network Key vs OTBR)");
   }
   Serial.printf("Attached as %s\r\n", OThread.otGetStringDeviceRole());
 
   // begin() enables SRP auto-start so DNS default server follows the BR.
   if (!OThreadDNSSD.begin("browser")) {
-    Serial.println("FAIL: OThreadDNSSD.begin");
-    return;
+    halt("FAIL: OThreadDNSSD.begin");
   }
   delay(2000);  // allow Network Data / DNS server selection
 }

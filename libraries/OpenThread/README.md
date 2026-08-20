@@ -566,7 +566,7 @@ int n = OThreadDNSSD.queryService("ot", "udp");
 IPAddress a = OThreadDNSSD.queryHost("sensor-1");
 ```
 
-Requires an attached Thread role and an SRP/DNS server in Network Data (typical OTBR). Prefer **Erase Flash: Sketch Only** when re-uploading so the SRP key in NVS is kept. See the ThreadDNSSD example README for OTBR CLI checks (`srp server service`), SoC vs OTBR reset, and name conflicts.
+Requires an attached Thread role and an SRP/DNS server in Network Data (typical OTBR). Prefer **Erase Flash: Sketch Only** when re-uploading so the SRP key in NVS is kept. Native examples halt on a failed `begin()` (`while (true)`) rather than returning from `setup()`, because Arduino still runs `loop()`. See the ThreadDNSSD example README for OTBR CLI checks (`srp server service`), SoC vs OTBR reset, and name conflicts.
 
 ## Examples
 

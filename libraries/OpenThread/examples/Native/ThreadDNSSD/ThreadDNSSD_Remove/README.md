@@ -48,3 +48,7 @@ PASS: two add/remove cycles + end() complete
 
 The OTBR CLI cannot delete another device’s registration; the client must
 `removeService` and/or `end()`.
+
+`FAIL: not attached` / `FAIL: OThreadDNSSD.begin` / a failed add or remove cycle
+halt the sketch (`while (true)`). Returning from `setup()` would still run
+`loop()` and print idle status as if the demo had finished.

@@ -24,3 +24,7 @@ PASS: sensor-1 -> fd...
 Prefer **Erase Flash: Sketch Only**. Re-runs every 10 s. If Board A is not
 announced, expect `FAIL: no address (lastError=...)` — not a success with an
 empty IPv6. After OTBR restart, wait for Board A to advertise again.
+
+`FAIL: not attached` / `FAIL: OThreadDNSSD.begin` halt the sketch (`while (true)`).
+Returning from `setup()` would still run `loop()` and keep calling `queryHost`
+with no DNS-SD client.

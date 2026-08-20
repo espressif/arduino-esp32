@@ -75,6 +75,14 @@ static bool waitAttached(uint32_t timeoutMs) {
   return false;
 }
 
+// Returning from setup() still runs loop(); halt so UDP is not served without announce.
+static void halt(const char *msg) {
+  Serial.println(msg);
+  while (true) {
+    delay(1000);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -91,31 +99,28 @@ void setup() {
 
   Serial.println("Waiting to attach...");
   if (!waitAttached(60000)) {
-    Serial.println("FAIL: not attached (check Network Key vs OTBR)");
-    return;
+    halt("FAIL: not attached (check Network Key vs OTBR)");
   }
   Serial.printf("Attached as %s\r\n", OThread.otGetStringDeviceRole());
 
   if (!OThreadDNSSD.begin(kHostName)) {
-    Serial.println("FAIL: OThreadDNSSD.begin");
-    return;
+    halt("FAIL: OThreadDNSSD.begin");
   }
   if (!OThreadDNSSD.addService("otlight", "udp", LIGHT_PORT)) {
-    Serial.println("FAIL: addService");
-    return;
+    halt("FAIL: addService");
   }
   (void)OThreadDNSSD.addServiceTxt("otlight", "udp", "cmds", "on,off,toggle,status");
 
   Serial.println("Waiting for SRP announce...");
   if (!OThreadDNSSD.waitForAnnounce(60000)) {
-    Serial.printf("FAIL: announce (lastError=%d)\r\n", (int)OThreadDNSSD.lastError());
-    return;
+    char msg[48];
+    snprintf(msg, sizeof(msg), "FAIL: announce (lastError=%d)", (int)OThreadDNSSD.lastError());
+    halt(msg);
   }
   Serial.printf("PASS: announced as %s _otlight._udp:%u\r\n", OThreadDNSSD.hostname(), LIGHT_PORT);
 
   if (!OtUdp.begin(LIGHT_PORT)) {
-    Serial.println("FAIL: UDP begin");
-    return;
+    halt("FAIL: UDP begin");
   }
   Serial.printf("UDP listening on port %u (MLEID %s)\r\n", LIGHT_PORT, OThread.getMeshLocalEid().toString().c_str());
   applyLamp(false);

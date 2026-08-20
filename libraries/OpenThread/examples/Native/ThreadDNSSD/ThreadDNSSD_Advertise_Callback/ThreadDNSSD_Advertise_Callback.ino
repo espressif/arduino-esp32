@@ -74,6 +74,15 @@ static bool waitAttached(uint32_t timeoutMs) {
   return false;
 }
 
+// Returning from setup() still runs loop(); halt on initial attach fail.
+// begin()/addService failures in startAdvertise() are retried from loop().
+static void halt(const char *msg) {
+  Serial.println(msg);
+  while (true) {
+    delay(1000);
+  }
+}
+
 // Queue registration; completion arrives via OT_DNSSD_EVENT_ANNOUNCED.
 static bool startAdvertise(const char *reason) {
   Serial.printf("Advertise (%s) as %s...\r\n", reason, kHostName);
@@ -117,8 +126,7 @@ void setup() {
 
   Serial.println("Waiting to attach...");
   if (!waitAttached(60000)) {
-    Serial.println("FAIL: not attached (check Network Key vs OTBR)");
-    return;
+    halt("FAIL: not attached (check Network Key vs OTBR)");
   }
   s_attached = true;
   s_wasAttached = true;
