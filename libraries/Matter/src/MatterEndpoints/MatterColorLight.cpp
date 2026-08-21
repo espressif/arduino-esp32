@@ -184,8 +184,9 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
           }
           espRgbColor_t rgb = espXYToRgbColor(255, x, y, false);
           espHsvColor_t xyHsv = espRgbColorToHsvColor(rgb);
-          colorHSV.h = (uint8_t)xyHsv.h;
-          colorHSV.s = xyHsv.s;
+          // uint8_t recovers the classic HSV wrap; then clamp 255 (reserved / full-scale).
+          colorHSV.h = clampColor254((uint8_t)xyHsv.h);
+          colorHSV.s = clampColor254(xyHsv.s);
           log_d("RGB Light XY changed — HSV updated to h=%u s=%u", colorHSV.h, colorHSV.s);
         } else if (
           attribute_id == ColorControl::Attributes::ColorMode::Id || attribute_id == ColorControl::Attributes::EnhancedColorMode::Id

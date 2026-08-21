@@ -29,7 +29,7 @@ espXyColor_t hsvToXyColor(espHsvColor_t hsv) {
   return espRgbColorToXYColor(espHsvColorToRgbColor(hsv));
 }
 
-// Matter HS and CurrentLevel use 0..254 (255 is the nullable null sentinel).
+// Matter HS is 0..254. CurrentLevel is 1..254 (255 is the nullable null sentinel).
 uint8_t clampColor254(uint8_t value) {
   return value > 254 ? 254 : value;
 }
@@ -154,8 +154,9 @@ bool MatterEnhancedColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t 
           // Chromaticity only: keep CurrentLevel as V. Hue is uint16_t; take 8-bit HSV hue.
           espRgbColor_t rgb = espXYToRgbColor(255, x, y, false);
           espHsvColor_t xyHsv = espRgbColorToHsvColor(rgb);
-          colorHSV.h = (uint8_t)xyHsv.h;
-          colorHSV.s = xyHsv.s;
+          // uint8_t recovers the classic HSV wrap; then clamp 255 (reserved / full-scale).
+          colorHSV.h = clampColor254((uint8_t)xyHsv.h);
+          colorHSV.s = clampColor254(xyHsv.s);
           log_d("Enhanced ColorLight XY changed — HSV updated to h=%u s=%u", colorHSV.h, colorHSV.s);
         } else if (
           attribute_id == ColorControl::Attributes::ColorMode::Id || attribute_id == ColorControl::Attributes::EnhancedColorMode::Id
