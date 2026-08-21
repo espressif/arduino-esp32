@@ -1,0 +1,62 @@
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
+#include "sdkconfig.h"
+#if CONFIG_TINYUSB_ENABLED
+
+#include "tusb.h"
+#include "tusb_config.h"
+
+#if CFG_TUH_ENABLED
+/** Weak in core; USBHostHID provides the strong definition (HID arm after tuh_task). */
+extern "C" void arduino_usb_host_hid_service(void);
+#endif
+
+/**
+ * @brief USB Host controller.
+ *
+ * Call begin() once in setup(), then task() in loop().
+ * After begin(), TinyUSB runs on a background worker — task() is then a no-op for transfers.
+ */
+class USBHostClass {
+public:
+  /** Start USB host mode. @return true on success. */
+  bool begin();
+
+  /** Process host events (or no-op when the background worker is running). */
+  void task();
+
+  /** True when TinyUSB is serviced by the background worker (do not call tuh_* from loop()). */
+  bool tuhBackgroundActive() const;
+
+  bool started() const {
+    return _started;
+  }
+  operator bool() const {
+    return _started;
+  }
+
+private:
+  bool _started = false;
+};
+
+extern USBHostClass USBHost;
+
+#endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */
