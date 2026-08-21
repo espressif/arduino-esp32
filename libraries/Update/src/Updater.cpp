@@ -9,14 +9,94 @@
 #include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
-#ifndef UPDATE_NOCRYPT
+#include "HEXBuilder.h"
 #include "mbedtls/build_info.h"
 #if MBEDTLS_VERSION_MAJOR >= 4
 #include "psa/crypto.h"
 #else
+#include "mbedtls/sha256.h"
+#ifndef UPDATE_NOCRYPT
 #include "mbedtls/aes.h"
-#endif
 #endif /* UPDATE_NOCRYPT */
+#endif /* MBEDTLS_VERSION_MAJOR >= 4 */
+
+// Streaming SHA-256 context used only when setSHA256() is called.
+// Prefers IDF/mbedTLS backends over SHA2Builder to avoid linking the full
+// software SHA-224/256/384/512 implementation into every Update sketch.
+struct UpdateSHA256Context {
+#if MBEDTLS_VERSION_MAJOR >= 4
+  psa_hash_operation_t op;
+#else
+  mbedtls_sha256_context ctx;
+#endif
+  uint8_t expected[32];
+};
+
+static bool update_sha256_begin(UpdateSHA256Context *ctx) {
+#if MBEDTLS_VERSION_MAJOR >= 4
+  psa_status_t psa_ret = psa_crypto_init();
+  if (psa_ret != PSA_SUCCESS) {
+    log_e("PSA crypto init failed: %d", (int)psa_ret);
+    return false;
+  }
+  ctx->op = psa_hash_operation_init();
+  psa_ret = psa_hash_setup(&ctx->op, PSA_ALG_SHA_256);
+  if (psa_ret != PSA_SUCCESS) {
+    log_e("PSA hash setup failed: %d", (int)psa_ret);
+    return false;
+  }
+  return true;
+#else
+  mbedtls_sha256_init(&ctx->ctx);
+  if (mbedtls_sha256_starts(&ctx->ctx, 0) != 0) {
+    mbedtls_sha256_free(&ctx->ctx);
+    return false;
+  }
+  return true;
+#endif
+}
+
+static bool update_sha256_update(UpdateSHA256Context *ctx, const uint8_t *data, size_t len) {
+  if (!ctx || !data || len == 0) {
+    return true;
+  }
+#if MBEDTLS_VERSION_MAJOR >= 4
+  return psa_hash_update(&ctx->op, data, len) == PSA_SUCCESS;
+#else
+  return mbedtls_sha256_update(&ctx->ctx, data, len) == 0;
+#endif
+}
+
+static bool update_sha256_finish(UpdateSHA256Context *ctx, uint8_t out[32]) {
+  if (!ctx || !out) {
+    return false;
+  }
+#if MBEDTLS_VERSION_MAJOR >= 4
+  size_t hash_len = 0;
+  psa_status_t psa_ret = psa_hash_finish(&ctx->op, out, 32, &hash_len);
+  if (psa_ret != PSA_SUCCESS || hash_len != 32) {
+    psa_hash_abort(&ctx->op);
+  }
+  ctx->op = psa_hash_operation_init();
+  return psa_ret == PSA_SUCCESS && hash_len == 32;
+#else
+  int ret = mbedtls_sha256_finish(&ctx->ctx, out);
+  mbedtls_sha256_free(&ctx->ctx);
+  return ret == 0;
+#endif
+}
+
+static void update_sha256_abort(UpdateSHA256Context *ctx) {
+  if (!ctx) {
+    return;
+  }
+#if MBEDTLS_VERSION_MAJOR >= 4
+  psa_hash_abort(&ctx->op);
+  ctx->op = psa_hash_operation_init();
+#else
+  mbedtls_sha256_free(&ctx->ctx);
+#endif
+}
 
 static const char *_err2str(uint8_t _error) {
   if (_error == UPDATE_ERROR_OK) {
@@ -53,6 +133,8 @@ static const char *_err2str(uint8_t _error) {
   } else if (_error == UPDATE_ERROR_SIGN) {
     return ("Signature Verification Failed");
 #endif /* UPDATE_SIGN */
+  } else if (_error == UPDATE_ERROR_SHA256) {
+    return ("SHA256 Check Failed");
   }
   return ("UNKNOWN");
 }
@@ -84,7 +166,8 @@ UpdateClass::UpdateClass()
 #ifndef UPDATE_NOCRYPT
     _cryptKey(0), _cryptBuffer(0),
 #endif /* UPDATE_NOCRYPT */
-    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _command(U_FLASH), _partition(NULL)
+    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _command(U_FLASH), _partition(NULL), _sha256_ctx(NULL),
+    _sha256_valid(false)
 #ifndef UPDATE_NOCRYPT
     ,
     _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
@@ -94,6 +177,7 @@ UpdateClass::UpdateClass()
     _hash(NULL), _sign(NULL), _signatureBuffer(NULL), _signatureSize(0), _hashType(-1)
 #endif /* UPDATE_SIGN */
 {
+  memset(_sha256_result, 0, sizeof(_sha256_result));
 }
 
 UpdateClass &UpdateClass::onProgress(THandlerFunction_Progress fn) {
@@ -119,6 +203,8 @@ void UpdateClass::_reset() {
     _hash = nullptr;
   }
 #endif /* UPDATE_SIGN */
+
+  _sha256FreeContext();
 
 #ifndef UPDATE_NOCRYPT
   _cryptBuffer = nullptr;
@@ -196,6 +282,13 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   _error = 0;
   _target_md5 = emptyString;
   _md5 = MD5Builder();
+  _sha256FreeContext();
+  _sha256_valid = false;
+  memset(_sha256_result, 0, sizeof(_sha256_result));
+#ifndef UPDATE_NOCRYPT
+  _target_md5_decrypted = true;
+  _target_sha256_decrypted = true;
+#endif /* UPDATE_NOCRYPT */
 
 #ifdef UPDATE_SIGN
   // Create and initialize signature hash if signature verification is enabled
@@ -622,6 +715,12 @@ bool UpdateClass::_writeBuffer() {
   if (!_target_md5_decrypted) {
     _md5.add(_buffer, _bufferLen);
   }
+  if (!_target_sha256_decrypted) {
+    if (!_sha256Update(_buffer, _bufferLen)) {
+      _abort(UPDATE_ERROR_SHA256);
+      return false;
+    }
+  }
 
   //check if data in buffer needs decrypting
   if (_cryptMode & U_AES_IMAGE_DECRYPTING_BIT) {
@@ -676,7 +775,7 @@ bool UpdateClass::_writeBuffer() {
     return false;
   }
 
-  //restore magic or md5 will fail
+  //restore magic or md5/sha256 will fail
   if (!_progress && _command == U_FLASH) {
     _buffer[0] = ESP_IMAGE_HEADER_MAGIC;
   }
@@ -684,6 +783,14 @@ bool UpdateClass::_writeBuffer() {
   if (_target_md5_decrypted) {
 #endif /* UPDATE_NOCRYPT */
     _md5.add(_buffer, _bufferLen);
+#ifndef UPDATE_NOCRYPT
+  }
+  if (_target_sha256_decrypted) {
+#endif /* UPDATE_NOCRYPT */
+    if (!_sha256Update(_buffer, _bufferLen)) {
+      _abort(UPDATE_ERROR_SHA256);
+      return false;
+    }
 #ifndef UPDATE_NOCRYPT
   }
 #endif /* UPDATE_NOCRYPT */
@@ -763,6 +870,106 @@ bool UpdateClass::setMD5(
   return true;
 }
 
+bool UpdateClass::setSHA256(
+  const char *expected_sha256
+#ifndef UPDATE_NOCRYPT
+  ,
+  bool calc_post_decryption
+#endif /* UPDATE_NOCRYPT */
+) {
+  if (!expected_sha256 || strlen(expected_sha256) != 64 || !HEXBuilder::isHexString(expected_sha256, 64)) {
+    return false;
+  }
+  // Digest must cover the entire payload; reject once writing has started.
+  if (_progress > 0 || _bufferLen > 0) {
+    log_e("setSHA256 must be called before writing data");
+    return false;
+  }
+  if (!isRunning()) {
+    log_e("setSHA256 requires an active update (call begin first)");
+    return false;
+  }
+
+  UpdateSHA256Context *ctx = new (std::nothrow) UpdateSHA256Context;
+  if (!ctx) {
+    log_e("Failed to allocate SHA-256 context");
+    return false;
+  }
+  if (!update_sha256_begin(ctx)) {
+    delete ctx;
+    return false;
+  }
+
+  HEXBuilder::hex2bytes(ctx->expected, sizeof(ctx->expected), expected_sha256);
+  _sha256FreeContext();
+  _sha256_valid = false;
+  memset(_sha256_result, 0, sizeof(_sha256_result));
+  _sha256_ctx = ctx;
+#ifndef UPDATE_NOCRYPT
+  _target_sha256_decrypted = calc_post_decryption;
+#endif /* UPDATE_NOCRYPT */
+  return true;
+}
+
+String UpdateClass::sha256String(void) {
+  if (!_sha256_valid) {
+    return String();
+  }
+  return HEXBuilder::bytes2hex(_sha256_result, sizeof(_sha256_result));
+}
+
+void UpdateClass::sha256(uint8_t *result) {
+  if (!result) {
+    return;
+  }
+  if (_sha256_valid) {
+    memcpy(result, _sha256_result, sizeof(_sha256_result));
+  } else {
+    memset(result, 0, sizeof(_sha256_result));
+  }
+}
+
+void UpdateClass::_sha256FreeContext() {
+  if (_sha256_ctx) {
+    update_sha256_abort(static_cast<UpdateSHA256Context *>(_sha256_ctx));
+    delete static_cast<UpdateSHA256Context *>(_sha256_ctx);
+    _sha256_ctx = nullptr;
+  }
+}
+
+bool UpdateClass::_sha256Update(const uint8_t *data, size_t len) {
+  if (!_sha256_ctx) {
+    return true;
+  }
+  if (!update_sha256_update(static_cast<UpdateSHA256Context *>(_sha256_ctx), data, len)) {
+    log_e("SHA-256 update failed");
+    _sha256FreeContext();
+    return false;
+  }
+  return true;
+}
+
+bool UpdateClass::_sha256Finish() {
+  if (!_sha256_ctx) {
+    return false;
+  }
+  UpdateSHA256Context *ctx = static_cast<UpdateSHA256Context *>(_sha256_ctx);
+  uint8_t digest[32];
+  bool ok = update_sha256_finish(ctx, digest);
+  if (ok) {
+    ok = memcmp(ctx->expected, digest, sizeof(digest)) == 0;
+  }
+  // Streaming state is consumed by finish; drop the heap object either way.
+  delete ctx;
+  _sha256_ctx = nullptr;
+  if (!ok) {
+    _sha256_valid = false;
+    return false;
+  }
+  memcpy(_sha256_result, digest, sizeof(_sha256_result));
+  return true;
+}
+
 bool UpdateClass::end(bool evenIfRemaining) {
   if (hasError() || _size == 0) {
     return false;
@@ -785,6 +992,14 @@ bool UpdateClass::end(bool evenIfRemaining) {
   if (_target_md5.length()) {
     if (_target_md5 != _md5.toString()) {
       _abort(UPDATE_ERROR_MD5);
+      return false;
+    }
+  }
+
+  bool sha256_used = _sha256_ctx != nullptr;
+  if (sha256_used) {
+    if (!_sha256Finish()) {
+      _abort(UPDATE_ERROR_SHA256);
       return false;
     }
   }
@@ -826,7 +1041,9 @@ bool UpdateClass::end(bool evenIfRemaining) {
   }
 #endif /* UPDATE_SIGN */
 
-  return _verifyEnd();
+  bool success = _verifyEnd();
+  _sha256_valid = success && sha256_used;
+  return success;
 }
 
 size_t UpdateClass::write(uint8_t *data, size_t len) {
