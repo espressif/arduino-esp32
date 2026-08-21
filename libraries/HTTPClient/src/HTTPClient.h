@@ -251,6 +251,14 @@ public:
 
   NetworkClient &getStream(void);
   NetworkClient *getStreamPtr(void);
+  /**
+   * @brief Return the NetworkClient set by begin(), even before connect().
+   *
+   * Unlike getStreamPtr(), this does not require an active TCP connection.
+   */
+  NetworkClient *getClient(void) {
+    return _client;
+  }
   int writeToStream(Stream *stream);
   String getString(void);
 

@@ -57,6 +57,17 @@ using HTTPUpdateEndCB = std::function<void()>;
 using HTTPUpdateErrorCB = std::function<void(int)>;
 using HTTPUpdateProgressCB = std::function<void(int, int)>;
 
+enum HTTPUpdateSidecarResult : uint8_t {
+  HTTPUPDATE_SIDECAR_MD5_FAILED = 0x01,
+  HTTPUPDATE_SIDECAR_SHA256_FAILED = 0x02,
+};
+
+// Implemented in HTTPUpdateChecksum.cpp; referenced only when setMD5sumUrl/setSHA256sumUrl is used.
+uint8_t httpUpdateFetchChecksumSidecars(
+  NetworkClient *client, const String *md5Url, const String *sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
+  const String &user, const String &password, const String &auth, const HTTPUpdateRequestCB &requestCB
+);
+
 class HTTPUpdate {
 public:
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
@@ -92,6 +103,20 @@ public:
   void setSHA256sum(const String &sha256Sum) {
     _sha256Sum = sha256Sum;
   }
+
+  /**
+   * Optional URL of a small checksum sidecar (e.g. firmware.bin.md5).
+   * Used only when setMD5sum() is empty; response header x-MD5 still wins.
+   * Calling this pulls in the sidecar fetch code (flash cost only when used).
+   */
+  void setMD5sumUrl(const String &url);
+
+  /**
+   * Optional URL of a small checksum sidecar (e.g. firmware.bin.sha256).
+   * Used only when setSHA256sum() is empty; response header x-SHA256 still wins.
+   * Calling this pulls in the sidecar fetch code (flash cost only when used).
+   */
+  void setSHA256sumUrl(const String &url);
 
   void setAuthorization(const String &user, const String &password) {
     _user = user;
@@ -157,6 +182,11 @@ protected:
   bool _rebootOnUpdate = true;
 
 private:
+  using ChecksumSidecarFetchFn = uint8_t (*)(
+    NetworkClient *client, const String *md5Url, const String *sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
+    const String &user, const String &password, const String &auth, const HTTPUpdateRequestCB &requestCB
+  );
+
   int _httpClientTimeout;
   UpdateClass *_updater;
   followRedirects_t _followRedirects;
@@ -165,6 +195,11 @@ private:
   String _auth;
   String _md5Sum;
   String _sha256Sum;
+  String *_md5SumUrl = nullptr;
+  String *_sha256SumUrl = nullptr;
+  bool _md5SumUrlSet = false;
+  bool _sha256SumUrlSet = false;
+  ChecksumSidecarFetchFn _checksumSidecarFetch = nullptr;
 
   // Callbacks
   HTTPUpdateStartCB _cbStart;

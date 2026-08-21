@@ -38,7 +38,10 @@
 HTTPUpdate::HTTPUpdate(int httpClientTimeout, UpdateClass *updater)
   : _httpClientTimeout(httpClientTimeout), _updater(updater), _followRedirects(HTTPC_DISABLE_FOLLOW_REDIRECTS) {}
 
-HTTPUpdate::~HTTPUpdate(void) {}
+HTTPUpdate::~HTTPUpdate(void) {
+  delete _md5SumUrl;
+  delete _sha256SumUrl;
+}
 
 HTTPUpdateResult HTTPUpdate::update(NetworkClient &client, const String &url, const String &currentVersion, HTTPUpdateRequestCB requestCB) {
   HTTPClient http;
@@ -195,6 +198,19 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
 
   HTTPUpdateResult ret = HTTP_UPDATE_FAILED;
 
+  // Prefetch checksum sidecars before the firmware GET when an explicit digest is
+  // not already set. Response headers can still override a successful prefetch.
+  String md5;
+  String sha256;
+  uint8_t sidecarFailures = 0;
+  if (_checksumSidecarFetch) {
+    uint8_t requested = (_md5SumUrlSet && !_md5Sum.length() ? HTTPUPDATE_SIDECAR_MD5_FAILED : 0)
+                        | (_sha256SumUrlSet && !_sha256Sum.length() ? HTTPUPDATE_SIDECAR_SHA256_FAILED : 0);
+    sidecarFailures = _checksumSidecarFetch(
+      http.getClient(), _md5SumUrl, _sha256SumUrl, requested, md5, sha256, _httpClientTimeout, _followRedirects, _user, _password, _auth, requestCB
+    );
+  }
+
   // use HTTP/1.0 for update since the update handler not support any transfer Encoding
   http.useHTTP10(true);
   http.setTimeout(_httpClientTimeout);
@@ -268,21 +284,28 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   log_d(" - code: %d\n", code);
   log_d(" - len: %d\n", len);
 
-  String md5;
+  // Precedence: setMD5sum()/setSHA256sum() > response header > sidecar URL
   if (_md5Sum.length()) {
     md5 = _md5Sum;
   } else if (http.hasHeader("x-MD5")) {
     md5 = http.header("x-MD5");
+  } else if ((sidecarFailures & HTTPUPDATE_SIDECAR_MD5_FAILED) && code == HTTP_CODE_OK && len > 0) {
+    _setLastError(HTTP_UE_SERVER_FAULTY_MD5);
+    http.end();
+    return HTTP_UPDATE_FAILED;
   }
   if (md5.length()) {
     log_d(" - MD5: %s\n", md5.c_str());
   }
 
-  String sha256;
   if (_sha256Sum.length()) {
     sha256 = _sha256Sum;
   } else if (http.hasHeader("x-SHA256")) {
     sha256 = http.header("x-SHA256");
+  } else if ((sidecarFailures & HTTPUPDATE_SIDECAR_SHA256_FAILED) && code == HTTP_CODE_OK && len > 0) {
+    _setLastError(HTTP_UE_SERVER_FAULTY_SHA256);
+    http.end();
+    return HTTP_UPDATE_FAILED;
   }
   if (sha256.length()) {
     log_d(" - SHA256: %s\n", sha256.c_str());

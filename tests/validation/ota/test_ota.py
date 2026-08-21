@@ -234,6 +234,101 @@ def _expect_unity_with_arduino_ota(dut, firmware: Path, host_ip: str, host_ipv6:
         return
 
 
+SIDECAR_ARTIFACTS = (
+    "ota.ino.bin.sha256",
+    "ota.ino.bin.md5",
+    "upper.sha256",
+    "bad.sha256",
+    "wrong.sha256",
+    "wrong.md5",
+)
+
+
+def _remove_sidecar_artifacts(serve_dir: Path) -> None:
+    for artifact in SIDECAR_ARTIFACTS:
+        (serve_dir / artifact).unlink(missing_ok=True)
+
+
+class DualStackHTTPServer(ThreadingTCPServer):
+    """HTTP server reachable over IPv4 and IPv6."""
+
+    address_family = socket.AF_INET6
+    allow_reuse_address = True
+    daemon_threads = True
+
+    def server_bind(self):
+        # Prefer dual-stack; if the sockopt is unsupported, still bind IPv6.
+        try:
+            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        except (AttributeError, OSError) as e:
+            LOGGER.debug("IPV6_V6ONLY=0 not applied (%s); continuing with IPv6 bind", e)
+        super().server_bind()
+
+
+class IPv4HTTPServer(ThreadingTCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+
+def _http_handler(serve_dir: Path, firmware_sha256: str):
+    class Handler(SimpleHTTPRequestHandler):
+        def __init__(self, *args, **kwargs):
+            self._omit_digest_header = False
+            super().__init__(*args, directory=str(serve_dir), **kwargs)
+
+        def do_GET(self):
+            path = self.path.split("?", 1)[0]
+            if path == "/redirect-sha256":
+                self.send_response(302)
+                self.send_header("Location", "/ota.ino.bin.sha256")
+                self.end_headers()
+                return
+            if path == "/slow.sha256":
+                body = f"{firmware_sha256}  ota.ino.bin\n".encode()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                for byte in body:
+                    self.wfile.write(bytes((byte,)))
+                    self.wfile.flush()
+                    time.sleep(0.002)
+                return
+            if path == "/unknown-length.sha256":
+                body = f"{firmware_sha256}\n".encode()
+                self.send_response(200)
+                self.send_header("Connection", "close")
+                self.end_headers()
+                self.wfile.write(body)
+                self.close_connection = True
+                return
+            if path == "/not-modified.bin":
+                self.send_response(304)
+                self.end_headers()
+                return
+            if path == "/firmware-noheader.bin":
+                # Same binary as ota.ino.bin, but without x-SHA256 (sidecar-only path).
+                self.path = "/ota.ino.bin"
+                self._omit_digest_header = True
+                try:
+                    return SimpleHTTPRequestHandler.do_GET(self)
+                finally:
+                    self._omit_digest_header = False
+            self._omit_digest_header = False
+            return SimpleHTTPRequestHandler.do_GET(self)
+
+        def end_headers(self):
+            path = self.path.split("?", 1)[0]
+            if path.endswith("/ota.ino.bin") or path == "/ota.ino.bin":
+                if not self._omit_digest_header:
+                    self.send_header("x-SHA256", firmware_sha256)
+            super().end_headers()
+
+        def log_message(self, format, *args):
+            LOGGER.debug("HTTP %s - %s", self.address_string(), format % args)
+
+    return Handler
+
+
 def test_ota(dut, wifi_ssid, wifi_pass, request):
     if not wifi_ssid:
         pytest.fail("WiFi SSID is required but not provided. Use --wifi-ssid argument.")
@@ -263,34 +358,19 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
         LOGGER.warning("Host has no IPv6 support; all IPv6 cases will be ignored")
 
     serve_dir = firmware.parent
-    firmware_sha256 = hashlib.sha256(firmware.read_bytes()).hexdigest()
+    firmware_bytes = firmware.read_bytes()
+    firmware_sha256 = hashlib.sha256(firmware_bytes).hexdigest()
+    firmware_md5 = hashlib.md5(firmware_bytes).hexdigest()
 
-    class DualStackHTTPServer(ThreadingTCPServer):
-        """HTTP server reachable over IPv4 and IPv6."""
-
-        address_family = socket.AF_INET6
-        allow_reuse_address = True
-        daemon_threads = True
-
-        def server_bind(self):
-            # Prefer dual-stack; if the sockopt is unsupported, still bind IPv6.
-            try:
-                self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-            except (AttributeError, OSError) as e:
-                LOGGER.debug("IPV6_V6ONLY=0 not applied (%s); continuing with IPv6 bind", e)
-            super().server_bind()
-
-    class IPv4HTTPServer(ThreadingTCPServer):
-        allow_reuse_address = True
-        daemon_threads = True
-
-    class Handler(SimpleHTTPRequestHandler):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, directory=str(serve_dir), **kwargs)
-
-        def end_headers(self):
-            self.send_header("x-SHA256", firmware_sha256)
-            super().end_headers()
+    # Sidecar artifacts for HTTPUpdate checksum URL tests (#12826)
+    request.addfinalizer(lambda: _remove_sidecar_artifacts(serve_dir))
+    (serve_dir / "ota.ino.bin.sha256").write_text(f"{firmware_sha256}  ota.ino.bin\n", encoding="ascii")
+    (serve_dir / "ota.ino.bin.md5").write_text(f"{firmware_md5}  ota.ino.bin\n", encoding="ascii")
+    (serve_dir / "upper.sha256").write_text(f"{firmware_sha256.upper()}\n", encoding="ascii")
+    (serve_dir / "bad.sha256").write_text("not-a-valid-digest\n", encoding="ascii")
+    (serve_dir / "wrong.sha256").write_text("0" * 64 + "\n", encoding="ascii")
+    (serve_dir / "wrong.md5").write_text("0" * 32 + "\n", encoding="ascii")
+    Handler = _http_handler(serve_dir, firmware_sha256)
 
     port = 8766
     server = None
