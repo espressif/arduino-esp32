@@ -91,6 +91,7 @@ OpenThread Library Structure
   * ``OpenThread``: Main class for managing Thread network operations (includes the Joiner / Commissioner roles).
   * ``DataSet``: Class for managing Thread operational datasets.
   * ``OThreadScan``: MLE Thread network discovery (``discoverNetworks()``) backed by ``otThreadDiscover()``; results in ``OThreadNetworkInfo``.
+  * ``OThreadDNSSD``: ESPmDNS-style Thread DNS-SD advertise + discover (``begin`` / ``addService`` / ``waitForAnnounce`` / ``queryService`` / ``queryHost`` / async ``startQuery*``).
   * ``OThreadUDP``: Arduino ``UDP``-compatible class for sending and receiving IPv6 UDP datagrams over the Thread mesh, backed by the raw ``otUdpSocket`` API (no lwIP).
   * ``OThreadCoAP`` classes: Application CoAP client and server wrappers (``OThreadCoAPClient``, ``OThreadCoAPServer``, optional CoAPS classes) backed by ``otCoap*`` / ``otCoapSecure*``.
 
@@ -149,6 +150,28 @@ same primitive Matter uses during commissioning.
     :maxdepth: 2
 
     openthread_scan
+
+OThreadDNSSD
+************
+
+The ``OThreadDNSSD`` class provides an ESPmDNS-style API to advertise and discover
+services on Thread (SRP client + DNS client under the hood). Services register with
+a Border Router so they can be discovered from the Thread mesh and (via the BR) the
+infrastructure network.
+
+* **Familiar API**: ``begin``, ``addService``, ``addServiceTxt``, ``waitForAnnounce``,
+  ``isAnnounceComplete``, ``onServiceEvent``, ``queryService``, ``queryHost``,
+  ``startQueryService``, ``startQueryHost``, ``onQueryEvent``.
+* **Auto SRP / DNS**: finds the on-mesh / BR SRP server from Network Data; DNS
+  default server follows for discover.
+* **Live announce status**: ``isAnnounceComplete()`` reflects local SRP client
+  ``Registered`` state (updated as OpenThread learns the server accepted the update).
+* **Fixed pools**: service/TXT/query caps like ``OThreadScan`` result limits.
+
+.. toctree::
+    :maxdepth: 2
+
+    openthread_dnssd
 
 OpenThreadCLI
 *************
@@ -320,7 +343,8 @@ The OpenThread library includes CLI-based and Native API examples demonstrating 
 * **Thread Commissioning** - Demonstrates a CommissionerNode that forms a network and authorizes a JoinerNode that joins using only a PSKd. `View Thread Commissioning examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning>`_.
 * **UDP Light + Switch** - Demonstrates a Native UDP light server and one or more switch clients using Thread commissioning and application port ``5051``. `View UDP Light + Switch examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch>`_.
 * **UDP Sensor Network** - Demonstrates a Native UDP collector and multiple sensor nodes, including application-level sequence ACKs, application port ``5050``, and optional Sleepy End Device behavior. `View UDP Sensor Network examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork>`_.
-* **Native Thread Network Discovery** - Discovers nearby Thread networks with ``OThreadScan.discoverNetworks()`` (blocking, async, and callback patterns). `View Native ThreadScan examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan>`_.
+* **Native Thread Network Discovery** - Discovers nearby Thread networks with ``OThreadScan.discoverNetworks()`` (blocking, async, and callback patterns). See ``libraries/OpenThread/examples/Native/ThreadScan/`` and :doc:`openthread_scan`.
+* **Native Thread DNS-SD** - Advertise and discover with ``OThreadDNSSD`` (blocking announce, event recovery, remove cycle, blocking and async ``queryService`` / ``queryHost``). App lab ``ThreadDNSSD_UDP_Light`` (light + switch + WiFi web via OTBR Advertising Proxy). See ``libraries/OpenThread/examples/Native/ThreadDNSSD/`` and :doc:`openthread_dnssd`.
 
 **Native CoAP Examples** (``OThreadCoAPClient`` / ``OThreadCoAPServer`` on port 5683; CoAPS on 5684 when enabled):
 

@@ -12,6 +12,7 @@ The Native API is the typed C++ interface exposed by Arduino wrappers such as:
 - `OThreadUDP`
 - `OThreadCoAP` (`OThreadCoAPClient`, `OThreadCoAPServer`, …)
 - `OThreadScan` (network scanning — Native API)
+- `OThreadDNSSD` (Thread DNS-SD advertise + discover; SRP + DNS under the hood)
 
 Instead of sending textual OpenThread CLI commands, sketches call methods
 directly, for example:
@@ -173,6 +174,25 @@ See [Native ThreadScan examples](https://github.com/espressif/arduino-esp32/tree
 patterns. Raw 802.15.4 beacon scan remains available via
 [CLI ThreadScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan) if needed.
 
+### `OThreadDNSSD`
+
+`OThreadDNSSD` advertises and discovers services on Thread with an ESPmDNS-style API
+(SRP + DNS under the hood). Requires an attached role and a Border Router
+SRP/DNS server. `isAnnounceComplete()` reports live local SRP `Registered` state.
+
+```cpp
+OThreadDNSSD.begin("sensor-1");
+OThreadDNSSD.addService("ot", "udp", 12345);
+OThreadDNSSD.waitForAnnounce(30000);
+
+// Discover board:
+OThreadDNSSD.begin("browser");
+int n = OThreadDNSSD.queryService("ot", "udp");
+```
+
+See [Native ThreadDNSSD examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD)
+(advertise / callback / remove / query / queryHost / query callback / UDP Light).
+
 ## Native vs CLI: quick comparison
 
 | Topic | Native approach | CLI approach |
@@ -240,6 +260,7 @@ Some examples also require:
 | [Native UDP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP) | [UDP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch), [UDP Sensor Network](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork) | Native UDP application traffic (ports 5050/5051). See [Native UDP examples overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/UDP/README.md). |
 | [Native CoAP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP) | [CoAP SimpleGet](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet), [CoAP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch), [CoAP Sensor](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor), [CoAP CRUD](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD), [CoAP Secure](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Secure), [CoAP Greenhouse](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse) | Native CoAP / CoAPS on ports 5683/5684. See [Native CoAP examples overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/CoAP/README.md). |
 | [Native ThreadScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan) | [ThreadScan_Discover](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover), [ThreadScan_Async](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async), [ThreadScan_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Callback) | `OThreadScan.discoverNetworks()` — MLE Thread discovery with `OThreadNetworkInfo` results. CLI reference: [CLI ThreadScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan). |
+| [Native ThreadDNSSD](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD) | [ThreadDNSSD_Advertise](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise), [ThreadDNSSD_Advertise_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise_Callback), [ThreadDNSSD_Remove](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Remove), [ThreadDNSSD_Query](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query), [ThreadDNSSD_QueryHost](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost), [ThreadDNSSD_Query_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback), [ThreadDNSSD_UDP_Light](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light) | `OThreadDNSSD` — advertise (SRP) + discover (DNS); UDP light lab with WiFi web. |
 
 ## Choosing an example
 
@@ -261,6 +282,9 @@ Some examples also require:
 - Use [ThreadScan_Discover](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover) for blocking Thread network discovery.
 - Use [ThreadScan_Async](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async) for non-blocking discovery polling in `loop()`.
 - Use [ThreadScan_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Callback) for per-network streaming callbacks.
+- Use [ThreadDNSSD_Advertise](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise) to register a service with a Border Router SRP server.
+- Use [ThreadDNSSD_Query](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query) / [ThreadDNSSD_QueryHost](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost) / [ThreadDNSSD_Query_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback) to browse or resolve (pair with Advertise).
+- Use [ThreadDNSSD_UDP_Light](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light) for an SRP + UDP lamp with an optional WiFi web UI.
 
 ## Practical guidance
 
