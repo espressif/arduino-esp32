@@ -157,9 +157,21 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
     return false;
   }
 
-  attr = fan_control::attribute::create_speed_setting(cluster, percent);
+  attr = fan_control::attribute::create_speed_setting(cluster, 0);
   if (attr == nullptr) {
     log_e("Failed to create Fan Speed Setting Attribute.");
+    return false;
+  }
+
+  attr = fan_control::attribute::create_speed_current(cluster, 0);
+  if (attr == nullptr) {
+    log_e("Failed to create Fan Speed Current Attribute.");
+    return false;
+  }
+
+  attr = fan_control::attribute::create_percent_current(cluster, percent);
+  if (attr == nullptr) {
+    log_e("Failed to create Fan Percent Current Attribute.");
     return false;
   }
 
@@ -230,8 +242,16 @@ bool MatterFan::setSpeedPercent(uint8_t newPercent, bool performUpdate) {
   if (speedVal.val.u8 != newPercent) {
     speedVal.val.u8 = newPercent;
     bool ret;
+    esp_matter_attr_val_t currentPercentVal = esp_matter_invalid(NULL);
+    if (!getAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &currentPercentVal)) {
+      log_e("Failed to get Fan Current Percent Attribute.");
+      return false;
+    }
+
+    currentPercentVal.val.u8 = newPercent;
     if (performUpdate) {
       ret = updateAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, &speedVal);
+      ret = updateAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &currentPercentVal);
     } else {
       ret = setAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, &speedVal);
       ret = setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &speedVal);
