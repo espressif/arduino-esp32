@@ -33,11 +33,19 @@ uint8_t clampColor254(uint8_t value) {
   return value > 254 ? 254 : value;
 }
 
+uint8_t clampHue254(uint16_t hue) {
+  return hue > 254 ? 254 : (uint8_t)hue;
+}
+
 uint8_t clampCurrentLevel(uint8_t value) {
   if (value < 1) {
     return 1;
   }
   return clampColor254(value);
+}
+
+espHsvColor_t clampHsvColor(espHsvColor_t hsv) {
+  return {clampHue254(hsv.h), clampColor254(hsv.s), clampCurrentLevel(hsv.v)};
 }
 
 void reportAttribute(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t val) {
@@ -49,7 +57,7 @@ void syncHsvToColorCluster(uint16_t endpoint_id, espHsvColor_t hsv) {
   const uint8_t colorMode = (uint8_t)ColorControl::ColorMode::kCurrentHueAndCurrentSaturation;
   reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::ColorMode::Id, esp_matter_enum8(colorMode));
   reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::EnhancedColorMode::Id, esp_matter_enum8(colorMode));
-  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentHue::Id, esp_matter_uint8(clampColor254((uint8_t)hsv.h)));
+  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentHue::Id, esp_matter_uint8(clampHue254(hsv.h)));
   reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentSaturation::Id, esp_matter_uint8(clampColor254(hsv.s)));
   reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentX::Id, esp_matter_uint16(xy.x));
   reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentY::Id, esp_matter_uint16(xy.y));  // codespell:ignore
@@ -96,8 +104,8 @@ endpoint_t *createRgbColorLightEndpoint(node_t *node, dimmable_light::config_t *
   }
 
   color_control::feature::hue_saturation::config_t hs_config;
-  hs_config.current_hue = (uint8_t)hsv.h;
-  hs_config.current_saturation = hsv.s;
+  hs_config.current_hue = clampHue254(hsv.h);
+  hs_config.current_saturation = clampColor254(hsv.s);
   color_control::feature::hue_saturation::add(color_control_cluster, &hs_config);
 
   color_control::feature::xy::config_t xy_config;
@@ -183,7 +191,11 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
           attribute_id == ColorControl::Attributes::ColorMode::Id || attribute_id == ColorControl::Attributes::EnhancedColorMode::Id
           || attribute_id == ColorControl::Attributes::RemainingTime::Id || attribute_id == ColorControl::Attributes::Options::Id
         ) {
-          log_d("RGB Light ColorMode/Options/RemainingTime attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u16);
+          if (attribute_id == ColorControl::Attributes::RemainingTime::Id) {
+            log_d("RGB Light RemainingTime attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u16);
+          } else {
+            log_d("RGB Light ColorMode/Options attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u8);
+          }
           break;
         } else {
           log_i("Color Control Attribute ID [0x%" PRIx32 "] not processed.", attribute_id);
@@ -216,16 +228,16 @@ bool MatterColorLight::begin(bool initialState, espHsvColor_t _colorHSV) {
     return false;
   }
 
-  espXyColor_t xy = hsvToXyColor(_colorHSV);
+  colorHSV = clampHsvColor(_colorHSV);
+  espXyColor_t xy = hsvToXyColor(colorHSV);
 
   dimmable_light::config_t light_config;
   light_config.on_off.on_off = initialState;
   light_config.on_off_lighting.start_up_on_off = nullptr;
   onOffState = initialState;
 
-  light_config.level_control.current_level = _colorHSV.v;
+  light_config.level_control.current_level = colorHSV.v;
   light_config.level_control_lighting.start_up_current_level = nullptr;
-  colorHSV = {_colorHSV.h, _colorHSV.s, _colorHSV.v};
 
   endpoint_t *endpoint = createRgbColorLightEndpoint(node::get(), &light_config, (void *)this, colorHSV, xy);
   if (endpoint == nullptr) {
@@ -305,12 +317,14 @@ bool MatterColorLight::setColorHSV(espHsvColor_t _hsvColor) {
     return false;
   }
 
+  const espHsvColor_t hsvColor = clampHsvColor(_hsvColor);
+
   // avoid processing if there was no change
-  if (colorHSV.h == _hsvColor.h && colorHSV.s == _hsvColor.s && colorHSV.v == _hsvColor.v) {
+  if (colorHSV.h == hsvColor.h && colorHSV.s == hsvColor.s && colorHSV.v == hsvColor.v) {
     return true;
   }
 
-  colorHSV = {_hsvColor.h, _hsvColor.s, _hsvColor.v};
+  colorHSV = hsvColor;
   syncHsvToColorCluster(endpoint_id, colorHSV);
 
   if (_onChangeColorCB != NULL) {

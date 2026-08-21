@@ -34,11 +34,19 @@ uint8_t clampColor254(uint8_t value) {
   return value > 254 ? 254 : value;
 }
 
+uint8_t clampHue254(uint16_t hue) {
+  return hue > 254 ? 254 : (uint8_t)hue;
+}
+
 uint8_t clampCurrentLevel(uint8_t value) {
   if (value < 1) {
     return 1;
   }
   return clampColor254(value);
+}
+
+espHsvColor_t clampHsvColor(espHsvColor_t hsv) {
+  return {clampHue254(hsv.h), clampColor254(hsv.s), clampCurrentLevel(hsv.v)};
 }
 
 // report() notifies subscribers without PRE_UPDATE, so setColorHSV() does not
@@ -56,7 +64,7 @@ void reportColorMode(uint16_t endpoint_id, ColorControl::ColorMode mode) {
 void syncHsvToColorCluster(uint16_t endpoint_id, espHsvColor_t hsv) {
   espXyColor_t xy = hsvToXyColor(hsv);
   reportColorMode(endpoint_id, ColorControl::ColorMode::kCurrentHueAndCurrentSaturation);
-  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentHue::Id, esp_matter_uint8(clampColor254((uint8_t)hsv.h)));
+  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentHue::Id, esp_matter_uint8(clampHue254(hsv.h)));
   reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentSaturation::Id, esp_matter_uint8(clampColor254(hsv.s)));
   reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentX::Id, esp_matter_uint16(xy.x));
   reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentY::Id, esp_matter_uint16(xy.y));  // codespell:ignore
@@ -154,7 +162,11 @@ bool MatterEnhancedColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t 
           || attribute_id == ColorControl::Attributes::RemainingTime::Id || attribute_id == ColorControl::Attributes::Options::Id
         ) {
           // Alexa writes these when switching between the color wheel and color temperature.
-          log_d("Enhanced ColorLight ColorMode/Options/RemainingTime attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u16);
+          if (attribute_id == ColorControl::Attributes::RemainingTime::Id) {
+            log_d("Enhanced ColorLight RemainingTime attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u16);
+          } else {
+            log_d("Enhanced ColorLight ColorMode/Options attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u8);
+          }
           break;
         } else {
           log_i("Color Control Attribute ID [0x%" PRIx32 "] not processed.", attribute_id);
@@ -187,16 +199,18 @@ bool MatterEnhancedColorLight::begin(bool initialState, espHsvColor_t _colorHSV,
     return false;
   }
 
-  espXyColor_t xy = hsvToXyColor(_colorHSV);
+  colorHSV = clampHsvColor(_colorHSV);
+  brightnessLevel = clampCurrentLevel(brightness);
+  colorHSV.v = brightnessLevel;
+  espXyColor_t xy = hsvToXyColor(colorHSV);
 
   extended_color_light::config_t light_config;
   light_config.on_off.on_off = initialState;
   light_config.on_off_lighting.start_up_on_off = nullptr;
   onOffState = initialState;
 
-  light_config.level_control.current_level = brightness;
+  light_config.level_control.current_level = brightnessLevel;
   light_config.level_control_lighting.start_up_current_level = nullptr;
-  brightnessLevel = brightness;
 
   light_config.color_control.color_mode = (uint8_t)ColorControl::ColorMode::kCurrentHueAndCurrentSaturation;
   light_config.color_control.enhanced_color_mode = (uint8_t)ColorControl::ColorMode::kCurrentHueAndCurrentSaturation;
@@ -205,7 +219,6 @@ bool MatterEnhancedColorLight::begin(bool initialState, espHsvColor_t _colorHSV,
   light_config.color_control_color_temperature.color_temperature_mireds = ColorTemperature;
   light_config.color_control_color_temperature.start_up_color_temperature_mireds = nullptr;
   colorTemperatureLevel = ColorTemperature;
-  colorHSV = {_colorHSV.h, _colorHSV.s, _colorHSV.v};
 
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = extended_color_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -216,8 +229,8 @@ bool MatterEnhancedColorLight::begin(bool initialState, espHsvColor_t _colorHSV,
 
   // Hue/saturation for the Arduino HSV API (official extended_color_light uses XY + color temperature)
   color_control::feature::hue_saturation::config_t hs_config;
-  hs_config.current_hue = _colorHSV.h;
-  hs_config.current_saturation = _colorHSV.s;
+  hs_config.current_hue = clampHue254(colorHSV.h);
+  hs_config.current_saturation = clampColor254(colorHSV.s);
   cluster_t *color_control_cluster = cluster::get(endpoint, ColorControl::Id);
   color_control::feature::hue_saturation::add(color_control_cluster, &hs_config);
 
@@ -284,13 +297,15 @@ bool MatterEnhancedColorLight::setBrightness(uint8_t newBrightness) {
     return false;
   }
 
+  const uint8_t brightness = clampCurrentLevel(newBrightness);
+
   // avoid processing if there was no change
-  if (brightnessLevel == newBrightness) {
+  if (brightnessLevel == brightness) {
     return true;
   }
 
-  brightnessLevel = newBrightness;
-  colorHSV.v = newBrightness;
+  brightnessLevel = brightness;
+  colorHSV.v = brightness;
 
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, LevelControl::Id);
@@ -357,14 +372,16 @@ bool MatterEnhancedColorLight::setColorHSV(espHsvColor_t _hsvColor) {
     return false;
   }
 
+  const espHsvColor_t hsvColor = clampHsvColor(_hsvColor);
+
   // avoid processing if there was no change
-  if (colorHSV.h == _hsvColor.h && colorHSV.s == _hsvColor.s && colorHSV.v == _hsvColor.v) {
+  if (colorHSV.h == hsvColor.h && colorHSV.s == hsvColor.s && colorHSV.v == hsvColor.v) {
     return true;
   }
 
-  colorHSV = {_hsvColor.h, _hsvColor.s, _hsvColor.v};
-  const bool brightnessChanged = (brightnessLevel != _hsvColor.v);
-  brightnessLevel = _hsvColor.v;
+  colorHSV = hsvColor;
+  const bool brightnessChanged = (brightnessLevel != hsvColor.v);
+  brightnessLevel = hsvColor.v;
   syncHsvToColorCluster(endpoint_id, colorHSV);
 
   if (_onChangeColorCB != NULL) {
