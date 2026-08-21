@@ -3,6 +3,10 @@
 This example demonstrates how to create a Matter-compatible color light device using an ESP32 SoC microcontroller.\
 The application showcases Matter commissioning, device control via smart home ecosystems, and manual control using a physical button.
 
+Matter 1.5 has no Color Light device type. This example uses ``MatterColorLight``, which is advertised as an Extended Color Light with Hue/Saturation and XY **only**. Smart home apps show a **color wheel** and do **not** show a color temperature slider. For wheel plus temperature, use the [Matter Enhanced Color Light](https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedColorLight) example.
+
+If you previously commissioned a firmware that exposed color temperature on this endpoint, **recommission** the device so the controller reloads the data model.
+
 ## Supported Targets
 
 | SoC | Wi-Fi | Thread | BLE Commissioning | RGB LED | Status |
@@ -25,7 +29,8 @@ The application showcases Matter commissioning, device control via smart home ec
 
 - Matter protocol implementation for a color light device
 - Support for both Wi-Fi and Thread(*) connectivity
-- RGB color control with HSV color model
+- RGB color control with HSV color model (hue 0-254, saturation 0-254, value 0-254)
+- No color temperature control (Matter apps will not show a temperature slider)
 - State persistence using `Preferences` library
 - Button control for toggling light and factory reset
 - Matter commissioning via QR code or manual pairing code

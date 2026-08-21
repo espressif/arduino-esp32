@@ -27,7 +27,7 @@ The application showcases Matter commissioning, a single Matter node containing 
 - Three light endpoints in a single Matter node:
   - Light #1: Simple On/Off Light
   - Light #2: Dimmable Light (on/off with brightness control)
-  - Light #3: Color Light (RGB color control)
+   - Light #3: Color Light (RGB color control, no color temperature)
 - Support for both Wi-Fi and Thread(*) connectivity
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
@@ -128,7 +128,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 - **Light #1**: Simple on/off light
 - **Light #2**: Dimmable light with brightness control
-- **Light #3**: Color light with RGB color control
+- **Light #3**: Color light with RGB color control (no color temperature slider)
 
 #### Apple Home
 

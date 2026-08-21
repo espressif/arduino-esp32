@@ -135,11 +135,11 @@ The color temperature is stored in `Preferences` and restored after power cycles
 
 ### Brightness Control
 
-The light supports brightness adjustment from 0 to 255:
+The light supports brightness adjustment from 0 to 255 in the Arduino API:
 
-- **0**: Light is off
-- **1-254**: Various brightness levels
-- **255**: Maximum brightness
+- **0**: Treated as off / minimum in the sketch
+- **1-254**: Matter CurrentLevel range (254 is full brightness)
+- **255**: Not a valid Matter CurrentLevel (nullable null sentinel); clamp to 254
 - **Default**: 15 (~6% brightness)
 
 The brightness level is stored in `Preferences` and restored after power cycles.

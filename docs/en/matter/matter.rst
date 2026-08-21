@@ -144,9 +144,9 @@ The library provides specialized endpoint classes for different device types. Ea
 
 * ``MatterOnOffLight``: Simple on/off light control
 * ``MatterDimmableLight``: Light with brightness control
-* ``MatterColorTemperatureLight``: Light with color temperature control
-* ``MatterColorLight``: Light with RGB color control (HSV color model)
-* ``MatterEnhancedColorLight``: Enhanced color light with color temperature and brightness control
+* ``MatterColorTemperatureLight``: Light with brightness and color temperature (no RGB wheel)
+* ``MatterColorLight``: RGB color light (HSV/XY, no color temperature slider in apps such as Alexa)
+* ``MatterEnhancedColorLight``: Extended color light with RGB, brightness, and color temperature
 
 **Sensor Endpoints:**
 
@@ -194,8 +194,8 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter On/Off Light** - Creates a Matter-compatible on/off light device with commissioning, device control via smart home ecosystems, and manual control using a physical button with state persistence. `View Matter On/Off Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterOnOffLight>`_
 * **Matter Dimmable Light** - Creates a Matter-compatible dimmable light device with brightness control. `View Matter Dimmable Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterDimmableLight>`_
 * **Matter Color Temperature Light** - Creates a Matter-compatible color temperature light device with adjustable color temperature control. `View Matter Color Temperature Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterTemperatureLight>`_
-* **Matter Color Light** - Creates a Matter-compatible color light device with RGB color control (HSV color model). `View Matter Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterColorLight>`_
-* **Matter Enhanced Color Light** - Creates a Matter-compatible enhanced color light with color temperature and brightness control. `View Matter Enhanced Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedColorLight>`_
+* **Matter Color Light** - Creates a Matter-compatible RGB color light (HSV/XY, no color temperature). `View Matter Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterColorLight>`_
+* **Matter Enhanced Color Light** - Creates a Matter-compatible extended color light with RGB, brightness, and color temperature. `View Matter Enhanced Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedColorLight>`_
 * **Matter Composed Lights** - Creates a Matter node with multiple light endpoints (On/Off Light, Dimmable Light, and Color Light) in a single node. `View Matter Composed Lights code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterComposedLights>`_
 * **Matter On Identify** - Implements the Matter Identify cluster callback for an on/off light device, making the LED blink when the device is identified from a Matter app. `View Matter On Identify code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterOnIdentify>`_
 

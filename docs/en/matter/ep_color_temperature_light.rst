@@ -9,8 +9,8 @@ The ``MatterColorTemperatureLight`` class provides a color temperature light end
 
 **Features:**
 * On/off control
-* Brightness level control (0-255)
-* Color temperature control (100-500 mireds)
+* Brightness level control (0-255; Matter CurrentLevel uses 1-254, and 255 is the nullable null sentinel)
+* Color temperature control (100-500 mireds; higher mireds are warmer)
 * State persistence support
 * Callback support for state, brightness, and temperature changes
 * Integration with Apple HomeKit, Amazon Alexa, and Google Home
@@ -80,7 +80,7 @@ Maximum brightness value (255).
 MAX_COLOR_TEMPERATURE
 ^^^^^^^^^^^^^^^^^^^^^
 
-Maximum color temperature value (500 mireds = cool white).
+Maximum color temperature value in mireds (500 mireds = warm white, about 2000 K).
 
 .. code-block:: arduino
 
@@ -89,7 +89,7 @@ Maximum color temperature value (500 mireds = cool white).
 MIN_COLOR_TEMPERATURE
 ^^^^^^^^^^^^^^^^^^^^^
 
-Minimum color temperature value (100 mireds = warm white).
+Minimum color temperature value in mireds (100 mireds = cool white, about 10000 K).
 
 .. code-block:: arduino
 
@@ -162,7 +162,7 @@ Sets the color temperature.
 
 * ``newTemperature`` - Color temperature in mireds (100-500)
 
-**Note:** Color temperature is measured in mireds (micro reciprocal degrees). Lower values (100-200) are warm white, higher values (400-500) are cool white.
+**Note:** Color temperature is measured in mireds (micro reciprocal degrees, ``mireds = 1000000 / Kelvin``). Lower values (100-200) are cool white; higher values (400-500) are warm white.
 
 getColorTemperature
 ^^^^^^^^^^^^^^^^^^^

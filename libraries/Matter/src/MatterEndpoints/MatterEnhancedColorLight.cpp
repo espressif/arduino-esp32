@@ -29,27 +29,39 @@ espXyColor_t hsvToXyColor(espHsvColor_t hsv) {
   return espRgbColorToXYColor(espHsvColorToRgbColor(hsv));
 }
 
-bool updateColorControlAttribute(uint16_t endpoint_id, uint32_t attribute_id, esp_matter_attr_val_t val) {
-  return attribute::update(endpoint_id, ColorControl::Id, attribute_id, &val) == ESP_OK;
+// Matter HS and CurrentLevel use 0..254 (255 is the nullable null sentinel).
+uint8_t clampColor254(uint8_t value) {
+  return value > 254 ? 254 : value;
+}
+
+uint8_t clampCurrentLevel(uint8_t value) {
+  if (value < 1) {
+    return 1;
+  }
+  return clampColor254(value);
+}
+
+// report() notifies subscribers without PRE_UPDATE, so setColorHSV() does not
+// invoke onChangeColorHSV() once per Hue/Sat/X/Y write.
+void reportAttribute(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t val) {
+  attribute::report(endpoint_id, cluster_id, attribute_id, &val);
+}
+
+void reportColorMode(uint16_t endpoint_id, ColorControl::ColorMode mode) {
+  const uint8_t modeVal = (uint8_t)mode;
+  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::ColorMode::Id, esp_matter_enum8(modeVal));
+  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::EnhancedColorMode::Id, esp_matter_enum8(modeVal));
 }
 
 void syncHsvToColorCluster(uint16_t endpoint_id, espHsvColor_t hsv) {
   espXyColor_t xy = hsvToXyColor(hsv);
-
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  val.type = ESP_MATTER_VAL_TYPE_UINT8;
-  val.val.u8 = hsv.h;
-  updateColorControlAttribute(endpoint_id, ColorControl::Attributes::CurrentHue::Id, val);
-
-  val.val.u8 = hsv.s;
-  updateColorControlAttribute(endpoint_id, ColorControl::Attributes::CurrentSaturation::Id, val);
-
-  val.type = ESP_MATTER_VAL_TYPE_UINT16;
-  val.val.u16 = xy.x;
-  updateColorControlAttribute(endpoint_id, ColorControl::Attributes::CurrentX::Id, val);
-
-  val.val.u16 = xy.y;
-  updateColorControlAttribute(endpoint_id, ColorControl::Attributes::CurrentY::Id, val);  // codespell:ignore
+  reportColorMode(endpoint_id, ColorControl::ColorMode::kCurrentHueAndCurrentSaturation);
+  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentHue::Id, esp_matter_uint8(clampColor254((uint8_t)hsv.h)));
+  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentSaturation::Id, esp_matter_uint8(clampColor254(hsv.s)));
+  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentX::Id, esp_matter_uint16(xy.x));
+  reportAttribute(endpoint_id, ColorControl::Id, ColorControl::Attributes::CurrentY::Id, esp_matter_uint16(xy.y));  // codespell:ignore
+  // CurrentLevel is nullable uint8; ESP_MATTER_VAL_TYPE_UINT8 returns err 258.
+  reportAttribute(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, esp_matter_nullable_uint8(clampCurrentLevel(hsv.v)));
 }
 }  // namespace
 
@@ -118,15 +130,34 @@ bool MatterEnhancedColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t 
           log_d("Enhanced ColorLight Saturation changed to %u", val->val.u8);
           colorHSV.s = val->val.u8;
         } else if (attribute_id == ColorControl::Attributes::CurrentX::Id || attribute_id == ColorControl::Attributes::CurrentY::Id) {  // codespell:ignore
-          esp_matter_attr_val_t xVal = esp_matter_invalid(NULL);
-          esp_matter_attr_val_t yVal = esp_matter_invalid(NULL);
-          getAttributeVal(ColorControl::Id, ColorControl::Attributes::CurrentX::Id, &xVal);
-          getAttributeVal(ColorControl::Id, ColorControl::Attributes::CurrentY::Id, &yVal);  // codespell:ignore
-          espRgbColor_t rgb = espXYToRgbColor(colorHSV.v, xVal.val.u16, yVal.val.u16, true);
-          colorHSV = espRgbColorToHsvColor(rgb);
+          // PRE_UPDATE still has the old stored value; use `val` for the attribute being written.
+          uint16_t x, y;
+          if (attribute_id == ColorControl::Attributes::CurrentX::Id) {
+            esp_matter_attr_val_t yVal = esp_matter_invalid(NULL);
+            x = val->val.u16;
+            getAttributeVal(ColorControl::Id, ColorControl::Attributes::CurrentY::Id, &yVal);  // codespell:ignore
+            y = yVal.val.u16;
+          } else {
+            esp_matter_attr_val_t xVal = esp_matter_invalid(NULL);
+            getAttributeVal(ColorControl::Id, ColorControl::Attributes::CurrentX::Id, &xVal);
+            x = xVal.val.u16;
+            y = val->val.u16;
+          }
+          // Chromaticity only: keep CurrentLevel as V. Hue is uint16_t; take 8-bit HSV hue.
+          espRgbColor_t rgb = espXYToRgbColor(255, x, y, false);
+          espHsvColor_t xyHsv = espRgbColorToHsvColor(rgb);
+          colorHSV.h = (uint8_t)xyHsv.h;
+          colorHSV.s = xyHsv.s;
           log_d("Enhanced ColorLight XY changed — HSV updated to h=%u s=%u", colorHSV.h, colorHSV.s);
+        } else if (
+          attribute_id == ColorControl::Attributes::ColorMode::Id || attribute_id == ColorControl::Attributes::EnhancedColorMode::Id
+          || attribute_id == ColorControl::Attributes::RemainingTime::Id || attribute_id == ColorControl::Attributes::Options::Id
+        ) {
+          // Alexa writes these when switching between the color wheel and color temperature.
+          log_d("Enhanced ColorLight ColorMode/Options/RemainingTime attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u16);
+          break;
         } else {
-          log_i("Color Control Attribute ID [%]" PRIx32 " not processed.", attribute_id);
+          log_i("Color Control Attribute ID [0x%" PRIx32 "] not processed.", attribute_id);
           break;
         }
         if (_onChangeColorCB != NULL) {
@@ -167,8 +198,8 @@ bool MatterEnhancedColorLight::begin(bool initialState, espHsvColor_t _colorHSV,
   light_config.level_control_lighting.start_up_current_level = nullptr;
   brightnessLevel = brightness;
 
-  light_config.color_control.color_mode = (uint8_t)ColorControl::ColorMode::kCurrentXAndCurrentY;
-  light_config.color_control.enhanced_color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
+  light_config.color_control.color_mode = (uint8_t)ColorControl::ColorMode::kCurrentHueAndCurrentSaturation;
+  light_config.color_control.enhanced_color_mode = (uint8_t)ColorControl::ColorMode::kCurrentHueAndCurrentSaturation;
   light_config.color_control_xy.current_x = xy.x;
   light_config.color_control_xy.current_y = xy.y;
   light_config.color_control_color_temperature.color_temperature_mireds = ColorTemperature;
@@ -300,6 +331,7 @@ bool MatterEnhancedColorLight::setColorTemperature(uint16_t newTemperature) {
   attribute::get_val(attribute, &val);
 
   if (val.val.u16 != colorTemperatureLevel) {
+    reportColorMode(endpoint_id, ColorControl::ColorMode::kColorTemperature);
     val.val.u16 = colorTemperatureLevel;
     attribute::update(endpoint_id, ColorControl::Id, ColorControl::Attributes::ColorTemperatureMireds::Id, &val);
   }
@@ -331,13 +363,19 @@ bool MatterEnhancedColorLight::setColorHSV(espHsvColor_t _hsvColor) {
   }
 
   colorHSV = {_hsvColor.h, _hsvColor.s, _hsvColor.v};
+  const bool brightnessChanged = (brightnessLevel != _hsvColor.v);
   brightnessLevel = _hsvColor.v;
   syncHsvToColorCluster(endpoint_id, colorHSV);
 
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  val.type = ESP_MATTER_VAL_TYPE_UINT8;
-  val.val.u8 = brightnessLevel;
-  attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
+  if (_onChangeColorCB != NULL) {
+    _onChangeColorCB(colorHSV);
+  }
+  if (brightnessChanged && _onChangeBrightnessCB != NULL) {
+    _onChangeBrightnessCB(brightnessLevel);
+  }
+  if (_onChangeCB != NULL) {
+    _onChangeCB(onOffState, colorHSV, brightnessLevel, colorTemperatureLevel);
+  }
   return true;
 }
 

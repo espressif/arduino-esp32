@@ -1,7 +1,9 @@
 # Matter Enhanced Color Light Example
 
 This example demonstrates how to create a Matter-compatible enhanced color light device using an ESP32 SoC microcontroller.\
-The application showcases Matter commissioning, device control via smart home ecosystems, and manual control using a physical button. The enhanced color light provides additional features including color temperature control and brightness adjustment.
+The application showcases Matter commissioning, device control via smart home ecosystems, and manual control using a physical button. The enhanced color light provides color temperature control and brightness adjustment in addition to the RGB color wheel.
+
+Use this example when the controller should show **on/off, brightness, color wheel, and color temperature**. For RGB only (no temperature slider), use the [Matter Color Light](https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterColorLight) example.
 
 ## Supported Targets
 
@@ -25,9 +27,9 @@ The application showcases Matter commissioning, device control via smart home ec
 
 - Matter protocol implementation for an enhanced color light device
 - Support for both Wi-Fi and Thread(*) connectivity
-- RGB color control with HSV color model
-- Color temperature control (warm to cool white)
-- Brightness control (0-255 levels)
+- RGB color control with HSV color model (hue 0-254, saturation 0-254, value 0-254)
+- Color temperature control (warm to cool white; higher mireds are warmer)
+- Brightness control (Arduino API 0-255; Matter CurrentLevel is 1-254)
 - State persistence using `Preferences` library
 - Button control for toggling light and factory reset
 - Matter commissioning via QR code or manual pairing code
@@ -111,7 +113,7 @@ Matter Node is commissioned and connected to the network. Ready for use.
 Light OnOff changed to ON
 Light Color Temperature changed to 370
 Light brightness changed to 128
-Light HSV Color changed to (120,255,255)
+Light HSV Color changed to (84,254,254)
 ```
 
 ## Using the Device
