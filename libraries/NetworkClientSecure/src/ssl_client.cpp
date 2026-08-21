@@ -48,8 +48,8 @@ static int _handle_error(int err, const char *function, int line) {
 #define handle_error(e) _handle_error(e, __FUNCTION__, __LINE__)
 
 void ssl_init(sslclient_context *ssl_client) {
-  // reset embedded pointers to zero
-  memset(ssl_client, 0, sizeof(sslclient_context));
+  // reset ssl_client by creating new (empty) context, as shared_ptr is not safe for memset
+  *ssl_client = sslclient_context();
   mbedtls_ssl_init(&ssl_client->ssl_ctx);
   mbedtls_ssl_config_init(&ssl_client->ssl_conf);
 #if MBEDTLS_VERSION_MAJOR < 4
@@ -195,6 +195,10 @@ int start_ssl_client(
     if ((ret = mbedtls_ssl_conf_alpn_protocols(&ssl_client->ssl_conf, alpn_protos)) != 0) {
       return handle_error(ret);
     }
+  }
+  
+  if (ssl_client->cipher_list) {
+    mbedtls_ssl_conf_ciphersuites(&ssl_client->ssl_conf, ssl_client->cipher_list.get());
   }
 
   // MBEDTLS_SSL_VERIFY_REQUIRED if a CA certificate is defined on Arduino IDE and
@@ -404,14 +408,17 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
   unsigned long socket_timeout = ssl_client->socket_timeout;
   int last_err = ssl_client->last_error;
   crt_bundle_attach_cb bundle_attach_cb = ssl_client->bundle_attach_cb;
+  std::shared_ptr<int> saved_ciphers = ssl_client->cipher_list;
 
-  // reset embedded pointers to zero
-  memset(ssl_client, 0, sizeof(sslclient_context));
+  
+  // reset ssl_client by creating new (empty) context, as shared_ptr is not safe for memset
+  *ssl_client = sslclient_context();
 
   ssl_client->handshake_timeout = handshake_timeout;
   ssl_client->socket_timeout = socket_timeout;
   ssl_client->last_error = last_err;
   ssl_client->bundle_attach_cb = bundle_attach_cb;
+  ssl_client->cipher_list = saved_ciphers;
   ssl_client->peek_buf = -1;
 }
 
