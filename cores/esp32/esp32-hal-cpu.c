@@ -206,50 +206,51 @@ const char *getClockSourceName(uint8_t source) {
 }
 
 const char *getSupportedCpuFrequencyMhz(uint8_t xtal) {
-  char *supported_frequencies = (char *)calloc(256, sizeof(char));
+#define SUP_CPU_FREQ_BUF_SIZE 256
+  const size_t buf_size = SUP_CPU_FREQ_BUF_SIZE;
+  static char buf[SUP_CPU_FREQ_BUF_SIZE];
   int pos = 0;
 
 #if TARGET_CPU_FREQ_MAX_400
 #if CONFIG_IDF_TARGET_ESP32P4 && CONFIG_ESP32P4_REV_MIN_FULL < 300
-  pos += snprintf(supported_frequencies + pos, 256 - pos, "360");
+  pos += snprintf(buf + pos, buf_size - pos, "360");
 #else
-  pos += snprintf(supported_frequencies + pos, 256 - pos, "400");
+  pos += snprintf(buf + pos, buf_size - pos, "400");
 #endif
 #elif TARGET_CPU_FREQ_MAX_240
 #if CONFIG_IDF_TARGET_ESP32
   if (!REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_RATED) || !REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_LOW)) {
-    pos += snprintf(supported_frequencies + pos, 256 - pos, "160, 80");
+    pos += snprintf(buf + pos, buf_size - pos, "160, 80");
   } else
 #endif
   {
-    pos += snprintf(supported_frequencies + pos, 256 - pos, "240, 160, 80");
+    pos += snprintf(buf + pos, buf_size - pos, "240, 160, 80");
   }
 #elif TARGET_CPU_FREQ_MAX_160
-  pos += snprintf(supported_frequencies + pos, 256 - pos, "160, 120, 80");
+  pos += snprintf(buf + pos, buf_size - pos, "160, 120, 80");
 #elif TARGET_CPU_FREQ_MAX_120
-  pos += snprintf(supported_frequencies + pos, 256 - pos, "120, 80");
+  pos += snprintf(buf + pos, buf_size - pos, "120, 80");
 #elif TARGET_CPU_FREQ_MAX_96
-  pos += snprintf(supported_frequencies + pos, 256 - pos, "96, 64, 48");
+  pos += snprintf(buf + pos, buf_size - pos, "96, 64, 48");
 #else
-  free(supported_frequencies);
   return "Unknown";
 #endif
 
   // Append xtal and its dividers only if xtal is nonzero
   if (xtal != 0) {
     // We'll show as: , <xtal>, <xtal/2>[, <xtal/4>] MHz
-    pos += snprintf(supported_frequencies + pos, 256 - pos, ", %u, %u", xtal, (uint8_t)(xtal / 2));
+    pos += snprintf(buf + pos, buf_size - pos, ", %u, %u", xtal, (uint8_t)(xtal / 2));
 
 #if CONFIG_IDF_TARGET_ESP32
     // Only append xtal/4 if it's > 0 and meaningful for higher-frequency chips (e.g., ESP32 40MHz/4=10)
     if (xtal >= RTC_XTAL_FREQ_40M) {
-      pos += snprintf(supported_frequencies + pos, 256 - pos, ", %u", (uint8_t)(xtal / 4));
+      pos += snprintf(buf + pos, buf_size - pos, ", %u", (uint8_t)(xtal / 4));
     }
 #endif
   }
 
-  pos += snprintf(supported_frequencies + pos, 256 - pos, " MHz");
-  return supported_frequencies;
+  pos += snprintf(buf + pos, buf_size - pos, " MHz");
+  return buf;
 }
 
 bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
