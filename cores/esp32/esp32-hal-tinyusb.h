@@ -20,6 +20,15 @@
 
 #if CONFIG_TINYUSB_ENABLED
 
+#if CONFIG_IDF_TARGET_ESP32P4
+#ifndef ARDUINO_USB_DEVICE_PORT
+#define ARDUINO_USB_DEVICE_PORT 1
+#endif
+#if ARDUINO_USB_DEVICE_PORT != 0 && ARDUINO_USB_DEVICE_PORT != 1
+#error "ARDUINO_USB_DEVICE_PORT must be 0 or 1"
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,19 +40,23 @@ extern "C" {
 #define USB_ESPRESSIF_VID                0x303A
 #define USB_STRING_DESCRIPTOR_ARRAY_SIZE 10
 
-#ifndef CFG_TUD_ENDPOINT_SIZE
 #if CONFIG_IDF_TARGET_ESP32P4
-#define CFG_TUD_ENDPOINT_SIZE 512
+#if ARDUINO_USB_DEVICE_PORT == 0
+#define ARDUINO_USB_ENDPOINT_SIZE 64
+#define CFG_TUD_NUM_EPS          6
+#define CFG_TUD_NUM_IN_EPS       5
 #else
+#define ARDUINO_USB_ENDPOINT_SIZE CFG_TUD_ENDPOINT_SIZE
+#define CFG_TUD_NUM_EPS          15
+#define CFG_TUD_NUM_IN_EPS       8
+#endif
+#else
+#ifndef CFG_TUD_ENDPOINT_SIZE
 #define CFG_TUD_ENDPOINT_SIZE 64
 #endif
-#endif
-#if CONFIG_IDF_TARGET_ESP32P4
-#define CFG_TUD_NUM_EPS    15
-#define CFG_TUD_NUM_IN_EPS 8
-#else
-#define CFG_TUD_NUM_EPS    6
-#define CFG_TUD_NUM_IN_EPS 5
+#define ARDUINO_USB_ENDPOINT_SIZE CFG_TUD_ENDPOINT_SIZE
+#define CFG_TUD_NUM_EPS          6
+#define CFG_TUD_NUM_IN_EPS       5
 #endif
 
 typedef struct {
