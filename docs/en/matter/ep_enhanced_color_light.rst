@@ -5,7 +5,7 @@ MatterEnhancedColorLight
 About
 -----
 
-The ``MatterEnhancedColorLight`` class provides an Extended Color Light (0x010D) with RGB (HSV and XY), brightness, and color temperature. Controllers such as Amazon Alexa typically show on/off, brightness, a color wheel, and a temperature slider. Use ``MatterColorLight`` if the app must not expose color temperature.
+The ``MatterEnhancedColorLight`` class provides an Extended Color Light (0x010D) with RGB (HSV and XY), brightness, and color temperature. Use ``MatterColorLight`` when the endpoint must not include color temperature.
 
 **Features:**
 * On/off control
@@ -14,7 +14,7 @@ The ``MatterEnhancedColorLight`` class provides an Extended Color Light (0x010D)
 * Color temperature control (100-500 mireds; higher mireds are warmer)
 * State persistence support
 * Callback support for all parameter changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

@@ -5,7 +5,7 @@ MatterColorLight
 About
 -----
 
-The ``MatterColorLight`` class provides an RGB color light with HSV control and **no color temperature**. Matter 1.5 has no Color Light (0x0102) device type, so this endpoint is advertised as an Extended Color Light (0x010D) with Hue/Saturation and XY only. Controllers such as Amazon Alexa show a color wheel and do not show a temperature slider. Use ``MatterEnhancedColorLight`` when the app must also expose color temperature.
+The ``MatterColorLight`` class provides an RGB color light with HSV control and **no color temperature**. Matter 1.5 has no Color Light (0x0102) device type, so this endpoint is advertised as an Extended Color Light (0x010D) with Hue/Saturation and XY only. Color Temperature is not in the data model. Use ``MatterEnhancedColorLight`` when the endpoint must also include color temperature.
 
 Changing the Color Control feature set (for example, removing color temperature after an upgrade) requires **recommissioning** the device so the controller reloads the data model.
 
@@ -14,7 +14,7 @@ Changing the Color Control feature set (for example, removing color temperature 
 * RGB color control with HSV color model (brightness is HSV value; there is no separate brightness or color-temperature API)
 * State persistence support
 * Callback support for state and color changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

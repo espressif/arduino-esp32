@@ -13,7 +13,7 @@ The ``MatterColorTemperatureLight`` class provides a color temperature light end
 * Color temperature control (100-500 mireds; higher mireds are warmer)
 * State persistence support
 * Callback support for state, brightness, and temperature changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

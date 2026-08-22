@@ -1,9 +1,9 @@
 # Matter Enhanced Color Light Example
 
 This example demonstrates how to create a Matter-compatible enhanced color light device using an ESP32 SoC microcontroller.\
-The application showcases Matter commissioning, device control via smart home ecosystems, and manual control using a physical button. The enhanced color light provides color temperature control and brightness adjustment in addition to the RGB color wheel.
+The application showcases Matter commissioning, device control via smart home ecosystems, and manual control using a physical button. The enhanced color light provides color temperature and brightness in addition to HSV/XY color.
 
-Use this example when the controller should show **on/off, brightness, color wheel, and color temperature**. For RGB only (no temperature slider), use the [Matter Color Light](https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterColorLight) example.
+Use this example when the endpoint should include **on/off, brightness, color, and color temperature**. For RGB only (no color temperature), use the [Matter Color Light](https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterColorLight) example.
 
 ## Supported Targets
 
@@ -33,7 +33,7 @@ Use this example when the controller should show **on/off, brightness, color whe
 - State persistence using `Preferences` library
 - Button control for toggling light and factory reset
 - Matter commissioning via QR code or manual pairing code
-- Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 (*) It is necessary to compile the project using Arduino as IDF Component.
 
 ## Hardware Requirements
@@ -127,7 +127,14 @@ The user button (BOOT button by default) provides manual control:
 
 ### Smart Home Integration
 
-Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
+Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
+
+#### Home Assistant
+
+1. Open Home Assistant
+2. Go to Settings > Devices & services > Add integration > Matter
+3. Scan the QR code from the Serial Monitor, or enter the manual pairing code
+4. Follow the prompts to complete setup
 
 #### Apple Home
 

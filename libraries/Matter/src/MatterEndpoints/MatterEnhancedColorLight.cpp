@@ -162,7 +162,7 @@ bool MatterEnhancedColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t 
           attribute_id == ColorControl::Attributes::ColorMode::Id || attribute_id == ColorControl::Attributes::EnhancedColorMode::Id
           || attribute_id == ColorControl::Attributes::RemainingTime::Id || attribute_id == ColorControl::Attributes::Options::Id
         ) {
-          // Alexa writes these when switching between the color wheel and color temperature.
+          // ColorMode / RemainingTime / Options updates do not change the HSV cache.
           if (attribute_id == ColorControl::Attributes::RemainingTime::Id) {
             log_d("Enhanced ColorLight RemainingTime attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u16);
           } else {

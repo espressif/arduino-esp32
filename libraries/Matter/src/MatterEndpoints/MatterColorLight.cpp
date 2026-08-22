@@ -64,8 +64,8 @@ void syncHsvToColorCluster(uint16_t endpoint_id, espHsvColor_t hsv) {
   reportAttribute(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, esp_matter_nullable_uint8(clampCurrentLevel(hsv.v)));
 }
 
-// Matter 1.5 has no Color Light device type. extended_color_light always adds
-// Color Temperature (Alexa shows a CT slider). Build dimmable lighting + HS/XY only.
+// Matter 1.5 has no Color Light device type. official extended_color_light
+// always includes Color Temperature. Build dimmable lighting + HS/XY only.
 endpoint_t *createRgbColorLightEndpoint(node_t *node, dimmable_light::config_t *config, void *priv_data, espHsvColor_t hsv, espXyColor_t xy) {
   endpoint_t *endpoint = esp_matter::endpoint::create(node, ENDPOINT_FLAG_NONE, priv_data);
   if (endpoint == nullptr) {
