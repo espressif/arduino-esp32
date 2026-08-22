@@ -145,7 +145,7 @@ The library provides specialized endpoint classes for different device types. Ea
 * ``MatterOnOffLight``: Simple on/off light control
 * ``MatterDimmableLight``: Light with brightness control
 * ``MatterColorTemperatureLight``: Light with brightness and color temperature (no RGB wheel)
-* ``MatterColorLight``: RGB color light (HSV/XY, no color temperature slider in apps such as Alexa)
+* ``MatterColorLight``: RGB color light (HSV/XY, no color temperature slider in Matter APPs)
 * ``MatterEnhancedColorLight``: Extended color light with RGB, brightness, and color temperature
 
 **Sensor Endpoints:**
