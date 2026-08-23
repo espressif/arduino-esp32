@@ -60,17 +60,17 @@ static const uint8_t SCK = -1;
 // I2S audio shared by the ES8311 codec and ES7210 ADC
 #define BOARD_HAS_ES8311
 #define BOARD_HAS_ES7210
-#define BOARD_I2S_MCLK 12
-#define BOARD_I2S_BCLK 43
-#define BOARD_I2S_LRC  38
-#define BOARD_I2S_DOUT 21
-#define BOARD_I2S_DIN  39
-#define I2S_MCLK       BOARD_I2S_MCLK
-#define I2S_SCLK       BOARD_I2S_BCLK
-#define I2S_BCLK       BOARD_I2S_BCLK
-#define I2S_LRCK       BOARD_I2S_LRC
-#define I2S_DOUT       BOARD_I2S_DOUT
-#define I2S_DIN        BOARD_I2S_DIN
+#define BOARD_I2S_MCLK  12
+#define BOARD_I2S_BCLK  43
+#define BOARD_I2S_LRC   38
+#define BOARD_I2S_DOUT  21
+#define BOARD_I2S_DIN   39
+#define I2S_MCLK        BOARD_I2S_MCLK
+#define I2S_SCLK        BOARD_I2S_BCLK
+#define I2S_BCLK        BOARD_I2S_BCLK
+#define I2S_LRCK        BOARD_I2S_LRC
+#define I2S_DOUT        BOARD_I2S_DOUT
+#define I2S_DIN         BOARD_I2S_DIN
 #define BOARD_PA_ENABLE 11
 #define PA_POWER        BOARD_PA_ENABLE
 
