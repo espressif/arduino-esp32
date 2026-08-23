@@ -57,17 +57,6 @@ using HTTPUpdateEndCB = std::function<void()>;
 using HTTPUpdateErrorCB = std::function<void(int)>;
 using HTTPUpdateProgressCB = std::function<void(int, int)>;
 
-enum HTTPUpdateSidecarResult : uint8_t {
-  HTTPUPDATE_SIDECAR_MD5_FAILED = 0x01,
-  HTTPUPDATE_SIDECAR_SHA256_FAILED = 0x02,
-};
-
-// Implemented in HTTPUpdateChecksum.cpp; referenced only when setMD5sumUrl/setSHA256sumUrl is used.
-uint8_t httpUpdateFetchChecksumSidecars(
-  NetworkClient *client, const String *md5Url, const String *sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
-  const String &user, const String &password, const String &auth, const HTTPUpdateRequestCB &requestCB
-);
-
 class HTTPUpdate {
 public:
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
@@ -178,14 +167,16 @@ protected:
       _cbError(err);
     }
   }
-  int _lastError;
+  int _lastError = 0;
   bool _rebootOnUpdate = true;
 
 private:
   using ChecksumSidecarFetchFn = uint8_t (*)(
-    NetworkClient *client, const String *md5Url, const String *sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
-    const String &user, const String &password, const String &auth, const HTTPUpdateRequestCB &requestCB
+    NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow
   );
+
+  static constexpr uint8_t SIDECAR_MD5_FAILED = 0x01;
+  static constexpr uint8_t SIDECAR_SHA256_FAILED = 0x02;
 
   int _httpClientTimeout;
   UpdateClass *_updater;
@@ -195,10 +186,8 @@ private:
   String _auth;
   String _md5Sum;
   String _sha256Sum;
-  String *_md5SumUrl = nullptr;
-  String *_sha256SumUrl = nullptr;
-  bool _md5SumUrlSet = false;
-  bool _sha256SumUrlSet = false;
+  String _md5SumUrl;
+  String _sha256SumUrl;
   ChecksumSidecarFetchFn _checksumSidecarFetch = nullptr;
 
   // Callbacks
@@ -208,7 +197,7 @@ private:
   HTTPUpdateProgressCB _cbProgress;
 
   int _ledPin{-1};
-  uint8_t _ledOn;
+  uint8_t _ledOn = HIGH;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_HTTPUPDATE)

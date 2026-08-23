@@ -34,6 +34,9 @@ Validates the `Update` API, `HTTPUpdate` library, and `ArduinoOTA` for unsigned 
 | `test_httpupdate_sidecar_slow_fragmented` | Slowly fragmented SHA-256 sidecar is read with timeout handling |
 | `test_httpupdate_sidecar_unknown_length` | SHA-256 sidecar without `Content-Length` is accepted |
 | `test_httpupdate_sidecar_httpclient_overload` | Sidecar works with the preconfigured `HTTPClient` overload |
+| `test_httpupdate_sidecar_httpclient_compatible_overload` | Sidecar works when compatibility `HTTPClient::begin(url)` creates its client lazily |
+| `test_httpupdate_sidecar_copy_is_independent` | Copying `HTTPUpdate` keeps independently owned sidecar URL state |
+| `test_httpupdate_sidecar_does_not_receive_firmware_credentials` | Firmware authorization and request callback data are not sent to the sidecar |
 | `test_httpupdate_sidecar_md5` | MD5 sidecar verifies firmware without header |
 | `test_httpupdate_both_sidecars` | MD5 and SHA-256 sidecars are fetched and verified together |
 | `test_httpupdate_sidecar_uppercase` | Uppercase hex sidecar is accepted |

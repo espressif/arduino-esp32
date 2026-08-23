@@ -12,6 +12,7 @@ The Update library provides functionality for Over-The-Air (OTA) firmware update
 - **MD5 Verification**: Optional MD5 checksum verification
 - **SHA-256 Verification**: Optional SHA-256 checksum verification of the downloaded payload (enabled only when `setSHA256()` / `HTTPUpdate::setSHA256sum()` / `x-SHA256` is used)
 - **Checksum Sidecar URLs**: `HTTPUpdate::setMD5sumUrl()` / `setSHA256sumUrl()` can fetch a small sidecar file (first 32/64 hex token) when no explicit digest or response header is available. This is integrity checking only, not code signing. The fetch code is linked only when those setters are used.
+  Sidecar requests reuse the firmware client's transport and redirect mode, but not firmware authorization or the firmware request callback.
 
 ## Quick Start
 

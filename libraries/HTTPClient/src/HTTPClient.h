@@ -170,6 +170,8 @@ typedef struct {
 } Cookie;
 typedef std::vector<Cookie> CookieJar;
 
+class HTTPUpdate;
+
 class HTTPClient {
 public:
   HTTPClient();
@@ -251,14 +253,6 @@ public:
 
   NetworkClient &getStream(void);
   NetworkClient *getStreamPtr(void);
-  /**
-   * @brief Return the NetworkClient set by begin(), even before connect().
-   *
-   * Unlike getStreamPtr(), this does not require an active TCP connection.
-   */
-  NetworkClient *getClient(void) {
-    return _client;
-  }
   int writeToStream(Stream *stream);
   String getString(void);
 
@@ -268,6 +262,10 @@ public:
   void setCookieJar(CookieJar *cookieJar);
   void resetCookieJar();
   void clearAllCookies();
+
+private:
+  friend class HTTPUpdate;
+  NetworkClient *getClient(void);
 
 protected:
   struct RequestArgument {

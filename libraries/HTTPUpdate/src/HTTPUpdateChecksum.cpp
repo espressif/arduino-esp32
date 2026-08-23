@@ -26,10 +26,15 @@
  */
 
 #include "HTTPUpdate.h"
-#include <new>
 
 // Cap sidecar body scan so a hostile/oversized response cannot grow heap.
 static const size_t HTTPUPDATE_SIDECAR_MAX_SCAN = 512;
+static const uint8_t HTTPUPDATE_SIDECAR_MD5_FAILED = 0x01;
+static const uint8_t HTTPUPDATE_SIDECAR_SHA256_FAILED = 0x02;
+
+static uint8_t httpUpdateFetchChecksumSidecars(
+  NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow
+);
 
 static bool httpUpdateIsHexDigit(int c) {
   return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
@@ -78,35 +83,18 @@ static bool httpUpdateParseFirstHexToken(NetworkClient &stream, size_t expectedL
   return false;
 }
 
-static void httpUpdateSetChecksumUrl(String *&target, bool &configured, const String &url) {
-  configured = !url.isEmpty();
-  if (url.isEmpty()) {
-    delete target;
-    target = nullptr;
-  } else {
-    if (!target) {
-      target = new (std::nothrow) String();
-    }
-    if (target) {
-      *target = url;
-    }
-  }
-}
-
 void HTTPUpdate::setMD5sumUrl(const String &url) {
-  httpUpdateSetChecksumUrl(_md5SumUrl, _md5SumUrlSet, url);
-  _checksumSidecarFetch = (_md5SumUrlSet || _sha256SumUrlSet) ? httpUpdateFetchChecksumSidecars : nullptr;
+  _md5SumUrl = url;
+  _checksumSidecarFetch = (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
 }
 
 void HTTPUpdate::setSHA256sumUrl(const String &url) {
-  httpUpdateSetChecksumUrl(_sha256SumUrl, _sha256SumUrlSet, url);
-  _checksumSidecarFetch = (_md5SumUrlSet || _sha256SumUrlSet) ? httpUpdateFetchChecksumSidecars : nullptr;
+  _sha256SumUrl = url;
+  _checksumSidecarFetch = (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
 }
 
-static bool httpUpdateFetchChecksumSidecar(
-  NetworkClient &client, const String &url, size_t digestLen, String &outDigest, int timeout, followRedirects_t follow, const String &user,
-  const String &password, const String &auth, const HTTPUpdateRequestCB &requestCB
-) {
+static bool
+  httpUpdateFetchChecksumSidecar(NetworkClient &client, const String &url, size_t digestLen, String &outDigest, int timeout, followRedirects_t follow) {
   outDigest = String();
 
   if (url.isEmpty() || (digestLen != 32 && digestLen != 64)) {
@@ -124,17 +112,8 @@ static bool httpUpdateFetchChecksumSidecar(
   http.setFollowRedirects(follow);
   http.setUserAgent("ESP32-http-Update");
 
-  if (requestCB) {
-    requestCB(&http);
-  }
-
-  if (!user.isEmpty() && !password.isEmpty()) {
-    http.setAuthorization(user.c_str(), password.c_str());
-  }
-  if (!auth.isEmpty()) {
-    http.setAuthorization(auth.c_str());
-  }
-
+  // Firmware authorization and request callbacks are intentionally not applied:
+  // a sidecar URL or redirect target may belong to a different origin.
   int code = http.GET();
   if (code != HTTP_CODE_OK) {
     http.end();
@@ -165,17 +144,14 @@ static bool httpUpdateFetchChecksumSidecar(
   return true;
 }
 
-uint8_t httpUpdateFetchChecksumSidecars(
-  NetworkClient *client, const String *md5Url, const String *sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
-  const String &user, const String &password, const String &auth, const HTTPUpdateRequestCB &requestCB
+static uint8_t httpUpdateFetchChecksumSidecars(
+  NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow
 ) {
   uint8_t failures = 0;
-  if ((requested & HTTPUPDATE_SIDECAR_MD5_FAILED)
-      && (!client || !md5Url || !httpUpdateFetchChecksumSidecar(*client, *md5Url, 32, md5, timeout, follow, user, password, auth, requestCB))) {
+  if ((requested & HTTPUPDATE_SIDECAR_MD5_FAILED) && (!client || !httpUpdateFetchChecksumSidecar(*client, md5Url, 32, md5, timeout, follow))) {
     failures |= HTTPUPDATE_SIDECAR_MD5_FAILED;
   }
-  if ((requested & HTTPUPDATE_SIDECAR_SHA256_FAILED)
-      && (!client || !sha256Url || !httpUpdateFetchChecksumSidecar(*client, *sha256Url, 64, sha256, timeout, follow, user, password, auth, requestCB))) {
+  if ((requested & HTTPUPDATE_SIDECAR_SHA256_FAILED) && (!client || !httpUpdateFetchChecksumSidecar(*client, sha256Url, 64, sha256, timeout, follow))) {
     failures |= HTTPUPDATE_SIDECAR_SHA256_FAILED;
   }
   return failures;

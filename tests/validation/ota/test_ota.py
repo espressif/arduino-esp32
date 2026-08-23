@@ -301,6 +301,17 @@ def _http_handler(serve_dir: Path, firmware_sha256: str):
                 self.wfile.write(body)
                 self.close_connection = True
                 return
+            if path == "/no-firmware-credentials.sha256":
+                if self.headers.get("Authorization") or self.headers.get("X-Firmware-Only"):
+                    self.send_response(400)
+                    self.end_headers()
+                    return
+                body = f"{firmware_sha256}\n".encode()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
             if path == "/not-modified.bin":
                 self.send_response(304)
                 self.end_headers()

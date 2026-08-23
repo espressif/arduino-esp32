@@ -38,10 +38,7 @@
 HTTPUpdate::HTTPUpdate(int httpClientTimeout, UpdateClass *updater)
   : _httpClientTimeout(httpClientTimeout), _updater(updater), _followRedirects(HTTPC_DISABLE_FOLLOW_REDIRECTS) {}
 
-HTTPUpdate::~HTTPUpdate(void) {
-  delete _md5SumUrl;
-  delete _sha256SumUrl;
-}
+HTTPUpdate::~HTTPUpdate(void) {}
 
 HTTPUpdateResult HTTPUpdate::update(NetworkClient &client, const String &url, const String &currentVersion, HTTPUpdateRequestCB requestCB) {
   HTTPClient http;
@@ -204,11 +201,9 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   String sha256;
   uint8_t sidecarFailures = 0;
   if (_checksumSidecarFetch) {
-    uint8_t requested = (_md5SumUrlSet && !_md5Sum.length() ? HTTPUPDATE_SIDECAR_MD5_FAILED : 0)
-                        | (_sha256SumUrlSet && !_sha256Sum.length() ? HTTPUPDATE_SIDECAR_SHA256_FAILED : 0);
-    sidecarFailures = _checksumSidecarFetch(
-      http.getClient(), _md5SumUrl, _sha256SumUrl, requested, md5, sha256, _httpClientTimeout, _followRedirects, _user, _password, _auth, requestCB
-    );
+    uint8_t requested =
+      (!_md5SumUrl.isEmpty() && _md5Sum.isEmpty() ? SIDECAR_MD5_FAILED : 0) | (!_sha256SumUrl.isEmpty() && _sha256Sum.isEmpty() ? SIDECAR_SHA256_FAILED : 0);
+    sidecarFailures = _checksumSidecarFetch(http.getClient(), _md5SumUrl, _sha256SumUrl, requested, md5, sha256, _httpClientTimeout, _followRedirects);
   }
 
   // use HTTP/1.0 for update since the update handler not support any transfer Encoding
@@ -289,7 +284,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
     md5 = _md5Sum;
   } else if (http.hasHeader("x-MD5")) {
     md5 = http.header("x-MD5");
-  } else if ((sidecarFailures & HTTPUPDATE_SIDECAR_MD5_FAILED) && code == HTTP_CODE_OK && len > 0) {
+  } else if ((sidecarFailures & SIDECAR_MD5_FAILED) && code == HTTP_CODE_OK && len > 0) {
     _setLastError(HTTP_UE_SERVER_FAULTY_MD5);
     http.end();
     return HTTP_UPDATE_FAILED;
@@ -302,7 +297,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
     sha256 = _sha256Sum;
   } else if (http.hasHeader("x-SHA256")) {
     sha256 = http.header("x-SHA256");
-  } else if ((sidecarFailures & HTTPUPDATE_SIDECAR_SHA256_FAILED) && code == HTTP_CODE_OK && len > 0) {
+  } else if ((sidecarFailures & SIDECAR_SHA256_FAILED) && code == HTTP_CODE_OK && len > 0) {
     _setLastError(HTTP_UE_SERVER_FAULTY_SHA256);
     http.end();
     return HTTP_UPDATE_FAILED;
