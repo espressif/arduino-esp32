@@ -301,6 +301,44 @@ def _http_handler(serve_dir: Path, firmware_sha256: str):
                 self.wfile.write(body)
                 self.close_connection = True
                 return
+            if path == "/chunked.sha256":
+                body = f"{firmware_sha256}  ota.ino.bin\n".encode()
+                chunks = (body[:17], body[17:49], body[49:])
+                self.send_response(200)
+                self.send_header("Transfer-Encoding", "chunked")
+                self.end_headers()
+                for chunk in chunks:
+                    self.wfile.write(f"{len(chunk):X}\r\n".encode())
+                    self.wfile.write(chunk + b"\r\n")
+                self.wfile.write(b"0\r\n\r\n")
+                self.wfile.flush()
+                return
+            if path == "/large.sha256":
+                body = f"{firmware_sha256}\n".encode() + b"x" * 600
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if path == "/boundary.sha256":
+                body = b"g" * (512 - len(firmware_sha256)) + firmware_sha256.encode() + b"\n"
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if path == "/stalled.sha256":
+                body = f"{firmware_sha256}\n".encode()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.flush()
+                time.sleep(1)
+                try:
+                    self.wfile.write(body)
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+                return
             if path == "/no-firmware-credentials.sha256":
                 if self.headers.get("Authorization") or self.headers.get("X-Firmware-Only"):
                     self.send_response(400)

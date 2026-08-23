@@ -33,7 +33,11 @@ Validates the `Update` API, `HTTPUpdate` library, and `ArduinoOTA` for unsigned 
 | `test_httpupdate_sidecar_sha256` | SHA-256 sidecar (GNU `sha256sum` format) verifies firmware without header |
 | `test_httpupdate_sidecar_slow_fragmented` | Slowly fragmented SHA-256 sidecar is read with timeout handling |
 | `test_httpupdate_sidecar_unknown_length` | SHA-256 sidecar without `Content-Length` is accepted |
-| `test_httpupdate_sidecar_httpclient_overload` | Sidecar works with the preconfigured `HTTPClient` overload |
+| `test_httpupdate_sidecar_chunked` | Chunked SHA-256 sidecar split inside the digest is decoded and accepted |
+| `test_httpupdate_sidecar_large_body` | A digest near the start of a sidecar larger than the scan window is accepted |
+| `test_httpupdate_sidecar_scan_boundary` | A digest ending exactly at the 512-byte scan boundary is validated with delimiter lookahead |
+| `test_httpupdate_sidecar_body_timeout` | A stalled sidecar body is aborted within the configured response timeout |
+| `test_httpupdate_sidecar_httpclient_overload` | Sidecar works with a preconfigured `HTTPClient` that already has an open firmware response |
 | `test_httpupdate_sidecar_httpclient_compatible_overload` | Sidecar works when compatibility `HTTPClient::begin(url)` creates its client lazily |
 | `test_httpupdate_sidecar_copy_is_independent` | Copying `HTTPUpdate` keeps independently owned sidecar URL state |
 | `test_httpupdate_sidecar_does_not_receive_firmware_credentials` | Firmware authorization and request callback data are not sent to the sidecar |
@@ -73,7 +77,7 @@ Validates the `Update` API, `HTTPUpdate` library, and `ArduinoOTA` for unsigned 
 ## Notes
 
 - The pytest HTTP server serves the firmware with its SHA-256 digest in an `x-SHA256` response header for `/ota.ino.bin`, prefers dual-stack (`::` with `IPV6_V6ONLY=0`), and falls back to IPv4-only if IPv6 bind fails.
-- Sidecar checksum tests use `/firmware-noheader.bin` (same bytes, no digest header), static checksum artifacts, delayed/unknown-length responses, and `/redirect-sha256` (302).
+- Sidecar checksum tests use `/firmware-noheader.bin` (same bytes, no digest header), static checksum artifacts, delayed/unknown-length/chunked responses, and `/redirect-sha256` (302).
 - Digest precedence in `HTTPUpdate` is: explicit setter > response header > sidecar URL.
 - IPv6 `HTTPUpdate` uses bracketed URLs (`http://[addr]:port/...`); `HTTPClient` parses RFC 3986 IPv6 literals.
 - `Update` API tests are transport-agnostic (no network).

@@ -40,47 +40,180 @@ static bool httpUpdateIsHexDigit(int c) {
   return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
 
-/**
- * Read the first hex token of exactly expectedLen characters from stream.
- * Longer or shorter hex runs are skipped. Uses only a stack buffer.
- */
-static bool httpUpdateParseFirstHexToken(NetworkClient &stream, size_t expectedLen, int contentLength, char *out) {
-  if (!out || (expectedLen != 32 && expectedLen != 64)) {
-    return false;
+class HTTPUpdateChecksumParser {
+public:
+  explicit HTTPUpdateChecksumParser(size_t expectedLen) : _expectedLen(expectedLen) {}
+
+  bool push(uint8_t byte) {
+    if (_scanned >= HTTPUPDATE_SIDECAR_MAX_SCAN) {
+      // One byte beyond the scan window may only confirm that an exact-length
+      // token ending at the boundary is properly delimited.
+      if (_tokenLength == _expectedLen && !httpUpdateIsHexDigit(byte)) {
+        _token[_expectedLen] = '\0';
+        _found = true;
+        return true;
+      }
+      _failed = true;
+      return false;
+    }
+
+    _scanned++;
+    if (httpUpdateIsHexDigit(byte)) {
+      if (_tokenLength < _expectedLen) {
+        _token[_tokenLength] = (char)byte;
+      }
+      _tokenLength++;
+    } else {
+      if (_tokenLength == _expectedLen) {
+        _token[_expectedLen] = '\0';
+        _found = true;
+      } else {
+        _tokenLength = 0;
+      }
+    }
+    return !_failed;
   }
 
-  const size_t maxScan = contentLength >= 0 && contentLength < (int)HTTPUPDATE_SIDECAR_MAX_SCAN ? contentLength : HTTPUPDATE_SIDECAR_MAX_SCAN;
-  size_t scanned = 0;
-  size_t tokenLength = 0;
+  bool finish() {
+    if (!_failed && !_found && _tokenLength == _expectedLen) {
+      _token[_expectedLen] = '\0';
+      _found = true;
+    }
+    return _found && !_failed;
+  }
 
-  while (scanned < maxScan) {
+  const char *token() const {
+    return _token;
+  }
+
+  bool found() const {
+    return _found;
+  }
+
+private:
+  size_t _expectedLen;
+  size_t _scanned = 0;
+  size_t _tokenLength = 0;
+  bool _found = false;
+  bool _failed = false;
+  char _token[65] = {};
+};
+
+enum HTTPUpdateReadResult {
+  HTTPUPDATE_READ_OK,
+  HTTPUPDATE_READ_EOF,
+  HTTPUPDATE_READ_TIMEOUT,
+};
+
+static HTTPUpdateReadResult httpUpdateReadByte(NetworkClient &stream, uint32_t startedAt, uint32_t timeout, uint8_t &out) {
+  while (!stream.available()) {
+    if ((uint32_t)(millis() - startedAt) >= timeout) {
+      return HTTPUPDATE_READ_TIMEOUT;
+    }
+    if (!stream.connected()) {
+      return HTTPUPDATE_READ_EOF;
+    }
+    delay(1);
+  }
+
+  int value = stream.read();
+  if (value < 0) {
+    return stream.connected() ? HTTPUPDATE_READ_TIMEOUT : HTTPUPDATE_READ_EOF;
+  }
+  out = (uint8_t)value;
+  return HTTPUPDATE_READ_OK;
+}
+
+static bool httpUpdateReadChunkSize(NetworkClient &stream, uint32_t startedAt, uint32_t timeout, size_t &chunkSize) {
+  char line[32];
+  size_t length = 0;
+  while (true) {
     uint8_t byte;
-    if (stream.readBytes(&byte, 1) != 1) {
+    if (httpUpdateReadByte(stream, startedAt, timeout, byte) != HTTPUPDATE_READ_OK) {
+      return false;
+    }
+    if (byte == '\n') {
       break;
     }
-    int c = byte;
-    scanned++;
-
-    if (httpUpdateIsHexDigit(c)) {
-      if (tokenLength < expectedLen) {
-        out[tokenLength] = (char)c;
+    if (byte != '\r') {
+      if (length + 1 >= sizeof(line)) {
+        return false;
       }
-      tokenLength++;
-      continue;
+      line[length++] = (char)byte;
     }
+  }
+  line[length] = '\0';
 
-    if (tokenLength == expectedLen) {
-      out[expectedLen] = '\0';
+  chunkSize = 0;
+  bool hasDigit = false;
+  for (size_t i = 0; i < length && line[i] != ';'; i++) {
+    int digit;
+    if (line[i] >= '0' && line[i] <= '9') {
+      digit = line[i] - '0';
+    } else if (line[i] >= 'a' && line[i] <= 'f') {
+      digit = line[i] - 'a' + 10;
+    } else if (line[i] >= 'A' && line[i] <= 'F') {
+      digit = line[i] - 'A' + 10;
+    } else {
+      return false;
+    }
+    if (chunkSize > (SIZE_MAX - (size_t)digit) / 16) {
+      return false;
+    }
+    chunkSize = chunkSize * 16 + (size_t)digit;
+    hasDigit = true;
+  }
+  return hasDigit;
+}
+
+static bool httpUpdateParseIdentityBody(NetworkClient &stream, int contentLength, HTTPUpdateChecksumParser &parser, uint32_t startedAt, uint32_t timeout) {
+  size_t remaining = contentLength >= 0 ? (size_t)contentLength : SIZE_MAX;
+  while (remaining) {
+    uint8_t byte;
+    HTTPUpdateReadResult result = httpUpdateReadByte(stream, startedAt, timeout, byte);
+    if (result != HTTPUPDATE_READ_OK) {
+      return result == HTTPUPDATE_READ_EOF && contentLength < 0 && parser.finish();
+    }
+    if (!parser.push(byte)) {
+      return false;
+    }
+    if (parser.found()) {
       return true;
     }
-    tokenLength = 0;
+    if (contentLength >= 0) {
+      remaining--;
+    }
   }
+  return parser.finish();
+}
 
-  if (tokenLength == expectedLen) {
-    out[expectedLen] = '\0';
-    return true;
+static bool httpUpdateParseChunkedBody(NetworkClient &stream, HTTPUpdateChecksumParser &parser, uint32_t startedAt, uint32_t timeout) {
+  while (true) {
+    size_t chunkSize;
+    if (!httpUpdateReadChunkSize(stream, startedAt, timeout, chunkSize)) {
+      return false;
+    }
+    if (chunkSize == 0) {
+      return parser.finish();
+    }
+
+    for (size_t i = 0; i < chunkSize; i++) {
+      uint8_t byte;
+      if (httpUpdateReadByte(stream, startedAt, timeout, byte) != HTTPUPDATE_READ_OK || !parser.push(byte)) {
+        return false;
+      }
+      if (parser.found()) {
+        return true;
+      }
+    }
+
+    uint8_t cr;
+    uint8_t lf;
+    if (httpUpdateReadByte(stream, startedAt, timeout, cr) != HTTPUPDATE_READ_OK || httpUpdateReadByte(stream, startedAt, timeout, lf) != HTTPUPDATE_READ_OK
+        || cr != '\r' || lf != '\n') {
+      return false;
+    }
   }
-  return false;
 }
 
 void HTTPUpdate::setMD5sumUrl(const String &url) {
@@ -101,6 +234,10 @@ static bool
     return false;
   }
 
+  // A new HTTPClient cannot determine which origin an existing socket belongs
+  // to. Close it so the sidecar request always connects to its own URL.
+  client.stop();
+
   HTTPClient http;
   if (!http.begin(client, url)) {
     return false;
@@ -111,20 +248,20 @@ static bool
   http.setTimeout(timeout);
   http.setFollowRedirects(follow);
   http.setUserAgent("ESP32-http-Update");
+  const char *headerKeys[] = {"Transfer-Encoding"};
+  http.collectHeaders(headerKeys, 1);
 
   // Firmware authorization and request callbacks are intentionally not applied:
   // a sidecar URL or redirect target may belong to a different origin.
+  uint32_t timeoutMs = timeout > 0 ? (uint32_t)timeout : 1;
+  uint32_t startedAt = millis();
   int code = http.GET();
-  if (code != HTTP_CODE_OK) {
+  if (code != HTTP_CODE_OK || (uint32_t)(millis() - startedAt) >= timeoutMs) {
     http.end();
     return false;
   }
 
   int contentLength = http.getSize();
-  if (contentLength > (int)HTTPUPDATE_SIDECAR_MAX_SCAN) {
-    http.end();
-    return false;
-  }
 
   NetworkClient *stream = http.getStreamPtr();
   if (!stream) {
@@ -132,15 +269,17 @@ static bool
     return false;
   }
 
-  char token[65];
-  bool ok = httpUpdateParseFirstHexToken(*stream, digestLen, contentLength, token);
+  HTTPUpdateChecksumParser parser(digestLen);
+  bool chunked = http.header("Transfer-Encoding").equalsIgnoreCase("chunked");
+  bool ok = chunked ? httpUpdateParseChunkedBody(*stream, parser, startedAt, timeoutMs)
+                    : httpUpdateParseIdentityBody(*stream, contentLength, parser, startedAt, timeoutMs);
   http.end();
 
   if (!ok) {
     return false;
   }
 
-  outDigest = token;
+  outDigest = parser.token();
   return true;
 }
 

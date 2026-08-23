@@ -285,7 +285,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   } else if (http.hasHeader("x-MD5")) {
     md5 = http.header("x-MD5");
   } else if ((sidecarFailures & SIDECAR_MD5_FAILED) && code == HTTP_CODE_OK && len > 0) {
-    _setLastError(HTTP_UE_SERVER_FAULTY_MD5);
+    _lastError = HTTP_UE_SERVER_FAULTY_MD5;
     http.end();
     return HTTP_UPDATE_FAILED;
   }
@@ -298,7 +298,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   } else if (http.hasHeader("x-SHA256")) {
     sha256 = http.header("x-SHA256");
   } else if ((sidecarFailures & SIDECAR_SHA256_FAILED) && code == HTTP_CODE_OK && len > 0) {
-    _setLastError(HTTP_UE_SERVER_FAULTY_SHA256);
+    _lastError = HTTP_UE_SERVER_FAULTY_SHA256;
     http.end();
     return HTTP_UPDATE_FAILED;
   }
