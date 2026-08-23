@@ -247,7 +247,6 @@ static bool
   http.useHTTP10(true);
   http.setTimeout(timeout);
   http.setFollowRedirects(follow);
-  http.setUserAgent("ESP32-http-Update");
   const char *headerKeys[] = {"Transfer-Encoding"};
   http.collectHeaders(headerKeys, 1);
 
