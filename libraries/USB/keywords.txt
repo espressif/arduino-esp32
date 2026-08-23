@@ -118,6 +118,7 @@ sampleRate	KEYWORD2
 bytesPerSample	KEYWORD2
 
 # Host
+setCore	KEYWORD2
 registerWithHost	KEYWORD2
 serviceReceives	KEYWORD2
 setReportCallback	KEYWORD2
@@ -132,6 +133,8 @@ getWheel	KEYWORD2
 getModifiers	KEYWORD2
 getKeys	KEYWORD2
 isKeyDown	KEYWORD2
+toAscii	KEYWORD2
+toVirtualKey	KEYWORD2
 reportData	KEYWORD2
 reportLength	KEYWORD2
 getReport	KEYWORD2

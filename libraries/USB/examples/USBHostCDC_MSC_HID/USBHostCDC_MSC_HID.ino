@@ -18,12 +18,9 @@
 #include <USBHost.h>
 #include <USBHostSerial.h>
 #include <USBHostMSC.h>
-#include <USBMSCFS.h>
-#include <FS.h>
 #include <USBHostHID.h>
 #include <USBHostHIDMouse.h>
 #include <USBHostHIDKeyboard.h>
-#include <USBHostHIDKeyboardDecode.h>
 
 static const unsigned long kHostSerialBaud = 115200;
 static const char *kUsbMountPath = "/usb";
@@ -64,7 +61,7 @@ static void onKeyboardReport(uint8_t modifiers, const uint8_t keys[6], void *) {
   }
 
   char ascii[8];
-  usbHostHidBootReportAppendAscii(ascii, sizeof(ascii), modifiers, keys, KeyboardLayout_en_US);
+  USBHostKeyboard.toAscii(ascii, sizeof(ascii), modifiers, keys);
 
   Serial.print(F("[keyboard] "));
   if (ascii[0]) {
@@ -95,13 +92,6 @@ void setup() {
   USBHostKeyboard.registerWithHost();
   USBHostKeyboard.setNotifyOnChangeOnly(true);
   USBHostKeyboard.setReportCallback(onKeyboardReport, nullptr);
-
-#if defined(USB_HOST_EN) && defined(DEV_VBUS_EN)
-  usbHostEnable(true);
-  delay(10);
-  usbHostPower(USB_HOST_POWER_VBUS);
-  delay(10);
-#endif
 
   if (!USBHost.begin()) {
     Serial.println(F("USBHost.begin() failed."));

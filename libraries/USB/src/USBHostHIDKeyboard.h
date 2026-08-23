@@ -27,8 +27,10 @@
 #if CFG_TUH_HID
 
 #include "USBHostHID.h"
+#include "USBHostHIDKeyboardDecode.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define USBHOST_KEY_MOD_LEFT_CTRL   0x01
 #define USBHOST_KEY_MOD_LEFT_SHIFT  0x02
@@ -63,6 +65,17 @@ public:
   void getKeys(uint8_t keys[6]) const;
   bool isKeyDown(uint8_t hid_usage) const;
   void clear();
+
+  /**
+   * Decode the current boot report to ASCII using a USBHIDKeyboard layout
+   * (default US). Same as toAscii(buf, cap, getModifiers(), keys).
+   */
+  size_t toAscii(char *buf, size_t cap, const uint8_t *layout = KeyboardLayout_en_US) const;
+  /** Decode a boot report (e.g. from the report callback). */
+  size_t toAscii(char *buf, size_t cap, uint8_t modifiers, const uint8_t keys[6],
+                 const uint8_t *layout = KeyboardLayout_en_US) const;
+  /** Map a keyboard-page HID usage to Arduino KEY_* (0 if not a special). */
+  uint8_t toVirtualKey(uint8_t hid_usage) const;
 
   /** Skip identical held-key reports (default false). */
   void setNotifyOnChangeOnly(bool enable) {

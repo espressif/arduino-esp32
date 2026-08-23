@@ -30,7 +30,7 @@
 extern "C" void arduino_usb_host_hid_service(void) __attribute__((weak));
 extern "C" void arduino_usb_host_hid_service(void) {}
 
-static TaskHandle_t s_tuh_worker = nullptr;
+static TaskHandle_t s_tuh_worker = NULL;
 
 static void arduino_usb_host_tuh_worker(void *arg) {
   (void)arg;
@@ -43,7 +43,7 @@ static void arduino_usb_host_tuh_worker(void *arg) {
 }
 
 bool USBHostClass::tuhBackgroundActive() const {
-  return s_tuh_worker != nullptr;
+  return s_tuh_worker != NULL;
 }
 
 bool USBHostClass::begin() {
@@ -51,21 +51,7 @@ bool USBHostClass::begin() {
     return true;
   }
 
-  /* ESP32-S3-USB-OTG host mux + VBUS (GPIO here; variant helpers may not link into core). */
-#if defined(USB_HOST_EN) && defined(DEV_VBUS_EN) && defined(LIMIT_EN)
-#  if defined(BOOST_EN)
-  pinMode(BOOST_EN, OUTPUT);
-  digitalWrite(BOOST_EN, LOW);
-#  endif
-  pinMode(USB_HOST_EN, OUTPUT);
-  digitalWrite(USB_HOST_EN, HIGH);
-  delay(10);
-  pinMode(DEV_VBUS_EN, OUTPUT);
-  digitalWrite(DEV_VBUS_EN, HIGH);
-  pinMode(LIMIT_EN, OUTPUT);
-  digitalWrite(LIMIT_EN, HIGH);
-  delay(10);
-#endif
+  USBHostBoardInit();
 
   tinyusb_host_config_t host_config = {
     .rhport = 0, /* P4 remaps 0 → HS rhport 1 inside tinyusb_host_init() */
@@ -77,16 +63,11 @@ bool USBHostClass::begin() {
   }
   _started = true;
 
-  if (s_tuh_worker == nullptr) {
-    /* Above Arduino loop priority so MSC/FatFs waits still make progress. */
-#if defined(CONFIG_FREERTOS_UNICORE) && CONFIG_FREERTOS_UNICORE
-    const BaseType_t ok = xTaskCreate(arduino_usb_host_tuh_worker, "usbhTuh", 8192, nullptr, 17, &s_tuh_worker);
-#else
+  if (s_tuh_worker == NULL) {
     const BaseType_t ok =
-      xTaskCreatePinnedToCore(arduino_usb_host_tuh_worker, "usbhTuh", 8192, nullptr, 17, &s_tuh_worker, 0);
-#endif
+      xTaskCreateUniversal(arduino_usb_host_tuh_worker, "usbhTuh", 8192, NULL, 17, &s_tuh_worker, _core);
     if (ok != pdPASS) {
-      s_tuh_worker = nullptr;
+      s_tuh_worker = NULL;
     }
   }
 
@@ -97,7 +78,7 @@ void USBHostClass::task() {
   if (!_started) {
     return;
   }
-  if (s_tuh_worker == nullptr) {
+  if (s_tuh_worker == NULL) {
     tuh_task();
     arduino_usb_host_hid_service();
   }

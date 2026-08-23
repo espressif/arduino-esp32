@@ -120,7 +120,7 @@ public:
 
 private:
   void applyBeginLineCodingIfNeeded();
-  static void ensureTxMutex();
+  static bool ensureTxMutex();
 
   volatile bool _mounted;
   bool _binding_valid;

@@ -2,7 +2,7 @@
  * USB Host MSC — filesystem test (based on SD/examples/SD_Test/SD_Test.ino)
  *
  * Requires ESP32-S2 / S3 / P4 with USB OTG and a FAT-formatted USB flash drive.
- * Wiring: connect the drive to the USB host port; on ESP32-S3-USB-OTG enable VBUS (sketch below).
+ * Wiring: connect the drive to the USB host port; on ESP32-S3-USB-OTG, USBHost.begin() enables VBUS.
  *
  * Flow: USBHost.begin() → wait for MSC → USBMSCFS.begin("/usb") → same File API tests as SD_Test.
  */
@@ -11,8 +11,6 @@
 #include <inttypes.h>
 #include <USBHost.h>
 #include <USBHostMSC.h>
-#include <USBMSCFS.h>
-#include <FS.h>
 
 #ifndef USB_MSC_MOUNTPOINT
 #define USB_MSC_MOUNTPOINT "/usb"
@@ -184,13 +182,6 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("USB Host MSC Test (SD_Test-style)");
-
-#if defined(USB_HOST_EN) && defined(DEV_VBUS_EN)
-  usbHostEnable(true);
-  delay(10);
-  usbHostPower(USB_HOST_POWER_VBUS);
-  delay(10);
-#endif
 
   if (!USBHost.begin()) {
     Serial.println("USBHost.begin() failed");

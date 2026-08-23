@@ -23,18 +23,30 @@
 #include "Arduino.h"
 #include "esp32-hal-log.h"
 
-/** True if collection looks like a Generic Desktop Mouse (usage 0x02). */
+/* HID short-item prefixes (data size in the low 2 bits). */
+static const uint8_t k_hid_usage_page = 0x05;   /* Usage Page, 1 byte */
+static const uint8_t k_hid_usage_page16 = 0x06; /* Usage Page, 2 bytes */
+static const uint8_t k_hid_usage = 0x09;        /* Usage, 1 byte */
+
+static bool hid_usage_is_gamepad_like(uint8_t u) {
+  return u == HID_USAGE_DESKTOP_JOYSTICK || u == HID_USAGE_DESKTOP_GAMEPAD ||
+         u == HID_USAGE_DESKTOP_MULTI_AXIS_CONTROLLER;
+}
+
+/** True if collection looks like a Generic Desktop Mouse. */
 static bool desc_is_desktop_mouse(const uint8_t *d, uint16_t len) {
-  if (d == nullptr || len < 4) {
+  if (d == NULL || len < 4) {
     return false;
   }
   for (uint16_t i = 0; i + 3 < len; i++) {
-    if (d[i] == 0x05 && d[i + 1] == 0x01 && d[i + 2] == 0x09 && d[i + 3] == 0x02) {
+    if (d[i] == k_hid_usage_page && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == k_hid_usage &&
+        d[i + 3] == HID_USAGE_DESKTOP_MOUSE) {
       return true;
     }
   }
   for (uint16_t i = 0; i + 4 < len; i++) {
-    if (d[i] == 0x06 && d[i + 1] == 0x01 && d[i + 2] == 0x00 && d[i + 3] == 0x09 && d[i + 4] == 0x02) {
+    if (d[i] == k_hid_usage_page16 && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == 0x00 &&
+        d[i + 3] == k_hid_usage && d[i + 4] == HID_USAGE_DESKTOP_MOUSE) {
       return true;
     }
   }
@@ -43,28 +55,27 @@ static bool desc_is_desktop_mouse(const uint8_t *d, uint16_t len) {
 
 /** True if report descriptor declares Generic Desktop Game Pad or Joystick. */
 static bool desc_is_gamepad_or_joystick(const uint8_t *d, uint16_t len) {
-  if (d == nullptr || len < 4) {
+  if (d == NULL || len < 4) {
     return false;
   }
-  /* Common pattern: Usage Page (Generic Desktop 0x0001) + Usage (Game Pad 0x05 or Joystick 0x04) */
+  /* Usage Page (Generic Desktop) + Usage (Game Pad / Joystick / Multi-axis) */
   for (uint16_t i = 0; i + 3 < len; i++) {
-    if (d[i] == 0x05 && d[i + 1] == 0x01 && d[i + 2] == 0x09) {
-      uint8_t u = d[i + 3];
-      if (u == 0x04 || u == 0x05 || u == 0x08) { /* Joystick, Game Pad, Multi-axis */
+    if (d[i] == k_hid_usage_page && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == k_hid_usage) {
+      if (hid_usage_is_gamepad_like(d[i + 3])) {
         return true;
       }
     }
   }
-  /* Long usage page 0x0001: 0x06 0x01 0x00 then usage 0x09 0x05 */
+  /* Long usage page 0x0001 then usage */
   for (uint16_t i = 0; i + 4 < len; i++) {
-    if (d[i] == 0x06 && d[i + 1] == 0x01 && d[i + 2] == 0x00 && d[i + 3] == 0x09 &&
-        (d[i + 4] == 0x05 || d[i + 4] == 0x04 || d[i + 4] == 0x08)) {
+    if (d[i] == k_hid_usage_page16 && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == 0x00 &&
+        d[i + 3] == k_hid_usage && hid_usage_is_gamepad_like(d[i + 4])) {
       return true;
     }
   }
   /* Usage Page Desktop then later Usage Game Pad / Joystick (not necessarily adjacent) */
   for (uint16_t i = 0; i + 1 < len; i++) {
-    if (d[i] != 0x05 || d[i + 1] != 0x01) {
+    if (d[i] != k_hid_usage_page || d[i + 1] != HID_USAGE_PAGE_DESKTOP) {
       continue;
     }
     uint16_t end = i + 2 + 160;
@@ -72,30 +83,7 @@ static bool desc_is_gamepad_or_joystick(const uint8_t *d, uint16_t len) {
       end = len;
     }
     for (uint16_t j = i + 2; j + 1 < end; j++) {
-      if (d[j] == 0x09) {
-        uint8_t u = d[j + 1];
-        if (u == 0x04 || u == 0x05 || u == 0x08) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
-/** Generic Desktop + Rx(0x33)/Ry(0x34) — common on dual-stick pads (e.g. many Genius). */
-static bool desc_has_rx_ry(const uint8_t *d, uint16_t len) {
-  bool desk = false;
-  for (uint16_t i = 0; i + 1 < len; i++) {
-    if (d[i] == 0x05 && d[i + 1] == 0x01) {
-      desk = true;
-    }
-    if (d[i] == 0x06 && i + 2 < len && d[i + 1] == 0x01 && d[i + 2] == 0x00) {
-      desk = true;
-    }
-    if (desk && d[i] == 0x09 && i + 1 < len) {
-      uint8_t u = d[i + 1];
-      if (u == 0x33 || u == 0x34) {
+      if (d[j] == k_hid_usage && hid_usage_is_gamepad_like(d[j + 1])) {
         return true;
       }
     }
@@ -103,35 +91,55 @@ static bool desc_has_rx_ry(const uint8_t *d, uint16_t len) {
   return false;
 }
 
-/** Desktop + Hat switch (0x39) — typical game controllers. */
+/** Generic Desktop + Rx/Ry — common on dual-stick pads (e.g. many Genius). */
+static bool desc_has_rx_ry(const uint8_t *d, uint16_t len) {
+  bool desk = false;
+  for (uint16_t i = 0; i + 1 < len; i++) {
+    if (d[i] == k_hid_usage_page && d[i + 1] == HID_USAGE_PAGE_DESKTOP) {
+      desk = true;
+    }
+    if (d[i] == k_hid_usage_page16 && i + 2 < len && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == 0x00) {
+      desk = true;
+    }
+    if (desk && d[i] == k_hid_usage && i + 1 < len) {
+      uint8_t u = d[i + 1];
+      if (u == HID_USAGE_DESKTOP_RX || u == HID_USAGE_DESKTOP_RY) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** Desktop + Hat switch — typical game controllers. */
 static bool desc_has_hat(const uint8_t *d, uint16_t len) {
   bool desk = false;
   for (uint16_t i = 0; i + 1 < len; i++) {
-    if (d[i] == 0x05 && d[i + 1] == 0x01) {
+    if (d[i] == k_hid_usage_page && d[i + 1] == HID_USAGE_PAGE_DESKTOP) {
       desk = true;
     }
-    if (desk && d[i] == 0x09 && d[i + 1] == 0x39) {
+    if (desk && d[i] == k_hid_usage && d[i + 1] == HID_USAGE_DESKTOP_HAT_SWITCH) {
       return true;
     }
   }
   return false;
 }
 
-/** 3+ distinct stick usages (0x30–0x35) after Desktop — pads with many axes. */
+/** 3+ distinct stick usages (X–Rz) after Desktop — pads with many axes. */
 static bool desc_many_desktop_axes(const uint8_t *d, uint16_t len) {
   bool desk = false;
   uint8_t mask = 0;
   for (uint16_t i = 0; i + 1 < len; i++) {
-    if (d[i] == 0x05 && d[i + 1] == 0x01) {
+    if (d[i] == k_hid_usage_page && d[i + 1] == HID_USAGE_PAGE_DESKTOP) {
       desk = true;
     }
     if (!desk) {
       continue;
     }
-    if (d[i] == 0x09 && i + 1 < len) {
+    if (d[i] == k_hid_usage && i + 1 < len) {
       uint8_t u = d[i + 1];
-      if (u >= 0x30 && u <= 0x35) {
-        mask |= (uint8_t)(1u << (u - 0x30));
+      if (u >= HID_USAGE_DESKTOP_X && u <= HID_USAGE_DESKTOP_RZ) {
+        mask |= (uint8_t)(1u << (u - HID_USAGE_DESKTOP_X));
       }
     }
   }
@@ -148,13 +156,13 @@ static bool desc_many_desktop_axes(const uint8_t *d, uint16_t len) {
 static bool desc_desktop_buttons_and_x(const uint8_t *d, uint16_t len) {
   bool desk = false, btn_page = false, x_axis = false;
   for (uint16_t i = 0; i + 1 < len; i++) {
-    if (d[i] == 0x05 && d[i + 1] == 0x01) {
+    if (d[i] == k_hid_usage_page && d[i + 1] == HID_USAGE_PAGE_DESKTOP) {
       desk = true;
     }
-    if (d[i] == 0x05 && d[i + 1] == 0x09) {
+    if (d[i] == k_hid_usage_page && d[i + 1] == HID_USAGE_PAGE_BUTTON) {
       btn_page = true;
     }
-    if (desk && d[i] == 0x09 && d[i + 1] == 0x30) {
+    if (desk && d[i] == k_hid_usage && d[i + 1] == HID_USAGE_DESKTOP_X) {
       x_axis = true;
     }
   }

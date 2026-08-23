@@ -26,6 +26,16 @@
 #if CFG_TUH_ENABLED
 /** Weak in core; USBHostHID provides the strong definition (HID arm after tuh_task). */
 extern "C" void arduino_usb_host_hid_service(void);
+
+/**
+ * Board mux / VBUS hook. Weak empty default is in esp32-hal-misc.c;
+ * override in the variant (see variants/esp32s3usbotg).
+ */
+extern "C" void USBHostBoardInit(void);
+#endif
+
+#ifndef ARDUINO_USB_HOST_CORE
+#define ARDUINO_USB_HOST_CORE 0
 #endif
 
 /**
@@ -38,6 +48,17 @@ class USBHostClass {
 public:
   /** Start USB host mode. @return true on success. */
   bool begin();
+
+  /**
+   * Pin the TinyUSB host worker. Call before begin().
+   * Default is ARDUINO_USB_HOST_CORE (0). Use -1 to leave the task unpinned.
+   */
+  void setCore(int coreId) {
+    _core = coreId;
+  }
+  int core() const {
+    return _core;
+  }
 
   /** Process host events (or no-op when the background worker is running). */
   void task();
@@ -54,6 +75,7 @@ public:
 
 private:
   bool _started = false;
+  int _core = ARDUINO_USB_HOST_CORE;
 };
 
 extern USBHostClass USBHost;

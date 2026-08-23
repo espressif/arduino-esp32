@@ -159,6 +159,24 @@ void USBHostHIDKeyboard::clear() {
   _has_report = false;
 }
 
+size_t USBHostHIDKeyboard::toAscii(char *buf, size_t cap, const uint8_t *layout) const {
+  uint8_t keys[6];
+  getKeys(keys);
+  return toAscii(buf, cap, _modifiers, keys, layout);
+}
+
+size_t USBHostHIDKeyboard::toAscii(char *buf, size_t cap, uint8_t modifiers, const uint8_t keys[6],
+                                   const uint8_t *layout) const {
+  if (layout == NULL) {
+    layout = KeyboardLayout_en_US;
+  }
+  return usbHostHidBootReportAppendAscii(buf, cap, modifiers, keys, layout);
+}
+
+uint8_t USBHostHIDKeyboard::toVirtualKey(uint8_t hid_usage) const {
+  return usbHostHidKeyboardUsageToArduinoVirtualKey(hid_usage);
+}
+
 USBHostHIDKeyboard USBHostKeyboard;
 
 #endif /* CFG_TUH_HID */

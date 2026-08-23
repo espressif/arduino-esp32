@@ -943,6 +943,24 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
 #if CFG_TUH_ENABLED
 static bool tinyusb_host_initialized = false;
 
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+/* After USB download the ROM leaves DWC2/PHY in persist or USJ state.
+ * Device tinyusb_init() already resets the module; host must too or
+ * nothing enumerates until a pad/EN reset. Always reset for host —
+ * USB persist is a device-CDC feature. */
+static void tinyusb_host_reset_usb_module(void) {
+  REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
+  REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  periph_ll_reset(PERIPH_MODULE_MAX);
+  periph_ll_enable_clk_clear_rst(PERIPH_MODULE_MAX);
+#else
+  periph_ll_reset(PERIPH_USB_MODULE);
+  periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
+#endif
+}
+#endif
+
 esp_err_t tinyusb_host_init(tinyusb_host_config_t *config) {
   if (tinyusb_host_initialized) {
     return ESP_OK;
@@ -952,6 +970,9 @@ esp_err_t tinyusb_host_init(tinyusb_host_config_t *config) {
   if (rhport == 0) {
     rhport = 1;  // P4 HS controller (UTMI) is rhport 1
   }
+#endif
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+  tinyusb_host_reset_usb_module();
 #endif
   esp_err_t err = init_usb_hal_host(false);
   if (err != ESP_OK) {

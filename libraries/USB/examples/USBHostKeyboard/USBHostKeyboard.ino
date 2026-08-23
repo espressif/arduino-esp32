@@ -11,7 +11,6 @@
 #include <Arduino.h>
 #include <USBHost.h>
 #include <USBHostHIDKeyboard.h>
-#include <USBHostHIDKeyboardDecode.h>
 
 #ifndef KEYBOARD_NOTIFY_ON_CHANGE_ONLY
 #define KEYBOARD_NOTIFY_ON_CHANGE_ONLY 1
@@ -39,7 +38,7 @@ static void onKeyboardReport(uint8_t modifiers, const uint8_t keys[6], void *) {
 #endif
 
   char ascii[8];
-  usbHostHidBootReportAppendAscii(ascii, sizeof(ascii), modifiers, keys, KeyboardLayout_en_US);
+  USBHostKeyboard.toAscii(ascii, sizeof(ascii), modifiers, keys);
 
   Serial.printf("[keyboard] mod=0x%02x", (unsigned)modifiers);
 
@@ -50,7 +49,7 @@ static void onKeyboardReport(uint8_t modifiers, const uint8_t keys[6], void *) {
       if (keys[i] == 0) {
         continue;
       }
-      uint8_t vk = usbHostHidKeyboardUsageToArduinoVirtualKey(keys[i]);
+      uint8_t vk = USBHostKeyboard.toVirtualKey(keys[i]);
       if (vk != 0) {
         Serial.printf("  vk=0x%02x", (unsigned)vk);
       } else {
@@ -73,13 +72,6 @@ void setup() {
   USBHostKeyboard.registerWithHost();
   USBHostKeyboard.setNotifyOnChangeOnly(KEYBOARD_NOTIFY_ON_CHANGE_ONLY != 0);
   USBHostKeyboard.setReportCallback(onKeyboardReport, nullptr);
-
-#if defined(USB_HOST_EN) && defined(DEV_VBUS_EN)
-  usbHostEnable(true);
-  delay(10);
-  usbHostPower(USB_HOST_POWER_VBUS);
-  delay(10);
-#endif
 
   if (!USBHost.begin()) {
     Serial.println("USBHost.begin() failed");

@@ -22,13 +22,6 @@ void setup() {
   USBHostMouse.registerWithHost();
   USBHostMouse.setReportCallback(onMouseReport, nullptr);
 
-#if defined(USB_HOST_EN) && defined(DEV_VBUS_EN)
-  usbHostEnable(true);
-  delay(10);
-  usbHostPower(USB_HOST_POWER_VBUS);
-  delay(10);
-#endif
-
   if (!USBHost.begin()) {
     Serial.println("USBHost.begin() failed");
     return;

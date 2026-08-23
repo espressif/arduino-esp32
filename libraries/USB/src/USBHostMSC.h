@@ -78,6 +78,8 @@ private:
 
 extern USBHostMSCClass USBHostMSC;
 
+#include "USBMSCFS.h"
+
 #endif /* CFG_TUH_ENABLED && CFG_TUH_MSC */
 #endif /* CONFIG_TINYUSB_ENABLED */
 #endif /* SOC_USB_OTG_SUPPORTED */

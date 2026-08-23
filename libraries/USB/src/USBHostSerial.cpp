@@ -42,10 +42,11 @@ USBHostSerialClass::~USBHostSerialClass() {
   end();
 }
 
-void USBHostSerialClass::ensureTxMutex() {
+bool USBHostSerialClass::ensureTxMutex() {
   if (s_usb_host_serial_tx_mutex == NULL) {
     s_usb_host_serial_tx_mutex = xSemaphoreCreateMutex();
   }
+  return s_usb_host_serial_tx_mutex != NULL;
 }
 
 bool USBHostSerialClass::mounted() const {
@@ -131,7 +132,9 @@ int USBHostSerialClass::availableForWrite() {
   if (!mounted()) {
     return 0;
   }
-  ensureTxMutex();
+  if (!ensureTxMutex()) {
+    return 0;
+  }
   if (xSemaphoreTake(s_usb_host_serial_tx_mutex, pdMS_TO_TICKS(_tx_timeout_ms)) != pdPASS) {
     return 0;
   }
@@ -144,7 +147,9 @@ void USBHostSerialClass::flush() {
   if (!mounted()) {
     return;
   }
-  ensureTxMutex();
+  if (!ensureTxMutex()) {
+    return;
+  }
   if (xSemaphoreTake(s_usb_host_serial_tx_mutex, pdMS_TO_TICKS(_tx_timeout_ms)) != pdPASS) {
     return;
   }
@@ -160,7 +165,9 @@ size_t USBHostSerialClass::write(const uint8_t *buffer, size_t size) {
   if (!mounted() || buffer == NULL || size == 0) {
     return 0;
   }
-  ensureTxMutex();
+  if (!ensureTxMutex()) {
+    return 0;
+  }
   if (xSemaphoreTake(s_usb_host_serial_tx_mutex, pdMS_TO_TICKS(_tx_timeout_ms)) != pdPASS) {
     return 0;
   }
