@@ -41,6 +41,7 @@
 #define HTTP_UE_BIN_VERIFY_HEADER_FAILED (-106)
 #define HTTP_UE_BIN_FOR_WRONG_FLASH      (-107)
 #define HTTP_UE_NO_PARTITION             (-108)
+#define HTTP_UE_SERVER_FAULTY_SHA256     (-109)
 
 enum HTTPUpdateResult {
   HTTP_UPDATE_FAILED,
@@ -86,6 +87,10 @@ public:
 
   void setMD5sum(const String &md5Sum) {
     _md5Sum = md5Sum;
+  }
+
+  void setSHA256sum(const String &sha256Sum) {
+    _sha256Sum = sha256Sum;
   }
 
   void setAuthorization(const String &user, const String &password) {
@@ -139,7 +144,7 @@ public:
 
 protected:
   t_httpUpdate_return handleUpdate(HTTPClient &http, const String &currentVersion, uint8_t type = U_FLASH, HTTPUpdateRequestCB requestCB = NULL);
-  bool runUpdate(Stream &in, uint32_t size, String md5, int command = U_FLASH);
+  bool runUpdate(Stream &in, uint32_t size, String md5, int command = U_FLASH, String sha256 = "");
 
   // Set the error and potentially use a CB to notify the application
   void _setLastError(int err) {
@@ -159,6 +164,7 @@ private:
   String _password;
   String _auth;
   String _md5Sum;
+  String _sha256Sum;
 
   // Callbacks
   HTTPUpdateStartCB _cbStart;
