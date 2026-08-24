@@ -53,10 +53,7 @@ bool USBHostClass::begin() {
 
   USBHostBoardInit();
 
-  tinyusb_host_config_t host_config = {
-    .rhport = 0, /* P4 remaps 0 → HS rhport 1 inside tinyusb_host_init() */
-  };
-  esp_err_t err = tinyusb_host_init(&host_config);
+  esp_err_t err = tinyusb_host_init();
   if (err != ESP_OK) {
     log_e("[USBHost] begin() failed: 0x%x (%s)", (unsigned)err, esp_err_to_name(err));
     return false;

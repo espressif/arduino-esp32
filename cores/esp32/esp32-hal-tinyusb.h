@@ -76,12 +76,9 @@ typedef struct {
 esp_err_t tinyusb_init(tinyusb_device_config_t *config);
 
 #if CFG_TUH_ENABLED
-// USB Host init (use instead of tinyusb_init when in host mode)
-typedef struct {
-  uint8_t rhport;  // 0 for ESP32-S2/S3, 1 for ESP32-P4 HS
-} tinyusb_host_config_t;
-
-esp_err_t tinyusb_host_init(tinyusb_host_config_t *config);
+// USB Host init (use instead of tinyusb_init when in host mode).
+// rhport is chip-fixed: 0 on S2/S3, 1 on P4 HS (TinyUSB OTG_HS).
+esp_err_t tinyusb_host_init(void);
 #endif
 
 /*

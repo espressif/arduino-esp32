@@ -961,15 +961,14 @@ static void tinyusb_host_reset_usb_module(void) {
 }
 #endif
 
-esp_err_t tinyusb_host_init(tinyusb_host_config_t *config) {
+esp_err_t tinyusb_host_init(void) {
   if (tinyusb_host_initialized) {
     return ESP_OK;
   }
-  uint8_t rhport = (config != NULL) ? config->rhport : 0;
 #if CONFIG_IDF_TARGET_ESP32P4
-  if (rhport == 0) {
-    rhport = 1;  // P4 HS controller (UTMI) is rhport 1
-  }
+  const uint8_t rhport = 1;  // TinyUSB: port 0 = OTG FS, port 1 = OTG HS (UTMI)
+#else
+  const uint8_t rhport = 0;
 #endif
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   tinyusb_host_reset_usb_module();
