@@ -103,6 +103,7 @@ private:
   volatile uint8_t _keys[6];
   volatile bool _has_report;
   bool _notify_on_change_only;
+  bool _strip_report_id;  ///< descriptor has REPORT_ID; try that offset first
   uint8_t _last_modifiers;
   uint8_t _last_keys[6];
   bool _last_valid;

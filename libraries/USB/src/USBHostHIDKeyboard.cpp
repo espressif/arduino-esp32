@@ -22,12 +22,65 @@
 #include "Arduino.h"
 #include <string.h>
 
+/** Walk HID short/long items; true if any REPORT_ID is present. */
+static bool desc_has_report_id(const uint8_t *d, uint16_t len) {
+  if (d == nullptr || len == 0) {
+    return false;
+  }
+  uint16_t i = 0;
+  while (i < len) {
+    const uint8_t b0 = d[i++];
+    if (b0 == 0xFE) {
+      if ((uint16_t)(i + 2) > len) {
+        break;
+      }
+      const uint8_t sz = d[i++];
+      i++; /* long-item tag */
+      if ((uint16_t)(i + sz) > len) {
+        break;
+      }
+      i = (uint16_t)(i + sz);
+      continue;
+    }
+    uint8_t sz = b0 & 0x03u;
+    if (sz == 3u) {
+      sz = 4u;
+    }
+    const uint8_t tag = (uint8_t)(b0 & 0xFCu);
+    if ((uint16_t)(i + sz) > len) {
+      break;
+    }
+    if (tag == 0x84u) { /* REPORT_ID */
+      return true;
+    }
+    i = (uint16_t)(i + sz);
+  }
+  return false;
+}
+
+/** 8-byte boot keyboard: reserved byte 0, key usages in the keyboard page. */
+static bool boot_report_plausible(const uint8_t *q, uint16_t m) {
+  if (q == nullptr || m < 8u) {
+    return false;
+  }
+  if (q[1] != 0) {
+    return false;
+  }
+  for (uint8_t i = 0; i < 6; i++) {
+    if (q[2 + i] > 0xE7u) {
+      return false;
+    }
+  }
+  return true;
+}
+
 USBHostHIDKeyboard::USBHostHIDKeyboard()
   : USBHostHIDDevice(),
     _modifiers(0),
     _keys{0, 0, 0, 0, 0, 0},
     _has_report(false),
     _notify_on_change_only(false),
+    _strip_report_id(false),
     _last_modifiers(0),
     _last_keys{0, 0, 0, 0, 0, 0},
     _last_valid(false),
@@ -45,8 +98,6 @@ void USBHostHIDKeyboard::_ensureRegistered() {
 
 bool USBHostHIDKeyboard::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
                                 const uint8_t *report_desc, uint16_t desc_len) {
-  (void)report_desc;
-  (void)desc_len;
   if (protocol != HID_ITF_PROTOCOL_KEYBOARD) {
     return false;
   }
@@ -59,7 +110,9 @@ bool USBHostHIDKeyboard::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
   for (int i = 0; i < 6; i++) {
     _keys[i] = 0;
   }
-  log_v("[USBHostKeyboard] claim dev_addr=%u idx=%u", (unsigned)dev_addr, (unsigned)idx);
+  _strip_report_id = desc_has_report_id(report_desc, desc_len);
+  log_v("[USBHostKeyboard] claim dev_addr=%u idx=%u rid=%u", (unsigned)dev_addr, (unsigned)idx,
+        (unsigned)(_strip_report_id ? 1u : 0u));
   return true;
 }
 
@@ -69,6 +122,7 @@ void USBHostHIDKeyboard::onUnmount(uint8_t dev_addr, uint8_t idx) {
     clearHidInterfaceBinding();
     _has_report = false;
     _last_valid = false;
+    _strip_report_id = false;
   }
 }
 
@@ -100,17 +154,43 @@ bool USBHostHIDKeyboard::_sameAsLastNotified() const {
 void USBHostHIDKeyboard::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) {
   (void)dev_addr;
   (void)idx;
-  const uint8_t *boot = report;
-  uint16_t boot_len = len;
-
-  /* Many keyboards prefix the 8-byte boot report with a report ID. */
-  if (len > 8u) {
-    boot = report + 1;
-    boot_len = len - 1u;
+  if (report == nullptr || len < 8u) {
+    return;
   }
 
-  if (boot_len < 8u) {
-    return;
+  /* Same idea as the mouse: descriptor REPORT_ID first, then the other offset. */
+  const uint8_t *boot = nullptr;
+  uint16_t boot_len = 0;
+  auto take = [&](const uint8_t *q, uint16_t m) -> bool {
+    if (!boot_report_plausible(q, m)) {
+      return false;
+    }
+    boot = q;
+    boot_len = m;
+    return true;
+  };
+
+  if (_strip_report_id && len > 8u) {
+    take(report + 1, (uint16_t)(len - 1u));
+  }
+  if (boot == nullptr) {
+    take(report, len);
+  }
+  if (boot == nullptr && !_strip_report_id && len > 8u) {
+    take(report + 1, (uint16_t)(len - 1u));
+  }
+  if (boot == nullptr) {
+    /* Last resort: hinted offset, else raw (still need 8 bytes). */
+    if (_strip_report_id && len > 8u) {
+      boot = report + 1;
+      boot_len = (uint16_t)(len - 1u);
+    } else {
+      boot = report;
+      boot_len = len;
+    }
+    if (boot_len < 8u) {
+      return;
+    }
   }
 
   _applyBootReport(boot, boot_len);
