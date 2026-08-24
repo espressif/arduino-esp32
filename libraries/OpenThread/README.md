@@ -578,7 +578,7 @@ Requires an attached Thread role and an SRP/DNS server in Network Data (typical 
 | [`ThreadDNSSD_Query`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query) | `queryService` browse |
 | [`ThreadDNSSD_QueryHost`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost) | `queryHost` resolve |
 | [`ThreadDNSSD_Query_Callback`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback) | Async discover via `onQueryEvent` |
-| [`ThreadDNSSD_UDP_Light`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light) | Light + switch + WiFi web (UDP + OTBR mDNS) |
+| [`ThreadDNSSD_UDP_Light`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light) | Light + switch + Wi-Fi web (UDP + OTBR mDNS) |
 
 Full API details: [OpenThread DNS documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_dnssd.html).
 

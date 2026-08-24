@@ -1,20 +1,20 @@
 # ThreadDNSSD UDP Light — Native API
 
-End-to-end lab built with `OThreadDNSSD` + `OThreadUDP` (and a WiFi-only web
+End-to-end lab built with `OThreadDNSSD` + `OThreadUDP` (and a Wi-Fi-only web
 board). A Thread **light** advertises `_otlight._udp` via SRP, a Thread
-**switch** discovers it on-mesh, and an optional **WiFi** UI reaches the same
+**switch** discovers it on-mesh, and an optional **Wi-Fi** UI reaches the same
 light through the OTBR (Advertising Proxy + OMR routing).
 
 | Sketch | Role |
 | ------ | ---- |
 | [light](light/) | Thread node: SRP advertise + UDP lamp server (port **5051**) |
 | [switch](switch/) | Thread node: `queryService` + BOOT → `TOGGLE` / `STATUS` |
-| [web](web/) | WiFi-only: `http://otlight-ui.local` → LAN mDNS + UDP to light |
+| [web](web/) | Wi-Fi-only: `http://otlight-ui.local` → LAN mDNS + UDP to light |
 
 ```text
 [Thread switch] --OThreadDNSSD+UDP--> [Thread light] --SRP--> [OTBR]
                                                           | Adv Proxy mDNS
-[Browser] --HTTP--> [WiFi web] --ESPmDNS+UDP-------------+
+[Browser] --HTTP--> [Wi-Fi web] --ESPmDNS+UDP-------------+
 ```
 
 Unlike [UDP Light Switch](../../UDP/UDP_Light_Switch/), these boards **join an
@@ -37,14 +37,14 @@ DNS-SD service type: `_otlight._udp` (instance / host `ot-light` by default).
 
 1. Bring up an **OTBR** on the Thread network with **SRP** (and **DNS** for the
    switch). For the web UI, also enable **Advertising Proxy** (or equivalent)
-   and keep the WiFi board on the **same LAN** as the OTBR infrastructure
+   and keep the Wi-Fi board on the **same LAN** as the OTBR infrastructure
    interface.
 2. Set `OT_NETKEY` in [light](light/) and [switch](switch/) to the OTBR Network
    Key. Prefer **Tools → Erase Flash: Sketch Only** so the SRP key in NVS is kept.
 3. Flash [light](light/) on a Thread SoC (ESP32-H2 / C6 / C5). Wait for
    `UDP listening` and `PASS: ANNOUNCED`.
 4. Flash [switch](switch/) on a second Thread board. Press **BOOT** to toggle.
-5. Optional: set WiFi credentials in [web](web/), flash a WiFi SoC, open
+5. Optional: set Wi-Fi credentials in [web](web/), flash a Wi-Fi SoC, open
    `http://otlight-ui.local`.
 
 Each folder has its own README with configuration, expected output, and
@@ -58,7 +58,7 @@ troubleshooting.
 | `CONFIG_SOC_IEEE802154_SUPPORTED=y` | `light`, `switch` |
 | `CONFIG_OPENTHREAD_SRP_CLIENT=y` | `light`, `switch` |
 | `CONFIG_OPENTHREAD_DNS_CLIENT=y` | `switch` |
-| WiFi (`CONFIG_SOC_WIFI_SUPPORTED` or hosted) | `web` |
+| Wi-Fi (`CONFIG_SOC_WIFI_SUPPORTED` or hosted) | `web` |
 
 ## Troubleshooting
 

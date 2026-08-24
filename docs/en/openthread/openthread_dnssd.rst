@@ -291,9 +291,9 @@ Native examples under ``libraries/OpenThread/examples/Native/ThreadDNSSD/``:
 * ``ThreadDNSSD_Query`` — browse ``_ot._udp`` (pair with Advertise)
 * ``ThreadDNSSD_QueryHost`` — resolve a host label (pair with Advertise)
 * ``ThreadDNSSD_Query_Callback`` — async ``startQueryService`` then ``startQueryHost`` via ``onQueryEvent``
-* ``ThreadDNSSD_UDP_Light`` — application lab: Thread light + switch + WiFi web UI
+* ``ThreadDNSSD_UDP_Light`` — application lab: Thread light + switch + Wi-Fi web UI
   (``_otlight._udp`` over UDP; light re-advertises after OTBR restart / lost attach;
-  WiFi discovers the light via OTBR Advertising Proxy mDNS)
+  Wi-Fi discovers the light via OTBR Advertising Proxy mDNS)
 
 See each example README in that folder for OTBR lab setup and expected Serial
 output. Related overview: :doc:`openthread`.

@@ -32,7 +32,7 @@ skips builds when those options are not enabled for a target.
 | [ThreadDNSSD_Query](ThreadDNSSD_Query/) | `queryService` browse (pair with Advertise) |
 | [ThreadDNSSD_QueryHost](ThreadDNSSD_QueryHost/) | `queryHost` resolve (pair with Advertise) |
 | [ThreadDNSSD_Query_Callback](ThreadDNSSD_Query_Callback/) | `onQueryEvent` + `startQueryService` / `startQueryHost` (both in one sketch) |
-| [ThreadDNSSD_UDP_Light](ThreadDNSSD_UDP_Light/) | App lab: Thread light + switch + WiFi web (SRP + UDP + OTBR Adv Proxy mDNS) |
+| [ThreadDNSSD_UDP_Light](ThreadDNSSD_UDP_Light/) | App lab: Thread light + switch + Wi-Fi web (SRP + UDP + OTBR Adv Proxy mDNS) |
 
 API demos (Advertise / Query / …) each have a short README. The UDP Light lab has
 a group README plus per-role folders (`light`, `switch`, `web`).
@@ -43,7 +43,7 @@ a group README plus per-role folders (`light`, `switch`, `web`).
 | ----- | ---- |
 | [light](ThreadDNSSD_UDP_Light/light/) | Thread: SRP `_otlight._udp` + UDP lamp |
 | [switch](ThreadDNSSD_UDP_Light/switch/) | Thread: `queryService` + BOOT control |
-| [web](ThreadDNSSD_UDP_Light/web/) | ESP WiFi: `otlight-ui.local` → LAN mDNS + UDP |
+| [web](ThreadDNSSD_UDP_Light/web/) | ESP Wi-Fi: `otlight-ui.local` → LAN mDNS + UDP |
 
 ## Check registrations on the OTBR
 

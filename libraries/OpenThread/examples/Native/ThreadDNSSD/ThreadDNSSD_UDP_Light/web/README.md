@@ -1,8 +1,8 @@
-# web - WiFi UI + LAN mDNS + UDP proxy
+# web - Wi-Fi UI + LAN mDNS + UDP proxy
 
-WiFi-only side of the [ThreadDNSSD UDP Light](../README.md) lab. This sketch:
+Wi-Fi-only side of the [ThreadDNSSD UDP Light](../README.md) lab. This sketch:
 
-* joins WiFi on the **same LAN** as the OTBR infrastructure interface,
+* joins Wi-Fi on the **same LAN** as the OTBR infrastructure interface,
 * advertises **http://otlight-ui.local** via ESPmDNS,
 * discovers `_otlight._udp` via LAN mDNS (OTBR **Advertising Proxy**),
 * proxies browser On / Off / Toggle / Status to UDP on the light.
@@ -12,7 +12,7 @@ This board does **not** run OpenThread. Thread attach + SRP are handled by
 
 ## Supported Targets
 
-Any Arduino-ESP32 board with WiFi (or hosted WiFi). Thread radio is not used.
+Any Arduino-ESP32 board with Wi-Fi (or hosted Wi-Fi). Thread radio is not used.
 
 IPv6 setup follows [WiFiIPv6](../../../../../WiFi/examples/WiFiIPv6/WiFiIPv6.ino):
 `WiFi.enableIPv6()` **before** `WiFi.begin()`, then wait for
@@ -25,7 +25,7 @@ IPv6 setup follows [WiFiIPv6](../../../../../WiFi/examples/WiFiIPv6/WiFiIPv6.ino
 | WiFi (`CONFIG_SOC_WIFI_SUPPORTED` or `CONFIG_ESP_HOSTED_ENABLED`) | STA + HTTP |
 | `CONFIG_LWIP_IPV6` | Talk to Thread OMR addresses |
 
-CI uses `requires_any` for WiFi (same pattern as ESPmDNS examples).
+CI uses `requires_any` for Wi-Fi (same pattern as ESPmDNS examples).
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ user’s log.
 | OTBR CLI | `srp server host` / `srp server service` — host `ot-light` IPv6 under the OMR prefix from `netdata show` |
 | Light board | OpenThread `ipaddr` — pick the address on the OMR prefix (not `fe80::` only) |
 
-Optional check from a PC on the same WiFi: `ping <the-omr-ipv6>`.
+Optional check from a PC on the same Wi-Fi: `ping <the-omr-ipv6>`.
 
 ## What the sketch does
 
@@ -98,7 +98,7 @@ Empty `v4`/`v6` after browse is common; the sketch then queries AAAA or uses
 | ------- | ------------ |
 | `FAIL: WiFi connect` / `FAIL: MDNS.begin` / `FAIL: WiFiUDP begin` | Fatal setup — sketch **halts** (`while (true)`); `loop()` does not serve HTTP |
 | `FAIL: CONFIG_LWIP_IPV6 is off` | Rebuild with IPv6 (needed for Thread OMR) |
-| `Found 0` | Adv Proxy off; not on OTBR WiFi; flaky mDNS |
+| `Found 0` | Adv Proxy off; not on OTBR Wi-Fi; flaky mDNS |
 | `err=261` / no AAAA | Adv Proxy without address records — set `LIGHT_IPV6_FALLBACK` |
 | `endPacket failed` | IPv4-only UDP socket — use latest sketch (`Udp.begin(IPAddress(IPv6), 0)`) |
 | `UDP timeout`, PC can `ping` OMR | Arduino lwIP often has **RIO off** (`CONFIG_LWIP_IPV6_ND6_ROUTE_INFO_OPTION_SUPPORT`) — a PC may reach the light while this Wi‑Fi board cannot |
