@@ -32,13 +32,13 @@ extern "C" {
 #define USB_STRING_DESCRIPTOR_ARRAY_SIZE 10
 
 #ifndef CFG_TUD_ENDPOINT_SIZE
-#if CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
 #define CFG_TUD_ENDPOINT_SIZE 512
 #else
 #define CFG_TUD_ENDPOINT_SIZE 64
 #endif
 #endif
-#if CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
 #define CFG_TUD_NUM_EPS    15
 #define CFG_TUD_NUM_IN_EPS 8
 #else
@@ -77,7 +77,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config);
 
 #if CFG_TUH_ENABLED
 // USB Host init (use instead of tinyusb_init when in host mode).
-// rhport is chip-fixed: 0 on S2/S3, 1 on P4 HS (TinyUSB OTG_HS).
+// rhport is chip-fixed: 0 on S2/S3/S31, 1 on P4 HS (TinyUSB OTG_HS).
 esp_err_t tinyusb_host_init(void);
 #endif
 

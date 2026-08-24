@@ -146,9 +146,13 @@ esp_err_t init_usb_hal(bool external_phy) {
   esp_err_t ret = ESP_OK;
   usb_phy_config_t phy_config = {
     .controller = USB_PHY_CTRL_OTG,
+#if CONFIG_IDF_TARGET_ESP32S31
+    .target = USB_PHY_TARGET_UTMI, /* S31 has no FSLS PHY */
+#else
     .target = USB_PHY_TARGET_INT,
+#endif
     .otg_mode = USB_OTG_MODE_DEVICE,
-#if CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
     .otg_speed = USB_PHY_SPEED_HIGH,
 #else
     .otg_speed = USB_PHY_SPEED_FULL,
@@ -183,7 +187,7 @@ esp_err_t init_usb_hal_host(bool external_phy) {
   (void)external_phy;
   usb_phy_config_t phy_config = {
     .controller = USB_PHY_CTRL_OTG,
-#if CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
     .target = USB_PHY_TARGET_UTMI,
     .otg_mode = USB_OTG_MODE_HOST,
     .otg_speed = USB_PHY_SPEED_HIGH,
@@ -236,12 +240,15 @@ esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
   tusb_rhport_init_t tinit;
   memset(&tinit, 0, sizeof(tusb_rhport_init_t));
   tinit.role = TUSB_ROLE_DEVICE;
-#if CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
   tinit.speed = TUSB_SPEED_HIGH;
-  if (!tusb_init(1, &tinit)) {
 #else
   tinit.speed = TUSB_SPEED_FULL;
-  if (!tusb_init(0, &tinit)) {
+#endif
+#if CONFIG_IDF_TARGET_ESP32P4
+  if (!tusb_init(1, &tinit)) { /* TinyUSB: P4 OTG HS is rhport 1 */
+#else
+  if (!tusb_init(0, &tinit)) { /* S2/S3 FS, S31 single HS */
 #endif
     log_e("Can't initialize the TinyUSB stack.");
     return ESP_FAIL;
@@ -968,7 +975,7 @@ esp_err_t tinyusb_host_init(void) {
 #if CONFIG_IDF_TARGET_ESP32P4
   const uint8_t rhport = 1;  // TinyUSB: port 0 = OTG FS, port 1 = OTG HS (UTMI)
 #else
-  const uint8_t rhport = 0;
+  const uint8_t rhport = 0;  // S2/S3 FS, S31 single HS (UTMI is _dwc2_controller[0])
 #endif
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   tinyusb_host_reset_usb_module();
@@ -979,7 +986,7 @@ esp_err_t tinyusb_host_init(void) {
   }
   tusb_rhport_init_t tinit = {
     .role = TUSB_ROLE_HOST,
-#if CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
     .speed = TUSB_SPEED_HIGH,
 #else
     .speed = TUSB_SPEED_AUTO,
