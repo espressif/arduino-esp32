@@ -227,9 +227,7 @@ typedef enum {
  *                For host resolve: `1` if an address was stored, else `0`.
  * @param context User context from @ref OThreadDNSSDClass::onQueryEvent.
  */
-typedef void (*OThreadDNSSDQueryCallback)(
-  ot_dnssd_query_kind_t kind, ot_dnssd_query_event_t event, otError error, int count, void *context
-);
+typedef void (*OThreadDNSSDQueryCallback)(ot_dnssd_query_kind_t kind, ot_dnssd_query_event_t event, otError error, int count, void *context);
 #endif /* CONFIG_OPENTHREAD_DNS_CLIENT */
 
 /**
@@ -533,7 +531,7 @@ private:
   struct ServiceSlot {
     bool used;
     bool registeredWithOt;
-    bool pendingRemove;  ///< true after RemoveService until OT reclaims via callback
+    bool pendingRemove;                               ///< true after RemoveService until OT reclaims via callback
     char serviceName[OT_DNSSD_SERVICE_NAME_MAX + 1];  ///< e.g. "_http._tcp"
     char instanceName[OT_DNSSD_INSTANCE_NAME_MAX + 1];
     char subtypes[OT_DNSSD_MAX_SUBTYPES][OT_DNSSD_SUBTYPE_MAX + 1];
@@ -565,13 +563,9 @@ private:
 #endif
 
   static void handleSrpCallback(
-    otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices,
-    const otSrpClientService *aRemovedServices, void *aContext
+    otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices, const otSrpClientService *aRemovedServices, void *aContext
   );
-  void onSrpCallback(
-    otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices,
-    const otSrpClientService *aRemovedServices
-  );
+  void onSrpCallback(otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices, const otSrpClientService *aRemovedServices);
 
   bool ensureAnnounceSem();
   void resetSlots();

@@ -54,8 +54,7 @@ void stripLeadingUnderscores(char *label) {
 #if defined(CONFIG_OPENTHREAD_DNS_CLIENT) && CONFIG_OPENTHREAD_DNS_CLIENT
 constexpr const char *kDnssdDomain = "default.service.arpa";
 // Length-prefixed TXT rdata for the stored pool (key + '=' + value per entry).
-constexpr size_t kTxtScratchSize =
-  OT_DNSSD_MAX_TXT_ENTRIES * (OT_DNSSD_TXT_KEY_MAX + OT_DNSSD_TXT_VALUE_MAX + 2) + 16;
+constexpr size_t kTxtScratchSize = OT_DNSSD_MAX_TXT_ENTRIES * (OT_DNSSD_TXT_KEY_MAX + OT_DNSSD_TXT_VALUE_MAX + 2) + 16;
 
 inline IPAddress otToIp(const otIp6Address &in) {
   return IPAddress(IPv6, in.mFields.m8);
@@ -76,26 +75,11 @@ inline bool isUnspecified(const otIp6Address &addr) {
 OThreadDNSSDClass OThreadDNSSD;
 
 OThreadDNSSDClass::OThreadDNSSDClass()
-  : _started(false),
-    _announceComplete(false),
-    _lastError(OT_ERROR_NONE),
-    _instanceNameSet(false),
-    _eventCb(nullptr),
-    _eventCtx(nullptr),
-    _announceSem(nullptr)
+  : _started(false), _announceComplete(false), _lastError(OT_ERROR_NONE), _instanceNameSet(false), _eventCb(nullptr), _eventCtx(nullptr), _announceSem(nullptr)
 #if defined(CONFIG_OPENTHREAD_DNS_CLIENT) && CONFIG_OPENTHREAD_DNS_CLIENT
     ,
-    _queryResultCount(0),
-    _dnsSem(nullptr),
-    _dnsDone(false),
-    _dnsServiceResolveIdx(-1),
-    _queryInProgress(false),
-    _queryAsync(false),
-    _queryKind(OT_DNSSD_QUERY_SERVICE),
-    _queryGen(0),
-    _queryActiveGen(0),
-    _queryCb(nullptr),
-    _queryCtx(nullptr)
+    _queryResultCount(0), _dnsSem(nullptr), _dnsDone(false), _dnsServiceResolveIdx(-1), _queryInProgress(false), _queryAsync(false),
+    _queryKind(OT_DNSSD_QUERY_SERVICE), _queryGen(0), _queryActiveGen(0), _queryCb(nullptr), _queryCtx(nullptr)
 #endif
 {
   _hostName[0] = '\0';
@@ -148,8 +132,7 @@ void OThreadDNSSDClass::clearAnnounceState() {
   _announceComplete = false;
   _lastError = OT_ERROR_NONE;
   if (_announceSem) {
-    while (xSemaphoreTake(_announceSem, 0) == pdTRUE) {
-    }
+    while (xSemaphoreTake(_announceSem, 0) == pdTRUE) {}
   }
 }
 
@@ -687,9 +670,7 @@ void OThreadDNSSDClass::reclaimRemovedServices(const otSrpClientService *removed
   }
 }
 
-bool OThreadDNSSDClass::evaluateAnnounceComplete(
-  const otSrpClientHostInfo *hostInfo, const otSrpClientService *services
-) const {
+bool OThreadDNSSDClass::evaluateAnnounceComplete(const otSrpClientHostInfo *hostInfo, const otSrpClientService *services) const {
   if (!hostInfo || hostInfo->mState != OT_SRP_CLIENT_ITEM_STATE_REGISTERED) {
     return false;
   }
@@ -735,8 +716,7 @@ bool OThreadDNSSDClass::syncAnnounceCompleteFromOt() {
   if (!lock) {
     return _announceComplete;
   }
-  _announceComplete =
-    evaluateAnnounceComplete(otSrpClientGetHostInfo(inst), otSrpClientGetServices(inst));
+  _announceComplete = evaluateAnnounceComplete(otSrpClientGetHostInfo(inst), otSrpClientGetServices(inst));
   return _announceComplete;
 }
 
@@ -747,15 +727,13 @@ bool OThreadDNSSDClass::isTerminalSrpError(otError error) {
 }
 
 void OThreadDNSSDClass::handleSrpCallback(
-  otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices,
-  const otSrpClientService *aRemovedServices, void *aContext
+  otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices, const otSrpClientService *aRemovedServices, void *aContext
 ) {
   static_cast<OThreadDNSSDClass *>(aContext)->onSrpCallback(aError, aHostInfo, aServices, aRemovedServices);
 }
 
 void OThreadDNSSDClass::onSrpCallback(
-  otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices,
-  const otSrpClientService *aRemovedServices
+  otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices, const otSrpClientService *aRemovedServices
 ) {
   // OT is done with removed entries — reclaim slot storage (name/TXT buffers).
   reclaimRemovedServices(aRemovedServices);
@@ -982,9 +960,7 @@ void OThreadDNSSDClass::onDnsBrowseCallback(otError aError, const otDnsBrowseRes
     if (startDetailResolveAt(0)) {
       return;
     }
-    finishAsyncQuery(
-      anySlotNeedsDetailResolve() ? ((_lastError != OT_ERROR_NONE) ? _lastError : OT_ERROR_FAILED) : OT_ERROR_NONE
-    );
+    finishAsyncQuery(anySlotNeedsDetailResolve() ? ((_lastError != OT_ERROR_NONE) ? _lastError : OT_ERROR_FAILED) : OT_ERROR_NONE);
     return;
   }
 
@@ -1059,8 +1035,7 @@ void OThreadDNSSDClass::onDnsServiceCallback(otError aError, const otDnsServiceR
 
     char instLabel[OT_DNSSD_INSTANCE_NAME_MAX + 1];
     char svcName[OT_DNS_MAX_NAME_SIZE];
-    if (otDnsServiceResponseGetServiceName(aResponse, instLabel, sizeof(instLabel), svcName, sizeof(svcName))
-        == OT_ERROR_NONE) {
+    if (otDnsServiceResponseGetServiceName(aResponse, instLabel, sizeof(instLabel), svcName, sizeof(svcName)) == OT_ERROR_NONE) {
       (void)svcName;
       if (slot.instanceName[0] == '\0') {
         (void)copyCString(slot.instanceName, sizeof(slot.instanceName), instLabel);
@@ -1092,9 +1067,7 @@ void OThreadDNSSDClass::onDnsServiceCallback(otError aError, const otDnsServiceR
     if (startDetailResolveAt(next)) {
       return;
     }
-    finishAsyncQuery(
-      anySlotNeedsDetailResolve() ? ((_lastError != OT_ERROR_NONE) ? _lastError : OT_ERROR_FAILED) : OT_ERROR_NONE
-    );
+    finishAsyncQuery(anySlotNeedsDetailResolve() ? ((_lastError != OT_ERROR_NONE) ? _lastError : OT_ERROR_FAILED) : OT_ERROR_NONE);
     return;
   }
 
@@ -1193,9 +1166,7 @@ bool OThreadDNSSDClass::startDetailResolveAt(uint8_t startIdx) {
       return false;
     }
     _dnsServiceResolveIdx = (int)i;
-    otError err = otDnsClientResolveServiceAndHostAddress(
-      inst, slot.instanceName, _dnsServiceFqdn, handleDnsServiceCallback, ctx, nullptr
-    );
+    otError err = otDnsClientResolveServiceAndHostAddress(inst, slot.instanceName, _dnsServiceFqdn, handleDnsServiceCallback, ctx, nullptr);
     if (err != OT_ERROR_NONE) {
       freeDnsCbCtx(ctx);
       _lastError = err;
@@ -1321,8 +1292,7 @@ IPAddress OThreadDNSSDClass::resolveAddressFqdn(const char *fqdn, uint32_t timeo
     return empty;
   }
 
-  while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
-  }
+  while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {}
   _dnsDone = false;
 
   {
@@ -1371,8 +1341,7 @@ bool OThreadDNSSDClass::resolveMissingServiceDetails(const char *serviceFqdn) {
       continue;
     }
 
-    while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
-    }
+    while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {}
     _dnsDone = false;
 
     {
@@ -1387,9 +1356,7 @@ bool OThreadDNSSDClass::resolveMissingServiceDetails(const char *serviceFqdn) {
         return false;
       }
       _dnsServiceResolveIdx = (int)i;
-      otError err = otDnsClientResolveServiceAndHostAddress(
-        inst, _queryResults[i].instanceName, _dnsServiceFqdn, handleDnsServiceCallback, ctx, nullptr
-      );
+      otError err = otDnsClientResolveServiceAndHostAddress(inst, _queryResults[i].instanceName, _dnsServiceFqdn, handleDnsServiceCallback, ctx, nullptr);
       if (err != OT_ERROR_NONE) {
         freeDnsCbCtx(ctx);
         _lastError = err;
@@ -1431,8 +1398,7 @@ int OThreadDNSSDClass::queryService(const char *service, const char *proto) {
     return 0;
   }
 
-  while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
-  }
+  while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {}
   _dnsDone = false;
   armQueryOp(false, OT_DNSSD_QUERY_SERVICE);
 
@@ -1524,8 +1490,7 @@ bool OThreadDNSSDClass::startQueryService(const char *service, const char *proto
     return false;
   }
 
-  while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
-  }
+  while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {}
   _dnsDone = false;
   armQueryOp(true, OT_DNSSD_QUERY_SERVICE);
 
@@ -1577,8 +1542,7 @@ bool OThreadDNSSDClass::startQueryHost(const char *host) {
     return false;
   }
 
-  while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {
-  }
+  while (xSemaphoreTake(_dnsSem, 0) == pdTRUE) {}
   _dnsDone = false;
   armQueryOp(true, OT_DNSSD_QUERY_HOST);
 

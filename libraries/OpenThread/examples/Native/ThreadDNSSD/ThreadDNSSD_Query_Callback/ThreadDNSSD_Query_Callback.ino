@@ -26,9 +26,7 @@
 #include "OThreadDNSSD.h"
 
 // Same Network Key as the OTBR Thread network (other dataset fields are learned on attach).
-static const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
-};
+static const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
 
 static const char *kPeerHost = "sensor-1";
 static const uint32_t kCycleDelayMs = 10000;
@@ -84,8 +82,8 @@ static void printServiceResults(int n) {
   Serial.printf("Service browse done: %d instance(s) (event=%d error=%d)\r\n", n, (int)s_event, (int)s_err);
   for (int i = 0; i < n; ++i) {
     Serial.printf(
-      "  [%d] instance=%s host=%s port=%u addr=%s\r\n", i, OThreadDNSSD.instanceName(i), OThreadDNSSD.hostname(i),
-      (unsigned)OThreadDNSSD.port(i), OThreadDNSSD.address(i).toString().c_str()
+      "  [%d] instance=%s host=%s port=%u addr=%s\r\n", i, OThreadDNSSD.instanceName(i), OThreadDNSSD.hostname(i), (unsigned)OThreadDNSSD.port(i),
+      OThreadDNSSD.address(i).toString().c_str()
     );
     for (int t = 0; t < OThreadDNSSD.numTxt(i); ++t) {
       Serial.printf("       TXT %s=%s\r\n", OThreadDNSSD.txtKey(i, t).c_str(), OThreadDNSSD.txt(i, t).c_str());

@@ -67,9 +67,7 @@ static void halt(const char *msg) {
 // Matches libraries/WiFi/examples/WiFiIPv6 — IPv6 events run on another task.
 static void onWiFiEvent(WiFiEvent_t event) {
   switch (event) {
-    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      s_gotIp4 = true;
-      break;
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP: s_gotIp4 = true; break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
       s_gotIp6 = true;
       Serial.print("STA IPv6: ");
@@ -205,10 +203,7 @@ static bool discoverLight() {
     IPAddress v6 = MDNS.addressV6(i);
     IPAddress v4 = MDNS.address(i);
     uint16_t port = MDNS.port(i);
-    Serial.printf(
-      "  [%d] %s host=%s v4=%s v6=%s port=%u\r\n", i, instance.c_str(), host.c_str(), v4.toString().c_str(),
-      v6.toString().c_str(), port
-    );
+    Serial.printf("  [%d] %s host=%s v4=%s v6=%s port=%u\r\n", i, instance.c_str(), host.c_str(), v4.toString().c_str(), v6.toString().c_str(), port);
 
     IPAddress addr;
     if (!isEmptyAddr(v6)) {
@@ -283,42 +278,38 @@ static bool sendLightCmd(const char *cmd, String &reply) {
 static void handleRoot() {
   String html;
   html.reserve(1200);
-  html += F(
-    "<!DOCTYPE html><html><head><meta charset=utf-8>"
-    "<meta name=viewport content=\"width=device-width,initial-scale=1\">"
-    "<title>OT Light</title>"
-    "<style>"
-    "body{font-family:system-ui,sans-serif;max-width:28rem;margin:2rem auto;padding:0 1rem}"
-    "h1{font-size:1.4rem}button{font-size:1rem;margin:.25rem;padding:.5rem 1rem}"
-    "#st{font-weight:600;margin:1rem 0}"
-    "</style></head><body>"
-    "<h1>Thread light (via OTBR)</h1>"
-    "<p id=st>Status: "
-  );
+  html += F("<!DOCTYPE html><html><head><meta charset=utf-8>"
+            "<meta name=viewport content=\"width=device-width,initial-scale=1\">"
+            "<title>OT Light</title>"
+            "<style>"
+            "body{font-family:system-ui,sans-serif;max-width:28rem;margin:2rem auto;padding:0 1rem}"
+            "h1{font-size:1.4rem}button{font-size:1rem;margin:.25rem;padding:.5rem 1rem}"
+            "#st{font-weight:600;margin:1rem 0}"
+            "</style></head><body>"
+            "<h1>Thread light (via OTBR)</h1>"
+            "<p id=st>Status: ");
   html += s_lastState;
-  html += F(
-    "</p>"
-    "<p>"
-    "<button onclick=\"cmd('on')\">On</button>"
-    "<button onclick=\"cmd('off')\">Off</button>"
-    "<button onclick=\"cmd('toggle')\">Toggle</button>"
-    "<button onclick=\"cmd('status')\">Refresh</button>"
-    "</p>"
-    "<p id=msg></p>"
-    "<script>"
-    "async function cmd(a){"
-    " document.getElementById('msg').textContent='...';"
-    " try{"
-    "  const r=await fetch('/api/'+a);"
-    "  const t=await r.text();"
-    "  document.getElementById('msg').textContent=t;"
-    "  const s=await fetch('/api/status');"
-    "  document.getElementById('st').textContent='Status: '+await s.text();"
-    " }catch(e){document.getElementById('msg').textContent=String(e);}"
-    "}"
-    "cmd('status');"
-    "</script></body></html>"
-  );
+  html += F("</p>"
+            "<p>"
+            "<button onclick=\"cmd('on')\">On</button>"
+            "<button onclick=\"cmd('off')\">Off</button>"
+            "<button onclick=\"cmd('toggle')\">Toggle</button>"
+            "<button onclick=\"cmd('status')\">Refresh</button>"
+            "</p>"
+            "<p id=msg></p>"
+            "<script>"
+            "async function cmd(a){"
+            " document.getElementById('msg').textContent='...';"
+            " try{"
+            "  const r=await fetch('/api/'+a);"
+            "  const t=await r.text();"
+            "  document.getElementById('msg').textContent=t;"
+            "  const s=await fetch('/api/status');"
+            "  document.getElementById('st').textContent='Status: '+await s.text();"
+            " }catch(e){document.getElementById('msg').textContent=String(e);}"
+            "}"
+            "cmd('status');"
+            "</script></body></html>");
   server.send(200, "text/html", html);
 }
 
@@ -382,11 +373,9 @@ void setup() {
     Serial.println("WARN: no STA IPv6 yet — mDNS AAAA / UDP to OMR may fail");
   }
 #ifndef CONFIG_LWIP_IPV6_ND6_ROUTE_INFO_OPTION_SUPPORT
-  Serial.println(
-    "WARN: lwIP RIO off (CONFIG_LWIP_IPV6_ND6_ROUTE_INFO_OPTION_SUPPORT).\r\n"
-    "  PC may ping Thread OMR while this board UDP-times-out.\r\n"
-    "  Enable RIO in Arduino libs, or use Thread+WiFi dual-homed UI."
-  );
+  Serial.println("WARN: lwIP RIO off (CONFIG_LWIP_IPV6_ND6_ROUTE_INFO_OPTION_SUPPORT).\r\n"
+                 "  PC may ping Thread OMR while this board UDP-times-out.\r\n"
+                 "  Enable RIO in Arduino libs, or use Thread+WiFi dual-homed UI.");
 #endif
 #endif
 

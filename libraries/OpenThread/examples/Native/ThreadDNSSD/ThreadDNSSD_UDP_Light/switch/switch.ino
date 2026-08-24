@@ -30,9 +30,7 @@
 #define USER_BUTTON BOOT_PIN
 #endif
 
-static const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
-};
+static const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
 
 static const uint16_t LIGHT_PORT_FALLBACK = 5051;
 static const uint32_t ACK_TIMEOUT_MS = 2000;
@@ -95,10 +93,7 @@ static bool discoverLight() {
     return false;
   }
   s_haveLight = true;
-  Serial.printf(
-    "Light: instance=%s host=%s [%s]:%u\r\n", OThreadDNSSD.instanceName(0), OThreadDNSSD.hostname(0),
-    s_lightAddr.toString().c_str(), s_lightPort
-  );
+  Serial.printf("Light: instance=%s host=%s [%s]:%u\r\n", OThreadDNSSD.instanceName(0), OThreadDNSSD.hostname(0), s_lightAddr.toString().c_str(), s_lightPort);
   return true;
 }
 

@@ -28,9 +28,7 @@
 #include "OThreadDNSSD.h"
 #include "OThreadUDP.h"
 
-static const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
-};
+static const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
 
 static const char *kHostName = "ot-light";
 static const uint16_t LIGHT_PORT = 5051;
@@ -223,9 +221,7 @@ void loop() {
       if (s_err == OT_ERROR_DUPLICATED || s_err == OT_ERROR_SECURITY) {
         s_nameConflict = true;
         s_needReadvertise = false;
-        Serial.printf(
-          "Name conflict for '%s' — not auto-retrying with the same hostname\r\n", OThreadDNSSD.hostname()
-        );
+        Serial.printf("Name conflict for '%s' — not auto-retrying with the same hostname\r\n", OThreadDNSSD.hostname());
       } else {
         s_announced = false;
         s_needReadvertise = true;
@@ -256,8 +252,8 @@ void loop() {
   if (millis() - lastPrint > 10000) {
     lastPrint = millis();
     Serial.printf(
-      "role=%s announce=%d needReadvertise=%d lamp=%s\r\n", OThread.otGetStringDeviceRole(),
-      OThreadDNSSD.isAnnounceComplete(), s_needReadvertise, lampOn ? "ON" : "OFF"
+      "role=%s announce=%d needReadvertise=%d lamp=%s\r\n", OThread.otGetStringDeviceRole(), OThreadDNSSD.isAnnounceComplete(), s_needReadvertise,
+      lampOn ? "ON" : "OFF"
     );
   }
 }

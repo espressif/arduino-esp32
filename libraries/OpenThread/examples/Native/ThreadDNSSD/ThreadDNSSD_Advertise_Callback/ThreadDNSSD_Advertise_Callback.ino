@@ -28,9 +28,7 @@
 #include "OThreadDNSSD.h"
 
 // Same Network Key as the OTBR Thread network (other dataset fields are learned on attach).
-static const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
-};
+static const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
 
 static const char *kHostName = "sensor-cb";
 static const uint16_t kServicePort = 12346;
@@ -159,9 +157,7 @@ void loop() {
       if (s_err == OT_ERROR_DUPLICATED || s_err == OT_ERROR_SECURITY) {
         s_nameConflict = true;
         s_needReadvertise = false;
-        Serial.printf(
-          "Name conflict for '%s' — not auto-retrying with the same hostname\r\n", OThreadDNSSD.hostname()
-        );
+        Serial.printf("Name conflict for '%s' — not auto-retrying with the same hostname\r\n", OThreadDNSSD.hostname());
       } else {
         s_announced = false;
         s_needReadvertise = true;
@@ -192,8 +188,8 @@ void loop() {
   if (millis() - s_lastStatusMs >= 5000) {
     s_lastStatusMs = millis();
     Serial.printf(
-      "status announceComplete=%d attached=%d needReadvertise=%d role=%s\r\n", OThreadDNSSD.isAnnounceComplete(),
-      s_attached, s_needReadvertise, OThread.otGetStringDeviceRole()
+      "status announceComplete=%d attached=%d needReadvertise=%d role=%s\r\n", OThreadDNSSD.isAnnounceComplete(), s_attached, s_needReadvertise,
+      OThread.otGetStringDeviceRole()
     );
   }
 }
