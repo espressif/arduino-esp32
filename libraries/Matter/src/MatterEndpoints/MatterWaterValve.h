@@ -25,9 +25,8 @@ using namespace chip::app::Clusters;
 
 // Matter Water Valve endpoint (device type 0x0042) - Valve Configuration and Control cluster.
 //
-// The Valve Configuration and Control cluster is a code-driven cluster (ESP-Matter 1.5+): its
-// CurrentState/TargetState/OpenDuration/RemainingDuration are managed internally by the CHIP
-// server, not by the classic ember attribute store, so they cannot be read/written through
+// CurrentState/TargetState/OpenDuration/RemainingDuration are managed by the CHIP cluster
+// implementation itself, so they cannot be read/written through
 // getAttributeVal()/setAttributeVal()/updateAttributeVal(). Instead, Open/Close commands (whether
 // they come from a Matter controller or from calling open()/close() locally) are routed through a
 // Delegate that bridges into the onOpen()/onClose() user callbacks, and the internal countdown for

@@ -18,28 +18,18 @@
 #include <Matter.h>
 #include <app/server/Server.h>
 #include <MatterEndpoints/MatterWaterValve.h>
-#include <app/clusters/valve-configuration-and-control-server/ValveConfigurationAndControlCluster.h>
-#include <data_model_provider/esp_matter_data_model_provider.h>
+#include <app/clusters/valve-configuration-and-control-server/valve-configuration-and-control-cluster.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
 namespace wv_endpoint = esp_matter::endpoint::water_valve;
 
-// returns the live ValveConfigurationAndControlCluster instance for an endpoint, or nullptr if the
-// Matter node has not started yet (or the endpoint doesn't have this cluster). Only valid to call
-// from the Matter/CHIP event loop thread.
-static ValveConfigurationAndControlCluster *getValveCluster(uint16_t endpoint_id) {
-  chip::app::ServerClusterInterface *iface =
-    esp_matter::data_model::provider::get_instance().registry().Get(chip::app::ConcreteClusterPath(endpoint_id, ValveConfigurationAndControl::Id));
-  return static_cast<ValveConfigurationAndControlCluster *>(iface);
-}
-
 // Bridges the CHIP ValveConfigurationAndControl::Delegate interface to the MatterWaterValve user callbacks.
 // Its methods are always invoked with the CHIP stack lock held - either implicitly (remote commands are
 // dispatched on the Matter/CHIP event loop thread) or explicitly (local open()/close() calls take the lock
-// via lock::ScopedChipStackLock before calling into the cluster) - so it's safe for them to call back into
-// the cluster (e.g. UpdateCurrentState()) synchronously.
+// via lock::ScopedChipStackLock before calling into the free functions below) - so it's safe for them to
+// call back into e.g. ValveConfigurationAndControl::UpdateCurrentState() synchronously.
 class MatterWaterValve::ValveDelegate : public ValveConfigurationAndControl::Delegate {
 public:
   explicit ValveDelegate(MatterWaterValve *owner) : owner(owner) {}
@@ -53,10 +43,7 @@ public:
     owner->targetState = MatterWaterValve::VALVE_STATE_OPEN;
     if (ok) {
       owner->currentState = MatterWaterValve::VALVE_STATE_OPEN;
-      ValveConfigurationAndControlCluster *cluster = getValveCluster(owner->getEndPointId());
-      if (cluster != nullptr) {
-        cluster->UpdateCurrentState(ValveConfigurationAndControl::ValveStateEnum::kOpen);
-      }
+      ValveConfigurationAndControl::UpdateCurrentState(owner->getEndPointId(), ValveConfigurationAndControl::ValveStateEnum::kOpen);
     } else {
       log_e("Water Valve onOpen() callback reported failure.");
     }
@@ -72,10 +59,7 @@ public:
     owner->openDuration = 0;
     owner->remainingDuration = 0;
 
-    ValveConfigurationAndControlCluster *cluster = getValveCluster(owner->getEndPointId());
-    if (cluster != nullptr) {
-      cluster->UpdateCurrentState(ValveConfigurationAndControl::ValveStateEnum::kClosed);
-    }
+    ValveConfigurationAndControl::UpdateCurrentState(owner->getEndPointId(), ValveConfigurationAndControl::ValveStateEnum::kClosed);
     return CHIP_NO_ERROR;
   }
 
@@ -148,8 +132,10 @@ void MatterWaterValve::end() {
 }
 
 bool MatterWaterValve::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
-  // The Valve Configuration and Control cluster is a code-driven cluster (ESP-Matter 1.5+); its attributes are
-  // managed internally and surfaced through the onOpen()/onClose() callbacks instead of this ember attribute path.
+  // CurrentState/TargetState/OpenDuration/RemainingDuration are still plain ember attributes on this cluster,
+  // but they're only ever written by the free functions below (in response to the ValveDelegate callbacks
+  // above), which already keep currentState/targetState/openDuration/remainingDuration in sync directly.
+  // Nothing extra to do here.
   return true;
 }
 
@@ -164,17 +150,13 @@ bool MatterWaterValve::open(uint32_t durationSeconds) {
   }
 
   lock::ScopedChipStackLock lock(portMAX_DELAY);
-  ValveConfigurationAndControlCluster *cluster = getValveCluster(getEndPointId());
-  if (cluster == nullptr) {
-    log_e("Water Valve cluster not found on endpoint %u. Call Matter.begin() first.", getEndPointId());
-    return false;
-  }
 
   chip::app::DataModel::Nullable<uint32_t> duration =
     (durationSeconds == 0) ? chip::app::DataModel::Nullable<uint32_t>() : chip::app::DataModel::Nullable<uint32_t>(durationSeconds);
-  // OpenValve() synchronously invokes the ValveDelegate above, which commits currentState/targetState
-  // (and, via HandleRemainingDurationTick, openDuration/remainingDuration) once the onOpen() callback confirms.
-  if (cluster->OpenValve(chip::app::DataModel::Nullable<chip::Percent>(), duration) != CHIP_NO_ERROR) {
+  // SetValveLevel() is the Open command's implementation: it synchronously invokes the ValveDelegate above,
+  // which commits currentState/targetState (and, via HandleRemainingDurationTick, openDuration/remainingDuration)
+  // once the onOpen() callback confirms. The Level feature is not enabled on this endpoint, so level is always null.
+  if (ValveConfigurationAndControl::SetValveLevel(getEndPointId(), chip::app::DataModel::Nullable<chip::Percent>(), duration) != CHIP_NO_ERROR) {
     log_e("Failed to open Water Valve.");
     return false;
   }
@@ -188,14 +170,9 @@ bool MatterWaterValve::close() {
   }
 
   lock::ScopedChipStackLock lock(portMAX_DELAY);
-  ValveConfigurationAndControlCluster *cluster = getValveCluster(getEndPointId());
-  if (cluster == nullptr) {
-    log_e("Water Valve cluster not found on endpoint %u. Call Matter.begin() first.", getEndPointId());
-    return false;
-  }
 
   // CloseValve() synchronously invokes the ValveDelegate above, which commits currentState/targetState.
-  if (cluster->CloseValve() != CHIP_NO_ERROR) {
+  if (ValveConfigurationAndControl::CloseValve(getEndPointId()) != CHIP_NO_ERROR) {
     log_e("Failed to close Water Valve.");
     return false;
   }
@@ -209,13 +186,12 @@ bool MatterWaterValve::setValveFault(uint16_t fault) {
   }
 
   lock::ScopedChipStackLock lock(portMAX_DELAY);
-  ValveConfigurationAndControlCluster *cluster = getValveCluster(getEndPointId());
-  if (cluster == nullptr) {
-    log_e("Water Valve cluster not found on endpoint %u. Call Matter.begin() first.", getEndPointId());
-    return false;
-  }
 
-  cluster->SetValveFault(chip::BitMask<ValveConfigurationAndControl::ValveFaultBitmap>(fault));
+  chip::BitMask<ValveConfigurationAndControl::ValveFaultBitmap> faultBitmap(fault);
+  // Persist the fault in the ValveFault attribute too (not just the event below): the cluster's own Open
+  // command handler checks this attribute and rejects Open with FailureDueToFault while any bit is set.
+  ValveConfigurationAndControl::Attributes::ValveFault::Set(getEndPointId(), faultBitmap);
+  ValveConfigurationAndControl::EmitValveFault(getEndPointId(), faultBitmap);
   valveFault = fault;
   return true;
 }
