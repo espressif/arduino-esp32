@@ -111,5 +111,9 @@ protected:
   // Subclasses that want TagList advertised even when the sketch never calls setTagList()
   // (Generic Switch) may call this from begin() after setEndPointId().
   bool enableTagList();
+
+  // BooleanState::StateValue is internally managed in ESP Matter 1.5+ (code-driven cluster).
+  // attribute::update() returns ESP_ERR_NOT_SUPPORTED (262); use the cluster setter instead.
+  bool setBooleanStateValue(bool value);
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

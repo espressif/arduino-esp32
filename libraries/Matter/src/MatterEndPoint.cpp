@@ -18,6 +18,8 @@
 #include <MatterEndPoint.h>
 #include <MatterTags.h>
 #include <string.h>
+#include <app/clusters/boolean-state-server/boolean-state-cluster.h>
+#include <data_model_provider/esp_matter_data_model_provider.h>
 
 using namespace chip::app::Clusters;
 
@@ -132,6 +134,23 @@ bool MatterEndPoint::updateAttributeVal(uint32_t cluster_id, uint32_t attribute_
   }
   log_e("Update FAILED! for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
   return false;
+}
+
+static BooleanStateCluster *getBooleanStateCluster(uint16_t endpoint_id) {
+  chip::app::ServerClusterInterface *iface =
+    esp_matter::data_model::provider::get_instance().registry().Get(chip::app::ConcreteClusterPath(endpoint_id, BooleanState::Id));
+  return static_cast<BooleanStateCluster *>(iface);
+}
+
+bool MatterEndPoint::setBooleanStateValue(bool value) {
+  BooleanStateCluster *cluster = getBooleanStateCluster(endpoint_id);
+  if (cluster == nullptr) {
+    log_e("BooleanState cluster not found on endpoint %u. Call Matter.begin() first.", endpoint_id);
+    return false;
+  }
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  cluster->SetStateValue(value);
+  return true;
 }
 
 // This callback is invoked when clients interact with the Identify Cluster of an specific endpoint.

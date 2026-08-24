@@ -1,7 +1,7 @@
 # Matter Rain Sensor Example
 
 This example demonstrates how to create a Matter-compatible rain sensor device using an ESP32 SoC microcontroller.\
-The application showcases Matter commissioning, device control via smart home ecosystems, manual control using a physical button, and automatic simulation of rain detection state changes.
+The application showcases Matter commissioning, sensor data reporting to smart home ecosystems, and automatic simulation of rain detection state changes.
 
 ## Supported Targets
 
@@ -26,17 +26,18 @@ The application showcases Matter commissioning, device control via smart home ec
 - Matter protocol implementation for a rain sensor device
 - Support for both Wi-Fi and Thread(*) connectivity
 - Rain detection state indication using LED (ON = Detected, OFF = Not Detected)
-- Automatic simulation of rain detection state changes every 20 seconds
-- Button control for toggling rain detection state and factory reset
+- Automatic simulation of rain detection state changes every `simulatedSensorInterval` (20 seconds)
+- Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
 - Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- `begin()` creates the endpoint (Not Detected). Call `setRain()` after `Matter.begin()` with the real or simulated sensor reading.
 (*) It is necessary to compile the project using Arduino as IDF Component.
 
 ## Hardware Requirements
 
 - ESP32 compatible development board (see supported targets table)
 - LED connected to GPIO pins (or using built-in LED) to indicate rain detection state
-- User button for manual control (uses BOOT button by default)
+- User button for factory reset (uses BOOT button by default)
 
 ## Pin Configuration
 
@@ -69,9 +70,15 @@ Before uploading the sketch, configure the following:
    ```
 
 3. **Button pin configuration** (optional):
-   By default, the `BOOT` button (GPIO 0) is used for the Rain Sensor state toggle and factory reset. You can change this to a different pin if needed.
+   By default, the `BOOT` button (GPIO 0) is used for factory reset. You can change this to a different pin if needed.
    ```cpp
    const uint8_t buttonPin = BOOT_PIN;  // Set your button pin here
+   ```
+
+4. **Simulated sensor interval** (optional):
+   Change how often the simulated hardware toggles. Replace `simulatedHWRainSensor()` with a real probe read when you have hardware.
+   ```cpp
+   const uint32_t simulatedSensorInterval = 20000;  // 20 seconds
    ```
 
 ## Building and Flashing
@@ -104,24 +111,33 @@ Matter Node not commissioned yet. Waiting for commissioning.
 Matter Node not commissioned yet. Waiting for commissioning.
 ...
 Matter Node is commissioned and connected to the network. Ready for use.
-User button released. Setting the Rain Sensor to Detected.
-User button released. Setting the Rain Sensor to Not Detected.
+Rain Sensor is Detected.
+Rain Sensor is Not Detected.
 ```
+
+After commissioning, the simulated sensor toggles every `simulatedSensorInterval` (20 seconds by default), `setRain()` reports that reading to Matter, and the LED follows `getRain()`.
 
 ## Using the Device
 
 ### Manual Control
 
-The user button (BOOT button by default) provides manual control:
+The user button (BOOT button by default) provides factory reset functionality:
 
-- **Short press of the button**: Toggle rain sensor state (Not Detected/Detected)
 - **Long press (>5 seconds)**: Factory reset the device (decommission)
 
-### Automatic Simulation
+### Sensor Simulation
 
-The rain sensor state automatically toggles every 20 seconds to simulate a real rain sensor. The LED will reflect the current state:
+The example includes a simulated rain sensor that:
+
+- Starts in the not-detected state (`false`)
+- Toggles every `simulatedSensorInterval` (20 seconds by default)
+- Is the only writer to Matter: `loop()` calls `setRain(simulatedHWRainSensor())`
+- Drives the LED from the reported Matter state (`getRain()`)
+
 - **LED ON**: Rain is Detected
 - **LED OFF**: Rain is Not Detected
+
+To use a real sensor, replace the body of `simulatedHWRainSensor()` with your probe read (for example `return digitalRead(rainPin);`).
 
 ### Smart Home Integration
 
@@ -162,15 +178,15 @@ You can also try the Home Assistant Matter feature in order to test it.
 
 The MatterRainSensor example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), sets up the Matter Rain Sensor endpoint with initial state (Not Detected), and waits for Matter commissioning.
-2. **`loop()`**: Handles button input for toggling rain detection state and factory reset, and automatically simulates rain detection state changes every 20 seconds.
-3. **`simulatedHWRainSensor()`**: Simulates a hardware rain sensor by toggling the rain detection state every 20 seconds.
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), creates the Matter Rain Sensor endpoint with `begin()` (fabric state starts Not Detected), starts Matter with `Matter.begin()`, and waits for commissioning.
+2. **`loop()`**: Handles the button for factory reset only, reports the simulated (or real) sensor with `setRain()` after `Matter.begin()`, and updates the LED from `getRain()`.
+3. **`simulatedHWRainSensor()`**: Simulates a hardware rain sensor by toggling every `simulatedSensorInterval`. Replace this function with a real sensor read.
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **LED not responding**: Verify pin configurations and connections
-- **Rain sensor state not updating**: Check Serial Monitor output to verify state changes are being processed
+- **Rain sensor state not updating**: `setRain()` must be called after `Matter.begin()`. `begin()` only creates the endpoint and does not take an initial state. The simulated sensor toggles every `simulatedSensorInterval` (20 seconds by default). Check Serial Monitor output to verify state changes are being processed.
 - **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection
 

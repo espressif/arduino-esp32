@@ -80,6 +80,8 @@ public:
   void setHandshakeTimeout(unsigned long handshake_timeout);
   void setAlpnProtocols(const char **alpn_protos);
 
+  void useBuiltinCACertBundle();
+
   // Certain protocols start in plain-text; and then have the client
   // give some STARTSSL command to `upgrade' the connection to TLS
   // or SSL. Setting PlainStart to true (the default is false) enables

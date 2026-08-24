@@ -42,7 +42,7 @@ MatterWaterFreezeDetector::~MatterWaterFreezeDetector() {
   end();
 }
 
-bool MatterWaterFreezeDetector::begin(bool _freezeState) {
+bool MatterWaterFreezeDetector::begin() {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
@@ -50,16 +50,17 @@ bool MatterWaterFreezeDetector::begin(bool _freezeState) {
     return false;
   }
 
-  water_freeze_detector::config_t water_freeze_detector_config;
-  water_freeze_detector_config.boolean_state.state_value = _freezeState;
+  water_freeze_detector::config_t water_freeze_detector_config{};
+  water_freeze_detector_config.boolean_state.state_value = false;
+  // CHIP BooleanStateCluster still starts at false regardless of this field;
+  // apply the real sensor with setFreeze() after Matter.begin().
 
-  // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = water_freeze_detector::create(node::get(), &water_freeze_detector_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create Water Freeze Detector endpoint");
     return false;
   }
-  freezeState = _freezeState;
+  freezeState = false;
   setEndPointId(endpoint::get_id(endpoint));
 
   log_i("Water Freeze Detector created with endpoint_id %u", getEndPointId());
@@ -78,27 +79,15 @@ bool MatterWaterFreezeDetector::setFreeze(bool _freezeState) {
     return false;
   }
 
-  // avoid processing if there was no change
   if (freezeState == _freezeState) {
     return true;
   }
 
-  esp_matter_attr_val_t freezeVal = esp_matter_invalid(NULL);
-
-  if (!getAttributeVal(BooleanState::Id, BooleanState::Attributes::StateValue::Id, &freezeVal)) {
-    log_e("Failed to get Water Freeze Detector Attribute.");
+  if (!setBooleanStateValue(_freezeState)) {
+    log_e("Failed to update Water Freeze Detector Attribute.");
     return false;
   }
-  if (freezeVal.val.u8 != _freezeState) {
-    freezeVal.val.u8 = _freezeState;
-    bool ret;
-    ret = updateAttributeVal(BooleanState::Id, BooleanState::Attributes::StateValue::Id, &freezeVal);
-    if (!ret) {
-      log_e("Failed to update Water Freeze Detector Attribute.");
-      return false;
-    }
-    freezeState = _freezeState;
-  }
+  freezeState = _freezeState;
   log_v("Water Freeze Detector set to %s", _freezeState ? "Detected" : "Not Detected");
 
   return true;

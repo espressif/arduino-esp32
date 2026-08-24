@@ -264,6 +264,7 @@ Common Issues
   * Check Serial Monitor for error messages (115200 baud)
   * Verify endpoint initialization with ``begin()`` method
   * Ensure ``Matter.begin()`` is called after all endpoints are initialized
+  * For Boolean State sensors (contact, leak, freeze, rain), call the setter after ``Matter.begin()``. ``begin()`` does not take an initial state.
 
 **Callbacks not firing**
   * Verify callback functions are registered before commissioning

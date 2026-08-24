@@ -23,12 +23,12 @@ class MatterRainSensor : public MatterEndPoint {
 public:
   MatterRainSensor();
   ~MatterRainSensor();
-  // begin Matter Rain Sensor endpoint with initial rain state
-  bool begin(bool _rainState = false);
+  // begin Matter Rain Sensor endpoint. Fabric StateValue starts false.
+  bool begin();
   // this will just stop processing Rain Sensor Matter events
   void end();
 
-  // set the rain state
+  // set the rain state. Call after Matter.begin() with the real sensor reading.
   bool setRain(bool _rainState);
   // returns the rain state
   bool getRain() {

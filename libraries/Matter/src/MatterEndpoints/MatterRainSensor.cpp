@@ -42,7 +42,7 @@ MatterRainSensor::~MatterRainSensor() {
   end();
 }
 
-bool MatterRainSensor::begin(bool _rainState) {
+bool MatterRainSensor::begin() {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
@@ -50,16 +50,17 @@ bool MatterRainSensor::begin(bool _rainState) {
     return false;
   }
 
-  rain_sensor::config_t rain_sensor_config;
-  rain_sensor_config.boolean_state.state_value = _rainState;
+  rain_sensor::config_t rain_sensor_config{};
+  rain_sensor_config.boolean_state.state_value = false;
+  // CHIP BooleanStateCluster still starts at false regardless of this field;
+  // apply the real sensor with setRain() after Matter.begin().
 
-  // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = rain_sensor::create(node::get(), &rain_sensor_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create Rain Sensor endpoint");
     return false;
   }
-  rainState = _rainState;
+  rainState = false;
   setEndPointId(endpoint::get_id(endpoint));
 
   log_i("Rain Sensor created with endpoint_id %u", getEndPointId());
@@ -78,27 +79,15 @@ bool MatterRainSensor::setRain(bool _rainState) {
     return false;
   }
 
-  // avoid processing if there was no change
   if (rainState == _rainState) {
     return true;
   }
 
-  esp_matter_attr_val_t rainVal = esp_matter_invalid(NULL);
-
-  if (!getAttributeVal(BooleanState::Id, BooleanState::Attributes::StateValue::Id, &rainVal)) {
-    log_e("Failed to get Rain Sensor Attribute.");
+  if (!setBooleanStateValue(_rainState)) {
+    log_e("Failed to update Rain Sensor Attribute.");
     return false;
   }
-  if (rainVal.val.u8 != _rainState) {
-    rainVal.val.u8 = _rainState;
-    bool ret;
-    ret = updateAttributeVal(BooleanState::Id, BooleanState::Attributes::StateValue::Id, &rainVal);
-    if (!ret) {
-      log_e("Failed to update Rain Sensor Attribute.");
-      return false;
-    }
-    rainState = _rainState;
-  }
+  rainState = _rainState;
   log_v("Rain Sensor set to %s", _rainState ? "Detected" : "Not Detected");
 
   return true;
