@@ -132,7 +132,7 @@ void loop() {
   uint32_t remainingDuration = WaterValve.getRemainingDuration();
   if (remainingDurationPrev != remainingDuration) {
     if (remainingDuration > 0) {
-      Serial.printf("Water valve remaining duration: %u s\r\n", remainingDuration);
+      Serial.printf("Water valve remaining duration: %lu s\r\n", remainingDuration);
     }
     remainingDurationPrev = remainingDuration;
   }
