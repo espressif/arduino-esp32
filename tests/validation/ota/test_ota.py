@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import os
 import re
@@ -262,6 +263,7 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
         LOGGER.warning("Host has no IPv6 support; all IPv6 cases will be ignored")
 
     serve_dir = firmware.parent
+    firmware_sha256 = hashlib.sha256(firmware.read_bytes()).hexdigest()
 
     class DualStackHTTPServer(ThreadingTCPServer):
         """HTTP server reachable over IPv4 and IPv6."""
@@ -282,15 +284,13 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
         allow_reuse_address = True
         daemon_threads = True
 
-    handler_class = type(
-        "Handler",
-        (SimpleHTTPRequestHandler,),
-        {
-            "__init__": lambda self, *a, **kw: SimpleHTTPRequestHandler.__init__(
-                self, *a, directory=str(serve_dir), **kw
-            )
-        },
-    )
+    class Handler(SimpleHTTPRequestHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=str(serve_dir), **kwargs)
+
+        def end_headers(self):
+            self.send_header("x-SHA256", firmware_sha256)
+            super().end_headers()
 
     port = 8766
     server = None
@@ -298,7 +298,7 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
     if ipv6_socket_ok:
         for _ in range(10):
             try:
-                server = DualStackHTTPServer(("::", port), handler_class)
+                server = DualStackHTTPServer(("::", port), Handler)
                 dual_stack = True
                 break
             except OSError:
@@ -307,7 +307,7 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
         port = 8766
         for _ in range(10):
             try:
-                server = IPv4HTTPServer(("0.0.0.0", port), handler_class)
+                server = IPv4HTTPServer(("0.0.0.0", port), Handler)
                 break
             except OSError:
                 port += 1
