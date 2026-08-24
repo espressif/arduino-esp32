@@ -51,7 +51,9 @@
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
 #include "HWCDC.h"
+#if defined __has_include && __has_include("USBCDC.h")
 #include "USBCDC.h"
+#endif
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

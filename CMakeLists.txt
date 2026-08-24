@@ -26,7 +26,6 @@ set(CORE_SRCS
   cores/esp32/base64.cpp
   cores/esp32/cbuf.cpp
   cores/esp32/ColorFormat.c
-  cores/esp32/chip-debug-report.cpp
   cores/esp32/esp32-hal-adc.c
   cores/esp32/esp32-hal-bt.c
   cores/esp32/esp32-hal-cpu.c
@@ -47,8 +46,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-sigmadelta.c
   cores/esp32/esp32-hal-spi.c
   cores/esp32/esp32-hal-time.c
-  cores/esp32/esp32-hal-timer.c
-  cores/esp32/esp32-hal-tinyusb.c
+  cores/esp32/esp32-hal-timer.c 
   cores/esp32/esp32-hal-touch.c
   cores/esp32/esp32-hal-touch-ng.c
   cores/esp32/esp32-hal-uart.c
@@ -73,9 +71,6 @@ set(CORE_SRCS
   cores/esp32/StringUtils.cpp
   cores/esp32/Tone.cpp
   cores/esp32/HWCDC.cpp
-  cores/esp32/USB.cpp
-  cores/esp32/USBCDC.cpp
-  cores/esp32/USBMSC.cpp
   cores/esp32/FirmwareMSC.cpp
   cores/esp32/firmware_msc_fat.c
   cores/esp32/wiring_pulse.c
@@ -83,20 +78,19 @@ set(CORE_SRCS
   cores/esp32/WMath.cpp
   cores/esp32/WString.cpp
   )
+if(IDF_TARGET MATCHES "esp32s2|esp32s3|esp32p4" AND CONFIG_TINYUSB_ENABLED)
+  list(APPEND CORE_SRCS
+    cores/esp32/esp32-hal-tinyusb.c
+    cores/esp32/USB.cpp
+    cores/esp32/USBCDC.cpp
+    cores/esp32/USBMSC.cpp)
+endif()
 
 set(ARDUINO_ALL_LIBRARIES
   ArduinoOTA
   AsyncUDP
-  BLE
-  BluetoothSerial
-  Console
   DNSServer
   EEPROM
-  ESP_I2S
-  ESP_NOW
-  ESP_SR
-  ESP_HostedOTA
-  ESP_Video
   ESPmDNS
   Ethernet
   FFat
@@ -104,63 +98,31 @@ set(ARDUINO_ALL_LIBRARIES
   Hash
   HTTPClient
   HTTPUpdate
-  HTTPUpdateServer
-  Insights
   LittleFS
-  Matter
   NetBIOS
   Network
-  OpenThread
   PPP
   Preferences
-  RainMaker
   SD_MMC
   SD
-  SimpleBLE
-  SPIFFS
   SPI
   Ticker
   Update
-  USB
   WebServer
-  NetworkClientSecure
   WiFi
-  WiFiProv
   Wire
-  Zigbee
   )
+if(IDF_TARGET MATCHES "esp32s2|esp32s3|esp32p4" AND CONFIG_TINYUSB_ENABLED)
+  list(APPEND ARDUINO_ALL_LIBRARIES USB)
+endif()
 
 set(ARDUINO_LIBRARY_ArduinoOTA_SRCS libraries/ArduinoOTA/src/ArduinoOTA.cpp)
 
 set(ARDUINO_LIBRARY_AsyncUDP_SRCS libraries/AsyncUDP/src/AsyncUDP.cpp)
 
-set(ARDUINO_LIBRARY_BluetoothSerial_SRCS
-  libraries/BluetoothSerial/src/BluetoothSerial.cpp
-  libraries/BluetoothSerial/src/BTAddress.cpp
-  libraries/BluetoothSerial/src/BTAdvertisedDeviceSet.cpp
-  libraries/BluetoothSerial/src/BTScanResultsSet.cpp)
-
-set(ARDUINO_LIBRARY_Console_SRCS libraries/Console/src/Console.cpp)
-set(ARDUINO_LIBRARY_Console_REQUIRES console)
-
 set(ARDUINO_LIBRARY_DNSServer_SRCS libraries/DNSServer/src/DNSServer.cpp)
 
 set(ARDUINO_LIBRARY_EEPROM_SRCS libraries/EEPROM/src/EEPROM.cpp)
-
-set(ARDUINO_LIBRARY_ESP_I2S_SRCS libraries/ESP_I2S/src/ESP_I2S.cpp)
-
-set(ARDUINO_LIBRARY_ESP_NOW_SRCS
-  libraries/ESP_NOW/src/ESP32_NOW.cpp
-  libraries/ESP_NOW/src/ESP32_NOW_Serial.cpp)
-
-set(ARDUINO_LIBRARY_ESP_SR_SRCS
-  libraries/ESP_SR/src/ESP_SR.cpp
-  libraries/ESP_SR/src/esp32-hal-sr.c)
-
-set(ARDUINO_LIBRARY_ESP_HostedOTA_SRCS
-  libraries/ESP_HostedOTA/src/ESP_HostedOTA.cpp)
-
-set(ARDUINO_LIBRARY_ESP_Video_SRCS libraries/ESP_Video/src/ESP_Video.cpp)
 
 set(ARDUINO_LIBRARY_ESPmDNS_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
 
@@ -183,58 +145,13 @@ set(ARDUINO_LIBRARY_HTTPClient_SRCS libraries/HTTPClient/src/HTTPClient.cpp)
 
 set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
 
-set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
-
 set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
 
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
 
-set(ARDUINO_LIBRARY_OpenThread_SRCS
-  libraries/OpenThread/src/OThread.cpp
-  libraries/OpenThread/src/OThreadCLI.cpp
-  libraries/OpenThread/src/OThreadUDP.cpp
-  libraries/OpenThread/src/OThreadCoAP.cpp
-  libraries/OpenThread/src/OThreadCLI_Util.cpp
-  libraries/OpenThread/src/OThreadScan.cpp)
-
-set(ARDUINO_LIBRARY_Matter_SRCS
-  libraries/Matter/src/MatterEndpoints/MatterGenericSwitch.cpp
-  libraries/Matter/src/MatterEndpoints/MatterOnOffLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterDimmableLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterColorTemperatureLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterColorLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterEnhancedColorLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterFan.cpp
-  libraries/Matter/src/MatterEndpoints/MatterTemperatureSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterTemperatureControlledCabinet.cpp
-  libraries/Matter/src/MatterEndpoints/MatterHumiditySensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterContactSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterWaterLeakDetector.cpp
-  libraries/Matter/src/MatterEndpoints/MatterWaterFreezeDetector.cpp
-  libraries/Matter/src/MatterEndpoints/MatterRainSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterPressureSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterOccupancySensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterOnOffPlugin.cpp
-  libraries/Matter/src/MatterEndpoints/MatterDimmablePlugin.cpp
-  libraries/Matter/src/MatterEndpoints/MatterThermostat.cpp
-  libraries/Matter/src/MatterEndpoints/MatterWindowCovering.cpp
-  libraries/Matter/src/MatterEndpoints/MatterLightSensor.cpp
-  libraries/Matter/src/Matter.cpp
-  libraries/Matter/src/MatterEndPoint.cpp)
-
 set(ARDUINO_LIBRARY_PPP_SRCS libraries/PPP/src/PPP.cpp)
 
 set(ARDUINO_LIBRARY_Preferences_SRCS libraries/Preferences/src/Preferences.cpp)
-
-set(ARDUINO_LIBRARY_RainMaker_SRCS
-  libraries/RainMaker/src/RMaker.cpp
-  libraries/RainMaker/src/RMakerNode.cpp
-  libraries/RainMaker/src/RMakerParam.cpp
-  libraries/RainMaker/src/RMakerDevice.cpp
-  libraries/RainMaker/src/RMakerType.cpp
-  libraries/RainMaker/src/RMakerQR.cpp
-  libraries/RainMaker/src/RMakerUtils.cpp
-  libraries/RainMaker/src/AppInsights.cpp)
 
 set(ARDUINO_LIBRARY_SD_MMC_SRCS libraries/SD_MMC/src/SD_MMC.cpp)
 
@@ -242,10 +159,6 @@ set(ARDUINO_LIBRARY_SD_SRCS
   libraries/SD/src/SD.cpp
   libraries/SD/src/sd_diskio.cpp
   libraries/SD/src/sd_diskio_crc.c)
-
-set(ARDUINO_LIBRARY_SimpleBLE_SRCS libraries/SimpleBLE/src/SimpleBLE.cpp)
-
-set(ARDUINO_LIBRARY_SPIFFS_SRCS libraries/SPIFFS/src/SPIFFS.cpp)
 
 set(ARDUINO_LIBRARY_SPI_SRCS libraries/SPI/src/SPI.cpp)
 
@@ -256,29 +169,31 @@ set(ARDUINO_LIBRARY_Update_SRCS
   libraries/Update/src/HttpsOTAUpdate.cpp
   libraries/Update/src/Updater_Signing.cpp)
 
-set(ARDUINO_LIBRARY_USB_SRCS
-  libraries/USB/src/USBAudioCard.cpp
-  libraries/USB/src/USBHID.cpp
-  libraries/USB/src/USBMIDI.cpp
-  libraries/USB/src/USBHIDMouse.cpp
-  libraries/USB/src/USBHIDKeyboard.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_da_DK.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_de_DE.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_en_US.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_es_ES.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_fr_CH.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_fr_FR.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_hu_HU.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_it_IT.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_ja_JP.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_pt_BR.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_pt_PT.cpp
-  libraries/USB/src/keyboardLayout/KeyboardLayout_sv_SE.cpp
-  libraries/USB/src/USBHIDGamepad.cpp
-  libraries/USB/src/USBHIDConsumerControl.cpp
-  libraries/USB/src/USBHIDSystemControl.cpp
-  libraries/USB/src/USBHIDVendor.cpp
-  libraries/USB/src/USBVendor.cpp)
+if(IDF_TARGET MATCHES "esp32s2|esp32s3|esp32p4" AND CONFIG_TINYUSB_ENABLED)
+  set(ARDUINO_LIBRARY_USB_SRCS
+    libraries/USB/src/USBAudioCard.cpp
+    libraries/USB/src/USBHID.cpp
+    libraries/USB/src/USBMIDI.cpp
+    libraries/USB/src/USBHIDMouse.cpp
+    libraries/USB/src/USBHIDKeyboard.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_da_DK.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_de_DE.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_en_US.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_es_ES.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_fr_CH.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_fr_FR.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_hu_HU.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_it_IT.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_ja_JP.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_pt_BR.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_pt_PT.cpp
+    libraries/USB/src/keyboardLayout/KeyboardLayout_sv_SE.cpp
+    libraries/USB/src/USBHIDGamepad.cpp
+    libraries/USB/src/USBHIDConsumerControl.cpp
+    libraries/USB/src/USBHIDSystemControl.cpp
+    libraries/USB/src/USBHIDVendor.cpp
+    libraries/USB/src/USBVendor.cpp)
+endif()
 
 set(ARDUINO_LIBRARY_WebServer_SRCS
   libraries/WebServer/src/WebServer.cpp
@@ -288,10 +203,6 @@ set(ARDUINO_LIBRARY_WebServer_SRCS
   libraries/WebServer/src/middleware/AuthenticationMiddleware.cpp
   libraries/WebServer/src/middleware/CorsMiddleware.cpp
   libraries/WebServer/src/middleware/LoggingMiddleware.cpp)
-
-set(ARDUINO_LIBRARY_NetworkClientSecure_SRCS
-  libraries/NetworkClientSecure/src/ssl_client.cpp
-  libraries/NetworkClientSecure/src/NetworkClientSecure.cpp)
 
 set(ARDUINO_LIBRARY_Network_SRCS
   libraries/Network/src/NetworkInterface.cpp
@@ -311,74 +222,7 @@ set(ARDUINO_LIBRARY_WiFi_SRCS
   libraries/WiFi/src/STA.cpp
   libraries/WiFi/src/AP.cpp)
 
-set(ARDUINO_LIBRARY_WiFiProv_SRCS libraries/WiFiProv/src/WiFiProv.cpp)
-
 set(ARDUINO_LIBRARY_Wire_SRCS libraries/Wire/src/Wire.cpp)
-
-set(ARDUINO_LIBRARY_Zigbee_SRCS
-  libraries/Zigbee/src/ZigbeeCore.cpp
-  libraries/Zigbee/src/ZigbeeEP.cpp
-  libraries/Zigbee/src/ZigbeeHandlers.cpp
-  libraries/Zigbee/src/ep/ZigbeeColorDimmableLight.cpp
-  libraries/Zigbee/src/ep/ZigbeeColorDimmerSwitch.cpp
-  libraries/Zigbee/src/ep/ZigbeeDimmableLight.cpp
-  libraries/Zigbee/src/ep/ZigbeeLight.cpp
-  libraries/Zigbee/src/ep/ZigbeeSwitch.cpp
-  libraries/Zigbee/src/ep/ZigbeeTempSensor.cpp
-  libraries/Zigbee/src/ep/ZigbeeThermostat.cpp
-  libraries/Zigbee/src/ep/ZigbeeFlowSensor.cpp
-  libraries/Zigbee/src/ep/ZigbeePressureSensor.cpp
-  libraries/Zigbee/src/ep/ZigbeeOccupancySensor.cpp
-  libraries/Zigbee/src/ep/ZigbeeCarbonDioxideSensor.cpp
-  libraries/Zigbee/src/ep/ZigbeeContactSwitch.cpp
-  libraries/Zigbee/src/ep/ZigbeeDoorWindowHandle.cpp
-  libraries/Zigbee/src/ep/ZigbeeWindowCovering.cpp
-  libraries/Zigbee/src/ep/ZigbeeVibrationSensor.cpp
-  libraries/Zigbee/src/ep/ZigbeeAnalog.cpp
-  libraries/Zigbee/src/ep/ZigbeeRangeExtender.cpp
-  libraries/Zigbee/src/ep/ZigbeeGateway.cpp
-  libraries/Zigbee/src/ep/ZigbeeWindSpeedSensor.cpp
-  libraries/Zigbee/src/ep/ZigbeeIlluminanceSensor.cpp
-  libraries/Zigbee/src/ep/ZigbeePM25Sensor.cpp
-  libraries/Zigbee/src/ep/ZigbeeElectricalMeasurement.cpp
-  libraries/Zigbee/src/ep/ZigbeeBinary.cpp
-  libraries/Zigbee/src/ep/ZigbeePowerOutlet.cpp
-  libraries/Zigbee/src/ep/ZigbeeFanControl.cpp
-  libraries/Zigbee/src/ep/ZigbeeMultistate.cpp
-  )
-
-set(ARDUINO_LIBRARY_BLE_SRCS
-  libraries/BLE/src/BLE2901.cpp
-  libraries/BLE/src/BLE2902.cpp
-  libraries/BLE/src/BLE2904.cpp
-  libraries/BLE/src/BLEAddress.cpp
-  libraries/BLE/src/BLEAdvertisedDevice.cpp
-  libraries/BLE/src/BLEAdvertising.cpp
-  libraries/BLE/src/BLEBeacon.cpp
-  libraries/BLE/src/BLECharacteristic.cpp
-  libraries/BLE/src/BLECharacteristicMap.cpp
-  libraries/BLE/src/BLEClient.cpp
-  libraries/BLE/src/BLEDescriptor.cpp
-  libraries/BLE/src/BLEDescriptorMap.cpp
-  libraries/BLE/src/BLEDevice.cpp
-  libraries/BLE/src/BLEEddystoneTLM.cpp
-  libraries/BLE/src/BLEEddystoneURL.cpp
-  libraries/BLE/src/BLEExceptions.cpp
-  libraries/BLE/src/BLEHIDDevice.cpp
-  libraries/BLE/src/BLERemoteCharacteristic.cpp
-  libraries/BLE/src/BLERemoteDescriptor.cpp
-  libraries/BLE/src/BLERemoteService.cpp
-  libraries/BLE/src/BLEScan.cpp
-  libraries/BLE/src/BLESecurity.cpp
-  libraries/BLE/src/BLEServer.cpp
-  libraries/BLE/src/BLEService.cpp
-  libraries/BLE/src/BLEServiceMap.cpp
-  libraries/BLE/src/BLEUtils.cpp
-  libraries/BLE/src/BLEUUID.cpp
-  libraries/BLE/src/BLEValue.cpp
-  libraries/BLE/src/FreeRTOS.cpp
-  libraries/BLE/src/GeneralUtils.cpp
-  )
 
 set(ARDUINO_LIBRARIES_SRCS)
 set(ARDUINO_LIBRARIES_REQUIRES)
@@ -401,21 +245,13 @@ set(includedirs variants/${CONFIG_ARDUINO_VARIANT}/ cores/esp32/ ${ARDUINO_LIBRA
 set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
 set(priv_includes cores/esp32/libb64)
 set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_usb_serial_jtag driver esp_http_client esp_https_ota esp_timer)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
+set(priv_requires fatfs nvs_flash app_update bootloader_support bt esp_hid esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
 
 set(min_v6_idf_version "6.0.0")
 if (idf_version VERSION_LESS min_v6_idf_version)
   list(APPEND priv_requires usb)
 else()
   list(APPEND requires esp_hal_uart esp_hal_ledc esp_hal_ana_conv esp_hal_gpio esp_hal_i2c esp_hal_gpspi esp_hal_timg esp_driver_i2c esp_driver_ledc esp_driver_sdm esp_driver_tsens esp_driver_rmt esp_driver_i2s esp_driver_uart esp_driver_dac)
-endif()
-
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThread)
-  #if(CONFIG_SOC_IEEE802154_SUPPORTED) # Does not work!
-  #if(CONFIG_OPENTHREAD_ENABLED) # Does not work!
-  if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2" OR IDF_TARGET STREQUAL "esp32c5") # Sadly only this works
-    list(APPEND requires openthread)
-  endif()
 endif()
 
 if(IDF_TARGET STREQUAL "esp32" OR IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3" OR IDF_TARGET STREQUAL "esp32p4")
@@ -513,21 +349,6 @@ endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
     maybe_add_component(esp_https_ota)
 endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ESP_SR)
-    maybe_add_component(espressif__esp_sr)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_Matter)
-    maybe_add_component(espressif__esp_matter)
-
-endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LittleFS)
     maybe_add_component(joltwallet__littlefs)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_WiFiProv)
-    maybe_add_component(espressif__network_provisioning)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ESP_Video)
-    if(IDF_TARGET STREQUAL "esp32s3" OR IDF_TARGET STREQUAL "esp32p4")
-        maybe_add_component(espressif__esp_video)
-    endif()
 endif()

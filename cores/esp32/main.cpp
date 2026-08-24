@@ -10,7 +10,9 @@
 #endif
 #endif
 
+#if defined __has_include && __has_include("chip-debug-report.h")
 #include "chip-debug-report.h"
+#endif
 
 #ifndef ARDUINO_LOOP_STACK_SIZE
 #ifndef CONFIG_ARDUINO_LOOP_STACK_SIZE
@@ -51,12 +53,14 @@ __attribute__((weak)) uint64_t getArduinoSetupWaitTime_ms(void) {
 
 void loopTask(void *pvParameters) {
   delay(getArduinoSetupWaitTime_ms());
+#if defined __has_include && __has_include("chip-debug-report.h")
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
   printBeforeSetupInfo();
 #else
   if (shouldPrintChipDebugReport()) {
     printBeforeSetupInfo();
   }
+#endif
 #endif
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
   // sets UART0 (default console) RX/TX pins as already configured in boot or as defined in variants/pins_arduino.h
@@ -65,12 +69,14 @@ void loopTask(void *pvParameters) {
   // usually done for opening the Serial Monitor and seeing all debug messages
 #endif
   setup();
+#if defined __has_include && __has_include("chip-debug-report.h")
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
   printAfterSetupInfo();
 #else
   if (shouldPrintChipDebugReport()) {
     printAfterSetupInfo();
   }
+#endif
 #endif
   for (;;) {
 #if CONFIG_FREERTOS_UNICORE

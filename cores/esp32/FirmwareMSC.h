@@ -14,7 +14,9 @@
 
 #pragma once
 #include <stdbool.h>
+#if defined __has_include && __has_include("USBMSC.h")
 #include "USBMSC.h"
+#endif
 
 #if CONFIG_TINYUSB_MSC_ENABLED
 

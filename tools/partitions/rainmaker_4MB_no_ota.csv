@@ -1,6 +1,0 @@
-# Name,   Type, SubType, Offset,  Size, Flags
-nvs,       data,  nvs,     0x9000,   0x5000,
-otadata,   data,  ota,     0xe000,   0x2000,
-ota_0,     app,   ota_0,   0x10000,  0x3DA000,
-fctry,     data,  nvs,     0x3EA000, 0x6000,
-coredump,  data,  coredump,0x3F0000, 0x10000,

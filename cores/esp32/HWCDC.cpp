@@ -11,7 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#if defined __has_include && __has_include("USB.h")
 #include "USB.h"
+#endif
 #if SOC_USB_SERIAL_JTAG_SUPPORTED
 
 #include "Arduino.h"  // defines ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE and ARDUINO_SERIAL_EVENT_TASK_PRIORITY
