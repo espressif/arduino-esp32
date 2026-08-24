@@ -91,6 +91,8 @@ typedef struct {
 /**
  * @brief Parse a raw HID Report descriptor (e.g. from USB GET_DESCRIPTOR).
  * @return Parsed map; caller must usbhid_free_report_map(). NULL on failure.
+ *
+ * Not reentrant: parse state is file-scope. Call from one task only.
  */
 usbhid_report_map_t *usbhid_parse_report_map(const uint8_t *hid_rm, size_t hid_rm_len);
 
