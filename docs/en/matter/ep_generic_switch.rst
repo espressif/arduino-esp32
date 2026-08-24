@@ -234,6 +234,6 @@ Full gesture support with long press and multi-press.
 Tagged Smart Buttons
 ********************
 
-Two On/Off buttons plus a custom-labeled Scene button, using Descriptor ``TagList`` so a controller can tell the endpoints apart.
+Three Generic Switch endpoints — On, Off, and a custom "Scene 1" button. Each tagged via the Descriptor ``TagList`` attribute so a Matter controller can display a meaningful name for each button instead of a generic "Switch 1 / Switch 2 / Switch 3".
 
 `View Matter Smart Buttons TagList example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButtonsTagList>`_
