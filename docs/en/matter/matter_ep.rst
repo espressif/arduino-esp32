@@ -130,6 +130,8 @@ Updates the value of an attribute from its cluster ID. This is typically used fo
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
+Boolean State ``StateValue`` (contact, leak, freeze, rain) is internally managed in ESP-Matter 1.5+ and cannot be written with ``updateAttributeVal()``. Those endpoints use a cluster setter; call ``setContact()`` / ``setLeak()`` / ``setFreeze()`` / ``setRain()`` after ``Matter.begin()``.
+
 Identify Cluster
 ****************
 

@@ -30,6 +30,7 @@
 #define UPDATE_ERROR_ABORT        (12)  ///< Update was aborted
 #define UPDATE_ERROR_DECRYPT      (13)  ///< Decryption failed
 #define UPDATE_ERROR_SIGN         (14)  ///< Signature verification failed
+#define UPDATE_ERROR_SHA256       (15)  ///< SHA-256 checksum mismatch
 
 #define UPDATE_SIZE_UNKNOWN 0xFFFFFFFF  ///< Constant indicating update size is unknown
 
@@ -227,6 +228,45 @@ public:
     return _md5.getBytes(result);
   }
 
+  /**
+   * @brief Set expected SHA-256 checksum for the incoming firmware image
+   *
+   * Digests the entire downloaded payload (same scope as MD5), not the
+   * ESP-IDF partition/image SHA-256 footer.
+   *
+   * Call after `begin()` and before any data is written. Hashing is only
+   * activated when this succeeds; otherwise no SHA-256 context is allocated.
+   *
+   * @param expected_sha256 Hex string containing expected SHA-256 digest (64 characters)
+   * @param calc_post_decryption If true, calculate SHA-256 after decryption
+   * @return true if SHA-256 was accepted
+   */
+  bool setSHA256(
+    const char *expected_sha256
+#ifndef UPDATE_NOCRYPT
+    ,
+    bool calc_post_decryption = true
+#endif /* #ifdef UPDATE_NOCRYPT */
+  );
+
+  /**
+   * @brief Get SHA-256 digest string of the completed firmware
+   *
+   * Only valid after a successful update that used `setSHA256()`.
+   *
+   * @return String Hex representation of SHA-256 digest, or empty if unavailable
+   */
+  String sha256String(void);
+
+  /**
+   * @brief Retrieve the raw SHA-256 bytes of the completed firmware
+   *
+   * Only valid after a successful update that used `setSHA256()`.
+   *
+   * @param result Pointer to a 32-byte buffer to receive SHA-256 bytes
+   */
+  void sha256(uint8_t *result);
+
 #ifdef UPDATE_SIGN
   /**
    * @brief Install signature verification for update images
@@ -351,6 +391,17 @@ private:
   bool _target_md5_decrypted = true;
 #endif /* UPDATE_NOCRYPT */
   MD5Builder _md5;
+
+#ifndef UPDATE_NOCRYPT
+  bool _target_sha256_decrypted = true;
+#endif                         /* UPDATE_NOCRYPT */
+  void *_sha256_ctx;           ///< Opaque streaming SHA-256 context and expected digest (allocated on demand)
+  uint8_t _sha256_result[32];  ///< Final digest kept after context is freed
+  bool _sha256_valid;          ///< True after all update verification and activation steps succeed
+
+  void _sha256FreeContext();
+  bool _sha256Update(const uint8_t *data, size_t len);
+  bool _sha256Finish();
 
   int _ledPin;
   uint8_t _ledOn;

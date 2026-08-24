@@ -11,7 +11,7 @@ The Matter library provides support for creating Matter-compatible devices inclu
 * Matter commissioning via QR code or manual pairing code
 * Multiple endpoint types for various device categories
 * Event monitoring and callback support
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 * Smart home ecosystem compatibility
 
 The Matter library is built on top of `ESP Matter SDK <https://github.com/espressif/esp-matter>`_ and provides a high-level Arduino-style interface for creating Matter devices.
@@ -263,6 +263,7 @@ Common Issues
   * Check Serial Monitor for error messages (115200 baud)
   * Verify endpoint initialization with ``begin()`` method
   * Ensure ``Matter.begin()`` is called after all endpoints are initialized
+  * For Boolean State sensors (contact, leak, freeze, rain), call the setter after ``Matter.begin()``. ``begin()`` does not take an initial state.
 
 **Callbacks not firing**
   * Verify callback functions are registered before commissioning

@@ -17,11 +17,18 @@ static const uint8_t WRITE_NR_BURST[3][3] = {
   {0xCC, 0xCC, 0xCC},
 };
 
+// Service UUIDs the server only advertises inside malformed AD structures. A
+// fixed parser must never surface them (see the payloads in server.ino).
+static BLEUUID badUuid16((uint16_t)0x180D);
+static BLEUUID badUuid32((uint32_t)0x04030201);
+
 String targetServerName = "";
 static boolean doConnect = false;
 static boolean connected = false;
 static boolean doScan = false;
 static boolean testCompleted = false;
+static int adPhase = 1;
+static boolean adPhase2Reported = false;
 static BLEClient *pClient = nullptr;
 static BLERemoteCharacteristic *pRemoteInsecureCharacteristic = nullptr;
 static BLERemoteCharacteristic *pRemoteSecureCharacteristic = nullptr;
@@ -176,6 +183,26 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       Serial.println(deviceName);
 
       if (deviceName == targetServerName) {
+        if (adPhase == 2) {
+          if (!adPhase2Reported) {
+            adPhase2Reported = true;
+            // Behind the zero-length terminator the server hides manufacturer data,
+            // and the 32-bit UUID list it advertises has a trailing partial group.
+            Serial.printf(
+              "[CLIENT] ADCHK2 mfg=%d svc32=%d\n", advertisedDevice.haveManufacturerData() ? 1 : 0, advertisedDevice.isAdvertisingService(badUuid32) ? 1 : 0
+            );
+          }
+          return;
+        }
+
+        // The scan response hides an oversize AD structure, a 16-bit UUID list with
+        // a trailing partial octet, and a 128-bit UUID structure shorter than 16
+        // bytes. Only the service UUID from the primary advertisement is valid, so
+        // a fixed parser reports exactly one service UUID and no manufacturer data.
+        Serial.printf(
+          "[CLIENT] ADCHK1 mfg=%d svc16=%d svcCount=%d\n", advertisedDevice.haveManufacturerData() ? 1 : 0,
+          advertisedDevice.isAdvertisingService(badUuid16) ? 1 : 0, advertisedDevice.getServiceUUIDCount()
+        );
         Serial.println("[CLIENT] Found target server!");
         BLEDevice::getScan()->stop();
         myDevice = new BLEAdvertisedDevice(advertisedDevice);
@@ -185,6 +212,26 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     }
   }
 };
+
+static MyAdvertisedDeviceCallbacks *pScanCallbacks = nullptr;
+
+// Rescan while the server advertises the window 2 payload (see server.ino).
+void runAdPhase2Scan() {
+  adPhase = 2;
+  adPhase2Reported = false;
+
+  BLEScan *pBLEScan = BLEDevice::getScan();
+  pBLEScan->stop();
+  pBLEScan->clearResults();
+  // Duplicates are wanted so the report is not suppressed by the earlier scan.
+  pBLEScan->setAdvertisedDeviceCallbacks(pScanCallbacks, true);
+  pBLEScan->setActiveScan(true);
+  pBLEScan->start(10, false);
+
+  if (!adPhase2Reported) {
+    Serial.println("[CLIENT] ADCHK2 server not found");
+  }
+}
 
 bool runReconnectPhase(uint16_t preseed, const char *label) {
   Serial.printf("[CLIENT] Reconnect phase: crossing %s (preseed=%u)\n", label, preseed);
@@ -278,7 +325,8 @@ void setup() {
 
   // Start scanning
   BLEScan *pBLEScan = BLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  pScanCallbacks = new MyAdvertisedDeviceCallbacks();
+  pBLEScan->setAdvertisedDeviceCallbacks(pScanCallbacks);
   pBLEScan->setInterval(1349);
   pBLEScan->setWindow(449);
   pBLEScan->setActiveScan(true);
@@ -286,6 +334,14 @@ void setup() {
 }
 
 void loop() {
+  if (testCompleted && Serial.available()) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    if (command == "ADPHASE2") {
+      runAdPhase2Scan();
+    }
+  }
+
   if (doConnect == true) {
     if (connectToServer()) {
       Serial.println("[CLIENT] Successfully connected and authenticated");

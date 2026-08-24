@@ -43,15 +43,21 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter water leak detector endpoint with an initial leak detection state.
+Initializes the Matter water leak detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setLeak()`` after ``Matter.begin()`` with the real sensor reading.
 
 .. code-block:: arduino
 
-    bool begin(bool _leakState = false);
-
-* ``_leakState`` - Initial water leak detection state (``true`` = detected, ``false`` = not detected, default: ``false``)
+    bool begin();
 
 This function will return ``true`` if successful, ``false`` otherwise.
+
+Typical usage:
+
+.. code-block:: arduino
+
+    WaterLeakDetector.begin();
+    Matter.begin();
+    WaterLeakDetector.setLeak(digitalRead(leakPin));
 
 end
 ^^^
@@ -68,7 +74,7 @@ Water Leak Detection State Control
 setLeak
 ^^^^^^^^
 
-Sets the water leak detection state.
+Sets the water leak detection state. Call after ``Matter.begin()``.
 
 .. code-block:: arduino
 
@@ -114,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the water leak detection state.
+Sets the water leak detection state. Same as ``setLeak()``; call after ``Matter.begin()``.
 
 .. code-block:: arduino
 
