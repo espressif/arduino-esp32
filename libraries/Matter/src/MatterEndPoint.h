@@ -73,5 +73,9 @@ protected:
   // main endpoint ID
   uint16_t endpoint_id = 0;
   EndPointIdentifyCB _onEndPointIdentifyCB = nullptr;
+
+  // BooleanState::StateValue is internally managed in ESP Matter 1.5+ (code-driven cluster).
+  // attribute::update() returns ESP_ERR_NOT_SUPPORTED (262); use the cluster setter instead.
+  bool setBooleanStateValue(bool value);
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

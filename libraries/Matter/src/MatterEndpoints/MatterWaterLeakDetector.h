@@ -23,12 +23,12 @@ class MatterWaterLeakDetector : public MatterEndPoint {
 public:
   MatterWaterLeakDetector();
   ~MatterWaterLeakDetector();
-  // begin Matter Water Leak Detector endpoint with initial leak state
-  bool begin(bool _leakState = false);
+  // begin Matter Water Leak Detector endpoint. Fabric StateValue starts false.
+  bool begin();
   // this will just stop processing Water Leak Detector Matter events
   void end();
 
-  // set the leak state
+  // set the leak state. Call after Matter.begin() with the real sensor reading.
   bool setLeak(bool _leakState);
   // returns the leak state
   bool getLeak() {
