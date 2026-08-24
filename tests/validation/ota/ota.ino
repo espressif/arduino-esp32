@@ -717,6 +717,22 @@ void test_httpupdate_sidecar_redirect(void) {
   TEST_ASSERT_EQUAL(64, Update.sha256String().length());
 }
 
+void test_httpupdate_sidecar_redirect_limit(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  HTTPClient http;
+  TEST_ASSERT_TRUE(http.begin(client, server_url + "/firmware-noheader.bin"));
+  http.setRedirectLimit(0);
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  httpUpdate.setSHA256sumUrl(server_url + "/redirect-sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(http));
+  TEST_ASSERT_EQUAL(HTTP_UE_SERVER_FAULTY_SHA256, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+}
+
 void test_httpupdate_sidecar_failure_does_not_mask_not_modified(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
   TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
@@ -902,6 +918,7 @@ void setup() {
   RUN_TEST(test_httpupdate_both_sidecars);
   RUN_TEST(test_httpupdate_sidecar_uppercase);
   RUN_TEST(test_httpupdate_sidecar_redirect);
+  RUN_TEST(test_httpupdate_sidecar_redirect_limit);
   RUN_TEST(test_httpupdate_sidecar_failure_does_not_mask_not_modified);
   RUN_TEST(test_httpupdate_download);
   RUN_TEST(test_httpupdate_download_ipv6);

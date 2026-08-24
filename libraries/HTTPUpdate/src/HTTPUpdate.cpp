@@ -203,7 +203,8 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   if (_checksumSidecarFetch) {
     uint8_t requested =
       (!_md5SumUrl.isEmpty() && _md5Sum.isEmpty() ? SIDECAR_MD5_FAILED : 0) | (!_sha256SumUrl.isEmpty() && _sha256Sum.isEmpty() ? SIDECAR_SHA256_FAILED : 0);
-    sidecarFailures = _checksumSidecarFetch(http.getClient(), _md5SumUrl, _sha256SumUrl, requested, md5, sha256, _httpClientTimeout, _followRedirects);
+    sidecarFailures =
+      _checksumSidecarFetch(http.getClient(), _md5SumUrl, _sha256SumUrl, requested, md5, sha256, _httpClientTimeout, _followRedirects, http._redirectLimit);
   }
 
   // use HTTP/1.0 for update since the update handler not support any transfer Encoding

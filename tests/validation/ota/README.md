@@ -45,6 +45,7 @@ Validates the `Update` API, `HTTPUpdate` library, and `ArduinoOTA` for unsigned 
 | `test_httpupdate_both_sidecars` | MD5 and SHA-256 sidecars are fetched and verified together |
 | `test_httpupdate_sidecar_uppercase` | Uppercase hex sidecar is accepted |
 | `test_httpupdate_sidecar_redirect` | Sidecar URL follows HTTP redirect when enabled |
+| `test_httpupdate_sidecar_redirect_limit` | Sidecar request honors the firmware client's configured redirect limit |
 | `test_httpupdate_sidecar_failure_does_not_mask_not_modified` | A failed sidecar prefetch does not replace HTTP 304 / no-update result |
 | `test_httpupdate_download` | `HTTPUpdate` download and SHA-256 verification over IPv4 |
 | `test_httpupdate_download_ipv6` | `HTTPUpdate` download and SHA-256 verification via RFC 3986 IPv6 URL |

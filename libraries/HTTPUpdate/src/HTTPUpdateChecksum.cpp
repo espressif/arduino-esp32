@@ -33,7 +33,8 @@ static const uint8_t HTTPUPDATE_SIDECAR_MD5_FAILED = 0x01;
 static const uint8_t HTTPUPDATE_SIDECAR_SHA256_FAILED = 0x02;
 
 static uint8_t httpUpdateFetchChecksumSidecars(
-  NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow
+  NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
+  uint16_t redirectLimit
 );
 
 static bool httpUpdateIsHexDigit(int c) {
@@ -226,8 +227,9 @@ void HTTPUpdate::setSHA256sumUrl(const String &url) {
   _checksumSidecarFetch = (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
 }
 
-static bool
-  httpUpdateFetchChecksumSidecar(NetworkClient &client, const String &url, size_t digestLen, String &outDigest, int timeout, followRedirects_t follow) {
+static bool httpUpdateFetchChecksumSidecar(
+  NetworkClient &client, const String &url, size_t digestLen, String &outDigest, int timeout, followRedirects_t follow, uint16_t redirectLimit
+) {
   outDigest = String();
 
   if (url.isEmpty() || (digestLen != 32 && digestLen != 64)) {
@@ -247,6 +249,7 @@ static bool
   http.useHTTP10(true);
   http.setTimeout(timeout);
   http.setFollowRedirects(follow);
+  http.setRedirectLimit(redirectLimit);
   const char *headerKeys[] = {"Transfer-Encoding"};
   http.collectHeaders(headerKeys, 1);
 
@@ -279,17 +282,19 @@ static bool
   }
 
   outDigest = parser.token();
-  return true;
+  return outDigest.length() == digestLen;
 }
 
 static uint8_t httpUpdateFetchChecksumSidecars(
-  NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow
+  NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
+  uint16_t redirectLimit
 ) {
   uint8_t failures = 0;
-  if ((requested & HTTPUPDATE_SIDECAR_MD5_FAILED) && (!client || !httpUpdateFetchChecksumSidecar(*client, md5Url, 32, md5, timeout, follow))) {
+  if ((requested & HTTPUPDATE_SIDECAR_MD5_FAILED) && (!client || !httpUpdateFetchChecksumSidecar(*client, md5Url, 32, md5, timeout, follow, redirectLimit))) {
     failures |= HTTPUPDATE_SIDECAR_MD5_FAILED;
   }
-  if ((requested & HTTPUPDATE_SIDECAR_SHA256_FAILED) && (!client || !httpUpdateFetchChecksumSidecar(*client, sha256Url, 64, sha256, timeout, follow))) {
+  if ((requested & HTTPUPDATE_SIDECAR_SHA256_FAILED)
+      && (!client || !httpUpdateFetchChecksumSidecar(*client, sha256Url, 64, sha256, timeout, follow, redirectLimit))) {
     failures |= HTTPUPDATE_SIDECAR_SHA256_FAILED;
   }
   return failures;

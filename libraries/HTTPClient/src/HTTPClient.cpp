@@ -926,7 +926,7 @@ NetworkClient *HTTPClient::getClient(void) {
   // Reapply transport settings on every retrieval. Deprecated begin() calls can
   // replace the traits while retaining the lazily allocated client.
   if (_tcpDeprecated && !_transportTraits->verify(*_client, _host.c_str())) {
-    log_d("transport level verify failed");
+    log_e("transport level verify failed");
     _client->stop();
     _client = nullptr;
     _tcpDeprecated.reset(nullptr);

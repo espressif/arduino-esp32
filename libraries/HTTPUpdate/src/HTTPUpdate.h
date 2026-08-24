@@ -172,7 +172,8 @@ protected:
 
 private:
   using ChecksumSidecarFetchFn = uint8_t (*)(
-    NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow
+    NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
+    uint16_t redirectLimit
   );
 
   static constexpr uint8_t SIDECAR_MD5_FAILED = 0x01;
