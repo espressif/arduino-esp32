@@ -4,8 +4,8 @@
  * Boot-protocol USB HID keyboard (ESP32-S2 / S3 / P4, USB host).
  * Register before USBHost.begin(); on ESP32-S3-USB-OTG, begin() enables VBUS.
  *
- * Log line shows modifiers + decoded text (US layout) when possible, else HID usage or
- * Arduino virtual key (KEY_*) for specials (arrows, F-keys, …).
+ * printReport() logs LEFT_CTRL+KEY_F1. The same names work in if ():
+ *   if ((modifiers & LEFT_CTRL) && USBHostKeyboard.toVirtualKey(keys[0]) == KEY_F1)
  */
 
 #include <Arduino.h>
@@ -37,30 +37,14 @@ static void onKeyboardReport(uint8_t modifiers, const uint8_t keys[6], void *) {
   }
 #endif
 
-  char ascii[8];
-  USBHostKeyboard.toAscii(ascii, sizeof(ascii), modifiers, keys);
+  Serial.print(F("[keyboard] "));
+  USBHostKeyboard.printReport(Serial, modifiers, keys);
+  Serial.println();
 
-  Serial.printf("[keyboard] mod=0x%02x", (unsigned)modifiers);
-
-  if (ascii[0] != '\0') {
-    Serial.printf("  %s", ascii);
-  } else if (any_key) {
-    for (int i = 0; i < 6; i++) {
-      if (keys[i] == 0) {
-        continue;
-      }
-      uint8_t vk = USBHostKeyboard.toVirtualKey(keys[i]);
-      if (vk != 0) {
-        Serial.printf("  vk=0x%02x", (unsigned)vk);
-      } else {
-        Serial.printf("  hid=0x%02x", (unsigned)keys[i]);
-      }
-    }
-  } else {
-    Serial.print(F("  (released)"));
+  if ((modifiers & LEFT_CTRL) && USBHostKeyboard.toVirtualKey(keys[0]) == KEY_F1) {
+    Serial.println(F("[app] Ctrl+F1"));
   }
 
-  Serial.println();
   USBHostKeyboard.clear();
 }
 

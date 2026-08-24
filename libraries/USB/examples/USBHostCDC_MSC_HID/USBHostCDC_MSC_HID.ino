@@ -72,17 +72,9 @@ static void onKeyboardReport(uint8_t modifiers, const uint8_t keys[6], void *) {
     return;
   }
 
-  char ascii[8];
-  USBHostKeyboard.toAscii(ascii, sizeof(ascii), modifiers, keys);
-
   Serial.print(F("[keyboard] "));
-  if (ascii[0]) {
-    Serial.print(ascii);
-  } else {
-    Serial.print(F("(non-printable keys)"));
-  }
+  USBHostKeyboard.printReport(Serial, modifiers, keys);
   Serial.println();
-
   USBHostKeyboard.clear();
 }
 

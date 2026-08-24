@@ -257,6 +257,89 @@ uint8_t USBHostHIDKeyboard::toVirtualKey(uint8_t hid_usage) const {
   return usbHostHidKeyboardUsageToArduinoVirtualKey(hid_usage);
 }
 
+const char *USBHostHIDKeyboard::toVirtualKeyName(uint8_t hid_usage) const {
+  return usbHostHidArduinoVirtualKeyName(toVirtualKey(hid_usage));
+}
+
+void USBHostHIDKeyboard::printReport(Print &out, uint8_t modifiers, const uint8_t keys[6],
+                                     const uint8_t *layout) const {
+  if (layout == NULL) {
+    layout = KeyboardLayout_en_US;
+  }
+
+  bool any = false;
+#define USBHOST_EMIT_MOD(bit, name)                                                                                    \
+  do {                                                                                                                 \
+    if ((modifiers & (bit)) != 0) {                                                                                    \
+      if (any) {                                                                                                       \
+        out.print('|');                                                                                                \
+      }                                                                                                                \
+      out.print(#name);                                                                                                \
+      any = true;                                                                                                      \
+    }                                                                                                                  \
+  } while (0);
+  USBHOST_KEY_MOD_MAP(USBHOST_EMIT_MOD)
+#undef USBHOST_EMIT_MOD
+
+  if (keys == nullptr) {
+    if (!any) {
+      out.print(F("(released)"));
+    }
+    return;
+  }
+
+  /* Boot 6KRO: too many keys → ErrorRollOver (0x01) in every slot. Print once. */
+  bool rollover = false;
+  bool only_ovf = true;
+  for (int i = 0; i < 6; i++) {
+    if (keys[i] == 0) {
+      continue;
+    }
+    rollover = true;
+    if (keys[i] != 0x01u) {
+      only_ovf = false;
+      break;
+    }
+  }
+  if (rollover && only_ovf) {
+    if (any) {
+      out.print('+');
+    }
+    out.print(F("ERR_OVF"));
+    return;
+  }
+
+  for (int i = 0; i < 6; i++) {
+    const uint8_t u = keys[i];
+    if (u == 0) {
+      continue;
+    }
+    if (any) {
+      out.print('+');
+    }
+    any = true;
+
+    const char *name = usbHostHidBootUsageLogName(u);
+    if (name == nullptr) {
+      name = toVirtualKeyName(u);
+    }
+    if (name != nullptr) {
+      out.print(name);
+      continue;
+    }
+    const char c = usbHostHidBootReportUsageToAscii(modifiers, u, layout);
+    if (c > 32 && c < 127) {
+      out.print(c);
+      continue;
+    }
+    out.printf("hid=0x%02x", (unsigned)u);
+  }
+
+  if (!any) {
+    out.print(F("(released)"));
+  }
+}
+
 USBHostHIDKeyboard USBHostKeyboard;
 
 #endif /* CFG_TUH_HID */

@@ -28,6 +28,7 @@
 
 #include "USBHostHID.h"
 #include "USBHostHIDKeyboardDecode.h"
+#include <Print.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -40,6 +41,50 @@
 #define USBHOST_KEY_MOD_RIGHT_SHIFT 0x20
 #define USBHOST_KEY_MOD_RIGHT_ALT   0x40
 #define USBHOST_KEY_MOD_RIGHT_GUI   0x80
+
+/**
+ * Boot modifier bit → short name (same strings as printReport).
+ *
+ * Sketch:
+ *   #define ON_MOD(bit, name) if (modifiers & (bit)) { ... #name ... }
+ *   USBHOST_KEY_MOD_MAP(ON_MOD)
+ *   #undef ON_MOD
+ *   if ((modifiers & (LEFT_CTRL | LEFT_ALT)) && USBHostKeyboard.toVirtualKey(keys[0]) == KEY_F1)
+ */
+#define USBHOST_KEY_MOD_MAP(X)                     \
+  X(USBHOST_KEY_MOD_LEFT_CTRL, LEFT_CTRL)          \
+  X(USBHOST_KEY_MOD_LEFT_SHIFT, LEFT_SHIFT)        \
+  X(USBHOST_KEY_MOD_LEFT_ALT, LEFT_ALT)            \
+  X(USBHOST_KEY_MOD_LEFT_GUI, LEFT_GUI)            \
+  X(USBHOST_KEY_MOD_RIGHT_CTRL, RIGHT_CTRL)        \
+  X(USBHOST_KEY_MOD_RIGHT_SHIFT, RIGHT_SHIFT)      \
+  X(USBHOST_KEY_MOD_RIGHT_ALT, RIGHT_ALT)          \
+  X(USBHOST_KEY_MOD_RIGHT_GUI, RIGHT_GUI)
+
+#ifndef LEFT_CTRL
+#define LEFT_CTRL USBHOST_KEY_MOD_LEFT_CTRL
+#endif
+#ifndef LEFT_SHIFT
+#define LEFT_SHIFT USBHOST_KEY_MOD_LEFT_SHIFT
+#endif
+#ifndef LEFT_ALT
+#define LEFT_ALT USBHOST_KEY_MOD_LEFT_ALT
+#endif
+#ifndef LEFT_GUI
+#define LEFT_GUI USBHOST_KEY_MOD_LEFT_GUI
+#endif
+#ifndef RIGHT_CTRL
+#define RIGHT_CTRL USBHOST_KEY_MOD_RIGHT_CTRL
+#endif
+#ifndef RIGHT_SHIFT
+#define RIGHT_SHIFT USBHOST_KEY_MOD_RIGHT_SHIFT
+#endif
+#ifndef RIGHT_ALT
+#define RIGHT_ALT USBHOST_KEY_MOD_RIGHT_ALT
+#endif
+#ifndef RIGHT_GUI
+#define RIGHT_GUI USBHOST_KEY_MOD_RIGHT_GUI
+#endif
 
 typedef void (*USBHostHIDKeyboardReportCb)(uint8_t modifiers, const uint8_t keys[6], void *arg);
 
@@ -76,6 +121,14 @@ public:
                  const uint8_t *layout = KeyboardLayout_en_US) const;
   /** Map a keyboard-page HID usage to Arduino KEY_* (0 if not a special). */
   uint8_t toVirtualKey(uint8_t hid_usage) const;
+  /** KEY_* identifier string for that usage, or nullptr. */
+  const char *toVirtualKeyName(uint8_t hid_usage) const;
+  /**
+   * Print modifiers as LEFT_CTRL / LEFT_SHIFT / … and keys as ASCII or KEY_*.
+   * Example: LEFT_CTRL+KEY_F1
+   */
+  void printReport(Print &out, uint8_t modifiers, const uint8_t keys[6],
+                   const uint8_t *layout = KeyboardLayout_en_US) const;
 
   /** Skip identical held-key reports (default false). */
   void setNotifyOnChangeOnly(bool enable) {
