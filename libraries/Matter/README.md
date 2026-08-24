@@ -54,7 +54,7 @@ Key rules:
 - **Internal state assignment goes inside the `if (value changed)` block**, after the successful update call.
 - When `updateAttributeVal()` may fail for nullable or dynamic attributes, a `setAttributeVal()` fallback can be used (see `MatterWindowCovering`, `MatterTemperatureControlledCabinet`). `setAttributeVal()` writes to the store without triggering the `PRE_UPDATE` callback chain or subscriber reporting.
 - For composite setters that update multiple attributes, attempt all sub-updates and return the combined result. Partial commits are possible (some attributes updated, others not) since true atomic rollback is not feasible with the current ESP-Matter API. Each sub-update independently follows the Ember pattern (internal state only after its own attribute store success).
-- **Color HSV/RGB setters** (`MatterColorLight`, `MatterEnhancedColorLight`) write Hue, Saturation, CurrentX, CurrentY, ColorMode, and CurrentLevel with `attribute::report()` (no `PRE_UPDATE`). They update the local HSV cache first, then report, then invoke the user color callback once. CurrentLevel is nullable uint8: valid levels are 1-254; 255 is the null sentinel (`err: 258` if written as a plain uint8).
+- **Color HSV/RGB setters** (`MatterColorLight`, `MatterEnhancedColorLight`) write Hue, Saturation, CurrentX, CurrentY, ColorMode, and CurrentLevel with `attribute::report()` (no `PRE_UPDATE`). They update the local HSV cache first, then report, then invoke the user color callback once. CurrentLevel is nullable uint8: valid levels are 1-254; 255 is the null sentinel (`err: 258` if written as a plain uint8). <!-- codespell:ignore currenty -->
 
 ### Getter Pattern
 
