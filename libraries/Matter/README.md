@@ -87,6 +87,12 @@ Key rules:
 - **Call the setter after `Matter.begin()`.** The cluster instance is not available before the stack starts. Sketches should `begin()` the endpoint, then `Matter.begin()`, then `setLeak()` / `setFreeze()` / `setRain()` / `setContact()` with the real sensor reading.
 - Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
 
+### Delegate-Based Clusters (Valve Configuration and Control)
+
+`MatterWaterValve` uses the code-driven Valve Configuration and Control cluster. Like Boolean State, its `CurrentState`/`TargetState`/`OpenDuration`/`RemainingDuration` attributes are managed internally by the CHIP server and are not reachable through `getAttributeVal()`/`setAttributeVal()`/`updateAttributeVal()`. Unlike Boolean State, this cluster also has no ember-based command path: Open/Close commands (whether sent by a Matter controller or triggered locally) are only ever delivered through a `chip::app::Clusters::ValveConfigurationAndControl::Delegate` registered at `begin()` via `config.valve_configuration_and_control.delegate`.
+
+`MatterWaterValve` implements a private nested `ValveDelegate` that bridges `HandleOpenValve()`/`HandleCloseValve()`/`HandleRemainingDurationTick()` to the `onOpen()`/`onClose()` user callbacks and commits internal state (`currentState`, `targetState`, `openDuration`, `remainingDuration`) only once the callback has run - the same "commit after confirmation" spirit as the Setter Pattern above, just confirmed by a delegate callback instead of an Ember store update. `open()`/`close()`/`setValveFault()` look up the live cluster with `esp_matter::data_model::provider::get_instance().registry().Get(...)` (the same lookup `MatterEndPoint::setBooleanStateValue()` uses for `BooleanStateCluster`) and call its public setters (`OpenValve()`, `CloseValve()`, `SetValveFault()`) directly under `lock::ScopedChipStackLock`; `OpenValve()`/`CloseValve()` synchronously invoke the delegate before returning, so by the time these calls return, internal state already reflects the outcome. The SDK's own timer drives the `RemainingDuration` countdown and automatically closes the valve when a timed open elapses (calling `HandleCloseValve()` the same way a remote Close command would) - no per-second polling is needed in the sketch.
+
 ### Controller-Originated Changes (attributeChangeCB)
 
 When a Matter controller changes an attribute (e.g., turning a light on via an app), the flow is:
@@ -150,6 +156,7 @@ Boolean State sensors (`MatterContactSensor`, `MatterWaterLeakDetector`, `Matter
 | `MatterThermostat` | Thermostat |
 | `MatterWindowCovering` | Window Covering |
 | `MatterTemperatureControlledCabinet` | Temperature Controlled Cabinet |
+| `MatterWaterValve` | Water Valve |
 
 ## Further Reading
 
