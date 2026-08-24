@@ -158,10 +158,8 @@ bool MatterEnhancedColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t 
           colorHSV.h = clampColor254((uint8_t)xyHsv.h);
           colorHSV.s = clampColor254(xyHsv.s);
           log_d("Enhanced ColorLight XY changed — HSV updated to h=%u s=%u", colorHSV.h, colorHSV.s);
-        } else if (
-          attribute_id == ColorControl::Attributes::ColorMode::Id || attribute_id == ColorControl::Attributes::EnhancedColorMode::Id
-          || attribute_id == ColorControl::Attributes::RemainingTime::Id || attribute_id == ColorControl::Attributes::Options::Id
-        ) {
+        } else if (attribute_id == ColorControl::Attributes::ColorMode::Id || attribute_id == ColorControl::Attributes::EnhancedColorMode::Id
+                   || attribute_id == ColorControl::Attributes::RemainingTime::Id || attribute_id == ColorControl::Attributes::Options::Id) {
           // ColorMode / RemainingTime / Options updates do not change the HSV cache.
           if (attribute_id == ColorControl::Attributes::RemainingTime::Id) {
             log_d("Enhanced ColorLight RemainingTime attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u16);

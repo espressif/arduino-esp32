@@ -73,8 +73,8 @@ endpoint_t *createRgbColorLightEndpoint(node_t *node, dimmable_light::config_t *
   }
 
   descriptor::create(endpoint, &(config->descriptor), CLUSTER_FLAG_SERVER);
-  if (esp_matter::endpoint::add_device_type(endpoint, ESP_MATTER_EXTENDED_COLOR_LIGHT_DEVICE_TYPE_ID, ESP_MATTER_EXTENDED_COLOR_LIGHT_DEVICE_TYPE_VERSION) !=
-      ESP_OK) {
+  if (esp_matter::endpoint::add_device_type(endpoint, ESP_MATTER_EXTENDED_COLOR_LIGHT_DEVICE_TYPE_ID, ESP_MATTER_EXTENDED_COLOR_LIGHT_DEVICE_TYPE_VERSION)
+      != ESP_OK) {
     return nullptr;
   }
 
@@ -188,10 +188,8 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
           colorHSV.h = clampColor254((uint8_t)xyHsv.h);
           colorHSV.s = clampColor254(xyHsv.s);
           log_d("RGB Light XY changed — HSV updated to h=%u s=%u", colorHSV.h, colorHSV.s);
-        } else if (
-          attribute_id == ColorControl::Attributes::ColorMode::Id || attribute_id == ColorControl::Attributes::EnhancedColorMode::Id
-          || attribute_id == ColorControl::Attributes::RemainingTime::Id || attribute_id == ColorControl::Attributes::Options::Id
-        ) {
+        } else if (attribute_id == ColorControl::Attributes::ColorMode::Id || attribute_id == ColorControl::Attributes::EnhancedColorMode::Id
+                   || attribute_id == ColorControl::Attributes::RemainingTime::Id || attribute_id == ColorControl::Attributes::Options::Id) {
           if (attribute_id == ColorControl::Attributes::RemainingTime::Id) {
             log_d("RGB Light RemainingTime attribute 0x%" PRIx32 " = %u", attribute_id, val->val.u16);
           } else {
