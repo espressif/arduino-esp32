@@ -22,7 +22,7 @@ IPv6 setup follows [WiFiIPv6](../../../../../WiFi/examples/WiFiIPv6/WiFiIPv6.ino
 
 | Feature | Why |
 | --- | --- |
-| WiFi (`CONFIG_SOC_WIFI_SUPPORTED` or `CONFIG_ESP_HOSTED_ENABLED`) | STA + HTTP |
+| Wi-Fi (`CONFIG_SOC_WIFI_SUPPORTED` or `CONFIG_ESP_HOSTED_ENABLED`) | STA + HTTP |
 | `CONFIG_LWIP_IPV6` | Talk to Thread OMR addresses |
 
 CI uses `requires_any` for Wi-Fi (same pattern as ESPmDNS examples).
