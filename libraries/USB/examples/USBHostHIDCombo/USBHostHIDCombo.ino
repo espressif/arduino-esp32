@@ -61,6 +61,18 @@ static uint8_t s_last_mouse_buttons = 0;
 static uint32_t s_last_status_ms;
 #endif
 
+static void onMouseReport(int16_t x, int16_t y, uint8_t buttons, int8_t wheel, void *) {
+#if MOUSE_PRINT_ON_ACTIVITY_ONLY
+  if (x == 0 && y == 0 && wheel == 0 && buttons == s_last_mouse_buttons) {
+    USBHostMouse.clear();
+    return;
+  }
+  s_last_mouse_buttons = buttons;
+#endif
+  Serial.printf("[mouse] dx=%d dy=%d btns=0x%02x wheel=%d\n", (int)x, (int)y, (unsigned)buttons, (int)wheel);
+  USBHostMouse.clear();
+}
+
 static void onKeyboardReport(uint8_t modifiers, const uint8_t keys[6], void *) {
   bool any_key = (modifiers != 0);
   for (int i = 0; i < 6; i++) {
@@ -117,6 +129,7 @@ void setup() {
   USBHostGamepad.registerWithHost();
   USBHostGamepad.setNotifyOnChangeOnly(GAMEPAD_NOTIFY_ON_CHANGE_ONLY != 0);
   USBHostMouse.registerWithHost();
+  USBHostMouse.setReportCallback(onMouseReport, nullptr);
   USBHostKeyboard.registerWithHost();
   USBHostKeyboard.setNotifyOnChangeOnly(KEYBOARD_NOTIFY_ON_CHANGE_ONLY != 0);
   USBHostKeyboard.setReportCallback(onKeyboardReport, nullptr);
@@ -131,31 +144,7 @@ void setup() {
 void loop() {
   USBHost.task(); /* HID IN arming runs on usbhTuh worker after tuh_task() */
 
-  /* available() returns true when a report is waiting. */
-  const bool mouse_ready = USBHostMouse.available();
-  const bool pad_ready = USBHostGamepad.available();
-
-  if (USBHostMouse.mounted() && mouse_ready) {
-    int16_t dx = USBHostMouse.getX();
-    int16_t dy = USBHostMouse.getY();
-    uint8_t btns = USBHostMouse.getButtons();
-    int8_t wh = USBHostMouse.getWheel();
-
-#if MOUSE_PRINT_ON_ACTIVITY_ONLY
-    if (dx == 0 && dy == 0 && wh == 0 && btns == s_last_mouse_buttons) {
-      USBHostMouse.clear();
-    } else {
-      s_last_mouse_buttons = btns;
-      Serial.printf("[mouse] dx=%d dy=%d btns=0x%02x wheel=%d\n", (int)dx, (int)dy, (unsigned)btns, (int)wh);
-      USBHostMouse.clear();
-    }
-#else
-    Serial.printf("[mouse] dx=%d dy=%d btns=0x%02x wheel=%d\n", (int)dx, (int)dy, (unsigned)btns, (int)wh);
-    USBHostMouse.clear();
-#endif
-  }
-
-  if (USBHostGamepad.mounted() && pad_ready) {
+  if (USBHostGamepad.mounted() && USBHostGamepad.available()) {
     uint16_t n = USBHostGamepad.reportLength();
     Serial.printf("[gamepad] len=%u hex:", (unsigned)n);
     for (uint16_t i = 0; i < n && i < 24; i++) {

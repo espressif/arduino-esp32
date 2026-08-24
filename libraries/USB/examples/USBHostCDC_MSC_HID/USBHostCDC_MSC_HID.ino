@@ -8,7 +8,7 @@
  * What this sketch does:
  *   - **CDC:** bytes from a USB serial device appear on the Serial Monitor; typing in the Monitor is sent to the device.
  *   - **MSC:** when a USB flash drive is plugged in, it mounts as a FAT disk (same idea as an SD card).
- *   - **HID:** prints simple lines when a USB mouse or boot keyboard sends data.
+ *   - **HID:** mouse and keyboard report callbacks print a line on each report.
  *     (Some mice send reports very often; that is normal.)
  *
  * Like TinyUSB’s host demo "cdc_msc_hid", but using the Arduino USB library classes.
@@ -50,6 +50,18 @@ static void listUsbRoot() {
   root.close();
 }
 
+static void onMouseReport(int16_t x, int16_t y, uint8_t buttons, int8_t wheel, void *) {
+  Serial.print(F("[mouse] dx="));
+  Serial.print((int)x);
+  Serial.print(F(" dy="));
+  Serial.print((int)y);
+  Serial.print(F(" buttons=0x"));
+  Serial.print(buttons, HEX);
+  Serial.print(F(" wheel="));
+  Serial.println((int)wheel);
+  USBHostMouse.clear();
+}
+
 static void onKeyboardReport(uint8_t modifiers, const uint8_t keys[6], void *) {
   bool any = modifiers != 0;
   for (int i = 0; i < 6 && !any; i++) {
@@ -89,6 +101,7 @@ void setup() {
   Serial.println();
 
   USBHostMouse.registerWithHost();
+  USBHostMouse.setReportCallback(onMouseReport, nullptr);
   USBHostKeyboard.registerWithHost();
   USBHostKeyboard.setNotifyOnChangeOnly(true);
   USBHostKeyboard.setReportCallback(onKeyboardReport, nullptr);
@@ -153,19 +166,6 @@ void loop() {
       s_usb_stick_mounted = false;
       Serial.println(F("[msc] USB drive removed."));
     }
-  }
-
-  // --- HID: mouse (simple print) ---
-  if (USBHostMouse.mounted() && USBHostMouse.available()) {
-    Serial.print(F("[mouse] dx="));
-    Serial.print((int)USBHostMouse.getX());
-    Serial.print(F(" dy="));
-    Serial.print((int)USBHostMouse.getY());
-    Serial.print(F(" buttons=0x"));
-    Serial.print(USBHostMouse.getButtons(), HEX);
-    Serial.print(F(" wheel="));
-    Serial.println((int)USBHostMouse.getWheel());
-    USBHostMouse.clear();
   }
 
   delay(2);
