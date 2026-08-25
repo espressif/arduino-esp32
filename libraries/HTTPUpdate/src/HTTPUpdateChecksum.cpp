@@ -29,8 +29,6 @@
 
 // Cap sidecar body scan so a hostile/oversized response cannot grow heap.
 static const size_t HTTPUPDATE_SIDECAR_MAX_SCAN = 512;
-static const uint8_t HTTPUPDATE_SIDECAR_MD5_FAILED = 0x01;
-static const uint8_t HTTPUPDATE_SIDECAR_SHA256_FAILED = 0x02;
 
 static uint8_t httpUpdateFetchChecksumSidecars(
   NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
@@ -233,6 +231,7 @@ static bool httpUpdateFetchChecksumSidecar(
   outDigest = String();
 
   if (url.isEmpty() || (digestLen != 32 && digestLen != 64)) {
+    log_e("invalid sidecar URL or digest length %u", (unsigned)digestLen);
     return false;
   }
 
@@ -242,6 +241,7 @@ static bool httpUpdateFetchChecksumSidecar(
 
   HTTPClient http;
   if (!http.begin(client, url)) {
+    log_e("sidecar begin failed: %s", url.c_str());
     return false;
   }
 
@@ -258,7 +258,13 @@ static bool httpUpdateFetchChecksumSidecar(
   uint32_t timeoutMs = timeout > 0 ? (uint32_t)timeout : 1;
   uint32_t startedAt = millis();
   int code = http.GET();
-  if (code != HTTP_CODE_OK || (uint32_t)(millis() - startedAt) >= timeoutMs) {
+  if (code != HTTP_CODE_OK) {
+    log_e("sidecar GET failed: %s code=%d", url.c_str(), code);
+    http.end();
+    return false;
+  }
+  if ((uint32_t)(millis() - startedAt) >= timeoutMs) {
+    log_e("sidecar GET timed out: %s", url.c_str());
     http.end();
     return false;
   }
@@ -267,6 +273,7 @@ static bool httpUpdateFetchChecksumSidecar(
 
   NetworkClient *stream = http.getStreamPtr();
   if (!stream) {
+    log_e("sidecar stream missing: %s", url.c_str());
     http.end();
     return false;
   }
@@ -278,11 +285,16 @@ static bool httpUpdateFetchChecksumSidecar(
   http.end();
 
   if (!ok) {
+    log_e("sidecar parse failed: %s chunked=%d", url.c_str(), chunked ? 1 : 0);
     return false;
   }
 
   outDigest = parser.token();
-  return outDigest.length() == digestLen;
+  if (outDigest.length() != digestLen) {
+    log_e("sidecar digest copy failed: %s len=%u expected=%u", url.c_str(), (unsigned)outDigest.length(), (unsigned)digestLen);
+    return false;
+  }
+  return true;
 }
 
 static uint8_t httpUpdateFetchChecksumSidecars(
@@ -290,12 +302,15 @@ static uint8_t httpUpdateFetchChecksumSidecars(
   uint16_t redirectLimit
 ) {
   uint8_t failures = 0;
-  if ((requested & HTTPUPDATE_SIDECAR_MD5_FAILED) && (!client || !httpUpdateFetchChecksumSidecar(*client, md5Url, 32, md5, timeout, follow, redirectLimit))) {
-    failures |= HTTPUPDATE_SIDECAR_MD5_FAILED;
+  if (!client && requested) {
+    log_e("sidecar fetch has no client");
   }
-  if ((requested & HTTPUPDATE_SIDECAR_SHA256_FAILED)
+  if ((requested & HTTPUpdate::SIDECAR_MD5_FAILED) && (!client || !httpUpdateFetchChecksumSidecar(*client, md5Url, 32, md5, timeout, follow, redirectLimit))) {
+    failures |= HTTPUpdate::SIDECAR_MD5_FAILED;
+  }
+  if ((requested & HTTPUpdate::SIDECAR_SHA256_FAILED)
       && (!client || !httpUpdateFetchChecksumSidecar(*client, sha256Url, 64, sha256, timeout, follow, redirectLimit))) {
-    failures |= HTTPUPDATE_SIDECAR_SHA256_FAILED;
+    failures |= HTTPUpdate::SIDECAR_SHA256_FAILED;
   }
   return failures;
 }

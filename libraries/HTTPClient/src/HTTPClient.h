@@ -170,8 +170,6 @@ typedef struct {
 } Cookie;
 typedef std::vector<Cookie> CookieJar;
 
-class HTTPUpdate;
-
 class HTTPClient {
 public:
   HTTPClient();
@@ -221,6 +219,9 @@ public:
   // Redirections
   void setFollowRedirects(followRedirects_t follow);
   void setRedirectLimit(uint16_t limit);  // max redirects to follow for a single request
+  uint16_t getRedirectLimit(void) const {
+    return _redirectLimit;
+  }
 
   bool setURL(const String &url);
   void useHTTP10(bool usehttp10 = true);
@@ -253,6 +254,7 @@ public:
 
   NetworkClient &getStream(void);
   NetworkClient *getStreamPtr(void);
+  NetworkClient *getClient(void);
   int writeToStream(Stream *stream);
   String getString(void);
 
@@ -262,10 +264,6 @@ public:
   void setCookieJar(CookieJar *cookieJar);
   void resetCookieJar();
   void clearAllCookies();
-
-private:
-  friend class HTTPUpdate;
-  NetworkClient *getClient(void);
 
 protected:
   struct RequestArgument {

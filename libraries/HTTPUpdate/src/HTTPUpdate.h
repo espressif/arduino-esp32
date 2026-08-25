@@ -107,6 +107,10 @@ public:
    */
   void setSHA256sumUrl(const String &url);
 
+  // Bitmask values returned by the sidecar fetch helper.
+  static constexpr uint8_t SIDECAR_MD5_FAILED = 0x01;
+  static constexpr uint8_t SIDECAR_SHA256_FAILED = 0x02;
+
   void setAuthorization(const String &user, const String &password) {
     _user = user;
     _password = password;
@@ -175,9 +179,6 @@ private:
     NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
     uint16_t redirectLimit
   );
-
-  static constexpr uint8_t SIDECAR_MD5_FAILED = 0x01;
-  static constexpr uint8_t SIDECAR_SHA256_FAILED = 0x02;
 
   int _httpClientTimeout;
   UpdateClass *_updater;
