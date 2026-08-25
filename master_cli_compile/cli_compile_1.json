@@ -465,14 +465,6 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/BLE/examples/Write",
-                "sizes": [{
-                        "flash_bytes": 707704,
-                        "flash_percentage": 22,
-                        "ram_bytes": 18220,
-                        "ram_percentage": 6
-                        }]
-                },
 {"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
                         "flash_bytes": 713938,
@@ -632,20 +624,28 @@
                         "ram_bytes": 14132,
                         "ram_percentage": 4
                         }]
+                },
+{"name": "libraries/ESP32/examples/AnalogRead",
+                "sizes": [{
+                        "flash_bytes": 269676,
+                        "flash_percentage": 21,
+                        "ram_bytes": 14400,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogReadContinuous",
+                "sizes": [{
+                        "flash_bytes": 274850,
+                        "flash_percentage": 21,
+                        "ram_bytes": 14408,
+                        "ram_percentage": 4
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                "sizes": [{
-                        "flash_bytes": 730163,
-                        "flash_percentage": 23,
-                        "ram_bytes": 16812,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/BLE/examples/UART",
                 "sizes": [{
                         "flash_bytes": 726245,
@@ -747,6 +747,22 @@
                         "flash_bytes": 290342,
                         "flash_percentage": 9,
                         "ram_bytes": 13892,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut/LEDCFade",
+                "sizes": [{
+                        "flash_bytes": 294264,
+                        "flash_percentage": 9,
+                        "ram_bytes": 14036,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut/LEDCGammaFade",
+                "sizes": [{
+                        "flash_bytes": 302140,
+                        "flash_percentage": 23,
+                        "ram_bytes": 14052,
                         "ram_percentage": 4
                         }]
                 }
@@ -1037,14 +1053,6 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
-{"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                "sizes": [{
-                        "flash_bytes": 573274,
-                        "flash_percentage": 18,
-                        "ram_bytes": 27780,
-                        "ram_percentage": 8
-                        }]
-                },
 {"name": "libraries/BLE/examples/UART",
                 "sizes": [{
                         "flash_bytes": 569310,
@@ -1186,6 +1194,22 @@
                         "flash_bytes": 272690,
                         "flash_percentage": 21,
                         "ram_bytes": 22212,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+                "sizes": [{
+                        "flash_bytes": 267915,
+                        "flash_percentage": 20,
+                        "ram_bytes": 22076,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut/ledcFrequency",
+                "sizes": [{
+                        "flash_bytes": 274426,
+                        "flash_percentage": 21,
+                        "ram_bytes": 22204,
                         "ram_percentage": 7
                         }]
                 }
