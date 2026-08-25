@@ -15,6 +15,8 @@ MatterColorTemperatureLight	KEYWORD1
 MatterColorLight	KEYWORD1
 MatterEnhancedColorLight	KEYWORD1
 MatterEndPoint	KEYWORD1
+MatterTag	KEYWORD1
+MatterTags	KEYWORD1
 MatterFan	KEYWORD1
 FanMode_t	KEYWORD1
 FanModeSequence_t	KEYWORD1
@@ -201,6 +203,11 @@ getSecondaryNetworkEndPointId	KEYWORD2
 createSecondaryNetworkInterface	KEYWORD2
 onIdentify	KEYWORD2
 endpointIdentifyCB	KEYWORD2
+setTagList	KEYWORD2
+createTag	KEYWORD2
+createCustomTag	KEYWORD2
+createRowTag	KEYWORD2
+createColumnTag	KEYWORD2
 setIlluminance	KEYWORD2
 getIlluminance	KEYWORD2
 
@@ -209,6 +216,7 @@ getIlluminance	KEYWORD2
 #######################################
 
 MAX_BRIGHTNESS	LITERAL1
+MAX_TAG_LIST_SIZE	LITERAL1
 MAX_COLOR_TEMPERATURE	LITERAL1
 MIN_COLOR_TEMPERATURE	LITERAL1
 ATTR_SET	LITERAL1
