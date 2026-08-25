@@ -13,7 +13,10 @@ Each Matter device type is represented by a C++ class under `src/MatterEndpoints
 
 This library is built on ESP-Matter, which uses an Ember-based attribute store. The attribute store is the protocol-level source of truth: when a Matter controller reads an attribute, it reads from this store.
 
-Most endpoint setters and getters **must** follow one of the two Ember store patterns below. Boolean State sensors are the exception: their `StateValue` is internally managed in ESP-Matter 1.5+ and cannot be written with `updateAttributeVal()`.
+Most endpoint setters and getters **must** follow one of the two Ember store patterns below. Exceptions:
+
+- Boolean State sensors: `StateValue` is internally managed in ESP-Matter 1.5+ and cannot be written with `updateAttributeVal()`.
+- Color lights: `setColorHSV()` / `setColorRGB()` write several Color Control attributes plus CurrentLevel using `attribute::report()` so a local set fires a single `onChangeColorHSV` callback instead of one per attribute.
 
 ### Setter Pattern
 
@@ -47,10 +50,11 @@ bool MyEndpoint::setValue(int newValue) {
 ```
 
 Key rules:
-- **Never assign internal state before the attribute store update.** If `updateAttributeVal()` fails and the function returns `false`, the internal state must remain unchanged.
+- **Never assign internal state before the attribute store update**, except for the color HSV/RGB setters described below. If `updateAttributeVal()` fails and the function returns `false`, the internal state must remain unchanged.
 - **Internal state assignment goes inside the `if (value changed)` block**, after the successful update call.
 - When `updateAttributeVal()` may fail for nullable or dynamic attributes, a `setAttributeVal()` fallback can be used (see `MatterWindowCovering`, `MatterTemperatureControlledCabinet`). `setAttributeVal()` writes to the store without triggering the `PRE_UPDATE` callback chain or subscriber reporting.
 - For composite setters that update multiple attributes, attempt all sub-updates and return the combined result. Partial commits are possible (some attributes updated, others not) since true atomic rollback is not feasible with the current ESP-Matter API. Each sub-update independently follows the Ember pattern (internal state only after its own attribute store success).
+- **Color HSV/RGB setters** (`MatterColorLight`, `MatterEnhancedColorLight`) write Hue, Saturation, CurrentX, CurrentY, ColorMode, and CurrentLevel with `attribute::report()` (no `PRE_UPDATE`). They update the local HSV cache first, then report, then invoke the user color callback once. CurrentLevel is nullable uint8: valid levels are 1-254; 255 is the null sentinel (`err: 258` if written as a plain uint8). <!-- codespell:ignore currenty -->
 
 ### Getter Pattern
 
@@ -125,6 +129,7 @@ Boolean State sensors (`MatterContactSensor`, `MatterWaterLeakDetector`, `Matter
 |-----|-------------------|------------------------------|----------------------|----------|
 | `updateAttributeVal()` | `attribute::update()` | Yes | Yes | Normal device-initiated state changes |
 | `setAttributeVal()` | `attribute::set_val()` | No | No | Fallback for nullable attributes, syncing related attributes inside callbacks, avoiding re-entrancy |
+| Color HSV `report()` | `attribute::report()` | No | Yes | `setColorHSV()` / `setColorRGB()`: notify subscribers without re-entering `attributeChangeCB` |
 
 ## Endpoint Classes
 
@@ -132,9 +137,9 @@ Boolean State sensors (`MatterContactSensor`, `MatterWaterLeakDetector`, `Matter
 |-------|-------------|
 | `MatterOnOffLight` | On/Off Light |
 | `MatterDimmableLight` | Dimmable Light |
-| `MatterColorLight` | Color Light (HSV) |
+| `MatterColorLight` | Extended Color Light (HSV/XY, no color temperature) |
 | `MatterColorTemperatureLight` | Color Temperature Light |
-| `MatterEnhancedColorLight` | Enhanced Color Light |
+| `MatterEnhancedColorLight` | Extended Color Light (HSV/XY + color temperature) |
 | `MatterOnOffPlugin` | On/Off Plug-in Unit |
 | `MatterDimmablePlugin` | Dimmable Plug-in Unit |
 | `MatterFan` | Fan |

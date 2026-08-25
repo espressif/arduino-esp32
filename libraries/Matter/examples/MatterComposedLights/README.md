@@ -31,7 +31,7 @@ The application showcases Matter commissioning, a single Matter node containing 
 - Support for both Wi-Fi and Thread(*) connectivity
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
-- Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 - Periodic state display of all three lights
 (*) It is necessary to compile the project using Arduino as IDF Component.
 
@@ -124,11 +124,18 @@ The user button (BOOT button by default) provides factory reset functionality:
 
 ### Smart Home Integration
 
-Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device. After commissioning, you will see three separate light devices in your smart home app:
+Use a Matter-compatible hub (like a Home Assistant Server, Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device. After commissioning, you will see three separate light devices in your smart home app:
 
 - **Light #1**: Simple on/off light
 - **Light #2**: Dimmable light with brightness control
-- **Light #3**: Color light with RGB color control
+- **Light #3**: Color light with RGB color control (no color temperature)
+
+#### Home Assistant
+
+1. Open Home Assistant
+2. Go to Settings > Devices & services > Add integration > Matter
+3. Scan the QR code from the Serial Monitor, or enter the manual pairing code
+4. Follow the prompts to complete setup
 
 #### Apple Home
 
