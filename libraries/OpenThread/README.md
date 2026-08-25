@@ -11,6 +11,7 @@ The Library implements the following C++ classes and helpers:
 - `OThreadUDP` Class for sending/receiving IPv6 UDP datagrams over the Thread network (raw `otUdpSocket`, no lwIP)
 - `OThreadCoAP` Classes for Application CoAP client/server over Thread (plain CoAP on port 5683; optional CoAPS on 5684)
 - `OThreadScan` Class for MLE Thread network discovery (`discoverNetworks()` / `OThreadNetworkInfo`)
+- `OThreadDNSSD` Class for Thread DNS-SD advertise + discover (`begin` / `addService` / `waitForAnnounce` / `queryService` / `queryHost`)
 - `DataSet` Class for OpenThread dataset manipulation using Native `OThread` Class
 
 For IPv6 multicast group membership (UDP receivers, CoAP group commands, `subscribeMulticast`, and example mapping), see **[Multicasting.md](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/Multicasting.md)**.
@@ -545,6 +546,41 @@ Thread does **not** need to be started; only `networkInterfaceUp()` is required.
 CLI equivalent: [`CLI ThreadScan`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan) (`discover` via `OThreadCLI`).
 
 Full API details: [OpenThread Scan documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_scan.html).
+
+# OThreadDNSSD Class — Thread DNS-SD Advertise + Discover
+
+`OThreadDNSSD` mirrors Wi-Fi `MDNS` for Thread: `begin(hostname)`, `addService`, `addServiceTxt`, then `waitForAnnounce()` because registration uses the OpenThread **SRP client** toward a Border Router. Discover uses `queryService` / `queryHost` (OpenThread **DNS client**; default server follows SRP). Fixed pools avoid heap growth (same idea as `OThreadScan`).
+
+`isAnnounceComplete()` reads **live** OpenThread SRP item state (host + services `Registered`) on each call — useful in `loop()` after a failed announce if OpenThread later succeeds (for example after the OTBR clears a name conflict). It does not probe the Border Router directly; the sketch still owns rename / re-advertise policy.
+
+```cpp
+#include <OThreadDNSSD.h>
+
+OThreadDNSSD.begin("sensor-1");
+OThreadDNSSD.addService("ot", "udp", 12345);
+OThreadDNSSD.waitForAnnounce(30000);
+
+// On another board:
+OThreadDNSSD.begin("browser");
+int n = OThreadDNSSD.queryService("ot", "udp");
+IPAddress a = OThreadDNSSD.queryHost("sensor-1");
+```
+
+Requires an attached Thread role and an SRP/DNS server in Network Data (typical OTBR). Prefer **Erase Flash: Sketch Only** when re-uploading so the SRP key in NVS is kept. See the ThreadDNSSD example README for `setup()` vs `loop()` handling, OTBR CLI checks (`srp server service`), SoC vs OTBR reset, and name conflicts.
+
+## Examples
+
+| Sketch | Pattern |
+| --- | --- |
+| [`ThreadDNSSD_Advertise`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise) | Blocking `waitForAnnounce` |
+| [`ThreadDNSSD_Advertise_Callback`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise_Callback) | `onServiceEvent` + re-advertise recovery |
+| [`ThreadDNSSD_Remove`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Remove) | Two add/remove cycles, then `end()` |
+| [`ThreadDNSSD_Query`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query) | `queryService` browse |
+| [`ThreadDNSSD_QueryHost`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost) | `queryHost` resolve |
+| [`ThreadDNSSD_Query_Callback`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback) | Async discover via `onQueryEvent` |
+| [`ThreadDNSSD_UDP_Light`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light) | Light + switch + Wi-Fi web (UDP + OTBR mDNS) |
+
+Full API details: [OpenThread DNS documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_dnssd.html).
 
 # OThreadUDP Class - IPv6 UDP over Thread
 

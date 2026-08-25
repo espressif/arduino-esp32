@@ -39,6 +39,9 @@
 
 #include "OThreadCoAP.h"
 #include "OThreadCLI.h"
+#if defined(CONFIG_OPENTHREAD_SRP_CLIENT) && CONFIG_OPENTHREAD_SRP_CLIENT
+#include "OThreadDNSSD.h"
+#endif
 
 static esp_openthread_platform_config_t ot_native_config;
 static esp_netif_t *openthread_netif = NULL;
@@ -566,10 +569,13 @@ void OpenThread::end() {
   otInstance *inst = mInstance;
 
   // Application teardown before stopping the worker (live OT callbacks must not
-  // target freed sketch objects). Order: CLI → CoAP servers → pending clients.
+  // target freed sketch objects). Order: CLI → DNS-SD → CoAP servers → pending clients.
   if (OThreadCLI) {
     OThreadCLI.end();
   }
+#if defined(CONFIG_OPENTHREAD_SRP_CLIENT) && CONFIG_OPENTHREAD_SRP_CLIENT
+  OThreadDNSSD.end();
+#endif
   // Always stop (idempotent): leaves multicast groups even when running=false.
   OThreadCoAPServer.stop();
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
