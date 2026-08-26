@@ -219,6 +219,9 @@ public:
   // Redirections
   void setFollowRedirects(followRedirects_t follow);
   void setRedirectLimit(uint16_t limit);  // max redirects to follow for a single request
+  uint16_t getRedirectLimit(void) const {
+    return _redirectLimit;
+  }
 
   bool setURL(const String &url);
   void useHTTP10(bool usehttp10 = true);
@@ -251,6 +254,7 @@ public:
 
   NetworkClient &getStream(void);
   NetworkClient *getStreamPtr(void);
+  NetworkClient *getClient(void);
   int writeToStream(Stream *stream);
   String getString(void);
 

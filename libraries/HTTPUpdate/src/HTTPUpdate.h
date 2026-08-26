@@ -93,6 +93,24 @@ public:
     _sha256Sum = sha256Sum;
   }
 
+  /**
+   * Optional URL of a small checksum sidecar (e.g. firmware.bin.md5).
+   * Used only when setMD5sum() is empty; response header x-MD5 still wins.
+   * Calling this pulls in the sidecar fetch code (flash cost only when used).
+   */
+  void setMD5sumUrl(const String &url);
+
+  /**
+   * Optional URL of a small checksum sidecar (e.g. firmware.bin.sha256).
+   * Used only when setSHA256sum() is empty; response header x-SHA256 still wins.
+   * Calling this pulls in the sidecar fetch code (flash cost only when used).
+   */
+  void setSHA256sumUrl(const String &url);
+
+  // Bitmask values returned by the sidecar fetch helper.
+  static constexpr uint8_t SIDECAR_MD5_FAILED = 0x01;
+  static constexpr uint8_t SIDECAR_SHA256_FAILED = 0x02;
+
   void setAuthorization(const String &user, const String &password) {
     _user = user;
     _password = password;
@@ -153,10 +171,15 @@ protected:
       _cbError(err);
     }
   }
-  int _lastError;
+  int _lastError = 0;
   bool _rebootOnUpdate = true;
 
 private:
+  using ChecksumSidecarFetchFn = uint8_t (*)(
+    NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
+    uint16_t redirectLimit
+  );
+
   int _httpClientTimeout;
   UpdateClass *_updater;
   followRedirects_t _followRedirects;
@@ -165,6 +188,9 @@ private:
   String _auth;
   String _md5Sum;
   String _sha256Sum;
+  String _md5SumUrl;
+  String _sha256SumUrl;
+  ChecksumSidecarFetchFn _checksumSidecarFetch = nullptr;
 
   // Callbacks
   HTTPUpdateStartCB _cbStart;
@@ -173,7 +199,7 @@ private:
   HTTPUpdateProgressCB _cbProgress;
 
   int _ledPin{-1};
-  uint8_t _ledOn;
+  uint8_t _ledOn = HIGH;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_HTTPUPDATE)

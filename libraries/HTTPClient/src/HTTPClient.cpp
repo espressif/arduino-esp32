@@ -913,6 +913,29 @@ NetworkClient *HTTPClient::getStreamPtr(void) {
   return nullptr;
 }
 
+NetworkClient *HTTPClient::getClient(void) {
+#ifdef HTTPCLIENT_1_1_COMPATIBLE
+  if (_transportTraits && !_client) {
+    _tcpDeprecated = _transportTraits->create();
+    if (!_tcpDeprecated) {
+      log_e("could not create client");
+      return nullptr;
+    }
+    _client = _tcpDeprecated.get();
+  }
+  // Reapply transport settings on every retrieval. Deprecated begin() calls can
+  // replace the traits while retaining the lazily allocated client.
+  if (_tcpDeprecated && !_transportTraits->verify(*_client, _host.c_str())) {
+    log_e("transport level verify failed");
+    _client->stop();
+    _client = nullptr;
+    _tcpDeprecated.reset(nullptr);
+    return nullptr;
+  }
+#endif
+  return _client;
+}
+
 /**
  * write all  message body / payload to Stream
  * @param stream Stream *
@@ -1141,28 +1164,10 @@ bool HTTPClient::connect(void) {
     return true;
   }
 
-#ifdef HTTPCLIENT_1_1_COMPATIBLE
-  if (_transportTraits && !_client) {
-    _tcpDeprecated = _transportTraits->create();
-    if (!_tcpDeprecated) {
-      log_e("failed to create client");
-      return false;
-    }
-    _client = _tcpDeprecated.get();
-  }
-#endif
-
-  if (!_client) {
+  if (!getClient()) {
     log_d("HTTPClient::begin was not called or returned error");
     return false;
   }
-#ifdef HTTPCLIENT_1_1_COMPATIBLE
-  if (_tcpDeprecated && !_transportTraits->verify(*_client, _host.c_str())) {
-    log_d("transport level verify failed");
-    _client->stop();
-    return false;
-  }
-#endif
   if (!_client->connect(_host.c_str(), _port, _connectTimeout)) {
     log_d("failed connect to %s:%u", _host.c_str(), _port);
     return false;
