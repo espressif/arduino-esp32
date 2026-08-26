@@ -65,7 +65,7 @@ Do not gate the LED on `isOnline()`. After a power cycle the light restores last
 
 1. Open `MatterDeviceIdentity.ino`.
 2. Board: your ESP32 target.
-3. Partition Scheme: **Huge APP (3MB No OTA/1MB SPIFFS)**.
+3. Partition Scheme: **Huge APP (3 MB No OTA / 1 MB SPIFFS)**.
 4. Enable **Erase All Flash Before Sketch Upload**.
 5. Upload. Serial 115200.
 
