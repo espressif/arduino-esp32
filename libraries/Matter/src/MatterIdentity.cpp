@@ -157,10 +157,10 @@ void ArduinoMatter::applyIdentityBeforeStart() {
   if (!needsOptionalBasicInfoAttrs()) {
     return;
   }
-  endpoint_t *ep = endpoint::get(0);
+  endpoint_t *ep = endpoint::get(node::get(), chip::kRootEndpointId);
   cluster_t *cluster = (ep != nullptr) ? cluster::get(ep, chip::app::Clusters::BasicInformation::Id) : nullptr;
   if (cluster == nullptr) {
-    log_e("Basic Information cluster missing on endpoint 0; optional identity attributes were not created.");
+    log_e("Basic Information cluster missing on the root endpoint; optional identity attributes were not created.");
     return;
   }
   using namespace chip::app::Clusters::BasicInformation::Attributes;
