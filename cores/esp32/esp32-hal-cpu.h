@@ -28,13 +28,6 @@ extern "C" {
 
 // When adding a new target, update the appropriate group(s) below
 
-// Targets that support XTAL frequency queries via rtc_clk_xtal_freq_get()
-#if (!defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32P4))
-#define TARGET_HAS_XTAL_FREQ 1
-#else
-#define TARGET_HAS_XTAL_FREQ 0
-#endif
-
 // Targets that need dynamic APB frequency updates via rtc_clk_apb_freq_update()
 #if (defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3))
 #define TARGET_HAS_DYNAMIC_APB 1
@@ -57,38 +50,6 @@ extern "C" {
 #define TARGET_HAS_APLL 0
 #endif
 
-// Targets grouped by maximum CPU frequency support
-
-#if (defined(CONFIG_IDF_TARGET_ESP32P4))
-#define TARGET_CPU_FREQ_MAX_400 1
-#else
-#define TARGET_CPU_FREQ_MAX_400 0
-#endif
-
-#if (defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3))
-#define TARGET_CPU_FREQ_MAX_240 1
-#else
-#define TARGET_CPU_FREQ_MAX_240 0
-#endif
-
-#if (defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C61))
-#define TARGET_CPU_FREQ_MAX_160 1
-#else
-#define TARGET_CPU_FREQ_MAX_160 0
-#endif
-
-#if (defined(CONFIG_IDF_TARGET_ESP32C2))
-#define TARGET_CPU_FREQ_MAX_120 1
-#else
-#define TARGET_CPU_FREQ_MAX_120 0
-#endif
-
-#if (defined(CONFIG_IDF_TARGET_ESP32H2))
-#define TARGET_CPU_FREQ_MAX_96 1
-#else
-#define TARGET_CPU_FREQ_MAX_96 0
-#endif
-
 typedef enum {
   APB_BEFORE_CHANGE,
   APB_AFTER_CHANGE
@@ -99,14 +60,14 @@ typedef void (*apb_change_cb_t)(void *arg, apb_change_ev_t ev_type, uint32_t old
 bool addApbChangeCallback(void *arg, apb_change_cb_t cb);
 bool removeApbChangeCallback(void *arg, apb_change_cb_t cb);
 
-//function takes the following frequencies as valid values:
-//  240, 160, 80    <<< For all XTAL types
-//  40, 20, 10      <<< For 40MHz XTAL
-//  26, 13          <<< For 26MHz XTAL
-//  24, 12          <<< For 24MHz XTAL
+// Valid values depend on the target, its revision and the XTAL frequency.
+// They are either derived from the PLL (e.g. 240, 160, 80 MHz on the ESP32)
+// or from the XTAL divided by an integer (e.g. 40, 20, 10 MHz for a 40 MHz XTAL).
+// Use getSupportedCpuFrequencyMhz() to list the frequencies accepted by the running chip.
 bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz);
 
-const char *getSupportedCpuFrequencyMhz(uint8_t xtal);
+// Returns a pointer to a shared static buffer. Not thread-safe.
+const char *getSupportedCpuFrequencyMhz(void);
 const char *getClockSourceName(uint8_t source);
 uint32_t getCpuFrequencyMhz();   // In MHz
 uint32_t getXtalFrequencyMhz();  // In MHz
