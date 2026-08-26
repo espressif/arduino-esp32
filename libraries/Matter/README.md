@@ -131,33 +131,80 @@ Boolean State sensors (`MatterContactSensor`, `MatterWaterLeakDetector`, `Matter
 | `setAttributeVal()` | `attribute::set_val()` | No | No | Fallback for nullable attributes, syncing related attributes inside callbacks, avoiding re-entrancy |
 | Color HSV `report()` | `attribute::report()` | No | Yes | `setColorHSV()` / `setColorRGB()`: notify subscribers without re-entering `attributeChangeCB` |
 
+## Shared endpoint API
+
+All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.begin()`, sketches can call `setTagList()` with `MatterTags` presets (Number, Location, Position, Switches) to set the Descriptor TagList. At most 3 tags per endpoint. See `MatterSmartButtonsTagList`. TagList does not set a light's display name.
+
 ## Endpoint Classes
+
+**Lighting**
 
 | Class | Device Type |
 |-------|-------------|
 | `MatterOnOffLight` | On/Off Light |
 | `MatterDimmableLight` | Dimmable Light |
-| `MatterColorLight` | Extended Color Light (HSV/XY, no color temperature) |
 | `MatterColorTemperatureLight` | Color Temperature Light |
+| `MatterColorLight` | Color Light (HSV/XY, no color temperature) |
 | `MatterEnhancedColorLight` | Extended Color Light (HSV/XY + color temperature) |
+
+**Sensors**
+
+| Class | Device Type |
+|-------|-------------|
+| `MatterTemperatureSensor` | Temperature Sensor |
+| `MatterHumiditySensor` | Humidity Sensor |
+| `MatterPressureSensor` | Pressure Sensor |
+| `MatterLightSensor` | Light / Illuminance Sensor |
+| `MatterOccupancySensor` | Occupancy Sensor (optional HoldTime) |
+| `MatterContactSensor` | Contact Sensor (Boolean State) |
+| `MatterWaterLeakDetector` | Water Leak Detector (Boolean State) |
+| `MatterWaterFreezeDetector` | Water Freeze Detector (Boolean State) |
+| `MatterRainSensor` | Rain Sensor (Boolean State) |
+
+**Control and other**
+
+| Class | Device Type |
+|-------|-------------|
 | `MatterOnOffPlugin` | On/Off Plug-in Unit |
 | `MatterDimmablePlugin` | Dimmable Plug-in Unit |
 | `MatterFan` | Fan |
 | `MatterGenericSwitch` | Generic Switch (smart button — short click, long press, multi-press) |
-| `MatterTemperatureSensor` | Temperature Sensor |
-| `MatterHumiditySensor` | Humidity Sensor |
-| `MatterPressureSensor` | Pressure Sensor |
-| `MatterContactSensor` | Contact Sensor |
-| `MatterOccupancySensor` | Occupancy Sensor |
-| `MatterWaterLeakDetector` | Water Leak Detector |
-| `MatterWaterFreezeDetector` | Water Freeze Detector |
-| `MatterRainSensor` | Rain Sensor |
 | `MatterThermostat` | Thermostat |
 | `MatterWindowCovering` | Window Covering |
 | `MatterTemperatureControlledCabinet` | Temperature Controlled Cabinet |
 
+## Node identity and commissioning
+
+Call these on the `Matter` singleton **before** `Matter.begin()`. After `begin()` they log a warning and do nothing. String setters **copy** into internal storage (stack or `String` temporaries are safe). `setDeviceName()` writes Basic Information NodeLabel (not a per-light name). Do not change Vendor ID / Product ID unless the DAC matches. SoftwareVersion is compile-time CHIP config.
+
+```cpp
+Matter.setVendorName("Espressif");            // max 32
+Matter.setProductName("KitchenLight");        // max 32
+Matter.setDeviceName("KitchenHub");           // NodeLabel, max 32
+Matter.setSerialNumber("KH-000123");          // max 32
+Matter.setHardwareVersion(7);
+Matter.setHardwareVersionString("RevA");      // max 64
+Matter.setSetupDiscriminator(0xF01);          // 0–0xFFF
+Matter.setSetupPasscode(20202024);            // valid Matter PIN
+Light.begin();
+Matter.begin();
+Serial.println(Matter.getManualPairingCode());     // live code after begin()
+Serial.println(Matter.getOnboardingQRCodeUrl());   // live QR URL after begin()
+```
+
+If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Arduino Matter uses the CHIP test pair **PIN `20202021`**, discriminator **`0xF00`**, manual code **`34970112332`** (same as On/Off Light and the other examples). Before `begin()` the pairing getters log a warning and return empty.
+
+| API | Meaning |
+|-----|---------|
+| `isDeviceCommissioned()` | A Matter fabric exists |
+| `isDeviceConnected()` | Wi-Fi or Thread is up |
+| `isOnline()` | A controller has an active CASE session (until CHIP idle-evicts it) |
+
+Do not gate LEDs on `isOnline()`. A session can stay up after the user leaves the app. See examples `MatterDeviceIdentity` and `MatterStatus`.
+
 ## Further Reading
 
-- [ESP-Matter Programming Guide](https://docs.espressif.com/projects/esp-matter/en/latest/)
 - [Arduino-ESP32 Matter Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/index.html)
+- [ESP-Matter Programming Guide](https://docs.espressif.com/projects/esp-matter/en/latest/)
 - [Matter Specification (CSA)](https://csa-iot.org/developer-resource/specifications-download-request/)
+- Examples: `MatterDeviceIdentity`, `MatterStatus`, `MatterSmartButtonsTagList`
