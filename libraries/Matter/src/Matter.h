@@ -234,6 +234,7 @@ protected:
   static void _init();
   static bool isStackStarted();  // true only after a successful Matter.begin()
   static bool ensureSetBeforeBegin(const char *apiName);
+  static bool storeIdentityString(char *dst, size_t dstSize, const char *src, const char *apiName);
   static void applyIdentityBeforeStart();
   static void applyIdentityAfterStart();
 };

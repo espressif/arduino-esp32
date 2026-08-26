@@ -70,8 +70,8 @@ bool ArduinoMatter::ensureSetBeforeBegin(const char *apiName) {
   return true;
 }
 
-static bool storeIdentityString(char *dst, size_t dstSize, const char *src, const char *apiName) {
-  if (!ArduinoMatter::ensureSetBeforeBegin(apiName)) {
+bool ArduinoMatter::storeIdentityString(char *dst, size_t dstSize, const char *src, const char *apiName) {
+  if (!ensureSetBeforeBegin(apiName)) {
     return false;
   }
   if (!copyBounded(dst, dstSize, src)) {
