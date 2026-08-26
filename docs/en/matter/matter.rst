@@ -107,18 +107,67 @@ The ``Matter`` class is implemented as a singleton, meaning there's only one ins
 The ``Matter`` class provides the following key methods:
 
 * ``begin()``: Initializes the Matter stack
-* ``isDeviceCommissioned()``: Checks if the device is commissioned
+* ``isDeviceCommissioned()``: Checks if the device is commissioned (a fabric exists)
 * ``isWiFiConnected()``: Checks Wi-Fi connection status
 * ``isThreadConnected()``: Checks Thread connection status
-* ``isDeviceConnected()``: Checks overall device connectivity
+* ``isDeviceConnected()``: Checks overall device connectivity (Wi-Fi or Thread)
+* ``isOnline()``: Checks if a controller has an active CASE session with this node. Stays true until CHIP idle-evicts that session, not until the user closes a controller app.
 * ``isWiFiStationEnabled()``: Checks if Wi-Fi Station mode is supported and enabled
 * ``isWiFiAccessPointEnabled()``: Checks if Wi-Fi AP mode is supported and enabled
 * ``isThreadEnabled()``: Checks if Thread network is supported and enabled
 * ``isBLECommissioningEnabled()``: Checks if BLE commissioning is supported and enabled
 * ``decommission()``: Factory resets the device
-* ``getManualPairingCode()``: Gets the manual pairing code for commissioning
-* ``getOnboardingQRCodeUrl()``: Gets the QR code URL for commissioning
+* ``getManualPairingCode()``: Gets the manual pairing code for commissioning (generated after ``begin()``; empty and a warning before ``begin()``)
+* ``getOnboardingQRCodeUrl()``: Gets the QR code URL for commissioning (generated after ``begin()``; empty and a warning before ``begin()``)
 * ``onEvent()``: Sets a callback for Matter events
+
+Device identity
+^^^^^^^^^^^^^^^
+
+Call these setters **before** ``Matter.begin()``. After ``begin()`` they log a warning and have no effect. String setters copy into internal storage; the argument does not need to remain valid. ``setDeviceName()`` writes Basic Information **NodeLabel**. Do not change Vendor ID / Product ID from a sketch unless the DAC matches. SoftwareVersion is compile-time CHIP configuration.
+
+.. code-block:: arduino
+
+    Matter.setVendorName("Espressif");           // max 32
+    Matter.setProductName("KitchenLight");       // max 32
+    Matter.setDeviceName("KitchenHub");          // NodeLabel, max 32
+    Matter.setSerialNumber("KH-000123");         // max 32
+    Matter.setHardwareVersion(7);
+    Matter.setHardwareVersionString("RevA");     // max 64
+    Matter.setSetupDiscriminator(0xF01);         // 0–0xFFF; Arduino test default 0xF00
+    Matter.setSetupPasscode(20202024);           // valid PIN; test default 20202021
+    Light.begin();
+    Matter.begin();
+
+On a single-endpoint node, controllers often use DeviceName as the accessory title. On a composed node it is the parent/node name; child lights are not renamed. Use ``MatterEndPoint::setTagList()`` for switch-style Descriptor tags, not as a light title.
+
+``getManualPairingCode()`` and ``getOnboardingQRCodeUrl()`` are generated from the live discriminator and PIN after ``Matter.begin()``. Before ``begin()`` they log a warning and return an empty string. The 11-digit short manual code uses only the top 4 bits of the discriminator, so ``0xF00`` and ``0xF01`` collide if the PIN is unchanged. Changing the PIN requires a matching SPAKE2+ verifier; the library regenerates it. Test while uncommissioned and erase flash after changing codes. Production belongs in factory NVS with a unique PIN per unit.
+
+Identity and commissioning APIs (all setters must run before ``Matter.begin()``):
+
+* ``setVendorName()``
+* ``setProductName()``
+* ``setDeviceName()``
+* ``setSerialNumber()``
+* ``setHardwareVersion()``
+* ``setHardwareVersionString()``
+* ``setSetupDiscriminator()``
+* ``setSetupPasscode()``
+
+Runtime status
+^^^^^^^^^^^^^^
+
++-----------------------------------+--------------------------------------------------------------+
+| API                               | Meaning                                                      |
++===================================+==============================================================+
+| ``isDeviceCommissioned()``        | A Matter fabric exists                                       |
++-----------------------------------+--------------------------------------------------------------+
+| ``isDeviceConnected()``           | Wi-Fi or Thread is up                                        |
++-----------------------------------+--------------------------------------------------------------+
+| ``isOnline()``                    | A controller has an active CASE session (until idle-evicted) |
++-----------------------------------+--------------------------------------------------------------+
+
+Do not gate physical outputs (LEDs) on ``isOnline()``. Restore last local state after commissioned. Use ``isOnline()`` for hub-discovery logs. A CASE session can remain active after the user leaves the app, until the hub or CHIP tears it down. See the Matter Status example.
 
 MatterEndPoint
 **************
@@ -186,7 +235,8 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 **Basic Examples:**
 
 * **Matter Minimum** - The smallest code required to create a Matter-compatible device. Ideal starting point for understanding Matter basics. `View Matter Minimum code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterMinimum>`_
-* **Matter Status** - Demonstrates how to check enabled Matter features and connectivity status. Implements a basic on/off light and periodically reports capability and connection status. `View Matter Status code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterStatus>`_
+* **Matter Status** - Demonstrates how to check enabled Matter features and connectivity status, including ``isDeviceCommissioned()``, ``isDeviceConnected()``, and ``isOnline()``. Implements a basic on/off light and periodically reports capability and connection status. `View Matter Status code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterStatus>`_
+* **Matter Device Identity** - Sets VendorName, ProductName, DeviceName (NodeLabel), SerialNumber, hardware version, and custom commissioning codes on ``Matter`` before ``begin()``. `View Matter Device Identity code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterDeviceIdentity>`_
 * **Matter Events** - Shows how to monitor and handle Matter events. Provides a comprehensive view of all Matter events during device operation. `View Matter Events code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEvents>`_
 * **Matter Commission Test** - Tests Matter commissioning functionality with automatic decommissioning after a 30-second delay for continuous testing cycles. `View Matter Commission Test code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterCommissionTest>`_
 

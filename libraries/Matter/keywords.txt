@@ -71,6 +71,15 @@ getOnboardingQRCodeUrl	KEYWORD2
 isBLECommissioningEnabled	KEYWORD2
 isDeviceCommissioned	KEYWORD2
 isDeviceConnected	KEYWORD2
+isOnline	KEYWORD2
+setVendorName	KEYWORD2
+setProductName	KEYWORD2
+setDeviceName	KEYWORD2
+setSerialNumber	KEYWORD2
+setHardwareVersion	KEYWORD2
+setHardwareVersionString	KEYWORD2
+setSetupDiscriminator	KEYWORD2
+setSetupPasscode	KEYWORD2
 isThreadConnected	KEYWORD2
 isThreadEnabled	KEYWORD2
 isWiFiAccessPointEnabled	KEYWORD2

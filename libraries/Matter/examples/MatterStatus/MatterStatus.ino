@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,23 +98,59 @@ void setup() {
   Serial.println("Matter started");
   Serial.println();
 
-  // Print commissioning information
   Serial.println("========================================");
-  Serial.println("Matter Node is not commissioned yet.");
-  Serial.println("Initiate the device discovery in your Matter environment.");
-  Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
+  if (Matter.isDeviceCommissioned()) {
+    Serial.println("Matter Node is already commissioned.");
+  } else {
+    Serial.println("Matter Node is not commissioned yet.");
+    Serial.println("Initiate the device discovery in your Matter environment.");
+    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
+  }
   Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
   Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
   Serial.println("========================================\n");
 }
 
 void loop() {
-  // Report connection status every 10 seconds
-  Serial.println("=== Connection Status ===");
-  Serial.printf("WiFi Connected: %s\r\n", Matter.isWiFiConnected() ? "YES" : "NO");
-  Serial.printf("Thread Connected: %s\r\n", Matter.isThreadConnected() ? "YES" : "NO");
-  Serial.printf("Device Connected: %s\r\n", Matter.isDeviceConnected() ? "YES" : "NO");
-  Serial.printf("Device Commissioned: %s\r\n", Matter.isDeviceCommissioned() ? "YES" : "NO");
-  Serial.println();
-  delay(10000);
+  static bool lastCommissioned = false;
+  static bool lastConnected = false;
+  static bool lastOnline = false;
+  static uint32_t lastOnlinePollMs = 0;
+  static uint32_t lastStatusPollMs = 0;
+
+  const uint32_t now = millis();
+
+  // CASE session is sampled every 2.5 s. The LED is not gated on isOnline().
+  if (lastOnlinePollMs == 0 || (now - lastOnlinePollMs) >= 2500) {
+    lastOnlinePollMs = now;
+    const bool online = Matter.isOnline();
+    if (online != lastOnline) {
+      Serial.printf("State change: Online=%s\r\n", online ? "YES" : "NO");
+      lastOnline = online;
+    }
+  }
+
+  // Commissioned / connected / radios every 5 s.
+  if (lastStatusPollMs == 0 || (now - lastStatusPollMs) >= 5000) {
+    lastStatusPollMs = now;
+    const bool commissioned = Matter.isDeviceCommissioned();
+    const bool connected = Matter.isDeviceConnected();
+    if (commissioned != lastCommissioned || connected != lastConnected) {
+      Serial.printf(
+        "State change: Commissioned=%s Connected=%s\r\n", commissioned ? "YES" : "NO", connected ? "YES" : "NO"
+      );
+      lastCommissioned = commissioned;
+      lastConnected = connected;
+    }
+
+    Serial.println("=== Connection Status ===");
+    Serial.printf("WiFi Connected: %s\r\n", Matter.isWiFiConnected() ? "YES" : "NO");
+    Serial.printf("Thread Connected: %s\r\n", Matter.isThreadConnected() ? "YES" : "NO");
+    Serial.printf("Device Connected: %s\r\n", connected ? "YES" : "NO");
+    Serial.printf("Device Commissioned: %s\r\n", commissioned ? "YES" : "NO");
+    Serial.printf("Device Online (CASE): %s\r\n", lastOnline ? "YES" : "NO");
+    Serial.println();
+  }
+
+  delay(50);
 }
