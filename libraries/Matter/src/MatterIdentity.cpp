@@ -24,7 +24,6 @@
 #include <app/clusters/basic-information/BasicInformationCluster.h>
 #include <app/data-model-provider/ActionReturnStatus.h>
 #include <app/data-model-provider/OperationTypes.h>
-#include <app/server/Dnssd.h>
 #include <app/server/Server.h>
 #include <lib/core/TLV.h>
 #include <platform/CHIPDeviceLayer.h>
@@ -274,16 +273,24 @@ static bool applyCommissionable() {
 
   sCommissionableProvider.publish();
 
-#if CONFIG_ENABLE_CHIPOBLE
-  CHIP_ERROR bleErr = chip::DeviceLayer::ConnectivityMgr().SetBLEAdvertisingEnabled(false);
-  if (bleErr == CHIP_NO_ERROR) {
-    bleErr = chip::DeviceLayer::ConnectivityMgr().SetBLEAdvertisingEnabled(true);
+  // Server::Init already opened a window and snapshotted the factory SPAKE2+ verifier.
+  // Reopen so AdvertiseAndListenForPASE() copies the wrap. Skip if a fabric exists or
+  // fail-safe is armed (an in-progress PASE already passed SPAKE).
+  if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0) {
+    if (!chip::Server::GetInstance().GetFailSafeContext().IsFailSafeFullyDisarmed()) {
+      log_w("Commissioning already in progress; custom PIN takes effect on the next window.");
+    } else {
+      chip::CommissioningWindowManager &mgr = chip::Server::GetInstance().GetCommissioningWindowManager();
+      if (mgr.IsCommissioningWindowOpen()) {
+        mgr.CloseCommissioningWindow();
+      }
+      const CHIP_ERROR err = mgr.OpenBasicCommissioningWindow();
+      if (err != CHIP_NO_ERROR) {
+        log_e("Failed to reopen commissioning window after custom PIN: %" CHIP_ERROR_FORMAT, err.Format());
+        return false;
+      }
+    }
   }
-  if (bleErr != CHIP_NO_ERROR) {
-    log_e("BLE advertising restart failed: %" CHIP_ERROR_FORMAT, bleErr.Format());
-  }
-#endif
-  chip::app::DnssdServer::Instance().StartServer();
   return true;
 }
 
@@ -314,18 +321,18 @@ static bool applyInstanceInfoWrap() {
 }
 
 void ArduinoMatter::applyIdentityAfterStart() {
+  if (sHasDiscriminator || sHasPasscode) {
+    if (!applyCommissionable()) {
+      log_e("Custom discriminator/passcode were not applied; pairing codes use the factory values.");
+    }
+  }
+
   if (needsInstanceInfoWrap() && !applyInstanceInfoWrap()) {
     log_e("Instance identity wrap was not installed.");
   }
 
   if (sDeviceName[0] != '\0') {
     writeNodeLabel(sDeviceName);
-  }
-
-  if (sHasDiscriminator || sHasPasscode) {
-    if (!applyCommissionable()) {
-      log_e("Custom discriminator/passcode were not applied; pairing codes use the factory values.");
-    }
   }
 
   refreshOnboardingCodes();
