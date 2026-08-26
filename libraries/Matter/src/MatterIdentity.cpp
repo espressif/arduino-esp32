@@ -139,9 +139,7 @@ static bool needsInstanceInfoWrap() {
   return sVendorName[0] != '\0' || sProductName[0] != '\0' || sHasHardwareVersion || sHardwareVersionString[0] != '\0' || sSerialNumber[0] != '\0';
 }
 
-static bool ensureBasicInfoAttr(
-  cluster_t *cluster, uint32_t attributeId, attribute_t *(*createFn)(cluster_t *, char *, uint16_t), const char *name
-) {
+static bool ensureBasicInfoAttr(cluster_t *cluster, uint32_t attributeId, attribute_t *(*createFn)(cluster_t *, char *, uint16_t), const char *name) {
   if (attribute::get(cluster, attributeId) != nullptr) {
     return true;
   }

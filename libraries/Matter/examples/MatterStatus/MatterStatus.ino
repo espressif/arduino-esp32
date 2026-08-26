@@ -136,9 +136,7 @@ void loop() {
     const bool commissioned = Matter.isDeviceCommissioned();
     const bool connected = Matter.isDeviceConnected();
     if (commissioned != lastCommissioned || connected != lastConnected) {
-      Serial.printf(
-        "State change: Commissioned=%s Connected=%s\r\n", commissioned ? "YES" : "NO", connected ? "YES" : "NO"
-      );
+      Serial.printf("State change: Commissioned=%s Connected=%s\r\n", commissioned ? "YES" : "NO", connected ? "YES" : "NO");
       lastCommissioned = commissioned;
       lastConnected = connected;
     }

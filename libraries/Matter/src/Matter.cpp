@@ -40,7 +40,11 @@ constexpr auto k_timeout_seconds = 300;
 // Two-phase lifecycle. Endpoint begin() creates the node (NodeCreated).
 // Matter.begin() starts the CHIP stack (StackStarted). These are not the same:
 // identity setters are valid after the node exists and invalid after the stack starts.
-enum class MatterLifecycle : uint8_t { Uninitialized, NodeCreated, StackStarted };
+enum class MatterLifecycle : uint8_t {
+  Uninitialized,
+  NodeCreated,
+  StackStarted
+};
 static MatterLifecycle sLifecycle = MatterLifecycle::Uninitialized;
 static node::config_t node_config;
 static node_t *deviceNode = nullptr;
