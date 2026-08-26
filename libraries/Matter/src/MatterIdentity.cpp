@@ -273,7 +273,7 @@ static bool applyCommissionable() {
 
   // Server::Init already opened a window and snapshotted the factory SPAKE2+ verifier.
   // Reopen so AdvertiseAndListenForPASE() copies the wrap. Skip if a fabric exists or
-  // fail-safe is armed (an in-progress PASE already passed SPAKE).
+  // fail-safe is armed (an in-progress PASE already passed SPAKE). // codespell:ignore
   if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0) {
     if (!chip::Server::GetInstance().GetFailSafeContext().IsFailSafeFullyDisarmed()) {
       log_w("Commissioning already in progress; custom PIN takes effect on the next window.");
