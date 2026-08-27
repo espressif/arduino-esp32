@@ -229,10 +229,34 @@ const char *getClockSourceName(uint8_t source) {
 #define REF_TICK_DIV_MIN 2
 #endif
 
+// The IDF checks the frequency against what the target can generate, but not against what this
+// particular chip was rated for, which is lower on some parts
+static bool cpuFreqIsRated(uint32_t freq_mhz) {
+#if CONFIG_IDF_TARGET_ESP32
+  // Both eFuse bits set means the part is rated for 160 MHz instead of the usual 240 MHz
+  if (freq_mhz > 160) {
+    return !(REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_RATED) && REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_LOW));
+  }
+#elif CONFIG_IDF_TARGET_ESP32P4
+  // Only revision 3 and newer are rated for 400 MHz
+  if (freq_mhz > 360) {
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+    return chip_info.revision >= 300;
+  }
+#endif
+
+  return true;
+}
+
 // rtc_clk_cpu_freq_mhz_to_config() accepts a few frequencies the chip cannot really run, so
-// tell those apart from the rest. Both cases below only concern the XTAL-derived frequencies:
-// the PLL is always divided exactly and keeps APB_CLK at its own frequency.
+// tell those apart from the rest. Both XTAL cases below only concern the XTAL-derived
+// frequencies: the PLL is always divided exactly and keeps APB_CLK at its own frequency.
 static bool cpuFreqIsUsable(const rtc_cpu_freq_config_t *conf) {
+  if (!cpuFreqIsRated(conf->freq_mhz)) {
+    return false;
+  }
+
   if (conf->source != SOC_CPU_CLK_SRC_XTAL) {
     return true;
   }
@@ -276,26 +300,7 @@ const char *getSupportedCpuFrequencyMhz(void) {
     return buf;
   }
 
-  // The IDF does not check the maximum frequency the chip was rated for, so filter it here
-#if CONFIG_IDF_TARGET_ESP32
-  const bool rated_160 = REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_RATED) && REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_LOW);
-#elif CONFIG_IDF_TARGET_ESP32P4
-  esp_chip_info_t chip_info;
-  esp_chip_info(&chip_info);
-  const bool rated_360 = chip_info.revision < 300;  // Only revision 3 and newer are rated for 400 MHz
-#endif
-
   for (uint32_t freq_mhz = highest_freq_mhz; freq_mhz > 0; freq_mhz--) {
-#if CONFIG_IDF_TARGET_ESP32
-    if (rated_160 && freq_mhz > 160) {
-      continue;
-    }
-#elif CONFIG_IDF_TARGET_ESP32P4
-    if (rated_360 && freq_mhz > 360) {
-      continue;
-    }
-#endif
-
     if (!rtc_clk_cpu_freq_mhz_to_config(freq_mhz, &conf) || conf.freq_mhz != freq_mhz || !cpuFreqIsUsable(&conf)) {
       continue;
     }

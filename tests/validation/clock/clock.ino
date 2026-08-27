@@ -57,8 +57,9 @@ static void parseSupportedFrequencies(void) {
       continue;
     }
     TEST_ASSERT_LESS_THAN_MESSAGE(MAX_SUPPORTED_FREQS, supported_count, "More frequencies reported than this test can hold");
-    supported[supported_count++] = strtoul(p, (char **)&p, 10);
-    p--;  // strtoul leaves p on the first character it did not consume
+    char *end = NULL;
+    supported[supported_count++] = strtoul(p, &end, 10);
+    p = end - 1;  // end is the first character strtoul did not consume, which the loop steps over
   }
 }
 

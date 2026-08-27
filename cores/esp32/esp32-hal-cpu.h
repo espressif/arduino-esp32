@@ -66,7 +66,7 @@ bool removeApbChangeCallback(void *arg, apb_change_cb_t cb);
 // Use getSupportedCpuFrequencyMhz() to list the frequencies accepted by the running chip.
 bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz);
 
-// Returns a pointer to a shared static buffer. Not thread-safe.
+// Returns a string with static storage duration, which must not be freed. Not thread-safe.
 const char *getSupportedCpuFrequencyMhz(void);
 const char *getClockSourceName(uint8_t source);
 uint32_t getCpuFrequencyMhz();   // In MHz

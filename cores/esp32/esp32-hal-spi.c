@@ -709,7 +709,13 @@ static uint32_t spiSourceFrequency(void) {
   uint32_t freq_hz = 0;
   if (esp_clk_tree_src_get_freq_hz((soc_module_clk_t)ARDUINO_SPI_CLK_SRC, ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED, &freq_hz) != ESP_OK || freq_hz == 0) {
     log_e("Could not read the SPI source clock frequency");
+    // Fall back to the source the peripheral was pinned to, since guessing the other one would
+    // put the divider math right back where it was before this frequency was read from the IDF
+#if ARDUINO_SPI_CLK_FOLLOWS_APB
     return getApbFrequency();
+#else
+    return getXtalFrequencyMhz() * 1000000;
+#endif
   }
   return freq_hz;
 }
