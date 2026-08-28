@@ -61489,7 +61489,7 @@ edge_dalton.build.target=esp
 edge_dalton.build.mcu=esp32c3
 edge_dalton.build.core=esp32
 edge_dalton.build.variant=edge_dalton
-edge_dalton.build.board=EDGE_DALTON
+edge_dalton.build.board=ESP32C3_DEV
 edge_dalton.build.bootloader_addr=0x0
 
 edge_dalton.build.cdc_on_boot=0
