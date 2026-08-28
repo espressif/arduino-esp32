@@ -6,19 +6,19 @@
 
 // === Edge Dalton (ESP32-C3) Custom Pinout ===
 static const uint8_t LED_BUILTIN = 10;
-#define BUILTIN_LED  LED_BUILTIN 
+#define BUILTIN_LED LED_BUILTIN
 
-// Default I2C Pins 
+// Default I2C Pins
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 
 // Default SPI Pins
-static const uint8_t SS    = 7;
-static const uint8_t MOSI  = 6;
-static const uint8_t MISO  = 5;
-static const uint8_t SCK   = 4;
+static const uint8_t SS = 7;
+static const uint8_t MOSI = 6;
+static const uint8_t MISO = 5;
+static const uint8_t SCK = 4;
 
-// Hardware Serial UART0 
+// Hardware Serial UART0
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
 
