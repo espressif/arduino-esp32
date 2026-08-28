@@ -74,6 +74,26 @@
 #define EXAMPLE_DVP_D6_PIN           17
 #define EXAMPLE_DVP_D7_PIN           16
 #define EXAMPLE_DVP_XCLK_FREQ        10000000
+#elif CONFIG_IDF_TARGET_ESP32S31
+/**
+ * @brief This configuration is for the ESP32-S31 Korvo board
+ */
+#define EXAMPLE_DVP_SCCB_I2C_PORT    0
+#define EXAMPLE_DVP_SCCB_I2C_SCL_PIN 1
+#define EXAMPLE_DVP_SCCB_I2C_SDA_PIN 0
+#define EXAMPLE_DVP_XCLK_PIN         55
+#define EXAMPLE_DVP_PCLK_PIN         54
+#define EXAMPLE_DVP_VSYNC_PIN        56
+#define EXAMPLE_DVP_DE_PIN           57
+#define EXAMPLE_DVP_D0_PIN           46
+#define EXAMPLE_DVP_D1_PIN           47
+#define EXAMPLE_DVP_D2_PIN           48
+#define EXAMPLE_DVP_D3_PIN           49
+#define EXAMPLE_DVP_D4_PIN           50
+#define EXAMPLE_DVP_D5_PIN           51
+#define EXAMPLE_DVP_D6_PIN           52
+#define EXAMPLE_DVP_D7_PIN           53
+#define EXAMPLE_DVP_XCLK_FREQ        20000000
 #else
 #error "The selected target SoC is not supported"
 #endif

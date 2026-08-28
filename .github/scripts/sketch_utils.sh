@@ -98,14 +98,15 @@ function default_fqbn_for_target {
     local overrides="${fqbn_append},${extra_opts},${debug_level}"
 
     local esp32_opts esp32s2_opts esp32s3_opts esp32c3_opts esp32c6_opts esp32h2_opts esp32p4_opts esp32c5_opts
-    esp32_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${overrides}")
-    esp32s2_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${overrides}")
-    esp32s3_opts=$(_normalize_fqbn_opts "PSRAM=opi,USBMode=default,${overrides}")
-    esp32c3_opts=$(_normalize_fqbn_opts "${overrides}")
-    esp32c6_opts=$(_normalize_fqbn_opts "${overrides}")
-    esp32h2_opts=$(_normalize_fqbn_opts "${overrides}")
-    esp32p4_opts=$(_normalize_fqbn_opts "PSRAM=enabled,USBMode=default,ChipVariant=postv3,${overrides}")
-    esp32c5_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${overrides}")
+    esp32_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${debug_level},${fqbn_append},${extra_opts}")
+    esp32s2_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${debug_level},${fqbn_append},${extra_opts}")
+    esp32s3_opts=$(_normalize_fqbn_opts "PSRAM=opi,USBMode=default,${debug_level},${fqbn_append},${extra_opts}")
+    esp32c3_opts=$(_normalize_fqbn_opts "${debug_level},${fqbn_append},${extra_opts}")
+    esp32c6_opts=$(_normalize_fqbn_opts "${debug_level},${fqbn_append},${extra_opts}")
+    esp32h2_opts=$(_normalize_fqbn_opts "${debug_level},${fqbn_append},${extra_opts}")
+    esp32p4_opts=$(_normalize_fqbn_opts "PSRAM=enabled,USBMode=default,ChipVariant=postv3,${debug_level},${fqbn_append},${extra_opts}")
+    esp32c5_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${debug_level},${fqbn_append},${extra_opts}")
+    esp32s31_opts=$(_normalize_fqbn_opts "USBMode=default,${debug_level},${fqbn_append},${extra_opts}")
 
     case "$target" in
         esp32)
@@ -139,6 +140,10 @@ function default_fqbn_for_target {
         esp32c5)
             [ -n "${options_override:-$esp32c5_opts}" ] && opt=":${options_override:-$esp32c5_opts}"
             echo "${pkg}:esp32c5${opt}"
+            ;;
+        esp32s31)
+            [ -n "${options_override:-$esp32s31_opts}" ] && opt=":${options_override:-$esp32s31_opts}"
+            echo "${pkg}:esp32s31${opt}"
             ;;
         *)
             echo "ERROR: Invalid chip: $target" >&2
