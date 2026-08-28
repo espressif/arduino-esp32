@@ -35,8 +35,7 @@ static bool desc_is_gamepad_or_joystick(const uint8_t *d, uint16_t len) {
     }
   }
   for (uint16_t i = 0; i + 4 < len; i++) {
-    if (d[i] == 0x06 && d[i + 1] == 0x01 && d[i + 2] == 0x00 && d[i + 3] == 0x09 &&
-        (d[i + 4] == 0x05 || d[i + 4] == 0x04 || d[i + 4] == 0x08)) {
+    if (d[i] == 0x06 && d[i + 1] == 0x01 && d[i + 2] == 0x00 && d[i + 3] == 0x09 && (d[i + 4] == 0x05 || d[i + 4] == 0x04 || d[i + 4] == 0x08)) {
       return true;
     }
   }
@@ -182,12 +181,8 @@ static void desc_probe_mouse_layout(const uint8_t *d, uint16_t len, bool *has_re
           usages[n_usage++] = (uint8_t)data;
         }
         break;
-      case 0x74: /* REPORT_SIZE */
-        report_size = (uint8_t)data;
-        break;
-      case 0x84: /* REPORT_ID */
-        *has_report_id = true;
-        break;
+      case 0x74: /* REPORT_SIZE */ report_size = (uint8_t)data; break;
+      case 0x84: /* REPORT_ID */ *has_report_id = true; break;
       case 0x80: /* INPUT */
         if (usage_page == 0x01u) {
           for (uint8_t u = 0; u < n_usage; u++) {
@@ -200,11 +195,8 @@ static void desc_probe_mouse_layout(const uint8_t *d, uint16_t len, bool *has_re
         n_usage = 0;
         break;
       case 0xA0: /* COLLECTION */
-      case 0xC0: /* END_COLLECTION */
-        n_usage = 0;
-        break;
-      default:
-        break;
+      case 0xC0: /* END_COLLECTION */ n_usage = 0; break;
+      default:   break;
     }
   }
 }
@@ -217,10 +209,8 @@ static int16_t rd_axis(const uint8_t *p, uint8_t nbytes) {
 }
 
 USBHostHIDMouse::USBHostHIDMouse()
-  : USBHostHIDDevice(),
-    _x(0), _y(0), _buttons(0), _wheel(0), _has_report(false), _strip_report_id(false), _xy_bytes(1),
-    _report_cb(nullptr), _report_cb_arg(nullptr) {
-}
+  : USBHostHIDDevice(), _x(0), _y(0), _buttons(0), _wheel(0), _has_report(false), _strip_report_id(false), _xy_bytes(1), _report_cb(nullptr),
+    _report_cb_arg(nullptr), _cb_w(0), _cb_r(0) {}
 
 void USBHostHIDMouse::_ensureRegistered() {
   static bool registered = false;
@@ -230,8 +220,7 @@ void USBHostHIDMouse::_ensureRegistered() {
   }
 }
 
-bool USBHostHIDMouse::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
-                            const uint8_t *report_desc, uint16_t desc_len) {
+bool USBHostHIDMouse::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc, uint16_t desc_len) {
   bool boot_mouse = (protocol == HID_ITF_PROTOCOL_MOUSE);
   bool report_mouse = false;
   if (!boot_mouse) {
@@ -269,24 +258,19 @@ bool USBHostHIDMouse::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
    * so the device sends its full descriptor layout (wheel / 16-bit axes / report ID).
    */
   if (tuh_hid_get_protocol(dev_addr, idx) != HID_PROTOCOL_REPORT) {
-    if (tuh_hid_set_protocol(dev_addr, idx, HID_PROTOCOL_REPORT)) {
-      log_v("[USBHostMouse] set_protocol(REPORT) queued (boot report has no wheel)");
-    } else {
-      log_w("[USBHostMouse] set_protocol(REPORT) submit failed");
-    }
+    (void)tuh_hid_set_protocol(dev_addr, idx, HID_PROTOCOL_REPORT);
   }
 
-  log_v("[USBHostMouse] claim dev=%u idx=%u boot=%u rid=%u xy_hint=%u", (unsigned)dev_addr, (unsigned)idx,
-        (unsigned)(boot_mouse ? 1u : 0u), (unsigned)(_strip_report_id ? 1u : 0u), (unsigned)_xy_bytes);
   return true;
 }
 
 void USBHostHIDMouse::onUnmount(uint8_t dev_addr, uint8_t idx) {
   if (dev_addr == _dev_addr && idx == _idx) {
-    log_v("[USBHostMouse] unmount dev_addr=%u idx=%u", (unsigned)dev_addr, (unsigned)idx);
     clearHidInterfaceBinding();
     _strip_report_id = false;
     _xy_bytes = 1;
+    _cb_w = 0;
+    _cb_r = 0;
   }
 }
 
@@ -337,12 +321,30 @@ void USBHostHIDMouse::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *rep
     return;
   }
 
-  log_v("[USBHostMouse] report len=%u btn=0x%02x dx=%d dy=%d wheel=%d", (unsigned)len, (unsigned)_buttons,
-        (int)_x, (int)_y, (int)_wheel);
-
   _has_report = true;
-  if (_report_cb) {
-    _report_cb(_x, _y, _buttons, _wheel, _report_cb_arg);
+  if (_report_cb != nullptr) {
+    const uint8_t w = _cb_w;
+    const uint8_t n = (uint8_t)((w + 1u) % CB_QUEUE);
+    if (n != _cb_r) {
+      _cb_q[w].x = _x;
+      _cb_q[w].y = _y;
+      _cb_q[w].buttons = _buttons;
+      _cb_q[w].wheel = _wheel;
+      _cb_w = n;
+    }
+  }
+}
+
+void USBHostHIDMouse::dispatchReportCallback() {
+  if (_report_cb == nullptr) {
+    _cb_r = _cb_w;
+    return;
+  }
+  while (_cb_r != _cb_w) {
+    const uint8_t r = _cb_r;
+    const ReportEvent e = _cb_q[r];
+    _cb_r = (uint8_t)((r + 1u) % CB_QUEUE);
+    _report_cb(e.x, e.y, e.buttons, e.wheel, _report_cb_arg);
   }
 }
 

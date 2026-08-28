@@ -51,14 +51,14 @@
  *   #undef ON_MOD
  *   if ((modifiers & (LEFT_CTRL | LEFT_ALT)) && USBHostKeyboard.toVirtualKey(keys[0]) == KEY_F1)
  */
-#define USBHOST_KEY_MOD_MAP(X)                     \
-  X(USBHOST_KEY_MOD_LEFT_CTRL, LEFT_CTRL)          \
-  X(USBHOST_KEY_MOD_LEFT_SHIFT, LEFT_SHIFT)        \
-  X(USBHOST_KEY_MOD_LEFT_ALT, LEFT_ALT)            \
-  X(USBHOST_KEY_MOD_LEFT_GUI, LEFT_GUI)            \
-  X(USBHOST_KEY_MOD_RIGHT_CTRL, RIGHT_CTRL)        \
-  X(USBHOST_KEY_MOD_RIGHT_SHIFT, RIGHT_SHIFT)      \
-  X(USBHOST_KEY_MOD_RIGHT_ALT, RIGHT_ALT)          \
+#define USBHOST_KEY_MOD_MAP(X)                \
+  X(USBHOST_KEY_MOD_LEFT_CTRL, LEFT_CTRL)     \
+  X(USBHOST_KEY_MOD_LEFT_SHIFT, LEFT_SHIFT)   \
+  X(USBHOST_KEY_MOD_LEFT_ALT, LEFT_ALT)       \
+  X(USBHOST_KEY_MOD_LEFT_GUI, LEFT_GUI)       \
+  X(USBHOST_KEY_MOD_RIGHT_CTRL, RIGHT_CTRL)   \
+  X(USBHOST_KEY_MOD_RIGHT_SHIFT, RIGHT_SHIFT) \
+  X(USBHOST_KEY_MOD_RIGHT_ALT, RIGHT_ALT)     \
   X(USBHOST_KEY_MOD_RIGHT_GUI, RIGHT_GUI)
 
 #ifndef LEFT_CTRL
@@ -98,8 +98,7 @@ class USBHostHIDKeyboard : public USBHostHIDDevice {
 public:
   USBHostHIDKeyboard();
 
-  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc,
-             uint16_t desc_len) override;
+  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc, uint16_t desc_len) override;
   void onUnmount(uint8_t dev_addr, uint8_t idx) override;
   void onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) override;
 
@@ -117,8 +116,7 @@ public:
    */
   size_t toAscii(char *buf, size_t cap, const uint8_t *layout = KeyboardLayout_en_US) const;
   /** Decode a boot report (e.g. from the report callback). */
-  size_t toAscii(char *buf, size_t cap, uint8_t modifiers, const uint8_t keys[6],
-                 const uint8_t *layout = KeyboardLayout_en_US) const;
+  size_t toAscii(char *buf, size_t cap, uint8_t modifiers, const uint8_t keys[6], const uint8_t *layout = KeyboardLayout_en_US) const;
   /** Map a keyboard-page HID usage to Arduino KEY_* (0 if not a special). */
   uint8_t toVirtualKey(uint8_t hid_usage) const;
   /** KEY_* identifier string for that usage, or nullptr. */
@@ -127,8 +125,7 @@ public:
    * Print modifiers as LEFT_CTRL / LEFT_SHIFT / … and keys as ASCII or KEY_*.
    * Example: LEFT_CTRL+KEY_F1
    */
-  void printReport(Print &out, uint8_t modifiers, const uint8_t keys[6],
-                   const uint8_t *layout = KeyboardLayout_en_US) const;
+  void printReport(Print &out, uint8_t modifiers, const uint8_t keys[6], const uint8_t *layout = KeyboardLayout_en_US) const;
 
   /** Skip identical held-key reports (default false). */
   void setNotifyOnChangeOnly(bool enable) {
@@ -138,19 +135,30 @@ public:
     return _notify_on_change_only;
   }
 
+  void registerWithHost() {
+    _ensureRegistered();
+  }
+
+  /**
+   * Called from USBHost.task() (loop context), not from the TinyUSB worker.
+   * Keep the callback reasonably short; Serial is OK here.
+   */
   void setReportCallback(USBHostHIDKeyboardReportCb cb, void *arg = nullptr) {
     _report_cb = cb;
     _report_cb_arg = arg;
-  }
-
-  void registerWithHost() {
-    _ensureRegistered();
   }
 
 private:
   void _ensureRegistered();
   void _applyBootReport(const uint8_t *boot, uint16_t boot_len);
   bool _sameAsLastNotified() const;
+  void dispatchReportCallback() override;
+
+  struct ReportEvent {
+    uint8_t modifiers;
+    uint8_t keys[6];
+  };
+  static const uint8_t CB_QUEUE = 8;
 
   volatile uint8_t _modifiers;
   volatile uint8_t _keys[6];
@@ -162,6 +170,9 @@ private:
   bool _last_valid;
   USBHostHIDKeyboardReportCb _report_cb;
   void *_report_cb_arg;
+  ReportEvent _cb_q[CB_QUEUE];
+  volatile uint8_t _cb_w;
+  volatile uint8_t _cb_r;
 };
 
 extern USBHostHIDKeyboard USBHostKeyboard;

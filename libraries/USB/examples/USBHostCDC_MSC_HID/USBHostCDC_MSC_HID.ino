@@ -83,8 +83,9 @@ void setup() {
   delay(500);
 
   Serial.printf(
-    "build flags: USB_MODE=%d CDC_ON_BOOT=%d MSC_ON_BOOT=%d DFU_ON_BOOT=%d\n",
-    (int)ARDUINO_USB_MODE, (int)ARDUINO_USB_CDC_ON_BOOT, (int)ARDUINO_USB_MSC_ON_BOOT, (int)ARDUINO_USB_DFU_ON_BOOT);
+    "build flags: USB_MODE=%d CDC_ON_BOOT=%d MSC_ON_BOOT=%d DFU_ON_BOOT=%d\n", (int)ARDUINO_USB_MODE, (int)ARDUINO_USB_CDC_ON_BOOT,
+    (int)ARDUINO_USB_MSC_ON_BOOT, (int)ARDUINO_USB_DFU_ON_BOOT
+  );
   Serial.println(F("(Host: in USB-OTG mode set all *_ON_BOOT=0; use ESP-Prog/UART or Hardware CDC for Serial Monitor.)"));
   Serial.println();
 

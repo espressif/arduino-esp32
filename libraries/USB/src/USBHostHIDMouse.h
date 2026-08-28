@@ -53,8 +53,7 @@ class USBHostHIDMouse : public USBHostHIDDevice {
 public:
   USBHostHIDMouse();
 
-  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc,
-             uint16_t desc_len) override;
+  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc, uint16_t desc_len) override;
   void onUnmount(uint8_t dev_addr, uint8_t idx) override;
   void onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) override;
 
@@ -73,6 +72,10 @@ public:
   }
   void clear();
 
+  /**
+   * Called from USBHost.task() (loop context), not from the TinyUSB worker.
+   * Keep the callback reasonably short; Serial is OK here.
+   */
   void setReportCallback(USBHostHIDMouseReportCb cb, void *arg = nullptr) {
     _report_cb = cb;
     _report_cb_arg = arg;
@@ -85,6 +88,15 @@ public:
 
 private:
   void _ensureRegistered();
+  void dispatchReportCallback() override;
+
+  struct ReportEvent {
+    int16_t x;
+    int16_t y;
+    uint8_t buttons;
+    int8_t wheel;
+  };
+  static const uint8_t CB_QUEUE = 8;
 
   volatile int16_t _x;
   volatile int16_t _y;
@@ -95,6 +107,9 @@ private:
   uint8_t _xy_bytes;      ///< 1 (boot-like) or 2 (16-bit axes); wheel follows X/Y
   USBHostHIDMouseReportCb _report_cb;
   void *_report_cb_arg;
+  ReportEvent _cb_q[CB_QUEUE];
+  volatile uint8_t _cb_w;
+  volatile uint8_t _cb_r;
 };
 
 extern USBHostHIDMouse USBHostMouse;

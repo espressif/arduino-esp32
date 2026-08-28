@@ -26,6 +26,10 @@
 #if CFG_TUH_ENABLED
 /** Weak in core; USBHostHID provides the strong definition (HID arm after tuh_task). */
 extern "C" void arduino_usb_host_hid_service(void);
+/** Weak in core; USBHostHID dispatches deferred report callbacks (loop-safe). */
+extern "C" void arduino_usb_host_hid_dispatch(void);
+/** Weak in core; USBHostHID arms HID IN only after the whole device has enumerated. */
+extern "C" void arduino_usb_host_hid_device_mounted(uint8_t daddr);
 
 /**
  * Board mux / VBUS hook. Weak empty default is in esp32-hal-misc.c;
@@ -42,7 +46,8 @@ extern "C" void USBHostBoardInit(void);
  * @brief USB Host controller.
  *
  * Call begin() once in setup(), then task() in loop().
- * After begin(), TinyUSB runs on a background worker — task() is then a no-op for transfers.
+ * After begin(), TinyUSB runs on a background worker — task() still dispatches HID
+ * report callbacks (do not call tuh_* from those callbacks).
  */
 class USBHostClass {
 public:
@@ -60,7 +65,7 @@ public:
     return _core;
   }
 
-  /** Process host events (or no-op when the background worker is running). */
+  /** Dispatch HID callbacks; also runs TinyUSB when no background worker. */
   void task();
 
   /** True when TinyUSB is serviced by the background worker (do not call tuh_* from loop()). */

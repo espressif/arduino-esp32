@@ -75,18 +75,8 @@ static bool boot_report_plausible(const uint8_t *q, uint16_t m) {
 }
 
 USBHostHIDKeyboard::USBHostHIDKeyboard()
-  : USBHostHIDDevice(),
-    _modifiers(0),
-    _keys{0, 0, 0, 0, 0, 0},
-    _has_report(false),
-    _notify_on_change_only(false),
-    _strip_report_id(false),
-    _last_modifiers(0),
-    _last_keys{0, 0, 0, 0, 0, 0},
-    _last_valid(false),
-    _report_cb(nullptr),
-    _report_cb_arg(nullptr) {
-}
+  : USBHostHIDDevice(), _modifiers(0), _keys{0, 0, 0, 0, 0, 0}, _has_report(false), _notify_on_change_only(false), _strip_report_id(false), _last_modifiers(0),
+    _last_keys{0, 0, 0, 0, 0, 0}, _last_valid(false), _report_cb(nullptr), _report_cb_arg(nullptr), _cb_w(0), _cb_r(0) {}
 
 void USBHostHIDKeyboard::_ensureRegistered() {
   static bool registered = false;
@@ -96,8 +86,7 @@ void USBHostHIDKeyboard::_ensureRegistered() {
   }
 }
 
-bool USBHostHIDKeyboard::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
-                                const uint8_t *report_desc, uint16_t desc_len) {
+bool USBHostHIDKeyboard::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc, uint16_t desc_len) {
   if (protocol != HID_ITF_PROTOCOL_KEYBOARD) {
     return false;
   }
@@ -111,18 +100,17 @@ bool USBHostHIDKeyboard::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
     _keys[i] = 0;
   }
   _strip_report_id = desc_has_report_id(report_desc, desc_len);
-  log_v("[USBHostKeyboard] claim dev_addr=%u idx=%u rid=%u", (unsigned)dev_addr, (unsigned)idx,
-        (unsigned)(_strip_report_id ? 1u : 0u));
   return true;
 }
 
 void USBHostHIDKeyboard::onUnmount(uint8_t dev_addr, uint8_t idx) {
   if (dev_addr == _dev_addr && idx == _idx) {
-    log_v("[USBHostKeyboard] unmount dev_addr=%u idx=%u", (unsigned)dev_addr, (unsigned)idx);
     clearHidInterfaceBinding();
     _has_report = false;
     _last_valid = false;
     _strip_report_id = false;
+    _cb_w = 0;
+    _cb_r = 0;
   }
 }
 
@@ -204,10 +192,33 @@ void USBHostHIDKeyboard::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *
   memcpy(_last_keys, (const void *)_keys, 6);
   _last_valid = true;
 
-  if (_report_cb) {
-    uint8_t kcopy[6];
-    getKeys(kcopy);
-    _report_cb(_modifiers, kcopy, _report_cb_arg);
+  if (_report_cb != nullptr) {
+    const uint8_t w = _cb_w;
+    const uint8_t n = (uint8_t)((w + 1u) % CB_QUEUE);
+    if (n != _cb_r) {
+      _cb_q[w].modifiers = _modifiers;
+      for (int i = 0; i < 6; i++) {
+        _cb_q[w].keys[i] = _keys[i];
+      }
+      _cb_w = n;
+    }
+  }
+}
+
+void USBHostHIDKeyboard::dispatchReportCallback() {
+  if (_report_cb == nullptr) {
+    _cb_r = _cb_w;
+    return;
+  }
+  while (_cb_r != _cb_w) {
+    const uint8_t r = _cb_r;
+    const uint8_t modifiers = _cb_q[r].modifiers;
+    uint8_t keys[6];
+    for (int i = 0; i < 6; i++) {
+      keys[i] = _cb_q[r].keys[i];
+    }
+    _cb_r = (uint8_t)((r + 1u) % CB_QUEUE);
+    _report_cb(modifiers, keys, _report_cb_arg);
   }
 }
 
@@ -245,8 +256,7 @@ size_t USBHostHIDKeyboard::toAscii(char *buf, size_t cap, const uint8_t *layout)
   return toAscii(buf, cap, _modifiers, keys, layout);
 }
 
-size_t USBHostHIDKeyboard::toAscii(char *buf, size_t cap, uint8_t modifiers, const uint8_t keys[6],
-                                   const uint8_t *layout) const {
+size_t USBHostHIDKeyboard::toAscii(char *buf, size_t cap, uint8_t modifiers, const uint8_t keys[6], const uint8_t *layout) const {
   if (layout == NULL) {
     layout = KeyboardLayout_en_US;
   }
@@ -261,22 +271,21 @@ const char *USBHostHIDKeyboard::toVirtualKeyName(uint8_t hid_usage) const {
   return usbHostHidArduinoVirtualKeyName(toVirtualKey(hid_usage));
 }
 
-void USBHostHIDKeyboard::printReport(Print &out, uint8_t modifiers, const uint8_t keys[6],
-                                     const uint8_t *layout) const {
+void USBHostHIDKeyboard::printReport(Print &out, uint8_t modifiers, const uint8_t keys[6], const uint8_t *layout) const {
   if (layout == NULL) {
     layout = KeyboardLayout_en_US;
   }
 
   bool any = false;
-#define USBHOST_EMIT_MOD(bit, name)                                                                                    \
-  do {                                                                                                                 \
-    if ((modifiers & (bit)) != 0) {                                                                                    \
-      if (any) {                                                                                                       \
-        out.print('|');                                                                                                \
-      }                                                                                                                \
-      out.print(#name);                                                                                                \
-      any = true;                                                                                                      \
-    }                                                                                                                  \
+#define USBHOST_EMIT_MOD(bit, name) \
+  do {                              \
+    if ((modifiers & (bit)) != 0) { \
+      if (any) {                    \
+        out.print('|');             \
+      }                             \
+      out.print(#name);             \
+      any = true;                   \
+    }                               \
   } while (0);
   USBHOST_KEY_MOD_MAP(USBHOST_EMIT_MOD)
 #undef USBHOST_EMIT_MOD

@@ -46,8 +46,7 @@ public:
 
   USBHostHIDGamepad();
 
-  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc,
-             uint16_t desc_len) override;
+  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc, uint16_t desc_len) override;
   void onUnmount(uint8_t dev_addr, uint8_t idx) override;
   void onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *report, uint16_t len) override;
 
@@ -68,6 +67,10 @@ public:
   /** Heuristic 8-bit sticks (-128..127 from unsigned center-128); optional leading report ID. */
   void getSticks8(int8_t *lx, int8_t *ly, int8_t *rx, int8_t *ry, bool skip_id_byte = false) const;
 
+  /**
+   * Called from USBHost.task() (loop context), not from the TinyUSB worker.
+   * Keep the callback reasonably short; Serial is OK here.
+   */
   void setReportCallback(USBHostHIDGamepadReportCb cb, void *arg = nullptr) {
     _report_cb = cb;
     _report_cb_arg = arg;
@@ -87,6 +90,7 @@ public:
 
 private:
   void _ensureRegistered();
+  void dispatchReportCallback() override;
 
   uint8_t _report[REPORT_CAP];
   uint16_t _report_len;
@@ -96,6 +100,7 @@ private:
   bool _notify_on_change_only;
   uint8_t _last_notified[REPORT_CAP];
   uint16_t _last_notified_len;
+  volatile bool _cb_pending;
 };
 
 extern USBHostHIDGamepad USBHostGamepad;

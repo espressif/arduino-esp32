@@ -79,8 +79,7 @@ static void msc_dma_mem_to_cpu(void *p, size_t len) {
   }
   const size_t sync_len = msc_dma_sync_size(len);
 #if USBHOST_MSC_USE_ESP_CACHE_MSYNC
-  if (esp_cache_msync(p, sync_len, ESP_CACHE_MSYNC_FLAG_DIR_M2C | ESP_CACHE_MSYNC_FLAG_INVALIDATE | ESP_CACHE_MSYNC_FLAG_TYPE_DATA) !=
-      ESP_OK) {
+  if (esp_cache_msync(p, sync_len, ESP_CACHE_MSYNC_FLAG_DIR_M2C | ESP_CACHE_MSYNC_FLAG_INVALIDATE | ESP_CACHE_MSYNC_FLAG_TYPE_DATA) != ESP_OK) {
     (void)cache_hal_invalidate_addr((uint32_t)(uintptr_t)p, (uint32_t)sync_len);
   }
 #elif defined(SOC_CACHE_WRITEBACK_SUPPORTED) && SOC_CACHE_WRITEBACK_SUPPORTED
@@ -103,14 +102,14 @@ static void ensure_scsi_sem(void) {
 
 static void scsi_xfer_begin(void) {
   ensure_scsi_sem();
-  while (xSemaphoreTake(s_scsi_done_sem, 0) == pdTRUE) {
-  }
+  while (xSemaphoreTake(s_scsi_done_sem, 0) == pdTRUE) {}
   s_scsi_ok = false;
 }
 
 static void pump_tuh(void) {
   if (!USBHost.tuhBackgroundActive()) {
-    tuh_task();
+    /* Non-blocking: tuh_task() would wait on the event queue past our timeout. */
+    tuh_task_ext(0, false);
   }
   yield();
 }
@@ -190,9 +189,7 @@ static bool msc_complete_cb(uint8_t dev_addr, const tuh_msc_complete_data_t *cb_
   (void)dev_addr;
   const bool ok = (cb_data->csw->signature == MSC_CSW_SIGNATURE) && (cb_data->csw->status == MSC_CSW_STATUS_PASSED);
   if (!ok) {
-    log_e("[USBHostMSC] CSW error: signature=%s status=%u",
-          (cb_data->csw->signature == MSC_CSW_SIGNATURE) ? "OK" : "BAD",
-          (unsigned)cb_data->csw->status);
+    log_e("[USBHostMSC] CSW error: signature=%s status=%u", (cb_data->csw->signature == MSC_CSW_SIGNATURE) ? "OK" : "BAD", (unsigned)cb_data->csw->status);
   }
   ensure_scsi_sem();
   s_scsi_ok = ok;
@@ -213,17 +210,14 @@ static bool wait_scsi(uint32_t timeout_ms, const char *op_tag) {
       yield();
     }
   }
-  log_e("[USBHostMSC] %s: TIMEOUT after %" PRIu32 " ms (mounted=%d ready=%d)",
-        op_tag,
-        timeout_ms,
-        (int)USBHostMSC.mounted(),
-        (int)tuh_msc_ready(USBHostMSC.devAddr()));
+  log_e(
+    "[USBHostMSC] %s: TIMEOUT after %" PRIu32 " ms (mounted=%d ready=%d)", op_tag, timeout_ms, (int)USBHostMSC.mounted(),
+    (int)tuh_msc_ready(USBHostMSC.devAddr())
+  );
   return false;
 }
 
-USBHostMSCClass::USBHostMSCClass()
-  : _mounted(false), _dev_addr(0), _lun(0), _itf_num(0), _ep_in(0), _ep_out(0), _block_count(0), _block_size(0) {
-}
+USBHostMSCClass::USBHostMSCClass() : _mounted(false), _dev_addr(0), _lun(0), _itf_num(0), _ep_in(0), _ep_out(0), _block_count(0), _block_size(0) {}
 
 bool USBHostMSCClass::cacheEndpoints(uint8_t dev_addr) {
   _itf_num = 0;
@@ -252,8 +246,7 @@ bool USBHostMSCClass::cacheEndpoints(uint8_t dev_addr) {
 
     if (type == TUSB_DESC_INTERFACE && len >= sizeof(tusb_desc_interface_t)) {
       const tusb_desc_interface_t *itf = (const tusb_desc_interface_t *)p;
-      if (itf->bInterfaceClass == TUSB_CLASS_MSC && itf->bInterfaceSubClass == MSC_SUBCLASS_SCSI &&
-          itf->bInterfaceProtocol == MSC_PROTOCOL_BOT) {
+      if (itf->bInterfaceClass == TUSB_CLASS_MSC && itf->bInterfaceSubClass == MSC_SUBCLASS_SCSI && itf->bInterfaceProtocol == MSC_PROTOCOL_BOT) {
         _itf_num = itf->bInterfaceNumber;
         uint16_t ep_index = index + len;
         for (uint8_t n = 0; n < itf->bNumEndpoints && (ep_index + 2) <= total; n++) {
@@ -346,8 +339,6 @@ void USBHostMSCClass::onMscMount(uint8_t dev_addr) {
   _block_count = tuh_msc_get_block_count(dev_addr, _lun);
   _block_size = tuh_msc_get_block_size(dev_addr, _lun);
   _mounted = true;
-  log_d("[USBHostMSC] mount dev=%u blocks=%u block_size=%u",
-        (unsigned)dev_addr, (unsigned)_block_count, (unsigned)_block_size);
 }
 
 void USBHostMSCClass::onMscUnmount(uint8_t dev_addr) {
@@ -362,7 +353,6 @@ void USBHostMSCClass::onMscUnmount(uint8_t dev_addr) {
   _ep_out = 0;
   _block_count = 0;
   _block_size = 0;
-  log_d("[USBHostMSC] umount dev=%u", (unsigned)dev_addr);
 }
 
 static bool msc_submit_rw(bool is_write, uint8_t dev, uint8_t lun, void *buf, uint32_t lba, uint16_t blocks) {
@@ -371,8 +361,8 @@ static bool msc_submit_rw(bool is_write, uint8_t dev, uint8_t lun, void *buf, ui
       return false;
     }
     scsi_xfer_begin();
-    const bool submitted = is_write ? tuh_msc_write10(dev, lun, buf, lba, blocks, msc_complete_cb, 0)
-                                    : tuh_msc_read10(dev, lun, buf, lba, blocks, msc_complete_cb, 0);
+    const bool submitted =
+      is_write ? tuh_msc_write10(dev, lun, buf, lba, blocks, msc_complete_cb, 0) : tuh_msc_read10(dev, lun, buf, lba, blocks, msc_complete_cb, 0);
     if (submitted) {
       return true;
     }

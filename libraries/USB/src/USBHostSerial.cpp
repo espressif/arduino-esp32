@@ -27,16 +27,8 @@
 static SemaphoreHandle_t s_usb_host_serial_tx_mutex;
 
 USBHostSerialClass::USBHostSerialClass()
-  : _mounted(false)
-  , _binding_valid(false)
-  , _cdc_idx(0)
-  , _dev_addr(0)
-  , _itf_num(0)
-  , _begin_baud(0)
-  , _begin_stop_bits(CDC_LINE_CODING_STOP_BITS_1)
-  , _begin_parity(CDC_LINE_CODING_PARITY_NONE)
-  , _begin_data_bits(8)
-  , _tx_timeout_ms(250) {}
+  : _mounted(false), _binding_valid(false), _cdc_idx(0), _dev_addr(0), _itf_num(0), _begin_baud(0), _begin_stop_bits(CDC_LINE_CODING_STOP_BITS_1),
+    _begin_parity(CDC_LINE_CODING_PARITY_NONE), _begin_data_bits(8), _tx_timeout_ms(250) {}
 
 USBHostSerialClass::~USBHostSerialClass() {
   end();
@@ -247,8 +239,6 @@ void USBHostSerialClass::onCdcMount(uint8_t idx) {
   _binding_valid = true;
   _mounted = true;
 
-  log_v("HOST CDC mounted");
-
   applyBeginLineCodingIfNeeded();
 }
 
@@ -258,7 +248,6 @@ void USBHostSerialClass::onCdcUnmount(uint8_t idx) {
   _binding_valid = false;
   _dev_addr = 0;
   _itf_num = 0;
-  log_v("HOST CDC unmounted");
 }
 
 USBHostSerialClass USBHostSerial;

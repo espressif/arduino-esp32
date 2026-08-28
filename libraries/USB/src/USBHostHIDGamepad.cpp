@@ -29,8 +29,7 @@ static const uint8_t k_hid_usage_page16 = 0x06; /* Usage Page, 2 bytes */
 static const uint8_t k_hid_usage = 0x09;        /* Usage, 1 byte */
 
 static bool hid_usage_is_gamepad_like(uint8_t u) {
-  return u == HID_USAGE_DESKTOP_JOYSTICK || u == HID_USAGE_DESKTOP_GAMEPAD ||
-         u == HID_USAGE_DESKTOP_MULTI_AXIS_CONTROLLER;
+  return u == HID_USAGE_DESKTOP_JOYSTICK || u == HID_USAGE_DESKTOP_GAMEPAD || u == HID_USAGE_DESKTOP_MULTI_AXIS_CONTROLLER;
 }
 
 /** True if collection looks like a Generic Desktop Mouse. */
@@ -39,14 +38,13 @@ static bool desc_is_desktop_mouse(const uint8_t *d, uint16_t len) {
     return false;
   }
   for (uint16_t i = 0; i + 3 < len; i++) {
-    if (d[i] == k_hid_usage_page && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == k_hid_usage &&
-        d[i + 3] == HID_USAGE_DESKTOP_MOUSE) {
+    if (d[i] == k_hid_usage_page && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == k_hid_usage && d[i + 3] == HID_USAGE_DESKTOP_MOUSE) {
       return true;
     }
   }
   for (uint16_t i = 0; i + 4 < len; i++) {
-    if (d[i] == k_hid_usage_page16 && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == 0x00 &&
-        d[i + 3] == k_hid_usage && d[i + 4] == HID_USAGE_DESKTOP_MOUSE) {
+    if (d[i] == k_hid_usage_page16 && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == 0x00 && d[i + 3] == k_hid_usage
+        && d[i + 4] == HID_USAGE_DESKTOP_MOUSE) {
       return true;
     }
   }
@@ -68,8 +66,8 @@ static bool desc_is_gamepad_or_joystick(const uint8_t *d, uint16_t len) {
   }
   /* Long usage page 0x0001 then usage */
   for (uint16_t i = 0; i + 4 < len; i++) {
-    if (d[i] == k_hid_usage_page16 && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == 0x00 &&
-        d[i + 3] == k_hid_usage && hid_usage_is_gamepad_like(d[i + 4])) {
+    if (d[i] == k_hid_usage_page16 && d[i + 1] == HID_USAGE_PAGE_DESKTOP && d[i + 2] == 0x00 && d[i + 3] == k_hid_usage
+        && hid_usage_is_gamepad_like(d[i + 4])) {
       return true;
     }
   }
@@ -176,18 +174,12 @@ static bool desc_should_claim_gamepad(const uint8_t *d, uint16_t desc_len) {
   if (desc_len < 8) {
     return false;
   }
-  return desc_has_rx_ry(d, desc_len) || desc_has_hat(d, desc_len) || desc_many_desktop_axes(d, desc_len) ||
-         desc_desktop_buttons_and_x(d, desc_len);
+  return desc_has_rx_ry(d, desc_len) || desc_has_hat(d, desc_len) || desc_many_desktop_axes(d, desc_len) || desc_desktop_buttons_and_x(d, desc_len);
 }
 
 USBHostHIDGamepad::USBHostHIDGamepad()
-  : USBHostHIDDevice(),
-    _report_len(0),
-    _has_report(false),
-    _report_cb(nullptr),
-    _report_cb_arg(nullptr),
-    _notify_on_change_only(false),
-    _last_notified_len(0) {
+  : USBHostHIDDevice(), _report_len(0), _has_report(false), _report_cb(nullptr), _report_cb_arg(nullptr), _notify_on_change_only(false), _last_notified_len(0),
+    _cb_pending(false) {
   memset(_report, 0, sizeof(_report));
   memset(_last_notified, 0, sizeof(_last_notified));
 }
@@ -200,8 +192,7 @@ void USBHostHIDGamepad::_ensureRegistered() {
   }
 }
 
-bool USBHostHIDGamepad::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
-                              const uint8_t *report_desc, uint16_t desc_len) {
+bool USBHostHIDGamepad::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc, uint16_t desc_len) {
   if (protocol == HID_ITF_PROTOCOL_MOUSE || protocol == HID_ITF_PROTOCOL_KEYBOARD) {
     return false;
   }
@@ -219,18 +210,16 @@ bool USBHostHIDGamepad::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol,
   _report_len = 0;
   _last_notified_len = 0;
   memset(_last_notified, 0, sizeof(_last_notified));
-  log_v("[USBHostGamepad] claim dev=%u idx=%u protocol=%u desc_len=%u",
-        (unsigned)dev_addr, (unsigned)idx, (unsigned)protocol, (unsigned)desc_len);
   return true;
 }
 
 void USBHostHIDGamepad::onUnmount(uint8_t dev_addr, uint8_t idx) {
   if (dev_addr == _dev_addr && idx == _idx) {
-    log_v("[USBHostGamepad] unmount dev_addr=%u idx=%u", (unsigned)dev_addr, (unsigned)idx);
     clearHidInterfaceBinding();
     _report_len = 0;
     _has_report = false;
     _last_notified_len = 0;
+    _cb_pending = false;
   }
 }
 
@@ -240,20 +229,34 @@ void USBHostHIDGamepad::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *r
   if (len > REPORT_CAP) {
     len = REPORT_CAP;
   }
-  if (_notify_on_change_only && _last_notified_len == len &&
-      len > 0 && memcmp(_last_notified, report, len) == 0) {
+  if (_notify_on_change_only && _last_notified_len == len && len > 0 && memcmp(_last_notified, report, len) == 0) {
     return;
   }
   memcpy(_report, report, len);
   _report_len = len;
   _has_report = true;
-  if (_report_cb) {
-    _report_cb(_report, _report_len, _report_cb_arg);
+  if (_report_cb != nullptr) {
+    _cb_pending = true;
   }
   if (_notify_on_change_only && len > 0) {
     memcpy(_last_notified, _report, len);
     _last_notified_len = len;
   }
+}
+
+void USBHostHIDGamepad::dispatchReportCallback() {
+  if (!_cb_pending || _report_cb == nullptr) {
+    _cb_pending = false;
+    return;
+  }
+  _cb_pending = false;
+  uint8_t tmp[REPORT_CAP];
+  const uint16_t n = _report_len;
+  if (n == 0) {
+    return;
+  }
+  memcpy(tmp, _report, n);
+  _report_cb(tmp, n, _report_cb_arg);
 }
 
 bool USBHostHIDGamepad::available() {
@@ -296,8 +299,7 @@ static int8_t u8_axis_to_s8(uint8_t v) {
   return (int8_t)x;
 }
 
-void USBHostHIDGamepad::getSticks8(int8_t *lx, int8_t *ly, int8_t *rx, int8_t *ry,
-                                   bool skip_id_byte) const {
+void USBHostHIDGamepad::getSticks8(int8_t *lx, int8_t *ly, int8_t *rx, int8_t *ry, bool skip_id_byte) const {
   if (lx) {
     *lx = 0;
   }
