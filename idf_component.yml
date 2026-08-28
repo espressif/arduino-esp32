@@ -5,6 +5,7 @@ targets:
   - esp32
   - esp32s2
   - esp32s3
+  - esp32s31
   - esp32c2
   - esp32c3
   - esp32c5
@@ -19,6 +20,7 @@ files:
     - "variants/esp32/**/*"
     - "variants/esp32s2/**/*"
     - "variants/esp32s3/**/*"
+    - "variants/esp32s31/**/*"
     - "variants/esp32c2/**/*"
     - "variants/esp32c3/**/*"
     - "variants/esp32c5/**/*"
@@ -84,7 +86,7 @@ dependencies:
     git: https://github.com/espressif/esp32-camera.git
     require: public
     rules:
-      - if: "target in [esp32, esp32s2, esp32s3]"
+      - if: "target in [esp32, esp32s2, esp32s3, esp32s31]"
   espressif/lan867x:
     version: "^2.0.0"
     rules:
