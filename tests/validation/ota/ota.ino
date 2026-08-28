@@ -52,6 +52,11 @@ void setUp(void) {}
 void tearDown(void) {
   httpUpdate.setMD5sum("");
   httpUpdate.setSHA256sum("");
+  httpUpdate.setMD5sumUrl("");
+  httpUpdate.setSHA256sumUrl("");
+  httpUpdate.setFollowRedirects(HTTPC_DISABLE_FOLLOW_REDIRECTS);
+  httpUpdate.setAuthorization("", "");
+  httpUpdate.setAuthorization("");
   if (Update.isRunning()) {
     Update.abort();
   }
@@ -426,6 +431,318 @@ void test_httpupdate_wrong_sha256_has_no_digest(void) {
   httpUpdate.setSHA256sum("");
 }
 
+void test_httpupdate_sidecar_missing(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/missing.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(HTTP_UE_SERVER_FAULTY_SHA256, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+}
+
+void test_httpupdate_sidecar_md5_missing(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setMD5sumUrl(server_url + "/missing.md5");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(HTTP_UE_SERVER_FAULTY_MD5, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+}
+
+void test_httpupdate_sidecar_invalid(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/bad.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(HTTP_UE_SERVER_FAULTY_SHA256, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+}
+
+void test_httpupdate_sidecar_wrong_sha256(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/wrong.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(UPDATE_ERROR_SHA256, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+  TEST_ASSERT_TRUE(Update.sha256String().isEmpty());
+}
+
+void test_httpupdate_sidecar_wrong_md5(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setMD5sumUrl(server_url + "/wrong.md5");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(UPDATE_ERROR_MD5, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+}
+
+void test_httpupdate_header_overrides_sidecar(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  // ota.ino.bin sends a correct x-SHA256 header; wrong sidecar must be ignored.
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/wrong.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/ota.ino.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_setter_overrides_sidecar(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  // Fetch the correct digest via sidecar first, then reuse it as an explicit setter
+  // while pointing the URL at a wrong sidecar — setter must win.
+  httpUpdate.setSHA256sumUrl(server_url + "/ota.ino.bin.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  String correct = Update.sha256String();
+  TEST_ASSERT_EQUAL(64, correct.length());
+
+  httpUpdate.setSHA256sum(correct);
+  httpUpdate.setSHA256sumUrl(server_url + "/wrong.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_TRUE(correct.equalsIgnoreCase(Update.sha256String()));
+}
+
+void test_httpupdate_sidecar_sha256(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/ota.ino.bin.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_slow_fragmented(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/slow.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_unknown_length(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/unknown-length.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_chunked(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/chunked.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_large_body(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/large.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_scan_boundary(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/boundary.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_body_timeout(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  HTTPUpdate fastUpdate(200);
+  fastUpdate.rebootOnUpdate(false);
+  fastUpdate.setSHA256sumUrl(server_url + "/stalled.sha256");
+  NetworkClient client;
+  uint32_t startedAt = millis();
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, fastUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(HTTP_UE_SERVER_FAULTY_SHA256, fastUpdate.getLastError());
+  TEST_ASSERT_LESS_THAN_UINT32(1000, millis() - startedAt);
+}
+
+void test_httpupdate_sidecar_httpclient_overload(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  HTTPClient http;
+  TEST_ASSERT_TRUE(http.begin(client, server_url + "/firmware-noheader.bin"));
+  // Leave a firmware response open. Sidecar fetching must close this socket
+  // instead of reusing it for a potentially different origin.
+  TEST_ASSERT_EQUAL(HTTP_CODE_OK, http.GET());
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/ota.ino.bin.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(http));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_httpclient_compatible_overload(void) {
+#ifndef HTTPCLIENT_1_1_COMPATIBLE
+  TEST_IGNORE_MESSAGE("HTTPClient compatibility API is disabled");
+#else
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  HTTPClient http;
+  TEST_ASSERT_TRUE(http.begin(server_url + "/firmware-noheader.bin"));
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/ota.ino.bin.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(http));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+#endif
+}
+
+void test_httpupdate_sidecar_copy_is_independent(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  HTTPUpdate source;
+  source.setSHA256sumUrl(server_url + "/ota.ino.bin.sha256");
+  HTTPUpdate copied = source;
+  HTTPUpdate assigned;
+  assigned = copied;
+  source.setSHA256sumUrl("");
+  copied.setSHA256sumUrl("");
+  assigned.rebootOnUpdate(false);
+  NetworkClient client;
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, assigned.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_does_not_receive_firmware_credentials(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  int callbackCalls = 0;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setAuthorization("firmware-user", "firmware-password");
+  httpUpdate.setSHA256sumUrl(server_url + "/no-firmware-credentials.sha256");
+  HTTPUpdateRequestCB requestCB = [&callbackCalls](HTTPClient *http) {
+    callbackCalls++;
+    http->addHeader("X-Firmware-Only", "true");
+  };
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin", "", requestCB));
+  TEST_ASSERT_EQUAL(1, callbackCalls);
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_md5(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setMD5sumUrl(server_url + "/ota.ino.bin.md5");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(32, Update.md5String().length());
+}
+
+void test_httpupdate_both_sidecars(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setMD5sumUrl(server_url + "/ota.ino.bin.md5");
+  httpUpdate.setSHA256sumUrl(server_url + "/ota.ino.bin.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(32, Update.md5String().length());
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_uppercase(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/upper.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_redirect(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  httpUpdate.setSHA256sumUrl(server_url + "/redirect-sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_redirect_limit(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  HTTPClient http;
+  TEST_ASSERT_TRUE(http.begin(client, server_url + "/firmware-noheader.bin"));
+  http.setRedirectLimit(0);
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  httpUpdate.setSHA256sumUrl(server_url + "/redirect-sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(http));
+  TEST_ASSERT_EQUAL(HTTP_UE_SERVER_FAULTY_SHA256, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+}
+
+void test_httpupdate_sidecar_failure_does_not_mask_not_modified(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA256sumUrl(server_url + "/missing.sha256");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_NO_UPDATES, httpUpdate.update(client, server_url + "/not-modified.bin", "1.0.0"));
+}
+
 void test_httpupdate_download(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
   TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
@@ -570,6 +887,11 @@ void setup() {
   RUN_TEST(test_httpupdate_invalid_url_ipv6);
   RUN_TEST(test_httpupdate_invalid_checksums_abort);
   RUN_TEST(test_httpupdate_wrong_sha256_has_no_digest);
+  RUN_TEST(test_httpupdate_sidecar_missing);
+  RUN_TEST(test_httpupdate_sidecar_md5_missing);
+  RUN_TEST(test_httpupdate_sidecar_invalid);
+  RUN_TEST(test_httpupdate_sidecar_wrong_sha256);
+  RUN_TEST(test_httpupdate_sidecar_wrong_md5);
   // ArduinoOTA uploads before HTTPUpdate download so partition state stays predictable.
   // Keep all no-auth cases before any setPassword() so leftover hashes cannot force AUTH.
   RUN_TEST(test_arduino_ota_upload_no_auth);
@@ -579,6 +901,25 @@ void setup() {
   RUN_TEST(test_arduino_ota_ipv4_mapped);
   RUN_TEST(test_arduino_ota_ipv6_with_auth);
   RUN_TEST(test_arduino_ota_upload_with_auth);
+  RUN_TEST(test_httpupdate_header_overrides_sidecar);
+  RUN_TEST(test_httpupdate_setter_overrides_sidecar);
+  RUN_TEST(test_httpupdate_sidecar_sha256);
+  RUN_TEST(test_httpupdate_sidecar_slow_fragmented);
+  RUN_TEST(test_httpupdate_sidecar_unknown_length);
+  RUN_TEST(test_httpupdate_sidecar_chunked);
+  RUN_TEST(test_httpupdate_sidecar_large_body);
+  RUN_TEST(test_httpupdate_sidecar_scan_boundary);
+  RUN_TEST(test_httpupdate_sidecar_body_timeout);
+  RUN_TEST(test_httpupdate_sidecar_httpclient_overload);
+  RUN_TEST(test_httpupdate_sidecar_httpclient_compatible_overload);
+  RUN_TEST(test_httpupdate_sidecar_copy_is_independent);
+  RUN_TEST(test_httpupdate_sidecar_does_not_receive_firmware_credentials);
+  RUN_TEST(test_httpupdate_sidecar_md5);
+  RUN_TEST(test_httpupdate_both_sidecars);
+  RUN_TEST(test_httpupdate_sidecar_uppercase);
+  RUN_TEST(test_httpupdate_sidecar_redirect);
+  RUN_TEST(test_httpupdate_sidecar_redirect_limit);
+  RUN_TEST(test_httpupdate_sidecar_failure_does_not_mask_not_modified);
   RUN_TEST(test_httpupdate_download);
   RUN_TEST(test_httpupdate_download_ipv6);
 

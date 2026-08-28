@@ -5,14 +5,16 @@ MatterColorLight
 About
 -----
 
-The ``MatterColorLight`` class provides a color light endpoint for Matter networks with RGB color control using the HSV color model. This endpoint implements the Matter lighting standard for full-color lighting control.
+The ``MatterColorLight`` class provides an RGB color light with HSV control and **no color temperature**. Matter 1.5 has no Color Light (0x0102) device type, so this endpoint is advertised as an Extended Color Light (0x010D) with Hue/Saturation and XY only. Color Temperature is not in the data model. Use ``MatterEnhancedColorLight`` when the endpoint must also include color temperature.
+
+Changing the Color Control feature set (for example, removing color temperature after an upgrade) requires **recommissioning** the device so the controller reloads the data model.
 
 **Features:**
 * On/off control
-* RGB color control with HSV color model
+* RGB color control with HSV color model (brightness is HSV value; there is no separate brightness or color-temperature API)
 * State persistence support
 * Callback support for state and color changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -125,7 +127,7 @@ Sets the color using HSV values.
 
     bool setColorHSV(espHsvColor_t hsvColor);
 
-* ``hsvColor`` - HSV color structure with hue (0-360), saturation (0-254), and value/brightness (0-254)
+* ``hsvColor`` - HSV color structure: hue (0-254, where 254 is 360°), saturation (0-254), and value/brightness (0-254). Do not pass degrees in the 0-360 range.
 
 getColorHSV
 ^^^^^^^^^^^

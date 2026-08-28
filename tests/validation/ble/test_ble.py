@@ -41,6 +41,14 @@ def test_ble(dut, ci_job_id):
     LOGGER.info("Checking BLE stack...")
     server.expect(r"\[SERVER\] BLE stack: (Bluedroid|NimBLE)", timeout=10)
 
+    # Issue #12821: BLEDevice::init() must not smash a heap tail canary (seen on ESP32-C5).
+    LOGGER.info("Checking heap integrity around BLEDevice::init (issue #12821)...")
+    server.expect_exact("[SERVER] Heap before BLEDevice::init(): clean", timeout=10)
+    server.expect_exact("[SERVER] Heap after BLEDevice::init(): clean", timeout=10)
+    client.expect_exact("[CLIENT] Heap before BLEDevice::init(): clean", timeout=10)
+    client.expect_exact("[CLIENT] Heap after BLEDevice::init(): clean", timeout=10)
+    LOGGER.info("Heap integrity after BLEDevice::init() is clean")
+
     # Wait for server to be ready
     LOGGER.info("Waiting for server to start advertising...")
     server.expect_exact("[SERVER] Characteristics configured", timeout=10)
@@ -86,6 +94,7 @@ def test_ble(dut, ci_job_id):
     # Continue with characteristics discovery
     client.expect_exact("[CLIENT] Found insecure characteristic", timeout=10)
     client.expect_exact("[CLIENT] Found secure characteristic", timeout=10)
+    client.expect_exact("[CLIENT] Found Write-NR characteristic", timeout=10)
 
     # Verify insecure characteristic read (no auth needed)
     LOGGER.info("Verifying insecure characteristic access...")
@@ -154,6 +163,19 @@ def test_ble(dut, ci_job_id):
     LOGGER.info("All characteristic operations completed successfully")
 
     LOGGER.info("Security and characteristic test passed!")
+
+    # --- Write-Without-Response burst (issue #12815) ---
+    # Central sends AA/BB/CC with no delay and no response. Server onWrite() must
+    # observe the original payloads, not three copies of the last packet.
+    LOGGER.info("Testing Write-NR burst (issue #12815)...")
+    client.expect_exact("[CLIENT] Starting Write-NR burst", timeout=10)
+    client.expect_exact("[CLIENT] Write-NR burst sent", timeout=10)
+    server.expect_exact("[SERVER] Write-NR packet 1/3: AA AA AA", timeout=10)
+    server.expect_exact("[SERVER] Write-NR packet 2/3: BB BB BB", timeout=10)
+    server.expect_exact("[SERVER] Write-NR packet 3/3: CC CC CC", timeout=10)
+    server.expect_exact("[SERVER] Write-NR burst PASSED", timeout=10)
+    server.expect_exact("[SERVER] Heap after Write-NR burst: clean", timeout=10)
+    LOGGER.info("Write-NR burst verified")
 
     # --- Reconnection stress test (app_id collision regression, issue #12625) ---
     # The client disconnects, pre-seeds the allocator, and reconnects in a loop.

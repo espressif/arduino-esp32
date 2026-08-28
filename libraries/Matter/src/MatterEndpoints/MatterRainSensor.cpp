@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterRainSensor.h>
 
 using namespace esp_matter;
@@ -63,6 +62,7 @@ bool MatterRainSensor::begin() {
   }
   rainState = false;
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Rain Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;

@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,15 @@ using namespace chip::app::Clusters;
 
 constexpr auto k_timeout_seconds = 300;
 
-static bool _matter_has_started = false;
+// Two-phase lifecycle. Endpoint begin() creates the node (NodeCreated).
+// Matter.begin() starts the CHIP stack (StackStarted). These are not the same:
+// identity setters are valid after the node exists and invalid after the stack starts.
+enum class MatterLifecycle : uint8_t {
+  Uninitialized,
+  NodeCreated,
+  StackStarted
+};
+static MatterLifecycle sLifecycle = MatterLifecycle::Uninitialized;
 static node::config_t node_config;
 static node_t *deviceNode = nullptr;
 ArduinoMatter::matterEventCB ArduinoMatter::_matterEventCB = nullptr;
@@ -143,8 +151,12 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
   }
 }
 
+bool ArduinoMatter::isStackStarted() {
+  return sLifecycle == MatterLifecycle::StackStarted;
+}
+
 void ArduinoMatter::_init() {
-  if (_matter_has_started) {
+  if (sLifecycle != MatterLifecycle::Uninitialized) {
     return;
   }
 
@@ -156,11 +168,14 @@ void ArduinoMatter::_init() {
     return;
   }
 
-  _matter_has_started = true;
+  sLifecycle = MatterLifecycle::NodeCreated;
 }
 
 void ArduinoMatter::begin() {
-  if (!_matter_has_started) {
+  if (sLifecycle == MatterLifecycle::StackStarted) {
+    return;
+  }
+  if (sLifecycle != MatterLifecycle::NodeCreated) {
     log_e("No Matter endpoint has been created. Please create an endpoint first.");
     return;
   }
@@ -184,12 +199,16 @@ void ArduinoMatter::begin() {
   set_openthread_platform_config(&config);
 #endif
 
+  applyIdentityBeforeStart();
+
   /* Matter start */
   esp_err_t err = esp_matter::start(app_event_cb);
   if (err != ESP_OK) {
     log_e("Failed to start Matter, err:%d", err);
-    _matter_has_started = false;
+    return;
   }
+  sLifecycle = MatterLifecycle::StackStarted;
+  applyIdentityAfterStart();
 }
 
 // Network and Commissioning Capability Queries

@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 #include <Arduino.h>
 #include <esp_matter.h>
 #include <ColorFormat.h>
+#include <MatterEndPoint.h>
+#include <MatterTags.h>
 #include <MatterEndpoints/MatterGenericSwitch.h>
 #include <MatterEndpoints/MatterOnOffLight.h>
 #include <MatterEndpoints/MatterDimmableLight.h>
@@ -172,15 +174,24 @@ public:
     _matterEventCB = cb;
   }
 
-  static inline String getManualPairingCode() {
-    // return the pairing code for manual pairing
-    return String("34970112332");
-  }
-  static inline String getOnboardingQRCodeUrl() {
-    // return the URL for the QR code for onboarding
-    return String("https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT:Y.K9042C00KA0648G00");
-  }
+  // Generated after Matter.begin() from CommissionableDataProvider.
+  // Before begin() these log a warning and return an empty String.
+  static String getManualPairingCode();
+  static String getOnboardingQRCodeUrl();
   static void begin();
+
+  // Node identity (Basic Information on endpoint 0). Call before Matter.begin().
+  // String setters copy into internal storage; the argument need not outlive the call.
+  static bool setVendorName(const char *name);
+  static bool setProductName(const char *name);
+  static bool setDeviceName(const char *name);  // writes NodeLabel
+  static bool setSerialNumber(const char *value);
+  static bool setHardwareVersion(uint16_t version);
+  static bool setHardwareVersionString(const char *value);
+
+  // Commissioning codes. Call before Matter.begin(). Test defaults are 0xF00 / 20202021.
+  static bool setSetupDiscriminator(uint16_t discriminator);
+  static bool setSetupPasscode(uint32_t passcode);
 
   // Network and Commissioning Capability Queries
   // These methods check both hardware support (SOC capabilities) and Matter configuration
@@ -193,6 +204,7 @@ public:
   static bool isWiFiConnected();
   static bool isThreadConnected();
   static bool isDeviceConnected();
+  static bool isOnline();  // active CASE session with a controller
   static void decommission();
 
   // list of Matter EndPoints Friend Classes
@@ -220,6 +232,11 @@ public:
 
 protected:
   static void _init();
+  static bool isStackStarted();  // true only after a successful Matter.begin()
+  static bool ensureSetBeforeBegin(const char *apiName);
+  static bool storeIdentityString(char *dst, size_t dstSize, const char *src, const char *apiName);
+  static void applyIdentityBeforeStart();
+  static void applyIdentityAfterStart();
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MATTER)

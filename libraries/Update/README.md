@@ -11,6 +11,8 @@ The Update library provides functionality for Over-The-Air (OTA) firmware update
 - **Progress Callbacks**: Monitor update progress
 - **MD5 Verification**: Optional MD5 checksum verification
 - **SHA-256 Verification**: Optional SHA-256 checksum verification of the downloaded payload (enabled only when `setSHA256()` / `HTTPUpdate::setSHA256sum()` / `x-SHA256` is used)
+- **Checksum Sidecar URLs**: `HTTPUpdate::setMD5sumUrl()` / `setSHA256sumUrl()` can fetch a small sidecar file (first 32/64 hex token) when no explicit digest or response header is available. This is integrity checking only, not code signing. The fetch code is linked only when those setters are used.
+  Sidecars are prefetched before the firmware response headers are known; those headers still take precedence. Sidecar requests reuse the firmware client's transport (including its TLS configuration) and redirect mode, but not firmware HTTP authorization or the firmware request callback. Keep sidecar URLs within the same transport trust boundary as the firmware URL.
 
 ## Quick Start
 
@@ -241,9 +243,13 @@ Sets expected SHA-256 hash for verification of the entire downloaded payload
 
 Call after `begin()` and before writing any payload bytes. The SHA-256 streaming
 context is allocated only when this succeeds, so sketches that never call
-`setSHA256()` (or never receive an `x-SHA256` header via `HTTPUpdate`) avoid the
+`setSHA256()` (or never receive an `x-SHA256` header / sidecar via `HTTPUpdate`) avoid the
 extra hashing work and keep the smaller static footprint on the global `Update`
 object.
+
+`HTTPUpdate` digest precedence is: `setMD5sum()` / `setSHA256sum()` >
+response headers `x-MD5` / `x-SHA256` > `setMD5sumUrl()` / `setSHA256sumUrl()`
+sidecar fetch (first hex token of length 32 / 64).
 
 **Parameters:**
 - `expected_sha256`: SHA-256 hash as hex string (64 characters)
