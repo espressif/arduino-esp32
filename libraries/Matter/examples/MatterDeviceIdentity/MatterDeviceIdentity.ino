@@ -17,6 +17,7 @@
 
 #include <Arduino.h>
 #include <Matter.h>
+// Wi-Fi in setup() only when CHIPoBLE is not in this build (CONFIG_ENABLE_CHIPOBLE=n).
 #if !CONFIG_ENABLE_CHIPOBLE
 #include <WiFi.h>
 #endif

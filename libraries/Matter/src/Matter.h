@@ -128,8 +128,14 @@ enum matterEvent_t {
   // BLE Deinitialized: Signals that BLE stack is deinitialized and memory reclaimed
   MATTER_BLE_DEINITIALIZED = (uint16_t)chip::DeviceLayer::DeviceEventType::kBLEDeinitialized,
 
-  // Starting ESP32 Platform Specific Events from 0x9000
-  MATTER_ESP32_SPECIFIC_EVENT,  // value is previous + 1
+  // Secure Session Established: Signals that a secure session (PASE or CASE) is established.
+  MATTER_SECURE_SESSION_ESTABLISHED = (uint16_t)chip::DeviceLayer::DeviceEventType::kSecureSessionEstablished,
+
+  // Factory Reset: Signals that factory reset has started.
+  MATTER_FACTORY_RESET = (uint16_t)chip::DeviceLayer::DeviceEventType::kFactoryReset,
+
+  // ESP-Matter platform specific events, from kRange_PublicPlatformSpecific + 0x1000.
+  // Defined in esp_matter.h
 
   // Commissioning Session Started: Signals that Commissioning session has started
   MATTER_COMMISSIONING_SESSION_STARTED = (uint16_t)chip::DeviceLayer::DeviceEventType::kCommissioningSessionStarted,
@@ -169,15 +175,27 @@ public:
   using matterEventCB = std::function<void(matterEvent_t, const chip::DeviceLayer::ChipDeviceEvent *)>;
   // Matter Event Callback
   static matterEventCB _matterEventCB;
-  // set the Matter Event Callback
+  // set the Matter Event Callback. The ChipDeviceEvent pointer is only valid
+  // during this call; do not store it.
   static void onEvent(matterEventCB cb) {
     _matterEventCB = cb;
+  }
+
+  // Called after CHIPoBLE BLE RAM has been returned to the heap (CHIP kBLEDeinitialized).
+  // Register before Matter.begin(). Runs on the CHIP task: do not block; set a flag and
+  // allocate large buffers from loop(). May never run if CHIPoBLE is off or release is disabled.
+  using bleMemoryReleasedCB = std::function<void()>;
+  static bleMemoryReleasedCB _bleMemoryReleasedCB;
+  static void onBLEMemoryReleased(bleMemoryReleasedCB cb) {
+    _bleMemoryReleasedCB = cb;
   }
 
   // Generated after Matter.begin() from CommissionableDataProvider.
   // Before begin() these log a warning and return an empty String.
   static String getManualPairingCode();
   static String getOnboardingQRCodeUrl();
+  // Starts the Matter stack. On Wi-Fi station builds, initializes Wi-Fi first with
+  // reduced RX/TX buffers so CHIP inherits those counts (first esp_wifi_init wins).
   static void begin();
 
   // Node identity (Basic Information on endpoint 0). Call before Matter.begin().
@@ -193,12 +211,26 @@ public:
   static bool setSetupDiscriminator(uint16_t discriminator);
   static bool setSetupPasscode(uint32_t passcode);
 
+  // CHIPoBLE on/off. Call before Matter.begin(). Default is true only when CONFIG_ENABLE_CHIPOBLE.
+  // false forces on-network commissioning (Wi-Fi/Ethernet first) and releases BLE RAM.
+  // Do not use the Arduino BLE library (BLE.h / BLEDevice) in a Matter sketch.
+  static bool setBLECommissioningEnabled(bool enabled);
+
+  // After CHIPoBLE commissioning, release BLE RAM. Call before Matter.begin(). Default true.
+  // Only takes effect when CONFIG_ENABLE_CHIPOBLE is set and CHIPoBLE commissioning is enabled.
+  // No effect if CHIPoBLE is compiled out (no BT, ESP32-S2, or Arduino IDE ESP32 prebuild
+  // which uses Bluedroid without CHIPoBLE). Arduino-as-IDF-component ESP32 can enable NimBLE
+  // and CONFIG_ENABLE_CHIPOBLE; then this API applies. To keep BLE after commission, those
+  // builds also need CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n.
+  static bool setBLEMemoryReleaseEnabled(bool enabled);
+
   // Network and Commissioning Capability Queries
   // These methods check both hardware support (SOC capabilities) and Matter configuration
   static bool isWiFiStationEnabled();       // Check if WiFi Station mode is supported and enabled
   static bool isWiFiAccessPointEnabled();   // Check if WiFi AP mode is supported and enabled
   static bool isThreadEnabled();            // Check if Thread network is supported and enabled
-  static bool isBLECommissioningEnabled();  // Check if BLE commissioning is supported and enabled
+  static bool isBLECommissioningEnabled();  // CHIPoBLE compiled in and setBLECommissioningEnabled()
+  static bool isBLEMemoryReleaseEnabled();  // CHIPoBLE on and release after commissioning (default true)
 
   static bool isDeviceCommissioned();
   static bool isWiFiConnected();
@@ -237,6 +269,7 @@ protected:
   static bool storeIdentityString(char *dst, size_t dstSize, const char *src, const char *apiName);
   static void applyIdentityBeforeStart();
   static void applyIdentityAfterStart();
+  static void applyBlePolicyAfterStart();
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MATTER)

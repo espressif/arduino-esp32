@@ -27,6 +27,12 @@
 #if CONFIG_ENABLE_CHIPOBLE
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-bt.h"
+#include <platform/internal/BLEManager.h>
+#include <system/SystemLayer.h>
+#endif
+
+#if defined(SOC_WIFI_SUPPORTED) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+#include <esp_wifi.h>
 #endif
 
 using namespace esp_matter;
@@ -49,6 +55,137 @@ static MatterLifecycle sLifecycle = MatterLifecycle::Uninitialized;
 static node::config_t node_config;
 static node_t *deviceNode = nullptr;
 ArduinoMatter::matterEventCB ArduinoMatter::_matterEventCB = nullptr;
+ArduinoMatter::bleMemoryReleasedCB ArduinoMatter::_bleMemoryReleasedCB = nullptr;
+#if CONFIG_ENABLE_CHIPOBLE
+static bool sBleCommissioningEnabled = true;
+#else
+static bool sBleCommissioningEnabled = false;
+#endif
+static bool sBleMemoryReleaseEnabled = true;
+
+// Reports the reclaim to the sketch exactly once, whether Arduino or CHIP did it.
+static bool sBleMemoryReleasedNotified = false;
+
+static void notifyBleMemoryReleased() {
+  if (sBleMemoryReleasedNotified) {
+    return;
+  }
+  sBleMemoryReleasedNotified = true;
+  if (ArduinoMatter::_bleMemoryReleasedCB != nullptr) {
+    ArduinoMatter::_bleMemoryReleasedCB();
+  }
+}
+
+#if CONFIG_ENABLE_CHIPOBLE
+// esp_bt_mem_release() corrupts the heap while the NimBLE host task is still running,
+// so poll for its exit the way CHIP does. Bounded, so a host that never exits cannot
+// leave a timer rearming forever.
+static constexpr uint8_t kClaimBleMemoryMaxRetries = 15;  // 15 x 2 s
+static uint8_t sClaimBleMemoryRetries = 0;
+
+static void claimBleMemoryTimer(chip::System::Layer *, void *);
+
+// BLEMgr().Shutdown() deinits the CHIPoBLE host but does not return the BLE RAM to the
+// heap. That step is BLEManagerImpl::ClaimBLEMemory(), which CHIP compiles in only when
+// CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING is set, and whose target list omits ESP32-C5 even
+// then (still true in esp-matter 1.6 and CHIP master). Every prebuilt Arduino library is
+// built with that option off, so CHIP neither reclaims nor posts kBLEDeinitialized.
+// Finish the job here. btMemRelease() only acts on regions that are still reserved, so
+// builds where CHIP does reclaim are unaffected.
+static void claimBleMemory() {
+  if (xTaskGetHandle("nimble_host") != nullptr) {
+    if (++sClaimBleMemoryRetries > kClaimBleMemoryMaxRetries) {
+      log_e("NimBLE host is still running; BLE memory was not reclaimed.");
+      return;
+    }
+    chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds32(2), claimBleMemoryTimer, nullptr);
+    return;
+  }
+#ifdef CONFIG_IDF_TARGET_ESP32
+  const bt_mode releaseMode = BT_MODE_BTDM;  // NimBLE reserves both regions on the original ESP32
+#else
+  const bt_mode releaseMode = BT_MODE_BLE;
+#endif
+  if (!btMemReleased(releaseMode) && !btMemRelease(releaseMode)) {
+    log_e("Failed to release BLE memory; it stays reserved.");
+    return;
+  }
+  log_d("BLE memory reclaimed");
+  // The RAM is on the heap now, so report it regardless of what the event queue does.
+  notifyBleMemoryReleased();
+  // CHIP posts kBLEDeinitialized only from its own ClaimBLEMemory(), which this build
+  // does not compile in. Post it here so onEvent(MATTER_BLE_DEINITIALIZED) stays in
+  // step with the callback above. notifyBleMemoryReleased() is one-shot, so neither
+  // this dispatch nor a build where CHIP also posts reports a second time.
+  chip::DeviceLayer::ChipDeviceEvent event = {};
+  event.Type = chip::DeviceLayer::DeviceEventType::kBLEDeinitialized;
+  if (chip::DeviceLayer::PlatformMgr().PostEvent(&event) != CHIP_NO_ERROR) {
+    log_e("Failed to post BLE deinit event; onEvent(MATTER_BLE_DEINITIALIZED) will not fire.");
+  }
+}
+
+// CHIP timers require the System::TimerCompleteCallback signature.
+static void claimBleMemoryTimer(chip::System::Layer *, void *) {
+  claimBleMemory();
+}
+
+// Runs on the CHIP task: _Shutdown() must not run from setup().
+static void shutdownChipBleWork(intptr_t) {
+  chip::DeviceLayer::Internal::BLEMgr().Shutdown();
+  // Shutdown() only schedules the state machine that deinits the host, so arm the
+  // reclaim poll rather than releasing here.
+  sClaimBleMemoryRetries = 0;
+  claimBleMemory();
+}
+#endif
+
+static void scheduleShutdownChipBle() {
+#if CONFIG_ENABLE_CHIPOBLE
+  chip::DeviceLayer::PlatformMgr().ScheduleWork(shutdownChipBleWork, 0);
+#endif
+}
+
+#if defined(SOC_WIFI_SUPPORTED) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+// Matter exchanges little data with a controller. Init Wi-Fi here with smaller
+// buffers so CHIP's InitWiFiStack() (WIFI_INIT_CONFIG_DEFAULT from sdkconfig)
+// becomes a no-op: the first esp_wifi_init() owns the counts.
+// IDF requires rx_ba_win <= dynamic_rx_buf_num and <= 2 * static_rx_buf_num.
+// 6 is the IDF default and the Memory saving rank for Matter-sized traffic.
+static constexpr int kMatterWifiStaticRxBufNum = 4;
+static constexpr int kMatterWifiDynamicRxBufNum = 8;
+static constexpr int kMatterWifiDynamicTxBufNum = 8;
+static constexpr int kMatterWifiCacheTxBufNum = 4;
+static constexpr int kMatterWifiRxBaWin = 6;
+
+static void initMatterWiFiStack() {
+  wifi_mode_t mode;
+  if (esp_wifi_get_mode(&mode) != ESP_ERR_WIFI_NOT_INIT) {
+    log_d("Wi-Fi already initialized; Matter buffer limits were not applied.");
+    return;
+  }
+
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+  cfg.static_rx_buf_num = kMatterWifiStaticRxBufNum;
+  cfg.dynamic_rx_buf_num = kMatterWifiDynamicRxBufNum;
+  cfg.tx_buf_type = 1;
+  cfg.static_tx_buf_num = 0;
+  cfg.dynamic_tx_buf_num = kMatterWifiDynamicTxBufNum;
+  if (cfg.cache_tx_buf_num < kMatterWifiCacheTxBufNum) {
+    cfg.cache_tx_buf_num = kMatterWifiCacheTxBufNum;
+  }
+  cfg.rx_ba_win = kMatterWifiRxBaWin;
+
+  const esp_err_t err = esp_wifi_init(&cfg);
+  if (err != ESP_OK) {
+    log_e("esp_wifi_init failed: %s", esp_err_to_name(err));
+    return;
+  }
+  log_d(
+    "Wi-Fi initialized with Matter buffer limits (static_rx=%d, dynamic_rx=%d, dynamic_tx=%d, rx_ba_win=%d)", kMatterWifiStaticRxBufNum,
+    kMatterWifiDynamicRxBufNum, kMatterWifiDynamicTxBufNum, cfg.rx_ba_win
+  );
+}
+#endif
 
 // This callback is called for every attribute update. The callback implementation shall
 // handle the desired attributes and return an appropriate error code. If the attribute
@@ -58,7 +195,7 @@ static esp_err_t app_attribute_update_cb(
 ) {
   log_d(
     "Attribute update callback: type: %u, endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %u", type, endpoint_id, cluster_id, attribute_id,
-    val->val.u32
+    val != nullptr ? val->val.u32 : 0u
   );
   esp_err_t err = ESP_OK;
   MatterEndPoint *ep = (MatterEndPoint *)priv_data;  // endpoint pointer to base class
@@ -116,7 +253,12 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
         "Interface %s Address changed", event->InterfaceIpAddressChanged.Type == chip::DeviceLayer::InterfaceIpChangeType::kIpV4_Assigned ? "IPv4" : "IPV6"
       );
       break;
-    case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:       log_d("Commissioning complete"); break;
+    case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:
+      log_d("Commissioning complete");
+      if (ArduinoMatter::isBLEMemoryReleaseEnabled()) {
+        scheduleShutdownChipBle();
+      }
+      break;
     case chip::DeviceLayer::DeviceEventType::kFailSafeTimerExpired:        log_d("Commissioning failed, fail safe timer expired"); break;
     case chip::DeviceLayer::DeviceEventType::kCommissioningSessionStarted: log_d("Commissioning session started"); break;
     case chip::DeviceLayer::DeviceEventType::kCommissioningSessionStopped: log_d("Commissioning session stopped"); break;
@@ -142,7 +284,10 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
     case chip::DeviceLayer::DeviceEventType::kFabricWillBeRemoved: log_d("Fabric will be removed"); break;
     case chip::DeviceLayer::DeviceEventType::kFabricUpdated:       log_d("Fabric is updated"); break;
     case chip::DeviceLayer::DeviceEventType::kFabricCommitted:     log_d("Fabric is committed"); break;
-    case chip::DeviceLayer::DeviceEventType::kBLEDeinitialized:    log_d("BLE deinitialized and memory reclaimed"); break;
+    case chip::DeviceLayer::DeviceEventType::kBLEDeinitialized:
+      log_d("BLE deinitialized and memory reclaimed");
+      notifyBleMemoryReleased();
+      break;
     default:                                                       break;
   }
   // Check if the user-defined callback is set
@@ -180,11 +325,14 @@ void ArduinoMatter::begin() {
     return;
   }
 
-#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+#if defined(CONFIG_BT_CONTROLLER_ENABLED) && CONFIG_ENABLE_CHIPOBLE
   if (isBLECommissioningEnabled() && btMemReleased(BT_MODE_BLE)) {
-    log_e("BLE memory has been released. BLE commissioning is not available.");
-    return;
+    log_w("BLE memory has been released; commissioning will use the IP network.");
   }
+#endif
+
+#if defined(SOC_WIFI_SUPPORTED) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  initMatterWiFiStack();
 #endif
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD
@@ -209,6 +357,7 @@ void ArduinoMatter::begin() {
   }
   sLifecycle = MatterLifecycle::StackStarted;
   applyIdentityAfterStart();
+  applyBlePolicyAfterStart();
 }
 
 // Network and Commissioning Capability Queries
@@ -247,18 +396,58 @@ bool ArduinoMatter::isThreadEnabled() {
 #endif
 }
 
-bool ArduinoMatter::isBLECommissioningEnabled() {
-  // Check hardware support (SOC capabilities) AND Matter/ESP configuration
-  // BLE commissioning requires: SOC BLE support AND (CHIPoBLE or NimBLE enabled)
-#ifdef SOC_BLE_SUPPORTED
-#if CONFIG_ENABLE_CHIPOBLE
+bool ArduinoMatter::setBLECommissioningEnabled(bool enabled) {
+  if (!ensureSetBeforeBegin("setBLECommissioningEnabled")) {
+    return false;
+  }
+#if !CONFIG_ENABLE_CHIPOBLE
+  if (enabled) {
+    log_e("Matter.setBLECommissioningEnabled(true) is not supported; CHIPoBLE is not compiled in.");
+    return false;
+  }
+  sBleCommissioningEnabled = false;
   return true;
 #else
-  return false;
+  sBleCommissioningEnabled = enabled;
+  return true;
 #endif
+}
+
+bool ArduinoMatter::isBLECommissioningEnabled() {
+#if CONFIG_ENABLE_CHIPOBLE
+  return sBleCommissioningEnabled;
 #else
   return false;
 #endif
+}
+
+bool ArduinoMatter::setBLEMemoryReleaseEnabled(bool enabled) {
+  if (!ensureSetBeforeBegin("setBLEMemoryReleaseEnabled")) {
+    return false;
+  }
+#if !CONFIG_ENABLE_CHIPOBLE
+  if (!enabled) {
+    log_e("Matter.setBLEMemoryReleaseEnabled(false) has no effect; CHIPoBLE is not compiled in.");
+    return false;
+  }
+  return true;
+#else
+  sBleMemoryReleaseEnabled = enabled;
+  return true;
+#endif
+}
+
+bool ArduinoMatter::isBLEMemoryReleaseEnabled() {
+  return isBLECommissioningEnabled() && sBleMemoryReleaseEnabled;
+}
+
+void ArduinoMatter::applyBlePolicyAfterStart() {
+  // CHIPoBLE off: free BLE at begin() (on-network). CHIPoBLE on and already
+  // commissioned: honor setBLEMemoryReleaseEnabled(). First-time CHIPoBLE
+  // commission uses kCommissioningComplete instead.
+  if (!isBLECommissioningEnabled() || (isDeviceCommissioned() && isBLEMemoryReleaseEnabled())) {
+    scheduleShutdownChipBle();
+  }
 }
 
 bool ArduinoMatter::isDeviceCommissioned() {

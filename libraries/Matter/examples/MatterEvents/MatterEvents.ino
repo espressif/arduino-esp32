@@ -103,6 +103,8 @@ void onMatterEvent(matterEvent_t eventType, const chip::DeviceLayer::ChipDeviceE
     case MATTER_OTA_STATE_CHANGED:             Serial.println("OTA State Changed"); break;
     case MATTER_SERVER_READY:                  Serial.println("Server Ready"); break;
     case MATTER_BLE_DEINITIALIZED:             Serial.println("BLE Deinitialized"); break;
+    case MATTER_SECURE_SESSION_ESTABLISHED:    Serial.println("Secure Session Established"); break;
+    case MATTER_FACTORY_RESET:                 Serial.println("Factory Reset Started"); break;
     case MATTER_COMMISSIONING_SESSION_STARTED: Serial.println("Commissioning Session Started"); break;
     case MATTER_COMMISSIONING_SESSION_STOPPED: Serial.println("Commissioning Session Stopped"); break;
     case MATTER_COMMISSIONING_WINDOW_OPEN:     Serial.println("Commissioning Window Opened"); break;
@@ -111,7 +113,6 @@ void onMatterEvent(matterEvent_t eventType, const chip::DeviceLayer::ChipDeviceE
     case MATTER_FABRIC_REMOVED:                Serial.println("Fabric Removed"); break;
     case MATTER_FABRIC_COMMITTED:              Serial.println("Fabric Committed"); break;
     case MATTER_FABRIC_UPDATED:                Serial.println("Fabric Updated"); break;
-    case MATTER_ESP32_SPECIFIC_EVENT:          Serial.println("Sending ESP32 Platform Specific Events"); break;
     case MATTER_ESP32_PUBLIC_SPECIFIC_EVENT:   Serial.println("Next Event Has Populated EventInfo"); break;
     default:
       // If the event type is not recognized, print "Unknown" and the event ID

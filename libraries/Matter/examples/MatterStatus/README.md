@@ -16,7 +16,10 @@ This example demonstrates how to check enabled Matter features and connectivity 
 
 ### Note on Commissioning:
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
+BLE commissioning is present only when **CHIPoBLE** is compiled in (`CONFIG_ENABLE_CHIPOBLE`), which uses **NimBLE** as the BLE host when `CONFIG_BT_NIMBLE_ENABLED` is set.
+
+- **Arduino IDE (precompiled Matter):** original **ESP32** uses Bluedroid and does **not** include CHIPoBLE. **ESP32-S2** has no Bluetooth. Set Wi-Fi credentials in the sketch. C3/C6/S3 use NimBLE + CHIPoBLE.
+- **Arduino as an ESP-IDF component:** original ESP32 can enable `CONFIG_BT_ENABLED`, `CONFIG_BT_NIMBLE_ENABLED`, and `CONFIG_ENABLE_CHIPOBLE` and then commission over BLE.
 - **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been precompiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project using Arduino as an IDF Component and to disable the Matter Wi-Fi station feature.
 - **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been precompiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
 
@@ -28,6 +31,7 @@ This example demonstrates how to check enabled Matter features and connectivity 
   - `isWiFiAccessPointEnabled()`: Checks if Wi-Fi AP mode is supported and enabled
   - `isThreadEnabled()`: Checks if Thread network is supported and enabled
   - `isBLECommissioningEnabled()`: Checks if BLE commissioning is supported and enabled
+  - `isBLEMemoryReleaseEnabled()`: Checks if BLE RAM will be released after CHIPoBLE commissioning
 - **Connection status monitoring**: Reports commissioned / connected / radios every 5 seconds. Samples `isOnline()` every 2.5 seconds and prints a line when any of those flags change
   - `isWiFiConnected()`: Checks Wi-Fi connection status (if Wi-Fi Station is enabled)
   - `isThreadConnected()`: Checks Thread connection status (if Thread is enabled)
@@ -157,6 +161,7 @@ The example demonstrates the use of capability query functions that check both h
 - **`Matter.isWiFiAccessPointEnabled()`**: Returns `true` if the device supports Wi-Fi AP mode and it's enabled in Matter configuration
 - **`Matter.isThreadEnabled()`**: Returns `true` if the device supports Thread networking and it's enabled in Matter configuration
 - **`Matter.isBLECommissioningEnabled()`**: Returns `true` if the device supports BLE and BLE commissioning is enabled
+- **`Matter.isBLEMemoryReleaseEnabled()`**: Returns `true` if CHIPoBLE is on and BLE RAM will be released after commissioning
 
 These functions are useful for:
 - Determining which features are available on the current device

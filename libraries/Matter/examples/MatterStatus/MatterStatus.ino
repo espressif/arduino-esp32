@@ -18,8 +18,8 @@
 
 #include <Arduino.h>
 #include <Matter.h>
-// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
-#if !CONFIG_ENABLE_CHIPOBLE  // ESP32 and ESP32-S2 do not support BLE commissioning
+// CONFIG_ENABLE_CHIPOBLE is set when this build includes Matter BLE commissioning (NimBLE + CHIPoBLE).
+#if !CONFIG_ENABLE_CHIPOBLE
 // if the device can be commissioned using BLE, WiFi is not used - save flash space
 #include <WiFi.h>
 // WiFi is manually set and started
@@ -68,9 +68,10 @@ void setup() {
   Serial.printf("WiFi Access Point Enabled: %s\r\n", Matter.isWiFiAccessPointEnabled() ? "YES" : "NO");
   Serial.printf("Thread Enabled: %s\r\n", Matter.isThreadEnabled() ? "YES" : "NO");
   Serial.printf("BLE Commissioning Enabled: %s\r\n", Matter.isBLECommissioningEnabled() ? "YES" : "NO");
+  Serial.printf("BLE Memory Release Enabled: %s\r\n", Matter.isBLEMemoryReleaseEnabled() ? "YES" : "NO");
   Serial.println();
 
-// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
+// Connect Wi-Fi in setup() only when this build has no CHIPoBLE.
 #if !CONFIG_ENABLE_CHIPOBLE
   // We start by connecting to a WiFi network
   if (Matter.isWiFiStationEnabled()) {

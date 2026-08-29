@@ -89,6 +89,7 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%
 ===> Got a Matter Event: CHIPoBLE Advertising Change
 ===> Got a Matter Event: Commissioning Window Opened
 ===> Got a Matter Event: Commissioning Session Started
+===> Got a Matter Event: Secure Session Established
 ===> Got a Matter Event: Commissioning Complete
 ===> Got a Matter Event: Operational Network Started
 ===> Got a Matter Event: Operational Network Enabled
@@ -113,7 +114,7 @@ Matter Node is decommissioned. Commissioning widget shall start over.
 The example continuously monitors and displays Matter events to the Serial Monitor. This includes:
 
 - **Connectivity Events**: Wi-Fi, Thread, Internet connectivity changes, IP address assignments
-- **Commissioning Events**: Commissioning session start/stop, commissioning window open/close, commissioning complete
+- **Commissioning Events**: Commissioning session start/stop, commissioning window open/close, secure session established, commissioning complete
 - **Fabric Events**: Fabric committed, updated, removed
 - **BLE Events**: CHIPoBLE connection established/closed, advertising changes
 - **Network Events**: Operational network started/enabled, interface IP address changes

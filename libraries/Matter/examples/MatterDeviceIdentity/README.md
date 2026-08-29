@@ -8,7 +8,7 @@ Use the **generated** pairing codes printed after `Matter.begin()`. Before `begi
 
 | SoC | Wi-Fi | Thread | BLE Commissioning | LED | Status |
 | --- | ---- | ------ | ----------------- | --- | ------ |
-| ESP32 | ✅ | ❌ | ❌ | Required | Fully supported |
+| ESP32 | ✅ | ❌ | IDE: ❌ / IDF NimBLE+CHIPoBLE: ✅ | Required | Fully supported |
 | ESP32-S2 | ✅ | ❌ | ❌ | Required | Fully supported |
 | ESP32-S3 | ✅ | ❌ | ✅ | Required | Fully supported |
 | ESP32-C3 | ✅ | ❌ | ✅ | Required | Fully supported |
@@ -18,9 +18,14 @@ Use the **generated** pairing codes printed after `Matter.begin()`. Before `begi
 
 ### Note on Commissioning
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. Set Wi-Fi credentials in the sketch.
+BLE commissioning is compiled in only when **CHIPoBLE** is enabled (`CONFIG_ENABLE_CHIPOBLE`). That is independent of the SoC name:
+
+- **Arduino IDE (precompiled Matter):** original **ESP32** uses Bluedroid and does **not** include CHIPoBLE. **ESP32-S2** has no Bluetooth. Set Wi-Fi credentials in the sketch (`#if !CONFIG_ENABLE_CHIPOBLE`). C3/C6/S3 (and Thread prebuilds) use NimBLE + CHIPoBLE.
+- **Arduino as an ESP-IDF component:** original ESP32 can use CHIPoBLE if you set `CONFIG_BT_ENABLED=y`, `CONFIG_BT_NIMBLE_ENABLED=y`, and `CONFIG_ENABLE_CHIPOBLE=y`. This sketch then skips the hardcoded Wi-Fi path and commissions over BLE.
 - **ESP32-C6** Arduino Matter is precompiled Wi-Fi only. Thread-only needs Arduino as an IDF component.
 - **ESP32-C5** Arduino Matter is precompiled Thread only.
+
+The BLE Commissioning column in the table is the **Arduino IDE prebuild**.
 
 ## Call order
 

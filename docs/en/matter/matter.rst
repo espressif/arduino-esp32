@@ -106,7 +106,7 @@ The ``Matter`` class is implemented as a singleton, meaning there's only one ins
 
 The ``Matter`` class provides the following key methods:
 
-* ``begin()``: Initializes the Matter stack
+* ``begin()``: Initializes the Matter stack. On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts. Skipped if the sketch already called ``WiFi.begin()`` / ``WiFi.mode()``.
 * ``isDeviceCommissioned()``: Checks if the device is commissioned (a fabric exists)
 * ``isWiFiConnected()``: Checks Wi-Fi connection status
 * ``isThreadConnected()``: Checks Thread connection status
@@ -115,11 +115,61 @@ The ``Matter`` class provides the following key methods:
 * ``isWiFiStationEnabled()``: Checks if Wi-Fi Station mode is supported and enabled
 * ``isWiFiAccessPointEnabled()``: Checks if Wi-Fi AP mode is supported and enabled
 * ``isThreadEnabled()``: Checks if Thread network is supported and enabled
-* ``isBLECommissioningEnabled()``: Checks if BLE commissioning is supported and enabled
+* ``isBLECommissioningEnabled()``: Checks if BLE commissioning is compiled in **and** still enabled (see ``setBLECommissioningEnabled()``)
+* ``setBLECommissioningEnabled()``: Enables or disables CHIPoBLE. Call before ``Matter.begin()``. ``false`` forces on-network commissioning (connect Wi-Fi or Ethernet first) and releases BLE RAM
+* ``setBLEMemoryReleaseEnabled()``: After CHIPoBLE commissioning, release BLE RAM (default ``true``). Call before ``Matter.begin()``. Only takes effect when ``CONFIG_ENABLE_CHIPOBLE`` is set and CHIPoBLE commissioning is enabled. No effect when CHIPoBLE is compiled out. Arduino-as-IDF-component builds that keep BLE must also set ``CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n``
+* ``isBLEMemoryReleaseEnabled()``: ``true`` when CHIPoBLE is on and BLE RAM will be released after commissioning
 * ``decommission()``: Factory resets the device
 * ``getManualPairingCode()``: Gets the manual pairing code for commissioning (generated after ``begin()``; empty and a warning before ``begin()``)
 * ``getOnboardingQRCodeUrl()``: Gets the QR code URL for commissioning (generated after ``begin()``; empty and a warning before ``begin()``)
-* ``onEvent()``: Sets a callback for Matter events
+* ``onEvent()``: Sets a callback for Matter events. The ``ChipDeviceEvent`` pointer is only valid during the callback; do not store it
+* ``onBLEMemoryReleased()``: Called when CHIPoBLE BLE RAM has been returned to the heap (same moment as ``MATTER_BLE_DEINITIALIZED``). Register before ``Matter.begin()``. Runs on the CHIP task: do not block; allocate large buffers from ``loop()``. May never run if CHIPoBLE is off or ``setBLEMemoryReleaseEnabled(false)``
+
+.. warning::
+
+   A Matter sketch owns the CHIPoBLE host (NimBLE when that stack is selected). Do **not** use the Arduino ``BLE`` library (``BLE.h`` / ``BLEDevice``) in the same sketch. After Matter starts CHIPoBLE — or after it disables CHIPoBLE and releases BLE RAM, or after CHIPoBLE commissioning with ``setBLEMemoryReleaseEnabled(true)`` (the default) — ``BLEDevice::init()`` will fail or crash. ``setBLECommissioningEnabled(false)`` does not free the radio for Arduino BLE.
+
+CHIPoBLE and NimBLE
+^^^^^^^^^^^^^^^^^^^
+
+Matter BLE commissioning is **CHIPoBLE**. The Arduino Matter APIs follow ``CONFIG_ENABLE_CHIPOBLE`` at build time, not a hardcoded SoC list.
+
+* **CHIPoBLE** (``CONFIG_ENABLE_CHIPOBLE``): CHIP compiles the BLE commissioning layer and ``BLEMgr()``. Arduino ``isBLECommissioningEnabled()`` can be true only in this build.
+* **NimBLE** (``CONFIG_BT_NIMBLE_ENABLED``): ESP-Matter selects the NimBLE ``BLEManagerImpl`` (host + controller). This is the stack used for CHIPoBLE RAM reclaim after ``BLEMgr().Shutdown()``.
+* **Bluetooth** (``CONFIG_BT_ENABLED``): If Bluetooth is off in sdkconfig, CHIP disables CHIPoBLE. The Arduino setters remain in the API and return ``false`` / no-op as documented.
+
+**Arduino IDE (precompiled Matter libraries):** CHIPoBLE is on for targets built with NimBLE (ESP32-C3/C6/S3, Thread prebuilds such as ESP32-C5/H2). Original **ESP32** prebuilds use the Bluedroid host and **do not** compile CHIPoBLE. **ESP32-S2** has no Bluetooth hardware, so CHIPoBLE is never available. Example sketches that ``#if !CONFIG_ENABLE_CHIPOBLE`` connect Wi-Fi in ``setup()`` match this.
+
+**Arduino as an ESP-IDF component:** You choose the stacks in sdkconfig. Original ESP32 can run CHIPoBLE if you set ``CONFIG_BT_ENABLED=y``, ``CONFIG_BT_NIMBLE_ENABLED=y``, and ``CONFIG_ENABLE_CHIPOBLE=y``. The same sketch then uses BLE commissioning (no hardcoded Wi-Fi) because it keys off ``CONFIG_ENABLE_CHIPOBLE``. To keep NimBLE after commissioning, also set ``CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n`` and call ``Matter.setBLEMemoryReleaseEnabled(false)`` before ``Matter.begin()``.
+
+Waiting for BLE RAM
+^^^^^^^^^^^^^^^^^^^
+
+``BLEMgr().Shutdown()`` is asynchronous. Heap at ``Matter.begin()`` or at ``MATTER_COMMISSIONING_COMPLETE`` is not the post-reclaim size. ``Shutdown()`` only deinitializes the CHIPoBLE host; it does not return the RAM. CHIP reclaims it in ``BLEManagerImpl::ClaimBLEMemory()``, which it compiles in only when ``CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING`` is set — off in the precompiled Arduino libraries — and which has no release branch for every SoC even then. The Arduino Matter library therefore performs the reclaim itself: it waits for the NimBLE host task to exit, releases the BLE regions to the heap, then posts ``kBLEDeinitialized``. Both ``onBLEMemoryReleased()`` and ``MATTER_BLE_DEINITIALIZED`` fire from that event, exactly once, whichever path did the work.
+
+Reclaim is not instant. Releasing the BLE regions while the NimBLE host task still runs would corrupt the heap, so the library polls for that task to exit every 2 seconds for up to 30 seconds. If the host never exits it logs an error and the callback does not run.
+
+Register ``Matter.onBLEMemoryReleased()`` **before** ``Matter.begin()``. Use it to set a flag; allocate a large buffer from ``loop()``:
+
+.. code-block:: arduino
+
+    volatile bool bleRamFree = false;
+
+    void setup() {
+      Matter.onBLEMemoryReleased([]() { bleRamFree = true; });
+      Light.begin();
+      Matter.begin();
+    }
+
+    void loop() {
+      static uint8_t *buf = nullptr;
+      if (bleRamFree && buf == nullptr) {
+        bleRamFree = false;
+        buf = (uint8_t *)malloc(16 * 1024);
+      }
+    }
+
+The callback may never run (no CHIPoBLE, ``setBLEMemoryReleaseEnabled(false)``, or a reclaim that timed out). Do not wait forever. ``onEvent()`` still delivers ``MATTER_BLE_DEINITIALIZED`` if you need other Matter events in the same sketch. See ``MatterCHIPoBLERelease``.
 
 Device identity
 ^^^^^^^^^^^^^^^
@@ -136,6 +186,8 @@ Call these setters **before** ``Matter.begin()``. After ``begin()`` they log a w
     Matter.setHardwareVersionString("RevA");     // max 64
     Matter.setSetupDiscriminator(0xF01);         // 0–0xFFF; Arduino test default 0xF00
     Matter.setSetupPasscode(20202024);           // valid PIN; test default 20202021
+    Matter.setBLECommissioningEnabled(false);    // optional: on-network only (Wi-Fi first); releases BLE RAM
+    // Matter.setBLEMemoryReleaseEnabled(false); // only if CHIPoBLE is left on: keep NimBLE after commission
     Light.begin();
     Matter.begin();
 
@@ -153,6 +205,8 @@ Identity and commissioning APIs (all setters must run before ``Matter.begin()``)
 * ``setHardwareVersionString()``
 * ``setSetupDiscriminator()``
 * ``setSetupPasscode()``
+* ``setBLECommissioningEnabled()``
+* ``setBLEMemoryReleaseEnabled()``
 
 Runtime status
 ^^^^^^^^^^^^^^
@@ -166,8 +220,14 @@ Runtime status
 +-----------------------------------+--------------------------------------------------------------+
 | ``isOnline()``                    | A controller has an active CASE session (until idle-evicted) |
 +-----------------------------------+--------------------------------------------------------------+
+| ``isBLECommissioningEnabled()``   | CHIPoBLE is compiled in and still enabled                    |
++-----------------------------------+--------------------------------------------------------------+
+| ``isBLEMemoryReleaseEnabled()``   | CHIPoBLE is on and BLE RAM will be released after commission |
++-----------------------------------+--------------------------------------------------------------+
 
 Do not gate physical outputs (LEDs) on ``isOnline()``. Restore last local state after commissioned. Use ``isOnline()`` for hub-discovery logs. A CASE session can remain active after the user leaves the app, until the hub or CHIP tears it down. See the Matter Status example.
+
+See ``MatterOnNetworkWiFi`` (disable CHIPoBLE, Wi-Fi first) and ``MatterCHIPoBLERelease`` (CHIPoBLE then BLE RAM release, ``onBLEMemoryReleased()``).
 
 MatterEndPoint
 **************
@@ -238,6 +298,8 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter Status** - Demonstrates how to check enabled Matter features and connectivity status, including ``isDeviceCommissioned()``, ``isDeviceConnected()``, and ``isOnline()``. Implements a basic on/off light and periodically reports capability and connection status. `View Matter Status code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterStatus>`_
 * **Matter Device Identity** - Sets VendorName, ProductName, DeviceName (NodeLabel), SerialNumber, hardware version, and custom commissioning codes on ``Matter`` before ``begin()``. `View Matter Device Identity code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterDeviceIdentity>`_
 * **Matter Events** - Shows how to monitor and handle Matter events. Provides a comprehensive view of all Matter events during device operation. `View Matter Events code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEvents>`_
+* **Matter CHIPoBLE Release** - CHIPoBLE commissioning, then BLE RAM reclaim. Uses ``onBLEMemoryReleased()`` and allocates a demo buffer from ``loop()``. `View Matter CHIPoBLE Release code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterCHIPoBLERelease>`_
+* **Matter On-Network Wi-Fi** - Disables CHIPoBLE, connects Wi-Fi first, and prints heap from ``onBLEMemoryReleased()``. `View Matter On-Network Wi-Fi code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterOnNetworkWiFi>`_
 * **Matter Commission Test** - Tests Matter commissioning functionality with automatic decommissioning after a 30-second delay for continuous testing cycles. `View Matter Commission Test code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterCommissionTest>`_
 
 **Lighting Examples:**
@@ -293,7 +355,7 @@ Common Issues
   * Ensure the Matter hub is in pairing mode
   * Check that Wi-Fi or Thread connectivity is properly configured
   * Verify the QR code or pairing code is correct
-  * For ESP32/ESP32-S2, ensure Wi-Fi credentials are set in the code
+  * For builds without CHIPoBLE (``CONFIG_ENABLE_CHIPOBLE=n``: Arduino IDE on original ESP32 or ESP32-S2, or Bluetooth off), set Wi-Fi credentials in the sketch. Original ESP32 can use CHIPoBLE when built as an IDF component with NimBLE and ``CONFIG_ENABLE_CHIPOBLE``.
 
 **Commissioning fails**
   * Try factory resetting the device by calling ``Matter.decommission()``
@@ -354,3 +416,5 @@ For debugging and monitoring Matter events, you can set up an event callback:
     });
 
 This allows you to monitor commissioning progress, connectivity changes, and other Matter events in real-time.
+
+To run code only after BLE RAM is back on the heap, use ``Matter.onBLEMemoryReleased()`` (see **Waiting for BLE RAM** above). ``MATTER_BLE_DEINITIALIZED`` is the matching ``onEvent()`` type.
