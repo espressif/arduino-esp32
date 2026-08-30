@@ -275,7 +275,10 @@ size_t Preferences::putString(const char *key, const char *value) {
     log_e("nvs_commit fail: %s %s", key, nvs_error(err));
     return 0;
   }
-  return strlen(value);
+  // Empty string stores successfully but strlen is 0; return 1 so callers
+  // treating 0 as failure still see success.
+  const size_t len = strlen(value);
+  return len > 0 ? len : 1;
 }
 
 size_t Preferences::putString(const char *key, const String value) {

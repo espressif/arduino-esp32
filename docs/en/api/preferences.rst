@@ -375,7 +375,8 @@ Arduino-esp32 Preferences API
          - if ``String``, a valid Arduino String type.
 
    **Returns**
-      * if successful: the number of bytes stored; ``0`` otherwise.
+      * if successful: the number of bytes stored; for an empty string ``1`` is returned
+        so success is distinguishable from failure; ``0`` otherwise.
 
    **Notes**
       * Attempting to store a value without a namespace being open in read-write mode will fail.

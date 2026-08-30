@@ -2,7 +2,7 @@
  * NVS/Preferences Validation Test
  *
  * Covers: all typed put/get (Char, UChar, Short, UShort, Int, UInt, Long,
- * ULong, Long64, ULong64, Float, Double, Bool), String (String + char*),
+ * ULong, Long64, ULong64, Float, Double, Bool), String (String + char* + empty),
  * Bytes/struct, isKey, getType, freeEntries, remove, clear,
  * multi-namespace isolation, and persistence across reboots.
  *
@@ -142,6 +142,14 @@ void test_string_cstr(void) {
   size_t len = prefs.getString("sc", buf, sizeof(buf));
   TEST_ASSERT_GREATER_THAN(0, len);
   TEST_ASSERT_EQUAL_STRING(val, buf);
+  prefs.end();
+}
+
+void test_string_empty(void) {
+  prefs.begin("test-str", false);
+  TEST_ASSERT_GREATER_OR_EQUAL(1, prefs.putString("se", ""));
+  TEST_ASSERT_TRUE(prefs.isKey("se"));
+  TEST_ASSERT_EQUAL_STRING("", prefs.getString("se", "default").c_str());
   prefs.end();
 }
 
@@ -333,6 +341,7 @@ void setup() {
     RUN_TEST(test_bool);
     RUN_TEST(test_string_object);
     RUN_TEST(test_string_cstr);
+    RUN_TEST(test_string_empty);
     RUN_TEST(test_bytes);
     RUN_TEST(test_struct);
     RUN_TEST(test_is_key);
