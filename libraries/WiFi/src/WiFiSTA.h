@@ -84,6 +84,9 @@ public:
   bool setAutoReconnect(bool autoReconnect);
   bool getAutoReconnect();
 
+  bool setInactiveTime(uint16_t seconds);
+  uint16_t getInactiveTime();
+
   // Next group functions must be called before WiFi.begin()
   void setMinSecurity(wifi_auth_mode_t minSecurity);  // Default is WIFI_AUTH_WPA2_PSK
   void setScanMethod(wifi_scan_method_t scanMethod);  // Default is WIFI_FAST_SCAN
@@ -170,6 +173,9 @@ public:
 
   bool setAutoReconnect(bool autoReconnect);
   bool getAutoReconnect();
+
+  bool setInactiveTime(uint16_t seconds);
+  uint16_t getInactiveTime();
 
   uint8_t waitForConnectResult(unsigned long timeoutLength = 60000);
 
