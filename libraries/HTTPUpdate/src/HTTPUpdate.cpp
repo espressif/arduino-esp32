@@ -154,6 +154,7 @@ String HTTPUpdate::getLastErrorString(void) {
     case HTTP_UE_BIN_FOR_WRONG_FLASH:      return "New Binary Does Not Fit Flash Size";
     case HTTP_UE_NO_PARTITION:             return "Partition Could Not be Found";
     case HTTP_UE_SERVER_FAULTY_SHA256:     return "Wrong SHA256";
+    case HTTP_UE_SERVER_FAULTY_SHA512:     return "Wrong SHA512";
   }
 
   return String();
@@ -199,12 +200,15 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   // not already set. Response headers can still override a successful prefetch.
   String md5;
   String sha256;
+  String sha512;
   uint8_t sidecarFailures = 0;
   if (_checksumSidecarFetch) {
-    uint8_t requested =
-      (!_md5SumUrl.isEmpty() && _md5Sum.isEmpty() ? SIDECAR_MD5_FAILED : 0) | (!_sha256SumUrl.isEmpty() && _sha256Sum.isEmpty() ? SIDECAR_SHA256_FAILED : 0);
-    sidecarFailures =
-      _checksumSidecarFetch(http.getClient(), _md5SumUrl, _sha256SumUrl, requested, md5, sha256, _httpClientTimeout, _followRedirects, http.getRedirectLimit());
+    uint8_t requested = (!_md5SumUrl.isEmpty() && _md5Sum.isEmpty() ? SIDECAR_MD5_FAILED : 0)
+                      | (!_sha256SumUrl.isEmpty() && _sha256Sum.isEmpty() ? SIDECAR_SHA256_FAILED : 0)
+                      | (!_sha512SumUrl.isEmpty() && _sha512Sum.isEmpty() ? SIDECAR_SHA512_FAILED : 0);
+    sidecarFailures = _checksumSidecarFetch(
+      http.getClient(), _md5SumUrl, _sha256SumUrl, _sha512SumUrl, requested, md5, sha256, sha512, _httpClientTimeout, _followRedirects, http.getRedirectLimit()
+    );
   }
 
   // use HTTP/1.0 for update since the update handler not support any transfer Encoding
@@ -259,7 +263,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
     http.setAuthorization(_auth.c_str());
   }
 
-  const char *headerkeys[] = {"x-MD5", "x-SHA256"};
+  const char *headerkeys[] = {"x-MD5", "x-SHA256", "x-SHA512"};
   size_t headerkeyssize = sizeof(headerkeys) / sizeof(char *);
 
   // track these headers
@@ -280,7 +284,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   log_d(" - code: %d\n", code);
   log_d(" - len: %d\n", len);
 
-  // Precedence: setMD5sum()/setSHA256sum() > response header > sidecar URL
+  // Precedence: setMD5sum()/setSHA256sum()/setSHA512sum() > response header > sidecar URL
   if (_md5Sum.length()) {
     md5 = _md5Sum;
   } else if (http.hasHeader("x-MD5")) {
@@ -305,6 +309,19 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   }
   if (sha256.length()) {
     log_d(" - SHA256: %s\n", sha256.c_str());
+  }
+
+  if (_sha512Sum.length()) {
+    sha512 = _sha512Sum;
+  } else if (http.hasHeader("x-SHA512")) {
+    sha512 = http.header("x-SHA512");
+  } else if ((sidecarFailures & SIDECAR_SHA512_FAILED) && code == HTTP_CODE_OK && len > 0) {
+    _lastError = HTTP_UE_SERVER_FAULTY_SHA512;
+    http.end();
+    return HTTP_UPDATE_FAILED;
+  }
+  if (sha512.length()) {
+    log_d(" - SHA512: %s\n", sha512.c_str());
   }
 
   log_d("ESP32 info:\n");
@@ -414,7 +431,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
                     }
 */
           }
-          if (runUpdate(*tcp, len, md5, command, sha256)) {
+          if (runUpdate(*tcp, len, md5, command, sha256, sha512)) {
             ret = HTTP_UPDATE_OK;
             log_d("Update ok\n");
             http.end();
@@ -469,9 +486,10 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
  * @param md5 String
  * @param command int
  * @param sha256 String
+ * @param sha512 String
  * @return true if Update ok
  */
-bool HTTPUpdate::runUpdate(Stream &in, uint32_t size, String md5, int command, String sha256) {
+bool HTTPUpdate::runUpdate(Stream &in, uint32_t size, String md5, int command, String sha256, String sha512) {
   if (!_updater) {
     return false;
   }
@@ -507,6 +525,15 @@ bool HTTPUpdate::runUpdate(Stream &in, uint32_t size, String md5, int command, S
     if (!_updater->setSHA256(sha256.c_str())) {
       _lastError = HTTP_UE_SERVER_FAULTY_SHA256;
       log_e("Update.setSHA256 failed! (%s)\n", sha256.c_str());
+      _updater->abort();
+      return false;
+    }
+  }
+
+  if (sha512.length()) {
+    if (!_updater->setSHA512(sha512.c_str())) {
+      _lastError = HTTP_UE_SERVER_FAULTY_SHA512;
+      log_e("Update.setSHA512 failed! (%s)\n", sha512.c_str());
       _updater->abort();
       return false;
     }

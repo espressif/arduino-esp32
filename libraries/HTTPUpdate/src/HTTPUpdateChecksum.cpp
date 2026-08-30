@@ -1,10 +1,10 @@
 /**
  *
  * @file HTTPUpdateChecksum.cpp
- * @brief Optional MD5/SHA-256 checksum sidecar fetch for HTTPUpdate.
+ * @brief Optional MD5/SHA-256/SHA-512 checksum sidecar fetch for HTTPUpdate.
  *
- * Linked only when a sketch calls setMD5sumUrl() / setSHA256sumUrl()
- * (referenced via a function pointer assigned in those setters).
+ * Linked only when a sketch calls setMD5sumUrl() / setSHA256sumUrl() /
+ * setSHA512sumUrl() (referenced via a function pointer assigned in those setters).
  *
  * Copyright (c) 2026. All rights reserved.
  * This file is part of the ESP32 Http Updater.
@@ -31,8 +31,8 @@
 static const size_t HTTPUPDATE_SIDECAR_MAX_SCAN = 512;
 
 static uint8_t httpUpdateFetchChecksumSidecars(
-  NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
-  uint16_t redirectLimit
+  NetworkClient *client, const String &md5Url, const String &sha256Url, const String &sha512Url, uint8_t requested, String &md5, String &sha256, String &sha512,
+  int timeout, followRedirects_t follow, uint16_t redirectLimit
 );
 
 static bool httpUpdateIsHexDigit(int c) {
@@ -95,7 +95,7 @@ private:
   size_t _tokenLength = 0;
   bool _found = false;
   bool _failed = false;
-  char _token[65] = {};
+  char _token[129] = {};
 };
 
 enum HTTPUpdateReadResult {
@@ -217,12 +217,20 @@ static bool httpUpdateParseChunkedBody(NetworkClient &stream, HTTPUpdateChecksum
 
 void HTTPUpdate::setMD5sumUrl(const String &url) {
   _md5SumUrl = url;
-  _checksumSidecarFetch = (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
+  _checksumSidecarFetch =
+    (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty() || !_sha512SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
 }
 
 void HTTPUpdate::setSHA256sumUrl(const String &url) {
   _sha256SumUrl = url;
-  _checksumSidecarFetch = (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
+  _checksumSidecarFetch =
+    (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty() || !_sha512SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
+}
+
+void HTTPUpdate::setSHA512sumUrl(const String &url) {
+  _sha512SumUrl = url;
+  _checksumSidecarFetch =
+    (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty() || !_sha512SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
 }
 
 static bool httpUpdateFetchChecksumSidecar(
@@ -230,7 +238,7 @@ static bool httpUpdateFetchChecksumSidecar(
 ) {
   outDigest = String();
 
-  if (url.isEmpty() || (digestLen != 32 && digestLen != 64)) {
+  if (url.isEmpty() || (digestLen != 32 && digestLen != 64 && digestLen != 128)) {
     log_e("invalid sidecar URL or digest length %u", (unsigned)digestLen);
     return false;
   }
@@ -298,8 +306,8 @@ static bool httpUpdateFetchChecksumSidecar(
 }
 
 static uint8_t httpUpdateFetchChecksumSidecars(
-  NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
-  uint16_t redirectLimit
+  NetworkClient *client, const String &md5Url, const String &sha256Url, const String &sha512Url, uint8_t requested, String &md5, String &sha256, String &sha512,
+  int timeout, followRedirects_t follow, uint16_t redirectLimit
 ) {
   uint8_t failures = 0;
   if (!client && requested) {
@@ -311,6 +319,10 @@ static uint8_t httpUpdateFetchChecksumSidecars(
   if ((requested & HTTPUpdate::SIDECAR_SHA256_FAILED)
       && (!client || !httpUpdateFetchChecksumSidecar(*client, sha256Url, 64, sha256, timeout, follow, redirectLimit))) {
     failures |= HTTPUpdate::SIDECAR_SHA256_FAILED;
+  }
+  if ((requested & HTTPUpdate::SIDECAR_SHA512_FAILED)
+      && (!client || !httpUpdateFetchChecksumSidecar(*client, sha512Url, 128, sha512, timeout, follow, redirectLimit))) {
+    failures |= HTTPUpdate::SIDECAR_SHA512_FAILED;
   }
   return failures;
 }

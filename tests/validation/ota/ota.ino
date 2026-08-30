@@ -52,8 +52,10 @@ void setUp(void) {}
 void tearDown(void) {
   httpUpdate.setMD5sum("");
   httpUpdate.setSHA256sum("");
+  httpUpdate.setSHA512sum("");
   httpUpdate.setMD5sumUrl("");
   httpUpdate.setSHA256sumUrl("");
+  httpUpdate.setSHA512sumUrl("");
   httpUpdate.setFollowRedirects(HTTPC_DISABLE_FOLLOW_REDIRECTS);
   httpUpdate.setAuthorization("", "");
   httpUpdate.setAuthorization("");
@@ -230,6 +232,55 @@ void test_update_sha256_roundtrip(void) {
   TEST_ASSERT_TRUE(Update.end());
   TEST_ASSERT_TRUE(String(correctMd5).equalsIgnoreCase(Update.md5String()));
   TEST_ASSERT_TRUE(String(correctSha256).equalsIgnoreCase(Update.sha256String()));
+}
+
+void test_update_sha512_format(void) {
+  TEST_ASSERT_TRUE(Update.begin(1024));
+  TEST_ASSERT_FALSE(Update.setSHA512(
+    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3z"
+  ));
+  TEST_ASSERT_TRUE(Update.setSHA512(
+    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+  ));
+  Update.abort();
+}
+
+void test_update_sha512_roundtrip(void) {
+  static const uint8_t data[64] = {0xE9, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+                                   0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+                                   0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
+                                   0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F};
+  // sha512sum/sha256sum/md5sum of the 64 bytes above, precomputed offline.
+  const char *correctSha512 =
+    "8e07336f5f9e9fdef71ecca9624b26f47918fe27078b541479e0c94cb8610137f2f30a5e80a2ea5c1890e60f2854f4217f964eebe270cc94881c2d2688c05250";
+  const char *wrongSha512 =
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+  const char *correctSha256 = "ac4a16884561961261469a1a0d7dd650eb0beb0e7dd9ade9d85d0af56bcdb061";
+  const char *correctMd5 = "89f3ce2a19779ce37dc6b27f3f57eb18";
+
+  TEST_ASSERT_TRUE(Update.begin(sizeof(data), U_SPIFFS));
+  TEST_ASSERT_TRUE(Update.setSHA512(correctSha512));
+  TEST_ASSERT_EQUAL(sizeof(data), Update.write((uint8_t *)data, sizeof(data)));
+  TEST_ASSERT_TRUE(Update.end());
+  TEST_ASSERT_TRUE(String(correctSha512).equalsIgnoreCase(Update.sha512String()));
+
+  TEST_ASSERT_TRUE(Update.begin(sizeof(data), U_SPIFFS));
+  Update.setSHA512(wrongSha512);
+  Update.write((uint8_t *)data, sizeof(data));
+  TEST_ASSERT_FALSE(Update.end());
+  TEST_ASSERT_EQUAL(UPDATE_ERROR_SHA512, Update.getError());
+  TEST_ASSERT_TRUE(Update.sha512String().isEmpty());
+
+  // MD5 + SHA-256 + SHA-512 together: all verified independently.
+  TEST_ASSERT_TRUE(Update.begin(sizeof(data), U_SPIFFS));
+  TEST_ASSERT_TRUE(Update.setMD5(correctMd5));
+  TEST_ASSERT_TRUE(Update.setSHA256(correctSha256));
+  TEST_ASSERT_TRUE(Update.setSHA512(correctSha512));
+  TEST_ASSERT_EQUAL(sizeof(data), Update.write((uint8_t *)data, sizeof(data)));
+  TEST_ASSERT_TRUE(Update.end());
+  TEST_ASSERT_TRUE(String(correctMd5).equalsIgnoreCase(Update.md5String()));
+  TEST_ASSERT_TRUE(String(correctSha256).equalsIgnoreCase(Update.sha256String()));
+  TEST_ASSERT_TRUE(String(correctSha512).equalsIgnoreCase(Update.sha512String()));
 }
 
 // ==================== ArduinoOTA Tests ====================
@@ -415,6 +466,13 @@ void test_httpupdate_invalid_checksums_abort(void) {
   TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, url));
   TEST_ASSERT_FALSE(Update.isRunning());
   httpUpdate.setSHA256sum("");
+
+  httpUpdate.setSHA512sum(
+    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3z"
+  );
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, url));
+  TEST_ASSERT_FALSE(Update.isRunning());
+  httpUpdate.setSHA512sum("");
 }
 
 void test_httpupdate_wrong_sha256_has_no_digest(void) {
@@ -429,6 +487,22 @@ void test_httpupdate_wrong_sha256_has_no_digest(void) {
   TEST_ASSERT_FALSE(Update.isRunning());
   TEST_ASSERT_TRUE(Update.sha256String().isEmpty());
   httpUpdate.setSHA256sum("");
+}
+
+void test_httpupdate_wrong_sha512_has_no_digest(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA512sum(
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+  );
+  String url = server_url + "/ota.ino.bin";
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, url));
+  TEST_ASSERT_FALSE(Update.isRunning());
+  TEST_ASSERT_TRUE(Update.sha512String().isEmpty());
+  httpUpdate.setSHA512sum("");
 }
 
 void test_httpupdate_sidecar_missing(void) {
@@ -480,6 +554,43 @@ void test_httpupdate_sidecar_wrong_sha256(void) {
   TEST_ASSERT_TRUE(Update.sha256String().isEmpty());
 }
 
+void test_httpupdate_sidecar_sha512_missing(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA512sumUrl(server_url + "/missing.sha512");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(HTTP_UE_SERVER_FAULTY_SHA512, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+}
+
+void test_httpupdate_sidecar_sha512_invalid(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA512sumUrl(server_url + "/bad.sha512");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(HTTP_UE_SERVER_FAULTY_SHA512, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+}
+
+void test_httpupdate_sidecar_wrong_sha512(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA512sumUrl(server_url + "/wrong.sha512");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_FAILED, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(UPDATE_ERROR_SHA512, httpUpdate.getLastError());
+  TEST_ASSERT_FALSE(Update.isRunning());
+  TEST_ASSERT_TRUE(Update.sha512String().isEmpty());
+}
+
 void test_httpupdate_sidecar_wrong_md5(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
   TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
@@ -504,6 +615,18 @@ void test_httpupdate_header_overrides_sidecar(void) {
   TEST_ASSERT_EQUAL(64, Update.sha256String().length());
 }
 
+void test_httpupdate_header_overrides_sidecar_sha512(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  // ota.ino.bin sends a correct x-SHA512 header; wrong sidecar must be ignored.
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA512sumUrl(server_url + "/wrong.sha512");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/ota.ino.bin"));
+  TEST_ASSERT_EQUAL(128, Update.sha512String().length());
+}
+
 void test_httpupdate_setter_overrides_sidecar(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
   TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
@@ -523,6 +646,23 @@ void test_httpupdate_setter_overrides_sidecar(void) {
   TEST_ASSERT_TRUE(correct.equalsIgnoreCase(Update.sha256String()));
 }
 
+void test_httpupdate_setter_overrides_sidecar_sha512(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA512sumUrl(server_url + "/ota.ino.bin.sha512");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  String correct = Update.sha512String();
+  TEST_ASSERT_EQUAL(128, correct.length());
+
+  httpUpdate.setSHA512sum(correct);
+  httpUpdate.setSHA512sumUrl(server_url + "/wrong.sha512");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_TRUE(correct.equalsIgnoreCase(Update.sha512String()));
+}
+
 void test_httpupdate_sidecar_sha256(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
   TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
@@ -532,6 +672,17 @@ void test_httpupdate_sidecar_sha256(void) {
   httpUpdate.setSHA256sumUrl(server_url + "/ota.ino.bin.sha256");
   TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
   TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+}
+
+void test_httpupdate_sidecar_sha512(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(server_url.length() > 0, "No server URL provided");
+
+  NetworkClient client;
+  httpUpdate.rebootOnUpdate(false);
+  httpUpdate.setSHA512sumUrl(server_url + "/ota.ino.bin.sha512");
+  TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
+  TEST_ASSERT_EQUAL(128, Update.sha512String().length());
 }
 
 void test_httpupdate_sidecar_slow_fragmented(void) {
@@ -689,9 +840,11 @@ void test_httpupdate_both_sidecars(void) {
   httpUpdate.rebootOnUpdate(false);
   httpUpdate.setMD5sumUrl(server_url + "/ota.ino.bin.md5");
   httpUpdate.setSHA256sumUrl(server_url + "/ota.ino.bin.sha256");
+  httpUpdate.setSHA512sumUrl(server_url + "/ota.ino.bin.sha512");
   TEST_ASSERT_EQUAL(HTTP_UPDATE_OK, httpUpdate.update(client, server_url + "/firmware-noheader.bin"));
   TEST_ASSERT_EQUAL(32, Update.md5String().length());
   TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+  TEST_ASSERT_EQUAL(128, Update.sha512String().length());
 }
 
 void test_httpupdate_sidecar_uppercase(void) {
@@ -882,15 +1035,21 @@ void setup() {
   RUN_TEST(test_update_md5_check);
   RUN_TEST(test_update_sha256_format);
   RUN_TEST(test_update_sha256_roundtrip);
+  RUN_TEST(test_update_sha512_format);
+  RUN_TEST(test_update_sha512_roundtrip);
   RUN_TEST(test_arduino_ota_begin_end);
   RUN_TEST(test_httpupdate_invalid_url);
   RUN_TEST(test_httpupdate_invalid_url_ipv6);
   RUN_TEST(test_httpupdate_invalid_checksums_abort);
   RUN_TEST(test_httpupdate_wrong_sha256_has_no_digest);
+  RUN_TEST(test_httpupdate_wrong_sha512_has_no_digest);
   RUN_TEST(test_httpupdate_sidecar_missing);
   RUN_TEST(test_httpupdate_sidecar_md5_missing);
   RUN_TEST(test_httpupdate_sidecar_invalid);
   RUN_TEST(test_httpupdate_sidecar_wrong_sha256);
+  RUN_TEST(test_httpupdate_sidecar_sha512_missing);
+  RUN_TEST(test_httpupdate_sidecar_sha512_invalid);
+  RUN_TEST(test_httpupdate_sidecar_wrong_sha512);
   RUN_TEST(test_httpupdate_sidecar_wrong_md5);
   // ArduinoOTA uploads before HTTPUpdate download so partition state stays predictable.
   // Keep all no-auth cases before any setPassword() so leftover hashes cannot force AUTH.
@@ -902,8 +1061,11 @@ void setup() {
   RUN_TEST(test_arduino_ota_ipv6_with_auth);
   RUN_TEST(test_arduino_ota_upload_with_auth);
   RUN_TEST(test_httpupdate_header_overrides_sidecar);
+  RUN_TEST(test_httpupdate_header_overrides_sidecar_sha512);
   RUN_TEST(test_httpupdate_setter_overrides_sidecar);
+  RUN_TEST(test_httpupdate_setter_overrides_sidecar_sha512);
   RUN_TEST(test_httpupdate_sidecar_sha256);
+  RUN_TEST(test_httpupdate_sidecar_sha512);
   RUN_TEST(test_httpupdate_sidecar_slow_fragmented);
   RUN_TEST(test_httpupdate_sidecar_unknown_length);
   RUN_TEST(test_httpupdate_sidecar_chunked);

@@ -31,6 +31,7 @@
 #define UPDATE_ERROR_DECRYPT      (13)  ///< Decryption failed
 #define UPDATE_ERROR_SIGN         (14)  ///< Signature verification failed
 #define UPDATE_ERROR_SHA256       (15)  ///< SHA-256 checksum mismatch
+#define UPDATE_ERROR_SHA512       (16)  ///< SHA-512 checksum mismatch
 
 #define UPDATE_SIZE_UNKNOWN 0xFFFFFFFF  ///< Constant indicating update size is unknown
 
@@ -267,6 +268,45 @@ public:
    */
   void sha256(uint8_t *result);
 
+  /**
+   * @brief Set expected SHA-512 checksum for the incoming firmware image
+   *
+   * Digests the entire downloaded payload (same scope as MD5/SHA-256), not the
+   * ESP-IDF partition/image SHA-256 footer.
+   *
+   * Call after `begin()` and before any data is written. Hashing is only
+   * activated when this succeeds; otherwise no SHA-512 context is allocated.
+   *
+   * @param expected_sha512 Hex string containing expected SHA-512 digest (128 characters)
+   * @param calc_post_decryption If true, calculate SHA-512 after decryption
+   * @return true if SHA-512 was accepted
+   */
+  bool setSHA512(
+    const char *expected_sha512
+#ifndef UPDATE_NOCRYPT
+    ,
+    bool calc_post_decryption = true
+#endif /* #ifdef UPDATE_NOCRYPT */
+  );
+
+  /**
+   * @brief Get SHA-512 digest string of the completed firmware
+   *
+   * Only valid after a successful update that used `setSHA512()`.
+   *
+   * @return String Hex representation of SHA-512 digest, or empty if unavailable
+   */
+  String sha512String(void);
+
+  /**
+   * @brief Retrieve the raw SHA-512 bytes of the completed firmware
+   *
+   * Only valid after a successful update that used `setSHA512()`.
+   *
+   * @param result Pointer to a 64-byte buffer to receive SHA-512 bytes
+   */
+  void sha512(uint8_t *result);
+
 #ifdef UPDATE_SIGN
   /**
    * @brief Install signature verification for update images
@@ -394,6 +434,7 @@ private:
 
 #ifndef UPDATE_NOCRYPT
   bool _target_sha256_decrypted = true;
+  bool _target_sha512_decrypted = true;
 #endif                         /* UPDATE_NOCRYPT */
   void *_sha256_ctx;           ///< Opaque streaming SHA-256 context and expected digest (allocated on demand)
   uint8_t _sha256_result[32];  ///< Final digest kept after context is freed
@@ -402,6 +443,14 @@ private:
   void _sha256FreeContext();
   bool _sha256Update(const uint8_t *data, size_t len);
   bool _sha256Finish();
+
+  void *_sha512_ctx;           ///< Opaque streaming SHA-512 context and expected digest (allocated on demand)
+  uint8_t _sha512_result[64];  ///< Final digest kept after context is freed
+  bool _sha512_valid;          ///< True after all update verification and activation steps succeed
+
+  void _sha512FreeContext();
+  bool _sha512Update(const uint8_t *data, size_t len);
+  bool _sha512Finish();
 
   int _ledPin;
   uint8_t _ledOn;

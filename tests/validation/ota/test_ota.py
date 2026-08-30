@@ -236,10 +236,13 @@ def _expect_unity_with_arduino_ota(dut, firmware: Path, host_ip: str, host_ipv6:
 
 SIDECAR_ARTIFACTS = (
     "ota.ino.bin.sha256",
+    "ota.ino.bin.sha512",
     "ota.ino.bin.md5",
     "upper.sha256",
     "bad.sha256",
     "wrong.sha256",
+    "bad.sha512",
+    "wrong.sha512",
     "wrong.md5",
 )
 
@@ -270,7 +273,7 @@ class IPv4HTTPServer(ThreadingTCPServer):
     daemon_threads = True
 
 
-def _http_handler(serve_dir: Path, firmware_sha256: str):
+def _http_handler(serve_dir: Path, firmware_sha256: str, firmware_sha512: str):
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             self._omit_digest_header = False
@@ -355,7 +358,7 @@ def _http_handler(serve_dir: Path, firmware_sha256: str):
                 self.end_headers()
                 return
             if path == "/firmware-noheader.bin":
-                # Same binary as ota.ino.bin, but without x-SHA256 (sidecar-only path).
+                # Same binary as ota.ino.bin, but without digest headers (sidecar-only path).
                 self.path = "/ota.ino.bin"
                 self._omit_digest_header = True
                 try:
@@ -370,6 +373,7 @@ def _http_handler(serve_dir: Path, firmware_sha256: str):
             if path.endswith("/ota.ino.bin") or path == "/ota.ino.bin":
                 if not self._omit_digest_header:
                     self.send_header("x-SHA256", firmware_sha256)
+                    self.send_header("x-SHA512", firmware_sha512)
             super().end_headers()
 
         def log_message(self, format, *args):
@@ -409,17 +413,21 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
     serve_dir = firmware.parent
     firmware_bytes = firmware.read_bytes()
     firmware_sha256 = hashlib.sha256(firmware_bytes).hexdigest()
+    firmware_sha512 = hashlib.sha512(firmware_bytes).hexdigest()
     firmware_md5 = hashlib.md5(firmware_bytes).hexdigest()
 
     # Sidecar artifacts for HTTPUpdate checksum URL tests (#12826)
     request.addfinalizer(lambda: _remove_sidecar_artifacts(serve_dir))
     (serve_dir / "ota.ino.bin.sha256").write_text(f"{firmware_sha256}  ota.ino.bin\n", encoding="ascii")
+    (serve_dir / "ota.ino.bin.sha512").write_text(f"{firmware_sha512}  ota.ino.bin\n", encoding="ascii")
     (serve_dir / "ota.ino.bin.md5").write_text(f"{firmware_md5}  ota.ino.bin\n", encoding="ascii")
     (serve_dir / "upper.sha256").write_text(f"{firmware_sha256.upper()}\n", encoding="ascii")
     (serve_dir / "bad.sha256").write_text("not-a-valid-digest\n", encoding="ascii")
     (serve_dir / "wrong.sha256").write_text("0" * 64 + "\n", encoding="ascii")
+    (serve_dir / "bad.sha512").write_text("not-a-valid-digest\n", encoding="ascii")
+    (serve_dir / "wrong.sha512").write_text("0" * 128 + "\n", encoding="ascii")
     (serve_dir / "wrong.md5").write_text("0" * 32 + "\n", encoding="ascii")
-    Handler = _http_handler(serve_dir, firmware_sha256)
+    Handler = _http_handler(serve_dir, firmware_sha256, firmware_sha512)
 
     port = 8766
     server = None
