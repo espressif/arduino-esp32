@@ -604,6 +604,8 @@ void OpenThread::end() {
       OThreadCLI.end();
     }
 #if defined(CONFIG_OPENTHREAD_SRP_CLIENT) && CONFIG_OPENTHREAD_SRP_CLIENT
+    // Before clearing the attach flag: DNSSD.end() must see attached=true so
+    // it does not otSrpClientStop() CHIP's Matter DNS-SD.
     OThreadDNSSD.end();
 #endif
     OThreadCoAPServer.stop();

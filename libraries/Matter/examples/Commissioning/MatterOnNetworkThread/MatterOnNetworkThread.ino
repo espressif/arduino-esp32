@@ -17,6 +17,7 @@
 // Do not start Arduino ESPmDNS — CHIP owns the mDNS responder.
 // Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
 // Do not call OThread.begin() before Matter.begin() — that would start a second stack.
+// Do not call OThreadDNSSD.begin() — CHIP owns Thread SRP (_matterc._udp).
 
 #include <Arduino.h>
 #include <Matter.h>

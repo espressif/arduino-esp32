@@ -12,6 +12,8 @@ This is the on-network half of the Thread pair. The other half is [MatterCHIPoBL
 
 **Do not call `OThread.begin()` before `Matter.begin()`.** CHIP starts the Thread stack; `OThread.begin()` afterwards attaches to it (`isAttachedToExternalStack()`). Calling `begin()` first would start a second stack.
 
+**Do not call `OThreadDNSSD.begin()`.** CHIP owns the Thread SRP client (`_matterc._udp`). Arduino DNS-SD `begin()` is refused while attached.
+
 ## What it does
 
 - Calls `Matter.selectNetwork(MATTER_NETWORK_THREAD, true)` before any accessory `begin()` (CHIPoBLE off)
