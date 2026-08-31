@@ -1,0 +1,211 @@
+# Matter Water Leak Detector Example
+
+This example demonstrates how to create a Matter-compatible water leak detector device using an ESP32 SoC microcontroller.\
+The application showcases Matter commissioning, sensor data reporting to smart home ecosystems, and automatic simulation of water leak detection state changes.
+
+## Supported Targets
+
+| SoC      | This sketch            | CHIPoBLE | Also in prebuild       | LED      |
+| -------- | ---------------------- | -------- | ---------------------- | -------- |
+| ESP32    | Wi-Fi (SSID in sketch) | Off      | Ethernet (EMAC or SPI) | Required |
+| ESP32-S2 | Wi-Fi (SSID in sketch) | Off      | Ethernet (SPI)         | Required |
+| ESP32-S3 | Wi-Fi (hub)            | On       | Ethernet (SPI)         | Required |
+| ESP32-C3 | Wi-Fi (hub)            | On       | Ethernet (SPI)         | Required |
+| ESP32-C5 | Wi-Fi (hub)            | On       | Ethernet (SPI)         | Required |
+| ESP32-C6 | Wi-Fi (hub, default)   | On       | Thread, Ethernet (SPI) | Required |
+| ESP32-H2 | Thread (hub)           | On       | Ethernet (SPI)         | Required |
+
+### Note on Commissioning
+
+This table is what **this sketch** does. It does not call `Matter.selectNetwork()` or start Ethernet.
+
+- **ESP32 / ESP32-S2:** no CHIPoBLE in the Arduino IDE prebuild. The sketch calls `WiFi.begin(ssid, password)`.
+- **ESP32-C6:** prebuild is dual-stack. Without `selectNetwork()` this sketch uses **Wi-Fi + CHIPoBLE**. Thread stays unused.
+- **ESP32-H2:** Thread + CHIPoBLE (no Wi-Fi).
+- **ESP32-C5:** Wi-Fi + CHIPoBLE. Thread is not in that prebuild.
+
+To change the path, call `Matter.selectNetwork()` **before** any accessory `begin()`. On-network: `selectNetwork(net, true)` (CHIPoBLE off). CHIPoBLE: `selectNetwork(net)` (BLE stays on). Do not also call `setBLECommissioningEnabled()`.
+
+- Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../../Commissioning/MatterCHIPoBLEWiFi)
+- Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)
+- Thread + CHIPoBLE (C6/H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
+- Thread on-network (C6/H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
+- Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../../Commissioning/MatterOnNetworkEthernet)
+
+## Features
+
+- Matter protocol implementation for a water leak detector device
+- Default network and CHIPoBLE as in the Supported Targets table (C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
+- Water leak detection state indication using LED (ON = Detected, OFF = Not Detected)
+- Automatic simulation of water leak detection state changes every `simulatedSensorInterval` (20 seconds)
+- Button control for factory reset (decommission)
+- Matter commissioning via QR code or manual pairing code
+- Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- `begin()` creates the endpoint (Not Detected). Call `setLeak()` after `Matter.begin()` with the real or simulated sensor reading.
+
+## Hardware Requirements
+
+- ESP32 compatible development board (see supported targets table)
+- LED connected to GPIO pins (or using built-in LED) to indicate water leak detection state
+- User button for factory reset (uses BOOT button by default)
+
+## Pin Configuration
+
+- **LED**: Uses `RGB_BUILTIN` if defined, otherwise pin 2
+- **Button**: Uses `BOOT_PIN` by default
+
+## Software Setup
+
+### Prerequisites
+
+1. Install the Arduino IDE (2.0 or newer recommended)
+2. Install ESP32 Arduino Core with Matter support
+3. ESP32 Arduino libraries:
+   - `Matter`
+   - `WiFi` (only for ESP32 and ESP32-S2)
+
+### Configuration
+
+Before uploading the sketch, configure the following:
+
+1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
+   ```cpp
+   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
+   const char *password = "your-password"; // Change to your Wi-Fi password
+   ```
+
+2. **LED pin configuration** (if not using built-in LED):
+   ```cpp
+   const uint8_t ledPin = 2;  // Set your LED pin here
+   ```
+
+3. **Button pin configuration** (optional):
+   By default, the `BOOT` button (GPIO 0) is used for factory reset. You can change this to a different pin if needed.
+   ```cpp
+   const uint8_t buttonPin = BOOT_PIN;  // Set your button pin here
+   ```
+
+4. **Simulated sensor interval** (optional):
+   Change how often the simulated hardware toggles. Replace `simulatedHWWaterLeakDetector()` with a real probe read when you have hardware.
+   ```cpp
+   const uint32_t simulatedSensorInterval = 20000;  // 20 seconds
+   ```
+
+## Building and Flashing
+
+1. Open the `MatterWaterLeakDetector.ino` sketch in the Arduino IDE.
+2. Select your ESP32 board from the **Tools > Board** menu.
+<!-- vale off -->
+3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
+<!-- vale on -->
+4. Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
+5. Connect your ESP32 board to your computer via USB.
+6. Click the **Upload** button to compile and flash the sketch.
+
+## Expected Output
+
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-H2). You should see output similar to the following, which provides the necessary information for commissioning:
+
+```
+Connecting to your-wifi-ssid
+.......
+Wi-Fi connected
+IP address: 192.168.1.100
+
+Matter Node is not commissioned yet.
+Initiate the device discovery in your Matter environment.
+Commission it to your Matter hub with the manual pairing code or QR code
+Manual pairing code: 34970112332
+QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
+Matter Node not commissioned yet. Waiting for commissioning.
+Matter Node not commissioned yet. Waiting for commissioning.
+...
+Matter Node is commissioned and connected to the network. Ready for use.
+Water Leak Detector is Detected.
+Water Leak Detector is Not Detected.
+```
+
+After commissioning, the simulated sensor toggles every `simulatedSensorInterval` (20 seconds by default), `setLeak()` reports that reading to Matter, and the LED follows `getLeak()`.
+
+## Using the Device
+
+### Manual Control
+
+The user button (BOOT button by default) provides factory reset functionality:
+
+- **Long press (>5 seconds)**: Factory reset the device (decommission)
+
+### Sensor Simulation
+
+The example includes a simulated water leak detector that:
+
+- Starts in the not-detected state (`false`)
+- Toggles every `simulatedSensorInterval` (20 seconds by default)
+- Is the only writer to Matter: `loop()` calls `setLeak(simulatedHWWaterLeakDetector())`
+- Drives the LED from the reported Matter state (`getLeak()`)
+
+- **LED ON**: Water leak is Detected
+- **LED OFF**: Water leak is Not Detected
+
+To use a real sensor, replace the body of `simulatedHWWaterLeakDetector()` with your probe read (for example `return digitalRead(leakPin);`).
+
+### Smart Home Integration
+
+Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
+Check for Matter Water Leak Detector endpoint support within the Matter Controller developer webpage.
+This endpoint is part of the latest Matter supported device list and it may not be fully supported by your Matter environment.
+You can also try the Home Assistant Matter feature in order to test it.
+
+#### Apple Home
+
+1. Open the Home app on your iOS device
+2. Tap the "+" button > Add Accessory
+3. Scan the QR code displayed in the Serial Monitor, or
+4. Tap "I Don't Have a Code or Cannot Scan" and enter the manual pairing code
+5. Follow the prompts to complete setup
+6. The device will appear as a water leak detector in your Home app
+7. You can monitor the water leak detection state (Detected/Not Detected) and receive notifications when the state changes
+
+#### Amazon Alexa
+
+1. Open the Alexa app
+2. Tap More > Add Device > Matter
+3. Select "Scan QR code" or "Enter code manually"
+4. Complete the setup process
+5. The water leak detector will appear in your Alexa app
+6. You can monitor the water leak detection state and set up routines based on state changes
+
+#### Google Home
+
+1. Open the Google Home app
+2. Tap "+" > Set up device > New device
+3. Choose "Matter device"
+4. Scan the QR code or enter the manual pairing code
+5. Follow the prompts to complete setup
+6. The water leak detector will appear in your Google Home app
+
+## Code Structure
+
+The MatterWaterLeakDetector example consists of the following main components:
+
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), creates the Matter Water Leak Detector endpoint with `begin()` (fabric state starts Not Detected), starts Matter with `Matter.begin()`, and waits for commissioning.
+2. **`loop()`**: Handles the button for factory reset only, reports the simulated (or real) sensor with `setLeak()` after `Matter.begin()`, and updates the LED from `getLeak()`.
+3. **`simulatedHWWaterLeakDetector()`**: Simulates a hardware water leak detector by toggling every `simulatedSensorInterval`. Replace this function with a real sensor read.
+
+## Troubleshooting
+
+- **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
+- **LED not responding**: Verify pin configurations and connections
+- **Water leak detector state not updating**: `setLeak()` must be called after `Matter.begin()`. `begin()` only creates the endpoint and does not take an initial state. The simulated sensor toggles every `simulatedSensorInterval` (20 seconds by default). Check Serial Monitor output to verify state changes are being processed.
+- **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
+- **No serial output**: Check baudrate (115200) and USB connection
+
+## Related Documentation
+
+- [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
+- [Matter Endpoint Base Class](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter_ep.html)
+- [Matter Water Leak Detector Endpoint](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/ep_water_leak_detector.html)
+
+## License
+
+This example is licensed under the Apache License, Version 2.0.

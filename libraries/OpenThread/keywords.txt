@@ -87,6 +87,8 @@ networkInterfaceUp	KEYWORD2
 networkInterfaceDown	KEYWORD2
 commitDataSet	KEYWORD2
 hasActiveDataset	KEYWORD2
+isAttachedToExternalStack	KEYWORD2
+waitForAttach	KEYWORD2
 getInstance	KEYWORD2
 getCurrentDataSet	KEYWORD2
 getMeshLocalPrefix	KEYWORD2

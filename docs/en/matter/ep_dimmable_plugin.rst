@@ -253,5 +253,5 @@ Example
 Dimmable Plugin
 ***************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterDimmablePlugin/MatterDimmablePlugin.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Control/MatterDimmablePlugin/MatterDimmablePlugin.ino
     :language: arduino

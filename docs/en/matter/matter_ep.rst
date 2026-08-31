@@ -52,6 +52,8 @@ createSecondaryNetworkInterface
 
 Creates a secondary network interface endpoint. This can be used for devices that support multiple network interfaces, such as Ethernet, Thread and Wi-Fi.
 
+``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` does **not** create this endpoint. On dual-stack C6 it puts Thread Network Commissioning on endpoint 0 (replacing the prebuild Wi-Fi driver) so hubs that only talk to the root see Thread. Call ``createSecondaryNetworkInterface()`` only when the product must expose **both** Wi-Fi (endpoint 0) and Thread (endpoint 2).
+
 .. code-block:: arduino
 
     bool createSecondaryNetworkInterface();
@@ -221,7 +223,7 @@ Example usage:
     // Custom namespace/tag with a label (the string literal must outlive the endpoint)
     Pump.setTagList({MatterTags::createTag(0x60, 3, "pump-A"), MatterTags::Position::Left});
 
-See the `MatterSmartButtonsTagList <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButtonsTagList>`_ example for a complete sketch (On, Off, and a custom-labeled switch).
+See the `MatterSmartButtonsTagList <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterSmartButtonsTagList>`_ example for a complete sketch (On, Off, and a custom-labeled switch).
 
 Attribute Change Callback
 *************************

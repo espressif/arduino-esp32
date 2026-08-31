@@ -139,5 +139,5 @@ Example
 Water Leak Detector
 ********************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterWaterLeakDetector/MatterWaterLeakDetector.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterWaterLeakDetector/MatterWaterLeakDetector.ino
     :language: arduino

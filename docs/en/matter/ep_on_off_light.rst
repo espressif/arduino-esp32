@@ -186,5 +186,5 @@ Example
 Basic On/Off Light
 ******************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterOnOffLight/MatterOnOffLight.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Lighting/MatterOnOffLight/MatterOnOffLight.ino
     :language: arduino

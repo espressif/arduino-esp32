@@ -135,7 +135,7 @@ Boolean State sensors (`MatterContactSensor`, `MatterWaterLeakDetector`, `Matter
 
 ## Shared endpoint API
 
-All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.begin()`, sketches can call `setTagList()` with `MatterTags` presets (Number, Location, Position, Switches) to set the Descriptor TagList. At most 3 tags per endpoint. See `MatterSmartButtonsTagList`. TagList does not set a light's display name.
+All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.begin()`, sketches can call `setTagList()` with `MatterTags` presets (Number, Location, Position, Switches) to set the Descriptor TagList. At most 3 tags per endpoint. See [`MatterSmartButtonsTagList`](examples/Control/MatterSmartButtonsTagList). TagList does not set a light's display name.
 
 ## Endpoint Classes
 
@@ -188,7 +188,9 @@ Matter.setHardwareVersion(7);
 Matter.setHardwareVersionString("RevA");      // max 64
 Matter.setSetupDiscriminator(0xF01);          // 0–0xFFF
 Matter.setSetupPasscode(20202024);            // valid Matter PIN
-Matter.setBLECommissioningEnabled(false);     // optional: on-network only (Wi-Fi first); releases BLE RAM
+// Prefer selectNetwork(WIFI|THREAD, true) to pick a transport and turn CHIPoBLE off.
+// setBLECommissioningEnabled(false) only if you keep the default network and just want BLE off.
+Matter.setBLECommissioningEnabled(false);
 // Matter.setBLEMemoryReleaseEnabled(false);  // only if CHIPoBLE is left on: keep NimBLE after commission
 Light.begin();
 Matter.begin();
@@ -198,28 +200,80 @@ Serial.println(Matter.getOnboardingQRCodeUrl());   // live QR URL after begin()
 
 If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Arduino Matter uses the CHIP test pair **PIN `20202021`**, discriminator **`0xF00`**, manual code **`34970112332`** (same as On/Off Light and the other examples). Before `begin()` the pairing getters log a warning and return empty.
 
-On Wi-Fi station builds, `Matter.begin()` initializes the Wi-Fi driver with reduced RX/TX buffers before starting CHIP. Matter traffic is small, so the library uses 4 static RX, 8 dynamic RX, 8 dynamic TX, and an AMPDU RX BA window of 6 instead of the sdkconfig defaults. `esp_wifi_init()` keeps the first caller's counts, so CHIP inherits them. If the sketch already called `WiFi.begin()` / `WiFi.mode()`, those limits are not applied.
+On Wi-Fi station builds, `Matter.begin()` initializes the Wi-Fi driver with reduced RX/TX buffers before starting CHIP unless Thread or Ethernet was selected. Matter traffic is small, so the library uses 4 static RX, 8 dynamic RX, 8 dynamic TX, and an AMPDU RX BA window of 6 instead of the sdkconfig defaults. `esp_wifi_init()` keeps the first caller's counts, so CHIP inherits them. If the sketch already called `WiFi.begin()` / `WiFi.mode()`, those limits are not applied.
 
-`setBLECommissioningEnabled(false)` (before `begin()`) makes a CHIPoBLE build commission on-network: connect Wi-Fi or Ethernet first, then `Matter.begin()`. BLE RAM is released automatically. Pairing codes are on-network only. See `MatterOnNetworkWiFi`. With CHIPoBLE left on, BLE RAM is released after a successful commission by default (`setBLEMemoryReleaseEnabled(true)`); see `MatterCHIPoBLERelease`. Call `setBLEMemoryReleaseEnabled(false)` before `begin()` to keep the BLE host after CHIPoBLE commissioning. That option has no effect when `CONFIG_ENABLE_CHIPOBLE` is off.
+Commissioning examples turn CHIPoBLE off with `selectNetwork(WIFI|THREAD, true)` (or one-arg `selectNetwork(ETHERNET)`). Do not also call `setBLECommissioningEnabled()`. That setter is only when you keep the default network and just want BLE off. Pairing codes are then on-network only. See [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi). With CHIPoBLE left on, BLE RAM is released after a successful commission by default (`setBLEMemoryReleaseEnabled(true)`); see [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease). Call `setBLEMemoryReleaseEnabled(false)` before `begin()` to keep the BLE host after CHIPoBLE commissioning. That option has no effect when `CONFIG_ENABLE_CHIPOBLE` is off.
+
+## Network selection
+
+Call `Matter.selectNetwork()` **before any accessory `begin()`**. No call (`MATTER_NETWORK_NONE`) keeps today's behaviour.
+
+| Network | `isNetworkSupported` | CHIPoBLE default | Notes |
+| --- | --- | --- | --- |
+| Wi-Fi | `CONFIG_ENABLE_WIFI_STATION` (all Matter targets except H2) | On | Primary commissioning cluster at endpoint 0 |
+| Thread | `CONFIG_ENABLE_MATTER_OVER_THREAD` (**C6 and H2** in the Arduino prebuild; not C5 yet) | On | Thread Network Commissioning on endpoint 0. On dual-stack C6 the prebuild Wi-Fi driver on the root is replaced so the hub cannot ask for an SSID. |
+| Ethernet | `CONFIG_ETH_ENABLED` (capable if you wire hardware) | Off | No commissioning cluster. Sketch starts `ETH` (EMAC or SPI), `enableIPv6()`, then `waitForNetwork()` |
+
+`selectNetwork(network, disableBLECommissioning)` overrides the BLE default. The library does **not** call `ETH.begin()` (PHY macros are sketch-local: EMAC `ETH.begin()`, or `SPI.begin()` plus `ETH.begin(..., SPI)`). Do **not** start Arduino `ESPmDNS` — CHIP owns mDNS; `MDNS.begin()` / `MDNS.end()` break Matter discovery.
+
+After `Matter.begin()`, `OThread.begin()` attaches to CHIP's Thread stack (`isAttachedToExternalStack()`) and `OThread.end()` must not tear that stack down.
+
+Do not mix the two paths: CHIPoBLE plus a sketch SSID/dataset fights the hub; CHIPoBLE off plus no credentials is a dead end.
+
+### Which commissioning example?
+
+Same On/Off Light in all of these. The only difference is how the node gets onto the network.
+
+| Example | Transport | CHIPoBLE | Credentials in the sketch | When to use |
+| --- | --- | --- | --- | --- |
+| [`MatterCHIPoBLEWiFi`](examples/Commissioning/MatterCHIPoBLEWiFi) | Wi-Fi | On | No. Hub sends SSID/password | Factory-fresh Wi-Fi node |
+| [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi) | Wi-Fi | Off | Yes. `selectNetwork(WIFI, true)` then `WiFi.begin(ssid, password)` | Already on Wi-Fi, or no BLE |
+| [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread) | Thread | On | No. Hub sends the dataset | Factory-fresh Thread node (C6/H2) |
+| [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread) | Thread | Off | Yes. Network key after `Matter.begin()` | Already on the mesh |
+| [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet) | Ethernet | Off | EMAC or SPI `ETH.begin()` + IPv6 first | Wired only (no commissioning cluster) |
+| [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease) | Default (Wi-Fi; Thread on H2) | On, then reclaimed | No | Same BLE path as the default accessory, plus heap reclaim |
+
+[`MatterOnOffLight`](examples/Lighting/MatterOnOffLight) is the generic accessory demo: CHIPoBLE when compiled in, otherwise sketch Wi-Fi credentials. Use the table above when you care about the commissioning path.
 
 Register `Matter.onBLEMemoryReleased()` **before** `Matter.begin()` if the sketch must allocate a large buffer only after reclaim. The callback runs on the CHIP task when `kBLEDeinitialized` is posted (same moment as `MATTER_BLE_DEINITIALIZED`). Set a flag there and `malloc` from `loop()`. Reclaim is not instant: releasing the BLE regions while the NimBLE host task still runs would corrupt the heap, so the library polls for that task to exit every 2 s for up to 30 s. The callback may never run if CHIPoBLE is off, release is disabled, or the reclaim times out. Do not wait forever.
 
-**Arduino IDE precompiled libraries:** CHIPoBLE is built with NimBLE on C3/C6/S3 (and Thread prebuilds such as C5/H2). Original ESP32 prebuilds use Bluedroid and do not compile CHIPoBLE. ESP32-S2 has no Bluetooth. **Arduino as an ESP-IDF component:** enable `CONFIG_BT_ENABLED`, `CONFIG_BT_NIMBLE_ENABLED`, and `CONFIG_ENABLE_CHIPOBLE` — including on original ESP32. Sketches already follow `CONFIG_ENABLE_CHIPOBLE` (not a chip name). To keep BLE after commission, also set `CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n`. If Bluetooth is off (`CONFIG_BT_ENABLED=n`), CHIPoBLE is compiled out and the BLE setters are no-ops / return false.
+**Arduino IDE precompiled libraries** (`CONFIG_*` in that Matter static library):
 
-| API | Meaning |
-|-----|---------|
+| SoC | Default network | Thread | Ethernet | CHIPoBLE | Notes |
+| --- | --- | --- | --- | --- | --- |
+| ESP32 | Wi-Fi | No | Yes (EMAC or SPI) | **No** (Bluedroid) | Use [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi) or Ethernet. `setBLECommissioningEnabled(true)` fails. |
+| ESP32-S2 | Wi-Fi | No | SPI PHY | **No** (no Bluetooth) | Same as ESP32 for BLE. |
+| ESP32-S3 / C3 | Wi-Fi | No | SPI PHY | Yes (NimBLE) | `selectNetwork(WIFI)` keeps BLE on; `, true` turns it off. |
+| ESP32-C5 | Wi-Fi | No (radio exists; not in this prebuild) | SPI PHY | Yes (NimBLE) | Same as C3. |
+| ESP32-C6 | Wi-Fi until `selectNetwork` | Yes (dual-stack) | SPI PHY | Yes (NimBLE) | `selectNetwork(THREAD)` puts Thread NC on endpoint 0. |
+| ESP32-H2 | Thread | Yes | SPI PHY | Yes (NimBLE) | No Wi-Fi. |
+
+Ethernet is on-network only: `selectNetwork(ETHERNET)` turns CHIPoBLE off. SPI PHYs (W5500, DM9051, KSZ8851SNL) work on every Arduino Matter SoC (tested: ESP32 + W5500). Internal RMII EMAC is original ESP32 only. Wi-Fi and Thread leave CHIPoBLE on when compiled in.
+
+**Arduino as an ESP-IDF component:** enable `CONFIG_BT_ENABLED`, `CONFIG_BT_NIMBLE_ENABLED`, and `CONFIG_ENABLE_CHIPOBLE` — including on original ESP32. Sketches already follow `CONFIG_ENABLE_CHIPOBLE` (not a chip name). To keep BLE after commission, also set `CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n`. If Bluetooth is off (`CONFIG_BT_ENABLED=n`), CHIPoBLE is compiled out and the BLE setters are no-ops / return false.
+
+| API | Effect |
+|-----|--------|
+| `isWiFiStationEnabled()` / `isThreadEnabled()` / `isEthernetEnabled()` | Compile-time only. Ethernet is “ETH can build”, not “cable up”. Thread is Matter-over-Thread, not “OpenThread is in the image”. |
+| `isNetworkSupported(net)` | Same as the matching `is*Enabled()` above. `NONE` is false. |
+| `selectNetwork(net)` | Records intent **before** any accessory `begin()`. Does **not** start a radio or apply a dataset. Ethernet turns CHIPoBLE **off**; Wi-Fi/Thread leave BLE on. `NONE` clears intent and does not change BLE. |
+| `selectNetwork(net, disableBLE)` | `true` calls `setBLECommissioningEnabled(false)`. `false` does **not** re-enable BLE. |
+| `getSelectedNetwork()` | Last successful `selectNetwork()`, or `NONE`. |
+| `getActiveNetwork()` | First netif with IPv6 (prefers the selection). Not `isWiFiConnected()` / `isThreadConnected()`. |
+| `getNetworkEndPointId(net)` | Expected commissioning endpoint (0 Wi-Fi; 0 Thread when Thread is selected; `0xFFFF` if none). Valid before the endpoint exists. |
+| `waitForNetwork(ms)` | Blocks until that IPv6 is there. `NONE` waits for any. Does not bring up hardware. `0` = one check. |
 | `isDeviceCommissioned()` | A Matter fabric exists |
-| `isDeviceConnected()` | Wi-Fi or Thread is up |
+| `isDeviceConnected()` | CHIP Wi-Fi or Thread connected, **or** Ethernet IPv6 |
 | `isOnline()` | A controller has an active CASE session (until CHIP idle-evicts it) |
 | `isBLECommissioningEnabled()` | CHIPoBLE is compiled in and still enabled |
 | `isBLEMemoryReleaseEnabled()` | CHIPoBLE is on and BLE RAM will be released after commissioning |
 | `onBLEMemoryReleased()` | BLE RAM is back on the heap (register before `begin()`) |
 
-Do not gate LEDs on `isOnline()`. A session can stay up after the user leaves the app. See examples `MatterDeviceIdentity` and `MatterStatus`.
+Do not gate LEDs on `isOnline()`. A session can stay up after the user leaves the app. See examples [`MatterDeviceIdentity`](examples/GettingStarted/MatterDeviceIdentity) and [`MatterStatus`](examples/GettingStarted/MatterStatus).
 
 ## Further Reading
 
 - [Arduino-ESP32 Matter Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/index.html)
 - [ESP-Matter Programming Guide](https://docs.espressif.com/projects/esp-matter/en/latest/)
 - [Matter Specification (CSA)](https://csa-iot.org/developer-resource/specifications-download-request/)
-- Examples: `MatterDeviceIdentity`, `MatterStatus`, `MatterOnNetworkWiFi`, `MatterCHIPoBLERelease`, `MatterSmartButtonsTagList`
+- Examples: [`MatterDeviceIdentity`](examples/GettingStarted/MatterDeviceIdentity), [`MatterStatus`](examples/GettingStarted/MatterStatus), [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi), [`MatterCHIPoBLEWiFi`](examples/Commissioning/MatterCHIPoBLEWiFi), [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet), [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread), [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread), [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease), [`MatterSmartButtonsTagList`](examples/Control/MatterSmartButtonsTagList)

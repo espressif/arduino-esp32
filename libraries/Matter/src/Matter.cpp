@@ -20,6 +20,13 @@
 #if CONFIG_ENABLE_MATTER_OVER_THREAD
 #include "esp_openthread_types.h"
 #include "platform/ESP32/OpenthreadLauncher.h"
+#if defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+#include <app/clusters/general-commissioning-server/BreadCrumbTracker.h>
+#include <app/clusters/network-commissioning/NetworkCommissioningCluster.h>
+#include <app/server-cluster/ServerClusterInterfaceRegistry.h>
+#include <data_model_provider/esp_matter_data_model_provider.h>
+#include <platform/OpenThread/GenericNetworkCommissioningThreadDriver.h>
+#endif
 #endif
 
 // This prevents initArduino() from releasing BLE memory before the
@@ -34,6 +41,12 @@
 #if defined(SOC_WIFI_SUPPORTED) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
 #include <esp_wifi.h>
 #endif
+
+#include <app/server/Dnssd.h>
+#include <esp_event.h>
+#include <esp_netif.h>
+#include <stdio.h>
+#include <string.h>
 
 using namespace esp_matter;
 using namespace esp_matter::attribute;
@@ -62,6 +75,160 @@ static bool sBleCommissioningEnabled = true;
 static bool sBleCommissioningEnabled = false;
 #endif
 static bool sBleMemoryReleaseEnabled = true;
+static matterNetwork_t sSelectedNetwork = MATTER_NETWORK_NONE;
+static esp_event_handler_instance_t sIpEventHandler = nullptr;
+
+extern bool matterWifiStackWrapRan();
+
+static bool netifHasUsableIpv6(const char *ifkey) {
+  if (ifkey == nullptr) {
+    return false;
+  }
+  esp_netif_t *netif = esp_netif_get_handle_from_ifkey(ifkey);
+  if (netif == nullptr || !esp_netif_is_netif_up(netif)) {
+    return false;
+  }
+  esp_ip6_addr_t addr;
+  if (esp_netif_get_ip6_linklocal(netif, &addr) == ESP_OK) {
+    return true;
+  }
+  if (esp_netif_get_ip6_global(netif, &addr) == ESP_OK) {
+    return true;
+  }
+  return false;
+}
+
+static bool ethernetHasUsableIpv6() {
+  if (netifHasUsableIpv6("ETH_DEF")) {
+    return true;
+  }
+  char key[16];
+  for (int i = 1; i <= 8; i++) {
+    snprintf(key, sizeof(key), "ETH_%d", i);
+    if (netifHasUsableIpv6(key)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool selectedHasUsableIpv6() {
+  switch (sSelectedNetwork) {
+    case MATTER_NETWORK_WIFI:     return netifHasUsableIpv6("WIFI_STA_DEF");
+    case MATTER_NETWORK_THREAD:   return netifHasUsableIpv6("OT_DEF");
+    case MATTER_NETWORK_ETHERNET: return ethernetHasUsableIpv6();
+    default:
+      return netifHasUsableIpv6("WIFI_STA_DEF") || netifHasUsableIpv6("OT_DEF") || ethernetHasUsableIpv6();
+  }
+}
+
+static void startDnssdWork(intptr_t) {
+  chip::app::DnssdServer::Instance().StartServer();
+}
+
+static void scheduleDnssdRestart() {
+  if (sLifecycle != MatterLifecycle::StackStarted) {
+    return;
+  }
+  chip::DeviceLayer::PlatformMgr().ScheduleWork(startDnssdWork, 0);
+}
+
+static bool ifkeyMatchesSelection(esp_netif_t *netif) {
+  if (netif == nullptr) {
+    return false;
+  }
+  const char *key = esp_netif_get_ifkey(netif);
+  if (key == nullptr) {
+    return false;
+  }
+  switch (sSelectedNetwork) {
+    case MATTER_NETWORK_WIFI:     return strcmp(key, "WIFI_STA_DEF") == 0;
+    case MATTER_NETWORK_THREAD:   return strcmp(key, "OT_DEF") == 0;
+    case MATTER_NETWORK_ETHERNET: return strncmp(key, "ETH_", 4) == 0;
+    default:                      return true;
+  }
+}
+
+static void matterIpEventHandler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+  (void)arg;
+  (void)event_base;
+  if (event_id != IP_EVENT_GOT_IP6 || event_data == nullptr) {
+    return;
+  }
+  // Thread commissionable ads go through the OpenThread SRP client, which is
+  // initialized only after the border router answers ClearSrpHost. StartServer()
+  // before that returns CHIP_ERROR_UNINITIALIZED (0x1c) and never publishes
+  // _matterc._udp. CHIP posts kDnssdInitialized when SRP is ready.
+  if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+    return;
+  }
+  const ip_event_got_ip6_t *event = static_cast<const ip_event_got_ip6_t *>(event_data);
+  if (ifkeyMatchesSelection(event->esp_netif)) {
+    scheduleDnssdRestart();
+  }
+}
+
+#if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+// The C6 prebuild binds Wi-Fi NC to endpoint 0 and Thread NC to endpoint 2.
+// Hubs that only talk to the root (Alexa) never send a Thread dataset.
+// After start(), replace the Wi-Fi driver on endpoint 0 with the Thread driver.
+class MatterBreadcrumbTracker : public chip::app::Clusters::BreadCrumbTracker {
+  void SetBreadCrumb(uint64_t) override {}
+};
+
+static MatterBreadcrumbTracker sThreadNcBreadcrumb;
+static chip::DeviceLayer::NetworkCommissioning::GenericThreadDriver sThreadNcDriver;
+static chip::app::LazyRegisteredServerCluster<chip::app::Clusters::NetworkCommissioningCluster> sThreadNcOnRoot;
+
+static void bindThreadNetworkCommissioningOnRoot() {
+  if (sSelectedNetwork != MATTER_NETWORK_THREAD) {
+    return;
+  }
+  lock::ScopedChipStackLock stackLock(portMAX_DELAY);
+  auto &registry = esp_matter::data_model::provider::get_instance().registry();
+  const chip::app::ConcreteClusterPath path(0, NetworkCommissioning::Id);
+  chip::app::ServerClusterInterface *existing = registry.Get(path);
+  if (existing != nullptr) {
+    (void)registry.Unregister(existing);
+    static_cast<chip::app::Clusters::NetworkCommissioningCluster *>(existing)->Deinit();
+  }
+  if (!sThreadNcOnRoot.IsConstructed()) {
+    sThreadNcOnRoot.Create(0, &sThreadNcDriver, sThreadNcBreadcrumb);
+  }
+  CHIP_ERROR err = sThreadNcOnRoot.Cluster().Init();
+  if (err != CHIP_NO_ERROR) {
+    log_e("Thread Network Commissioning Init on endpoint 0 failed: %" CHIP_ERROR_FORMAT, err.Format());
+    return;
+  }
+  err = registry.Register(sThreadNcOnRoot.Registration());
+  if (err != CHIP_NO_ERROR) {
+    log_e("Failed to register Thread Network Commissioning on endpoint 0: %" CHIP_ERROR_FORMAT, err.Format());
+    return;
+  }
+  log_i("Thread Network Commissioning is on endpoint 0 (replaced Wi-Fi)");
+}
+
+static void hideRootWiFiDiagnostics() {
+  endpoint_t *root = endpoint::get(node::get(), 0);
+  if (root == nullptr) {
+    return;
+  }
+  cluster_t *wifiDiag = cluster::get(root, WiFiNetworkDiagnostics::Id);
+  if (wifiDiag != nullptr) {
+    cluster::destroy(wifiDiag);
+  }
+}
+#endif
+
+static void registerMatterIpEventHandler() {
+  if (sIpEventHandler != nullptr) {
+    return;
+  }
+  const esp_err_t err = esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, matterIpEventHandler, nullptr, &sIpEventHandler);
+  if (err != ESP_OK) {
+    log_e("Failed to register IP event handler for Matter DNS-SD: %s", esp_err_to_name(err));
+  }
+}
 
 // Reports the reclaim to the sketch exactly once, whether Arduino or CHIP did it.
 static bool sBleMemoryReleasedNotified = false;
@@ -158,6 +325,9 @@ static constexpr int kMatterWifiCacheTxBufNum = 4;
 static constexpr int kMatterWifiRxBaWin = 6;
 
 static void initMatterWiFiStack() {
+  if (sSelectedNetwork == MATTER_NETWORK_THREAD || sSelectedNetwork == MATTER_NETWORK_ETHERNET) {
+    return;
+  }
   wifi_mode_t mode;
   if (esp_wifi_get_mode(&mode) != ESP_ERR_WIFI_NOT_INIT) {
     log_d("Wi-Fi already initialized; Matter buffer limits were not applied.");
@@ -288,6 +458,9 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
       log_d("BLE deinitialized and memory reclaimed");
       notifyBleMemoryReleased();
       break;
+    case chip::DeviceLayer::DeviceEventType::kDnssdInitialized:
+      log_i("Matter DNS-SD initialized");
+      break;
     default:                                                       break;
   }
   // Check if the user-defined callback is set
@@ -305,6 +478,15 @@ void ArduinoMatter::_init() {
     return;
   }
 
+#if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+#ifndef CONFIG_CUSTOM_NETWORK_CONFIG
+  if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+    node_config.root_node.network_commissioning.feature_map =
+      chip::to_underlying(NetworkCommissioning::Feature::kThreadNetworkInterface);
+  }
+#endif
+#endif
+
   // Create a Matter node and add the mandatory Root Node device type on endpoint 0
   // node handle can be used to add/modify other endpoints.
   deviceNode = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
@@ -312,6 +494,12 @@ void ArduinoMatter::_init() {
     log_e("Failed to create Matter node");
     return;
   }
+
+#if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+    hideRootWiFiDiagnostics();
+  }
+#endif
 
   sLifecycle = MatterLifecycle::NodeCreated;
 }
@@ -335,6 +523,11 @@ void ArduinoMatter::begin() {
   initMatterWiFiStack();
 #endif
 
+  if (sSelectedNetwork == MATTER_NETWORK_ETHERNET && !ethernetHasUsableIpv6()) {
+    log_e("Ethernet selected but no usable IPv6 address. Call ETH.begin(), enableIPv6(), and waitForNetwork() before Matter.begin().");
+    return;
+  }
+
 #if CONFIG_ENABLE_MATTER_OVER_THREAD
   // Set OpenThread platform config
   esp_openthread_platform_config_t config;
@@ -356,22 +549,30 @@ void ArduinoMatter::begin() {
     return;
   }
   sLifecycle = MatterLifecycle::StackStarted;
+#if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  bindThreadNetworkCommissioningOnRoot();
+#endif
+#ifdef CONFIG_ENABLE_WIFI_STATION
+  if ((sSelectedNetwork == MATTER_NETWORK_THREAD || sSelectedNetwork == MATTER_NETWORK_ETHERNET) && !matterWifiStackWrapRan()) {
+    log_e("InitWiFiStack wrap did not run; Wi-Fi may still start. Check the --wrap flag in platform.txt.");
+  }
+#endif
   applyIdentityAfterStart();
   applyBlePolicyAfterStart();
+  registerMatterIpEventHandler();
+  if (selectedHasUsableIpv6()) {
+    scheduleDnssdRestart();
+  }
 }
 
 // Network and Commissioning Capability Queries
 bool ArduinoMatter::isWiFiStationEnabled() {
-  // Check hardware support (SOC capabilities) AND Matter configuration
 #ifdef SOC_WIFI_SUPPORTED
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+#ifdef CONFIG_ENABLE_WIFI_STATION
   return true;
-#else
-  return false;
 #endif
-#else
-  return false;
 #endif
+  return false;
 }
 
 bool ArduinoMatter::isWiFiAccessPointEnabled() {
@@ -388,12 +589,124 @@ bool ArduinoMatter::isWiFiAccessPointEnabled() {
 }
 
 bool ArduinoMatter::isThreadEnabled() {
-  // Check Matter configuration only
-#if CONFIG_ENABLE_MATTER_OVER_THREAD || CHIP_DEVICE_CONFIG_ENABLE_THREAD
+#ifdef CONFIG_ENABLE_MATTER_OVER_THREAD
   return true;
 #else
   return false;
 #endif
+}
+
+bool ArduinoMatter::isEthernetEnabled() {
+#ifdef CONFIG_ETH_ENABLED
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isNetworkSupported(matterNetwork_t network) {
+  switch (network) {
+    case MATTER_NETWORK_WIFI:     return isWiFiStationEnabled();
+    case MATTER_NETWORK_THREAD:   return isThreadEnabled();
+    case MATTER_NETWORK_ETHERNET: return isEthernetEnabled();
+    default:                      return false;
+  }
+}
+
+bool ArduinoMatter::selectNetwork(matterNetwork_t network) {
+  const bool disableBle = (network == MATTER_NETWORK_ETHERNET);
+  return selectNetwork(network, disableBle);
+}
+
+bool ArduinoMatter::selectNetwork(matterNetwork_t network, bool disableBLECommissioning) {
+  if (sLifecycle != MatterLifecycle::Uninitialized) {
+    log_e("Matter.selectNetwork() must be called before any accessory begin().");
+    return false;
+  }
+  if (network == MATTER_NETWORK_NONE) {
+    sSelectedNetwork = MATTER_NETWORK_NONE;
+    return true;
+  }
+  if (!isNetworkSupported(network)) {
+    log_e("Matter.selectNetwork(): network %d is not supported on this target.", static_cast<int>(network));
+    return false;
+  }
+#if !CONFIG_ENABLE_CHIPOBLE
+  if (network == MATTER_NETWORK_THREAD) {
+    log_e("Thread selected but CHIPoBLE is not compiled in. Commission only if the sketch provisions a Thread dataset.");
+  }
+#endif
+  sSelectedNetwork = network;
+  if (disableBLECommissioning) {
+    if (!setBLECommissioningEnabled(false)) {
+      log_w("Matter.selectNetwork(): could not disable CHIPoBLE.");
+    }
+  }
+  return true;
+}
+
+matterNetwork_t ArduinoMatter::getSelectedNetwork() {
+  return sSelectedNetwork;
+}
+
+matterNetwork_t ArduinoMatter::getActiveNetwork() {
+  if (sSelectedNetwork != MATTER_NETWORK_NONE && selectedHasUsableIpv6()) {
+    return sSelectedNetwork;
+  }
+  if (netifHasUsableIpv6("WIFI_STA_DEF")) {
+    return MATTER_NETWORK_WIFI;
+  }
+  if (netifHasUsableIpv6("OT_DEF")) {
+    return MATTER_NETWORK_THREAD;
+  }
+  if (ethernetHasUsableIpv6()) {
+    return MATTER_NETWORK_ETHERNET;
+  }
+  return MATTER_NETWORK_NONE;
+}
+
+uint16_t ArduinoMatter::getNetworkEndPointId(matterNetwork_t network) {
+  switch (network) {
+    case MATTER_NETWORK_WIFI:
+      if (!isWiFiStationEnabled()) {
+        return 0xFFFF;
+      }
+#if defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+      if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+        return 0xFFFF;
+      }
+#endif
+      return 0;
+    case MATTER_NETWORK_THREAD:
+      if (!isThreadEnabled()) {
+        return 0xFFFF;
+      }
+#if defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+      if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+        return 0;
+      }
+#endif
+#ifdef CONFIG_THREAD_NETWORK_ENDPOINT_ID
+      return CONFIG_THREAD_NETWORK_ENDPOINT_ID;
+#else
+      return 0;
+#endif
+    case MATTER_NETWORK_ETHERNET:
+    default: return 0xFFFF;
+  }
+}
+
+bool ArduinoMatter::waitForNetwork(uint32_t timeoutMs) {
+  const uint32_t start = millis();
+  while (true) {
+    if (selectedHasUsableIpv6()) {
+      return true;
+    }
+    if ((millis() - start) >= timeoutMs) {
+      return false;
+    }
+    delay(50);
+  }
 }
 
 bool ArduinoMatter::setBLECommissioningEnabled(bool enabled) {
@@ -463,7 +776,7 @@ bool ArduinoMatter::isThreadConnected() {
 }
 
 bool ArduinoMatter::isDeviceConnected() {
-  return ArduinoMatter::isWiFiConnected() || ArduinoMatter::isThreadConnected();
+  return ArduinoMatter::isWiFiConnected() || ArduinoMatter::isThreadConnected() || ethernetHasUsableIpv6();
 }
 
 void ArduinoMatter::decommission() {

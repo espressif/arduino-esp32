@@ -53,9 +53,11 @@ Here is a matrix of the library support status for the main features and periphe
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
 | LEDC                 | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Matter (Thread) [6]_ | |n/a| | |n/a| | |n/a| | |yes| | |yes| | |n/a| | |yes| | |n/a| | |n/a| | |n/a| |
+| Matter (Thread) [6]_ | |n/a| | |n/a| | |n/a| | |no|  | |yes| | |n/a| | |yes| | |n/a| | |n/a| | |n/a| |
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Matter (Wi-Fi) [7]_  | |yes| | |no|  | |yes| | |no|  | |yes| | |no|  | |n/a| | |n/a| | |yes| | |yes| |
+| Matter (Wi-Fi) [7]_  | |yes| | |no|  | |yes| | |yes| | |yes| | |no|  | |n/a| | |n/a| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Matter Ethernet [8]_ | |yes| | |no|  | |yes| | |yes| | |yes| | |no|  | |yes| | |n/a| | |yes| | |yes| |
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
 | MIPI CSI             | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |no|  | |n/a| | |n/a| |
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
@@ -107,13 +109,16 @@ Here is a matrix of the library support status for the main features and periphe
 .. [5] Non-native Zigbee SoCs can also run Zigbee, but must use another SoC (with Zigbee radio) as a RCP connected by UART/SPI.
    Check the `Gateway example <https://github.com/espressif/arduino-esp32/tree/master/libraries/Zigbee/examples/Zigbee_Gateway>`_ for more details.
 
-.. [6] Matter over Thread is supported by our library but is not included in the precompiled libraries for ESP32-C6 and ESP32-C5.
-   In order to use Matter over Thread, you need to use Arduino as an ESP-IDF component or rebuild the static libraries.
+.. [6] Matter-over-Thread is in the Arduino IDE prebuild for ESP32-C6 (dual-stack with Wi-Fi) and ESP32-H2 (Thread only).
+   ESP32-C5 has an IEEE 802.15.4 radio, but the Matter prebuild is Wi-Fi; enable Matter-over-Thread with Arduino as an ESP-IDF component.
    Check the `Arduino_ESP_Matter_over_OpenThread example <https://github.com/espressif/arduino-esp32/tree/master/idf_component_examples/Arduino_ESP_Matter_over_OpenThread>`_ for more details.
 
-.. [7] Matter over Wi-Fi is supported by our library but is not included in the precompiled libraries for ESP32-C5.
-   Although ESP32-C5 has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been precompiled using Thread only.
-   In order to use Matter over Wi-Fi, you need to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
+.. [7] Matter-over-Wi-Fi is in the Arduino IDE prebuild for ESP32, ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C5, and ESP32-C6.
+   ESP32-H2 has no Wi-Fi. ESP32-C2 and ESP32-C61 need Arduino as an ESP-IDF component or rebuilt static libraries.
+
+.. [8] Matter-over-Ethernet is on-network only (no Network Commissioning cluster; CHIPoBLE off).
+   SPI PHYs (W5500, DM9051, KSZ8851SNL) work on every Arduino Matter SoC; tested with ESP32 + W5500.
+   Internal RMII EMAC is original ESP32 only. See the `MatterOnNetworkEthernet <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet>`_ example.
 
 .. note:: The ESP32-C2 and ESP32-C61 are only supported using Arduino as an ESP-IDF component or by rebuilding the static libraries.
 

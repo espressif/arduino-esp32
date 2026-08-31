@@ -132,5 +132,5 @@ Example
 Temperature Sensor
 ******************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterTemperatureSensor/MatterTemperatureSensor.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterTemperatureSensor/MatterTemperatureSensor.ino
     :language: arduino

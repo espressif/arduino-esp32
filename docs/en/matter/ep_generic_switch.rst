@@ -222,18 +222,18 @@ Simple Smart Button
 
 Minimal short-click implementation using ``press()`` on down and ``release()`` on up.
 
-`View Matter Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButton>`_
+`View Matter Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterSmartButton>`_
 
 Enhanced Smart Button
 *********************
 
-Full gesture support with long press and multi-press.
+Still **one** GPIO (BOOT). ``begin(FEATURE_ALL)`` plus the sketch state machine send ``LongPress`` / ``LongRelease`` and ``MultiPressOngoing`` / ``MultiPressComplete``. This is not the multi-button / TagList example.
 
-`View Matter Enhanced Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedSmartButton>`_
+`View Matter Enhanced Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterEnhancedSmartButton>`_
 
 Tagged Smart Buttons
 ********************
 
 Three Generic Switch endpoints — On, Off, and a custom "Scene 1" button. Each tagged via the Descriptor ``TagList`` attribute so a Matter controller can display a meaningful name for each button instead of a generic "Switch 1 / Switch 2 / Switch 3".
 
-`View Matter Smart Buttons TagList example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButtonsTagList>`_
+`View Matter Smart Buttons TagList example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterSmartButtonsTagList>`_

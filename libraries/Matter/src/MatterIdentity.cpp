@@ -324,19 +324,17 @@ static bool applyInstanceInfoWrap() {
 }
 
 void ArduinoMatter::applyIdentityAfterStart() {
-  const bool bleOn = isBLECommissioningEnabled();
-  const chip::CommissioningWindowAdvertisement advertisement =
-    bleOn ? chip::CommissioningWindowAdvertisement::kAllSupported : chip::CommissioningWindowAdvertisement::kDnssdOnly;
-
   if (sHasDiscriminator || sHasPasscode) {
     if (!applyCommissionable()) {
       log_e("Custom discriminator/passcode were not applied; pairing codes use the factory values.");
     }
-  }
-
-  // Server::Init opens kAllSupported (BLE + DNS-SD) and snapshots the PASE verifier.  // codespell:ignore
-  // Reopen when the PIN/discriminator wrap must be snapshotted, or when BLE must be dropped.
-  if (sHasDiscriminator || sHasPasscode || !bleOn) {
+    // Server::Init opens kAllSupported (BLE + DNS-SD) and snapshots the PASE verifier.  // codespell:ignore
+    // Reopen only when the PIN/discriminator wrap must be snapshotted.
+    // Do not close/reopen just because BLE is off — that tears down _matterc._udp on
+    // on-network Wi-Fi before the commissioner can find the node (test: MatterOnNetworkWiFi).
+    const chip::CommissioningWindowAdvertisement advertisement = isBLECommissioningEnabled()
+                                                                  ? chip::CommissioningWindowAdvertisement::kAllSupported
+                                                                  : chip::CommissioningWindowAdvertisement::kDnssdOnly;
     if (!reopenCommissioningWindow(advertisement)) {
       log_e("Commissioning window was not refreshed.");
     }
