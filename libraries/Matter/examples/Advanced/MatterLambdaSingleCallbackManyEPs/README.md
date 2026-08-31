@@ -28,8 +28,8 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 - Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../../Commissioning/MatterCHIPoBLEWiFi)
 - Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)
-- Thread + CHIPoBLE (C6/H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
-- Thread on-network (C6/H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
+- Thread + CHIPoBLE (ESP32-C6 / ESP32-H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
+- Thread on-network (ESP32-C6 / ESP32-H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../../Commissioning/MatterOnNetworkEthernet)
 
 ## Features
@@ -37,7 +37,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - Matter protocol implementation with multiple endpoints in a single node
 - Six on/off light endpoints sharing a single callback function
 - Lambda function with capture variable for efficient endpoint identification
-- Default network and CHIPoBLE as in the Supported Targets table (C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
+- Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
 - Each endpoint has a unique GPIO pin and friendly name
 - Matter commissioning via QR code or manual pairing code
 - Integration with Apple HomeKit, Amazon Alexa, and Google Home

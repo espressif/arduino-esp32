@@ -121,7 +121,7 @@ The ``Matter`` class provides the following key methods:
 * ``isOnline()``: Checks if a controller has an active CASE session with this node. Stays true until CHIP idle-evicts that session, not until the user closes a controller app.
 * ``isWiFiStationEnabled()``: Checks if Wi-Fi Station mode is supported and enabled
 * ``isWiFiAccessPointEnabled()``: Checks if Wi-Fi AP mode is supported and enabled
-* ``isThreadEnabled()``: ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (C6/H2 prebuild). Not "OpenThread is compiled in" (C5)
+* ``isThreadEnabled()``: ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (ESP32-C6 / ESP32-H2 prebuild). Not "OpenThread is compiled in" (ESP32-C5)
 * ``isBLECommissioningEnabled()``: Checks if BLE commissioning is compiled in **and** still enabled (see ``setBLECommissioningEnabled()``)
 * ``setBLECommissioningEnabled()``: Enables or disables CHIPoBLE. Call before ``Matter.begin()``. Commissioning sketches use ``selectNetwork(net, true)`` instead of this setter. ``false`` is only when you keep the default network and just want BLE off (connect Wi-Fi or Ethernet first); it releases BLE RAM
 * ``setBLEMemoryReleaseEnabled()``: After CHIPoBLE commissioning, release BLE RAM (default ``true``). Call before ``Matter.begin()``. Only takes effect when ``CONFIG_ENABLE_CHIPOBLE`` is set and CHIPoBLE commissioning is enabled. No effect when CHIPoBLE is compiled out. Arduino-as-IDF-component builds that keep BLE must also set ``CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n``
@@ -268,21 +268,21 @@ Do not gate physical outputs (LEDs) on ``isOnline()``. Restore last local state 
 
 Wi-Fi and Thread each have two commissioning paths. Do not mix them: CHIPoBLE plus a sketch SSID/dataset fights the hub; CHIPoBLE off plus no credentials is a dead end. Ethernet is on-network only (no commissioning cluster).
 
-+------------------------------+-----------+-------------------+--------------------------------------------+----------------------------------------+
-| Example                      | Transport | CHIPoBLE          | Credentials in the sketch                  | When to use                            |
-+==============================+===========+===================+============================================+========================================+
-| ``MatterCHIPoBLEWiFi``       | Wi-Fi     | On                | No. Hub sends SSID/password                | Factory-fresh Wi-Fi node               |
-+------------------------------+-----------+-------------------+--------------------------------------------+----------------------------------------+
-| ``MatterOnNetworkWiFi``      | Wi-Fi     | Off               | Yes. ``selectNetwork`` + ``WiFi.begin()``  | Already on Wi-Fi, or no BLE            |
-+------------------------------+-----------+-------------------+--------------------------------------------+----------------------------------------+
-| ``MatterCHIPoBLEThread``     | Thread    | On                | No. Hub sends the dataset                  | Factory-fresh Thread node (C6/H2)      |
-+------------------------------+-----------+-------------------+--------------------------------------------+----------------------------------------+
-| ``MatterOnNetworkThread``    | Thread    | Off               | Yes. Network key after ``Matter.begin()``  | Already on the mesh                    |
-+------------------------------+-----------+-------------------+--------------------------------------------+----------------------------------------+
-| ``MatterOnNetworkEthernet``  | Ethernet  | Off               | EMAC or SPI ``ETH.begin()`` + IPv6 first   | Wired only                             |
-+------------------------------+-----------+-------------------+--------------------------------------------+----------------------------------------+
-| ``MatterCHIPoBLERelease``    | Default   | On, then reclaimed| No                                         | BLE reclaim demo (Wi-Fi; Thread on H2) |
-+------------------------------+-----------+-------------------+--------------------------------------------+----------------------------------------+
++------------------------------+-----------+-------------------+--------------------------------------------+--------------------------------------------------+
+| Example                      | Transport | CHIPoBLE          | Credentials in the sketch                  | When to use                                      |
++==============================+===========+===================+============================================+==================================================+
+| ``MatterCHIPoBLEWiFi``       | Wi-Fi     | On                | No. Hub sends SSID/password                | Factory-fresh Wi-Fi node                         |
++------------------------------+-----------+-------------------+--------------------------------------------+--------------------------------------------------+
+| ``MatterOnNetworkWiFi``      | Wi-Fi     | Off               | Yes. ``selectNetwork`` + ``WiFi.begin()``  | Already on Wi-Fi, or no BLE                      |
++------------------------------+-----------+-------------------+--------------------------------------------+--------------------------------------------------+
+| ``MatterCHIPoBLEThread``     | Thread    | On                | No. Hub sends the dataset                  | Factory-fresh Thread node (ESP32-C6 / ESP32-H2)  |
++------------------------------+-----------+-------------------+--------------------------------------------+--------------------------------------------------+
+| ``MatterOnNetworkThread``    | Thread    | Off               | Yes. Network key after ``Matter.begin()``  | Already on the mesh                              |
++------------------------------+-----------+-------------------+--------------------------------------------+--------------------------------------------------+
+| ``MatterOnNetworkEthernet``  | Ethernet  | Off               | EMAC or SPI ``ETH.begin()`` + IPv6 first   | Wired only                                       |
++------------------------------+-----------+-------------------+--------------------------------------------+--------------------------------------------------+
+| ``MatterCHIPoBLERelease``    | Default   | On, then reclaimed| No                                         | BLE reclaim demo (Wi-Fi; Thread on ESP32-H2)     |
++------------------------------+-----------+-------------------+--------------------------------------------+--------------------------------------------------+
 
 ``MatterOnOffLight`` is the generic accessory demo (CHIPoBLE when compiled in, otherwise sketch Wi-Fi). Use the table when you care about the commissioning path.
 
@@ -291,22 +291,22 @@ Network selection
 
 Call ``Matter.selectNetwork()`` **before any accessory** ``begin()``. With no call the selection is ``MATTER_NETWORK_NONE`` and existing sketches are unchanged.
 
-+------------+----------------------------------------------+------------------+------------------------------------------------------+
-| Network    | Supported when                               | CHIPoBLE default | Endpoint                                             |
-+============+==============================================+==================+======================================================+
-| Wi-Fi      | ``CONFIG_ENABLE_WIFI_STATION`` (not H2)      | Enabled          | 0 (primary)                                          |
-+------------+----------------------------------------------+------------------+------------------------------------------------------+
-| Thread     | ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (C6/H2) | Enabled          | 0 when Thread is selected (C6 replaces root Wi-Fi)   |
-+------------+----------------------------------------------+------------------+------------------------------------------------------+
-| Ethernet   | ``CONFIG_ETH_ENABLED`` (wire hardware)       | Disabled         | None (``0xFFFF``). No commissioning cluster          |
-+------------+----------------------------------------------+------------------+------------------------------------------------------+
++------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
+| Network    | Supported when                                                 | CHIPoBLE default | Endpoint                                                         |
++============+================================================================+==================+==================================================================+
+| Wi-Fi      | ``CONFIG_ENABLE_WIFI_STATION`` (not ESP32-H2)                  | Enabled          | 0 (primary)                                                      |
++------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
+| Thread     | ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (ESP32-C6 / ESP32-H2)     | Enabled          | 0 when Thread is selected (ESP32-C6 replaces root Wi-Fi)         |
++------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
+| Ethernet   | ``CONFIG_ETH_ENABLED`` (wire hardware)                         | Disabled         | None (``0xFFFF``). No commissioning cluster                      |
++------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
 
 * The library does **not** call ``ETH.begin()``. PHY macros are sketch-local. Internal EMAC (original ESP32, variant defines ``ETH_PHY_MDC`` / ``ETH_PHY_MDIO``): ``ETH.begin()``. SPI PHY (default W5500): ``SPI.begin()`` then ``ETH.begin(..., SPI)``. Then ``enableIPv6()`` and ``waitForNetwork()`` before ``Matter.begin()``.
 * Do **not** start Arduino ``ESPmDNS``. CHIP owns the responder. ``MDNS.begin()`` overwrites the hostname; ``MDNS.end()`` destroys CHIP's services.
 * ``selectNetwork(network, disableBLECommissioning)`` overrides the CHIPoBLE default. ``true`` turns CHIPoBLE off; do not also call ``setBLECommissioningEnabled()``. A selected-but-down interface plus no BLE leaves no commissioning path.
 * Ethernet and Thread skip CHIP's ``InitWiFiStack()`` via a linker ``--wrap``.
 * After ``Matter.begin()``, ``OThread.begin()`` attaches to CHIP's stack (``isAttachedToExternalStack()``). ``OThread.end()`` must not tear that stack down.
-* C5: ``isThreadEnabled()`` is false until Matter-over-Thread is enabled in that prebuild.
+* ESP32-C5: ``isThreadEnabled()`` is false until Matter-over-Thread is enabled in that prebuild.
 
 See `MatterOnNetworkEthernet <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet>`_, `MatterCHIPoBLEWiFi <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEWiFi>`_ / `MatterOnNetworkWiFi <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkWiFi>`_, and `MatterCHIPoBLEThread <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEThread>`_ / `MatterOnNetworkThread <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkThread>`_.
 
@@ -384,7 +384,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 
 * **Matter CHIPoBLE Wi-Fi** - CHIPoBLE on, no SSID in the sketch. The hub sends Wi-Fi credentials. `View Matter CHIPoBLE Wi-Fi code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEWiFi>`_
 * **Matter On-Network Wi-Fi** - CHIPoBLE off, ``selectNetwork(WIFI, true)`` then ``WiFi.begin(ssid, password)``. `View Matter On-Network Wi-Fi code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkWiFi>`_
-* **Matter CHIPoBLE Thread** - CHIPoBLE on, no dataset. The hub sends the Thread dataset (C6/H2). `View Matter CHIPoBLE Thread code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEThread>`_
+* **Matter CHIPoBLE Thread** - CHIPoBLE on, no dataset. The hub sends the Thread dataset (ESP32-C6 / ESP32-H2). `View Matter CHIPoBLE Thread code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEThread>`_
 * **Matter On-Network Thread** - CHIPoBLE off, sketch network key after ``Matter.begin()``. `View Matter On-Network Thread code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkThread>`_
 * **Matter On-Network Ethernet** - CHIPoBLE off, EMAC or SPI ``ETH.begin()`` and IPv6 before ``Matter.begin()``. `View Matter On-Network Ethernet code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet>`_
 * **Matter CHIPoBLE Release** - CHIPoBLE commissioning, then BLE RAM reclaim. Uses ``onBLEMemoryReleased()`` and allocates a demo buffer from ``loop()``. `View Matter CHIPoBLE Release code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLERelease>`_

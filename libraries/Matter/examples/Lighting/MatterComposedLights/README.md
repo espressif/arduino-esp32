@@ -28,8 +28,8 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 - Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../../Commissioning/MatterCHIPoBLEWiFi)
 - Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)
-- Thread + CHIPoBLE (C6/H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
-- Thread on-network (C6/H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
+- Thread + CHIPoBLE (ESP32-C6 / ESP32-H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
+- Thread on-network (ESP32-C6 / ESP32-H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../../Commissioning/MatterOnNetworkEthernet)
 
 ## Features
@@ -39,7 +39,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
   - Light #1: Simple On/Off Light
   - Light #2: Dimmable Light (on/off with brightness control)
   - Light #3: Color Light (RGB color control)
-- Default network and CHIPoBLE as in the Supported Targets table (C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
+- Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
 - Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home

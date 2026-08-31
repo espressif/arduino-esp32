@@ -210,8 +210,8 @@ Call `Matter.selectNetwork()` **before any accessory `begin()`**. No call (`MATT
 
 | Network | `isNetworkSupported` | CHIPoBLE default | Notes |
 | --- | --- | --- | --- |
-| Wi-Fi | `CONFIG_ENABLE_WIFI_STATION` (all Matter targets except H2) | On | Primary commissioning cluster at endpoint 0 |
-| Thread | `CONFIG_ENABLE_MATTER_OVER_THREAD` (**C6 and H2** in the Arduino prebuild; not C5 yet) | On | Thread Network Commissioning on endpoint 0. On dual-stack C6 the prebuild Wi-Fi driver on the root is replaced so the hub cannot ask for an SSID. |
+| Wi-Fi | `CONFIG_ENABLE_WIFI_STATION` (all Matter targets except ESP32-H2) | On | Primary commissioning cluster at endpoint 0 |
+| Thread | `CONFIG_ENABLE_MATTER_OVER_THREAD` (**ESP32-C6 and ESP32-H2** in the Arduino prebuild; not ESP32-C5 yet) | On | Thread Network Commissioning on endpoint 0. On dual-stack ESP32-C6 the prebuild Wi-Fi driver on the root is replaced so the hub cannot ask for an SSID. |
 | Ethernet | `CONFIG_ETH_ENABLED` (capable if you wire hardware) | Off | No commissioning cluster. Sketch starts `ETH` (EMAC or SPI), `enableIPv6()`, then `waitForNetwork()` |
 
 `selectNetwork(network, disableBLECommissioning)` overrides the BLE default. The library does **not** call `ETH.begin()` (PHY macros are sketch-local: EMAC `ETH.begin()`, or `SPI.begin()` plus `ETH.begin(..., SPI)`). Do **not** start Arduino `ESPmDNS` — CHIP owns mDNS; `MDNS.begin()` / `MDNS.end()` break Matter discovery.
@@ -228,10 +228,10 @@ Same On/Off Light in all of these. The only difference is how the node gets onto
 | --- | --- | --- | --- | --- |
 | [`MatterCHIPoBLEWiFi`](examples/Commissioning/MatterCHIPoBLEWiFi) | Wi-Fi | On | No. Hub sends SSID/password | Factory-fresh Wi-Fi node |
 | [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi) | Wi-Fi | Off | Yes. `selectNetwork(WIFI, true)` then `WiFi.begin(ssid, password)` | Already on Wi-Fi, or no BLE |
-| [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread) | Thread | On | No. Hub sends the dataset | Factory-fresh Thread node (C6/H2) |
+| [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread) | Thread | On | No. Hub sends the dataset | Factory-fresh Thread node (ESP32-C6 / ESP32-H2) |
 | [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread) | Thread | Off | Yes. Network key after `Matter.begin()` | Already on the mesh |
 | [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet) | Ethernet | Off | EMAC or SPI `ETH.begin()` + IPv6 first | Wired only (no commissioning cluster) |
-| [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease) | Default (Wi-Fi; Thread on H2) | On, then reclaimed | No | Same BLE path as the default accessory, plus heap reclaim |
+| [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease) | Default (Wi-Fi; Thread on ESP32-H2) | On, then reclaimed | No | Same BLE path as the default accessory, plus heap reclaim |
 
 [`MatterOnOffLight`](examples/Lighting/MatterOnOffLight) is the generic accessory demo: CHIPoBLE when compiled in, otherwise sketch Wi-Fi credentials. Use the table above when you care about the commissioning path.
 
@@ -243,8 +243,8 @@ Register `Matter.onBLEMemoryReleased()` **before** `Matter.begin()` if the sketc
 | --- | --- | --- | --- | --- | --- |
 | ESP32 | Wi-Fi | No | Yes (EMAC or SPI) | **No** (Bluedroid) | Use [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi) or Ethernet. `setBLECommissioningEnabled(true)` fails. |
 | ESP32-S2 | Wi-Fi | No | SPI PHY | **No** (no Bluetooth) | Same as ESP32 for BLE. |
-| ESP32-S3 / C3 | Wi-Fi | No | SPI PHY | Yes (NimBLE) | `selectNetwork(WIFI)` keeps BLE on; `, true` turns it off. |
-| ESP32-C5 | Wi-Fi | No (radio exists; not in this prebuild) | SPI PHY | Yes (NimBLE) | Same as C3. |
+| ESP32-S3 / ESP32-C3 | Wi-Fi | No | SPI PHY | Yes (NimBLE) | `selectNetwork(WIFI)` keeps BLE on; `, true` turns it off. |
+| ESP32-C5 | Wi-Fi | No (radio exists; not in this prebuild) | SPI PHY | Yes (NimBLE) | Same as ESP32-C3. |
 | ESP32-C6 | Wi-Fi until `selectNetwork` | Yes (dual-stack) | SPI PHY | Yes (NimBLE) | `selectNetwork(THREAD)` puts Thread NC on endpoint 0. |
 | ESP32-H2 | Thread | Yes | SPI PHY | Yes (NimBLE) | No Wi-Fi. |
 

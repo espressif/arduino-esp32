@@ -32,14 +32,14 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 - Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../../Commissioning/MatterCHIPoBLEWiFi)
 - Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)
-- Thread + CHIPoBLE (C6/H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
-- Thread on-network (C6/H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
+- Thread + CHIPoBLE (ESP32-C6 / ESP32-H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
+- Thread on-network (ESP32-C6 / ESP32-H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../../Commissioning/MatterOnNetworkEthernet)
 
 ## Features
 
 - Matter protocol implementation for a color light device
-- Default network and CHIPoBLE as in the Supported Targets table (C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
+- Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
 - RGB color control with HSV color model (hue 0-254, saturation 0-254, value 0-254)
 - No color temperature control (Color Temperature is not in the data model)
 - State persistence using `Preferences` library

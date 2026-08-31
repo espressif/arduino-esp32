@@ -52,7 +52,7 @@ createSecondaryNetworkInterface
 
 Creates a secondary network interface endpoint. This can be used for devices that support multiple network interfaces, such as Ethernet, Thread and Wi-Fi.
 
-``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` does **not** create this endpoint. On dual-stack C6 it puts Thread Network Commissioning on endpoint 0 (replacing the prebuild Wi-Fi driver) so hubs that only talk to the root see Thread. Call ``createSecondaryNetworkInterface()`` only when the product must expose **both** Wi-Fi (endpoint 0) and Thread (endpoint 2).
+``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` does **not** create this endpoint. On a dual-stack ESP32-C6 (Wi-Fi + Thread), the prebuild puts Wi-Fi Network Commissioning on endpoint 0 and Thread on endpoint 2. Many hubs only commission the root, so ``selectNetwork(THREAD)`` moves Thread Network Commissioning onto endpoint 0 (it replaces the Wi-Fi driver there). Call ``createSecondaryNetworkInterface()`` only when the product must expose **both** Wi-Fi (endpoint 0) and Thread (endpoint 2).
 
 .. code-block:: arduino
 

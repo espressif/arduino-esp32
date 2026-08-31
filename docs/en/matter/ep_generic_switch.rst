@@ -227,7 +227,7 @@ Minimal short-click implementation using ``press()`` on down and ``release()`` o
 Enhanced Smart Button
 *********************
 
-Still **one** GPIO (BOOT). ``begin(FEATURE_ALL)`` plus the sketch state machine send ``LongPress`` / ``LongRelease`` and ``MultiPressOngoing`` / ``MultiPressComplete``. This is not the multi-button / TagList example.
+Same single BOOT button as the simple example. ``begin(FEATURE_ALL)`` enables long-press and multi-press; the sketch turns hold time and click count into ``LongPress`` / ``LongRelease`` and ``MultiPressOngoing`` / ``MultiPressComplete``. For several buttons with names, use the TagList example below.
 
 `View Matter Enhanced Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterEnhancedSmartButton>`_
 

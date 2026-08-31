@@ -11,7 +11,7 @@ This is the BLE half of the Thread pair. The other half is [MatterOnNetworkThrea
 - `Matter.selectNetwork(MATTER_NETWORK_THREAD)` before any accessory `begin()` (CHIPoBLE stays **on**)
 - Starts the On/Off Light and `Matter.begin()`
 - Prints pairing codes for BLE commissioning
-- On dual-stack C6, Thread Network Commissioning replaces Wi-Fi on endpoint 0
+- On dual-stack ESP32-C6, Thread Network Commissioning replaces Wi-Fi on endpoint 0
 
 Do not call `OThread.begin()` or `commitDataSet()` here. After the hub finishes, CHIP has the dataset.
 
@@ -31,7 +31,7 @@ Do not type a Wi-Fi password into this example. The hub should offer Thread netw
 
 This sketch calls `Matter.selectNetwork(MATTER_NETWORK_THREAD)` and leaves CHIPoBLE **on**. The hub sends the Thread dataset. Do not call `OThread.begin()` here.
 
-- Arduino Matter prebuild Thread: **ESP32-C6** and **ESP32-H2**. C5 reports Thread unsupported until Matter-over-Thread is in that prebuild.
+- Arduino Matter prebuild Thread: **ESP32-C6** and **ESP32-H2**. ESP32-C5 reports Thread unsupported until Matter-over-Thread is in that prebuild.
 - ESP32-C6 also has Wi-Fi; this sketch selects Thread. For Wi-Fi see [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi).
 - Thread on-network (CHIPoBLE off): [MatterOnNetworkThread](../MatterOnNetworkThread).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).

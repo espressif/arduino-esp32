@@ -21,7 +21,7 @@ This is the on-network half of the Thread pair. The other half is [MatterCHIPoBL
 - Attaches `OThread` to CHIP's instance, commits a `DataSet` that holds only the network key, then `start()` / `waitForAttach()` / `waitForNetwork()`
 - Prints on-network pairing codes. CHIP publishes `_matterc._udp` through Thread SRP after the border router SRP server is found (`Matter DNS-SD initialized` in the log). Do not expect that log at attach time; SRP comes up a few seconds later.
 
-Thread Network Commissioning is on endpoint 0 (C6 replaces the prebuild Wi-Fi cluster on the root; H2 is already Thread-only).
+Thread Network Commissioning is on endpoint 0 (ESP32-C6 replaces the prebuild Wi-Fi cluster on the root; ESP32-H2 is already Thread-only).
 
 ## Network key
 

@@ -31,8 +31,8 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 - Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../../Commissioning/MatterCHIPoBLEWiFi)
 - Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)
-- Thread + CHIPoBLE (C6/H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
-- Thread on-network (C6/H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
+- Thread + CHIPoBLE (ESP32-C6 / ESP32-H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
+- Thread on-network (ESP32-C6 / ESP32-H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../../Commissioning/MatterOnNetworkEthernet)
 
 ## Call order
