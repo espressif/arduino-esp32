@@ -162,8 +162,9 @@ public:
    * CLI/CoAP cleanup as a safety net.
    *
    * When attached to an external stack (Matter), only Arduino wrappers are
-   * released; CHIP's Thread stack and SRP client are left running
-   * (`OThreadDNSSD.end()` does not stop SRP).
+   * released; CHIP's Thread stack and SRP client are left running.
+   * ``OThreadDNSSD.end()`` is a no-op unless ``begin()`` succeeded on this
+   * stack (it is refused while attached).
    */
   static void end();
 

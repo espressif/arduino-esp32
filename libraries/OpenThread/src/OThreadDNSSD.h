@@ -67,7 +67,8 @@
  *
  * When `OThread` is attached to an external stack (Matter / CHIP), that stack
  * owns the single OpenThread SRP client (`_matterc._udp`). @ref begin then
- * fails; @ref end only drops Arduino callbacks and local state.
+ * fails, so @ref end is a no-op and does not stop CHIP SRP. Sketch
+ * @ref onServiceEvent / @ref onQueryEvent stay registered until overwritten.
  */
 
 /** @brief Max services that can be advertised concurrently (fail closed when full). */
@@ -270,17 +271,19 @@ public:
    * @brief Tear down Arduino DNS-SD state.
    *
    * When this device owns the OpenThread stack, unregisters host/services,
-   * stops the SRP client, and delivers @ref OT_DNSSD_EVENT_REMOVED on the
-   * **caller** task. If an async discover is in flight, also delivers
-   * @ref OT_DNSSD_QUERY_ERROR with `OT_ERROR_ABORT` via @ref onQueryEvent
-   * before REMOVED. If the OpenThread lock cannot be acquired, SRP unregister
-   * toward the server may not run; local state is still cleared and REMOVED
-   * is still delivered.
+   * unregisters this library's OpenThread SRP callback, stops the SRP client,
+   * and delivers @ref OT_DNSSD_EVENT_REMOVED on the **caller** task. If an
+   * async discover is in flight, also delivers @ref OT_DNSSD_QUERY_ERROR with
+   * `OT_ERROR_ABORT` via @ref onQueryEvent before REMOVED. If the OpenThread
+   * lock cannot be acquired, SRP unregister toward the server may not run;
+   * local state is still cleared and REMOVED is still delivered. Sketch
+   * @ref onServiceEvent / @ref onQueryEvent are not cleared (re-@ref begin
+   * keeps using them).
    *
-   * When `OThread` is attached to an external stack, does **not** stop or
-   * clear the SRP client (CHIP still advertises `_matterc._udp`). Only
-   * Arduino callbacks, slots, and query state are dropped; REMOVED is not
-   * sent. Also called from `OThread.end()`.
+   * When `OThread` is attached to an external stack, @ref begin has already
+   * failed, so this is a no-op: CHIP's SRP client (`_matterc._udp`) is not
+   * stopped or cleared, and REMOVED is not sent. Also called from
+   * `OThread.end()`.
    */
   void end();
 
@@ -367,7 +370,8 @@ public:
   /**
    * @brief Register event callback (optional).
    *
-   * Do not call other OThreadDNSSD methods from the callback.
+   * Stays registered across @ref end / @ref begin until replaced or set to
+   * `nullptr`. Do not call other OThreadDNSSD methods from the callback.
    */
   void onServiceEvent(OThreadDNSSDEventCallback callback, void *context = nullptr);
 
@@ -445,10 +449,11 @@ public:
   /**
    * @brief Register async discover callback (optional).
    *
-   * Used with @ref startQueryService / @ref startQueryHost. Do not call other
-   * OThreadDNSSD methods from the callback. On @ref OT_DNSSD_QUERY_DONE, copy
-   * results in `loop()`; after timeout / @ref end, do not rely on getters until
-   * a new query.
+   * Used with @ref startQueryService / @ref startQueryHost. Stays registered
+   * across @ref end / @ref begin until replaced or set to `nullptr`. Do not
+   * call other OThreadDNSSD methods from the callback. On
+   * @ref OT_DNSSD_QUERY_DONE, copy results in `loop()`; after timeout /
+   * @ref end, do not rely on getters until a new query.
    */
   void onQueryEvent(OThreadDNSSDQueryCallback callback, void *context = nullptr);
 
