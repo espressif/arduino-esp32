@@ -50,7 +50,7 @@ Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do
 3. Commission with the printed pairing code or QR (BLE when CHIPoBLE is in the build).
 4. After commission (or on an already-commissioned reboot), wait for the “BLE memory released” lines, then the 16 KB `malloc`.
 
-Long-press BOOT (>5 s) to factory-reset. BLE comes back on the next boot until the node is commissioned again.
+Long-press BOOT (>5 s) to decommission the node (`Matter.decommission()`). This removes fabrics; it is not a full flash erase. BLE comes back on the next boot until the node is commissioned again.
 
 Call `Matter.setBLEMemoryReleaseEnabled(false)` before `Matter.begin()` to keep NimBLE after commissioning. That has no effect when `CONFIG_ENABLE_CHIPOBLE` is off (Arduino IDE original ESP32, ESP32-S2, or Bluetooth compiled out).
 

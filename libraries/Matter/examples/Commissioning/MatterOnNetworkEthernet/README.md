@@ -70,7 +70,7 @@ Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do
 
 Bring Ethernet up and wait for IPv6 **before** `Matter.begin()`. After a cable unplug/replug, or a reboot of an already-commissioned node, the library re-publishes DNS-SD on `IP_EVENT_GOT_IP6`.
 
-Long-press BOOT (>5 s) to factory-reset.
+Long-press BOOT (>5 s) to decommission the node (`Matter.decommission()`). This removes fabrics; it is not a full flash erase.
 
 ## Related
 

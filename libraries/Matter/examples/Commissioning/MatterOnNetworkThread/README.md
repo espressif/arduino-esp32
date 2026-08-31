@@ -55,7 +55,7 @@ Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do
 3. Serial Monitor 115200.
 4. Do not call `MDNS.begin()`.
 
-Long-press BOOT (>5 s) to factory-reset.
+Long-press BOOT (>5 s) to decommission the node (`Matter.decommission()`). This removes fabrics; it is not a full flash erase.
 
 ## Related
 
