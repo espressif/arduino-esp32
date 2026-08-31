@@ -38,7 +38,7 @@
 // Matter Occupancy Sensor Endpoint
 MatterOccupancySensor OccupancySensor;
 
-// CONFIG_ENABLE_CHIPOBLE is set when this build includes Matter BLE commissioning.
+// CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
 #if !CONFIG_ENABLE_CHIPOBLE
 // Wi-Fi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your Wi-Fi SSID
@@ -59,7 +59,7 @@ void setup() {
 
   Serial.begin(115200);
 
-// CONFIG_ENABLE_CHIPOBLE is set when this build includes Matter BLE commissioning.
+// CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
 #if !CONFIG_ENABLE_CHIPOBLE
   // Manually connect to Wi-Fi
   WiFi.begin(ssid, password);

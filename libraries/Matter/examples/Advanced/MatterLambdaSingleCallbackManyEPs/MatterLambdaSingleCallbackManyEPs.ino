@@ -33,7 +33,7 @@ Matter App Control: 'Room 5' (OnOffLight[4], Endpoint 5, GPIO 10) changed to: OF
 #if !CONFIG_ENABLE_CHIPOBLE
 // WiFi.h / WiFi.begin() only when this build has no CHIPoBLE (CONFIG_ENABLE_CHIPOBLE=n). Hub-delivered Wi-Fi still uses CHIP's stack.
 #include <WiFi.h>
-// CONFIG_ENABLE_CHIPOBLE is set when this build includes Matter BLE commissioning.
+// CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
 // Wi-Fi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your Wi-Fi SSID
 const char *password = "your-password";  // Change this to your Wi-Fi password
@@ -57,7 +57,7 @@ const char *lightName[MAX_LIGHT_NUMBER] = {
 void setup() {
   Serial.begin(115200);  // callback will just print a message in the console
 
-// CONFIG_ENABLE_CHIPOBLE is set when this build includes Matter BLE commissioning.
+// CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
 #if !CONFIG_ENABLE_CHIPOBLE
   // We start by connecting to a Wi-Fi network
   Serial.print("Connecting to ");

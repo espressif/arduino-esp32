@@ -18,7 +18,7 @@
 
 #include <Arduino.h>
 #include <Matter.h>
-// CONFIG_ENABLE_CHIPOBLE is set when this build includes Matter BLE commissioning (NimBLE + CHIPoBLE).
+// CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
 #if !CONFIG_ENABLE_CHIPOBLE
 // WiFi.h / WiFi.begin() only when this build has no CHIPoBLE (CONFIG_ENABLE_CHIPOBLE=n). Hub-delivered Wi-Fi still uses CHIP's stack.
 #include <WiFi.h>
