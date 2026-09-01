@@ -57,7 +57,7 @@ dependencies:
   espressif/esp_modem:
     version: "^2.0.2"
   espressif/esp-zigbee-lib:
-    version: "^2.0.2"
+    version: "^2.0.4"
     require: public
     rules:
       - if: "target not in [esp32c2, esp32c61, esp32p4]"
