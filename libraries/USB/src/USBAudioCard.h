@@ -107,13 +107,36 @@ typedef void (*arduino_usb_audio_card_data_handler_t)(void *data, uint16_t len);
  */
 class USBAudioCard {
 public:
+  /**
+  *  @brief Maximum number of discrete sample rates the device can advertise (UAC1 full-speed).
+  *  Limited to 8 by the descriptor cases provided by this implementation and the TinyUSB
+  *  macro expansion used to build the UAC1 format descriptor.
+  */
+  static constexpr uint8_t UAC_MAX_SAMPLE_RATES = 8;
+
   /** @brief Creates the audio device configuration and registers the USB audio interface.
    *  @param sample_rate   Initial sample rate in Hz (UAC1 full-speed: typically up to 48000).
    *  @param bps             Bits per sample (@ref UAC_Bits_Per_Sample).
    *  @param spk_channels    Speaker channel layout (@ref UAC_SPK_Channels).
    *  @param mic_channels    Microphone channel layout (@ref UAC_MIC_Channels).
    */
-  USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels = UAC_SPK_STEREO, UAC_MIC_Channels mic_channels = UAC_MIC_STEREO);
+  USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels = UAC_SPK_STEREO, UAC_MIC_Channels mic_channels = UAC_MIC_STEREO)
+    : USBAudioCard(&sample_rate, 1, bps, spk_channels, mic_channels) {}
+  /**
+  *  @brief Creates the audio device configuration advertising multiple discrete sample rates
+  *  (UAC1 full-speed).
+  *  @param sample_rates  Pointer to an array of supported sample rates in Hz, e.g. a local
+  *                       `uint32_t rates[] = {48000, 44100}`. The values are copied during
+  *                       construction, so the array does not need to outlive this call.
+  *                       Entries may be in any order; the first entry becomes the initial rate.
+  *                       On UAC1 full-speed, the largest rate is used to size the USB endpoints.
+  *                       On UAC2 high-speed targets, the list is not included in the descriptor.
+  *  @param num_rates     Number of entries in @a sample_rates (1..UAC_MAX_SAMPLE_RATES).
+  *  @param bps           Bits per sample (@ref UAC_Bits_Per_Sample).
+  *  @param spk_channels  Speaker channel layout (@ref UAC_SPK_Channels).
+  *  @param mic_channels  Microphone channel layout (@ref UAC_MIC_Channels).
+  */
+  USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels = UAC_SPK_STEREO, UAC_MIC_Channels mic_channels = UAC_MIC_STEREO);
   ~USBAudioCard();
 
   /** @brief Allocates buffers and starts the speaker receive task if a speaker path exists.
