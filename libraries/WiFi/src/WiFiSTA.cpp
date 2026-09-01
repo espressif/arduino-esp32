@@ -268,23 +268,6 @@ bool WiFiSTAClass::getAutoReconnect() {
 }
 
 /**
- * Set STA inactive (beacon timeout) time.
- * @param seconds inactive time in seconds (>= 3)
- * @return true on success
- */
-bool WiFiSTAClass::setInactiveTime(uint16_t seconds) {
-  return STA.setInactiveTime(seconds);
-}
-
-/**
- * Get STA inactive (beacon timeout) time in seconds.
- * @return inactive time in seconds, or 0 on failure
- */
-uint16_t WiFiSTAClass::getInactiveTime() {
-  return STA.getInactiveTime();
-}
-
-/**
  * Wait for WiFi connection to reach a result
  * returns the status reached or disconnect if STA is off
  * @return wl_status_t

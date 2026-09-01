@@ -174,9 +174,6 @@ public:
   bool setAutoReconnect(bool autoReconnect);
   bool getAutoReconnect();
 
-  bool setInactiveTime(uint16_t seconds);
-  uint16_t getInactiveTime();
-
   uint8_t waitForConnectResult(unsigned long timeoutLength = 60000);
 
   // Next group functions must be called before WiFi.begin()
