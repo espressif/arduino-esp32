@@ -35,7 +35,6 @@
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-bt.h"
 #include <platform/internal/BLEManager.h>
-#include <system/SystemLayer.h>
 #endif
 
 #if defined(SOC_WIFI_SUPPORTED) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
@@ -47,6 +46,7 @@
 #include <esp_netif.h>
 #include <stdio.h>
 #include <string.h>
+#include <system/SystemLayer.h>
 
 using namespace esp_matter;
 using namespace esp_matter::attribute;
@@ -133,6 +133,51 @@ static void scheduleDnssdRestart() {
   chip::DeviceLayer::PlatformMgr().ScheduleWork(startDnssdWork, 0);
 }
 
+#if CONFIG_ENABLE_MATTER_OVER_THREAD
+// Thread commissionable ads are OpenThread SRP (_matterc._udp), proxied as LAN
+// mDNS by the border router. On ESP32-C6, ChipDnssdInit also runs Wi-Fi mDNS
+// and posts kDnssdInitialized immediately — that is not SRP. StartServer()
+// before the OTBR answers ClearSrpHost returns CHIP_ERROR_UNINITIALIZED and
+// never publishes. After attach, retry for ~24 s so a late SRP server still
+// gets advertised. Safe from the ESP-IDF IP task: work runs on the CHIP task.
+static constexpr uint8_t kThreadAdvertiseMaxRetries = 8;
+static uint8_t sThreadAdvertiseRetriesLeft = 0;
+static bool sThreadAdvertiseTimerArmed = false;
+
+static void threadAdvertiseRetryTimer(chip::System::Layer *, void *) {
+  sThreadAdvertiseTimerArmed = false;
+  if (sLifecycle != MatterLifecycle::StackStarted || sSelectedNetwork != MATTER_NETWORK_THREAD) {
+    return;
+  }
+  chip::app::DnssdServer::Instance().StartServer();
+  if (sThreadAdvertiseRetriesLeft == 0) {
+    return;
+  }
+  sThreadAdvertiseRetriesLeft--;
+  sThreadAdvertiseTimerArmed = true;
+  chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds16(3), threadAdvertiseRetryTimer, nullptr);
+}
+
+static void startThreadAdvertiseRetriesWork(intptr_t) {
+  if (sLifecycle != MatterLifecycle::StackStarted || sSelectedNetwork != MATTER_NETWORK_THREAD) {
+    return;
+  }
+  chip::app::DnssdServer::Instance().StartServer();
+  sThreadAdvertiseRetriesLeft = kThreadAdvertiseMaxRetries;
+  if (!sThreadAdvertiseTimerArmed) {
+    sThreadAdvertiseTimerArmed = true;
+    chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds16(3), threadAdvertiseRetryTimer, nullptr);
+  }
+}
+
+static void startThreadAdvertiseRetries() {
+  if (sLifecycle != MatterLifecycle::StackStarted) {
+    return;
+  }
+  chip::DeviceLayer::PlatformMgr().ScheduleWork(startThreadAdvertiseRetriesWork, 0);
+}
+#endif
+
 static bool ifkeyMatchesSelection(esp_netif_t *netif) {
   if (netif == nullptr) {
     return false;
@@ -155,17 +200,17 @@ static void matterIpEventHandler(void *arg, esp_event_base_t event_base, int32_t
   if (event_id != IP_EVENT_GOT_IP6 || event_data == nullptr) {
     return;
   }
-  // Thread commissionable ads go through the OpenThread SRP client, which is
-  // initialized only after the border router answers ClearSrpHost. StartServer()
-  // before that returns CHIP_ERROR_UNINITIALIZED (0x1c) and never publishes
-  // _matterc._udp. CHIP posts kDnssdInitialized when SRP is ready.
-  if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+  const ip_event_got_ip6_t *event = static_cast<const ip_event_got_ip6_t *>(event_data);
+  if (!ifkeyMatchesSelection(event->esp_netif)) {
     return;
   }
-  const ip_event_got_ip6_t *event = static_cast<const ip_event_got_ip6_t *>(event_data);
-  if (ifkeyMatchesSelection(event->esp_netif)) {
-    scheduleDnssdRestart();
+#if CONFIG_ENABLE_MATTER_OVER_THREAD
+  if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+    startThreadAdvertiseRetries();
+    return;
   }
+#endif
+  scheduleDnssdRestart();
 }
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
@@ -458,7 +503,30 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
       log_d("BLE deinitialized and memory reclaimed");
       notifyBleMemoryReleased();
       break;
+    case chip::DeviceLayer::DeviceEventType::kThreadConnectivityChange:
+#if CONFIG_ENABLE_MATTER_OVER_THREAD
+      if (sSelectedNetwork == MATTER_NETWORK_THREAD &&
+          event->ThreadConnectivityChange.Result == chip::DeviceLayer::kConnectivity_Established) {
+        startThreadAdvertiseRetries();
+      }
+#endif
+      break;
     case chip::DeviceLayer::DeviceEventType::kDnssdInitialized:
+#if CONFIG_ENABLE_MATTER_OVER_THREAD
+      if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+#if defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+        // ESP32-C6: EspDnssdInit posts this as soon as Wi-Fi mDNS starts. Thread
+        // SRP posts the same event later, after attach + OTBR ClearSrpHost.
+        if (!chip::DeviceLayer::ConnectivityMgr().IsThreadAttached()) {
+          log_d("Matter DNS-SD initialized (Wi-Fi mDNS); Thread SRP is not ready yet");
+          break;
+        }
+#endif
+        log_i("Matter DNS-SD initialized (Thread SRP ready)");
+        startThreadAdvertiseRetries();
+        break;
+      }
+#endif
       log_i("Matter DNS-SD initialized");
       break;
     default:                                                       break;
@@ -561,7 +629,14 @@ void ArduinoMatter::begin() {
   applyBlePolicyAfterStart();
   registerMatterIpEventHandler();
   if (selectedHasUsableIpv6()) {
-    scheduleDnssdRestart();
+#if CONFIG_ENABLE_MATTER_OVER_THREAD
+    if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+      startThreadAdvertiseRetries();
+    } else
+#endif
+    {
+      scheduleDnssdRestart();
+    }
   }
 }
 

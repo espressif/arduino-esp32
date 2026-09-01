@@ -19,7 +19,7 @@ This is the on-network half of the Thread pair. The other half is [MatterCHIPoBL
 - Calls `Matter.selectNetwork(MATTER_NETWORK_THREAD, true)` before any accessory `begin()` (CHIPoBLE off)
 - Starts the On/Off Light and `Matter.begin()`
 - Attaches `OThread` to CHIP's instance, commits a `DataSet` that holds only the network key, then `start()` / `waitForAttach()` / `waitForNetwork()`
-- Prints on-network pairing codes. CHIP publishes `_matterc._udp` through Thread SRP after the border router SRP server is found (`Matter DNS-SD initialized` in the log). Do not expect that log at attach time; SRP comes up a few seconds later.
+- Prints on-network pairing codes. CHIP publishes `_matterc._udp` through Thread SRP after the border router SRP server is found (`Matter DNS-SD initialized (Thread SRP ready)` in the log). That is not the same as attach: on ESP32-C6 an earlier `Matter DNS-SD initialized` is only Wi-Fi mDNS. The library retries advertise for about 24 s after Thread IPv6 / attach. If the app still does not see the node, the border router is not proxying SRP to LAN mDNS — use [MatterCHIPoBLEThread](../MatterCHIPoBLEThread) for consumer apps.
 
 Thread Network Commissioning is on endpoint 0 (ESP32-C6 replaces the prebuild Wi-Fi cluster on the root; ESP32-H2 is already Thread-only).
 
