@@ -177,7 +177,7 @@ public:
     return _stack_running;
   }
   bool started() {
-    return _started;
+    return _started && !_paused;
   }
   bool paused() {
     return _paused;

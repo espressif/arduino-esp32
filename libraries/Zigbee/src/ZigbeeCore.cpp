@@ -68,7 +68,7 @@ ZigbeeCore::ZigbeeCore() {
   _rx_on_when_idle = true;
   _debug = false;
   _allow_multi_endpoint_binding = false;
-  _global_default_response_cb = nullptr;  // Initialize global callback to nullptr
+  _global_default_response_cb = NULL;  // Initialize global callback to NULL
   lock = xSemaphoreCreateBinary();
   if (lock == NULL) {
     log_e("Semaphore creation failed");
@@ -81,8 +81,22 @@ bool zb_app_signal_handler(const ezb_app_signal_t *signal);
 bool zb_apsde_data_indication_handler(const ezb_apsde_data_ind_t *ind);
 
 // ---- Commissioning retry (replacement for the removed esp_zb_scheduler_alarm) -------------------
-static esp_timer_handle_t s_comm_retry_timer = nullptr;
+static esp_timer_handle_t s_comm_retry_timer = NULL;
 static uint8_t s_comm_retry_mode = 0;
+
+// ---- Zigbee mainloop stop/start (esp_zigbee_stop, SDK v2.0.4+) --------------------------------
+static TaskHandle_t zigbeeTaskHandle = NULL;
+static SemaphoreHandle_t zigbeeResumeSem = NULL;   // start() posts; task waits after mainloop exit
+static SemaphoreHandle_t zigbeeStoppedSem = NULL;  // task posts when mainloop exit completes
+
+static void ensureZigbeeTaskSync(void) {
+  if (zigbeeResumeSem == NULL) {
+    zigbeeResumeSem = xSemaphoreCreateBinary();
+  }
+  if (zigbeeStoppedSem == NULL) {
+    zigbeeStoppedSem = xSemaphoreCreateBinary();
+  }
+}
 
 static void comm_retry_timer_cb(void *arg) {
   if (esp_zigbee_lock_acquire(portMAX_DELAY)) {
@@ -249,9 +263,14 @@ static void esp_zb_task(void *pvParameters) {
     power_desc.current_power_source_level = EZB_AF_NODE_POWER_SOURCE_LEVEL_100_PERCENT;
     ezb_af_set_node_power_desc(&power_desc);
   }
-  ezb_set_rx_on_when_idle(Zigbee.getRxOnWhenIdle());
+  ezb_set_rx_on_when_idle(Zigbee.getRxOnWhenIdle()); // set the rx on when idle flag
 
-  esp_zigbee_launch_mainloop();
+  for (;;) {
+    esp_zigbee_launch_mainloop();  // blocks until esp_zigbee_stop() - mainloop is the Zigbee stack's main loop
+    xSemaphoreGive(zigbeeStoppedSem); // post the semaphore to indicate that the task has stopped
+    xSemaphoreTake(zigbeeResumeSem, portMAX_DELAY); // wait for the semaphore to be posted
+    ezb_set_rx_on_when_idle(Zigbee.getRxOnWhenIdle()); // set the rx on when idle flag, might have changed since the task was stopped
+  }
 }
 
 // Zigbee stack init: esp_zigbee_init() + commissioning setup (no endpoint registration yet).
@@ -317,7 +336,8 @@ bool ZigbeeCore::zigbeeStartStack() {
   if (_stack_running) {
     return true;
   }
-  if (xTaskCreate(esp_zb_task, "Zigbee_main", 8192, NULL, 5, NULL) != pdPASS) {
+  ensureZigbeeTaskSync();
+  if (xTaskCreate(esp_zb_task, "Zigbee_main", 8192, NULL, 5, &zigbeeTaskHandle) != pdPASS) {
     log_e("Failed to create Zigbee task");
     return false;
   }
@@ -913,19 +933,42 @@ void ZigbeeCore::setNVRAMChannelMask(uint32_t mask) {
 }
 
 void ZigbeeCore::stop() {
-  if (_stack_running && !_paused) {
-    vTaskSuspend(xTaskGetHandle("Zigbee_main"));
-    log_v("Zigbee stack stopped");
-    _paused = true;
+  if (!_stack_running || _paused) {
+    return;
   }
+
+  xSemaphoreTake(zigbeeStoppedSem, 0);
+
+  esp_err_t err = ESP_FAIL;
+  if (esp_zigbee_lock_acquire(portMAX_DELAY)) {
+    err = esp_zigbee_stop();
+    esp_zigbee_lock_release();
+  } else {
+    log_e("Failed to acquire Zigbee lock for stop");
+    return;
+  }
+  if (err != ESP_OK) {
+    log_e("Failed to stop Zigbee stack: %s", esp_err_to_name(err));
+    return;
+  }
+
+  if (xSemaphoreTake(zigbeeStoppedSem, pdMS_TO_TICKS(5000)) != pdTRUE) {
+    log_e("Timed out waiting for Zigbee mainloop to stop");
+    return;
+  }
+
+  _paused = true;
+  log_v("Zigbee stack stopped");
 }
 
 void ZigbeeCore::start() {
-  if (_stack_running && _paused) {
-    vTaskResume(xTaskGetHandle("Zigbee_main"));
-    log_v("Zigbee stack started");
-    _paused = false;
+  if (!_stack_running || !_paused) {
+    return;
   }
+
+  _paused = false;
+  xSemaphoreGive(zigbeeResumeSem);
+  log_v("Zigbee stack started");
 }
 
 // Function to convert enum value to string
