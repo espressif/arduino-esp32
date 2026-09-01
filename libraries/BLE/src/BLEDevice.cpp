@@ -1391,6 +1391,21 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     {
       log_i("ESP_GAP_BLE_AUTH_CMPL_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
+      // Report the outcome so a failed pairing is not mistaken for a successful one.
+      // fail_reason carries the SMP reason code and is the only way to tell why pairing was rejected.
+      if (param->ble_security.auth_cmpl.success) {
+        log_i(
+          "Authentication complete: addr=%s, auth_mode=0x%02x", BLEAddress(param->ble_security.auth_cmpl.bd_addr).toString().c_str(),
+          param->ble_security.auth_cmpl.auth_mode
+        );
+      } else {
+        log_e(
+          "Authentication failed: addr=%s, reason=%u (0x%02x), %s", BLEAddress(param->ble_security.auth_cmpl.bd_addr).toString().c_str(),
+          param->ble_security.auth_cmpl.fail_reason, param->ble_security.auth_cmpl.fail_reason,
+          BLEUtils::authFailReasonToString(param->ble_security.auth_cmpl.fail_reason)
+        );
+      }
+
       // Call user callback BEFORE signaling completion.
       // This ensures callback output (e.g., "Authentication complete") appears before
       // any waiting GATT operations are unblocked and produce their own output.
