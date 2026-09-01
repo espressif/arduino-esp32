@@ -606,6 +606,50 @@ bool STAClass::getAutoReconnect() {
   return _autoReconnect;
 }
 
+/**
+ * Set STA inactive (beacon timeout) time.
+ * If the station does not receive a beacon from the connected AP within this time,
+ * it disconnects. Default is 6 seconds; minimum is 3 seconds.
+ * Must be called after STA has been started (e.g. after WiFi.begin()).
+ * @param seconds inactive time in seconds (>= 3)
+ * @return true on success
+ */
+bool STAClass::setInactiveTime(uint16_t seconds) {
+  static constexpr uint16_t kMinInactiveTimeSec = 3;
+  if (seconds < kMinInactiveTimeSec) {
+    log_e("Inactive time must be at least %u seconds", kMinInactiveTimeSec);
+    return false;
+  }
+  if (!started()) {
+    log_w("STA has not been started");
+    return false;
+  }
+  esp_err_t err = esp_wifi_set_inactive_time(WIFI_IF_STA, seconds);
+  if (err != ESP_OK) {
+    log_e("esp_wifi_set_inactive_time failed!: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
+/**
+ * Get STA inactive (beacon timeout) time in seconds.
+ * Must be called after STA has been started.
+ * @return inactive time in seconds, or 0 on failure
+ */
+uint16_t STAClass::getInactiveTime() {
+  if (!started()) {
+    log_w("STA has not been started");
+    return 0;
+  }
+  uint16_t seconds = 0;
+  esp_err_t err = esp_wifi_get_inactive_time(WIFI_IF_STA, &seconds);
+  if (err != ESP_OK) {
+    log_e("esp_wifi_get_inactive_time failed!: 0x%x: %s", err, esp_err_to_name(err));
+    return 0;
+  }
+  return seconds;
+}
+
 void STAClass::setMinSecurity(wifi_auth_mode_t minSecurity) {
   _minSecurity = minSecurity;
 }
