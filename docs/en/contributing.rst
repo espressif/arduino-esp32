@@ -174,7 +174,8 @@ Currently, the default FQBNs are:
 * ``espressif:esp32:esp32c3``
 * ``espressif:esp32:esp32c6``
 * ``espressif:esp32:esp32h2``
-* ``espressif:esp32:esp32p4:USBMode=default,ChipVariant=postv3``
+* ``espressif:esp32:esp32p4:PSRAM=enabled,USBMode=hwcdc,ChipVariant=postv3`` (``CDCOnBoot`` is forced last: ``cdc`` locally, ``default`` / Disabled in CI)
+* ``espressif:esp32:esp32c5:PSRAM=enabled``
 
 There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.yml`` file.
 
@@ -190,6 +191,10 @@ This makes it possible to turn off an option that is enabled by default, such as
 .. code-block:: yaml
 
     fqbn_append: PSRAM=disabled
+
+On ESP32-P4, ``CDCOnBoot`` is an exception: after the FQBN is fully resolved (including a full ``fqbn:`` list),
+the scripts force ``CDCOnBoot=cdc`` (Enabled) for local runs and ``CDCOnBoot=default`` (Disabled) when ``CI=true``.
+Do not set ``CDCOnBoot`` in ``ci.yml``.
 
 When the options differ per target, ``fqbn_append`` can be a dictionary instead. The ``default`` entry is applied to every target and the entry
 matching the target is merged on top of it, so only the difference has to be spelled out. This is needed for options that do not exist on every
