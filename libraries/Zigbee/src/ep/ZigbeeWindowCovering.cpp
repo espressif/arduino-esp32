@@ -42,7 +42,7 @@ ZigbeeWindowCovering::ZigbeeWindowCovering(uint8_t endpoint) : ZigbeeEP(endpoint
   // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
   // scenes, window covering clusters) instead of the v1 cluster-list factory.
   _ep_config = {
-    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_WINDOW_COVERING_DEVICE_ID, .app_device_version = 0
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_WINDOW_COVERING_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
   ezb_zha_window_covering_config_t window_covering_cfg = EZB_ZHA_WINDOW_COVERING_CONFIG();
   _ep_desc = ezb_zha_create_window_covering(_endpoint, &window_covering_cfg);

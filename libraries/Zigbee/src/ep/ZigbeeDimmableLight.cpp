@@ -24,7 +24,7 @@ ZigbeeDimmableLight::ZigbeeDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) 
 
   // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
   // scenes, on/off, level clusters) instead of the v1 manual cluster-list factory.
-  _ep_config = {.ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0};
+  _ep_config = {.ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0, .reserved = 0};
 
   // set default values
   _current_state = false;

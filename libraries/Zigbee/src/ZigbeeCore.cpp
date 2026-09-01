@@ -43,7 +43,6 @@
 #include "ZigbeeCore.h"
 #if CONFIG_ZB_ENABLED
 
-#include "ZigbeeHandlers.cpp"  // TODO(zb-v2): ZCL action handlers still use the v1 ZCL API.
 #include <set>
 #include "nvs_flash.h"
 #include "esp_timer.h"
@@ -77,9 +76,7 @@ ZigbeeCore::ZigbeeCore() {
 }
 
 //forward declarations
-// v2.x ZCL core-action handler (implemented in ZigbeeHandlers.cpp). The callback now returns void and
-// receives a non-const message whose ->out.result field is used to communicate status back to the stack.
-static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, void *message);
+void zigbee_register_zcl_handlers(void);  // ZigbeeHandlers.cpp — registers static zb_action_handler (SDK v2 pattern)
 bool zb_app_signal_handler(const ezb_app_signal_t *signal);
 bool zb_apsde_data_indication_handler(const ezb_apsde_data_ind_t *ind);
 
@@ -99,7 +96,13 @@ static void comm_retry_timer_cb(void *arg) {
 static void scheduleCommissioning(uint8_t mode, uint32_t delay_ms) {
   s_comm_retry_mode = mode;
   if (!s_comm_retry_timer) {
-    const esp_timer_create_args_t args = {.callback = comm_retry_timer_cb, .arg = nullptr, .name = "zb_comm_retry"};
+    const esp_timer_create_args_t args = {
+      .callback = comm_retry_timer_cb,
+      .arg = nullptr,
+      .dispatch_method = ESP_TIMER_TASK,
+      .name = "zb_comm_retry",
+      .skip_unhandled_events = false,
+    };
     if (esp_timer_create(&args, &s_comm_retry_timer) != ESP_OK) {
       log_e("Failed to create commissioning retry timer");
       return;
@@ -216,7 +219,7 @@ bool ZigbeeCore::registerEndpoints() {
   }
 
   // SDK order: register device descriptor, then ZCL core action handler.
-  ezb_zcl_core_action_handler_register(zb_action_handler);
+  zigbee_register_zcl_handlers();
 
   for (std::list<ZigbeeEP *>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
     log_i("Device type: %s, Endpoint: %u, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
@@ -578,12 +581,12 @@ bool zb_app_signal_handler(const ezb_app_signal_t *signal) {
 // APS DATA INDICATION HANDLER to catch bind/unbind requests
 bool zb_apsde_data_indication_handler(const ezb_apsde_data_ind_t *ind) {
   if (Zigbee.getDebugMode()) {
-    uint16_t src_short = (ind->src_address.addr_mode == EZB_ADDR_MODE_SHORT) ? ind->src_address.u.short_addr : 0xFFFF;
     log_d("APSDE INDICATION - Received APSDE-DATA indication, status: %u", ind->status);
     log_d(
       "APSDE INDICATION - dst_endpoint: %u, src_endpoint: %u, cluster_id: 0x%04x, profile_id: 0x%04x, asdu_length: %u, src_short_addr: 0x%04x, "
       "security_status: %u, lqi: %d",
-      ind->dst_endpoint, ind->src_endpoint, ind->cluster_id, ind->profile_id, ind->asdu_length, src_short, ind->security_status, ind->lqi
+      ind->dst_endpoint, ind->src_endpoint, ind->cluster_id, ind->profile_id, ind->asdu_length,
+      (ind->src_address.addr_mode == EZB_ADDR_MODE_SHORT) ? ind->src_address.u.short_addr : 0xFFFF, ind->security_status, ind->lqi
     );
   }
   if (ind->status == 0x00) {

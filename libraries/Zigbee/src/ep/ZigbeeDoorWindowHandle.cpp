@@ -33,7 +33,7 @@ ZigbeeDoorWindowHandle::ZigbeeDoorWindowHandle(uint8_t endpoint) : ZigbeeEP(endp
   _enrolled = false;
   memset(_ias_cie_addr, 0, sizeof(_ias_cie_addr));
 
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_IAS_ZONE_ID, .app_device_version = 0};
+  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_IAS_ZONE_ID, .app_device_version = 0, .reserved = 0};
   _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
   if (_ep_desc == nullptr) {
     log_e("Failed to create door/window handle endpoint descriptor");

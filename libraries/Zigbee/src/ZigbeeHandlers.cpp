@@ -267,10 +267,10 @@ static esp_err_t zb_cmd_ias_zone_status_change_handler(const ezb_zcl_ias_zone_st
     log_e("Received message: error status(%d)", message->info.status);
     return ESP_ERR_INVALID_ARG;
   }
-  const ezb_zcl_cmd_hdr_t *hdr = message->in.header;
   log_v(
-    "IAS Zone Status Notification: from address(0x%x) src endpoint(%u) to dst endpoint(%u) cluster(0x%x)", hdr ? hdr->src_addr.u.short_addr : 0,
-    hdr ? hdr->src_ep : 0, message->info.dst_ep, message->info.cluster_id
+    "IAS Zone Status Notification: from address(0x%x) src endpoint(%u) to dst endpoint(%u) cluster(0x%x)",
+    message->in.header ? message->in.header->src_addr.u.short_addr : 0, message->in.header ? message->in.header->src_ep : 0, message->info.dst_ep,
+    message->info.cluster_id
   );
 
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
@@ -290,11 +290,10 @@ static esp_err_t zb_cmd_ias_zone_enroll_request_handler(const ezb_zcl_ias_zone_e
     log_e("Received message: error status(%d)", message->info.status);
     return ESP_ERR_INVALID_ARG;
   }
-  const ezb_zcl_cmd_hdr_t *hdr = message->in.header;
   log_v(
     "IAS Zone Enroll Request: from address(0x%x) src endpoint(%u) to dst endpoint(%u) cluster(0x%x) zone type(0x%x) manufacturer code(0x%x)",
-    hdr ? hdr->src_addr.u.short_addr : 0, hdr ? hdr->src_ep : 0, message->info.dst_ep, message->info.cluster_id, message->in.payload.zone_type,
-    message->in.payload.manuf_code
+    message->in.header ? message->in.header->src_addr.u.short_addr : 0, message->in.header ? message->in.header->src_ep : 0, message->info.dst_ep,
+    message->info.cluster_id, message->in.payload.zone_type, message->in.payload.manuf_code
   );
 
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
@@ -334,10 +333,9 @@ static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_c
 
   // NOTE(zb-v2): the movement command ID now lives in the ZCL header (in.header->cmd_id); the payload
   // is a union (lift/tilt value or percentage) decoded by the EP based on the command ID.
-  const ezb_zcl_cmd_hdr_t *hdr = message->in.header;
   log_v(
-    "Received message: endpoint(%u), cluster(0x%x), command(0x%x), payload(%u)", message->info.dst_ep, message->info.cluster_id, hdr ? hdr->cmd_id : 0,
-    message->in.payload.lift_value
+    "Received message: endpoint(%u), cluster(0x%x), command(0x%x), payload(%u)", message->info.dst_ep, message->info.cluster_id,
+    message->in.header ? message->in.header->cmd_id : 0, message->in.payload.lift_value
   );
 
   // List through all Zigbee EPs and call the callback function, with the message
@@ -544,10 +542,10 @@ static esp_err_t zb_cmd_default_resp_handler(const ezb_zcl_cmd_default_rsp_messa
     log_e("Received message: error status(%d)", message->info.status);
     return ESP_ERR_INVALID_ARG;
   }
-  const ezb_zcl_cmd_hdr_t *hdr = message->in.header;
   log_v(
-    "Received default response: from address(0x%x), src_endpoint(%u) to dst_endpoint(%u), cluster(0x%x) with status 0x%x", hdr ? hdr->src_addr.u.short_addr : 0,
-    hdr ? hdr->src_ep : 0, message->info.dst_ep, message->info.cluster_id, message->in.status_code
+    "Received default response: from address(0x%x), src_endpoint(%u) to dst_endpoint(%u), cluster(0x%x) with status 0x%x",
+    message->in.header ? message->in.header->src_addr.u.short_addr : 0, message->in.header ? message->in.header->src_ep : 0, message->info.dst_ep,
+    message->info.cluster_id, message->in.status_code
   );
 
   // Call global callback if set
@@ -574,10 +572,10 @@ static esp_err_t zb_manuf_spec_command_handler(const ezb_zcl_manuf_spec_cmd_mess
     log_e("Received message: error status(%d)", message->info.status);
     return ESP_ERR_INVALID_ARG;
   }
-  const ezb_zcl_cmd_hdr_t *hdr = message->in.header;
   log_v(
-    "Manufacturer-specific command: from address(0x%x) src endpoint(%u) to dst endpoint(%u) cluster(0x%x) command(0x%x)", hdr ? hdr->src_addr.u.short_addr : 0,
-    hdr ? hdr->src_ep : 0, message->info.dst_ep, message->info.cluster_id, hdr ? hdr->cmd_id : 0
+    "Manufacturer-specific command: from address(0x%x) src endpoint(%u) to dst endpoint(%u) cluster(0x%x) command(0x%x)",
+    message->in.header ? message->in.header->src_addr.u.short_addr : 0, message->in.header ? message->in.header->src_ep : 0, message->info.dst_ep,
+    message->info.cluster_id, message->in.header ? message->in.header->cmd_id : 0
   );
 
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
@@ -587,6 +585,10 @@ static esp_err_t zb_manuf_spec_command_handler(const ezb_zcl_manuf_spec_cmd_mess
     }
   }
   return ESP_OK;
+}
+
+void zigbee_register_zcl_handlers(void) {
+  ezb_zcl_core_action_handler_register(zb_action_handler);
 }
 
 #endif  // CONFIG_ZB_ENABLED

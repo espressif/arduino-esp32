@@ -74,7 +74,7 @@ ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : ZigbeeEP(en
   _on_light_color_change_with_source = nullptr;
 
   _ep_config = {
-    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_COLOR_DIMMER_SWITCH_DEVICE_ID, .app_device_version = 0
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_COLOR_DIMMER_SWITCH_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
     ezb_zha_color_dimmer_switch_config_t switch_cfg = EZB_ZHA_COLOR_DIMMER_SWITCH_CONFIG();
     _ep_desc = ezb_zha_create_color_dimmer_switch(_endpoint, &switch_cfg);

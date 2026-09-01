@@ -68,7 +68,7 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _on_humidity_receive_with_source = nullptr;
   _on_humidity_config_receive = nullptr;
 
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_THERMOSTAT_DEVICE_ID, .app_device_version = 0};
+  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_THERMOSTAT_DEVICE_ID, .app_device_version = 0, .reserved = 0};
     ezb_zha_thermostat_config_t thermostat_cfg = EZB_ZHA_THERMOSTAT_CONFIG();
     _ep_desc = ezb_zha_create_thermostat(_endpoint, &thermostat_cfg);
 

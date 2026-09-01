@@ -20,7 +20,7 @@ ZigbeeMultistate::ZigbeeMultistate(uint8_t endpoint) : ZigbeeEP(endpoint) {
 
   // v2.x data model: build the endpoint descriptor manually with Basic + Identify server clusters.
   // Multistate Input/Output clusters are attached later by addMultistateInput()/addMultistateOutput().
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
+  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
 
   // Initialize member variables
   _multistate_clusters = 0;

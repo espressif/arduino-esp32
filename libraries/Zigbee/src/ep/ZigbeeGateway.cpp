@@ -22,7 +22,7 @@ ZigbeeGateway::ZigbeeGateway(uint8_t endpoint) : ZigbeeEP(endpoint) {
   // v2.x data model: build the endpoint descriptor manually (Basic + Identify) instead of the v1
   // cluster-list factory. Registered as a Home Gateway device to preserve the v1 device id.
   ezb_af_ep_config_t ep_config = {
-    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_HOME_GATEWAY_DEVICE_ID, .app_device_version = 0
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_HOME_GATEWAY_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
   _ep_config = ep_config;
     _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);

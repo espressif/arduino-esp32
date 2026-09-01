@@ -24,7 +24,7 @@ ZigbeePowerOutlet::ZigbeePowerOutlet(uint8_t endpoint) : ZigbeeEP(endpoint) {
   // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
   // scenes, on/off clusters) instead of the v1 manual cluster-list factory.
   _ep_config = {
-    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_MAINS_POWER_OUTLET_DEVICE_ID, .app_device_version = 0
+    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_MAINS_POWER_OUTLET_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
   log_v("Outlet endpoint created %u", _endpoint);
     ezb_zha_mains_power_outlet_config_t outlet_cfg = EZB_ZHA_MAINS_POWER_OUTLET_CONFIG();

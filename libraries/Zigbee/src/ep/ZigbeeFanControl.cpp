@@ -27,7 +27,7 @@ ZigbeeFanControl::ZigbeeFanControl(uint8_t endpoint) : ZigbeeEP(endpoint) {
   // NOTE(zb-v2): the v1 device id mismatch is preserved: _device_id is Thermostat while the endpoint
   // descriptor is registered as a Heating/Cooling Unit (matching the v1 _ep_config.app_device_id).
   ezb_af_ep_config_t ep_config = {
-    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_HEATING_COOLING_UNIT_DEVICE_ID, .app_device_version = 0
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_HEATING_COOLING_UNIT_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
   _ep_config = ep_config;
     _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);

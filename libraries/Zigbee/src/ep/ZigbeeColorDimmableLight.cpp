@@ -28,7 +28,7 @@ ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(
   _color_temp_physical_max_mireds = EZB_ZCL_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MAX_MIREDS_DEFAULT_VALUE;
 
   _ep_config = {
-    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_COLOR_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0
+    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_COLOR_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
 
   //set default values
