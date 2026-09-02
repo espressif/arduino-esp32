@@ -92,6 +92,8 @@ bool ZigbeeTempSensor::setReporting(uint16_t min_interval, uint16_t max_interval
 }
 
 bool ZigbeeTempSensor::setTemperature(float temperature) {
+  log_v("Updating temperature sensor value...");
+  log_d("Setting temperature to %.2f°C", temperature);
   int16_t zb_temperature = zb_float_to_s16(temperature);
   ezb_zcl_status_t ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_TEMPERATURE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_TEMPERATURE_MEASUREMENT_MEASURED_VALUE_ID, &zb_temperature, false
@@ -116,6 +118,7 @@ bool ZigbeeTempSensor::reportTemperature() {
     log_e("Failed to send temperature report");
     return false;
   }
+  log_v("Temperature report sent");
   return true;
 }
 
@@ -148,6 +151,8 @@ void ZigbeeTempSensor::addHumiditySensor(float min, float max, float tolerance, 
 }
 
 bool ZigbeeTempSensor::setHumidity(float humidity) {
+  log_v("Updating humidity sensor value...");
+  log_d("Setting humidity to %.2f%%", humidity);
   uint16_t zb_humidity = (uint16_t)(humidity * 100);
   ezb_zcl_status_t ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_ID, &zb_humidity, false
@@ -172,6 +177,7 @@ bool ZigbeeTempSensor::reportHumidity() {
     log_e("Failed to send humidity report");
     return false;
   }
+  log_v("Humidity report sent");
   return true;
 }
 
