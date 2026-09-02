@@ -16,6 +16,13 @@
 // over BLE. Do not commit a sketch dataset — that fights the hub.
 // For on-network Thread (BLE off + network key in the sketch) see MatterOnNetworkThread.
 // Do not start Arduino ESPmDNS. Do not use BLE.h / BLEDevice.
+//
+// Supported SoCs: C6, H2, and C5 with Tools → Matter Network → Thread.
+// ESP32 / S2 / S3 / C3: no Matter-over-Thread in the prebuild — this sketch will halt.
+// C5: two prebuilds. Matter Network → Thread selects esp32c5_mot. Wi-Fi (default)
+// has isThreadEnabled() false and setup() halts.
+// C6: one dual-stack prebuild. No Matter Network menu. selectNetwork(THREAD) uses
+// Thread (root Network Commissioning). After a boards.txt change: Tools → Reload Board Data.
 
 #include <Arduino.h>
 #include <Matter.h>

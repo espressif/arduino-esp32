@@ -34,6 +34,8 @@ This sketch calls `Matter.selectNetwork(MATTER_NETWORK_THREAD)` and leaves CHIPo
 - Arduino Matter prebuild Thread: **ESP32-C6**, **ESP32-H2**, and **ESP32-C5** with **Tools → Matter Network → Thread**. Use `Matter.isThreadEnabled()` / `CONFIG_ENABLE_MATTER_OVER_THREAD`.
 - ESP32-C6 also has Wi-Fi; this sketch selects Thread. For Wi-Fi see [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi).
 - Thread on-network (CHIPoBLE off): [MatterOnNetworkThread](../MatterOnNetworkThread).
+
+**Arduino IDE:** C5 Thread needs **Tools → Matter Network → Thread** (second prebuild). C6 has no such menu — one dual-stack image; this sketch’s `selectNetwork(THREAD)` picks Thread.
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.

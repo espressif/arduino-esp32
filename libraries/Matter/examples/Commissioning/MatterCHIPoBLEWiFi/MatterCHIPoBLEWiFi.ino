@@ -16,6 +16,13 @@
 // over BLE. Do not call WiFi.begin() — that fights the hub.
 // For on-network Wi-Fi (BLE off + credentials in the sketch) see MatterOnNetworkWiFi.
 // Do not start Arduino ESPmDNS. Do not use BLE.h / BLEDevice.
+//
+// Supported SoCs: S3, C3, C5, C6 (CHIPoBLE + Wi-Fi in the Arduino IDE prebuild).
+// ESP32 / S2: no CHIPoBLE — use MatterOnNetworkWiFi. H2: no Wi-Fi — use a Thread example.
+// C5: Tools → Matter Network → Wi-Fi (default). That menu picks the Wi-Fi lib tree
+// (esp32c5). Thread menu is a second prebuild; this sketch will halt there.
+// C6: one dual-stack prebuild. No Matter Network menu. selectNetwork(WIFI) keeps
+// Wi-Fi; Thread stays unused. After a boards.txt change: Tools → Reload Board Data.
 
 #include <Arduino.h>
 #include <Matter.h>

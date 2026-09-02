@@ -31,6 +31,8 @@ This sketch calls `Matter.selectNetwork(MATTER_NETWORK_WIFI, true)` and `WiFi.be
 - ESP32-C6 also has Thread; this sketch keeps Wi-Fi. For Thread see [MatterOnNetworkThread](../MatterOnNetworkThread).
 - ESP32-C5: this sketch needs **Tools → Matter Network → Wi-Fi** (default). Thread menu: [MatterOnNetworkThread](../MatterOnNetworkThread).
 - Wi-Fi + CHIPoBLE (hub sends SSID): [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi).
+
+**Arduino IDE:** C5 has **Tools → Matter Network** (Wi-Fi vs Thread are two prebuilds). C6 has no such menu — one dual-stack image; this sketch’s `selectNetwork(WIFI, true)` keeps Wi-Fi.
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.
