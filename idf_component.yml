@@ -120,7 +120,7 @@ dependencies:
       - if: "target in [esp32s3, esp32p4]"
       - if: idf_version < 6.0
   espressif/esp_hosted:
-    version: "^2.9.2"
+    version: "2.12.3"
     rules:
       - if: "target == esp32p4"
   espressif/esp_wifi_remote:
