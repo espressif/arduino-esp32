@@ -319,9 +319,9 @@ void BLESecurity::waitForAuthenticationComplete(uint32_t timeoutMs) {
     return;
   }
 
-  // Semaphore should have been created in startSecurity()
-  if (m_authCompleteSemaphore == nullptr) {
-    log_e("Authentication semaphore not initialized");
+  // The semaphore is created by startSecurity(). If security was never started there is
+  // nothing to wait for, which is the normal path when forced authentication is disabled.
+  if (!m_securityStarted || m_authCompleteSemaphore == nullptr) {
     return;
   }
 
@@ -463,10 +463,21 @@ bool BLESecurity::startSecurity(uint16_t connHandle, int *rcPtr) {
   return m_securityStarted;
 }
 
-// This function is called when authentication is complete for NimBLE.
+// This function is called when authentication completed successfully for NimBLE.
 void BLESecurityCallbacks::onAuthenticationComplete(ble_gap_conn_desc *desc) {
-  bool success = desc != nullptr;
-  Serial.printf("Using default onAuthenticationComplete. Authentication %s.\n", success ? "successful" : "failed");
+  Serial.println("Using default onAuthenticationComplete. Authentication successful.");
+}
+
+// This function is called when authentication completes for NimBLE, successfully or not.
+void BLESecurityCallbacks::onAuthenticationComplete(ble_gap_conn_desc *desc, int status) {
+  if (status != 0) {
+    // The reason code is not decoded here because the text tables are only compiled in
+    // when logging is enabled, which is independent of this Serial output.
+    Serial.printf("Using default onAuthenticationComplete. Authentication failed with status %d.\n", status);
+    return;
+  }
+
+  onAuthenticationComplete(desc);
 }
 #endif
 

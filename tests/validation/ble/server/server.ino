@@ -11,6 +11,9 @@
 #define SECURE_CHARACTERISTIC_UUID   "ff1d2614-e2d6-4c87-9154-6625d39ca7f8"
 #define WRITE_NR_CHARACTERISTIC_UUID "d7c1aa01-36e1-4688-b7f5-ea07361b26a8"
 
+// Static passkey used by the Passkey Entry phase.
+#define PASSKEY_PIN 123456
+
 static const int WRITE_NR_BURST_COUNT = 3;
 static const uint8_t WRITE_NR_EXPECTED[WRITE_NR_BURST_COUNT][3] = {
   {0xAA, 0xAA, 0xAA},
@@ -87,8 +90,22 @@ class MySecurityCallbacks : public BLESecurityCallbacks {
     return true;
   }
 
+  // Passkey Entry phase only. With DisplayOnly capability the stack asks us to show
+  // the passkey the peer has to enter, which is how the test tells the two pairing
+  // methods apart: Numeric Comparison would call onConfirmPIN() instead.
+  void onPassKeyNotify(uint32_t passkey) override {
+    Serial.printf("[SERVER] Passkey notify: %06lu\n", (unsigned long)passkey);
+  }
+
 #if defined(CONFIG_BLUEDROID_ENABLED)
   void onAuthenticationComplete(esp_ble_auth_cmpl_t desc) override {
+    // Bluedroid reports both outcomes through this callback, so the result has to be
+    // checked here. Without it a rejected pairing looks exactly like a successful one.
+    if (!desc.success) {
+      Serial.printf("[SERVER] Authentication failed: reason=%u (0x%02X)\n", desc.fail_reason, desc.fail_reason);
+      return;
+    }
+
     BLEAddress peerAddr(desc.bd_addr);
     Serial.println("[SERVER] Authentication complete");
 
@@ -110,7 +127,14 @@ class MySecurityCallbacks : public BLESecurityCallbacks {
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
-  void onAuthenticationComplete(ble_gap_conn_desc *desc) override {
+  // The status-aware overload is used so a rejected pairing is reported instead of
+  // silently looking like a successful one.
+  void onAuthenticationComplete(ble_gap_conn_desc *desc, int status) override {
+    if (status != 0) {
+      Serial.printf("[SERVER] Authentication failed: status=%d\n", status);
+      return;
+    }
+
     BLEAddress peerAddr(desc->peer_id_addr.val, desc->peer_id_addr.type);
     Serial.println("[SERVER] Authentication complete");
 
@@ -281,6 +305,37 @@ void setup() {
   Serial.printf("[SERVER] Service UUID: %s\n", SERVICE_UUID);
 }
 
+// Drops every bond this device holds. Without this the next pairing attempt would
+// re-encrypt the link with the stored LTK instead of running the pairing method
+// the test wants to exercise.
+static void forgetBonds() {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  int count = esp_ble_get_bond_device_num();
+  if (count > 0) {
+    esp_ble_bond_dev_t *list = (esp_ble_bond_dev_t *)malloc(sizeof(esp_ble_bond_dev_t) * count);
+    if (list != nullptr) {
+      esp_ble_get_bond_device_list(&count, list);
+      for (int i = 0; i < count; i++) {
+        esp_ble_remove_bond_device(list[i].bd_addr);
+      }
+      free(list);
+    }
+  }
+#elif defined(CONFIG_NIMBLE_ENABLED)
+  ble_store_clear();
+#endif
+}
+
+// Switch from Numeric Comparison to Passkey Entry. DisplayOnly here against
+// KeyboardOnly on the client selects Passkey Entry, which is the method used by the
+// Server_secure_static_passkey example and the one reported broken in issue #12860.
+static void startPasskeyPhase() {
+  forgetBonds();
+  BLESecurity::setPassKey(true, PASSKEY_PIN);
+  BLESecurity::setCapability(ESP_IO_CAP_OUT);
+  Serial.println("[SERVER] Passkey entry mode ready");
+}
+
 // Swap the scan response for the window 2 payload (32-bit guard + terminator).
 void startAdvertisingPhase2() {
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
@@ -323,6 +378,8 @@ void loop() {
     command.trim();
     if (command == "ADPHASE2") {
       startAdvertisingPhase2();
+    } else if (command == "PSKPHASE") {
+      startPasskeyPhase();
     }
   }
 

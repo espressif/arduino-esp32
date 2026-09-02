@@ -869,6 +869,48 @@ String BLEUtils::adFlagsToString(uint8_t adFlags) {
   return res;
 }  // adFlagsToString
 
+/**
+ * @brief Convert a Bluedroid authentication failure reason to a string representation.
+ *
+ * The table is only compiled in when the error log level is enabled, since that is the
+ * only place these strings are consumed.
+ *
+ * @param [in] reason The reason reported in esp_ble_auth_cmpl_t::fail_reason.
+ * @return A string representation of the failure reason.
+ */
+const char *BLEUtils::authFailReasonToString(esp_ble_auth_fail_rsn_t reason) {
+  switch (reason) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    case ESP_AUTH_SMP_PASSKEY_FAIL:            return "Passkey entry failed or was canceled by the user";
+    case ESP_AUTH_SMP_OOB_FAIL:                return "OOB data is not available";
+    case ESP_AUTH_SMP_PAIR_AUTH_FAIL:          return "Authentication requirements cannot be met with these IO capabilities";
+    case ESP_AUTH_SMP_CONFIRM_VALUE_FAIL:      return "Confirm value does not match the calculated compare value";
+    case ESP_AUTH_SMP_PAIR_NOT_SUPPORT:        return "Pairing is not supported by the peer";
+    case ESP_AUTH_SMP_ENC_KEY_SIZE:            return "Resultant encryption key size is insufficient";
+    case ESP_AUTH_SMP_INVALID_CMD:             return "SMP command is not supported by the peer";
+    case ESP_AUTH_SMP_UNKNOWN_ERR:             return "Pairing failed for an unspecified reason";
+    case ESP_AUTH_SMP_REPEATED_ATTEMPT:        return "Too little time has elapsed since the last pairing or security request";
+    case ESP_AUTH_SMP_INVALID_PARAMETERS:      return "Command length is invalid or a parameter is out of range";
+    case ESP_AUTH_SMP_DHKEY_CHK_FAIL:          return "DHKey check value does not match the one calculated locally";
+    case ESP_AUTH_SMP_NUM_COMP_FAIL:           return "Numeric comparison values do not match";
+    case ESP_AUTH_SMP_BR_PARING_IN_PROGR:      return "Pairing over BR/EDR is already in progress";
+    case ESP_AUTH_SMP_XTRANS_DERIVE_NOT_ALLOW: return "BR/EDR link key cannot be used to derive LE transport keys";
+    case ESP_AUTH_SMP_INTERNAL_ERR:            return "Internal error in the pairing procedure";
+    case ESP_AUTH_SMP_UNKNOWN_IO:              return "Unknown IO capability, unable to decide the association model";
+    case ESP_AUTH_SMP_INIT_FAIL:               return "SMP pairing initiation failed";
+    case ESP_AUTH_SMP_CONFIRM_FAIL:            return "Confirm value does not match";
+    case ESP_AUTH_SMP_BUSY:                    return "A security request is already in progress";
+    case ESP_AUTH_SMP_ENC_FAIL:                return "The controller failed to start encryption";
+    case ESP_AUTH_SMP_STARTED:                 return "SMP pairing process started";
+    case ESP_AUTH_SMP_RSP_TIMEOUT:             return "Timed out waiting for an SMP command";
+    case ESP_AUTH_SMP_DIV_NOT_AVAIL:           return "Encrypted Diversifier value not available";
+    case ESP_AUTH_SMP_UNSPEC_ERR:              return "Unspecified failure reason";
+    case ESP_AUTH_SMP_CONN_TOUT:               return "Pairing failed due to a connection timeout";
+#endif
+    default: return "Unknown";
+  }
+}  // authFailReasonToString
+
 esp_gatt_id_t BLEUtils::buildGattId(esp_bt_uuid_t uuid, uint8_t inst_id) {
   esp_gatt_id_t retGattId;
   retGattId.uuid = uuid;
@@ -2119,6 +2161,41 @@ const char *BLEUtils::returnCodeToString(int rc) {
 }
 
 /**
+ * @brief Converts a raw SMP pairing failure reason to a text string.
+ *
+ * BLE_GAP_EVENT_PARING_COMPLETE reports the reason as a bare SMP code, unlike most
+ * NimBLE status values which are namespaced BLE_HS_* codes handled by returnCodeToString().
+ *
+ * The table is only compiled in when the error log level is enabled, since that is the
+ * only place these strings are consumed.
+ *
+ * @param [in] smErr The SMP reason code (Core spec Vol 3, Part H, 3.5.5).
+ * @return A string representation of the reason code.
+ */
+const char *BLEUtils::smErrorToString(uint8_t smErr) {
+  switch (smErr) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    case 0:                           return "Success";
+    case BLE_SM_ERR_PASSKEY:          return "Passkey entry failed or was canceled by the user";
+    case BLE_SM_ERR_OOB:              return "OOB data is not available";
+    case BLE_SM_ERR_AUTHREQ:          return "Authentication requirements cannot be met with these IO capabilities";
+    case BLE_SM_ERR_CONFIRM_MISMATCH: return "Confirm value does not match the calculated compare value";
+    case BLE_SM_ERR_PAIR_NOT_SUPP:    return "Pairing is not supported by the peer";
+    case BLE_SM_ERR_ENC_KEY_SZ:       return "Resultant encryption key size is insufficient";
+    case BLE_SM_ERR_CMD_NOT_SUPP:     return "SMP command is not supported by the peer";
+    case BLE_SM_ERR_UNSPECIFIED:      return "Pairing failed for an unspecified reason";
+    case BLE_SM_ERR_REPEATED:         return "Too little time has elapsed since the last pairing or security request";
+    case BLE_SM_ERR_INVAL:            return "Command length is invalid or a parameter is out of range";
+    case BLE_SM_ERR_DHKEY:            return "DHKey check value does not match the one calculated locally";
+    case BLE_SM_ERR_NUMCMP:           return "Numeric comparison values do not match";
+    case BLE_SM_ERR_ALREADY:          return "Pairing over BR/EDR is already in progress";
+    case BLE_SM_ERR_CROSS_TRANS:      return "BR/EDR link key cannot be used to derive LE transport keys";
+#endif
+    default: return "Unknown";
+  }
+}
+
+/**
  * @brief Utility function to log the gap event info.
  * @param [in] event A pointer to the gap event structure.
  * @param [in] arg Unused.
@@ -2209,6 +2286,19 @@ const char *BLEUtils::gapEventToString(uint8_t eventType) {
     case BLE_GAP_EVENT_SCAN_REQ_RCVD:  //23
       return "BLE_GAP_EVENT_SCAN_REQ_RCVD";
 #endif
+
+    case BLE_GAP_EVENT_PARING_COMPLETE:  //27, name is misspelled in NimBLE
+      return "BLE_GAP_EVENT_PAIRING_COMPLETE";
+
+    case BLE_GAP_EVENT_SUBRATE_CHANGE:  //28
+      return "BLE_GAP_EVENT_SUBRATE_CHANGE";
+
+    case BLE_GAP_EVENT_DATA_LEN_CHG:  //34
+      return "BLE_GAP_EVENT_DATA_LEN_CHG";
+
+    case BLE_GAP_EVENT_LINK_ESTAB:  //38
+      return "BLE_GAP_EVENT_LINK_ESTAB";
+
     default: log_d("gapEventToString: Unknown event type %d 0x%02x", eventType, eventType); return "Unknown event type";
   }
 #else   // #if defined(CONFIG_NIMBLE_ENABLE_GAP_EVENT_CODE_TEXT)
