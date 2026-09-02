@@ -97,6 +97,14 @@ void setup() {
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
 
+  // Initialize Zigbee stack as end device
+  if (!Zigbee.role(ZIGBEE_END_DEVICE)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Enable both XY (RGB) and Temperature color capabilities
   uint16_t capabilities = ZIGBEE_COLOR_CAPABILITY_X_Y | ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP;
   zbColorLight.setLightColorCapabilities(capabilities);
@@ -114,15 +122,17 @@ void setup() {
   // Set min/max temperature range (High Kelvin -> Low Mireds: Min and Max is switched)
   zbColorLight.setLightColorTemperatureRange(kelvinToMireds(6500), kelvinToMireds(2000));
 
-  // Add endpoint to Zigbee Core
-  Serial.println("Adding ZigbeeLight endpoint to Zigbee Core");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbColorLight);
 
-  // When all EPs are registered, start Zigbee in End Device mode
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {

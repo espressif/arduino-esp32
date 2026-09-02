@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* Class of Zigbee Pressure sensor endpoint inherited from common EP class */
+/* Class of Zigbee Fan Control endpoint inherited from common EP class */
 
 #pragma once
 
@@ -21,26 +21,25 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
 
 // Custom Arduino-friendly enums for fan mode values
 enum ZigbeeFanMode {
-  FAN_MODE_OFF = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_OFF,
-  FAN_MODE_LOW = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_LOW,
-  FAN_MODE_MEDIUM = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_MEDIUM,
-  FAN_MODE_HIGH = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_HIGH,
-  FAN_MODE_ON = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_ON,
-  FAN_MODE_AUTO = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_AUTO,
-  FAN_MODE_SMART = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SMART,
+  FAN_MODE_OFF = 0x00,
+  FAN_MODE_LOW = 0x01,
+  FAN_MODE_MEDIUM = 0x02,
+  FAN_MODE_HIGH = 0x03,
+  FAN_MODE_ON = 0x04,
+  FAN_MODE_AUTO = 0x05,
+  FAN_MODE_SMART = 0x06,
 };
 
 // Custom Arduino-friendly enums for fan mode sequence
 enum ZigbeeFanModeSequence {
-  FAN_MODE_SEQUENCE_LOW_MED_HIGH = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_MED_HIGH,
-  FAN_MODE_SEQUENCE_LOW_HIGH = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_HIGH,
-  FAN_MODE_SEQUENCE_LOW_MED_HIGH_AUTO = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_MED_HIGH_AUTO,
-  FAN_MODE_SEQUENCE_LOW_HIGH_AUTO = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_HIGH_AUTO,
-  FAN_MODE_SEQUENCE_ON_AUTO = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_ON_AUTO,
+  FAN_MODE_SEQUENCE_LOW_MED_HIGH = 0x00,
+  FAN_MODE_SEQUENCE_LOW_HIGH = 0x01,
+  FAN_MODE_SEQUENCE_LOW_MED_HIGH_AUTO = 0x02,
+  FAN_MODE_SEQUENCE_LOW_HIGH_AUTO = 0x03,
+  FAN_MODE_SEQUENCE_ON_AUTO = 0x04,
 };
 
 class ZigbeeFanControl : public ZigbeeEP {
@@ -67,7 +66,7 @@ public:
   }
 
 private:
-  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
   //callback function to be called on fan mode change
   void (*_on_fan_mode_change)(ZigbeeFanMode mode);
   void fanModeChanged();

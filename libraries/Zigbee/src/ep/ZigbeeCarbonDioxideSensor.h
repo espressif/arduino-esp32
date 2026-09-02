@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* Class of Zigbee Pressure sensor endpoint inherited from common EP class */
+/* Class of Zigbee Carbon Dioxide sensor endpoint inherited from common EP class */
 
 #pragma once
 
@@ -21,34 +21,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
-
-// clang-format off
-#define ZIGBEE_DEFAULT_CARBON_DIOXIDE_SENSOR_CONFIG()                     \
-  {                                                                       \
-    .basic_cfg =                                                          \
-      {                                                                   \
-        .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,        \
-        .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,      \
-      },                                                                  \
-    .identify_cfg =                                                       \
-      {                                                                   \
-        .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE, \
-      },                                                                  \
-    .carbon_dioxide_meas_cfg =                                            \
-      {                                                                   \
-        .measured_value = 0.0,                                            \
-        .min_measured_value = 0.0,                                        \
-        .max_measured_value = 1.0,                                        \
-      },                                                                  \
-  }
-// clang-format on
-
-typedef struct zigbee_carbon_dioxide_sensor_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-  esp_zb_carbon_dioxide_measurement_cluster_cfg_t carbon_dioxide_meas_cfg;
-} zigbee_carbon_dioxide_sensor_cfg_t;
+#include "ezbee/zcl/cluster/carbon_dioxide_measurement_desc.h"
 
 class ZigbeeCarbonDioxideSensor : public ZigbeeEP {
 public:
@@ -74,6 +47,10 @@ public:
 
   // Report the carbon dioxide value
   bool report();
+
+private:
+  ezb_zcl_carbon_dioxide_measurement_cluster_config_t _carbon_dioxide_meas_cfg;
+  float _tolerance;
 };
 
 #endif  // CONFIG_ZB_ENABLED

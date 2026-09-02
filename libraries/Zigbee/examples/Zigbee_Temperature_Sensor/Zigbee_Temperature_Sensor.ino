@@ -63,6 +63,14 @@ void setup() {
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
+  // Initialize Zigbee stack as end device
+  if (!Zigbee.role(ZIGBEE_END_DEVICE)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: set Zigbee device name and model
   zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
 
@@ -78,11 +86,11 @@ void setup() {
   // Optional: Time cluster configuration (default params, as this device will revieve time from coordinator)
   zbTempSensor.addTimeCluster();
 
-  // Add endpoint to Zigbee Core
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in End Device mode
+  // When all EPs are registered, start Zigbee
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
@@ -96,6 +104,10 @@ void setup() {
     delay(100);
   }
   Serial.println();
+
+  // Activate the local Time cluster server (must be after Zigbee.begin()) so getTime() can store the
+  // synchronized time locally without hitting the SDK time-server write hook.
+  zbTempSensor.registerTimeServer();
 
   // Optional: If time cluster is added, time can be read from the coordinator
   timeinfo = zbTempSensor.getTime();

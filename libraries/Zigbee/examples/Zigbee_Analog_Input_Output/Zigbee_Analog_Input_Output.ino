@@ -50,7 +50,6 @@ void onAnalogOutputChange(float analog_output) {
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting...");
 
   // Init button switch
   pinMode(button, INPUT_PULLUP);
@@ -58,18 +57,26 @@ void setup() {
   // Set analog resolution to 10 bits
   analogReadResolution(10);
 
+  // Initialize Zigbee stack as router
+  if (!Zigbee.role(ZIGBEE_ROUTER)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: set Zigbee device name and model
   zbAnalogDevice.setManufacturerAndModel("Espressif", "ZigbeeAnalogDevice");
 
   // Set up analog input
   zbAnalogDevice.addAnalogInput();
-  zbAnalogDevice.setAnalogInputApplication(ESP_ZB_ZCL_AI_POWER_IN_WATTS_CONSUMPTION);
+  zbAnalogDevice.setAnalogInputApplication(EZB_ZCL_AI_POWER_IN_WATTS_CONSUMPTION);
   zbAnalogDevice.setAnalogInputDescription("Power Consumption (Watts)");
   zbAnalogDevice.setAnalogInputResolution(0.01);
 
   // Set up analog output
   zbAnalogDevice.addAnalogOutput();
-  zbAnalogDevice.setAnalogOutputApplication(ESP_ZB_ZCL_AI_RPM_OTHER);
+  zbAnalogDevice.setAnalogOutputApplication(EZB_ZCL_AI_RPM_OTHER);
   zbAnalogDevice.setAnalogOutputDescription("Fan Speed (RPM)");
   zbAnalogDevice.setAnalogOutputResolution(1);
 
@@ -81,19 +88,19 @@ void setup() {
 
   // Set up analog input
   zbAnalogTemp.addAnalogInput();
-  zbAnalogTemp.setAnalogInputApplication(ESP_ZB_ZCL_AI_TEMPERATURE_OTHER);
+  zbAnalogTemp.setAnalogInputApplication(EZB_ZCL_AI_TEMPERATURE_OTHER);
   zbAnalogTemp.setAnalogInputDescription("Temperature");
   zbAnalogTemp.setAnalogInputResolution(0.1);
 
   // Set up analog input
   zbAnalogFan.addAnalogInput();
-  zbAnalogFan.setAnalogInputApplication(ESP_ZB_ZCL_AI_RPM_OTHER);
+  zbAnalogFan.setAnalogInputApplication(EZB_ZCL_AI_RPM_OTHER);
   zbAnalogFan.setAnalogInputDescription("RPM");
   zbAnalogFan.setAnalogInputResolution(1);
 
   // Set up analog input
   zbAnalogPercent.addAnalogInput();
-  zbAnalogPercent.setAnalogInputApplication(ESP_ZB_ZCL_AI_PERCENTAGE_OTHER);
+  zbAnalogPercent.setAnalogInputApplication(EZB_ZCL_AI_PERCENTAGE_OTHER);
   zbAnalogPercent.setAnalogInputDescription("Percentage");
   zbAnalogPercent.setAnalogInputResolution(0.01);
 
@@ -104,8 +111,8 @@ void setup() {
   Zigbee.addEndpoint(&zbAnalogPercent);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in Router Device mode
-  if (!Zigbee.begin(ZIGBEE_ROUTER)) {
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();

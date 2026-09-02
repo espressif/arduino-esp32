@@ -51,24 +51,24 @@ bool resend = false;
 
 /************************ Callbacks *****************************/
 #if USE_GLOBAL_ON_RESPONSE_CALLBACK
-void onGlobalResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster) {
+void onGlobalResponse(zb_cmd_type_t command, ezb_zcl_status_t status, uint8_t endpoint, uint16_t cluster) {
   Serial.printf("Global response command: %d, status: %s, endpoint: %u, cluster: 0x%04x\r\n", command, esp_zb_zcl_status_to_name(status), endpoint, cluster);
   if ((command == ZB_CMD_REPORT_ATTRIBUTE) && (endpoint == TEMP_SENSOR_ENDPOINT_NUMBER)) {
     switch (status) {
-      case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
-      case ESP_ZB_ZCL_STATUS_FAIL:    resend = true; break;
-      default:                        break;  // add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
+      case EZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
+      case EZB_ZCL_STATUS_FAIL:    resend = true; break;
+      default:                     break;  // add more statuses like EZB_ZCL_STATUS_INVALID_VALUE, EZB_ZCL_STATUS_TIMEOUT etc.
     }
   }
 }
 #else
-void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status) {
+void onResponse(zb_cmd_type_t command, ezb_zcl_status_t status) {
   Serial.printf("Response command: %d, status: %s\r\n", command, esp_zb_zcl_status_to_name(status));
   if (command == ZB_CMD_REPORT_ATTRIBUTE) {
     switch (status) {
-      case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
-      case ESP_ZB_ZCL_STATUS_FAIL:    resend = true; break;
-      default:                        break;  // add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
+      case EZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
+      case EZB_ZCL_STATUS_FAIL:    resend = true; break;
+      default:                     break;  // add more statuses like EZB_ZCL_STATUS_INVALID_VALUE, EZB_ZCL_STATUS_TIMEOUT etc.
     }
   }
 }
@@ -130,6 +130,18 @@ void setup() {
   // Configure the wake up source and set to wake up every 5 seconds
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
 
+  esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
+  zigbeeConfig.zed_config.keep_alive = 10000;
+  Zigbee.setTimeout(10000);  // Set timeout for Zigbee Begin to 10s (default is 30s)
+
+  // Initialize Zigbee stack as end device with custom config
+  if (!Zigbee.role(&zigbeeConfig)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: set Zigbee device name and model
   zbTempSensor.setManufacturerAndModel("Espressif", "SleepyZigbeeTempSensor");
 
@@ -159,22 +171,17 @@ void setup() {
   zbTempSensor.onDefaultResponse(onResponse);
 #endif
 
-  // Add endpoint to Zigbee Core
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
-  // Create a custom Zigbee configuration for End Device with keep alive 10s to avoid interference with reporting data
-  esp_zb_cfg_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
-  zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
-
-  // For battery powered devices, it can be better to set timeout for Zigbee Begin to lower value to save battery
-  // If the timeout has been reached, the network channel mask will be reset and the device will try to connect again after reset (scanning all channels)
-  Zigbee.setTimeout(10000);  // Set timeout for Zigbee Begin to 10s (default is 30s)
-
-  // When all EPs are registered, start Zigbee in End Device mode
-  if (!Zigbee.begin(&zigbeeConfig, false)) {
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();  // If Zigbee failed to start, reboot the device and try again
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {

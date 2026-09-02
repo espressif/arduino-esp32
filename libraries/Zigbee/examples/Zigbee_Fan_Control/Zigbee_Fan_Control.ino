@@ -83,6 +83,14 @@ void setup() {
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
 
+  // Initialize Zigbee stack
+  if (!Zigbee.role(ZIGBEE_ROUTER)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   //Optional: set Zigbee device name and model
   zbFanControl.setManufacturerAndModel("Espressif", "ZBFanControl");
 
@@ -92,15 +100,17 @@ void setup() {
   // Set callback function for fan mode change
   zbFanControl.onFanModeChange(setFan);
 
-  //Add endpoint to Zigbee Core
-  Serial.println("Adding ZigbeeFanControl endpoint to Zigbee Core");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbFanControl);
 
-  // When all EPs are registered, start Zigbee in ROUTER mode
-  if (!Zigbee.begin(ZIGBEE_ROUTER)) {
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {

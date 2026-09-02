@@ -14,9 +14,11 @@
 
 #pragma once
 
-#include "esp_zigbee_core.h"
+#include "esp_zigbee.h"  // v2.x all-in-one header (was esp_zigbee_core.h)
 
 // Foundation Command Types
+// NOTE(zb-v2): These are ZCL spec-fixed foundation command IDs (0x00-0x16); the values are
+// unchanged in v2.x, so this library-local enum is kept as-is.
 typedef enum {
   ZB_CMD_READ_ATTRIBUTE = 0x00U,                        /*!< Read attributes command */
   ZB_CMD_READ_ATTRIBUTE_RESPONSE = 0x01U,               /*!< Read attributes response command */

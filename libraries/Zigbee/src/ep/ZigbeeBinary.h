@@ -21,7 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
 
 //enum for bits set to check what analog cluster were added
 enum zigbee_binary_clusters {
@@ -68,12 +67,6 @@ enum zigbee_binary_clusters {
 #define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_ACCESS_CONTROL     0x01000003  // Type 0x01, Index 0x0003
 #define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_OTHER              0x0100FFFF  // Type 0x01, Index 0xFFFF
 
-typedef struct zigbee_binary_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-  esp_zb_binary_output_cluster_cfg_t binary_output_cfg;
-  esp_zb_binary_input_cluster_cfg_t binary_input_cfg;
-} zigbee_binary_cfg_t;
 
 class ZigbeeBinary : public ZigbeeEP {
 public:
@@ -111,13 +104,18 @@ public:
   bool reportBinaryOutput();
 
 private:
-  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
 
   void (*_on_binary_output_change)(bool);
   void binaryOutputChanged();
 
   bool _output_state;
   uint8_t _binary_clusters;
+
+  uint32_t _bi_application_type;
+  uint32_t _bo_application_type;
+  char _bi_description[ZB_MAX_NAME_LENGTH + 2];
+  char _bo_description[ZB_MAX_NAME_LENGTH + 2];
 };
 
 #endif  // CONFIG_ZB_ENABLED
