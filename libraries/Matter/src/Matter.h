@@ -237,7 +237,7 @@ public:
   // Compile-time capability (Kconfig / SOC). Not "the interface is up".
   static bool isWiFiStationEnabled();       // CONFIG_ENABLE_WIFI_STATION (false on H2)
   static bool isWiFiAccessPointEnabled();   // CONFIG_ENABLE_WIFI_AP
-  static bool isThreadEnabled();            // CONFIG_ENABLE_MATTER_OVER_THREAD (C6/H2 prebuild; not C5)
+  static bool isThreadEnabled();            // CONFIG_ENABLE_MATTER_OVER_THREAD (C6/H2; C5 when Matter Network is Thread)
   static bool isEthernetEnabled();          // CONFIG_ETH_ENABLED: ETH library builds; not "cable present"
   static bool isBLECommissioningEnabled();  // CHIPoBLE compiled in and still enabled
   static bool isBLEMemoryReleaseEnabled();  // CHIPoBLE on and BLE RAM will be released after commission

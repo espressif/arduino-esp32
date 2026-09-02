@@ -26,16 +26,16 @@ Define overrides **before** `#include <ETH.h>`, or use a variant that already de
 
 Default pins (used when `ETH_PHY_TYPE` is not predefined) are a W5500 on SPI:
 
-| Macro | Default |
-| --- | --- |
+| Macro          | Default         |
+| -------------- | --------------- |
 | `ETH_PHY_TYPE` | `ETH_PHY_W5500` |
-| `ETH_PHY_ADDR` | `1` |
-| `ETH_PHY_CS` | `15` |
-| `ETH_PHY_IRQ` | `4` |
-| `ETH_PHY_RST` | `5` |
-| `ETH_SPI_SCK` | `14` |
-| `ETH_SPI_MISO` | `12` |
-| `ETH_SPI_MOSI` | `13` |
+| `ETH_PHY_ADDR` | `1`             |
+| `ETH_PHY_CS`   | `15`            |
+| `ETH_PHY_IRQ`  | `4`             |
+| `ETH_PHY_RST`  | `5`             |
+| `ETH_SPI_SCK`  | `14`            |
+| `ETH_SPI_MISO` | `12`            |
+| `ETH_SPI_MOSI` | `13`            |
 
 Internal EMAC on original ESP32 uses `ETH_PHY_MDC` / `ETH_PHY_MDIO` / `ETH_CLK_MODE` instead of SPI. The sketch then takes the `ETH.begin()` (no-arg) path.
 
@@ -43,15 +43,15 @@ Internal EMAC on original ESP32 uses `ETH_PHY_MDC` / `ETH_PHY_MDIO` / `ETH_CLK_M
 
 `CONFIG_ETH_ENABLED` is on for all Arduino Matter targets. Ethernet commissioning is on-network only (no Network Commissioning cluster).
 
-| SoC      | This sketch | CHIPoBLE | Also in prebuild | PHY                         |
-| -------- | ----------- | -------- | ---------------- | --------------------------- |
-| ESP32    | Ethernet    | Off      | Wi-Fi            | EMAC or SPI (tested: W5500) |
-| ESP32-S2 | Ethernet    | Off      | Wi-Fi            | SPI                         |
-| ESP32-S3 | Ethernet    | Off      | Wi-Fi            | SPI                         |
-| ESP32-C3 | Ethernet    | Off      | Wi-Fi            | SPI                         |
-| ESP32-C5 | Ethernet    | Off      | Wi-Fi            | SPI                         |
-| ESP32-C6 | Ethernet    | Off      | Wi-Fi, Thread    | SPI                         |
-| ESP32-H2 | Ethernet    | Off      | Thread           | SPI                         |
+| SoC      | This sketch | CHIPoBLE | Also in prebuild     | PHY                         |
+| -------- | ----------- | -------- | -------------------- | --------------------------- |
+| ESP32    | Ethernet    | Off      | Wi-Fi                | EMAC or SPI (tested: W5500) |
+| ESP32-S2 | Ethernet    | Off      | Wi-Fi                | SPI                         |
+| ESP32-S3 | Ethernet    | Off      | Wi-Fi                | SPI                         |
+| ESP32-C3 | Ethernet    | Off      | Wi-Fi                | SPI                         |
+| ESP32-C5 | Ethernet    | Off      | Wi-Fi, Thread (menu) | SPI                         |
+| ESP32-C6 | Ethernet    | Off      | Wi-Fi, Thread        | SPI                         |
+| ESP32-H2 | Ethernet    | Off      | Thread               | SPI                         |
 
 This sketch calls `Matter.selectNetwork(MATTER_NETWORK_ETHERNET)` (CHIPoBLE **off**), then `ETH.begin()`, `enableIPv6()`, and `waitForNetwork()` before `Matter.begin()`. You still need a PHY.
 

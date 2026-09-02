@@ -6,15 +6,15 @@ Use the **generated** pairing codes printed after `Matter.begin()`. Before `begi
 
 ## Supported Targets
 
-| SoC      | This sketch            | CHIPoBLE | Also in prebuild       | LED      |
-| -------- | ---------------------- | -------- | ---------------------- | -------- |
-| ESP32    | Wi-Fi (SSID in sketch) | Off      | Ethernet (EMAC or SPI) | Required |
-| ESP32-S2 | Wi-Fi (SSID in sketch) | Off      | Ethernet (SPI)         | Required |
-| ESP32-S3 | Wi-Fi (hub)            | On       | Ethernet (SPI)         | Required |
-| ESP32-C3 | Wi-Fi (hub)            | On       | Ethernet (SPI)         | Required |
-| ESP32-C5 | Wi-Fi (hub)            | On       | Ethernet (SPI)         | Required |
-| ESP32-C6 | Wi-Fi (hub, default)   | On       | Thread, Ethernet (SPI) | Required |
-| ESP32-H2 | Thread (hub)           | On       | Ethernet (SPI)         | Required |
+| SoC      | This sketch            | CHIPoBLE | Also in prebuild              | LED      |
+| -------- | ---------------------- | -------- | ----------------------------- | -------- |
+| ESP32    | Wi-Fi (SSID in sketch) | Off      | Ethernet (EMAC or SPI)        | Required |
+| ESP32-S2 | Wi-Fi (SSID in sketch) | Off      | Ethernet (SPI)                | Required |
+| ESP32-S3 | Wi-Fi (hub)            | On       | Ethernet (SPI)                | Required |
+| ESP32-C3 | Wi-Fi (hub)            | On       | Ethernet (SPI)                | Required |
+| ESP32-C5 | Wi-Fi (hub, default)   | On       | Thread (menu), Ethernet (SPI) | Required |
+| ESP32-C6 | Wi-Fi (hub, default)   | On       | Thread, Ethernet (SPI)        | Required |
+| ESP32-H2 | Thread (hub)           | On       | Ethernet (SPI)                | Required |
 
 ### Note on Commissioning
 
@@ -25,14 +25,14 @@ CHIPoBLE is compiled in only when `CONFIG_ENABLE_CHIPOBLE` is set:
 - **Arduino IDE:** original ESP32 is Bluedroid (no CHIPoBLE) and ESP32-S2 has no Bluetooth. Those two call `WiFi.begin(ssid, password)`. C3/C5/C6/S3/H2 use NimBLE + CHIPoBLE.
 - **Arduino as an ESP-IDF component:** original ESP32 can enable `CONFIG_BT_ENABLED`, `CONFIG_BT_NIMBLE_ENABLED`, and `CONFIG_ENABLE_CHIPOBLE`. This sketch then skips the hardcoded Wi-Fi path and commissions over BLE.
 - **ESP32-C6:** dual-stack prebuild. Without `selectNetwork()` this sketch uses **Wi-Fi + CHIPoBLE**.
-- **ESP32-C5:** Wi-Fi + CHIPoBLE. Thread is not in that prebuild.
+- **ESP32-C5:** Wi-Fi + CHIPoBLE when Tools → Matter Network is Wi-Fi (default). Thread + CHIPoBLE when Matter Network is Thread (Matter.isThreadEnabled() / CONFIG_ENABLE_MATTER_OVER_THREAD).
 
 To change the path, call `Matter.selectNetwork()` **before** any accessory `begin()`. On-network: `selectNetwork(net, true)` (CHIPoBLE off). CHIPoBLE: `selectNetwork(net)` (BLE stays on). Do not also call `setBLECommissioningEnabled()`.
 
 - Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../../Commissioning/MatterCHIPoBLEWiFi)
 - Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)
-- Thread + CHIPoBLE (ESP32-C6 / ESP32-H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
-- Thread on-network (ESP32-C6 / ESP32-H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
+- Thread + CHIPoBLE (ESP32-C6 / ESP32-H2 / ESP32-C5 Thread menu): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
+- Thread on-network (ESP32-C6 / ESP32-H2 / ESP32-C5 Thread menu): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../../Commissioning/MatterOnNetworkEthernet)
 
 ## Call order

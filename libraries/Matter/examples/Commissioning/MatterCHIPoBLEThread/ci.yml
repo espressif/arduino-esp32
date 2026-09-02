@@ -1,4 +1,6 @@
-fqbn_append: PartitionScheme=huge_app
+fqbn_append:
+  default: PartitionScheme=huge_app
+  esp32c5: MatterNetwork=thread
 
 requires:
   - CONFIG_ESP_MATTER_ENABLE_DATA_MODEL=y

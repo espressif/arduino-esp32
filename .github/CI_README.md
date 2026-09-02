@@ -76,7 +76,7 @@ The configuration defines several target lists for different purposes:
 #### Special Lists
 
 - **`ALL_SOCS`** - Complete list of all supported SoCs
-- **`CORE_VARIANTS`** - SoC variants used for packaging/release flows (includes variant-specific entries)
+- **`CORE_VARIANTS`** - SoC variants used for packaging/release flows (includes variant-specific entries: ``esp32p4_es``, ``esp32c5_mot``)
 - **`SKIP_LIB_BUILD_SOCS`** - SoCs without pre-built libraries (e.g., esp32c2, esp32c61)
 - **`CORE_SOCS`** - Computed list of buildable SoCs (ALL_SOCS minus SKIP_LIB_BUILD_SOCS)
 
@@ -692,6 +692,16 @@ fqbn_append:
   esp32: PSRAM=disabled
   esp32s3: PSRAM=disabled
 ```
+
+ESP32-C5 has a **Matter Network** menu (`MatterNetwork=wifi` is the compile default). Thread sketches must select the Thread lib tree so `check_requirements` reads `tools/esp32-arduino-libs/esp32c5_mot/sdkconfig` (`CONFIG_ENABLE_MATTER_OVER_THREAD=y`). Same map form:
+
+```yaml
+fqbn_append:
+  default: PartitionScheme=huge_app
+  esp32c5: MatterNetwork=thread
+```
+
+`sdkconfig_for_sketch` maps C5 + `MatterNetwork=thread` to `esp32c5_mot`, and P4 + `ChipVariant=prev3` to `esp32p4_es`. A missing variant `sdkconfig` makes `check_requirements` warn and still try to build.
 
 Use `fqbn` instead only when a test needs several builds per target (for example with and without PSRAM); it lists complete FQBNs and ignores `fqbn_append`.
 
@@ -1562,7 +1572,10 @@ bash .github/scripts/check_official_variants.sh \
 - `build_sketch` - Build a single sketch
 - `chunk_build` - Build sketches in chunks
 - `count` - Count sketches for chunking
-- `check_requirements` - Validate sketch requirements
+- `check_requirements` - Validate sketch requirements against the variant `sdkconfig`
+- `sdkconfig_for_sketch` - `sdkconfig` path for a sketch/target (uses `chip_variant` from `ci.yml` FQBN)
+- `chip_variant_for_target` - Lib folder: C5 Thread menu → `esp32c5_mot`, P4 `ChipVariant=prev3` → `esp32p4_es`
+- `fqbn_append` - Print `fqbn_append` options a `ci.yml` sets for one target
 - `install_libs` - Install library dependencies
 
 ### Test Scripts

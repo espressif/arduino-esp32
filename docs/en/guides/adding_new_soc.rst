@@ -197,8 +197,10 @@ to a defconfig fragment filename under ``configs/`` (e.g. ``"80m"`` means
    * - ``target``
      - The IDF target name (passed to ``idf.py -DIDF_TARGET=``).
    * - ``chip_variant``
-     - Optional. Output directory name when it differs from ``target`` (e.g. ``esp32p4_es``
-       for an early-silicon variant). Defaults to ``target``.
+     - Optional. Output directory name when it differs from ``target``. Examples:
+       ``esp32p4_es`` (early-silicon P4) and ``esp32c5_mot`` (ESP32-C5 Matter-over-Thread).
+       Defaults to ``target``. Arduino IDE selects the folder with ``build.chip_variant``
+       (P4 **Chip Variant** menu, C5 **Matter Network** menu).
    * - ``skip``
      - Set to ``1`` for component-only support. Remove when promoting to full support.
    * - ``features``
@@ -399,6 +401,8 @@ Menu entries to add as applicable (based on ``soc_caps.h``):
 - ``CDCOnBoot`` (if ``SOC_USB_SERIAL_JTAG_SUPPORTED`` or ``SOC_USB_OTG_SUPPORTED``)
 - ``ZigbeeMode`` (if ``SOC_IEEE802154_SUPPORTED``)
 - ``PSRAM`` (if ``SOC_SPIRAM_SUPPORTED``)
+- ``ChipVariant`` when the SoC has more than one lib tree (ESP32-P4: ``esp32p4`` / ``esp32p4_es``)
+- ``MatterNetwork`` when Matter transport is a menu-selected lib tree (ESP32-C5: ``esp32c5`` Wi-Fi / ``esp32c5_mot`` Thread)
 
 For component-only support, the board entry still exists but is not usable from the Arduino
 IDE without prebuilt libraries.

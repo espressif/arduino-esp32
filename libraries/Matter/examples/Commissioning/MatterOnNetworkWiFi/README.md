@@ -15,20 +15,21 @@ This is the on-network half of the Wi-Fi pair. The other half is [MatterCHIPoBLE
 
 ## Supported targets
 
-| SoC      | This sketch             | CHIPoBLE | Also in prebuild       |
-| -------- | ----------------------- | -------- | ---------------------- |
-| ESP32    | Wi-Fi (SSID in sketch)  | Off      | Ethernet (EMAC or SPI) |
-| ESP32-S2 | Wi-Fi (SSID in sketch)  | Off      | Ethernet (SPI)         |
-| ESP32-S3 | Wi-Fi (SSID in sketch)  | Off      | Ethernet (SPI)         |
-| ESP32-C3 | Wi-Fi (SSID in sketch)  | Off      | Ethernet (SPI)         |
-| ESP32-C5 | Wi-Fi (SSID in sketch)  | Off      | Ethernet (SPI)         |
-| ESP32-C6 | Wi-Fi (SSID in sketch)  | Off      | Thread, Ethernet (SPI) |
-| ESP32-H2 | Does not run (no Wi-Fi) | —        | Thread, Ethernet (SPI) |
+| SoC      | This sketch             | CHIPoBLE | Also in prebuild              |
+| -------- | ----------------------- | -------- | ----------------------------- |
+| ESP32    | Wi-Fi (SSID in sketch)  | Off      | Ethernet (EMAC or SPI)        |
+| ESP32-S2 | Wi-Fi (SSID in sketch)  | Off      | Ethernet (SPI)                |
+| ESP32-S3 | Wi-Fi (SSID in sketch)  | Off      | Ethernet (SPI)                |
+| ESP32-C3 | Wi-Fi (SSID in sketch)  | Off      | Ethernet (SPI)                |
+| ESP32-C5 | Wi-Fi (SSID in sketch)  | Off      | Thread (menu), Ethernet (SPI) |
+| ESP32-C6 | Wi-Fi (SSID in sketch)  | Off      | Thread, Ethernet (SPI)        |
+| ESP32-H2 | Does not run (no Wi-Fi) | —        | Thread, Ethernet (SPI)        |
 
 This sketch calls `Matter.selectNetwork(MATTER_NETWORK_WIFI, true)` and `WiFi.begin(ssid, password)`. On the Arduino IDE prebuild, ESP32 / ESP32-S2 already have CHIPoBLE off.
 
 - ESP32-H2: use [MatterOnNetworkThread](../MatterOnNetworkThread) or [MatterCHIPoBLEThread](../MatterCHIPoBLEThread).
 - ESP32-C6 also has Thread; this sketch keeps Wi-Fi. For Thread see [MatterOnNetworkThread](../MatterOnNetworkThread).
+- ESP32-C5: this sketch needs **Tools → Matter Network → Wi-Fi** (default). Thread menu: [MatterOnNetworkThread](../MatterOnNetworkThread).
 - Wi-Fi + CHIPoBLE (hub sends SSID): [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 

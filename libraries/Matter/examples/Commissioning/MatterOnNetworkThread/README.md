@@ -21,7 +21,7 @@ This is the on-network half of the Thread pair. The other half is [MatterCHIPoBL
 - Attaches `OThread` to CHIP's instance, commits a `DataSet` that holds only the network key, then `start()` / `waitForAttach()` / `waitForNetwork()`
 - Prints on-network pairing codes. CHIP publishes `_matterc._udp` through Thread SRP after the border router SRP server is found (`Matter DNS-SD initialized (Thread SRP ready)` in the log). That is not the same as attach: on ESP32-C6 an earlier `Matter DNS-SD initialized` is only Wi-Fi mDNS. The library retries advertise for about 24 s after Thread IPv6 / attach. If the app still does not see the node, the border router is not proxying SRP to LAN mDNS — use [MatterCHIPoBLEThread](../MatterCHIPoBLEThread) for consumer apps.
 
-Thread Network Commissioning is on endpoint 0 (ESP32-C6 replaces the prebuild Wi-Fi cluster on the root; ESP32-H2 is already Thread-only).
+Thread Network Commissioning is on endpoint 0 (ESP32-C6 replaces the prebuild Wi-Fi cluster on the root; ESP32-H2 and ESP32-C5 Thread menu are already Thread-only).
 
 ## Network key
 
@@ -31,19 +31,19 @@ The sketch commits that key on every boot (it does not skip commit when NVS alre
 
 ## Supported targets
 
-| SoC      | This sketch                           | CHIPoBLE | Also in prebuild       |
-| -------- | ------------------------------------- | -------- | ---------------------- |
-| ESP32    | Does not run (no Thread)              | Off      | Ethernet (EMAC or SPI) |
-| ESP32-S2 | Does not run (no Thread)              | Off      | Ethernet (SPI)         |
-| ESP32-S3 | Does not run (no Thread)              | On       | Ethernet (SPI)         |
-| ESP32-C3 | Does not run (no Thread)              | On       | Ethernet (SPI)         |
-| ESP32-C5 | Does not run (Thread not in prebuild) | On       | Ethernet (SPI)         |
-| ESP32-C6 | Thread (key in sketch)                | Off      | Wi-Fi, Ethernet (SPI)  |
-| ESP32-H2 | Thread (key in sketch)                | Off      | Ethernet (SPI)         |
+| SoC      | This sketch                          | CHIPoBLE | Also in prebuild       |
+| -------- | ------------------------------------ | -------- | ---------------------- |
+| ESP32    | Does not run (no Thread)             | Off      | Ethernet (EMAC or SPI) |
+| ESP32-S2 | Does not run (no Thread)             | Off      | Ethernet (SPI)         |
+| ESP32-S3 | Does not run (no Thread)             | On       | Ethernet (SPI)         |
+| ESP32-C3 | Does not run (no Thread)             | On       | Ethernet (SPI)         |
+| ESP32-C5 | Thread (**Matter Network → Thread**) | Off      | Wi-Fi, Ethernet (SPI)  |
+| ESP32-C6 | Thread (key in sketch)               | Off      | Wi-Fi, Ethernet (SPI)  |
+| ESP32-H2 | Thread (key in sketch)               | Off      | Ethernet (SPI)         |
 
 This sketch calls `Matter.selectNetwork(MATTER_NETWORK_THREAD, true)` (CHIPoBLE **off**), then after `Matter.begin()` attaches `OThread` and commits the border-router network key.
 
-- Arduino Matter prebuild Thread: **ESP32-C6** and **ESP32-H2**.
+- Arduino Matter prebuild Thread: **ESP32-C6**, **ESP32-H2**, and **ESP32-C5** with **Tools → Matter Network → Thread**.
 - Most consumer apps discover over BLE. For that path use [MatterCHIPoBLEThread](../MatterCHIPoBLEThread).
 - ESP32-C6 also has Wi-Fi; this sketch selects Thread. For Wi-Fi see [MatterOnNetworkWiFi](../MatterOnNetworkWiFi).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).

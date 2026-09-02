@@ -4,15 +4,15 @@ This is a minimal example demonstrating how to create a Matter-compatible window
 
 ## Supported Targets
 
-| SoC      | This sketch            | CHIPoBLE | Also in prebuild       |
-| -------- | ---------------------- | -------- | ---------------------- |
-| ESP32    | Wi-Fi (SSID in sketch) | Off      | Ethernet (EMAC or SPI) |
-| ESP32-S2 | Wi-Fi (SSID in sketch) | Off      | Ethernet (SPI)         |
-| ESP32-S3 | Wi-Fi (hub)            | On       | Ethernet (SPI)         |
-| ESP32-C3 | Wi-Fi (hub)            | On       | Ethernet (SPI)         |
-| ESP32-C5 | Wi-Fi (hub)            | On       | Ethernet (SPI)         |
-| ESP32-C6 | Wi-Fi (hub, default)   | On       | Thread, Ethernet (SPI) |
-| ESP32-H2 | Thread (hub)           | On       | Ethernet (SPI)         |
+| SoC      | This sketch            | CHIPoBLE | Also in prebuild              |
+| -------- | ---------------------- | -------- | ----------------------------- |
+| ESP32    | Wi-Fi (SSID in sketch) | Off      | Ethernet (EMAC or SPI)        |
+| ESP32-S2 | Wi-Fi (SSID in sketch) | Off      | Ethernet (SPI)                |
+| ESP32-S3 | Wi-Fi (hub)            | On       | Ethernet (SPI)                |
+| ESP32-C3 | Wi-Fi (hub)            | On       | Ethernet (SPI)                |
+| ESP32-C5 | Wi-Fi (hub, default)   | On       | Thread (menu), Ethernet (SPI) |
+| ESP32-C6 | Wi-Fi (hub, default)   | On       | Thread, Ethernet (SPI)        |
+| ESP32-H2 | Thread (hub)           | On       | Ethernet (SPI)                |
 
 ### Note on Commissioning
 
@@ -21,14 +21,14 @@ This table is what **this sketch** does. It does not call `Matter.selectNetwork(
 - **ESP32 / ESP32-S2:** no CHIPoBLE in the Arduino IDE prebuild. The sketch calls `WiFi.begin(ssid, password)`.
 - **ESP32-C6:** prebuild is dual-stack. Without `selectNetwork()` this sketch uses **Wi-Fi + CHIPoBLE**. Thread stays unused.
 - **ESP32-H2:** Thread + CHIPoBLE (no Wi-Fi).
-- **ESP32-C5:** Wi-Fi + CHIPoBLE. Thread is not in that prebuild.
+- **ESP32-C5:** Wi-Fi + CHIPoBLE when Tools → Matter Network is Wi-Fi (default). Thread + CHIPoBLE when Matter Network is Thread (Matter.isThreadEnabled() / CONFIG_ENABLE_MATTER_OVER_THREAD).
 
 To change the path, call `Matter.selectNetwork()` **before** any accessory `begin()`. On-network: `selectNetwork(net, true)` (CHIPoBLE off). CHIPoBLE: `selectNetwork(net)` (BLE stays on). Do not also call `setBLECommissioningEnabled()`.
 
 - Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../../Commissioning/MatterCHIPoBLEWiFi)
 - Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)
-- Thread + CHIPoBLE (ESP32-C6 / ESP32-H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
-- Thread on-network (ESP32-C6 / ESP32-H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
+- Thread + CHIPoBLE (ESP32-C6 / ESP32-H2 / ESP32-C5 Thread menu): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
+- Thread on-network (ESP32-C6 / ESP32-H2 / ESP32-C5 Thread menu): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../../Commissioning/MatterOnNetworkEthernet)
 
 ## Features

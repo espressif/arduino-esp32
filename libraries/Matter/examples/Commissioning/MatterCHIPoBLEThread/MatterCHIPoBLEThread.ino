@@ -52,7 +52,7 @@ void setup() {
   pinMode(ledPin, OUTPUT);
 
   if (!Matter.isNetworkSupported(MATTER_NETWORK_THREAD)) {
-    halt("Matter-over-Thread is not enabled in this build (C6/H2 prebuild only).");
+    halt("Matter-over-Thread is not enabled in this build. On ESP32-C5 set Tools → Matter Network → Thread.");
   }
   if (!Matter.isBLECommissioningEnabled()) {
     halt("CHIPoBLE is not compiled in. Use MatterOnNetworkThread and set the border router network key.");

@@ -3,6 +3,42 @@
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPTS_DIR}/env.sh"
 
+# Lib folder under tools/esp32-arduino-libs. Default is the IDF target.
+# C5 Matter Network → Thread uses esp32c5_mot; P4 Chip Variant prev3 uses esp32p4_es.
+function chip_variant_for_target { # chip_variant_for_target <target> [fqbn_opts]
+    local target="$1"
+    local opts=",${2:-},"
+    case "$target" in
+        esp32c5)
+            if [[ "$opts" == *",MatterNetwork=thread,"* ]]; then
+                echo "esp32c5_mot"
+            else
+                echo "esp32c5"
+            fi
+            ;;
+        esp32p4)
+            if [[ "$opts" == *",ChipVariant=prev3,"* ]]; then
+                echo "esp32p4_es"
+            else
+                echo "esp32p4"
+            fi
+            ;;
+        *)
+            echo "$target"
+            ;;
+    esac
+}
+
+function sdkconfig_for_sketch { # sdkconfig_for_sketch <sketchdir> <target>
+    local sketchdir="$1"
+    local target="$2"
+    local fa=""
+    if [ -f "$sketchdir/ci.yml" ]; then
+        fa=$(fqbn_append_for_target "$sketchdir/ci.yml" "$target")
+    fi
+    echo "$SDKCONFIG_DIR/$(chip_variant_for_target "$target" "$fa")/sdkconfig"
+}
+
 function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
     local sketchdir=$1
     local sdkconfig_path=$2
@@ -105,7 +141,7 @@ function default_fqbn_for_target {
     esp32c6_opts=$(_normalize_fqbn_opts "${overrides}")
     esp32h2_opts=$(_normalize_fqbn_opts "${overrides}")
     esp32p4_opts=$(_normalize_fqbn_opts "PSRAM=enabled,USBMode=default,ChipVariant=postv3,${overrides}")
-    esp32c5_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${overrides}")
+    esp32c5_opts=$(_normalize_fqbn_opts "PSRAM=enabled,MatterNetwork=wifi,${overrides}")
 
     case "$target" in
         esp32)
@@ -331,7 +367,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             exit 0
         fi
 
-        has_requirements=$(check_requirements "$sketchdir" "$SDKCONFIG_DIR/$target/sdkconfig")
+        has_requirements=$(check_requirements "$sketchdir" "$(sdkconfig_for_sketch "$sketchdir" "$target")")
         if [ "$has_requirements" == "0" ]; then
             echo "Target $target does not meet the requirements for $sketchname. Skipping."
             exit 0
@@ -508,7 +544,7 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
             fi
 
             if [ "$ignore_requirements" != "1" ]; then
-                has_requirements=$(check_requirements "$sketchdir" "$SDKCONFIG_DIR/$target/sdkconfig")
+                has_requirements=$(check_requirements "$sketchdir" "$(sdkconfig_for_sketch "$sketchdir" "$target")")
                 if [ "$has_requirements" == "0" ]; then
                     continue
                 fi
@@ -861,6 +897,7 @@ Available commands:
     install_libs: Install libraries from ci.yml file.
     default_upload_test_fqbn: Print default mock-upload FQBN for a SoC (target [pkg_prefix]).
     fqbn_append: Print the fqbn_append options a ci.yml sets for a target (ci_yml target [yq_path]).
+    sdkconfig_for_sketch: Print sdkconfig path for a sketch/target (uses chip_variant from FQBN).
 "
 
 cmd=$1
@@ -885,6 +922,8 @@ case "$cmd" in
     "default_upload_test_fqbn") default_upload_test_fqbn "$@"
     ;;
     "fqbn_append") fqbn_append_for_target "$@"
+    ;;
+    "sdkconfig_for_sketch") sdkconfig_for_sketch "$@"
     ;;
     *)
         echo "ERROR: Unrecognized command"

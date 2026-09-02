@@ -23,22 +23,23 @@ Expect a delay of a few seconds between `MATTER_COMMISSIONING_COMPLETE` and the 
 
 ## Supported targets
 
-| SoC                         | This sketch            | CHIPoBLE           | Also in prebuild       | Heap-after-BLE demo |
-| --------------------------- | ---------------------- | ------------------ | ---------------------- | ------------------- |
-| ESP32 (Arduino IDE)         | Wi-Fi (SSID in sketch) | Off                | Ethernet (EMAC or SPI) | No                  |
-| ESP32 (IDF NimBLE+CHIPoBLE) | Wi-Fi (hub)            | On, then reclaimed | Ethernet (EMAC or SPI) | Yes                 |
-| ESP32-S2                    | Wi-Fi (SSID in sketch) | Off                | Ethernet (SPI)         | No                  |
-| ESP32-S3                    | Wi-Fi (hub)            | On, then reclaimed | Ethernet (SPI)         | Yes                 |
-| ESP32-C3                    | Wi-Fi (hub)            | On, then reclaimed | Ethernet (SPI)         | Yes                 |
-| ESP32-C5                    | Wi-Fi (hub)            | On, then reclaimed | Ethernet (SPI)         | Yes                 |
-| ESP32-C6                    | Wi-Fi (hub, default)   | On, then reclaimed | Thread, Ethernet (SPI) | Yes                 |
-| ESP32-H2                    | Thread (hub)           | On, then reclaimed | Ethernet (SPI)         | Yes                 |
+| SoC                         | This sketch            | CHIPoBLE           | Also in prebuild              | Heap-after-BLE demo |
+| --------------------------- | ---------------------- | ------------------ | ----------------------------- | ------------------- |
+| ESP32 (Arduino IDE)         | Wi-Fi (SSID in sketch) | Off                | Ethernet (EMAC or SPI)        | No                  |
+| ESP32 (IDF NimBLE+CHIPoBLE) | Wi-Fi (hub)            | On, then reclaimed | Ethernet (EMAC or SPI)        | Yes                 |
+| ESP32-S2                    | Wi-Fi (SSID in sketch) | Off                | Ethernet (SPI)                | No                  |
+| ESP32-S3                    | Wi-Fi (hub)            | On, then reclaimed | Ethernet (SPI)                | Yes                 |
+| ESP32-C3                    | Wi-Fi (hub)            | On, then reclaimed | Ethernet (SPI)                | Yes                 |
+| ESP32-C5                    | Wi-Fi (hub, default)   | On, then reclaimed | Thread (menu), Ethernet (SPI) | Yes                 |
+| ESP32-C6                    | Wi-Fi (hub, default)   | On, then reclaimed | Thread, Ethernet (SPI)        | Yes                 |
+| ESP32-H2                    | Thread (hub)           | On, then reclaimed | Ethernet (SPI)                | Yes                 |
 
 This sketch leaves CHIPoBLE on when it is compiled in, then reclaims BLE RAM after a fabric exists. It does not call `selectNetwork()` or start Ethernet.
 
 - Same BLE path without the heap demo: [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi).
 - Disable CHIPoBLE and commission on Wi-Fi: [MatterOnNetworkWiFi](../MatterOnNetworkWiFi).
 - ESP32-C6 also has Thread; this sketch keeps the default (Wi-Fi). For Thread see [MatterCHIPoBLEThread](../MatterCHIPoBLEThread).
+- ESP32-C5 default **Matter Network** is Wi-Fi. Thread menu uses Thread + CHIPoBLE (same as this sketch with no `selectNetwork()`).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.

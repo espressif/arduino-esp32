@@ -16,21 +16,22 @@ Same idea as Thread: BLE is the bootstrap when the device has no network credent
 
 ## Supported targets
 
-| SoC      | This sketch                 | CHIPoBLE | Also in prebuild       |
-| -------- | --------------------------- | -------- | ---------------------- |
-| ESP32    | Does not run (no CHIPoBLE)  | Off      | Ethernet (EMAC or SPI) |
-| ESP32-S2 | Does not run (no Bluetooth) | Off      | Ethernet (SPI)         |
-| ESP32-S3 | Wi-Fi (hub)                 | On       | Ethernet (SPI)         |
-| ESP32-C3 | Wi-Fi (hub)                 | On       | Ethernet (SPI)         |
-| ESP32-C5 | Wi-Fi (hub)                 | On       | Ethernet (SPI)         |
-| ESP32-C6 | Wi-Fi (hub)                 | On       | Thread, Ethernet (SPI) |
-| ESP32-H2 | Does not run (no Wi-Fi)     | On       | Thread, Ethernet (SPI) |
+| SoC      | This sketch                 | CHIPoBLE | Also in prebuild              |
+| -------- | --------------------------- | -------- | ----------------------------- |
+| ESP32    | Does not run (no CHIPoBLE)  | Off      | Ethernet (EMAC or SPI)        |
+| ESP32-S2 | Does not run (no Bluetooth) | Off      | Ethernet (SPI)                |
+| ESP32-S3 | Wi-Fi (hub)                 | On       | Ethernet (SPI)                |
+| ESP32-C3 | Wi-Fi (hub)                 | On       | Ethernet (SPI)                |
+| ESP32-C5 | Wi-Fi (hub, default)        | On       | Thread (menu), Ethernet (SPI) |
+| ESP32-C6 | Wi-Fi (hub)                 | On       | Thread, Ethernet (SPI)        |
+| ESP32-H2 | Does not run (no Wi-Fi)     | On       | Thread, Ethernet (SPI)        |
 
 This sketch calls `Matter.selectNetwork(MATTER_NETWORK_WIFI)` and leaves CHIPoBLE **on**. It does not call `WiFi.begin()`.
 
 - ESP32 / ESP32-S2: use [MatterOnNetworkWiFi](../MatterOnNetworkWiFi).
 - ESP32-H2: use [MatterCHIPoBLEThread](../MatterCHIPoBLEThread) or [MatterOnNetworkThread](../MatterOnNetworkThread).
 - ESP32-C6 also has Thread; this sketch keeps Wi-Fi. For Thread see [MatterCHIPoBLEThread](../MatterCHIPoBLEThread).
+- ESP32-C5: this sketch needs **Tools → Matter Network → Wi-Fi** (default). Thread menu: [MatterCHIPoBLEThread](../MatterCHIPoBLEThread).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.
