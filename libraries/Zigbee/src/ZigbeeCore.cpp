@@ -46,6 +46,9 @@
 #include <set>
 #include "nvs_flash.h"
 #include "esp_timer.h"
+#if SOC_IEEE802154_SUPPORTED
+#include "esp_ieee802154.h"
+#endif
 
 static bool edBatteryPowered = false;
 
@@ -957,6 +960,15 @@ void ZigbeeCore::stop() {
     return;
   }
 
+#if SOC_IEEE802154_SUPPORTED
+  // esp_zigbee_stop() exits the mainloop but leaves the IEEE802.15.4 radio enabled.
+  // On dual-radio SoCs (C6/S31/…) that shares RF with Wi‑Fi, disable it so Wi‑Fi can scan/connect.
+  esp_err_t radio_err = esp_ieee802154_disable();
+  if (radio_err != ESP_OK) {
+    log_w("Failed to disable IEEE802.15.4 radio after stop: %s", esp_err_to_name(radio_err));
+  }
+#endif
+
   _paused = true;
   log_v("Zigbee stack stopped");
 }
@@ -965,6 +977,16 @@ void ZigbeeCore::start() {
   if (!_stack_running || !_paused) {
     return;
   }
+
+#if SOC_IEEE802154_SUPPORTED
+  // If Wi‑Fi was just deinitialized, give its async PHY cleanup a moment before
+  // reclaiming the shared radio (avoids "timeout when WiFi un-init" stalls).
+  vTaskDelay(pdMS_TO_TICKS(50));
+  esp_err_t radio_err = esp_ieee802154_enable();
+  if (radio_err != ESP_OK) {
+    log_w("Failed to enable IEEE802.15.4 radio before start: %s", esp_err_to_name(radio_err));
+  }
+#endif
 
   _paused = false;
   xSemaphoreGive(zigbeeResumeSem);
