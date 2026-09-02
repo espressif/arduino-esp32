@@ -53,6 +53,26 @@ int StreamString::read() {
   return -1;
 }
 
+size_t StreamString::readBytes(char *buffer, size_t buffLen) {
+  if (!buffLen || !buffer) {
+    return 0;
+  }
+  const uint32_t start = millis();
+  size_t count = 0;
+  do {
+    if (this->length()) {
+      const size_t available = min(buffLen - count, (size_t)this->length());
+      memcpy(buffer + count, c_str(), available);
+      remove(0, available);
+      count += available;
+    }
+    if (count == buffLen || _timeout == 0) {
+      return count;
+    }
+  } while (millis() - start < _timeout);
+  return count;
+}
+
 int StreamString::peek() {
   if (length()) {
     char c = charAt(0);
