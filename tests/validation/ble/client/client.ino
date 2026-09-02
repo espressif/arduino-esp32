@@ -199,11 +199,26 @@ bool connectToServer() {
   pRemoteSecureCharacteristic->setAuth(ESP_GATT_AUTH_REQ_MITM);
 
   // Read secure characteristic (triggers on-demand authentication for both stacks)
+  authResult = AUTH_PENDING;
   if (pRemoteSecureCharacteristic->canRead()) {
     Serial.println("[CLIENT] Reading secure characteristic...");
     String value = pRemoteSecureCharacteristic->readValue();
     Serial.print("[CLIENT] Secure characteristic value: ");
     Serial.println(value.c_str());
+  }
+
+  // The read above only triggers pairing; the outcome arrives asynchronously through
+  // the security callbacks. Reporting success without checking it is exactly what made
+  // the failure in issue #12860 look like a working pairing.
+  unsigned long authStart = millis();
+  while (authResult == AUTH_PENDING && (millis() - authStart) < 10000) {
+    delay(50);
+  }
+
+  if (authResult != AUTH_SUCCESS) {
+    Serial.println("[CLIENT] ERROR: Authentication did not complete successfully");
+    pClient->disconnect();
+    return false;
   }
 
   connected = true;
