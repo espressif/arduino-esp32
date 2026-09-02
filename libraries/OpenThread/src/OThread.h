@@ -148,6 +148,9 @@ public:
   /**
    * @brief Initialize the OpenThread stack.
    * @param OThreadAutoStart When true, auto-start Thread using the NVS dataset.
+   *
+   * If an OpenThread instance is already running (CHIP / Matter started it),
+   * attach to that instance and skip stack init, netif, mainloop and auto-start.
    */
   static void begin(bool OThreadAutoStart = true);
 
@@ -157,8 +160,22 @@ public:
    * mainloop. Application code should also call ``OThreadUDP.stop()`` on open
    * sockets and destroy CoAP client objects before ``end()``; ``end()`` repeats
    * CLI/CoAP cleanup as a safety net.
+   *
+   * When attached to an external stack (Matter), only Arduino wrappers are
+   * released; CHIP's Thread stack and SRP client are left running.
+   * ``OThreadDNSSD.end()`` is a no-op unless ``begin()`` succeeded on this
+   * stack (it is refused while attached).
    */
   static void end();
+
+  /** @brief True when begin() attached to an already-initialized OpenThread instance. */
+  static bool isAttachedToExternalStack();
+
+  /**
+   * @brief Block until this device is a Thread child, router, or leader.
+   * @return true if attached before timeoutMs.
+   */
+  static bool waitForAttach(uint32_t timeoutMs);
 
   /** @brief Start the Thread network (equivalent to CLI "thread start"). */
   void start();

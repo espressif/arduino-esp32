@@ -139,5 +139,5 @@ Example
 Contact Sensor
 **************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterContactSensor/MatterContactSensor.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterContactSensor/MatterContactSensor.ino
     :language: arduino

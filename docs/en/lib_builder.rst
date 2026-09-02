@@ -154,12 +154,22 @@ This build command will build for the ESP32-S3 target. You can specify other tar
 * esp32c2
 * esp32c3
 * esp32c5
+* esp32c5_mot
 * esp32c6
 * esp32c61
 * esp32h2
 * esp32p4
+* esp32p4_es
 * esp32s2
 * esp32s3
+
+``-t esp32c5`` builds both C5 exports (Matter-over-Wi-Fi ``esp32c5`` and Matter-over-Thread ``esp32c5_mot``).
+``-t esp32c5_mot`` builds only the Thread tree.
+Arduino IDE **Tools → Matter Network** maps Wi-Fi to ``esp32c5`` and Thread to ``esp32c5_mot``.
+
+``-t esp32p4`` builds both P4 exports (``esp32p4`` for silicon v3.00 or newer, and ``esp32p4_es`` for early silicon).
+``-t esp32p4_es`` builds only the early-silicon tree.
+Arduino IDE **Tools → Chip Variant** maps **v3.00 or newer** to ``esp32p4`` and **Before v3.00** to ``esp32p4_es``.
 
 Set Build Type
 ^^^^^^^^^^^^^^
@@ -213,7 +223,7 @@ Pre-Configuring the UI
 The UI can be pre-configured using command line arguments. The following arguments are available:
 
 - ``-t, --target <target>``: Comma-separated list of targets to be compiled.
-  Choose from: *all*, *esp32*, *esp32c2*, *esp32c3*, *esp32c5*, *esp32c6*, *esp32c61*, *esp32h2*, *esp32s2*, *esp32s3*.
+  Choose from: *all*, *esp32*, *esp32c2*, *esp32c3*, *esp32c5*, *esp32c5_mot*, *esp32c6*, *esp32c61*, *esp32h2*, *esp32p4*, *esp32p4_es*, *esp32s2*, *esp32s3*.
   Default: all except *esp32c2* and *esp32c61*;
 - ``--copy, --no-copy``: Enable/disable copying the compiled libraries to ``arduino-esp32``. Enabled by default;
 - ``-c, --arduino-path <path>``: Path to ``arduino-esp32`` directory. Default: OS dependent;

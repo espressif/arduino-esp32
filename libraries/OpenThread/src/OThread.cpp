@@ -413,6 +413,7 @@ void DataSet::apply(otInstance *instance) {
 // OpenThread Implementation
 bool OpenThread::otStarted;
 otInstance *OpenThread::mInstance;
+static bool sAttachedToExternalStack = false;
 DataSet OpenThread::mCurrentDataset;
 otNetworkKey OpenThread::mNetworkKey;
 otExtAddress OpenThread::mFactoryEui64;
@@ -441,9 +442,41 @@ OpenThread::operator bool() const {
   return otStarted;
 }
 
+bool OpenThread::isAttachedToExternalStack() {
+  return sAttachedToExternalStack;
+}
+
+bool OpenThread::waitForAttach(uint32_t timeoutMs) {
+  const uint32_t start = millis();
+  while (true) {
+    if (mInstance != nullptr) {
+      OtLock lock;
+      if (lock) {
+        const otDeviceRole role = otThreadGetDeviceRole(mInstance);
+        if (role == OT_DEVICE_ROLE_CHILD || role == OT_DEVICE_ROLE_ROUTER || role == OT_DEVICE_ROLE_LEADER) {
+          return true;
+        }
+      }
+    }
+    if ((millis() - start) >= timeoutMs) {
+      return false;
+    }
+    delay(50);
+  }
+}
+
 void OpenThread::begin(bool OThreadAutoStart) {
   if (otStarted) {
     log_w("OpenThread already started");
+    return;
+  }
+
+  otInstance *existing = esp_openthread_get_instance();
+  if (existing != nullptr && otInstanceIsInitialized(existing)) {
+    mInstance = existing;
+    otStarted = true;
+    sAttachedToExternalStack = true;
+    log_i("Attaching to an already-initialized OpenThread instance");
     return;
   }
 
@@ -563,6 +596,27 @@ void OpenThread::begin(bool OThreadAutoStart) {
 void OpenThread::end() {
   if (!otStarted) {
     log_w("OpenThread already stopped");
+    return;
+  }
+
+  if (sAttachedToExternalStack) {
+    if (OThreadCLI) {
+      OThreadCLI.end();
+    }
+#if defined(CONFIG_OPENTHREAD_SRP_CLIENT) && CONFIG_OPENTHREAD_SRP_CLIENT
+    // Before clearing the attach flag: DNSSD.end() must see attached=true so
+    // it does not otSrpClientStop() CHIP's Matter DNS-SD.
+    OThreadDNSSD.end();
+#endif
+    OThreadCoAPServer.stop();
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+    OThreadCoAPSecureServer.stop();
+#endif
+    OThreadCoAP::releaseAllPending(mInstance);
+    mInstance = nullptr;
+    otStarted = false;
+    sAttachedToExternalStack = false;
+    log_d("Detached from external OpenThread stack");
     return;
   }
 

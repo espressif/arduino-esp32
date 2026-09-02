@@ -126,5 +126,5 @@ Example
 Light Sensor
 ************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterLightSensor/MatterLightSensor.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterLightSensor/MatterLightSensor.ino
     :language: arduino

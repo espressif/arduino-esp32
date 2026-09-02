@@ -30,6 +30,7 @@ CORE_VARIANTS=(
     "esp32"
     "esp32c3"
     "esp32c5"
+    "esp32c5_mot"
     "esp32c6"
     "esp32h2"
     "esp32p4"

@@ -132,5 +132,5 @@ Example
 Humidity Sensor
 ***************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterHumiditySensor/MatterHumiditySensor.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterHumiditySensor/MatterHumiditySensor.ino
     :language: arduino

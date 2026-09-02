@@ -288,5 +288,5 @@ Example
 Fan Control
 ***********
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterFan/MatterFan.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Control/MatterFan/MatterFan.ino
     :language: arduino

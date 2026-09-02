@@ -689,5 +689,5 @@ Example
 Window Covering
 ***************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterWindowCovering/MatterWindowCovering.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Control/MatterWindowCovering/MatterWindowCovering.ino
     :language: arduino

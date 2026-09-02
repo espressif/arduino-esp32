@@ -139,5 +139,5 @@ Example
 Water Freeze Detector
 *********************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterWaterFreezeDetector/MatterWaterFreezeDetector.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterWaterFreezeDetector/MatterWaterFreezeDetector.ino
     :language: arduino

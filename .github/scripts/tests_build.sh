@@ -88,7 +88,7 @@ function build_multi_device_test {
         fi
 
         # Check if target meets the requirements using check_requirements from sketch_utils.sh
-        has_requirements=$(${SKETCH_UTILS} check_requirements "$test_dir" "tools/esp32-arduino-libs/$target/sdkconfig")
+        has_requirements=$(${SKETCH_UTILS} check_requirements "$test_dir" "$(${SKETCH_UTILS} sdkconfig_for_sketch "$test_dir" "$target")")
         if [ "$has_requirements" == "0" ]; then
             echo "Skipping multi-device test $test_name for $target (requirements not met)"
             return 0

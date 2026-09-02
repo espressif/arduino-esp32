@@ -26,6 +26,7 @@
 #include <app/data-model-provider/OperationTypes.h>
 #include <app/server/Server.h>
 #include <lib/core/TLV.h>
+#include <platform/CHIPDeviceConfig.h>
 #include <platform/CHIPDeviceLayer.h>
 #include <setup_payload/OnboardingCodesUtil.h>
 #include <setup_payload/QRCodeSetupPayloadGenerator.h>
@@ -209,9 +210,9 @@ static void refreshOnboardingCodes() {
   sCodesGenerated = false;
 
   chip::RendezvousInformationFlags flags(chip::RendezvousInformationFlag::kOnNetwork);
-#if CONFIG_ENABLE_CHIPOBLE
-  flags.Set(chip::RendezvousInformationFlag::kBLE);
-#endif
+  if (ArduinoMatter::isBLECommissioningEnabled()) {
+    flags.Set(chip::RendezvousInformationFlag::kBLE);
+  }
 
   char qrBuf[kMaxQrCodeLen] = {};
   chip::MutableCharSpan qr(qrBuf, sizeof(qrBuf));
@@ -270,24 +271,28 @@ static bool applyCommissionable() {
   }
 
   sCommissionableProvider.publish();
+  return true;
+}
 
-  // Server::Init already opened a window and snapshotted the factory SPAKE2+ verifier.
-  // Reopen so AdvertiseAndListenForPASE() copies the wrap. Skip if a fabric exists or
-  // fail-safe is armed (an in-progress PASE already passed SPAKE). // codespell:ignore
-  if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0) {
-    if (!chip::Server::GetInstance().GetFailSafeContext().IsFailSafeFullyDisarmed()) {
-      log_w("Commissioning already in progress; custom PIN takes effect on the next window.");
-    } else {
-      chip::CommissioningWindowManager &mgr = chip::Server::GetInstance().GetCommissioningWindowManager();
-      if (mgr.IsCommissioningWindowOpen()) {
-        mgr.CloseCommissioningWindow();
-      }
-      const CHIP_ERROR err = mgr.OpenBasicCommissioningWindow();
-      if (err != CHIP_NO_ERROR) {
-        log_e("Failed to reopen commissioning window after custom PIN: %" CHIP_ERROR_FORMAT, err.Format());
-        return false;
-      }
-    }
+static bool reopenCommissioningWindow(chip::CommissioningWindowAdvertisement advertisement) {
+  esp_matter::lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (chip::Server::GetInstance().GetFabricTable().FabricCount() != 0) {
+    return true;
+  }
+  if (!chip::Server::GetInstance().GetFailSafeContext().IsFailSafeFullyDisarmed()) {
+    log_w("Commissioning already in progress; the next window will use the current commissioning settings.");
+    return true;
+  }
+  chip::CommissioningWindowManager &mgr = chip::Server::GetInstance().GetCommissioningWindowManager();
+  if (mgr.IsCommissioningWindowOpen()) {
+    mgr.CloseCommissioningWindow();
+  }
+  const CHIP_ERROR err = mgr.OpenBasicCommissioningWindow(
+    chip::System::Clock::Seconds32(CHIP_DEVICE_CONFIG_DISCOVERY_TIMEOUT_SECS), advertisement
+  );
+  if (err != CHIP_NO_ERROR) {
+    log_e("Failed to reopen commissioning window: %" CHIP_ERROR_FORMAT, err.Format());
+    return false;
   }
   return true;
 }
@@ -322,6 +327,17 @@ void ArduinoMatter::applyIdentityAfterStart() {
   if (sHasDiscriminator || sHasPasscode) {
     if (!applyCommissionable()) {
       log_e("Custom discriminator/passcode were not applied; pairing codes use the factory values.");
+    } else {
+      // Server::Init opens kAllSupported (BLE + DNS-SD) and snapshots the PASE verifier.  // codespell:ignore
+      // Reopen only when the PIN/discriminator wrap was published.
+      // Do not close/reopen just because BLE is off — that tears down _matterc._udp on
+      // on-network Wi-Fi before the commissioner can find the node (test: MatterOnNetworkWiFi).
+      const chip::CommissioningWindowAdvertisement advertisement = isBLECommissioningEnabled()
+                                                                    ? chip::CommissioningWindowAdvertisement::kAllSupported
+                                                                    : chip::CommissioningWindowAdvertisement::kDnssdOnly;
+      if (!reopenCommissioningWindow(advertisement)) {
+        log_e("Commissioning window was not refreshed.");
+      }
     }
   }
 

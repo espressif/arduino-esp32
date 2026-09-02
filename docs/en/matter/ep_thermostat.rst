@@ -306,5 +306,5 @@ Example
 Thermostat
 **********
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterThermostat/MatterThermostat.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Control/MatterThermostat/MatterThermostat.ino
     :language: arduino

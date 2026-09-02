@@ -568,6 +568,8 @@ IPAddress a = OThreadDNSSD.queryHost("sensor-1");
 
 Requires an attached Thread role and an SRP/DNS server in Network Data (typical OTBR). Prefer **Erase Flash: Sketch Only** when re-uploading so the SRP key in NVS is kept. See the ThreadDNSSD example README for `setup()` vs `loop()` handling, OTBR CLI checks (`srp server service`), SoC vs OTBR reset, and name conflicts.
 
+On a Matter-over-Thread node, `OThread.begin()` after `Matter.begin()` **attaches** to CHIP’s instance. That stack already uses the one OpenThread SRP client for `_matterc._udp`. `OThreadDNSSD.begin()` then returns false, so a later `end()` is a no-op and does not stop CHIP’s SRP. Sketch `onServiceEvent` / `onQueryEvent` stay registered until overwritten. Use `OThreadDNSSD` on a stack this sketch started (`OThread.begin()` first), not on a Matter-attached stack.
+
 ## Examples
 
 | Sketch | Pattern |

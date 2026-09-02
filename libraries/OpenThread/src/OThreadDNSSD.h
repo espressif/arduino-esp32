@@ -64,6 +64,11 @@
  *
  * Requires `CONFIG_OPENTHREAD_SRP_CLIENT`. Discover APIs additionally require
  * `CONFIG_OPENTHREAD_DNS_CLIENT`. The global instance is @ref OThreadDNSSD.
+ *
+ * When `OThread` is attached to an external stack (Matter / CHIP), that stack
+ * owns the single OpenThread SRP client (`_matterc._udp`). @ref begin then
+ * fails, so @ref end is a no-op and does not stop CHIP SRP. Sketch
+ * @ref onServiceEvent / @ref onQueryEvent stay registered until overwritten.
  */
 
 /** @brief Max services that can be advertised concurrently (fail closed when full). */
@@ -252,9 +257,10 @@ public:
    * @param hostName Host label (no domain), e.g. `"sensor-1"`. Prefer a
    *                 per-device unique label when multiple nodes share an OTBR.
    * @return true if configured successfully; false on missing stack, bad name,
-   *         or OpenThread error. False is local/config, not "SRP server not
-   *         ready". Do not call addService / query APIs until a later successful
-   *         begin().
+   *         OpenThread error, or when `OThread.isAttachedToExternalStack()`
+   *         (CHIP owns SRP; taking the host would drop Matter DNS-SD). False is
+   *         local/config, not "SRP server not ready". Do not call addService /
+   *         query APIs until a later successful begin().
    */
   bool begin(const char *hostName);
   bool begin(const String &hostName) {
@@ -262,16 +268,22 @@ public:
   }
 
   /**
-   * @brief Unregister host/services, stop SRP client, clear query results.
+   * @brief Tear down Arduino DNS-SD state.
    *
-   * Also called from `OThread.end()`. Delivers @ref OT_DNSSD_EVENT_REMOVED via
-   * @ref onServiceEvent on the **caller** task (not the OpenThread task).
-   * If an async discover is in flight, also delivers @ref OT_DNSSD_QUERY_ERROR
-   * with `OT_ERROR_ABORT` via @ref onQueryEvent (caller task) before REMOVED.
-   * Invalidates any in-flight discover; do not use query result getters until
-   * a new @ref begin and query. If the OpenThread lock cannot be acquired, SRP
-   * unregister toward the server may not run; local state is still cleared and
-   * REMOVED is still delivered.
+   * When this device owns the OpenThread stack, unregisters host/services,
+   * unregisters this library's OpenThread SRP callback, stops the SRP client,
+   * and delivers @ref OT_DNSSD_EVENT_REMOVED on the **caller** task. If an
+   * async discover is in flight, also delivers @ref OT_DNSSD_QUERY_ERROR with
+   * `OT_ERROR_ABORT` via @ref onQueryEvent before REMOVED. If the OpenThread
+   * lock cannot be acquired, SRP unregister toward the server may not run;
+   * local state is still cleared and REMOVED is still delivered. Sketch
+   * @ref onServiceEvent / @ref onQueryEvent are not cleared (re-@ref begin
+   * keeps using them).
+   *
+   * When `OThread` is attached to an external stack, @ref begin has already
+   * failed, so this is a no-op: CHIP's SRP client (`_matterc._udp`) is not
+   * stopped or cleared, and REMOVED is not sent. Also called from
+   * `OThread.end()`.
    */
   void end();
 
@@ -358,7 +370,8 @@ public:
   /**
    * @brief Register event callback (optional).
    *
-   * Do not call other OThreadDNSSD methods from the callback.
+   * Stays registered across @ref end / @ref begin until replaced or set to
+   * `nullptr`. Do not call other OThreadDNSSD methods from the callback.
    */
   void onServiceEvent(OThreadDNSSDEventCallback callback, void *context = nullptr);
 
@@ -436,10 +449,11 @@ public:
   /**
    * @brief Register async discover callback (optional).
    *
-   * Used with @ref startQueryService / @ref startQueryHost. Do not call other
-   * OThreadDNSSD methods from the callback. On @ref OT_DNSSD_QUERY_DONE, copy
-   * results in `loop()`; after timeout / @ref end, do not rely on getters until
-   * a new query.
+   * Used with @ref startQueryService / @ref startQueryHost. Stays registered
+   * across @ref end / @ref begin until replaced or set to `nullptr`. Do not
+   * call other OThreadDNSSD methods from the callback. On
+   * @ref OT_DNSSD_QUERY_DONE, copy results in `loop()`; after timeout /
+   * @ref end, do not rely on getters until a new query.
    */
   void onQueryEvent(OThreadDNSSDQueryCallback callback, void *context = nullptr);
 
@@ -521,6 +535,8 @@ public:
 #endif /* CONFIG_OPENTHREAD_DNS_CLIENT */
 
 private:
+  void teardown(bool ownSrpClient);
+
   struct TxtSlot {
     char key[OT_DNSSD_TXT_KEY_MAX + 1];
     uint8_t value[OT_DNSSD_TXT_VALUE_MAX];

@@ -228,7 +228,7 @@ Example
 Basic Occupancy Sensor
 **********************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterOccupancySensor/MatterOccupancySensor.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterOccupancySensor/MatterOccupancySensor.ino
     :language: arduino
 
 Occupancy Sensor with HoldTime
@@ -236,7 +236,7 @@ Occupancy Sensor with HoldTime
 
 For an example that demonstrates HoldTime functionality, see:
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterOccupancyWithHoldTime/MatterOccupancyWithHoldTime.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterOccupancyWithHoldTime/MatterOccupancyWithHoldTime.ino
     :language: arduino
 
 This example shows:

@@ -49,7 +49,7 @@ enum matterEvent_t {
   // Starting from 0x8000, these events are public and can be used by applications.
   // Defined in CHIPDeviceEvent.h
 
-  // WiFi Connectivity Change: Signals a change in connectivity of the device's WiFi station interface.
+  // Wi-Fi Connectivity Change: Signals a change in connectivity of the device's Wi-Fi station interface.
   MATTER_WIFI_CONNECTIVITY_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kWiFiConnectivityChange,
 
   // Thread Connectivity Change: Signals a change in connectivity of the device's Thread interface.
@@ -78,8 +78,8 @@ enum matterEvent_t {
   // Request BLE connections to be closed. This is used in the supportsConcurrentConnection = False case.
   MATTER_CLOSE_ALL_BLE_CONNECTIONS = (uint16_t)chip::DeviceLayer::DeviceEventType::kCloseAllBleConnections,
 
-  // WiFi Device Available: When supportsConcurrentConnection = False, the ConnectNetwork
-  // command cannot start until the BLE device is closed and the Operation Network device (e.g. WiFi) has been started.
+  // Wi-Fi Device Available: When supportsConcurrentConnection = False, the ConnectNetwork
+  // command cannot start until the BLE device is closed and the Operation Network device (e.g. Wi-Fi) has been started.
   MATTER_WIFI_DEVICE_AVAILABLE = (uint16_t)chip::DeviceLayer::DeviceEventType::kWiFiDeviceAvailable,
 
   MATTER_OPERATIONAL_NETWORK_STARTED = (uint16_t)chip::DeviceLayer::DeviceEventType::kOperationalNetworkStarted,
@@ -128,8 +128,14 @@ enum matterEvent_t {
   // BLE Deinitialized: Signals that BLE stack is deinitialized and memory reclaimed
   MATTER_BLE_DEINITIALIZED = (uint16_t)chip::DeviceLayer::DeviceEventType::kBLEDeinitialized,
 
-  // Starting ESP32 Platform Specific Events from 0x9000
-  MATTER_ESP32_SPECIFIC_EVENT,  // value is previous + 1
+  // Secure Session Established: Signals that a secure session (PASE or CASE) is established.
+  MATTER_SECURE_SESSION_ESTABLISHED = (uint16_t)chip::DeviceLayer::DeviceEventType::kSecureSessionEstablished,
+
+  // Factory Reset: Signals that factory reset has started.
+  MATTER_FACTORY_RESET = (uint16_t)chip::DeviceLayer::DeviceEventType::kFactoryReset,
+
+  // ESP-Matter platform specific events, from kRange_PublicPlatformSpecific + 0x1000.
+  // Defined in esp_matter.h
 
   // Commissioning Session Started: Signals that Commissioning session has started
   MATTER_COMMISSIONING_SESSION_STARTED = (uint16_t)chip::DeviceLayer::DeviceEventType::kCommissioningSessionStarted,
@@ -159,6 +165,15 @@ enum matterEvent_t {
 
   // ESP32 Matter Events: These are custom ESP32 Matter events as defined in CHIPDevicePlatformEvent.h.
   MATTER_ESP32_PUBLIC_SPECIFIC_EVENT = (uint16_t)chip::DeviceLayer::DeviceEventType::kRange_PublicPlatformSpecific,  // ESPSystemEvent
+  MATTER_ESP32_SPECIFIC_EVENT = MATTER_ESP32_PUBLIC_SPECIFIC_EVENT,
+};
+
+// Runtime network selection. NONE is the default: existing sketches are unchanged.
+enum matterNetwork_t {
+  MATTER_NETWORK_NONE = 0,
+  MATTER_NETWORK_WIFI,
+  MATTER_NETWORK_THREAD,
+  MATTER_NETWORK_ETHERNET
 };
 
 using namespace esp_matter;
@@ -169,15 +184,28 @@ public:
   using matterEventCB = std::function<void(matterEvent_t, const chip::DeviceLayer::ChipDeviceEvent *)>;
   // Matter Event Callback
   static matterEventCB _matterEventCB;
-  // set the Matter Event Callback
+  // set the Matter Event Callback. The ChipDeviceEvent pointer is only valid
+  // during this call; do not store it.
   static void onEvent(matterEventCB cb) {
     _matterEventCB = cb;
+  }
+
+  // Called after CHIPoBLE BLE RAM has been returned to the heap (CHIP kBLEDeinitialized).
+  // Register before Matter.begin(). Runs on the CHIP task: do not block; set a flag and
+  // allocate large buffers from loop(). May never run if CHIPoBLE is off or release is disabled.
+  using bleMemoryReleasedCB = std::function<void()>;
+  static bleMemoryReleasedCB _bleMemoryReleasedCB;
+  static void onBLEMemoryReleased(bleMemoryReleasedCB cb) {
+    _bleMemoryReleasedCB = cb;
   }
 
   // Generated after Matter.begin() from CommissionableDataProvider.
   // Before begin() these log a warning and return an empty String.
   static String getManualPairingCode();
   static String getOnboardingQRCodeUrl();
+  // Starts the Matter stack. On Wi-Fi station builds with no Thread/Ethernet
+  // selection, initializes Wi-Fi first with reduced RX/TX buffers so CHIP
+  // inherits those counts (first esp_wifi_init wins).
   static void begin();
 
   // Node identity (Basic Information on endpoint 0). Call before Matter.begin().
@@ -193,12 +221,52 @@ public:
   static bool setSetupDiscriminator(uint16_t discriminator);
   static bool setSetupPasscode(uint32_t passcode);
 
-  // Network and Commissioning Capability Queries
-  // These methods check both hardware support (SOC capabilities) and Matter configuration
-  static bool isWiFiStationEnabled();       // Check if WiFi Station mode is supported and enabled
-  static bool isWiFiAccessPointEnabled();   // Check if WiFi AP mode is supported and enabled
-  static bool isThreadEnabled();            // Check if Thread network is supported and enabled
-  static bool isBLECommissioningEnabled();  // Check if BLE commissioning is supported and enabled
+  // CHIPoBLE on/off. Call before Matter.begin(). Default is true only when CONFIG_ENABLE_CHIPOBLE.
+  // false forces on-network commissioning (Wi-Fi/Ethernet first) and releases BLE RAM.
+  // Do not use the Arduino BLE library (BLE.h / BLEDevice) in a Matter sketch.
+  static bool setBLECommissioningEnabled(bool enabled);
+
+  // After CHIPoBLE commissioning, release BLE RAM. Call before Matter.begin(). Default true.
+  // Only takes effect when CONFIG_ENABLE_CHIPOBLE is set and CHIPoBLE commissioning is enabled.
+  // No effect if CHIPoBLE is compiled out (no BT, ESP32-S2, or Arduino IDE ESP32 prebuild
+  // which uses Bluedroid without CHIPoBLE). Arduino-as-IDF-component ESP32 can enable NimBLE
+  // and CONFIG_ENABLE_CHIPOBLE; then this API applies. To keep BLE after commission, those
+  // builds also need CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n.
+  static bool setBLEMemoryReleaseEnabled(bool enabled);
+
+  // Compile-time capability (Kconfig / SOC). Not "the interface is up".
+  static bool isWiFiStationEnabled();       // CONFIG_ENABLE_WIFI_STATION (false on H2)
+  static bool isWiFiAccessPointEnabled();   // CONFIG_ENABLE_WIFI_AP
+  static bool isThreadEnabled();            // CONFIG_ENABLE_MATTER_OVER_THREAD (C6/H2; C5 when Matter Network is Thread)
+  static bool isEthernetEnabled();          // CONFIG_ETH_ENABLED: ETH library builds; not "cable present"
+  static bool isBLECommissioningEnabled();  // CHIPoBLE compiled in and still enabled
+  static bool isBLEMemoryReleaseEnabled();  // CHIPoBLE on and BLE RAM will be released after commission
+
+  // Runtime network selection. Call selectNetwork() before any accessory begin().
+  // Records intent only: does not start Wi-Fi, Thread, or Ethernet, and does not
+  // apply a Thread dataset. Ethernet: sketch must ETH.begin() + enableIPv6().
+  // Dual-stack C6: selectNetwork(THREAD) puts Thread Network Commissioning on endpoint 0
+  // (replaces the prebuild Wi-Fi driver) so hubs that only talk to the root see Thread.
+  // Matter.begin() skips CHIP's Wi-Fi init for Thread/Ethernet.
+  static bool isNetworkSupported(matterNetwork_t network);  // same as the is*Enabled() helpers
+  // BLE default: Ethernet disables CHIPoBLE; Wi-Fi and Thread leave it on.
+  // MATTER_NETWORK_NONE clears the selection and does not change BLE.
+  static bool selectNetwork(matterNetwork_t network);
+  // disableBLECommissioning true: setBLECommissioningEnabled(false).
+  // false: does not turn CHIPoBLE back on if the sketch already disabled it.
+  static bool selectNetwork(matterNetwork_t network, bool disableBLECommissioning);
+  static matterNetwork_t getSelectedNetwork();  // last selectNetwork(), or NONE
+  // Which netif has IPv6 (link-local or global). Prefers the selection if that
+  // interface is up; else Wi-Fi, Thread, Ethernet. Not isWiFiConnected().
+  static matterNetwork_t getActiveNetwork();
+  // Expected Network Commissioning endpoint, even before it is created.
+  // Wi-Fi: 0, or 0xFFFF when Thread replaced the root driver (C6).
+  // Thread: 0 when Thread is selected (C6 replaces root Wi-Fi; H2 is already 0).
+  // Ethernet / unsupported: 0xFFFF.
+  static uint16_t getNetworkEndPointId(matterNetwork_t network);
+  // Block (delay) until the selected interface has IPv6. NONE waits for any.
+  // Does not start hardware. timeoutMs 0 is a single check.
+  static bool waitForNetwork(uint32_t timeoutMs);
 
   static bool isDeviceCommissioned();
   static bool isWiFiConnected();
@@ -237,6 +305,7 @@ protected:
   static bool storeIdentityString(char *dst, size_t dstSize, const char *src, const char *apiName);
   static void applyIdentityBeforeStart();
   static void applyIdentityAfterStart();
+  static void applyBlePolicyAfterStart();
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MATTER)

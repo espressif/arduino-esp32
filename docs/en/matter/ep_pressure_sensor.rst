@@ -129,5 +129,5 @@ Example
 Pressure Sensor
 ***************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterPressureSensor/MatterPressureSensor.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterPressureSensor/MatterPressureSensor.ino
     :language: arduino

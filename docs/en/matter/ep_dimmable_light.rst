@@ -232,5 +232,5 @@ Example
 Dimmable Light
 **************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterDimmableLight/MatterDimmableLight.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Lighting/MatterDimmableLight/MatterDimmableLight.ino
     :language: arduino

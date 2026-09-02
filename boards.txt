@@ -20,6 +20,7 @@ menu.JTAGAdapter=JTAG Adapter
 menu.ZigbeeMode=Zigbee Mode
 menu.PinNumbers=Pin Numbering
 menu.ChipVariant=Chip Variant
+menu.MatterNetwork=Matter Network
 
 # Custom options
 menu.Revision=Board Revision
@@ -190,6 +191,7 @@ esp32c5.serial.disableRTS=false
 esp32c5.build.tarch=riscv32
 esp32c5.build.target=esp
 esp32c5.build.mcu=esp32c5
+esp32c5.build.chip_variant=esp32c5
 esp32c5.build.core=esp32
 esp32c5.build.variant=esp32c5
 esp32c5.build.board=ESP32C5_DEV
@@ -359,6 +361,11 @@ esp32c5.menu.DebugLevel.verbose.build.code_debug=5
 esp32c5.menu.EraseFlash.none=Disabled
 esp32c5.menu.EraseFlash.all=Enabled
 esp32c5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+esp32c5.menu.MatterNetwork.wifi=Wi-Fi
+esp32c5.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+esp32c5.menu.MatterNetwork.thread=Thread
+esp32c5.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
 
 esp32c5.menu.ZigbeeMode.default=Disabled
 esp32c5.menu.ZigbeeMode.default.build.zigbee_mode=
@@ -8865,6 +8872,7 @@ sparkfun_esp32c5_thing_plus.serial.disableRTS=false
 sparkfun_esp32c5_thing_plus.build.tarch=riscv32
 sparkfun_esp32c5_thing_plus.build.target=esp
 sparkfun_esp32c5_thing_plus.build.mcu=esp32c5
+sparkfun_esp32c5_thing_plus.build.chip_variant=esp32c5
 sparkfun_esp32c5_thing_plus.build.core=esp32
 sparkfun_esp32c5_thing_plus.build.variant=sparkfun_esp32c5_thing_plus
 sparkfun_esp32c5_thing_plus.build.board=ESP32C5_THING_PLUS
@@ -9022,6 +9030,11 @@ sparkfun_esp32c5_thing_plus.menu.DebugLevel.verbose.build.code_debug=5
 sparkfun_esp32c5_thing_plus.menu.EraseFlash.none=Disabled
 sparkfun_esp32c5_thing_plus.menu.EraseFlash.all=Enabled
 sparkfun_esp32c5_thing_plus.menu.EraseFlash.all.upload.erase_cmd=-e
+
+sparkfun_esp32c5_thing_plus.menu.MatterNetwork.wifi=Wi-Fi
+sparkfun_esp32c5_thing_plus.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+sparkfun_esp32c5_thing_plus.menu.MatterNetwork.thread=Thread
+sparkfun_esp32c5_thing_plus.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
 
 sparkfun_esp32c5_thing_plus.menu.ZigbeeMode.default=Disabled
 sparkfun_esp32c5_thing_plus.menu.ZigbeeMode.default.build.zigbee_mode=
@@ -13592,6 +13605,7 @@ dfrobot_firebeetle2_esp32c5.serial.disableRTS=false
 dfrobot_firebeetle2_esp32c5.build.tarch=riscv32
 dfrobot_firebeetle2_esp32c5.build.target=esp
 dfrobot_firebeetle2_esp32c5.build.mcu=esp32c5
+dfrobot_firebeetle2_esp32c5.build.chip_variant=esp32c5
 dfrobot_firebeetle2_esp32c5.build.core=esp32
 dfrobot_firebeetle2_esp32c5.build.variant=dfrobot_firebeetle2_esp32c5
 dfrobot_firebeetle2_esp32c5.build.board=DFROBOT_FIREBEETLE_2_ESP32C5
@@ -13702,6 +13716,11 @@ dfrobot_firebeetle2_esp32c5.menu.DebugLevel.verbose.build.code_debug=5
 dfrobot_firebeetle2_esp32c5.menu.EraseFlash.none=Disabled
 dfrobot_firebeetle2_esp32c5.menu.EraseFlash.all=Enabled
 dfrobot_firebeetle2_esp32c5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.wifi=Wi-Fi
+dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.thread=Thread
+dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
 
 dfrobot_firebeetle2_esp32c5.menu.ZigbeeMode.default=Disabled
 dfrobot_firebeetle2_esp32c5.menu.ZigbeeMode.default.build.zigbee_mode=
@@ -37902,6 +37921,7 @@ XIAO_ESP32C5.serial.disableRTS=false
 XIAO_ESP32C5.build.tarch=riscv32
 XIAO_ESP32C5.build.target=esp
 XIAO_ESP32C5.build.mcu=esp32c5
+XIAO_ESP32C5.build.chip_variant=esp32c5
 XIAO_ESP32C5.build.core=esp32
 XIAO_ESP32C5.build.variant=XIAO_ESP32C5
 XIAO_ESP32C5.build.board=XIAO_ESP32C5
@@ -38047,6 +38067,11 @@ XIAO_ESP32C5.menu.DebugLevel.verbose.build.code_debug=5
 XIAO_ESP32C5.menu.EraseFlash.none=Disabled
 XIAO_ESP32C5.menu.EraseFlash.all=Enabled
 XIAO_ESP32C5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+XIAO_ESP32C5.menu.MatterNetwork.wifi=Wi-Fi
+XIAO_ESP32C5.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+XIAO_ESP32C5.menu.MatterNetwork.thread=Thread
+XIAO_ESP32C5.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
 
 XIAO_ESP32C5.menu.ZigbeeMode.default=Disabled
 XIAO_ESP32C5.menu.ZigbeeMode.default.build.zigbee_mode=
@@ -46440,6 +46465,7 @@ waveshare_esp32_c5_lcd_1_47.serial.disableRTS=false
 waveshare_esp32_c5_lcd_1_47.build.tarch=riscv32
 waveshare_esp32_c5_lcd_1_47.build.target=esp
 waveshare_esp32_c5_lcd_1_47.build.mcu=esp32c5
+waveshare_esp32_c5_lcd_1_47.build.chip_variant=esp32c5
 waveshare_esp32_c5_lcd_1_47.build.core=esp32
 waveshare_esp32_c5_lcd_1_47.build.variant=waveshare_esp32_c5_lcd_1_47
 waveshare_esp32_c5_lcd_1_47.build.board=WAVESHARE_ESP32_C5_LCD_1_47
@@ -46575,6 +46601,11 @@ waveshare_esp32_c5_lcd_1_47.menu.EraseFlash.none=Disabled
 waveshare_esp32_c5_lcd_1_47.menu.EraseFlash.all=Enabled
 waveshare_esp32_c5_lcd_1_47.menu.EraseFlash.all.upload.erase_cmd=-e
 
+waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.wifi=Wi-Fi
+waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.thread=Thread
+waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
+
 waveshare_esp32_c5_lcd_1_47.menu.ZigbeeMode.default=Disabled
 waveshare_esp32_c5_lcd_1_47.menu.ZigbeeMode.default.build.zigbee_mode=
 waveshare_esp32_c5_lcd_1_47.menu.ZigbeeMode.default.build.zigbee_libs=
@@ -46616,6 +46647,7 @@ waveshare_esp32_c5_zero.serial.disableRTS=false
 waveshare_esp32_c5_zero.build.tarch=riscv32
 waveshare_esp32_c5_zero.build.target=esp
 waveshare_esp32_c5_zero.build.mcu=esp32c5
+waveshare_esp32_c5_zero.build.chip_variant=esp32c5
 waveshare_esp32_c5_zero.build.core=esp32
 waveshare_esp32_c5_zero.build.variant=waveshare_esp32_c5_zero
 waveshare_esp32_c5_zero.build.board=WAVESHARE_ESP32_C5_ZERO
@@ -46750,6 +46782,11 @@ waveshare_esp32_c5_zero.menu.DebugLevel.verbose.build.code_debug=5
 waveshare_esp32_c5_zero.menu.EraseFlash.none=Disabled
 waveshare_esp32_c5_zero.menu.EraseFlash.all=Enabled
 waveshare_esp32_c5_zero.menu.EraseFlash.all.upload.erase_cmd=-e
+
+waveshare_esp32_c5_zero.menu.MatterNetwork.wifi=Wi-Fi
+waveshare_esp32_c5_zero.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+waveshare_esp32_c5_zero.menu.MatterNetwork.thread=Thread
+waveshare_esp32_c5_zero.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
 
 waveshare_esp32_c5_zero.menu.ZigbeeMode.default=Disabled
 waveshare_esp32_c5_zero.menu.ZigbeeMode.default.build.zigbee_mode=
@@ -53849,6 +53886,7 @@ pcbcupid_glyph_c5.serial.disableRTS=false
 pcbcupid_glyph_c5.build.tarch=riscv32
 pcbcupid_glyph_c5.build.target=esp
 pcbcupid_glyph_c5.build.mcu=esp32c5
+pcbcupid_glyph_c5.build.chip_variant=esp32c5
 pcbcupid_glyph_c5.build.core=esp32
 pcbcupid_glyph_c5.build.variant=pcbcupid_glyph_c5
 pcbcupid_glyph_c5.build.board=PCBCUPID_GLYPH_C5
@@ -53983,6 +54021,11 @@ pcbcupid_glyph_c5.menu.DebugLevel.verbose.build.code_debug=5
 pcbcupid_glyph_c5.menu.EraseFlash.none=Disabled
 pcbcupid_glyph_c5.menu.EraseFlash.all=Enabled
 pcbcupid_glyph_c5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+pcbcupid_glyph_c5.menu.MatterNetwork.wifi=Wi-Fi
+pcbcupid_glyph_c5.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+pcbcupid_glyph_c5.menu.MatterNetwork.thread=Thread
+pcbcupid_glyph_c5.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
 
 pcbcupid_glyph_c5.menu.ZigbeeMode.default=Disabled
 pcbcupid_glyph_c5.menu.ZigbeeMode.default.build.zigbee_mode=
@@ -58133,6 +58176,7 @@ soldered_nula_dual_esp32c5.serial.disableRTS=false
 soldered_nula_dual_esp32c5.build.tarch=riscv32
 soldered_nula_dual_esp32c5.build.target=esp
 soldered_nula_dual_esp32c5.build.mcu=esp32c5
+soldered_nula_dual_esp32c5.build.chip_variant=esp32c5
 soldered_nula_dual_esp32c5.build.core=esp32
 soldered_nula_dual_esp32c5.build.variant=soldered_nula_dual_esp32c5
 soldered_nula_dual_esp32c5.build.board=SOLDERED_NULA_DUAL_ESP32C5
@@ -58290,6 +58334,11 @@ soldered_nula_dual_esp32c5.menu.DebugLevel.verbose.build.code_debug=5
 soldered_nula_dual_esp32c5.menu.EraseFlash.none=Disabled
 soldered_nula_dual_esp32c5.menu.EraseFlash.all=Enabled
 soldered_nula_dual_esp32c5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+soldered_nula_dual_esp32c5.menu.MatterNetwork.wifi=Wi-Fi
+soldered_nula_dual_esp32c5.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+soldered_nula_dual_esp32c5.menu.MatterNetwork.thread=Thread
+soldered_nula_dual_esp32c5.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
 
 soldered_nula_dual_esp32c5.menu.ZigbeeMode.default=Disabled
 soldered_nula_dual_esp32c5.menu.ZigbeeMode.default.build.zigbee_mode=
@@ -58966,6 +59015,7 @@ pandabyte_xc5.serial.disableRTS=false
 pandabyte_xc5.build.tarch=riscv32
 pandabyte_xc5.build.target=esp
 pandabyte_xc5.build.mcu=esp32c5
+pandabyte_xc5.build.chip_variant=esp32c5
 pandabyte_xc5.build.core=esp32
 pandabyte_xc5.build.variant=pandabyte_xc5
 pandabyte_xc5.build.board=PANDABYTE_XC5
@@ -59135,6 +59185,11 @@ pandabyte_xc5.menu.DebugLevel.verbose.build.code_debug=5
 pandabyte_xc5.menu.EraseFlash.none=Disabled
 pandabyte_xc5.menu.EraseFlash.all=Enabled
 pandabyte_xc5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+pandabyte_xc5.menu.MatterNetwork.wifi=Wi-Fi
+pandabyte_xc5.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+pandabyte_xc5.menu.MatterNetwork.thread=Thread
+pandabyte_xc5.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
 
 pandabyte_xc5.menu.ZigbeeMode.default=Disabled
 pandabyte_xc5.menu.ZigbeeMode.default.build.zigbee_mode=
@@ -60436,6 +60491,7 @@ canipulator_v2.serial.disableRTS=false
 canipulator_v2.build.tarch=riscv32
 canipulator_v2.build.target=esp
 canipulator_v2.build.mcu=esp32c5
+canipulator_v2.build.chip_variant=esp32c5
 canipulator_v2.build.core=esp32
 canipulator_v2.build.variant=canipulator_v2
 canipulator_v2.build.board=CANIPULATOR_V2
@@ -60605,6 +60661,11 @@ canipulator_v2.menu.DebugLevel.verbose.build.code_debug=5
 canipulator_v2.menu.EraseFlash.none=Disabled
 canipulator_v2.menu.EraseFlash.all=Enabled
 canipulator_v2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+canipulator_v2.menu.MatterNetwork.wifi=Wi-Fi
+canipulator_v2.menu.MatterNetwork.wifi.build.chip_variant=esp32c5
+canipulator_v2.menu.MatterNetwork.thread=Thread
+canipulator_v2.menu.MatterNetwork.thread.build.chip_variant=esp32c5_mot
 
 canipulator_v2.menu.ZigbeeMode.default=Disabled
 canipulator_v2.menu.ZigbeeMode.default.build.zigbee_mode=
