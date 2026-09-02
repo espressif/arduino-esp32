@@ -46,10 +46,27 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
     local requirements
     local requirements_or
 
-    if [ ! -f "$sdkconfig_path" ] || [ ! -f "$sketchdir/ci.yml" ]; then
+    if [ ! -f "$sketchdir/ci.yml" ]; then
         echo "WARNING: sdkconfig or ci.yml not found. Assuming requirements are met." 1>&2
-        # Return 1 on error to force the sketch to be built and fail. This way the
-        # CI will fail and the user will know that the sketch has a problem.
+    elif [ ! -f "$sdkconfig_path" ]; then
+        # Extra chip_variant tree not in this esp32-arduino-libs zip yet
+        # (e.g. esp32c5_mot before the package.json URL is bumped). Skip instead
+        # of compiling against a missing compiler.sdk.path.
+        local have_libs=0
+        local installed_sdkconfig
+        for installed_sdkconfig in "$SDKCONFIG_DIR"/*/sdkconfig; do
+            if [ -f "$installed_sdkconfig" ]; then
+                have_libs=1
+                break
+            fi
+        done
+        if [ "$have_libs" -eq 1 ]; then
+            echo "WARNING: $sdkconfig_path not found. Skipping this target until the variant is in esp32-arduino-libs." 1>&2
+            echo 0
+            return
+        fi
+        echo "WARNING: sdkconfig or ci.yml not found. Assuming requirements are met." 1>&2
+        # No libs installed at all: force the sketch to be built and fail.
     else
         # Check if the sketch requires any configuration options (AND)
         requirements=$(yq eval '.requires[]' "$sketchdir/ci.yml" 2>/dev/null)

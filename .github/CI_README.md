@@ -701,7 +701,7 @@ fqbn_append:
   esp32c5: MatterNetwork=thread
 ```
 
-`sdkconfig_for_sketch` maps C5 + `MatterNetwork=thread` to `esp32c5_mot`, and P4 + `ChipVariant=prev3` to `esp32p4_es`. A missing variant `sdkconfig` makes `check_requirements` warn and still try to build.
+`sdkconfig_for_sketch` maps C5 + `MatterNetwork=thread` to `esp32c5_mot`, and P4 + `ChipVariant=prev3` to `esp32p4_es`. If that variant `sdkconfig` is missing but other lib trees are installed, `check_requirements` skips the target (the published `esp32-arduino-libs` zip does not include the variant yet). If no lib `sdkconfig` exists at all, the sketch is still built so a broken libs install fails the job.
 
 Use `fqbn` instead only when a test needs several builds per target (for example with and without PSRAM); it lists complete FQBNs and ignores `fqbn_append`.
 
