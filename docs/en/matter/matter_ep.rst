@@ -10,6 +10,7 @@ The ``MatterEndPoint`` class is the base class for all Matter endpoints. It prov
 * **Endpoint Management**: Each endpoint has a unique endpoint ID for identification within the Matter network
 * **Attribute Access**: Methods to get and set attribute values from Matter clusters
 * **Identify Cluster**: Support for device identification (visual feedback like LED blinking)
+* **Semantic Tags**: Descriptor cluster ``TagList`` support via ``setTagList()``, so controllers can tell sibling endpoints of the same device type apart
 * **Secondary Network Interfaces**: Support for multiple network interfaces (Wi-Fi, Thread, Ethernet)
 * **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers
 
@@ -130,6 +131,8 @@ Updates the value of an attribute from its cluster ID. This is typically used fo
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
+Boolean State ``StateValue`` (contact, leak, freeze, rain) is internally managed in ESP-Matter 1.5+ and cannot be written with ``updateAttributeVal()``. Those endpoints use a cluster setter; call ``setContact()`` / ``setLeak()`` / ``setFreeze()`` / ``setRain()`` after ``Matter.begin()``.
+
 Identify Cluster
 ****************
 
@@ -166,6 +169,59 @@ Example usage:
         }
         return true;
     });
+
+Semantic Tags (TagList)
+***********************
+
+``setTagList()`` writes the Descriptor cluster ``TagList`` attribute for this endpoint. Use it to disambiguate sibling endpoints that share the same Matter device type (for example three lights tagged Top/Middle/Bottom, or Generic Switch buttons tagged On/Off plus a custom-labeled Scene).
+
+Call ``setTagList()`` after the endpoint ``begin()`` and before ``Matter.begin()``. The first call enables the Descriptor TagList feature on that endpoint; sketches that never tag an endpoint do not pay the extra FLASH cost. Generic Switch is the exception: it still enables TagList during ``begin()``, matching the previous behavior of that endpoint type. ``setTagList()`` logs an error and returns ``false`` if the endpoint ``begin()`` has not been called.
+
+At most ``MatterEndPoint::MAX_TAG_LIST_SIZE`` (3) tags are accepted. That limit comes from esp-matter (``ESP_MATTER_MAX_SEMANTIC_TAG_COUNT``). Optional ``label`` pointers are not copied and must remain valid for as long as the endpoint is running (string literals are fine).
+
+Named presets live in ``MatterTags`` (see ``MatterTags.h``): ``Position``, ``Number``, ``Switches``, and ``Location``. Use ``MatterTags::createTag(namespaceId, tag, label)`` for a custom namespace/tag/label combination. For a Switches Custom tag with a user-visible label, use ``MatterTags::Switches::createCustomTag(label)``. Position Row/Column tags require a non-empty label; the Matter spec uses an Arabic numeral such as ``"1"`` for the first row/column. Use ``MatterTags::Position::createRowTag(label)`` and ``createColumnTag(label)``.
+
+setTagList
+^^^^^^^^^^
+
+Sets the Descriptor cluster TagList attribute, replacing any list set previously.
+
+.. code-block:: arduino
+
+    bool setTagList(const MatterTag *tagList, uint8_t count);
+    bool setTagList(std::initializer_list<MatterTag> tagList);
+
+* ``tagList`` - Array or brace-enclosed list of ``MatterTag`` entries
+* ``count`` - Number of entries (pointer overload only); must be 1..3
+
+This function will return ``true`` if successful, ``false`` otherwise.
+
+Example usage:
+
+.. code-block:: arduino
+
+    Light1.begin();
+    Light2.begin();
+    Light3.begin();
+
+    Light1.setTagList({MatterTags::Position::Top, MatterTags::Number::One});
+    Light2.setTagList({MatterTags::Position::Middle, MatterTags::Number::Two});
+    Light3.setTagList({MatterTags::Location::Outdoor, MatterTags::Position::Bottom});
+
+    // Position Row/Column require a non-empty label (spec uses "1" for the first row/column)
+    GridCell.setTagList({MatterTags::Position::createRowTag("1"), MatterTags::Position::createColumnTag("2")});
+
+    ButtonOn.begin();
+    ButtonOn.setTagList({MatterTags::Switches::On});
+
+    // Switches Custom tag with a label (the string literal must outlive the endpoint)
+    ButtonScene.begin();
+    ButtonScene.setTagList({MatterTags::Switches::createCustomTag("Scene 1")});
+
+    // Custom namespace/tag with a label (the string literal must outlive the endpoint)
+    Pump.setTagList({MatterTags::createTag(0x60, 3, "pump-A"), MatterTags::Position::Left});
+
+See the `MatterSmartButtonsTagList <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButtonsTagList>`_ example for a complete sketch (On, Off, and a custom-labeled switch).
 
 Attribute Change Callback
 *************************

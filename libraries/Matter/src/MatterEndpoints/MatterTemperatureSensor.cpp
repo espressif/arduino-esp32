@@ -63,6 +63,7 @@ bool MatterTemperatureSensor::begin(int16_t _rawTemperature) {
   }
   rawTemperature = _rawTemperature;
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Temperature Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;

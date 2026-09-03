@@ -104,6 +104,7 @@ set(ARDUINO_ALL_LIBRARIES
   Hash
   HTTPClient
   HTTPUpdate
+  HTTPUpdateServer
   Insights
   LittleFS
   Matter
@@ -180,7 +181,7 @@ set(ARDUINO_LIBRARY_Hash_SRCS
 
 set(ARDUINO_LIBRARY_HTTPClient_SRCS libraries/HTTPClient/src/HTTPClient.cpp)
 
-set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
+set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp libraries/HTTPUpdate/src/HTTPUpdateChecksum.cpp)
 
 set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
 
@@ -194,7 +195,8 @@ set(ARDUINO_LIBRARY_OpenThread_SRCS
   libraries/OpenThread/src/OThreadUDP.cpp
   libraries/OpenThread/src/OThreadCoAP.cpp
   libraries/OpenThread/src/OThreadCLI_Util.cpp
-  libraries/OpenThread/src/OThreadScan.cpp)
+  libraries/OpenThread/src/OThreadScan.cpp
+  libraries/OpenThread/src/OThreadDNSSD.cpp)
 
 set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterGenericSwitch.cpp
@@ -219,6 +221,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterWindowCovering.cpp
   libraries/Matter/src/MatterEndpoints/MatterLightSensor.cpp
   libraries/Matter/src/Matter.cpp
+  libraries/Matter/src/MatterIdentity.cpp
   libraries/Matter/src/MatterEndPoint.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS libraries/PPP/src/PPP.cpp)

@@ -8,8 +8,10 @@ def test_ble(dut, ci_job_id):
     server = dut[0]
     client = dut[1]
 
-    # Generate unique server name for this test run
-    server_name = "BLE_SRV_" + ci_job_id if ci_job_id else "BLE_SRV_" + rand_str4()
+    # Generate unique server name for this test run. The suffix is kept at four
+    # characters so the scan response still fits the 31-octet limit alongside the
+    # malformed AD structures used by the advertisement parsing checks.
+    server_name = "BLE_SRV_" + (ci_job_id[-4:] if ci_job_id else rand_str4())
 
     LOGGER.info(f"Server Name: {server_name}")
 
@@ -39,6 +41,14 @@ def test_ble(dut, ci_job_id):
     LOGGER.info("Checking BLE stack...")
     server.expect(r"\[SERVER\] BLE stack: (Bluedroid|NimBLE)", timeout=10)
 
+    # Issue #12821: BLEDevice::init() must not smash a heap tail canary (seen on ESP32-C5).
+    LOGGER.info("Checking heap integrity around BLEDevice::init (issue #12821)...")
+    server.expect_exact("[SERVER] Heap before BLEDevice::init(): clean", timeout=10)
+    server.expect_exact("[SERVER] Heap after BLEDevice::init(): clean", timeout=10)
+    client.expect_exact("[CLIENT] Heap before BLEDevice::init(): clean", timeout=10)
+    client.expect_exact("[CLIENT] Heap after BLEDevice::init(): clean", timeout=10)
+    LOGGER.info("Heap integrity after BLEDevice::init() is clean")
+
     # Wait for server to be ready
     LOGGER.info("Waiting for server to start advertising...")
     server.expect_exact("[SERVER] Characteristics configured", timeout=10)
@@ -54,7 +64,18 @@ def test_ble(dut, ci_job_id):
 
     # Client finds server
     LOGGER.info("Waiting for client to discover server...")
-    client.expect_exact("[CLIENT] Found target server!", timeout=60)
+
+    # Advertisement parsing regression, window 1. The scan response hides an oversize
+    # AD structure, a 16-bit UUID list with a trailing partial octet and a 128-bit UUID
+    # structure shorter than 16 bytes. None of them may reach the parsed fields, so the
+    # only service UUID left is the valid one from the primary advertisement.
+    m = client.expect(r"\[CLIENT\] ADCHK1 mfg=(\d) svc16=(\d) svcCount=(\d+)", timeout=60)
+    assert int(m.group(1)) == 0, "oversize AD structure was parsed as manufacturer data"
+    assert int(m.group(2)) == 0, "16-bit UUID list with a trailing partial octet was parsed"
+    assert int(m.group(3)) == 1, f"expected only the advertised service UUID, got {int(m.group(3))}"
+    LOGGER.info("Advertisement parsing checks (window 1) passed")
+
+    client.expect_exact("[CLIENT] Found target server!", timeout=10)
 
     # Client connects to server
     LOGGER.info("Client connecting to server...")
@@ -73,6 +94,7 @@ def test_ble(dut, ci_job_id):
     # Continue with characteristics discovery
     client.expect_exact("[CLIENT] Found insecure characteristic", timeout=10)
     client.expect_exact("[CLIENT] Found secure characteristic", timeout=10)
+    client.expect_exact("[CLIENT] Found Write-NR characteristic", timeout=10)
 
     # Verify insecure characteristic read (no auth needed)
     LOGGER.info("Verifying insecure characteristic access...")
@@ -142,6 +164,19 @@ def test_ble(dut, ci_job_id):
 
     LOGGER.info("Security and characteristic test passed!")
 
+    # --- Write-Without-Response burst (issue #12815) ---
+    # Central sends AA/BB/CC with no delay and no response. Server onWrite() must
+    # observe the original payloads, not three copies of the last packet.
+    LOGGER.info("Testing Write-NR burst (issue #12815)...")
+    client.expect_exact("[CLIENT] Starting Write-NR burst", timeout=10)
+    client.expect_exact("[CLIENT] Write-NR burst sent", timeout=10)
+    server.expect_exact("[SERVER] Write-NR packet 1/3: AA AA AA", timeout=10)
+    server.expect_exact("[SERVER] Write-NR packet 2/3: BB BB BB", timeout=10)
+    server.expect_exact("[SERVER] Write-NR packet 3/3: CC CC CC", timeout=10)
+    server.expect_exact("[SERVER] Write-NR burst PASSED", timeout=10)
+    server.expect_exact("[SERVER] Heap after Write-NR burst: clean", timeout=10)
+    LOGGER.info("Write-NR burst verified")
+
     # --- Reconnection stress test (app_id collision regression, issue #12625) ---
     # The client disconnects, pre-seeds the allocator, and reconnects in a loop.
     # We only rely on client-side messages for synchronization since server periodic
@@ -164,5 +199,18 @@ def test_ble(dut, ci_job_id):
 
     client.expect_exact("[CLIENT] Reconnection stress test PASSED", timeout=10)
     LOGGER.info("Reconnection stress test passed")
+
+    # Advertisement parsing regression, window 2. The server now advertises a 32-bit
+    # UUID list with a trailing partial group followed by a zero-length terminator
+    # that hides manufacturer data. Parsing must stop at the terminator.
+    LOGGER.info("Switching server to advertisement parsing window 2...")
+    server.write("ADPHASE2")
+    server.expect_exact("[SERVER] AD phase 2 advertising", timeout=15)
+
+    client.write("ADPHASE2")
+    m = client.expect(r"\[CLIENT\] ADCHK2 mfg=(\d) svc32=(\d)", timeout=30)
+    assert int(m.group(1)) == 0, "AD structures behind the zero-length terminator were parsed"
+    assert int(m.group(2)) == 0, "32-bit UUID list with a trailing partial group was parsed"
+    LOGGER.info("Advertisement parsing checks (window 2) passed")
 
     LOGGER.info("BLE test passed!")

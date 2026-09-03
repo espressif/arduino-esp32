@@ -198,7 +198,8 @@ The checked-out core is installed via `install-arduino-core-esp32.sh` (symlink +
 
 **Logic:**
 - Non-PR (`push`, `workflow_dispatch`): always run
-- PR: `tj-actions/changed-files` with `files_yaml` categories `boards` / `upload` (`**` minus `boards.txt`)
+- PR: `tj-actions/changed-files` with `files_yaml` categories `boards` / `upload`
+  - `upload` matches `on.pull_request.paths` minus `boards.txt` (not `**`, so `variants/` and other companion files do not force a run)
   - run `find_boards.sh official` only when `boards_any_changed`
   - run mock upload if official `CORE_SOCS` boards changed (`FQBNS` non-empty) **or** `upload_any_changed`
 

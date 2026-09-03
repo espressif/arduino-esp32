@@ -16,6 +16,12 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <MatterEndPoint.h>
+#include <MatterTags.h>
+#include <string.h>
+#include <app/clusters/boolean-state-server/boolean-state-cluster.h>
+#include <data_model_provider/esp_matter_data_model_provider.h>
+
+using namespace chip::app::Clusters;
 
 uint16_t MatterEndPoint::secondary_network_endpoint_id = 0;
 
@@ -130,6 +136,23 @@ bool MatterEndPoint::updateAttributeVal(uint32_t cluster_id, uint32_t attribute_
   return false;
 }
 
+static BooleanStateCluster *getBooleanStateCluster(uint16_t endpoint_id) {
+  chip::app::ServerClusterInterface *iface =
+    esp_matter::data_model::provider::get_instance().registry().Get(chip::app::ConcreteClusterPath(endpoint_id, BooleanState::Id));
+  return static_cast<BooleanStateCluster *>(iface);
+}
+
+bool MatterEndPoint::setBooleanStateValue(bool value) {
+  BooleanStateCluster *cluster = getBooleanStateCluster(endpoint_id);
+  if (cluster == nullptr) {
+    log_e("BooleanState cluster not found on endpoint %u. Call Matter.begin() first.", endpoint_id);
+    return false;
+  }
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  cluster->SetStateValue(value);
+  return true;
+}
+
 // This callback is invoked when clients interact with the Identify Cluster of an specific endpoint.
 bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEnabled) {
   if (_onEndPointIdentifyCB) {
@@ -141,6 +164,101 @@ bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEna
 // User callback for the Identify Cluster functionality
 void MatterEndPoint::onIdentify(EndPointIdentifyCB onEndPointIdentifyCB) {
   _onEndPointIdentifyCB = onEndPointIdentifyCB;
+}
+
+// Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.
+bool MatterEndPoint::enableTagList() {
+  if (tagListEnabled) {
+    return true;
+  }
+  if (endpoint_id == 0) {
+    log_e("Endpoint ID is not set. Call the endpoint begin() first.");
+    return false;
+  }
+  endpoint_t *ep = endpoint::get(node::get(), endpoint_id);
+  if (ep == nullptr) {
+    log_e("Endpoint %u not found", endpoint_id);
+    return false;
+  }
+  cluster_t *descriptorCluster = cluster::get(ep, Descriptor::Id);
+  if (descriptorCluster == nullptr) {
+    log_e("Descriptor cluster not found on endpoint %u", endpoint_id);
+    return false;
+  }
+  if (cluster::descriptor::feature::tag_list::add(descriptorCluster) != ESP_OK) {
+    log_e("Failed to enable TagList feature on endpoint %u", endpoint_id);
+    return false;
+  }
+  tagListEnabled = true;
+  return true;
+}
+
+// Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
+bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
+  if (endpoint_id == 0) {
+    log_e("setTagList() requires the endpoint begin() to be called first.");
+    return false;
+  }
+  if (tagList == nullptr || count == 0) {
+    log_e("setTagList() requires a non-empty tag list.");
+    return false;
+  }
+  if (count > MAX_TAG_LIST_SIZE) {
+    log_e("setTagList() accepts at most %u tags", MAX_TAG_LIST_SIZE);
+    return false;
+  }
+
+  for (uint8_t i = 0; i < count; i++) {
+    const bool emptyLabel = (tagList[i].label == nullptr || tagList[i].label[0] == '\0');
+    if (tagList[i].namespaceId == MatterTags::Switches::NS && tagList[i].tag == MatterTags::Switches::Custom && emptyLabel) {
+      log_e("Switches Custom tag requires a non-empty label. Use MatterTags::Switches::createCustomTag().");
+      return false;
+    }
+    if (tagList[i].namespaceId == MatterTags::Position::NS && tagList[i].tag == MatterTags::Position::Row && emptyLabel) {
+      log_e("Position Row tag requires a non-empty label. Use MatterTags::Position::createRowTag().");
+      return false;
+    }
+    if (tagList[i].namespaceId == MatterTags::Position::NS && tagList[i].tag == MatterTags::Position::Column && emptyLabel) {
+      log_e("Position Column tag requires a non-empty label. Use MatterTags::Position::createColumnTag().");
+      return false;
+    }
+  }
+
+  if (!enableTagList()) {
+    return false;
+  }
+
+  endpoint_t *ep = endpoint::get(node::get(), endpoint_id);
+  if (ep == nullptr) {
+    log_e("Endpoint %u not found", endpoint_id);
+    return false;
+  }
+
+  Globals::Structs::SemanticTagStruct::Type tags[MAX_TAG_LIST_SIZE] = {};
+  for (uint8_t i = 0; i < count; i++) {
+    tags[i].mfgCode.SetNull();
+    tags[i].namespaceID = tagList[i].namespaceId;
+    tags[i].tag = tagList[i].tag;
+    if (tagList[i].label != nullptr) {
+      tags[i].label.Emplace(chip::CharSpan(tagList[i].label, strlen(tagList[i].label)));
+    }
+  }
+
+  esp_err_t err = endpoint::set_semantic_tags(ep, tags, count);
+  if (err != ESP_OK) {
+    log_e("Failed to set TagList attribute: %s", esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+
+// Convenience overload: ButtonOn.setTagList({MatterTags::Switches::On});
+bool MatterEndPoint::setTagList(std::initializer_list<MatterTag> tagList) {
+  if (tagList.size() > MAX_TAG_LIST_SIZE) {
+    log_e("setTagList() accepts at most %u tags", MAX_TAG_LIST_SIZE);
+    return false;
+  }
+  return setTagList(tagList.begin(), static_cast<uint8_t>(tagList.size()));
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

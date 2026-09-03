@@ -161,6 +161,7 @@ bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, Ther
   currentMode = _currentMode;
 
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Thermostat created with endpoint_id %u", getEndPointId());
 
   started = true;

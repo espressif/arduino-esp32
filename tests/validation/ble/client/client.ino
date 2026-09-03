@@ -2,23 +2,43 @@
 #include "BLEDevice.h"
 #include "BLESecurity.h"
 #include "nvs_flash.h"
+#include <esp_heap_caps.h>
 
 static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static BLEUUID insecureCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 static BLEUUID secureCharUUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
+static BLEUUID writeNrCharUUID("d7c1aa01-36e1-4688-b7f5-ea07361b26a8");
 
 static const int RECONNECT_CYCLES = 10;
 static const uint16_t APPID_PRESEED_GATT_IF_NONE = 250;  // crosses ESP_GATT_IF_NONE (0xFF on Bluedroid)
+static const uint8_t WRITE_NR_BURST[3][3] = {
+  {0xAA, 0xAA, 0xAA},
+  {0xBB, 0xBB, 0xBB},
+  {0xCC, 0xCC, 0xCC},
+};
+
+// Service UUIDs the server only advertises inside malformed AD structures. A
+// fixed parser must never surface them (see the payloads in server.ino).
+static BLEUUID badUuid16((uint16_t)0x180D);
+static BLEUUID badUuid32((uint32_t)0x04030201);
 
 String targetServerName = "";
 static boolean doConnect = false;
 static boolean connected = false;
 static boolean doScan = false;
 static boolean testCompleted = false;
+static int adPhase = 1;
+static boolean adPhase2Reported = false;
 static BLEClient *pClient = nullptr;
 static BLERemoteCharacteristic *pRemoteInsecureCharacteristic = nullptr;
 static BLERemoteCharacteristic *pRemoteSecureCharacteristic = nullptr;
+static BLERemoteCharacteristic *pRemoteWriteNrCharacteristic = nullptr;
 static BLEAdvertisedDevice *myDevice = nullptr;
+
+static void printHeapIntegrity(const char *when) {
+  bool clean = heap_caps_check_integrity_all(true);
+  Serial.printf("[CLIENT] Heap %s: %s\n", when, clean ? "clean" : "CORRUPT");
+}
 
 class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient *pclient) {
@@ -120,6 +140,14 @@ bool connectToServer() {
   }
   Serial.println("[CLIENT] Found secure characteristic");
 
+  pRemoteWriteNrCharacteristic = pRemoteService->getCharacteristic(writeNrCharUUID);
+  if (pRemoteWriteNrCharacteristic == nullptr) {
+    Serial.println("[CLIENT] ERROR: Failed to find Write-NR characteristic");
+    pClient->disconnect();
+    return false;
+  }
+  Serial.println("[CLIENT] Found Write-NR characteristic");
+
   // Read insecure characteristic
   if (pRemoteInsecureCharacteristic->canRead()) {
     String value = pRemoteInsecureCharacteristic->readValue();
@@ -155,6 +183,26 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       Serial.println(deviceName);
 
       if (deviceName == targetServerName) {
+        if (adPhase == 2) {
+          if (!adPhase2Reported) {
+            adPhase2Reported = true;
+            // Behind the zero-length terminator the server hides manufacturer data,
+            // and the 32-bit UUID list it advertises has a trailing partial group.
+            Serial.printf(
+              "[CLIENT] ADCHK2 mfg=%d svc32=%d\n", advertisedDevice.haveManufacturerData() ? 1 : 0, advertisedDevice.isAdvertisingService(badUuid32) ? 1 : 0
+            );
+          }
+          return;
+        }
+
+        // The scan response hides an oversize AD structure, a 16-bit UUID list with
+        // a trailing partial octet, and a 128-bit UUID structure shorter than 16
+        // bytes. Only the service UUID from the primary advertisement is valid, so
+        // a fixed parser reports exactly one service UUID and no manufacturer data.
+        Serial.printf(
+          "[CLIENT] ADCHK1 mfg=%d svc16=%d svcCount=%d\n", advertisedDevice.haveManufacturerData() ? 1 : 0,
+          advertisedDevice.isAdvertisingService(badUuid16) ? 1 : 0, advertisedDevice.getServiceUUIDCount()
+        );
         Serial.println("[CLIENT] Found target server!");
         BLEDevice::getScan()->stop();
         myDevice = new BLEAdvertisedDevice(advertisedDevice);
@@ -164,6 +212,26 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     }
   }
 };
+
+static MyAdvertisedDeviceCallbacks *pScanCallbacks = nullptr;
+
+// Rescan while the server advertises the window 2 payload (see server.ino).
+void runAdPhase2Scan() {
+  adPhase = 2;
+  adPhase2Reported = false;
+
+  BLEScan *pBLEScan = BLEDevice::getScan();
+  pBLEScan->stop();
+  pBLEScan->clearResults();
+  // Duplicates are wanted so the report is not suppressed by the earlier scan.
+  pBLEScan->setAdvertisedDeviceCallbacks(pScanCallbacks, true);
+  pBLEScan->setActiveScan(true);
+  pBLEScan->start(10, false);
+
+  if (!adPhase2Reported) {
+    Serial.println("[CLIENT] ADCHK2 server not found");
+  }
+}
 
 bool runReconnectPhase(uint16_t preseed, const char *label) {
   Serial.printf("[CLIENT] Reconnect phase: crossing %s (preseed=%u)\n", label, preseed);
@@ -236,7 +304,10 @@ void setup() {
   nvs_flash_erase();
   nvs_flash_init();
 
+  // Issue #12821: BLEDevice::init() must not overflow a heap block / destroy the tail canary.
+  printHeapIntegrity("before BLEDevice::init()");
   BLEDevice::init("BLE_Test_Client");
+  printHeapIntegrity("after BLEDevice::init()");
 
   // Configure security for Numeric Comparison
   BLESecurity *pSecurity = new BLESecurity();
@@ -254,7 +325,8 @@ void setup() {
 
   // Start scanning
   BLEScan *pBLEScan = BLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  pScanCallbacks = new MyAdvertisedDeviceCallbacks();
+  pBLEScan->setAdvertisedDeviceCallbacks(pScanCallbacks);
   pBLEScan->setInterval(1349);
   pBLEScan->setWindow(449);
   pBLEScan->setActiveScan(true);
@@ -262,6 +334,14 @@ void setup() {
 }
 
 void loop() {
+  if (testCompleted && Serial.available()) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    if (command == "ADPHASE2") {
+      runAdPhase2Scan();
+    }
+  }
+
   if (doConnect == true) {
     if (connectToServer()) {
       Serial.println("[CLIENT] Successfully connected and authenticated");
@@ -302,6 +382,23 @@ void loop() {
     }
 
     Serial.println("[CLIENT] Test operations completed");
+
+    // --- Write-Without-Response burst (issue #12815) ---
+    // Three back-to-back Write Commands with distinct payloads. The server must
+    // deliver each original packet to onWrite(), not three copies of the last one.
+    Serial.println("[CLIENT] Starting Write-NR burst");
+    if (pRemoteWriteNrCharacteristic && pRemoteWriteNrCharacteristic->canWriteNoResponse()) {
+      for (int i = 0; i < 3; i++) {
+        uint8_t buf[3];
+        memcpy(buf, WRITE_NR_BURST[i], sizeof(buf));
+        bool ok = pRemoteWriteNrCharacteristic->writeValue(buf, sizeof(buf), false);
+        Serial.printf("[CLIENT] Write-NR packet %d/3 %s\n", i + 1, ok ? "queued" : "FAILED");
+      }
+      Serial.println("[CLIENT] Write-NR burst sent");
+    } else {
+      Serial.println("[CLIENT] ERROR: Write-NR characteristic missing or cannot write without response");
+    }
+    delay(1000);
 
     // --- Reconnection stress test (app_id collision regression) ---
     // Disconnect from the current connection first

@@ -63,6 +63,7 @@ bool MatterPressureSensor::begin(int16_t _rawPressure) {
   }
   rawPressure = _rawPressure;
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Pressure Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;

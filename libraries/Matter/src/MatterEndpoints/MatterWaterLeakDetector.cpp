@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterWaterLeakDetector.h>
 
 using namespace esp_matter;
@@ -43,7 +42,7 @@ MatterWaterLeakDetector::~MatterWaterLeakDetector() {
   end();
 }
 
-bool MatterWaterLeakDetector::begin(bool _leakState) {
+bool MatterWaterLeakDetector::begin() {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
@@ -51,17 +50,19 @@ bool MatterWaterLeakDetector::begin(bool _leakState) {
     return false;
   }
 
-  water_leak_detector::config_t water_leak_detector_config;
-  water_leak_detector_config.boolean_state.state_value = _leakState;
+  water_leak_detector::config_t water_leak_detector_config{};
+  water_leak_detector_config.boolean_state.state_value = false;
+  // CHIP BooleanStateCluster still starts at false regardless of this field;
+  // apply the real sensor with setLeak() after Matter.begin().
 
-  // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = water_leak_detector::create(node::get(), &water_leak_detector_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create Water Leak Detector endpoint");
     return false;
   }
-  leakState = _leakState;
+  leakState = false;
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Water Leak Detector created with endpoint_id %u", getEndPointId());
 
   started = true;
@@ -78,27 +79,15 @@ bool MatterWaterLeakDetector::setLeak(bool _leakState) {
     return false;
   }
 
-  // avoid processing if there was no change
   if (leakState == _leakState) {
     return true;
   }
 
-  esp_matter_attr_val_t leakVal = esp_matter_invalid(NULL);
-
-  if (!getAttributeVal(BooleanState::Id, BooleanState::Attributes::StateValue::Id, &leakVal)) {
-    log_e("Failed to get Water Leak Detector Attribute.");
+  if (!setBooleanStateValue(_leakState)) {
+    log_e("Failed to update Water Leak Detector Attribute.");
     return false;
   }
-  if (leakVal.val.u8 != _leakState) {
-    leakVal.val.u8 = _leakState;
-    bool ret;
-    ret = updateAttributeVal(BooleanState::Id, BooleanState::Attributes::StateValue::Id, &leakVal);
-    if (!ret) {
-      log_e("Failed to update Water Leak Detector Attribute.");
-      return false;
-    }
-    leakState = _leakState;
-  }
+  leakState = _leakState;
   log_v("Water Leak Detector set to %s", _leakState ? "Detected" : "Not Detected");
 
   return true;

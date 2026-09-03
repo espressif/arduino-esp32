@@ -17,7 +17,6 @@
 
 #include <string.h>
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterTemperatureControlledCabinet.h>
 #include <esp_matter_attribute.h>
 
@@ -155,6 +154,7 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
   useTemperatureNumber = true;  // Set feature mode to temperature_number
 
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Temperature Controlled Cabinet created with temperature_number feature, endpoint_id %u", getEndPointId());
 
   // Workaround: Manually create Step attribute if it wasn't created automatically
@@ -257,6 +257,7 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
   rawStep = 0;
 
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Temperature Level Controlled Cabinet created with temperature_level feature, endpoint_id %u", getEndPointId());
 
   // Set started flag before calling setter methods (they check for started)

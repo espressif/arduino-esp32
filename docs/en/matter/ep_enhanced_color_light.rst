@@ -5,16 +5,16 @@ MatterEnhancedColorLight
 About
 -----
 
-The ``MatterEnhancedColorLight`` class provides an enhanced color light endpoint for Matter networks with full RGB color control, brightness, and color temperature. This endpoint implements the Matter lighting standard for advanced color lighting with all features.
+The ``MatterEnhancedColorLight`` class provides an Extended Color Light (0x010D) with RGB (HSV and XY), brightness, and color temperature. Use ``MatterColorLight`` when the endpoint must not include color temperature.
 
 **Features:**
 * On/off control
 * RGB color control with HSV color model
-* Brightness level control (0-255)
-* Color temperature control (100-500 mireds)
+* Brightness level control (0-255; Matter CurrentLevel uses 1-254, and 255 is the nullable null sentinel)
+* Color temperature control (100-500 mireds; higher mireds are warmer)
 * State persistence support
 * Callback support for all parameter changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -83,7 +83,7 @@ Maximum brightness value (255).
 MAX_COLOR_TEMPERATURE
 ^^^^^^^^^^^^^^^^^^^^^
 
-Maximum color temperature value (500 mireds = cool white).
+Maximum color temperature value in mireds (500 mireds = warm white, about 2000 K).
 
 .. code-block:: arduino
 
@@ -92,7 +92,7 @@ Maximum color temperature value (500 mireds = cool white).
 MIN_COLOR_TEMPERATURE
 ^^^^^^^^^^^^^^^^^^^^^
 
-Minimum color temperature value (100 mireds = warm white).
+Minimum color temperature value in mireds (100 mireds = cool white, about 10000 K).
 
 .. code-block:: arduino
 
@@ -158,6 +158,8 @@ Sets the color using HSV values.
 
     bool setColorHSV(espHsvColor_t hsvColor);
 
+* ``hsvColor`` - HSV color structure: hue (0-254, where 254 is 360°), saturation (0-254), and value/brightness (0-254). Do not pass degrees in the 0-360 range.
+
 getColorHSV
 ^^^^^^^^^^^
 
@@ -199,6 +201,8 @@ Sets the color temperature.
 .. code-block:: arduino
 
     bool setColorTemperature(uint16_t newTemperature);
+
+* ``newTemperature`` - Color temperature in mireds (100-500). Higher mireds are warmer white; lower mireds are cooler white.
 
 getColorTemperature
 ^^^^^^^^^^^^^^^^^^^

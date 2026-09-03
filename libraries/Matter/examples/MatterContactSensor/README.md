@@ -1,7 +1,7 @@
 # Matter Contact Sensor Example
 
 This example demonstrates how to create a Matter-compatible contact sensor device using an ESP32 SoC microcontroller.\
-The application showcases Matter commissioning, device control via smart home ecosystems, manual control using a physical button, and automatic simulation of contact state changes.
+The application showcases Matter commissioning, sensor data reporting to smart home ecosystems, and automatic simulation of contact state changes.
 
 ## Supported Targets
 
@@ -18,25 +18,26 @@ The application showcases Matter commissioning, device control via smart home ec
 ### Note on Commissioning:
 
 - **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project using Arduino as an IDF Component and to disable the Matter Wi-Fi station feature.
-- **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been pre compiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been precompiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project using Arduino as an IDF Component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been precompiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
 
 ## Features
 
 - Matter protocol implementation for a contact sensor device
 - Support for both Wi-Fi and Thread(*) connectivity
 - Contact state indication using LED (ON = Closed, OFF = Open)
-- Automatic simulation of contact state changes every 20 seconds
-- Button control for toggling contact state and factory reset
+- Automatic simulation of contact state changes every `simulatedSensorInterval` (20 seconds)
+- Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
 - Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- `begin()` creates the endpoint (Open). Call `setContact()` after `Matter.begin()` with the real or simulated sensor reading.
 (*) It is necessary to compile the project using Arduino as IDF Component.
 
 ## Hardware Requirements
 
 - ESP32 compatible development board (see supported targets table)
 - LED connected to GPIO pins (or using built-in LED) to indicate contact state
-- User button for manual control (uses BOOT button by default)
+- User button for factory reset (uses BOOT button by default)
 
 ## Pin Configuration
 
@@ -69,9 +70,15 @@ Before uploading the sketch, configure the following:
    ```
 
 3. **Button pin configuration** (optional):
-   By default, the `BOOT` button (GPIO 0) is used for the Contact Sensor state toggle and factory reset. You can change this to a different pin if needed.
+   By default, the `BOOT` button (GPIO 0) is used for factory reset. You can change this to a different pin if needed.
    ```cpp
    const uint8_t buttonPin = BOOT_PIN;  // Set your button pin here
+   ```
+
+4. **Simulated sensor interval** (optional):
+   Change how often the simulated hardware toggles. Replace `simulatedHWContactSensor()` with a real probe read when you have hardware.
+   ```cpp
+   const uint32_t simulatedSensorInterval = 20000;  // 20 seconds
    ```
 
 ## Building and Flashing
@@ -104,24 +111,33 @@ Matter Node not commissioned yet. Waiting for commissioning.
 Matter Node not commissioned yet. Waiting for commissioning.
 ...
 Matter Node is commissioned and connected to the network. Ready for use.
-User button released. Setting the Contact Sensor to Closed.
-User button released. Setting the Contact Sensor to Open.
+Contact Sensor is Closed.
+Contact Sensor is Open.
 ```
+
+After commissioning, the simulated sensor toggles every `simulatedSensorInterval` (20 seconds by default), `setContact()` reports that reading to Matter, and the LED follows `getContact()`.
 
 ## Using the Device
 
 ### Manual Control
 
-The user button (BOOT button by default) provides manual control:
+The user button (BOOT button by default) provides factory reset functionality:
 
-- **Short press of the button**: Toggle contact sensor state (Open/Closed)
 - **Long press (>5 seconds)**: Factory reset the device (decommission)
 
-### Automatic Simulation
+### Sensor Simulation
 
-The contact sensor state automatically toggles every 20 seconds to simulate a real contact sensor (such as a door or window sensor). The LED will reflect the current state:
+The example includes a simulated contact sensor that:
+
+- Starts in the open state (`false`)
+- Toggles every `simulatedSensorInterval` (20 seconds by default)
+- Is the only writer to Matter: `loop()` calls `setContact(simulatedHWContactSensor())`
+- Drives the LED from the reported Matter state (`getContact()`)
+
 - **LED ON**: Contact sensor is Closed
 - **LED OFF**: Contact sensor is Open
+
+To use a real sensor, replace the body of `simulatedHWContactSensor()` with your probe read (for example `return digitalRead(contactPin);`).
 
 ### Smart Home Integration
 
@@ -159,15 +175,15 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 The MatterContactSensor example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), sets up the Matter Contact Sensor endpoint with initial state (Open), and waits for Matter commissioning.
-2. **`loop()`**: Handles button input for toggling contact state and factory reset, and automatically simulates contact state changes every 20 seconds.
-3. **`simulatedHWContactSensor()`**: Simulates a hardware contact sensor by toggling the contact state every 20 seconds.
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), creates the Matter Contact Sensor endpoint with `begin()` (fabric state starts Open), starts Matter with `Matter.begin()`, and waits for commissioning.
+2. **`loop()`**: Handles the button for factory reset only, reports the simulated (or real) sensor with `setContact()` after `Matter.begin()`, and updates the LED from `getContact()`.
+3. **`simulatedHWContactSensor()`**: Simulates a hardware contact sensor by toggling every `simulatedSensorInterval`. Replace this function with a real sensor read.
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **LED not responding**: Verify pin configurations and connections
-- **Contact sensor state not updating**: Check Serial Monitor output to verify state changes are being processed
+- **Contact sensor state not updating**: `setContact()` must be called after `Matter.begin()`. `begin()` only creates the endpoint and does not take an initial state. The simulated sensor toggles every `simulatedSensorInterval` (20 seconds by default). Check Serial Monitor output to verify state changes are being processed.
 - **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection
 
