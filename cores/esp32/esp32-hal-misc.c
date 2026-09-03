@@ -234,6 +234,11 @@ void initVariant() {}
 void init() __attribute__((weak));
 void init() {}
 
+/* Variant hook for USBHost.begin() — keep the empty default in this C file, not
+ * USBHost.cpp. A same-TU C++ empty body gets inlined and the override never runs. */
+void USBHostBoardInit(void) __attribute__((weak));
+void USBHostBoardInit(void) {}
+
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
 /**
  * @brief Verify the OTA image after boot
