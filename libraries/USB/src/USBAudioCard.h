@@ -26,6 +26,19 @@
  *  Available when @c SOC_USB_OTG_SUPPORTED and @c CONFIG_TINYUSB_AUDIO_ENABLED
  *  are enabled. Uses TinyUSB UAC1 (full-speed) or UAC2 (high-speed) depending
  *  on the build configuration.
+ *
+ *  Multiple discrete sample rates (UAC1 full-speed) are an opt-in feature
+ *  because they increase flash usage noticeably. Define @c UAC_USE_MULTIPLE_RATES
+ *  to enable them. The macro must be visible when compiling both the sketch
+ *  and the USBAudioCard library sources, so add it to the sketch's
+ *  @c build_opt.h (e.g. @c -DUAC_USE_MULTIPLE_RATES) or to the platform's
+ *  build flags; defining it at the top of the .ino only affects the sketch
+ *  itself, not the library sources.
+ *
+ *  The multiple-rate feature is currently implemented for UAC1 (full-speed)
+ *  only: on UAC2 high-speed targets (e.g. ESP32-P4) the multi-rate constructor
+ *  exists but the extra rates are not used yet. UAC2 support is planned (see
+ *  the TODO in USBAudioCard.cpp).
  */
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_AUDIO_CARD_EVENTS);
@@ -107,6 +120,14 @@ typedef void (*arduino_usb_audio_card_data_handler_t)(void *data, uint16_t len);
  */
 class USBAudioCard {
 public:
+  /** @brief Creates the audio device configuration and registers the USB audio interface.
+   *  @param sample_rate   Initial sample rate in Hz (UAC1 full-speed: typically up to 48000).
+   *  @param bps             Bits per sample (@ref UAC_Bits_Per_Sample).
+   *  @param spk_channels    Speaker channel layout (@ref UAC_SPK_Channels).
+   *  @param mic_channels    Microphone channel layout (@ref UAC_MIC_Channels).
+   */
+  USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels = UAC_SPK_STEREO, UAC_MIC_Channels mic_channels = UAC_MIC_STEREO);
+#if defined(UAC_USE_MULTIPLE_RATES)
   /**
   *  @brief Maximum number of discrete sample rates the device can advertise (UAC1 full-speed).
   *  Limited to 8 by the descriptor cases provided by this implementation and the TinyUSB
@@ -114,29 +135,22 @@ public:
   */
   static constexpr uint8_t UAC_MAX_SAMPLE_RATES = 8;
 
-  /** @brief Creates the audio device configuration and registers the USB audio interface.
-   *  @param sample_rate   Initial sample rate in Hz (UAC1 full-speed: typically up to 48000).
-   *  @param bps             Bits per sample (@ref UAC_Bits_Per_Sample).
-   *  @param spk_channels    Speaker channel layout (@ref UAC_SPK_Channels).
-   *  @param mic_channels    Microphone channel layout (@ref UAC_MIC_Channels).
-   */
-  USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels = UAC_SPK_STEREO, UAC_MIC_Channels mic_channels = UAC_MIC_STEREO)
-    : USBAudioCard(&sample_rate, 1, bps, spk_channels, mic_channels) {}
   /**
-  *  @brief Creates the audio device configuration advertising multiple discrete sample rates
-  *  (UAC1 full-speed).
+  *  @brief Creates the audio device configuration advertising multiple discrete sample rates.
   *  @param sample_rates  Pointer to an array of supported sample rates in Hz, e.g. a local
   *                       `uint32_t rates[] = {48000, 44100}`. The values are copied during
   *                       construction, so the array does not need to outlive this call.
   *                       Entries may be in any order; the first entry becomes the initial rate.
-  *                       On UAC1 full-speed, the largest rate is used to size the USB endpoints.
-  *                       On UAC2 high-speed targets, the list is not included in the descriptor.
+  *                       The largest rate is used to size the USB endpoints (UAC1 full-speed).
+  *                       On UAC2 high-speed targets (e.g. ESP32-P4) the multi-rate path is
+  *                       not implemented yet, so only the initial rate is used there.
   *  @param num_rates     Number of entries in @a sample_rates (1..UAC_MAX_SAMPLE_RATES).
   *  @param bps           Bits per sample (@ref UAC_Bits_Per_Sample).
   *  @param spk_channels  Speaker channel layout (@ref UAC_SPK_Channels).
   *  @param mic_channels  Microphone channel layout (@ref UAC_MIC_Channels).
   */
   USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels = UAC_SPK_STEREO, UAC_MIC_Channels mic_channels = UAC_MIC_STEREO);
+#endif  // defined(UAC_USE_MULTIPLE_RATES)
   ~USBAudioCard();
 
   /** @brief Allocates buffers and starts the speaker receive task if a speaker path exists.

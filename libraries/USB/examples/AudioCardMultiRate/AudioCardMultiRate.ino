@@ -23,9 +23,17 @@
   ARDUINO_USB_AUDIO_CARD_SAMPLE_RATE_EVENT. The example re-tunes the I2S TX
   interface with configureTX() so the DAC follows the new sample rate.
 
+  NOTE: Multiple sample rates are an opt-in UAC1 feature guarded by the
+  UAC_USE_MULTIPLE_RATES build define (it adds flash usage). The define must be
+  visible to the library sources, so this example ships a build_opt.h file with
+  "-DUAC_USE_MULTIPLE_RATES" next to the sketch. To use the feature in your own
+  sketch, add that define to your build flags or create a build_opt.h file in
+  your sketch folder.
+
   NOTE: Multiple sample rate support is currently implemented for UAC1.
-  UAC2 uses a different clock and sample-rate control mechanism and is outside
-  the scope of this example.
+  UAC2 uses a different clock and sample-rate control mechanism (clock source
+  controls); support is planned but not implemented yet (see the TODO in
+  USBAudioCard.cpp), so this example is full-speed only.
 */
 
 #include <Arduino.h>

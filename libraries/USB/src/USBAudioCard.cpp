@@ -28,9 +28,6 @@ esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, i
 
 static uint8_t _itf_num = 0;
 static uint32_t _sample_rate = 48000;
-static uint32_t _sample_rates[USBAudioCard::UAC_MAX_SAMPLE_RATES] = {48000};
-static uint8_t _num_sample_rates = 1;
-static uint32_t _max_sample_rate = 48000;
 static uint8_t _spk_channels = 2;
 static uint8_t _mic_channels = 2;
 static uint8_t _bits_per_sample = 24;
@@ -42,10 +39,25 @@ static int32_t *_spk_buf = NULL;  //[CFG_TUD_AUDIO_FUNC_1_EP_OUT_SW_BUF_SZ / 4]
 static arduino_usb_audio_card_data_handler_t _cb = NULL;
 static USBAudioCard *_uac = NULL;
 
-// The UAC1 (full-speed) descriptor builders below are only used by the
-// full-speed UAC1 path; the high-speed UAC2 path does not use them.
-// Keep them out of high-speed builds to avoid unused-function warnings.
-#if !TUD_OPT_HIGH_SPEED
+// The multi-rate state is opt-in via UAC_USE_MULTIPLE_RATES. The UAC1 descriptor
+// builders that follow are additionally gated on !TUD_OPT_HIGH_SPEED because the
+// high-speed (UAC2) path never calls them: building them there would only warn
+// (unused functions) and waste flash.
+//
+// TODO(esp32-arduino): implement multi-rate support for UAC2 (high-speed,
+// currently the ESP32-P4). The rate list is advertised through the clock source
+// SAM_FREQ controls, not the format descriptor:
+//   - Size the TUD_AUDIO20_* endpoints from _max_sample_rate (UAC2 holds no rate
+//     count in the format descriptor, so no per-count dispatch is needed).
+//   - Answer SAM_FREQ GET RANGE with one discrete subrange per advertised rate
+//     (min = max = rate) and validate SAM_FREQ SET CUR against _sample_rates[].
+#if defined(UAC_USE_MULTIPLE_RATES)
+static uint32_t _sample_rates[USBAudioCard::UAC_MAX_SAMPLE_RATES] = {48000};
+static uint8_t _num_sample_rates = 1;
+static uint32_t _max_sample_rate = 48000;
+#endif
+
+#if defined(UAC_USE_MULTIPLE_RATES) && !TUD_OPT_HIGH_SPEED
 
 // UAC1 (full-speed) multi-rate descriptor builders.
 //
@@ -183,7 +195,7 @@ static uint16_t _uac10_microphone(uint8_t *dst, uint8_t *itf, uint8_t str_index)
   }
 }
 
-#endif  // !TUD_OPT_HIGH_SPEED
+#endif  // defined(UAC_USE_MULTIPLE_RATES) && !TUD_OPT_HIGH_SPEED
 
 uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
   _itf_num = *itf;
@@ -270,6 +282,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
   }
 #else
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB UAC1");
+#ifdef UAC_USE_MULTIPLE_RATES
   if (_spk_channels == 2 && _mic_channels > 0) {
     // Stereo Headset
     return _uac10_headset_stereo(dst, itf, str_index);
@@ -286,7 +299,69 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     // Microphone(s)
     return _uac10_microphone(dst, itf, str_index);
   }
-#endif
+#else
+  if (_spk_channels == 2 && _mic_channels > 0) {
+    // Stereo Headset
+    uint8_t ep_num = tinyusb_get_free_duplex_endpoint();
+    TU_VERIFY(ep_num != 0);
+    uint8_t descriptor[TUD_AUDIO10_HEADSET_STEREO_DESC_LEN(1)] = {
+      // Interface number, string index, EP Out & EP In address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX, sample rate
+      TUD_AUDIO10_HEADSET_STEREO_DESCRIPTOR(
+        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), 48000, _spk_channels, _mic_channels, _bytes_per_sample, _bits_per_sample, _sample_rate
+      )
+    };
+    *itf += 3;
+    memcpy(dst, descriptor, TUD_AUDIO10_HEADSET_STEREO_DESC_LEN(1));
+    return TUD_AUDIO10_HEADSET_STEREO_DESC_LEN(1);
+  } else if (_spk_channels == 1 && _mic_channels > 0) {
+    // Mono Headset
+    uint8_t ep_num = tinyusb_get_free_duplex_endpoint();
+    TU_VERIFY(ep_num != 0);
+    uint8_t descriptor[TUD_AUDIO10_HEADSET_MONO_DESC_LEN(1)] = {
+      // Interface number, string index, EP Out & EP In address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX, sample rate
+      TUD_AUDIO10_HEADSET_MONO_DESCRIPTOR(
+        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), 48000, _spk_channels, _mic_channels, _bytes_per_sample, _bits_per_sample, _sample_rate
+      )
+    };
+    *itf += 3;
+    memcpy(dst, descriptor, TUD_AUDIO10_HEADSET_MONO_DESC_LEN(1));
+    return TUD_AUDIO10_HEADSET_MONO_DESC_LEN(1);
+  } else if (_spk_channels == 2 && _mic_channels == 0) {
+    // Stereo Speaker
+    uint8_t ep_num = tinyusb_get_free_out_endpoint();
+    TU_VERIFY(ep_num != 0);
+    uint8_t descriptor[TUD_AUDIO10_SPEAKER_STEREO_DESC_LEN(1)] = {
+      // Interface number, string index, EP Out address, max sample rate, speaker channels, bytes per sample RX/TX, bits used per sample RX/TX, sample rate
+      TUD_AUDIO10_SPEAKER_STEREO_DESCRIPTOR(_itf_num, str_index, ep_num, 48000, _spk_channels, _bytes_per_sample, _bits_per_sample, _sample_rate)
+    };
+    *itf += 2;
+    memcpy(dst, descriptor, TUD_AUDIO10_SPEAKER_STEREO_DESC_LEN(1));
+    return TUD_AUDIO10_SPEAKER_STEREO_DESC_LEN(1);
+  } else if (_spk_channels == 1 && _mic_channels == 0) {
+    // Mono Speaker
+    uint8_t ep_num = tinyusb_get_free_out_endpoint();
+    TU_VERIFY(ep_num != 0);
+    uint8_t descriptor[TUD_AUDIO10_SPEAKER_MONO_DESC_LEN(1)] = {
+      // Interface number, string index, EP Out address, max sample rate, speaker channels, bytes per sample RX/TX, bits used per sample RX/TX, sample rate
+      TUD_AUDIO10_SPEAKER_MONO_DESCRIPTOR(_itf_num, str_index, ep_num, 48000, _spk_channels, _bytes_per_sample, _bits_per_sample, _sample_rate)
+    };
+    *itf += 2;
+    memcpy(dst, descriptor, TUD_AUDIO10_SPEAKER_MONO_DESC_LEN(1));
+    return TUD_AUDIO10_SPEAKER_MONO_DESC_LEN(1);
+  } else if (_spk_channels == 0 && _mic_channels > 0) {
+    // Microphone(s)
+    uint8_t ep_num = tinyusb_get_free_in_endpoint();
+    TU_VERIFY(ep_num != 0);
+    uint8_t descriptor[TUD_AUDIO10_MICROPHONE_DESC_LEN(1)] = {
+      // Interface number, string index, EP In address, max sample rate, microphone channels, bytes per sample RX/TX, bits used per sample RX/TX, sample rate
+      TUD_AUDIO10_MICROPHONE_DESCRIPTOR(_itf_num, str_index, (uint8_t)(ep_num | 0x80), 48000, _mic_channels, _bytes_per_sample, _bits_per_sample, _sample_rate)
+    };
+    *itf += 2;
+    memcpy(dst, descriptor, TUD_AUDIO10_MICROPHONE_DESC_LEN(1));
+    return TUD_AUDIO10_MICROPHONE_DESC_LEN(1);
+  }
+#endif  // UAC_USE_MULTIPLE_RATES
+#endif  // TUD_OPT_HIGH_SPEED
   return 0;
 }
 
@@ -318,6 +393,7 @@ bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const *p_req
 #else
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   if (ctrlSel == AUDIO10_EP_CTRL_SAMPLING_FREQ && p_request->bRequest == AUDIO10_CS_REQ_SET_CUR && p_request->wLength == 3) {
+#ifdef UAC_USE_MULTIPLE_RATES
     uint32_t rate = tu_unaligned_read32(pBuff) & 0x00FFFFFF;
     bool supported = false;
     for (uint8_t i = 0; i < _num_sample_rates; i++) {
@@ -332,6 +408,10 @@ bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const *p_req
     }
     _sample_rate = rate;
     log_d("EP set current freq: %" PRIu32, _sample_rate);
+#else
+    _sample_rate = tu_unaligned_read32(pBuff) & 0x00FFFFFF;
+    log_d("EP set current freq: %" PRIu32, _sample_rate);
+#endif  // UAC_USE_MULTIPLE_RATES
     // Send SAMPLE RATE Event
     arduino_usb_audio_card_event_data_t p;
     p.sample_rate.rate = _sample_rate;
@@ -342,7 +422,7 @@ bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const *p_req
   }
   log_w("Set EP request not handled, ctrlSel = %d, bRequest = %d, wLength = %d", ctrlSel, p_request->bRequest, p_request->wLength);
   return false;
-#endif
+#endif  // TUD_OPT_HIGH_SPEED
 }
 
 // Invoked when audio class specific get request received for an EP
@@ -579,12 +659,19 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *p_reques
   return true;
 }
 
+#if defined(UAC_USE_MULTIPLE_RATES)
+USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels, UAC_MIC_Channels mic_channels)
+  : USBAudioCard(&sample_rate, 1, bps, spk_channels, mic_channels) {}
 USBAudioCard::USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels, UAC_MIC_Channels mic_channels) {
+#else
+USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels, UAC_MIC_Channels mic_channels) {
+#endif  // defined(UAC_USE_MULTIPLE_RATES)
   if (_uac == NULL) {
     if ((uint8_t)spk_channels > 2) {
       log_e("Maximum of 2 speaker channels supported!");
       return;
     }
+#if defined(UAC_USE_MULTIPLE_RATES)
     if (num_rates == 0 || num_rates > USBAudioCard::UAC_MAX_SAMPLE_RATES) {
       log_e("Invalid number of sample rates %u (1..%u) supported!", num_rates, USBAudioCard::UAC_MAX_SAMPLE_RATES);
       return;
@@ -603,6 +690,10 @@ USBAudioCard::USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_
       }
     }
     _sample_rate = _sample_rates[0];
+#else
+    _uac = this;
+    _sample_rate = sample_rate;
+#endif  // defined(UAC_USE_MULTIPLE_RATES)
     _bits_per_sample = (uint8_t)bps;
     _bytes_per_sample = (_bits_per_sample <= 16) ? 2 : 4;
     _spk_channels = (uint8_t)spk_channels;
@@ -610,7 +701,7 @@ USBAudioCard::USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_
 
     uint16_t descriptor_len = 0;
 #if TUD_OPT_HIGH_SPEED
-    if (_max_sample_rate > CFG_TUD_AUDIO_MAX_SAMPLE_RATE) {
+    if (_sample_rate > CFG_TUD_AUDIO_MAX_SAMPLE_RATE) {
       log_e("Maximum %u sample rate supported!", CFG_TUD_AUDIO_MAX_SAMPLE_RATE);
       _uac = NULL;
       return;
@@ -632,7 +723,11 @@ USBAudioCard::USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_
       descriptor_len = TUD_AUDIO20_MICROPHONE_DESC_LEN;
     }
 #else
+#ifdef UAC_USE_MULTIPLE_RATES
     if (_max_sample_rate > 48000) {
+#else
+    if (_sample_rate > 48000) {
+#endif  // UAC_USE_MULTIPLE_RATES
       log_e("Maximum 48000 sample rate supported!");
       _uac = NULL;
       return;
@@ -640,6 +735,8 @@ USBAudioCard::USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_
     if (((_spk_channels + _mic_channels) * _bytes_per_sample) > 8) {
       log_e("Too many channels or too high bits per sample selected! Audio might not work!");
     }
+
+#ifdef UAC_USE_MULTIPLE_RATES
     if (_spk_channels == 2 && _mic_channels > 0) {
       // Stereo Headset
       descriptor_len = TUD_AUDIO10_HEADSET_STEREO_DESC_LEN(_num_sample_rates);
@@ -656,7 +753,25 @@ USBAudioCard::USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_
       // Microphone(s)
       descriptor_len = TUD_AUDIO10_MICROPHONE_DESC_LEN(_num_sample_rates);
     }
-#endif
+#else
+    if (_spk_channels == 2 && _mic_channels > 0) {
+      // Stereo Headset
+      descriptor_len = TUD_AUDIO10_HEADSET_STEREO_DESC_LEN(1);
+    } else if (_spk_channels == 1 && _mic_channels > 0) {
+      // Mono Headset
+      descriptor_len = TUD_AUDIO10_HEADSET_MONO_DESC_LEN(1);
+    } else if (_spk_channels == 2 && _mic_channels == 0) {
+      // Stereo Speaker
+      descriptor_len = TUD_AUDIO10_SPEAKER_STEREO_DESC_LEN(1);
+    } else if (_spk_channels == 1 && _mic_channels == 0) {
+      // Mono Speaker
+      descriptor_len = TUD_AUDIO10_SPEAKER_MONO_DESC_LEN(1);
+    } else if (_spk_channels == 0 && _mic_channels > 0) {
+      // Microphone(s)
+      descriptor_len = TUD_AUDIO10_MICROPHONE_DESC_LEN(1);
+    }
+#endif  // UAC_USE_MULTIPLE_RATES
+#endif  // TUD_OPT_HIGH_SPEED
     tinyusb_enable_interface(USB_INTERFACE_AUDIO, descriptor_len, tusb_audio_load_descriptor);
   }
 }
