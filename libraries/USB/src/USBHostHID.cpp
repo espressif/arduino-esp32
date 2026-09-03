@@ -59,6 +59,7 @@ static bool hidXferAbortOk(void) {
   return USBHOST_HID_XFER_ABORT && !hidBaselineY();
 }
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
 static const char *hidSpeedStr(uint8_t speed) {
   switch (speed) {
     case TUSB_SPEED_LOW:  return "LS";
@@ -67,6 +68,7 @@ static const char *hidSpeedStr(uint8_t speed) {
     default:              return "?";
   }
 }
+#endif
 
 bool USBHostHIDClass::hasOtherMounted(uint8_t dev_addr, uint8_t idx) const {
   for (size_t i = 0; i < _num_devices; i++) {

@@ -91,9 +91,10 @@ static void arduino_usb_host_worker_watch(void) {
   }
   if (!stalled && (now - last_change_ms) > 1000u) {
     stalled = true;
-    const uint8_t phase = s_tuh_phase;
-    const char *where = (phase == TUH_PHASE_TASK) ? "tuh_task" : (phase == TUH_PHASE_HID) ? "hid service" : "idle";
-    log_e("[USBHost] worker stalled %ums in %s (iter=%u)", (unsigned)(now - last_change_ms), where, (unsigned)iter);
+    log_e(
+      "[USBHost] worker stalled %ums in %s (iter=%u)", (unsigned)(now - last_change_ms),
+      (s_tuh_phase == TUH_PHASE_TASK) ? "tuh_task" : (s_tuh_phase == TUH_PHASE_HID) ? "hid service" : "idle", (unsigned)iter
+    );
   }
 }
 
