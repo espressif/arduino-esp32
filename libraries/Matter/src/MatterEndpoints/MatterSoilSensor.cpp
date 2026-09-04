@@ -52,7 +52,7 @@ void ESPMatterSoilMeasurementClusterServerInitCallback(chip::EndpointId endpoint
 
   // SoilMoistureMeasurementLimits is mandatory and fixed for the lifetime of the cluster: report the
   // full [0..100] percent range this endpoint accepts, with no additional accuracy ranges.
-  SoilMeasurement::Attributes::SoilMoistureMeasurementLimits::TypeInfo::Type limits;
+  SoilMeasurement::Attributes::SoilMoistureMeasurementLimits::TypeInfo::Type limits{};
   limits.measurementType = Globals::MeasurementTypeEnum::kSoilMoisture;
   limits.measured = true;
   limits.minMeasuredValue = 0;
