@@ -8,54 +8,54 @@
 
 Test|ESP32|ESP32-C3|ESP32-C5|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-adc_pwm|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:
-ble|Error :fire:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:
+adc_pwm|12/12 :white_check_mark:\*|12/12 :white_check_mark:\*|12/12 :white_check_mark:\*|12/12 :white_check_mark:\*|12/12 :white_check_mark:\*|12/12 :white_check_mark:\*|12/12 :white_check_mark:\*|12/12 :white_check_mark:\*
+ble|Error :fire:|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*
 bt_classic|Error :fire:|-|-|-|-|-|-|-
-bt_inuse_override|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:
-bt_mem_wrap|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:
-clock|7/7 :white_check_mark:|7/7 :white_check_mark:|7/7 :white_check_mark:|0/1 :x:|6/7 :x:|9/10 :x:|7/7 :white_check_mark:|352/352 :white_check_mark:
-dac|1/1 :white_check_mark:|-|-|-|-|-|1/1 :white_check_mark:|-
-democfg|2/2 :white_check_mark:|-|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
-eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:
-esp_now|Error :fire:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
+bt_inuse_override|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*
+bt_mem_wrap|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*
+clock|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*|0/1 :x:\*|6/7 :x:\*|9/10 :x:\*|7/7 :white_check_mark:\*|352/352 :white_check_mark:\*
+dac|1/1 :white_check_mark:\*|-|-|-|-|-|1/1 :white_check_mark:\*|-
+democfg|2/2 :white_check_mark:\*|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
+eeprom|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*
+esp_now|Error :fire:|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
 ethernet|Error :fire:|-|-|-|-|Error :fire:|-|-
-fs|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:
-hash|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:
-hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
-i2s|38/38 :white_check_mark:|43/43 :white_check_mark:|Error :fire:|Error :fire:|43/43 :white_check_mark:|Error :fire:|38/38 :white_check_mark:|Error :fire:
-keyboard_layout|-|-|-|-|-|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:
-multitasking|10/10 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|10/10 :white_check_mark:|9/9 :white_check_mark:|10/10 :white_check_mark:
-network_client|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:
-networking|13/13 :white_check_mark:|13/13 :white_check_mark:\*|13/13 :white_check_mark:|12/13 :x:|-|-|12/13 :x:|13/13 :white_check_mark:\*
-nvs|54/54 :white_check_mark:|54/54 :white_check_mark:|27/27 :white_check_mark:|108/108 :white_check_mark:|108/108 :white_check_mark:|108/108 :white_check_mark:|54/54 :white_check_mark:|81/81 :white_check_mark:
-openthread|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|-
-ota|42/43 :x:|42/43 :x:\*|42/43 :x:|41/43 :x:|-|-|41/43 :x:|42/43 :x:\*
-periman|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
-power_management|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:
-psram|14/14 :white_check_mark:|-|14/14 :white_check_mark:|-|-|11/11 :white_check_mark:|14/14 :white_check_mark:|14/14 :white_check_mark:
-signed_ota|1/1 :white_check_mark:|1/1 :white_check_mark:\*|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:\*
-ticker|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:
-timer|7/7 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:
-tls_http|0/1 :x:|Error :fire:|0/1 :x:|-|-|-|0/1 :x:|0/1 :x:\*
-touch|3/3 :white_check_mark:|-|-|-|-|3/3 :white_check_mark:|3/3 :white_check_mark:|3/3 :white_check_mark:
-uart|26/26 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|26/26 :white_check_mark:|25/25 :white_check_mark:
-unity|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:
-webserver|Error :fire:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
-wifi|34/34 :white_check_mark:|17/17 :white_check_mark:\*|17/17 :white_check_mark:|17/17 :white_check_mark:|-|-|34/34 :white_check_mark:|51/51 :white_check_mark:\*
-wifi_ap|Error :fire:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
-zigbee|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|-
+fs|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*
+hash|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*
+hello_world|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
+i2s|38/38 :white_check_mark:\*|43/43 :white_check_mark:\*|Error :fire:|Error :fire:|43/43 :white_check_mark:\*|Error :fire:|38/38 :white_check_mark:\*|Error :fire:
+keyboard_layout|-|-|-|-|-|10/10 :white_check_mark:\*|10/10 :white_check_mark:\*|10/10 :white_check_mark:\*
+multitasking|10/10 :white_check_mark:\*|9/9 :white_check_mark:\*|9/9 :white_check_mark:\*|9/9 :white_check_mark:\*|9/9 :white_check_mark:\*|10/10 :white_check_mark:\*|9/9 :white_check_mark:\*|10/10 :white_check_mark:\*
+network_client|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*
+networking|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|12/13 :x:\*|-|-|12/13 :x:\*|13/13 :white_check_mark:\*
+nvs|54/54 :white_check_mark:\*|54/54 :white_check_mark:\*|27/27 :white_check_mark:\*|108/108 :white_check_mark:\*|108/108 :white_check_mark:\*|108/108 :white_check_mark:\*|54/54 :white_check_mark:\*|81/81 :white_check_mark:\*
+openthread|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|-
+ota|42/43 :x:\*|42/43 :x:\*|42/43 :x:\*|41/43 :x:\*|-|-|41/43 :x:\*|42/43 :x:\*
+periman|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
+power_management|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*
+psram|14/14 :white_check_mark:\*|-|14/14 :white_check_mark:\*|-|-|11/11 :white_check_mark:\*|14/14 :white_check_mark:\*|14/14 :white_check_mark:\*
+signed_ota|1/1 :white_check_mark:\*|Error :fire:|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
+ticker|19/19 :white_check_mark:\*|19/19 :white_check_mark:\*|19/19 :white_check_mark:\*|19/19 :white_check_mark:\*|19/19 :white_check_mark:\*|19/19 :white_check_mark:\*|19/19 :white_check_mark:\*|19/19 :white_check_mark:\*
+timer|7/7 :white_check_mark:\*|8/8 :white_check_mark:\*|8/8 :white_check_mark:\*|8/8 :white_check_mark:\*|8/8 :white_check_mark:\*|8/8 :white_check_mark:\*|8/8 :white_check_mark:\*|8/8 :white_check_mark:\*
+tls_http|0/1 :x:\*|Error :fire:|0/1 :x:\*|-|-|-|0/1 :x:\*|0/1 :x:\*
+touch|3/3 :white_check_mark:\*|-|-|-|-|3/3 :white_check_mark:\*|3/3 :white_check_mark:\*|3/3 :white_check_mark:\*
+uart|26/26 :white_check_mark:\*|25/25 :white_check_mark:\*|25/25 :white_check_mark:\*|25/25 :white_check_mark:\*|25/25 :white_check_mark:\*|25/25 :white_check_mark:\*|26/26 :white_check_mark:\*|25/25 :white_check_mark:\*
+unity|15/15 :white_check_mark:\*|15/15 :white_check_mark:\*|15/15 :white_check_mark:\*|15/15 :white_check_mark:\*|15/15 :white_check_mark:\*|15/15 :white_check_mark:\*|15/15 :white_check_mark:\*|15/15 :white_check_mark:\*
+webserver|Error :fire:|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
+wifi|34/34 :white_check_mark:\*|17/17 :white_check_mark:\*|17/17 :white_check_mark:\*|17/17 :white_check_mark:\*|-|-|34/34 :white_check_mark:\*|51/51 :white_check_mark:\*
+wifi_ap|Error :fire:|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|2/2 :white_check_mark:\*|3/3 :white_check_mark:\*
+zigbee|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|-
 
 #### Wokwi
 
 Test|ESP32|ESP32-C3|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-console|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:
+console|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:\*|17/17 :white_check_mark:
 eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:
 fs|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:
 gpio|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
 hash|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:
 hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
-i2c_master|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|7/7 :white_check_mark:|7/7 :white_check_mark:\*|8/8 :white_check_mark:|8/8 :white_check_mark:
+i2c_master|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|7/7 :white_check_mark:|7/7 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:
 keyboard_layout|-|-|-|-|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:
 multitasking|10/10 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|10/10 :white_check_mark:|9/9 :white_check_mark:|10/10 :white_check_mark:
 network_client|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:
@@ -73,160 +73,160 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
 ### Performance Tests
 
 - **coremark**
-  - ESP32 - Success - :white_check_mark:
-    - cores=2 - 3 runs:
+  - ESP32 - Success - :white_check_mark:\*
+    - cores=2 - 3 runs (cached):
       - avg_score: 746.92
-  - ESP32-C3 - Success - :white_check_mark:
-    - cores=1 - 3 runs:
+  - ESP32-C3 - Success - :white_check_mark:\*
+    - cores=1 - 3 runs (cached):
       - avg_score: 297.15
-  - ESP32-C5 - Success - :white_check_mark:
-    - cores=1 - 3 runs:
+  - ESP32-C5 - Success - :white_check_mark:\*
+    - cores=1 - 3 runs (cached):
       - avg_score: 542.27
-  - ESP32-C6 - Success - :white_check_mark:
-    - cores=1 - 3 runs:
+  - ESP32-C6 - Success - :white_check_mark:\*
+    - cores=1 - 3 runs (cached):
       - avg_score: 318.04
-  - ESP32-H2 - Success - :white_check_mark:
-    - cores=1 - 3 runs:
+  - ESP32-H2 - Success - :white_check_mark:\*
+    - cores=1 - 3 runs (cached):
       - avg_score: 189.73
-  - ESP32-P4 - Success - :white_check_mark:
-    - cores=2 - 3 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - cores=2 - 3 runs (cached):
       - avg_score: 1810.75
-  - ESP32-S2 - Success - :white_check_mark:
-    - cores=1 - 3 runs:
+  - ESP32-S2 - Success - :white_check_mark:\*
+    - cores=1 - 3 runs (cached):
       - avg_score: 372.73
-  - ESP32-S3 - Success - :white_check_mark:
-    - cores=2 - 3 runs:
+  - ESP32-S3 - Success - :white_check_mark:\*
+    - cores=2 - 3 runs (cached):
       - avg_score: 724.99
 
 - **fibonacci**
-  - ESP32 - Success - :white_check_mark:
-    - fib_n=40 - 3 runs:
+  - ESP32 - Success - :white_check_mark:\*
+    - fib_n=40 - 3 runs (cached):
       - avg_time: 26.56 s
-  - ESP32-C3 - Success - :white_check_mark:
-    - fib_n=40 - 3 runs:
+  - ESP32-C3 - Success - :white_check_mark:\*
+    - fib_n=40 - 3 runs (cached):
       - avg_time: 45.82 s
-  - ESP32-C5 - Success - :white_check_mark:
-    - fib_n=40 - 3 runs:
+  - ESP32-C5 - Success - :white_check_mark:\*
+    - fib_n=40 - 3 runs (cached):
       - avg_time: 26.56 s
-  - ESP32-C6 - Success - :white_check_mark:
-    - fib_n=40 - 3 runs:
+  - ESP32-C6 - Success - :white_check_mark:\*
+    - fib_n=40 - 3 runs (cached):
       - avg_time: 44.81 s
-  - ESP32-H2 - Success - :white_check_mark:
-    - fib_n=40 - 3 runs:
+  - ESP32-H2 - Success - :white_check_mark:\*
+    - fib_n=40 - 3 runs (cached):
       - avg_time: 75.12 s
-  - ESP32-P4 - Success - :white_check_mark:
-    - fib_n=40 - 3 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - fib_n=40 - 3 runs (cached):
       - avg_time: 15.91 s
-  - ESP32-S2 - Success - :white_check_mark:
-    - fib_n=40 - 3 runs:
+  - ESP32-S2 - Success - :white_check_mark:\*
+    - fib_n=40 - 3 runs (cached):
       - avg_time: 25.16 s
-  - ESP32-S3 - Success - :white_check_mark:
-    - fib_n=40 - 3 runs:
+  - ESP32-S3 - Success - :white_check_mark:\*
+    - fib_n=40 - 3 runs (cached):
       - avg_time: 21.43 s
 
 - **linpack_double**
-  - ESP32 - Success - :white_check_mark:
-    - data_type=double - 1000 runs:
+  - ESP32 - Success - :white_check_mark:\*
+    - data_type=double - 1000 runs (cached):
       - avg_score: 1.87 MFLOPS
       - max_score: 1.88 MFLOPS
       - median_score: 1.88 MFLOPS
       - min_score: 1.56 MFLOPS
-  - ESP32-C3 - Success - :white_check_mark:
-    - data_type=double - 1000 runs:
+  - ESP32-C3 - Success - :white_check_mark:\*
+    - data_type=double - 1000 runs (cached):
       - avg_score: 0.78 MFLOPS
       - max_score: 0.78 MFLOPS
       - median_score: 0.77 MFLOPS
       - min_score: 0.71 MFLOPS
-  - ESP32-C5 - Success - :white_check_mark:
-    - data_type=double - 1000 runs:
+  - ESP32-C5 - Success - :white_check_mark:\*
+    - data_type=double - 1000 runs (cached):
       - avg_score: 1.91 MFLOPS
       - max_score: 1.93 MFLOPS
       - median_score: 1.92 MFLOPS
       - min_score: 1.43 MFLOPS
-  - ESP32-C6 - Success - :white_check_mark:
-    - data_type=double - 1000 runs:
+  - ESP32-C6 - Success - :white_check_mark:\*
+    - data_type=double - 1000 runs (cached):
       - avg_score: 1.3 MFLOPS
       - max_score: 1.31 MFLOPS
       - median_score: 1.3 MFLOPS
       - min_score: 1.11 MFLOPS
-  - ESP32-H2 - Success - :white_check_mark:
-    - data_type=double - 1000 runs:
+  - ESP32-H2 - Success - :white_check_mark:\*
+    - data_type=double - 1000 runs (cached):
       - avg_score: 0.46 MFLOPS
       - max_score: 0.47 MFLOPS
       - median_score: 0.46 MFLOPS
       - min_score: 0.43 MFLOPS
-  - ESP32-P4 - Success - :white_check_mark:
-    - data_type=double - 1000 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - data_type=double - 1000 runs (cached):
       - avg_score: 3.14 MFLOPS
       - max_score: 3.19 MFLOPS
       - median_score: 3.15 MFLOPS
       - min_score: 2.22 MFLOPS
-  - ESP32-S2 - Success - :white_check_mark:
-    - data_type=double - 1000 runs:
+  - ESP32-S2 - Success - :white_check_mark:\*
+    - data_type=double - 1000 runs (cached):
       - avg_score: 1.71 MFLOPS
       - max_score: 1.74 MFLOPS
       - median_score: 1.71 MFLOPS
       - min_score: 1.54 MFLOPS
-  - ESP32-S3 - Success - :white_check_mark:
-    - data_type=double - 1000 runs:
+  - ESP32-S3 - Success - :white_check_mark:\*
+    - data_type=double - 1000 runs (cached):
       - avg_score: 2.0 MFLOPS
       - max_score: 2.03 MFLOPS
       - median_score: 2.0 MFLOPS
       - min_score: 1.13 MFLOPS
 
 - **linpack_float**
-  - ESP32 - Success - :white_check_mark:
-    - data_type=float - 1000 runs:
+  - ESP32 - Success - :white_check_mark:\*
+    - data_type=float - 1000 runs (cached):
       - avg_score: 11.49 MFLOPS
       - max_score: 12.03 MFLOPS
       - median_score: 11.45 MFLOPS
       - min_score: 5.94 MFLOPS
-  - ESP32-C3 - Success - :white_check_mark:
-    - data_type=float - 1000 runs:
+  - ESP32-C3 - Success - :white_check_mark:\*
+    - data_type=float - 1000 runs (cached):
       - avg_score: 1.19 MFLOPS
       - max_score: 1.2 MFLOPS
       - median_score: 1.2 MFLOPS
       - min_score: 1.07 MFLOPS
-  - ESP32-C5 - Success - :white_check_mark:
-    - data_type=float - 1000 runs:
+  - ESP32-C5 - Success - :white_check_mark:\*
+    - data_type=float - 1000 runs (cached):
       - avg_score: 3.02 MFLOPS
       - max_score: 3.07 MFLOPS
       - median_score: 3.03 MFLOPS
       - min_score: 2.16 MFLOPS
-  - ESP32-C6 - Success - :white_check_mark:
-    - data_type=float - 1000 runs:
+  - ESP32-C6 - Success - :white_check_mark:\*
+    - data_type=float - 1000 runs (cached):
       - avg_score: 2.17 MFLOPS
       - max_score: 2.19 MFLOPS
       - median_score: 2.18 MFLOPS
       - min_score: 1.72 MFLOPS
-  - ESP32-H2 - Success - :white_check_mark:
-    - data_type=float - 1000 runs:
+  - ESP32-H2 - Success - :white_check_mark:\*
+    - data_type=float - 1000 runs (cached):
       - avg_score: 0.7 MFLOPS
       - max_score: 0.71 MFLOPS
       - median_score: 0.7 MFLOPS
       - min_score: 0.64 MFLOPS
-  - ESP32-P4 - Success - :white_check_mark:
-    - data_type=float - 1000 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - data_type=float - 1000 runs (cached):
       - avg_score: 30.92 MFLOPS
       - max_score: 33.65 MFLOPS
       - median_score: 31.28 MFLOPS
       - min_score: 9.2 MFLOPS
-  - ESP32-S2 - Success - :white_check_mark:
-    - data_type=float - 1000 runs:
+  - ESP32-S2 - Success - :white_check_mark:\*
+    - data_type=float - 1000 runs (cached):
       - avg_score: 2.81 MFLOPS
       - max_score: 2.9 MFLOPS
       - median_score: 2.81 MFLOPS
       - min_score: 2.41 MFLOPS
-  - ESP32-S3 - Success - :white_check_mark:
-    - data_type=float - 1000 runs:
+  - ESP32-S3 - Success - :white_check_mark:\*
+    - data_type=float - 1000 runs (cached):
       - avg_score: 13.93 MFLOPS
       - max_score: 14.69 MFLOPS
       - median_score: 13.81 MFLOPS
       - min_score: 2.74 MFLOPS
 
 - **psramspeed**
-  - ESP32 - Success - :white_check_mark:
-    - copies=400,max_test_size=524288 - 3 runs:
+  - ESP32 - Success - :white_check_mark:\*
+    - copies=400,max_test_size=524288 - 3 runs (cached):
       - memcpy_65536_mock_avg_rate: 9237.0 KiB/s
       - memcpy_65536_mock_avg_time: 2771419.33 us
       - memcpy_65536_system_avg_rate: 8999.0 KiB/s
@@ -259,8 +259,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_524288_mock_avg_time: 14492609.67 us
       - memset_524288_system_avg_rate: 14131.0 KiB/s
       - memset_524288_system_avg_time: 14492236.33 us
-  - ESP32-C5 - Success - :white_check_mark:
-    - copies=400,max_test_size=524288 - 3 runs:
+  - ESP32-C5 - Success - :white_check_mark:\*
+    - copies=400,max_test_size=524288 - 3 runs (cached):
       - memcpy_65536_mock_avg_rate: 8724.0 KiB/s
       - memcpy_65536_mock_avg_time: 2934148.67 us
       - memcpy_65536_system_avg_rate: 8732.0 KiB/s
@@ -293,8 +293,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_524288_mock_avg_time: 15232361.0 us
       - memset_524288_system_avg_rate: 13468.0 KiB/s
       - memset_524288_system_avg_time: 15205421.33 us
-  - ESP32-P4 - Success - :white_check_mark:
-    - copies=400,max_test_size=524288 - 3 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - copies=400,max_test_size=524288 - 3 runs (cached):
       - memcpy_65536_mock_avg_rate: 398722.67 KiB/s
       - memcpy_65536_mock_avg_time: 64205.0 us
       - memcpy_65536_system_avg_rate: 411379.67 KiB/s
@@ -327,8 +327,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_524288_mock_avg_time: 1020237.67 us
       - memset_524288_system_avg_rate: 200778.0 KiB/s
       - memset_524288_system_avg_time: 1020030.33 us
-  - ESP32-S2 - Success - :white_check_mark:
-    - copies=400,max_test_size=524288 - 3 runs:
+  - ESP32-S2 - Success - :white_check_mark:\*
+    - copies=400,max_test_size=524288 - 3 runs (cached):
       - memcpy_65536_mock_avg_rate: 9750.0 KiB/s
       - memcpy_65536_mock_avg_time: 2625518.0 us
       - memcpy_65536_system_avg_rate: 9748.0 KiB/s
@@ -361,8 +361,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_524288_mock_avg_time: 13787121.67 us
       - memset_524288_system_avg_rate: 14854.0 KiB/s
       - memset_524288_system_avg_time: 13787124.33 us
-  - ESP32-S3 - Success - :white_check_mark:
-    - copies=400,max_test_size=524288 - 3 runs:
+  - ESP32-S3 - Success - :white_check_mark:\*
+    - copies=400,max_test_size=524288 - 3 runs (cached):
       - memcpy_65536_mock_avg_rate: 21847.0 KiB/s
       - memcpy_65536_mock_avg_time: 1171758.33 us
       - memcpy_65536_system_avg_rate: 21842.0 KiB/s
@@ -397,8 +397,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_524288_system_avg_time: 6002521.33 us
 
 - **ramspeed**
-  - ESP32 - Success - :white_check_mark:
-    - copies=50000,max_test_size=65536 - 3 runs:
+  - ESP32 - Success - :white_check_mark:\*
+    - copies=50000,max_test_size=65536 - 3 runs (cached):
       - memcpy_32_mock_avg_rate: 34579.0 KiB/s
       - memcpy_32_mock_avg_time: 45171.67 us
       - memcpy_32_system_avg_rate: 96890.0 KiB/s
@@ -495,8 +495,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_65536_mock_avg_time: 8170954.33 us
       - memset_65536_system_avg_rate: 745199.67 KiB/s
       - memset_65536_system_avg_time: 4294150.33 us
-  - ESP32-C3 - Success - :white_check_mark:
-    - copies=50000,max_test_size=65536 - 3 runs:
+  - ESP32-C3 - Success - :white_check_mark:\*
+    - copies=50000,max_test_size=65536 - 3 runs (cached):
       - memcpy_32_mock_avg_rate: 38803.33 KiB/s
       - memcpy_32_mock_avg_time: 40253.67 us
       - memcpy_32_system_avg_rate: 59128.0 KiB/s
@@ -593,8 +593,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_65536_mock_avg_time: 9047880.0 us
       - memset_65536_system_avg_rate: 310300.0 KiB/s
       - memset_65536_system_avg_time: 10312582.0 us
-  - ESP32-C5 - Success - :white_check_mark:
-    - copies=50000,max_test_size=65536 - 3 runs:
+  - ESP32-C5 - Success - :white_check_mark:\*
+    - copies=50000,max_test_size=65536 - 3 runs (cached):
       - memcpy_32_mock_avg_rate: 76110.33 KiB/s
       - memcpy_32_mock_avg_time: 20522.67 us
       - memcpy_32_system_avg_rate: 99374.67 KiB/s
@@ -691,8 +691,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_65536_mock_avg_time: 5159488.33 us
       - memset_65536_system_avg_rate: 620183.0 KiB/s
       - memset_65536_system_avg_time: 5159762.33 us
-  - ESP32-C6 - Success - :white_check_mark:
-    - copies=50000,max_test_size=65536 - 3 runs:
+  - ESP32-C6 - Success - :white_check_mark:\*
+    - copies=50000,max_test_size=65536 - 3 runs (cached):
       - memcpy_32_mock_avg_rate: 42407.67 KiB/s
       - memcpy_32_mock_avg_time: 36832.33 us
       - memcpy_32_system_avg_rate: 69902.67 KiB/s
@@ -789,8 +789,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_65536_mock_avg_time: 9694167.0 us
       - memset_65536_system_avg_rate: 412604.33 KiB/s
       - memset_65536_system_avg_time: 7755599.67 us
-  - ESP32-H2 - Success - :white_check_mark:
-    - copies=50000,max_test_size=65536 - 3 runs:
+  - ESP32-H2 - Success - :white_check_mark:\*
+    - copies=50000,max_test_size=65536 - 3 runs (cached):
       - memcpy_32_mock_avg_rate: 26433.0 KiB/s
       - memcpy_32_mock_avg_time: 59091.67 us
       - memcpy_32_system_avg_rate: 42286.33 KiB/s
@@ -887,8 +887,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_65536_mock_avg_time: 18410807.0 us
       - memset_65536_system_avg_rate: 246148.0 KiB/s
       - memset_65536_system_avg_time: 13000282.0 us
-  - ESP32-P4 - Success - :white_check_mark:
-    - copies=50000,max_test_size=65536 - 3 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - copies=50000,max_test_size=65536 - 3 runs (cached):
       - memcpy_32_mock_avg_rate: 127084.67 KiB/s
       - memcpy_32_mock_avg_time: 12291.0 us
       - memcpy_32_system_avg_rate: 168486.0 KiB/s
@@ -985,8 +985,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_65536_mock_avg_time: 3101236.67 us
       - memset_65536_system_avg_rate: 1032689.33 KiB/s
       - memset_65536_system_avg_time: 3098704.67 us
-  - ESP32-S2 - Success - :white_check_mark:
-    - copies=50000,max_test_size=65536 - 3 runs:
+  - ESP32-S2 - Success - :white_check_mark:\*
+    - copies=50000,max_test_size=65536 - 3 runs (cached):
       - memcpy_32_mock_avg_rate: 38126.0 KiB/s
       - memcpy_32_mock_avg_time: 40969.0 us
       - memcpy_32_system_avg_rate: 113193.33 KiB/s
@@ -1083,8 +1083,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_65536_mock_avg_time: 8163265.67 us
       - memset_65536_system_avg_rate: 414681.0 KiB/s
       - memset_65536_system_avg_time: 7716757.33 us
-  - ESP32-S3 - Success - :white_check_mark:
-    - copies=50000,max_test_size=65536 - 3 runs:
+  - ESP32-S3 - Success - :white_check_mark:\*
+    - copies=50000,max_test_size=65536 - 3 runs (cached):
       - memcpy_32_mock_avg_rate: 44673.0 KiB/s
       - memcpy_32_mock_avg_time: 34964.67 us
       - memcpy_32_system_avg_rate: 124362.67 KiB/s
@@ -1183,37 +1183,37 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_65536_system_avg_time: 4296547.33 us
 
 - **superpi**
-  - ESP32 - Success - :white_check_mark:
-    - digits=16384 - 3 runs:
+  - ESP32 - Success - :white_check_mark:\*
+    - digits=16384 - 3 runs (cached):
       - avg_time: 12.33 s
-  - ESP32-C3 - Success - :white_check_mark:
-    - digits=16384 - 3 runs:
+  - ESP32-C3 - Success - :white_check_mark:\*
+    - digits=16384 - 3 runs (cached):
       - avg_time: 42.74 s
-  - ESP32-C5 - Success - :white_check_mark:
-    - digits=16384 - 3 runs:
+  - ESP32-C5 - Success - :white_check_mark:\*
+    - digits=16384 - 3 runs (cached):
       - avg_time: 23.77 s
-  - ESP32-C6 - Success - :white_check_mark:
-    - digits=16384 - 3 runs:
+  - ESP32-C6 - Success - :white_check_mark:\*
+    - digits=16384 - 3 runs (cached):
       - avg_time: 27.15 s
-  - ESP32-H2 - Success - :white_check_mark:
-    - digits=16384 - 3 runs:
+  - ESP32-H2 - Success - :white_check_mark:\*
+    - digits=16384 - 3 runs (cached):
       - avg_time: 70.82 s
-  - ESP32-P4 - Success - :white_check_mark:
-    - digits=16384 - 3 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - digits=16384 - 3 runs (cached):
       - avg_time: 8.96 s
-  - ESP32-S2 - Success - :white_check_mark:
-    - digits=16384 - 3 runs:
+  - ESP32-S2 - Success - :white_check_mark:\*
+    - digits=16384 - 3 runs (cached):
       - avg_time: 17.88 s
-  - ESP32-S3 - Success - :white_check_mark:
-    - digits=16384 - 3 runs:
+  - ESP32-S3 - Success - :white_check_mark:\*
+    - digits=16384 - 3 runs (cached):
       - avg_time: 23.27 s
 
 
 
 > \* Result from last successful run (runner currently unavailable)
 
-Generated on: 2026/09/02 02:03:04 UTC
+Generated on: 2026/09/06 06:27:37 UTC
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/6048a624f084ea7f645384fd91c57f43e633875d) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/33574578471) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/33575193754) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/33581634832)
+[Commit](https://github.com/espressif/arduino-esp32/commit/6048a624f084ea7f645384fd91c57f43e633875d) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/34000863646) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/34001249449) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/34016466072)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/100097263152)
+[Test results](https://github.com/espressif/arduino-esp32/runs/101441165668)
