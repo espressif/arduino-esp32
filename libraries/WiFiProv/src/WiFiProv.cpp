@@ -29,6 +29,7 @@
 #include <esp_wifi.h>
 #include <esp_event.h>
 #include <esp32-hal.h>
+#include <esp32-hal-alloc-ble-mem.h>
 #if __has_include("qrcode.h")
 #include "qrcode.h"
 #endif
