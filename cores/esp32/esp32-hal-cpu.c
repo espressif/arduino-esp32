@@ -28,6 +28,7 @@
 #include "esp32-hal-cpu.h"
 #include <inttypes.h>
 #include "hal/timer_ll.h"
+#include "hal/clk_tree_hal.h"
 #include "esp_private/systimer.h"
 #if __has_include("hal/lact_ll.h")
 #include "hal/lact_ll.h"
@@ -200,6 +201,19 @@ static uint32_t calculateApb(rtc_cpu_freq_config_t *conf) {
     return 80 * MHZ;
   }
   return (conf->source_freq_mhz * MHZ) / conf->div;
+#elif CONFIG_IDF_TARGET_ESP32H2
+  // AHB_CLK cannot exceed 32 MHz. IDF rtc_clk_cpu_freq_to_pll_mhz() / flash_pll pick:
+  //   PLL 96 MHz (cpu_div 1) → ahb_div 3 → 32 MHz
+  //   PLL 48 MHz (cpu_div 2) → ahb_div 4 → 24 MHz
+  //   FLASH_PLL 64 MHz (cpu_div 1) → ahb_div 2 → 32 MHz
+  // XTAL/RC_FAST: f_cpu = f_ahb. APB follows AHB (apb_div 1).
+  if (conf->source == SOC_CPU_CLK_SRC_XTAL || conf->source == SOC_CPU_CLK_SRC_RC_FAST) {
+    return conf->freq_mhz * MHZ;
+  }
+  if (conf->source == SOC_CPU_CLK_SRC_PLL && conf->freq_mhz == 48) {
+    return 24 * MHZ;
+  }
+  return 32 * MHZ;
 #else
   // Switching the CPU to the XTAL takes the bus clocks down with it: the IDF programs the
   // AHB divider to the CPU divider ("let f_cpu = f_ahb"), so APB_CLK ends up at the CPU
@@ -265,6 +279,16 @@ static bool cpuFreqIsUsable(const rtc_cpu_freq_config_t *conf) {
   if ((conf->source_freq_mhz % conf->freq_mhz) != 0) {
     return false;
   }
+
+#if CONFIG_IDF_TARGET_ESP32C6
+  // ESP32-C6 PCR_CPU_LS_DIV_NUM only accepts 0, 1, 3, 7, 15, 31 (dividers 1, 2, 4, 8, 16, 32).
+  // rtc_clk_cpu_freq_mhz_to_config() still returns true for 8/4/2/1 MHz (div 5/10/20/40) because
+  // it only checks XTAL/freq rounding. Programming those values trips HAL_ASSERT or leaves the
+  // PCR in an illegal state and the chip resets (boot loop).
+  if (conf->div == 0 || (conf->div & (conf->div - 1)) != 0 || conf->div > 32) {
+    return false;
+  }
+#endif
 
 #ifdef REF_TICK_DIV_MIN
   // On these targets APB_CLK follows the CPU, and the 1 MHz REF_TICK divided from APB_CLK
@@ -337,7 +361,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   }
 
   // ===== Calculate APB frequencies =====
-  capb = calculateApb(&cconf);
+  capb = clk_hal_apb_get_freq_hz();
   apb = calculateApb(&conf);
 
   // ===== Apply frequency change =====
@@ -346,6 +370,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   }
 
   rtc_clk_cpu_freq_set_config_fast(&conf);
+  apb = clk_hal_apb_get_freq_hz();
 
   // Update APB frequency for targets with dynamic APB
 #if TARGET_HAS_DYNAMIC_APB
@@ -400,7 +425,5 @@ uint32_t getXtalFrequencyMhz() {
 }
 
 uint32_t getApbFrequency() {
-  rtc_cpu_freq_config_t conf;
-  rtc_clk_cpu_freq_get_config(&conf);
-  return calculateApb(&conf);
+  return clk_hal_apb_get_freq_hz();
 }
