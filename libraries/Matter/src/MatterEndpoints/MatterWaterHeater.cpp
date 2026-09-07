@@ -12,8 +12,6 @@
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
-using namespace esp_matter::cluster;
-
 using namespace chip::app::Clusters;
 
 namespace {
@@ -23,35 +21,23 @@ constexpr int16_t DEFAULT_HEATING_SETPOINT = 4800;
 
 constexpr int16_t ABS_MIN_HEATING_SETPOINT = 2000;
 constexpr int16_t MIN_HEATING_SETPOINT = 2000;
-
 constexpr int16_t ABS_MAX_HEATING_SETPOINT = 8500;
 constexpr int16_t MAX_HEATING_SETPOINT = 8500;
 
 constexpr uint8_t DEFAULT_SYSTEM_MODE =
   static_cast<uint8_t>(Thermostat::SystemModeEnum::kHeat);
 
-constexpr uint8_t DEFAULT_HEATER_TYPES = 0x01;
+constexpr uint8_t DEFAULT_HEATER_TYPES =
+  MatterWaterHeater::IMMERSION_ELEMENT_1;
+
 constexpr uint8_t DEFAULT_HEAT_DEMAND = 0;
 constexpr uint16_t DEFAULT_TANK_VOLUME = 100;
 constexpr uint8_t DEFAULT_TANK_PERCENTAGE = 100;
-constexpr uint8_t DEFAULT_BOOST_STATE = 0;
+constexpr uint8_t DEFAULT_BOOST_STATE =
+  MatterWaterHeater::BOOST_INACTIVE;
 
-constexpr uint8_t DEFAULT_WATER_HEATER_MODE = 1;
-
-/*
- * Matter Water Heater device type:
- *
- *   0x050F
- *
- * esp-matter's generated implementation creates:
- *
- *   Descriptor
- *   WaterHeaterManagement
- *   WaterHeaterMode
- *   Thermostat
- *
- * automatically.
- */
+constexpr uint8_t DEFAULT_WATER_HEATER_MODE =
+  MatterWaterHeater::WATER_HEATER_MODE_MANUAL;
 
 }  // namespace
 
@@ -67,67 +53,47 @@ MatterWaterHeater::~MatterWaterHeater()
 bool MatterWaterHeater::begin()
 {
   if (initialized) {
-    log_e("Matter Water Heater has already been initialized.");
     return false;
   }
 
-  /*
-   * Make sure the Arduino Matter node exists.
-   *
-   * This is the same lifecycle used by the other Arduino-ESP32
-   * Matter endpoints.
-   */
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e(
-      "Matter Water Heater with Endpoint Id %u already exists.",
-      getEndPointId()
-    );
     return false;
   }
 
   /*
    * Water Heater Management
    */
-  water_heater_management::config_t management_config;
+  esp_matter::cluster::water_heater_management::config_t
+    management_config;
 
   management_config.heater_types = DEFAULT_HEATER_TYPES;
   management_config.heat_demand = DEFAULT_HEAT_DEMAND;
   management_config.boost_state = DEFAULT_BOOST_STATE;
 
   /*
-   * Enable the Energy Management feature.
-   */
-  management_config.features.energy_management.tank_volume =
-    DEFAULT_TANK_VOLUME;
-
-  /*
-   * Enable TankPercent feature.
-   */
-  management_config.features.tank_percent.tank_percentage =
-    DEFAULT_TANK_PERCENTAGE;
-
-  /*
    * Water Heater Mode
    */
-  water_heater_mode::config_t mode_config;
+  esp_matter::cluster::water_heater_mode::config_t
+    mode_config;
 
   /*
    * Thermostat
+   *
+   * This is the endpoint thermostat configuration, not the cluster
+   * namespace. Use the fully-qualified namespace to avoid the
+   * endpoint::thermostat / cluster::thermostat ambiguity.
    */
-  thermostat::config_t thermostat_config;
+  esp_matter::endpoint::thermostat::config_t thermostat_config;
 
-  thermostat_config.local_temperature =
-    DEFAULT_LOCAL_TEMPERATURE;
+  thermostat_config.local_temperature = DEFAULT_LOCAL_TEMPERATURE;
 
   thermostat_config.control_sequence_of_operation =
     static_cast<uint8_t>(
-      Thermostat::ControlSequenceOfOperationEnum::kHeatingOnly
-    );
+      Thermostat::ControlSequenceOfOperationEnum::kHeatingOnly);
 
-  thermostat_config.system_mode =
-    DEFAULT_SYSTEM_MODE;
+  thermostat_config.system_mode = DEFAULT_SYSTEM_MODE;
 
   thermostat_config.features.heating.occupied_heating_setpoint =
     DEFAULT_HEATING_SETPOINT;
@@ -136,42 +102,70 @@ bool MatterWaterHeater::begin()
     DEFAULT_HEATING_SETPOINT;
 
   thermostat_config.feature_flags |=
-    thermostat::feature::heating::get_id();
+    esp_matter::cluster::thermostat::feature::heating::get_id();
 
   /*
-   * Device type configuration.
+   * Water Heater device type 0x050F.
+   *
+   * The generated device type creates:
+   *
+   *   - Water Heater Management
+   *   - Water Heater Mode
+   *   - Thermostat
+   *
+   * on the same endpoint.
    */
-  water_heater::config_t water_heater_config;
+  esp_matter::endpoint::water_heater::config_t water_heater_config;
 
-  water_heater_config.water_heater_management =
-    management_config;
+  water_heater_config.water_heater_management = management_config;
+  water_heater_config.water_heater_mode = mode_config;
+  water_heater_config.thermostat = thermostat_config;
 
-  water_heater_config.water_heater_mode =
-    mode_config;
-
-  water_heater_config.thermostat =
-    thermostat_config;
-
-  /*
-   * Create the Water Heater endpoint.
-   */
   endpoint_t *endpoint =
-    water_heater::create(
+    esp_matter::endpoint::water_heater::create(
       node::get(),
       &water_heater_config,
       ENDPOINT_FLAG_NONE,
-      this
-    );
+      this);
 
   if (endpoint == nullptr) {
-    log_e("Failed to create Matter Water Heater endpoint.");
     return false;
   }
 
-  setEndPointId(endpoint::get_id(endpoint));
+  /*
+   * Enable the optional Water Heater Management features.
+   *
+   * These features are no longer configured through
+   * management_config.features.* in current esp-matter.
+   */
+  cluster_t *management_cluster =
+    cluster::get(
+      endpoint,
+      WaterHeaterManagement::Id);
+
+  if (management_cluster == nullptr) {
+    return false;
+  }
+
+  if (esp_matter::cluster::water_heater_management::
+        feature::energy_management::add(management_cluster) != ESP_OK) {
+    return false;
+  }
+
+  if (esp_matter::cluster::water_heater_management::
+        feature::tank_percentage::add(management_cluster) != ESP_OK) {
+    return false;
+  }
 
   /*
-   * Cache the initial values.
+   * Store the endpoint ID in MatterEndPoint.
+   */
+  setEndPointId(endpoint::get_id(endpoint));
+
+  initialized = true;
+
+  /*
+   * Initialize the local cache from the values configured above.
    */
   localTemperature = DEFAULT_LOCAL_TEMPERATURE;
   heatingSetpoint = DEFAULT_HEATING_SETPOINT;
@@ -195,156 +189,36 @@ bool MatterWaterHeater::begin()
   tankVolume = DEFAULT_TANK_VOLUME;
   tankPercentage = DEFAULT_TANK_PERCENTAGE;
   boostState = DEFAULT_BOOST_STATE;
+  waterHeaterMode = DEFAULT_WATER_HEATER_MODE;
 
-  waterHeaterMode =
-    DEFAULT_WATER_HEATER_MODE;
-
-  initialized = true;
+  /*
+   * The generated Water Heater device type creates the mandatory
+   * attributes. The optional management features have just been
+   * added above.
+   *
+   * Push our configured initial values after the attributes exist.
+   */
+  setTankVolume(DEFAULT_TANK_VOLUME);
+  setTankPercentage(DEFAULT_TANK_PERCENTAGE);
 
   return true;
 }
 
 void MatterWaterHeater::end()
 {
-  /*
-   * Arduino-ESP32 Matter endpoints don't currently expose a public
-   * endpoint::destroy() equivalent through MatterEndPoint.
-   *
-   * Keep the object logically stopped, as the existing endpoint
-   * implementations do.
-   */
   initialized = false;
 }
 
 /*
  * --------------------------------------------------------------------------
- * Attribute callback
- * --------------------------------------------------------------------------
- */
-
-bool MatterWaterHeater::attributeChangeCB(
-  uint16_t endpoint_id,
-  uint32_t cluster_id,
-  uint32_t attribute_id,
-  esp_matter_attr_val_t *val
-)
-{
-  if (!initialized || val == nullptr) {
-    return false;
-  }
-
-  if (endpoint_id != getEndPointId()) {
-    return true;
-  }
-
-  /*
-   * Thermostat
-   */
-  if (cluster_id == Thermostat::Id) {
-
-    switch (attribute_id) {
-
-      case Thermostat::Attributes::LocalTemperature::Id:
-        localTemperature = val->val.i16;
-
-        log_v(
-          "Water Heater local temperature: %.2f C",
-          static_cast<float>(localTemperature) / 100.0f
-        );
-        break;
-
-      case Thermostat::Attributes::OccupiedHeatingSetpoint::Id:
-        heatingSetpoint = val->val.i16;
-
-        log_v(
-          "Water Heater heating setpoint: %.2f C",
-          static_cast<float>(heatingSetpoint) / 100.0f
-        );
-        break;
-
-      case Thermostat::Attributes::SystemMode::Id:
-        systemMode = val->val.u8;
-
-        log_v(
-          "Water Heater system mode: %u",
-          systemMode
-        );
-        break;
-
-      default:
-        break;
-    }
-
-    return true;
-  }
-
-  /*
-   * Water Heater Management
-   */
-  if (cluster_id == WaterHeaterManagement::Id) {
-
-    switch (attribute_id) {
-
-      case WaterHeaterManagement::Attributes::HeaterTypes::Id:
-        heaterTypes = val->val.u8;
-        break;
-
-      case WaterHeaterManagement::Attributes::HeatDemand::Id:
-        heatDemand = val->val.u8;
-        break;
-
-      case WaterHeaterManagement::Attributes::TankVolume::Id:
-        tankVolume = val->val.u16;
-        break;
-
-      case WaterHeaterManagement::Attributes::TankPercentage::Id:
-        tankPercentage = val->val.u8;
-        break;
-
-      case WaterHeaterManagement::Attributes::BoostState::Id:
-        boostState = val->val.u8;
-        break;
-
-      default:
-        break;
-    }
-
-    return true;
-  }
-
-  /*
-   * Water Heater Mode
-   */
-  if (cluster_id == WaterHeaterMode::Id) {
-
-    if (attribute_id ==
-        WaterHeaterMode::Attributes::CurrentMode::Id) {
-
-      waterHeaterMode = val->val.u8;
-
-      log_v(
-        "Water Heater operation mode: %u",
-        waterHeaterMode
-      );
-    }
-
-    return true;
-  }
-
-  return true;
-}
-
-/*
- * --------------------------------------------------------------------------
- * Temperature
+ * Thermostat / local temperature
  * --------------------------------------------------------------------------
  */
 
 bool MatterWaterHeater::setLocalTemperature(float temperature)
 {
   return setLocalTemperatureRaw(
-    static_cast<int16_t>(temperature * 100.0f)
-  );
+    static_cast<int16_t>(temperature * 100.0f));
 }
 
 float MatterWaterHeater::getLocalTemperature()
@@ -359,15 +233,31 @@ bool MatterWaterHeater::setLocalTemperatureRaw(int16_t temperature)
   }
 
   esp_matter_attr_val_t value =
-    esp_matter_nullable<int16_t>(temperature);
+    esp_matter_invalid(NULL);
 
-  value = esp_matter_attr_val(temperature);
+  if (!getAttributeVal(
+        Thermostat::Id,
+        Thermostat::Attributes::LocalTemperature::Id,
+        &value)) {
+    return false;
+  }
 
-  return updateAttributeVal(
-    Thermostat::Id,
-    Thermostat::Attributes::LocalTemperature::Id,
-    &value
-  );
+  if (value.val.i16 == temperature) {
+    localTemperature = temperature;
+    return true;
+  }
+
+  value.val.i16 = temperature;
+
+  if (!updateAttributeVal(
+        Thermostat::Id,
+        Thermostat::Attributes::LocalTemperature::Id,
+        &value)) {
+    return false;
+  }
+
+  localTemperature = temperature;
+  return true;
 }
 
 int16_t MatterWaterHeater::getLocalTemperatureRaw()
@@ -384,8 +274,7 @@ int16_t MatterWaterHeater::getLocalTemperatureRaw()
 bool MatterWaterHeater::setHeatingSetpoint(float temperature)
 {
   return setHeatingSetpointRaw(
-    static_cast<int16_t>(temperature * 100.0f)
-  );
+    static_cast<int16_t>(temperature * 100.0f));
 }
 
 float MatterWaterHeater::getHeatingSetpoint()
@@ -393,9 +282,7 @@ float MatterWaterHeater::getHeatingSetpoint()
   return static_cast<float>(heatingSetpoint) / 100.0f;
 }
 
-bool MatterWaterHeater::setHeatingSetpointRaw(
-  int16_t temperature
-)
+bool MatterWaterHeater::setHeatingSetpointRaw(int16_t temperature)
 {
   if (!initialized) {
     return false;
@@ -403,30 +290,34 @@ bool MatterWaterHeater::setHeatingSetpointRaw(
 
   if (temperature < minimumHeatingSetpoint ||
       temperature > maximumHeatingSetpoint) {
-    log_e(
-      "Heating setpoint %.2f C is outside [%0.2f, %0.2f] C.",
-      static_cast<float>(temperature) / 100.0f,
-      static_cast<float>(minimumHeatingSetpoint) / 100.0f,
-      static_cast<float>(maximumHeatingSetpoint) / 100.0f
-    );
-
     return false;
   }
 
-    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+  esp_matter_attr_val_t value =
+    esp_matter_invalid(NULL);
 
-    val.type = ESP_MATTER_VAL_TYPE_INT16;
-    val.val.i16 = temperature;
-
-    if (!updateAttributeVal(
-            Thermostat::Id,
-            Thermostat::Attributes::OccupiedHeatingSetpoint::Id,
-            &val)) {
+  if (!getAttributeVal(
+        Thermostat::Id,
+        Thermostat::Attributes::OccupiedHeatingSetpoint::Id,
+        &value)) {
     return false;
-    }
+  }
+
+  if (value.val.i16 == temperature) {
+    heatingSetpoint = temperature;
+    return true;
+  }
+
+  value.val.i16 = temperature;
+
+  if (!updateAttributeVal(
+        Thermostat::Id,
+        Thermostat::Attributes::OccupiedHeatingSetpoint::Id,
+        &value)) {
+    return false;
+  }
 
   heatingSetpoint = temperature;
-
   return true;
 }
 
@@ -437,127 +328,188 @@ int16_t MatterWaterHeater::getHeatingSetpointRaw()
 
 /*
  * --------------------------------------------------------------------------
- * Heating limits
+ * Heating setpoint limits
  * --------------------------------------------------------------------------
  */
 
 bool MatterWaterHeater::setAbsoluteMinimumHeatingSetpoint(
-  float temperature
-)
+  float temperature)
 {
+  const int16_t value =
+    static_cast<int16_t>(temperature * 100.0f);
+
   if (!initialized) {
     return false;
   }
 
-  int16_t value =
-    static_cast<int16_t>(temperature * 100.0f);
-
-  if (value > absoluteMinimumHeatingSetpoint) {
-    /*
-     * The absolute minimum can only be lowered by hardware
-     * configuration; don't allow an invalid Matter state.
-     */
+  if (value < ABS_MIN_HEATING_SETPOINT ||
+      value > ABS_MAX_HEATING_SETPOINT) {
+    return false;
   }
 
   esp_matter_attr_val_t attr =
-    esp_matter_attr_val(value);
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        Thermostat::Id,
+        Thermostat::Attributes::
+          AbsMinHeatSetpointLimit::Id,
+        &attr)) {
+    return false;
+  }
+
+  attr.val.i16 = value;
 
   if (!updateAttributeVal(
         Thermostat::Id,
-        Thermostat::Attributes::AbsMinHeatSetpointLimit::Id,
+        Thermostat::Attributes::
+          AbsMinHeatSetpointLimit::Id,
         &attr)) {
     return false;
   }
 
   absoluteMinimumHeatingSetpoint = value;
 
+  if (minimumHeatingSetpoint < value) {
+    setMinimumHeatingSetpoint(
+      static_cast<float>(value) / 100.0f);
+  }
+
   return true;
 }
 
 bool MatterWaterHeater::setMinimumHeatingSetpoint(
-  float temperature
-)
+  float temperature)
 {
+  const int16_t value =
+    static_cast<int16_t>(temperature * 100.0f);
+
   if (!initialized) {
     return false;
   }
 
-  int16_t value =
-    static_cast<int16_t>(temperature * 100.0f);
-
   if (value < absoluteMinimumHeatingSetpoint ||
-      value > absoluteMaximumHeatingSetpoint) {
+      value > maximumHeatingSetpoint) {
     return false;
   }
 
   esp_matter_attr_val_t attr =
-    esp_matter_attr_val(value);
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        Thermostat::Id,
+        Thermostat::Attributes::
+          MinHeatSetpointLimit::Id,
+        &attr)) {
+    return false;
+  }
+
+  attr.val.i16 = value;
 
   if (!updateAttributeVal(
         Thermostat::Id,
-        Thermostat::Attributes::MinHeatSetpointLimit::Id,
+        Thermostat::Attributes::
+          MinHeatSetpointLimit::Id,
         &attr)) {
     return false;
   }
 
   minimumHeatingSetpoint = value;
 
+  if (heatingSetpoint < value) {
+    setHeatingSetpointRaw(value);
+  }
+
   return true;
 }
 
 bool MatterWaterHeater::setAbsoluteMaximumHeatingSetpoint(
-  float temperature
-)
+  float temperature)
 {
+  const int16_t value =
+    static_cast<int16_t>(temperature * 100.0f);
+
   if (!initialized) {
     return false;
   }
 
-  int16_t value =
-    static_cast<int16_t>(temperature * 100.0f);
+  if (value < ABS_MIN_HEATING_SETPOINT ||
+      value > ABS_MAX_HEATING_SETPOINT) {
+    return false;
+  }
 
   esp_matter_attr_val_t attr =
-    esp_matter_attr_val(value);
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        Thermostat::Id,
+        Thermostat::Attributes::
+          AbsMaxHeatSetpointLimit::Id,
+        &attr)) {
+    return false;
+  }
+
+  attr.val.i16 = value;
 
   if (!updateAttributeVal(
         Thermostat::Id,
-        Thermostat::Attributes::AbsMaxHeatSetpointLimit::Id,
+        Thermostat::Attributes::
+          AbsMaxHeatSetpointLimit::Id,
         &attr)) {
     return false;
   }
 
   absoluteMaximumHeatingSetpoint = value;
 
+  if (maximumHeatingSetpoint > value) {
+    setMaximumHeatingSetpoint(
+      static_cast<float>(value) / 100.0f);
+  }
+
   return true;
 }
 
 bool MatterWaterHeater::setMaximumHeatingSetpoint(
-  float temperature
-)
+  float temperature)
 {
+  const int16_t value =
+    static_cast<int16_t>(temperature * 100.0f);
+
   if (!initialized) {
     return false;
   }
 
-  int16_t value =
-    static_cast<int16_t>(temperature * 100.0f);
-
-  if (value < absoluteMinimumHeatingSetpoint ||
+  if (value < minimumHeatingSetpoint ||
       value > absoluteMaximumHeatingSetpoint) {
     return false;
   }
 
   esp_matter_attr_val_t attr =
-    esp_matter_attr_val(value);
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        Thermostat::Id,
+        Thermostat::Attributes::
+          MaxHeatSetpointLimit::Id,
+        &attr)) {
+    return false;
+  }
+
+  attr.val.i16 = value;
 
   if (!updateAttributeVal(
         Thermostat::Id,
-        Thermostat::Attributes::MaxHeatSetpointLimit::Id,
+        Thermostat::Attributes::
+          MaxHeatSetpointLimit::Id,
         &attr)) {
     return false;
   }
 
   maximumHeatingSetpoint = value;
+
+  if (heatingSetpoint > value) {
+    setHeatingSetpointRaw(value);
+  }
 
   return true;
 }
@@ -565,40 +517,35 @@ bool MatterWaterHeater::setMaximumHeatingSetpoint(
 float MatterWaterHeater::getAbsoluteMinimumHeatingSetpoint()
 {
   return static_cast<float>(
-    absoluteMinimumHeatingSetpoint
-  ) / 100.0f;
+    absoluteMinimumHeatingSetpoint) / 100.0f;
 }
 
 float MatterWaterHeater::getMinimumHeatingSetpoint()
 {
   return static_cast<float>(
-    minimumHeatingSetpoint
-  ) / 100.0f;
+    minimumHeatingSetpoint) / 100.0f;
 }
 
 float MatterWaterHeater::getAbsoluteMaximumHeatingSetpoint()
 {
   return static_cast<float>(
-    absoluteMaximumHeatingSetpoint
-  ) / 100.0f;
+    absoluteMaximumHeatingSetpoint) / 100.0f;
 }
 
 float MatterWaterHeater::getMaximumHeatingSetpoint()
 {
   return static_cast<float>(
-    maximumHeatingSetpoint
-  ) / 100.0f;
+    maximumHeatingSetpoint) / 100.0f;
 }
 
 /*
  * --------------------------------------------------------------------------
- * System mode
+ * Thermostat system mode
  * --------------------------------------------------------------------------
  */
 
 bool MatterWaterHeater::setSystemMode(
-  SystemMode_t mode
-)
+  SystemMode_t mode)
 {
   if (!initialized) {
     return false;
@@ -610,9 +557,16 @@ bool MatterWaterHeater::setSystemMode(
   }
 
   esp_matter_attr_val_t value =
-    esp_matter_attr_val(
-      static_cast<uint8_t>(mode)
-    );
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        Thermostat::Id,
+        Thermostat::Attributes::SystemMode::Id,
+        &value)) {
+    return false;
+  }
+
+  value.val.u8 = static_cast<uint8_t>(mode);
 
   if (!updateAttributeVal(
         Thermostat::Id,
@@ -621,8 +575,7 @@ bool MatterWaterHeater::setSystemMode(
     return false;
   }
 
-  systemMode = mode;
-
+  systemMode = static_cast<uint8_t>(mode);
   return true;
 }
 
@@ -639,28 +592,34 @@ MatterWaterHeater::getSystemMode()
  */
 
 bool MatterWaterHeater::setHeaterTypes(
-  uint8_t value
-)
+  uint8_t value)
 {
   if (!initialized) {
     return false;
   }
 
   esp_matter_attr_val_t attr =
-    esp_matter_attr_val(
-      value,
-      esp_matter_attr_val::uint_sub_type::k_bitmap
-    );
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        WaterHeaterManagement::Id,
+        WaterHeaterManagement::Attributes::
+          HeaterTypes::Id,
+        &attr)) {
+    return false;
+  }
+
+  attr.val.u8 = value;
 
   if (!updateAttributeVal(
         WaterHeaterManagement::Id,
-        WaterHeaterManagement::Attributes::HeaterTypes::Id,
+        WaterHeaterManagement::Attributes::
+          HeaterTypes::Id,
         &attr)) {
     return false;
   }
 
   heaterTypes = value;
-
   return true;
 }
 
@@ -670,28 +629,34 @@ uint8_t MatterWaterHeater::getHeaterTypes()
 }
 
 bool MatterWaterHeater::setHeatDemand(
-  uint8_t value
-)
+  uint8_t value)
 {
   if (!initialized) {
     return false;
   }
 
   esp_matter_attr_val_t attr =
-    esp_matter_attr_val(
-      value,
-      esp_matter_attr_val::uint_sub_type::k_bitmap
-    );
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        WaterHeaterManagement::Id,
+        WaterHeaterManagement::Attributes::
+          HeatDemand::Id,
+        &attr)) {
+    return false;
+  }
+
+  attr.val.u8 = value;
 
   if (!updateAttributeVal(
         WaterHeaterManagement::Id,
-        WaterHeaterManagement::Attributes::HeatDemand::Id,
+        WaterHeaterManagement::Attributes::
+          HeatDemand::Id,
         &attr)) {
     return false;
   }
 
   heatDemand = value;
-
   return true;
 }
 
@@ -701,25 +666,34 @@ uint8_t MatterWaterHeater::getHeatDemand()
 }
 
 bool MatterWaterHeater::setTankVolume(
-  uint16_t value
-)
+  uint16_t value)
 {
   if (!initialized) {
     return false;
   }
 
   esp_matter_attr_val_t attr =
-    esp_matter_attr_val(value);
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        WaterHeaterManagement::Id,
+        WaterHeaterManagement::Attributes::
+          TankVolume::Id,
+        &attr)) {
+    return false;
+  }
+
+  attr.val.u16 = value;
 
   if (!updateAttributeVal(
         WaterHeaterManagement::Id,
-        WaterHeaterManagement::Attributes::TankVolume::Id,
+        WaterHeaterManagement::Attributes::
+          TankVolume::Id,
         &attr)) {
     return false;
   }
 
   tankVolume = value;
-
   return true;
 }
 
@@ -729,25 +703,34 @@ uint16_t MatterWaterHeater::getTankVolume()
 }
 
 bool MatterWaterHeater::setTankPercentage(
-  uint8_t value
-)
+  uint8_t value)
 {
   if (!initialized || value > 100) {
     return false;
   }
 
   esp_matter_attr_val_t attr =
-    esp_matter_attr_val(value);
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        WaterHeaterManagement::Id,
+        WaterHeaterManagement::Attributes::
+          TankPercentage::Id,
+        &attr)) {
+    return false;
+  }
+
+  attr.val.u8 = value;
 
   if (!updateAttributeVal(
         WaterHeaterManagement::Id,
-        WaterHeaterManagement::Attributes::TankPercentage::Id,
+        WaterHeaterManagement::Attributes::
+          TankPercentage::Id,
         &attr)) {
     return false;
   }
 
   tankPercentage = value;
-
   return true;
 }
 
@@ -757,28 +740,39 @@ uint8_t MatterWaterHeater::getTankPercentage()
 }
 
 bool MatterWaterHeater::setBoostState(
-  BoostState_t state
-)
+  BoostState_t state)
 {
   if (!initialized) {
     return false;
   }
 
-  esp_matter_attr_val_t attr =
-    esp_matter_attr_val(
-      static_cast<uint8_t>(state),
-      esp_matter_attr_val::uint_sub_type::k_enum
-    );
+  if (state != BOOST_INACTIVE &&
+      state != BOOST_ACTIVE) {
+    return false;
+  }
 
-  if (!updateAttributeVal(
+  esp_matter_attr_val_t attr =
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
         WaterHeaterManagement::Id,
-        WaterHeaterManagement::Attributes::BoostState::Id,
+        WaterHeaterManagement::Attributes::
+          BoostState::Id,
         &attr)) {
     return false;
   }
 
-  boostState = state;
+  attr.val.u8 = static_cast<uint8_t>(state);
 
+  if (!updateAttributeVal(
+        WaterHeaterManagement::Id,
+        WaterHeaterManagement::Attributes::
+          BoostState::Id,
+        &attr)) {
+    return false;
+  }
+
+  boostState = static_cast<uint8_t>(state);
   return true;
 }
 
@@ -795,31 +789,40 @@ MatterWaterHeater::getBoostState()
  */
 
 bool MatterWaterHeater::setWaterHeaterMode(
-  WaterHeaterMode_t mode
-)
+  WaterHeaterMode_t mode)
 {
   if (!initialized) {
     return false;
   }
 
-  if (mode > WATER_HEATER_MODE_ECO) {
+  if (mode != WATER_HEATER_MODE_OFF &&
+      mode != WATER_HEATER_MODE_MANUAL &&
+      mode != WATER_HEATER_MODE_ECO) {
     return false;
   }
 
-  esp_matter_attr_val_t value =
-    esp_matter_attr_val(
-      static_cast<uint8_t>(mode)
-    );
+  esp_matter_attr_val_t attr =
+    esp_matter_invalid(NULL);
+
+  if (!getAttributeVal(
+        WaterHeaterMode::Id,
+        WaterHeaterMode::Attributes::
+          CurrentMode::Id,
+        &attr)) {
+    return false;
+  }
+
+  attr.val.u8 = static_cast<uint8_t>(mode);
 
   if (!updateAttributeVal(
         WaterHeaterMode::Id,
-        WaterHeaterMode::Attributes::CurrentMode::Id,
-        &value)) {
+        WaterHeaterMode::Attributes::
+          CurrentMode::Id,
+        &attr)) {
     return false;
   }
 
-  waterHeaterMode = mode;
-
+  waterHeaterMode = static_cast<uint8_t>(mode);
   return true;
 }
 
@@ -827,8 +830,133 @@ MatterWaterHeater::WaterHeaterMode_t
 MatterWaterHeater::getWaterHeaterMode()
 {
   return static_cast<WaterHeaterMode_t>(
-    waterHeaterMode
-  );
+    waterHeaterMode);
+}
+
+/*
+ * --------------------------------------------------------------------------
+ * MatterEndPoint callback
+ * --------------------------------------------------------------------------
+ */
+
+bool MatterWaterHeater::attributeChangeCB(
+  uint16_t endpoint_id,
+  uint32_t cluster_id,
+  uint32_t attribute_id,
+  esp_matter_attr_val_t *val)
+{
+  if (!initialized || val == nullptr) {
+    return false;
+  }
+
+  if (endpoint_id != getEndPointId()) {
+    return false;
+  }
+
+  switch (cluster_id) {
+
+    case Thermostat::Id:
+      switch (attribute_id) {
+
+        case Thermostat::Attributes::
+          LocalTemperature::Id:
+          localTemperature = val->val.i16;
+          return true;
+
+        case Thermostat::Attributes::
+          OccupiedHeatingSetpoint::Id:
+          heatingSetpoint = val->val.i16;
+          return true;
+
+        case Thermostat::Attributes::
+          AbsMinHeatSetpointLimit::Id:
+          absoluteMinimumHeatingSetpoint =
+            val->val.i16;
+          return true;
+
+        case Thermostat::Attributes::
+          MinHeatSetpointLimit::Id:
+          minimumHeatingSetpoint =
+            val->val.i16;
+          return true;
+
+        case Thermostat::Attributes::
+          AbsMaxHeatSetpointLimit::Id:
+          absoluteMaximumHeatingSetpoint =
+            val->val.i16;
+          return true;
+
+        case Thermostat::Attributes::
+          MaxHeatSetpointLimit::Id:
+          maximumHeatingSetpoint =
+            val->val.i16;
+          return true;
+
+        case Thermostat::Attributes::
+          SystemMode::Id:
+          systemMode = val->val.u8;
+          return true;
+
+        default:
+          break;
+      }
+      break;
+
+    case WaterHeaterManagement::Id:
+      switch (attribute_id) {
+
+        case WaterHeaterManagement::Attributes::
+          HeaterTypes::Id:
+          heaterTypes = val->val.u8;
+          return true;
+
+        case WaterHeaterManagement::Attributes::
+          HeatDemand::Id:
+          heatDemand = val->val.u8;
+          return true;
+
+        case WaterHeaterManagement::Attributes::
+          BoostState::Id:
+          boostState = val->val.u8;
+          return true;
+
+        /*
+         * TankVolume and TankPercentage are optional features,
+         * but once enabled above they are normal attributes.
+         */
+        case WaterHeaterManagement::Attributes::
+          TankVolume::Id:
+          tankVolume = val->val.u16;
+          return true;
+
+        case WaterHeaterManagement::Attributes::
+          TankPercentage::Id:
+          tankPercentage = val->val.u8;
+          return true;
+
+        default:
+          break;
+      }
+      break;
+
+    case WaterHeaterMode::Id:
+      switch (attribute_id) {
+
+        case WaterHeaterMode::Attributes::
+          CurrentMode::Id:
+          waterHeaterMode = val->val.u8;
+          return true;
+
+        default:
+          break;
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  return true;
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
