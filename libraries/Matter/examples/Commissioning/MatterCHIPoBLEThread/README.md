@@ -36,6 +36,8 @@ This sketch calls `Matter.selectNetwork(MATTER_NETWORK_THREAD)` and leaves CHIPo
 - Thread on-network (CHIPoBLE off): [MatterOnNetworkThread](../MatterOnNetworkThread).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
+**Arduino IDE:** C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(THREAD)` picks Thread.
+
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.
 
 ## Setup

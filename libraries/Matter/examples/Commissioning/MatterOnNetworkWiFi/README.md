@@ -32,6 +32,8 @@ This sketch calls `Matter.selectNetwork(MATTER_NETWORK_WIFI, true)` and `WiFi.be
 - Wi-Fi + CHIPoBLE (hub sends SSID): [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
+**Arduino IDE:** C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(WIFI, true)` keeps Wi-Fi.
+
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.
 
 ## Setup

@@ -18,6 +18,11 @@
 // Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
 // Do not call OThread.begin() before Matter.begin() — that would start a second stack.
 // Do not call OThreadDNSSD.begin() — CHIP owns Thread SRP (_matterc._udp).
+//
+// Supported SoCs: C6 and H2 (Matter-over-Thread in the Arduino IDE prebuild).
+// C5: Thread radio exists; Matter-over-Thread is not in this prebuild — this sketch will halt.
+// C6: one dual-stack prebuild. No Matter Network menu. selectNetwork(THREAD, true)
+// uses Thread and turns CHIPoBLE off.
 
 #include <Arduino.h>
 #include <Matter.h>
