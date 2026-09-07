@@ -115,7 +115,7 @@ bool MatterWaterHeater::begin()
    *
    * on the same endpoint.
    */
-  esp_matter::cluster::thermostat::config_t::config_t water_heater_config;
+  esp_matter::endpoint::water_heater::config_t water_heater_config;
 
   water_heater_config.water_heater_management = management_config;
   water_heater_config.water_heater_mode = mode_config;
