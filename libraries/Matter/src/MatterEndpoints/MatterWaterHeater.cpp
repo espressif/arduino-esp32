@@ -98,9 +98,6 @@ bool MatterWaterHeater::begin()
   thermostat_config.features.heating.occupied_heating_setpoint =
     DEFAULT_HEATING_SETPOINT;
 
-  thermostat_config.features.heating.unoccupied_heating_setpoint =
-    DEFAULT_HEATING_SETPOINT;
-
   thermostat_config.feature_flags |=
     esp_matter::cluster::thermostat::feature::heating::get_id();
 
@@ -149,11 +146,6 @@ bool MatterWaterHeater::begin()
 
   if (esp_matter::cluster::water_heater_management::
         feature::energy_management::add(management_cluster) != ESP_OK) {
-    return false;
-  }
-
-  if (esp_matter::cluster::water_heater_management::
-        feature::tank_percentage::add(management_cluster) != ESP_OK) {
     return false;
   }
 
