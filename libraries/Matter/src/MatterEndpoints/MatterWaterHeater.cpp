@@ -144,11 +144,6 @@ bool MatterWaterHeater::begin()
     return false;
   }
 
-  if (esp_matter::cluster::water_heater_management::
-        feature::energy_management::add(management_cluster) != ESP_OK) {
-    return false;
-  }
-
   /*
    * Store the endpoint ID in MatterEndPoint.
    */

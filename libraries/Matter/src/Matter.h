@@ -35,7 +35,6 @@
 #include <MatterEndpoints/MatterWaterLeakDetector.h>
 #include <MatterEndpoints/MatterWaterFreezeDetector.h>
 #include <MatterEndpoints/MatterWaterHeater.h>
-#include <MatterEndpoints/MatterWaterHeater.h>
 #include <MatterEndpoints/MatterRainSensor.h>
 #include <MatterEndpoints/MatterPressureSensor.h>
 #include <MatterEndpoints/MatterOccupancySensor.h>
