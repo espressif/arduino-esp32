@@ -413,15 +413,17 @@ bool MatterWaterHeater::setHeatingSetpointRaw(
     return false;
   }
 
-  esp_matter_attr_val_t value =
-    esp_matter_attr_val(temperature);
+    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
 
-  if (!updateAttributeVal(
-        Thermostat::Id,
-        Thermostat::Attributes::OccupiedHeatingSetpoint::Id,
-        &value)) {
+    val.type = ESP_MATTER_VAL_TYPE_INT16;
+    val.val.i16 = temperature;
+
+    if (!updateAttributeVal(
+            Thermostat::Id,
+            Thermostat::Attributes::OccupiedHeatingSetpoint::Id,
+            &val)) {
     return false;
-  }
+    }
 
   heatingSetpoint = temperature;
 
