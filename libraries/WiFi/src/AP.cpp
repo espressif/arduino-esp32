@@ -181,17 +181,19 @@ bool APClass::onEnable() {
 bool APClass::onDisable() {
   Network.removeEvent(_wifi_ap_event_handle);
   _wifi_ap_event_handle = 0;
-  // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
-  // That would be done by WiFi.enableAP(false) if STA is not enabled, or when it gets disabled
-  _esp_netif = NULL;
-  destroyNetif();
+
   if (_ap_ev_instance != NULL) {
     esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &_ap_event_cb);
     _ap_ev_instance = NULL;
   }
+
+  // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
+  // That would be done by WiFi.enableAP(false) if STA is not enabled, or when it gets disabled
+  _esp_netif = NULL;
+  destroyNetif();
+
   return true;
 }
-
 bool APClass::begin() {
   if (!WiFi.enableAP(true)) {
     log_e("AP enable failed!");
