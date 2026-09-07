@@ -19,8 +19,8 @@
 //
 // Supported SoCs: S3, C3, C5, C6 (CHIPoBLE + Wi-Fi in the Arduino IDE prebuild).
 // ESP32 / S2: no CHIPoBLE — use MatterOnNetworkWiFi. H2: no Wi-Fi — use a Thread example.
-// C6: one dual-stack prebuild. No Matter Network menu. selectNetwork(WIFI) keeps
-// Wi-Fi; Thread stays unused.
+// C5: Tools → Matter Network → Wi-Fi (default). C6: one dual-stack prebuild.
+// No Matter Network menu. selectNetwork(WIFI) keeps Wi-Fi; Thread stays unused.
 
 #include <Arduino.h>
 #include <Matter.h>

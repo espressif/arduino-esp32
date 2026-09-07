@@ -17,8 +17,8 @@
 // Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
 //
 // Supported SoCs: ESP32, S2, S3, C3, C5, C6. H2: no Wi-Fi — use a Thread example.
-// C6: one dual-stack prebuild. No Matter Network menu. selectNetwork(WIFI, true)
-// keeps Wi-Fi and turns CHIPoBLE off.
+// C5: Tools → Matter Network → Wi-Fi (default). C6: one dual-stack prebuild.
+// No Matter Network menu. selectNetwork(WIFI, true) keeps Wi-Fi and turns CHIPoBLE off.
 
 #include <Arduino.h>
 #include <Matter.h>

@@ -35,9 +35,11 @@ MatterThermostat	KEYWORD1
 MatterWindowCovering	KEYWORD1
 ControlSequenceOfOperation_t	KEYWORD1
 ThermostatMode_t	KEYWORD1
+ThermostatAutoMode_t	KEYWORD1
 WindowCoveringType_t	KEYWORD1
 OperationalState_t	KEYWORD1
 OperationalStatusField_t	KEYWORD1
+PositionCalibration	KEYWORD1
 EndPointCB	KEYWORD1
 EndPointOpenCB	KEYWORD1
 EndPointCloseCB	KEYWORD1
@@ -52,6 +54,7 @@ EndPointSpeedCB	KEYWORD1
 EndPointOnOffCB	KEYWORD1
 EndPointBrightnessCB	KEYWORD1
 EndPointRGBColorCB	KEYWORD1
+EndPointLevelCB	KEYWORD1
 EndPointIdentifyCB	KEYWORD1
 matterEvent_t	KEYWORD1
 matterEventCB	KEYWORD1
@@ -116,6 +119,7 @@ updateAccessory	KEYWORD2
 onChange	KEYWORD2
 onChangeOnOff	KEYWORD2
 onChangeBrightness	KEYWORD2
+onChangeLevel	KEYWORD2
 onChangeColorTemperature	KEYWORD2
 onChangeColorHSV	KEYWORD2
 click	KEYWORD2
@@ -190,8 +194,12 @@ setLiftPosition	KEYWORD2
 getLiftPosition	KEYWORD2
 setLiftPercentage	KEYWORD2
 getLiftPercentage	KEYWORD2
+setCurrentLiftPercent100ths	KEYWORD2
+getCurrentLiftPercent100ths	KEYWORD2
 setTargetLiftPercent100ths	KEYWORD2
 getTargetLiftPercent100ths	KEYWORD2
+setLiftCalibration	KEYWORD2
+getLiftCalibration	KEYWORD2
 setInstalledOpenLimitLift	KEYWORD2
 getInstalledOpenLimitLift	KEYWORD2
 setInstalledClosedLimitLift	KEYWORD2
@@ -200,8 +208,12 @@ setTiltPosition	KEYWORD2
 getTiltPosition	KEYWORD2
 setTiltPercentage	KEYWORD2
 getTiltPercentage	KEYWORD2
+setCurrentTiltPercent100ths	KEYWORD2
+getCurrentTiltPercent100ths	KEYWORD2
 setTargetTiltPercent100ths	KEYWORD2
 getTargetTiltPercent100ths	KEYWORD2
+setTiltCalibration	KEYWORD2
+getTiltCalibration	KEYWORD2
 setInstalledOpenLimitTilt	KEYWORD2
 getInstalledOpenLimitTilt	KEYWORD2
 setInstalledClosedLimitTilt	KEYWORD2
@@ -238,6 +250,7 @@ getIlluminance	KEYWORD2
 #######################################
 
 MAX_BRIGHTNESS	LITERAL1
+MAX_LEVEL	LITERAL1
 MAX_TAG_LIST_SIZE	LITERAL1
 MAX_COLOR_TEMPERATURE	LITERAL1
 MIN_COLOR_TEMPERATURE	LITERAL1
@@ -269,6 +282,13 @@ THERMOSTAT_MODE_OFF	LITERAL1
 THERMOSTAT_MODE_AUTO	LITERAL1
 THERMOSTAT_MODE_COOL	LITERAL1
 THERMOSTAT_MODE_HEAT	LITERAL1
+THERMOSTAT_MODE_EMERGENCY_HEAT	LITERAL1
+THERMOSTAT_MODE_PRECOOLING	LITERAL1
+THERMOSTAT_MODE_FAN_ONLY	LITERAL1
+THERMOSTAT_MODE_DRY	LITERAL1
+THERMOSTAT_MODE_SLEEP	LITERAL1
+THERMOSTAT_AUTO_MODE_DISABLED	LITERAL1
+THERMOSTAT_AUTO_MODE_ENABLED	LITERAL1
 MATTER_WIFI_CONNECTIVITY_CHANGE	LITERAL1
 MATTER_THREAD_CONNECTIVITY_CHANGE	LITERAL1
 MATTER_INTERNET_CONNECTIVITY_CHANGE	LITERAL1

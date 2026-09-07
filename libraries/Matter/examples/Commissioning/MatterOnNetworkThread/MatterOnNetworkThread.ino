@@ -19,8 +19,7 @@
 // Do not call OThread.begin() before Matter.begin() — that would start a second stack.
 // Do not call OThreadDNSSD.begin() — CHIP owns Thread SRP (_matterc._udp).
 //
-// Supported SoCs: C6 and H2 (Matter-over-Thread in the Arduino IDE prebuild).
-// C5: Thread radio exists; Matter-over-Thread is not in this prebuild — this sketch will halt.
+// Supported SoCs: C5 (Tools → Matter Network → Thread), C6, and H2.
 // C6: one dual-stack prebuild. No Matter Network menu. selectNetwork(THREAD, true)
 // uses Thread and turns CHIPoBLE off.
 

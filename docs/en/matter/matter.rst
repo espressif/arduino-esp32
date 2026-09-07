@@ -121,7 +121,7 @@ The ``Matter`` class provides the following key methods:
 * ``isOnline()``: Checks if a controller has an active CASE session with this node. Stays true until CHIP idle-evicts that session, not until the user closes a controller app.
 * ``isWiFiStationEnabled()``: Checks if Wi-Fi Station mode is supported and enabled
 * ``isWiFiAccessPointEnabled()``: Checks if Wi-Fi AP mode is supported and enabled
-* ``isThreadEnabled()``: ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (ESP32-C6 / ESP32-H2 prebuild). Not "OpenThread is compiled in" (ESP32-C5)
+* ``isThreadEnabled()``: ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (ESP32-C6 / ESP32-H2; ESP32-C5 when **Tools → Matter Network → Thread**). Not "OpenThread is compiled in"
 * ``isBLECommissioningEnabled()``: Checks if BLE commissioning is compiled in **and** still enabled (see ``setBLECommissioningEnabled()``)
 * ``setBLECommissioningEnabled()``: Enables or disables CHIPoBLE. Call before ``Matter.begin()``. Commissioning sketches use ``selectNetwork(net, true)`` instead of this setter. ``false`` is only when you keep the default network and just want BLE off (connect Wi-Fi or Ethernet first); it releases BLE RAM
 * ``setBLEMemoryReleaseEnabled()``: After CHIPoBLE commissioning, release BLE RAM (default ``true``). Call before ``Matter.begin()``. Only takes effect when ``CONFIG_ENABLE_CHIPOBLE`` is set and CHIPoBLE commissioning is enabled. No effect when CHIPoBLE is compiled out. Arduino-as-IDF-component builds that keep BLE must also set ``CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n``
@@ -158,7 +158,7 @@ Matter BLE commissioning is **CHIPoBLE**. The Arduino Matter APIs follow ``CONFI
 +------------+-------------------------------+-----------------------------------+-----------+---------------------------+------------------+
 | ESP32-C3   | Wi-Fi                         | No                                | SPI PHY   | Yes                       |                  |
 +------------+-------------------------------+-----------------------------------+-----------+---------------------------+------------------+
-| ESP32-C5   | Wi-Fi                         | No (radio exists; not in prebuild)| SPI PHY   | Yes                       |                  |
+| ESP32-C5   | Wi-Fi (menu default)          | Yes (Matter Network / Thread)     | SPI PHY   | Yes                       | Two Matter .a    |
 +------------+-------------------------------+-----------------------------------+-----------+---------------------------+------------------+
 | ESP32-C6   | Wi-Fi until ``selectNetwork`` | Yes (dual-stack)                  | SPI PHY   | Yes                       |                  |
 +------------+-------------------------------+-----------------------------------+-----------+---------------------------+------------------+
@@ -296,7 +296,7 @@ Call ``Matter.selectNetwork()`` **before any accessory** ``begin()``. With no ca
 +============+================================================================+==================+==================================================================+
 | Wi-Fi      | ``CONFIG_ENABLE_WIFI_STATION`` (not ESP32-H2)                  | Enabled          | 0 (primary)                                                      |
 +------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
-| Thread     | ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (ESP32-C6 / ESP32-H2)     | Enabled          | 0 when Thread is selected (ESP32-C6 replaces root Wi-Fi)         |
+| Thread     | ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (C6 / H2; C5 menu Thread) | Enabled          | 0 when Thread is selected (ESP32-C6 replaces root Wi-Fi)         |
 +------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
 | Ethernet   | ``CONFIG_ETH_ENABLED`` (wire hardware)                         | Disabled         | None (``0xFFFF``). No commissioning cluster                      |
 +------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
@@ -306,7 +306,7 @@ Call ``Matter.selectNetwork()`` **before any accessory** ``begin()``. With no ca
 * ``selectNetwork(network, disableBLECommissioning)`` overrides the CHIPoBLE default. ``true`` turns CHIPoBLE off; do not also call ``setBLECommissioningEnabled()``. A selected-but-down interface plus no BLE leaves no commissioning path.
 * Ethernet and Thread skip CHIP's ``InitWiFiStack()`` via a linker ``--wrap``.
 * After ``Matter.begin()``, ``OThread.begin()`` attaches to CHIP's stack (``isAttachedToExternalStack()``). ``OThread.end()`` must not tear that stack down.
-* ESP32-C5: ``isThreadEnabled()`` is false until Matter-over-Thread is enabled in that prebuild.
+* ESP32-C5: ``isThreadEnabled()`` is true when **Tools → Matter Network → Thread** (``ARDUINO_MATTER_NETWORK_THREAD`` + ``libespressif__esp_matter.thread.a``). Default Wi-Fi menu keeps Matter-over-Wi-Fi.
 
 See `MatterOnNetworkEthernet <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet>`_, `MatterCHIPoBLEWiFi <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEWiFi>`_ / `MatterOnNetworkWiFi <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkWiFi>`_, and `MatterCHIPoBLEThread <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEThread>`_ / `MatterOnNetworkThread <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkThread>`_.
 

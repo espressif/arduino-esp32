@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -14,6 +14,7 @@
 
 #pragma once
 #include <sdkconfig.h>
+#include <MatterC5Network.h>
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Arduino.h>
@@ -237,7 +238,7 @@ public:
   // Compile-time capability (Kconfig / SOC). Not "the interface is up".
   static bool isWiFiStationEnabled();       // CONFIG_ENABLE_WIFI_STATION (false on H2)
   static bool isWiFiAccessPointEnabled();   // CONFIG_ENABLE_WIFI_AP
-  static bool isThreadEnabled();            // CONFIG_ENABLE_MATTER_OVER_THREAD (C6/H2 prebuild; not C5)
+  static bool isThreadEnabled();            // CONFIG_ENABLE_MATTER_OVER_THREAD (C6/H2; C5 Tools → Matter Network → Thread)
   static bool isEthernetEnabled();          // CONFIG_ETH_ENABLED: ETH library builds; not "cable present"
   static bool isBLECommissioningEnabled();  // CHIPoBLE compiled in and still enabled
   static bool isBLEMemoryReleaseEnabled();  // CHIPoBLE on and BLE RAM will be released after commission

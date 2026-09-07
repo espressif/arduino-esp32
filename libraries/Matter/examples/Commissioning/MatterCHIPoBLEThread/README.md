@@ -25,18 +25,18 @@ Do not type a Wi-Fi password into this example. The hub should offer Thread netw
 | ESP32-S2 | Does not run (no Thread)              | Off      | Ethernet (SPI)         |
 | ESP32-S3 | Does not run (no Thread)              | On       | Ethernet (SPI)         |
 | ESP32-C3 | Does not run (no Thread)              | On       | Ethernet (SPI)         |
-| ESP32-C5 | Does not run (Thread not in prebuild) | On       | Ethernet (SPI)         |
+| ESP32-C5 | Thread (hub; Matter Network → Thread) | On       | Ethernet (SPI)         |
 | ESP32-C6 | Thread (hub)                          | On       | Wi-Fi, Ethernet (SPI)  |
 | ESP32-H2 | Thread (hub)                          | On       | Ethernet (SPI)         |
 
 This sketch calls `Matter.selectNetwork(MATTER_NETWORK_THREAD)` and leaves CHIPoBLE **on**. The hub sends the Thread dataset. Do not call `OThread.begin()` here.
 
-- Arduino Matter prebuild Thread: **ESP32-C6** and **ESP32-H2**. ESP32-C5 reports Thread unsupported until Matter-over-Thread is in that prebuild.
+- Arduino Matter prebuild Thread: **ESP32-C5** (Tools → Matter Network → Thread), **ESP32-C6**, and **ESP32-H2**.
 - ESP32-C6 also has Wi-Fi; this sketch selects Thread. For Wi-Fi see [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi).
 - Thread on-network (CHIPoBLE off): [MatterOnNetworkThread](../MatterOnNetworkThread).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
-**Arduino IDE:** C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(THREAD)` picks Thread.
+**Arduino IDE:** C5: set **Matter Network → Thread**. C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(THREAD)` picks Thread.
 
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.
 

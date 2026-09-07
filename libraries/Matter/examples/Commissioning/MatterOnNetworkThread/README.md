@@ -37,18 +37,18 @@ The sketch commits that key on every boot (it does not skip commit when NVS alre
 | ESP32-S2 | Does not run (no Thread)              | Off      | Ethernet (SPI)         |
 | ESP32-S3 | Does not run (no Thread)              | On       | Ethernet (SPI)         |
 | ESP32-C3 | Does not run (no Thread)              | On       | Ethernet (SPI)         |
-| ESP32-C5 | Does not run (Thread not in prebuild) | On       | Ethernet (SPI)         |
+| ESP32-C5 | Thread (key; Matter Network → Thread) | Off      | Ethernet (SPI)         |
 | ESP32-C6 | Thread (key in sketch)                | Off      | Wi-Fi, Ethernet (SPI)  |
 | ESP32-H2 | Thread (key in sketch)                | Off      | Ethernet (SPI)         |
 
 This sketch calls `Matter.selectNetwork(MATTER_NETWORK_THREAD, true)` (CHIPoBLE **off**), then after `Matter.begin()` attaches `OThread` and commits the border-router network key.
 
-- Arduino Matter prebuild Thread: **ESP32-C6** and **ESP32-H2**.
+- Arduino Matter prebuild Thread: **ESP32-C5** (Tools → Matter Network → Thread), **ESP32-C6**, and **ESP32-H2**.
 - Most consumer apps discover over BLE. For that path use [MatterCHIPoBLEThread](../MatterCHIPoBLEThread).
 - ESP32-C6 also has Wi-Fi; this sketch selects Thread. For Wi-Fi see [MatterOnNetworkWiFi](../MatterOnNetworkWiFi).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
-**Arduino IDE:** C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(THREAD, true)` picks Thread.
+**Arduino IDE:** C5: set **Matter Network → Thread**. C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(THREAD, true)` picks Thread.
 
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.
 
