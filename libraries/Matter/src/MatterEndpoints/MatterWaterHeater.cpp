@@ -85,7 +85,7 @@ bool MatterWaterHeater::begin()
    * namespace. Use the fully-qualified namespace to avoid the
    * endpoint::thermostat / cluster::thermostat ambiguity.
    */
-  esp_matter::endpoint::thermostat::config_t thermostat_config;
+  esp_matter::cluster::thermostat::config_t thermostat_config;
 
   thermostat_config.local_temperature = DEFAULT_LOCAL_TEMPERATURE;
 
@@ -115,7 +115,7 @@ bool MatterWaterHeater::begin()
    *
    * on the same endpoint.
    */
-  esp_matter::endpoint::water_heater::config_t water_heater_config;
+  esp_matter::cluster::thermostat::config_t::config_t water_heater_config;
 
   water_heater_config.water_heater_management = management_config;
   water_heater_config.water_heater_mode = mode_config;
