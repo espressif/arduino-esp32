@@ -76,6 +76,7 @@
 #include "esp_system.h"
 #include "esp_eth.h"
 #include "esp_netif.h"
+#include "driver/spi_master.h"  // for spi_host_device_t (used in begin()/beginSPI())
 
 #if CONFIG_ETH_USE_ESP32_EMAC
 #if defined __has_include && __has_include("esp_eth_phy_lan867x.h")
