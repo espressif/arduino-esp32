@@ -136,7 +136,11 @@ esp_err_t init_usb_hal(bool external_phy) {
     .target = USB_PHY_TARGET_INT,
     .otg_mode = USB_OTG_MODE_DEVICE,
 #if CONFIG_IDF_TARGET_ESP32P4
+#if ARDUINO_USB_DEVICE_PORT == 0
+    .otg_speed = USB_PHY_SPEED_FULL,
+#else
     .otg_speed = USB_PHY_SPEED_HIGH,
+#endif
 #else
     .otg_speed = USB_PHY_SPEED_FULL,
 #endif
@@ -181,8 +185,12 @@ esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
   memset(&tinit, 0, sizeof(tusb_rhport_init_t));
   tinit.role = TUSB_ROLE_DEVICE;
 #if CONFIG_IDF_TARGET_ESP32P4
+#if ARDUINO_USB_DEVICE_PORT == 0
+  tinit.speed = TUSB_SPEED_FULL;
+#else
   tinit.speed = TUSB_SPEED_HIGH;
-  if (!tusb_init(1, &tinit)) {
+#endif
+  if (!tusb_init(ARDUINO_USB_DEVICE_PORT, &tinit)) {
 #else
   tinit.speed = TUSB_SPEED_FULL;
   if (!tusb_init(0, &tinit)) {
