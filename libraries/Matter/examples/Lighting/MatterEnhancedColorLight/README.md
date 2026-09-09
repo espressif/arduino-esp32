@@ -192,7 +192,7 @@ The MatterEnhancedColorLight example consists of the following main components:
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **RGB LED not responding**: Verify pin configurations and connections
 - **Color temperature not working**: Verify that the color temperature callback is properly handling HSV conversion
-- **ESP32-C3 never commissions**: Usual symptom of low heap (CHIPoBLE + Wi-Fi + this data model). Uncomment `SET_LOOP_TASK_STACK_SIZE(4 * 1024);` near the top of the sketch to free 4 KB from the Arduino loop stack
+- **ESP32-C3/H2/C5 never commissions**: Usual symptom of low heap (CHIPoBLE + Wi-Fi + this data model). Uncomment `SET_LOOP_TASK_STACK_SIZE(4 * 1024);` near the top of the sketch to free 4 KB from the Arduino loop stack
 - **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection
 

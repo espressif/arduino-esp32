@@ -21,7 +21,7 @@
 #endif
 #include <Preferences.h>
 
-// ESP32-C3: if the node never commissions (usual low-heap symptom), uncomment this.
+// ESP32-C3/H2/C5: if the node never commissions (usual low-heap symptom), uncomment this.
 // The default 8 KB loop stack is reserved from the heap before setup();
 // 4 KB is enough for this sketch and frees 4 KB for CHIPoBLE + Wi-Fi.
 // SET_LOOP_TASK_STACK_SIZE(4 * 1024);
