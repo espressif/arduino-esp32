@@ -11,7 +11,6 @@ The ``MatterEndPoint`` class is the base class for all Matter endpoints. It prov
 * **Attribute Access**: Methods to get and set attribute values from Matter clusters
 * **Identify Cluster**: Support for device identification (visual feedback like LED blinking)
 * **Semantic Tags**: Descriptor cluster ``TagList`` support via ``setTagList()``, so controllers can tell sibling endpoints of the same device type apart
-* **Secondary Network Interfaces**: Support for multiple network interfaces (Wi-Fi, Thread, Ethernet)
 * **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers
 
 All Matter endpoint classes inherit from ``MatterEndPoint``, providing a consistent interface and common functionality across all device types.
@@ -44,32 +43,17 @@ Sets the current Matter Accessory endpoint ID.
 
 * ``ep`` - Endpoint number to set
 
-Secondary Network Interface
-***************************
+Secondary Network Interface (deprecated)
+****************************************
 
-createSecondaryNetworkInterface
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Arduino Matter exposes **one** Network Commissioning cluster on endpoint 0: Wi-Fi **or** Thread, not both. On ESP32-C6 call ``Matter.selectNetwork(MATTER_NETWORK_WIFI)`` or ``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` before any accessory ``begin()``. ``selectNetwork(THREAD)`` replaces the root Wi-Fi driver so hubs that only talk to endpoint 0 see Thread.
 
-Creates a secondary network interface endpoint. This can be used for devices that support multiple network interfaces, such as Ethernet, Thread and Wi-Fi.
-
-``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` does **not** create this endpoint. On a dual-stack ESP32-C6 (Wi-Fi + Thread), the prebuild puts Wi-Fi Network Commissioning on endpoint 0 and Thread on endpoint 2. Many hubs only commission the root, so ``selectNetwork(THREAD)`` moves Thread Network Commissioning onto endpoint 0 (it replaces the Wi-Fi driver there). Call ``createSecondaryNetworkInterface()`` only when the product must expose **both** Wi-Fi (endpoint 0) and Thread (endpoint 2).
+``createSecondaryNetworkInterface()`` is deprecated. It does not create an endpoint and always returns ``false``. ``getSecondaryNetworkEndPointId()`` always returns 0.
 
 .. code-block:: arduino
 
     bool createSecondaryNetworkInterface();
-
-This function will return ``true`` if successful, ``false`` otherwise.
-
-getSecondaryNetworkEndPointId
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Gets the secondary network interface endpoint ID.
-
-.. code-block:: arduino
-
     uint16_t getSecondaryNetworkEndPointId();
-
-This function will return the secondary network endpoint ID, or 0 if not created.
 
 Attribute Management
 ********************

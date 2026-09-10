@@ -214,9 +214,9 @@ static void matterIpEventHandler(void *arg, esp_event_base_t event_base, int32_t
 }
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-// The C6 prebuild binds Wi-Fi NC to endpoint 0 and Thread NC to endpoint 2.
-// Hubs that only talk to the root (Alexa) never send a Thread dataset.
-// After start(), replace the Wi-Fi driver on endpoint 0 with the Thread driver.
+// The C6 prebuild can bind Thread NC to Kconfig endpoint 2, but Arduino does not
+// create that endpoint. C6 is Wi-Fi or Thread on the root: after start(), replace
+// the Wi-Fi driver on endpoint 0 with the Thread driver.
 class MatterBreadcrumbTracker : public chip::app::Clusters::BreadCrumbTracker {
   void SetBreadCrumb(uint64_t) override {}
 };
@@ -757,15 +757,13 @@ uint16_t ArduinoMatter::getNetworkEndPointId(matterNetwork_t network) {
         return 0xFFFF;
       }
 #if defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+      // C6: Thread NC is on endpoint 0 only after selectNetwork(THREAD).
       if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
         return 0;
       }
+      return 0xFFFF;
 #endif
-#ifdef CONFIG_THREAD_NETWORK_ENDPOINT_ID
-      return CONFIG_THREAD_NETWORK_ENDPOINT_ID;
-#else
       return 0;
-#endif
     case MATTER_NETWORK_ETHERNET:
     default: return 0xFFFF;
   }

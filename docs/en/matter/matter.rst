@@ -116,7 +116,7 @@ The ``Matter`` class provides the following key methods:
 * ``selectNetwork()``: Records intent before any accessory ``begin()``. Does not start Wi-Fi, Thread, or Ethernet, and does not apply a Thread dataset. One-argument form: Ethernet disables CHIPoBLE; Wi-Fi and Thread leave it on. ``selectNetwork(net, true)`` turns CHIPoBLE off; ``false`` does not turn it back on. ``NONE`` clears intent and does not change BLE
 * ``getSelectedNetwork()``: Last successful ``selectNetwork()``, or ``NONE``
 * ``getActiveNetwork()``: First netif with IPv6 (prefers the selection). Not ``isWiFiConnected()`` / ``isThreadConnected()``
-* ``getNetworkEndPointId()``: Expected Network Commissioning endpoint (0 Wi-Fi, 0 Thread when Thread is selected, ``0xFFFF`` if none). Valid before the endpoint is created
+* ``getNetworkEndPointId()``: Expected Network Commissioning endpoint on the root (0 Wi-Fi, 0 Thread when Thread is on the root, ``0xFFFF`` if none). ESP32-C6 is Wi-Fi or Thread, not both. Valid before the endpoint is created
 * ``waitForNetwork()``: Blocks until that IPv6 is present. ``NONE`` waits for any interface. Does not start hardware. ``timeoutMs`` 0 is a single check
 * ``isOnline()``: Checks if a controller has an active CASE session with this node. Stays true until CHIP idle-evicts that session, not until the user closes a controller app.
 * ``isWiFiStationEnabled()``: Checks if Wi-Fi Station mode is supported and enabled
@@ -160,7 +160,7 @@ Matter BLE commissioning is **CHIPoBLE**. The Arduino Matter APIs follow ``CONFI
 +------------+-------------------------------+-----------------------------------+-----------+---------------------------+------------------+
 | ESP32-C5   | Wi-Fi (menu default)          | Yes (Matter Network / Thread)     | SPI PHY   | Yes                       | Two Matter .a    |
 +------------+-------------------------------+-----------------------------------+-----------+---------------------------+------------------+
-| ESP32-C6   | Wi-Fi until ``selectNetwork`` | Yes (dual-stack)                  | SPI PHY   | Yes                       |                  |
+| ESP32-C6   | Wi-Fi until ``selectNetwork`` | Yes (one NC on endpoint 0)        | SPI PHY   | Yes                       |                  |
 +------------+-------------------------------+-----------------------------------+-----------+---------------------------+------------------+
 | ESP32-H2   | Thread                        | Yes                               | SPI PHY   | Yes                       | No Wi-Fi         |
 +------------+-------------------------------+-----------------------------------+-----------+---------------------------+------------------+
@@ -297,7 +297,7 @@ Call ``Matter.selectNetwork()`` **before any accessory** ``begin()``. With no ca
 +============+================================================================+==================+==================================================================+
 | Wi-Fi      | ``CONFIG_ENABLE_WIFI_STATION`` (not ESP32-H2)                  | Enabled          | 0 (primary)                                                      |
 +------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
-| Thread     | ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (C6 / H2; C5 menu Thread) | Enabled          | 0 when Thread is selected (ESP32-C6 replaces root Wi-Fi)         |
+| Thread     | ``CONFIG_ENABLE_MATTER_OVER_THREAD`` (C6 / H2; C5 menu Thread) | Enabled          | 0 when Thread is on the root (C6: ``selectNetwork(THREAD)``)     |
 +------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
 | Ethernet   | ``CONFIG_ETH_ENABLED`` (wire hardware)                         | Disabled         | None (``0xFFFF``). No commissioning cluster                      |
 +------------+----------------------------------------------------------------+------------------+------------------------------------------------------------------+
@@ -307,6 +307,7 @@ Call ``Matter.selectNetwork()`` **before any accessory** ``begin()``. With no ca
 * ``selectNetwork(network, disableBLECommissioning)`` overrides the CHIPoBLE default. ``true`` turns CHIPoBLE off; do not also call ``setBLECommissioningEnabled()``. A selected-but-down interface plus no BLE leaves no commissioning path.
 * Ethernet and Thread skip CHIP's ``InitWiFiStack()`` via a linker ``--wrap``.
 * After ``Matter.begin()``, ``OThread.begin()`` attaches to CHIP's stack (``isAttachedToExternalStack()``). ``OThread.end()`` must not tear that stack down.
+* ESP32-C6: one Network Commissioning cluster on endpoint 0. ``selectNetwork(THREAD)`` replaces root Wi-Fi with Thread. Do not use ``createSecondaryNetworkInterface()`` (deprecated; it does not create a second NC endpoint).
 * ESP32-C5: ``isThreadEnabled()`` is true when **Tools → Matter Network → Thread** (``ARDUINO_MATTER_NETWORK_THREAD`` + ``libespressif__esp_matter.thread.a``). Default Wi-Fi menu keeps Matter-over-Wi-Fi.
 
 See `MatterOnNetworkEthernet <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet>`_, `MatterCHIPoBLEWiFi <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEWiFi>`_ / `MatterOnNetworkWiFi <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkWiFi>`_, and `MatterCHIPoBLEThread <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEThread>`_ / `MatterOnNetworkThread <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkThread>`_.
@@ -319,7 +320,6 @@ The ``MatterEndPoint`` class is the base class for all Matter endpoints. It prov
 * **Endpoint Management**: Each endpoint has a unique endpoint ID for identification
 * **Attribute Access**: Methods to get and set attribute values from Matter clusters
 * **Identify Cluster**: Support for device identification (visual feedback)
-* **Secondary Network Interfaces**: Support for multiple network interfaces (Wi-Fi, Thread, Ethernet)
 * **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers
 
 .. toctree::

@@ -247,8 +247,9 @@ public:
   // Runtime network selection. Call selectNetwork() before any accessory begin().
   // Records intent only: does not start Wi-Fi, Thread, or Ethernet, and does not
   // apply a Thread dataset. Ethernet: sketch must ETH.begin() + enableIPv6().
-  // Dual-stack C6: selectNetwork(THREAD) puts Thread Network Commissioning on endpoint 0
-  // (replaces the prebuild Wi-Fi driver) so hubs that only talk to the root see Thread.
+  // ESP32-C6: one Network Commissioning cluster on endpoint 0. selectNetwork(THREAD)
+  // replaces the prebuild Wi-Fi driver so hubs that only talk to the root see Thread.
+  // Wi-Fi and Thread are alternatives, not simultaneous NC endpoints.
   // Matter.begin() skips CHIP's Wi-Fi init for Thread/Ethernet.
   static bool isNetworkSupported(matterNetwork_t network);  // same as the is*Enabled() helpers
   // BLE default: Ethernet disables CHIPoBLE; Wi-Fi and Thread leave it on.
@@ -263,8 +264,8 @@ public:
   static matterNetwork_t getActiveNetwork();
   // Expected Network Commissioning endpoint, even before it is created.
   // Wi-Fi: 0, or 0xFFFF when Thread replaced the root driver (C6).
-  // Thread: 0 when Thread is selected (C6 replaces root Wi-Fi; H2 is already 0).
-  // Ethernet / unsupported: 0xFFFF.
+  // Thread: 0 when Thread is on the root (selected on C6; always on H2 / C5 Thread).
+  // Ethernet / not selected / unsupported: 0xFFFF. No secondary Thread endpoint.
   static uint16_t getNetworkEndPointId(matterNetwork_t network);
   // Block (delay) until the selected interface has IPv6. NONE waits for any.
   // Does not start hardware. timeoutMs 0 is a single check.

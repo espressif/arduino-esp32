@@ -51,12 +51,13 @@ public:
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   virtual bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) = 0;
 
-  // This function is called to create a secondary network interface endpoint.
-  // It can be used for devices that support multiple network interfaces,
-  // such as Ethernet, Thread and Wi-Fi.
+  // Deprecated. Arduino Matter exposes one Network Commissioning cluster on endpoint 0:
+  // Wi-Fi or Thread (ESP32-C6: Matter.selectNetwork()), not both. Does not create an endpoint.
+  [[deprecated("Use Matter.selectNetwork(MATTER_NETWORK_WIFI or MATTER_NETWORK_THREAD); Network Commissioning is on endpoint 0")]]
   bool createSecondaryNetworkInterface();
 
-  // This function is called to get the secondary network interface endpoint ID.
+  // Deprecated. Always 0; Network Commissioning is on endpoint 0.
+  [[deprecated("Network Commissioning is on endpoint 0; this always returns 0")]]
   uint16_t getSecondaryNetworkEndPointId();
 
   // This function is called to get the current Matter Accessory endpoint ID.
