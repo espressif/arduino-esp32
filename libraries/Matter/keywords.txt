@@ -56,6 +56,7 @@ EndPointBrightnessCB	KEYWORD1
 EndPointRGBColorCB	KEYWORD1
 EndPointLevelCB	KEYWORD1
 EndPointIdentifyCB	KEYWORD1
+MatterIdentifyRequest	KEYWORD1
 matterEvent_t	KEYWORD1
 matterEventCB	KEYWORD1
 bleMemoryReleasedCB	KEYWORD1
@@ -236,6 +237,7 @@ getEndPointId	KEYWORD2
 getSecondaryNetworkEndPointId	KEYWORD2
 createSecondaryNetworkInterface	KEYWORD2
 onIdentify	KEYWORD2
+getIdentifyRequest	KEYWORD2
 endpointIdentifyCB	KEYWORD2
 setTagList	KEYWORD2
 createTag	KEYWORD2

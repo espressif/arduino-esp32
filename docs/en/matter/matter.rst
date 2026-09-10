@@ -399,7 +399,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter Color Light** - Creates a Matter-compatible RGB color light (HSV/XY, no color temperature). `View Matter Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterColorLight>`_
 * **Matter Enhanced Color Light** - Creates a Matter-compatible extended color light with RGB, brightness, and color temperature. `View Matter Enhanced Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterEnhancedColorLight>`_
 * **Matter Composed Lights** - Creates a Matter node with multiple light endpoints (On/Off Light, Dimmable Light, and Color Light) in a single node. `View Matter Composed Lights code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterComposedLights>`_
-* **Matter On Identify** - Implements the Matter Identify cluster callback for an on/off light device, making the LED blink when the device is identified from a Matter app. `View Matter On Identify code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterOnIdentify>`_
+* **Matter On Identify** - Identify cluster on an on/off light: ``onIdentify(bool)`` plus ``getIdentifyRequest()`` so IdentifyTime and TriggerEffect Blink / Breathe / Okay / ChannelChange can look different. `View Matter On Identify code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterOnIdentify>`_
 
 **Sensor Examples:**
 

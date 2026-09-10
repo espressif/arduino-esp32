@@ -14,7 +14,9 @@
 
 /*
  * Matter On/Off Light that demonstrates the Identify cluster.
- * The Matter app can request identify; the LED blinks while Identify is active.
+ * onIdentify(bool) still starts/stops feedback. getIdentifyRequest() tells
+ * the sketch which command/effect it was so Blink, Breathe, Okay, and
+ * IdentifyTime can look different.
  */
 
 // Matter Manager
@@ -55,6 +57,45 @@ const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s
 const uint8_t identifyLedPin = ledPin;  // uses the same LED as the Light - change if needed
 volatile bool identifyFlag = false;     // Flag to start the Blink when in Identify state
 bool identifyBlink = false;             // Blink state when in Identify state
+uint32_t identifyPeriodMs = 500;        // on/off half-period
+uint32_t identifyUntilMs = 0;           // 0 = run until onIdentify(false); else millis() deadline
+uint32_t identifyLastToggleMs = 0;
+
+const char *identifyEffectName(const MatterIdentifyRequest &req) {
+  if (!req.valid) {
+    return "None";
+  }
+  // START/STOP pass CHIP's leftover/default effect id (often Blink). Not the session type.
+  if (!req.fromTriggerEffect) {
+    return "IdentifyTime";
+  }
+  switch (req.effectId) {
+    case MatterIdentifyRequest::BLINK:          return "Blink";
+    case MatterIdentifyRequest::BREATHE:        return "Breathe";
+    case MatterIdentifyRequest::OKAY:           return "Okay";
+    case MatterIdentifyRequest::CHANNEL_CHANGE: return "ChannelChange";
+    case MatterIdentifyRequest::FINISH:         return "Finish";
+    case MatterIdentifyRequest::STOP:           return "Stop";
+    default:                                    return "Unknown";
+  }
+}
+
+void applyIdentifyLed(bool on) {
+#ifdef LED_BUILTIN
+  uint8_t brightness = on ? 32 : 0;
+  rgbLedWrite(identifyLedPin, brightness, 0, 0);
+#else
+  digitalWrite(identifyLedPin, on ? HIGH : LOW);
+#endif
+}
+
+void stopIdentifyFeedback() {
+  identifyFlag = false;
+  identifyUntilMs = 0;
+  // force returning to the original state by toggling the light twice
+  OnOffLight.toggle();
+  OnOffLight.toggle();
+}
 
 // Matter Protocol Endpoint (On/OFF Light) Callback
 bool onOffLightCallback(bool state) {
@@ -64,19 +105,55 @@ bool onOffLightCallback(bool state) {
 }
 
 // Identify: blink the LED GPIO (same pin as the On/Off light).
+// Use getIdentifyRequest() for TriggerEffect vs IdentifyTime and the effect id.
 bool onIdentifyLightCallback(bool identifyIsActive) {
-  Serial.printf("Identify Cluster is %s\r\n", identifyIsActive ? "Active" : "Inactive");
-  if (identifyIsActive) {
-    // Start Blinking the light in loop()
-    identifyFlag = true;
-    identifyBlink = !OnOffLight;  // Start with the inverted light state
-  } else {
-    // Stop Blinking and restore the light to the its last state
-    identifyFlag = false;
-    // force returning to the original state by toggling the light twice
-    OnOffLight.toggle();
-    OnOffLight.toggle();
+  const MatterIdentifyRequest req = OnOffLight.getIdentifyRequest();
+  Serial.printf(
+    "Identify %s (%s effect=%s 0x%02x variant=%u)\r\n", identifyIsActive ? "Active" : "Inactive", req.fromTriggerEffect ? "TriggerEffect" : "IdentifyTime",
+    identifyEffectName(req), req.effectId, req.effectVariant
+  );
+
+  if (!identifyIsActive) {
+    stopIdentifyFeedback();
+    return true;
   }
+
+  identifyFlag = true;
+  identifyBlink = true;
+  identifyLastToggleMs = millis();
+
+  if (!req.fromTriggerEffect) {
+    // Identify / IdentifyTime: blink until STOP
+    identifyPeriodMs = 500;
+    identifyUntilMs = 0;
+    return true;
+  }
+
+  // TriggerEffect has no later STOP. Time the animation here.
+  switch (req.effectId) {
+    case MatterIdentifyRequest::BLINK:
+      identifyPeriodMs = 200;
+      identifyUntilMs = millis() + 2000;
+      break;
+    case MatterIdentifyRequest::BREATHE:
+      identifyPeriodMs = 800;
+      identifyUntilMs = millis() + 15000;
+      break;
+    case MatterIdentifyRequest::OKAY:
+      // One short flash
+      identifyPeriodMs = 400;
+      identifyUntilMs = millis() + 400;
+      break;
+    case MatterIdentifyRequest::CHANNEL_CHANGE:
+      identifyPeriodMs = 150;
+      identifyUntilMs = millis() + 8000;
+      break;
+    default:
+      identifyPeriodMs = 500;
+      identifyUntilMs = millis() + 2000;
+      break;
+  }
+  applyIdentifyLed(true);
   return true;
 }
 
@@ -133,15 +210,16 @@ void setup() {
 }
 
 void loop() {
-  // check if the Light is in  identify state and blink it every 500ms (delay loop time)
+  const uint32_t now = millis();
+
   if (identifyFlag) {
-#ifdef LED_BUILTIN
-    uint8_t brightness = 32 * identifyBlink;
-    rgbLedWrite(identifyLedPin, brightness, 0, 0);
-#else
-    digitalWrite(identifyLedPin, identifyBlink ? HIGH : LOW);
-#endif
-    identifyBlink = !identifyBlink;
+    if (identifyUntilMs != 0 && (int32_t)(now - identifyUntilMs) >= 0) {
+      stopIdentifyFeedback();
+    } else if ((now - identifyLastToggleMs) >= identifyPeriodMs) {
+      identifyLastToggleMs = now;
+      identifyBlink = !identifyBlink;
+      applyIdentifyLed(identifyBlink);
+    }
   }
 
   // Check if the button has been pressed
@@ -163,5 +241,5 @@ void loop() {
     button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
 
-  delay(500);  // works as a debounce for the button and also for the LED blink
+  delay(10);
 }

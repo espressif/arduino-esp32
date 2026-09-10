@@ -132,9 +132,15 @@ bool MatterEndPoint::setBooleanStateValue(bool value) {
 }
 
 // This callback is invoked when clients interact with the Identify Cluster of an specific endpoint.
-bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEnabled) {
+bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, const MatterIdentifyRequest &request) {
+  if (getEndPointId() != endpoint_id) {
+    log_w("Identify callback endpoint %u does not match this MatterEndPoint (%u)", endpoint_id, getEndPointId());
+    return false;
+  }
+  identifyRequest = request;
+  identifyRequest.valid = true;
   if (_onEndPointIdentifyCB) {
-    return _onEndPointIdentifyCB(identifyIsEnabled);
+    return _onEndPointIdentifyCB(identifyRequest.active);
   }
   return true;
 }
@@ -142,6 +148,10 @@ bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEna
 // User callback for the Identify Cluster functionality
 void MatterEndPoint::onIdentify(EndPointIdentifyCB onEndPointIdentifyCB) {
   _onEndPointIdentifyCB = onEndPointIdentifyCB;
+}
+
+MatterIdentifyRequest MatterEndPoint::getIdentifyRequest() const {
+  return identifyRequest;
 }
 
 // Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.

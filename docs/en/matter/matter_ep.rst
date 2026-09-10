@@ -141,12 +141,34 @@ The callback signature is:
 
 When ``identifyIsEnabled`` is ``true``, the device should provide visual feedback (e.g., blink an LED). When ``false``, the device should stop the identification feedback.
 
+Both the Identify command (``IdentifyTime`` → START/STOP) and ``TriggerEffect`` invoke this callback. ``TriggerEffect`` Blink/Breathe/Okay/ChannelChange report ``true``. ``StopEffect`` and ``FinishEffect`` report ``false``. A one-shot ``TriggerEffect`` does not send a later STOP; if the sketch latches a flag, time the animation out.
+
+getIdentifyRequest
+^^^^^^^^^^^^^^^^^^
+
+Returns the last Identify event for this endpoint. The library fills it immediately before ``onIdentify()`` runs. Use it inside that callback (or later) to distinguish IdentifyTime from ``TriggerEffect`` and to read the effect id.
+
+.. code-block:: arduino
+
+    MatterIdentifyRequest getIdentifyRequest();
+
+``MatterIdentifyRequest`` fields:
+
+* ``valid`` - ``false`` until this endpoint has received an Identify event. Do not treat a default ``effectId`` of 0 as Blink
+* ``active`` - same boolean passed to ``onIdentify()``
+* ``fromTriggerEffect`` - ``true`` for ``TriggerEffect``; ``false`` for Identify / ``IdentifyTime``
+* ``effectId`` - ``MatterIdentifyRequest::BLINK`` (0x00), ``BREATHE`` (0x01), ``OKAY`` (0x02), ``CHANNEL_CHANGE`` (0x0B), ``FINISH`` (0xFE), ``STOP`` (0xFF). Meaningful when ``fromTriggerEffect`` is ``true``. On IdentifyTime START/STOP CHIP still passes a leftover/default id (often Blink); ignore it
+* ``effectVariant`` - usually Default (0)
+
 Example usage:
 
 .. code-block:: arduino
 
     myEndpoint.onIdentify([](bool identifyIsEnabled) {
-        if (identifyIsEnabled) {
+        MatterIdentifyRequest req = myEndpoint.getIdentifyRequest();
+        if (identifyIsEnabled && req.fromTriggerEffect && req.effectId == MatterIdentifyRequest::OKAY) {
+            // Short confirmation flash; time it out in loop()
+        } else if (identifyIsEnabled) {
             // Start blinking LED
             digitalWrite(LED_PIN, HIGH);
         } else {

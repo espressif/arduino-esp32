@@ -1,7 +1,7 @@
 # Matter On Identify Example
 
 This example demonstrates how to implement the Matter Identify cluster callback for an on/off light device using an ESP32 SoC microcontroller.\
-The application showcases Matter commissioning, device control via smart home ecosystems, and the Identify feature that makes the LED blink when the device is identified from a Matter app.
+The application showcases Matter commissioning, device control via smart home ecosystems, and the Identify feature. `onIdentify(bool)` starts or stops feedback. `getIdentifyRequest()` tells the sketch whether the event was IdentifyTime or TriggerEffect (Blink, Breathe, Okay, ChannelChange) so each can look different.
 
 ## Supported Targets
 
@@ -36,8 +36,8 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 - Matter protocol implementation for an on/off light device
 - Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
-- On Identify callback implementation - LED blinks when device is identified
-- Visual identification feedback (red blinking for RGB LED, toggling for regular LED)
+- On Identify callback plus `getIdentifyRequest()` for effect details
+- Visual identification feedback that differs by request (IdentifyTime vs TriggerEffect Blink / Breathe / Okay / ChannelChange)
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
 - Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
@@ -116,11 +116,20 @@ Matter Node not commissioned yet. Waiting for commissioning.
 Matter Node is commissioned and connected to the network. Ready for use.
 ```
 
-When you trigger the Identify command from a Matter app, you should see:
+When you trigger Identify from a Matter app, you should see a line such as:
 ```
-Identify Cluster is Active
-Identify Cluster is Inactive
+Identify Active (IdentifyTime effect=IdentifyTime 0x00 variant=0)
+Identify Inactive (IdentifyTime effect=IdentifyTime 0x00 variant=0)
 ```
+
+The name is `IdentifyTime` whenever `fromTriggerEffect` is false. CHIP may still pass leftover effect id `0x00` (Blink default) on START/STOP; this sketch does not treat that as a Blink effect.
+
+A `TriggerEffect` Blink looks like:
+```
+Identify Active (TriggerEffect effect=Blink 0x00 variant=0)
+```
+
+Okay is a single short flash (`TriggerEffect effect=Okay`). Breathe is a slower pulse for about 15 seconds. ChannelChange is a faster blink for about 8 seconds. One-shot TriggerEffect has no later STOP; the sketch times those animations out.
 
 ## Using the Device
 
@@ -132,12 +141,22 @@ The user button (BOOT button by default) provides factory reset functionality:
 
 ### Identify Feature
 
-The Identify feature allows you to visually identify a specific device from your Matter app. When you trigger the Identify command:
+The Identify feature allows you to visually identify a specific device from your Matter app.
 
-1. **For RGB LED (RGB_BUILTIN)**: The LED will blink in red color
-2. **For regular LED**: The LED will toggle on/off
+`onIdentify(bool)` still means start (`true`) or stop (`false`). Call `OnOffLight.getIdentifyRequest()` in that callback for the last event:
 
-The blinking continues while the Identify cluster is active (typically 3-15 seconds depending on the app). When the Identify period ends, the LED automatically returns to its previous state (on or off).
+| Request | How this sketch behaves |
+| --- | --- |
+| Identify / IdentifyTime (`fromTriggerEffect == false`) | Blink every 500 ms until the controller sends STOP |
+| TriggerEffect Blink | Fast blink for about 2 s, then the sketch stops itself |
+| TriggerEffect Breathe | Slow pulse for about 15 s |
+| TriggerEffect Okay | One short flash |
+| TriggerEffect ChannelChange | Fast blink for about 8 s |
+| TriggerEffect Stop / Finish | `onIdentify(false)` — stop immediately |
+
+RGB LED (RGB_BUILTIN) blinks red. A regular LED toggles. When identify ends, the LED returns to its previous on/off state.
+
+Which command the app sends depends on the controller. Apple Home often uses IdentifyTime. Some apps send TriggerEffect. Watch the Serial line to see which request arrived.
 
 ### How to Trigger Identify
 
@@ -215,23 +234,23 @@ The MatterOnIdentify example consists of the following main components:
 
 1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), initializes the Matter on/off light endpoint, registers the on/off callback and the Identify callback, and starts the Matter stack.
 
-2. **`loop()`**: Handles the Identify blinking logic (if identify flag is active, blinks the LED every 500 ms), handles button input for factory reset, and allows the Matter stack to process events.
+2. **`loop()`**: Times Identify animations with `millis()` (period and optional deadline from the request), handles button input for factory reset, and allows the Matter stack to process events.
 
 3. **Callbacks**:
    - `onOffLightCallback()`: Controls the physical LED based on on/off state from Matter controller.
-   - `onIdentifyLightCallback()`: Handles the Identify cluster activation/deactivation. When active, sets the identify flag to start blinking. When inactive, stops blinking and restores the original light state.
+   - `onIdentifyLightCallback()`: `onIdentify(bool)` start/stop. Calls `getIdentifyRequest()` to choose IdentifyTime vs TriggerEffect Blink / Breathe / Okay / ChannelChange.
 
-4. **Identify Blinking Logic**:
-   - For RGB LEDs: Blinks in red color (brightness 32) when identify is active
-   - For regular LEDs: Toggles on/off when identify is active
-   - Blinking rate: Every 500 ms (determined by the delay in loop)
+4. **Identify feedback**:
+   - RGB LEDs: red (brightness 32); regular LEDs: on/off
+   - IdentifyTime: 500 ms blink until STOP
+   - TriggerEffect: sketch applies the duration in the table above (no CHIP STOP)
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **LED not responding**: Verify pin configurations and connections
 - **Identify feature not working**: Ensure the device is commissioned and you're using a Matter app that supports the Identify cluster. Some apps may not have a visible Identify button
-- **LED not blinking during identify**: Check Serial Monitor for "Identify Cluster is Active" message. If you don't see it, the Identify command may not be reaching the device
+- **LED not blinking during identify**: Check Serial Monitor for `Identify Active`. If you don't see it, the Identify command may not be reaching the device
 - **LED state not restored after identify**: The code uses a double-toggle to restore state. If this doesn't work, ensure the light state is properly tracked
 - **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection

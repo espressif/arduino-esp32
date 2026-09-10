@@ -448,13 +448,29 @@ static esp_err_t app_identification_cb(identification::callback_type_t type, uin
     log_v("Identification callback: START");
     identifyIsActive = true;
   } else if (type == identification::callback_type_t::EFFECT) {
-    log_v("Identification callback: EFFECT");
+    // TriggerEffect does not send START. Blink/Breathe/Okay/ChannelChange are
+    // identify feedback. StopEffect/FinishEffect end it. CHIP does not send STOP
+    // after a one-shot effect while IdentifyTime is 0; sketches that latch a
+    // flag should time the animation out themselves.
+    using EffectId = chip::app::Clusters::Identify::EffectIdentifierEnum;
+    const EffectId effect = static_cast<EffectId>(effect_id);
+    identifyIsActive = (effect != EffectId::kStopEffect && effect != EffectId::kFinishEffect);
+    log_v("Identification callback: EFFECT id %u active %u", effect_id, identifyIsActive);
   } else if (type == identification::callback_type_t::STOP) {
     identifyIsActive = false;
     log_v("Identification callback: STOP");
   }
   if (ep != nullptr) {
-    err = ep->endpointIdentifyCB(endpoint_id, identifyIsActive) ? ESP_OK : ESP_FAIL;
+    if (ep->getEndPointId() != endpoint_id) {
+      log_w("Identify priv_data is not the MatterEndPoint for endpoint %u", endpoint_id);
+      return ESP_ERR_INVALID_ARG;
+    }
+    MatterIdentifyRequest request;
+    request.active = identifyIsActive;
+    request.effectId = effect_id;
+    request.effectVariant = effect_variant;
+    request.fromTriggerEffect = (type == identification::callback_type_t::EFFECT);
+    err = ep->endpointIdentifyCB(endpoint_id, request) ? ESP_OK : ESP_FAIL;
   }
 
   return err;
