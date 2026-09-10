@@ -13,7 +13,7 @@ The ``MatterFan`` class provides a fan endpoint for Matter networks with speed a
 * Fan mode control (OFF, LOW, MEDIUM, HIGH, ON, AUTO, SMART)
 * Fan mode sequence configuration
 * Callback support for state, speed, and mode changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

@@ -12,7 +12,7 @@ The ``MatterDimmablePlugin`` class provides a dimmable plugin unit endpoint for 
 * Power level control (0-255)
 * State persistence support
 * Callback support for state and level changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

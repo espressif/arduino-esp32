@@ -223,7 +223,8 @@ public:
   static bool setSetupPasscode(uint32_t passcode);
 
   // CHIPoBLE on/off. Call before Matter.begin(). Default is true only when CONFIG_ENABLE_CHIPOBLE.
-  // false forces on-network commissioning (Wi-Fi/Ethernet first) and releases BLE RAM.
+  // false forces on-network commissioning (Wi-Fi/Ethernet first). BLE RAM is
+  // released after Matter.begin(), not at this call.
   // Do not use the Arduino BLE library (BLE.h / BLEDevice) in a Matter sketch.
   static bool setBLECommissioningEnabled(bool enabled);
 

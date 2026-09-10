@@ -13,7 +13,7 @@ The ``MatterWindowCovering`` class provides a window covering endpoint for Matte
 * Local motor calibration for physical-unit to percentage conversion
 * Multiple window covering types support
 * Callback support for open, close, lift, tilt, and stop commands
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Supported Window Covering Types:**

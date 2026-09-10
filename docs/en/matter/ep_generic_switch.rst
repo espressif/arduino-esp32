@@ -12,7 +12,7 @@ The ``MatterGenericSwitch`` class provides a generic switch endpoint for Matter 
 * Configurable Switch cluster features (short click, long press, multi-press)
 * Individual event methods matching the Matter specification
 * ``click()`` convenience helper for simple automations
-* Automation trigger support for Apple Home, Amazon Alexa, Google Home, and Home Assistant
+* Automation trigger support for Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

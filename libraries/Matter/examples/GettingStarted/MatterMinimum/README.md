@@ -39,7 +39,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - Simple on/off control via Matter app
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
-- Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 - Minimal code footprint - ideal for learning Matter basics
 
 ## Hardware Requirements
@@ -97,7 +97,7 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-H2). You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-C5 / ESP32-C6 / ESP32-H2). You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
@@ -125,7 +125,14 @@ Note: This minimal example does not include button toggle functionality. To add 
 
 ### Smart Home Integration
 
-Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
+Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
+
+#### Home Assistant
+
+1. Open Home Assistant
+2. Go to Settings > Devices & services > Add integration > Matter
+3. Scan the QR code from the Serial Monitor, or enter the manual pairing code
+4. Follow the prompts to complete setup
 
 #### Apple Home
 

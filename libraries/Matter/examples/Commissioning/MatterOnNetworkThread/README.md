@@ -4,7 +4,7 @@ Commission a Matter On/Off Light over Thread **without CHIPoBLE**. After `Matter
 
 This is the on-network half of the Thread pair. The other half is [MatterCHIPoBLEThread](../MatterCHIPoBLEThread) (BLE on, hub sends the dataset).
 
-**Alexa / most consumer apps discover Matter devices over BLE.** With CHIPoBLE off they will not see this node. Use [MatterCHIPoBLEThread](../MatterCHIPoBLEThread) for that. This example is for a controller that browses `_matterc._udp` on the Thread mesh (via the border router SRP / DNS-SD proxy).
+**Most consumer controllers (Home Assistant, Apple Home, Amazon Alexa, Google Home) discover Matter devices over BLE.** With CHIPoBLE off they will not see this node. Use [MatterCHIPoBLEThread](../MatterCHIPoBLEThread) for that. This example is for a controller that browses `_matterc._udp` on the Thread mesh (via the border router SRP / DNS-SD proxy).
 
 **Do not start Arduino `ESPmDNS`.** CHIP owns the mDNS responder.
 

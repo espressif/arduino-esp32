@@ -20,7 +20,7 @@ The ``MatterTemperatureControlledCabinet`` class provides a temperature controll
 * Temperature level array support (temperature_level mode)
 * Automatic setpoint validation against limits
 * Feature validation - methods return errors if called with wrong feature mode
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Important:** The ``temperature_number`` and ``temperature_level`` features are **mutually exclusive**. Only one can be enabled at a time. Use ``begin(tempSetpoint, minTemp, maxTemp, step)`` for temperature_number mode or ``begin(supportedLevels, levelCount, selectedLevel)`` for temperature_level mode.

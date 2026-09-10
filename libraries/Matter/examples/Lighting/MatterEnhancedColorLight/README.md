@@ -44,7 +44,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - State persistence using `Preferences` library
 - Button control for toggling light and factory reset
 - Matter commissioning via QR code or manual pairing code
-- Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
+- Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 
 ## Hardware Requirements
 
@@ -102,7 +102,7 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-H2). You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-C5 / ESP32-C6 / ESP32-H2). You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid

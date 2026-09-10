@@ -14,7 +14,7 @@ The ``MatterEnhancedColorLight`` class provides an Extended Color Light (0x010D)
 * Color temperature control (100-500 mireds; higher mireds are warmer)
 * State persistence support
 * Callback support for all parameter changes
-* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

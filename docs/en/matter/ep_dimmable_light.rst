@@ -12,7 +12,7 @@ The ``MatterDimmableLight`` class provides a dimmable light endpoint for Matter 
 * Brightness level control (0-255)
 * State persistence support
 * Callback support for state and brightness changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

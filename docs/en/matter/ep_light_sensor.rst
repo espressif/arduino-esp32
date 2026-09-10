@@ -11,7 +11,7 @@ The ``MatterLightSensor`` class provides an illuminance sensor endpoint for Matt
 * Illuminance measurement reporting (1 lx to 3.576 Mlx)
 * Read-only sensor (no control functionality)
 * Automatic illuminance updates
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -45,7 +45,7 @@ Initializes the Matter light sensor endpoint with an initial illuminance value.
 
 .. code-block:: arduino
 
-    bool begin(double illuminance = 1.00)
+    bool begin(double illuminance = 1.00);
 
 * ``illuminance`` - Initial illuminance value (1 lx to 3.576 Mlx, default: 1.00)
 

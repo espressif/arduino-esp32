@@ -14,7 +14,7 @@ The ``MatterThermostat`` class provides a thermostat endpoint for Matter network
 * Automatic temperature regulation
 * Deadband control for AUTO mode
 * Callback support for mode, temperature, and setpoint changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -118,6 +118,15 @@ Gets the current thermostat mode.
 .. code-block:: arduino
 
     ThermostatMode_t getMode();
+
+getControlSequence
+^^^^^^^^^^^^^^^^^^
+
+Gets the Control Sequence of Operation set at ``begin()``.
+
+.. code-block:: arduino
+
+    ControlSequenceOfOperation_t getControlSequence();
 
 getThermostatModeString
 ^^^^^^^^^^^^^^^^^^^^^^^

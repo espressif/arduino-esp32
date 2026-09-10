@@ -37,7 +37,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - **Lift control only** (0-100%) - simplified implementation
 - **Single `onGoToLiftPercentage()` callback** - handles all window covering lift changes when `TargetPositionLiftPercent100ths` changes
 - Matter commissioning via QR code or manual pairing code
-- Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 
 ## Hardware Requirements
 
@@ -103,7 +103,7 @@ Window Covering change request: Lift=50%
 
 ## Usage
 
-1. **Commissioning**: Use the QR code or manual pairing code to commission the device to your Matter hub (Apple Home, Google Home, or Amazon Alexa).
+1. **Commissioning**: Use the QR code or manual pairing code to commission the device to your Matter hub (Home Assistant, Apple Home, Google Home, or Amazon Alexa).
 
 2. **Control**: Once commissioned, you can control the window covering lift percentage (0-100%) from your smart home app. The `onGoToLiftPercentage()` callback will be triggered whenever the target lift percentage changes.
 

@@ -74,7 +74,6 @@ static bool provisionThreadNetwork() {
   }
   Serial.printf("Thread ready, role=%s endpoint=%u\r\n", OThread.otGetStringDeviceRole(), Matter.getNetworkEndPointId(MATTER_NETWORK_THREAD));
   Serial.println("CHIP will advertise _matterc._udp via Thread SRP once the border router SRP server answers.");
-  Serial.println("Alexa typically finds Matter devices over BLE. Use MatterCHIPoBLEThread for that.");
   return true;
 }
 #endif

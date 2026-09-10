@@ -48,7 +48,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
   - `isOnline()`: Checks if a controller has an active CASE session with this node (not a gate for the LED). Stays true until the session is idle-evicted, not when the user closes the app.
 - Simple on/off light control
 - Matter commissioning via QR code or manual pairing code
-- Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 
 ## Hardware Requirements
 
@@ -190,7 +190,7 @@ Typical first-commission sequence: pairing code → `Commissioned=YES` → `Conn
 
 ### Smart Home Integration
 
-Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device. Once commissioned, you can control the light from your smart home app.
+Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device. Once commissioned, you can control the light from your smart home app.
 
 ## Code Structure
 

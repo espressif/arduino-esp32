@@ -41,7 +41,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - **Simple short-click** gesture per button: `InitialPress` on press, `ShortRelease` on release
 - Dedicated button for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
-- Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 
 For gesture support (long-press, multi-press), see the [MatterEnhancedSmartButton](../MatterEnhancedSmartButton) example.\
 
@@ -99,7 +99,7 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-H2). You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-C5 / ESP32-C6 / ESP32-H2). You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
@@ -156,7 +156,7 @@ ButtonScene.setTagList({MatterTags::Switches::createCustomTag("Scene 1")});
 
 ### Smart Home Integration
 
-Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device. After commissioning, the three buttons appear as separate switch endpoints that you can use to trigger automations — the tags help the controller's UI label them correctly (e.g. "On"/"Off"/"Scene 1") instead of showing indistinguishable switches.
+Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device. After commissioning, the three buttons appear as separate switch endpoints that you can use to trigger automations — the tags help the controller's UI label them correctly (e.g. "On"/"Off"/"Scene 1") instead of showing indistinguishable switches.
 
 ## Code Structure
 

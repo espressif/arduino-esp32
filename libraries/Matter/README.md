@@ -2,7 +2,7 @@
 
 Arduino-friendly wrapper around [ESP-Matter](https://docs.espressif.com/projects/esp-matter/en/latest/) (Espressif's SDK for Matter), providing high-level endpoint classes for common Matter device types.
 
-**Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`) in a Matter sketch.** When CHIPoBLE is compiled in (`CONFIG_ENABLE_CHIPOBLE`) Matter owns the BLE host (NimBLE if `CONFIG_BT_NIMBLE_ENABLED`). After `Matter.begin()`, after `setBLECommissioningEnabled(false)`, or after CHIPoBLE commissioning with the default `setBLEMemoryReleaseEnabled(true)`, `BLEDevice::init()` will fail or crash. Turning CHIPoBLE off does not hand the radio to Arduino BLE.
+**Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`) in a Matter sketch.** When CHIPoBLE is compiled in (`CONFIG_ENABLE_CHIPOBLE`) Matter owns the BLE host (NimBLE if `CONFIG_BT_NIMBLE_ENABLED`). After `Matter.begin()`, `BLEDevice::init()` will fail or crash: CHIPoBLE is running, you turned it off with `setBLECommissioningEnabled(false)` / `selectNetwork(..., true)` (BLE RAM is released after `begin()`, not at that call), or CHIPoBLE commissioning finished with the default `setBLEMemoryReleaseEnabled(true)`. Turning CHIPoBLE off does not hand the radio to Arduino BLE.
 
 ## Architecture
 
@@ -231,7 +231,7 @@ Same On/Off Light in all of these. The only difference is how the node gets onto
 | [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread) | Thread | On | No. Hub sends the dataset | Factory-fresh Thread node (ESP32-C5 / ESP32-C6 / ESP32-H2) |
 | [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread) | Thread | Off | Yes. Network key after `Matter.begin()` | Already on the mesh |
 | [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet) | Ethernet | Off | EMAC or SPI `ETH.begin()` + IPv6 first | Wired only (no commissioning cluster) |
-| [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease) | Default (Wi-Fi; Thread on ESP32-H2) | On, then reclaimed | No | Same BLE path as the default accessory, plus heap reclaim |
+| [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease) | Default (Wi-Fi; Thread on ESP32-C5 / ESP32-C6 / ESP32-H2) | On, then reclaimed | No | Same BLE path as the default accessory, plus heap reclaim |
 
 [`MatterOnOffLight`](examples/Lighting/MatterOnOffLight) is the generic accessory demo: CHIPoBLE when compiled in, otherwise sketch Wi-Fi credentials. Use the table above when you care about the commissioning path.
 

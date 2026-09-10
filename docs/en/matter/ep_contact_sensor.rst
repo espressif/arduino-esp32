@@ -12,7 +12,7 @@ The ``MatterContactSensor`` class provides a contact sensor endpoint for Matter 
 * Simple boolean state
 * Read-only sensor (no control functionality)
 * Automatic state updates
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

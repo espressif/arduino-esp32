@@ -11,7 +11,7 @@ The ``MatterOnOffLight`` class provides a simple on/off light endpoint for Matte
 * Simple on/off control
 * State persistence support
 * Callback support for state changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**

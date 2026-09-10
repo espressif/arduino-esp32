@@ -12,7 +12,7 @@ The ``MatterTemperatureSensor`` class provides a temperature sensor endpoint for
 * 1/100th degree Celsius precision
 * Read-only sensor (no control functionality)
 * Automatic temperature updates
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
