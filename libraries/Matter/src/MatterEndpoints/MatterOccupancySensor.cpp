@@ -21,6 +21,7 @@
 #include <esp_matter_attribute.h>
 #include <esp_matter_core.h>
 #include <app/clusters/occupancy-sensor-server/occupancy-sensor-server.h>
+#include <app/clusters/occupancy-sensor-server/occupancy-hal.h>
 #include <platform/CHIPDeviceLayer.h>
 #include <app/AttributeAccessInterface.h>
 #include <app/AttributeAccessInterfaceRegistry.h>
@@ -33,6 +34,31 @@ using namespace esp_matter::cluster;
 using namespace esp_matter::cluster::occupancy_sensing::attribute;
 using namespace chip::app::Clusters;
 
+// CHIP occupancy-sensor-server.cpp defines a weak halOccupancyGetSensorType() that
+// always returns PIR. emberAfOccupancySensingClusterServerInitCallback() runs at
+// Matter.begin() and overwrites Ember OccupancySensorType / TypeBitmap from that
+// HAL. A strong definition here reports the type stored by MatterOccupancySensor
+// so two sensors can keep different types after stack start.
+HalOccupancySensorType halOccupancyGetSensorType(chip::EndpointId endpoint) {
+  void *priv_data = esp_matter::endpoint::get_priv_data(endpoint);
+  if (priv_data == nullptr) {
+    return HAL_OCCUPANCY_SENSOR_TYPE_PIR;
+  }
+
+  MatterOccupancySensor *sensor = static_cast<MatterOccupancySensor *>(priv_data);
+  if (sensor->getEndPointId() != endpoint) {
+    return HAL_OCCUPANCY_SENSOR_TYPE_PIR;
+  }
+
+  switch (sensor->getOccupancySensorType()) {
+    case MatterOccupancySensor::OCCUPANCY_SENSOR_TYPE_ULTRASONIC:         return HAL_OCCUPANCY_SENSOR_TYPE_ULTRASONIC;
+    case MatterOccupancySensor::OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC: return HAL_OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC;
+    case MatterOccupancySensor::OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT:   return HAL_OCCUPANCY_SENSOR_TYPE_PHYSICAL;
+    case MatterOccupancySensor::OCCUPANCY_SENSOR_TYPE_PIR:
+    default:                                                              return HAL_OCCUPANCY_SENSOR_TYPE_PIR;
+  }
+}
+
 // HoldTime / HoldTimeLimits (Occupancy Sensing cluster, Matter 1.4+)
 //
 // These attributes let a controller configure how long occupancy stays "true" after the
@@ -43,17 +69,20 @@ using namespace chip::app::Clusters;
 // HoldTime writes invoke the user callback (onHoldTimeChange) while still using the official
 // server validation (HoldTimeLimits min/max/default).
 //
-// Custom AttributeAccessInterface wrapper that intercepts HoldTime writes to call user callbacks
-// This wraps the standard OccupancySensing::Instance to add callback support
+// Custom AttributeAccessInterface wrapper that intercepts HoldTime writes to call user callbacks.
+// One wrapper per occupancy endpoint so FeatureMap matches that sensor's type bits.
+// OccupancySensing::Instance is not registered; it is only used to read/write CHIP-managed
+// HoldTime / HoldTimeLimits. FeatureMap is encoded here so it is never served from Feature(0).
 class OccupancySensingAttrAccessWrapper : public chip::app::AttributeAccessInterface {
 public:
-  OccupancySensingAttrAccessWrapper()
-    : chip::app::AttributeAccessInterface(chip::Optional<chip::EndpointId>::Missing(), OccupancySensing::Id),
-      mInstance(chip::BitMask<OccupancySensing::Feature>(0)) {}
+  OccupancySensingAttrAccessWrapper(chip::EndpointId endpoint, chip::BitMask<OccupancySensing::Feature> features)
+    : chip::app::AttributeAccessInterface(chip::MakeOptional(endpoint), OccupancySensing::Id), mInstance(features), mFeatures(features) {}
+
+  ~OccupancySensingAttrAccessWrapper() {
+    chip::app::AttributeAccessInterfaceRegistry::Instance().Unregister(this);
+  }
 
   CHIP_ERROR Init() {
-    // Register THIS wrapper instance, not the standard instance
-    // The wrapper will delegate reads/writes to mInstance internally
     bool registered = chip::app::AttributeAccessInterfaceRegistry::Instance().Register(this);
     if (!registered) {
       log_e("Failed to register OccupancySensing AttributeAccessInterface (duplicate?)");
@@ -63,7 +92,9 @@ public:
   }
 
   CHIP_ERROR Read(const chip::app::ConcreteReadAttributePath &aPath, chip::app::AttributeValueEncoder &aEncoder) override {
-    // Delegate reads to the standard instance
+    if (aPath.mAttributeId == OccupancySensing::Attributes::FeatureMap::Id) {
+      return aEncoder.Encode(mFeatures);
+    }
     return mInstance.Read(aPath, aEncoder);
   }
 
@@ -112,6 +143,7 @@ public:
 
 private:
   OccupancySensing::Instance mInstance;
+  chip::BitMask<OccupancySensing::Feature> mFeatures;
 
   // Helper to find MatterOccupancySensor instance for an endpoint
   static MatterOccupancySensor *FindOccupancySensorForEndpoint(chip::EndpointId endpointId) {
@@ -130,13 +162,6 @@ private:
     return nullptr;
   }
 };
-
-// Static AttributeAccessInterface wrapper instance
-// Registered once globally to handle all OccupancySensing endpoints
-namespace {
-static OccupancySensingAttrAccessWrapper sOccupancySensingAttrAccess;
-static bool sOccupancySensingAttrAccessRegistered = false;
-}  // namespace
 
 // Static helper functions for Matter event loop operations
 namespace {
@@ -218,6 +243,8 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
     log_e("Matter Occupancy Sensor with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
+  occupancySensorType = _occupancySensorType;
+
   occupancy_sensor::config_t occupancy_sensor_config;
   occupancy_sensor_config.occupancy_sensing.occupancy = _occupancyState;
   occupancy_sensor_config.occupancy_sensing.occupancy_sensor_type = _occupancySensorType;
@@ -249,16 +276,16 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
 
   occupancyState = _occupancyState;
 
-  // Register AttributeAccessInterface for OccupancySensing cluster if not already registered
-  // This enables HoldTime and HoldTimeLimits (MANAGED_INTERNALLY attributes) to be read
-  // via the server implementation instead of falling back to esp-matter's placeholder storage
-  if (!sOccupancySensingAttrAccessRegistered) {
-    CHIP_ERROR err = sOccupancySensingAttrAccess.Init();
-    if (err == CHIP_NO_ERROR) {
-      sOccupancySensingAttrAccessRegistered = true;
-    } else {
-      log_e("Failed to register OccupancySensing AttributeAccessInterface: %" CHIP_ERROR_FORMAT, err.Format());
-    }
+  // Per-endpoint AAI: HoldTime / HoldTimeLimits stay CHIP-managed; FeatureMap uses this
+  // endpoint's sensor-type bits (already stored in occupancy_sensing.feature_flags).
+  mHoldTimeAccess = new OccupancySensingAttrAccessWrapper(
+    getEndPointId(), chip::BitMask<OccupancySensing::Feature>(occupancy_sensor_config.occupancy_sensing.feature_flags)
+  );
+  CHIP_ERROR aaiErr = mHoldTimeAccess->Init();
+  if (aaiErr != CHIP_NO_ERROR) {
+    log_e("Failed to register OccupancySensing AttributeAccessInterface: %" CHIP_ERROR_FORMAT, aaiErr.Format());
+    delete mHoldTimeAccess;
+    mHoldTimeAccess = nullptr;
   }
 
   // Add HoldTime and HoldTimeLimits attributes to the occupancy sensing cluster
@@ -299,6 +326,8 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
 
 void MatterOccupancySensor::end() {
   started = false;
+  delete mHoldTimeAccess;
+  mHoldTimeAccess = nullptr;
 }
 
 bool MatterOccupancySensor::setOccupancy(bool _occupancyState) {
