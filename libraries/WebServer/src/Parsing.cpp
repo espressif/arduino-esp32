@@ -266,7 +266,11 @@ bool WebServer::_parseRequest(NetworkClient &client) {
 
   String formData;
   // below is needed only when POST type request
-  if (method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH || method == HTTP_DELETE) {
+  if (method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH || method == HTTP_DELETE
+#ifdef HTTP_PARSER_HAS_QUERY
+      || method == HTTP_QUERY
+#endif
+  ) {
     String boundaryStr;
     String headerName;
     String headerValue;
