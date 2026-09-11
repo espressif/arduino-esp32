@@ -10,7 +10,7 @@ The Update library provides functionality for Over-The-Air (OTA) firmware update
 - **Multiple Sources**: HTTP, HTTPS, SD card, and custom sources
 - **Progress Callbacks**: Monitor update progress
 - **MD5 Verification**: Optional MD5 checksum verification
-- **SHA-256 Verification**: Optional SHA-256 checksum verification of the downloaded payload (enabled only when `setSHA256()` / `HTTPUpdate::setSHA256sum()` / `x-SHA256` is used)
+- **SHA-256 Verification**: Optional SHA-256 checksum verification of the downloaded payload. The hash implementation is linked only when `setSHA256()` is referenced (directly or because the sketch uses `HTTPUpdate`).
 - **SHA-512 Verification**: Optional SHA-512 checksum verification of the downloaded payload. The hash implementation is linked only when `setSHA512()` is referenced (directly or because the sketch uses `HTTPUpdate`).
 - **Checksum Sidecar URLs**: `HTTPUpdate::setMD5sumUrl()` / `setSHA256sumUrl()` / `setSHA512sumUrl()` can fetch a small sidecar file (first 32/64/128 hex token) when no explicit digest or response header is available. This is integrity checking only, not code signing. The fetch code is linked only when those setters are used.
   Sidecars are prefetched before the firmware response headers are known; those headers still take precedence. Sidecar requests reuse the firmware client's transport (including its TLS configuration) and redirect mode, but not firmware HTTP authorization or the firmware request callback. Keep sidecar URLs within the same transport trust boundary as the firmware URL.
@@ -243,10 +243,12 @@ Sets expected SHA-256 hash for verification of the entire downloaded payload
 (same scope as MD5; not the ESP-IDF partition/image SHA-256 footer).
 
 Call after `begin()` and before writing any payload bytes. The SHA-256 streaming
-context is allocated only when this succeeds, so sketches that never call
-`setSHA256()` (or never receive an `x-SHA256` header / sidecar via `HTTPUpdate`) avoid the
-extra hashing work and keep the smaller static footprint on the global `Update`
-object.
+context is allocated only when this succeeds. The mbedtls/PSA SHA-256
+implementation lives in a separate translation unit and is linked only when
+`setSHA256()` is referenced. Sketches that use `Update` without calling
+`setSHA256()` keep the smaller FLASH footprint (`SD_Update` and similar).
+`HTTPUpdate` references the setter so `setSHA256sum()` / `x-SHA256` / sidecar
+keep working.
 
 `HTTPUpdate` digest precedence is: `setMD5sum()` / `setSHA256sum()` / `setSHA512sum()` >
 response headers `x-MD5` / `x-SHA256` / `x-SHA512` > `setMD5sumUrl()` / `setSHA256sumUrl()` /

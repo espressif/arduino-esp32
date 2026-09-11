@@ -39,6 +39,8 @@ static bool update_sha512_begin(UpdateSHA512Context *ctx) {
   psa_ret = psa_hash_setup(&ctx->op, PSA_ALG_SHA_512);
   if (psa_ret != PSA_SUCCESS) {
     log_e("PSA hash setup failed: %d", (int)psa_ret);
+    psa_hash_abort(&ctx->op);
+    ctx->op = psa_hash_operation_init();
     return false;
   }
   return true;
@@ -155,7 +157,7 @@ bool UpdateClass::setSHA512(
     return false;
   }
 
-  UpdateSHA512Context *ctx = new (std::nothrow) UpdateSHA512Context;
+  UpdateSHA512Context *ctx = new (std::nothrow) UpdateSHA512Context{};
   if (!ctx) {
     log_e("Failed to allocate SHA-512 context");
     return false;
@@ -165,7 +167,7 @@ bool UpdateClass::setSHA512(
     return false;
   }
 
-  static const SHA512Ops ops = {
+  static const SHAOps ops = {
     updateSHA512FreeContext,
     updateSHA512Update,
     updateSHA512Finish,

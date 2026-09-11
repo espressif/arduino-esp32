@@ -237,6 +237,8 @@ public:
    *
    * Call after `begin()` and before any data is written. Hashing is only
    * activated when this succeeds; otherwise no SHA-256 context is allocated.
+   * The mbedtls/PSA SHA-256 implementation is in a separate translation unit
+   * and is linked only when this setter is referenced.
    *
    * @param expected_sha256 Hex string containing expected SHA-256 digest (64 characters)
    * @param calc_post_decryption If true, calculate SHA-256 after decryption
@@ -437,27 +439,23 @@ private:
 #ifndef UPDATE_NOCRYPT
   bool _target_sha256_decrypted = true;
   bool _target_sha512_decrypted = true;
-#endif                         /* UPDATE_NOCRYPT */
+#endif /* UPDATE_NOCRYPT */
   void *_sha256_ctx;           ///< Opaque streaming SHA-256 context and expected digest (allocated on demand)
   uint8_t _sha256_result[32];  ///< Final digest kept after context is freed
   bool _sha256_valid;          ///< True after all update verification and activation steps succeed
-
-  void _sha256FreeContext();
-  bool _sha256Update(const uint8_t *data, size_t len);
-  bool _sha256Finish();
-
   void *_sha512_ctx;           ///< Opaque streaming SHA-512 context and expected digest (allocated on demand)
   uint8_t _sha512_result[64];  ///< Final digest kept after context is freed
   bool _sha512_valid;          ///< True after all update verification and activation steps succeed
 
-  // Bound only from setSHA512() in UpdaterSHA512.cpp so --gc-sections can drop SHA-512.
-  // Same pattern as HTTPUpdate::_checksumSidecarFetch: C function pointer, assigned in the setter TU.
-  struct SHA512Ops {
+  // Bound only from setSHA256()/setSHA512() in their own TUs so --gc-sections
+  // can drop mbedtls/PSA. Same pattern as HTTPUpdate::_checksumSidecarFetch.
+  struct SHAOps {
     void (*freeContext)(void *&ctx);
     bool (*update)(void *&ctx, const uint8_t *data, size_t len);
     bool (*finish)(void *&ctx, uint8_t *result, bool &valid);
   };
-  const SHA512Ops *_sha512Ops;
+  const SHAOps *_sha256Ops;
+  const SHAOps *_sha512Ops;
 
   int _ledPin;
   uint8_t _ledOn;
