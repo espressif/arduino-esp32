@@ -15,7 +15,6 @@
 #include "psa/crypto.h"
 #else
 #include "mbedtls/sha256.h"
-#include "mbedtls/sha512.h"
 #ifndef UPDATE_NOCRYPT
 #include "mbedtls/aes.h"
 #endif /* UPDATE_NOCRYPT */
@@ -24,6 +23,7 @@
 // Streaming SHA-256 context used only when setSHA256() is called.
 // Prefers IDF/mbedTLS backends over SHA2Builder to avoid linking the full
 // software SHA-224/256/384/512 implementation into every Update sketch.
+// Optional SHA-512 lives in UpdaterSHA512.cpp and is bound from setSHA512().
 struct UpdateSHA256Context {
 #if MBEDTLS_VERSION_MAJOR >= 4
   psa_hash_operation_t op;
@@ -31,16 +31,6 @@ struct UpdateSHA256Context {
   mbedtls_sha256_context ctx;
 #endif
   uint8_t expected[32];
-};
-
-// Streaming SHA-512 context used only when setSHA512() is called.
-struct UpdateSHA512Context {
-#if MBEDTLS_VERSION_MAJOR >= 4
-  psa_hash_operation_t op;
-#else
-  mbedtls_sha512_context ctx;
-#endif
-  uint8_t expected[64];
 };
 
 static bool update_sha256_begin(UpdateSHA256Context *ctx) {
@@ -106,72 +96,6 @@ static void update_sha256_abort(UpdateSHA256Context *ctx) {
   ctx->op = psa_hash_operation_init();
 #else
   mbedtls_sha256_free(&ctx->ctx);
-#endif
-}
-
-static bool update_sha512_begin(UpdateSHA512Context *ctx) {
-#if MBEDTLS_VERSION_MAJOR >= 4
-  psa_status_t psa_ret = psa_crypto_init();
-  if (psa_ret != PSA_SUCCESS) {
-    log_e("PSA crypto init failed: %d", (int)psa_ret);
-    return false;
-  }
-  ctx->op = psa_hash_operation_init();
-  psa_ret = psa_hash_setup(&ctx->op, PSA_ALG_SHA_512);
-  if (psa_ret != PSA_SUCCESS) {
-    log_e("PSA hash setup failed: %d", (int)psa_ret);
-    return false;
-  }
-  return true;
-#else
-  mbedtls_sha512_init(&ctx->ctx);
-  if (mbedtls_sha512_starts(&ctx->ctx, 0) != 0) {
-    mbedtls_sha512_free(&ctx->ctx);
-    return false;
-  }
-  return true;
-#endif
-}
-
-static bool update_sha512_update(UpdateSHA512Context *ctx, const uint8_t *data, size_t len) {
-  if (!ctx || !data || len == 0) {
-    return true;
-  }
-#if MBEDTLS_VERSION_MAJOR >= 4
-  return psa_hash_update(&ctx->op, data, len) == PSA_SUCCESS;
-#else
-  return mbedtls_sha512_update(&ctx->ctx, data, len) == 0;
-#endif
-}
-
-static bool update_sha512_finish(UpdateSHA512Context *ctx, uint8_t out[64]) {
-  if (!ctx || !out) {
-    return false;
-  }
-#if MBEDTLS_VERSION_MAJOR >= 4
-  size_t hash_len = 0;
-  psa_status_t psa_ret = psa_hash_finish(&ctx->op, out, 64, &hash_len);
-  if (psa_ret != PSA_SUCCESS || hash_len != 64) {
-    psa_hash_abort(&ctx->op);
-  }
-  ctx->op = psa_hash_operation_init();
-  return psa_ret == PSA_SUCCESS && hash_len == 64;
-#else
-  int ret = mbedtls_sha512_finish(&ctx->ctx, out);
-  mbedtls_sha512_free(&ctx->ctx);
-  return ret == 0;
-#endif
-}
-
-static void update_sha512_abort(UpdateSHA512Context *ctx) {
-  if (!ctx) {
-    return;
-  }
-#if MBEDTLS_VERSION_MAJOR >= 4
-  psa_hash_abort(&ctx->op);
-  ctx->op = psa_hash_operation_init();
-#else
-  mbedtls_sha512_free(&ctx->ctx);
 #endif
 }
 
@@ -246,7 +170,7 @@ UpdateClass::UpdateClass()
     _cryptKey(0), _cryptBuffer(0),
 #endif /* UPDATE_NOCRYPT */
     _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _command(U_FLASH), _partition(NULL), _sha256_ctx(NULL),
-    _sha256_valid(false), _sha512_ctx(NULL), _sha512_valid(false)
+    _sha256_valid(false), _sha512_ctx(NULL), _sha512_valid(false), _sha512Ops(NULL)
 #ifndef UPDATE_NOCRYPT
     ,
     _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
@@ -285,7 +209,9 @@ void UpdateClass::_reset() {
 #endif /* UPDATE_SIGN */
 
   _sha256FreeContext();
-  _sha512FreeContext();
+  if (_sha512Ops) {
+    _sha512Ops->freeContext(_sha512_ctx);
+  }
 
 #ifndef UPDATE_NOCRYPT
   _cryptBuffer = nullptr;
@@ -366,7 +292,9 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   _sha256FreeContext();
   _sha256_valid = false;
   memset(_sha256_result, 0, sizeof(_sha256_result));
-  _sha512FreeContext();
+  if (_sha512Ops) {
+    _sha512Ops->freeContext(_sha512_ctx);
+  }
   _sha512_valid = false;
   memset(_sha512_result, 0, sizeof(_sha512_result));
 #ifndef UPDATE_NOCRYPT
@@ -807,7 +735,7 @@ bool UpdateClass::_writeBuffer() {
     }
   }
   if (!_target_sha512_decrypted) {
-    if (!_sha512Update(_buffer, _bufferLen)) {
+    if (_sha512Ops && !_sha512Ops->update(_sha512_ctx, _buffer, _bufferLen)) {
       _abort(UPDATE_ERROR_SHA512);
       return false;
     }
@@ -886,7 +814,7 @@ bool UpdateClass::_writeBuffer() {
   }
   if (_target_sha512_decrypted) {
 #endif /* UPDATE_NOCRYPT */
-    if (!_sha512Update(_buffer, _bufferLen)) {
+    if (_sha512Ops && !_sha512Ops->update(_sha512_ctx, _buffer, _bufferLen)) {
       _abort(UPDATE_ERROR_SHA512);
       return false;
     }
@@ -1069,47 +997,6 @@ bool UpdateClass::_sha256Finish() {
   return true;
 }
 
-bool UpdateClass::setSHA512(
-  const char *expected_sha512
-#ifndef UPDATE_NOCRYPT
-  ,
-  bool calc_post_decryption
-#endif /* UPDATE_NOCRYPT */
-) {
-  if (!expected_sha512 || strlen(expected_sha512) != 128 || !HEXBuilder::isHexString(expected_sha512, 128)) {
-    return false;
-  }
-  // Digest must cover the entire payload; reject once writing has started.
-  if (_progress > 0 || _bufferLen > 0) {
-    log_e("setSHA512 must be called before writing data");
-    return false;
-  }
-  if (!isRunning()) {
-    log_e("setSHA512 requires an active update (call begin first)");
-    return false;
-  }
-
-  UpdateSHA512Context *ctx = new (std::nothrow) UpdateSHA512Context;
-  if (!ctx) {
-    log_e("Failed to allocate SHA-512 context");
-    return false;
-  }
-  if (!update_sha512_begin(ctx)) {
-    delete ctx;
-    return false;
-  }
-
-  HEXBuilder::hex2bytes(ctx->expected, sizeof(ctx->expected), expected_sha512);
-  _sha512FreeContext();
-  _sha512_valid = false;
-  memset(_sha512_result, 0, sizeof(_sha512_result));
-  _sha512_ctx = ctx;
-#ifndef UPDATE_NOCRYPT
-  _target_sha512_decrypted = calc_post_decryption;
-#endif /* UPDATE_NOCRYPT */
-  return true;
-}
-
 String UpdateClass::sha512String(void) {
   if (!_sha512_valid) {
     return String();
@@ -1126,47 +1013,6 @@ void UpdateClass::sha512(uint8_t *result) {
   } else {
     memset(result, 0, sizeof(_sha512_result));
   }
-}
-
-void UpdateClass::_sha512FreeContext() {
-  if (_sha512_ctx) {
-    update_sha512_abort(static_cast<UpdateSHA512Context *>(_sha512_ctx));
-    delete static_cast<UpdateSHA512Context *>(_sha512_ctx);
-    _sha512_ctx = nullptr;
-  }
-}
-
-bool UpdateClass::_sha512Update(const uint8_t *data, size_t len) {
-  if (!_sha512_ctx) {
-    return true;
-  }
-  if (!update_sha512_update(static_cast<UpdateSHA512Context *>(_sha512_ctx), data, len)) {
-    log_e("SHA-512 update failed");
-    _sha512FreeContext();
-    return false;
-  }
-  return true;
-}
-
-bool UpdateClass::_sha512Finish() {
-  if (!_sha512_ctx) {
-    return false;
-  }
-  UpdateSHA512Context *ctx = static_cast<UpdateSHA512Context *>(_sha512_ctx);
-  uint8_t digest[64];
-  bool ok = update_sha512_finish(ctx, digest);
-  if (ok) {
-    ok = memcmp(ctx->expected, digest, sizeof(digest)) == 0;
-  }
-  // Streaming state is consumed by finish; drop the heap object either way.
-  delete ctx;
-  _sha512_ctx = nullptr;
-  if (!ok) {
-    _sha512_valid = false;
-    return false;
-  }
-  memcpy(_sha512_result, digest, sizeof(_sha512_result));
-  return true;
 }
 
 bool UpdateClass::end(bool evenIfRemaining) {
@@ -1205,7 +1051,7 @@ bool UpdateClass::end(bool evenIfRemaining) {
 
   bool sha512_used = _sha512_ctx != nullptr;
   if (sha512_used) {
-    if (!_sha512Finish()) {
+    if (!_sha512Ops || !_sha512Ops->finish(_sha512_ctx, _sha512_result, _sha512_valid)) {
       _abort(UPDATE_ERROR_SHA512);
       return false;
     }

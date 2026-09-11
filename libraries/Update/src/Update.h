@@ -276,6 +276,8 @@ public:
    *
    * Call after `begin()` and before any data is written. Hashing is only
    * activated when this succeeds; otherwise no SHA-512 context is allocated.
+   * The mbedtls/PSA SHA-512 implementation is in a separate translation unit
+   * and is linked only when this setter is referenced.
    *
    * @param expected_sha512 Hex string containing expected SHA-512 digest (128 characters)
    * @param calc_post_decryption If true, calculate SHA-512 after decryption
@@ -448,9 +450,14 @@ private:
   uint8_t _sha512_result[64];  ///< Final digest kept after context is freed
   bool _sha512_valid;          ///< True after all update verification and activation steps succeed
 
-  void _sha512FreeContext();
-  bool _sha512Update(const uint8_t *data, size_t len);
-  bool _sha512Finish();
+  // Bound only from setSHA512() in UpdaterSHA512.cpp so --gc-sections can drop SHA-512.
+  // Same pattern as HTTPUpdate::_checksumSidecarFetch: C function pointer, assigned in the setter TU.
+  struct SHA512Ops {
+    void (*freeContext)(void *&ctx);
+    bool (*update)(void *&ctx, const uint8_t *data, size_t len);
+    bool (*finish)(void *&ctx, uint8_t *result, bool &valid);
+  };
+  const SHA512Ops *_sha512Ops;
 
   int _ledPin;
   uint8_t _ledOn;
