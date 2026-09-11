@@ -907,6 +907,7 @@ void test_httpupdate_download(void) {
 
   TEST_ASSERT_EQUAL_MESSAGE(HTTP_UPDATE_OK, ret, "HTTPUpdate could not connect to server or download failed");
   TEST_ASSERT_EQUAL(64, Update.sha256String().length());
+  TEST_ASSERT_EQUAL(128, Update.sha512String().length());
 }
 
 void test_httpupdate_download_ipv6(void) {

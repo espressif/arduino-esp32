@@ -208,7 +208,7 @@ public:
 #ifndef UPDATE_NOCRYPT
     ,
     bool calc_post_decryption = true
-#endif /* #ifdef UPDATE_NOCRYPT */
+#endif /* UPDATE_NOCRYPT */
   );
 
   /**
@@ -249,7 +249,7 @@ public:
 #ifndef UPDATE_NOCRYPT
     ,
     bool calc_post_decryption = true
-#endif /* #ifdef UPDATE_NOCRYPT */
+#endif /* UPDATE_NOCRYPT */
   );
 
   /**
@@ -290,7 +290,7 @@ public:
 #ifndef UPDATE_NOCRYPT
     ,
     bool calc_post_decryption = true
-#endif /* #ifdef UPDATE_NOCRYPT */
+#endif /* UPDATE_NOCRYPT */
   );
 
   /**
