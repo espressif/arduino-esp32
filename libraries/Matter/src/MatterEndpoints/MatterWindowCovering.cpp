@@ -70,16 +70,22 @@ bool MatterWindowCovering::begin(
     installedClosedLimitTilt = tiltCalibration->closed;
   }
 
-  bool supportsTilt = (coveringType == SHUTTER || coveringType == BLIND_TILT_ONLY || coveringType == BLIND_LIFT_AND_TILT);
+  // Type comments in the header: shutter / tilt-only blind do not lift.
+  // ESP-Matter requires at least one of Lift or Tilt (O.a+).
+  const bool supportsTilt = (coveringType == SHUTTER || coveringType == BLIND_TILT_ONLY || coveringType == BLIND_LIFT_AND_TILT);
+  const bool supportsLift = (coveringType != SHUTTER && coveringType != BLIND_TILT_ONLY);
 
   wc_endpoint::config_t window_covering_config(0);
   window_covering_config.window_covering.type = (uint8_t)coveringType;
   window_covering_config.window_covering.config_status = 0;
   window_covering_config.window_covering.operational_status = 0;
+  window_covering_config.window_covering.feature_flags = 0;
 
-  window_covering_config.window_covering.feature_flags = lift::get_id() | position_aware_lift::get_id();
-  window_covering_config.window_covering.features.position_aware_lift.target_position_lift_percent_100ths = nullable<uint16_t>(currentLiftPercent100ths);
-  window_covering_config.window_covering.features.position_aware_lift.current_position_lift_percent_100ths = nullable<uint16_t>(currentLiftPercent100ths);
+  if (supportsLift) {
+    window_covering_config.window_covering.feature_flags |= lift::get_id() | position_aware_lift::get_id();
+    window_covering_config.window_covering.features.position_aware_lift.target_position_lift_percent_100ths = nullable<uint16_t>(currentLiftPercent100ths);
+    window_covering_config.window_covering.features.position_aware_lift.current_position_lift_percent_100ths = nullable<uint16_t>(currentLiftPercent100ths);
+  }
 
   if (supportsTilt) {
     window_covering_config.window_covering.feature_flags |= tilt::get_id() | position_aware_tilt::get_id();
@@ -99,7 +105,9 @@ bool MatterWindowCovering::begin(
 
   started = true;
 
-  setCurrentLiftPercent100ths(currentLiftPercent100ths);
+  if (supportsLift) {
+    setCurrentLiftPercent100ths(currentLiftPercent100ths);
+  }
   if (supportsTilt) {
     setCurrentTiltPercent100ths(currentTiltPercent100ths);
   }
