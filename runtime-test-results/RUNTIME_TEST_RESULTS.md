@@ -49,7 +49,7 @@ zigbee|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_ma
 
 Test|ESP32|ESP32-C3|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-console|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:\*|17/17 :white_check_mark:|17/17 :white_check_mark:
+console|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:
 eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:
 fs|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:
 gpio|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
@@ -1212,8 +1212,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
 
 > \* Result from last successful run (runner currently unavailable)
 
-Generated on: 2026/09/11 06:26:45 UTC
+Generated on: 2026/09/12 00:40:29 UTC
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/6048a624f084ea7f645384fd91c57f43e633875d) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/34545683791) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/34546324566) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/34569779176)
+[Commit](https://github.com/espressif/arduino-esp32/commit/6048a624f084ea7f645384fd91c57f43e633875d) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/34660961231) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/34661477429) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/34662334923)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/103169724696)
+[Test results](https://github.com/espressif/arduino-esp32/runs/103467466470)
