@@ -1,6 +1,6 @@
 # Matter Temperature Controlled Cabinet Example (Temperature Level Mode)
 
-This example demonstrates how to create a Matter-compatible temperature controlled cabinet device using the **temperature_level** feature mode. This mode provides temperature control using predefined levels (e.g., Off, Low, Medium, High, Maximum) rather than precise temperature setpoint values.
+This example demonstrates how to create a Matter-compatible temperature controlled cabinet device using the **temperature_level** feature mode. This mode provides temperature control using predefined levels (Off / Low / Medium / High / Maximum) rather than a numeric setpoint.
 
 **Important:** The `temperature_number` and `temperature_level` features are **mutually exclusive**. Only one can be enabled at a time. See the [MatterTemperatureControlledCabinet](../MatterTemperatureControlledCabinet) example for temperature setpoint control mode.
 
@@ -37,7 +37,9 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 - Matter protocol implementation for a temperature controlled cabinet device
 - Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
-- Temperature level control with array of supported levels
+- Temperature level control with an array of application uint8 values (`10`, `20`, `30`, `40`, `50`)
+- Those values are advertised to hubs as Matter string labels (`"10"` … `"50"`); the hub writes a list **index** (`0`…`4`)
+- Serial prints the Arduino value, the Matter index, and the hub label so the mapping is visible
 - Up to 16 predefined temperature levels
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
@@ -45,7 +47,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 ## Use Case
 
-Use this mode when you need simple preset-based temperature control (e.g., 0=Off, 1=Low, 2=Medium, 3=High, 4=Maximum) rather than precise temperature values. This is ideal for devices where users select from predefined temperature presets rather than setting exact temperatures.
+Use this mode when you need simple preset-based temperature control rather than a precise setpoint. The sketch uses `10=Off`, `20=Low`, `30=Medium`, `40=High`, `50=Maximum` so the application value is not the same number as the Matter list index. The hub UI shows the decimal labels `"10"` … `"50"`.
 
 ## Hardware Requirements
 
@@ -84,13 +86,15 @@ Before uploading the sketch, configure the following:
    ```
 
 3. **Temperature levels configuration** (optional):
-   Adjust the supported levels array and initial level in the sketch:
+   Adjust the supported levels array and initial **value** (must appear in the array):
    ```cpp
-   uint8_t supportedLevels[] = {0, 1, 2, 3, 4};  // Define your levels
+   uint8_t supportedLevels[] = {10, 20, 30, 40, 50};  // Arduino values; hub labels "10"…"50"
    const uint16_t levelCount = sizeof(supportedLevels) / sizeof(supportedLevels[0]);
-   const uint8_t initialLevel = 2;  // Initial selected level
+   const uint8_t initialLevel = 30;  // Medium — Matter stores index 2
    TemperatureCabinet.begin(supportedLevels, levelCount, initialLevel);
-   // Note: The array is copied internally, so it doesn't need to remain valid after begin() returns
+   // The array is copied internally; it does not need to stay valid after begin() returns.
+   // setSelectedTemperatureLevel() / getSelectedTemperatureLevel() use these uint8 values.
+   // Controllers write SelectedTemperatureLevel as an index into the advertised string list.
    ```
 
 ## Building and Flashing
@@ -125,19 +129,23 @@ Matter Node not commissioned yet. Waiting for commissioning.
 Matter Node is commissioned and connected to the network. Ready for use.
 
 Temperature Controlled Cabinet Configuration (Temperature Level Mode):
-  Selected Level: 2
-  Supported Levels Count: 5
-  Supported Levels: 0, 1, 2, 3, 4
-Temperature level updated to: 3 (Supported Levels: 0, 1, 2, 3, 4)
-*** Temperature level 2 reached/overpassed while increasing ***
-Temperature level updated to: 4 (Supported Levels: 0, 1, 2, 3, 4)
-Temperature level updated to: 3 (Supported Levels: 0, 1, 2, 3, 4)
-Temperature level updated to: 2 (Supported Levels: 0, 1, 2, 3, 4)
-*** Temperature level 2 reached/overpassed while decreasing ***
-Temperature level updated to: 1 (Supported Levels: 0, 1, 2, 3, 4)
+  Arduino getSelectedTemperatureLevel() = 30
+  Matter SelectedTemperatureLevel index = 2
+  SupportedTemperatureLevels count = 5
+  List [index]=value("hub label"): [0]=10("10"), [1]=20("20"), [2]=30("30"), [3]=40("40"), [4]=50("50")
+  Hub SetTemperature writes an index (0..4). Arduino setters/getters use the uint8 value.
+Temperature level updated: value 40, Matter index 3, hub label "40"
+*** Temperature level 30 reached/overpassed while increasing ***
+Temperature level updated: value 50, Matter index 4, hub label "50"
+Temperature level updated: value 40, Matter index 3, hub label "40"
+Temperature level updated: value 30, Matter index 2, hub label "30"
+*** Temperature level 30 reached/overpassed while decreasing ***
+Temperature level updated: value 20, Matter index 1, hub label "20"
 ...
-Current Temperature Level: 2 (Supported Levels: 0, 1, 2, 3, 4)
+Current temperature level: value 30, Matter index 2, hub label "30"
 ```
+
+On the hub, `SupportedTemperatureLevels` is the string list `"10"`, `"20"`, `"30"`, `"40"`, `"50"`. Choosing the third entry writes index `2`; `getSelectedTemperatureLevel()` still returns `30`.
 
 ## Using the Device
 
@@ -166,7 +174,7 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 4. Tap "I Don't Have a Code or Cannot Scan" and enter the manual pairing code
 5. Follow the prompts to complete setup
 6. The device will appear as a temperature controlled cabinet in your Home app
-7. You can select from the available temperature levels
+7. You can select from the advertised string labels (`"10"` … `"50"` in this sketch)
 
 #### Amazon Alexa
 
@@ -175,7 +183,7 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 3. Select "Scan QR code" or "Enter code manually"
 4. Complete the setup process
 5. The temperature controlled cabinet will appear in your Alexa app
-6. You can select temperature levels and set up routines
+6. You can select from the advertised string labels and set up routines
 
 #### Google Home
 
@@ -185,7 +193,7 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 4. Scan the QR code or enter the manual pairing code
 5. Follow the prompts to complete setup
 6. The temperature controlled cabinet will appear in your Google Home app
-7. You can select from available temperature levels
+7. You can select from the advertised string labels (`"10"` … `"50"` in this sketch)
 
 ## Code Structure
 
@@ -200,27 +208,29 @@ The MatterTemperatureControlledCabinetLevels example consists of the following m
    - Handles button input for factory reset
 
 3. **Helper Functions**:
+   - `indexOfLevel()` / `printSupportedLevels()` / `printLevelMapping()`: Map an Arduino uint8 value to the Matter list index and hub string label
    - `initLevelControl()`: Initializes the level control state from the current selected level
    - `checkLevelReached()`: Checks and logs when the initial level is reached/overpassed
    - `updateTemperatureLevel()`: Updates the temperature level with cycling logic and boundary detection
-   - `printLevelStatus()`: Prints the current level status
+   - `printLevelStatus()`: Prints the current value, Matter index, and hub label
    - `handleButtonPress()`: Handles button press detection and factory reset functionality
 
 ## API Usage
 
 The example demonstrates the following API methods:
 
-- `begin(supportedLevels, levelCount, selectedLevel)` - Initialize the cabinet with temperature levels
-- `getSelectedTemperatureLevel()` - Get current selected temperature level
-- `setSelectedTemperatureLevel(level)` - Set selected temperature level
-- `getSupportedTemperatureLevelsCount()` - Get count of supported levels
-- `setSupportedTemperatureLevels(levels, count)` - Set supported temperature levels array
+- `begin(supportedLevels, levelCount, selectedLevel)` — `selectedLevel` is a **value from the array**, not a Matter index
+- `getSelectedTemperatureLevel()` — returns that uint8 value (here `10`…`50`)
+- `setSelectedTemperatureLevel(level)` — takes the same uint8 value; Matter stores the matching index
+- `getSupportedTemperatureLevelsCount()` — number of advertised string labels
+
+`setSupportedTemperatureLevels()` is not used after `begin()` in this sketch. If you call it later, the current selected **value** must still appear in the new array.
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Temperature level not updating**: Check Serial Monitor output to verify level changes are being processed
-- **Invalid level error**: Ensure the selected level is in the supported levels array
+- **Invalid level error**: `begin()` / `setSelectedTemperatureLevel()` take a value from `supportedLevels[]` (here `10`…`50`), not the hub index (`0`…`4`)
 - **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection
 - **Wrong mode error**: Remember that temperature_number and temperature_level modes are mutually exclusive. Make sure you're using the correct example and API methods for temperature level mode

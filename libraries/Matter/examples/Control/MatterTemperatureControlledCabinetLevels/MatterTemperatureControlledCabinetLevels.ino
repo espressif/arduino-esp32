@@ -19,9 +19,13 @@
  * Additionally the ESP32 will send debug messages indicating the Matter activity.
  * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
  *
- * The example will create a Matter Temperature Controlled Cabinet Device using temperature_level feature.
- * The Temperature Controlled Cabinet can be controlled via Matter controllers to set
- * temperature levels from a predefined array of supported levels.
+ * begin() takes a uint8 array of application level values. Matter SupportedTemperatureLevels is a
+ * list of strings, so each value is advertised as a decimal label (30 -> "30"). Hubs write
+ * SelectedTemperatureLevel as an index into that list. set/getSelectedTemperatureLevel() still
+ * use the uint8 values from the array, not the index.
+ *
+ * Values here are 10/20/30/40/50 so the value is not the same as the Matter index. Serial prints
+ * both so you can tell them apart.
  *
  * This mode is mutually exclusive with temperature_number mode.
  * See MatterTemperatureControlledCabinet example for temperature setpoint control.
@@ -56,12 +60,36 @@ uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
-// Temperature levels array - these represent different temperature presets
-// Example: 0 = Off, 1 = Low, 2 = Medium, 3 = High, 4 = Maximum
-// The actual temperature values are application-specific
-uint8_t supportedLevels[] = {0, 1, 2, 3, 4};
+// Application level values (not 0..N-1, so they are distinct from the Matter list index).
+// Meaning is application-specific: 10=Off, 20=Low, 30=Medium, 40=High, 50=Maximum.
+// Hubs see the string list "10", "20", "30", "40", "50" and write index 0..4.
+uint8_t supportedLevels[] = {10, 20, 30, 40, 50};
 const uint16_t levelCount = sizeof(supportedLevels) / sizeof(supportedLevels[0]);
-const uint8_t initialLevel = 2;  // Start with level 2 (Medium)
+const uint8_t initialLevel = 30;  // Medium — Matter stores this as index 2
+
+// Returns the Matter list index for an application level value, or -1 if unknown.
+int16_t indexOfLevel(uint8_t level) {
+  for (uint16_t i = 0; i < levelCount; i++) {
+    if (supportedLevels[i] == level) {
+      return (int16_t)i;
+    }
+  }
+  return -1;
+}
+
+void printSupportedLevels() {
+  for (uint16_t i = 0; i < levelCount; i++) {
+    Serial.printf("[%u]=%u(\"%u\")", i, supportedLevels[i], supportedLevels[i]);
+    if (i < levelCount - 1) {
+      Serial.print(", ");
+    }
+  }
+}
+
+void printLevelMapping(const char *prefix, uint8_t level) {
+  int16_t index = indexOfLevel(level);
+  Serial.printf("%s value %u, Matter index %d, hub label \"%u\"\r\n", prefix, level, (int)index, level);
+}
 
 // Temperature level control state
 struct LevelControlState {
@@ -82,13 +110,8 @@ void initLevelControl() {
   if (!levelState.initialized) {
     uint8_t currentLevel = TemperatureCabinet.getSelectedTemperatureLevel();
     levelState.initialLevel = currentLevel;
-    // Find the index of current level in supportedLevels array
-    for (uint16_t i = 0; i < levelCount; i++) {
-      if (supportedLevels[i] == currentLevel) {
-        levelState.currentLevelIndex = i;
-        break;
-      }
-    }
+    int16_t index = indexOfLevel(currentLevel);
+    levelState.currentLevelIndex = (index >= 0) ? (uint16_t)index : 0;
     levelState.initialized = true;
   }
 }
@@ -140,30 +163,15 @@ void updateTemperatureLevel() {
 
   // Update the temperature level
   if (TemperatureCabinet.setSelectedTemperatureLevel(newLevel)) {
-    Serial.printf("Temperature level updated to: %u (Supported Levels: ", newLevel);
-    for (uint16_t i = 0; i < levelCount; i++) {
-      Serial.printf("%u", supportedLevels[i]);
-      if (i < levelCount - 1) {
-        Serial.print(", ");
-      }
-    }
-    Serial.println(")");
+    printLevelMapping("Temperature level updated:", newLevel);
   } else {
-    Serial.printf("Failed to update temperature level to: %u\r\n", newLevel);
+    Serial.printf("Failed to update temperature level to value %u\r\n", newLevel);
   }
 }
 
 // Print current level status
 void printLevelStatus() {
-  uint8_t currentLevel = TemperatureCabinet.getSelectedTemperatureLevel();
-  Serial.printf("Current Temperature Level: %u (Supported Levels: ", currentLevel);
-  for (uint16_t i = 0; i < levelCount; i++) {
-    Serial.printf("%u", supportedLevels[i]);
-    if (i < levelCount - 1) {
-      Serial.print(", ");
-    }
-  }
-  Serial.println(")");
+  printLevelMapping("Current temperature level:", TemperatureCabinet.getSelectedTemperatureLevel());
 }
 
 // Handle button press for decommissioning
@@ -206,13 +214,9 @@ void setup() {
   Serial.println();
 #endif
 
-  // Initialize Temperature Controlled Cabinet with temperature_level feature:
-  // - supportedLevels: Array of temperature level values (0-255)
-  // - levelCount: Number of levels in the array
-  // - initialLevel: Initial selected temperature level
-  //
-  // Note: This mode is mutually exclusive with temperature_number mode.
-  // See MatterTemperatureControlledCabinet example for temperature setpoint control.
+  // temperature_level mode: pass application values. Matter advertises them as string
+  // labels and stores SelectedTemperatureLevel as the index of initialLevel in the array.
+  // Mutually exclusive with temperature_number mode (see MatterTemperatureControlledCabinet).
   if (!TemperatureCabinet.begin(supportedLevels, levelCount, initialLevel)) {
     Serial.println("Failed to initialize Temperature Controlled Cabinet!");
     while (1) {
@@ -242,18 +246,14 @@ void setup() {
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
   }
 
-  // Print initial configuration
   Serial.println("\nTemperature Controlled Cabinet Configuration (Temperature Level Mode):");
-  Serial.printf("  Selected Level: %u\n", TemperatureCabinet.getSelectedTemperatureLevel());
-  Serial.printf("  Supported Levels Count: %u\n", TemperatureCabinet.getSupportedTemperatureLevelsCount());
-  Serial.print("  Supported Levels: ");
-  for (uint16_t i = 0; i < levelCount; i++) {
-    Serial.printf("%u", supportedLevels[i]);
-    if (i < levelCount - 1) {
-      Serial.print(", ");
-    }
-  }
+  Serial.printf("  Arduino getSelectedTemperatureLevel() = %u\r\n", TemperatureCabinet.getSelectedTemperatureLevel());
+  Serial.printf("  Matter SelectedTemperatureLevel index = %d\r\n", (int)indexOfLevel(TemperatureCabinet.getSelectedTemperatureLevel()));
+  Serial.printf("  SupportedTemperatureLevels count = %u\r\n", TemperatureCabinet.getSupportedTemperatureLevelsCount());
+  Serial.print("  List [index]=value(\"hub label\"): ");
+  printSupportedLevels();
   Serial.println();
+  Serial.println("  Hub SetTemperature writes an index (0..4). Arduino setters/getters use the uint8 value.");
 }
 
 void loop() {

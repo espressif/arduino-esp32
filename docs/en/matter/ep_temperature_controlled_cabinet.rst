@@ -12,7 +12,7 @@ The ``MatterTemperatureControlledCabinet`` class provides a temperature controll
 * Two initialization modes:
 
    - **Temperature Number Mode** (``begin(tempSetpoint, minTemp, maxTemp, step)``): Temperature setpoint control with min/max limits and step control
-   - **Temperature Level Mode** (``begin(supportedLevels, levelCount, selectedLevel)``): Temperature level control with array of supported levels
+   - **Temperature Level Mode** (``begin(supportedLevels, levelCount, selectedLevel)``): Temperature level control with an array of supported levels advertised as Matter string labels
 
 * 1/100th degree Celsius precision (for temperature_number mode)
 * Min/max temperature limits with validation (temperature_number mode)
@@ -85,11 +85,13 @@ Initializes the Matter temperature controlled cabinet endpoint with **temperatur
 
 * ``supportedLevels`` - Pointer to array of temperature level values (uint8_t, 0-255)
 * ``levelCount`` - Number of levels in the array (maximum: 16)
-* ``selectedLevel`` - Initial selected temperature level (default: 0)
+* ``selectedLevel`` - Initial selected temperature level; must be one of the values in ``supportedLevels`` (default: 0)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** The maximum number of supported levels is 16 (defined by ``temperature_control::k_max_temp_level_count``). The array is copied internally, so it does not need to remain valid after the function returns. This method uses a custom endpoint implementation that properly supports the temperature_level feature.
+**Note:** The maximum number of supported levels is 16 (defined by ``temperature_control::k_max_temp_level_count``). The array is copied internally, so it does not need to remain valid after the function returns.
+
+**Note:** Matter ``SupportedTemperatureLevels`` is a list of strings. This API advertises each uint8 value as a decimal label (for example ``2`` is reported as ``"2"``). Controllers write ``SelectedTemperatureLevel`` as an index into that list. ``setSelectedTemperatureLevel()`` and ``getSelectedTemperatureLevel()`` still use the uint8 values you passed.
 
 end
 ^^^
@@ -231,11 +233,11 @@ Sets the selected temperature level.
 
     bool setSelectedTemperatureLevel(uint8_t level);
 
-* ``level`` - Temperature level (0-255)
+* ``level`` - Temperature level value from the supported-levels array (0-255)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** Temperature level and temperature number features are mutually exclusive. This method will return ``false`` and log an error if called when using temperature_number mode.
+**Note:** Temperature level and temperature number features are mutually exclusive. This method will return ``false`` and log an error if called when using temperature_number mode. The value is stored in Matter as the index of that entry in ``SupportedTemperatureLevels``.
 
 getSelectedTemperatureLevel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -264,7 +266,7 @@ Sets the supported temperature levels array.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** The maximum number of supported levels is 16. The array is copied internally, so it does not need to remain valid after the function returns. This method will return ``false`` and log an error if called when using temperature_number mode or if count exceeds the maximum.
+**Note:** The maximum number of supported levels is 16. The array is copied internally and advertised as decimal string labels. The current selected value must still appear in the new array. This method will return ``false`` and log an error if called when using temperature_number mode, if count exceeds the maximum, or if the current selection is not in the new array.
 
 getSupportedTemperatureLevelsCount
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

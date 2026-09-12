@@ -19,7 +19,10 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+class ArduinoCabinetTemperatureLevelsDelegate;
+
 class MatterTemperatureControlledCabinet : public MatterEndPoint {
+  friend class ArduinoCabinetTemperatureLevelsDelegate;
 public:
   MatterTemperatureControlledCabinet();
   ~MatterTemperatureControlledCabinet();
@@ -29,7 +32,8 @@ public:
   bool begin(double tempSetpoint = 0.00, double minTemperature = -10.0, double maxTemperature = 32.0, double step = 0.50);
 
   // begin with temperature_level feature (mutually exclusive with temperature_number)
-  // This enables temperature level control with an array of supported levels
+  // This enables temperature level control with an array of supported levels.
+  // Matter SupportedTemperatureLevels is a list of strings; each uint8 is advertised as a decimal label.
   bool begin(uint8_t *supportedLevels, uint16_t levelCount, uint8_t selectedLevel = 0);
 
   // this will stop processing Temperature Controlled Cabinet Matter events
@@ -83,6 +87,7 @@ protected:
   // Fixed-size buffer for supported temperature levels (max 16 as per Matter spec: temperature_control::k_max_temp_level_count)
   uint8_t supportedLevelsArray[16];  // Size matches esp_matter::cluster::temperature_control::k_max_temp_level_count
   uint16_t supportedLevelsCount = 0;
+  bool temperatureLevelsDelegateHeld = false;
 
   // internal functions to set the raw temperature values (Matter Cluster)
   bool setRawTemperatureSetpoint(int16_t _rawTemperature);
@@ -91,5 +96,7 @@ protected:
   bool setRawStep(int16_t _rawStep);
   bool begin(int16_t _rawTempSetpoint, int16_t _rawMinTemperature, int16_t _rawMaxTemperature, int16_t _rawStep);
   bool beginInternal(uint8_t *supportedLevels, uint16_t levelCount, uint8_t selectedLevel);
+  bool indexOfSupportedLevel(uint8_t level, uint8_t *index) const;
+  bool writeSelectedTemperatureLevelIndex(uint8_t index);
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
