@@ -185,6 +185,18 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
     return false;
   }
 
+  if (_rawMinTemperature >= _rawMaxTemperature) {
+    log_e("Min temperature %.02fC must be lower than max %.02fC.", (float)_rawMinTemperature / 100.0, (float)_rawMaxTemperature / 100.0);
+    return false;
+  }
+  if (_rawTempSetpoint < _rawMinTemperature || _rawTempSetpoint > _rawMaxTemperature) {
+    log_e(
+      "Temperature setpoint %.02fC is out of range [%.02fC, %.02fC]", (float)_rawTempSetpoint / 100.0, (float)_rawMinTemperature / 100.0,
+      (float)_rawMaxTemperature / 100.0
+    );
+    return false;
+  }
+
   // Note: esp-matter automatically creates all attributes from the config struct when features are enabled
   // - temperature_number feature creates: TemperatureSetpoint, MinTemperature, MaxTemperature
   // - temperature_step feature creates: Step (always enabled for temperature_number mode to allow setStep() later)
@@ -442,6 +454,14 @@ bool MatterTemperatureControlledCabinet::setRawMinTemperature(int16_t _rawTemper
   if (rawMinTemperature == _rawTemperature) {
     return true;
   }
+  if (_rawTemperature >= rawMaxTemperature) {
+    log_e("Min temperature %.02fC must be lower than max %.02fC.", (float)_rawTemperature / 100.0, (float)rawMaxTemperature / 100.0);
+    return false;
+  }
+  if (rawTempSetpoint < _rawTemperature) {
+    log_e("Min temperature %.02fC is above the current setpoint %.02fC.", (float)_rawTemperature / 100.0, (float)rawTempSetpoint / 100.0);
+    return false;
+  }
 
   esp_matter_attr_val_t tempVal = esp_matter_invalid(NULL);
   if (!getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MinTemperature::Id, &tempVal)) {
@@ -492,6 +512,14 @@ bool MatterTemperatureControlledCabinet::setRawMaxTemperature(int16_t _rawTemper
 
   if (rawMaxTemperature == _rawTemperature) {
     return true;
+  }
+  if (_rawTemperature <= rawMinTemperature) {
+    log_e("Max temperature %.02fC must be higher than min %.02fC.", (float)_rawTemperature / 100.0, (float)rawMinTemperature / 100.0);
+    return false;
+  }
+  if (rawTempSetpoint > _rawTemperature) {
+    log_e("Max temperature %.02fC is below the current setpoint %.02fC.", (float)_rawTemperature / 100.0, (float)rawTempSetpoint / 100.0);
+    return false;
   }
 
   esp_matter_attr_val_t tempVal = esp_matter_invalid(NULL);

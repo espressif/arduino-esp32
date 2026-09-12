@@ -68,7 +68,7 @@ Initializes the Matter temperature controlled cabinet endpoint with **temperatur
 * ``maxTemperature`` - Maximum allowed temperature in Celsius (default: 32.0)
 * ``step`` - Initial temperature step value in Celsius (default: 0.50)
 
-This function will return ``true`` if successful, ``false`` otherwise.
+This function will return ``true`` if successful, ``false`` if ``min >= max``, the setpoint is outside ``[min, max]``, or creation fails.
 
 **Note:** The implementation stores temperature with 1/100th degree Celsius precision internally. The temperature_step feature is always enabled for temperature_number mode, allowing ``setStep()`` to be called later even if step is not provided in ``begin()``.
 
@@ -147,7 +147,7 @@ Sets the minimum allowed temperature.
 
     bool setMinTemperature(double temperature);
 
-* ``temperature`` - Minimum temperature in Celsius
+* ``temperature`` - Minimum temperature in Celsius. Must stay below ``max`` and must not move past the current setpoint.
 
 This function will return ``true`` if successful, ``false`` otherwise. Will return ``false`` and log an error if called when using temperature_level mode.
 
@@ -173,7 +173,7 @@ Sets the maximum allowed temperature.
 
     bool setMaxTemperature(double temperature);
 
-* ``temperature`` - Maximum temperature in Celsius
+* ``temperature`` - Maximum temperature in Celsius. Must stay above ``min`` and must not move past the current setpoint.
 
 This function will return ``true`` if successful, ``false`` otherwise. Will return ``false`` and log an error if called when using temperature_level mode.
 
