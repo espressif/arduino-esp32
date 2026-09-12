@@ -10,7 +10,7 @@ The ``MatterFan`` class provides a fan endpoint for Matter networks with speed a
 **Features:**
 * On/off control
 * Fan speed control (0-100%)
-* Fan mode control (OFF, LOW, MEDIUM, HIGH, ON, AUTO, SMART)
+* Fan mode control (OFF, LOW, MEDIUM, HIGH, AUTO). ``ON`` and ``SMART`` are remapped, not stored
 * Fan mode sequence configuration
 * Callback support for state, speed, and mode changes
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
@@ -107,9 +107,11 @@ Fan mode enumeration:
 * ``FAN_MODE_LOW`` - Low speed
 * ``FAN_MODE_MEDIUM`` - Medium speed
 * ``FAN_MODE_HIGH`` - High speed
-* ``FAN_MODE_ON`` - Fan is on
-* ``FAN_MODE_AUTO`` - Auto mode
-* ``FAN_MODE_SMART`` - Smart mode
+* ``FAN_MODE_ON`` - Alias: stored as ``FAN_MODE_HIGH``
+* ``FAN_MODE_AUTO`` - Auto mode (only valid in an Auto sequence)
+* ``FAN_MODE_SMART`` - Alias: stored as ``FAN_MODE_AUTO`` if the sequence includes Auto, otherwise ``FAN_MODE_HIGH``
+
+Matter ``FanModeSequence`` never includes On or Smart. CHIP remaps those writes the same way.
 
 Fan Mode Sequences
 ******************
@@ -174,6 +176,8 @@ Sets the fan speed percentage.
 * ``newPercent`` - Speed percentage (0-100)
 * ``performUpdate`` - Perform update after setting (default: ``true``)
 
+Writes nullable ``PercentSetting`` and non-nullable ``PercentCurrent`` separately. In Auto, Matter may null ``PercentSetting``; ``PercentCurrent`` stays 0-100.
+
 getSpeedPercent
 ^^^^^^^^^^^^^^^
 
@@ -195,8 +199,10 @@ Sets the fan mode.
 
     bool setMode(FanMode_t newMode, bool performUpdate = true);
 
-* ``newMode`` - Fan mode to set
+* ``newMode`` - Fan mode to set. ``FAN_MODE_ON`` and ``FAN_MODE_SMART`` are remapped as described under ``FanMode_t``
 * ``performUpdate`` - Perform update after setting (default: ``true``)
+
+This function will return ``false`` if the remapped mode is not in the sequence passed to ``begin()``.
 
 getMode
 ^^^^^^^

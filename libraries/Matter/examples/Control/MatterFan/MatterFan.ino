@@ -101,7 +101,7 @@ void setup() {
   delay(500);
 #endif
 
-  // Boot: 0% speed, OFF; mode sequence Off/High.
+  // Boot: 0% speed, Off. Sequence is Off/High, so setOnOff(true) / FAN_MODE_ON store High.
   Fan.begin(0, MatterFan::FAN_MODE_OFF, MatterFan::FAN_MODE_SEQ_OFF_HIGH);
 
   // callback functions would control Fan motor

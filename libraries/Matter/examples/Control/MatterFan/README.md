@@ -38,7 +38,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
 - On/Off control
 - Speed control (0-100% in steps of 10%)
-- Fan modes (OFF, ON, SMART, HIGH)
+- Fan modes for this sketch: Off and High (`FAN_MODE_SEQ_OFF_HIGH`). `setOnOff(true)` / `FAN_MODE_ON` are stored as High
 - Analog input for manual speed adjustment
 - PWM output for DC motor control (simulated with RGB LED brightness)
 - Button control for toggling fan and factory reset
@@ -127,9 +127,9 @@ Matter Node not commissioned yet. Waiting for commissioning.
 Matter Node is commissioned and connected to the network. Ready for use.
 Fan State: Mode OFF | 0% speed.
 User button released. Setting the Fan ON.
-Fan State: Mode ON | 50% speed.
-Fan set to SMART mode -- speed percentage will go to 50%
-Fan State: Mode SMART | 50% speed.
+Fan State: Mode HIGH | 50% speed.
+Fan set to HIGH mode -- speed percentage will go to 50%
+Fan State: Mode HIGH | 50% speed.
 ```
 
 ## Using the Device
@@ -169,7 +169,7 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 4. Tap "I Don't Have a Code or Cannot Scan" and enter the manual pairing code
 5. Follow the prompts to complete setup
 6. The device will appear as a fan in your Home app
-7. You can control on/off, speed (0-100%), and fan modes (OFF, ON, SMART, HIGH)
+7. You can control on/off, speed (0-100%), and fan modes (this sketch: Off and High)
 
 #### Amazon Alexa
 
@@ -197,7 +197,7 @@ The MatterFan example consists of the following main components:
 2. **`loop()`**: Checks the Matter commissioning state, handles button input for toggling the fan and factory reset, reads analog input to adjust fan speed, and allows the Matter stack to process events.
 3. **Callbacks**:
    - `onChangeSpeedPercent()`: Handles speed percentage changes (0% to 100%). Automatically turns fan on/off based on speed.
-   - `onChangeMode()`: Handles fan mode changes (OFF, ON, SMART, HIGH). Automatically sets speed to 50% when switching from OFF to another mode.
+   - `onChangeMode()`: Handles fan mode changes. Automatically sets speed to 50% when switching from Off to another mode. `FAN_MODE_ON` is remapped to High.
    - `onChange()`: Generic callback that controls the DC motor via PWM and reports the current state.
    - `fanDCMotorDrive()`: Drives the DC motor (or simulates it with RGB LED brightness) based on fan state and speed.
 
