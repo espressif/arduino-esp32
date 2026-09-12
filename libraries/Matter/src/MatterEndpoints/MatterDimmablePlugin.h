@@ -43,7 +43,7 @@ public:
     _onChangeOnOffCB = onChangeCB;
   }
 
-  // User Callback for whenever the Plugin level value [0..255] is changed by the Matter Controller
+  // User Callback for whenever the Plugin level value [1..254] is changed by the Matter Controller
   using EndPointLevelCB = std::function<bool(uint8_t)>;
   void onChangeLevel(EndPointLevelCB onChangeCB) {
     _onChangeLevelCB = onChangeCB;

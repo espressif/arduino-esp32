@@ -22,6 +22,14 @@ using namespace esp_matter;
 using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
 
+// CurrentLevel is nullable uint8. 0 is below lighting MinLevel (1); 255 is the null sentinel.
+static uint8_t clampCurrentLevel(uint8_t value) {
+  if (value < 1) {
+    return 1;
+  }
+  return value > 254 ? 254 : value;
+}
+
 bool MatterDimmablePlugin::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
   bool ret = true;
   if (!started) {
@@ -87,9 +95,9 @@ bool MatterDimmablePlugin::begin(bool initialState, uint8_t level) {
   plugin_config.on_off_lighting.start_up_on_off = nullptr;
   onOffState = initialState;
 
-  plugin_config.level_control.current_level = level;
+  this->level = clampCurrentLevel(level);
+  plugin_config.level_control.current_level = this->level;
   plugin_config.level_control_lighting.start_up_current_level = nullptr;
-  this->level = level;
 
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = dimmable_plug_in_unit::create(node::get(), &plugin_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -162,24 +170,24 @@ bool MatterDimmablePlugin::setLevel(uint8_t newLevel) {
     return false;
   }
 
+  const uint8_t clampedLevel = clampCurrentLevel(newLevel);
   // avoid processing if there was no change
-  if (level == newLevel) {
+  if (level == clampedLevel) {
     return true;
   }
 
-  level = newLevel;
+  level = clampedLevel;
 
   endpoint_t *endpoint = endpoint::get(node::get(), getEndPointId());
   cluster_t *cluster = cluster::get(endpoint, LevelControl::Id);
   esp_matter::attribute_t *attribute = attribute::get(cluster, LevelControl::Attributes::CurrentLevel::Id);
-
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  attribute::get_val(attribute, &val);
-
-  if (val.val.u8 != level) {
-    val.val.u8 = level;
-    attribute::update(getEndPointId(), LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
+  if (attribute == nullptr) {
+    log_e("Failed to get Dimmable Plugin CurrentLevel Attribute.");
+    return false;
   }
+
+  esp_matter_attr_val_t val = esp_matter_nullable_uint8(level);
+  attribute::update(getEndPointId(), LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
   return true;
 }
 

@@ -9,7 +9,7 @@ The ``MatterDimmablePlugin`` class provides a dimmable plugin unit endpoint for 
 
 **Features:**
 * On/off control
-* Power level control (0-255)
+* Power level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel)
 * State persistence support
 * Callback support for state and level changes
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
@@ -49,7 +49,7 @@ Initializes the Matter dimmable plugin endpoint with optional initial state and 
     bool begin(bool initialState = false, uint8_t level = 64);
 
 * ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``)
-* ``level`` - Initial power level (0-255, default: 64 = 25%)
+* ``level`` - Initial power level (0-255, default: 64 = 25%). ``0`` is stored as ``1``; ``255`` is stored as ``254``.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -112,7 +112,7 @@ Sets the power level of the plugin.
 
     bool setLevel(uint8_t newLevel);
 
-* ``newLevel`` - New power level (0-255, where 0 = off, 255 = maximum level)
+* ``newLevel`` - Power level (0-255). On/off is a separate attribute; ``0`` clamps to ``1`` and ``255`` clamps to ``254``.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -125,7 +125,7 @@ Gets the current power level of the plugin.
 
     uint8_t getLevel();
 
-This function will return the power level (0-255).
+This function will return the power level (1-254).
 
 Constants
 *********
@@ -133,7 +133,7 @@ Constants
 MAX_LEVEL
 ^^^^^^^^^^
 
-Maximum power level value constant.
+Arduino full-scale input (255). Matter stores this as ``254``.
 
 .. code-block:: arduino
 
@@ -196,7 +196,7 @@ The callback signature is:
     bool onChangeCallback(bool newState, uint8_t newLevel);
 
 * ``newState`` - New on/off state (``true`` = on, ``false`` = off)
-* ``newLevel`` - New power level (0-255)
+* ``newLevel`` - New power level (1-254)
 
 onChangeOnOff
 ^^^^^^^^^^^^^
@@ -234,7 +234,7 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t newLevel);
 
-* ``newLevel`` - New power level (0-255)
+* ``newLevel`` - New power level (1-254)
 
 updateAccessory
 ^^^^^^^^^^^^^^^
