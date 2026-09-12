@@ -28,7 +28,7 @@ The ``MatterWindowCovering`` class provides a window covering endpoint for Matte
 * ``BLIND_LIFT_AND_TILT`` - Lift and Tilt support
 * ``PROJECTOR_SCREEN`` - Lift support
 
-``begin()`` advertises only the features that type actually has (Lift and/or Tilt, plus position-aware). A shutter or tilt-only blind does not advertise Lift. Lift setters (``setLiftPercentage()``, ``setCurrentLiftPercent100ths()``, and the other lift APIs) return ``false`` on those types. Tilt setters return ``false`` on lift-only types. ESP-Matter requires at least one of Lift or Tilt.
+``begin()`` advertises only the features that type actually has (Lift and/or Tilt, plus position-aware). A shutter or tilt-only blind does not advertise Lift. Unused lift or tilt arguments and calibration are ignored (not cached). Lift setters return ``false`` on those types; lift getters return ``0``. Tilt setters return ``false`` on lift-only types; tilt getters return ``0``. ESP-Matter requires at least one of Lift or Tilt.
 
 **Use Cases:**
 * Motorized blinds

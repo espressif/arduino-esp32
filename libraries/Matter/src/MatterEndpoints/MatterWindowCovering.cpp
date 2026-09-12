@@ -57,10 +57,16 @@ bool MatterWindowCovering::begin(
     return false;
   }
 
-  currentLiftPercent = liftPercent;
-  currentLiftPercent100ths = liftPercent * 100;
-  currentTiltPercent = tiltPercent;
-  currentTiltPercent100ths = tiltPercent * 100;
+  // Type comments in the header: shutter / tilt-only blind do not lift.
+  // ESP-Matter requires at least one of Lift or Tilt (O.a+). FeatureMap is fixed at create.
+  bool supportsLift = false;
+  bool supportsTilt = false;
+  coveringLiftTilt(coveringType, &supportsLift, &supportsTilt);
+
+  currentLiftPercent = 0;
+  currentLiftPercent100ths = 0;
+  currentTiltPercent = 0;
+  currentTiltPercent100ths = 0;
   currentLiftPosition = 0;
   currentTiltPosition = 0;
   installedOpenLimitLift = 0;
@@ -68,20 +74,27 @@ bool MatterWindowCovering::begin(
   installedOpenLimitTilt = 0;
   installedClosedLimitTilt = 65534;
 
-  if (liftCalibration != nullptr) {
-    installedOpenLimitLift = liftCalibration->open;
-    installedClosedLimitLift = liftCalibration->closed;
-  }
-  if (tiltCalibration != nullptr) {
-    installedOpenLimitTilt = tiltCalibration->open;
-    installedClosedLimitTilt = tiltCalibration->closed;
+  if (supportsLift) {
+    currentLiftPercent = liftPercent;
+    currentLiftPercent100ths = liftPercent * 100;
+    if (liftCalibration != nullptr) {
+      installedOpenLimitLift = liftCalibration->open;
+      installedClosedLimitLift = liftCalibration->closed;
+    }
+  } else if (liftCalibration != nullptr || liftPercent != 0) {
+    log_w("Lift percentage/calibration ignored: covering type has no Lift feature.");
   }
 
-  // Type comments in the header: shutter / tilt-only blind do not lift.
-  // ESP-Matter requires at least one of Lift or Tilt (O.a+). FeatureMap is fixed at create.
-  bool supportsLift = false;
-  bool supportsTilt = false;
-  coveringLiftTilt(coveringType, &supportsLift, &supportsTilt);
+  if (supportsTilt) {
+    currentTiltPercent = tiltPercent;
+    currentTiltPercent100ths = tiltPercent * 100;
+    if (tiltCalibration != nullptr) {
+      installedOpenLimitTilt = tiltCalibration->open;
+      installedClosedLimitTilt = tiltCalibration->closed;
+    }
+  } else if (tiltCalibration != nullptr || tiltPercent != 0) {
+    log_w("Tilt percentage/calibration ignored: covering type has no Tilt feature.");
+  }
 
   wc_endpoint::config_t window_covering_config(0);
   window_covering_config.window_covering.type = (uint8_t)coveringType;
@@ -117,13 +130,9 @@ bool MatterWindowCovering::begin(
 
   if (supportsLift) {
     setCurrentLiftPercent100ths(currentLiftPercent100ths);
-  } else if (liftCalibration != nullptr) {
-    log_w("Lift calibration ignored: covering type has no Lift feature.");
   }
   if (supportsTilt) {
     setCurrentTiltPercent100ths(currentTiltPercent100ths);
-  } else if (tiltCalibration != nullptr) {
-    log_w("Tilt calibration ignored: covering type has no Tilt feature.");
   }
 
   return true;
@@ -369,6 +378,9 @@ bool MatterWindowCovering::setLiftPosition(uint16_t liftPosition) {
 }
 
 uint16_t MatterWindowCovering::getLiftPosition() {
+  if (!liftFeatureEnabled) {
+    return 0;
+  }
   return currentLiftPosition;
 }
 
@@ -388,6 +400,9 @@ bool MatterWindowCovering::setLiftPercentage(uint8_t liftPercent) {
 }
 
 uint8_t MatterWindowCovering::getLiftPercentage() {
+  if (!liftFeatureEnabled) {
+    return 0;
+  }
   return currentLiftPercent;
 }
 
@@ -431,7 +446,10 @@ bool MatterWindowCovering::setCurrentLiftPercent100ths(uint16_t liftPercent100th
 }
 
 uint16_t MatterWindowCovering::getCurrentLiftPercent100ths() {
-  if (started && liftFeatureEnabled) {
+  if (!liftFeatureEnabled) {
+    return 0;
+  }
+  if (started) {
     esp_matter_attr_val_t val = esp_matter_invalid(NULL);
     if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id, &val)) {
       if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val.val.u16)) {
@@ -532,6 +550,9 @@ bool MatterWindowCovering::setTiltPosition(uint16_t tiltPosition) {
 }
 
 uint16_t MatterWindowCovering::getTiltPosition() {
+  if (!tiltFeatureEnabled) {
+    return 0;
+  }
   return currentTiltPosition;
 }
 
@@ -551,6 +572,9 @@ bool MatterWindowCovering::setTiltPercentage(uint8_t tiltPercent) {
 }
 
 uint8_t MatterWindowCovering::getTiltPercentage() {
+  if (!tiltFeatureEnabled) {
+    return 0;
+  }
   return currentTiltPercent;
 }
 
@@ -594,7 +618,10 @@ bool MatterWindowCovering::setCurrentTiltPercent100ths(uint16_t tiltPercent100th
 }
 
 uint16_t MatterWindowCovering::getCurrentTiltPercent100ths() {
-  if (started && tiltFeatureEnabled) {
+  if (!tiltFeatureEnabled) {
+    return 0;
+  }
+  if (started) {
     esp_matter_attr_val_t val = esp_matter_invalid(NULL);
     if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTiltPercent100ths::Id, &val)) {
       if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val.val.u16)) {
