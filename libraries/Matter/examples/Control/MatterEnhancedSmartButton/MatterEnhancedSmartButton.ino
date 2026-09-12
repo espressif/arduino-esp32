@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Enhanced Matter smart button — short click, long press, and multi-press gestures.
-// Maps physical button actions to all Matter Generic Switch momentary events.
-// For a minimal short-click-only implementation see MatterSmartButton example.
+// Matter smart button gestures on one BOOT button (FEATURE_ALL).
+//   tap            -> single click   (InitialPress + ShortRelease + MultiPressComplete 1)
+//   tap tap        -> double click   (… + MultiPressOngoing 2 + MultiPressComplete 2)
+//   tap tap tap    -> triple click   (same pattern, count 3; up to multiPressMax)
+//   hold ~1 s      -> long press     (LongPress + LongRelease)
+//   hold 5 s       -> factory reset  (Matter.decommission(), not a Switch event)
+// For a short-click-only button see MatterSmartButton. For named sibling buttons see MatterSmartButtonsTagList.
 
 // Matter Manager
 #include <Arduino.h>
@@ -40,9 +44,9 @@ const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
 // Timing (adjust to match your hub / use case)
 const uint32_t debounceMs = 50;                // button debouncing time (ms)
-const uint32_t longPressMs = 1000;             // hold duration to trigger LongPress event (ms)
-const uint32_t multiPressWindowMs = 300;       // max gap between clicks for multi-press (ms)
-const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
+const uint32_t longPressMs = 1000;             // hold duration to trigger LongPress (ms)
+const uint32_t multiPressWindowMs = 400;       // max gap between taps for double/triple click (ms)
+const uint32_t decommissioningTimeout = 5000;  // hold 5s or longer to decommission (not a Switch gesture)
 const uint8_t multiPressMax = 5;               // maximum press count reported to Matter (2–255)
 
 // Button state
@@ -61,6 +65,15 @@ static bool readButtonPressed() {
   return digitalRead(buttonPin) == LOW;
 }
 
+static const char *clickGestureName(uint8_t count) {
+  switch (count) {
+    case 1:  return "SINGLE CLICK";
+    case 2:  return "DOUBLE CLICK";
+    case 3:  return "TRIPLE CLICK";
+    default: return "MULTI CLICK";
+  }
+}
+
 static void handlePressDown() {
   pressStartMs = millis();
   longPressSent = false;
@@ -68,13 +81,13 @@ static void handlePressDown() {
   if (inMultiPressSequence && millis() < multiPressDeadlineMs && pressesInSequence >= 1) {
     // Additional press within the multi-press window
     uint8_t count = pressesInSequence + 1;
-    Serial.printf("User button pressed again. Sending MultiPressOngoing (count=%u) to the Matter Controller!\r\n", count);
+    Serial.printf("Tap %u in this sequence. Sending MultiPressOngoing (count=%u).\r\n", count, count);
     SmartButton.multiPressOngoing(count);
   } else {
     // First press in a new sequence
     pressesInSequence = 0;
     inMultiPressSequence = true;
-    Serial.println("User button pressed. Sending InitialPress to the Matter Controller!");
+    Serial.println("Button down. Sending InitialPress.");
     SmartButton.press();
   }
 }
@@ -82,7 +95,8 @@ static void handlePressDown() {
 static void handlePressUp() {
   if (longPressSent) {
     // Release after a long press
-    Serial.println("User button released after long press. Sending LongRelease to the Matter Controller!");
+    Serial.println("Button up after hold. Sending LongRelease.");
+    Serial.println(">>> Gesture: LONG PRESS");
     SmartButton.longRelease();
     longPressSent = false;
     inMultiPressSequence = false;
@@ -92,7 +106,7 @@ static void handlePressUp() {
   }
 
   // Short release
-  Serial.println("User button released. Sending ShortRelease to the Matter Controller!");
+  Serial.println("Button up. Sending ShortRelease.");
   SmartButton.release();
   pressesInSequence++;
   multiPressDeadlineMs = millis() + multiPressWindowMs;
@@ -101,7 +115,7 @@ static void handlePressUp() {
 static void checkLongPress() {
   if (buttonPressed && !longPressSent && (millis() - pressStartMs >= longPressMs)) {
     longPressSent = true;
-    Serial.println("User button held. Sending LongPress to the Matter Controller!");
+    Serial.println("Hold reached 1 s. Sending LongPress.");
     SmartButton.longPress();
   }
 }
@@ -115,7 +129,9 @@ static void checkMultiPressComplete() {
   }
 
   if (SmartButton.hasFeature(MatterGenericSwitch::FEATURE_MULTI_PRESS) && pressesInSequence > 0) {
-    Serial.printf("Multi-press window expired. Sending MultiPressComplete (count=%u) to the Matter Controller!\r\n", pressesInSequence);
+    Serial.printf(
+      ">>> Gesture: %s (MultiPressComplete count=%u)\r\n", clickGestureName(pressesInSequence), pressesInSequence
+    );
     SmartButton.multiPressComplete(pressesInSequence);
   }
 
@@ -158,6 +174,7 @@ void setup() {
   // This may be a restart of a already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
+    Serial.println("BOOT button gestures: tap = single click, tap-tap = double, tap-tap-tap = triple, hold 1s = long press, hold 5s = factory reset.");
   }
 }
 
@@ -179,6 +196,7 @@ void loop() {
       }
     }
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
+    Serial.println("BOOT button gestures: tap = single click, tap-tap = double, tap-tap-tap = triple, hold 1s = long press, hold 5s = factory reset.");
   }
 
   // A builtin button is used to trigger gesture events to the Matter Controller

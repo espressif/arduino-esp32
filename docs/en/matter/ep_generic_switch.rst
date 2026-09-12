@@ -183,7 +183,7 @@ Sends ``MultiPressComplete`` when the multi-press window expires after the last 
 click
 ^^^^^
 
-Convenience helper: sends ``InitialPress`` followed by ``ShortRelease`` when the release feature is enabled.
+Convenience helper: sends ``InitialPress`` followed by ``ShortRelease`` when the release feature is enabled. Both events run in one Matter-task lambda so ``ShortRelease`` cannot be processed before ``InitialPress``.
 
 .. code-block:: arduino
 
@@ -227,7 +227,7 @@ Minimal short-click implementation using ``press()`` on down and ``release()`` o
 Enhanced Smart Button
 *********************
 
-Same single BOOT button as the simple example. ``begin(FEATURE_ALL)`` enables long-press and multi-press; the sketch turns hold time and click count into ``LongPress`` / ``LongRelease`` and ``MultiPressOngoing`` / ``MultiPressComplete``. For several buttons with names, use the TagList example below.
+Same single BOOT button as the simple example. ``begin(FEATURE_ALL)`` enables long-press and multi-press. Serial names the gestures: single click, double click, triple click, and long press. For several buttons with names, use the TagList example below.
 
 `View Matter Enhanced Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterEnhancedSmartButton>`_
 

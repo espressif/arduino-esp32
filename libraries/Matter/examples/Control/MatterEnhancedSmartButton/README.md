@@ -1,6 +1,14 @@
 # Matter Enhanced Smart Button Example
 
-This example is still **one** physical button (BOOT), not several tagged switches. It enables Switch `FEATURE_ALL` and maps hold / repeated clicks to Matter events: `LongPress` / `LongRelease` and `MultiPressOngoing` / `MultiPressComplete` (count 2, 3, …).
+This example is still **one** physical button (BOOT), not several tagged switches. It enables Switch `FEATURE_ALL` and maps those actions to named gestures:
+
+| Physical action | Gesture printed on Serial | Matter events |
+| --- | --- | --- |
+| One tap | `SINGLE CLICK` | `InitialPress` + `ShortRelease` + `MultiPressComplete` (1) |
+| Two taps | `DOUBLE CLICK` | plus `MultiPressOngoing` (2) + `MultiPressComplete` (2) |
+| Three taps | `TRIPLE CLICK` | same pattern, count 3 (up to `multiPressMax`) |
+| Hold ~1 s | `LONG PRESS` | `LongPress` + `LongRelease` |
+| Hold 5 s | factory reset | `Matter.decommission()` — not a Switch event |
 
 For a short-click-only single button, see [MatterSmartButton](../MatterSmartButton). For **three** short-click buttons with Descriptor tags, see [MatterSmartButtonsTagList](../MatterSmartButtonsTagList).
 
@@ -38,9 +46,8 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 ## Features
 
 - Matter Generic Switch with **all momentary gesture features** enabled (`FEATURE_ALL`)
-- Short click: `InitialPress` + `ShortRelease`
+- Single / double / triple click (400 ms window, up to 5 taps)
 - Long press (default 1 s): `LongPress` + `LongRelease`
-- Multi-press (default 300 ms window, up to 5 presses): `MultiPressOngoing` + `MultiPressComplete`
 - Factory reset via 5 s hold (decommission, not a Matter event)
 - Serial logging of each gesture for debugging
 
@@ -61,7 +68,7 @@ Adjust timing constants at the top of the sketch:
 
 ```cpp
 const uint32_t longPressMs = 1000;        // long-press threshold
-const uint32_t multiPressWindowMs = 300;  // gap between clicks for multi-press
+const uint32_t multiPressWindowMs = 400;  // gap between taps for double/triple click
 const uint8_t multiPressMax = 5;          // max presses reported to Matter
 ```
 
@@ -77,19 +84,14 @@ Same steps as MatterSmartButton:
 ## Expected Serial Output
 
 ```
-Initial press
-Short release
-Multi-press complete (count=1)
+>>> Gesture: SINGLE CLICK (MultiPressComplete count=1)
 
-Initial press
-Short release
-Multi-press ongoing (count=2)
-Short release
-Multi-press complete (count=2)
+Tap 2 in this sequence. Sending MultiPressOngoing (count=2).
+>>> Gesture: DOUBLE CLICK (MultiPressComplete count=2)
 
-Initial press
-Long press
-Long release
+Hold reached 1 s. Sending LongPress.
+Button up after hold. Sending LongRelease.
+>>> Gesture: LONG PRESS
 ```
 
 ## Smart Home Integration
