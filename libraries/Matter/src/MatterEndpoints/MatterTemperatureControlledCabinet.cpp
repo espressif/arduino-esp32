@@ -98,7 +98,7 @@ bool MatterTemperatureControlledCabinet::attributeChangeCB(uint16_t endpoint_id,
   log_d("Temperature Controlled Cabinet Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32, endpoint_id, cluster_id, attribute_id);
 
   // Handle TemperatureControl cluster attribute changes from Matter controller
-  if (cluster_id == TemperatureControl::Id) {
+  if (endpoint_id == getEndPointId() && cluster_id == TemperatureControl::Id) {
     switch (attribute_id) {
       case TemperatureControl::Attributes::TemperatureSetpoint::Id:
         if (useTemperatureNumber) {
