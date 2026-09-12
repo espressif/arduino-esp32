@@ -22,6 +22,7 @@
 #include "platform/ESP32/OpenthreadLauncher.h"
 #if defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
 #include <app/clusters/general-commissioning-server/BreadCrumbTracker.h>
+#include <app/clusters/general-commissioning-server/CodegenIntegration.h>
 #include <app/clusters/network-commissioning/NetworkCommissioningCluster.h>
 #include <app/server-cluster/ServerClusterInterfaceRegistry.h>
 #include <data_model_provider/esp_matter_data_model_provider.h>
@@ -217,8 +218,19 @@ static void matterIpEventHandler(void *arg, esp_event_base_t event_base, int32_t
 // The C6 prebuild can bind Thread NC to Kconfig endpoint 2, but Arduino does not
 // create that endpoint. C6 is Wi-Fi or Thread on the root: after start(), replace
 // the Wi-Fi driver on endpoint 0 with the Thread driver.
+// NetworkCommissioning commands carry a breadcrumb. CHIP writes it through this
+// tracker into GeneralCommissioning.Breadcrumb so the hub can see fail/success.
+// The Wi-Fi NC on root already uses ESP-Matter's tracker; this one is only for
+// the Thread cluster Arduino puts on endpoint 0.
 class MatterBreadcrumbTracker : public chip::app::Clusters::BreadCrumbTracker {
-  void SetBreadCrumb(uint64_t) override {}
+  void SetBreadCrumb(uint64_t value) override {
+    GeneralCommissioningCluster *cluster = GeneralCommissioning::Instance();
+    if (cluster == nullptr) {
+      log_e("General Commissioning cluster not available; Thread NC breadcrumb not set");
+      return;
+    }
+    cluster->SetBreadCrumb(value);
+  }
 };
 
 static MatterBreadcrumbTracker sThreadNcBreadcrumb;
