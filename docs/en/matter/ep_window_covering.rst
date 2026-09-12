@@ -251,7 +251,7 @@ Window Covering Type
 setCoveringType
 ^^^^^^^^^^^^^^^
 
-Sets the window covering type.
+Sets the window covering ``Type`` attribute. Lift/Tilt ``FeatureMap`` bits are fixed at ``begin()``. A type that needs a different feature set (for example shutter to roller shade) is rejected; recreate the endpoint instead. Types in the same family (roller shade to awning) succeed.
 
 .. code-block:: arduino
 

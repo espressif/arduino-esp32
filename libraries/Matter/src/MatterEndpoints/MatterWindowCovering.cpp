@@ -26,6 +26,13 @@ using namespace esp_matter::cluster::window_covering::feature;
 using namespace chip::app::Clusters;
 namespace wc_endpoint = esp_matter::endpoint::window_covering;
 
+namespace {
+void coveringLiftTilt(MatterWindowCovering::WindowCoveringType_t type, bool *lift, bool *tilt) {
+  *tilt = (type == MatterWindowCovering::SHUTTER || type == MatterWindowCovering::BLIND_TILT_ONLY || type == MatterWindowCovering::BLIND_LIFT_AND_TILT);
+  *lift = (type != MatterWindowCovering::SHUTTER && type != MatterWindowCovering::BLIND_TILT_ONLY);
+}
+}  // namespace
+
 MatterWindowCovering::MatterWindowCovering() {}
 
 MatterWindowCovering::~MatterWindowCovering() {
@@ -71,9 +78,10 @@ bool MatterWindowCovering::begin(
   }
 
   // Type comments in the header: shutter / tilt-only blind do not lift.
-  // ESP-Matter requires at least one of Lift or Tilt (O.a+).
-  const bool supportsTilt = (coveringType == SHUTTER || coveringType == BLIND_TILT_ONLY || coveringType == BLIND_LIFT_AND_TILT);
-  const bool supportsLift = (coveringType != SHUTTER && coveringType != BLIND_TILT_ONLY);
+  // ESP-Matter requires at least one of Lift or Tilt (O.a+). FeatureMap is fixed at create.
+  bool supportsLift = false;
+  bool supportsTilt = false;
+  coveringLiftTilt(coveringType, &supportsLift, &supportsTilt);
 
   wc_endpoint::config_t window_covering_config(0);
   window_covering_config.window_covering.type = (uint8_t)coveringType;
@@ -736,6 +744,16 @@ MatterWindowCovering::PositionCalibration MatterWindowCovering::getTiltCalibrati
 bool MatterWindowCovering::setCoveringType(WindowCoveringType_t coveringType) {
   if (!started) {
     log_e("Matter Window Covering device has not begun.");
+    return false;
+  }
+
+  bool wantLift = false;
+  bool wantTilt = false;
+  coveringLiftTilt(coveringType, &wantLift, &wantTilt);
+  if (wantLift != liftFeatureEnabled || wantTilt != tiltFeatureEnabled) {
+    log_e(
+      "setCoveringType(%u) needs different Lift/Tilt features than begin(); FeatureMap is fixed at create.", (uint8_t)coveringType
+    );
     return false;
   }
 

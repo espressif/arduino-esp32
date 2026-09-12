@@ -105,7 +105,8 @@ public:
   bool setTiltCalibration(const PositionCalibration &calibration);
   PositionCalibration getTiltCalibration();
 
-  // Window covering type
+  // Type attribute only. FeatureMap (Lift/Tilt) is fixed at begin(); a type that
+  // needs a different feature set is rejected (recreate the endpoint instead).
   bool setCoveringType(WindowCoveringType_t coveringType);
   WindowCoveringType_t getCoveringType();
 
