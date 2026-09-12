@@ -23,7 +23,10 @@ using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
 
 // string helper for the THERMOSTAT MODE
-const char *MatterThermostat::thermostatModeString[5] = {"OFF", "AUTO", "UNKNOWN", "COOL", "HEAT"};
+// Indexed by Thermostat::SystemModeEnum (2 is unused in the spec)
+const char *MatterThermostat::thermostatModeString[10] = {
+  "OFF", "AUTO", "UNKNOWN", "COOL", "HEAT", "EMERGENCY_HEAT", "PRECOOLING", "FAN_ONLY", "DRY", "SLEEP"
+};
 
 namespace {
 uint32_t thermostatFeatureFlagsFromControlSequence(uint8_t controlSequence) {
@@ -51,7 +54,7 @@ bool MatterThermostat::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
     val->val.u32
   );
 
-  if (cluster_id == Thermostat::Id) {
+  if (endpoint_id == getEndPointId() && cluster_id == Thermostat::Id) {
     switch (attribute_id) {
       case Thermostat::Attributes::SystemMode::Id:
         if (_onChangeModeCB != NULL) {

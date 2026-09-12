@@ -131,7 +131,7 @@ Gets the Control Sequence of Operation set at ``begin()``.
 getThermostatModeString
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Gets a friendly string for the thermostat mode.
+Gets a friendly string for the thermostat ``SystemMode`` value, including ``EMERGENCY_HEAT``, ``PRECOOLING``, ``FAN_ONLY``, ``DRY``, and ``SLEEP``. Returns ``UNKNOWN`` for the unused enum value ``2`` and for any out-of-range mode.
 
 .. code-block:: arduino
 

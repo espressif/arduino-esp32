@@ -65,8 +65,11 @@ public:
   ThermostatMode_t getMode() {
     return currentMode;
   }
-  // returns a friendly string for the Fan Mode
+  // returns a friendly string for the Thermostat SystemMode (unknown if out of range)
   static const char *getThermostatModeString(uint8_t mode) {
+    if (mode >= (sizeof(thermostatModeString) / sizeof(thermostatModeString[0]))) {
+      return "UNKNOWN";
+    }
     return thermostatModeString[mode];
   }
 
@@ -202,6 +205,6 @@ protected:
   // clang-format on
 
   // string helper for the THERMOSTAT MODE
-  static const char *thermostatModeString[5];
+  static const char *thermostatModeString[10];
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
