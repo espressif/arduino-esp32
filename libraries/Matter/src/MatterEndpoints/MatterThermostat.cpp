@@ -175,6 +175,16 @@ void MatterThermostat::end() {
   started = false;
 }
 
+float MatterThermostat::getDeadBand() {
+  if (started && autoMode == THERMOSTAT_AUTO_MODE_ENABLED) {
+    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+    if (getAttributeVal(Thermostat::Id, Thermostat::Attributes::MinSetpointDeadBand::Id, &val)) {
+      return (float)val.val.i8 / 10.00;
+    }
+  }
+  return (float)kDefaultDeadBand / 10.00;
+}
+
 bool MatterThermostat::setMode(ThermostatMode_t _mode) {
   if (!started) {
     log_e("Matter Thermostat device has not begun.");
@@ -295,25 +305,24 @@ bool MatterThermostat::setCoolingHeatingSetpoints(double _setpointHeatingTempera
 
   // AUTO mode requires both setpoints to be valid to each other and respect the deadband
   if (currentMode == THERMOSTAT_MODE_AUTO) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-    float deadband = getDeadBand();
-#endif
+    const float deadband = getDeadBand();
+    const int16_t deadbandHundredths = (int16_t)(deadband * 100.0f + 0.5f);
     // only setting Cooling Setpoint
-    if (settingCooling && !settingHeating && _rawCoolValue < (heatingSetpointTemperature + (kDefaultDeadBand * 10))) {
+    if (settingCooling && !settingHeating && _rawCoolValue < (heatingSetpointTemperature + deadbandHundredths)) {
       log_e(
         "AutoMode :: Invalid Cooling Setpoint value: %.01fC - must be higher or equal than %.01fC", _setpointCoolingTemperature, getHeatingSetpoint() + deadband
       );
       return false;
     }
     // only setting Heating Setpoint
-    if (!settingCooling && settingHeating && _rawHeatValue > (coolingSetpointTemperature - (kDefaultDeadBand * 10))) {
+    if (!settingCooling && settingHeating && _rawHeatValue > (coolingSetpointTemperature - deadbandHundredths)) {
       log_e(
         "AutoMode :: Invalid Heating Setpoint value: %.01fC - must be lower or equal than %.01fC", _setpointHeatingTemperature, getCoolingSetpoint() - deadband
       );
       return false;
     }
     // setting both setpoints
-    if (settingCooling && settingHeating && (_rawCoolValue <= _rawHeatValue || _rawCoolValue - _rawHeatValue < kDefaultDeadBand * 10.0)) {
+    if (settingCooling && settingHeating && (_rawCoolValue <= _rawHeatValue || _rawCoolValue - _rawHeatValue < deadbandHundredths)) {
       log_e(
         "AutoMode :: Error - Heating Setpoint %.01fC must be lower than Cooling Setpoint %.01fC with a minimum difference of %0.1fC",
         _setpointHeatingTemperature, _setpointCoolingTemperature, deadband

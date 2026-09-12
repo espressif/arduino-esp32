@@ -255,7 +255,7 @@ Gets the maximum cooling setpoint limit.
 getDeadBand
 ^^^^^^^^^^^
 
-Gets the deadband value (minimum difference between heating and cooling setpoints in AUTO mode).
+Gets the AUTO ``MinSetpointDeadBand`` in Celsius (cluster stores tenths of a degree). Reads the attribute when Auto is enabled; otherwise returns the default 2.5 °C.
 
 .. code-block:: arduino
 

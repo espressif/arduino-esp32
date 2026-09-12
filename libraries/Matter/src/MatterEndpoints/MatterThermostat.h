@@ -94,10 +94,8 @@ public:
   float getMaxCoolSetpoint() {
     return (float)kDefaultMaxCoolSetpointLimit / 100.00;
   }
-  // get the deadband in 1/10th of a Celsio degree
-  float getDeadBand() {
-    return (float)kDefaultDeadBand / 10.00;
-  }
+  // AUTO MinSetpointDeadBand in Celsius (cluster value is 1/10 °C). Falls back to 2.5 °C.
+  float getDeadBand();
 
   // generic function for setting the cooling and heating setpoints - checks if the setpoints are valid
   // it can be used to set both setpoints at the same time or only one of them, by setting the other to (float)0xffff
