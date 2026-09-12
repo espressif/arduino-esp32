@@ -190,17 +190,17 @@ bool MatterThermostat::setMode(ThermostatMode_t _mode) {
       case THERMOSTAT_SEQ_OP_COOLING:
       case THERMOSTAT_SEQ_OP_COOLING_REHEAT:
         if (_mode == THERMOSTAT_MODE_HEAT || _mode == THERMOSTAT_MODE_AUTO) {
-          break;
+          log_e("Invalid Thermostat Mode for Cooling Control Sequence of Operation.");
+          return false;
         }
-        log_e("Invalid Thermostat Mode for Cooling Control Sequence of Operation.");
-        return false;
+        break;
       case THERMOSTAT_SEQ_OP_HEATING:
       case THERMOSTAT_SEQ_OP_HEATING_REHEAT:
         if (_mode == THERMOSTAT_MODE_COOL || _mode == THERMOSTAT_MODE_AUTO) {
-          break;
+          log_e("Invalid Thermostat Mode for Heating Control Sequence of Operation.");
+          return false;
         }
-        log_e("Invalid Thermostat Mode for Heating Control Sequence of Operation.");
-        return false;
+        break;
       default:
         // compiler warning about not handling all enum values
         break;
