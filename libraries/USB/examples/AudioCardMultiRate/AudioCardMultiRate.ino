@@ -15,7 +15,7 @@
 /*
   USB Audio Card with multiple sample rates (device mode)
 
-  Based on the AudioCard example, this example demonstrates UAC1 with multiple
+  Based on the AudioCard example, this example demonstrates USB Audio with multiple
   discrete sample rates, 44.1 kHz and 48 kHz, allowing the host to switch
   between them.
 
@@ -23,17 +23,12 @@
   ARDUINO_USB_AUDIO_CARD_SAMPLE_RATE_EVENT. The example re-tunes the I2S TX
   interface with configureTX() so the DAC follows the new sample rate.
 
-  NOTE: Multiple sample rates are an opt-in UAC1 feature guarded by the
+  NOTE: Multiple sample rates are an opt-in feature guarded by the
   UAC_USE_MULTIPLE_RATES build define (it adds flash usage). The define must be
   visible to the library sources, so this example ships a build_opt.h file with
   "-DUAC_USE_MULTIPLE_RATES" next to the sketch. To use the feature in your own
   sketch, add that define to your build flags or create a build_opt.h file in
   your sketch folder.
-
-  NOTE: Multiple sample rate support is currently implemented for UAC1.
-  UAC2 uses a different clock and sample-rate control mechanism (clock source
-  controls); support is planned but not implemented yet (see the TODO in
-  USBAudioCard.cpp), so this example is full-speed only.
 */
 
 #include <Arduino.h>
@@ -41,8 +36,6 @@
 #include "USB.h"
 #include "USBAudioCard.h"
 
-// The UAC1 implementation used by this example runs in Full-Speed mode,
-// so this example is limited to ESP32-S2/S3.
 #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32S2
 #define I2S_BCLK  4
 #define I2S_LRCK  5
@@ -50,8 +43,15 @@
 #define I2S_DIN   7
 #define I2S_WIDTH I2S_DATA_BIT_WIDTH_16BIT
 #define UAC_BPS   UAC_BPS_16
+#elif CONFIG_IDF_TARGET_ESP32P4
+#define I2S_BCLK  0
+#define I2S_LRCK  1
+#define I2S_DOUT  2
+#define I2S_DIN   3
+#define I2S_WIDTH I2S_DATA_BIT_WIDTH_32BIT
+#define UAC_BPS   UAC_BPS_24
 #else
-#error This example requires an ESP32-S2 or an ESP32-S3 (UAC1 Full-Speed)
+#error This example is not supported on the selected hardware
 #endif
 
 // Advertise 48 kHz (default) and 44.1 kHz. The first array entry is the initial
@@ -59,6 +59,8 @@
 static const uint32_t UAC_SAMPLE_RATES[] = {48000, 44100};
 constexpr size_t UAC_SAMPLE_RATE_COUNT = sizeof(UAC_SAMPLE_RATES) / sizeof(UAC_SAMPLE_RATES[0]);
 
+// This example intentionally uses a speaker-only interface to keep the
+// multi-rate behavior focused. See AudioCard for a full-duplex headset example.
 USBAudioCard uac(UAC_SAMPLE_RATES, UAC_SAMPLE_RATE_COUNT, UAC_BPS, UAC_SPK_STEREO, UAC_MIC_NONE);
 
 I2SClass i2s;

@@ -27,18 +27,13 @@
  *  are enabled. Uses TinyUSB UAC1 (full-speed) or UAC2 (high-speed) depending
  *  on the build configuration.
  *
- *  Multiple discrete sample rates (UAC1 full-speed) are an opt-in feature
+ *  Multiple discrete sample rates are an opt-in feature
  *  because they increase flash usage noticeably. Define @c UAC_USE_MULTIPLE_RATES
  *  to enable them. The macro must be visible when compiling both the sketch
  *  and the USBAudioCard library sources, so add it to the sketch's
  *  @c build_opt.h (e.g. @c -DUAC_USE_MULTIPLE_RATES) or to the platform's
  *  build flags; defining it at the top of the .ino only affects the sketch
  *  itself, not the library sources.
- *
- *  The multiple-rate feature is currently implemented for UAC1 (full-speed)
- *  only: on UAC2 high-speed targets (e.g. ESP32-P4) the multi-rate constructor
- *  exists but the extra rates are not used yet. UAC2 support is planned (see
- *  the TODO in USBAudioCard.cpp).
  */
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_AUDIO_CARD_EVENTS);
@@ -129,9 +124,9 @@ public:
   USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels = UAC_SPK_STEREO, UAC_MIC_Channels mic_channels = UAC_MIC_STEREO);
 #if defined(UAC_USE_MULTIPLE_RATES)
   /**
-  *  @brief Maximum number of discrete sample rates the device can advertise (UAC1 full-speed).
-  *  Limited to 8 by the descriptor cases provided by this implementation and the TinyUSB
-  *  macro expansion used to build the UAC1 format descriptor.
+  *  @brief Maximum number of discrete sample rates the device can advertise.
+  *  Limited to 8 by the UAC1 descriptor cases provided by this implementation
+  *  and the TinyUSB macro expansion used to build the UAC1 format descriptor.
   */
   static constexpr uint8_t UAC_MAX_SAMPLE_RATES = 8;
 
@@ -140,10 +135,9 @@ public:
   *  @param sample_rates  Pointer to an array of supported sample rates in Hz, e.g. a local
   *                       `uint32_t rates[] = {48000, 44100}`. The values are copied during
   *                       construction, so the array does not need to outlive this call.
-  *                       Entries may be in any order; the first entry becomes the initial rate.
-  *                       The largest rate is used to size the USB endpoints (UAC1 full-speed).
-  *                       On UAC2 high-speed targets (e.g. ESP32-P4) the multi-rate path is
-  *                       not implemented yet, so only the initial rate is used there.
+  *                       Entries must be non-zero and unique, and may be in any order; the first
+  *                       entry becomes the initial rate. The largest rate is used to size the
+  *                       USB endpoints.
   *  @param num_rates     Number of entries in @a sample_rates (1..UAC_MAX_SAMPLE_RATES).
   *  @param bps           Bits per sample (@ref UAC_Bits_Per_Sample).
   *  @param spk_channels  Speaker channel layout (@ref UAC_SPK_Channels).

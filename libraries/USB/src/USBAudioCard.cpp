@@ -41,20 +41,20 @@ static USBAudioCard *_uac = NULL;
 
 // The multi-rate state is opt-in via UAC_USE_MULTIPLE_RATES. The UAC1 descriptor
 // builders that follow are additionally gated on !TUD_OPT_HIGH_SPEED because the
-// high-speed (UAC2) path never calls them: building them there would only warn
-// (unused functions) and waste flash.
-//
-// TODO(esp32-arduino): implement multi-rate support for UAC2 (high-speed,
-// currently the ESP32-P4). The rate list is advertised through the clock source
-// SAM_FREQ controls, not the format descriptor:
-//   - Size the TUD_AUDIO20_* endpoints from _max_sample_rate (UAC2 holds no rate
-//     count in the format descriptor, so no per-count dispatch is needed).
-//   - Answer SAM_FREQ GET RANGE with one discrete subrange per advertised rate
-//     (min = max = rate) and validate SAM_FREQ SET CUR against _sample_rates[].
+// high-speed (UAC2) path advertises rates through its clock source controls.
 #if defined(UAC_USE_MULTIPLE_RATES)
 static uint32_t _sample_rates[USBAudioCard::UAC_MAX_SAMPLE_RATES] = {48000};
 static uint8_t _num_sample_rates = 1;
 static uint32_t _max_sample_rate = 48000;
+
+static bool _is_sample_rate_supported(uint32_t rate) {
+  for (uint8_t i = 0; i < _num_sample_rates; i++) {
+    if (_sample_rates[i] == rate) {
+      return true;
+    }
+  }
+  return false;
+}
 #endif
 
 #if defined(UAC_USE_MULTIPLE_RATES) && !TUD_OPT_HIGH_SPEED
@@ -201,6 +201,11 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
   _itf_num = *itf;
 #if TUD_OPT_HIGH_SPEED
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB UAC2");
+#ifdef UAC_USE_MULTIPLE_RATES
+  uint32_t max_sample_rate = _max_sample_rate;
+#else
+  uint32_t max_sample_rate = CFG_TUD_AUDIO_MAX_SAMPLE_RATE;
+#endif
   if (_spk_channels == 2 && _mic_channels > 0) {
     // Stereo Headset
     uint8_t ep_num = tinyusb_get_free_duplex_endpoint();
@@ -210,7 +215,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_HEADSET_STEREO_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_HEADSET_STEREO_DESCRIPTOR(
-        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _spk_channels, _mic_channels,
+        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), max_sample_rate, _spk_channels, _mic_channels,
         _bytes_per_sample, _bits_per_sample
       )
     };
@@ -226,7 +231,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_HEADSET_MONO_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_HEADSET_MONO_DESCRIPTOR(
-        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _spk_channels, _mic_channels,
+        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), max_sample_rate, _spk_channels, _mic_channels,
         _bytes_per_sample, _bits_per_sample
       )
     };
@@ -242,7 +247,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_SPEAKER_STEREO_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_SPEAKER_STEREO_DESCRIPTOR(
-        _itf_num, str_index, ep_num, (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _spk_channels, _bytes_per_sample, _bits_per_sample
+        _itf_num, str_index, ep_num, (uint8_t)(int_ep_num | 0x80), max_sample_rate, _spk_channels, _bytes_per_sample, _bits_per_sample
       )
     };
     *itf += 2;
@@ -257,7 +262,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_SPEAKER_MONO_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_SPEAKER_MONO_DESCRIPTOR(
-        _itf_num, str_index, ep_num, (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _spk_channels, _bytes_per_sample, _bits_per_sample
+        _itf_num, str_index, ep_num, (uint8_t)(int_ep_num | 0x80), max_sample_rate, _spk_channels, _bytes_per_sample, _bits_per_sample
       )
     };
     *itf += 2;
@@ -272,7 +277,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_MICROPHONE_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_MICROPHONE_DESCRIPTOR(
-        _itf_num, str_index, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _mic_channels, _bytes_per_sample,
+        _itf_num, str_index, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), max_sample_rate, _mic_channels, _bytes_per_sample,
         _bits_per_sample
       )
     };
@@ -394,15 +399,8 @@ bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const *p_req
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   if (ctrlSel == AUDIO10_EP_CTRL_SAMPLING_FREQ && p_request->bRequest == AUDIO10_CS_REQ_SET_CUR && p_request->wLength == 3) {
 #ifdef UAC_USE_MULTIPLE_RATES
-    uint32_t rate = tu_unaligned_read32(pBuff) & 0x00FFFFFF;
-    bool supported = false;
-    for (uint8_t i = 0; i < _num_sample_rates; i++) {
-      if (_sample_rates[i] == rate) {
-        supported = true;
-        break;
-      }
-    }
-    if (!supported) {
+    uint32_t rate = (uint32_t)pBuff[0] | ((uint32_t)pBuff[1] << 8) | ((uint32_t)pBuff[2] << 16);
+    if (!_is_sample_rate_supported(rate)) {
       log_w("Sample rate %" PRIu32 " is not in the advertised list, rejecting", rate);
       return false;
     }
@@ -463,12 +461,25 @@ bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
         audio20_control_cur_4_t curf = {(int32_t)tu_htole32(_sample_rate)};
         return tud_audio_buffer_and_schedule_control_xfer(rhport, p_request, &curf, sizeof(curf));
       } else if (p_request->bRequest == AUDIO20_CS_REQ_RANGE) {
+#ifdef UAC_USE_MULTIPLE_RATES
+        audio20_control_range_4_n_t(USBAudioCard::UAC_MAX_SAMPLE_RATES) rangef = {};
+        rangef.wNumSubRanges = tu_htole16(_num_sample_rates);
+        for (uint8_t i = 0; i < _num_sample_rates; i++) {
+          rangef.subrange[i].bMin = (int32_t)tu_htole32(_sample_rates[i]);
+          rangef.subrange[i].bMax = (int32_t)tu_htole32(_sample_rates[i]);
+          rangef.subrange[i].bRes = tu_htole32(0);
+          log_d("Clock Range %u: %" PRIu32 ", %" PRIu32 ", %u", i, _sample_rates[i], _sample_rates[i], 0);
+        }
+        uint16_t range_len = sizeof(rangef.wNumSubRanges) + _num_sample_rates * sizeof(rangef.subrange[0]);
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, p_request, &rangef, range_len);
+#else
         audio20_control_range_4_n_t(1) rangef = {.wNumSubRanges = tu_htole16(1)};
         rangef.subrange[0].bMin = (int32_t)tu_htole32(_sample_rate);
         rangef.subrange[0].bMax = (int32_t)tu_htole32(_sample_rate);
         rangef.subrange[0].bRes = (int32_t)tu_htole32(0);
         log_d("Clock Range %" PRIu32 ", %" PRIu32 ", %d", _sample_rate, _sample_rate, 0);
         return tud_audio_buffer_and_schedule_control_xfer(rhport, p_request, &rangef, sizeof(rangef));
+#endif
       }
     } else if (ctrlSel == AUDIO20_CS_CTRL_CLK_VALID && p_request->bRequest == AUDIO20_CS_REQ_CUR) {
       audio20_control_cur_1_t cur_valid = {.bCur = 1};
@@ -582,7 +593,14 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
   } else if (entityID == UAC2_ENTITY_CLOCK && p_request->bRequest == AUDIO20_CS_REQ_CUR) {
     if (ctrlSel == AUDIO20_CS_CTRL_SAM_FREQ) {
       TU_VERIFY(p_request->wLength == sizeof(audio20_control_cur_4_t));
-      _sample_rate = (uint32_t)((audio20_control_cur_4_t const *)buf)->bCur;
+      uint32_t rate = tu_le32toh((uint32_t)((audio20_control_cur_4_t const *)buf)->bCur);
+#ifdef UAC_USE_MULTIPLE_RATES
+      if (!_is_sample_rate_supported(rate)) {
+        log_w("Sample rate %" PRIu32 " is not in the advertised list, rejecting", rate);
+        return false;
+      }
+#endif
+      _sample_rate = rate;
       log_d("Clock set current freq: %" PRIu32, _sample_rate);
       // Send SAMPLE RATE Event
       arduino_usb_audio_card_event_data_t p;
@@ -680,6 +698,21 @@ USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SP
       log_e("sample_rates pointer is NULL!");
       return;
     }
+    for (uint8_t i = 0; i < num_rates; i++) {
+      // Zero is invalid for a UAC sample frequency. Do not impose a generic non-zero minimum here:
+      // the application is responsible for choosing rates supported by its I2S/codec hardware.
+      if (sample_rates[i] == 0) {
+        log_e("Sample rate at index %u must be greater than zero!", i);
+        return;
+      }
+      // Each advertised rate must be distinct; duplicate UAC ranges add no capability.
+      for (uint8_t j = 0; j < i; j++) {
+        if (sample_rates[j] == sample_rates[i]) {
+          log_e("Duplicate sample rate %" PRIu32 " at index %u!", sample_rates[i], i);
+          return;
+        }
+      }
+    }
     _uac = this;
     _num_sample_rates = num_rates;
     _max_sample_rate = 0;
@@ -701,7 +734,11 @@ USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SP
 
     uint16_t descriptor_len = 0;
 #if TUD_OPT_HIGH_SPEED
+#ifdef UAC_USE_MULTIPLE_RATES
+    if (_max_sample_rate > CFG_TUD_AUDIO_MAX_SAMPLE_RATE) {
+#else
     if (_sample_rate > CFG_TUD_AUDIO_MAX_SAMPLE_RATE) {
+#endif
       log_e("Maximum %u sample rate supported!", CFG_TUD_AUDIO_MAX_SAMPLE_RATE);
       _uac = NULL;
       return;
