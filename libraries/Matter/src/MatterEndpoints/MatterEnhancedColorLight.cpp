@@ -309,14 +309,14 @@ bool MatterEnhancedColorLight::setBrightness(uint8_t newBrightness) {
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, LevelControl::Id);
   esp_matter::attribute_t *attribute = attribute::get(cluster, LevelControl::Attributes::CurrentLevel::Id);
-
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  attribute::get_val(attribute, &val);
-
-  if (val.val.u8 != brightnessLevel) {
-    val.val.u8 = brightnessLevel;
-    attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
+  if (attribute == nullptr) {
+    log_e("Failed to get Enhanced Color Light CurrentLevel Attribute.");
+    return false;
   }
+
+  // CurrentLevel is nullable uint8; ESP_MATTER_VAL_TYPE_UINT8 returns err 258.
+  esp_matter_attr_val_t val = esp_matter_nullable_uint8(brightnessLevel);
+  attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
   return true;
 }
 
