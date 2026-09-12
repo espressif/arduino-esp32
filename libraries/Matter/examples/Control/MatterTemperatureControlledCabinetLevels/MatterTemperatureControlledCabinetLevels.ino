@@ -19,13 +19,14 @@
  * Additionally the ESP32 will send debug messages indicating the Matter activity.
  * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
  *
- * begin() takes a uint8 array of application level values. Matter SupportedTemperatureLevels is a
- * list of strings, so each value is advertised as a decimal label (30 -> "30"). Hubs write
+ * begin() takes a uint8 array of application level values plus optional string labels.
+ * Matter SupportedTemperatureLevels is a list of those strings. Hubs write
  * SelectedTemperatureLevel as an index into that list. set/getSelectedTemperatureLevel() still
  * use the uint8 values from the array, not the index.
  *
- * Values here are 10/20/30/40/50 so the value is not the same as the Matter index. Serial prints
- * both so you can tell them apart.
+ * Values here are 10/20/30/40/50 so the value is not the same as the Matter index. Labels are
+ * Off/Low/Medium/High/Max. Serial prints value, index, and hub name so you can tell them apart.
+ * Label pointers are not copied; these string literals stay valid for the life of the firmware.
  *
  * This mode is mutually exclusive with temperature_number mode.
  * See MatterTemperatureControlledCabinet example for temperature setpoint control.
@@ -61,9 +62,9 @@ bool button_state = false;                     // false = released | true = pres
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // Application level values (not 0..N-1, so they are distinct from the Matter list index).
-// Meaning is application-specific: 10=Off, 20=Low, 30=Medium, 40=High, 50=Maximum.
-// Hubs see the string list "10", "20", "30", "40", "50" and write index 0..4.
+// Hubs see the string list "Off" / "Low" / "Medium" / "High" / "Max" and write index 0..4.
 uint8_t supportedLevels[] = {10, 20, 30, 40, 50};
+const char *supportedLevelLabels[] = {"Off", "Low", "Medium", "High", "Max"};
 const uint16_t levelCount = sizeof(supportedLevels) / sizeof(supportedLevels[0]);
 const uint8_t initialLevel = 30;  // Medium — Matter stores this as index 2
 
@@ -79,7 +80,7 @@ int16_t indexOfLevel(uint8_t level) {
 
 void printSupportedLevels() {
   for (uint16_t i = 0; i < levelCount; i++) {
-    Serial.printf("[%u]=%u(\"%u\")", i, supportedLevels[i], supportedLevels[i]);
+    Serial.printf("[%u]=%u(\"%s\")", i, supportedLevels[i], supportedLevelLabels[i]);
     if (i < levelCount - 1) {
       Serial.print(", ");
     }
@@ -88,7 +89,8 @@ void printSupportedLevels() {
 
 void printLevelMapping(const char *prefix, uint8_t level) {
   int16_t index = indexOfLevel(level);
-  Serial.printf("%s value %u, Matter index %d, hub label \"%u\"\r\n", prefix, level, (int)index, level);
+  const char *label = (index >= 0) ? supportedLevelLabels[index] : "?";
+  Serial.printf("%s value %u, Matter index %d, hub label \"%s\"\r\n", prefix, level, (int)index, label);
 }
 
 // Temperature level control state
@@ -214,10 +216,10 @@ void setup() {
   Serial.println();
 #endif
 
-  // temperature_level mode: pass application values. Matter advertises them as string
-  // labels and stores SelectedTemperatureLevel as the index of initialLevel in the array.
+  // temperature_level mode: pass application values plus hub names. Matter stores
+  // SelectedTemperatureLevel as the index of initialLevel in the array.
   // Mutually exclusive with temperature_number mode (see MatterTemperatureControlledCabinet).
-  if (!TemperatureCabinet.begin(supportedLevels, levelCount, initialLevel)) {
+  if (!TemperatureCabinet.begin(supportedLevels, supportedLevelLabels, levelCount, initialLevel)) {
     Serial.println("Failed to initialize Temperature Controlled Cabinet!");
     while (1) {
       delay(1000);

@@ -21,7 +21,9 @@
 #include <MatterEndpoints/MatterTemperatureControlledCabinet.h>
 #include <esp_matter_attribute.h>
 #include <app/clusters/temperature-control-server/supported-temperature-levels-manager.h>
+#include <app/reporting/reporting.h>
 #include <lib/support/Span.h>
+#include <platform/CHIPDeviceLayer.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -47,8 +49,14 @@ public:
       return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
     }
 
-    char label[32];
-    snprintf(label, sizeof(label), "%u", cabinet->supportedLevelsArray[mIndex]);
+    const char *label = cabinet->supportedLevelLabels[mIndex];
+    if (label == nullptr || label[0] == '\0') {
+      char decimal[MatterTemperatureControlledCabinet::MAX_TEMPERATURE_LEVEL_LABEL_LENGTH + 1];
+      snprintf(decimal, sizeof(decimal), "%u", cabinet->supportedLevelsArray[mIndex]);
+      mIndex++;
+      return chip::CopyCharSpanToMutableCharSpan(chip::CharSpan::fromCharString(decimal), item);
+    }
+
     mIndex++;
     return chip::CopyCharSpanToMutableCharSpan(chip::CharSpan::fromCharString(label), item);
   }
@@ -269,6 +277,10 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
 }
 
 bool MatterTemperatureControlledCabinet::begin(uint8_t *supportedLevels, uint16_t levelCount, uint8_t selectedLevel) {
+  return begin(supportedLevels, nullptr, levelCount, selectedLevel);
+}
+
+bool MatterTemperatureControlledCabinet::begin(uint8_t *supportedLevels, const char *const *labels, uint16_t levelCount, uint8_t selectedLevel) {
   if (supportedLevels == nullptr || levelCount == 0) {
     log_e("Invalid supportedLevels array or levelCount. Must provide at least one level.");
     return false;
@@ -277,6 +289,10 @@ bool MatterTemperatureControlledCabinet::begin(uint8_t *supportedLevels, uint16_
   // Validate against maximum from ESP-Matter
   if (levelCount > temperature_control::k_max_temp_level_count) {
     log_e("Level count %u exceeds maximum %u", levelCount, temperature_control::k_max_temp_level_count);
+    return false;
+  }
+
+  if (!labelsFitChipBuffer(labels, levelCount)) {
     return false;
   }
 
@@ -292,10 +308,10 @@ bool MatterTemperatureControlledCabinet::begin(uint8_t *supportedLevels, uint16_
     log_e("Selected level %u is not in the supported levels array", selectedLevel);
     return false;
   }
-  return beginInternal(supportedLevels, levelCount, selectedLevel);
+  return beginInternal(supportedLevels, labels, levelCount, selectedLevel);
 }
 
-bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels, uint16_t levelCount, uint8_t selectedLevel) {
+bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels, const char *const *labels, uint16_t levelCount, uint8_t selectedLevel) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
@@ -333,9 +349,8 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
     return false;
   }
 
-  // Copy supported levels array into internal buffer
-  memcpy(supportedLevelsArray, supportedLevels, levelCount * sizeof(uint8_t));
-  supportedLevelsCount = levelCount;
+  // Copy supported levels; store label pointers (not copied).
+  assignSupportedLevels(supportedLevels, labels, levelCount);
   selectedTempLevel = selectedLevel;
   useTemperatureNumber = false;  // Set feature mode to temperature_level
 
@@ -361,6 +376,8 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
     log_e("Failed to set selected temperature level");
     releaseTemperatureLevelsDelegate();
     temperatureLevelsDelegateHeld = false;
+    supportedLevelsCount = 0;
+    memset(supportedLevelLabels, 0, sizeof(supportedLevelLabels));
     started = false;  // Reset on failure
     return false;
   }
@@ -376,7 +393,8 @@ void MatterTemperatureControlledCabinet::end() {
   started = false;
   useTemperatureNumber = true;  // Reset to default
   supportedLevelsCount = 0;
-  // No need to clear array - it's a fixed-size buffer
+  memset(supportedLevelLabels, 0, sizeof(supportedLevelLabels));
+  // No need to clear the uint8 array - it's a fixed-size buffer
 }
 
 bool MatterTemperatureControlledCabinet::setRawTemperatureSetpoint(int16_t _rawTemperature) {
@@ -648,6 +666,10 @@ uint8_t MatterTemperatureControlledCabinet::getSelectedTemperatureLevel() {
 }
 
 bool MatterTemperatureControlledCabinet::setSupportedTemperatureLevels(uint8_t *levels, uint16_t count) {
+  return setSupportedTemperatureLevels(levels, nullptr, count);
+}
+
+bool MatterTemperatureControlledCabinet::setSupportedTemperatureLevels(uint8_t *levels, const char *const *labels, uint16_t count) {
   if (!started) {
     log_e("Matter Temperature Controlled Cabinet device has not begun.");
     return false;
@@ -669,6 +691,10 @@ bool MatterTemperatureControlledCabinet::setSupportedTemperatureLevels(uint8_t *
     return false;
   }
 
+  if (!labelsFitChipBuffer(labels, count)) {
+    return false;
+  }
+
   // Keep the current selection if it still exists in the new list. Matter stores the index.
   uint8_t selectedIndex = 0;
   bool haveSelection = false;
@@ -684,17 +710,63 @@ bool MatterTemperatureControlledCabinet::setSupportedTemperatureLevels(uint8_t *
     return false;
   }
 
-  // CHIP encodes this list from the iterator using supportedLevelsArray, not Ember.
-  memcpy(supportedLevelsArray, levels, count * sizeof(uint8_t));
-  supportedLevelsCount = count;
+  // CHIP encodes this list from the iterator, not Ember.
+  assignSupportedLevels(levels, labels, count);
 
   if (!writeSelectedTemperatureLevelIndex(selectedIndex)) {
     return false;
   }
 
+  reportSupportedTemperatureLevels();
   log_v("Temperature Controlled Cabinet supported temperature levels updated, count: %u", count);
 
   return true;
+}
+
+bool MatterTemperatureControlledCabinet::labelsFitChipBuffer(const char *const *labels, uint16_t count) const {
+  if (labels == nullptr) {
+    return true;
+  }
+  for (uint16_t i = 0; i < count; i++) {
+    if (labels[i] == nullptr || labels[i][0] == '\0') {
+      continue;
+    }
+    if (strlen(labels[i]) > MAX_TEMPERATURE_LEVEL_LABEL_LENGTH) {
+      log_e("Temperature level label %u exceeds %u characters", i, MAX_TEMPERATURE_LEVEL_LABEL_LENGTH);
+      return false;
+    }
+  }
+  return true;
+}
+
+void MatterTemperatureControlledCabinet::assignSupportedLevels(uint8_t *levels, const char *const *labels, uint16_t count) {
+  memcpy(supportedLevelsArray, levels, count * sizeof(uint8_t));
+  supportedLevelsCount = count;
+  for (uint16_t i = 0; i < temperature_control::k_max_temp_level_count; i++) {
+    if (i < count && labels != nullptr && labels[i] != nullptr && labels[i][0] != '\0') {
+      supportedLevelLabels[i] = labels[i];
+    } else {
+      supportedLevelLabels[i] = nullptr;
+    }
+  }
+}
+
+void MatterTemperatureControlledCabinet::reportSupportedTemperatureLevels() {
+  // CHIP serves the list from the iterator. Mark it dirty so a subscribed hub rereads names.
+  // Must run on the Matter event loop (same as Occupancy HoldTime).
+  if (!chip::DeviceLayer::SystemLayer().IsInitialized()) {
+    return;
+  }
+
+  const uint16_t endpoint_id = getEndPointId();
+  CHIP_ERROR err = chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id]() {
+    MatterReportingAttributeChangeCallback(
+      endpoint_id, TemperatureControl::Id, TemperatureControl::Attributes::SupportedTemperatureLevels::Id
+    );
+  });
+  if (err != CHIP_NO_ERROR) {
+    log_w("Failed to schedule SupportedTemperatureLevels report: %" CHIP_ERROR_FORMAT, err.Format());
+  }
 }
 
 bool MatterTemperatureControlledCabinet::indexOfSupportedLevel(uint8_t level, uint8_t *index) const {
