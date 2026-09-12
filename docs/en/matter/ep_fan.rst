@@ -50,7 +50,7 @@ Initializes the Matter fan endpoint with optional initial speed, mode, and mode 
 
     bool begin(uint8_t percent = 0, FanMode_t fanMode = FAN_MODE_OFF, FanModeSequence_t fanModeSeq = FAN_MODE_SEQ_OFF_HIGH);
 
-* ``percent`` - Initial speed percentage (0-100, default: 0)
+* ``percent`` - Initial speed percentage (0-100, default: 0). Forced to ``0`` when ``fanMode`` is ``FAN_MODE_OFF``. In Auto, this is ``PercentCurrent`` only; ``PercentSetting`` is null.
 * ``fanMode`` - Initial fan mode (default: ``FAN_MODE_OFF``)
 * ``fanModeSeq`` - Fan mode sequence configuration (default: ``FAN_MODE_SEQ_OFF_HIGH``)
 
@@ -201,6 +201,8 @@ Sets the fan mode.
 
 * ``newMode`` - Fan mode to set. ``FAN_MODE_ON`` and ``FAN_MODE_SMART`` are remapped as described under ``FanMode_t``
 * ``performUpdate`` - Perform update after setting (default: ``true``)
+
+Matches CHIP after the mode write: ``FAN_MODE_OFF`` sets ``PercentSetting`` and ``PercentCurrent`` to ``0``; ``FAN_MODE_AUTO`` nulls ``PercentSetting`` and leaves ``PercentCurrent`` as the actual speed.
 
 This function will return ``false`` if the remapped mode is not in the sequence passed to ``begin()``.
 

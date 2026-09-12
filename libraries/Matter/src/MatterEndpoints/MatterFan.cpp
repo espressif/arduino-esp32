@@ -154,11 +154,20 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
     return false;
   }
 
+  // CHIP: Off zeros both percents; Auto nulls PercentSetting.
+  if (fanMode == FAN_MODE_OFF) {
+    percent = 0;
+  }
+
   // endpoint handles can be used to add/modify clusters.
   fan::config_t fan_config;
   fan_config.fan_control.fan_mode = fanMode;
   fan_config.fan_control.percent_current = percent;
-  fan_config.fan_control.percent_setting = percent;
+  if (fanMode == FAN_MODE_AUTO) {
+    fan_config.fan_control.percent_setting = nullable<uint8_t>();
+  } else {
+    fan_config.fan_control.percent_setting = percent;
+  }
   fan_config.fan_control.fan_mode_sequence = fanModeSeq;
 
   endpoint_t *endpoint = fan::create(node::get(), &fan_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -220,7 +229,41 @@ bool MatterFan::setMode(FanMode_t newMode, bool performUpdate) {
     }
   }
   currentFanMode = newMode;
+  if (!applyModePercentRules(currentFanMode, performUpdate)) {
+    return false;
+  }
   log_v("Fan Mode %s to %s ==> onOffState[%s]", performUpdate ? "updated" : "set", getFanModeString(currentFanMode), getOnOff() ? "ON" : "OFF");
+  return true;
+}
+
+bool MatterFan::applyModePercentRules(FanMode_t mode, bool performUpdate) {
+  if (mode == FAN_MODE_OFF) {
+    esp_matter_attr_val_t settingVal = esp_matter_nullable_uint8(0);
+    bool ret = performUpdate ? updateAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, &settingVal)
+                             : setAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, &settingVal);
+    if (!ret) {
+      log_e("Failed to %s Fan PercentSetting Attribute.", performUpdate ? "update" : "set");
+      return false;
+    }
+    esp_matter_attr_val_t currentVal = esp_matter_uint8(0);
+    if (!setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &currentVal)) {
+      log_e("Failed to set Fan PercentCurrent Attribute.");
+      return false;
+    }
+    currentPercent = 0;
+    return true;
+  }
+
+  if (mode == FAN_MODE_AUTO) {
+    // Null PercentSetting; PercentCurrent stays the actual speed.
+    esp_matter_attr_val_t settingVal = esp_matter_nullable_uint8(nullable<uint8_t>());
+    bool ret = performUpdate ? updateAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, &settingVal)
+                             : setAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, &settingVal);
+    if (!ret) {
+      log_e("Failed to %s Fan PercentSetting Attribute.", performUpdate ? "update" : "set");
+      return false;
+    }
+  }
   return true;
 }
 

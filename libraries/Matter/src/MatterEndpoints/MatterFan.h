@@ -159,6 +159,7 @@ protected:
   static const char *fanModeString[7];
 
   FanMode_t resolveFanMode(FanMode_t mode) const;
+  bool applyModePercentRules(FanMode_t mode, bool performUpdate);
 };
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
