@@ -155,6 +155,10 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
       // Current position attributes (read-only to external Matter controllers; updated internally by device)
       case WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id:
       {
+        if (chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val->val.u16)) {
+          log_d("Window Covering Current Lift Percentage is null");
+          break;
+        }
         uint16_t liftPercent100ths = val->val.u16;
         uint8_t liftPercent = (uint8_t)(liftPercent100ths / 100);
         log_d("Window Covering Lift Percentage changed to %u%%", liftPercent);
@@ -171,6 +175,10 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
       }
       case WindowCovering::Attributes::CurrentPositionTiltPercent100ths::Id:
       {
+        if (chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val->val.u16)) {
+          log_d("Window Covering Current Tilt Percentage is null");
+          break;
+        }
         uint16_t tiltPercent100ths = val->val.u16;
         uint8_t tiltPercent = (uint8_t)(tiltPercent100ths / 100);
         log_d("Window Covering Tilt Percentage changed to %u%%", tiltPercent);
