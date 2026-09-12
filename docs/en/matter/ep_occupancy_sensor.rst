@@ -10,8 +10,8 @@ The ``MatterOccupancySensor`` class provides an occupancy sensor endpoint for Ma
 **Features:**
 * Occupancy state reporting (occupied/unoccupied)
 * Multiple sensor type support (PIR, Ultrasonic, Physical Contact)
-* HoldTime attribute for configuring how long the sensor holds the "occupied" state
-* HoldTimeLimits (min, max, default) for validation and controller guidance
+* HoldTime attribute (seconds) stored and reportable to controllers
+* HoldTimeLimits (min, max, default) required before a controller can write a non-zero HoldTime
 * HoldTime change callback for real-time updates from Matter controllers
 * Simple boolean state
 * Read-only sensor (no control functionality)
@@ -80,6 +80,15 @@ Occupancy sensor type enumeration:
 * ``OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC`` - Combined PIR and Ultrasonic
 * ``OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT`` - Physical contact sensor
 
+getOccupancySensorType
+^^^^^^^^^^^^^^^^^^^^^^
+
+Returns the sensor type passed to ``begin()``. CHIP cluster init reads this via ``halOccupancyGetSensorType()``.
+
+.. code-block:: arduino
+
+    OccupancySensorType_t getOccupancySensorType();
+
 Occupancy State Control
 ***********************
 
@@ -113,7 +122,7 @@ HoldTime Control
 setHoldTime
 ^^^^^^^^^^^
 
-Sets the HoldTime value (in seconds). The HoldTime determines how long the sensor maintains the "occupied" state after the last detection.
+Sets the HoldTime attribute (in seconds). CHIP stores and reports this value. ``setOccupancy(false)`` is not delayed by HoldTime — the sketch (or HAL) must keep occupied until the hold expires. See the HoldTime example.
 
 .. code-block:: arduino
 
@@ -121,7 +130,7 @@ Sets the HoldTime value (in seconds). The HoldTime determines how long the senso
 
 * ``_holdTime_seconds`` - HoldTime value in seconds
 
-**Important:** This function must be called after ``Matter.begin()`` has been called, as it requires the Matter event loop to be running.
+**Important:** This function must be called after ``Matter.begin()`` has been called, as it requires the Matter event loop to be running. When limits are configured (``holdTimeMax > 0``), the value must fall in that range.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -153,6 +162,7 @@ Sets the HoldTime limits (minimum, maximum, and default values). These limits de
 * This function must be called after ``Matter.begin()`` has been called, as it requires the Matter event loop to be running.
 * The ``holdTimeDefault_seconds`` parameter is informational metadata for Matter controllers (recommended default value). It does NOT automatically set the HoldTime attribute - use ``setHoldTime()`` to set the actual value.
 * If the current HoldTime value is outside the new limits, it will be automatically adjusted to the nearest limit (minimum or maximum).
+* Call this before a Matter controller writes HoldTime. Until ``max > 0``, CHIP rejects any non-zero controller HoldTime write (limits start at 0/0/0).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

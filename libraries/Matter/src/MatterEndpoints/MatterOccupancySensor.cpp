@@ -200,10 +200,11 @@ void SetHoldTimeLimitsAndHoldTimeInEventLoop(
 }  // namespace
 
 // clang-format off
+// Indexed by OccupancySensorTypeEnum: kPir, kUltrasonic, kPIRAndUltrasonic, kPhysicalContact
 const uint8_t MatterOccupancySensor::occupancySensorTypeBitmap[4] = {
   MatterOccupancySensor::occupancySensorTypePir,
-  MatterOccupancySensor::occupancySensorTypePir | MatterOccupancySensor::occupancySensorTypeUltrasonic,
   MatterOccupancySensor::occupancySensorTypeUltrasonic,
+  MatterOccupancySensor::occupancySensorTypePir | MatterOccupancySensor::occupancySensorTypeUltrasonic,
   MatterOccupancySensor::occupancySensorTypePhysicalContact
 };
 // clang-format on
