@@ -17,6 +17,7 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterDimmableLight.h>
+#include <app/util/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -28,6 +29,14 @@ static uint8_t clampCurrentLevel(uint8_t value) {
     return 1;
   }
   return value > 254 ? 254 : value;
+}
+
+static bool currentLevelFromAttr(const esp_matter_attr_val_t *val, uint8_t *out) {
+  if (val == nullptr || chip::app::NumericAttributeTraits<uint8_t>::IsNullValue(val->val.u8)) {
+    return false;
+  }
+  *out = clampCurrentLevel(val->val.u8);
+  return true;
 }
 
 bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
@@ -60,15 +69,20 @@ bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
         break;
       case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-          log_d("DimmableLight Brightness changed to %u", val->val.u8);
+          uint8_t level = 0;
+          if (!currentLevelFromAttr(val, &level)) {
+            log_d("DimmableLight CurrentLevel is null");
+            break;
+          }
+          log_d("DimmableLight Brightness changed to %u", level);
           if (_onChangeBrightnessCB != NULL) {
-            ret &= _onChangeBrightnessCB(val->val.u8);
+            ret &= _onChangeBrightnessCB(level);
           }
           if (_onChangeCB != NULL) {
-            ret &= _onChangeCB(onOffState, val->val.u8);
+            ret &= _onChangeCB(onOffState, level);
           }
           if (ret == true) {
-            brightnessLevel = val->val.u8;
+            brightnessLevel = level;
           }
         }
         break;

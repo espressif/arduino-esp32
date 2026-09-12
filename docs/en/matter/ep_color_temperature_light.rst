@@ -160,7 +160,7 @@ Sets the color temperature.
 
     bool setColorTemperature(uint16_t newTemperature);
 
-* ``newTemperature`` - Color temperature in mireds (100-500)
+* ``newTemperature`` - Color temperature in mireds. Values outside 100-500 are clamped. ``ColorTempPhysicalMin/MaxMireds`` are advertised as 100/500 so controllers stay in that range.
 
 **Note:** Color temperature is measured in mireds (micro reciprocal degrees, ``mireds = 1000000 / Kelvin``). Lower values (100-200) are cool white; higher values (400-500) are warm white.
 

@@ -202,7 +202,7 @@ Sets the color temperature.
 
     bool setColorTemperature(uint16_t newTemperature);
 
-* ``newTemperature`` - Color temperature in mireds (100-500). Higher mireds are warmer white; lower mireds are cooler white.
+* ``newTemperature`` - Color temperature in mireds. Values outside 100-500 are clamped. ``ColorTempPhysicalMin/MaxMireds`` are advertised as 100/500. Higher mireds are warmer white; lower mireds are cooler white.
 
 getColorTemperature
 ^^^^^^^^^^^^^^^^^^^
