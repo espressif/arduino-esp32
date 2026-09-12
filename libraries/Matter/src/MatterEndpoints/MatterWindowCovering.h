@@ -173,6 +173,11 @@ protected:
   uint16_t installedOpenLimitTilt = 0;
   uint16_t installedClosedLimitTilt = 65534;
   WindowCoveringType_t coveringType = ROLLERSHADE;
+  bool liftFeatureEnabled = false;
+  bool tiltFeatureEnabled = false;
+
+  bool requireLiftFeature() const;
+  bool requireTiltFeature() const;
 
   EndPointOpenCB _onOpenCB = NULL;
   EndPointCloseCB _onCloseCB = NULL;

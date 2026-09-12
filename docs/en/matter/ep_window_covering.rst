@@ -28,7 +28,7 @@ The ``MatterWindowCovering`` class provides a window covering endpoint for Matte
 * ``BLIND_LIFT_AND_TILT`` - Lift and Tilt support
 * ``PROJECTOR_SCREEN`` - Lift support
 
-``begin()`` advertises only the features that type actually has (Lift and/or Tilt, plus position-aware). A shutter or tilt-only blind does not advertise Lift. ESP-Matter requires at least one of Lift or Tilt.
+``begin()`` advertises only the features that type actually has (Lift and/or Tilt, plus position-aware). A shutter or tilt-only blind does not advertise Lift. Lift setters (``setLiftPercentage()``, ``setCurrentLiftPercent100ths()``, and the other lift APIs) return ``false`` on those types. Tilt setters return ``false`` on lift-only types. ESP-Matter requires at least one of Lift or Tilt.
 
 **Use Cases:**
 * Motorized blinds
@@ -139,7 +139,7 @@ Sets the window covering lift position as a percentage. This method updates the 
 
 * ``liftPercent`` - Lift percentage (0-100, where 0 is fully open, 100 is fully closed)
 
-This function will return ``true`` if successful, ``false`` otherwise.
+This function will return ``true`` if successful, ``false`` otherwise (including ``SHUTTER`` and ``BLIND_TILT_ONLY``, which have no Lift feature).
 
 **Note:** When the device reaches the target position, call ``setOperationalState(LIFT, STALL)`` to indicate that movement is complete. Prefer ``setCurrentLiftPercent100ths()`` when sub-percent precision is needed.
 
