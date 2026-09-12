@@ -17,10 +17,40 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterColorTemperatureLight.h>
+#include <app/util/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
+
+// CurrentLevel is nullable uint8. 0 is below lighting MinLevel (1); 255 is the null sentinel.
+static uint8_t clampCurrentLevel(uint8_t value) {
+  if (value < 1) {
+    return 1;
+  }
+  if (value > 254) {
+    return 254;
+  }
+  return value;
+}
+
+static uint16_t clampColorTemperature(uint16_t mireds) {
+  if (mireds < MatterColorTemperatureLight::MIN_COLOR_TEMPERATURE) {
+    return MatterColorTemperatureLight::MIN_COLOR_TEMPERATURE;
+  }
+  if (mireds > MatterColorTemperatureLight::MAX_COLOR_TEMPERATURE) {
+    return MatterColorTemperatureLight::MAX_COLOR_TEMPERATURE;
+  }
+  return mireds;
+}
+
+static bool currentLevelFromAttr(const esp_matter_attr_val_t *val, uint8_t *out) {
+  if (val == nullptr || chip::app::NumericAttributeTraits<uint8_t>::IsNullValue(val->val.u8)) {
+    return false;
+  }
+  *out = clampCurrentLevel(val->val.u8);
+  return true;
+}
 
 bool MatterColorTemperatureLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
   bool ret = true;
@@ -52,15 +82,20 @@ bool MatterColorTemperatureLight::attributeChangeCB(uint16_t endpoint_id, uint32
         break;
       case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-          log_d("Temperature Light Brightness changed to %u", val->val.u8);
+          uint8_t level = 0;
+          if (!currentLevelFromAttr(val, &level)) {
+            log_d("Temperature Light CurrentLevel is null");
+            break;
+          }
+          log_d("Temperature Light Brightness changed to %u", level);
           if (_onChangeBrightnessCB != NULL) {
-            ret &= _onChangeBrightnessCB(val->val.u8);
+            ret &= _onChangeBrightnessCB(level);
           }
           if (_onChangeCB != NULL) {
-            ret &= _onChangeCB(onOffState, val->val.u8, colorTemperatureLevel);
+            ret &= _onChangeCB(onOffState, level, colorTemperatureLevel);
           }
           if (ret == true) {
-            brightnessLevel = val->val.u8;
+            brightnessLevel = level;
           }
         }
         break;
@@ -102,15 +137,18 @@ bool MatterColorTemperatureLight::begin(bool initialState, uint8_t brightness, u
   light_config.on_off_lighting.start_up_on_off = nullptr;
   onOffState = initialState;
 
-  light_config.level_control.current_level = brightness;
+  brightnessLevel = clampCurrentLevel(brightness);
+  light_config.level_control.current_level = brightnessLevel;
   light_config.level_control_lighting.start_up_current_level = nullptr;
-  brightnessLevel = brightness;
 
   light_config.color_control.color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
   light_config.color_control.enhanced_color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
-  light_config.color_control_color_temperature.color_temperature_mireds = ColorTemperature;
+  colorTemperatureLevel = clampColorTemperature(ColorTemperature);
+  light_config.color_control_color_temperature.color_temperature_mireds = colorTemperatureLevel;
+  light_config.color_control_color_temperature.color_temp_physical_min_mireds = MIN_COLOR_TEMPERATURE;
+  light_config.color_control_color_temperature.color_temp_physical_max_mireds = MAX_COLOR_TEMPERATURE;
+  light_config.color_control_color_temperature.couple_color_temp_to_level_min_mireds = MIN_COLOR_TEMPERATURE;
   light_config.color_control_color_temperature.start_up_color_temperature_mireds = nullptr;
-  colorTemperatureLevel = ColorTemperature;
 
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = color_temperature_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -187,24 +225,24 @@ bool MatterColorTemperatureLight::setBrightness(uint8_t newBrightness) {
     return false;
   }
 
+  const uint8_t brightness = clampCurrentLevel(newBrightness);
   // avoid processing if there was no change
-  if (brightnessLevel == newBrightness) {
+  if (brightnessLevel == brightness) {
     return true;
   }
 
-  brightnessLevel = newBrightness;
+  brightnessLevel = brightness;
 
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, LevelControl::Id);
   esp_matter::attribute_t *attribute = attribute::get(cluster, LevelControl::Attributes::CurrentLevel::Id);
-
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  attribute::get_val(attribute, &val);
-
-  if (val.val.u8 != brightnessLevel) {
-    val.val.u8 = brightnessLevel;
-    attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
+  if (attribute == nullptr) {
+    log_e("Failed to get Temperature Light CurrentLevel Attribute.");
+    return false;
   }
+
+  esp_matter_attr_val_t val = esp_matter_nullable_uint8(brightnessLevel);
+  attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
   return true;
 }
 
@@ -218,12 +256,14 @@ bool MatterColorTemperatureLight::setColorTemperature(uint16_t newTemperature) {
     return false;
   }
 
+  const uint16_t temperature = clampColorTemperature(newTemperature);
+
   // avoid processing if there was no change
-  if (colorTemperatureLevel == newTemperature) {
+  if (colorTemperatureLevel == temperature) {
     return true;
   }
 
-  colorTemperatureLevel = newTemperature;
+  colorTemperatureLevel = temperature;
 
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, ColorControl::Id);

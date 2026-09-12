@@ -17,6 +17,7 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterEnhancedColorLight.h>
+#include <app/util/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -42,6 +43,24 @@ uint8_t clampCurrentLevel(uint8_t value) {
     return 1;
   }
   return clampColor254(value);
+}
+
+uint16_t clampColorTemperature(uint16_t mireds) {
+  if (mireds < MatterEnhancedColorLight::MIN_COLOR_TEMPERATURE) {
+    return MatterEnhancedColorLight::MIN_COLOR_TEMPERATURE;
+  }
+  if (mireds > MatterEnhancedColorLight::MAX_COLOR_TEMPERATURE) {
+    return MatterEnhancedColorLight::MAX_COLOR_TEMPERATURE;
+  }
+  return mireds;
+}
+
+bool currentLevelFromAttr(const esp_matter_attr_val_t *val, uint8_t *out) {
+  if (val == nullptr || chip::app::NumericAttributeTraits<uint8_t>::IsNullValue(val->val.u8)) {
+    return false;
+  }
+  *out = clampCurrentLevel(val->val.u8);
+  return true;
 }
 
 espHsvColor_t clampHsvColor(espHsvColor_t hsv) {
@@ -102,16 +121,21 @@ bool MatterEnhancedColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t 
         break;
       case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-          log_d("Enhanced ColorLight Brightness changed to %u", val->val.u8);
+          uint8_t level = 0;
+          if (!currentLevelFromAttr(val, &level)) {
+            log_d("Enhanced ColorLight CurrentLevel is null");
+            break;
+          }
+          log_d("Enhanced ColorLight Brightness changed to %u", level);
           if (_onChangeBrightnessCB != NULL) {
-            ret &= _onChangeBrightnessCB(val->val.u8);
+            ret &= _onChangeBrightnessCB(level);
           }
           if (_onChangeCB != NULL) {
-            ret &= _onChangeCB(onOffState, colorHSV, val->val.u8, colorTemperatureLevel);
+            ret &= _onChangeCB(onOffState, colorHSV, level, colorTemperatureLevel);
           }
           if (ret == true) {
-            brightnessLevel = val->val.u8;
-            colorHSV.v = val->val.u8;
+            brightnessLevel = level;
+            colorHSV.v = level;
           }
         }
         break;
@@ -214,9 +238,12 @@ bool MatterEnhancedColorLight::begin(bool initialState, espHsvColor_t _colorHSV,
   light_config.color_control.enhanced_color_mode = (uint8_t)ColorControl::ColorMode::kCurrentHueAndCurrentSaturation;
   light_config.color_control_xy.current_x = xy.x;
   light_config.color_control_xy.current_y = xy.y;
-  light_config.color_control_color_temperature.color_temperature_mireds = ColorTemperature;
+  colorTemperatureLevel = clampColorTemperature(ColorTemperature);
+  light_config.color_control_color_temperature.color_temperature_mireds = colorTemperatureLevel;
+  light_config.color_control_color_temperature.color_temp_physical_min_mireds = MIN_COLOR_TEMPERATURE;
+  light_config.color_control_color_temperature.color_temp_physical_max_mireds = MAX_COLOR_TEMPERATURE;
+  light_config.color_control_color_temperature.couple_color_temp_to_level_min_mireds = MIN_COLOR_TEMPERATURE;
   light_config.color_control_color_temperature.start_up_color_temperature_mireds = nullptr;
-  colorTemperatureLevel = ColorTemperature;
 
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = extended_color_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -309,14 +336,14 @@ bool MatterEnhancedColorLight::setBrightness(uint8_t newBrightness) {
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, LevelControl::Id);
   esp_matter::attribute_t *attribute = attribute::get(cluster, LevelControl::Attributes::CurrentLevel::Id);
-
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  attribute::get_val(attribute, &val);
-
-  if (val.val.u8 != brightnessLevel) {
-    val.val.u8 = brightnessLevel;
-    attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
+  if (attribute == nullptr) {
+    log_e("Failed to get Enhanced Color Light CurrentLevel Attribute.");
+    return false;
   }
+
+  // CurrentLevel is nullable uint8; ESP_MATTER_VAL_TYPE_UINT8 returns err 258.
+  esp_matter_attr_val_t val = esp_matter_nullable_uint8(brightnessLevel);
+  attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
   return true;
 }
 
@@ -330,12 +357,14 @@ bool MatterEnhancedColorLight::setColorTemperature(uint16_t newTemperature) {
     return false;
   }
 
+  const uint16_t temperature = clampColorTemperature(newTemperature);
+
   // avoid processing if there was no change
-  if (colorTemperatureLevel == newTemperature) {
+  if (colorTemperatureLevel == temperature) {
     return true;
   }
 
-  colorTemperatureLevel = newTemperature;
+  colorTemperatureLevel = temperature;
 
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, ColorControl::Id);

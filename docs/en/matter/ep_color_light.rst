@@ -14,7 +14,7 @@ Changing the Color Control feature set (for example, removing color temperature 
 * RGB color control with HSV color model (brightness is HSV value; there is no separate brightness or color-temperature API)
 * State persistence support
 * Callback support for state and color changes
-* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -210,5 +210,5 @@ Example
 Color Light
 ***********
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterColorLight/MatterColorLight.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Lighting/MatterColorLight/MatterColorLight.ino
     :language: arduino

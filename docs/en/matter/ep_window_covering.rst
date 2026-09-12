@@ -13,7 +13,7 @@ The ``MatterWindowCovering`` class provides a window covering endpoint for Matte
 * Local motor calibration for physical-unit to percentage conversion
 * Multiple window covering types support
 * Callback support for open, close, lift, tilt, and stop commands
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Supported Window Covering Types:**
@@ -27,6 +27,8 @@ The ``MatterWindowCovering`` class provides a window covering endpoint for Matte
 * ``BLIND_TILT_ONLY`` - Tilt support
 * ``BLIND_LIFT_AND_TILT`` - Lift and Tilt support
 * ``PROJECTOR_SCREEN`` - Lift support
+
+``begin()`` advertises only the features that type actually has (Lift and/or Tilt, plus position-aware). A shutter or tilt-only blind does not advertise Lift. Unused lift or tilt arguments and calibration are ignored (not cached). Lift setters return ``false`` on those types; lift getters return ``0``. Tilt setters return ``false`` on lift-only types; tilt getters return ``0``. ESP-Matter requires at least one of Lift or Tilt.
 
 **Use Cases:**
 * Motorized blinds
@@ -137,7 +139,7 @@ Sets the window covering lift position as a percentage. This method updates the 
 
 * ``liftPercent`` - Lift percentage (0-100, where 0 is fully open, 100 is fully closed)
 
-This function will return ``true`` if successful, ``false`` otherwise.
+This function will return ``true`` if successful, ``false`` otherwise (including ``SHUTTER`` and ``BLIND_TILT_ONLY``, which have no Lift feature).
 
 **Note:** When the device reaches the target position, call ``setOperationalState(LIFT, STALL)`` to indicate that movement is complete. Prefer ``setCurrentLiftPercent100ths()`` when sub-percent precision is needed.
 
@@ -249,7 +251,7 @@ Window Covering Type
 setCoveringType
 ^^^^^^^^^^^^^^^
 
-Sets the window covering type.
+Sets the window covering ``Type`` attribute. Lift/Tilt ``FeatureMap`` bits are fixed at ``begin()``. A type that needs a different feature set (for example shutter to roller shade) is rejected; recreate the endpoint instead. Types in the same family (roller shade to awning) succeed.
 
 .. code-block:: arduino
 
@@ -689,5 +691,5 @@ Example
 Window Covering
 ***************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterWindowCovering/MatterWindowCovering.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Control/MatterWindowCovering/MatterWindowCovering.ino
     :language: arduino

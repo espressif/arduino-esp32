@@ -31,9 +31,8 @@ public:
   static const uint8_t MIN_SPEED = 1;    // minimum Low speed
   static const uint8_t OFF_SPEED = 0;    // speed set by Matter when FAN_MODE_OFF
 
-  // Default Fan Modes: ON, SMART, HIGH and OFF
-
-  // Other mode will depend on what is the configured Fan Mode Sequence
+  // Matter FanModeSequence never stores On or Smart. setMode() remaps them:
+  // On → High; Smart → Auto if the sequence includes Auto, otherwise High.
   enum FanMode_t {
     FAN_MODE_OFF = (uint8_t)FanModeEnum::kOff,
     FAN_MODE_LOW = (uint8_t)FanModeEnum::kLow,
@@ -44,9 +43,7 @@ public:
     FAN_MODE_SMART = (uint8_t)FanModeEnum::kSmart
   };
 
-  // Menu will always have ON, OFF, HIGH and SMART.
-  // AUTO will show up only when a AUTO SEQ is CONFIGURED
-  // LOW and MEDIUM depend on the SEQ MODE configuration
+  // Sequences are Off plus High, and optionally Low / Medium / Auto.
   enum FanModeSequence_t {
     FAN_MODE_SEQ_OFF_LOW_MED_HIGH = (uint8_t)FanModeSequenceEnum::kOffLowMedHigh,
     FAN_MODE_SEQ_OFF_LOW_HIGH = (uint8_t)FanModeSequenceEnum::kOffLowHigh,
@@ -63,6 +60,9 @@ public:
 
   // returns a friendly string for the Fan Mode
   static const char *getFanModeString(uint8_t mode) {
+    if (mode >= (sizeof(fanModeString) / sizeof(fanModeString[0]))) {
+      return "Unknown";
+    }
     return fanModeString[mode];
   }
 
@@ -140,12 +140,10 @@ protected:
   static const uint8_t fanSeqModeLow = 0x02;
   static const uint8_t fanSeqModeMedium = 0x04;
   static const uint8_t fanSeqModeHigh = 0x08;
-  static const uint8_t fanSeqModeOn = 0x10;
   static const uint8_t fanSeqModeAuto = 0x20;
-  static const uint8_t fanSeqModeSmart = 0x40;
 
-  // bitmap for common modes: ON, OFF, HIGH and SMART
-  static const uint8_t fanSeqCommonModes = fanSeqModeOff | fanSeqModeOn | fanSeqModeHigh | fanSeqModeSmart;
+  // Every Matter sequence includes Off and High.
+  static const uint8_t fanSeqCommonModes = fanSeqModeOff | fanSeqModeHigh;
 
   static const uint8_t fanSeqModeOffLowMedHigh = fanSeqCommonModes | fanSeqModeLow | fanSeqModeMedium;
   static const uint8_t fanSeqModeOffLowHigh = fanSeqCommonModes | fanSeqModeLow;
@@ -159,6 +157,9 @@ protected:
 
   // string helper for the FAN MODE
   static const char *fanModeString[7];
+
+  FanMode_t resolveFanMode(FanMode_t mode) const;
+  bool applyModePercentRules(FanMode_t mode, bool performUpdate);
 };
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
