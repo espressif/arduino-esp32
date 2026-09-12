@@ -220,8 +220,9 @@ void MatterGenericSwitch::multiPressComplete(uint8_t count) {
     return;
   }
 
-  if (count > multiPressMax) {
-    count = 0;
+  if (count == 0 || count > multiPressMax) {
+    log_e("MultiPressComplete count %u is out of range (1–%u).", count, multiPressMax);
+    return;
   }
 
   int switch_endpoint_id = getEndPointId();
