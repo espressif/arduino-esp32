@@ -21,6 +21,7 @@
 
 class MatterDimmablePlugin : public MatterEndPoint {
 public:
+  // Arduino full-scale input (0–255). Matter CurrentLevel is 1–254; 0 and 255 are clamped.
   static const uint8_t MAX_LEVEL = 255;
 
   MatterDimmablePlugin();

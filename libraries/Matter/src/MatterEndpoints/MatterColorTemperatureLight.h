@@ -21,6 +21,7 @@
 
 class MatterColorTemperatureLight : public MatterEndPoint {
 public:
+  // Arduino full-scale input (0–255). Matter CurrentLevel is 1–254; 0 and 255 are clamped.
   static const uint8_t MAX_BRIGHTNESS = 255;
   static const uint16_t MAX_COLOR_TEMPERATURE = 500;
   static const uint16_t MIN_COLOR_TEMPERATURE = 100;
