@@ -51,6 +51,7 @@ NetworkClientSecure::NetworkClientSecure() {
   _psKey = NULL;
   next = NULL;
   _alpn_protos = NULL;
+  _cipher_list = NULL;
   _use_ca_bundle = false;
 }
 
@@ -84,6 +85,7 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
   _psKey = NULL;
   next = NULL;
   _alpn_protos = NULL;
+  _cipher_list = NULL;
 }
 
 NetworkClientSecure::~NetworkClientSecure() {
@@ -145,7 +147,9 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *CA
 }
 
 int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *host, const char *CA_cert, const char *cert, const char *private_key) {
-  int ret = start_ssl_client(sslclient.get(), ip, port, host, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
+  int ret = start_ssl_client(
+    sslclient.get(), ip, port, host, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos, _cipher_list
+  );
 
   if (ret >= 0 && !_stillinPlainStart) {
     ret = ssl_starttls_handshake(sslclient.get());
@@ -193,7 +197,9 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *ps
     return 0;
   }
 
-  int ret = start_ssl_client(sslclient.get(), address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
+  int ret = start_ssl_client(
+    sslclient.get(), address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos, _cipher_list
+  );
   sslclient->last_error = ret;
   if (ret < 0) {
     log_e("start_ssl_client: connect failed %d", ret);
@@ -455,25 +461,13 @@ void NetworkClientSecure::setAlpnProtocols(const char **alpn_protos) {
   _alpn_protos = alpn_protos;
 }
 
-bool NetworkClientSecure::setCiphers(const int *list, size_t count) {
-  if (_connected) {
-    log_e("setCiphers: cannot change ciphersuites while a connection is active; "
-          "call this before connect() or after stop()");
-    return false;
-  }
+void NetworkClientSecure::setCiphers(const int *ciphersuites) {
+  _cipher_list = ciphersuites;
+}
 
-  if (list == nullptr || count == 0) {
-    sslclient->cipher_list.reset();
-    return true;
-  }
-
-  sslclient->cipher_list = std::shared_ptr<int>(new (std::nothrow) int[count + 1], std::default_delete<int[]>());
-  if (!sslclient->cipher_list) {
-    return false;
-  }
-  memcpy(sslclient->cipher_list.get(), list, count * sizeof(int));
-  sslclient->cipher_list.get()[count] = 0;
-  return true;
+void NetworkClientSecure::setCiphers(const int *ciphersuites, size_t count) {
+  (void)count;
+  setCiphers(ciphersuites);
 }
 
 int NetworkClientSecure::fd() const {

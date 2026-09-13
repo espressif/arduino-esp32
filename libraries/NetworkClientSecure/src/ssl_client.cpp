@@ -48,8 +48,8 @@ static int _handle_error(int err, const char *function, int line) {
 #define handle_error(e) _handle_error(e, __FUNCTION__, __LINE__)
 
 void ssl_init(sslclient_context *ssl_client) {
-  // reset ssl_client by creating new (empty) context, as shared_ptr is not safe for memset
-  *ssl_client = sslclient_context();
+  // reset embedded pointers to zero
+  memset(ssl_client, 0, sizeof(sslclient_context));
   mbedtls_ssl_init(&ssl_client->ssl_ctx);
   mbedtls_ssl_config_init(&ssl_client->ssl_conf);
 #if MBEDTLS_VERSION_MAJOR < 4
@@ -68,7 +68,7 @@ void attach_ssl_certificate_bundle(sslclient_context *ssl_client, bool att) {
 
 int start_ssl_client(
   sslclient_context *ssl_client, const IPAddress &ip, uint32_t port, const char *hostname, int timeout, const char *rootCABuff, bool useRootCABundle,
-  const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos
+  const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos, const int *ciphersuites
 ) {
   int ret;
   int enable = 1;
@@ -197,8 +197,8 @@ int start_ssl_client(
     }
   }
   
-  if (ssl_client->cipher_list) {
-    mbedtls_ssl_conf_ciphersuites(&ssl_client->ssl_conf, ssl_client->cipher_list.get());
+  if (ciphersuites != NULL) {
+    mbedtls_ssl_conf_ciphersuites(&ssl_client->ssl_conf, ciphersuites);
   }
 
   // MBEDTLS_SSL_VERIFY_REQUIRED if a CA certificate is defined on Arduino IDE and
@@ -408,17 +408,14 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
   unsigned long socket_timeout = ssl_client->socket_timeout;
   int last_err = ssl_client->last_error;
   crt_bundle_attach_cb bundle_attach_cb = ssl_client->bundle_attach_cb;
-  std::shared_ptr<int> saved_ciphers = ssl_client->cipher_list;
 
-  
-  // reset ssl_client by creating new (empty) context, as shared_ptr is not safe for memset
-  *ssl_client = sslclient_context();
+  // reset embedded pointers to zero
+  memset(ssl_client, 0, sizeof(sslclient_context));
 
   ssl_client->handshake_timeout = handshake_timeout;
   ssl_client->socket_timeout = socket_timeout;
   ssl_client->last_error = last_err;
   ssl_client->bundle_attach_cb = bundle_attach_cb;
-  ssl_client->cipher_list = saved_ciphers;
   ssl_client->peek_buf = -1;
 }
 

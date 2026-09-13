@@ -10,7 +10,6 @@
 #include "mbedtls/ssl.h"
 #include "mbedtls/error.h"
 #include "mbedtls/version.h"
-#include <memory>
 
 #if MBEDTLS_VERSION_MAJOR < 4
 #include "mbedtls/entropy.h"
@@ -41,14 +40,12 @@ typedef struct sslclient_context {
   int last_error;
   int peek_buf;
 
-  std::shared_ptr<int> cipher_list;
-
 } sslclient_context;
 
 void ssl_init(sslclient_context *ssl_client);
 int start_ssl_client(
   sslclient_context *ssl_client, const IPAddress &ip, uint32_t port, const char *hostname, int timeout, const char *rootCABuff, bool useRootCABundle,
-  const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos
+  const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos, const int *ciphersuites
 );
 void attach_ssl_certificate_bundle(sslclient_context *ssl_client, bool att);
 int ssl_starttls_handshake(sslclient_context *ssl_client);
