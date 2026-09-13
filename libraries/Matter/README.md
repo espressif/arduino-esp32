@@ -4,6 +4,8 @@ Arduino-friendly wrapper around [ESP-Matter](https://docs.espressif.com/projects
 
 **Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`) in a Matter sketch.** When CHIPoBLE is compiled in (`CONFIG_ENABLE_CHIPOBLE`) Matter owns the BLE host (NimBLE if `CONFIG_BT_NIMBLE_ENABLED`). After `Matter.begin()`, `BLEDevice::init()` will fail or crash: CHIPoBLE is running, you turned it off with `setBLECommissioningEnabled(false)` / `selectNetwork(..., true)` (BLE RAM is released after `begin()`, not at that call), or CHIPoBLE commissioning finished with the default `setBLEMemoryReleaseEnabled(true)`. Turning CHIPoBLE off does not hand the radio to Arduino BLE.
 
+On SoCs with PSRAM initialized (SPIRAM heap present), the data model (endpoints, clusters, attributes) is allocated in PSRAM so many-endpoint nodes leave internal/DMA RAM for CHIPoBLE and AES. `ESP.getFreeHeap()` can stay flat while `ESP.getFreePsram()` drops; that is expected. CHIP, AES bounce buffers, and NimBLE still use `malloc` / DMA and are not moved to PSRAM. Without a SPIRAM heap the same objects stay in internal RAM.
+
 ## Architecture
 
 Each Matter device type is represented by a C++ class under `src/MatterEndpoints/` (e.g., `MatterOnOffLight`, `MatterTemperatureSensor`, `MatterFan`). These classes manage:
@@ -232,6 +234,7 @@ Same On/Off Light in all of these. The only difference is how the node gets onto
 | [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread) | Thread | Off | Yes. Network key after `Matter.begin()` | Already on the mesh |
 | [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet) | Ethernet | Off | EMAC or SPI `ETH.begin()` + IPv6 first | Wired only (no commissioning cluster) |
 | [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease) | Default (Wi-Fi; Thread on ESP32-C5 / ESP32-C6 / ESP32-H2) | On, then reclaimed | No | Same BLE path as the default accessory, plus heap reclaim |
+| [`MatterEarlyBLERelease`](examples/Advanced/MatterEarlyBLERelease) | 1: Wi-Fi / 0: default | 1: off at boot / 0: CHIPoBLE then reclaim | 1: sketch SSID / 0: hub over BLE | One On/Off Light; `[heap]` shows internal RAM and PSRAM |
 
 [`MatterOnOffLight`](examples/Lighting/MatterOnOffLight) is the generic accessory demo: CHIPoBLE when compiled in, otherwise sketch Wi-Fi credentials. Use the table above when you care about the commissioning path.
 
@@ -276,4 +279,4 @@ Do not gate LEDs on `isOnline()`. A session can stay up after the user leaves th
 - [Arduino-ESP32 Matter Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/index.html)
 - [ESP-Matter Programming Guide](https://docs.espressif.com/projects/esp-matter/en/latest/)
 - [Matter Specification (CSA)](https://csa-iot.org/developer-resource/specifications-download-request/)
-- Examples: [`MatterDeviceIdentity`](examples/GettingStarted/MatterDeviceIdentity), [`MatterStatus`](examples/GettingStarted/MatterStatus), [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi), [`MatterCHIPoBLEWiFi`](examples/Commissioning/MatterCHIPoBLEWiFi), [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet), [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread), [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread), [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease), [`MatterSmartButtonsTagList`](examples/Control/MatterSmartButtonsTagList)
+- Examples: [`MatterDeviceIdentity`](examples/GettingStarted/MatterDeviceIdentity), [`MatterStatus`](examples/GettingStarted/MatterStatus), [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi), [`MatterCHIPoBLEWiFi`](examples/Commissioning/MatterCHIPoBLEWiFi), [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet), [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread), [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread), [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease), [`MatterEarlyBLERelease`](examples/Advanced/MatterEarlyBLERelease), [`MatterSmartButtonsTagList`](examples/Control/MatterSmartButtonsTagList)

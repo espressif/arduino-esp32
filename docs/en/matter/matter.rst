@@ -41,6 +41,8 @@ These settings are required for the following reasons:
 * **Partition Scheme**: Matter firmware requires a large application partition (3 MB) to accommodate the Matter stack and application code.
 * **Erase Flash**: Erasing flash is necessary to remove any leftover Wi-Fi or Matter configuration from the NVS (Non-Volatile Storage) partition. Without erasing, previous network credentials, Matter fabric information, or device commissioning data may interfere with the new firmware, causing commissioning failures or connectivity issues.
 
+On a ESP32 SoC that has PSRAM and PSRAM is enabled and initialized (SPIRAM heap present), the Matter data model (endpoints, clusters, attributes) is placed in PSRAM. ``ESP.getFreeHeap()`` can stay flat while ``ESP.getFreePsram()`` drops as endpoints are created; that is expected. CHIP, AES DMA bounce buffers, and NimBLE still use internal ``malloc`` / DMA. Without a SPIRAM heap the data model stays in internal RAM.
+
 Matter Protocol Overview
 ************************
 
@@ -178,6 +180,8 @@ Waiting for BLE RAM
 
 Reclaim is not instant. Releasing the BLE regions while the NimBLE host task still runs would corrupt the heap, so the library polls for that task to exit every 2 seconds for up to 30 seconds. If the host never exits it logs an error and the callback does not run.
 
+To return BLE RAM **before** ``setup()`` (so accessory ``begin()`` already sees it), provide a strong C ``bleInUse()`` that returns ``false``. A C++ ``bool bleInUse()`` is mangled and does not override the HAL. That path is on-network only: still call ``selectNetwork(net, true)`` and connect Wi-Fi or Ethernet first. See `MatterEarlyBLERelease <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterEarlyBLERelease>`_ (mode 1). On CHIPoBLE prebuilds the Matter ``.a`` may still start NimBLE in ``Matter.begin()``; ``onBLEMemoryReleased()`` then means teardown after ``begin()``.
+
 Register ``Matter.onBLEMemoryReleased()`` **before** ``Matter.begin()``. Use it to set a flag; allocate a large buffer from ``loop()``:
 
 .. code-block:: arduino
@@ -283,6 +287,8 @@ Wi-Fi and Thread each have two commissioning paths. Do not mix them: CHIPoBLE pl
 | ``MatterOnNetworkEthernet``  | Ethernet  | Off               | EMAC or SPI ``ETH.begin()`` + IPv6 first   | Wired only                                                             |
 +------------------------------+-----------+-------------------+--------------------------------------------+------------------------------------------------------------------------+
 | ``MatterCHIPoBLERelease``    | Default   | On, then reclaimed| No                                         | BLE reclaim demo (Wi-Fi; Thread on ESP32-C5 / ESP32-C6 / ESP32-H2)     |
++------------------------------+-----------+-------------------+--------------------------------------------+------------------------------------------------------------------------+
+| ``MatterEarlyBLERelease``    | 1: Wi-Fi / 0: default | 1: off at boot / 0: on, then reclaimed | 1: sketch SSID / 0: hub over BLE | One On/Off Light; ``[heap]`` shows internal RAM and PSRAM              |
 +------------------------------+-----------+-------------------+--------------------------------------------+------------------------------------------------------------------------+
 
 ``MatterOnOffLight`` is the generic accessory demo (CHIPoBLE when compiled in, otherwise sketch Wi-Fi). Use the table when you care about the commissioning path.
@@ -431,6 +437,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 **Advanced Examples:**
 
 * **Matter Lambda Single Callback Many Endpoints** - Demonstrates how to create multiple Matter endpoints in a single node using a shared lambda function callback with capture for efficient callback handling. `View Matter Lambda Single Callback Many Endpoints code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterLambdaSingleCallbackManyEPs>`_
+* **Matter Early BLE Release** - One On/Off Light. ``MATTER_EARLY_BLE_RELEASE`` **1** (default): ``bleInUse()==false`` then on-network Wi-Fi. **0**: CHIPoBLE. Serial reports Tools PSRAM and ``[heap]`` internal / PSRAM. `View Matter Early BLE Release code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterEarlyBLERelease>`_
 
 Common Problems and Issues
 --------------------------
