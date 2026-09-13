@@ -338,7 +338,7 @@ Sketch helpers
 
 These are **not** members of ``Matter``. ``#include <Matter.h>`` pulls in ``MatterHelpers.h`` (and ``MatterButton.h``). They print to Serial and may reboot. Do not wait for commissioning in ``loop()``.
 
-* ``matterWaitUntilReady()``: Call from ``setup()`` after ``Matter.begin()``. Prints pairing codes if there is no fabric; one-line status every 10 s; waits up to 5 minutes (default) for CASE. ``timeoutMs`` 0 waits forever (unlike ``Matter.waitForNetwork(0)``, which is a single check). Reboots if still uncommissioned. If commissioned but CASE never arrives, continues.
+* ``matterWaitUntilReady()``: Call from ``setup()`` after ``Matter.begin()``. Prints pairing codes if there is no fabric; one-line status every 10 s and once more when CASE is up. Waits up to 5 minutes (default) for CASE. ``timeoutMs`` 0 waits forever (unlike ``Matter.waitForNetwork(0)``, which is a single check). Reboots if still uncommissioned. If commissioned but CASE never arrives, continues.
 * ``matterRestartIfNoFabric()``: Call from ``loop()``. Reboots if the hub removed the fabric. ``Matter.decommission()`` already factory-resets.
 
 ``MatterButton`` is a board-button class, not a Generic Switch cluster. An ``esp_timer`` samples the pin; ``loop()`` only drains ``poll()``. Do not call Matter APIs from the timer callback.

@@ -49,6 +49,22 @@ Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do
 
 Long-press BOOT (>5 s) to decommission the node (`Matter.decommission()`). This removes fabrics; it is not a full flash erase.
 
+## Expected Output
+
+Open the Serial Monitor at **115200**. On ESP32-C6 the `[ready]` line should show `net=thread`. The last line before CASE is up has every flag `Y`:
+
+```
+Matter Node is not commissioned yet.
+Commission it using the pairing code or QR code.
+Manual pairing code: 34970112332
+QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
+[ready] net=thread commissioned=N connected=N controller=N
+[ready] net=thread commissioned=Y connected=Y controller=N
+...
+[ready] net=thread commissioned=Y connected=Y controller=Y
+Controller CASE session is up.
+```
+
 ## Related
 
 - [MatterOnNetworkThread](../MatterOnNetworkThread) — BLE off, network key in the sketch

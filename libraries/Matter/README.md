@@ -285,7 +285,7 @@ These are **not** members of `Matter`. `#include <Matter.h>` pulls in `MatterHel
 
 | Helper | Effect |
 |--------|--------|
-| `matterWaitUntilReady()` | `setup()` after `Matter.begin()`: pairing codes if needed; one-line status every 10 s; wait up to 5 min for CASE (`timeoutMs` 0 = forever). Reboots if still no fabric. If commissioned but CASE never arrives, continues |
+| `matterWaitUntilReady()` | `setup()` after `Matter.begin()`: pairing codes if needed; one-line status every 10 s and once more when CASE is up; wait up to 5 min (`timeoutMs` 0 = forever). Reboots if still no fabric. If commissioned but CASE never arrives, continues |
 | `matterRestartIfNoFabric()` | `loop()`: reboot if the hub removed the fabric. `Matter.decommission()` already factory-resets |
 | `MatterButton` | Board button (`MatterButton.h`). Timer samples the pin; `loop()` drains `poll()` (`PRESS` / `CLICK` / `DOUBLE_CLICK` / `LONG_HOLD`). Default: 50 ms debounce, 5 s long-hold, double-click off. Not a Generic Switch cluster |
 

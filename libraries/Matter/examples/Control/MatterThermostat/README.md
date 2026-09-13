@@ -112,6 +112,7 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%
 [ready] net=wifi commissioned=N connected=N controller=N
 [ready] net=wifi commissioned=Y connected=Y controller=N
 ...
+[ready] net=wifi commissioned=Y connected=Y controller=Y
 Controller CASE session is up.
 
 Initial Setpoints are 20.0C to 23.0C with a minimum 2.5C difference

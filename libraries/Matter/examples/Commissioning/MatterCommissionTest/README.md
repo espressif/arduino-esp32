@@ -92,6 +92,7 @@ Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
 [ready] net=wifi commissioned=N connected=N controller=N
 ...
+[ready] net=wifi commissioned=Y connected=Y controller=Y
 Controller CASE session is up.
 Matter fabric is present. Repeating the cycle.
 ====> Decommissioning in 30 seconds. <====

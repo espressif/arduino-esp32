@@ -20,9 +20,9 @@
 // Sketch-side helpers. They print to Serial and may reboot.
 // Not members of ArduinoMatter. Pulled in by Matter.h.
 
-// setup() after Matter.begin(): pairing codes if no fabric; status every 10 s;
-// wait up to timeoutMs for a CASE session (0 = wait forever). Reboots if still
-// no fabric. If commissioned but CASE never arrives, continues.
+// setup() after Matter.begin(): pairing codes if no fabric; status every 10 s
+// and once more when CASE is up; wait up to timeoutMs (0 = forever). Reboots
+// if still no fabric. If commissioned but CASE never arrives, continues.
 void matterWaitUntilReady(uint32_t timeoutMs = 5 * 60 * 1000);
 // loop(): hub removed the fabric. Button Matter.decommission() already resets.
 void matterRestartIfNoFabric();

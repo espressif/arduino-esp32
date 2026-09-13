@@ -110,6 +110,7 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%
 [ready] net=wifi commissioned=N connected=N controller=N
 [ready] net=wifi commissioned=Y connected=Y controller=N
 ...
+[ready] net=wifi commissioned=Y connected=Y controller=Y
 Controller CASE session is up.
 Current Temperature is -25.00C
 Current Temperature is -10.00C

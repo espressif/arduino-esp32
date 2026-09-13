@@ -17,6 +17,19 @@
 
 #include <Matter.h>
 
+static void printReadyStatus(bool commissioned, bool connected, bool online) {
+  const char *net = "none";
+  switch (Matter.getActiveNetwork()) {
+    case MATTER_NETWORK_WIFI:     net = "wifi"; break;
+    case MATTER_NETWORK_THREAD:   net = "thread"; break;
+    case MATTER_NETWORK_ETHERNET: net = "eth"; break;
+    default:                      break;
+  }
+  Serial.printf(
+    "[ready] net=%s commissioned=%s connected=%s controller=%s\r\n", net, commissioned ? "Y" : "N", connected ? "Y" : "N", online ? "Y" : "N"
+  );
+}
+
 void matterWaitUntilReady(uint32_t timeoutMs) {
   if (!Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is not commissioned yet.");
@@ -34,20 +47,16 @@ void matterWaitUntilReady(uint32_t timeoutMs) {
     const bool connected = Matter.isDeviceConnected();
     const bool online = Matter.isOnline();
     const uint32_t now = millis();
+    bool printed = false;
     if (lastPrint == 0 || (now - lastPrint) >= 10000) {
       lastPrint = now;
-      const char *net = "none";
-      switch (Matter.getActiveNetwork()) {
-        case MATTER_NETWORK_WIFI:     net = "wifi"; break;
-        case MATTER_NETWORK_THREAD:   net = "thread"; break;
-        case MATTER_NETWORK_ETHERNET: net = "eth"; break;
-        default:                      break;
-      }
-      Serial.printf(
-        "[ready] net=%s commissioned=%s connected=%s controller=%s\r\n", net, commissioned ? "Y" : "N", connected ? "Y" : "N", online ? "Y" : "N"
-      );
+      printReadyStatus(commissioned, connected, online);
+      printed = true;
     }
     if (online) {
+      if (!printed) {
+        printReadyStatus(commissioned, connected, online);
+      }
       Serial.println("Controller CASE session is up.");
       return;
     }

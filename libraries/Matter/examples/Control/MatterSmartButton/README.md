@@ -107,6 +107,7 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%
 [ready] net=wifi commissioned=N connected=N controller=N
 [ready] net=wifi commissioned=Y connected=Y controller=N
 ...
+[ready] net=wifi commissioned=Y connected=Y controller=Y
 Controller CASE session is up.
 User button pressed. Sending InitialPress to the Matter Controller!
 User button released. Sending ShortRelease to the Matter Controller!

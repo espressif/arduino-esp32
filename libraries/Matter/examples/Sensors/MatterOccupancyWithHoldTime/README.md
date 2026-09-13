@@ -130,6 +130,7 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%
 [ready] net=wifi commissioned=N connected=N controller=N
 [ready] net=wifi commissioned=Y connected=Y controller=N
 ...
+[ready] net=wifi commissioned=Y connected=Y controller=Y
 Controller CASE session is up.
 Occupancy detected! Holding state for 30 seconds (HoldTime)
 HoldTime expired. Switching to unoccupied state.
