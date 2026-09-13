@@ -208,6 +208,9 @@ public:
   // This function must be called before `begin()`
   void setTaskStackSize(size_t size);
 
+  // Set the polling period (ms) used by the W5500 MAC when no IRQ pin is set. Must be called before `begin()`.
+  void setPollPeriod(uint32_t poll_period_ms);
+
   // ETH Handle APIs
   bool fullDuplex() const;
   bool setFullDuplex(bool on);
@@ -278,6 +281,7 @@ private:
   int8_t _pin_rmii_clock;
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
   size_t _task_stack_size;
+  uint32_t _poll_period_ms;
   network_event_handle_t _eth_connected_event_handle;
 
   static bool ethDetachBus(void *bus_pointer);

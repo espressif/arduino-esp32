@@ -43,15 +43,21 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter water freeze detector endpoint with an initial freeze detection state.
+Initializes the Matter water freeze detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setFreeze()`` after ``Matter.begin()`` with the real sensor reading.
 
 .. code-block:: arduino
 
-    bool begin(bool _freezeState = false);
-
-* ``_freezeState`` - Initial water freeze detection state (``true`` = detected, ``false`` = not detected, default: ``false``)
+    bool begin();
 
 This function will return ``true`` if successful, ``false`` otherwise.
+
+Typical usage:
+
+.. code-block:: arduino
+
+    WaterFreezeDetector.begin();
+    Matter.begin();
+    WaterFreezeDetector.setFreeze(digitalRead(freezePin));
 
 end
 ^^^
@@ -68,7 +74,7 @@ Water Freeze Detection State Control
 setFreeze
 ^^^^^^^^^
 
-Sets the water freeze detection state.
+Sets the water freeze detection state. Call after ``Matter.begin()``.
 
 .. code-block:: arduino
 
@@ -114,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the water freeze detection state.
+Sets the water freeze detection state. Same as ``setFreeze()``; call after ``Matter.begin()``.
 
 .. code-block:: arduino
 

@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterOccupancySensor.h>
 #include <esp_matter_cluster.h>
 #include <esp_matter_attribute.h>
@@ -247,6 +246,7 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
     return false;
   }
   setEndPointId(endpoint::get_id(endpoint));
+
   occupancyState = _occupancyState;
 
   // Register AttributeAccessInterface for OccupancySensing cluster if not already registered

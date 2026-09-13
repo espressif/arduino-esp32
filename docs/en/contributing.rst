@@ -184,7 +184,26 @@ If you just want to append a string to the default FQBNs, you can use the ``fqbn
 
     fqbn_append: DebugLevel=debug
 
-If you want to override the default FQBNs, you can use the ``fqbn`` field. It is a dictionary where the key is the target name and the value is a list of FQBNs.
+Each menu option is kept only once, so a key set in ``fqbn_append`` replaces the default value for that key instead of being listed twice.
+This makes it possible to turn off an option that is enabled by default, such as compiling for ESP32 with ``espressif:esp32:esp32:PSRAM=disabled``:
+
+.. code-block:: yaml
+
+    fqbn_append: PSRAM=disabled
+
+When the options differ per target, ``fqbn_append`` can be a dictionary instead. The ``default`` entry is applied to every target and the entry
+matching the target is merged on top of it, so only the difference has to be spelled out. This is needed for options that do not exist on every
+target: ESP32-C3, ESP32-C6 and ESP32-H2 have no PSRAM menu and would fail to compile if they were given ``PSRAM=disabled``.
+
+.. code-block:: yaml
+
+    fqbn_append:
+      default: PartitionScheme=huge_app
+      esp32: PSRAM=disabled
+      esp32s3: PSRAM=disabled
+
+The options are applied lowest priority first: the default FQBN for the target, then ``fqbn_append``, then the debug level passed on the
+command line. If you want to override the default FQBNs entirely, you can use the ``fqbn`` field. It is a dictionary where the key is the target name and the value is a list of FQBNs.
 The FQBNs in the list will be used in sequence to compile the sketch. For example, to compile a sketch for ESP32-S2 with and without PSRAM enabled, you would use:
 
 .. code-block:: yaml

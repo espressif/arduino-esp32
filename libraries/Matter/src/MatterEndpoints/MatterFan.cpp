@@ -111,6 +111,7 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
   currentPercent = percent;
 
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Fan created with endpoint_id %u", getEndPointId());
 
   started = true;

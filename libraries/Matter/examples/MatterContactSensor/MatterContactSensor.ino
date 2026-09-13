@@ -19,9 +19,10 @@
  * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
  *
  * The example will create a Matter Contact Sensor Device.
- * The Contact Sensor state can be toggled by pressing the onboard button.
+ * begin() creates the endpoint with StateValue open. Call setContact() after
+ * Matter.begin() with the real or simulated sensor reading.
  * The Contact Sensor state will be indicated by the onboard LED.
- * The Contact Sensor state will be simulated to change every 20 seconds.
+ * The Contact Sensor state will be simulated to change every simulatedSensorInterval.
  *
  * The onboard button can be kept pressed for 5 seconds to decommission the Matter Node.
  * The example will also show the manual commissioning code and QR code to be used in the Matter environment.
@@ -56,18 +57,19 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LE
 #warning "Do not forget to set the RGB LED pin"
 #endif
 
-// set your board USER BUTTON pin here - decommissioning and Manual Contact Sensor toggle button
+// set your board USER BUTTON pin here - decommissioning only
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
 // Button control
 uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
-const uint32_t debouceTime = 250;              // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
+
+// Simulated hardware toggles every 20 seconds. Replace simulatedHWContactSensor() with a real probe read.
+const uint32_t simulatedSensorInterval = 20000;
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
-  // The button will also be used to manually toggle the Contact Sensor state
   pinMode(buttonPin, INPUT_PULLUP);
   // Initialize the LED (light) GPIO and Matter End Point
   pinMode(ledPin, OUTPUT);
@@ -86,7 +88,7 @@ void setup() {
   Serial.println();
 #endif
 
-  // set initial contact sensor state as false (default)
+  // Create the endpoint. Fabric StateValue starts false (open); call setContact() after Matter.begin().
   ContactSensor.begin();
   digitalWrite(ledPin, LOW);  // LED OFF
 
@@ -114,12 +116,11 @@ void setup() {
 }
 
 bool simulatedHWContactSensor() {
-  // Simulated Contact Sensor
+  // Simulated Contact Sensor. Replace this body with a real sensor, e.g. return digitalRead(contactPin);
   static bool contactState = false;
-  static uint32_t lastTime = 0;
+  static uint32_t lastTime = millis();
 
-  // Simulate a Contact Sensor state change every 20 seconds
-  if (millis() - lastTime > 20000) {
+  if (millis() - lastTime > simulatedSensorInterval) {
     contactState = !contactState;
     lastTime = millis();
   }
@@ -134,29 +135,25 @@ void loop() {
     button_state = true;           // pressed.
   }
 
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > debouceTime && digitalRead(buttonPin) == HIGH) {
+  if (button_state && digitalRead(buttonPin) == HIGH) {
     button_state = false;  // released
-    // button is released - toggle Contact State (Open/Closed)
-    ContactSensor.setContact(!ContactSensor.getContact());  // same as ContactSensor = !ContactSensor;
-    Serial.printf("User button released. Setting the Contact Sensor to %s.\r\n", ContactSensor ? "Closed" : "Open");
-    // LED will indicate the Contact Sensor state
-    if (ContactSensor) {
-      digitalWrite(ledPin, HIGH);  // LED ON
-    } else {
-      digitalWrite(ledPin, LOW);  // LED OFF
-    }
   }
 
   // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  uint32_t time_diff = millis() - button_time_stamp;
   if (button_state && time_diff > decommissioningTimeout) {
     Serial.println("Decommissioning Contact Sensor Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
-    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
+    button_time_stamp = millis();  // avoid running decommissioning again, reboot takes a second or so
   }
 
-  // Simulated Contact Sensor
+  // Report simulated (or real) hardware to Matter. First call after Matter.begin() applies the current reading.
+  bool previous = ContactSensor.getContact();
   ContactSensor.setContact(simulatedHWContactSensor());
+  if (ContactSensor.getContact() != previous) {
+    Serial.printf("Contact Sensor is %s.\r\n", ContactSensor ? "Closed" : "Open");
+  }
+  digitalWrite(ledPin, ContactSensor ? HIGH : LOW);
 
   delay(50);
 }

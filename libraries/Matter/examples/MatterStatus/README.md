@@ -18,7 +18,7 @@ This example demonstrates how to check enabled Matter features and connectivity 
 
 - **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
 - **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been precompiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project using Arduino as an IDF Component and to disable the Matter Wi-Fi station feature.
-- **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been pre compiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
+- **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been precompiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
 
 ## Features
 
@@ -28,11 +28,12 @@ This example demonstrates how to check enabled Matter features and connectivity 
   - `isWiFiAccessPointEnabled()`: Checks if Wi-Fi AP mode is supported and enabled
   - `isThreadEnabled()`: Checks if Thread network is supported and enabled
   - `isBLECommissioningEnabled()`: Checks if BLE commissioning is supported and enabled
-- **Connection status monitoring**: Reports connection status every 10 seconds
+- **Connection status monitoring**: Reports commissioned / connected / radios every 5 seconds. Samples `isOnline()` every 2.5 seconds and prints a line when any of those flags change
   - `isWiFiConnected()`: Checks Wi-Fi connection status (if Wi-Fi Station is enabled)
   - `isThreadConnected()`: Checks Thread connection status (if Thread is enabled)
   - `isDeviceConnected()`: Checks overall device connectivity (Wi-Fi or Thread)
   - `isDeviceCommissioned()`: Checks if the device is commissioned to a Matter fabric
+  - `isOnline()`: Checks if a controller has an active CASE session with this node (not a gate for the LED). Stays true until the session is idle-evicted, not when the user closes the app.
 - Simple on/off light control
 - Matter commissioning via QR code or manual pairing code
 - Integration with Apple HomeKit, Amazon Alexa, and Google Home
@@ -116,14 +117,16 @@ WiFi Connected: YES
 Thread Connected: NO
 Device Connected: YES
 Device Commissioned: NO
+Device Online (CASE): NO
 
 === Connection Status ===
 WiFi Connected: YES
 Thread Connected: NO
 Device Connected: YES
 Device Commissioned: NO
+Device Online (CASE): NO
 
-... (reports every 10 seconds)
+... (reports every 5 seconds)
 
 User Callback :: New Light State = ON
 === Connection Status ===
@@ -131,8 +134,17 @@ WiFi Connected: YES
 Thread Connected: NO
 Device Connected: YES
 Device Commissioned: YES
+Device Online (CASE): NO
 
-... (reports every 10 seconds)
+State change: Commissioned=YES Connected=YES Online=YES
+=== Connection Status ===
+WiFi Connected: YES
+Thread Connected: NO
+Device Connected: YES
+Device Commissioned: YES
+Device Online (CASE): YES
+
+... (reports every 5 seconds)
 ```
 
 ## Usage
@@ -153,12 +165,15 @@ These functions are useful for:
 
 ### Connection Status Monitoring
 
-The example periodically reports connection status every 10 seconds:
+The example reports commissioned / connected / radio status every 5 seconds and samples `isOnline()` every 2.5 seconds:
 
 - **`Matter.isWiFiConnected()`**: Returns `true` if Wi-Fi Station is connected. If Wi-Fi Station is not enabled, always returns `false`.
 - **`Matter.isThreadConnected()`**: Returns `true` if Thread is attached to a network. If Thread is not enabled, always returns `false`.
 - **`Matter.isDeviceConnected()`**: Returns `true` if the device is connected via Wi-Fi or Thread (overall connectivity status)
 - **`Matter.isDeviceCommissioned()`**: Returns `true` if the device has been commissioned to a Matter fabric
+- **`Matter.isOnline()`**: Returns `true` if a Matter controller currently has an active CASE (operational) session. This is not the same as commissioned (fabric exists) or connected (radio/IP is up). It stays true until CHIP or the hub tears that session down (idle-evict), not merely when the user closes an app. The on/off LED is **not** gated on this flag.
+
+Typical first-commission sequence: pairing code → `Commissioned=YES` → `Connected=YES` → `Online=YES`. Online changes can appear on the 2.5 s poll; commissioned / connected changes appear on the 5 s poll.
 
 ### Smart Home Integration
 
@@ -175,7 +190,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
   - Prints commissioning information
 
 - **`loop()`**:
-  - Reports connection status every 10 seconds
+  - Samples `isOnline()` every 2.5 seconds; reports commissioned / connected / radios every 5 seconds
   - All light control is handled via Matter callbacks
 
 - **Callbacks**:
@@ -187,7 +202,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 2. **Capability queries return unexpected values**: These functions check both hardware support and Matter configuration. Verify that the features are enabled in your Matter build configuration.
 
-3. **Connection status not updating**: The status is reported every 10 seconds. Check Serial Monitor output to see the periodic reports.
+3. **Connection status not updating**: Radios and commissioned / connected are reported every 5 seconds; `isOnline()` is sampled every 2.5 seconds. Check Serial Monitor output to see the periodic reports.
 
 4. **LED not responding**: Verify pin configurations and connections.
 

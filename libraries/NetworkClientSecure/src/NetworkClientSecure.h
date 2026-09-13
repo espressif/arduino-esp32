@@ -99,6 +99,8 @@ public:
    */
   void setCiphers(const int *ciphersuites, size_t count);
 
+  void useBuiltinCACertBundle();
+
   // Certain protocols start in plain-text; and then have the client
   // give some STARTSSL command to `upgrade' the connection to TLS
   // or SSL. Setting PlainStart to true (the default is false) enables

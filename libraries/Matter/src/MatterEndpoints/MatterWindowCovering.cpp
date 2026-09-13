@@ -94,6 +94,7 @@ bool MatterWindowCovering::begin(
   }
 
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Window Covering created with endpoint_id %u", getEndPointId());
 
   started = true;

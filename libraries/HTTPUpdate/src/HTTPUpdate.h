@@ -41,6 +41,7 @@
 #define HTTP_UE_BIN_VERIFY_HEADER_FAILED (-106)
 #define HTTP_UE_BIN_FOR_WRONG_FLASH      (-107)
 #define HTTP_UE_NO_PARTITION             (-108)
+#define HTTP_UE_SERVER_FAULTY_SHA256     (-109)
 
 enum HTTPUpdateResult {
   HTTP_UPDATE_FAILED,
@@ -87,6 +88,28 @@ public:
   void setMD5sum(const String &md5Sum) {
     _md5Sum = md5Sum;
   }
+
+  void setSHA256sum(const String &sha256Sum) {
+    _sha256Sum = sha256Sum;
+  }
+
+  /**
+   * Optional URL of a small checksum sidecar (e.g. firmware.bin.md5).
+   * Used only when setMD5sum() is empty; response header x-MD5 still wins.
+   * Calling this pulls in the sidecar fetch code (flash cost only when used).
+   */
+  void setMD5sumUrl(const String &url);
+
+  /**
+   * Optional URL of a small checksum sidecar (e.g. firmware.bin.sha256).
+   * Used only when setSHA256sum() is empty; response header x-SHA256 still wins.
+   * Calling this pulls in the sidecar fetch code (flash cost only when used).
+   */
+  void setSHA256sumUrl(const String &url);
+
+  // Bitmask values returned by the sidecar fetch helper.
+  static constexpr uint8_t SIDECAR_MD5_FAILED = 0x01;
+  static constexpr uint8_t SIDECAR_SHA256_FAILED = 0x02;
 
   void setAuthorization(const String &user, const String &password) {
     _user = user;
@@ -139,7 +162,7 @@ public:
 
 protected:
   t_httpUpdate_return handleUpdate(HTTPClient &http, const String &currentVersion, uint8_t type = U_FLASH, HTTPUpdateRequestCB requestCB = NULL);
-  bool runUpdate(Stream &in, uint32_t size, String md5, int command = U_FLASH);
+  bool runUpdate(Stream &in, uint32_t size, String md5, int command = U_FLASH, String sha256 = "");
 
   // Set the error and potentially use a CB to notify the application
   void _setLastError(int err) {
@@ -148,10 +171,15 @@ protected:
       _cbError(err);
     }
   }
-  int _lastError;
+  int _lastError = 0;
   bool _rebootOnUpdate = true;
 
 private:
+  using ChecksumSidecarFetchFn = uint8_t (*)(
+    NetworkClient *client, const String &md5Url, const String &sha256Url, uint8_t requested, String &md5, String &sha256, int timeout, followRedirects_t follow,
+    uint16_t redirectLimit
+  );
+
   int _httpClientTimeout;
   UpdateClass *_updater;
   followRedirects_t _followRedirects;
@@ -159,6 +187,10 @@ private:
   String _password;
   String _auth;
   String _md5Sum;
+  String _sha256Sum;
+  String _md5SumUrl;
+  String _sha256SumUrl;
+  ChecksumSidecarFetchFn _checksumSidecarFetch = nullptr;
 
   // Callbacks
   HTTPUpdateStartCB _cbStart;
@@ -167,7 +199,7 @@ private:
   HTTPUpdateProgressCB _cbProgress;
 
   int _ledPin{-1};
-  uint8_t _ledOn;
+  uint8_t _ledOn = HIGH;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_HTTPUPDATE)

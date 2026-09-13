@@ -18,8 +18,8 @@ The application showcases Matter commissioning, device control via smart home ec
 ### Note on Commissioning:
 
 - **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project using Arduino as an IDF Component and to disable the Matter Wi-Fi station feature.
-- **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been pre compiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been precompiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project using Arduino as an IDF Component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been precompiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
 
 ## Features
 
@@ -32,7 +32,7 @@ The application showcases Matter commissioning, device control via smart home ec
 - RGB LED support with color temperature to RGB conversion
 - Regular LED support with PWM brightness control
 - Matter commissioning via QR code or manual pairing code
-- Integration with Apple HomeKit, Amazon Alexa, and Google Home
+- Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
 (*) It is necessary to compile the project using Arduino as IDF Component.
 
 ## Hardware Requirements
@@ -135,18 +135,25 @@ The color temperature is stored in `Preferences` and restored after power cycles
 
 ### Brightness Control
 
-The light supports brightness adjustment from 0 to 255:
+The light supports brightness adjustment from 0 to 255 in the Arduino API:
 
-- **0**: Light is off
-- **1-254**: Various brightness levels
-- **255**: Maximum brightness
+- **0**: Treated as off / minimum in the sketch
+- **1-254**: Matter CurrentLevel range (254 is full brightness)
+- **255**: Not a valid Matter CurrentLevel (nullable null sentinel); clamp to 254
 - **Default**: 15 (~6% brightness)
 
 The brightness level is stored in `Preferences` and restored after power cycles.
 
 ### Smart Home Integration
 
-Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
+Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
+
+#### Home Assistant
+
+1. Open Home Assistant
+2. Go to Settings > Devices & services > Add integration > Matter
+3. Scan the QR code from the Serial Monitor, or enter the manual pairing code
+4. Follow the prompts to complete setup
 
 #### Apple Home
 

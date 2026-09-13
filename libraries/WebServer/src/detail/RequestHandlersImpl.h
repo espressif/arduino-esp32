@@ -154,6 +154,28 @@ public:
     _baseUriLength = _uri.length();
   }
 
+  // True if path contains a "." or ".." segment (slash-delimited), including a
+  // trailing "/.." or leading "../".
+  static bool containsDotSegment(const String &path) {
+    size_t start = 0;
+    while (start <= path.length()) {
+      int slash = path.indexOf('/', start);
+      size_t end = (slash < 0) ? path.length() : (size_t)slash;
+      size_t len = end - start;
+      if (len == 1 && path.charAt(start) == '.') {
+        return true;
+      }
+      if (len == 2 && path.charAt(start) == '.' && path.charAt(start + 1) == '.') {
+        return true;
+      }
+      if (slash < 0) {
+        break;
+      }
+      start = (size_t)slash + 1;
+    }
+    return false;
+  }
+
   bool canHandle(HTTPMethod requestMethod, const String &requestUri) override {
     if (requestMethod != HTTP_GET) {
       return false;
@@ -199,7 +221,30 @@ public:
       }
 
       // Append whatever follows this URI in request to get the file path.
-      path += requestUri.substring(_baseUriLength);
+      // Reject path traversal: literal and percent-encoded dot-segments must not
+      // escape the configured filesystem root.
+      String relative = requestUri.substring(_baseUriLength);
+      String decoded = WebServer::urlDecode(relative);
+      if (containsDotSegment(relative) || containsDotSegment(decoded)) {
+        log_e("StaticRequestHandler: rejecting path traversal in %s", requestUri.c_str());
+        return false;
+      }
+      path += relative;
+
+      // Final path must still sit under the configured root once duplicate
+      // slashes are collapsed. Note the root may itself be "/".
+      String normalizedPath = path;
+      while (normalizedPath.indexOf("//") >= 0) {
+        normalizedPath.replace("//", "/");
+      }
+      String rootPrefix = _path;
+      if (!rootPrefix.endsWith("/")) {
+        rootPrefix += "/";
+      }
+      if (normalizedPath != rootPrefix && !normalizedPath.startsWith(rootPrefix)) {
+        log_e("StaticRequestHandler: path %s escapes root %s", path.c_str(), _path.c_str());
+        return false;
+      }
     }
     log_v("StaticRequestHandler::handle: path=%s, isFile=%d\r\n", path.c_str(), _isFile);
 

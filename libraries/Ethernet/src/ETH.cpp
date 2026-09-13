@@ -171,7 +171,7 @@ ETHClass::ETHClass(uint8_t eth_index)
     _pin_mcd(-1), _pin_mdio(-1), _pin_power(-1), _pin_rmii_clock(-1)
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
     ,
-    _task_stack_size(4096), _eth_connected_event_handle(0) {
+    _task_stack_size(4096), _poll_period_ms(10), _eth_connected_event_handle(0) {
 }
 
 ETHClass::~ETHClass() {}
@@ -187,6 +187,10 @@ bool ETHClass::ethDetachBus(void *bus_pointer) {
 
 void ETHClass::setTaskStackSize(size_t size) {
   _task_stack_size = size;
+}
+
+void ETHClass::setPollPeriod(uint32_t poll_period_ms) {
+  _poll_period_ms = poll_period_ms;
 }
 
 #if CONFIG_ETH_USE_ESP32_EMAC
@@ -717,7 +721,7 @@ bool ETHClass::beginSPI(
     mac_config.int_gpio_num = _pin_irq;
 #if ETH_SPI_SUPPORTS_NO_IRQ
     if (_pin_irq < 0) {
-      mac_config.poll_period_ms = 10;
+      mac_config.poll_period_ms = _poll_period_ms;
     }
 #endif
 #if ETH_SPI_SUPPORTS_CUSTOM

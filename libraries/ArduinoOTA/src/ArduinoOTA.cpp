@@ -168,7 +168,12 @@ void ArduinoOTAClass::begin() {
     _port = 3232;
   }
 
+#if CONFIG_LWIP_IPV6
+  // Bind dual-stack (::) so IPv4 and IPv6 OTA invites are accepted
+  if (!_udp_ota.begin(IN6ADDR_ANY, _port)) {
+#else
   if (!_udp_ota.begin(_port)) {
+#endif
     log_e("udp bind failed");
     return;
   }

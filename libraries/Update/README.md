@@ -10,6 +10,9 @@ The Update library provides functionality for Over-The-Air (OTA) firmware update
 - **Multiple Sources**: HTTP, HTTPS, SD card, and custom sources
 - **Progress Callbacks**: Monitor update progress
 - **MD5 Verification**: Optional MD5 checksum verification
+- **SHA-256 Verification**: Optional SHA-256 checksum verification of the downloaded payload (enabled only when `setSHA256()` / `HTTPUpdate::setSHA256sum()` / `x-SHA256` is used)
+- **Checksum Sidecar URLs**: `HTTPUpdate::setMD5sumUrl()` / `setSHA256sumUrl()` can fetch a small sidecar file (first 32/64 hex token) when no explicit digest or response header is available. This is integrity checking only, not code signing. The fetch code is linked only when those setters are used.
+  Sidecars are prefetched before the firmware response headers are known; those headers still take precedence. Sidecar requests reuse the firmware client's transport (including its TLS configuration) and redirect mode, but not firmware HTTP authorization or the firmware request callback. Keep sidecar URLs within the same transport trust boundary as the firmware URL.
 
 ## Quick Start
 
@@ -231,6 +234,37 @@ Sets expected MD5 hash for verification.
 
 **Returns:** `true` on success, `false` on failure
 
+#### setSHA256()
+```cpp
+bool setSHA256(const char *expected_sha256)
+```
+Sets expected SHA-256 hash for verification of the entire downloaded payload
+(same scope as MD5; not the ESP-IDF partition/image SHA-256 footer).
+
+Call after `begin()` and before writing any payload bytes. The SHA-256 streaming
+context is allocated only when this succeeds, so sketches that never call
+`setSHA256()` (or never receive an `x-SHA256` header / sidecar via `HTTPUpdate`) avoid the
+extra hashing work and keep the smaller static footprint on the global `Update`
+object.
+
+`HTTPUpdate` digest precedence is: `setMD5sum()` / `setSHA256sum()` >
+response headers `x-MD5` / `x-SHA256` > `setMD5sumUrl()` / `setSHA256sumUrl()`
+sidecar fetch (first hex token of length 32 / 64).
+
+**Parameters:**
+- `expected_sha256`: SHA-256 hash as hex string (64 characters)
+
+**Returns:** `true` on success, `false` on failure
+
+#### sha256String() / sha256()
+```cpp
+String sha256String(void)
+void sha256(uint8_t *result)
+```
+Return the digest of a completed update that used `setSHA256()`.
+If SHA-256 was not enabled for the update, `sha256String()` returns an empty
+string and `sha256()` writes zeros.
+
 #### getError()
 ```cpp
 uint8_t getError()
@@ -306,6 +340,7 @@ UpdaterECDSAVerifier(const uint8_t *pubkey, size_t pubkeyLen, int hashType = HAS
 | 12 | UPDATE_ERROR_ABORT | Aborted |
 | 13 | UPDATE_ERROR_DECRYPT | Decryption error |
 | 14 | UPDATE_ERROR_SIGN | Signature verification failed |
+| 15 | UPDATE_ERROR_SHA256 | SHA-256 check failed |
 
 ## Examples
 
