@@ -117,14 +117,13 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 Fan State: Mode OFF | 0% speed.
 User button released. Setting the Fan ON.
 Fan State: Mode HIGH | 50% speed.
@@ -193,8 +192,8 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterFan example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, analog input, PWM output), configures Wi-Fi (if needed), sets up the Matter Fan endpoint with initial state (OFF, 0% speed), and registers callbacks for state changes.
-2. **`loop()`**: Checks the Matter commissioning state, handles button input for toggling the fan and factory reset, reads analog input to adjust fan speed, and allows the Matter stack to process events.
+1. **`setup()`**: Initializes hardware (button, analog input, PWM output), configures Wi-Fi (if needed), sets up the Matter Fan endpoint with initial state (OFF, 0% speed), registers callbacks for state changes, and waits for commissioning / CASE via `matterWaitUntilReady()`.
+2. **`loop()`**: Accessory logic (button toggle, long-press decommission, analog speed). `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 3. **Callbacks**:
    - `onChangeSpeedPercent()`: Handles speed percentage changes (0% to 100%). Automatically turns fan on/off based on speed.
    - `onChangeMode()`: Handles fan mode changes. Automatically sets speed to 50% when switching from Off to another mode. `FAN_MODE_ON` is remapped to High.

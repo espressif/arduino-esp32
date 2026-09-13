@@ -106,16 +106,15 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 
-Initial Setpoints are 23.0C to 20.0C with a minimum 2.5C difference
+Initial Setpoints are 20.0C to 23.0C with a minimum 2.5C difference
 Auto mode is ON. Initial Temperature of 12.5C
 Local Temperature Sensor will be simulated every 10 seconds and changed by a simulated heater and cooler to move in between setpoints.
 Current Local Temperature is 12.5C
@@ -221,9 +220,9 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterThermostat example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Thermostat endpoint with cooling/heating sequence of operation and AUTO mode enabled, sets initial setpoints (heating: 23.0°C, cooling: 20.0°C) and initial temperature (12.5°C), and waits for Matter commissioning.
+1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Thermostat endpoint with cooling/heating sequence of operation and AUTO mode enabled, sets initial setpoints (heating: 20.0°C, cooling: 23.0°C) and initial temperature (12.5°C), and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
-2. **`loop()`**: Reads serial input for manual temperature setting, simulates heating/cooling systems and temperature changes every 10 seconds, controls heating/cooling based on thermostat mode and setpoints, handles button input for factory reset, and allows the Matter stack to process events.
+2. **`loop()`**: Reads serial input for manual temperature setting, simulates heating/cooling systems and temperature changes every 10 seconds, controls heating/cooling based on thermostat mode and setpoints, and handles long-press decommission. `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 
 3. **`getSimulatedTemperature()`**: Simulates temperature changes based on heating/cooling state. Temperature increases when heating is active, decreases when cooling is active. Replace this function with your actual sensor reading code.
 

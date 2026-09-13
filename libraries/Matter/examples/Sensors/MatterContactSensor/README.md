@@ -113,14 +113,13 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 Contact Sensor is Closed.
 Contact Sensor is Open.
 ```
@@ -192,8 +191,8 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterContactSensor example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), creates the Matter Contact Sensor endpoint with `begin()` (fabric state starts Open), starts Matter with `Matter.begin()`, and waits for commissioning.
-2. **`loop()`**: Handles the button for factory reset only, reports the simulated (or real) sensor with `setContact()` after `Matter.begin()`, and updates the LED from `getContact()`.
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), creates the Matter Contact Sensor endpoint with `begin()` (fabric state starts Open), starts Matter with `Matter.begin()`, and waits for commissioning / CASE via `matterWaitUntilReady()`.
+2. **`loop()`**: Handles long-press decommission, reports the simulated (or real) sensor with `setContact()` after `Matter.begin()`, and updates the LED from `getContact()`. `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 3. **`simulatedHWContactSensor()`**: Simulates a hardware contact sensor by toggling every `simulatedSensorInterval`. Replace this function with a real sensor read.
 
 ## Troubleshooting

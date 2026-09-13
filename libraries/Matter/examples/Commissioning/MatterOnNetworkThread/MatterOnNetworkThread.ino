@@ -13,14 +13,14 @@
 // limitations under the License.
 
 // On-network commissioning over Thread. Side-by-side with MatterCHIPoBLEThread:
-// same On/Off Light; the delta is selectNetwork(THREAD, true), the border router network key, then attach.
+// same On/Off Light; the delta is selectNetwork(MATTER_NETWORK_THREAD, true), the border router network key, then attach.
 // Do not start Arduino ESPmDNS — CHIP owns the mDNS responder.
 // Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
 // Do not call OThread.begin() before Matter.begin() — that would start a second stack.
 // Do not call OThreadDNSSD.begin() — CHIP owns Thread SRP (_matterc._udp).
 //
 // Supported SoCs: C5 (Tools → Matter Network → Thread), C6, and H2.
-// C6: one dual-stack prebuild. No Matter Network menu. selectNetwork(THREAD, true)
+// C6: one dual-stack prebuild. No Matter Network menu. selectNetwork(MATTER_NETWORK_THREAD, true)
 // uses Thread and turns CHIPoBLE off.
 
 #include <Arduino.h>
@@ -38,9 +38,7 @@ const uint8_t ledPin = 2;
 #endif
 
 const uint8_t buttonPin = BOOT_PIN;
-uint32_t button_time_stamp = 0;
-bool button_state = false;
-const uint32_t decommissioningTimeout = 5000;
+MatterButton button;
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD
 // Replace with the Thread network this node should join (same values as the border router).
@@ -93,7 +91,7 @@ static void halt(const char *reason) {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(buttonPin, INPUT_PULLUP);
+  button.begin(buttonPin);
   pinMode(ledPin, OUTPUT);
 
   if (!Matter.isNetworkSupported(MATTER_NETWORK_THREAD)) {
@@ -117,27 +115,18 @@ void setup() {
   }
 #endif
 
-  if (!Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Commission it on the Thread network with the pairing code or QR code.");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-  }
+  matterWaitUntilReady();
 }
 
 void loop() {
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    button_time_stamp = millis();
-    button_state = true;
-  }
-  if (digitalRead(buttonPin) == HIGH && button_state) {
-    button_state = false;
-  }
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();
+  matterRestartIfNoFabric();
+
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_LONG_HOLD) {
+      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+      Matter.decommission();
+    }
   }
   delay(500);
 }

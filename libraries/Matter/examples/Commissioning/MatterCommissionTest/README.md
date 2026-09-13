@@ -87,20 +87,15 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Fabric not commissioned yet. Waiting for commissioning.
-Matter Fabric not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
 ...
-Matter Node is commissioned and connected to the network.
+Controller CASE session is up.
+Matter fabric is present. Repeating the cycle.
 ====> Decommissioning in 30 seconds. <====
 Matter Node is decommissioned. Commissioning widget shall start over.
-
-Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-...
 ```
 
 ## Using the Device
@@ -109,8 +104,8 @@ Initiate the device discovery in your Matter environment.
 
 The device operates in a continuous test cycle:
 
-1. **Commissioning Phase**: The device waits for Matter commissioning. It displays the manual pairing code and QR code URL in the Serial Monitor.
-2. **Commissioned Phase**: Once commissioned, the device is connected to the Matter network and ready for use.
+1. **Commissioning Phase**: The device waits for commissioning / CASE via `matterWaitUntilReady()`. It displays the manual pairing code and QR code URL in the Serial Monitor.
+2. **Commissioned Phase**: A fabric is present (CASE may already be up). The sketch then decommissions to repeat the cycle.
 3. **Automatic Decommissioning**: After 30 seconds, the device automatically decommissions itself.
 4. **Repeat**: The cycle repeats, allowing you to test the commissioning process multiple times.
 
@@ -157,8 +152,8 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterCommissionTest example consists of the following main components:
 
-1. **`setup()`**: Configures Wi-Fi (if needed), initializes the Matter On/Off Light endpoint, and starts the Matter stack.
-2. **`loop()`**: Checks the Matter commissioning state, displays pairing information when not commissioned, waits for commissioning, and then automatically decommissions after 30 seconds to repeat the cycle.
+1. **`setup()`**: Configures Wi-Fi (if needed), initializes the Matter On/Off Light endpoint, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
+2. **`loop()`**: Automatically decommissions after 30 seconds to repeat the cycle. `matterRestartIfNoFabric()` reboots if the fabric is gone.
 
 ## Troubleshooting
 

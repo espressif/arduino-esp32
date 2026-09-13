@@ -108,14 +108,13 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 On button pressed. Sending InitialPress to the Matter Controller!
 On button released. Sending ShortRelease to the Matter Controller!
 Off button pressed. Sending InitialPress to the Matter Controller!
@@ -162,9 +161,9 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterSmartButtonsTagList example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (On, Off, Scene, and the decommission button), configures Wi-Fi (if needed), initializes the three Matter Generic Switch endpoints, tags them with `setTagList()`, and starts the Matter stack.
+1. **`setup()`**: Initializes hardware (On, Off, Scene, and the decommission button), configures Wi-Fi (if needed), initializes the three Matter Generic Switch endpoints, tags them with `setTagList()`, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
-2. **`loop()`**: Checks the Matter commissioning state, handles all three buttons' input via `handleButton()`, and checks the dedicated decommission button.
+2. **`loop()`**: Drains each `MatterButton` via `handleButton()` (press / click / long-hold). `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 
 3. **Button Event Handling** (`handleButton()`):
    - Detects button press and release with debouncing (250 ms)

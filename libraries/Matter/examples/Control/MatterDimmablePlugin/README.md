@@ -110,15 +110,14 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
+Controller CASE session is up.
 Initial state: OFF | level: 64
-Matter Node is commissioned and connected to the network. Ready for use.
 Plugin OnOff changed to ON
 Plugin Level changed to 128
 User Callback :: New Plugin State = ON, Level = 128
@@ -213,9 +212,9 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterDimmablePlugin example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, relay/dimmer pin), configures Wi-Fi (if needed), initializes `Preferences` library, sets up the Matter plugin endpoint with the last saved state (defaults to OFF with level 64 if not previously saved), registers callback functions, and starts the Matter stack.
+1. **`setup()`**: Initializes hardware (button, relay/dimmer pin), configures Wi-Fi (if needed), initializes `Preferences` library, sets up the Matter plugin endpoint with the last saved state (defaults to OFF with level 64 if not previously saved), registers callback functions, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
-2. **`loop()`**: Checks the Matter commissioning state, handles button input for toggling the plugin and factory reset, and allows the Matter stack to process events.
+2. **`loop()`**: Accessory logic (button toggle and long-press decommission). `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 
 3. **Callbacks**:
    - `setPluginState()`: Controls the physical relay/dimmer based on the on/off state and power level, saves the state to `Preferences` for persistence, and prints the state change to Serial Monitor.

@@ -110,15 +110,15 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Initial state: Lift=100%, Tilt=0%
-Matter Node is commissioned and connected to the network. Ready for use.
-Window Covering changed: Lift=100%, Tilt=0%
+Controller CASE session is up.
+Initial state: Lift=0%, Tilt=0%
+Window Covering changed: Lift=0%, Tilt=0%
 Moving lift to 50% (position: 100 cm)
 Window Covering changed: Lift=50%, Tilt=0%
 ```
@@ -137,7 +137,7 @@ The user button (BOOT button by default) provides manual control:
 The device saves the last known lift and tilt percentages using the `Preferences` library. After a power cycle or restart:
 
 - The device will restore to the last saved lift and tilt percentages
-- Default state is 100% lift (fully open) and 0% tilt if no previous state was saved
+- Default state is 0% lift (fully open) and 0% tilt if no previous state was saved
 - The Matter controller will be notified of the restored state
 - The RGB LED will reflect the restored state
 
@@ -219,15 +219,15 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterWindowCovering example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, RGB LED), configures Wi-Fi (if needed), initializes `Preferences` library, sets up the Matter window covering endpoint with the last saved state, registers callback functions, and starts the Matter stack.
+1. **`setup()`**: Initializes hardware (button, RGB LED), configures Wi-Fi (if needed), initializes `Preferences` library, sets up the Matter window covering endpoint with the last saved state, registers callback functions, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
-2. **`loop()`**: Checks the Matter commissioning state, handles button input for manual lift control and factory reset, and allows the Matter stack to process events.
+2. **`loop()`**: Accessory logic (button lift steps and long-press decommission). `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 
 3. **Callbacks**:
 
    **Target Position Callbacks** (called when `TargetPosition` attributes change):
-   - `fullOpen()`: Registered with `onOpen()` - called when `UpOrOpen` command is received. Moves window covering to fully open (100% lift), calls `setLiftPercentage()` to update `CurrentPosition`, and sets operational state to `STALL`
-   - `fullClose()`: Registered with `onClose()` - called when `DownOrClose` command is received. Moves window covering to fully closed (0% lift), calls `setLiftPercentage()` to update `CurrentPosition`, and sets operational state to `STALL`
+   - `fullOpen()`: Registered with `onOpen()` - called when `UpOrOpen` command is received. Moves window covering to fully open (Matter 0% lift), calls `setLiftPercentage()` to update `CurrentPosition`, and sets operational state to `STALL`
+   - `fullClose()`: Registered with `onClose()` - called when `DownOrClose` command is received. Moves window covering to fully closed (Matter 100% lift), calls `setLiftPercentage()` to update `CurrentPosition`, and sets operational state to `STALL`
    - `goToLiftPercentage()`: Registered with `onGoToLiftPercentage()` - called when `TargetPositionLiftPercent100ths` changes (from commands, `setTargetLiftPercent100ths()`, or direct attribute writes). Calculates absolute position (cm) based on installed limits, calls `setLiftPercentage()` to update `CurrentPosition`, and sets operational state to `STALL` when movement is complete
    - `goToTiltPercentage()`: Registered with `onGoToTiltPercentage()` - called when `TargetPositionTiltPercent100ths` changes. Calls `setTiltPercentage()` to update `CurrentPosition`, and sets operational state to `STALL` when movement is complete
    - `stopMotor()`: Registered with `onStop()` - called when `StopMotion` command is received. Stops any ongoing movement, calls `setLiftPercentage()` and `setTiltPercentage()` to update `CurrentPosition` for both, and sets operational state to `STALL` for both

@@ -691,10 +691,6 @@ bool MatterTemperatureControlledCabinet::setSupportedTemperatureLevels(uint8_t *
     return false;
   }
 
-  if (!labelsFitChipBuffer(labels, count)) {
-    return false;
-  }
-
   // Keep the current selection if it still exists in the new list. Matter stores the index.
   uint8_t selectedIndex = 0;
   bool haveSelection = false;

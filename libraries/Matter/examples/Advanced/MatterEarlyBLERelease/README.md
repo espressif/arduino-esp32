@@ -4,7 +4,7 @@ One **On/Off Light**. Two ways to handle BLE RAM. Serial `[heap]` also prints PS
 
 | `MATTER_EARLY_BLE_RELEASE` | Commissioning | BLE RAM |
 | -------------------------- | ------------- | ------- |
-| **1** (default) | On-network Wi-Fi (`selectNetwork(WIFI, true)` + `WiFi.begin()`). No CHIPoBLE. | Released at `initArduino()` (`bleInUse()` returns `false`). |
+| **1** (default) | On-network Wi-Fi (`selectNetwork(MATTER_NETWORK_WIFI, true)` + `WiFi.begin()`). No CHIPoBLE. | Released at `initArduino()` (`bleInUse()` returns `false`). |
 | **0** | CHIPoBLE. No sketch Wi-Fi. Hub sends credentials over BLE. | Library reclaim after `Matter.begin()` / commission. |
 
 **Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`).** Neither mode hands the radio to Arduino BLE.
@@ -42,7 +42,7 @@ Arduino IDE: C5 default is **Matter Network → Wi-Fi**. C6 has no Matter Networ
 
 1. After the includes: set `MATTER_EARLY_BLE_RELEASE`. For mode **1**, set `ssid` / `password`.
 2. Partition scheme: **Huge APP**. Enable **Erase All Flash Before Sketch Upload**.
-3. Serial Monitor 115200. The light drives `ledPin`. Long-press BOOT (>5 s) to decommission.
+3. Serial Monitor 115200. The light drives `ledPin`. After `Matter.begin()`, the sketch waits for commissioning / CASE via `matterWaitUntilReady()`. Long-press BOOT (>5 s) to decommission. `loop()` calls `matterRestartIfNoFabric()` if the hub removed the fabric.
 
 ## Related
 

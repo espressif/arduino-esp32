@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -48,11 +48,7 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LE
 
 // set your board USER BUTTON pin here - decommissioning button
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
-
-// Button control - decommission the Matter Node
-uint32_t button_time_stamp = 0;                // debouncing control
-bool button_state = false;                     // false = released | true = pressed
-const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
+MatterButton button;
 
 // Matter Protocol Endpoint (On/OFF Light) Callback
 bool onOffLightCallback(bool state) {
@@ -65,7 +61,7 @@ void setup() {
   Serial.begin(115200);
 
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
-  pinMode(buttonPin, INPUT_PULLUP);
+  button.begin(buttonPin);
   // Initialize the LED GPIO
   pinMode(ledPin, OUTPUT);
 
@@ -82,6 +78,9 @@ void setup() {
     delay(500);
   }
   Serial.println();
+  Serial.println("Wi-Fi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
 #endif
 
   // Initialize at least one Matter EndPoint
@@ -92,34 +91,18 @@ void setup() {
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
-
-  if (!Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Initiate the device discovery in your Matter environment.");
-    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-  }
+  matterWaitUntilReady();
 }
 
 void loop() {
-  // Check if the button has been pressed
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    // deals with button debouncing
-    button_time_stamp = millis();  // record the time while the button is pressed.
-    button_state = true;           // pressed.
-  }
+  matterRestartIfNoFabric();
 
-  if (digitalRead(buttonPin) == HIGH && button_state) {
-    button_state = false;  // released
-  }
-
-  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_LONG_HOLD) {
+      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+      Matter.decommission();
+    }
   }
 
   delay(500);

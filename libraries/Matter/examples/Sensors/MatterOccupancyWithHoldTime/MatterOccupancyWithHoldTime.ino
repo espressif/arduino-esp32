@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -62,11 +62,7 @@ const char *holdTimePrefKey = "HoldTime";
 
 // set your board USER BUTTON pin here - decommissioning only
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
-
-// Button control
-uint32_t button_time_stamp = 0;                // debouncing control
-bool button_state = false;                     // false = released | true = pressed
-const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
+MatterButton button;
 
 // Simulated Occupancy Sensor with HoldTime support
 // When occupancy is detected, it holds the "occupied" state for HoldTime seconds
@@ -120,20 +116,23 @@ bool simulatedHWOccupancySensor() {
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
-  pinMode(buttonPin, INPUT_PULLUP);
+  button.begin(buttonPin);
 
   Serial.begin(115200);
 
 // CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
 #if !CONFIG_ENABLE_CHIPOBLE
-  // Manually connect to Wi-Fi
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
   WiFi.begin(ssid, password);
-  // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println();
+  Serial.println("Wi-Fi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
 #endif
 
   // Initialize Preferences and read stored HoldTime value
@@ -181,45 +180,18 @@ void setup() {
   }
 
   Serial.printf("Initial HoldTime: %u seconds\n", OccupancySensor.getHoldTime());
-
-  // Check Matter Accessory Commissioning state, which may change during execution of loop()
-  if (!Matter.isDeviceCommissioned()) {
-    Serial.println("");
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Initiate the device discovery in your Matter environment.");
-    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-    // waits for Matter Occupancy Sensor Commissioning.
-    uint32_t timeCount = 0;
-    while (!Matter.isDeviceCommissioned()) {
-      delay(100);
-      if ((timeCount++ % 50) == 0) {  // 50*100ms = 5 sec
-        Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
-      }
-    }
-    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
-  }
+  matterWaitUntilReady();
 }
 
 void loop() {
-  // Check if the button has been pressed
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    // deals with button debouncing
-    button_time_stamp = millis();  // record the time while the button is pressed.
-    button_state = true;           // pressed.
-  }
+  matterRestartIfNoFabric();
 
-  if (button_state && digitalRead(buttonPin) == HIGH) {
-    button_state = false;  // released
-  }
-
-  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning Occupancy Sensor Matter Accessory. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_LONG_HOLD) {
+      Serial.println("Decommissioning Occupancy Sensor Matter Accessory. It shall be commissioned again.");
+      Matter.decommission();
+    }
   }
 
   // Check Simulated Occupancy Sensor and set Matter Attribute

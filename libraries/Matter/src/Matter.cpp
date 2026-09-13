@@ -785,7 +785,7 @@ uint16_t ArduinoMatter::getNetworkEndPointId(matterNetwork_t network) {
         return 0xFFFF;
       }
 #if defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-      // C6: Thread NC is on endpoint 0 only after selectNetwork(THREAD).
+      // C6: Thread NC is on endpoint 0 only after selectNetwork(MATTER_NETWORK_THREAD).
       if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
         return 0;
       }

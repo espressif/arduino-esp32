@@ -9,6 +9,8 @@ Commission with CHIPoBLE, then let Matter shut NimBLE down and return BLE RAM to
 - Leaves CHIPoBLE enabled (default when `CONFIG_ENABLE_CHIPOBLE` is set)
 - Calls `Matter.setBLEMemoryReleaseEnabled(true)` (the default) so BLE RAM is returned after a fabric exists
 - Registers `Matter.onBLEMemoryReleased()` **before** `Matter.begin()`
+- After `Matter.begin()`, waits for commissioning / CASE via `matterWaitUntilReady()`
+- `loop()` calls `matterRestartIfNoFabric()` if the hub removed the fabric
 - The callback only sets a flag (it runs on the CHIP task). `loop()` then `malloc`s a 16 KB demo buffer
 - Prints `ESP.getFreeHeap()` / `getMinFreeHeap()` / `getMaxAllocHeap()`:
   - before `Matter.begin()`
@@ -48,7 +50,7 @@ Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do
 1. Partition scheme: **Huge APP**. Enable **Erase All Flash Before Sketch Upload**.
 2. Serial Monitor 115200.
 3. Commission with the printed pairing code or QR (BLE when CHIPoBLE is in the build).
-4. After commission (or on an already-commissioned reboot), wait for the “BLE memory released” lines, then the 16 KB `malloc`.
+4. After commission (or on an already-commissioned reboot), wait for `BLE memory released (CHIP kBLEDeinitialized)`, then the 16 KB `malloc`.
 
 Long-press BOOT (>5 s) to decommission the node (`Matter.decommission()`). This removes fabrics; it is not a full flash erase. BLE comes back on the next boot until the node is commissioned again.
 

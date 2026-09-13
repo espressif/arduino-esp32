@@ -4,14 +4,15 @@ Commission a Matter On/Off Light over Wi-Fi **without CHIPoBLE**. The sketch con
 
 This is the on-network half of the Wi-Fi pair. The other half is [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi) (BLE on, hub sends SSID/password).
 
-**Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`) in this sketch.** Matter owns NimBLE. `selectNetwork(WIFI, true)` turns CHIPoBLE off and releases BLE RAM; it does not hand the radio to Arduino BLE.
+**Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`) in this sketch.** Matter owns NimBLE. `selectNetwork(MATTER_NETWORK_WIFI, true)` turns CHIPoBLE off and releases BLE RAM; it does not hand the radio to Arduino BLE.
 
 ## What it does
 
 - Calls `Matter.selectNetwork(MATTER_NETWORK_WIFI, true)` before any accessory `begin()` (CHIPoBLE off)
 - Connects Wi-Fi first, then starts Matter
-- Prints pairing codes for on-network commissioning
-- Prints `ESP.getFreeHeap()` before/after `begin()`. `onBLEMemoryReleased()` is registered but usually does not run here (`selectNetwork(WIFI, true)` turns CHIPoBLE off before `begin()`). See [MatterCHIPoBLERelease](../MatterCHIPoBLERelease) for allocate-from-`loop()` after reclaim.
+- After `Matter.begin()`, waits for commissioning / CASE via `matterWaitUntilReady()`
+- `loop()` calls `matterRestartIfNoFabric()` if the hub removed the fabric
+- Prints `ESP.getFreeHeap()` before/after `begin()`. `onBLEMemoryReleased()` is registered but usually does not run here (`selectNetwork(MATTER_NETWORK_WIFI, true)` turns CHIPoBLE off before `begin()`). See [MatterCHIPoBLERelease](../MatterCHIPoBLERelease) for allocate-from-`loop()` after reclaim.
 
 ## Supported targets
 
@@ -32,7 +33,7 @@ This sketch calls `Matter.selectNetwork(MATTER_NETWORK_WIFI, true)` and `WiFi.be
 - Wi-Fi + CHIPoBLE (hub sends SSID): [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
-**Arduino IDE:** C5 default is **Matter Network → Wi-Fi**. C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(WIFI, true)` keeps Wi-Fi.
+**Arduino IDE:** C5 default is **Matter Network → Wi-Fi**. C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(MATTER_NETWORK_WIFI, true)` keeps Wi-Fi.
 
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.
 

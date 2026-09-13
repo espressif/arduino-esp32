@@ -81,6 +81,8 @@ Same steps as MatterSmartButton:
 3. Enable **Erase All Flash Before Sketch Upload**
 4. Upload
 
+After `Matter.begin()`, the sketch waits for commissioning / CASE via `matterWaitUntilReady()`. `loop()` calls `matterRestartIfNoFabric()` if the hub removed the fabric.
+
 ## Expected Serial Output
 
 ```

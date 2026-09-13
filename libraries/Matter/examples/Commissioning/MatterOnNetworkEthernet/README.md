@@ -16,6 +16,8 @@ Commission a Matter On/Off Light over Ethernet. Pair this with [MatterOnNetworkW
   - **SPI PHY** (default in this sketch): `SPI.begin(ETH_SPI_SCK, ETH_SPI_MISO, ETH_SPI_MOSI)` then `ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, SPI)` — default chip is W5500
 - `ETH.enableIPv6()` and `Matter.waitForNetwork(30000)`
 - Starts the On/Off Light and `Matter.begin()`
+- After `Matter.begin()`, waits for commissioning / CASE via `matterWaitUntilReady()`
+- `loop()` calls `matterRestartIfNoFabric()` if the hub removed the fabric
 - Prints on-network pairing codes
 
 There is no Ethernet Network Commissioning cluster. The commissioner must already reach the device on IP.
@@ -53,7 +55,7 @@ Internal EMAC on original ESP32 uses `ETH_PHY_MDC` / `ETH_PHY_MDIO` / `ETH_CLK_M
 | ESP32-C6 | Ethernet    | Off      | Wi-Fi, Thread    | SPI                         |
 | ESP32-H2 | Ethernet    | Off      | Thread           | SPI                         |
 
-This sketch calls `Matter.selectNetwork(MATTER_NETWORK_ETHERNET)` (CHIPoBLE **off**), then `ETH.begin()`, `enableIPv6()`, and `waitForNetwork()` before `Matter.begin()`. You still need a PHY.
+This sketch calls `Matter.selectNetwork(MATTER_NETWORK_ETHERNET)` (CHIPoBLE **off**), then `ETH.begin()`, `enableIPv6()`, and `Matter.waitForNetwork()` before `Matter.begin()`. You still need a PHY.
 
 - Same on-network pattern on Wi-Fi: [MatterOnNetworkWiFi](../MatterOnNetworkWiFi).
 - Same on-network pattern on Thread: [MatterOnNetworkThread](../MatterOnNetworkThread).

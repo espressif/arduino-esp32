@@ -104,16 +104,16 @@ Once the sketch is running, open the Serial Monitor at a baud rate of **115200**
 Connecting to your-wifi-ssid
 .......
 Wi-Fi connected
+IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 ```
 
 When you trigger Identify from a Matter app, you should see a line such as:
@@ -232,9 +232,9 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterOnIdentify example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), initializes the Matter on/off light endpoint, registers the on/off callback and the Identify callback, and starts the Matter stack.
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), initializes the Matter on/off light endpoint, registers the on/off callback and the Identify callback, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
-2. **`loop()`**: Times Identify animations with `millis()` (period and optional deadline from the request), handles button input for factory reset, and allows the Matter stack to process events.
+2. **`loop()`**: Times Identify animations with `millis()` (period and optional deadline from the request) and handles long-press decommission. `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 
 3. **Callbacks**:
    - `onOffLightCallback()`: Controls the physical LED based on on/off state from Matter controller.

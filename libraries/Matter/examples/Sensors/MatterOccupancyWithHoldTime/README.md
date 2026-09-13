@@ -124,14 +124,13 @@ HoldTime set to: 30 seconds
 Initial HoldTime: 30 seconds
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 Occupancy detected! Holding state for 30 seconds (HoldTime)
 HoldTime expired. Switching to unoccupied state.
 ```
@@ -298,12 +297,12 @@ The MatterOccupancyWithHoldTime example consists of the following main component
    - Calls `Matter.begin()` to start the Matter stack
    - Sets HoldTimeLimits (min, max, default) after Matter.begin()
    - Sets initial HoldTime value (from Preferences or default)
-   - Waits for Matter commissioning
+   - Waits for commissioning / CASE via `matterWaitUntilReady()`
 
 2. **`loop()`**:
-   - Handles button input for factory reset
+   - Handles long-press decommission
    - Continuously checks the simulated occupancy sensor and updates the Matter attribute
-   - Allows the Matter stack to process events
+   - `matterRestartIfNoFabric()` reboots if the hub removed the fabric
 
 3. **`simulatedHWOccupancySensor()`**:
    - Simulates a hardware occupancy sensor with HoldTime support

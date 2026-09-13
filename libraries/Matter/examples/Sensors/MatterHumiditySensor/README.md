@@ -104,14 +104,13 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 Current Humidity is 95.00%
 Current Humidity is 10.50%
 Current Humidity is 11.00%
@@ -193,8 +192,8 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterHumiditySensor example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Humidity Sensor endpoint with initial value (95%), and waits for Matter commissioning.
-2. **`loop()`**: Displays the current humidity value every 5 seconds, updates the sensor reading from the simulated hardware sensor, handles button input for factory reset, and allows the Matter stack to process events.
+1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Humidity Sensor endpoint with initial value (95%), and waits for commissioning / CASE via `matterWaitUntilReady()`.
+2. **`loop()`**: Displays the current humidity value every 5 seconds, updates the sensor reading from the simulated hardware sensor, and handles long-press decommission. `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 3. **`getSimulatedHumidity()`**: Simulates a hardware humidity sensor by cycling through values from 10% to 30% in 0.5% steps. Replace this function with your actual sensor reading code.
 
 ## Troubleshooting

@@ -107,15 +107,14 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
+Controller CASE session is up.
 Initial state: ON | brightness: 15
-Matter Node is commissioned and connected to the network. Ready for use.
 Light OnOff changed to ON
 Light Brightness changed to 128
 ```
@@ -172,8 +171,8 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterDimmableLight example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), sets up the Matter endpoint, restores the last known state (on/off and brightness) from `Preferences`, and registers callbacks for state changes.
-2. **`loop()`**: Checks the Matter commissioning state, handles button input for toggling the light and factory reset, and allows the Matter stack to process events.
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), sets up the Matter endpoint, restores the last known state (on/off and brightness) from `Preferences`, registers callbacks for state changes, and waits for commissioning / CASE via `matterWaitUntilReady()`.
+2. **`loop()`**: Accessory logic (button toggle and long-press decommission). `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 3. **Callbacks**:
    - `setLightState()`: Controls the physical LED with brightness level (supports both RGB LED and regular LED with PWM).
    - `onChangeOnOff()`: Handles on/off state changes.

@@ -83,17 +83,19 @@ Matter Simple Blinds Example
 ============================
 
 Connecting to your-ssid
+.......
 Wi-Fi connected
 IP address: 192.168.1.100
-Matter started
 
-========================================
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
-QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT:Y.K9042C00KA0648G00
-========================================
+QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
+...
+Controller CASE session is up.
+Matter started
 ```
 
 When a command is received from the Matter controller:
@@ -110,8 +112,8 @@ Window Covering change request: Lift=50%
 ## Code Structure
 
 - **`onBlindsLift()`**: Callback function that handles window covering lift changes. This is registered with `WindowBlinds.onGoToLiftPercentage()` and is triggered when `TargetPositionLiftPercent100ths` changes. The callback receives the target lift percentage (0-100%).
-- **`setup()`**: Initializes Wi-Fi (if needed), Window Covering endpoint with `ROLLERSHADE` type, registers the callback, and starts Matter.
-- **`loop()`**: Empty - all control is handled via Matter callbacks.
+- **`setup()`**: Initializes Wi-Fi (if needed), Window Covering endpoint with `ROLLERSHADE` type, registers the callback, starts Matter, and waits for commissioning / CASE via `matterWaitUntilReady()`.
+- **`loop()`**: `matterRestartIfNoFabric()` reboots if the hub removed the fabric. Lift commands are handled in `onBlindsLift()`.
 
 ## Customization
 

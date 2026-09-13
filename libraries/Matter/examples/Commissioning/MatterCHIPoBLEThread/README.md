@@ -10,7 +10,8 @@ This is the BLE half of the Thread pair. The other half is [MatterOnNetworkThrea
 
 - `Matter.selectNetwork(MATTER_NETWORK_THREAD)` before any accessory `begin()` (CHIPoBLE stays **on**)
 - Starts the On/Off Light and `Matter.begin()`
-- Prints pairing codes for BLE commissioning
+- After `Matter.begin()`, waits for commissioning / CASE via `matterWaitUntilReady()`
+- `loop()` calls `matterRestartIfNoFabric()` if the hub removed the fabric
 - On dual-stack ESP32-C6, Thread Network Commissioning replaces Wi-Fi on endpoint 0
 
 Do not call `OThread.begin()` or `commitDataSet()` here. After the hub finishes, CHIP has the dataset.
@@ -36,7 +37,7 @@ This sketch calls `Matter.selectNetwork(MATTER_NETWORK_THREAD)` and leaves CHIPo
 - Thread on-network (CHIPoBLE off): [MatterOnNetworkThread](../MatterOnNetworkThread).
 - Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../MatterOnNetworkEthernet).
 
-**Arduino IDE:** C5: set **Matter Network → Thread**. C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(THREAD)` picks Thread.
+**Arduino IDE:** C5: set **Matter Network → Thread**. C6 has no Matter Network menu — one dual-stack image; this sketch’s `selectNetwork(MATTER_NETWORK_THREAD)` picks Thread.
 
 Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do not also call `setBLECommissioningEnabled()`.
 

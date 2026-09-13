@@ -113,14 +113,13 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 Water Freeze Detector is Detected.
 Water Freeze Detector is Not Detected.
 ```
@@ -194,8 +193,8 @@ This endpoint is part of the latest Matter supported device list and it may not 
 
 The MatterWaterFreezeDetector example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), creates the Matter Water Freeze Detector endpoint with `begin()` (fabric state starts Not Detected), starts Matter with `Matter.begin()`, and waits for commissioning.
-2. **`loop()`**: Handles the button for factory reset only, reports the simulated (or real) sensor with `setFreeze()` after `Matter.begin()`, and updates the LED from `getFreeze()`.
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), creates the Matter Water Freeze Detector endpoint with `begin()` (fabric state starts Not Detected), starts Matter with `Matter.begin()`, and waits for commissioning / CASE via `matterWaitUntilReady()`.
+2. **`loop()`**: Handles long-press decommission, reports the simulated (or real) sensor with `setFreeze()` after `Matter.begin()`, and updates the LED from `getFreeze()`. `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 3. **`simulatedHWWaterFreezeDetector()`**: Simulates a hardware water freeze detector by toggling every `simulatedSensorInterval`. Replace this function with a real sensor read.
 
 ## Troubleshooting

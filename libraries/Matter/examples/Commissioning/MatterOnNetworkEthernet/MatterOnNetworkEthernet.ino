@@ -43,9 +43,7 @@ const uint8_t ledPin = 2;
 #endif
 
 const uint8_t buttonPin = BOOT_PIN;
-uint32_t button_time_stamp = 0;
-bool button_state = false;
-const uint32_t decommissioningTimeout = 5000;
+MatterButton button;
 
 bool onOffLightCallback(bool state) {
   digitalWrite(ledPin, state ? HIGH : LOW);
@@ -62,7 +60,7 @@ static void halt(const char *reason) {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(buttonPin, INPUT_PULLUP);
+  button.begin(buttonPin);
   pinMode(ledPin, OUTPUT);
 
   digitalWrite(ledPin, HIGH);
@@ -106,29 +104,19 @@ void setup() {
   OnOffLight.begin();
   OnOffLight.onChange(onOffLightCallback);
   Matter.begin();
+  matterWaitUntilReady();
   Serial.printf("BLE commissioning enabled: %s\r\n", Matter.isBLECommissioningEnabled() ? "YES" : "NO");
-
-  if (!Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Commission it on the Ethernet network with the pairing code or QR code.");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-  }
 }
 
 void loop() {
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    button_time_stamp = millis();
-    button_state = true;
-  }
-  if (digitalRead(buttonPin) == HIGH && button_state) {
-    button_state = false;
-  }
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();
+  matterRestartIfNoFabric();
+
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_LONG_HOLD) {
+      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+      Matter.decommission();
+    }
   }
   delay(500);
 }

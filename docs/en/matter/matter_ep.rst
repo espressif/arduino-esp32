@@ -46,7 +46,7 @@ Sets the current Matter Accessory endpoint ID.
 Secondary Network Interface (deprecated)
 ****************************************
 
-Arduino Matter exposes **one** Network Commissioning cluster on endpoint 0: Wi-Fi **or** Thread, not both. On ESP32-C6 call ``Matter.selectNetwork(MATTER_NETWORK_WIFI)`` or ``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` before any accessory ``begin()``. ``selectNetwork(THREAD)`` replaces the root Wi-Fi driver so hubs that only talk to endpoint 0 see Thread.
+Arduino Matter exposes **one** Network Commissioning cluster on endpoint 0: Wi-Fi **or** Thread, not both. On ESP32-C6 call ``Matter.selectNetwork(MATTER_NETWORK_WIFI)`` or ``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` before any accessory ``begin()``. ``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` replaces the root Wi-Fi driver so hubs that only talk to endpoint 0 see Thread.
 
 ``createSecondaryNetworkInterface()`` is deprecated. It does not create an endpoint and always returns ``false``. ``getSecondaryNetworkEndPointId()`` always returns 0.
 
@@ -67,7 +67,7 @@ Gets a pointer to an attribute from its cluster ID and attribute ID.
 
     esp_matter::attribute_t *getAttribute(uint32_t cluster_id, uint32_t attribute_id);
 
-* ``cluster_id`` - Cluster ID (e.g., ``OnOff::Attributes::OnOff::Id``)
+* ``cluster_id`` - Cluster ID (e.g., ``OnOff::Id``)
 * ``attribute_id`` - Attribute ID (e.g., ``OnOff::Attributes::OnOff::Id``)
 
 This function will return a pointer to the attribute, or ``NULL`` if not found.

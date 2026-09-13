@@ -105,13 +105,16 @@ Connecting to your-wifi-ssid
 Wi-Fi connected
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
+...
+Controller CASE session is up.
 ```
 
-After commissioning, the device will be ready for control via Matter apps. No additional status messages are printed in this minimal example.
+After CASE is up, this minimal example prints no extra accessory status. Long-press BOOT to decommission.
 
 ## Using the Device
 
@@ -163,9 +166,9 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterMinimum example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), initializes the Matter on/off light endpoint, registers the callback function, and starts the Matter stack. Displays commissioning information if not yet commissioned.
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), initializes the Matter on/off light endpoint, registers the callback function, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
-2. **`loop()`**: Handles button input for factory reset (long press >5 seconds) and allows the Matter stack to process events. This minimal example does not include commissioning state checking in the loop - it only checks once in setup.
+2. **`loop()`**: Accessory logic (long-press decommission). `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 
 3. **`onOffLightCallback()`**: Simple callback function that controls the LED based on the on/off state received from the Matter controller. This is the minimal callback implementation.
 
@@ -175,7 +178,6 @@ This minimal example can be extended with additional features:
 
 - **State persistence**: Add `Preferences` library to save the last known state
 - **Button toggle**: Add button press detection to toggle the light manually
-- **Commissioning status check**: Add periodic checking of commissioning state in the loop
 - **Multiple endpoints**: Add more Matter endpoints to the same node
 - **Enhanced callbacks**: Add more detailed callback functions for better control
 

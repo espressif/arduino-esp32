@@ -41,11 +41,7 @@ const uint8_t ledPin = 2;
 #endif
 
 const uint8_t buttonPin = BOOT_PIN;
-
-uint32_t button_time_stamp = 0;
-bool button_state = false;
-const uint32_t debouceTime = 250;
-const uint32_t decommissioningTimeout = 5000;
+MatterButton button;
 
 bool setLightOnOff(bool state) {
   Serial.printf("User Callback :: New Light State = %s\r\n", state ? "ON" : "OFF");
@@ -73,8 +69,6 @@ void printIdentity() {
   Serial.printf("  HardwareVersionString: %s\r\n", kHardwareVersionString);
   Serial.printf("  Setup discriminator: 0x%03X\r\n", kSetupDiscriminator);
   Serial.printf("  Setup passcode: %lu\r\n", static_cast<unsigned long>(kSetupPasscode));
-  Serial.printf("  Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-  Serial.printf("  QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
 }
 
 // Log CASE session up/down without blocking loop() (button / decommission stay live).
@@ -102,7 +96,7 @@ void pollControllerOnline() {
 }
 
 void setup() {
-  pinMode(buttonPin, INPUT_PULLUP);
+  button.begin(buttonPin);
   pinMode(ledPin, OUTPUT);
   Serial.begin(115200);
 
@@ -127,7 +121,7 @@ void setup() {
   Matter.setSerialNumber(kSerialNumber);
   Matter.setHardwareVersion(kHardwareVersion);
   Matter.setHardwareVersionString(kHardwareVersionString);
-  // Not the Arduino test pair 0xF00 / 20202021. Use the generated pairing codes below.
+  // Not the Arduino test pair 0xF00 / 20202021. Live pairing codes come from matterWaitUntilReady().
   Matter.setSetupDiscriminator(kSetupDiscriminator);
   Matter.setSetupPasscode(kSetupPasscode);
 
@@ -137,53 +131,26 @@ void setup() {
   OnOffLight.onChange(setLightOnOff);
 
   Matter.begin();
+  matterWaitUntilReady();
   printIdentity();
-
-  if (Matter.isDeviceCommissioned()) {
-    Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
-    OnOffLight.updateAccessory();
-    Serial.println("Matter Node is commissioned. Light restored from local state.");
-  }
+  Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
+  OnOffLight.updateAccessory();
 }
 
 void loop() {
-  if (!Matter.isDeviceCommissioned()) {
-    Serial.println("");
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Initiate the device discovery in your Matter environment.");
-    Serial.println("Commission it using the generated manual pairing code or QR code");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-    uint32_t timeCount = 0;
-    while (!Matter.isDeviceCommissioned()) {
-      delay(100);
-      if ((timeCount++ % 50) == 0) {
-        Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
-      }
-    }
-    Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
-    OnOffLight.updateAccessory();
-    Serial.println("Matter Node is commissioned. Applying last local light state.");
-  }
+  matterRestartIfNoFabric();
 
   pollControllerOnline();
 
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    button_time_stamp = millis();
-    button_state = true;
-  }
-
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > debouceTime && digitalRead(buttonPin) == HIGH) {
-    button_state = false;
-    Serial.println("User button released. Toggling Light!");
-    OnOffLight.toggle();
-  }
-
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-    OnOffLight.setOnOff(false);
-    Matter.decommission();
-    button_time_stamp = millis();
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_CLICK) {
+      Serial.println("User button released. Toggling Light!");
+      OnOffLight.toggle();
+    } else if (ev == MATTER_BUTTON_LONG_HOLD) {
+      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+      OnOffLight.setOnOff(false);
+      Matter.decommission();
+    }
   }
 }

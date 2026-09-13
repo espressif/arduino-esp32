@@ -108,15 +108,14 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
+Controller CASE session is up.
 Initial state: OFF
-Matter Node is commissioned and connected to the network. Ready for use.
 User Callback :: New Plugin State = ON
 User Callback :: New Plugin State = OFF
 ```
@@ -198,9 +197,9 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterOnOffPlugin example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, relay/LED pin), configures Wi-Fi (if needed), initializes `Preferences` library, sets up the Matter plugin endpoint with the last saved state (defaults to OFF if not previously saved), registers the callback function, and starts the Matter stack.
+1. **`setup()`**: Initializes hardware (button, relay/LED pin), configures Wi-Fi (if needed), initializes `Preferences` library, sets up the Matter plugin endpoint with the last saved state (defaults to OFF if not previously saved), registers the callback function, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
-2. **`loop()`**: Checks the Matter commissioning state, handles button input for factory reset, and allows the Matter stack to process events.
+2. **`loop()`**: Accessory logic (long-press decommission). `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 
 3. **Callbacks**:
    - `setPluginOnOff()`: Controls the physical relay/LED based on the on/off state, saves the state to `Preferences` for persistence, and prints the state change to Serial Monitor.

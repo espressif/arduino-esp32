@@ -121,14 +121,13 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 
 Temperature Controlled Cabinet Configuration (Temperature Level Mode):
   Arduino getSelectedTemperatureLevel() = 30
@@ -201,13 +200,13 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterTemperatureControlledCabinetLevels example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Temperature Controlled Cabinet endpoint with temperature level configuration, and waits for Matter commissioning.
+1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Temperature Controlled Cabinet endpoint with temperature level configuration, and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
 2. **`loop()`**:
    - **Dynamic Level Updates**: Automatically cycles through all supported temperature levels every 1 second in both directions (increasing and decreasing). This demonstrates the temperature level control functionality and allows Matter controllers to observe real-time changes.
    - **Level Reached Detection**: Monitors when the initial level is reached or overpassed in each direction and prints a notification message once per direction.
    - Periodically prints the current temperature level (every 5 seconds)
-   - Handles button input for factory reset
+   - Handles long-press decommission. `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 
 3. **Helper Functions**:
    - `indexOfLevel()` / `printSupportedLevels()` / `printLevelMapping()`: Map an Arduino uint8 value to the Matter list index and hub string label

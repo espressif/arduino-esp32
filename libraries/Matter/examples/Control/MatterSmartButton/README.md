@@ -101,18 +101,17 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
-Button pressed — sending InitialPress
-Button released — sending ShortRelease
-Button pressed — sending InitialPress
-Button released — sending ShortRelease
+Controller CASE session is up.
+User button pressed. Sending InitialPress to the Matter Controller!
+User button released. Sending ShortRelease to the Matter Controller!
+User button pressed. Sending InitialPress to the Matter Controller!
+User button released. Sending ShortRelease to the Matter Controller!
 ```
 
 ## Using the Device
@@ -179,9 +178,9 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterSmartButton example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), initializes the Matter Generic Switch endpoint, and starts the Matter stack.
+1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), initializes the Matter Generic Switch endpoint, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
-2. **`loop()`**: Checks the Matter commissioning state, handles button input for sending click events and factory reset, and allows the Matter stack to process events.
+2. **`loop()`**: Drains `MatterButton` events (press / click / long-hold decommission) and maps them to the Generic Switch. `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
 
 3. **Button Event Handling**:
    - Detects button press and release with debouncing (50 ms)
@@ -191,7 +190,7 @@ The MatterSmartButton example consists of the following main components:
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
-- **Button clicks not registering**: Check Serial Monitor for "Button pressed" and "Button released" messages. Verify button wiring and debounce time
+- **Button clicks not registering**: Check Serial Monitor for `User button pressed` / `User button released`. Verify button wiring and debounce time
 - **Automations not triggering**: Ensure the device is commissioned and that automations are properly configured in your Matter app. The button sends events, but automations must be set up in the app
 - **Button not responding**: Verify button pin configuration and connections. Check that the button is properly connected with pull-up resistor (INPUT_PULLUP mode)
 - **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`

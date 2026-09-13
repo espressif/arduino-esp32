@@ -96,23 +96,13 @@ void setup() {
 
   // Start Matter
   Matter.begin();
+  matterWaitUntilReady();
   Serial.println("Matter started");
-  Serial.println();
-
-  Serial.println("========================================");
-  if (Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is already commissioned.");
-  } else {
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Initiate the device discovery in your Matter environment.");
-    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
-  }
-  Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-  Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-  Serial.println("========================================\n");
 }
 
 void loop() {
+  matterRestartIfNoFabric();
+
   static bool lastCommissioned = false;
   static bool lastConnected = false;
   static bool lastOnline = false;

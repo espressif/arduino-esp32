@@ -18,7 +18,7 @@
 //
 //   1 (default)  Free BLE at boot, then commission on-network over Wi-Fi.
 //                A strong C bleInUse() returns false so initArduino() releases
-//                BLE RAM before setup(). selectNetwork(WIFI, true) turns CHIPoBLE
+//                BLE RAM before setup(). selectNetwork(MATTER_NETWORK_WIFI, true) turns CHIPoBLE
 //                off; WiFi.begin() joins the AP. Do not also call
 //                setBLECommissioningEnabled().
 //
@@ -61,9 +61,7 @@ const uint8_t ledPin = 2;
 #endif
 
 const uint8_t buttonPin = BOOT_PIN;
-uint32_t button_time_stamp = 0;
-bool button_state = false;
-const uint32_t decommissioningTimeout = 5000;
+MatterButton button;
 
 static volatile bool sBleMemoryReleased = false;
 
@@ -124,7 +122,7 @@ void onBleMemoryReleased() {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(buttonPin, INPUT_PULLUP);
+  button.begin(buttonPin);
   pinMode(ledPin, OUTPUT);
 
   Serial.println();
@@ -182,49 +180,25 @@ void setup() {
   printHeap("before Matter.begin()");
   Matter.begin();
   printHeap("after Matter.begin()");
-
-  if (Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is commissioned. Ready for use.");
-  } else {
-    Serial.println("Matter Node is not commissioned yet.");
-#if MATTER_EARLY_BLE_RELEASE || !CONFIG_ENABLE_CHIPOBLE
-    Serial.println("Commission it on the Wi-Fi network (on-network).");
-#else
-    Serial.println("Commission it with CHIPoBLE using the pairing code or QR code.");
-#endif
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-  }
+  matterWaitUntilReady();
+  printHeap("after waitUntilReady()");
 }
 
 void loop() {
+  matterRestartIfNoFabric();
+
   if (sBleMemoryReleased) {
     sBleMemoryReleased = false;
     Serial.println("onBLEMemoryReleased(): BLE RAM is back on the heap.");
     printHeap("after onBLEMemoryReleased()");
   }
 
-  if (!Matter.isDeviceCommissioned()) {
-    static uint32_t sWaitCount = 0;
-    delay(100);
-    if ((sWaitCount++ % 50) == 0) {
-      Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_LONG_HOLD) {
+      Serial.println("Decommissioning the Matter Node. It shall be commissioned again.");
+      Matter.decommission();
     }
-    return;
-  }
-
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    button_time_stamp = millis();
-    button_state = true;
-  }
-  if (digitalRead(buttonPin) == HIGH && button_state) {
-    button_state = false;
-  }
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning the Matter Node. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();
   }
   delay(50);
 }

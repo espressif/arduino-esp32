@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -171,33 +171,11 @@ void setup() {
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
-  // This may be a restart of a already commissioned Matter accessory
-  if (Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
-    Serial.println("BOOT button gestures: tap = single click, tap-tap = double, tap-tap-tap = triple, hold 1s = long press, hold 5s = factory reset.");
-  }
+  matterWaitUntilReady();
 }
 
 void loop() {
-  // Check Matter Accessory Commissioning state, which may change during execution of loop()
-  if (!Matter.isDeviceCommissioned()) {
-    Serial.println("");
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Initiate the device discovery in your Matter environment.");
-    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-    // waits for Matter Generic Switch Commissioning.
-    uint32_t timeCount = 0;
-    while (!Matter.isDeviceCommissioned()) {
-      delay(100);
-      if ((timeCount++ % 50) == 0) {  // 50*100ms = 5 sec
-        Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
-      }
-    }
-    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
-    Serial.println("BOOT button gestures: tap = single click, tap-tap = double, tap-tap-tap = triple, hold 1s = long press, hold 5s = factory reset.");
-  }
+  matterRestartIfNoFabric();
 
   // A builtin button is used to trigger gesture events to the Matter Controller
   bool rawPressed = readButtonPressed();

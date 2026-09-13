@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -47,45 +47,30 @@ const uint8_t buttonOffPin = 5;                  // Off button GPIO — change t
 const uint8_t buttonScenePin = 2;                // Scene button GPIO — LED/strapping on some ESP32 boards; change to match your wiring
 const uint8_t decommissionButtonPin = BOOT_PIN;  // hold this button for 5s to decommission
 
-// Per-button debouncing state
-struct ButtonState {
-  uint32_t timeStamp = 0;  // debouncing control
-  bool pressed = false;    // false = released | true = pressed
-};
-ButtonState onButtonState;
-ButtonState offButtonState;
-ButtonState sceneButtonState;
+MatterButton buttonOn;
+MatterButton buttonOff;
+MatterButton buttonScene;
+MatterButton decommissionButton;
 
-const uint32_t debounceTime = 250;             // button debouncing time (ms)
-const uint32_t decommissioningTimeout = 5000;  // keep the decommission button pressed for 5s, or longer
-uint32_t decommissionStart = 0;                // 0 = decommission button not currently held
-
-static void handleButton(uint8_t pin, ButtonState &state, MatterGenericSwitch &sw, const char *name) {
-  // deals with button debouncing
-  if (digitalRead(pin) == LOW && !state.pressed) {
-    state.timeStamp = millis();  // record the time while the button is pressed.
-    state.pressed = true;        // pressed.
-    Serial.printf("%s button pressed. Sending InitialPress to the Matter Controller!\r\n", name);
-    // Matter Controller will receive an InitialPress event and, if programmed, it will trigger an action
-    sw.press();
-  }
-
-  uint32_t timeDiff = millis() - state.timeStamp;
-  if (state.pressed && timeDiff > debounceTime && digitalRead(pin) == HIGH) {
-    state.pressed = false;  // released
-    // button is released - send a ShortRelease event to the Matter Controller
-    Serial.printf("%s button released. Sending ShortRelease to the Matter Controller!\r\n", name);
-    // Matter Controller will receive an event and, if programmed, it will trigger an action
-    sw.release();
+static void handleButton(MatterButton &btn, MatterGenericSwitch &sw, const char *name) {
+  matterButtonEvent_t ev;
+  while ((ev = btn.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_PRESS) {
+      Serial.printf("%s button pressed. Sending InitialPress to the Matter Controller!\r\n", name);
+      sw.press();
+    } else if (ev == MATTER_BUTTON_CLICK) {
+      Serial.printf("%s button released. Sending ShortRelease to the Matter Controller!\r\n", name);
+      sw.release();
+    }
   }
 }
 
 void setup() {
   // Initialize the On/Off/Scene buttons and the dedicated decommissioning button
-  pinMode(buttonOnPin, INPUT_PULLUP);
-  pinMode(buttonOffPin, INPUT_PULLUP);
-  pinMode(buttonScenePin, INPUT_PULLUP);
-  pinMode(decommissionButtonPin, INPUT_PULLUP);
+  buttonOn.begin(buttonOnPin);
+  buttonOff.begin(buttonOffPin);
+  buttonScene.begin(buttonScenePin);
+  decommissionButton.begin(decommissionButtonPin);
 
   Serial.begin(115200);
 
@@ -125,47 +110,22 @@ void setup() {
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
-  // This may be a restart of an already commissioned Matter accessory
-  if (Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
-  }
+  matterWaitUntilReady();
 }
 
 void loop() {
-  // Check Matter Accessory Commissioning state, which may change during execution of loop()
-  if (!Matter.isDeviceCommissioned()) {
-    Serial.println("");
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Initiate the device discovery in your Matter environment.");
-    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-    // waits for Matter Generic Switch Commissioning.
-    uint32_t timeCount = 0;
-    while (!Matter.isDeviceCommissioned()) {
-      delay(100);
-      if ((timeCount++ % 50) == 0) {  // 50*100ms = 5 sec
-        Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
-      }
-    }
-    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
-  }
+  matterRestartIfNoFabric();
 
   // Three independent buttons are used to trigger events to the Matter Controller
-  handleButton(buttonOnPin, onButtonState, ButtonOn, "On");
-  handleButton(buttonOffPin, offButtonState, ButtonOff, "Off");
-  handleButton(buttonScenePin, sceneButtonState, ButtonScene, "Scene 1");
+  handleButton(buttonOn, ButtonOn, "On");
+  handleButton(buttonOff, ButtonOff, "Off");
+  handleButton(buttonScene, ButtonScene, "Scene 1");
 
-  // A dedicated button is kept pressed for longer than 5 seconds in order to decommission matter node
-  if (digitalRead(decommissionButtonPin) == LOW) {
-    if (decommissionStart == 0) {
-      decommissionStart = millis();
-    } else if (millis() - decommissionStart > decommissioningTimeout) {
+  matterButtonEvent_t ev;
+  while ((ev = decommissionButton.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_LONG_HOLD) {
       Serial.println("Decommissioning the Generic Switch Matter Accessories. They shall be commissioned again.");
       Matter.decommission();
-      decommissionStart = millis();  // avoid running decommissioning again, reboot takes a second or so
     }
-  } else {
-    decommissionStart = 0;  // button released - reset the hold timer
   }
 }

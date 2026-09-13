@@ -109,46 +109,23 @@ Wi-Fi Station Enabled: YES
 Wi-Fi Access Point Enabled: NO
 Thread Enabled: NO
 BLE Commissioning Enabled: NO
+BLE Memory Release Enabled: NO
 
 Connecting to your-ssid
 .......
 Wi-Fi connected
 IP address: 192.168.1.100
+
+Matter Node is not commissioned yet.
+Commission it using the pairing code or QR code.
+Manual pairing code: 34970112332
+QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=Y
+...
+Controller CASE session is up.
 Matter started
 
-========================================
-Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
-Manual pairing code: 34970112332
-QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT:Y.K9042C00KA0648G00
-========================================
-
-=== Connection Status ===
-Wi-Fi Connected: YES
-Thread Connected: NO
-Device Connected: YES
-Device Commissioned: NO
-Device Online (CASE): NO
-
-=== Connection Status ===
-Wi-Fi Connected: YES
-Thread Connected: NO
-Device Connected: YES
-Device Commissioned: NO
-Device Online (CASE): NO
-
-... (reports every 5 seconds)
-
-User Callback :: New Light State = ON
-=== Connection Status ===
-Wi-Fi Connected: YES
-Thread Connected: NO
-Device Connected: YES
-Device Commissioned: YES
-Device Online (CASE): NO
-
-State change: Commissioned=YES Connected=YES Online=YES
 === Connection Status ===
 Wi-Fi Connected: YES
 Thread Connected: NO
@@ -156,7 +133,8 @@ Device Connected: YES
 Device Commissioned: YES
 Device Online (CASE): YES
 
-... (reports every 5 seconds)
+User Callback :: New Light State = ON
+State change: Online=NO
 ```
 
 ## Usage
@@ -200,9 +178,10 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
   - Connects to Wi-Fi (if needed and enabled)
   - Initializes On/Off Light endpoint
   - Starts Matter stack
-  - Prints commissioning information
+  - Waits for commissioning / CASE via `matterWaitUntilReady()`, then prints `Matter started`
 
 - **`loop()`**:
+  - `matterRestartIfNoFabric()` reboots if the hub removed the fabric
   - Samples `isOnline()` every 2.5 seconds; reports commissioned / connected / radios every 5 seconds
   - All light control is handled via Matter callbacks
 

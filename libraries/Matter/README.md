@@ -190,7 +190,7 @@ Matter.setHardwareVersion(7);
 Matter.setHardwareVersionString("RevA");      // max 64
 Matter.setSetupDiscriminator(0xF01);          // 0–0xFFF
 Matter.setSetupPasscode(20202024);            // valid Matter PIN
-// Prefer selectNetwork(WIFI|THREAD, true) to pick a transport and turn CHIPoBLE off.
+// Prefer selectNetwork(MATTER_NETWORK_WIFI or MATTER_NETWORK_THREAD, true) to pick a transport and turn CHIPoBLE off.
 // setBLECommissioningEnabled(false) only if you keep the default network and just want BLE off.
 Matter.setBLECommissioningEnabled(false);
 // Matter.setBLEMemoryReleaseEnabled(false);  // only if CHIPoBLE is left on: keep NimBLE after commission
@@ -204,7 +204,7 @@ If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Ardu
 
 On Wi-Fi station builds, `Matter.begin()` initializes the Wi-Fi driver with reduced RX/TX buffers before starting CHIP unless Thread or Ethernet was selected. Matter traffic is small, so the library uses 4 static RX, 8 dynamic RX, 8 dynamic TX, and an AMPDU RX BA window of 6 instead of the sdkconfig defaults. `esp_wifi_init()` keeps the first caller's counts, so CHIP inherits them. If the sketch already called `WiFi.begin()` / `WiFi.mode()`, those limits are not applied.
 
-Commissioning examples turn CHIPoBLE off with `selectNetwork(WIFI|THREAD, true)` (or one-arg `selectNetwork(ETHERNET)`). Do not also call `setBLECommissioningEnabled()`. That setter is only when you keep the default network and just want BLE off. Pairing codes are then on-network only. See [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi). With CHIPoBLE left on, BLE RAM is released after a successful commission by default (`setBLEMemoryReleaseEnabled(true)`); see [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease). Call `setBLEMemoryReleaseEnabled(false)` before `begin()` to keep the BLE host after CHIPoBLE commissioning. That option has no effect when `CONFIG_ENABLE_CHIPOBLE` is off.
+Commissioning examples turn CHIPoBLE off with `selectNetwork(MATTER_NETWORK_WIFI, true)` / `selectNetwork(MATTER_NETWORK_THREAD, true)` (or one-arg `selectNetwork(MATTER_NETWORK_ETHERNET)`). Do not also call `setBLECommissioningEnabled()`. That setter is only when you keep the default network and just want BLE off. Pairing codes are then on-network only. See [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi). With CHIPoBLE left on, BLE RAM is released after a successful commission by default (`setBLEMemoryReleaseEnabled(true)`); see [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease). Call `setBLEMemoryReleaseEnabled(false)` before `begin()` to keep the BLE host after CHIPoBLE commissioning. That option has no effect when `CONFIG_ENABLE_CHIPOBLE` is off.
 
 ## Network selection
 
@@ -213,8 +213,8 @@ Call `Matter.selectNetwork()` **before any accessory `begin()`**. No call (`MATT
 | Network | `isNetworkSupported` | CHIPoBLE default | Notes |
 | --- | --- | --- | --- |
 | Wi-Fi | `CONFIG_ENABLE_WIFI_STATION` (all Matter targets except ESP32-H2) | On | Primary commissioning cluster at endpoint 0 |
-| Thread | `CONFIG_ENABLE_MATTER_OVER_THREAD` (**ESP32-C6 and ESP32-H2**; **ESP32-C5** with Tools → Matter Network → Thread) | On | Thread Network Commissioning on endpoint 0. C5 is H2-style (Wi-Fi station off in that Matter `.a`). ESP32-C6 is Wi-Fi **or** Thread on the root (`selectNetwork(THREAD)` replaces the prebuild Wi-Fi driver). `createSecondaryNetworkInterface()` is deprecated and does nothing. |
-| Ethernet | `CONFIG_ETH_ENABLED` (capable if you wire hardware) | Off | No commissioning cluster. Sketch starts `ETH` (EMAC or SPI), `enableIPv6()`, then `waitForNetwork()` |
+| Thread | `CONFIG_ENABLE_MATTER_OVER_THREAD` (**ESP32-C6 and ESP32-H2**; **ESP32-C5** with Tools → Matter Network → Thread) | On | Thread Network Commissioning on endpoint 0. C5 is H2-style (Wi-Fi station off in that Matter `.a`). ESP32-C6 is Wi-Fi **or** Thread on the root (`selectNetwork(MATTER_NETWORK_THREAD)` replaces the prebuild Wi-Fi driver). `createSecondaryNetworkInterface()` is deprecated and does nothing. |
+| Ethernet | `CONFIG_ETH_ENABLED` (capable if you wire hardware) | Off | No commissioning cluster. Sketch starts `ETH` (EMAC or SPI), `enableIPv6()`, then `Matter.waitForNetwork()` |
 
 `selectNetwork(network, disableBLECommissioning)` overrides the BLE default. The library does **not** call `ETH.begin()` (PHY macros are sketch-local: EMAC `ETH.begin()`, or `SPI.begin()` plus `ETH.begin(..., SPI)`). Do **not** start Arduino `ESPmDNS` — CHIP owns mDNS; `MDNS.begin()` / `MDNS.end()` break Matter discovery.
 
@@ -229,7 +229,7 @@ Same On/Off Light in all of these. The only difference is how the node gets onto
 | Example | Transport | CHIPoBLE | Credentials in the sketch | When to use |
 | --- | --- | --- | --- | --- |
 | [`MatterCHIPoBLEWiFi`](examples/Commissioning/MatterCHIPoBLEWiFi) | Wi-Fi | On | No. Hub sends SSID/password | Factory-fresh Wi-Fi node |
-| [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi) | Wi-Fi | Off | Yes. `selectNetwork(WIFI, true)` then `WiFi.begin(ssid, password)` | Already on Wi-Fi, or no BLE |
+| [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi) | Wi-Fi | Off | Yes. `selectNetwork(MATTER_NETWORK_WIFI, true)` then `WiFi.begin(ssid, password)` | Already on Wi-Fi, or no BLE |
 | [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread) | Thread | On | No. Hub sends the dataset | Factory-fresh Thread node (ESP32-C5 / ESP32-C6 / ESP32-H2) |
 | [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread) | Thread | Off | Yes. Network key after `Matter.begin()` | Already on the mesh |
 | [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet) | Ethernet | Off | EMAC or SPI `ETH.begin()` + IPv6 first | Wired only (no commissioning cluster) |
@@ -246,14 +246,16 @@ Register `Matter.onBLEMemoryReleased()` **before** `Matter.begin()` if the sketc
 | --- | --- | --- | --- | --- | --- |
 | ESP32 | Wi-Fi | No | Yes (EMAC or SPI) | **No** (Bluedroid) | Use [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi) or Ethernet. `setBLECommissioningEnabled(true)` fails. |
 | ESP32-S2 | Wi-Fi | No | SPI PHY | **No** (no Bluetooth) | Same as ESP32 for BLE. |
-| ESP32-S3 / ESP32-C3 | Wi-Fi | No | SPI PHY | Yes (NimBLE) | `selectNetwork(WIFI)` keeps BLE on; `, true` turns it off. |
+| ESP32-S3 / ESP32-C3 | Wi-Fi | No | SPI PHY | Yes (NimBLE) | `selectNetwork(MATTER_NETWORK_WIFI)` keeps BLE on; `, true` turns it off. |
 | ESP32-C5 | Wi-Fi (Tools → Matter Network default) | Yes (Matter Network → Thread) | SPI PHY | Yes (NimBLE) | One `esp32c5/` folder; `.wifi.a` / `.thread.a`. |
-| ESP32-C6 | Wi-Fi until `selectNetwork` | Yes (image has both; one NC on endpoint 0) | SPI PHY | Yes (NimBLE) | `selectNetwork(THREAD)` puts Thread NC on endpoint 0. Not both. |
+| ESP32-C6 | Wi-Fi until `selectNetwork` | Yes (image has both; one NC on endpoint 0) | SPI PHY | Yes (NimBLE) | `selectNetwork(MATTER_NETWORK_THREAD)` puts Thread NC on endpoint 0. Not both. |
 | ESP32-H2 | Thread | Yes | SPI PHY | Yes (NimBLE) | No Wi-Fi. |
 
-Ethernet is on-network only: `selectNetwork(ETHERNET)` turns CHIPoBLE off. SPI PHYs (W5500, DM9051, KSZ8851SNL) work on every Arduino Matter SoC (tested: ESP32 + W5500). Internal RMII EMAC is original ESP32 only. Wi-Fi and Thread leave CHIPoBLE on when compiled in.
+Ethernet is on-network only: `selectNetwork(MATTER_NETWORK_ETHERNET)` turns CHIPoBLE off. SPI PHYs (W5500, DM9051, KSZ8851SNL) work on every Arduino Matter SoC (tested: ESP32 + W5500). Internal RMII EMAC is original ESP32 only. Wi-Fi and Thread leave CHIPoBLE on when compiled in.
 
 **Arduino as an ESP-IDF component:** enable `CONFIG_BT_ENABLED`, `CONFIG_BT_NIMBLE_ENABLED`, and `CONFIG_ENABLE_CHIPOBLE` — including on original ESP32. Sketches already follow `CONFIG_ENABLE_CHIPOBLE` (not a chip name). To keep BLE after commission, also set `CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n`. If Bluetooth is off (`CONFIG_BT_ENABLED=n`), CHIPoBLE is compiled out and the BLE setters are no-ops / return false.
+
+**`Matter` class (runtime):**
 
 | API | Effect |
 |-----|--------|
@@ -264,19 +266,56 @@ Ethernet is on-network only: `selectNetwork(ETHERNET)` turns CHIPoBLE off. SPI P
 | `getSelectedNetwork()` | Last successful `selectNetwork()`, or `NONE`. |
 | `getActiveNetwork()` | First netif with IPv6 (prefers the selection). Not `isWiFiConnected()` / `isThreadConnected()`. |
 | `getNetworkEndPointId(net)` | Expected root commissioning endpoint (0 Wi-Fi; 0 Thread when Thread is on the root; `0xFFFF` if none). C6 is Wi-Fi or Thread, not both. |
-| `waitForNetwork(ms)` | Blocks until that IPv6 is there. `NONE` waits for any. Does not bring up hardware. `0` = one check. |
+| `Matter.waitForNetwork(ms)` | Blocks until that IPv6 is there. `MATTER_NETWORK_NONE` waits for any. Does not bring up hardware. `0` = one check. |
 | `isDeviceCommissioned()` | A Matter fabric exists |
 | `isDeviceConnected()` | CHIP Wi-Fi or Thread connected, **or** Ethernet IPv6 |
 | `isOnline()` | A controller has an active CASE session (until CHIP idle-evicts it) |
+| `isWiFiConnected()` / `isThreadConnected()` | Wi-Fi associated / Thread attached |
+| `isWiFiAccessPointEnabled()` | Compile-time Wi-Fi AP support |
+| `onEvent()` | Matter `matterEvent_t` callback. `ChipDeviceEvent` is valid only during the call |
 | `isBLECommissioningEnabled()` | CHIPoBLE is compiled in and still enabled |
 | `isBLEMemoryReleaseEnabled()` | CHIPoBLE is on and BLE RAM will be released after commissioning |
 | `onBLEMemoryReleased()` | BLE RAM is back on the heap (register before `begin()`) |
 
-Do not gate LEDs on `isOnline()`. A session can stay up after the user leaves the app. See examples [`MatterDeviceIdentity`](examples/GettingStarted/MatterDeviceIdentity) and [`MatterStatus`](examples/GettingStarted/MatterStatus).
+Do not gate LEDs on `isOnline()`. A session can stay up after the user leaves the app. See [`MatterDeviceIdentity`](examples/GettingStarted/MatterDeviceIdentity) and [`MatterStatus`](examples/GettingStarted/MatterStatus).
+
+## Sketch helpers
+
+These are **not** members of `Matter`. `#include <Matter.h>` pulls in `MatterHelpers.h` (and `MatterButton.h`). They print to Serial and may reboot. Do not wait for commissioning in `loop()`.
+
+| Helper | Effect |
+|--------|--------|
+| `matterWaitUntilReady()` | `setup()` after `Matter.begin()`: pairing codes if needed; one-line status every 10 s; wait up to 5 min for CASE (`timeoutMs` 0 = forever). Reboots if still no fabric. If commissioned but CASE never arrives, continues |
+| `matterRestartIfNoFabric()` | `loop()`: reboot if the hub removed the fabric. `Matter.decommission()` already factory-resets |
+| `MatterButton` | Board button (`MatterButton.h`). Timer samples the pin; `loop()` drains `poll()` (`PRESS` / `CLICK` / `DOUBLE_CLICK` / `LONG_HOLD`). Default: 50 ms debounce, 5 s long-hold, double-click off. Not a Generic Switch cluster |
+
+```cpp
+#include <Matter.h>
+
+MatterButton button;
+
+void setup() {
+  button.begin(BOOT_PIN);
+  // ... endpoint begin() ...
+  Matter.begin();
+  matterWaitUntilReady();
+}
+
+void loop() {
+  matterRestartIfNoFabric();
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_CLICK) { /* toggle */ }
+    else if (ev == MATTER_BUTTON_LONG_HOLD) { Matter.decommission(); }
+  }
+}
+```
+
+Official examples call `matterWaitUntilReady()` in `setup()` and `matterRestartIfNoFabric()` in `loop()`.
 
 ## Further Reading
 
-- [Arduino-ESP32 Matter Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/index.html)
+- [Arduino-ESP32 Matter Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
 - [ESP-Matter Programming Guide](https://docs.espressif.com/projects/esp-matter/en/latest/)
 - [Matter Specification (CSA)](https://csa-iot.org/developer-resource/specifications-download-request/)
 - Examples: [`MatterDeviceIdentity`](examples/GettingStarted/MatterDeviceIdentity), [`MatterStatus`](examples/GettingStarted/MatterStatus), [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi), [`MatterCHIPoBLEWiFi`](examples/Commissioning/MatterCHIPoBLEWiFi), [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet), [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread), [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread), [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease), [`MatterEarlyBLERelease`](examples/Advanced/MatterEarlyBLERelease), [`MatterSmartButtonsTagList`](examples/Control/MatterSmartButtonsTagList)

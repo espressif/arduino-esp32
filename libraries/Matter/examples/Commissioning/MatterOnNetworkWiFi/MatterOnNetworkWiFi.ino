@@ -13,12 +13,12 @@
 // limitations under the License.
 
 // On-network commissioning over Wi-Fi. Side-by-side with MatterCHIPoBLEWiFi:
-// same On/Off Light; the delta is selectNetwork(WIFI, true) then WiFi.begin().
+// same On/Off Light; the delta is selectNetwork(MATTER_NETWORK_WIFI, true) then WiFi.begin().
 // Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
 //
 // Supported SoCs: ESP32, S2, S3, C3, C5, C6. H2: no Wi-Fi — use a Thread example.
 // C5: Tools → Matter Network → Wi-Fi (default). C6: one dual-stack prebuild.
-// No Matter Network menu. selectNetwork(WIFI, true) keeps Wi-Fi and turns CHIPoBLE off.
+// No Matter Network menu. selectNetwork(MATTER_NETWORK_WIFI, true) keeps Wi-Fi and turns CHIPoBLE off.
 
 #include <Arduino.h>
 #include <Matter.h>
@@ -36,9 +36,7 @@ const uint8_t ledPin = 2;
 #endif
 
 const uint8_t buttonPin = BOOT_PIN;
-uint32_t button_time_stamp = 0;
-bool button_state = false;
-const uint32_t decommissioningTimeout = 5000;
+MatterButton button;
 
 static uint32_t sHeapBeforeBegin = 0;
 
@@ -70,7 +68,7 @@ static void halt(const char *reason) {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(buttonPin, INPUT_PULLUP);
+  button.begin(buttonPin);
   pinMode(ledPin, OUTPUT);
 
   if (!Matter.isNetworkSupported(MATTER_NETWORK_WIFI)) {
@@ -103,28 +101,18 @@ void setup() {
   printHeap("After Matter.begin()");
   Serial.printf("Heap delta after begin: %d bytes\r\n", (int)ESP.getFreeHeap() - (int)sHeapBeforeBegin);
   Serial.printf("BLE commissioning enabled: %s\r\n", Matter.isBLECommissioningEnabled() ? "YES" : "NO");
-
-  if (!Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Commission it on the Wi-Fi network with the pairing code or QR code.");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-  }
+  matterWaitUntilReady();
 }
 
 void loop() {
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    button_time_stamp = millis();
-    button_state = true;
-  }
-  if (digitalRead(buttonPin) == HIGH && button_state) {
-    button_state = false;
-  }
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();
+  matterRestartIfNoFabric();
+
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_LONG_HOLD) {
+      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+      Matter.decommission();
+    }
   }
   delay(500);
 }

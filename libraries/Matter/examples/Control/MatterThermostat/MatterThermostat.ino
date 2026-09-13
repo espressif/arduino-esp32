@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -40,11 +40,7 @@ const char *password = "your-password";  // Change this to your Wi-Fi password
 
 // set your board USER BUTTON pin here - decommissioning button
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
-
-// Button control - decommission the Matter Node
-uint32_t button_time_stamp = 0;                // debouncing control
-bool button_state = false;                     // false = released | true = pressed
-const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
+MatterButton button;
 
 // Simulate a system that will activate heating/cooling in addition to a temperature sensor - add your preferred code here
 float getSimulatedTemperature(bool isHeating, bool isCooling) {
@@ -65,20 +61,23 @@ float getSimulatedTemperature(bool isHeating, bool isCooling) {
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
-  pinMode(buttonPin, INPUT_PULLUP);
+  button.begin(buttonPin);
 
   Serial.begin(115200);
 
 // CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
 #if !CONFIG_ENABLE_CHIPOBLE
-  // Manually connect to Wi-Fi
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
   WiFi.begin(ssid, password);
-  // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println();
+  Serial.println("Wi-Fi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
 #endif
 
   // Simulated Thermostat in COOLING and HEATING mode with Auto Mode to keep the temperature between setpoints
@@ -87,41 +86,22 @@ void setup() {
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
+  matterWaitUntilReady();
 
-  // Check Matter Accessory Commissioning state, which may change during execution of loop()
-  if (!Matter.isDeviceCommissioned()) {
-    Serial.println("");
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Initiate the device discovery in your Matter environment.");
-    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-    // waits for Matter Thermostat Commissioning.
-    uint32_t timeCount = 0;
-    while (!Matter.isDeviceCommissioned()) {
-      delay(100);
-      if ((timeCount++ % 50) == 0) {  // 50*100ms = 5 sec
-        Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
-      }
-    }
-    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
+  // start the thermostat in AUTO mode
+  SimulatedThermostat.setMode(MatterThermostat::THERMOSTAT_MODE_AUTO);
+  // Heating 20 C, cooling 23 C (cooling must stay at least deadband above heating in auto mode)
+  SimulatedThermostat.setCoolingHeatingSetpoints(20.0, 23.00);
+  // set the local temperature sensor in Celsius
+  SimulatedThermostat.setLocalTemperature(12.50);
 
-    // after commissioning, set initial thermostat parameters
-    // start the thermostat in AUTO mode
-    SimulatedThermostat.setMode(MatterThermostat::THERMOSTAT_MODE_AUTO);
-    // Heating 20 C, cooling 23 C (cooling must stay at least deadband above heating in auto mode)
-    SimulatedThermostat.setCoolingHeatingSetpoints(20.0, 23.00);
-    // set the local temperature sensor in Celsius
-    SimulatedThermostat.setLocalTemperature(12.50);
-
-    Serial.println();
-    Serial.printf(
-      "Initial Setpoints are %.01fC to %.01fC with a minimum 2.5C difference\r\n", SimulatedThermostat.getHeatingSetpoint(),
-      SimulatedThermostat.getCoolingSetpoint()
-    );
-    Serial.printf("Auto mode is ON. Initial Temperature of %.01fC \r\n", SimulatedThermostat.getLocalTemperature());
-    Serial.println("Local Temperature Sensor will be simulated every 10 seconds and changed by a simulated heater and cooler to move in between setpoints.");
-  }
+  Serial.println();
+  Serial.printf(
+    "Initial Setpoints are %.01fC to %.01fC with a minimum 2.5C difference\r\n", SimulatedThermostat.getHeatingSetpoint(),
+    SimulatedThermostat.getCoolingSetpoint()
+  );
+  Serial.printf("Auto mode is ON. Initial Temperature of %.01fC \r\n", SimulatedThermostat.getLocalTemperature());
+  Serial.println("Local Temperature Sensor will be simulated every 10 seconds and changed by a simulated heater and cooler to move in between setpoints.");
 }
 
 // This will simulate the thermostat control system (heating and cooling)
@@ -163,6 +143,8 @@ void readSerialForNewTemperature() {
 // User can change the thermostat mode using the Matter APP (smartphone)
 // The loop will simulate a heating and cooling system and the associated local temperature change
 void loop() {
+  matterRestartIfNoFabric();
+
   static uint32_t timeCounter = 0;
 
   // Simulate the heating and cooling systems
@@ -230,23 +212,12 @@ void loop() {
       isHeating ? "ON" : "OFF", isCooling ? "ON" : "OFF"
     );
   }
-  // Check if the button has been pressed
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    // deals with button debouncing
-    button_time_stamp = millis();  // record the time while the button is pressed.
-    button_state = true;           // pressed.
-  }
-
-  if (digitalRead(buttonPin) == HIGH && button_state) {
-    button_state = false;  // released
-  }
-
-  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning Thermostat Matter Accessory. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_LONG_HOLD) {
+      Serial.println("Decommissioning Thermostat Matter Accessory. It shall be commissioned again.");
+      Matter.decommission();
+    }
   }
 
   delay(500);

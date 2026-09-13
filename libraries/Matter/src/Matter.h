@@ -247,7 +247,7 @@ public:
   // Runtime network selection. Call selectNetwork() before any accessory begin().
   // Records intent only: does not start Wi-Fi, Thread, or Ethernet, and does not
   // apply a Thread dataset. Ethernet: sketch must ETH.begin() + enableIPv6().
-  // ESP32-C6: one Network Commissioning cluster on endpoint 0. selectNetwork(THREAD)
+  // ESP32-C6: one Network Commissioning cluster on endpoint 0. selectNetwork(MATTER_NETWORK_THREAD)
   // replaces the prebuild Wi-Fi driver so hubs that only talk to the root see Thread.
   // Wi-Fi and Thread are alternatives, not simultaneous NC endpoints.
   // Matter.begin() skips CHIP's Wi-Fi init for Thread/Ethernet.
@@ -314,5 +314,7 @@ protected:
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MATTER)
 extern ArduinoMatter Matter;
 #endif
+
+#include <MatterHelpers.h>
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

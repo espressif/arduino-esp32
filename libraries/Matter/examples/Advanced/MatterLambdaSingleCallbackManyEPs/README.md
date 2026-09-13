@@ -126,14 +126,13 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+Controller CASE session is up.
 Matter App Control: 'Room 1' (OnOffLight[0], Endpoint 1, GPIO 2) changed to: OFF
 Matter App Control: 'Room 1' (OnOffLight[0], Endpoint 1, GPIO 2) changed to: ON
 Matter App Control: 'Room 5' (OnOffLight[4], Endpoint 5, GPIO 10) changed to: ON
@@ -203,9 +202,9 @@ The MatterLambdaSingleCallbackManyEPs example consists of the following main com
    - `lightPins[]`: Array of GPIO pins for each light
    - `lightName[]`: Array of friendly names for each light
 
-2. **`setup()`**: Configures Wi-Fi (if needed), initializes all GPIO pins, initializes all Matter endpoints, registers lambda callbacks with capture variables for each endpoint, and starts the Matter stack.
+2. **`setup()`**: Configures Wi-Fi (if needed), initializes all GPIO pins, initializes all Matter endpoints, registers lambda callbacks with capture variables for each endpoint, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
 
-3. **`loop()`**: Checks the Matter commissioning state and connection status, displays appropriate messages, and allows the Matter stack to process events.
+3. **`loop()`**: `matterRestartIfNoFabric()` reboots if the hub removed the fabric. Light changes are handled in the lambda callbacks.
 
 4. **Lambda Callback**:
    - Uses capture variable `[i]` to identify which endpoint triggered the callback

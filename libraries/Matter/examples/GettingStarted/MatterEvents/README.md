@@ -89,13 +89,11 @@ Connecting to your-wifi-ssid
 Wi-Fi connected
 IP address: 192.168.1.100
 
-Starting Matter Commission Test...
-
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
+[ready] net=wifi commissioned=N connected=N controller=N
 ===> Got a Matter Event: CHIPoBLE Advertising Change
 ===> Got a Matter Event: Commissioning Window Opened
 ===> Got a Matter Event: Commissioning Session Started
@@ -107,9 +105,9 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%
 ===> Got a Matter Event: IPv4 Address Assigned
 ===> Got a Matter Event: Server Ready
 ===> Got a Matter Event: DNS-SD Initialized
-Matter Fabric not commissioned yet. Waiting for commissioning.
-...
-Matter Node is commissioned and connected to Wi-Fi.
+[ready] net=wifi commissioned=Y connected=Y controller=Y
+Controller CASE session is up.
+Matter Events example started.
 ====> Decommissioning in 60 seconds. <====
 ===> Got a Matter Event: Fabric Will Be Removed
 ===> Got a Matter Event: Fabric Removed
@@ -135,8 +133,8 @@ The example continuously monitors and displays Matter events to the Serial Monit
 
 The device operates in a continuous test cycle:
 
-1. **Commissioning Phase**: The device waits for Matter commissioning and displays all related events.
-2. **Commissioned Phase**: Once commissioned, the device is connected to the Matter network and ready for use. All network and service events are displayed.
+1. **Commissioning Phase**: The device waits for commissioning / CASE via `matterWaitUntilReady()` and displays all related events.
+2. **Commissioned Phase**: A fabric is present (CASE may already be up). Network and service events keep printing. The sketch then decommissions to repeat the cycle.
 3. **Automatic Decommissioning**: After 60 seconds, the device automatically decommissions itself.
 4. **Repeat**: The cycle repeats, allowing you to test the commissioning process multiple times and observe all events.
 
@@ -186,8 +184,8 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterEvents example consists of the following main components:
 
-1. **`setup()`**: Initializes Serial communication, configures Wi-Fi (if needed), sets up the Matter On/Off Light endpoint, registers the Matter event callback handler, and starts the Matter stack.
-2. **`loop()`**: Checks the Matter commissioning state, displays pairing information when not commissioned, waits for commissioning, and then automatically decommissions after 60 seconds to repeat the cycle.
+1. **`setup()`**: Initializes Serial communication, configures Wi-Fi (if needed), sets up the Matter On/Off Light endpoint, registers the Matter event callback handler, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
+2. **`loop()`**: Automatically decommissions after 60 seconds to repeat the cycle. `matterRestartIfNoFabric()` reboots if the fabric is gone.
 3. **`onMatterEvent()`**: Comprehensive event callback handler that processes and displays all Matter events, including connectivity changes, commissioning events, fabric management, BLE events, and system events.
 
 ## Troubleshooting

@@ -2,7 +2,7 @@
 
 This example shows how to set node identity and commissioning codes on the `Matter` singleton before `Matter.begin()`. It is an on/off light (same hardware as Matter On/Off Light) plus VendorName, ProductName, DeviceName (NodeLabel), SerialNumber, hardware version, and a non-default discriminator/PIN.
 
-Use the **generated** pairing codes printed after `Matter.begin()`. Before `begin()` the getters log a warning and return empty. Do not use a remembered Arduino test code (`34970112332`) when the PIN or discriminator has been changed.
+Use the **generated** pairing codes from `matterWaitUntilReady()` after `Matter.begin()`. Before `begin()` the getters log a warning and return empty. Do not use a remembered Arduino test code (`34970112332`) when the PIN or discriminator has been changed.
 
 ## Supported Targets
 
@@ -61,7 +61,7 @@ Production devices should use a unique random PIN and discriminator per unit (fa
 
 ## Commissioned, connected, online
 
-After pairing, the sketch drives the LED from local Matter state (`updateAccessory()`). `loop()` keeps the button live and samples `Matter.isOnline()` every 2.5 seconds, logging only when the CASE session goes up or down.
+`setup()` waits for commissioning / CASE via `matterWaitUntilReady()`, then drives the LED from local Matter state (`updateAccessory()`). `loop()` keeps the button live, calls `matterRestartIfNoFabric()`, and samples `Matter.isOnline()` every 2.5 seconds, logging only when the CASE session goes up or down.
 
 1. `Matter.isDeviceCommissioned()` — fabric exists (pairing wait)
 2. `Matter.isDeviceConnected()` — Wi-Fi, Thread, or Ethernet IPv6 is up

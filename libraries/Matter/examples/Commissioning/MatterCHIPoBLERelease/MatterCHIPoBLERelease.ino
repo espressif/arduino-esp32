@@ -35,9 +35,7 @@ const uint8_t ledPin = 2;
 #endif
 
 const uint8_t buttonPin = BOOT_PIN;
-uint32_t button_time_stamp = 0;
-bool button_state = false;
-const uint32_t decommissioningTimeout = 5000;
+MatterButton button;
 
 static uint32_t sHeapBeforeBegin = 0;
 static uint32_t sHeapAfterBegin = 0;
@@ -91,7 +89,7 @@ void tryAllocAfterBleRelease() {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(buttonPin, INPUT_PULLUP);
+  button.begin(buttonPin);
   pinMode(ledPin, OUTPUT);
 
 #if !CONFIG_ENABLE_CHIPOBLE
@@ -104,6 +102,9 @@ void setup() {
     delay(500);
   }
   Serial.println();
+  Serial.println("Wi-Fi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
 #endif
 
   OnOffLight.begin();
@@ -119,43 +120,27 @@ void setup() {
   Matter.begin();
   sHeapAfterBegin = ESP.getFreeHeap();
   printHeap("After Matter.begin()");
+  matterWaitUntilReady();
+  printHeap("After waitUntilReady()");
   Serial.printf("Heap delta after begin: %+d bytes\r\n", (int)sHeapAfterBegin - (int)sHeapBeforeBegin);
   Serial.printf("BLE commissioning enabled: %s\r\n", Matter.isBLECommissioningEnabled() ? "YES" : "NO");
   Serial.printf("BLE memory release after commissioning: %s\r\n", Matter.isBLEMemoryReleaseEnabled() ? "YES" : "NO");
-
-  if (Matter.isDeviceCommissioned()) {
-    if (Matter.isBLEMemoryReleaseEnabled()) {
-      Serial.println("Already commissioned. Wait for onBLEMemoryReleased() / MATTER_BLE_DEINITIALIZED.");
-    } else {
-      Serial.println("Already commissioned.");
-    }
-  } else {
-    Serial.println("Matter Node is not commissioned yet.");
-    if (Matter.isBLECommissioningEnabled()) {
-      Serial.println("Commission it with CHIPoBLE using the pairing code or QR code.");
-    } else {
-      Serial.println("Commission it using the pairing code or QR code.");
-    }
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
+  if (Matter.isBLEMemoryReleaseEnabled()) {
+    Serial.println("Wait for onBLEMemoryReleased() / MATTER_BLE_DEINITIALIZED.");
   }
 }
 
 void loop() {
+  matterRestartIfNoFabric();
+
   tryAllocAfterBleRelease();
 
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    button_time_stamp = millis();
-    button_state = true;
-  }
-  if (digitalRead(buttonPin) == HIGH && button_state) {
-    button_state = false;
-  }
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();
+  matterButtonEvent_t ev;
+  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
+    if (ev == MATTER_BUTTON_LONG_HOLD) {
+      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+      Matter.decommission();
+    }
   }
   delay(500);
 }
