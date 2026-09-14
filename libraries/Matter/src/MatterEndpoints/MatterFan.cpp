@@ -100,6 +100,8 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
           return false;
         }
         if (val->val.u8 == currentPercent) {
+          // Controller already has PercentSetting; still report PercentCurrent.
+          reportPercentCurrent(currentPercent);
           break;
         }
         log_v("FanControl PercentSetting changed to %u", val->val.u8);
@@ -112,8 +114,7 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
           ret &= _onChangeCB(currentFanMode, val->val.u8);
         }
         if (ret == true) {
-          esp_matter_attr_val_t currentVal = esp_matter_uint8(currentPercent);
-          setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &currentVal);
+          reportPercentCurrent(currentPercent);
         }
         break;
       case FanControl::Attributes::PercentCurrent::Id:
@@ -201,6 +202,14 @@ void MatterFan::end() {
   started = false;
 }
 
+// Controllers write PercentSetting / FanMode and subscribe to PercentCurrent
+// (and the other of those two). attribute::update() marks the attribute dirty
+// so the subscription confirms the command. set_val() does not.
+bool MatterFan::reportPercentCurrent(uint8_t percent) {
+  esp_matter_attr_val_t currentVal = esp_matter_uint8(percent);
+  return updateAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &currentVal);
+}
+
 bool MatterFan::setMode(FanMode_t newMode, bool performUpdate) {
   if (!started) {
     log_w("Matter Fan device has not begun.");
@@ -254,12 +263,11 @@ bool MatterFan::applyModePercentRules(FanMode_t mode, bool performUpdate) {
       log_e("Failed to %s Fan PercentSetting Attribute.", performUpdate ? "update" : "set");
       return false;
     }
-    esp_matter_attr_val_t currentVal = esp_matter_uint8(0);
-    if (!setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &currentVal)) {
-      log_e("Failed to set Fan PercentCurrent Attribute.");
+    currentPercent = 0;
+    if (!reportPercentCurrent(0)) {
+      log_e("Failed to update Fan PercentCurrent Attribute.");
       return false;
     }
-    currentPercent = 0;
     return true;
   }
 
@@ -304,13 +312,13 @@ bool MatterFan::setSpeedPercent(uint8_t newPercent, bool performUpdate) {
     return false;
   }
 
-  // PercentCurrent is not nullable; keep it in sync with the requested speed.
-  esp_matter_attr_val_t currentVal = esp_matter_uint8(newPercent);
-  if (!setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &currentVal)) {
-    log_e("Failed to set Fan PercentCurrent Attribute.");
+  // PercentCurrent is what the hub subscribes to as the actual speed. Always
+  // report it — set_val() alone leaves the APP UI on the previous value.
+  currentPercent = newPercent;
+  if (!reportPercentCurrent(newPercent)) {
+    log_e("Failed to update Fan PercentCurrent Attribute.");
     return false;
   }
-  currentPercent = newPercent;
   log_v("Fan Speed %s to %u ==> onOffState[%s]", performUpdate ? "updated" : "set", currentPercent, getOnOff() ? "ON" : "OFF");
   return true;
 }

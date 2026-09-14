@@ -160,6 +160,7 @@ protected:
 
   FanMode_t resolveFanMode(FanMode_t mode) const;
   bool applyModePercentRules(FanMode_t mode, bool performUpdate);
+  bool reportPercentCurrent(uint8_t percent);
 };
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
