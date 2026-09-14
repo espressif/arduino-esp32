@@ -48,9 +48,12 @@
 
 #if MATTER_EARLY_BLE_RELEASE || !CONFIG_ENABLE_CHIPOBLE
 #include <WiFi.h>
-const char *ssid = "your-ssid";      // mode 1 (and boards with no CHIPoBLE)
-const char *password = "your-password";
 #endif
+// Fill these in for mode 1 (on-network) and for boards with no BLE commissioning
+// (ESP32 / ESP32-S2). In mode 0, Matter commissions over BLE (CHIPoBLE) and
+// the hub sends the Wi-Fi credentials — leave the placeholders.
+#define WIFI_SSID     "your-ssid"
+#define WIFI_PASSWORD "your-password"
 
 MatterOnOffLight OnOffLight;
 
@@ -147,25 +150,39 @@ void setup() {
   }
 
   Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  Serial.println(WIFI_SSID);
+  WiFi.mode(WIFI_STA);
+#if CONFIG_LWIP_IPV6
+  WiFi.enableIPv6(true);
+#endif
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print('.');
     delay(500);
   }
   Serial.println();
-  Serial.print("Wi-Fi connected, IP ");
+  Serial.println("Wi-Fi connected");
+  Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  delay(500);
   printHeap("after Wi-Fi connected");
 #elif !CONFIG_ENABLE_CHIPOBLE
   Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  Serial.println(WIFI_SSID);
+  WiFi.mode(WIFI_STA);
+#if CONFIG_LWIP_IPV6
+  WiFi.enableIPv6(true);
+#endif
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print('.');
     delay(500);
   }
   Serial.println();
+  Serial.println("Wi-Fi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+  delay(500);
   printHeap("after Wi-Fi connected");
 #endif
 

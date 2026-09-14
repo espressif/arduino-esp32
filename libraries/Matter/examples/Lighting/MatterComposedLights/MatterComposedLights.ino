@@ -15,11 +15,6 @@
 // Matter Manager
 #include <Arduino.h>
 #include <Matter.h>
-#if !CONFIG_ENABLE_CHIPOBLE
-// WiFi.h / WiFi.begin() only when this build has no CHIPoBLE (CONFIG_ENABLE_CHIPOBLE=n). Hub-delivered Wi-Fi still uses CHIP's stack.
-#include <WiFi.h>
-#endif
-
 // ESP32-C3/H2/C5: if the node never commissions (usual low-heap symptom), uncomment this.
 // The default 8 KB loop stack is reserved from the heap before setup();
 // 4 KB is enough for this sketch and frees 4 KB for CHIPoBLE + Wi-Fi.
@@ -31,12 +26,13 @@ MatterOnOffLight Light1;
 MatterDimmableLight Light2;
 MatterColorLight Light3;
 
-// CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
-#if !CONFIG_ENABLE_CHIPOBLE
-// Wi-Fi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your Wi-Fi SSID
-const char *password = "your-password";  // Change this to your Wi-Fi password
-#endif
+// Wi-Fi credentials for this sketch. Fill these in when the board cannot
+// commission over BLE (Arduino prebuild on ESP32 / ESP32-S2): the sketch
+// joins the AP itself. When Matter commissions over BLE (CHIPoBLE), the
+// hub sends SSID and password — leave the placeholders; they are unused.
+#define WIFI_SSID     "your-ssid"
+#define WIFI_PASSWORD "your-password"
+
 
 // set your board USER BUTTON pin here -  USED to decommission the Matter Node
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
@@ -66,21 +62,7 @@ void setup() {
 
 // CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
 #if !CONFIG_ENABLE_CHIPOBLE
-  // We start by connecting to a Wi-Fi network
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  // Manually connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
-  Serial.println("Wi-Fi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  delay(500);
+  matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD);
 #endif
 
   // Initialize all 3 Matter EndPoints

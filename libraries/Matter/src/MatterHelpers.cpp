@@ -13,9 +13,38 @@
 // limitations under the License.
 
 #include <sdkconfig.h>
+#include "soc/soc_caps.h"
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
+#if !CONFIG_ENABLE_CHIPOBLE && (SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED)
+#include <WiFi.h>
+
+void matterConnectWiFi(const char *ssid, const char *password) {
+  if (ssid == nullptr) {
+    ssid = "";
+  }
+  if (password == nullptr) {
+    password = "";
+  }
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.mode(WIFI_STA);
+#if CONFIG_LWIP_IPV6
+  WiFi.enableIPv6(true);
+#endif
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println("Wi-Fi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+  delay(500);
+}
+#endif /* !CONFIG_ENABLE_CHIPOBLE && Wi-Fi */
 
 static void printReadyStatus(bool commissioned, bool connected, bool online) {
   const char *net = "none";

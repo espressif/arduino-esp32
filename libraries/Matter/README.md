@@ -202,7 +202,7 @@ Serial.println(Matter.getOnboardingQRCodeUrl());   // live QR URL after begin()
 
 If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Arduino Matter uses the CHIP test pair **PIN `20202021`**, discriminator **`0xF00`**, manual code **`34970112332`** (same as On/Off Light and the other examples). Before `begin()` the pairing getters log a warning and return empty.
 
-On Wi-Fi station builds, `Matter.begin()` initializes the Wi-Fi driver with reduced RX/TX buffers before starting CHIP unless Thread or Ethernet was selected. Matter traffic is small, so the library uses 4 static RX, 8 dynamic RX, 8 dynamic TX, and an AMPDU RX BA window of 6 instead of the sdkconfig defaults. `esp_wifi_init()` keeps the first caller's counts, so CHIP inherits them. If the sketch already called `WiFi.begin()` / `WiFi.mode()`, those limits are not applied.
+On Wi-Fi station builds, `Matter.begin()` initializes the Wi-Fi driver with reduced RX/TX buffers before starting CHIP unless Thread or Ethernet was selected. Matter traffic is small, so the library uses 4 static RX, 8 dynamic RX, 8 dynamic TX, and an AMPDU RX BA window of 6 instead of the sdkconfig defaults. `esp_wifi_init()` keeps the first caller's counts, so CHIP inherits them. If the sketch already called `matterConnectWiFi()` / `WiFi.begin()` / `WiFi.mode()`, those limits are not applied.
 
 Commissioning examples turn CHIPoBLE off with `selectNetwork(MATTER_NETWORK_WIFI, true)` / `selectNetwork(MATTER_NETWORK_THREAD, true)` (or one-arg `selectNetwork(MATTER_NETWORK_ETHERNET)`). Do not also call `setBLECommissioningEnabled()`. That setter is only when you keep the default network and just want BLE off. Pairing codes are then on-network only. See [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi). With CHIPoBLE left on, BLE RAM is released after a successful commission by default (`setBLEMemoryReleaseEnabled(true)`); see [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease). Call `setBLEMemoryReleaseEnabled(false)` before `begin()` to keep the BLE host after CHIPoBLE commissioning. That option has no effect when `CONFIG_ENABLE_CHIPOBLE` is off.
 
@@ -283,8 +283,11 @@ Do not gate LEDs on `isOnline()`. A session can stay up after the user leaves th
 
 These are **not** members of `Matter`. `#include <Matter.h>` pulls in `MatterHelpers.h` (and `MatterButton.h`). They print to Serial and may reboot. Do not wait for commissioning in `loop()`.
 
+`matterConnectWiFi()` is compiled only when `CONFIG_ENABLE_CHIPOBLE` is off (ESP32 / ESP32-S2). `MatterHelpers.cpp` then includes `<WiFi.h>`. CHIPoBLE / Thread builds skip that include so the Arduino builder does not link `WiFiClass` (~80 KB flash, ~6 KB BSS). On-network sketches that still start STA with CHIPoBLE compiled in (`MatterOnNetworkWiFi`, EarlyBLE mode 1) include `<WiFi.h>` and call `WiFi.begin()` themselves.
+
 | Helper | Effect |
 |--------|--------|
+| `matterConnectWiFi(ssid, password)` | `CONFIG_ENABLE_CHIPOBLE=n` only. `setup()` before `Matter.begin()`. Official examples pass `WIFI_SSID` / `WIFI_PASSWORD`. Enables STA IPv6, waits for IPv4. Not on CHIPoBLE or H2 |
 | `matterWaitUntilReady()` | `setup()` after `Matter.begin()`: pairing codes if needed; one-line status every 10 s and once more when CASE is up; wait up to 5 min (`timeoutMs` 0 = forever). Reboots if still no fabric. If commissioned but CASE never arrives, continues |
 | `matterRestartIfNoFabric()` | `loop()`: reboot if the hub removed the fabric. `Matter.decommission()` already factory-resets |
 | `MatterButton` | Board button (`MatterButton.h`). Timer samples the pin; `loop()` drains `poll()` (`PRESS` / `CLICK` / `DOUBLE_CLICK` / `LONG_HOLD`). Default: 50 ms debounce, 5 s long-hold, double-click off. Not a Generic Switch cluster |

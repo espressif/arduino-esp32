@@ -26,8 +26,10 @@
 
 MatterOnOffLight OnOffLight;
 
-const char *ssid = "your-ssid";
-const char *password = "your-password";
+// This sketch always joins Wi-Fi itself (on-network commissioning, no BLE).
+// Set your AP here.
+#define WIFI_SSID     "your-ssid"
+#define WIFI_PASSWORD "your-password"
 
 #ifdef LED_BUILTIN
 const uint8_t ledPin = LED_BUILTIN;
@@ -81,15 +83,21 @@ void setup() {
   }
 
   Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  Serial.println(WIFI_SSID);
+  WiFi.mode(WIFI_STA);
+#if CONFIG_LWIP_IPV6
+  WiFi.enableIPv6(true);
+#endif
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print('.');
     delay(500);
   }
   Serial.println();
-  Serial.print("Wi-Fi connected, IP ");
+  Serial.println("Wi-Fi connected");
+  Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  delay(500);
 
   OnOffLight.begin();
   OnOffLight.onChange(onOffLightCallback);

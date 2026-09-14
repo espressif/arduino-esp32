@@ -19,7 +19,7 @@ The application showcases Matter commissioning, sending button click events to s
 
 This table is what **this sketch** does. It does not call `Matter.selectNetwork()` or start Ethernet.
 
-- **ESP32 / ESP32-S2:** no CHIPoBLE in the Arduino IDE prebuild. The sketch calls `WiFi.begin(ssid, password)`.
+- **ESP32 / ESP32-S2:** no CHIPoBLE in the Arduino IDE prebuild. The sketch calls `matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD)`.
 - **ESP32-C6:** prebuild is dual-stack. Without `selectNetwork()` this sketch uses **Wi-Fi + CHIPoBLE**. Thread stays unused.
 - **ESP32-H2:** Thread + CHIPoBLE (no Wi-Fi).
 - **ESP32-C5:** Wi-Fi + CHIPoBLE by default (Tools → Matter Network → Wi-Fi). Thread is Tools → Matter Network → Thread.

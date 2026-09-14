@@ -17,18 +17,17 @@
 
 #include <Arduino.h>
 #include <Matter.h>
-// Wi-Fi in setup() only when CHIPoBLE is not in this build (CONFIG_ENABLE_CHIPOBLE=n).
-#if !CONFIG_ENABLE_CHIPOBLE
-#include <WiFi.h>
-#endif
 #include <Preferences.h>
 
 MatterOnOffLight OnOffLight;
 
-#if !CONFIG_ENABLE_CHIPOBLE
-const char *ssid = "your-ssid";
-const char *password = "your-password";
-#endif
+// Wi-Fi credentials for this sketch. Fill these in when the board cannot
+// commission over BLE (Arduino prebuild on ESP32 / ESP32-S2): the sketch
+// joins the AP itself. When Matter commissions over BLE (CHIPoBLE), the
+// hub sends SSID and password — leave the placeholders; they are unused.
+#define WIFI_SSID     "your-ssid"
+#define WIFI_PASSWORD "your-password"
+
 
 Preferences matterPref;
 const char *onOffPrefKey = "OnOff";
@@ -101,17 +100,7 @@ void setup() {
   Serial.begin(115200);
 
 #if !CONFIG_ENABLE_CHIPOBLE
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\r\nWi-Fi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  delay(500);
+  matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD);
 #endif
 
   // Must be called before Matter.begin(). Late calls log a warning and are ignored.

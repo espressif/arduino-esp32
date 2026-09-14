@@ -109,7 +109,7 @@ The ``Matter`` class is implemented as a singleton, meaning there's only one ins
 
 The ``Matter`` class provides the following key methods:
 
-* ``begin()``: Initializes the Matter stack. On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts, unless Thread or Ethernet was selected. Skipped if the sketch already called ``WiFi.begin()`` / ``WiFi.mode()``.
+* ``begin()``: Initializes the Matter stack. On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts, unless Thread or Ethernet was selected. Skipped if the sketch already called ``matterConnectWiFi()`` / ``WiFi.begin()`` / ``WiFi.mode()``.
 * ``isDeviceCommissioned()``: Checks if the device is commissioned (a fabric exists)
 * ``isWiFiConnected()``: Checks Wi-Fi connection status
 * ``isThreadConnected()``: Checks Thread connection status
@@ -170,7 +170,7 @@ Matter BLE commissioning is **CHIPoBLE**. The Arduino Matter APIs follow ``CONFI
 | ESP32-H2   | Thread                        | Yes                               | SPI PHY   | Yes                       | No Wi-Fi         |
 +------------+-------------------------------+-----------------------------------+-----------+---------------------------+------------------+
 
-``CONFIG_ENABLE_CHIPOBLE`` is off on original ESP32 and ESP32-S2. Those targets **must not** use CHIPoBLE sketches; ``setBLECommissioningEnabled(true)`` fails. Use `MatterOnNetworkWiFi <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkWiFi>`_ (or Ethernet). Example sketches that ``#if !CONFIG_ENABLE_CHIPOBLE`` call ``WiFi.begin()`` match this. Ethernet commissioning is always on-network: ``Matter.selectNetwork(MATTER_NETWORK_ETHERNET)`` turns CHIPoBLE off. Wi-Fi and Thread leave CHIPoBLE on when it is compiled in; ``Matter.selectNetwork(net, true)`` turns it off.
+``CONFIG_ENABLE_CHIPOBLE`` is off on original ESP32 and ESP32-S2. Those targets **must not** use CHIPoBLE sketches; ``setBLECommissioningEnabled(true)`` fails. Use `MatterOnNetworkWiFi <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkWiFi>`_ (or Ethernet). Example sketches that ``#if !CONFIG_ENABLE_CHIPOBLE`` call ``matterConnectWiFi()`` match this. Ethernet commissioning is always on-network: ``Matter.selectNetwork(MATTER_NETWORK_ETHERNET)`` turns CHIPoBLE off. Wi-Fi and Thread leave CHIPoBLE on when it is compiled in; ``Matter.selectNetwork(net, true)`` turns it off.
 
 Ethernet is available on **every Arduino Matter SoC** when you attach a PHY. SPI modules (W5500, DM9051, KSZ8851SNL) work on all of them — tested with original ESP32 + W5500. Internal RMII EMAC is original ESP32 only. There is no Ethernet Network Commissioning cluster; the sketch must ``ETH.begin()``, ``enableIPv6()``, and ``Matter.waitForNetwork()`` before ``Matter.begin()``. See `MatterOnNetworkEthernet <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet>`_.
 
@@ -289,7 +289,7 @@ Wi-Fi and Thread each have two commissioning paths. Do not mix them: CHIPoBLE pl
 +==============================+===========+===================+============================================+========================================================================+
 | ``MatterCHIPoBLEWiFi``       | Wi-Fi     | On                | No. Hub sends SSID/password                | Factory-fresh Wi-Fi node                                               |
 +------------------------------+-----------+-------------------+--------------------------------------------+------------------------------------------------------------------------+
-| ``MatterOnNetworkWiFi``      | Wi-Fi     | Off               | Yes. ``selectNetwork`` + ``WiFi.begin()``  | Already on Wi-Fi, or no BLE                                            |
+| ``MatterOnNetworkWiFi``      | Wi-Fi     | Off               | Yes. ``WiFi.begin()``                      | Already on Wi-Fi, or no BLE                                            |
 +------------------------------+-----------+-------------------+--------------------------------------------+------------------------------------------------------------------------+
 | ``MatterCHIPoBLEThread``     | Thread    | On                | No. Hub sends the dataset                  | Factory-fresh Thread node (ESP32-C5 / ESP32-C6 / ESP32-H2)             |
 +------------------------------+-----------+-------------------+--------------------------------------------+------------------------------------------------------------------------+
@@ -338,6 +338,7 @@ Sketch helpers
 
 These are **not** members of ``Matter``. ``#include <Matter.h>`` pulls in ``MatterHelpers.h`` (and ``MatterButton.h``). They print to Serial and may reboot. Do not wait for commissioning in ``loop()``.
 
+* ``matterConnectWiFi(ssid, password)``: Present only when ``CONFIG_ENABLE_CHIPOBLE`` is off. ``MatterHelpers.cpp`` includes ``WiFi.h`` in that build so regular sketches just call the helper. Enables station IPv6 before ``WiFi.begin()`` (Arduino does not do that by default). CHIPoBLE / Thread builds do not include ``WiFi.h`` (no ``WiFiClass`` cost). On-network sketches that start STA with CHIPoBLE compiled in include ``WiFi.h`` and call ``WiFi.begin()`` themselves. Not present on ESP32-H2.
 * ``matterWaitUntilReady()``: Call from ``setup()`` after ``Matter.begin()``. Prints pairing codes if there is no fabric; one-line status every 10 s and once more when CASE is up. Waits up to 5 minutes (default) for CASE. ``timeoutMs`` 0 waits forever (unlike ``Matter.waitForNetwork(0)``, which is a single check). Reboots if still uncommissioned. If commissioned but CASE never arrives, continues.
 * ``matterRestartIfNoFabric()``: Call from ``loop()``. Reboots if the hub removed the fabric. ``Matter.decommission()`` already factory-resets.
 
@@ -444,7 +445,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 **Commissioning:**
 
 * **Matter CHIPoBLE Wi-Fi** - CHIPoBLE on, no SSID in the sketch. The hub sends Wi-Fi credentials. `View Matter CHIPoBLE Wi-Fi code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEWiFi>`_
-* **Matter On-Network Wi-Fi** - CHIPoBLE off, ``Matter.selectNetwork(MATTER_NETWORK_WIFI, true)`` then ``WiFi.begin(ssid, password)``. `View Matter On-Network Wi-Fi code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkWiFi>`_
+* **Matter On-Network Wi-Fi** - CHIPoBLE off, ``Matter.selectNetwork(MATTER_NETWORK_WIFI, true)`` then ``WiFi.begin(WIFI_SSID, WIFI_PASSWORD)``. `View Matter On-Network Wi-Fi code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkWiFi>`_
 * **Matter CHIPoBLE Thread** - CHIPoBLE on, no dataset. The hub sends the Thread dataset (ESP32-C5 / ESP32-C6 / ESP32-H2). `View Matter CHIPoBLE Thread code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterCHIPoBLEThread>`_
 * **Matter On-Network Thread** - CHIPoBLE off, sketch network key after ``Matter.begin()``. `View Matter On-Network Thread code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkThread>`_
 * **Matter On-Network Ethernet** - CHIPoBLE off, EMAC or SPI ``ETH.begin()`` and IPv6 before ``Matter.begin()``. `View Matter On-Network Ethernet code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet>`_

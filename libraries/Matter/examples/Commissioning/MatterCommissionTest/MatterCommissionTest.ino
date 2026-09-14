@@ -16,41 +16,24 @@
 
 #include <Arduino.h>
 #include <Matter.h>
-#if !CONFIG_ENABLE_CHIPOBLE
-// WiFi.h / WiFi.begin() only when this build has no CHIPoBLE (CONFIG_ENABLE_CHIPOBLE=n). Hub-delivered Wi-Fi still uses CHIP's stack.
-#include <WiFi.h>
-#endif
-
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
 MatterOnOffLight OnOffLight;
 
-// CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
-#if !CONFIG_ENABLE_CHIPOBLE
-// Wi-Fi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your Wi-Fi SSID
-const char *password = "your-password";  // Change this to your Wi-Fi password
-#endif
+// Wi-Fi credentials for this sketch. Fill these in when the board cannot
+// commission over BLE (Arduino prebuild on ESP32 / ESP32-S2): the sketch
+// joins the AP itself. When Matter commissions over BLE (CHIPoBLE), the
+// hub sends SSID and password — leave the placeholders; they are unused.
+#define WIFI_SSID     "your-ssid"
+#define WIFI_PASSWORD "your-password"
+
 
 void setup() {
   Serial.begin(115200);
 
 // CONFIG_ENABLE_CHIPOBLE=n: sketch starts Wi-Fi here; with CHIPoBLE the hub delivers credentials.
 #if !CONFIG_ENABLE_CHIPOBLE
-  // We start by connecting to a Wi-Fi network
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  // Manually connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\r\nWi-Fi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  delay(500);
+  matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD);
 #endif
 
   // Initialize at least one Matter EndPoint

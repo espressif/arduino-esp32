@@ -16,15 +16,17 @@
 // onBLEMemoryReleased() runs when that RAM is back on the heap — allocate large
 // buffers from loop(), not from the callback (it runs on the CHIP task).
 // Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
-// Fallback when CHIPoBLE is not in the build: WiFi.begin(ssid, password); BLE RAM release does not apply.
+// Fallback when CHIPoBLE is not in the build: matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD); BLE RAM release does not apply.
 
 #include <Arduino.h>
 #include <Matter.h>
-#if !CONFIG_ENABLE_CHIPOBLE
-#include <WiFi.h>
-const char *ssid = "your-ssid";
-const char *password = "your-password";
-#endif
+// Wi-Fi credentials for this sketch. Fill these in when the board cannot
+// commission over BLE (Arduino prebuild on ESP32 / ESP32-S2): the sketch
+// joins the AP itself. When Matter commissions over BLE (CHIPoBLE), the
+// hub sends SSID and password — leave the placeholders; they are unused.
+#define WIFI_SSID     "your-ssid"
+#define WIFI_PASSWORD "your-password"
+
 
 MatterOnOffLight OnOffLight;
 
@@ -94,17 +96,7 @@ void setup() {
 
 #if !CONFIG_ENABLE_CHIPOBLE
   Serial.println("CHIPoBLE is not compiled in this build. BLE RAM release does not apply.");
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print('.');
-    delay(500);
-  }
-  Serial.println();
-  Serial.println("Wi-Fi connected");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD);
 #endif
 
   OnOffLight.begin();
