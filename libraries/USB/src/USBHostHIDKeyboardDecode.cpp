@@ -20,61 +20,88 @@
 uint8_t usbHostHidKeyboardUsageToArduinoVirtualKey(uint8_t hid_usage) {
   /* HID usage = USBHIDKeyboard KEY - 0x88 for KEY >= 0x88 (see USBHIDKeyboard::press). */
   switch (hid_usage) {
-#define USBHOST_VK_HID(hid, vk, name)                                                                                  \
-  case hid:                                                                                                            \
-    return vk;
+#define USBHOST_VK_HID(hid, vk, name) \
+  case hid: return vk;
     USBHOST_VK_MAP(USBHOST_VK_HID)
 #undef USBHOST_VK_HID
-    default:
-      return 0;
+    default: return 0;
   }
 }
 
 const char *usbHostHidArduinoVirtualKeyName(uint8_t vk) {
   switch (vk) {
-#define USBHOST_VK_NAME(hid, vk, name)                                                                                 \
-  case vk:                                                                                                             \
-    return #name;
+#define USBHOST_VK_NAME(hid, vk, name) \
+  case vk: return #name;
     USBHOST_VK_MAP(USBHOST_VK_NAME)
 #undef USBHOST_VK_NAME
-    default:
-      return NULL;
+    default: return NULL;
   }
 }
 
 const char *usbHostHidBootUsageLogName(uint8_t hid_usage) {
   switch (hid_usage) {
-    case 0x01:
-      return "ERR_OVF"; /* Keyboard ErrorRollOver — boot 6KRO overflow */
-    case 0x02:
-      return "ERR_POST";
-    case 0x03:
-      return "ERR_UNDEF";
-    case 0x32:
-      return "NON_US_HASH"; /* HID Keyboard Non-US # and ~ (ISO, next to Enter) */
-    case 0x64:
-      return "NON_US_BS"; /* HID Keyboard Non-US \ and | */
-#define USBHOST_VK_HID_NAME(hid, vk, name)                                                                             \
-  case hid:                                                                                                            \
-    return #name;
+    case 0x01: return "ERR_OVF"; /* Keyboard ErrorRollOver — boot 6KRO overflow */
+    case 0x02: return "ERR_POST";
+    case 0x03: return "ERR_UNDEF";
+    case 0x32: return "NON_US_HASH"; /* HID Keyboard Non-US # and ~ (ISO, next to Enter) */
+    case 0x64: return "NON_US_BS";   /* HID Keyboard Non-US \ and | */
+#define USBHOST_VK_HID_NAME(hid, vk, name) \
+  case hid: return #name;
       USBHOST_VK_MAP(USBHOST_VK_HID_NAME)
 #undef USBHOST_VK_HID_NAME
-    default:
-      return NULL;
+    default: return NULL;
   }
 }
 
-char usbHostHidBootReportUsageToAscii(uint8_t modifiers, const uint8_t hid_usage, const uint8_t *layout) {
+/* Keypad usages are absent from the layout tables: operators are always live, digits need Num Lock
+ * (without it the keys are Home/End/arrows/… — see USBHOST_VK_MAP for their KEY_KP_* names). */
+static char keypad_ascii(uint8_t hid_usage, uint8_t leds) {
+  switch (hid_usage) {
+    case 0x54u: return '/';
+    case 0x55u: return '*';
+    case 0x56u: return '-';
+    case 0x57u: return '+';
+    case 0x67u: return '=';
+    default:    break;
+  }
+  if ((leds & USBHOST_KEY_LED_NUM_LOCK) == 0) {
+    return 0;
+  }
+  if (hid_usage >= 0x59u && hid_usage <= 0x61u) {
+    return (char)('1' + (hid_usage - 0x59u));
+  }
+  if (hid_usage == 0x62u) {
+    return '0';
+  }
+  if (hid_usage == 0x63u) {
+    return '.';
+  }
+  return 0;
+}
+
+char usbHostHidBootReportUsageToAscii(uint8_t modifiers, const uint8_t hid_usage, uint8_t leds, const uint8_t *layout) {
   if (layout == nullptr || hid_usage == 0) {
     return 0;
   }
 
-  const bool shift = (modifiers & (uint8_t)(0x02u | 0x20u)) != 0;
+  bool shift = (modifiers & (uint8_t)(0x02u | 0x20u)) != 0;
   const bool altgr = (modifiers & 0x40u) != 0;
+
+  /* Caps Lock is letters only — Shift+1 stays '!' with it on. */
+  if ((leds & USBHOST_KEY_LED_CAPS_LOCK) != 0 && hid_usage >= 0x04u && hid_usage <= 0x1du) {
+    shift = !shift;
+  }
 
   /* Space is still space with Shift/Ctrl held; the US table only lists unshifted 0x2c. */
   if (hid_usage == 0x2cu && !altgr) {
     return ' ';
+  }
+
+  if (hid_usage >= 0x54u && !altgr) {
+    const char kp = keypad_ascii(hid_usage, leds);
+    if (kp != 0) {
+      return kp;
+    }
   }
 
   for (unsigned ascii = 32; ascii < 128; ascii++) {
@@ -96,8 +123,7 @@ char usbHostHidBootReportUsageToAscii(uint8_t modifiers, const uint8_t hid_usage
   return 0;
 }
 
-size_t usbHostHidBootReportAppendAscii(char *buf, size_t buf_cap, uint8_t modifiers, const uint8_t keys[6],
-                                       const uint8_t *layout) {
+size_t usbHostHidBootReportAppendAscii(char *buf, size_t buf_cap, uint8_t modifiers, const uint8_t keys[6], uint8_t leds, const uint8_t *layout) {
   if (buf == nullptr || buf_cap == 0 || keys == nullptr) {
     return 0;
   }
@@ -110,7 +136,7 @@ size_t usbHostHidBootReportAppendAscii(char *buf, size_t buf_cap, uint8_t modifi
     if (u == 0) {
       continue;
     }
-    const char c = usbHostHidBootReportUsageToAscii(modifiers, u, layout);
+    const char c = usbHostHidBootReportUsageToAscii(modifiers, u, leds, layout);
     if (c == 0) {
       continue;
     }

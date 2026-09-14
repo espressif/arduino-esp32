@@ -46,6 +46,7 @@ extern "C" {
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc, uint16_t desc_len);
 void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t idx);
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len);
+void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, uint16_t len);
 void tuh_umount_cb(uint8_t daddr);
 void arduino_usb_host_hid_service(void);
 void arduino_usb_host_hid_dispatch(void);
@@ -100,6 +101,19 @@ protected:
   /** Invoke queued setReportCallback() from USBHost.task() (loop context). */
   virtual void dispatchReportCallback() {}
 
+  /**
+   * Host-worker pass right after tuh_task(), same context as the interrupt-IN rearm.
+   * Start OUT/control transfers (tuh_hid_set_report) only from here.
+   */
+  virtual void serviceFromHostTask() {}
+
+  /** Completion of a transfer started in serviceFromHostTask(); len 0 means it failed. */
+  virtual void onSetReportComplete(uint8_t report_id, uint8_t report_type, uint16_t len) {
+    (void)report_id;
+    (void)report_type;
+    (void)len;
+  }
+
   uint8_t _dev_addr;
   uint8_t _idx;
   bool _mounted;
@@ -129,6 +143,7 @@ private:
   friend void tuh_hid_mount_cb(uint8_t, uint8_t, uint8_t const *, uint16_t);
   friend void tuh_hid_umount_cb(uint8_t, uint8_t);
   friend void tuh_hid_report_received_cb(uint8_t, uint8_t, uint8_t const *, uint16_t);
+  friend void tuh_hid_set_report_complete_cb(uint8_t, uint8_t, uint8_t, uint8_t, uint16_t);
   friend void tuh_umount_cb(uint8_t);
   friend void arduino_usb_host_hid_service(void);
   friend void arduino_usb_host_hid_dispatch(void);
@@ -139,6 +154,7 @@ private:
   void _onDeviceUnmount(uint8_t dev_addr);
   void _onTuhMount(uint8_t daddr);
   void _onReport(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len);
+  void _onSetReportComplete(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, uint16_t len);
   void dispatchReportCallbacks();
 
   void serviceReceivesFromHostTask();

@@ -76,7 +76,8 @@ static bool boot_report_plausible(const uint8_t *q, uint16_t m) {
 
 USBHostHIDKeyboard::USBHostHIDKeyboard()
   : USBHostHIDDevice(), _modifiers(0), _keys{0, 0, 0, 0, 0, 0}, _has_report(false), _notify_on_change_only(false), _strip_report_id(false), _last_modifiers(0),
-    _last_keys{0, 0, 0, 0, 0, 0}, _last_valid(false), _report_cb(nullptr), _report_cb_arg(nullptr), _cb_w(0), _cb_r(0) {}
+    _last_keys{0, 0, 0, 0, 0, 0}, _last_valid(false), _leds(0), _leds_sent(0), _led_report(0), _led_tries(0), _led_busy(false), _lock_handling(true),
+    _report_cb(nullptr), _report_cb_arg(nullptr), _cb_w(0), _cb_r(0) {}
 
 void USBHostHIDKeyboard::_ensureRegistered() {
   static bool registered = false;
@@ -99,6 +100,11 @@ bool USBHostHIDKeyboard::claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, 
   for (int i = 0; i < 6; i++) {
     _keys[i] = 0;
   }
+  /* A keyboard comes up with its LEDs off, so the host starts from the same state. */
+  _leds = 0;
+  _leds_sent = 0;
+  _led_tries = 0;
+  _led_busy = false;
   _strip_report_id = desc_has_report_id(report_desc, desc_len);
   return true;
 }
@@ -109,6 +115,11 @@ void USBHostHIDKeyboard::onUnmount(uint8_t dev_addr, uint8_t idx) {
     _has_report = false;
     _last_valid = false;
     _strip_report_id = false;
+    /* No completion callback arrives for a transfer that was in flight when the device went away. */
+    _leds = 0;
+    _leds_sent = 0;
+    _led_tries = 0;
+    _led_busy = false;
     _cb_w = 0;
     _cb_r = 0;
   }
@@ -121,6 +132,60 @@ void USBHostHIDKeyboard::_applyBootReport(const uint8_t *boot, uint16_t boot_len
   _modifiers = boot[0];
   for (int i = 0; i < 6; i++) {
     _keys[i] = boot[2 + i];
+  }
+}
+
+/* Toggle on the press edge only — a held key stays in the report until it is released. */
+void USBHostHIDKeyboard::_updateLocks(const uint8_t prev_keys[6]) {
+  if (!_lock_handling) {
+    return;
+  }
+  static const uint8_t lock_usage[3] = {0x39u, 0x53u, 0x47u};
+  static const uint8_t lock_led[3] = {USBHOST_KEY_LED_CAPS_LOCK, USBHOST_KEY_LED_NUM_LOCK, USBHOST_KEY_LED_SCROLL_LOCK};
+
+  for (int i = 0; i < 3; i++) {
+    if (!isKeyDown(lock_usage[i])) {
+      continue;
+    }
+    bool was_down = false;
+    for (int k = 0; k < 6; k++) {
+      if (prev_keys[k] == lock_usage[i]) {
+        was_down = true;
+        break;
+      }
+    }
+    if (!was_down) {
+      _leds = (uint8_t)(_leds ^ lock_led[i]);
+      _led_tries = 0;
+    }
+  }
+}
+
+void USBHostHIDKeyboard::serviceFromHostTask() {
+  if (_led_busy || _leds == _leds_sent) {
+    return;
+  }
+  _led_report = _leds;
+  /* Control pipe busy (enumeration, another class): just try again on the next pass. */
+  if (tuh_hid_set_report(_dev_addr, _idx, 0, HID_REPORT_TYPE_OUTPUT, &_led_report, 1)) {
+    _led_busy = true;
+  }
+}
+
+void USBHostHIDKeyboard::onSetReportComplete(uint8_t report_id, uint8_t report_type, uint16_t len) {
+  (void)report_id;
+  if (report_type != HID_REPORT_TYPE_OUTPUT) {
+    return;
+  }
+  _led_busy = false;
+  if (len != 0) {
+    _leds_sent = _led_report;
+    _led_tries = 0;
+    return;
+  }
+  /* Keyboards that reject SET_REPORT would otherwise keep retrying on every host pass. */
+  if (++_led_tries >= LED_MAX_TRIES) {
+    _leds_sent = _led_report;
   }
 }
 
@@ -181,7 +246,12 @@ void USBHostHIDKeyboard::onReport(uint8_t dev_addr, uint8_t idx, const uint8_t *
     }
   }
 
+  uint8_t prev_keys[6];
+  for (int i = 0; i < 6; i++) {
+    prev_keys[i] = _keys[i];
+  }
   _applyBootReport(boot, boot_len);
+  _updateLocks(prev_keys);
 
   if (_notify_on_change_only && _sameAsLastNotified()) {
     return;
@@ -260,7 +330,7 @@ size_t USBHostHIDKeyboard::toAscii(char *buf, size_t cap, uint8_t modifiers, con
   if (layout == NULL) {
     layout = KeyboardLayout_en_US;
   }
-  return usbHostHidBootReportAppendAscii(buf, cap, modifiers, keys, layout);
+  return usbHostHidBootReportAppendAscii(buf, cap, modifiers, keys, _leds, layout);
 }
 
 uint8_t USBHostHIDKeyboard::toVirtualKey(uint8_t hid_usage) const {
@@ -336,7 +406,7 @@ void USBHostHIDKeyboard::printReport(Print &out, uint8_t modifiers, const uint8_
       out.print(name);
       continue;
     }
-    const char c = usbHostHidBootReportUsageToAscii(modifiers, u, layout);
+    const char c = usbHostHidBootReportUsageToAscii(modifiers, u, _leds, layout);
     if (c > 32 && c < 127) {
       out.print(c);
       continue;

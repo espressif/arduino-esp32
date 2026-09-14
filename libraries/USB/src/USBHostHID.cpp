@@ -326,6 +326,16 @@ void USBHostHIDClass::_onReport(uint8_t dev_addr, uint8_t idx, uint8_t const *re
   }
 }
 
+void USBHostHIDClass::_onSetReportComplete(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, uint16_t len) {
+  for (size_t i = 0; i < _num_devices; i++) {
+    USBHostHIDDevice *dev = _devices[i];
+    if (dev != nullptr && dev->matches(dev_addr, idx)) {
+      dev->onSetReportComplete(report_id, report_type, len);
+      return;
+    }
+  }
+}
+
 extern "C" {
 
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc, uint16_t desc_len) {
@@ -345,6 +355,11 @@ void tuh_umount_cb(uint8_t daddr) {
 
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len) {
   USBHostHID._onReport(dev_addr, idx, report, len);
+}
+
+/* Overrides the weak stub in esp32-hal-tinyusb.c. */
+void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, uint16_t len) {
+  USBHostHID._onSetReportComplete(dev_addr, idx, report_id, report_type, len);
 }
 
 void arduino_usb_host_hid_service(void) {
@@ -457,6 +472,9 @@ void USBHostHIDClass::serviceReceivesFromHostTask() {
     if (_pending_wait_enum && a == _pending_dev_addr) {
       continue;
     }
+    /* Control pipe, independent of the interrupt IN below. */
+    dev->serviceFromHostTask();
+
     const bool is_new = (a == _rearm_skip_addr && x == _rearm_skip_idx);
     if (!tuh_hid_receive_ready(a, x)) {
       /* Abort only stuck peers — never the interface that just claimed/started IN. */

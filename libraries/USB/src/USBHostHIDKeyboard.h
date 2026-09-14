@@ -127,6 +127,34 @@ public:
    */
   void printReport(Print &out, uint8_t modifiers, const uint8_t keys[6], const uint8_t *layout = KeyboardLayout_en_US) const;
 
+  /**
+   * Lock state, mirrored on the keyboard LEDs (USBHOST_KEY_LED_*). Caps Lock and Num Lock also
+   * change what toAscii() returns, so a sketch normally only reads this.
+   */
+  uint8_t getLeds() const {
+    return _leds;
+  }
+  bool capsLock() const {
+    return (_leds & USBHOST_KEY_LED_CAPS_LOCK) != 0;
+  }
+  bool numLock() const {
+    return (_leds & USBHOST_KEY_LED_NUM_LOCK) != 0;
+  }
+  bool scrollLock() const {
+    return (_leds & USBHOST_KEY_LED_SCROLL_LOCK) != 0;
+  }
+  /** Force the lock state, e.g. setLeds(USBHOST_KEY_LED_NUM_LOCK) to start with the keypad live. */
+  void setLeds(uint8_t leds) {
+    _leds = leds;
+  }
+  /** Toggle locks on Caps/Num/Scroll presses and drive the LEDs (default true). */
+  void setLockHandling(bool enable) {
+    _lock_handling = enable;
+  }
+  bool lockHandling() const {
+    return _lock_handling;
+  }
+
   /** Skip identical held-key reports (default false). */
   void setNotifyOnChangeOnly(bool enable) {
     _notify_on_change_only = enable;
@@ -151,14 +179,18 @@ public:
 private:
   void _ensureRegistered();
   void _applyBootReport(const uint8_t *boot, uint16_t boot_len);
+  void _updateLocks(const uint8_t prev_keys[6]);
   bool _sameAsLastNotified() const;
   void dispatchReportCallback() override;
+  void serviceFromHostTask() override;
+  void onSetReportComplete(uint8_t report_id, uint8_t report_type, uint16_t len) override;
 
   struct ReportEvent {
     uint8_t modifiers;
     uint8_t keys[6];
   };
   static const uint8_t CB_QUEUE = 8;
+  static const uint8_t LED_MAX_TRIES = 3;
 
   volatile uint8_t _modifiers;
   volatile uint8_t _keys[6];
@@ -168,6 +200,12 @@ private:
   uint8_t _last_modifiers;
   uint8_t _last_keys[6];
   bool _last_valid;
+  volatile uint8_t _leds;
+  uint8_t _leds_sent;
+  uint8_t _led_report;  ///< SET_REPORT payload; has to outlive the transfer
+  uint8_t _led_tries;
+  bool _led_busy;
+  bool _lock_handling;
   USBHostHIDKeyboardReportCb _report_cb;
   void *_report_cb_arg;
   ReportEvent _cb_q[CB_QUEUE];
