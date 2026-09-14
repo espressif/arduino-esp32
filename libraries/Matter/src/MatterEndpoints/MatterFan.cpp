@@ -73,15 +73,19 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
     switch (attribute_id) {
       case FanControl::Attributes::FanMode::Id: {
         FanMode_t newMode = resolveFanMode((FanMode_t)val->val.u8);
+        if (newMode == currentFanMode) {
+          break;
+        }
         log_v("FanControl Fan Mode changed to %s (%x)", getFanModeString(newMode), (uint8_t)newMode);
+        // Cache before callbacks. ATTR_SET still runs PRE_UPDATE; getMode() must
+        // already show the new value or sketch setOnOff()/setMode() write again
+        // and overflow loopTask.
+        currentFanMode = newMode;
         if (_onChangeModeCB != NULL) {
           ret &= _onChangeModeCB(newMode);
         }
         if (_onChangeCB != NULL) {
           ret &= _onChangeCB(newMode, currentPercent);
-        }
-        if (ret == true) {
-          currentFanMode = newMode;
         }
         break;
       }
@@ -95,7 +99,12 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
           log_e("FanControl PercentSetting %u is out of range", val->val.u8);
           return false;
         }
+        if (val->val.u8 == currentPercent) {
+          break;
+        }
         log_v("FanControl PercentSetting changed to %u", val->val.u8);
+        // Same as FanMode: cache first so getSpeedPercent() is current in callbacks.
+        currentPercent = val->val.u8;
         if (_onChangeSpeedCB != NULL) {
           ret &= _onChangeSpeedCB(val->val.u8);
         }
@@ -103,7 +112,6 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
           ret &= _onChangeCB(currentFanMode, val->val.u8);
         }
         if (ret == true) {
-          currentPercent = val->val.u8;
           esp_matter_attr_val_t currentVal = esp_matter_uint8(currentPercent);
           setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &currentVal);
         }
@@ -113,15 +121,16 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
           log_e("FanControl PercentCurrent %u is out of range", val->val.u8);
           return false;
         }
+        if (val->val.u8 == currentPercent) {
+          break;
+        }
         log_v("FanControl PercentCurrent changed to %u", val->val.u8);
+        currentPercent = val->val.u8;
         if (_onChangeSpeedCB != NULL) {
           ret &= _onChangeSpeedCB(val->val.u8);
         }
         if (_onChangeCB != NULL) {
           ret &= _onChangeCB(currentFanMode, val->val.u8);
-        }
-        if (ret == true) {
-          currentPercent = val->val.u8;
         }
         break;
     }
