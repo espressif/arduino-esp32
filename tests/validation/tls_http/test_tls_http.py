@@ -35,7 +35,9 @@ def _root_der_from_presented_chain(ctx, pem_blocks):
     as SSLSocket.get_verified_chain()[-1]). Otherwise use the issuer of the
     last extra cert, which is typically a cross-signing root.
     """
-    store = {_name_key(info["subject"]): der for info, der in zip(ctx.get_ca_certs(), ctx.get_ca_certs(binary_form=True))}
+    store = {
+        _name_key(info["subject"]): der for info, der in zip(ctx.get_ca_certs(), ctx.get_ca_certs(binary_form=True))
+    }
     if not store:
         raise RuntimeError("Default CA store is empty")
 
