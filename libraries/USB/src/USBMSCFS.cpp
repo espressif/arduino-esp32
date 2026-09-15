@@ -38,13 +38,12 @@ extern "C" {
 /* FatFs in Arduino-ESP32 is built with FF_LBA64=0, so GPT is not searched by f_mount.
  * For GPT disks we expose a synthetic MBR that points at the FAT partition; FatFs then
  * uses normal MBR scanning with absolute LBAs (no super-floppy remapping). */
-static const uint8_t kGuidMsBasicData[16] = {0xA2, 0xA0, 0xD0, 0xEB, 0xE5, 0xB9, 0x33, 0x44,
-                                             0x87, 0xC0, 0x68, 0xB6, 0xB7, 0x26, 0x99, 0xC7};
+static const uint8_t kGuidMsBasicData[16] = {0xA2, 0xA0, 0xD0, 0xEB, 0xE5, 0xB9, 0x33, 0x44, 0x87, 0xC0, 0x68, 0xB6, 0xB7, 0x26, 0x99, 0xC7};
 
 typedef struct {
   char *base_path;
-  bool use_synth_mbr; /**< true: disk_read(0) returns synthetic MBR for GPT→FAT */
-  uint32_t gpt_part_lba; /**< Absolute start LBA of FAT partition (GPT) */
+  bool use_synth_mbr;      /**< true: disk_read(0) returns synthetic MBR for GPT→FAT */
+  uint32_t gpt_part_lba;   /**< Absolute start LBA of FAT partition (GPT) */
   uint32_t gpt_part_count; /**< Partition sector count for synthetic PTE */
 } usb_msc_slot_t;
 
@@ -86,8 +85,7 @@ static bool sector_looks_fat_vbr(const uint8_t *sec) {
   /* FAT12/16 heuristic (same idea as FatFs check_fs). */
   const uint32_t bps = ld_u16(sec + 11);
   const uint8_t spc = sec[13];
-  return (bps >= 512 && bps <= 4096 && (bps & (bps - 1)) == 0) && spc != 0 && (spc & (spc - 1)) == 0 &&
-         ld_u16(sec + 14) != 0 && sec[16] >= 1 && sec[16] <= 2;
+  return (bps >= 512 && bps <= 4096 && (bps & (bps - 1)) == 0) && spc != 0 && (spc & (spc - 1)) == 0 && ld_u16(sec + 14) != 0 && sec[16] >= 1 && sec[16] <= 2;
 }
 
 static bool sector_looks_exfat_vbr(const uint8_t *sec) {
@@ -96,14 +94,10 @@ static bool sector_looks_exfat_vbr(const uint8_t *sec) {
 
 static void usbmsc_log_sector0_diag(const uint8_t *sec, uint32_t block_size) {
   log_e(
-    "USBMSCFS: LBA0 diag bsize=%" PRIu32 " sig=0x%04" PRIx32 " jmp=0x%02x type32='%.8s' oem='%.8s' mbr0_sys=0x%02x mbr0_lba=%" PRIu32,
-    block_size,
-    (uint32_t)ld_u16(sec + 510),
-    (unsigned)sec[0],
-    (const char *)(sec + 82),
-    (const char *)(sec + 3),
-    (unsigned)sec[0x1BE + 4],
-    (uint32_t)ld_u32(sec + 0x1BE + 8));
+    "USBMSCFS: LBA0 diag bsize=%" PRIu32 " sig=0x%04" PRIx32 " jmp=0x%02x type32='%.8s' oem='%.8s' mbr0_sys=0x%02x mbr0_lba=%" PRIu32, block_size,
+    (uint32_t)ld_u16(sec + 510), (unsigned)sec[0], (const char *)(sec + 82), (const char *)(sec + 3), (unsigned)sec[0x1BE + 4],
+    (uint32_t)ld_u32(sec + 0x1BE + 8)
+  );
 }
 
 static void usbmsc_fill_synth_mbr(uint8_t *sec, uint32_t part_lba, uint32_t part_count) {
@@ -202,7 +196,7 @@ static bool usbmsc_probe_volume(uint32_t *out_gpt_lba, uint32_t *out_gpt_count, 
       }
       const uint64_t first = ld_u64(sec + ofs + 32);
       const uint64_t last = ld_u64(sec + ofs + 40);
-      if (first == 0 || first >= bcount || last < first) {
+      if (first == 0 || first >= bcount || last < first || last >= bcount) {
         continue;
       }
 
@@ -219,9 +213,7 @@ static bool usbmsc_probe_volume(uint32_t *out_gpt_lba, uint32_t *out_gpt_count, 
       if (sector_looks_fat_vbr(sec)) {
         *out_gpt_lba = (uint32_t)first;
         *out_gpt_count = (uint32_t)(last - first + 1);
-        log_i("USBMSCFS: GPT FAT partition at LBA %" PRIu32 " (%" PRIu32 " sectors) — synthetic MBR for FatFs",
-              *out_gpt_lba,
-              *out_gpt_count);
+        log_i("USBMSCFS: GPT FAT partition at LBA %" PRIu32 " (%" PRIu32 " sectors) — synthetic MBR for FatFs", *out_gpt_lba, *out_gpt_count);
         free(sec);
         return true;
       }
@@ -277,11 +269,14 @@ static DRESULT ff_usbmsc_read(unsigned char pdrv, unsigned char *buff, uint32_t 
 
   const usb_msc_slot_t *slot = s_usbmsc_slots[pdrv];
   const uint32_t bsize = USBHostMSC.blockSize();
-  log_v("[USBMSCFS] disk_read pdrv=%u sector=%" PRIu32 " count=%u synth=%d",
-        (unsigned)pdrv,
-        (uint32_t)sector,
-        (unsigned)count,
-        (int)slot->use_synth_mbr);
+  /* sector and count come from FatFs, driven by on-disk metadata the device supplies. Check
+   * ahead of the synthetic-MBR branch, which reads LBA 1..count-1 out of the same range. */
+  const uint32_t bcount = USBHostMSC.blockCount();
+  if (sector >= bcount || (uint32_t)count > bcount - sector) {
+    log_e("[USBMSCFS] disk_read out of range sector=%" PRIu32 " count=%u blocks=%" PRIu32, sector, (unsigned)count, bcount);
+    return RES_PARERR;
+  }
+  log_v("[USBMSCFS] disk_read pdrv=%u sector=%" PRIu32 " count=%u synth=%d", (unsigned)pdrv, (uint32_t)sector, (unsigned)count, (int)slot->use_synth_mbr);
 
   if (slot->use_synth_mbr && sector == 0) {
     if (bsize < 512) {
@@ -310,10 +305,12 @@ static DRESULT ff_usbmsc_write(unsigned char pdrv, const unsigned char *buff, ui
   }
 
   const usb_msc_slot_t *slot = s_usbmsc_slots[pdrv];
-  log_v("[USBMSCFS] disk_write pdrv=%u sector=%" PRIu32 " count=%u",
-        (unsigned)pdrv,
-        (uint32_t)sector,
-        (unsigned)count);
+  const uint32_t bcount = USBHostMSC.blockCount();
+  if (sector >= bcount || (uint32_t)count > bcount - sector) {
+    log_e("[USBMSCFS] disk_write out of range sector=%" PRIu32 " count=%u blocks=%" PRIu32, sector, (unsigned)count, bcount);
+    return RES_PARERR;
+  }
+  log_v("[USBMSCFS] disk_write pdrv=%u sector=%" PRIu32 " count=%u", (unsigned)pdrv, (uint32_t)sector, (unsigned)count);
 
   if (slot->use_synth_mbr && sector == 0) {
     /* Do not overwrite the real protective GPT MBR with our synthetic table. */
@@ -333,8 +330,7 @@ static DRESULT ff_usbmsc_ioctl(unsigned char pdrv, unsigned char cmd, void *buff
     return RES_PARERR;
   }
   switch (cmd) {
-    case CTRL_SYNC:
-      return RES_OK;
+    case CTRL_SYNC: return RES_OK;
     case GET_SECTOR_COUNT:
       if (!USBHostMSC.mounted() || buff == nullptr) {
         return RES_ERROR;
@@ -353,8 +349,7 @@ static DRESULT ff_usbmsc_ioctl(unsigned char pdrv, unsigned char cmd, void *buff
       }
       *((uint32_t *)buff) = 1;
       return RES_OK;
-    default:
-      return RES_PARERR;
+    default: return RES_PARERR;
   }
 }
 
@@ -381,8 +376,15 @@ USBMSCFS::~USBMSCFS() {
 }
 
 static void usbmsc_begin_cleanup(const char *mountpoint, uint8_t pdrv, bool vfs_registered) {
-  if (vfs_registered && mountpoint != nullptr) {
-    esp_vfs_fat_unregister_path(mountpoint);
+  if (vfs_registered) {
+    /* f_mount() publishes FatFs[vol] and creates the per-volume mutex before it attempts the
+     * mount, so both outlive a failure — and esp_vfs_fat_unregister_path() would free the
+     * FATFS out from under the still-registered pointer. Same order as end(). */
+    char drv[3] = {(char)('0' + pdrv), ':', 0};
+    (void)f_mount(NULL, drv, 0);
+    if (mountpoint != nullptr) {
+      esp_vfs_fat_unregister_path(mountpoint);
+    }
   }
   ff_diskio_register(pdrv, NULL);
   usbmsc_free_slot(pdrv);
@@ -430,11 +432,7 @@ bool USBMSCFS::begin(const char *mountpoint, uint8_t max_files, bool format_if_e
   slot->gpt_part_count = gpt_count;
 
   static const ff_diskio_impl_t usb_msc_diskio = {
-    ff_usbmsc_initialize,
-    ff_usbmsc_status,
-    ff_usbmsc_read,
-    ff_usbmsc_write,
-    ff_usbmsc_ioctl,
+    ff_usbmsc_initialize, ff_usbmsc_status, ff_usbmsc_read, ff_usbmsc_write, ff_usbmsc_ioctl,
   };
 
   ff_diskio_register(pdrv, &usb_msc_diskio);

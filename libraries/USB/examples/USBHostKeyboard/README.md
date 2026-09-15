@@ -6,7 +6,7 @@ Reads a **boot-protocol** USB HID keyboard on ESP32-S2 / S3 / P4 in USB host mod
 
 1. **Board / USB mode:** Same as [USBHostMouse](../USBHostMouse/README.md) and [USBHostGamepad](../USBHostGamepad/README.md) — OTG-capable board, **Hardware CDC** on most boards, or **ESP32-S3-USB-OTG**.
 2. **`USBHostKeyboard.registerWithHost()`** before **`USBHost.begin()`**. Plug the keyboard after boot or replug if it enumerated too early.
-3. **VBUS** on ESP32-S3-USB-OTG is enabled in the sketch.
+3. **VBUS:** On ESP32-S3-USB-OTG, `USBHost.begin()` enables the host port through `USBHostBoardInit()`; the sketch may also call `usbHostEnable` / `usbHostPower`.
 4. **Hub:** If direct attach is unreliable, try a USB hub.
 
 ## API

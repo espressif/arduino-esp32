@@ -91,19 +91,34 @@ static void msc_dma_mem_to_cpu(void *p, size_t len) {
 static SemaphoreHandle_t s_msc_io_mutex;
 static SemaphoreHandle_t s_scsi_done_sem = nullptr;
 static volatile bool s_scsi_ok;
+static volatile uintptr_t s_scsi_tag = 0; /* completion we are waiting for, 0 = none */
+static uintptr_t s_scsi_tag_seq = 0;      /* submit side only, the worker never writes this */
 static volatile bool s_ctrl_done;
 static volatile bool s_ctrl_ok;
 
-static void ensure_scsi_sem(void) {
+static bool ensure_scsi_sem(void) {
   if (s_scsi_done_sem == nullptr) {
     s_scsi_done_sem = xSemaphoreCreateBinary();
+    if (s_scsi_done_sem == nullptr) {
+      log_e("[USBHostMSC] SCSI semaphore alloc failed");
+      return false;
+    }
   }
+  return true;
 }
 
-static void scsi_xfer_begin(void) {
-  ensure_scsi_sem();
+/** @return tag to pass as the completion's user_arg, 0 if the transfer must not be submitted. */
+static uintptr_t scsi_xfer_begin(void) {
+  if (!ensure_scsi_sem()) {
+    return 0;
+  }
   while (xSemaphoreTake(s_scsi_done_sem, 0) == pdTRUE) {}
   s_scsi_ok = false;
+  if (++s_scsi_tag_seq == 0) {
+    s_scsi_tag_seq = 1; /* 0 means "not waiting" */
+  }
+  s_scsi_tag = s_scsi_tag_seq;
+  return s_scsi_tag;
 }
 
 static void pump_tuh(void) {
@@ -179,37 +194,51 @@ static void msc_dma_free_safe(uint8_t dev_addr, void *p) {
   heap_caps_free(p);
 }
 
-static void ensure_msc_mutex(void) {
+static bool ensure_msc_mutex(void) {
   if (s_msc_io_mutex == nullptr) {
     s_msc_io_mutex = xSemaphoreCreateRecursiveMutex();
+    if (s_msc_io_mutex == nullptr) {
+      log_e("[USBHostMSC] MSC IO mutex alloc failed");
+      return false;
+    }
   }
+  return true;
 }
 
 static bool msc_complete_cb(uint8_t dev_addr, const tuh_msc_complete_data_t *cb_data) {
   (void)dev_addr;
+  /* A transfer we gave up on can still complete. Signalling here would let it satisfy the
+   * retry's wait and hand back the wrong data. */
+  if (cb_data->user_arg == 0 || cb_data->user_arg != s_scsi_tag) {
+    log_w("[USBHostMSC] dropping stale completion (tag=%u expected=%u)", (unsigned)cb_data->user_arg, (unsigned)s_scsi_tag);
+    return true;
+  }
   const bool ok = (cb_data->csw->signature == MSC_CSW_SIGNATURE) && (cb_data->csw->status == MSC_CSW_STATUS_PASSED);
   if (!ok) {
     log_e("[USBHostMSC] CSW error: signature=%s status=%u", (cb_data->csw->signature == MSC_CSW_SIGNATURE) ? "OK" : "BAD", (unsigned)cb_data->csw->status);
   }
-  ensure_scsi_sem();
+  if (!ensure_scsi_sem()) {
+    return true;
+  }
   s_scsi_ok = ok;
   (void)xSemaphoreGive(s_scsi_done_sem);
   return true;
 }
 
 static bool wait_scsi(uint32_t timeout_ms, const char *op_tag) {
-  ensure_scsi_sem();
+  if (!ensure_scsi_sem()) {
+    return false;
+  }
   const uint32_t start = millis();
   while ((millis() - start) <= timeout_ms) {
     const TickType_t wait = USBHost.tuhBackgroundActive() ? pdMS_TO_TICKS(100) : 0;
     if (xSemaphoreTake(s_scsi_done_sem, wait) == pdTRUE) {
       return s_scsi_ok;
     }
-    if (!USBHost.tuhBackgroundActive()) {
-      tuh_task();
-      yield();
-    }
+    pump_tuh();
   }
+  /* Stop a completion arriving after the timeout from satisfying the retry's wait. */
+  s_scsi_tag = 0;
   log_e(
     "[USBHostMSC] %s: TIMEOUT after %" PRIu32 " ms (mounted=%d ready=%d)", op_tag, timeout_ms, (int)USBHostMSC.mounted(),
     (int)tuh_msc_ready(USBHostMSC.devAddr())
@@ -224,7 +253,10 @@ bool USBHostMSCClass::cacheEndpoints(uint8_t dev_addr) {
   _ep_in = 0;
   _ep_out = 0;
 
+  /* The sync getter reports no transfer length, so a short descriptor would leave the tail as
+   * stack garbage and the walk below would parse it as descriptors. */
   uint8_t cfg[256];
+  memset(cfg, 0, sizeof(cfg));
   if (tuh_descriptor_get_configuration_sync(dev_addr, 0, cfg, sizeof(cfg)) != XFER_RESULT_SUCCESS) {
     log_e("[USBHostMSC] get configuration descriptor failed");
     return false;
@@ -304,9 +336,10 @@ bool USBHostMSCClass::recoverBot(const char *reason) {
 
   (void)tuh_edpt_abort_xfer(_dev_addr, _ep_in);
   (void)tuh_edpt_abort_xfer(_dev_addr, _ep_out);
-  ensure_scsi_sem();
-  s_scsi_ok = false;
-  (void)xSemaphoreGive(s_scsi_done_sem);
+  if (ensure_scsi_sem()) {
+    s_scsi_ok = false;
+    (void)xSemaphoreGive(s_scsi_done_sem);
+  }
 
   tusb_control_request_t reset_req = {};
   reset_req.bmRequestType_bit.recipient = TUSB_REQ_RCPT_INTERFACE;
@@ -360,9 +393,12 @@ static bool msc_submit_rw(bool is_write, uint8_t dev, uint8_t lun, void *buf, ui
     if (!wait_msc_ep_ready(dev, 3000)) {
       return false;
     }
-    scsi_xfer_begin();
+    const uintptr_t tag = scsi_xfer_begin();
+    if (tag == 0) {
+      return false;
+    }
     const bool submitted =
-      is_write ? tuh_msc_write10(dev, lun, buf, lba, blocks, msc_complete_cb, 0) : tuh_msc_read10(dev, lun, buf, lba, blocks, msc_complete_cb, 0);
+      is_write ? tuh_msc_write10(dev, lun, buf, lba, blocks, msc_complete_cb, tag) : tuh_msc_read10(dev, lun, buf, lba, blocks, msc_complete_cb, tag);
     if (submitted) {
       return true;
     }
@@ -376,9 +412,22 @@ bool USBHostMSCClass::xferBlocks(bool is_write, uint32_t lba, void *buffer, uint
     return false;
   }
 
-  ensure_msc_mutex();
+  if (!ensure_msc_mutex()) {
+    return false;
+  }
   if (xSemaphoreTakeRecursive(s_msc_io_mutex, pdMS_TO_TICKS(60000)) != pdTRUE) {
     log_e("[USBHostMSC] %s: mutex timeout", is_write ? "writeBlocks" : "readBlocks");
+    return false;
+  }
+
+  /* onMscUnmount() zeroes these from the worker at any point below. Latch them, otherwise a
+   * mid-transfer unplug turns _dev_addr into 0 and msc_dma_free_safe() skips its BOT-busy
+   * check and frees a buffer the controller may still be writing into. */
+  const uint8_t dev = _dev_addr;
+  const uint8_t lun = _lun;
+  const uint32_t bsize = _block_size;
+  if (dev == 0 || bsize == 0) {
+    xSemaphoreGiveRecursive(s_msc_io_mutex);
     return false;
   }
 
@@ -390,11 +439,16 @@ bool USBHostMSCClass::xferBlocks(bool is_write, uint32_t lba, void *buffer, uint
   bool ok = true;
 
   while (remaining > 0 && ok) {
+    if (!_mounted) {
+      /* Device left mid-transfer: stop rather than retry against a dead endpoint. */
+      ok = false;
+      break;
+    }
     uint32_t chunk = remaining;
     if (chunk > (uint32_t)USBHOST_MSC_MAX_SECTORS) {
       chunk = (uint32_t)USBHOST_MSC_MAX_SECTORS;
     }
-    const size_t nbytes = (size_t)chunk * (size_t)_block_size;
+    const size_t nbytes = (size_t)chunk * (size_t)bsize;
     uint8_t *dma_buf = (uint8_t *)msc_dma_alloc(nbytes);
     if (dma_buf == nullptr) {
       ok = false;
@@ -410,7 +464,7 @@ bool USBHostMSCClass::xferBlocks(bool is_write, uint32_t lba, void *buffer, uint
 
     bool done = false;
     for (int try_n = 0; try_n < 2 && !done; try_n++) {
-      if (!msc_submit_rw(is_write, _dev_addr, _lun, dma_buf, cur_lba, (uint16_t)chunk)) {
+      if (!msc_submit_rw(is_write, dev, lun, dma_buf, cur_lba, (uint16_t)chunk)) {
         if (try_n == 0 && recoverBot("submit")) {
           continue;
         }
@@ -427,7 +481,7 @@ bool USBHostMSCClass::xferBlocks(bool is_write, uint32_t lba, void *buffer, uint
     }
 
     if (!done) {
-      msc_dma_free_safe(_dev_addr, dma_buf);
+      msc_dma_free_safe(dev, dma_buf);
       ok = false;
       break;
     }
@@ -438,7 +492,7 @@ bool USBHostMSCClass::xferBlocks(bool is_write, uint32_t lba, void *buffer, uint
 #endif
       memcpy(user, dma_buf, nbytes);
     }
-    msc_dma_free_safe(_dev_addr, dma_buf);
+    msc_dma_free_safe(dev, dma_buf);
 
     if (is_write) {
       /* Pace sector writes — some controllers wedge if hammered with no gap. */

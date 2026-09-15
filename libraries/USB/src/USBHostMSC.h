@@ -66,14 +66,15 @@ private:
   bool recoverBot(const char *reason);
   bool xferBlocks(bool is_write, uint32_t lba, void *buffer, uint32_t blocks);
 
+  /* All written together with _mounted from the TinyUSB worker, so a reader must not cache them. */
   volatile bool _mounted;
-  uint8_t _dev_addr;
-  uint8_t _lun;
-  uint8_t _itf_num;
-  uint8_t _ep_in;
-  uint8_t _ep_out;
-  uint32_t _block_count;
-  uint32_t _block_size;
+  volatile uint8_t _dev_addr;
+  volatile uint8_t _lun;
+  volatile uint8_t _itf_num;
+  volatile uint8_t _ep_in;
+  volatile uint8_t _ep_out;
+  volatile uint32_t _block_count;
+  volatile uint32_t _block_size;
 };
 
 extern USBHostMSCClass USBHostMSC;

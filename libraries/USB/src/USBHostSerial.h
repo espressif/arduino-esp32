@@ -122,11 +122,12 @@ private:
   void applyBeginLineCodingIfNeeded();
   static bool ensureTxMutex();
 
+  /* Written together with _mounted from the TinyUSB worker, so a reader must not cache them. */
   volatile bool _mounted;
-  bool _binding_valid;
-  uint8_t _cdc_idx;
-  uint8_t _dev_addr;
-  uint8_t _itf_num;
+  volatile bool _binding_valid;
+  volatile uint8_t _cdc_idx;
+  volatile uint8_t _dev_addr;
+  volatile uint8_t _itf_num;
   unsigned long _begin_baud;
   uint8_t _begin_stop_bits;
   uint8_t _begin_parity;

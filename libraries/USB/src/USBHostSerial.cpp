@@ -1,4 +1,4 @@
-// Copyright 2015-2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -164,23 +164,35 @@ size_t USBHostSerialClass::write(const uint8_t *buffer, size_t size) {
     return 0;
   }
 
+  const bool non_blocking = (_tx_timeout_ms == 0);
   size_t so_far = 0;
   uint32_t deadline = millis() + _tx_timeout_ms;
   while (so_far < size) {
-    if ((int32_t)(millis() - deadline) >= 0) {
-      break;
-    }
     uint32_t n = tuh_cdc_write(_cdc_idx, buffer + so_far, (uint32_t)(size - so_far));
     if (n) {
+      /* Flush once after the loop, otherwise write(uint8_t) is one bulk transfer per byte.
+       * The deadline is not checked while the write is making progress. */
       so_far += n;
-      (void)tuh_cdc_write_flush(_cdc_idx);
-    } else {
-      if (!USBHost.tuhBackgroundActive()) {
-        tuh_task();
-      } else {
-        yield();
-      }
+      continue;
     }
+    /* FIFO full or endpoint busy: nothing more fits until it drains. */
+    if (non_blocking || (int32_t)(millis() - deadline) >= 0) {
+      break;
+    }
+    /* The device can vanish mid-write, leaving _cdc_idx stale. */
+    if (!mounted()) {
+      break;
+    }
+    (void)tuh_cdc_write_flush(_cdc_idx);
+    if (!USBHost.tuhBackgroundActive()) {
+      /* Must not block: tuh_task() waits on the event queue past our deadline. */
+      tuh_task_ext(0, false);
+    } else {
+      yield();
+    }
+  }
+  if (so_far) {
+    (void)tuh_cdc_write_flush(_cdc_idx);
   }
 
   xSemaphoreGive(s_usb_host_serial_tx_mutex);
@@ -243,7 +255,9 @@ void USBHostSerialClass::onCdcMount(uint8_t idx) {
 }
 
 void USBHostSerialClass::onCdcUnmount(uint8_t idx) {
-  (void)idx;
+  if (!_binding_valid || idx != _cdc_idx) {
+    return;
+  }
   _mounted = false;
   _binding_valid = false;
   _dev_addr = 0;

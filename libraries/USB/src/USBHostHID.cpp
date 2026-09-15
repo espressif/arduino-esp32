@@ -404,6 +404,9 @@ void USBHostHIDDevice::syncHostMountState() {
   if (!_mounted || !_itf_binding_valid || _dev_addr == 0) {
     return;
   }
+  /* Only ever drop this device's own state. This polls ahead of tuh_hid_umount_cb, so going
+   * through releaseClaimedInterface() would emit a second unmount note for the same interface
+   * and clearPendingIf() would cancel a start-receive that already belongs to the replug. */
   if (!tuh_mounted(_dev_addr) || !tuh_hid_mounted(_dev_addr, _idx)) {
     onUnmount(_dev_addr, _idx);
     return;

@@ -298,13 +298,26 @@ static int handle_cmd(hid_report_cmd_t *cmd)
             s_report_size = cmd->value;
         } else if (cmd->cmd == USBHID_RM_REPORT_COUNT) {
             s_report_count = cmd->value;
-        } else if (cmd->cmd == USBHID_RM_INPUT) {
-            s_report_params.input_len += (s_report_size * s_report_count);
-        } else if (cmd->cmd == USBHID_RM_OUTPUT) {
-            s_report_params.output_len += (s_report_size * s_report_count);
-        } else if (cmd->cmd == USBHID_RM_FEATURE) {
-            s_report_params.feature_len += (s_report_size * s_report_count);
+        } else if (cmd->cmd == USBHID_RM_INPUT || cmd->cmd == USBHID_RM_OUTPUT
+                   || cmd->cmd == USBHID_RM_FEATURE) {
+            uint16_t *acc = (cmd->cmd == USBHID_RM_INPUT)    ? &s_report_params.input_len
+                            : (cmd->cmd == USBHID_RM_OUTPUT) ? &s_report_params.output_len
+                                                             : &s_report_params.feature_len;
+            /* Size and count are both device-controlled and reach 0xFFFF, so the uint16_t
+               product promotes to int and overflows. Accumulate in 32 bits. */
+            const uint32_t total = (uint32_t)*acc + (uint32_t)s_report_size * (uint32_t)s_report_count;
+            if (total > UINT16_MAX) {
+                USBHID_PARSE_LOGE("report bit count overflow: size=%u count=%u", (unsigned)s_report_size, (unsigned)s_report_count);
+                s_parse_step = PARSE_WAIT_USAGE_PAGE;
+                return -1;
+            }
+            *acc = (uint16_t)total;
         } else if (cmd->cmd == USBHID_RM_COLLECTION) {
+            if (s_collection_depth == UINT8_MAX) {
+                USBHID_PARSE_LOGE("collection nesting too deep");
+                s_parse_step = PARSE_WAIT_USAGE_PAGE;
+                return -1;
+            }
             s_collection_depth += 1;
         } else if (cmd->cmd == USBHID_RM_END_COLLECTION) {
             s_collection_depth -= 1;
