@@ -520,8 +520,6 @@ bool USBHostMSCClass::sync(void) {
   return mounted();
 }
 
-USBHostMSCClass USBHostMSC;
-
 extern "C" {
 
 void tuh_msc_mount_cb(uint8_t dev_addr) {
@@ -533,5 +531,10 @@ void tuh_msc_umount_cb(uint8_t dev_addr) {
 }
 
 } /* extern "C" */
+
+/* Unlike the HID handlers and USBHostSerial, this one stays a library global: the FatFs
+ * diskio layer in USBMSCFS.cpp is a plain C callback interface with nowhere to hang a user
+ * pointer, and TinyUSB's MSC host tracks a single device anyway. Dropping it saves 64 bytes. */
+USBHostMSCClass USBHostMSC;
 
 #endif /* SOC_USB_OTG && CFG_TUH_MSC */

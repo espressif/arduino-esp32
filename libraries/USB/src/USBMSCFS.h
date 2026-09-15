@@ -40,6 +40,8 @@ protected:
 
 public:
   USBMSCFS(FSImplPtr impl);
+  /** Builds the default VFS implementation, so a sketch can just declare `USBMSCFS usbfs;`. */
+  USBMSCFS();
   ~USBMSCFS();
 
   bool begin(const char *mountpoint = "/usb", uint8_t max_files = 5, bool format_if_empty = false);
@@ -58,7 +60,6 @@ public:
 }  // namespace fs
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_USB_MSC_FS)
-extern fs::USBMSCFS USBMSCFS;
 #endif
 
 #endif /* CFG_TUH_ENABLED && CFG_TUH_MSC */

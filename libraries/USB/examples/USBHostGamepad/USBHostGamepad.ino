@@ -12,6 +12,9 @@
 #include <USBHost.h>
 #include <USBHostHIDGamepad.h>
 
+/* Host handlers are declared by the sketch, so a build only pays for what it uses. */
+USBHostHIDGamepad USBHostGamepad;
+
 /** Set to 1 to print heuristic sticks when polling (see loop). */
 #ifndef GAMEPAD_TRY_STICK8
 #define GAMEPAD_TRY_STICK8 1

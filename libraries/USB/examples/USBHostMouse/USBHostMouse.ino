@@ -9,6 +9,9 @@
 #include <USBHost.h>
 #include <USBHostHIDMouse.h>
 
+/* Host handlers are declared by the sketch, so a build only pays for what it uses. */
+USBHostHIDMouse USBHostMouse;
+
 /** 1 = print only when movement, wheel, or buttons change (fewer idle lines). */
 #ifndef MOUSE_PRINT_ON_ACTIVITY_ONLY
 #define MOUSE_PRINT_ON_ACTIVITY_ONLY 1

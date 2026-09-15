@@ -12,6 +12,9 @@
 #include <USBHost.h>
 #include <USBHostHIDKeyboard.h>
 
+/* Host handlers are declared by the sketch, so a build only pays for what it uses. */
+USBHostHIDKeyboard USBHostKeyboard;
+
 #ifndef KEYBOARD_NOTIFY_ON_CHANGE_ONLY
 #define KEYBOARD_NOTIFY_ON_CHANGE_ONLY 1
 #endif

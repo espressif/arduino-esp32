@@ -419,7 +419,5 @@ void USBHostHIDKeyboard::printReport(Print &out, uint8_t modifiers, const uint8_
   }
 }
 
-USBHostHIDKeyboard USBHostKeyboard;
-
 #endif /* CFG_TUH_HID */
 #endif /* SOC_USB_OTG_SUPPORTED */

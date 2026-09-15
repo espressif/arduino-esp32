@@ -213,7 +213,5 @@ private:
   volatile uint8_t _cb_r;
 };
 
-extern USBHostHIDKeyboard USBHostKeyboard;
-
 #endif /* CFG_TUH_HID */
 #endif /* SOC_USB_OTG_SUPPORTED */

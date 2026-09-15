@@ -26,12 +26,26 @@
 
 static SemaphoreHandle_t s_usb_host_serial_tx_mutex;
 
+/* Zero-initialised on purpose: a plain pointer is not a static-init root, so a sketch that
+ * never declares a USBHostSerialClass leaves the class unreferenced and the linker drops it.
+ * TinyUSB gives us a single CDC interface (CFG_TUH_CDC == 1), so one instance is enough. */
+static USBHostSerialClass *s_usb_host_serial = nullptr;
+
 USBHostSerialClass::USBHostSerialClass()
   : _mounted(false), _binding_valid(false), _cdc_idx(0), _dev_addr(0), _itf_num(0), _begin_baud(0), _begin_stop_bits(CDC_LINE_CODING_STOP_BITS_1),
-    _begin_parity(CDC_LINE_CODING_PARITY_NONE), _begin_data_bits(8), _tx_timeout_ms(250) {}
+    _begin_parity(CDC_LINE_CODING_PARITY_NONE), _begin_data_bits(8), _tx_timeout_ms(250) {
+  if (s_usb_host_serial == nullptr) {
+    s_usb_host_serial = this;
+  } else {
+    log_e("[USBHostSerial] only one instance can receive CDC events");
+  }
+}
 
 USBHostSerialClass::~USBHostSerialClass() {
   end();
+  if (s_usb_host_serial == this) {
+    s_usb_host_serial = nullptr;
+  }
 }
 
 bool USBHostSerialClass::ensureTxMutex() {
@@ -264,17 +278,19 @@ void USBHostSerialClass::onCdcUnmount(uint8_t idx) {
   _itf_num = 0;
 }
 
-USBHostSerialClass USBHostSerial;
-
 // TinyUSB callbacks — strong symbols override weak stubs in esp32-hal-tinyusb.c
 extern "C" {
 
 void tuh_cdc_mount_cb(uint8_t idx) {
-  USBHostSerial.onCdcMount(idx);
+  if (s_usb_host_serial != nullptr) {
+    s_usb_host_serial->onCdcMount(idx);
+  }
 }
 
 void tuh_cdc_umount_cb(uint8_t idx) {
-  USBHostSerial.onCdcUnmount(idx);
+  if (s_usb_host_serial != nullptr) {
+    s_usb_host_serial->onCdcUnmount(idx);
+  }
 }
 
 void tuh_cdc_rx_cb(uint8_t idx) {

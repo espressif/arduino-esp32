@@ -12,6 +12,9 @@
 #include <USBHost.h>
 #include <USBHostSerial.h>
 
+/* Host handlers are declared by the sketch, so a build only pays for what it uses. */
+USBHostSerialClass USBHostSerial;
+
 #ifndef HOST_SERIAL_BAUD
 #define HOST_SERIAL_BAUD 115200
 #endif

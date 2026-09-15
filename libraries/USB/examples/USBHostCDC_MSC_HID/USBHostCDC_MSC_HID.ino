@@ -18,9 +18,16 @@
 #include <USBHost.h>
 #include <USBHostSerial.h>
 #include <USBHostMSC.h>
+#include <USBMSCFS.h>
 #include <USBHostHID.h>
 #include <USBHostHIDMouse.h>
 #include <USBHostHIDKeyboard.h>
+
+/* Host handlers are declared by the sketch, so a build only pays for what it uses. */
+USBHostSerialClass USBHostSerial;
+fs::USBMSCFS USBMSCFS;
+USBHostHIDMouse USBHostMouse;
+USBHostHIDKeyboard USBHostKeyboard;
 
 static const unsigned long kHostSerialBaud = 115200;
 static const char *kUsbMountPath = "/usb";

@@ -9,6 +9,9 @@
 #include <USBHost.h>
 #include <USBHostHIDMouse.h>
 
+/* Host handlers are declared by the sketch, so a build only pays for what it uses. */
+USBHostHIDMouse USBHostMouse;
+
 static void onMouseReport(int16_t x, int16_t y, uint8_t buttons, int8_t wheel, void *) {
   Serial.printf("mouse: dx=%d dy=%d btns=0x%02x wheel=%d\n", (int)x, (int)y, (unsigned)buttons, (int)wheel);
 }

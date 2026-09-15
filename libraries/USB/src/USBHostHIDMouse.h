@@ -112,7 +112,5 @@ private:
   volatile uint8_t _cb_r;
 };
 
-extern USBHostHIDMouse USBHostMouse;
-
 #endif /* CFG_TUH_HID */
 #endif /* SOC_USB_OTG_SUPPORTED */

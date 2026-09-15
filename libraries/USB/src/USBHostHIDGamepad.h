@@ -103,7 +103,5 @@ private:
   volatile bool _cb_pending;
 };
 
-extern USBHostHIDGamepad USBHostGamepad;
-
 #endif /* CFG_TUH_HID */
 #endif /* SOC_USB_OTG_SUPPORTED */

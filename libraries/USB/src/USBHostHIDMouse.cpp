@@ -358,7 +358,5 @@ void USBHostHIDMouse::clear() {
   _has_report = false;
 }
 
-USBHostHIDMouse USBHostMouse;
-
 #endif /* CFG_TUH_HID */
 #endif /* SOC_USB_OTG_SUPPORTED */

@@ -371,6 +371,8 @@ namespace fs {
 
 USBMSCFS::USBMSCFS(FSImplPtr impl) : FS(impl), _pdrv(0xFF) {}
 
+USBMSCFS::USBMSCFS() : USBMSCFS(FSImplPtr(new VFSImpl())) {}
+
 USBMSCFS::~USBMSCFS() {
   end();
 }
@@ -585,9 +587,5 @@ bool USBMSCFS::writeRAW(uint8_t *buffer, uint32_t sector) {
 }
 
 }  // namespace fs
-
-#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_USB_MSC_FS)
-fs::USBMSCFS USBMSCFS(FSImplPtr(new VFSImpl()));
-#endif
 
 #endif /* SOC_USB_OTG && CFG_TUH_MSC */

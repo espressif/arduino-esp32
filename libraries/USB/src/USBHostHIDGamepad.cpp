@@ -331,7 +331,5 @@ void USBHostHIDGamepad::getSticks8(int8_t *lx, int8_t *ly, int8_t *rx, int8_t *r
   }
 }
 
-USBHostHIDGamepad USBHostGamepad;
-
 #endif /* CFG_TUH_HID */
 #endif /* SOC_USB_OTG_SUPPORTED */

@@ -19,6 +19,11 @@
 #include <USBHostHIDKeyboard.h>
 #include <USBHostHIDGamepad.h>
 
+/* Host handlers are declared by the sketch, so a build only pays for what it uses. */
+USBHostHIDMouse USBHostMouse;
+USBHostHIDKeyboard USBHostKeyboard;
+USBHostHIDGamepad USBHostGamepad;
+
 /** 1 = log usbhid_parse_report_map() for every HID interface (verbose when using a hub). */
 #ifndef COMBO_DUMP_HID_DESCRIPTOR
 #define COMBO_DUMP_HID_DESCRIPTOR 0

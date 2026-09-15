@@ -135,8 +135,6 @@ private:
   uint32_t _tx_timeout_ms;
 };
 
-extern USBHostSerialClass USBHostSerial;
-
 #endif /* CFG_TUH_ENABLED && CFG_TUH_CDC */
 #endif /* CONFIG_TINYUSB_ENABLED */
 #endif /* SOC_USB_OTG_SUPPORTED */

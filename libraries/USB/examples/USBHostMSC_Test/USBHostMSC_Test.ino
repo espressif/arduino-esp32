@@ -11,6 +11,10 @@
 #include <inttypes.h>
 #include <USBHost.h>
 #include <USBHostMSC.h>
+#include <USBMSCFS.h>
+
+/* Host handlers are declared by the sketch, so a build only pays for what it uses. */
+fs::USBMSCFS USBMSCFS;
 
 #ifndef USB_MSC_MOUNTPOINT
 #define USB_MSC_MOUNTPOINT "/usb"
