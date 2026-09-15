@@ -82,6 +82,31 @@ function _normalize_fqbn_opts {
     '
 }
 
+# Force ESP32-P4 Serial mapping for the environment. Applied last so it wins
+# over target defaults, fqbn_append, full FQBNs from ci.yml, and -fqbn.
+# CI hardware runners talk to UART0, so CDC on boot must be Disabled
+# (CDCOnBoot=default). Local and Wokwi use USB Serial/JTAG, so Enabled
+# (CDCOnBoot=cdc).
+function apply_cdc_on_boot_opt {
+    local fqbn="$1"
+    local board
+    board=$(echo "$fqbn" | cut -d':' -f3)
+    if [ "$board" != "esp32p4" ]; then
+        echo "$fqbn"
+        return 0
+    fi
+
+    local base options cdc_opt
+    base=$(echo "$fqbn" | cut -d':' -f1-3)
+    options=$(echo "$fqbn" | cut -d':' -f4-)
+    if [ "${CI:-false}" = "true" ]; then
+        cdc_opt="CDCOnBoot=default"
+    else
+        cdc_opt="CDCOnBoot=cdc"
+    fi
+    echo "${base}:$(_normalize_fqbn_opts "${options},${cdc_opt}")"
+}
+
 function default_fqbn_for_target {
     local target="$1"
     local options_override="${2:-}"
@@ -104,47 +129,49 @@ function default_fqbn_for_target {
     esp32c3_opts=$(_normalize_fqbn_opts "${overrides}")
     esp32c6_opts=$(_normalize_fqbn_opts "${overrides}")
     esp32h2_opts=$(_normalize_fqbn_opts "${overrides}")
-    esp32p4_opts=$(_normalize_fqbn_opts "PSRAM=enabled,USBMode=default,ChipVariant=postv3,${overrides}")
+    esp32p4_opts=$(_normalize_fqbn_opts "PSRAM=enabled,USBMode=hwcdc,ChipVariant=postv3,${overrides}")
     esp32c5_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${overrides}")
 
+    local result=""
     case "$target" in
         esp32)
             [ -n "${options_override:-$esp32_opts}" ] && opt=":${options_override:-$esp32_opts}"
-            echo "${pkg}:esp32${opt}"
+            result="${pkg}:esp32${opt}"
             ;;
         esp32s2)
             [ -n "${options_override:-$esp32s2_opts}" ] && opt=":${options_override:-$esp32s2_opts}"
-            echo "${pkg}:esp32s2${opt}"
+            result="${pkg}:esp32s2${opt}"
             ;;
         esp32c3)
             [ -n "${options_override:-$esp32c3_opts}" ] && opt=":${options_override:-$esp32c3_opts}"
-            echo "${pkg}:esp32c3${opt}"
+            result="${pkg}:esp32c3${opt}"
             ;;
         esp32s3)
             [ -n "${options_override:-$esp32s3_opts}" ] && opt=":${options_override:-$esp32s3_opts}"
-            echo "${pkg}:esp32s3${opt}"
+            result="${pkg}:esp32s3${opt}"
             ;;
         esp32c6)
             [ -n "${options_override:-$esp32c6_opts}" ] && opt=":${options_override:-$esp32c6_opts}"
-            echo "${pkg}:esp32c6${opt}"
+            result="${pkg}:esp32c6${opt}"
             ;;
         esp32h2)
             [ -n "${options_override:-$esp32h2_opts}" ] && opt=":${options_override:-$esp32h2_opts}"
-            echo "${pkg}:esp32h2${opt}"
+            result="${pkg}:esp32h2${opt}"
             ;;
         esp32p4)
             [ -n "${options_override:-$esp32p4_opts}" ] && opt=":${options_override:-$esp32p4_opts}"
-            echo "${pkg}:esp32p4${opt}"
+            result="${pkg}:esp32p4${opt}"
             ;;
         esp32c5)
             [ -n "${options_override:-$esp32c5_opts}" ] && opt=":${options_override:-$esp32c5_opts}"
-            echo "${pkg}:esp32c5${opt}"
+            result="${pkg}:esp32c5${opt}"
             ;;
         *)
             echo "ERROR: Invalid chip: $target" >&2
             return 1
             ;;
     esac
+    apply_cdc_on_boot_opt "$result"
 }
 
 # Read the fqbn_append options a ci.yml requests for one target. The field is
@@ -373,6 +400,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         mkdir -p "$build_dir"
 
         currfqbn=$(echo "$fqbn" | jq -r --argjson i "$i" '.[$i]')
+        currfqbn=$(apply_cdc_on_boot_opt "$currfqbn")
 
         if [ "${use_arduino_cli:-0}" -eq 1 ] && [ -f "$ide_path/arduino-cli" ]; then
             echo "Building $sketchname with arduino-cli and FQBN=$currfqbn"
