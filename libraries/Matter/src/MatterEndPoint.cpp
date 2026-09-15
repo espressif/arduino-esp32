@@ -25,35 +25,13 @@ using namespace chip::app::Clusters;
 
 uint16_t MatterEndPoint::secondary_network_endpoint_id = 0;
 
-// This function is called to create a secondary network interface endpoint.
-// It can be used for devices that support multiple network interfaces,
-// such as Ethernet, Thread and Wi-Fi.
 bool MatterEndPoint::createSecondaryNetworkInterface() {
-  if (secondary_network_endpoint_id != 0) {
-    log_v("Secondary network interface endpoint already exists with ID %u", secondary_network_endpoint_id);
-    return false;
-  }
-
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-  // Create a secondary network interface endpoint
-  endpoint::secondary_network_interface::config_t secondary_network_interface_config;
-  secondary_network_interface_config.network_commissioning.feature_map = chip::to_underlying(
-    //chip::app::Clusters::NetworkCommissioning::Feature::kWiFiNetworkInterface) |
-    chip::app::Clusters::NetworkCommissioning::Feature::kThreadNetworkInterface
+  log_w(
+    "createSecondaryNetworkInterface() is deprecated and does nothing. "
+    "Arduino Matter exposes Wi-Fi or Thread Network Commissioning on endpoint 0 "
+    "(ESP32-C6: Matter.selectNetwork()), not both."
   );
-  endpoint_t *endpoint = endpoint::secondary_network_interface::create(node::get(), &secondary_network_interface_config, ENDPOINT_FLAG_NONE, nullptr);
-  if (endpoint == nullptr) {
-    log_e("Failed to create secondary network interface endpoint");
-    return false;
-  }
-  secondary_network_endpoint_id = endpoint::get_id(endpoint);
-  log_i("Secondary Network Interface created with endpoint_id %u", secondary_network_endpoint_id);
-#else
-  log_i("Secondary Network Interface not supported");
   return false;
-#endif
-
-  return true;
 }
 
 uint16_t MatterEndPoint::getSecondaryNetworkEndPointId() {
@@ -154,9 +132,15 @@ bool MatterEndPoint::setBooleanStateValue(bool value) {
 }
 
 // This callback is invoked when clients interact with the Identify Cluster of an specific endpoint.
-bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEnabled) {
+bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, const MatterIdentifyRequest &request) {
+  if (getEndPointId() != endpoint_id) {
+    log_w("Identify callback endpoint %u does not match this MatterEndPoint (%u)", endpoint_id, getEndPointId());
+    return false;
+  }
+  identifyRequest = request;
+  identifyRequest.valid = true;
   if (_onEndPointIdentifyCB) {
-    return _onEndPointIdentifyCB(identifyIsEnabled);
+    return _onEndPointIdentifyCB(identifyRequest.active);
   }
   return true;
 }
@@ -164,6 +148,10 @@ bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEna
 // User callback for the Identify Cluster functionality
 void MatterEndPoint::onIdentify(EndPointIdentifyCB onEndPointIdentifyCB) {
   _onEndPointIdentifyCB = onEndPointIdentifyCB;
+}
+
+MatterIdentifyRequest MatterEndPoint::getIdentifyRequest() const {
+  return identifyRequest;
 }
 
 // Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.

@@ -25,6 +25,11 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
                 [[ -z "$requirement" ]] && continue
                 found_line=$(grep -E "^$requirement" "$sdkconfig_path")
                 if [[ "$found_line" == "" ]]; then
+                    # C5 publishes one Wi-Fi sdkconfig. Matter-over-Thread is
+                    # Tools → Matter Network → Thread (overlay + .thread.a).
+                    if [[ "$requirement" == "CONFIG_ENABLE_MATTER_OVER_THREAD=y" && "$sdkconfig_path" == *"/esp32c5/"* ]]; then
+                        continue
+                    fi
                     has_requirements=0
                 fi
             done <<< "$requirements"

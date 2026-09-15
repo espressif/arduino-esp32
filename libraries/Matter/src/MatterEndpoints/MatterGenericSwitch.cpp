@@ -220,8 +220,9 @@ void MatterGenericSwitch::multiPressComplete(uint8_t count) {
     return;
   }
 
-  if (count > multiPressMax) {
-    count = 0;
+  if (count == 0 || count > multiPressMax) {
+    log_e("MultiPressComplete count %u is out of range (1–%u).", count, multiPressMax);
+    return;
   }
 
   int switch_endpoint_id = getEndPointId();
@@ -232,10 +233,27 @@ void MatterGenericSwitch::multiPressComplete(uint8_t count) {
 }
 
 void MatterGenericSwitch::click() {
-  press();
-  if (hasFeature(FEATURE_RELEASE)) {
-    release();
+  if (!started) {
+    log_e("Matter Generic Switch device has not begun.");
+    return;
   }
+  if (!hasFeature(FEATURE_MOMENTARY)) {
+    log_w("InitialPress not enabled in feature flags.");
+    return;
+  }
+
+  // One lambda keeps InitialPress before ShortRelease. Two ScheduleLambda
+  // calls can run ShortRelease first.
+  const bool sendRelease = hasFeature(FEATURE_RELEASE);
+  int switch_endpoint_id = getEndPointId();
+  chip::DeviceLayer::SystemLayer().ScheduleLambda([switch_endpoint_id, sendRelease]() {
+    setCurrentPosition(static_cast<uint16_t>(switch_endpoint_id), pressPosition);
+    switch_cluster::event::send_initial_press(switch_endpoint_id, pressPosition);
+    if (sendRelease) {
+      setCurrentPosition(static_cast<uint16_t>(switch_endpoint_id), idlePosition);
+      switch_cluster::event::send_short_release(switch_endpoint_id, pressPosition);
+    }
+  });
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

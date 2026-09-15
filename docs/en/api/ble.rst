@@ -12,6 +12,16 @@ The BLE library wraps the ESP-IDF host stack with an Arduino-style API.
 If you use the ``BLE`` library (for example ``BLEDevice::init()``), the core keeps the
 Bluetooth memory regions reserved automatically.
 
+.. warning::
+
+   Do **not** use this library in a Matter sketch. When CHIPoBLE is compiled in,
+   Matter owns the BLE host (NimBLE if that stack is selected). ``BLEDevice::init()``
+   will fail or crash after ``Matter.begin()``, including when
+   ``Matter.setBLECommissioningEnabled(false)`` releases BLE RAM, and after
+   CHIPoBLE commissioning when ``Matter.setBLEMemoryReleaseEnabled(true)`` (the default).
+   Use ``Matter.onBLEMemoryReleased()`` to run code after that RAM is back on the heap.
+   See :doc:`../matter/matter`.
+
 Using ESP-IDF BLE APIs directly
 ---------------------------------
 

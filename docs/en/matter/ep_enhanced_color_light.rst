@@ -14,7 +14,7 @@ The ``MatterEnhancedColorLight`` class provides an Extended Color Light (0x010D)
 * Color temperature control (100-500 mireds; higher mireds are warmer)
 * State persistence support
 * Callback support for all parameter changes
-* Integration with Home Assistant, Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -202,7 +202,7 @@ Sets the color temperature.
 
     bool setColorTemperature(uint16_t newTemperature);
 
-* ``newTemperature`` - Color temperature in mireds (100-500). Higher mireds are warmer white; lower mireds are cooler white.
+* ``newTemperature`` - Color temperature in mireds. Values outside 100-500 are clamped. ``ColorTempPhysicalMin/MaxMireds`` are advertised as 100/500. Higher mireds are warmer white; lower mireds are cooler white.
 
 getColorTemperature
 ^^^^^^^^^^^^^^^^^^^
@@ -303,5 +303,5 @@ Example
 Enhanced Color Light
 ********************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterEnhancedColorLight/MatterEnhancedColorLight.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Lighting/MatterEnhancedColorLight/MatterEnhancedColorLight.ino
     :language: arduino
