@@ -1384,7 +1384,14 @@ int I2SClass::peek() {
 
 int I2SClass::read() {
   int out = 0;
-  if (readBytes((char *)&out, rx_data_bit_width / 8) == (rx_data_bit_width / 8)) {
+  size_t read_size = rx_data_bit_width / 8;
+  if (rx_slot_mode == I2S_SLOT_MODE_STEREO) {
+    read_size *= 2;
+  }
+  if (read_size > sizeof(out)) {
+    return -1;
+  }
+  if (readBytes((char *)&out, read_size) == read_size) {
     return out;
   }
   return -1;
