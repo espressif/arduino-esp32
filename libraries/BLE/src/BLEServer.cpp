@@ -993,12 +993,44 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         return BLE_ATT_ERR_INVALID_HANDLE;
       }
 
+      if (event->enc_change.status == 0) {
+        log_i(
+          "Encryption enabled: handle=%u, encrypted=%d, authenticated=%d, bonded=%d", event->enc_change.conn_handle, desc.sec_state.encrypted,
+          desc.sec_state.authenticated, desc.sec_state.bonded
+        );
+      } else if (event->enc_change.status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
+        // The peer no longer has the key we bonded with; drop the stale bond so the next attempt can pair again.
+        log_w("Peer is missing the bonding key. Deleting the stale bond.");
+        ble_store_util_delete_peer(&desc.peer_id_addr);
+      } else {
+        log_e(
+          "Encryption failed: handle=%u, rc=%d (0x%04x), %s", event->enc_change.conn_handle, event->enc_change.status, event->enc_change.status,
+          BLEUtils::returnCodeToString(event->enc_change.status)
+        );
+      }
+
       if (BLEDevice::m_securityCallbacks != nullptr) {
-        BLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
+        BLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc, event->enc_change.status);
       }
 
       return 0;
     }  // BLE_GAP_EVENT_ENC_CHANGE
+
+    case BLE_GAP_EVENT_PARING_COMPLETE:  // Name is misspelled in NimBLE
+    {
+      // Reported before the keys are persisted, and carries the SMP reason code that
+      // BLE_GAP_EVENT_ENC_CHANGE does not.
+      if (event->pairing_complete.status == 0) {
+        log_i("Pairing complete: handle=%u", event->pairing_complete.conn_handle);
+      } else {
+        log_e(
+          "Pairing failed: handle=%u, SMP reason=%u, %s", event->pairing_complete.conn_handle, event->pairing_complete.status,
+          BLEUtils::smErrorToString(event->pairing_complete.status)
+        );
+      }
+
+      return 0;
+    }  // BLE_GAP_EVENT_PARING_COMPLETE
 
     case BLE_GAP_EVENT_PASSKEY_ACTION:
     {
