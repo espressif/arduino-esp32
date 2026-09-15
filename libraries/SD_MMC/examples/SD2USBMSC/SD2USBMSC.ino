@@ -3,7 +3,7 @@
 #warning Device does not support USB_OTG or native USB CDC/JTAG is selected
 void setup() {}
 void loop() {}
-#endif
+#else
 
 #include <USB.h>
 #include <USBMSC.h>
@@ -106,3 +106,4 @@ void setup() {
 void loop() {
   delay(-1);
 }
+#endif
