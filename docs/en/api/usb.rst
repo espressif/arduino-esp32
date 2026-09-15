@@ -23,6 +23,31 @@ The USB host mode, you can connect devices on the ESP32, like external modems, m
 
 .. note:: This mode is still under development for the ESP32.
 
+Two host stacks are available and only one of them can own the USB peripheral at a time:
+
+* **TinyUSB**, used by the ``USBHost`` class and the ``USBHost*`` examples. This is what the Arduino USB host API is built on.
+* the **ESP-IDF USB Host Library** (``usb/usb_host.h``), used directly from a sketch. Pick this one when a class driver exists for ESP-IDF but not for TinyUSB. See the ``USBHostIDF`` example.
+
+.. warning::
+   Since ``arduino-esp32`` 3.3.11 the prebuilt libraries are built with ``CONFIG_USB_HOST_ENABLE_ENUM_FILTER_CALLBACK`` enabled, so a sketch calling ``usb_host_install()`` **must** set ``usb_host_config_t::enum_filter_cb``.
+   ESP-IDF treats a ``NULL`` callback as "do not enumerate this device" and cancels enumeration for every device, without logging an error.
+   The "Set to NULL otherwise" note in the ESP-IDF header only applies when that option is disabled, which was the case up to 3.3.10.
+
+   An allow-all callback is enough when no filtering is needed:
+
+   .. code-block:: arduino
+
+       static bool enumFilter(const usb_device_desc_t *dev_desc, uint8_t *bConfigurationValue) {
+         *bConfigurationValue = 1;
+         return true;
+       }
+
+       host_config.enum_filter_cb = enumFilter;
+
+   The callback is also the only way to enumerate a configuration other than the first one, which some devices require. It must not block and must not submit transfers.
+
+.. note:: The ESP-IDF USB Host Library is not part of the ESP32-S2 prebuilt libraries. On that target only the TinyUSB host is available.
+
 API Description
 ---------------
 
