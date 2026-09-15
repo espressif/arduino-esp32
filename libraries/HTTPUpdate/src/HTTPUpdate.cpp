@@ -204,8 +204,8 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   uint8_t sidecarFailures = 0;
   if (_checksumSidecarFetch) {
     uint8_t requested = (!_md5SumUrl.isEmpty() && _md5Sum.isEmpty() ? SIDECAR_MD5_FAILED : 0)
-                      | (!_sha256SumUrl.isEmpty() && _sha256Sum.isEmpty() ? SIDECAR_SHA256_FAILED : 0)
-                      | (!_sha512SumUrl.isEmpty() && _sha512Sum.isEmpty() ? SIDECAR_SHA512_FAILED : 0);
+                        | (!_sha256SumUrl.isEmpty() && _sha256Sum.isEmpty() ? SIDECAR_SHA256_FAILED : 0)
+                        | (!_sha512SumUrl.isEmpty() && _sha512Sum.isEmpty() ? SIDECAR_SHA512_FAILED : 0);
     sidecarFailures = _checksumSidecarFetch(
       http.getClient(), _md5SumUrl, _sha256SumUrl, _sha512SumUrl, requested, md5, sha256, sha512, _httpClientTimeout, _followRedirects, http.getRedirectLimit()
     );

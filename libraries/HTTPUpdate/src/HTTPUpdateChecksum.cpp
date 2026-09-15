@@ -217,20 +217,17 @@ static bool httpUpdateParseChunkedBody(NetworkClient &stream, HTTPUpdateChecksum
 
 void HTTPUpdate::setMD5sumUrl(const String &url) {
   _md5SumUrl = url;
-  _checksumSidecarFetch =
-    (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty() || !_sha512SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
+  _checksumSidecarFetch = (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty() || !_sha512SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
 }
 
 void HTTPUpdate::setSHA256sumUrl(const String &url) {
   _sha256SumUrl = url;
-  _checksumSidecarFetch =
-    (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty() || !_sha512SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
+  _checksumSidecarFetch = (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty() || !_sha512SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
 }
 
 void HTTPUpdate::setSHA512sumUrl(const String &url) {
   _sha512SumUrl = url;
-  _checksumSidecarFetch =
-    (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty() || !_sha512SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
+  _checksumSidecarFetch = (!_md5SumUrl.isEmpty() || !_sha256SumUrl.isEmpty() || !_sha512SumUrl.isEmpty()) ? httpUpdateFetchChecksumSidecars : nullptr;
 }
 
 static bool httpUpdateFetchChecksumSidecar(

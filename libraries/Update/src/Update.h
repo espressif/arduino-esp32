@@ -439,7 +439,7 @@ private:
 #ifndef UPDATE_NOCRYPT
   bool _target_sha256_decrypted = true;
   bool _target_sha512_decrypted = true;
-#endif /* UPDATE_NOCRYPT */
+#endif                         /* UPDATE_NOCRYPT */
   void *_sha256_ctx;           ///< Opaque streaming SHA-256 context and expected digest (allocated on demand)
   uint8_t _sha256_result[32];  ///< Final digest kept after context is freed
   bool _sha256_valid;          ///< True after all update verification and activation steps succeed
