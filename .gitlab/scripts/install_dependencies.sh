@@ -30,4 +30,15 @@ wget -q https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BIN
 chmod +x /usr/bin/yq
 yq --version
 
+# Install Node.js and matter-server only when the matter test is scheduled.
+# TEST_LIST is a newline-separated list of sketch paths set by the dynamic pipeline generator.
+if echo "${TEST_LIST:-}" | grep -q "matter"; then
+    echo "[deps] Installing Node.js 24.x (required for matter-server)"
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+    apt-get install -y nodejs
+    echo "[deps] Installing matter-server npm package"
+    npm install -g matter-server
+    matter-server -h
+fi
+
 echo "[deps] Dependencies installed successfully"
