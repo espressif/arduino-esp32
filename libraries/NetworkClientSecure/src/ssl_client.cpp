@@ -68,7 +68,7 @@ void attach_ssl_certificate_bundle(sslclient_context *ssl_client, bool att) {
 
 int start_ssl_client(
   sslclient_context *ssl_client, const IPAddress &ip, uint32_t port, const char *hostname, int timeout, const char *rootCABuff, bool useRootCABundle,
-  const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos
+  const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos, const int *ciphersuites
 ) {
   int ret;
   int enable = 1;
@@ -195,6 +195,10 @@ int start_ssl_client(
     if ((ret = mbedtls_ssl_conf_alpn_protocols(&ssl_client->ssl_conf, alpn_protos)) != 0) {
       return handle_error(ret);
     }
+  }
+  
+  if (ciphersuites != NULL) {
+    mbedtls_ssl_conf_ciphersuites(&ssl_client->ssl_conf, ciphersuites);
   }
 
   // MBEDTLS_SSL_VERIFY_REQUIRED if a CA certificate is defined on Arduino IDE and
