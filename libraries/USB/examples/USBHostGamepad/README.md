@@ -8,7 +8,7 @@ Boot-protocol **mice** use `HID_ITF_PROTOCOL_MOUSE`. Many USB devices (gamepads,
 
 ## Usage
 
-1. Board with USB OTG in host mode (e.g. ESP32-S3 USB OTG).
+1. Board with USB OTG in host mode (e.g. ESP32-S3-USB-OTG). See the [USBHostMouse checklist](../USBHostMouse/README.md) for the **USB Mode** / **USB CDC On Boot** combination to avoid.
 2. **`USBHostGamepad.registerWithHost()` must run in `setup()` before `USBHost.begin()`.**  
    If the pad is already powered when `begin()` runs, HID mount can finish before `loop()` — then a handler registered only from `available()` never runs `claim()`, and you get no reports until **unplug/replug**.
 3. Plug the gamepad **after** boot (or replug once).
