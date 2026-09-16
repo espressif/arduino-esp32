@@ -129,7 +129,7 @@ enum matterEvent_t {
   // BLE Deinitialized: Signals that BLE stack is deinitialized and memory reclaimed
   MATTER_BLE_DEINITIALIZED = (uint16_t)chip::DeviceLayer::DeviceEventType::kBLEDeinitialized,
 
-  // Secure Session Established: Signals that a secure session (PASE or CASE) is established.
+  // Secure Session Established: Signals that a secure session (PASE or CASE) is established.  // codespell:ignore
   MATTER_SECURE_SESSION_ESTABLISHED = (uint16_t)chip::DeviceLayer::DeviceEventType::kSecureSessionEstablished,
 
   // Factory Reset: Signals that factory reset has started.

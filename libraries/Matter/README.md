@@ -208,7 +208,7 @@ Commissioning examples turn CHIPoBLE off with `selectNetwork(MATTER_NETWORK_WIFI
 
 ## Network selection
 
-Call `Matter.selectNetwork()` **before any accessory `begin()`**. No call (`MATTER_NETWORK_NONE`) keeps today's behaviour.
+Call `Matter.selectNetwork()` **before any accessory `begin()`**. No call (`MATTER_NETWORK_NONE`) keeps today's behavior.
 
 | Network | `isNetworkSupported` | CHIPoBLE default | Notes |
 | --- | --- | --- | --- |
