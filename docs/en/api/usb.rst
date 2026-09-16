@@ -21,11 +21,9 @@ USB as Host
 
 The USB host mode, you can connect devices on the ESP32, like external modems, mouse and keyboards.
 
-.. note:: This mode is still under development for the ESP32.
-
 Two host stacks are available and only one of them can own the USB peripheral at a time:
 
-* **TinyUSB**, used by the ``USBHost`` class and the ``USBHost*`` examples. This is what the Arduino USB host API is built on.
+* **TinyUSB**, used by the ``USBHost`` class and the ``USBHost*`` examples. This is what the Arduino USB host API is built on, and it is documented in :doc:`usb_host`.
 * the **ESP-IDF USB Host Library** (``usb/usb_host.h``), used directly from a sketch. Pick this one when a class driver exists for ESP-IDF but not for TinyUSB. See the ``USBHostIDF`` example.
 
 .. warning::
@@ -61,6 +59,7 @@ For more supported USB classes implementation, see the following sections:
 
    USB CDC <usb_cdc>
    USB MSC <usb_msc>
+   USB Host <usb_host>
 
 USB Common
 **********
