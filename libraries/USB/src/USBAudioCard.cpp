@@ -201,11 +201,6 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
   _itf_num = *itf;
 #if TUD_OPT_HIGH_SPEED
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB UAC2");
-#ifdef UAC_USE_MULTIPLE_RATES
-  uint32_t max_sample_rate = _max_sample_rate;
-#else
-  uint32_t max_sample_rate = CFG_TUD_AUDIO_MAX_SAMPLE_RATE;
-#endif
   if (_spk_channels == 2 && _mic_channels > 0) {
     // Stereo Headset
     uint8_t ep_num = tinyusb_get_free_duplex_endpoint();
@@ -215,7 +210,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_HEADSET_STEREO_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_HEADSET_STEREO_DESCRIPTOR(
-        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), max_sample_rate, _spk_channels, _mic_channels,
+        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _spk_channels, _mic_channels,
         _bytes_per_sample, _bits_per_sample
       )
     };
@@ -231,7 +226,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_HEADSET_MONO_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_HEADSET_MONO_DESCRIPTOR(
-        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), max_sample_rate, _spk_channels, _mic_channels,
+        _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _spk_channels, _mic_channels,
         _bytes_per_sample, _bits_per_sample
       )
     };
@@ -247,7 +242,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_SPEAKER_STEREO_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_SPEAKER_STEREO_DESCRIPTOR(
-        _itf_num, str_index, ep_num, (uint8_t)(int_ep_num | 0x80), max_sample_rate, _spk_channels, _bytes_per_sample, _bits_per_sample
+        _itf_num, str_index, ep_num, (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _spk_channels, _bytes_per_sample, _bits_per_sample
       )
     };
     *itf += 2;
@@ -262,7 +257,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_SPEAKER_MONO_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_SPEAKER_MONO_DESCRIPTOR(
-        _itf_num, str_index, ep_num, (uint8_t)(int_ep_num | 0x80), max_sample_rate, _spk_channels, _bytes_per_sample, _bits_per_sample
+        _itf_num, str_index, ep_num, (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _spk_channels, _bytes_per_sample, _bits_per_sample
       )
     };
     *itf += 2;
@@ -277,7 +272,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     uint8_t descriptor[TUD_AUDIO20_MICROPHONE_DESC_LEN] = {
       // Interface number, string index, EP Out & EP In & EP Interrupt address, max sample rate, speaker channels, mic channels, bytes per sample RX/TX, bits used per sample RX/TX
       TUD_AUDIO20_MICROPHONE_DESCRIPTOR(
-        _itf_num, str_index, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), max_sample_rate, _mic_channels, _bytes_per_sample,
+        _itf_num, str_index, (uint8_t)(ep_num | 0x80), (uint8_t)(int_ep_num | 0x80), CFG_TUD_AUDIO_MAX_SAMPLE_RATE, _mic_channels, _bytes_per_sample,
         _bits_per_sample
       )
     };
