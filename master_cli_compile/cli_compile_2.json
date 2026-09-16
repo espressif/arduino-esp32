@@ -4,10 +4,10 @@
                 "sketches": [
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                 "sizes": [{
-                        "flash_bytes": 940116,
+                        "flash_bytes": 940880,
                         "flash_percentage": 72,
-                        "ram_bytes": 47216,
-                        "ram_percentage": 14
+                        "ram_bytes": 47536,
+                        "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/EEPROM/examples/eeprom_class",
@@ -124,17 +124,17 @@
                 },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                 "sizes": [{
-                        "flash_bytes": 1047145,
+                        "flash_bytes": 1047901,
                         "flash_percentage": 6,
-                        "ram_bytes": 69456,
+                        "ram_bytes": 69776,
                         "ram_percentage": 21
                         }]
                 },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                 "sizes": [{
-                        "flash_bytes": 1059773,
+                        "flash_bytes": 1060529,
                         "flash_percentage": 6,
-                        "ram_bytes": 69528,
+                        "ram_bytes": 69848,
                         "ram_percentage": 21
                         }]
                 },
@@ -167,22 +167,6 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
-{"name": "libraries/EEPROM/examples/eeprom_write",
-                "sizes": [{
-                        "flash_bytes": 287982,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13232,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/AnalogOut/LEDCFade",
-                "sizes": [{
-                        "flash_bytes": 290708,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13336,
-                        "ram_percentage": 4
-                        }]
-                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
                 "sizes": [{
                         "flash_bytes": 270686,
@@ -300,6 +284,30 @@
                         "flash_bytes": 278238,
                         "flash_percentage": 21,
                         "ram_bytes": 13208,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/FreeRTOS/Semaphore",
+                "sizes": [{
+                        "flash_bytes": 277490,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13208,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/GPIO/BlinkRGB",
+                "sizes": [{
+                        "flash_bytes": 284268,
+                        "flash_percentage": 22,
+                        "ram_bytes": 14292,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/GPIO/FunctionalInterrupt",
+                "sizes": [{
+                        "flash_bytes": 284160,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13808,
                         "ram_percentage": 4
                         }]
                 }
@@ -797,9 +805,9 @@
                 "sketches": [
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                 "sizes": [{
-                        "flash_bytes": 871138,
-                        "flash_percentage": 66,
-                        "ram_bytes": 31848,
+                        "flash_bytes": 871790,
+                        "flash_percentage": 67,
+                        "ram_bytes": 32104,
                         "ram_percentage": 10
                         }]
                 },
@@ -1119,25 +1127,25 @@
                 },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                 "sizes": [{
-                        "flash_bytes": 1004315,
+                        "flash_bytes": 1005179,
                         "flash_percentage": 6,
-                        "ram_bytes": 67648,
+                        "ram_bytes": 67968,
                         "ram_percentage": 21
                         }]
                 },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                 "sizes": [{
-                        "flash_bytes": 1007261,
+                        "flash_bytes": 1008125,
                         "flash_percentage": 6,
-                        "ram_bytes": 67736,
+                        "ram_bytes": 68056,
                         "ram_percentage": 21
                         }]
                 },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                 "sizes": [{
-                        "flash_bytes": 1009569,
+                        "flash_bytes": 1010397,
                         "flash_percentage": 6,
-                        "ram_bytes": 68144,
+                        "ram_bytes": 68464,
                         "ram_percentage": 21
                         }]
                 },
