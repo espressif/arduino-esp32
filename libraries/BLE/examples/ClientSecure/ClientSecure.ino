@@ -34,7 +34,7 @@ void setup() {
   }
 
   BLESecurity sec = BLE.getSecurity();
-  sec.setIOCapability(BLESecurity::DisplayYesNo);
+  sec.setIOCapability(BLEIOCapability::DisplayYesNo);
   // bonding = true, MITM protection = true, Secure Connections = true
   sec.setAuthenticationMode(true, true, true);
   sec.onConfirmPassKey([](const BLEConnInfo &conn, uint32_t passkey) -> bool {

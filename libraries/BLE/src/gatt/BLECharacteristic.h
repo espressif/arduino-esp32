@@ -271,7 +271,7 @@ public:
    * @param maxLen Maximum value length in bytes.
    * @return Handle to the newly created descriptor.
    */
-  BLEDescriptor createDescriptor(const BLEUUID &uuid, BLEPermission perms = BLEPermission::Read, size_t maxLen = 100);
+  BLEDescriptor createDescriptor(const BLEUUID &uuid, BLEPermission perms = BLEPermission::ReadOpen, size_t maxLen = 100);
 
   /**
    * @brief Find a descriptor by UUID.

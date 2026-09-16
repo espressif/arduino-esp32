@@ -163,7 +163,7 @@ Getting Started
         BLEServer server = BLE.createServer();
         BLEService svc = server.createService(SVC_UUID);
         BLECharacteristic chr = svc.createCharacteristic(
-            CHR_UUID, BLEProperty::Read, BLEPermissions::OpenRead
+            CHR_UUID, BLEProperty::Read, BLEPermission::ReadOpen
         );
         chr.setValue("Espressif");
         server.start();
@@ -750,9 +750,9 @@ Create a characteristic with the given UUID, properties and permissions.
 
 Permissions are required. The mapping is fail-closed: a read or write
 property is only exposed if the matching permission direction is declared.
-Use a preset from the ``BLEPermissions::`` namespace (for example
-``BLEPermissions::OpenReadWrite`` or ``BLEPermissions::EncryptedRead``) for
-the common cases, or combine raw ``BLEPermission`` bits for custom setups.
+Most characteristics need a single ``BLEPermission`` value such as
+``BLEPermission::ReadWriteOpen`` or ``BLEPermission::ReadWriteEncrypted``;
+combine values with ``|`` when each direction needs its own security level.
 For notify- or indicate-only characteristics pass ``BLEPermission::None``.
 
 getCharacteristic
@@ -967,7 +967,7 @@ createDescriptor
 
 .. code-block:: cpp
 
-    BLEDescriptor createDescriptor(const BLEUUID &uuid, BLEPermission perms = BLEPermission::Read, size_t maxLen = 100);
+    BLEDescriptor createDescriptor(const BLEUUID &uuid, BLEPermission perms = BLEPermission::ReadOpen, size_t maxLen = 100);
 
 Create a descriptor under this characteristic.
 
@@ -2050,19 +2050,6 @@ Construction and Validity
     BLESecurity();                         // default: null handle
     explicit operator bool() const;
 
-IOCapability Enum
-^^^^^^^^^^^^^^^^^
-
-.. code-block:: cpp
-
-    enum IOCapability : uint8_t {
-        DisplayOnly     = 0,
-        DisplayYesNo    = 1,
-        KeyboardOnly    = 2,
-        NoInputNoOutput = 3,
-        KeyboardDisplay = 4,
-    };
-
 IO Capability and Authentication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2071,9 +2058,9 @@ setIOCapability
 
 .. code-block:: cpp
 
-    void setIOCapability(IOCapability cap);
+    void setIOCapability(BLEIOCapability cap);
 
-Set the device's input/output capabilities for pairing.
+Declare what this device can show to and accept from a user during pairing. See :ref:`ble_io_capability`.
 
 setAuthenticationMode
 """""""""""""""""""""
@@ -2393,6 +2380,8 @@ BLEProperty
 
 Characteristic properties -- Bluetooth Core Spec Vol 3, Part G, 3.3.1.1. Combine with bitwise OR.
 
+This is the list of ATT operations a characteristic supports. The flags are independent and none of them implies any other, so declare exactly the ones clients should be able to use.
+
 .. code-block:: cpp
 
     enum class BLEProperty : uint8_t {
@@ -2406,6 +2395,27 @@ Characteristic properties -- Bluetooth Core Spec Vol 3, Part G, 3.3.1.1. Combine
         ExtendedProps = 0x80,
     };
 
+``Write`` and ``WriteNR`` are two different ATT operations rather than two spellings of one:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 30 26 26
+
+   * - Property
+     - ATT operation
+     - Acknowledged
+     - Client API
+   * - ``Write``
+     - Write Request
+     - Yes, the client learns if it failed
+     - ``writeValue(data, len, true)``
+   * - ``WriteNR``
+     - Write Command
+     - No, fire and forget
+     - ``writeValue(data, len, false)``
+
+Declaring one does not enable the other. Declaring both is normal when you want the client to choose per write, which is what the Nordic UART RX characteristic and HID output reports do. A client can check each independently with ``canWrite()`` and ``canWriteNoResponse()``.
+
 Example:
 
 .. code-block:: cpp
@@ -2415,55 +2425,93 @@ Example:
 BLEPermission
 *************
 
-Attribute access permissions -- Bluetooth Core Spec Vol 3, Part F, 3.2.5. Combine with bitwise OR.
+Attribute access permissions -- Bluetooth Core Spec Vol 3, Part F, 3.2.5.
+
+Every name is a direction (``Read``, ``Write`` or ``ReadWrite``) followed by a security level, always in that order, so each permission has exactly one spelling.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 23 23 24
+
+   * - Security level
+     - Read only
+     - Write only
+     - Both directions
+   * - Open, no pairing
+     - ``ReadOpen``
+     - ``WriteOpen``
+     - ``ReadWriteOpen``
+   * - Encrypted link
+     - ``ReadEncrypted``
+     - ``WriteEncrypted``
+     - ``ReadWriteEncrypted``
+   * - MITM-authenticated pairing
+     - ``ReadAuthenticated``
+     - ``WriteAuthenticated``
+     - ``ReadWriteAuthenticated``
+   * - Authorization callback
+     - ``ReadAuthorized``
+     - ``WriteAuthorized``
+     - ``ReadWriteAuthorized``
+
+``BLEPermission::None`` means no access at all, which is what notify-only and indicate-only characteristics use.
 
 .. code-block:: cpp
 
     enum class BLEPermission : uint16_t {
-        Read              = 0x0001,
-        ReadEncrypted     = 0x0002,
-        ReadAuthenticated = 0x0004,
-        ReadAuthorized    = 0x0008,
-        Write             = 0x0010,
-        WriteEncrypted    = 0x0020,
-        WriteAuthenticated= 0x0040,
-        WriteAuthorized   = 0x0080,
+        None                   = 0x0000,
+
+        ReadOpen               = 0x0001,
+        ReadEncrypted          = 0x0002,
+        ReadAuthenticated      = 0x0004 | ReadEncrypted,
+        ReadAuthorized         = 0x0008,
+
+        WriteOpen              = 0x0010,
+        WriteEncrypted         = 0x0020,
+        WriteAuthenticated     = 0x0040 | WriteEncrypted,
+        WriteAuthorized        = 0x0080,
+
+        ReadWriteOpen          = ReadOpen | WriteOpen,
+        ReadWriteEncrypted     = ReadEncrypted | WriteEncrypted,
+        ReadWriteAuthenticated = ReadAuthenticated | WriteAuthenticated,
+        ReadWriteAuthorized    = ReadAuthorized | WriteAuthorized,
     };
 
-Example:
+The ``Authenticated`` values carry the encryption requirement with them, matching the ATT security hierarchy, so there is no way to ask for MITM protection and accidentally leave the link unencrypted.
+
+The security level is always spelled out, ``Open`` included. Granting unprotected access is therefore something you name explicitly rather than something you get by reaching for the shortest value in the enum.
+
+Combine values with bitwise OR when the two directions need different levels:
 
 .. code-block:: cpp
 
-    BLEPermission perms = BLEPermission::ReadEncrypted | BLEPermission::WriteAuthenticated;
+    // Anyone may read the value, only a paired peer may change it
+    BLEPermission perms = BLEPermission::ReadOpen | BLEPermission::WriteEncrypted;
 
-BLEPermissions Presets
-^^^^^^^^^^^^^^^^^^^^^^
+.. _ble_io_capability:
 
-Convenience constants in the ``BLEPermissions::`` namespace for common security configurations:
+BLEIOCapability
+***************
+
+Pairing input/output capability -- Bluetooth Core Spec Vol 3, Part H, 2.3.2. Describes what the device can show to a user and what it can accept from one, which is what the Security Manager uses to pick a pairing method.
 
 .. code-block:: cpp
 
-    // Open — no security requirement
-    BLEPermissions::OpenRead
-    BLEPermissions::OpenWrite
-    BLEPermissions::OpenReadWrite
+    enum class BLEIOCapability : uint8_t {
+        DisplayOnly     = 0,  // Can show a passkey, cannot take input
+        DisplayYesNo    = 1,  // Can show a passkey and accept a yes/no confirmation
+        KeyboardOnly    = 2,  // Can take a typed passkey, cannot show one
+        NoInputNoOutput = 3,  // No usable I/O, so pairing falls back to Just Works
+        KeyboardDisplay = 4,  // Both a keypad and a display, every pairing method available
+    };
 
-    // Encrypted — pairing required, no MITM
-    BLEPermissions::EncryptedRead
-    BLEPermissions::EncryptedWrite
-    BLEPermissions::EncryptedReadWrite
+This describes the hardware only. How strict the pairing has to be is a separate setting, ``setAuthenticationMode()``. A board with a display and buttons may still choose Just Works, but a board reporting ``NoInputNoOutput`` can never do better than Just Works no matter what else it asks for.
 
-    // Authenticated — MITM-protected pairing (implies encryption)
-    BLEPermissions::AuthenticatedRead
-    BLEPermissions::AuthenticatedWrite
-    BLEPermissions::AuthenticatedReadWrite
+.. code-block:: cpp
 
-    // Authorized — application-level authorization callback
-    BLEPermissions::AuthorizedRead
-    BLEPermissions::AuthorizedWrite
-    BLEPermissions::AuthorizedReadWrite
-
-Use these with ``createCharacteristic()`` for readable, self-documenting permission declarations.
+    BLESecurity sec = BLE.getSecurity();
+    sec.setIOCapability(BLEIOCapability::DisplayOnly);
+    sec.setAuthenticationMode(true, true, true);  // bonding, MITM, LE Secure Connections
 
 BLEConnInfo
 ***********

@@ -45,7 +45,7 @@ void setup() {
   });
 
   BLEService svc = server.createService(SVC_UUID);
-  localChr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::Notify, BLEPermissions::OpenReadWrite);
+  localChr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::Notify, BLEPermission::ReadWriteOpen);
   localChr.setValue("Hello from dual-role device");
   server.start();
 

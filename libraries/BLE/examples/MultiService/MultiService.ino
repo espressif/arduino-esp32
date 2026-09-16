@@ -114,7 +114,7 @@ void setup() {
 
   // Temperature: clients can read the current value or subscribe to notifications
   Serial.print("  Creating Temperature characteristic... ");
-  tempChr = envSvc.createCharacteristic(TEMP_CHR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
+  tempChr = envSvc.createCharacteristic(TEMP_CHR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
   if (!tempChr) {
     Serial.println("FAILED!");
     while (true) {
@@ -127,7 +127,7 @@ void setup() {
 
   // Humidity: same properties as temperature
   Serial.print("  Creating Humidity characteristic... ");
-  humChr = envSvc.createCharacteristic(HUM_CHR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
+  humChr = envSvc.createCharacteristic(HUM_CHR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
   if (!humChr) {
     Serial.println("FAILED!");
     while (true) {
@@ -154,7 +154,7 @@ void setup() {
 
   // Firmware Version: read-only, never changes at runtime
   Serial.print("  Creating Firmware Version characteristic... ");
-  BLECharacteristic fwChr = devSvc.createCharacteristic(FW_CHR_UUID, BLEProperty::Read, BLEPermissions::OpenRead);
+  BLECharacteristic fwChr = devSvc.createCharacteristic(FW_CHR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
   if (!fwChr) {
     Serial.println("FAILED!");
     while (true) {
@@ -167,7 +167,7 @@ void setup() {
 
   // Device Name: read + write so clients can rename the device at runtime
   Serial.print("  Creating Device Name characteristic... ");
-  BLECharacteristic nameChr = devSvc.createCharacteristic(NAME_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
+  BLECharacteristic nameChr = devSvc.createCharacteristic(NAME_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermission::ReadWriteOpen);
   if (!nameChr) {
     Serial.println("FAILED!");
     while (true) {

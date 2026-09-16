@@ -318,7 +318,7 @@ def _phase_introspection_and_permissions(server, client):
       * getRSSI() returns a value (connected link).
       * can*() introspection reflects the peer's declared properties on each
         known characteristic (including post-fail-closed masking).
-      * A characteristic declared as Read|Write with only OpenRead permission
+      * A characteristic declared as Read|Write with only Read permission
         is advertised without the Write property and rejects writes at ATT.
       * The CCCD (0x2902) is present on a Notify characteristic, on both
         NimBLE (auto-created by the host) and Bluedroid (explicit).

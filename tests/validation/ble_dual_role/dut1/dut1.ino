@@ -57,7 +57,7 @@ void setup() {
   });
 
   BLEService svc = server.createService(SVC_UUID);
-  BLECharacteristic chr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read, BLEPermissions::OpenRead);
+  BLECharacteristic chr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
   chr.setValue("DUT1 data");
   server.start();
   Serial.println("[DUT1] Server started");

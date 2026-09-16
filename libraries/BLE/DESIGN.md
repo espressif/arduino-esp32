@@ -308,6 +308,51 @@ The library treats these as separate concepts:
 This separation is fundamental and must be preserved.
 Do not reintroduce stack-specific property/permission conflation into public APIs.
 
+`BLEProperty` is a flat list of supported ATT operations, not a hierarchy. No
+flag implies another. In particular `Write` (Write Request) and `WriteNR`
+(Write Command) are distinct operations and offering both is conventional, not
+suspicious: the Nordic UART RX characteristic and HID output reports created by
+this library both set both. Do not add a validator diagnostic for that
+combination; an earlier revision did, and it fired against the library's own
+services on every startup.
+
+#### Naming rule for `BLEPermission`
+
+There is exactly one permission type. An earlier revision had a `BLEPermission`
+bitmask enum plus a `BLEPermissions::` namespace of preset constants, which put
+`BLEPermission::ReadEncrypted` and `BLEPermissions::EncryptedRead` in the same
+API with different values. Do not bring that back.
+
+Every value is named `<direction><level>`, where direction is `Read`, `Write` or
+`ReadWrite` and level is `Open`, `Encrypted`, `Authenticated` or `Authorized`.
+Direction always comes first. When adding a value, follow the existing order
+rather than inventing a synonym: a name that differs from an existing one only
+by word order is a bug.
+
+The level is always present, including `Open`, so the enum is a complete 3x4
+grid with no special cases. Do not add a bare `Read` or `Write` shorthand for
+the open level. Keeping it spelled out means the unprotected option is never
+the shortest or most guessable name in a security enum, and it stops
+`BLEPermission::Read` from reading like a restatement of `BLEProperty::Read`
+when both appear in the same `createCharacteristic()` call.
+
+The `Authenticated` values include the `Encrypted` bit, because the ATT security
+hierarchy makes authenticated access imply an encrypted link, and because
+declaring one without the other was the most common mistake with the old preset
+constants. That makes them multi-bit values, so `operator&` on `BLEPermission`
+is a **containment** test (`(a & b) == b`) rather than a plain "any bit set"
+test. A plain bitwise AND would report a merely encrypted permission as
+authenticated. Backend mapping code must go through the typed operator; do not
+cast to `uint16_t` and test bits by hand.
+
+### IO capability is not part of `BLESecurity`
+
+`BLEIOCapability` (`types/BLEIOCapability.h`) is a top-level type, not a member
+of `BLESecurity`. It describes fixed hardware, what the board can show a user
+and what it can accept from them, while `BLESecurity` holds runtime pairing
+policy. `setAuthenticationMode()` is where strictness is decided. Keep device
+description and pairing policy in separate types.
+
 ### GATT validation
 
 `gatt/BLECharacteristicValidation.h` provides spec-compliance checks run in two stages:

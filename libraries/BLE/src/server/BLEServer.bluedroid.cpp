@@ -98,7 +98,7 @@ namespace {
  */
 esp_gatt_perm_t toEspGattPermissions(BLEPermission perm) {
   esp_gatt_perm_t result = 0;
-  if (perm & BLEPermission::Read) {
+  if (perm & BLEPermission::ReadOpen) {
     result |= ESP_GATT_PERM_READ;
   }
   if (perm & BLEPermission::ReadEncrypted) {
@@ -110,7 +110,7 @@ esp_gatt_perm_t toEspGattPermissions(BLEPermission perm) {
   if (perm & BLEPermission::ReadAuthorized) {
     result |= ESP_GATT_PERM_READ;
   }
-  if (perm & BLEPermission::Write) {
+  if (perm & BLEPermission::WriteOpen) {
     result |= ESP_GATT_PERM_WRITE;
   }
   if (perm & BLEPermission::WriteEncrypted) {
@@ -134,9 +134,9 @@ esp_gatt_perm_t toEspGattPermissions(BLEPermission perm) {
  * @return @c esp_gatt_char_prop_t for @c esp_ble_gatts_add_char.
  */
 esp_gatt_char_prop_t toEspGattProperties(BLEProperty props, BLEPermission perms) {
-  const bool anyReadPerm = (perms & BLEPermission::Read) || (perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated)
+  const bool anyReadPerm = (perms & BLEPermission::ReadOpen) || (perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated)
                            || (perms & BLEPermission::ReadAuthorized);
-  const bool anyWritePerm = (perms & BLEPermission::Write) || (perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated)
+  const bool anyWritePerm = (perms & BLEPermission::WriteOpen) || (perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated)
                             || (perms & BLEPermission::WriteAuthorized);
 
   esp_gatt_char_prop_t r = 0;
@@ -292,7 +292,7 @@ BTStatus BLEServer::start() {
           auto cccd = std::make_shared<BLEDescriptor::Impl>();
           cccd->uuid = BLEUUID(CCCD_UUID16);
           cccd->chr = chr.get();
-          cccd->permissions = BLEPermission::Read | BLEPermission::Write;
+          cccd->permissions = BLEPermission::ReadWriteOpen;
           cccd->value.resize(2, 0);
           chr->descriptors.push_back(cccd);
         }
@@ -513,9 +513,7 @@ BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
     conn->getAddress().toEspBdAddr(bda);
   }
   impl.phySync.take();
-  esp_err_t err = esp_ble_gap_set_preferred_phy(
-    bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF
-  );
+  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
   if (err != ESP_OK) {
     log_e("Server: esp_ble_gap_set_preferred_phy: %s", esp_err_to_name(err));
     impl.phySync.give(BTStatus::Fail);
@@ -647,9 +645,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
     {
       uint16_t connId = param->connect.conn_id;
       log_i("Server: client connected, connId=%u", connId);
-      BLEConnInfo connInfo = BLEConnInfoImpl::make(
-        connId, param->connect.remote_bda, 23, false, static_cast<BTAddress::Type>(param->connect.ble_addr_type)
-      );
+      BLEConnInfo connInfo = BLEConnInfoImpl::make(connId, param->connect.remote_bda, 23, false, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
       {
         BLELockGuard lock(impl->mtx);
         impl->connSet(connId, connInfo);
@@ -1201,9 +1197,7 @@ void BLEServer::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     }
     case ESP_GAP_BLE_SET_PKT_LENGTH_COMPLETE_EVT:
       // Completion has no BDA; only one dataLenSync waiter is in flight at a time.
-      impl->dataLenSync.give(
-        param->pkt_data_length_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail
-      );
+      impl->dataLenSync.give(param->pkt_data_length_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
 #endif /* BLE5_SUPPORTED */
 #if BLE_SMP_SUPPORTED

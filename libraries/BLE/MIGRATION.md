@@ -94,7 +94,7 @@ static const BLEUUID CHR_UUID("2A29");
 BLEServer server = BLE.createServer();
 BLEService svc = server.createService(SVC_UUID);
 BLECharacteristic chr = svc.createCharacteristic(CHR_UUID,
-    BLEProperty::Read, BLEPermissions::OpenRead);
+    BLEProperty::Read, BLEPermission::ReadOpen);
 chr.setValue("Hello");
 ```
 
@@ -155,7 +155,9 @@ In v3.x, properties and permissions were often combined or confused. v4.0 separa
 - `BLEProperty` -- what the characteristic **can do** (Read, Write, Notify, etc.)
 - `BLEPermission` -- what **security level** is required to access it
 
-The mapping is fail-closed: a `Read` or write property is only advertised if a matching permission direction is declared. For notify/indicate-only characteristics use `BLEPermission::None`. Prefer a semantic preset from `BLEPermissions::` for the common cases.
+The mapping is fail-closed: a `Read` or write property is only advertised if a matching permission direction is declared. For notify/indicate-only characteristics use `BLEPermission::None`.
+
+Permission names read as a direction (`Read`, `Write` or `ReadWrite`) followed by a security level (`Open`, `Encrypted`, `Authenticated` or `Authorized`), so `BLEPermission::ReadWriteAuthenticated` covers the common "both directions need a bonded, MITM-protected link" case in one value. The level is always spelled out, `Open` included, so unprotected access has to be asked for by name.
 
 ```cpp
 // v3.x -- combined, inconsistent across stacks
@@ -171,9 +173,9 @@ pService->createCharacteristic("uuid",
 static const BLEUUID MY_CHAR_UUID("0000abcd-0000-1000-8000-00805f9b34fb");
 auto chr = svc.createCharacteristic(MY_CHAR_UUID,
     BLEProperty::Read | BLEProperty::Write,
-    BLEPermissions::EncryptedReadWrite);
+    BLEPermission::ReadWriteEncrypted);
 
-// ...or use the raw bits directly for fine-grained control:
+// ...or give each direction its own security level:
 static const BLEUUID MY_CHAR2_UUID("0000abce-0000-1000-8000-00805f9b34fb");
 auto chr2 = svc.createCharacteristic(MY_CHAR2_UUID,
     BLEProperty::Read | BLEProperty::Write,
@@ -429,14 +431,16 @@ Follow these steps to convert a v3.x sketch to v4.0:
 
 | Old (v3.x) Bluedroid | Old (v3.x) NimBLE | New (v4.0) |
 |---|---|---|
-| `ESP_GATT_PERM_READ` | (implicit via property) | `BLEPermission::Read` |
+| `ESP_GATT_PERM_READ` | (implicit via property) | `BLEPermission::ReadOpen` |
 | `ESP_GATT_PERM_READ_ENCRYPTED` | `NIMBLE_PROPERTY::READ_ENC` | `BLEPermission::ReadEncrypted` |
 | `ESP_GATT_PERM_READ_ENC_MITM` | `NIMBLE_PROPERTY::READ_AUTHEN` | `BLEPermission::ReadAuthenticated` |
 | N/A | `NIMBLE_PROPERTY::READ_AUTHOR` | `BLEPermission::ReadAuthorized` |
-| `ESP_GATT_PERM_WRITE` | (implicit via property) | `BLEPermission::Write` |
+| `ESP_GATT_PERM_WRITE` | (implicit via property) | `BLEPermission::WriteOpen` |
 | `ESP_GATT_PERM_WRITE_ENCRYPTED` | `NIMBLE_PROPERTY::WRITE_ENC` | `BLEPermission::WriteEncrypted` |
 | `ESP_GATT_PERM_WRITE_ENC_MITM` | `NIMBLE_PROPERTY::WRITE_AUTHEN` | `BLEPermission::WriteAuthenticated` |
 | N/A | `NIMBLE_PROPERTY::WRITE_AUTHOR` | `BLEPermission::WriteAuthorized` |
+
+`BLEPermission` also has a value for each security level applied to both directions at once, which is what most characteristics want: `ReadWriteOpen`, `ReadWriteEncrypted`, `ReadWriteAuthenticated` and `ReadWriteAuthorized`. The `Authenticated` values include the encryption requirement, so `ReadAuthenticated` on its own is equivalent to the old `ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_READ_ENC_MITM` pair.
 
 ### Descriptors
 
@@ -616,7 +620,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | Old (v3.x) | New (v4.0) | Notes |
 |---|---|---|
 | `new BLESecurity()` | `BLE.getSecurity()` | Singleton handle |
-| `pSec->setCapability(cap)` | `sec.setIOCapability(cap)` | Uses `BLESecurity::IOCapability` enum |
+| `pSec->setCapability(cap)` | `sec.setIOCapability(cap)` | Uses `BLEIOCapability` enum |
 | `pSec->setAuthenticationMode(mode)` | `sec.setAuthenticationMode(bonding, mitm, sc)` | 3 booleans |
 | `pSec->setStaticPIN(pin)` | `sec.setStaticPassKey(pin)` | |
 | `pSec->getPassKey()` | `sec.getPassKey()` | |
@@ -796,7 +800,7 @@ void setup() {
     BLECharacteristic chr = svc.createCharacteristic(
         CHR_UUID,
         BLEProperty::Read | BLEProperty::Notify,
-        BLEPermissions::OpenRead
+        BLEPermission::ReadOpen
     );
     // CCCD (BLE2902) is auto-created for Notify characteristics!
     chr.setValue("Hello World");
@@ -921,7 +925,7 @@ void setup() {
 
     BLESecurity sec = BLE.getSecurity();
     sec.setAuthenticationMode(true, true, true);  // bonding, MITM, SC
-    sec.setIOCapability(BLESecurity::DisplayOnly);
+    sec.setIOCapability(BLEIOCapability::DisplayOnly);
     sec.setStaticPassKey(123456);
     sec.onPassKeyDisplay([](const BLEConnInfo &conn, uint32_t pk) {
         Serial.printf("Passkey: %06lu\n", pk);
@@ -993,7 +997,7 @@ pChar->setDescription("Temperature");
 static const BLEUUID MY_CHAR_UUID("0000abcd-0000-1000-8000-00805f9b34fb");
 BLECharacteristic chr = svc.createCharacteristic(MY_CHAR_UUID,
     BLEProperty::Read | BLEProperty::Notify,
-    BLEPermissions::OpenRead);
+    BLEPermission::ReadOpen);
 // CCCD is auto-created! No BLE2902 needed.
 
 // Presentation format (create via characteristic so it's automatically attached)
@@ -1204,7 +1208,7 @@ If your v3.x code used the Bluedroid backend (via `CONFIG_BT_BLUEDROID_ENABLED`)
 - **Remove `esp_ble_*` types from callbacks** -- Replace `esp_ble_gatts_cb_param_t*` with `BLEConnInfo`.
 - **Replace `esp_ble_auth_cmpl_t` in security callback** -- Use the `(BLEConnInfo, bool success)` signature.
 - **Replace `ESP_GATT_PERM_*` macros** -- Use `BLEPermission::*` enum.
-- **Replace `ESP_IO_CAP_*` constants** -- Use `BLESecurity::IOCapability` enum members.
+- **Replace `ESP_IO_CAP_*` constants** -- Use `BLEIOCapability` enum members.
 - **Replace `ESP_LE_AUTH_*` auth mode constants** -- Use `sec.setAuthenticationMode(bonding, mitm, sc)` with three booleans.
 - **`BLEAddress` → `BTAddress`** -- The old `BLEAddress` wrapping `esp_bd_addr_t` is replaced.
 - **BLE5 features** -- Extended advertising/scanning APIs exist on both stacks; on classic ESP32 Bluedroid builds with BLE5 off they return `NotSupported`. Periodic-adv TX remains NimBLE-only. `BLEConnInfo` may report PHY `PHY_1M` until BLE5 silicon surfaces the real values; peer address type comes from connect/`AUTH_CMPL` events. `getIdAddress()` returns the OTA address (Bluedroid has no resolved-identity field on connect).

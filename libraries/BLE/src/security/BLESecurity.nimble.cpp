@@ -75,7 +75,7 @@ void BLESecurity::Impl::applyToHost() const {
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
-void BLESecurity::setIOCapability(IOCapability cap) {
+void BLESecurity::setIOCapability(BLEIOCapability cap) {
   BLE_CHECK_IMPL();
   impl.ioCap = cap;
   impl.applyToHost();
@@ -188,7 +188,7 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
 
 void BLESecurity::resetSecurity() {
   BLE_CHECK_IMPL();
-  impl.ioCap = NoInputNoOutput;
+  impl.ioCap = BLEIOCapability::NoInputNoOutput;
   impl.bonding = true;
   impl.mitm = false;
   impl.sc = true;
@@ -222,7 +222,7 @@ uint32_t BLESecurity::Impl::resolvePasskeyForDisplay(const BLEConnInfo &conn) {
 
 // Stubs for BLE_SMP_SUPPORTED == 0: log where useful; return NotSupported, empty, or 0.
 
-void BLESecurity::setIOCapability(IOCapability) {
+void BLESecurity::setIOCapability(BLEIOCapability) {
   log_w("SMP not supported");
 }
 

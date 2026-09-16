@@ -318,7 +318,7 @@ void setup() {
   Serial.printf("[CLIENT] Heap after init: %u\n", (unsigned)heapAfterInit);
 
   BLESecurity sec = BLE.getSecurity();
-  sec.setIOCapability(BLESecurity::DisplayYesNo);
+  sec.setIOCapability(BLEIOCapability::DisplayYesNo);
   sec.setAuthenticationMode(true, true, true);
   // Distribute both the encryption key and the identity key so phase 22
   // can verify local/peer IRK round-trip across the bond.
@@ -924,7 +924,7 @@ void setup() {
   //   * BLERemoteCharacteristic::can{Read,Write,WriteNoResponse,Notify,Indicate}()
   //   * BLERemoteCharacteristic::getDescriptors() / getDescriptor() / getHandle()
   // And verifies the new properties/permissions validation end-to-end: a char
-  // declared as Read|Write with only OpenRead permission must be advertised
+  // declared as Read|Write with only Read permission must be advertised
   // without the Write property (fail-closed masking) and must reject writes.
   waitForPhase(15);
   {
@@ -984,7 +984,7 @@ void setup() {
         auto cccd = nt.getDescriptor(BLEUUID(static_cast<uint16_t>(0x2902)));
         Serial.printf("[CLIENT] Notify CCCD found: %d\n", (int)(bool)cccd);
 
-        // Fail-closed test: char declares Read|Write but only has OpenRead
+        // Fail-closed test: char declares Read|Write but only has Read
         // permission. The backend must strip the Write property bit, so:
         //   - canRead()  -> true, canWrite() -> false
         //   - readValue() succeeds and returns "ro_data"
@@ -2176,7 +2176,7 @@ void setup() {
           if (!sc) {
             Serial.println("[CLIENT] Phase30 secure char not found");
           } else {
-            // Reading an AuthenticatedRead characteristic forces a fresh pairing
+            // Reading a ReadAuthenticated characteristic forces a fresh pairing
             // now that the bond was deleted on both ends.
             String v = sc.readValue();
             Serial.printf("[CLIENT] Phase30 secureRead=%s\n", v.c_str());
@@ -2232,7 +2232,7 @@ void setup() {
         if (svc) {
           BLERemoteCharacteristic sc = svc.getCharacteristic(secureCharUUID);
           if (sc) {
-            // Reading the AuthenticatedRead characteristic starts pairing, which
+            // Reading the ReadAuthenticated characteristic starts pairing, which
             // we reject; the read must therefore fail (empty result).
             String v = sc.readValue();
             readOk = (v.length() > 0);
@@ -2267,7 +2267,7 @@ void setup() {
     clientLastAuthSuccess = false;
     BLESecurity sec = BLE.getSecurity();
     (void)sec.deleteAllBonds();
-    sec.setIOCapability(BLESecurity::KeyboardOnly);
+    sec.setIOCapability(BLEIOCapability::KeyboardOnly);
     delay(1500);
     bool found = scanForServer();
     Serial.printf("[CLIENT] Phase32 rescan found=%d\n", (int)found);
@@ -2309,7 +2309,7 @@ void setup() {
       }
     }
     // Restore the numeric-comparison default for any later work.
-    sec.setIOCapability(BLESecurity::DisplayYesNo);
+    sec.setIOCapability(BLEIOCapability::DisplayYesNo);
     Serial.println("[CLIENT] Phase32 done");
   }
 

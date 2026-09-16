@@ -48,7 +48,7 @@ void setup() {
 
   BLESecurity sec = BLE.getSecurity();
   sec.setStaticPassKey(123456);
-  sec.setIOCapability(BLESecurity::DisplayOnly);
+  sec.setIOCapability(BLEIOCapability::DisplayOnly);
   // bonding = true, MITM protection = true, Secure Connections = true
   sec.setAuthenticationMode(true, true, true);
   sec.onAuthenticationComplete(onAuthDone);
@@ -61,12 +61,12 @@ void setup() {
 
   // Secure characteristic: requires authentication (passkey pairing) for read/write
   BLECharacteristic secureChar =
-    svc.createCharacteristic(SECURE_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::AuthenticatedReadWrite);
+    svc.createCharacteristic(SECURE_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermission::ReadWriteAuthenticated);
   secureChar.setValue("Secret Data");
 
   // Open characteristic: accessible without pairing
   BLECharacteristic openChar =
-    svc.createCharacteristic(OPEN_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
+    svc.createCharacteristic(OPEN_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermission::ReadWriteOpen);
   openChar.setValue("Public Data");
 
   server.start();

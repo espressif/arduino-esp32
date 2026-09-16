@@ -58,11 +58,11 @@ public:
    * @brief Add a characteristic to this service.
    *
    * Properties and permissions are declared separately (Bluetooth Core Spec
-   * Vol 3 §3.3.1.1 and §3.2.5). Permissions are required — the mapping is
+   * Vol 3 §3.3.1.1 and §3.2.5). Permissions are required and the mapping is
    * fail-closed: a read or write property is only exposed if the matching
-   * permission direction is declared. Use a preset from the
-   * `BLEPermissions::` namespace for the common cases, e.g.
-   * `BLEPermissions::OpenReadWrite` or `BLEPermissions::EncryptedRead`.
+   * permission direction is declared. Most characteristics need a single
+   * @ref BLEPermission value such as `BLEPermission::ReadWriteOpen` or
+   * `BLEPermission::ReadEncrypted`.
    *
    * For notify- or indicate-only characteristics (which don't involve a GATT
    * read/write) pass `BLEPermission::None`.

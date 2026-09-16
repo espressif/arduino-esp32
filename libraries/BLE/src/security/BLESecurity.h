@@ -26,6 +26,7 @@
 #include "BTStatus.h"
 #include "BTAddress.h"
 #include "types/BLEConnInfo.h"
+#include "types/BLEIOCapability.h"
 #include <memory>
 #include <functional>
 
@@ -54,21 +55,10 @@ public:
   // --- IO Capability ---
 
   /**
-   * @brief SMP I/O capability values (pairing user interface model).
+   * @brief Set the I/O capability this device reports during pairing negotiation.
+   * @param cap What the device can display to and accept from the user, see @ref BLEIOCapability.
    */
-  enum IOCapability : uint8_t {
-    DisplayOnly = 0,      ///< Device can display a passkey but has no input.
-    DisplayYesNo = 1,     ///< Device can display a passkey and accept yes/no confirmation.
-    KeyboardOnly = 2,     ///< Device can accept keyboard input but has no display.
-    NoInputNoOutput = 3,  ///< Device has no I/O capability (Just Works pairing).
-    KeyboardDisplay = 4,  ///< Device has both keyboard input and a display.
-  };
-
-  /**
-   * @brief Set the I/O capability used for pairing negotiation.
-   * @param cap I/O capability value.
-   */
-  void setIOCapability(IOCapability cap);
+  void setIOCapability(BLEIOCapability cap);
 
   /**
    * @brief Set the authentication requirements for pairing.

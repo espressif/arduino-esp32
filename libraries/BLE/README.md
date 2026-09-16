@@ -12,7 +12,7 @@ Issues and questions should be raised here: https://github.com/espressif/arduino
 
 ### Quick Start
 
-1. **Choose your ESP32's IO capabilities** using `IOCapability` enum values
+1. **Choose your ESP32's IO capabilities** using `BLEIOCapability` enum values
 2. **Configure authentication requirements** with `setAuthenticationMode()`
 3. **Set up security** using the `BLESecurity` handle from `BLE.getSecurity()`
 4. **Handle stack differences** between Bluedroid (ESP32) and NimBLE (other SoCs)
@@ -34,15 +34,18 @@ Issues and questions should be raised here: https://github.com/espressif/arduino
 
 ### IO Capabilities Explained
 
-The ESP32 BLE library defines the following IO capabilities:
+What your board can show to and take from a user decides which pairing methods
+are available to it. Declare it with `BLEIOCapability`, which describes the
+hardware only: how strict the pairing has to be is a separate setting
+(`setAuthenticationMode()`).
 
 | Capability | Enum Value | Can Display | Can Input | Can Confirm | Example Devices |
 |------------|-----------|-------------|-----------|-------------|-----------------|
-| **No Input No Output** | `NoInputNoOutput` | No | No | No | Sensor nodes, beacons, simple actuators |
-| **Display Only** | `DisplayOnly` | Yes | No | No | E-ink displays, LED matrix displays |
-| **Keyboard Only** | `KeyboardOnly` | No | Yes | No | Button-only devices, rotary encoders |
-| **Display Yes/No** | `DisplayYesNo` | Yes | No | Yes | Devices with display + confirmation button |
-| **Keyboard Display** | `KeyboardDisplay` | Yes | Yes | Yes | Full-featured ESP32 devices with UI |
+| **No Input No Output** | `BLEIOCapability::NoInputNoOutput` | No | No | No | Sensor nodes, beacons, simple actuators |
+| **Display Only** | `BLEIOCapability::DisplayOnly` | Yes | No | No | E-ink displays, LED matrix displays |
+| **Keyboard Only** | `BLEIOCapability::KeyboardOnly` | No | Yes | No | Button-only devices, rotary encoders |
+| **Display Yes/No** | `BLEIOCapability::DisplayYesNo` | Yes | No | Yes | Devices with display + confirmation button |
+| **Keyboard Display** | `BLEIOCapability::KeyboardDisplay` | Yes | Yes | Yes | Full-featured ESP32 devices with UI |
 
 ### Pairing Methods Explained
 
@@ -157,13 +160,13 @@ Here are some common scenarios for the pairing methods depending on the IO capab
 BLESecurity sec = BLE.getSecurity();
 
 // Conservative approach - limits pairing methods but ensures compatibility
-sec.setIOCapability(NoInputNoOutput);    // Just Works only
+sec.setIOCapability(BLEIOCapability::NoInputNoOutput);    // Just Works only
 
 // Balanced approach - good UX with optional security
-sec.setIOCapability(DisplayYesNo);       // Just Works or Numeric Comparison
+sec.setIOCapability(BLEIOCapability::DisplayYesNo);       // Just Works or Numeric Comparison
 
 // Maximum security - supports all methods
-sec.setIOCapability(KeyboardDisplay);    // All pairing methods available
+sec.setIOCapability(BLEIOCapability::KeyboardDisplay);    // All pairing methods available
 ```
 
 ##### Authentication Configuration
@@ -191,7 +194,7 @@ BLESecurity sec = BLE.getSecurity();
 
 // Set a static passkey for consistent pairing experience
 sec.setStaticPassKey(123456);
-sec.setIOCapability(KeyboardDisplay);       // Required for MITM even with static passkey
+sec.setIOCapability(BLEIOCapability::KeyboardDisplay);       // Required for MITM even with static passkey
 sec.setAuthenticationMode(true, true, true); // Bonding + MITM + SC
 ```
 
@@ -213,12 +216,11 @@ sec.setAuthenticationMode(true, true, true); // Bonding + MITM + SC
 #include <BLE.h>
 
 // Create a characteristic that requires encryption + MITM on both directions.
-// Use one of the BLEPermissions:: presets for a clear intent, or combine
-// raw BLEPermission bits manually for custom setups.
+// Combine BLEPermission values with | when each direction needs its own level.
 BLECharacteristic chr = svc.createCharacteristic(
     CHAR_UUID,
     BLEProperty::Read | BLEProperty::Write,
-    BLEPermissions::AuthenticatedReadWrite
+    BLEPermission::ReadWriteAuthenticated
 );
 
 // Check which stack is running
@@ -247,10 +249,10 @@ sec.setAuthenticationMode(true, true, true);   // Bonding + MITM + SC
 ##### Static passkey not being requested / Nothing happens when trying to read secure characteristic
 ```cpp
 // Problem: Wrong IO capability for MITM
-sec.setIOCapability(NoInputNoOutput);  // Can't support MITM
+sec.setIOCapability(BLEIOCapability::NoInputNoOutput);  // Can't support MITM
 
 // Solution: Set proper capability even for static passkey
-sec.setIOCapability(KeyboardDisplay);  // Required for MITM
+sec.setIOCapability(BLEIOCapability::KeyboardDisplay);  // Required for MITM
 sec.setStaticPassKey(123456);
 ```
 
@@ -260,7 +262,7 @@ sec.setStaticPassKey(123456);
 BLECharacteristic chr = svc.createCharacteristic(
     CHAR_UUID,
     BLEProperty::Read | BLEProperty::Write,
-    BLEPermissions::AuthenticatedReadWrite
+    BLEPermission::ReadWriteAuthenticated
 );
 ```
 
@@ -291,19 +293,30 @@ sec.onAuthenticationComplete([](const BLEConnInfo &conn, bool success) {
 
 #### BLEProperty (Characteristic Properties)
 
-Properties define the capabilities of a characteristic. Combine with bitwise OR.
+Properties are the list of ATT operations a characteristic supports. The flags
+are independent and none of them implies any other, so declare exactly the ones
+clients should be able to use. Combine with bitwise OR.
 
 ```cpp
 // Standard Bluetooth properties
-BLEProperty::Read          // Read operation
-BLEProperty::Write         // Write operation
-BLEProperty::WriteNR       // Write without response
+BLEProperty::Read          // Read Request
+BLEProperty::Write         // Write Request, acknowledged
+BLEProperty::WriteNR       // Write Command, no response
 BLEProperty::Notify        // Notifications
 BLEProperty::Indicate      // Indications
 BLEProperty::Broadcast     // Broadcast
 BLEProperty::SignedWrite   // Signed write command
 BLEProperty::ExtendedProps // Extended properties
 ```
+
+`Write` and `WriteNR` are two different ATT operations, not two spellings of
+one. `Write` is the acknowledged Write Request, so the client finds out whether
+it worked. `WriteNR` is the unacknowledged Write Command, which is cheaper and
+lower latency but reports nothing back. Declaring one does not enable the
+other, and declaring both is normal when you want the client to choose per
+write, which is what the Nordic UART RX characteristic and HID output reports
+do. On the client side, `canWrite()` and `canWriteNoResponse()` report them
+separately and `writeValue(data, len, withResponse)` picks between them.
 
 #### BLEPermission (Access Permissions)
 
@@ -313,36 +326,24 @@ advertised to the client if a matching permission direction is also declared.
 Use `BLEPermission::None` for notify/indicate-only characteristics (no GATT
 read/write path).
 
-Combine with bitwise OR:
+Every name is a direction (`Read`, `Write` or `ReadWrite`) followed by a
+security level, always in that order, so there is exactly one way to spell any
+given permission:
+
+| Security level | Read only | Write only | Both directions |
+| --- | --- | --- | --- |
+| Open, no pairing | `ReadOpen` | `WriteOpen` | `ReadWriteOpen` |
+| Encrypted link | `ReadEncrypted` | `WriteEncrypted` | `ReadWriteEncrypted` |
+| MITM-authenticated pairing | `ReadAuthenticated` | `WriteAuthenticated` | `ReadWriteAuthenticated` |
+| Authorization callback | `ReadAuthorized` | `WriteAuthorized` | `ReadWriteAuthorized` |
+
+The `Authenticated` values already carry the encryption requirement, so there
+is no separate bit to remember. Combine values with bitwise OR when the two
+directions need different levels:
 
 ```cpp
-// Basic (no security) — open access at the GATT layer
-BLEPermission::Read                  // Plain read (open)
-BLEPermission::Write                 // Plain write (open)
-
-// Encryption required
-BLEPermission::ReadEncrypted         // Read requires encryption
-BLEPermission::WriteEncrypted        // Write requires encryption
-
-// Authentication required (MITM protection)
-BLEPermission::ReadAuthenticated     // Read requires encryption + MITM
-BLEPermission::WriteAuthenticated    // Write requires encryption + MITM
-
-// Authorization required
-BLEPermission::ReadAuthorized        // Read requires authorization callback
-BLEPermission::WriteAuthorized       // Write requires authorization callback
-```
-
-##### Semantic presets (`BLEPermissions::`)
-
-Self-documenting names for the common cases, encoding both direction
-(Read / Write / ReadWrite) and security level:
-
-```cpp
-BLEPermissions::OpenRead              BLEPermissions::OpenWrite              BLEPermissions::OpenReadWrite
-BLEPermissions::EncryptedRead         BLEPermissions::EncryptedWrite         BLEPermissions::EncryptedReadWrite
-BLEPermissions::AuthenticatedRead     BLEPermissions::AuthenticatedWrite     BLEPermissions::AuthenticatedReadWrite
-BLEPermissions::AuthorizedRead        BLEPermissions::AuthorizedWrite        BLEPermissions::AuthorizedReadWrite
+// Anyone may read the value, only a paired peer may change it
+BLEPermission::ReadOpen | BLEPermission::WriteEncrypted
 ```
 
 #### Usage Examples by Security Level
@@ -352,7 +353,7 @@ BLEPermissions::AuthorizedRead        BLEPermissions::AuthorizedWrite        BLE
 BLECharacteristic chr = svc.createCharacteristic(
     CHAR_UUID,
     BLEProperty::Read | BLEProperty::Write,
-    BLEPermissions::OpenReadWrite
+    BLEPermission::ReadWriteOpen
 );
 ```
 
@@ -361,7 +362,7 @@ BLECharacteristic chr = svc.createCharacteristic(
 BLECharacteristic chr = svc.createCharacteristic(
     CHAR_UUID,
     BLEProperty::Read | BLEProperty::Write,
-    BLEPermissions::EncryptedReadWrite
+    BLEPermission::ReadWriteEncrypted
 );
 ```
 
@@ -370,7 +371,7 @@ BLECharacteristic chr = svc.createCharacteristic(
 BLECharacteristic chr = svc.createCharacteristic(
     CHAR_UUID,
     BLEProperty::Read | BLEProperty::Write,
-    BLEPermissions::AuthenticatedReadWrite
+    BLEPermission::ReadWriteAuthenticated
 );
 ```
 
@@ -379,7 +380,7 @@ BLECharacteristic chr = svc.createCharacteristic(
 BLECharacteristic chr = svc.createCharacteristic(
     CHAR_UUID,
     BLEProperty::Read | BLEProperty::Write,
-    BLEPermissions::AuthorizedReadWrite
+    BLEPermission::ReadWriteAuthorized
 );
 ```
 

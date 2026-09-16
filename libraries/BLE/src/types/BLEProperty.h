@@ -24,7 +24,19 @@
 /**
  * @brief Characteristic Properties -- Bluetooth Core Spec Vol 3, Part G, 3.3.1.1.
  *
- * Describes what operations a characteristic supports.
+ * The list of ATT operations a characteristic supports. These are independent
+ * flags rather than a hierarchy: none of them implies any other, so declare
+ * exactly the ones you want clients to be able to use.
+ *
+ * @ref BLEProperty::Write and @ref BLEProperty::WriteNR in particular are two
+ * different ATT operations, not two spellings of the same one. `Write` is the
+ * acknowledged Write Request, where the client learns whether the write
+ * succeeded. `WriteNR` is the unacknowledged Write Command, which is cheaper
+ * and lower latency but reports nothing back. Declaring one does not enable
+ * the other, and declaring both is perfectly normal when you want the client
+ * to pick per write, which is what the Nordic UART RX characteristic and HID
+ * output reports do.
+ *
  * Combine with bitwise OR: `BLEProperty::Read | BLEProperty::Notify`.
  */
 enum class BLEProperty : uint8_t {
@@ -42,94 +54,92 @@ inline constexpr BLEProperty operator|(BLEProperty a, BLEProperty b) {
   return static_cast<BLEProperty>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
 }
 
-inline constexpr BLEProperty operator|=(BLEProperty &a, BLEProperty b) {
+inline constexpr BLEProperty &operator|=(BLEProperty &a, BLEProperty b) {
   return a = a | b;
 }
 
+/**
+ * @brief Test whether @p a contains every bit of @p b.
+ */
 inline constexpr bool operator&(BLEProperty a, BLEProperty b) {
-  return (static_cast<uint8_t>(a) & static_cast<uint8_t>(b)) != 0;
+  return static_cast<uint8_t>(b) != 0 && (static_cast<uint8_t>(a) & static_cast<uint8_t>(b)) == static_cast<uint8_t>(b);
 }
 
 /**
  * @brief Attribute Access Permissions -- Bluetooth Core Spec Vol 3, Part F, 3.2.5.
  *
- * Controls security requirements for read/write access. In this library the
- * mapping is fail-closed: a characteristic advertises a read or write
- * property only if the matching permission direction is also declared.
- * `BLEPermission::None` means "no access"; use one of the
- * `BLEPermissions::` presets or combine bits manually for specific security
- * levels.
+ * A permission says what a peer may do with an attribute and how well
+ * protected the link has to be before it may do it. Every name is a direction
+ * (`Read`, `Write`, or `ReadWrite`) followed by a security level, always in
+ * that order, so each permission has exactly one spelling.
+ *
+ * The levels, from weakest to strongest:
+ *
+ * - `Open`: no protection at all, any peer may access it without pairing.
+ * - `Encrypted`: any pairing will do, including Just Works.
+ * - `Authenticated`: MITM-protected pairing, which also requires encryption.
+ * - `Authorized`: the application decides per access through
+ *   @c BLESecurity::onAuthorization.
+ *
+ * The level is always spelled out, including `Open`, so granting unprotected
+ * access is something you have to ask for by name rather than something you
+ * get by reaching for the shortest value.
+ *
+ * Use `|` when the two directions need different levels:
+ *
+ * @code
+ *   // Anyone may read the value, only a bonded peer may change it.
+ *   svc.createCharacteristic(uuid, BLEProperty::Read | BLEProperty::Write, BLEPermission::ReadOpen | BLEPermission::WriteEncrypted);
+ * @endcode
+ *
+ * The mapping to the native stacks is fail-closed: a characteristic advertises
+ * a read or write property only when the matching permission direction is
+ * declared. Notify-only and indicate-only characteristics therefore take
+ * @ref BLEPermission::None, which grants no direct access.
  */
 enum class BLEPermission : uint16_t {
-  None = 0x0000,                ///< No access permitted
-  Read = 0x0001,                ///< Open read (no encryption required)
-  ReadEncrypted = 0x0002,       ///< Read requires an encrypted link
-  ReadAuthenticated = 0x0004,   ///< Read requires MITM-authenticated pairing
-  ReadAuthorized = 0x0008,      ///< Read gated by application authorization callback
-  Write = 0x0010,               ///< Open write (no encryption required)
-  WriteEncrypted = 0x0020,      ///< Write requires an encrypted link
-  WriteAuthenticated = 0x0040,  ///< Write requires MITM-authenticated pairing
-  WriteAuthorized = 0x0080,     ///< Write gated by application authorization callback
+  None = 0x0000,  ///< No access permitted.
+
+  ReadOpen = 0x0001,                           ///< Read with no security requirement at all.
+  ReadEncrypted = 0x0002,                      ///< Read requires an encrypted link.
+  ReadAuthenticated = 0x0004 | ReadEncrypted,  ///< Read requires MITM-authenticated pairing, which implies encryption.
+  ReadAuthorized = 0x0008,                     ///< Read gated by the application authorization callback.
+
+  WriteOpen = 0x0010,                            ///< Write with no security requirement at all.
+  WriteEncrypted = 0x0020,                       ///< Write requires an encrypted link.
+  WriteAuthenticated = 0x0040 | WriteEncrypted,  ///< Write requires MITM-authenticated pairing, which implies encryption.
+  WriteAuthorized = 0x0080,                      ///< Write gated by the application authorization callback.
+
+  ReadWriteOpen = ReadOpen | WriteOpen,                             ///< Read and write, neither with any security requirement.
+  ReadWriteEncrypted = ReadEncrypted | WriteEncrypted,              ///< Read and write both require an encrypted link.
+  ReadWriteAuthenticated = ReadAuthenticated | WriteAuthenticated,  ///< Read and write both require MITM-authenticated pairing.
+  ReadWriteAuthorized = ReadAuthorized | WriteAuthorized,           ///< Read and write both gated by the authorization callback.
 };
 
+/**
+ * @brief Combine permissions, typically to give each direction its own level.
+ */
 inline constexpr BLEPermission operator|(BLEPermission a, BLEPermission b) {
   return static_cast<BLEPermission>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
 }
 
-inline constexpr BLEPermission operator|=(BLEPermission &a, BLEPermission b) {
+inline constexpr BLEPermission &operator|=(BLEPermission &a, BLEPermission b) {
   return a = a | b;
 }
 
-inline constexpr bool operator&(BLEPermission a, BLEPermission b) {
-  return (static_cast<uint16_t>(a) & static_cast<uint16_t>(b)) != 0;
-}
-
 /**
- * @brief Semantic permission presets.
+ * @brief Test whether @p a grants everything @p b asks for.
  *
- * Self-documenting combinations for the common cases. Names encode both
- * direction (`Read`, `Write`, `ReadWrite`) and security level
- * (`Open` / `Encrypted` / `Authenticated`). Use these rather than raw
- * bit combinations whenever possible.
- *
- * Example:
- * @code
- *   svc.createCharacteristic(uuid,
- *     BLEProperty::Read | BLEProperty::Write,
- *     BLEPermissions::OpenReadWrite);
- * @endcode
- *
- * Authenticated presets include the Encrypted bit as well, matching the
- * GATT security hierarchy (authenticated pairing implies encryption).
- *
- * Kept as a namespace (not folded into @c BLEPermission) because these are
- * OR-combinations of the enum's bits, not new distinct enum values; a namespace
- * of @c constexpr constants keeps them strongly typed and clearly scoped
- * (@c BLEPermissions::OpenReadWrite) without polluting the bitmask enum.
+ * This is a containment test, not a plain bitwise AND, because the
+ * `Authenticated` values carry the encryption bit as well. Testing against
+ * @ref BLEPermission::ReadAuthenticated is therefore true only for a
+ * permission that really is authenticated, and not for one that is merely
+ * encrypted, while testing a merely encrypted requirement against an
+ * authenticated permission still succeeds.
  */
-namespace BLEPermissions {
-
-// Open — readable/writable with no security requirement.
-inline constexpr BLEPermission OpenRead = BLEPermission::Read;
-inline constexpr BLEPermission OpenWrite = BLEPermission::Write;
-inline constexpr BLEPermission OpenReadWrite = BLEPermission::Read | BLEPermission::Write;
-
-// Encrypted — pairing required (no MITM).
-inline constexpr BLEPermission EncryptedRead = BLEPermission::ReadEncrypted;
-inline constexpr BLEPermission EncryptedWrite = BLEPermission::WriteEncrypted;
-inline constexpr BLEPermission EncryptedReadWrite = BLEPermission::ReadEncrypted | BLEPermission::WriteEncrypted;
-
-// Authenticated — MITM-protected pairing required (implies encryption).
-inline constexpr BLEPermission AuthenticatedRead = BLEPermission::ReadEncrypted | BLEPermission::ReadAuthenticated;
-inline constexpr BLEPermission AuthenticatedWrite = BLEPermission::WriteEncrypted | BLEPermission::WriteAuthenticated;
-inline constexpr BLEPermission AuthenticatedReadWrite = AuthenticatedRead | AuthenticatedWrite;
-
-// Authorized — application-level authorization callback gates access.
-inline constexpr BLEPermission AuthorizedRead = BLEPermission::ReadAuthorized;
-inline constexpr BLEPermission AuthorizedWrite = BLEPermission::WriteAuthorized;
-inline constexpr BLEPermission AuthorizedReadWrite = BLEPermission::ReadAuthorized | BLEPermission::WriteAuthorized;
-
-}  // namespace BLEPermissions
+inline constexpr bool operator&(BLEPermission a, BLEPermission b) {
+  return static_cast<uint16_t>(b) != 0 && (static_cast<uint16_t>(a) & static_cast<uint16_t>(b)) == static_cast<uint16_t>(b);
+}
 
 // ---------------------------------------------------------------------------
 // GATT characteristic descriptors: 16-bit UUIDs and value bit-fields.

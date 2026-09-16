@@ -129,7 +129,7 @@ void setup() {
   }
 
   BLESecurity sec = BLE.getSecurity();
-  sec.setIOCapability(BLESecurity::NoInputNoOutput);
+  sec.setIOCapability(BLEIOCapability::NoInputNoOutput);
   // bonding = true, MITM protection = false, Secure Connections = true
   sec.setAuthenticationMode(true, false, true);
 

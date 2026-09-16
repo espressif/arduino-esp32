@@ -330,7 +330,7 @@ void setup() {
   // (NoInputNoOutput) which provides encryption without a PIN. Bonding
   // stores the keys so reconnections skip pairing.
   BLESecurity sec = BLE.getSecurity();
-  sec.setIOCapability(BLESecurity::NoInputNoOutput);
+  sec.setIOCapability(BLEIOCapability::NoInputNoOutput);
   // Parameters: bonding=true (persist keys across reboots),
   //             MITM=false (no man-in-the-middle protection -- no PIN),
   //             SC=true (use LE Secure Connections for stronger encryption)

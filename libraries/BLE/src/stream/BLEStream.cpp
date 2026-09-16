@@ -144,12 +144,12 @@ BTStatus BLEStream::begin(const String &deviceName) {
   // commonly issue an ATT_READ on discovery to populate their UI. Allowing
   // Read returns the most recently notified bytes, which is the closest
   // meaningful "current value" and keeps generic clients happy.
-  _impl->txChr = svc.createCharacteristic(kNUS_TxCharUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
+  _impl->txChr = svc.createCharacteristic(kNUS_TxCharUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
 
   // RX characteristic: client writes, server receives. Open access to match
   // the common deployed NUS behavior; add encryption with
-  // BLEPermissions::EncryptedWrite if the profile calls for it.
-  _impl->rxChr = svc.createCharacteristic(kNUS_RxCharUUID, BLEProperty::Write | BLEProperty::WriteNR, BLEPermissions::OpenWrite);
+  // BLEPermission::WriteEncrypted if the profile calls for it.
+  _impl->rxChr = svc.createCharacteristic(kNUS_RxCharUUID, BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen);
   _impl->rxChr.onWrite([this](BLECharacteristic chr, const BLEConnInfo &connInfo) {
     size_t len = 0;
     const uint8_t *data = chr.getValue(&len);

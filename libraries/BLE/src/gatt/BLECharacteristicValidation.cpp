@@ -70,7 +70,7 @@ bool hasWriteProp(BLEProperty p) {
  * @return true if any of Read, ReadEncrypted, ReadAuthenticated, or ReadAuthorized is present.
  */
 bool hasAnyReadPerm(BLEPermission p) {
-  return (p & BLEPermission::Read) || (p & BLEPermission::ReadEncrypted) || (p & BLEPermission::ReadAuthenticated) || (p & BLEPermission::ReadAuthorized);
+  return (p & BLEPermission::ReadOpen) || (p & BLEPermission::ReadEncrypted) || (p & BLEPermission::ReadAuthenticated) || (p & BLEPermission::ReadAuthorized);
 }
 
 /**
@@ -79,7 +79,8 @@ bool hasAnyReadPerm(BLEPermission p) {
  * @return true if any of Write, WriteEncrypted, WriteAuthenticated, or WriteAuthorized is present.
  */
 bool hasAnyWritePerm(BLEPermission p) {
-  return (p & BLEPermission::Write) || (p & BLEPermission::WriteEncrypted) || (p & BLEPermission::WriteAuthenticated) || (p & BLEPermission::WriteAuthorized);
+  return (p & BLEPermission::WriteOpen) || (p & BLEPermission::WriteEncrypted) || (p & BLEPermission::WriteAuthenticated)
+         || (p & BLEPermission::WriteAuthorized);
 }
 
 /**
@@ -155,41 +156,36 @@ bool bleValidateCharProps(const BLEUUID &uuid, BLEProperty props, BLEPermission 
   if ((props & BLEProperty::Read) && !hasAnyReadPerm(perms)) {
     log_w(
       "Characteristic %s: READ property declared but no read permission — "
-      "reads will be rejected; use BLEPermissions::OpenRead or EncryptedRead",
+      "reads will be rejected; use BLEPermission::ReadOpen or BLEPermission::ReadEncrypted",
       u
     );
   }
   if (hasWriteProp(props) && !hasAnyWritePerm(perms)) {
     log_w(
       "Characteristic %s: write property declared but no write permission — "
-      "writes will be rejected; use BLEPermissions::OpenWrite or EncryptedWrite",
+      "writes will be rejected; use BLEPermission::WriteOpen or BLEPermission::WriteEncrypted",
       u
     );
   }
 
-  // 3.3 Security level mixing
-  if ((perms & BLEPermission::Read) && ((perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated))) {
+  // 3.3 Security level mixing. The ATT security hierarchy (BT Core Spec v5.x,
+  // Vol 3, Part F, §3.2.5) is ordered, so OR-ing the open permission for a
+  // direction onto a protected one for that same direction just lowers the bar
+  // back to open. There is no matching "authenticated but not encrypted" check
+  // because BLEPermission::ReadAuthenticated / WriteAuthenticated carry the
+  // encryption requirement with them and cannot be declared without it.
+  if ((perms & BLEPermission::ReadOpen) && ((perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated))) {
     log_w("Characteristic %s: plain READ mixed with encrypted READ (encryption made redundant)", u);
   }
-  if ((perms & BLEPermission::Write) && ((perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated))) {
+  if ((perms & BLEPermission::WriteOpen) && ((perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated))) {
     log_w("Characteristic %s: plain WRITE mixed with encrypted WRITE (encryption made redundant)", u);
   }
 
-  // 3.4 AUTHEN without ENC — per ATT security hierarchy, authenticated access
-  // implies the link is also encrypted (BT Core Spec v5.x, Vol 3, Part F,
-  // §3.2.5 and Vol 3, Part H, §3.5.1 — authentication requires an encrypted
-  // link as a prerequisite).
-  if ((perms & BLEPermission::ReadAuthenticated) && !(perms & BLEPermission::ReadEncrypted)) {
-    log_w("Characteristic %s: ReadAuthenticated implies ReadEncrypted — consider adding it", u);
-  }
-  if ((perms & BLEPermission::WriteAuthenticated) && !(perms & BLEPermission::WriteEncrypted)) {
-    log_w("Characteristic %s: WriteAuthenticated implies WriteEncrypted — consider adding it", u);
-  }
-
-  // 3.5 WRITE and WRITE_NR combined
-  if ((props & BLEProperty::Write) && (props & BLEProperty::WriteNR)) {
-    log_w("Characteristic %s: WRITE and WRITE_NR both set — valid but uncommon, verify intent", u);
-  }
+  // No check for WRITE together with WRITE_NR. They are separate ATT
+  // operations (Write Request vs Write Command), so offering both simply lets
+  // the client choose per write. It is conventional for the Nordic UART RX
+  // characteristic and for HID output reports, both of which this library
+  // creates that way itself.
 
   // 3.6 SIGNED_WRITE relies on a shared CSRK exchanged during bonding; without
   // an encrypted/authenticated write path the signature cannot be validated and
@@ -378,12 +374,12 @@ bool bleValidateDescProps(const BLEUUID &descUuid, const BLEUUID &chrUuid, BLEPe
 
   // Fail-closed: a descriptor with no permissions is inaccessible by design.
   // The CCCD auto-creation path on Bluedroid bypasses this helper (it sets
-  // OpenReadWrite directly), so user-created descriptors reaching this point
+  // BLEPermission::ReadWriteOpen directly), so user-created descriptors reaching this point
   // have genuinely been declared as "no access" — almost certainly a bug.
   if (!anyRead && !anyWrite) {
     log_e(
       "Descriptor %s on characteristic %s: no permissions set (use at least one "
-      "BLEPermission::Read* or Write* direction)",
+      "BLEPermission::ReadOpen* or Write* direction)",
       d, c
     );
     ok = false;
@@ -396,8 +392,8 @@ bool bleValidateDescProps(const BLEUUID &descUuid, const BLEUUID &chrUuid, BLEPe
   // `anyRead`/`anyWrite` predicates above count `*Authorized` itself as a
   // direction — that's fine for the "has any access" check but useless
   // here, so this branch tests the base perms explicitly.
-  const bool hasBaseRead = (perms & BLEPermission::Read) || (perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated);
-  const bool hasBaseWrite = (perms & BLEPermission::Write) || (perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated);
+  const bool hasBaseRead = (perms & BLEPermission::ReadOpen) || (perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated);
+  const bool hasBaseWrite = (perms & BLEPermission::WriteOpen) || (perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated);
   if ((perms & BLEPermission::ReadAuthorized) && !hasBaseRead) {
     log_e(
       "Descriptor %s on %s: ReadAuthorized requires a base read permission "
@@ -478,32 +474,22 @@ bool bleValidateDescProps(const BLEUUID &descUuid, const BLEUUID &chrUuid, BLEPe
   // so skip the noise there.
   const bool isStackManaged = (id16 == 0x2902 || id16 == 0x2903);
   if (!isStackManaged) {
-    if ((perms & BLEPermission::Read) && !(perms & BLEPermission::ReadEncrypted) && !(perms & BLEPermission::ReadAuthenticated)
+    if ((perms & BLEPermission::ReadOpen) && !(perms & BLEPermission::ReadEncrypted) && !(perms & BLEPermission::ReadAuthenticated)
         && ((perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated))) {
       log_w("Descriptor %s on %s: plain READ mixed with secure WRITE — readable with no security", d, c);
     }
-    if ((perms & BLEPermission::Write) && !(perms & BLEPermission::WriteEncrypted) && !(perms & BLEPermission::WriteAuthenticated)
+    if ((perms & BLEPermission::WriteOpen) && !(perms & BLEPermission::WriteEncrypted) && !(perms & BLEPermission::WriteAuthenticated)
         && ((perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated))) {
       log_w("Descriptor %s on %s: plain WRITE mixed with secure READ — writable with no security", d, c);
     }
   }
 
   // 3.3 Security-level mixing on the same direction.
-  if ((perms & BLEPermission::Read) && ((perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated))) {
+  if ((perms & BLEPermission::ReadOpen) && ((perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated))) {
     log_w("Descriptor %s on %s: plain READ mixed with encrypted READ (encryption made redundant)", d, c);
   }
-  if ((perms & BLEPermission::Write) && ((perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated))) {
+  if ((perms & BLEPermission::WriteOpen) && ((perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated))) {
     log_w("Descriptor %s on %s: plain WRITE mixed with encrypted WRITE (encryption made redundant)", d, c);
-  }
-
-  // 3.4 AUTHEN without ENC — per GATT security hierarchy, authenticated
-  // implies encrypted; declaring AUTHEN alone works with most stacks but is
-  // ambiguous at the API level.
-  if ((perms & BLEPermission::ReadAuthenticated) && !(perms & BLEPermission::ReadEncrypted)) {
-    log_w("Descriptor %s on %s: ReadAuthenticated implies ReadEncrypted — consider adding it", d, c);
-  }
-  if ((perms & BLEPermission::WriteAuthenticated) && !(perms & BLEPermission::WriteEncrypted)) {
-    log_w("Descriptor %s on %s: WriteAuthenticated implies WriteEncrypted — consider adding it", d, c);
   }
 
   return ok;

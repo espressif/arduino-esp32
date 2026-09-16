@@ -55,7 +55,7 @@ struct BLESecurityImplCommon {
   // setAuthenticationMode, ...) while the host task reads them during pairing.
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
-  BLESecurity::IOCapability ioCap = BLESecurity::NoInputNoOutput;
+  BLEIOCapability ioCap = BLEIOCapability::NoInputNoOutput;
   bool mitm = false;
   bool forceAuth = false;
   bool regenOnConnect = false;

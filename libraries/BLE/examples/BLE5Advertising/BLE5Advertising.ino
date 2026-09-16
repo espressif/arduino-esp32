@@ -44,7 +44,7 @@ void setup() {
 
   BLEServer server = BLE.createServer();
   BLEService svc = server.createService(SVC_UUID);
-  svc.createCharacteristic(CHR_UUID, BLEProperty::Read, BLEPermissions::OpenRead).setValue("Hello BLE5");
+  svc.createCharacteristic(CHR_UUID, BLEProperty::Read, BLEPermission::ReadOpen).setValue("Hello BLE5");
 
   server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
     Serial.printf("BLE5 client connected: %s\n", conn.getAddress().toString().c_str());

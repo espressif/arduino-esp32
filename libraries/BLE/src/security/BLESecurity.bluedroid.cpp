@@ -86,11 +86,11 @@ void BLESecurity::Impl::applySecurityParams() {
 
   esp_ble_io_cap_t espIoCap;
   switch (ioCap) {
-    case BLESecurity::DisplayOnly:     espIoCap = ESP_IO_CAP_OUT; break;
-    case BLESecurity::DisplayYesNo:    espIoCap = ESP_IO_CAP_IO; break;
-    case BLESecurity::KeyboardOnly:    espIoCap = ESP_IO_CAP_IN; break;
-    case BLESecurity::KeyboardDisplay: espIoCap = ESP_IO_CAP_KBDISP; break;
-    default:                           espIoCap = ESP_IO_CAP_NONE; break;
+    case BLEIOCapability::DisplayOnly:     espIoCap = ESP_IO_CAP_OUT; break;
+    case BLEIOCapability::DisplayYesNo:    espIoCap = ESP_IO_CAP_IO; break;
+    case BLEIOCapability::KeyboardOnly:    espIoCap = ESP_IO_CAP_IN; break;
+    case BLEIOCapability::KeyboardDisplay: espIoCap = ESP_IO_CAP_KBDISP; break;
+    default:                               espIoCap = ESP_IO_CAP_NONE; break;
   }
 
   uint8_t initKeyDist = 0;
@@ -230,9 +230,7 @@ void BLESecurity::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_p
       // Pairing/authentication complete.  auth_cmpl.success indicates whether
       // the SMP procedure succeeded or failed (e.g. passkey mismatch, timeout).
       // BT Core Spec v5.x, Vol 3, Part H, §3.5 (Pairing Confirm/Random/DHKey).
-      BLEConnInfo conn = BLEConnInfoImpl::make(
-        param->ble_security.auth_cmpl.bd_addr, static_cast<BTAddress::Type>(param->ble_security.auth_cmpl.addr_type)
-      );
+      BLEConnInfo conn = BLEConnInfoImpl::make(param->ble_security.auth_cmpl.bd_addr, static_cast<BTAddress::Type>(param->ble_security.auth_cmpl.addr_type));
       bool success = param->ble_security.auth_cmpl.success;
       if (success) {
         BLEConnInfoImpl::updateSecurityFromAuthComplete(conn, param->ble_security.auth_cmpl.auth_mode);
@@ -280,7 +278,7 @@ void BLESecurity::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_p
 // Stack-specific BLESecurity methods
 // --------------------------------------------------------------------------
 
-void BLESecurity::setIOCapability(IOCapability cap) {
+void BLESecurity::setIOCapability(BLEIOCapability cap) {
   BLE_CHECK_IMPL();
   // Config fields are read on the host task during pairing (guarded by mtx there),
   // so the writers take the same lock. applySecurityParams runs under the recursive
@@ -438,7 +436,7 @@ BTStatus BLESecurity::startSecurity(uint16_t /*connHandle*/) {
 
 void BLESecurity::resetSecurity() {
   BLE_CHECK_IMPL();
-  impl.ioCap = NoInputNoOutput;
+  impl.ioCap = BLEIOCapability::NoInputNoOutput;
   impl.bonding = true;
   impl.mitm = false;
   impl.secureConnection = true;
@@ -466,7 +464,7 @@ void bluedroidSecurityHandleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 
 // Stubs for BLE_SMP_SUPPORTED == 0: log where useful; return NotSupported, empty, or 0.
 
-void BLESecurity::setIOCapability(IOCapability cap) {
+void BLESecurity::setIOCapability(BLEIOCapability cap) {
   (void)cap;
   log_w("SMP not supported");
 }

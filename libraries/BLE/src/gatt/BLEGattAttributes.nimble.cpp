@@ -314,6 +314,45 @@ BTStatus BLECharacteristic::indicate(uint16_t connHandle, const uint8_t *data, s
   return (rc == 0) ? BTStatus::OK : BTStatus::Fail;
 }
 
+/**
+ * @brief Maps @ref BLEPermission to NimBLE descriptor att access flags.
+ * @param perms Declared descriptor permissions.
+ * @return @c BLE_ATT_F_* bitfield for @c ble_gatt_dsc_def.
+ * @note Fail-closed: no permission bits means no att flags, so a descriptor
+ *       declared with @ref BLEPermission::None stays inaccessible instead of
+ *       silently falling back to open read. The validator already rejects that
+ *       spec, so the only way to reach here with @c None is direct @c Impl
+ *       construction, where an inaccessible descriptor is the safer outcome.
+ */
+static uint8_t mapDescriptorAttFlags(BLEPermission perms) {
+  uint8_t flags = 0;
+  if (perms & BLEPermission::ReadOpen) {
+    flags |= BLE_ATT_F_READ;
+  }
+  if (perms & BLEPermission::WriteOpen) {
+    flags |= BLE_ATT_F_WRITE;
+  }
+  if (perms & BLEPermission::ReadEncrypted) {
+    flags |= BLE_ATT_F_READ | BLE_ATT_F_READ_ENC;
+  }
+  if (perms & BLEPermission::ReadAuthenticated) {
+    flags |= BLE_ATT_F_READ | BLE_ATT_F_READ_AUTHEN;
+  }
+  if (perms & BLEPermission::ReadAuthorized) {
+    flags |= BLE_ATT_F_READ | BLE_ATT_F_READ_AUTHOR;
+  }
+  if (perms & BLEPermission::WriteEncrypted) {
+    flags |= BLE_ATT_F_WRITE | BLE_ATT_F_WRITE_ENC;
+  }
+  if (perms & BLEPermission::WriteAuthenticated) {
+    flags |= BLE_ATT_F_WRITE | BLE_ATT_F_WRITE_AUTHEN;
+  }
+  if (perms & BLEPermission::WriteAuthorized) {
+    flags |= BLE_ATT_F_WRITE | BLE_ATT_F_WRITE_AUTHOR;
+  }
+  return flags;
+}
+
 BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermission perms, size_t maxLen) {
   BLE_CHECK_IMPL(BLEDescriptor());
 
@@ -329,39 +368,7 @@ BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermis
   desc->permissions = perms;
   nimbleUuidFromPublic(uuid, desc->nimbleUUID);
 
-  // Fail-closed mapping from BLEPermission to NimBLE att flags. Unlike the
-  // previous revision this does NOT fall back to READ when no permission
-  // bits are set — that path is now rejected by the validator above, so the
-  // only way to reach here with `perms == None` is via direct Impl
-  // construction, in which case leaving the descriptor inaccessible (and
-  // logged as an error) is the safer failure mode.
-  uint8_t flags = 0;
-  uint16_t p = static_cast<uint16_t>(perms);
-  if (p & static_cast<uint16_t>(BLEPermission::Read)) {
-    flags |= BLE_ATT_F_READ;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::Write)) {
-    flags |= BLE_ATT_F_WRITE;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::ReadEncrypted)) {
-    flags |= BLE_ATT_F_READ | BLE_ATT_F_READ_ENC;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::ReadAuthenticated)) {
-    flags |= BLE_ATT_F_READ | BLE_ATT_F_READ_AUTHEN;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::ReadAuthorized)) {
-    flags |= BLE_ATT_F_READ | BLE_ATT_F_READ_AUTHOR;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::WriteEncrypted)) {
-    flags |= BLE_ATT_F_WRITE | BLE_ATT_F_WRITE_ENC;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::WriteAuthenticated)) {
-    flags |= BLE_ATT_F_WRITE | BLE_ATT_F_WRITE_AUTHEN;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::WriteAuthorized)) {
-    flags |= BLE_ATT_F_WRITE | BLE_ATT_F_WRITE_AUTHOR;
-  }
-  desc->attFlags = flags;
+  desc->attFlags = mapDescriptorAttFlags(perms);
   desc->value.reserve(maxLen);
 
   impl.descriptors.push_back(desc);
@@ -378,7 +385,7 @@ void BLECharacteristic::setDescription(const String &desc) {
   if (existing) {
     existing.setValue(desc);
   } else {
-    auto d = createDescriptor(BLEUUID(BLE_DSC_UUID16_USER_DESC), BLEPermission::Read, desc.length() + 1);
+    auto d = createDescriptor(BLEUUID(BLE_DSC_UUID16_USER_DESC), BLEPermission::ReadOpen, desc.length() + 1);
     d.setValue(desc);
   }
 }
@@ -397,9 +404,9 @@ void BLECharacteristic::setDescription(const String &desc) {
 static ble_gatt_chr_flags mapPropertyFlags(BLEProperty props, BLEPermission perms) {
   ble_gatt_chr_flags f = 0;
 
-  const bool anyReadPerm = (perms & BLEPermission::Read) || (perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated)
+  const bool anyReadPerm = (perms & BLEPermission::ReadOpen) || (perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated)
                            || (perms & BLEPermission::ReadAuthorized);
-  const bool anyWritePerm = (perms & BLEPermission::Write) || (perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated)
+  const bool anyWritePerm = (perms & BLEPermission::WriteOpen) || (perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated)
                             || (perms & BLEPermission::WriteAuthorized);
 
   // Operation axis — gated on matching permission direction.
@@ -592,36 +599,10 @@ void BLECharacteristic::setDescription(const String &) {
 // Maps BLEPermission flags to NimBLE att access flags before registration.
 void BLEDescriptor::setPermissions(BLEPermission perms) {
   BLE_CHECK_IMPL();
-  uint8_t flags = 0;
-  uint16_t p = static_cast<uint16_t>(perms);
-  if (p & static_cast<uint16_t>(BLEPermission::Read)) {
-    flags |= BLE_ATT_F_READ;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::Write)) {
-    flags |= BLE_ATT_F_WRITE;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::ReadEncrypted)) {
-    flags |= BLE_ATT_F_READ | BLE_ATT_F_READ_ENC;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::ReadAuthenticated)) {
-    flags |= BLE_ATT_F_READ | BLE_ATT_F_READ_AUTHEN;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::ReadAuthorized)) {
-    flags |= BLE_ATT_F_READ | BLE_ATT_F_READ_AUTHOR;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::WriteEncrypted)) {
-    flags |= BLE_ATT_F_WRITE | BLE_ATT_F_WRITE_ENC;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::WriteAuthenticated)) {
-    flags |= BLE_ATT_F_WRITE | BLE_ATT_F_WRITE_AUTHEN;
-  }
-  if (p & static_cast<uint16_t>(BLEPermission::WriteAuthorized)) {
-    flags |= BLE_ATT_F_WRITE | BLE_ATT_F_WRITE_AUTHOR;
-  }
   // Store both the native flags and the source BLEPermission so the
   // cross-backend validator (which runs again at registration time) can
   // reason about logical permissions after a post-creation mutation.
-  impl.attFlags = flags;
+  impl.attFlags = mapDescriptorAttFlags(perms);
   impl.permissions = perms;
 }
 

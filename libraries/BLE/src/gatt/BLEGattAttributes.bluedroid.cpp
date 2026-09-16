@@ -201,7 +201,7 @@ void BLECharacteristic::setDescription(const String &desc) {
   if (existing) {
     existing.setValue(desc);
   } else {
-    auto d = createDescriptor(BLEUUID(BLE_DSC_UUID16_USER_DESC), BLEPermission::Read, desc.length() + 1);
+    auto d = createDescriptor(BLEUUID(BLE_DSC_UUID16_USER_DESC), BLEPermission::ReadOpen, desc.length() + 1);
     d.setValue(desc);
   }
 }

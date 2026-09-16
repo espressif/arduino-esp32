@@ -66,7 +66,7 @@ void setup() {
   Serial.println("OK");
 
   Serial.print("Creating notify characteristic... ");
-  notifyChr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
+  notifyChr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
   if (!notifyChr) {
     Serial.println("FAILED!");
     while (true) {

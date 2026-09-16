@@ -48,25 +48,25 @@ BLEHIDDevice::BLEHIDDevice(BLEServer server) : _server(server) {
   // HIDS 1.0 §3: Battery Service shall be an Included Service of the HID Service.
   _hidSvc.addIncludedService(_batterySvc);
 
-  _mfgChar = _devInfoSvc.createCharacteristic(kMfgNameUUID, BLEProperty::Read, BLEPermissions::OpenRead);
-  _pnpChar = _devInfoSvc.createCharacteristic(kPnpIdUUID, BLEProperty::Read, BLEPermissions::OpenRead);
+  _mfgChar = _devInfoSvc.createCharacteristic(kMfgNameUUID, BLEProperty::Read, BLEPermission::ReadOpen);
+  _pnpChar = _devInfoSvc.createCharacteristic(kPnpIdUUID, BLEProperty::Read, BLEPermission::ReadOpen);
 
-  _hidInfoChar = _hidSvc.createCharacteristic(kHIDInfoUUID, BLEProperty::Read, BLEPermissions::OpenRead);
-  _reportMapChar = _hidSvc.createCharacteristic(kReportMapUUID, BLEProperty::Read, BLEPermissions::OpenRead);
+  _hidInfoChar = _hidSvc.createCharacteristic(kHIDInfoUUID, BLEProperty::Read, BLEPermission::ReadOpen);
+  _reportMapChar = _hidSvc.createCharacteristic(kReportMapUUID, BLEProperty::Read, BLEPermission::ReadOpen);
 
   // HIDS 1.0 §3.6: External Report Reference descriptor on Report Map
   // referencing the Battery Level characteristic UUID.
-  BLEDescriptor extRef = _reportMapChar.createDescriptor(kExtReportRefDescUUID, BLEPermission::Read);
+  BLEDescriptor extRef = _reportMapChar.createDescriptor(kExtReportRefDescUUID, BLEPermission::ReadOpen);
   uint8_t battUuid16[2] = {0x19, 0x2A};  // 0x2A19 little-endian
   extRef.setValue(battUuid16, 2);
 
-  _hidControlChar = _hidSvc.createCharacteristic(kHIDControlUUID, BLEProperty::WriteNR, BLEPermissions::OpenWrite);
-  _protocolModeChar = _hidSvc.createCharacteristic(kProtocolModeUUID, BLEProperty::Read | BLEProperty::WriteNR, BLEPermissions::OpenReadWrite);
+  _hidControlChar = _hidSvc.createCharacteristic(kHIDControlUUID, BLEProperty::WriteNR, BLEPermission::WriteOpen);
+  _protocolModeChar = _hidSvc.createCharacteristic(kProtocolModeUUID, BLEProperty::Read | BLEProperty::WriteNR, BLEPermission::ReadWriteOpen);
 
   uint8_t protocolMode = 1;  // Report Protocol Mode
   _protocolModeChar.setValue(&protocolMode, 1);
 
-  _batteryLevelChar = _batterySvc.createCharacteristic(kBatteryLevelUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
+  _batteryLevelChar = _batterySvc.createCharacteristic(kBatteryLevelUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
 
   // HoGP §4.3.1 / HIDS 1.0 §3: The HID Service UUID (0x1812) MUST appear in
   // the advertising data so that HID hosts can discover the device by service
@@ -147,10 +147,10 @@ BLECharacteristic BLEHIDDevice::protocolMode() {
 static BLEPermission openPermsFor(BLEProperty props) {
   BLEPermission p = BLEPermission::None;
   if (props & BLEProperty::Read) {
-    p = p | BLEPermission::Read;
+    p = p | BLEPermission::ReadOpen;
   }
   if ((props & BLEProperty::Write) || (props & BLEProperty::WriteNR)) {
-    p = p | BLEPermission::Write;
+    p = p | BLEPermission::WriteOpen;
   }
   return p;
 }
@@ -169,7 +169,7 @@ static BLEPermission openPermsFor(BLEProperty props) {
  */
 static BLECharacteristic createReportChar(BLEService &svc, BLEProperty props, uint8_t reportId, uint8_t reportType) {
   BLECharacteristic chr = svc.createCharacteristic(kReportUUID, props, openPermsFor(props));
-  BLEDescriptor refDesc = chr.createDescriptor(kReportRefDescUUID, BLEPermission::Read);
+  BLEDescriptor refDesc = chr.createDescriptor(kReportRefDescUUID, BLEPermission::ReadOpen);
   uint8_t refValue[2] = {reportId, reportType};
   refDesc.setValue(refValue, 2);
   return chr;
@@ -189,7 +189,7 @@ BLECharacteristic BLEHIDDevice::featureReport(uint8_t reportId) {
 
 BLECharacteristic BLEHIDDevice::bootInput() {
   if (!_bootInputChar) {
-    _bootInputChar = _hidSvc.createCharacteristic(kBootInputUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
+    _bootInputChar = _hidSvc.createCharacteristic(kBootInputUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
   }
   return _bootInputChar;
 }
@@ -197,7 +197,7 @@ BLECharacteristic BLEHIDDevice::bootInput() {
 BLECharacteristic BLEHIDDevice::bootOutput() {
   if (!_bootOutputChar) {
     _bootOutputChar =
-      _hidSvc.createCharacteristic(kBootOutputUUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::WriteNR, BLEPermissions::OpenReadWrite);
+      _hidSvc.createCharacteristic(kBootOutputUUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::ReadWriteOpen);
   }
   return _bootOutputChar;
 }
