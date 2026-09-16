@@ -45,11 +45,12 @@ public:
     _out = p ? p : &Serial;
   }
 
-  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc,
-             uint16_t desc_len) override {
+  bool claim(uint8_t dev_addr, uint8_t idx, uint8_t protocol, const uint8_t *report_desc, uint16_t desc_len) override {
     if (_out != nullptr) {
-      _out->printf("\n--- HID report descriptor parse (dev=%u idx=%u boot_protocol=%u, len=%u) ---\n",
-                   (unsigned)dev_addr, (unsigned)idx, (unsigned)protocol, (unsigned)desc_len);
+      _out->printf(
+        "\n--- HID report descriptor parse (dev=%u idx=%u boot_protocol=%u, len=%u) ---\n", (unsigned)dev_addr, (unsigned)idx, (unsigned)protocol,
+        (unsigned)desc_len
+      );
       usbhid_print_parsed_report_map(*_out, report_desc, desc_len);
       _out->println("--- end parse ---\n");
     }

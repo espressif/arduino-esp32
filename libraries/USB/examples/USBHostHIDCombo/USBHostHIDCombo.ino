@@ -152,9 +152,10 @@ void loop() {
     const uint32_t now = millis();
     if ((uint32_t)(now - s_last_status_ms) >= (uint32_t)COMBO_STATUS_INTERVAL_MS) {
       s_last_status_ms = now;
-      Serial.printf("[status] mouse=%s keyboard=%s gamepad=%s\n",
-                    USBHostMouse.mounted() ? "yes" : "no", USBHostKeyboard.mounted() ? "yes" : "no",
-                    USBHostGamepad.mounted() ? "yes" : "no");
+      Serial.printf(
+        "[status] mouse=%s keyboard=%s gamepad=%s\n", USBHostMouse.mounted() ? "yes" : "no", USBHostKeyboard.mounted() ? "yes" : "no",
+        USBHostGamepad.mounted() ? "yes" : "no"
+      );
     }
   }
 #endif

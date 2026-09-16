@@ -93,7 +93,10 @@ static void arduino_usb_host_worker_watch(void) {
     stalled = true;
     log_e(
       "[USBHost] worker stalled %ums in %s (iter=%u)", (unsigned)(now - last_change_ms),
-      (s_tuh_phase == TUH_PHASE_TASK) ? "tuh_task" : (s_tuh_phase == TUH_PHASE_HID) ? "hid service" : "idle", (unsigned)iter
+      (s_tuh_phase == TUH_PHASE_TASK)  ? "tuh_task"
+      : (s_tuh_phase == TUH_PHASE_HID) ? "hid service"
+                                       : "idle",
+      (unsigned)iter
     );
   }
 }

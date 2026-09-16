@@ -18,26 +18,26 @@ extern "C" {
 #endif
 
 /* HID Report Map item tags (short items, bTag in high nibble of first byte) */
-#define USBHID_RM_INPUT           0x80
-#define USBHID_RM_OUTPUT          0x90
-#define USBHID_RM_FEATURE         0xb0
-#define USBHID_RM_COLLECTION      0xa0
-#define USBHID_RM_END_COLLECTION  0xc0
-#define USBHID_RM_USAGE_PAGE      0x04
-#define USBHID_RM_LOGICAL_MINIMUM 0x14
-#define USBHID_RM_LOGICAL_MAXIMUM 0x24
+#define USBHID_RM_INPUT            0x80
+#define USBHID_RM_OUTPUT           0x90
+#define USBHID_RM_FEATURE          0xb0
+#define USBHID_RM_COLLECTION       0xa0
+#define USBHID_RM_END_COLLECTION   0xc0
+#define USBHID_RM_USAGE_PAGE       0x04
+#define USBHID_RM_LOGICAL_MINIMUM  0x14
+#define USBHID_RM_LOGICAL_MAXIMUM  0x24
 #define USBHID_RM_PHYSICAL_MINIMUM 0x34
 #define USBHID_RM_PHYSICAL_MAXIMUM 0x44
-#define USBHID_RM_UNIT_EXPONENT   0x54
-#define USBHID_RM_UNIT            0x64
-#define USBHID_RM_REPORT_SIZE     0x74
-#define USBHID_RM_REPORT_ID       0x84
-#define USBHID_RM_REPORT_COUNT    0x94
-#define USBHID_RM_PUSH            0xa4
-#define USBHID_RM_POP             0xb4
-#define USBHID_RM_USAGE           0x08
-#define USBHID_RM_USAGE_MINIMUM   0x18
-#define USBHID_RM_USAGE_MAXIMUM   0x28
+#define USBHID_RM_UNIT_EXPONENT    0x54
+#define USBHID_RM_UNIT             0x64
+#define USBHID_RM_REPORT_SIZE      0x74
+#define USBHID_RM_REPORT_ID        0x84
+#define USBHID_RM_REPORT_COUNT     0x94
+#define USBHID_RM_PUSH             0xa4
+#define USBHID_RM_POP              0xb4
+#define USBHID_RM_USAGE            0x08
+#define USBHID_RM_USAGE_MINIMUM    0x18
+#define USBHID_RM_USAGE_MAXIMUM    0x28
 
 /* Values inside HID Report descriptor (not the same as usbhid_report_usage_t). */
 #define USBHID_RD_USAGE_PAGE_GENERIC_DESKTOP 0x01u

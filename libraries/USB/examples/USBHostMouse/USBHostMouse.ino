@@ -49,13 +49,11 @@ void loop() {
       USBHostMouse.clear();
     } else {
       s_last_buttons = btns;
-      Serial.printf("dx=%d dy=%d btns=0x%02x wheel=%d\n",
-                    (int)dx, (int)dy, (unsigned)btns, (int)wh);
+      Serial.printf("dx=%d dy=%d btns=0x%02x wheel=%d\n", (int)dx, (int)dy, (unsigned)btns, (int)wh);
       USBHostMouse.clear();
     }
 #else
-    Serial.printf("dx=%d dy=%d btns=0x%02x wheel=%d\n",
-                  (int)dx, (int)dy, (unsigned)btns, (int)wh);
+    Serial.printf("dx=%d dy=%d btns=0x%02x wheel=%d\n", (int)dx, (int)dy, (unsigned)btns, (int)wh);
     USBHostMouse.clear();
 #endif
   }

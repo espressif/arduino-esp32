@@ -20,14 +20,16 @@ void usbhid_print_parsed_report_map(Print &out, const uint8_t *hid_rm, size_t hi
     return;
   }
 
-  out.printf("Parsed HID report map: usage=%s appearance=0x%04x report_items=%u\n",
-             usbhid_usage_str(map->usage), (unsigned)map->appearance, (unsigned)map->reports_len);
+  out.printf(
+    "Parsed HID report map: usage=%s appearance=0x%04x report_items=%u\n", usbhid_usage_str(map->usage), (unsigned)map->appearance, (unsigned)map->reports_len
+  );
 
   for (unsigned i = 0; i < (unsigned)map->reports_len; i++) {
     const usbhid_report_item_t *r = &map->reports[i];
-    out.printf("  [%u] report_id=%u type=%s protocol=%s len=%u usage=%s\n", i, (unsigned)r->report_id,
-               usbhid_report_type_str(r->report_type), usbhid_protocol_mode_str(r->protocol_mode),
-               (unsigned)r->value_len, usbhid_usage_str(r->usage));
+    out.printf(
+      "  [%u] report_id=%u type=%s protocol=%s len=%u usage=%s\n", i, (unsigned)r->report_id, usbhid_report_type_str(r->report_type),
+      usbhid_protocol_mode_str(r->protocol_mode), (unsigned)r->value_len, usbhid_usage_str(r->usage)
+    );
   }
 
   usbhid_free_report_map(map);
