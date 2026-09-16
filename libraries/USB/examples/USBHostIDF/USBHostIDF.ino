@@ -92,8 +92,7 @@ static void deviceGone(usb_device_handle_t dev) {
   Serial0.println("[usbh] device removed");
 }
 
-static void clientEvent(const usb_host_client_event_msg_t *msg, void *arg) {
-  (void)arg;
+static void clientEvent(const usb_host_client_event_msg_t *msg, void *) {
   switch (msg->event) {
     case USB_HOST_CLIENT_EVENT_NEW_DEV:  deviceAdded(msg->new_dev.address); break;
     case USB_HOST_CLIENT_EVENT_DEV_GONE: deviceGone(msg->dev_gone.dev_hdl); break;
@@ -101,8 +100,7 @@ static void clientEvent(const usb_host_client_event_msg_t *msg, void *arg) {
   }
 }
 
-static void daemonTask(void *arg) {
-  (void)arg;
+static void daemonTask(void *) {
   while (true) {
     uint32_t event_flags = 0;
     usb_host_lib_handle_events(portMAX_DELAY, &event_flags);
@@ -112,8 +110,7 @@ static void daemonTask(void *arg) {
   }
 }
 
-static void clientTask(void *arg) {
-  (void)arg;
+static void clientTask(void *) {
   while (true) {
     usb_host_client_handle_events(s_client, portMAX_DELAY);
   }

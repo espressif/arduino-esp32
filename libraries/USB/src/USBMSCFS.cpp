@@ -469,7 +469,7 @@ bool USBMSCFSClass::begin(const char *mountpoint, uint8_t max_files, bool format
       log_e("USBMSCFS: f_mount failed (%d)", (int)res);
     }
 
-    if (res == FR_NO_FILESYSTEM && format_if_empty) {
+    if (res == FR_NO_FILESYSTEM && format_if_empty && gpt_lba == 0) {
       BYTE *work = (BYTE *)malloc(sizeof(BYTE) * FF_MAX_SS);
       if (work == nullptr) {
         log_e("USBMSCFS: alloc for f_mkfs failed");
@@ -489,6 +489,14 @@ bool USBMSCFSClass::begin(const char *mountpoint, uint8_t max_files, bool format
         _pdrv = 0xFF;
         return false;
       }
+    } else if (res == FR_NO_FILESYSTEM && format_if_empty) {
+      /* GPT disk: writes to LBA 0 are swallowed to protect the protective MBR, so f_mkfs would
+       * lay down a partition table that never lands while its VBR goes to the synthetic offset,
+       * then return FR_OK over a GPT header that no longer describes the volume. */
+      log_e("USBMSCFS: refusing to format a GPT disk — f_mkfs would write through the synthetic MBR and leave the GPT header stale");
+      usbmsc_begin_cleanup(mountpoint, pdrv, true);
+      _pdrv = 0xFF;
+      return false;
     } else {
       usbmsc_begin_cleanup(mountpoint, pdrv, true);
       _pdrv = 0xFF;
@@ -572,15 +580,26 @@ uint64_t USBMSCFSClass::usedBytes() {
   return size;
 }
 
+/* Both take a bare pointer, so the caller cannot signal capacity while a sector is whatever the
+ * device reports. On a 4K-sector drive one sector would run 3.5 KB past a 512-byte buffer. */
+static bool usbmsc_raw_sector_ok(const char *op) {
+  const uint32_t bsize = USBHostMSC.blockSize();
+  if (bsize != 512) {
+    log_e("[USBMSCFS] %s needs a 512-byte sector, device reports %" PRIu32, op, bsize);
+    return false;
+  }
+  return true;
+}
+
 bool USBMSCFSClass::readRAW(uint8_t *buffer, uint32_t sector) {
-  if (_pdrv == 0xFF || buffer == nullptr) {
+  if (_pdrv == 0xFF || buffer == nullptr || !usbmsc_raw_sector_ok("readRAW")) {
     return false;
   }
   return ff_usbmsc_read(_pdrv, buffer, sector, 1u) == RES_OK;
 }
 
 bool USBMSCFSClass::writeRAW(uint8_t *buffer, uint32_t sector) {
-  if (_pdrv == 0xFF || buffer == nullptr) {
+  if (_pdrv == 0xFF || buffer == nullptr || !usbmsc_raw_sector_ok("writeRAW")) {
     return false;
   }
   return ff_usbmsc_write(_pdrv, buffer, sector, 1u) == RES_OK;

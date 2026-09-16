@@ -53,6 +53,8 @@ public:
   uint64_t totalBytes();
   uint64_t usedBytes();
 
+  /** Single sector to/from a 512-byte buffer. Fails on a device with a larger sector, since
+   *  there is no way for the caller to state the buffer's capacity. */
   bool readRAW(uint8_t *buffer, uint32_t sector);
   bool writeRAW(uint8_t *buffer, uint32_t sector);
 };
