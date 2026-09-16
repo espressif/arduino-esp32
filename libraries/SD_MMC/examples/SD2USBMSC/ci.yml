@@ -1,3 +1,6 @@
+fqbn:
+  - espressif:esp32:esp32p4:PSRAM=enabled,USBMode=default,ChipVariant=postv3
+
 requires:
   - CONFIG_SOC_SDMMC_HOST_SUPPORTED=y
   - CONFIG_TINYUSB_MSC_ENABLED=y
