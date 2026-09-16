@@ -34,7 +34,6 @@ MatterGenericSwitch SmartButton;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // set your board USER BUTTON pin here
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
@@ -125,9 +124,7 @@ static void checkMultiPressComplete() {
   }
 
   if (SmartButton.hasFeature(MatterGenericSwitch::FEATURE_MULTI_PRESS) && pressesInSequence > 0) {
-    Serial.printf(
-      ">>> Gesture: %s (MultiPressComplete count=%u)\r\n", clickGestureName(pressesInSequence), pressesInSequence
-    );
+    Serial.printf(">>> Gesture: %s (MultiPressComplete count=%u)\r\n", clickGestureName(pressesInSequence), pressesInSequence);
     SmartButton.multiPressComplete(pressesInSequence);
   }
 

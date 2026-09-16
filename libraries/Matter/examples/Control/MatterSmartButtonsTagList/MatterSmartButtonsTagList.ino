@@ -36,7 +36,6 @@ MatterGenericSwitch ButtonScene;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // set your board pins here
 const uint8_t buttonOnPin = 4;                   // On button GPIO — change to match your wiring
 const uint8_t buttonOffPin = 5;                  // Off button GPIO — change to match your wiring

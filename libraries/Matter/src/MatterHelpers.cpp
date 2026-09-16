@@ -54,9 +54,7 @@ static void printReadyStatus(bool commissioned, bool connected, bool online) {
     case MATTER_NETWORK_ETHERNET: net = "eth"; break;
     default:                      break;
   }
-  Serial.printf(
-    "[ready] net=%s commissioned=%s connected=%s controller=%s\r\n", net, commissioned ? "Y" : "N", connected ? "Y" : "N", online ? "Y" : "N"
-  );
+  Serial.printf("[ready] net=%s commissioned=%s connected=%s controller=%s\r\n", net, commissioned ? "Y" : "N", connected ? "Y" : "N", online ? "Y" : "N");
 }
 
 void matterWaitUntilReady(uint32_t timeoutMs) {

@@ -27,7 +27,6 @@ MatterOnOffLight OnOffLight;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 void setup() {
   Serial.begin(115200);
 

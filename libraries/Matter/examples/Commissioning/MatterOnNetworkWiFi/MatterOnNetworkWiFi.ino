@@ -44,8 +44,7 @@ static uint32_t sHeapBeforeBegin = 0;
 
 static void printHeap(const char *when) {
   Serial.printf(
-    "%s  free=%lu  min=%lu  maxAlloc=%lu\r\n", when, (unsigned long)ESP.getFreeHeap(), (unsigned long)ESP.getMinFreeHeap(),
-    (unsigned long)ESP.getMaxAllocHeap()
+    "%s  free=%lu  min=%lu  maxAlloc=%lu\r\n", when, (unsigned long)ESP.getFreeHeap(), (unsigned long)ESP.getMinFreeHeap(), (unsigned long)ESP.getMaxAllocHeap()
   );
 }
 

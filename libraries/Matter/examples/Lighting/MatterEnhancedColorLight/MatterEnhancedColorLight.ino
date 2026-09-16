@@ -33,7 +33,6 @@ MatterEnhancedColorLight EnhancedColorLight;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // It will use HSV color to control all Matter Attribute Changes
 HsvColor_t currentHSVColor = {0, 0, 0};
 
@@ -137,8 +136,8 @@ void setup() {
   Matter.begin();
   matterWaitUntilReady();
   Serial.printf(
-    "Initial state: %s | RGB Color: (%u,%u,%u) \r\n", EnhancedColorLight ? "ON" : "OFF", EnhancedColorLight.getColorRGB().r,
-    EnhancedColorLight.getColorRGB().g, EnhancedColorLight.getColorRGB().b
+    "Initial state: %s | RGB Color: (%u,%u,%u) \r\n", EnhancedColorLight ? "ON" : "OFF", EnhancedColorLight.getColorRGB().r, EnhancedColorLight.getColorRGB().g,
+    EnhancedColorLight.getColorRGB().b
   );
   EnhancedColorLight.updateAccessory();
 }

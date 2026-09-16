@@ -28,7 +28,6 @@ MatterOnOffPlugin OnOffPlugin;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // it will keep last OnOff state stored, using Preferences
 Preferences matterPref;
 const char *onOffPrefKey = "OnOff";

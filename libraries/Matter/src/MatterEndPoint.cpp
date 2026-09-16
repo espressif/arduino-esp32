@@ -26,11 +26,9 @@ using namespace chip::app::Clusters;
 uint16_t MatterEndPoint::secondary_network_endpoint_id = 0;
 
 bool MatterEndPoint::createSecondaryNetworkInterface() {
-  log_w(
-    "createSecondaryNetworkInterface() is deprecated and does nothing. "
-    "Arduino Matter exposes Wi-Fi or Thread Network Commissioning on endpoint 0 "
-    "(ESP32-C6: Matter.selectNetwork()), not both."
-  );
+  log_w("createSecondaryNetworkInterface() is deprecated and does nothing. "
+        "Arduino Matter exposes Wi-Fi or Thread Network Commissioning on endpoint 0 "
+        "(ESP32-C6: Matter.selectNetwork()), not both.");
   return false;
 }
 

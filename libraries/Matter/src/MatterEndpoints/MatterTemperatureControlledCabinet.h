@@ -23,6 +23,7 @@ class ArduinoCabinetTemperatureLevelsDelegate;
 
 class MatterTemperatureControlledCabinet : public MatterEndPoint {
   friend class ArduinoCabinetTemperatureLevelsDelegate;
+
 public:
   MatterTemperatureControlledCabinet();
   ~MatterTemperatureControlledCabinet();

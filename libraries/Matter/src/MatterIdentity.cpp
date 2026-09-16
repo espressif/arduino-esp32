@@ -287,9 +287,7 @@ static bool reopenCommissioningWindow(chip::CommissioningWindowAdvertisement adv
   if (mgr.IsCommissioningWindowOpen()) {
     mgr.CloseCommissioningWindow();
   }
-  const CHIP_ERROR err = mgr.OpenBasicCommissioningWindow(
-    chip::System::Clock::Seconds32(CHIP_DEVICE_CONFIG_DISCOVERY_TIMEOUT_SECS), advertisement
-  );
+  const CHIP_ERROR err = mgr.OpenBasicCommissioningWindow(chip::System::Clock::Seconds32(CHIP_DEVICE_CONFIG_DISCOVERY_TIMEOUT_SECS), advertisement);
   if (err != CHIP_NO_ERROR) {
     log_e("Failed to reopen commissioning window: %" CHIP_ERROR_FORMAT, err.Format());
     return false;
@@ -332,9 +330,8 @@ void ArduinoMatter::applyIdentityAfterStart() {
       // Reopen only when the PIN/discriminator wrap was published.
       // Do not close/reopen just because BLE is off — that tears down _matterc._udp on
       // on-network Wi-Fi before the commissioner can find the node (test: MatterOnNetworkWiFi).
-      const chip::CommissioningWindowAdvertisement advertisement = isBLECommissioningEnabled()
-                                                                    ? chip::CommissioningWindowAdvertisement::kAllSupported
-                                                                    : chip::CommissioningWindowAdvertisement::kDnssdOnly;
+      const chip::CommissioningWindowAdvertisement advertisement =
+        isBLECommissioningEnabled() ? chip::CommissioningWindowAdvertisement::kAllSupported : chip::CommissioningWindowAdvertisement::kDnssdOnly;
       if (!reopenCommissioningWindow(advertisement)) {
         log_e("Commissioning window was not refreshed.");
       }

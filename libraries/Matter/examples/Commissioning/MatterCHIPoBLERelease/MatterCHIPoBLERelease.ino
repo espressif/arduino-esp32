@@ -27,7 +27,6 @@
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 MatterOnOffLight OnOffLight;
 
 #ifdef LED_BUILTIN
@@ -49,8 +48,7 @@ static uint8_t *sPostBleBuffer = nullptr;
 
 static void printHeap(const char *when) {
   Serial.printf(
-    "%s  free=%lu  min=%lu  maxAlloc=%lu\r\n", when, (unsigned long)ESP.getFreeHeap(), (unsigned long)ESP.getMinFreeHeap(),
-    (unsigned long)ESP.getMaxAllocHeap()
+    "%s  free=%lu  min=%lu  maxAlloc=%lu\r\n", when, (unsigned long)ESP.getFreeHeap(), (unsigned long)ESP.getMinFreeHeap(), (unsigned long)ESP.getMaxAllocHeap()
   );
 }
 

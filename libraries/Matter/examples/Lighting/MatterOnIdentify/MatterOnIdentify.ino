@@ -33,7 +33,6 @@ MatterOnOffLight OnOffLight;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // Light GPIO that can be controlled by Matter APP
 #ifdef LED_BUILTIN
 const uint8_t ledPin = LED_BUILTIN;

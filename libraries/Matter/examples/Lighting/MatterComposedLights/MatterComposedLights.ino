@@ -33,7 +33,6 @@ MatterColorLight Light3;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // set your board USER BUTTON pin here -  USED to decommission the Matter Node
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 MatterButton button;

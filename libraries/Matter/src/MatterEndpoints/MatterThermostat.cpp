@@ -24,9 +24,7 @@ using namespace chip::app::Clusters;
 
 // string helper for the THERMOSTAT MODE
 // Indexed by Thermostat::SystemModeEnum (2 is unused in the spec)
-const char *MatterThermostat::thermostatModeString[10] = {
-  "OFF", "AUTO", "UNKNOWN", "COOL", "HEAT", "EMERGENCY_HEAT", "PRECOOLING", "FAN_ONLY", "DRY", "SLEEP"
-};
+const char *MatterThermostat::thermostatModeString[10] = {"OFF", "AUTO", "UNKNOWN", "COOL", "HEAT", "EMERGENCY_HEAT", "PRECOOLING", "FAN_ONLY", "DRY", "SLEEP"};
 
 namespace {
 uint32_t thermostatFeatureFlagsFromControlSequence(uint8_t controlSequence) {

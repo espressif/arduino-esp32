@@ -28,7 +28,6 @@ MatterWindowCovering WindowBlinds;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // Simple callback - handles window Lift change request
 bool onBlindsLift(uint8_t liftPercent) {
   // This example only uses lift

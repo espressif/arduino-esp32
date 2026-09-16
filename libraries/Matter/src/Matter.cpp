@@ -118,8 +118,7 @@ static bool selectedHasUsableIpv6() {
     case MATTER_NETWORK_WIFI:     return netifHasUsableIpv6("WIFI_STA_DEF");
     case MATTER_NETWORK_THREAD:   return netifHasUsableIpv6("OT_DEF");
     case MATTER_NETWORK_ETHERNET: return ethernetHasUsableIpv6();
-    default:
-      return netifHasUsableIpv6("WIFI_STA_DEF") || netifHasUsableIpv6("OT_DEF") || ethernetHasUsableIpv6();
+    default:                      return netifHasUsableIpv6("WIFI_STA_DEF") || netifHasUsableIpv6("OT_DEF") || ethernetHasUsableIpv6();
   }
 }
 
@@ -533,8 +532,7 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
       break;
     case chip::DeviceLayer::DeviceEventType::kThreadConnectivityChange:
 #if CONFIG_ENABLE_MATTER_OVER_THREAD
-      if (sSelectedNetwork == MATTER_NETWORK_THREAD &&
-          event->ThreadConnectivityChange.Result == chip::DeviceLayer::kConnectivity_Established) {
+      if (sSelectedNetwork == MATTER_NETWORK_THREAD && event->ThreadConnectivityChange.Result == chip::DeviceLayer::kConnectivity_Established) {
         startThreadAdvertiseRetries();
       }
 #endif
@@ -557,7 +555,7 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
 #endif
       log_i("Matter DNS-SD initialized");
       break;
-    default:                                                       break;
+    default: break;
   }
   // Check if the user-defined callback is set
   if (ArduinoMatter::_matterEventCB != nullptr) {
@@ -577,8 +575,7 @@ void ArduinoMatter::_init() {
 #if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
 #ifndef CONFIG_CUSTOM_NETWORK_CONFIG
   if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
-    node_config.root_node.network_commissioning.feature_map =
-      chip::to_underlying(NetworkCommissioning::Feature::kThreadNetworkInterface);
+    node_config.root_node.network_commissioning.feature_map = chip::to_underlying(NetworkCommissioning::Feature::kThreadNetworkInterface);
   }
 #endif
 #endif
@@ -793,7 +790,7 @@ uint16_t ArduinoMatter::getNetworkEndPointId(matterNetwork_t network) {
 #endif
       return 0;
     case MATTER_NETWORK_ETHERNET:
-    default: return 0xFFFF;
+    default:                      return 0xFFFF;
   }
 }
 

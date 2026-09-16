@@ -43,7 +43,6 @@ MatterWaterFreezeDetector WaterFreezeDetector;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // LED will be used to indicate the Water Freeze Detector state
 // set your board RGB LED pin here
 #ifdef RGB_BUILTIN
@@ -80,7 +79,6 @@ void setup() {
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
   matterWaitUntilReady();
-
 }
 
 bool simulatedHWWaterFreezeDetector() {

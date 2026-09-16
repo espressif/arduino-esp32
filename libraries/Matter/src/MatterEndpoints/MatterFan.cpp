@@ -71,7 +71,8 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
 
   if (endpoint_id == getEndPointId() && cluster_id == FanControl::Id) {
     switch (attribute_id) {
-      case FanControl::Attributes::FanMode::Id: {
+      case FanControl::Attributes::FanMode::Id:
+      {
         FanMode_t newMode = resolveFanMode((FanMode_t)val->val.u8);
         if (newMode == currentFanMode) {
           break;

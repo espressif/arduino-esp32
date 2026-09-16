@@ -37,7 +37,6 @@ Matter App Control: 'Room 5' (OnOffLight[4], Endpoint 5, GPIO 10) changed to: OF
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 //number of On-Off Lights:
 const uint8_t MAX_LIGHT_NUMBER = 6;
 

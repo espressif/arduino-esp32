@@ -93,9 +93,7 @@ static void printPsramStatus() {
 }
 
 static void printHeap(const char *when) {
-  Serial.printf(
-    "[heap] %s  int=%lu  intMax=%lu", when, (unsigned long)ESP.getFreeHeap(), (unsigned long)ESP.getMaxAllocHeap()
-  );
+  Serial.printf("[heap] %s  int=%lu  intMax=%lu", when, (unsigned long)ESP.getFreeHeap(), (unsigned long)ESP.getMaxAllocHeap());
   if (psramFound()) {
     Serial.printf("  psram=%lu", (unsigned long)ESP.getFreePsram());
   } else {

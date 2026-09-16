@@ -756,9 +756,7 @@ void MatterTemperatureControlledCabinet::reportSupportedTemperatureLevels() {
 
   const uint16_t endpoint_id = getEndPointId();
   CHIP_ERROR err = chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id]() {
-    MatterReportingAttributeChangeCallback(
-      endpoint_id, TemperatureControl::Id, TemperatureControl::Attributes::SupportedTemperatureLevels::Id
-    );
+    MatterReportingAttributeChangeCallback(endpoint_id, TemperatureControl::Id, TemperatureControl::Attributes::SupportedTemperatureLevels::Id);
   });
   if (err != CHIP_NO_ERROR) {
     log_w("Failed to schedule SupportedTemperatureLevels report: %" CHIP_ERROR_FORMAT, err.Format());

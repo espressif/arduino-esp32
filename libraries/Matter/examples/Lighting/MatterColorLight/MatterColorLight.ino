@@ -28,7 +28,6 @@ MatterColorLight ColorLight;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // it will keep last OnOff & HSV Color state stored, using Preferences
 Preferences matterPref;
 const char *onOffPrefKey = "OnOff";

@@ -279,9 +279,8 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
 
   // Per-endpoint AAI: HoldTime / HoldTimeLimits stay CHIP-managed; FeatureMap uses this
   // endpoint's sensor-type bits (already stored in occupancy_sensing.feature_flags).
-  mHoldTimeAccess = new OccupancySensingAttrAccessWrapper(
-    getEndPointId(), chip::BitMask<OccupancySensing::Feature>(occupancy_sensor_config.occupancy_sensing.feature_flags)
-  );
+  mHoldTimeAccess =
+    new OccupancySensingAttrAccessWrapper(getEndPointId(), chip::BitMask<OccupancySensing::Feature>(occupancy_sensor_config.occupancy_sensing.feature_flags));
   CHIP_ERROR aaiErr = mHoldTimeAccess->Init();
   if (aaiErr != CHIP_NO_ERROR) {
     log_e("Failed to register OccupancySensing AttributeAccessInterface: %" CHIP_ERROR_FORMAT, aaiErr.Format());

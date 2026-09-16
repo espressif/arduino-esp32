@@ -28,7 +28,6 @@ MatterOnOffLight OnOffLight;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 Preferences matterPref;
 const char *onOffPrefKey = "OnOff";
 

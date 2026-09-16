@@ -28,7 +28,6 @@ MatterColorTemperatureLight CW_WW_Light;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // it will keep last OnOff & Brightness state stored, using Preferences
 Preferences matterPref;
 const char *onOffPrefKey = "OnOff";

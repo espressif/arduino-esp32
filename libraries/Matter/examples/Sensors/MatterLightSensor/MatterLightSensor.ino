@@ -33,7 +33,6 @@ MatterLightSensor SimulatedLightSensor;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // set your board USER BUTTON pin here - decommissioning button
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 MatterButton button;
@@ -70,7 +69,6 @@ void setup() {
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
   matterWaitUntilReady();
-
 }
 
 void loop() {

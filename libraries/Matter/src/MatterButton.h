@@ -24,10 +24,10 @@
 
 enum matterButtonEvent_t : uint8_t {
   MATTER_BUTTON_NONE = 0,
-  MATTER_BUTTON_PRESS,          // debounced press (active)
-  MATTER_BUTTON_CLICK,          // short release; delayed if double-click is enabled
-  MATTER_BUTTON_DOUBLE_CLICK,   // second short release within the gap
-  MATTER_BUTTON_LONG_HOLD,      // still held; cancels a pending click
+  MATTER_BUTTON_PRESS,         // debounced press (active)
+  MATTER_BUTTON_CLICK,         // short release; delayed if double-click is enabled
+  MATTER_BUTTON_DOUBLE_CLICK,  // second short release within the gap
+  MATTER_BUTTON_LONG_HOLD,     // still held; cancels a pending click
 };
 
 class MatterButton {

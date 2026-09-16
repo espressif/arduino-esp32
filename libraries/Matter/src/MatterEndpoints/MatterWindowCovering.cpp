@@ -778,9 +778,7 @@ bool MatterWindowCovering::setCoveringType(WindowCoveringType_t coveringType) {
   bool wantTilt = false;
   coveringLiftTilt(coveringType, &wantLift, &wantTilt);
   if (wantLift != liftFeatureEnabled || wantTilt != tiltFeatureEnabled) {
-    log_e(
-      "setCoveringType(%u) needs different Lift/Tilt features than begin(); FeatureMap is fixed at create.", (uint8_t)coveringType
-    );
+    log_e("setCoveringType(%u) needs different Lift/Tilt features than begin(); FeatureMap is fixed at create.", (uint8_t)coveringType);
     return false;
   }
 

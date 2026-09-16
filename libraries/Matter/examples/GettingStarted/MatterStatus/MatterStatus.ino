@@ -25,7 +25,6 @@
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
 MatterOnOffLight OnOffLight;
