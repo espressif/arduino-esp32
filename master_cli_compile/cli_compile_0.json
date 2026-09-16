@@ -914,6 +914,14 @@
                         "ram_bytes": 28256,
                         "ram_percentage": 9
                         }]
+                },
+{"name": "libraries/BLE/examples/Server",
+                "sizes": [{
+                        "flash_bytes": 794272,
+                        "flash_percentage": 25,
+                        "ram_bytes": 28248,
+                        "ram_percentage": 9
+                        }]
                 }
 ]
 },
@@ -1063,6 +1071,14 @@
                         "ram_bytes": 16680,
                         "ram_percentage": 5
                         }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
+                "sizes": [{
+                        "flash_bytes": 234543,
+                        "flash_percentage": 18,
+                        "ram_bytes": 16672,
+                        "ram_percentage": 5
+                        }]
                 }
 ]
 },
@@ -1071,7 +1087,7 @@
                 "sketches": [
 {"name": "libraries/ArduinoOTA/examples/BasicOTA",
                 "sizes": [{
-                        "flash_bytes": 940691,
+                        "flash_bytes": 940687,
                         "flash_percentage": 72,
                         "ram_bytes": 51236,
                         "ram_percentage": 16
@@ -1079,7 +1095,7 @@
                 },
 {"name": "libraries/ArduinoOTA/examples/SignedOTA",
                 "sizes": [{
-                        "flash_bytes": 945827,
+                        "flash_bytes": 945823,
                         "flash_percentage": 72,
                         "ram_bytes": 51292,
                         "ram_percentage": 16
@@ -1095,7 +1111,7 @@
                 },
 {"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
                 "sizes": [{
-                        "flash_bytes": 850222,
+                        "flash_bytes": 850218,
                         "flash_percentage": 65,
                         "ram_bytes": 44964,
                         "ram_percentage": 14
@@ -1103,7 +1119,7 @@
                 },
 {"name": "libraries/AsyncUDP/examples/AsyncUDPServer",
                 "sizes": [{
-                        "flash_bytes": 849958,
+                        "flash_bytes": 849954,
                         "flash_percentage": 65,
                         "ram_bytes": 44964,
                         "ram_percentage": 14
@@ -1226,6 +1242,14 @@
                         "flash_bytes": 573478,
                         "flash_percentage": 18,
                         "ram_bytes": 27780,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/UART",
+                "sizes": [{
+                        "flash_bytes": 569374,
+                        "flash_percentage": 18,
+                        "ram_bytes": 27796,
                         "ram_percentage": 8
                         }]
                 }
