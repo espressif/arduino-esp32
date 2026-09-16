@@ -13,7 +13,6 @@ on:
       - "boards.txt"
       - "tools/flasher.py"
       - "package/package_esp32_index.template.json"
-      - ".github/esp32-mock-bootloader-version"
       - ".github/scripts/arduino_headless.sh"
       - ".github/scripts/find_boards.sh"
       - ".github/scripts/mock_upload_lib.sh"
@@ -51,8 +50,18 @@ jobs:
             boards:
               - boards.txt
             upload:
-              - '**'
-              - '!boards.txt'
+              - platform.txt
+              - programmers.txt
+              - tools/flasher.py
+              - package/package_esp32_index.template.json
+              - .github/scripts/arduino_headless.sh
+              - .github/scripts/find_boards.sh
+              - .github/scripts/mock_upload_lib.sh
+              - .github/scripts/test-mock-upload.sh
+              - .github/scripts/install-arduino-builder.sh
+              - .github/scripts/sketch_utils.sh
+              - .github/scripts/socs_config.sh
+              - .github/workflows/upload-tests.yml
 
       - name: Find changed official boards
         if: github.event_name == 'pull_request' && steps.changed.outputs.boards_any_changed == 'true'
@@ -83,7 +92,7 @@ jobs:
             exit 0
           fi
 
-          echo "Only non-official boards.txt changes; skipping mock upload"
+          echo "No official CORE_SOCS boards or upload-related paths changed; skipping mock upload"
           echo "should_run=false" >> "$GITHUB_OUTPUT"
 
   mock-upload:
