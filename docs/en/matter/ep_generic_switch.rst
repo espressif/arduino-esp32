@@ -12,7 +12,7 @@ The ``MatterGenericSwitch`` class provides a generic switch endpoint for Matter 
 * Configurable Switch cluster features (short click, long press, multi-press)
 * Individual event methods matching the Matter specification
 * ``click()`` convenience helper for simple automations
-* Automation trigger support for Apple Home, Amazon Alexa, Google Home, and Home Assistant
+* Automation trigger support for Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -183,7 +183,7 @@ Sends ``MultiPressComplete`` when the multi-press window expires after the last 
 click
 ^^^^^
 
-Convenience helper: sends ``InitialPress`` followed by ``ShortRelease`` when the release feature is enabled.
+Convenience helper: sends ``InitialPress`` followed by ``ShortRelease`` when the release feature is enabled. Both events run in one Matter-task lambda so ``ShortRelease`` cannot be processed before ``InitialPress``.
 
 .. code-block:: arduino
 
@@ -222,18 +222,18 @@ Simple Smart Button
 
 Minimal short-click implementation using ``press()`` on down and ``release()`` on up.
 
-`View Matter Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButton>`_
+`View Matter Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterSmartButton>`_
 
 Enhanced Smart Button
 *********************
 
-Full gesture support with long press and multi-press.
+Same single BOOT button as the simple example. ``begin(FEATURE_ALL)`` enables long-press and multi-press. Serial names the gestures: single click, double click, triple click, and long press. For several buttons with names, use the TagList example below.
 
-`View Matter Enhanced Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedSmartButton>`_
+`View Matter Enhanced Smart Button example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterEnhancedSmartButton>`_
 
 Tagged Smart Buttons
 ********************
 
 Three Generic Switch endpoints — On, Off, and a custom "Scene 1" button. Each tagged via the Descriptor ``TagList`` attribute so a Matter controller can display a meaningful name for each button instead of a generic "Switch 1 / Switch 2 / Switch 3".
 
-`View Matter Smart Buttons TagList example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButtonsTagList>`_
+`View Matter Smart Buttons TagList example on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterSmartButtonsTagList>`_

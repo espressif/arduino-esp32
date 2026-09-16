@@ -53,6 +53,11 @@ public:
   bool getOccupancy() {
     return occupancyState;
   }
+  // Sensor type passed to begin(). CHIP's cluster init reads this via
+  // halOccupancyGetSensorType() and writes OccupancySensorType / TypeBitmap.
+  OccupancySensorType_t getOccupancySensorType() {
+    return occupancySensorType;
+  }
 
   // set the hold time (in seconds)
   // Must be called after Matter.begin() has been called (requires Matter event loop to be running)
@@ -97,6 +102,7 @@ protected:
 
   bool started = false;
   bool occupancyState = false;
+  OccupancySensorType_t occupancySensorType = OCCUPANCY_SENSOR_TYPE_PIR;
   uint16_t holdTime_seconds = 0;
 
   // HoldTimeLimits settings (set via setHoldTimeLimits() after Matter.begin())
@@ -106,5 +112,9 @@ protected:
 
   // User callback
   HoldTimeChangeCB _onHoldTimeChangeCB = nullptr;
+
+  // Per-endpoint Occupancy Sensing AAI. HoldTime storage is CHIP-managed; FeatureMap
+  // is encoded from this endpoint's sensor-type bits (not a process-wide Feature(0)).
+  OccupancySensingAttrAccessWrapper *mHoldTimeAccess = nullptr;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
