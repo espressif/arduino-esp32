@@ -2,9 +2,10 @@
 
 Same exercises as **`libraries/SD/examples/SD_Test`** (`listDir`, `mkdir`, read/write/append, rename, `testFileIO`, `totalBytes` / `usedBytes`), but on a **USB flash drive** via **`USBMSCFS`**.
 
-1. FAT-formatted stick, USB host port, **`USBHost.begin()`** + wait for **`USBHostMSC.mounted()`**.
-2. **`USBMSCFS.begin("/usb")`** (or change **`USB_MSC_MOUNTPOINT`** in the sketch).
-3. After tests, the sketch calls **`USBMSCFS.end()`** so you can unplug cleanly.
+1. **Declare the filesystem in the sketch:** `USBMSCFSClass USBMSCFS;`. The library ships no instance, so a sketch only pays for it when it names it. `USBHostMSCClass USBHostMSC` is the exception — the FatFs layer needs a fixed instance, so the library still provides that one.
+2. FAT-formatted stick, USB host port, **`USBHost.begin()`** + wait for **`USBHostMSC.mounted()`**.
+3. **`USBMSCFS.begin("/usb")`** (or change **`USB_MSC_MOUNTPOINT`** in the sketch).
+4. After tests, the sketch calls **`USBMSCFS.end()`** so you can unplug cleanly.
 
 Optional: **`USB_MSC_WAIT_MS`** (default 60000) — max time to wait for enumeration in `setup()`.
 

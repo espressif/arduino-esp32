@@ -115,8 +115,15 @@ bytesPerSample	KEYWORD2
 
 # Host
 setCore	KEYWORD2
+core	KEYWORD2
 registerWithHost	KEYWORD2
 serviceReceives	KEYWORD2
+USBHostBoardInit	KEYWORD2
+claim	KEYWORD2
+onReport	KEYWORD2
+onUnmount	KEYWORD2
+matches	KEYWORD2
+setPrint	KEYWORD2
 setReportCallback	KEYWORD2
 setNotifyOnChangeOnly	KEYWORD2
 notifyOnChangeOnly	KEYWORD2
@@ -139,6 +146,17 @@ lockHandling	KEYWORD2
 toAscii	KEYWORD2
 toVirtualKey	KEYWORD2
 toVirtualKeyName	KEYWORD2
+usbHostHidKeyboardUsageToArduinoVirtualKey	KEYWORD2
+usbHostHidArduinoVirtualKeyName	KEYWORD2
+usbHostHidBootUsageLogName	KEYWORD2
+usbHostHidBootReportUsageToAscii	KEYWORD2
+usbHostHidBootReportAppendAscii	KEYWORD2
+usbhid_print_parsed_report_map	KEYWORD2
+usbhid_parse_report_map	KEYWORD2
+usbhid_free_report_map	KEYWORD2
+usbhid_usage_str	KEYWORD2
+usbhid_protocol_mode_str	KEYWORD2
+usbhid_report_type_str	KEYWORD2
 printReport	KEYWORD2
 reportData	KEYWORD2
 reportLength	KEYWORD2
@@ -150,6 +168,11 @@ interfaceIndex	KEYWORD2
 interfaceNumber	KEYWORD2
 cdcIndex	KEYWORD2
 baudRate	KEYWORD2
+read	KEYWORD2
+readBytes	KEYWORD2
+peek	KEYWORD2
+flush	KEYWORD2
+availableForWrite	KEYWORD2
 setTxTimeoutMs	KEYWORD2
 getTxTimeoutMs	KEYWORD2
 setLineCoding	KEYWORD2
@@ -188,6 +211,8 @@ HIDMouseRel	LITERAL1
 HIDMouseAbs	LITERAL1
 
 USBHOST_VK_MAP	LITERAL1
+USBHOST_VK_ENUM	LITERAL1
+USBHOST_HID_DUMP_DESC	LITERAL1
 USBHOST_KEY_MOD_MAP	LITERAL1
 USBHOST_KEY_MOD_LEFT_CTRL	LITERAL1
 USBHOST_KEY_MOD_LEFT_SHIFT	LITERAL1
