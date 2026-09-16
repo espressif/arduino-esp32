@@ -1005,15 +1005,21 @@ function verify_gh_pages_package_json {
         return 1
     }
 
-    version=$(jq -r '.packages[0].platforms[0].version // empty' <<<"$remote")
-    platform_url=$(jq -r '.packages[0].platforms[0].url // empty' <<<"$remote")
+    # The dev index aggregates many versions and is sorted newest-first, so the just-released
+    # version is not necessarily platforms[0] (e.g. a 4.x pre-release from master outranks a
+    # 3.x maintenance patch). Match the platform entry by version instead of assuming index 0.
+    version=$(jq -r --arg v "$expected_version" \
+        'first(.packages[0].platforms[] | select(.version == $v) | .version) // empty' <<<"$remote")
+    platform_url=$(jq -r --arg v "$expected_version" \
+        'first(.packages[0].platforms[] | select(.version == $v) | .url) // empty' <<<"$remote")
 
-    if [ -z "$version" ] || [ -z "$platform_url" ]; then
-        echo "ERROR: gh-pages JSON missing platform version/url ($url)" >&2
+    if [ -z "$version" ]; then
+        echo "ERROR: gh-pages JSON has no platform for version $expected_version ($url)" >&2
+        echo "  available versions: $(jq -r '[.packages[0].platforms[].version] | join(", ")' <<<"$remote")" >&2
         return 1
     fi
-    if [ "$version" != "$expected_version" ]; then
-        echo "ERROR: gh-pages JSON version $version != expected $expected_version" >&2
+    if [ -z "$platform_url" ]; then
+        echo "ERROR: gh-pages JSON missing platform url for version $expected_version ($url)" >&2
         return 1
     fi
 

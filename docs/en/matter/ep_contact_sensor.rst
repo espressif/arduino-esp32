@@ -12,7 +12,7 @@ The ``MatterContactSensor`` class provides a contact sensor endpoint for Matter 
 * Simple boolean state
 * Read-only sensor (no control functionality)
 * Automatic state updates
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -43,15 +43,21 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter contact sensor endpoint with an initial contact state.
+Initializes the Matter contact sensor endpoint. Fabric ``StateValue`` starts ``false`` (open). Call ``setContact()`` after ``Matter.begin()`` with the real sensor reading.
 
 .. code-block:: arduino
 
-    bool begin(bool _contactState = false);
-
-* ``_contactState`` - Initial contact state (``true`` = closed, ``false`` = open, default: ``false``)
+    bool begin();
 
 This function will return ``true`` if successful, ``false`` otherwise.
+
+Typical usage:
+
+.. code-block:: arduino
+
+    ContactSensor.begin();
+    Matter.begin();
+    ContactSensor.setContact(digitalRead(contactPin));
 
 end
 ^^^
@@ -68,7 +74,7 @@ Contact State Control
 setContact
 ^^^^^^^^^^
 
-Sets the contact state.
+Sets the contact state. Call after ``Matter.begin()``.
 
 .. code-block:: arduino
 
@@ -114,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the contact state.
+Sets the contact state. Same as ``setContact()``; call after ``Matter.begin()``.
 
 .. code-block:: arduino
 
@@ -133,5 +139,5 @@ Example
 Contact Sensor
 **************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterContactSensor/MatterContactSensor.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterContactSensor/MatterContactSensor.ino
     :language: arduino

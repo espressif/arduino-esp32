@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #if !SOC_USB_OTG_SUPPORTED || ARDUINO_USB_MODE
-#error Device does not support USB_OTG or native USB CDC/JTAG is selected
-#endif
+#warning Device does not support USB_OTG or native USB CDC/JTAG is selected
+void setup() {}
+void loop() {}
+#else
 
 #include <USB.h>
 #include <USBMSC.h>
@@ -104,3 +106,4 @@ void setup() {
 void loop() {
   delay(-1);
 }
+#endif
