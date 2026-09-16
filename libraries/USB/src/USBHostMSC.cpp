@@ -207,7 +207,7 @@ static bool ensure_msc_mutex(void) {
 
 static bool msc_complete_cb(uint8_t dev_addr, const tuh_msc_complete_data_t *cb_data) {
   (void)dev_addr;
-  /* A transfer we gave up on can still complete. Signalling here would let it satisfy the
+  /* A transfer we gave up on can still complete. Signaling here would let it satisfy the
    * retry's wait and hand back the wrong data. */
   if (cb_data->user_arg == 0 || cb_data->user_arg != s_scsi_tag) {
     log_w("[USBHostMSC] dropping stale completion (tag=%u expected=%u)", (unsigned)cb_data->user_arg, (unsigned)s_scsi_tag);

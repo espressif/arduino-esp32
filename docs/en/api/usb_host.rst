@@ -246,7 +246,7 @@ The bitmasks are ``USBHOST_KEY_LED_NUM_LOCK``, ``USBHOST_KEY_LED_CAPS_LOCK``, ``
 Gamepad
 *******
 
-Gamepad report layouts are device-specific, so this handler exposes the raw report and a couple of heuristics rather than pretending to normalise every pad.
+Gamepad report layouts are device-specific, so this handler exposes the raw report and a couple of heuristics rather than pretending to normalize every pad.
 
 .. code-block:: arduino
 
@@ -314,7 +314,7 @@ CDC host
 
 ``begin(0)`` skips the automatic ``SET_LINE_CODING``, leaving the adapter at whatever it was configured to. The object converts to ``bool``, so ``if (USBHostSerial)`` tests the mount state.
 
-On top of the usual ``Stream`` methods, writes honour a configurable timeout: ``setTxTimeoutMs(0)`` makes ``write()`` non-blocking, returning what fit.
+On top of the usual ``Stream`` methods, writes honor a configurable timeout: ``setTxTimeoutMs(0)`` makes ``write()`` non-blocking, returning what fit.
 
 .. note:: ``CFG_TUH_CDC`` sets the host CDC pool size and is often 1 in the prebuilt libraries, which means one CDC device at a time.
 
