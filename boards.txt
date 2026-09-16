@@ -204,6 +204,8 @@ esp32c5.build.flash_mode=qio
 esp32c5.build.boot=qio
 esp32c5.build.partitions=default
 esp32c5.build.defines=
+esp32c5.build.matter_mode=
+esp32c5.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 esp32c5.menu.JTAGAdapter.default=Disabled
@@ -8889,6 +8891,8 @@ sparkfun_esp32c5_thing_plus.build.flash_mode=qio
 sparkfun_esp32c5_thing_plus.build.boot=qio
 sparkfun_esp32c5_thing_plus.build.partitions=default
 sparkfun_esp32c5_thing_plus.build.defines=
+sparkfun_esp32c5_thing_plus.build.matter_mode=
+sparkfun_esp32c5_thing_plus.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 sparkfun_esp32c5_thing_plus.menu.JTAGAdapter.default=Disabled
@@ -13626,6 +13630,8 @@ dfrobot_firebeetle2_esp32c5.build.flash_mode=qio
 dfrobot_firebeetle2_esp32c5.build.boot=qio
 dfrobot_firebeetle2_esp32c5.build.partitions=default
 dfrobot_firebeetle2_esp32c5.build.defines=
+dfrobot_firebeetle2_esp32c5.build.matter_mode=
+dfrobot_firebeetle2_esp32c5.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 dfrobot_firebeetle2_esp32c5.menu.JTAGAdapter.default=Disabled
@@ -37946,6 +37952,8 @@ XIAO_ESP32C5.build.flash_mode=qio
 XIAO_ESP32C5.build.boot=qio
 XIAO_ESP32C5.build.partitions=default_8MB
 XIAO_ESP32C5.build.defines=
+XIAO_ESP32C5.build.matter_mode=
+XIAO_ESP32C5.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 XIAO_ESP32C5.menu.JTAGAdapter.default=Disabled
@@ -46494,6 +46502,8 @@ waveshare_esp32_c5_lcd_1_47.build.flash_mode=qio
 waveshare_esp32_c5_lcd_1_47.build.boot=qio
 waveshare_esp32_c5_lcd_1_47.build.partitions=default
 waveshare_esp32_c5_lcd_1_47.build.defines=
+waveshare_esp32_c5_lcd_1_47.build.matter_mode=
+waveshare_esp32_c5_lcd_1_47.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 waveshare_esp32_c5_lcd_1_47.menu.JTAGAdapter.default=Disabled
@@ -46680,6 +46690,8 @@ waveshare_esp32_c5_zero.build.flash_mode=qio
 waveshare_esp32_c5_zero.build.boot=qio
 waveshare_esp32_c5_zero.build.partitions=default
 waveshare_esp32_c5_zero.build.defines=
+waveshare_esp32_c5_zero.build.matter_mode=
+waveshare_esp32_c5_zero.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 waveshare_esp32_c5_zero.menu.JTAGAdapter.default=Disabled
@@ -53923,6 +53935,8 @@ pcbcupid_glyph_c5.build.flash_mode=dio
 pcbcupid_glyph_c5.build.boot=dio
 pcbcupid_glyph_c5.build.partitions=default
 pcbcupid_glyph_c5.build.defines=
+pcbcupid_glyph_c5.build.matter_mode=
+pcbcupid_glyph_c5.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 pcbcupid_glyph_c5.menu.JTAGAdapter.default=Disabled
@@ -58217,6 +58231,8 @@ soldered_nula_dual_esp32c5.build.flash_mode=qio
 soldered_nula_dual_esp32c5.build.boot=qio
 soldered_nula_dual_esp32c5.build.partitions=default
 soldered_nula_dual_esp32c5.build.defines=
+soldered_nula_dual_esp32c5.build.matter_mode=
+soldered_nula_dual_esp32c5.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 soldered_nula_dual_esp32c5.menu.JTAGAdapter.default=Disabled
@@ -59060,6 +59076,8 @@ pandabyte_xc5.build.flash_mode=qio
 pandabyte_xc5.build.boot=qio
 pandabyte_xc5.build.partitions=default
 pandabyte_xc5.build.defines=
+pandabyte_xc5.build.matter_mode=
+pandabyte_xc5.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 pandabyte_xc5.menu.JTAGAdapter.default=Disabled
@@ -60540,6 +60558,8 @@ canipulator_v2.build.flash_mode=qio
 canipulator_v2.build.boot=qio
 canipulator_v2.build.partitions=default
 canipulator_v2.build.defines=
+canipulator_v2.build.matter_mode=
+canipulator_v2.build.matter_libs=
 
 ## IDE 2.0 Seems to not update the value
 canipulator_v2.menu.JTAGAdapter.default=Disabled
