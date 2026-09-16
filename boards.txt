@@ -377,6 +377,9 @@ esp32c5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
 esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+esp32c5.menu.MatterNetwork.default=Disabled
+esp32c5.menu.MatterNetwork.default.build.matter_mode=
+esp32c5.menu.MatterNetwork.default.build.matter_libs=
 esp32c5.menu.MatterNetwork.wifi=Wi-Fi
 esp32c5.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 esp32c5.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
@@ -9047,6 +9050,9 @@ sparkfun_esp32c5_thing_plus.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/
 sparkfun_esp32c5_thing_plus.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 sparkfun_esp32c5_thing_plus.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+sparkfun_esp32c5_thing_plus.menu.MatterNetwork.default=Disabled
+sparkfun_esp32c5_thing_plus.menu.MatterNetwork.default.build.matter_mode=
+sparkfun_esp32c5_thing_plus.menu.MatterNetwork.default.build.matter_libs=
 sparkfun_esp32c5_thing_plus.menu.MatterNetwork.wifi=Wi-Fi
 sparkfun_esp32c5_thing_plus.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 sparkfun_esp32c5_thing_plus.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
@@ -13734,6 +13740,9 @@ dfrobot_firebeetle2_esp32c5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/
 dfrobot_firebeetle2_esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 dfrobot_firebeetle2_esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.default=Disabled
+dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.default.build.matter_mode=
+dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.default.build.matter_libs=
 dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.wifi=Wi-Fi
 dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 dfrobot_firebeetle2_esp32c5.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
@@ -38086,6 +38095,9 @@ XIAO_ESP32C5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
 XIAO_ESP32C5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 XIAO_ESP32C5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+XIAO_ESP32C5.menu.MatterNetwork.default=Disabled
+XIAO_ESP32C5.menu.MatterNetwork.default.build.matter_mode=
+XIAO_ESP32C5.menu.MatterNetwork.default.build.matter_libs=
 XIAO_ESP32C5.menu.MatterNetwork.wifi=Wi-Fi
 XIAO_ESP32C5.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 XIAO_ESP32C5.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
@@ -46620,6 +46632,9 @@ waveshare_esp32_c5_lcd_1_47.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/
 waveshare_esp32_c5_lcd_1_47.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 waveshare_esp32_c5_lcd_1_47.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.default=Disabled
+waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.default.build.matter_mode=
+waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.default.build.matter_libs=
 waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.wifi=Wi-Fi
 waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 waveshare_esp32_c5_lcd_1_47.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
@@ -46803,6 +46818,9 @@ waveshare_esp32_c5_zero.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/rout
 waveshare_esp32_c5_zero.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 waveshare_esp32_c5_zero.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+waveshare_esp32_c5_zero.menu.MatterNetwork.default=Disabled
+waveshare_esp32_c5_zero.menu.MatterNetwork.default.build.matter_mode=
+waveshare_esp32_c5_zero.menu.MatterNetwork.default.build.matter_libs=
 waveshare_esp32_c5_zero.menu.MatterNetwork.wifi=Wi-Fi
 waveshare_esp32_c5_zero.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 waveshare_esp32_c5_zero.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
@@ -54043,6 +54061,9 @@ pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - 
 pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+pcbcupid_glyph_c5.menu.MatterNetwork.default=Disabled
+pcbcupid_glyph_c5.menu.MatterNetwork.default.build.matter_mode=
+pcbcupid_glyph_c5.menu.MatterNetwork.default.build.matter_libs=
 pcbcupid_glyph_c5.menu.MatterNetwork.wifi=Wi-Fi
 pcbcupid_glyph_c5.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 pcbcupid_glyph_c5.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
@@ -58357,6 +58378,9 @@ soldered_nula_dual_esp32c5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/r
 soldered_nula_dual_esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 soldered_nula_dual_esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+soldered_nula_dual_esp32c5.menu.MatterNetwork.default=Disabled
+soldered_nula_dual_esp32c5.menu.MatterNetwork.default.build.matter_mode=
+soldered_nula_dual_esp32c5.menu.MatterNetwork.default.build.matter_libs=
 soldered_nula_dual_esp32c5.menu.MatterNetwork.wifi=Wi-Fi
 soldered_nula_dual_esp32c5.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 soldered_nula_dual_esp32c5.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
@@ -59209,6 +59233,9 @@ pandabyte_xc5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debu
 pandabyte_xc5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 pandabyte_xc5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+pandabyte_xc5.menu.MatterNetwork.default=Disabled
+pandabyte_xc5.menu.MatterNetwork.default.build.matter_mode=
+pandabyte_xc5.menu.MatterNetwork.default.build.matter_libs=
 pandabyte_xc5.menu.MatterNetwork.wifi=Wi-Fi
 pandabyte_xc5.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 pandabyte_xc5.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
@@ -60686,6 +60713,9 @@ canipulator_v2.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Deb
 canipulator_v2.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 canipulator_v2.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
+canipulator_v2.menu.MatterNetwork.default=Disabled
+canipulator_v2.menu.MatterNetwork.default.build.matter_mode=
+canipulator_v2.menu.MatterNetwork.default.build.matter_libs=
 canipulator_v2.menu.MatterNetwork.wifi=Wi-Fi
 canipulator_v2.menu.MatterNetwork.wifi.build.matter_mode=-DARDUINO_MATTER_NETWORK_WIFI
 canipulator_v2.menu.MatterNetwork.wifi.build.matter_libs=-lespressif__esp_matter.wifi
