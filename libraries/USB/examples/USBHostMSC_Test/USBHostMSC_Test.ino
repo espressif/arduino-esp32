@@ -14,7 +14,7 @@
 #include <USBMSCFS.h>
 
 /* Host handlers are declared by the sketch, so a build only pays for what it uses. */
-fs::USBMSCFS USBMSCFS;
+USBMSCFSClass USBMSCFS;
 
 #ifndef USB_MSC_MOUNTPOINT
 #define USB_MSC_MOUNTPOINT "/usb"
@@ -247,4 +247,3 @@ void loop() {
   USBHost.task();
   delay(50);
 }
-

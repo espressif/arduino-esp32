@@ -34,15 +34,15 @@ namespace fs {
  *
  * GPT + Microsoft Basic Data FAT is supported via a synthetic MBR for FatFs.
  */
-class USBMSCFS : public FS {
+class USBMSCFSClass : public FS {
 protected:
   uint8_t _pdrv;  // FatFs drive, or 0xFF when not mounted
 
 public:
-  USBMSCFS(FSImplPtr impl);
-  /** Builds the default VFS implementation, so a sketch can just declare `USBMSCFS usbfs;`. */
-  USBMSCFS();
-  ~USBMSCFS();
+  USBMSCFSClass(FSImplPtr impl);
+  /** Builds the default VFS implementation, so a sketch can just declare `USBMSCFSClass usbfs;`. */
+  USBMSCFSClass();
+  ~USBMSCFSClass();
 
   bool begin(const char *mountpoint = "/usb", uint8_t max_files = 5, bool format_if_empty = false);
   void end();
@@ -59,7 +59,8 @@ public:
 
 }  // namespace fs
 
-#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_USB_MSC_FS)
+#ifndef FS_NO_GLOBALS
+using fs::USBMSCFSClass;
 #endif
 
 #endif /* CFG_TUH_ENABLED && CFG_TUH_MSC */

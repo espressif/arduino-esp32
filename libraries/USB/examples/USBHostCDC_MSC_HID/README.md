@@ -11,7 +11,7 @@ Use a hub if you want more than one of them attached at the same time.
 ## Flash / run checklist
 
 1. **Board / USB mode:** see the [USBHostMouse checklist](../USBHostMouse/README.md) for the **USB Mode** / **USB CDC On Boot** combination to avoid. This sketch prints its own `ARDUINO_USB_MODE` / `CDC_ON_BOOT` / `MSC_ON_BOOT` / `DFU_ON_BOOT` build flags at startup, which is the quickest way to confirm what you actually built.
-2. **Declare the instances in the sketch:** `USBHostSerialClass`, `fs::USBMSCFS`, `USBHostHIDMouse`, and `USBHostHIDKeyboard`. The library ships no instances, so a sketch only pays for the classes it names. `USBHostMSCClass USBHostMSC` is the exception — the FatFs layer needs a fixed instance, so the library still provides it.
+2. **Declare the instances in the sketch:** `USBHostSerialClass`, `USBMSCFSClass`, `USBHostHIDMouse`, and `USBHostHIDKeyboard`. The library ships no instances, so a sketch only pays for the classes it names. `USBHostMSCClass USBHostMSC` is the exception — the FatFs layer needs a fixed instance, so the library still provides it.
 3. Both HID **`registerWithHost()`** calls run in `setup()` **before** `USBHost.begin()`.
 4. `loop()` must keep calling **`USBHost.task()`**.
 

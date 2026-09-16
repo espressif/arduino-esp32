@@ -369,11 +369,11 @@ static void usbmsc_free_slot(uint8_t pdrv) {
 
 namespace fs {
 
-USBMSCFS::USBMSCFS(FSImplPtr impl) : FS(impl), _pdrv(0xFF) {}
+USBMSCFSClass::USBMSCFSClass(FSImplPtr impl) : FS(impl), _pdrv(0xFF) {}
 
-USBMSCFS::USBMSCFS() : USBMSCFS(FSImplPtr(new VFSImpl())) {}
+USBMSCFSClass::USBMSCFSClass() : USBMSCFSClass(FSImplPtr(new VFSImpl())) {}
 
-USBMSCFS::~USBMSCFS() {
+USBMSCFSClass::~USBMSCFSClass() {
   end();
 }
 
@@ -392,7 +392,7 @@ static void usbmsc_begin_cleanup(const char *mountpoint, uint8_t pdrv, bool vfs_
   usbmsc_free_slot(pdrv);
 }
 
-bool USBMSCFS::begin(const char *mountpoint, uint8_t max_files, bool format_if_empty) {
+bool USBMSCFSClass::begin(const char *mountpoint, uint8_t max_files, bool format_if_empty) {
   if (_pdrv != 0xFF) {
     return true;
   }
@@ -500,7 +500,7 @@ bool USBMSCFS::begin(const char *mountpoint, uint8_t max_files, bool format_if_e
   return true;
 }
 
-void USBMSCFS::end() {
+void USBMSCFSClass::end() {
   if (_pdrv == 0xFF) {
     return;
   }
@@ -519,28 +519,28 @@ void USBMSCFS::end() {
   _pdrv = 0xFF;
 }
 
-uint64_t USBMSCFS::cardSize() {
+uint64_t USBMSCFSClass::cardSize() {
   if (_pdrv == 0xFF || !USBHostMSC.mounted()) {
     return 0;
   }
   return (uint64_t)USBHostMSC.blockCount() * (uint64_t)USBHostMSC.blockSize();
 }
 
-size_t USBMSCFS::numSectors() {
+size_t USBMSCFSClass::numSectors() {
   if (_pdrv == 0xFF || !USBHostMSC.mounted()) {
     return 0;
   }
   return (size_t)USBHostMSC.blockCount();
 }
 
-size_t USBMSCFS::sectorSize() {
+size_t USBMSCFSClass::sectorSize() {
   if (_pdrv == 0xFF || !USBHostMSC.mounted()) {
     return 0;
   }
   return (size_t)USBHostMSC.blockSize();
 }
 
-uint64_t USBMSCFS::totalBytes() {
+uint64_t USBMSCFSClass::totalBytes() {
   FATFS *fsinfo;
   DWORD fre_clust;
   char drv[3] = {(char)('0' + _pdrv), ':', 0};
@@ -556,7 +556,7 @@ uint64_t USBMSCFS::totalBytes() {
   return size;
 }
 
-uint64_t USBMSCFS::usedBytes() {
+uint64_t USBMSCFSClass::usedBytes() {
   FATFS *fsinfo;
   DWORD fre_clust;
   char drv[3] = {(char)('0' + _pdrv), ':', 0};
@@ -572,14 +572,14 @@ uint64_t USBMSCFS::usedBytes() {
   return size;
 }
 
-bool USBMSCFS::readRAW(uint8_t *buffer, uint32_t sector) {
+bool USBMSCFSClass::readRAW(uint8_t *buffer, uint32_t sector) {
   if (_pdrv == 0xFF || buffer == nullptr) {
     return false;
   }
   return ff_usbmsc_read(_pdrv, buffer, sector, 1u) == RES_OK;
 }
 
-bool USBMSCFS::writeRAW(uint8_t *buffer, uint32_t sector) {
+bool USBMSCFSClass::writeRAW(uint8_t *buffer, uint32_t sector) {
   if (_pdrv == 0xFF || buffer == nullptr) {
     return false;
   }

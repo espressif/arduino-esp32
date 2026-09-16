@@ -25,7 +25,7 @@
 
 /* Host handlers are declared by the sketch, so a build only pays for what it uses. */
 USBHostSerialClass USBHostSerial;
-fs::USBMSCFS USBMSCFS;
+USBMSCFSClass USBMSCFS;
 USBHostHIDMouse USBHostMouse;
 USBHostHIDKeyboard USBHostKeyboard;
 
