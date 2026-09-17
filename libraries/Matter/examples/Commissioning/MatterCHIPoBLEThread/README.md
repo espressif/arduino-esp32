@@ -4,7 +4,7 @@ Commission a Matter On/Off Light onto Thread **over CHIPoBLE**. The hub sends th
 
 This is the BLE half of the Thread pair. The other half is [MatterOnNetworkThread](../MatterOnNetworkThread) (BLE off + network key in the sketch).
 
-**Do not start Arduino `ESPmDNS`.** **Do not use `BLE.h` / `BLEDevice`.**
+**Do not start Arduino `ESPmDNS`.** **Do not use `BLE.h`.**
 
 ## What it does
 

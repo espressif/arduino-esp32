@@ -14,7 +14,7 @@
 
 // On-network commissioning over Wi-Fi. Side-by-side with MatterCHIPoBLEWiFi:
 // same On/Off Light; the delta is selectNetwork(MATTER_NETWORK_WIFI, true) then WiFi.begin().
-// Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
+// Do not use the Arduino BLE library (BLE.h) in this sketch.
 //
 // Supported SoCs: ESP32, S2, S3, C3, C5, C6. H2: no Wi-Fi — use a Thread example.
 // C5: Tools → Matter Network → Wi-Fi (default). C6: one dual-stack prebuild.

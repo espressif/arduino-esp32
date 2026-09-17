@@ -15,7 +15,7 @@
 // On-network commissioning over Thread. Side-by-side with MatterCHIPoBLEThread:
 // same On/Off Light; the delta is selectNetwork(MATTER_NETWORK_THREAD, true), the border router network key, then attach.
 // Do not start Arduino ESPmDNS — CHIP owns the mDNS responder.
-// Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
+// Do not use the Arduino BLE library (BLE.h) in this sketch.
 // Do not call OThread.begin() before Matter.begin() — that would start a second stack.
 // Do not call OThreadDNSSD.begin() — CHIP owns Thread SRP (_matterc._udp).
 //
