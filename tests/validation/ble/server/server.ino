@@ -1165,6 +1165,13 @@ void loop() {
     // Slave Connection Interval Range AD (0x12): 6..18 in 1.25 ms units.
     // Mirrors setMinPreferred/setMaxPreferred so the client can parse it back.
     sr.setPreferredParams(0x0006, 0x0012);
+    // Issue #12801, kept last: the length byte claims 20 octets when only 2
+    // follow. Rejecting it must not disturb the real fields parsed above — a
+    // parser missing the bounds check reads type 0xFF with a 19-byte length and
+    // overwrites the manufacturer data above with out-of-bounds bytes, so the
+    // client asserting company 0x02E5 / length 3 is what catches it.
+    const uint8_t oversizeAd[] = {20, 0xFF, 0x01, 0x02};
+    sr.addRaw(oversizeAd, sizeof(oversizeAd));
     adv.setScanResponseData(sr);
 
     BTStatus s = adv.start();
@@ -1176,6 +1183,9 @@ void loop() {
     // Parser regression window: every AD structure here is malformed in a
     // different way and none of them may reach the client's parsed fields.
     // Distinct name so the client does not confuse this with the ADV_ window.
+    // The client concatenates the advertisement and the scan response before
+    // parsing, so the primary payload must stay free of anything that halts
+    // parsing or the whole scan response below would be skipped untested.
     String oszName = String("OSZ_") + serverName;
     BLEAdvertisementData od;
     od.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
@@ -1185,20 +1195,28 @@ void loop() {
     BLEAdvertisementData osr;
     // A UUID list must hold a whole number of UUIDs. Each of these is one octet
     // group short, so a parser that rounds down would invent a UUID from the
-    // trailing bytes or read past the field.
+    // trailing bytes or read past the field. None of them halts parsing.
     const uint8_t partial16Ad[] = {2, 0x03, 0x0D};                      // 16-bit list, 1 of 2 octets
     const uint8_t partial32Ad[] = {4, 0x05, 0x0D, 0x18, 0x00};          // 32-bit list, 3 of 4 octets
     const uint8_t short128Ad[] = {8, 0x07, 0x0D, 0x18, 0, 0, 0, 0, 0};  // 128-bit UUID, 7 of 16 octets
-    // Length 20 claims 20 octets follow; only type (0xFF) + 2 data bytes are present.
-    const uint8_t oversizeAd[] = {20, 0xFF, 0x01, 0x02};  // issue #12801
+    // A zero-length AD terminates the payload (Core Spec Vol 3, Part C, §11).
+    // The manufacturer AD behind it is deliberately well formed, so nothing
+    // except correct terminator handling can keep it out of the parsed fields.
+    // A parser missing that check treats the following length byte as the AD
+    // type and underflows its own length to 255: type 0x04 then walks a 32-bit
+    // UUID list far past the buffer, so the client sees a burst of garbage
+    // service UUIDs instead of none.
+    const uint8_t terminatorAd[] = {0x00};
+    const uint8_t hiddenMfgAd[] = {4, 0xFF, 0xE5, 0x02, 0x42};
     osr.addRaw(partial16Ad, sizeof(partial16Ad));
     osr.addRaw(partial32Ad, sizeof(partial32Ad));
     osr.addRaw(short128Ad, sizeof(short128Ad));
-    osr.addRaw(oversizeAd, sizeof(oversizeAd));
+    osr.addRaw(terminatorAd, sizeof(terminatorAd));
+    osr.addRaw(hiddenMfgAd, sizeof(hiddenMfgAd));
     adv.setScanResponseData(osr);
 
     BTStatus os = adv.start();
-    Serial.printf("[SERVER] Phase20 parseOversizeAdv ok=%d isAdv=%d\n", (int)(bool)os, (int)adv.isAdvertising());
+    Serial.printf("[SERVER] Phase20 malformedAdv ok=%d isAdv=%d\n", (int)(bool)os, (int)adv.isAdvertising());
     // Client may still be finishing the ADV_ retry; keep this window wide.
     delay(12000);
     adv.stop();

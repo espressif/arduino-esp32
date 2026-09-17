@@ -43,7 +43,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 17 | address_types | every `BTAddress::Type` + Public/Random connect roundtrip |
 | 18 | authorization | app-level authorization approve/deny of writes |
 | 19 | encrypted_perm_enforcement | encrypted characteristic read/write over paired link |
-| 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip + **malformed AD parser rejection** (issue #12801) |
+| 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip + **malformed AD parser rejection** (issue #12801, truncated UUID lists, zero-length AD terminator) |
 | 21 | beacon_and_eddystone | iBeacon / Eddystone URL / Eddystone TLM frames |
 | 22 | bond_and_whitelist | bond enumeration, whitelist, IRK cross-check |
 | 23 | error_paths_and_misc | unknown UUIDs, typed reads, UUID algebra, write-after-disconnect |
@@ -67,19 +67,35 @@ full name. It additionally guards the Slave Connection Interval Range AD (0x12):
 `setPreferredParams` (the field `setMinPreferred` / `setMaxPreferred` feed) must
 encode `[04 12 min_lo min_hi max_lo max_hi]` in little-endian 1.25 ms units, and
 the client parses the same field back out of the received payload to confirm the
-min/max survived the over-the-air round trip. A second over-the-air window
-(`OSZ_<name>`) has a scan response built entirely out of malformed AD structures
-appended with `addRaw`, and none of them may reach the parsed fields:
+min/max survived the over-the-air round trip.
 
-- a manufacturer AD whose length byte claims 20 octets when only 2 follow, so the
-  client must report `parseOversizeRejected=1` (`!haveManufacturerData()`),
-  guarding issue #12801;
+Two over-the-air windows also guard the advertisement parser against malformed AD
+structures appended with `addRaw`. The client concatenates the advertisement and
+the scan response into one buffer before parsing, so any structure that halts
+parsing hides every structure after it. That allows exactly one halting probe per
+window, kept last, and it is why the two probes below are split across windows.
+
+The `ADV_<name>` scan response ends with a manufacturer AD whose length byte
+claims 20 octets when only 2 follow (issue #12801). Rejecting it must leave the
+fields before it untouched, so the client asserts the genuine manufacturer field
+still reads back verbatim as `mfgHex=e502455350` (company `0x02E5` little-endian
+followed by `"ESP"`; `getManufacturerDataString()` hex-encodes the whole field,
+company id included). A parser missing the bounds check instead reads a 19-octet
+manufacturer field and overwrites that data with out-of-bounds bytes.
+
+The `OSZ_<name>` scan response carries the non-halting probes followed by the
+terminator probe:
+
 - 16-bit, 32-bit and 128-bit service-UUID structures that are each one octet
   group short of a whole UUID, reported as `malformedUuidsRejected=1`, which holds
-  only when the device ends up with no service UUID at all.
-
-The malformed UUID lists come before the oversized field, because rejecting an
-oversized field stops parsing and would otherwise hide everything after it.
+  only when the device ends up with no service UUID at all;
+- a zero-length AD, which terminates the payload (Core Spec Vol 3, Part C, §11),
+  hiding a deliberately well-formed manufacturer AD placed behind it. Nothing but
+  correct terminator handling can keep that field out of the parsed data, so the
+  client must report `terminatorHidMfg=1`. A parser missing the check reads the
+  following length byte as the AD type and underflows its own length to 255, then
+  walks a 32-bit UUID list far past the buffer — which the `svcCount` in
+  `malformedUuidsRejected` catches as a burst of garbage UUIDs.
 
 Phase 1 checks heap integrity (`heap_caps_check_integrity_all`) immediately before
 and after the first `BLE.begin()` on both devices. A stack init that overruns a

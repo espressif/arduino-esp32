@@ -562,6 +562,20 @@ def _phase_adv_data_and_scan(server, client):
     """Phase 20 — full BLEAdvertisementData payload + scan tuning parsers."""
     server.expect(r"\[SERVER\] Phase20 advReady ok=[01] isAdv=[01]", timeout=30)
     client.expect(r"\[CLIENT\] Phase20 results=\d+ isScanning=[01]", timeout=30)
+    # Issue #12801: the ADV_ scan response ends with an AD whose length byte claims
+    # 20 octets when only 2 follow. Rejecting it must leave the fields before it
+    # intact — a parser missing the bounds check reads it as a 19-octet
+    # manufacturer field and overwrites the genuine manufacturer data with
+    # out-of-bounds bytes. getManufacturerDataString() hex-encodes the whole
+    # field, company id included, so an intact 0x02E5 + "ESP" is "e502455350".
+    # The client prints this before prefInterval.
+    m_mfg = client.expect(
+        r"\[CLIENT\] Phase20 mfgCompany=0x([0-9A-Fa-f]{4}) mfgLen=\d+ mfgHex=([0-9a-f]*)",
+        timeout=30,
+    )
+    assert int(m_mfg.group(1), 16) == 0x02E5, f"manufacturer company id corrupted: got 0x{m_mfg.group(1)}"
+    mfg_hex = m_mfg.group(2).decode()
+    assert mfg_hex == "e502455350", f"manufacturer data corrupted by the trailing oversized AD: got {mfg_hex}"
     # Slave Connection Interval Range AD (0x12): encoding guard on the server
     # (setPreferredParams / setMinPreferred / setMaxPreferred) plus the
     # over-the-air round trip parsed back by the client. The client emits the
@@ -577,15 +591,18 @@ def _phase_adv_data_and_scan(server, client):
     m = client.expect(r"\[CLIENT\] Phase20 sawAdv=([01])", timeout=30)
     assert int(m.group(1)) == 1, "client did not see the ADV_<name> payload"
     # Parser regression: after the ADV_ window the server advertises OSZ_<name>,
-    # whose scan response is built entirely out of malformed AD structures — a
-    # truncated manufacturer AD (issue #12801) and 16/32/128-bit UUID structures
-    # that are each one octet group short. None of them may reach the parsed fields.
-    server.expect(r"\[SERVER\] Phase20 parseOversizeAdv ok=1 isAdv=[01]", timeout=50)
+    # whose scan response is built entirely out of malformed AD structures —
+    # 16/32/128-bit UUID lists that are each one octet group short, then a
+    # zero-length terminator hiding a well-formed manufacturer AD. None of them
+    # may reach the parsed fields. Only one halting probe can be proven per
+    # window, because the client parses the advertisement and the scan response
+    # as one concatenated buffer and whatever halts parsing hides the rest.
+    server.expect(r"\[SERVER\] Phase20 malformedAdv ok=1 isAdv=[01]", timeout=50)
     m_osz = client.expect(
-        r"\[CLIENT\] Phase20 parseOversizeRejected=(-1|[01]) malformedUuidsRejected=(-1|[01])",
+        r"\[CLIENT\] Phase20 terminatorHidMfg=(-1|[01]) malformedUuidsRejected=(-1|[01])",
         timeout=50,
     )
-    assert int(m_osz.group(1)) == 1, "client did not reject the truncated manufacturer AD (issue #12801)"
+    assert int(m_osz.group(1)) == 1, "client parsed a manufacturer AD hidden behind a zero-length AD terminator"
     assert int(m_osz.group(2)) == 1, "client parsed a UUID out of a malformed or terminated AD structure"
     # AD payload-limit regression: legacy 31-octet cap must be enforced (name
     # degrades to a Shortened Local Name, an oversized field is dropped whole),

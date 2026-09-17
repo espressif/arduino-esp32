@@ -1413,7 +1413,13 @@ void setup() {
         (int)d.isConnectable(), (int)d.isLegacyAdvertisement()
       );
       Serial.printf("[CLIENT] Phase20 svcUUIDs=%u first=%s\n", (unsigned)d.getServiceUUIDCount(), d.getServiceUUID(0).toString().c_str());
-      Serial.printf("[CLIENT] Phase20 mfgCompany=0x%04X mfgLen=%u\n", (unsigned)d.getManufacturerCompanyId(), (unsigned)d.getManufacturerDataString().length());
+      // Hex of the whole manufacturer field, company id included: an intact
+      // 0x02E5 + "ESP" is "e502455350". Reported verbatim so a corrupted field
+      // shows what replaced it instead of only a length mismatch.
+      String mfgHex = d.getManufacturerDataString();
+      Serial.printf(
+        "[CLIENT] Phase20 mfgCompany=0x%04X mfgLen=%u mfgHex=%s\n", (unsigned)d.getManufacturerCompanyId(), (unsigned)mfgHex.length(), mfgHex.c_str()
+      );
       size_t svcLen = 0;
       const uint8_t *svcRaw = d.getServiceData(0, &svcLen);
       BLEUUID svc16((uint16_t)0x180D);
@@ -1445,8 +1451,9 @@ void setup() {
     }
     Serial.printf("[CLIENT] Phase20 sawAdv=%d\n", (int)sawAdv);
 
-    // Second scan: server switches to OSZ_<name> with a truncated manufacturer
-    // AD in the scan response. parsePayload must not treat it as valid mfg data.
+    // Second scan: server switches to OSZ_<name>, whose scan response holds only
+    // malformed AD structures — truncated UUID lists and a zero-length terminator
+    // shadowing a well-formed manufacturer AD. None may reach the parsed fields.
     // Server valid window is 14 s; after ADV_ (+ optional retry) wait for OSZ_.
     scn.stop();
     delay(3000);
@@ -1454,24 +1461,27 @@ void setup() {
     scn.clearDuplicateCache();
     String oszWant = String("OSZ_") + targetName;
     BLEScan::Results oszResults = scn.startBlocking(8000);
-    int parseOversizeRejected = -1;
+    int terminatorHidMfg = -1;
     int parseMalformedUuids = -1;
     for (const auto &dev : oszResults) {
       BLEAdvertisedDevice d = dev;
       if (d.getName() == oszWant) {
-        parseOversizeRejected = d.haveManufacturerData() ? 0 : 1;
+        // The well-formed manufacturer AD sits behind a zero-length terminator,
+        // so it may only surface if the terminator was ignored.
+        terminatorHidMfg = d.haveManufacturerData() ? 0 : 1;
         // The scan response carries three truncated UUID lists and the primary
-        // advertisement carries none, so a parser that does not round a partial
-        // UUID up into a whole one ends up with no service UUID at all.
+        // advertisement carries none, so a parser that neither rounds a partial
+        // UUID up into a whole one nor walks past the terminator ends up with no
+        // service UUID at all.
         parseMalformedUuids = (d.getServiceUUIDCount() == 0) ? 1 : 0;
         Serial.printf(
-          "[CLIENT] Phase20 parseOversize name=%s haveMfg=%d svcCount=%u payloadLen=%u\n", d.getName().c_str(), (int)d.haveManufacturerData(),
+          "[CLIENT] Phase20 malformedAd name=%s haveMfg=%d svcCount=%u payloadLen=%u\n", d.getName().c_str(), (int)d.haveManufacturerData(),
           (unsigned)d.getServiceUUIDCount(), (unsigned)d.getPayloadLength()
         );
         break;
       }
     }
-    Serial.printf("[CLIENT] Phase20 parseOversizeRejected=%d malformedUuidsRejected=%d\n", parseOversizeRejected, parseMalformedUuids);
+    Serial.printf("[CLIENT] Phase20 terminatorHidMfg=%d malformedUuidsRejected=%d\n", terminatorHidMfg, parseMalformedUuids);
 
     scn.clearResults();
     scn.setActiveScan(true);
