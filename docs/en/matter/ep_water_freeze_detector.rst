@@ -12,7 +12,7 @@ The ``MatterWaterFreezeDetector`` class provides a water freeze detector endpoin
 * Simple boolean state
 * Read-only sensor (no control functionality)
 * Automatic state updates
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -43,15 +43,21 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter water freeze detector endpoint with an initial freeze detection state.
+Initializes the Matter water freeze detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setFreeze()`` after ``Matter.begin()`` with the real sensor reading.
 
 .. code-block:: arduino
 
-    bool begin(bool _freezeState = false);
-
-* ``_freezeState`` - Initial water freeze detection state (``true`` = detected, ``false`` = not detected, default: ``false``)
+    bool begin();
 
 This function will return ``true`` if successful, ``false`` otherwise.
+
+Typical usage:
+
+.. code-block:: arduino
+
+    WaterFreezeDetector.begin();
+    Matter.begin();
+    WaterFreezeDetector.setFreeze(digitalRead(freezePin));
 
 end
 ^^^
@@ -68,7 +74,7 @@ Water Freeze Detection State Control
 setFreeze
 ^^^^^^^^^
 
-Sets the water freeze detection state.
+Sets the water freeze detection state. Call after ``Matter.begin()``.
 
 .. code-block:: arduino
 
@@ -114,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the water freeze detection state.
+Sets the water freeze detection state. Same as ``setFreeze()``; call after ``Matter.begin()``.
 
 .. code-block:: arduino
 
@@ -133,5 +139,5 @@ Example
 Water Freeze Detector
 *********************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterWaterFreezeDetector/MatterWaterFreezeDetector.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterWaterFreezeDetector/MatterWaterFreezeDetector.ino
     :language: arduino

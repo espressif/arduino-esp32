@@ -143,8 +143,12 @@ bool WebServer::authenticateBasicSHA1(const char *_username, const char *_sha1Ba
 
 bool WebServer::authenticate(const char *_username, const char *_password) {
   return WebServer::authenticate([_username, _password](HTTPAuthMethod mode, String username, String params[]) -> String * {
-    (void)mode;
     (void)params;
+    // Plaintext-password auth only applies to Basic/Digest. A bare or unknown
+    // Authorization scheme must not be treated as a successful username match.
+    if (mode != BASIC_AUTH && mode != DIGEST_AUTH) {
+      return NULL;
+    }
     return username.equalsConstantTime(_username) ? new String(_password) : NULL;
   });
 }

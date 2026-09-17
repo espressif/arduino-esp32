@@ -114,8 +114,8 @@ static void get_peer_irk(BLEAddress peerAddr) {
     Serial.println();
   } else {
     Serial.println("!!! Failed to retrieve peer IRK !!!");
-    Serial.println("This is expected if bonding is disabled or the peer doesn't distribute its Identity Key.");
-    Serial.println("To enable bonding, change setAuthenticationMode to: pSecurity->setAuthenticationMode(true, true, true);\n");
+    Serial.println("Pairing succeeded, so this means the peer chose not to distribute its Identity Key.");
+    Serial.println("Not every device does. Bonding is already enabled in this example, so there is nothing to change here.\n");
   }
 
   Serial.println("=======================================\n");
@@ -125,6 +125,14 @@ static void get_peer_irk(BLEAddress peerAddr) {
 class MySecurityCallbacks : public BLESecurityCallbacks {
 #if defined(CONFIG_BLUEDROID_ENABLED)
   void onAuthenticationComplete(esp_ble_auth_cmpl_t desc) override {
+    // Bluedroid reports both outcomes here, so the result has to be checked.
+    // Asking for the IRK after a failed pairing would only produce a confusing error.
+    if (!desc.success) {
+      Serial.printf("\n!!! Pairing failed: reason %u (0x%02X) !!!\n", desc.fail_reason, desc.fail_reason);
+      Serial.println("No keys were exchanged, so there is no peer IRK to retrieve.\n");
+      return;
+    }
+
     // desc.bd_addr is the peer's connection address (may be a Resolvable Private Address).
     // getPeerIRK() will also search by the stored identity address as a fallback.
     BLEAddress peerAddr(desc.bd_addr);
@@ -133,6 +141,8 @@ class MySecurityCallbacks : public BLESecurityCallbacks {
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
+  // Only called once pairing has actually succeeded. Override the (desc, status)
+  // overload instead if you also want to be told why a pairing was rejected.
   void onAuthenticationComplete(ble_gap_conn_desc *desc) override {
     // peer_id_addr is always the resolved identity address in NimBLE
     BLEAddress peerAddr(desc->peer_id_addr.val, desc->peer_id_addr.type);
