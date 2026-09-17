@@ -60,13 +60,11 @@ void setup() {
   BLEService svc = server.createService(SVC_UUID);
 
   // Secure characteristic: requires authentication (passkey pairing) for read/write
-  BLECharacteristic secureChar =
-    svc.createCharacteristic(SECURE_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermission::ReadWriteAuthenticated);
+  BLECharacteristic secureChar = svc.createCharacteristic(SECURE_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermission::ReadWriteAuthenticated);
   secureChar.setValue("Secret Data");
 
   // Open characteristic: accessible without pairing
-  BLECharacteristic openChar =
-    svc.createCharacteristic(OPEN_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermission::ReadWriteOpen);
+  BLECharacteristic openChar = svc.createCharacteristic(OPEN_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermission::ReadWriteOpen);
   openChar.setValue("Public Data");
 
   server.start();

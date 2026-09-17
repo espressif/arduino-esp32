@@ -391,8 +391,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     // 16/32-bit UUID encoding and the exact same byte layout as the NimBLE and
     // Bluedroid extended-advertising paths (CSS Part A §1.2: the Local Name is
     // carried in the scan response when scannable, otherwise in the primary AD).
-    const bool scannable =
-      (impl.advType == BLEAdvType::ConnectableScannable || impl.advType == BLEAdvType::ScannableUndirected);
+    const bool scannable = (impl.advType == BLEAdvType::ConnectableScannable || impl.advType == BLEAdvType::ScannableUndirected);
     String advName = impl.name.length() > 0 ? impl.name : BLE.getDeviceName();
     const bool nameInScanRsp = impl.scanResp && scannable;
 
@@ -627,7 +626,7 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   params.own_addr_type = static_cast<esp_ble_addr_type_t>(BLE.getOwnAddressType());
   params.peer_addr_type = BLE_ADDR_TYPE_PUBLIC;
   params.filter_policy = mapFilterPolicy(scanRequestWhitelistOnly, connectWhitelistOnly);
-  params.primary_phy = ESP_BLE_GAP_PRI_PHY_1M;   // legacy PDUs are 1M only
+  params.primary_phy = ESP_BLE_GAP_PRI_PHY_1M;  // legacy PDUs are 1M only
   params.secondary_phy = ESP_BLE_GAP_PHY_1M;
   params.sid = 0;
   params.tx_power = EXT_ADV_TX_PWR_NO_PREFERENCE;
@@ -656,9 +655,8 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
     const uint8_t *advPtr = rawAdvData.data();
     size_t advLen = rawAdvData.size();
     if (!customAdvData) {
-      built = BLEAdvDataBuilder::buildLegacyAdvData(
-        advName, serviceUUIDs, appearance, includeTxPower, BLE.getPower(), nameInScanRsp, minPreferred, maxPreferred
-      );
+      built =
+        BLEAdvDataBuilder::buildLegacyAdvData(advName, serviceUUIDs, appearance, includeTxPower, BLE.getPower(), nameInScanRsp, minPreferred, maxPreferred);
       advPtr = built.data();
       advLen = built.length();
     }

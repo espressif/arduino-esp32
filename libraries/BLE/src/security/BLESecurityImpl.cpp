@@ -56,10 +56,8 @@ void BLESecurityImplCommon::notifyAuthComplete(const BLEConnInfo &conn, bool suc
     // time. Say it once per boot: failures usually arrive in bursts of retries.
     static std::atomic<bool> hinted{false};
     if (!hinted.exchange(true)) {
-      log_w(
-        "Security: pairing failed. If it keeps failing with the same peer, suspect a stale bond: bonds persist in NVS across reflashing. Clear them with "
-        "BLESecurity::deleteAllBonds(), or erase NVS entirely (esptool erase-flash). See the Troubleshooting section of the BLE API documentation."
-      );
+      log_w("Security: pairing failed. If it keeps failing with the same peer, suspect a stale bond: bonds persist in NVS across reflashing. Clear them with "
+            "BLESecurity::deleteAllBonds(), or erase NVS entirely (esptool erase-flash). See the Troubleshooting section of the BLE API documentation.");
     }
   }
 #endif

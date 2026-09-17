@@ -534,9 +534,7 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
         break;
       }
 
-      case BLE_L2CAP_EVENT_COC_TX_UNSTALLED:
-        impl->txSync.give(event->tx_unstalled.status == 0 ? BTStatus::OK : BTStatus::Fail);
-        break;
+      case BLE_L2CAP_EVENT_COC_TX_UNSTALLED: impl->txSync.give(event->tx_unstalled.status == 0 ? BTStatus::OK : BTStatus::Fail); break;
     }
     return 0;
   };

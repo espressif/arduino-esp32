@@ -56,7 +56,7 @@ void setup() {
 
   // Extended advertising configuration
   adv.setExtType(ADV_INSTANCE, BLEAdvType::ConnectableScannable);  // Allow connections and scan requests
-  adv.setExtPhy(ADV_INSTANCE, BLEPhy::PHY_1M, BLEPhy::PHY_2M);    // 1M primary, 2M secondary (faster)
+  adv.setExtPhy(ADV_INSTANCE, BLEPhy::PHY_1M, BLEPhy::PHY_2M);     // 1M primary, 2M secondary (faster)
   adv.setExtSID(ADV_INSTANCE, 1);                                  // Advertising Set Identifier
 
   BLEAdvertisementData data;

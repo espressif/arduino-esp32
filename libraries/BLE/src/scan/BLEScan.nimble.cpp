@@ -239,9 +239,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         {
           BLELockGuard lock(impl->mtx);
           // Legacy PDUs carry no ADI; match the legacy entry (SID 0xFF).
-          found = BLEScanImplCommon::mergeScanResponse(
-            impl->results, addr, 0xFF, event->disc.data, event->disc.length_data, event->disc.rssi, merged
-          );
+          found = BLEScanImplCommon::mergeScanResponse(impl->results, addr, 0xFF, event->disc.data, event->disc.length_data, event->disc.rssi, merged);
         }
         if (found) {
           dispatchResult(impl, merged);
@@ -398,8 +396,9 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   params.filter_policy = 0;
   params.limited = 0;
 
-  int rc =
-    ble_gap_disc(static_cast<uint8_t>(BLE.getOwnAddressType()), durationMs == 0 ? BLE_HS_FOREVER : (int32_t)durationMs, &params, BLEScan::Impl::gapEventHandler, &impl);
+  int rc = ble_gap_disc(
+    static_cast<uint8_t>(BLE.getOwnAddressType()), durationMs == 0 ? BLE_HS_FOREVER : (int32_t)durationMs, &params, BLEScan::Impl::gapEventHandler, &impl
+  );
   if (rc != 0) {
     log_e("ble_gap_disc: rc=%d", rc);
     return BTStatus::Fail;

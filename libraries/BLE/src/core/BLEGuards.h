@@ -145,8 +145,7 @@
  * This is the stack-capability flag; the "is a TX impl actually compiled" flag
  * is BLE_PERIODIC_ADV_TX_SUPPORTED below.
  */
-#if (BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV)) \
- || (BLE_BLUEDROID && defined(CONFIG_BT_BLE_50_PERIODIC_ADV_EN))
+#if (BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV)) || (BLE_BLUEDROID && defined(CONFIG_BT_BLE_50_PERIODIC_ADV_EN))
 #define BLE_PERIODIC_ADV_SUPPORTED 1
 #else
 #define BLE_PERIODIC_ADV_SUPPORTED 0

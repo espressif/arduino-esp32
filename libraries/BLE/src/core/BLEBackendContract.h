@@ -53,21 +53,16 @@
 // --- Classes with a shared base: Foo::Impl must inherit FooImplCommon (two-layer model). ---
 static_assert(std::is_base_of<BLEServerImplCommon, BLEServer::Impl>::value, "BLEServer::Impl must inherit BLEServerImplCommon");
 static_assert(std::is_base_of<BLEServiceImplCommon, BLEService::Impl>::value, "BLEService::Impl must inherit BLEServiceImplCommon");
-static_assert(
-  std::is_base_of<BLECharacteristicImplCommon, BLECharacteristic::Impl>::value, "BLECharacteristic::Impl must inherit BLECharacteristicImplCommon"
-);
+static_assert(std::is_base_of<BLECharacteristicImplCommon, BLECharacteristic::Impl>::value, "BLECharacteristic::Impl must inherit BLECharacteristicImplCommon");
 static_assert(std::is_base_of<BLEDescriptorImplCommon, BLEDescriptor::Impl>::value, "BLEDescriptor::Impl must inherit BLEDescriptorImplCommon");
 static_assert(std::is_base_of<BLEClientImplCommon, BLEClient::Impl>::value, "BLEClient::Impl must inherit BLEClientImplCommon");
-static_assert(
-  std::is_base_of<BLERemoteServiceImplCommon, BLERemoteService::Impl>::value, "BLERemoteService::Impl must inherit BLERemoteServiceImplCommon"
-);
+static_assert(std::is_base_of<BLERemoteServiceImplCommon, BLERemoteService::Impl>::value, "BLERemoteService::Impl must inherit BLERemoteServiceImplCommon");
 static_assert(
   std::is_base_of<BLERemoteCharacteristicImplCommon, BLERemoteCharacteristic::Impl>::value,
   "BLERemoteCharacteristic::Impl must inherit BLERemoteCharacteristicImplCommon"
 );
 static_assert(
-  std::is_base_of<BLERemoteDescriptorImplCommon, BLERemoteDescriptor::Impl>::value,
-  "BLERemoteDescriptor::Impl must inherit BLERemoteDescriptorImplCommon"
+  std::is_base_of<BLERemoteDescriptorImplCommon, BLERemoteDescriptor::Impl>::value, "BLERemoteDescriptor::Impl must inherit BLERemoteDescriptorImplCommon"
 );
 static_assert(std::is_base_of<BLESecurityImplCommon, BLESecurity::Impl>::value, "BLESecurity::Impl must inherit BLESecurityImplCommon");
 

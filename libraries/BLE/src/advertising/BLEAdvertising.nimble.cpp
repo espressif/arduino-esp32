@@ -227,7 +227,10 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     return BTStatus::Fail;
   }
   impl.isAdvertising = true;
-  log_i("Advertising: started (legacy over ext instance %u, duration=%u ms, %u service UUID(s))", Impl::kLegacyInstance, durationMs, (unsigned)impl.serviceUUIDs.size());
+  log_i(
+    "Advertising: started (legacy over ext instance %u, duration=%u ms, %u service UUID(s))", Impl::kLegacyInstance, durationMs,
+    (unsigned)impl.serviceUUIDs.size()
+  );
   return BTStatus::OK;
 #else
   struct ble_gap_adv_params advParams = {};
@@ -514,7 +517,7 @@ int BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   struct ble_gap_ext_adv_params params = {};
   fillLegacyPduExtAdvParams(advType, params);
   params.own_addr_type = static_cast<uint8_t>(BLE.getOwnAddressType());
-  params.primary_phy = BLE_HCI_LE_PHY_1M;    // legacy PDUs are 1M only
+  params.primary_phy = BLE_HCI_LE_PHY_1M;  // legacy PDUs are 1M only
   params.secondary_phy = BLE_HCI_LE_PHY_1M;
   params.itvl_min = minInterval;
   params.itvl_max = maxInterval;
@@ -539,9 +542,8 @@ int BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
     }
     rc = ble_gap_ext_adv_set_data(kLegacyInstance, om);
   } else {
-    BLEAdvertisementData adv = BLEAdvDataBuilder::buildLegacyAdvData(
-      name, serviceUUIDs, appearance, includeTxPower, BLE.getPower(), nameInScanRsp, minPreferred, maxPreferred
-    );
+    BLEAdvertisementData adv =
+      BLEAdvDataBuilder::buildLegacyAdvData(name, serviceUUIDs, appearance, includeTxPower, BLE.getPower(), nameInScanRsp, minPreferred, maxPreferred);
     struct os_mbuf *om = ble_hs_mbuf_from_flat(adv.data(), adv.length());
     if (!om) {
       return BLE_HS_ENOMEM;
