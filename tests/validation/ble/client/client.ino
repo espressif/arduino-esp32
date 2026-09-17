@@ -150,7 +150,13 @@ void readName() {
 // ========================= Phase 1 — Basic Lifecycle =========================
 
 bool phase_basic() {
+  // Stack init has previously overrun a heap block and smashed the tail canary,
+  // which only surfaced as a corruption panic much later, in unrelated code.
+  // Walk every heap region on both sides of the first begin() to catch it here.
+  bool heapCleanBefore = heap_caps_check_integrity_all(true);
   BTStatus status = BLE.begin(targetName + "_client");
+  bool heapCleanAfter = heap_caps_check_integrity_all(true);
+  Serial.printf("[CLIENT] Phase1 heapIntegrity before=%d after=%d\n", (int)heapCleanBefore, (int)heapCleanAfter);
   if (!status) {
     Serial.printf("[CLIENT] Init FAILED: %s\n", status.toString());
     return false;
@@ -597,6 +603,17 @@ void setup() {
       // Read back to verify server received it
       String readBack = writeNrChr.readValue();
       Serial.printf("[CLIENT] WriteNR readback: %s\n", readBack.c_str());
+
+      // Three packets back to back, no delay and no ATT response in between, so
+      // they queue up in the stack. The server must see AA/BB/CC and not three
+      // copies of the last payload.
+      static const uint8_t burst[][3] = {{0xAA, 0xAA, 0xAA}, {0xBB, 0xBB, 0xBB}, {0xCC, 0xCC, 0xCC}};
+      bool burstSent = true;
+      for (const auto &packet : burst) {
+        burstSent = burstSent && (bool)writeNrChr.writeValue(packet, sizeof(packet), false);
+      }
+      Serial.printf("[CLIENT] Phase8 burst sent=%d\n", (int)burstSent);
+      delay(500);
     }
     Serial.println("[CLIENT] Status: write_no_response done");
   }
@@ -1347,7 +1364,9 @@ void setup() {
       for (const auto &dev : results) {
         BLEAdvertisedDevice d = dev;
         String n = d.getName();
-        Serial.printf("[CLIENT] Phase20 seen name=\"%s\" addr=%s payloadLen=%u\n", n.c_str(), d.getAddress().toString().c_str(), (unsigned)d.getPayloadLength());
+        Serial.printf(
+          "[CLIENT] Phase20 seen name=\"%s\" addr=%s payloadLen=%u\n", n.c_str(), d.getAddress().toString().c_str(), (unsigned)d.getPayloadLength()
+        );
         if (n != wantName) {
           continue;
         }
@@ -1394,15 +1413,12 @@ void setup() {
         (int)d.isConnectable(), (int)d.isLegacyAdvertisement()
       );
       Serial.printf("[CLIENT] Phase20 svcUUIDs=%u first=%s\n", (unsigned)d.getServiceUUIDCount(), d.getServiceUUID(0).toString().c_str());
-      Serial.printf(
-        "[CLIENT] Phase20 mfgCompany=0x%04X mfgLen=%u\n", (unsigned)d.getManufacturerCompanyId(), (unsigned)d.getManufacturerDataString().length()
-      );
+      Serial.printf("[CLIENT] Phase20 mfgCompany=0x%04X mfgLen=%u\n", (unsigned)d.getManufacturerCompanyId(), (unsigned)d.getManufacturerDataString().length());
       size_t svcLen = 0;
       const uint8_t *svcRaw = d.getServiceData(0, &svcLen);
       BLEUUID svc16((uint16_t)0x180D);
       Serial.printf(
-        "[CLIENT] Phase20 svcDataLen=%u advertisesSvc=%d payloadLen=%u\n", (unsigned)svcLen, (int)d.isAdvertisingService(svc16),
-        (unsigned)d.getPayloadLength()
+        "[CLIENT] Phase20 svcDataLen=%u advertisesSvc=%d payloadLen=%u\n", (unsigned)svcLen, (int)d.isAdvertisingService(svc16), (unsigned)d.getPayloadLength()
       );
       (void)svcRaw;
       // Slave Connection Interval Range AD (0x12): parse it back out of the
@@ -1439,18 +1455,23 @@ void setup() {
     String oszWant = String("OSZ_") + targetName;
     BLEScan::Results oszResults = scn.startBlocking(8000);
     int parseOversizeRejected = -1;
+    int parseMalformedUuids = -1;
     for (const auto &dev : oszResults) {
       BLEAdvertisedDevice d = dev;
       if (d.getName() == oszWant) {
         parseOversizeRejected = d.haveManufacturerData() ? 0 : 1;
+        // The scan response carries three truncated UUID lists and the primary
+        // advertisement carries none, so a parser that does not round a partial
+        // UUID up into a whole one ends up with no service UUID at all.
+        parseMalformedUuids = (d.getServiceUUIDCount() == 0) ? 1 : 0;
         Serial.printf(
-          "[CLIENT] Phase20 parseOversize name=%s haveMfg=%d payloadLen=%u\n", d.getName().c_str(), (int)d.haveManufacturerData(),
-          (unsigned)d.getPayloadLength()
+          "[CLIENT] Phase20 parseOversize name=%s haveMfg=%d svcCount=%u payloadLen=%u\n", d.getName().c_str(), (int)d.haveManufacturerData(),
+          (unsigned)d.getServiceUUIDCount(), (unsigned)d.getPayloadLength()
         );
         break;
       }
     }
-    Serial.printf("[CLIENT] Phase20 parseOversizeRejected=%d\n", parseOversizeRejected);
+    Serial.printf("[CLIENT] Phase20 parseOversizeRejected=%d malformedUuidsRejected=%d\n", parseOversizeRejected, parseMalformedUuids);
 
     scn.clearResults();
     scn.setActiveScan(true);
@@ -2311,8 +2332,8 @@ void setup() {
         BLEConnInfo ci = pc.getConnInfo();
         auto bonds = sec.getBondedDevices();
         Serial.printf(
-          "[CLIENT] Phase32 passkeyEntry enc=%d bond=%d bonds=%u authFired=%d authSuccess=%d\n", (int)ci.isEncrypted(), (int)ci.isBonded(), (unsigned)bonds.size(),
-          (int)clientAuthCompleteFired, (int)clientLastAuthSuccess
+          "[CLIENT] Phase32 passkeyEntry enc=%d bond=%d bonds=%u authFired=%d authSuccess=%d\n", (int)ci.isEncrypted(), (int)ci.isBonded(),
+          (unsigned)bonds.size(), (int)clientAuthCompleteFired, (int)clientLastAuthSuccess
         );
         pc.disconnect();
         delay(500);

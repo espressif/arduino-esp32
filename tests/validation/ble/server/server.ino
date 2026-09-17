@@ -122,6 +122,15 @@ volatile uint16_t authzLastAttrHandle = 0;
 // observe one approval and one denial from the same characteristic.
 volatile bool authzApproveNextWrite = true;
 
+// Phase 8 Write-Without-Response burst — the payloads the client sends back to
+// back, one distinct byte value repeated per packet so a payload that leaked in
+// from another packet in the queue is obvious in the log. Touched only from the
+// onWrite callback, which the stack runs on a single task.
+static const uint8_t writeNrBurstBytes[] = {0xAA, 0xBB, 0xCC};
+static const size_t writeNrBurstLen = 3;
+uint8_t writeNrBurstSeen = 0;
+bool writeNrBurstOk = true;
+
 // Phase 24 BLE5 advanced — last PHY/DLE state observed by server callbacks.
 volatile uint8_t phase24TxPhy = 0;
 volatile uint8_t phase24RxPhy = 0;
@@ -194,7 +203,13 @@ void readName() {
 // ========================= Phase 1 — Basic Lifecycle =========================
 
 bool phase_basic() {
+  // Stack init has previously overrun a heap block and smashed the tail canary,
+  // which only surfaced as a corruption panic much later, in unrelated code.
+  // Walk every heap region on both sides of the first begin() to catch it here.
+  bool heapCleanBefore = heap_caps_check_integrity_all(true);
   BTStatus status = BLE.begin(serverName);
+  bool heapCleanAfter = heap_caps_check_integrity_all(true);
+  Serial.printf("[SERVER] Phase1 heapIntegrity before=%d after=%d\n", (int)heapCleanBefore, (int)heapCleanAfter);
   if (!status) {
     Serial.printf("[SERVER] Init FAILED: %s\n", status.toString());
     return false;
@@ -430,6 +445,21 @@ bool phase_gatt_setup() {
     syncPhaseFromHost();
     size_t len = 0;
     const uint8_t *data = c.getValue(&len);
+    // Burst packets arrive back to back with no ATT response in between, which is
+    // what lets a value buffer shared across queued packets show up: every
+    // callback then reads the newest payload instead of its own. Report each one
+    // so the host can check the three payloads stayed distinct and in order.
+    if (len == writeNrBurstLen && writeNrBurstSeen < sizeof(writeNrBurstBytes)) {
+      uint8_t want = writeNrBurstBytes[writeNrBurstSeen];
+      bool ok = (data[0] == want && data[1] == want && data[2] == want);
+      writeNrBurstOk = writeNrBurstOk && ok;
+      writeNrBurstSeen++;
+      Serial.printf("[SERVER] Phase8 burst %u bytes=%02X%02X%02X ok=%d\n", (unsigned)writeNrBurstSeen, data[0], data[1], data[2], (int)ok);
+      if (writeNrBurstSeen == sizeof(writeNrBurstBytes)) {
+        Serial.printf("[SERVER] Phase8 burst done seen=%u ok=%d\n", (unsigned)writeNrBurstSeen, (int)writeNrBurstOk);
+      }
+      return;
+    }
     Serial.printf("[SERVER] WriteNR received: %.*s\n", (int)len, (const char *)data);
   });
 
@@ -1143,9 +1173,8 @@ void loop() {
     delay(14000);
     adv.stop();
 
-    // Parser regression (issue #12801): advertise a scan response whose final
-    // AD length byte claims more octets than remain in the PDU. The client's
-    // parsePayload must reject that field instead of reading past the buffer.
+    // Parser regression window: every AD structure here is malformed in a
+    // different way and none of them may reach the client's parsed fields.
     // Distinct name so the client does not confuse this with the ADV_ window.
     String oszName = String("OSZ_") + serverName;
     BLEAdvertisementData od;
@@ -1154,8 +1183,17 @@ void loop() {
     adv.setAdvertisementData(od);
 
     BLEAdvertisementData osr;
+    // A UUID list must hold a whole number of UUIDs. Each of these is one octet
+    // group short, so a parser that rounds down would invent a UUID from the
+    // trailing bytes or read past the field.
+    const uint8_t partial16Ad[] = {2, 0x03, 0x0D};                      // 16-bit list, 1 of 2 octets
+    const uint8_t partial32Ad[] = {4, 0x05, 0x0D, 0x18, 0x00};          // 32-bit list, 3 of 4 octets
+    const uint8_t short128Ad[] = {8, 0x07, 0x0D, 0x18, 0, 0, 0, 0, 0};  // 128-bit UUID, 7 of 16 octets
     // Length 20 claims 20 octets follow; only type (0xFF) + 2 data bytes are present.
-    const uint8_t oversizeAd[] = {20, 0xFF, 0x01, 0x02};
+    const uint8_t oversizeAd[] = {20, 0xFF, 0x01, 0x02};  // issue #12801
+    osr.addRaw(partial16Ad, sizeof(partial16Ad));
+    osr.addRaw(partial32Ad, sizeof(partial32Ad));
+    osr.addRaw(short128Ad, sizeof(short128Ad));
     osr.addRaw(oversizeAd, sizeof(oversizeAd));
     adv.setScanResponseData(osr);
 

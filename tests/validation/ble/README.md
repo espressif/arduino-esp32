@@ -24,14 +24,14 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 
 | Phase | Label | What it covers |
 |---|---|---|
-| 1 | basic_lifecycle | init / deinit / reinit / final deinit |
+| 1 | basic_lifecycle | init / deinit / reinit / final deinit + **heap canary integrity around the first `begin()`** |
 | 2 | ble5_ext_periodic_adv | extended + periodic advertising and sync (BLE5) |
 | 3 | gatt_setup_connect | server start, scan, connect, service discovery, heap tracking |
 | 4 | gatt_read_write | characteristic read / write / read-back |
 | 5 | notifications_indications | CCCD subscribe, notify, indicate, unsubscribe, subscriber count |
 | 6 | large_att_write | 512-byte write + read integrity |
 | 7 | descriptor_read_write | user description + presentation format descriptors |
-| 8 | write_no_response | write-without-response path |
+| 8 | write_no_response | write-without-response path + **queued burst payload integrity** |
 | 9 | server_disconnect | server-initiated disconnect + client reconnect |
 | 10 | security | Numeric Comparison pairing, matching passkey, secure read |
 | 11 | ble5_phy_dle | PHY update + data-length extension (BLE5) |
@@ -43,7 +43,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 17 | address_types | every `BTAddress::Type` + Public/Random connect roundtrip |
 | 18 | authorization | app-level authorization approve/deny of writes |
 | 19 | encrypted_perm_enforcement | encrypted characteristic read/write over paired link |
-| 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip + **truncated AD parser rejection** (issue #12801) |
+| 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip + **malformed AD parser rejection** (issue #12801) |
 | 21 | beacon_and_eddystone | iBeacon / Eddystone URL / Eddystone TLM frames |
 | 22 | bond_and_whitelist | bond enumeration, whitelist, IRK cross-check |
 | 23 | error_paths_and_misc | unknown UUIDs, typed reads, UUID algebra, write-after-disconnect |
@@ -68,9 +68,29 @@ full name. It additionally guards the Slave Connection Interval Range AD (0x12):
 encode `[04 12 min_lo min_hi max_lo max_hi]` in little-endian 1.25 ms units, and
 the client parses the same field back out of the received payload to confirm the
 min/max survived the over-the-air round trip. A second over-the-air window
-(`OSZ_<name>`) appends a deliberately truncated manufacturer AD (length byte
-claims 20 octets, only 2 follow) via `addRaw`; the client must report
-`parseOversizeRejected=1` (`!haveManufacturerData()`), guarding issue #12801.
+(`OSZ_<name>`) has a scan response built entirely out of malformed AD structures
+appended with `addRaw`, and none of them may reach the parsed fields:
+
+- a manufacturer AD whose length byte claims 20 octets when only 2 follow, so the
+  client must report `parseOversizeRejected=1` (`!haveManufacturerData()`),
+  guarding issue #12801;
+- 16-bit, 32-bit and 128-bit service-UUID structures that are each one octet
+  group short of a whole UUID, reported as `malformedUuidsRejected=1`, which holds
+  only when the device ends up with no service UUID at all.
+
+The malformed UUID lists come before the oversized field, because rejecting an
+oversized field stops parsing and would otherwise hide everything after it.
+
+Phase 1 checks heap integrity (`heap_caps_check_integrity_all`) immediately before
+and after the first `BLE.begin()` on both devices. A stack init that overruns a
+heap block corrupts a canary silently and only panics much later in unrelated
+code, so the check has to sit right around the call.
+
+Phase 8 follows the single write-without-response with a burst of three packets
+sent back to back, with no delay and no ATT response in between so they queue up
+in the stack. The server must observe `AAAAAA`, `BBBBBB` and `CCCCCC` in order; a
+value buffer shared across queued packets shows up as three copies of the last
+payload.
 
 ## Requirements
 

@@ -67,6 +67,13 @@ def _start_phase(server, client, phase_num):
 
 
 def _phase_basic(server, client):
+    # Heap canaries around the very first begin(): a stack init that overruns a
+    # block corrupts the heap silently and only panics later, somewhere else.
+    for dut, tag in ((server, "SERVER"), (client, "CLIENT")):
+        m = dut.expect(rf"\[{tag}\] Phase1 heapIntegrity before=([01]) after=([01])", timeout=30)
+        assert int(m.group(1)) == 1, f"{tag} heap was already corrupt before BLE.begin()"
+        assert int(m.group(2)) == 1, f"{tag} BLE.begin() corrupted the heap"
+
     server.expect_exact("[SERVER] Init OK", timeout=30)
     server.expect_exact("[SERVER] Deinit OK", timeout=10)
     server.expect_exact("[SERVER] Reinit OK", timeout=30)
@@ -181,6 +188,21 @@ def _phase_write_no_response(server, client):
     server.expect_exact("[SERVER] WriteNR received: WriteNR_OK", timeout=10)
     # Use [^\r\n]+ not .+ : on CRLF, "." matches \r and greedy .+ can swallow the next line.
     client.expect(r"\[CLIENT\] WriteNR readback: [^\r\n]+", timeout=10)
+
+    # Burst of three queued Write-Without-Response packets. A value buffer shared
+    # across queued packets makes every onWrite() read the newest payload, so the
+    # server would report CCCCCC three times instead of AA/BB/CC.
+    m_sent = client.expect(r"\[CLIENT\] Phase8 burst sent=([01])", timeout=15)
+    assert int(m_sent.group(1)) == 1, "client failed to send the Write-NR burst"
+    for index, payload in enumerate(("AAAAAA", "BBBBBB", "CCCCCC"), start=1):
+        m = server.expect(rf"\[SERVER\] Phase8 burst {index} bytes=([0-9A-F]{{6}}) ok=([01])", timeout=15)
+        got = m.group(1).decode()
+        assert got == payload, f"Write-NR packet {index} arrived as {got}, expected {payload}"
+        assert int(m.group(2)) == 1, f"server rejected Write-NR packet {index}"
+    m_done = server.expect(r"\[SERVER\] Phase8 burst done seen=(\d+) ok=([01])", timeout=15)
+    assert int(m_done.group(1)) == 3, f"server saw {int(m_done.group(1))} of 3 Write-NR burst packets"
+    assert int(m_done.group(2)) == 1, "Write-NR burst payloads were not preserved"
+
     client.expect_exact("[CLIENT] Status: write_no_response done", timeout=10)
 
 
@@ -440,7 +462,8 @@ def _phase_conninfo_and_params(server, client):
     # getConnInfo(handle) must return a fresh snapshot reflecting the post-exchange
     # MTU/conn-params, reject a bogus handle, and behave the same on both stacks.
     m_gci = server.expect(
-        r"\[SERVER\] Phase16 getConnInfo valid=([01]) mtu=(\d+) timeout=(\d+) bogusValid=([01]) refreshedMtu=([01]) refreshedParams=([01])",
+        r"\[SERVER\] Phase16 getConnInfo valid=([01]) mtu=(\d+) timeout=(\d+) bogusValid=([01]) "
+        r"refreshedMtu=([01]) refreshedParams=([01])",
         timeout=10,
     )
     assert int(m_gci.group(1)) == 1, "getConnInfo(handle) returned an invalid snapshot for a live connection"
@@ -553,11 +576,17 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_cpref.group(3), 16) == 0x0012, f"preferred max interval mismatch: got 0x{m_cpref.group(3)}"
     m = client.expect(r"\[CLIENT\] Phase20 sawAdv=([01])", timeout=30)
     assert int(m.group(1)) == 1, "client did not see the ADV_<name> payload"
-    # Parser regression (issue #12801): after the ADV_ window the server advertises
-    # OSZ_<name> with a truncated manufacturer AD; parsePayload must reject it.
+    # Parser regression: after the ADV_ window the server advertises OSZ_<name>,
+    # whose scan response is built entirely out of malformed AD structures — a
+    # truncated manufacturer AD (issue #12801) and 16/32/128-bit UUID structures
+    # that are each one octet group short. None of them may reach the parsed fields.
     server.expect(r"\[SERVER\] Phase20 parseOversizeAdv ok=1 isAdv=[01]", timeout=50)
-    m_osz = client.expect(r"\[CLIENT\] Phase20 parseOversizeRejected=(-1|[01])", timeout=50)
+    m_osz = client.expect(
+        r"\[CLIENT\] Phase20 parseOversizeRejected=(-1|[01]) malformedUuidsRejected=(-1|[01])",
+        timeout=50,
+    )
     assert int(m_osz.group(1)) == 1, "client did not reject the truncated manufacturer AD (issue #12801)"
+    assert int(m_osz.group(2)) == 1, "client parsed a UUID out of a malformed or terminated AD structure"
     # AD payload-limit regression: legacy 31-octet cap must be enforced (name
     # degrades to a Shortened Local Name, an oversized field is dropped whole),
     # while an extended payload accepts the full name.
@@ -569,7 +598,9 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_cap.group(2)) == 1, "an oversized AD field was not rejected whole (legacy cap)"
     assert int(m_cap.group(3)) == 1, "extended AD payload did not accept the full name"
     m_pref = server.expect(r"\[SERVER\] Phase20 prefIntervalAD ok=([01])", timeout=10)
-    assert int(m_pref.group(1)) == 1, "setPreferredParams did not emit a correct Slave Connection Interval Range AD (0x12)"
+    assert (
+        int(m_pref.group(1)) == 1
+    ), "setPreferredParams did not emit a correct Slave Connection Interval Range AD (0x12)"
     client.expect_exact("[CLIENT] Phase20 done", timeout=15)
     server.expect_exact("[SERVER] Phase20 done", timeout=20)
 
@@ -831,7 +862,9 @@ def _phase_ble5_legacy_plus_ext(server, client):
     assert int(m_s.group(2)) == 1, "server legacy set failed to start"
     m_ext = server.expect(r"\[SERVER\] Phase27 extAdv ok=([01]) data=([01])", timeout=15)
     assert int(m_ext.group(2)) == 1, "server failed to set extended adv data"
-    assert int(m_ext.group(1)) == 1, "server failed to start the concurrent extended set (reserved-instance concurrency broken)"
+    assert (
+        int(m_ext.group(1)) == 1
+    ), "server failed to start the concurrent extended set (reserved-instance concurrency broken)"
 
     m_c = client.expect(
         r"\[CLIENT\] (Phase27 BLE5 not supported, skipping"
@@ -958,7 +991,8 @@ def _phase_nc_reject(server, client):
     fails and neither end ends up encrypted or bonded. Runs on both stacks.
     """
     m_c = client.expect(
-        r"\[CLIENT\] Phase31 ncReject readOk=([01]) enc=([01]) bond=([01]) bonds=(\d+) authFired=([01]) authSuccess=([01])",
+        r"\[CLIENT\] Phase31 ncReject readOk=([01]) enc=([01]) bond=([01]) bonds=(\d+) "
+        r"authFired=([01]) authSuccess=([01])",
         timeout=60,
     )
     assert int(m_c.group(1)) == 0, "secure read succeeded despite the numeric-comparison reject"
@@ -1028,7 +1062,9 @@ def _phase_periodic_adv_lifecycle(server, client):
     # At least one teardown transition must be observed: an explicit terminate
     # (deterministic) or a supervision-timeout sync-lost (timing dependent).
     m_t = client.expect(r"\[CLIENT\] Phase33 lost=([01]) terminateOk=([01])", timeout=45)
-    assert (int(m_t.group(1)) == 1) or (int(m_t.group(2)) == 1), "neither sync-lost nor explicit terminate observed (periodic teardown uncovered)"
+    assert (int(m_t.group(1)) == 1) or (
+        int(m_t.group(2)) == 1
+    ), "neither sync-lost nor explicit terminate observed (periodic teardown uncovered)"
 
     server.expect_exact("[SERVER] Phase33 periodic stopped", timeout=45)
     client.expect_exact("[CLIENT] Phase33 done", timeout=20)
