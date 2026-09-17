@@ -354,7 +354,12 @@ def _phase_introspection_and_permissions(server, client):
     server.expect_exact("[SERVER] DescPerm validation done", timeout=10)
 
     client.expect_exact("[CLIENT] Reconnected for introspection", timeout=30)
-    client.expect(r"\[CLIENT\] RSSI: -?\d+", timeout=10)
+    m_rssi = client.expect(r"\[CLIENT\] RSSI: (-?\d+)", timeout=10)
+    rssi = int(m_rssi.group(1))
+    # -128 is the sentinel getRSSI() returns when the read never completes, so
+    # matching any integer here let a broken read pass as a success. Both DUTs
+    # sit on the same bench, well inside this range.
+    assert -110 <= rssi <= 20, f"getRSSI() returned {rssi}; -128 means the read failed or timed out"
     m_svc = client.expect(r"\[CLIENT\] Service count: (\d+)", timeout=10)
     assert int(m_svc.group(1)) >= 1, "Expected at least 1 service on server"
     m_ch = client.expect(r"\[CLIENT\] Characteristic count: (\d+)", timeout=10)

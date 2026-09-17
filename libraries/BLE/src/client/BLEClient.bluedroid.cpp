@@ -760,10 +760,15 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
     }
   }
 
-  // For CONNECT_EVT, also try matching by BDA if gattc_if didn't match
+  // For CONNECT_EVT, also try matching by BDA if gattc_if didn't match.
+  // Several clients may share one link to the same peer, so the address alone
+  // does not identify one: only consider a client that is still waiting for a
+  // connection. Without that guard a stray event (one whose gattc_if belongs to
+  // a client destroyed mid-connect) could land on a live client and overwrite
+  // its connId, pointing every later GATT operation at a foreign connection.
   if (!client && event == ESP_GATTC_CONNECT_EVT) {
     for (auto *c : s_clients) {
-      if (c->peerAddress.equalsEspBdAddr(param->connect.remote_bda)) {
+      if (!c->connected && c->peerAddress.equalsEspBdAddr(param->connect.remote_bda)) {
         client = c;
         break;
       }
@@ -992,11 +997,18 @@ void BLEClient::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 
   if (event == ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT) {
     if (param->read_rssi_cmpl.status == ESP_BT_STATUS_SUCCESS) {
+      // RSSI belongs to the physical ACL, and Bluedroid lets several BLEClient
+      // app-ids share one link to the same peer (see the AUTH_CMPL handler
+      // above). The completion event carries only the peer address, so it
+      // cannot say which of them asked. Update and release every client on that
+      // address: stopping at the first match released whichever client happened
+      // to be first in the list and left the actual requester waiting until it
+      // timed out, so getRSSI() returned -128 whenever more than one client
+      // shared the link.
       for (auto *c : s_clients) {
         if (c->peerAddress.equalsEspBdAddr(param->read_rssi_cmpl.remote_addr)) {
           c->lastRssi = param->read_rssi_cmpl.rssi;
           c->rssiSync.give(BTStatus::OK);
-          return;
         }
       }
     } else {
