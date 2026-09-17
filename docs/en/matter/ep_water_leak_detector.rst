@@ -12,7 +12,7 @@ The ``MatterWaterLeakDetector`` class provides a water leak detector endpoint fo
 * Simple boolean state
 * Read-only sensor (no control functionality)
 * Automatic state updates
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -139,5 +139,5 @@ Example
 Water Leak Detector
 ********************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterWaterLeakDetector/MatterWaterLeakDetector.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterWaterLeakDetector/MatterWaterLeakDetector.ino
     :language: arduino
