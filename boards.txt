@@ -53340,16 +53340,16 @@ pcbcupid_glyph_c5.menu.ZigbeeMode.default.build.zigbee_mode=
 pcbcupid_glyph_c5.menu.ZigbeeMode.default.build.zigbee_libs=
 pcbcupid_glyph_c5.menu.ZigbeeMode.ed=Zigbee ED (end device)
 pcbcupid_glyph_c5.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-pcbcupid_glyph_c5.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+pcbcupid_glyph_c5.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp-zigbee-core.zed.release -lesp-zigbee-idf.native.release -lesp-zigbee.release
 pcbcupid_glyph_c5.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 pcbcupid_glyph_c5.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-pcbcupid_glyph_c5.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+pcbcupid_glyph_c5.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp-zigbee-core.zczr.release -lesp-zigbee-idf.native.release -lesp-zigbee.release
 pcbcupid_glyph_c5.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
 pcbcupid_glyph_c5.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
-pcbcupid_glyph_c5.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+pcbcupid_glyph_c5.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp-zigbee-core.zed.debug -lesp-zigbee-idf.native.debug -lesp-zigbee.debug
 pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
 pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
+pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp-zigbee-core.zczr.debug -lesp-zigbee-idf.native.debug -lesp-zigbee.debug
 
 ##############################################################
 
@@ -59757,10 +59757,16 @@ canipulator_v1.menu.ZigbeeMode.default.build.zigbee_mode=
 canipulator_v1.menu.ZigbeeMode.default.build.zigbee_libs=
 canipulator_v1.menu.ZigbeeMode.ed=Zigbee ED (end device)
 canipulator_v1.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-canipulator_v1.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+canipulator_v1.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp-zigbee-core.zed.release -lesp-zigbee-idf.native.release -lesp-zigbee.release
 canipulator_v1.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 canipulator_v1.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-canipulator_v1.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+canipulator_v1.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp-zigbee-core.zczr.release -lesp-zigbee-idf.native.release -lesp-zigbee.release
+canipulator_v1.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+canipulator_v1.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+canipulator_v1.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp-zigbee-core.zed.debug -lesp-zigbee-idf.native.debug -lesp-zigbee.debug
+canipulator_v1.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+canipulator_v1.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+canipulator_v1.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp-zigbee-core.zczr.debug -lesp-zigbee-idf.native.debug -lesp-zigbee.debug
 
 ##############################################################
 
@@ -59962,16 +59968,16 @@ canipulator_v2.menu.ZigbeeMode.default.build.zigbee_mode=
 canipulator_v2.menu.ZigbeeMode.default.build.zigbee_libs=
 canipulator_v2.menu.ZigbeeMode.ed=Zigbee ED (end device)
 canipulator_v2.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-canipulator_v2.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+canipulator_v2.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp-zigbee-core.zed.release -lesp-zigbee-idf.native.release -lesp-zigbee.release
 canipulator_v2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 canipulator_v2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-canipulator_v2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+canipulator_v2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp-zigbee-core.zczr.release -lesp-zigbee-idf.native.release -lesp-zigbee.release
 canipulator_v2.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
 canipulator_v2.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
-canipulator_v2.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+canipulator_v2.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp-zigbee-core.zed.debug -lesp-zigbee-idf.native.debug -lesp-zigbee.debug
 canipulator_v2.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
 canipulator_v2.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-canipulator_v2.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
+canipulator_v2.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp-zigbee-core.zczr.debug -lesp-zigbee-idf.native.debug -lesp-zigbee.debug
 
 ##############################################################
 
