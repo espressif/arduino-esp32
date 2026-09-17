@@ -798,7 +798,9 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
 #if BLE_SMP_SUPPORTED
       if (event->type == BLE_GAP_EVENT_ENC_CHANGE) {
-        if (event->enc_change.status != 0) {
+        if (event->enc_change.status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
+          BLESecurity::Impl::deleteStaleBond(desc.peer_id_addr);
+        } else if (event->enc_change.status != 0) {
           log_w("Client: pairing/encryption failed on conn %u, host status=0x%04x", connHandle, event->enc_change.status);
         }
         auto *sec = BLESecurity::Impl::instance();
@@ -850,6 +852,27 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         ble_sm_inject_io(event->passkey.conn_handle, &pkey);
       }
       return 0;
+    }
+
+    case BLE_GAP_EVENT_PARING_COMPLETE:  // Name is misspelled in NimBLE
+    {
+      // Arrives before the keys are persisted, so it only reports; BLE_GAP_EVENT_ENC_CHANGE
+      // is still what drives notifyAuthComplete().
+      BLESecurity::Impl::reportPairingComplete(event->pairing_complete.conn_handle, event->pairing_complete.status);
+      return 0;
+    }
+
+    case BLE_GAP_EVENT_REPEAT_PAIRING:
+    {
+      struct ble_gap_conn_desc desc;
+      if (ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc) != 0) {
+        return BLE_GAP_REPEAT_PAIRING_IGNORE;
+      }
+
+      // The peer wants to pair again on a link we already have a bond for. Keeping the old
+      // bond would make the new keys collide with it, so drop it and let the retry proceed.
+      ble_store_util_delete_peer(&desc.peer_id_addr);
+      return BLE_GAP_REPEAT_PAIRING_RETRY;
     }
 #endif /* BLE_SMP_SUPPORTED */
 

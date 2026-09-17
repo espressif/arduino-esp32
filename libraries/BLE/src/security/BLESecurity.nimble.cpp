@@ -69,6 +69,53 @@ void BLESecurity::Impl::applySecurityParams() const {
   ble_hs_cfg.sm_their_key_dist = respKeyDist;
 }
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
+/**
+ * @brief Names an SMP pairing failure reason for logging.
+ * @param reason sm_err reported by BLE_GAP_EVENT_PARING_COMPLETE.
+ * @return Static description, or "unknown reason" for codes outside the spec range.
+ * @note These are the Pairing Failed reason codes from BT Core Spec v5.x, Vol 3, Part H, §3.5.5.
+ *       Unlike most NimBLE status values they are bare SMP codes, not namespaced BLE_HS_* ones.
+ */
+static const char *smpFailReasonName(int reason) {
+  switch (reason) {
+    case BLE_SM_ERR_PASSKEY:          return "passkey entry failed";
+    case BLE_SM_ERR_OOB:              return "OOB data not available";
+    case BLE_SM_ERR_AUTHREQ:          return "authentication requirements cannot be met";
+    case BLE_SM_ERR_CONFIRM_MISMATCH: return "confirm value mismatch";
+    case BLE_SM_ERR_PAIR_NOT_SUPP:    return "pairing not supported by peer";
+    case BLE_SM_ERR_ENC_KEY_SZ:       return "encryption key size too short";
+    case BLE_SM_ERR_CMD_NOT_SUPP:     return "SMP command not supported";
+    case BLE_SM_ERR_UNSPECIFIED:      return "unspecified reason";
+    case BLE_SM_ERR_REPEATED:         return "repeated attempts, pairing disallowed";
+    case BLE_SM_ERR_INVAL:            return "invalid parameters";
+    case BLE_SM_ERR_DHKEY:            return "DHKey check failed";
+    case BLE_SM_ERR_NUMCMP:           return "numeric comparison mismatch";
+    case BLE_SM_ERR_ALREADY:          return "BR/EDR pairing in progress";
+    case BLE_SM_ERR_CROSS_TRANS:      return "cross-transport key derivation not allowed";
+    case BLE_SM_ERR_KEY_REJ:          return "key rejected by peer";
+    default:                          return "unknown reason";
+  }
+}
+#endif
+
+void BLESecurity::Impl::reportPairingComplete(uint16_t connHandle, int smReason) {
+  if (smReason == BLE_SM_ERR_SUCCESS) {
+    log_d("Security: pairing complete on conn %u", connHandle);
+    return;
+  }
+  log_w("Security: pairing on conn %u failed: %s (SMP reason=0x%02x)", connHandle, smpFailReasonName(smReason), smReason);
+}
+
+void BLESecurity::Impl::deleteStaleBond(const ble_addr_t &peerIdAddr) {
+  int rc = ble_store_util_delete_peer(&peerIdAddr);
+  if (rc != 0) {
+    log_e("Security: failed to delete the stale bond, rc=%d", rc);
+    return;
+  }
+  log_w("Security: the peer no longer holds the bonding key, deleted the stale bond so the next attempt can pair again");
+}
+
 // --------------------------------------------------------------------------
 // Stack-specific BLESecurity methods
 // --------------------------------------------------------------------------
@@ -281,6 +328,10 @@ void BLESecurity::resetSecurity() {
 uint32_t BLESecurity::Impl::resolvePasskeyForDisplay(const BLEConnInfo &) {
   return 0;
 }
+
+void BLESecurity::Impl::reportPairingComplete(uint16_t, int) {}
+
+void BLESecurity::Impl::deleteStaleBond(const ble_addr_t &) {}
 
 #endif /* BLE_SMP_SUPPORTED */
 

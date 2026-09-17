@@ -405,7 +405,9 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       impl->dispatchIdentityResolved(connInfo);
 
 #if BLE_SMP_SUPPORTED
-      if (status != 0) {
+      if (status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
+        BLESecurity::Impl::deleteStaleBond(desc.peer_id_addr);
+      } else if (status != 0) {
         log_w("Server: pairing/encryption failed on conn %u, host status=0x%04x", connHandle, status);
       }
       auto *sec = BLESecurity::Impl::instance();
@@ -471,6 +473,14 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         pkey.numcmp_accept = sec->resolveNumericComparison(connInfo, event->passkey.params.numcmp) ? 1 : 0;
         ble_sm_inject_io(connHandle, &pkey);
       }
+      return 0;
+    }
+
+    case BLE_GAP_EVENT_PARING_COMPLETE:  // Name is misspelled in NimBLE
+    {
+      // Arrives before the keys are persisted, so it only reports; BLE_GAP_EVENT_ENC_CHANGE
+      // is still what drives notifyAuthComplete().
+      BLESecurity::Impl::reportPairingComplete(event->pairing_complete.conn_handle, event->pairing_complete.status);
       return 0;
     }
 
