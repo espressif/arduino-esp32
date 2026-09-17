@@ -21,6 +21,7 @@
 
 class MatterEnhancedColorLight : public MatterEndPoint {
 public:
+  // Arduino full-scale input (0–255). Matter CurrentLevel is 1–254; 0 and 255 are clamped.
   static const uint8_t MAX_BRIGHTNESS = 255;
   static const uint16_t MAX_COLOR_TEMPERATURE = 500;
   static const uint16_t MIN_COLOR_TEMPERATURE = 100;
@@ -53,7 +54,7 @@ public:
     _onChangeOnOffCB = onChangeCB;
   }
 
-  // User Callback for whenever the Light brightness value [0..255] is changed by the Matter Controller
+  // User Callback for whenever the Light brightness value [1..254] is changed by the Matter Controller
   using EndPointBrightnessCB = std::function<bool(uint8_t)>;
   void onChangeBrightness(EndPointBrightnessCB onChangeCB) {
     _onChangeBrightnessCB = onChangeCB;

@@ -57,21 +57,50 @@ def test_webserver(dut, ci_job_id):
     LOGGER.info(f"Client connected. IP: {client_ip}")
     assert is_valid_ipv4(client_ip)
 
-    # Verify each test result
-    client.expect_exact("[CLIENT] PASS stream_text", timeout=10)
-    LOGGER.info("PASS: stream_text")
+    # Each test case is reported by the client as "PASS <name>" or "FAIL <name>".
+    # The stream cases validate the send(Stream&) overload; the remaining cases
+    # are regression checks for the request-parsing security reports and for the
+    # legitimate request shapes those checks must keep accepting.
+    test_cases = [
+        # send(Stream&) overload coverage
+        ("stream_text", 10),
+        ("stream_binary", 10),
+        ("stream_explicit_len", 10),
+        ("stream_empty", 10),
+        ("string", 10),
+        # Request-parsing robustness / security regression checks
+        ("auth_bypass", 15),  # report 2: bare Authorization username bypass
+        ("path_traversal", 15),  # report 6: serveStatic dot-segment traversal
+        # Compatibility checks for the limits added by the fixes above
+        ("static_root", 15),  # serveStatic mapped to the filesystem root
+        ("raw_body", 20),  # non-multipart body still streams to the callback
+        ("many_args", 15),  # form with many fields still fully parsed
+        ("long_uri", 20),  # long query served, over-long target answered 414
+        ("long_line", 60),  # unterminated protocol line refused, long header accepted
+        ("regex_route", 15),  # regex route still matches a normal-length path
+        # Slow-client checks (upstream issue 12788)
+        ("slow_line", 40),  # trickled bytes into an unterminated header line
+        ("slow_headers", 50),  # endless stream of complete but tiny headers
+        # Checks that crash or hang the server task on a vulnerable build
+        ("upload_null_deref", 45),  # report 4: before multipart (masks null upload)
+        ("arg_poison", 20),  # report 8: aborted multipart poisons later args
+        ("arg_flood", 45),  # report 3: query-separator allocation amplification
+        ("regex_stack", 60),  # report 7: UriRegex stack exhaustion
+        ("regex_backtrack", 60),  # report 7: UriRegex catastrophic backtracking
+        ("multipart_eof", 45),  # report 1: last — hangs server on vulnerable builds
+    ]
 
-    client.expect_exact("[CLIENT] PASS stream_binary", timeout=10)
-    LOGGER.info("PASS: stream_binary")
+    # Collect every case result (instead of stopping at the first failure) so a
+    # run against a vulnerable build reports the full matrix of findings.
+    failures = []
+    for name, timeout in test_cases:
+        m = client.expect(rf"\[CLIENT\] (PASS|FAIL) {name}", timeout=timeout)
+        result = m.group(1).decode()
+        if result == "PASS":
+            LOGGER.info(f"PASS: {name}")
+        else:
+            LOGGER.error(f"FAIL: {name}")
+            failures.append(name)
 
-    client.expect_exact("[CLIENT] PASS stream_explicit_len", timeout=10)
-    LOGGER.info("PASS: stream_explicit_len")
-
-    client.expect_exact("[CLIENT] PASS stream_empty", timeout=10)
-    LOGGER.info("PASS: stream_empty")
-
-    client.expect_exact("[CLIENT] PASS string", timeout=10)
-    LOGGER.info("PASS: string")
-
-    client.expect_exact("[CLIENT] All tests passed", timeout=10)
-    LOGGER.info("All WebServer stream tests passed")
+    assert not failures, f"WebServer test cases failed: {', '.join(failures)}"
+    LOGGER.info("All WebServer tests passed")

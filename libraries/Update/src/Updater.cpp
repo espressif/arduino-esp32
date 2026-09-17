@@ -9,14 +9,19 @@
 #include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
+#include "HEXBuilder.h"
 #ifndef UPDATE_NOCRYPT
 #include "mbedtls/build_info.h"
 #if MBEDTLS_VERSION_MAJOR >= 4
 #include "psa/crypto.h"
 #else
 #include "mbedtls/aes.h"
-#endif
+#endif /* MBEDTLS_VERSION_MAJOR >= 4 */
 #endif /* UPDATE_NOCRYPT */
+
+// Optional SHA-256/SHA-512 live in UpdaterSHA256.cpp / UpdaterSHA512.cpp
+// and are bound from setSHA256() / setSHA512() so --gc-sections can drop
+// mbedtls/PSA hash implementations from Update sketches that never enable them.
 
 static const char *_err2str(uint8_t _error) {
   if (_error == UPDATE_ERROR_OK) {
@@ -53,6 +58,10 @@ static const char *_err2str(uint8_t _error) {
   } else if (_error == UPDATE_ERROR_SIGN) {
     return ("Signature Verification Failed");
 #endif /* UPDATE_SIGN */
+  } else if (_error == UPDATE_ERROR_SHA256) {
+    return ("SHA256 Check Failed");
+  } else if (_error == UPDATE_ERROR_SHA512) {
+    return ("SHA512 Check Failed");
   }
   return ("UNKNOWN");
 }
@@ -84,7 +93,8 @@ UpdateClass::UpdateClass()
 #ifndef UPDATE_NOCRYPT
     _cryptKey(0), _cryptBuffer(0),
 #endif /* UPDATE_NOCRYPT */
-    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _command(U_FLASH), _partition(NULL)
+    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _command(U_FLASH), _partition(NULL), _sha256_ctx(NULL),
+    _sha256_valid(false), _sha512_ctx(NULL), _sha512_valid(false), _sha256Ops(NULL), _sha512Ops(NULL)
 #ifndef UPDATE_NOCRYPT
     ,
     _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
@@ -94,6 +104,8 @@ UpdateClass::UpdateClass()
     _hash(NULL), _sign(NULL), _signatureBuffer(NULL), _signatureSize(0), _hashType(-1)
 #endif /* UPDATE_SIGN */
 {
+  memset(_sha256_result, 0, sizeof(_sha256_result));
+  memset(_sha512_result, 0, sizeof(_sha512_result));
 }
 
 UpdateClass &UpdateClass::onProgress(THandlerFunction_Progress fn) {
@@ -119,6 +131,13 @@ void UpdateClass::_reset() {
     _hash = nullptr;
   }
 #endif /* UPDATE_SIGN */
+
+  if (_sha256Ops) {
+    _sha256Ops->freeContext(_sha256_ctx);
+  }
+  if (_sha512Ops) {
+    _sha512Ops->freeContext(_sha512_ctx);
+  }
 
 #ifndef UPDATE_NOCRYPT
   _cryptBuffer = nullptr;
@@ -196,6 +215,15 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   _error = 0;
   _target_md5 = emptyString;
   _md5 = MD5Builder();
+  _sha256_valid = false;
+  memset(_sha256_result, 0, sizeof(_sha256_result));
+  _sha512_valid = false;
+  memset(_sha512_result, 0, sizeof(_sha512_result));
+#ifndef UPDATE_NOCRYPT
+  _target_md5_decrypted = true;
+  _target_sha256_decrypted = true;
+  _target_sha512_decrypted = true;
+#endif /* UPDATE_NOCRYPT */
 
 #ifdef UPDATE_SIGN
   // Create and initialize signature hash if signature verification is enabled
@@ -622,6 +650,18 @@ bool UpdateClass::_writeBuffer() {
   if (!_target_md5_decrypted) {
     _md5.add(_buffer, _bufferLen);
   }
+  if (!_target_sha256_decrypted) {
+    if (_sha256Ops && !_sha256Ops->update(_sha256_ctx, _buffer, _bufferLen)) {
+      _abort(UPDATE_ERROR_SHA256);
+      return false;
+    }
+  }
+  if (!_target_sha512_decrypted) {
+    if (_sha512Ops && !_sha512Ops->update(_sha512_ctx, _buffer, _bufferLen)) {
+      _abort(UPDATE_ERROR_SHA512);
+      return false;
+    }
+  }
 
   //check if data in buffer needs decrypting
   if (_cryptMode & U_AES_IMAGE_DECRYPTING_BIT) {
@@ -676,7 +716,7 @@ bool UpdateClass::_writeBuffer() {
     return false;
   }
 
-  //restore magic or md5 will fail
+  //restore magic or md5/sha256/sha512 will fail
   if (!_progress && _command == U_FLASH) {
     _buffer[0] = ESP_IMAGE_HEADER_MAGIC;
   }
@@ -684,6 +724,22 @@ bool UpdateClass::_writeBuffer() {
   if (_target_md5_decrypted) {
 #endif /* UPDATE_NOCRYPT */
     _md5.add(_buffer, _bufferLen);
+#ifndef UPDATE_NOCRYPT
+  }
+  if (_target_sha256_decrypted) {
+#endif /* UPDATE_NOCRYPT */
+    if (_sha256Ops && !_sha256Ops->update(_sha256_ctx, _buffer, _bufferLen)) {
+      _abort(UPDATE_ERROR_SHA256);
+      return false;
+    }
+#ifndef UPDATE_NOCRYPT
+  }
+  if (_target_sha512_decrypted) {
+#endif /* UPDATE_NOCRYPT */
+    if (_sha512Ops && !_sha512Ops->update(_sha512_ctx, _buffer, _bufferLen)) {
+      _abort(UPDATE_ERROR_SHA512);
+      return false;
+    }
 #ifndef UPDATE_NOCRYPT
   }
 #endif /* UPDATE_NOCRYPT */
@@ -763,6 +819,42 @@ bool UpdateClass::setMD5(
   return true;
 }
 
+String UpdateClass::sha256String(void) {
+  if (!_sha256_valid) {
+    return String();
+  }
+  return HEXBuilder::bytes2hex(_sha256_result, sizeof(_sha256_result));
+}
+
+void UpdateClass::sha256(uint8_t *result) {
+  if (!result) {
+    return;
+  }
+  if (_sha256_valid) {
+    memcpy(result, _sha256_result, sizeof(_sha256_result));
+  } else {
+    memset(result, 0, sizeof(_sha256_result));
+  }
+}
+
+String UpdateClass::sha512String(void) {
+  if (!_sha512_valid) {
+    return String();
+  }
+  return HEXBuilder::bytes2hex(_sha512_result, sizeof(_sha512_result));
+}
+
+void UpdateClass::sha512(uint8_t *result) {
+  if (!result) {
+    return;
+  }
+  if (_sha512_valid) {
+    memcpy(result, _sha512_result, sizeof(_sha512_result));
+  } else {
+    memset(result, 0, sizeof(_sha512_result));
+  }
+}
+
 bool UpdateClass::end(bool evenIfRemaining) {
   if (hasError() || _size == 0) {
     return false;
@@ -785,6 +877,22 @@ bool UpdateClass::end(bool evenIfRemaining) {
   if (_target_md5.length()) {
     if (_target_md5 != _md5.toString()) {
       _abort(UPDATE_ERROR_MD5);
+      return false;
+    }
+  }
+
+  bool sha256_used = _sha256_ctx != nullptr;
+  if (sha256_used) {
+    if (!_sha256Ops || !_sha256Ops->finish(_sha256_ctx, _sha256_result, _sha256_valid)) {
+      _abort(UPDATE_ERROR_SHA256);
+      return false;
+    }
+  }
+
+  bool sha512_used = _sha512_ctx != nullptr;
+  if (sha512_used) {
+    if (!_sha512Ops || !_sha512Ops->finish(_sha512_ctx, _sha512_result, _sha512_valid)) {
+      _abort(UPDATE_ERROR_SHA512);
       return false;
     }
   }
@@ -826,7 +934,10 @@ bool UpdateClass::end(bool evenIfRemaining) {
   }
 #endif /* UPDATE_SIGN */
 
-  return _verifyEnd();
+  bool success = _verifyEnd();
+  _sha256_valid = success && sha256_used;
+  _sha512_valid = success && sha512_used;
+  return success;
 }
 
 size_t UpdateClass::write(uint8_t *data, size_t len) {
