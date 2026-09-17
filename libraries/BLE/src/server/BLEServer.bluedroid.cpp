@@ -1148,7 +1148,7 @@ void BLEServer::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       {
         BLELockGuard lock(impl->mtx);
         for (auto &entry : impl->connections) {
-          if (memcmp(entry.second.getAddress().data(), param->update_conn_params.bda, 6) == 0) {
+          if (entry.second.getAddress().equalsEspBdAddr(param->update_conn_params.bda)) {
             BLEConnInfoImpl::setConnParams(
               entry.second, param->update_conn_params.conn_int, param->update_conn_params.latency, param->update_conn_params.timeout
             );
@@ -1169,7 +1169,7 @@ void BLEServer::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       if (st == BTStatus::OK) {
         BLELockGuard lock(impl->mtx);
         for (auto &entry : impl->connections) {
-          if (memcmp(entry.second.getAddress().data(), param->read_phy.bda, 6) == 0) {
+          if (entry.second.getAddress().equalsEspBdAddr(param->read_phy.bda)) {
             BLEConnInfoImpl::setPhy(entry.second, param->read_phy.tx_phy, param->read_phy.rx_phy);
             impl->pendingTxPhy = static_cast<BLEPhy>(param->read_phy.tx_phy);
             impl->pendingRxPhy = static_cast<BLEPhy>(param->read_phy.rx_phy);
@@ -1186,7 +1186,7 @@ void BLEServer::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       if (st == BTStatus::OK) {
         BLELockGuard lock(impl->mtx);
         for (auto &entry : impl->connections) {
-          if (memcmp(entry.second.getAddress().data(), param->phy_update.bda, 6) == 0) {
+          if (entry.second.getAddress().equalsEspBdAddr(param->phy_update.bda)) {
             BLEConnInfoImpl::setPhy(entry.second, param->phy_update.tx_phy, param->phy_update.rx_phy);
             break;
           }
@@ -1212,7 +1212,7 @@ void BLEServer::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       {
         BLELockGuard lock(impl->mtx);
         for (auto &entry : impl->connections) {
-          if (memcmp(entry.second.getAddress().data(), param->ble_security.auth_cmpl.bd_addr, 6) == 0) {
+          if (entry.second.getAddress().equalsEspBdAddr(param->ble_security.auth_cmpl.bd_addr)) {
             BLEConnInfoImpl::setAddressType(entry.second, static_cast<BTAddress::Type>(param->ble_security.auth_cmpl.addr_type));
             BLEConnInfoImpl::updateSecurityFromAuthComplete(entry.second, param->ble_security.auth_cmpl.auth_mode);
             connInfo = entry.second;

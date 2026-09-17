@@ -50,7 +50,7 @@ struct BLESecurityImplCommon {
   // typical single-central/single-pairing usage; concurrent multi-link pairing
   // with per-link wait semantics is out of scope (would need a per-connection
   // sync map). Documented limitation, not a bug.
-  BLESync authSync;
+  BLESync authSync{"authSync"};
   // Guards the security config fields, which the user task writes (setIOCapability,
   // setAuthenticationMode, ...) while the host task reads them during pairing.
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();

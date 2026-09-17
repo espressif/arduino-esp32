@@ -36,6 +36,8 @@
 #include "core/BLEMutex.h"
 #include "esp32-hal-log.h"
 
+#include <atomic>
+
 // These hooks run on the host/BTC task while the app task may reassign the
 // callbacks via BLESecurity setters (which lock mtx). Snapshot the target
 // callback under mtx, then invoke the copy with the lock released so a user
@@ -44,6 +46,24 @@
 BLESecurity::Impl *BLESecurityImplCommon::s_instance = nullptr;
 
 void BLESecurityImplCommon::notifyAuthComplete(const BLEConnInfo &conn, bool success) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
+  if (!success) {
+    // Bond keys live in NVS, which survives reflashing, so a leftover or
+    // mismatched bond keeps rejecting the same peer long after the sketch
+    // changed. The reason codes that surface in that case (DHKey check, confirm
+    // value, encryption failure) describe the crypto step that failed and never
+    // point at the bond store, which makes this cause easy to chase for a long
+    // time. Say it once per boot: failures usually arrive in bursts of retries.
+    static std::atomic<bool> hinted{false};
+    if (!hinted.exchange(true)) {
+      log_w(
+        "Security: pairing failed. If it keeps failing with the same peer, suspect a stale bond: bonds persist in NVS across reflashing. Clear them with "
+        "BLESecurity::deleteAllBonds(), or erase NVS entirely (esptool erase-flash). See the Troubleshooting section of the BLE API documentation."
+      );
+    }
+  }
+#endif
+
   BLESecurity::AuthCompleteHandler cb;
   {
     BLELockGuard lock(mtx);

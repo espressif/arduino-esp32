@@ -151,6 +151,47 @@ void BLESecurity::Impl::applySecurityParams() {
   }
 }
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
+/**
+ * @brief Names an SMP pairing failure reason for logging.
+ * @param reason fail_reason from ESP_GAP_BLE_AUTH_CMPL_EVT.
+ * @return Static description, or "unknown reason" for codes outside the enum.
+ * @note The first block is the Pairing Failed reason codes from BT Core Spec
+ *       v5.x, Vol 3, Part H, §3.5.5; the rest are Bluedroid-internal states
+ *       that never travel on air.
+ */
+static const char *smpFailReasonName(esp_ble_auth_fail_rsn_t reason) {
+  switch (reason) {
+    case ESP_AUTH_SMP_PASSKEY_FAIL:            return "passkey entry failed";
+    case ESP_AUTH_SMP_OOB_FAIL:                return "OOB data not available";
+    case ESP_AUTH_SMP_PAIR_AUTH_FAIL:          return "authentication requirements cannot be met";
+    case ESP_AUTH_SMP_CONFIRM_VALUE_FAIL:      return "confirm value mismatch";
+    case ESP_AUTH_SMP_PAIR_NOT_SUPPORT:        return "pairing not supported by peer";
+    case ESP_AUTH_SMP_ENC_KEY_SIZE:            return "encryption key size too short";
+    case ESP_AUTH_SMP_INVALID_CMD:             return "SMP command not supported";
+    case ESP_AUTH_SMP_UNKNOWN_ERR:             return "unspecified reason";
+    case ESP_AUTH_SMP_REPEATED_ATTEMPT:        return "repeated attempts, pairing disallowed";
+    case ESP_AUTH_SMP_INVALID_PARAMETERS:      return "invalid parameters";
+    case ESP_AUTH_SMP_DHKEY_CHK_FAIL:          return "DHKey check failed";
+    case ESP_AUTH_SMP_NUM_COMP_FAIL:           return "numeric comparison mismatch";
+    case ESP_AUTH_SMP_BR_PARING_IN_PROGR:      return "BR/EDR pairing in progress";
+    case ESP_AUTH_SMP_XTRANS_DERIVE_NOT_ALLOW: return "cross-transport key derivation not allowed";
+    case ESP_AUTH_SMP_INTERNAL_ERR:            return "host internal error";
+    case ESP_AUTH_SMP_UNKNOWN_IO:              return "unknown IO capability, no association model";
+    case ESP_AUTH_SMP_INIT_FAIL:               return "pairing initiation failed";
+    case ESP_AUTH_SMP_CONFIRM_FAIL:            return "host confirm value mismatch";
+    case ESP_AUTH_SMP_BUSY:                    return "security request already pending";
+    case ESP_AUTH_SMP_ENC_FAIL:                return "controller failed to start encryption";
+    case ESP_AUTH_SMP_STARTED:                 return "pairing started";
+    case ESP_AUTH_SMP_RSP_TIMEOUT:             return "SMP response timeout";
+    case ESP_AUTH_SMP_DIV_NOT_AVAIL:           return "diversifier not available";
+    case ESP_AUTH_SMP_UNSPEC_ERR:              return "host unspecified failure";
+    case ESP_AUTH_SMP_CONN_TOUT:               return "connection timed out during pairing";
+    default:                                   return "unknown reason";
+  }
+}
+#endif
+
 /**
  * @brief Dispatches Bluedroid GAP security events to the active @c Impl instance (passkey, confirm, security request, auth complete).
  * @param event GAP event identifier.
@@ -234,17 +275,17 @@ void BLESecurity::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_p
       bool success = param->ble_security.auth_cmpl.success;
       if (success) {
         BLEConnInfoImpl::updateSecurityFromAuthComplete(conn, param->ble_security.auth_cmpl.auth_mode);
+      } else {
+        // fail_reason carries the SMP Pairing Failed reason code (BT Core Spec
+        // v5.x, Vol 3, Part H, 3.5.5). Without it a rejected pairing, a key
+        // mismatch and a timeout all reach the application as a bare false.
+        log_w(
+          "Security: pairing with " ESP_BD_ADDR_STR " failed: %s (SMP reason=0x%02x)", ESP_BD_ADDR_HEX(param->ble_security.auth_cmpl.bd_addr),
+          smpFailReasonName(param->ble_security.auth_cmpl.fail_reason), param->ble_security.auth_cmpl.fail_reason
+        );
       }
 
-      BLESecurity::AuthCompleteHandler authCb;
-      {
-        BLELockGuard lock(sec->mtx);
-        authCb = sec->authCompleteCb;
-      }
-      if (authCb) {
-        authCb(conn, success);
-      }
-      sec->authSync.give(success ? BTStatus::OK : BTStatus::AuthFailed);
+      sec->notifyAuthComplete(conn, success);
       break;
     }
 
@@ -422,7 +463,7 @@ std::vector<BTAddress> BLESecurity::getBondedDevices() const {
   }
 
   for (int i = 0; i < num; i++) {
-    result.push_back(BTAddress(devList[i].bd_addr, BTAddress::Type::Public));
+    result.push_back(BTAddress::fromEspBdAddr(devList[i].bd_addr, BTAddress::Type::Public));
   }
   return result;
 }

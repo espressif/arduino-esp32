@@ -41,7 +41,7 @@ struct BLEL2CAPChannel::Impl {
 
   /// Wakes a multi-SDU @c write() that hit @c BLE_HS_ESTALLED / @c BLE_HS_EBUSY
   /// waiting for peer credits (@c BLE_L2CAP_EVENT_COC_TX_UNSTALLED).
-  BLESync txSync;
+  BLESync txSync{"txSync"};
 
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 

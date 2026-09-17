@@ -61,11 +61,11 @@ inline esp_ble_gap_phy_mask_t blePhyToPrefMask(BLEPhy phy) {
 struct BLEClass::Impl {
   uint16_t localMTU = 23;
   uint8_t ownAddrType = BLE_ADDR_TYPE_PUBLIC;
-  BLESync privacySync;
+  BLESync privacySync{"privacySync"};
   /// Bridges @c esp_ble_gap_update_whitelist (async) to the blocking public
   /// @c whiteListAdd / @c whiteListRemove APIs. Signaled from
   /// @c ESP_GAP_BLE_UPDATE_WHITELIST_COMPLETE_EVT.
-  BLESync whitelistSync;
+  BLESync whitelistSync{"whitelistSync"};
   BLEClass::RawEventHandler customGapHandler = nullptr;
   BLEClass::RawEventHandler customGattcHandler = nullptr;
   BLEClass::RawEventHandler customGattsHandler = nullptr;

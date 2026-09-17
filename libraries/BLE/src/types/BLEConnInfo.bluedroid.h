@@ -45,9 +45,21 @@ struct BLEConnInfoImpl {
    *       security events, so the identity address falls back to the OTA address
    *       per the getIdAddress() contract, matching NimBLE for an unresolved peer.
    */
-  static BLEConnInfo make(
-    uint16_t connId, const uint8_t bda[6], uint16_t mtu = 23, bool central = false, BTAddress::Type addrType = BTAddress::Type::Public
-  );
+  static BLEConnInfo make(uint16_t connId, const uint8_t bda[6], uint16_t mtu = 23, bool central = false, BTAddress::Type addrType = BTAddress::Type::Public);
+
+  /**
+   * @brief Build a BLEConnInfo from a peer address that is already a BTAddress.
+   *
+   * For callers holding a BTAddress rather than a raw Bluedroid address. The
+   * address carries its own type and its bytes are taken as-is, so there is no
+   * wire-order conversion to get wrong.
+   * @param connId GATT connection identifier (0 when unknown).
+   * @param address Peer address, including its address type.
+   * @param mtu Negotiated ATT MTU (defaults to the 23-byte minimum).
+   * @param central True when this device is the central (client).
+   * @return A valid BLEConnInfo describing the link.
+   */
+  static BLEConnInfo make(uint16_t connId, const BTAddress &address, uint16_t mtu = 23, bool central = false);
 
   /**
    * @brief Build a minimal peripheral-role BLEConnInfo from a peer address only.

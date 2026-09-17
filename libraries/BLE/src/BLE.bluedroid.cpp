@@ -235,6 +235,18 @@ BTStatus BLEClass::begin(const String &deviceName) {
 
   _initialized = true;
   _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
+
+#if BLE_SMP_SUPPORTED
+  // getSecurity() keeps its Impl in a function-local static that outlives an
+  // end()/begin() cycle, but the freshly initialized stack is back at its own
+  // defaults. Re-push the retained configuration so the two cannot disagree:
+  // without this, an end()/begin() round-trip silently dropped every security
+  // setting while getSecurity() still reported the old values.
+  if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
+    sec->applySecurityParams();
+  }
+#endif
+
   return BTStatus::OK;
 }
 
@@ -289,7 +301,7 @@ BTAddress BLEClass::getAddress() const {
   if (!addr) {
     return BTAddress();
   }
-  return BTAddress(addr, BTAddress::Type::Public);
+  return BTAddress::fromEspBdAddr(addr, BTAddress::Type::Public);
 }
 
 // Toggles esp_ble_gap_config_local_privacy only when the desired privacy level differs from the current state; uses a 2 s privacySync wait.
@@ -383,8 +395,8 @@ bool BLEClass::getPeerIRK(const BTAddress &peer, uint8_t irk[16]) const {
       continue;
     }
 
-    BTAddress bondAddr(devList[i].bd_addr, BTAddress::Type::Public);
-    BTAddress identityAddr(devList[i].bond_key.pid_key.static_addr, BTAddress::Type::Public);
+    BTAddress bondAddr = BTAddress::fromEspBdAddr(devList[i].bd_addr, BTAddress::Type::Public);
+    BTAddress identityAddr = BTAddress::fromEspBdAddr(devList[i].bond_key.pid_key.static_addr, BTAddress::Type::Public);
 
     if (bondAddr == peer || identityAddr == peer) {
       bool nonzero = false;
@@ -630,7 +642,9 @@ BLEServer BLEClass::createServer() {
     auto fresh = std::make_shared<BLEServer::Impl>();
     BLEServer::Impl::s_instance = fresh.get();
     esp_timer_create_args_t timerArgs = {};
-    timerArgs.callback = [](void *) { BLE.startAdvertising(); };
+    timerArgs.callback = [](void *) {
+      BLE.startAdvertising();
+    };
     timerArgs.name = "ble_adv_restart";
     esp_timer_create(&timerArgs, &fresh->advRestartTimer);
     if (!bluedroidRegisterGattsApp(fresh)) {

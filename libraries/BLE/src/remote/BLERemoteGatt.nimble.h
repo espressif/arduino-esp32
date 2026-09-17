@@ -52,7 +52,7 @@ inline bool nimbleIsGattConnected(uint16_t connHandle) {
  */
 struct BLERemoteService::Impl : BLERemoteServiceImplCommon {
   uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE;
-  BLESync chrDiscoverSync;
+  BLESync chrDiscoverSync{"chrDiscoverSync"};
 
   static int chrDiscoveryCb(uint16_t connHandle, const struct ble_gatt_error *error, const struct ble_gatt_chr *chr, void *arg);
 };
@@ -70,9 +70,9 @@ struct BLERemoteCharacteristic::Impl : BLERemoteCharacteristicImplCommon {
   // Last ATT error from the most recent read or write GATT callback (read and
   // write are sequential blocking ops, so a single field is sufficient).
   int lastAttError = 0;
-  BLESync readSync;
-  BLESync writeSync;
-  BLESync dscDiscoverSync;
+  BLESync readSync{"readSync"};
+  BLESync writeSync{"writeSync"};
+  BLESync dscDiscoverSync{"dscDiscoverSync"};
 
   static int readCb(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
   static int writeCb(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
@@ -92,8 +92,8 @@ struct BLERemoteCharacteristic::Impl : BLERemoteCharacteristicImplCommon {
  */
 struct BLERemoteDescriptor::Impl : BLERemoteDescriptorImplCommon {
   uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE;
-  BLESync readSync;
-  BLESync writeSync;
+  BLESync readSync{"dscReadSync"};
+  BLESync writeSync{"dscWriteSync"};
 
   static int readCb(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
   static int writeCb(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);

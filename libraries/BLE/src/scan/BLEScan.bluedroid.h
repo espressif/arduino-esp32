@@ -44,7 +44,7 @@ struct BLEScan::Impl {
   // and the start/stop guards observe it without locking across callbacks.
   std::atomic<bool> isScanning{false};
   BLEScan::Results results;
-  BLESync scanSync;
+  BLESync scanSync{"scanSync"};
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
   BLEScan::ResultHandler onResultCb = nullptr;

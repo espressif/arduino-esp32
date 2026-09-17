@@ -60,13 +60,13 @@ struct BLEServer::Impl : BLEServerImplCommon {
   // Drop any buffered fragments for connId (no-op if absent).
   void erasePrepWrites(uint16_t connId);
 
-  BLESync regSync;
-  BLESync createSync;
-  BLESync connectSync;
+  BLESync regSync{"regSync"};
+  BLESync createSync{"createSync"};
+  BLESync connectSync{"connectSync"};
 #if BLE5_SUPPORTED
   // Bridges async GAP PHY/DLE completions to the blocking public setPhy/getPhy/setDataLen APIs.
-  BLESync phySync;
-  BLESync dataLenSync;
+  BLESync phySync{"phySync"};
+  BLESync dataLenSync{"dataLenSync"};
   BLEPhy pendingTxPhy = BLEPhy::PHY_1M;
   BLEPhy pendingRxPhy = BLEPhy::PHY_1M;
 #endif

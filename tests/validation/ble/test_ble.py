@@ -99,6 +99,16 @@ def _phase_ble5_adv(server, client):
 
         server.expect_exact("[SERVER] BLE5 adv phase done", timeout=30)
         client.expect_exact("[CLIENT] BLE5 scan phase done", timeout=10)
+    else:
+        # Mixed-capability pair, e.g. a BLE5-capable P4 against an ESP32. The
+        # capable side still runs its full advertising or scanning window while
+        # the other returns at once. Wait for it here: the phase barrier below
+        # would otherwise release phase 3 while that side is still advertising,
+        # and the peer would scan for a server that cannot answer yet.
+        if ble5_server:
+            server.expect_exact("[SERVER] BLE5 adv phase done", timeout=60)
+        if ble5_client:
+            client.expect_exact("[CLIENT] BLE5 scan phase done", timeout=60)
 
     return ble5_server, ble5_client
 
@@ -661,27 +671,36 @@ def _phase_ble5_advanced(server, client):
         timeout=20,
     )
     server_ok = b"getDefaultPhy" in m_s.group(0)
-    if server_ok:
-        server.expect(r"\[SERVER\] Phase24 setDefaultPhy ok=1", timeout=5)
-        # The client now holds a dedicated connection for this phase, so the
-        # per-connection PHY/DLE path must run and succeed every run.
-        server.expect_exact("[SERVER] Phase24 setPhy(2M) ok=1", timeout=15)
-        server.expect(r"\[SERVER\] Phase24 getPhy ok=1 tx=\d+ rx=\d+", timeout=5)
-        server.expect_exact("[SERVER] Phase24 setDataLen ok=1", timeout=5)
-    server.expect_exact("[SERVER] Phase24 done", timeout=15)
 
+    # Read the client's capability before asserting the server's per-connection
+    # results: the dedicated BLE5 connection those depend on only exists when
+    # both sides speak BLE5. The two DUTs buffer independently, so reading the
+    # client's line first here does not depend on the order they actually print.
     m_c = client.expect(
         r"\[CLIENT\] (Phase24 BLE5 not supported, skipping|Phase24 getDefaultPhy ok=[01] tx=\d+ rx=\d+)",
         timeout=20,
     )
     client_ok = b"getDefaultPhy" in m_c.group(0)
+    both = server_ok and client_ok
+
+    if server_ok:
+        server.expect(r"\[SERVER\] Phase24 setDefaultPhy ok=1", timeout=5)
+        if both:
+            # The client holds a dedicated connection for this phase, so the
+            # per-connection PHY/DLE path must run and succeed every run.
+            server.expect_exact("[SERVER] Phase24 setPhy(2M) ok=1", timeout=15)
+            server.expect(r"\[SERVER\] Phase24 getPhy ok=1 tx=\d+ rx=\d+", timeout=5)
+            server.expect_exact("[SERVER] Phase24 setDataLen ok=1", timeout=5)
+    server.expect_exact("[SERVER] Phase24 done", timeout=15)
+
     if client_ok:
         client.expect(r"\[CLIENT\] Phase24 setDefaultPhy ok=1", timeout=5)
         client.expect(r"\[CLIENT\] Phase24 startExtendedCoded ok=1", timeout=10)
-        client.expect_exact("[CLIENT] Phase24 phyConn ok=1", timeout=20)
+        if both:
+            client.expect_exact("[CLIENT] Phase24 phyConn ok=1", timeout=20)
     client.expect_exact("[CLIENT] Phase24 done", timeout=15)
 
-    return server_ok and client_ok
+    return both
 
 
 def _phase_hid_smoke(server, client):
@@ -763,12 +782,18 @@ def _phase_ble5_legacy_over_ext(server, client):
     assert int(m_s.group(2)) == 1, "server legacy-over-ext advertising failed to start"
 
     m_c = client.expect(
-        r"\[CLIENT\] Phase26 sawLegacy=([01]) legacy=([01]) connectable=([01])",
+        r"\[CLIENT\] (Phase26 BLE5 not supported, skipping|Phase26 sawLegacy=([01]) legacy=([01]) connectable=([01]))",
         timeout=30,
     )
-    assert int(m_c.group(1)) == 1, "client did not discover the legacy-over-ext advertisement"
-    assert int(m_c.group(2)) == 1, "legacy-over-ext adv was not flagged as a legacy advertisement"
-    assert int(m_c.group(3)) == 1, "legacy-over-ext adv was not flagged connectable"
+    if b"not supported" in m_c.group(0):
+        # Scanner cannot see an extended-engine advertisement, so there is
+        # nothing to assert against even though the server advertised fine.
+        server.expect_exact("[SERVER] Phase26 done", timeout=20)
+        client.expect_exact("[CLIENT] Phase26 done", timeout=10)
+        return False
+    assert int(m_c.group(2)) == 1, "client did not discover the legacy-over-ext advertisement"
+    assert int(m_c.group(3)) == 1, "legacy-over-ext adv was not flagged as a legacy advertisement"
+    assert int(m_c.group(4)) == 1, "legacy-over-ext adv was not flagged connectable"
     server.expect_exact("[SERVER] Phase26 done", timeout=20)
     client.expect_exact("[CLIENT] Phase26 done", timeout=10)
     return True
@@ -804,11 +829,18 @@ def _phase_ble5_legacy_plus_ext(server, client):
     assert int(m_ext.group(1)) == 1, "server failed to start the concurrent extended set (reserved-instance concurrency broken)"
 
     m_c = client.expect(
-        r"\[CLIENT\] Phase27 sawLegacy=([01]) sawExt=([01]) legacyIsLegacy=([01]) extIsLegacy=([01])",
+        r"\[CLIENT\] (Phase27 BLE5 not supported, skipping"
+        r"|Phase27 sawLegacy=([01]) sawExt=([01]) legacyIsLegacy=([01]) extIsLegacy=([01]))",
         timeout=30,
     )
-    assert int(m_c.group(1)) == 1, "client did not see the concurrent legacy set (LEG_ name)"
-    assert int(m_c.group(2)) == 1, "client did not see the concurrent extended set (EXT_ name)"
+    if b"not supported" in m_c.group(0):
+        # The EXT_ set is only visible to an extended scanner, so a legacy-only
+        # client cannot confirm the concurrency the server just demonstrated.
+        server.expect_exact("[SERVER] Phase27 done", timeout=20)
+        client.expect_exact("[CLIENT] Phase27 done", timeout=10)
+        return False
+    assert int(m_c.group(2)) == 1, "client did not see the concurrent legacy set (LEG_ name)"
+    assert int(m_c.group(3)) == 1, "client did not see the concurrent extended set (EXT_ name)"
     server.expect_exact("[SERVER] Phase27 done", timeout=20)
     client.expect_exact("[CLIENT] Phase27 done", timeout=10)
     return True

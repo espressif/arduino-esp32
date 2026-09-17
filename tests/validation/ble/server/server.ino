@@ -204,6 +204,16 @@ bool phase_basic() {
   Serial.printf("[SERVER] Device name: %s\n", BLE.getDeviceName().c_str());
   Serial.printf("[SERVER] Address: %s\n", BLE.getAddress().toString().c_str());
 
+  // NVS outlives reflashing, so bonds from an earlier run would otherwise leak
+  // into the pairing phases and make them depend on whatever state the boards
+  // were left in. Wipe once here, at boot, before any phase pairs.
+  {
+    BLESecurity sec = BLE.getSecurity();
+    size_t stale = sec.getBondedDevices().size();
+    (void)sec.deleteAllBonds();
+    Serial.printf("[SERVER] Boot bond wipe: stale=%u bonds=%u\n", (unsigned)stale, (unsigned)sec.getBondedDevices().size());
+  }
+
   BLE.end(false);
   Serial.println("[SERVER] Deinit OK");
   delay(1000);
@@ -310,7 +320,10 @@ bool phase_gatt_setup() {
     return true;
   });
   sec.onAuthenticationComplete([](const BLEConnInfo &conn, bool success) {
-    Serial.println("[SERVER] Authentication complete");
+    // The success flag is appended rather than logged separately so the
+    // existing "[SERVER] Authentication complete" substring match still holds,
+    // while a server-side pairing failure is no longer invisible in the log.
+    Serial.printf("[SERVER] Authentication complete success=%d\n", (int)success);
   });
   // Phase 18: application-level authorization callback. Always approves
   // reads; alternates approve/deny on writes (see authzApproveNextWrite).
@@ -878,8 +891,8 @@ void loop() {
       bool refreshedMtu = (fresh.getMTU() == phase16LastMtu) && (phase16LastMtu > 23);
       bool refreshedParams = !phase16ConnParamsSeen || fresh.getSupervisionTimeout() == phase16LastTimeout;
       Serial.printf(
-        "[SERVER] Phase16 getConnInfo valid=%d mtu=%u timeout=%u bogusValid=%d refreshedMtu=%d refreshedParams=%d\n", (int)freshValid,
-        (unsigned)fresh.getMTU(), (unsigned)fresh.getSupervisionTimeout(), (int)(bool)bogus, (int)refreshedMtu, (int)refreshedParams
+        "[SERVER] Phase16 getConnInfo valid=%d mtu=%u timeout=%u bogusValid=%d refreshedMtu=%d refreshedParams=%d\n", (int)freshValid, (unsigned)fresh.getMTU(),
+        (unsigned)fresh.getSupervisionTimeout(), (int)(bool)bogus, (int)refreshedMtu, (int)refreshedParams
       );
     }
     Serial.println("[SERVER] Phase16 done");
@@ -1388,8 +1401,7 @@ void loop() {
     BLEService ephemeral = srv.createService("cccccccc-0000-4000-8000-000000000099");
     strCheck(static_cast<bool>(ephemeral));
     if (ephemeral) {
-      BLECharacteristic epChr =
-        ephemeral.createCharacteristic("cccccccc-0000-4000-8000-00000000009a", BLEProperty::Read, BLEPermission::ReadOpen);
+      BLECharacteristic epChr = ephemeral.createCharacteristic("cccccccc-0000-4000-8000-00000000009a", BLEProperty::Read, BLEPermission::ReadOpen);
       strCheck(static_cast<bool>(epChr));
       if (epChr) {
         BLEDescriptor epDesc = epChr.createDescriptor("2901", BLEPermission::ReadOpen, 16);

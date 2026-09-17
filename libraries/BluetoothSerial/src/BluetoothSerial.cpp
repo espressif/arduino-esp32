@@ -291,7 +291,7 @@ void BluetoothSerial::Impl::txTask(void *arg) {
         }
       } else {
         for (const auto &peer : impl->peers) {
-          if (memcmp(peer.address.data(), pkt->targetAddr, 6) == 0) {
+          if (peer.address.equalsEspBdAddr(pkt->targetAddr)) {
             handles.push_back(peer.handle);
             break;
           }
@@ -391,7 +391,7 @@ void BluetoothSerial::Impl::sppCallback(esp_spp_cb_event_t event, esp_spp_cb_par
       const uint8_t *bda = (event == ESP_SPP_OPEN_EVT) ? param->open.rem_bda : param->srv_open.rem_bda;
       log_i("SPP connected, handle=%u", handle);
 
-      BTAddress address(bda, BTAddress::Type::Public);
+      BTAddress address = BTAddress::fromEspBdAddr(bda, BTAddress::Type::Public);
       bool accepted = false;
 
       if (s_impl->peersMtx && xSemaphoreTake(s_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
@@ -516,7 +516,7 @@ void BluetoothSerial::Impl::gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_
       // GAP Inquiry procedure: BT Core Spec v5.x, Vol 3, Part C, §4.4.2.
       // EIR data types: BT Core Spec v5.x, Vol 3, Part C, §8.1.
       BluetoothSerial::DiscoveryResult result;
-      result.address = BTAddress(param->disc_res.bda, BTAddress::Type::Public);
+      result.address = BTAddress::fromEspBdAddr(param->disc_res.bda, BTAddress::Type::Public);
 
       char bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1] = {};
       uint8_t bdname_len = 0;
@@ -833,7 +833,7 @@ size_t BluetoothSerial::writeTo(const BTAddress &address, const uint8_t *buf, si
 
   pkt->len = len;
   pkt->broadcast = false;
-  memcpy(pkt->targetAddr, address.data(), sizeof(pkt->targetAddr));
+  address.toEspBdAddr(pkt->targetAddr);
   memcpy(pkt->data, buf, len);
 
   if (xQueueSend(_impl->txQueue, &pkt, pdMS_TO_TICKS(1000)) != pdTRUE) {
@@ -889,7 +889,7 @@ BTStatus BluetoothSerial::connect(const BTAddress &address, uint8_t channel) {
     return BTStatus::NotInitialized;
   }
 
-  memcpy(_impl->peerAddr, address.data(), 6);
+  address.toEspBdAddr(_impl->peerAddr);
   _impl->isRemoteAddressSet = true;
   _impl->doConnect = true;
 
@@ -1126,7 +1126,7 @@ std::vector<BTAddress> BluetoothSerial::getBondedDevices() {
   esp_err_t err = esp_bt_gap_get_bond_device_list(&count, list);
   if (err == ESP_OK) {
     for (int i = 0; i < count; i++) {
-      result.push_back(BTAddress(list[i], BTAddress::Type::Public));
+      result.push_back(BTAddress::fromEspBdAddr(list[i], BTAddress::Type::Public));
     }
   }
 
@@ -1139,7 +1139,7 @@ BTStatus BluetoothSerial::deleteBond(const BTAddress &address) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  memcpy(bda, address.data(), 6);
+  address.toEspBdAddr(bda);
   xEventGroupClearBits(_impl->btEventGroup, BT_BOND_REMOVE_COMPLETED);
   esp_err_t err = esp_bt_gap_remove_bond_device(bda);
   if (err != ESP_OK) {
@@ -1210,7 +1210,7 @@ BTAddress BluetoothSerial::getAddress() const {
     return BTAddress();
   }
 
-  return BTAddress(addr, BTAddress::Type::Public);
+  return BTAddress::fromEspBdAddr(addr, BTAddress::Type::Public);
 }
 
 BluetoothSerial::operator bool() const {

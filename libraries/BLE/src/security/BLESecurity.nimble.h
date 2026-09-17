@@ -42,7 +42,7 @@ struct BLESecurity::Impl : BLESecurityImplCommon {
   uint8_t respKeyDist = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
 
   /// @brief NimBLE-specific: push the current SMP settings into the NimBLE host (@c ble_hs_cfg).
-  void applyToHost() const;
+  void applySecurityParams() const;
 
   /// @brief NimBLE-specific: Passkey Entry display role -- NimBLE asks the app to *supply* the
   /// passkey to show, so this computes/regens the shared @c passKey and dispatches it. (The input

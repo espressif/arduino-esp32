@@ -46,7 +46,7 @@ struct BLEScan::Impl {
   BLEScan::CompleteHandler onCompleteCb = nullptr;
 
   BLEScan::Results results;
-  BLESync scanSync;
+  BLESync scanSync{"scanSync"};
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
   BLEScan::PeriodicSyncHandler periodicSyncCb = nullptr;

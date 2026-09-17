@@ -44,6 +44,14 @@ BTAddress::BTAddress(const String &str) {
   parseString(str.c_str());
 }
 
+BTAddress BTAddress::fromEspBdAddr(const uint8_t bda[6], Type type) {
+  uint8_t lsb[6];
+  for (int i = 0; i < 6; i++) {
+    lsb[i] = bda[5 - i];
+  }
+  return BTAddress(lsb, type);
+}
+
 void BTAddress::parseString(const char *str) {
   if (!str) {
     return;
@@ -92,7 +100,18 @@ const uint8_t *BTAddress::data() const {
 }
 
 void BTAddress::toEspBdAddr(uint8_t out[6]) const {
-  memcpy(out, _addr, 6);
+  for (int i = 0; i < 6; i++) {
+    out[i] = _addr[5 - i];
+  }
+}
+
+bool BTAddress::equalsEspBdAddr(const uint8_t bda[6]) const {
+  for (int i = 0; i < 6; i++) {
+    if (_addr[i] != bda[5 - i]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 BTAddress::Type BTAddress::type() const {

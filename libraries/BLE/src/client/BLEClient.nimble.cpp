@@ -798,6 +798,9 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
 #if BLE_SMP_SUPPORTED
       if (event->type == BLE_GAP_EVENT_ENC_CHANGE) {
+        if (event->enc_change.status != 0) {
+          log_w("Client: pairing/encryption failed on conn %u, host status=0x%04x", connHandle, event->enc_change.status);
+        }
         auto *sec = BLESecurity::Impl::instance();
         if (sec) {
           sec->notifyAuthComplete(connInfo, event->enc_change.status == 0);

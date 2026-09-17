@@ -379,7 +379,7 @@ bool bleValidateDescProps(const BLEUUID &descUuid, const BLEUUID &chrUuid, BLEPe
   if (!anyRead && !anyWrite) {
     log_e(
       "Descriptor %s on characteristic %s: no permissions set (use at least one "
-      "BLEPermission::ReadOpen* or Write* direction)",
+      "BLEPermission::Read* or Write* direction)",
       d, c
     );
     ok = false;

@@ -227,6 +227,17 @@ BTStatus BLEClass::begin(const String &deviceName) {
 
   _initialized = true;
   _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
+
+#if BLE_SMP_SUPPORTED
+  // The ble_hs_cfg.sm_* defaults above are written on every begin(), but
+  // getSecurity() keeps its Impl in a function-local static that outlives an
+  // end()/begin() cycle. Re-push the retained configuration so those defaults
+  // do not silently overwrite security settings the application already made.
+  if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
+    sec->applySecurityParams();
+  }
+#endif
+
   vTaskDelay(200 / portTICK_PERIOD_MS);
   return BTStatus::OK;
 }

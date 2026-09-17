@@ -368,7 +368,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
           // Build advertised device from scan result
           auto devImpl = std::make_shared<BLEAdvertisedDevice::Impl>();
-          devImpl->address = BTAddress(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
+          devImpl->address = BTAddress::fromEspBdAddr(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
           devImpl->addrType = static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type);
           devImpl->rssi = param->scan_rst.rssi;
           devImpl->hasRSSI = true;
@@ -516,7 +516,8 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
       const uint8_t et = r.event_type;
       const bool legacyReport =
         (et == ESP_BLE_LEGACY_ADV_TYPE_IND || et == ESP_BLE_LEGACY_ADV_TYPE_DIRECT_IND || et == ESP_BLE_LEGACY_ADV_TYPE_SCAN_IND
-         || et == ESP_BLE_LEGACY_ADV_TYPE_NONCON_IND || et == ESP_BLE_LEGACY_ADV_TYPE_SCAN_RSP_TO_ADV_IND || et == ESP_BLE_LEGACY_ADV_TYPE_SCAN_RSP_TO_ADV_SCAN_IND);
+         || et == ESP_BLE_LEGACY_ADV_TYPE_NONCON_IND || et == ESP_BLE_LEGACY_ADV_TYPE_SCAN_RSP_TO_ADV_IND
+         || et == ESP_BLE_LEGACY_ADV_TYPE_SCAN_RSP_TO_ADV_SCAN_IND);
       devImpl->legacy = legacyReport;
       devImpl->connectable = (et & ESP_BLE_ADV_REPORT_EXT_ADV_IND) != 0 || et == ESP_BLE_LEGACY_ADV_TYPE_IND || et == ESP_BLE_LEGACY_ADV_TYPE_DIRECT_IND;
       devImpl->scannable = (et & ESP_BLE_ADV_REPORT_EXT_SCAN_IND) != 0 || et == ESP_BLE_LEGACY_ADV_TYPE_SCAN_IND;

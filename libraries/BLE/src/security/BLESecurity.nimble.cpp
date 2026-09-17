@@ -59,7 +59,7 @@
  *       Key distribution bits: EncKey=0x01, IdKey=0x02, SignKey=0x04, LinkKey=0x08
  *       (Vol 3, Part H, §3.6.1, Table 3.8).
  */
-void BLESecurity::Impl::applyToHost() const {
+void BLESecurity::Impl::applySecurityParams() const {
   // ioCap/mitm come from the BLESecurityImplCommon base; bonding/sc/*KeyDist are NimBLE's.
   ble_hs_cfg.sm_io_cap = static_cast<uint8_t>(ioCap);
   ble_hs_cfg.sm_bonding = bonding ? 1 : 0;
@@ -78,7 +78,7 @@ void BLESecurity::Impl::applyToHost() const {
 void BLESecurity::setIOCapability(BLEIOCapability cap) {
   BLE_CHECK_IMPL();
   impl.ioCap = cap;
-  impl.applyToHost();
+  impl.applySecurityParams();
 }
 
 void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool secureConnection) {
@@ -86,7 +86,7 @@ void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool secureConn
   impl.bonding = bonding;
   impl.mitm = mitm;
   impl.sc = secureConnection;
-  impl.applyToHost();
+  impl.applySecurityParams();
 }
 
 // A static passkey is reduced modulo 1000000 to enforce the 6-digit (0–999999) range.
@@ -118,13 +118,13 @@ uint32_t BLESecurity::getPassKey() const {
 void BLESecurity::setInitiatorKeys(KeyDist keys) {
   BLE_CHECK_IMPL();
   impl.initKeyDist = static_cast<uint8_t>(keys);
-  impl.applyToHost();
+  impl.applySecurityParams();
 }
 
 void BLESecurity::setResponderKeys(KeyDist keys) {
   BLE_CHECK_IMPL();
   impl.respKeyDist = static_cast<uint8_t>(keys);
-  impl.applyToHost();
+  impl.applySecurityParams();
 }
 
 // Bounded scan: stops after 100 stored bonds to avoid unbounded store iteration.
@@ -193,7 +193,7 @@ void BLESecurity::resetSecurity() {
   impl.mitm = false;
   impl.sc = true;
   impl.forceAuth = false;
-  impl.applyToHost();
+  impl.applySecurityParams();
 }
 
 // --------------------------------------------------------------------------

@@ -62,6 +62,19 @@ public:
   /** @brief Construct from Arduino String. */
   BTAddress(const String &str);
 
+  /**
+   * @brief Construct from an esp_bd_addr_t, which is MSB-first.
+   *
+   * Bluedroid (BLE and BR/EDR) stores addresses MSB-first (bda[0] = bits
+   * 47-40), the opposite of the LSB-first order used internally and by
+   * NimBLE. Use this instead of the raw-array constructor for any address
+   * coming out of an esp_bd_addr_t, and toEspBdAddr() to convert back.
+   *
+   * @param bda 6-byte address array (bda[0] = MSB).
+   * @param type Address type.
+   */
+  static BTAddress fromEspBdAddr(const uint8_t bda[6], Type type = Public);
+
   bool operator==(const BTAddress &other) const;
   bool operator!=(const BTAddress &other) const;
   bool operator<(const BTAddress &other) const;
@@ -73,14 +86,25 @@ public:
   const uint8_t *data() const;
 
   /**
-   * @brief Copy the address into a mutable 6-byte buffer (LSB-first).
+   * @brief Copy the address into a mutable 6-byte buffer as MSB-first.
    *
-   * Convenience for the many ESP-IDF Bluetooth APIs that take a non-const
-   * esp_bd_addr_t (a uint8_t[6]) by pointer. Avoids scattering
-   * `esp_bd_addr_t x; memcpy(x, addr.data(), 6);` at every call site.
+   * Reverses the internal LSB-first bytes into the MSB-first order that
+   * esp_bd_addr_t uses, for the many ESP-IDF Bluetooth APIs that take a
+   * non-const esp_bd_addr_t by pointer. Never memcpy() data() into an
+   * esp_bd_addr_t: that skips the byte swap and targets the reversed
+   * address.
    * @param out Destination 6-byte array (e.g. an esp_bd_addr_t).
    */
   void toEspBdAddr(uint8_t out[6]) const;
+
+  /**
+   * @brief Compare against an MSB-first esp_bd_addr_t, ignoring the type.
+   *
+   * For matching a stored address against the esp_bd_addr_t carried by a
+   * Bluedroid event, where the event gives no address type to compare.
+   * @param bda 6-byte address array (bda[0] = MSB).
+   */
+  bool equalsEspBdAddr(const uint8_t bda[6]) const;
 
   /** @brief Returns the address type. */
   Type type() const;

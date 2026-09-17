@@ -160,6 +160,16 @@ bool phase_basic() {
   Serial.printf("[CLIENT] Device name: %s\n", BLE.getDeviceName().c_str());
   Serial.printf("[CLIENT] Address: %s\n", BLE.getAddress().toString().c_str());
 
+  // NVS outlives reflashing, so bonds from an earlier run would otherwise leak
+  // into the pairing phases and make them depend on whatever state the boards
+  // were left in. Wipe once here, at boot, before any phase pairs.
+  {
+    BLESecurity sec = BLE.getSecurity();
+    size_t stale = sec.getBondedDevices().size();
+    (void)sec.deleteAllBonds();
+    Serial.printf("[CLIENT] Boot bond wipe: stale=%u bonds=%u\n", (unsigned)stale, (unsigned)sec.getBondedDevices().size());
+  }
+
   BLE.end(false);
   Serial.println("[CLIENT] Deinit OK");
   delay(1000);

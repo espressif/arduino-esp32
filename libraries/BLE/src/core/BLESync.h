@@ -59,8 +59,10 @@ class BLESync {
 public:
   /**
    * @brief Construct a sync object with no semaphore until @ref take().
+   * @param name Operation this sync waits on, used to identify it in timeout
+   *             diagnostics. Stored by pointer, so pass a string literal.
    */
-  BLESync() : _sem(nullptr), _status(BTStatus::OK) {}
+  explicit BLESync(const char *name = "unnamed") : _sem(nullptr), _status(BTStatus::OK), _name(name) {}
 
   /**
    * @brief Release the internal binary semaphore, if created.
@@ -132,6 +134,7 @@ private:
   // this concurrently; the semaphore already orders the take()/wait()/give()
   // handshake, so relaxed atomicity is enough for the barrier-free getter.
   std::atomic<BTStatus> _status;
+  const char *_name;
 };
 
 #endif /* BLE_ENABLED */

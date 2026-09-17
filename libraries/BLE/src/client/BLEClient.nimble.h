@@ -44,11 +44,11 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // ENC_CHANGE); this latches after the first onIdentity dispatch so the callback
   // fires at most once per connection. Reset on each CONNECT event. Guarded by mtx.
   bool identityDispatched = false;
-  BLESync connectSync;
+  BLESync connectSync{"connectSync"};
   // Lets the blocking connect() wait for the initial ATT MTU exchange to finish
   // so getMTU() is accurate as soon as connect() returns (ordering contract in
   // DESIGN.md). Signalled by mtuExchangeCb.
-  BLESync mtuSync;
+  BLESync mtuSync{"mtuSync"};
 
   // Prevent destruction while NimBLE holds our raw pointer.
   // Set before ble_gap_connect(); cleared in gapEventHandler after the
@@ -62,7 +62,7 @@ struct BLEClient::Impl : BLEClientImplCommon {
   };
   std::vector<RemoteServiceEntry> discoveredServices;
   bool discovering = false;
-  BLESync discoverSync;
+  BLESync discoverSync{"discoverSync"};
 
   static int gapEventHandler(struct ble_gap_event *event, void *arg);
   static int serviceDiscoveryCb(uint16_t connHandle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);

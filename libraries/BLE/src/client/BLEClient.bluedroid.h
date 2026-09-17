@@ -53,19 +53,19 @@ struct BLEClient::Impl : BLEClientImplCommon {
   std::atomic<bool> secAuthenticated{false};
   std::atomic<bool> secBonded{false};
 
-  BLESync regSync;       // For blocking GATTC app registration
-  BLESync connectSync;   // For blocking connect
-  BLESync discoverSync;  // For blocking service discovery
+  BLESync regSync{"regSync"};            // For blocking GATTC app registration
+  BLESync connectSync{"connectSync"};    // For blocking connect
+  BLESync discoverSync{"discoverSync"};  // For blocking service discovery
   // Only one GATT read/write can be in-flight per client at a time because
   // Bluedroid delivers completions without a per-characteristic token.
-  BLESync readSync;
-  BLESync writeSync;
-  BLESync mtuSync;   // For MTU exchange
-  BLESync rssiSync;  // For RSSI read
+  BLESync readSync{"readSync"};
+  BLESync writeSync{"writeSync"};
+  BLESync mtuSync{"mtuSync"};    // For MTU exchange
+  BLESync rssiSync{"rssiSync"};  // For RSSI read
 #if BLE5_SUPPORTED
   // Bridges async GAP PHY/DLE completions to the blocking public setPhy/getPhy/setDataLen APIs.
-  BLESync phySync;
-  BLESync dataLenSync;
+  BLESync phySync{"phySync"};
+  BLESync dataLenSync{"dataLenSync"};
   BLEPhy pendingTxPhy = BLEPhy::PHY_1M;
   BLEPhy pendingRxPhy = BLEPhy::PHY_1M;
   // Cached live PHY for getConnInfo() (updated from READ_PHY / PHY_UPDATE events).

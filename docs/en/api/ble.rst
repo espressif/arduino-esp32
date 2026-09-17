@@ -2991,6 +2991,58 @@ NUS UUIDs
     static BLEUUID nusRxCharUUID();
     static BLEUUID nusTxCharUUID();
 
+Troubleshooting
+---------------
+
+Pairing Keeps Failing With the Same Peer
+****************************************
+
+Bonds live in NVS, not in the sketch. Uploading new firmware, rebuilding the GATT
+database, or switching between the Bluedroid and NimBLE stacks all leave the stored
+bond keys untouched, so a bond created by an earlier sketch can outlive everything
+that produced it.
+
+When those stored keys stop matching what the peer expects, pairing fails at the
+cryptographic step that first notices the mismatch. The reported reason describes
+that step and not the bond store, which makes a stale bond easy to misread as a
+stack or configuration bug. Typical symptoms:
+
+- ``DHKey check failed`` or ``confirm value mismatch`` during Secure Connections pairing.
+- ``controller failed to start encryption`` when reconnecting to an already bonded peer.
+- Numeric comparison displaying the same six digits on both devices, and pairing failing anyway.
+- A peer that paired reliably for a long time now failing every attempt, with no code change.
+
+The library logs a warning pointing at this section the first time a pairing fails
+in a session.
+
+Clearing the Bond Store
+^^^^^^^^^^^^^^^^^^^^^^^
+
+From a sketch:
+
+.. code-block:: cpp
+
+    BLESecurity sec = BLE.getSecurity();
+    sec.deleteAllBonds();             // drop every bond
+    sec.deleteBond(peerAddress);      // or just one peer
+
+Or erase NVS from the host, which also discards Wi-Fi credentials and anything else
+kept in ``Preferences``:
+
+.. code-block:: bash
+
+    esptool -p <port> erase-flash
+
+.. note::
+    A bond has two sides. Clearing it on the ESP32 while a phone, computer, or second
+    ESP32 still holds its half produces exactly the same failures, because that peer
+    keeps presenting keys this device no longer recognizes. Remove the pairing on the
+    peer too, which on most phones is "Forget This Device".
+
+Automated test setups are especially exposed to this, because bond state survives
+between runs and can turn an otherwise deterministic suite into an intermittent one.
+Wiping bonds at startup, or erasing flash before a run, keeps results reproducible.
+
 Migration from v3.x
 --------------------
 

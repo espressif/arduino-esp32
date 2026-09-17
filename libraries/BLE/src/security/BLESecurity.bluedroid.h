@@ -47,7 +47,7 @@ struct BLESecurity::Impl : BLESecurityImplCommon {
   /// Bridges @c esp_ble_remove_bond_device (async) to the blocking public
   /// @c deleteBond / @c deleteAllBonds APIs. Signaled from
   /// @c ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT.
-  BLESync bondSync;
+  BLESync bondSync{"bondSync"};
 
   /// @brief Bluedroid-specific: GAP security event dispatch (routed from BluedroidCore via
   /// @c bluedroidSecurityHandleGAP). Static because the stack calls it by function pointer.

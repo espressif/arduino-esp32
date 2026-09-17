@@ -39,14 +39,14 @@ void BLESync::take() {
 
 BTStatus BLESync::wait(uint32_t timeoutMs) {
   if (!_sem) {
-    log_e("BLESync::wait called without take()");
+    log_e("BLESync(%s)::wait called without take()", _name);
     return BTStatus::InvalidState;
   }
 
   TickType_t ticks = (timeoutMs == portMAX_DELAY) ? portMAX_DELAY : pdMS_TO_TICKS(timeoutMs);
 
   if (xSemaphoreTake(_sem, ticks) != pdTRUE) {
-    log_w("BLESync::wait timed out after %u ms", timeoutMs);
+    log_w("BLESync(%s)::wait timed out after %u ms", _name, timeoutMs);
     return BTStatus::Timeout;
   }
 

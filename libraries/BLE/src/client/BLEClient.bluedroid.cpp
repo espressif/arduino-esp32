@@ -127,7 +127,9 @@ static uint16_t allocateAppId() {
     }
 
     candidate = BLEClient::Impl::s_nextAppId;
-    if (candidate == startedAt) return APP_ID_INVALID;
+    if (candidate == startedAt) {
+      return APP_ID_INVALID;
+    }
   }
 }
 
@@ -588,9 +590,7 @@ BLEConnInfo BLEClient::getConnInfo() const {
   if (!_impl || !_impl->connected) {
     return BLEConnInfo();
   }
-  BLEConnInfo conn = BLEConnInfoImpl::make(
-    _impl->connId, _impl->peerAddress.data(), _impl->mtu, /*central=*/true, _impl->peerAddress.type()
-  );
+  BLEConnInfo conn = BLEConnInfoImpl::make(_impl->connId, _impl->peerAddress, _impl->mtu, /*central=*/true);
   // Bluedroid has no live security-level query, so reflect the flags latched from
   // AUTH_CMPL. Matches NimBLE getConnInfo() and the server's persisted flags.
   BLEConnInfoImpl::updateSecurityFlags(conn, _impl->secEncrypted, _impl->secAuthenticated, _impl->secBonded);
@@ -645,9 +645,7 @@ BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
   esp_bd_addr_t bda;
   impl.peerAddress.toEspBdAddr(bda);
   impl.phySync.take();
-  esp_err_t err = esp_ble_gap_set_preferred_phy(
-    bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF
-  );
+  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
   if (err != ESP_OK) {
     log_e("Client: esp_ble_gap_set_preferred_phy: %s", esp_err_to_name(err));
     impl.phySync.give(BTStatus::Fail);
@@ -765,7 +763,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
   // For CONNECT_EVT, also try matching by BDA if gattc_if didn't match
   if (!client && event == ESP_GATTC_CONNECT_EVT) {
     for (auto *c : s_clients) {
-      if (memcmp(c->peerAddress.data(), param->connect.remote_bda, 6) == 0) {
+      if (c->peerAddress.equalsEspBdAddr(param->connect.remote_bda)) {
         client = c;
         break;
       }
@@ -784,7 +782,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       // CONNECT carries ble_addr_type; OPEN does not. Refresh peerAddress so
       // getConnInfo() / onConnect see the stack-reported type (may refine the
       // type passed into connect()).
-      client->peerAddress = BTAddress(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
+      client->peerAddress = BTAddress::fromEspBdAddr(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
       // MTU exchange is performed from the caller thread in connect(), not from
       // any GATTC event callback: on Bluedroid a request issued at connection
       // setup is silently dropped (no CFG_MTU_EVT delivered).
@@ -808,9 +806,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
         // retry once the link is up (see BLEClient::connect).
         // Prefer peerAddress (type latched on CONNECT) over open.remote_bda
         // (OPEN has no addr_type field).
-        BLEConnInfo conn = BLEConnInfoImpl::make(
-          client->connId, client->peerAddress.data(), client->mtu, /*central=*/true, client->peerAddress.type()
-        );
+        BLEConnInfo conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
         client->dispatchConnect(conn);
         client->connectSync.give(BTStatus::OK);
       } else {
@@ -841,9 +837,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       client->rssiSync.give(BTStatus::Fail);
 
       if (wasConnected) {
-        BLEConnInfo conn = BLEConnInfoImpl::make(
-          client->connId, client->peerAddress.data(), client->mtu, /*central=*/true, client->peerAddress.type()
-        );
+        BLEConnInfo conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
         client->dispatchDisconnect(conn, reason);
       }
 
@@ -945,9 +939,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       }
       client->mtuSync.give(param->cfg_mtu.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
 
-      BLEConnInfo conn = BLEConnInfoImpl::make(
-        client->connId, client->peerAddress.data(), client->mtu, /*central=*/true, client->peerAddress.type()
-      );
+      BLEConnInfo conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
       client->dispatchMtuChanged(conn, client->mtu);
       break;
     }
@@ -985,9 +977,9 @@ void BLEClient::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
   if (event == ESP_GAP_BLE_AUTH_CMPL_EVT && param->ble_security.auth_cmpl.success) {
     const auto addrType = static_cast<BTAddress::Type>(param->ble_security.auth_cmpl.addr_type);
     for (auto *c : s_clients) {
-      if (c->connected && memcmp(c->peerAddress.data(), param->ble_security.auth_cmpl.bd_addr, 6) == 0) {
-        c->peerAddress = BTAddress(param->ble_security.auth_cmpl.bd_addr, addrType);
-        BLEConnInfo conn = BLEConnInfoImpl::make(c->connId, c->peerAddress.data(), c->mtu, /*central=*/true, addrType);
+      if (c->connected && c->peerAddress.equalsEspBdAddr(param->ble_security.auth_cmpl.bd_addr)) {
+        c->peerAddress = BTAddress::fromEspBdAddr(param->ble_security.auth_cmpl.bd_addr, addrType);
+        BLEConnInfo conn = BLEConnInfoImpl::make(c->connId, c->peerAddress, c->mtu, /*central=*/true);
         BLEConnInfoImpl::updateSecurityFromAuthComplete(conn, param->ble_security.auth_cmpl.auth_mode);
         c->secEncrypted = conn.isEncrypted();
         c->secAuthenticated = conn.isAuthenticated();
@@ -1001,7 +993,7 @@ void BLEClient::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
   if (event == ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT) {
     if (param->read_rssi_cmpl.status == ESP_BT_STATUS_SUCCESS) {
       for (auto *c : s_clients) {
-        if (memcmp(c->peerAddress.data(), param->read_rssi_cmpl.remote_addr, 6) == 0) {
+        if (c->peerAddress.equalsEspBdAddr(param->read_rssi_cmpl.remote_addr)) {
           c->lastRssi = param->read_rssi_cmpl.rssi;
           c->rssiSync.give(BTStatus::OK);
           return;
@@ -1022,7 +1014,7 @@ void BLEClient::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
   if (event == ESP_GAP_BLE_READ_PHY_COMPLETE_EVT) {
     BTStatus st = (param->read_phy.status == ESP_BT_STATUS_SUCCESS) ? BTStatus::OK : BTStatus::Fail;
     for (auto *c : s_clients) {
-      if (c->connected && memcmp(c->peerAddress.data(), param->read_phy.bda, 6) == 0) {
+      if (c->connected && c->peerAddress.equalsEspBdAddr(param->read_phy.bda)) {
         if (st == BTStatus::OK) {
           c->cachedTxPhy = param->read_phy.tx_phy;
           c->cachedRxPhy = param->read_phy.rx_phy;
@@ -1037,7 +1029,7 @@ void BLEClient::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
   if (event == ESP_GAP_BLE_PHY_UPDATE_COMPLETE_EVT) {
     BTStatus st = (param->phy_update.status == ESP_BT_STATUS_SUCCESS) ? BTStatus::OK : BTStatus::Fail;
     for (auto *c : s_clients) {
-      if (c->connected && memcmp(c->peerAddress.data(), param->phy_update.bda, 6) == 0) {
+      if (c->connected && c->peerAddress.equalsEspBdAddr(param->phy_update.bda)) {
         if (st == BTStatus::OK) {
           c->cachedTxPhy = param->phy_update.tx_phy;
           c->cachedRxPhy = param->phy_update.rx_phy;

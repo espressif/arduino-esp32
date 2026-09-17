@@ -30,7 +30,7 @@
 // BLEAdvertising::Impl is defined directly here (a .bluedroid.* file) with no common base.
 struct BLEAdvertising::Impl {
   bool isAdvertising = false;
-  BLESync advSync;
+  BLESync advSync{"advSync"};
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
   BLEAdvertising::CompleteHandler onCompleteCb = nullptr;
 

@@ -41,11 +41,15 @@ bool authModeIsBonded(uint8_t authMode) {
 }  // namespace
 
 BLEConnInfo BLEConnInfoImpl::make(uint16_t connId, const uint8_t bda[6], uint16_t mtu, bool central, BTAddress::Type addrType) {
+  return make(connId, BTAddress::fromEspBdAddr(bda, addrType), mtu, central);
+}
+
+BLEConnInfo BLEConnInfoImpl::make(uint16_t connId, const BTAddress &address, uint16_t mtu, bool central) {
   BLEConnInfo info;
   info._valid = true;
   auto *d = info.data();
   d->handle = connId;
-  d->address = BTAddress(bda, addrType);
+  d->address = address;
   d->idAddress = d->address;
   d->mtu = mtu;
   d->central = central;

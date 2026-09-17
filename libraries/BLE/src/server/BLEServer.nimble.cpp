@@ -405,6 +405,9 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       impl->dispatchIdentityResolved(connInfo);
 
 #if BLE_SMP_SUPPORTED
+      if (status != 0) {
+        log_w("Server: pairing/encryption failed on conn %u, host status=0x%04x", connHandle, status);
+      }
       auto *sec = BLESecurity::Impl::instance();
       if (sec) {
         sec->notifyAuthComplete(connInfo, status == 0);
