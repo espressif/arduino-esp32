@@ -17,6 +17,7 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterColorLight.h>
+#include <app/util/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -41,6 +42,14 @@ uint8_t clampCurrentLevel(uint8_t value) {
     return 1;
   }
   return clampColor254(value);
+}
+
+bool currentLevelFromAttr(const esp_matter_attr_val_t *val, uint8_t *out) {
+  if (val == nullptr || chip::app::NumericAttributeTraits<uint8_t>::IsNullValue(val->val.u8)) {
+    return false;
+  }
+  *out = clampCurrentLevel(val->val.u8);
+  return true;
 }
 
 espHsvColor_t clampHsvColor(espHsvColor_t hsv) {
@@ -148,15 +157,20 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
         break;
       case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-          log_d("RGB Color Light Brightness changed to %u", val->val.u8);
+          uint8_t level = 0;
+          if (!currentLevelFromAttr(val, &level)) {
+            log_d("RGB Color Light CurrentLevel is null");
+            break;
+          }
+          log_d("RGB Color Light Brightness changed to %u", level);
           if (_onChangeColorCB != NULL) {
-            ret &= _onChangeColorCB({colorHSV.h, colorHSV.s, val->val.u8});
+            ret &= _onChangeColorCB({colorHSV.h, colorHSV.s, level});
           }
           if (_onChangeCB != NULL) {
-            ret &= _onChangeCB(onOffState, {colorHSV.h, colorHSV.s, val->val.u8});
+            ret &= _onChangeCB(onOffState, {colorHSV.h, colorHSV.s, level});
           }
           if (ret == true) {
-            colorHSV.v = val->val.u8;
+            colorHSV.v = level;
           }
         }
         break;

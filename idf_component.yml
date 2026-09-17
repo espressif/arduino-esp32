@@ -12,6 +12,7 @@ targets:
   - esp32p4
   - esp32s2
   - esp32s3
+  - esp32s31
 tags:
   - arduino
 files:
@@ -26,6 +27,7 @@ files:
     - "variants/esp32p4/**/*"
     - "variants/esp32s2/**/*"
     - "variants/esp32s3/**/*"
+    - "variants/esp32s31/**/*"
   exclude:
     - ".*" # All files in the root directory that start with a dot.
     - ".gitlab/"
@@ -63,64 +65,29 @@ dependencies:
     version: "==1.6.8"
     require: public
     rules:
-      - if: "target not in [esp32c2, esp32c61, esp32p4]"
+      - if: "target not in [esp32c2, esp32c61, esp32p4, esp32s31]"
   espressif/esp-dsp:
     version: "^1.8.0"
     rules:
       - if: "target not in [esp32c2, esp32c61]"
-  # RainMaker Start (Fixed versions, because Matter supports only Insights 1.0.1)
-  espressif/network_provisioning:
-    rules:
-      - if: "target != esp32c2"
-    matches:
-      # New Provisioning for IDF6
-      - if: idf_version >= 6.0
-        version: "1.2.4"
-      - if: idf_version < 6.0
-        version: "1.0.2"
   espressif/esp_rainmaker:
-    version: ">=1.15.0"
+    version: ">=1.16.0"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
-      - if: idf_version < 6.0
-  espressif/rmaker_common:
-    version: ">=1.8.5"
-    rules:
-      - if: "target not in [esp32c2, esp32p4]"
-      - if: idf_version < 6.0
   espressif/esp_insights:
-    version: ">=1.3.3"
+    version: ">=1.3.4"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
-      - if: idf_version < 6.0
-  espressif/esp_diag_data_store:
-    version: ">=1.0.2"
-    rules:
-      - if: "target not in [esp32c2, esp32p4]"
-      - if: idf_version < 6.0
-  espressif/esp_diagnostics:
-    version: ">=1.3.3"
-    rules:
-      - if: "target not in [esp32c2, esp32p4]"
-      - if: idf_version < 6.0
-  espressif/cbor:
-    version: "0.6.1~4"
-    rules:
-      - if: "target not in [esp32c2, esp32p4]"
-      - if: idf_version < 6.0
   espressif/qrcode:
-    version: "0.1.0~2"
+    version: "0.2.0"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
-      - if: idf_version < 6.0
-  # RainMaker End
   espressif/esp-sr:
-    version: "^2.4.5"
+    version: "^2.5.3"
     rules:
       - if: "target in [esp32s3, esp32p4]"
-      - if: idf_version < 6.0
   espressif/esp_hosted:
-    version: "^2.9.2"
+    version: "^2.12.13"
     rules:
       - if: "target == esp32p4"
   espressif/esp_wifi_remote:
@@ -128,10 +95,8 @@ dependencies:
     rules:
       - if: "target == esp32p4"
   espressif/libsodium:
-    version: "^1.0.22"
+    version: "^1.0.22~1"
     require: public
-    rules:
-      - if: idf_version < 6.0
   espressif/esp-modbus:
     version: "^2.1.3"
     require: public

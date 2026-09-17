@@ -27,6 +27,19 @@ static boolean doConnect = false;
 static boolean connected = false;
 static boolean doScan = false;
 static boolean testCompleted = false;
+
+// Static passkeys for the Passkey Entry phase. The wrong one must be rejected.
+static const uint32_t PASSKEY_CORRECT = 123456;
+static const uint32_t PASSKEY_WRONG = 654321;
+
+// Outcome of the most recent pairing attempt, written from the security callbacks.
+enum AuthResult {
+  AUTH_PENDING,
+  AUTH_SUCCESS,
+  AUTH_FAILURE
+};
+static volatile AuthResult authResult = AUTH_PENDING;
+
 static int adPhase = 1;
 static boolean adPhase2Reported = false;
 static BLEClient *pClient = nullptr;
@@ -60,8 +73,26 @@ class MySecurityCallbacks : public BLESecurityCallbacks {
     return true;
   }
 
+  // Passkey Entry phase only. With KeyboardOnly capability the stack asks us for the
+  // passkey the peer displays. A static passkey is configured, so this only runs if
+  // that lookup ever fails.
+  uint32_t onPassKeyRequest() override {
+    uint32_t passkey = BLESecurity::getPassKey();
+    Serial.printf("[CLIENT] Passkey request, injecting: %06lu\n", (unsigned long)passkey);
+    return passkey;
+  }
+
 #if defined(CONFIG_BLUEDROID_ENABLED)
   void onAuthenticationComplete(esp_ble_auth_cmpl_t desc) override {
+    // Bluedroid reports both outcomes through this callback, so the result has to be
+    // checked here. Without it a rejected pairing looks exactly like a successful one.
+    if (!desc.success) {
+      authResult = AUTH_FAILURE;
+      Serial.printf("[CLIENT] Authentication failed: reason=%u (0x%02X)\n", desc.fail_reason, desc.fail_reason);
+      return;
+    }
+
+    authResult = AUTH_SUCCESS;
     BLEAddress peerAddr(desc.bd_addr);
     Serial.println("[CLIENT] Authentication complete");
 
@@ -83,7 +114,16 @@ class MySecurityCallbacks : public BLESecurityCallbacks {
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
-  void onAuthenticationComplete(ble_gap_conn_desc *desc) override {
+  // The status-aware overload is used so a rejected pairing is reported instead of
+  // silently looking like a successful one.
+  void onAuthenticationComplete(ble_gap_conn_desc *desc, int status) override {
+    if (status != 0) {
+      authResult = AUTH_FAILURE;
+      Serial.printf("[CLIENT] Authentication failed: status=%d\n", status);
+      return;
+    }
+
+    authResult = AUTH_SUCCESS;
     BLEAddress peerAddr(desc->peer_id_addr.val, desc->peer_id_addr.type);
     Serial.println("[CLIENT] Authentication complete");
 
@@ -159,11 +199,26 @@ bool connectToServer() {
   pRemoteSecureCharacteristic->setAuth(ESP_GATT_AUTH_REQ_MITM);
 
   // Read secure characteristic (triggers on-demand authentication for both stacks)
+  authResult = AUTH_PENDING;
   if (pRemoteSecureCharacteristic->canRead()) {
     Serial.println("[CLIENT] Reading secure characteristic...");
     String value = pRemoteSecureCharacteristic->readValue();
     Serial.print("[CLIENT] Secure characteristic value: ");
     Serial.println(value.c_str());
+  }
+
+  // The read above only triggers pairing; the outcome arrives asynchronously through
+  // the security callbacks. Reporting success without checking it is exactly what made
+  // the failure in issue #12860 look like a working pairing.
+  unsigned long authStart = millis();
+  while (authResult == AUTH_PENDING && (millis() - authStart) < 10000) {
+    delay(50);
+  }
+
+  if (authResult != AUTH_SUCCESS) {
+    Serial.println("[CLIENT] ERROR: Authentication did not complete successfully");
+    pClient->disconnect();
+    return false;
   }
 
   connected = true;
@@ -270,6 +325,95 @@ bool runReconnectPhase(uint16_t preseed, const char *label) {
   return true;
 }
 
+// Drops every bond this device holds. Without this the next attempt would re-encrypt
+// the link with the stored LTK and never run Passkey Entry again.
+static void forgetBonds() {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  int count = esp_ble_get_bond_device_num();
+  if (count > 0) {
+    esp_ble_bond_dev_t *list = (esp_ble_bond_dev_t *)malloc(sizeof(esp_ble_bond_dev_t) * count);
+    if (list != nullptr) {
+      esp_ble_get_bond_device_list(&count, list);
+      for (int i = 0; i < count; i++) {
+        esp_ble_remove_bond_device(list[i].bd_addr);
+      }
+      free(list);
+    }
+  }
+#elif defined(CONFIG_NIMBLE_ENABLED)
+  ble_store_clear();
+#endif
+}
+
+// One Passkey Entry attempt: connect, discover, then read the secure characteristic
+// to trigger on-demand pairing with the given passkey. Reports whether the peer
+// accepted it. A pairing that never completes is reported as a rejection so the test
+// cannot hang on a stack that goes silent.
+static bool runPasskeyAttempt(const char *label, uint32_t passkey) {
+  forgetBonds();
+  BLESecurity::setPassKey(true, passkey);
+
+  authResult = AUTH_PENDING;
+
+  BLEClient *pPasskeyClient = BLEDevice::createClient();
+  if (pPasskeyClient == nullptr) {
+    Serial.printf("[CLIENT] %s FAILED: createClient returned null\n", label);
+    return false;
+  }
+
+  if (!pPasskeyClient->connect(myDevice->getAddress(), myDevice->getAddressType(), 10000)) {
+    Serial.printf("[CLIENT] %s FAILED: connect failed\n", label);
+    delete pPasskeyClient;
+    return false;
+  }
+
+  bool paired = false;
+  BLERemoteService *pSvc = pPasskeyClient->getService(serviceUUID);
+  if (pSvc == nullptr) {
+    Serial.printf("[CLIENT] %s FAILED: service not found\n", label);
+  } else {
+    BLERemoteCharacteristic *pChr = pSvc->getCharacteristic(secureCharUUID);
+    if (pChr == nullptr) {
+      Serial.printf("[CLIENT] %s FAILED: secure characteristic not found\n", label);
+    } else {
+      pChr->setAuth(ESP_GATT_AUTH_REQ_MITM);
+      Serial.printf("[CLIENT] %s reading secure characteristic\n", label);
+      pChr->readValue();
+
+      unsigned long start = millis();
+      while (authResult == AUTH_PENDING && (millis() - start) < 30000) {
+        delay(50);
+      }
+      paired = (authResult == AUTH_SUCCESS);
+    }
+  }
+
+  pPasskeyClient->disconnect();
+  delete pPasskeyClient;
+  // Give both sides time to tear the link down and restart advertising.
+  delay(2000);
+
+  Serial.printf("[CLIENT] %s result: %s\n", label, paired ? "PAIRED" : "REJECTED");
+  return paired;
+}
+
+// Passkey Entry coverage. The correct passkey runs first: a peer that has just
+// rejected a pairing answers the next attempt with "Repeated Attempts" (SMP reason 9)
+// rather than running Passkey Entry again, which would mask the real result.
+void runPasskeyPhase() {
+  Serial.println("[CLIENT] Starting passkey entry phase");
+  BLESecurity::setCapability(ESP_IO_CAP_IN);
+
+  bool correctPaired = runPasskeyAttempt("Passkey correct", PASSKEY_CORRECT);
+  bool wrongPaired = runPasskeyAttempt("Passkey wrong", PASSKEY_WRONG);
+
+  if (correctPaired && !wrongPaired) {
+    Serial.println("[CLIENT] Passkey entry phase PASSED");
+  } else {
+    Serial.println("[CLIENT] Passkey entry phase FAILED");
+  }
+}
+
 void readServerName() {
   Serial.println("[CLIENT] Waiting for server name...");
   Serial.println("[CLIENT] Send server name:");
@@ -339,6 +483,8 @@ void loop() {
     command.trim();
     if (command == "ADPHASE2") {
       runAdPhase2Scan();
+    } else if (command == "PSKPHASE") {
+      runPasskeyPhase();
     }
   }
 

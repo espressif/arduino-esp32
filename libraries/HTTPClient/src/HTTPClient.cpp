@@ -1155,13 +1155,17 @@ bool HTTPClient::connect(void) {
   if (connected()) {
     if (_reuse) {
       log_d("already connected, reusing connection");
-    } else {
-      log_d("already connected, try reuse!");
+      while (_client->available() > 0) {
+        _client->read();
+      }
+      return true;
     }
-    while (_client->available() > 0) {
-      _client->read();
-    }
-    return true;
+    // HTTP/1.0 and Connection: close cannot reuse the socket. The previous
+    // response (including a 302 with no body) may still look "connected"
+    // because the peer FIN has not been observed yet. Sending the next
+    // request on that socket — typical after a redirect — fails.
+    log_d("already connected, closing because reuse is disabled");
+    _client->stop();
   }
 
   if (!getClient()) {

@@ -13,6 +13,7 @@
 
 # All supported SoCs
 ALL_SOCS=(
+    "esp32s31"
     "esp32"
     "esp32c2"
     "esp32c3"
@@ -27,6 +28,7 @@ ALL_SOCS=(
 
 # All supported SoC variants by the ESP32 Arduino core
 CORE_VARIANTS=(
+    "esp32s31"
     "esp32"
     "esp32c3"
     "esp32c5"
@@ -144,6 +146,7 @@ IDF_V6_0_TARGETS=(
 
 # IDF v6.1 supported targets
 IDF_V6_1_TARGETS=(
+    "esp32s31"
     "esp32"
     "esp32c2"
     "esp32c3"
