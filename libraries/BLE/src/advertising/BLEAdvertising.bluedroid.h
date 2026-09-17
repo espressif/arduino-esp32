@@ -83,7 +83,7 @@ struct BLEAdvertising::Impl {
   static constexpr uint8_t kLegacyInstance = kMaxExtInstances - 1;
   ExtInstance extInstances[kMaxExtInstances];
 
-  // Per-instance slot (lazily initialised), or nullptr when @p instance is the
+  // Per-instance slot (lazily initialized), or nullptr when @p instance is the
   // reserved legacy set or out of range.
   ExtInstance *extInstanceAt(uint8_t instance);
   // Push accumulated params to the controller only when dirty, then wait for

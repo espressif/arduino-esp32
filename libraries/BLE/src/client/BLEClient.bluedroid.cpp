@@ -232,9 +232,9 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
     const esp_ble_gap_conn_params_t *p1m = (phyMask & ESP_BLE_GAP_PHY_1M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *p2m = (phyMask & ESP_BLE_GAP_PHY_2M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *pcoded = (phyMask & ESP_BLE_GAP_PHY_CODED_PREF_MASK) ? &connParams : nullptr;
-    esp_err_t prefErr = esp_ble_gap_prefer_ext_connect_params_set(bda, phyMask, p1m, p2m, pcoded);
-    if (prefErr != ESP_OK) {
-      log_w("Client: prefer_ext_connect_params_set: %s (continuing with gattc_enh_open)", esp_err_to_name(prefErr));
+    esp_err_t preferredParamsErr = esp_ble_gap_prefer_ext_connect_params_set(bda, phyMask, p1m, p2m, pcoded);
+    if (preferredParamsErr != ESP_OK) {
+      log_w("Client: prefer_ext_connect_params_set: %s (continuing with gattc_enh_open)", esp_err_to_name(preferredParamsErr));
     }
   }
 #else
@@ -334,9 +334,9 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
     const esp_ble_gap_conn_params_t *p1m = (phyMask & ESP_BLE_GAP_PHY_1M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *p2m = (phyMask & ESP_BLE_GAP_PHY_2M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *pcoded = (phyMask & ESP_BLE_GAP_PHY_CODED_PREF_MASK) ? &connParams : nullptr;
-    esp_err_t prefErr = esp_ble_gap_prefer_ext_connect_params_set(bda, phyMask, p1m, p2m, pcoded);
-    if (prefErr != ESP_OK) {
-      log_w("Client: prefer_ext_connect_params_set: %s (continuing with gattc_enh_open)", esp_err_to_name(prefErr));
+    esp_err_t preferredParamsErr = esp_ble_gap_prefer_ext_connect_params_set(bda, phyMask, p1m, p2m, pcoded);
+    if (preferredParamsErr != ESP_OK) {
+      log_w("Client: prefer_ext_connect_params_set: %s (continuing with gattc_enh_open)", esp_err_to_name(preferredParamsErr));
     }
   }
 #else

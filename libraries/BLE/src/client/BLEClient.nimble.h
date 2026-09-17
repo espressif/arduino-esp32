@@ -47,7 +47,7 @@ struct BLEClient::Impl : BLEClientImplCommon {
   BLESync connectSync{"connectSync"};
   // Lets the blocking connect() wait for the initial ATT MTU exchange to finish
   // so getMTU() is accurate as soon as connect() returns (ordering contract in
-  // DESIGN.md). Signalled by mtuExchangeCb.
+  // DESIGN.md). Signaled by mtuExchangeCb.
   BLESync mtuSync{"mtuSync"};
 
   // Prevent destruction while NimBLE holds our raw pointer.

@@ -105,7 +105,7 @@ BTStatus BLEL2CAPChannel::write(const uint8_t *data, size_t len) {
       impl.txSync.take();
       int rc = ble_l2cap_send(impl.chan, om);
       if (rc == 0) {
-        // Sent immediately — no unstall event will arrive for this SDU.
+        // Sent immediately — no unstall event will arrive for this SDU.  // codespell:ignore unstall
         impl.txSync.give(BTStatus::OK);
         break;
       }
@@ -113,7 +113,7 @@ BTStatus BLEL2CAPChannel::write(const uint8_t *data, size_t len) {
         // Controller took ownership; wait for credits before the next chunk.
         BTStatus st = impl.txSync.wait(10000);
         if (st != BTStatus::OK) {
-          log_e("L2CAP write: timed out waiting for TX unstall");
+          log_e("L2CAP write: timed out waiting for TX unstall");  // codespell:ignore unstall
           return st == BTStatus::Timeout ? BTStatus::Timeout : st;
         }
         break;
@@ -122,7 +122,7 @@ BTStatus BLEL2CAPChannel::write(const uint8_t *data, size_t len) {
         // Previous SDU still draining — wait and retry the same mbuf.
         BTStatus st = impl.txSync.wait(10000);
         if (st != BTStatus::OK) {
-          log_e("L2CAP write: timed out waiting for TX unstall (EBUSY)");
+          log_e("L2CAP write: timed out waiting for TX unstall (EBUSY)");  // codespell:ignore unstall
           os_mbuf_free_chain(om);
           return st == BTStatus::Timeout ? BTStatus::Timeout : st;
         }

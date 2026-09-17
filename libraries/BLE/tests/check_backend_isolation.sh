@@ -43,64 +43,69 @@ SRC_DIR="$(cd "${SCRIPT_DIR}/../src" && pwd)"
 
 status=0
 
+# Indent a captured multi-line block so it reads as detail under its error line.
+indent() {
+    printf '    %s\n' "${1//$'\n'/$'\n'    }"
+}
+
 # Strip block comments, line comments and pure Doxygen lines so the token scan
 # only sees real code. (awk keeps this dependency-free and portable.)
 strip_comments() {
-  awk '
-    { line = $0 }
-    # drop /* ... */ that open and close on the same line
-    { gsub(/\/\*.*\*\//, "", line) }
-    in_block {
-      if (line ~ /\*\//) { sub(/^.*\*\//, "", line); in_block = 0 }
-      else { next }
-    }
-    /\/\*/ { sub(/\/\*.*$/, "", line); in_block = 1 }
-    { sub(/\/\/.*$/, "", line) }         # trailing // comments
-    { print line }
-  ' "$1"
+    awk '
+        { line = $0 }
+        # drop /* ... */ that open and close on the same line
+        { gsub(/\/\*.*\*\//, "", line) }
+        in_block {
+            if (line ~ /\*\//) { sub(/^.*\*\//, "", line); in_block = 0 }
+            else { next }
+        }
+        /\/\*/ { sub(/\/\*.*$/, "", line); in_block = 1 }
+        { sub(/\/\/.*$/, "", line) }         # trailing // comments
+        { print line }
+    ' "$1"
 }
 
 # Build the public-surface header set: the umbrella BLE.h plus every project
 # header it directly includes that resolves to a file under src/.
 UMBRELLA="${SRC_DIR}/BLE.h"
 if [ ! -e "${UMBRELLA}" ]; then
-  echo "ERROR: umbrella header not found: ${UMBRELLA}"
-  exit 1
+    echo "ERROR: umbrella header not found: ${UMBRELLA}"
+    exit 1
 fi
 
 public_headers=("${UMBRELLA}")
 while IFS= read -r inc; do
-  [ -e "${SRC_DIR}/${inc}" ] && public_headers+=("${SRC_DIR}/${inc}")
+    [ -e "${SRC_DIR}/${inc}" ] && public_headers+=("${SRC_DIR}/${inc}")
 done < <(
-  grep -oE '^[[:space:]]*#[[:space:]]*include[[:space:]]*"[^"]+"' "${UMBRELLA}" \
-    | sed -E 's/.*"([^"]+)".*/\1/'
+    grep -oE '^[[:space:]]*#[[:space:]]*include[[:space:]]*"[^"]+"' "${UMBRELLA}" \
+        | sed -E 's/.*"([^"]+)".*/\1/'
 )
 
 for hdr in "${public_headers[@]}"; do
-  [ -e "$hdr" ] || continue
-  name="$(basename "$hdr")"
+    [ -e "$hdr" ] || continue
+    name="$(basename "$hdr")"
 
-  # 1) Forbidden includes (checked on raw #include lines): the backend selector
-  #    (core/BLEBackend.h) or any backend header by suffix (*.nimble.h /
-  #    *.bluedroid.h) wherever it lives.
-  bad_inc="$(grep -nE '^[[:space:]]*#[[:space:]]*include[[:space:]]*[<"]([^">]*\.(nimble|bluedroid)\.h|[^">]*BLEBackend\.h)' "$hdr" || true)"
-  if [ -n "$bad_inc" ]; then
-    echo "ERROR: ${name} includes a backend/selector header (public API must stay backend-agnostic):"
-    echo "$bad_inc" | sed 's/^/    /'
-    status=1
-  fi
+    # 1) Forbidden includes (checked on raw #include lines): the backend selector
+    #    (core/BLEBackend.h) or any backend header by suffix (*.nimble.h /
+    #    *.bluedroid.h) wherever it lives.
+    bad_inc="$(grep -nE '^[[:space:]]*#[[:space:]]*include[[:space:]]*[<"]([^">]*\.(nimble|bluedroid)\.h|[^">]*BLEBackend\.h)' "$hdr" || true)"
+    if [ -n "$bad_inc" ]; then
+        echo "ERROR: ${name} includes a backend/selector header (public API must stay backend-agnostic):"
+        indent "$bad_inc"
+        status=1
+    fi
 
-  # 2) Forbidden tokens in real code (comments stripped first).
-  bad_tok="$(strip_comments "$hdr" | grep -nE 'esp_ble_|ble_gap_|ble_hs_|ble_uuid_|::Impl\b|Nimble[A-Za-z]*Impl|Bluedroid[A-Za-z]*Impl' || true)"
-  if [ -n "$bad_tok" ]; then
-    echo "ERROR: ${name} names a backend-specific type in code (public API must stay backend-agnostic):"
-    echo "$bad_tok" | sed 's/^/    /'
-    status=1
-  fi
+    # 2) Forbidden tokens in real code (comments stripped first).
+    bad_tok="$(strip_comments "$hdr" | grep -nE 'esp_ble_|ble_gap_|ble_hs_|ble_uuid_|::Impl\b|Nimble[A-Za-z]*Impl|Bluedroid[A-Za-z]*Impl' || true)"
+    if [ -n "$bad_tok" ]; then
+        echo "ERROR: ${name} names a backend-specific type in code (public API must stay backend-agnostic):"
+        indent "$bad_tok"
+        status=1
+    fi
 done
 
 if [ "$status" -eq 0 ]; then
-  echo "OK: public BLE headers are backend-agnostic."
+    echo "OK: public BLE headers are backend-agnostic."
 fi
 
 exit "$status"

@@ -73,5 +73,5 @@ struct BLEAdvertisedDeviceImplCommon {
 };
 
 // BLEAdvertisedDevice is fully stack-agnostic: the neutral combiner just adopts
-// the shared base so all state/behaviour is disclosed as common by its type.
+// the shared base so all state/behavior is disclosed as common by its type.
 struct BLEAdvertisedDevice::Impl : BLEAdvertisedDeviceImplCommon {};
