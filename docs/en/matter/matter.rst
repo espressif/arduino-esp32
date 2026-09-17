@@ -139,7 +139,7 @@ Commissioning wait, fabric-loss reboot, and the board button are sketch helpers 
 
 .. warning::
 
-   A Matter sketch owns the CHIPoBLE host (NimBLE when that stack is selected). Do **not** use the Arduino ``BLE`` library (``BLE.h`` / ``BLEDevice``) in the same sketch. After Matter starts CHIPoBLE — or after it disables CHIPoBLE and releases BLE RAM, or after CHIPoBLE commissioning with ``setBLEMemoryReleaseEnabled(true)`` (the default) — ``BLEDevice::init()`` will fail or crash. ``setBLECommissioningEnabled(false)`` does not free the radio for Arduino BLE.
+   A Matter sketch owns the CHIPoBLE host (NimBLE when that stack is selected). Do **not** use the Arduino ``BLE`` library (``BLE.h``) in the same sketch. After Matter starts CHIPoBLE — or after it disables CHIPoBLE and releases BLE RAM, or after CHIPoBLE commissioning with ``setBLEMemoryReleaseEnabled(true)`` (the default) — ``BLE.begin()`` will fail or crash. ``setBLECommissioningEnabled(false)`` does not free the radio for Arduino BLE.
 
 CHIPoBLE and NimBLE
 ^^^^^^^^^^^^^^^^^^^

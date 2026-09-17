@@ -176,6 +176,37 @@ Getting Started
         delay(1000);
     }
 
+Bluetooth Memory Reservation
+****************************
+
+The Bluetooth controller and host need dedicated RAM regions. Sketches that do not use Bluetooth
+should not pay for them, so ``initArduino()`` releases those regions back to the heap before
+``setup()`` runs unless something in the link tells the core that Bluetooth is in use.
+
+Linking this library is enough to make that decision: ``BLE.bluedroid.cpp`` and ``BLE.nimble.cpp``
+include ``esp32-hal-alloc-ble-mem.h``, whose constructor marks BLE as in use before
+``app_main()``. If you only ever call the ``BLE`` API, the regions stay reserved and there is
+nothing to configure.
+
+.. note::
+
+   If your sketch calls ESP-IDF BLE APIs directly instead of going through this library --
+   ``nimble_port_init()``, ``esp_ble_mesh_init()``, or similar -- add the include yourself in at
+   least one source file, or initialization will fail once the RAM has already been reclaimed:
+
+   .. code-block:: arduino
+
+       #include "esp32-hal-alloc-ble-mem.h"
+
+.. warning::
+
+   Do **not** use this library in a Matter sketch. When CHIPoBLE is compiled in, Matter owns the
+   BLE host, so ``BLE.begin()`` will fail or crash after ``Matter.begin()``. That holds even when
+   ``Matter.setBLECommissioningEnabled(false)`` releases the BLE RAM, and after CHIPoBLE
+   commissioning completes with the default ``Matter.setBLEMemoryReleaseEnabled(true)``. Turning
+   CHIPoBLE off does not hand the radio over. Use ``Matter.onBLEMemoryReleased()`` if you need to
+   allocate once that RAM is back on the heap. See :doc:`../matter/matter`.
+
 BLEClass (Global BLE Object)
 -----------------------------
 

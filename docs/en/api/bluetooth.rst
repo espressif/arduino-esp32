@@ -86,6 +86,24 @@ Build requirements
 
 BluetoothSerial is compiled only when Bluetooth is enabled in sdkconfig: ``SOC_BT_SUPPORTED``, ``CONFIG_BT_ENABLED``, and ``CONFIG_BLUEDROID_ENABLED`` must be set. SPP must be enabled (``CONFIG_BT_SPP_ENABLED``) for serial bridge use cases.
 
+Bluetooth memory reservation
+****************************
+
+The Bluetooth controller and host need dedicated RAM regions. Sketches that do not use Bluetooth should not pay for them, so ``initArduino()`` releases those regions back to the heap before ``setup()`` runs unless something in the link tells the core that Bluetooth is in use.
+
+Linking this library is enough to make that decision: ``BluetoothSerial.cpp`` includes ``esp32-hal-alloc-bt-classic-mem.h``, whose constructor marks Bluetooth Classic as in use before ``app_main()``. If you only ever call the ``BluetoothSerial`` API, the regions stay reserved and there is nothing to configure.
+
+If your sketch calls ESP-IDF Bluetooth APIs directly instead of going through an Arduino library, add the matching include yourself in at least one source file, or initialization will fail once the RAM has already been reclaimed:
+
+* **Bluetooth Classic:** ``esp32-hal-alloc-bt-classic-mem.h``
+* **BLE:** ``esp32-hal-alloc-ble-mem.h``
+
+.. code-block:: arduino
+
+    #include "esp32-hal-alloc-bt-classic-mem.h"
+
+Reserving one transport does not reserve the other, so a sketch that drives both stacks directly needs both includes.
+
 API Reference
 -------------
 
