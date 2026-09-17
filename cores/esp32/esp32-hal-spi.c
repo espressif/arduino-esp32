@@ -954,7 +954,13 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   // Pin the peripheral to the source spiSourceFrequency() reports instead of relying on the
   // reset value of the mux. The bus is idle here, so the switch cannot disturb a transfer.
   // The ESP32 and the S2 have no mux to begin with and are always clocked from APB_CLK.
-  spi_ll_set_clk_source((spi_dev_t *)spi->dev, ARDUINO_SPI_CLK_SRC);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  PERIPH_RCC_ATOMIC() {
+#endif
+    spi_ll_set_clk_source((spi_dev_t *)spi->dev, ARDUINO_SPI_CLK_SRC);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  }
+#endif
 #endif
   spi->dev->user.usr_mosi = 1;
   spi->dev->user.usr_miso = 1;
