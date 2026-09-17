@@ -196,7 +196,7 @@ To use the USB-OTG mode with TinyUSB for ``Serial`` and upload:
 3. Set **Upload Mode** to ``USB-OTG CDC (TinyUSB)``
 4. Connect to the **USB 2.0 Type-C Port** (High-Speed, pin49/50)
 
-Arduino's TinyUSB stack on the ESP32-P4 uses the **High-Speed** OTG controller. The upload flow uses a 1200bps touch to reset the board into download mode.
+Arduino's TinyUSB stack on the ESP32-P4 uses the **High-Speed** OTG controller. The upload flow uses a 1200 bps touch to reset the board into download mode.
 
 .. note::
     The first flash must be done via the **USB Serial/JTAG Port** (or by manually entering download mode with BOOT + RESET), since TinyUSB CDC is not available on a blank chip. Subsequent uploads can use the USB 2.0 Type-C Port.
@@ -261,6 +261,8 @@ Header Block
 J1
 ^^
 
+.. vale off
+
 ===  ======  =====  ===================================
 No.  Name    Type   Function
 ===  ======  =====  ===================================
@@ -310,6 +312,8 @@ No.  Name    Type   Function
     I: Input;
     O: Output;
     T: High impedance.
+
+.. vale on
 
 .. [1] GPIO0 and GPIO1 can be enabled by disabling the XTAL_32K function (moving R61/R59 to R199/R197).
 .. [2] GPIO45 can be enabled by disabling the SD_PWRn function (moving R231 to R100).
