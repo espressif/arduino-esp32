@@ -44,6 +44,14 @@ void setup() {
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
+  // Initialize Zigbee stack as end device
+  if (!Zigbee.role(ZIGBEE_END_DEVICE)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: set Zigbee device name and model
   zbPM25Sensor.setManufacturerAndModel("Espressif", "ZigbeePM25Sensor");
 
@@ -57,7 +65,7 @@ void setup() {
   Zigbee.addEndpoint(&zbPM25Sensor);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in End Device mode
+  // When all EPs are registered, start Zigbee
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");

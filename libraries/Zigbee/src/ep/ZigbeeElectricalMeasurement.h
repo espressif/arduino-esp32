@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* Class of Zigbee Pressure sensor endpoint inherited from common EP class */
+/* Class of Zigbee Electrical Measurement endpoint inherited from common EP class */
 
 #pragma once
 
@@ -21,26 +21,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
-
-// clang-format off
-#define ZIGBEE_DEFAULT_ELECTRICAL_MEASUREMENT_CONFIG()                                              \
-    {                                                                                               \
-        .basic_cfg =                                                                                \
-            {                                                                                       \
-                .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                          \
-                .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                        \
-            },                                                                                      \
-        .identify_cfg =                                                                             \
-            {                                                                                       \
-                .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                   \
-            },                                                                                      \
-        .electrical_measurement_cfg =                                                               \
-            {                                                                                       \
-                .measured_type = 0x00,                                                              \
-            },                                                                                      \
-    }
-// clang-format on
+#include "ezbee/zcl/cluster/electrical_measurement_desc.h"
 
 enum ZIGBEE_DC_MEASUREMENT_TYPE {
   ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE = 0x0001,
@@ -62,12 +43,6 @@ enum ZIGBEE_AC_PHASE_TYPE {
   ZIGBEE_AC_PHASE_TYPE_B = 0x0002,
   ZIGBEE_AC_PHASE_TYPE_C = 0x0003,
 };
-
-typedef struct zigbee_electrical_measurement_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-  esp_zb_electrical_meas_cluster_cfg_t electrical_measurement_cfg;
-} zigbee_electrical_measurement_cfg_t;
 
 class ZigbeeElectricalMeasurement : public ZigbeeEP {
 public:
@@ -110,10 +85,26 @@ public:
   bool reportAC(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type);
 
 private:
-  uint32_t measure_type = 0x0000;
+  ezb_zcl_electrical_measurement_cluster_config_t _electrical_measurement_cfg;
   bool ac_volt_mult_div_set = false;
   bool ac_current_mult_div_set = false;
   bool ac_power_mult_div_set = false;
+
+  int16_t _dc_measurement = 0;
+  int16_t _dc_min = -32767;
+  int16_t _dc_max = 32767;
+  uint16_t _dc_multiplier = 1;
+  uint16_t _dc_divisor = 1;
+
+  uint16_t _ac_u16_measurement = 0;
+  uint16_t _ac_u16_min = 0;
+  uint16_t _ac_u16_max = 0xffff;
+  int16_t _ac_s16_measurement = 0;
+  int16_t _ac_s16_min = -32767;
+  int16_t _ac_s16_max = 32767;
+  int8_t _ac_power_factor = 100;
+  uint16_t _ac_multiplier = 1;
+  uint16_t _ac_divisor = 1;
 };
 
 #endif  // CONFIG_ZB_ENABLED

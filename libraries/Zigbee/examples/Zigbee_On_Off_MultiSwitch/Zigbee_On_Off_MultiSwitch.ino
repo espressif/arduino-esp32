@@ -84,7 +84,15 @@ void setup() {
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
-  // Set Zigbee device name and model
+  // Initialize Zigbee stack with given role (coordinator or router)
+  if (!Zigbee.role(ZIGBEE_ROLE)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+  
+  // Set Zigbee device name and model  
   zbSwitch.setManufacturerAndModel("Espressif", "ZBMultiSwitch");
 
   // Set binding settings depending on the role
@@ -94,15 +102,17 @@ void setup() {
     zbSwitch.setManualBinding(true);  //Set manual binding to true, so binding is done on Home Assistant side
   }
 
-  // Add endpoint to Zigbee Core
-  Serial.println("Adding ZigbeeSwitch endpoint to Zigbee Core");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbSwitch);
 
-  // When all EPs are registered, start Zigbee with given role
-  if (!Zigbee.begin(ZIGBEE_ROLE)) {
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
 
   Serial.println("Connecting to network");

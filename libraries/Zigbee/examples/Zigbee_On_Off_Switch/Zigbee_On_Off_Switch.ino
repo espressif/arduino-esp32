@@ -126,21 +126,6 @@ static void enableGpioInterrupt(bool enabled) {
 void setup() {
   Serial.begin(115200);
 
-  //Optional: set Zigbee device name and model
-  zbSwitch.setManufacturerAndModel("Espressif", "ZigbeeSwitch");
-
-  //Optional to allow multiple light to bind to the switch
-  zbSwitch.allowMultipleBinding(true);
-
-  zbSwitch.onLightStateChange(onLightStateChange);
-
-  //Add endpoint to Zigbee Core
-  Serial.println("Adding ZigbeeSwitch endpoint to Zigbee Core");
-  Zigbee.addEndpoint(&zbSwitch);
-
-  //Open network for 180 seconds after boot
-  Zigbee.setRebootOpenNetwork(180);
-
   // Init button switch
   for (int i = 0; i < PAIR_SIZE(buttonFunctionPair); i++) {
     pinMode(buttonFunctionPair[i].pin, INPUT_PULLUP);
@@ -153,11 +138,37 @@ void setup() {
     attachInterruptArg(buttonFunctionPair[i].pin, onGpioInterrupt, (void *)(buttonFunctionPair + i), FALLING);
   }
 
-  // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
-  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
+  // Initialize Zigbee stack as coordinator
+  if (!Zigbee.role(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
+  //Optional: set Zigbee device name and model
+  zbSwitch.setManufacturerAndModel("Espressif", "ZigbeeSwitch");
+
+  //Optional to allow multiple light to bind to the switch
+  zbSwitch.allowMultipleBinding(true);
+
+  // Set callback function for light state change
+  zbSwitch.onLightStateChange(onLightStateChange);
+
+  // Add endpoints to Zigbee Core
+  Zigbee.addEndpoint(&zbSwitch);
+
+  // Optional: set reboot open network time to 180 seconds
+  Zigbee.setRebootOpenNetwork(180);
+
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
 
   Serial.println("Waiting for Light to bound to the switch");
