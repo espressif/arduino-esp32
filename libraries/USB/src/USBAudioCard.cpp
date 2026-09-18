@@ -689,6 +689,12 @@ USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SP
       log_e("Invalid number of sample rates %u (1..%u) supported!", num_rates, USBAudioCard::UAC_MAX_SAMPLE_RATES);
       return;
     }
+#if TUD_OPT_HIGH_SPEED
+    if (num_rates > USBAudioCard::UAC2_MAX_SAMPLE_RATES) {
+      log_e("UAC2 supports at most %u sample rates!", USBAudioCard::UAC2_MAX_SAMPLE_RATES);
+      return;
+    }
+#endif
     if (sample_rates == NULL) {
       log_e("sample_rates pointer is NULL!");
       return;

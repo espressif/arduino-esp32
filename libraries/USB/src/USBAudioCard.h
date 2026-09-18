@@ -131,6 +131,12 @@ public:
   static constexpr uint8_t UAC_MAX_SAMPLE_RATES = 8;
 
   /**
+  * @brief Maximum number of discrete sample rates supported by the current UAC2 implementation.
+  * Limited to 5 by TinyUSB's 64-byte audio control buffer used for Clock Source RANGE responses.
+  */
+  static constexpr uint8_t UAC2_MAX_SAMPLE_RATES = 5;
+
+  /**
   *  @brief Creates the audio device configuration advertising multiple discrete sample rates.
   *  @param sample_rates  Pointer to an array of supported sample rates in Hz, e.g. a local
   *                       `uint32_t rates[] = {48000, 44100}`. The values are copied during
