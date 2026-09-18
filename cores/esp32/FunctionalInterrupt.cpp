@@ -13,6 +13,9 @@ typedef void (*voidFuncPtrArg)(void *);
 
 extern "C" {
 extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc, void *arg, int intr_type, bool functional);
+#if SOC_GPTIMER_SUPPORTED
+extern void timerAttachInterruptFunctionalArg(hw_timer_t *timer, voidFuncPtrArg userFunc, void *arg, bool functional);
+#endif
 }
 
 void ARDUINO_ISR_ATTR interruptFunctional(void *arg) {
@@ -26,6 +29,12 @@ void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode
   // use the local interrupt routine which takes the ArgStructure as argument
   __attachInterruptFunctionalArg(pin, (voidFuncPtrArg)interruptFunctional, new InterruptArgStructure{intRoutine}, mode, true);
 }
+
+#if SOC_GPTIMER_SUPPORTED
+void timerAttachInterrupt(hw_timer_t *timer, std::function<void(void)> userFunc) {
+  timerAttachInterruptFunctionalArg(timer, (voidFuncPtrArg)interruptFunctional, new InterruptArgStructure{userFunc}, true);
+}
+#endif
 
 extern "C" {
 void cleanupFunctional(void *arg) {
