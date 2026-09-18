@@ -1,4 +1,4 @@
-fqbn_append: PartitionScheme=huge_app
+fqbn_append: PartitionScheme=huge_app,MatterNetwork=wifi
 
 requires:
   - CONFIG_ESP_MATTER_ENABLE_DATA_MODEL=y
