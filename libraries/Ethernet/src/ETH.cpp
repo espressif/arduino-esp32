@@ -168,7 +168,7 @@ ETHClass::ETHClass(uint8_t eth_index)
     _spi_freq_mhz(20), _pin_cs(-1), _pin_irq(-1), _pin_rst(-1), _pin_sck(-1), _pin_miso(-1), _pin_mosi(-1)
 #if CONFIG_ETH_USE_ESP32_EMAC
     ,
-    _pin_mcd(-1), _pin_mdio(-1), _pin_power(-1), _pin_rmii_clock(-1)
+    _pin_mdc(-1), _pin_mdio(-1), _pin_power(-1), _pin_rmii_clock(-1)
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
     ,
     _task_stack_size(4096), _poll_period_ms(10), _eth_connected_event_handle(0) {
@@ -334,7 +334,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   }
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, ETHClass::ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, ETHClass::ethDetachBus);
-  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MCD, ETHClass::ethDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MDC, ETHClass::ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MDIO, ETHClass::ethDetachBus);
   if (power != -1) {
     perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_PWR, ETHClass::ethDetachBus);
@@ -361,14 +361,19 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   mac_config.smi_gpio.mdc_num = digitalPinToGPIONumber(mdc);
   mac_config.smi_gpio.mdio_num = digitalPinToGPIONumber(mdio);
 
+
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32P4
   _pin_rmii_clock = mac_config.clock_config.rmii.clock_gpio;
 #endif
-  _pin_mcd = digitalPinToGPIONumber(mdc);
+  _pin_mdc = digitalPinToGPIONumber(mdc);
   _pin_mdio = digitalPinToGPIONumber(mdio);
   _pin_power = digitalPinToGPIONumber(power);
 
-  if (!perimanClearPinBus(_pin_mcd)) {
+
+  if (!perimanClearPinBus(_pin_rmii_clock)) {
+    return false;
+  }
+  if (!perimanClearPinBus(_pin_mdc)) {
     return false;
   }
   if (!perimanClearPinBus(_pin_mdio)) {
@@ -542,7 +547,10 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   _eth_started = true;
 
-  if (!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET_MCD, (void *)(this), -1, -1)) {
+  if (!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(_pin_mdc, ESP32_BUS_TYPE_ETHERNET_MDC, (void *)(this), -1, -1)) {
     goto err;
   }
   if (!perimanSetPinBus(_pin_mdio, ESP32_BUS_TYPE_ETHERNET_MDIO, (void *)(this), -1, -1)) {
@@ -1169,12 +1177,12 @@ void ETHClass::end(void) {
 #if (CONFIG_ETH_USE_ESP32_EMAC && CONFIG_IDF_TARGET_ESP32)
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, empty_ethDetachBus);
-  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MCD, empty_ethDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MDC, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MDIO, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_PWR, empty_ethDetachBus);
-  if (_pin_rmii_clock != -1 && _pin_mcd != -1 && _pin_mdio != -1) {
+  if (_pin_rmii_clock != -1 && _pin_mdc != -1 && _pin_mdio != -1) {
     perimanClearPinBus(_pin_rmii_clock);
-    perimanClearPinBus(_pin_mcd);
+    perimanClearPinBus(_pin_mdc);
     perimanClearPinBus(_pin_mdio);
 
     perimanClearPinBus(ETH_RMII_TX_EN);
@@ -1185,7 +1193,7 @@ void ETHClass::end(void) {
     perimanClearPinBus(ETH_RMII_CRS_DV);
 
     _pin_rmii_clock = -1;
-    _pin_mcd = -1;
+    _pin_mdc = -1;
     _pin_mdio = -1;
   }
 
