@@ -91,6 +91,12 @@ Key rules:
 - **Call the setter after `Matter.begin()`.** The cluster instance is not available before the stack starts. Sketches should `begin()` the endpoint, then `Matter.begin()`, then `setLeak()` / `setFreeze()` / `setRain()` / `setContact()` with the real sensor reading.
 - Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
 
+### Code-Driven Clusters Without an ESP-Matter Wrapper (Soil Measurement)
+
+`MatterSoilSensor` uses the Soil Measurement cluster, which - unlike Boolean State - has no `esp_matter::endpoint::soil_sensor` / `esp_matter::cluster::soil_measurement` convenience wrapper yet. `MatterSoilSensor.cpp` builds the endpoint from the generic low-level API (`endpoint::create()`, `cluster::descriptor::create()`, `cluster::identify::create()`, `add_device_type()`) and plugs the cluster in itself, the same way ESP-Matter's own `data_model_provider/clusters/boolean_state_integration.cpp` does for Boolean State: a bare `cluster::create(endpoint, SoilMeasurement::Id, CLUSTER_FLAG_SERVER)` placeholder (for descriptor/introspection bookkeeping) with `cluster::set_init_and_shutdown_callbacks()` pointing at a local init callback that constructs a `chip::app::Clusters::SoilMeasurementCluster` and registers it with `esp_matter::data_model::provider::get_instance().registry()`.
+
+Like Boolean State, `SoilMoistureMeasuredValue` is then served by that live cluster instance, not the Ember attribute store - `setSoilMoisture()` looks it up through the registry and calls `SoilMeasurementCluster::SetSoilMoistureMeasuredValue()` directly, and `begin()` takes no initial value for the same reason (the cluster instance doesn't exist until the Matter stack starts).
+
 ### Controller-Originated Changes (attributeChangeCB)
 
 When a Matter controller changes an attribute (e.g., turning a light on via an app), the flow is:
@@ -160,6 +166,7 @@ All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.
 | `MatterWaterLeakDetector` | Water Leak Detector (Boolean State) |
 | `MatterWaterFreezeDetector` | Water Freeze Detector (Boolean State) |
 | `MatterRainSensor` | Rain Sensor (Boolean State) |
+| `MatterSoilSensor` | Soil Sensor (code-driven Soil Measurement cluster) |
 
 **Control and other**
 
