@@ -163,7 +163,11 @@ hw_timer_t *timerBegin(uint32_t frequency) {
     .flags.intr_shared = true,
   };
 
-  hw_timer_t *timer = malloc(sizeof(hw_timer_t));
+  hw_timer_t *timer = (hw_timer_t *)calloc(1, sizeof(hw_timer_t));
+  if (timer == NULL) {
+    log_e("Failed to allocate timer structure");
+    return NULL;
+  }
 
   err = gptimer_new_timer(&config, &timer->timer_handle);
   if (err != ESP_OK) {
@@ -220,6 +224,11 @@ void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void 
     .on_alarm = timerFnWrapper,
   };
 
+  if (timer->timer_started == true) {
+    gptimer_stop(timer->timer_handle);
+  }
+  gptimer_disable(timer->timer_handle);
+
   // if new attach without detach remove old functional info
   if (timer->interrupt_handle.functional && timer->interrupt_handle.arg) {
     cleanupFunctional(timer->interrupt_handle.arg);
@@ -229,10 +238,6 @@ void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void 
   timer->interrupt_handle.arg = arg;
   timer->interrupt_handle.functional = functional;
 
-  if (timer->timer_started == true) {
-    gptimer_stop(timer->timer_handle);
-  }
-  gptimer_disable(timer->timer_handle);
   err = gptimer_register_event_callbacks(timer->timer_handle, &cbs, &timer->interrupt_handle);
   if (err != ESP_OK) {
     log_e("Timer Attach Interrupt failed, error num=%d", err);

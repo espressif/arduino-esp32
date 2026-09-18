@@ -32,6 +32,9 @@ void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode
 
 #if SOC_GPTIMER_SUPPORTED
 void timerAttachInterrupt(hw_timer_t *timer, std::function<void(void)> userFunc) {
+  if (timer == NULL) {
+    return;
+  }
   timerAttachInterruptFunctionalArg(timer, (voidFuncPtrArg)interruptFunctional, new InterruptArgStructure{userFunc}, true);
 }
 #endif
