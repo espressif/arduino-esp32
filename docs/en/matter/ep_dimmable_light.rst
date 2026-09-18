@@ -9,10 +9,10 @@ The ``MatterDimmableLight`` class provides a dimmable light endpoint for Matter 
 
 **Features:**
 * On/off control
-* Brightness level control (0-255)
+* Brightness level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel)
 * State persistence support
 * Callback support for state and brightness changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -49,7 +49,7 @@ Initializes the Matter dimmable light endpoint with optional initial state and b
     bool begin(bool initialState = false, uint8_t brightness = 64);
 
 * ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``)
-* ``brightness`` - Initial brightness level (0-255, default: 64 = 25%)
+* ``brightness`` - Initial brightness level (0-255, default: 64 = 25%). ``0`` is stored as ``1``; ``255`` is stored as ``254``.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -112,7 +112,7 @@ Sets the brightness level of the light.
 
     bool setBrightness(uint8_t newBrightness);
 
-* ``newBrightness`` - New brightness level (0-255, where 0 = off, 255 = maximum brightness)
+* ``newBrightness`` - Brightness (0-255). On/off is a separate attribute; ``0`` clamps to ``1`` and ``255`` clamps to ``254``.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -125,7 +125,7 @@ Gets the current brightness level of the light.
 
     uint8_t getBrightness();
 
-This function will return the brightness level (0-255).
+This function will return the brightness level (1-254).
 
 Constants
 *********
@@ -133,7 +133,7 @@ Constants
 MAX_BRIGHTNESS
 ^^^^^^^^^^^^^^
 
-Maximum brightness value constant.
+Arduino full-scale input (255). Matter stores this as ``254``.
 
 .. code-block:: arduino
 
@@ -181,7 +181,7 @@ The callback signature is:
     bool onChangeCallback(bool newState, uint8_t newBrightness);
 
 * ``newState`` - New on/off state
-* ``newBrightness`` - New brightness level (0-255)
+* ``newBrightness`` - New brightness level (1-254)
 
 onChangeOnOff
 ^^^^^^^^^^^^^
@@ -232,5 +232,5 @@ Example
 Dimmable Light
 **************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterDimmableLight/MatterDimmableLight.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Lighting/MatterDimmableLight/MatterDimmableLight.ino
     :language: arduino

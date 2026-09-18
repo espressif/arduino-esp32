@@ -257,6 +257,10 @@ bool OThreadDNSSDClass::begin(const char *hostName) {
   if (_started) {
     end();
   }
+  if (OThread.isAttachedToExternalStack()) {
+    log_e("OThreadDNSSD: begin() is not supported while attached to an external OpenThread stack (Matter/CHIP owns SRP)");
+    return false;
+  }
   otInstance *inst = OThread.getInstance();
   if (!inst) {
     log_e("OThreadDNSSD: OpenThread not started");
@@ -316,6 +320,11 @@ bool OThreadDNSSDClass::begin(const char *hostName) {
 }
 
 void OThreadDNSSDClass::end() {
+  // Must run before OThread::end() clears the attach flag.
+  teardown(!OThread.isAttachedToExternalStack());
+}
+
+void OThreadDNSSDClass::teardown(bool ownSrpClient) {
   if (!_started) {
     return;
   }
@@ -326,14 +335,17 @@ void OThreadDNSSDClass::end() {
   {
     OtLock lock;
     otInstance *inst = OThread.getInstance();
-    // Ask the SRP server to forget us when possible, then clear local client
-    // tracking so OpenThread drops pointers into our slots before we zero them.
     // Hold the OT lock through DNS invalidation so an in-flight DNS callback
     // cannot commit after we have torn down.
     if (inst && lock) {
-      (void)otSrpClientRemoveHostAndServices(inst, true, true);
-      otSrpClientClearHostAndServices(inst);
-      otSrpClientStop(inst);
+      if (ownSrpClient) {
+        // Arduino owns this instance: unregister toward the SRP server and
+        // stop the client so OpenThread drops pointers into our slots.
+        (void)otSrpClientRemoveHostAndServices(inst, true, true);
+        otSrpClientClearHostAndServices(inst);
+        otSrpClientStop(inst);
+      }
+      // Always drop our callback so OT cannot call into a dead sketch object.
       otSrpClientSetCallback(inst, nullptr, nullptr);
     } else if (inst && !lock) {
       log_e("OThreadDNSSD: end() failed to acquire OT lock; clearing local state anyway");
@@ -363,7 +375,9 @@ void OThreadDNSSDClass::end() {
     xSemaphoreGive(_dnsSem);
   }
 #endif
-  notifyEvent(OT_DNSSD_EVENT_REMOVED, OT_ERROR_NONE);
+  if (ownSrpClient) {
+    notifyEvent(OT_DNSSD_EVENT_REMOVED, OT_ERROR_NONE);
+  }
 }
 
 void OThreadDNSSDClass::setInstanceName(const char *name) {

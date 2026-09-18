@@ -14,7 +14,7 @@ The ``MatterThermostat`` class provides a thermostat endpoint for Matter network
 * Automatic temperature regulation
 * Deadband control for AUTO mode
 * Callback support for mode, temperature, and setpoint changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -119,10 +119,19 @@ Gets the current thermostat mode.
 
     ThermostatMode_t getMode();
 
+getControlSequence
+^^^^^^^^^^^^^^^^^^
+
+Gets the Control Sequence of Operation set at ``begin()``.
+
+.. code-block:: arduino
+
+    ControlSequenceOfOperation_t getControlSequence();
+
 getThermostatModeString
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Gets a friendly string for the thermostat mode.
+Gets a friendly string for the thermostat ``SystemMode`` value, including ``EMERGENCY_HEAT``, ``PRECOOLING``, ``FAN_ONLY``, ``DRY``, and ``SLEEP``. Returns ``UNKNOWN`` for the unused enum value ``2`` and for any out-of-range mode.
 
 .. code-block:: arduino
 
@@ -246,7 +255,7 @@ Gets the maximum cooling setpoint limit.
 getDeadBand
 ^^^^^^^^^^^
 
-Gets the deadband value (minimum difference between heating and cooling setpoints in AUTO mode).
+Gets the AUTO ``MinSetpointDeadBand`` in Celsius (cluster stores tenths of a degree). Reads the attribute when Auto is enabled; otherwise returns the default 2.5 °C.
 
 .. code-block:: arduino
 
@@ -306,5 +315,5 @@ Example
 Thermostat
 **********
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterThermostat/MatterThermostat.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Control/MatterThermostat/MatterThermostat.ino
     :language: arduino

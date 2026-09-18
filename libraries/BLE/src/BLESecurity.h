@@ -233,9 +233,15 @@ public:
    ***************************************************************************/
 
 #if defined(CONFIG_NIMBLE_ENABLED)
-  // This callback is called when the authentication is complete.
-  // Status can be checked in the desc parameter.
+  // This callback is called when the authentication completed successfully.
+  // The resulting security state can be checked in the desc parameter.
   virtual void onAuthenticationComplete(ble_gap_conn_desc *desc);
+
+  // This callback is called when the authentication completes, successfully or not.
+  // status is 0 on success, otherwise a BLE_HS_* error code.
+  // The default implementation forwards successful authentications to the overload above,
+  // so overriding only that one keeps the success-only semantics.
+  virtual void onAuthenticationComplete(ble_gap_conn_desc *desc, int status);
 #endif
 
 };  // BLESecurityCallbacks
