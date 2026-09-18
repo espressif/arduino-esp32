@@ -89,10 +89,7 @@ BLEServer::BLEServer() {
   m_svcChanged = false;
 #endif
 
-#if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
   m_advertiseOnDisconnect = false;
-#endif
-
   m_gattAppId = ESP_GATT_IF_NONE;
   m_gattsStarted = false;
   m_connectedCount = 0;
@@ -363,11 +360,9 @@ bool BLEServer::removePeerDevice(uint16_t conn_id, bool _client) {
   return result;
 }
 
-#if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
 void BLEServer::advertiseOnDisconnect(bool enable) {
   m_advertiseOnDisconnect = enable;
 }
-#endif
 
 void BLEServerCallbacks::onConnect(BLEServer *pServer) {
   log_d("BLEServerCallbacks", ">> onConnect(): Default");
@@ -851,12 +846,10 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
       // Reset security state on disconnect
       BLESecurity::resetSecurity();
 
-#if !defined(CONFIG_BT_NIMBLE_EXT_ADV)
       if (server->m_advertiseOnDisconnect) {
         log_i("Start advertising again after disconnect");
         server->startAdvertising();
       }
-#endif
 
       return 0;
     }  // BLE_GAP_EVENT_DISCONNECT
