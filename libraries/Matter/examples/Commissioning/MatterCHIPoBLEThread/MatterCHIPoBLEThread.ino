@@ -69,7 +69,11 @@ void setup() {
 
   OnOffLight.begin();
   OnOffLight.onChange(onOffLightCallback);
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
+  if (!Matter.isStackStarted()) {
+    halt("Matter.begin() failed. The Matter stack did not start.");
+  }
   Serial.printf("BLE commissioning enabled: %s\r\n", Matter.isBLECommissioningEnabled() ? "YES" : "NO");
   Serial.printf("Thread Network Commissioning is on endpoint %u.\r\n", Matter.getNetworkEndPointId(MATTER_NETWORK_THREAD));
   matterWaitUntilReady();

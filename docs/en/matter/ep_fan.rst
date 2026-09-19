@@ -176,7 +176,7 @@ Sets the fan speed percentage.
 * ``newPercent`` - Speed percentage (0-100)
 * ``performUpdate`` - Perform update after setting (default: ``true``)
 
-Writes nullable ``PercentSetting`` and non-nullable ``PercentCurrent`` separately. In Auto, Matter may null ``PercentSetting``; ``PercentCurrent`` stays 0-100.
+Writes nullable ``PercentSetting`` and non-nullable ``PercentCurrent`` separately. In ``FAN_MODE_AUTO``, this updates ``PercentCurrent`` only so ``PercentSetting`` stays null (CHIP accepts a non-null Auto write; Arduino skips it). In other modes both attributes are written. After ``Matter.begin()``, a non-zero setting while Off turns the cluster on (Low/Med/High); ``0`` turns it Off. Arduino then refreshes ``getMode()`` / ``getOnOff()`` from the cluster. ``PercentCurrent`` stays 0-100.
 
 getSpeedPercent
 ^^^^^^^^^^^^^^^

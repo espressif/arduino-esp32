@@ -110,6 +110,7 @@ The ``Matter`` class is implemented as a singleton, meaning there's only one ins
 The ``Matter`` class provides the following key methods:
 
 * ``begin()``: Initializes the Matter stack. On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts, unless Thread or Ethernet was selected. Skipped if the sketch already called ``matterConnectWiFi()`` / ``WiFi.begin()`` / ``WiFi.mode()``.
+* ``isStackStarted()``: ``true`` only after a successful ``Matter.begin()``. Pairing-code getters are empty until this is true.
 * ``isDeviceCommissioned()``: Checks if the device is commissioned (a fabric exists)
 * ``isWiFiConnected()``: Checks Wi-Fi connection status
 * ``isThreadConnected()``: Checks Thread connection status
@@ -130,8 +131,8 @@ The ``Matter`` class provides the following key methods:
 * ``setBLEMemoryReleaseEnabled()``: After CHIPoBLE commissioning, release BLE RAM (default ``true``). Call before ``Matter.begin()``. Only takes effect when ``CONFIG_ENABLE_CHIPOBLE`` is set and CHIPoBLE commissioning is enabled. No effect when CHIPoBLE is compiled out. Arduino-as-IDF-component builds that keep BLE must also set ``CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n``
 * ``isBLEMemoryReleaseEnabled()``: ``true`` when CHIPoBLE is on and BLE RAM will be released after commissioning
 * ``decommission()``: Factory resets the device
-* ``getManualPairingCode()``: Gets the manual pairing code for commissioning (generated after ``begin()``; empty and a warning before ``begin()``)
-* ``getOnboardingQRCodeUrl()``: Gets the QR code URL for commissioning (generated after ``begin()``; empty and a warning before ``begin()``)
+* ``getManualPairingCode()``: Gets the manual pairing code for commissioning (generated after a successful ``begin()``; empty and a warning before ``begin()`` or if ``begin()`` failed)
+* ``getOnboardingQRCodeUrl()``: Gets the QR code URL for commissioning (generated after a successful ``begin()``; empty and a warning before ``begin()`` or if ``begin()`` failed)
 * ``onEvent()``: Sets a callback for Matter events. The ``ChipDeviceEvent`` pointer is only valid during the callback; do not store it
 * ``onBLEMemoryReleased()``: Called when CHIPoBLE BLE RAM has been returned to the heap (same moment as ``MATTER_BLE_DEINITIALIZED``). Register before ``Matter.begin()``. Runs on the CHIP task: do not block; allocate large buffers from ``loop()``. May never run if CHIPoBLE is off or ``setBLEMemoryReleaseEnabled(false)``
 
@@ -210,16 +211,25 @@ The callback may never run (no CHIPoBLE, ``setBLEMemoryReleaseEnabled(false)``, 
 Device identity
 ^^^^^^^^^^^^^^^
 
-Call these setters **before** ``Matter.begin()``. After ``begin()`` they log a warning and have no effect. String setters copy into internal storage; the argument does not need to remain valid. ``setDeviceName()`` writes Basic Information **NodeLabel**. Do not change Vendor ID / Product ID from a sketch unless the DAC matches. SoftwareVersion is compile-time CHIP configuration.
+Call these setters **before** ``Matter.begin()``. After ``begin()`` they log a warning and have no effect. String setters copy into internal storage; the argument does not need to remain valid. ``setDeviceName()`` writes Basic Information **NodeLabel**. Do not change Vendor ID / Product ID from a sketch unless the DAC matches. ``SoftwareVersion`` / ``SoftwareVersionString`` are Basic Information from ConfigurationManager (the firmware version controllers such as Alexa display), not ``HardwareVersion``. They are stored in RAM for this boot; CHIP does not persist ``StoreSoftwareVersion`` on ESP32.
+
+Vendor, product, serial, and hardware strings go through Arduino's instance-info wrapper when ``CONFIG_CUSTOM_DEVICE_INSTANCE_INFO_PROVIDER`` is set. ``CONFIG_EXAMPLE_DEVICE_INSTANCE_INFO_PROVIDER`` leaves CHIP's generic provider and does not publish those Arduino names. Factory or secure-cert instance-info providers take priority over the wrapper. Factory NVS still owns per-unit PIN and DAC.
+
+FixedLabel and UserLabel (Generic Switch) need CHIP's ``DeviceInfoProvider``. If the build uses ``CONFIG_NONE_DEVICE_INFO_PROVIDER``, ``Matter.begin()`` registers Arduino's RAM provider before the stack starts. CHIP's ``ESP32DeviceInfoProvider`` is not linked unless factory data is enabled. Factory or custom device-info providers still replace it.
+
+Most examples call ``matterSetExampleIdentity("Color Light")`` (or the matching endpoint name) for vendor ``Espressif`` and product ``<SoC> <endpoint>``, for example ``ESP32-C6 Color Light``. ProductName is capped at 32 characters. Override with the setters below, as in Matter Device Identity.
 
 .. code-block:: arduino
 
+    matterSetExampleIdentity("Color Light");     // vendor Espressif, product "<SoC> Color Light"
     Matter.setVendorName("Espressif");           // max 32
     Matter.setProductName("KitchenLight");       // max 32
     Matter.setDeviceName("KitchenHub");          // NodeLabel, max 32
     Matter.setSerialNumber("KH-000123");         // max 32
     Matter.setHardwareVersion(7);
     Matter.setHardwareVersionString("RevA");     // max 64
+    Matter.setSoftwareVersion(7);                // Basic Information SoftwareVersion (uint32)
+    Matter.setSoftwareVersionString("1.0.7");    // max 64; default is the IDF app version
     Matter.setSetupDiscriminator(0xF01);         // 0–0xFFF; Arduino test default 0xF00
     Matter.setSetupPasscode(20202024);           // valid PIN; test default 20202021
     // Prefer selectNetwork(MATTER_NETWORK_WIFI or MATTER_NETWORK_THREAD, true) to pick a transport and turn CHIPoBLE off.
@@ -231,21 +241,28 @@ Call these setters **before** ``Matter.begin()``. After ``begin()`` they log a w
 
 On a single-endpoint node, controllers often use DeviceName as the accessory title. On a composed node it is the parent/node name; child lights are not renamed. Use ``MatterEndPoint::setTagList()`` for switch-style Descriptor tags, not as a light title.
 
-``getManualPairingCode()`` and ``getOnboardingQRCodeUrl()`` are generated from the live discriminator and PIN after ``Matter.begin()``. Before ``begin()`` they log a warning and return an empty string. The Arduino test defaults are PIN ``20202021``, discriminator ``0xF00``, manual code ``34970112332``. The 11-digit short manual code uses only the top 4 bits of the discriminator, so ``0xF00`` and ``0xF01`` collide if the PIN is unchanged. Changing the PIN requires a matching SPAKE2+ verifier; the library regenerates it. Test while uncommissioned and erase flash after changing codes. Production belongs in factory NVS with a unique PIN per unit.
+``getManualPairingCode()`` and ``getOnboardingQRCodeUrl()`` are generated from the live discriminator and PIN after a successful ``Matter.begin()``. Before ``begin()``, or if ``begin()`` failed (``isStackStarted()`` is false), they log a warning and return an empty string. The Arduino test defaults are PIN ``20202021``, discriminator ``0xF00``, manual code ``34970112332``. The 11-digit short manual code uses only the top 4 bits of the discriminator, so ``0xF00`` and ``0xF01`` collide if the PIN is unchanged. Changing the PIN requires a matching SPAKE2+ verifier; the library regenerates it. Test while uncommissioned and erase flash after changing codes. Production belongs in factory NVS with a unique PIN per unit.
 
 Identity and commissioning APIs (all setters must run before ``Matter.begin()``):
 
+* ``matterSetExampleIdentity()``
 * ``setVendorName()``
 * ``setProductName()``
 * ``setDeviceName()``
 * ``setSerialNumber()``
 * ``setHardwareVersion()``
 * ``setHardwareVersionString()``
+* ``setSoftwareVersion()``
+* ``setSoftwareVersionString()``
+* ``getSoftwareVersion()``
+* ``getSoftwareVersionString()``
 * ``setSetupDiscriminator()``
 * ``setSetupPasscode()``
 * ``setBLECommissioningEnabled()``
 * ``setBLEMemoryReleaseEnabled()``
 * ``selectNetwork()``
+
+``getSoftwareVersion()`` and ``getSoftwareVersionString()`` may be called after ``Matter.begin()``. Without a setter they return ``CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER`` and the IDF app version.
 
 ``Matter.waitForNetwork()`` is a runtime method, not a setter. It does not start hardware. Ethernet sketches typically call it after ``ETH.begin()`` / ``enableIPv6()`` and before ``Matter.begin()``. ``timeoutMs`` 0 is a single check; ``MATTER_NETWORK_NONE`` waits for any interface.
 
@@ -255,6 +272,8 @@ Runtime status
 +-----------------------------------+--------------------------------------------------------------+
 | API                               | Meaning                                                      |
 +===================================+==============================================================+
+| ``isStackStarted()``              | ``Matter.begin()`` succeeded                                   |
++-----------------------------------+--------------------------------------------------------------+
 | ``isDeviceCommissioned()``        | A Matter fabric exists                                       |
 +-----------------------------------+--------------------------------------------------------------+
 | ``isDeviceConnected()``           | Wi-Fi, Thread, or Ethernet IPv6 is up                        |
@@ -324,7 +343,7 @@ Call ``Matter.selectNetwork()`` **before any accessory** ``begin()``. With no ca
 * The library does **not** call ``ETH.begin()``. PHY macros are sketch-local. Internal EMAC (original ESP32, variant defines ``ETH_PHY_MDC`` / ``ETH_PHY_MDIO``): ``ETH.begin()``. SPI PHY (default W5500): ``SPI.begin()`` then ``ETH.begin(..., SPI)``. Then ``enableIPv6()`` and ``Matter.waitForNetwork()`` before ``Matter.begin()``.
 * Do **not** start Arduino ``ESPmDNS``. CHIP owns the responder. ``MDNS.begin()`` overwrites the hostname; ``MDNS.end()`` destroys CHIP's services.
 * ``selectNetwork(network, disableBLECommissioning)`` overrides the CHIPoBLE default. ``true`` turns CHIPoBLE off; do not also call ``setBLECommissioningEnabled()``. A selected-but-down interface plus no BLE leaves no commissioning path.
-* Ethernet and Thread skip CHIP's ``InitWiFiStack()`` via a linker ``--wrap``.
+* Dual-stack images still run CHIP's ``InitWiFiStack()`` from ``esp_matter::start()`` (``InitChipStack()`` needs the Wi-Fi controller). Arduino does not call ``InitWiFiStack()`` itself — that must happen after the default event loop exists. After ``Matter.begin()``, Thread and Ethernet disable the Wi-Fi station so a leftover SSID does not join. Arduino's reduced-buffer ``esp_wifi_init()`` is used only when Wi-Fi is selected.
 * After ``Matter.begin()``, ``OThread.begin()`` attaches to CHIP's stack (``isAttachedToExternalStack()``). ``OThread.end()`` must not tear that stack down.
 * ESP32-C6: one Network Commissioning cluster on endpoint 0. ``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` replaces root Wi-Fi with Thread. Do not use ``createSecondaryNetworkInterface()`` (deprecated; it does not create a second NC endpoint).
 * ESP32-C5: ``isThreadEnabled()`` is true when **Tools → Matter Network → Thread** (``ARDUINO_MATTER_NETWORK_THREAD`` + ``libespressif__esp_matter.thread.a``). Default Wi-Fi menu keeps Matter-over-Wi-Fi.
@@ -339,8 +358,9 @@ Sketch helpers
 These are **not** members of ``Matter``. ``#include <Matter.h>`` pulls in ``MatterHelpers.h`` (and ``MatterButton.h``). They print to Serial and may reboot. Do not wait for commissioning in ``loop()``.
 
 * ``matterConnectWiFi(ssid, password)``: Present only when ``CONFIG_ENABLE_CHIPOBLE`` is off. ``MatterHelpers.cpp`` includes ``WiFi.h`` in that build so regular sketches just call the helper. Enables station IPv6 before ``WiFi.begin()`` (Arduino does not do that by default). CHIPoBLE / Thread builds do not include ``WiFi.h`` (no ``WiFiClass`` cost). On-network sketches that start STA with CHIPoBLE compiled in include ``WiFi.h`` and call ``WiFi.begin()`` themselves. Not present on ESP32-H2.
-* ``matterWaitUntilReady()``: Call from ``setup()`` after ``Matter.begin()``. Prints pairing codes if there is no fabric; one-line status every 10 s and once more when CASE is up. Waits up to 5 minutes (default) for CASE. ``timeoutMs`` 0 waits forever (unlike ``Matter.waitForNetwork(0)``, which is a single check). Reboots if still uncommissioned. If commissioned but CASE never arrives, continues.
-* ``matterRestartIfNoFabric()``: Call from ``loop()``. Reboots if the hub removed the fabric. ``Matter.decommission()`` already factory-resets.
+* ``matterSetExampleIdentity(endpointName)``: Call from ``setup()`` before ``Matter.begin()``. Sets vendor ``Espressif`` and product ``<SoC> <endpointName>`` (for example ``ESP32-C6 Color Light``). ProductName is capped at 32 characters.
+* ``matterWaitUntilReady()``: Call from ``setup()`` after ``Matter.begin()``. If the stack never started, prints that ``begin()`` failed and halts (does not return to ``loop()``). Otherwise prints pairing codes if there is no fabric; one-line status every 10 s and once more when CASE is up. Waits up to 5 minutes (default) for CASE. ``timeoutMs`` 0 waits forever (unlike ``Matter.waitForNetwork(0)``, which is a single check). Reboots if still uncommissioned. If commissioned but CASE never arrives, continues.
+* ``matterRestartIfNoFabric()``: Call from ``loop()``. No-op if the stack never started. Reboots if the hub removed the fabric. ``Matter.decommission()`` already factory-resets.
 
 ``MatterButton`` is a board-button class, not a Generic Switch cluster. An ``esp_timer`` samples the pin; ``loop()`` only drains ``poll()``. Do not call Matter APIs from the timer callback.
 
@@ -437,9 +457,9 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 
 **Getting Started:**
 
-* **Matter Minimum** - The smallest code required to create a Matter-compatible device. Ideal starting point for understanding Matter basics. `View Matter Minimum code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterMinimum>`_
+* **Matter Minimum** - Smallest On/Off Light: LED GPIO, ``onChange()``, ``Matter.begin()``, ``matterWaitUntilReady()``. No button and no ``matterSetExampleIdentity()``. `View Matter Minimum code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterMinimum>`_
 * **Matter Status** - Demonstrates how to check enabled Matter features and connectivity status, including ``isDeviceCommissioned()``, ``isDeviceConnected()``, and ``isOnline()``. Implements a basic on/off light and periodically reports capability and connection status. `View Matter Status code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterStatus>`_
-* **Matter Device Identity** - Sets VendorName, ProductName, DeviceName (NodeLabel), SerialNumber, hardware version, and custom commissioning codes on ``Matter`` before ``begin()``. `View Matter Device Identity code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterDeviceIdentity>`_
+* **Matter Device Identity** - Sets VendorName, ProductName, DeviceName (NodeLabel), SerialNumber, hardware version, software version, and custom commissioning codes on ``Matter`` before ``begin()``. `View Matter Device Identity code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterDeviceIdentity>`_
 * **Matter Events** - Shows how to monitor and handle Matter events. Provides a comprehensive view of all Matter events during device operation. `View Matter Events code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterEvents>`_
 
 **Commissioning:**
@@ -469,7 +489,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter Pressure Sensor** - Creates a Matter-compatible pressure sensor device with automatic simulation of pressure readings. `View Matter Pressure Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterPressureSensor>`_
 * **Matter Contact Sensor** - Creates a Matter-compatible contact sensor device (open/closed state). `View Matter Contact Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterContactSensor>`_
 * **Matter Occupancy Sensor** - Creates a Matter-compatible occupancy sensor device with automatic simulation of occupancy state changes. `View Matter Occupancy Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterOccupancySensor>`_
-* **Matter Occupancy Sensor with HoldTime** - Creates a Matter-compatible occupancy sensor device with HoldTime functionality, automatic simulation of occupancy state changes, HoldTime configuration with persistence across reboots, and HoldTime change callback for real-time updates from Matter controllers. `View Matter Occupancy Sensor with HoldTime code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterOccupancyWithHoldTime>`_
+* **Matter Occupancy Sensor with HoldTime** - Creates a Matter occupancy sensor that reports a raw motion pulse; CHIP HoldTime keeps Occupancy occupied, then vacant. HoldTime is configurable, persisted, and has a controller callback. `View Matter Occupancy Sensor with HoldTime code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterOccupancyWithHoldTime>`_
 * **Matter Water Leak Detector** - Creates a Matter-compatible water leak detector device with automatic simulation of water leak detection state changes. `View Matter Water Leak Detector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterWaterLeakDetector>`_
 * **Matter Water Freeze Detector** - Creates a Matter-compatible water freeze detector device with automatic simulation of water freeze detection state changes. `View Matter Water Freeze Detector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterWaterFreezeDetector>`_
 * **Matter Rain Sensor** - Creates a Matter-compatible rain sensor device with automatic simulation of rain detection state changes. `View Matter Rain Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterRainSensor>`_
@@ -487,7 +507,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter Enhanced Smart Button** - One BOOT button with Switch ``FEATURE_ALL``: single click, double click, triple click, and long press. Serial prints the gesture name plus the Matter events. `View Matter Enhanced Smart Button code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterEnhancedSmartButton>`_
 * **Matter Smart Buttons TagList** - Three short-click Generic Switches (On, Off, Scene) told apart with Descriptor ``TagList``. No long-press or multi-press. `View Matter Smart Buttons TagList code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterSmartButtonsTagList>`_
 * **Matter Window Covering** - Creates a Matter-compatible window covering device with lift and tilt control (blinds, shades) with manual control using a physical button. `View Matter Window Covering code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterWindowCovering>`_
-* **Matter Simple Blinds** - A minimal example that only controls lift percentage using a single onGoToLiftPercentage() callback. `View Matter Simple Blinds code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterSimpleBlinds>`_
+* **Matter Simple Blinds** - Lift-only covering. Simulated motor at 1% / 200 ms reports Current and Opening/Closing/Stall. `View Matter Simple Blinds code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterSimpleBlinds>`_
 
 **Advanced Examples:**
 

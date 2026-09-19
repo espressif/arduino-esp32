@@ -106,7 +106,11 @@ void setup() {
 
   OnOffLight.begin();
   OnOffLight.onChange(onOffLightCallback);
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
+  if (!Matter.isStackStarted()) {
+    halt("Matter.begin() failed. The Matter stack did not start.");
+  }
   Serial.printf("BLE commissioning enabled: %s\r\n", Matter.isBLECommissioningEnabled() ? "YES" : "NO");
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD

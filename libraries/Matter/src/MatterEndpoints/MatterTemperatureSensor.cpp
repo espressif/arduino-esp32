@@ -17,6 +17,8 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterTemperatureSensor.h>
+#include <app/clusters/temperature-measurement-server/TemperatureMeasurementCluster.h>
+#include <app/data-model/Nullable.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -102,35 +104,41 @@ void MatterTemperatureSensor::end() {
   started = false;
 }
 
+void MatterTemperatureSensor::onStackStarted() {
+  TemperatureMeasurementCluster *cluster = static_cast<TemperatureMeasurementCluster *>(findRegisteredCluster(TemperatureMeasurement::Id));
+  if (cluster == nullptr) {
+    log_e("TemperatureMeasurement cluster not found after Matter.begin().");
+    return;
+  }
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(rawTemperature)) != CHIP_NO_ERROR) {
+    log_e("Failed to apply cached Temperature Sensor value after Matter.begin().");
+  }
+}
+
 bool MatterTemperatureSensor::setRawTemperature(int16_t _rawTemperature) {
   if (!started) {
     log_e("Matter Temperature Sensor device has not begun.");
     return false;
   }
 
-  // avoid processing if there was no change
-  if (rawTemperature == _rawTemperature) {
+  if (rawTemperature == _rawTemperature && findRegisteredCluster(TemperatureMeasurement::Id) != nullptr) {
     return true;
   }
 
-  esp_matter_attr_val_t temperatureVal = esp_matter_invalid(NULL);
+  TemperatureMeasurementCluster *cluster = static_cast<TemperatureMeasurementCluster *>(findRegisteredCluster(TemperatureMeasurement::Id));
+  if (cluster == nullptr) {
+    rawTemperature = _rawTemperature;
+    return true;
+  }
 
-  if (!getAttributeVal(TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperatureVal)) {
-    log_e("Failed to get Temperature Sensor Attribute.");
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(_rawTemperature)) != CHIP_NO_ERROR) {
+    log_e("Failed to update Temperature Sensor Attribute.");
     return false;
   }
-  if (temperatureVal.val.i16 != _rawTemperature) {
-    temperatureVal.val.i16 = _rawTemperature;
-    bool ret;
-    ret = updateAttributeVal(TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperatureVal);
-    if (!ret) {
-      log_e("Failed to update Temperature Sensor Attribute.");
-      return false;
-    }
-    rawTemperature = _rawTemperature;
-  }
+  rawTemperature = _rawTemperature;
   log_v("Temperature Sensor set to %.02fC", (float)_rawTemperature / 100.00);
-
   return true;
 }
 

@@ -442,6 +442,8 @@ Gets the current target lift position in percent100ths.
 
 This function will return the current target lift position in percent100ths (0-10000).
 
+``onGoToLiftPercentage()`` runs in PRE_UPDATE, so a cluster read would still be the previous Target. This getter returns the incoming request (cached from the write), which is the value to copy into Current for an instant move.
+
 setTargetTiltPercent100ths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -541,7 +543,7 @@ The ``MatterWindowCovering`` class automatically detects Matter commands and cal
 **Current Position Callback** (triggered when ``CurrentPosition`` attributes change):
 * ``onChange()`` - called when ``CurrentPositionLiftPercent100ths`` or ``CurrentPositionTiltPercent100ths`` change (after ``setLiftPercentage()``/``setTiltPercentage()`` are called or when a Matter controller updates these attributes directly)
 
-**Important:** ``onChange()`` is **not** automatically called when Matter commands are executed. Commands modify ``TargetPosition``, not ``CurrentPosition``. To trigger ``onChange()``, your ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callback must call ``setLiftPercentage()`` or ``setTiltPercentage()`` when the physical device actually moves.
+**Important:** ``onChange()`` is **not** automatically called when Matter commands are executed. Commands modify ``TargetPosition``, not ``CurrentPosition``. CHIP then sets ``OperationalStatus`` to Opening/Closing until Current equals Target (Alexa keeps showing "Opening" and the old percent). Returning true from ``onGoToLiftPercentage()`` only accepts the target. The callback must write Current (prefer ``setCurrentLiftPercent100ths(getTargetLiftPercent100ths())``) and ``setOperationalState(LIFT, STALL)`` when the covering arrives. That also fires ``onChange()``.
 
 **Note:** All callbacks are optional. If a specific callback is not registered, only the generic ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callbacks will be called (if registered).
 

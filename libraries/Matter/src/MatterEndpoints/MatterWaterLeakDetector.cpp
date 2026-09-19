@@ -53,7 +53,7 @@ bool MatterWaterLeakDetector::begin() {
   water_leak_detector::config_t water_leak_detector_config{};
   water_leak_detector_config.boolean_state.state_value = false;
   // CHIP BooleanStateCluster still starts at false regardless of this field;
-  // apply the real sensor with setLeak() after Matter.begin().
+  // setLeak() after endpoint begin() caches the value and applies it at Matter.begin().
 
   endpoint_t *endpoint = water_leak_detector::create(node::get(), &water_leak_detector_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {

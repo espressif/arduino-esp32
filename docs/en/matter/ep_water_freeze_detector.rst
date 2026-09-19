@@ -43,7 +43,7 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter water freeze detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setFreeze()`` after ``Matter.begin()`` with the real sensor reading.
+Initializes the Matter water freeze detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setFreeze()`` after the endpoint ``begin()``; a value set before ``Matter.begin()`` is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -74,7 +74,7 @@ Water Freeze Detection State Control
 setFreeze
 ^^^^^^^^^
 
-Sets the water freeze detection state. Call after ``Matter.begin()``.
+Sets the water freeze detection state. Call after the endpoint ``begin()``. Before ``Matter.begin()`` the value is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -120,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the water freeze detection state. Same as ``setFreeze()``; call after ``Matter.begin()``.
+Sets the water freeze detection state. Same as ``setFreeze()``.
 
 .. code-block:: arduino
 

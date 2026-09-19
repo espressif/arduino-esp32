@@ -193,7 +193,11 @@ void setup() {
   Matter.onBLEMemoryReleased(onBleMemoryReleased);
 
   printHeap("before Matter.begin()");
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
+  if (!Matter.isStackStarted()) {
+    halt("Matter.begin() failed. The Matter stack did not start.");
+  }
   printHeap("after Matter.begin()");
   matterWaitUntilReady();
   printHeap("after waitUntilReady()");

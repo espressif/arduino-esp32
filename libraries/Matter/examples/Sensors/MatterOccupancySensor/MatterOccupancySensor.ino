@@ -59,6 +59,7 @@ void setup() {
   OccupancySensor.begin();
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Occupancy Sensor");
   Matter.begin();
   matterWaitUntilReady();
 }

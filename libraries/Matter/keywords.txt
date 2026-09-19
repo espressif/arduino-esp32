@@ -79,9 +79,11 @@ getOnboardingQRCodeUrl	KEYWORD2
 isBLECommissioningEnabled	KEYWORD2
 isBLEMemoryReleaseEnabled	KEYWORD2
 isDeviceCommissioned	KEYWORD2
+isStackStarted	KEYWORD2
 isDeviceConnected	KEYWORD2
 isOnline	KEYWORD2
 matterConnectWiFi	KEYWORD2
+matterSetExampleIdentity	KEYWORD2
 matterWaitUntilReady	KEYWORD2
 matterRestartIfNoFabric	KEYWORD2
 setDebounceMs	KEYWORD2
@@ -96,6 +98,10 @@ setDeviceName	KEYWORD2
 setSerialNumber	KEYWORD2
 setHardwareVersion	KEYWORD2
 setHardwareVersionString	KEYWORD2
+setSoftwareVersion	KEYWORD2
+setSoftwareVersionString	KEYWORD2
+getSoftwareVersion	KEYWORD2
+getSoftwareVersionString	KEYWORD2
 setSetupDiscriminator	KEYWORD2
 setSetupPasscode	KEYWORD2
 setBLECommissioningEnabled	KEYWORD2
@@ -155,8 +161,13 @@ onChangeMode	KEYWORD2
 onChangeSpeedPercent	KEYWORD2
 setTemperature	KEYWORD2
 getTemperature	KEYWORD2
+setRawTemperature	KEYWORD2
 setTemperatureSetpoint	KEYWORD2
 getTemperatureSetpoint	KEYWORD2
+setRawTemperatureSetpoint	KEYWORD2
+setRawMinTemperature	KEYWORD2
+setRawMaxTemperature	KEYWORD2
+setRawStep	KEYWORD2
 setMinTemperature	KEYWORD2
 getMinTemperature	KEYWORD2
 setMaxTemperature	KEYWORD2
@@ -169,6 +180,7 @@ setSupportedTemperatureLevels	KEYWORD2
 getSupportedTemperatureLevelsCount	KEYWORD2
 setHumidity	KEYWORD2
 getHumidity	KEYWORD2
+setRawHumidity	KEYWORD2
 setContact	KEYWORD2
 getContact	KEYWORD2
 setLeak	KEYWORD2
@@ -179,8 +191,10 @@ setRain	KEYWORD2
 getRain	KEYWORD2
 setPressure	KEYWORD2
 getPressure	KEYWORD2
+setRawPressure	KEYWORD2
 setOccupancy	KEYWORD2
 getOccupancy	KEYWORD2
+isOccupied	KEYWORD2
 getOccupancySensorType	KEYWORD2
 setHoldTime	KEYWORD2
 getHoldTime	KEYWORD2
@@ -252,12 +266,14 @@ onIdentify	KEYWORD2
 getIdentifyRequest	KEYWORD2
 endpointIdentifyCB	KEYWORD2
 setTagList	KEYWORD2
+enableTagList	KEYWORD2
 createTag	KEYWORD2
 createCustomTag	KEYWORD2
 createRowTag	KEYWORD2
 createColumnTag	KEYWORD2
 setIlluminance	KEYWORD2
 getIlluminance	KEYWORD2
+setRawIlluminance	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -271,6 +287,7 @@ MIN_COLOR_TEMPERATURE	LITERAL1
 ATTR_SET	LITERAL1
 ATTR_UPDATE	LITERAL1
 MAX_SPEED	LITERAL1
+MAX_TEMPERATURE_LEVEL_LABEL_LENGTH	LITERAL1
 MIN_SPEED	LITERAL1
 OFF_SPEED	LITERAL1
 FAN_MODE_OFF	LITERAL1
@@ -380,3 +397,9 @@ OKAY	LITERAL1
 CHANNEL_CHANGE	LITERAL1
 FINISH	LITERAL1
 STOP	LITERAL1
+setHardwareVersion	KEYWORD2
+setHardwareVersionString	KEYWORD2
+setSoftwareVersion	KEYWORD2
+setSoftwareVersionString	KEYWORD2
+getSoftwareVersion	KEYWORD2
+getSoftwareVersionString	KEYWORD2

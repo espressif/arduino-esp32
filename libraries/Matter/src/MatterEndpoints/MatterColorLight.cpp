@@ -17,7 +17,7 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterColorLight.h>
-#include <app/util/attribute-storage-null-handling.h>
+#include <lib/support/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;

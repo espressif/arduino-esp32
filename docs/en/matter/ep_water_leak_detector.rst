@@ -43,7 +43,7 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter water leak detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setLeak()`` after ``Matter.begin()`` with the real sensor reading.
+Initializes the Matter water leak detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setLeak()`` after the endpoint ``begin()``; a value set before ``Matter.begin()`` is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -74,7 +74,7 @@ Water Leak Detection State Control
 setLeak
 ^^^^^^^^
 
-Sets the water leak detection state. Call after ``Matter.begin()``.
+Sets the water leak detection state. Call after the endpoint ``begin()``. Before ``Matter.begin()`` the value is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -120,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the water leak detection state. Same as ``setLeak()``; call after ``Matter.begin()``.
+Sets the water leak detection state. Same as ``setLeak()``.
 
 .. code-block:: arduino
 
