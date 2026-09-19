@@ -1,9 +1,9 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -14,6 +14,7 @@
 
 #pragma once
 #include <sdkconfig.h>
+#include <MatterC5Network.h>
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Arduino.h>
@@ -37,6 +38,26 @@ struct MatterTag {
   const char *label = nullptr;  // optional, nullptr = no label
 };
 
+// Last Identify cluster event for an endpoint. Filled before onIdentify(bool) runs.
+// Call getIdentifyRequest() from that callback (or later) to read effect details.
+struct MatterIdentifyRequest {
+  // Matter Identify::TriggerEffect EffectIdentifierEnum
+  enum EffectId : uint8_t {
+    BLINK = 0x00,
+    BREATHE = 0x01,
+    OKAY = 0x02,
+    CHANNEL_CHANGE = 0x0B,
+    FINISH = 0xFE,
+    STOP = 0xFF
+  };
+
+  bool valid = false;              // false until this endpoint has received an Identify event
+  bool active = false;             // same value passed to onIdentify(bool)
+  uint8_t effectId = 0;            // EffectId; meaningful when fromTriggerEffect is true
+  uint8_t effectVariant = 0;       // usually Default (0)
+  bool fromTriggerEffect = false;  // false = Identify / IdentifyTime session
+};
+
 // Matter Endpoint Base Class. Controls the endpoint ID and allows the child class to overwrite attribute change call
 class MatterEndPoint {
 public:
@@ -50,12 +71,13 @@ public:
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   virtual bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) = 0;
 
-  // This function is called to create a secondary network interface endpoint.
-  // It can be used for devices that support multiple network interfaces,
-  // such as Ethernet, Thread and Wi-Fi.
+  // Deprecated. Arduino Matter exposes one Network Commissioning cluster on endpoint 0:
+  // Wi-Fi or Thread (ESP32-C6: Matter.selectNetwork()), not both. Does not create an endpoint.
+  [[deprecated("Use Matter.selectNetwork(MATTER_NETWORK_WIFI or MATTER_NETWORK_THREAD); Network Commissioning is on endpoint 0")]]
   bool createSecondaryNetworkInterface();
 
-  // This function is called to get the secondary network interface endpoint ID.
+  // Deprecated. Always 0; Network Commissioning is on endpoint 0.
+  [[deprecated("Network Commissioning is on endpoint 0; this always returns 0")]]
   uint16_t getSecondaryNetworkEndPointId();
 
   // This function is called to get the current Matter Accessory endpoint ID.
@@ -77,10 +99,14 @@ public:
   bool updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
 
   // This callback is invoked when clients interact with the Identify Cluster of an specific endpoint.
-  bool endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEnabled);
+  // Stores request, then calls onIdentify(request.active).
+  bool endpointIdentifyCB(uint16_t endpoint_id, const MatterIdentifyRequest &request);
 
   // User callback for the Identify Cluster functionality
   void onIdentify(EndPointIdentifyCB onEndPointIdentifyCB);
+
+  // Last Identify event for this endpoint (updated immediately before onIdentify()).
+  MatterIdentifyRequest getIdentifyRequest() const;
 
   // Maximum number of Descriptor TagList entries per endpoint.
   // Matches esp-matter ESP_MATTER_MAX_SEMANTIC_TAG_COUNT.
@@ -104,6 +130,7 @@ protected:
   // main endpoint ID
   uint16_t endpoint_id = 0;
   EndPointIdentifyCB _onEndPointIdentifyCB = nullptr;
+  MatterIdentifyRequest identifyRequest;
   bool tagListEnabled = false;
 
   // Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.

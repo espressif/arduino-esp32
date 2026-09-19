@@ -128,7 +128,7 @@ public:
               }
             }
           } else {
-            uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+            uint32_t maxSketchSpace = ESP.getFreeSketchSpace() & 0xFFFFF000;
             if (!Update.begin(maxSketchSpace, U_FLASH)) {  //start with max available size
               _setUpdaterError();
             }

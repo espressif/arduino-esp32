@@ -683,7 +683,7 @@ Defines test requirements and platform support:
 - `fqbn: {chip: [full FQBN, ...]}` - Replaces the default FQBN, one build per entry
 
 **FQBN options (`fqbn_append`):**
-Each menu key is kept only once, so a key set in `fqbn_append` replaces the default value for that key rather than being listed twice. This is how a test disables an option that is on by default, such as `PSRAM=disabled` on ESP32. Options are applied lowest priority first: the target default, then `fqbn_append`, then the per-device `fqbn_append` of a multi-device test, then the debug level passed with `-d`.
+Each menu key is kept only once, so a key set in `fqbn_append` replaces the default value for that key rather than being listed twice. This is how a test disables an option that is on by default, such as `PSRAM=disabled` on ESP32. Options are applied lowest priority first: the target default, then `fqbn_append`, then the per-device `fqbn_append` of a multi-device test, then the debug level passed with `-d`. On ESP32-P4, `CDCOnBoot` is then overwritten for the environment (Disabled in CI, Enabled locally), including for full `fqbn:` lists.
 
 Use the map form when the options differ per target. The `default` entry applies to every target and the entry matching the target is merged on top of it, so only the difference has to be spelled out. This is required for menus that do not exist on every target — ESP32-C3, ESP32-C6 and ESP32-H2 have no PSRAM menu, and `arduino-cli` rejects the whole build with `invalid option 'PSRAM'` if they are given `PSRAM=disabled`:
 
@@ -1565,6 +1565,29 @@ bash .github/scripts/check_official_variants.sh \
 - `count` - Count sketches for chunking
 - `check_requirements` - Validate sketch requirements
 - `install_libs` - Install library dependencies
+
+**Default FQBNs:**
+
+When no explicit FQBN is provided via `ci.yml`, the following per-SoC defaults are used:
+
+| SoC | Default FQBN |
+|-----|-------------|
+| ESP32 | `espressif:esp32:esp32:PSRAM=enabled` |
+| ESP32-S2 | `espressif:esp32:esp32s2:PSRAM=enabled` |
+| ESP32-S3 | `espressif:esp32:esp32s3:PSRAM=opi,USBMode=default` |
+| ESP32-C3 | `espressif:esp32:esp32c3` |
+| ESP32-C6 | `espressif:esp32:esp32c6` |
+| ESP32-H2 | `espressif:esp32:esp32h2` |
+| ESP32-P4 | `espressif:esp32:esp32p4:PSRAM=enabled,USBMode=hwcdc,ChipVariant=postv3` |
+| ESP32-C5 | `espressif:esp32:esp32c5:PSRAM=enabled` |
+
+> **Note:** `CDCOnBoot` on ESP32-P4 is **not** taken from `ci.yml`. After the FQBN is fully
+> resolved (defaults, `fqbn_append`, explicit `fqbn:`, or `-fqbn`), `apply_cdc_on_boot_opt`
+> overwrites it:
+> - `CI=true`: `CDCOnBoot=default` (Disabled) so `Serial` maps to UART0 for hardware runners
+> - Local: `CDCOnBoot=cdc` (Enabled) so `Serial` maps to `HWCDCSerial` (USB Serial/JTAG)
+>
+> Do not set `CDCOnBoot` in `ci.yml`; the environment overlay always wins.
 
 ### Test Scripts
 
