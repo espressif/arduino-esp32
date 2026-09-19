@@ -17,6 +17,8 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterHumiditySensor.h>
+#include <app/clusters/relative-humidity-measurement-server/RelativeHumidityMeasurementCluster.h>
+#include <app/data-model/Nullable.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -80,40 +82,47 @@ void MatterHumiditySensor::end() {
   started = false;
 }
 
+void MatterHumiditySensor::onStackStarted() {
+  RelativeHumidityMeasurementCluster *cluster =
+    static_cast<RelativeHumidityMeasurementCluster *>(findRegisteredCluster(RelativeHumidityMeasurement::Id));
+  if (cluster == nullptr) {
+    log_e("RelativeHumidityMeasurement cluster not found after Matter.begin().");
+    return;
+  }
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(rawHumidity)) != CHIP_NO_ERROR) {
+    log_e("Failed to apply cached Humidity Sensor value after Matter.begin().");
+  }
+}
+
 bool MatterHumiditySensor::setRawHumidity(uint16_t _rawHumidity) {
   if (!started) {
     log_e("Matter Humidity Sensor device has not begun.");
     return false;
   }
-  // is it a valid percentage value?
   if (_rawHumidity > 10000) {
     log_e("Humidity Sensor Percentage value out of range [0..100].");
     return false;
   }
 
-  // avoid processing if there was no change
-  if (rawHumidity == _rawHumidity) {
+  if (rawHumidity == _rawHumidity && findRegisteredCluster(RelativeHumidityMeasurement::Id) != nullptr) {
     return true;
   }
 
-  esp_matter_attr_val_t humidityVal = esp_matter_invalid(NULL);
+  RelativeHumidityMeasurementCluster *cluster =
+    static_cast<RelativeHumidityMeasurementCluster *>(findRegisteredCluster(RelativeHumidityMeasurement::Id));
+  if (cluster == nullptr) {
+    rawHumidity = _rawHumidity;
+    return true;
+  }
 
-  if (!getAttributeVal(RelativeHumidityMeasurement::Id, RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &humidityVal)) {
-    log_e("Failed to get Humidity Sensor Attribute.");
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(_rawHumidity)) != CHIP_NO_ERROR) {
+    log_e("Failed to update Humidity Sensor Attribute.");
     return false;
   }
-  if (humidityVal.val.u16 != _rawHumidity) {
-    humidityVal.val.u16 = _rawHumidity;
-    bool ret;
-    ret = updateAttributeVal(RelativeHumidityMeasurement::Id, RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &humidityVal);
-    if (!ret) {
-      log_e("Failed to update Humidity Sensor Attribute.");
-      return false;
-    }
-    rawHumidity = _rawHumidity;
-  }
+  rawHumidity = _rawHumidity;
   log_v("Humidity Sensor set to %.02f Percent", (float)_rawHumidity / 100.00);
-
   return true;
 }
 

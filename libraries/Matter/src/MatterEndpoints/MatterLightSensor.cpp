@@ -18,6 +18,8 @@
 #include <inttypes.h>
 #include <Matter.h>
 #include <MatterEndpoints/MatterLightSensor.h>
+#include <app/clusters/illuminance-measurement-server/IlluminanceMeasurementCluster.h>
+#include <app/data-model/Nullable.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -81,40 +83,47 @@ void MatterLightSensor::end() {
   started = false;
 }
 
+void MatterLightSensor::onStackStarted() {
+  IlluminanceMeasurementCluster *cluster =
+    static_cast<IlluminanceMeasurementCluster *>(findRegisteredCluster(IlluminanceMeasurement::Id));
+  if (cluster == nullptr) {
+    log_e("IlluminanceMeasurement cluster not found after Matter.begin().");
+    return;
+  }
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(rawIlluminance)) != CHIP_NO_ERROR) {
+    log_e("Failed to apply cached Light Sensor value after Matter.begin().");
+  }
+}
+
 bool MatterLightSensor::setRawIlluminance(uint16_t _rawIlluminance) {
   if (!started) {
     log_e("Matter Light Sensor device has not begun.");
     return false;
   }
-  // is it a valid illuminance value?
   if (_rawIlluminance > 65534) {
     log_e("Light illuminance value out of range [1..3576000].");
     return false;
   }
 
-  // avoid processing if there was no change
-  if (rawIlluminance == _rawIlluminance) {
+  if (rawIlluminance == _rawIlluminance && findRegisteredCluster(IlluminanceMeasurement::Id) != nullptr) {
     return true;
   }
 
-  esp_matter_attr_val_t illuminanceVal = esp_matter_invalid(NULL);
+  IlluminanceMeasurementCluster *cluster =
+    static_cast<IlluminanceMeasurementCluster *>(findRegisteredCluster(IlluminanceMeasurement::Id));
+  if (cluster == nullptr) {
+    rawIlluminance = _rawIlluminance;
+    return true;
+  }
 
-  if (!getAttributeVal(IlluminanceMeasurement::Id, IlluminanceMeasurement::Attributes::MeasuredValue::Id, &illuminanceVal)) {
-    log_e("Failed to get Light Sensor Attribute.");
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(_rawIlluminance)) != CHIP_NO_ERROR) {
+    log_e("Failed to update Light Sensor Attribute.");
     return false;
   }
-  if (illuminanceVal.val.u16 != _rawIlluminance) {
-    illuminanceVal.val.u16 = _rawIlluminance;
-    bool ret;
-    ret = updateAttributeVal(IlluminanceMeasurement::Id, IlluminanceMeasurement::Attributes::MeasuredValue::Id, &illuminanceVal);
-    if (!ret) {
-      log_e("Failed to update Light Sensor Attribute.");
-      return false;
-    }
-    rawIlluminance = _rawIlluminance;
-  }
+  rawIlluminance = _rawIlluminance;
   log_v("Light Sensor set to %.02f Lux", (float)pow(10, (rawIlluminance - 1) / 10000.0));
-
   return true;
 }
 

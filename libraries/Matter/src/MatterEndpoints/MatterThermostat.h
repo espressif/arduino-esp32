@@ -158,7 +158,7 @@ public:
 
   // User Callback for whenever any parameter is changed by the Matter Controller
   // Main parameters are Thermostat Mode, Local Temperature, Cooling Setpoint and Heating Setpoint
-  // Those can be obtained using getMode(), getTemperature(), getCoolingSetpoint() and getHeatingSetpoint()
+  // Those can be obtained using getMode(), getLocalTemperature(), getCoolingSetpoint() and getHeatingSetpoint()
   using EndPointCB = std::function<bool(void)>;
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;

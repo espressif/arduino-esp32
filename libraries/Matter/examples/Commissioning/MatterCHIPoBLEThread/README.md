@@ -54,6 +54,8 @@ Long-press BOOT (>5 s) to decommission the node (`Matter.decommission()`). This 
 Open the Serial Monitor at **115200**. On ESP32-C6 the `[ready]` line should show `net=thread`. The last line before CASE is up has every flag `Y`:
 
 ```
+BLE commissioning enabled: YES
+Thread Network Commissioning is on endpoint 0.
 Matter Node is not commissioned yet.
 Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332

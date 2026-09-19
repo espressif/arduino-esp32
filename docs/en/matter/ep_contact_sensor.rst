@@ -43,7 +43,7 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter contact sensor endpoint. Fabric ``StateValue`` starts ``false`` (open). Call ``setContact()`` after ``Matter.begin()`` with the real sensor reading.
+Initializes the Matter contact sensor endpoint. Fabric ``StateValue`` starts ``false`` (open). Call ``setContact()`` after the endpoint ``begin()``; a value set before ``Matter.begin()`` is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -74,7 +74,7 @@ Contact State Control
 setContact
 ^^^^^^^^^^
 
-Sets the contact state. Call after ``Matter.begin()``.
+Sets the contact state. Call after the endpoint ``begin()``. Before ``Matter.begin()`` the value is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -120,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the contact state. Same as ``setContact()``; call after ``Matter.begin()``.
+Sets the contact state. Same as ``setContact()``.
 
 .. code-block:: arduino
 

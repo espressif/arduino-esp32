@@ -43,7 +43,7 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter rain sensor endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setRain()`` after ``Matter.begin()`` with the real sensor reading.
+Initializes the Matter rain sensor endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setRain()`` after the endpoint ``begin()``; a value set before ``Matter.begin()`` is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -74,7 +74,7 @@ Rain Detection State Control
 setRain
 ^^^^^^^
 
-Sets the rain detection state. Call after ``Matter.begin()``.
+Sets the rain detection state. Call after the endpoint ``begin()``. Before ``Matter.begin()`` the value is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -120,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the rain detection state. Same as ``setRain()``; call after ``Matter.begin()``.
+Sets the rain detection state. Same as ``setRain()``.
 
 .. code-block:: arduino
 

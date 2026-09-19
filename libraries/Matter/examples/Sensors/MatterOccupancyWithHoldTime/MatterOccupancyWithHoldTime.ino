@@ -19,12 +19,10 @@
  * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
  *
  * The example will create a Matter Occupancy Sensor Device.
- * Simulated detection every 2 minutes; occupied only until HoldTime expires
- * (default 30 seconds, configurable via the Matter controller).
- *
- * The HoldTime attribute allows you to adjust how long the active status is retained
- * after the person leaves. The HoldTime can be changed by a Matter Controller, and the
- * onHoldTimeChange() callback is used to update the simulated sensor functionality.
+ * Simulated PIR pulse (1 s) every 2 minutes. CHIP HoldTime (default 30 s)
+ * keeps Occupancy occupied after the pulse; the hub then goes vacant.
+ * Do not implement HoldTime in the sketch — setOccupancy(false) starts CHIP's timer.
+ * Polling the same vacant reading again would restart that timer.
  *
  * The HoldTime value is persisted to Preferences (NVS) and restored on reboot, so the
  * last configured HoldTime value is maintained across device restarts.
@@ -47,7 +45,7 @@
 #include <Preferences.h>
 
 // HoldTime configuration constants
-const uint16_t HOLD_TIME_MIN = 0;       // Minimum HoldTime in seconds
+const uint16_t HOLD_TIME_MIN = 1;       // Minimum HoldTime in seconds (CHIP rejects 0)
 const uint16_t HOLD_TIME_MAX = 3600;    // Maximum HoldTime in seconds (1 hour)
 const uint16_t HOLD_TIME_DEFAULT = 30;  // Default HoldTime in seconds
 
@@ -63,54 +61,18 @@ const char *holdTimePrefKey = "HoldTime";
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 MatterButton button;
 
-// Simulated Occupancy Sensor with HoldTime support
-// When occupancy is detected, it holds the "occupied" state for HoldTime seconds
-// After HoldTime expires, it automatically switches to "unoccupied"
-//
-// Behavior for different HoldTime vs detectionInterval relationships:
-// - holdTime_ms < detectionInterval: State switches to unoccupied after HoldTime, then waits for next detection
-// - holdTime_ms == detectionInterval: If detections keep coming, timer resets (continuous occupancy)
-// - holdTime_ms > detectionInterval: If detections keep coming, timer resets (continuous occupancy)
-//   If detections stop, HoldTime expires after the last detection
+// Raw PIR pulse. CHIP HoldTime keeps the cluster occupied after this returns false.
 bool simulatedHWOccupancySensor() {
-  static bool occupancyState = false;
-  static uint32_t lastDetectionTime = 0;
-  static uint32_t lastDetectionEvent = millis();
-  const uint32_t detectionInterval = 120000;  // Simulate detection every 2 minutes
+  static uint32_t windowStart = millis();
+  const uint32_t detectionInterval = 120000;  // Pulse every 2 minutes
+  const uint32_t pulseMs = 1000;
+  const uint32_t now = millis();
 
-  // Get current HoldTime from the sensor (can be changed by Matter Controller)
-  uint32_t holdTime_ms = OccupancySensor.getHoldTime() * 1000;  // Convert seconds to milliseconds
-
-  // Check HoldTime expiration FIRST (before processing new detections)
-  // This ensures HoldTime can expire even if a detection occurs in the same iteration
-  if (occupancyState && (millis() - lastDetectionTime > holdTime_ms)) {
-    occupancyState = false;
-    // Reset detection interval counter so next detection can happen immediately
-    // This makes the simulation more responsive after the room becomes unoccupied
-    lastDetectionEvent = millis();
-    Serial.println("HoldTime expired. Switching to unoccupied state.");
+  if ((now - windowStart) >= detectionInterval) {
+    windowStart = now;
+    Serial.printf("Motion pulse. Cluster stays occupied for HoldTime=%u s\r\n", OccupancySensor.getHoldTime());
   }
-
-  // Simulate periodic occupancy detection (e.g., motion detected)
-  // Check this AFTER HoldTime expiration so new detections can immediately re-trigger occupancy
-  if (millis() - lastDetectionEvent > detectionInterval) {
-    // New detection event occurred
-    lastDetectionEvent = millis();
-
-    if (!occupancyState) {
-      // Transition from unoccupied to occupied - start hold timer
-      occupancyState = true;
-      lastDetectionTime = millis();
-      Serial.printf("Occupancy detected! Holding state for %u seconds (HoldTime)\n", OccupancySensor.getHoldTime());
-    } else {
-      // Already occupied - new detection extends the hold period by resetting the timer
-      // This simulates continuous occupancy (person still present)
-      lastDetectionTime = millis();
-      Serial.printf("Occupancy still detected. Resetting hold timer to %u seconds (HoldTime)\n", OccupancySensor.getHoldTime());
-    }
-  }
-
-  return occupancyState;
+  return (now - windowStart) < pulseMs;
 }
 
 void setup() {
@@ -142,31 +104,30 @@ void setup() {
     Serial.printf("HoldTime changed to %u seconds by Matter Controller\n", holdTime_seconds);
     // Store the new HoldTime value to Preferences for persistence across reboots
     matterPref.putUShort(holdTimePrefKey, holdTime_seconds);
-    // The callback can return false to reject the change, or true to accept it
-    // In this case, we always accept the change and update the simulator
+    // Return false to reject the controller write. CHIP already owns HoldTime.
     return true;
   });
 
   // set initial occupancy sensor state as false and connected to a PIR sensor type (default)
   OccupancySensor.begin();
 
-  // Matter beginning - Last step, after all EndPoints are initialized
-  Matter.begin();
-
-  // Set HoldTimeLimits after Matter.begin() (optional, but recommended for validation)
+  // HoldTime must be enabled before Matter.begin() so the OccupancySensing cluster
+  // is created with the hold-time feature. Later controller writes still work.
   if (!OccupancySensor.setHoldTimeLimits(HOLD_TIME_MIN, HOLD_TIME_MAX, HOLD_TIME_DEFAULT)) {
     Serial.println("Warning: Failed to set HoldTimeLimits");
   } else {
     Serial.printf("HoldTimeLimits set: Min=%u, Max=%u, Default=%u seconds\n", HOLD_TIME_MIN, HOLD_TIME_MAX, HOLD_TIME_DEFAULT);
   }
 
-  // Set initial HoldTime (use stored value if valid, otherwise use default)
-  // This must be done after Matter.begin() because setHoldTime() requires the Matter event loop
   if (!OccupancySensor.setHoldTime(storedHoldTime)) {
     Serial.printf("Warning: Failed to set HoldTime to %u seconds\n", storedHoldTime);
   } else {
     Serial.printf("HoldTime set to: %u seconds\n", storedHoldTime);
   }
+
+  // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Occupancy Sensor");
+  Matter.begin();
 
   Serial.printf("Initial HoldTime: %u seconds\n", OccupancySensor.getHoldTime());
   matterWaitUntilReady();
@@ -183,8 +144,14 @@ void loop() {
     }
   }
 
-  // Check Simulated Occupancy Sensor and set Matter Attribute
   OccupancySensor.setOccupancy(simulatedHWOccupancySensor());
+
+  static bool lastHubOccupied = OccupancySensor.isOccupied();
+  const bool hubOccupied = OccupancySensor.isOccupied();
+  if (hubOccupied != lastHubOccupied) {
+    Serial.printf("Hub occupancy: %s\r\n", hubOccupied ? "occupied" : "vacant");
+    lastHubOccupied = hubOccupied;
+  }
 
   delay(50);
 }

@@ -19,7 +19,7 @@ This library is built on ESP-Matter, which uses an Ember-based attribute store. 
 
 Most endpoint setters and getters **must** follow one of the two Ember store patterns below. Exceptions:
 
-- Boolean State sensors: `StateValue` is internally managed in ESP-Matter 1.5+ and cannot be written with `updateAttributeVal()`.
+- Boolean State sensors: `StateValue` lives on the code-driven cluster. `updateAttributeVal()` only writes the shadow table; use `setBooleanStateValue()` / `SetStateValue()` after `Matter.begin()`.
 - Color lights: `setColorHSV()` / `setColorRGB()` write several Color Control attributes plus CurrentLevel using `attribute::report()` so a local set fires a single `onChangeColorHSV` callback instead of one per attribute.
 
 ### Setter Pattern
@@ -74,7 +74,7 @@ This is consistent across all endpoints. Since setters only update internal stat
 
 ### Boolean State Sensors (ESP-Matter 1.5+)
 
-`MatterContactSensor`, `MatterWaterLeakDetector`, `MatterWaterFreezeDetector`, and `MatterRainSensor` use the code-driven Boolean State cluster. `attribute::update()` returns `ESP_ERR_NOT_SUPPORTED` (262) for `StateValue`. Those setters call `MatterEndPoint::setBooleanStateValue()`, which looks up the live cluster and uses `BooleanStateCluster::SetStateValue()`.
+`MatterContactSensor`, `MatterWaterLeakDetector`, `MatterWaterFreezeDetector`, and `MatterRainSensor` use the code-driven Boolean State cluster. `attribute::update()` on `StateValue` only writes the shadow table; the hub still reads the cluster (which starts `false`). Those setters call `MatterEndPoint::setBooleanStateValue()`, which looks up the live cluster and uses `BooleanStateCluster::SetStateValue()`.
 
 ```cpp
 bool MatterWaterLeakDetector::setLeak(bool _leakState) {
@@ -92,7 +92,7 @@ bool MatterWaterLeakDetector::setLeak(bool _leakState) {
 
 Key rules:
 - **`begin()` takes no initial state.** Value-initialize the config and set `config.boolean_state.state_value = false` so Ember `create()` gets a deterministic default. CHIP's live `BooleanStateCluster` ignores that field and always starts at `false`. A real sensor that is not false must be applied with the setter after `Matter.begin()`.
-- **Call the setter after `Matter.begin()`.** The cluster instance is not available before the stack starts. Sketches should `begin()` the endpoint, then `Matter.begin()`, then `setLeak()` / `setFreeze()` / `setRain()` / `setContact()` with the real sensor reading.
+- **Call the setter after the endpoint `begin()`.** Before `Matter.begin()` the value is cached and pushed when the cluster is created. After start it writes the live cluster. Typical sketches still do `begin()`, `Matter.begin()`, then the setter.
 - Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
 
 ### Controller-Originated Changes (attributeChangeCB)
@@ -179,15 +179,24 @@ All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.
 
 ## Node identity and commissioning
 
-Call these on the `Matter` singleton **before** `Matter.begin()`. After `begin()` they log a warning and do nothing. String setters **copy** into internal storage (stack or `String` temporaries are safe). `setDeviceName()` writes Basic Information NodeLabel (not a per-light name). Do not change Vendor ID / Product ID unless the DAC matches. SoftwareVersion is compile-time CHIP config.
+Call these on the `Matter` singleton **before** `Matter.begin()`. After `begin()` they log a warning and do nothing. String setters **copy** into internal storage (stack or `String` temporaries are safe). `setDeviceName()` writes Basic Information NodeLabel (not a per-light name). Do not change Vendor ID / Product ID unless the DAC matches. `SoftwareVersion` / `SoftwareVersionString` are Basic Information from ConfigurationManager (Alexa “version”), not `HardwareVersion`. They are stored in RAM for this boot; CHIP does not persist them on ESP32.
+
+Vendor, product, serial, and hardware strings go through Arduino's instance-info wrapper when `CONFIG_CUSTOM_DEVICE_INSTANCE_INFO_PROVIDER` is set. `CONFIG_EXAMPLE_DEVICE_INSTANCE_INFO_PROVIDER` leaves CHIP's generic provider and does not publish those Arduino names. Factory or secure-cert instance-info providers take priority over the wrapper. Factory NVS still owns per-unit PIN and DAC.
+
+FixedLabel and UserLabel (Generic Switch) need CHIP's `DeviceInfoProvider`. If the build uses `CONFIG_NONE_DEVICE_INFO_PROVIDER`, `Matter.begin()` registers Arduino's RAM provider before the stack starts. CHIP's `ESP32DeviceInfoProvider` is not linked unless factory data is enabled. Factory or custom device-info providers still replace it.
+
+Most examples call `matterSetExampleIdentity("Color Light")` (or the matching endpoint name) for vendor `Espressif` and product `<SoC> <endpoint>`, for example `ESP32-C6 Color Light`. ProductName is capped at 32 characters. `MatterMinimum` skips this and keeps CHIP defaults. Override with the setters below, as in Matter Device Identity.
 
 ```cpp
+matterSetExampleIdentity("Color Light");      // vendor Espressif, product "<SoC> Color Light"
 Matter.setVendorName("Espressif");            // max 32
 Matter.setProductName("KitchenLight");        // max 32
 Matter.setDeviceName("KitchenHub");           // NodeLabel, max 32
 Matter.setSerialNumber("KH-000123");          // max 32
 Matter.setHardwareVersion(7);
 Matter.setHardwareVersionString("RevA");      // max 64
+Matter.setSoftwareVersion(7);                 // Basic Information SoftwareVersion (uint32)
+Matter.setSoftwareVersionString("1.0.7");     // max 64; default is the IDF app version
 Matter.setSetupDiscriminator(0xF01);          // 0–0xFFF
 Matter.setSetupPasscode(20202024);            // valid Matter PIN
 // Prefer selectNetwork(MATTER_NETWORK_WIFI or MATTER_NETWORK_THREAD, true) to pick a transport and turn CHIPoBLE off.
@@ -200,9 +209,11 @@ Serial.println(Matter.getManualPairingCode());     // live code after begin()
 Serial.println(Matter.getOnboardingQRCodeUrl());   // live QR URL after begin()
 ```
 
-If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Arduino Matter uses the CHIP test pair **PIN `20202021`**, discriminator **`0xF00`**, manual code **`34970112332`** (same as On/Off Light and the other examples). Before `begin()` the pairing getters log a warning and return empty.
+If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Arduino Matter uses the CHIP test pair **PIN `20202021`**, discriminator **`0xF00`**, manual code **`34970112332`** (same as On/Off Light and the other examples). Before `begin()`, or if `begin()` failed (`isStackStarted()` is false), the pairing getters log a warning and return empty.
 
 On Wi-Fi station builds, `Matter.begin()` initializes the Wi-Fi driver with reduced RX/TX buffers before starting CHIP unless Thread or Ethernet was selected. Matter traffic is small, so the library uses 4 static RX, 8 dynamic RX, 8 dynamic TX, and an AMPDU RX BA window of 6 instead of the sdkconfig defaults. `esp_wifi_init()` keeps the first caller's counts, so CHIP inherits them. If the sketch already called `matterConnectWiFi()` / `WiFi.begin()` / `WiFi.mode()`, those limits are not applied.
+
+Dual-stack images (C5/C6) still run CHIP's `InitWiFiStack()` inside `esp_matter::start()` — `InitChipStack()` needs the Wi-Fi controller even when Thread is selected. Arduino does not call `InitWiFiStack()` itself (that must happen after the default event loop exists). After `Matter.begin()`, Thread and Ethernet disable the Wi-Fi station so a leftover SSID does not join.
 
 Commissioning examples turn CHIPoBLE off with `selectNetwork(MATTER_NETWORK_WIFI, true)` / `selectNetwork(MATTER_NETWORK_THREAD, true)` (or one-arg `selectNetwork(MATTER_NETWORK_ETHERNET)`). Do not also call `setBLECommissioningEnabled()`. That setter is only when you keep the default network and just want BLE off. Pairing codes are then on-network only. See [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi). With CHIPoBLE left on, BLE RAM is released after a successful commission by default (`setBLEMemoryReleaseEnabled(true)`); see [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease). Call `setBLEMemoryReleaseEnabled(false)` before `begin()` to keep the BLE host after CHIPoBLE commissioning. That option has no effect when `CONFIG_ENABLE_CHIPOBLE` is off.
 
@@ -267,6 +278,7 @@ Ethernet is on-network only: `selectNetwork(MATTER_NETWORK_ETHERNET)` turns CHIP
 | `getActiveNetwork()` | First netif with IPv6 (prefers the selection). Not `isWiFiConnected()` / `isThreadConnected()`. |
 | `getNetworkEndPointId(net)` | Expected root commissioning endpoint (0 Wi-Fi; 0 Thread when Thread is on the root; `0xFFFF` if none). C6 is Wi-Fi or Thread, not both. |
 | `Matter.waitForNetwork(ms)` | Blocks until that IPv6 is there. `MATTER_NETWORK_NONE` waits for any. Does not bring up hardware. `0` = one check. |
+| `isStackStarted()` | `true` only after a successful `Matter.begin()` |
 | `isDeviceCommissioned()` | A Matter fabric exists |
 | `isDeviceConnected()` | CHIP Wi-Fi or Thread connected, **or** Ethernet IPv6 |
 | `isOnline()` | A controller has an active CASE session (until CHIP idle-evicts it) |
@@ -288,8 +300,9 @@ These are **not** members of `Matter`. `#include <Matter.h>` pulls in `MatterHel
 | Helper | Effect |
 |--------|--------|
 | `matterConnectWiFi(ssid, password)` | `CONFIG_ENABLE_CHIPOBLE=n` only. `setup()` before `Matter.begin()`. Official examples pass `WIFI_SSID` / `WIFI_PASSWORD`. Enables STA IPv6, waits for IPv4. Not on CHIPoBLE or H2 |
-| `matterWaitUntilReady()` | `setup()` after `Matter.begin()`: pairing codes if needed; one-line status every 10 s and once more when CASE is up; wait up to 5 min (`timeoutMs` 0 = forever). Reboots if still no fabric. If commissioned but CASE never arrives, continues |
-| `matterRestartIfNoFabric()` | `loop()`: reboot if the hub removed the fabric. `Matter.decommission()` already factory-resets |
+| `matterSetExampleIdentity(endpointName)` | `setup()` before `Matter.begin()`. Vendor `Espressif`, product `<SoC> <endpointName>` (for example `ESP32-C6 Color Light`). ProductName max 32 characters |
+| `matterWaitUntilReady()` | `setup()` after `Matter.begin()`: if `begin()` failed, prints that and halts. Otherwise pairing codes if needed; one-line status every 10 s and once more when CASE is up; wait up to 5 min (`timeoutMs` 0 = forever). Reboots if still no fabric. If commissioned but CASE never arrives, continues |
+| `matterRestartIfNoFabric()` | `loop()`: no-op if the stack never started; reboot if the hub removed the fabric. `Matter.decommission()` already factory-resets |
 | `MatterButton` | Board button (`MatterButton.h`). Timer samples the pin; `loop()` drains `poll()` (`PRESS` / `CLICK` / `DOUBLE_CLICK` / `LONG_HOLD`). Default: 50 ms debounce, 5 s long-hold, double-click off. Not a Generic Switch cluster |
 
 ```cpp

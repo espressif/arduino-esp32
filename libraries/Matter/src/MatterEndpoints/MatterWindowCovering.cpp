@@ -77,6 +77,7 @@ bool MatterWindowCovering::begin(
   if (supportsLift) {
     currentLiftPercent = liftPercent;
     currentLiftPercent100ths = liftPercent * 100;
+    targetLiftPercent100ths = currentLiftPercent100ths;
     if (liftCalibration != nullptr) {
       installedOpenLimitLift = liftCalibration->open;
       installedClosedLimitLift = liftCalibration->closed;
@@ -88,6 +89,7 @@ bool MatterWindowCovering::begin(
   if (supportsTilt) {
     currentTiltPercent = tiltPercent;
     currentTiltPercent100ths = tiltPercent * 100;
+    targetTiltPercent100ths = currentTiltPercent100ths;
     if (tiltCalibration != nullptr) {
       installedOpenLimitTilt = tiltCalibration->open;
       installedClosedLimitTilt = tiltCalibration->closed;
@@ -227,7 +229,9 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
       case WindowCovering::Attributes::TargetPositionLiftPercent100ths::Id:
       {
         if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val->val.u16)) {
-          uint16_t targetLiftPercent100ths = val->val.u16;
+          // PRE_UPDATE: the cluster still holds the previous Target. Cache `val`
+          // so getTargetLiftPercent100ths() in the sketch is the new request.
+          targetLiftPercent100ths = val->val.u16;
           uint8_t targetLiftPercent = (uint8_t)(targetLiftPercent100ths / 100);
           log_d("Window Covering Target Lift Percentage changed to %u%%", targetLiftPercent);
           // Call callback to trigger movement - do NOT update currentLiftPercent here
@@ -285,7 +289,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
       case WindowCovering::Attributes::TargetPositionTiltPercent100ths::Id:
       {
         if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val->val.u16)) {
-          uint16_t targetTiltPercent100ths = val->val.u16;
+          targetTiltPercent100ths = val->val.u16;
           uint8_t targetTiltPercent = (uint8_t)(targetTiltPercent100ths / 100);
           log_d("Window Covering Target Tilt Percentage changed to %u%%", targetTiltPercent);
           // Call callback to trigger movement - do NOT update currentTiltPercent here
@@ -484,6 +488,7 @@ bool MatterWindowCovering::setTargetLiftPercent100ths(uint16_t liftPercent100ths
 
   if (val.val.u16 != liftPercent100ths) {
     val.val.u16 = liftPercent100ths;
+    targetLiftPercent100ths = liftPercent100ths;
     return updateAttributeVal(WindowCovering::Id, WindowCovering::Attributes::TargetPositionLiftPercent100ths::Id, &val);
   }
   return true;
@@ -493,13 +498,9 @@ uint16_t MatterWindowCovering::getTargetLiftPercent100ths() {
   if (!liftFeatureEnabled) {
     return 0;
   }
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::TargetPositionLiftPercent100ths::Id, &val)) {
-    if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val.val.u16)) {
-      return val.val.u16;
-    }
-  }
-  return 0;
+  // Cached from the last Target write (`val` in PRE_UPDATE). Reading the
+  // cluster here would return the previous Target while the callback runs.
+  return targetLiftPercent100ths;
 }
 
 bool MatterWindowCovering::setTiltPosition(uint16_t tiltPosition) {
@@ -656,6 +657,7 @@ bool MatterWindowCovering::setTargetTiltPercent100ths(uint16_t tiltPercent100ths
 
   if (val.val.u16 != tiltPercent100ths) {
     val.val.u16 = tiltPercent100ths;
+    targetTiltPercent100ths = tiltPercent100ths;
     return updateAttributeVal(WindowCovering::Id, WindowCovering::Attributes::TargetPositionTiltPercent100ths::Id, &val);
   }
   return true;
@@ -665,13 +667,7 @@ uint16_t MatterWindowCovering::getTargetTiltPercent100ths() {
   if (!tiltFeatureEnabled) {
     return 0;
   }
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::TargetPositionTiltPercent100ths::Id, &val)) {
-    if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val.val.u16)) {
-      return val.val.u16;
-    }
-  }
-  return 0;
+  return targetTiltPercent100ths;
 }
 
 bool MatterWindowCovering::setInstalledOpenLimitLift(uint16_t openLimit) {

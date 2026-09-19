@@ -18,7 +18,9 @@
 #include <MatterEndPoint.h>
 #include <MatterTags.h>
 #include <string.h>
-#include <app/clusters/boolean-state-server/boolean-state-cluster.h>
+#include <app/ConcreteClusterPath.h>
+#include <app/clusters/boolean-state-server/BooleanStateCluster.h>
+#include <app/server-cluster/ServerClusterInterface.h>
 #include <data_model_provider/esp_matter_data_model_provider.h>
 
 using namespace chip::app::Clusters;
@@ -58,7 +60,7 @@ esp_matter::attribute_t *MatterEndPoint::getAttribute(uint32_t cluster_id, uint3
   }
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   if (endpoint == nullptr) {
-    log_e("Endpoint [%]u not found", endpoint_id);
+    log_e("Endpoint [%u] not found", endpoint_id);
     return nullptr;
   }
   cluster_t *cluster = cluster::get(endpoint, cluster_id);
@@ -112,17 +114,37 @@ bool MatterEndPoint::updateAttributeVal(uint32_t cluster_id, uint32_t attribute_
   return false;
 }
 
-static BooleanStateCluster *getBooleanStateCluster(uint16_t endpoint_id) {
-  chip::app::ServerClusterInterface *iface =
-    esp_matter::data_model::provider::get_instance().registry().Get(chip::app::ConcreteClusterPath(endpoint_id, BooleanState::Id));
-  return static_cast<BooleanStateCluster *>(iface);
+chip::app::ServerClusterInterface *MatterEndPoint::findRegisteredCluster(uint32_t cluster_id) {
+  if (endpoint_id == 0) {
+    return nullptr;
+  }
+  return esp_matter::data_model::provider::get_instance().registry().Get(chip::app::ConcreteClusterPath(endpoint_id, cluster_id));
+}
+
+void MatterEndPoint::notifyStackStarted() {
+  if (hasPendingBooleanState) {
+    BooleanStateCluster *cluster = static_cast<BooleanStateCluster *>(findRegisteredCluster(BooleanState::Id));
+    if (cluster != nullptr) {
+      lock::ScopedChipStackLock lock(portMAX_DELAY);
+      cluster->SetStateValue(pendingBooleanState);
+    } else {
+      log_e("BooleanState cluster not found on endpoint %u after Matter.begin().", endpoint_id);
+    }
+    hasPendingBooleanState = false;
+  }
+  onStackStarted();
 }
 
 bool MatterEndPoint::setBooleanStateValue(bool value) {
-  BooleanStateCluster *cluster = getBooleanStateCluster(endpoint_id);
+  BooleanStateCluster *cluster = static_cast<BooleanStateCluster *>(findRegisteredCluster(BooleanState::Id));
   if (cluster == nullptr) {
-    log_e("BooleanState cluster not found on endpoint %u. Call Matter.begin() first.", endpoint_id);
-    return false;
+    if (endpoint_id == 0) {
+      log_e("BooleanState cluster not found. Call the endpoint begin() first.");
+      return false;
+    }
+    pendingBooleanState = value;
+    hasPendingBooleanState = true;
+    return true;
   }
   lock::ScopedChipStackLock lock(portMAX_DELAY);
   cluster->SetStateValue(value);

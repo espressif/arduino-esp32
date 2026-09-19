@@ -28,7 +28,7 @@ public:
   // this will just stop processing Rain Sensor Matter events
   void end();
 
-  // set the rain state. Call after Matter.begin() with the real sensor reading.
+  // set the rain state after endpoint begin(). Cached until Matter.begin() if the cluster is not live yet.
   bool setRain(bool _rainState);
   // returns the rain state
   bool getRain() {

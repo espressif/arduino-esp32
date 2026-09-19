@@ -17,7 +17,9 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterFan.h>
-#include <app/util/attribute-storage-null-handling.h>
+#include <app/clusters/fan-control-server/FanControlCluster.h>
+#include <app/data-model/Nullable.h>
+#include <lib/support/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -203,10 +205,33 @@ void MatterFan::end() {
   started = false;
 }
 
-// Controllers write PercentSetting / FanMode and subscribe to PercentCurrent
-// (and the other of those two). attribute::update() marks the attribute dirty
-// so the subscription confirms the command. set_val() does not.
+void MatterFan::onStackStarted() {
+  FanControlCluster *cluster = static_cast<FanControlCluster *>(findRegisteredCluster(FanControl::Id));
+  if (cluster == nullptr) {
+    log_e("FanControl cluster not found after Matter.begin().");
+    return;
+  }
+
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (cluster->SetFanMode(static_cast<FanControl::FanModeEnum>(currentFanMode)) != chip::Protocols::InteractionModel::Status::Success) {
+    log_e("Failed to apply cached FanMode after Matter.begin().");
+    return;
+  }
+  if (currentFanMode != FAN_MODE_AUTO && currentFanMode != FAN_MODE_OFF) {
+    if (cluster->SetPercentSetting(chip::app::DataModel::MakeNullable<chip::Percent>(currentPercent)) !=
+        chip::Protocols::InteractionModel::Status::Success) {
+      log_e("Failed to apply cached Fan PercentSetting after Matter.begin().");
+    }
+  }
+  cluster->SetPercentCurrent(currentPercent);
+}
+
 bool MatterFan::reportPercentCurrent(uint8_t percent) {
+  FanControlCluster *cluster = static_cast<FanControlCluster *>(findRegisteredCluster(FanControl::Id));
+  if (cluster != nullptr) {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    return cluster->SetPercentCurrent(percent);
+  }
   esp_matter_attr_val_t currentVal = esp_matter_uint8(percent);
   return updateAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, &currentVal);
 }
@@ -227,6 +252,21 @@ bool MatterFan::setMode(FanMode_t newMode, bool performUpdate) {
   if (!(validFanModes & (1 << newMode))) {
     log_e("Invalid Fan Mode %s for the current Fan Mode Sequence.", getFanModeString(newMode));
     return false;
+  }
+
+  FanControlCluster *cluster = static_cast<FanControlCluster *>(findRegisteredCluster(FanControl::Id));
+  if (cluster != nullptr) {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    if (cluster->SetFanMode(static_cast<FanControl::FanModeEnum>(newMode)) != chip::Protocols::InteractionModel::Status::Success) {
+      log_e("Failed to set Fan Mode Attribute.");
+      return false;
+    }
+    currentFanMode = newMode;
+    if (currentFanMode == FAN_MODE_OFF) {
+      currentPercent = 0;
+    }
+    log_v("Fan Mode %s to %s ==> onOffState[%s]", performUpdate ? "updated" : "set", getFanModeString(currentFanMode), getOnOff() ? "ON" : "OFF");
+    return true;
   }
 
   esp_matter_attr_val_t modeVal = esp_matter_invalid(NULL);
@@ -301,6 +341,29 @@ bool MatterFan::setSpeedPercent(uint8_t newPercent, bool performUpdate) {
     return true;
   }
 
+  FanControlCluster *cluster = static_cast<FanControlCluster *>(findRegisteredCluster(FanControl::Id));
+  if (cluster != nullptr) {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    // Keep PercentSetting null in Auto (SetFanMode(Auto) already nulled it).
+    // CHIP accepts a non-null SetPercentSetting in Auto; skip it so the setting stays null.
+    if (currentFanMode != FAN_MODE_AUTO) {
+      if (cluster->SetPercentSetting(chip::app::DataModel::MakeNullable<chip::Percent>(newPercent)) !=
+          chip::Protocols::InteractionModel::Status::Success) {
+        log_e("Failed to set Fan PercentSetting Attribute.");
+        return false;
+      }
+    }
+    if (!cluster->SetPercentCurrent(newPercent)) {
+      log_e("Failed to update Fan PercentCurrent Attribute.");
+      return false;
+    }
+    currentPercent = newPercent;
+    // SetPercentSetting(0) turns FanMode Off; a non-zero setting turns it on to Low/Med/High.
+    currentFanMode = static_cast<FanMode_t>(cluster->GetFanMode());
+    log_v("Fan Speed %s to %u ==> onOffState[%s]", performUpdate ? "updated" : "set", currentPercent, getOnOff() ? "ON" : "OFF");
+    return true;
+  }
+
   esp_matter_attr_val_t settingVal = esp_matter_nullable_uint8(newPercent);
   bool ret;
   if (performUpdate) {
@@ -313,8 +376,6 @@ bool MatterFan::setSpeedPercent(uint8_t newPercent, bool performUpdate) {
     return false;
   }
 
-  // PercentCurrent is what the hub subscribes to as the actual speed. Always
-  // report it — set_val() alone leaves the APP UI on the previous value.
   currentPercent = newPercent;
   if (!reportPercentCurrent(newPercent)) {
     log_e("Failed to update Fan PercentCurrent Attribute.");

@@ -70,7 +70,7 @@ Initializes the Matter temperature controlled cabinet endpoint with **temperatur
 
 This function will return ``true`` if successful, ``false`` if ``min >= max``, the setpoint is outside ``[min, max]``, or creation fails.
 
-**Note:** The implementation stores temperature with 1/100th degree Celsius precision internally. The temperature_step feature is always enabled for temperature_number mode, allowing ``setStep()`` to be called later even if step is not provided in ``begin()``.
+**Note:** The implementation stores temperature with 1/100th degree Celsius precision internally. The temperature_step feature is always enabled for temperature_number mode. CHIP keeps min, max, and step as construction-time constants, so pass the final values to ``begin()``. ``setMinTemperature()`` / ``setMaxTemperature()`` / ``setStep()`` can still change the Ember table before ``Matter.begin()``; after start they fail.
 
 begin (overloaded)
 ^^^^^^^^^^^^^^^^^^
@@ -167,7 +167,7 @@ Sets the minimum allowed temperature.
 
 * ``temperature`` - Minimum temperature in Celsius. Must stay below ``max`` and must not move past the current setpoint.
 
-This function will return ``true`` if successful, ``false`` otherwise. Will return ``false`` and log an error if called when using temperature_level mode.
+This function will return ``true`` if successful, ``false`` otherwise. It fails after ``Matter.begin()`` (CHIP min is fixed at cluster create) and if called in temperature_level mode.
 
 getMinTemperature
 ^^^^^^^^^^^^^^^^^
@@ -193,7 +193,7 @@ Sets the maximum allowed temperature.
 
 * ``temperature`` - Maximum temperature in Celsius. Must stay above ``min`` and must not move past the current setpoint.
 
-This function will return ``true`` if successful, ``false`` otherwise. Will return ``false`` and log an error if called when using temperature_level mode.
+This function will return ``true`` if successful, ``false`` otherwise. It fails after ``Matter.begin()`` (CHIP max is fixed at cluster create) and if called in temperature_level mode.
 
 getMaxTemperature
 ^^^^^^^^^^^^^^^^^
@@ -224,7 +224,7 @@ Sets the temperature step value.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** The temperature_step feature is always enabled when using temperature_number mode, so this method can be called at any time to set or change the step value, even if step was not provided in ``begin()``. This method will return ``false`` and log an error if called when using temperature_level mode.
+**Note:** The temperature_step feature is always enabled in temperature_number mode. Call this before ``Matter.begin()``. After start, CHIP step is const and the call fails. It also fails in temperature_level mode.
 
 getStep
 ^^^^^^^

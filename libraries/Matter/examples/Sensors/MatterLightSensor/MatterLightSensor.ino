@@ -67,6 +67,7 @@ void setup() {
   SimulatedLightSensor.begin(2150.0);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Light Sensor");
   Matter.begin();
   matterWaitUntilReady();
 }
