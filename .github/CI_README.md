@@ -1225,6 +1225,7 @@ The file lists popular Arduino libraries with their names, which examples to tes
 | `upload-candidate-json` | no | yes (one gh-pages commit to `release-staging/`) |
 | `test-post-release` | no | yes (install from `release-staging/`) |
 | `promote-release` | no | yes (staging → root, hosted bins; one gh-pages commit) |
+| `upload-idf-component` | no | yes (`workflow_call` after promote; checkout the version tag, verify tagged SHA) |
 | `rollback-release` | no | only if post-release tests fail |
 | `notify-discord` | no | yes (after promote) |
 
@@ -1238,7 +1239,8 @@ The file lists popular Arduino libraries with their names, which examples to tes
 6. **`upload-candidate-json`** — regenerate final JSONs, `github-release.sh candidate` → one gh-pages commit to `release-staging/`
 7. **`test-post-release`** — matrix: install-only from `release-staging/` gh-pages URLs
 8. **`promote-release`** — `github-release.sh promote`: one gh-pages commit (root JSONs, remove `release-staging/`, new hosted bins)
-9. **`notify-discord`** — post GitHub-style release card to Discord (`DISCORD_WEBHOOK_URL` secret, `/github` suffix)
+9. **`upload-idf-component`** — `workflow_call` of `upload-idf-component.yml` after promote succeeds (tag is stable; checkout the version tag and verify it matches the tagged SHA). Manual `workflow_dispatch` can pass only `tag`.
+10. **`notify-discord`** — post GitHub-style release card to Discord (`DISCORD_WEBHOOK_URL` secret, `/github` suffix)
 
 On pre-release test failure, `cleanup-draft-release` deletes the draft release (no tag created). On post-release test failure, `rollback-release` deletes `release-staging/`, the published release, and the git tag.
 
