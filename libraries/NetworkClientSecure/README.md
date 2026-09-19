@@ -109,9 +109,7 @@ static const int cipher_list[] = {MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 wiFiClient.setCiphers(cipher_list);
 ```
 
-Call `setCiphers(nullptr)` to restore mbedTLS's default ciphersuite list. An overload
-`setCiphers(cipher_list, count)` is also provided for source compatibility with BearSSL-based cores
-(e.g. ESP8266); `count` is ignored and the array must still be 0-terminated.
+Call `setCiphers(nullptr)` to restore mbedTLS's default ciphersuite list.
 
 Note that ciphersuite IDs not enabled in the mbedTLS build are silently dropped and will only surface later as a handshake failure,
 and that a restrictive list combined with `setPreSharedKey()` can filter out every PSK-capable
