@@ -122,13 +122,13 @@ bool MatterSoilSensor::begin() {
     return false;
   }
 
-  cluster::descriptor::config_t descriptor_config;
+  cluster::descriptor::config_t descriptor_config = {};
   if (cluster::descriptor::create(endpoint, &descriptor_config, CLUSTER_FLAG_SERVER) == nullptr) {
     log_e("Failed to create Descriptor cluster");
     return false;
   }
 
-  cluster::identify::config_t identify_config;
+  cluster::identify::config_t identify_config = {};
   identify_config.identify_type = chip::to_underlying(Identify::IdentifyTypeEnum::kVisibleIndicator);
   if (cluster::identify::create(endpoint, &identify_config, CLUSTER_FLAG_SERVER) == nullptr) {
     log_e("Failed to create Identify cluster");
