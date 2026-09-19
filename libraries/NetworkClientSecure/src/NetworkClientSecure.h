@@ -93,11 +93,6 @@ public:
    * can also filter out every PSK-capable ciphersuite.
    */
   void setCiphers(const int *ciphersuites);
-  /**
-   * Overload for source compatibility with BearSSL-based cores (e.g. ESP8266's
-   * WiFiClientSecure::setCiphers()). `ciphersuites` must still be 0-terminated; `count` is unused.
-   */
-  void setCiphers(const int *ciphersuites, size_t count);
 
   void useBuiltinCACertBundle();
 
