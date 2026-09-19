@@ -61857,3 +61857,156 @@ cytron_maker_esp32.menu.DebugLevel.verbose.build.code_debug=5
 cytron_maker_esp32.menu.EraseFlash.none=Disabled
 cytron_maker_esp32.menu.EraseFlash.all=Enabled
 cytron_maker_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+tdeck.name=LilyGo T-Deck
+
+tdeck.bootloader.tool=esptool_py
+tdeck.bootloader.tool.default=esptool_py
+
+tdeck.upload.tool=esptool_py
+tdeck.upload.tool.default=esptool_py
+tdeck.upload.tool.network=esp_ota
+
+tdeck.upload.maximum_size=1310720
+tdeck.upload.maximum_data_size=327680
+tdeck.upload.flags=
+tdeck.upload.erase_cmd=
+tdeck.upload.extra_flags=
+tdeck.upload.use_1200bps_touch=false
+tdeck.upload.wait_for_upload_port=false
+
+tdeck.serial.disableDTR=false
+tdeck.serial.disableRTS=false
+
+tdeck.build.tarch=xtensa
+tdeck.build.bootloader_addr=0x0
+tdeck.build.target=esp32s3
+tdeck.build.mcu=esp32s3
+tdeck.build.core=esp32
+tdeck.build.variant=lilygo_tdeck
+tdeck.build.board=T_DECK
+
+tdeck.build.usb_mode=1
+tdeck.build.cdc_on_boot=0
+tdeck.build.msc_on_boot=0
+tdeck.build.dfu_on_boot=0
+tdeck.build.f_cpu=240000000L
+tdeck.build.flash_size=16MB
+tdeck.build.flash_freq=80m
+tdeck.build.flash_mode=dio
+tdeck.build.boot=qio
+tdeck.build.boot_freq=80m
+tdeck.build.partitions=app3M_fat9M_16MB
+tdeck.build.defines=-DBOARD_HAS_PSRAM -DARDUINO_T_DECK
+tdeck.build.loop_core=
+tdeck.build.event_core=
+tdeck.build.psram_type=opi
+tdeck.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+tdeck.menu.JTAGAdapter.default=Disabled
+tdeck.menu.JTAGAdapter.default.build.copy_jtag_files=0
+tdeck.menu.JTAGAdapter.builtin=Integrated USB JTAG
+tdeck.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+tdeck.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+tdeck.menu.LoopCore.1=Core 1
+tdeck.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+tdeck.menu.LoopCore.0=Core 0
+tdeck.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+tdeck.menu.EventsCore.1=Core 1
+tdeck.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+tdeck.menu.EventsCore.0=Core 0
+tdeck.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+tdeck.menu.USBMode.hwcdc=Hardware CDC and JTAG
+tdeck.menu.USBMode.hwcdc.build.usb_mode=1
+tdeck.menu.USBMode.default=USB-OTG (TinyUSB)
+tdeck.menu.USBMode.default.build.usb_mode=0
+
+tdeck.menu.CDCOnBoot.default=Enabled
+tdeck.menu.CDCOnBoot.default.build.cdc_on_boot=1
+tdeck.menu.CDCOnBoot.cdc=Disabled
+tdeck.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+tdeck.menu.MSCOnBoot.default=Disabled
+tdeck.menu.MSCOnBoot.default.build.msc_on_boot=0
+tdeck.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+tdeck.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+tdeck.menu.DFUOnBoot.default=Disabled
+tdeck.menu.DFUOnBoot.default.build.dfu_on_boot=0
+tdeck.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+tdeck.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+tdeck.menu.UploadMode.default=UART0 / Hardware CDC
+tdeck.menu.UploadMode.default.upload.use_1200bps_touch=false
+tdeck.menu.UploadMode.default.upload.wait_for_upload_port=false
+tdeck.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+tdeck.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+tdeck.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+tdeck.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+tdeck.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+tdeck.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+tdeck.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+tdeck.menu.PartitionScheme.fatflash.build.partitions=ffat
+tdeck.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+tdeck.menu.PartitionScheme.rainmaker=RainMaker
+tdeck.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+tdeck.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+tdeck.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MODEL)
+tdeck.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+tdeck.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+tdeck.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+tdeck.menu.PartitionScheme.custom=Custom
+tdeck.menu.PartitionScheme.custom.build.partitions=
+tdeck.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+tdeck.menu.CPUFreq.240=240MHz (WiFi)
+tdeck.menu.CPUFreq.240.build.f_cpu=240000000L
+tdeck.menu.CPUFreq.160=160MHz (WiFi)
+tdeck.menu.CPUFreq.160.build.f_cpu=160000000L
+tdeck.menu.CPUFreq.80=80MHz (WiFi)
+tdeck.menu.CPUFreq.80.build.f_cpu=80000000L
+tdeck.menu.CPUFreq.40=40MHz
+tdeck.menu.CPUFreq.40.build.f_cpu=40000000L
+tdeck.menu.CPUFreq.20=20MHz
+tdeck.menu.CPUFreq.20.build.f_cpu=20000000L
+tdeck.menu.CPUFreq.10=10MHz
+tdeck.menu.CPUFreq.10.build.f_cpu=10000000L
+
+tdeck.menu.UploadSpeed.921600=921600
+tdeck.menu.UploadSpeed.921600.upload.speed=921600
+tdeck.menu.UploadSpeed.115200=115200
+tdeck.menu.UploadSpeed.115200.upload.speed=115200
+tdeck.menu.UploadSpeed.256000.windows=256000
+tdeck.menu.UploadSpeed.256000.upload.speed=256000
+tdeck.menu.UploadSpeed.230400.windows.upload.speed=256000
+tdeck.menu.UploadSpeed.230400=230400
+tdeck.menu.UploadSpeed.230400.upload.speed=230400
+tdeck.menu.UploadSpeed.460800.linux=460800
+tdeck.menu.UploadSpeed.460800.macosx=460800
+tdeck.menu.UploadSpeed.460800.upload.speed=460800
+tdeck.menu.UploadSpeed.512000.windows=512000
+tdeck.menu.UploadSpeed.512000.upload.speed=512000
+
+tdeck.menu.DebugLevel.none=None
+tdeck.menu.DebugLevel.none.build.code_debug=0
+tdeck.menu.DebugLevel.error=Error
+tdeck.menu.DebugLevel.error.build.code_debug=1
+tdeck.menu.DebugLevel.warn=Warn
+tdeck.menu.DebugLevel.warn.build.code_debug=2
+tdeck.menu.DebugLevel.info=Info
+tdeck.menu.DebugLevel.info.build.code_debug=3
+tdeck.menu.DebugLevel.debug=Debug
+tdeck.menu.DebugLevel.debug.build.code_debug=4
+tdeck.menu.DebugLevel.verbose=Verbose
+tdeck.menu.DebugLevel.verbose.build.code_debug=5
+
+tdeck.menu.EraseFlash.none=Disabled
+tdeck.menu.EraseFlash.all=Enabled
+tdeck.menu.EraseFlash.all.upload.erase_cmd=-e
