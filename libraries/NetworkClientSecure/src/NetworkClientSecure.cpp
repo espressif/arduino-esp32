@@ -470,11 +470,6 @@ void NetworkClientSecure::setCiphers(const int *ciphersuites) {
   _cipher_list = ciphersuites;
 }
 
-void NetworkClientSecure::setCiphers(const int *ciphersuites, size_t count) {
-  (void)count;
-  setCiphers(ciphersuites);
-}
-
 int NetworkClientSecure::fd() const {
   return sslclient->socket;
 }
