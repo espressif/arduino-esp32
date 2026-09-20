@@ -98,7 +98,9 @@ MatterDimmablePlugin::~MatterDimmablePlugin() {
 }
 
 bool MatterDimmablePlugin::begin(bool initialState, uint8_t level) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
   if (getEndPointId() != 0) {
     log_e("Matter Dimmable Plugin with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
