@@ -204,9 +204,13 @@ public:
   // Before begin() these log a warning and return an empty String.
   static String getManualPairingCode();
   static String getOnboardingQRCodeUrl();
-  // Starts the Matter stack. On Wi-Fi station builds with no Thread/Ethernet
-  // selection, initializes Wi-Fi first with reduced RX/TX buffers so CHIP
-  // inherits those counts (first esp_wifi_init wins).
+  // Creates the Matter node (root endpoint 0) if not already created. Idempotent.
+  // Normally called from MatterEndPoint::ensureMatterNode() inside endpoint begin().
+  // Sketches rarely call this directly.
+  static bool initNode();
+  // Starts the Matter stack after at least one accessory endpoint exists on the node.
+  // On Wi-Fi station builds with no Thread/Ethernet selection, initializes Wi-Fi first
+  // with reduced RX/TX buffers so CHIP inherits those counts (first esp_wifi_init wins).
   static void begin();
 
   // Node identity (Basic Information on endpoint 0). Call before Matter.begin().
@@ -278,31 +282,7 @@ public:
   static bool isOnline();  // active CASE session with a controller
   static void decommission();
 
-  // list of Matter EndPoints Friend Classes
-  friend class MatterGenericSwitch;
-  friend class MatterOnOffLight;
-  friend class MatterDimmableLight;
-  friend class MatterDimmablePlugin;
-  friend class MatterColorTemperatureLight;
-  friend class MatterColorLight;
-  friend class MatterEnhancedColorLight;
-  friend class MatterFan;
-  friend class MatterTemperatureSensor;
-  friend class MatterTemperatureControlledCabinet;
-  friend class MatterHumiditySensor;
-  friend class MatterContactSensor;
-  friend class MatterWaterLeakDetector;
-  friend class MatterWaterFreezeDetector;
-  friend class MatterRainSensor;
-  friend class MatterPressureSensor;
-  friend class MatterOccupancySensor;
-  friend class MatterOnOffPlugin;
-  friend class MatterThermostat;
-  friend class MatterWindowCovering;
-  friend class MatterLightSensor;
-
 protected:
-  static void _init();
   static bool isStackStarted();  // true only after a successful Matter.begin()
   static bool ensureSetBeforeBegin(const char *apiName);
   static bool storeIdentityString(char *dst, size_t dstSize, const char *src, const char *apiName);

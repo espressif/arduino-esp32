@@ -125,7 +125,9 @@ MatterColorTemperatureLight::~MatterColorTemperatureLight() {
 }
 
 bool MatterColorTemperatureLight::begin(bool initialState, uint8_t brightness, uint16_t ColorTemperature) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter Temperature Light with Endpoint Id %u device has already been created.", getEndPointId());

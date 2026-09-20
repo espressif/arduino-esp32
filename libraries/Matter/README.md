@@ -13,13 +13,34 @@ Each Matter device type is represented by a C++ class under `src/MatterEndpoints
 - **Internal state variables** — C++ members that cache the device's current state (e.g., `onOffState`, `brightnessLevel`, `rawTemperature`).
 - **Matter attribute store** — The ESP-Matter SDK's attribute database, which is the protocol-level representation read by controllers and used for subscriptions/reporting.
 
+### Custom endpoints (esp-matter device types not wrapped in-tree)
+
+Subclass `MatterEndPoint`, implement `attributeChangeCB`, and in your subclass `begin()`:
+
+1. Call `ensureMatterNode()` (protected; only valid inside the subclass) or, from sketch code that does not subclass `MatterEndPoint`, `Matter.initNode()`.
+2. Create the endpoint with `esp_matter::endpoint::*::create(node::get(), …, ENDPOINT_FLAG_NONE, (void *)this)`.
+3. `setEndPointId(endpoint::get_id(ep))`, or use `registerCreatedEndpoint(ep)` after a `create()` that already passed `(void *)this`.
+
+Use the same Ember setter/getter patterns as stock endpoints. Override `onStackStarted()` when you need code-driven clusters after `Matter.begin()`. Sketch order is unchanged: accessory `begin()` / `setTagList()` → `Matter.begin()`. `Matter.begin()` requires at least one accessory endpoint (id ≠ 0) on the node.
+
+Full walkthrough: [`MatterCustomEndpoint`](examples/Advanced/MatterCustomEndpoint) builds a **PM2.5 sensor** to illustrate creating and using user custom endpoints (Air Quality Sensor device type plus PM2.5 cluster). The sketch subclasses `MatterEndPoint`, calls your endpoint `begin()`, then `Matter.begin()`:
+
+```cpp
+MyCustomMatterEndpoint myEndpoint;
+
+void setup() {
+  myEndpoint.begin(/* initial state */);
+  Matter.begin();
+}
+```
+
 ## Attribute Update Pattern
 
 This library is built on ESP-Matter, which uses an Ember-based attribute store. The attribute store is the protocol-level source of truth: when a Matter controller reads an attribute, it reads from this store.
 
 Most endpoint setters and getters **must** follow one of the two Ember store patterns below. Exceptions:
 
-- Boolean State sensors: `StateValue` is internally managed in ESP-Matter 1.5+ and cannot be written with `updateAttributeVal()`.
+- Boolean State sensors: `StateValue` lives on the code-driven cluster. `updateAttributeVal()` only updates the shadow table; use `setBooleanStateValue()` / the endpoint setter. Values set before `Matter.begin()` are cached and applied when the stack starts.
 - Color lights: `setColorHSV()` / `setColorRGB()` write several Color Control attributes plus CurrentLevel using `attribute::report()` so a local set fires a single `onChangeColorHSV` callback instead of one per attribute.
 
 ### Setter Pattern
@@ -321,4 +342,4 @@ Official examples call `matterWaitUntilReady()` in `setup()` and `matterRestartI
 - [Arduino-ESP32 Matter Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
 - [ESP-Matter Programming Guide](https://docs.espressif.com/projects/esp-matter/en/latest/)
 - [Matter Specification (CSA)](https://csa-iot.org/developer-resource/specifications-download-request/)
-- Examples: [`MatterDeviceIdentity`](examples/GettingStarted/MatterDeviceIdentity), [`MatterStatus`](examples/GettingStarted/MatterStatus), [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi), [`MatterCHIPoBLEWiFi`](examples/Commissioning/MatterCHIPoBLEWiFi), [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet), [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread), [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread), [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease), [`MatterEarlyBLERelease`](examples/Advanced/MatterEarlyBLERelease), [`MatterSmartButtonsTagList`](examples/Control/MatterSmartButtonsTagList)
+- Examples: [`MatterDeviceIdentity`](examples/GettingStarted/MatterDeviceIdentity), [`MatterStatus`](examples/GettingStarted/MatterStatus), [`MatterOnNetworkWiFi`](examples/Commissioning/MatterOnNetworkWiFi), [`MatterCHIPoBLEWiFi`](examples/Commissioning/MatterCHIPoBLEWiFi), [`MatterOnNetworkEthernet`](examples/Commissioning/MatterOnNetworkEthernet), [`MatterOnNetworkThread`](examples/Commissioning/MatterOnNetworkThread), [`MatterCHIPoBLEThread`](examples/Commissioning/MatterCHIPoBLEThread), [`MatterCHIPoBLERelease`](examples/Commissioning/MatterCHIPoBLERelease), [`MatterEarlyBLERelease`](examples/Advanced/MatterEarlyBLERelease), [`MatterCustomEndpoint`](examples/Advanced/MatterCustomEndpoint), [`MatterSmartButtonsTagList`](examples/Control/MatterSmartButtonsTagList)

@@ -43,7 +43,9 @@ MatterWaterFreezeDetector::~MatterWaterFreezeDetector() {
 }
 
 bool MatterWaterFreezeDetector::begin() {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter Water Freeze Detector with Endpoint Id %u device has already been created.", getEndPointId());
@@ -53,7 +55,7 @@ bool MatterWaterFreezeDetector::begin() {
   water_freeze_detector::config_t water_freeze_detector_config{};
   water_freeze_detector_config.boolean_state.state_value = false;
   // CHIP BooleanStateCluster still starts at false regardless of this field;
-  // apply the real sensor with setFreeze() after Matter.begin().
+  // setFreeze() after endpoint begin() caches the value and applies it at Matter.begin().
 
   endpoint_t *endpoint = water_freeze_detector::create(node::get(), &water_freeze_detector_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {

@@ -186,7 +186,9 @@ bool MatterTemperatureControlledCabinet::begin(double tempSetpoint, double minTe
 }
 
 bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t _rawMinTemperature, int16_t _rawMaxTemperature, int16_t _rawStep) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Temperature Controlled Cabinet with Endpoint Id %u device has already been created.", getEndPointId());
@@ -312,7 +314,9 @@ bool MatterTemperatureControlledCabinet::begin(uint8_t *supportedLevels, const c
 }
 
 bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels, const char *const *labels, uint16_t levelCount, uint8_t selectedLevel) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Temperature Controlled Cabinet with Endpoint Id %u device has already been created.", getEndPointId());
