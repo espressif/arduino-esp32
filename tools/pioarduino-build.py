@@ -25,7 +25,6 @@ http://arduino.cc/en/Reference/HomePage
 # Extends: https://github.com/pioarduino/platform-espressif32/blob/develop/builder/main.py
 
 from os.path import abspath, basename, isdir, isfile, join
-from copy import deepcopy
 from SCons.Script import DefaultEnvironment, SConscript
 
 env = DefaultEnvironment()
@@ -258,6 +257,4 @@ env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
 #  Adjust the `esptoolpy` command in the `ElfToBin` builder with firmware checksum offset
 #
 
-action = deepcopy(env["BUILDERS"]["ElfToBin"].action)
-action.cmd_list = env["BUILDERS"]["ElfToBin"].action.cmd_list.replace("-o", "--elf-sha256-offset 0xb0 -o")
-env["BUILDERS"]["ElfToBin"].action = action
+env["BUILDERS"]["ElfToBin"].action.cmd_list = env["BUILDERS"]["ElfToBin"].action.cmd_list.replace("-o", "--elf-sha256-offset 0xb0 -o")
