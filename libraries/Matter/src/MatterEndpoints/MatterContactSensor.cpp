@@ -43,7 +43,7 @@ MatterContactSensor::~MatterContactSensor() {
 }
 
 bool MatterContactSensor::begin() {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Contact Sensor with Endpoint Id %u device has already been created.", getEndPointId());

@@ -133,7 +133,14 @@ public:
   // Called by ArduinoMatter after esp_matter::start(). Code-driven cluster objects exist now.
   void notifyStackStarted();
 
+  // After creating an endpoint with esp_matter::endpoint::*::create(..., (void *)this),
+  // register it when not using a stock Matter* begin(). Call before Matter.begin().
+  bool registerCreatedEndpoint(endpoint_t *ep);
+
 protected:
+  // Creates the Matter node once (root endpoint 0). Idempotent. Used by stock and custom begin().
+  static void ensureMatterNode();
+
   // used for secondary network interface endpoints
   static uint16_t secondary_network_endpoint_id;
   // main endpoint ID

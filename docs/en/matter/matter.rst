@@ -109,7 +109,8 @@ The ``Matter`` class is implemented as a singleton, meaning there's only one ins
 
 The ``Matter`` class provides the following key methods:
 
-* ``begin()``: Initializes the Matter stack. On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts, unless Thread or Ethernet was selected. Skipped if the sketch already called ``matterConnectWiFi()`` / ``WiFi.begin()`` / ``WiFi.mode()``.
+* ``initNode()``: Creates the Matter node (root endpoint 0) if needed. Idempotent. Normally called from ``MatterEndPoint::ensureMatterNode()`` inside endpoint ``begin()``; sketches rarely call this directly.
+* ``begin()``: Starts the Matter stack after at least one accessory endpoint exists on the node (endpoint id ≠ 0). On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts, unless Thread or Ethernet was selected. Skipped if the sketch already called ``matterConnectWiFi()`` / ``WiFi.begin()`` / ``WiFi.mode()``.
 * ``isStackStarted()``: ``true`` only after a successful ``Matter.begin()``. Pairing-code getters are empty until this is true.
 * ``isDeviceCommissioned()``: Checks if the device is commissioned (a fabric exists)
 * ``isWiFiConnected()``: Checks Wi-Fi connection status
@@ -403,6 +404,8 @@ The ``MatterEndPoint`` class is the base class for all Matter endpoints. It prov
 * **Identify Cluster**: Support for device identification (visual feedback)
 * **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers
 
+**Custom endpoints:** Subclass ``MatterEndPoint``, implement ``attributeChangeCB``, and in ``begin()`` call ``ensureMatterNode()``, then ``esp_matter::endpoint::*::create(node::get(), …, (void *)this)`` and ``setEndPointId()``, or ``registerCreatedEndpoint()`` after ``create()`` with ``(void *)this``. Override ``onStackStarted()`` when using code-driven clusters. Sketch order is unchanged (``selectNetwork()`` → accessory ``begin()`` → ``Matter.begin()``).
+
 .. toctree::
     :maxdepth: 2
 
@@ -513,6 +516,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 
 * **Matter Lambda Single Callback Many Endpoints** - Demonstrates how to create multiple Matter endpoints in a single node using a shared lambda function callback with capture for efficient callback handling. `View Matter Lambda Single Callback Many Endpoints code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterLambdaSingleCallbackManyEPs>`_
 * **Matter Early BLE Release** - One On/Off Light. ``MATTER_EARLY_BLE_RELEASE`` **1** (default): ``bleInUse()==false`` then on-network Wi-Fi. **0**: CHIPoBLE. Serial reports Tools PSRAM and ``[heap]`` internal / PSRAM. `View Matter Early BLE Release code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterEarlyBLERelease>`_
+* **Matter customEndpoint** - Example that implements a **PM2.5 sensor** to illustrate creation and use of user custom endpoints (``MatterEndPoint`` subclass, ``ensureMatterNode()``, ``registerCreatedEndpoint()``). `View Matter customEndpoint code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/customEndpoint>`_
 
 Common Problems and Issues
 --------------------------

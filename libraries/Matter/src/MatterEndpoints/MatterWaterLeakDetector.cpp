@@ -43,7 +43,7 @@ MatterWaterLeakDetector::~MatterWaterLeakDetector() {
 }
 
 bool MatterWaterLeakDetector::begin() {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Water Leak Detector with Endpoint Id %u device has already been created.", getEndPointId());

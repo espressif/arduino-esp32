@@ -214,7 +214,7 @@ MatterEnhancedColorLight::~MatterEnhancedColorLight() {
 }
 
 bool MatterEnhancedColorLight::begin(bool initialState, espHsvColor_t _colorHSV, uint8_t brightness, uint16_t ColorTemperature) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Enhanced ColorLight with Endpoint Id %u device has already been created.", getEndPointId());

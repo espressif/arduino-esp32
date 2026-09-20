@@ -45,7 +45,7 @@ MatterPressureSensor::~MatterPressureSensor() {
 }
 
 bool MatterPressureSensor::begin(int16_t _rawPressure) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Pressure Sensor with Endpoint Id %u device has already been created.", getEndPointId());

@@ -73,7 +73,7 @@ MatterTemperatureSensor::~MatterTemperatureSensor() {
 }
 
 bool MatterTemperatureSensor::begin(int16_t _rawTemperature) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Temperature Sensor with Endpoint Id %u device has already been created.", getEndPointId());

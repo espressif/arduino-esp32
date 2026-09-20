@@ -43,7 +43,7 @@ MatterWaterFreezeDetector::~MatterWaterFreezeDetector() {
 }
 
 bool MatterWaterFreezeDetector::begin() {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Water Freeze Detector with Endpoint Id %u device has already been created.", getEndPointId());

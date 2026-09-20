@@ -15,6 +15,7 @@
 #include <sdkconfig.h>
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
+#include <Matter.h>
 #include <MatterEndPoint.h>
 #include <MatterTags.h>
 #include <string.h>
@@ -24,8 +25,36 @@
 #include <data_model_provider/esp_matter_data_model_provider.h>
 
 using namespace chip::app::Clusters;
+using namespace esp_matter::endpoint;
 
 uint16_t MatterEndPoint::secondary_network_endpoint_id = 0;
+
+void MatterEndPoint::ensureMatterNode() {
+  (void)ArduinoMatter::initNode();
+}
+
+bool MatterEndPoint::registerCreatedEndpoint(endpoint_t *ep) {
+  ensureMatterNode();
+  if (ep == nullptr) {
+    log_e("registerCreatedEndpoint: null endpoint");
+    return false;
+  }
+  if (getEndPointId() != 0) {
+    log_e("registerCreatedEndpoint: endpoint ID already set (%u)", getEndPointId());
+    return false;
+  }
+  const uint16_t id = endpoint::get_id(ep);
+  if (id == 0) {
+    log_e("registerCreatedEndpoint: cannot register root endpoint 0");
+    return false;
+  }
+  if (endpoint::get_priv_data(id) != static_cast<void *>(this)) {
+    log_e("registerCreatedEndpoint: priv_data for endpoint %u must be (void *)this", id);
+    return false;
+  }
+  setEndPointId(id);
+  return true;
+}
 
 bool MatterEndPoint::createSecondaryNetworkInterface() {
   log_w("createSecondaryNetworkInterface() is deprecated and does nothing. "

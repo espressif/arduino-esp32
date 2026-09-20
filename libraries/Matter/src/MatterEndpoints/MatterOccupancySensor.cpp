@@ -69,7 +69,7 @@ MatterOccupancySensor::~MatterOccupancySensor() {
 }
 
 bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _occupancySensorType) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   holdTime_seconds = 0;
   if (getEndPointId() != 0) {
