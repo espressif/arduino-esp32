@@ -179,15 +179,20 @@ All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.
 
 ## Node identity and commissioning
 
-Call these on the `Matter` singleton **before** `Matter.begin()`. After `begin()` they log a warning and do nothing. String setters **copy** into internal storage (stack or `String` temporaries are safe). `setDeviceName()` writes Basic Information NodeLabel (not a per-light name). Do not change Vendor ID / Product ID unless the DAC matches. SoftwareVersion is compile-time CHIP config.
+Call these on the `Matter` singleton **before** `Matter.begin()`. After `begin()` they log a warning and do nothing. String setters **copy** into internal storage (stack or `String` temporaries are safe). `setDeviceName()` writes Basic Information NodeLabel (not a per-light name). Do not change Vendor ID / Product ID unless the DAC matches. `SoftwareVersion` / `SoftwareVersionString` are Basic Information from ConfigurationManager (the firmware version controllers such as Alexa display), not `HardwareVersion`. They are stored in RAM for this boot; CHIP does not persist them on ESP32.
+
+Most examples call `matterSetExampleIdentity("Color Light")` (or the matching endpoint name) for vendor `Espressif` and product `<SoC> <endpoint>`, for example `ESP32-C6 Color Light`. ProductName is capped at 32 characters. `MatterMinimum` skips this and keeps CHIP defaults. Override with the setters below, as in Matter Device Identity.
 
 ```cpp
+matterSetExampleIdentity("Color Light");      // vendor Espressif, product "<SoC> Color Light"
 Matter.setVendorName("Espressif");            // max 32
 Matter.setProductName("KitchenLight");        // max 32
 Matter.setDeviceName("KitchenHub");           // NodeLabel, max 32
 Matter.setSerialNumber("KH-000123");          // max 32
 Matter.setHardwareVersion(7);
 Matter.setHardwareVersionString("RevA");      // max 64
+Matter.setSoftwareVersion(7);                 // Basic Information SoftwareVersion (uint32)
+Matter.setSoftwareVersionString("1.0.7");     // max 64; default is the IDF app version
 Matter.setSetupDiscriminator(0xF01);          // 0–0xFFF
 Matter.setSetupPasscode(20202024);            // valid Matter PIN
 // Prefer selectNetwork(MATTER_NETWORK_WIFI or MATTER_NETWORK_THREAD, true) to pick a transport and turn CHIPoBLE off.
@@ -200,7 +205,9 @@ Serial.println(Matter.getManualPairingCode());     // live code after begin()
 Serial.println(Matter.getOnboardingQRCodeUrl());   // live QR URL after begin()
 ```
 
-If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Arduino Matter uses the CHIP test pair **PIN `20202021`**, discriminator **`0xF00`**, manual code **`34970112332`** (same as On/Off Light and the other examples). Before `begin()` the pairing getters log a warning and return empty.
+If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Arduino Matter uses the CHIP test pair **PIN `20202021`**, discriminator **`0xF00`**, manual code **`34970112332`** (same as On/Off Light and the other examples). Before `begin()`, or if `begin()` failed (`isStackStarted()` is false), the pairing getters log a warning and return empty.
+
+`getSoftwareVersion()` and `getSoftwareVersionString()` may be called after `Matter.begin()`. Without a setter they return `CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER` and the IDF app version.
 
 On Wi-Fi station builds, `Matter.begin()` initializes the Wi-Fi driver with reduced RX/TX buffers before starting CHIP unless Thread or Ethernet was selected. Matter traffic is small, so the library uses 4 static RX, 8 dynamic RX, 8 dynamic TX, and an AMPDU RX BA window of 6 instead of the sdkconfig defaults. `esp_wifi_init()` keeps the first caller's counts, so CHIP inherits them. If the sketch already called `matterConnectWiFi()` / `WiFi.begin()` / `WiFi.mode()`, those limits are not applied.
 
@@ -267,6 +274,7 @@ Ethernet is on-network only: `selectNetwork(MATTER_NETWORK_ETHERNET)` turns CHIP
 | `getActiveNetwork()` | First netif with IPv6 (prefers the selection). Not `isWiFiConnected()` / `isThreadConnected()`. |
 | `getNetworkEndPointId(net)` | Expected root commissioning endpoint (0 Wi-Fi; 0 Thread when Thread is on the root; `0xFFFF` if none). C6 is Wi-Fi or Thread, not both. |
 | `Matter.waitForNetwork(ms)` | Blocks until that IPv6 is there. `MATTER_NETWORK_NONE` waits for any. Does not bring up hardware. `0` = one check. |
+| `isStackStarted()` | `true` only after a successful `Matter.begin()` |
 | `isDeviceCommissioned()` | A Matter fabric exists |
 | `isDeviceConnected()` | CHIP Wi-Fi or Thread connected, **or** Ethernet IPv6 |
 | `isOnline()` | A controller has an active CASE session (until CHIP idle-evicts it) |
@@ -288,8 +296,9 @@ These are **not** members of `Matter`. `#include <Matter.h>` pulls in `MatterHel
 | Helper | Effect |
 |--------|--------|
 | `matterConnectWiFi(ssid, password)` | `CONFIG_ENABLE_CHIPOBLE=n` only. `setup()` before `Matter.begin()`. Official examples pass `WIFI_SSID` / `WIFI_PASSWORD`. Enables STA IPv6, waits for IPv4. Not on CHIPoBLE or H2 |
-| `matterWaitUntilReady()` | `setup()` after `Matter.begin()`: pairing codes if needed; one-line status every 10 s and once more when CASE is up; wait up to 5 min (`timeoutMs` 0 = forever). Reboots if still no fabric. If commissioned but CASE never arrives, continues |
-| `matterRestartIfNoFabric()` | `loop()`: reboot if the hub removed the fabric. `Matter.decommission()` already factory-resets |
+| `matterSetExampleIdentity(endpointName)` | `setup()` before `Matter.begin()`. Vendor `Espressif`, product `<SoC> <endpointName>` (for example `ESP32-C6 Color Light`). ProductName max 32 characters |
+| `matterWaitUntilReady()` | `setup()` after `Matter.begin()`: if `begin()` failed, prints that and halts. Otherwise pairing codes if needed; one-line status every 10 s and once more when CASE is up; wait up to 5 min (`timeoutMs` 0 = forever). Reboots if still no fabric. If commissioned but CASE never arrives, continues |
+| `matterRestartIfNoFabric()` | `loop()`: no-op if the stack never started; reboot if the hub removed the fabric. `Matter.decommission()` already factory-resets |
 | `MatterButton` | Board button (`MatterButton.h`). Timer samples the pin; `loop()` drains `poll()` (`PRESS` / `CLICK` / `DOUBLE_CLICK` / `LONG_HOLD`). Default: 50 ms debounce, 5 s long-hold, double-click off. Not a Generic Switch cluster |
 
 ```cpp

@@ -200,8 +200,8 @@ public:
     _bleMemoryReleasedCB = cb;
   }
 
-  // Generated after Matter.begin() from CommissionableDataProvider.
-  // Before begin() these log a warning and return an empty String.
+  // Generated after a successful Matter.begin() from CommissionableDataProvider.
+  // Before begin() or if begin() failed these log a warning and return an empty String.
   static String getManualPairingCode();
   static String getOnboardingQRCodeUrl();
   // Starts the Matter stack. On Wi-Fi station builds with no Thread/Ethernet
@@ -217,6 +217,12 @@ public:
   static bool setSerialNumber(const char *value);
   static bool setHardwareVersion(uint16_t version);
   static bool setHardwareVersionString(const char *value);
+  // SoftwareVersion is Basic Information (ConfigurationManager), not HardwareVersion.
+  // In-memory only; CHIP StoreSoftwareVersion is unsupported on ESP32.
+  static bool setSoftwareVersion(uint32_t version);
+  static bool setSoftwareVersionString(const char *value);
+  static uint32_t getSoftwareVersion();
+  static String getSoftwareVersionString();
 
   // Commissioning codes. Call before Matter.begin(). Test defaults are 0xF00 / 20202021.
   static bool setSetupDiscriminator(uint16_t discriminator);
@@ -271,6 +277,7 @@ public:
   // Does not start hardware. timeoutMs 0 is a single check.
   static bool waitForNetwork(uint32_t timeoutMs);
 
+  static bool isStackStarted();  // true only after a successful Matter.begin()
   static bool isDeviceCommissioned();
   static bool isWiFiConnected();
   static bool isThreadConnected();
@@ -303,7 +310,6 @@ public:
 
 protected:
   static void _init();
-  static bool isStackStarted();  // true only after a successful Matter.begin()
   static bool ensureSetBeforeBegin(const char *apiName);
   static bool storeIdentityString(char *dst, size_t dstSize, const char *src, const char *apiName);
   static void applyIdentityBeforeStart();

@@ -53,7 +53,9 @@ static const char *kProductName = "KitchenLight";
 static const char *kDeviceName = "KitchenHub";
 static const char *kSerialNumber = "KH-000123";
 static const char *kHardwareVersionString = "RevA";
+static const char *kSoftwareVersionString = "1.0.7";
 static const uint16_t kHardwareVersion = 7;
+static const uint32_t kSoftwareVersion = 7;
 static const uint16_t kSetupDiscriminator = 0xF01;
 static const uint32_t kSetupPasscode = 20202024;
 
@@ -65,6 +67,8 @@ void printIdentity() {
   Serial.printf("  SerialNumber: %s\r\n", kSerialNumber);
   Serial.printf("  HardwareVersion: %u\r\n", kHardwareVersion);
   Serial.printf("  HardwareVersionString: %s\r\n", kHardwareVersionString);
+  Serial.printf("  SoftwareVersion: %lu\r\n", static_cast<unsigned long>(kSoftwareVersion));
+  Serial.printf("  SoftwareVersionString: %s\r\n", kSoftwareVersionString);
   Serial.printf("  Setup discriminator: 0x%03X\r\n", kSetupDiscriminator);
   Serial.printf("  Setup passcode: %lu\r\n", static_cast<unsigned long>(kSetupPasscode));
 }
@@ -102,6 +106,8 @@ void setup() {
   matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD);
 #endif
 
+  // Other examples use matterSetExampleIdentity("Color Light") for vendor Espressif
+  // and product "<SoC> <endpoint>". This sketch sets custom values.
   // Must be called before Matter.begin(). Late calls log a warning and are ignored.
   Matter.setVendorName(kVendorName);
   Matter.setProductName(kProductName);
@@ -109,6 +115,8 @@ void setup() {
   Matter.setSerialNumber(kSerialNumber);
   Matter.setHardwareVersion(kHardwareVersion);
   Matter.setHardwareVersionString(kHardwareVersionString);
+  Matter.setSoftwareVersion(kSoftwareVersion);
+  Matter.setSoftwareVersionString(kSoftwareVersionString);
   // Not the Arduino test pair 0xF00 / 20202021. Live pairing codes come from matterWaitUntilReady().
   Matter.setSetupDiscriminator(kSetupDiscriminator);
   Matter.setSetupPasscode(kSetupPasscode);

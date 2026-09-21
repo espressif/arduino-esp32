@@ -77,6 +77,7 @@ void setup() {
   digitalWrite(ledPin, LOW);  // LED OFF
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Contact Sensor");
   Matter.begin();
   matterWaitUntilReady();
 }

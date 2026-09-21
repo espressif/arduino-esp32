@@ -28,7 +28,10 @@
 #include <lib/core/TLV.h>
 #include <platform/CHIPDeviceConfig.h>
 #include <platform/CHIPDeviceLayer.h>
+#include <platform/ESP32/ConfigurationManagerImpl.h>
 #include <setup_payload/OnboardingCodesUtil.h>
+#include <esp_app_desc.h>
+#include <string.h>
 #include <setup_payload/QRCodeSetupPayloadGenerator.h>
 #include <setup_payload/SetupPayload.h>
 #include <transport/SecureSession.h>
@@ -43,21 +46,66 @@ using namespace MatterIdentityInternal;
 static constexpr size_t kMaxQrCodeLen = chip::QRCodeBasicSetupPayloadGenerator::kMaxQRCodeBase38RepresentationLength + 1;
 static constexpr size_t kMaxQrUrlLen = 768;
 static constexpr size_t kMaxManualCodeLen = chip::kManualSetupLongCodeCharLength + 2;
+static constexpr size_t kMaxSwStringLen = 64;
+
+// SoftwareVersion is ConfigurationManager, not DeviceInstanceInfoProvider.
+class OverrideConfigurationManager : public chip::DeviceLayer::ConfigurationManagerImpl {
+public:
+  void setSoftwareVersion(uint32_t version) {
+    mSoftwareVersion = version;
+    mHasSoftwareVersion = true;
+  }
+  void setSoftwareVersionString(const char *value) {
+    mSoftwareVersionString = value;
+  }
+
+  CHIP_ERROR GetSoftwareVersion(uint32_t &softwareVer) override {
+    if (mHasSoftwareVersion) {
+      softwareVer = mSoftwareVersion;
+      return CHIP_NO_ERROR;
+    }
+    return chip::DeviceLayer::ConfigurationManagerImpl::GetSoftwareVersion(softwareVer);
+  }
+
+  CHIP_ERROR GetSoftwareVersionString(char *buf, size_t bufSize) override {
+    if (mSoftwareVersionString != nullptr && mSoftwareVersionString[0] != '\0') {
+      if (buf == nullptr) {
+        return CHIP_ERROR_INVALID_ARGUMENT;
+      }
+      const size_t n = strlen(mSoftwareVersionString);
+      if (n + 1 > bufSize) {
+        return CHIP_ERROR_BUFFER_TOO_SMALL;
+      }
+      memcpy(buf, mSoftwareVersionString, n + 1);
+      return CHIP_NO_ERROR;
+    }
+    return chip::DeviceLayer::ConfigurationManagerImpl::GetSoftwareVersionString(buf, bufSize);
+  }
+
+private:
+  const char *mSoftwareVersionString = nullptr;
+  uint32_t mSoftwareVersion = 0;
+  bool mHasSoftwareVersion = false;
+};
 
 static OverrideInstanceInfoProvider sInstanceProvider;
 static OverrideCommissionableDataProvider sCommissionableProvider;
+static OverrideConfigurationManager sConfigMgr;
 
 static char sVendorName[kMaxIdentityLen + 1] = {};
 static char sProductName[kMaxIdentityLen + 1] = {};
 static char sDeviceName[kMaxIdentityLen + 1] = {};
 static char sHardwareVersionString[kMaxHwStringLen + 1] = {};
+static char sSoftwareVersionString[kMaxSwStringLen + 1] = {};
 static char sSerialNumber[kMaxSerialLen + 1] = {};
 static char sManualCode[kMaxManualCodeLen] = {};
 static char sQrUrl[kMaxQrUrlLen] = {};
 static uint16_t sHardwareVersion = 0;
 static uint16_t sDiscriminator = 0;
 static uint32_t sPasscode = 0;
+static uint32_t sSoftwareVersion = 0;
 static bool sHasHardwareVersion = false;
+static bool sHasSoftwareVersion = false;
 static bool sHasDiscriminator = false;
 static bool sHasPasscode = false;
 static bool sCodesGenerated = false;
@@ -106,6 +154,45 @@ bool ArduinoMatter::setHardwareVersion(uint16_t version) {
   return true;
 }
 
+bool ArduinoMatter::setSoftwareVersion(uint32_t version) {
+  if (!ensureSetBeforeBegin("setSoftwareVersion")) {
+    return false;
+  }
+  sSoftwareVersion = version;
+  sHasSoftwareVersion = true;
+  return true;
+}
+
+bool ArduinoMatter::setSoftwareVersionString(const char *value) {
+  return storeIdentityString(sSoftwareVersionString, sizeof(sSoftwareVersionString), value, "setSoftwareVersionString");
+}
+
+uint32_t ArduinoMatter::getSoftwareVersion() {
+  if (sHasSoftwareVersion) {
+    return sSoftwareVersion;
+  }
+  uint32_t version = 0;
+  if (chip::DeviceLayer::ConfigurationMgr().GetSoftwareVersion(version) != CHIP_NO_ERROR) {
+    version = static_cast<uint32_t>(CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER);
+  }
+  return version;
+}
+
+String ArduinoMatter::getSoftwareVersionString() {
+  if (sSoftwareVersionString[0] != '\0') {
+    return String(sSoftwareVersionString);
+  }
+  char buf[chip::DeviceLayer::ConfigurationManager::kMaxSoftwareVersionStringLength + 1] = {};
+  if (chip::DeviceLayer::ConfigurationMgr().GetSoftwareVersionString(buf, sizeof(buf)) == CHIP_NO_ERROR && buf[0] != '\0') {
+    return String(buf);
+  }
+  const esp_app_desc_t *appDescription = esp_app_get_description();
+  if (appDescription != nullptr && appDescription->version[0] != '\0') {
+    return String(appDescription->version);
+  }
+  return String();
+}
+
 bool ArduinoMatter::setSetupDiscriminator(uint16_t discriminator) {
   if (!ensureSetBeforeBegin("setSetupDiscriminator")) {
     return false;
@@ -152,18 +239,28 @@ static bool ensureBasicInfoAttr(cluster_t *cluster, uint32_t attributeId, attrib
 }
 
 void ArduinoMatter::applyIdentityBeforeStart() {
-  if (!needsOptionalBasicInfoAttrs()) {
-    return;
+  if (needsOptionalBasicInfoAttrs()) {
+    endpoint_t *ep = endpoint::get(node::get(), chip::kRootEndpointId);
+    cluster_t *cluster = (ep != nullptr) ? cluster::get(ep, chip::app::Clusters::BasicInformation::Id) : nullptr;
+    if (cluster == nullptr) {
+      log_e("Basic Information cluster missing on the root endpoint; optional identity attributes were not created.");
+    } else {
+      using namespace chip::app::Clusters::BasicInformation::Attributes;
+      if (sSerialNumber[0] != '\0') {
+        ensureBasicInfoAttr(cluster, SerialNumber::Id, cluster::basic_information::attribute::create_serial_number, "SerialNumber");
+      }
+    }
   }
-  endpoint_t *ep = endpoint::get(node::get(), chip::kRootEndpointId);
-  cluster_t *cluster = (ep != nullptr) ? cluster::get(ep, chip::app::Clusters::BasicInformation::Id) : nullptr;
-  if (cluster == nullptr) {
-    log_e("Basic Information cluster missing on the root endpoint; optional identity attributes were not created.");
-    return;
-  }
-  using namespace chip::app::Clusters::BasicInformation::Attributes;
-  if (sSerialNumber[0] != '\0') {
-    ensureBasicInfoAttr(cluster, SerialNumber::Id, cluster::basic_information::attribute::create_serial_number, "SerialNumber");
+
+  if (sHasSoftwareVersion || sSoftwareVersionString[0] != '\0') {
+    if (sHasSoftwareVersion) {
+      sConfigMgr.setSoftwareVersion(sSoftwareVersion);
+    }
+    if (sSoftwareVersionString[0] != '\0') {
+      sConfigMgr.setSoftwareVersionString(sSoftwareVersionString);
+    }
+    chip::DeviceLayer::SetConfigurationMgr(&sConfigMgr);
+    log_i("Custom ConfigurationManager registered (SoftwareVersion=%lu)", static_cast<unsigned long>(sHasSoftwareVersion ? sSoftwareVersion : 0));
   }
 }
 
