@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@
 // Initialize the static instance pointer
 ZigbeeSwitch *ZigbeeSwitch::_instance = nullptr;
 
-// v2.x addressing helpers: build the cluster command control block for each destination style.
-// In v2.x there is no address_mode enum; the destination is expressed through ezb_address_t.
+// Addressing helpers: destination is expressed through ezb_address_t.
 static ezb_zcl_cluster_cmd_ctrl_t make_cmd_ctrl_bound(uint8_t src_ep) {
   ezb_zcl_cluster_cmd_ctrl_t c = {};
   ezb_address_set_none(&c.dst_addr);  // no explicit destination -> routed to bound devices

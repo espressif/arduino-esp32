@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@
 #include "ezbee/zcl/cluster/binary_input_desc.h"
 #include "ezbee/zcl/cluster/binary_output_desc.h"
 
-// NOTE(zb-v2): v2.x does not expose application-type "group id" macros. The group id is the high byte
-// of the 32-bit ApplicationType value, so the ZCL-defined values are inlined here (matching v1):
-// Binary Input = 0x03, Binary Output = 0x04.
+// Application-type group id is the high byte of the 32-bit ApplicationType value, so the
+// ZCL-defined values are inlined here: Binary Input = 0x03, Binary Output = 0x04.
 #define ZB_BINARY_INPUT_GROUP_ID  0x03
 #define ZB_BINARY_OUTPUT_GROUP_ID 0x04
 
@@ -28,7 +27,7 @@ ZigbeeBinary::ZigbeeBinary(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
   _on_binary_output_change = nullptr;
 
-  // v2.x data model: build the endpoint descriptor manually with Basic + Identify server clusters.
+  // Endpoint descriptor: Basic + Identify server clusters.
   // Binary Input/Output clusters are attached later by addBinaryInput()/addBinaryOutput().
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
     _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
@@ -140,7 +139,7 @@ bool ZigbeeBinary::reportBinaryInput() {
   /* Send report attributes command */
   ezb_zcl_report_attr_cmd_t report_attr_cmd;
   memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
-  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  // Report to bound devices (no explicit destination).
   ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
   report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
   report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_BINARY_INPUT;

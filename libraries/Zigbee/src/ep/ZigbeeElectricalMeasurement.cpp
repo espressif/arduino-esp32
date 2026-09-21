@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,6 @@
 #if CONFIG_ZB_ENABLED
 #include "ezbee/zha.h"
 
-
-// NOTE(zb-v2): the v1 header had a wrong DC power attribute name and required a workaround macro
-// (ESP_ZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_DCPOWER_ID). v2.x exposes the correctly named
-// EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_DC_POWER_ID directly, so the workaround is no longer needed.
 
 ZigbeeElectricalMeasurement::ZigbeeElectricalMeasurement(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
@@ -139,9 +135,7 @@ bool ZigbeeElectricalMeasurement::setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE meas
     attr_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_DC_POWER_ID;
   }
 
-  // NOTE(zb-v2): Reporting is now handle-based (was a caller-populated esp_zb_zcl_reporting_info_t).
-  // The reporting record is created by the stack when the endpoint is registered, so this must be
-  // called after Zigbee.begin(). We look up the handle, tune the intervals/reportable change, then start.
+  // Must be called after Zigbee.begin(). Look up the reporting handle, set intervals / delta, then start it.
   ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(
     _endpoint, EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, EZB_ZCL_STD_MANUF_CODE
   );
@@ -180,7 +174,7 @@ bool ZigbeeElectricalMeasurement::reportDC(ZIGBEE_DC_MEASUREMENT_TYPE measuremen
   /* Send report attributes command */
   ezb_zcl_report_attr_cmd_t report_attr_cmd;
   memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
-  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  // Report to bound devices (no explicit destination).
   ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
   report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
   report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT;
@@ -673,8 +667,7 @@ bool ZigbeeElectricalMeasurement::setACReporting(
     default:                                      log_e("Invalid measurement type"); return false;
   }
 
-  // NOTE(zb-v2): Reporting is now handle-based (was a caller-populated esp_zb_zcl_reporting_info_t).
-  // Look up the reporting handle for the attribute, tune the intervals/reportable change, then start.
+  // Must be called after Zigbee.begin(). Look up the reporting handle, set intervals / delta, then start it.
   ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(
     _endpoint, EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, EZB_ZCL_STD_MANUF_CODE
   );
@@ -731,7 +724,7 @@ bool ZigbeeElectricalMeasurement::reportAC(ZIGBEE_AC_MEASUREMENT_TYPE measuremen
   /* Send report attributes command */
   ezb_zcl_report_attr_cmd_t report_attr_cmd;
   memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
-  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  // Report to bound devices (no explicit destination).
   ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
   report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
   report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT;

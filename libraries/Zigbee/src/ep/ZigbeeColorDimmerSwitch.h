@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ private:
   void (*_on_light_color_change)(uint8_t, uint8_t, uint8_t);
   void (*_on_light_color_change_with_source)(uint8_t, uint8_t, uint8_t, uint8_t, ezb_address_t);
 
-  // v2.x On/Off, Level, Color and read senders shared by all addressing overloads.
+  // On/Off, Level, Color and read senders shared by all addressing overloads.
   void sendOnOffCommand(uint8_t on_off_cmd_id, const void *cmd_ctrl);
   void sendMoveToLevel(uint8_t level, const void *cmd_ctrl);
   void sendLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, const void *cmd_ctrl);

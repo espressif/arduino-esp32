@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@
 #include "ezbee/zcl/cluster/analog_output_desc.h"
 #include <cfloat>
 
-// NOTE(zb-v2): v2.x does not expose application-type "group id" macros (v1 ESP_ZB_ZCL_AI_GROUP_ID /
-// ESP_ZB_ZCL_AO_GROUP_ID). The group id is the high byte of the 32-bit ApplicationType value, so the
+// Application-type group id is the high byte of the 32-bit ApplicationType value, so the
 // ZCL-defined values are inlined here: Analog Input = 0x00, Analog Output = 0x01.
 #define ZB_ANALOG_INPUT_GROUP_ID  0x00
 #define ZB_ANALOG_OUTPUT_GROUP_ID 0x01
@@ -29,7 +28,7 @@ ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
   _on_analog_output_change = nullptr;
 
-  // v2.x data model: build the endpoint descriptor manually with Basic + Identify server clusters.
+  // Endpoint descriptor: Basic + Identify server clusters.
   // Analog Input/Output clusters are attached later by addAnalogInput()/addAnalogOutput().
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
     _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
@@ -220,7 +219,7 @@ bool ZigbeeAnalog::reportAnalogInput() {
   /* Send report attributes command */
   ezb_zcl_report_attr_cmd_t report_attr_cmd;
   memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
-  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  // Report to bound devices (no explicit destination).
   ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
   report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
   report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_ANALOG_INPUT;
@@ -256,9 +255,7 @@ bool ZigbeeAnalog::reportAnalogOutput() {
 }
 
 bool ZigbeeAnalog::setAnalogInputReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
-  // NOTE(zb-v2): Reporting is now handle-based; the reporting record is created by the stack when the
-  // endpoint is registered, so this must be called after Zigbee.begin(). Look up the handle, tune the
-  // intervals/reportable change, then start the report.
+  // Must be called after Zigbee.begin(). Look up the reporting handle, set intervals / delta, then start it.
   ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(
     _endpoint, EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID, EZB_ZCL_STD_MANUF_CODE
   );

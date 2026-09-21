@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@ static float zb_s16_to_temperature(int16_t value) {
   return 1.0 * value / 100;
 }
 
-// v2.x addressing helpers: build the destination address for each addressing style.
-// In v2.x there is no APS address_mode enum; the destination is expressed through ezb_address_t and the
+// Addressing helpers: destination is expressed through ezb_address_t and the
 // destination endpoint (0 when the endpoint is "not present", i.e. routed to bound devices or a group).
 static ezb_address_t make_addr_bound() {
   ezb_address_t a;
@@ -72,10 +71,9 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
     ezb_zha_thermostat_config_t thermostat_cfg = EZB_ZHA_THERMOSTAT_CONFIG();
     _ep_desc = ezb_zha_create_thermostat(_endpoint, &thermostat_cfg);
 
-    // NOTE(zb-v2): ezb_zha_create_thermostat() only creates the Basic/Identify/Thermostat (server) clusters.
-    // The v1 _endpoint manually added Identify (client) plus Temperature/RelHumidity measurement (client)
-    // clusters so the thermostat can bind to a remote sensor and accept its reports. Re-add them here with
-    // ezb_af_endpoint_add_cluster_desc() (replaces the v1 esp_zb_cluster_list_add_*_cluster() calls).
+    // ezb_zha_create_thermostat() only creates the Basic/Identify/Thermostat (server) clusters.
+    // Add Temperature and RelHumidity measurement client clusters so the thermostat can bind
+    // to a remote sensor and accept its reports.
     if (_ep_desc != nullptr) {
     ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_temperature_measurement_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_CLIENT));
     ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_rel_humidity_measurement_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_CLIENT));
@@ -235,8 +233,7 @@ void ZigbeeThermostat::sendConfigReport(uint16_t cluster_id, ezb_zcl_config_repo
   configureClusterReporting(&report_cmd);
 }
 
-// NOTE(zb-v2): v1 built one ezb_zcl_config_report_record_t per addressing overload with the same content;
-// these two helpers build the temperature (INT16) and humidity (UINT16) records once.
+// Build temperature (INT16) and humidity (UINT16) configure-report records.
 static ezb_zcl_config_report_record_t make_temp_report_record(uint16_t min_interval, uint16_t max_interval, int16_t report_change) {
   ezb_zcl_config_report_record_t record = {};
   record.direction = EZB_ZCL_REPORTING_SEND;

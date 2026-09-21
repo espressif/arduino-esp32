@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,8 +55,7 @@ static esp_err_t zb_ota_upgrade_status_handler(const ezb_zcl_ota_upgrade_client_
 static esp_err_t zb_ota_upgrade_query_image_resp_handler(ezb_zcl_ota_upgrade_query_next_image_rsp_message_t *message);
 static esp_err_t zb_manuf_spec_command_handler(const ezb_zcl_manuf_spec_cmd_message_t *message);
 
-// Zigbee ZCL core action handler (v2.x).
-// NOTE(zb-v2): The callback signature changed: it now returns void and receives a non-const message.
+// Zigbee ZCL core action handler.
 // Status is communicated back to the stack via message->out.result (left at its default here except
 // where a handler explicitly rejects, e.g. the OTA query-image response). The internal esp_err_t
 // returns below are kept only for local control flow/logging.
@@ -86,8 +85,6 @@ static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, voi
       zb_ota_upgrade_query_image_resp_handler((ezb_zcl_ota_upgrade_query_next_image_rsp_message_t *)message);
       break;
     case EZB_ZCL_CORE_DEFAULT_RSP_CB_ID:    zb_cmd_default_resp_handler((ezb_zcl_cmd_default_rsp_message_t *)message); break;
-    // NOTE(zb-v2): v1 had separate PRIVILEGE_COMMAND_REQ and CUSTOM_CLUSTER_REQ callbacks; in v2.x both
-    // collapse into the single manufacturer-specific command callback.
     case EZB_ZCL_CORE_MANUF_SPEC_CMD_CB_ID: zb_manuf_spec_command_handler((ezb_zcl_manuf_spec_cmd_message_t *)message); break;
     default:                                log_w("Receive unhandled Zigbee action(0x%x) callback", (unsigned int)callback_id); break;
   }
@@ -138,8 +135,7 @@ static esp_err_t zb_attribute_reporting_handler(const ezb_zcl_cmd_report_attr_me
     message->info.cluster_id
   );
   // List through all Zigbee EPs and call the callback function, with the message.
-  // NOTE(zb-v2): a single report message can carry multiple attributes (in.variables linked list);
-  // we rebuild an ezb_zcl_attribute_t per variable to keep the zbAttributeRead() EP interface unchanged.
+  // A single report can carry multiple attributes (in.variables); rebuild one ezb_zcl_attribute_t each.
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_ep == (*it)->getEndpoint()) {
       for (ezb_zcl_report_attr_variable_t *variable = message->in.variables; variable != nullptr; variable = variable->next) {
@@ -176,8 +172,7 @@ static esp_err_t zb_cmd_read_attr_resp_handler(const ezb_zcl_cmd_read_attr_rsp_m
 
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_ep == (*it)->getEndpoint()) {
-      // NOTE(zb-v2): read-attr-rsp variables now expose flat fields (attr_id/status/attr_type/attr_value)
-      // instead of a nested ezb_zcl_attribute_t; rebuild one to keep the EP interface unchanged.
+      // Rebuild a nested ezb_zcl_attribute_t from the flat read-attr-rsp variable fields.
       ezb_zcl_read_attr_rsp_variable_t *variable = message->in.variables;
       while (variable) {
         ezb_zcl_attribute_t attribute = {};
@@ -331,8 +326,7 @@ static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_c
     log_e("Received message: error status(%d)", message->info.status);
   }
 
-  // NOTE(zb-v2): the movement command ID now lives in the ZCL header (in.header->cmd_id); the payload
-  // is a union (lift/tilt value or percentage) decoded by the EP based on the command ID.
+  // Movement command ID is in the ZCL header (in.header->cmd_id); payload is a lift/tilt union.
   log_v(
     "Received message: endpoint(%u), cluster(0x%x), command(0x%x), payload(%u)", message->info.dst_ep, message->info.cluster_id,
     message->in.header ? message->in.header->cmd_id : 0, message->in.payload.lift_value
@@ -390,11 +384,7 @@ static esp_err_t esp_element_ota_data(uint32_t total_size, const void *payload, 
   return ESP_OK;
 }
 
-// NOTE(zb-v2): The OTA client model was redesigned. The v1 single STATUS callback (with ota_header +
-// raw payload) is replaced by a progress enum (start/receiving/check/apply/finish/abort) carrying a
-// union of per-phase data. The flash-write flow below is ported faithfully; the OTA sub-element header
-// stripping (esp_element_ota_data) is retained since the OTA file sub-element format is spec-defined and
-// independent of the SDK version.
+// OTA client progress: start / receiving / check / apply / finish / abort.
 static esp_err_t zb_ota_upgrade_status_handler(const ezb_zcl_ota_upgrade_client_progress_message_t *message) {
   static uint32_t total_size = 0;
   static uint32_t offset = 0;
@@ -560,9 +550,7 @@ static esp_err_t zb_cmd_default_resp_handler(const ezb_zcl_cmd_default_rsp_messa
   return ESP_OK;
 }
 
-// NOTE(zb-v2): v1's separate privilege-command and custom-cluster-command callbacks are merged into the
-// single manufacturer-specific command callback. We dispatch to both EP hooks so that endpoints relying
-// on either zbCustomClusterCommand() or zbPrivilegeCommand() continue to receive the command.
+// Dispatch manufacturer-specific commands to both EP hooks.
 static esp_err_t zb_manuf_spec_command_handler(const ezb_zcl_manuf_spec_cmd_message_t *message) {
   if (!message) {
     log_e("Empty message");

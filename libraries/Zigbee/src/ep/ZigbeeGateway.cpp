@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@
 ZigbeeGateway::ZigbeeGateway(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_HOME_GATEWAY_DEVICE_ID;
 
-  // v2.x data model: build the endpoint descriptor manually (Basic + Identify) instead of the v1
-  // cluster-list factory. Registered as a Home Gateway device to preserve the v1 device id.
+  // Endpoint descriptor: Basic + Identify. Registered as a Home Gateway device.
   ezb_af_ep_config_t ep_config = {
     .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_HOME_GATEWAY_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };

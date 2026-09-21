@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,27 +14,13 @@
 
 /* Zigbee core class */
 
-// =====================================================================================
-// ESP-Zigbee-SDK v2.x migration (ZigbeeCore) -- STEP 1 of the library migration.
-//
-// This file targets the v2.x SDK (esp_zigbee.h + the ezbee/* core layer). It will NOT
-// compile until:
-//   1) the Arduino toolchain (esp32-arduino-libs / esp32-arduino-lib-builder) bundles
-//      esp-zigbee-lib v2.x, and
-//   2) the rest of the library (ZigbeeTypes, ZigbeeEP, ZigbeeHandlers and every src/ep/*)
-//      is migrated to the new ZCL data model.
-//
-// Boundaries that are owned by the not-yet-migrated ZCL / ZigbeeEP layer are flagged with
-// `TODO(zb-v2):` so they can be resolved in the follow-up steps.
-// =====================================================================================
-
 #pragma once
 
 #include "soc/soc_caps.h"
 #include "sdkconfig.h"
 #if CONFIG_ZB_ENABLED
 
-#include "esp_zigbee.h"                 // all-in-one v2.x header (was esp_zigbee_core.h)
+#include "esp_zigbee.h"
 #include "ezbee/zha.h"                  // ZHA standard device IDs (EZB_ZHA_*_DEVICE_ID); not pulled in by esp_zigbee.h
 #include "ezbee/zdo/zdo_nwk_mgmt.h"     // Mgmt_Bind_req (binding table retrieval)
 #include "ezbee/zdo/zdo_dev_srv_disc.h" // Match_Desc_req (endpoint discovery)
@@ -47,7 +33,6 @@ class ZigbeeEP;
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrArg)(void *);
 
-// v2.x active-scan beacon descriptor (was esp_zb_network_descriptor_t)
 typedef ezb_nwk_active_scan_result_t zigbee_scan_result_t;
 
 // enum of Zigbee Roles (values match ezb_nwk_device_type_t)
@@ -62,7 +47,7 @@ typedef enum {
 
 #define ZB_BEGIN_TIMEOUT_DEFAULT 30000  // 30 seconds
 
-// All 2.4GHz channels (11-26). Replaces removed ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK.
+// All 2.4 GHz channels (11-26)
 #define ZB_TRANSCEIVER_ALL_CHANNELS_MASK 0x07FFF800
 
 #define ZIGBEE_DEFAULT_ED_CONFIG()                  \
@@ -90,7 +75,6 @@ typedef enum {
     .zczr_config = {.max_children = 10},              \
   }
 
-// v2.x radio config: host_config was removed; uart field order changed.
 #define ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG()     \
   {                                                \
     .radio_mode = ESP_ZIGBEE_RADIO_MODE_UART_RCP,  \
@@ -113,14 +97,14 @@ typedef enum {
 
 class ZigbeeCore {
 private:
-  esp_zigbee_radio_config_t _radio_config;  // host_config removed in v2.x
+  esp_zigbee_radio_config_t _radio_config;
   uint32_t _primary_channel_mask;
   uint32_t _begin_timeout;
   int16_t _scan_status;
   uint8_t _scan_duration;
   bool _rx_on_when_idle;
 
-  ezb_af_device_desc_t _zb_dev_desc;  // was esp_zb_ep_list_t *_zb_ep_list
+  ezb_af_device_desc_t _zb_dev_desc;
   zigbee_role_t _role;
   bool _initialized;
   bool _endpoints_registered;
@@ -197,8 +181,6 @@ public:
   void setRadioConfig(esp_zigbee_radio_config_t config);
   esp_zigbee_radio_config_t getRadioConfig();
 
-  // NOTE(zb-v2): host_config was removed from the SDK; the host-config accessors are gone.
-
   void setPrimaryChannelMask(uint32_t mask);  // By default all channels are scanned (11-26) -> mask 0x07FFF800
 
   void setScanDuration(uint8_t duration);  // Can be set from 1 - 4. 1 is fastest, 4 is slowest
@@ -251,9 +233,6 @@ public:
   void callDefaultResponseCallback(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status, uint8_t endpoint, uint16_t cluster);
 
   // Friend function declarations to allow access to private members.
-  // v2.x: the application signal handler is registered via ezb_app_signal_add_handler()
-  // (it returns bool and receives an opaque ezb_app_signal_t*), instead of overriding the
-  // old weak esp_zb_app_signal_handler() symbol.
   friend bool zb_app_signal_handler(const ezb_app_signal_t *signal);
   friend bool zb_apsde_data_indication_handler(const ezb_apsde_data_ind_t *ind);
 

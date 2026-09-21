@@ -1,24 +1,32 @@
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "ZigbeeMultistate.h"
 #if CONFIG_ZB_ENABLED
 #include "ezbee/zha.h"
 #include "ezbee/zcl/cluster/multistate_input_desc.h"
 #include "ezbee/zcl/cluster/multistate_output_desc.h"
 
-// NOTE(zb-v2): The v1 build needed an extern-"C" shim that aliased esp_zb_zcl_multistate_input_init_*()
-// onto the misnamed esp_zb_zcl_multi_input_init_*() symbols (ESP-ZIGBEE-SDK 1.6.6 bug). v2.x ships the
-// MultistateInput cluster under its correct name (ezb_zcl_multistate_input_cluster_server_init), so the
-// workaround is removed. TODO(zb-v2): confirm no equivalent init alias is required once v2.x links.
-
-// NOTE(zb-v2): v2.x does not expose application-type "group id" macros. The group id is the high byte
-// of the 32-bit ApplicationType value, so the ZCL-defined values are inlined here (matching v1):
-// Multistate Input = 0x0D, Multistate Output = 0x0E.
+// Application-type group id is the high byte of the 32-bit ApplicationType value, so the
+// ZCL-defined values are inlined here: Multistate Input = 0x0D, Multistate Output = 0x0E.
 #define ZB_MULTISTATE_INPUT_GROUP_ID  0x0D
 #define ZB_MULTISTATE_OUTPUT_GROUP_ID 0x0E
 
 ZigbeeMultistate::ZigbeeMultistate(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
 
-  // v2.x data model: build the endpoint descriptor manually with Basic + Identify server clusters.
+  // Endpoint descriptor: Basic + Identify server clusters.
   // Multistate Input/Output clusters are attached later by addMultistateInput()/addMultistateOutput().
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
 
@@ -337,7 +345,7 @@ bool ZigbeeMultistate::reportMultistateInput() {
   /* Send report attributes command */
   ezb_zcl_report_attr_cmd_t report_attr_cmd;
   memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
-  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  // Report to bound devices (no explicit destination).
   ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
   report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
   report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_MULTISTATE_INPUT;

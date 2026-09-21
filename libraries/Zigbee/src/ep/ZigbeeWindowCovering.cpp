@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,7 @@ ZigbeeWindowCovering::ZigbeeWindowCovering(uint8_t endpoint) : ZigbeeEP(endpoint
   _on_stop = nullptr;
 
   // set default values for window covering attributes
-  // NOTE(zb-v2): v2.x defines no CurrentPositionLift/TiltPercentage DEFAULT_VALUE macro; only MIN/MAX
-  // exist for the percentage attributes, so the spec minimum (0) is used as the initial value.
+  // No DEFAULT_VALUE macro for CurrentPositionLift/TiltPercentage; start at the spec minimum (0).
   _current_lift_percentage = EZB_ZCL_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_MIN_VALUE;
   _current_tilt_percentage = EZB_ZCL_WINDOW_COVERING_CURRENT_POSITION_TILT_PERCENTAGE_MIN_VALUE;
   _installed_open_limit_lift = EZB_ZCL_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_LIFT_DEFAULT_VALUE;
@@ -39,8 +38,7 @@ ZigbeeWindowCovering::ZigbeeWindowCovering(uint8_t endpoint) : ZigbeeEP(endpoint
   _physical_closed_limit_lift = EZB_ZCL_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_LIFT_DEFAULT_VALUE;
   _physical_closed_limit_tilt = EZB_ZCL_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_TILT_DEFAULT_VALUE;
 
-  // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
-  // scenes, window covering clusters) instead of the v1 cluster-list factory.
+  // ZHA template: Basic, Identify, Groups, Scenes, Window Covering.
   _ep_config = {
     .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_WINDOW_COVERING_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
@@ -52,7 +50,7 @@ ZigbeeWindowCovering::ZigbeeWindowCovering(uint8_t endpoint) : ZigbeeEP(endpoint
   }
 
   // The ZHA template only adds the mandatory window covering attributes (type, config status). Add the
-  // optional position/limit attributes that this endpoint reports, matching the v1 cluster factory.
+  // optional position/limit attributes that this endpoint reports.
   addOrSetEpClusterAttr(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID,
     (void *)&_current_lift_percentage, ezb_zcl_window_covering_cluster_desc_add_attr
@@ -200,9 +198,7 @@ void ZigbeeWindowCovering::zbAttributeSet(const ezb_zcl_set_attr_value_message_t
       );
       setMode(motor_reversed, calibration_mode, maintenance_mode, leds_on);
       // Update configuration status with motor reversed status (stack callback: no Zigbee lock).
-      // NOTE(zb-v2): runtime attribute access goes through the opaque attribute descriptor: read with
-      // ezb_zcl_get_attr_desc()/ezb_zcl_attr_desc_get_value() and write with ezb_zcl_set_attr_value()
-      // (the lock-free variant wrapped by setClusterAttribute()), preserving the no-lock callback flow.
+      // Read/write the opaque attribute descriptor without taking the Zigbee lock (stack callback).
       uint8_t config_status = 0;
       ezb_zcl_attr_desc_t config_status_attr =
         ezb_zcl_get_attr_desc(_endpoint, EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_STATUS_ID, EZB_ZCL_STD_MANUF_CODE);
@@ -229,7 +225,7 @@ void ZigbeeWindowCovering::zbAttributeSet(const ezb_zcl_set_attr_value_message_t
 void ZigbeeWindowCovering::zbWindowCoveringMovementCmd(const ezb_zcl_window_covering_movement_message_t *message) {
   // check the data and call right method
   if (message->info.cluster_id == EZB_ZCL_CLUSTER_ID_WINDOW_COVERING) {
-    // NOTE(zb-v2): the movement command ID is carried in the ZCL header (in.header->cmd_id) and the
+    // Movement command ID is in the ZCL header (in.header->cmd_id) and the
     // payload is a union (lift/tilt value or percentage) selected by that command ID.
     const ezb_zcl_cmd_hdr_t *header = message->in.header;
     uint8_t command = header ? header->cmd_id : 0xff;
@@ -296,16 +292,14 @@ void ZigbeeWindowCovering::stop() {
 bool ZigbeeWindowCovering::setLiftPosition(uint16_t lift_position) {
   _current_lift_position = lift_position;
   _current_lift_percentage = ((lift_position - _installed_open_limit_lift) * 100) / (_installed_closed_limit_lift - _installed_open_limit_lift);
-  log_v("Updating window covering lift position to %u (%u%)", _current_lift_position, _current_lift_percentage);
+  log_v("Updating window covering lift position to %u (%u%%)", _current_lift_position, _current_lift_percentage);
 
   ezb_zcl_status_t ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_ID, &_current_lift_position, false
   );
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
-    // NOTE(zb-v2): the SDK window covering check_value_handler has the INSTALLED_OPEN/CLOSED lift limits
-    // swapped (open used as max, closed as min), so a valid CURRENT_POSITION_LIFT is rejected with 0x87.
-    // Non-fatal: the lift percentage attribute (used by HA) is still updated below. Remove once SDK fixed.
-    log_w("Failed to set lift position (SDK limit-check bug): 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    log_e("Failed to set lift position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
   }
   ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID, &_current_lift_percentage,
@@ -327,10 +321,8 @@ bool ZigbeeWindowCovering::setLiftPercentage(uint8_t lift_percentage) {
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_ID, &_current_lift_position, false
   );
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
-    // NOTE(zb-v2): the SDK window covering check_value_handler has the INSTALLED_OPEN/CLOSED lift limits
-    // swapped (open used as max, closed as min), so a valid CURRENT_POSITION_LIFT is rejected with 0x87.
-    // Non-fatal: the lift percentage attribute (used by HA) is still updated below. Remove once SDK fixed.
-    log_w("Failed to set lift position (SDK limit-check bug): 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    log_e("Failed to set lift position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
   }
   ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID, &_current_lift_percentage,
@@ -346,16 +338,14 @@ bool ZigbeeWindowCovering::setLiftPercentage(uint8_t lift_percentage) {
 bool ZigbeeWindowCovering::setTiltPosition(uint16_t tilt_position) {
   _current_tilt_position = tilt_position;
   _current_tilt_percentage = ((tilt_position - _installed_open_limit_tilt) * 100) / (_installed_closed_limit_tilt - _installed_open_limit_tilt);
-  log_v("Updating window covering tilt position to %u (%u%)", _current_tilt_position, _current_tilt_percentage);
+  log_v("Updating window covering tilt position to %u (%u%%)", _current_tilt_position, _current_tilt_percentage);
 
   ezb_zcl_status_t ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_ID, &_current_tilt_position, false
   );
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
-    // NOTE(zb-v2): the SDK window covering check_value_handler has the INSTALLED_OPEN/CLOSED tilt limits
-    // swapped (open used as max, closed as min), so a valid CURRENT_POSITION_TILT is rejected with 0x87.
-    // Non-fatal: the tilt percentage attribute (used by HA) is still updated below. Remove once SDK fixed.
-    log_w("Failed to set tilt position (SDK limit-check bug): 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    log_e("Failed to set tilt position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
   }
   ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_PERCENTAGE_ID, &_current_tilt_percentage,
@@ -377,10 +367,8 @@ bool ZigbeeWindowCovering::setTiltPercentage(uint8_t tilt_percentage) {
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_ID, &_current_tilt_position, false
   );
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
-    // NOTE(zb-v2): the SDK window covering check_value_handler has the INSTALLED_OPEN/CLOSED tilt limits
-    // swapped (open used as max, closed as min), so a valid CURRENT_POSITION_TILT is rejected with 0x87.
-    // Non-fatal: the tilt percentage attribute (used by HA) is still updated below. Remove once SDK fixed.
-    log_w("Failed to set tilt position (SDK limit-check bug): 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    log_e("Failed to set tilt position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
   }
   ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_PERCENTAGE_ID, &_current_tilt_percentage,

@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,9 +69,7 @@ bool ZigbeeIlluminanceSensor::setTolerance(uint16_t tolerance) {
 }
 
 bool ZigbeeIlluminanceSensor::setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta) {
-  // NOTE(zb-v2): Reporting is now handle-based. The reporting record is created by the stack when the
-  // endpoint is registered, so this must be called after Zigbee.begin(). We look up the handle, tune the
-  // intervals/reportable change, then start the report.
+  // Must be called after Zigbee.begin(). Look up the reporting handle, set intervals / delta, then start it.
   ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(
     _endpoint, EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID, EZB_ZCL_STD_MANUF_CODE
   );
@@ -103,7 +101,7 @@ bool ZigbeeIlluminanceSensor::report() {
   /* Send report attributes command */
   ezb_zcl_report_attr_cmd_t report_attr_cmd;
   memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
-  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  // Report to bound devices (no explicit destination).
   ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
   report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
   report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT;

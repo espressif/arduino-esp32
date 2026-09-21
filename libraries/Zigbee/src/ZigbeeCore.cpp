@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,31 +14,6 @@
 
 /* Zigbee Core Functions */
 
-// =====================================================================================
-// ESP-Zigbee-SDK v2.x migration (ZigbeeCore) -- STEP 1 of the library migration.
-//
-// What was migrated here (ZigbeeCore's own responsibilities):
-//   - Init/start:      esp_zb_platform_config()+esp_zb_init()  -> esp_zigbee_init(&esp_zigbee_config_t)
-//                      esp_zb_start()+esp_zb_stack_main_loop()  -> esp_zigbee_start()+esp_zigbee_launch_mainloop()
-//   - Storage:         the "zb_storage" partition is now NVS and is initialized via
-//                      nvs_flash_init_partition("zb_storage") (the partitions.csv subtype must be `nvs`).
-//   - App signals:     the weak esp_zb_app_signal_handler() override is replaced by
-//                      ezb_app_signal_add_handler(); signal type/params via ezb_app_signal_get_type()/
-//                      ezb_app_signal_get_params(); there is no more `esp_err_status` (BDB signals carry
-//                      ezb_bdb_signal_simple_params_t::status).
-//   - Channel mask:    esp_zb_set_primary_network_channel_set() -> ezb_bdb_set_primary_channel_set()
-//   - Scan:            esp_zb_zdo_active_scan_request()         -> ezb_nwk_scan() (now streams one beacon
-//                      per callback, terminated by a NULL result).
-//   - Bindings:        esp_zb_zdo_binding_table_req()           -> ezb_zdo_nwk_mgmt_bind_req() (array-based result).
-//   - Retry:           esp_zb_scheduler_alarm() (removed)       -> esp_timer one-shot re-posting into the stack.
-//   - Sleepy/battery:  the ZBOSS zb_set_ed_node_descriptor() workaround is replaced by
-//                      ezb_af_set_node_power_desc()+ezb_set_rx_on_when_idle().
-//
-// Boundaries owned by the not-yet-migrated ZCL / ZigbeeEP layer are flagged with `TODO(zb-v2):`.
-// This file will not compile until esp-zigbee-lib v2.x is bundled by the toolchain AND the rest of
-// the library (ZigbeeTypes/ZigbeeEP/ZigbeeHandlers/src/ep/*) is migrated.
-// =====================================================================================
-
 #include "Arduino.h"
 #include "ZigbeeCore.h"
 #if CONFIG_ZB_ENABLED
@@ -53,7 +28,7 @@
 static bool edBatteryPowered = false;
 
 ZigbeeCore::ZigbeeCore() {
-  _radio_config.radio_mode = ESP_ZIGBEE_RADIO_MODE_NATIVE;  // Use the native 15.4 radio (host_config removed in v2.x)
+  _radio_config.radio_mode = ESP_ZIGBEE_RADIO_MODE_NATIVE;  // Use the native 15.4 radio
   _zb_dev_desc = ezb_af_create_device_desc();
   _primary_channel_mask = ZB_TRANSCEIVER_ALL_CHANNELS_MASK;
   _open_network = 0;
@@ -79,15 +54,15 @@ ZigbeeCore::ZigbeeCore() {
 }
 
 //forward declarations
-void zigbee_register_zcl_handlers(void);  // ZigbeeHandlers.cpp — registers static zb_action_handler (SDK v2 pattern)
+void zigbee_register_zcl_handlers(void);  // ZigbeeHandlers.cpp
 bool zb_app_signal_handler(const ezb_app_signal_t *signal);
 bool zb_apsde_data_indication_handler(const ezb_apsde_data_ind_t *ind);
 
-// ---- Commissioning retry (replacement for the removed esp_zb_scheduler_alarm) -------------------
+// ---- Commissioning retry (one-shot timer, re-posts into the stack) ------------------------------
 static esp_timer_handle_t s_comm_retry_timer = NULL;
 static uint8_t s_comm_retry_mode = 0;
 
-// ---- Zigbee mainloop stop/start (esp_zigbee_stop, SDK v2.0.4+) --------------------------------
+// ---- Zigbee mainloop stop/start (esp_zigbee_stop) ----------------------------------------------
 static TaskHandle_t zigbeeTaskHandle = NULL;
 static SemaphoreHandle_t zigbeeResumeSem = NULL;   // start() posts; task waits after mainloop exit
 static SemaphoreHandle_t zigbeeStoppedSem = NULL;  // task posts when mainloop exit completes
@@ -255,9 +230,7 @@ static void esp_zb_task(void *pvParameters) {
   /* initialize and start Zigbee stack (no-autostart: we drive commissioning from the signal handler) */
   ESP_ERROR_CHECK(esp_zigbee_start(false));
 
-  // Battery powered end devices: advertise a disposable-battery node power descriptor.
-  // Replaces the old ZBOSS zb_set_ed_node_descriptor() workaround (the power source and transfer
-  // size node-descriptor fields are now generated from the device's settings in v2.x).
+  // Battery-powered end devices: advertise a disposable-battery node power descriptor.
   if (((zigbee_role_t)Zigbee.getRole() == ZIGBEE_END_DEVICE) && edBatteryPowered) {
     ezb_af_node_power_desc_t power_desc = {};
     power_desc.current_power_mode = EZB_AF_NODE_POWER_MODE_SYNC_ON_WHEN_IDLE;
@@ -278,8 +251,7 @@ static void esp_zb_task(void *pvParameters) {
 
 // Zigbee stack init: esp_zigbee_init() + commissioning setup (no endpoint registration yet).
 bool ZigbeeCore::zigbeeStackInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs) {
-  // The persistent data partition is now NVS (was a FAT partition in v1.x). The partitions.csv
-  // entry for `zb_storage` must use subtype `nvs`, and the partition must be initialized as NVS.
+  // Persistent Zigbee data lives in the `zb_storage` NVS partition (subtype `nvs`).
   esp_err_t nvs_err = nvs_flash_init_partition("zb_storage");
   if (nvs_err == ESP_ERR_NVS_NO_FREE_PAGES || nvs_err == ESP_ERR_NVS_NEW_VERSION_FOUND || erase_nvs) {
     nvs_flash_erase_partition("zb_storage");
@@ -290,7 +262,6 @@ bool ZigbeeCore::zigbeeStackInit(esp_zigbee_device_config_t *zb_cfg, bool erase_
     return false;
   }
 
-  // v2.x bundles the platform + device configuration into a single esp_zigbee_init() call.
   esp_zigbee_config_t zb_init_cfg = {
     .device_config = *zb_cfg,
     .platform_config =
@@ -327,9 +298,6 @@ bool ZigbeeCore::zigbeeStackInit(esp_zigbee_device_config_t *zb_cfg, bool erase_
 
   // Register APSDE-DATA indication handler to catch bind/unbind requests.
   ezb_apsde_data_indication_handler_register(zb_apsde_data_indication_handler);
-
-  // NOTE(zb-v2): esp_zb_nvram_erase_at_start() is removed. NVRAM erase on join is handled above
-  // by erasing the zb_storage NVS partition when `erase_nvs` is set.
 
   _initialized = true;
   return true;
@@ -394,7 +362,7 @@ void ZigbeeCore::closeNetwork() {
   }
 }
 
-// v2.x application signal handler. Registered via ezb_app_signal_add_handler().
+// Application signal handler (registered via ezb_app_signal_add_handler()).
 // Returns true if the signal was fully handled, false to let the stack continue its default handling.
 bool zb_app_signal_handler(const ezb_app_signal_t *signal) {
   ezb_app_signal_type_t sig_type = ezb_app_signal_get_type(signal);
@@ -404,8 +372,7 @@ bool zb_app_signal_handler(const ezb_app_signal_t *signal) {
     case EZB_ZDO_SIGNAL_SKIP_STARTUP:  // Common
       log_i("Zigbee stack initialized");
       log_d("Zigbee channel mask: 0x%08" PRIx32, ezb_get_channel_mask());
-      // In v2.x the initialization (rejoin to previous network) does not run automatically;
-      // the application must trigger it explicitly.
+      // Rejoin / initialization does not run automatically; trigger it explicitly.
       ezb_bdb_start_top_level_commissioning(EZB_BDB_MODE_INITIALIZATION);
       break;
     case EZB_BDB_SIGNAL_DEVICE_FIRST_START:  // Common
@@ -505,8 +472,6 @@ bool zb_app_signal_handler(const ezb_app_signal_t *signal) {
       if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         const ezb_zdo_signal_device_annce_params_t *dev_annce_params = (const ezb_zdo_signal_device_annce_params_t *)p_params;
         log_i("New device commissioned or rejoined (short: 0x%04x)", dev_annce_params->short_addr);
-        // TODO(zb-v2): ZigbeeEP::findEndpoint() must be migrated to accept ezb_zdo_match_desc_req_t
-        // and to fill field.profile_id / cluster_list / cb before issuing ezb_zdo_match_desc_req().
         ezb_zdo_match_desc_req_t cmd_req = {};
         cmd_req.dst_nwk_addr = dev_annce_params->short_addr;
         cmd_req.field.nwk_addr_of_interest = dev_annce_params->short_addr;
@@ -626,15 +591,14 @@ bool zb_apsde_data_indication_handler(const ezb_apsde_data_ind_t *ind) {
 void ZigbeeCore::factoryReset(bool restart) {
   if (restart) {
     log_v("Factory resetting Zigbee stack, device will reboot");
-    esp_zigbee_factory_reset();  // noreturn in v2.x
+    esp_zigbee_factory_reset();  // does not return
   } else {
-    // TODO(zb-v2): esp_zb_zcl_reset_nvram_to_factory_default() (ZCL) has no direct v2.x equivalent
-    // available here; revisit when the ZCL layer is migrated.
-    log_w("Factory reset without restart is not yet supported on the v2.x SDK");
+    // TODO: factory reset without reboot (NVS erase only) is not supported by the SDK.
+    log_w("Factory reset without restart is not yet supported");
   }
 }
 
-// v2.x active scan results stream one beacon per callback, terminated by a NULL result.
+// Active scan streams one beacon per callback, terminated by a NULL result.
 void ZigbeeCore::scanCompleteCallback(ezb_nwk_active_scan_result_t *result, void *user_ctx) {
   if (result == nullptr) {
     // Scan finished
@@ -717,9 +681,9 @@ void ZigbeeCore::scanDelete() {
   _scan_status = ZB_SCAN_FAILED;
 }
 
-// Recall bounded devices from the binding table after reboot or when requested.
-// v2.x: ezb_zdo_nwk_mgmt_bind_req() returns the binding table as an array (rsp->binding_table_list)
-// rather than the v1 linked list, and chunking advances field.start_index.
+// Recall bound devices from the binding table after reboot or when requested.
+// ezb_zdo_nwk_mgmt_bind_req() returns the table as an array (rsp->binding_table_list);
+// chunking advances field.start_index.
 void ZigbeeCore::bindingTableCb(const ezb_zdo_nwk_mgmt_bind_req_result_t *result, void *user_ctx) {
   ezb_zdo_nwk_mgmt_bind_req_t *req = (ezb_zdo_nwk_mgmt_bind_req_t *)user_ctx;
 
@@ -925,7 +889,6 @@ void ZigbeeCore::searchBindings() {
 void ZigbeeCore::resetNVRAMChannelMask() {
   _primary_channel_mask = ZB_TRANSCEIVER_ALL_CHANNELS_MASK;
   ezb_set_channel_mask(_primary_channel_mask);
-  // NOTE(zb-v2): the ZBOSS zb_nvram_write_dataset() call is removed; persistence is handled by NVS.
   log_v("Channel mask reset to all channels");
 }
 
@@ -994,7 +957,6 @@ void ZigbeeCore::start() {
 }
 
 // Function to convert enum value to string
-// TODO(zb-v2): the HA device id enum lives in ezbee/zha.h in v2.x; verify the identifiers still match.
 const char *ZigbeeCore::getDeviceTypeString(uint16_t deviceId) {
   switch (deviceId) {
     case EZB_ZHA_ON_OFF_SWITCH_DEVICE_ID:              return "General On/Off switch";

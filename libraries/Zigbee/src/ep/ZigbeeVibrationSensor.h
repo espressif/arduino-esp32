@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,9 +51,9 @@ public:
 private:
   ezb_zcl_ias_zone_cluster_config_t _ias_zone_cfg;
   void zbIASZoneEnrollResponse(const ezb_zcl_ias_zone_enroll_rsp_message_t *message) override;
-  uint16_t _zone_status;  // ZoneStatus is a 16-bit bitmap in v2.x
+  uint16_t _zone_status;  // ZoneStatus bitmap
   uint8_t _zone_id;
-  uint8_t _ias_cie_addr[8];  // EUI-64 (was esp_zb_ieee_addr_t)
+  uint8_t _ias_cie_addr[8];  // EUI-64
   uint8_t _ias_cie_endpoint;
   bool _enrolled;
 };

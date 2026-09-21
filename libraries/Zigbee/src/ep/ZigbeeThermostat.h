@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,10 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-
-// NOTE(zb-v2): v1 defined a local ZB_DEFAULT_THERMOSTAT_CONFIG() macro to dodge a narrowing-conversion
-// warning in the SDK. v2.x ships EZB_ZHA_THERMOSTAT_CONFIG() (see ezbee/zha.h) with the same purpose, so
-// the local macro is dropped and the SDK macro is used directly in the constructor.
 
 class ZigbeeThermostat : public ZigbeeEP {
 public:
@@ -125,7 +121,7 @@ private:
   float _max_humidity;
   float _tolerance_humidity;
 
-  // v2.x read/configure-report senders shared by all addressing overloads.
+  // Read / configure-report senders shared by all addressing overloads.
   bool sendReadAttributes(uint16_t cluster_id, uint16_t *attributes, uint8_t attr_number, ezb_address_t dst_addr, uint8_t dst_ep);
   void sendConfigReport(uint16_t cluster_id, ezb_zcl_config_report_record_t *records, uint16_t record_number, ezb_address_t dst_addr, uint8_t dst_ep);
 

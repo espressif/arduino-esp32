@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,15 +35,13 @@
     Z = (float)(0.019334 * (r) + 0.119193 * (g) + 0.950227 * (b)); \
   }
 
-// NOTE(zb-v2): v2.x exposes packing through EZB_PACKED_* (see core_types.h) rather than a single
-// ESP_ZB_PACKED_STRUCT macro, so the ZCL string helper uses the portable packed attribute directly.
 typedef struct zbstring_s {
   uint8_t len;
   char data[];
 } __attribute__((packed)) zbstring_t;
 
 typedef struct zb_device_params_s {
-  uint8_t ieee_addr[8];  // was esp_zb_ieee_addr_t; kept as a raw EUI-64 byte array (ezb_extaddr_t is a union)
+  uint8_t ieee_addr[8];  // EUI-64
   uint8_t endpoint;
   uint16_t short_addr;
 } zb_device_params_t;
@@ -54,8 +52,7 @@ typedef enum {
   ZB_POWER_SOURCE_BATTERY = 0x03,
 } zb_power_source_t;
 
-// Global function for converting ZCL status to name.
-// NOTE(zb-v2): name kept (used across the library); parameter is now the v2.x ezb_zcl_status_t (uint8_t).
+// Convert ZCL status to a readable name.
 const char *esp_zb_zcl_status_to_name(ezb_zcl_status_t status);
 
 /* Zigbee End Device Class */
@@ -68,12 +65,9 @@ public:
   ZigbeeEP(uint8_t endpoint = 10);
   ~ZigbeeEP() {}
 
-  // Set ep config and endpoint descriptor.
-  // NOTE(zb-v2): The v1 ZCL "cluster list" (esp_zb_cluster_list_t) no longer exists. In v2.x a derived
-  // class creates an endpoint descriptor with ezb_af_create_endpoint_desc(&ep_config), attaches each
-  // cluster descriptor with ezb_af_endpoint_add_cluster_desc(), and passes the result here. ZigbeeCore
-  // then attaches _ep_desc to the device descriptor via ezb_af_device_add_endpoint_desc().
-  // v2.x lifecycle: Zigbee.role(role), configure EPs, Zigbee.addEndpoint(), Zigbee.begin().
+  // Endpoint descriptor is created by the derived class (ezb_af_create_endpoint_desc +
+  // ezb_af_endpoint_add_cluster_desc) and attached to the device in Zigbee.addEndpoint().
+  // Lifecycle: Zigbee.role(), configure EPs, Zigbee.addEndpoint(), Zigbee.begin().
   bool isEpReady() const {
     return _ep_desc != nullptr;
   }
@@ -108,8 +102,6 @@ public:
   bool setManufacturerAndModel(const char *name, const char *model);
 
   // Methods to read manufacturer and model name from selected endpoint and short address.
-  // NOTE(zb-v2): IEEE address parameters are plain const uint8_t[8] EUI-64 pointers (the v1
-  // esp_zb_ieee_addr_t typedef is no longer used here).
   char *readManufacturer(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
   char *readModel(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
 
@@ -186,10 +178,7 @@ public:
   virtual void zbIASZoneEnrollRequest(const ezb_zcl_ias_zone_enroll_req_message_t *message) {};
   virtual void zbIASZoneEnrollResponse(const ezb_zcl_ias_zone_enroll_rsp_message_t *message) {};
   virtual void zbDefaultResponse(const ezb_zcl_cmd_default_rsp_message_t *message);  //already implemented
-  // NOTE(zb-v2): v1 "privilege command" and "custom cluster command" interception have no direct v2.x
-  // equivalent. The closest mechanism is the manufacturer-specific command callback
-  // (EZB_ZCL_CORE_MANUF_SPEC_CMD_CB_ID -> ezb_zcl_manuf_spec_cmd_message_t) and/or the raw frame handler.
-  // These two hooks are mapped to the manuf-spec message and need a redesign in ZigbeeHandlers.
+  // Manufacturer-specific command hooks (dispatched from EZB_ZCL_CORE_MANUF_SPEC_CMD_CB_ID).
   virtual void zbPrivilegeCommand(const ezb_zcl_manuf_spec_cmd_message_t *message);
   virtual void zbCustomClusterCommand(const ezb_zcl_manuf_spec_cmd_message_t *message);
 
@@ -241,11 +230,9 @@ private:
 
 protected:
   uint8_t _endpoint;
-  // NOTE(zb-v2): HA standard device IDs move to ezbee/zha.h (e.g. ezb_zha_standard_devices_t). Kept as a
-  // plain uint16_t app_device_id here to avoid coupling to the (not-yet-migrated) ZHA device-id enum.
   uint16_t _device_id;
-  ezb_af_ep_config_t _ep_config;   // was esp_zb_endpoint_config_t
-  ezb_af_ep_desc_t _ep_desc;       // was esp_zb_cluster_list_t *_cluster_list (opaque endpoint descriptor)
+  ezb_af_ep_config_t _ep_config;
+  ezb_af_ep_desc_t _ep_desc;
   bool _is_bound;
   bool _allow_multiple_binding;
   bool _use_manual_binding;
@@ -259,9 +246,7 @@ protected:
   bool getClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, uint16_t value_size);
   bool reportClusterAttribute(ezb_zcl_report_attr_cmd_t *report_attr_cmd);
   bool readClusterAttribute(ezb_zcl_read_attr_cmd_t *read_req);
-  // NOTE(zb-v2): v2.x reporting is handle-based (ezb_zcl_reporting_info_t obtained via
-  // ezb_zcl_reporting_info_find(), then ezb_zcl_reporting_info_update()); there is no caller-populated
-  // reporting-info struct anymore. This helper now takes the opaque reporting handle.
+  // Start reporting from an opaque handle (ezb_zcl_reporting_info_find / ezb_zcl_reporting_info_update).
   bool setClusterReporting(ezb_zcl_reporting_info_t reporting_info);
   bool configureClusterReporting(ezb_zcl_config_report_cmd_t *report_cmd);
 

@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ bool ZigbeeVibrationSensor::report() {
     log_e("Failed to report: IAS Zone not enrolled");
     return false;
   }
-  // v2.x has no public notification sender; the server emits it automatically on ZoneStatus change.
+  // The server emits the notification automatically on ZoneStatus change.
   log_v("IAS Zone status change notification is emitted automatically on ZoneStatus attribute change");
   return true;
 }
@@ -114,9 +114,8 @@ bool ZigbeeVibrationSensor::requestIASZoneEnroll() {
 }
 
 bool ZigbeeVibrationSensor::restoreIASZoneEnroll() {
-  // NOTE: Workaround, not a proper fix. v2.x does not persist the IAS Zone attributes across reboot
-  // (unlike SDK in v1.x), so we just re-assert ZoneState = ENROLLED to resume notifications to the
-  // persisted CIE binding. Revert to reading back the persisted attributes if the SDK matches old behaviour.
+  // Workaround: IAS Zone attributes are not persisted across reboot, so re-assert ZoneState = ENROLLED
+  // to resume notifications to the persisted CIE binding.
   uint8_t zone_state = EZB_ZCL_IAS_ZONE_ZONE_STATE_ENROLLED;
   ezb_zcl_status_t ret =
     setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATE_ID, &zone_state, false);

@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ ZigbeePowerOutlet::ZigbeePowerOutlet(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_MAINS_POWER_OUTLET_DEVICE_ID;
   _on_state_change = nullptr;
 
-  // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
-  // scenes, on/off clusters) instead of the v1 manual cluster-list factory.
+  // ZHA template: Basic, Identify, Groups, Scenes, On/Off.
   _ep_config = {
     .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_MAINS_POWER_OUTLET_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };

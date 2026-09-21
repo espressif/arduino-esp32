@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,9 +23,8 @@ ZigbeeFanControl::ZigbeeFanControl(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _current_fan_mode = FAN_MODE_OFF;
   _current_fan_mode_sequence = FAN_MODE_SEQUENCE_LOW_MED_HIGH;
 
-  // v2.x data model: build the endpoint descriptor manually (Basic + Identify + FanControl server).
-  // NOTE(zb-v2): the v1 device id mismatch is preserved: _device_id is Thermostat while the endpoint
-  // descriptor is registered as a Heating/Cooling Unit (matching the v1 _ep_config.app_device_id).
+  // Endpoint descriptor: Basic + Identify + Fan Control.
+  // _device_id is Thermostat (no Fan Control device ID in the spec); the endpoint is registered as a Heating/Cooling Unit.
   ezb_af_ep_config_t ep_config = {
     .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_HEATING_COOLING_UNIT_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
@@ -60,7 +59,6 @@ bool ZigbeeFanControl::setFanModeSequence(ZigbeeFanModeSequence sequence) {
 void ZigbeeFanControl::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {
   //check the data and call right method
   if (message->info.cluster_id == EZB_ZCL_CLUSTER_ID_FAN_CONTROL) {
-    // NOTE(zb-v2): v1 ESP_ZB_ZCL_ATTR_TYPE_8BIT_ENUM is EZB_ZCL_ATTR_TYPE_ENUM8 in v2.x.
     if (message->in.attribute.id == EZB_ZCL_ATTR_FAN_CONTROL_FAN_MODE_ID && message->in.attribute.data.type == EZB_ZCL_ATTR_TYPE_ENUM8) {
       if (message->in.attribute.data.value != nullptr && message->in.attribute.data.size >= 1) {
         uint8_t raw_mode = *(const uint8_t *)message->in.attribute.data.value;

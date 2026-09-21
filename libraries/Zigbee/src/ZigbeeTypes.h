@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,9 @@
 
 #pragma once
 
-#include "esp_zigbee.h"  // v2.x all-in-one header (was esp_zigbee_core.h)
+#include "esp_zigbee.h"
 
-// Foundation Command Types
-// NOTE(zb-v2): These are ZCL spec-fixed foundation command IDs (0x00-0x16); the values are
-// unchanged in v2.x, so this library-local enum is kept as-is.
+// Foundation Command Types (ZCL spec IDs 0x00-0x16)
 typedef enum {
   ZB_CMD_READ_ATTRIBUTE = 0x00U,                        /*!< Read attributes command */
   ZB_CMD_READ_ATTRIBUTE_RESPONSE = 0x01U,               /*!< Read attributes response command */

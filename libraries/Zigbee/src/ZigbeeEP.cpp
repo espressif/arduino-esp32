@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,12 +28,10 @@
 static constexpr int64_t ZIGBEE_UTCTIME_UNIX_OFFSET_SEC = 946684800LL;
 static constexpr uint32_t ZIGBEE_UTCTIME_INVALID = UINT32_MAX;
 
-/* Time cluster server interface (SDK v2.x): the Time attribute (0x0000) is no longer served from stored
- * attribute memory — the server reads it through a registered interface callback (see
- * zcl_time_cluster_read_time() in the SDK, which returns ZCL_STATUS_NOT_FOUND when no interface is set).
- * A single device-wide wall clock backs all Time server endpoints; it is anchored to a millis() baseline
- * so the served time advances between updates. The clock is updated automatically whenever the Time
- * attribute is written (the server's write hook calls set_utc_time). */
+/* Time cluster server: Time (0x0000) is served through a registered interface callback, not stored
+ * attribute memory. A single device-wide wall clock backs all Time server endpoints; it is anchored
+ * to a millis() baseline so the served time advances between updates. The clock is updated whenever
+ * the Time attribute is written. */
 static uint32_t s_time_server_utc_base = 0;  // ZCL UTCTime (s since 2000-01-01) captured at the anchor
 static uint32_t s_time_server_ms_base = 0;   // millis() captured at the anchor
 static bool s_time_server_clock_valid = false;
@@ -128,7 +126,7 @@ ezb_zcl_status_t ZigbeeEP::setClusterAttribute(uint16_t cluster_id, uint8_t clus
     log_w("Cannot set attribute: failed to acquire Zigbee lock");
     return EZB_ZCL_STATUS_FAIL;
   }
-  // v2.x set takes an explicit manufacturer code (standard attributes use EZB_ZCL_STD_MANUF_CODE).
+  // Standard attributes use EZB_ZCL_STD_MANUF_CODE.
   ezb_zcl_status_t ret = ezb_zcl_set_attr_value(_endpoint, cluster_id, cluster_role, attr_id, EZB_ZCL_STD_MANUF_CODE, value, check);
   esp_zigbee_lock_release();
   return ret;
@@ -147,7 +145,7 @@ bool ZigbeeEP::getClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, ui
     log_w("Cannot get attribute: failed to acquire Zigbee lock");
     return false;
   }
-  // v2.x: attributes are opaque descriptors; fetch the descriptor and copy its value into the caller buffer.
+  // Attributes are opaque descriptors; copy the value into the caller buffer.
   ezb_zcl_attr_desc_t attr = ezb_zcl_get_attr_desc(_endpoint, cluster_id, cluster_role, attr_id, EZB_ZCL_STD_MANUF_CODE);
   if (attr == nullptr) {
     esp_zigbee_lock_release();
@@ -216,9 +214,8 @@ bool ZigbeeEP::readClusterAttribute(ezb_zcl_read_attr_cmd_t *read_req) {
 }
 
 bool ZigbeeEP::setClusterReporting(ezb_zcl_reporting_info_t reporting_info) {
-  // NOTE(zb-v2): The v1 esp_zb_zcl_update_reporting_info(struct*) call is replaced by the handle-based
-  // reporting API. The caller is expected to obtain the handle via ezb_zcl_reporting_info_find() (and
-  // tune it with ezb_zcl_reporting_info_update()) before starting it here.
+  // Caller obtains the handle via ezb_zcl_reporting_info_find() and tunes it with
+  // ezb_zcl_reporting_info_update() before starting it here.
   if (reporting_info == EZB_ZCL_INVALID_REPORTING_INFO) {
     log_e("Reporting info handle is invalid");
     return false;
@@ -498,7 +495,7 @@ bool ZigbeeEP::reportBatteryPercentage() {
   /* Send report attributes command */
   ezb_zcl_report_attr_cmd_t report_attr_cmd;
   memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
-  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  // Report to bound devices (no explicit destination).
   ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
   report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
   report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_POWER_CONFIG;
@@ -646,8 +643,7 @@ void ZigbeeEP::zbReadBasicCluster(const ezb_zcl_attribute_t *attribute) {
 }
 
 void ZigbeeEP::zbIdentify(const ezb_zcl_set_attr_value_message_t *message) {
-  // NOTE(zb-v2): set-attr messages nest the attribute under .in; the IdentifyTime attribute (0x0000) is
-  // matched here. Confirm EZB_ZCL_ATTR_IDENTIFY_IDENTIFY_TIME_ID against ezbee/zcl/cluster/identify_desc.h.
+  // IdentifyTime is nested under message->in.attribute.
   if (message->in.attribute.id == EZB_ZCL_ATTR_IDENTIFY_IDENTIFY_TIME_ID && message->in.attribute.data.type == EZB_ZCL_ATTR_TYPE_UINT16) {
     if (_on_identify != NULL) {
       _on_identify(*(uint16_t *)message->in.attribute.data.value);
@@ -706,8 +702,7 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
 }
 
 bool ZigbeeEP::registerTimeServer() {
-  // v2.x serves the Time attribute (0x0000) through this interface; the per-endpoint time context is
-  // created when the stack starts, so this must be called after Zigbee.begin().
+  // The Time attribute is served through this interface. Call after Zigbee.begin().
   if (!_time_server) {
     log_e("registerTimeServer: no Time cluster on this endpoint, call addTimeCluster() first");
     return false;
@@ -921,11 +916,8 @@ bool ZigbeeEP::addOTAClient(
 }
 
 void ZigbeeEP::requestOTAUpdate() {
-  // TODO(zb-v2): Reimplement OTA server discovery + image query for v2.x. The v1 flow used
-  // esp_zb_zdo_match_cluster() + esp_zb_ota_upgrade_client_query_interval_set()/query_image_req(), which
-  // are replaced by the ezb ZDO Match_Desc request (ezbee/zdo/zdo_dev_srv_disc.h) and the v2.x OTA client
-  // query API (ezbee/zcl/cluster/ota_upgrade.h). These are not yet wired up.
-  log_w("requestOTAUpdate() is not yet implemented for ESP-ZIGBEE-SDK v2.x");
+  // TODO: wire OTA server discovery (ZDO Match_Desc) and the OTA client query API.
+  log_w("requestOTAUpdate() is not yet implemented");
 }
 
 void ZigbeeEP::removeBoundDevice(uint8_t endpoint, const uint8_t *ieee_addr) {
@@ -986,12 +978,10 @@ void ZigbeeEP::zbDefaultResponse(const ezb_zcl_cmd_default_rsp_message_t *messag
 }
 
 void ZigbeeEP::addPrivilegeCommand(uint16_t cluster_id, uint16_t command_id) {
-  // TODO(zb-v2): esp_zb_zcl_add_privilege_command() has no v2.x equivalent. Command interception is now
-  // done through the manufacturer-specific command callback (EZB_ZCL_CORE_MANUF_SPEC_CMD_CB_ID) and/or
-  // the raw frame handler (ezb_zcl_raw_command_handler_register()). This needs a redesign in ZigbeeHandlers.
+  // TODO: intercept standard cluster commands via the manuf-spec / raw-frame handlers.
   (void)cluster_id;
   (void)command_id;
-  log_w("addPrivilegeCommand() is not yet implemented for ESP-ZIGBEE-SDK v2.x");
+  log_w("addPrivilegeCommand() is not yet implemented");
 }
 
 bool ZigbeeEP::sendIASZoneEnrollResponse(
@@ -1031,10 +1021,6 @@ void ZigbeeEP::zbCustomClusterCommand(const ezb_zcl_manuf_spec_cmd_message_t *me
 }
 
 // Global function implementation
-// NOTE(zb-v2): The v2.x ZCL status set (ezb_zcl_status_e) is smaller than v1; statuses that no longer
-// exist (e.g. UNSUP_GEN_CMD, UNSUP_MANUF_*, DUPE_EXISTS, WRITE_ONLY, HW/SW_FAIL, LIMIT_REACHED) were
-// dropped, and a few were renamed (INSUFF_SPACE -> INSUFFICIENT_SPACE, UNREPORTABLE_ATTRIB ->
-// UNREPORTBLE_ATTRIB, CALIB_ERR -> CALIBRATION_ERROR, UNSUP_CLUST -> UNSUPPORTED_CLUSTER).
 const char *esp_zb_zcl_status_to_name(ezb_zcl_status_t status) {
   switch (status) {
     case EZB_ZCL_STATUS_SUCCESS:              return "Success";

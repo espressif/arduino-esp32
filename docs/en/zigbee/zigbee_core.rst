@@ -313,10 +313,6 @@ Gets the current radio configuration.
 
 This function will return current radio configuration.
 
-.. note::
-
-    The host configuration accessors (``setHostConfig`` / ``getHostConfig``) were removed in the ESP Zigbee SDK v2.x; the host configuration is no longer part of the public API.
-
 Debug and Utilities
 *******************
 
