@@ -30,6 +30,8 @@ class ServerClusterInterface;
 
 using namespace esp_matter;
 
+class ArduinoMatter;
+
 // A single Matter semantic tag (Descriptor cluster TagList entry). Tags disambiguate sibling
 // endpoints that expose the same device type, or otherwise clarify an endpoint's role/position
 // (e.g. tagging 3 buttons with Number (One/Two/Three) and Position (Top/Middle/Bottom) tags so a
@@ -130,16 +132,18 @@ public:
   // Convenience overload: Light1.setTagList({MatterTags::Position::Top, MatterTags::Number::One});
   bool setTagList(std::initializer_list<MatterTag> tagList);
 
-  // Called by ArduinoMatter after esp_matter::start(). Code-driven cluster objects exist now.
-  void notifyStackStarted();
-
   // After creating an endpoint with esp_matter::endpoint::*::create(..., (void *)this),
   // register it when not using a stock Matter* begin(). Call before Matter.begin().
   bool registerCreatedEndpoint(endpoint_t *ep);
 
 protected:
+  friend class ArduinoMatter;
+
   // Creates the Matter node once (root endpoint 0). Idempotent. Used by stock and custom begin().
-  static void ensureMatterNode();
+  static bool ensureMatterNode();
+
+  // Called by ArduinoMatter after esp_matter::start(). Code-driven cluster objects exist now.
+  void notifyStackStarted();
 
   // used for secondary network interface endpoints
   static uint16_t secondary_network_endpoint_id;

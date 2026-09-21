@@ -404,7 +404,7 @@ The ``MatterEndPoint`` class is the base class for all Matter endpoints. It prov
 * **Identify Cluster**: Support for device identification (visual feedback)
 * **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers
 
-**Custom endpoints:** Subclass ``MatterEndPoint``, implement ``attributeChangeCB``, and in ``begin()`` call ``ensureMatterNode()``, then ``esp_matter::endpoint::*::create(node::get(), …, (void *)this)`` and ``setEndPointId()``, or ``registerCreatedEndpoint()`` after ``create()`` with ``(void *)this``. Override ``onStackStarted()`` when using code-driven clusters. Sketch order is unchanged (``selectNetwork()`` → accessory ``begin()`` → ``Matter.begin()``).
+**Custom endpoints:** Subclass ``MatterEndPoint``, implement ``attributeChangeCB``, and in your subclass ``begin()`` call ``ensureMatterNode()`` (protected; use ``Matter.initNode()`` only outside a subclass), then ``esp_matter::endpoint::*::create(node::get(), …, (void *)this)`` and ``setEndPointId()``, or ``registerCreatedEndpoint()`` after ``create()`` with ``(void *)this``. Override ``onStackStarted()`` when using code-driven clusters. Sketch order is unchanged (accessory ``begin()`` / ``setTagList()`` → ``Matter.begin()``).
 
 .. toctree::
     :maxdepth: 2
@@ -516,7 +516,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 
 * **Matter Lambda Single Callback Many Endpoints** - Demonstrates how to create multiple Matter endpoints in a single node using a shared lambda function callback with capture for efficient callback handling. `View Matter Lambda Single Callback Many Endpoints code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterLambdaSingleCallbackManyEPs>`_
 * **Matter Early BLE Release** - One On/Off Light. ``MATTER_EARLY_BLE_RELEASE`` **1** (default): ``bleInUse()==false`` then on-network Wi-Fi. **0**: CHIPoBLE. Serial reports Tools PSRAM and ``[heap]`` internal / PSRAM. `View Matter Early BLE Release code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterEarlyBLERelease>`_
-* **Matter customEndpoint** - Example that implements a **PM2.5 sensor** to illustrate creation and use of user custom endpoints (``MatterEndPoint`` subclass, ``ensureMatterNode()``, ``registerCreatedEndpoint()``). `View Matter customEndpoint code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/customEndpoint>`_
+* **Matter Custom Endpoint** - Example that implements a **PM2.5 sensor** to illustrate creation and use of user custom endpoints (``MatterEndPoint`` subclass, ``ensureMatterNode()``, ``registerCreatedEndpoint()``). `View MatterCustomEndpoint code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterCustomEndpoint>`_
 
 Common Problems and Issues
 --------------------------

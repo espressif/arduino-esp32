@@ -43,6 +43,39 @@ Sets the current Matter Accessory endpoint ID.
 
 * ``ep`` - Endpoint number to set
 
+Custom endpoints
+****************
+
+For esp-matter device types that are not wrapped by a stock ``Matter*`` class, subclass ``MatterEndPoint``, implement ``attributeChangeCB``, and in your subclass ``begin()``:
+
+1. Call ``ensureMatterNode()`` (protected on ``MatterEndPoint``; not callable from the sketch) or ``Matter.initNode()`` if you are not using a ``MatterEndPoint`` subclass.
+2. Create the endpoint with ``esp_matter::endpoint::*::create(node::get(), …, ENDPOINT_FLAG_NONE, (void *)this)``.
+3. Call ``setEndPointId(endpoint::get_id(ep))``, or ``registerCreatedEndpoint(ep)`` after ``create()`` with ``(void *)this``.
+
+Override ``onStackStarted()`` when you need to push cached attribute values after ``Matter.begin()`` (for example code-driven clusters). See the `MatterCustomEndpoint <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterCustomEndpoint>`_ example.
+
+registerCreatedEndpoint
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Registers an endpoint created with ``esp_matter::endpoint::*::create(..., (void *)this)``. Call before ``Matter.begin()``.
+
+.. code-block:: arduino
+
+    bool registerCreatedEndpoint(endpoint_t *ep);
+
+onStackStarted
+^^^^^^^^^^^^^^
+
+Override this hook in a ``MatterEndPoint`` subclass to push cached attribute values after ``Matter.begin()``, when code-driven clusters or the live attribute store are available. The library calls it once per endpoint (via an internal ``notifyStackStarted()``) immediately after ``esp_matter::start()`` succeeds.
+
+Do not call ``notifyStackStarted()`` from application code.
+
+.. code-block:: arduino
+
+    void onStackStarted() override;
+
+Typical uses: sync a value held in C++ members into clusters that were not writable before the stack started, or re-apply a measurement after ``Matter.begin()`` (see the `MatterCustomEndpoint <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterCustomEndpoint>`_ example). For Boolean State sensors, prefer the endpoint setters (``setContact()``, etc.); they cache via ``setBooleanStateValue()`` when the cluster is not registered yet.
+
 Secondary Network Interface (deprecated)
 ****************************************
 

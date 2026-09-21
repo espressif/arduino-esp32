@@ -29,12 +29,15 @@ using namespace esp_matter::endpoint;
 
 uint16_t MatterEndPoint::secondary_network_endpoint_id = 0;
 
-void MatterEndPoint::ensureMatterNode() {
-  (void)ArduinoMatter::initNode();
+bool MatterEndPoint::ensureMatterNode() {
+  return ArduinoMatter::initNode();
 }
 
 bool MatterEndPoint::registerCreatedEndpoint(endpoint_t *ep) {
-  ensureMatterNode();
+  if (!ensureMatterNode()) {
+    log_e("registerCreatedEndpoint: failed to create Matter node");
+    return false;
+  }
   if (ep == nullptr) {
     log_e("registerCreatedEndpoint: null endpoint");
     return false;
