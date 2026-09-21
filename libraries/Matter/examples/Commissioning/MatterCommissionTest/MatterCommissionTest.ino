@@ -39,6 +39,7 @@ void setup() {
   OnOffLight.begin();
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
   matterWaitUntilReady();
 }

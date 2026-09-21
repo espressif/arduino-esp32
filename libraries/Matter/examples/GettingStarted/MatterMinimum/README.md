@@ -34,24 +34,21 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 ## Features
 
-- Minimal Matter protocol implementation for an on/off light device
+- One On/Off Light endpoint
+- LED follows the Matter On/Off attribute (`LED_BUILTIN`, or GPIO 2)
 - Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
-- Simple on/off control via Matter app
-- Button control for factory reset (decommission)
-- Matter commissioning via QR code or manual pairing code
+- Commissioning via QR code or manual pairing code from the serial monitor
+- No BOOT button, no `matterSetExampleIdentity()`, no extra prints after CASE
 - Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-- Minimal code footprint - ideal for learning Matter basics
 
 ## Hardware Requirements
 
 - ESP32 compatible development board (see supported targets table)
-- Optional: LED connected to GPIO pin (or using built-in LED) for visual feedback
-- Optional: User button for factory reset (uses BOOT button by default)
+- Optional: LED on `LED_BUILTIN` or GPIO 2
 
 ## Pin Configuration
 
-- **LED**: Uses `LED_BUILTIN` if defined, otherwise pin 2
-- **Button**: Uses `BOOT_PIN` by default (only for factory reset)
+- **LED**: `LED_BUILTIN` if defined, otherwise pin 2
 
 ## Software Setup
 
@@ -165,22 +162,16 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 ## Code Structure
 
-The MatterMinimum example consists of the following main components:
-
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), initializes the Matter on/off light endpoint, registers the callback function, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
-
-2. **`loop()`**: Accessory logic (long-press decommission). `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
-
-3. **`onOffLightCallback()`**: Simple callback function that controls the LED based on the on/off state received from the Matter controller. This is the minimal callback implementation.
+1. **`onOffLightCallback()`**: Writes the LED from the On/Off state. Must return `true`.
+2. **`setup()`**: LED GPIO, Wi-Fi only when CHIPoBLE is off, `OnOffLight.begin()`, `onChange()`, `Matter.begin()`, `matterWaitUntilReady()`. No `matterSetExampleIdentity()`.
+3. **`loop()`**: `matterRestartIfNoFabric()` then `delay(500)`.
 
 ## Extending the Example
 
-This minimal example can be extended with additional features:
-
-- **State persistence**: Add `Preferences` library to save the last known state
-- **Button toggle**: Add button press detection to toggle the light manually
-- **Multiple endpoints**: Add more Matter endpoints to the same node
-- **Enhanced callbacks**: Add more detailed callback functions for better control
+- **Identity**: `matterSetExampleIdentity("OnOff Light")` before `Matter.begin()`, or see Matter Device Identity
+- **Local button / decommission**: see Matter On/Off Light (`MatterButton`, long-hold `Matter.decommission()`)
+- **State persistence**: `Preferences` for the last On/Off state
+- **More endpoints**: add another `Matter*` object and `begin()` it before `Matter.begin()`
 
 ## Troubleshooting
 
@@ -188,7 +179,7 @@ This minimal example can be extended with additional features:
 - **LED not responding**: Verify pin configurations and connections. The LED will only respond to Matter app commands after commissioning
 - **Failed to commission**: Try erasing the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection
-- **LED not turning on/off**: Ensure the device is commissioned and you're controlling it via a Matter app. The minimal example only responds to Matter controller commands, not local button presses
+- **No factory-reset button**: This sketch has none. Erase flash or remove the fabric from the hub
 
 ## Related Documentation
 
