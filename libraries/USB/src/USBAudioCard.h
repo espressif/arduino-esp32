@@ -149,7 +149,10 @@ public:
   *  @param spk_channels  Speaker channel layout (@ref UAC_SPK_Channels).
   *  @param mic_channels  Microphone channel layout (@ref UAC_MIC_Channels).
   */
-  USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels = UAC_SPK_STEREO, UAC_MIC_Channels mic_channels = UAC_MIC_STEREO);
+  USBAudioCard(
+    const uint32_t *sample_rates, uint8_t num_rates, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels = UAC_SPK_STEREO,
+    UAC_MIC_Channels mic_channels = UAC_MIC_STEREO
+  );
 #endif  // defined(UAC_USE_MULTIPLE_RATES)
   ~USBAudioCard();
 

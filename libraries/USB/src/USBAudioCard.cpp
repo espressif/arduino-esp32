@@ -83,71 +83,65 @@ static bool _is_sample_rate_supported(uint32_t rate) {
 // Keep the public cap in sync with the cases above. Lowering it is safe (the constructor rejects
 // larger counts and the extra cases become dead code), but raising it would require additional
 // cases in _UAC10_CASES and corresponding TinyUSB macro expansion support.
-static_assert(USBAudioCard::UAC_MAX_SAMPLE_RATES <= 8, "UAC_MAX_SAMPLE_RATES must not exceed the 8 cases expanded by _UAC10_CASES (TinyUSB TU_ARGS_APPLY_EXPAND limit)");
+static_assert(
+  USBAudioCard::UAC_MAX_SAMPLE_RATES <= 8, "UAC_MAX_SAMPLE_RATES must not exceed the 8 cases expanded by _UAC10_CASES (TinyUSB TU_ARGS_APPLY_EXPAND limit)"
+);
 
-#define _UAC10_CASE_HEADSET_STEREO(_n)                                                         \
-  case _n: {                                                                                   \
-    uint8_t descriptor[TUD_AUDIO10_HEADSET_STEREO_DESC_LEN(_n)] = {                            \
-TUD_AUDIO10_HEADSET_STEREO_DESCRIPTOR(                                                   \
-      _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), _max_sample_rate, _spk_channels, \
-_mic_channels, _bytes_per_sample, _bits_per_sample, _UAC10_FREQS(_n, _sample_rates)    \
-      )                                                                                        \
-    };                                                                                         \
-    *itf += 3;                                                                                 \
-    memcpy(dst, descriptor, sizeof(descriptor));                                               \
-    return sizeof(descriptor);                                                                 \
+#define _UAC10_CASE_HEADSET_STEREO(_n)                                                                                                            \
+  case _n:                                                                                                                                        \
+  {                                                                                                                                               \
+    uint8_t descriptor[TUD_AUDIO10_HEADSET_STEREO_DESC_LEN(_n)] = {TUD_AUDIO10_HEADSET_STEREO_DESCRIPTOR(                                         \
+      _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), _max_sample_rate, _spk_channels, _mic_channels, _bytes_per_sample, _bits_per_sample, \
+      _UAC10_FREQS(_n, _sample_rates)                                                                                                             \
+    )};                                                                                                                                           \
+    *itf += 3;                                                                                                                                    \
+    memcpy(dst, descriptor, sizeof(descriptor));                                                                                                  \
+    return sizeof(descriptor);                                                                                                                    \
   }
 
-#define _UAC10_CASE_HEADSET_MONO(_n)                                                           \
-  case _n: {                                                                                   \
-    uint8_t descriptor[TUD_AUDIO10_HEADSET_MONO_DESC_LEN(_n)] = {                              \
-TUD_AUDIO10_HEADSET_MONO_DESCRIPTOR(                                                     \
-      _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), _max_sample_rate, _spk_channels, \
-_mic_channels, _bytes_per_sample, _bits_per_sample, _UAC10_FREQS(_n, _sample_rates)    \
-      )                                                                                        \
-    };                                                                                         \
-    *itf += 3;                                                                                 \
-    memcpy(dst, descriptor, sizeof(descriptor));                                               \
-    return sizeof(descriptor);                                                                 \
+#define _UAC10_CASE_HEADSET_MONO(_n)                                                                                                              \
+  case _n:                                                                                                                                        \
+  {                                                                                                                                               \
+    uint8_t descriptor[TUD_AUDIO10_HEADSET_MONO_DESC_LEN(_n)] = {TUD_AUDIO10_HEADSET_MONO_DESCRIPTOR(                                             \
+      _itf_num, str_index, ep_num, (uint8_t)(ep_num | 0x80), _max_sample_rate, _spk_channels, _mic_channels, _bytes_per_sample, _bits_per_sample, \
+      _UAC10_FREQS(_n, _sample_rates)                                                                                                             \
+    )};                                                                                                                                           \
+    *itf += 3;                                                                                                                                    \
+    memcpy(dst, descriptor, sizeof(descriptor));                                                                                                  \
+    return sizeof(descriptor);                                                                                                                    \
   }
 
-#define _UAC10_CASE_SPEAKER_STEREO(_n)                                                         \
-  case _n: {                                                                                   \
-    uint8_t descriptor[TUD_AUDIO10_SPEAKER_STEREO_DESC_LEN(_n)] = {                            \
-TUD_AUDIO10_SPEAKER_STEREO_DESCRIPTOR(                                                   \
-      _itf_num, str_index, ep_num, _max_sample_rate, _spk_channels, _bytes_per_sample,       \
-_bits_per_sample, _UAC10_FREQS(_n, _sample_rates)                                      \
-    )                                                                                        \
-    };                                                                                         \
-    *itf += 2;                                                                                 \
-    memcpy(dst, descriptor, sizeof(descriptor));                                               \
-    return sizeof(descriptor);                                                                 \
+#define _UAC10_CASE_SPEAKER_STEREO(_n)                                                                                                   \
+  case _n:                                                                                                                               \
+  {                                                                                                                                      \
+    uint8_t descriptor[TUD_AUDIO10_SPEAKER_STEREO_DESC_LEN(_n)] = {TUD_AUDIO10_SPEAKER_STEREO_DESCRIPTOR(                                \
+      _itf_num, str_index, ep_num, _max_sample_rate, _spk_channels, _bytes_per_sample, _bits_per_sample, _UAC10_FREQS(_n, _sample_rates) \
+    )};                                                                                                                                  \
+    *itf += 2;                                                                                                                           \
+    memcpy(dst, descriptor, sizeof(descriptor));                                                                                         \
+    return sizeof(descriptor);                                                                                                           \
   }
 
-#define _UAC10_CASE_SPEAKER_MONO(_n)                                                           \
-  case _n: {                                                                                   \
-    uint8_t descriptor[TUD_AUDIO10_SPEAKER_MONO_DESC_LEN(_n)] = {                              \
-TUD_AUDIO10_SPEAKER_MONO_DESCRIPTOR(                                                     \
-      _itf_num, str_index, ep_num, _max_sample_rate, _spk_channels, _bytes_per_sample,       \
-_bits_per_sample, _UAC10_FREQS(_n, _sample_rates)                                      \
-    )                                                                                        \
-    };                                                                                         \
-    *itf += 2;                                                                                 \
-    memcpy(dst, descriptor, sizeof(descriptor));                                               \
-    return sizeof(descriptor);                                                                 \
+#define _UAC10_CASE_SPEAKER_MONO(_n)                                                                                                     \
+  case _n:                                                                                                                               \
+  {                                                                                                                                      \
+    uint8_t descriptor[TUD_AUDIO10_SPEAKER_MONO_DESC_LEN(_n)] = {TUD_AUDIO10_SPEAKER_MONO_DESCRIPTOR(                                    \
+      _itf_num, str_index, ep_num, _max_sample_rate, _spk_channels, _bytes_per_sample, _bits_per_sample, _UAC10_FREQS(_n, _sample_rates) \
+    )};                                                                                                                                  \
+    *itf += 2;                                                                                                                           \
+    memcpy(dst, descriptor, sizeof(descriptor));                                                                                         \
+    return sizeof(descriptor);                                                                                                           \
   }
 
-#define _UAC10_CASE_MICROPHONE(_n)                                                             \
-  case _n: {                                                                                   \
-    uint8_t descriptor[TUD_AUDIO10_MICROPHONE_DESC_LEN(_n)] = {                                \
-TUD_AUDIO10_MICROPHONE_DESCRIPTOR(                                                       \
-      _itf_num, str_index, (uint8_t)(ep_num | 0x80), _max_sample_rate, _mic_channels,        \
-_bytes_per_sample, _bits_per_sample, _UAC10_FREQS(_n, _sample_rates)                   \
-      )                                                                                        \
-    };                                                                                         \
-    *itf += 2;                                                                                 \
-    memcpy(dst, descriptor, sizeof(descriptor));                                               \
-    return sizeof(descriptor);                                                                 \
+#define _UAC10_CASE_MICROPHONE(_n)                                                                                                                         \
+  case _n:                                                                                                                                                 \
+  {                                                                                                                                                        \
+    uint8_t descriptor[TUD_AUDIO10_MICROPHONE_DESC_LEN(_n)] = {TUD_AUDIO10_MICROPHONE_DESCRIPTOR(                                                          \
+      _itf_num, str_index, (uint8_t)(ep_num | 0x80), _max_sample_rate, _mic_channels, _bytes_per_sample, _bits_per_sample, _UAC10_FREQS(_n, _sample_rates) \
+    )};                                                                                                                                                    \
+    *itf += 2;                                                                                                                                             \
+    memcpy(dst, descriptor, sizeof(descriptor));                                                                                                           \
+    return sizeof(descriptor);                                                                                                                             \
   }
 
 static uint16_t _uac10_headset_stereo(uint8_t *dst, uint8_t *itf, uint8_t str_index) {
@@ -675,7 +669,9 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *p_reques
 #if defined(UAC_USE_MULTIPLE_RATES)
 USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels, UAC_MIC_Channels mic_channels)
   : USBAudioCard(&sample_rate, 1, bps, spk_channels, mic_channels) {}
-USBAudioCard::USBAudioCard(const uint32_t *sample_rates, uint8_t num_rates, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels, UAC_MIC_Channels mic_channels) {
+USBAudioCard::USBAudioCard(
+  const uint32_t *sample_rates, uint8_t num_rates, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels, UAC_MIC_Channels mic_channels
+) {
 #else
 USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SPK_Channels spk_channels, UAC_MIC_Channels mic_channels) {
 #endif  // defined(UAC_USE_MULTIPLE_RATES)
