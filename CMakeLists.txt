@@ -441,6 +441,11 @@ if(IDF_TARGET STREQUAL "esp32" OR IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET ST
   list(APPEND requires esp_driver_touch_sens)
 endif()
 
+# rgbLedWrite SPI fallback (esp32-hal-rgb-led.c) for SoCs without RMT
+if(IDF_TARGET STREQUAL "esp32c2" OR IDF_TARGET STREQUAL "esp32c61")
+  list(APPEND priv_requires led_strip)
+endif()
+
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
 if(NOT CONFIG_FREERTOS_HZ EQUAL 1000 AND NOT "$ENV{ARDUINO_SKIP_TICK_CHECK}")

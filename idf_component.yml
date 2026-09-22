@@ -135,6 +135,12 @@ dependencies:
   espressif/esp-modbus:
     version: "^2.1.3"
     require: public
+  # Addressable RGB (rgbLedWrite) on targets without RMT - SPI backend via led_strip
+  # (same approach as ESP-IDF examples/get-started/blink).
+  espressif/led_strip:
+    version: "^3.0.0"
+    rules:
+      - if: "target in [esp32c2, esp32c61]"
   joltwallet/littlefs:
     version: "^1.22.1"
   chmorgan/esp-libhelix-mp3:
