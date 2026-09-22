@@ -26,7 +26,7 @@ namespace chip {
 namespace app {
 class ServerClusterInterface;
 }
-}
+}  // namespace chip
 
 using namespace esp_matter;
 

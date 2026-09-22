@@ -316,7 +316,9 @@ public:
     mSoftwareVersion = version;
     mHasSoftwareVersion = true;
   }
-  void setSoftwareVersionString(const char *value) { mSoftwareVersionString = value; }
+  void setSoftwareVersionString(const char *value) {
+    mSoftwareVersionString = value;
+  }
 
   CHIP_ERROR GetSoftwareVersion(uint32_t &softwareVer) override {
     if (mHasSoftwareVersion) {
@@ -605,8 +607,7 @@ private:
     char values[chip::DeviceLayer::kMaxUserLabelListLength][chip::DeviceLayer::kMaxLabelValueLength + 1] = {};
   };
 
-  template <typename T>
-  class EmptyIterator : public Iterator<T> {
+  template<typename T> class EmptyIterator : public Iterator<T> {
   public:
     size_t Count() override {
       return 0;
@@ -770,10 +771,8 @@ void ArduinoMatter::applyIdentityBeforeStart() {
   }
 #if defined(CONFIG_FACTORY_DEVICE_INSTANCE_INFO_PROVIDER) || defined(CONFIG_SEC_CERT_DEVICE_INSTANCE_INFO_PROVIDER)
   if (needsInstanceInfoWrap()) {
-    log_w(
-      "Factory or secure-cert instance-info provider takes priority. "
-      "Arduino VendorName/ProductName/SerialNumber/HardwareVersion may not be used by Matter stack."
-    );
+    log_w("Factory or secure-cert instance-info provider takes priority. "
+          "Arduino VendorName/ProductName/SerialNumber/HardwareVersion may not be used by Matter stack.");
   }
 #endif
 }
@@ -787,7 +786,8 @@ static bool writeNodeLabel(const char *label) {
   esp_matter_attr_val_t val = esp_matter_char_str(writableLabel, len);
   if (attribute::update(
         chip::kRootEndpointId, chip::app::Clusters::BasicInformation::Id, chip::app::Clusters::BasicInformation::Attributes::NodeLabel::Id, &val
-      ) != ESP_OK) {
+      )
+      != ESP_OK) {
     log_e("NodeLabel write failed");
     return false;
   }

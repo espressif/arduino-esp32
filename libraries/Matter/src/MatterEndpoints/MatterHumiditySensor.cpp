@@ -83,8 +83,7 @@ void MatterHumiditySensor::end() {
 }
 
 void MatterHumiditySensor::onStackStarted() {
-  RelativeHumidityMeasurementCluster *cluster =
-    static_cast<RelativeHumidityMeasurementCluster *>(findRegisteredCluster(RelativeHumidityMeasurement::Id));
+  RelativeHumidityMeasurementCluster *cluster = static_cast<RelativeHumidityMeasurementCluster *>(findRegisteredCluster(RelativeHumidityMeasurement::Id));
   if (cluster == nullptr) {
     log_e("RelativeHumidityMeasurement cluster not found after Matter.begin().");
     return;
@@ -109,8 +108,7 @@ bool MatterHumiditySensor::setRawHumidity(uint16_t _rawHumidity) {
     return true;
   }
 
-  RelativeHumidityMeasurementCluster *cluster =
-    static_cast<RelativeHumidityMeasurementCluster *>(findRegisteredCluster(RelativeHumidityMeasurement::Id));
+  RelativeHumidityMeasurementCluster *cluster = static_cast<RelativeHumidityMeasurementCluster *>(findRegisteredCluster(RelativeHumidityMeasurement::Id));
   if (cluster == nullptr) {
     rawHumidity = _rawHumidity;
     return true;

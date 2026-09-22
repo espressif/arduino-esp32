@@ -1193,7 +1193,7 @@ bool OThreadDNSSDClass::startDetailResolveAt(uint8_t startIdx) {
 }
 
 void OThreadDNSSDClass::armQueryOp(bool async, ot_dnssd_query_kind_t kind) {
-  const_cast<uint32_t&>(_queryGen)++;
+  const_cast<uint32_t &>(_queryGen)++;
   if (_queryGen == 0) {
     _queryGen = 1;
   }
@@ -1206,7 +1206,7 @@ void OThreadDNSSDClass::armQueryOp(bool async, ot_dnssd_query_kind_t kind) {
 
 void OThreadDNSSDClass::clearQueryOp() {
   _queryActiveGen = 0;
-  const_cast<uint32_t&>(_queryGen)++;
+  const_cast<uint32_t &>(_queryGen)++;
   if (_queryGen == 0) {
     _queryGen = 1;
   }

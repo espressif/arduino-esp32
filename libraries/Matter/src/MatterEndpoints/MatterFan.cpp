@@ -218,8 +218,7 @@ void MatterFan::onStackStarted() {
     return;
   }
   if (currentFanMode != FAN_MODE_AUTO && currentFanMode != FAN_MODE_OFF) {
-    if (cluster->SetPercentSetting(chip::app::DataModel::MakeNullable<chip::Percent>(currentPercent)) !=
-        chip::Protocols::InteractionModel::Status::Success) {
+    if (cluster->SetPercentSetting(chip::app::DataModel::MakeNullable<chip::Percent>(currentPercent)) != chip::Protocols::InteractionModel::Status::Success) {
       log_e("Failed to apply cached Fan PercentSetting after Matter.begin().");
     }
   }
@@ -347,8 +346,7 @@ bool MatterFan::setSpeedPercent(uint8_t newPercent, bool performUpdate) {
     // Keep PercentSetting null in Auto (SetFanMode(Auto) already nulled it).
     // CHIP accepts a non-null SetPercentSetting in Auto; skip it so the setting stays null.
     if (currentFanMode != FAN_MODE_AUTO) {
-      if (cluster->SetPercentSetting(chip::app::DataModel::MakeNullable<chip::Percent>(newPercent)) !=
-          chip::Protocols::InteractionModel::Status::Success) {
+      if (cluster->SetPercentSetting(chip::app::DataModel::MakeNullable<chip::Percent>(newPercent)) != chip::Protocols::InteractionModel::Status::Success) {
         log_e("Failed to set Fan PercentSetting Attribute.");
         return false;
       }

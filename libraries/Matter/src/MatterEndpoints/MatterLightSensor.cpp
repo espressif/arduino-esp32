@@ -84,8 +84,7 @@ void MatterLightSensor::end() {
 }
 
 void MatterLightSensor::onStackStarted() {
-  IlluminanceMeasurementCluster *cluster =
-    static_cast<IlluminanceMeasurementCluster *>(findRegisteredCluster(IlluminanceMeasurement::Id));
+  IlluminanceMeasurementCluster *cluster = static_cast<IlluminanceMeasurementCluster *>(findRegisteredCluster(IlluminanceMeasurement::Id));
   if (cluster == nullptr) {
     log_e("IlluminanceMeasurement cluster not found after Matter.begin().");
     return;
@@ -110,8 +109,7 @@ bool MatterLightSensor::setRawIlluminance(uint16_t _rawIlluminance) {
     return true;
   }
 
-  IlluminanceMeasurementCluster *cluster =
-    static_cast<IlluminanceMeasurementCluster *>(findRegisteredCluster(IlluminanceMeasurement::Id));
+  IlluminanceMeasurementCluster *cluster = static_cast<IlluminanceMeasurementCluster *>(findRegisteredCluster(IlluminanceMeasurement::Id));
   if (cluster == nullptr) {
     rawIlluminance = _rawIlluminance;
     return true;

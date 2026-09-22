@@ -390,8 +390,7 @@ static void disableWiFiStationIfNotSelected() {
     return;
   }
   lock::ScopedChipStackLock stackLock(portMAX_DELAY);
-  const CHIP_ERROR err =
-    chip::DeviceLayer::ConnectivityMgr().SetWiFiStationMode(chip::DeviceLayer::ConnectivityManager::kWiFiStationMode_Disabled);
+  const CHIP_ERROR err = chip::DeviceLayer::ConnectivityMgr().SetWiFiStationMode(chip::DeviceLayer::ConnectivityManager::kWiFiStationMode_Disabled);
   if (err != CHIP_NO_ERROR) {
     log_w("Failed to disable Wi-Fi station: %" CHIP_ERROR_FORMAT, err.Format());
   }
@@ -412,9 +411,8 @@ static void ensureChiPoBleAdvertising() {
   if (mgr.IsCommissioningWindowOpen() || !chip::Server::GetInstance().GetFailSafeContext().IsFailSafeFullyDisarmed()) {
     return;
   }
-  const CHIP_ERROR err = mgr.OpenBasicCommissioningWindow(
-    chip::System::Clock::Seconds32(k_timeout_seconds), chip::CommissioningWindowAdvertisement::kAllSupported
-  );
+  const CHIP_ERROR err =
+    mgr.OpenBasicCommissioningWindow(chip::System::Clock::Seconds32(k_timeout_seconds), chip::CommissioningWindowAdvertisement::kAllSupported);
   if (err != CHIP_NO_ERROR) {
     log_e("Failed to open CHIPoBLE commissioning window: %" CHIP_ERROR_FORMAT, err.Format());
   }

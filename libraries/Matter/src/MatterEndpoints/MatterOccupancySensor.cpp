@@ -92,9 +92,7 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
       occupancy_sensor_config.occupancy_sensing.feature_flags = passive_infrared::get_id() | ultrasonic::get_id();
       break;
     case OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT: occupancy_sensor_config.occupancy_sensing.feature_flags = physical_contact::get_id(); break;
-    default:
-      occupancy_sensor_config.occupancy_sensing.feature_flags = other::get_id();
-      break;
+    default:                                     occupancy_sensor_config.occupancy_sensing.feature_flags = other::get_id(); break;
   }
 
   endpoint_t *endpoint = occupancy_sensor::create(node::get(), &occupancy_sensor_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -293,8 +291,7 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
 
   // CHIP OccupancySensingCluster::SetHoldTimeLimits sanitizes the same way.
   const uint16_t holdTimeMin = std::max(static_cast<uint16_t>(1), _holdTimeMin_seconds);
-  const uint16_t holdTimeMax =
-    std::max({static_cast<uint16_t>(10), holdTimeMin, _holdTimeMax_seconds});
+  const uint16_t holdTimeMax = std::max({static_cast<uint16_t>(10), holdTimeMin, _holdTimeMax_seconds});
   const uint16_t holdTimeDefault = std::clamp(_holdTimeDefault_seconds, holdTimeMin, holdTimeMax);
   if (holdTimeMin != _holdTimeMin_seconds || holdTimeMax != _holdTimeMax_seconds || holdTimeDefault != _holdTimeDefault_seconds) {
     log_i(

@@ -85,10 +85,10 @@ bool matterSetExampleIdentity(const char *endpointName) {
   // Product name string for Matter attributes (VendorName and ProductName)
   char product[33] = {};
   snprintf(product, sizeof(product), "%s %s", soc, endpointName);
-  
+
   // Set ProductName for Matter Mobile App
   Matter.setProductName(product);
-  
+
   // Set DeviceName for NodeLabel (used by Alexa and other controllers)
   return Matter.setDeviceName(product);
 }
