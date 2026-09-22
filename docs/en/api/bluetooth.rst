@@ -9,7 +9,10 @@ The BluetoothSerial library provides a UART-like interface over Bluetooth Classi
 
 .. note::
 
-    Bluetooth Classic is only supported on the original ESP32. It is not available on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6, ESP32-H2, or ESP32-P4.
+    Bluetooth Classic is supported on the original ESP32. On ESP32-S31 the prebuild enables NimBLE only, so ``BluetoothSerial`` requires using Arduino as an ESP-IDF component or rebuilding the static libraries.
+    For more information, see the `Arduino as an ESP-IDF component documentation <../esp-idf_component.html>`_ or the
+    `Lib Builder documentation <../lib_builder.html>`_, respectively.
+    It is not available on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6, ESP32-H2, or ESP32-P4.
 
 Key features:
 
@@ -52,7 +55,8 @@ SPP callbacks (data received, authentication events) execute on the Bluetooth co
 Design notes
 ------------
 
-* **ESP32 only** -- Bluetooth Classic (BR/EDR) hardware is present only on the original ESP32 SoC.
+* **ESP32 and ESP32-S31** -- Bluetooth Classic (BR/EDR) hardware is present on the original ESP32 and on ESP32-S31. On ESP32-S31, ``BluetoothSerial`` requires using Arduino as an ESP-IDF component or rebuilding the static libraries.
+  See the `Arduino as an ESP-IDF component documentation <../esp-idf_component.html>`_ or the `Lib Builder documentation <../lib_builder.html>`_, respectively.
 * **SPP profile** -- Communication uses the Serial Port Profile, which provides a virtual serial link over L2CAP/RFCOMM.
 * **Security** -- Both server (acceptor) and client (initiator) modes use ``ESP_SPP_SEC_AUTHENTICATE``. Incoming and outgoing connections require authentication.
 * **Fallible resource creation** -- ``begin()`` may return ``BTStatus::NoMemory`` (FreeRTOS allocation failure) or ``BTStatus::Timeout`` (controller did not respond in time). Always check the return value.

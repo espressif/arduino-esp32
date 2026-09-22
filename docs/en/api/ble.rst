@@ -25,10 +25,10 @@ Key Features:
 Supported SoCs
 **************
 
-The BLE library is available on: **ESP32**, **ESP32-S3**, **ESP32-C3**, **ESP32-C6**, **ESP32-C5**, **ESP32-H2**, and **ESP32-P4** (via hosted BLE).
+The BLE library is available on: **ESP32**, **ESP32-S3**, **ESP32-S31**, **ESP32-C3**, **ESP32-C6**, **ESP32-C5**, **ESP32-H2**, and **ESP32-P4** (via hosted BLE).
 
 BLE 5.0 features (extended advertising, periodic advertising, PHY selection, DLE) require a BLE 5.0-capable SoC
-(ESP32-S3, ESP32-C3, ESP32-C6, ESP32-C5, ESP32-H2, ESP32-P4) and are compile-time guarded by ``SOC_BLE_50_SUPPORTED``.
+(ESP32-S3, ESP32-S31, ESP32-C3, ESP32-C6, ESP32-C5, ESP32-H2, ESP32-P4) and are compile-time guarded by ``SOC_BLE_50_SUPPORTED``.
 
 Architecture and Design
 -----------------------

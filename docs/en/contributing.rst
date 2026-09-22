@@ -176,6 +176,7 @@ Currently, the default FQBNs are:
 * ``espressif:esp32:esp32h2``
 * ``espressif:esp32:esp32p4:PSRAM=enabled,USBMode=hwcdc,ChipVariant=postv3`` (``CDCOnBoot`` is forced last: ``cdc`` locally, ``default`` / Disabled in CI)
 * ``espressif:esp32:esp32c5:PSRAM=enabled``
+* ``espressif:esp32:esp32s31:USBMode=default``
 
 There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.yml`` file.
 
