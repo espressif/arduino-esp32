@@ -15,7 +15,7 @@
 // On-network commissioning over Ethernet. Side-by-side with MatterOnNetworkWiFi:
 // same On/Off Light; the delta is PHY macros, ETH.begin() (EMAC or SPI), IPv6, waitForNetwork().
 // Do not start Arduino ESPmDNS — CHIP owns the mDNS responder.
-// Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
+// Do not use the Arduino BLE library (BLE.h) in this sketch.
 
 // Defaults used when the variant does not define ETH_PHY_TYPE (SPI W5500).
 #ifndef ETH_PHY_TYPE

@@ -29,7 +29,7 @@
 // bleInUse() must be extern "C". A C++ bool bleInUse() is mangled: no override,
 // no link error, BLE stays reserved.
 //
-// Do not include BLE.h / BLEDevice. Neither mode hands the radio to Arduino BLE.
+// Do not include BLE.h. Neither mode hands the radio to Arduino BLE.
 //
 // ESP32 / ESP32-S2 have no CHIPoBLE in the Arduino prebuild — the sketch uses
 // Wi-Fi. ESP32-H2 has no Wi-Fi: use mode 0 (CHIPoBLE / Thread).
