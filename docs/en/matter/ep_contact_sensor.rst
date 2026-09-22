@@ -8,19 +8,19 @@ About
 The ``MatterContactSensor`` class provides a contact sensor endpoint for Matter networks. This endpoint implements the Matter contact sensing standard for detecting open/closed states (e.g., doors, windows).
 
 **Features:**
-* Contact state reporting (open/closed)
-* Simple boolean state
-* Read-only sensor (no control functionality)
-* Automatic state updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Contact state reporting (open/closed).
+* Simple boolean state.
+* Read-only sensor (no control functionality).
+* Automatic state updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Door/window sensors
-* Contact switches
-* Security systems
-* Access control
-* Smart home automation triggers
+* Door/window sensors.
+* Contact switches.
+* Security systems.
+* Access control.
+* Smart home automation triggers.
 
 API Reference
 -------------
@@ -80,7 +80,7 @@ Sets the contact state. Call after the endpoint ``begin()``. Before ``Matter.beg
 
     bool setContact(bool _contactState);
 
-* ``_contactState`` - Contact state (``true`` = closed, ``false`` = open)
+* ``_contactState`` - Contact state (``true`` = closed, ``false`` = open).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

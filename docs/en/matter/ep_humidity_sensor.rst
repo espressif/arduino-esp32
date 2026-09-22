@@ -8,19 +8,19 @@ About
 The ``MatterHumiditySensor`` class provides a humidity sensor endpoint for Matter networks. This endpoint implements the Matter humidity sensing standard for read-only humidity reporting.
 
 **Features:**
-* Humidity measurement reporting (0-100%)
-* 1/100th percent precision
-* Read-only sensor (no control functionality)
-* Automatic humidity updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Humidity measurement reporting (0-100%).
+* 1/100th percent precision.
+* Read-only sensor (no control functionality).
+* Automatic humidity updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Room humidity monitoring
-* Weather stations
-* HVAC systems
-* Humidity logging
-* Smart home climate monitoring
+* Room humidity monitoring.
+* Weather stations.
+* HVAC systems.
+* Humidity logging.
+* Smart home climate monitoring.
 
 API Reference
 -------------
@@ -49,7 +49,7 @@ Initializes the Matter humidity sensor endpoint with an initial humidity value.
 
     bool begin(double humidityPercent = 0.00);
 
-* ``humidityPercent`` - Initial humidity percentage (0.0-100.0, default: 0.00)
+* ``humidityPercent`` - Initial humidity percentage (0.0-100.0, default: 0.00).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -76,7 +76,7 @@ Sets the reported humidity percentage.
 
     bool setHumidity(double humidityPercent);
 
-* ``humidityPercent`` - Humidity percentage (0.0-100.0)
+* ``humidityPercent`` - Humidity percentage (0.0-100.0).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

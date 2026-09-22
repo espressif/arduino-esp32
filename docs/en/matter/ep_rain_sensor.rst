@@ -8,19 +8,19 @@ About
 The ``MatterRainSensor`` class provides a rain sensor endpoint for Matter networks. This endpoint implements the Matter rain sensing standard for detecting rain presence (detected/not detected states).
 
 **Features:**
-* Rain detection state reporting (detected/not detected)
-* Simple boolean state
-* Read-only sensor (no control functionality)
-* Automatic state updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Rain detection state reporting (detected/not detected).
+* Simple boolean state.
+* Read-only sensor (no control functionality).
+* Automatic state updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Weather monitoring systems
-* Irrigation control systems
-* Outdoor sensor networks
-* Smart home automation triggers
-* Rain detection for automated systems
+* Weather monitoring systems.
+* Irrigation control systems.
+* Outdoor sensor networks.
+* Smart home automation triggers.
+* Rain detection for automated systems.
 
 API Reference
 -------------
@@ -80,7 +80,7 @@ Sets the rain detection state. Call after the endpoint ``begin()``. Before ``Mat
 
     bool setRain(bool _rainState);
 
-* ``_rainState`` - Rain detection state (``true`` = detected, ``false`` = not detected)
+* ``_rainState`` - Rain detection state (``true`` = detected, ``false`` = not detected).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

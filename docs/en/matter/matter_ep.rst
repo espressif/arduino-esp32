@@ -7,11 +7,11 @@ About
 
 The ``MatterEndPoint`` class is the base class for all Matter endpoints. It provides common functionality for all endpoint types.
 
-* **Endpoint Management**: Each endpoint has a unique endpoint ID for identification within the Matter network
-* **Attribute Access**: Methods to get and set attribute values from Matter clusters
-* **Identify Cluster**: Support for device identification (visual feedback like LED blinking)
-* **Semantic Tags**: Descriptor cluster ``TagList`` support via ``setTagList()``, so controllers can tell sibling endpoints of the same device type apart
-* **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers
+* **Endpoint Management**: Each endpoint has a unique endpoint ID for identification within the Matter network.
+* **Attribute Access**: Methods to get and set attribute values from Matter clusters.
+* **Identify Cluster**: Support for device identification (visual feedback like LED blinking).
+* **Semantic Tags**: Descriptor cluster ``TagList`` support via ``setTagList()``, so controllers can tell sibling endpoints of the same device type apart.
+* **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers.
 
 All Matter endpoint classes inherit from ``MatterEndPoint``, providing a consistent interface and common functionality across all device types.
 
@@ -41,7 +41,7 @@ Sets the current Matter Accessory endpoint ID.
 
     void setEndPointId(uint16_t ep);
 
-* ``ep`` - Endpoint number to set
+* ``ep`` - Endpoint number to set.
 
 Custom endpoints
 ****************
@@ -100,8 +100,8 @@ Gets a pointer to an attribute from its cluster ID and attribute ID.
 
     esp_matter::attribute_t *getAttribute(uint32_t cluster_id, uint32_t attribute_id);
 
-* ``cluster_id`` - Cluster ID (e.g., ``OnOff::Id``)
-* ``attribute_id`` - Attribute ID (e.g., ``OnOff::Attributes::OnOff::Id``)
+* ``cluster_id`` - Cluster ID (e.g., ``OnOff::Id``).
+* ``attribute_id`` - Attribute ID (e.g., ``OnOff::Attributes::OnOff::Id``).
 
 This function will return a pointer to the attribute, or ``NULL`` if not found.
 
@@ -114,9 +114,9 @@ Gets the value of an attribute from its cluster ID and attribute ID.
 
     bool getAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
 
-* ``cluster_id`` - Cluster ID
-* ``attribute_id`` - Attribute ID
-* ``attrVal`` - Pointer to store the attribute value
+* ``cluster_id`` - Cluster ID.
+* ``attribute_id`` - Attribute ID.
+* ``attrVal`` - Pointer to store the attribute value.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -129,9 +129,9 @@ Sets the value of an attribute from its cluster ID and attribute ID.
 
     bool setAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
 
-* ``cluster_id`` - Cluster ID
-* ``attribute_id`` - Attribute ID
-* ``attrVal`` - Pointer to the attribute value to set
+* ``cluster_id`` - Cluster ID.
+* ``attribute_id`` - Attribute ID.
+* ``attrVal`` - Pointer to the attribute value to set.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -144,9 +144,9 @@ Updates the value of an attribute from its cluster ID. This is typically used fo
 
     bool updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
 
-* ``cluster_id`` - Cluster ID
-* ``attribute_id`` - Attribute ID
-* ``attrVal`` - Pointer to the attribute value to update
+* ``cluster_id`` - Cluster ID.
+* ``attribute_id`` - Attribute ID.
+* ``attrVal`` - Pointer to the attribute value to update.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -187,11 +187,11 @@ Returns the last Identify event for this endpoint. The library fills it immediat
 
 ``MatterIdentifyRequest`` fields:
 
-* ``valid`` - ``false`` until this endpoint has received an Identify event. Do not treat a default ``effectId`` of 0 as Blink
-* ``active`` - same boolean passed to ``onIdentify()``
-* ``fromTriggerEffect`` - ``true`` for ``TriggerEffect``; ``false`` for Identify / ``IdentifyTime``
-* ``effectId`` - ``MatterIdentifyRequest::BLINK`` (0x00), ``BREATHE`` (0x01), ``OKAY`` (0x02), ``CHANNEL_CHANGE`` (0x0B), ``FINISH`` (0xFE), ``STOP`` (0xFF). Meaningful when ``fromTriggerEffect`` is ``true``. On IdentifyTime START/STOP CHIP still passes a leftover/default id (often Blink); ignore it
-* ``effectVariant`` - usually Default (0)
+* ``valid`` - ``false`` until this endpoint has received an Identify event. Do not treat a default ``effectId`` of 0 as Blink.
+* ``active`` - same boolean passed to ``onIdentify()``.
+* ``fromTriggerEffect`` - ``true`` for ``TriggerEffect``; ``false`` for Identify / ``IdentifyTime``.
+* ``effectId`` - ``MatterIdentifyRequest::BLINK`` (0x00), ``BREATHE`` (0x01), ``OKAY`` (0x02), ``CHANNEL_CHANGE`` (0x0B), ``FINISH`` (0xFE), ``STOP`` (0xFF). Meaningful when ``fromTriggerEffect`` is ``true``. On IdentifyTime START/STOP CHIP still passes a leftover/default id (often Blink); ignore it.
+* ``effectVariant`` - usually Default (0).
 
 Example usage:
 
@@ -232,8 +232,8 @@ Sets the Descriptor cluster TagList attribute, replacing any list set previously
     bool setTagList(const MatterTag *tagList, uint8_t count);
     bool setTagList(std::initializer_list<MatterTag> tagList);
 
-* ``tagList`` - Array or brace-enclosed list of ``MatterTag`` entries
-* ``count`` - Number of entries (pointer overload only); must be 1..3
+* ``tagList`` - Array or brace-enclosed list of ``MatterTag`` entries.
+* ``count`` - Number of entries (pointer overload only); must be 1..3.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -276,10 +276,10 @@ This function is called by the Matter internal event processor when an attribute
 
     virtual bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
-* ``endpoint_id`` - Endpoint ID where the attribute changed
-* ``cluster_id`` - Cluster ID of the changed attribute
-* ``attribute_id`` - Attribute ID that changed
-* ``val`` - Pointer to the new attribute value
+* ``endpoint_id`` - Endpoint ID where the attribute changed.
+* ``cluster_id`` - Cluster ID of the changed attribute.
+* ``attribute_id`` - Attribute ID that changed.
+* ``val`` - Pointer to the new attribute value.
 
 This function should return ``true`` if the change was handled successfully, ``false`` otherwise.
 

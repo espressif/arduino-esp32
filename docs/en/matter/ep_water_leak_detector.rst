@@ -8,19 +8,19 @@ About
 The ``MatterWaterLeakDetector`` class provides a water leak detector endpoint for Matter networks. This endpoint implements the Matter water leak detection standard for detecting water leak conditions (detected/not detected states).
 
 **Features:**
-* Water leak detection state reporting (detected/not detected)
-* Simple boolean state
-* Read-only sensor (no control functionality)
-* Automatic state updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Water leak detection state reporting (detected/not detected).
+* Simple boolean state.
+* Read-only sensor (no control functionality).
+* Automatic state updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Water leak monitoring
-* Basement flood detection
-* Appliance leak detection
-* Smart home automation triggers
-* Preventative maintenance systems
+* Water leak monitoring.
+* Basement flood detection.
+* Appliance leak detection.
+* Smart home automation triggers.
+* Preventative maintenance systems.
 
 API Reference
 -------------
@@ -80,7 +80,7 @@ Sets the water leak detection state. Call after the endpoint ``begin()``. Before
 
     bool setLeak(bool _leakState);
 
-* ``_leakState`` - Water leak detection state (``true`` = detected, ``false`` = not detected)
+* ``_leakState`` - Water leak detection state (``true`` = detected, ``false`` = not detected).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

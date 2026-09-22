@@ -14,25 +14,25 @@ The ``MatterTemperatureControlledCabinet`` class provides a temperature controll
    - **Temperature Number Mode** (``begin(tempSetpoint, minTemp, maxTemp, step)``): Temperature setpoint control with min/max limits and step control
    - **Temperature Level Mode** (``begin(supportedLevels, levelCount, selectedLevel)`` or ``begin(supportedLevels, labels, levelCount, selectedLevel)``): Temperature level control with an array of supported levels advertised as Matter string labels
 
-* 1/100th degree Celsius precision (for temperature_number mode)
-* Min/max temperature limits with validation (temperature_number mode)
-* Temperature step control (temperature_number mode, always enabled)
-* Temperature level array support (temperature_level mode)
-* Automatic setpoint validation against limits
-* Feature validation - methods return errors if called with wrong feature mode
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* 1/100th degree Celsius precision (for temperature_number mode).
+* Min/max temperature limits with validation (temperature_number mode).
+* Temperature step control (temperature_number mode, always enabled).
+* Temperature level array support (temperature_level mode).
+* Automatic setpoint validation against limits.
+* Feature validation - methods return errors if called with wrong feature mode.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Important:** The ``temperature_number`` and ``temperature_level`` features are **mutually exclusive**. Only one can be enabled at a time. Use ``begin(tempSetpoint, minTemp, maxTemp, step)`` for temperature_number mode or ``begin(supportedLevels, levelCount, selectedLevel)`` (optional ``labels``) for temperature_level mode.
 
 **Use Cases:**
 
-* Refrigerators and freezers
-* Wine coolers
-* Medical storage cabinets
-* Laboratory equipment
-* Food storage systems
-* Temperature-controlled storage units
+* Refrigerators and freezers.
+* Wine coolers.
+* Medical storage cabinets.
+* Laboratory equipment.
+* Food storage systems.
+* Temperature-controlled storage units.
 
 API Reference
 -------------
@@ -63,10 +63,10 @@ Initializes the Matter temperature controlled cabinet endpoint with **temperatur
 
     bool begin(double tempSetpoint = 0.00, double minTemperature = -10.0, double maxTemperature = 32.0, double step = 0.50);
 
-* ``tempSetpoint`` - Initial temperature setpoint in Celsius (default: 0.00)
-* ``minTemperature`` - Minimum allowed temperature in Celsius (default: -10.0)
-* ``maxTemperature`` - Maximum allowed temperature in Celsius (default: 32.0)
-* ``step`` - Initial temperature step value in Celsius (default: 0.50)
+* ``tempSetpoint`` - Initial temperature setpoint in Celsius (default: 0.00).
+* ``minTemperature`` - Minimum allowed temperature in Celsius (default: -10.0).
+* ``maxTemperature`` - Maximum allowed temperature in Celsius (default: 32.0).
+* ``step`` - Initial temperature step value in Celsius (default: 0.50).
 
 This function will return ``true`` if successful, ``false`` if ``min >= max``, the setpoint is outside ``[min, max]``, or creation fails.
 
@@ -83,9 +83,9 @@ Initializes the Matter temperature controlled cabinet endpoint with **temperatur
 
     bool begin(uint8_t *supportedLevels, uint16_t levelCount, uint8_t selectedLevel = 0);
 
-* ``supportedLevels`` - Pointer to array of temperature level values (uint8_t, 0-255)
-* ``levelCount`` - Number of levels in the array (maximum: 16)
-* ``selectedLevel`` - Initial selected temperature level; must be one of the values in ``supportedLevels`` (default: 0)
+* ``supportedLevels`` - Pointer to array of temperature level values (uint8_t, 0-255).
+* ``levelCount`` - Number of levels in the array (maximum: 16).
+* ``selectedLevel`` - Initial selected temperature level; must be one of the values in ``supportedLevels`` (default: 0).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -102,8 +102,8 @@ Same as the temperature_level ``begin()`` above, with optional hub-visible names
 
 * ``supportedLevels`` - Pointer to array of temperature level values (uint8_t, 0-255). Copied internally.
 * ``labels`` - Parallel array of C strings, same length as ``supportedLevels``. A ``nullptr`` or empty entry falls back to the decimal of that uint8 (for example ``30`` → ``"30"``). Each non-empty pointer is **not copied** and must remain valid while the endpoint is running (string literals are fine). Same lifetime rule as ``setTagList()``.
-* ``levelCount`` - Number of levels in the arrays (maximum: 16)
-* ``selectedLevel`` - Initial selected temperature level; must be one of the values in ``supportedLevels`` (default: 0)
+* ``levelCount`` - Number of levels in the arrays (maximum: 16).
+* ``selectedLevel`` - Initial selected temperature level; must be one of the values in ``supportedLevels`` (default: 0).
 
 This function will return ``true`` if successful, ``false`` if a label is longer than ``MatterTemperatureControlledCabinet::MAX_TEMPERATURE_LEVEL_LABEL_LENGTH`` (32), or if validation fails.
 
@@ -134,7 +134,7 @@ Sets the temperature setpoint value. The setpoint will be validated against min/
 
     bool setTemperatureSetpoint(double temperature);
 
-* ``temperature`` - Temperature setpoint in Celsius
+* ``temperature`` - Temperature setpoint in Celsius.
 
 This function will return ``true`` if successful, ``false`` otherwise (e.g., if temperature is out of range or wrong feature mode).
 
@@ -220,7 +220,7 @@ Sets the temperature step value.
 
     bool setStep(double step);
 
-* ``step`` - Temperature step value in Celsius
+* ``step`` - Temperature step value in Celsius.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -251,7 +251,7 @@ Sets the selected temperature level.
 
     bool setSelectedTemperatureLevel(uint8_t level);
 
-* ``level`` - Temperature level value from the supported-levels array (0-255)
+* ``level`` - Temperature level value from the supported-levels array (0-255).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -280,9 +280,9 @@ Sets the supported temperature levels array.
     bool setSupportedTemperatureLevels(uint8_t *levels, uint16_t count);
     bool setSupportedTemperatureLevels(uint8_t *levels, const char *const *labels, uint16_t count);
 
-* ``levels`` - Pointer to array of temperature level values (array is copied internally)
+* ``levels`` - Pointer to array of temperature level values (array is copied internally).
 * ``labels`` - Optional parallel name array. Same pointer lifetime as ``begin(..., labels, ...)``. ``nullptr`` clears any previously stored names and advertises decimals.
-* ``count`` - Number of levels in the array (maximum: 16)
+* ``count`` - Number of levels in the array (maximum: 16).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

@@ -8,19 +8,19 @@ About
 The ``MatterWaterFreezeDetector`` class provides a water freeze detector endpoint for Matter networks. This endpoint implements the Matter water freeze detection standard for detecting water freeze conditions (detected/not detected states).
 
 **Features:**
-* Water freeze detection state reporting (detected/not detected)
-* Simple boolean state
-* Read-only sensor (no control functionality)
-* Automatic state updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Water freeze detection state reporting (detected/not detected).
+* Simple boolean state.
+* Read-only sensor (no control functionality).
+* Automatic state updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Water pipe freeze monitoring
-* Outdoor water system protection
-* HVAC freeze detection
-* Smart home automation triggers
-* Preventative maintenance systems
+* Water pipe freeze monitoring.
+* Outdoor water system protection.
+* HVAC freeze detection.
+* Smart home automation triggers.
+* Preventative maintenance systems.
 
 API Reference
 -------------
@@ -80,7 +80,7 @@ Sets the water freeze detection state. Call after the endpoint ``begin()``. Befo
 
     bool setFreeze(bool _freezeState);
 
-* ``_freezeState`` - Water freeze detection state (``true`` = detected, ``false`` = not detected)
+* ``_freezeState`` - Water freeze detection state (``true`` = detected, ``false`` = not detected).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
