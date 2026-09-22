@@ -443,7 +443,12 @@ bool USBMSCFSClass::begin(const char *mountpoint, uint8_t max_files, bool format
 
   FATFS *fs = nullptr;
   char drv[3] = {(char)('0' + pdrv), ':', 0};
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
   esp_err_t err = esp_vfs_fat_register(mountpoint, drv, max_files, &fs);
+#else
+  esp_vfs_fat_conf_t conf = {.base_path = mountpoint, .fat_drive = drv, .max_files = max_files};
+  esp_err_t err = esp_vfs_fat_register(&conf, &fs);
+#endif
   if (err != ESP_OK) {
     log_e("USBMSCFS: esp_vfs_fat_register failed 0x%x", err);
     usbmsc_begin_cleanup(mountpoint, pdrv, false);
