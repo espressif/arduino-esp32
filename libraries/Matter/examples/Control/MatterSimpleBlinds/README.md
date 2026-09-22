@@ -34,7 +34,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 ## Features
 
 - Lift-only `ROLLERSHADE` (Matter percent: 0 = open, 100 = closed)
-- Simulated motor: **1% every 200 ms** (full travel about 20 s). A new Target mid-move changes direction
+- Simulated motor: **1 percent every 200 ms** (full travel about 20 s). A new Target mid-move changes direction
 - Reports `CurrentPositionLiftPercent100ths` each step and Lift `OperationalState` (Opening / Closing / Stall)
 - Single `onGoToLiftPercentage()` callback when Target changes
 - Matter commissioning via QR code or manual pairing code
@@ -107,7 +107,7 @@ Opening: 100% -> 50%
 Lift reached 50%
 ```
 
-Alexa shows Opening or Closing and the moving percent until Stall. A new Target while moving retargets the simulation.
+Alexa shows Opening or Closing and the moving lift position until Stall. A new Target while moving retargets the simulation.
 
 ## Usage
 
@@ -147,6 +147,6 @@ Change `kSimStepPercent` / `kSimStepMs` to match a slower or faster shade.
 
 ## Notes
 
-- `ROLLERSHADE` (lift only). Matter percent: 0 = open, 100 = closed. Boot position is 100% closed.
+- `ROLLERSHADE` (lift only). Matter percent: 0 = open, 100 = closed. Boot position is 100 percent closed.
 - The sketch simulates travel (1%/200 ms). A real motor should report Current while moving and Stall when it arrives.
 - `onGoToLiftPercentage()` accepts Target only. Current is updated from `loop()`.
