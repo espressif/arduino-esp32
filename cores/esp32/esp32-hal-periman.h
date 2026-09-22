@@ -100,7 +100,8 @@ typedef enum {
 #if CONFIG_ETH_USE_ESP32_EMAC
   ESP32_BUS_TYPE_ETHERNET_RMII,  // IO is used as ETHERNET RMII pin
   ESP32_BUS_TYPE_ETHERNET_CLK,   // IO is used as ETHERNET CLK pin
-  ESP32_BUS_TYPE_ETHERNET_MCD,   // IO is used as ETHERNET MCD pin
+  ESP32_BUS_TYPE_ETHERNET_MDC,   // IO is used as ETHERNET MDC (Management Data Clock) pin
+  ESP32_BUS_TYPE_ETHERNET_MCD = ESP32_BUS_TYPE_ETHERNET_MDC,  // Deprecated alias for backward compatibility
   ESP32_BUS_TYPE_ETHERNET_MDIO,  // IO is used as ETHERNET MDIO pin
   ESP32_BUS_TYPE_ETHERNET_PWR,   // IO is used as ETHERNET PWR pin
 #endif

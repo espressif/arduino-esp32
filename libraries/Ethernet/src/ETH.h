@@ -275,7 +275,7 @@ private:
   int8_t _pin_miso;
   int8_t _pin_mosi;
 #if CONFIG_ETH_USE_ESP32_EMAC
-  int8_t _pin_mcd;
+  int8_t _pin_mdc;
   int8_t _pin_mdio;
   int8_t _pin_power;
   int8_t _pin_rmii_clock;
