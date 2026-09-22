@@ -883,6 +883,14 @@
                         "ram_percentage": 23
                         }]
                 },
+{"name": "libraries/USB/examples/AudioCardMultiRate",
+                "sizes": [{
+                        "flash_bytes": 445894,
+                        "flash_percentage": 34,
+                        "ram_bytes": 73904,
+                        "ram_percentage": 23
+                        }]
+                },
 {"name": "libraries/USB/examples/CompositeDevice",
                 "sizes": [{
                         "flash_bytes": 310834,
@@ -912,14 +920,6 @@
                         "flash_bytes": 307334,
                         "flash_percentage": 23,
                         "ram_bytes": 23584,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/USB/examples/Gamepad",
-                "sizes": [{
-                        "flash_bytes": 310834,
-                        "flash_percentage": 24,
-                        "ram_bytes": 23808,
                         "ram_percentage": 7
                         }]
                 }
@@ -986,33 +986,41 @@
                 },
 {"name": "libraries/USB/examples/AudioCard",
                 "sizes": [{
-                        "flash_bytes": 340608,
-                        "flash_percentage": 26,
-                        "ram_bytes": 50696,
+                        "flash_bytes": 362164,
+                        "flash_percentage": 28,
+                        "ram_bytes": 50728,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/USB/examples/AudioCardMultiRate",
+                "sizes": [{
+                        "flash_bytes": 358708,
+                        "flash_percentage": 27,
+                        "ram_bytes": 49344,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/CompositeDevice",
                 "sizes": [{
-                        "flash_bytes": 350220,
+                        "flash_bytes": 350320,
                         "flash_percentage": 27,
-                        "ram_bytes": 49984,
+                        "ram_bytes": 50032,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/ConsumerControl",
                 "sizes": [{
-                        "flash_bytes": 302212,
+                        "flash_bytes": 302312,
                         "flash_percentage": 23,
-                        "ram_bytes": 49536,
+                        "ram_bytes": 49584,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/CustomHIDDevice",
                 "sizes": [{
-                        "flash_bytes": 315704,
+                        "flash_bytes": 315804,
                         "flash_percentage": 24,
-                        "ram_bytes": 49544,
+                        "ram_bytes": 49592,
                         "ram_percentage": 15
                         }]
                 },
@@ -1026,57 +1034,49 @@
                 },
 {"name": "libraries/USB/examples/Gamepad",
                 "sizes": [{
-                        "flash_bytes": 316276,
+                        "flash_bytes": 316376,
                         "flash_percentage": 24,
-                        "ram_bytes": 49560,
+                        "ram_bytes": 49608,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
-                        "flash_bytes": 318628,
+                        "flash_bytes": 318728,
                         "flash_percentage": 24,
-                        "ram_bytes": 49632,
+                        "ram_bytes": 49680,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
                 "sizes": [{
-                        "flash_bytes": 303572,
+                        "flash_bytes": 303656,
                         "flash_percentage": 23,
-                        "ram_bytes": 49568,
+                        "ram_bytes": 49600,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
                 "sizes": [{
-                        "flash_bytes": 303896,
+                        "flash_bytes": 303996,
                         "flash_percentage": 23,
-                        "ram_bytes": 49568,
+                        "ram_bytes": 49616,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
                 "sizes": [{
-                        "flash_bytes": 304020,
+                        "flash_bytes": 304104,
                         "flash_percentage": 23,
-                        "ram_bytes": 49560,
+                        "ram_bytes": 49592,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
                 "sizes": [{
-                        "flash_bytes": 311792,
+                        "flash_bytes": 311876,
                         "flash_percentage": 24,
-                        "ram_bytes": 49208,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/USB/examples/KeyboardAndMouseControl",
-                "sizes": [{
-                        "flash_bytes": 317160,
-                        "flash_percentage": 24,
-                        "ram_bytes": 49600,
+                        "ram_bytes": 49240,
                         "ram_percentage": 15
                         }]
                 }
@@ -1207,33 +1207,41 @@
                 },
 {"name": "libraries/USB/examples/AudioCard",
                 "sizes": [{
-                        "flash_bytes": 411456,
-                        "flash_percentage": 31,
-                        "ram_bytes": 56432,
+                        "flash_bytes": 432916,
+                        "flash_percentage": 33,
+                        "ram_bytes": 56464,
+                        "ram_percentage": 17
+                        }]
+                },
+{"name": "libraries/USB/examples/AudioCardMultiRate",
+                "sizes": [{
+                        "flash_bytes": 434032,
+                        "flash_percentage": 33,
+                        "ram_bytes": 55440,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/CompositeDevice",
                 "sizes": [{
-                        "flash_bytes": 413148,
+                        "flash_bytes": 413248,
                         "flash_percentage": 32,
-                        "ram_bytes": 55712,
+                        "ram_bytes": 55760,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/ConsumerControl",
                 "sizes": [{
-                        "flash_bytes": 364636,
+                        "flash_bytes": 364720,
                         "flash_percentage": 28,
-                        "ram_bytes": 55272,
+                        "ram_bytes": 55304,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/CustomHIDDevice",
                 "sizes": [{
-                        "flash_bytes": 378020,
+                        "flash_bytes": 378120,
                         "flash_percentage": 29,
-                        "ram_bytes": 55280,
+                        "ram_bytes": 55328,
                         "ram_percentage": 17
                         }]
                 },
@@ -1242,14 +1250,6 @@
                         "flash_bytes": 393992,
                         "flash_percentage": 30,
                         "ram_bytes": 55128,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/USB/examples/Gamepad",
-                "sizes": [{
-                        "flash_bytes": 378592,
-                        "flash_percentage": 29,
-                        "ram_bytes": 55296,
                         "ram_percentage": 17
                         }]
                 }

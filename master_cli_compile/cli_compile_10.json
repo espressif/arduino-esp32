@@ -795,6 +795,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/USB/examples/Gamepad",
+                "sizes": [{
+                        "flash_bytes": 310834,
+                        "flash_percentage": 24,
+                        "ram_bytes": 23808,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
                         "flash_bytes": 310834,
@@ -914,20 +922,20 @@
                         "ram_bytes": 72760,
                         "ram_percentage": 22
                         }]
-                },
-{"name": "libraries/USB/examples/USBHostHIDCombo",
-                "sizes": [{
-                        "flash_bytes": 409790,
-                        "flash_percentage": 31,
-                        "ram_bytes": 72896,
-                        "ram_percentage": 22
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/USB/examples/KeyboardAndMouseControl",
+                "sizes": [{
+                        "flash_bytes": 317160,
+                        "flash_percentage": 24,
+                        "ram_bytes": 49600,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/USB/examples/MIDI/MidiController",
                 "sizes": [{
                         "flash_bytes": 323724,
@@ -1071,20 +1079,20 @@
                         "ram_bytes": 49568,
                         "ram_percentage": 15
                         }]
-                },
-{"name": "libraries/Update/examples/AWS_S3_OTA_Update",
-                "sizes": [{
-                        "flash_bytes": 852568,
-                        "flash_percentage": 65,
-                        "ram_bytes": 42548,
-                        "ram_percentage": 13
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/USB/examples/Gamepad",
+                "sizes": [{
+                        "flash_bytes": 378592,
+                        "flash_percentage": 29,
+                        "ram_bytes": 55296,
+                        "ram_percentage": 17
+                        }]
+                },
 {"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
                         "flash_bytes": 380868,
@@ -1242,14 +1250,6 @@
                         "flash_bytes": 374936,
                         "flash_percentage": 29,
                         "ram_bytes": 54416,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/USB/examples/USBHostMouseCallback",
-                "sizes": [{
-                        "flash_bytes": 374780,
-                        "flash_percentage": 29,
-                        "ram_bytes": 54408,
                         "ram_percentage": 17
                         }]
                 }

@@ -795,6 +795,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/USB/examples/USBHostHIDCombo",
+                "sizes": [{
+                        "flash_bytes": 409790,
+                        "flash_percentage": 31,
+                        "ram_bytes": 72896,
+                        "ram_percentage": 22
+                        }]
+                },
 {"name": "libraries/USB/examples/USBHostIDF",
                 "sizes": [{
                         "flash_bytes": 388698,
@@ -914,20 +922,20 @@
                         "ram_bytes": 24616,
                         "ram_percentage": 8
                         }]
-                },
-{"name": "libraries/Update/examples/Signed_OTA_Update",
-                "sizes": [{
-                        "flash_bytes": 1063400,
-                        "flash_percentage": 81,
-                        "ram_bytes": 32840,
-                        "ram_percentage": 10
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/Update/examples/AWS_S3_OTA_Update",
+                "sizes": [{
+                        "flash_bytes": 856856,
+                        "flash_percentage": 65,
+                        "ram_bytes": 42564,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/Update/examples/HTTPS_OTA_Update",
                 "sizes": [{
                         "flash_bytes": 944547,
@@ -1071,20 +1079,20 @@
                         "ram_bytes": 42508,
                         "ram_percentage": 13
                         }]
-                },
-{"name": "libraries/WebServer/examples/MultiHomedServers",
-                "sizes": [{
-                        "flash_bytes": 909072,
-                        "flash_percentage": 69,
-                        "ram_bytes": 44580,
-                        "ram_percentage": 14
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/USB/examples/USBHostMouseCallback",
+                "sizes": [{
+                        "flash_bytes": 374780,
+                        "flash_percentage": 29,
+                        "ram_bytes": 54408,
+                        "ram_percentage": 17
+                        }]
+                },
 {"name": "libraries/USB/examples/USBHostSerial",
                 "sizes": [{
                         "flash_bytes": 374828,
@@ -1242,14 +1250,6 @@
                         "flash_bytes": 973475,
                         "flash_percentage": 74,
                         "ram_bytes": 51668,
-                        "ram_percentage": 16
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1",
-                "sizes": [{
-                        "flash_bytes": 980775,
-                        "flash_percentage": 75,
-                        "ram_bytes": 51684,
                         "ram_percentage": 16
                         }]
                 }
