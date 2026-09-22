@@ -43,7 +43,6 @@
 #include <MatterEndpoints/MatterThermostat.h>
 #include <MatterEndpoints/MatterWindowCovering.h>
 #include <MatterEndpoints/MatterLightSensor.h>
-#include "matter_closure_patch.h"
 
 // Matter Event types used when there is a user callback for Matter Events
 enum matterEvent_t {
@@ -200,10 +199,15 @@ public:
     _bleMemoryReleasedCB = cb;
   }
 
-  // Generated after Matter.begin() from CommissionableDataProvider.
-  // Before begin() these log a warning and return an empty String.
+  // Generated after a successful Matter.begin() from CommissionableDataProvider.
+  // Before begin() or if begin() failed these log a warning and return an empty String.
   static String getManualPairingCode();
   static String getOnboardingQRCodeUrl();
+  // Creates the Matter node (root endpoint 0) if not already created. Idempotent.
+  // Normally called from MatterEndPoint::ensureMatterNode() inside endpoint begin().
+  // Sketches rarely call this directly.
+  static bool initNode();
+
   // Starts the Matter stack. On Wi-Fi station builds with no Thread/Ethernet
   // selection, initializes Wi-Fi first with reduced RX/TX buffers so CHIP
   // inherits those counts (first esp_wifi_init wins).
@@ -217,6 +221,12 @@ public:
   static bool setSerialNumber(const char *value);
   static bool setHardwareVersion(uint16_t version);
   static bool setHardwareVersionString(const char *value);
+  // SoftwareVersion is Basic Information (ConfigurationManager), not HardwareVersion.
+  // In-memory only; CHIP StoreSoftwareVersion is unsupported on ESP32.
+  static bool setSoftwareVersion(uint32_t version);
+  static bool setSoftwareVersionString(const char *value);
+  static uint32_t getSoftwareVersion();
+  static String getSoftwareVersionString();
 
   // Commissioning codes. Call before Matter.begin(). Test defaults are 0xF00 / 20202021.
   static bool setSetupDiscriminator(uint16_t discriminator);
@@ -250,7 +260,9 @@ public:
   // ESP32-C6: one Network Commissioning cluster on endpoint 0. selectNetwork(MATTER_NETWORK_THREAD)
   // replaces the prebuild Wi-Fi driver so hubs that only talk to the root see Thread.
   // Wi-Fi and Thread are alternatives, not simultaneous NC endpoints.
-  // Matter.begin() skips CHIP's Wi-Fi init for Thread/Ethernet.
+  // Dual-stack images still run CHIP InitWiFiStack() (InitChipStack needs it).
+  // After start, Thread/Ethernet disable the Wi-Fi station so a leftover SSID
+  // does not join. Arduino's reduced-buffer esp_wifi_init() is Wi-Fi-only.
   static bool isNetworkSupported(matterNetwork_t network);  // same as the is*Enabled() helpers
   // BLE default: Ethernet disables CHIPoBLE; Wi-Fi and Thread leave it on.
   // MATTER_NETWORK_NONE clears the selection and does not change BLE.
@@ -271,6 +283,7 @@ public:
   // Does not start hardware. timeoutMs 0 is a single check.
   static bool waitForNetwork(uint32_t timeoutMs);
 
+  static bool isStackStarted();  // true only after a successful Matter.begin()
   static bool isDeviceCommissioned();
   static bool isWiFiConnected();
   static bool isThreadConnected();
@@ -278,32 +291,7 @@ public:
   static bool isOnline();  // active CASE session with a controller
   static void decommission();
 
-  // list of Matter EndPoints Friend Classes
-  friend class MatterGenericSwitch;
-  friend class MatterOnOffLight;
-  friend class MatterDimmableLight;
-  friend class MatterDimmablePlugin;
-  friend class MatterColorTemperatureLight;
-  friend class MatterColorLight;
-  friend class MatterEnhancedColorLight;
-  friend class MatterFan;
-  friend class MatterTemperatureSensor;
-  friend class MatterTemperatureControlledCabinet;
-  friend class MatterHumiditySensor;
-  friend class MatterContactSensor;
-  friend class MatterWaterLeakDetector;
-  friend class MatterWaterFreezeDetector;
-  friend class MatterRainSensor;
-  friend class MatterPressureSensor;
-  friend class MatterOccupancySensor;
-  friend class MatterOnOffPlugin;
-  friend class MatterThermostat;
-  friend class MatterWindowCovering;
-  friend class MatterLightSensor;
-
 protected:
-  static void _init();
-  static bool isStackStarted();  // true only after a successful Matter.begin()
   static bool ensureSetBeforeBegin(const char *apiName);
   static bool storeIdentityString(char *dst, size_t dstSize, const char *src, const char *apiName);
   static void applyIdentityBeforeStart();

@@ -1,6 +1,8 @@
 # Matter Device Identity Example
 
-This example shows how to set node identity and commissioning codes on the `Matter` singleton before `Matter.begin()`. It is an on/off light (same hardware as Matter On/Off Light) plus VendorName, ProductName, DeviceName (NodeLabel), SerialNumber, hardware version, and a non-default discriminator/PIN.
+This example shows how to set node identity and commissioning codes on the `Matter` singleton before `Matter.begin()`. It is an on/off light (same hardware as Matter On/Off Light) plus VendorName, ProductName, DeviceName (NodeLabel), SerialNumber, hardware version, software version, and a non-default discriminator/PIN.
+
+Other examples use `matterSetExampleIdentity("Color Light")` for vendor `Espressif` and product `<SoC> <endpoint>`. This sketch sets custom values instead.
 
 Use the **generated** pairing codes from `matterWaitUntilReady()` after `Matter.begin()`. Before `begin()` the getters log a warning and return empty. Do not use a remembered Arduino test code (`34970112332`) when the PIN or discriminator has been changed.
 
@@ -44,18 +46,21 @@ Matter.setDeviceName("KitchenHub");   // Basic Information NodeLabel
 Matter.setSerialNumber("KH-000123");
 Matter.setHardwareVersion(7);
 Matter.setHardwareVersionString("RevA");
+Matter.setSoftwareVersion(7);             // Alexa/controller firmware version
+Matter.setSoftwareVersionString("1.0.7");
 Matter.setSetupDiscriminator(0xF01);  // 0–0xFFF; test default is 0xF00
 Matter.setSetupPasscode(20202024);    // valid PIN; test default is 20202021
 
 OnOffLight.begin(lastOnOffState);
-Matter.begin();  // applies identity, regenerates SPAKE2+ if the PIN changed, prints live codes
+Matter.begin();  // applies identity and regenerates SPAKE2+ if the PIN changed
+matterWaitUntilReady();  // prints live pairing codes after begin()
 ```
 
 Setters after `Matter.begin()` log a warning and have no effect. String setters copy the text (literals, stack buffers, and `String` are all safe). Limits: names and serial 32, hardware version string 64.
 
 `setDeviceName()` writes NodeLabel. On a single-endpoint node, controllers often use that as the device title. On a composed node it is the parent/node name; child lights are not renamed (use `MatterEndPoint::setTagList()` for switch-style tags, not light titles).
 
-Do not change Vendor ID / Product ID from a sketch unless the DAC matches. SoftwareVersion is compile-time CHIP config.
+Do not change Vendor ID / Product ID from a sketch unless the DAC matches. SoftwareVersion is Basic Information from ConfigurationManager (in RAM for this boot). HardwareVersion is DeviceInstanceInfoProvider.
 
 Production devices should use a unique random PIN and discriminator per unit (factory NVS). This example stores values in RAM and reapplies them every boot.
 

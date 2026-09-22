@@ -28,7 +28,7 @@ public:
   // this will just stop processing Water Freeze Detector Matter events
   void end();
 
-  // set the freeze state. Call after Matter.begin() with the real sensor reading.
+  // set the freeze state after endpoint begin(). Cached until Matter.begin() if the cluster is not live yet.
   bool setFreeze(bool _freezeState);
   // returns the freeze state
   bool getFreeze() {

@@ -17,7 +17,7 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterColorTemperatureLight.h>
-#include <app/util/attribute-storage-null-handling.h>
+#include <lib/support/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -125,7 +125,7 @@ MatterColorTemperatureLight::~MatterColorTemperatureLight() {
 }
 
 bool MatterColorTemperatureLight::begin(bool initialState, uint8_t brightness, uint16_t ColorTemperature) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Temperature Light with Endpoint Id %u device has already been created.", getEndPointId());

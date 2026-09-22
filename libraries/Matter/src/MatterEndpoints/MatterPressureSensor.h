@@ -59,5 +59,6 @@ protected:
   // internal function to set the raw pressure value (Matter Cluster)
   bool setRawPressure(int16_t _rawPressure);
   bool begin(int16_t _rawPressure);
+  void onStackStarted() override;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

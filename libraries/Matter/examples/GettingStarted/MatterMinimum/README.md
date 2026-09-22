@@ -1,7 +1,6 @@
 # Matter Minimum Example
 
-This example demonstrates the smallest code required to create a Matter-compatible device using an ESP32 SoC microcontroller.\
-The application showcases the minimal implementation for Matter commissioning and device control via smart home ecosystems. This is an ideal starting point for understanding Matter basics and building more complex devices.
+The smallest Matter sketch: one ``MatterOnOffLight``, an LED GPIO, and ``onChange()``. Commission from the pairing code that ``matterWaitUntilReady()`` prints. There is no button, no custom identity, and no extra serial status after CASE.
 
 ## Supported Targets
 
@@ -34,24 +33,21 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 ## Features
 
-- Minimal Matter protocol implementation for an on/off light device
+- One On/Off Light endpoint
+- LED follows the Matter On/Off attribute (`LED_BUILTIN`, or GPIO 2)
 - Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
-- Simple on/off control via Matter app
-- Button control for factory reset (decommission)
-- Matter commissioning via QR code or manual pairing code
+- Commissioning via QR code or manual pairing code from the serial monitor
+- No BOOT button, no `matterSetExampleIdentity()`, no extra prints after CASE
 - Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-- Minimal code footprint - ideal for learning Matter basics
 
 ## Hardware Requirements
 
 - ESP32 compatible development board (see supported targets table)
-- Optional: LED connected to GPIO pin (or using built-in LED) for visual feedback
-- Optional: User button for factory reset (uses BOOT button by default)
+- Optional: LED on `LED_BUILTIN` or GPIO 2
 
 ## Pin Configuration
 
-- **LED**: Uses `LED_BUILTIN` if defined, otherwise pin 2
-- **Button**: Uses `BOOT_PIN` by default (only for factory reset)
+- **LED**: `LED_BUILTIN` if defined, otherwise pin 2
 
 ## Software Setup
 
@@ -69,19 +65,13 @@ Before uploading the sketch, configure the following:
 
 1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
-   const char *password = "your-password"; // Change to your Wi-Fi password
+   #define WIFI_SSID "your-ssid"         // Change to your Wi-Fi SSID
+   #define WIFI_PASSWORD "your-password" // Change to your Wi-Fi password
    ```
 
-2. **LED pin configuration** (if not using built-in LED):
+2. **LED pin** (if the board has no `LED_BUILTIN`):
    ```cpp
    const uint8_t ledPin = 2;  // Set your LED pin here
-   ```
-
-3. **Button pin configuration** (optional):
-   By default, the `BOOT` button (GPIO 0) is used for factory reset. You can change this to a different pin if needed.
-   ```cpp
-   const uint8_t buttonPin = BOOT_PIN;  // Set your button pin here
    ```
 
 ## Building and Flashing
@@ -115,17 +105,11 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%
 Controller CASE session is up.
 ```
 
-After CASE is up, this minimal example prints no extra accessory status. Long-press BOOT to decommission.
+After CASE is up, this example prints no extra accessory status. To factory-reset, erase flash and upload again, or use the hub to remove the fabric (`matterRestartIfNoFabric()` then reboots).
 
 ## Using the Device
 
-### Manual Control
-
-The user button (BOOT button by default) provides factory reset functionality:
-
-- **Long press (>5 seconds)**: Factory reset the device (decommission)
-
-Note: This minimal example does not include button toggle functionality. To add manual toggle control, you can extend the code with additional button handling logic.
+Control is from the Matter app only. There is no local button.
 
 ### Smart Home Integration
 
@@ -165,30 +149,24 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 ## Code Structure
 
-The MatterMinimum example consists of the following main components:
-
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), initializes the Matter on/off light endpoint, registers the callback function, starts the Matter stack, and waits for commissioning / CASE via `matterWaitUntilReady()`.
-
-2. **`loop()`**: Accessory logic (long-press decommission). `matterRestartIfNoFabric()` reboots if the hub removed the fabric.
-
-3. **`onOffLightCallback()`**: Simple callback function that controls the LED based on the on/off state received from the Matter controller. This is the minimal callback implementation.
+1. **`onOffLightCallback()`**: Writes the LED from the On/Off state. Must return `true`.
+2. **`setup()`**: LED GPIO, Wi-Fi only when CHIPoBLE is off, `OnOffLight.begin()`, `onChange()`, `Matter.begin()`, `matterWaitUntilReady()`. No `matterSetExampleIdentity()`.
+3. **`loop()`**: `matterRestartIfNoFabric()` then `delay(500)`.
 
 ## Extending the Example
 
-This minimal example can be extended with additional features:
-
-- **State persistence**: Add `Preferences` library to save the last known state
-- **Button toggle**: Add button press detection to toggle the light manually
-- **Multiple endpoints**: Add more Matter endpoints to the same node
-- **Enhanced callbacks**: Add more detailed callback functions for better control
+- **Identity**: `matterSetExampleIdentity("OnOff Light")` before `Matter.begin()`, or see Matter Device Identity
+- **Local button / decommission**: see Matter On/Off Light (`MatterButton`, long-hold `Matter.decommission()`)
+- **State persistence**: `Preferences` for the last On/Off state
+- **More endpoints**: add another `Matter*` object and `begin()` it before `Matter.begin()`
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
-- **LED not responding**: Verify pin configurations and connections. The LED will only respond to Matter app commands after commissioning
-- **Failed to commission**: Try erasing the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
-- **No serial output**: Check baudrate (115200) and USB connection
-- **LED not turning on/off**: Ensure the device is commissioned and you're controlling it via a Matter app. The minimal example only responds to Matter controller commands, not local button presses
+- **LED not responding**: Check the GPIO. The LED only follows Matter On/Off after the device is commissioned
+- **Failed to commission**: Erase flash (`Tools` → `Erase All Flash Before Sketch Upload: "Enabled"`, or `esptool.py --port <PORT> erase_flash`) and upload again
+- **No serial output**: Baud rate 115200 and USB connection
+- **No factory-reset button**: This sketch has none. Erase flash or remove the fabric from the hub
 
 ## Related Documentation
 

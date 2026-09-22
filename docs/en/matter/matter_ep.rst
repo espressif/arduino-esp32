@@ -7,11 +7,11 @@ About
 
 The ``MatterEndPoint`` class is the base class for all Matter endpoints. It provides common functionality for all endpoint types.
 
-* **Endpoint Management**: Each endpoint has a unique endpoint ID for identification within the Matter network
-* **Attribute Access**: Methods to get and set attribute values from Matter clusters
-* **Identify Cluster**: Support for device identification (visual feedback like LED blinking)
-* **Semantic Tags**: Descriptor cluster ``TagList`` support via ``setTagList()``, so controllers can tell sibling endpoints of the same device type apart
-* **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers
+* **Endpoint Management**: Each endpoint has a unique endpoint ID for identification within the Matter network.
+* **Attribute Access**: Methods to get and set attribute values from Matter clusters.
+* **Identify Cluster**: Support for device identification (visual feedback like LED blinking).
+* **Semantic Tags**: Descriptor cluster ``TagList`` support via ``setTagList()``, so controllers can tell sibling endpoints of the same device type apart.
+* **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers.
 
 All Matter endpoint classes inherit from ``MatterEndPoint``, providing a consistent interface and common functionality across all device types.
 
@@ -41,7 +41,40 @@ Sets the current Matter Accessory endpoint ID.
 
     void setEndPointId(uint16_t ep);
 
-* ``ep`` - Endpoint number to set
+* ``ep`` - Endpoint number to set.
+
+Custom endpoints
+****************
+
+For esp-matter device types that are not wrapped by a stock ``Matter*`` class, subclass ``MatterEndPoint``, implement ``attributeChangeCB``, and in your subclass ``begin()``:
+
+1. Call ``ensureMatterNode()`` (protected on ``MatterEndPoint``; not callable from the sketch) or ``Matter.initNode()`` if you are not using a ``MatterEndPoint`` subclass.
+2. Create the endpoint with ``esp_matter::endpoint::*::create(node::get(), …, ENDPOINT_FLAG_NONE, (void *)this)``.
+3. Call ``setEndPointId(endpoint::get_id(ep))``, or ``registerCreatedEndpoint(ep)`` after ``create()`` with ``(void *)this``.
+
+Override ``onStackStarted()`` when you need to push cached attribute values after ``Matter.begin()`` (for example code-driven clusters). See the `MatterCustomEndpoint <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterCustomEndpoint>`_ example.
+
+registerCreatedEndpoint
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Registers an endpoint created with ``esp_matter::endpoint::*::create(..., (void *)this)``. Call before ``Matter.begin()``.
+
+.. code-block:: arduino
+
+    bool registerCreatedEndpoint(endpoint_t *ep);
+
+onStackStarted
+^^^^^^^^^^^^^^
+
+Override this hook in a ``MatterEndPoint`` subclass to push cached attribute values after ``Matter.begin()``, when code-driven clusters or the live attribute store are available. The library calls it once per endpoint (via an internal ``notifyStackStarted()``) immediately after ``esp_matter::start()`` succeeds.
+
+Do not call ``notifyStackStarted()`` from application code.
+
+.. code-block:: arduino
+
+    void onStackStarted() override;
+
+Typical uses: sync a value held in C++ members into clusters that were not writable before the stack started, or re-apply a measurement after ``Matter.begin()`` (see the `MatterCustomEndpoint <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Advanced/MatterCustomEndpoint>`_ example). For Boolean State sensors, prefer the endpoint setters (``setContact()``, etc.); they cache via ``setBooleanStateValue()`` when the cluster is not registered yet.
 
 Secondary Network Interface (deprecated)
 ****************************************
@@ -67,8 +100,8 @@ Gets a pointer to an attribute from its cluster ID and attribute ID.
 
     esp_matter::attribute_t *getAttribute(uint32_t cluster_id, uint32_t attribute_id);
 
-* ``cluster_id`` - Cluster ID (e.g., ``OnOff::Id``)
-* ``attribute_id`` - Attribute ID (e.g., ``OnOff::Attributes::OnOff::Id``)
+* ``cluster_id`` - Cluster ID (e.g., ``OnOff::Id``).
+* ``attribute_id`` - Attribute ID (e.g., ``OnOff::Attributes::OnOff::Id``).
 
 This function will return a pointer to the attribute, or ``NULL`` if not found.
 
@@ -81,9 +114,9 @@ Gets the value of an attribute from its cluster ID and attribute ID.
 
     bool getAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
 
-* ``cluster_id`` - Cluster ID
-* ``attribute_id`` - Attribute ID
-* ``attrVal`` - Pointer to store the attribute value
+* ``cluster_id`` - Cluster ID.
+* ``attribute_id`` - Attribute ID.
+* ``attrVal`` - Pointer to store the attribute value.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -96,9 +129,9 @@ Sets the value of an attribute from its cluster ID and attribute ID.
 
     bool setAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
 
-* ``cluster_id`` - Cluster ID
-* ``attribute_id`` - Attribute ID
-* ``attrVal`` - Pointer to the attribute value to set
+* ``cluster_id`` - Cluster ID.
+* ``attribute_id`` - Attribute ID.
+* ``attrVal`` - Pointer to the attribute value to set.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -111,13 +144,13 @@ Updates the value of an attribute from its cluster ID. This is typically used fo
 
     bool updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
 
-* ``cluster_id`` - Cluster ID
-* ``attribute_id`` - Attribute ID
-* ``attrVal`` - Pointer to the attribute value to update
+* ``cluster_id`` - Cluster ID.
+* ``attribute_id`` - Attribute ID.
+* ``attrVal`` - Pointer to the attribute value to update.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-Boolean State ``StateValue`` (contact, leak, freeze, rain) is internally managed in ESP-Matter 1.5+ and cannot be written with ``updateAttributeVal()``. Those endpoints use a cluster setter; call ``setContact()`` / ``setLeak()`` / ``setFreeze()`` / ``setRain()`` after ``Matter.begin()``.
+Boolean State ``StateValue`` (contact, leak, freeze, rain) lives on the code-driven cluster and cannot be written with ``updateAttributeVal()`` (that only updates the shadow table). Those endpoints use a cluster setter. Call ``setContact()`` / ``setLeak()`` / ``setFreeze()`` / ``setRain()`` after the endpoint ``begin()``; a value set before ``Matter.begin()`` is cached and applied when the cluster is created.
 
 Identify Cluster
 ****************
@@ -154,11 +187,11 @@ Returns the last Identify event for this endpoint. The library fills it immediat
 
 ``MatterIdentifyRequest`` fields:
 
-* ``valid`` - ``false`` until this endpoint has received an Identify event. Do not treat a default ``effectId`` of 0 as Blink
-* ``active`` - same boolean passed to ``onIdentify()``
-* ``fromTriggerEffect`` - ``true`` for ``TriggerEffect``; ``false`` for Identify / ``IdentifyTime``
-* ``effectId`` - ``MatterIdentifyRequest::BLINK`` (0x00), ``BREATHE`` (0x01), ``OKAY`` (0x02), ``CHANNEL_CHANGE`` (0x0B), ``FINISH`` (0xFE), ``STOP`` (0xFF). Meaningful when ``fromTriggerEffect`` is ``true``. On IdentifyTime START/STOP CHIP still passes a leftover/default id (often Blink); ignore it
-* ``effectVariant`` - usually Default (0)
+* ``valid`` - ``false`` until this endpoint has received an Identify event. Do not treat a default ``effectId`` of 0 as Blink.
+* ``active`` - same boolean passed to ``onIdentify()``.
+* ``fromTriggerEffect`` - ``true`` for ``TriggerEffect``; ``false`` for Identify / ``IdentifyTime``.
+* ``effectId`` - ``MatterIdentifyRequest::BLINK`` (0x00), ``BREATHE`` (0x01), ``OKAY`` (0x02), ``CHANNEL_CHANGE`` (0x0B), ``FINISH`` (0xFE), ``STOP`` (0xFF). Meaningful when ``fromTriggerEffect`` is ``true``. On IdentifyTime START/STOP CHIP still passes a leftover/default id (often Blink); ignore it.
+* ``effectVariant`` - usually Default (0).
 
 Example usage:
 
@@ -199,8 +232,8 @@ Sets the Descriptor cluster TagList attribute, replacing any list set previously
     bool setTagList(const MatterTag *tagList, uint8_t count);
     bool setTagList(std::initializer_list<MatterTag> tagList);
 
-* ``tagList`` - Array or brace-enclosed list of ``MatterTag`` entries
-* ``count`` - Number of entries (pointer overload only); must be 1..3
+* ``tagList`` - Array or brace-enclosed list of ``MatterTag`` entries.
+* ``count`` - Number of entries (pointer overload only); must be 1..3.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -243,10 +276,10 @@ This function is called by the Matter internal event processor when an attribute
 
     virtual bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
-* ``endpoint_id`` - Endpoint ID where the attribute changed
-* ``cluster_id`` - Cluster ID of the changed attribute
-* ``attribute_id`` - Attribute ID that changed
-* ``val`` - Pointer to the new attribute value
+* ``endpoint_id`` - Endpoint ID where the attribute changed.
+* ``cluster_id`` - Cluster ID of the changed attribute.
+* ``attribute_id`` - Attribute ID that changed.
+* ``val`` - Pointer to the new attribute value.
 
 This function should return ``true`` if the change was handled successfully, ``false`` otherwise.
 
