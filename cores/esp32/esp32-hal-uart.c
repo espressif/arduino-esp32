@@ -58,6 +58,17 @@
 #define SOC_UART_RTS_PIN_IDX SOC_UART_PERIPH_SIGNAL_RTS
 #endif
 
+// IDF 6.1 turned uart_set_pin() into a macro that calls _uart_set_pin6().
+// Prebuilt esp-zigbee-lib (remote radio spinel UART) still references the
+// old 5-argument function symbol. Weak so a future IDF that exports the
+// real function again wins.
+#ifdef uart_set_pin
+#undef uart_set_pin
+esp_err_t __attribute__((weak)) uart_set_pin(uart_port_t uart_num, int tx_io_num, int rx_io_num, int rts_io_num, int cts_io_num) {
+  return _uart_set_pin6(uart_num, tx_io_num, rx_io_num, rts_io_num, cts_io_num, -1, -1);
+}
+#endif
+
 // Weak function that is overridden by Arduino layer when HardwareSerial.cpp is linked
 // This removes the upward dependency from HAL to Arduino (HAL calls weak, Arduino provides strong implementation)
 void __attribute__((weak)) hardware_serial_end(uint8_t uart_num) {
