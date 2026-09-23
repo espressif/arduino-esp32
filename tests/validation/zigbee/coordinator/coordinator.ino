@@ -6,7 +6,7 @@
  * ZCL interop (coordinator switch -> end device light) runs in loop() only
  * after pytest sends RUN_INTEROP (once the end device has joined).
  *
- * Zigbee.begin() is called only once per boot.
+ * SDK v2 lifecycle: role() once, configure and add endpoints, then begin() once.
  *
  * Pin-to-pin: wireless (802.15.4 radio)
  * Runner: two_duts (C6/H2)
@@ -72,13 +72,15 @@ void test_coordinator_config(void) {
   TEST_ASSERT_TRUE(Zigbee.allowMultiEndpointBinding());
 
   Zigbee.setTimeout(ZB_TIMEOUT_MS);
-  Zigbee.setPrimaryChannelMask(ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK);
+  // Channel mask and radio config are applied inside role().
+  Zigbee.setPrimaryChannelMask(ZB_TRANSCEIVER_ALL_CHANNELS_MASK);
 
-  esp_zb_radio_config_t radio = Zigbee.getRadioConfig();
-  TEST_ASSERT_EQUAL(ZB_RADIO_MODE_NATIVE, radio.radio_mode);
+  esp_zigbee_radio_config_t radio = Zigbee.getRadioConfig();
+  TEST_ASSERT_EQUAL(ESP_ZIGBEE_RADIO_MODE_NATIVE, radio.radio_mode);
 
-  esp_zb_host_config_t host = Zigbee.getHostConfig();
-  TEST_ASSERT_EQUAL(ZB_HOST_CONNECTION_MODE_NONE, host.host_connection_mode);
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.role(ZIGBEE_COORDINATOR, true), "role() failed");
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.initialized(), "role() must initialize the stack");
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.role(ZIGBEE_COORDINATOR), "duplicate role() must succeed");
 }
 
 // ==================== All endpoint types (before begin) ====================
@@ -91,7 +93,8 @@ void test_coordinator_register_all_endpoints(void) {
 // ==================== Stack init ====================
 
 void test_coordinator_begin(void) {
-  TEST_ASSERT_TRUE(Zigbee.begin(ZIGBEE_COORDINATOR, true));
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.initialized(), "role() must run before begin()");
+  TEST_ASSERT_TRUE(Zigbee.begin());
 
   unsigned long start = millis();
   while (!Zigbee.started() && millis() - start < ZB_TIMEOUT_MS) {
@@ -99,8 +102,9 @@ void test_coordinator_begin(void) {
   }
   TEST_ASSERT_TRUE_MESSAGE(Zigbee.started(), "Coordinator failed to start stack");
 
-  TEST_ASSERT_FALSE_MESSAGE(Zigbee.begin(ZIGBEE_COORDINATOR, true), "duplicate begin() must return false");
-  TEST_ASSERT_TRUE_MESSAGE(Zigbee.started(), "stack must keep running after rejected begin()");
+  // A second begin() does not restart the stack; it reports that it is already running.
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.begin(), "duplicate begin() must return started()");
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.started(), "stack must keep running after duplicate begin()");
 }
 
 // ==================== stop / start ====================
