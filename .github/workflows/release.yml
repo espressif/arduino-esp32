@@ -355,6 +355,9 @@ jobs:
     needs: [test-pre-release, create-draft-release, generate-test-json, build]
     if: ${{ !inputs.dry-run && needs.test-pre-release.result == 'success' }}
     runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.tag.outputs.release_tag }}
+      tagged_sha: ${{ steps.tag.outputs.tagged_sha }}
 
     steps:
       - name: Checkout repository
@@ -375,6 +378,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
         run: bash ./.github/scripts/release/github-release.sh tag
+
+      - name: Export tag outputs
+        id: tag
+        run: |
+          tagged_sha=$(git rev-parse "${RELEASE_TAG}^{commit}")
+          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "tagged_sha=${tagged_sha}" >> "$GITHUB_OUTPUT"
+          echo "Tagged ${RELEASE_TAG} at ${tagged_sha}"
 
       - name: Download draft assets
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
@@ -576,6 +587,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
           RELEASE_ID: ${{ needs.create-draft-release.outputs.release_id }}
         run: bash ./.github/scripts/release/github-release.sh rollback
+
+  # After promote the git tag is stable (rollback already skipped), so the
+  # called workflow can check out the tag and optionally verify the tagged SHA.
+  upload-idf-component:
+    name: Upload IDF Component
+    needs: [promote-release, publish-release]
+    if: ${{ !inputs.dry-run && needs.promote-release.result == 'success' }}
+    uses: ./.github/workflows/upload-idf-component.yml
+    secrets: inherit
+    with:
+      tag: ${{ needs.publish-release.outputs.release_tag }}
+      git_ref: ${{ needs.publish-release.outputs.tagged_sha }}
 
   notify-discord:
     name: Notify Discord

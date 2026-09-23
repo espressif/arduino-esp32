@@ -1,18 +1,28 @@
 name: Push components to https://components.espressif.com
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Version to push to the component registry (e.g. 3.3.12)"
+        required: true
+        type: string
+      git_ref:
+        description: "Optional SHA (or tag) that the version tag must resolve to"
+        required: false
+        type: string
+        default: ""
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Version to push to the component registry'
+        description: "Version to push to the component registry (e.g. 3.3.12)"
         required: true
+        type: string
       git_ref:
-        description: 'Git ref with the source to push to the component registry'
-        required: true
-  workflow_run:
-    workflows: ["Release ESP32 Arduino package"]
-    types:
-      - completed
+        description: "Optional SHA (or tag) that the version tag must resolve to"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -21,37 +31,63 @@ jobs:
   upload_components:
     runs-on: ubuntu-latest
     steps:
-      - name: Get the release tag
+      - name: Normalize version
         env:
-          head_branch: ${{ inputs.tag || github.event.workflow_run.head_branch }}
+          TAG_INPUT: ${{ inputs.tag }}
         run: |
-          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ] && [ "${{ github.event_name }}" == "workflow_run" ]; then
-            echo "Release workflow failed. Exiting..."
+          tag=$(echo "$TAG_INPUT" | tr -cd '[:alnum:]_.-')
+          tag="${tag#v}"
+          if [[ ! $tag =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
+            echo "Invalid version: $tag" >&2
             exit 1
           fi
-
-          # Read and sanitize the branch/tag name
-          branch=$(echo "$head_branch" | tr -cd '[:alnum:]/_.-')
-
-          if [[ $branch == refs/tags/* ]]; then
-            tag="${branch#refs/tags/}"
-          elif [[ $branch =~ ^[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
-            tag=$branch
-          else
-            echo "Tag not found in $branch. Exiting..."
-            exit 1
-          fi
-
           echo "Tag: $tag"
-          echo "RELEASE_TAG=$tag" >> $GITHUB_ENV
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
 
+      # Runs only after a successful promote, so this tag is no longer being
+      # force-moved by rollback. git_ref, if set, is an extra SHA/tag check.
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ inputs.git_ref || env.RELEASE_TAG }}
+          ref: refs/tags/${{ env.RELEASE_TAG }}
           submodules: "recursive"
 
+      - name: Verify tag matches git_ref
+        if: ${{ inputs.git_ref != '' }}
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+        run: |
+          ref=$(echo "$GIT_REF" | tr -cd '[:alnum:]_.-')
+          actual=$(git rev-parse HEAD)
+          if [ -z "$ref" ]; then
+            echo "git_ref empty after sanitizing" >&2
+            exit 1
+          fi
+
+          # Shallow checkout only has this tag. Resolve SHAs against HEAD
+          # without rev-parse of other objects; fetch extra tag names if needed.
+          if [[ $ref =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+            if [[ "$actual" != "$ref"* ]]; then
+              echo "Tag $RELEASE_TAG ($actual) does not match git_ref SHA $ref" >&2
+              exit 1
+            fi
+            expected=$actual
+          elif [ "$ref" = "$RELEASE_TAG" ]; then
+            expected=$actual
+          else
+            git fetch --depth=1 origin "refs/tags/$ref:refs/tags/$ref"
+            expected=$(git rev-parse "$ref^{commit}")
+            if [ "$actual" != "$expected" ]; then
+              echo "HEAD:    $actual"
+              echo "git_ref: $expected ($ref)"
+              echo "Tag $RELEASE_TAG does not point at git_ref $ref" >&2
+              exit 1
+            fi
+          fi
+          echo "HEAD:    $actual"
+          echo "git_ref: $expected ($ref)"
+
       - name: Upload components to the component registry
-        uses: espressif/upload-components-ci-action@df9e740b912c009996df639ba7090c24e9a542c2 # v2.2.0
+        uses: espressif/upload-components-ci-action@355b0bb4d41e94edbec03d08c0ba0c11bbc4834d # v2.2.1
         with:
           components: "arduino-esp32: ." # component_name: directory
           version: ${{ env.RELEASE_TAG }}
