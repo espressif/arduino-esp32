@@ -87,7 +87,7 @@ jobs:
           echo "git_ref: $expected ($ref)"
 
       - name: Upload components to the component registry
-        uses: espressif/upload-components-ci-action@df9e740b912c009996df639ba7090c24e9a542c2 # v2.2.0
+        uses: espressif/upload-components-ci-action@355b0bb4d41e94edbec03d08c0ba0c11bbc4834d # v2.2.1
         with:
           components: "arduino-esp32: ." # component_name: directory
           version: ${{ env.RELEASE_TAG }}
