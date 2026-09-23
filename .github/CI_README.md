@@ -1599,6 +1599,7 @@ When no explicit FQBN is provided via `ci.yml`, the following per-SoC defaults a
 | ESP32-H2 | `espressif:esp32:esp32h2` |
 | ESP32-P4 | `espressif:esp32:esp32p4:PSRAM=enabled,USBMode=hwcdc,ChipVariant=postv3` |
 | ESP32-C5 | `espressif:esp32:esp32c5:PSRAM=enabled` |
+| ESP32-S31 | `espressif:esp32:esp32s31:USBMode=default` |
 
 > **Note:** `CDCOnBoot` on ESP32-P4 is **not** taken from `ci.yml`. After the FQBN is fully
 > resolved (defaults, `fqbn_append`, explicit `fqbn:`, or `-fqbn`), `apply_cdc_on_boot_opt`
@@ -1805,7 +1806,7 @@ Pins that are never safe (flash, UART serial monitor, USB-JTAG, strapping, input
 | **Always safe** | 16, 17 |
 | **Peripheral-dependent** | 4, 13, 14, 27, 32, 33 (Touch) · 18, 19, 23 (SPI) · 21, 22 (I2C) · 25, 26 (DAC) |
 
-[^adc1]: `analogContinuous()` accepts **ADC1 only**. Do not use ADC2 pins for continuous mode even though `analogRead()` works on them. `analogContinuous()` clears requested pins via periman but fails if ADC1 oneshot is still in use on *other* pins. On all other targets (S2, S3, C3, C6, H2, C5, P4) the ADC is a single unit and this split does not apply. Ref: `cores/esp32/esp32-hal-adc.c`.
+[^adc1]: `analogContinuous()` accepts **ADC1 only**. Do not use ADC2 pins for continuous mode even though `analogRead()` works on them. `analogContinuous()` clears requested pins via periman but fails if ADC1 oneshot is still in use on *other* pins. On S2, S3, C3, C6, H2, C5, and P4 the ADC is a single unit and this split does not apply. ESP32-S31 has two units (ADC1 on GPIO42–49, ADC2 on GPIO50–57) and only one attenuation (`ADC_11db`). Ref: `cores/esp32/esp32-hal-adc.c`.
 
 [^adc2]: `analogRead()` on ADC2 pins can fail or return incorrect values when the Wi-Fi radio is active. ADC2 pins **cannot** be used with `analogContinuous()`.
 
@@ -1929,6 +1930,25 @@ Pins that are never safe (flash, UART serial monitor, USB-JTAG, strapping, input
 | **Touch** | `T0`→2, `T1`→3, `T2`→4, `T3`→5, `T4`→6, `T5`→7, `T6`→8, `T7`→9, `T8`→10, `T9`→11, `T10`→12, `T11`→13, `T12`→14, `T13`→15 |
 | **Always safe** | 20–23, 27, 46–48, 53 |
 | **Peripheral-dependent** | 2–6 (Touch) · 7, 8 (I2C, Touch) · 26, 32, 33 (SPI) · 54 (ESP-Hosted RESET) |
+
+### ESP32-S31 — `esp32s31` Dev Module
+
+Arduino pin aliases come from `variants/esp32s31/pins_arduino.h` (ESP32-S31 EV Function board). Strapping and flash pins come from the chip pin list.
+
+| Property | GPIOs |
+|---|---|
+| **Strapping** | 36, 37, 60, 61 (`BOOT_PIN` is 61) |
+| **SPI flash (do not use)** | 26–28, 30–32 |
+| **UART** | `TX`→58, `RX`→59 |
+| **I2C** | `SDA`→2, `SCL`→3 |
+| **SPI** | `SS`→37, `MOSI`→38, `MISO`→39, `SCK`→40 |
+| **ADC1** | `A0`→42 … `A7`→49 |
+| **ADC2** | `A8`→50 … `A15`→57 |
+| **Touch** | `T0`→6 … `T13`→19 |
+| **Ethernet (RGMII)** | `IRQ`→4, `MDC`→5, `MDIO`→6, `POWER`→7, `TX0`–`TX3`→8–11, `TX_CTL`→12, `TX_CLK`→13, `RX_CLK`→14, `RX_CTL`→15, `RX3`–`RX0`→16–19 |
+| **I2S** | `SCL1`→50, `SDA1`→51, `MCLK`→52, `SCLK`→53, `DOUT`→54, `LRCK`→55, `DIN`→56, `PA_CTRL`→57 |
+| **RGB LED** | `LED_BUILTIN` / `RGB_BUILTIN`→60 (also a strapping pin) |
+| **Peripheral-dependent** | 2, 3 (I2C) · 4–19 (Ethernet, and 6–19 are also Touch) · 37–40 (SPI; 37 is strapping) · 50–57 (I2S, and ADC2) |
 
 ### Quick Reference: Choosing Test Pins
 

@@ -10,10 +10,10 @@ It handles low-level initialization for **MIPI-CSI** (with ISP) and **DVP** inte
 
 Typical use cases include preview pipelines, frame grabbing for computer vision, JPEG capture, and sensor tuning (gain, exposure, flip, and similar controls).
 
-The library is available when **ESP-IDF 5.4.0 or later** is used and the target is **ESP32-S3** or **ESP32-P4**.
+The library is available when **ESP-IDF 5.4.0 or later** is used and the target is **ESP32-S3**, **ESP32-P4**, or **ESP32-S31**.
 At least one of ``CONFIG_ESP_VIDEO_ENABLE_MIPI_CSI_VIDEO_DEVICE`` or ``CONFIG_ESP_VIDEO_ENABLE_DVP_VIDEO_DEVICE`` must be enabled in the IDF configuration; otherwise ``ESP_Video.h`` exposes no public API.
 Supported interfaces depend on those Kconfig options.
-The library examples target **ESP32-P4** (MIPI-CSI + DVP) and **ESP32-S3** (DVP).
+The library examples target **ESP32-P4** (MIPI-CSI + DVP), **ESP32-S3** (DVP) and **ESP32-S31** (DVP).
 
 Include the header in your sketch:
 
@@ -85,7 +85,7 @@ MIPI-CSI flow (ESP32-P4):
         // use frame; buffer is returned to the driver when `frame` is destroyed
     }
 
-DVP flow (ESP32-S3 or ESP32-P4):
+DVP flow (ESP32-S3, ESP32-P4, or ESP32-S31):
 
 .. code-block:: cpp
 
@@ -956,7 +956,7 @@ MIPI-CSI capture (ESP32-P4):
 .. literalinclude:: ../../../libraries/ESP_Video/examples/mipi_csi_camera/mipi_csi_camera.ino
     :language: cpp
 
-DVP capture (ESP32-S3 or ESP32-P4):
+DVP capture (ESP32-S3, ESP32-P4, or ESP32-S31):
 
 .. literalinclude:: ../../../libraries/ESP_Video/examples/dvp_camera/dvp_camera.ino
     :language: cpp

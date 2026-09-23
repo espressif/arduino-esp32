@@ -79,7 +79,7 @@ Typical uses: sync a value held in C++ members into clusters that were not writa
 Secondary Network Interface (deprecated)
 ****************************************
 
-Arduino Matter exposes **one** Network Commissioning cluster on endpoint 0: Wi-Fi **or** Thread, not both. On ESP32-C6 call ``Matter.selectNetwork(MATTER_NETWORK_WIFI)`` or ``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` before any accessory ``begin()``. ``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` replaces the root Wi-Fi driver so hubs that only talk to endpoint 0 see Thread.
+Arduino Matter exposes **one** Network Commissioning cluster on endpoint 0: Wi-Fi **or** Thread, not both. On ESP32-C6 and ESP32-S31 call ``Matter.selectNetwork(MATTER_NETWORK_WIFI)`` or ``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` before any accessory ``begin()``. ``Matter.selectNetwork(MATTER_NETWORK_THREAD)`` replaces the root Wi-Fi driver so hubs that only talk to endpoint 0 see Thread.
 
 ``createSecondaryNetworkInterface()`` is deprecated. It does not create an endpoint and always returns ``false``. ``getSecondaryNetworkEndPointId()`` always returns 0.
 

@@ -75,6 +75,7 @@ This function is used to set the attenuation for all channels.
 
 Input voltages can be attenuated before being input to the ADCs.
 There are 4 available attenuation options, the higher the attenuation is, the higher the measurable input voltage could be.
+ESP32-S31 has a single attenuation option, ``ADC_11db``.
 
 The measurable input voltage differs for each chip, see table below for detailed information.
 

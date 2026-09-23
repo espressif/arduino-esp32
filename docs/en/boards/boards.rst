@@ -36,6 +36,8 @@ The ESP32 is divided by family:
     * Wi-Fi only
 * ESP32-S3
     * Wi-Fi and BLE 5
+* ESP32-S31
+    * Wi-Fi 6, BLE 5, Bluetooth Classic and IEEE 802.15.4
 
 .. [#rebuild-required] This SoC is only supported using Arduino as an ESP-IDF component or by rebuilding the static libraries.
 
