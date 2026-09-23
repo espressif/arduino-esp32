@@ -71,7 +71,11 @@ The coordinator and end device flash at different speeds; pytest drives the end 
 
 ## Notes
 
-- SDK v2 startup is `role()` then `begin()`. `role()` is called once per boot (a second call succeeds and does not re-init). Endpoint setters require `role()` first. `begin()` is called once; a second call returns the current `started()` state and does not restart the stack.
+- SDK v2 startup/lifecycle requirements:
+  - Call `role()` before `begin()`.
+  - `role()` is called once per boot; a second call succeeds and does not re-init.
+  - Endpoint setters require `role()` first.
+  - `begin()` is called once; a second call returns the current `started()` state and does not restart the stack.
 - Unlike Matter validation, Zigbee cannot decommission/reboot mid-suite on a single DUT — depth comes from getter round-trips, callbacks, reporting, pre-begin cluster config, and real ZCL over the air with a second board.
 - Thermostat, gateway, and range-extender endpoints are registered on the coordinator but have no simple local attribute setters in the Arduino API; control paths are covered via registration and ZCL examples.
 - ED→coordinator switch control is not covered (would need bind/discover APIs); coordinator→ED interop uses automatic binding on join.
