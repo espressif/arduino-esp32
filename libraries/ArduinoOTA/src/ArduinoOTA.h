@@ -82,6 +82,13 @@ public:
   ArduinoOTAClass &setSignature(UpdaterVerifyClass *sign);
 #endif /* UPDATE_SIGN */
 
+  //This callback will be called before the updater begins receiving data.
+  // It will be called after authentication, prior to signature verification
+  // (if used), before the actual update process begins. Use this callback
+  // if you need to disable any hardware or services before the update begins,
+  // such as timer-based interrups used for ISRs.
+  ArduinoOTAClass &onPrepare(THandlerFunction fn);
+  
   //This callback will be called when OTA connection has begun
   ArduinoOTAClass &onStart(THandlerFunction fn);
 
@@ -127,6 +134,7 @@ private:
   IPAddress _ota_ip;
   String _md5;
 
+  THandlerFunction _prepare_callback;
   THandlerFunction _start_callback;
   THandlerFunction _end_callback;
   THandlerFunction_Error _error_callback;

@@ -29,7 +29,7 @@
 
 ArduinoOTAClass::ArduinoOTAClass(UpdateClass *updater)
   : _updater(updater), _port(0), _initialized(false), _rebootOnSuccess(true), _mdnsEnabled(true), _state(OTA_IDLE), _size(0), _cmd(0), _ota_port(0),
-    _ota_timeout(1000), _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL)
+    _ota_timeout(1000), _prepare_callback(NULL), _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL)
 #ifdef UPDATE_SIGN
     ,
     _sign(NULL)
@@ -39,6 +39,11 @@ ArduinoOTAClass::ArduinoOTAClass(UpdateClass *updater)
 
 ArduinoOTAClass::~ArduinoOTAClass() {
   end();
+}
+
+ArduinoOTAClass &ArduinoOTAClass::onPrepare(THandlerFunction fn) {
+  _prepare_callback = fn;
+  return *this;
 }
 
 ArduinoOTAClass &ArduinoOTAClass::onStart(THandlerFunction fn) {
@@ -327,6 +332,10 @@ void ArduinoOTAClass::_runUpdate() {
   if (!_updater) {
     log_e("UpdateClass is NULL!");
     return;
+  }
+
+  if (_prepare_callback) {
+    _prepare_callback();
   }
 
 #ifdef UPDATE_SIGN
