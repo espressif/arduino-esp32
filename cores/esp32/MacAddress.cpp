@@ -93,6 +93,7 @@ bool MacAddress::fromString6(const char *buf) {
   int i;
 
   strncpy(cs, buf, sizeof(cs) - 1);  //strtok modifies the buffer: copy to working buffer.
+  cs[sizeof(cs) - 1] = '\0';         //strncpy does not terminate when the input fills the buffer.
 
   for (i = 0; i < 6; i++) {
     token = strtok((i == 0) ? cs : NULL, ":");  //Find first or next token
@@ -112,6 +113,7 @@ bool MacAddress::fromString8(const char *buf) {
   int i;
 
   strncpy(cs, buf, sizeof(cs) - 1);  //strtok modifies the buffer: copy to working buffer.
+  cs[sizeof(cs) - 1] = '\0';         //strncpy does not terminate when the input fills the buffer.
 
   for (i = 0; i < 8; i++) {
     token = strtok((i == 0) ? cs : NULL, ":");  //Find first or next token
