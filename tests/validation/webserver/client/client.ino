@@ -13,6 +13,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
+#include <MD5Builder.h>
 
 #define SERVER_PORT  80
 #define TEST_TIMEOUT 5000
@@ -21,6 +22,8 @@
 
 // Basic auth header value for admin:SuperSecurePassword (see server.ino).
 static const char *VALID_BASIC_AUTH = "Basic YWRtaW46U3VwZXJTZWN1cmVQYXNzd29yZA==";
+static const char *DIGEST_USER = "admin";
+static const char *DIGEST_PASS = "SuperSecurePassword";
 
 // Test data (must match server)
 static const char test_body[] = "Hello from Stream!";
@@ -173,6 +176,131 @@ int get_content_length(const String &response) {
   int end = response.indexOf("\r\n", idx);
   String val = response.substring(idx + 16, end);
   return val.toInt();
+}
+
+String headerValue(const String &response, const char *name) {
+  String prefix = String(name) + ": ";
+  int idx = response.indexOf(prefix);
+  if (idx < 0) {
+    return "";
+  }
+  int end = response.indexOf("\r\n", idx);
+  if (end < 0) {
+    return "";
+  }
+  return response.substring(idx + prefix.length(), end);
+}
+
+String quotedParam(const String &src, const char *key) {
+  String needle = String(key) + "=\"";
+  int begin = src.indexOf(needle);
+  if (begin < 0) {
+    return "";
+  }
+  int start = begin + needle.length();
+  int end = src.indexOf('"', start);
+  if (end < 0) {
+    return "";
+  }
+  return src.substring(start, end);
+}
+
+bool challengeHasStale(const String &www) {
+  String lower = www;
+  lower.toLowerCase();
+  int i = lower.indexOf("stale=");
+  if (i < 0) {
+    return false;
+  }
+  return lower.substring(i + 6).startsWith("true");
+}
+
+String md5hex(const String &in) {
+  MD5Builder md5;
+  md5.begin();
+  md5.add(in);
+  md5.calculate();
+  return md5.toString();
+}
+
+String
+  digestAuthorization(const char *user, const char *pass, const char *method, const char *uri, const String &realm, const String &nonce, const String &opaque) {
+  String ha1 = md5hex(String(user) + ':' + realm + ':' + pass);
+  String ha2 = md5hex(String(method) + ':' + uri);
+  const char *nc = "00000001";
+  const char *cnonce = "0a4f113b";
+  String response = md5hex(ha1 + ':' + nonce + ':' + nc + ':' + cnonce + ":auth:" + ha2);
+  String hdr = "Digest username=\"";
+  hdr += user;
+  hdr += "\", realm=\"";
+  hdr += realm;
+  hdr += "\", nonce=\"";
+  hdr += nonce;
+  hdr += "\", uri=\"";
+  hdr += uri;
+  hdr += "\", qop=auth, nc=";
+  hdr += nc;
+  hdr += ", cnonce=\"";
+  hdr += cnonce;
+  hdr += "\", opaque=\"";
+  hdr += opaque;
+  hdr += "\", response=\"";
+  hdr += response;
+  hdr += '"';
+  return hdr;
+}
+
+String digestReq(const char *method, const char *path, const String &authorization) {
+  String req = String(method) + " ";
+  req += path;
+  req += " HTTP/1.1\r\nHost: x\r\nAuthorization: ";
+  req += authorization;
+  req += "\r\nConnection: close\r\n\r\n";
+  return http_raw(req, TEST_TIMEOUT, false);
+}
+
+String digestGet(const char *path, const String &authorization) {
+  return digestReq("GET", path, authorization);
+}
+
+String digestAuthorizationRfc2069(
+  const char *user, const char *pass, const char *method, const char *uri, const String &realm, const String &nonce, const String &opaque
+) {
+  String ha1 = md5hex(String(user) + ':' + realm + ':' + pass);
+  String ha2 = md5hex(String(method) + ':' + uri);
+  String response = md5hex(ha1 + ':' + nonce + ':' + ha2);
+  String hdr = "Digest username=\"";
+  hdr += user;
+  hdr += "\", realm=\"";
+  hdr += realm;
+  hdr += "\", nonce=\"";
+  hdr += nonce;
+  hdr += "\", uri=\"";
+  hdr += uri;
+  hdr += "\", opaque=\"";
+  hdr += opaque;
+  hdr += "\", response=\"";
+  hdr += response;
+  hdr += '"';
+  return hdr;
+}
+
+bool digestChallenge(String &realm, String &nonce, String &opaque, bool allowStale) {
+  String challenge = http_raw("GET /digest HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  if (get_status_code(challenge) != 401) {
+    return false;
+  }
+  String www = headerValue(challenge, "WWW-Authenticate");
+  realm = quotedParam(www, "realm");
+  nonce = quotedParam(www, "nonce");
+  opaque = quotedParam(www, "opaque");
+  if (!realm.length() || !nonce.length() || !opaque.length()) {
+    return false;
+  }
+  if (!allowStale && challengeHasStale(www)) {
+    return false;
+  }
+  return true;
 }
 
 static bool all_passed = true;
@@ -355,6 +483,303 @@ void testAuthBypass() {
   String attack = http_raw("GET /secure HTTP/1.1\r\nHost: x\r\nAuthorization: admin\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
   int status = get_status_code(attack);
   report("auth_bypass", status == 401, status == 200 ? "bare username authenticated" : "unexpected status");
+}
+
+// Issue 12915: digest auth must keep more than one nonce valid, and a correct
+// response for an unknown nonce must be answered with stale=true rather than a
+// fresh login prompt.
+void testDigestAuth() {
+  Serial.println("[CLIENT] Testing digest_auth");
+
+  String challenge = http_raw("GET /digest HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  if (get_status_code(challenge) != 401) {
+    report("digest_auth", false, "challenge not 401");
+    return;
+  }
+  String www = headerValue(challenge, "WWW-Authenticate");
+  String realm = quotedParam(www, "realm");
+  String nonceA = quotedParam(www, "nonce");
+  String opaque = quotedParam(www, "opaque");
+  if (!realm.length() || !nonceA.length() || !opaque.length()) {
+    report("digest_auth", false, "missing challenge fields");
+    return;
+  }
+  if (challengeHasStale(www)) {
+    report("digest_auth", false, "initial challenge has stale");
+    return;
+  }
+
+  String authA = digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, nonceA, opaque);
+  if (get_status_code(digestGet("/digest", authA)) != 200) {
+    report("digest_auth", false, "first nonce rejected");
+    return;
+  }
+
+  String challengeB = http_raw("GET /digest HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  String nonceB = quotedParam(headerValue(challengeB, "WWW-Authenticate"), "nonce");
+  if (!nonceB.length()) {
+    report("digest_auth", false, "second challenge missing nonce");
+    return;
+  }
+  String authB = digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, nonceB, opaque);
+
+  if (get_status_code(digestGet("/digest", authA)) != 200) {
+    report("digest_auth", false, "first client logged out by second challenge");
+    return;
+  }
+  if (get_status_code(digestGet("/digest", authB)) != 200) {
+    report("digest_auth", false, "second client rejected");
+    return;
+  }
+
+  String uriMismatch = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/other", realm, nonceA, opaque));
+  if (get_status_code(uriMismatch) != 401) {
+    report("digest_auth", false, "uri mismatch accepted");
+    return;
+  }
+  if (challengeHasStale(headerValue(uriMismatch, "WWW-Authenticate"))) {
+    report("digest_auth", false, "uri mismatch marked stale");
+    return;
+  }
+
+  const char *unknownNonce = "000000000000000000000000000000000000000000000000";
+  String staleResp = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, unknownNonce, opaque));
+  if (get_status_code(staleResp) != 401) {
+    report("digest_auth", false, "unknown nonce not 401");
+    return;
+  }
+  if (!challengeHasStale(headerValue(staleResp, "WWW-Authenticate"))) {
+    report("digest_auth", false, "unknown nonce missing stale=true");
+    return;
+  }
+
+  String badPass = digestGet("/digest", digestAuthorization(DIGEST_USER, "wrong-password", "GET", "/digest", realm, unknownNonce, opaque));
+  if (get_status_code(badPass) != 401) {
+    report("digest_auth", false, "wrong password not 401");
+    return;
+  }
+  if (challengeHasStale(headerValue(badPass, "WWW-Authenticate"))) {
+    report("digest_auth", false, "wrong password marked stale");
+    return;
+  }
+
+  report("digest_auth", true);
+}
+
+// Extra coverage for the signed-nonce digest fix: integrity, replay, query
+// strings, RFC 2069, stale isolation, and method handling.
+void testDigestAuthEdges() {
+  Serial.println("[CLIENT] Testing digest_auth_edges");
+
+  String realm, nonceA, opaque;
+  if (!digestChallenge(realm, nonceA, opaque, false)) {
+    report("digest_auth_edges", false, "initial challenge");
+    return;
+  }
+
+  String authA = digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, nonceA, opaque);
+  if (get_status_code(digestGet("/digest", authA)) != 200) {
+    report("digest_auth_edges", false, "first nonce rejected");
+    return;
+  }
+
+  String realmB, nonceB, opaqueB;
+  if (!digestChallenge(realmB, nonceB, opaqueB, false)) {
+    report("digest_auth_edges", false, "second challenge");
+    return;
+  }
+  if (opaqueB != opaque) {
+    report("digest_auth_edges", false, "opaque rotated");
+    return;
+  }
+  if (nonceB == nonceA) {
+    report("digest_auth_edges", false, "nonce reused");
+    return;
+  }
+
+  if (get_status_code(digestGet("/digest", authA)) != 200) {
+    report("digest_auth_edges", false, "replay after second challenge rejected");
+    return;
+  }
+  if (get_status_code(digestGet("/digest", authA)) != 200) {
+    report("digest_auth_edges", false, "second replay rejected");
+    return;
+  }
+
+  String upperNonce = nonceA;
+  upperNonce.toUpperCase();
+  String authUpper = digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, upperNonce, opaque);
+  if (get_status_code(digestGet("/digest", authUpper)) != 200) {
+    report("digest_auth_edges", false, "uppercase nonce rejected");
+    return;
+  }
+
+  String authQuery = digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest?x=1", realm, nonceA, opaque);
+  String queryResp = digestGet("/digest?x=1", authQuery);
+  if (get_status_code(queryResp) != 200) {
+    report("digest_auth_edges", false, "query-string uri rejected");
+    return;
+  }
+
+  String authPathOnly = digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, nonceA, opaque);
+  if (get_status_code(digestGet("/digest?x=1", authPathOnly)) != 200) {
+    report("digest_auth_edges", false, "path-only uri with query request rejected");
+    return;
+  }
+
+  String rfc2069 = digestAuthorizationRfc2069(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, nonceA, opaque);
+  if (get_status_code(digestGet("/digest", rfc2069)) != 200) {
+    report("digest_auth_edges", false, "rfc2069 without qop rejected");
+    return;
+  }
+
+  String quotedQop = authA;
+  quotedQop.replace("qop=auth", "qop=\"auth\"");
+  if (get_status_code(digestGet("/digest", quotedQop)) != 200) {
+    report("digest_auth_edges", false, "quoted qop rejected");
+    return;
+  }
+
+  String withAlgo = authA;
+  withAlgo += ", algorithm=MD5";
+  if (get_status_code(digestGet("/digest", withAlgo)) != 200) {
+    report("digest_auth_edges", false, "algorithm=MD5 rejected");
+    return;
+  }
+
+  String tampered = nonceA;
+  char last = tampered[tampered.length() - 1];
+  tampered.setCharAt(tampered.length() - 1, last == '0' ? '1' : '0');
+  String tamperedResp = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, tampered, opaque));
+  if (get_status_code(tamperedResp) != 401) {
+    report("digest_auth_edges", false, "tampered mac not 401");
+    return;
+  }
+  if (!challengeHasStale(headerValue(tamperedResp, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "tampered mac missing stale=true");
+    return;
+  }
+
+  String truncated = nonceA.substring(0, 16);
+  String truncResp = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, truncated, opaque));
+  if (get_status_code(truncResp) != 401 || !challengeHasStale(headerValue(truncResp, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "truncated nonce not stale");
+    return;
+  }
+
+  String nonHex = nonceA;
+  nonHex.setCharAt(nonHex.length() - 1, 'g');
+  String nonHexResp = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, nonHex, opaque));
+  if (get_status_code(nonHexResp) != 401 || !challengeHasStale(headerValue(nonHexResp, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "non-hex nonce not stale");
+    return;
+  }
+
+  String emptyNonce = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, "", opaque));
+  if (get_status_code(emptyNonce) != 401) {
+    report("digest_auth_edges", false, "empty nonce not 401");
+    return;
+  }
+  if (challengeHasStale(headerValue(emptyNonce, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "empty nonce marked stale");
+    return;
+  }
+
+  String badUser = digestGet("/digest", digestAuthorization("not-admin", DIGEST_PASS, "GET", "/digest", realm, nonceA, opaque));
+  if (get_status_code(badUser) != 401) {
+    report("digest_auth_edges", false, "wrong username not 401");
+    return;
+  }
+  if (challengeHasStale(headerValue(badUser, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "wrong username marked stale");
+    return;
+  }
+
+  String badOpaque = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, nonceA, "00"));
+  if (get_status_code(badOpaque) != 401) {
+    report("digest_auth_edges", false, "wrong opaque not 401");
+    return;
+  }
+  if (!challengeHasStale(headerValue(badOpaque, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "wrong opaque missing stale=true");
+    return;
+  }
+
+  String noOpaque = authA;
+  int opaqueAt = noOpaque.indexOf(", opaque=\"");
+  if (opaqueAt < 0) {
+    report("digest_auth_edges", false, "opaque field missing in header");
+    return;
+  }
+  int opaqueEnd = noOpaque.indexOf('"', opaqueAt + 11);
+  if (opaqueEnd < 0) {
+    report("digest_auth_edges", false, "opaque field unterminated");
+    return;
+  }
+  noOpaque.remove(opaqueAt, opaqueEnd - opaqueAt + 1);
+  String missingOpaque = digestGet("/digest", noOpaque);
+  if (get_status_code(missingOpaque) != 401) {
+    report("digest_auth_edges", false, "missing opaque not 401");
+    return;
+  }
+  if (challengeHasStale(headerValue(missingOpaque, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "missing opaque marked stale");
+    return;
+  }
+
+  String methodMismatch = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "POST", "/digest", realm, nonceA, opaque));
+  if (get_status_code(methodMismatch) != 401) {
+    report("digest_auth_edges", false, "method mismatch accepted");
+    return;
+  }
+  if (challengeHasStale(headerValue(methodMismatch, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "method mismatch marked stale");
+    return;
+  }
+
+  String postOk = digestReq("POST", "/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "POST", "/digest", realm, nonceA, opaque));
+  if (get_status_code(postOk) != 200) {
+    report("digest_auth_edges", false, "post digest rejected");
+    return;
+  }
+  if (get_body(postOk).indexOf("DIGEST_POST_OK") < 0) {
+    report("digest_auth_edges", false, "post digest body mismatch");
+    return;
+  }
+
+  const char *unknownNonce = "111111111111111111111111111111111111111111111111";
+  String staleResp = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, unknownNonce, opaque));
+  if (get_status_code(staleResp) != 401 || !challengeHasStale(headerValue(staleResp, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "unknown nonce not stale");
+    return;
+  }
+  String nonceStale = quotedParam(headerValue(staleResp, "WWW-Authenticate"), "nonce");
+  String opaqueStale = quotedParam(headerValue(staleResp, "WWW-Authenticate"), "opaque");
+  if (!nonceStale.length() || opaqueStale != opaque) {
+    report("digest_auth_edges", false, "stale challenge missing fields");
+    return;
+  }
+  String retry = digestGet("/digest", digestAuthorization(DIGEST_USER, DIGEST_PASS, "GET", "/digest", realm, nonceStale, opaque));
+  if (get_status_code(retry) != 200) {
+    report("digest_auth_edges", false, "retry after stale rejected");
+    return;
+  }
+
+  String unauth = http_raw("GET /digest HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  if (get_status_code(unauth) != 401) {
+    report("digest_auth_edges", false, "unauthenticated not 401");
+    return;
+  }
+  if (challengeHasStale(headerValue(unauth, "WWW-Authenticate"))) {
+    report("digest_auth_edges", false, "unauthenticated challenge leaked stale");
+    return;
+  }
+  if (get_status_code(digestGet("/digest", authA)) != 200) {
+    report("digest_auth_edges", false, "original nonce logged out by unauthenticated request");
+    return;
+  }
+
+  report("digest_auth_edges", true);
 }
 
 // Report 6: serveStatic() must not allow escaping the configured static root
@@ -691,6 +1116,8 @@ void runTests() {
 
   // Non-destructive robustness checks first (server stays responsive).
   testAuthBypass();
+  testDigestAuth();
+  testDigestAuthEdges();
   testPathTraversal();
 
   // Compatibility checks: request shapes the robustness limits must still accept.

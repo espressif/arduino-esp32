@@ -226,6 +226,15 @@ void registerEndpoints() {
     server.send(200, "text/plain", "PATH=" + server.arg("path"));
   });
 
+  // Digest auth: signed nonces must stay valid for more than one client, and a
+  // correct response for an unknown nonce must be challenged with stale=true.
+  server.on("/digest", HTTP_ANY, []() {
+    if (!server.authenticate(www_username, www_password)) {
+      return server.requestAuthentication(DIGEST_AUTH);
+    }
+    server.send(200, "text/plain", String(server.method() == HTTP_POST ? "DIGEST_POST_OK" : "DIGEST_OK"));
+  });
+
   // --- Upload endpoints (reports 1 and 4) ---
   // Mirrors the upstream FSBrowser POST /edit route: a handler plus an upload
   // callback that touches server.upload().
