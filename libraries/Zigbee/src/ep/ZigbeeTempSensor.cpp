@@ -111,7 +111,8 @@ bool ZigbeeTempSensor::setTemperature(float temperature) {
 
 bool ZigbeeTempSensor::reportTemperature() {
   /* Send report attributes command */
-  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
+  esp_zb_zcl_report_attr_cmd_t report_attr_cmd = {};
+  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID;
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
@@ -158,7 +159,8 @@ bool ZigbeeTempSensor::setHumidity(float humidity) {
 
 bool ZigbeeTempSensor::reportHumidity() {
   /* Send report attributes command */
-  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
+  esp_zb_zcl_report_attr_cmd_t report_attr_cmd = {};
+  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID;
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
