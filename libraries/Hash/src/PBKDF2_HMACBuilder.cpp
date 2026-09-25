@@ -14,9 +14,7 @@
 
 #include <Arduino.h>
 #include "PBKDF2_HMACBuilder.h"
-
-// Block size for HMAC (64 bytes for SHA-1, SHA-256, SHA-512)
-#define HMAC_BLOCK_SIZE 64
+#include "HMACBuilder.h"
 
 PBKDF2_HMACBuilder::PBKDF2_HMACBuilder(HashBuilder *hash, String password, String salt, uint32_t iterations) {
   this->hashBuilder = hash;
@@ -58,50 +56,6 @@ void PBKDF2_HMACBuilder::clearData() {
   }
   derivedKeyLen = 0;
   calculated = false;
-}
-
-void PBKDF2_HMACBuilder::hmac(const uint8_t *key, size_t keyLen, const uint8_t *data, size_t dataLen, uint8_t *output) {
-  uint8_t keyPad[HMAC_BLOCK_SIZE];
-  uint8_t outerPad[HMAC_BLOCK_SIZE];
-  uint8_t innerHash[64];  // Large enough for any hash
-
-  // Prepare key
-  if (keyLen > HMAC_BLOCK_SIZE) {
-    // Key is longer than block size, hash it
-    hashBuilder->begin();
-    hashBuilder->add(key, keyLen);
-    hashBuilder->calculate();
-    hashBuilder->getBytes(keyPad);
-    keyLen = hashSize;
-  } else {
-    // Copy key to keyPad
-    memcpy(keyPad, key, keyLen);
-  }
-
-  // Pad key with zeros if necessary
-  if (keyLen < HMAC_BLOCK_SIZE) {
-    memset(keyPad + keyLen, 0, HMAC_BLOCK_SIZE - keyLen);
-  }
-
-  // Create outer and inner pads
-  for (int i = 0; i < HMAC_BLOCK_SIZE; i++) {
-    outerPad[i] = keyPad[i] ^ 0x5c;
-    keyPad[i] = keyPad[i] ^ 0x36;
-  }
-
-  // Inner hash: H(K XOR ipad, text)
-  hashBuilder->begin();
-  hashBuilder->add(keyPad, HMAC_BLOCK_SIZE);
-  hashBuilder->add(data, dataLen);
-  hashBuilder->calculate();
-  hashBuilder->getBytes(innerHash);
-
-  // Outer hash: H(K XOR opad, inner_hash)
-  hashBuilder->begin();
-  hashBuilder->add(outerPad, HMAC_BLOCK_SIZE);
-  hashBuilder->add(innerHash, hashSize);
-  hashBuilder->calculate();
-  hashBuilder->getBytes(output);
 }
 
 // HashBuilder interface methods
@@ -228,28 +182,41 @@ void PBKDF2_HMACBuilder::setHashAlgorithm(HashBuilder *hash) {
 void PBKDF2_HMACBuilder::pbkdf2_hmac(
   const uint8_t *password, size_t passwordLen, const uint8_t *salt, size_t saltLen, uint32_t iterations, uint8_t *output, size_t outputLen
 ) {
+  HMACBuilder hmac(hashBuilder);
+  hmac.setKey(password, passwordLen);
+  if (!hmac.getBlockSize() || !hmac.getHashSize()) {
+    log_e("PBKDF2_HMACBuilder: HMAC is not usable (hash algorithm or block size missing).");
+    return;
+  }
+
   uint8_t u1[64];  // Large enough for any hash
   uint8_t u2[64];
-  uint8_t saltWithBlock[256];  // Salt + block number
   uint8_t block[64];
+  uint8_t blockIndex[4];
 
   size_t blocks = (outputLen + hashSize - 1) / hashSize;
 
   for (size_t i = 1; i <= blocks; i++) {
     // Prepare salt || INT(i)
-    memcpy(saltWithBlock, salt, saltLen);
-    saltWithBlock[saltLen] = (i >> 24) & 0xFF;
-    saltWithBlock[saltLen + 1] = (i >> 16) & 0xFF;
-    saltWithBlock[saltLen + 2] = (i >> 8) & 0xFF;
-    saltWithBlock[saltLen + 3] = i & 0xFF;
+    blockIndex[0] = (i >> 24) & 0xFF;
+    blockIndex[1] = (i >> 16) & 0xFF;
+    blockIndex[2] = (i >> 8) & 0xFF;
+    blockIndex[3] = i & 0xFF;
 
     // U1 = HMAC(password, salt || INT(i))
-    hmac(password, passwordLen, saltWithBlock, saltLen + 4, u1);
+    hmac.begin();
+    hmac.add(salt, saltLen);
+    hmac.add(blockIndex, sizeof(blockIndex));
+    hmac.calculate();
+    hmac.getBytes(u1);
     memcpy(block, u1, hashSize);
 
     // U2 = HMAC(password, U1)
     for (uint32_t j = 1; j < iterations; j++) {
-      hmac(password, passwordLen, u1, hashSize, u2);
+      hmac.begin();
+      hmac.add(u1, hashSize);
+      hmac.calculate();
+      hmac.getBytes(u2);
       memcpy(u1, u2, hashSize);
 
       // XOR with previous result
@@ -262,4 +229,8 @@ void PBKDF2_HMACBuilder::pbkdf2_hmac(
     size_t copyLen = (i == blocks) ? (outputLen - (i - 1) * hashSize) : hashSize;
     memcpy(output + (i - 1) * hashSize, block, copyLen);
   }
+
+  forced_memzero(u1, sizeof(u1));
+  forced_memzero(u2, sizeof(u2));
+  forced_memzero(block, sizeof(block));
 }
