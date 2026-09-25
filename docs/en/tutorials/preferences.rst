@@ -78,9 +78,11 @@ Preferences directly supports the following data types:
    +-------------------+-------------------+---------------+
    | Double            | double_t          | 8             |
    +-------------------+-------------------+---------------+
-   |                   | const char*       | variable      |
-   | String            +-------------------+               |
+   | String            | const char*       | variable      |
+   |                   +-------------------+               |
    |                   | String            |               |
+   |                   +-------------------+               |
+   |                   | std::string       |               |
    +-------------------+-------------------+---------------+
    | Bytes             | uint8_t           | variable      |
    +-------------------+-------------------+---------------+
@@ -618,6 +620,8 @@ With Preferences, the ``getX`` methods listed in Table 2 below will return a def
    | Double           |                 |
    +------------------+-----------------+
    | String (String)  | ""              |
+   |                  |                 |
+   | std::string      |                 |
    +------------------+-----------------+
    | String (* buf)   | \\0             |
    +------------------+-----------------+
