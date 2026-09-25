@@ -17,7 +17,7 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 18;
 static const uint8_t SCL = 8;
 
-#define SD_CS (39)
+#define SD_CS                    (39)
 #define LILYGO_TDECK_SD_SPI_FREQ (800000U)
 static const uint8_t SS = SD_CS;
 static const uint8_t MOSI = 41;
