@@ -58,6 +58,10 @@ public:
   virtual void getChars(char *output) = 0;
   virtual String toString() = 0;
   virtual size_t getHashSize() const = 0;
+  // Compression block size (HMAC ipad/opad width). 0 means unknown.
+  virtual size_t getBlockSize() const {
+    return 0;
+  }
 };
 
 #endif
