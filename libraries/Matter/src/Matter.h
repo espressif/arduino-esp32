@@ -44,6 +44,7 @@
 #include <MatterEndpoints/MatterWindowCovering.h>
 #include <MatterEndpoints/MatterLightSensor.h>
 #include <MatterEndpoints/MatterWaterValve.h>
+#include <MatterEndpoints/MatterWaterHeater.h>
 
 // Matter Event types used when there is a user callback for Matter Events
 enum matterEvent_t {

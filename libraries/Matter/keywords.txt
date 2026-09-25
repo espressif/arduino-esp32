@@ -70,6 +70,11 @@ MatterLightSensor	KEYWORD1
 MatterWaterValve	KEYWORD1
 ValveState_t	KEYWORD1
 ValveFault_t	KEYWORD1
+MatterWaterHeater	KEYWORD1
+WaterHeaterMode_t	KEYWORD1
+SystemMode_t	KEYWORD1
+HeaterType_t	KEYWORD1
+BoostState_t	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -290,6 +295,36 @@ getDefaultOpenDuration	KEYWORD2
 getRemainingDuration	KEYWORD2
 getValveFault	KEYWORD2
 setValveFault	KEYWORD2
+setLocalTemperature	KEYWORD2
+getLocalTemperature	KEYWORD2
+setLocalTemperatureRaw	KEYWORD2
+getLocalTemperatureRaw	KEYWORD2
+setHeatingSetpoint	KEYWORD2
+getHeatingSetpoint	KEYWORD2
+setHeatingSetpointRaw	KEYWORD2
+getHeatingSetpointRaw	KEYWORD2
+setAbsoluteMinimumHeatingSetpoint	KEYWORD2
+setMinimumHeatingSetpoint	KEYWORD2
+setAbsoluteMaximumHeatingSetpoint	KEYWORD2
+setMaximumHeatingSetpoint	KEYWORD2
+getAbsoluteMinimumHeatingSetpoint	KEYWORD2
+getMinimumHeatingSetpoint	KEYWORD2
+getAbsoluteMaximumHeatingSetpoint	KEYWORD2
+getMaximumHeatingSetpoint	KEYWORD2
+setSystemMode	KEYWORD2
+getSystemMode	KEYWORD2
+setHeaterTypes	KEYWORD2
+getHeaterTypes	KEYWORD2
+setHeatDemand	KEYWORD2
+getHeatDemand	KEYWORD2
+setTankVolume	KEYWORD2
+getTankVolume	KEYWORD2
+setTankPercentage	KEYWORD2
+getTankPercentage	KEYWORD2
+setBoostState	KEYWORD2
+getBoostState	KEYWORD2
+setWaterHeaterMode	KEYWORD2
+getWaterHeaterMode	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -416,6 +451,17 @@ VALVE_FAULT_LEAKING	LITERAL1
 VALVE_FAULT_NOT_CONNECTED	LITERAL1
 VALVE_FAULT_SHORT_CIRCUIT	LITERAL1
 VALVE_FAULT_CURRENT_EXCEEDED	LITERAL1
+WATER_HEATER_MODE_OFF	LITERAL1
+WATER_HEATER_MODE_MANUAL	LITERAL1
+WATER_HEATER_MODE_ECO	LITERAL1
+SYSTEM_MODE_OFF	LITERAL1
+SYSTEM_MODE_HEAT	LITERAL1
+IMMERSION_ELEMENT_1	LITERAL1
+IMMERSION_ELEMENT_2	LITERAL1
+HEAT_PUMP	LITERAL1
+BOILER	LITERAL1
+BOOST_INACTIVE	LITERAL1
+BOOST_ACTIVE	LITERAL1
 BLINK	LITERAL1
 BREATHE	LITERAL1
 OKAY	LITERAL1

@@ -204,6 +204,7 @@ All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.
 | `MatterWindowCovering` | Window Covering |
 | `MatterTemperatureControlledCabinet` | Temperature Controlled Cabinet |
 | `MatterWaterValve` | Water Valve |
+| `MatterWaterHeater` | Water Heater |
 
 ## Node identity and commissioning
 
