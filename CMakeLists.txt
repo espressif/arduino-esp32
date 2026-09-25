@@ -221,6 +221,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterThermostat.cpp
   libraries/Matter/src/MatterEndpoints/MatterWindowCovering.cpp
   libraries/Matter/src/MatterEndpoints/MatterLightSensor.cpp
+  libraries/Matter/src/MatterEndpoints/MatterSoilSensor.cpp
   libraries/Matter/src/Matter.cpp
   libraries/Matter/src/MatterHelpers.cpp
   libraries/Matter/src/MatterButton.cpp
