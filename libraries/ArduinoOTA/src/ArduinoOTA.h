@@ -88,7 +88,7 @@ public:
   // if you need to disable any hardware or services before the update begins,
   // such as timer-based interrups used for ISRs.
   ArduinoOTAClass &onPrepare(THandlerFunction fn);
-  
+
   //This callback will be called when OTA connection has begun
   ArduinoOTAClass &onStart(THandlerFunction fn);
 
