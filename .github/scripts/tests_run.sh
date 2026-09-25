@@ -46,6 +46,31 @@ function run_multi_device_test {
 
     printf "\033[95mRunning multi-device test: %s\033[0m\n" "$test_name"
 
+    # Honor ci.yml disables before the Wokwi/QEMU hard error. Those platforms
+    # cannot run multi-DUT tests, but a test that opts out must be a skip.
+    if [ -f "$test_dir/ci.yml" ]; then
+        local selected_platform
+        selected_platform=$(yq eval ".platforms.${platform}" "$test_dir/ci.yml" 2>/dev/null)
+        if [[ $selected_platform == "false" ]]; then
+            printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$test_name" "$target" "$platform"
+            printf "\n\n\n"
+            return 0
+        fi
+
+        local soc
+        for soc in "${dut_targets[@]}"; do
+            local is_target
+            local platform_target
+            is_target=$(yq eval ".targets.${soc}" "$test_dir/ci.yml" 2>/dev/null)
+            platform_target=$(yq eval ".platforms.${platform}.${soc}" "$test_dir/ci.yml" 2>/dev/null)
+            if [[ $is_target == "false" ]] || [[ $platform_target == "false" ]]; then
+                printf "\033[93mSkipping %s test for %s, platform: %s (disabled for %s)\033[0m\n" "$test_name" "$target" "$platform" "$soc"
+                printf "\n\n\n"
+                return 0
+            fi
+        done
+    fi
+
     if [ $platform == "wokwi" ]; then
         echo "ERROR: Wokwi platform not supported for multi-device tests"
         return 1
@@ -94,30 +119,6 @@ function run_multi_device_test {
         dut_targets=()
         for ((i=0; i<device_count; i++)); do
             dut_targets+=("$single")
-        done
-    fi
-
-    # Skip if any DUT SoC is disabled for this test/platform
-    if [ -f "$test_dir/ci.yml" ]; then
-        local selected_platform
-        selected_platform=$(yq eval ".platforms.${platform}" "$test_dir/ci.yml" 2>/dev/null)
-        if [[ $selected_platform == "false" ]]; then
-            printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$test_name" "$target" "$platform"
-            printf "\n\n\n"
-            return 0
-        fi
-
-        local soc
-        for soc in "${dut_targets[@]}"; do
-            local is_target
-            local platform_target
-            is_target=$(yq eval ".targets.${soc}" "$test_dir/ci.yml" 2>/dev/null)
-            platform_target=$(yq eval ".platforms.${platform}.${soc}" "$test_dir/ci.yml" 2>/dev/null)
-            if [[ $is_target == "false" ]] || [[ $platform_target == "false" ]]; then
-                printf "\033[93mSkipping %s test for %s, platform: %s (disabled for %s)\033[0m\n" "$test_name" "$target" "$platform" "$soc"
-                printf "\n\n\n"
-                return 0
-            fi
         done
     fi
 
