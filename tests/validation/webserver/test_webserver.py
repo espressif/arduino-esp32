@@ -70,6 +70,8 @@ def test_webserver(dut, ci_job_id):
         ("string", 10),
         # Request-parsing robustness / security regression checks
         ("auth_bypass", 15),  # report 2: bare Authorization username bypass
+        ("digest_auth", 20),  # issue 12915: multi-client digest nonce + stale=true
+        ("digest_auth_edges", 40),  # signed-nonce integrity, replay, query, RFC 2069, stale isolation
         ("path_traversal", 15),  # report 6: serveStatic dot-segment traversal
         # Compatibility checks for the limits added by the fixes above
         ("static_root", 15),  # serveStatic mapped to the filesystem root

@@ -64,6 +64,9 @@ public:
   size_t getHashSize() const override {
     return hash_size;
   }
+  size_t getBlockSize() const override {
+    return rate;
+  }
 };
 
 class SHA3_224Builder : public SHA3Builder {

@@ -32,6 +32,8 @@
 #include "detail/RequestHandlersImpl.h"
 #include "MD5Builder.h"
 #include "SHA1Builder.h"
+#include "SHA2Builder.h"
+#include "HMACBuilder.h"
 #include "base64.h"
 
 static const char AUTHORIZATION_HEADER[] = "Authorization";
@@ -55,6 +57,7 @@ WebServer::~WebServer() {
   _clearRequestHeaders();
   _clearResponseHeaders();
   delete _chain;
+  forced_memzero(_digestSecret, sizeof(_digestSecret));
 
   RequestHandler *handler = _firstHandler;
   while (handler) {
@@ -133,8 +136,9 @@ bool WebServer::authenticateBasicSHA1(const char *_username, const char *_sha1Ba
       log_v("Calculated SHA1 in base64: %s", sha1calc);
     }
 
-    return ((username.equalsConstantTime(_username)) && (String((char *)sha1calc).equalsConstantTime(_sha1Base64orHex))
-            && (mode == BASIC_AUTH) /* to keep things somewhat time constant. */
+    return (
+             (username.equalsConstantTime(_username)) && (String((char *)sha1calc).equalsConstantTime(_sha1Base64orHex))
+             && (mode == BASIC_AUTH) /* to keep things somewhat time constant. */
            )
              ? new String(params[0])
              : NULL;
@@ -154,6 +158,8 @@ bool WebServer::authenticate(const char *_username, const char *_password) {
 }
 
 bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
+  _digestNonceStale = false;
+
   if (!hasHeader(FPSTR(AUTHORIZATION_HEADER))) {
     return false;
   }
@@ -239,10 +245,6 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
       goto exf;
     }
 
-    if ((_opaque != _sopaque) || (_nonce != _snonce) || (_realm != _srealm)) {
-      goto exf;
-    }
-
     // parameters for the RFC 2617 newer Digest
     String _nc, _cnonce;
     if (authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
@@ -251,19 +253,8 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     }
 
     log_v("Hash of user:realm:pass=%s", _H1.c_str());
-    String _H2 = "";
-    if (_currentMethod == HTTP_GET) {
-      _H2 = md5str(String(F("GET:")) + _uri);
-    } else if (_currentMethod == HTTP_POST) {
-      _H2 = md5str(String(F("POST:")) + _uri);
-    } else if (_currentMethod == HTTP_PUT) {
-      _H2 = md5str(String(F("PUT:")) + _uri);
-    } else if (_currentMethod == HTTP_DELETE) {
-      _H2 = md5str(String(F("DELETE:")) + _uri);
-    } else {
-      _H2 = md5str(String(F("GET:")) + _uri);
-    }
-    log_v("Hash of GET:uri=%s", _H2.c_str());
+    String _H2 = md5str(String(http_method_str(_currentMethod)) + ':' + _uri);
+    log_v("Hash of method:uri=%s", _H2.c_str());
     String _responsecheck = "";
     if (authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
       _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _nc + ':' + _cnonce + F(":auth:") + _H2);
@@ -273,9 +264,22 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     authReq = "";
 
     log_v("The Proper response=%s", _responsecheck.c_str());
-    bool ret = _response == _responsecheck;
-    log_v("Authentication %s", ret ? "Success" : "Failed");
-    return ret;
+    if (!_response.equalsConstantTime(_responsecheck)) {
+      log_v("Authentication Failed");
+      return false;
+    }
+
+    // Credentials match the nonce the client sent. A signed nonce that is still
+    // within TTL is accepted even if another client has since been challenged.
+    // An expired or unknown nonce gets stale=true so the browser retries silently.
+    if (_isDigestNonceValid(_nonce) && _opaque.equalsConstantTime(_sopaque) && _realm.equalsConstantTime(_srealm)) {
+      log_v("Authentication Success");
+      return true;
+    }
+
+    _digestNonceStale = true;
+    log_v("Authentication Failed (stale nonce)");
+    return false;
   } else if (authReq.length()) {
     // OTHER_AUTH
     log_v("Trying to authenticate using Other Auth, authReq=%s", authReq.c_str());
@@ -292,13 +296,105 @@ exf:
   return false;
 }
 
-String WebServer::_getRandomHexString() {
-  char buffer[33];  // buffer to hold 32 Hex Digit + /0
-  int i;
-  for (i = 0; i < 4; i++) {
-    snprintf(buffer + (i * 8), sizeof(buffer) - (size_t)(i * 8), "%08" PRIx32, esp_random());
+static const size_t DIGEST_NONCE_TS_LEN = 4;
+static const size_t DIGEST_NONCE_RND_LEN = 4;
+static const size_t DIGEST_NONCE_MAC_LEN = 16;
+static const size_t DIGEST_NONCE_BIN_LEN = DIGEST_NONCE_TS_LEN + DIGEST_NONCE_RND_LEN + DIGEST_NONCE_MAC_LEN;
+static const size_t DIGEST_NONCE_HEX_LEN = DIGEST_NONCE_BIN_LEN * 2;
+static const char DIGEST_OPAQUE_LABEL[] = "WebServer-opaque";
+
+static void digestPutBe32(uint8_t *out, uint32_t value) {
+  out[0] = (uint8_t)(value >> 24);
+  out[1] = (uint8_t)(value >> 16);
+  out[2] = (uint8_t)(value >> 8);
+  out[3] = (uint8_t)value;
+}
+
+static uint32_t digestGetBe32(const uint8_t *in) {
+  return ((uint32_t)in[0] << 24) | ((uint32_t)in[1] << 16) | ((uint32_t)in[2] << 8) | (uint32_t)in[3];
+}
+
+void WebServer::_ensureDigestAuthMaterial() {
+  if (_digestSecretReady) {
+    return;
   }
-  return String(buffer);
+
+  for (size_t i = 0; i < sizeof(_digestSecret); i += sizeof(uint32_t)) {
+    uint32_t rnd = esp_random();
+    size_t n = sizeof(_digestSecret) - i;
+    if (n > sizeof(rnd)) {
+      n = sizeof(rnd);
+    }
+    memcpy(_digestSecret + i, &rnd, n);
+  }
+
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(_digestSecret, sizeof(_digestSecret));
+  hmac.begin();
+  hmac.add(DIGEST_OPAQUE_LABEL);
+  hmac.calculate();
+  uint8_t mac[SHA2_256_HASH_SIZE];
+  hmac.getBytes(mac);
+  _sopaque = HEXBuilder::bytes2hex(mac, DIGEST_NONCE_MAC_LEN);
+  _digestSecretReady = true;
+}
+
+String WebServer::_makeDigestNonce() {
+  _ensureDigestAuthMaterial();
+
+  uint8_t msg[DIGEST_NONCE_TS_LEN + DIGEST_NONCE_RND_LEN];
+  digestPutBe32(msg, millis());
+  digestPutBe32(msg + DIGEST_NONCE_TS_LEN, esp_random());
+
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(_digestSecret, sizeof(_digestSecret));
+  hmac.begin();
+  hmac.add(msg, sizeof(msg));
+  hmac.calculate();
+  uint8_t mac[SHA2_256_HASH_SIZE];
+  hmac.getBytes(mac);
+
+  return HEXBuilder::bytes2hex(msg, sizeof(msg)) + HEXBuilder::bytes2hex(mac, DIGEST_NONCE_MAC_LEN);
+}
+
+bool WebServer::_isDigestNonceValid(const String &nonce) {
+  _ensureDigestAuthMaterial();
+
+  if (nonce.length() != DIGEST_NONCE_HEX_LEN || !HEXBuilder::isHexString(nonce)) {
+    return false;
+  }
+
+  uint8_t raw[DIGEST_NONCE_BIN_LEN];
+  if (HEXBuilder::hex2bytes(raw, sizeof(raw), nonce.c_str()) != sizeof(raw)) {
+    return false;
+  }
+
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(_digestSecret, sizeof(_digestSecret));
+  hmac.begin();
+  hmac.add(raw, DIGEST_NONCE_TS_LEN + DIGEST_NONCE_RND_LEN);
+  hmac.calculate();
+  uint8_t mac[SHA2_256_HASH_SIZE];
+  hmac.getBytes(mac);
+
+  uint8_t diff = 0;
+  for (size_t i = 0; i < DIGEST_NONCE_MAC_LEN; i++) {
+    diff |= mac[i] ^ raw[DIGEST_NONCE_TS_LEN + DIGEST_NONCE_RND_LEN + i];
+  }
+  if (diff != 0) {
+    return false;
+  }
+
+#if WEBSERVER_DIGEST_NONCE_TTL > 0
+  uint32_t issued = digestGetBe32(raw);
+  if ((millis() - issued) > (uint32_t)WEBSERVER_DIGEST_NONCE_TTL) {
+    return false;
+  }
+#endif
+  return true;
 }
 
 void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, const String &authFailMsg) {
@@ -308,14 +404,16 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
     _srealm = String(realm);
   }
   if (mode == BASIC_AUTH) {
+    _digestNonceStale = false;
     sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeBasic + String(F(" realm=\"")) + _srealm + String(F("\"")));
   } else {
-    _snonce = _getRandomHexString();
-    _sopaque = _getRandomHexString();
-    sendHeader(
-      String(FPSTR(WWW_Authenticate)), AuthTypeDigest + String(F(" realm=\"")) + _srealm + String(F("\", qop=\"auth\", nonce=\"")) + _snonce
-                                         + String(F("\", opaque=\"")) + _sopaque + String(F("\""))
-    );
+    String header = AuthTypeDigest + String(F(" realm=\"")) + _srealm + String(F("\", qop=\"auth\", nonce=\"")) + _makeDigestNonce()
+                    + String(F("\", opaque=\"")) + _sopaque + String(F("\""));
+    if (_digestNonceStale) {
+      header += F(", stale=true");
+      _digestNonceStale = false;
+    }
+    sendHeader(String(FPSTR(WWW_Authenticate)), header);
   }
   using namespace mime;
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
@@ -796,8 +894,10 @@ void WebServer::sendContent_P(PGM_P content, size_t size) {
 void WebServer::_streamFileCore(const size_t fileSize, const String &fileName, const String &contentType, const int code) {
   using namespace mime;
   setContentLength(fileSize);
-  if (fileName.endsWith(String(FPSTR(mimeTable[gz].endsWith))) && contentType != String(FPSTR(mimeTable[gz].mimeType))
-      && contentType != String(FPSTR(mimeTable[none].mimeType))) {
+  if (
+    fileName.endsWith(String(FPSTR(mimeTable[gz].endsWith))) && contentType != String(FPSTR(mimeTable[gz].mimeType))
+    && contentType != String(FPSTR(mimeTable[none].mimeType))
+  ) {
     sendHeader(F("Content-Encoding"), F("gzip"));
   }
   send(code, contentType, "");

@@ -1,7 +1,8 @@
 /*
  * Validation test for Hash library, MD5Builder, HEXBuilder, and HashBuilder.
  * Uses Unity framework with known-answer test vectors from
- * NIST FIPS 180-4, FIPS 202, RFC 1321, and RFC 6070.
+ * NIST FIPS 180-4, FIPS 202, RFC 1321, RFC 2104/2202/4231, RFC 6070,
+ * and Python 3 hmac.new(..., hashlib.<alg>).
  */
 
 #include <Arduino.h>
@@ -11,7 +12,15 @@
 #include <SHA2Builder.h>
 #include <SHA3Builder.h>
 #include <PBKDF2_HMACBuilder.h>
+#include <HMACBuilder.h>
 #include <StreamString.h>
+
+class ZeroBlockHash : public SHA256Builder {
+public:
+  size_t getBlockSize() const override {
+    return 0;
+  }
+};
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -569,6 +578,469 @@ void test_pbkdf2_setters(void) {
   TEST_ASSERT_EQUAL_STRING("33044695f8609480da53f5241212296156533fee38da64c2149fcf308c36952c", pbkdf2.toString().c_str());
 }
 
+void test_pbkdf2_sha512_c1(void) {
+  SHA512Builder sha512;
+  PBKDF2_HMACBuilder pbkdf2(&sha512, "password", "salt", 1);
+  pbkdf2.begin();
+  pbkdf2.calculate();
+  TEST_ASSERT_EQUAL_STRING(
+    "867f70cf1ade02cff3752599a3a53dc4af34c7a669815ae5d513554e1c8cf252c02d470a285a0501bad999bfe943c08f050235d7d68b1da55e63f73b60a57fce",
+    pbkdf2.toString().c_str()
+  );
+}
+
+void test_pbkdf2_sha384_c1(void) {
+  SHA384Builder sha384;
+  PBKDF2_HMACBuilder pbkdf2(&sha384, "password", "salt", 1);
+  pbkdf2.begin();
+  pbkdf2.calculate();
+  TEST_ASSERT_EQUAL_STRING("c0e14f06e49e32d73f9f52ddf1d0c5c7191609233631dadd76a567db42b78676b38fc800cc53ddb642f5c74442e62be4", pbkdf2.toString().c_str());
+}
+
+void test_pbkdf2_sha3_256_c1(void) {
+  SHA3_256Builder sha3;
+  PBKDF2_HMACBuilder pbkdf2(&sha3, "password", "salt", 1);
+  pbkdf2.begin();
+  pbkdf2.calculate();
+  TEST_ASSERT_EQUAL_STRING("94613f3ee2ea730e0b06754f3fc816d4f87c9be9cbd8556b5d59b52330e333a8", pbkdf2.toString().c_str());
+}
+
+// ==================== HMAC (RFC 2202 / RFC 4231) ====================
+
+void test_hmac_sha1_rfc2202(void) {
+  const uint8_t key[20] = {0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b};
+  SHA1Builder sha1;
+  HMACBuilder hmac(&sha1);
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL(20, (int)hmac.getHashSize());
+  TEST_ASSERT_EQUAL_STRING("b617318655057264e28bc0b6fb378c8ef146be00", hmac.toString().c_str());
+}
+
+void test_hmac_sha256_rfc4231_1(void) {
+  const uint8_t key[20] = {0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b};
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7", hmac.toString().c_str());
+}
+
+void test_hmac_sha256_rfc4231_2(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("Jefe");
+  hmac.begin();
+  hmac.add("what do ya want for nothing?");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843", hmac.toString().c_str());
+}
+
+void test_hmac_sha256_rfc4231_6(void) {
+  uint8_t key[131];
+  memset(key, 0xaa, sizeof(key));
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add("Test Using Larger Than Block-Size Key - Hash Key First");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54", hmac.toString().c_str());
+}
+
+void test_hmac_sha512_rfc4231_1(void) {
+  const uint8_t key[20] = {0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b};
+  SHA512Builder sha512;
+  HMACBuilder hmac(&sha512);
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL(64, (int)hmac.getHashSize());
+  TEST_ASSERT_EQUAL_STRING(
+    "87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854", hmac.toString().c_str()
+  );
+}
+
+void test_hmac_sha256_multi_chunk(void) {
+  const uint8_t key[20] = {0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b};
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add("Hi");
+  hmac.add(" There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7", hmac.toString().c_str());
+}
+
+void test_hmac_sha256_add_stream(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("Jefe");
+  hmac.begin();
+  StreamString ss;
+  ss.print("what do ya want for nothing?");
+  TEST_ASSERT_TRUE(hmac.addStream(ss, ss.available()));
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843", hmac.toString().c_str());
+}
+
+void test_hmac_sha3_256(void) {
+  const uint8_t key[20] = {0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b};
+  SHA3_256Builder sha3;
+  TEST_ASSERT_EQUAL(SHA3_256_RATE, (int)sha3.getBlockSize());
+  HMACBuilder hmac(&sha3);
+  TEST_ASSERT_EQUAL(SHA3_256_RATE, (int)hmac.getBlockSize());
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("ba85192310dffa96e2a3a40e69774351140bb7185e1202cdcc917589f95e16bb", hmac.toString().c_str());
+}
+
+void test_hmac_sha3_224(void) {
+  const uint8_t key[20] = {0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b};
+  SHA3_224Builder sha3;
+  HMACBuilder hmac(&sha3);
+  TEST_ASSERT_EQUAL(SHA3_224_RATE, (int)hmac.getBlockSize());
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("3b16546bbc7be2706a031dcafd56373d9884367641d8c59af3c860f7", hmac.toString().c_str());
+}
+
+void test_hmac_unknown_block_size(void) {
+  ZeroBlockHash hash;
+  HMACBuilder hmac(&hash);
+  TEST_ASSERT_EQUAL(0, (int)hmac.getBlockSize());
+  hmac.setKey("Jefe");
+  hmac.begin();
+  hmac.add("what do ya want for nothing?");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("", hmac.toString().c_str());
+}
+
+// Remaining HMAC cases were generated with Python 3:
+//   hmac.new(key, msg, hashlib.<alg>).hexdigest()
+
+static const uint8_t HMAC_KEY_0B20[20] = {0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
+                                          0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b};
+
+void test_hash_block_sizes(void) {
+  MD5Builder md5;
+  SHA1Builder sha1;
+  SHA224Builder sha224;
+  SHA256Builder sha256;
+  SHA384Builder sha384;
+  SHA512Builder sha512;
+  SHA3_224Builder sha3_224;
+  SHA3_256Builder sha3_256;
+  SHA3_384Builder sha3_384;
+  SHA3_512Builder sha3_512;
+  TEST_ASSERT_EQUAL(64, (int)md5.getBlockSize());
+  TEST_ASSERT_EQUAL(64, (int)sha1.getBlockSize());
+  TEST_ASSERT_EQUAL(SHA2_256_BLOCK_SIZE, (int)sha224.getBlockSize());
+  TEST_ASSERT_EQUAL(SHA2_256_BLOCK_SIZE, (int)sha256.getBlockSize());
+  TEST_ASSERT_EQUAL(SHA2_512_BLOCK_SIZE, (int)sha384.getBlockSize());
+  TEST_ASSERT_EQUAL(SHA2_512_BLOCK_SIZE, (int)sha512.getBlockSize());
+  TEST_ASSERT_EQUAL(SHA3_224_RATE, (int)sha3_224.getBlockSize());
+  TEST_ASSERT_EQUAL(SHA3_256_RATE, (int)sha3_256.getBlockSize());
+  TEST_ASSERT_EQUAL(SHA3_384_RATE, (int)sha3_384.getBlockSize());
+  TEST_ASSERT_EQUAL(SHA3_512_RATE, (int)sha3_512.getBlockSize());
+}
+
+void test_hmac_md5(void) {
+  const uint8_t key[16] = {0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b};
+  MD5Builder md5;
+  HMACBuilder hmac(&md5);
+  TEST_ASSERT_EQUAL(16, (int)hmac.getHashSize());
+  TEST_ASSERT_EQUAL(64, (int)hmac.getBlockSize());
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("9294727a3638bb1c13f48ef8158bfc9d", hmac.toString().c_str());
+}
+
+void test_hmac_sha224(void) {
+  SHA224Builder sha224;
+  HMACBuilder hmac(&sha224);
+  TEST_ASSERT_EQUAL(28, (int)hmac.getHashSize());
+  TEST_ASSERT_EQUAL(64, (int)hmac.getBlockSize());
+  hmac.setKey(HMAC_KEY_0B20, sizeof(HMAC_KEY_0B20));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("896fb1128abbdf196832107cd49df33f47b4b1169912ba4f53684b22", hmac.toString().c_str());
+}
+
+void test_hmac_sha384(void) {
+  SHA384Builder sha384;
+  HMACBuilder hmac(&sha384);
+  TEST_ASSERT_EQUAL(48, (int)hmac.getHashSize());
+  TEST_ASSERT_EQUAL(128, (int)hmac.getBlockSize());
+  hmac.setKey(HMAC_KEY_0B20, sizeof(HMAC_KEY_0B20));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6", hmac.toString().c_str());
+}
+
+void test_hmac_sha3_384(void) {
+  SHA3_384Builder sha3;
+  HMACBuilder hmac(&sha3);
+  TEST_ASSERT_EQUAL(SHA3_384_RATE, (int)hmac.getBlockSize());
+  hmac.setKey(HMAC_KEY_0B20, sizeof(HMAC_KEY_0B20));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("68d2dcf7fd4ddd0a2240c8a437305f61fb7334cfb5d0226e1bc27dc10a2e723a20d370b47743130e26ac7e3d532886bd", hmac.toString().c_str());
+}
+
+void test_hmac_sha3_512(void) {
+  SHA3_512Builder sha3;
+  HMACBuilder hmac(&sha3);
+  TEST_ASSERT_EQUAL(SHA3_512_RATE, (int)hmac.getBlockSize());
+  hmac.setKey(HMAC_KEY_0B20, sizeof(HMAC_KEY_0B20));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING(
+    "eb3fbd4b2eaab8f5c504bd3a41465aacec15770a7cabac531e482f860b5ec7ba47ccb2c6f2afce8f88d22b6dc61380f23a668fd3888bb80537c0a0b86407689e", hmac.toString().c_str()
+  );
+}
+
+void test_hmac_empty_key_empty_msg(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("");
+  hmac.begin();
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad", hmac.toString().c_str());
+}
+
+void test_hmac_empty_message(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("key");
+  hmac.begin();
+  hmac.add((const uint8_t *)"", 0);
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("5d5d139563c95b5967b9bd9a8c9b233a9dedb45072794cd232dc1b74832607d0", hmac.toString().c_str());
+}
+
+void test_hmac_binary_key_and_data(void) {
+  uint8_t key[32];
+  for (int i = 0; i < 32; i++) {
+    key[i] = (uint8_t)i;
+  }
+  const uint8_t msg[] = {0x00, 0x01, 0xff, 0x00, 0x0a};
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add(msg, sizeof(msg));
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("681c7b085b12861c76abe905dda09dee212d28946156de492912cdbd6bb01fca", hmac.toString().c_str());
+}
+
+void test_hmac_long_key_sha3_256(void) {
+  uint8_t key[200];
+  memset(key, 0xaa, sizeof(key));
+  SHA3_256Builder sha3;
+  HMACBuilder hmac(&sha3);
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add("hash key first");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("bbd03ad5bf158b443d79a0fcb6eeaf03e326e2aa976f273f1c98c19dc6ae4da7", hmac.toString().c_str());
+}
+
+void test_hmac_rfc4231_3(void) {
+  const uint8_t key[20] = {0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa};
+  uint8_t data[50];
+  memset(data, 0xdd, sizeof(data));
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(key, sizeof(key));
+  hmac.begin();
+  hmac.add(data, sizeof(data));
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe", hmac.toString().c_str());
+}
+
+void test_hmac_set_key_overloads(void) {
+  SHA256Builder sha256;
+  HMACBuilder a(&sha256), b(&sha256), c(&sha256);
+  const uint8_t key[] = {'J', 'e', 'f', 'e'};
+  a.setKey(key, sizeof(key));
+  b.setKey("Jefe");
+  c.setKey(String("Jefe"));
+  a.begin();
+  a.add("Hello");
+  a.calculate();
+  b.begin();
+  b.add("Hello");
+  b.calculate();
+  c.begin();
+  c.add("Hello");
+  c.calculate();
+  TEST_ASSERT_EQUAL_STRING("f660515327e2d854a38ec8426f7bf0292e2418a18694467cecf5ade7e1b617fc", a.toString().c_str());
+  TEST_ASSERT_EQUAL_STRING(a.toString().c_str(), b.toString().c_str());
+  TEST_ASSERT_EQUAL_STRING(a.toString().c_str(), c.toString().c_str());
+}
+
+void test_hmac_set_hash_algorithm(void) {
+  SHA1Builder sha1;
+  SHA256Builder sha256;
+  HMACBuilder hmac;
+  TEST_ASSERT_EQUAL(0, (int)hmac.getHashSize());
+  TEST_ASSERT_EQUAL(0, (int)hmac.getBlockSize());
+  hmac.setHashAlgorithm(&sha1);
+  TEST_ASSERT_EQUAL(20, (int)hmac.getHashSize());
+  TEST_ASSERT_EQUAL(64, (int)hmac.getBlockSize());
+  hmac.setKey(HMAC_KEY_0B20, sizeof(HMAC_KEY_0B20));
+  hmac.begin();
+  hmac.add("Hi There");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("b617318655057264e28bc0b6fb378c8ef146be00", hmac.toString().c_str());
+  hmac.setHashAlgorithm(&sha256);
+  TEST_ASSERT_EQUAL(32, (int)hmac.getHashSize());
+  hmac.setKey("Jefe");
+  hmac.begin();
+  hmac.add("what do ya want for nothing?");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843", hmac.toString().c_str());
+}
+
+void test_hmac_explicit_block_size(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256, SHA2_256_BLOCK_SIZE);
+  TEST_ASSERT_EQUAL(SHA2_256_BLOCK_SIZE, (int)hmac.getBlockSize());
+  hmac.setKey("Jefe");
+  hmac.begin();
+  hmac.add("what do ya want for nothing?");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843", hmac.toString().c_str());
+
+  HMACBuilder tooBig(&sha256, HMAC_MAX_BLOCK_SIZE + 1);
+  TEST_ASSERT_EQUAL(0, (int)tooBig.getBlockSize());
+}
+
+void test_hmac_getbytes_getchars(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("Jefe");
+  hmac.begin();
+  hmac.add("Hello");
+  hmac.calculate();
+  uint8_t bytes[32];
+  char chars[65];
+  hmac.getBytes(bytes);
+  hmac.getChars(chars);
+  TEST_ASSERT_EQUAL_STRING("f660515327e2d854a38ec8426f7bf0292e2418a18694467cecf5ade7e1b617fc", hmac.toString().c_str());
+  TEST_ASSERT_EQUAL_STRING(hmac.toString().c_str(), chars);
+  TEST_ASSERT_EQUAL_HEX8(0xf6, bytes[0]);
+  TEST_ASSERT_EQUAL_HEX8(0xfc, bytes[31]);
+}
+
+void test_hmac_reset(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("Jefe");
+  hmac.begin();
+  hmac.add("what do ya want for nothing?");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843", hmac.toString().c_str());
+  hmac.begin();
+  hmac.add("second message");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("dec91abee3678dd127e50a5b8b791d51bfe1b43a24c78946f1d14b03405dba77", hmac.toString().c_str());
+}
+
+void test_hmac_add_string_and_hex(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(String("Jefe"));
+  hmac.begin();
+  hmac.add(String("Hello"));
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("f660515327e2d854a38ec8426f7bf0292e2418a18694467cecf5ade7e1b617fc", hmac.toString().c_str());
+
+  hmac.begin();
+  hmac.addHexString("48656c6c6f");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("f660515327e2d854a38ec8426f7bf0292e2418a18694467cecf5ade7e1b617fc", hmac.toString().c_str());
+
+  hmac.begin();
+  hmac.addHexString(String("48656c6c6f"));
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("f660515327e2d854a38ec8426f7bf0292e2418a18694467cecf5ade7e1b617fc", hmac.toString().c_str());
+}
+
+void test_hmac_key_with_spaces(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("key with spaces");
+  hmac.begin();
+  hmac.add("msg");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("529c93ac12436210960e010a6e6b2fa5c4017532b92e8fe76bed2fd50906a0e9", hmac.toString().c_str());
+}
+
+void test_hmac_md5_string_key(void) {
+  MD5Builder md5;
+  HMACBuilder hmac(&md5);
+  hmac.setKey("Jefe");
+  hmac.begin();
+  hmac.add("what do ya want for nothing?");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("750c783e6ab0b503eaa86e310a5db738", hmac.toString().c_str());
+}
+
+void test_hmac_calculate_before_begin(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("Jefe");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("", hmac.toString().c_str());
+}
+
+void test_hmac_null_key(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("Jefe");
+  hmac.begin();
+  hmac.add("Hello");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("f660515327e2d854a38ec8426f7bf0292e2418a18694467cecf5ade7e1b617fc", hmac.toString().c_str());
+
+  hmac.setKey((const char *)NULL);
+  TEST_ASSERT_EQUAL_STRING("", hmac.toString().c_str());
+  hmac.begin();
+  hmac.add("Hello");
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("", hmac.toString().c_str());
+}
+
+void test_hmac_add_stream_large_maxlen(void) {
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey("Jefe");
+  hmac.begin();
+  StreamString ss;
+  ss.print("Hello");
+  TEST_ASSERT_TRUE(hmac.addStream(ss, (size_t)-1));
+  hmac.calculate();
+  TEST_ASSERT_EQUAL_STRING("f660515327e2d854a38ec8426f7bf0292e2418a18694467cecf5ade7e1b617fc", hmac.toString().c_str());
+}
+
 // ==================== SHA-2 padding boundaries ====================
 
 void test_sha256_55bytes(void) {
@@ -718,6 +1190,43 @@ void setup() {
   RUN_TEST(test_pbkdf2_sha256_c1);
   RUN_TEST(test_pbkdf2_sha1_c4096);
   RUN_TEST(test_pbkdf2_setters);
+  RUN_TEST(test_pbkdf2_sha512_c1);
+  RUN_TEST(test_pbkdf2_sha384_c1);
+  RUN_TEST(test_pbkdf2_sha3_256_c1);
+
+  // HMAC
+  RUN_TEST(test_hmac_sha1_rfc2202);
+  RUN_TEST(test_hmac_sha256_rfc4231_1);
+  RUN_TEST(test_hmac_sha256_rfc4231_2);
+  RUN_TEST(test_hmac_sha256_rfc4231_6);
+  RUN_TEST(test_hmac_sha512_rfc4231_1);
+  RUN_TEST(test_hmac_sha256_multi_chunk);
+  RUN_TEST(test_hmac_sha256_add_stream);
+  RUN_TEST(test_hmac_sha3_256);
+  RUN_TEST(test_hmac_sha3_224);
+  RUN_TEST(test_hmac_unknown_block_size);
+  RUN_TEST(test_hash_block_sizes);
+  RUN_TEST(test_hmac_md5);
+  RUN_TEST(test_hmac_sha224);
+  RUN_TEST(test_hmac_sha384);
+  RUN_TEST(test_hmac_sha3_384);
+  RUN_TEST(test_hmac_sha3_512);
+  RUN_TEST(test_hmac_empty_key_empty_msg);
+  RUN_TEST(test_hmac_empty_message);
+  RUN_TEST(test_hmac_binary_key_and_data);
+  RUN_TEST(test_hmac_long_key_sha3_256);
+  RUN_TEST(test_hmac_rfc4231_3);
+  RUN_TEST(test_hmac_set_key_overloads);
+  RUN_TEST(test_hmac_set_hash_algorithm);
+  RUN_TEST(test_hmac_explicit_block_size);
+  RUN_TEST(test_hmac_getbytes_getchars);
+  RUN_TEST(test_hmac_reset);
+  RUN_TEST(test_hmac_add_string_and_hex);
+  RUN_TEST(test_hmac_key_with_spaces);
+  RUN_TEST(test_hmac_md5_string_key);
+  RUN_TEST(test_hmac_calculate_before_begin);
+  RUN_TEST(test_hmac_null_key);
+  RUN_TEST(test_hmac_add_stream_large_maxlen);
 
   // Padding boundaries
   RUN_TEST(test_sha256_55bytes);
