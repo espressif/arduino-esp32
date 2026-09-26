@@ -116,6 +116,12 @@ Key rules:
 - **Call the setter after the endpoint `begin()`.** Before `Matter.begin()` the value is cached and pushed when the cluster is created. After start it writes the live cluster. Typical sketches still do `begin()`, `Matter.begin()`, then the setter.
 - Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
 
+### Delegate-Based Clusters (Valve Configuration and Control)
+
+`MatterWaterValve` uses the Valve Configuration and Control cluster, which is a code-driven `chip::app::Clusters::ValveConfigurationAndControlCluster` object: its `CurrentState`/`TargetState`/`OpenDuration`/`RemainingDuration`/`ValveFault` attributes live in that object and are not reachable through `getAttributeVal()`/`setAttributeVal()`/`updateAttributeVal()`. Open/Close commands (whether sent by a Matter controller or triggered locally) are only ever delivered through a `chip::app::Clusters::ValveConfigurationAndControl::Delegate`, which is attached to the live cluster in `onStackStarted()` (the cluster object only exists after `Matter.begin()`).
+
+`MatterWaterValve` implements a private nested `ValveDelegate` that bridges `HandleOpenValve()`/`HandleCloseValve()`/`HandleRemainingDurationTick()` to the `onOpen()`/`onClose()` user callbacks and commits internal state (`currentState`, `targetState`, `openDuration`, `remainingDuration`) only once the callback has run - the same "commit after confirmation" spirit as the Setter Pattern above, just confirmed by a delegate callback instead of an Ember store update. `open()`/`close()`/`setValveFault()` drive the cluster object found with `findRegisteredCluster()` (`OpenValve()`, `CloseValve()`, `SetValveFault()`) under `lock::ScopedChipStackLock`; `OpenValve()`/`CloseValve()` synchronously invoke the delegate before returning, so by the time these calls return, internal state already reflects the outcome. `open()`/`close()` require `Matter.begin()` to have run; `setValveFault()` called earlier is cached and applied at stack start. The SDK's own timer drives the `RemainingDuration` countdown and automatically closes the valve when a timed open elapses (calling `HandleCloseValve()` the same way a remote Close command would) - no per-second polling is needed in the sketch.
+
 ### Controller-Originated Changes (attributeChangeCB)
 
 When a Matter controller changes an attribute (e.g., turning a light on via an app), the flow is:
@@ -197,6 +203,7 @@ All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.
 | `MatterThermostat` | Thermostat |
 | `MatterWindowCovering` | Window Covering |
 | `MatterTemperatureControlledCabinet` | Temperature Controlled Cabinet |
+| `MatterWaterValve` | Water Valve |
 
 ## Node identity and commissioning
 
