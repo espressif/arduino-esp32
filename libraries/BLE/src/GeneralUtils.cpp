@@ -228,7 +228,8 @@ bool GeneralUtils::base64Decode(const String &in, String *out) {
     a4_to_a3(a3, a4);
 
     for (j = 0; j < i - 1; j++) {
-      (*out)[dec_len++] = a3[j];
+      out->concat(a3[j]);
+      dec_len++;
     }
   }
 
