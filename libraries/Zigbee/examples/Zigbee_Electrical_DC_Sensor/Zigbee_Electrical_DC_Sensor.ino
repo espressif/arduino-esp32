@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,13 +48,20 @@ ZigbeeElectricalMeasurement zbElectricalMeasurement = ZigbeeElectricalMeasuremen
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting...");
 
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
   // Set analog resolution to 10 bits
   analogReadResolution(10);
+
+  // Initialize Zigbee stack as end device
+  if (!Zigbee.role(ZIGBEE_END_DEVICE)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
 
   // Optional: set Zigbee device name and model
   zbElectricalMeasurement.setManufacturerAndModel("Espressif", "ZigbeeElectricalMeasurementDC");

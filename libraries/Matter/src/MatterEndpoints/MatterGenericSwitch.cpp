@@ -17,6 +17,9 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterGenericSwitch.h>
+#include <app/ConcreteClusterPath.h>
+#include <app/clusters/switch-server/SwitchCluster.h>
+#include <data_model_provider/esp_matter_data_model_provider.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -25,6 +28,15 @@ using namespace chip::app::Clusters;
 
 namespace {
 void setCurrentPosition(uint16_t endpoint_id, uint8_t position) {
+  chip::app::ServerClusterInterface *iface =
+    esp_matter::data_model::provider::get_instance().registry().Get(chip::app::ConcreteClusterPath(endpoint_id, Switch::Id));
+  SwitchCluster *cluster = static_cast<SwitchCluster *>(iface);
+  if (cluster != nullptr) {
+    if (cluster->SetCurrentPosition(position) != CHIP_NO_ERROR) {
+      log_e("Failed to set Switch CurrentPosition to %u", position);
+    }
+    return;
+  }
   esp_matter_attr_val_t val = esp_matter_invalid(NULL);
   val.type = ESP_MATTER_VAL_TYPE_UINT8;
   val.val.u8 = position;
@@ -56,7 +68,7 @@ bool MatterGenericSwitch::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
 }
 
 bool MatterGenericSwitch::begin(uint32_t featureFlags, uint8_t multiPressMax) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Generic Switch with Endpoint Id %u device has already been created.", getEndPointId());
@@ -124,6 +136,10 @@ bool MatterGenericSwitch::begin(uint32_t featureFlags, uint8_t multiPressMax) {
 
 void MatterGenericSwitch::end() {
   started = false;
+}
+
+void MatterGenericSwitch::onStackStarted() {
+  setCurrentPosition(getEndPointId(), idlePosition);
 }
 
 void MatterGenericSwitch::press() {

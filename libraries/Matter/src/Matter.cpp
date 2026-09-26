@@ -16,7 +16,9 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
+#include <app/server/CommissioningWindowManager.h>
 #include <app/server/Server.h>
+#include <platform/ConnectivityManager.h>
 #if CONFIG_ENABLE_MATTER_OVER_THREAD
 #include "esp_openthread_types.h"
 #include "platform/ESP32/OpenthreadLauncher.h"
@@ -26,6 +28,7 @@
 #include <app/clusters/network-commissioning/NetworkCommissioningCluster.h>
 #include <app/server-cluster/ServerClusterInterfaceRegistry.h>
 #include <data_model_provider/esp_matter_data_model_provider.h>
+#include <platform/DeviceControlServer.h>
 #include <platform/OpenThread/GenericNetworkCommissioningThreadDriver.h>
 #endif
 #endif
@@ -79,8 +82,6 @@ static bool sBleMemoryReleaseEnabled = true;
 static matterNetwork_t sSelectedNetwork = MATTER_NETWORK_NONE;
 static esp_event_handler_instance_t sIpEventHandler = nullptr;
 
-extern bool matterWifiStackWrapRan();
-
 static bool netifHasUsableIpv6(const char *ifkey) {
   if (ifkey == nullptr) {
     return false;
@@ -126,11 +127,18 @@ static void startDnssdWork(intptr_t) {
   chip::app::DnssdServer::Instance().StartServer();
 }
 
+static void scheduleChipWork(chip::DeviceLayer::AsyncWorkFunct work, const char *what) {
+  const CHIP_ERROR err = chip::DeviceLayer::PlatformMgr().ScheduleWork(work, 0);
+  if (err != CHIP_NO_ERROR) {
+    log_e("Failed to schedule %s: %" CHIP_ERROR_FORMAT, what, err.Format());
+  }
+}
+
 static void scheduleDnssdRestart() {
   if (sLifecycle != MatterLifecycle::StackStarted) {
     return;
   }
-  chip::DeviceLayer::PlatformMgr().ScheduleWork(startDnssdWork, 0);
+  scheduleChipWork(startDnssdWork, "DNS-SD restart");
 }
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD
@@ -174,7 +182,7 @@ static void startThreadAdvertiseRetries() {
   if (sLifecycle != MatterLifecycle::StackStarted) {
     return;
   }
-  chip::DeviceLayer::PlatformMgr().ScheduleWork(startThreadAdvertiseRetriesWork, 0);
+  scheduleChipWork(startThreadAdvertiseRetriesWork, "Thread advertise retries");
 }
 #endif
 
@@ -249,7 +257,13 @@ static void bindThreadNetworkCommissioningOnRoot() {
     static_cast<chip::app::Clusters::NetworkCommissioningCluster *>(existing)->Deinit();
   }
   if (!sThreadNcOnRoot.IsConstructed()) {
-    sThreadNcOnRoot.Create(0, &sThreadNcDriver, sThreadNcBreadcrumb);
+    const chip::app::Clusters::NetworkCommissioningCluster::Context context{
+      .breadcrumbTracker = sThreadNcBreadcrumb,
+      .failSafeContext = chip::Server::GetInstance().GetFailSafeContext(),
+      .platformManager = chip::DeviceLayer::PlatformMgr(),
+      .deviceControlServer = chip::DeviceLayer::DeviceControlServer::DeviceControlSvr(),
+    };
+    sThreadNcOnRoot.Create(0, &sThreadNcDriver, context);
   }
   CHIP_ERROR err = sThreadNcOnRoot.Cluster().Init();
   if (err != CHIP_NO_ERROR) {
@@ -364,9 +378,46 @@ static void shutdownChipBleWork(intptr_t) {
 
 static void scheduleShutdownChipBle() {
 #if CONFIG_ENABLE_CHIPOBLE
-  chip::DeviceLayer::PlatformMgr().ScheduleWork(shutdownChipBleWork, 0);
+  scheduleChipWork(shutdownChipBleWork, "CHIPoBLE shutdown");
 #endif
 }
+
+#if defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+// Dual-stack images must init the Wi-Fi controller (InitChipStack → EnableStationMode).
+// Thread/Ethernet still must not join a leftover STA. Disable after start().
+static void disableWiFiStationIfNotSelected() {
+  if (sSelectedNetwork != MATTER_NETWORK_THREAD && sSelectedNetwork != MATTER_NETWORK_ETHERNET) {
+    return;
+  }
+  lock::ScopedChipStackLock stackLock(portMAX_DELAY);
+  const CHIP_ERROR err = chip::DeviceLayer::ConnectivityMgr().SetWiFiStationMode(chip::DeviceLayer::ConnectivityManager::kWiFiStationMode_Disabled);
+  if (err != CHIP_NO_ERROR) {
+    log_w("Failed to disable Wi-Fi station: %" CHIP_ERROR_FORMAT, err.Format());
+  }
+}
+#endif
+
+#if CONFIG_ENABLE_CHIPOBLE
+static void ensureChiPoBleAdvertising() {
+  if (!ArduinoMatter::isBLECommissioningEnabled() || ArduinoMatter::isDeviceCommissioned()) {
+    return;
+  }
+  lock::ScopedChipStackLock stackLock(portMAX_DELAY);
+  const CHIP_ERROR bleErr = chip::DeviceLayer::ConnectivityMgr().SetBLEAdvertisingEnabled(true);
+  if (bleErr != CHIP_NO_ERROR && bleErr != CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE) {
+    log_w("SetBLEAdvertisingEnabled failed: %" CHIP_ERROR_FORMAT, bleErr.Format());
+  }
+  chip::CommissioningWindowManager &mgr = chip::Server::GetInstance().GetCommissioningWindowManager();
+  if (mgr.IsCommissioningWindowOpen() || !chip::Server::GetInstance().GetFailSafeContext().IsFailSafeFullyDisarmed()) {
+    return;
+  }
+  const CHIP_ERROR err =
+    mgr.OpenBasicCommissioningWindow(chip::System::Clock::Seconds32(k_timeout_seconds), chip::CommissioningWindowAdvertisement::kAllSupported);
+  if (err != CHIP_NO_ERROR) {
+    log_e("Failed to open CHIPoBLE commissioning window: %" CHIP_ERROR_FORMAT, err.Format());
+  }
+}
+#endif
 
 #if defined(SOC_WIFI_SUPPORTED) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
 // Matter exchanges little data with a controller. Init Wi-Fi here with smaller
@@ -567,9 +618,22 @@ bool ArduinoMatter::isStackStarted() {
   return sLifecycle == MatterLifecycle::StackStarted;
 }
 
-void ArduinoMatter::_init() {
+static bool matterHasAccessoryEndpoint() {
+  node_t *node = node::get();
+  if (node == nullptr) {
+    return false;
+  }
+  for (endpoint_t *ep = endpoint::get_first(node); ep != nullptr; ep = endpoint::get_next(ep)) {
+    if (endpoint::get_id(ep) != 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ArduinoMatter::initNode() {
   if (sLifecycle != MatterLifecycle::Uninitialized) {
-    return;
+    return true;
   }
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
@@ -585,7 +649,7 @@ void ArduinoMatter::_init() {
   deviceNode = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
   if (deviceNode == nullptr) {
     log_e("Failed to create Matter node");
-    return;
+    return false;
   }
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
@@ -595,6 +659,7 @@ void ArduinoMatter::_init() {
 #endif
 
   sLifecycle = MatterLifecycle::NodeCreated;
+  return true;
 }
 
 void ArduinoMatter::begin() {
@@ -602,7 +667,11 @@ void ArduinoMatter::begin() {
     return;
   }
   if (sLifecycle != MatterLifecycle::NodeCreated) {
-    log_e("No Matter endpoint has been created. Please create an endpoint first.");
+    log_e("Matter node has not been created. Call at least one endpoint begin() first.");
+    return;
+  }
+  if (!matterHasAccessoryEndpoint()) {
+    log_e("No Matter accessory endpoint on the node. At least one endpoint begin() must succeed before Matter.begin().");
     return;
   }
 
@@ -642,16 +711,35 @@ void ArduinoMatter::begin() {
     return;
   }
   sLifecycle = MatterLifecycle::StackStarted;
+  {
+    node_t *node = node::get();
+    if (node != nullptr) {
+      for (endpoint_t *ep = endpoint::get_first(node); ep != nullptr; ep = endpoint::get_next(ep)) {
+        const uint16_t id = endpoint::get_id(ep);
+        if (id == 0) {
+          continue;
+        }
+        void *priv = endpoint::get_priv_data(id);
+        if (priv == nullptr) {
+          continue;
+        }
+        static_cast<MatterEndPoint *>(priv)->notifyStackStarted();
+      }
+    }
+  }
 #if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
   bindThreadNetworkCommissioningOnRoot();
 #endif
-#ifdef CONFIG_ENABLE_WIFI_STATION
-  if ((sSelectedNetwork == MATTER_NETWORK_THREAD || sSelectedNetwork == MATTER_NETWORK_ETHERNET) && !matterWifiStackWrapRan()) {
-    log_e("InitWiFiStack wrap did not run; Wi-Fi may still start. Check the --wrap flag in platform.txt.");
-  }
+#if defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  disableWiFiStationIfNotSelected();
 #endif
   applyIdentityAfterStart();
   applyBlePolicyAfterStart();
+#if CONFIG_ENABLE_CHIPOBLE
+  if (sSelectedNetwork == MATTER_NETWORK_THREAD) {
+    ensureChiPoBleAdvertising();
+  }
+#endif
   registerMatterIpEventHandler();
   if (selectedHasUsableIpv6()) {
 #if CONFIG_ENABLE_MATTER_OVER_THREAD

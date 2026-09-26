@@ -78,6 +78,7 @@ void setup() {
   OnOffLight.onChange(setLightOnOff);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
   matterWaitUntilReady();
   Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");

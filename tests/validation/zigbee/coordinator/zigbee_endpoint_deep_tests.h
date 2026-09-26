@@ -191,17 +191,6 @@ static void test_window_covering(void) {
   TEST_ASSERT_TRUE(epCovering.setTiltPercentage(75));
 }
 
-static void fake_ias_zone_enroll_attrs(uint8_t endpoint) {
-  esp_zb_ieee_addr_t fake_cie = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-  uint8_t zone_id = 0;
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
-    endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, &fake_cie, false
-  );
-  esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID, &zone_id, false);
-  esp_zb_lock_release();
-}
-
 static void test_ias_zone_devices(void) {
   // Non-enrolled devices must refuse to set+report
   TEST_ASSERT_FALSE_MESSAGE(epContact.enrolled(), "contact should start un-enrolled");
@@ -213,16 +202,13 @@ static void test_ias_zone_devices(void) {
   TEST_ASSERT_FALSE_MESSAGE(epDoorHandle.enrolled(), "door handle should start un-enrolled");
   TEST_ASSERT_FALSE_MESSAGE(epDoorHandle.setClosed(), "setClosed must fail when not enrolled");
 
-  // Simulate enrollment via the production reboot-restore path
-  fake_ias_zone_enroll_attrs(ZB_EP_CONTACT);
+  // SDK v2 restore sets ZoneState = ENROLLED directly; CIE address is no longer required.
   TEST_ASSERT_TRUE_MESSAGE(epContact.restoreIASZoneEnroll(), "contact restoreIASZoneEnroll failed");
   TEST_ASSERT_TRUE_MESSAGE(epContact.enrolled(), "contact should be enrolled after restore");
 
-  fake_ias_zone_enroll_attrs(ZB_EP_VIBRATION);
   TEST_ASSERT_TRUE_MESSAGE(epVibration.restoreIASZoneEnroll(), "vibration restoreIASZoneEnroll failed");
   TEST_ASSERT_TRUE_MESSAGE(epVibration.enrolled(), "vibration should be enrolled after restore");
 
-  fake_ias_zone_enroll_attrs(ZB_EP_DOOR_HANDLE);
   TEST_ASSERT_TRUE_MESSAGE(epDoorHandle.restoreIASZoneEnroll(), "door handle restoreIASZoneEnroll failed");
   TEST_ASSERT_TRUE_MESSAGE(epDoorHandle.enrolled(), "door handle should be enrolled after restore");
 

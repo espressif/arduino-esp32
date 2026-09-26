@@ -10,19 +10,19 @@ The ``MatterColorLight`` class provides an RGB color light with HSV control and 
 Changing the Color Control feature set (for example, removing color temperature after an upgrade) requires **recommissioning** the device so the controller reloads the data model.
 
 **Features:**
-* On/off control
-* RGB color control with HSV color model (brightness is HSV value; there is no separate brightness or color-temperature API)
-* State persistence support
-* Callback support for state and color changes
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* On/off control.
+* RGB color control with HSV color model (brightness is HSV value; there is no separate brightness or color-temperature API).
+* State persistence support.
+* Callback support for state and color changes.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* RGB smart lights
-* Color-changing lights
-* Mood lighting
-* Entertainment lighting control
-* Smart home color automation
+* RGB smart lights.
+* Color-changing lights.
+* Mood lighting.
+* Entertainment lighting control.
+* Smart home color automation.
 
 API Reference
 -------------
@@ -51,8 +51,8 @@ Initializes the Matter color light endpoint with optional initial state and colo
 
     bool begin(bool initialState = false, espHsvColor_t colorHSV = {0, 254, 31});
 
-* ``initialState`` - Initial on/off state (default: ``false`` = off)
-* ``colorHSV`` - Initial HSV color (default: red 12% intensity HSV(0, 254, 31))
+* ``initialState`` - Initial on/off state (default: ``false`` = off).
+* ``colorHSV`` - Initial HSV color (default: red 12% intensity HSV(0, 254, 31)).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -107,7 +107,7 @@ Sets the color using RGB values.
 
     bool setColorRGB(espRgbColor_t rgbColor);
 
-* ``rgbColor`` - RGB color structure with red, green, and blue values (0-255 each)
+* ``rgbColor`` - RGB color structure with red, green, and blue values (0-255 each).
 
 getColorRGB
 ^^^^^^^^^^^

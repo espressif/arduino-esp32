@@ -42,7 +42,7 @@ Toggles the state of bound lights (on to off, or off to on).
     void lightToggle();
     void lightToggle(uint16_t group_addr);
     void lightToggle(uint8_t endpoint, uint16_t short_addr);
-    void lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void lightToggle(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``group_addr`` - Group address to control (optional)
 * ``endpoint`` - Target device endpoint (optional)
@@ -59,7 +59,7 @@ Turns on bound lights.
     void lightOn();
     void lightOn(uint16_t group_addr);
     void lightOn(uint8_t endpoint, uint16_t short_addr);
-    void lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void lightOn(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``group_addr`` - Group address to control (optional)
 * ``endpoint`` - Target device endpoint (optional)
@@ -76,7 +76,7 @@ Turns off bound lights.
     void lightOff();
     void lightOff(uint16_t group_addr);
     void lightOff(uint8_t endpoint, uint16_t short_addr);
-    void lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void lightOff(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``group_addr`` - Group address to control (optional)
 * ``endpoint`` - Target device endpoint (optional)

@@ -28,7 +28,7 @@ public:
   // this will just stop processing Water Leak Detector Matter events
   void end();
 
-  // set the leak state. Call after Matter.begin() with the real sensor reading.
+  // set the leak state after endpoint begin(). Cached until Matter.begin() if the cluster is not live yet.
   bool setLeak(bool _leakState);
   // returns the leak state
   bool getLeak() {

@@ -24,6 +24,8 @@ endif()
 
 set(CORE_SRCS
   cores/esp32/base64.cpp
+  cores/esp32/BTAddress.cpp
+  cores/esp32/BTStatus.cpp
   cores/esp32/cbuf.cpp
   cores/esp32/ColorFormat.c
   cores/esp32/chip-debug-report.cpp
@@ -135,11 +137,14 @@ set(ARDUINO_LIBRARY_ArduinoOTA_SRCS libraries/ArduinoOTA/src/ArduinoOTA.cpp)
 
 set(ARDUINO_LIBRARY_AsyncUDP_SRCS libraries/AsyncUDP/src/AsyncUDP.cpp)
 
+file(GLOB ARDUINO_LIBRARY_BLE_SRCS
+  libraries/BLE/src/*.cpp
+  libraries/BLE/src/*/*.cpp
+)
+list(SORT ARDUINO_LIBRARY_BLE_SRCS)
+
 set(ARDUINO_LIBRARY_BluetoothSerial_SRCS
-  libraries/BluetoothSerial/src/BluetoothSerial.cpp
-  libraries/BluetoothSerial/src/BTAddress.cpp
-  libraries/BluetoothSerial/src/BTAdvertisedDeviceSet.cpp
-  libraries/BluetoothSerial/src/BTScanResultsSet.cpp)
+  libraries/BluetoothSerial/src/BluetoothSerial.cpp)
 
 set(ARDUINO_LIBRARY_Console_SRCS libraries/Console/src/Console.cpp)
 set(ARDUINO_LIBRARY_Console_REQUIRES console)
@@ -226,7 +231,6 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterButton.cpp
   libraries/Matter/src/MatterIdentity.cpp
   libraries/Matter/src/MatterEndPoint.cpp
-  libraries/Matter/src/MatterWiFiStackWrap.cpp
   libraries/Matter/src/MatterMemWrap.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS libraries/PPP/src/PPP.cpp)
@@ -366,39 +370,6 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeMultistate.cpp
   )
 
-set(ARDUINO_LIBRARY_BLE_SRCS
-  libraries/BLE/src/BLE2901.cpp
-  libraries/BLE/src/BLE2902.cpp
-  libraries/BLE/src/BLE2904.cpp
-  libraries/BLE/src/BLEAddress.cpp
-  libraries/BLE/src/BLEAdvertisedDevice.cpp
-  libraries/BLE/src/BLEAdvertising.cpp
-  libraries/BLE/src/BLEBeacon.cpp
-  libraries/BLE/src/BLECharacteristic.cpp
-  libraries/BLE/src/BLECharacteristicMap.cpp
-  libraries/BLE/src/BLEClient.cpp
-  libraries/BLE/src/BLEDescriptor.cpp
-  libraries/BLE/src/BLEDescriptorMap.cpp
-  libraries/BLE/src/BLEDevice.cpp
-  libraries/BLE/src/BLEEddystoneTLM.cpp
-  libraries/BLE/src/BLEEddystoneURL.cpp
-  libraries/BLE/src/BLEExceptions.cpp
-  libraries/BLE/src/BLEHIDDevice.cpp
-  libraries/BLE/src/BLERemoteCharacteristic.cpp
-  libraries/BLE/src/BLERemoteDescriptor.cpp
-  libraries/BLE/src/BLERemoteService.cpp
-  libraries/BLE/src/BLEScan.cpp
-  libraries/BLE/src/BLESecurity.cpp
-  libraries/BLE/src/BLEServer.cpp
-  libraries/BLE/src/BLEService.cpp
-  libraries/BLE/src/BLEServiceMap.cpp
-  libraries/BLE/src/BLEUtils.cpp
-  libraries/BLE/src/BLEUUID.cpp
-  libraries/BLE/src/BLEValue.cpp
-  libraries/BLE/src/FreeRTOS.cpp
-  libraries/BLE/src/GeneralUtils.cpp
-  )
-
 set(ARDUINO_LIBRARIES_SRCS)
 set(ARDUINO_LIBRARIES_REQUIRES)
 set(ARDUINO_LIBRARIES_INCLUDEDIRS)
@@ -437,7 +408,7 @@ if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThre
   endif()
 endif()
 
-if(IDF_TARGET STREQUAL "esp32" OR IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3" OR IDF_TARGET STREQUAL "esp32p4")
+if(IDF_TARGET STREQUAL "esp32" OR IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3" OR IDF_TARGET STREQUAL "esp32p4" OR IDF_TARGET STREQUAL "esp32s31")
   list(APPEND requires esp_driver_touch_sens)
 endif()
 
@@ -517,13 +488,6 @@ if(CONFIG_OPENTHREAD_ENABLED AND CONFIG_SOC_IEEE802154_SUPPORTED)
     "-u __wrap_otPlatMessagePoolDeinit")
 endif()
 
-# Matter: skip CHIP InitWiFiStack when Thread or Ethernet is selected.
-# --wrap of a missing symbol is ignored (H2 has no Wi-Fi stack).
-if(CONFIG_ESP_MATTER_ENABLE_DATA_MODEL AND CONFIG_ENABLE_WIFI_STATION)
-  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=_ZN4chip11DeviceLayer8Internal10ESP32Utils13InitWiFiStackEv" APPEND)
-  target_link_libraries(${COMPONENT_LIB} INTERFACE "-u __wrap__ZN4chip11DeviceLayer8Internal10ESP32Utils13InitWiFiStackEv")
-endif()
-
 # Matter data model: prefer SPIRAM when that heap exists (bypass malloc 4096 rule).
 # C++ mangled names from harvested libespressif__esp_matter.a (nm-confirmed).
 if(CONFIG_ESP_MATTER_ENABLE_DATA_MODEL)
@@ -545,7 +509,7 @@ function(maybe_add_component component_name)
     endif()
 endfunction()
 
-if(IDF_TARGET MATCHES "esp32s2|esp32s3|esp32p4" AND CONFIG_TINYUSB_ENABLED)
+if(IDF_TARGET MATCHES "esp32s2|esp32s3|esp32p4|esp32s31" AND CONFIG_TINYUSB_ENABLED)
     maybe_add_component(arduino_tinyusb)
 endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
@@ -565,7 +529,7 @@ if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_WiFiProv
     maybe_add_component(espressif__network_provisioning)
 endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ESP_Video)
-    if(IDF_TARGET STREQUAL "esp32s3" OR IDF_TARGET STREQUAL "esp32p4")
+    if(IDF_TARGET STREQUAL "esp32s3" OR IDF_TARGET STREQUAL "esp32p4" OR IDF_TARGET STREQUAL "esp32s31")
         maybe_add_component(espressif__esp_video)
     endif()
 endif()

@@ -75,8 +75,8 @@ Before uploading the sketch, configure the following:
 
 1. **Wi-Fi Credentials** (for ESP32 and ESP32-S2 only):
    ```cpp
-   const char *ssid = "your-ssid";
-   const char *password = "your-password";
+   #define WIFI_SSID "your-ssid"
+   #define WIFI_PASSWORD "your-password"
    ```
 
 2. **LED pin configuration** (if not using built-in LED):
