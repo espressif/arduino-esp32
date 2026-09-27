@@ -370,9 +370,6 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   _pin_power = digitalPinToGPIONumber(power);
 
 
-  if (!perimanClearPinBus(_pin_rmii_clock)) {
-    return false;
-  }
   if (!perimanClearPinBus(_pin_mdc)) {
     return false;
   }
@@ -547,9 +544,6 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   _eth_started = true;
 
-  if (!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)) {
-    goto err;
-  }
   if (!perimanSetPinBus(_pin_mdc, ESP32_BUS_TYPE_ETHERNET_MDC, (void *)(this), -1, -1)) {
     goto err;
   }
