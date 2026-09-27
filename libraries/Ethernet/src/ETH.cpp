@@ -268,7 +268,14 @@ void ETHClass::setPollPeriod(uint32_t poll_period_ms) {
 // clang-format on
 
 #if CONFIG_SOC_EMAC_SUPPORT_1000M
-#define ETH_RETURN_ON_ERROR(e, m) { esp_err_t r = e; if (r != ESP_OK) { log_e(m); return r;} }
+#define ETH_RETURN_ON_ERROR(e, m) \
+  {                               \
+    esp_err_t r = e;              \
+    if (r != ESP_OK) {            \
+      log_e(m);                   \
+      return r;                   \
+    }                             \
+  }
 /**
  * @brief Initialize YT8531 PHY specific configuration
  *
@@ -279,44 +286,43 @@ void ETHClass::setPollPeriod(uint32_t poll_period_ms) {
  * @param eth_handle Ethernet handle
  * @return ESP_OK on success, ESP_FAIL on failure
  */
-static esp_err_t eth_phy_yt8531_specific_init(esp_eth_handle_t eth_handle)
-{
-    /* When the YT8531 PHY is reset during the Generic 802.3 PHY driver initialization, it disables auto negotiation.
+static esp_err_t eth_phy_yt8531_specific_init(esp_eth_handle_t eth_handle) {
+  /* When the YT8531 PHY is reset during the Generic 802.3 PHY driver initialization, it disables auto negotiation.
      * So we need to enable it again. This is undocumented but observed behavior.
      */
-    bool auto_nego_en = true;
-    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego_en), "set auto negotiation failed");
+  bool auto_nego_en = true;
+  ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego_en), "set auto negotiation failed");
 
-    /*
+  /*
     * RGMII requires Tx and Rx paths clock delays to be configured.
     *
     * Target delay: ~2 ns on both Tx and Rx.
     */
-    esp_eth_phy_reg_rw_data_t phy_reg = {.reg_value_p = NULL};
-    uint32_t reg_val;
-    phy_reg.reg_value_p = &reg_val;
+  esp_eth_phy_reg_rw_data_t phy_reg = {.reg_value_p = NULL};
+  uint32_t reg_val;
+  phy_reg.reg_value_p = &reg_val;
 
-    // --- Configure RX ~2 ns coarse delay (EXT_CHIP_CONFIG 0xA001, bit[8]) ---
-    reg_val = 0xA001;
-    phy_reg.reg_addr = 0x1E;  // EXT address register
-    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write EXT addr reg (Chip_Config) failed");
-    phy_reg.reg_addr = 0x1F;  // EXT data register
-    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_READ_PHY_REG, &phy_reg), "read Chip_Config failed");
-    reg_val |= (1U << 8);     // set rxc_dly_en
-    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write Chip_Config failed");
+  // --- Configure RX ~2 ns coarse delay (EXT_CHIP_CONFIG 0xA001, bit[8]) ---
+  reg_val = 0xA001;
+  phy_reg.reg_addr = 0x1E;  // EXT address register
+  ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write EXT addr reg (Chip_Config) failed");
+  phy_reg.reg_addr = 0x1F;  // EXT data register
+  ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_READ_PHY_REG, &phy_reg), "read Chip_Config failed");
+  reg_val |= (1U << 8);  // set rxc_dly_en
+  ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write Chip_Config failed");
 
-    // --- Configure TX ~2 ns delay (EXT_RGMII_CONFIG1 0xA003, bits[7:0]) ---
-    reg_val = 0xA003;
-    phy_reg.reg_addr = 0x1E;  // EXT address register
-    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write EXT addr reg (RGMII_Config1) failed");
-    phy_reg.reg_addr = 0x1F;  // EXT data register
-    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_READ_PHY_REG, &phy_reg), "read RGMII_Config1 failed");
-    // Clear tx_delay_sel [3:0] and tx_delay_sel_fe [7:4], then set both to 13 (~1.95 ns)
-    reg_val = (reg_val & ~0x00FFU) | (13U << 4) | (13U << 0);
-    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write RGMII_Config1 failed");
+  // --- Configure TX ~2 ns delay (EXT_RGMII_CONFIG1 0xA003, bits[7:0]) ---
+  reg_val = 0xA003;
+  phy_reg.reg_addr = 0x1E;  // EXT address register
+  ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write EXT addr reg (RGMII_Config1) failed");
+  phy_reg.reg_addr = 0x1F;  // EXT data register
+  ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_READ_PHY_REG, &phy_reg), "read RGMII_Config1 failed");
+  // Clear tx_delay_sel [3:0] and tx_delay_sel_fe [7:4], then set both to 13 (~1.95 ns)
+  reg_val = (reg_val & ~0x00FFU) | (13U << 4) | (13U << 0);
+  ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write RGMII_Config1 failed");
 
-    log_i("RGMII PHY delays configured: Rx ~2 ns (coarse), Tx ~2 ns (13 steps x 150 ps)");
-    return ESP_OK;
+  log_i("RGMII PHY delays configured: Rx ~2 ns (coarse), Tx ~2 ns (13 steps x 150 ps)");
+  return ESP_OK;
 }
 #endif
 
@@ -361,7 +367,6 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   mac_config.smi_gpio.mdc_num = digitalPinToGPIONumber(mdc);
   mac_config.smi_gpio.mdio_num = digitalPinToGPIONumber(mdio);
 
-
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32P4
   _pin_rmii_clock = mac_config.clock_config.rmii.clock_gpio;
 #endif
@@ -369,10 +374,6 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   _pin_mdio = digitalPinToGPIONumber(mdio);
   _pin_power = digitalPinToGPIONumber(power);
 
-
-  if (!perimanClearPinBus(_pin_rmii_clock)) {
-    return false;
-  }
   if (!perimanClearPinBus(_pin_mdc)) {
     return false;
   }
@@ -547,9 +548,6 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   _eth_started = true;
 
-  if (!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)) {
-    goto err;
-  }
   if (!perimanSetPinBus(_pin_mdc, ESP32_BUS_TYPE_ETHERNET_MDC, (void *)(this), -1, -1)) {
     goto err;
   }
