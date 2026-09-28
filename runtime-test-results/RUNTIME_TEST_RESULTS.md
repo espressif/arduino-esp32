@@ -14,7 +14,7 @@ bt_classic|Error :fire:|-|-|-|-|-|-|-
 bt_inuse_override|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*
 bt_mem_wrap|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*
 clock|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*
-dac|1/1 :white_check_mark:\*|-|-|-|-|-|1/1 :white_check_mark:\*|-
+dac|1/1 :white_check_mark:\*|-|-|-|-|-|Error :fire:|-
 democfg|2/2 :white_check_mark:\*|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
 eeprom|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*|31/31 :white_check_mark:\*
 esp_now|Error :fire:|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
@@ -22,7 +22,7 @@ ethernet|Error :fire:|-|-|-|-|Error :fire:|-|-
 fs|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*|61/61 :white_check_mark:\*
 hash|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*
 hello_world|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
-i2s|38/38 :white_check_mark:\*|43/43 :white_check_mark:\*|Error :fire:|Error :fire:|43/43 :white_check_mark:\*|Error :fire:|38/38 :white_check_mark:\*|Error :fire:
+i2s|38/38 :white_check_mark:\*|43/43 :white_check_mark:\*|Error :fire:|Error :fire:|43/43 :white_check_mark:\*|Error :fire:|Error :fire:|Error :fire:
 keyboard_layout|-|-|-|-|-|10/10 :white_check_mark:\*|10/10 :white_check_mark:\*|10/10 :white_check_mark:\*
 multitasking|10/10 :white_check_mark:\*|9/9 :white_check_mark:\*|9/9 :white_check_mark:\*|9/9 :white_check_mark:\*|9/9 :white_check_mark:\*|10/10 :white_check_mark:\*|9/9 :white_check_mark:\*|10/10 :white_check_mark:\*
 network_client|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*
@@ -1212,8 +1212,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
 
 > \* Result from last successful run (runner currently unavailable)
 
-Generated on: 2026/09/27 00:37:19 UTC
+Generated on: 2026/09/28 00:37:55 UTC
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/eb1b8b149b4122500a40b2730dd4340fdee283d5) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/36282057027) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/36282530850) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/36282960080)
+[Commit](https://github.com/espressif/arduino-esp32/commit/eb1b8b149b4122500a40b2730dd4340fdee283d5) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/36361701097) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/36362290163) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/36362788496)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/108518457675)
+[Test results](https://github.com/espressif/arduino-esp32/runs/108743516097)
