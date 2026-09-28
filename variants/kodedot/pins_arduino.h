@@ -91,6 +91,14 @@ static const uint8_t A5 = 21;
 #define SDMMC_D2                   41
 #define SDMMC_D3                   42
 
+// GPIO39-48 (SDMMC, RFID, the ESP-Hosted D1) are VDD_IO_5, fed by the P4's LDO VO4, which boots at about
+// 1.2 V: the core raises it to 3.3 V while one of them is in use, and hands it to SD_MMC while a card is up.
+#define BOARD_PERIMAN_IO_LDO_AUTO        1
+#define BOARD_PERIMAN_IO_LDO0_CHANNEL    4
+#define BOARD_PERIMAN_IO_LDO0_GPIO_MIN   39
+#define BOARD_PERIMAN_IO_LDO0_GPIO_MAX   48
+#define BOARD_PERIMAN_IO_LDO0_VOLTAGE_MV 3300
+
 // IR: both lines are the ESP32-C5's (its IO24 TX, IO23 RX), so the P4 has no IR pins
 
 // 125 kHz RFID front end (discrete, antenna PCB). RFID_PULL idles high through R11, and high
