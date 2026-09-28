@@ -19,7 +19,7 @@ ESPOTA = ESP32_ROOT / "tools" / "espota.py"
 LOGGER = logging.getLogger(__name__)
 
 # IPv4 or IPv6 (may contain ':'); auth is last space-separated token.
-# Require a newline so pexpect cannot match a truncated password (e.g. "te" of "test-ota-v6").
+# Require a newline so pexpect cannot match a truncated password (e.g. "test" of "test-ota-v6").
 ARDUINO_OTA_BEGIN_RE = re.compile(rb"ARDUINO_OTA_BEGIN (\S+) ([0-9]+) (\S+)\r?\n")
 ARDUINO_OTA_BEGIN_MAPPED_RE = re.compile(rb"ARDUINO_OTA_BEGIN_MAPPED (\S+) ([0-9]+) (\S+)\r?\n")
 ARDUINO_OTA_BEGIN_BADAUTH_RE = re.compile(rb"ARDUINO_OTA_BEGIN_BADAUTH (\S+) ([0-9]+) (\S+)\r?\n")
