@@ -48,6 +48,11 @@ void setup() {
   // ArduinoOTA.setPasswordHash("8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918");
 
   ArduinoOTA
+    .onPrepare([]() {
+      // Note: This is called before the OTA update begins, but after authentication.
+      // Useful to stop Interrupts or other hardware that might interfere with the update process.
+      Serial.println("Prepare for OTA update");
+    })
     .onStart([]() {
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH) {
