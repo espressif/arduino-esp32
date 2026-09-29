@@ -53,7 +53,7 @@ console|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mar
 eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:
 fs|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:
 gpio|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
-hash|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:
+hash|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:
 hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
 i2c_master|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|7/7 :white_check_mark:|7/7 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:
 keyboard_layout|-|-|-|-|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:
@@ -62,7 +62,7 @@ network_client|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_ch
 networking|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|-|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:
 nvs|52/52 :white_check_mark:|52/52 :white_check_mark:|104/104 :white_check_mark:|104/104 :white_check_mark:|104/104 :white_check_mark:|52/52 :white_check_mark:|78/78 :white_check_mark:
 psram|14/14 :white_check_mark:|-|-|-|11/11 :white_check_mark:|14/14 :white_check_mark:|14/14 :white_check_mark:
-sdcard|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:
+sdcard|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:\*|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:
 spi|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:
 ticker|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:
 timer|7/7 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:
@@ -1212,8 +1212,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
 
 > \* Result from last successful run (runner currently unavailable)
 
-Generated on: 2026/09/28 00:37:55 UTC
+Generated on: 2026/09/29 00:35:34 UTC
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/eb1b8b149b4122500a40b2730dd4340fdee283d5) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/36361701097) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/36362290163) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/36362788496)
+[Commit](https://github.com/espressif/arduino-esp32/commit/46ababa792129f47f22efeb8493ef0cc11e0e023) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/36502264622) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/36502969130) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/36503685359)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/108743516097)
+[Test results](https://github.com/espressif/arduino-esp32/runs/109200653155)
