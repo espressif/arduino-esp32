@@ -171,13 +171,12 @@ typedef enum {
 } i2c_stretch_cause_t;
 
 static inline i2c_stretch_cause_t i2c_ll_stretch_cause(i2c_dev_t *hw) {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 \
-  || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
-  return hw->sr.stretch_cause;
+#if CONFIG_IDF_TARGET_ESP32
+  return I2C_STRETCH_CAUSE_MAX;
 #elif CONFIG_IDF_TARGET_ESP32S2
   return hw->status_reg.stretch_cause;
 #else
-  return I2C_STRETCH_CAUSE_MAX;
+  return hw->sr.stretch_cause;
 #endif
 }
 
