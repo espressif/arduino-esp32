@@ -1,7 +1,7 @@
 /*
  * Matter Water Heater example for Arduino-ESP32.
  *
- * Creates a Matter 1.4 Water Heater endpoint (0x050F).
+ * Creates a Matter Water Heater endpoint (device type 0x050F).
  */
 
 #include <Matter.h>

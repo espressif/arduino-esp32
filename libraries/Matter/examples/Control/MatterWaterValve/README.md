@@ -26,11 +26,11 @@ This table is what **this sketch** does. It does not call `Matter.selectNetwork(
 
 To change the path, call `Matter.selectNetwork()` **before** any accessory `begin()`. On-network: `selectNetwork(net, true)` (CHIPoBLE off). CHIPoBLE: `selectNetwork(net)` (BLE stays on). Do not also call `setBLECommissioningEnabled()`.
 
-- Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../Commissioning/MatterCHIPoBLEWiFi)
-- Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../Commissioning/MatterOnNetworkWiFi)
-- Thread + CHIPoBLE (ESP32-C5 / ESP32-C6 / ESP32-H2): [MatterCHIPoBLEThread](../Commissioning/MatterCHIPoBLEThread)
-- Thread on-network (ESP32-C5 / ESP32-C6 / ESP32-H2): [MatterOnNetworkThread](../Commissioning/MatterOnNetworkThread)
-- Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../Commissioning/MatterOnNetworkEthernet)
+- Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../../Commissioning/MatterCHIPoBLEWiFi)
+- Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)
+- Thread + CHIPoBLE (ESP32-C5 / ESP32-C6 / ESP32-H2): [MatterCHIPoBLEThread](../../Commissioning/MatterCHIPoBLEThread)
+- Thread on-network (ESP32-C5 / ESP32-C6 / ESP32-H2): [MatterOnNetworkThread](../../Commissioning/MatterOnNetworkThread)
+- Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../../Commissioning/MatterOnNetworkEthernet)
 
 ## Features
 
@@ -93,7 +93,7 @@ Before uploading the sketch, configure the following:
 
 ## Building and Flashing
 
-1. Open the `MatterWaterValve.ino` sketch in the Arduino IDE.
+1. Open the example in the Arduino IDE: **File → Examples → Matter → Control → MatterWaterValve**.
 2. Select your ESP32 board from the **Tools > Board** menu.
 <!-- vale off -->
 3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.

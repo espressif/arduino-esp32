@@ -135,5 +135,5 @@ Example
 Water Valve
 **********
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterWaterValve/MatterWaterValve.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Control/MatterWaterValve/MatterWaterValve.ino
     :language: arduino
