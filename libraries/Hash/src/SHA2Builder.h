@@ -71,6 +71,9 @@ public:
   size_t getHashSize() const override {
     return hash_size;
   }
+  size_t getBlockSize() const override {
+    return block_size;
+  }
 };
 
 class SHA224Builder : public SHA2Builder {

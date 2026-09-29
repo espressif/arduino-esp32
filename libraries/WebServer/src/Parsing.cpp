@@ -218,6 +218,7 @@ bool WebServer::_parseRequest(NetworkClient &client) {
   String url = req.substring(addr_start + 1, addr_end);
   String versionEnd = req.substring(addr_end + 8);
   _currentVersion = atoi(versionEnd.c_str());
+  _currentRequestTarget = url;
   String searchStr = "";
   int hasSearch = url.indexOf('?');
   if (hasSearch != -1) {
