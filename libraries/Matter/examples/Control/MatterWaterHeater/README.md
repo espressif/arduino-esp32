@@ -7,8 +7,8 @@ The application showcases Matter commissioning, water heater attributes (tempera
 
 | SoC      | This sketch            | CHIPoBLE | Also in prebuild       |
 | -------- | ---------------------- | -------- | ---------------------- |
-| ESP32    | No network in sketch   | Off      | Ethernet (EMAC or SPI) |
-| ESP32-S2 | No network in sketch   | Off      | Ethernet (SPI)         |
+| ESP32    | Wi-Fi (SSID in sketch) | Off      | Ethernet (EMAC or SPI) |
+| ESP32-S2 | Wi-Fi (SSID in sketch) | Off      | Ethernet (SPI)         |
 | ESP32-S3 | CHIPoBLE (hub Wi-Fi)   | On       | Ethernet (SPI)         |
 | ESP32-C3 | CHIPoBLE (hub Wi-Fi)   | On       | Ethernet (SPI)         |
 | ESP32-C5 | CHIPoBLE (hub)         | On       | Ethernet (SPI)         |
@@ -19,7 +19,7 @@ The application showcases Matter commissioning, water heater attributes (tempera
 
 This table is what **this sketch** does. It does not call `Matter.selectNetwork()` or start Wi-Fi/Ethernet itself.
 
-- **ESP32 / ESP32-S2:** no CHIPoBLE in the Arduino IDE prebuild. Add `matterConnectWiFi()` (or another on-network path) before `Matter.begin()`, or use a commissioning example.
+- **ESP32 / ESP32-S2:** no CHIPoBLE in the Arduino IDE prebuild. The sketch calls `matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD)`.
 - **ESP32-C6:** prebuild is dual-stack. Without `selectNetwork()` this sketch uses **Wi-Fi + CHIPoBLE**. Thread stays unused.
 - **ESP32-H2:** Thread + CHIPoBLE (no Wi-Fi).
 - **ESP32-C5:** Wi-Fi + CHIPoBLE by default (Tools → Matter Network → Wi-Fi). Thread is Tools → Matter Network → Thread.
@@ -56,10 +56,15 @@ For a production device, replace the simulation with real sensors and actuators 
 2. Install ESP32 Arduino Core with Matter support
 3. ESP32 Arduino libraries:
    - `Matter`
+   - `WiFi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
-Before uploading the sketch on **ESP32 / ESP32-S2**, add Wi-Fi (or copy the network setup from [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)) before `Matter.begin()`.
+1. **Wi-Fi credentials** (if not using BLE commissioning — mandatory for ESP32 | ESP32-S2):
+   ```cpp
+   #define WIFI_SSID "your-ssid"
+   #define WIFI_PASSWORD "your-password"
+   ```
 
 ## Building and Flashing
 
@@ -74,19 +79,26 @@ Before uploading the sketch on **ESP32 / ESP32-S2**, add Wi-Fi (or copy the netw
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only if you added Wi-Fi setup for ESP32 / ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-C5 / ESP32-C6 / ESP32-H2). You should see output similar to the following:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-C5 / ESP32-C6 / ESP32-H2). `matterWaitUntilReady()` prints the pairing information and waits until the controller CASE session is up. About five seconds later, `loop()` starts the simulated heating log:
 
 ```
-Matter Water Heater
--------------------
-Matter Water Heater endpoint created.
+Connecting to your-wifi-ssid
+.......
+Wi-Fi connected
+IP address: 192.168.1.100
 
-Device is not commissioned.
+Matter Node is not commissioned yet.
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
-QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=...
-Temperature: 20.0 C | Setpoint: 48.0 C | Tank: 0 % | Demand: 0x01 | Boost: 0
-Temperature: 20.5 C | Setpoint: 48.0 C | Tank: 1 % | Demand: 0x01 | Boost: 0
+QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
+[ready] net=wifi commissioned=Y connected=Y controller=Y
+Controller CASE session is up.
+changed | Temp: 20.0 C | Setpoint: 48.0 C | Mode: Manual | System: Heat | Boost: off | Tank: 0 % | Demand: 0x01
+tick | Temp: 20.5 C | Setpoint: 48.0 C | Mode: Manual | System: Heat | Boost: off | Tank: 1 % | Demand: 0x01
+tick | Temp: 21.0 C | Setpoint: 48.0 C | Mode: Manual | System: Heat | Boost: off | Tank: 3 % | Demand: 0x01
 ```
 
 ## Using the Device
@@ -109,7 +121,14 @@ Default configuration:
 | Water heater mode   |            Manual |
 | Tank percentage     |               0 % |
 
-Every five seconds the sketch increases the simulated water temperature until the heating setpoint is reached. Tank percentage is derived from temperature. **HeatDemand** follows heater activity in `loop()`; `setSystemMode()` / controller writes also sync demand via the library.
+Every five seconds the sketch updates the simulated tank:
+
+- **Manual** and system **Heat**: temperature rises by 0.5 °C toward the heating setpoint.
+- **Eco**: rises by 0.25 °C and stops at 40 °C even if the setpoint is higher.
+- **Boost**: rises by 1.5 °C toward the setpoint even if system mode or water heater mode is Off.
+- **Off** (water heater mode Off, or system Off, with boost inactive): temperature falls toward 20 °C.
+
+Tank percentage is derived from temperature versus the setpoint. **HeatDemand** is the heater-type bitmap while heating and 0 when the target is reached or heating is off. A line prefixed `changed` is printed as soon as the hub updates mode, system mode, boost, or setpoint.
 
 ### Smart Home Integration
 
@@ -148,9 +167,10 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterWaterHeater example consists of the following main components:
 
-1. **`setup()`**: Creates the `MatterWaterHeater` endpoint (`begin()` adds WHM tank features), configures heater type, tank volume, setpoints, and modes, then calls `Matter.begin()`.
-2. **`loop()`**: Simulates heating every five seconds, updates **HeatDemand** while below setpoint, and calls `updateTankPercentage()` from simulated temperature.
+1. **`setup()`**: Creates the `MatterWaterHeater` endpoint (`begin()` adds WHM tank features), configures attributes, then `Matter.begin()` and `matterWaitUntilReady()` (same commissioning wait as Fan and Thermostat).
+2. **`loop()`**: `matterRestartIfNoFabric()`. Prints `changed` when mode, system mode, boost, or setpoint changes. Every five seconds applies Manual, Eco, Boost, or Off behavior, updates **HeatDemand**, and calls `updateTankPercentage()`. There is no button; decommission is not in this sketch.
 3. **`updateTankPercentage()`**: Maps temperature between cold water and setpoint to **TankPercentage**.
+4. **`logWaterHeater()`**: Prints temperature, setpoint, water heater mode, system mode, boost, tank percent, and heat demand.
 
 For a real appliance, read tank temperature from a sensor, drive the heating element with proper safety interlocks, and never rely on Matter as the only safety layer.
 
@@ -158,7 +178,7 @@ For a real appliance, read tank temperature from a sensor, drive the heating ele
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured (ESP32 / ESP32-S2 need Wi-Fi in the sketch or another commissioning path).
 - **Tank attributes missing on hub**: Call `waterHeater.begin()` before `Matter.begin()` so EnergyManagement and TankPercent features are provisioned.
-- **HeatDemand does not match hub after mode change**: Use a build that includes controller-side `syncHeatDemand()` in `attributeChangeCB`.
+- **HeatDemand does not match hub after mode change**: Confirm `MatterWaterHeater` is up to date; controller writes to SystemMode/Boost/HeaterTypes sync HeatDemand in the library.
 - **Failed to commission**: Erase flash (**Erase All Flash Before Sketch Upload**) or use another Matter node on the same fabric.
 - **No serial output**: Check baud rate (115200) and USB connection.
 

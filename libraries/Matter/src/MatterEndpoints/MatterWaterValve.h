@@ -116,7 +116,7 @@ public:
   }
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
-  bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
+  bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) override;
 
 protected:
   // Attaches the delegate and pushes the cached state/fault into the code-driven cluster.

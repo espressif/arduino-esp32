@@ -51,6 +51,8 @@ public:
   MatterWaterHeater();
   ~MatterWaterHeater();
 
+  // Provisions optional WHM tank features; call before Matter.begin(). On failure after partial
+  // create, the endpoint is destroyed so begin() may be retried on the same node.
   bool begin();
   void end();
 
@@ -100,7 +102,7 @@ public:
   bool setBoostState(BoostState_t state);
   BoostState_t getBoostState();
 
-  // Water Heater Mode
+  // Water Heater Mode (CHIP mode-base server, not an ember attribute).
   bool setWaterHeaterMode(WaterHeaterMode_t mode);
   WaterHeaterMode_t getWaterHeaterMode();
 
@@ -127,6 +129,13 @@ private:
   uint8_t boostState = BOOST_INACTIVE;
 
   uint8_t waterHeaterMode = WATER_HEATER_MODE_MANUAL;
+  // Set when the sketch calls setWaterHeaterMode() before the mode server exists, so Init() can apply it.
+  bool waterHeaterModeSetByApp = false;
+
+  // ModeBase::Delegate for Water Heater Mode. Defined in the .cpp. Lives for the endpoint lifetime
+  // after the stack starts, because ModeBase::Instance keeps this pointer.
+  class ModeDelegate;
+  ModeDelegate *modeDelegate = nullptr;
 
   // Recomputes HeatDemand from the current heaterTypes/systemMode/boostState and pushes it if changed.
   // Per Matter spec, HeatDemand reflects the heat sources currently active (Boost or normal heating).

@@ -169,12 +169,26 @@ This function will return ``true`` if successful, ``false`` otherwise.
 State Query
 ***********
 
-The following methods read cached state updated by the delegate (open/close paths and duration ticks):
+getCurrentState / isOpen
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-* ``getCurrentState()`` / ``getTargetState()`` - Last known valve states.
-* ``isOpen()`` - ``true`` when ``getCurrentState()`` is ``VALVE_STATE_OPEN``.
-* ``getOpenDuration()`` / ``getDefaultOpenDuration()`` / ``getRemainingDuration()`` - Timed open duration in seconds (``0`` = indefinite).
-* ``getValveFault()`` - Current fault bitmap.
+.. code-block:: arduino
+
+    ValveState_t getCurrentState();
+    ValveState_t getTargetState();
+    bool isOpen();
+
+getRemainingDuration
+^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: arduino
+
+    uint32_t getOpenDuration();
+    uint32_t getDefaultOpenDuration();
+    uint32_t getRemainingDuration();
+    uint16_t getValveFault();
+
+Cached state is updated by the delegate (open/close paths and duration ticks).
 
 Example
 -------

@@ -141,6 +141,8 @@ setSystemMode / setBoostState / setWaterHeaterMode
 
 ``setSystemMode()`` and ``setBoostState()`` update **HeatDemand** automatically. When a Matter controller writes **SystemMode**, **BoostState**, or **HeaterTypes**, the endpoint runs the same **HeatDemand** sync logic.
 
+``setWaterHeaterMode()`` updates the CHIP mode-base **CurrentMode** (Off / Manual / Eco). Before ``Matter.begin()`` the value is cached and applied when the mode server starts. A controller ``ChangeToMode`` command updates the same cache.
+
 setHeaterTypes / setHeatDemand
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -160,6 +162,18 @@ setTankVolume / setTankPercentage
     bool setTankPercentage(uint8_t tankPercentage);
 
 Attributes exist after ``begin()`` provisions the optional WHM features. If attributes are missing, values are cached locally.
+
+Heating Setpoint Limits
+***********************
+
+Occupied heating setpoint writes are clamped to the configured min/max limits (defaults match the thermostat-style 0.01 °C units internally):
+
+.. code-block:: arduino
+
+    bool setMinimumHeatingSetpoint(float temperature);
+    bool setMaximumHeatingSetpoint(float temperature);
+    bool setAbsoluteMinimumHeatingSetpoint(float temperature);
+    bool setAbsoluteMaximumHeatingSetpoint(float temperature);
 
 Example
 -------

@@ -124,7 +124,7 @@ Key rules:
 
 ### Water Heater (Water Heater Management optional features)
 
-`MatterWaterHeater` uses the esp-matter **ember/data-model** path for Water Heater Management, Water Heater Mode, and Thermostat. `esp_matter::endpoint::water_heater::create()` only creates mandatory WHM attributes; **TankVolume** and **TankPercentage** require the generated `feature::energy_management::add()` and `feature::tank_percent::add()` calls inside `MatterWaterHeater::begin()`. That `begin()` must run **before** `Matter.begin()`. `setSystemMode()`, `setBoostState()`, and controller writes to those attributes (and **HeaterTypes**) keep **HeatDemand** in sync via `syncHeatDemand()`. WHM Boost/CancelBoost commands are not wrapped in the Arduino API yet; use `setBoostState()` for boost on/off.
+`MatterWaterHeater` uses the esp-matter **ember/data-model** path for Water Heater Management and Thermostat. Water Heater Mode is a CHIP mode-base server: `begin()` installs a `ModeBase::Delegate` (Off / Manual / Eco) and `setWaterHeaterMode()` calls `UpdateCurrentMode()`. `esp_matter::endpoint::water_heater::create()` only creates mandatory WHM attributes; **TankVolume** and **TankPercentage** require the generated `feature::energy_management::add()` and `feature::tank_percent::add()` calls inside `MatterWaterHeater::begin()`. That `begin()` must run **before** `Matter.begin()`. `setSystemMode()`, `setBoostState()`, and controller writes to those attributes (and **HeaterTypes**) keep **HeatDemand** in sync via `syncHeatDemand()`. WHM Boost/CancelBoost commands are not wrapped in the Arduino API yet; use `setBoostState()` for boost on/off.
 
 ### Controller-Originated Changes (attributeChangeCB)
 

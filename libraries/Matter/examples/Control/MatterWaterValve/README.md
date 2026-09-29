@@ -70,8 +70,8 @@ Before uploading the sketch, configure the following:
 
 1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
-   const char *password = "your-password"; // Change to your Wi-Fi password
+   #define WIFI_SSID "your-ssid"
+   #define WIFI_PASSWORD "your-password"
    ```
 
 2. **LED pin configuration** (if not using built-in LED):
@@ -93,7 +93,7 @@ Before uploading the sketch, configure the following:
 
 ## Building and Flashing
 
-1. Open the example in the Arduino IDE: **File → Examples → Matter → Control → MatterWaterValve**.
+1. Open the `MatterWaterValve.ino` sketch in the Arduino IDE (**File → Examples → Matter → Control → MatterWaterValve**).
 2. Select your ESP32 board from the **Tools > Board** menu.
 <!-- vale off -->
 3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
@@ -113,20 +113,19 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
-Initiate the device discovery in your Matter environment.
-Commission it to your Matter hub with the manual pairing code or QR code
+Commission it using the pairing code or QR code.
 Manual pairing code: 34970112332
 QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-Matter Node not commissioned yet. Waiting for commissioning.
-Matter Node not commissioned yet. Waiting for commissioning.
+[ready] net=wifi commissioned=N connected=N controller=N
+[ready] net=wifi commissioned=Y connected=Y controller=N
 ...
-Matter Node is commissioned and connected to the network. Ready for use.
+[ready] net=wifi commissioned=Y connected=Y controller=Y
+Controller CASE session is up.
 User button released. Opening the water valve!
 User Callback :: Opening the water valve
 Water valve remaining duration: 10 s
 Water valve remaining duration: 9 s
 ...
-Water valve remaining duration: 1 s
 User Callback :: Closing the water valve
 ```
 
@@ -181,9 +180,9 @@ Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google
 
 The MatterWaterValve example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), sets up the Matter Water Valve endpoint, registers the `onOpen()`/`onClose()` callbacks, and starts the Matter stack.
+1. **`setup()`**: Initializes `MatterButton` and the LED, configures Wi-Fi (if needed), sets up the Matter Water Valve endpoint, registers the `onOpen()`/`onClose()` callbacks, then `Matter.begin()` and `matterWaitUntilReady()`.
 
-2. **`loop()`**: Checks the Matter commissioning state, prints the remaining duration of a timed open operation as it counts down, handles button input for toggling the valve and factory reset, and allows the Matter stack to process events.
+2. **`loop()`**: `matterRestartIfNoFabric()`, then `MatterButton` click (toggle open for `openDurationSeconds` or close) and long-hold decommission. Logs **RemainingDuration** while a timed open counts down. Commissioning wait is `matterWaitUntilReady()` in `setup()`, same as the Fan and Thermostat examples.
 
 3. **Callbacks**:
    - `onValveOpen()`: Called whenever the valve is commanded open, either by a Matter controller or locally via `open()`. Drives the physical actuator (the LED, in this example). Return `true` on success or `false` if open could not be completed.

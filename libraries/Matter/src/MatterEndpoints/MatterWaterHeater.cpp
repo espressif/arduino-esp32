@@ -21,6 +21,8 @@
 #include <esp_matter_core.h>
 #include <water_heater_management.h>
 #include <app-common/zap-generated/cluster-enums.h>
+#include <app/clusters/mode-base-server/CodegenIntegration.h>
+#include <lib/support/Span.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -46,6 +48,82 @@ constexpr uint8_t DEFAULT_BOOST_STATE = MatterWaterHeater::BOOST_INACTIVE;
 
 constexpr uint8_t DEFAULT_WATER_HEATER_MODE = MatterWaterHeater::WATER_HEATER_MODE_MANUAL;
 }  // namespace
+
+namespace {
+constexpr uint8_t kModeCount = 3;
+
+struct ModeOption {
+  const char *label;
+  uint8_t value;
+  chip::app::Clusters::ModeBase::ModeTag tag;
+};
+
+// Mode values match MatterWaterHeater::WaterHeaterMode_t. Tags are spec ModeTag values.
+constexpr ModeOption kModes[kModeCount] = {
+  {"Off", MatterWaterHeater::WATER_HEATER_MODE_OFF, chip::app::Clusters::ModeBase::ModeTag::kMin},
+  {"Manual", MatterWaterHeater::WATER_HEATER_MODE_MANUAL, chip::app::Clusters::ModeBase::ModeTag::kDay},
+  {"Eco", MatterWaterHeater::WATER_HEATER_MODE_ECO, chip::app::Clusters::ModeBase::ModeTag::kLowEnergy},
+};
+}  // namespace
+
+// Bridges Water Heater Mode to CHIP ModeBase. Methods run on the Matter event loop (Init / ChangeToMode)
+// or under ScopedChipStackLock from setWaterHeaterMode().
+class MatterWaterHeater::ModeDelegate : public chip::app::Clusters::ModeBase::Delegate {
+public:
+  explicit ModeDelegate(MatterWaterHeater *owner) : owner(owner) {}
+
+  chip::app::Clusters::ModeBase::Instance *instance() const {
+    return const_cast<chip::app::Clusters::ModeBase::Instance *>(GetInstance());
+  }
+
+  CHIP_ERROR Init() override {
+    chip::app::Clusters::ModeBase::Instance *modeInstance = instance();
+    if (modeInstance == nullptr) {
+      return CHIP_NO_ERROR;
+    }
+    if (owner->waterHeaterModeSetByApp) {
+      modeInstance->UpdateCurrentMode(owner->waterHeaterMode);
+    } else {
+      owner->waterHeaterMode = modeInstance->GetCurrentMode();
+    }
+    return CHIP_NO_ERROR;
+  }
+
+  CHIP_ERROR GetModeLabelByIndex(uint8_t modeIndex, chip::MutableCharSpan &label) override {
+    if (modeIndex >= kModeCount) {
+      return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
+    }
+    return chip::CopyCharSpanToMutableCharSpan(chip::CharSpan::fromCharString(kModes[modeIndex].label), label);
+  }
+
+  CHIP_ERROR GetModeValueByIndex(uint8_t modeIndex, uint8_t &value) override {
+    if (modeIndex >= kModeCount) {
+      return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
+    }
+    value = kModes[modeIndex].value;
+    return CHIP_NO_ERROR;
+  }
+
+  CHIP_ERROR GetModeTagsByIndex(uint8_t modeIndex, chip::app::DataModel::List<chip::app::Clusters::detail::Structs::ModeTagStruct::Type> &modeTags) override {
+    if (modeIndex >= kModeCount) {
+      return CHIP_ERROR_PROVIDER_LIST_EXHAUSTED;
+    }
+    if (modeTags.size() < 1) {
+      return CHIP_ERROR_BUFFER_TOO_SMALL;
+    }
+    modeTags[0].value = static_cast<uint16_t>(kModes[modeIndex].tag);
+    modeTags.reduce_size(1);
+    return CHIP_NO_ERROR;
+  }
+
+  void HandleChangeToMode(uint8_t newMode, chip::app::Clusters::ModeBase::Commands::ChangeToModeResponse::Type &response) override {
+    owner->waterHeaterMode = newMode;
+    response.status = static_cast<uint8_t>(chip::app::Clusters::ModeBase::StatusCode::kSuccess);
+  }
+
+private:
+  MatterWaterHeater *owner;
+};
 
 MatterWaterHeater::MatterWaterHeater() {}
 
@@ -75,8 +153,15 @@ bool MatterWaterHeater::begin() {
   management_config.heat_demand = DEFAULT_HEAT_DEMAND;
   management_config.boost_state = DEFAULT_BOOST_STATE;
 
-  // Water Heater Mode
+  // Water Heater Mode is a CHIP mode-base server. The delegate must be set before create() so
+  // WaterHeaterModeDelegateInitCB builds ModeBase::Instance at stack start.
+  modeDelegate = new (std::nothrow) ModeDelegate(this);
+  if (modeDelegate == nullptr) {
+    log_e("Failed to allocate Water Heater Mode delegate");
+    return false;
+  }
   esp_matter::cluster::water_heater_mode::config_t mode_config;
+  mode_config.delegate = modeDelegate;
 
   // Thermostat. This is the endpoint's thermostat configuration, not the cluster namespace -
   // use the fully-qualified name to avoid the endpoint::thermostat / cluster::thermostat ambiguity.
@@ -96,11 +181,17 @@ bool MatterWaterHeater::begin() {
 
   endpoint_t *endpoint = esp_matter::endpoint::water_heater::create(node::get(), &water_heater_config, ENDPOINT_FLAG_NONE, this);
   if (endpoint == nullptr) {
+    delete modeDelegate;
+    modeDelegate = nullptr;
     return false;
   }
 
   cluster_t *management_cluster = cluster::get(endpoint, WaterHeaterManagement::Id);
   if (management_cluster == nullptr) {
+    log_e("Water Heater Management cluster missing after endpoint create");
+    esp_matter::endpoint::destroy(node::get(), endpoint);
+    delete modeDelegate;
+    modeDelegate = nullptr;
     return false;
   }
 
@@ -111,6 +202,9 @@ bool MatterWaterHeater::begin() {
   energy_management_config.estimated_heat_required = 0;
   if (feature::energy_management::add(management_cluster, &energy_management_config) != ESP_OK) {
     log_e("Failed to add Water Heater Management EnergyManagement feature");
+    esp_matter::endpoint::destroy(node::get(), endpoint);
+    delete modeDelegate;
+    modeDelegate = nullptr;
     return false;
   }
 
@@ -118,6 +212,9 @@ bool MatterWaterHeater::begin() {
   tank_percent_config.tank_percentage = DEFAULT_TANK_PERCENTAGE;
   if (feature::tank_percent::add(management_cluster, &tank_percent_config) != ESP_OK) {
     log_e("Failed to add Water Heater Management TankPercent feature");
+    esp_matter::endpoint::destroy(node::get(), endpoint);
+    delete modeDelegate;
+    modeDelegate = nullptr;
     return false;
   }
 
@@ -577,17 +674,20 @@ bool MatterWaterHeater::setWaterHeaterMode(WaterHeaterMode_t mode) {
     return false;
   }
 
-  esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WaterHeaterMode::Id, WaterHeaterMode::Attributes::CurrentMode::Id, &attr)) {
-    return false;
+  chip::app::Clusters::ModeBase::Instance *modeInstance = (modeDelegate != nullptr) ? modeDelegate->instance() : nullptr;
+  if (modeInstance == nullptr) {
+    // ModeBase::Instance is created when the Matter stack starts. Cache until Init().
+    waterHeaterMode = static_cast<uint8_t>(mode);
+    waterHeaterModeSetByApp = true;
+    return true;
   }
 
-  attr.val.u8 = static_cast<uint8_t>(mode);
-  if (!updateAttributeVal(WaterHeaterMode::Id, WaterHeaterMode::Attributes::CurrentMode::Id, &attr)) {
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (modeInstance->UpdateCurrentMode(static_cast<uint8_t>(mode)) != chip::Protocols::InteractionModel::Status::Success) {
     return false;
   }
-
   waterHeaterMode = static_cast<uint8_t>(mode);
+  waterHeaterModeSetByApp = true;
   return true;
 }
 

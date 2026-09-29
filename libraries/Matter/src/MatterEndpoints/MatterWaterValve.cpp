@@ -49,6 +49,7 @@ public:
       }
     } else {
       log_e("Water Valve onOpen() callback reported failure.");
+      owner->currentState = MatterWaterValve::VALVE_STATE_CLOSED;
       owner->targetState = MatterWaterValve::VALVE_STATE_CLOSED;
       if (cluster != nullptr) {
         cluster->UpdateCurrentState(ValveConfigurationAndControl::ValveStateEnum::kClosed);
@@ -207,8 +208,15 @@ bool MatterWaterValve::open(uint32_t durationSeconds) {
   // OpenValve() is the Open command's implementation: it synchronously invokes the ValveDelegate above,
   // which commits currentState/targetState (and, via HandleRemainingDurationTick, openDuration/remainingDuration)
   // once the onOpen() callback confirms. The Level feature is not enabled on this endpoint, so level is always null.
+  // OpenValve() always returns CHIP_NO_ERROR after invoking the delegate (CHIP 1.6). It sets
+  // TargetState to Open and starts the duration timer before the callback result is known.
+  // If onOpen() failed, close immediately so the cluster does not stay open or keep counting down.
   if (cluster->OpenValve(chip::app::DataModel::Nullable<chip::Percent>(), duration) != CHIP_NO_ERROR) {
     log_e("Failed to open Water Valve.");
+    return false;
+  }
+  if (currentState != VALVE_STATE_OPEN) {
+    cluster->CloseValve();
     return false;
   }
   return true;
