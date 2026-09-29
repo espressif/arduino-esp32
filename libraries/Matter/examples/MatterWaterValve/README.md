@@ -5,33 +5,43 @@ The application showcases Matter commissioning, device control via smart home ec
 
 ## Supported Targets
 
-| SoC | Wi-Fi | Thread | BLE Commissioning | LED | Status |
-| --- | ---- | ------ | ----------------- | --- | ------ |
-| ESP32 | ✅ | ❌ | ❌ | Required | Fully supported |
-| ESP32-S2 | ✅ | ❌ | ❌ | Required | Fully supported |
-| ESP32-S3 | ✅ | ❌ | ✅ | Required | Fully supported |
-| ESP32-C3 | ✅ | ❌ | ✅ | Required | Fully supported |
-| ESP32-C5 | ❌ | ✅ | ✅ | Required | Supported (Thread only) |
-| ESP32-C6 | ✅ | ❌ | ✅ | Required | Fully supported |
-| ESP32-H2 | ❌ | ✅ | ✅ | Required | Supported (Thread only) |
+| SoC      | This sketch            | CHIPoBLE | Also in prebuild       | LED      |
+| -------- | ---------------------- | -------- | ---------------------- | -------- |
+| ESP32    | Wi-Fi (SSID in sketch) | Off      | Ethernet (EMAC or SPI) | Required |
+| ESP32-S2 | Wi-Fi (SSID in sketch) | Off      | Ethernet (SPI)         | Required |
+| ESP32-S3 | Wi-Fi (hub)            | On       | Ethernet (SPI)         | Required |
+| ESP32-C3 | Wi-Fi (hub)            | On       | Ethernet (SPI)         | Required |
+| ESP32-C5 | Wi-Fi (hub)            | On       | Ethernet (SPI)         | Required |
+| ESP32-C6 | Wi-Fi (hub, default)   | On       | Thread, Ethernet (SPI) | Required |
+| ESP32-H2 | Thread (hub)           | On       | Ethernet (SPI)         | Required |
 
-### Note on Commissioning:
+### Note on Commissioning
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project using Arduino as an IDF Component and to disable the Matter Wi-Fi station feature.
-- **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been pre compiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
+This table is what **this sketch** does. It does not call `Matter.selectNetwork()` or start Ethernet.
+
+- **ESP32 / ESP32-S2:** no CHIPoBLE in the Arduino IDE prebuild. The sketch connects to Wi-Fi with credentials in the source file.
+- **ESP32-C6:** prebuild is dual-stack. Without `selectNetwork()` this sketch uses **Wi-Fi + CHIPoBLE**. Thread stays unused.
+- **ESP32-H2:** Thread + CHIPoBLE (no Wi-Fi).
+- **ESP32-C5:** Wi-Fi + CHIPoBLE by default (Tools → Matter Network → Wi-Fi). Thread is Tools → Matter Network → Thread.
+
+To change the path, call `Matter.selectNetwork()` **before** any accessory `begin()`. On-network: `selectNetwork(net, true)` (CHIPoBLE off). CHIPoBLE: `selectNetwork(net)` (BLE stays on). Do not also call `setBLECommissioningEnabled()`.
+
+- Wi-Fi + CHIPoBLE: [MatterCHIPoBLEWiFi](../Commissioning/MatterCHIPoBLEWiFi)
+- Wi-Fi on-network (CHIPoBLE off): [MatterOnNetworkWiFi](../Commissioning/MatterOnNetworkWiFi)
+- Thread + CHIPoBLE (ESP32-C5 / ESP32-C6 / ESP32-H2): [MatterCHIPoBLEThread](../Commissioning/MatterCHIPoBLEThread)
+- Thread on-network (ESP32-C5 / ESP32-C6 / ESP32-H2): [MatterOnNetworkThread](../Commissioning/MatterOnNetworkThread)
+- Ethernet (CHIPoBLE off): [MatterOnNetworkEthernet](../Commissioning/MatterOnNetworkEthernet)
 
 ## Features
 
 - Matter protocol implementation for a water valve device (device type 0x0042, Valve Configuration and Control cluster)
-- Support for both Wi-Fi and Thread(*) connectivity
-- Open (indefinitely or for a set duration, with automatic closing) and Close control
-- Automatic countdown of the `RemainingDuration` attribute for timed open operations - handled internally, no polling loop needed in the sketch
+- Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
+- Open (indefinitely or for a set duration, with automatic closing) and close control
+- Automatic countdown of the `RemainingDuration` attribute for timed open operations (handled internally; no polling loop in the sketch)
 - Valve fault reporting
 - Button control for manual open/close and factory reset
 - Matter commissioning via QR code or manual pairing code
-- Integration with Apple HomeKit, Amazon Alexa, and Google Home
-(*) It is necessary to compile the project using Arduino as IDF Component.
+- Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 
 ## Hardware Requirements
 
@@ -169,8 +179,8 @@ The MatterWaterValve example consists of the following main components:
 2. **`loop()`**: Checks the Matter commissioning state, prints the remaining duration of a timed open operation as it counts down, handles button input for toggling the valve and factory reset, and allows the Matter stack to process events.
 
 3. **Callbacks**:
-   - `onValveOpen()`: Called whenever the valve is commanded open, either by a Matter controller or locally via `open()`. Drives the physical actuator (the LED, in this example) and returns success/failure to the Matter core.
-   - `onValveClose()`: Called whenever the valve is commanded closed, either by a Matter controller, locally via `close()`, or automatically when a timed open operation elapses.
+   - `onValveOpen()`: Called whenever the valve is commanded open, either by a Matter controller or locally via `open()`. Drives the physical actuator (the LED, in this example). Return `true` on success or `false` if open could not be completed.
+   - `onValveClose()`: Called whenever the valve is commanded closed, either by a Matter controller, locally via `close()`, or automatically when a timed open operation elapses. Return type is `void` (the Matter delegate does not use a close failure result).
 
 For a production water valve, replace the LED control in `onValveOpen()`/`onValveClose()` with your actual relay/solenoid driver code.
 
