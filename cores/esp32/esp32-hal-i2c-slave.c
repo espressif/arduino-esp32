@@ -171,8 +171,8 @@ typedef enum {
 } i2c_stretch_cause_t;
 
 static inline i2c_stretch_cause_t i2c_ll_stretch_cause(i2c_dev_t *hw) {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 \
-  || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 \
+  || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
   return hw->sr.stretch_cause;
 #elif CONFIG_IDF_TARGET_ESP32S2
   return hw->status_reg.stretch_cause;
@@ -354,7 +354,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
 #endif
   }
   i2c_ll_enable_controller_clock(i2c->dev, true);
-#else // C5 & C61
+#else  // C5 & C61
   i2c_ll_enable_bus_clock(i2c->num, true);
   i2c_ll_reset_register(i2c->num);
   i2c_ll_enable_controller_clock(i2c->dev, true);
