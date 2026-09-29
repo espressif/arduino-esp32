@@ -112,7 +112,7 @@ public:
 
   // User Callback for whenever the valve is commanded closed, either by a Matter controller, by calling close()
   // locally, or automatically when a timed open operation elapses. It should perform the physical action.
-  using EndPointCloseCB = std::function<bool()>;
+  using EndPointCloseCB = std::function<void()>;
   void onClose(EndPointCloseCB onCloseCB) {
     _onCloseCB = onCloseCB;
   }

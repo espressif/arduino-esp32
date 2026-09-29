@@ -59,11 +59,9 @@ bool onValveOpen() {
   return true;
 }
 
-bool onValveClose() {
+void onValveClose() {
   Serial.println("User Callback :: Closing the water valve");
   digitalWrite(ledPin, LOW);
-  // This callback must return the success state to Matter core
-  return true;
 }
 
 void setup() {

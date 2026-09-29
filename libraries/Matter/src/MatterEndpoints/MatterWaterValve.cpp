@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterWaterValve.h>
 #include <app/clusters/valve-configuration-and-control-server/ValveConfigurationAndControlCluster.h>
 #include <app/data-model/Nullable.h>
@@ -41,15 +40,19 @@ public:
     if (owner->_onOpenCB != NULL) {
       ok = owner->_onOpenCB();
     }
-    owner->targetState = MatterWaterValve::VALVE_STATE_OPEN;
+    ValveConfigurationAndControlCluster *cluster = owner->getValveCluster();
     if (ok) {
+      owner->targetState = MatterWaterValve::VALVE_STATE_OPEN;
       owner->currentState = MatterWaterValve::VALVE_STATE_OPEN;
-      ValveConfigurationAndControlCluster *cluster = owner->getValveCluster();
       if (cluster != nullptr) {
         cluster->UpdateCurrentState(ValveConfigurationAndControl::ValveStateEnum::kOpen);
       }
     } else {
       log_e("Water Valve onOpen() callback reported failure.");
+      owner->targetState = MatterWaterValve::VALVE_STATE_CLOSED;
+      if (cluster != nullptr) {
+        cluster->UpdateCurrentState(ValveConfigurationAndControl::ValveStateEnum::kClosed);
+      }
     }
     return chip::app::DataModel::Nullable<chip::Percent>();
   }
@@ -141,6 +144,15 @@ bool MatterWaterValve::begin(uint32_t defaultOpenDurationSeconds) {
 }
 
 void MatterWaterValve::end() {
+  if (delegate != nullptr) {
+    ValveConfigurationAndControlCluster *cluster = getValveCluster();
+    if (cluster != nullptr) {
+      lock::ScopedChipStackLock lock(portMAX_DELAY);
+      cluster->SetDelegate(nullptr);
+    }
+    delete delegate;
+    delegate = nullptr;
+  }
   started = false;
 }
 
