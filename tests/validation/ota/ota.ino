@@ -3,7 +3,8 @@
  *
  * Covers: HTTPUpdate (download, verify success/failure, MD5 check),
  *         Update API (begin, write, end, abort, error handling),
- *         ArduinoOTA (begin/end, hostname, espota upload IPv4/IPv6, with/without auth).
+ *         ArduinoOTA (begin/end, hostname, espota upload IPv4/IPv6, with/without auth,
+ *         onPrepare-before-onStart ordering, prepare skipped on AUTH failure).
  *
  * WiFi credentials and HTTP server URL are received via serial from pytest.
  * The pytest harness serves firmware binaries over HTTP and drives espota.py
@@ -47,6 +48,9 @@ static bool hostSupportsGlobalIPv6() {
 static volatile bool s_ota_done = false;
 static volatile bool s_ota_ok = false;
 static volatile int s_ota_error = -1;
+static volatile bool s_ota_prepare_seen = false;
+static volatile bool s_ota_start_seen = false;
+static volatile bool s_ota_prepare_before_start = false;
 
 void setUp(void) {}
 void tearDown(void) {
@@ -103,11 +107,22 @@ static void resetArduinoOtaFlags() {
   s_ota_done = false;
   s_ota_ok = false;
   s_ota_error = -1;
+  s_ota_prepare_seen = false;
+  s_ota_start_seen = false;
+  s_ota_prepare_before_start = false;
 }
 
 static void configureArduinoOtaCallbacks() {
+  ArduinoOTA.onPrepare([]() {
+    Serial.println("ArduinoOTA prepare");
+    s_ota_prepare_seen = true;
+    if (!s_ota_start_seen) {
+      s_ota_prepare_before_start = true;
+    }
+  });
   ArduinoOTA.onStart([]() {
     Serial.println("ArduinoOTA starting");
+    s_ota_start_seen = true;
   });
   ArduinoOTA.onEnd([]() {
     Serial.println("ArduinoOTA finished");
@@ -131,6 +146,18 @@ static void configureArduinoOtaCallbacks() {
       last_pct = pct;
     }
   });
+}
+
+static bool arduinoOtaPrepareOrderOk() {
+  if (!s_ota_prepare_seen) {
+    Serial.println("ArduinoOTA onPrepare was not called");
+    return false;
+  }
+  if (!s_ota_start_seen || !s_ota_prepare_before_start) {
+    Serial.println("ArduinoOTA onPrepare did not run before onStart");
+    return false;
+  }
+  return true;
 }
 
 static bool runArduinoOtaUpload(const char *auth, const IPAddress &listen_ip) {
@@ -166,7 +193,7 @@ static bool runArduinoOtaUpload(const char *auth, const IPAddress &listen_ip) {
     Serial.printf("ArduinoOTA failed with error %d\n", s_ota_error);
     return false;
   }
-  return true;
+  return arduinoOtaPrepareOrderOk();
 }
 
 // ==================== Update API Tests ====================
@@ -417,7 +444,44 @@ void test_arduino_ota_ipv4_mapped(void) {
 
   TEST_ASSERT_TRUE_MESSAGE(s_ota_done, "ArduinoOTA IPv4-mapped upload timed out");
   TEST_ASSERT_TRUE_MESSAGE(s_ota_ok, "ArduinoOTA IPv4-mapped upload failed");
+  TEST_ASSERT_TRUE_MESSAGE(arduinoOtaPrepareOrderOk(), "ArduinoOTA IPv4-mapped onPrepare order failed");
 #endif
+}
+
+void test_arduino_ota_prepare_not_called_on_auth_fail(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  resetArduinoOtaFlags();
+  ArduinoOTA.setPort(ARDUINO_OTA_PORT);
+  ArduinoOTA.setHostname("ota-validation");
+  ArduinoOTA.setMdnsEnabled(false);
+  ArduinoOTA.setRebootOnSuccess(false);
+  ArduinoOTA.setPassword("test-ota");
+  configureArduinoOtaCallbacks();
+  ArduinoOTA.begin();
+
+  // Pytest sends a wrong password so authentication must fail before onPrepare.
+  Serial.printf("ARDUINO_OTA_BEGIN_BADAUTH %s %u test-ota\n", WiFi.localIP().toString().c_str(), ARDUINO_OTA_PORT);
+
+  unsigned long start = millis();
+  while (!s_ota_done && (millis() - start) < ARDUINO_OTA_TIMEOUT_MS) {
+    ArduinoOTA.handle();
+    delay(1);
+  }
+
+  // Keep the UDP listener up so espota can finish its SHA256-then-MD5 retry
+  // before we stop the service. Otherwise pytest blocks on a 120s timeout.
+  unsigned long drain = millis();
+  while ((millis() - drain) < 5000) {
+    ArduinoOTA.handle();
+    delay(1);
+  }
+  ArduinoOTA.end();
+
+  TEST_ASSERT_TRUE_MESSAGE(s_ota_done, "ArduinoOTA wrong-auth timed out");
+  TEST_ASSERT_EQUAL_MESSAGE(OTA_AUTH_ERROR, s_ota_error, "Expected OTA_AUTH_ERROR");
+  TEST_ASSERT_FALSE_MESSAGE(s_ota_prepare_seen, "onPrepare must not run before authentication succeeds");
+  TEST_ASSERT_FALSE_MESSAGE(s_ota_start_seen, "onStart must not run before authentication succeeds");
 }
 
 // ==================== HTTPUpdate Tests ====================
@@ -1054,6 +1118,7 @@ void setup() {
   RUN_TEST(test_arduino_ota_upload_ipv6);
   RUN_TEST(test_arduino_ota_ipv4_after_ipv6);
   RUN_TEST(test_arduino_ota_ipv4_mapped);
+  RUN_TEST(test_arduino_ota_prepare_not_called_on_auth_fail);
   RUN_TEST(test_arduino_ota_ipv6_with_auth);
   RUN_TEST(test_arduino_ota_upload_with_auth);
   RUN_TEST(test_httpupdate_header_overrides_sidecar);
