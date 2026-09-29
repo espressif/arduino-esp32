@@ -345,7 +345,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     i2c_ll_reset_register(i2c->num);
     i2c_ll_enable_controller_clock(i2c->dev, true);
   }
-#elif !CONFIG_IDF_TARGET_ESP32C5
+#elif !CONFIG_IDF_TARGET_ESP32C5 && !CONFIG_IDF_TARGET_ESP32C61
   if (i2c->num == 0) {
     periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
 #if SOC_HP_I2C_NUM > 1
@@ -354,7 +354,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
 #endif
   }
   i2c_ll_enable_controller_clock(i2c->dev, true);
-#else // C5
+#else // C5 & C61
   i2c_ll_enable_bus_clock(i2c->num, true);
   i2c_ll_reset_register(i2c->num);
   i2c_ll_enable_controller_clock(i2c->dev, true);
