@@ -23,9 +23,7 @@
 
 namespace chip::app::Clusters {
 class ValveConfigurationAndControlCluster;
-}
-
-using namespace chip::app::Clusters;
+}  // namespace chip::app::Clusters
 
 // Matter Water Valve endpoint (device type 0x0042) - Valve Configuration and Control cluster.
 //
@@ -40,19 +38,19 @@ class MatterWaterValve : public MatterEndPoint {
 public:
   // ValveStateEnum values (from Matter spec)
   enum ValveState_t {
-    VALVE_STATE_CLOSED = (uint8_t)ValveConfigurationAndControl::ValveStateEnum::kClosed,
-    VALVE_STATE_OPEN = (uint8_t)ValveConfigurationAndControl::ValveStateEnum::kOpen,
-    VALVE_STATE_TRANSITIONING = (uint8_t)ValveConfigurationAndControl::ValveStateEnum::kTransitioning,
+    VALVE_STATE_CLOSED = (uint8_t)chip::app::Clusters::ValveConfigurationAndControl::ValveStateEnum::kClosed,
+    VALVE_STATE_OPEN = (uint8_t)chip::app::Clusters::ValveConfigurationAndControl::ValveStateEnum::kOpen,
+    VALVE_STATE_TRANSITIONING = (uint8_t)chip::app::Clusters::ValveConfigurationAndControl::ValveStateEnum::kTransitioning,
   };
 
   // ValveFaultBitmap values (from Matter spec) - combine with bitwise OR
   enum ValveFault_t {
-    VALVE_FAULT_GENERAL_FAULT = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kGeneralFault,
-    VALVE_FAULT_BLOCKED = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kBlocked,
-    VALVE_FAULT_LEAKING = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kLeaking,
-    VALVE_FAULT_NOT_CONNECTED = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kNotConnected,
-    VALVE_FAULT_SHORT_CIRCUIT = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kShortCircuit,
-    VALVE_FAULT_CURRENT_EXCEEDED = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kCurrentExceeded,
+    VALVE_FAULT_GENERAL_FAULT = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kGeneralFault,
+    VALVE_FAULT_BLOCKED = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kBlocked,
+    VALVE_FAULT_LEAKING = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kLeaking,
+    VALVE_FAULT_NOT_CONNECTED = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kNotConnected,
+    VALVE_FAULT_SHORT_CIRCUIT = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kShortCircuit,
+    VALVE_FAULT_CURRENT_EXCEEDED = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kCurrentExceeded,
   };
 
   MatterWaterValve();
@@ -143,6 +141,6 @@ private:
   ValveDelegate *delegate = nullptr;
 
   // Live CHIP cluster object for this endpoint, or nullptr before Matter.begin().
-  ValveConfigurationAndControlCluster *getValveCluster();
+  chip::app::Clusters::ValveConfigurationAndControlCluster *getValveCluster();
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
