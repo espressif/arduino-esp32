@@ -19,10 +19,12 @@
 #include <MatterEndpoints/MatterWaterHeater.h>
 #include <esp_matter.h>
 #include <esp_matter_core.h>
+#include <water_heater_management.h>
 #include <app-common/zap-generated/cluster-enums.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
+using namespace esp_matter::cluster::water_heater_management;
 using namespace chip::app::Clusters;
 
 namespace {
@@ -62,6 +64,11 @@ bool MatterWaterHeater::begin() {
     return false;
   }
 
+  if (ArduinoMatter::isStackStarted()) {
+    log_e("MatterWaterHeater::begin() must be called before Matter.begin() to provision optional WHM features.");
+    return false;
+  }
+
   // Water Heater Management
   esp_matter::cluster::water_heater_management::config_t management_config;
   management_config.heater_types = DEFAULT_HEATER_TYPES;
@@ -97,6 +104,23 @@ bool MatterWaterHeater::begin() {
     return false;
   }
 
+  // water_heater::create() only adds mandatory WHM attributes; optional TankVolume / TankPercentage
+  // require EnergyManagement and TankPercent features (generated water_heater_management API).
+  feature::energy_management::config_t energy_management_config;
+  energy_management_config.tank_volume = DEFAULT_TANK_VOLUME;
+  energy_management_config.estimated_heat_required = 0;
+  if (feature::energy_management::add(management_cluster, &energy_management_config) != ESP_OK) {
+    log_e("Failed to add Water Heater Management EnergyManagement feature");
+    return false;
+  }
+
+  feature::tank_percent::config_t tank_percent_config;
+  tank_percent_config.tank_percentage = DEFAULT_TANK_PERCENTAGE;
+  if (feature::tank_percent::add(management_cluster, &tank_percent_config) != ESP_OK) {
+    log_e("Failed to add Water Heater Management TankPercent feature");
+    return false;
+  }
+
   setEndPointId(endpoint::get_id(endpoint));
   initialized = true;
 
@@ -118,8 +142,7 @@ bool MatterWaterHeater::begin() {
   boostState = DEFAULT_BOOST_STATE;
   waterHeaterMode = DEFAULT_WATER_HEATER_MODE;
 
-  // Push our configured initial values after the attributes exist (the generated Water Heater device
-  // type only creates the mandatory attributes / defaults set above).
+  // Push initial tank values (attributes exist after feature::add above).
   setTankVolume(DEFAULT_TANK_VOLUME);
   setTankPercentage(DEFAULT_TANK_PERCENTAGE);
   syncHeatDemand();
@@ -467,7 +490,9 @@ bool MatterWaterHeater::setTankVolume(uint16_t value) {
 
   esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
   if (!getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::TankVolume::Id, &attr)) {
-    return false;
+    tankVolume = value;
+    log_v("TankVolume attribute not in data model; cached locally (%u)", value);
+    return true;
   }
 
   attr.val.u16 = value;
@@ -490,7 +515,9 @@ bool MatterWaterHeater::setTankPercentage(uint8_t value) {
 
   esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
   if (!getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::TankPercentage::Id, &attr)) {
-    return false;
+    tankPercentage = value;
+    log_v("TankPercentage attribute not in data model; cached locally (%u)", value);
+    return true;
   }
 
   attr.val.u8 = value;
@@ -612,6 +639,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
 
         case Thermostat::Attributes::SystemMode::Id:
           systemMode = val->val.u8;
+          syncHeatDemand();
           return true;
 
         default: break;
@@ -622,6 +650,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
       switch (attribute_id) {
         case WaterHeaterManagement::Attributes::HeaterTypes::Id:
           heaterTypes = val->val.u8;
+          syncHeatDemand();
           return true;
 
         case WaterHeaterManagement::Attributes::HeatDemand::Id:
@@ -630,6 +659,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
 
         case WaterHeaterManagement::Attributes::BoostState::Id:
           boostState = val->val.u8;
+          syncHeatDemand();
           return true;
 
         // TankVolume and TankPercentage are optional features, but once enabled above they are normal attributes.
