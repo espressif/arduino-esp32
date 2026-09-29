@@ -5,15 +5,15 @@ The application showcases Matter commissioning, water heater attributes (tempera
 
 ## Supported Targets
 
-| SoC      | This sketch              | CHIPoBLE | Also in prebuild       |
-| -------- | ------------------------ | -------- | ---------------------- |
-| ESP32    | CHIPoBLE (no Wi-Fi code) | On       | Ethernet (EMAC or SPI) |
-| ESP32-S2 | CHIPoBLE (no Wi-Fi code) | Off      | Ethernet (SPI)         |
-| ESP32-S3 | CHIPoBLE (hub Wi-Fi)     | On       | Ethernet (SPI)         |
-| ESP32-C3 | CHIPoBLE (hub Wi-Fi)     | On       | Ethernet (SPI)         |
-| ESP32-C5 | CHIPoBLE (hub)           | On       | Ethernet (SPI)         |
-| ESP32-C6 | CHIPoBLE (hub, default)  | On       | Thread, Ethernet (SPI) |
-| ESP32-H2 | Thread (hub)             | On       | Ethernet (SPI)         |
+| SoC      | This sketch            | CHIPoBLE | Also in prebuild       |
+| -------- | ---------------------- | -------- | ---------------------- |
+| ESP32    | No network in sketch   | Off      | Ethernet (EMAC or SPI) |
+| ESP32-S2 | No network in sketch   | Off      | Ethernet (SPI)         |
+| ESP32-S3 | CHIPoBLE (hub Wi-Fi)   | On       | Ethernet (SPI)         |
+| ESP32-C3 | CHIPoBLE (hub Wi-Fi)   | On       | Ethernet (SPI)         |
+| ESP32-C5 | CHIPoBLE (hub)         | On       | Ethernet (SPI)         |
+| ESP32-C6 | CHIPoBLE (hub, default)| On       | Thread, Ethernet (SPI) |
+| ESP32-H2 | Thread (hub)           | On       | Ethernet (SPI)         |
 
 ### Note on Commissioning
 
@@ -37,7 +37,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - Matter protocol implementation for a water heater device (device type 0x050F)
 - Default network and CHIPoBLE as in the Supported Targets table
 - Simulated tank temperature, heating setpoint, tank percentage, and heat demand
-- Water Heater Management tank attributes (provisioned in `MatterWaterHeater::begin()` before `Matter.begin()`)
+- `MatterWaterHeater::begin()` provisions Water Heater Management **EnergyManagement** and **TankPercent** features (call before `Matter.begin()`)
 - Matter commissioning via QR code or manual pairing code
 - Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 
@@ -48,61 +48,56 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 For a production device, replace the simulation with real sensors and actuators with appropriate safety interlocks.
 
-## Matter Device Type
-
-The endpoint implements the Matter Water Heater device type:
-
-```text
-Water Heater
-Device Type ID: 0x050F
-```
-
-The endpoint uses the following Matter clusters:
-
-* Descriptor
-* Water Heater Management
-* Water Heater Mode
-* Thermostat
-
-## Running the example
-
-Open the example from the Arduino IDE:
-
-```text
-File
-  → Examples
-    → Matter
-      → Control
-        → MatterWaterHeater
-```
-
-Select an ESP32 board and compile/upload the example.
-
-After startup, the device prints its Matter commissioning information to the serial console.
-
-Open the Serial Monitor at:
-
-```text
-115200 baud
-```
-
-If the device has not yet been commissioned, the sketch prints the manual pairing code and QR-code URL.
-
 ## Software Setup
 
 ### Prerequisites
 
 1. Install the Arduino IDE (2.0 or newer recommended)
 2. Install ESP32 Arduino Core with Matter support
-3. Arduino libraries: `Matter`
+3. ESP32 Arduino libraries:
+   - `Matter`
 
-Before uploading, set **Partition Scheme** to **Huge APP (3 MB No OTA / 1 MB SPIFFS)** and enable **Erase All Flash Before Sketch Upload** (see Matter library documentation).
+### Configuration
 
-## Simulated water heater
+Before uploading the sketch on **ESP32 / ESP32-S2**, add Wi-Fi (or copy the network setup from [MatterOnNetworkWiFi](../../Commissioning/MatterOnNetworkWiFi)) before `Matter.begin()`.
 
-The example simulates a heating cycle.
+## Building and Flashing
 
-The default configuration is:
+1. Open the example in the Arduino IDE: **File → Examples → Matter → Control → MatterWaterHeater**.
+2. Select your ESP32 board from the **Tools > Board** menu.
+<!-- vale off -->
+3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
+<!-- vale on -->
+4. Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
+5. Connect your ESP32 board to your computer via USB.
+6. Click the **Upload** button to compile and flash the sketch.
+
+## Expected Output
+
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only if you added Wi-Fi setup for ESP32 / ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-C5 / ESP32-C6 / ESP32-H2). You should see output similar to the following:
+
+```
+Matter Water Heater
+-------------------
+Matter Water Heater endpoint created.
+
+Device is not commissioned.
+Manual pairing code: 34970112332
+QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=...
+Temperature: 20.0 C | Setpoint: 48.0 C | Tank: 0 % | Demand: 0x01 | Boost: 0
+Temperature: 20.5 C | Setpoint: 48.0 C | Tank: 1 % | Demand: 0x01 | Boost: 0
+...
+```
+
+## Using the Device
+
+### Device type and clusters
+
+The endpoint implements Matter device type **0x050F** (Water Heater) with **Water Heater Management**, **Water Heater Mode**, and **Thermostat** (heating-only) clusters.
+
+### Simulated water heater
+
+Default configuration:
 
 | Parameter           |             Value |
 | ------------------- | ----------------: |
@@ -114,117 +109,65 @@ The default configuration is:
 | Water heater mode   |            Manual |
 | Tank percentage     |               0 % |
 
-Every few seconds the example increases the simulated water temperature until the configured heating setpoint is reached.
+Every five seconds the sketch increases the simulated water temperature until the heating setpoint is reached. Tank percentage is derived from temperature. **HeatDemand** follows heater activity in `loop()`; `setSystemMode()` / controller writes also sync demand via the library.
 
-The tank percentage is calculated from the simulated water temperature.
+### Smart Home Integration
 
-## API
+Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
 
-The `MatterWaterHeater` class provides APIs for reading and updating the main Water Heater attributes.
+#### Home Assistant
 
-### Temperature
+1. Open Home Assistant
+2. Go to Settings > Devices & services > Add integration > Matter
+3. Scan the QR code from the Serial Monitor, or enter the manual pairing code
+4. Follow the prompts to complete setup
 
-```cpp
-waterHeater.setLocalTemperature(45.0f);
+#### Apple Home
 
-float temperature =
-    waterHeater.getLocalTemperature();
-```
+1. Open the Home app on your iOS device
+2. Tap the "+" button > Add Accessory
+3. Scan the QR code displayed in the Serial Monitor, or enter the manual pairing code
+4. Follow the prompts to complete setup
 
-### Heating setpoint
+#### Amazon Alexa
 
-```cpp
-waterHeater.setHeatingSetpoint(48.0f);
+1. Open the Alexa app
+2. Tap More > Add Device > Matter
+3. Select "Scan QR code" or "Enter code manually"
+4. Complete the setup process
 
-float setpoint =
-    waterHeater.getHeatingSetpoint();
-```
+#### Google Home
 
-### System mode
+1. Open the Google Home app
+2. Tap "+" > Set up device > New device
+3. Choose "Matter device"
+4. Scan the QR code or enter the manual pairing code
+5. Follow the prompts to complete setup
 
-```cpp
-waterHeater.setSystemMode(
-    MatterWaterHeater::SYSTEM_MODE_HEAT
-);
-```
+## Code Structure
 
-### Heater type
+The MatterWaterHeater example consists of the following main components:
 
-```cpp
-waterHeater.setHeaterTypes(
-    MatterWaterHeater::IMMERSION_ELEMENT_1
-);
-```
+1. **`setup()`**: Creates the `MatterWaterHeater` endpoint (`begin()` adds WHM tank features), configures heater type, tank volume, setpoints, and modes, then calls `Matter.begin()`.
+2. **`loop()`**: Simulates heating every five seconds, updates **HeatDemand** while below setpoint, and calls `updateTankPercentage()` from simulated temperature.
+3. **`updateTankPercentage()`**: Maps temperature between cold water and setpoint to **TankPercentage**.
 
-### Tank volume
+For a real appliance, read tank temperature from a sensor, drive the heating element with proper safety interlocks, and never rely on Matter as the only safety layer.
 
-```cpp
-waterHeater.setTankVolume(100);
-```
+## Troubleshooting
 
-### Tank percentage
+- **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured (ESP32 / ESP32-S2 need Wi-Fi in the sketch or another commissioning path).
+- **Tank attributes missing on hub**: Call `waterHeater.begin()` before `Matter.begin()` so EnergyManagement and TankPercent features are provisioned.
+- **HeatDemand does not match hub after mode change**: Use a build that includes controller-side `syncHeatDemand()` in `attributeChangeCB`.
+- **Failed to commission**: Erase flash (**Erase All Flash Before Sketch Upload**) or use another Matter node on the same fabric.
+- **No serial output**: Check baud rate (115200) and USB connection.
 
-```cpp
-waterHeater.setTankPercentage(75);
-```
+## Related Documentation
 
-### Water Heater mode
+- [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
+- [Matter Endpoint Base Class](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter_ep.html)
+- [Matter Water Heater Endpoint](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/ep_water_heater.html)
 
-```cpp
-waterHeater.setWaterHeaterMode(
-    MatterWaterHeater::WATER_HEATER_MODE_MANUAL
-);
-```
+## License
 
-### Heat demand
-
-`HeatDemand` is a bitmap of the heat sources (same bit values as `HeaterTypes`) currently active, not a percentage. `setSystemMode()` and `setBoostState()` keep it in sync automatically: switching to `SYSTEM_MODE_HEAT` (or activating Boost) sets it to the configured heater types, and switching to `SYSTEM_MODE_OFF` (with Boost inactive) clears it.
-
-Call `setHeatDemand()` directly only to report finer-grained state while `SystemMode` stays `Heat` - for example, turning the reported demand off once the setpoint has been reached, as this example's `loop()` does:
-
-```cpp
-waterHeater.setHeatDemand(
-    waterHeater.getHeaterTypes()
-);
-
-waterHeater.setHeatDemand(0);
-```
-
-### Boost
-
-```cpp
-waterHeater.setBoostState(
-    MatterWaterHeater::BOOST_ACTIVE
-);
-```
-
-## Implementation notes
-
-The Water Heater endpoint is implemented using the `esp-matter` data model provided by Arduino-ESP32.
-
-`MatterWaterHeater::begin()` must be called **before** `Matter.begin()`. It provisions Water Heater Management **EnergyManagement** and **TankPercent** features so `TankVolume` and `TankPercentage` exist on the endpoint. Configure heater type, tank size, setpoints, and modes after `begin()` and before or after `Matter.begin()` (tank setters work once features are added).
-
-The Arduino API is intentionally kept at a higher level than the underlying Matter data model. Applications should normally use `MatterWaterHeater` rather than manipulating the Matter clusters directly.
-
-The example is intended as a starting point for applications implementing a physical water heater, boiler, heat-pump water heater, or similar appliance.
-
-## Limitations
-
-This example uses simulated values and does not control physical heating hardware.
-
-In a production implementation:
-
-1. Read the actual tank temperature from a sensor.
-2. Update the Matter local temperature attribute.
-3. Apply the Matter heating setpoint to the physical controller.
-4. Update the tank percentage from the actual tank state.
-5. Report the actual heat demand.
-6. Implement the appropriate safety limits and hardware interlocks.
-
-Never use the Matter endpoint as the only safety mechanism for controlling a real heating element.
-
-## Related Matter specification
-
-The implementation follows the Matter Water Heater device model and its associated Water Heater Management, Water Heater Mode and Thermostat clusters.
-
-For additional information, refer to the Matter specification and the Arduino-ESP32 Matter documentation.
+This example is licensed under the Apache License, Version 2.0.

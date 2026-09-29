@@ -104,7 +104,7 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The Wi-Fi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-C5 / ESP32-C6 / ESP32-H2). You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
@@ -141,7 +141,14 @@ The user button (BOOT button by default) provides manual control:
 
 ### Smart Home Integration
 
-Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
+Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
+
+#### Home Assistant
+
+1. Open Home Assistant
+2. Go to Settings > Devices & services > Add integration > Matter
+3. Scan the QR code from the Serial Monitor, or enter the manual pairing code
+4. Follow the prompts to complete setup
 
 #### Apple Home
 
@@ -196,6 +203,7 @@ For a production water valve, replace the LED control in `onValveOpen()`/`onValv
 
 - [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
 - [Matter Endpoint Base Class](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter_ep.html)
+- [Matter Water Valve Endpoint](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/ep_water_valve.html)
 
 ## License
 

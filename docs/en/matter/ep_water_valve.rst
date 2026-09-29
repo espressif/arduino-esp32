@@ -52,6 +52,15 @@ Creates the endpoint and allocates the valve delegate. Call before ``Matter.begi
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
+Typical usage:
+
+.. code-block:: arduino
+
+    WaterValve.begin();
+    WaterValve.onOpen(onValveOpen);
+    WaterValve.onClose(onValveClose);
+    Matter.begin();
+
 ``open()`` / ``close()`` require ``Matter.begin()`` to have run so the live ``ValveConfigurationAndControlCluster`` exists and the delegate is attached in ``onStackStarted()``.
 
 end
@@ -62,6 +71,30 @@ Stops processing Matter water valve events and releases the valve delegate.
 .. code-block:: arduino
 
     void end();
+
+Valve States and Faults
+***********************
+
+ValveState_t
+^^^^^^^^^^^^
+
+Valve state enumeration (``ValveStateEnum``):
+
+* ``VALVE_STATE_CLOSED`` - Valve is closed.
+* ``VALVE_STATE_OPEN`` - Valve is open.
+* ``VALVE_STATE_TRANSITIONING`` - Valve is transitioning.
+
+ValveFault_t
+^^^^^^^^^^^^
+
+Valve fault bitmap (combine with bitwise OR):
+
+* ``VALVE_FAULT_GENERAL_FAULT``
+* ``VALVE_FAULT_BLOCKED``
+* ``VALVE_FAULT_LEAKING``
+* ``VALVE_FAULT_NOT_CONNECTED``
+* ``VALVE_FAULT_SHORT_CIRCUIT``
+* ``VALVE_FAULT_CURRENT_EXCEEDED``
 
 Callbacks
 *********
@@ -109,6 +142,8 @@ Opens the valve indefinitely, for ``defaultOpenDurationSeconds`` (set in ``begin
     bool open();
     bool open(uint32_t durationSeconds);
 
+This function will return ``true`` if successful, ``false`` otherwise.
+
 close
 ^^^^^
 
@@ -117,6 +152,8 @@ Closes the valve.
 .. code-block:: arduino
 
     bool close();
+
+This function will return ``true`` if successful, ``false`` otherwise.
 
 setValveFault
 ^^^^^^^^^^^^^
@@ -128,6 +165,16 @@ Reports or clears fault bits (``ValveFault_t``). May be called before ``Matter.b
     bool setValveFault(uint16_t fault);
 
 This function will return ``true`` if successful, ``false`` otherwise.
+
+State Query
+***********
+
+The following methods read cached state updated by the delegate (open/close paths and duration ticks):
+
+* ``getCurrentState()`` / ``getTargetState()`` - Last known valve states.
+* ``isOpen()`` - ``true`` when ``getCurrentState()`` is ``VALVE_STATE_OPEN``.
+* ``getOpenDuration()`` / ``getDefaultOpenDuration()`` / ``getRemainingDuration()`` - Timed open duration in seconds (``0`` = indefinite).
+* ``getValveFault()`` - Current fault bitmap.
 
 Example
 -------
