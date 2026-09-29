@@ -345,6 +345,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
   I2C_RCC_ATOMIC() {
     i2c_ll_enable_bus_clock(i2c->num, true);
     i2c_ll_reset_register(i2c->num);
+    i2c_ll_enable_controller_clock(i2c->dev, true);
   }
 #elif !CONFIG_IDF_TARGET_ESP32P4 && !CONFIG_IDF_TARGET_ESP32C5
   if (i2c->num == 0) {
@@ -354,9 +355,15 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     periph_ll_enable_clk_clear_rst(PERIPH_I2C1_MODULE);
 #endif
   }
+#else // P4 & C5
+  i2c_ll_enable_bus_clock(i2c->num, true);
+  i2c_ll_reset_register(i2c->num);
 #endif
 #endif  // !defined(CONFIG_IDF_TARGET_ESP32P4)
 
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
+  i2c_ll_enable_controller_clock(i2c->dev, true);
+#endif
 #if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)) || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)) \
   || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 3) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0))
   i2c_ll_set_mode(i2c->dev, I2C_BUS_MODE_SLAVE);
@@ -809,6 +816,14 @@ static void i2c_slave_isr_handler(void *arg) {
       while (xQueueReceiveFromISR(i2c->tx_queue, &d, (BaseType_t *const)&pxHigherPriorityTaskWoken) == pdTRUE);  //flush partial write
 #endif
     }
+#if CONFIG_IDF_TARGET_ESP32C5
+    // Workaround for c5 digital bug. Please note that following code has no
+    // functionality. It's just use for workaround the potential issue for avoiding
+    // secondary transaction.
+    i2c_ll_slave_enable_auto_start(i2c->dev, true);
+    i2c_ll_start_trans(i2c->dev);
+    i2c_ll_slave_enable_auto_start(i2c->dev, false);
+#endif
   }
 
 #ifndef CONFIG_IDF_TARGET_ESP32
