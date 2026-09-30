@@ -8,12 +8,12 @@ value is restored from the Zigbee NVS dataset.
 
 Currently, this example supports the following targets.
 
-| Supported Targets | ESP32-C6 | ESP32-H2 |
-| ----------------- | -------- | -------- |
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-H2 | ESP32-S31 |
+| ----------------- | -------- | -------- | -------- | --------- |
 
 ## Hardware Required
 
-* One development board (ESP32-C6 or ESP32-H2) running this example as a Zigbee coordinator
+* One development board (ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31) running this example as a Zigbee coordinator
 * A USB cable for power supply and programming
 
 ### Configure the Project

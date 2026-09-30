@@ -925,7 +925,7 @@ void ZigbeeCore::stop() {
 
 #if SOC_IEEE802154_SUPPORTED
   // esp_zigbee_stop() exits the mainloop but leaves the IEEE802.15.4 radio enabled.
-  // On dual-radio SoCs (C6/S31/…) that shares RF with Wi‑Fi, disable it so Wi‑Fi can scan/connect.
+  // On dual-radio SoCs (C5/C6/S31/…) that shares RF with Wi‑Fi, disable it so Wi‑Fi can scan/connect.
   esp_err_t radio_err = esp_ieee802154_disable();
   if (radio_err != ESP_OK) {
     log_w("Failed to disable IEEE802.15.4 radio after stop: %s", esp_err_to_name(radio_err));

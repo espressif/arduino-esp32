@@ -2,15 +2,15 @@
 
 This example shows how to **pause the Zigbee stack** with `Zigbee.stop()`, use **Wi‑Fi** to fetch outdoor **temperature, humidity and pressure** from the free [Open-Meteo](https://open-meteo.com/) API, then **resume Zigbee** with `Zigbee.start()` and report those values on Zigbee endpoints.
 
-It is intended for SoCs that share the radio between Zigbee (802.15.4) and Wi‑Fi (e.g. ESP32-C6): Zigbee must be stopped before Wi‑Fi can use the radio.
+It is intended for SoCs that share the radio between Zigbee (802.15.4) and Wi‑Fi (e.g. ESP32-C5, ESP32-C6): Zigbee must be stopped before Wi‑Fi can use the radio.
 
 The device runs as a **Zigbee end device** (not a router). Pausing Zigbee for Wi‑Fi must not interrupt routing for other mesh devices. Prefer mains power; this radio handoff pattern is a poor fit for long battery sleep.
 
 # Supported Targets
 
-| Supported Targets | ESP32-C6 | ESP32-S31* |
-| ----------------- | -------- | ---------- |
-|                   | yes      | yes*       |
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-S31* |
+| ----------------- | -------- | -------- | ---------- |
+|                   | yes      | yes      | yes*       |
 
 \* Preview / when Zigbee + Wi‑Fi are enabled for the board.
 
@@ -37,7 +37,7 @@ The device runs as a **Zigbee end device** (not a router). Pausing Zigbee for Wi
 
 ## Hardware Required
 
-* ESP32-C6 (or other Zigbee + Wi‑Fi board) as Zigbee **end device** (prefer mains powered)
+* ESP32-C5, ESP32-C6 (or other Zigbee + Wi‑Fi board) as Zigbee **end device** (prefer mains powered)
 * A Zigbee coordinator / hub (e.g. Home Assistant ZHA)
 * USB cable for power and programming
 * Wi‑Fi access point with internet access

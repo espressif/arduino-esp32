@@ -6,14 +6,14 @@ This example shows how to configure the Zigbee end device and use it as a Home A
 
 Currently, this example supports the following targets.
 
-| Supported Targets | ESP32-C6 | ESP32-H2 |
-| ----------------- | -------- | -------- |
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-H2 | ESP32-S31 |
+| ----------------- | -------- | -------- | -------- | --------- |
 
 ## Hardware Required
 
-* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee coordinator (loaded with Zigbee_Color_Dimmer_Switch example)
+* One development board (ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31) acting as Zigbee coordinator (loaded with Zigbee_Color_Dimmer_Switch example)
 * A USB cable for power supply and programming
-* Choose another board (ESP32-H2 or ESP32-C6) as Zigbee end device and upload the Zigbee_Color_Dimmable_Light example
+* Choose another board (ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31) as Zigbee end device and upload the Zigbee_Color_Dimmable_Light example
 
 ### Configure the Project
 
@@ -63,6 +63,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+* ESP32-C5 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c5_datasheet_en.pdf)
 * ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
 * ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
+* ESP32-S31 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s31_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)
