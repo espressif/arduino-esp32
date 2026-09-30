@@ -19,14 +19,28 @@
 #include <MatterEndpoints/MatterWaterHeater.h>
 #include <esp_matter.h>
 #include <esp_matter_core.h>
+#ifdef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
 #include <water_heater_management.h>
+#endif
 #include <app-common/zap-generated/cluster-enums.h>
 #include <app/clusters/mode-base-server/CodegenIntegration.h>
+#include <app/clusters/water-heater-management-server/Delegate.h>
 #include <lib/support/Span.h>
+#include <platform/CHIPDeviceLayer.h>
+#include <system/SystemLayer.h>
+
+#ifndef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
+// Pre-Matter.begin() FeatureMap writes must skip attribute callbacks (legacy update_feature_map()).
+namespace esp_matter {
+namespace attribute {
+esp_err_t get_val_internal(attribute_t *attribute, esp_matter_attr_val_t *val);
+esp_err_t set_val_internal(attribute_t *attribute, esp_matter_attr_val_t *val, bool call_callbacks);
+}  // namespace attribute
+}  // namespace esp_matter
+#endif
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
-using namespace esp_matter::cluster::water_heater_management;
 using namespace chip::app::Clusters;
 
 namespace {
@@ -64,6 +78,36 @@ constexpr ModeOption kModes[kModeCount] = {
   {"Manual", MatterWaterHeater::WATER_HEATER_MODE_MANUAL, chip::app::Clusters::ModeBase::ModeTag::kDay},
   {"Eco", MatterWaterHeater::WATER_HEATER_MODE_ECO, chip::app::Clusters::ModeBase::ModeTag::kLowEnergy},
 };
+
+#ifndef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
+// Legacy energy_management::add(cluster_t*) is declared but not linked. Create the
+// optional WHM attributes here and write FeatureMap without pre-update callbacks.
+bool orWhmFeatureMap(cluster_t *cluster, uint32_t feature_bit) {
+  esp_matter_attr_val_t feature_map_val = esp_matter_invalid(NULL);
+  attribute_t *feature_map_attr = attribute::get(cluster, Globals::Attributes::FeatureMap::Id);
+  if (feature_map_attr == nullptr || ::esp_matter::attribute::get_val_internal(feature_map_attr, &feature_map_val) != ESP_OK) {
+    return false;
+  }
+  feature_map_val.val.u32 |= feature_bit;
+  return ::esp_matter::attribute::set_val_internal(feature_map_attr, &feature_map_val, false) == ESP_OK;
+}
+
+bool addLegacyWhmEnergyManagement(cluster_t *cluster) {
+  if (!orWhmFeatureMap(cluster, static_cast<uint32_t>(WaterHeaterManagement::Feature::kEnergyManagement))) {
+    return false;
+  }
+  return ::esp_matter::cluster::water_heater_management::attribute::create_tank_volume(cluster, 0) != nullptr &&
+         ::esp_matter::cluster::water_heater_management::attribute::create_estimated_heat_required(cluster, 0) != nullptr;
+}
+
+bool addLegacyWhmTankPercent(cluster_t *cluster) {
+  if (::esp_matter::cluster::water_heater_management::feature::tank_percent::add(cluster) != ESP_OK) {
+    return false;
+  }
+  // tank_percent::get_id() wrongly returns kEnergyManagement in legacy esp_matter_feature.cpp.
+  return orWhmFeatureMap(cluster, static_cast<uint32_t>(WaterHeaterManagement::Feature::kTankPercent));
+}
+#endif
 }  // namespace
 
 // Bridges Water Heater Mode to CHIP ModeBase. Methods run on the Matter event loop (Init / ChangeToMode)
@@ -125,6 +169,91 @@ private:
   MatterWaterHeater *owner;
 };
 
+// Bridges Boost/CancelBoost and WHM attribute reads to the Arduino cache. CHIP
+// WaterHeaterManagementCluster is created only when this delegate is set on create().
+class MatterWaterHeater::ManagementDelegate : public chip::app::Clusters::WaterHeaterManagement::Delegate {
+public:
+  explicit ManagementDelegate(MatterWaterHeater *owner) : owner(owner) {}
+
+  chip::Protocols::InteractionModel::Status HandleBoost(
+    uint32_t duration, chip::Optional<bool> oneShot, chip::Optional<bool> emergencyBoost, chip::Optional<int16_t> temporarySetpoint,
+    chip::Optional<chip::Percent> targetPercentage, chip::Optional<chip::Percent> targetReheat
+  ) override {
+    (void)emergencyBoost;
+    (void)targetReheat;
+
+    if (temporarySetpoint.HasValue()) {
+      const int16_t requested = temporarySetpoint.Value();
+      if (requested < owner->minimumHeatingSetpoint || requested > owner->maximumHeatingSetpoint) {
+        return chip::Protocols::InteractionModel::Status::ConstraintError;
+      }
+    }
+    if (targetPercentage.HasValue() && targetPercentage.Value() > 100) {
+      return chip::Protocols::InteractionModel::Status::ConstraintError;
+    }
+
+    if (temporarySetpoint.HasValue()) {
+      if (!owner->boostHasTemporarySetpoint) {
+        owner->boostSavedHeatingSetpoint = owner->heatingSetpoint;
+        owner->boostHasTemporarySetpoint = true;
+      }
+      if (!owner->setHeatingSetpointRaw(temporarySetpoint.Value())) {
+        return chip::Protocols::InteractionModel::Status::ConstraintError;
+      }
+    } else if (owner->boostHasTemporarySetpoint) {
+      (void)owner->setHeatingSetpointRaw(owner->boostSavedHeatingSetpoint);
+      owner->boostHasTemporarySetpoint = false;
+    }
+
+    if (!owner->applyBoostState(MatterWaterHeater::BOOST_ACTIVE)) {
+      return chip::Protocols::InteractionModel::Status::Failure;
+    }
+
+    owner->boostOneShot = oneShot.ValueOr(false);
+    owner->boostHasTargetPercentage = targetPercentage.HasValue();
+    owner->boostTargetPercentage = targetPercentage.ValueOr(0);
+    owner->armBoostTimer(duration);
+    (void)GenerateBoostStartedEvent(duration, oneShot, emergencyBoost, temporarySetpoint, targetPercentage, targetReheat);
+    owner->maybeFinishOneShotBoost();
+    return chip::Protocols::InteractionModel::Status::Success;
+  }
+
+  chip::Protocols::InteractionModel::Status HandleCancelBoost() override {
+    if (owner->boostState == MatterWaterHeater::BOOST_INACTIVE && !owner->boostTimerArmed) {
+      return chip::Protocols::InteractionModel::Status::Success;
+    }
+    owner->finishBoost(true);
+    return chip::Protocols::InteractionModel::Status::Success;
+  }
+
+  chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap> GetHeaterTypes() override {
+    return chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap>(owner->heaterTypes);
+  }
+
+  chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap> GetHeatDemand() override {
+    return chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap>(owner->heatDemand);
+  }
+
+  uint16_t GetTankVolume() override {
+    return owner->tankVolume;
+  }
+
+  chip::Energy_mWh GetEstimatedHeatRequired() override {
+    return 0;
+  }
+
+  chip::Percent GetTankPercentage() override {
+    return owner->tankPercentage;
+  }
+
+  chip::app::Clusters::WaterHeaterManagement::BoostStateEnum GetBoostState() override {
+    return static_cast<chip::app::Clusters::WaterHeaterManagement::BoostStateEnum>(owner->boostState);
+  }
+
+private:
+  MatterWaterHeater *owner;
+};
+
 MatterWaterHeater::MatterWaterHeater() {}
 
 MatterWaterHeater::~MatterWaterHeater() {
@@ -139,6 +268,7 @@ bool MatterWaterHeater::begin() {
   ensureMatterNode();
 
   if (getEndPointId() != 0) {
+    log_e("MatterWaterHeater already has endpoint %u; end() after Matter.begin() does not destroy it.", getEndPointId());
     return false;
   }
 
@@ -156,12 +286,18 @@ bool MatterWaterHeater::begin() {
   // Water Heater Mode is a CHIP mode-base server. The delegate must be set before create() so
   // WaterHeaterModeDelegateInitCB builds ModeBase::Instance at stack start.
   modeDelegate = new (std::nothrow) ModeDelegate(this);
-  if (modeDelegate == nullptr) {
-    log_e("Failed to allocate Water Heater Mode delegate");
+  managementDelegate = new (std::nothrow) ManagementDelegate(this);
+  if (modeDelegate == nullptr || managementDelegate == nullptr) {
+    log_e("Failed to allocate Water Heater delegates");
+    delete modeDelegate;
+    delete managementDelegate;
+    modeDelegate = nullptr;
+    managementDelegate = nullptr;
     return false;
   }
   esp_matter::cluster::water_heater_mode::config_t mode_config;
   mode_config.delegate = modeDelegate;
+  management_config.delegate = managementDelegate;
 
   // Thermostat. This is the endpoint's thermostat configuration, not the cluster namespace -
   // use the fully-qualified name to avoid the endpoint::thermostat / cluster::thermostat ambiguity.
@@ -179,10 +315,12 @@ bool MatterWaterHeater::begin() {
   water_heater_config.water_heater_mode = mode_config;
   water_heater_config.thermostat = thermostat_config;
 
-  endpoint_t *endpoint = esp_matter::endpoint::water_heater::create(node::get(), &water_heater_config, ENDPOINT_FLAG_NONE, this);
+  endpoint_t *endpoint = esp_matter::endpoint::water_heater::create(node::get(), &water_heater_config, ENDPOINT_FLAG_DESTROYABLE, this);
   if (endpoint == nullptr) {
     delete modeDelegate;
+    delete managementDelegate;
     modeDelegate = nullptr;
+    managementDelegate = nullptr;
     return false;
   }
 
@@ -191,32 +329,59 @@ bool MatterWaterHeater::begin() {
     log_e("Water Heater Management cluster missing after endpoint create");
     esp_matter::endpoint::destroy(node::get(), endpoint);
     delete modeDelegate;
+    delete managementDelegate;
     modeDelegate = nullptr;
+    managementDelegate = nullptr;
     return false;
   }
 
-  // water_heater::create() only adds mandatory WHM attributes; optional TankVolume / TankPercentage
-  // require EnergyManagement and TankPercent features (generated water_heater_management API).
-  feature::energy_management::config_t energy_management_config;
+  // water_heater::create() only adds mandatory WHM attributes; TankVolume / TankPercentage need
+  // EnergyManagement and TankPercent features before setTankVolume() / setTankPercentage().
+#ifdef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
+  esp_matter::cluster::water_heater_management::feature::energy_management::config_t energy_management_config;
   energy_management_config.tank_volume = DEFAULT_TANK_VOLUME;
   energy_management_config.estimated_heat_required = 0;
-  if (feature::energy_management::add(management_cluster, &energy_management_config) != ESP_OK) {
+  if (esp_matter::cluster::water_heater_management::feature::energy_management::add(management_cluster, &energy_management_config) != ESP_OK) {
     log_e("Failed to add Water Heater Management EnergyManagement feature");
     esp_matter::endpoint::destroy(node::get(), endpoint);
     delete modeDelegate;
+    delete managementDelegate;
     modeDelegate = nullptr;
+    managementDelegate = nullptr;
     return false;
   }
 
-  feature::tank_percent::config_t tank_percent_config;
+  esp_matter::cluster::water_heater_management::feature::tank_percent::config_t tank_percent_config;
   tank_percent_config.tank_percentage = DEFAULT_TANK_PERCENTAGE;
-  if (feature::tank_percent::add(management_cluster, &tank_percent_config) != ESP_OK) {
+  if (esp_matter::cluster::water_heater_management::feature::tank_percent::add(management_cluster, &tank_percent_config) != ESP_OK) {
     log_e("Failed to add Water Heater Management TankPercent feature");
     esp_matter::endpoint::destroy(node::get(), endpoint);
     delete modeDelegate;
+    delete managementDelegate;
     modeDelegate = nullptr;
+    managementDelegate = nullptr;
     return false;
   }
+#else
+  if (!addLegacyWhmEnergyManagement(management_cluster)) {
+    log_e("Failed to add Water Heater Management EnergyManagement feature");
+    esp_matter::endpoint::destroy(node::get(), endpoint);
+    delete modeDelegate;
+    delete managementDelegate;
+    modeDelegate = nullptr;
+    managementDelegate = nullptr;
+    return false;
+  }
+  if (!addLegacyWhmTankPercent(management_cluster)) {
+    log_e("Failed to add Water Heater Management TankPercent feature");
+    esp_matter::endpoint::destroy(node::get(), endpoint);
+    delete modeDelegate;
+    delete managementDelegate;
+    modeDelegate = nullptr;
+    managementDelegate = nullptr;
+    return false;
+  }
+#endif
 
   setEndPointId(endpoint::get_id(endpoint));
   initialized = true;
@@ -248,7 +413,35 @@ bool MatterWaterHeater::begin() {
 }
 
 void MatterWaterHeater::end() {
+  if (initialized) {
+    finishBoost(false);
+  } else {
+    cancelBoostTimer();
+  }
+
+  if (!ArduinoMatter::isStackStarted()) {
+    if (getEndPointId() != 0) {
+      endpoint_t *ep = endpoint::get(node::get(), getEndPointId());
+      if (ep != nullptr) {
+        esp_matter::endpoint::destroy(node::get(), ep);
+      }
+      // setEndPointId(0) is rejected; clear so begin() can create a new endpoint.
+      endpoint_id = 0;
+    }
+    delete modeDelegate;
+    delete managementDelegate;
+    modeDelegate = nullptr;
+    managementDelegate = nullptr;
+    initialized = false;
+    return;
+  }
+
   initialized = false;
+  if (getEndPointId() != 0) {
+    log_w(
+      "MatterWaterHeater::end() after Matter.begin() leaves endpoint %u until reboot; begin() cannot recreate it.", getEndPointId()
+    );
+  }
 }
 
 /*
@@ -277,6 +470,7 @@ bool MatterWaterHeater::setLocalTemperatureRaw(int16_t temperature) {
 
   if (value.val.i16 == temperature) {
     localTemperature = temperature;
+    maybeFinishOneShotBoost();
     return true;
   }
 
@@ -286,6 +480,7 @@ bool MatterWaterHeater::setLocalTemperatureRaw(int16_t temperature) {
   }
 
   localTemperature = temperature;
+  maybeFinishOneShotBoost();
   return true;
 }
 
@@ -614,6 +809,7 @@ bool MatterWaterHeater::setTankPercentage(uint8_t value) {
   if (!getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::TankPercentage::Id, &attr)) {
     tankPercentage = value;
     log_v("TankPercentage attribute not in data model; cached locally (%u)", value);
+    maybeFinishOneShotBoost();
     return true;
   }
 
@@ -623,11 +819,37 @@ bool MatterWaterHeater::setTankPercentage(uint8_t value) {
   }
 
   tankPercentage = value;
+  maybeFinishOneShotBoost();
   return true;
 }
 
 uint8_t MatterWaterHeater::getTankPercentage() {
   return tankPercentage;
+}
+
+bool MatterWaterHeater::applyBoostState(BoostState_t state) {
+  if (!initialized) {
+    return false;
+  }
+
+  if (state != BOOST_INACTIVE && state != BOOST_ACTIVE) {
+    return false;
+  }
+
+  esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
+  if (getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::BoostState::Id, &attr)) {
+    if (attr.val.u8 != static_cast<uint8_t>(state)) {
+      attr.val.u8 = static_cast<uint8_t>(state);
+      if (!updateAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::BoostState::Id, &attr)) {
+        log_w("BoostState attribute write failed; keeping local cache");
+      }
+    }
+  }
+
+  boostState = static_cast<uint8_t>(state);
+  // Per Matter spec, HeatDemand reflects the heat sources currently active: Boost must be reflected too.
+  syncHeatDemand();
+  return true;
 }
 
 bool MatterWaterHeater::setBoostState(BoostState_t state) {
@@ -639,20 +861,89 @@ bool MatterWaterHeater::setBoostState(BoostState_t state) {
     return false;
   }
 
-  esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::BoostState::Id, &attr)) {
-    return false;
+  if (state == BOOST_INACTIVE && (boostState == BOOST_ACTIVE || boostTimerArmed || boostHasTemporarySetpoint)) {
+    finishBoost(true);
+    return boostState == BOOST_INACTIVE;
   }
 
-  attr.val.u8 = static_cast<uint8_t>(state);
-  if (!updateAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::BoostState::Id, &attr)) {
-    return false;
+  return applyBoostState(state);
+}
+
+void MatterWaterHeater::boostTimerCallback(chip::System::Layer *layer, void *appState) {
+  (void)layer;
+  static_cast<MatterWaterHeater *>(appState)->finishBoost(true);
+}
+
+void MatterWaterHeater::armBoostTimer(uint32_t durationSeconds) {
+  cancelBoostTimer();
+  if (durationSeconds == 0) {
+    return;
+  }
+  if (!chip::DeviceLayer::SystemLayer().IsInitialized()) {
+    log_w("Cannot arm Water Heater boost timer; SystemLayer is not initialized");
+    return;
   }
 
-  boostState = static_cast<uint8_t>(state);
-  // Per Matter spec, HeatDemand reflects the heat sources currently active: Boost must be reflected too.
-  syncHeatDemand();
-  return true;
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  const CHIP_ERROR err =
+    chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds32(durationSeconds), boostTimerCallback, this);
+  if (err != CHIP_NO_ERROR) {
+    log_e("Failed to start Water Heater boost timer: %" CHIP_ERROR_FORMAT, err.Format());
+    return;
+  }
+  boostTimerArmed = true;
+}
+
+void MatterWaterHeater::cancelBoostTimer() {
+  if (!boostTimerArmed) {
+    return;
+  }
+  if (chip::DeviceLayer::SystemLayer().IsInitialized()) {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    chip::DeviceLayer::SystemLayer().CancelTimer(boostTimerCallback, this);
+  }
+  boostTimerArmed = false;
+}
+
+void MatterWaterHeater::finishBoost(bool emitEndedEvent) {
+  if (boostFinishing) {
+    return;
+  }
+  boostFinishing = true;
+
+  cancelBoostTimer();
+  if (boostHasTemporarySetpoint) {
+    (void)setHeatingSetpointRaw(boostSavedHeatingSetpoint);
+    boostHasTemporarySetpoint = false;
+  }
+  boostOneShot = false;
+  boostHasTargetPercentage = false;
+
+  if (boostState != BOOST_INACTIVE) {
+    (void)applyBoostState(BOOST_INACTIVE);
+  }
+
+  if (emitEndedEvent && managementDelegate != nullptr) {
+    const CHIP_ERROR err = managementDelegate->GenerateBoostEndedEvent();
+    if (err != CHIP_NO_ERROR) {
+      log_w("Failed to emit Water Heater BoostEnded: %" CHIP_ERROR_FORMAT, err.Format());
+    }
+  }
+
+  boostFinishing = false;
+}
+
+void MatterWaterHeater::maybeFinishOneShotBoost() {
+  if (!boostOneShot || boostState != BOOST_ACTIVE) {
+    return;
+  }
+  if (localTemperature < heatingSetpoint) {
+    return;
+  }
+  if (boostHasTargetPercentage && tankPercentage < boostTargetPercentage) {
+    return;
+  }
+  finishBoost(true);
 }
 
 MatterWaterHeater::BoostState_t MatterWaterHeater::getBoostState() {
@@ -715,6 +1006,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
       switch (attribute_id) {
         case Thermostat::Attributes::LocalTemperature::Id:
           localTemperature = val->val.i16;
+          maybeFinishOneShotBoost();
           return true;
 
         case Thermostat::Attributes::OccupiedHeatingSetpoint::Id:
@@ -758,6 +1050,11 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           return true;
 
         case WaterHeaterManagement::Attributes::BoostState::Id:
+          if (!boostFinishing && val->val.u8 == BOOST_INACTIVE &&
+              (boostState == BOOST_ACTIVE || boostTimerArmed || boostHasTemporarySetpoint)) {
+            finishBoost(true);
+            return true;
+          }
           boostState = val->val.u8;
           syncHeatDemand();
           return true;
@@ -769,6 +1066,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
 
         case WaterHeaterManagement::Attributes::TankPercentage::Id:
           tankPercentage = val->val.u8;
+          maybeFinishOneShotBoost();
           return true;
 
         default: break;

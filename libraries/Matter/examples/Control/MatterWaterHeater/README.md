@@ -1,7 +1,8 @@
 # Matter Water Heater Example
 
-This example demonstrates how to create a Matter-compatible water heater device using an ESP32 SoC microcontroller.\
-The application showcases Matter commissioning, water heater attributes (temperature, setpoint, tank state, heat demand), and a simulated heating cycle.
+This is the basic water heater sketch: commission a Matter Water Heater, report tank temperature, and heat toward the setpoint.\
+It honors System Mode, Water Heater Mode Off, and Boost, and clears **HeatDemand** when the tank is not drawing power.\
+Eco, Boost duration / one-shot details, tank percentage, and richer logging are in [MatterWaterHeaterAdvanced](../MatterWaterHeaterAdvanced).
 
 ## Supported Targets
 
@@ -34,17 +35,17 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 ## Features
 
-- Matter protocol implementation for a water heater device (device type 0x050F)
-- Default network and CHIPoBLE as in the Supported Targets table
-- Simulated tank temperature, heating setpoint, tank percentage, and heat demand
-- `MatterWaterHeater::begin()` provisions Water Heater Management **EnergyManagement** and **TankPercent** features (call before `Matter.begin()`)
+- Matter Water Heater (device type 0x050F)
+- Simulated tank temperature and heating setpoint
+- Heats while System Mode is Heat and Water Heater Mode is not Off, or while a hub Boost is Active (Boost still heats if Mode or System is Off)
+- Cools toward 20 °C when heating is off
+- Clears **HeatDemand** when the tank is at the setpoint or not heating
 - Matter commissioning via QR code or manual pairing code
-- Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 
 ## Hardware Requirements
 
 - ESP32 compatible development board (see supported targets table)
-- No additional hardware required; temperature and tank state are simulated in the sketch
+- No additional hardware; temperature is simulated
 
 For a production device, replace the simulation with real sensors and actuators with appropriate safety interlocks.
 
@@ -79,113 +80,50 @@ For a production device, replace the simulation with real sensors and actuators 
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. Wi-Fi connection messages appear only on ESP32 and ESP32-S2. CHIPoBLE targets get the operational network from the hub (Wi-Fi, or Thread on ESP32-C5 / ESP32-C6 / ESP32-H2). `matterWaitUntilReady()` prints the pairing information and waits until the controller CASE session is up. About five seconds later, `loop()` starts the simulated heating log:
+Open the Serial Monitor at **115200**. `matterWaitUntilReady()` prints the pairing code and waits until the controller CASE session is up. About five seconds later `loop()` prints the simulated tank:
 
 ```
-Connecting to your-wifi-ssid
-.......
-Wi-Fi connected
-IP address: 192.168.1.100
-
-Matter Node is not commissioned yet.
-Commission it using the pairing code or QR code.
-Manual pairing code: 34970112332
-QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3A6FCJ142C00KA0648G00
-[ready] net=wifi commissioned=N connected=N controller=N
-[ready] net=wifi commissioned=Y connected=Y controller=N
-...
-[ready] net=wifi commissioned=Y connected=Y controller=Y
 Controller CASE session is up.
-changed | Temp: 20.0 C | Setpoint: 48.0 C | Mode: Manual | System: Heat | Boost: off | Tank: 0 % | Demand: 0x01
-tick | Temp: 20.5 C | Setpoint: 48.0 C | Mode: Manual | System: Heat | Boost: off | Tank: 1 % | Demand: 0x01
-tick | Temp: 21.0 C | Setpoint: 48.0 C | Mode: Manual | System: Heat | Boost: off | Tank: 3 % | Demand: 0x01
+Temp: 20.5 C | Setpoint: 48.0 C | Heat: on
+Temp: 21.0 C | Setpoint: 48.0 C | Heat: on
 ```
+
+`Heat: on` is **HeatDemand** (element drawing power), not System Mode. At the setpoint the log shows `Heat: off`.
+
+Change the setpoint, System Mode, or Water Heater Mode from the hub; the next tick follows the new values. Mode **Off** stops heating unless Boost is Active.
 
 ## Using the Device
 
-### Device type and clusters
+The endpoint is Matter device type **0x050F**. This sketch drives temperature and HeatDemand only (no Eco cap, tank %, or Boost session log):
 
-The endpoint implements Matter device type **0x050F** (Water Heater) with **Water Heater Management**, **Water Heater Mode**, and **Thermostat** (heating-only) clusters.
+| Parameter           |  Value |
+| ------------------- | -----: |
+| Initial temperature |  20 °C |
+| Heating setpoint    |  48 °C |
+| System mode         |   Heat |
+| Water heater mode   | Manual (library default) |
 
-### Simulated water heater
+Every five seconds the temperature rises by 0.5 °C toward the setpoint while heating. It falls toward 20 °C when System Mode is Off or Water Heater Mode is Off, unless Boost is Active. **HeatDemand** is the heater-type bitmap while the element is on, and 0 at the setpoint or when heating is off.
 
-Default configuration:
-
-| Parameter           |             Value |
-| ------------------- | ----------------: |
-| Tank volume         |             100 L |
-| Initial temperature |             20 °C |
-| Heating setpoint    |             48 °C |
-| Heater type         | Immersion element |
-| System mode         |              Heat |
-| Water heater mode   |            Manual |
-| Tank percentage     |               0 % |
-
-Every five seconds the sketch updates the simulated tank:
-
-- **Manual** and system **Heat**: temperature rises by 0.5 °C toward the heating setpoint.
-- **Eco**: rises by 0.25 °C and stops at 40 °C even if the setpoint is higher.
-- **Boost**: rises by 1.5 °C toward the setpoint even if system mode or water heater mode is Off.
-- **Off** (water heater mode Off, or system Off, with boost inactive): temperature falls toward 20 °C.
-
-Tank percentage is derived from temperature versus the setpoint. **HeatDemand** is the heater-type bitmap while heating and 0 when the target is reached or heating is off. A line prefixed `changed` is printed as soon as the hub updates mode, system mode, boost, or setpoint.
-
-### Smart Home Integration
-
-Use a Matter-compatible hub (like a Home Assistant server, Apple HomePod, Google Nest Hub, or Amazon Echo) to commission the device.
-
-#### Home Assistant
-
-1. Open Home Assistant
-2. Go to Settings > Devices & services > Add integration > Matter
-3. Scan the QR code from the Serial Monitor, or enter the manual pairing code
-4. Follow the prompts to complete setup
-
-#### Apple Home
-
-1. Open the Home app on your iOS device
-2. Tap the "+" button > Add Accessory
-3. Scan the QR code displayed in the Serial Monitor, or enter the manual pairing code
-4. Follow the prompts to complete setup
-
-#### Amazon Alexa
-
-1. Open the Alexa app
-2. Tap More > Add Device > Matter
-3. Select "Scan QR code" or "Enter code manually"
-4. Complete the setup process
-
-#### Google Home
-
-1. Open the Google Home app
-2. Tap "+" > Set up device > New device
-3. Choose "Matter device"
-4. Scan the QR code or enter the manual pairing code
-5. Follow the prompts to complete setup
+Use a Matter hub (Home Assistant, Apple Home, Amazon Alexa, or Google Home) to scan the QR code or enter the manual pairing code from the Serial Monitor.
 
 ## Code Structure
 
-The MatterWaterHeater example consists of the following main components:
+1. **`setup()`**: `waterHeater.begin()` (before `Matter.begin()`), set temperature and setpoint, then `Matter.begin()` and `matterWaitUntilReady()`.
+2. **`loop()`**: `matterRestartIfNoFabric()`. Every five seconds updates temperature and **HeatDemand**, and prints them. Mode Off and System Off stop heating unless Boost is Active.
 
-1. **`setup()`**: Creates the `MatterWaterHeater` endpoint (`begin()` adds WHM tank features), configures attributes, then `Matter.begin()` and `matterWaitUntilReady()` (same commissioning wait as Fan and Thermostat).
-2. **`loop()`**: `matterRestartIfNoFabric()`. Prints `changed` when mode, system mode, boost, or setpoint changes. Every five seconds applies Manual, Eco, Boost, or Off behavior, updates **HeatDemand**, and calls `updateTankPercentage()`. There is no button; decommission is not in this sketch.
-3. **`updateTankPercentage()`**: Maps temperature between cold water and setpoint to **TankPercentage**.
-4. **`logWaterHeater()`**: Prints temperature, setpoint, water heater mode, system mode, boost, tank percent, and heat demand.
-
-For a real appliance, read tank temperature from a sensor, drive the heating element with proper safety interlocks, and never rely on Matter as the only safety layer.
+There is no button; decommission is not in this sketch.
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured (ESP32 / ESP32-S2 need Wi-Fi in the sketch or another commissioning path).
-- **Tank attributes missing on hub**: Call `waterHeater.begin()` before `Matter.begin()` so EnergyManagement and TankPercent features are provisioned.
-- **HeatDemand does not match hub after mode change**: Confirm `MatterWaterHeater` is up to date; controller writes to SystemMode/Boost/HeaterTypes sync HeatDemand in the library.
 - **Failed to commission**: Erase flash (**Erase All Flash Before Sketch Upload**) or use another Matter node on the same fabric.
 - **No serial output**: Check baud rate (115200) and USB connection.
 
 ## Related Documentation
 
+- [Matter Water Heater Advanced](../MatterWaterHeaterAdvanced)
 - [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
-- [Matter Endpoint Base Class](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter_ep.html)
 - [Matter Water Heater Endpoint](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/ep_water_heater.html)
 
 ## License

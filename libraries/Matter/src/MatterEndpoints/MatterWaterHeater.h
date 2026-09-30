@@ -20,6 +20,12 @@
 #include <MatterEndPoint.h>
 #include <app-common/zap-generated/cluster-enums.h>
 
+namespace chip {
+namespace System {
+class Layer;
+}  // namespace System
+}  // namespace chip
+
 // Matter Water Heater endpoint (device type 0x050F) - Water Heater Management, Water Heater Mode and Thermostat clusters.
 class MatterWaterHeater : public MatterEndPoint {
 public:
@@ -51,9 +57,12 @@ public:
   MatterWaterHeater();
   ~MatterWaterHeater();
 
-  // Provisions optional WHM tank features; call before Matter.begin(). On failure after partial
-  // create, the endpoint is destroyed so begin() may be retried on the same node.
+  // Provisions optional WHM tank features and the WHM delegate; call before Matter.begin().
+  // On failure after partial create, the endpoint is destroyed so begin() may be retried.
   bool begin();
+  // Before Matter.begin(): destroys the endpoint and frees both delegates so begin() can run again.
+  // After Matter.begin(): cancels an active boost timer and stops sketch-side updates. The Matter
+  // endpoint and CHIP Instances stay until reboot; begin() will fail.
   void end();
 
   // Thermostat / local temperature
@@ -99,6 +108,9 @@ public:
   bool setTankPercentage(uint8_t tankPercentage);
   uint8_t getTankPercentage();
 
+  // Writes BoostState and syncs HeatDemand. Setting INACTIVE cancels an active
+  // Boost session (timer, temporary setpoint, BoostEnded). Controller
+  // Boost/CancelBoost commands use the WHM delegate and then this same cache.
   bool setBoostState(BoostState_t state);
   BoostState_t getBoostState();
 
@@ -136,6 +148,26 @@ private:
   // after the stack starts, because ModeBase::Instance keeps this pointer.
   class ModeDelegate;
   ModeDelegate *modeDelegate = nullptr;
+
+  // CHIP WaterHeaterManagement::Delegate. Required so Boost/CancelBoost register a
+  // WaterHeaterManagement::Instance and controllers read WHM attrs from this cache.
+  class ManagementDelegate;
+  ManagementDelegate *managementDelegate = nullptr;
+
+  bool boostTimerArmed = false;
+  bool boostOneShot = false;
+  bool boostHasTemporarySetpoint = false;
+  int16_t boostSavedHeatingSetpoint = 0;
+  bool boostHasTargetPercentage = false;
+  uint8_t boostTargetPercentage = 0;
+  bool boostFinishing = false;
+
+  static void boostTimerCallback(chip::System::Layer *layer, void *appState);
+  void armBoostTimer(uint32_t durationSeconds);
+  void cancelBoostTimer();
+  void finishBoost(bool emitEndedEvent);
+  void maybeFinishOneShotBoost();
+  bool applyBoostState(BoostState_t state);
 
   // Recomputes HeatDemand from the current heaterTypes/systemMode/boostState and pushes it if changed.
   // Per Matter spec, HeatDemand reflects the heat sources currently active (Boost or normal heating).

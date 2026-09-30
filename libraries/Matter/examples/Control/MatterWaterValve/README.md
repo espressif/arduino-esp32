@@ -185,7 +185,7 @@ The MatterWaterValve example consists of the following main components:
 2. **`loop()`**: `matterRestartIfNoFabric()`, then `MatterButton` click (toggle open for `openDurationSeconds` or close) and long-hold decommission. Logs **RemainingDuration** while a timed open counts down. Commissioning wait is `matterWaitUntilReady()` in `setup()`, same as the Fan and Thermostat examples.
 
 3. **Callbacks**:
-   - `onValveOpen()`: Called whenever the valve is commanded open, either by a Matter controller or locally via `open()`. Drives the physical actuator (the LED, in this example). Return `true` on success or `false` if open could not be completed.
+   - `onValveOpen()`: Called whenever the valve is commanded open, either by a Matter controller or locally via `open()`. Drives the physical actuator (the LED, in this example). Return `true` on success or `false` if open could not be completed. A failed open is rolled back after CHIP `OpenValve()` returns so the remaining-duration timer does not keep the valve Open.
    - `onValveClose()`: Called whenever the valve is commanded closed, either by a Matter controller, locally via `close()`, or automatically when a timed open operation elapses. Return type is `void` (the Matter delegate does not use a close failure result).
 
 For a production water valve, replace the LED control in `onValveOpen()`/`onValveClose()` with your actual relay/solenoid driver code.

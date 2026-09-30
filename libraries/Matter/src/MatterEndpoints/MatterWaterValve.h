@@ -140,7 +140,13 @@ private:
   class ValveDelegate;
   ValveDelegate *delegate = nullptr;
 
+  // Set when onOpen() fails and CloseValve() is scheduled after OpenValve() returns.
+  // Local open() must not CloseValve() again or onClose() runs twice.
+  bool openRollbackScheduled = false;
+
   // Live CHIP cluster object for this endpoint, or nullptr before Matter.begin().
   chip::app::Clusters::ValveConfigurationAndControlCluster *getValveCluster();
+
+  void rollbackFailedOpen();
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

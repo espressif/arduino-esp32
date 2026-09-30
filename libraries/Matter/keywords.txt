@@ -295,12 +295,8 @@ getDefaultOpenDuration	KEYWORD2
 getRemainingDuration	KEYWORD2
 getValveFault	KEYWORD2
 setValveFault	KEYWORD2
-setLocalTemperature	KEYWORD2
-getLocalTemperature	KEYWORD2
 setLocalTemperatureRaw	KEYWORD2
 getLocalTemperatureRaw	KEYWORD2
-setHeatingSetpoint	KEYWORD2
-getHeatingSetpoint	KEYWORD2
 setHeatingSetpointRaw	KEYWORD2
 getHeatingSetpointRaw	KEYWORD2
 setAbsoluteMinimumHeatingSetpoint	KEYWORD2
@@ -469,9 +465,3 @@ OKAY	LITERAL1
 CHANNEL_CHANGE	LITERAL1
 FINISH	LITERAL1
 STOP	LITERAL1
-setHardwareVersion	KEYWORD2
-setHardwareVersionString	KEYWORD2
-setSoftwareVersion	KEYWORD2
-setSoftwareVersionString	KEYWORD2
-getSoftwareVersion	KEYWORD2
-getSoftwareVersionString	KEYWORD2

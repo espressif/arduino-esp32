@@ -8,15 +8,18 @@ About
 The ``MatterWaterValve`` class provides a water valve endpoint for Matter networks (device type ``0x0042``). This endpoint implements the Matter Valve Configuration and Control cluster as a code-driven CHIP server object.
 
 **Features:**
+
 * Open indefinitely or for a timed duration (automatic close when the countdown elapses).
 * ``DefaultOpenDuration`` configured in ``begin()``.
 * ``ValveFault`` reporting.
 * ``onOpen()`` / ``onClose()`` user callbacks bridged through a cluster ``Delegate``.
+* Failed ``onOpen()`` is rolled back after CHIP ``OpenValve()`` returns so the remaining-duration timer does not keep the valve Open.
 * Local ``open()`` / ``close()`` after ``Matter.begin()`` (same paths as a Matter controller).
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
 * Matter standard compliance.
 
 **Use Cases:**
+
 * Irrigation valves.
 * Main water shutoff valves.
 * Appliance supply valves.
@@ -102,7 +105,7 @@ Callbacks
 onOpen
 ^^^^^^
 
-Sets a callback for when the valve is commanded open (Matter controller or local ``open()``). Return ``false`` if open could not be completed; the library keeps the valve reported as closed.
+Sets a callback for when the valve is commanded open (Matter controller or local ``open()``). Return ``false`` if open could not be completed; the library keeps the valve reported as closed. A failed Open is rolled back after CHIP ``OpenValve()`` returns (the remaining-duration timer is started after the delegate callback). Local ``open()`` does not CloseValve a second time when that rollback is already scheduled.
 
 .. code-block:: arduino
 
@@ -194,7 +197,7 @@ Example
 -------
 
 Water Valve
-**********
+***********
 
 .. literalinclude:: ../../../libraries/Matter/examples/Control/MatterWaterValve/MatterWaterValve.ino
     :language: arduino
