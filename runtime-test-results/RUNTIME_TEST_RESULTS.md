@@ -26,10 +26,10 @@ i2s|38/38 :white_check_mark:\*|43/43 :white_check_mark:\*|Error :fire:|Error :fi
 keyboard_layout|-|-|-|-|-|10/10 :white_check_mark:\*|10/10 :white_check_mark:\*|10/10 :white_check_mark:\*
 multitasking|10/10 :white_check_mark:\*|9/9 :white_check_mark:\*|9/9 :white_check_mark:\*|9/9 :white_check_mark:\*|9/9 :white_check_mark:\*|10/10 :white_check_mark:\*|9/9 :white_check_mark:\*|10/10 :white_check_mark:\*
 network_client|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*
-networking|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|-|-|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*
+networking|13/13 :white_check_mark:\*|Error :fire:|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*|-|-|13/13 :white_check_mark:\*|13/13 :white_check_mark:\*
 nvs|54/54 :white_check_mark:\*|54/54 :white_check_mark:\*|27/27 :white_check_mark:\*|108/108 :white_check_mark:\*|108/108 :white_check_mark:\*|108/108 :white_check_mark:\*|54/54 :white_check_mark:\*|81/81 :white_check_mark:\*
 openthread|-|-|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|-|-|-
-ota|52/52 :white_check_mark:\*|0/1 :x:\*|52/52 :white_check_mark:\*|0/1 :x:\*|-|-|51/52 :x:\*|52/52 :white_check_mark:\*
+ota|52/52 :white_check_mark:\*|Error :fire:|52/52 :white_check_mark:\*|0/1 :x:\*|-|-|51/52 :x:\*|52/52 :white_check_mark:\*
 periman|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
 power_management|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*|5/5 :white_check_mark:\*
 psram|14/14 :white_check_mark:\*|-|14/14 :white_check_mark:\*|-|-|11/11 :white_check_mark:\*|14/14 :white_check_mark:\*|14/14 :white_check_mark:\*
@@ -62,7 +62,7 @@ network_client|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_ch
 networking|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|-|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:
 nvs|52/52 :white_check_mark:|52/52 :white_check_mark:|104/104 :white_check_mark:|104/104 :white_check_mark:|104/104 :white_check_mark:|52/52 :white_check_mark:|78/78 :white_check_mark:
 psram|14/14 :white_check_mark:|-|-|-|11/11 :white_check_mark:|14/14 :white_check_mark:|14/14 :white_check_mark:
-sdcard|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:\*|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:
+sdcard|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:
 spi|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:|16/16 :white_check_mark:
 ticker|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:
 timer|7/7 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:
@@ -1212,8 +1212,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
 
 > \* Result from last successful run (runner currently unavailable)
 
-Generated on: 2026/09/29 00:35:34 UTC
+Generated on: 2026/09/30 00:36:43 UTC
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/46ababa792129f47f22efeb8493ef0cc11e0e023) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/36502264622) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/36502969130) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/36503685359)
+[Commit](https://github.com/espressif/arduino-esp32/commit/699c2dcf50f1b7bd0d3e269ff43f016b087cf801) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/36649538886) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/36650322568) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/36651057521)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/109200653155)
+[Test results](https://github.com/espressif/arduino-esp32/runs/109685382099)
