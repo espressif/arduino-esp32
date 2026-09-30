@@ -78,12 +78,10 @@ extern "C" const esp_partition_t *__wrap_esp_ota_get_running_partition(void) {
 }
 
 /**
- * @brief A sketch on the Dot has no OTA slot.
- * @param from Ignored.
+ * @brief A sketch on the Dot has no OTA slot, whichever partition the search starts from.
  * @return Always NULL.
  */
-extern "C" const esp_partition_t *__wrap_esp_ota_get_next_update_partition(const esp_partition_t *from) {
-  (void)from;
+extern "C" const esp_partition_t *__wrap_esp_ota_get_next_update_partition(const esp_partition_t *) {
   return NULL;
 }
 
