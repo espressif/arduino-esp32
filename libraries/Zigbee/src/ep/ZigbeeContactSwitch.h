@@ -43,7 +43,7 @@ public:
   // Request a new IAS zone enroll, can be called to enroll a new device or to re-enroll an already enrolled device
   bool requestIASZoneEnroll();
 
-  // Restore IAS Zone enroll, needed to be called after rebooting already enrolled device - restored from flash memory (faster for sleepy devices)
+  // Sync enroll from persisted ZoneState / CIE / ZoneId (call after Zigbee.begin())
   bool restoreIASZoneEnroll();
 
   // Check if the device is enrolled in the IAS Zone
