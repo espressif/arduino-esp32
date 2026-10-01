@@ -61,6 +61,7 @@
 #include "soc/lp_system_reg.h"
 #include "esp_rom_sys.h"
 #elif CONFIG_IDF_TARGET_ESP32P4
+#include "hal/usb_wrap_ll.h"
 #endif
 
 typedef enum {
@@ -155,7 +156,7 @@ esp_err_t init_usb_hal(bool external_phy) {
     .target = USB_PHY_TARGET_INT,
 #endif
     .otg_mode = USB_OTG_MODE_DEVICE,
-#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
+#if (CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT == 0) || CONFIG_IDF_TARGET_ESP32S31
     .otg_speed = USB_PHY_SPEED_HIGH,
 #else
     .otg_speed = USB_PHY_SPEED_FULL,
@@ -164,7 +165,18 @@ esp_err_t init_usb_hal(bool external_phy) {
     .otg_io_conf = NULL,
   };
 
+#if CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT != 0
+  // Route FS OTG before the PHY driver configures its pins. PHY0 selection
+  // moves USB Serial/JTAG to PHY1 for this application.
+  usb_wrap_ll_phy_select(&USB_WRAP, 0);
+#endif
   ret = usb_new_phy(&phy_config, &phy_handle);
+#if CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT != 0
+  if (ret == ESP_OK) {
+    gpio_set_drive_capability(GPIO_NUM_24, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(GPIO_NUM_25, GPIO_DRIVE_CAP_3);
+  }
+#endif
   if (ret != ESP_OK) {
     log_e("Failed to init USB PHY");
   }
@@ -243,15 +255,15 @@ esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
   tusb_rhport_init_t tinit;
   memset(&tinit, 0, sizeof(tusb_rhport_init_t));
   tinit.role = TUSB_ROLE_DEVICE;
-#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
+#if (CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT == 0) || CONFIG_IDF_TARGET_ESP32S31
   tinit.speed = TUSB_SPEED_HIGH;
 #else
   tinit.speed = TUSB_SPEED_FULL;
 #endif
-#if CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT == 0
   if (!tusb_init(1, &tinit)) { /* TinyUSB: P4 OTG HS is rhport 1 */
 #else
-  if (!tusb_init(0, &tinit)) { /* S2/S3 FS, S31 single HS */
+  if (!tusb_init(0, &tinit)) { /* P4/S2/S3 FS, S31 single HS */
 #endif
     log_e("Can't initialize the TinyUSB stack.");
     return ESP_FAIL;

@@ -680,6 +680,9 @@ esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
 esp32p4.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32p4.menu.USBMode.default.build.usb_mode=0
+esp32p4.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+esp32p4.menu.USBMode.tinyusb_fs.build.usb_mode=0
+esp32p4.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 esp32p4.menu.CDCOnBoot.cdc=Enabled
 esp32p4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -3477,6 +3480,9 @@ esp32p4_core_board.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32p4_core_board.menu.USBMode.default.build.usb_mode=0
 esp32p4_core_board.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32p4_core_board.menu.USBMode.hwcdc.build.usb_mode=1
+esp32p4_core_board.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+esp32p4_core_board.menu.USBMode.tinyusb_fs.build.usb_mode=0
+esp32p4_core_board.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 esp32p4_core_board.menu.CDCOnBoot.default=Disabled
 esp32p4_core_board.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -14323,7 +14329,13 @@ dfrobot_firebeetle2_esp32p4.build.chip_variant=esp32p4_es
 dfrobot_firebeetle2_esp32p4.build.board=DFROBOT_FIREBEETLE2_ESP32P4
 dfrobot_firebeetle2_esp32p4.build.bootloader_addr=0x2000
 
-dfrobot_firebeetle2_esp32p4.build.usb_mode=1
+dfrobot_firebeetle2_esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG
+dfrobot_firebeetle2_esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
+dfrobot_firebeetle2_esp32p4.menu.USBMode.default=USB-OTG (TinyUSB)
+dfrobot_firebeetle2_esp32p4.menu.USBMode.default.build.usb_mode=0
+dfrobot_firebeetle2_esp32p4.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+dfrobot_firebeetle2_esp32p4.menu.USBMode.tinyusb_fs.build.usb_mode=0
+dfrobot_firebeetle2_esp32p4.menu.USBMode.tinyusb_fs.build.usb_port=1
 dfrobot_firebeetle2_esp32p4.build.cdc_on_boot=1
 dfrobot_firebeetle2_esp32p4.build.msc_on_boot=0
 dfrobot_firebeetle2_esp32p4.build.dfu_on_boot=0
@@ -24405,6 +24417,9 @@ m5stack_tab5.menu.USBMode.hwcdc=Hardware CDC and JTAG
 m5stack_tab5.menu.USBMode.hwcdc.build.usb_mode=1
 m5stack_tab5.menu.USBMode.default=USB-OTG (TinyUSB)
 m5stack_tab5.menu.USBMode.default.build.usb_mode=0
+m5stack_tab5.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+m5stack_tab5.menu.USBMode.tinyusb_fs.build.usb_mode=0
+m5stack_tab5.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 m5stack_tab5.menu.CDCOnBoot.cdc=Enabled
 m5stack_tab5.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -45100,6 +45115,9 @@ waveshare_p4_poe_eth.menu.USBMode.default=USB-OTG (TinyUSB)
 waveshare_p4_poe_eth.menu.USBMode.default.build.usb_mode=0
 waveshare_p4_poe_eth.menu.USBMode.hwcdc=Hardware CDC and JTAG
 waveshare_p4_poe_eth.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_p4_poe_eth.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+waveshare_p4_poe_eth.menu.USBMode.tinyusb_fs.build.usb_mode=0
+waveshare_p4_poe_eth.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 waveshare_p4_poe_eth.menu.CDCOnBoot.default=Disabled
 waveshare_p4_poe_eth.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -57627,6 +57645,9 @@ esp32p4_4ds_mipi.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32p4_4ds_mipi.menu.USBMode.default.build.usb_mode=0
 esp32p4_4ds_mipi.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32p4_4ds_mipi.menu.USBMode.hwcdc.build.usb_mode=1
+esp32p4_4ds_mipi.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+esp32p4_4ds_mipi.menu.USBMode.tinyusb_fs.build.usb_mode=0
+esp32p4_4ds_mipi.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 esp32p4_4ds_mipi.menu.CDCOnBoot.default=Disabled
 esp32p4_4ds_mipi.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -57787,6 +57808,9 @@ esp32p4_4ds_mipi_round.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32p4_4ds_mipi_round.menu.USBMode.default.build.usb_mode=0
 esp32p4_4ds_mipi_round.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32p4_4ds_mipi_round.menu.USBMode.hwcdc.build.usb_mode=1
+esp32p4_4ds_mipi_round.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+esp32p4_4ds_mipi_round.menu.USBMode.tinyusb_fs.build.usb_mode=0
+esp32p4_4ds_mipi_round.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 esp32p4_4ds_mipi_round.menu.CDCOnBoot.default=Disabled
 esp32p4_4ds_mipi_round.menu.CDCOnBoot.default.build.cdc_on_boot=0
