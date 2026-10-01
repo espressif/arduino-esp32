@@ -228,7 +228,7 @@ Serial.println(Matter.getOnboardingQRCodeUrl());   // live QR URL after begin()
 
 If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Arduino Matter uses the CHIP test pair **PIN `20202021`**, discriminator **`0xF00`**, manual code **`34970112332`** (same as On/Off Light and the other examples). Before `begin()`, or if `begin()` failed (`isStackStarted()` is false), the pairing getters log a warning and return empty.
 
-`getSoftwareVersion()` and `getSoftwareVersionString()` report the Basic Information software version controllers see after a successful `Matter.begin()`. If `setSoftwareVersion()` / `setSoftwareVersionString()` ran earlier, the getters return those stored values even before `begin()`. Without a setter after `begin()`, they read ConfigurationManager, `CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER`, or the IDF app version string.
+`getSoftwareVersion()` and `getSoftwareVersionString()` must only be called after a successful `Matter.begin()`. Before `begin()`, or if `begin()` failed (`isStackStarted()` is false), they log a warning and return `0` or an empty string. Without a setter they read ConfigurationManager, `CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER`, or the IDF app version string.
 
 On Wi-Fi station builds, `Matter.begin()` initializes the Wi-Fi driver with reduced RX/TX buffers before starting CHIP unless Thread or Ethernet was selected. Matter traffic is small, so the library uses 4 static RX, 8 dynamic RX, 8 dynamic TX, and an AMPDU RX BA window of 6 instead of the sdkconfig defaults. `esp_wifi_init()` keeps the first caller's counts, so CHIP inherits them. If the sketch already called `matterConnectWiFi()` / `WiFi.begin()` / `WiFi.mode()`, those limits are not applied.
 

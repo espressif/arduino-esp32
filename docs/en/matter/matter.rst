@@ -256,7 +256,7 @@ Identity and commissioning (call before ``Matter.begin()``). ``matterSetExampleI
 * ``setBLEMemoryReleaseEnabled()``
 * ``selectNetwork()``
 
-``getSoftwareVersion()`` and ``getSoftwareVersionString()`` report the Basic Information software version controllers see after a successful ``Matter.begin()``. If ``setSoftwareVersion()`` / ``setSoftwareVersionString()`` ran earlier, the getters return those stored values even before ``begin()``. Without a setter after ``begin()``, they read ConfigurationManager, ``CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER``, or the IDF app version string.
+``getSoftwareVersion()`` and ``getSoftwareVersionString()`` must only be called after a successful ``Matter.begin()``. Before ``begin()``, or if ``begin()`` failed (``isStackStarted()`` is false), they log a warning and return ``0`` or an empty string. Without a setter they read ConfigurationManager, ``CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER``, or the IDF app version string.
 
 ``Matter.waitForNetwork()`` is a runtime method, not a setter. It does not start hardware. Ethernet sketches typically call it after ``ETH.begin()`` / ``enableIPv6()`` and before ``Matter.begin()``. ``timeoutMs`` 0 is a single check; ``MATTER_NETWORK_NONE`` waits for any interface.
 

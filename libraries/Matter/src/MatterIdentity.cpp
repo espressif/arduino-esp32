@@ -168,6 +168,10 @@ bool ArduinoMatter::setSoftwareVersionString(const char *value) {
 }
 
 uint32_t ArduinoMatter::getSoftwareVersion() {
+  if (!isStackStarted()) {
+    log_w("Matter.getSoftwareVersion() is not available before Matter.begin(); call it after a successful begin().");
+    return 0;
+  }
   if (sHasSoftwareVersion) {
     return sSoftwareVersion;
   }
@@ -179,6 +183,10 @@ uint32_t ArduinoMatter::getSoftwareVersion() {
 }
 
 String ArduinoMatter::getSoftwareVersionString() {
+  if (!isStackStarted()) {
+    log_w("Matter.getSoftwareVersionString() is not available before Matter.begin(); call it after a successful begin().");
+    return String();
+  }
   if (sSoftwareVersionString[0] != '\0') {
     return String(sSoftwareVersionString);
   }

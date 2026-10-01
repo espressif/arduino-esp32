@@ -225,6 +225,7 @@ public:
   // In-memory only; CHIP StoreSoftwareVersion is unsupported on ESP32.
   static bool setSoftwareVersion(uint32_t version);
   static bool setSoftwareVersionString(const char *value);
+  // Basic Information SoftwareVersion. Call after a successful Matter.begin() only.
   static uint32_t getSoftwareVersion();
   static String getSoftwareVersionString();
 
