@@ -219,7 +219,7 @@ To see the supported list for each SoC, see this section: `Libraries <../librari
 The USB option will be available only if the correct target is selected.
 
 USB Mode (ESP32-P4)
-******************
+*******************
 
 ESP32-P4 boards provide three choices in the existing **USB Mode** menu:
 
