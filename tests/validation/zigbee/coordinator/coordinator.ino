@@ -9,7 +9,7 @@
  * SDK v2 lifecycle: role() once, configure and add endpoints, then begin() once.
  *
  * Pin-to-pin: wireless (802.15.4 radio)
- * Runner: two_duts (C6/H2)
+ * Runner: two_duts (C5/C6/H2/S31)
  * Requires: CONFIG_ZB_ENABLED=y, ZigbeeMode=zczr, PartitionScheme=zigbee_zczr
  */
 

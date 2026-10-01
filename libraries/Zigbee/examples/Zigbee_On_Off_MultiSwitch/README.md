@@ -6,18 +6,18 @@ This example demonstrates how to configure a Zigbee device as a multi-switch con
 
 Currently, this example supports the following targets.
 
-| Supported Targets | ESP32-C6 | ESP32-H2 |
-| ----------------- | -------- | -------- |
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-H2 | ESP32-S31 |
+| ----------------- | -------- | -------- | -------- | --------- |
 
 ## Hardware Required
 
-* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee multi-switch controller
+* One development board (ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31) acting as Zigbee multi-switch controller
 * One or more Zigbee light devices (loaded with Zigbee_On_Off_Light example)
 * A USB cable for power supply and programming
 
 ### Configure the Project
 
-The example uses the BOOT button (pin 9) on ESP32-C6 and ESP32-H2 as the physical switch input. The switch can be configured to operate in two modes:
+The example uses the BOOT button (`BOOT_PIN`) as the physical switch input. The switch can be configured to operate in two modes:
 
 1. **Coordinator Mode**: For running your own Zigbee network
 2. **Router Mode**: For Home Assistant integration
@@ -105,6 +105,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+* ESP32-C5 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c5_datasheet_en.pdf)
 * ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
 * ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
+* ESP32-S31 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s31_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)

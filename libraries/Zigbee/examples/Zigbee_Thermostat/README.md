@@ -8,27 +8,27 @@ This example shows how to configure Zigbee Coordinator and use it as a Home Auto
 
 Currently, this example supports the following targets.
 
-| Supported Targets | ESP32-C6 | ESP32-H2 |
-| ----------------- | -------- | -------- |
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-H2 | ESP32-S31 |
+| ----------------- | -------- | -------- | -------- | --------- |
 
 ## Thermostat Functions
 
 Note:
- * This board means the board (e.g. ESP32-H2) loaded with `Zigbee_Thermostat` example.
- * The remote board means the board (e.g. ESP32-H2) loaded with `Zigbee_Temperature_Sensor` example.
+ * This board means the board (e.g. ESP32-C5 / C6 / H2 / S31) loaded with `Zigbee_Thermostat` example.
+ * The remote board means the board (e.g. ESP32-C5 / C6 / H2 / S31) loaded with `Zigbee_Temperature_Sensor` example.
 
 Functions:
  * By clicking the button (BOOT) on this board, this board will read temperature value, temperature measurement range and temperature tolerance from the remote board. Also, this board will configure the remote board to report the measured temperature value every 10 seconds or every 2 degree changes.
 
 ## Hardware Required
 
-* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee end device (loaded with Zigbee_Temperature_Sensor example).
+* One development board (ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31) acting as Zigbee end device (loaded with Zigbee_Temperature_Sensor example).
 * A USB cable for power supply and programming.
-* Choose another board (ESP32-H2 or ESP32-C6) as Zigbee coordinator (loaded with Zigbee_Thermostat example).
+* Choose another board (ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31) as Zigbee coordinator (loaded with Zigbee_Thermostat example).
 
 ### Configure the Project
 
-Set the Button GPIO by changing the `BUTTON_PIN` definition. By default, it's the pin `9` (BOOT button on ESP32-C6 and ESP32-H2).
+Set the Button GPIO by changing the `BUTTON_PIN` definition. By default, it's the pin `BOOT_PIN` (BOOT button on all supported boards).
 
 #### Using Arduino IDE
 
@@ -74,6 +74,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+* ESP32-C5 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c5_datasheet_en.pdf)
 * ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
 * ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
+* ESP32-S31 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s31_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)
