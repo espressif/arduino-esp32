@@ -61022,8 +61022,8 @@ xteink_x4.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp-zigbee-core.zczr.release 
 ozobot_drvkit.name=Ozobot DRVKit
 ozobot_drvkit.vid.0=0x2D81
 ozobot_drvkit.pid.0=0x1901
-ozobot_drvkit.upload_port.0.vid=0x303A
-ozobot_drvkit.upload_port.0.pid=0x1001
+ozobot_drvkit.upload_port.0.vid=0x2D81
+ozobot_drvkit.upload_port.0.pid=0x1901
 
 ozobot_drvkit.bootloader.tool=esptool_py
 ozobot_drvkit.bootloader.tool.default=esptool_py
