@@ -43,9 +43,7 @@ public:
       log_e("Air Quality PM2.5 sensor has not begun.");
       return false;
     }
-    log_d(
-      "Attr update: endpoint %u, cluster 0x%08" PRIX32 ", attribute 0x%08" PRIX32, endpoint_id, cluster_id, attribute_id
-    );
+    log_d("Attr update: endpoint %u, cluster 0x%08" PRIX32 ", attribute 0x%08" PRIX32, endpoint_id, cluster_id, attribute_id);
     return true;
   }
 
