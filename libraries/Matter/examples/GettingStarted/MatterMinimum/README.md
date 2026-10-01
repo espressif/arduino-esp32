@@ -64,22 +64,13 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 Before uploading the sketch, configure the following:
 
-1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
+1. **Wi-Fi credentials** (mandatory on ESP32 / ESP32-S2 where CHIPoBLE is off; unused placeholders when the hub commissions over CHIPoBLE):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
-   const char *password = "your-password"; // Change to your Wi-Fi password
+   #define WIFI_SSID     "your-ssid"
+   #define WIFI_PASSWORD "your-password"
    ```
 
-2. **LED pin configuration** (if not using built-in LED):
-   ```cpp
-   const uint8_t ledPin = 2;  // Set your LED pin here
-   ```
-
-3. **Button pin configuration** (optional):
-   By default, the `BOOT` button (GPIO 0) is used for factory reset. You can change this to a different pin if needed.
-   ```cpp
-   const uint8_t buttonPin = BOOT_PIN;  // Set your button pin here
-   ```
+2. **LED pin** (if the board has no `LED_BUILTIN`): edit the `#else` branch in the sketch (`const uint8_t ledPin = 2;`).
 
 ## Building and Flashing
 
@@ -112,17 +103,9 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%
 Controller CASE session is up.
 ```
 
-After CASE is up, this minimal example prints no extra accessory status. Long-press BOOT to decommission.
+After CASE is up, this minimal example prints no extra accessory status. There is no local button; control the light from a Matter controller app.
 
 ## Using the Device
-
-### Manual Control
-
-The user button (BOOT button by default) provides factory reset functionality:
-
-- **Long press (>5 seconds)**: Factory reset the device (decommission)
-
-Note: This minimal example does not include button toggle functionality. To add manual toggle control, you can extend the code with additional button handling logic.
 
 ### Smart Home Integration
 

@@ -109,8 +109,8 @@ The ``Matter`` class is implemented as a singleton, meaning there's only one ins
 
 The ``Matter`` class provides the following key methods:
 
-* ``initNode()``: Creates the Matter node (root endpoint 0) if needed. Idempotent. Normally called from ``MatterEndPoint::ensureMatterNode()`` inside endpoint ``begin()``; sketches rarely call this directly.
-* ``begin()``: Starts the Matter stack after at least one accessory endpoint exists on the node (endpoint id ≠ 0). On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts, unless Thread or Ethernet was selected. Skipped if the sketch already called ``matterConnectWiFi()`` / ``WiFi.begin()`` / ``WiFi.mode()``.
+* `initNode()`: Creates the Matter node (root endpoint 0) if needed. Idempotent. Normally called from `MatterEndPoint::ensureMatterNode()` inside endpoint `begin()`; sketches rarely call this directly.
+* `begin()`: Starts the Matter stack after at least one accessory endpoint exists on the node (endpoint id other than 0). On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts, unless Thread or Ethernet was selected. Skipped if the sketch already called `matterConnectWiFi()`, `WiFi.begin()`, or `WiFi.mode()`.
 * ``isDeviceCommissioned()``: Checks if the device is commissioned (a fabric exists)
 * ``isWiFiConnected()``: Checks Wi-Fi connection status
 * ``isThreadConnected()``: Checks Thread connection status
@@ -120,7 +120,7 @@ The ``Matter`` class provides the following key methods:
 * ``selectNetwork()``: Records intent before any accessory ``begin()``. Does not start Wi-Fi, Thread, or Ethernet, and does not apply a Thread dataset. One-argument form: Ethernet disables CHIPoBLE; Wi-Fi and Thread leave it on. ``selectNetwork(net, true)`` turns CHIPoBLE off; ``false`` does not turn it back on. ``NONE`` clears intent and does not change BLE
 * ``getSelectedNetwork()``: Last successful ``selectNetwork()``, or ``NONE``
 * ``getActiveNetwork()``: First netif with IPv6 (prefers the selection). Not ``isWiFiConnected()`` / ``isThreadConnected()``
-* ``getNetworkEndPointId()``: Expected Network Commissioning endpoint on the root (0 Wi-Fi, 0 Thread when Thread is on the root, ``0xFFFF`` if none). ESP32-C6 is Wi-Fi or Thread, not both. Valid before the endpoint is created
+* ``getNetworkEndPointId(network)``: Expected Network Commissioning endpoint on the root for ``network`` (0 Wi-Fi, 0 Thread when Thread is on the root, ``0xFFFF`` if none). ESP32-C6 is Wi-Fi or Thread, not both. Valid before the endpoint is created
 * ``waitForNetwork()``: Blocks until that IPv6 is present. ``MATTER_NETWORK_NONE`` waits for any interface. Does not start hardware. ``timeoutMs`` 0 is a single check
 * ``isOnline()``: Checks if a controller has an active CASE session with this node. Stays true until CHIP idle-evicts that session, not until the user closes a controller app.
 * ``isWiFiStationEnabled()``: Checks if Wi-Fi Station mode is supported and enabled
@@ -235,11 +235,11 @@ Most examples call ``matterSetExampleIdentity("Color Light")`` (or the matching 
     Light.begin();
     Matter.begin();
 
-On a single-endpoint node, controllers often use DeviceName as the accessory title. On a composed node it is the parent/node name; child lights are not renamed. Use ``MatterEndPoint::setTagList()`` for switch-style Descriptor tags, not as a light title.
+On a single-endpoint node, controllers often use DeviceName as the accessory title. On a composed node it is the parent/node name; child lights are not renamed. Use ``MatterEndPoint::setTagList()`` after accessory ``begin()`` and before ``Matter.begin()`` for switch-style Descriptor tags, not as a light title.
 
 ``getManualPairingCode()`` and ``getOnboardingQRCodeUrl()`` are generated from the live discriminator and PIN after a successful ``Matter.begin()``. Before ``begin()``, or if ``begin()`` failed (``isStackStarted()`` is false), they log a warning and return an empty string. The Arduino test defaults are PIN ``20202021``, discriminator ``0xF00``, manual code ``34970112332``. The 11-digit short manual code uses only the top 4 bits of the discriminator, so ``0xF00`` and ``0xF01`` collide if the PIN is unchanged. Changing the PIN requires a matching SPAKE2+ verifier; the library regenerates it. Test while uncommissioned and erase flash after changing codes. Production belongs in factory NVS with a unique PIN per unit.
 
-Identity and commissioning APIs (all setters must run before ``Matter.begin()``):
+Identity and commissioning (call before ``Matter.begin()``). ``matterSetExampleIdentity()`` is a sketch helper, not a ``Matter`` method:
 
 * ``matterSetExampleIdentity()``
 * ``setVendorName()``
@@ -250,15 +250,13 @@ Identity and commissioning APIs (all setters must run before ``Matter.begin()``)
 * ``setHardwareVersionString()``
 * ``setSoftwareVersion()``
 * ``setSoftwareVersionString()``
-* ``getSoftwareVersion()``
-* ``getSoftwareVersionString()``
 * ``setSetupDiscriminator()``
 * ``setSetupPasscode()``
 * ``setBLECommissioningEnabled()``
 * ``setBLEMemoryReleaseEnabled()``
 * ``selectNetwork()``
 
-``getSoftwareVersion()`` and ``getSoftwareVersionString()`` may be called after ``Matter.begin()``. Without a setter they return ``CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER`` and the IDF app version.
+``getSoftwareVersion()`` and ``getSoftwareVersionString()`` report the Basic Information software version controllers see after a successful ``Matter.begin()``. If ``setSoftwareVersion()`` / ``setSoftwareVersionString()`` ran earlier, the getters return those stored values even before ``begin()``. Without a setter after ``begin()``, they read ConfigurationManager, ``CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER``, or the IDF app version string.
 
 ``Matter.waitForNetwork()`` is a runtime method, not a setter. It does not start hardware. Ethernet sketches typically call it after ``ETH.begin()`` / ``enableIPv6()`` and before ``Matter.begin()``. ``timeoutMs`` 0 is a single check; ``MATTER_NETWORK_NONE`` waits for any interface.
 
@@ -282,7 +280,7 @@ Runtime status
 +-----------------------------------+--------------------------------------------------------------+
 | ``Matter.waitForNetwork()``       | Block until the selected netif has IPv6                      |
 +-----------------------------------+--------------------------------------------------------------+
-| ``getNetworkEndPointId()``        | Expected Network Commissioning endpoint, or ``0xFFFF``       |
+| ``getNetworkEndPointId(network)`` | Expected Network Commissioning endpoint, or ``0xFFFF``       |
 +-----------------------------------+--------------------------------------------------------------+
 | ``isBLECommissioningEnabled()``   | CHIPoBLE is compiled in and still enabled                    |
 +-----------------------------------+--------------------------------------------------------------+
@@ -356,7 +354,7 @@ These are **not** members of ``Matter``. ``#include <Matter.h>`` pulls in ``Matt
 * ``matterConnectWiFi(ssid, password)``: Present only when ``CONFIG_ENABLE_CHIPOBLE`` is off. ``MatterHelpers.cpp`` includes ``WiFi.h`` in that build so regular sketches just call the helper. Enables station IPv6 before ``WiFi.begin()`` (Arduino does not do that by default). CHIPoBLE / Thread builds do not include ``WiFi.h`` (no ``WiFiClass`` cost). On-network sketches that start STA with CHIPoBLE compiled in include ``WiFi.h`` and call ``WiFi.begin()`` themselves. Not present on ESP32-H2.
 * ``matterSetExampleIdentity(endpointName)``: Call from ``setup()`` before ``Matter.begin()``. Sets vendor ``Espressif`` and product ``<SoC> <endpointName>`` (for example ``ESP32-C6 Color Light``). ProductName is capped at 32 characters.
 * ``matterWaitUntilReady()``: Call from ``setup()`` after ``Matter.begin()``. If the stack never started, prints that ``begin()`` failed and halts (does not return to ``loop()``). Otherwise prints pairing codes if there is no fabric; one-line status every 10 s and once more when CASE is up. Waits up to 5 minutes (default) for CASE. ``timeoutMs`` 0 waits forever (unlike ``Matter.waitForNetwork(0)``, which is a single check). Reboots if still uncommissioned. If commissioned but CASE never arrives, continues.
-* ``matterRestartIfNoFabric()``: Call from ``loop()``. No-op if the stack never started. Reboots if the hub removed the fabric. ``Matter.decommission()`` already factory-resets.
+* ``matterRestartIfNoFabric()``: Call from ``loop()``. No-op if the stack never started. Reboots when no fabric exists (hub removed the fabric, or the node was never commissioned). Use with ``matterWaitUntilReady()`` in ``setup()`` so an uncommissioned node is not left in ``loop()`` without a fabric. ``Matter.decommission()`` already factory-resets.
 
 ``MatterButton`` is a board-button class, not a Generic Switch cluster. An ``esp_timer`` samples the pin; ``loop()`` only drains ``poll()``. Do not call Matter APIs from the timer callback.
 
@@ -455,9 +453,9 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 
 **Getting Started:**
 
-* **Matter Minimum** - Smallest On/Off Light: LED GPIO, ``onChange()``, ``Matter.begin()``, ``matterWaitUntilReady()``. No button and no ``matterSetExampleIdentity()``. `View Matter Minimum code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterMinimum>`_
+* **Matter Minimum** - Smallest On/Off Light implementation: LED GPIO, ``onChange()``, ``Matter.begin()``, ``matterWaitUntilReady()``. No button and no ``matterSetExampleIdentity()``. `View Matter Minimum code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterMinimum>`_
 * **Matter Status** - Demonstrates how to check enabled Matter features and connectivity status, including ``isDeviceCommissioned()``, ``isDeviceConnected()``, and ``isOnline()``. Implements a basic on/off light and periodically reports capability and connection status. `View Matter Status code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterStatus>`_
-* **Matter Device Identity** - Sets VendorName, ProductName, DeviceName (NodeLabel), SerialNumber, hardware version, and custom commissioning codes on ``Matter`` before ``begin()``. `View Matter Device Identity code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterDeviceIdentity>`_
+* **Matter Device Identity** - Sets VendorName, ProductName, DeviceName (NodeLabel), SerialNumber, hardware and software version, and custom commissioning codes on ``Matter`` before ``begin()``. `View Matter Device Identity code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterDeviceIdentity>`_
 * **Matter Events** - Shows how to monitor and handle Matter events. Provides a comprehensive view of all Matter events during device operation. `View Matter Events code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/GettingStarted/MatterEvents>`_
 
 **Commissioning:**
@@ -478,7 +476,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter Color Light** - Creates a Matter-compatible RGB color light (HSV/XY, no color temperature). `View Matter Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterColorLight>`_
 * **Matter Enhanced Color Light** - Creates a Matter-compatible extended color light with RGB, brightness, and color temperature. `View Matter Enhanced Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterEnhancedColorLight>`_
 * **Matter Composed Lights** - Creates a Matter node with multiple light endpoints (On/Off Light, Dimmable Light, and Color Light) in a single node. `View Matter Composed Lights code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterComposedLights>`_
-* **Matter On Identify** - Identify cluster on an on/off light: ``onIdentify(bool)`` plus ``getIdentifyRequest()`` so IdentifyTime and TriggerEffect Blink / Breathe / Okay / ChannelChange can look different. `View Matter On Identify code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterOnIdentify>`_
+* **Matter On Identify** - Identify cluster on an on/off light: ``onIdentify()`` plus ``getIdentifyRequest()`` so IdentifyTime and TriggerEffect Blink / Breathe / Okay / ChannelChange can look different. `View Matter On Identify code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Lighting/MatterOnIdentify>`_
 
 **Sensor Examples:**
 
@@ -550,9 +548,10 @@ Common Issues
   * For Boolean State sensors (contact, leak, freeze, rain), call the setter after ``Matter.begin()``. ``begin()`` does not take an initial state.
 
 **Callbacks not firing**
-  * Verify callback functions are registered before ``Matter.begin()``
-  * Check that callback functions are properly defined
-  * Ensure endpoint is properly initialized with ``begin()``
+  * Register ``Matter.onEvent()`` and ``Matter.onBLEMemoryReleased()`` before ``Matter.begin()`` if you need events from stack startup or BLE reclaim
+  * Register endpoint ``onChange()`` / ``onIdentify()`` after accessory ``begin()`` (before or after ``Matter.begin()`` is fine)
+  * Check that callback functions are properly defined and return the success value the endpoint expects
+  * Ensure each endpoint is initialized with ``begin()`` before ``Matter.begin()``
 
 Factory Reset
 *************

@@ -228,7 +228,7 @@ Serial.println(Matter.getOnboardingQRCodeUrl());   // live QR URL after begin()
 
 If the sketch never calls `setSetupPasscode()` / `setSetupDiscriminator()`, Arduino Matter uses the CHIP test pair **PIN `20202021`**, discriminator **`0xF00`**, manual code **`34970112332`** (same as On/Off Light and the other examples). Before `begin()`, or if `begin()` failed (`isStackStarted()` is false), the pairing getters log a warning and return empty.
 
-`getSoftwareVersion()` and `getSoftwareVersionString()` may be called after `Matter.begin()`. Without a setter they return `CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER` and the IDF app version.
+`getSoftwareVersion()` and `getSoftwareVersionString()` report the Basic Information software version controllers see after a successful `Matter.begin()`. If `setSoftwareVersion()` / `setSoftwareVersionString()` ran earlier, the getters return those stored values even before `begin()`. Without a setter after `begin()`, they read ConfigurationManager, `CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER`, or the IDF app version string.
 
 On Wi-Fi station builds, `Matter.begin()` initializes the Wi-Fi driver with reduced RX/TX buffers before starting CHIP unless Thread or Ethernet was selected. Matter traffic is small, so the library uses 4 static RX, 8 dynamic RX, 8 dynamic TX, and an AMPDU RX BA window of 6 instead of the sdkconfig defaults. `esp_wifi_init()` keeps the first caller's counts, so CHIP inherits them. If the sketch already called `matterConnectWiFi()` / `WiFi.begin()` / `WiFi.mode()`, those limits are not applied.
 
@@ -319,7 +319,7 @@ These are **not** members of `Matter`. `#include <Matter.h>` pulls in `MatterHel
 | `matterConnectWiFi(ssid, password)` | `CONFIG_ENABLE_CHIPOBLE=n` only. `setup()` before `Matter.begin()`. Official examples pass `WIFI_SSID` / `WIFI_PASSWORD`. Enables STA IPv6, waits for IPv4. Not on CHIPoBLE or H2 |
 | `matterSetExampleIdentity(endpointName)` | `setup()` before `Matter.begin()`. Vendor `Espressif`, product `<SoC> <endpointName>` (for example `ESP32-C6 Color Light`). ProductName max 32 characters |
 | `matterWaitUntilReady()` | `setup()` after `Matter.begin()`: if `begin()` failed, prints that and halts. Otherwise pairing codes if needed; one-line status every 10 s and once more when CASE is up; wait up to 5 min (`timeoutMs` 0 = forever). Reboots if still no fabric. If commissioned but CASE never arrives, continues |
-| `matterRestartIfNoFabric()` | `loop()`: no-op if the stack never started; reboot if the hub removed the fabric. `Matter.decommission()` already factory-resets |
+| `matterRestartIfNoFabric()` | `loop()`: no-op if the stack never started; reboot when no fabric exists (hub removed it, or the node was never commissioned). Pair with `matterWaitUntilReady()` in `setup()`. `Matter.decommission()` already factory-resets |
 | `MatterButton` | Board button (`MatterButton.h`). Timer samples the pin; `loop()` drains `poll()` (`PRESS` / `CLICK` / `DOUBLE_CLICK` / `LONG_HOLD`). Default: 50 ms debounce, 5 s long-hold, double-click off. Not a Generic Switch cluster |
 
 ```cpp
