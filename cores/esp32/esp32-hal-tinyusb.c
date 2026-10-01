@@ -57,6 +57,9 @@
 #include "esp32s3/rom/usb/usb_persist.h"
 #include "esp32s3/rom/usb/usb_dc.h"
 #include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
+#elif CONFIG_IDF_TARGET_ESP32S31
+#include "soc/lp_system_reg.h"
+#include "esp_rom_sys.h"
 #elif CONFIG_IDF_TARGET_ESP32P4
 #endif
 
@@ -704,6 +707,13 @@ void usb_persist_restart(restart_type_t mode) {
     }
 #endif
     esp_restart();
+  }
+#elif CONFIG_IDF_TARGET_ESP32S31
+  if (mode == RESTART_BOOTLOADER) {
+    // S31 downloads over USB-OTG HS, without the S3 CDC/JTAG PHY switch.
+    // Reset the whole system so ROM can reinitialize the USB peripheral.
+    REG_SET_BIT(LP_SYSTEM_REG_SYS_CTRL_REG, LP_SYSTEM_REG_FORCE_DOWNLOAD_BOOT);
+    esp_rom_software_reset_system();
   }
 #endif
 }
