@@ -6,4 +6,4 @@ pytest-embedded-arduino==2.8.1
 pytest-embedded-wokwi==2.8.1
 pytest-embedded-qemu==2.8.1
 esptool==5.3.1
-wokwi-client
+wokwi-client>=0.4.1
