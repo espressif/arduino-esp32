@@ -30,11 +30,17 @@
 void matterConnectWiFi(const char *ssid, const char *password);
 #endif
 
-// setup() after Matter.begin(): pairing codes if no fabric; status every 10 s
-// and once more when CASE is up; wait up to timeoutMs (0 = forever). Reboots
-// if still no fabric. If commissioned but CASE never arrives, continues.
+// Vendor "Espressif" and Product "<SoC> <endpointName>", e.g. "ESP32-C6 Color Light".
+// Call before Matter.begin(). ProductName is capped at 32 characters.
+bool matterSetExampleIdentity(const char *endpointName);
+
+// setup() after Matter.begin(): if begin() failed, prints that and halts.
+// Otherwise pairing codes if no fabric; status every 10 s and once more when
+// CASE is up; wait up to timeoutMs (0 = forever). Reboots if still no fabric.
+// If commissioned but CASE never arrives, continues.
 void matterWaitUntilReady(uint32_t timeoutMs = 5 * 60 * 1000);
-// loop(): hub removed the fabric. Button Matter.decommission() already resets.
+// loop(): no-op if the stack never started. Reboots if the hub removed the
+// fabric. Matter.decommission() already factory-resets.
 void matterRestartIfNoFabric();
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

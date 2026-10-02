@@ -10,8 +10,7 @@ The ``MatterDimmableLight`` class provides a dimmable light endpoint for Matter 
 **Features:**
 * On/off control
 * Brightness level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel)
-* State persistence support
-* Callback support for state and brightness changes
+* Callback support for on/off and brightness changes (persist in the sketch with Preferences or NVS if needed)
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
