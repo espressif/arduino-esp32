@@ -50,7 +50,7 @@ zigbee|-|-|Error :fire:|Error :fire:|Error :fire:|-|-|-
 Test|ESP32|ESP32-C3|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:
 console|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:
-eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:
+eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:\*|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:
 fs|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:
 gpio|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
 hash|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:
@@ -141,8 +141,10 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
 
 
 
-Generated on: 2026/10/01 00:38:24 UTC
+> \* Result from last successful run (runner currently unavailable)
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/699c2dcf50f1b7bd0d3e269ff43f016b087cf801) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/36795545394) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/36796271089) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/36797065042)
+Generated on: 2026/10/02 00:36:25 UTC
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/110163156214)
+[Commit](https://github.com/espressif/arduino-esp32/commit/86dc2cd705fc7cb7b90261a6416d5ba23e13d6f2) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/36945164004) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/36945972343) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/36946709123)
+
+[Test results](https://github.com/espressif/arduino-esp32/runs/110650755734)
