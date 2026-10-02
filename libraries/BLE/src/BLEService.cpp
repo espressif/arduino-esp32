@@ -257,22 +257,23 @@ void BLEService::addCharacteristic(BLECharacteristic *pCharacteristic) {
   log_v(">> addCharacteristic()");
   log_d("Adding characteristic: uuid=%s to service: %s", pCharacteristic->getUUID().toString().c_str(), toString().c_str());
 
-  // Check that we don't add the same characteristic twice.
+  // Warn on a UUID collision, but do not treat it as the same characteristic.
+  // HID Report characteristics all share UUID 0x2A4D and are distinguished by
+  // their 0x2908 Report Reference descriptors. m_uuidMap is keyed by object
+  // pointer, so distinct objects with the same UUID are representable.
   BLECharacteristic *pExisting = m_characteristicMap.getByUUID(pCharacteristic->getUUID());
-  if (pExisting != nullptr) {
+  if (pExisting != nullptr && pExisting != pCharacteristic) {
     log_w("<< Adding a new characteristic with the same UUID as a previous one");
   }
 
 #if defined(CONFIG_NIMBLE_ENABLED)
-  if (pExisting != nullptr) {
-    pExisting->m_removed = 0;
-  } else
+  // Re-adding this exact object (e.g. after removeCharacteristic hide) un-hides it.
+  // Always insert: std::map::insert is a no-op if the pointer is already present.
+  pCharacteristic->m_removed = 0;
 #endif
-  {
-    // Remember this characteristic in our map of characteristics.  At this point, we can lookup by UUID
-    // but not by handle.  The handle is allocated to us on the ESP_GATTS_ADD_CHAR_EVT.
-    m_characteristicMap.setByUUID(pCharacteristic, pCharacteristic->getUUID());
-  }
+  // Remember this characteristic in our map of characteristics.  At this point, we can lookup by UUID
+  // but not by handle.  The handle is allocated to us on the ESP_GATTS_ADD_CHAR_EVT.
+  m_characteristicMap.setByUUID(pCharacteristic, pCharacteristic->getUUID());
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   getServer()->serviceChanged();
@@ -508,11 +509,10 @@ bool BLEService::start() {
 void BLEService::removeCharacteristic(BLECharacteristic *pCharacteristic, bool deleteChr) {
   if (pCharacteristic->m_removed > 0) {
     if (deleteChr) {
-      BLECharacteristic *pExisting = m_characteristicMap.getByUUID(pCharacteristic->getUUID());
-      if (pExisting != nullptr) {
-        m_characteristicMap.removeCharacteristic(pExisting);
-        delete pExisting;
-      }
+      // Remove by object identity, not UUID. Multiple characteristics can share a UUID
+      // (HID Report 0x2A4D); looking up by UUID would delete the wrong object.
+      m_characteristicMap.removeCharacteristic(pCharacteristic);
+      delete pCharacteristic;
     }
 
     return;

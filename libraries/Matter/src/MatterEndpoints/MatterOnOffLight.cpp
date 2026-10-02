@@ -59,7 +59,9 @@ MatterOnOffLight::~MatterOnOffLight() {
 }
 
 bool MatterOnOffLight::begin(bool initialState) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter On-Off Light with Endpoint Id %u device has already been created.", getEndPointId());
