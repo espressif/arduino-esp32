@@ -90,6 +90,7 @@ void setup() {
   ButtonScene.setTagList({MatterTags::Switches::createCustomTag("Scene 1")});
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Smart Buttons");
   Matter.begin();
   matterWaitUntilReady();
 }

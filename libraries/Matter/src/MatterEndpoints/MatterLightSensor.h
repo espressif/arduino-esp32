@@ -76,5 +76,6 @@ protected:
   // internal function to set the raw illuminance value (Matter Cluster)
   bool begin(uint16_t _rawIlluminance);
   bool setRawIlluminance(uint16_t _rawIlluminance);
+  void onStackStarted() override;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

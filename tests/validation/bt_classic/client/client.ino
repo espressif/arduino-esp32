@@ -1,115 +1,215 @@
-/*
- * Copyright 2026 Espressif Systems (Shanghai) PTE LTD
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
- * BT Classic SPP master for multi-DUT validation (pairs with server/).
- */
+// BT Classic validation test — CLIENT (SPP initiator)
+// Phases:
+//   1. basic_lifecycle  — begin / deinit / reinit
+//   2. spp_connect_data — discover server by name, connect, bidirectional data, disconnect
+//   3. bond_management  — list bonds, delete all, verify empty
+//   4. memory_release   — end(true)
 
 #include <Arduino.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "BluetoothSerial.h"
+#pragma GCC diagnostic pop
 
-#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error Bluetooth is not enabled
-#endif
+BluetoothSerial SerialBT;
 
-#if !defined(CONFIG_BT_SPP_ENABLED)
-#error BT Classic SPP is only available on ESP32
-#endif
+String serverName;
+String clientName;
+volatile int currentPhase = 0;
 
-static BluetoothSerial SerialBT;
-static String slaveName;
-static const char *kMasterName = "BT_CLASSIC_MASTER";
-static const char *kPing = "BT_CLASSIC_PING";
-static const char *kPong = "BT_CLASSIC_PONG";
+// ---------------------------------------------------------------------------
+// Phase coordination (same pattern as BLE validation tests)
+// ---------------------------------------------------------------------------
 
-static bool readSlaveNameFromHost() {
-  Serial.println("[CLIENT] Ready for slave name");
-  Serial.println("[CLIENT] Send slave name:");
-  while (slaveName.length() == 0) {
-    if (Serial.available()) {
-      slaveName = Serial.readStringUntil('\n');
-      slaveName.trim();
+void checkSerial() {
+  static String buf;
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+    if (c == '\n') {
+      buf.trim();
+      if (buf.startsWith("START_PHASE_")) {
+        int phase = buf.substring(12).toInt();
+        if (phase > currentPhase) {
+          currentPhase = phase;
+          Serial.printf("[CLIENT] Phase %d started\n", phase);
+        }
+      }
+      buf = "";
+    } else if (c != '\r') {
+      buf += c;
     }
-    delay(50);
   }
-  Serial.printf("[CLIENT] Slave name: %s\n", slaveName.c_str());
-  return true;
 }
 
-static bool waitForConnection() {
-  Serial.printf("[CLIENT] Connecting to %s\n", slaveName.c_str());
-
-  if (SerialBT.connect(slaveName)) {
-    return true;
+void waitForPhase(int n) {
+  while (currentPhase < n) {
+    checkSerial();
+    delay(10);
   }
-
-  const unsigned long deadline = millis() + 90000;
-  while (millis() < deadline) {
-    if (SerialBT.connected(10000)) {
-      return true;
-    }
-    Serial.println("[CLIENT] Waiting for slave...");
-  }
-  return false;
 }
+
+// ---------------------------------------------------------------------------
+// Setup: run all phases sequentially
+// ---------------------------------------------------------------------------
 
 void setup() {
   Serial.begin(115200);
   while (!Serial) {
-    delay(10);
+    delay(100);
   }
 
-  if (!readSlaveNameFromHost()) {
-    return;
-  }
-
-  if (!SerialBT.begin(kMasterName, true)) {
-    Serial.println("[CLIENT] ERROR: begin failed");
-    return;
-  }
-
-  if (!waitForConnection()) {
-    Serial.println("[CLIENT] ERROR: connect failed");
-    return;
-  }
-
-  Serial.println("[CLIENT] Connected");
-
-  SerialBT.println(kPing);
-
-  const unsigned long deadline = millis() + 30000;
-  while (!SerialBT.available() && millis() < deadline) {
+  // Receive server name from test script
+  Serial.println("[CLIENT] Send server name:");
+  String input;
+  while (input.length() == 0) {
+    if (Serial.available()) {
+      input = Serial.readStringUntil('\n');
+      input.trim();
+    }
     delay(50);
   }
+  serverName = input;
+  clientName = serverName + "_C";
+  Serial.printf("[CLIENT] Server: %s\n", serverName.c_str());
 
-  if (!SerialBT.available()) {
-    Serial.println("[CLIENT] ERROR: no response from server");
-    return;
+  // -------------------------------------------------------------------------
+  // Phase 1: basic lifecycle
+  // -------------------------------------------------------------------------
+  waitForPhase(1);
+
+  BTStatus status = SerialBT.begin(clientName, true);
+  if (!status) {
+    Serial.println("[CLIENT] Init FAILED");
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.printf("[CLIENT] Init OK, addr: %s\n", SerialBT.getAddress().toString().c_str());
+
+  SerialBT.end(false);
+  Serial.println("[CLIENT] Deinit OK");
+
+  status = SerialBT.begin(clientName, true);
+  if (!status) {
+    Serial.println("[CLIENT] Reinit FAILED");
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("[CLIENT] Reinit OK");
+  // Stay initialized for phase 2.
+
+  // -------------------------------------------------------------------------
+  // Phase 2: SPP connect + bidirectional data exchange
+  // -------------------------------------------------------------------------
+  waitForPhase(2);
+
+  Serial.println("[CLIENT] Connecting...");
+  BTStatus connectStatus = SerialBT.connect(serverName, 30000);
+  if (!connectStatus) {
+    Serial.printf("[CLIENT] Connect FAILED: %s\n", connectStatus.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("[CLIENT] Connected");
+  Serial.printf("[CLIENT] peerCount=%u\n", SerialBT.peerCount());
+  {
+    auto peerList = SerialBT.peers();
+    Serial.printf("[CLIENT] peers=%u\n", (unsigned)peerList.size());
+    if (!peerList.empty()) {
+      Serial.printf("[CLIENT] peerAddr=%s\n", peerList[0].toString().c_str());
+    }
   }
 
-  String response = SerialBT.readStringUntil('\n');
-  response.trim();
-  Serial.printf("[CLIENT] Received: %s\n", response.c_str());
+  // Targeted writeTo round-trip
+  SerialBT.print("SPP_WRITE_TO_PROBE");
+  Serial.println("[CLIENT] Sent: SPP_WRITE_TO_PROBE");
 
-  if (response != kPong) {
-    Serial.println("[CLIENT] ERROR: unexpected response");
-    return;
+  {
+    String rx;
+    uint32_t deadline = millis() + 15000;
+    while (millis() < deadline) {
+      while (SerialBT.available()) {
+        rx += (char)SerialBT.read();
+      }
+      if (rx.indexOf("SPP_WRITE_TO_ACK") >= 0) {
+        break;
+      }
+      delay(10);
+    }
+    if (rx.indexOf("SPP_WRITE_TO_ACK") >= 0) {
+      Serial.println("[CLIENT] Received: SPP_WRITE_TO_ACK");
+    } else {
+      Serial.println("[CLIENT] writeTo ack timeout");
+    }
   }
 
-  Serial.println("[CLIENT] Test complete");
+  // Broadcast path
+  SerialBT.print("HELLO_FROM_CLIENT");
+  Serial.println("[CLIENT] Sent: HELLO_FROM_CLIENT");
+
+  // Receive response from server
+  String rx;
+  uint32_t deadline = millis() + 15000;
+  while (millis() < deadline) {
+    while (SerialBT.available()) {
+      rx += (char)SerialBT.read();
+    }
+    if (rx.indexOf("HELLO_FROM_SERVER") >= 0) {
+      break;
+    }
+    delay(10);
+  }
+  if (rx.indexOf("HELLO_FROM_SERVER") >= 0) {
+    Serial.println("[CLIENT] Received: HELLO_FROM_SERVER");
+  } else {
+    Serial.println("[CLIENT] Receive timeout");
+  }
+
+  // Ask server to disconnect this peer by address
+  SerialBT.print("DISCONNECT_ME");
+  Serial.println("[CLIENT] Sent: DISCONNECT_ME");
+
+  deadline = millis() + 15000;
+  while (SerialBT.connected() && millis() < deadline) {
+    delay(20);
+  }
+  if (!SerialBT.connected()) {
+    Serial.println("[CLIENT] Disconnected by server");
+  } else {
+    SerialBT.disconnect();
+    Serial.println("[CLIENT] Disconnected");
+  }
+
+  // -------------------------------------------------------------------------
+  // Phase 3: bond management
+  // -------------------------------------------------------------------------
+  waitForPhase(3);
+
+  auto bonds = SerialBT.getBondedDevices();
+  Serial.printf("[CLIENT] Bonds: %d\n", (int)bonds.size());
+
+  BTStatus deleteStatus = SerialBT.deleteAllBonds();
+  Serial.printf("[CLIENT] DeleteAllBonds: %s\n", deleteStatus ? "OK" : "FAILED");
+
+  bonds = SerialBT.getBondedDevices();
+  Serial.printf("[CLIENT] Bonds after delete: %d\n", (int)bonds.size());
+
+  // -------------------------------------------------------------------------
+  // Phase 4: memory release
+  // -------------------------------------------------------------------------
+  waitForPhase(4);
+
+  SerialBT.end(true);
+  Serial.println("[CLIENT] Memory released");
+
+  while (true) {
+    delay(1000);
+  }
 }
 
-void loop() {}
+void loop() {
+  checkSerial();
+  delay(10);
+}

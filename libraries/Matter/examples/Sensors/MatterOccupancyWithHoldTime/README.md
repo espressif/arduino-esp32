@@ -40,7 +40,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - HoldTime attribute for configuring how long the sensor holds the "occupied" state
 - HoldTimeLimits (min, max, default) for validation and controller guidance
 - HoldTime persistence across reboots using Preferences (NVS)
-- Automatic simulation of occupancy state changes every 2 minutes with HoldTime expiration
+- Simulated PIR pulse (1 s) every 2 minutes; CHIP HoldTime keeps Occupancy occupied, then vacant
 - HoldTime change callback for real-time updates from Matter controllers
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
@@ -73,14 +73,14 @@ Before uploading the sketch, configure the following:
 
 1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
-   const char *password = "your-password"; // Change to your Wi-Fi password
+   #define WIFI_SSID "your-ssid"         // Change to your Wi-Fi SSID
+   #define WIFI_PASSWORD "your-password" // Change to your Wi-Fi password
    ```
 
 2. **HoldTime configuration** (optional):
    The example uses default HoldTime limits. You can customize them:
    ```cpp
-   const uint16_t HOLD_TIME_MIN = 0;        // Minimum HoldTime in seconds
+   const uint16_t HOLD_TIME_MIN = 1;        // Minimum HoldTime in seconds (CHIP rejects 0)
    const uint16_t HOLD_TIME_MAX = 3600;     // Maximum HoldTime in seconds (1 hour)
    const uint16_t HOLD_TIME_DEFAULT = 30;   // Default HoldTime in seconds
    ```
@@ -119,7 +119,7 @@ Wi-Fi connected
 IP address: 192.168.1.100
 
 Restored HoldTime from Preferences: 30 seconds
-HoldTimeLimits set: Min=0, Max=3600, Default=30 seconds
+HoldTimeLimits set: Min=1, Max=3600, Default=30 seconds
 HoldTime set to: 30 seconds
 Initial HoldTime: 30 seconds
 
@@ -132,11 +132,12 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%
 ...
 [ready] net=wifi commissioned=Y connected=Y controller=Y
 Controller CASE session is up.
-Occupancy detected! Holding state for 30 seconds (HoldTime)
-HoldTime expired. Switching to unoccupied state.
+Motion pulse. Cluster stays occupied for HoldTime=30 s
+Hub occupancy: occupied
+Hub occupancy: vacant
 ```
 
-After commissioning, the occupancy sensor will automatically simulate occupancy detections every 2 minutes. When occupancy is detected, the sensor holds the "occupied" state for the configured HoldTime duration (default: 30 seconds). After HoldTime expires, it automatically switches to "unoccupied" state. The Matter controller will receive these state updates and can also configure the HoldTime value.
+A 1 s motion pulse every 2 minutes. CHIP HoldTime (default 30 s) keeps Occupancy occupied after the pulse; then the hub goes vacant. `isOccupied()` is what Alexa reads. `setOccupancy(false)` starts that timer once — polling vacant again must not restart it (the endpoint skips no-ops).
 
 ## Using the Device
 
@@ -148,22 +149,17 @@ The user button (BOOT button by default) provides factory reset functionality:
 
 ### Sensor Simulation
 
-The example includes a simulated occupancy sensor with HoldTime support that:
+The sketch reports a **raw PIR pulse** (occupied 1 s, then vacant). CHIP HoldTime is what Alexa waits on:
 
-- Starts in the unoccupied state (false)
-- Simulates occupancy detection every 2 minutes
-- When occupancy is detected, holds the "occupied" state for the HoldTime duration
-- After HoldTime expires, automatically switches to "unoccupied" state
-- If new detections occur while occupied, the HoldTime timer resets (continuous occupancy)
-- Updates the Matter attribute automatically
+- Pulse occupied every 2 minutes
+- `setOccupancy(false)` after the pulse starts the cluster timer
+- Hub stays occupied for HoldTime, then vacant
+- A new pulse while holding occupied cancels the timer and starts over
+- HoldTime is configurable from the controller and stored in Preferences
 
-**HoldTime Behavior:**
-- The HoldTime value determines how long the sensor maintains the "occupied" state after the last detection
-- HoldTime can be configured via Matter Controller (within the min/max limits)
-- HoldTime value is persisted to Preferences and restored on reboot
-- When HoldTime expires, the sensor transitions to "unoccupied" even if no new detection occurs
+Do not implement HoldTime in the sketch. `getOccupancy()` is the last pulse; `isOccupied()` is the held cluster value.
 
-To use a real occupancy sensor, replace the `simulatedHWOccupancySensor()` function with your sensor library code. The HoldTime functionality will work the same way - the sensor will hold the occupied state for the configured HoldTime duration after motion is no longer detected.
+For a real PIR, return the pin level from `simulatedHWOccupancySensor()`. CHIP still applies HoldTime after the pin goes low.
 
 ### PIR Sensor Integration Example
 
@@ -244,7 +240,7 @@ After making these changes:
 2. Open the Serial Monitor at 115200 baud
 3. Move in front of the PIR sensor - you should see "OCCUPIED" messages
 4. Stay still for a few seconds - you should see "UNOCCUPIED" messages
-5. The Matter controller will automatically receive these occupancy state updates
+5. The hub stays occupied for HoldTime after the PIR goes low, then goes vacant
 
 ### Smart Home Integration
 
@@ -295,9 +291,8 @@ The MatterOccupancyWithHoldTime example consists of the following main component
    - Initializes Preferences and restores stored HoldTime value
    - Registers HoldTime change callback for persistence
    - Sets up the Matter Occupancy Sensor endpoint with initial state (unoccupied)
+   - Sets HoldTimeLimits and HoldTime after the sensor `begin()` and before `Matter.begin()` (required to enable HoldTime)
    - Calls `Matter.begin()` to start the Matter stack
-   - Sets HoldTimeLimits (min, max, default) after Matter.begin()
-   - Sets initial HoldTime value (from Preferences or default)
    - Waits for commissioning / CASE via `matterWaitUntilReady()`
 
 2. **`loop()`**:
@@ -323,7 +318,7 @@ The MatterOccupancyWithHoldTime example consists of the following main component
 - **Occupancy readings not updating**: Check that the sensor simulation function is being called correctly. For real sensors, verify sensor wiring and library initialization
 - **State not changing**: The simulated sensor detects occupancy every 2 minutes (120000 ms). The state will hold for HoldTime seconds after detection. If you're using a real sensor, ensure it's properly connected and reading correctly
 - **HoldTime not persisting**: Verify that Preferences is properly initialized and the callback is saving the value. Check Serial Monitor for "HoldTime changed" messages
-- **HoldTime not working**: Ensure `setHoldTimeLimits()` and `setHoldTime()` are called after `Matter.begin()`. Check Serial Monitor for error messages
+- **HoldTime not working**: Ensure `setHoldTimeLimits()` and `setHoldTime()` are called after the sensor `begin()` and before `Matter.begin()`. After `Matter.begin()` those calls only update a cluster that already has HoldTime enabled. Check Serial Monitor for error messages
 - **PIR sensor not detecting motion**:
   - Verify PIR sensor wiring (VCC, GND, OUT connections)
   - Check if PIR sensor requires 5 V or 3.3 V power (some PIR sensors need 5 V)

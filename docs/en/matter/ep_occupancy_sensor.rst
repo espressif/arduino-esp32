@@ -8,23 +8,23 @@ About
 The ``MatterOccupancySensor`` class provides an occupancy sensor endpoint for Matter networks. This endpoint implements the Matter occupancy sensing standard for detecting occupied/unoccupied states (e.g., motion sensors, PIR sensors).
 
 **Features:**
-* Occupancy state reporting (occupied/unoccupied)
-* Multiple sensor type support (PIR, Ultrasonic, Physical Contact)
-* HoldTime attribute (seconds) stored and reportable to controllers
-* HoldTimeLimits (min, max, default) required before a controller can write a non-zero HoldTime
-* HoldTime change callback for real-time updates from Matter controllers
-* Simple boolean state
-* Read-only sensor (no control functionality)
-* Automatic state updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Occupancy state reporting (occupied/unoccupied).
+* Multiple sensor type support (PIR, Ultrasonic, Physical Contact).
+* Optional HoldTime (seconds). Off unless ``setHoldTime()`` / ``setHoldTimeLimits()`` is called after the sensor ``begin()`` and before ``Matter.begin()``.
+* HoldTimeLimits (min, max, default) for controller validation when HoldTime is enabled.
+* HoldTime change callback for real-time updates from Matter controllers.
+* Simple boolean state.
+* Read-only sensor (no control functionality).
+* Automatic state updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Motion sensors (PIR)
-* Occupancy detection
-* Security systems
-* Smart lighting automation
-* Energy management (turn off lights when unoccupied)
+* Motion sensors (PIR).
+* Occupancy detection.
+* Security systems.
+* Smart lighting automation.
+* Energy management (turn off lights when unoccupied).
 
 API Reference
 -------------
@@ -53,8 +53,8 @@ Initializes the Matter occupancy sensor endpoint with an initial occupancy state
 
     bool begin(bool _occupancyState = false, OccupancySensorType_t _occupancySensorType = OCCUPANCY_SENSOR_TYPE_PIR);
 
-* ``_occupancyState`` - Initial occupancy state (``true`` = occupied, ``false`` = unoccupied, default: ``false``)
-* ``_occupancySensorType`` - Sensor type (default: ``OCCUPANCY_SENSOR_TYPE_PIR``)
+* ``_occupancyState`` - Initial occupancy state (``true`` = occupied, ``false`` = unoccupied, default: ``false``).
+* ``_occupancySensorType`` - Sensor type (default: ``OCCUPANCY_SENSOR_TYPE_PIR``).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -75,15 +75,15 @@ OccupancySensorType_t
 
 Occupancy sensor type enumeration:
 
-* ``OCCUPANCY_SENSOR_TYPE_PIR`` - Passive Infrared (PIR) sensor
-* ``OCCUPANCY_SENSOR_TYPE_ULTRASONIC`` - Ultrasonic sensor
-* ``OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC`` - Combined PIR and Ultrasonic
-* ``OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT`` - Physical contact sensor
+* ``OCCUPANCY_SENSOR_TYPE_PIR`` - Passive Infrared (PIR) sensor.
+* ``OCCUPANCY_SENSOR_TYPE_ULTRASONIC`` - Ultrasonic sensor.
+* ``OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC`` - Combined PIR and Ultrasonic.
+* ``OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT`` - Physical contact sensor.
 
 getOccupancySensorType
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Returns the sensor type passed to ``begin()``. CHIP cluster init reads this via ``halOccupancyGetSensorType()``.
+Returns the sensor type passed to ``begin()``. Occupancy Sensing features at create time set the cluster FeatureMap (no occupancy HAL).
 
 .. code-block:: arduino
 
@@ -101,20 +101,33 @@ Sets the occupancy state.
 
     bool setOccupancy(bool _occupancyState);
 
-* ``_occupancyState`` - Occupancy state (``true`` = occupied, ``false`` = unoccupied)
+* ``_occupancyState`` - Occupancy state (``true`` = occupied, ``false`` = unoccupied).
+
+With HoldTime enabled, ``setOccupancy(false)`` starts the cluster hold timer instead of going vacant immediately. A second ``setOccupancy(false)`` would restart that timer, so unchanged requests are ignored. ``getOccupancy()`` is the last request; ``isOccupied()`` is the Occupancy attribute the hub reads.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
 getOccupancy
 ^^^^^^^^^^^^
 
-Gets the current occupancy state.
+Returns the last occupancy value requested by the sketch, not the held cluster state.
 
 .. code-block:: arduino
 
     bool getOccupancy();
 
-This function will return ``true`` if occupied, ``false`` if unoccupied.
+This function will return ``true`` if the sketch last requested occupied, ``false`` if vacant.
+
+isOccupied
+^^^^^^^^^^
+
+Returns the Occupancy attribute the hub reads, including HoldTime.
+
+.. code-block:: arduino
+
+    bool isOccupied();
+
+This function will return ``true`` if the Occupancy attribute is occupied (including HoldTime), ``false`` if vacant.
 
 HoldTime Control
 ****************
@@ -122,15 +135,15 @@ HoldTime Control
 setHoldTime
 ^^^^^^^^^^^
 
-Sets the HoldTime attribute (in seconds). CHIP stores and reports this value. ``setOccupancy(false)`` is not delayed by HoldTime — the sketch (or HAL) must keep occupied until the hold expires. See the HoldTime example.
+Sets the HoldTime attribute (in seconds). Call after the sensor ``begin()`` and **before** ``Matter.begin()`` to create the HoldTime attributes. After ``Matter.begin()`` it only updates a cluster that already has HoldTime enabled. ``0`` is not allowed.
 
 .. code-block:: arduino
 
     bool setHoldTime(uint16_t _holdTime_seconds);
 
-* ``_holdTime_seconds`` - HoldTime value in seconds
+* ``_holdTime_seconds`` - HoldTime value in seconds (at least 1).
 
-**Important:** This function must be called after ``Matter.begin()`` has been called, as it requires the Matter event loop to be running. When limits are configured (``holdTimeMax > 0``), the value must fall in that range.
+When limits are configured (``holdTimeMax > 0``), the value must fall in that range.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -154,15 +167,14 @@ Sets the HoldTime limits (minimum, maximum, and default values). These limits de
 
     bool setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uint16_t _holdTimeMax_seconds, uint16_t _holdTimeDefault_seconds);
 
-* ``_holdTimeMin_seconds`` - Minimum HoldTime value in seconds
-* ``_holdTimeMax_seconds`` - Maximum HoldTime value in seconds
-* ``_holdTimeDefault_seconds`` - Default/recommended HoldTime value in seconds (informational metadata for controllers)
+* ``_holdTimeMin_seconds`` - Minimum HoldTime value in seconds (CHIP coerces values below 1 up to 1).
+* ``_holdTimeMax_seconds`` - Maximum HoldTime value in seconds (CHIP coerces values below 10 up to at least 10).
+* ``_holdTimeDefault_seconds`` - Default/recommended HoldTime value in seconds (informational metadata for controllers; clamped into the min/max range).
 
 **Important:**
-* This function must be called after ``Matter.begin()`` has been called, as it requires the Matter event loop to be running.
+* Call after the sensor ``begin()`` and **before** ``Matter.begin()`` to enable HoldTime. After ``Matter.begin()`` it only updates a cluster that already has HoldTime enabled.
 * The ``holdTimeDefault_seconds`` parameter is informational metadata for Matter controllers (recommended default value). It does NOT automatically set the HoldTime attribute - use ``setHoldTime()`` to set the actual value.
 * If the current HoldTime value is outside the new limits, it will be automatically adjusted to the nearest limit (minimum or maximum).
-* Call this before a Matter controller writes HoldTime. Until ``max > 0``, CHIP rejects any non-zero controller HoldTime write (limits start at 0/0/0).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -175,7 +187,7 @@ Sets a callback function that will be called when the HoldTime value is changed 
 
     void onHoldTimeChange(HoldTimeChangeCB onHoldTimeChangeCB);
 
-* ``onHoldTimeChangeCB`` - Callback function of type ``HoldTimeChangeCB``
+* ``onHoldTimeChangeCB`` - Callback function of type ``HoldTimeChangeCB``.
 
 The callback function signature is:
 
@@ -250,7 +262,7 @@ For an example that demonstrates HoldTime functionality, see:
     :language: arduino
 
 This example shows:
-* How to configure HoldTimeLimits after ``Matter.begin()``
-* How to set and persist HoldTime values
-* How to use the ``onHoldTimeChange()`` callback
-* How to implement HoldTime expiration logic in sensor simulation
+* How to configure HoldTimeLimits and HoldTime after the sensor ``begin()`` and before ``Matter.begin()``.
+* How to persist HoldTime values.
+* How to use the ``onHoldTimeChange()`` callback.
+* How to report a raw motion pulse and let CHIP HoldTime hold Occupancy for the hub.

@@ -57,6 +57,9 @@
 #include "esp32s3/rom/usb/usb_persist.h"
 #include "esp32s3/rom/usb/usb_dc.h"
 #include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
+#elif CONFIG_IDF_TARGET_ESP32S31
+#include "soc/lp_system_reg.h"
+#include "esp_rom_sys.h"
 #elif CONFIG_IDF_TARGET_ESP32P4
 #endif
 
@@ -705,6 +708,13 @@ void usb_persist_restart(restart_type_t mode) {
 #endif
     esp_restart();
   }
+#elif CONFIG_IDF_TARGET_ESP32S31
+  if (mode == RESTART_BOOTLOADER) {
+    // S31 downloads over USB-OTG HS, without the S3 CDC/JTAG PHY switch.
+    // Reset the whole system so ROM can reinitialize the USB peripheral.
+    REG_SET_BIT(LP_SYSTEM_REG_SYS_CTRL_REG, LP_SYSTEM_REG_FORCE_DOWNLOAD_BOOT);
+    esp_rom_software_reset_system();
+  }
 #endif
 }
 
@@ -792,7 +802,10 @@ static void set_usb_serial_num(void) {
   /* Get the MAC address */
 #if CONFIG_IDF_TARGET_ESP32P4
   const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_0_REG, EFUSE_MAC_0);
-  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_0_REG, EFUSE_MAC_1);
+  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_1_REG, EFUSE_MAC_1);
+#elif CONFIG_IDF_TARGET_ESP32S31
+  const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SYS0_REG, EFUSE_MAC_0);
+  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS1_REG, EFUSE_MAC_1);
 #else
   const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_0_REG, EFUSE_MAC_0);
   const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_1_REG, EFUSE_MAC_1);

@@ -23,12 +23,7 @@
 
 using namespace chip::app::Clusters::OccupancySensing;
 
-// Forward declaration for friend class
-class OccupancySensingAttrAccessWrapper;
-
 class MatterOccupancySensor : public MatterEndPoint {
-  friend class OccupancySensingAttrAccessWrapper;
-
 public:
   // Different Occupancy Sensor Types
   enum OccupancySensorType_t {
@@ -42,35 +37,38 @@ public:
   MatterOccupancySensor();
   ~MatterOccupancySensor();
   // begin Matter Occupancy Sensor endpoint with initial occupancy state and default PIR sensor type
-  // Note: Call setHoldTimeLimits() after Matter.begin() to configure HoldTimeLimits (optional)
+  // Sensor type is taken from Occupancy Sensing features at create time.
+  // HoldTime is off unless setHoldTime() / setHoldTimeLimits() is called before Matter.begin().
   bool begin(bool _occupancyState = false, OccupancySensorType_t _occupancySensorType = OCCUPANCY_SENSOR_TYPE_PIR);
   // this will just stop processing Occupancy Sensor Matter events
   void end();
 
-  // set the occupancy state
+  // Last raw reading from the sketch. Duplicate calls are ignored (CHIP
+  // SetOccupancy(false) restarts HoldTime). With HoldTime enabled the cluster
+  // stays occupied until the timer fires; getOccupancy() does not wait for that.
   bool setOccupancy(bool _occupancyState);
-  // returns the occupancy state
   bool getOccupancy() {
     return occupancyState;
   }
-  // Sensor type passed to begin(). CHIP's cluster init reads this via
-  // halOccupancyGetSensorType() and writes OccupancySensorType / TypeBitmap.
+  // Occupancy attribute the hub reads (includes HoldTime).
+  bool isOccupied();
   OccupancySensorType_t getOccupancySensorType() {
     return occupancySensorType;
   }
 
-  // set the hold time (in seconds)
-  // Must be called after Matter.begin() has been called (requires Matter event loop to be running)
+  // Enable or update HoldTime (seconds). Call after begin() and before Matter.begin()
+  // to create the HoldTime attributes; after Matter.begin() only updates a live cluster.
   bool setHoldTime(uint16_t _holdTime_seconds);
   // returns the hold time (in seconds)
   uint16_t getHoldTime() {
     return holdTime_seconds;
   }
 
-  // set the hold time limits (min, max, default in seconds)
-  // Must be called after Matter.begin() has been called (requires Matter event loop to be running)
-  // Note: holdTimeDefault_seconds is informational metadata for Matter controllers (recommended default value).
-  //       It does NOT automatically set the HoldTime attribute - use setHoldTime() to set the actual value.
+  // Enable or update HoldTimeLimits (min, max, default in seconds).
+  // Call after begin() and before Matter.begin() to enable HoldTime; after start
+  // only updates the cluster if HoldTime was already enabled.
+  // Values are coerced to the CHIP range: min at least 1, max at least 10.
+  // holdTimeDefault_seconds is informational for controllers; use setHoldTime() for the live value.
   bool setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uint16_t _holdTimeMax_seconds, uint16_t _holdTimeDefault_seconds);
 
   // bool conversion operator
@@ -105,7 +103,7 @@ protected:
   OccupancySensorType_t occupancySensorType = OCCUPANCY_SENSOR_TYPE_PIR;
   uint16_t holdTime_seconds = 0;
 
-  // HoldTimeLimits settings (set via setHoldTimeLimits() after Matter.begin())
+  // HoldTimeLimits settings (set via setHoldTimeLimits() before Matter.begin())
   uint16_t holdTimeMin_seconds = 0;
   uint16_t holdTimeMax_seconds = 0;  // 0 means no maximum, no limits enforced
   uint16_t holdTimeDefault_seconds = 0;
@@ -113,8 +111,7 @@ protected:
   // User callback
   HoldTimeChangeCB _onHoldTimeChangeCB = nullptr;
 
-  // Per-endpoint Occupancy Sensing AAI. HoldTime storage is CHIP-managed; FeatureMap
-  // is encoded from this endpoint's sensor-type bits (not a process-wide Feature(0)).
-  OccupancySensingAttrAccessWrapper *mHoldTimeAccess = nullptr;
+  bool ensureHoldTimeAttributes();
+  void onStackStarted() override;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

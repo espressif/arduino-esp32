@@ -17,7 +17,7 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterDimmableLight.h>
-#include <app/util/attribute-storage-null-handling.h>
+#include <lib/support/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -98,7 +98,7 @@ MatterDimmableLight::~MatterDimmableLight() {
 }
 
 bool MatterDimmableLight::begin(bool initialState, uint8_t brightness) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
   if (getEndPointId() != 0) {
     log_e("Matter Dimmable Light with Endpoint Id %u device has already been created.", getEndPointId());
     return false;

@@ -96,6 +96,8 @@ static const uint8_t BOOT_PIN = 9;
 static const uint8_t BOOT_PIN = 35;
 #elif CONFIG_IDF_TARGET_ESP32C5
 static const uint8_t BOOT_PIN = 28;
+#elif CONFIG_IDF_TARGET_ESP32S31
+static const uint8_t BOOT_PIN = 61;
 #else
 #error BOOT_PIN not defined for this chip!
 #endif

@@ -1,6 +1,7 @@
 /*
  * Register all Zigbee endpoint classes from Zigbee.h on the coordinator.
- * Pre-begin configuration (min/max, clusters) lives in register_all_zigbee_endpoints().
+ * Endpoint configuration (min/max, clusters) lives in register_all_zigbee_endpoints().
+ * Zigbee.role() must already have been called; SDK v2 rejects EP setters before that.
  * Deep API tests are in zigbee_endpoint_deep_tests.h.
  */
 

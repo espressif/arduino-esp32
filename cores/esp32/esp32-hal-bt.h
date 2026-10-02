@@ -36,8 +36,6 @@ typedef enum {
 // BT libraries include esp32-hal-alloc-ble-mem.h and esp32-hal-alloc-bt-classic-mem.h which set
 // _bleLibraryInUse and _btClassicLibraryInUse to true via constructor.
 // Users may also provide their own strong *InUse() to override.
-bool _btInUse_default(void);
-bool btInUse(void);
 bool btClassicInUse(void);
 bool bleInUse(void);
 
@@ -60,6 +58,12 @@ bool btMemReleased(bt_mode mode);
 // already released BT memory on its own, so that btMemReleased() reflects
 // the true state and btMemRelease() does not attempt a double-release.
 void btMarkMemReleased(bt_mode mode);
+
+/**
+ * @brief Query the current BT controller mode.
+ * @return The active bt_mode, or BT_MODE_DEFAULT if the controller is idle/uninitialized.
+ */
+bt_mode btGetMode(void);
 
 #ifdef __cplusplus
 }

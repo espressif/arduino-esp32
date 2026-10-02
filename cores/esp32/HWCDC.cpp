@@ -446,7 +446,9 @@ void HWCDC::begin(unsigned long baud) {
   }
   // Configure PHY
   // USB_Serial_JTAG use internal PHY
+#ifndef CONFIG_IDF_TARGET_ESP32S31
   USB_SERIAL_JTAG.conf0.phy_sel = 0;
+#endif
   // Disable software control USB D+ D- pullup pulldown (Device FS: dp_pullup = 1)
   USB_SERIAL_JTAG.conf0.pad_pull_override = 0;
   // Enable USB D+ pullup
