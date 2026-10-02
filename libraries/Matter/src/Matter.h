@@ -43,6 +43,7 @@
 #include <MatterEndpoints/MatterThermostat.h>
 #include <MatterEndpoints/MatterWindowCovering.h>
 #include <MatterEndpoints/MatterLightSensor.h>
+#include <MatterEndpoints/MatterSoilSensor.h>
 #include "matter_closure_patch.h"
 
 // Matter Event types used when there is a user callback for Matter Events
@@ -300,6 +301,7 @@ public:
   friend class MatterThermostat;
   friend class MatterWindowCovering;
   friend class MatterLightSensor;
+  friend class MatterSoilSensor;
 
 protected:
   static void _init();
