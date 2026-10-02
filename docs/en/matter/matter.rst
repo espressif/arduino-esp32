@@ -109,8 +109,8 @@ The ``Matter`` class is implemented as a singleton, meaning there's only one ins
 
 The ``Matter`` class provides the following key methods:
 
-* `initNode()`: Creates the Matter node (root endpoint 0) if needed. Idempotent. Normally called from `MatterEndPoint::ensureMatterNode()` inside endpoint `begin()`; sketches rarely call this directly.
-* `begin()`: Starts the Matter stack after at least one accessory endpoint exists on the node (endpoint id other than 0). On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts, unless Thread or Ethernet was selected. Skipped if the sketch already called `matterConnectWiFi()`, `WiFi.begin()`, or `WiFi.mode()`.
+* ``initNode()``: Creates the Matter node (root endpoint 0) if needed. Idempotent. Normally called from ``MatterEndPoint::ensureMatterNode()`` inside endpoint ``begin()``; sketches rarely call this directly.
+* ``begin()``: Starts the Matter stack after at least one accessory endpoint exists on the node (endpoint id other than 0). On Wi-Fi station builds, starts the Wi-Fi driver first with reduced RX/TX buffers (4 static RX, 8 dynamic RX, 8 dynamic TX, AMPDU RX BA window 6) so CHIP inherits those counts, unless Thread or Ethernet was selected. Skipped if the sketch already called ``matterConnectWiFi()``, ``WiFi.begin()``, or ``WiFi.mode()``.
 * ``isDeviceCommissioned()``: Checks if the device is commissioned (a fabric exists)
 * ``isWiFiConnected()``: Checks Wi-Fi connection status
 * ``isThreadConnected()``: Checks Thread connection status
