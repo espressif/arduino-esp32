@@ -50,7 +50,7 @@ zigbee|-|-|Error :fire:|Error :fire:|Error :fire:|-|-|-
 Test|ESP32|ESP32-C3|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:
 console|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:
-eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:\*|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:
+eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:
 fs|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:
 gpio|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
 hash|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:|107/107 :white_check_mark:
@@ -141,10 +141,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
 
 
 
-> \* Result from last successful run (runner currently unavailable)
+Generated on: 2026/10/03 00:33:32 UTC
 
-Generated on: 2026/10/02 00:36:25 UTC
+[Commit](https://github.com/espressif/arduino-esp32/commit/aeabde6e33e4dfe44842166975032b68f6e479a7) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/37081267210) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/37081952922) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/37082441819)
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/86dc2cd705fc7cb7b90261a6416d5ba23e13d6f2) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/36945164004) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/36945972343) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/36946709123)
-
-[Test results](https://github.com/espressif/arduino-esp32/runs/110650755734)
+[Test results](https://github.com/espressif/arduino-esp32/runs/111086058392)
