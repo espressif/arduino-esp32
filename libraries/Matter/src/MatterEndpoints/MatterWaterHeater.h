@@ -102,15 +102,24 @@ public:
   bool setHeatDemand(uint8_t heatDemand);
   uint8_t getHeatDemand();
 
+  // TankVolume / TankPercentage are code-driven (WHM Delegate). Setters update the
+  // Arduino cache and report; do not updateAttributeVal() them.
   bool setTankVolume(uint16_t tankVolume);
   uint16_t getTankVolume();
 
   bool setTankPercentage(uint8_t tankPercentage);
   uint8_t getTankPercentage();
 
-  // Writes BoostState and syncs HeatDemand. Setting INACTIVE cancels an active
-  // Boost session (timer, temporary setpoint, BoostEnded). Controller
-  // Boost/CancelBoost commands use the WHM delegate and then this same cache.
+  // EstimatedHeatRequired is code-driven (WHM Delegate, EnergyManagement). Matter
+  // unit is milliWatt-hours (int64). Controllers often display kWh (1 kWh = 1e6 mWh).
+  // This is remaining energy to reach the heating goal, not the current heat rate.
+  bool setEstimatedHeatRequired(int64_t energy_mWh);
+  int64_t getEstimatedHeatRequired();
+
+  // Updates the BoostState cache (CHIP reads it via the WHM Delegate) and syncs
+  // HeatDemand. Setting INACTIVE cancels an active Boost session (timer,
+  // temporary setpoint, BoostEnded). Controller Boost/CancelBoost commands use
+  // the WHM delegate and then this same cache.
   bool setBoostState(BoostState_t state);
   BoostState_t getBoostState();
 
@@ -138,6 +147,7 @@ private:
   uint8_t heatDemand = 0;
   uint16_t tankVolume = 100;
   uint8_t tankPercentage = 100;
+  int64_t estimatedHeatRequired = 0;
   uint8_t boostState = BOOST_INACTIVE;
 
   uint8_t waterHeaterMode = WATER_HEATER_MODE_MANUAL;

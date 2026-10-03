@@ -20,11 +20,13 @@
 #include <esp_matter.h>
 #include <esp_matter_core.h>
 #ifdef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
+#include <thermostat.h>
 #include <water_heater_management.h>
 #endif
 #include <app-common/zap-generated/cluster-enums.h>
 #include <app/clusters/mode-base-server/CodegenIntegration.h>
 #include <app/clusters/water-heater-management-server/Delegate.h>
+#include <app/reporting/reporting.h>
 #include <lib/support/Span.h>
 #include <platform/CHIPDeviceLayer.h>
 #include <system/SystemLayer.h>
@@ -58,6 +60,7 @@ constexpr uint8_t DEFAULT_HEATER_TYPES = MatterWaterHeater::IMMERSION_ELEMENT_1;
 constexpr uint8_t DEFAULT_HEAT_DEMAND = 0;
 constexpr uint16_t DEFAULT_TANK_VOLUME = 100;
 constexpr uint8_t DEFAULT_TANK_PERCENTAGE = 100;
+constexpr int64_t DEFAULT_ESTIMATED_HEAT_REQUIRED = 0;
 constexpr uint8_t DEFAULT_BOOST_STATE = MatterWaterHeater::BOOST_INACTIVE;
 
 constexpr uint8_t DEFAULT_WATER_HEATER_MODE = MatterWaterHeater::WATER_HEATER_MODE_MANUAL;
@@ -108,6 +111,19 @@ bool addLegacyWhmTankPercent(cluster_t *cluster) {
   return orWhmFeatureMap(cluster, static_cast<uint32_t>(WaterHeaterManagement::Feature::kTankPercent));
 }
 #endif
+
+// WHM attributes are code-driven (Delegate). Ember get/update fails (GET_VAL / 262).
+void reportWhmAttribute(uint16_t endpointId, chip::AttributeId attributeId) {
+  if (endpointId == 0 || !chip::DeviceLayer::SystemLayer().IsInitialized()) {
+    return;
+  }
+  const CHIP_ERROR err = chip::DeviceLayer::SystemLayer().ScheduleLambda([endpointId, attributeId]() {
+    MatterReportingAttributeChangeCallback(endpointId, WaterHeaterManagement::Id, attributeId);
+  });
+  if (err != CHIP_NO_ERROR) {
+    log_v("Failed to schedule WHM attribute report: %" CHIP_ERROR_FORMAT, err.Format());
+  }
+}
 }  // namespace
 
 // Bridges Water Heater Mode to CHIP ModeBase. Methods run on the Matter event loop (Init / ChangeToMode)
@@ -239,7 +255,7 @@ public:
   }
 
   chip::Energy_mWh GetEstimatedHeatRequired() override {
-    return 0;
+    return owner->estimatedHeatRequired;
   }
 
   chip::Percent GetTankPercentage() override {
@@ -335,6 +351,31 @@ bool MatterWaterHeater::begin() {
     return false;
   }
 
+  // water_heater::create() only adds OccupiedHeatingSetpoint (Heating feature). Controllers
+  // that expose a heating range need AbsMin/AbsMaxHeatSetpointLimit.
+  cluster_t *thermostat_cluster = cluster::get(endpoint, Thermostat::Id);
+  if (thermostat_cluster == nullptr) {
+    log_e("Thermostat cluster missing after endpoint create");
+    esp_matter::endpoint::destroy(node::get(), endpoint);
+    delete modeDelegate;
+    delete managementDelegate;
+    modeDelegate = nullptr;
+    managementDelegate = nullptr;
+    return false;
+  }
+  if (cluster::thermostat::attribute::create_abs_min_heat_setpoint_limit(thermostat_cluster, ABS_MIN_HEATING_SETPOINT) == nullptr
+      || cluster::thermostat::attribute::create_abs_max_heat_setpoint_limit(thermostat_cluster, ABS_MAX_HEATING_SETPOINT) == nullptr
+      || cluster::thermostat::attribute::create_min_heat_setpoint_limit(thermostat_cluster, MIN_HEATING_SETPOINT) == nullptr
+      || cluster::thermostat::attribute::create_max_heat_setpoint_limit(thermostat_cluster, MAX_HEATING_SETPOINT) == nullptr) {
+    log_e("Failed to add Thermostat heating setpoint limits");
+    esp_matter::endpoint::destroy(node::get(), endpoint);
+    delete modeDelegate;
+    delete managementDelegate;
+    modeDelegate = nullptr;
+    managementDelegate = nullptr;
+    return false;
+  }
+
   // water_heater::create() only adds mandatory WHM attributes; TankVolume / TankPercentage need
   // EnergyManagement and TankPercent features before setTankVolume() / setTankPercentage().
 #ifdef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
@@ -401,12 +442,17 @@ bool MatterWaterHeater::begin() {
   heatDemand = DEFAULT_HEAT_DEMAND;
   tankVolume = DEFAULT_TANK_VOLUME;
   tankPercentage = DEFAULT_TANK_PERCENTAGE;
+  estimatedHeatRequired = DEFAULT_ESTIMATED_HEAT_REQUIRED;
   boostState = DEFAULT_BOOST_STATE;
   waterHeaterMode = DEFAULT_WATER_HEATER_MODE;
+  // ModeBase defaults to the first supported mode (Off). Pin Manual so the stack Init()
+  // does not overwrite the cache and leave the example tank frozen at cold water.
+  setWaterHeaterMode(static_cast<WaterHeaterMode_t>(DEFAULT_WATER_HEATER_MODE));
 
   // Push initial tank values (attributes exist after feature::add above).
   setTankVolume(DEFAULT_TANK_VOLUME);
   setTankPercentage(DEFAULT_TANK_PERCENTAGE);
+  setEstimatedHeatRequired(DEFAULT_ESTIMATED_HEAT_REQUIRED);
   syncHeatDemand();
 
   return true;
@@ -722,17 +768,11 @@ bool MatterWaterHeater::setHeaterTypes(uint8_t value) {
     return false;
   }
 
-  esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::HeaterTypes::Id, &attr)) {
-    return false;
+  // HeaterTypes is code-driven (WHM Delegate). Ember rejects get/update (GET_VAL / 262).
+  if (heaterTypes != value) {
+    heaterTypes = value;
+    reportWhmAttribute(getEndPointId(), WaterHeaterManagement::Attributes::HeaterTypes::Id);
   }
-
-  attr.val.u8 = value;
-  if (!updateAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::HeaterTypes::Id, &attr)) {
-    return false;
-  }
-
-  heaterTypes = value;
   // The active source bits (HeatDemand) can never exceed the heater types the appliance actually has.
   syncHeatDemand();
   return true;
@@ -747,17 +787,12 @@ bool MatterWaterHeater::setHeatDemand(uint8_t value) {
     return false;
   }
 
-  esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::HeatDemand::Id, &attr)) {
-    return false;
+  // HeatDemand is code-driven (WHM Delegate). The ember store rejects writes (262);
+  // CHIP and Matter controllers read GetHeatDemand() from this cache.
+  if (heatDemand != value) {
+    heatDemand = value;
+    reportWhmAttribute(getEndPointId(), WaterHeaterManagement::Attributes::HeatDemand::Id);
   }
-
-  attr.val.u8 = value;
-  if (!updateAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::HeatDemand::Id, &attr)) {
-    return false;
-  }
-
-  heatDemand = value;
   return true;
 }
 
@@ -780,19 +815,11 @@ bool MatterWaterHeater::setTankVolume(uint16_t value) {
     return false;
   }
 
-  esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::TankVolume::Id, &attr)) {
+  // TankVolume is code-driven (WHM Delegate GetTankVolume). Ember rejects get/update.
+  if (tankVolume != value) {
     tankVolume = value;
-    log_v("TankVolume attribute not in data model; cached locally (%u)", value);
-    return true;
+    reportWhmAttribute(getEndPointId(), WaterHeaterManagement::Attributes::TankVolume::Id);
   }
-
-  attr.val.u16 = value;
-  if (!updateAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::TankVolume::Id, &attr)) {
-    return false;
-  }
-
-  tankVolume = value;
   return true;
 }
 
@@ -805,26 +832,34 @@ bool MatterWaterHeater::setTankPercentage(uint8_t value) {
     return false;
   }
 
-  esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::TankPercentage::Id, &attr)) {
+  // TankPercentage is code-driven (WHM Delegate GetTankPercentage). Ember rejects get/update.
+  if (tankPercentage != value) {
     tankPercentage = value;
-    log_v("TankPercentage attribute not in data model; cached locally (%u)", value);
-    maybeFinishOneShotBoost();
-    return true;
+    reportWhmAttribute(getEndPointId(), WaterHeaterManagement::Attributes::TankPercentage::Id);
   }
-
-  attr.val.u8 = value;
-  if (!updateAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::TankPercentage::Id, &attr)) {
-    return false;
-  }
-
-  tankPercentage = value;
   maybeFinishOneShotBoost();
   return true;
 }
 
 uint8_t MatterWaterHeater::getTankPercentage() {
   return tankPercentage;
+}
+
+bool MatterWaterHeater::setEstimatedHeatRequired(int64_t energy_mWh) {
+  if (!initialized || energy_mWh < 0) {
+    return false;
+  }
+
+  // EstimatedHeatRequired is code-driven (WHM Delegate GetEstimatedHeatRequired).
+  if (estimatedHeatRequired != energy_mWh) {
+    estimatedHeatRequired = energy_mWh;
+    reportWhmAttribute(getEndPointId(), WaterHeaterManagement::Attributes::EstimatedHeatRequired::Id);
+  }
+  return true;
+}
+
+int64_t MatterWaterHeater::getEstimatedHeatRequired() {
+  return estimatedHeatRequired;
 }
 
 bool MatterWaterHeater::applyBoostState(BoostState_t state) {
@@ -836,17 +871,12 @@ bool MatterWaterHeater::applyBoostState(BoostState_t state) {
     return false;
   }
 
-  esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
-  if (getAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::BoostState::Id, &attr)) {
-    if (attr.val.u8 != static_cast<uint8_t>(state)) {
-      attr.val.u8 = static_cast<uint8_t>(state);
-      if (!updateAttributeVal(WaterHeaterManagement::Id, WaterHeaterManagement::Attributes::BoostState::Id, &attr)) {
-        log_w("BoostState attribute write failed; keeping local cache");
-      }
-    }
-  }
-
+  // BoostState is code-driven (WHM Delegate GetBoostState). Ember rejects writes (262).
+  const bool changed = boostState != static_cast<uint8_t>(state);
   boostState = static_cast<uint8_t>(state);
+  if (changed) {
+    reportWhmAttribute(getEndPointId(), WaterHeaterManagement::Attributes::BoostState::Id);
+  }
   // Per Matter spec, HeatDemand reflects the heat sources currently active: Boost must be reflected too.
   syncHeatDemand();
   return true;
@@ -924,7 +954,22 @@ void MatterWaterHeater::finishBoost(bool emitEndedEvent) {
   }
 
   if (emitEndedEvent && managementDelegate != nullptr) {
-    const CHIP_ERROR err = managementDelegate->GenerateBoostEndedEvent();
+    // GenerateEvent() requires the CHIP stack lock. Controller CancelBoost / the boost
+    // timer already hold it; setBoostState() from loop() does not.
+    ManagementDelegate *delegate = managementDelegate;
+    CHIP_ERROR err = CHIP_NO_ERROR;
+    if (chip::DeviceLayer::PlatformMgr().IsChipStackLockedByCurrentThread()) {
+      err = delegate->GenerateBoostEndedEvent();
+    } else if (chip::DeviceLayer::SystemLayer().IsInitialized()) {
+      err = chip::DeviceLayer::SystemLayer().ScheduleLambda([delegate]() {
+        const CHIP_ERROR emitErr = delegate->GenerateBoostEndedEvent();
+        if (emitErr != CHIP_NO_ERROR) {
+          log_w("Failed to emit Water Heater BoostEnded: %" CHIP_ERROR_FORMAT, emitErr.Format());
+        }
+      });
+    } else {
+      err = CHIP_ERROR_INCORRECT_STATE;
+    }
     if (err != CHIP_NO_ERROR) {
       log_w("Failed to emit Water Heater BoostEnded: %" CHIP_ERROR_FORMAT, err.Format());
     }
@@ -1059,7 +1104,6 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           syncHeatDemand();
           return true;
 
-        // TankVolume and TankPercentage are optional features, but once enabled above they are normal attributes.
         case WaterHeaterManagement::Attributes::TankVolume::Id:
           tankVolume = val->val.u16;
           return true;
@@ -1067,6 +1111,10 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
         case WaterHeaterManagement::Attributes::TankPercentage::Id:
           tankPercentage = val->val.u8;
           maybeFinishOneShotBoost();
+          return true;
+
+        case WaterHeaterManagement::Attributes::EstimatedHeatRequired::Id:
+          estimatedHeatRequired = val->val.i64;
           return true;
 
         default: break;

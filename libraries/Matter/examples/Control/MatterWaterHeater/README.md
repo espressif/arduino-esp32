@@ -1,8 +1,8 @@
 # Matter Water Heater Example
 
 This is the basic water heater sketch: commission a Matter Water Heater, report tank temperature, and heat toward the setpoint.\
-It honors System Mode, Water Heater Mode Off, and Boost, and clears **HeatDemand** when the tank is not drawing power.\
-Eco, Boost duration / one-shot details, tank percentage, and richer logging are in [MatterWaterHeaterAdvanced](../MatterWaterHeaterAdvanced).
+System Mode, **Boost** / **CancelBoost**, and target temperature are logged on the Serial Monitor as soon as the controller writes them.\
+Water Heater Mode Eco, Boost duration / one-shot details, tank percentage, and richer logging are in [MatterWaterHeaterAdvanced](../MatterWaterHeaterAdvanced).
 
 ## Supported Targets
 
@@ -37,8 +37,9 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 - Matter Water Heater (device type 0x050F)
 - Simulated tank temperature and heating setpoint
-- Heats while System Mode is Heat and Water Heater Mode is not Off, or while a hub Boost is Active (Boost still heats if Mode or System is Off)
-- Cools toward 20 °C when heating is off
+- System Mode **Heat** (no Boost): +0.5 °C / 5 s; **Boost**: +1.0 °C / 5 s
+- Cools at 0.25 °C/s toward 16 °C when operation is Off (and Boost is inactive)
+- Serial lines for Boost / Cancel Boost, system mode, water heater mode, and target temperature
 - Clears **HeatDemand** when the tank is at the setpoint or not heating
 - Matter commissioning via QR code or manual pairing code
 
@@ -80,37 +81,46 @@ For a production device, replace the simulation with real sensors and actuators 
 
 ## Expected Output
 
-Open the Serial Monitor at **115200**. `matterWaitUntilReady()` prints the pairing code and waits until the controller CASE session is up. About five seconds later `loop()` prints the simulated tank:
+Open the Serial Monitor at **115200**. `matterWaitUntilReady()` prints the pairing code and waits until the controller CASE session is up. Hub writes print immediately; the tank tick is every five seconds:
 
 ```
 Controller CASE session is up.
-Temp: 20.5 C | Setpoint: 48.0 C | Heat: on
-Temp: 21.0 C | Setpoint: 48.0 C | Heat: on
+Ready | operation: Heat | target: 48.0 C | water heater mode: Manual
+Temp: 20.5 C | Setpoint: 48.0 C | HeatDemand: on | Heat
+Controller: Boost on
+Operation: Boost
+Controller: target temperature 42.0 C
+Target reached. HeatDemand idle; leaving Boost for Heat.
+Controller: Cancel Boost
+Operation: Heat
+Temp: 42.0 C | Setpoint: 42.0 C | HeatDemand: idle | Heat
 ```
 
-`Heat: on` is **HeatDemand** (element drawing power), not System Mode. At the setpoint the log shows `Heat: off`.
+`HeatDemand: on` is the Matter **HeatDemand** attribute (which heater types are drawing power: immersion, heat pump, boiler, …). Reaching the setpoint in **Heat** idles HeatDemand and keeps System Mode Heat. Reaching it during **Boost** ends Boost so heating continues in Heat. **Off** is only when the controller writes System Mode Off (that cools the tank).
 
-Change the setpoint, System Mode, or Water Heater Mode from the hub; the next tick follows the new values. Mode **Off** stops heating unless Boost is Active.
+A controller **Boost** command may use a long duration and no one-shot; this sketch ends that Boost at the setpoint so Boost does not stay active after the tank is hot.
 
 ## Using the Device
 
-The endpoint is Matter device type **0x050F**. This sketch drives temperature and HeatDemand only (no Eco cap, tank %, or Boost session log):
+The endpoint is Matter device type **0x050F**. This sketch drives temperature and HeatDemand (no Eco temperature cap, tank %, or Boost session fields):
 
-| Parameter           |  Value |
-| ------------------- | -----: |
-| Initial temperature |  20 °C |
-| Heating setpoint    |  48 °C |
-| System mode         |   Heat |
-| Water heater mode   | Manual (library default) |
+| Parameter           |                      Value |
+| ------------------- | -------------------------: |
+| Initial temperature |                      16 °C |
+| Heating setpoint    |                      48 °C |
+| System mode         |                       Heat |
+| Water heater mode   | Manual (`begin()` default) |
 
-Every five seconds the temperature rises by 0.5 °C toward the setpoint while heating. It falls toward 20 °C when System Mode is Off or Water Heater Mode is Off, unless Boost is Active. **HeatDemand** is the heater-type bitmap while the element is on, and 0 at the setpoint or when heating is off.
+Every five seconds Heat rises 0.5 °C and Boost rises 1.0 °C toward the setpoint. Off falls 0.25 °C/s toward 16 °C unless Boost is Active. **HeatDemand** is the heater-type bitmap while a heater type is on, and 0 at the setpoint or when heating is off.
 
-Use a Matter hub (Home Assistant, Apple Home, Amazon Alexa, or Google Home) to scan the QR code or enter the manual pairing code from the Serial Monitor.
+`MatterWaterHeater::begin()` adds Thermostat **AbsMinHeatSetpointLimit** and **AbsMaxHeatSetpointLimit** (default **20 °C … 85 °C**) so controllers can show a setpoint dial. That range is not the tank temperature: this sketch cools to 16 °C. After `begin()`, `setAbsoluteMinimumHeatingSetpoint()` / `setAbsoluteMaximumHeatingSetpoint()` (and `setMinimumHeatingSetpoint()` / `setMaximumHeatingSetpoint()`) can change the dial within 20 °C … 85 °C. See `ep_water_heater.rst`.
+
+Use a Matter controller to scan the QR code or enter the manual pairing code from the Serial Monitor.
 
 ## Code Structure
 
 1. **`setup()`**: `waterHeater.begin()` (before `Matter.begin()`), set temperature and setpoint, then `Matter.begin()` and `matterWaitUntilReady()`.
-2. **`loop()`**: `matterRestartIfNoFabric()`. Every five seconds updates temperature and **HeatDemand**, and prints them. Mode Off and System Off stop heating unless Boost is Active.
+2. **`loop()`**: `matterRestartIfNoFabric()`. Prints hub changes (Boost, system mode, water heater mode, target temperature) immediately. Every five seconds updates temperature and **HeatDemand**. Off stops heating unless Boost is Active.
 
 There is no button; decommission is not in this sketch.
 
