@@ -104,7 +104,14 @@ void setup() {
 
   sHeapBeforeBegin = ESP.getFreeHeap();
   printHeap("Before Matter.begin()");
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
+  if (!Matter.isStackStarted()) {
+    Serial.println("Matter.begin() failed. The Matter stack did not start.");
+    while (true) {
+      delay(1000);
+    }
+  }
   printHeap("After Matter.begin()");
   Serial.printf("Heap delta after begin: %d bytes\r\n", (int)ESP.getFreeHeap() - (int)sHeapBeforeBegin);
   Serial.printf("BLE commissioning enabled: %s\r\n", Matter.isBLECommissioningEnabled() ? "YES" : "NO");

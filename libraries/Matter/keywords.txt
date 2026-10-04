@@ -79,12 +79,16 @@ getOnboardingQRCodeUrl	KEYWORD2
 initNode	KEYWORD2
 registerCreatedEndpoint	KEYWORD2
 onStackStarted	KEYWORD2
+getSoftwareVersion	KEYWORD2
+getSoftwareVersionString	KEYWORD2
+isStackStarted	KEYWORD2
 isBLECommissioningEnabled	KEYWORD2
 isBLEMemoryReleaseEnabled	KEYWORD2
 isDeviceCommissioned	KEYWORD2
 isDeviceConnected	KEYWORD2
 isOnline	KEYWORD2
 matterConnectWiFi	KEYWORD2
+matterSetExampleIdentity	KEYWORD2
 matterWaitUntilReady	KEYWORD2
 matterRestartIfNoFabric	KEYWORD2
 setDebounceMs	KEYWORD2
@@ -99,6 +103,8 @@ setDeviceName	KEYWORD2
 setSerialNumber	KEYWORD2
 setHardwareVersion	KEYWORD2
 setHardwareVersionString	KEYWORD2
+setSoftwareVersion	KEYWORD2
+setSoftwareVersionString	KEYWORD2
 setSetupDiscriminator	KEYWORD2
 setSetupPasscode	KEYWORD2
 setBLECommissioningEnabled	KEYWORD2

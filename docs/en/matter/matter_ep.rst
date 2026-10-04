@@ -264,6 +264,15 @@ Example usage:
 
 See the `MatterSmartButtonsTagList <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterSmartButtonsTagList>`_ example for a complete sketch (On, Off, and a custom-labeled switch).
 
+Endpoint user callbacks
+***********************
+
+Lighting and control endpoints expose ``onChange()``, ``onIdentify()``, and similar registrars. Call them **after** that endpoint's ``begin()``. They may be registered before or after ``Matter.begin()``; controller-driven updates need the stack running and a callback registered before you rely on physical sync.
+
+Register ``Matter.onEvent()`` and ``Matter.onBLEMemoryReleased()`` **before** ``Matter.begin()`` if you need events from stack startup or BLE RAM reclaim.
+
+Boolean State sensors (contact, leak, freeze, rain): call ``setContact()`` / ``setLeak()`` / ``setFreeze()`` / ``setRain()`` **after** ``Matter.begin()``.
+
 Attribute Change Callback
 *************************
 
