@@ -56880,59 +56880,59 @@ rakwireless_rak3112.menu.EraseFlash.all=Enabled
 rakwireless_rak3112.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
-kodedot.name=kode dot
+# Kode Dot (ESP32-P4) running kodeOS. Upload writes the sketch, and nothing
+# else, into kodeOS's mailbox at 0x1C00000; kodeOS installs it as an app and
+# runs it in place. Tools -> Burn Bootloader erases the whole device, kodeOS
+# included: do not use it on this board.
+kodedot.name=Kode Dot
 
 kodedot.bootloader.tool=esptool_py
 kodedot.bootloader.tool.default=esptool_py
 
 kodedot.upload.tool=esptool_py_app_only
 kodedot.upload.tool.default=esptool_py_app_only
-kodedot.upload.tool.network=esp_ota
 
-kodedot.upload.maximum_size=8388608
+# Wraps for a sketch that runs from a DATA partition; see variants/kodedot/kode_flash_guard.cpp.
+kodedot.compiler.c.elf.extra_flags=-Wl,--wrap=esp_ota_get_running_partition -Wl,--wrap=esp_ota_get_next_update_partition -Wl,--wrap=esp_image_verify
+
+kodedot.upload.maximum_size=4186112
 kodedot.upload.maximum_data_size=327680
 kodedot.upload.flags=
 kodedot.upload.extra_flags=
+kodedot.upload.erase_cmd=
 kodedot.upload.use_1200bps_touch=false
 kodedot.upload.wait_for_upload_port=false
 kodedot.upload.speed=921600
 
-
 kodedot.serial.disableDTR=false
 kodedot.serial.disableRTS=false
 
-kodedot.build.tarch=xtensa
-kodedot.build.bootloader_addr=0x0
-kodedot.build.target=esp32s3
-kodedot.build.mcu=esp32s3
+kodedot.build.tarch=riscv32
+kodedot.build.target=esp
+kodedot.build.mcu=esp32p4
 kodedot.build.core=esp32
 kodedot.build.variant=kodedot
+kodedot.build.chip_variant=esp32p4
 kodedot.build.board=KODE_DOT
+kodedot.build.bootloader_addr=0x2000
 
 kodedot.build.usb_mode=1
 kodedot.build.cdc_on_boot=1
 kodedot.build.msc_on_boot=0
 kodedot.build.dfu_on_boot=0
 
-kodedot.build.f_cpu=240000000L
-
-kodedot.build.flash_offset=0x400000
+kodedot.build.f_cpu=400000000L
+kodedot.build.flash_offset=0x1C00000
 kodedot.build.flash_size=32MB
 kodedot.build.flash_freq=80m
+kodedot.build.img_freq=80m
 kodedot.build.flash_mode=dio
-kodedot.build.psram_type=opi
-
-kodedot.build.custom_partitions=kodedot_partitions
-
-kodedot.build.defines=
-
-kodedot.build.loop_core=-DARDUINO_RUNNING_CORE=1
-kodedot.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+kodedot.build.boot=dio
+kodedot.build.partitions=default
+kodedot.build.defines=-DBOARD_HAS_PSRAM -DKODE_SKETCH_NAME="{build.project_name}"
 
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
-
-kodedot.recipe.output.save_file={build.project_name}.ino.bin
 
 kodedot.menu.DebugLevel.none=None
 kodedot.menu.DebugLevel.none.build.code_debug=0

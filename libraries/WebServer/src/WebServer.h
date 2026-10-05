@@ -103,6 +103,10 @@ enum HTTPAuthMethod {
 #define WEBSERVER_MAX_HEADER_WAIT 10000  // ms for the request line and all headers together. 0 disables the check
 #endif
 
+#ifndef WEBSERVER_DIGEST_NONCE_TTL
+#define WEBSERVER_DIGEST_NONCE_TTL 300000  // ms a signed digest nonce stays valid for any client. 0 disables expiry
+#endif
+
 #define CONTENT_LENGTH_UNKNOWN ((size_t) - 1)
 #define CONTENT_LENGTH_NOT_SET ((size_t) - 2)
 
@@ -277,7 +281,7 @@ public:
   void enableDelay(boolean value);
   void enableCORS(boolean value = true);
   void enableCrossOrigin(boolean value = true);
-  typedef std::function<String(FS &fs, const String &fName)> ETagFunction;
+  typedef std::function<String(fs::FS &fs, const String &fName)> ETagFunction;
   void enableETag(bool enable, ETagFunction fn = nullptr);
 
   void setContentLength(const size_t contentLength);
@@ -325,7 +329,9 @@ protected:
 
   void _streamFileCore(const size_t fileSize, const String &fileName, const String &contentType, const int code = 200);
 
-  String _getRandomHexString();
+  void _ensureDigestAuthMaterial();
+  String _makeDigestNonce();
+  bool _isDigestNonceValid(const String &nonce);
   // for extracting Auth parameters
   String _extractParam(String &authReq, const String &param, const char delimit = '"');
 
@@ -344,6 +350,7 @@ protected:
   NetworkClient _currentClient;
   HTTPMethod _currentMethod = HTTP_ANY;
   String _currentUri;
+  String _currentRequestTarget;  // origin-form request-target, including any query string
   uint8_t _currentVersion = 0;
   HTTPClientStatus _currentStatus = HC_NONE;
   unsigned long _statusChange = 0;
@@ -372,7 +379,9 @@ protected:
   String _hostHeader;
   bool _chunked = false;
 
-  String _snonce;  // Store noance and opaque for future comparison
+  uint8_t _digestSecret[32] = {};
+  bool _digestSecretReady = false;
+  bool _digestNonceStale = false;
   String _sopaque;
   String _srealm;  // Store the Auth realm between Calls
 
