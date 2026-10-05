@@ -51,6 +51,7 @@ static esp_err_t zb_cmd_ias_zone_enroll_request_handler(const ezb_zcl_ias_zone_e
 static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const ezb_zcl_ias_zone_enroll_rsp_message_t *message);
 static esp_err_t zb_cmd_default_resp_handler(const ezb_zcl_cmd_default_rsp_message_t *message);
 static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_covering_movement_message_t *message);
+static esp_err_t zb_door_lock_cmd_handler(ezb_zcl_door_lock_lock_door_message_t *message, bool lock);
 static esp_err_t zb_ota_upgrade_status_handler(const ezb_zcl_ota_upgrade_client_progress_message_t *message);
 static esp_err_t zb_ota_upgrade_query_image_resp_handler(ezb_zcl_ota_upgrade_query_next_image_rsp_message_t *message);
 static esp_err_t zb_manuf_spec_command_handler(const ezb_zcl_manuf_spec_cmd_message_t *message);
@@ -78,6 +79,8 @@ static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, voi
     case EZB_ZCL_CORE_WINDOW_COVERING_MOVEMENT_CB_ID:
       zb_window_covering_movement_resp_handler((ezb_zcl_window_covering_movement_message_t *)message);
       break;
+    case EZB_ZCL_CORE_DOOR_LOCK_LOCK_DOOR_CB_ID:   zb_door_lock_cmd_handler((ezb_zcl_door_lock_lock_door_message_t *)message, true); break;
+    case EZB_ZCL_CORE_DOOR_LOCK_UNLOCK_DOOR_CB_ID: zb_door_lock_cmd_handler((ezb_zcl_door_lock_lock_door_message_t *)message, false); break;
     case EZB_ZCL_CORE_OTA_UPGRADE_CLIENT_PROGRESS_CB_ID:
       zb_ota_upgrade_status_handler((ezb_zcl_ota_upgrade_client_progress_message_t *)message);
       break;
@@ -336,6 +339,23 @@ static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_c
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_ep == (*it)->getEndpoint()) {
       (*it)->zbWindowCoveringMovementCmd(message);  //method zbWindowCoveringMovementCmd must be implemented in specific EP class
+    }
+  }
+  return ESP_OK;
+}
+
+static esp_err_t zb_door_lock_cmd_handler(ezb_zcl_door_lock_lock_door_message_t *message, bool lock) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  log_v("Received door %s command: endpoint(%u), cluster(0x%x)", lock ? "lock" : "unlock", message->info.dst_ep, message->info.cluster_id);
+
+  // The command is answered with a failure unless an endpoint accepts it
+  message->out.result = EZB_ZCL_STATUS_FAIL;
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_ep == (*it)->getEndpoint()) {
+      (*it)->zbDoorLockCmd(message, lock);  //method zbDoorLockCmd must be implemented in specific EP class
     }
   }
   return ESP_OK;
