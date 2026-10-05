@@ -509,7 +509,7 @@ bool WebServer::_removeRequestHandler(RequestHandler *handler) {
   return false;
 }
 
-void WebServer::serveStatic(const char *uri, FS &fs, const char *path, const char *cache_header) {
+void WebServer::serveStatic(const char *uri, fs::FS &fs, const char *path, const char *cache_header) {
   _addRequestHandler(new StaticRequestHandler(fs, path, uri, cache_header));
 }
 
