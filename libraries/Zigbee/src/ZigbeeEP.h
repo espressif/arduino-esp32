@@ -179,6 +179,7 @@ public:
   virtual void zbIdentify(const ezb_zcl_set_attr_value_message_t *message);
   virtual void zbOTAState(bool otaActive);
   virtual void zbWindowCoveringMovementCmd(const ezb_zcl_window_covering_movement_message_t *message) {};
+  virtual void zbDoorLockCmd(ezb_zcl_door_lock_lock_door_message_t *message, bool lock) {};
   virtual void zbReadTimeCluster(const ezb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIASZoneStatusChangeNotification(const ezb_zcl_ias_zone_status_change_notif_message_t *message) {};
   virtual void zbIASZoneEnrollRequest(const ezb_zcl_ias_zone_enroll_req_message_t *message) {};
