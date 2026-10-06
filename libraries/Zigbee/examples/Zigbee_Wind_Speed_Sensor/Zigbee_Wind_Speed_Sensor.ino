@@ -33,7 +33,7 @@
 
 #include "Zigbee.h"
 
-#define BUTTON_PIN                        9  //Boot button for C6/H2
+#define BUTTON_PIN                        BOOT_PIN
 #define WIND_SPEED_SENSOR_ENDPOINT_NUMBER 10
 
 ZigbeeWindSpeedSensor zbWindSpeedSensor = ZigbeeWindSpeedSensor(WIND_SPEED_SENSOR_ENDPOINT_NUMBER);

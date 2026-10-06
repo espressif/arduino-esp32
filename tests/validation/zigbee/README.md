@@ -1,6 +1,6 @@
 # Zigbee Validation Test
 
-Validates **ZigbeeCore** and all 26 Zigbee endpoint classes from `Zigbee.h`: stack configuration, endpoint registration, deep on-device API tests (getters, callbacks, reporting), network form/join, and coordinator→end-device ZCL interop. This is a **multi-DUT** test on ESP32-C6 / ESP32-H2.
+Validates **ZigbeeCore** and all 26 Zigbee endpoint classes from `Zigbee.h`: stack configuration, endpoint registration, deep on-device API tests (getters, callbacks, reporting), network form/join, and coordinator→end-device ZCL interop. This is a **multi-DUT** test on ESP32-C5 / C6 / H2 / S31.
 
 ## Architecture
 
@@ -51,7 +51,7 @@ After Unity, `loop()` runs coordinator→end-device switch/light interop when py
 
 ## Requirements
 
-- **Hardware**: Two ESP32-C6 or ESP32-H2 boards (802.15.4 radio required)
+- **Hardware**: Two boards of ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31 (802.15.4 radio required)
 - **Wokwi/QEMU**: Not supported (802.15.4 radio not simulated)
 - **CI Runner**: `two_duts`
 - **SoC Config**: `CONFIG_ZB_ENABLED=y`, `CONFIG_SOC_IEEE802154_SUPPORTED=y`
