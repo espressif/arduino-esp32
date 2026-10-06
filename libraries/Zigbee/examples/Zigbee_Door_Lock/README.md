@@ -41,8 +41,70 @@ Only the features implemented by the Zigbee stack are available:
 
 * Lock Door and Unlock Door commands (the sketch callbacks can reject a command by returning `false`)
 * LockState attribute (reported to the network), LockType and ActuatorEnabled attributes
+* PIN code users managed by the coordinator (SetPINCode, GetPINCode, ClearPINCode, SetUserStatus), for example with the Home Assistant "Set lock user code" action.
+  The users are stored in NVS with `setUserStorage(true)` and restored after a reboot.
+* The last LockState is kept after a reboot as a Zigbee persistent attribute (`setAttributePersistent()`, see the Zigbee_Attribute_Storage example). `restoreLockState()` reads it back.
+* Operation event notifications (`reportOperationEvent()`), shown by ZHA as lock events (keypad / manual / RF source and the user)
+* Simulated keypad: type a PIN code in the Serial Monitor to lock/unlock with it
 
-PIN codes, schedules, user management and operation event notifications are not supported yet.
+Schedules, RFID users, user types and event masks are not supported yet.
+
+The PIN code features need the Zigbee libraries built with the esp-zigbee changes for the Door Lock PIN commands. The persistent attribute needs esp-zigbee-lib 2.0.5 or newer.
+A long press of the BOOT button also removes the stored PIN users, the PIN codes are stored in NVS as plain text.
+
+## Managing PIN codes in Home Assistant (ZHA)
+
+ZHA has no user interface for the lock PIN codes, they are managed with actions.
+Open `Developer tools -> Actions`, switch to `YAML mode`, paste one of the actions below and press `Perform action`.
+Replace `lock.zigbee_door_lock` with the entity ID of your lock (`Settings -> Devices & services -> Entities`).
+
+The `code_slot` is the user number and starts at 1 in Home Assistant (user ID 0 in the sketch). The number of slots is set by `setMaxUsers()` (10 by default).
+The PIN code has 4 to 16 digits.
+
+Set (add or change) a PIN code:
+
+```yaml
+action: zha.set_lock_user_code
+data:
+  entity_id: lock.zigbee_door_lock
+  code_slot: 1
+  user_code: "1234"
+```
+
+Disable a PIN code, it stays stored but the lock does not accept it:
+
+```yaml
+action: zha.disable_lock_user_code
+data:
+  entity_id: lock.zigbee_door_lock
+  code_slot: 1
+```
+
+Enable it again:
+
+```yaml
+action: zha.enable_lock_user_code
+data:
+  entity_id: lock.zigbee_door_lock
+  code_slot: 1
+```
+
+Remove a PIN code:
+
+```yaml
+action: zha.clear_lock_user_code
+data:
+  entity_id: lock.zigbee_door_lock
+  code_slot: 1
+```
+
+Notes:
+
+* Home Assistant does not show the stored codes. Use the Serial Monitor of the sketch to check the changes, the `userChanged()` callback prints the user, its status and the PIN length.
+* A PIN code can be used by one user only, setting a code which is already used in another slot fails.
+* To test a code, type it in the Serial Monitor of the sketch (the simulated keypad). The lock toggles and the operation event with the user is sent to Home Assistant.
+  A wrong code is sent as an "invalid PIN" event.
+* The events are shown in the lock's `Logbook` and are fired as `zha_event` events (`Developer tools -> Events -> Listen to events`), so they can be used in automations.
 
 ## Troubleshooting
 

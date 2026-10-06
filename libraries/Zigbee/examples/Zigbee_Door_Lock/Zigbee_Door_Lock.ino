@@ -23,6 +23,11 @@
  * A short press of the BOOT button simulates a local operation of the lock (toggles the state and reports it),
  * a long press (more than 3 seconds) performs a factory reset of the Zigbee stack.
  *
+ * PIN codes: the users and their PIN codes are managed from the Zigbee coordinator (e.g. Home Assistant "Set lock user code").
+ * Type a PIN code in the Serial Monitor to simulate a keypad: a known PIN toggles the lock, an unknown one is rejected.
+ * Every local operation is also sent to the coordinator as an operation event notification.
+ * The PIN users (NVS) and the LockState (Zigbee persistent attribute) are kept after a reboot.
+ *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
@@ -79,6 +84,35 @@ bool unlockDoor() {
   return true;
 }
 
+// Called when a PIN user is added, changed or removed from the Zigbee network.
+// The PIN codes are only kept in RAM, here you would store them (e.g. in NVS) to keep them after a reboot.
+void userChanged(uint16_t user_id) {
+  char pin[ZB_DOOR_LOCK_MAX_PIN_LENGTH + 1];
+  ZigbeeDoorLockUserStatus status = zbDoorLock.getUserStatus(user_id);
+  zbDoorLock.getUserPin(user_id, pin, sizeof(pin));
+  Serial.printf("User %u changed: status %u, PIN length %u\r\n", user_id, (unsigned)status, (unsigned)strlen(pin));
+}
+
+// Toggle the lock locally and tell the coordinator who did it
+void localOperation(ZigbeeDoorLockOperationSource source, uint16_t user_id) {
+  bool lock = !zbDoorLock.isLocked();
+  Serial.printf("Local operation: %s door\r\n", lock ? "lock" : "unlock");
+  if (lock) {
+    zbDoorLock.setLocked();
+  } else {
+    zbDoorLock.setUnlocked();
+  }
+  showLockState(lock);
+
+  uint8_t event;
+  if (source == DOOR_LOCK_SOURCE_MANUAL) {
+    event = lock ? DOOR_LOCK_EVENT_MANUAL_LOCK : DOOR_LOCK_EVENT_MANUAL_UNLOCK;
+  } else {
+    event = lock ? DOOR_LOCK_EVENT_LOCK : DOOR_LOCK_EVENT_UNLOCK;
+  }
+  zbDoorLock.reportOperationEvent(source, event, user_id);
+}
+
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
@@ -107,6 +141,16 @@ void setup() {
   zbDoorLock.onLock(lockDoor);
   zbDoorLock.onUnlock(unlockDoor);
 
+  // Optional: set the number of PIN users and get notified when they are changed from the network
+  zbDoorLock.setMaxUsers(10);
+  zbDoorLock.onUserChange(userChanged);
+
+  // Keep the PIN users in NVS, so they survive a reboot
+  zbDoorLock.setUserStorage(true);
+
+  // Keep the last LockState in the Zigbee NVS dataset, so it survives a reboot (needs esp-zigbee-lib 2.0.5+)
+  zbDoorLock.setAttributePersistent(EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_ATTR_DOOR_LOCK_LOCK_STATE_ID);
+
   // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbDoorLock);
 
@@ -126,9 +170,15 @@ void setup() {
   }
   Serial.println();
 
-  // Set and report the initial state of the lock
-  zbDoorLock.setLocked();
-  showLockState(true);
+  // Restore the state of the lock from before the reboot. On the first start nothing is stored, so assume the lock is locked.
+  // In a real lock, read the real position of the lock here instead.
+  if (zbDoorLock.restoreLockState() == DOOR_LOCK_STATE_UNLOCKED) {
+    zbDoorLock.setUnlocked();
+    showLockState(false);
+  } else {
+    zbDoorLock.setLocked();
+    showLockState(true);
+  }
 }
 
 void loop() {
@@ -142,19 +192,31 @@ void loop() {
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
         Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
+        zbDoorLock.clearUsers();  // The factory reset only clears the Zigbee dataset, not the stored PIN users
         delay(1000);
         Zigbee.factoryReset();
       }
     }
-    // Short press: simulate local operation of the lock
-    if (zbDoorLock.isLocked()) {
-      Serial.println("Local operation: unlock door");
-      zbDoorLock.setUnlocked();
-      showLockState(false);
-    } else {
-      Serial.println("Local operation: lock door");
-      zbDoorLock.setLocked();
-      showLockState(true);
+    // Short press: simulate manual operation of the lock
+    localOperation(DOOR_LOCK_SOURCE_MANUAL, 0xffff);
+  }
+
+  // Simulated keypad: PIN code typed in the Serial Monitor
+  if (Serial.available()) {
+    String pin = Serial.readStringUntil('\n');
+    pin.trim();
+    if (pin.length() > 0) {
+      int32_t user_id = zbDoorLock.checkPin(pin.c_str());
+      if (user_id >= 0) {
+        Serial.printf("PIN accepted for user %ld\r\n", (long)user_id);
+        localOperation(DOOR_LOCK_SOURCE_KEYPAD, (uint16_t)user_id);
+      } else {
+        Serial.println("Unknown PIN or the user is disabled");
+        // Tell the coordinator about the failed attempt
+        zbDoorLock.reportOperationEvent(
+          DOOR_LOCK_SOURCE_KEYPAD, zbDoorLock.isLocked() ? DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN : DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN
+        );
+      }
     }
   }
   delay(100);
