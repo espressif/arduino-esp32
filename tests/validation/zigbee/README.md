@@ -78,5 +78,7 @@ The coordinator and end device flash at different speeds; pytest drives the end 
   - `begin()` is called once; a second call returns the current `started()` state and does not restart the stack.
 - Unlike Matter validation, Zigbee cannot decommission/reboot mid-suite on a single DUT — depth comes from getter round-trips, callbacks, reporting, pre-begin cluster config, and real ZCL over the air with a second board.
 - Thermostat, gateway, and range-extender endpoints are registered on the coordinator but have no simple local attribute setters in the Arduino API; control paths are covered via registration and ZCL examples.
+- The coordinator's deep tests run before the end device joins, so nothing is bound to its endpoints. Attribute reports only go to bound destinations, so the coordinator asserts that `report*()` fails there; the end device's `reportTemperature()` after joining covers the bound path.
+- `stop()` disables the 802.15.4 radio, which wipes its MAC settings (channel, PAN ID, addresses, rx-on-when-idle). Both `*_stop_start` tests run before forming or joining the network, so a regression in restoring those settings shows up as a failed join.
 - ED→coordinator switch control is not covered (would need bind/discover APIs); coordinator→ED interop uses automatic binding on join.
 - `scanNetworks`, `factoryReset`, and RCP host mode are not covered here (see library examples).
