@@ -23,6 +23,59 @@
 #include "esp_timer.h"
 #if SOC_IEEE802154_SUPPORTED
 #include "esp_ieee802154.h"
+
+// esp_ieee802154_enable() re-initializes the MAC PIB to driver defaults (promiscuous, no PAN ID/addresses,
+// rx-when-idle off) and the Zigbee stack does not re-apply it on resume, so stop()/start() carry it over.
+typedef struct {
+  uint8_t channel;
+  uint16_t panid;
+  uint16_t short_addr;
+  uint8_t ext_addr[8];
+  bool promiscuous;
+  bool coordinator;
+  bool rx_when_idle;
+  esp_ieee802154_pending_mode_t pending_mode;
+  int8_t cca_threshold;
+  esp_ieee802154_cca_mode_t cca_mode;
+  esp_ieee802154_txpower_table_t power_table;
+} zb_radio_pib_t;
+
+static zb_radio_pib_t s_radio_pib;
+
+static void zb_radio_pib_save(void) {
+  s_radio_pib.channel = esp_ieee802154_get_channel();
+  s_radio_pib.panid = esp_ieee802154_get_panid();
+  s_radio_pib.short_addr = esp_ieee802154_get_short_address();
+  esp_ieee802154_get_extended_address(s_radio_pib.ext_addr);
+  s_radio_pib.promiscuous = esp_ieee802154_get_promiscuous();
+  s_radio_pib.coordinator = esp_ieee802154_get_coordinator();
+  s_radio_pib.rx_when_idle = esp_ieee802154_get_rx_when_idle();
+  s_radio_pib.pending_mode = esp_ieee802154_get_pending_mode();
+  s_radio_pib.cca_threshold = esp_ieee802154_get_cca_threshold();
+  s_radio_pib.cca_mode = esp_ieee802154_get_cca_mode();
+  esp_ieee802154_get_power_table(&s_radio_pib.power_table);
+}
+
+static void zb_radio_pib_restore(void) {
+  esp_ieee802154_set_power_table(s_radio_pib.power_table);
+  esp_ieee802154_set_channel(s_radio_pib.channel);
+  esp_ieee802154_set_panid(s_radio_pib.panid);
+  esp_ieee802154_set_short_address(s_radio_pib.short_addr);
+  esp_ieee802154_set_extended_address(s_radio_pib.ext_addr);
+  esp_ieee802154_set_promiscuous(s_radio_pib.promiscuous);
+  esp_ieee802154_set_coordinator(s_radio_pib.coordinator);
+  esp_ieee802154_set_pending_mode(s_radio_pib.pending_mode);
+  esp_ieee802154_set_cca_threshold(s_radio_pib.cca_threshold);
+  esp_ieee802154_set_cca_mode(s_radio_pib.cca_mode);
+  esp_ieee802154_set_rx_when_idle(s_radio_pib.rx_when_idle);
+  if (s_radio_pib.rx_when_idle) {
+    esp_ieee802154_receive();
+  }
+  log_v(
+    "Restored 802.15.4 radio: channel %u, PAN 0x%04x, short 0x%04x, rx_when_idle %d", s_radio_pib.channel, s_radio_pib.panid, s_radio_pib.short_addr,
+    s_radio_pib.rx_when_idle
+  );
+}
 #endif
 
 static bool edBatteryPowered = false;
@@ -125,9 +178,9 @@ bool ZigbeeCore::role(zigbee_role_t role, bool erase_nvs) {
   esp_zigbee_device_config_t zb_nwk_cfg;
   switch (role) {
     case ZIGBEE_COORDINATOR: zb_nwk_cfg = ZIGBEE_DEFAULT_COORDINATOR_CONFIG(); break;
-    case ZIGBEE_ROUTER:      zb_nwk_cfg = ZIGBEE_DEFAULT_ROUTER_CONFIG();      break;
-    case ZIGBEE_END_DEVICE:  zb_nwk_cfg = ZIGBEE_DEFAULT_ED_CONFIG();          break;
-    default: log_e("Invalid Zigbee role"); return false;
+    case ZIGBEE_ROUTER:      zb_nwk_cfg = ZIGBEE_DEFAULT_ROUTER_CONFIG(); break;
+    case ZIGBEE_END_DEVICE:  zb_nwk_cfg = ZIGBEE_DEFAULT_ED_CONFIG(); break;
+    default:                 log_e("Invalid Zigbee role"); return false;
   }
   _role = role;
   if (!zigbeeStackInit(&zb_nwk_cfg, erase_nvs)) {
@@ -239,13 +292,13 @@ static void esp_zb_task(void *pvParameters) {
     power_desc.current_power_source_level = EZB_AF_NODE_POWER_SOURCE_LEVEL_100_PERCENT;
     ezb_af_set_node_power_desc(&power_desc);
   }
-  ezb_set_rx_on_when_idle(Zigbee.getRxOnWhenIdle()); // set the rx on when idle flag
+  ezb_set_rx_on_when_idle(Zigbee.getRxOnWhenIdle());  // set the rx on when idle flag
 
   for (;;) {
-    esp_zigbee_launch_mainloop();  // blocks until esp_zigbee_stop() - mainloop is the Zigbee stack's main loop
-    xSemaphoreGive(zigbeeStoppedSem); // post the semaphore to indicate that the task has stopped
-    xSemaphoreTake(zigbeeResumeSem, portMAX_DELAY); // wait for the semaphore to be posted
-    ezb_set_rx_on_when_idle(Zigbee.getRxOnWhenIdle()); // set the rx on when idle flag, might have changed since the task was stopped
+    esp_zigbee_launch_mainloop();                       // blocks until esp_zigbee_stop() - mainloop is the Zigbee stack's main loop
+    xSemaphoreGive(zigbeeStoppedSem);                   // post the semaphore to indicate that the task has stopped
+    xSemaphoreTake(zigbeeResumeSem, portMAX_DELAY);     // wait for the semaphore to be posted
+    ezb_set_rx_on_when_idle(Zigbee.getRxOnWhenIdle());  // set the rx on when idle flag, might have changed since the task was stopped
   }
 }
 
@@ -926,6 +979,7 @@ void ZigbeeCore::stop() {
 #if SOC_IEEE802154_SUPPORTED
   // esp_zigbee_stop() exits the mainloop but leaves the IEEE802.15.4 radio enabled.
   // On dual-radio SoCs (C6/S31/…) that shares RF with Wi‑Fi, disable it so Wi‑Fi can scan/connect.
+  zb_radio_pib_save();
   esp_err_t radio_err = esp_ieee802154_disable();
   if (radio_err != ESP_OK) {
     log_w("Failed to disable IEEE802.15.4 radio after stop: %s", esp_err_to_name(radio_err));
@@ -948,6 +1002,8 @@ void ZigbeeCore::start() {
   esp_err_t radio_err = esp_ieee802154_enable();
   if (radio_err != ESP_OK) {
     log_w("Failed to enable IEEE802.15.4 radio before start: %s", esp_err_to_name(radio_err));
+  } else {
+    zb_radio_pib_restore();
   }
 #endif
 
