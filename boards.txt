@@ -56716,6 +56716,25 @@ kodedot.build.defines=-DBOARD_HAS_PSRAM -DKODE_SKETCH_NAME="{build.project_name}
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
 
+# Debug settings; see variants/kodedot/kodedot-debug.cfg.
+kodedot.debug_config.kodedot.cortex-debug.custom.name=Arduino on Kode Dot
+kodedot.debug_config.kodedot.cortex-debug.custom.serverArgs.0=-c
+kodedot.debug_config.kodedot.cortex-debug.custom.serverArgs.1=set ::kodedot_bin {{build.path}/{build.project_name}.bin}
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.0=set remote hardware-watchpoint-limit 2
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.1=eval "monitor kodedot_check 0x%x", &esp_app_desc
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.2=monitor reset halt
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.3=monitor gdb sync
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.4=thb setup
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.5=c
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.0=monitor reset halt
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.1=monitor gdb sync
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.2=thb setup
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.3=c
+kodedot.debug.additional_config=debug_config.kodedot
+kodedot.debug.server.openocd.scripts.1={build.variant.path}/kodedot-debug.cfg
+# No ESP32-P4 SVD ships with the core: an empty path keeps the IDE from reporting it missing.
+kodedot.debug.svd_file=
+
 kodedot.menu.DebugLevel.none=None
 kodedot.menu.DebugLevel.none.build.code_debug=0
 kodedot.menu.DebugLevel.error=Error
