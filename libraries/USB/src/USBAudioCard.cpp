@@ -773,10 +773,8 @@ USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SP
 #else
     uint32_t max_rate = _sample_rate;
 #endif
-    if (
-      TUD_AUDIO_EP_SIZE(false, max_rate, _bytes_per_sample, _spk_channels) > CFG_TUD_AUDIO_FUNC_1_EP_OUT_SZ_MAX
-      || TUD_AUDIO_EP_SIZE(false, max_rate, _bytes_per_sample, _mic_channels) > CFG_TUD_AUDIO_FUNC_1_EP_IN_SZ_MAX
-    ) {
+    if (TUD_AUDIO_EP_SIZE(false, max_rate, _bytes_per_sample, _spk_channels) > CFG_TUD_AUDIO_FUNC_1_EP_OUT_SZ_MAX
+        || TUD_AUDIO_EP_SIZE(false, max_rate, _bytes_per_sample, _mic_channels) > CFG_TUD_AUDIO_FUNC_1_EP_IN_SZ_MAX) {
       log_e("Audio format exceeds the SDK full-speed endpoint buffer size");
       _uac = NULL;
       return;
