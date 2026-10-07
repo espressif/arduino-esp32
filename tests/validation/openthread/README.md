@@ -23,9 +23,9 @@ Validates the OpenThread stack and Arduino `OThread` / `OThreadCLI` APIs on chip
 | Test Function | Description |
 |---|---|
 | `test_leader_stack_running` | Verify `OThread` and `OThreadCLI` are started |
-| `test_leader_cli_version` | CLI `version` contains `OPENTHREAD` |
-| `test_leader_cli_detached_state` | CLI `state` is `detached` before joining |
-| `test_leader_cli_util_exec` | `otGetRespCmd("state")` returns detached |
+| `test_leader_cli_version` | CLI `version` contains `openthread` (case-insensitive) |
+| `test_leader_cli_disabled_state` | CLI `state` is `disabled` before `ifconfig up` (`OThread.begin(false)`) |
+| `test_leader_cli_util_exec` | `otGetRespCmd("state")` returns disabled |
 | `test_leader_form_network` | Init dataset, start Thread, become leader, export dataset hex |
 | `test_leader_ot_role` | `otGetDeviceRole()` and CLI `state` report leader |
 | `test_leader_ot_network_getters` | Network name, channel, PAN ID, ext PAN ID, network key |
@@ -40,16 +40,16 @@ Validates the OpenThread stack and Arduino `OThread` / `OThreadCLI` APIs on chip
 | Test Function | Description |
 |---|---|
 | `test_child_stack_running` | Verify `OThread` and `OThreadCLI` are started |
-| `test_child_cli_version` | CLI `version` contains `OPENTHREAD` |
-| `test_child_cli_detached_state` | CLI `state` is `detached` before joining |
-| `test_child_cli_util_exec` | `otGetRespCmd("state")` returns detached |
+| `test_child_cli_version` | CLI `version` contains `openthread` (case-insensitive) |
+| `test_child_cli_disabled_state` | CLI `state` is `disabled` before `ifconfig up` (`OThread.begin(false)`) |
+| `test_child_cli_util_exec` | `otGetRespCmd("state")` returns disabled |
 | `test_child_join_network` | Import dataset from pytest, start Thread, attach to network |
 | `test_child_network_matches_leader` | Network getters match `NETINFO` from pytest |
 | `test_child_ot_role_attached` | Role is child or router after attach |
 | `test_child_ot_network_getters` | Network getters match expected netinfo |
 | `test_child_ot_attached_addresses` | RLOC16, mesh-local EID, address caches |
 | `test_child_ot_current_dataset` | Active `DataSet` matches expected netinfo |
-| `test_child_cli_active_dataset_hex` | CLI `dataset active -x` matches imported dataset |
+| `test_child_cli_active_dataset_hex` | CLI `dataset active -x` has the same TLVs as the imported dataset (order-independent) |
 | `test_child_cli_util_network_fields` | CLI network fields match `OThread` getters |
 | `test_child_cli_print_network_info` | `otPrintRespCLI` and `otPrintNetworkInformation` |
 

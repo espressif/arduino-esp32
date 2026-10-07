@@ -1,5 +1,6 @@
 import logging
 import re
+from conftest import expect_exact_and_capture
 
 
 def test_openthread(dut):
@@ -14,10 +15,12 @@ def test_openthread(dut):
 
     LOGGER.info("Starting leader Unity tests...")
     leader.write("GO\n")
+    leader.expect_unity_test_output(timeout=180)
 
     LOGGER.info("Waiting for leader to export dataset...")
     m_export = leader.expect(
-        r"\[LEADER\] (DATASET=([0-9a-fA-F]+)|EXPORT_FAILED)",
+        # Anchor to end of line, otherwise the match can fire while the hex is still arriving over serial.
+        r"\[LEADER\] (DATASET=([0-9a-fA-F]+)\r?\n|EXPORT_FAILED)",
         timeout=180,
     )
     export_tag = m_export.group(1)
@@ -62,9 +65,10 @@ def test_openthread(dut):
     child.write(f"NETINFO name={net_name} channel={net_channel} " f"panid={net_panid} extpanid={net_extpanid}\n")
 
     LOGGER.info("Waiting for child to join network...")
-    child.expect_exact("[CHILD] JOINED", timeout=60)
+    child_unity_log = expect_exact_and_capture(child, "[CHILD] JOINED", timeout=60)
 
     LOGGER.info("Waiting for child completion...")
-    child.expect_exact("[CHILD] DONE", timeout=120)
+    child.expect_unity_test_output(timeout=120, extra_before=child_unity_log)
+    child.expect_exact("[CHILD] DONE", timeout=30)
 
     LOGGER.info("OpenThread multi-DUT test passed!")
