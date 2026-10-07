@@ -16,10 +16,10 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterWaterValve.h>
 #include <app/clusters/valve-configuration-and-control-server/ValveConfigurationAndControlCluster.h>
 #include <app/data-model/Nullable.h>
+#include <platform/CHIPDeviceLayer.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -41,20 +41,37 @@ public:
     if (owner->_onOpenCB != NULL) {
       ok = owner->_onOpenCB();
     }
-    owner->targetState = MatterWaterValve::VALVE_STATE_OPEN;
+    ValveConfigurationAndControlCluster *cluster = owner->getValveCluster();
     if (ok) {
+      owner->targetState = MatterWaterValve::VALVE_STATE_OPEN;
       owner->currentState = MatterWaterValve::VALVE_STATE_OPEN;
-      ValveConfigurationAndControlCluster *cluster = owner->getValveCluster();
       if (cluster != nullptr) {
         cluster->UpdateCurrentState(ValveConfigurationAndControl::ValveStateEnum::kOpen);
       }
     } else {
       log_e("Water Valve onOpen() callback reported failure.");
+      owner->currentState = MatterWaterValve::VALVE_STATE_CLOSED;
+      owner->targetState = MatterWaterValve::VALVE_STATE_CLOSED;
+      owner->openRollbackScheduled = false;
+      // OpenValve() starts the remaining-duration timer after this callback returns.
+      // Close after it unwinds so the cluster does not stay Open or keep counting down.
+      if (cluster != nullptr) {
+        MatterWaterValve *valve = owner;
+        const CHIP_ERROR err = chip::DeviceLayer::SystemLayer().ScheduleLambda([valve]() {
+          valve->rollbackFailedOpen();
+        });
+        if (err == CHIP_NO_ERROR) {
+          owner->openRollbackScheduled = true;
+        } else {
+          log_e("Failed to schedule Water Valve open rollback: %" CHIP_ERROR_FORMAT, err.Format());
+        }
+      }
     }
     return chip::app::DataModel::Nullable<chip::Percent>();
   }
 
   CHIP_ERROR HandleCloseValve() override {
+    owner->openRollbackScheduled = false;
     if (owner->_onCloseCB != NULL) {
       owner->_onCloseCB();
     }
@@ -135,17 +152,36 @@ bool MatterWaterValve::begin(uint32_t defaultOpenDurationSeconds) {
   openDuration = 0;
   remainingDuration = 0;
   valveFault = 0;
+  openRollbackScheduled = false;
   started = true;
 
   return true;
 }
 
 void MatterWaterValve::end() {
+  if (delegate != nullptr) {
+    ValveConfigurationAndControlCluster *cluster = getValveCluster();
+    if (cluster != nullptr) {
+      lock::ScopedChipStackLock lock(portMAX_DELAY);
+      cluster->SetDelegate(nullptr);
+    }
+    delete delegate;
+    delegate = nullptr;
+  }
+  openRollbackScheduled = false;
   started = false;
 }
 
 ValveConfigurationAndControlCluster *MatterWaterValve::getValveCluster() {
   return static_cast<ValveConfigurationAndControlCluster *>(findRegisteredCluster(ValveConfigurationAndControl::Id));
+}
+
+void MatterWaterValve::rollbackFailedOpen() {
+  openRollbackScheduled = false;
+  ValveConfigurationAndControlCluster *cluster = getValveCluster();
+  if (cluster != nullptr && cluster->CloseValve() != CHIP_NO_ERROR) {
+    log_e("Failed to roll back Water Valve after open was rejected.");
+  }
 }
 
 void MatterWaterValve::onStackStarted() {
@@ -192,11 +228,21 @@ bool MatterWaterValve::open(uint32_t durationSeconds) {
 
   chip::app::DataModel::Nullable<uint32_t> duration =
     (durationSeconds == 0) ? chip::app::DataModel::Nullable<uint32_t>() : chip::app::DataModel::Nullable<uint32_t>(durationSeconds);
-  // OpenValve() is the Open command's implementation: it synchronously invokes the ValveDelegate above,
-  // which commits currentState/targetState (and, via HandleRemainingDurationTick, openDuration/remainingDuration)
-  // once the onOpen() callback confirms. The Level feature is not enabled on this endpoint, so level is always null.
+  // OpenValve() invokes the delegate, then starts the remaining-duration timer (CHIP 1.6).
+  // A failed onOpen() schedules CloseValve() after this call returns. Close here only if
+  // that schedule failed, so onClose() does not run twice.
   if (cluster->OpenValve(chip::app::DataModel::Nullable<chip::Percent>(), duration) != CHIP_NO_ERROR) {
     log_e("Failed to open Water Valve.");
+    return false;
+  }
+  if (currentState != VALVE_STATE_OPEN) {
+    // HandleOpenValve already scheduled CloseValve() after OpenValve() unwinds.
+    // Closing here as well would run onClose() twice.
+    if (!openRollbackScheduled) {
+      if (cluster->CloseValve() != CHIP_NO_ERROR) {
+        log_e("Failed to roll back Water Valve after open was rejected.");
+      }
+    }
     return false;
   }
   return true;

@@ -23,9 +23,7 @@
 
 namespace chip::app::Clusters {
 class ValveConfigurationAndControlCluster;
-}
-
-using namespace chip::app::Clusters;
+}  // namespace chip::app::Clusters
 
 // Matter Water Valve endpoint (device type 0x0042) - Valve Configuration and Control cluster.
 //
@@ -40,25 +38,25 @@ class MatterWaterValve : public MatterEndPoint {
 public:
   // ValveStateEnum values (from Matter spec)
   enum ValveState_t {
-    VALVE_STATE_CLOSED = (uint8_t)ValveConfigurationAndControl::ValveStateEnum::kClosed,
-    VALVE_STATE_OPEN = (uint8_t)ValveConfigurationAndControl::ValveStateEnum::kOpen,
-    VALVE_STATE_TRANSITIONING = (uint8_t)ValveConfigurationAndControl::ValveStateEnum::kTransitioning,
+    VALVE_STATE_CLOSED = (uint8_t)chip::app::Clusters::ValveConfigurationAndControl::ValveStateEnum::kClosed,
+    VALVE_STATE_OPEN = (uint8_t)chip::app::Clusters::ValveConfigurationAndControl::ValveStateEnum::kOpen,
+    VALVE_STATE_TRANSITIONING = (uint8_t)chip::app::Clusters::ValveConfigurationAndControl::ValveStateEnum::kTransitioning,
   };
 
   // ValveFaultBitmap values (from Matter spec) - combine with bitwise OR
   enum ValveFault_t {
-    VALVE_FAULT_GENERAL_FAULT = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kGeneralFault,
-    VALVE_FAULT_BLOCKED = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kBlocked,
-    VALVE_FAULT_LEAKING = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kLeaking,
-    VALVE_FAULT_NOT_CONNECTED = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kNotConnected,
-    VALVE_FAULT_SHORT_CIRCUIT = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kShortCircuit,
-    VALVE_FAULT_CURRENT_EXCEEDED = (uint16_t)ValveConfigurationAndControl::ValveFaultBitmap::kCurrentExceeded,
+    VALVE_FAULT_GENERAL_FAULT = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kGeneralFault,
+    VALVE_FAULT_BLOCKED = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kBlocked,
+    VALVE_FAULT_LEAKING = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kLeaking,
+    VALVE_FAULT_NOT_CONNECTED = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kNotConnected,
+    VALVE_FAULT_SHORT_CIRCUIT = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kShortCircuit,
+    VALVE_FAULT_CURRENT_EXCEEDED = (uint16_t)chip::app::Clusters::ValveConfigurationAndControl::ValveFaultBitmap::kCurrentExceeded,
   };
 
   MatterWaterValve();
   ~MatterWaterValve();
-  // begin Matter Water Valve endpoint. defaultOpenDurationSeconds (0 = none) is reported as the
-  // DefaultOpenDuration attribute and used by open() (no argument) when set.
+  // begin Matter Water Valve endpoint. defaultOpenDurationSeconds (0 = no DefaultOpenDuration attribute;
+  // open() with no argument then opens indefinitely) is reported when non-zero and used by open().
   bool begin(uint32_t defaultOpenDurationSeconds = 0);
   // this will just stop processing Water Valve Matter events
   void end();
@@ -112,13 +110,13 @@ public:
 
   // User Callback for whenever the valve is commanded closed, either by a Matter controller, by calling close()
   // locally, or automatically when a timed open operation elapses. It should perform the physical action.
-  using EndPointCloseCB = std::function<bool()>;
+  using EndPointCloseCB = std::function<void()>;
   void onClose(EndPointCloseCB onCloseCB) {
     _onCloseCB = onCloseCB;
   }
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
-  bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
+  bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) override;
 
 protected:
   // Attaches the delegate and pushes the cached state/fault into the code-driven cluster.
@@ -142,7 +140,13 @@ private:
   class ValveDelegate;
   ValveDelegate *delegate = nullptr;
 
+  // Set when onOpen() fails and CloseValve() is scheduled after OpenValve() returns.
+  // Local open() must not CloseValve() again or onClose() runs twice.
+  bool openRollbackScheduled = false;
+
   // Live CHIP cluster object for this endpoint, or nullptr before Matter.begin().
-  ValveConfigurationAndControlCluster *getValveCluster();
+  chip::app::Clusters::ValveConfigurationAndControlCluster *getValveCluster();
+
+  void rollbackFailedOpen();
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
