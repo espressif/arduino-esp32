@@ -1,0 +1,186 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#pragma once
+#include <sdkconfig.h>
+#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
+
+#include <Matter.h>
+#include <MatterEndPoint.h>
+#include <app-common/zap-generated/cluster-enums.h>
+
+namespace chip {
+namespace System {
+class Layer;
+}  // namespace System
+}  // namespace chip
+
+// Matter Water Heater endpoint (device type 0x050F) - Water Heater Management, Water Heater Mode and Thermostat clusters.
+class MatterWaterHeater : public MatterEndPoint {
+public:
+  enum WaterHeaterMode_t {
+    WATER_HEATER_MODE_OFF = 0,
+    WATER_HEATER_MODE_MANUAL = 1,
+    WATER_HEATER_MODE_ECO = 2,
+  };
+
+  enum SystemMode_t {
+    SYSTEM_MODE_OFF = 0,
+    SYSTEM_MODE_HEAT = 4,
+  };
+
+  // Bitmap - a heater may report more than one type, and HeatDemand reuses the same bit values.
+  enum HeaterType_t {
+    IMMERSION_ELEMENT_1 = 0x01,
+    IMMERSION_ELEMENT_2 = 0x02,
+    HEAT_PUMP = 0x04,
+    BOILER = 0x08,
+    OTHER = 0x10,
+  };
+
+  enum BoostState_t {
+    BOOST_INACTIVE = 0,
+    BOOST_ACTIVE = 1,
+  };
+
+  MatterWaterHeater();
+  ~MatterWaterHeater();
+
+  // Provisions optional WHM tank features and the WHM delegate; call before Matter.begin().
+  // On failure after partial create, the endpoint is destroyed so begin() may be retried.
+  bool begin();
+  // Before Matter.begin(): destroys the endpoint and frees both delegates so begin() can run again.
+  // After Matter.begin(): cancels an active boost timer and stops sketch-side updates. The Matter
+  // endpoint and CHIP Instances stay until reboot; begin() will fail.
+  void end();
+
+  // Thermostat / local temperature
+  bool setLocalTemperature(float temperature);
+  float getLocalTemperature();
+
+  bool setLocalTemperatureRaw(int16_t temperature);
+  int16_t getLocalTemperatureRaw();
+
+  bool setHeatingSetpoint(float temperature);
+  float getHeatingSetpoint();
+
+  bool setHeatingSetpointRaw(int16_t temperature);
+  int16_t getHeatingSetpointRaw();
+
+  // Heating setpoint limits
+  bool setAbsoluteMinimumHeatingSetpoint(float temperature);
+  bool setMinimumHeatingSetpoint(float temperature);
+  bool setAbsoluteMaximumHeatingSetpoint(float temperature);
+  bool setMaximumHeatingSetpoint(float temperature);
+
+  float getAbsoluteMinimumHeatingSetpoint();
+  float getMinimumHeatingSetpoint();
+  float getAbsoluteMaximumHeatingSetpoint();
+  float getMaximumHeatingSetpoint();
+
+  // Thermostat system mode
+  bool setSystemMode(SystemMode_t mode);
+  SystemMode_t getSystemMode();
+
+  // Water Heater Management
+  bool setHeaterTypes(uint8_t heaterTypes);
+  uint8_t getHeaterTypes();
+
+  // HeatDemand is a bitmap (same bit values as HeaterTypes) of the heat sources currently active.
+  // It is kept in sync automatically by setSystemMode()/setBoostState(); call this only to override it.
+  bool setHeatDemand(uint8_t heatDemand);
+  uint8_t getHeatDemand();
+
+  // TankVolume / TankPercentage are code-driven (WHM Delegate). Setters update the
+  // Arduino cache and report; do not updateAttributeVal() them.
+  bool setTankVolume(uint16_t tankVolume);
+  uint16_t getTankVolume();
+
+  bool setTankPercentage(uint8_t tankPercentage);
+  uint8_t getTankPercentage();
+
+  // EstimatedHeatRequired is code-driven (WHM Delegate, EnergyManagement). Matter
+  // unit is milliWatt-hours (int64). Controllers often display kWh (1 kWh = 1e6 mWh).
+  // This is remaining energy to reach the heating goal, not the current heat rate.
+  bool setEstimatedHeatRequired(int64_t energy_mWh);
+  int64_t getEstimatedHeatRequired();
+
+  // Updates the BoostState cache (CHIP reads it via the WHM Delegate) and syncs
+  // HeatDemand. Setting INACTIVE cancels an active Boost session (timer,
+  // temporary setpoint, BoostEnded). Controller Boost/CancelBoost commands use
+  // the WHM delegate and then this same cache.
+  bool setBoostState(BoostState_t state);
+  BoostState_t getBoostState();
+
+  // Water Heater Mode (CHIP mode-base server, not an ember attribute).
+  bool setWaterHeaterMode(WaterHeaterMode_t mode);
+  WaterHeaterMode_t getWaterHeaterMode();
+
+  // MatterEndPoint callback.
+  bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) override;
+
+private:
+  bool initialized = false;
+
+  int16_t localTemperature = 2000;
+  int16_t heatingSetpoint = 4800;
+
+  int16_t absoluteMinimumHeatingSetpoint = 2000;
+  int16_t minimumHeatingSetpoint = 2000;
+  int16_t absoluteMaximumHeatingSetpoint = 8500;
+  int16_t maximumHeatingSetpoint = 8500;
+
+  uint8_t systemMode = SYSTEM_MODE_HEAT;
+
+  uint8_t heaterTypes = IMMERSION_ELEMENT_1;
+  uint8_t heatDemand = 0;
+  uint16_t tankVolume = 100;
+  uint8_t tankPercentage = 100;
+  int64_t estimatedHeatRequired = 0;
+  uint8_t boostState = BOOST_INACTIVE;
+
+  uint8_t waterHeaterMode = WATER_HEATER_MODE_MANUAL;
+  // Set when the sketch calls setWaterHeaterMode() before the mode server exists, so Init() can apply it.
+  bool waterHeaterModeSetByApp = false;
+
+  // ModeBase::Delegate for Water Heater Mode. Defined in the .cpp. Lives for the endpoint lifetime
+  // after the stack starts, because ModeBase::Instance keeps this pointer.
+  class ModeDelegate;
+  ModeDelegate *modeDelegate = nullptr;
+
+  // CHIP WaterHeaterManagement::Delegate. Required so Boost/CancelBoost register a
+  // WaterHeaterManagement::Instance and controllers read WHM attrs from this cache.
+  class ManagementDelegate;
+  ManagementDelegate *managementDelegate = nullptr;
+
+  bool boostTimerArmed = false;
+  bool boostOneShot = false;
+  bool boostHasTemporarySetpoint = false;
+  int16_t boostSavedHeatingSetpoint = 0;
+  bool boostHasTargetPercentage = false;
+  uint8_t boostTargetPercentage = 0;
+  bool boostFinishing = false;
+
+  static void boostTimerCallback(chip::System::Layer *layer, void *appState);
+  void armBoostTimer(uint32_t durationSeconds);
+  void cancelBoostTimer();
+  void finishBoost(bool emitEndedEvent);
+  void maybeFinishOneShotBoost();
+  bool applyBoostState(BoostState_t state);
+
+  // Recomputes HeatDemand from the current heaterTypes/systemMode/boostState and pushes it if changed.
+  // Per Matter spec, HeatDemand reflects the heat sources currently active (Boost or normal heating).
+  void syncHeatDemand();
+};
+#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

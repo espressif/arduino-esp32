@@ -116,6 +116,10 @@ Key rules:
 - **Call the setter after the endpoint `begin()`.** Before `Matter.begin()` the value is cached and pushed when the cluster is created. After start it writes the live cluster. Typical sketches still do `begin()`, `Matter.begin()`, then the setter.
 - Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
 
+### Water Heater (Water Heater Management optional features)
+
+`MatterWaterHeater` uses the esp-matter **ember/data-model** path for Water Heater Management and Thermostat. Water Heater Mode is a CHIP mode-base server: `begin()` installs a `ModeBase::Delegate` (Off / Manual / Eco), pins **Manual** so ModeBase does not start on Off, and `setWaterHeaterMode()` calls `UpdateCurrentMode()`. `begin()` also installs a `WaterHeaterManagement::Delegate` so CHIP creates a `WaterHeaterManagement::Instance`: controllers read WHM attributes from the Arduino cache, and **Boost** / **CancelBoost** commands are handled in-library (duration timer, optional one-shot, optional temporary setpoint and target tank percentage). **HeaterTypes**, **HeatDemand**, **TankVolume**, **TankPercentage**, **EstimatedHeatRequired**, and **BoostState** are code-driven (do not `updateAttributeVal()` them). `esp_matter::endpoint::water_heater::create()` only creates mandatory WHM attributes and OccupiedHeatingSetpoint; **TankVolume** / **EstimatedHeatRequired** / **TankPercentage** need `feature::energy_management::add()` and `feature::tank_percent::add()` (or the legacy equivalent), and Thermostat **AbsMin** / **AbsMax** / **Min** / **MaxHeatSetpointLimit** are added in `MatterWaterHeater::begin()` so controllers can read a heating range. That `begin()` must run **before** `Matter.begin()`. `end()` finishes an active Boost session (restores a temporary setpoint, no BoostEnded event). Before the stack starts it then destroys the endpoint and frees both delegates so `begin()` can run again; after `Matter.begin()` it only stops sketch-side updates (the endpoint stays until reboot). `setSystemMode()`, `setBoostState()`, and controller writes to SystemMode / HeaterTypes keep **HeatDemand** in sync via `syncHeatDemand()`. Sketches can still call `setBoostState()` for local boost on/off.
+
 ### Controller-Originated Changes (attributeChangeCB)
 
 When a Matter controller changes an attribute (e.g., turning a light on via an app), the flow is:
@@ -197,6 +201,7 @@ All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.
 | `MatterThermostat` | Thermostat |
 | `MatterWindowCovering` | Window Covering |
 | `MatterTemperatureControlledCabinet` | Temperature Controlled Cabinet |
+| `MatterWaterHeater` | Water Heater |
 
 ## Node identity and commissioning
 
