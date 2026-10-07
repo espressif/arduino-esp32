@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterSoilSensor.h>
 #include <app/clusters/soil-measurement-server/soil-measurement-cluster.h>
 #include <clusters/SoilMeasurement/Attributes.h>
@@ -105,7 +104,7 @@ MatterSoilSensor::~MatterSoilSensor() {
 }
 
 bool MatterSoilSensor::begin() {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Soil Sensor with Endpoint Id %u device has already been created.", getEndPointId());
