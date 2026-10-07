@@ -444,6 +444,7 @@ The library provides specialized endpoint classes for different device types. Ea
 
 * ``MatterFan``: Fan with speed and mode control.
 * ``MatterThermostat``: Thermostat with temperature control and setpoints.
+* ``MatterWaterValve``: Water valve (Valve Configuration and Control; delegate-driven open/close).
 * ``MatterOnOffPlugin``: On/off plugin unit (power outlet/relay).
 * ``MatterDimmablePlugin``: Dimmable plugin unit (power outlet/relay with brightness control).
 * ``MatterGenericSwitch``: Generic switch endpoint (smart button with optional long-press and multi-press).
@@ -504,6 +505,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 
 * **Matter Fan** - Creates a Matter-compatible fan device with speed and mode control. `View Matter Fan code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterFan>`_.
 * **Matter Thermostat** - Creates a Matter-compatible thermostat device with temperature setpoint management and simulated heating/cooling systems with automatic temperature regulation. `View Matter Thermostat code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterThermostat>`_.
+* **Matter Water Valve** - Water valve with timed open, ``RemainingDuration`` countdown, fault reporting, and button toggle. `View Matter Water Valve code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterWaterValve>`_.
 * **Matter Temperature Controlled Cabinet** - Creates a Matter-compatible temperature controlled cabinet device with precise temperature setpoint control with min/max limits (temperature_number mode). `View Matter Temperature Controlled Cabinet code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterTemperatureControlledCabinet>`_.
 * **Matter Temperature Controlled Cabinet Levels** - Creates a Matter-compatible temperature controlled cabinet device using predefined temperature levels (temperature_level mode) with hub-visible names (Off / Low / Medium / High / Max). `View Matter Temperature Controlled Cabinet Levels code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterTemperatureControlledCabinetLevels>`_.
 * **Matter On/Off Plugin** - Creates a Matter-compatible on/off plugin unit (power relay) device with state persistence for power control applications. `View Matter On/Off Plugin code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Control/MatterOnOffPlugin>`_.
