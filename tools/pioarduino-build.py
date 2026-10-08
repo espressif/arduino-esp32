@@ -211,6 +211,7 @@ env.Prepend(LIBS=libs)
 #
 
 env.Append(
+    ELF2BINFLAGS=["--elf-sha256-offset", "0xb0"],
     LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")],
     FLASH_EXTRA_IMAGES=[
         (
@@ -252,11 +253,3 @@ partition_table = env.Command(
     ),
 )
 env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
-
-#
-#  Adjust the `esptoolpy` command in the `ElfToBin` builder with firmware checksum offset
-#
-
-env["BUILDERS"]["ElfToBin"].action.cmd_list = env["BUILDERS"]["ElfToBin"].action.cmd_list.replace(
-    "-o", "--elf-sha256-offset 0xb0 -o"
-)
