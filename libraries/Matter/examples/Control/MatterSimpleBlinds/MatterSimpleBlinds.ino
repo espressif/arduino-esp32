@@ -57,6 +57,7 @@ void setup() {
   WindowBlinds.onGoToLiftPercentage(onBlindsLift);
 
   // Start Matter
+  matterSetExampleIdentity("Window Covering");
   Matter.begin();
   matterWaitUntilReady();
   Serial.println("Matter started");

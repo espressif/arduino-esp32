@@ -68,6 +68,7 @@ void setup() {
   SimulatedHumiditySensor.begin(95.00);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Humidity Sensor");
   Matter.begin();
   matterWaitUntilReady();
 }

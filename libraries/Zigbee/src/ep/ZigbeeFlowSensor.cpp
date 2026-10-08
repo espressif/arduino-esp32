@@ -112,7 +112,7 @@ bool ZigbeeFlowSensor::setFlow(float flow) {
 
 bool ZigbeeFlowSensor::report() {
   /* Send report attributes command */
-  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
+  esp_zb_zcl_report_attr_cmd_t report_attr_cmd = {};
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_VALUE_ID;
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
