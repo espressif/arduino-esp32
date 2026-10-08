@@ -9,6 +9,8 @@ tests/
 [Rr]elease*/
 !release-staging/
 !release-staging/**
+# Sizes baselines per branch (size_test/master, size_test/release_v4.0.x, ...)
+!size_test/*/
 .vs/
 __vm/
 *.vcxproj*
