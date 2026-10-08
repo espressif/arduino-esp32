@@ -1,6 +1,6 @@
 # TLS / HTTP Client Validation Test
 
-Validates `NetworkClientSecure` TLS connections (CA cert, insecure mode, send/receive) and `HTTPClient` operations (GET, POST, custom headers, timeout, HTTPS) against postman-echo.com.
+Validates `NetworkClientSecure` TLS connections (CA cert, insecure mode, send/receive) and `HTTPClient` operations (GET, POST, custom headers, timeout, HTTPS via an explicit CA, `begin("https://")` refused without a trust anchor, `useBuiltinCACertBundle()`, and `setInsecure()`) against postman-echo.com.
 
 ## Test Cases
 
@@ -14,10 +14,13 @@ Validates `NetworkClientSecure` TLS connections (CA cert, insecure mode, send/re
 | `test_http_custom_header` | `HTTPClient` HTTPS GET with `X-Custom-Test` header, verify echoed |
 | `test_https_get` | `HTTPClient` HTTPS GET via `NetworkClientSecure` with CA cert (status only) |
 | `test_http_timeout` | `HTTPClient` to unreachable IP (192.0.2.1), verify timeout error |
+| `test_https_begin_url_no_trust_fails` | `HTTPClient::begin("https://...")` with no trust anchor, verify the connection is refused |
+| `test_https_begin_url_uses_bundle` | `HTTPClient::useBuiltinCACertBundle()` then `begin("https://...")`, verify 200 and body |
+| `test_https_set_insecure` | `HTTPClient::setInsecure()` then `begin("https://...")`, verify 200 |
 
 ## Requirements
 
-- **Hardware**: Any ESP32 variant with Wi-Fi support (except ESP32-C6 — insufficient RAM)
+- **Hardware**: Any ESP32 variant with Wi-Fi support (except ESP32-C6 — runtime heap OOM during TLS)
 - **Wokwi/QEMU**: QEMU not supported
 - **CI Runner**: `wifi_router`
 - **SoC Config**: `CONFIG_SOC_WIFI_SUPPORTED=y`

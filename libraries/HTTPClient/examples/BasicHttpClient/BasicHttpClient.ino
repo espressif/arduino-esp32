@@ -69,9 +69,12 @@ void loop() {
     HTTPClient http;
 
     Serial.print("[HTTP] begin...\n");
-    // configure traged server and url
-    //http.begin("https://www.howsmyssl.com/a/check", ca); //HTTPS
-    http.begin("http://example.com/index.html");  //HTTP
+    // configure target server and url
+    // HTTPS needs a trust anchor, set before begin():
+    // http.useBuiltinCACertBundle();                     // validate against the builtin CA bundle
+    // http.setInsecure();                                // or skip certificate validation (opt-in, MITM-vulnerable)
+    // http.begin("https://www.howsmyssl.com/a/check");  // HTTPS
+    http.begin("http://example.com/index.html");  // HTTP
 
     Serial.print("[HTTP] GET...\n");
     // start connection and send HTTP header

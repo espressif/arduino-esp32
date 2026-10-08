@@ -197,8 +197,8 @@ int start_ssl_client(
     }
   }
 
-  // MBEDTLS_SSL_VERIFY_REQUIRED if a CA certificate is defined on Arduino IDE and
-  // MBEDTLS_SSL_VERIFY_NONE if not.
+  // MBEDTLS_SSL_VERIFY_NONE only when the caller explicitly requested insecure mode.
+  // Otherwise a CA cert, the builtin CA bundle, or a PSK is required.
 
   if (insecure) {
     mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_NONE);
