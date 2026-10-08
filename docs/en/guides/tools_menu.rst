@@ -218,6 +218,33 @@ To see the supported list for each SoC, see this section: `Libraries <../librari
 
 The USB option will be available only if the correct target is selected.
 
+USB Mode (ESP32-P4)
+*******************
+
+ESP32-P4 boards provide three choices in the existing **USB Mode** menu:
+
+* **USB-OTG (TinyUSB)**: TinyUSB device classes on the dedicated high-speed port.
+* **Hardware CDC and JTAG**: the built-in serial and debug interface on GPIO24/25.
+* **USB-OTG (TinyUSB Full Speed)**: HID, CDC and other TinyUSB device classes at
+  12 Mbit/s on GPIO24/25, the usual USB Serial/JTAG connection.
+
+Each board retains its existing default. The host controller remains independent:
+full-speed TinyUSB device mode leaves the dedicated high-speed port available
+for a USB host. In Hardware CDC and JTAG mode, explicit TinyUSB device API use
+still targets the dedicated high-speed port.
+
+Selecting full-speed TinyUSB takes over GPIO24/25 and moves hardware Serial/JTAG
+to the other full-speed PHY. Enable **USB CDC On Boot** if you want a serial port
+alongside HID or another device class. To recover the ROM programming port,
+hold BOOT, press RESET, then release BOOT.
+
+For Arduino CLI, select ``USBMode=default``, ``USBMode=hwcdc``, or
+``USBMode=tinyusb_fs``. Existing USB Mode options and their identifiers are unchanged.
+ESP32-S31 continues to use its high-speed port and has no full-speed option.
+
+Full-speed USB audio uses UAC1. The precompiled SDK's audio endpoint buffers
+limit the available formats; formats exceeding those buffers are rejected.
+
 USB CDC On Boot
 ***************
 

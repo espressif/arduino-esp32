@@ -149,6 +149,7 @@ void setup() {
   SmartButton.begin(MatterGenericSwitch::FEATURE_ALL, multiPressMax);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Smart Button");
   Matter.begin();
   matterWaitUntilReady();
 }

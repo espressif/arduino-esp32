@@ -167,6 +167,7 @@ void setup() {
   TemperatureCabinet.begin(4.0, -10.0, 10.0, 0.5);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Temp Cabinet");
   Matter.begin();
   matterWaitUntilReady();
 

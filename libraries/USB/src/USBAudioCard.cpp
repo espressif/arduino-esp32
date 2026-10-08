@@ -40,7 +40,7 @@ static arduino_usb_audio_card_data_handler_t _cb = NULL;
 static USBAudioCard *_uac = NULL;
 
 // The multi-rate state is opt-in via UAC_USE_MULTIPLE_RATES. The UAC1 descriptor
-// builders that follow are additionally gated on !TUD_OPT_HIGH_SPEED because the
+// builders that follow are enabled only for the selected full-speed port; the
 // high-speed (UAC2) path advertises rates through its clock source controls.
 #if defined(UAC_USE_MULTIPLE_RATES)
 static uint32_t _sample_rates[USBAudioCard::UAC_MAX_SAMPLE_RATES] = {48000};
@@ -57,7 +57,7 @@ static bool _is_sample_rate_supported(uint32_t rate) {
 }
 #endif
 
-#if defined(UAC_USE_MULTIPLE_RATES) && !TUD_OPT_HIGH_SPEED
+#if defined(UAC_USE_MULTIPLE_RATES) && (!TUD_OPT_HIGH_SPEED || ARDUINO_USB_PORT != 0)
 
 // UAC1 (full-speed) multi-rate descriptor builders.
 //
@@ -189,11 +189,11 @@ static uint16_t _uac10_microphone(uint8_t *dst, uint8_t *itf, uint8_t str_index)
   }
 }
 
-#endif  // defined(UAC_USE_MULTIPLE_RATES) && !TUD_OPT_HIGH_SPEED
+#endif  // defined(UAC_USE_MULTIPLE_RATES) && (!TUD_OPT_HIGH_SPEED || ARDUINO_USB_PORT != 0)
 
 uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
   _itf_num = *itf;
-#if TUD_OPT_HIGH_SPEED
+#if TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB UAC2");
   if (_spk_channels == 2 && _mic_channels > 0) {
     // Stereo Headset
@@ -355,7 +355,7 @@ uint16_t tusb_audio_load_descriptor(uint8_t *dst, uint8_t *itf) {
     return TUD_AUDIO10_MICROPHONE_DESC_LEN(1);
   }
 #endif  // UAC_USE_MULTIPLE_RATES
-#endif  // TUD_OPT_HIGH_SPEED
+#endif  // TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
   return 0;
 }
 
@@ -380,7 +380,7 @@ void _uacReceiveTask(void *pvParameters) {
 bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const *p_request, uint8_t *pBuff) {
   (void)rhport;
   dump_control_request(p_request);
-#if TUD_OPT_HIGH_SPEED
+#if TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
   (void)pBuff;
   (void)p_request;
   return false;
@@ -409,13 +409,13 @@ bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const *p_req
   }
   log_w("Set EP request not handled, ctrlSel = %d, bRequest = %d, wLength = %d", ctrlSel, p_request->bRequest, p_request->wLength);
   return false;
-#endif  // TUD_OPT_HIGH_SPEED
+#endif  // TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
 }
 
 // Invoked when audio class specific get request received for an EP
 bool tud_audio_get_req_ep_cb(uint8_t rhport, tusb_control_request_t const *p_request) {
   dump_control_request(p_request);
-#if TUD_OPT_HIGH_SPEED
+#if TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
   (void)rhport;
   (void)p_request;
   return false;
@@ -442,7 +442,7 @@ bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
 
   dump_control_request(p_request);
 
-#if TUD_OPT_HIGH_SPEED
+#if TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
   if (entityID == UAC2_ENTITY_CLOCK) {
     if (ctrlSel == AUDIO20_CS_CTRL_SAM_FREQ) {
       if (p_request->bRequest == AUDIO20_CS_REQ_CUR) {
@@ -552,7 +552,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
 
   dump_control_request(p_request);
 
-#if TUD_OPT_HIGH_SPEED
+#if TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
   if (entityID == UAC2_ENTITY_SPK_FEATURE_UNIT && p_request->bRequest == AUDIO20_CS_REQ_CUR) {
     if (ctrlSel == AUDIO20_FU_CTRL_MUTE) {
       TU_VERIFY(p_request->wLength == sizeof(audio20_control_cur_1_t));
@@ -685,7 +685,7 @@ USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SP
       log_e("Invalid number of sample rates %u (1..%u) supported!", num_rates, USBAudioCard::UAC_MAX_SAMPLE_RATES);
       return;
     }
-#if TUD_OPT_HIGH_SPEED
+#if TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
     if (num_rates > USBAudioCard::UAC2_MAX_SAMPLE_RATES) {
       log_e("UAC2 supports at most %u sample rates!", USBAudioCard::UAC2_MAX_SAMPLE_RATES);
       return;
@@ -730,7 +730,7 @@ USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SP
     _mic_channels = (uint8_t)mic_channels;
 
     uint16_t descriptor_len = 0;
-#if TUD_OPT_HIGH_SPEED
+#if TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
 #ifdef UAC_USE_MULTIPLE_RATES
     if (_max_sample_rate > CFG_TUD_AUDIO_MAX_SAMPLE_RATE) {
 #else
@@ -763,6 +763,19 @@ USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SP
     if (_sample_rate > 48000) {
 #endif  // UAC_USE_MULTIPLE_RATES
       log_e("Maximum 48000 sample rate supported!");
+      _uac = NULL;
+      return;
+    }
+    // The SDK's P4 audio buffers are sized for HS packets. FS packets cover
+    // one millisecond, so reject formats that exceed those compiled buffers.
+#ifdef UAC_USE_MULTIPLE_RATES
+    uint32_t max_rate = _max_sample_rate;
+#else
+    uint32_t max_rate = _sample_rate;
+#endif
+    if (TUD_AUDIO_EP_SIZE(false, max_rate, _bytes_per_sample, _spk_channels) > CFG_TUD_AUDIO_FUNC_1_EP_OUT_SZ_MAX
+        || TUD_AUDIO_EP_SIZE(false, max_rate, _bytes_per_sample, _mic_channels) > CFG_TUD_AUDIO_FUNC_1_EP_IN_SZ_MAX) {
+      log_e("Audio format exceeds the SDK full-speed endpoint buffer size");
       _uac = NULL;
       return;
     }
@@ -805,7 +818,7 @@ USBAudioCard::USBAudioCard(uint32_t sample_rate, UAC_Bits_Per_Sample bps, UAC_SP
       descriptor_len = TUD_AUDIO10_MICROPHONE_DESC_LEN(1);
     }
 #endif  // UAC_USE_MULTIPLE_RATES
-#endif  // TUD_OPT_HIGH_SPEED
+#endif  // TUD_OPT_HIGH_SPEED && ARDUINO_USB_PORT == 0
     tinyusb_enable_interface(USB_INTERFACE_AUDIO, descriptor_len, tusb_audio_load_descriptor);
   }
 }

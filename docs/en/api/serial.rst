@@ -47,6 +47,7 @@ ESP32-C5  2        1
 ESP32-C6  2        1
 ESP32-H2  2        0
 ESP32-P4  5        1
+ESP32-S31 4        1
 ========= ======== ========
 
 **Note:**
@@ -61,7 +62,7 @@ ESP32-P4  5        1
 
   **Example:** The ESP32-C6 has 2 HP UARTs and 1 LP UART. The Arduino Core creates ``Serial0`` and ``Serial1`` (HP UARTs) plus ``Serial2`` (LP UART) HardwareSerial objects.
 
-  **Important:** On ESP32-C5, ESP32-C6, and ESP32-C61, LP UARTs use fixed GPIO pins for RX, TX, CTS, and RTS; ``setPins()`` cannot change them. On ESP32-P4, the LP UART supports the GPIO matrix and follows the same pin rules as HP UARTs (including automatic one-wire when RX equals TX).
+  **Important:** On ESP32-C5, ESP32-C6, and ESP32-C61, LP UARTs use fixed GPIO pins for RX, TX, CTS, and RTS; ``setPins()`` cannot change them. On ESP32-P4 and ESP32-S31, the LP UART supports the GPIO matrix and follows the same pin rules as HP UARTs (including automatic one-wire when RX equals TX).
 
 Arduino-ESP32 Serial API
 ------------------------
@@ -432,6 +433,7 @@ Mode and Pin Compatibility
 | ``UART_MODE_IRDA``   | No                        | Yes (split pins)       |
 | LP UART (C5/C6/C61)  | No                        | Fixed RX pad only      |
 | LP UART (P4 matrix)  | Auto when RX == TX        | Yes (unless one-wire)  |
+| LP UART (S31 matrix) | Auto when RX == TX        | Yes (unless one-wire)  |
 +----------------------+---------------------------+------------------------+
 
 setRxBufferSize
@@ -685,7 +687,7 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
 
 **Related Examples:**
 
-* `IrdaMode_DualUART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo>`_ - Single-board demonstration using two UARTs with internal loopback. Requires ESP32 with 3+ UARTs (ESP32, ESP32-S3, ESP32-P4). No external hardware needed. Ideal for testing IrDA mode functionality.
+* `IrdaMode_DualUART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo>`_ - Single-board demonstration using two UARTs with internal loopback. Requires ESP32 with 3+ UARTs (ESP32, ESP32-S3, ESP32-P4, ESP32-S31). No external hardware needed. Ideal for testing IrDA mode functionality.
 
 * `IrdaMode_TwoBoard_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/IrdaMode_TwoBoard_Demo>`_ - Two-board peer-to-peer IrDA communication with user-selectable TX/RX modes via Serial Monitor. Works on any ESP32 variant. Requires IR LED (TX side) and IR receiver (RX side) connected between two boards. Demonstrates real infrared communication.
 
@@ -703,14 +705,15 @@ Sets the UART clock source. Must be called **before** ``begin()`` to take effect
   * ``UART_CLK_SRC_DEFAULT`` - Default clock source (varies by SoC)
   * ``UART_CLK_SRC_APB`` - APB clock (ESP32, ESP32-S2, ESP32-C3, ESP32-S3)
   * ``UART_CLK_SRC_PLL`` - PLL clock (ESP32-C2, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-P4)
-  * ``UART_CLK_SRC_XTAL`` - XTAL clock (ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3, ESP32-P4)
-  * ``UART_CLK_SRC_RTC`` - RTC clock (ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3, ESP32-P4)
+  * ``UART_CLK_SRC_XTAL`` - XTAL clock (ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3, ESP32-P4, ESP32-S31)
+  * ``UART_CLK_SRC_RTC`` - RTC clock (ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3, ESP32-P4, ESP32-S31)
   * ``UART_CLK_SRC_REF_TICK`` - REF_TICK clock (ESP32, ESP32-S2)
 
 **Note:**
 * Clock source availability varies by SoC.
 * PLL frequency varies by SoC: ESP32-C2 (40 MHz), ESP32-H2 (48 MHz), ESP32-C5/C6/C61/P4 (80 MHz).
 * ESP32-C5, ESP32-C6, ESP32-C61, and ESP32-P4 have LP UART that uses only RTC_FAST or XTAL/2 as clock source.
+* ESP32-S31 has no ``UART_CLK_SRC_PLL``. Its LP UART uses ``RC_FAST`` or XTAL.
 * For ESP32 and ESP32-S2, REF_TICK is used by default for baud rates ≤ 250000 to avoid baud rate changes when CPU frequency changes, but this limits RX timeout to 1 symbol.
 
 **Returns:** ``true`` if clock source is set successfully, ``false`` otherwise.

@@ -73,6 +73,7 @@ void setup() {
   Light3.onChangeOnOff(setLightOnOff3);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Composed Lights");
   Matter.begin();
   matterWaitUntilReady();
 }

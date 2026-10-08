@@ -8,18 +8,18 @@ About
 The ``MatterDimmablePlugin`` class provides a dimmable plugin unit endpoint for Matter networks. This endpoint implements the Matter dimmable plugin standard for controlling power outlets, relays, and other dimmable devices with power level control.
 
 **Features:**
-* On/off control
-* Power level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel)
-* State persistence support
-* Callback support for state and level changes
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* On/off control.
+* Power level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel).
+* State persistence support.
+* Callback support for state and level changes.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Dimmable smart power outlets
-* Variable power control
-* Smart dimmer plugs
-* Level-controlled device control
+* Dimmable smart power outlets.
+* Variable power control.
+* Smart dimmer plugs.
+* Level-controlled device control.
 
 API Reference
 -------------
@@ -48,7 +48,7 @@ Initializes the Matter dimmable plugin endpoint with optional initial state and 
 
     bool begin(bool initialState = false, uint8_t level = 64);
 
-* ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``)
+* ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``).
 * ``level`` - Initial power level (0-255, default: 64 = 25%). ``0`` is stored as ``1``; ``255`` is stored as ``254``.
 
 This function will return ``true`` if successful, ``false`` otherwise.
@@ -74,7 +74,7 @@ Sets the on/off state of the plugin.
 
     bool setOnOff(bool newState);
 
-* ``newState`` - New state (``true`` = on, ``false`` = off)
+* ``newState`` - New state (``true`` = on, ``false`` = off).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -187,7 +187,7 @@ Sets a callback function to be called when any parameter changes.
 
     void onChange(EndPointCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when state changes
+* ``onChangeCB`` - Function to call when state changes.
 
 The callback signature is:
 
@@ -195,8 +195,8 @@ The callback signature is:
 
     bool onChangeCallback(bool newState, uint8_t newLevel);
 
-* ``newState`` - New on/off state (``true`` = on, ``false`` = off)
-* ``newLevel`` - New power level (1-254)
+* ``newState`` - New on/off state (``true`` = on, ``false`` = off).
+* ``newLevel`` - New power level (1-254).
 
 onChangeOnOff
 ^^^^^^^^^^^^^
@@ -207,7 +207,7 @@ Sets a callback function to be called when the on/off state changes.
 
     void onChangeOnOff(EndPointOnOffCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when on/off state changes
+* ``onChangeCB`` - Function to call when on/off state changes.
 
 The callback signature is:
 
@@ -215,7 +215,7 @@ The callback signature is:
 
     bool onChangeCallback(bool newState);
 
-* ``newState`` - New on/off state (``true`` = on, ``false`` = off)
+* ``newState`` - New on/off state (``true`` = on, ``false`` = off).
 
 onChangeLevel
 ^^^^^^^^^^^^^
@@ -226,7 +226,7 @@ Sets a callback function to be called when the power level changes.
 
     void onChangeLevel(EndPointLevelCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when level changes
+* ``onChangeCB`` - Function to call when level changes.
 
 The callback signature is:
 
@@ -234,7 +234,7 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t newLevel);
 
-* ``newLevel`` - New power level (1-254)
+* ``newLevel`` - New power level (1-254).
 
 updateAccessory
 ^^^^^^^^^^^^^^^

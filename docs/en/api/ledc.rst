@@ -21,6 +21,7 @@ ESP32-C5          6        1      4
 ESP32-C6          6        1      4
 ESP32-H2          6        1      4
 ESP32-P4          8        1      4
+ESP32-S31         16       2      4
 ================= ======== ====== ===================
 
 One group does **not** mean one timer. Each group has its own pool of timers

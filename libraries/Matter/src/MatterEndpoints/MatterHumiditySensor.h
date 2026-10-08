@@ -65,5 +65,6 @@ protected:
   // internal function to set the raw humidity value (Matter Cluster)
   bool begin(uint16_t _rawHumidity);
   bool setRawHumidity(uint16_t _rawHumidity);
+  void onStackStarted() override;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

@@ -1,3 +1,17 @@
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Class of Zigbee Multistate sensor endpoint inherited from common EP class */
 
 #pragma once
@@ -7,7 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
 
 // Types for Multistate Input/Output
 // uint16_t for present value -> index to array of states
@@ -107,10 +120,6 @@ enum zigbee_multistate_clusters {
   MULTISTATE_OUTPUT = 2
 };
 
-typedef struct zigbee_multistate_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-} zigbee_multistate_cfg_t;
 
 class ZigbeeMultistate : public ZigbeeEP {
 public:
@@ -169,7 +178,7 @@ public:
   bool reportMultistateOutput();
 
 private:
-  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
 
   void (*_on_multistate_output_change)(uint16_t state);
   void multistateOutputChanged();
@@ -183,6 +192,11 @@ private:
   uint16_t _output_state_names_length;
   // const char* const* _input_state_names;
   // const char* const* _output_state_names;
+
+  uint32_t _mi_application_type;
+  uint32_t _mo_application_type;
+  char _mi_description[ZB_MAX_NAME_LENGTH + 2];
+  char _mo_description[ZB_MAX_NAME_LENGTH + 2];
 };
 
 #endif  // CONFIG_ZB_ENABLED

@@ -8,19 +8,19 @@ About
 The ``MatterRainSensor`` class provides a rain sensor endpoint for Matter networks. This endpoint implements the Matter rain sensing standard for detecting rain presence (detected/not detected states).
 
 **Features:**
-* Rain detection state reporting (detected/not detected)
-* Simple boolean state
-* Read-only sensor (no control functionality)
-* Automatic state updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Rain detection state reporting (detected/not detected).
+* Simple boolean state.
+* Read-only sensor (no control functionality).
+* Automatic state updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Weather monitoring systems
-* Irrigation control systems
-* Outdoor sensor networks
-* Smart home automation triggers
-* Rain detection for automated systems
+* Weather monitoring systems.
+* Irrigation control systems.
+* Outdoor sensor networks.
+* Smart home automation triggers.
+* Rain detection for automated systems.
 
 API Reference
 -------------
@@ -43,7 +43,7 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter rain sensor endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setRain()`` after ``Matter.begin()`` with the real sensor reading.
+Initializes the Matter rain sensor endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setRain()`` after the endpoint ``begin()``; a value set before ``Matter.begin()`` is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -74,13 +74,13 @@ Rain Detection State Control
 setRain
 ^^^^^^^
 
-Sets the rain detection state. Call after ``Matter.begin()``.
+Sets the rain detection state. Call after the endpoint ``begin()``. Before ``Matter.begin()`` the value is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
     bool setRain(bool _rainState);
 
-* ``_rainState`` - Rain detection state (``true`` = detected, ``false`` = not detected)
+* ``_rainState`` - Rain detection state (``true`` = detected, ``false`` = not detected).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -120,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the rain detection state. Same as ``setRain()``; call after ``Matter.begin()``.
+Sets the rain detection state. Same as ``setRain()``.
 
 .. code-block:: arduino
 
