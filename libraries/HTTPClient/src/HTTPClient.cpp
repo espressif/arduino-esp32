@@ -73,33 +73,54 @@ public:
   virtual bool verify(NetworkClient &client, const char *host) {
     return true;
   }
+
+#ifndef HTTPCLIENT_NOSECURE
+  virtual void setTrust(bool insecure, HTTPClient::CABundleAttachFn caBundleAttach) {
+    (void)insecure;
+    (void)caBundleAttach;
+  }
+#endif  // HTTPCLIENT_NOSECURE
 };
 
 #ifndef HTTPCLIENT_NOSECURE
 class TLSTraits : public TransportTraits {
 public:
-  TLSTraits(const char *CAcert, const char *clicert = nullptr, const char *clikey = nullptr) : _cacert(CAcert), _clicert(clicert), _clikey(clikey) {}
+  TLSTraits(const char *CAcert, const char *clicert = nullptr, const char *clikey = nullptr)
+    : _cacert(CAcert), _clicert(clicert), _clikey(clikey), _insecure(false), _caBundleAttach(nullptr) {}
 
   std::unique_ptr<NetworkClient> create() override {
     return std::unique_ptr<NetworkClient>(new NetworkClientSecure());
   }
 
   bool verify(NetworkClient &client, const char *host) override {
+    (void)host;
     NetworkClientSecure &wcs = static_cast<NetworkClientSecure &>(client);
-    if (_cacert == nullptr) {
+    if (_insecure) {
       wcs.setInsecure();
-    } else {
+    } else if (_cacert != nullptr) {
       wcs.setCACert(_cacert);
       wcs.setCertificate(_clicert);
       wcs.setPrivateKey(_clikey);
+    } else if (_caBundleAttach != nullptr) {
+      _caBundleAttach(wcs);
+    } else {
+      log_e("No trust anchor for HTTPS: pass a CA certificate, call useBuiltinCACertBundle() or setInsecure()");
+      return false;
     }
     return true;
+  }
+
+  void setTrust(bool insecure, HTTPClient::CABundleAttachFn caBundleAttach) override {
+    _insecure = insecure;
+    _caBundleAttach = caBundleAttach;
   }
 
 protected:
   const char *_cacert;
   const char *_clicert;
   const char *_clikey;
+  bool _insecure;
+  HTTPClient::CABundleAttachFn _caBundleAttach;
 };
 #endif  // HTTPCLIENT_NOSECURE
 #endif  // HTTPCLIENT_1_1_COMPATIBLE
@@ -220,12 +241,16 @@ bool HTTPClient::begin(String url, const char *CAcert) {
   if (!beginInternal(url, "https")) {
     return false;
   }
+  if (CAcert != nullptr) {
+    _insecure = false;
+  }
   _secure = true;
   _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert));
   if (!_transportTraits) {
     log_e("could not create transport traits");
     return false;
   }
+  _transportTraits->setTrust(_insecure, _caBundleAttach);
 
   return true;
 }
@@ -381,6 +406,7 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char *CAcer
   if (strlen(CAcert) == 0) {
     return false;
   }
+  _insecure = false;
   _secure = true;
   _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert));
   return true;
@@ -401,6 +427,7 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char *CAcer
   if (strlen(CAcert) == 0) {
     return false;
   }
+  _insecure = false;
   _secure = true;
   _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert, cli_cert, cli_key));
   return true;
@@ -536,6 +563,33 @@ void HTTPClient::setTimeout(uint16_t timeout) {
     _client->setTimeout(timeout);
   }
 }
+
+#ifndef HTTPCLIENT_NOSECURE
+void HTTPClient::setInsecure() {
+  _insecure = true;
+  _caBundleAttach = nullptr;
+#ifdef HTTPCLIENT_1_1_COMPATIBLE
+  if (_transportTraits) {
+    _transportTraits->setTrust(_insecure, _caBundleAttach);
+  }
+#endif  // HTTPCLIENT_1_1_COMPATIBLE
+  log_w("HTTPClient: TLS certificate validation disabled (setInsecure)");
+}
+
+static void attachBuiltinCACertBundle(NetworkClientSecure &client) {
+  client.useBuiltinCACertBundle();
+}
+
+void HTTPClient::useBuiltinCACertBundle() {
+  _insecure = false;
+  _caBundleAttach = &attachBuiltinCACertBundle;
+#ifdef HTTPCLIENT_1_1_COMPATIBLE
+  if (_transportTraits) {
+    _transportTraits->setTrust(_insecure, _caBundleAttach);
+  }
+#endif  // HTTPCLIENT_1_1_COMPATIBLE
+}
+#endif  // HTTPCLIENT_NOSECURE
 
 /**
  * use HTTP1.0

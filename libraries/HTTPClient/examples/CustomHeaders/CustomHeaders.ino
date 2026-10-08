@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <time.h>
 
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -28,6 +29,17 @@ void setup() {
   }
   Serial.println();
   Serial.println("Connected to WiFi: " + WiFi.SSID());
+
+  // Certificate date checks need a valid clock
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  Serial.print("Waiting for NTP time sync: ");
+  time_t now = time(nullptr);
+  while (now < 8 * 3600 * 2) {
+    delay(500);
+    Serial.print(".");
+    now = time(nullptr);
+  }
+  Serial.println(" done");
 }
 
 void loop() {
@@ -35,7 +47,9 @@ void loop() {
   HTTPClient http;
 
   Serial.print("[HTTP] Preparing HTTP request...\n");
-  // This page will return the headers we want to test + some others
+  // This page will return the headers we want to test + some others.
+  // Validate the HTTPS server against the builtin CA bundle.
+  http.useBuiltinCACertBundle();
   http.begin("https://httpbingo.org/response-headers?x-custom-header=value:42");
 
 #if COLLECT_ALL_HEADERS

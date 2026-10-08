@@ -5,7 +5,9 @@
  *   NetworkClientSecure: TLS handshake with CA cert, reject invalid cert,
  *                        setInsecure(), send/receive over TLS
  *   HTTPClient: GET (200 + body), POST (echo payload), custom headers,
- *               timeout, HTTPS via NetworkClientSecure
+ *               timeout, HTTPS via NetworkClientSecure, begin("https://")
+ *               refused without a trust anchor, HTTPClient::useBuiltinCACertBundle(),
+ *               HTTPClient::setInsecure()
  *
  * WiFi credentials and CA certificate PEM are received from the
  * Python test driver via serial. No keys or certs are hardcoded.
@@ -226,6 +228,49 @@ void test_http_timeout(void) {
   }
 }
 
+void test_https_begin_url_no_trust_fails(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  HTTPClient http;
+  http.setConnectTimeout(HTTP_TIMEOUT);
+  http.setTimeout(HTTP_TIMEOUT);
+  TEST_ASSERT_TRUE(http.begin("https://postman-echo.com/get"));
+  int code = http.GET();
+  http.end();
+
+  TEST_ASSERT_EQUAL(HTTPC_ERROR_CONNECTION_REFUSED, code);
+}
+
+void test_https_begin_url_uses_bundle(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  HTTPClient http;
+  http.useBuiltinCACertBundle();
+  http.setConnectTimeout(HTTP_TIMEOUT);
+  http.setTimeout(HTTP_TIMEOUT);
+  TEST_ASSERT_TRUE(http.begin("https://postman-echo.com/get"));
+  int code = http.GET();
+  String body = http.getString();
+  http.end();
+
+  TEST_ASSERT_EQUAL(200, code);
+  TEST_ASSERT_TRUE(body.indexOf("postman-echo.com") >= 0);
+}
+
+void test_https_set_insecure(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  HTTPClient http;
+  http.setInsecure();
+  http.setConnectTimeout(HTTP_TIMEOUT);
+  http.setTimeout(HTTP_TIMEOUT);
+  TEST_ASSERT_TRUE(http.begin("https://postman-echo.com/get"));
+  int code = http.GET();
+  http.end();
+
+  TEST_ASSERT_EQUAL(200, code);
+}
+
 // ==================== Setup ====================
 
 static void flushSerial() {
@@ -321,6 +366,9 @@ void setup() {
   RUN_TEST(test_http_custom_header);
   RUN_TEST(test_https_get);
   RUN_TEST(test_http_timeout);
+  RUN_TEST(test_https_begin_url_no_trust_fails);
+  RUN_TEST(test_https_begin_url_uses_bundle);
+  RUN_TEST(test_https_set_insecure);
 
   UNITY_END();
 }

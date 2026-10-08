@@ -183,6 +183,8 @@ public:
   bool begin(NetworkClient &client, String host, uint16_t port, String uri = "/", bool https = false);
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
+  // HTTPS URLs need a trust anchor: a CA certificate passed to begin(url, CAcert),
+  // useBuiltinCACertBundle() or setInsecure(). Otherwise the connection is refused.
   bool begin(String url);
   bool begin(String host, uint16_t port, String uri = "/");
 #ifndef HTTPCLIENT_NOSECURE
@@ -215,6 +217,18 @@ public:
   void setAuthorizationType(const char *authType);
   void setConnectTimeout(int32_t connectTimeout);
   void setTimeout(uint16_t timeout);
+#ifndef HTTPCLIENT_NOSECURE
+  typedef void (*CABundleAttachFn)(NetworkClientSecure &client);
+
+  // The following apply to begin(url) / begin(url, CAcert) (the compatibility API that creates the client).
+  // Validate HTTPS servers against the builtin CA bundle. Links the bundle (~65 KB of flash) only when called.
+  void useBuiltinCACertBundle();
+  // Skip TLS certificate validation. VERY INSECURE! Explicit opt-in only.
+  void setInsecure();
+#else
+  void useBuiltinCACertBundle() {}
+  void setInsecure() {}
+#endif  // HTTPCLIENT_NOSECURE
 
   // Redirections
   void setFollowRedirects(followRedirects_t follow);
@@ -300,6 +314,10 @@ protected:
   bool _useHTTP10 = false;
   bool _secure = false;
   bool _collectAllHeaders = false;
+#ifndef HTTPCLIENT_NOSECURE
+  bool _insecure = false;
+  CABundleAttachFn _caBundleAttach = nullptr;
+#endif  // HTTPCLIENT_NOSECURE
 
   String _uri;
   String _protocol;
