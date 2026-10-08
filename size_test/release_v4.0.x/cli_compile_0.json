@@ -1,0 +1,1487 @@
+{"boards": [
+{ "board": "espressif:esp32:esp32s31",
+                "target": "esp32s31",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/BasicOTA",
+                "sizes": [{
+                        "flash_bytes": 1084194,
+                        "flash_percentage": 83,
+                        "ram_bytes": 60112,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                "sizes": [{
+                        "flash_bytes": 1091586,
+                        "flash_percentage": 83,
+                        "ram_bytes": 60200,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
+                "sizes": [{
+                        "flash_bytes": 985998,
+                        "flash_percentage": 75,
+                        "ram_bytes": 53412,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
+                "sizes": [{
+                        "flash_bytes": 986422,
+                        "flash_percentage": 75,
+                        "ram_bytes": 53412,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPServer",
+                "sizes": [{
+                        "flash_bytes": 985942,
+                        "flash_percentage": 75,
+                        "ram_bytes": 53412,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Advertising",
+                "sizes": [{
+                        "flash_bytes": 815964,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27440,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5PeriodicAdv",
+                "sizes": [{
+                        "flash_bytes": 803224,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27296,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Scan",
+                "sizes": [{
+                        "flash_bytes": 797826,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27272,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon",
+                "sizes": [{
+                        "flash_bytes": 801840,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27320,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon_Scanner",
+                "sizes": [{
+                        "flash_bytes": 800190,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27272,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Client",
+                "sizes": [{
+                        "flash_bytes": 815106,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27360,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientSecure",
+                "sizes": [{
+                        "flash_bytes": 813168,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27352,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientServer",
+                "sizes": [{
+                        "flash_bytes": 838126,
+                        "flash_percentage": 27,
+                        "ram_bytes": 27480,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/DeviceExplorer",
+                "sizes": [{
+                        "flash_bytes": 814992,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27288,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Eddystone",
+                "sizes": [{
+                        "flash_bytes": 803486,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27288,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Client",
+                "sizes": [{
+                        "flash_bytes": 817364,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27376,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Composite",
+                "sizes": [{
+                        "flash_bytes": 822624,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27440,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Gamepad",
+                "sizes": [{
+                        "flash_bytes": 825708,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27424,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Keyboard",
+                "sizes": [{
+                        "flash_bytes": 821888,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27424,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClient",
+                "sizes": [{
+                        "flash_bytes": 808802,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27304,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClientUART",
+                "sizes": [{
+                        "flash_bytes": 826016,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27448,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiService",
+                "sizes": [{
+                        "flash_bytes": 826896,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27552,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Notify",
+                "sizes": [{
+                        "flash_bytes": 817830,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27464,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Scan",
+                "sizes": [{
+                        "flash_bytes": 797628,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27272,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Server",
+                "sizes": [{
+                        "flash_bytes": 821412,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27456,
+                        "ram_percentage": 8
+                        }]
+                }
+]
+},
+{ "board": "espressif:esp32:esp32",
+                "target": "esp32",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/BasicOTA",
+                "sizes": [{
+                        "flash_bytes": 1026330,
+                        "flash_percentage": 78,
+                        "ram_bytes": 54388,
+                        "ram_percentage": 17
+                        }]
+                },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                "sizes": [{
+                        "flash_bytes": 1032110,
+                        "flash_percentage": 79,
+                        "ram_bytes": 54444,
+                        "ram_percentage": 17
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
+                "sizes": [{
+                        "flash_bytes": 954179,
+                        "flash_percentage": 73,
+                        "ram_bytes": 48536,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
+                "sizes": [{
+                        "flash_bytes": 954535,
+                        "flash_percentage": 73,
+                        "ram_bytes": 48536,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPServer",
+                "sizes": [{
+                        "flash_bytes": 954171,
+                        "flash_percentage": 73,
+                        "ram_bytes": 48536,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon",
+                "sizes": [{
+                        "flash_bytes": 1114179,
+                        "flash_percentage": 35,
+                        "ram_bytes": 42352,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon_Scanner",
+                "sizes": [{
+                        "flash_bytes": 1114819,
+                        "flash_percentage": 35,
+                        "ram_bytes": 42328,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/Client",
+                "sizes": [{
+                        "flash_bytes": 1125251,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42384,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientSecure",
+                "sizes": [{
+                        "flash_bytes": 1123463,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42392,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientServer",
+                "sizes": [{
+                        "flash_bytes": 1135131,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42400,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/DeviceExplorer",
+                "sizes": [{
+                        "flash_bytes": 1123951,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42328,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/Eddystone",
+                "sizes": [{
+                        "flash_bytes": 1115719,
+                        "flash_percentage": 35,
+                        "ram_bytes": 42328,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Client",
+                "sizes": [{
+                        "flash_bytes": 1127379,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42432,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Composite",
+                "sizes": [{
+                        "flash_bytes": 1129967,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42392,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Gamepad",
+                "sizes": [{
+                        "flash_bytes": 1132923,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42376,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Keyboard",
+                "sizes": [{
+                        "flash_bytes": 1129099,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42376,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClient",
+                "sizes": [{
+                        "flash_bytes": 1115967,
+                        "flash_percentage": 35,
+                        "ram_bytes": 42352,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClientUART",
+                "sizes": [{
+                        "flash_bytes": 1132675,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42368,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiService",
+                "sizes": [{
+                        "flash_bytes": 1133675,
+                        "flash_percentage": 36,
+                        "ram_bytes": 42472,
+                        "ram_percentage": 13
+                        }]
+                }
+]
+},
+{ "board": "espressif:esp32:esp32c3",
+                "target": "esp32c3",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/BasicOTA",
+                "sizes": [{
+                        "flash_bytes": 1092995,
+                        "flash_percentage": 83,
+                        "ram_bytes": 43232,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                "sizes": [{
+                        "flash_bytes": 1098605,
+                        "flash_percentage": 84,
+                        "ram_bytes": 43264,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
+                "sizes": [{
+                        "flash_bytes": 994611,
+                        "flash_percentage": 76,
+                        "ram_bytes": 37308,
+                        "ram_percentage": 11
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
+                "sizes": [{
+                        "flash_bytes": 995071,
+                        "flash_percentage": 76,
+                        "ram_bytes": 37308,
+                        "ram_percentage": 11
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPServer",
+                "sizes": [{
+                        "flash_bytes": 994537,
+                        "flash_percentage": 76,
+                        "ram_bytes": 37308,
+                        "ram_percentage": 11
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Advertising",
+                "sizes": [{
+                        "flash_bytes": 636783,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18668,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5PeriodicAdv",
+                "sizes": [{
+                        "flash_bytes": 622825,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18532,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Scan",
+                "sizes": [{
+                        "flash_bytes": 616343,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18508,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon",
+                "sizes": [{
+                        "flash_bytes": 621271,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18540,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon_Scanner",
+                "sizes": [{
+                        "flash_bytes": 618937,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18508,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/Client",
+                "sizes": [{
+                        "flash_bytes": 635337,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18580,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientSecure",
+                "sizes": [{
+                        "flash_bytes": 633137,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18572,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientServer",
+                "sizes": [{
+                        "flash_bytes": 661341,
+                        "flash_percentage": 21,
+                        "ram_bytes": 18708,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/DeviceExplorer",
+                "sizes": [{
+                        "flash_bytes": 635163,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18524,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/Eddystone",
+                "sizes": [{
+                        "flash_bytes": 623297,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18524,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Client",
+                "sizes": [{
+                        "flash_bytes": 638029,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18612,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Composite",
+                "sizes": [{
+                        "flash_bytes": 644029,
+                        "flash_percentage": 20,
+                        "ram_bytes": 18684,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Gamepad",
+                "sizes": [{
+                        "flash_bytes": 648339,
+                        "flash_percentage": 21,
+                        "ram_bytes": 18668,
+                        "ram_percentage": 6
+                        }]
+                }
+]
+},
+{ "board": "espressif:esp32:esp32c5",
+                "target": "esp32c5",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/BasicOTA",
+                "sizes": [{
+                        "flash_bytes": 1168305,
+                        "flash_percentage": 89,
+                        "ram_bytes": 56664,
+                        "ram_percentage": 17
+                        }]
+                },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                "sizes": [{
+                        "flash_bytes": 1175363,
+                        "flash_percentage": 90,
+                        "ram_bytes": 56704,
+                        "ram_percentage": 17
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
+                "sizes": [{
+                        "flash_bytes": 1068827,
+                        "flash_percentage": 82,
+                        "ram_bytes": 50372,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
+                "sizes": [{
+                        "flash_bytes": 1069289,
+                        "flash_percentage": 82,
+                        "ram_bytes": 50372,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPServer",
+                "sizes": [{
+                        "flash_bytes": 1068753,
+                        "flash_percentage": 82,
+                        "ram_bytes": 50372,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Advertising",
+                "sizes": [{
+                        "flash_bytes": 804699,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23244,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5PeriodicAdv",
+                "sizes": [{
+                        "flash_bytes": 790837,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23100,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Scan",
+                "sizes": [{
+                        "flash_bytes": 784751,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23076,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon",
+                "sizes": [{
+                        "flash_bytes": 789289,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23108,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon_Scanner",
+                "sizes": [{
+                        "flash_bytes": 787349,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23076,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/Client",
+                "sizes": [{
+                        "flash_bytes": 803685,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23164,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientSecure",
+                "sizes": [{
+                        "flash_bytes": 801505,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23156,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientServer",
+                "sizes": [{
+                        "flash_bytes": 829273,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23284,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/DeviceExplorer",
+                "sizes": [{
+                        "flash_bytes": 803539,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23092,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/Eddystone",
+                "sizes": [{
+                        "flash_bytes": 791315,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23092,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Client",
+                "sizes": [{
+                        "flash_bytes": 806387,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23180,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Composite",
+                "sizes": [{
+                        "flash_bytes": 811941,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23244,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Gamepad",
+                "sizes": [{
+                        "flash_bytes": 816255,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23228,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Keyboard",
+                "sizes": [{
+                        "flash_bytes": 811151,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23228,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClient",
+                "sizes": [{
+                        "flash_bytes": 796737,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23092,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClientUART",
+                "sizes": [{
+                        "flash_bytes": 815895,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23236,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiService",
+                "sizes": [{
+                        "flash_bytes": 817455,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23348,
+                        "ram_percentage": 7
+                        }]
+                }
+]
+},
+{ "board": "espressif:esp32:esp32c6",
+                "target": "esp32c6",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/BasicOTA",
+                "sizes": [{
+                        "flash_bytes": 1127413,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48928,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                "sizes": [{
+                        "flash_bytes": 1134475,
+                        "flash_percentage": 87,
+                        "ram_bytes": 48976,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
+                "sizes": [{
+                        "flash_bytes": 1028943,
+                        "flash_percentage": 79,
+                        "ram_bytes": 43004,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
+                "sizes": [{
+                        "flash_bytes": 1029407,
+                        "flash_percentage": 79,
+                        "ram_bytes": 43004,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPServer",
+                "sizes": [{
+                        "flash_bytes": 1028873,
+                        "flash_percentage": 78,
+                        "ram_bytes": 43004,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Advertising",
+                "sizes": [{
+                        "flash_bytes": 745971,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18968,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5PeriodicAdv",
+                "sizes": [{
+                        "flash_bytes": 732067,
+                        "flash_percentage": 23,
+                        "ram_bytes": 18824,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Scan",
+                "sizes": [{
+                        "flash_bytes": 726043,
+                        "flash_percentage": 23,
+                        "ram_bytes": 18808,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon",
+                "sizes": [{
+                        "flash_bytes": 730503,
+                        "flash_percentage": 23,
+                        "ram_bytes": 18840,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon_Scanner",
+                "sizes": [{
+                        "flash_bytes": 728695,
+                        "flash_percentage": 23,
+                        "ram_bytes": 18808,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/Client",
+                "sizes": [{
+                        "flash_bytes": 745011,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18872,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientSecure",
+                "sizes": [{
+                        "flash_bytes": 742815,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18864,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientServer",
+                "sizes": [{
+                        "flash_bytes": 770709,
+                        "flash_percentage": 25,
+                        "ram_bytes": 19000,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/DeviceExplorer",
+                "sizes": [{
+                        "flash_bytes": 744825,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18824,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/Eddystone",
+                "sizes": [{
+                        "flash_bytes": 732513,
+                        "flash_percentage": 23,
+                        "ram_bytes": 18824,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Client",
+                "sizes": [{
+                        "flash_bytes": 747699,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18896,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Composite",
+                "sizes": [{
+                        "flash_bytes": 753235,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18984,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Gamepad",
+                "sizes": [{
+                        "flash_bytes": 757549,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18968,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Keyboard",
+                "sizes": [{
+                        "flash_bytes": 752445,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18960,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClient",
+                "sizes": [{
+                        "flash_bytes": 738091,
+                        "flash_percentage": 23,
+                        "ram_bytes": 18824,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClientUART",
+                "sizes": [{
+                        "flash_bytes": 757195,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18968,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiService",
+                "sizes": [{
+                        "flash_bytes": 758763,
+                        "flash_percentage": 24,
+                        "ram_bytes": 19072,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/BLE/examples/Notify",
+                "sizes": [{
+                        "flash_bytes": 748017,
+                        "flash_percentage": 24,
+                        "ram_bytes": 18984,
+                        "ram_percentage": 6
+                        }]
+                }
+]
+},
+{ "board": "espressif:esp32:esp32h2",
+                "target": "esp32h2",
+                "sketches": [
+{"name": "libraries/BLE/examples/BLE5Advertising",
+                "sizes": [{
+                        "flash_bytes": 759885,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17304,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5PeriodicAdv",
+                "sizes": [{
+                        "flash_bytes": 745973,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17152,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Scan",
+                "sizes": [{
+                        "flash_bytes": 739969,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17136,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon",
+                "sizes": [{
+                        "flash_bytes": 744421,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17168,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon_Scanner",
+                "sizes": [{
+                        "flash_bytes": 742605,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17136,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/Client",
+                "sizes": [{
+                        "flash_bytes": 758937,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17216,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientSecure",
+                "sizes": [{
+                        "flash_bytes": 756741,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17208,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientServer",
+                "sizes": [{
+                        "flash_bytes": 784627,
+                        "flash_percentage": 25,
+                        "ram_bytes": 17336,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/DeviceExplorer",
+                "sizes": [{
+                        "flash_bytes": 758739,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17152,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/Eddystone",
+                "sizes": [{
+                        "flash_bytes": 746439,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17152,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Client",
+                "sizes": [{
+                        "flash_bytes": 761625,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17240,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Composite",
+                "sizes": [{
+                        "flash_bytes": 767149,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17304,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Gamepad",
+                "sizes": [{
+                        "flash_bytes": 771463,
+                        "flash_percentage": 25,
+                        "ram_bytes": 17288,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Keyboard",
+                "sizes": [{
+                        "flash_bytes": 766359,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17280,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClient",
+                "sizes": [{
+                        "flash_bytes": 752017,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17152,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClientUART",
+                "sizes": [{
+                        "flash_bytes": 771109,
+                        "flash_percentage": 25,
+                        "ram_bytes": 17288,
+                        "ram_percentage": 5
+                        }]
+                }
+]
+},
+{ "board": "espressif:esp32:esp32p4",
+                "target": "esp32p4",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/BasicOTA",
+                "sizes": [{
+                        "flash_bytes": 1002944,
+                        "flash_percentage": 77,
+                        "ram_bytes": 36272,
+                        "ram_percentage": 11
+                        }]
+                },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                "sizes": [{
+                        "flash_bytes": 1043144,
+                        "flash_percentage": 80,
+                        "ram_bytes": 36400,
+                        "ram_percentage": 11
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
+                "sizes": [{
+                        "flash_bytes": 831110,
+                        "flash_percentage": 63,
+                        "ram_bytes": 29680,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
+                "sizes": [{
+                        "flash_bytes": 831430,
+                        "flash_percentage": 63,
+                        "ram_bytes": 29680,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPServer",
+                "sizes": [{
+                        "flash_bytes": 831036,
+                        "flash_percentage": 63,
+                        "ram_bytes": 29680,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Advertising",
+                "sizes": [{
+                        "flash_bytes": 824960,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27720,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5PeriodicAdv",
+                "sizes": [{
+                        "flash_bytes": 811188,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27584,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Scan",
+                "sizes": [{
+                        "flash_bytes": 805870,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27568,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon",
+                "sizes": [{
+                        "flash_bytes": 809652,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27600,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon_Scanner",
+                "sizes": [{
+                        "flash_bytes": 807592,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27568,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Client",
+                "sizes": [{
+                        "flash_bytes": 825000,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27632,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientSecure",
+                "sizes": [{
+                        "flash_bytes": 822812,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27624,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientServer",
+                "sizes": [{
+                        "flash_bytes": 850360,
+                        "flash_percentage": 27,
+                        "ram_bytes": 27752,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/DeviceExplorer",
+                "sizes": [{
+                        "flash_bytes": 824846,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27584,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/Eddystone",
+                "sizes": [{
+                        "flash_bytes": 811594,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27584,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Client",
+                "sizes": [{
+                        "flash_bytes": 827670,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27656,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Composite",
+                "sizes": [{
+                        "flash_bytes": 832190,
+                        "flash_percentage": 26,
+                        "ram_bytes": 27736,
+                        "ram_percentage": 8
+                        }]
+                }
+]
+},
+{ "board": "espressif:esp32:esp32s2",
+                "target": "esp32s2",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/BasicOTA",
+                "sizes": [{
+                        "flash_bytes": 967013,
+                        "flash_percentage": 74,
+                        "ram_bytes": 49564,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                "sizes": [{
+                        "flash_bytes": 971605,
+                        "flash_percentage": 74,
+                        "ram_bytes": 49580,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
+                "sizes": [{
+                        "flash_bytes": 882004,
+                        "flash_percentage": 67,
+                        "ram_bytes": 43280,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
+                "sizes": [{
+                        "flash_bytes": 882316,
+                        "flash_percentage": 67,
+                        "ram_bytes": 43280,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPServer",
+                "sizes": [{
+                        "flash_bytes": 882012,
+                        "flash_percentage": 67,
+                        "ram_bytes": 43280,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/Console/examples/ConsoleAdvanced",
+                "sizes": [{
+                        "flash_bytes": 305566,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17804,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Console/examples/ConsoleBasic",
+                "sizes": [{
+                        "flash_bytes": 283677,
+                        "flash_percentage": 22,
+                        "ram_bytes": 17232,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Console/examples/ConsoleFS",
+                "sizes": [{
+                        "flash_bytes": 327705,
+                        "flash_percentage": 25,
+                        "ram_bytes": 17632,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Console/examples/ConsoleGPIO",
+                "sizes": [{
+                        "flash_bytes": 305398,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17820,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Console/examples/ConsoleHistory",
+                "sizes": [{
+                        "flash_bytes": 327165,
+                        "flash_percentage": 25,
+                        "ram_bytes": 17392,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Console/examples/ConsoleManual",
+                "sizes": [{
+                        "flash_bytes": 259549,
+                        "flash_percentage": 20,
+                        "ram_bytes": 17232,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Console/examples/ConsoleSysInfo",
+                "sizes": [{
+                        "flash_bytes": 285357,
+                        "flash_percentage": 22,
+                        "ram_bytes": 17216,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Console/examples/ConsoleWiFi",
+                "sizes": [{
+                        "flash_bytes": 929632,
+                        "flash_percentage": 71,
+                        "ram_bytes": 44752,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/DNSServer/examples/CaptivePortal",
+                "sizes": [{
+                        "flash_bytes": 928348,
+                        "flash_percentage": 71,
+                        "ram_bytes": 45056,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/EEPROM/examples/eeprom_class",
+                "sizes": [{
+                        "flash_bytes": 257909,
+                        "flash_percentage": 20,
+                        "ram_bytes": 17168,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/EEPROM/examples/eeprom_extra",
+                "sizes": [{
+                        "flash_bytes": 260097,
+                        "flash_percentage": 20,
+                        "ram_bytes": 17104,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/EEPROM/examples/eeprom_write",
+                "sizes": [{
+                        "flash_bytes": 257321,
+                        "flash_percentage": 20,
+                        "ram_bytes": 17120,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut/LEDCFade",
+                "sizes": [{
+                        "flash_bytes": 259185,
+                        "flash_percentage": 20,
+                        "ram_bytes": 17216,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
+                "sizes": [{
+                        "flash_bytes": 240197,
+                        "flash_percentage": 18,
+                        "ram_bytes": 17216,
+                        "ram_percentage": 5
+                        }]
+                }
+]
+},
+{ "board": "espressif:esp32:esp32s3",
+                "target": "esp32s3",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/BasicOTA",
+                "sizes": [{
+                        "flash_bytes": 1009446,
+                        "flash_percentage": 77,
+                        "ram_bytes": 52864,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                "sizes": [{
+                        "flash_bytes": 1015262,
+                        "flash_percentage": 77,
+                        "ram_bytes": 52912,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
+                "sizes": [{
+                        "flash_bytes": 915322,
+                        "flash_percentage": 70,
+                        "ram_bytes": 46368,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
+                "sizes": [{
+                        "flash_bytes": 915638,
+                        "flash_percentage": 70,
+                        "ram_bytes": 46368,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/AsyncUDP/examples/AsyncUDPServer",
+                "sizes": [{
+                        "flash_bytes": 915334,
+                        "flash_percentage": 70,
+                        "ram_bytes": 46368,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Advertising",
+                "sizes": [{
+                        "flash_bytes": 595046,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28272,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5PeriodicAdv",
+                "sizes": [{
+                        "flash_bytes": 583190,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28128,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/BLE5Scan",
+                "sizes": [{
+                        "flash_bytes": 577070,
+                        "flash_percentage": 18,
+                        "ram_bytes": 28112,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon",
+                "sizes": [{
+                        "flash_bytes": 581898,
+                        "flash_percentage": 18,
+                        "ram_bytes": 28144,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/Beacon_Scanner",
+                "sizes": [{
+                        "flash_bytes": 579010,
+                        "flash_percentage": 18,
+                        "ram_bytes": 28112,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/Client",
+                "sizes": [{
+                        "flash_bytes": 592430,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28192,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientSecure",
+                "sizes": [{
+                        "flash_bytes": 590726,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28176,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/ClientServer",
+                "sizes": [{
+                        "flash_bytes": 614786,
+                        "flash_percentage": 20,
+                        "ram_bytes": 28304,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/DeviceExplorer",
+                "sizes": [{
+                        "flash_bytes": 592198,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28128,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/Eddystone",
+                "sizes": [{
+                        "flash_bytes": 583278,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28128,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Client",
+                "sizes": [{
+                        "flash_bytes": 594042,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28208,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Composite",
+                "sizes": [{
+                        "flash_bytes": 600954,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28288,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Gamepad",
+                "sizes": [{
+                        "flash_bytes": 603862,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28272,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/HID_Keyboard",
+                "sizes": [{
+                        "flash_bytes": 600246,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28256,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClient",
+                "sizes": [{
+                        "flash_bytes": 587206,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28128,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiClientUART",
+                "sizes": [{
+                        "flash_bytes": 604278,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28272,
+                        "ram_percentage": 9
+                        }]
+                }
+]
+}
+]}
