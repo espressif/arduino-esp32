@@ -21,16 +21,11 @@
 
 // Matter Soil Sensor endpoint (device type 0x0045) - Soil Measurement cluster (0x0430).
 //
-// Soil Measurement has no ember-native implementation: it only exists as a code-driven cluster (the
-// same family as BooleanState/ValveConfigurationAndControl), and esp_matter does not (yet) ship a
-// esp_matter::endpoint::soil_sensor / esp_matter::cluster::soil_measurement convenience wrapper for it.
-// MatterSoilSensor therefore builds the endpoint from the generic low-level endpoint/cluster API and
-// registers the live chip::app::Clusters::SoilMeasurementCluster itself (see MatterSoilSensor.cpp),
-// the same technique esp_matter's own boolean_state_integration.cpp uses for BooleanState.
-//
-// SoilMoistureMeasuredValue is managed by that cluster implementation, not by the ember attribute
-// store, so it cannot be read/written through getAttributeVal()/setAttributeVal()/updateAttributeVal().
-// setSoilMoisture() drives it directly through SoilMeasurementCluster::SetSoilMoistureMeasuredValue().
+// Soil Measurement is a code-driven CHIP cluster (like Boolean State or Valve Configuration and Control).
+// MatterSoilSensor uses esp_matter::endpoint::soil_sensor::create() and ESP-Matter's soil_measurement
+// integration (SetSoilMoistureLimits / SetSoilMoistureMeasuredValue). SoilMoistureMeasuredValue is not
+// served from the Ember attribute store, so use setSoilMoisture() rather than getAttributeVal() /
+// updateAttributeVal().
 //
 // The Soil Measurement cluster only defines a whole-percent (0-100) measured value - there is no
 // sub-percent precision to request, unlike e.g. MatterHumiditySensor's 1/100th of a percent.
@@ -38,16 +33,18 @@ class MatterSoilSensor : public MatterEndPoint {
 public:
   MatterSoilSensor();
   ~MatterSoilSensor();
-  // begin Matter Soil Sensor endpoint. Like the Boolean State sensors, the live Soil Measurement
-  // cluster instance is not available until the Matter stack starts, so begin() takes no initial
-  // value - call setSoilMoisture() with the real sensor reading after Matter.begin().
+  // begin Matter Soil Sensor endpoint. The live SoilMeasurementCluster is registered when the Matter
+  // stack starts; call setSoilMoisture() before or after Matter.begin(). Values set before the stack
+  // starts are cached and applied in onStackStarted() after the first successful setSoilMoisture() call.
   bool begin();
+  // Same as begin(), then seeds the moisture cache (and pending report) like setSoilMoisture(initialPercent).
+  bool begin(uint8_t initialSoilMoisturePercent);
   // this will just stop processing Soil Sensor Matter events
   void end();
 
   // set the soil moisture percent [0..100]
   bool setSoilMoisture(uint8_t soilMoisturePercent);
-  // returns the last reported soil moisture percent [0..100]
+  // returns the last cached soil moisture percent [0..100] (last successful setSoilMoisture() or pending cache)
   uint8_t getSoilMoisture() {
     return soilMoisture;
   }
@@ -64,7 +61,13 @@ public:
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) override;
 
 protected:
+  void onStackStarted() override;
+
+  bool createSoilSensorEndpoint();
+  void destroySoilSensorEndpoint(endpoint_t *endpoint);
+
   bool started = false;
+  bool hasPendingMoistureReport = false;
   uint8_t soilMoisture = 0;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

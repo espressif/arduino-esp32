@@ -116,11 +116,11 @@ Key rules:
 - **Call the setter after the endpoint `begin()`.** Before `Matter.begin()` the value is cached and pushed when the cluster is created. After start it writes the live cluster. Typical sketches still do `begin()`, `Matter.begin()`, then the setter.
 - Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
 
-### Code-Driven Clusters Without an ESP-Matter Wrapper (Soil Measurement)
+### Soil Measurement (code-driven cluster)
 
-`MatterSoilSensor` uses the Soil Measurement cluster, which - unlike Boolean State - has no `esp_matter::endpoint::soil_sensor` / `esp_matter::cluster::soil_measurement` convenience wrapper yet. `MatterSoilSensor.cpp` builds the endpoint from the generic low-level API (`endpoint::create()`, `cluster::descriptor::create()`, `cluster::identify::create()`, `add_device_type()`) and plugs the cluster in itself, the same way ESP-Matter's own `data_model_provider/clusters/boolean_state_integration.cpp` does for Boolean State: a bare `cluster::create(endpoint, SoilMeasurement::Id, CLUSTER_FLAG_SERVER)` placeholder (for descriptor/introspection bookkeeping) with `cluster::set_init_and_shutdown_callbacks()` pointing at a local init callback that constructs a `chip::app::Clusters::SoilMeasurementCluster` and registers it with `esp_matter::data_model::provider::get_instance().registry()`.
+`MatterSoilSensor` uses `esp_matter::endpoint::soil_sensor::create()` (Soil Sensor device type `0x0045`) and the ESP-Matter Soil Measurement integration (`SetSoilMoistureLimits()` before `Matter.begin()`, then `SetSoilMoistureMeasuredValue()` / `findRegisteredCluster()` after the stack starts). The live `SoilMeasurementCluster` is registered by ESP-Matter's `data_model_provider/clusters/soil_measurement/integration.cpp`, not by Arduino code. `setSoilMoisture()` caches readings before `Matter.begin()` and applies them in `onStackStarted()`, like `MatterHumiditySensor`.
 
-Like Boolean State, `SoilMoistureMeasuredValue` is then served by that live cluster instance, not the Ember attribute store - `setSoilMoisture()` looks it up through the registry and calls `SoilMeasurementCluster::SetSoilMoistureMeasuredValue()` directly, and `begin()` takes no initial value for the same reason (the cluster instance doesn't exist until the Matter stack starts).
+Like Boolean State, `SoilMoistureMeasuredValue` is served by that live cluster instance, not the Ember attribute store. Use `setSoilMoisture()` (which calls ESP-Matter's `SetSoilMoistureMeasuredValue()` once the stack is up). `begin()` takes no initial moisture value; the measured attribute stays null until the first `setSoilMoisture()` call.
 
 ### Controller-Originated Changes (attributeChangeCB)
 
