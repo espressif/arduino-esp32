@@ -15260,6 +15260,117 @@ adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp-zigbee-core.zczr.release -lesp-zigbee-idf.remote.release -lesp-zigbee.release
 
 ##############################################################
+# Adafruit Metro ESP32-P4
+
+adafruit_metro_esp32p4.name=Adafruit Metro ESP32-P4
+
+adafruit_metro_esp32p4.vid.0=0x239A
+adafruit_metro_esp32p4.pid.0=0x817B
+adafruit_metro_esp32p4.vid.1=0x239A
+adafruit_metro_esp32p4.pid.1=0x017B
+adafruit_metro_esp32p4.vid.2=0x239A
+adafruit_metro_esp32p4.pid.2=0x817C
+adafruit_metro_esp32p4.upload_port.0.vid=0x239A
+adafruit_metro_esp32p4.upload_port.0.pid=0x817B
+adafruit_metro_esp32p4.upload_port.1.vid=0x239A
+adafruit_metro_esp32p4.upload_port.1.pid=0x017B
+adafruit_metro_esp32p4.upload_port.2.vid=0x239A
+adafruit_metro_esp32p4.upload_port.2.pid=0x817C
+
+adafruit_metro_esp32p4.bootloader.tool=esptool_py
+adafruit_metro_esp32p4.bootloader.tool.default=esptool_py
+adafruit_metro_esp32p4.upload.tool=esptool_py
+adafruit_metro_esp32p4.upload.tool.default=esptool_py
+adafruit_metro_esp32p4.upload.tool.network=esp_ota
+adafruit_metro_esp32p4.upload.maximum_size=6553600
+adafruit_metro_esp32p4.upload.maximum_data_size=327680
+adafruit_metro_esp32p4.upload.flags=
+adafruit_metro_esp32p4.upload.erase_cmd=
+adafruit_metro_esp32p4.upload.extra_flags=
+adafruit_metro_esp32p4.upload.use_1200bps_touch=false
+adafruit_metro_esp32p4.upload.wait_for_upload_port=false
+adafruit_metro_esp32p4.serial.disableDTR=false
+adafruit_metro_esp32p4.serial.disableRTS=false
+
+adafruit_metro_esp32p4.build.tarch=riscv32
+adafruit_metro_esp32p4.build.target=esp
+adafruit_metro_esp32p4.build.mcu=esp32p4
+adafruit_metro_esp32p4.build.core=esp32
+adafruit_metro_esp32p4.build.variant=adafruit_metro_esp32p4
+adafruit_metro_esp32p4.build.chip_variant=esp32p4_es
+adafruit_metro_esp32p4.build.board=ADAFRUIT_METRO_ESP32P4
+adafruit_metro_esp32p4.build.bootloader_addr=0x2000
+adafruit_metro_esp32p4.build.usb_mode=1
+adafruit_metro_esp32p4.build.usb_port=1
+adafruit_metro_esp32p4.build.cdc_on_boot=1
+adafruit_metro_esp32p4.build.msc_on_boot=0
+adafruit_metro_esp32p4.build.dfu_on_boot=0
+adafruit_metro_esp32p4.build.f_cpu=360000000L
+adafruit_metro_esp32p4.build.flash_size=16MB
+adafruit_metro_esp32p4.build.flash_freq=80m
+adafruit_metro_esp32p4.build.img_freq=80m
+adafruit_metro_esp32p4.build.flash_mode=dio
+adafruit_metro_esp32p4.build.boot=qio
+adafruit_metro_esp32p4.build.partitions=default_16MB
+adafruit_metro_esp32p4.build.defines=-DBOARD_HAS_PSRAM
+
+adafruit_metro_esp32p4.menu.ChipVariant.prev3=Before v3.00
+adafruit_metro_esp32p4.menu.ChipVariant.prev3.build.chip_variant=esp32p4_es
+adafruit_metro_esp32p4.menu.ChipVariant.prev3.build.f_cpu=360000000L
+adafruit_metro_esp32p4.menu.ChipVariant.postv3=v3.00 or newer
+adafruit_metro_esp32p4.menu.ChipVariant.postv3.build.chip_variant=esp32p4
+adafruit_metro_esp32p4.menu.ChipVariant.postv3.build.f_cpu=400000000L
+
+adafruit_metro_esp32p4.menu.PSRAM.enabled=Enabled
+adafruit_metro_esp32p4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_metro_esp32p4.menu.PSRAM.disabled=Disabled
+adafruit_metro_esp32p4.menu.PSRAM.disabled.build.defines=
+
+adafruit_metro_esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG (USB-C)
+adafruit_metro_esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
+adafruit_metro_esp32p4.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed, USB-C)
+adafruit_metro_esp32p4.menu.USBMode.tinyusb_fs.build.usb_mode=0
+adafruit_metro_esp32p4.menu.USBMode.tinyusb_fs.build.usb_port=1
+
+adafruit_metro_esp32p4.menu.CDCOnBoot.cdc=Enabled
+adafruit_metro_esp32p4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+adafruit_metro_esp32p4.menu.CDCOnBoot.default=Disabled
+adafruit_metro_esp32p4.menu.CDCOnBoot.default.build.cdc_on_boot=0
+adafruit_metro_esp32p4.menu.UploadMode.default=UART0 / Hardware CDC
+adafruit_metro_esp32p4.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_metro_esp32p4.menu.UploadMode.default.upload.wait_for_upload_port=false
+adafruit_metro_esp32p4.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+adafruit_metro_esp32p4.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_metro_esp32p4.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+adafruit_metro_esp32p4.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+adafruit_metro_esp32p4.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+adafruit_metro_esp32p4.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+
+adafruit_metro_esp32p4.menu.UploadSpeed.921600=921600
+adafruit_metro_esp32p4.menu.UploadSpeed.921600.upload.speed=921600
+adafruit_metro_esp32p4.menu.UploadSpeed.115200=115200
+adafruit_metro_esp32p4.menu.UploadSpeed.115200.upload.speed=115200
+adafruit_metro_esp32p4.menu.UploadSpeed.460800=460800
+adafruit_metro_esp32p4.menu.UploadSpeed.460800.upload.speed=460800
+
+adafruit_metro_esp32p4.menu.DebugLevel.none=None
+adafruit_metro_esp32p4.menu.DebugLevel.none.build.code_debug=0
+adafruit_metro_esp32p4.menu.DebugLevel.error=Error
+adafruit_metro_esp32p4.menu.DebugLevel.error.build.code_debug=1
+adafruit_metro_esp32p4.menu.DebugLevel.warn=Warn
+adafruit_metro_esp32p4.menu.DebugLevel.warn.build.code_debug=2
+adafruit_metro_esp32p4.menu.DebugLevel.info=Info
+adafruit_metro_esp32p4.menu.DebugLevel.info.build.code_debug=3
+adafruit_metro_esp32p4.menu.DebugLevel.debug=Debug
+adafruit_metro_esp32p4.menu.DebugLevel.debug.build.code_debug=4
+adafruit_metro_esp32p4.menu.DebugLevel.verbose=Verbose
+adafruit_metro_esp32p4.menu.DebugLevel.verbose.build.code_debug=5
+adafruit_metro_esp32p4.menu.EraseFlash.none=Disabled
+adafruit_metro_esp32p4.menu.EraseFlash.all=Enabled
+adafruit_metro_esp32p4.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
 # Adafruit Metro ESP32-S3
 
 adafruit_metro_esp32s3.name=Adafruit Metro ESP32-S3
