@@ -211,9 +211,7 @@ env.Prepend(LIBS=libs)
 #
 
 env.Append(
-    ELF2BINFLAGS=[
-        "--elf-sha256-offset", "0xb0"
-    ],
+    ELF2BINFLAGS=["--elf-sha256-offset", "0xb0"],
     LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")],
     FLASH_EXTRA_IMAGES=[
         (
