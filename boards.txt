@@ -15260,7 +15260,7 @@ adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp-zigbee-core.zczr.release -lesp-zigbee-idf.remote.release -lesp-zigbee.release
 
 ##############################################################
-# Adafruit Metro ESP32-S3
+# Adafruit Metro ESP32-P4
 
 adafruit_metro_esp32p4.name=Adafruit Metro ESP32-P4
 
@@ -15371,6 +15371,7 @@ adafruit_metro_esp32p4.menu.EraseFlash.all=Enabled
 adafruit_metro_esp32p4.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+# Adafruit Metro ESP32-S3
 
 adafruit_metro_esp32s3.name=Adafruit Metro ESP32-S3
 adafruit_metro_esp32s3.vid.0=0x239A
