@@ -116,6 +116,12 @@ Key rules:
 - **Call the setter after the endpoint `begin()`.** Before `Matter.begin()` the value is cached and pushed when the cluster is created. After start it writes the live cluster. Typical sketches still do `begin()`, `Matter.begin()`, then the setter.
 - Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
 
+### Soil Measurement (code-driven cluster)
+
+`MatterSoilSensor` uses `esp_matter::endpoint::soil_sensor::create()` (Soil Sensor device type `0x0045`) and the ESP-Matter Soil Measurement integration (`SetSoilMoistureLimits()` before `Matter.begin()`, then `SetSoilMoistureMeasuredValue()` / `findRegisteredCluster()` after the stack starts). The live `SoilMeasurementCluster` is registered by ESP-Matter's `data_model_provider/clusters/soil_measurement/integration.cpp`, not by Arduino code. `setSoilMoisture()` caches readings before `Matter.begin()` and applies them in `onStackStarted()`, like `MatterHumiditySensor`.
+
+Like Boolean State, `SoilMoistureMeasuredValue` is served by that live cluster instance, not the Ember attribute store. Use `setSoilMoisture()` (which calls ESP-Matter's `SetSoilMoistureMeasuredValue()` once the stack is up). `begin()` takes no initial moisture value; the measured attribute stays null until the first `setSoilMoisture()` call.
+
 ### Controller-Originated Changes (attributeChangeCB)
 
 When a Matter controller changes an attribute (e.g., turning a light on via an app), the flow is:
@@ -185,6 +191,7 @@ All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.
 | `MatterWaterLeakDetector` | Water Leak Detector (Boolean State) |
 | `MatterWaterFreezeDetector` | Water Freeze Detector (Boolean State) |
 | `MatterRainSensor` | Rain Sensor (Boolean State) |
+| `MatterSoilSensor` | Soil Sensor (code-driven Soil Measurement cluster) |
 
 **Control and other**
 

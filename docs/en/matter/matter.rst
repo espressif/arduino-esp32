@@ -430,6 +430,7 @@ The library provides specialized endpoint classes for different device types. Ea
 
 * ``MatterTemperatureSensor``: Temperature sensor (read-only).
 * ``MatterHumiditySensor``: Humidity sensor (read-only).
+* ``MatterSoilSensor``: Soil sensor (Soil Measurement cluster; whole-percent moisture).
 * ``MatterPressureSensor``: Pressure sensor (read-only).
 * ``MatterContactSensor``: Contact sensor (open/closed state).
 * ``MatterWaterLeakDetector``: Water leak detector (detected/not detected state).
@@ -491,6 +492,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 
 * **Matter Temperature Sensor** - Creates a Matter-compatible temperature sensor device with sensor data reporting to smart home ecosystems. `View Matter Temperature Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterTemperatureSensor>`_.
 * **Matter Humidity Sensor** - Creates a Matter-compatible humidity sensor device with sensor data reporting. `View Matter Humidity Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterHumiditySensor>`_.
+* **Matter Soil Sensor** - Soil moisture sensor (Soil Measurement cluster, whole percent 0–100). `View Matter Soil Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterSoilSensor>`_.
 * **Matter Pressure Sensor** - Creates a Matter-compatible pressure sensor device with automatic simulation of pressure readings. `View Matter Pressure Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterPressureSensor>`_.
 * **Matter Contact Sensor** - Creates a Matter-compatible contact sensor device (open/closed state). `View Matter Contact Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterContactSensor>`_.
 * **Matter Occupancy Sensor** - Creates a Matter-compatible occupancy sensor device with automatic simulation of occupancy state changes. `View Matter Occupancy Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/Sensors/MatterOccupancySensor>`_.
