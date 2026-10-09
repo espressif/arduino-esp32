@@ -500,6 +500,15 @@ void ZigbeeDoorLock::zbDoorLockClearPinCode(ezb_zcl_door_lock_clear_pin_code_mes
   }
 }
 
+void ZigbeeDoorLock::zbDoorLockClearAllPinCodes(ezb_zcl_door_lock_clear_all_pin_codes_message_t *message) {
+  message->out.result = EZB_ZCL_STATUS_SUCCESS;
+  clearUsers();
+  message->out.status = EZB_ZCL_DOOR_LOCK_CMD_STATUS_SUCCESS;
+  if (_on_user_change) {
+    _on_user_change(ZB_DOOR_LOCK_ALL_USERS);
+  }
+}
+
 void ZigbeeDoorLock::zbDoorLockSetUserStatus(ezb_zcl_door_lock_set_user_status_message_t *message) {
   uint16_t user_id = message->in.payload.user_id;
   uint8_t status = message->in.payload.user_status;

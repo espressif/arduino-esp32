@@ -125,9 +125,9 @@ The callbacks run in the Zigbee stack context, keep them short and do not call Z
 PIN code users
 **************
 
-The Zigbee coordinator (e.g. Home Assistant with ZHA) manages the PIN code users with the SetPINCode, GetPINCode, ClearPINCode and SetUserStatus commands.
-The users are kept in RAM by the endpoint (and in NVS if ``setUserStorage(true)`` is called), user IDs are zero based. The PIN code is never sent back to the network
-(the SendPINOverTheAir attribute is not enabled).
+The Zigbee coordinator (e.g. Home Assistant with ZHA) manages the PIN code users with the SetPINCode, GetPINCode, ClearPINCode, ClearAllPINCodes and SetUserStatus commands.
+The users are kept in RAM by the endpoint (and in NVS if ``setUserStorage(true)`` is called), user IDs are zero based. The PIN code is not sent back to the network
+(the SendPINOverTheAir attribute is not enabled), the Zigbee stack sends ``0x04 0xFF 0xFF 0xFF 0xFF`` as the PIN code instead.
 
 .. code-block:: arduino
 
@@ -143,7 +143,7 @@ The users are kept in RAM by the endpoint (and in NVS if ``setUserStorage(true)`
 The PIN codes are stored as plain text in NVS, use flash and NVS encryption if the device has to protect them.
 ``ZigbeeDoorLockUserStatus`` is ``DOOR_LOCK_USER_AVAILABLE``, ``DOOR_LOCK_USER_ENABLED`` or ``DOOR_LOCK_USER_DISABLED``.
 PIN codes have 4 to 16 characters (``ZB_DOOR_LOCK_MIN_PIN_LENGTH`` / ``ZB_DOOR_LOCK_MAX_PIN_LENGTH``), the same PIN cannot be used by two users.
-The ``onUserChange`` callback runs in the Zigbee stack context, keep it short.
+The ``onUserChange`` callback runs in the Zigbee stack context, keep it short. It gets ``ZB_DOOR_LOCK_ALL_USERS`` as the user ID if all the users were removed with ClearAllPINCodes.
 
 reportOperationEvent
 ^^^^^^^^^^^^^^^^^^^^
@@ -157,7 +157,7 @@ Sends an operation event notification, which ZHA / Home Assistant shows as a loc
 * ``source`` - ``DOOR_LOCK_SOURCE_KEYPAD``, ``DOOR_LOCK_SOURCE_RF``, ``DOOR_LOCK_SOURCE_MANUAL``, ``DOOR_LOCK_SOURCE_RFID`` or ``DOOR_LOCK_SOURCE_INDETERMINATE``
 * ``event_code`` - ``ZigbeeDoorLockEvent``, e.g. ``DOOR_LOCK_EVENT_LOCK`` / ``DOOR_LOCK_EVENT_UNLOCK`` (keypad, RF, RFID), ``DOOR_LOCK_EVENT_MANUAL_LOCK`` / ``DOOR_LOCK_EVENT_MANUAL_UNLOCK`` (manual), ``DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN`` / ``DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN`` (failed PIN attempt)
 * ``user_id`` - user that operated the lock, ``0xffff`` if unknown
-* ``pin`` - PIN code used (sent only if SendPINOverTheAir is enabled, which it is not by default)
+* ``pin`` - PIN code used (sent only if SendPINOverTheAir is enabled, which it is not by default, otherwise ``0xFF`` bytes are sent)
 
 Example
 -------

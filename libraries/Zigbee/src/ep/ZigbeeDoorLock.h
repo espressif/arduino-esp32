@@ -82,7 +82,8 @@ enum ZigbeeDoorLockEvent {
 
 #define ZB_DOOR_LOCK_MAX_PIN_LENGTH 16  // Maximum number of characters of a PIN code
 #define ZB_DOOR_LOCK_MIN_PIN_LENGTH 4   // Minimum number of characters of a PIN code (advertised in the MinPINCodeLength attribute)
-#define ZB_DOOR_LOCK_DEFAULT_USERS  10  // Default number of PIN users, see setMaxUsers()
+#define ZB_DOOR_LOCK_DEFAULT_USERS  10      // Default number of PIN users, see setMaxUsers()
+#define ZB_DOOR_LOCK_ALL_USERS      0xFFFF  // user_id passed to the onUserChange() callback when all the users were removed
 
 class ZigbeeDoorLock : public ZigbeeEP {
 public:
@@ -110,7 +111,8 @@ public:
   }
 
   // Callback called when a user is added, changed or removed by the Zigbee network (in the Zigbee stack context, keep it short).
-  // Use it to persist the users (getUserStatus() / getUserPin()). Return values are not used.
+  // user_id is ZB_DOOR_LOCK_ALL_USERS if all the users were removed (ClearAllPINCodes).
+  // Use it to react to the change (getUserStatus() / getUserPin()). The users are stored by setUserStorage(). Return values are not used.
   void onUserChange(void (*callback)(uint16_t user_id)) {
     _on_user_change = callback;
   }
@@ -132,7 +134,7 @@ public:
 
   // Send an operation event notification (what ZHA/Home Assistant shows as a lock event) to the bound devices.
   // event_code is one of ZigbeeDoorLockEvent, e.g. DOOR_LOCK_EVENT_LOCK / DOOR_LOCK_EVENT_UNLOCK for the keypad, RF and RFID sources.
-  // user_id is 0xffff if there is no user. The PIN is only sent if the coordinator enabled SendPINOverTheAir.
+  // user_id is 0xffff if there is no user. The PIN is only sent if the coordinator enabled SendPINOverTheAir, otherwise the stack masks it (0xFF).
   bool reportOperationEvent(ZigbeeDoorLockOperationSource source, uint8_t event_code, uint16_t user_id = 0xffff, const char *pin = nullptr);
 
   // Set the lock type (see ZigbeeDoorLockType), must be called before Zigbee.addEndpoint()
@@ -164,6 +166,7 @@ private:
   void zbDoorLockSetPinCode(ezb_zcl_door_lock_set_pin_code_message_t *message) override;
   void zbDoorLockGetPinCode(ezb_zcl_door_lock_get_pin_code_message_t *message) override;
   void zbDoorLockClearPinCode(ezb_zcl_door_lock_clear_pin_code_message_t *message) override;
+  void zbDoorLockClearAllPinCodes(ezb_zcl_door_lock_clear_all_pin_codes_message_t *message) override;
   void zbDoorLockSetUserStatus(ezb_zcl_door_lock_set_user_status_message_t *message) override;
   bool reportLockState();
   bool addPinAttributes();

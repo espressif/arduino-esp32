@@ -85,8 +85,12 @@ bool unlockDoor() {
 }
 
 // Called when a PIN user is added, changed or removed from the Zigbee network.
-// The PIN codes are only kept in RAM, here you would store them (e.g. in NVS) to keep them after a reboot.
+// The users are stored in NVS by setUserStorage(true), here we only print the change.
 void userChanged(uint16_t user_id) {
+  if (user_id == ZB_DOOR_LOCK_ALL_USERS) {
+    Serial.println("All users removed");
+    return;
+  }
   char pin[ZB_DOOR_LOCK_MAX_PIN_LENGTH + 1];
   ZigbeeDoorLockUserStatus status = zbDoorLock.getUserStatus(user_id);
   zbDoorLock.getUserPin(user_id, pin, sizeof(pin));

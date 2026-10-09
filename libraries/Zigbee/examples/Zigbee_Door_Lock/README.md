@@ -41,7 +41,7 @@ Only the features implemented by the Zigbee stack are available:
 
 * Lock Door and Unlock Door commands (the sketch callbacks can reject a command by returning `false`)
 * LockState attribute (reported to the network), LockType and ActuatorEnabled attributes
-* PIN code users managed by the coordinator (SetPINCode, GetPINCode, ClearPINCode, SetUserStatus), for example with the Home Assistant "Set lock user code" action.
+* PIN code users managed by the coordinator (SetPINCode, GetPINCode, ClearPINCode, ClearAllPINCodes, SetUserStatus), for example with the Home Assistant "Set lock user code" action.
   The users are stored in NVS with `setUserStorage(true)` and restored after a reboot.
 * The last LockState is kept after a reboot as a Zigbee persistent attribute (`setAttributePersistent()`, see the Zigbee_Attribute_Storage example). `restoreLockState()` reads it back.
 * Operation event notifications (`reportOperationEvent()`), shown by ZHA as lock events (keypad / manual / RF source and the user)

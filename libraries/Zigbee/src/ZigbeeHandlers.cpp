@@ -91,6 +91,9 @@ static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, voi
     case EZB_ZCL_CORE_DOOR_LOCK_CLEAR_PIN_CODE_CB_ID:
       zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_clear_pin_code_message_t *)message, &ZigbeeEP::zbDoorLockClearPinCode);
       break;
+    case EZB_ZCL_CORE_DOOR_LOCK_CLEAR_ALL_PIN_CODES_CB_ID:
+      zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_clear_all_pin_codes_message_t *)message, &ZigbeeEP::zbDoorLockClearAllPinCodes);
+      break;
     case EZB_ZCL_CORE_DOOR_LOCK_SET_USER_STATUS_CB_ID:
       zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_set_user_status_message_t *)message, &ZigbeeEP::zbDoorLockSetUserStatus);
       break;

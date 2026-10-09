@@ -183,6 +183,7 @@ public:
   virtual void zbDoorLockSetPinCode(ezb_zcl_door_lock_set_pin_code_message_t *message) {};
   virtual void zbDoorLockGetPinCode(ezb_zcl_door_lock_get_pin_code_message_t *message) {};
   virtual void zbDoorLockClearPinCode(ezb_zcl_door_lock_clear_pin_code_message_t *message) {};
+  virtual void zbDoorLockClearAllPinCodes(ezb_zcl_door_lock_clear_all_pin_codes_message_t *message) {};
   virtual void zbDoorLockSetUserStatus(ezb_zcl_door_lock_set_user_status_message_t *message) {};
   virtual void zbReadTimeCluster(const ezb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIASZoneStatusChangeNotification(const ezb_zcl_ias_zone_status_change_notif_message_t *message) {};
