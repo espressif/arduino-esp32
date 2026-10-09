@@ -3592,6 +3592,116 @@ esp32p4_core_board.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+esp_mosaico.name=Espressif ESP-Mosaico V1.2
+
+esp_mosaico.bootloader.tool=esptool_py
+esp_mosaico.bootloader.tool.default=esptool_py
+esp_mosaico.upload.tool=esptool_py
+esp_mosaico.upload.tool.default=esptool_py
+esp_mosaico.upload.tool.network=esp_ota
+esp_mosaico.upload.maximum_size=3145728
+esp_mosaico.upload.maximum_data_size=327680
+esp_mosaico.upload.flags=
+esp_mosaico.upload.extra_flags=
+esp_mosaico.upload.erase_cmd=
+esp_mosaico.upload.use_1200bps_touch=true
+esp_mosaico.upload.wait_for_upload_port=true
+esp_mosaico.serial.disableDTR=false
+esp_mosaico.serial.disableRTS=false
+
+esp_mosaico.build.tarch=riscv32
+esp_mosaico.build.target=esp
+esp_mosaico.build.mcu=esp32s31
+esp_mosaico.build.core=esp32
+esp_mosaico.build.variant=esp_mosaico
+esp_mosaico.build.board=ESP_MOSAICO
+esp_mosaico.build.bootloader_addr=0x2000
+esp_mosaico.build.usb_mode=0
+esp_mosaico.build.cdc_on_boot=1
+esp_mosaico.build.msc_on_boot=0
+esp_mosaico.build.dfu_on_boot=0
+esp_mosaico.build.f_cpu=320000000L
+esp_mosaico.build.flash_size=16MB
+esp_mosaico.build.flash_freq=80m
+esp_mosaico.build.flash_mode=dio
+esp_mosaico.build.boot=qio
+esp_mosaico.build.boot_freq=80m
+esp_mosaico.build.partitions=app3M_fat9M_16MB
+esp_mosaico.build.defines=-DBOARD_HAS_PSRAM
+esp_mosaico.build.loop_core=-DARDUINO_RUNNING_CORE=1
+esp_mosaico.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+esp_mosaico.build.psram_type=opi
+esp_mosaico.build.memory_type={build.boot}_{build.psram_type}
+
+esp_mosaico.menu.USBMode.default=USB-OTG (TinyUSB)
+esp_mosaico.menu.USBMode.default.build.usb_mode=0
+esp_mosaico.menu.USBMode.hwcdc=Hardware CDC and JTAG (Expansion Pins)
+esp_mosaico.menu.USBMode.hwcdc.build.usb_mode=1
+esp_mosaico.menu.USBMode.hwcdc.upload.use_1200bps_touch=false
+esp_mosaico.menu.USBMode.hwcdc.upload.wait_for_upload_port=false
+
+esp_mosaico.menu.CDCOnBoot.cdc=Enabled
+esp_mosaico.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+esp_mosaico.menu.CDCOnBoot.default=Disabled
+esp_mosaico.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp_mosaico.menu.CDCOnBoot.default.upload.use_1200bps_touch=false
+esp_mosaico.menu.CDCOnBoot.default.upload.wait_for_upload_port=false
+
+esp_mosaico.menu.MSCOnBoot.default=Disabled
+esp_mosaico.menu.MSCOnBoot.default.build.msc_on_boot=0
+esp_mosaico.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+esp_mosaico.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+esp_mosaico.menu.DFUOnBoot.default=Disabled
+esp_mosaico.menu.DFUOnBoot.default.build.dfu_on_boot=0
+esp_mosaico.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+esp_mosaico.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+esp_mosaico.menu.JTAGAdapter.default=Disabled
+esp_mosaico.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp_mosaico.menu.JTAGAdapter.builtin=Integrated USB JTAG (Expansion Pins)
+esp_mosaico.menu.JTAGAdapter.builtin.build.openocdscript=esp32s31-builtin.cfg
+esp_mosaico.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+esp_mosaico.menu.JTAGAdapter.external=FTDI Adapter
+esp_mosaico.menu.JTAGAdapter.external.build.openocdscript=esp32s31-ftdi.cfg
+esp_mosaico.menu.JTAGAdapter.external.build.copy_jtag_files=1
+
+esp_mosaico.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp_mosaico.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp_mosaico.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp_mosaico.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp_mosaico.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp_mosaico.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp_mosaico.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp_mosaico.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp_mosaico.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+esp_mosaico.menu.UploadSpeed.921600=921600
+esp_mosaico.menu.UploadSpeed.921600.upload.speed=921600
+esp_mosaico.menu.UploadSpeed.460800=460800
+esp_mosaico.menu.UploadSpeed.460800.upload.speed=460800
+esp_mosaico.menu.UploadSpeed.115200=115200
+esp_mosaico.menu.UploadSpeed.115200.upload.speed=115200
+
+esp_mosaico.menu.DebugLevel.none=None
+esp_mosaico.menu.DebugLevel.none.build.code_debug=0
+esp_mosaico.menu.DebugLevel.error=Error
+esp_mosaico.menu.DebugLevel.error.build.code_debug=1
+esp_mosaico.menu.DebugLevel.warn=Warn
+esp_mosaico.menu.DebugLevel.warn.build.code_debug=2
+esp_mosaico.menu.DebugLevel.info=Info
+esp_mosaico.menu.DebugLevel.info.build.code_debug=3
+esp_mosaico.menu.DebugLevel.debug=Debug
+esp_mosaico.menu.DebugLevel.debug.build.code_debug=4
+esp_mosaico.menu.DebugLevel.verbose=Verbose
+esp_mosaico.menu.DebugLevel.verbose.build.code_debug=5
+
+esp_mosaico.menu.EraseFlash.none=Disabled
+esp_mosaico.menu.EraseFlash.all=Enabled
+esp_mosaico.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 aventen_s3_sync.name=Aventen S3 Sync
 ## Based upon ESP32-S3 Dev Board
 
