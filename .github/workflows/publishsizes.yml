@@ -7,12 +7,24 @@ on:
       - completed
 
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to report sizes for (uses its latest Compilation Tests run)"
+        required: true
+        type: string
+      baseline_branch:
+        description: "Baseline branch to compare against (e.g. master, release/v4.0.x). Empty uses the PR base branch."
+        required: false
+        default: ""
+        type: string
+
 env:
   # It's convenient to set variables for values used multiple times in the workflow
   SKETCHES_REPORTS_PATH: artifacts/sizes-report
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 permissions:
+  actions: read
   contents: read
   pull-requests: write
   pages: write
@@ -22,8 +34,9 @@ jobs:
     name: Sizes Comparison Results
     runs-on: ubuntu-latest
     if: |
-      github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success'
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.event == 'pull_request' &&
+       github.event.workflow_run.conclusion == 'success')
 
     steps:
       - name: Checkout gh-pages branch
@@ -38,15 +51,44 @@ jobs:
           mkdir -p sizes-report/master
           mkdir -p sizes-report/pr
 
-      - name: Download JSON file
+      # workflow_run: the run that triggered this workflow.
+      # workflow_dispatch: the latest completed Compilation Tests run for the PR head commit.
+      - name: Find Compilation Tests run
+        id: compile_run
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_RUN_ARTIFACTS_URL: ${{ github.event.workflow_run.artifacts_url }}
+          INPUT_PR_NUMBER: ${{ inputs.pr_number }}
         run: |
-          mv master_cli_compile/*.json artifacts/sizes-report/master/
+          if [[ "$EVENT_NAME" != "workflow_dispatch" ]]; then
+            echo "artifacts_url=$WORKFLOW_RUN_ARTIFACTS_URL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          pr_num=$(echo "$INPUT_PR_NUMBER" | tr -d '[:space:]#')
+          if ! [[ "$pr_num" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid PR number: '$INPUT_PR_NUMBER'"
+            exit 1
+          fi
+          head_sha=$(gh pr view "$pr_num" --repo "$GITHUB_REPOSITORY" --json headRefOid --jq .headRefOid)
+          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/push.yml/runs?event=pull_request&head_sha=$head_sha&status=completed&per_page=1" \
+            --jq '.workflow_runs[0] | select(.) | "\(.id) \(.conclusion)"')
+          if [[ -z "$run" ]]; then
+            echo "::error::No completed Compilation Tests run found for PR #$pr_num (head $head_sha)"
+            exit 1
+          fi
+          read -r run_id conclusion <<< "$run"
+          if [[ "$conclusion" != "success" ]]; then
+            echo "::warning::Compilation Tests run $run_id concluded '$conclusion'. Sizes may be incomplete."
+          fi
+          echo "Using Compilation Tests run $run_id for PR #$pr_num (head $head_sha)"
+          echo "artifacts_url=repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts" >> "$GITHUB_OUTPUT"
 
       - name: Download and Extract Artifacts
+        env:
+          ARTIFACTS_URL: ${{ steps.compile_run.outputs.artifacts_url }}
         run: |
           cd artifacts
-          artifacts_url=${{ github.event.workflow_run.artifacts_url }}
-          gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
+          gh api "$ARTIFACTS_URL" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
           do
             IFS=$'\t' read name url <<< "$artifact"
             # Only process pr_number and pr_cli_compile artifacts
@@ -64,15 +106,59 @@ jobs:
           echo "Contents of parent directory:"
           ls -R ..
 
-      - name: Read the pr_num file
-        id: pr_num_reader
-        uses: juliangruber/read-file-action@b549046febe0fe86f8cb4f93c24e284433f9ab58 # v1.1.7
-        with:
-          path: ./artifacts/sizes-report/pr_num.txt
+      # Compare against the baseline of the PR's base branch (saved by push.yml), or the one requested manually.
+      # pr_num.txt comes from the PR run, so validate it and get the base branch from the API.
+      - name: Load baseline
+        id: baseline
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+          INPUT_BASELINE_BRANCH: ${{ inputs.baseline_branch }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            pr_num=$(echo "$INPUT_PR_NUMBER" | tr -d '[:space:]#')
+          else
+            pr_num=$(tr -d '[:space:]' < artifacts/sizes-report/pr_num.txt)
+          fi
+          if ! [[ "$pr_num" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid PR number: '$pr_num'"
+            exit 1
+          fi
+          base_ref=$(echo "$INPUT_BASELINE_BRANCH" | tr -d '[:space:]')
+          if [[ -z "$base_ref" ]]; then
+            base_ref=$(gh pr view "$pr_num" --repo "$GITHUB_REPOSITORY" --json baseRefName --jq .baseRefName)
+          elif ! [[ "$base_ref" =~ ^(master|release/[A-Za-z0-9._-]+)$ ]]; then
+            echo "::error::Baseline branch must be master or release/*, got '$base_ref'"
+            exit 1
+          fi
+          if ! [[ "$base_ref" =~ ^(master|release/[A-Za-z0-9._-]+)$ ]]; then
+            echo "::notice::No sizes baseline for base branch '$base_ref'. Skipping report."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          dir="size_test/${base_ref//\//_}"
+          if ! compgen -G "$dir/*.json" > /dev/null; then
+            msg="Baseline '$dir' not found on gh-pages (saved on pushes to $base_ref). Available: $(ls size_test 2>/dev/null | tr '\n' ' ')"
+            if [[ -n "$INPUT_BASELINE_BRANCH" ]]; then
+              echo "::error::$msg"
+              exit 1
+            fi
+            echo "::notice::$msg. Skipping report."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Comparing PR #$pr_num against $base_ref ($dir)"
+          mv "$dir"/*.json artifacts/sizes-report/master/
+          echo "pr_num=$pr_num" >> "$GITHUB_OUTPUT"
+          echo "base_ref=$base_ref" >> "$GITHUB_OUTPUT"
+          echo "found=true" >> "$GITHUB_OUTPUT"
 
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@bea91d2c99ca80c88a883b39b1c4012f00ec3d09 # sizes_v2
+        if: steps.baseline.outputs.found == 'true'
+        uses: P-R-O-C-H-Y/report-size-deltas@4ae1e90a8066d22b3eda546aeddefd9474ce3ad4 # sizes_v2
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}
-          pr-number: "${{ steps.pr_num_reader.outputs.content }}"
+          pr-number: "${{ steps.baseline.outputs.pr_num }}"
+          baseline-branch: "${{ steps.baseline.outputs.base_ref }}"
+          update-comment: ${{ github.event_name != 'workflow_dispatch' }}
