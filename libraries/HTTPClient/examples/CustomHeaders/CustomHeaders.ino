@@ -48,7 +48,7 @@ void loop() {
 
   Serial.print("[HTTP] Preparing HTTP request...\n");
   // This page will return the headers we want to test + some others.
-  // Validate the HTTPS server against the builtin CA bundle.
+  // Builtin CA bundle: ~70 KB of flash. Use begin(url, CAcert) with one PEM if the sketch must stay small.
   http.useBuiltinCACertBundle();
   http.begin("https://httpbingo.org/response-headers?x-custom-header=value:42");
 

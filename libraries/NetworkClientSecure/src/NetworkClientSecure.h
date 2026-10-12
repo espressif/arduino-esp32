@@ -80,7 +80,7 @@ public:
   void setHandshakeTimeout(unsigned long handshake_timeout);
   void setAlpnProtocols(const char **alpn_protos);
 
-  void useBuiltinCACertBundle();
+  void useBuiltinCACertBundle();  // Mozilla CA bundle; ~70 KB of flash, linked only when called
 
   // Certain protocols start in plain-text; and then have the client
   // give some STARTSSL command to `upgrade' the connection to TLS

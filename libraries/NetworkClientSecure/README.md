@@ -29,14 +29,13 @@ Please see the NetworkClientSecure example.
 Using a bundle of root certificate authority certificates
 ---------------------------------------------------------
 This method is similar to the single root certificate verification above, but it uses a standard set of
-root certificates from Mozilla to authenticate against, while the previous method only accepts a single
-certificate for a given server. This allows the client to connect to all public SSL servers.
+root certificates from Mozilla. That lets the client connect to public HTTPS servers without pinning one CA.
 
-To use this feature in Arduino IDE:
-If the Arduino IDE added support for embedding files in the meantime, then follow the instructions above.
-If not, you have two choices:
-1. create a makefile where you can add the idf_component_register() declaration to include the certificate bundle
-2. Store the bundle as a SPIFFS file, but then you have to load it into RAM in runtime and waste 64k of precious memory
+Call `NetworkClientSecure::useBuiltinCACertBundle()` (or `HTTPClient::useBuiltinCACertBundle()` with the
+compatibility `begin(url)` API). The bundle is linked only when that function is called. On ESP32 it adds
+about **70 KB of flash** (65 KB of CA data plus attach code). A single PEM via `setCACert()` is about 1.3 KB.
+
+See the WiFiClientSecureBuiltinCACertBundle example.
 
 Using a root CA cert and client cert/keys
 -----------------------------------------
@@ -105,6 +104,8 @@ Running on TLS 1.2 using mbedTLS
 #### NetworkClientSecure
 Wi-Fi secure connection example for ESP32
 Running on TLS 1.2 using mbedTLS
+#### WiFiClientSecureBuiltinCACertBundle
+Same as NetworkClientSecure, but trusts the builtin Mozilla CA bundle (`useBuiltinCACertBundle()`, ~70 KB of flash)
 #### NetworkClientSecureEnterprise
 This example demonstrates a secure connection to a Wi-Fi network using WPA/WPA2 Enterprise (for example eduroam),
 and establishing a secure HTTPS connection with an external server (for example arduino.php5.sk) using the defined anonymous identity, user identity, and password.

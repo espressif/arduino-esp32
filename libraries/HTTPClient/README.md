@@ -8,7 +8,15 @@ Arduino HTTP and HTTPS client for ESP32. It can use a caller-owned `NetworkClien
 
 That is a breaking change from 3.x, where the same call silently skipped validation.
 
-The builtin CA bundle adds about 65 KB of flash, so it is only linked into sketches that call `useBuiltinCACertBundle()`.
+The builtin Mozilla CA bundle is linked only into sketches that call `useBuiltinCACertBundle()`. On ESP32 that is about **70 KB of flash** (the 65 KB bundle plus attach code). A single PEM passed to `begin(url, CAcert)` or `NetworkClientSecure::setCACert()` is about **1.3 KB**. Other SoCs are in the same range (about 71–75 KB in CI).
+
+| Trust method | Typical FLASH vs plain HTTP |
+|---|---:|
+| `setInsecure()` | +70 B |
+| Own CA (`begin(url, CAcert)`) | +1.3 KB |
+| `useBuiltinCACertBundle()` | +70 KB |
+
+Prefer a pinned CA when the sketch talks to one host and flash is tight. Use the builtin bundle when the client must trust public CAs in general.
 
 Certificate date checks need a valid system clock. Call `configTime()` (NTP) before HTTPS requests, or verification can fail while the clock is still at the epoch.
 

@@ -71,8 +71,9 @@ void loop() {
     Serial.print("[HTTP] begin...\n");
     // configure target server and url
     // HTTPS needs a trust anchor, set before begin():
-    // http.useBuiltinCACertBundle();                     // validate against the builtin CA bundle
-    // http.setInsecure();                                // or skip certificate validation (opt-in, MITM-vulnerable)
+    // http.useBuiltinCACertBundle();                     // public CAs; ~70 KB of flash
+    // http.begin("https://example.com/", rootCA);        // one PEM; ~1.3 KB of flash
+    // http.setInsecure();                                // skip validation (opt-in, MITM-vulnerable)
     // http.begin("https://www.howsmyssl.com/a/check");  // HTTPS
     http.begin("http://example.com/index.html");  // HTTP
 

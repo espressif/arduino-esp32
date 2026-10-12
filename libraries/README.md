@@ -53,7 +53,7 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
   Filesystem virtualization framework
 
 ### HTTPClient
-  A simple HTTP client, compatible with NetworkClientSecure. HTTPS `begin(url)` requires a CA certificate or `useBuiltinCACertBundle()`; use `setInsecure()` only as an explicit opt-in.
+  A simple HTTP client, compatible with NetworkClientSecure. HTTPS `begin(url)` requires a CA certificate (~1.3 KB) or `useBuiltinCACertBundle()` (~70 KB of flash); use `setInsecure()` only as an explicit opt-in.
 
 ### HTTPUpdate
   Download a firmware update from HTTPd and apply it using Update

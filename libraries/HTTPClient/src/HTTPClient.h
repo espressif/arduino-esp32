@@ -221,7 +221,7 @@ public:
   typedef void (*CABundleAttachFn)(NetworkClientSecure &client);
 
   // The following apply to begin(url) / begin(url, CAcert) (the compatibility API that creates the client).
-  // Validate HTTPS servers against the builtin CA bundle. Links the bundle (~65 KB of flash) only when called.
+  // Validate HTTPS servers against the builtin CA bundle. Links ~70 KB of flash only when called.
   void useBuiltinCACertBundle();
   // Skip TLS certificate validation. VERY INSECURE! Explicit opt-in only.
   void setInsecure();
