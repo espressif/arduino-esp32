@@ -406,6 +406,10 @@ function run_test {
         printf "\n"
         if [ $result -ne 0 ]; then
             result=0
+            if [ $platform == "wokwi" ]; then
+                # Give the simulation server time to recover from transient connection drops
+                sleep 10
+            fi
             printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$sketchname" "$i"
             printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
             set +e

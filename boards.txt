@@ -534,6 +534,10 @@ esp32p4.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MODE
 esp32p4.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 esp32p4.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
 esp32p4.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+esp32p4.menu.PartitionScheme.esp_sr_16_app4M=ESP SR 16M (4MB APP/4MB SPIFFS/3.9MB MODEL)
+esp32p4.menu.PartitionScheme.esp_sr_16_app4M.upload.maximum_size=4194304
+esp32p4.menu.PartitionScheme.esp_sr_16_app4M.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+esp32p4.menu.PartitionScheme.esp_sr_16_app4M.build.partitions=esp_sr_16_app4M
 esp32p4.menu.PartitionScheme.custom=Custom
 esp32p4.menu.PartitionScheme.custom.build.partitions=
 esp32p4.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -3322,6 +3326,10 @@ esp32p4_core_board.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS
 esp32p4_core_board.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 esp32p4_core_board.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
 esp32p4_core_board.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+esp32p4_core_board.menu.PartitionScheme.esp_sr_16_app4M=ESP SR 16M (4MB APP/4MB SPIFFS/3.9MB MODEL)
+esp32p4_core_board.menu.PartitionScheme.esp_sr_16_app4M.upload.maximum_size=4194304
+esp32p4_core_board.menu.PartitionScheme.esp_sr_16_app4M.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+esp32p4_core_board.menu.PartitionScheme.esp_sr_16_app4M.build.partitions=esp_sr_16_app4M
 esp32p4_core_board.menu.PartitionScheme.custom=Custom
 esp32p4_core_board.menu.PartitionScheme.custom.build.partitions=
 esp32p4_core_board.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -14178,6 +14186,10 @@ dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16_app4M=ESP SR 16M (4MB APP/4MB SPIFFS/3.9MB MODEL)
+dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16_app4M.upload.maximum_size=4194304
+dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16_app4M.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16_app4M.build.partitions=esp_sr_16_app4M
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.custom=Custom
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.custom.build.partitions=
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -44954,6 +44966,10 @@ waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIF
 waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
 waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16_app4M=ESP SR 16M (4MB APP/4MB SPIFFS/3.9MB MODEL)
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16_app4M.upload.maximum_size=4194304
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16_app4M.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16_app4M.build.partitions=esp_sr_16_app4M
 waveshare_p4_poe_eth.menu.PartitionScheme.custom=Custom
 waveshare_p4_poe_eth.menu.PartitionScheme.custom.build.partitions=
 waveshare_p4_poe_eth.menu.PartitionScheme.custom.upload.maximum_size=33554432
@@ -56662,59 +56678,78 @@ rakwireless_rak3112.menu.EraseFlash.all=Enabled
 rakwireless_rak3112.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
-kodedot.name=kode dot
+# Kode Dot (ESP32-P4) running kodeOS. Upload writes the sketch, and nothing
+# else, into kodeOS's mailbox at 0x1C00000; kodeOS installs it as an app and
+# runs it in place. Tools -> Burn Bootloader erases the whole device, kodeOS
+# included: do not use it on this board.
+kodedot.name=Kode Dot
 
 kodedot.bootloader.tool=esptool_py
 kodedot.bootloader.tool.default=esptool_py
 
 kodedot.upload.tool=esptool_py_app_only
 kodedot.upload.tool.default=esptool_py_app_only
-kodedot.upload.tool.network=esp_ota
 
-kodedot.upload.maximum_size=8388608
+# Wraps for a sketch that runs from a DATA partition; see variants/kodedot/kode_flash_guard.cpp.
+kodedot.compiler.c.elf.extra_flags=-Wl,--wrap=esp_ota_get_running_partition -Wl,--wrap=esp_ota_get_next_update_partition -Wl,--wrap=esp_image_verify
+
+kodedot.upload.maximum_size=4186112
 kodedot.upload.maximum_data_size=327680
 kodedot.upload.flags=
 kodedot.upload.extra_flags=
+kodedot.upload.erase_cmd=
 kodedot.upload.use_1200bps_touch=false
 kodedot.upload.wait_for_upload_port=false
 kodedot.upload.speed=921600
 
-
 kodedot.serial.disableDTR=false
 kodedot.serial.disableRTS=false
 
-kodedot.build.tarch=xtensa
-kodedot.build.bootloader_addr=0x0
-kodedot.build.target=esp32s3
-kodedot.build.mcu=esp32s3
+kodedot.build.tarch=riscv32
+kodedot.build.target=esp
+kodedot.build.mcu=esp32p4
 kodedot.build.core=esp32
 kodedot.build.variant=kodedot
+kodedot.build.chip_variant=esp32p4
 kodedot.build.board=KODE_DOT
+kodedot.build.bootloader_addr=0x2000
 
 kodedot.build.usb_mode=1
 kodedot.build.cdc_on_boot=1
 kodedot.build.msc_on_boot=0
 kodedot.build.dfu_on_boot=0
 
-kodedot.build.f_cpu=240000000L
-
-kodedot.build.flash_offset=0x400000
+kodedot.build.f_cpu=400000000L
+kodedot.build.flash_offset=0x1C00000
 kodedot.build.flash_size=32MB
 kodedot.build.flash_freq=80m
+kodedot.build.img_freq=80m
 kodedot.build.flash_mode=dio
-kodedot.build.psram_type=opi
-
-kodedot.build.custom_partitions=kodedot_partitions
-
-kodedot.build.defines=
-
-kodedot.build.loop_core=-DARDUINO_RUNNING_CORE=1
-kodedot.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+kodedot.build.boot=dio
+kodedot.build.partitions=default
+kodedot.build.defines=-DBOARD_HAS_PSRAM -DKODE_SKETCH_NAME="{build.project_name}"
 
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
 
-kodedot.recipe.output.save_file={build.project_name}.ino.bin
+# Debug settings; see variants/kodedot/kodedot-debug.cfg.
+kodedot.debug_config.kodedot.cortex-debug.custom.name=Arduino on Kode Dot
+kodedot.debug_config.kodedot.cortex-debug.custom.serverArgs.0=-c
+kodedot.debug_config.kodedot.cortex-debug.custom.serverArgs.1=set ::kodedot_bin {{build.path}/{build.project_name}.bin}
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.0=set remote hardware-watchpoint-limit 2
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.1=eval "monitor kodedot_check 0x%x", &esp_app_desc
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.2=monitor reset halt
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.3=monitor gdb sync
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.4=thb setup
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.5=c
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.0=monitor reset halt
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.1=monitor gdb sync
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.2=thb setup
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.3=c
+kodedot.debug.additional_config=debug_config.kodedot
+kodedot.debug.server.openocd.scripts.1={build.variant.path}/kodedot-debug.cfg
+# No ESP32-P4 SVD ships with the core: an empty path keeps the IDE from reporting it missing.
+kodedot.debug.svd_file=
 
 kodedot.menu.DebugLevel.none=None
 kodedot.menu.DebugLevel.none.build.code_debug=0

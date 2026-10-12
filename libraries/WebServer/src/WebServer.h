@@ -281,7 +281,7 @@ public:
   void enableDelay(boolean value);
   void enableCORS(boolean value = true);
   void enableCrossOrigin(boolean value = true);
-  typedef std::function<String(FS &fs, const String &fName)> ETagFunction;
+  typedef std::function<String(fs::FS &fs, const String &fName)> ETagFunction;
   void enableETag(bool enable, ETagFunction fn = nullptr);
 
   void setContentLength(const size_t contentLength);
