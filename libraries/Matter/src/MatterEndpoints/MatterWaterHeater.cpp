@@ -72,14 +72,14 @@ constexpr uint8_t kModeCount = 3;
 struct ModeOption {
   const char *label;
   uint8_t value;
-  chip::app::Clusters::ModeBase::ModeTag tag;
+  chip::app::Clusters::WaterHeaterMode::ModeTag tag;
 };
 
 // Mode values match MatterWaterHeater::WaterHeaterMode_t. Tags are spec ModeTag values.
 constexpr ModeOption kModes[kModeCount] = {
-  {"Off", MatterWaterHeater::WATER_HEATER_MODE_OFF, chip::app::Clusters::ModeBase::ModeTag::kMin},
-  {"Manual", MatterWaterHeater::WATER_HEATER_MODE_MANUAL, chip::app::Clusters::ModeBase::ModeTag::kDay},
-  {"Eco", MatterWaterHeater::WATER_HEATER_MODE_ECO, chip::app::Clusters::ModeBase::ModeTag::kLowEnergy},
+  {"Off", MatterWaterHeater::WATER_HEATER_MODE_OFF, chip::app::Clusters::WaterHeaterMode::ModeTag::kOff},
+  {"Manual", MatterWaterHeater::WATER_HEATER_MODE_MANUAL, chip::app::Clusters::WaterHeaterMode::ModeTag::kManual},
+  {"Eco", MatterWaterHeater::WATER_HEATER_MODE_ECO, chip::app::Clusters::WaterHeaterMode::ModeTag::kLowEnergy},
 };
 
 #ifndef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
