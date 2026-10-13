@@ -127,7 +127,7 @@ PIN code users
 
 The Zigbee coordinator (e.g. Home Assistant with ZHA) manages the PIN code users with the SetPINCode, GetPINCode, ClearPINCode, ClearAllPINCodes and SetUserStatus commands.
 The users are kept in RAM by the endpoint (and in NVS if ``setUserStorage(true)`` is called), user IDs are zero based. The PIN code is not sent back to the network
-(the SendPINOverTheAir attribute is not enabled), the Zigbee stack sends ``0x04 0xFF 0xFF 0xFF 0xFF`` as the PIN code instead.
+(the SendPINOverTheAir attribute is not enabled), the Zigbee stack keeps the PIN length and replaces every PIN character with ``0xFF`` instead.
 
 .. code-block:: arduino
 
@@ -157,7 +157,7 @@ Sends an operation event notification, which ZHA / Home Assistant shows as a loc
 * ``source`` - ``DOOR_LOCK_SOURCE_KEYPAD``, ``DOOR_LOCK_SOURCE_RF``, ``DOOR_LOCK_SOURCE_MANUAL``, ``DOOR_LOCK_SOURCE_RFID`` or ``DOOR_LOCK_SOURCE_INDETERMINATE``
 * ``event_code`` - ``ZigbeeDoorLockEvent``, e.g. ``DOOR_LOCK_EVENT_LOCK`` / ``DOOR_LOCK_EVENT_UNLOCK`` (keypad, RF, RFID), ``DOOR_LOCK_EVENT_MANUAL_LOCK`` / ``DOOR_LOCK_EVENT_MANUAL_UNLOCK`` (manual), ``DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN`` / ``DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN`` (failed PIN attempt)
 * ``user_id`` - user that operated the lock, ``0xffff`` if unknown
-* ``pin`` - PIN code used (sent only if SendPINOverTheAir is enabled, which it is not by default, otherwise ``0xFF`` bytes are sent)
+* ``pin`` - PIN code used (sent only if SendPINOverTheAir is enabled, which it is not by default, otherwise the length is kept and every character is replaced by ``0xFF``)
 
 Example
 -------

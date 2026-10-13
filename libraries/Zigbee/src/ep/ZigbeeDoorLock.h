@@ -60,7 +60,9 @@ enum ZigbeeDoorLockOperationSource {
   DOOR_LOCK_SOURCE_INDETERMINATE = 0xff,
 };
 
-// Operation event codes (ZCL Door Lock operation event codes, as used by ZHA)
+// Operation event codes as one flat table, as decoded by ZHA / zigpy (it ignores the event source when naming the event).
+// The ZCL specification (and the esp-zigbee ezb_zcl_door_lock_*_operation_event_code_t enums) defines the codes per event source,
+// e.g. a manual lock is 0x09 there. The values are sent as given, so use those enums with a raw value for strictly spec compliant codes.
 enum ZigbeeDoorLockEvent {
   DOOR_LOCK_EVENT_UNKNOWN = 0x00,
   DOOR_LOCK_EVENT_LOCK = 0x01,    // Keypad, RF, RFID
