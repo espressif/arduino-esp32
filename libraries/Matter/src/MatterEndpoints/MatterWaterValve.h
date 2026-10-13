@@ -25,6 +25,10 @@ namespace chip::app::Clusters {
 class ValveConfigurationAndControlCluster;
 }  // namespace chip::app::Clusters
 
+namespace chip::System {
+class Layer;
+}  // namespace chip::System
+
 // Matter Water Valve endpoint (device type 0x0042) - Valve Configuration and Control cluster.
 //
 // CurrentState/TargetState/OpenDuration/RemainingDuration are managed by the CHIP cluster
@@ -140,13 +144,19 @@ private:
   class ValveDelegate;
   ValveDelegate *delegate = nullptr;
 
-  // Set when onOpen() fails and CloseValve() is scheduled after OpenValve() returns.
-  // Local open() must not CloseValve() again or onClose() runs twice.
-  bool openRollbackScheduled = false;
+  // onOpen() failed: CloseValve() is owed once OpenValve() has unwound (CHIP starts the countdown after the
+  // delegate returns, and the delegate has no error channel). Cleared by the rollback itself or by any close.
+  bool openRollbackOwed = false;
+  // A timer / deferred work that will run the rollback is currently armed.
+  // Local open() closes inline only when nothing is armed, so onClose() never runs twice.
+  bool openRollbackArmed = false;
 
   // Live CHIP cluster object for this endpoint, or nullptr before Matter.begin().
   chip::app::Clusters::ValveConfigurationAndControlCluster *getValveCluster();
 
   void rollbackFailedOpen();
+  // Must be called with the CHIP stack lock held. Retried from the countdown tick while the rollback is owed.
+  void armOpenRollback();
+  static void rollbackTimerCB(chip::System::Layer *, void *ctx);
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
