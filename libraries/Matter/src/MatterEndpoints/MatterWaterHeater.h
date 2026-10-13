@@ -98,11 +98,12 @@ public:
   uint8_t getHeaterTypes();
 
   // HeatDemand is a bitmap (same bit values as HeaterTypes) of the heat sources currently active.
-  // It is kept in sync automatically by setSystemMode()/setBoostState(); call this only to override it.
+  // It is kept in sync automatically by setSystemMode(), setBoostState(), setWaterHeaterMode() and
+  // setHeaterTypes(); call this only to override it.
   bool setHeatDemand(uint8_t heatDemand);
   uint8_t getHeatDemand();
 
-  // TankVolume / TankPercentage are code-driven (WHM Delegate). Setters update the
+  // TankVolume (uint16, mL) / TankPercentage are code-driven (WHM Delegate). Setters update the
   // Arduino cache and report; do not updateAttributeVal() them.
   bool setTankVolume(uint16_t tankVolume);
   uint16_t getTankVolume();
@@ -120,10 +121,12 @@ public:
   // HeatDemand. Setting INACTIVE cancels an active Boost session (timer,
   // temporary setpoint, BoostEnded). Controller Boost/CancelBoost commands use
   // the WHM delegate and then this same cache.
+  // EmergencyBoost and TargetReheat are not supported: Boost commands carrying them are rejected.
   bool setBoostState(BoostState_t state);
   BoostState_t getBoostState();
 
   // Water Heater Mode (CHIP mode-base server, not an ember attribute).
+  // Mode Off stops normal heating demand; an active Boost still demands heat (see syncHeatDemand()).
   bool setWaterHeaterMode(WaterHeaterMode_t mode);
   WaterHeaterMode_t getWaterHeaterMode();
 
@@ -173,14 +176,15 @@ private:
   bool boostFinishing = false;
 
   static void boostTimerCallback(chip::System::Layer *layer, void *appState);
-  void armBoostTimer(uint32_t durationSeconds);
+  // Returns false if the timer could not be armed; the caller must roll back the boost.
+  bool armBoostTimer(uint32_t durationSeconds);
   void cancelBoostTimer();
   void finishBoost(bool emitEndedEvent);
   void maybeFinishOneShotBoost();
   bool applyBoostState(BoostState_t state);
 
-  // Recomputes HeatDemand from the current heaterTypes/systemMode/boostState and pushes it if changed.
-  // Per Matter spec, HeatDemand reflects the heat sources currently active (Boost or normal heating).
+  // Recomputes HeatDemand from the current heaterTypes/systemMode/boostState/waterHeaterMode and pushes it if changed.
+  // Boost demands the heater sources regardless of mode; otherwise Heat mode (and Mode not Off) demands them.
   void syncHeatDemand();
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
