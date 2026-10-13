@@ -37,6 +37,8 @@ public:
 
   chip::app::DataModel::Nullable<chip::Percent> HandleOpenValve(chip::app::DataModel::Nullable<chip::Percent> level) override {
     (void)level;  // the Level feature is not enabled on this endpoint
+    owner->openDuration = 0;
+    owner->remainingDuration = 0;
     bool ok = true;
     if (owner->_onOpenCB != NULL) {
       ok = owner->_onOpenCB();
@@ -225,6 +227,11 @@ bool MatterWaterValve::open(uint32_t durationSeconds) {
   }
 
   lock::ScopedChipStackLock lock(portMAX_DELAY);
+
+  if (valveFault != 0) {
+    log_e("Failed to open Water Valve due to an active valve fault.");
+    return false;
+  }
 
   chip::app::DataModel::Nullable<uint32_t> duration =
     (durationSeconds == 0) ? chip::app::DataModel::Nullable<uint32_t>() : chip::app::DataModel::Nullable<uint32_t>(durationSeconds);
