@@ -60,26 +60,25 @@ enum ZigbeeDoorLockOperationSource {
   DOOR_LOCK_SOURCE_INDETERMINATE = 0xff,
 };
 
-// Operation event codes as one flat table, as decoded by ZHA / zigpy (it ignores the event source when naming the event).
-// The ZCL specification (and the esp-zigbee ezb_zcl_door_lock_*_operation_event_code_t enums) defines the codes per event source,
-// e.g. a manual lock is 0x09 there. The values are sent as given, so use those enums with a raw value for strictly spec compliant codes.
+// Operation event codes (ZCL Door Lock, Operation Event Code Value table). All the event sources share this value mapping,
+// but each code is only applicable to some of the sources. The value is not the bit position in the *OperationEventMask attributes.
 enum ZigbeeDoorLockEvent {
-  DOOR_LOCK_EVENT_UNKNOWN = 0x00,
-  DOOR_LOCK_EVENT_LOCK = 0x01,    // Keypad, RF, RFID
-  DOOR_LOCK_EVENT_UNLOCK = 0x02,  // Keypad, RF, RFID
-  DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN = 0x03,
-  DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_SCHEDULE = 0x04,
-  DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN = 0x05,
-  DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_SCHEDULE = 0x06,
-  DOOR_LOCK_EVENT_ONE_TOUCH_LOCK = 0x07,  // Manual
-  DOOR_LOCK_EVENT_KEY_LOCK = 0x08,        // Manual
-  DOOR_LOCK_EVENT_KEY_UNLOCK = 0x09,      // Manual
-  DOOR_LOCK_EVENT_AUTO_LOCK = 0x0a,
-  DOOR_LOCK_EVENT_SCHEDULE_LOCK = 0x0b,
-  DOOR_LOCK_EVENT_SCHEDULE_UNLOCK = 0x0c,
-  DOOR_LOCK_EVENT_MANUAL_LOCK = 0x0d,    // Manual (key or thumb turn)
-  DOOR_LOCK_EVENT_MANUAL_UNLOCK = 0x0e,  // Manual (key or thumb turn)
-  DOOR_LOCK_EVENT_NON_ACCESS_USER = 0x0f,
+  DOOR_LOCK_EVENT_UNKNOWN = 0x00,  // All sources
+  DOOR_LOCK_EVENT_LOCK = 0x01,     // All sources
+  DOOR_LOCK_EVENT_UNLOCK = 0x02,   // All sources
+  DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN = 0x03,         // Keypad, RF, RFID
+  DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_SCHEDULE = 0x04,    // Keypad, RF, RFID
+  DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN = 0x05,       // Keypad, RF, RFID
+  DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_SCHEDULE = 0x06,  // Keypad, RF, RFID
+  DOOR_LOCK_EVENT_ONE_TOUCH_LOCK = 0x07,                   // Manual
+  DOOR_LOCK_EVENT_KEY_LOCK = 0x08,                         // Manual
+  DOOR_LOCK_EVENT_KEY_UNLOCK = 0x09,                       // Manual
+  DOOR_LOCK_EVENT_AUTO_LOCK = 0x0a,                        // Manual
+  DOOR_LOCK_EVENT_SCHEDULE_LOCK = 0x0b,                    // Manual
+  DOOR_LOCK_EVENT_SCHEDULE_UNLOCK = 0x0c,                  // Manual
+  DOOR_LOCK_EVENT_MANUAL_LOCK = 0x0d,                      // Manual (key or thumb turn)
+  DOOR_LOCK_EVENT_MANUAL_UNLOCK = 0x0e,                    // Manual (key or thumb turn)
+  DOOR_LOCK_EVENT_NON_ACCESS_USER = 0x0f,                  // Keypad
 };
 
 #define ZB_DOOR_LOCK_MAX_PIN_LENGTH 16  // Maximum number of characters of a PIN code
@@ -135,7 +134,7 @@ public:
   int32_t checkPin(const char *pin);
 
   // Send an operation event notification (what ZHA/Home Assistant shows as a lock event) to the bound devices.
-  // event_code is one of ZigbeeDoorLockEvent, e.g. DOOR_LOCK_EVENT_LOCK / DOOR_LOCK_EVENT_UNLOCK for the keypad, RF and RFID sources.
+  // event_code is one of ZigbeeDoorLockEvent, e.g. DOOR_LOCK_EVENT_LOCK / DOOR_LOCK_EVENT_UNLOCK (any source). Not every code is applicable to every source.
   // user_id is 0xffff if there is no user. The PIN is only sent if the coordinator enabled SendPINOverTheAir, otherwise the stack masks it (0xFF).
   bool reportOperationEvent(ZigbeeDoorLockOperationSource source, uint8_t event_code, uint16_t user_id = 0xffff, const char *pin = nullptr);
 
@@ -170,6 +169,7 @@ private:
   void zbDoorLockClearPinCode(ezb_zcl_door_lock_clear_pin_code_message_t *message) override;
   void zbDoorLockClearAllPinCodes(ezb_zcl_door_lock_clear_all_pin_codes_message_t *message) override;
   void zbDoorLockSetUserStatus(ezb_zcl_door_lock_set_user_status_message_t *message) override;
+  void zbDoorLockGetUserStatus(ezb_zcl_door_lock_get_user_status_message_t *message) override;
   bool reportLockState();
   bool addPinAttributes();
 

@@ -125,7 +125,7 @@ The callbacks run in the Zigbee stack context, keep them short and do not call Z
 PIN code users
 **************
 
-The Zigbee coordinator (e.g. Home Assistant with ZHA) manages the PIN code users with the SetPINCode, GetPINCode, ClearPINCode, ClearAllPINCodes and SetUserStatus commands.
+The Zigbee coordinator (e.g. Home Assistant with ZHA) manages the PIN code users with the SetPINCode, GetPINCode, ClearPINCode, ClearAllPINCodes, SetUserStatus and GetUserStatus commands.
 The users are kept in RAM by the endpoint (and in NVS if ``setUserStorage(true)`` is called), user IDs are zero based. The PIN code is not sent back to the network
 (the SendPINOverTheAir attribute is not enabled), the Zigbee stack keeps the PIN length and replaces every PIN character with ``0xFF`` instead.
 
@@ -155,7 +155,7 @@ Sends an operation event notification, which ZHA / Home Assistant shows as a loc
     bool reportOperationEvent(ZigbeeDoorLockOperationSource source, uint8_t event_code, uint16_t user_id = 0xffff, const char *pin = nullptr);
 
 * ``source`` - ``DOOR_LOCK_SOURCE_KEYPAD``, ``DOOR_LOCK_SOURCE_RF``, ``DOOR_LOCK_SOURCE_MANUAL``, ``DOOR_LOCK_SOURCE_RFID`` or ``DOOR_LOCK_SOURCE_INDETERMINATE``
-* ``event_code`` - ``ZigbeeDoorLockEvent``, e.g. ``DOOR_LOCK_EVENT_LOCK`` / ``DOOR_LOCK_EVENT_UNLOCK`` (keypad, RF, RFID), ``DOOR_LOCK_EVENT_MANUAL_LOCK`` / ``DOOR_LOCK_EVENT_MANUAL_UNLOCK`` (manual), ``DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN`` / ``DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN`` (failed PIN attempt)
+* ``event_code`` - ``ZigbeeDoorLockEvent``, e.g. ``DOOR_LOCK_EVENT_LOCK`` / ``DOOR_LOCK_EVENT_UNLOCK`` (any source), ``DOOR_LOCK_EVENT_MANUAL_LOCK`` / ``DOOR_LOCK_EVENT_MANUAL_UNLOCK`` (manual), ``DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN`` / ``DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN`` (failed PIN attempt, keypad / RF / RFID). Not every code is applicable to every source, see the comments of ``ZigbeeDoorLockEvent``
 * ``user_id`` - user that operated the lock, ``0xffff`` if unknown
 * ``pin`` - PIN code used (sent only if SendPINOverTheAir is enabled, which it is not by default, otherwise the length is kept and every character is replaced by ``0xFF``)
 

@@ -427,7 +427,7 @@ void ZigbeeDoorLock::zbDoorLockCmd(ezb_zcl_door_lock_lock_door_message_t *messag
 
 // PIN code / user commands received from the network (called in the Zigbee stack context, no Zigbee lock is taken here)
 void ZigbeeDoorLock::zbDoorLockSetPinCode(ezb_zcl_door_lock_set_pin_code_message_t *message) {
-  const ezb_zcl_door_lock_set_pin_code_payload_t *req = &message->in.payload;
+  const ezb_zcl_door_lock_pin_code_payload_t *req = &message->in.payload;
   message->out.result = EZB_ZCL_STATUS_SUCCESS;
   message->out.status = EZB_ZCL_DOOR_LOCK_CMD_STATUS_FAIL;
 
@@ -529,6 +529,12 @@ void ZigbeeDoorLock::zbDoorLockSetUserStatus(ezb_zcl_door_lock_set_user_status_m
       _on_user_change(user_id);
     }
   }
+}
+
+void ZigbeeDoorLock::zbDoorLockGetUserStatus(ezb_zcl_door_lock_get_user_status_message_t *message) {
+  message->out.result = EZB_ZCL_STATUS_SUCCESS;
+  // The default of the message (available) is used for unknown users.
+  message->out.user_status = getUserStatus(message->in.payload.user_id);
 }
 
 #endif  // CONFIG_ZB_ENABLED

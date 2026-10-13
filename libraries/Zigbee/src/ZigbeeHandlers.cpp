@@ -97,6 +97,9 @@ static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, voi
     case EZB_ZCL_CORE_DOOR_LOCK_SET_USER_STATUS_CB_ID:
       zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_set_user_status_message_t *)message, &ZigbeeEP::zbDoorLockSetUserStatus);
       break;
+    case EZB_ZCL_CORE_DOOR_LOCK_GET_USER_STATUS_CB_ID:
+      zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_get_user_status_message_t *)message, &ZigbeeEP::zbDoorLockGetUserStatus);
+      break;
     case EZB_ZCL_CORE_OTA_UPGRADE_CLIENT_PROGRESS_CB_ID:
       zb_ota_upgrade_status_handler((ezb_zcl_ota_upgrade_client_progress_message_t *)message);
       break;
