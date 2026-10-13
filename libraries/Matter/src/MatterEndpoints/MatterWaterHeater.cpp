@@ -146,6 +146,7 @@ public:
     } else {
       owner->waterHeaterMode = modeInstance->GetCurrentMode();
     }
+    owner->syncHeatDemand();
     return CHIP_NO_ERROR;
   }
 
@@ -177,7 +178,14 @@ public:
   }
 
   void HandleChangeToMode(uint8_t newMode, chip::app::Clusters::ModeBase::Commands::ChangeToModeResponse::Type &response) override {
+    if (newMode != MatterWaterHeater::WATER_HEATER_MODE_OFF && newMode != MatterWaterHeater::WATER_HEATER_MODE_MANUAL &&
+        newMode != MatterWaterHeater::WATER_HEATER_MODE_ECO) {
+      // Reject modes this endpoint does not advertise. Verify the StatusCode name in the SDK's mode-base headers.
+      response.status = static_cast<uint8_t>(chip::app::Clusters::ModeBase::StatusCode::kUnsupportedMode);
+      return;
+    }
     owner->waterHeaterMode = newMode;
+    owner->syncHeatDemand();
     response.status = static_cast<uint8_t>(chip::app::Clusters::ModeBase::StatusCode::kSuccess);
   }
 
@@ -195,8 +203,10 @@ public:
     uint32_t duration, chip::Optional<bool> oneShot, chip::Optional<bool> emergencyBoost, chip::Optional<int16_t> temporarySetpoint,
     chip::Optional<chip::Percent> targetPercentage, chip::Optional<chip::Percent> targetReheat
   ) override {
-    (void)emergencyBoost;
-    (void)targetReheat;
+    // EmergencyBoost and TargetReheat are not implemented by this endpoint. Reject them before any state change.
+    if (emergencyBoost.HasValue() || targetReheat.HasValue()) {
+      return chip::Protocols::InteractionModel::Status::InvalidCommand;
+    }
 
     if (temporarySetpoint.HasValue()) {
       const int16_t requested = temporarySetpoint.Value();
@@ -214,6 +224,7 @@ public:
         owner->boostHasTemporarySetpoint = true;
       }
       if (!owner->setHeatingSetpointRaw(temporarySetpoint.Value())) {
+        owner->finishBoost(false);
         return chip::Protocols::InteractionModel::Status::ConstraintError;
       }
     } else if (owner->boostHasTemporarySetpoint) {
@@ -221,15 +232,21 @@ public:
       owner->boostHasTemporarySetpoint = false;
     }
 
-    if (!owner->applyBoostState(MatterWaterHeater::BOOST_ACTIVE)) {
-      return chip::Protocols::InteractionModel::Status::Failure;
-    }
-
     owner->boostOneShot = oneShot.ValueOr(false);
     owner->boostHasTargetPercentage = targetPercentage.HasValue();
     owner->boostTargetPercentage = targetPercentage.ValueOr(0);
-    owner->armBoostTimer(duration);
-    (void)GenerateBoostStartedEvent(duration, oneShot, emergencyBoost, temporarySetpoint, targetPercentage, targetReheat);
+
+    // Arm the timer before activating Boost. If it cannot be armed, roll back so no Boost is left without an end.
+    if (!owner->armBoostTimer(duration)) {
+      owner->finishBoost(false);
+      return chip::Protocols::InteractionModel::Status::Failure;
+    }
+    if (!owner->applyBoostState(MatterWaterHeater::BOOST_ACTIVE)) {
+      owner->finishBoost(false);
+      return chip::Protocols::InteractionModel::Status::Failure;
+    }
+
+    (void)GenerateBoostStartedEvent(duration, oneShot, chip::NullOptional, temporarySetpoint, targetPercentage, chip::NullOptional);
     owner->maybeFinishOneShotBoost();
     return chip::Protocols::InteractionModel::Status::Success;
   }
@@ -802,9 +819,10 @@ uint8_t MatterWaterHeater::getHeatDemand() {
 
 void MatterWaterHeater::syncHeatDemand() {
   // Boost overrides normal heating: while active, the configured heater sources are demanded
-  // regardless of SystemMode. Otherwise HeatDemand follows SystemMode (Heat -> sources active,
-  // Off -> no source active).
-  const uint8_t demand = (boostState == BOOST_ACTIVE || systemMode == SYSTEM_MODE_HEAT) ? heaterTypes : 0;
+  // regardless of SystemMode or Water Heater Mode. Otherwise normal heating demands them only when
+  // SystemMode is Heat and Water Heater Mode is not Off.
+  const bool normalHeating = (systemMode == SYSTEM_MODE_HEAT) && (waterHeaterMode != WATER_HEATER_MODE_OFF);
+  const uint8_t demand = (boostState == BOOST_ACTIVE || normalHeating) ? heaterTypes : 0;
   if (demand != heatDemand) {
     setHeatDemand(demand);
   }
@@ -904,14 +922,15 @@ void MatterWaterHeater::boostTimerCallback(chip::System::Layer *layer, void *app
   static_cast<MatterWaterHeater *>(appState)->finishBoost(true);
 }
 
-void MatterWaterHeater::armBoostTimer(uint32_t durationSeconds) {
+bool MatterWaterHeater::armBoostTimer(uint32_t durationSeconds) {
   cancelBoostTimer();
   if (durationSeconds == 0) {
-    return;
+    // No timer: the Boost lasts until CancelBoost or a BoostState write of Inactive.
+    return true;
   }
   if (!chip::DeviceLayer::SystemLayer().IsInitialized()) {
-    log_w("Cannot arm Water Heater boost timer; SystemLayer is not initialized");
-    return;
+    log_e("Cannot arm Water Heater boost timer; SystemLayer is not initialized");
+    return false;
   }
 
   lock::ScopedChipStackLock lock(portMAX_DELAY);
@@ -919,9 +938,10 @@ void MatterWaterHeater::armBoostTimer(uint32_t durationSeconds) {
     chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds32(durationSeconds), boostTimerCallback, this);
   if (err != CHIP_NO_ERROR) {
     log_e("Failed to start Water Heater boost timer: %" CHIP_ERROR_FORMAT, err.Format());
-    return;
+    return false;
   }
   boostTimerArmed = true;
+  return true;
 }
 
 void MatterWaterHeater::cancelBoostTimer() {
@@ -1015,15 +1035,20 @@ bool MatterWaterHeater::setWaterHeaterMode(WaterHeaterMode_t mode) {
     // ModeBase::Instance is created when the Matter stack starts. Cache until Init().
     waterHeaterMode = static_cast<uint8_t>(mode);
     waterHeaterModeSetByApp = true;
+    syncHeatDemand();
     return true;
   }
 
-  lock::ScopedChipStackLock lock(portMAX_DELAY);
-  if (modeInstance->UpdateCurrentMode(static_cast<uint8_t>(mode)) != chip::Protocols::InteractionModel::Status::Success) {
-    return false;
+  {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    if (modeInstance->UpdateCurrentMode(static_cast<uint8_t>(mode)) != chip::Protocols::InteractionModel::Status::Success) {
+      return false;
+    }
+    waterHeaterMode = static_cast<uint8_t>(mode);
+    waterHeaterModeSetByApp = true;
   }
-  waterHeaterMode = static_cast<uint8_t>(mode);
-  waterHeaterModeSetByApp = true;
+  // Mode Off changes HeatDemand (Boost still overrides it).
+  syncHeatDemand();
   return true;
 }
 
@@ -1125,6 +1150,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
       switch (attribute_id) {
         case WaterHeaterMode::Attributes::CurrentMode::Id:
           waterHeaterMode = val->val.u8;
+          syncHeatDemand();
           return true;
 
         default: break;
