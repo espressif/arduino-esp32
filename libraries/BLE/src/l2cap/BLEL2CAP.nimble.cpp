@@ -301,7 +301,8 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
         cb = server->onAcceptCb;
       }
       if (cb) {
-        cb(BLEL2CAPChannelImplCommon::makeHandle(chanImpl));
+        BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(chanImpl);
+        cb(channel);
       }
       break;
     }
@@ -367,7 +368,8 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
         }
       }
       if (cb && chanImpl) {
-        cb(BLEL2CAPChannelImplCommon::makeHandle(chanImpl), data, dataLen);
+        BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(chanImpl);
+        cb(channel, data, dataLen);
       }
       break;
     }
@@ -500,7 +502,8 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
           cb = impl->onDisconnectCb;
         }
         if (cb) {
-          cb(BLEL2CAPChannelImplCommon::makeHandle(impl));
+          BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(impl);
+          cb(channel);
         }
         delete ctx;
         break;
@@ -529,7 +532,8 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
           cb = impl->onDataCb;
         }
         if (cb) {
-          cb(BLEL2CAPChannelImplCommon::makeHandle(impl), data, dataLen);
+          BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(impl);
+          cb(channel, data, dataLen);
         }
         break;
       }

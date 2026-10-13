@@ -73,8 +73,6 @@ struct BLEClient::Impl : BLEClientImplCommon {
   uint8_t cachedRxPhy = 1;
 #endif
 
-  std::vector<std::shared_ptr<BLERemoteService::Impl>> discoveredServices;
-
   // Temp buffer for read operations
   std::vector<uint8_t> readBuf;
   esp_gatt_status_t lastReadStatus = ESP_GATT_OK;

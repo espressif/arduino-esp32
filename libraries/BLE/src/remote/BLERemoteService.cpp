@@ -38,9 +38,11 @@ uint16_t BLERemoteService::getHandle() const {
 }
 
 BLEClient BLERemoteService::getClient() const {
-  // makeHandle rebuilds the owning shared_ptr from the raw BLEClient::Impl* via
-  // shared_from_this(); the client is owned by whoever established the connection.
-  return (_impl && _impl->client) ? BLEClient::Impl::makeHandle(_impl->client) : BLEClient();
+  if (!_impl) {
+    return BLEClient();
+  }
+  auto client = _impl->client.lock();
+  return client ? BLEClient::Impl::makeHandle(client.get()) : BLEClient();
 }
 
 String BLERemoteService::getValue(const BLEUUID &charUUID) {

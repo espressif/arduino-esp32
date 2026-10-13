@@ -439,59 +439,6 @@ BTStatus BLEClient::discoverServices() {
   return BTStatus::OK;
 }
 
-// If services were not yet discovered and the client is connected, calls discoverServices()
-// (blocking) once before matching.
-BLERemoteService BLEClient::getService(const BLEUUID &uuid) {
-  BLE_CHECK_IMPL(BLERemoteService());
-
-  // Auto-discover if not done
-  if (impl.discoveredServices.empty() && impl.connected) {
-    if (!discoverServices()) {
-      return BLERemoteService();
-    }
-  }
-
-  BLELockGuard lock(impl.mtx);
-  for (auto &svc : impl.discoveredServices) {
-    log_d("getService: comparing %s == %s", svc->uuid.toString().c_str(), uuid.toString().c_str());
-    if (svc->uuid == uuid) {
-      return BLERemoteService(std::shared_ptr<BLERemoteService::Impl>(svc));
-    }
-  }
-  log_w("getService: UUID %s not found among %u discovered service(s)", uuid.toString().c_str(), (unsigned)impl.discoveredServices.size());
-  return BLERemoteService();
-}
-
-// Const overload triggers lazy discovery: if connected and the service list is empty, calls the
-// non-const discoverServices() synchronously (up to 10 s) to populate the list.
-std::vector<BLERemoteService> BLEClient::getServices() const {
-  std::vector<BLERemoteService> result;
-  if (!_impl) {
-    return result;
-  }
-
-  // Lazy discovery: mirror the const_cast pattern already used by
-  // BLERemoteService::getCharacteristics() / BLERemoteCharacteristic::getDescriptors()
-  // so a user calling only getServices() still gets back the actual remote services.
-  if (_impl->connected) {
-    bool empty;
-    {
-      BLELockGuard lock(_impl->mtx);
-      empty = _impl->discoveredServices.empty();
-    }
-    if (empty) {
-      auto *self = const_cast<BLEClient *>(this);
-      (void)self->discoverServices();
-    }
-  }
-
-  BLELockGuard lock(_impl->mtx);
-  for (auto &svc : _impl->discoveredServices) {
-    result.push_back(BLERemoteService(std::shared_ptr<BLERemoteService::Impl>(svc)));
-  }
-  return result;
-}
-
 // --------------------------------------------------------------------------
 // Security
 // --------------------------------------------------------------------------
@@ -799,6 +746,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       if (param->open.status == ESP_GATT_OK) {
         client->connId = param->open.conn_id;
         client->connected = true;
+        client->connectionGeneration.fetch_add(1);
         // Fresh link starts unencrypted; clear any latched flags from a prior
         // connection on this client so getConnInfo() cannot report stale state.
         client->secEncrypted = false;
@@ -868,7 +816,8 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       svc->uuid = bluedroidUuidToPublic(param->search_res.srvc_id.uuid);
       svc->startHandle = param->search_res.start_handle;
       svc->endHandle = param->search_res.end_handle;
-      svc->client = client;
+      svc->client = client->shared_from_this();
+      svc->clientGeneration = client->connectionGeneration.load();
       BLELockGuard lock(client->mtx);
       client->discoveredServices.push_back(svc);
       break;
@@ -1113,14 +1062,6 @@ BTStatus BLEClient::disconnect() {
 BTStatus BLEClient::discoverServices() {
   log_w("GATT client not supported");
   return BTStatus::NotSupported;
-}
-
-BLERemoteService BLEClient::getService(const BLEUUID &) {
-  return BLERemoteService();
-}
-
-std::vector<BLERemoteService> BLEClient::getServices() const {
-  return {};
 }
 
 BTStatus BLEClient::secureConnection() {

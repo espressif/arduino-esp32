@@ -5,7 +5,40 @@
 
 #include <Arduino.h>
 #include <BLE.h>
+#include <atomic>
+#include <type_traits>
 #include "esp_heap_caps.h"
+
+// Every handler hands the callback a handle it can act on (chr.setValue() from
+// onRead, channel.write() from onData, server.startAdvertising() from
+// onDisconnect, ...), so each one must accept a callable that takes the handle
+// by non-const reference. A const-reference parameter would reject these.
+template<typename Handler, typename Fn> constexpr bool acceptsMutableHandle = std::is_constructible_v<Handler, Fn *>;
+
+static_assert(acceptsMutableHandle<BLECharacteristic::ReadHandler, void(BLECharacteristic &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLECharacteristic::WriteHandler, void(BLECharacteristic &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLECharacteristic::NotifyHandler, void(BLECharacteristic &)>);
+static_assert(acceptsMutableHandle<BLECharacteristic::SubscribeHandler, void(BLECharacteristic &, const BLEConnInfo &, uint16_t)>);
+static_assert(acceptsMutableHandle<BLECharacteristic::StatusHandler, void(BLECharacteristic &, BLECharacteristic::NotifyStatus, uint32_t)>);
+static_assert(acceptsMutableHandle<BLEDescriptor::ReadHandler, void(BLEDescriptor &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEDescriptor::WriteHandler, void(BLEDescriptor &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEServer::ConnectHandler, void(BLEServer &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEServer::DisconnectHandler, void(BLEServer &, const BLEConnInfo &, uint8_t)>);
+static_assert(acceptsMutableHandle<BLEServer::MtuChangedHandler, void(BLEServer &, const BLEConnInfo &, uint16_t)>);
+static_assert(acceptsMutableHandle<BLEServer::ConnParamsHandler, void(BLEServer &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEServer::IdentityHandler, void(BLEServer &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEClient::ConnectHandler, void(BLEClient &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEClient::DisconnectHandler, void(BLEClient &, const BLEConnInfo &, uint8_t)>);
+static_assert(acceptsMutableHandle<BLEClient::ConnectFailHandler, void(BLEClient &, int)>);
+static_assert(acceptsMutableHandle<BLEClient::MtuChangedHandler, void(BLEClient &, const BLEConnInfo &, uint16_t)>);
+static_assert(acceptsMutableHandle<BLEClient::ConnParamsReqHandler, bool(BLEClient &, const BLEConnParams &)>);
+static_assert(acceptsMutableHandle<BLEClient::IdentityHandler, void(BLEClient &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLERemoteCharacteristic::NotifyCallback, void(BLERemoteCharacteristic &, const uint8_t *, size_t, bool)>);
+static_assert(acceptsMutableHandle<BLEL2CAPChannel::DataHandler, void(BLEL2CAPChannel &, const uint8_t *, size_t)>);
+static_assert(acceptsMutableHandle<BLEL2CAPChannel::DisconnectHandler, void(BLEL2CAPChannel &)>);
+static_assert(acceptsMutableHandle<BLEL2CAPServer::AcceptHandler, void(BLEL2CAPChannel &)>);
+static_assert(acceptsMutableHandle<BLEL2CAPServer::DataHandler, void(BLEL2CAPChannel &, const uint8_t *, size_t)>);
+static_assert(acceptsMutableHandle<BLEL2CAPServer::DisconnectHandler, void(BLEL2CAPChannel &)>);
 
 static const BLEUUID SERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static const BLEUUID RW_CHAR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -14,6 +47,30 @@ static const BLEUUID INDICATE_CHAR_UUID("d5f782b2-a36e-4d68-947c-0e9a5f2c78e1");
 static const BLEUUID SECURE_CHAR_UUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
 static const BLEUUID DESC_CHAR_UUID("a3c87501-8ed3-4bdf-8a39-a01bebede295");
 static const BLEUUID WRITENR_CHAR_UUID("1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e");
+// Phase 4 / Phase 7: values produced on demand by the onRead handler through
+// the handle it receives, so every read returns a fresh value.
+static const BLEUUID DYNAMIC_READ_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a35");
+static const BLEUUID DYNAMIC_READ_DESC_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a36");
+// Phase 4 / Phase 7: same idea with a 512-byte value, which needs a Read Blob
+// after the first MTU-sized chunk. onRead must run once per read, not per chunk.
+static const BLEUUID LONG_READ_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a37");
+static const BLEUUID LONG_READ_DESC_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a38");
+static const BLEUUID SNAPSHOT_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3a");
+static const BLEUUID DUAL_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3b");
+static const BLEUUID TMP_SVC_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3c");
+static const BLEUUID TMP_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3d");
+static const BLEUUID BUSY_SVC_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3e");
+static const BLEUUID BUSY_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3f");
+// Phase 35: per-peer CCCD, in-flight removeService, read-timeout recover, notify flood.
+static const BLEUUID EDGE_SVC_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a40");
+static const BLEUUID PEER_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a41");
+static const BLEUUID QUEUE_SVC_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a42");
+static const BLEUUID QUEUE_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a43");
+static const BLEUUID TIMEOUT_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a44");
+static const BLEUUID WRITABLE_DESC_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a45");
+// Phase 3: written through a handle obtained from a const lookup, read back by
+// the client in Phase 4.
+static const BLEUUID CONST_LOOKUP_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a39");
 // Phase 15 (introspection_and_permissions): R|W properties but only Read
 // permission. Exercises the fail-closed mapping: the Write property must be
 // stripped by the backend so the peer sees it as read-only, and writes must
@@ -78,8 +135,10 @@ bool phase29Done = false;  // conn_params_reject (HITL)
 bool phase30Done = false;  // deletebond_roundtrip (HITL)
 bool phase31Done = false;  // nc_reject (HITL)
 bool phase32Done = false;  // passkey_entry (HITL)
-bool phase33Done = false;  // periodic_adv_lifecycle (HITL)
-bool phase34Done = false;  // memory_release (tail of suite)
+bool phase33Done = false;  // indication_busy_retry
+bool phase34Done = false;  // periodic_adv_lifecycle (HITL)
+bool phase35Done = false;  // pending_send_edges
+bool phase36Done = false;  // memory_release (tail of suite)
 
 // Phase 32 (passkey-entry) — the peripheral is DisplayOnly and shows this fixed
 // passkey; the central (KeyboardOnly) supplies the same value from its
@@ -130,6 +189,94 @@ static const uint8_t writeNrBurstBytes[] = {0xAA, 0xBB, 0xCC};
 static const size_t writeNrBurstLen = 3;
 uint8_t writeNrBurstSeen = 0;
 bool writeNrBurstOk = true;
+
+// Phase 4 / Phase 7 on-demand reads. Each read handler writes the next value
+// into the handle it receives; the stack sends that value in the same response.
+uint32_t dynamicChrReads = 0;
+uint32_t dynamicDescReads = 0;
+uint32_t writableDescWrites = 0;
+
+static void onDynamicChrRead(BLECharacteristic &chr, const BLEConnInfo &conn) {
+  chr.setValue(String("dyn_chr_") + String(++dynamicChrReads));
+}
+
+// Each long read fills the whole value with one letter that advances per
+// onRead call ('A', 'B', ... for the characteristic, 'a', 'b', ... for the
+// descriptor). A read stitched from several onRead calls is not uniform.
+static const size_t LONG_READ_LEN = 512;
+uint32_t longChrReads = 0;
+uint32_t longDescReads = 0;
+
+static void fillLongValue(uint8_t *buf, char first, uint32_t n) {
+  memset(buf, first + (int)((n - 1) % 26), LONG_READ_LEN);
+}
+
+// Phase 4: loop() rewrites this value every few ms, much faster than the
+// connection interval between a Read and its Read Blob. Each long read must
+// still return one value, not the head of one and the tail of the next.
+BLECharacteristic snapshotChr;
+
+// Phase 5 onNotify/onStatus. Handlers record; loop() logs so the output stays
+// ordered relative to the phase markers. notifyPayloadFromCallback makes the
+// next onNotify supply the payload, proving it runs before the value is sent.
+std::atomic<bool> notifyPayloadFromCallback{false};
+std::atomic<uint32_t> notifyCbCount{0};
+std::atomic<int> notifyStatus{-1};
+std::atomic<uint32_t> notifyStatusCode{0};
+std::atomic<uint32_t> indicateCbCount{0};
+std::atomic<int> indicateStatus{-1};
+std::atomic<uint32_t> indicateStatusCode{0};
+bool notifyStatusLogged = false;
+bool indicateStatusLogged = false;
+bool noSubscriberChecked = false;
+
+// Phase 5: indications sent back to back, before the previous one is
+// confirmed. ATT allows one outstanding indication per client, so the library
+// must queue them; each one is reported once the client confirms it.
+static const int INDICATE_BURST = 4;
+static const int INDICATE_OVERFLOW = 12;  // 1 in-flight + 8 queued; the rest must be Busy
+std::atomic<uint32_t> indicateOkCount{0};
+std::atomic<uint32_t> indicateErrCount{0};
+bool indicateBurstSent = false;
+bool indicateBurstLogged = false;
+unsigned long indicateBurstTime = 0;
+bool indicateOverflowSent = false;
+bool indicateOverflowLogged = false;
+int indicateOverflowAccepted = 0;
+int indicateOverflowBusy = 0;
+unsigned long indicateOverflowTime = 0;
+
+// Phase 5: a characteristic the client subscribes to for both notifications
+// and indications. Its notifications and indications complete through the
+// same Bluedroid event, so each status must still land on the right kind.
+static const int DUAL_BURST = 4;
+BLECharacteristic dualChr;
+std::atomic<bool> dualBothEnabled{false};
+std::atomic<uint32_t> dualIndOk{0};
+std::atomic<uint32_t> dualNotifOk{0};
+std::atomic<uint32_t> dualErr{0};
+bool dualSent = false;
+bool dualLogged = false;
+unsigned long dualTime = 0;
+
+// Phase 33: delivery results of the indications sent behind Service Changed.
+std::atomic<uint32_t> busyOkCount{0};
+std::atomic<uint32_t> busyErrCount{0};
+
+static const char *notifyStatusName(int s) {
+  switch (s) {
+    case BLECharacteristic::SUCCESS_INDICATE:        return "SUCCESS_INDICATE";
+    case BLECharacteristic::SUCCESS_NOTIFY:          return "SUCCESS_NOTIFY";
+    case BLECharacteristic::ERROR_INDICATE_DISABLED: return "ERROR_INDICATE_DISABLED";
+    case BLECharacteristic::ERROR_NOTIFY_DISABLED:   return "ERROR_NOTIFY_DISABLED";
+    case BLECharacteristic::ERROR_GATT:              return "ERROR_GATT";
+    case BLECharacteristic::ERROR_NO_CLIENT:         return "ERROR_NO_CLIENT";
+    case BLECharacteristic::ERROR_NO_SUBSCRIBER:     return "ERROR_NO_SUBSCRIBER";
+    case BLECharacteristic::ERROR_INDICATE_TIMEOUT:  return "ERROR_INDICATE_TIMEOUT";
+    case BLECharacteristic::ERROR_INDICATE_FAILURE:  return "ERROR_INDICATE_FAILURE";
+    default:                                         return "NONE";
+  }
+}
 
 // Phase 24 BLE5 advanced — last PHY/DLE state observed by server callbacks.
 volatile uint8_t phase24TxPhy = 0;
@@ -364,9 +511,14 @@ bool phase_gatt_setup() {
   Serial.println("[SERVER] Security configured");
 
   BLEServer server = BLE.createServer();
+  Serial.printf("[SERVER] Services after begin: %u\n", (unsigned)server.getServices().size());
   server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
     syncPhaseFromHost();
     Serial.println("[SERVER] Client connected");
+    // Phase 4 connects a second central while the first is still on the link.
+    if (currentPhase == 4 && s.getConnectedCount() < 2) {
+      s.startAdvertising();
+    }
   });
   server.onDisconnect([](BLEServer s, const BLEConnInfo &conn, uint8_t reason) {
     syncPhaseFromHost();
@@ -403,13 +555,70 @@ bool phase_gatt_setup() {
     Serial.printf("[SERVER] Received %u bytes\n", (unsigned)len);
   });
 
+  auto dynamicChr = svc.createCharacteristic(DYNAMIC_READ_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+  dynamicChr.onRead(onDynamicChrRead);
+
+  auto constLookupChr = svc.createCharacteristic(CONST_LOOKUP_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+  constLookupChr.setValue("const_initial");
+
+  auto longChr = svc.createCharacteristic(LONG_READ_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+  longChr.onRead([](BLECharacteristic &chr, const BLEConnInfo &conn) {
+    static uint8_t buf[LONG_READ_LEN];  // keep 512 bytes off the BLE task stack
+    fillLongValue(buf, 'A', ++longChrReads);
+    chr.setValue(buf, sizeof(buf));
+  });
+
   notifyChr = svc.createCharacteristic(NOTIFY_CHAR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
   notifyChr.onSubscribe([](BLECharacteristic chr, const BLEConnInfo &conn, uint16_t subValue) {
     syncPhaseFromHost();
     Serial.printf("[SERVER] Subscriber count: %u\n", chr.getSubscribedCount());
   });
+  notifyChr.onNotify([](BLECharacteristic &chr) {
+    notifyCbCount.fetch_add(1, std::memory_order_relaxed);
+    if (notifyPayloadFromCallback.exchange(false, std::memory_order_relaxed)) {
+      chr.setValue("notify_test_1");
+    }
+  });
+  notifyChr.onStatus([](BLECharacteristic &chr, BLECharacteristic::NotifyStatus status, uint32_t code) {
+    notifyStatusCode = code;
+    notifyStatus = status;
+  });
 
   indicateChr = svc.createCharacteristic(INDICATE_CHAR_UUID, BLEProperty::Read | BLEProperty::Indicate, BLEPermission::ReadOpen);
+  indicateChr.onNotify([](BLECharacteristic &chr) {
+    indicateCbCount.fetch_add(1, std::memory_order_relaxed);
+  });
+  indicateChr.onStatus([](BLECharacteristic &chr, BLECharacteristic::NotifyStatus status, uint32_t code) {
+    indicateStatusCode = code;
+    indicateStatus = status;
+    if (status == BLECharacteristic::SUCCESS_INDICATE) {
+      indicateOkCount.fetch_add(1, std::memory_order_relaxed);
+    } else {
+      indicateErrCount.fetch_add(1, std::memory_order_relaxed);
+    }
+  });
+
+  dualChr = svc.createCharacteristic(DUAL_CHAR_UUID, BLEProperty::Read | BLEProperty::Notify | BLEProperty::Indicate, BLEPermission::ReadOpen);
+  dualChr.setDescription("Dual Characteristic");
+  dualChr.onSubscribe([](BLECharacteristic chr, const BLEConnInfo &conn, uint16_t subValue) {
+    dualBothEnabled = (subValue == 0x0003);
+  });
+  dualChr.onStatus([](BLECharacteristic &chr, BLECharacteristic::NotifyStatus status, uint32_t code) {
+    if (status == BLECharacteristic::SUCCESS_INDICATE) {
+      dualIndOk.fetch_add(1, std::memory_order_relaxed);
+    } else if (status == BLECharacteristic::SUCCESS_NOTIFY) {
+      dualNotifOk.fetch_add(1, std::memory_order_relaxed);
+    } else {
+      dualErr.fetch_add(1, std::memory_order_relaxed);
+    }
+  });
+
+  snapshotChr = svc.createCharacteristic(SNAPSHOT_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+  {
+    static uint8_t buf[LONG_READ_LEN];
+    fillLongValue(buf, 'A', 1);
+    snapshotChr.setValue(buf, sizeof(buf));
+  }
 
   auto secureChr = svc.createCharacteristic(SECURE_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadAuthenticated);
   secureChr.setValue("Secure Data!");
@@ -420,15 +629,11 @@ bool phase_gatt_setup() {
   descChr.setDescription("Test Characteristic");
 
   auto pfDesc = descChr.createDescriptor(BLEUUID(static_cast<uint16_t>(0x2904)), BLEPermission::ReadOpen, 7);
-  uint8_t pfData[7] = {0};
-  pfData[0] = BLEDescriptor::FORMAT_UTF8;  // format
-  pfData[1] = 0;                           // exponent
-  pfData[2] = 0x00;
-  pfData[3] = 0x27;  // unit = 0x2700 (unitless)
-  pfData[4] = 1;     // namespace (Bluetooth SIG)
-  pfData[5] = 0;
-  pfData[6] = 0;  // description
-  pfDesc.setValue(pfData, 7);
+  pfDesc.setFormat(BLEDescriptor::FORMAT_UTF8);
+  pfDesc.setExponent(-2);
+  pfDesc.setUnit(0x2700);
+  pfDesc.setNamespace(1);
+  pfDesc.setFormatDescription(0x0042);
 
   // Phase 15: custom-UUID descriptor with read-only permissions. The client
   // will read it successfully and then attempt a write, which must fail at
@@ -437,6 +642,30 @@ bool phase_gatt_setup() {
   // access-profile rules so this is purely a permission-enforcement test.
   auto roDesc = descChr.createDescriptor(DESC_READONLY_UUID, BLEPermission::ReadOpen, 32);
   roDesc.setValue("ro_desc_val");
+
+  auto dynamicDesc = descChr.createDescriptor(DYNAMIC_READ_DESC_UUID, BLEPermission::ReadOpen, 32);
+  dynamicDesc.onRead([](BLEDescriptor &desc, const BLEConnInfo &conn) {
+    desc.setValue(String("dyn_desc_") + String(++dynamicDescReads));
+  });
+
+  auto longDesc = descChr.createDescriptor(LONG_READ_DESC_UUID, BLEPermission::ReadOpen, LONG_READ_LEN);
+  longDesc.onRead([](BLEDescriptor &desc, const BLEConnInfo &conn) {
+    static uint8_t buf[LONG_READ_LEN];  // keep 512 bytes off the BLE task stack
+    fillLongValue(buf, 'a', ++longDescReads);
+    desc.setValue(buf, sizeof(buf));
+  });
+
+  // Phase 7: Writable custom descriptor with maxLen=510 (< 512) to exercise
+  // normal descriptor writes + onWrite, Long Descriptor Writes (>MTU), and
+  // Prepared Write maxLen rejection + rollback when writing 512 bytes.
+  auto writableDesc = descChr.createDescriptor(WRITABLE_DESC_UUID, BLEPermission::ReadWriteOpen, 510);
+  writableDesc.setValue("desc_init");
+  writableDesc.onWrite([](BLEDescriptor &desc, const BLEConnInfo &conn) {
+    syncPhaseFromHost();
+    size_t len = 0;
+    (void)desc.getValue(&len);
+    Serial.printf("[SERVER] Descriptor write count=%lu len=%u\n", (unsigned long)++writableDescWrites, (unsigned)len);
+  });
 
   // Phase 8: WriteNR test characteristic
   auto writeNrChr = svc.createCharacteristic(WRITENR_CHAR_UUID, BLEProperty::Read | BLEProperty::WriteNR, BLEPermission::ReadWriteOpen);
@@ -504,11 +733,43 @@ bool phase_gatt_setup() {
     );
   });
 
+  // Pure lookups must be callable through const handles (e.g. a const
+  // BLEServer & parameter in user code).
+  {
+    const BLEServer &constServer = server;
+    const BLEService constSvc = constServer.getService(SERVICE_UUID);
+    const BLECharacteristic constChr = constSvc.getCharacteristic(DESC_CHAR_UUID);
+    bool ok = constSvc && constChr && constChr.getDescriptor(DYNAMIC_READ_DESC_UUID) && constServer.getAdvertising();
+    Serial.printf("[SERVER] Const lookups ok=%d\n", (int)ok);
+
+    // const on a handle is shallow: a lookup through a const handle returns a
+    // regular handle to the same shared attribute, so writing through it is
+    // visible from every other handle (and to the client in Phase 4).
+    BLECharacteristic fromConst = constSvc.getCharacteristic(CONST_LOOKUP_CHAR_UUID);
+    fromConst.setValue("set_via_const_lookup");
+    bool shared = server.getService(SERVICE_UUID).getCharacteristic(CONST_LOOKUP_CHAR_UUID).getStringValue() == "set_via_const_lookup";
+    Serial.printf("[SERVER] Const lookup handle writable=%d\n", (int)shared);
+  }
+
   server.start();
 
   size_t heapAfterServer = heap_caps_get_free_size(MALLOC_CAP_8BIT);
   Serial.printf("[SERVER] Heap after server: %u\n", (unsigned)heapAfterServer);
   Serial.println("[SERVER] Server started");
+
+  // Not advertising yet, so nobody is connected: broadcasts must report
+  // ERROR_NO_CLIENT (not ERROR_NO_SUBSCRIBER) without calling onNotify.
+  {
+    uint32_t notifyBefore = notifyCbCount;
+    uint32_t indicateBefore = indicateCbCount;
+    notifyChr.notify();
+    indicateChr.indicate();
+    Serial.printf("[SERVER] No-client notify status=%s onNotify=%lu\n", notifyStatusName(notifyStatus), (unsigned long)(notifyCbCount - notifyBefore));
+    Serial.printf("[SERVER] No-client indicate status=%s onNotify=%lu\n", notifyStatusName(indicateStatus), (unsigned long)(indicateCbCount - indicateBefore));
+    notifyStatus = -1;
+    indicateStatus = -1;
+    indicateErrCount = 0;
+  }
 
   BLEAdvertising adv = BLE.getAdvertising();
   adv.addServiceUUID(SERVICE_UUID);
@@ -570,11 +831,26 @@ void loop() {
     }
   }
 
+  if (currentPhase == 4) {
+    static uint8_t buf[LONG_READ_LEN];
+    uint32_t n = 1;
+    BLE.createServer().startAdvertising();
+    while (currentPhase == 4) {
+      fillLongValue(buf, 'A', ++n);
+      snapshotChr.setValue(buf, sizeof(buf));
+      delay(2);
+      checkSerial();
+    }
+  }
+
   static unsigned long notifyTime = 0;
 
-  // Phase 5: Send notification then indication
+  // Phase 5: Send notification then indication. The notification payload comes
+  // from onNotify: the client receiving "notify_stale" instead of
+  // "notify_test_1" means onNotify ran after the value was captured.
   if (currentPhase >= 5 && notifyStep == 0 && notifyChr.getSubscribedCount() > 0) {
-    notifyChr.setValue("notify_test_1");
+    notifyChr.setValue("notify_stale");
+    notifyPayloadFromCallback = true;
     BTStatus s = notifyChr.notify();
     if (s) {
       Serial.println("[SERVER] Notification sent");
@@ -582,13 +858,100 @@ void loop() {
     notifyStep = 1;
     notifyTime = millis();
   }
-  if (notifyStep == 1 && millis() - notifyTime >= 1000) {
+  if (notifyStep >= 1 && !notifyStatusLogged && notifyStatus >= 0) {
+    notifyStatusLogged = true;
+    Serial.printf(
+      "[SERVER] Notify status=%s code=%lu onNotify=%lu\n", notifyStatusName(notifyStatus), (unsigned long)notifyStatusCode, (unsigned long)notifyCbCount
+    );
+  }
+  if (notifyStep == 1 && millis() - notifyTime >= 1000 && indicateChr.getSubscribedCount() > 0) {
     indicateChr.setValue("indicate_test_1");
     BTStatus s = indicateChr.indicate();
     if (s) {
       Serial.println("[SERVER] Indication sent");
     }
     notifyStep = 2;
+  }
+  if (notifyStep >= 2 && !indicateStatusLogged && indicateStatus >= 0) {
+    indicateStatusLogged = true;
+    Serial.printf(
+      "[SERVER] Indicate status=%s code=%lu onNotify=%lu\n", notifyStatusName(indicateStatus), (unsigned long)indicateStatusCode, (unsigned long)indicateCbCount
+    );
+  }
+  if (indicateStatusLogged && !indicateBurstSent && indicateChr.getSubscribedCount() > 0) {
+    indicateBurstSent = true;
+    indicateOkCount = 0;
+    indicateErrCount = 0;
+    int accepted = 0;
+    for (int i = 1; i <= INDICATE_BURST; i++) {
+      char payload[16];
+      int len = snprintf(payload, sizeof(payload), "burst_%d", i);
+      if (indicateChr.indicate(reinterpret_cast<const uint8_t *>(payload), len)) {
+        accepted++;
+      }
+    }
+    Serial.printf("[SERVER] Indicate burst accepted=%d\n", accepted);
+    indicateBurstTime = millis();
+  }
+  if (indicateBurstSent && !indicateBurstLogged && (indicateOkCount + indicateErrCount >= INDICATE_BURST || millis() - indicateBurstTime >= 10000)) {
+    indicateBurstLogged = true;
+    Serial.printf("[SERVER] Indicate burst confirmed=%lu failed=%lu\n", (unsigned long)indicateOkCount, (unsigned long)indicateErrCount);
+  }
+  // Queue capacity is 1 in-flight + 8 queued. Twelve back-to-back indicates
+  // must accept at least 8 and refuse the rest with Busy.
+  if (indicateBurstLogged && !indicateOverflowSent && indicateChr.getSubscribedCount() > 0) {
+    indicateOverflowSent = true;
+    indicateOkCount = 0;
+    indicateErrCount = 0;
+    indicateOverflowAccepted = 0;
+    indicateOverflowBusy = 0;
+    for (int i = 1; i <= INDICATE_OVERFLOW; i++) {
+      char payload[16];
+      int len = snprintf(payload, sizeof(payload), "ovf_%d", i);
+      BTStatus s = indicateChr.indicate(reinterpret_cast<const uint8_t *>(payload), len);
+      if (s == BTStatus::Busy) {
+        indicateOverflowBusy++;
+      } else if (s) {
+        indicateOverflowAccepted++;
+      }
+    }
+    indicateOverflowTime = millis();
+  }
+  if (
+    indicateOverflowSent && !indicateOverflowLogged
+    && (indicateOkCount + indicateErrCount >= (uint32_t)(indicateOverflowAccepted + indicateOverflowBusy) || millis() - indicateOverflowTime >= 10000)
+  ) {
+    indicateOverflowLogged = true;
+    Serial.printf(
+      "[SERVER] Indicate overflow accepted=%d busy=%d confirmed=%lu failed=%lu\n", indicateOverflowAccepted, indicateOverflowBusy,
+      (unsigned long)indicateOkCount, (unsigned long)indicateErrCount
+    );
+  }
+  // Every notification after the first indication is sent while it is still
+  // unconfirmed, on the same characteristic and connection.
+  if (indicateOverflowLogged && !dualSent && dualBothEnabled) {
+    dualSent = true;
+    for (int i = 1; i <= DUAL_BURST; i++) {
+      char payload[16];
+      int len = snprintf(payload, sizeof(payload), "di_%d", i);
+      dualChr.indicate(reinterpret_cast<const uint8_t *>(payload), len);
+      len = snprintf(payload, sizeof(payload), "dn_%d", i);
+      dualChr.notify(reinterpret_cast<const uint8_t *>(payload), len);
+    }
+    dualTime = millis();
+  }
+  if (dualSent && !dualLogged && (dualIndOk + dualNotifOk + dualErr >= 2 * DUAL_BURST || millis() - dualTime >= 10000)) {
+    dualLogged = true;
+    Serial.printf("[SERVER] Dual confirmed ind=%lu notif=%lu failed=%lu\n", (unsigned long)dualIndOk, (unsigned long)dualNotifOk, (unsigned long)dualErr);
+  }
+  // Phase 6 start: the client unsubscribed at the end of Phase 5, so a
+  // broadcast notify() must report ERROR_NO_SUBSCRIBER without calling onNotify.
+  if (currentPhase >= 6 && notifyStep >= 2 && !noSubscriberChecked && notifyChr.getSubscribedCount() == 0) {
+    noSubscriberChecked = true;
+    notifyStatus = -1;
+    uint32_t before = notifyCbCount;
+    notifyChr.notify();
+    Serial.printf("[SERVER] No-subscriber notify status=%s onNotify=%lu\n", notifyStatusName(notifyStatus), (unsigned long)(notifyCbCount - before));
   }
 
   // Phase 9: Server-initiated disconnect
@@ -777,7 +1140,7 @@ void loop() {
         l2capChannel = channel;
         Serial.println("[SERVER] L2CAP channel accepted");
       });
-      l2capServer.onData([](BLEL2CAPChannel channel, const uint8_t *data, size_t len) {
+      l2capServer.onData([](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
         syncPhaseFromHost();
         String msg((const char *)data, len);
         Serial.printf("[SERVER] L2CAP received: %s\n", msg.c_str());
@@ -845,6 +1208,46 @@ void loop() {
     //    custom UUID so no reserved-UUID rule fires.
     auto d7 = permFailClosedChr.createDescriptor(BLEUUID("a0000000-0000-4000-8000-000000000003"), BLEPermission::ReadOpen);
     Serial.printf("[SERVER] DescPerm valid accepted: %d\n", (int)((bool)d7));
+
+    // Characteristic construction-time validation (bleValidateCharProps) and
+    // included-service removeService() Busy guard.
+    BLEServer valSrv = BLE.createServer();
+    BLEService valSvc = valSrv.createService(BLEUUID("a0000000-0000-4000-8000-000000000010"));
+    auto c1 = valSvc.createCharacteristic(BLEUUID("a0000000-0000-4000-8000-000000000011"), static_cast<BLEProperty>(0), BLEPermission::ReadOpen);
+    auto c2 = valSvc.createCharacteristic(BLEUUID("a0000000-0000-4000-8000-000000000012"), BLEProperty::Write, BLEPermission::ReadOpen);
+    auto c3 = valSvc.createCharacteristic(BLEUUID("a0000000-0000-4000-8000-000000000013"), BLEProperty::Read, BLEPermission::WriteOpen);
+    auto c4 = valSvc.createCharacteristic(BLEUUID("a0000000-0000-4000-8000-000000000014"), BLEProperty::Read, BLEPermission::WriteAuthorized);
+    auto c5 = valSvc.createCharacteristic(BLEUUID("a0000000-0000-4000-8000-000000000015"), BLEProperty::Read, BLEPermission::ReadOpen);
+    int charRej = (int)(!c1) + (int)(!c2) + (int)(!c3) + (int)(!c4);
+    (void)valSrv.removeService(valSvc);
+    Serial.printf("[SERVER] CharProp validation rejected=%d/4 validAccepted=%d\n", charRej, (int)((bool)c5));
+
+    BLEService incTarget = valSrv.createService(BLEUUID("a0000000-0000-4000-8000-000000000016"));
+    BLEService incHost = valSrv.createService(BLEUUID("a0000000-0000-4000-8000-000000000017"));
+    incHost.addIncludedService(incTarget);
+    BTStatus remBusy = valSrv.removeService(incTarget);
+    BTStatus remHost = valSrv.removeService(incHost);
+    BTStatus remTarget = valSrv.removeService(incTarget);
+    BTStatus remAgain = valSrv.removeService(incTarget);
+    BTStatus remNull = valSrv.removeService(BLEService());
+    Serial.printf(
+      "[SERVER] IncludedService removeBusy=%d removeOrderOk=%d removeInvalidOk=%d\n", (int)(remBusy == BTStatus::Busy),
+      (int)((bool)remHost && (bool)remTarget), (int)(remAgain == BTStatus::InvalidState && remNull == BTStatus::InvalidState)
+    );
+
+    BLEDescriptor udHelper = BLEDescriptor::createUserDescription("ud_init");
+    udHelper.setUserDescription("ud_updated");
+    BLEDescriptor cccdHelper = BLEDescriptor::createCCCD();
+    cccdHelper.setNotifications(true);
+    cccdHelper.setIndications(true);
+    BLEDescriptor pfHelper = BLEDescriptor::createPresentationFormat();
+    BLEDescriptor nullDesc;
+    bool helpersOk = udHelper.isUserDescription() && !udHelper.isCCCD() && udHelper.getUserDescription() == "ud_updated"
+                     && cccdHelper.isCCCD() && cccdHelper.getNotifications() && cccdHelper.getIndications()
+                     && pfHelper.isPresentationFormat() && pfHelper.getLength() == 7
+                     && nullDesc.getLength() == 0 && !nullDesc.getNotifications()
+                     && dualChr.getDescriptor(BLEUUID(static_cast<uint16_t>(0x2901))).getUserDescription() == "Dual Characteristic";
+    Serial.printf("[SERVER] DescriptorHelpers ok=%d\n", (int)helpersOk);
 
     Serial.println("[SERVER] DescPerm validation done");
   }
@@ -1490,9 +1893,18 @@ void loop() {
         if (!conns.empty()) {
           sawConnect = true;
           uint16_t h = conns[0].getHandle();
+          // The client is connected but has not subscribed, so targeted sends
+          // must be refused; a handle that is not connected reports NO_CLIENT.
           notifyChr.setValue("targeted");
+          notifyStatus = -1;
           BTStatus s = notifyChr.notify(h);
-          Serial.printf("[SERVER] NotifyHandle ok=%d handle=%u\n", (int)(bool)s, (unsigned)h);
+          Serial.printf("[SERVER] NotifyHandle ok=%d ret=%s status=%s\n", (int)(bool)s, s.toString(), notifyStatusName(notifyStatus));
+          indicateStatus = -1;
+          s = indicateChr.indicate(h);
+          Serial.printf("[SERVER] IndicateHandle ok=%d ret=%s status=%s\n", (int)(bool)s, s.toString(), notifyStatusName(indicateStatus));
+          notifyStatus = -1;
+          s = notifyChr.notify(static_cast<uint16_t>(h + 0x100));
+          Serial.printf("[SERVER] NotifyBadHandle ok=%d ret=%s status=%s\n", (int)(bool)s, s.toString(), notifyStatusName(notifyStatus));
           Serial.printf("[SERVER] IsSubscribed handle=%u sub=%d\n", (unsigned)h, (int)notifyChr.isSubscribed(h));
           auto subs = notifyChr.getSubscribedConnections();
           Serial.printf("[SERVER] SubscribedConnections: %u\n", (unsigned)subs.size());
@@ -1569,15 +1981,17 @@ void loop() {
   if (currentPhase >= 25 && !phase25Done) {
     phase25Done = true;
 
-    {
-      BLEServer srv = BLE.createServer();
-      auto conns = srv.getConnections();
-      for (auto &c : conns) {
-        (void)srv.disconnect(c.getHandle());
-      }
+    BLEServer endedServer = BLE.createServer();
+    auto conns = endedServer.getConnections();
+    for (auto &c : conns) {
+      (void)endedServer.disconnect(c.getHandle());
     }
     delay(500);
     BLE.end(false);
+    BTStatus endedNotify = notifyChr.notify();
+    bool teardownOk = endedServer.getServices().empty() && !endedServer.isStarted() && notifyChr.getHandle() == 0 && !notifyChr.getService()
+                      && notifyChr.getDescriptors().empty() && endedNotify == BTStatus::InvalidState;
+    Serial.printf("[SERVER] Phase25 teardown shells=%d\n", (int)teardownOk);
     delay(500);
 
     BTStatus s = BLE.begin(String("HID_") + serverName);
@@ -1585,6 +1999,71 @@ void loop() {
       Serial.printf("[SERVER] Phase25 HID init FAILED: %s\n", s.toString());
     } else {
       BLEServer hidServer = BLE.createServer();
+      Serial.printf("[SERVER] Phase25 services after begin: %u\n", (unsigned)hidServer.getServices().size());
+
+      // Database-building removal APIs must detach externally retained handles
+      // instead of leaving raw parent pointers behind.
+      BLEService removedSvc = hidServer.createService(TMP_SVC_UUID);
+      BLECharacteristic removedChr = removedSvc.createCharacteristic(TMP_CHAR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermission::ReadWriteOpen);
+      BLEDescriptor removedDesc = removedChr.createDescriptor(BLEUUID((uint16_t)0xA001), BLEPermission::ReadWriteOpen);
+      removedChr.removeDescriptor(removedDesc);
+      bool descriptorShell = removedDesc.getHandle() == 0 && !removedDesc.getCharacteristic();
+      removedDesc = removedChr.createDescriptor(BLEUUID((uint16_t)0xA002), BLEPermission::ReadWriteOpen);
+      removedSvc.removeCharacteristic(removedChr);
+      bool characteristicShell = removedChr.getHandle() == 0 && !removedChr.getService() && removedChr.getDescriptors().empty() && removedDesc.getHandle() == 0
+                                 && !removedDesc.getCharacteristic();
+      removedChr = removedSvc.createCharacteristic(TMP_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+      removedDesc = removedChr.createDescriptor(BLEUUID((uint16_t)0xA003), BLEPermission::ReadOpen);
+      bool serviceRemoved = (bool)hidServer.removeService(removedSvc);
+      bool serviceShell = removedSvc.getHandle() == 0 && !removedSvc.getServer() && removedSvc.getCharacteristics().empty() && removedChr.getHandle() == 0
+                          && !removedChr.getService() && removedDesc.getHandle() == 0 && !removedDesc.getCharacteristic();
+      Serial.printf("[SERVER] Phase25 removal shells=%d\n", (int)(descriptorShell && characteristicShell && serviceRemoved && serviceShell));
+
+      // Pre-registration characteristic validation (bleValidateCharForRegistration):
+      //   1. ExtendedProps without 0x2900 descriptor -> InvalidState
+      //   2. Broadcast without 0x2903 descriptor -> InvalidState
+      //   3. 0x2904 descriptor with length != 7 -> InvalidState
+      //   4. Descriptor with permissions mutated to None post-creation -> InvalidState
+      int preRegRej = 0;
+      {
+        BLEService badSvc = hidServer.createService(TMP_SVC_UUID);
+        (void)badSvc.createCharacteristic(TMP_CHAR_UUID, BLEProperty::Read | BLEProperty::ExtendedProps, BLEPermission::ReadOpen);
+        if (hidServer.start() == BTStatus::InvalidState) {
+          preRegRej++;
+        }
+        (void)hidServer.removeService(badSvc);
+      }
+      {
+        BLEService badSvc = hidServer.createService(TMP_SVC_UUID);
+        (void)badSvc.createCharacteristic(TMP_CHAR_UUID, BLEProperty::Read | BLEProperty::Broadcast, BLEPermission::ReadOpen);
+        if (hidServer.start() == BTStatus::InvalidState) {
+          preRegRej++;
+        }
+        (void)hidServer.removeService(badSvc);
+      }
+      {
+        BLEService badSvc = hidServer.createService(TMP_SVC_UUID);
+        BLECharacteristic badChr = badSvc.createCharacteristic(TMP_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+        BLEDescriptor badPf = badChr.createDescriptor(BLEUUID((uint16_t)0x2904), BLEPermission::ReadOpen, 7);
+        const uint8_t shortPf[3] = {0x01, 0x00, 0x00};
+        badPf.setValue(shortPf, sizeof(shortPf));
+        if (hidServer.start() == BTStatus::InvalidState) {
+          preRegRej++;
+        }
+        (void)hidServer.removeService(badSvc);
+      }
+      {
+        BLEService badSvc = hidServer.createService(TMP_SVC_UUID);
+        BLECharacteristic badChr = badSvc.createCharacteristic(TMP_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+        BLEDescriptor mutDesc = badChr.createDescriptor(BLEUUID((uint16_t)0xA004), BLEPermission::ReadOpen, 8);
+        mutDesc.setPermissions(BLEPermission::None);
+        if (hidServer.start() == BTStatus::InvalidState) {
+          preRegRej++;
+        }
+        (void)hidServer.removeService(badSvc);
+      }
+      Serial.printf("[SERVER] Phase25 preRegRejected=%d/4\n", preRegRej);
+
       BLEHIDDevice hid(hidServer);
       hid.manufacturer("Espressif");
       hid.pnp(0x02, 0x303A, 0x1001, 0x0100);
@@ -1616,6 +2095,15 @@ void loop() {
       Serial.printf("[SERVER] Phase25 bootCached=%d\n", (int)bootCached);
 
       Serial.printf("[SERVER] Phase25 bootOut=%d\n", (int)(bool)bootOut);
+
+      // Dynamic service addition after server.start(): add a new service +
+      // characteristic and call start() again so the peer can discover and
+      // read it alongside the initially started HID and Battery services.
+      BLEService dynSvc = hidServer.createService(TMP_SVC_UUID);
+      BLECharacteristic dynChr = dynSvc.createCharacteristic(TMP_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+      dynChr.setValue("dyn_svc_ok");
+      BTStatus dynStart = hidServer.start();
+      Serial.printf("[SERVER] Phase25 dynSvcStarted=%d handle=%u\n", (int)((bool)dynStart && dynChr.getHandle() != 0), (unsigned)dynChr.getHandle());
 
       BLEAdvertising adv = BLE.getAdvertising();
       // BLE.end() above already reset the advertising state (cleared all
@@ -1750,7 +2238,7 @@ void loop() {
       if (!l2capBulkServer) {
         Serial.println("[SERVER] Phase28 L2CAP init FAILED");
       } else {
-        l2capBulkServer.onData([](BLEL2CAPChannel channel, const uint8_t *data, size_t len) {
+        l2capBulkServer.onData([](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
           syncPhaseFromHost();
           if (!l2capBulkReplied) {
             // Bulk accumulation phase: sum SDU lengths until the target is met,
@@ -1962,21 +2450,96 @@ void loop() {
   }
 
   // =========================================================================
-  // Phase 33: Periodic advertising lifecycle — sync, terminate, sync-lost (BLE5)
+  // Phase 33: Indications right behind one the stack sent itself
+  // =========================================================================
+  // On Bluedroid, deleting a started service makes the stack indicate Service
+  // Changed to the client. Indications sent right after it must wait for its
+  // confirmation and then go out, not fail with ESP_GATT_BUSY. NimBLE rebuilds
+  // its whole database to delete a service, so there the indications go out
+  // on their own.
+  if (currentPhase >= 33 && !phase33Done) {
+    phase33Done = true;
+    BLEAdvertising adv = BLE.getAdvertising();
+    adv.stop();
+    (void)BLE.getSecurity().deleteAllBonds();
+    BLE.end(false);
+    delay(500);
+    BTStatus init = BLE.begin(serverName);
+    if (!init) {
+      Serial.printf("[SERVER] Phase33 init FAILED: %s\n", init.toString());
+      Serial.println("[SERVER] Phase33 done");
+      return;
+    }
+    BLEServer srv = BLE.createServer();
+    adv = BLE.getAdvertising();
+    // A fresh database makes Bluedroid's Service Changed (sent when the
+    // temporary started service below is deleted) the only indication holding
+    // the slot. Without a bond, the client receives no stale database change
+    // from an earlier session when it reconnects.
+    BLEService busySvc = srv.createService(BUSY_SVC_UUID);
+    BLECharacteristic busyChr = busySvc.createCharacteristic(BUSY_CHAR_UUID, BLEProperty::Read | BLEProperty::Indicate, BLEPermission::ReadOpen);
+    busyChr.onStatus([](BLECharacteristic &chr, BLECharacteristic::NotifyStatus status, uint32_t code) {
+      if (status == BLECharacteristic::SUCCESS_INDICATE) {
+        busyOkCount.fetch_add(1, std::memory_order_relaxed);
+      } else {
+        busyErrCount.fetch_add(1, std::memory_order_relaxed);
+      }
+    });
+#if BLE_BLUEDROID
+    BLEService tmpSvc = srv.createService(TMP_SVC_UUID);
+    tmpSvc.createCharacteristic(TMP_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen).setValue("tmp");
+#endif
+    srv.start();
+    adv.start();
+
+    unsigned long startWait = millis();
+    while (busyChr.getSubscribedCount() == 0 && millis() - startWait < 30000) {
+      delay(50);
+    }
+    if (busyChr.getSubscribedCount() == 0) {
+      Serial.println("[SERVER] Phase33 no subscriber");
+    } else {
+      // The client's subscribe() is still waiting for the CCCD write confirm.
+      // Sending Service Changed immediately aborts that GATT procedure, so
+      // subscribe() returns Fail even though the CCCD write landed.
+      delay(500);
+#if BLE_BLUEDROID
+      const char *serviceChanged = srv.removeService(tmpSvc) ? "1" : "0";
+#else
+      const char *serviceChanged = "n/a";
+#endif
+      for (int i = 1; i <= 3; i++) {
+        char payload[16];
+        int len = snprintf(payload, sizeof(payload), "busy_%d", i);
+        busyChr.indicate(reinterpret_cast<const uint8_t *>(payload), len);
+      }
+      unsigned long sent = millis();
+      while (busyOkCount + busyErrCount < 3 && millis() - sent < 10000) {
+        delay(20);
+      }
+      Serial.printf(
+        "[SERVER] Phase33 serviceChanged=%s confirmed=%lu failed=%lu\n", serviceChanged, (unsigned long)busyOkCount, (unsigned long)busyErrCount
+      );
+    }
+    Serial.println("[SERVER] Phase33 done");
+  }
+
+  // =========================================================================
+  // Phase 34: Periodic advertising lifecycle — sync, terminate, sync-lost (BLE5)
   // =========================================================================
   // Extends the phase-2 periodic-sync happy path with the teardown transitions:
   // the client terminates its sync explicitly (terminatePeriodicSync) and also
   // observes onPeriodicLost after the server stops the periodic train. Re-inits
   // BLE5 advertising, then restores a normal stack so the memory_release phase
   // still measures a meaningful free. Self-skips without BLE5.
-  if (currentPhase >= 33 && !phase33Done) {
-    phase33Done = true;
+  if (currentPhase >= 34 && !phase34Done) {
+    phase34Done = true;
 #if BLE5_SUPPORTED
     BLE.end(false);
     delay(500);
     BTStatus s = BLE.begin(serverName);
     if (!s) {
-      Serial.printf("[SERVER] Phase33 init FAILED: %s\n", s.toString());
+      Serial.printf("[SERVER] Phase34 init FAILED: %s\n", s.toString());
     } else {
       BLEAdvertising adv = BLE.getAdvertising();
       adv.setExtType(0, BLEAdvType::NonConnectable);
@@ -1991,14 +2554,14 @@ void loop() {
       adv.setPeriodicAdvData(0, perData);
       (void)adv.startExtended(0, 0, 0);
       adv.startPeriodicAdv(0);
-      Serial.println("[SERVER] Phase33 periodic started");
+      Serial.println("[SERVER] Phase34 periodic started");
       // Let the client sync + terminate its own sync.
       delay(12000);
       // Stop the periodic train so the client observes a supervision-timeout
       // sync-lost on any sync it re-established.
       adv.stopPeriodicAdv(0);
       adv.stopExtended(0);
-      Serial.println("[SERVER] Phase33 periodic stopped");
+      Serial.println("[SERVER] Phase34 periodic stopped");
       delay(6000);
       // Restore a normal connectable stack so memory_release frees real state.
       BLE.end(false);
@@ -2006,15 +2569,224 @@ void loop() {
       (void)BLE.begin(serverName);
     }
 #else
-    Serial.println("[SERVER] Phase33 BLE5 not supported, skipping");
+    Serial.println("[SERVER] Phase34 BLE5 not supported, skipping");
 #endif
-    Serial.println("[SERVER] Phase33 done");
+    Serial.println("[SERVER] Phase34 done");
   }
 
-  // Phase 34: Memory release (tail of the suite; runs after every other phase
-  // phases 16-33 can exercise the BLE stack while it's still alive).
-  if (currentPhase >= 34 && !phase34Done) {
-    phase34Done = true;
+  // =========================================================================
+  // Phase 35: CCCD bit routing, in-flight removeService, read-timeout recover,
+  //           notify flood / congestion
+  // =========================================================================
+  // One ACL (two boards share a single local address pair). Per-peer CCCD and
+  // EATT need a third DUT / a public EATT API. The host auto-confirms
+  // indications, so a withheld-CONF / 30 s indication timeout cannot be forced.
+  if (currentPhase >= 35 && !phase35Done) {
+    phase35Done = true;
+    BLEAdvertising adv = BLE.getAdvertising();
+    adv.stop();
+    BLE.end(false);
+    delay(500);
+    BTStatus init = BLE.begin(serverName);
+    if (!init) {
+      Serial.printf("[SERVER] Phase35 init FAILED: %s\n", init.toString());
+      Serial.println("[SERVER] Phase35 done");
+    } else {
+      BLEServer srv = BLE.createServer();
+      srv.advertiseOnDisconnect(true);
+
+      std::atomic<uint16_t> peerCccd{0};
+      std::atomic<uint16_t> peerConn{0};
+      std::atomic<bool> havePeer{false};
+      std::atomic<uint32_t> peerNotifyOk{0};
+      std::atomic<uint32_t> peerIndicateOk{0};
+      std::atomic<uint32_t> peerNotifyDisabled{0};
+      std::atomic<uint32_t> peerIndicateDisabled{0};
+      std::atomic<uint32_t> queueOk{0};
+      std::atomic<uint32_t> queueErr{0};
+      std::atomic<uint32_t> floodOk{0};
+      std::atomic<uint32_t> floodErr{0};
+      std::atomic<bool> flooding{false};
+      std::atomic<uint32_t> timeoutAttempts{0};
+      std::atomic<bool> timeoutAllowed{false};
+      uint16_t timeoutHandle = 0;
+
+      BLEService edgeSvc = srv.createService(EDGE_SVC_UUID);
+      BLECharacteristic peerChr =
+        edgeSvc.createCharacteristic(PEER_CHAR_UUID, BLEProperty::Read | BLEProperty::Notify | BLEProperty::Indicate, BLEPermission::ReadOpen);
+      peerChr.onSubscribe([&peerCccd, &peerConn, &havePeer](BLECharacteristic, const BLEConnInfo &info, uint16_t subValue) {
+        peerCccd = subValue;
+        peerConn = info.getHandle();
+        havePeer = true;
+      });
+      peerChr.onStatus([&peerNotifyOk, &peerIndicateOk, &peerNotifyDisabled, &peerIndicateDisabled, &floodOk, &floodErr,
+                        &flooding](BLECharacteristic &, BLECharacteristic::NotifyStatus status, uint32_t) {
+        if (flooding.load(std::memory_order_relaxed)) {
+          if (status == BLECharacteristic::SUCCESS_NOTIFY) {
+            floodOk.fetch_add(1, std::memory_order_relaxed);
+          } else {
+            floodErr.fetch_add(1, std::memory_order_relaxed);
+          }
+          return;
+        }
+        if (status == BLECharacteristic::SUCCESS_NOTIFY) {
+          peerNotifyOk.fetch_add(1, std::memory_order_relaxed);
+        } else if (status == BLECharacteristic::SUCCESS_INDICATE) {
+          peerIndicateOk.fetch_add(1, std::memory_order_relaxed);
+        } else if (status == BLECharacteristic::ERROR_NOTIFY_DISABLED) {
+          peerNotifyDisabled.fetch_add(1, std::memory_order_relaxed);
+        } else if (status == BLECharacteristic::ERROR_INDICATE_DISABLED) {
+          peerIndicateDisabled.fetch_add(1, std::memory_order_relaxed);
+        }
+      });
+
+      BLECharacteristic timeoutChr = edgeSvc.createCharacteristic(TIMEOUT_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadAuthorized);
+      timeoutChr.setValue("timeout_ok");
+
+      BLEService queueSvc = srv.createService(QUEUE_SVC_UUID);
+      BLECharacteristic queueChr = queueSvc.createCharacteristic(QUEUE_CHAR_UUID, BLEProperty::Read | BLEProperty::Indicate, BLEPermission::ReadOpen);
+      queueChr.onStatus([&queueOk, &queueErr](BLECharacteristic &, BLECharacteristic::NotifyStatus status, uint32_t) {
+        if (status == BLECharacteristic::SUCCESS_INDICATE) {
+          queueOk.fetch_add(1, std::memory_order_relaxed);
+        } else {
+          queueErr.fetch_add(1, std::memory_order_relaxed);
+        }
+      });
+
+      srv.start();
+      timeoutHandle = timeoutChr.getHandle();
+      BLESecurity sec = BLE.getSecurity();
+      sec.onAuthorization([&timeoutAllowed, &timeoutAttempts, timeoutHandle](const BLEConnInfo &, uint16_t attrHandle, bool isRead) -> bool {
+        if (!isRead || attrHandle != timeoutHandle) {
+          return true;
+        }
+        uint32_t n = timeoutAttempts.fetch_add(1, std::memory_order_relaxed);
+        if (n == 0) {
+          // Bluedroid delivers this from a worker; a short delay keeps the ATT
+          // read outstanding so the client's 200 ms timeout expires. NimBLE
+          // invokes it on the host task — blocking here races a GATT rebuild
+          // (ble_svc_gap_init already-inited assert).
+#if BLE_BLUEDROID
+          delay(400);
+#endif
+          timeoutAllowed = true;
+          return false;
+        }
+        return timeoutAllowed.load();
+      });
+
+      adv = BLE.getAdvertising();
+      adv.addServiceUUID(EDGE_SVC_UUID);
+      adv.start();
+
+      unsigned long startWait = millis();
+      while ((peerCccd.load() & 0x0001) == 0 && millis() - startWait < 30000) {
+        delay(50);
+      }
+      // Bluedroid's first GATT conn_id is 0; do not treat a zero handle as missing.
+      // Targeted send: broadcast indicate with notify-only CCCD reports
+      // ERROR_NO_SUBSCRIBER, not ERROR_INDICATE_DISABLED.
+      if (havePeer.load()) {
+        peerChr.indicate(peerConn.load(), reinterpret_cast<const uint8_t *>("peer_i"), 6);
+      }
+      startWait = millis();
+      while (peerIndicateDisabled.load() == 0 && millis() - startWait < 2000) {
+        delay(10);
+      }
+      if (havePeer.load()) {
+        peerChr.notify(peerConn.load(), reinterpret_cast<const uint8_t *>("peer_n"), 6);
+      }
+      startWait = millis();
+      while (peerNotifyOk.load() == 0 && millis() - startWait < 10000) {
+        delay(20);
+      }
+      flooding.store(true, std::memory_order_relaxed);
+      const int kFlood = 32;
+      int floodSent = 0;
+      for (int i = 1; i <= kFlood; i++) {
+        char payload[16];
+        int len = snprintf(payload, sizeof(payload), "flood_%d", i);
+        if (peerChr.notify(reinterpret_cast<const uint8_t *>(payload), len)) {
+          floodSent++;
+        }
+        delay(5);
+      }
+      startWait = millis();
+      while (floodOk.load() + floodErr.load() < (uint32_t)floodSent && millis() - startWait < 15000) {
+        delay(20);
+      }
+      const uint32_t floodConfirmed = floodOk.load();
+      const uint32_t floodFailed = floodErr.load();
+      flooding.store(false, std::memory_order_relaxed);
+      startWait = millis();
+      while ((peerCccd.load() & 0x0002) == 0 && millis() - startWait < 15000) {
+        delay(50);
+      }
+      if (havePeer.load()) {
+        peerChr.notify(peerConn.load(), reinterpret_cast<const uint8_t *>("peer_n"), 6);
+      }
+      startWait = millis();
+      while (peerNotifyDisabled.load() == 0 && millis() - startWait < 2000) {
+        delay(10);
+      }
+      if (havePeer.load()) {
+        peerChr.indicate(peerConn.load(), reinterpret_cast<const uint8_t *>("peer_i"), 6);
+      }
+      startWait = millis();
+      while (peerIndicateOk.load() == 0 && millis() - startWait < 10000) {
+        delay(20);
+      }
+      Serial.printf(
+        "[SERVER] Phase35 cccd notifyOk=%lu indicateDisabled=%lu indicateOk=%lu notifyDisabled=%lu\n", (unsigned long)peerNotifyOk.load(),
+        (unsigned long)peerIndicateDisabled.load(), (unsigned long)peerIndicateOk.load(), (unsigned long)peerNotifyDisabled.load()
+      );
+
+      startWait = millis();
+      while (queueChr.getSubscribedCount() == 0 && millis() - startWait < 10000) {
+        delay(50);
+      }
+      int qAccepted = 0;
+      int qBusy = 0;
+      for (int i = 1; i <= 10; i++) {
+        char payload[16];
+        int len = snprintf(payload, sizeof(payload), "q_%d", i);
+        BTStatus s = queueChr.indicate(reinterpret_cast<const uint8_t *>(payload), len);
+        if (s == BTStatus::Busy) {
+          qBusy++;
+        } else if (s) {
+          qAccepted++;
+        }
+      }
+      BTStatus removeBusy = srv.removeService(queueSvc);
+      startWait = millis();
+      while (queueOk.load() + queueErr.load() < (uint32_t)(qAccepted + qBusy) && millis() - startWait < 10000) {
+        delay(20);
+      }
+      BTStatus removeIdle = srv.removeService(queueSvc);
+      Serial.printf(
+        "[SERVER] Phase35 removeBusy=%d accepted=%d busy=%d removeIdle=%d\n", (int)(removeBusy == BTStatus::Busy), qAccepted, qBusy, (int)(bool)removeIdle
+      );
+      Serial.printf(
+        "[SERVER] Phase35 flood sent=%d confirmed=%lu failed=%lu\n", floodSent, (unsigned long)floodConfirmed, (unsigned long)floodFailed
+      );
+
+      startWait = millis();
+      while (timeoutAttempts.load() == 0 && millis() - startWait < 15000) {
+        delay(50);
+      }
+      delay(1000);
+      peerChr.resetCallbacks();
+      timeoutChr.resetCallbacks();
+      queueChr.resetCallbacks();
+      sec.onAuthorization(nullptr);
+      Serial.println("[SERVER] Phase35 done");
+    }
+  }
+
+  // Phase 36: Memory release (tail of the suite; runs after every other phase
+  // so phases 16-35 can exercise the BLE stack while it's still alive).
+  if (currentPhase >= 36 && !phase36Done) {
+    phase36Done = true;
     delay(500);
 
     size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);

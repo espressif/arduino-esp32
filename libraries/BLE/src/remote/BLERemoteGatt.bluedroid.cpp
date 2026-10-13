@@ -40,6 +40,26 @@
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
+namespace {
+
+std::shared_ptr<BLEClient::Impl> remoteClient(const std::shared_ptr<BLERemoteService::Impl> &service) {
+  if (!service) {
+    return nullptr;
+  }
+  auto client = service->client.lock();
+  return client && client->connected && client->connectionGeneration.load() == service->clientGeneration ? client : nullptr;
+}
+
+std::shared_ptr<BLEClient::Impl> remoteClient(const std::shared_ptr<BLERemoteCharacteristic::Impl> &chr) {
+  return chr ? remoteClient(chr->service.lock()) : nullptr;
+}
+
+std::shared_ptr<BLEClient::Impl> remoteClient(const std::shared_ptr<BLERemoteDescriptor::Impl> &desc) {
+  return desc ? remoteClient(desc->chr.lock()) : nullptr;
+}
+
+}  // namespace
+
 // getClient() is stack-agnostic and lives in the common src/BLERemoteService.cpp.
 
 // Blocking: may call esp_ble_gattc_get_attr_count / esp_ble_gattc_get_all_char (synchronous attribute queries) while connected.
@@ -47,14 +67,15 @@ BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &uuid)
   BLE_CHECK_IMPL(BLERemoteCharacteristic());
 
   // Discover characteristics if not yet done
-  if (!impl.characteristicsDiscovered && impl.client && impl.client->connected) {
+  auto client = impl.client.lock();
+  if (!impl.characteristicsDiscovered && client && client->connected) {
     uint16_t count = 0;
     esp_gatt_status_t st =
-      esp_ble_gattc_get_attr_count(impl.client->gattcIf, impl.client->connId, ESP_GATT_DB_CHARACTERISTIC, impl.startHandle, impl.endHandle, 0, &count);
+      esp_ble_gattc_get_attr_count(client->gattcIf, client->connId, ESP_GATT_DB_CHARACTERISTIC, impl.startHandle, impl.endHandle, 0, &count);
 
     if (st == ESP_GATT_OK && count > 0) {
       std::vector<esp_gattc_char_elem_t> chars(count);
-      st = esp_ble_gattc_get_all_char(impl.client->gattcIf, impl.client->connId, impl.startHandle, impl.endHandle, chars.data(), &count, 0);
+      st = esp_ble_gattc_get_all_char(client->gattcIf, client->connId, impl.startHandle, impl.endHandle, chars.data(), &count, 0);
 
       if (st == ESP_GATT_OK) {
         for (uint16_t i = 0; i < count; i++) {
@@ -63,7 +84,7 @@ BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &uuid)
           cImpl->handle = chars[i].char_handle;
           cImpl->defHandle = chars[i].char_handle;
           cImpl->properties = chars[i].properties;
-          cImpl->service = _impl.get();
+          cImpl->service = _impl;
           impl.characteristics.push_back(cImpl);
         }
       }
@@ -87,7 +108,8 @@ std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() cons
   }
 
   // Trigger discovery through non-const cast (discovery is a lazy-init pattern)
-  if (!_impl->characteristicsDiscovered && _impl->client && _impl->client->connected) {
+  auto client = _impl->client.lock();
+  if (!_impl->characteristicsDiscovered && client && client->connected) {
     auto *self = const_cast<BLERemoteService *>(this);
     self->getCharacteristic(BLEUUID(static_cast<uint16_t>(0)));  // triggers discovery
   }
@@ -102,11 +124,7 @@ std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() cons
 
 #include "esp32-hal-log.h"
 
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: empty client/characteristic handles and lists.
-
-BLEClient BLERemoteService::getClient() const {
-  return BLEClient();
-}
+// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: empty characteristic handles and lists.
 
 BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &) {
   return BLERemoteCharacteristic();
@@ -153,10 +171,11 @@ std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() cons
 /**
  * @brief Heuristic for "must encrypt/authenticate" style GATT status codes.
  * @param s Status from a GATTC operation.
- * @return True if the status matches insufficient auth/authorization/encryption.
+ * @return True if pairing/encryption can clear the status.
+ * @note Insufficient authorization is an application deny; retrying SMP will not help.
  */
 static bool isAuthGattStatus(esp_gatt_status_t s) {
-  return s == ESP_GATT_INSUF_AUTHENTICATION || s == ESP_GATT_INSUF_AUTHORIZATION || s == ESP_GATT_INSUF_ENCRYPTION;
+  return s == ESP_GATT_INSUF_AUTHENTICATION || s == ESP_GATT_INSUF_ENCRYPTION;
 }
 
 /**
@@ -191,10 +210,10 @@ static bool initiateSecurityAndWait(BLEClient::Impl *client) {
 
 // Blocking: synchronous wait on the client read object after issuing esp_ble_gattc_read_char.
 bool BLERemoteCharacteristic::readInto(uint32_t timeoutMs) {
-  if (!_impl || !_impl->service || !_impl->service->client) {
+  auto client = remoteClient(_impl);
+  if (!client) {
     return false;
   }
-  auto *client = _impl->service->client;
   if (!client->connected) {
     return false;
   }
@@ -224,7 +243,7 @@ bool BLERemoteCharacteristic::readInto(uint32_t timeoutMs) {
 
     if (retry == 0 && isAuthGattStatus(client->lastReadStatus)) {
       log_d("RemoteCharacteristic %s: auth error on read, initiating security", _impl->uuid.toString().c_str());
-      if (!initiateSecurityAndWait(client)) {
+      if (!initiateSecurityAndWait(client.get())) {
         log_w("RemoteCharacteristic %s: security initiation failed", _impl->uuid.toString().c_str());
         return false;
       }
@@ -242,10 +261,10 @@ bool BLERemoteCharacteristic::readInto(uint32_t timeoutMs) {
 
 // Blocking: when withResponse is true, esp_ble_gattc_write_char is followed by a wait on the client write sync. Long data may still be subject to the controller/ATT MTU.
 BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *data, size_t len, bool withResponse) {
-  if (!_impl || !_impl->service || !_impl->service->client) {
+  auto client = remoteClient(_impl);
+  if (!client) {
     return BTStatus::InvalidState;
   }
-  auto *client = _impl->service->client;
   if (!client->connected) {
     return BTStatus::NotConnected;
   }
@@ -281,7 +300,7 @@ BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *data, size_t len, bo
 
     if (retry == 0 && isAuthGattStatus(client->lastWriteStatus)) {
       log_d("RemoteCharacteristic %s: auth error on write, initiating security", _impl->uuid.toString().c_str());
-      if (!initiateSecurityAndWait(client)) {
+      if (!initiateSecurityAndWait(client.get())) {
         return BTStatus::AuthFailed;
       }
       continue;
@@ -297,10 +316,10 @@ BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *data, size_t len, bo
 
 // Blocking: CCCD write path uses a confirmed GATTC write with wait; CCCD subscription semantics apply.
 BTStatus BLERemoteCharacteristic::subscribe(bool notifications, NotifyCallback callback) {
-  if (!_impl || !_impl->service || !_impl->service->client) {
+  auto client = remoteClient(_impl);
+  if (!client) {
     return BTStatus::InvalidState;
   }
-  auto *client = _impl->service->client;
   if (!client->connected) {
     return BTStatus::NotConnected;
   }
@@ -334,10 +353,10 @@ BTStatus BLERemoteCharacteristic::subscribe(bool notifications, NotifyCallback c
 
 // Blocking: confirmed descriptor write with wait in the handle+1 fallback path.
 BTStatus BLERemoteCharacteristic::unsubscribe() {
-  if (!_impl || !_impl->service || !_impl->service->client) {
+  auto client = remoteClient(_impl);
+  if (!client) {
     return BTStatus::InvalidState;
   }
-  auto *client = _impl->service->client;
   if (!client->connected) {
     return BTStatus::NotConnected;
   }
@@ -373,8 +392,8 @@ BTStatus BLERemoteCharacteristic::unsubscribe() {
 BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &uuid) {
   BLE_CHECK_IMPL(BLERemoteDescriptor());
 
-  if (!impl.descriptorsDiscovered && impl.service && impl.service->client && impl.service->client->connected) {
-    auto *client = impl.service->client;
+  auto client = remoteClient(_impl);
+  if (!impl.descriptorsDiscovered && client && client->connected) {
     uint16_t count = 0;
     esp_gatt_status_t st = esp_ble_gattc_get_attr_count(client->gattcIf, client->connId, ESP_GATT_DB_DESCRIPTOR, 0, 0, impl.handle, &count);
 
@@ -387,7 +406,7 @@ BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &uuid) 
           auto dImpl = std::make_shared<BLERemoteDescriptor::Impl>();
           dImpl->uuid = bluedroidUuidToPublic(descs[i].uuid);
           dImpl->handle = descs[i].handle;
-          dImpl->chr = _impl.get();
+          dImpl->chr = _impl;
           impl.descriptors.push_back(dImpl);
         }
       }
@@ -410,7 +429,8 @@ std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const
   }
 
   // Trigger discovery through non-const cast (lazy init)
-  if (!_impl->descriptorsDiscovered && _impl->service && _impl->service->client && _impl->service->client->connected) {
+  auto client = remoteClient(_impl);
+  if (!_impl->descriptorsDiscovered && client && client->connected) {
     auto *self = const_cast<BLERemoteCharacteristic *>(this);
     self->getDescriptor(BLEUUID(static_cast<uint16_t>(0)));  // triggers discovery
   }
@@ -425,45 +445,10 @@ std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const
 
 #include "esp32-hal-log.h"
 
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: false/empty/NotSupported/nullptr as appropriate; log on side-effecting paths.
-
-uint16_t BLERemoteCharacteristic::getHandle() const {
-  return 0;
-}
-
-bool BLERemoteCharacteristic::canRead() const {
-  return false;
-}
-
-bool BLERemoteCharacteristic::canWrite() const {
-  return false;
-}
-
-bool BLERemoteCharacteristic::canWriteNoResponse() const {
-  return false;
-}
-
-bool BLERemoteCharacteristic::canNotify() const {
-  return false;
-}
-
-bool BLERemoteCharacteristic::canIndicate() const {
-  return false;
-}
-
-bool BLERemoteCharacteristic::canBroadcast() const {
-  return false;
-}
+// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: false/empty/NotSupported as appropriate; log on side-effecting paths.
 
 bool BLERemoteCharacteristic::readInto(uint32_t) {
   return false;
-}
-
-const uint8_t *BLERemoteCharacteristic::readRawData(size_t *len) {
-  if (len) {
-    *len = 0;
-  }
-  return nullptr;
 }
 
 BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *, size_t, bool) {
@@ -512,10 +497,10 @@ std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const
 
 // Blocking: esp_ble_gattc_read_char_descr and synchronous wait on the client read sync object.
 bool BLERemoteDescriptor::readInto(uint32_t timeoutMs) {
-  if (!_impl || !_impl->chr || !_impl->chr->service || !_impl->chr->service->client) {
+  auto client = remoteClient(_impl);
+  if (!client) {
     return false;
   }
-  auto *client = _impl->chr->service->client;
   if (!client->connected) {
     return false;
   }
@@ -547,10 +532,10 @@ bool BLERemoteDescriptor::readInto(uint32_t timeoutMs) {
 
 // Blocking on confirmed writes: esp_ble_gattc_write_char_descr and wait; used for CCCD subscription writes from higher layers.
 BTStatus BLERemoteDescriptor::writeValue(const uint8_t *data, size_t len, bool withResponse) {
-  if (!_impl || !_impl->chr || !_impl->chr->service || !_impl->chr->service->client) {
+  auto client = remoteClient(_impl);
+  if (!client) {
     return BTStatus::InvalidState;
   }
-  auto *client = _impl->chr->service->client;
   if (!client->connected) {
     return BTStatus::NotConnected;
   }
@@ -573,7 +558,7 @@ BTStatus BLERemoteDescriptor::writeValue(const uint8_t *data, size_t len, bool w
   }
 
   if (withResponse) {
-    return client->writeSync.wait(5000);
+    return client->writeSync.wait(10000);
   }
   return BTStatus::OK;
 }

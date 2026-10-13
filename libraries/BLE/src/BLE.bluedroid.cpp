@@ -257,7 +257,17 @@ void BLEClass::end(bool releaseMemory) {
   }
 
 #if BLE_GATT_SERVER_SUPPORTED
-  BLEServer::Impl::invalidate();
+  // Prevent deferred work from racing host shutdown. Keep the GATT tree alive
+  // until Bluedroid is fully stopped so any final native callbacks can still
+  // resolve their attribute handles safely.
+  if (BLEServer::Impl *server = BLEServer::Impl::s_instance) {
+    if (server->advRestartTimer) {
+      esp_timer_stop(server->advRestartTimer);
+    }
+    if (server->indicationRetryTimer) {
+      esp_timer_stop(server->indicationRetryTimer);
+    }
+  }
 #endif
   // Reset advertising state before tearing down the stack.  The Bluedroid
   // stack is still running here, so the public reset() can call stop() through
@@ -276,8 +286,23 @@ void BLEClass::end(bool releaseMemory) {
   getScan().terminateAllPeriodicSyncs();
 #endif
 
+  // Close the public session before native shutdown callbacks run. The GATT
+  // tree stays attached until deinit, but callbacks cannot re-enter
+  // createServer() or send through a host that is stopping.
+  _initialized = false;
+#if BLE_GATT_SERVER_SUPPORTED
+  if (BLEServer::Impl *server = BLEServer::Impl::s_instance) {
+    BLELockGuard lock(server->mtx);
+    server->active = false;
+  }
+#endif
+
   esp_bluedroid_disable();
   esp_bluedroid_deinit();
+
+#if BLE_GATT_SERVER_SUPPORTED
+  BLEServer::Impl::invalidate();
+#endif
 
   esp_bt_controller_disable();
   esp_bt_controller_deinit();
@@ -285,8 +310,6 @@ void BLEClass::end(bool releaseMemory) {
   if (releaseMemory) {
     btMemRelease(BT_MODE_BLE);
   }
-
-  _initialized = false;
 }
 
 // --------------------------------------------------------------------------
@@ -640,13 +663,17 @@ BLEServer BLEClass::createServer() {
   }
   if (!slot) {
     auto fresh = std::make_shared<BLEServer::Impl>();
-    BLEServer::Impl::s_instance = fresh.get();
     esp_timer_create_args_t timerArgs = {};
     timerArgs.callback = [](void *) {
       BLE.startAdvertising();
     };
     timerArgs.name = "ble_adv_restart";
-    esp_timer_create(&timerArgs, &fresh->advRestartTimer);
+    esp_err_t err = esp_timer_create(&timerArgs, &fresh->advRestartTimer);
+    if (err != ESP_OK) {
+      log_e("createServer: advertising timer: %s", esp_err_to_name(err));
+      return BLEServer();
+    }
+    BLEServer::Impl::s_instance = fresh.get();
     if (!bluedroidRegisterGattsApp(fresh)) {
       BLEServer::Impl::s_instance = nullptr;
       return BLEServer();
@@ -654,10 +681,15 @@ BLEServer BLEClass::createServer() {
     slot = fresh;
   } else if (slot->gattsIf == ESP_GATT_IF_NONE) {
     if (!bluedroidRegisterGattsApp(slot)) {
-      BLEServer::Impl::s_instance = nullptr;
-      slot.reset();
+      BLEServer::Impl::s_instance = slot.get();
+      BLELockGuard lock(slot->mtx);
+      slot->active = false;
       return BLEServer();
     }
+  }
+  {
+    BLELockGuard lock(slot->mtx);
+    slot->active = true;
   }
   return BLEServer(slot);
 }

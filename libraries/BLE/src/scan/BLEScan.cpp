@@ -73,7 +73,8 @@ void BLEScan::setFilterDuplicates(bool filter) {
 }
 
 bool BLEScan::isScanning() const {
-  return _impl && _impl->isScanning;
+  BLE_CHECK_IMPL(false);
+  return impl.isScanning;
 }
 
 // Callback setters store the handler and no-op with a warning when scanning is
@@ -140,12 +141,10 @@ void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
 #endif
 }
 
-#if BLE_SCANNING_SUPPORTED
-
 // Result-management helpers are thread-safe: each acquires impl.mtx before
 // touching the shared results set.
 
-BLEScan::Results BLEScan::getResults() {
+BLEScan::Results BLEScan::getResults() const {
   BLE_CHECK_IMPL(BLEScan::Results());
   BLELockGuard lock(impl.mtx);
   return impl.results;
@@ -196,7 +195,5 @@ void BLEScan::Results::dump() const {
     log_i("[%d] %s", i, _devices[i].toString().c_str());
   }
 }
-
-#endif /* BLE_SCANNING_SUPPORTED */
 
 #endif /* BLE_ENABLED */

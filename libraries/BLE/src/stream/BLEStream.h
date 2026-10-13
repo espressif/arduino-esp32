@@ -180,7 +180,8 @@ public:
    * @param peer Connection metadata for the target peer.
    * @param buffer Data to send.
    * @param size Number of bytes to send.
-   * @return Number of bytes sent, or 0 on failure or if not connected.
+   * @return Number of bytes sent, or 0 on failure, if not connected, or (server
+   *         mode) if the peer has not enabled TX notifications.
    */
   size_t writeTo(const BLEConnInfo &peer, const uint8_t *buffer, size_t size);
 

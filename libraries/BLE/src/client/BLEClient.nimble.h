@@ -22,6 +22,7 @@
 #if BLE_NIMBLE
 
 #include "client/BLEClientImpl.h"
+#include "remote/BLERemoteService.h"
 #include "types/BLEConnInfo.nimble.h"
 #include "core/BLESync.h"
 
@@ -55,12 +56,6 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // terminal event (DISCONNECT or CONNECT-failure) has been fully dispatched.
   std::shared_ptr<BLEClient::Impl> nimbleRef;
 
-  struct RemoteServiceEntry {
-    BLEUUID uuid;
-    uint16_t startHandle;
-    uint16_t endHandle;
-  };
-  std::vector<RemoteServiceEntry> discoveredServices;
   bool discovering = false;
   BLESync discoverSync{"discoverSync"};
 

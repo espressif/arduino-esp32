@@ -108,7 +108,7 @@ public:
    * @return Pointer to the internal buffer, or nullptr if no value has been read yet.
    * @note The pointer is invalidated by any subsequent read or write on this characteristic.
    */
-  const uint8_t *readRawData(size_t *len = nullptr);
+  const uint8_t *readRawData(size_t *len = nullptr) const;
 
   /**
    * @brief Write a value to the remote characteristic.
@@ -166,8 +166,13 @@ public:
    * @param data         Pointer to the notification payload.
    * @param length       Length of the payload in bytes.
    * @param isNotification True for a notification, false for an indication.
+   * @note Runs on the BLE stack task. Do not call blocking GATT operations
+   *       (@c readValue(), confirmed @c writeValue(), @c subscribe()) on @p chr
+   *       here: they wait for a response that this same task delivers, so they
+   *       stall until their timeout. A read also replaces the buffer @p data
+   *       points into. Defer such work to another task.
    */
-  using NotifyCallback = std::function<void(const BLERemoteCharacteristic &chr, const uint8_t *, size_t, bool)>;
+  using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, bool)>;
 
   /**
    * @brief Subscribe to notifications or indications from this characteristic.

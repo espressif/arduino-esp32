@@ -31,6 +31,7 @@
 #include <host/ble_hs.h>
 #include <host/ble_gatt.h>
 #include <host/ble_att.h>
+#include <atomic>
 #include <vector>
 #include <memory>
 
@@ -70,6 +71,7 @@ struct BLERemoteCharacteristic::Impl : BLERemoteCharacteristicImplCommon {
   // Last ATT error from the most recent read or write GATT callback (read and
   // write are sequential blocking ops, so a single field is sufficient).
   int lastAttError = 0;
+  std::atomic<uint32_t> readGeneration{0};
   BLESync readSync{"readSync"};
   BLESync writeSync{"writeSync"};
   BLESync dscDiscoverSync{"dscDiscoverSync"};
@@ -81,6 +83,7 @@ struct BLERemoteCharacteristic::Impl : BLERemoteCharacteristicImplCommon {
 
   static void registerForNotify(uint16_t connHandle, uint16_t attrHandle, const std::shared_ptr<BLERemoteCharacteristic::Impl> &impl);
   static void unregisterForNotify(uint16_t connHandle, uint16_t attrHandle);
+  static void clearNotifyRoutes(uint16_t connHandle);
   static void handleNotifyRx(uint16_t connHandle, uint16_t attrHandle, struct os_mbuf *om, bool isNotify);
 };
 
@@ -92,6 +95,7 @@ struct BLERemoteCharacteristic::Impl : BLERemoteCharacteristicImplCommon {
  */
 struct BLERemoteDescriptor::Impl : BLERemoteDescriptorImplCommon {
   uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE;
+  std::atomic<uint32_t> readGeneration{0};
   BLESync readSync{"dscReadSync"};
   BLESync writeSync{"dscWriteSync"};
 

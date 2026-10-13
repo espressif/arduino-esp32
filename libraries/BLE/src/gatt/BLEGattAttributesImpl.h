@@ -45,6 +45,7 @@ struct BLEServiceImplCommon : std::enable_shared_from_this<BLEService::Impl> {
   uint8_t instId = 0;
   uint32_t numHandles = 15;
   bool started = false;
+  bool removing = false;
   BLEServer::Impl *server = nullptr;
   std::vector<std::shared_ptr<BLECharacteristic::Impl>> characteristics;
   std::vector<std::shared_ptr<BLEService::Impl>> includedServices;
@@ -88,6 +89,19 @@ struct BLECharacteristicImplCommon : std::enable_shared_from_this<BLECharacteris
     }
   }
 
+  // Handlers are copied under mtx and invoked outside it.
+  void dispatchNotify();
+  void dispatchStatus(BLECharacteristic::NotifyStatus status, uint32_t code);
+
+  /** @brief Owning active server, or null when this characteristic is detached/inactive. */
+  BLEServer::Impl *activeServer();
+
+  /** @brief Shared implementation of notify() and indicate() across all subscribed connections. */
+  BTStatus sendToSubscribers(const uint8_t *data, size_t length, bool indicate);
+
+  /** @brief Shared implementation of notify(connHandle) and indicate(connHandle). */
+  BTStatus sendToConnection(uint16_t connHandle, const uint8_t *data, size_t length, bool indicate);
+
   // Handle factory for backend code that is not a friend of BLECharacteristic: mints
   // a handle through the private ctor, which only this befriended ImplCommon can call.
   // Keeps the friend surface to one type per class.
@@ -98,11 +112,33 @@ struct BLECharacteristicImplCommon : std::enable_shared_from_this<BLECharacteris
 };
 
 /**
+ * @brief Detach a local descriptor and release its retained state.
+ *
+ * The public handle remains a valid, empty shell after this call.
+ */
+void bleDetachLocalDescriptor(const std::shared_ptr<BLEDescriptor::Impl> &desc);
+
+/**
+ * @brief Detach a local characteristic and all its descriptors.
+ *
+ * The public handles remain valid, empty shells after this call.
+ */
+void bleDetachLocalCharacteristic(const std::shared_ptr<BLECharacteristic::Impl> &chr);
+
+/**
+ * @brief Detach a local service and its owned characteristic tree.
+ *
+ * Included services are only unlinked; they remain owned by the server.
+ */
+void bleDetachLocalService(const std::shared_ptr<BLEService::Impl> &svc);
+
+/**
  * @brief Shared, stack-agnostic state for a GATT descriptor.
  */
 struct BLEDescriptorImplCommon : std::enable_shared_from_this<BLEDescriptor::Impl> {
   BLEUUID uuid;
   uint16_t handle = 0;
+  size_t maxLen = 512;
   std::vector<uint8_t> value;
   BLECharacteristic::Impl *chr = nullptr;
   BLEPermission permissions{};

@@ -17,158 +17,82 @@
 
 /**
  * @file BLEGattAttributes.bluedroid.cpp
- * @brief Bluedroid server-side GATT attributes: characteristic notify/indicate and descriptor permissions (BLE_GATT_SERVER_SUPPORTED).
+ * @brief Bluedroid server-side GATT attributes: characteristic notify and descriptor permissions (BLE_GATT_SERVER_SUPPORTED).
  */
 
 #include "core/BLEGuards.h"
 #if BLE_BLUEDROID
 
-// ==========================================================================
-// BLECharacteristic - Bluedroid notify/indicate and descriptor helpers
-// ==========================================================================
-
 #if BLE_GATT_SERVER_SUPPORTED
 
 #include "BLE.h"
-
 #include "gatt/BLEGattAttributes.bluedroid.h"
 #include "server/BLEServer.bluedroid.h"
 #include "core/BLEImplHelpers.h"
-#include "types/BLEConnInfoData.h"
 #include "gatt/BLECharacteristicValidation.h"
 #include "esp32-hal-log.h"
 
 #include <esp_gatts_api.h>
-#include <vector>
 
 // --------------------------------------------------------------------------
-// BLECharacteristic -- Bluedroid
+// BLECharacteristic notification & descriptor helpers (Bluedroid)
 // --------------------------------------------------------------------------
 
-// API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
-
-// Bluedroid sends notifications through esp_ble_gatts_send_indicate with need_confirm=false.
-BTStatus BLECharacteristic::notify(const uint8_t *data, size_t length) {
-  BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!(impl.properties & BLEProperty::Notify)) {
-    log_w("Characteristic %s: notify called but Notify property not set", impl.uuid.toString().c_str());
+// Hands one notification (need_confirm=false) to the stack, or holds it if an
+// indication on the same characteristic is currently in flight on connHandle
+// (so ESP_GATTS_CONF_EVT can distinguish indication confirmations from
+// notification completions).
+BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length) {
+  BLEServer::Impl *server = impl.activeServer();
+  if (!server) {
     return BTStatus::InvalidState;
   }
-  if (!impl.service || !impl.service->server) {
-    log_e("Characteristic %s: notify called but service/server not set", impl.uuid.toString().c_str());
-    return BTStatus::InvalidState;
-  }
-  auto *server = impl.service->server;
 
-  // When no explicit payload is given, snapshot the stored value under the
-  // per-characteristic mtx so a concurrent setValue() cannot reallocate it
-  // mid-send.
-  std::vector<uint8_t> stored;
-  const uint8_t *sendData = data;
-  size_t sendLen = length;
-  if (!sendData || sendLen == 0) {
-    BLELockGuard lock(impl.mtx);
-    stored = impl.value;
-    sendData = stored.data();
-    sendLen = stored.size();
-  }
-
-  BLELockGuard lock(server->mtx);
-  for (auto &sub : impl.subscribers) {
-    if (sub.second & BLE_CCCD_NOTIFY) {
-      esp_ble_gatts_send_indicate(server->gattsIf, sub.first, impl.handle, sendLen, const_cast<uint8_t *>(sendData), false);
+  esp_err_t err = ESP_OK;
+  bool wasHeld = false;
+  bool wasFull = false;
+  bool pumpAfterReject = false;
+  {
+    BLELockGuard serverLock(server->mtx);
+    if (!server->active || !server->started || server->gattsIf == ESP_GATT_IF_NONE || !server->connFind(connHandle) || !server->characteristicCanSend(&impl)) {
+      return BTStatus::InvalidState;
+    }
+    auto *link = server->indicationLink(connHandle);
+    if (link && link->inFlight.get() == &impl) {
+      auto &ns = server->notifyStateFor(connHandle);
+      if (ns.heldNotifies.size() >= BLEServer::Impl::kMaxHeldNotifications) {
+        wasFull = true;
+      } else {
+        ns.heldNotifies.push_back({impl.shared_from_this(), std::vector<uint8_t>(data, data + length)});
+        wasHeld = true;
+      }
+    } else {
+      auto &ns = server->notifyStateFor(connHandle);
+      ns.notifiesPending++;
+      err = esp_ble_gatts_send_indicate(server->gattsIf, connHandle, impl.handle, length, const_cast<uint8_t *>(data), false);
+      if (err != ESP_OK) {
+        if (--ns.notifiesPending == 0 && ns.pumpWaiting) {
+          ns.pumpWaiting = false;
+          pumpAfterReject = true;
+        }
+      }
     }
   }
-  return BTStatus::OK;
-}
 
-BTStatus BLECharacteristic::notify(uint16_t connHandle, const uint8_t *data, size_t length) {
-  BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!(impl.properties & BLEProperty::Notify)) {
-    log_w("Characteristic %s: notify(conn) called but Notify property not set", impl.uuid.toString().c_str());
-    return BTStatus::InvalidState;
+  if (wasHeld) {
+    return BTStatus::OK;
   }
-  if (!impl.service || !impl.service->server) {
-    log_e("Characteristic %s: notify(conn) called but service/server not set", impl.uuid.toString().c_str());
-    return BTStatus::InvalidState;
+  if (wasFull) {
+    log_w("Characteristic %s: notify conn=%u - too many held behind an unconfirmed indication", impl.uuid.toString().c_str(), connHandle);
+    impl.dispatchStatus(BLECharacteristic::ERROR_GATT, 0);
+    return BTStatus::Busy;
   }
-  auto *server = impl.service->server;
-
-  std::vector<uint8_t> stored;
-  const uint8_t *sendData = data;
-  size_t sendLen = length;
-  if (!sendData || sendLen == 0) {
-    BLELockGuard lock(impl.mtx);
-    stored = impl.value;
-    sendData = stored.data();
-    sendLen = stored.size();
-  }
-
-  esp_err_t err = esp_ble_gatts_send_indicate(server->gattsIf, connHandle, impl.handle, sendLen, const_cast<uint8_t *>(sendData), false);
   if (err != ESP_OK) {
     log_e("Characteristic %s: esp_ble_gatts_send_indicate (notify) conn=%u: %s", impl.uuid.toString().c_str(), connHandle, esp_err_to_name(err));
-    return BTStatus::Fail;
-  }
-  return BTStatus::OK;
-}
-
-// Indications use esp_ble_gatts_send_indicate with need_confirm=true to request client confirmation.
-BTStatus BLECharacteristic::indicate(const uint8_t *data, size_t length) {
-  BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!(impl.properties & BLEProperty::Indicate)) {
-    log_w("Characteristic %s: indicate called but Indicate property not set", impl.uuid.toString().c_str());
-    return BTStatus::InvalidState;
-  }
-  if (!impl.service || !impl.service->server) {
-    log_e("Characteristic %s: indicate called but service/server not set", impl.uuid.toString().c_str());
-    return BTStatus::InvalidState;
-  }
-  auto *server = impl.service->server;
-
-  std::vector<uint8_t> stored;
-  const uint8_t *sendData = data;
-  size_t sendLen = length;
-  if (!sendData || sendLen == 0) {
-    BLELockGuard lock(impl.mtx);
-    stored = impl.value;
-    sendData = stored.data();
-    sendLen = stored.size();
-  }
-
-  BLELockGuard lock(server->mtx);
-  for (auto &sub : impl.subscribers) {
-    if (sub.second & BLE_CCCD_INDICATE) {
-      esp_ble_gatts_send_indicate(server->gattsIf, sub.first, impl.handle, sendLen, const_cast<uint8_t *>(sendData), true);
+    impl.dispatchStatus((err == ESP_ERR_INVALID_STATE) ? BLECharacteristic::ERROR_NO_CLIENT : BLECharacteristic::ERROR_GATT, static_cast<uint32_t>(err));
+    if (pumpAfterReject) {
+      server->pumpIndications(connHandle);
     }
-  }
-  return BTStatus::OK;
-}
-
-BTStatus BLECharacteristic::indicate(uint16_t connHandle, const uint8_t *data, size_t length) {
-  BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!(impl.properties & BLEProperty::Indicate)) {
-    log_w("Characteristic %s: indicate(conn) called but Indicate property not set", impl.uuid.toString().c_str());
-    return BTStatus::InvalidState;
-  }
-  if (!impl.service || !impl.service->server) {
-    log_e("Characteristic %s: indicate(conn) called but service/server not set", impl.uuid.toString().c_str());
-    return BTStatus::InvalidState;
-  }
-  auto *server = impl.service->server;
-
-  std::vector<uint8_t> stored;
-  const uint8_t *sendData = data;
-  size_t sendLen = length;
-  if (!sendData || sendLen == 0) {
-    BLELockGuard lock(impl.mtx);
-    stored = impl.value;
-    sendData = stored.data();
-    sendLen = stored.size();
-  }
-
-  esp_err_t err = esp_ble_gatts_send_indicate(server->gattsIf, connHandle, impl.handle, sendLen, const_cast<uint8_t *>(sendData), true);
-  if (err != ESP_OK) {
-    log_e("Characteristic %s: esp_ble_gatts_send_indicate (indicate) conn=%u: %s", impl.uuid.toString().c_str(), connHandle, esp_err_to_name(err));
     return BTStatus::Fail;
   }
   return BTStatus::OK;
@@ -188,82 +112,21 @@ BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermis
   desc->uuid = uuid;
   desc->chr = _impl.get();
   desc->permissions = perms;
+  desc->maxLen = maxLen;
   desc->value.reserve(maxLen);
   impl.descriptors.push_back(desc);
   return BLEDescriptor(desc);
 }
 
-void BLECharacteristic::setDescription(const String &desc) {
-  if (!_impl) {
-    return;
-  }
-  auto existing = getDescriptor(BLEUUID(BLE_DSC_UUID16_USER_DESC));
-  if (existing) {
-    existing.setValue(desc);
-  } else {
-    auto d = createDescriptor(BLEUUID(BLE_DSC_UUID16_USER_DESC), BLEPermission::ReadOpen, desc.length() + 1);
-    d.setValue(desc);
-  }
-}
-
-#else /* !BLE_GATT_SERVER_SUPPORTED -- stubs */
-
-#include "BLE.h"
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_SERVER_SUPPORTED == 0: notify/indicate return NotSupported; no descriptors.
-
-BTStatus BLECharacteristic::notify(const uint8_t *, size_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLECharacteristic::notify(uint16_t, const uint8_t *, size_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLECharacteristic::indicate(const uint8_t *, size_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLECharacteristic::indicate(uint16_t, const uint8_t *, size_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &, BLEPermission, size_t) {
-  return BLEDescriptor();
-}
-
-void BLECharacteristic::setDescription(const String &) {}
-
-#endif /* BLE_GATT_SERVER_SUPPORTED */
-
-// ==========================================================================
-// BLEDescriptor - Bluedroid registration-time permission storage
-// ==========================================================================
-
-#if BLE_GATT_SERVER_SUPPORTED
-
-#include "gatt/BLEGattAttributes.bluedroid.h"
-#include "core/BLEImplHelpers.h"
-
 void BLEDescriptor::setPermissions(BLEPermission perms) {
   BLE_CHECK_IMPL();
   // Bluedroid applies descriptor permissions at GATT registration time
-  // (see BluedroidServer::startServer's descriptor loop), so we just stash
-  // the requested permissions here. Calling this after the service has
-  // been started will not retroactively update the native permissions.
+  // (see BLEServer::start's descriptor loop), so we stash the requested
+  // permissions here.
   impl.permissions = perms;
 }
 
 #else /* !BLE_GATT_SERVER_SUPPORTED -- stubs */
-
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_SERVER_SUPPORTED == 0: setPermissions is a no-op.
 
 void BLEDescriptor::setPermissions(BLEPermission) {}
 

@@ -30,9 +30,11 @@
 #if BLE_ENABLED
 
 #include "client/BLEClient.h"
+#include "remote/BLERemoteService.h"
 #include "core/BLEMutex.h"
 #include <atomic>
 #include <memory>
+#include <vector>
 
 /**
  * @brief Shared, stack-agnostic state for a GATT client.
@@ -42,6 +44,10 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   // Set on the BLE event task (connect/disconnect callbacks) and read on the
   // user task (isConnected), so it is atomic for well-defined concurrent access.
   std::atomic<bool> connected{false};
+  // Incremented for every successful link. Remote GATT handles capture this
+  // value so a recycled native connection handle cannot revive stale services.
+  std::atomic<uint32_t> connectionGeneration{0};
+  std::vector<std::shared_ptr<BLERemoteService::Impl>> discoveredServices;
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
   BLEClient::ConnectHandler onConnectCb = nullptr;

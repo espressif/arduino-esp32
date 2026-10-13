@@ -125,7 +125,7 @@ shared header for this one case.
 `BLE.createClient()` returns a fresh client instance each time.
 This is a hard design requirement: multi-client support must remain possible.
 Each backend's `createClient()` writes the same guard + fresh-alloc pattern directly; Bluedroid
-additionally delegates stack registration to `bluedroidRegisterClient` in `BluedroidClient.cpp`.
+additionally delegates stack registration to `bluedroidRegisterClient` in `BLEClient.bluedroid.cpp`.
 
 ### GATT handles
 
@@ -212,8 +212,10 @@ BLE objects form strict ownership trees:
 - Client → RemoteService → RemoteCharacteristic → RemoteDescriptor
 
 Parent Impls hold `std::shared_ptr` to child Impls (strong ownership).
-Child Impls hold a raw `Impl*` back-reference to their parent (non-owning).
-This direction is safe because a parent always outlives its children — destroying a service destroys its characteristics.
+Local server-side child Impls hold a raw `Impl*` back-reference to their parent.
+Before `end()` or a removal API releases the local tree's ownership, the library clears every raw back-reference and converts any externally retained child handle into a detached shell.
+Remote client-side child Impls instead hold a `std::weak_ptr` back-reference. A retained remote child can therefore safely outlive its client or parent handle; parent navigation then returns an empty handle and operations that require the connection fail safely.
+Each remote service also captures the client's connection generation, so recycling a native connection handle cannot make a stale remote tree operate on a later link.
 Using `shared_ptr` in both directions would create reference cycles and leak everything.
 
 ### `enable_shared_from_this` and handle reconstruction
@@ -223,7 +225,7 @@ This solves two problems that arise because internal code often holds only a raw
 
 1. **Callback dispatch** — Backend event handlers (static C callbacks from NimBLE/Bluedroid) receive a raw `Impl*` via context pointers. To invoke the user's `std::function` callback they must construct a public handle (e.g. `BLECharacteristic`), which requires a `shared_ptr<Impl>`. `shared_from_this()` safely promotes the raw pointer without creating a second ownership group.
 
-2. **Child-to-parent navigation** — Methods like `BLEDescriptor::getCharacteristic()` and `BLEService::getServer()` need to return a public handle from the non-owning raw parent `Impl*`. `shared_from_this()` on the parent Impl produces the `shared_ptr` needed to construct that handle.
+2. **Local child-to-parent navigation** — Methods like `BLEDescriptor::getCharacteristic()` and `BLEService::getServer()` need to return a public handle from the non-owning raw parent `Impl*`. `shared_from_this()` on the parent Impl produces the `shared_ptr` needed to construct that handle. Remote children lock their weak parent reference instead.
 
 **Safety constraint:** `shared_from_this()` may only be called on an Impl that is already owned by at least one `shared_ptr`. This is always the case in practice because Impls are created via `std::make_shared` in factory methods (`createServer`, `createService`, etc.) and the parent keeps the owning `shared_ptr` alive for the entire lifetime of the child.
 
@@ -231,8 +233,9 @@ This solves two problems that arise because internal code often holds only a raw
 
 When `BLE.end()` is called, each Impl releases its child ownership chains, frees internal heap allocations, and marks itself as not initialized.
 The bulk of memory is reclaimed immediately.
-If the user still holds handles, each Impl enters a minimal shell state (~16–32 bytes) that persists until the last handle is released, at which point the shell is freed automatically.
+If the user still holds a child handle, its Impl enters a minimal shell state that persists until the last handle is released, at which point the shell is freed automatically. Top-level singleton Impls remain library-owned but release their session resources.
 This means `BLE.end(true)` (controller memory release) works correctly even if the user has forgotten to clear global handles.
+`BLE.createServer()` is a process-lifetime singleton (one physical GATT server): `end()` keeps that object and drops its services, so a later `begin()` plus `createServer()` returns the same empty server. The sketch must recreate the GATT tree; calling `createService()` without `end()` having cleared the previous tree would otherwise register a second copy.
 
 ### True value types
 
@@ -258,6 +261,10 @@ When extending the library, always use the per-event `std::function` registratio
 Callbacks are copied under the object mutex and invoked after the lock is released.
 This avoids calling user code while internal locks are held.
 Preserve that pattern.
+
+Mutable handle references passed to callbacks are borrowed for that callback invocation.
+A callback may copy the handle (the normal cheap shared-handle copy) when it needs to retain it,
+but must not retain a pointer or reference to the callback parameter itself.
 
 ### Execution-context rule
 
@@ -383,6 +390,7 @@ Code should not assume that `createService()` alone means the service already ex
 
 The public semantic is one API regardless.
 Any new code must preserve this abstraction.
+Send enqueueing and native submission must revalidate characteristic membership while holding the server lock. This serializes sends with removal: either the send becomes pending first and removal returns `Busy`, or removal marks the service and the send returns `InvalidState`.
 
 ## Lifecycle rules
 
@@ -537,7 +545,7 @@ header; the two backends are structurally identical except NimBLE-only `L2CAP`):
 
 - **Scan results:** cache into `results` **before** `onResult`, so `getResults()` inside the handler sees the current device.
 - **Client connect:** deliver `onConnect` **before** unblocking a blocking `connect()`.
-- **Client disconnect:** tear down connection state, then deliver `onDisconnect` only if the link had reached connected.
+- **Client disconnect:** tear down connection state, discovered remote ownership, and notification routes before delivering `onDisconnect`; deliver it only if the link had reached connected.
 - **Client MTU exchange:** initiate from the **caller's thread inside blocking `connect()`**, after the connect sync is released, and **block until it completes**. Bluedroid drops a pending MTU procedure if another GATT/GAP op starts while it is in flight. NimBLE may run the exchange after `connect()` returns; `onMtuChanged` still lands after `onConnect`. `connectAsync()` does **not** auto-exchange — call `setMTU()` after `onConnect`. MTU is not yet negotiated *inside* `onConnect`.
 - **Default scan timing:** interval == window == 30 ms (continuous active scan) unless overridden.
 - **`BLEConnInfo::getIdAddress()`:** resolved identity when the stack provides one (NimBLE `peer_id_addr`), else OTA. Bluedroid has no resolved-identity field → always OTA, never empty.
@@ -579,12 +587,13 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
 - **`client.onConnParamsUpdateRequest`:** NimBLE-only. Bluedroid's L2CAP layer accepts/negotiates connection-parameter updates internally and only surfaces the result (`ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT`) after the fact, so there is no application pre-accept hook to bridge.
 - **Bluedroid `BLEConnInfo::keySize`:** `AUTH_CMPL` carries no key size; stays at default (NimBLE reports `sec_state.key_size`).
 - **Bluedroid BLE5 surface:** extended adv/scan, PHY/DLE, periodic adv TX, and periodic sync RX are implemented under `BLE5_SUPPORTED` / `BLE_PERIODIC_ADV_SUPPORTED`. Classic esp32 Bluedroid libs remain BLE 4.2-only.
-- **HITL-pending coverage:** multi-central BLEStream under load (two simultaneous centrals with per-peer routing; needs a third DUT). Passkey-entry pairing + Numeric-Comparison reject, periodic terminate/sync-lost, L2CAP bulk across the credit stall + reconnect, conn-param reject, and the `deleteBond` round-trip are now covered by phases 28-34. See `tests/validation/ble/README.md`.
+- **HITL-pending coverage:** multi-central BLEStream under load (two simultaneous centrals with per-peer routing; needs a third DUT). Passkey-entry pairing + Numeric-Comparison reject, periodic terminate/sync-lost, L2CAP bulk across the credit stall + reconnect, conn-param reject, and the `deleteBond` round-trip are covered by phases 28-34. Indication `ESP_GATT_BUSY` retry, indication queue-full, CCCD bit routing, in-flight `removeService`, abandoned long-read reconnect, and read-timeout destroy/re-read are covered by phases 4, 5, 33, and 35. See `tests/validation/ble/README.md`.
+- **Untestable on this API / 2-DUT rig:** EATT (no public API). Per-peer CCCD and overlapping snapshots on two ACL links (two `BLEClient` instances on one central share one ACL with the peripheral). Withholding Handle Value Confirmation (both hosts auto-confirm indications, so the 30 s ATT indication timeout cannot be forced without a non-confirming peer).
 
 ## Testing as executable design
 
 The BLE validation suite in `tests/validation/ble/` is the best executable summary of the intended behavior.
-It exercises lifecycle, GATT server/client setup, read/write/notify/indicate flows, large ATT writes, descriptor behavior, security/pairing, BLE5 extended features, reconnect cycles, `BLEStream`, L2CAP CoC, and memory release.
+It exercises lifecycle, GATT server/client setup, read/write/notify/indicate flows, large ATT writes, descriptor behavior, security/pairing, BLE5 extended features, reconnect cycles, `BLEStream`, L2CAP CoC, long-read snapshot isolation, indication queue/BUSY retry and pending-send edges, and memory release.
 
 ### Design rule
 

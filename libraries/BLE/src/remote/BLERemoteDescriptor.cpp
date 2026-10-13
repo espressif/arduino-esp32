@@ -38,8 +38,7 @@ uint16_t BLERemoteDescriptor::getHandle() const {
 }
 
 BLERemoteCharacteristic BLERemoteDescriptor::getRemoteCharacteristic() const {
-  // Non-owning handle: the parent characteristic is owned by the discovering service.
-  return (_impl && _impl->chr) ? BLERemoteCharacteristic(_impl->chr->shared_from_this()) : BLERemoteCharacteristic();
+  return _impl ? BLERemoteCharacteristic(_impl->chr.lock()) : BLERemoteCharacteristic();
 }
 
 String BLERemoteDescriptor::readValue(uint32_t timeoutMs) {

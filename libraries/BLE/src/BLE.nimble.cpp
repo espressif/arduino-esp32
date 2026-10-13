@@ -69,6 +69,10 @@ extern "C" void ble_store_config_init(void);
 // reference so it is re-initialized after a stack restart (see the definition
 // for the use-after-free this prevents across BLE.end()/begin()).
 void nimbleResetReAdvertiseEvent();
+
+// Process-lifetime singleton. end() clears its GATT tree but keeps this slot so
+// existing BLEServer handles remain the same server after begin().
+static std::shared_ptr<BLEServer::Impl> s_server;
 #endif
 
 // --------------------------------------------------------------------------
@@ -278,8 +282,29 @@ void BLEClass::end(bool releaseMemory) {
   nimbleResetReAdvertiseEvent();
 #endif
 
+  // Close the public session before native shutdown callbacks run. Keep the
+  // GATT tree alive until the host has stopped, but reject re-entrant server
+  // creation and value sends while it is stopping.
+  _initialized = false;
+#if BLE_GATT_SERVER_SUPPORTED
+  if (s_server) {
+    BLELockGuard lock(s_server->mtx);
+    s_server->active = false;
+  }
+#endif
+
   nimble_port_stop();
   nimble_port_deinit();
+  _impl->synced = false;
+
+#if BLE_GATT_SERVER_SUPPORTED
+  // Native callbacks can retain raw pointers into the GATT tree. Release it
+  // only after the host task has stopped and deinit has discarded those
+  // registrations.
+  if (s_server) {
+    s_server->releaseGattTree();
+  }
+#endif
 
 #if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
   hostedDeinitBLE();
@@ -290,9 +315,6 @@ void BLEClass::end(bool releaseMemory) {
     btMemRelease(BT_MODE_BLE);
 #endif
   }
-
-  _impl->synced = false;
-  _initialized = false;
 }
 
 // --------------------------------------------------------------------------
@@ -648,16 +670,19 @@ BTStatus BLEClass::stopAdvertising() {
 
 #if BLE_GATT_SERVER_SUPPORTED
 BLEServer BLEClass::createServer() {
-  static std::shared_ptr<BLEServer::Impl> slot;
   if (!isInitialized()) {
     log_e("createServer: BLE not initialized");
     return BLEServer();
   }
-  if (!slot) {
+  if (!s_server) {
     log_d("createServer: creating new server instance");
-    slot = std::make_shared<BLEServer::Impl>();
+    s_server = std::make_shared<BLEServer::Impl>();
   }
-  return BLEServer(slot);
+  {
+    BLELockGuard lock(s_server->mtx);
+    s_server->active = true;
+  }
+  return BLEServer(s_server);
 }
 #else
 BLEServer BLEClass::createServer() {

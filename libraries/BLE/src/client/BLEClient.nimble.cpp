@@ -376,71 +376,6 @@ BTStatus BLEClient::discoverServices() {
   return status;
 }
 
-BLERemoteService BLEClient::getService(const BLEUUID &uuid) {
-  if (!_impl) {
-    return BLERemoteService();
-  }
-  bool needDiscover;
-  {
-    BLELockGuard lock(_impl->mtx);
-    if (!_impl->connected) {
-      return BLERemoteService();
-    }
-    needDiscover = _impl->discoveredServices.empty();
-  }
-
-  if (needDiscover) {
-    if (discoverServices() != BTStatus::OK) {
-      return BLERemoteService();
-    }
-  }
-
-  BLELockGuard lock(_impl->mtx);
-  uint16_t handle = _impl->connHandle;
-  for (auto &entry : _impl->discoveredServices) {
-    if (entry.uuid == uuid) {
-      auto sImpl = std::make_shared<BLERemoteService::Impl>();
-      sImpl->uuid = entry.uuid;
-      sImpl->startHandle = entry.startHandle;
-      sImpl->endHandle = entry.endHandle;
-      sImpl->connHandle = handle;
-      sImpl->client = _impl.get();
-
-      return BLERemoteService(sImpl);
-    }
-  }
-  return BLERemoteService();
-}
-
-std::vector<BLERemoteService> BLEClient::getServices() const {
-  std::vector<BLERemoteService> result;
-  BLE_CHECK_IMPL(result);
-
-  bool needDiscover;
-  {
-    BLELockGuard lock(impl.mtx);
-    needDiscover = impl.connected && impl.discoveredServices.empty();
-  }
-  if (needDiscover) {
-    auto *self = const_cast<BLEClient *>(this);
-    (void)self->discoverServices();
-  }
-
-  BLELockGuard lock(impl.mtx);
-  uint16_t handle = impl.connHandle;
-  for (auto &entry : impl.discoveredServices) {
-    auto sImpl = std::make_shared<BLERemoteService::Impl>();
-    sImpl->uuid = entry.uuid;
-    sImpl->startHandle = entry.startHandle;
-    sImpl->endHandle = entry.endHandle;
-    sImpl->connHandle = handle;
-    sImpl->client = _impl.get();
-
-    result.push_back(BLERemoteService(sImpl));
-  }
-  return result;
-}
-
 // --------------------------------------------------------------------------
 // Connection info
 // --------------------------------------------------------------------------
@@ -681,6 +616,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         BLELockGuard lock(impl->mtx);
         impl->connHandle = event->connect.conn_handle;
         impl->connected = true;
+        impl->connectionGeneration.fetch_add(1);
         impl->identityDispatched = false;
       }
       log_i("Client: connected, handle=%u", event->connect.conn_handle);
@@ -709,7 +645,9 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         wasConnected = impl->connected;
         impl->connected = false;
         impl->connHandle = BLE_HS_CONN_HANDLE_NONE;
+        impl->discoveredServices.clear();
       }
+      BLERemoteCharacteristic::Impl::clearNotifyRoutes(evtHandle);
 
       BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(event->disconnect.conn);
       uint8_t reason = event->disconnect.reason;
@@ -899,13 +837,19 @@ int BLEClient::Impl::serviceDiscoveryCb(uint16_t connHandle, const struct ble_ga
   }
 
   if (error->status == 0 && service != nullptr) {
-    RemoteServiceEntry entry;
-    entry.uuid = nimbleUuidToPublic(service->uuid);
-    entry.startHandle = service->start_handle;
-    entry.endHandle = service->end_handle;
+    auto serviceImpl = std::make_shared<BLERemoteService::Impl>();
+    serviceImpl->uuid = nimbleUuidToPublic(service->uuid);
+    serviceImpl->startHandle = service->start_handle;
+    serviceImpl->endHandle = service->end_handle;
+    serviceImpl->connHandle = connHandle;
+    serviceImpl->client = impl->shared_from_this();
     {
       BLELockGuard lock(impl->mtx);
-      impl->discoveredServices.push_back(entry);
+      if (!impl->connected || impl->connHandle != connHandle) {
+        return 0;
+      }
+      serviceImpl->clientGeneration = impl->connectionGeneration.load();
+      impl->discoveredServices.push_back(serviceImpl);
     }
     return 0;
   }
@@ -997,16 +941,6 @@ BTStatus BLEClient::secureConnection() {
 BTStatus BLEClient::discoverServices() {
   log_w("GATT client not supported");
   return BTStatus::NotSupported;
-}
-
-BLERemoteService BLEClient::getService(const BLEUUID &) {
-  log_w("GATT client not supported");
-  return BLERemoteService();
-}
-
-std::vector<BLERemoteService> BLEClient::getServices() const {
-  log_w("GATT client not supported");
-  return {};
 }
 
 void BLEClient::setMTU(uint16_t) {

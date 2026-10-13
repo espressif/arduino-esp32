@@ -121,15 +121,76 @@ void BLEClient::resetCallbacks() {
 #endif
 }
 
-#if BLE_GATT_CLIENT_SUPPORTED
-
 BTAddress BLEClient::getPeerAddress() const {
-  return _impl ? _impl->peerAddress : BTAddress();
+  BLE_CHECK_IMPL(BTAddress());
+  return impl.peerAddress;
 }
 
 bool BLEClient::isConnected() const {
-  return _impl && _impl->connected;
+  BLE_CHECK_IMPL(false);
+  return impl.connected;
 }
+
+#if BLE_GATT_CLIENT_SUPPORTED
+
+BLERemoteService BLEClient::getService(const BLEUUID &uuid) {
+  BLE_CHECK_IMPL(BLERemoteService());
+  bool needDiscover;
+  {
+    BLELockGuard lock(impl.mtx);
+    if (!impl.connected) {
+      return BLERemoteService();
+    }
+    needDiscover = impl.discoveredServices.empty();
+  }
+  if (needDiscover && !discoverServices()) {
+    return BLERemoteService();
+  }
+
+  BLELockGuard lock(impl.mtx);
+  for (auto &service : impl.discoveredServices) {
+    if (service->uuid == uuid) {
+      return BLERemoteService(service);
+    }
+  }
+  log_w("getService: UUID %s not found among %u discovered service(s)", uuid.toString().c_str(), (unsigned)impl.discoveredServices.size());
+  return BLERemoteService();
+}
+
+std::vector<BLERemoteService> BLEClient::getServices() const {
+  std::vector<BLERemoteService> result;
+  BLE_CHECK_IMPL(result);
+  bool needDiscover;
+  {
+    BLELockGuard lock(impl.mtx);
+    needDiscover = impl.connected && impl.discoveredServices.empty();
+  }
+  if (needDiscover) {
+    auto *self = const_cast<BLEClient *>(this);
+    (void)self->discoverServices();
+  }
+
+  BLELockGuard lock(impl.mtx);
+  result.reserve(impl.discoveredServices.size());
+  for (auto &service : impl.discoveredServices) {
+    result.push_back(BLERemoteService(service));
+  }
+  return result;
+}
+
+#else /* !BLE_GATT_CLIENT_SUPPORTED */
+
+BLERemoteService BLEClient::getService(const BLEUUID &) {
+  log_w("GATT client not supported");
+  return BLERemoteService();
+}
+
+std::vector<BLERemoteService> BLEClient::getServices() const {
+  log_w("GATT client not supported");
+  return {};
+}
+
+#endif /* BLE_GATT_CLIENT_SUPPORTED */
 
 String BLEClient::getValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID) {
   log_d("Client: getValue svc=%s chr=%s", serviceUUID.toString().c_str(), charUUID.toString().c_str());
@@ -158,7 +219,5 @@ String BLEClient::toString() const {
   s += impl.connected ? ", connected)" : ", disconnected)";
   return s;
 }
-
-#endif /* BLE_GATT_CLIENT_SUPPORTED */
 
 #endif /* BLE_ENABLED */
