@@ -28,6 +28,10 @@ tmp/
 .env
 .venv/
 venv/
+__pycache__/
+_build/
+.pytest_cache/
+.ruff_cache/
 
 # Ignore files built by Visual Studio/Visual Micro and other IDEs
 [Dd]ebug/
@@ -45,8 +49,6 @@ boards.sloeber.txt
 # Ignore docs build (Sphinx)
 docs/build
 docs/source/_build
-__pycache__/
-_build/
 
 # Test log files
 *.log

@@ -90,6 +90,8 @@ OpenThread Library Structure
 * **Classes API**: Object-oriented classes that directly call OpenThread API functions.
   * ``OpenThread``: Main class for managing Thread network operations (includes the Joiner / Commissioner roles).
   * ``DataSet``: Class for managing Thread operational datasets.
+  * ``OThreadScan``: MLE Thread network discovery (``discoverNetworks()``) backed by ``otThreadDiscover()``; results in ``OThreadNetworkInfo``.
+  * ``OThreadDNSSD``: ESPmDNS-style Thread DNS-SD advertise + discover (``begin`` / ``addService`` / ``waitForAnnounce`` / ``queryService`` / ``queryHost`` / async ``startQuery*``).
   * ``OThreadUDP``: Arduino ``UDP``-compatible class for sending and receiving IPv6 UDP datagrams over the Thread mesh, backed by the raw ``otUdpSocket`` API (no lwIP).
   * ``OThreadCoAP`` classes: Application CoAP client and server wrappers (``OThreadCoAPClient``, ``OThreadCoAPServer``, optional CoAPS classes) backed by ``otCoap*`` / ``otCoapSecure*``.
 
@@ -127,6 +129,49 @@ The ``DataSet`` class provides a convenient way to manage Thread operational dat
     :maxdepth: 2
 
     openthread_dataset
+
+OThreadScan
+***********
+
+The ``OThreadScan`` class discovers nearby Thread networks via MLE discover
+(``otThreadDiscover()`` / CLI ``discover``). Each result is an
+``OThreadNetworkInfo`` with Thread identity and IEEE 802.15.4 link fields — the
+same primitive Matter uses during commissioning.
+
+* **Single API**: ``discoverNetworks()`` — blocking, async poll
+  (``scanComplete()``), or streaming callbacks (``onResult()`` /
+  ``onComplete()``).
+* **No Thread start required**: only ``OThread.networkInterfaceUp()`` after
+  ``OThread.begin(false)``.
+* **Optional filters**: PAN ID, joiner-only, EUI-64 via
+  ``OThreadDiscoverFilters``.
+
+.. toctree::
+    :maxdepth: 2
+
+    openthread_scan
+
+OThreadDNSSD
+************
+
+The ``OThreadDNSSD`` class provides an ESPmDNS-style API to advertise and discover
+services on Thread (SRP client + DNS client under the hood). Services register with
+a Border Router so they can be discovered from the Thread mesh and (via the BR) the
+infrastructure network.
+
+* **Familiar API**: ``begin``, ``addService``, ``addServiceTxt``, ``waitForAnnounce``,
+  ``isAnnounceComplete``, ``onServiceEvent``, ``queryService``, ``queryHost``,
+  ``startQueryService``, ``startQueryHost``, ``onQueryEvent``.
+* **Auto SRP / DNS**: finds the on-mesh / BR SRP server from Network Data; DNS
+  default server follows for discover.
+* **Live announce status**: ``isAnnounceComplete()`` reflects local SRP client
+  ``Registered`` state (updated as OpenThread learns the server accepted the update).
+* **Fixed pools**: service/TXT/query caps like ``OThreadScan`` result limits.
+
+.. toctree::
+    :maxdepth: 2
+
+    openthread_dnssd
 
 OpenThreadCLI
 *************
@@ -298,6 +343,8 @@ The OpenThread library includes CLI-based and Native API examples demonstrating 
 * **Thread Commissioning** - Demonstrates a CommissionerNode that forms a network and authorizes a JoinerNode that joins using only a PSKd. `View Thread Commissioning examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning>`_.
 * **UDP Light + Switch** - Demonstrates a Native UDP light server and one or more switch clients using Thread commissioning and application port ``5051``. `View UDP Light + Switch examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch>`_.
 * **UDP Sensor Network** - Demonstrates a Native UDP collector and multiple sensor nodes, including application-level sequence ACKs, application port ``5050``, and optional Sleepy End Device behavior. `View UDP Sensor Network examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork>`_.
+* **Native Thread Network Discovery** - Discovers nearby Thread networks with ``OThreadScan.discoverNetworks()`` (blocking, async, and callback patterns). See ``libraries/OpenThread/examples/Native/ThreadScan/`` and :doc:`openthread_scan`.
+* **Native Thread DNS-SD** - Advertise and discover with ``OThreadDNSSD`` (blocking announce, event recovery, remove cycle, blocking and async ``queryService`` / ``queryHost``). App lab ``ThreadDNSSD_UDP_Light`` (light + switch + Wi-Fi web via OTBR Advertising Proxy). See ``libraries/OpenThread/examples/Native/ThreadDNSSD/`` and :doc:`openthread_dnssd`.
 
 **Native CoAP Examples** (``OThreadCoAPClient`` / ``OThreadCoAPServer`` on port 5683; CoAPS on 5684 when enabled):
 
@@ -373,6 +420,13 @@ Common Issues
   * Avoid OpenThread-reserved UDP ports for application traffic. ``5683`` / ``5684`` are CoAP/CoAPs ports and ``61631`` is Thread TMF CoAP; the Native UDP examples use ``5050`` and ``5051``.
   * If you are seeing dropped or truncated packets, bump ``OT_UDP_MAX_PACKET_SIZE`` and ``OT_UDP_RX_QUEUE_DEPTH`` at build time.
   * If ``otUdpNewMessage()`` consistently returns ``NULL``, the OpenThread message buffer pool is exhausted - reduce send rate or increase ``CONFIG_OPENTHREAD_NUM_MESSAGE_BUFFERS``.
+
+**OThreadScan discovery fails or finds no networks**
+  * Call ``OThread.networkInterfaceUp()`` before ``discoverNetworks()``; Thread does not need to be started.
+  * Start a Leader or Router on another board first for meaningful results.
+  * ``OT_DISCOVER_FAILED`` — timeout, interface down, or internal resource failure; confirm the interface is up and increase ``setScanTimeout()`` if needed.
+  * ``OT_DISCOVER_RUNNING`` — discovery is already in progress; wait for ``scanComplete()`` before starting another scan or calling ``scanDelete()``.
+  * For CLI-based 802.15.4 beacon scan, use `CLI ThreadScan <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan>`_.
 
 **OThreadCoAP requests fail or time out**
   * Ensure the device is attached (role ≥ Child) before ``server.begin()`` or client requests.
@@ -623,6 +677,33 @@ Sending and receiving IPv6 UDP datagrams over the Thread mesh, using
 
         delay(1000);
     }
+
+Thread network discovery
+************************
+
+Discover nearby Thread networks with ``OThreadScan`` (MLE discover). Thread
+does not need to be started — only the IPv6 interface must be up:
+
+.. code-block:: arduino
+
+    #include <OThread.h>
+    #include <OThreadScan.h>
+
+    void setup() {
+        Serial.begin(115200);
+        OThread.begin(false);
+        OThread.networkInterfaceUp();
+
+        int n = OThreadScan.discoverNetworks();
+        if (n >= 0) {
+            for (int i = 0; i < n; ++i) {
+                Serial.println(OThreadScan.getResult(i).networkNameStr());
+            }
+            OThreadScan.scanDelete();
+        }
+    }
+
+See :doc:`openthread_scan` for async polling, streaming callbacks, and filters.
 
 CoAP over Thread
 ****************

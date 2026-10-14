@@ -33,6 +33,13 @@ void usbHostEnable(bool enable) {
   digitalWrite(USB_HOST_EN, enable);
 }
 
+extern "C" void USBHostBoardInit(void) {
+  usbHostEnable(true);
+  delay(10);
+  usbHostPower(USB_HOST_POWER_VBUS);
+  delay(10);
+}
+
 extern "C" void initVariant(void) {
   // Route USB to Device Side
   pinMode(BOOST_EN, OUTPUT);

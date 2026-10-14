@@ -109,13 +109,13 @@ LOLIN
 Generic Vendor
 **************
 
-    .. toctree::
-        :maxdepth: 1
+.. toctree::
+    :maxdepth: 1
 
-        Generic Board Name <generic>
+    Generic Board Name <generic>
 
-    .. note::
-        Create one file per board or one file with multiple boards. Do not add board information/description on this file.
+.. note::
+    Create one file per board or one file with multiple boards. Do not add board information/description on this file.
 
 .. include:: ../common/datasheet.inc
 

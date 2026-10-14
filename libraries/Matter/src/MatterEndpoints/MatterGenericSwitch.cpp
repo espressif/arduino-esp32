@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterGenericSwitch.h>
 
 using namespace esp_matter;
@@ -105,9 +104,6 @@ bool MatterGenericSwitch::begin(uint32_t featureFlags, uint8_t multiPressMax) {
   cluster::groups::config_t groups_config;
   cluster::groups::create(endpoint, &groups_config, CLUSTER_FLAG_SERVER | CLUSTER_FLAG_CLIENT);
 
-  cluster_t *aCluster = cluster::get(endpoint, Descriptor::Id);
-  esp_matter::cluster::descriptor::feature::tag_list::add(aCluster);
-
   cluster::fixed_label::config_t fl_config;
   cluster::fixed_label::create(endpoint, &fl_config, CLUSTER_FLAG_SERVER);
 
@@ -115,6 +111,11 @@ bool MatterGenericSwitch::begin(uint32_t featureFlags, uint8_t multiPressMax) {
   cluster::user_label::create(endpoint, &ul_config, CLUSTER_FLAG_SERVER);
 
   setEndPointId(endpoint::get_id(endpoint));
+
+  if (!enableTagList()) {
+    log_w("Failed to enable TagList support on Generic Switch endpoint %u; switch will still work", getEndPointId());
+  }
+
   log_i("Generic Switch created with endpoint_id %u (feature_flags=0x%02" PRIX32 ")", getEndPointId(), featureFlags);
 
   started = true;
@@ -219,8 +220,9 @@ void MatterGenericSwitch::multiPressComplete(uint8_t count) {
     return;
   }
 
-  if (count > multiPressMax) {
-    count = 0;
+  if (count == 0 || count > multiPressMax) {
+    log_e("MultiPressComplete count %u is out of range (1–%u).", count, multiPressMax);
+    return;
   }
 
   int switch_endpoint_id = getEndPointId();
@@ -231,10 +233,27 @@ void MatterGenericSwitch::multiPressComplete(uint8_t count) {
 }
 
 void MatterGenericSwitch::click() {
-  press();
-  if (hasFeature(FEATURE_RELEASE)) {
-    release();
+  if (!started) {
+    log_e("Matter Generic Switch device has not begun.");
+    return;
   }
+  if (!hasFeature(FEATURE_MOMENTARY)) {
+    log_w("InitialPress not enabled in feature flags.");
+    return;
+  }
+
+  // One lambda keeps InitialPress before ShortRelease. Two ScheduleLambda
+  // calls can run ShortRelease first.
+  const bool sendRelease = hasFeature(FEATURE_RELEASE);
+  int switch_endpoint_id = getEndPointId();
+  chip::DeviceLayer::SystemLayer().ScheduleLambda([switch_endpoint_id, sendRelease]() {
+    setCurrentPosition(static_cast<uint16_t>(switch_endpoint_id), pressPosition);
+    switch_cluster::event::send_initial_press(switch_endpoint_id, pressPosition);
+    if (sendRelease) {
+      setCurrentPosition(static_cast<uint16_t>(switch_endpoint_id), idlePosition);
+      switch_cluster::event::send_short_release(switch_endpoint_id, pressPosition);
+    }
+  });
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

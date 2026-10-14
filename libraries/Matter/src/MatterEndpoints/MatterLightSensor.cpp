@@ -17,7 +17,6 @@
 
 #include <inttypes.h>
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterLightSensor.h>
 
 using namespace esp_matter;
@@ -71,6 +70,7 @@ bool MatterLightSensor::begin(uint16_t _rawIlluminance) {
   }
   rawIlluminance = _rawIlluminance;
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("Light Sensor created with endpoint_id %d", getEndPointId());
 
   started = true;

@@ -10,6 +10,8 @@ The Library implements the following C++ classes and helpers:
 - `OThreadCLI` Class for CLI OpenThread API
 - `OThreadUDP` Class for sending/receiving IPv6 UDP datagrams over the Thread network (raw `otUdpSocket`, no lwIP)
 - `OThreadCoAP` Classes for Application CoAP client/server over Thread (plain CoAP on port 5683; optional CoAPS on 5684)
+- `OThreadScan` Class for MLE Thread network discovery (`discoverNetworks()` / `OThreadNetworkInfo`)
+- `OThreadDNSSD` Class for Thread DNS-SD advertise + discover (`begin` / `addService` / `waitForAnnounce` / `queryService` / `queryHost`)
 - `DataSet` Class for OpenThread dataset manipulation using Native `OThread` Class
 
 For IPv6 multicast group membership (UDP receivers, CoAP group commands, `subscribeMulticast`, and example mapping), see **[Multicasting.md](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/Multicasting.md)**.
@@ -452,6 +454,135 @@ The PSKd is an ASCII string, **6 to 32 characters**, using the base32-thread alp
 
 - [`CommissionerNode`](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode/CommissionerNode.ino) builds a fresh DataSet, forms the network, then runs the Commissioner.
 - [`JoinerNode`](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode/JoinerNode.ino) has **no** local DataSet, only the PSKd, and uses `startJoiner()` to obtain the dataset over the air.
+
+# OThreadScan Class — Thread Network Discovery
+
+`OThreadScan` discovers nearby Thread networks via MLE discover (`otThreadDiscover()` / CLI `discover`). Each result is an `OThreadNetworkInfo` with Thread identity (network name, Extended PAN ID, joinable) and IEEE 802.15.4 link fields (extended address, PAN ID, channel, RSSI, LQI). This matches what Matter uses to list Thread networks during commissioning.
+
+## Class Definition
+
+```cpp
+struct OThreadDiscoverFilters {
+  uint16_t panIdFilter;  // OT_PANID_BROADCAST (0xffff) = no filter
+  bool joinerOnly;
+  bool eui64Filter;
+};
+
+struct OThreadNetworkInfo {
+  char     networkName[OT_NETWORK_NAME_MAX_SIZE + 1];
+  uint8_t  extendedPanId[OT_EXT_PAN_ID_SIZE];
+  uint16_t panId;
+  uint8_t  extAddress[OT_EXT_ADDRESS_SIZE];
+  uint8_t  channel;
+  int8_t   rssi;
+  uint8_t  lqi;
+  uint8_t  threadVersion;
+  bool     joinable;
+  bool     nativeCommissioner;
+  // networkNameStr(), extendedPanIdStr(), extAddressStr()
+};
+
+class OThreadScanClass {
+public:
+  void setScanTimeout(uint32_t ms);
+  void setChannel(uint8_t channel);  // 0 = all channels
+  void setDiscoverFilters(const OThreadDiscoverFilters &filters);
+  void onResult(OThreadDiscoverResultCallback callback, void *context = nullptr);
+  void onComplete(OThreadDiscoverCompleteCallback callback, void *context = nullptr);
+
+  int16_t discoverNetworks(bool async = false);
+  int16_t scanComplete();
+  void scanDelete();
+  bool isDiscoverInProgress() const;
+
+  uint16_t getResultCount() const;
+  const OThreadNetworkInfo &getResult(uint16_t index) const;
+
+  // Index-based getters: networkName(), panId(), rssi(), isJoinable(), ...
+  const otActiveScanResult *getActiveScanResult(uint16_t index) const;
+};
+
+extern OThreadScanClass OThreadScan;
+```
+
+Return codes (Wi-Fi scan convention): `OT_DISCOVER_RUNNING` (-1), `OT_DISCOVER_FAILED` (-2).
+
+Result vectors are pre-reserved to `OT_DISCOVER_MAX_RESULTS` (default 16) before each scan so discovery callbacks do not heap-allocate while the OpenThread API lock is held. Duplicate responses with the same Extended PAN ID are merged in storage; only the strongest RSSI is kept. `onResult()` is still called for every Discovery Response. Extra unique networks beyond the cap are still delivered via `onResult()` but are not stored for `getResult()`.
+
+To store more unique networks, define `OT_DISCOVER_MAX_RESULTS` **before** including `OThreadScan.h` (see `ThreadScan_Discover` example).
+
+`scanDelete()` frees stored results and releases vector capacity. It is a no-op until the final discovery callback has completed (even if OpenThread already reports discover idle); call it again after the scan finishes. After a timeout it also stays a no-op until that final callback arrives — retry once `isDiscoverInProgress()` returns `false`.
+
+**Result access** (WiFiScan-style): use `getResult()` / `getResultCount()` only after discovery completes (`discoverNetworks()` ≥ 0, `scanComplete()` ≥ 0, or `onComplete()`). While a scan is running, use `onResult()` for streaming. Do not call other `OThreadScan` methods from inside `onResult()` / `onComplete()` callbacks.
+
+## Usage patterns
+
+**Blocking** (WiFiScan-style):
+
+```cpp
+OThread.begin(false);
+OThread.networkInterfaceUp();
+int n = OThreadScan.discoverNetworks();
+for (int i = 0; i < n; ++i) {
+  Serial.println(OThreadScan.getResult(i).networkNameStr());
+}
+OThreadScan.scanDelete();
+```
+
+**Async** (`discoverNetworks(true)` + `scanComplete()` in `loop()`).
+
+**Streaming** (`onResult()` / `onComplete()` callbacks — OpenThread / Matter model). Call `scanDelete()` from `loop()` after `scanComplete()` finishes, not from inside callbacks.
+
+Thread does **not** need to be started; only `networkInterfaceUp()` is required. For results, run a Leader on another board first.
+
+## Examples
+
+| Sketch | Pattern |
+| --- | --- |
+| [`ThreadScan_Discover`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover) | Blocking |
+| [`ThreadScan_Async`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async) | Async poll |
+| [`ThreadScan_Callback`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Callback) | Streaming callbacks |
+
+CLI equivalent: [`CLI ThreadScan`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan) (`discover` via `OThreadCLI`).
+
+Full API details: [OpenThread Scan documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_scan.html).
+
+# OThreadDNSSD Class — Thread DNS-SD Advertise + Discover
+
+`OThreadDNSSD` mirrors Wi-Fi `MDNS` for Thread: `begin(hostname)`, `addService`, `addServiceTxt`, then `waitForAnnounce()` because registration uses the OpenThread **SRP client** toward a Border Router. Discover uses `queryService` / `queryHost` (OpenThread **DNS client**; default server follows SRP). Fixed pools avoid heap growth (same idea as `OThreadScan`).
+
+`isAnnounceComplete()` reads **live** OpenThread SRP item state (host + services `Registered`) on each call — useful in `loop()` after a failed announce if OpenThread later succeeds (for example after the OTBR clears a name conflict). It does not probe the Border Router directly; the sketch still owns rename / re-advertise policy.
+
+```cpp
+#include <OThreadDNSSD.h>
+
+OThreadDNSSD.begin("sensor-1");
+OThreadDNSSD.addService("ot", "udp", 12345);
+OThreadDNSSD.waitForAnnounce(30000);
+
+// On another board:
+OThreadDNSSD.begin("browser");
+int n = OThreadDNSSD.queryService("ot", "udp");
+IPAddress a = OThreadDNSSD.queryHost("sensor-1");
+```
+
+Requires an attached Thread role and an SRP/DNS server in Network Data (typical OTBR). Prefer **Erase Flash: Sketch Only** when re-uploading so the SRP key in NVS is kept. See the ThreadDNSSD example README for `setup()` vs `loop()` handling, OTBR CLI checks (`srp server service`), SoC vs OTBR reset, and name conflicts.
+
+On a Matter-over-Thread node, `OThread.begin()` after `Matter.begin()` **attaches** to CHIP’s instance. That stack already uses the one OpenThread SRP client for `_matterc._udp`. `OThreadDNSSD.begin()` then returns false, so a later `end()` is a no-op and does not stop CHIP’s SRP. Sketch `onServiceEvent` / `onQueryEvent` stay registered until overwritten. Use `OThreadDNSSD` on a stack this sketch started (`OThread.begin()` first), not on a Matter-attached stack.
+
+## Examples
+
+| Sketch | Pattern |
+| --- | --- |
+| [`ThreadDNSSD_Advertise`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise) | Blocking `waitForAnnounce` |
+| [`ThreadDNSSD_Advertise_Callback`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise_Callback) | `onServiceEvent` + re-advertise recovery |
+| [`ThreadDNSSD_Remove`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Remove) | Two add/remove cycles, then `end()` |
+| [`ThreadDNSSD_Query`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query) | `queryService` browse |
+| [`ThreadDNSSD_QueryHost`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost) | `queryHost` resolve |
+| [`ThreadDNSSD_Query_Callback`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback) | Async discover via `onQueryEvent` |
+| [`ThreadDNSSD_UDP_Light`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light) | Light + switch + Wi-Fi web (UDP + OTBR mDNS) |
+
+Full API details: [OpenThread DNS documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_dnssd.html).
 
 # OThreadUDP Class - IPv6 UDP over Thread
 

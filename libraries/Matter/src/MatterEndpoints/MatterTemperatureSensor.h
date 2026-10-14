@@ -23,19 +23,14 @@ class MatterTemperatureSensor : public MatterEndPoint {
 public:
   MatterTemperatureSensor();
   ~MatterTemperatureSensor();
-  // begin Matter Temperature Sensor endpoint with initial float temperature in Celsius
-  bool begin(double temperature = 0.00) {
-    return begin(static_cast<int16_t>(temperature * 100.0f));
-  }
+  // begin Matter Temperature Sensor endpoint with initial temperature in Celsius
+  // MeasuredValue is int16 hundredths: −327.68…327.67 °C
+  bool begin(double temperature = 0.00);
   // this will stop processing Temperature Sensor Matter events
   void end();
 
-  // set the reported raw temperature
-  bool setTemperature(double temperature) {
-    // stores up to 1/100th Celsius precision
-    int16_t rawValue = static_cast<int16_t>(temperature * 100.0f);
-    return setRawTemperature(rawValue);
-  }
+  // set the reported temperature in Celsius (−327.68…327.67)
+  bool setTemperature(double temperature);
   // returns the reported float temperature with 1/100th Celsius precision
   double getTemperature() {
     return (double)rawTemperature / 100.0;

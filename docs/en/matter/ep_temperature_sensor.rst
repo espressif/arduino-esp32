@@ -12,7 +12,7 @@ The ``MatterTemperatureSensor`` class provides a temperature sensor endpoint for
 * 1/100th degree Celsius precision
 * Read-only sensor (no control functionality)
 * Automatic temperature updates
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -49,9 +49,9 @@ Initializes the Matter temperature sensor endpoint with an initial temperature v
 
     bool begin(double temperature = 0.00);
 
-* ``temperature`` - Initial temperature in Celsius (default: 0.00)
+* ``temperature`` - Initial temperature in Celsius (default: 0.00). Matter ``MeasuredValue`` is int16 hundredths (−327.68…327.67 °C).
 
-This function will return ``true`` if successful, ``false`` otherwise.
+This function will return ``true`` if successful, ``false`` if the value is out of range or creation fails.
 
 **Note:** The implementation stores temperature with 1/100th degree Celsius precision internally.
 
@@ -80,7 +80,7 @@ Sets the reported temperature value.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** Temperature is stored with 1/100th degree Celsius precision. The valid range is typically -273.15°C (absolute zero) to 327.67°C.
+**Note:** Temperature is stored with 1/100th degree Celsius precision. Values outside −327.68…327.67 °C return ``false`` (int16 overflow).
 
 getTemperature
 ^^^^^^^^^^^^^^
@@ -132,5 +132,5 @@ Example
 Temperature Sensor
 ******************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterTemperatureSensor/MatterTemperatureSensor.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterTemperatureSensor/MatterTemperatureSensor.ino
     :language: arduino

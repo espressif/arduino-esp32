@@ -18,12 +18,13 @@ extern "C" {
 #define perimanClearPinBus(p) perimanSetPinBus(p, ESP32_BUS_TYPE_INIT, NULL, -1, -1)
 
 typedef enum {
-  ESP32_BUS_TYPE_INIT,      // IO has not been attached to a bus yet
-  ESP32_BUS_TYPE_GPIO,      // IO is used as GPIO
-  ESP32_BUS_TYPE_UART_RX,   // IO is used as UART RX pin
-  ESP32_BUS_TYPE_UART_TX,   // IO is used as UART TX pin
-  ESP32_BUS_TYPE_UART_CTS,  // IO is used as UART CTS pin
-  ESP32_BUS_TYPE_UART_RTS,  // IO is used as UART RTS pin
+  ESP32_BUS_TYPE_INIT,        // IO has not been attached to a bus yet
+  ESP32_BUS_TYPE_GPIO,        // IO is used as GPIO
+  ESP32_BUS_TYPE_UART_RX,     // IO is used as UART RX pin
+  ESP32_BUS_TYPE_UART_TX,     // IO is used as UART TX pin
+  ESP32_BUS_TYPE_UART_CTS,    // IO is used as UART CTS pin
+  ESP32_BUS_TYPE_UART_RTS,    // IO is used as UART RTS pin
+  ESP32_BUS_TYPE_UART_RX_TX,  // IO is used as open-drain UART RX and TX pin (one-wire mode)
 #if SOC_SDM_SUPPORTED
   ESP32_BUS_TYPE_SIGMADELTA,  // IO is used as SigmeDelta output
 #endif
@@ -97,11 +98,12 @@ typedef enum {
   ESP32_BUS_TYPE_ETHERNET_SPI,  // IO is used as ETHERNET SPI pin
 #endif
 #if CONFIG_ETH_USE_ESP32_EMAC
-  ESP32_BUS_TYPE_ETHERNET_RMII,  // IO is used as ETHERNET RMII pin
-  ESP32_BUS_TYPE_ETHERNET_CLK,   // IO is used as ETHERNET CLK pin
-  ESP32_BUS_TYPE_ETHERNET_MCD,   // IO is used as ETHERNET MCD pin
-  ESP32_BUS_TYPE_ETHERNET_MDIO,  // IO is used as ETHERNET MDIO pin
-  ESP32_BUS_TYPE_ETHERNET_PWR,   // IO is used as ETHERNET PWR pin
+  ESP32_BUS_TYPE_ETHERNET_RMII,                               // IO is used as ETHERNET RMII pin
+  ESP32_BUS_TYPE_ETHERNET_CLK,                                // IO is used as ETHERNET CLK pin
+  ESP32_BUS_TYPE_ETHERNET_MDC,                                // IO is used as ETHERNET MDC (Management Data Clock) pin
+  ESP32_BUS_TYPE_ETHERNET_MCD = ESP32_BUS_TYPE_ETHERNET_MDC,  // Deprecated alias for backward compatibility
+  ESP32_BUS_TYPE_ETHERNET_MDIO,                               // IO is used as ETHERNET MDIO pin
+  ESP32_BUS_TYPE_ETHERNET_PWR,                                // IO is used as ETHERNET PWR pin
 #endif
 #if CONFIG_LWIP_PPP_SUPPORT
   ESP32_BUS_TYPE_PPP_TX,   // IO is used as PPP Modem TX pin

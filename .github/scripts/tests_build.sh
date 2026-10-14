@@ -118,7 +118,7 @@ function build_multi_device_test {
 
         if [ "$device_type" == "!!map" ]; then
             sketch_name=$(yq eval ".multi_device.$device.sketch" "$test_dir/ci.yml" 2>/dev/null)
-            device_fqbn_append=$(yq eval ".multi_device.$device.fqbn_append // \"\"" "$test_dir/ci.yml" 2>/dev/null)
+            device_fqbn_append=$(${SKETCH_UTILS} fqbn_append "$test_dir/ci.yml" "$target" ".multi_device.$device.fqbn_append")
         else
             sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
             device_fqbn_append=""

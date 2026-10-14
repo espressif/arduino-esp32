@@ -13,19 +13,23 @@ with additional features for advanced use cases.
 
 **Key Features:**
 
-* **Full-duplex communication**: Simultaneous transmission and reception
-* **Configurable baud rates**: From 300 to 5,000,000+ baud
-* **Multiple data formats**: Configurable data bits, parity, and stop bits
-* **Hardware flow control**: Support for RTS/CTS signals
-* **RS485 support**: Half-duplex RS485 communication mode
-* **Low-power UART**: Some SoCs support LP (Low-Power) UART for ultra-low power applications
-* **Baud rate detection**: Automatic baud rate detection (ESP32, ESP32-S2 only)
-* **Event callbacks**: Receive and error event callbacks
-* **Configurable buffers**: Adjustable RX and TX buffer sizes
+* **Full-duplex communication**: Simultaneous transmission and reception.
+* **Configurable baud rates**: From 300 to 5,000,000+ baud.
+* **Multiple data formats**: Configurable data bits, parity, and stop bits.
+* **Hardware flow control**: Support for RTS/CTS signals.
+* **RS485 support**: Half-duplex RS485 communication mode.
+* **Low-power UART**: Some SoCs support LP (Low-Power) UART for ultra-low power applications.
+* **Baud rate detection**: Automatic baud rate detection (ESP32, ESP32-S2 only).
+* **Event callbacks**: Receive and error event callbacks.
+* **Configurable buffers**: Adjustable RX and TX buffer sizes.
+* **RX internal pull**: Automatic pull-up or pull-down on the RX pad (see `RX internal pull <rx-internal-pull_>`_).
+* **One-wire UART**: Automatic open-drain single-GPIO RX+TX when RX and TX resolve to the same pin (see `one-wire UART <one-wire-uart_>`_).
 
 .. note::
    In case that both pins, RX and TX are detached from UART, the driver will be stopped.
    Detaching may occur when, for instance, starting another peripheral using RX and TX pins, such as Wire.begin(RX0, TX0).
+   In one-wire mode, RX and TX share a single GPIO registered as ``UART_RX_TX`` in the Peripheral Manager;
+   an external deinit of that pin (for example ``pinMode()`` or another peripheral claiming the GPIO) terminates the UART driver.
 
 UART Availability
 -----------------
@@ -57,7 +61,7 @@ ESP32-P4  5        1
 
   **Example:** The ESP32-C6 has 2 HP UARTs and 1 LP UART. The Arduino Core creates ``Serial0`` and ``Serial1`` (HP UARTs) plus ``Serial2`` (LP UART) HardwareSerial objects.
 
-  **Important:** LP UARTs can be used as regular UART ports, but they have fixed GPIO pins for RX, TX, CTS, and RTS. It is not possible to change the pins for LP UARTs using ``setPins()``.
+  **Important:** On ESP32-C5, ESP32-C6, and ESP32-C61, LP UARTs use fixed GPIO pins for RX, TX, CTS, and RTS; ``setPins()`` cannot change them. On ESP32-P4, the LP UART supports the GPIO matrix and follows the same pin rules as HP UARTs (including automatic one-wire when RX equals TX).
 
 Arduino-ESP32 Serial API
 ------------------------
@@ -73,7 +77,7 @@ Initializes the Serial port with the specified baud rate and configuration.
 
 * ``baud`` - Baud rate (bits per second). Common values: 9600, 115200, 230400, etc.
 
-  **Special value:** ``0`` enables baud rate detection (ESP32, ESP32-S2 only). The function will attempt to detect the baud rate for up to ``timeout_ms`` milliseconds. See the :ref:`Baud Rate Detection Example <baud-rate-detection-example>` for usage details.
+  **Special value:** ``0`` enables baud rate detection (ESP32, ESP32-S2 only). The function will attempt to detect the baud rate for up to ``timeout_ms`` milliseconds. See the `Baud Rate Detection Example <baud-rate-detection-example_>`_ for usage details.
 * ``config`` - Serial configuration (data bits, parity, stop bits):
 
   * ``SERIAL_8N1`` - 8 data bits, no parity, 1 stop bit (default)
@@ -90,7 +94,7 @@ Initializes the Serial port with the specified baud rate and configuration.
 
 * ``txPin`` - TX pin number. Use ``-1`` to keep the default pin or current pin assignment.
 
-* ``invert`` - If ``true``, inverts the RX and TX signal polarity.
+* ``invert`` - If ``true``, inverts the RX and TX signal polarity. Also sets the RX internal pull to pull-down when `enableRxInternalPull() <enable-rx-internal-pull_>`_ is enabled (see `Signal Inversion and RX Internal Pull <signal-inversion-rx-pull_>`_).
 
 * ``timeout_ms`` - Timeout in milliseconds for baud rate detection (when ``baud = 0``). Default: 20000 ms (20 seconds).
 
@@ -313,6 +317,123 @@ Sets or changes the RX, TX, CTS, and RTS pins for the Serial port.
 
 **Note:** This function can be called before or after ``begin()``. When pins are changed, the previous pins are automatically detached.
 
+When the effective RX and TX pins resolve to the same GPIO (explicit ``setPins(p, p)`` / ``begin(..., p, p)``, or ``-1`` keep-current that makes them equal), the driver automatically enters **open-drain one-wire** mode and registers a shared ``UART_RX_TX`` pin. An external pull-up is required. The UART must be in ``UART_MODE_UART``. RS485 and IrDA reject same-pin configuration, and ``setMode()`` rejects switching away from ``UART_MODE_UART`` while one-wire is active. See `one-wire UART <one-wire-uart_>`_ and `Mode and Pin Compatibility <mode-pin-compatibility_>`_.
+
+.. _enable-rx-internal-pull:
+.. _rx-internal-pull:
+
+enableRxInternalPull
+********************
+
+Enables or disables the internal pull resistor on the RX GPIO. Must be called **before** ``begin()`` to take effect.
+
+.. code-block:: arduino
+
+    bool enableRxInternalPull(bool enable = true);
+
+* ``enable`` - If ``true`` (default), the core applies an internal pull on the RX pad after attach. If ``false``, the RX pad is left floating (no internal pull).
+
+**Returns:** ``true`` if the setting was applied, ``false`` if the UART is already running.
+
+When enabled, pull direction follows RX signal inversion (see `Signal Inversion and RX Internal Pull <signal-inversion-rx-pull_>`_):
+
+* Normal RX (not inverted): pull-up (idle HIGH)
+* RX inverted: pull-down (idle LOW)
+
+Internal pull is **not** applied in one-wire mode (same GPIO for RX and TX).
+
+**Related Example:**
+
+* `RxPull_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/RxPull_Demo>`_ — Floating RX vs default internal pull, and inverted-RX pull direction on split pins.
+
+.. _one-wire-uart:
+
+One-wire UART
+*************
+
+One-wire (single-GPIO RX+TX) is enabled automatically when the effective RX and TX pins are the same GPIO. The HAL configures that shared pad as open-drain. No separate opt-in API is required.
+
+Examples:
+
+* ``Serial1.setPins(8, 8);`` or ``Serial1.begin(115200, SERIAL_8N1, 8, 8);``
+* With RX already ``8`` and TX ``9``, ``Serial1.setPins(-1, 8);`` resolves to RX=TX=``8`` and enters one-wire
+
+.. warning::
+
+   Open-drain one-wire requires an **external pull-up to 3.3 V** using a suitable conventional pull-up resistor. TX actively drives LOW and releases HIGH, so without the resistor the line has no valid idle HIGH. Use a half-duplex protocol and never let multiple peers transmit simultaneously. One-wire mode is **not** a substitute for RS485 half-duplex (which requires separate TX, RX, and RTS pins to an external transceiver).
+
+Why one-wire UART can receive ghost data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In one-wire mode, RX is always listening on the same open-drain pin that TX uses. The external pull-up establishes idle HIGH whenever all transmitters release the bus. Any brief LOW or noise looks like a UART start bit, so the receiver can produce framing errors, BREAK events, or "ghost" bytes.
+
+Main causes:
+
+1. **Missing external pull-up** — open-drain TX releases HIGH and cannot establish idle HIGH by itself.
+2. **Startup or mux transients** — attaching the shared pin can briefly look like a LOW start bit.
+3. **Self-echo** — TX is also seen on RX. That is expected for intentional transmission; noise on TX looks the same.
+4. **Bus noise or collisions** — wiring noise or simultaneous transmitters corrupt frames.
+
+How to prevent it
+^^^^^^^^^^^^^^^^^
+
+* Add an **external pull-up** to 3.3 V on the one-wire pad or shared bus. This holds idle HIGH whenever all open-drain outputs release the line.
+* Drain RX after ``begin()`` or ``setPins()`` using ``while (Serial1.available()) { Serial1.read(); }`` to clear glitches generated during pin attachment.
+* Match and discard the expected local self-echo after each write before processing peer data.
+* Ignore data until the first valid frame, or require a known preamble, to filter startup noise before real protocol traffic.
+* Use half-duplex only: never let multiple peers transmit simultaneously.
+* Use suitable wiring and pull-up value to maintain clean signal edges.
+
+The weak internal pull is intentionally disabled in normal one-wire operation. A real one-wire bus requires an external pull-up. Open-drain does not impose a special UART baud-rate restriction.
+
+**Related Example:**
+
+* `OneWire_UART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo>`_ — Single-board one-wire self-echo on one GPIO (RX == TX), using the UART internal loopback so it runs with no external wiring, plus a half-duplex USB bridge.
+* `OneWire_UART_Two_Boards <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/OneWire_UART_Two_Boards>`_ — Open-drain PING/PONG communication between two ESP32-family boards over one signal wire plus common GND. Both peers remain in same-pin RX/TX mode, use an external pull-up, and discard local TX self-echo.
+
+.. _signal-inversion-rx-pull:
+
+Signal Inversion and RX Internal Pull
+-------------------------------------
+
+RX internal pull (when `enableRxInternalPull() <enable-rx-internal-pull_>`_ is enabled) tracks **RX signal inversion** only:
+
++---------------------------------+----------------------------------+
+| Event                           | RX internal pull (when enabled)  |
++=================================+==================================+
+| ``begin(..., invert=false)``    | Pull-up                          |
+| ``begin(..., invert=true)``     | Pull-down                        |
+| ``setRxInvert(true/false)``     | Pull-down / pull-up              |
+| ``setTxInvert()`` only          | Unchanged                        |
+| One-wire mode                   | Disabled (external pull-up)      |
+| ``enableRxInternalPull(false)`` | Disabled (floating)              |
++---------------------------------+----------------------------------+
+
+Pin Configuration Order
+-----------------------
+
+Call these **before** ``begin()`` (same pattern as ``setClockSource()`` and ``setRxBufferSize()``):
+
+1. ``enableRxInternalPull()`` (optional, default on)
+2. ``setClockSource()``, ``setRxBufferSize()``, ``setTxBufferSize()`` (optional)
+3. ``setPins()`` (optional; can also be called after ``begin()``; same-pin auto-enables one-wire)
+4. ``begin()``
+
+.. _mode-pin-compatibility:
+
+Mode and Pin Compatibility
+--------------------------
+
++----------------------+---------------------------+------------------------+
+| Mode                 | One-wire                  | RX internal pull       |
++======================+===========================+========================+
+| ``UART_MODE_UART``   | Auto when RX == TX        | Yes (unless one-wire)  |
+| RS485 modes          | No                        | Yes (split pins)       |
+| ``UART_MODE_IRDA``   | No                        | Yes (split pins)       |
+| LP UART (C5/C6/C61)  | No                        | Fixed RX pad only      |
+| LP UART (P4 matrix)  | Auto when RX == TX        | Yes (unless one-wire)  |
++----------------------+---------------------------+------------------------+
+
 setRxBufferSize
 ***************
 
@@ -517,7 +638,7 @@ Sets the UART operating mode.
 
 **Returns:** ``true`` if mode is set successfully, ``false`` otherwise.
 
-**Note:** For RS485 half-duplex mode, the RTS pin must be configured using ``setPins()`` to control the transceiver.
+**Note:** For RS485 half-duplex mode, the RTS pin must be configured using ``setPins()`` to control the transceiver. RS485 does **not** support one-wire (same GPIO for RX and TX). See `Mode and Pin Compatibility <mode-pin-compatibility_>`_.
 
 setIrdaDirection
 ****************
@@ -538,6 +659,7 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
 .. note::
 
    * IrDA mode works in exclusive directions: the UART can either transmit or receive, but not both simultaneously.
+   * IrDA requires **separate** TX and RX GPIO pins; one-wire mode is not supported.
    * The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaDirection()``.
    * Switching between TX and RX modes can be done by calling ``setIrdaDirection()`` with different parameters.
    * The ESP32 UART hardware automatically handles IrDA pulse timing and encoding/decoding.
@@ -563,9 +685,9 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
 
 **Related Examples:**
 
-* **IrdaMode_DualUART_Demo** - Single-board demonstration using two UARTs with internal loopback. Requires ESP32 with 3+ UARTs (ESP32, ESP32-S3, ESP32-P4). No external hardware needed. Ideal for testing IrDA mode functionality.
+* `IrdaMode_DualUART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo>`_ - Single-board demonstration using two UARTs with internal loopback. Requires ESP32 with 3+ UARTs (ESP32, ESP32-S3, ESP32-P4). No external hardware needed. Ideal for testing IrDA mode functionality.
 
-* **IrdaMode_TwoBoard_Demo** - Two-board peer-to-peer IrDA communication with user-selectable TX/RX modes via Serial Monitor. Works on any ESP32 variant. Requires IR LED (TX side) and IR receiver (RX side) connected between two boards. Demonstrates real infrared communication.
+* `IrdaMode_TwoBoard_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/IrdaMode_TwoBoard_Demo>`_ - Two-board peer-to-peer IrDA communication with user-selectable TX/RX modes via Serial Monitor. Works on any ESP32 variant. Requires IR LED (TX side) and IR receiver (RX side) connected between two boards. Demonstrates real infrared communication.
 
 setClockSource
 **************
@@ -605,6 +727,8 @@ Enables or disables RX signal inversion.
 * ``invert`` - If ``true``, inverts the RX signal polarity
 
 **Returns:** ``true`` if inversion is set successfully, ``false`` otherwise.
+
+When `enableRxInternalPull() <enable-rx-internal-pull_>`_ is enabled, changing RX inversion also updates the RX pad pull direction (pull-down when inverted, pull-up when normal).
 
 setTxInvert
 ***********
@@ -681,7 +805,7 @@ Returns whether the Serial port is initialized and ready.
 Testing and Helper Functions
 ----------------------------
 
-The following HAL-level functions are available for testing UART functionality without external hardware connections. These functions use the ESP32 GPIO matrix to create internal loopback connections.
+The following HAL-level functions are available for testing UART functionality without external hardware connections.
 
 uart_internal_loopback
 **********************
@@ -696,9 +820,10 @@ Creates an internal loopback connection from a UART's TX signal to a specified R
 * ``rxPin`` - GPIO pin number to receive the TX signal
 
 **Note:**
-* This function uses the ESP32 GPIO matrix to internally connect the UART's TX output to the specified RX pin.
+* When ``rxPin`` is the UART's current RX pad and that pad uses **native IOMUX** routing (the SoC default pin for that UART's RX signal), loopback is enabled inside the UART peripheral via ``uart_set_loop_back()``.
+* Otherwise (GPIO-matrix RX pins, cross-UART routing, or alternate RX GPIOs), the function uses the **GPIO matrix** to connect the UART TX signal to ``rxPin``.
 * LP (Low-Power) UARTs are not supported for loopback.
-* This is useful for testing UART communication without physical connections.
+* This is useful for testing UART communication without physical connections. The CI validation suite ``tests/validation/uart/uart.ino`` exercises both paths.
 
 **Example:**
 
@@ -761,34 +886,46 @@ Example Applications
 
 Baud Rate Detection Example:
 
-.. literalinclude:: ../../../libraries/ESP32/examples/Serial/BaudRateDetect_Demo/BaudRateDetect_Demo.ino
-    :language: arduino
+`BaudRateDetect_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/BaudRateDetect_Demo/BaudRateDetect_Demo.ino>`_
 
 OnReceive Callback Example:
 
-.. literalinclude:: ../../../libraries/ESP32/examples/Serial/OnReceive_Demo/OnReceive_Demo.ino
-    :language: arduino
+`OnReceive_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/OnReceive_Demo/OnReceive_Demo.ino>`_
 
 RS485 Communication Example:
 
-.. literalinclude:: ../../../libraries/ESP32/examples/Serial/RS485_Echo_Demo/RS485_Echo_Demo.ino
-    :language: arduino
+`RS485_Echo_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/RS485_Echo_Demo/RS485_Echo_Demo.ino>`_
 
 IrDA Mode Examples:
 
 Dual-UART Example (Single Board with 3+ UARTs):
 
-.. literalinclude:: ../../../libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo/IrdaMode_DualUART_Demo.ino
-    :language: arduino
+`IrdaMode_DualUART_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo/IrdaMode_DualUART_Demo.ino>`_
 
 Two-Board Example (Peer-to-Peer Communication):
 
-.. literalinclude:: ../../../libraries/ESP32/examples/Serial/IrdaMode_TwoBoard_Demo/IrdaMode_TwoBoard_Demo.ino
-    :language: arduino
+`IrdaMode_TwoBoard_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/IrdaMode_TwoBoard_Demo/IrdaMode_TwoBoard_Demo.ino>`_
 
 Hardware Flow Control Example:
 
-.. literalinclude:: ../../../libraries/ESP32/examples/Serial/HardwareFlowControl_Demo/HardwareFlowControl_Demo.ino
-    :language: arduino
+`HardwareFlowControl_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/HardwareFlowControl_Demo/HardwareFlowControl_Demo.ino>`_
+
+RX Internal Pull Example:
+
+Demonstrates floating RX idle (pull on vs off) and pull direction vs ``begin(invert)`` / ``setRxInvert()`` on split pins. Leave UART1 RX unconnected; the sketch prints pull state from ``gpio_get_io_config()`` on USB Serial at **115200** baud.
+
+`RxPull_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/RxPull_Demo/RxPull_Demo.ino>`_
+
+One-Wire UART Example:
+
+Demonstrates same-pin open-drain UART on a single board: UART1 transmits and receives on one GPIO (**RX == TX**) and receives its own transmission back through the UART internal loopback, so the example runs with no external wiring. After the startup self-echo test, typed characters are forwarded onto the one-wire GPIO and echoed back on USB Serial. On a real bus, an external pull-up to 3.3 V replaces the internal loopback.
+
+`OneWire_UART_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo/OneWire_UART_Demo.ino>`_
+
+One-Wire UART Two-Board Example:
+
+Demonstrates same-pin open-drain, half-duplex PING/PONG communication between two ESP32-family boards using one signal wire, common GND, and an external pull-up. The HAL configures open-drain automatically; the example keeps RX and TX on the same pad for every turn and discards expected local TX self-echo. Roles and GPIOs are configured independently on each board, allowing different SoCs.
+
+`OneWire_UART_Two_Boards.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/OneWire_UART_Two_Boards/OneWire_UART_Two_Boards.ino>`_
 
 Complete list of `Serial examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial>`_.

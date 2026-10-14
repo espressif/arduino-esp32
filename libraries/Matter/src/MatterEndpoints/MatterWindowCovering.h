@@ -105,7 +105,8 @@ public:
   bool setTiltCalibration(const PositionCalibration &calibration);
   PositionCalibration getTiltCalibration();
 
-  // Window covering type
+  // Type attribute only. FeatureMap (Lift/Tilt) is fixed at begin(); a type that
+  // needs a different feature set is rejected (recreate the endpoint instead).
   bool setCoveringType(WindowCoveringType_t coveringType);
   WindowCoveringType_t getCoveringType();
 
@@ -173,6 +174,11 @@ protected:
   uint16_t installedOpenLimitTilt = 0;
   uint16_t installedClosedLimitTilt = 65534;
   WindowCoveringType_t coveringType = ROLLERSHADE;
+  bool liftFeatureEnabled = false;
+  bool tiltFeatureEnabled = false;
+
+  bool requireLiftFeature() const;
+  bool requireTiltFeature() const;
 
   EndPointOpenCB _onOpenCB = NULL;
   EndPointCloseCB _onCloseCB = NULL;

@@ -60,15 +60,14 @@ bool LittleFSFS::begin(bool formatOnFail, const char *basePath, uint8_t maxOpenF
     return true;
   }
 
-  esp_vfs_littlefs_conf_t conf = {
-    .base_path = basePath,
-    .partition_label = partitionLabel_,
-    .partition = NULL,
-    .format_if_mount_failed = false,
-    .read_only = false,
-    .dont_mount = false,
-    .grow_on_mount = true
-  };
+  esp_vfs_littlefs_conf_t conf = {};
+  conf.base_path = basePath;
+  conf.partition_label = partitionLabel_;
+  conf.partition = NULL;
+  conf.format_if_mount_failed = false;
+  conf.read_only = false;
+  conf.dont_mount = false;
+  conf.grow_on_mount = true;
 
   esp_err_t err = esp_vfs_littlefs_register(&conf);
   if (err == ESP_FAIL && formatOnFail) {

@@ -24,12 +24,13 @@ static peripheral_pin_item_t pins[SOC_GPIO_PIN_COUNT];
 
 const char *perimanGetTypeName(peripheral_bus_type_t type) {
   switch (type) {
-    case ESP32_BUS_TYPE_INIT:     return "INIT";
-    case ESP32_BUS_TYPE_GPIO:     return "GPIO";
-    case ESP32_BUS_TYPE_UART_RX:  return "UART_RX";
-    case ESP32_BUS_TYPE_UART_TX:  return "UART_TX";
-    case ESP32_BUS_TYPE_UART_CTS: return "UART_CTS";
-    case ESP32_BUS_TYPE_UART_RTS: return "UART_RTS";
+    case ESP32_BUS_TYPE_INIT:       return "INIT";
+    case ESP32_BUS_TYPE_GPIO:       return "GPIO";
+    case ESP32_BUS_TYPE_UART_RX:    return "UART_RX";
+    case ESP32_BUS_TYPE_UART_TX:    return "UART_TX";
+    case ESP32_BUS_TYPE_UART_CTS:   return "UART_CTS";
+    case ESP32_BUS_TYPE_UART_RTS:   return "UART_RTS";
+    case ESP32_BUS_TYPE_UART_RX_TX: return "UART_RX_TX";
 #if SOC_SDM_SUPPORTED
     case ESP32_BUS_TYPE_SIGMADELTA: return "SIGMADELTA";
 #endif
@@ -102,7 +103,7 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
 #if CONFIG_ETH_USE_ESP32_EMAC
     case ESP32_BUS_TYPE_ETHERNET_RMII: return "ETHERNET_RMII";
     case ESP32_BUS_TYPE_ETHERNET_CLK:  return "ETHERNET_CLK";
-    case ESP32_BUS_TYPE_ETHERNET_MCD:  return "ETHERNET_MCD";
+    case ESP32_BUS_TYPE_ETHERNET_MDC:  return "ETHERNET_MDC";
     case ESP32_BUS_TYPE_ETHERNET_MDIO: return "ETHERNET_MDIO";
     case ESP32_BUS_TYPE_ETHERNET_PWR:  return "ETHERNET_PWR";
 #endif

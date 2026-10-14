@@ -39,7 +39,19 @@
 # FQBN append
 # -----------
 # This is the setting that will be appended to the default FQBNs.
+# A menu key given here replaces the default for that key, so this can also be
+# used to turn off options that are enabled by default (for example PSRAM).
 fqbn_append: DebugLevel=verbose
+
+# It can also be a dictionary when the options differ per target. The "default"
+# entry applies to every target and the per-target entry is merged on top of it,
+# so only the difference has to be spelled out. Targets without a PSRAM menu must
+# not receive PSRAM=disabled, which is what the example below avoids:
+#
+# fqbn_append:
+#   default: PartitionScheme=huge_app
+#   esp32: PSRAM=disabled
+#   esp32s3: PSRAM=disabled
 
 # FQBN list
 # ---------

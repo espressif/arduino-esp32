@@ -134,6 +134,9 @@ bool uartSetIrdaDirection(uart_t *uart, esp32_uart_irda_direction_t irdaDirectio
 // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only LP_UART_SCLK_LP_FAST (RTC_FAST) or LP_UART_SCLK_XTAL_D2 (XTAL/2) as Clock Source
 bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc);
 
+// Must be set before uartBegin(); no effect after the driver is running
+bool uartEnableRxInternalPull(uint8_t uartNum, bool enable);
+
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
 

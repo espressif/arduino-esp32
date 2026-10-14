@@ -137,7 +137,7 @@ int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *CA_cer
 
 int NetworkClientSecure::connect(const char *host, uint16_t port, const char *CA_cert, const char *cert, const char *private_key) {
   IPAddress address;
-  if (!Network.hostByName(host, address)) {
+  if (Network.hostByName(host, address) != 1) {
     return 0;
   }
 
@@ -189,7 +189,7 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *ps
   log_v("start_ssl_client with PSK");
 
   IPAddress address;
-  if (!Network.hostByName(host, address)) {
+  if (Network.hostByName(host, address) != 1) {
     return 0;
   }
 
@@ -354,6 +354,11 @@ void NetworkClientSecure::setCACertBundle(const uint8_t *bundle, size_t size) {
     attach_ssl_certificate_bundle(sslclient.get(), false);
     _use_ca_bundle = false;
   }
+}
+
+void NetworkClientSecure::useBuiltinCACertBundle() {
+  attach_ssl_certificate_bundle(sslclient.get(), true);
+  _use_ca_bundle = true;
 }
 
 void NetworkClientSecure::setCertificate(const char *client_ca) {

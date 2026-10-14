@@ -351,6 +351,9 @@ function run_test {
             if [[ -f "$sketchdir/diagram.$target.json" ]]; then
                 extra_args+=("--wokwi-diagram" "$sketchdir/diagram.$target.json")
             fi
+            if [[ "$target" == "esp32p4" ]] && [[ "${CI:-false}" != "true" ]]; then
+                extra_args+=("--wokwi-usb-serial-jtag" "true")
+            fi
             generate_wokwi_toml "$sketchdir" "$build_dir" "$sketchname"
         elif [ $platform == "qemu" ]; then
             PATH=$HOME/qemu/bin:$PATH
@@ -403,6 +406,10 @@ function run_test {
         printf "\n"
         if [ $result -ne 0 ]; then
             result=0
+            if [ $platform == "wokwi" ]; then
+                # Give the simulation server time to recover from transient connection drops
+                sleep 10
+            fi
             printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$sketchname" "$i"
             printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
             set +e

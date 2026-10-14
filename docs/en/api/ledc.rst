@@ -7,18 +7,91 @@ About
 The LED control (LEDC) peripheral is primarily designed to control the intensity of LEDs,
 although it can also be used to generate PWM signals for other purposes.
 
-ESP32 SoCs has from 6 to 16 channels (variates on socs, see table below) which can generate independent waveforms, that can be used for example to drive RGB LED devices.
+ESP32 SoCs have from 6 to 16 LEDC channels (see the table below) which can
+generate independent waveforms, for example to drive RGB LED devices.
 
-========= =======================
-ESP32 SoC Number of LEDC channels
-========= =======================
-ESP32     16
-ESP32-S2  8
-ESP32-S3  8
-ESP32-C3  6
-ESP32-C6  6
-ESP32-H2  6
-========= =======================
+================= ======== ====== ===================
+ESP32 SoC         Channels Groups Timers (per group)
+================= ======== ====== ===================
+ESP32             16       2      4
+ESP32-S2          8        1      4
+ESP32-S3          8        1      4
+ESP32-C3          6        1      4
+ESP32-C5          6        1      4
+ESP32-C6          6        1      4
+ESP32-H2          6        1      4
+ESP32-P4          8        1      4
+================= ======== ====== ===================
+
+One group does **not** mean one timer. Each group has its own pool of timers
+(4 on all current SoCs), so you can have up to 4 independent frequencies per
+group. Channels only share a timer when they are configured with the same
+frequency and resolution (see below).
+
+Channels, timers and frequency sharing
+**************************************
+
+LEDC separates **channels** from **timers**:
+
+* A **channel** drives one or more GPIOs and owns the duty cycle (and fade).
+* A **timer** owns the PWM frequency and resolution.
+* Several channels in the same group can share one timer.
+
+``ledcAttach()`` / ``ledcAttachChannel()`` reuse an existing timer when another
+channel in the **same group** is already configured with the same frequency and
+resolution. That saves limited hardware timers, but means those pins stay locked
+to the same frequency until they use different timers.
+
+**Important:** choosing different channel numbers does **not** by itself give
+independent frequencies. If two pins are attached with the same ``freq`` and
+``resolution``, they typically share one timer. Calling
+``ledcChangeFrequency()`` on either pin then changes **all** channels on that
+timer.
+
+On ESP32 (2 groups) the channel ranges are:
+
+* channels ``0``–``7`` (group 0)
+* channels ``8``–``15`` (group 1)
+
+Other SoCs have a single group (all channels share one timer pool of 4).
+
+To keep frequencies independent when you will change them at runtime:
+
+1. Attach the pins with **different** frequency and/or resolution from the start
+   (you can change them later with ``ledcChangeFrequency()``), or
+2. On ESP32, put them in **different channel groups** (for example channel ``0``
+   and channel ``8``).
+
+Attaching both pins at the same frequency/resolution and only diverging later
+with ``ledcChangeFrequency()`` will not give independent outputs if they already
+share a timer.
+
+Frequency and resolution limits
+*******************************
+
+Frequency and duty resolution are coupled. The PWM frequency is approximately:
+
+``freq ≈ ledc_clock / (clock_divider × 2^resolution)``
+
+The clock divider has a limited range, so for a given LEDC clock source and
+resolution there is both a **minimum** and a **maximum** achievable frequency.
+Asking for a frequency that is too low for the chosen resolution fails the same
+way as asking for one that is too high.
+
+When LEDC uses the XTAL clock (Arduino default on SoCs that support it), the
+crystal is typically **40 MHz** (check ``getXtalFrequencyMhz()`` for the value
+on your board). At 40 MHz with 8-bit resolution, the minimum is about **153 Hz**.
+Original ESP32 does not support XTAL as an LEDC source and defaults to
+``LEDC_AUTO_CLK`` instead.
+
+To get lower frequencies, **increase** the resolution (for example 9–14 bits),
+or change the LEDC clock source with ``ledcSetClockSource()`` before attaching
+channels. Reducing resolution makes the minimum frequency higher, not lower.
+
+Exact limits depend on the SoC, clock source, and board configuration. Run the
+:ref:`LEDC frequency range example <ledc-frequency-example>` to print the
+achievable min/max for the current setup.
+
 
 Arduino-ESP32 LEDC API
 ----------------------
@@ -56,6 +129,9 @@ ledcAttach
 
 This function is used to setup LEDC pin with given frequency and resolution. LEDC channel will be selected automatically.
 
+Timer reuse for matching frequency/resolution applies here as well
+(see `Channels, timers and frequency sharing`_).
+
 .. code-block:: arduino
 
     bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
@@ -74,6 +150,10 @@ ledcAttachChannel
 
 This function is used to setup LEDC pin with given frequency, resolution and channel.
 Attaching multiple pins to the same channel will make them share the same duty cycle. Given frequency, resolution will be ignored if channel is already configured.
+
+If another channel in the same group already uses the same frequency and resolution,
+that timer is reused (see `Channels, timers and frequency sharing`_). Different
+channel numbers alone do not guarantee independent frequencies.
 
 .. code-block:: arduino
 
@@ -202,6 +282,9 @@ ledcChangeFrequency
 
 This function is used to set frequency for the LEDC pin.
 
+This updates the **timer** used by the pin. Every channel that shares that timer
+gets the new frequency and resolution. See `Channels, timers and frequency sharing`_.
+
 .. code-block:: arduino
 
     uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution);
@@ -325,6 +408,13 @@ This function is used to set frequency for selected analogWrite pin.
 
 Example Applications
 ********************
+
+.. _ledc-frequency-example:
+
+LEDC frequency range example:
+
+.. literalinclude:: ../../../libraries/ESP32/examples/AnalogOut/ledcFrequency/ledcFrequency.ino
+    :language: arduino
 
 LEDC fade example:
 

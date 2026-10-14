@@ -67,7 +67,7 @@ uint8_t NetworkUDP::begin(IPAddress address, uint16_t port) {
     struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
     ip_addr_t addr;
     address.to_ip_addr_t(&addr);
-    memset((char *)tmpaddr, 0, sizeof(struct sockaddr_in));
+    memset((char *)tmpaddr, 0, sizeof(struct sockaddr_in6));
     tmpaddr->sin6_family = AF_INET6;
     tmpaddr->sin6_port = htons(server_port);
     tmpaddr->sin6_scope_id = addr.u_addr.ip6.zone;
