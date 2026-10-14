@@ -513,38 +513,6 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
-{"name": "libraries/ESP32/examples/Serial/onReceiveExample",
-                "sizes": [{
-                        "flash_bytes": 303874,
-                        "flash_percentage": 23,
-                        "ram_bytes": 17624,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/print64bitVariable",
-                "sizes": [{
-                        "flash_bytes": 304368,
-                        "flash_percentage": 23,
-                        "ram_bytes": 17600,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Template/ExampleTemplate",
-                "sizes": [{
-                        "flash_bytes": 282782,
-                        "flash_percentage": 22,
-                        "ram_bytes": 17576,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Time/SimpleTime",
-                "sizes": [{
-                        "flash_bytes": 1097457,
-                        "flash_percentage": 84,
-                        "ram_bytes": 51756,
-                        "ram_percentage": 16
-                        }]
-                },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
                         "flash_bytes": 312176,
@@ -684,6 +652,46 @@
 {"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
                         "flash_bytes": 1254787,
+                        "flash_percentage": 96,
+                        "ram_bytes": 52084,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/HTTPClient/examples/BasicHttpsClient",
+                "sizes": [{
+                        "flash_bytes": 1266119,
+                        "flash_percentage": 97,
+                        "ram_bytes": 52124,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/HTTPClient/examples/CustomHeaders",
+                "sizes": [{
+                        "flash_bytes": 1291279,
+                        "flash_percentage": 99,
+                        "ram_bytes": 51924,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/HTTPClient/examples/HTTPClientEnterprise",
+                "sizes": [{
+                        "flash_bytes": 1251819,
+                        "flash_percentage": 40,
+                        "ram_bytes": 52044,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/HTTPClient/examples/ReuseConnection",
+                "sizes": [{
+                        "flash_bytes": 1254385,
+                        "flash_percentage": 96,
+                        "ram_bytes": 52308,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/HTTPClient/examples/StreamHttpClient",
+                "sizes": [{
+                        "flash_bytes": 1253805,
                         "flash_percentage": 96,
                         "ram_bytes": 52084,
                         "ram_percentage": 16

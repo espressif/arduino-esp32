@@ -521,22 +521,6 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
-{"name": "libraries/ESP32/examples/AnalogOut/ledcFrequency",
-                "sizes": [{
-                        "flash_bytes": 295610,
-                        "flash_percentage": 23,
-                        "ram_bytes": 17816,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/AnalogOut/ledcWrite_RGB",
-                "sizes": [{
-                        "flash_bytes": 312238,
-                        "flash_percentage": 24,
-                        "ram_bytes": 17840,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/ESP32/examples/AnalogRead",
                 "sizes": [{
                         "flash_bytes": 316700,
@@ -694,6 +678,30 @@
                         "flash_bytes": 322222,
                         "flash_percentage": 25,
                         "ram_bytes": 18724,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/ESP32/examples/RMT/RMTLoopback",
+                "sizes": [{
+                        "flash_bytes": 323870,
+                        "flash_percentage": 25,
+                        "ram_bytes": 20148,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/ESP32/examples/RMT/RMTReadXJT",
+                "sizes": [{
+                        "flash_bytes": 322814,
+                        "flash_percentage": 25,
+                        "ram_bytes": 18580,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
+                "sizes": [{
+                        "flash_bytes": 321120,
+                        "flash_percentage": 24,
+                        "ram_bytes": 21188,
                         "ram_percentage": 6
                         }]
                 }

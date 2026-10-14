@@ -513,14 +513,6 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
-{"name": "libraries/BLE/examples/Notify",
-                "sizes": [{
-                        "flash_bytes": 806729,
-                        "flash_percentage": 26,
-                        "ram_bytes": 23268,
-                        "ram_percentage": 7
-                        }]
-                },
 {"name": "libraries/BLE/examples/Scan",
                 "sizes": [{
                         "flash_bytes": 784437,
@@ -686,6 +678,22 @@
                         "flash_bytes": 288302,
                         "flash_percentage": 22,
                         "ram_bytes": 17624,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut/ledcFrequency",
+                "sizes": [{
+                        "flash_bytes": 295610,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17816,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut/ledcWrite_RGB",
+                "sizes": [{
+                        "flash_bytes": 312238,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17840,
                         "ram_percentage": 5
                         }]
                 }
