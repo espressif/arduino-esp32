@@ -343,10 +343,10 @@ bool sdWriteSector(uint8_t pdrv, const char *buffer, unsigned long long sector) 
         return false;
       }
       switch (SD_SPI_DATA_RSP(token)) {
-        case SD_SPI_DATA_ACCEPTED: break;
+        case SD_SPI_DATA_ACCEPTED:  break;
         case SD_SPI_DATA_CRC_ERROR: continue;  // resend
-        case SD_SPI_DATA_WR_ERROR: log_e("Card reported a write error"); return false;
-        default:                   log_e("Unexpected data response token 0x%02x", token); return false;
+        case SD_SPI_DATA_WR_ERROR:  log_e("Card reported a write error"); return false;
+        default:                    log_e("Unexpected data response token 0x%02x", token); return false;
       }
 
       unsigned int resp;
