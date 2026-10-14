@@ -57,7 +57,7 @@ jobs:
           echo "Release branch: $ref"
 
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
@@ -75,7 +75,7 @@ jobs:
           echo "DRY_RUN=${{ inputs.dry-run }}" >> "$GITHUB_ENV"
 
       - name: Set up Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.x"
 
@@ -86,7 +86,7 @@ jobs:
         run: bash ./.github/scripts/release/build-packages.sh
 
       - name: Upload release packages
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-packages
           path: |
@@ -95,7 +95,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload release metadata
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-metadata
           path: |
@@ -105,7 +105,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload hosted binaries
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: hosted
           if-no-files-found: ignore
@@ -120,7 +120,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
@@ -139,13 +139,13 @@ jobs:
           fi
 
       - name: Download release packages
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-packages
           path: ${{ github.workspace }}/build
 
       - name: Download release metadata
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-metadata
           path: ${{ github.workspace }}/build
@@ -164,7 +164,7 @@ jobs:
           fi
 
       - name: Upload draft assets metadata
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: draft-assets
           path: ${{ github.workspace }}/build/draft-assets.json
@@ -177,7 +177,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
@@ -192,19 +192,19 @@ jobs:
           echo "JSON_MODE=final" >> "$GITHUB_ENV"
 
       - name: Download release packages
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-packages
           path: ${{ github.workspace }}/build
 
       - name: Download release metadata
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-metadata
           path: ${{ github.workspace }}/build
 
       - name: Download draft assets
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: draft-assets
           path: ${{ github.workspace }}/build
@@ -225,7 +225,7 @@ jobs:
           fi
 
       - name: Upload test package JSON
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-package-json
           path: staging-json/
@@ -243,7 +243,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
@@ -258,7 +258,7 @@ jobs:
           echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
 
       - name: Set up Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.x"
 
@@ -277,19 +277,19 @@ jobs:
         run: rm -rf build && mkdir -p build
 
       - name: Download release packages
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-packages
           path: ${{ github.workspace }}/build
 
       - name: Download test package JSON
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test-package-json
           path: ${{ github.workspace }}/build
 
       - name: Download draft assets metadata
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: draft-assets
           path: ${{ github.workspace }}/build
@@ -329,7 +329,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
@@ -361,7 +361,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
@@ -388,7 +388,7 @@ jobs:
           echo "Tagged ${RELEASE_TAG} at ${tagged_sha}"
 
       - name: Download draft assets
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: draft-assets
           path: ${{ github.workspace }}/build
@@ -399,7 +399,7 @@ jobs:
         run: bash ./.github/scripts/release/github-release.sh publish
 
       - name: Upload published draft assets
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: draft-assets
           path: ${{ github.workspace }}/build/draft-assets.json
@@ -413,7 +413,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
@@ -427,7 +427,7 @@ jobs:
           echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
 
       - name: Set up Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.x"
 
@@ -435,19 +435,19 @@ jobs:
         run: pip install packaging
 
       - name: Download release packages
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-packages
           path: ${{ github.workspace }}/build
 
       - name: Download release metadata
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-metadata
           path: ${{ github.workspace }}/build
 
       - name: Download draft assets
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: draft-assets
           path: ${{ github.workspace }}/build
@@ -475,7 +475,7 @@ jobs:
         run: bash ./.github/scripts/release/github-release.sh candidate
 
       - name: Upload final package JSON
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: final-package-json
           path: staging-json/
@@ -493,7 +493,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref }}
 
@@ -518,7 +518,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
@@ -531,14 +531,14 @@ jobs:
           echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
 
       - name: Download final package JSON
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: final-package-json
           path: ${{ github.workspace }}/build
 
       - name: Download hosted binaries
         continue-on-error: true
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: hosted
           path: ${{ github.workspace }}/hosted-latest
@@ -563,7 +563,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
@@ -577,7 +577,7 @@ jobs:
           echo "RELEASE_PRE=${{ inputs.prerelease }}" >> "$GITHUB_ENV"
 
       - name: Download draft assets
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: draft-assets
           path: ${{ github.workspace }}/build
@@ -609,7 +609,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref }}
 

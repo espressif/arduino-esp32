@@ -33,7 +33,7 @@ jobs:
       push_time: ${{ steps.set-ref.outputs.push_time }}
     steps:
       - name: Report pending
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const owner = '${{ github.repository_owner }}';
@@ -53,7 +53,7 @@ jobs:
             core.info(`${name} is ${state}`);
 
       - name: Download and extract event file
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -61,7 +61,7 @@ jobs:
           path: artifacts/event_file
 
       - name: Download and extract matrix info
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -268,7 +268,7 @@ jobs:
           echo "push_time=$push_time" >> $GITHUB_OUTPUT
 
       - name: Download and extract parent QEMU results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -278,14 +278,14 @@ jobs:
           path: artifacts/results/qemu
 
       - name: Upload parent artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: parent-artifacts
           path: artifacts
           if-no-files-found: error
 
       - name: Report conclusion
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         if: always()
         with:
           script: |
@@ -321,7 +321,7 @@ jobs:
       statuses: write
     steps:
       - name: Report pending
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const owner = '${{ github.repository_owner }}';
@@ -343,7 +343,7 @@ jobs:
       - name: Check if already passed
         id: get-cache-results
         if: needs.get-artifacts.outputs.pr_num
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: test-${{ env.id }}-results-hw
           path: |
@@ -425,7 +425,7 @@ jobs:
 
       - name: Trigger GitLab Pipeline and Download Artifacts
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        uses: digital-blueprint/gitlab-pipeline-trigger-action@20e77989b24af658ba138a0aa5291bdc657f1505 # v1.3.0
+        uses: digital-blueprint/gitlab-pipeline-trigger-action@1bbd622ab7b529eb806a34fe36299d9b33da354a # v1.4.4
         id: gitlab-trigger
         with:
           host: ${{ secrets.GITLAB_URL }}
@@ -481,7 +481,7 @@ jobs:
           fi
 
       - name: Upload hardware results as cache
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: steps.check-tests.outputs.enabled == 'true' && needs.get-artifacts.outputs.pr_num
         with:
           key: test-${{ env.id }}-results-hw
@@ -490,7 +490,7 @@ jobs:
             tests/**/result_*.json
 
       - name: Upload hardware results as artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: test-results-hw
@@ -500,7 +500,7 @@ jobs:
             tests/**/result_*.json
 
       - name: Report conclusion
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         if: always()
         with:
           script: |
@@ -542,7 +542,7 @@ jobs:
         chip: ${{ fromJson(needs.get-artifacts.outputs.wokwi_targets) }}
     steps:
       - name: Report pending
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const owner = '${{ github.repository_owner }}';
@@ -564,7 +564,7 @@ jobs:
       - name: Check if already passed
         id: get-cache-results
         if: needs.get-artifacts.outputs.pr_num && needs.get-artifacts.outputs.rerun_wokwi_test == 'false'
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: test-${{ env.id }}-results-wokwi
           path: |
@@ -595,11 +595,11 @@ jobs:
       # DO NOT use artifact-derived values for the checkout ref — they can be forged by a malicious PR.
       - name: Checkout repository
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.get-artifacts.outputs.base || github.ref }}
 
-      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         with:
           cache-dependency-path: tests/requirements.txt
@@ -614,7 +614,7 @@ jobs:
 
       - name: Wokwi CI Server
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        uses: wokwi/wokwi-ci-server-action@a6fabb5a49e080158c7a1d121ea5b789536a82c3 # v1
+        uses: wokwi/wokwi-ci-server-action@dbcd1765ab1f3ab71aa246c361dd85d036a8f080 # v1
 
       - name: Install Wokwi CLI
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
@@ -623,7 +623,7 @@ jobs:
 
       - name: Get binaries
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -644,7 +644,7 @@ jobs:
           bash .github/scripts/tests_run.sh -c -type "$TEST_TYPE" -t "$TEST_CHIP" -i 0 -m 1 -W -wifi-ssid "$WOKWI_WIFI_SSID" -wifi-password "$WOKWI_WIFI_PASSWORD"
 
       - name: Upload ${{ matrix.chip }} ${{ matrix.type }} Wokwi results as cache
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: steps.check-tests.outputs.enabled == 'true' && needs.get-artifacts.outputs.pr_num
         with:
           key: test-${{ env.id }}-results-wokwi
@@ -653,7 +653,7 @@ jobs:
             tests/**/result_*.json
 
       - name: Upload ${{ matrix.chip }} ${{ matrix.type }} Wokwi results as artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: test-results-wokwi-${{ matrix.chip }}-${{ matrix.type }}
@@ -663,7 +663,7 @@ jobs:
             tests/**/result_*.json
 
       - name: Report conclusion
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         if: always()
         with:
           script: |
