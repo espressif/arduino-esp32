@@ -205,7 +205,7 @@ void MatterWaterValve::armOpenRollback() {
 void MatterWaterValve::rollbackFailedOpen() {
   openRollbackArmed = false;
   if (!openRollbackOwed) {
-    return;  // cancelled meanwhile (close() or any Close command)
+    return;  // canceled meanwhile (close() or any Close command)
   }
   openRollbackOwed = false;
   ValveConfigurationAndControlCluster *cluster = getValveCluster();
