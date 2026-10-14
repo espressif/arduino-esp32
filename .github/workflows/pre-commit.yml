@@ -86,6 +86,8 @@ jobs:
           echo "${{ steps.pre-commit.outcome }}" > ./pr-artifacts/pre_commit_outcome.txt
           echo "${{ steps.pre-commit.outputs.pending_commit }}" > ./pr-artifacts/pending_commit.txt
           echo "${{ contains(github.event.pull_request.labels.*.name, 'Re-trigger Pre-commit Hooks') }}" > ./pr-artifacts/has_retrigger_label.txt
+          # lite can push to same-repo branches and user forks with maintainer edits; not org forks or forks that disable them
+          echo "${{ github.event.pull_request.head.repo.full_name != github.repository && !github.event.pull_request.maintainer_can_modify }}" > ./pr-artifacts/cannot_push_fixes.txt
 
       - name: Upload PR artifacts
         if: ${{ always() && github.event_name == 'pull_request' }}
