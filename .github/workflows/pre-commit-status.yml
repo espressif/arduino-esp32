@@ -85,17 +85,23 @@ jobs:
             pre_commit_outcome=$(cat ./pr-artifacts/pre_commit_outcome.txt | tr -cd '[:alpha:]_')
             pending_commit=$(cat ./pr-artifacts/pending_commit.txt | tr -cd '[:digit:]')
             has_retrigger_label=$(cat ./pr-artifacts/has_retrigger_label.txt | tr -cd '[:alpha:]')
+            cannot_push_fixes=false
+            if [ -f "./pr-artifacts/cannot_push_fixes.txt" ]; then
+              cannot_push_fixes=$(cat ./pr-artifacts/cannot_push_fixes.txt | tr -cd '[:alpha:]')
+            fi
 
             echo "pr_number=$pr_number" >> $GITHUB_OUTPUT
             echo "pre_commit_outcome=$pre_commit_outcome" >> $GITHUB_OUTPUT
             echo "pending_commit=$pending_commit" >> $GITHUB_OUTPUT
             echo "has_retrigger_label=$has_retrigger_label" >> $GITHUB_OUTPUT
+            echo "cannot_push_fixes=$cannot_push_fixes" >> $GITHUB_OUTPUT
             echo "artifacts_found=true" >> $GITHUB_OUTPUT
 
             echo "PR number: $pr_number"
             echo "Pre-commit outcome: $pre_commit_outcome"
             echo "Pending commit: $pending_commit"
             echo "Has retrigger label: $has_retrigger_label"
+            echo "Cannot push fixes: $cannot_push_fixes"
           else
             echo "No PR artifacts found"
             echo "artifacts_found=false" >> $GITHUB_OUTPUT
@@ -115,7 +121,7 @@ jobs:
         if: |
           steps.pr-info.outputs.artifacts_found == 'true' &&
           steps.pr-info.outputs.pre_commit_outcome == 'failure' &&
-          steps.pr-info.outputs.pending_commit == '0'
+          (steps.pr-info.outputs.pending_commit == '0' || steps.pr-info.outputs.cannot_push_fixes == 'true')
         continue-on-error: true
         run: |
           gh pr edit ${{ steps.pr-info.outputs.pr_number }} --repo ${{ github.repository }} --add-label 'Status: Pre-commit fixes required ⚠️'
@@ -132,23 +138,39 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+      - name: Build PR comment body
+        if: |
+          steps.pr-info.outputs.artifacts_found == 'true' &&
+          steps.pr-info.outputs.pre_commit_outcome == 'failure' &&
+          (steps.pr-info.outputs.pending_commit == '0' || steps.pr-info.outputs.cannot_push_fixes == 'true')
+        env:
+          CANNOT_PUSH_FIXES: ${{ steps.pr-info.outputs.cannot_push_fixes }}
+          REPORT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+        run: |
+          {
+            echo "## ⚠️ Pre-commit Hooks Failed"
+            echo
+            echo "Some pre-commit hooks failed and require manual fixes. Please see the detailed error report below."
+            echo
+            if [ "$CANNOT_PUSH_FIXES" = "true" ]; then
+              echo "Automatic fixes cannot be pushed to this branch. This happens for organization-owned forks and when **Allow edits from maintainers** is disabled."
+              echo
+            fi
+            echo "**What to do:**"
+            echo "1. 📋 [**View the detailed error report**](${REPORT_URL}) to see which hooks failed"
+            echo "2. 🔧 Fix the issues locally in your code"
+            echo "3. 💾 Commit and push your changes"
+            echo "4. 🔄 The hooks will run again automatically"
+            echo
+            echo "**Need help?** Ask in the comments below."
+          } > ./pr-comment.md
+
       - name: Comment on PR about pre-commit failures
         if: |
           steps.pr-info.outputs.artifacts_found == 'true' &&
           steps.pr-info.outputs.pre_commit_outcome == 'failure' &&
-          steps.pr-info.outputs.pending_commit == '0'
+          (steps.pr-info.outputs.pending_commit == '0' || steps.pr-info.outputs.cannot_push_fixes == 'true')
         uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
         with:
           pr-number: ${{ steps.pr-info.outputs.pr_number }}
-          message: |
-            ## ⚠️ Pre-commit Hooks Failed
-
-            Some pre-commit hooks failed and require manual fixes. Please see the detailed error report below.
-
-            **What to do:**
-            1. 📋 [**View the detailed error report**](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}) to see which hooks failed
-            2. 🔧 Fix the issues locally in your code
-            3. 💾 Commit and push your changes
-            4. 🔄 The hooks will run again automatically
-
-            **Need help?** Ask in the comments below.
+          file-path: ./pr-comment.md
