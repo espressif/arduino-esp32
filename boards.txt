@@ -3658,9 +3658,9 @@ esp_mosaico.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp_mosaico.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp_mosaico.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp_mosaico.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp_mosaico.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-esp_mosaico.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-esp_mosaico.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp_mosaico.menu.PartitionScheme.default_16MB=16M with spiffs (6.25MB APP/3.43MB SPIFFS)
+esp_mosaico.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+esp_mosaico.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
 
 esp_mosaico.menu.UploadSpeed.921600=921600
 esp_mosaico.menu.UploadSpeed.921600.upload.speed=921600
