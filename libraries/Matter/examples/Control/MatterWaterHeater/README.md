@@ -92,8 +92,6 @@ Operation: Boost
 Controller: target temperature 42.0 C
 Target reached. HeatDemand idle; leaving Boost for Heat.
 Temp: 42.0 C | Setpoint: 42.0 C | HeatDemand: idle | Heat
-Controller: Cancel Boost
-Operation: Heat
 ```
 
 `HeatDemand: on` is the Matter **HeatDemand** attribute: which heater types are drawing power (immersion, heat pump, boiler, …).

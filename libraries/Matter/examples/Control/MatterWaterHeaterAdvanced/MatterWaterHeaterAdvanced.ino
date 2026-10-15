@@ -153,8 +153,7 @@ void updateEstimatedHeatRequired() {
 }
 
 // Map tank temperature to TankPercentage (0 % at cold water, 100 % at the current setpoint).
-void updateTankPercentage() {
-  const float current = waterHeater.getLocalTemperature();
+void updateTankPercentage(float current) {
   const float target = waterHeater.getHeatingSetpoint();
 
   if (target <= COLD_WATER_TEMP) {
@@ -311,10 +310,12 @@ void loop() {
     if (temperature > target) {
       temperature = target;
     }
+    updateTankPercentage(temperature);
     waterHeater.setLocalTemperature(temperature);
     waterHeater.setHeatDemand(activeHeatSources(boostOn, mode));
   } else if (heating) {
     waterHeater.setHeatDemand(0);
+    updateTankPercentage(temperature);
   } else {
     if (temperature > COLD_WATER_TEMP) {
       temperature -= COOL_RATE_C_PER_S * (UPDATE_INTERVAL_MS / 1000.0f);
@@ -324,9 +325,9 @@ void loop() {
       waterHeater.setLocalTemperature(temperature);
     }
     waterHeater.setHeatDemand(0);
+    updateTankPercentage(temperature);
   }
 
-  updateTankPercentage();
   updateEstimatedHeatRequired();
 
   // A Boost command may have a long duration and no oneShot. End Boost at the heating
@@ -334,6 +335,7 @@ void loop() {
   if (waterHeater.getBoostState() == MatterWaterHeater::BOOST_ACTIVE && temperature >= setpoint) {
     Serial.println("Target reached. HeatDemand idle; leaving Boost for Heat.");
     waterHeater.setBoostState(MatterWaterHeater::BOOST_INACTIVE);
+    prevBoost = waterHeater.getBoostState();
     // setBoostState() syncs HeatDemand to HeaterTypes; the tank is at the goal.
     waterHeater.setHeatDemand(0);
   } else {

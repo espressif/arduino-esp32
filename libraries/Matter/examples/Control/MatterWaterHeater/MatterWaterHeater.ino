@@ -158,6 +158,7 @@ void loop() {
   if (waterHeater.getBoostState() == MatterWaterHeater::BOOST_ACTIVE && temperature >= setpoint) {
     Serial.println("Target reached. HeatDemand idle; leaving Boost for Heat.");
     waterHeater.setBoostState(MatterWaterHeater::BOOST_INACTIVE);
+    prevBoost = waterHeater.getBoostState();
     // setBoostState() syncs HeatDemand back to HeaterTypes while System Mode stays Heat.
     waterHeater.setHeatDemand(0);
   } else {
