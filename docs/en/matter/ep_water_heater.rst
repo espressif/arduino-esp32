@@ -250,7 +250,7 @@ These Thermostat attributes are the **controller setpoint range** (the target di
 
 Call the absolute setters first when narrowing the product range. ``Min`` / ``Max`` must stay inside ``AbsMin`` / ``AbsMax``.
 
-The absolute setters reject values outside **20 °C … 85 °C**. They also reject a new absolute minimum above the current absolute maximum, or a new absolute maximum below the current absolute minimum.
+The absolute setters reject values outside **20 °C … 85 °C**. They also reject a new absolute minimum above the current maximum or absolute maximum, or a new absolute maximum below the current minimum or absolute minimum. When narrowing a limit inside the current ``Min`` / ``Max`` span, the absolute setter raises ``Min`` or lowers ``Max`` first so ``AbsMin <= Min <= Max <= AbsMax`` always holds.
 
 A controller **OccupiedHeatingSetpoint** outside ``Min`` / ``Max`` is rejected. Limit writes that would cross are rejected too. A controller may cache the range at commissioning. A later change may need a re-interview before the dial updates.
 
