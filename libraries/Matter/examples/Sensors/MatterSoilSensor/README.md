@@ -63,7 +63,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 2. Install ESP32 Arduino Core with Matter support
 3. ESP32 Arduino libraries:
    - `Matter`
-   - `WiFi` (only for ESP32 and ESP32-S2)
+   - `Wi-Fi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
