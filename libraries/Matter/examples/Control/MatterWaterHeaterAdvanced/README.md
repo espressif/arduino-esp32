@@ -131,7 +131,7 @@ Tank percentage on the `ready` line is 0% from `setup()`. Each later tick maps `
 
 **EstimatedHeatRequired** is the remaining energy to reach the heating goal (`volume × ΔT × 1.163 Wh/L·°C`, stored as mWh). Eco uses the 40 °C cap as the goal, so it needs less energy than Manual or Boost at the same tank temperature. Off still reports energy if the tank is below that goal. The value falls as the tank heats and is 0 at the goal.
 
-Reaching the target during **Boost** ends Boost, then System Mode Heat continues. **Off** applies when System Mode is Off or Water Heater Mode is Off. Only an active Boost keeps heating.
+Reaching the target during **Boost** ends Boost, then System Mode Heat continues. HeatDemand is chosen again after the temperature write, so a one-shot that finishes in the library does not leave Boost sources on for the rest of that tick. **Off** applies when System Mode is Off or Water Heater Mode is Off. Only an active Boost keeps heating.
 
 Controller writes print `Controller:` lines immediately (Boost, system mode, water heater mode, target temperature), then a `changed` / `boost-on` / `boost-off` snapshot.
 

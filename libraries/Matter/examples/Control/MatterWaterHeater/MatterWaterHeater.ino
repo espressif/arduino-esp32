@@ -141,7 +141,19 @@ void loop() {
       temperature = setpoint;
     }
     waterHeater.setLocalTemperature(temperature);
-    waterHeater.setHeatDemand(waterHeater.getHeaterTypes());
+    // A one-shot Boost can finish inside setLocalTemperature() and restore the setpoint.
+    const bool boostStillOn = waterHeater.getBoostState() == MatterWaterHeater::BOOST_ACTIVE;
+    const float setpointNow = waterHeater.getHeatingSetpoint();
+    if (boostStillOn != boostOn) {
+      prevBoost = waterHeater.getBoostState();
+    }
+    const bool heatingNow = boostStillOn
+                            || (system == MatterWaterHeater::SYSTEM_MODE_HEAT && mode != MatterWaterHeater::WATER_HEATER_MODE_OFF);
+    if (heatingNow && temperature < setpointNow) {
+      waterHeater.setHeatDemand(waterHeater.getHeaterTypes());
+    } else {
+      waterHeater.setHeatDemand(0);
+    }
   } else {
     if (!heating && temperature > COLD_WATER_TEMP) {
       temperature -= COOL_RATE_C_PER_S * (UPDATE_INTERVAL_MS / 1000.0f);
@@ -175,7 +187,7 @@ void loop() {
   }
 
   Serial.printf(
-    "Temp: %.1f C | Setpoint: %.1f C | HeatDemand: %s | %s\r\n", temperature, setpoint,
+    "Temp: %.1f C | Setpoint: %.1f C | HeatDemand: %s | %s\r\n", temperature, waterHeater.getHeatingSetpoint(),
     waterHeater.getHeatDemand() != 0 ? "on" : "idle", operationName(waterHeater.getBoostState(), system, mode)
   );
 }

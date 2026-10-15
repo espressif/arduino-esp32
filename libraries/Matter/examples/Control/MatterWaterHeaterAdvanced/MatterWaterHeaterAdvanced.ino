@@ -312,7 +312,17 @@ void loop() {
     }
     updateTankPercentage(temperature);
     waterHeater.setLocalTemperature(temperature);
-    waterHeater.setHeatDemand(activeHeatSources(boostOn, mode));
+    // A one-shot Boost can finish inside setLocalTemperature() and restore the setpoint.
+    const bool boostStillOn = waterHeater.getBoostState() == MatterWaterHeater::BOOST_ACTIVE;
+    if (boostStillOn != boostOn) {
+      prevBoost = waterHeater.getBoostState();
+    }
+    const bool heatingNow = boostStillOn || (systemHeat && !modeOff);
+    if (heatingNow && temperature < heatingGoalC()) {
+      waterHeater.setHeatDemand(activeHeatSources(boostStillOn, mode));
+    } else {
+      waterHeater.setHeatDemand(0);
+    }
   } else if (heating) {
     waterHeater.setHeatDemand(0);
     updateTankPercentage(temperature);

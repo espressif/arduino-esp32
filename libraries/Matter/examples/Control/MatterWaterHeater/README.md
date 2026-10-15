@@ -98,7 +98,7 @@ Temp: 42.0 C | Setpoint: 42.0 C | HeatDemand: idle | Heat
 
 Reaching the setpoint in **Heat** idles HeatDemand and keeps System Mode Heat. Reaching it during **Boost** ends Boost, then heating continues in Heat. **Off** is only when the controller writes System Mode Off. That cools the tank.
 
-A controller **Boost** command may use a long duration and no one-shot; this sketch ends that Boost at the setpoint so Boost does not stay active after the tank is hot.
+A controller **Boost** command may use a long duration and no one-shot; this sketch ends that Boost at the setpoint so Boost does not stay active after the tank is hot. HeatDemand is chosen again after the temperature write, so a one-shot that finishes in the library does not leave demand on for the rest of that tick.
 
 ## Using the Device
 
