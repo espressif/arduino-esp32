@@ -180,7 +180,7 @@ public:
   void HandleChangeToMode(uint8_t newMode, chip::app::Clusters::ModeBase::Commands::ChangeToModeResponse::Type &response) override {
     if (newMode != MatterWaterHeater::WATER_HEATER_MODE_OFF && newMode != MatterWaterHeater::WATER_HEATER_MODE_MANUAL &&
         newMode != MatterWaterHeater::WATER_HEATER_MODE_ECO) {
-      // Reject modes this endpoint does not advertise. Verify the StatusCode name in the SDK's mode-base headers.
+      // Reject modes this endpoint does not advertise.
       response.status = static_cast<uint8_t>(chip::app::Clusters::ModeBase::StatusCode::kUnsupportedMode);
       return;
     }
@@ -625,7 +625,26 @@ bool MatterWaterHeater::setAbsoluteMinimumHeatingSetpoint(float temperature) {
   }
 
   if (value < ABS_MIN_HEATING_SETPOINT || value > ABS_MAX_HEATING_SETPOINT || value > absoluteMaximumHeatingSetpoint) {
+    log_e(
+      "Absolute min heating setpoint %.02fC must be within [%.02f..%.02f] and <= absolute max %.02fC.", temperature,
+      static_cast<float>(ABS_MIN_HEATING_SETPOINT) / 100.0f, static_cast<float>(ABS_MAX_HEATING_SETPOINT) / 100.0f,
+      static_cast<float>(absoluteMaximumHeatingSetpoint) / 100.0f
+    );
     return false;
+  }
+
+  if (minimumHeatingSetpoint < value) {
+    if (value > maximumHeatingSetpoint) {
+      log_e(
+        "Absolute min heating setpoint %.02fC cannot exceed current max heating setpoint %.02fC.", temperature,
+        static_cast<float>(maximumHeatingSetpoint) / 100.0f
+      );
+      return false;
+    }
+    if (!setMinimumHeatingSetpoint(static_cast<float>(value) / 100.0f)) {
+      log_e("Failed to raise min heating setpoint to %.02fC.", temperature);
+      return false;
+    }
   }
 
   esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
@@ -639,11 +658,6 @@ bool MatterWaterHeater::setAbsoluteMinimumHeatingSetpoint(float temperature) {
   }
 
   absoluteMinimumHeatingSetpoint = value;
-
-  if (minimumHeatingSetpoint < value) {
-    setMinimumHeatingSetpoint(static_cast<float>(value) / 100.0f);
-  }
-
   return true;
 }
 
@@ -685,7 +699,26 @@ bool MatterWaterHeater::setAbsoluteMaximumHeatingSetpoint(float temperature) {
   }
 
   if (value < ABS_MIN_HEATING_SETPOINT || value > ABS_MAX_HEATING_SETPOINT || value < absoluteMinimumHeatingSetpoint) {
+    log_e(
+      "Absolute max heating setpoint %.02fC must be within [%.02f..%.02f] and >= absolute min %.02fC.", temperature,
+      static_cast<float>(ABS_MIN_HEATING_SETPOINT) / 100.0f, static_cast<float>(ABS_MAX_HEATING_SETPOINT) / 100.0f,
+      static_cast<float>(absoluteMinimumHeatingSetpoint) / 100.0f
+    );
     return false;
+  }
+
+  if (maximumHeatingSetpoint > value) {
+    if (value < minimumHeatingSetpoint) {
+      log_e(
+        "Absolute max heating setpoint %.02fC cannot be below current min heating setpoint %.02fC.", temperature,
+        static_cast<float>(minimumHeatingSetpoint) / 100.0f
+      );
+      return false;
+    }
+    if (!setMaximumHeatingSetpoint(static_cast<float>(value) / 100.0f)) {
+      log_e("Failed to lower max heating setpoint to %.02fC.", temperature);
+      return false;
+    }
   }
 
   esp_matter_attr_val_t attr = esp_matter_invalid(NULL);
@@ -699,11 +732,6 @@ bool MatterWaterHeater::setAbsoluteMaximumHeatingSetpoint(float temperature) {
   }
 
   absoluteMaximumHeatingSetpoint = value;
-
-  if (maximumHeatingSetpoint > value) {
-    setMaximumHeatingSetpoint(static_cast<float>(value) / 100.0f);
-  }
-
   return true;
 }
 
@@ -1117,7 +1145,8 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           return true;
 
         case Thermostat::Attributes::AbsMinHeatSetpointLimit::Id:
-          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT || val->val.i16 > absoluteMaximumHeatingSetpoint) {
+          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT
+              || val->val.i16 > minimumHeatingSetpoint || val->val.i16 > absoluteMaximumHeatingSetpoint) {
             return false;
           }
           absoluteMinimumHeatingSetpoint = val->val.i16;
@@ -1131,7 +1160,8 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           return true;
 
         case Thermostat::Attributes::AbsMaxHeatSetpointLimit::Id:
-          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT || val->val.i16 < absoluteMinimumHeatingSetpoint) {
+          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT
+              || val->val.i16 < maximumHeatingSetpoint || val->val.i16 < absoluteMinimumHeatingSetpoint) {
             return false;
           }
           absoluteMaximumHeatingSetpoint = val->val.i16;
