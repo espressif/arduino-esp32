@@ -138,7 +138,8 @@ Key rules:
 
 **HeatDemand**
 
-- `setSystemMode()`, `setBoostState()`, `setWaterHeaterMode()`, `setHeaterTypes()`, and a controller write to SystemMode keep HeatDemand in sync through `syncHeatDemand()`. HeaterTypes is not client-writable.
+- `setSystemMode()`, `setBoostState()`, `setWaterHeaterMode()`, `setHeaterTypes()`, and a controller write to SystemMode keep HeatDemand in sync through `syncHeatDemand()`.
+- HeaterTypes is not client-writable.
 
 **Lifecycle**
 

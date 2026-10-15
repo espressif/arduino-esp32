@@ -96,7 +96,9 @@ Controller: Cancel Boost
 Operation: Heat
 ```
 
-`HeatDemand: on` is the Matter **HeatDemand** attribute (which heater types are drawing power: immersion, heat pump, boiler, …). Reaching the setpoint in **Heat** idles HeatDemand and keeps System Mode Heat. Reaching it during **Boost** ends Boost so heating continues in Heat. **Off** is only when the controller writes System Mode Off (that cools the tank).
+`HeatDemand: on` is the Matter **HeatDemand** attribute: which heater types are drawing power (immersion, heat pump, boiler, …).
+
+Reaching the setpoint in **Heat** idles HeatDemand and keeps System Mode Heat. Reaching it during **Boost** ends Boost, then heating continues in Heat. **Off** is only when the controller writes System Mode Off. That cools the tank.
 
 A controller **Boost** command may use a long duration and no one-shot; this sketch ends that Boost at the setpoint so Boost does not stay active after the tank is hot.
 
@@ -111,9 +113,13 @@ The endpoint is Matter device type **0x050F**. This sketch drives temperature an
 | System mode         |                       Heat |
 | Water heater mode   | Manual (`begin()` default) |
 
-Every five seconds Heat rises 0.5 °C and Boost rises 1.0 °C toward the setpoint. Off falls 0.25 °C/s toward 16 °C unless Boost is Active. **HeatDemand** is the heater-type bitmap while a heater type is on, and 0 at the setpoint or when heating is off.
+Every five seconds Heat rises 0.5 °C and Boost rises 1.0 °C toward the setpoint. Off falls 0.25 °C/s toward 16 °C unless Boost is Active.
 
-`MatterWaterHeater::begin()` adds Thermostat **AbsMinHeatSetpointLimit** and **AbsMaxHeatSetpointLimit** (default **20 °C … 85 °C**) so controllers can show a setpoint dial. That range is not the tank temperature: this sketch cools to 16 °C. After `begin()`, `setAbsoluteMinimumHeatingSetpoint()` / `setAbsoluteMaximumHeatingSetpoint()` (and `setMinimumHeatingSetpoint()` / `setMaximumHeatingSetpoint()`) can change the dial within 20 °C … 85 °C. See `ep_water_heater.rst`.
+**HeatDemand** is the heater-type bitmap while a heater type is on, and 0 at the setpoint or when heating is off.
+
+`MatterWaterHeater::begin()` adds Thermostat **AbsMinHeatSetpointLimit** and **AbsMaxHeatSetpointLimit** (default **20 °C … 85 °C**) so controllers can show a setpoint dial. That range is not the tank temperature. This sketch cools to 16 °C.
+
+After `begin()`, `setAbsoluteMinimumHeatingSetpoint()` / `setAbsoluteMaximumHeatingSetpoint()` and `setMinimumHeatingSetpoint()` / `setMaximumHeatingSetpoint()` can change the dial within 20 °C … 85 °C. See `ep_water_heater.rst`.
 
 Use a Matter controller to scan the QR code or enter the manual pairing code from the Serial Monitor.
 

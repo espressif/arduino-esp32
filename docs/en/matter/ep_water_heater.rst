@@ -46,7 +46,11 @@ Initialization
 begin
 ^^^^^
 
-Creates the Water Heater device type, installs the Water Heater Management delegate (**Boost** / **CancelBoost**), adds **EnergyManagement** and **TankPercent** so ``TankVolume``, ``EstimatedHeatRequired``, and ``TankPercentage`` exist, and enables the Water Heater Mode **OnOff** feature so the Off mode tag is valid. It also adds Thermostat ``AbsMin`` / ``AbsMax`` / ``Min`` / ``MaxHeatSetpointLimit``. Pins Water Heater Mode to **Manual** so the mode server does not start on **Off**. Call before ``Matter.begin()``; calling ``begin()`` after the stack has started fails.
+Creates the Water Heater device type and installs the Water Heater Management delegate (**Boost** / **CancelBoost**).
+
+Adds **EnergyManagement** and **TankPercent** so ``TankVolume``, ``EstimatedHeatRequired``, and ``TankPercentage`` exist. Enables the Water Heater Mode **OnOff** feature so the Off mode tag is valid. Also adds Thermostat ``AbsMin`` / ``AbsMax`` / ``Min`` / ``MaxHeatSetpointLimit``. Pins Water Heater Mode to **Manual** so the mode server does not start on **Off**.
+
+Call ``begin()`` before ``Matter.begin()``. A call after the stack has started fails.
 
 .. code-block:: arduino
 
@@ -104,7 +108,9 @@ Heater type bitmap. ``HeaterTypes`` is the sources the appliance **has**. ``Heat
 
 * ``IMMERSION_ELEMENT_1`` (``0x01``), ``IMMERSION_ELEMENT_2`` (``0x02``), ``HEAT_PUMP`` (``0x04``), ``BOILER`` (``0x08``), ``OTHER`` (``0x10``).
 
-``HeatDemand`` is not Eco / Manual / Boost / Off. Those are Water Heater Mode, Thermostat **SystemMode**, and **BoostState**. A single-source tank reports one bit while that source is on, and ``0`` when it is not. An appliance can advertise several bits in ``HeaterTypes`` and report a **subset** in ``HeatDemand`` (for example boiler in Manual, heat pump in Eco, boiler plus immersion in Boost).
+``HeatDemand`` is not Eco / Manual / Boost / Off. Those are Water Heater Mode, Thermostat **SystemMode**, and **BoostState**.
+
+A single-source tank reports one bit while that source is on, and ``0`` when it is not. An appliance can advertise several bits in ``HeaterTypes`` and report a **subset** in ``HeatDemand``: boiler in Manual, heat pump in Eco, boiler plus immersion in Boost.
 
 BoostState_t
 ^^^^^^^^^^^^
@@ -155,13 +161,23 @@ setSystemMode / setBoostState / setWaterHeaterMode
 
 ``setSystemMode()``, ``setBoostState()``, and ``setWaterHeaterMode()`` update **HeatDemand**. A controller **SystemMode** write does the same sync. Only Off and Heat are accepted.
 
-**HeaterTypes**, **HeatDemand**, **TankVolume**, **TankPercentage**, **EstimatedHeatRequired**, and **BoostState** are code-driven (the WHM Delegate). Do not write them with ``updateAttributeVal()``; CHIP and the hub read the Arduino cache. The setters report changes to subscribers. **HeaterTypes** is not client-writable.
+**HeaterTypes**, **HeatDemand**, **TankVolume**, **TankPercentage**, **EstimatedHeatRequired**, and **BoostState** are code-driven (the WHM Delegate). Do not write them with ``updateAttributeVal()``. CHIP and the hub read the Arduino cache. The setters report changes to subscribers. **HeaterTypes** is not client-writable.
 
-A controller **Boost** sets **BoostState** to Active, may apply a temporary heating setpoint, and arms a duration timer. ``duration`` ``0`` is a local extension: Boost stays active until **CancelBoost** or ``setBoostState(BOOST_INACTIVE)``, with no auto-timeout. **oneShot** ends Boost once the local temperature, and the target tank percentage when that field is present, has been reached. **CancelBoost** and ``setBoostState(BOOST_INACTIVE)`` restore a temporary setpoint and emit **BoostEnded**. **EmergencyBoost** is ignored: no extra heat sources are turned on, and the command still succeeds. **TargetReheat** is rejected with ``InvalidCommand``.
+A controller **Boost** sets **BoostState** to Active. It may apply a temporary heating setpoint and arm a duration timer.
+
+``duration`` ``0`` is a local extension. Boost stays active until **CancelBoost** or ``setBoostState(BOOST_INACTIVE)``, with no auto-timeout.
+
+**oneShot** ends Boost once the local temperature has been reached. If a target tank percentage is present, that percentage must be reached too.
+
+**CancelBoost** and ``setBoostState(BOOST_INACTIVE)`` restore a temporary setpoint and emit **BoostEnded**.
+
+**EmergencyBoost** is ignored. No extra heat sources are turned on, and the command still succeeds. **TargetReheat** is rejected with ``InvalidCommand``.
 
 Thermostat **SystemMode** Heat/Off is independent of Water Heater Mode (Off / Manual / Eco). A controller **Boost** does not change Water Heater Mode.
 
-``setWaterHeaterMode()`` updates the CHIP mode-base **CurrentMode** (Off / Manual / Eco). Before ``Matter.begin()`` the value is cached and applied when the mode server starts. A controller ``ChangeToMode`` command updates the same cache and **HeatDemand**. Mode Off stops normal heating demand; an active Boost still demands heat.
+``setWaterHeaterMode()`` updates the CHIP mode-base **CurrentMode** (Off / Manual / Eco). Before ``Matter.begin()`` the value is cached and applied when the mode server starts.
+
+A controller ``ChangeToMode`` command updates the same cache and **HeatDemand**. Mode Off stops normal heating demand. An active Boost still demands heat.
 
 setHeaterTypes / setHeatDemand
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -173,9 +189,24 @@ setHeaterTypes / setHeatDemand
 
 ``HeaterTypes`` is the product capability (which heat sources exist). ``HeatDemand`` is which of those sources are drawing power **right now** (a subset of ``HeaterTypes``, or ``0``).
 
-``setSystemMode()``, ``setBoostState()``, ``setWaterHeaterMode()``, and ``setHeaterTypes()`` call ``syncHeatDemand()``. **Boost** copies ``HeaterTypes`` into ``HeatDemand`` even when System Mode or Water Heater Mode is Off. Otherwise **SystemMode** Heat with Water Heater Mode not Off copies ``HeaterTypes``; every other case sets ``HeatDemand`` to ``0``. ``setHeatDemand()`` can report a subset while System Mode stays Heat (for example ``0`` once the tank is at the setpoint). The next sync replaces that subset with ``0`` or every ``HeaterTypes`` bit. The value is stored in the Arduino cache that ``GetHeatDemand()`` returns.
+``setSystemMode()``, ``setBoostState()``, ``setWaterHeaterMode()``, and ``setHeaterTypes()`` call ``syncHeatDemand()``.
 
-Example Serial logs print that bitmap in words, not hex. The basic sketch prints ``on`` / ``idle``. ``MatterWaterHeaterAdvanced`` advertises every ``HeaterType_t`` bit, names them all (``Immersion 1``, ``Immersion 2``, ``Heat pump``, ``Boiler``, ``Other``; combinations use ``+``), and reports a subset while heating: **Manual** uses the boiler (a common market source), **Eco** the heat pump, **Boost** boiler plus both immersion elements, and ``idle`` when the tank is at the goal or not heating. ``OTHER`` stays in ``HeaterTypes`` so the Serial helper has a name for that bit.
+* **Boost** copies ``HeaterTypes`` into ``HeatDemand``, even when System Mode or Water Heater Mode is Off.
+* Otherwise, **SystemMode** Heat with Water Heater Mode not Off copies ``HeaterTypes``.
+* Every other case sets ``HeatDemand`` to ``0``.
+
+``setHeatDemand()`` can report a subset while System Mode stays Heat, for example ``0`` once the tank is at the setpoint. The next sync replaces that subset with ``0`` or every ``HeaterTypes`` bit. The value is stored in the Arduino cache that ``GetHeatDemand()`` returns.
+
+Example Serial logs print that bitmap in words, not hex. The basic sketch prints ``on`` / ``idle``.
+
+``MatterWaterHeaterAdvanced`` advertises every ``HeaterType_t`` bit and names them: ``Immersion 1``, ``Immersion 2``, ``Heat pump``, ``Boiler``, ``Other``. Combinations use ``+``. While heating it reports a subset:
+
+* **Manual** uses the boiler (a common market source).
+* **Eco** uses the heat pump.
+* **Boost** uses the boiler plus both immersion elements.
+* ``idle`` when the tank is at the goal or not heating.
+
+``OTHER`` stays in ``HeaterTypes`` so the Serial helper has a name for that bit.
 
 setTankVolume / setTankPercentage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -217,7 +248,11 @@ These Thermostat attributes are the **controller setpoint range** (the target di
     float getAbsoluteMinimumHeatingSetpoint();
     float getAbsoluteMaximumHeatingSetpoint();
 
-Call the absolute setters first when narrowing the product range. ``Min`` / ``Max`` must stay inside ``AbsMin`` / ``AbsMax``. The absolute setters reject values outside **20 °C … 85 °C**, and they reject a new absolute minimum above the current absolute maximum or a new absolute maximum below the current absolute minimum. A controller **OccupiedHeatingSetpoint** outside ``Min`` / ``Max`` is rejected, as are limit writes that would cross. A controller may cache the range at commissioning; a later change may need a re-interview before the dial updates.
+Call the absolute setters first when narrowing the product range. ``Min`` / ``Max`` must stay inside ``AbsMin`` / ``AbsMax``.
+
+The absolute setters reject values outside **20 °C … 85 °C**. They also reject a new absolute minimum above the current absolute maximum, or a new absolute maximum below the current absolute minimum.
+
+A controller **OccupiedHeatingSetpoint** outside ``Min`` / ``Max`` is rejected. Limit writes that would cross are rejected too. A controller may cache the range at commissioning. A later change may need a re-interview before the dial updates.
 
 Example
 -------

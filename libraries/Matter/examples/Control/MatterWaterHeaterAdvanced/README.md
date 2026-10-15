@@ -40,7 +40,8 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - Controller **Boost** / **CancelBoost** (duration, one-shot, optional temporary setpoint). **EmergencyBoost** is ignored. **TargetReheat** is rejected with `InvalidCommand`.
 - Serial `Controller:` lines for Boost, system mode, water heater mode, and target temperature (same as the basic example)
 - `MatterWaterHeater::begin()` provisions Water Heater Management **EnergyManagement** and **TankPercent** (call before `Matter.begin()`)
-- After `begin()`, the sketch sets the controller setpoint dial to **25 °C … 60 °C** (`setAbsoluteMinimumHeatingSetpoint()` / `setAbsoluteMaximumHeatingSetpoint()`, then `Min` / `Max`). The API cannot go outside the library span **20 °C … 85 °C**. Tank temperature is independent (starts at 20 °C, cools to 16 °C).
+- After `begin()`, the sketch sets the controller setpoint dial to **25 °C … 60 °C** (`setAbsoluteMinimumHeatingSetpoint()` / `setAbsoluteMaximumHeatingSetpoint()`, then `Min` / `Max`). The API cannot go outside **20 °C … 85 °C**.
+- Tank temperature is independent of that dial. This sketch starts at 20 °C and cools to 16 °C.
 - Matter commissioning via QR code or manual pairing code
 
 ## Hardware Requirements
@@ -121,12 +122,18 @@ Every five seconds the sketch updates the simulated tank:
 
 - **Manual** and System Mode **Heat**: +0.5 °C toward the heating setpoint. **HeatDemand** is **Boiler**.
 - **Water Heater Mode Eco**: +0.25 °C, stops at 40 °C even if the setpoint is higher, **HeatDemand** is **Heat pump**.
-- **Boost**: +1.0 °C (double Manual) toward the current heating setpoint even if system mode or water heater mode is Off. **HeatDemand** is **Boiler+Immersion 1+Immersion 2**. A controller **Boost** command can also apply a temporary setpoint and a duration or one-shot; **CancelBoost** (or the timer / one-shot) restores that setpoint.
+- **Boost**: +1.0 °C (double Manual) toward the current heating setpoint, even if system mode or water heater mode is Off. **HeatDemand** is **Boiler+Immersion 1+Immersion 2**. A controller **Boost** can apply a temporary setpoint and a duration or one-shot. **CancelBoost**, the timer, or one-shot restores that setpoint.
 - **Off** (water heater mode Off, or system Off, with boost inactive): temperature falls at 0.25 °C/s toward 16 °C.
 
 The **25 °C … 60 °C** dial is `OccupiedHeatingSetpoint` only. `LocalTemperature` can sit below the dial minimum (this sketch starts at 20 °C). A controller that still shows **20 °C … 85 °C** after a flash may be using the range from first commissioning; re-interview the node so it re-reads `AbsMin` / `AbsMax`.
 
-Tank percentage on the `ready` line is 0% from `setup()`. Each later tick maps `(temperature - 16) / (setpoint - 16)`. **EstimatedHeatRequired** is the remaining energy to reach the heating goal (`volume × ΔT × 1.163 Wh/L·°C`, stored as mWh). Eco uses the 40 °C cap as the goal (less energy than Manual/Boost at the same tank temperature). Off still reports energy if the tank is below that goal; the value falls as the tank heats and is 0 at the goal. Reaching the target during **Boost** ends Boost so System Mode Heat continues. **Off** applies when System Mode is Off or Water Heater Mode is Off. Only an active Boost keeps heating. Controller writes print `Controller:` lines immediately (Boost, system mode, water heater mode, target temperature), then a `changed` / `boost-on` / `boost-off` snapshot.
+Tank percentage on the `ready` line is 0% from `setup()`. Each later tick maps `(temperature - 16) / (setpoint - 16)`.
+
+**EstimatedHeatRequired** is the remaining energy to reach the heating goal (`volume × ΔT × 1.163 Wh/L·°C`, stored as mWh). Eco uses the 40 °C cap as the goal, so it needs less energy than Manual or Boost at the same tank temperature. Off still reports energy if the tank is below that goal. The value falls as the tank heats and is 0 at the goal.
+
+Reaching the target during **Boost** ends Boost, then System Mode Heat continues. **Off** applies when System Mode is Off or Water Heater Mode is Off. Only an active Boost keeps heating.
+
+Controller writes print `Controller:` lines immediately (Boost, system mode, water heater mode, target temperature), then a `changed` / `boost-on` / `boost-off` snapshot.
 
 ### HeatDemand (Serial names)
 
@@ -145,13 +152,21 @@ This sketch uses a **boiler** as the everyday heater (common on the market). Whi
 
 `Other` is in `HeaterTypes` so the helper has a name for that bit; this sketch does not turn it on. Eco / Manual / Boost change **which subset** is on, not the meaning of HeatDemand (it is still “sources drawing power now”).
 
-The sketch chooses this subset with `setHeatDemand()` after each mode change and on every five-second update. Without the sketch, the library reports all of `HeaterTypes` while heating. A library sync (system mode, water heater mode, or Boost) can therefore show every bit until the next update, at most five seconds. **HeaterTypes** is not client-writable.
+The sketch chooses this subset with `setHeatDemand()` after each mode change and on every five-second update. Without the sketch, the library reports all of `HeaterTypes` while heating.
+
+A library sync (system mode, water heater mode, or Boost) can show every bit until the next update, at most five seconds. **HeaterTypes** is not client-writable.
 
 The [basic example](../MatterWaterHeater) prints the same attribute as `on` / `idle` and does not name the heater type.
 
 ### Hub Boost / CancelBoost
 
-After commissioning, send **Boost** from a Matter controller that exposes Water Heater Management commands. The serial log prints `Controller: Boost on` and `boost-on`. While Boost is Active this sketch heats at 1.0 °C per tick (double Manual), even if Mode or System is Off. **CancelBoost**, a duration timeout, or a one-shot that has reached the setpoint (and optional target tank %) prints `Controller: Cancel Boost` / `boost-off` and restores any temporary setpoint the command applied. **EmergencyBoost** is ignored. Boost commands that include **TargetReheat** are rejected with `InvalidCommand`.
+After commissioning, send **Boost** from a Matter controller that exposes Water Heater Management commands. The serial log prints `Controller: Boost on` and `boost-on`.
+
+While Boost is Active this sketch heats at 1.0 °C per tick (double Manual), even if Mode or System is Off.
+
+**CancelBoost**, a duration timeout, or a one-shot that has reached the setpoint (and optional target tank %) prints `Controller: Cancel Boost` / `boost-off` and restores any temporary setpoint.
+
+**EmergencyBoost** is ignored. Boost commands that include **TargetReheat** are rejected with `InvalidCommand`.
 
 You can also call `waterHeater.setBoostState(MatterWaterHeater::BOOST_ACTIVE)` locally; the same heating path and log apply. There is no Arduino API that sends the Matter Boost command fields (duration, oneShot, temporarySetpoint).
 
@@ -161,8 +176,8 @@ Use a Matter controller to scan the QR code or enter the manual pairing code fro
 
 ## Code Structure
 
-1. **`setup()`**: Creates the `MatterWaterHeater` endpoint (`begin()` adds WHM tank features, default **20 °C … 85 °C** setpoint limits, and the Boost/CancelBoost delegate), then sets the dial to **25 °C … 60 °C**, tank attributes, modes, and initial **EstimatedHeatRequired**. `Matter.begin()` and `matterWaitUntilReady()`. Prints how to exercise controller Boost.
-2. **`loop()`**: `matterRestartIfNoFabric()`. Prints `Controller:` lines and a snapshot when Boost, system mode, water heater mode, or setpoint changes. Every five seconds applies Manual, Water Heater Mode Eco, Boost, or Off behavior, updates **HeatDemand**, `updateTankPercentage()`, and `updateEstimatedHeatRequired()`. `setLocalTemperature()` is what a one-shot Boost uses to finish. There is no button; decommission is not in this sketch.
+1. **`setup()`**: `begin()` adds WHM tank features, default **20 °C … 85 °C** setpoint limits, and the Boost/CancelBoost delegate. The sketch then sets the dial to **25 °C … 60 °C**, tank attributes, modes, and initial **EstimatedHeatRequired**. Then `Matter.begin()` and `matterWaitUntilReady()`. Prints how to exercise controller Boost.
+2. **`loop()`**: `matterRestartIfNoFabric()`. Prints `Controller:` lines and a snapshot when Boost, system mode, water heater mode, or setpoint changes. Every five seconds applies Manual, Eco, Boost, or Off, then updates **HeatDemand**, tank percentage, and estimated heat. `setLocalTemperature()` is what a one-shot Boost uses to finish. There is no button; decommission is not in this sketch.
 3. **`updateTankPercentage()`**: Maps temperature between cold water and setpoint to **TankPercentage**.
 4. **`heatingGoalC()` / `updateEstimatedHeatRequired()`**: Eco caps the goal at 40 °C; otherwise the goal is the heating setpoint. Remaining energy is `volume × ΔT × 1163 mWh/L·°C`.
 5. **`activeHeatSources()` / `heatDemandName()` / `logWaterHeater()`**: While heating, Manual reports **Boiler**, Eco **Heat pump**, Boost **Boiler+Immersion 1+Immersion 2**. Serial names every WHM bit (see **HeatDemand (Serial names)**), not hex.
