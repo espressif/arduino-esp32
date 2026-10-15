@@ -126,7 +126,7 @@ Key rules:
 
 `MatterSoilSensor` uses `esp_matter::endpoint::soil_sensor::create()` (Soil Sensor device type `0x0045`) and the ESP-Matter Soil Measurement integration (`SetSoilMoistureLimits()` before `Matter.begin()`, then `SetSoilMoistureMeasuredValue()` / `findRegisteredCluster()` after the stack starts). The live `SoilMeasurementCluster` is registered by ESP-Matter's `data_model_provider/clusters/soil_measurement/integration.cpp`, not by Arduino code. `setSoilMoisture()` caches readings before `Matter.begin()` and applies them in `onStackStarted()`, like `MatterHumiditySensor`.
 
-Like Boolean State, `SoilMoistureMeasuredValue` is served by that live cluster instance, not the Ember attribute store. Use `setSoilMoisture()` (which calls ESP-Matter's `SetSoilMoistureMeasuredValue()` once the stack is up). The no-argument `begin()` leaves the measured attribute null until the first `setSoilMoisture()` call; `begin(uint8_t)` seeds an initial value.
+Like Boolean State, `SoilMoistureMeasuredValue` is served by that live cluster instance, not the Ember attribute store. Use `setSoilMoisture()` (which calls ESP-Matter's `SetSoilMoistureMeasuredValue()` once the stack is up). The no-argument `begin()` leaves the measured attribute null until the first `setSoilMoisture()` call; `begin(uint8_t)` seeds an initial value. A later `setSoilMoisture()` of the same percent is skipped only after that value has been published.
 
 ### Controller-Originated Changes (attributeChangeCB)
 
