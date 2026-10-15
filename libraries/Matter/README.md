@@ -118,7 +118,7 @@ Key rules:
 
 ### Water Heater (Water Heater Management optional features)
 
-`MatterWaterHeater` uses the esp-matter ember/data-model path for Water Heater Management and Thermostat.
+`MatterWaterHeater` uses CHIP delegates for Water Heater Management and Water Heater Mode. Thermostat uses the esp-matter ember/data-model path.
 
 **Water Heater Mode**
 
@@ -138,7 +138,7 @@ Key rules:
 
 **HeatDemand**
 
-- `setSystemMode()`, `setBoostState()` and controller writes to SystemMode or HeaterTypes keep HeatDemand in sync through `syncHeatDemand()`.
+- `setSystemMode()`, `setBoostState()`, `setWaterHeaterMode()`, `setHeaterTypes()`, and a controller write to SystemMode keep HeatDemand in sync through `syncHeatDemand()`. HeaterTypes is not client-writable.
 
 **Lifecycle**
 
