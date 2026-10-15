@@ -184,6 +184,9 @@ private:
     FinishOneShot,
   };
 
+  // Attribute write, cache update, and one-shot check. The caller holds the CHIP lock after Matter.begin().
+  bool setHeatingSetpointRawBody(int16_t temperature);
+
   static void boostTimerCallback(chip::System::Layer *layer, void *appState);
   // Returns false if the timer could not be armed; the caller must roll back the boost.
   bool armBoostTimer(uint32_t durationSeconds);

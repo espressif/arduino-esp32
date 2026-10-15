@@ -680,6 +680,17 @@ float MatterWaterHeater::getHeatingSetpoint() {
 }
 
 bool MatterWaterHeater::setHeatingSetpointRaw(int16_t temperature) {
+  // A queued one-shot check can restore the saved setpoint between the attribute write and the
+  // cache assignment. Hold the lock across both once the stack is running. Before Matter.begin()
+  // the lock is not ready, and no one-shot work is queued yet.
+  if (ArduinoMatter::isStackStarted()) {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    return setHeatingSetpointRawBody(temperature);
+  }
+  return setHeatingSetpointRawBody(temperature);
+}
+
+bool MatterWaterHeater::setHeatingSetpointRawBody(int16_t temperature) {
   if (!initialized) {
     return false;
   }
@@ -743,7 +754,7 @@ bool MatterWaterHeater::setAbsoluteMinimumHeatingSetpoint(float temperature) {
       );
       return false;
     }
-    if (!setMinimumHeatingSetpoint(static_cast<float>(value) / 100.0f)) {
+    if (!setMinimumHeatingSetpoint(temperature)) {
       log_e("Failed to raise min heating setpoint to %.02fC.", temperature);
       return false;
     }
@@ -819,7 +830,7 @@ bool MatterWaterHeater::setAbsoluteMaximumHeatingSetpoint(float temperature) {
       );
       return false;
     }
-    if (!setMaximumHeatingSetpoint(static_cast<float>(value) / 100.0f)) {
+    if (!setMaximumHeatingSetpoint(temperature)) {
       log_e("Failed to lower max heating setpoint to %.02fC.", temperature);
       return false;
     }
