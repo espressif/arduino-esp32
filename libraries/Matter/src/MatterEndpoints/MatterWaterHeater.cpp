@@ -31,7 +31,6 @@
 #include <platform/CHIPDeviceLayer.h>
 #include <system/SystemLayer.h>
 
-#ifndef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
 // Pre-Matter.begin() FeatureMap writes must skip attribute callbacks (legacy update_feature_map()).
 namespace esp_matter {
 namespace attribute {
@@ -39,7 +38,6 @@ esp_err_t get_val_internal(attribute_t *attribute, esp_matter_attr_val_t *val);
 esp_err_t set_val_internal(attribute_t *attribute, esp_matter_attr_val_t *val, bool call_callbacks);
 }  // namespace attribute
 }  // namespace esp_matter
-#endif
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -82,10 +80,9 @@ constexpr ModeOption kModes[kModeCount] = {
   {"Eco", MatterWaterHeater::WATER_HEATER_MODE_ECO, chip::app::Clusters::WaterHeaterMode::ModeTag::kLowEnergy},
 };
 
-#ifndef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
-// Legacy energy_management::add(cluster_t*) is declared but not linked. Create the
-// optional WHM attributes here and write FeatureMap without pre-update callbacks.
-bool orWhmFeatureMap(cluster_t *cluster, uint32_t feature_bit) {
+// ESP-Matter copies FeatureMap into the code-driven cluster at stack start. Skip callbacks:
+// the Matter event loop is not running yet during begin().
+bool orClusterFeatureMap(cluster_t *cluster, uint32_t feature_bit) {
   esp_matter_attr_val_t feature_map_val = esp_matter_invalid(NULL);
   attribute_t *feature_map_attr = attribute::get(cluster, Globals::Attributes::FeatureMap::Id);
   if (feature_map_attr == nullptr || ::esp_matter::attribute::get_val_internal(feature_map_attr, &feature_map_val) != ESP_OK) {
@@ -95,8 +92,11 @@ bool orWhmFeatureMap(cluster_t *cluster, uint32_t feature_bit) {
   return ::esp_matter::attribute::set_val_internal(feature_map_attr, &feature_map_val, false) == ESP_OK;
 }
 
+#ifndef CONFIG_ESP_MATTER_ENABLE_GENERATED_DATA_MODEL
+// Legacy energy_management::add(cluster_t*) is declared but not linked. Create the
+// optional WHM attributes here and write FeatureMap without pre-update callbacks.
 bool addLegacyWhmEnergyManagement(cluster_t *cluster) {
-  if (!orWhmFeatureMap(cluster, static_cast<uint32_t>(WaterHeaterManagement::Feature::kEnergyManagement))) {
+  if (!orClusterFeatureMap(cluster, static_cast<uint32_t>(WaterHeaterManagement::Feature::kEnergyManagement))) {
     return false;
   }
   return ::esp_matter::cluster::water_heater_management::attribute::create_tank_volume(cluster, 0) != nullptr &&
@@ -108,7 +108,7 @@ bool addLegacyWhmTankPercent(cluster_t *cluster) {
     return false;
   }
   // tank_percent::get_id() wrongly returns kEnergyManagement in legacy esp_matter_feature.cpp.
-  return orWhmFeatureMap(cluster, static_cast<uint32_t>(WaterHeaterManagement::Feature::kTankPercent));
+  return orClusterFeatureMap(cluster, static_cast<uint32_t>(WaterHeaterManagement::Feature::kTankPercent));
 }
 #endif
 
@@ -203,8 +203,9 @@ public:
     uint32_t duration, chip::Optional<bool> oneShot, chip::Optional<bool> emergencyBoost, chip::Optional<int16_t> temporarySetpoint,
     chip::Optional<chip::Percent> targetPercentage, chip::Optional<chip::Percent> targetReheat
   ) override {
-    // EmergencyBoost and TargetReheat are not implemented by this endpoint. Reject them before any state change.
-    if (emergencyBoost.HasValue() || targetReheat.HasValue()) {
+    // TargetReheat would require reheating after the tank cools. This endpoint has no reheat threshold.
+    // EmergencyBoost is a hint to use extra sources; ignore it and keep the normal HeatDemand bits.
+    if (targetReheat.HasValue()) {
       return chip::Protocols::InteractionModel::Status::InvalidCommand;
     }
 
@@ -246,7 +247,7 @@ public:
       return chip::Protocols::InteractionModel::Status::Failure;
     }
 
-    (void)GenerateBoostStartedEvent(duration, oneShot, chip::NullOptional, temporarySetpoint, targetPercentage, chip::NullOptional);
+    (void)GenerateBoostStartedEvent(duration, oneShot, emergencyBoost, temporarySetpoint, targetPercentage, chip::NullOptional);
     owner->maybeFinishOneShotBoost();
     return chip::Protocols::InteractionModel::Status::Success;
   }
@@ -272,7 +273,7 @@ public:
   }
 
   chip::Energy_mWh GetEstimatedHeatRequired() override {
-    return owner->estimatedHeatRequired;
+    return owner->getEstimatedHeatRequired();
   }
 
   chip::Percent GetTankPercentage() override {
@@ -440,6 +441,19 @@ bool MatterWaterHeater::begin() {
     return false;
   }
 #endif
+
+  // Off mode tag 0x4000 requires Mode Base feature OnOff. ESP-Matter reads this FeatureMap
+  // when it builds ModeBase::Instance inside Matter.begin().
+  cluster_t *mode_cluster = cluster::get(endpoint, WaterHeaterMode::Id);
+  if (mode_cluster == nullptr || !orClusterFeatureMap(mode_cluster, static_cast<uint32_t>(WaterHeaterMode::Feature::kOnOff))) {
+    log_e("Failed to enable Water Heater Mode OnOff feature");
+    esp_matter::endpoint::destroy(node::get(), endpoint);
+    delete modeDelegate;
+    delete managementDelegate;
+    modeDelegate = nullptr;
+    managementDelegate = nullptr;
+    return false;
+  }
 
   setEndPointId(endpoint::get_id(endpoint));
   initialized = true;
@@ -610,7 +624,7 @@ bool MatterWaterHeater::setAbsoluteMinimumHeatingSetpoint(float temperature) {
     return false;
   }
 
-  if (value < ABS_MIN_HEATING_SETPOINT || value > ABS_MAX_HEATING_SETPOINT) {
+  if (value < ABS_MIN_HEATING_SETPOINT || value > ABS_MAX_HEATING_SETPOINT || value > absoluteMaximumHeatingSetpoint) {
     return false;
   }
 
@@ -670,7 +684,7 @@ bool MatterWaterHeater::setAbsoluteMaximumHeatingSetpoint(float temperature) {
     return false;
   }
 
-  if (value < ABS_MIN_HEATING_SETPOINT || value > ABS_MAX_HEATING_SETPOINT) {
+  if (value < ABS_MIN_HEATING_SETPOINT || value > ABS_MAX_HEATING_SETPOINT || value < absoluteMinimumHeatingSetpoint) {
     return false;
   }
 
@@ -869,14 +883,30 @@ bool MatterWaterHeater::setEstimatedHeatRequired(int64_t energy_mWh) {
   }
 
   // EstimatedHeatRequired is code-driven (WHM Delegate GetEstimatedHeatRequired).
-  if (estimatedHeatRequired != energy_mWh) {
+  // The int64 is read on the Matter task. Lock only after the stack exists so setup()
+  // can store the value before Matter.begin(); chip_stack_lock is not ready before that.
+  bool changed = false;
+  if (ArduinoMatter::isStackStarted()) {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    changed = estimatedHeatRequired != energy_mWh;
+    if (changed) {
+      estimatedHeatRequired = energy_mWh;
+    }
+  } else if (estimatedHeatRequired != energy_mWh) {
     estimatedHeatRequired = energy_mWh;
+    changed = true;
+  }
+  if (changed) {
     reportWhmAttribute(getEndPointId(), WaterHeaterManagement::Attributes::EstimatedHeatRequired::Id);
   }
   return true;
 }
 
 int64_t MatterWaterHeater::getEstimatedHeatRequired() {
+  if (!ArduinoMatter::isStackStarted()) {
+    return estimatedHeatRequired;
+  }
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
   return estimatedHeatRequired;
 }
 
@@ -1080,26 +1110,44 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           return true;
 
         case Thermostat::Attributes::OccupiedHeatingSetpoint::Id:
+          if (val->val.i16 < minimumHeatingSetpoint || val->val.i16 > maximumHeatingSetpoint) {
+            return false;
+          }
           heatingSetpoint = val->val.i16;
           return true;
 
         case Thermostat::Attributes::AbsMinHeatSetpointLimit::Id:
+          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT || val->val.i16 > absoluteMaximumHeatingSetpoint) {
+            return false;
+          }
           absoluteMinimumHeatingSetpoint = val->val.i16;
           return true;
 
         case Thermostat::Attributes::MinHeatSetpointLimit::Id:
+          if (val->val.i16 < absoluteMinimumHeatingSetpoint || val->val.i16 > maximumHeatingSetpoint) {
+            return false;
+          }
           minimumHeatingSetpoint = val->val.i16;
           return true;
 
         case Thermostat::Attributes::AbsMaxHeatSetpointLimit::Id:
+          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT || val->val.i16 < absoluteMinimumHeatingSetpoint) {
+            return false;
+          }
           absoluteMaximumHeatingSetpoint = val->val.i16;
           return true;
 
         case Thermostat::Attributes::MaxHeatSetpointLimit::Id:
+          if (val->val.i16 < minimumHeatingSetpoint || val->val.i16 > absoluteMaximumHeatingSetpoint) {
+            return false;
+          }
           maximumHeatingSetpoint = val->val.i16;
           return true;
 
         case Thermostat::Attributes::SystemMode::Id:
+          if (val->val.u8 != SYSTEM_MODE_OFF && val->val.u8 != SYSTEM_MODE_HEAT) {
+            return false;
+          }
           systemMode = val->val.u8;
           syncHeatDemand();
           return true;

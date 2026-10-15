@@ -121,7 +121,7 @@ public:
   // HeatDemand. Setting INACTIVE cancels an active Boost session (timer,
   // temporary setpoint, BoostEnded). Controller Boost/CancelBoost commands use
   // the WHM delegate and then this same cache.
-  // EmergencyBoost and TargetReheat are not supported: Boost commands carrying them are rejected.
+  // EmergencyBoost is ignored (no extra heat sources). TargetReheat is rejected.
   bool setBoostState(BoostState_t state);
   BoostState_t getBoostState();
 
