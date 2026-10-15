@@ -1303,8 +1303,17 @@ uint16_t ETHClass::linkSpeed() const {
     return 0;
   }
   eth_speed_t link_speed;
-  esp_eth_ioctl(_eth_handle, ETH_CMD_G_SPEED, &link_speed);
-  return (link_speed == ETH_SPEED_10M) ? 10 : 100;
+  if (esp_eth_ioctl(_eth_handle, ETH_CMD_G_SPEED, &link_speed) != ESP_OK) {
+    return 0;
+  }
+  switch (link_speed) {
+    case ETH_SPEED_10M:  return 10;
+    case ETH_SPEED_100M: return 100;
+#if CONFIG_SOC_EMAC_SUPPORT_1000M
+    case ETH_SPEED_1000M: return 1000;
+#endif
+    default: return 0;
+  }
 }
 
 bool ETHClass::_setLinkSpeed(uint16_t speed) {
@@ -1312,6 +1321,9 @@ bool ETHClass::_setLinkSpeed(uint16_t speed) {
     return false;
   }
   eth_speed_t link_speed = (speed == 10) ? ETH_SPEED_10M : ETH_SPEED_100M;
+#if CONFIG_SOC_EMAC_SUPPORT_1000M
+  link_speed = (speed == 1000) ? ETH_SPEED_1000M : link_speed;
+#endif
   esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_SPEED, &link_speed);
   if (err != ESP_OK) {
     log_e("Failed to set link speed: 0x%x: %s", err, esp_err_to_name(err));
@@ -1320,8 +1332,12 @@ bool ETHClass::_setLinkSpeed(uint16_t speed) {
 }
 
 bool ETHClass::setLinkSpeed(uint16_t speed) {
-  if (speed != 10 && speed != 100) {
-    log_e("Ethernet currently supports only 10 or 100 Mbps link speed");
+  if (speed != 10 && speed != 100
+#if CONFIG_SOC_EMAC_SUPPORT_1000M
+  && speed != 1000
+#endif
+  ) {
+    log_e("Unsupported link speed: %d Mbps", speed);
     return false;
   }
   if (_eth_started) {
