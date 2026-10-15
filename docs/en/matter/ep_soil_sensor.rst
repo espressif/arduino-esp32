@@ -41,7 +41,7 @@ Initialization
 begin
 ^^^^^
 
-Creates the endpoint (Descriptor, Identify, device type, Soil Measurement cluster placeholder). Call before ``Matter.begin()``. Takes no initial moisture value.
+Creates the endpoint (Descriptor, Identify, device type, Soil Measurement cluster placeholder). Call before ``Matter.begin()``. The overload ``begin(uint8_t initialSoilMoisturePercent)`` additionally seeds an initial whole-percent reading, which is cached until the live cluster is available.
 
 .. code-block:: arduino
 
