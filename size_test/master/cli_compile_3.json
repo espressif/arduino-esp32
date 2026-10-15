@@ -161,33 +161,33 @@
                 "sketches": [
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptLambda",
                 "sizes": [{
-                        "flash_bytes": 282858,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13488,
+                        "flash_bytes": 304236,
+                        "flash_percentage": 23,
+                        "ram_bytes": 14580,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
                 "sizes": [{
-                        "flash_bytes": 281080,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13488,
+                        "flash_bytes": 282572,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13800,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/GPIO/GPIOInterrupt",
                 "sizes": [{
-                        "flash_bytes": 281732,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13488,
+                        "flash_bytes": 283232,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13808,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/HWCDC_Events",
                 "sizes": [{
-                        "flash_bytes": 289412,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13408,
+                        "flash_bytes": 310774,
+                        "flash_percentage": 24,
+                        "ram_bytes": 14508,
                         "ram_percentage": 4
                         }]
                 },
@@ -672,7 +672,7 @@
                 "sketches": [
 {"name": "libraries/ESP32/examples/GPIO/BlinkRGB",
                 "sizes": [{
-                        "flash_bytes": 285920,
+                        "flash_bytes": 285958,
                         "flash_percentage": 22,
                         "ram_bytes": 14952,
                         "ram_percentage": 5
@@ -680,42 +680,42 @@
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterrupt",
                 "sizes": [{
-                        "flash_bytes": 285974,
+                        "flash_bytes": 287476,
                         "flash_percentage": 22,
-                        "ram_bytes": 14220,
+                        "ram_bytes": 14540,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptLambda",
                 "sizes": [{
-                        "flash_bytes": 286144,
-                        "flash_percentage": 22,
-                        "ram_bytes": 14220,
-                        "ram_percentage": 4
+                        "flash_bytes": 307116,
+                        "flash_percentage": 23,
+                        "ram_bytes": 15320,
+                        "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
                 "sizes": [{
-                        "flash_bytes": 284394,
+                        "flash_bytes": 285904,
                         "flash_percentage": 22,
-                        "ram_bytes": 14228,
+                        "ram_bytes": 14548,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/GPIO/GPIOInterrupt",
                 "sizes": [{
-                        "flash_bytes": 285054,
+                        "flash_bytes": 286556,
                         "flash_percentage": 22,
-                        "ram_bytes": 14236,
+                        "ram_bytes": 14548,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/HWCDC_Events",
                 "sizes": [{
-                        "flash_bytes": 292722,
-                        "flash_percentage": 22,
-                        "ram_bytes": 14060,
-                        "ram_percentage": 4
+                        "flash_bytes": 313676,
+                        "flash_percentage": 24,
+                        "ram_bytes": 15160,
+                        "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/MacAddress/GetMacAddress",
@@ -1058,25 +1058,25 @@
                 },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 250616,
+                        "flash_bytes": 252056,
                         "flash_percentage": 19,
-                        "ram_bytes": 16616,
+                        "ram_bytes": 16944,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 250452,
+                        "flash_bytes": 251884,
                         "flash_percentage": 19,
-                        "ram_bytes": 16600,
+                        "ram_bytes": 16920,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Touch/TouchButton",
                 "sizes": [{
-                        "flash_bytes": 258324,
+                        "flash_bytes": 259708,
                         "flash_percentage": 20,
-                        "ram_bytes": 16984,
+                        "ram_bytes": 17296,
                         "ram_percentage": 5
                         }]
                 }
