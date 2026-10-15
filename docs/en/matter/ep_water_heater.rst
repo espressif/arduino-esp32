@@ -73,7 +73,7 @@ end
 
 Stops sketch-side updates. If a Boost session is active, restores any temporary heating setpoint and clears Boost (no **BoostEnded** event). When the saved target is outside the current ``Min`` / ``Max``, the temporary setpoint stays and the saved target is kept until a later limit change makes it legal. The temporary value is not clamped.
 
-Before ``Matter.begin()``, ``end()`` then destroys the endpoint and frees both delegates so ``begin()`` can be called again. After ``Matter.begin()``, ``end()`` shuts down Water Heater Mode and detaches both delegates. The delegates stay allocated with no owner, so destroying the Arduino object does not leave CHIP calling into freed memory. The Matter endpoint stays until reboot; a later ``begin()`` fails.
+Before ``Matter.begin()``, ``end()`` then destroys the endpoint, clears TagList state, and frees both delegates so ``begin()`` can be called again. After ``Matter.begin()``, ``end()`` shuts down Water Heater Mode, detaches both delegates, and clears the endpoint callback pointer. The delegates stay allocated with no owner, so destroying the Arduino object does not leave CHIP calling into freed memory. A queued setpoint restore is dropped once the delegates are detached. The Matter endpoint stays until reboot; a later ``begin()`` fails.
 
 .. code-block:: arduino
 
@@ -167,7 +167,7 @@ A controller **Boost** sets **BoostState** to Active. It may apply a temporary h
 
 ``duration`` ``0`` is a local extension. Boost stays active until **CancelBoost** or ``setBoostState(BOOST_INACTIVE)``, with no auto-timeout.
 
-**oneShot** ends Boost once the local temperature has been reached. If a target tank percentage is present, that percentage must be reached too.
+**oneShot** ends Boost once the local temperature has been reached. If a target tank percentage is present, that percentage must be reached too. A heating-setpoint write that is already reached ends the session as well, including when ``duration`` is 0.
 
 **CancelBoost** and ``setBoostState(BOOST_INACTIVE)`` restore a temporary setpoint and emit **BoostEnded**. Once the stack is running, that completion holds the CHIP stack lock for the whole transition. If the saved setpoint is outside ``Min`` / ``Max``, Boost still ends, the temporary target stays, and the saved value is retried after a later limit change.
 
@@ -195,7 +195,7 @@ setHeaterTypes / setHeatDemand
 * Otherwise, **SystemMode** Heat with Water Heater Mode not Off copies ``HeaterTypes``.
 * Every other case sets ``HeatDemand`` to ``0``.
 
-``setHeatDemand()`` can report a subset while System Mode stays Heat, for example ``0`` once the tank is at the setpoint. The next sync replaces that subset with ``0`` or every ``HeaterTypes`` bit. The value is stored in the Arduino cache that ``GetHeatDemand()`` returns.
+``setHeatDemand()`` can report a subset while System Mode stays Heat, for example ``0`` once the tank is at the setpoint. It returns false when any bit is outside ``HeaterTypes``. The next sync replaces a legal subset with ``0`` or every ``HeaterTypes`` bit. The value is stored in the Arduino cache that ``GetHeatDemand()`` returns.
 
 Example Serial logs print that bitmap in words, not hex. The basic sketch prints ``on`` / ``idle``.
 

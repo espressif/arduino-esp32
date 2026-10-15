@@ -60,9 +60,11 @@ public:
   // Provisions optional WHM tank features and the WHM delegate; call before Matter.begin().
   // On failure after partial create, the endpoint is destroyed so begin() may be retried.
   bool begin();
-  // Before Matter.begin(): destroys the endpoint and frees both delegates so begin() can run again.
-  // After Matter.begin(): finishes Boost, shuts down Water Heater Mode, and detaches both delegates
-  // (they stay allocated). The Matter endpoint stays until reboot; begin() will fail.
+  // Before Matter.begin(): destroys the endpoint, clears TagList state, and frees both delegates
+  // so begin() can run again.
+  // After Matter.begin(): finishes Boost, shuts down Water Heater Mode, detaches both delegates
+  // (they stay allocated), and clears the endpoint callback pointer. A queued setpoint restore
+  // is dropped. The Matter endpoint stays until reboot; begin() will fail.
   void end();
 
   // Thermostat / local temperature
@@ -99,7 +101,7 @@ public:
 
   // HeatDemand is a bitmap (same bit values as HeaterTypes) of the heat sources currently active.
   // It is kept in sync automatically by setSystemMode(), setBoostState(), setWaterHeaterMode() and
-  // setHeaterTypes(); call this only to override it.
+  // setHeaterTypes(); call this only to override it. Bits outside HeaterTypes are rejected.
   bool setHeatDemand(uint8_t heatDemand);
   uint8_t getHeatDemand();
 
@@ -174,6 +176,13 @@ private:
   bool boostHasTargetPercentage = false;
   uint8_t boostTargetPercentage = 0;
   bool boostFinishing = false;
+  // Set while HandleBoost writes the temporary setpoint, before the new session is armed.
+  bool applyingBoostSetpoint = false;
+
+  enum class DeferredAction : uint8_t {
+    RestoreSetpoint,
+    FinishOneShot,
+  };
 
   static void boostTimerCallback(chip::System::Layer *layer, void *appState);
   // Returns false if the timer could not be armed; the caller must roll back the boost.
@@ -186,6 +195,13 @@ private:
   // Retries restoreBoostSetpoint() once Boost is inactive and the saved target is inside Min/Max.
   void retryBoostSetpointRestore();
   void scheduleBoostSetpointRestore();
+  // Posts action to the Matter task. The lambda uses the leaked WHM delegate and returns if it was detached.
+  bool postToAttachedDelegate(DeferredAction action);
+  // After OccupiedHeatingSetpoint commits, ends a one-shot Boost that has already reached its target.
+  void scheduleOneShotCompletion();
+  // Ends a one-shot after a sketch setpoint write. Skipped during Boost command setup and restore.
+  void noteHeatingSetpointCommitted();
+  bool heatDemandAllowed(uint8_t value) const;
   void detachDelegates();
   void maybeFinishOneShotBoost();
   bool applyBoostState(BoostState_t state);

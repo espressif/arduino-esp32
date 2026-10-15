@@ -130,7 +130,7 @@ Key rules:
 
 - `begin()` installs a `WaterHeaterManagement::Delegate`, so CHIP creates a `WaterHeaterManagement::Instance`.
 - Controllers read the WHM attributes from the Arduino cache.
-- Boost and CancelBoost are handled in the library: duration timer, optional one-shot, optional temporary setpoint and optional target tank percentage.
+- Boost and CancelBoost are handled in the library: duration timer, optional one-shot, optional temporary setpoint and optional target tank percentage. A heating-setpoint write that is already reached ends a one-shot, including when duration is 0.
 - These attributes are code-driven, so do not call `updateAttributeVal()` on them: HeaterTypes, HeatDemand, TankVolume, TankPercentage, EstimatedHeatRequired and BoostState.
 - `esp_matter::endpoint::water_heater::create()` only creates the mandatory WHM attributes and OccupiedHeatingSetpoint.
 - TankVolume, EstimatedHeatRequired and TankPercentage need `feature::energy_management::add()` and `feature::tank_percent::add()` (or the legacy equivalent).
@@ -139,14 +139,15 @@ Key rules:
 **HeatDemand**
 
 - `setSystemMode()`, `setBoostState()`, `setWaterHeaterMode()`, `setHeaterTypes()`, and a controller write to SystemMode keep HeatDemand in sync through `syncHeatDemand()`.
+- `setHeatDemand()` returns false when any bit is outside HeaterTypes.
 - HeaterTypes is not client-writable.
 
 **Lifecycle**
 
 - `begin()` must run before `Matter.begin()`.
 - `end()` finishes an active Boost: it restores a temporary setpoint, with no BoostEnded event. If that restore is outside Min/Max, the saved target is kept and retried after a later limit change.
-- Before the stack starts, `end()` destroys the endpoint and frees both delegates, so `begin()` can run again.
-- After `Matter.begin()`, `end()` shuts down Water Heater Mode and detaches both delegates. They stay allocated. The endpoint stays until reboot.
+- Before the stack starts, `end()` destroys the endpoint, clears TagList state, and frees both delegates, so `begin()` can run again.
+- After `Matter.begin()`, `end()` shuts down Water Heater Mode, detaches both delegates, and clears the endpoint callback pointer. They stay allocated. A queued setpoint restore is dropped. The endpoint stays until reboot.
 - A sketch can still call `setBoostState()` for a local boost on or off. Boost completion holds the CHIP stack lock for the whole transition once the stack is running.
 
 ### Delegate-Based Clusters (Valve Configuration and Control)

@@ -221,6 +221,10 @@ public:
     return owner != nullptr;
   }
 
+  MatterWaterHeater *attachedOwner() const {
+    return owner;
+  }
+
   void detach() {
     if (owner == nullptr) {
       return;
@@ -257,18 +261,31 @@ public:
       return chip::Protocols::InteractionModel::Status::ConstraintError;
     }
 
-    if (temporarySetpoint.HasValue()) {
-      if (!owner->boostHasTemporarySetpoint) {
-        owner->boostSavedHeatingSetpoint = owner->heatingSetpoint;
-        owner->boostHasTemporarySetpoint = true;
-      }
-      if (!owner->setHeatingSetpointRaw(temporarySetpoint.Value())) {
-        owner->finishBoost(false);
-        return chip::Protocols::InteractionModel::Status::ConstraintError;
-      }
-    } else if (owner->boostHasTemporarySetpoint) {
-      if (!owner->restoreBoostSetpoint()) {
-        return chip::Protocols::InteractionModel::Status::ConstraintError;
+    // The new one-shot session is not armed yet. Skip completion checks on these writes.
+    {
+      struct ApplyingBoostSetpoint {
+        MatterWaterHeater *heater;
+        explicit ApplyingBoostSetpoint(MatterWaterHeater *heater) : heater(heater) {
+          heater->applyingBoostSetpoint = true;
+        }
+        ~ApplyingBoostSetpoint() {
+          heater->applyingBoostSetpoint = false;
+        }
+      } applying(owner);
+
+      if (temporarySetpoint.HasValue()) {
+        if (!owner->boostHasTemporarySetpoint) {
+          owner->boostSavedHeatingSetpoint = owner->heatingSetpoint;
+          owner->boostHasTemporarySetpoint = true;
+        }
+        if (!owner->setHeatingSetpointRaw(temporarySetpoint.Value())) {
+          owner->finishBoost(false);
+          return chip::Protocols::InteractionModel::Status::ConstraintError;
+        }
+      } else if (owner->boostHasTemporarySetpoint) {
+        if (!owner->restoreBoostSetpoint()) {
+          return chip::Protocols::InteractionModel::Status::ConstraintError;
+        }
       }
     }
 
@@ -554,6 +571,12 @@ void MatterWaterHeater::end() {
     } else if (!boostFinishing) {
       cancelBoostTimer();
     }
+    if (getEndPointId() != 0) {
+      const esp_err_t clearErr = esp_matter::endpoint::set_priv_data(getEndPointId(), nullptr);
+      if (clearErr != ESP_OK) {
+        log_e("Failed to clear Water Heater endpoint %u callback context: %d", getEndPointId(), static_cast<int>(clearErr));
+      }
+    }
     detachDelegates();
     initialized = false;
   } else if (initialized) {
@@ -570,6 +593,9 @@ void MatterWaterHeater::end() {
       }
       // setEndPointId(0) is rejected; clear so begin() can create a new endpoint.
       endpoint_id = 0;
+      // The destroyed endpoint took its TagList feature with it. enableTagList() skips
+      // feature creation while this stays true.
+      tagListEnabled = false;
     }
     delete modeDelegate;
     delete managementDelegate;
@@ -669,6 +695,7 @@ bool MatterWaterHeater::setHeatingSetpointRaw(int16_t temperature) {
 
   if (value.val.i16 == temperature) {
     heatingSetpoint = temperature;
+    noteHeatingSetpointCommitted();
     return true;
   }
 
@@ -678,6 +705,7 @@ bool MatterWaterHeater::setHeatingSetpointRaw(int16_t temperature) {
   }
 
   heatingSetpoint = temperature;
+  noteHeatingSetpointCommitted();
   return true;
 }
 
@@ -919,8 +947,18 @@ uint8_t MatterWaterHeater::getHeaterTypes() {
   return heaterTypes;
 }
 
+bool MatterWaterHeater::heatDemandAllowed(uint8_t value) const {
+  return (value & static_cast<uint8_t>(~heaterTypes)) == 0;
+}
+
 bool MatterWaterHeater::setHeatDemand(uint8_t value) {
   if (!initialized) {
+    return false;
+  }
+  if (!heatDemandAllowed(value)) {
+    log_e(
+      "HeatDemand 0x%02x includes a source that is not in HeaterTypes 0x%02x.", static_cast<unsigned>(value), static_cast<unsigned>(heaterTypes)
+    );
     return false;
   }
 
@@ -1169,18 +1207,56 @@ void MatterWaterHeater::retryBoostSetpointRestore() {
   (void)restoreBoostSetpoint();
 }
 
+bool MatterWaterHeater::postToAttachedDelegate(DeferredAction action) {
+  if (managementDelegate == nullptr || !chip::DeviceLayer::SystemLayer().IsInitialized()) {
+    return false;
+  }
+  // Capture the delegate, not this. end() detaches it under the CHIP lock and leaves it allocated,
+  // so a lambda that runs after the Arduino object is destroyed sees a null owner and returns.
+  ManagementDelegate *delegate = managementDelegate;
+  const CHIP_ERROR err = chip::DeviceLayer::SystemLayer().ScheduleLambda([delegate, action]() {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    MatterWaterHeater *heater = delegate->attachedOwner();
+    if (heater == nullptr) {
+      return;
+    }
+    if (action == DeferredAction::RestoreSetpoint) {
+      heater->retryBoostSetpointRestore();
+    } else {
+      heater->maybeFinishOneShotBoost();
+    }
+  });
+  if (err != CHIP_NO_ERROR) {
+    log_w("Failed to schedule Water Heater work: %" CHIP_ERROR_FORMAT, err.Format());
+    return false;
+  }
+  return true;
+}
+
 void MatterWaterHeater::scheduleBoostSetpointRestore() {
   if (!boostHasTemporarySetpoint || boostState == BOOST_ACTIVE) {
     return;
   }
-  if (!chip::DeviceLayer::SystemLayer().IsInitialized()) {
+  if (!chip::DeviceLayer::SystemLayer().IsInitialized() || managementDelegate == nullptr) {
     retryBoostSetpointRestore();
     return;
   }
-  const CHIP_ERROR err = chip::DeviceLayer::SystemLayer().ScheduleLambda([this]() { retryBoostSetpointRestore(); });
-  if (err != CHIP_NO_ERROR) {
-    log_w("Failed to schedule Water Heater setpoint restore: %" CHIP_ERROR_FORMAT, err.Format());
+  (void)postToAttachedDelegate(DeferredAction::RestoreSetpoint);
+}
+
+void MatterWaterHeater::scheduleOneShotCompletion() {
+  if (managementDelegate == nullptr || !chip::DeviceLayer::SystemLayer().IsInitialized()) {
+    log_w("Failed to schedule Water Heater one-shot check.");
+    return;
   }
+  (void)postToAttachedDelegate(DeferredAction::FinishOneShot);
+}
+
+void MatterWaterHeater::noteHeatingSetpointCommitted() {
+  if (applyingBoostSetpoint || boostFinishing) {
+    return;
+  }
+  maybeFinishOneShotBoost();
 }
 
 void MatterWaterHeater::maybeFinishOneShotBoost() {
@@ -1269,6 +1345,8 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
             return false;
           }
           heatingSetpoint = val->val.i16;
+          // PRE_UPDATE has not committed the attribute yet. Finish the one-shot after this callback returns.
+          scheduleOneShotCompletion();
           return true;
 
         case Thermostat::Attributes::AbsMinHeatSetpointLimit::Id:
@@ -1325,6 +1403,9 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           return true;
 
         case WaterHeaterManagement::Attributes::HeatDemand::Id:
+          if (!heatDemandAllowed(val->val.u8)) {
+            return false;
+          }
           heatDemand = val->val.u8;
           return true;
 
