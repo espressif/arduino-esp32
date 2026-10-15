@@ -19,6 +19,8 @@
 #include <MatterEndpoints/MatterSoilSensor.h>
 #include <clusters/SoilMeasurement/Attributes.h>
 #include <clusters/soil_measurement/integration.h>
+#include <app/data-model/List.h>
+#include <lib/core/Optional.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -27,6 +29,21 @@ using namespace chip::app::Clusters;
 namespace {
 
 using SoilMoistureValue = SoilMeasurement::Attributes::SoilMoistureMeasuredValue::TypeInfo::Type;
+using AccuracyRange = Globals::Structs::MeasurementAccuracyRangeStruct::Type;
+
+// SoilMeasurementCluster stores the limits struct by value, but accuracyRanges is only a
+// pointer and a count. This range must outlive every soil sensor cluster.
+const AccuracyRange &soilMoistureAccuracyRange() {
+  static const AccuracyRange range = [] {
+    AccuracyRange value{};
+    value.rangeMin = 0;
+    value.rangeMax = 100;
+    // Percent100ths: 10 is 0.10%. Same default as ESP-Matter's soil sensor sample.
+    value.percentMax = chip::MakeOptional(static_cast<chip::Percent100ths>(10));
+    return value;
+  }();
+  return range;
+}
 
 void setSoilMoistureLimitsForEndpoint(uint16_t endpoint_id) {
   SoilMeasurement::Attributes::SoilMoistureMeasurementLimits::TypeInfo::Type limits{};
@@ -34,6 +51,8 @@ void setSoilMoistureLimitsForEndpoint(uint16_t endpoint_id) {
   limits.measured = true;
   limits.minMeasuredValue = 0;
   limits.maxMeasuredValue = 100;
+  const AccuracyRange &accuracyRange = soilMoistureAccuracyRange();
+  limits.accuracyRanges = chip::app::DataModel::List<const AccuracyRange>(&accuracyRange, 1);
   SoilMeasurement::SetSoilMoistureLimits(endpoint_id, limits);
 }
 
