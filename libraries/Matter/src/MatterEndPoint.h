@@ -22,7 +22,15 @@
 #include <functional>
 #include <initializer_list>
 
+namespace chip {
+namespace app {
+class ServerClusterInterface;
+}
+}
+
 using namespace esp_matter;
+
+class ArduinoMatter;
 
 // A single Matter semantic tag (Descriptor cluster TagList entry). Tags disambiguate sibling
 // endpoints that expose the same device type, or otherwise clarify an endpoint's role/position
@@ -124,7 +132,19 @@ public:
   // Convenience overload: Light1.setTagList({MatterTags::Position::Top, MatterTags::Number::One});
   bool setTagList(std::initializer_list<MatterTag> tagList);
 
+  // After creating an endpoint with esp_matter::endpoint::*::create(..., (void *)this),
+  // register it when not using a stock Matter* begin(). Call before Matter.begin().
+  bool registerCreatedEndpoint(endpoint_t *ep);
+
 protected:
+  friend class ArduinoMatter;
+
+  // Creates the Matter node once (root endpoint 0). Idempotent. Used by stock and custom begin().
+  static bool ensureMatterNode();
+
+  // Called by ArduinoMatter after esp_matter::start(). Code-driven cluster objects exist now.
+  void notifyStackStarted();
+
   // used for secondary network interface endpoints
   static uint16_t secondary_network_endpoint_id;
   // main endpoint ID
@@ -132,6 +152,8 @@ protected:
   EndPointIdentifyCB _onEndPointIdentifyCB = nullptr;
   MatterIdentifyRequest identifyRequest;
   bool tagListEnabled = false;
+  bool pendingBooleanState = false;
+  bool hasPendingBooleanState = false;
 
   // Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.
   // Called automatically by setTagList(). Idempotent.
@@ -139,8 +161,14 @@ protected:
   // (Generic Switch) may call this from begin() after setEndPointId().
   bool enableTagList();
 
-  // BooleanState::StateValue is internally managed in ESP Matter 1.5+ (code-driven cluster).
-  // attribute::update() returns ESP_ERR_NOT_SUPPORTED (262); use the cluster setter instead.
+  // BooleanState::StateValue lives on the code-driven cluster. attribute::update() only
+  // writes the shadow table. Before Matter.begin() the value is cached and pushed at start.
   bool setBooleanStateValue(bool value);
+
+  // Push cached values into code-driven clusters. Default is a no-op.
+  virtual void onStackStarted() {}
+
+  // Live CHIP cluster for this endpoint, or nullptr before Matter.begin().
+  chip::app::ServerClusterInterface *findRegisteredCluster(uint32_t cluster_id);
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
