@@ -46,8 +46,13 @@ Creates the endpoint (Descriptor, Identify, device type, Soil Measurement cluste
 .. code-block:: arduino
 
     bool begin();
+    bool begin(uint8_t initialSoilMoisturePercent);
 
-This function will return ``true`` if successful, ``false`` otherwise.
+``begin()`` takes no initial moisture value. The measured attribute stays null until the first successful ``setSoilMoisture()``.
+
+``begin(uint8_t)`` does the same and then seeds the moisture cache. ``initialSoilMoisturePercent`` is a whole percent in ``[0..100]``. When this call happens before ``Matter.begin()``, the value is applied in ``onStackStarted()`` once the live cluster is registered.
+
+Both return ``true`` if successful, ``false`` otherwise.
 
 Typical usage:
 
@@ -87,7 +92,7 @@ This function will return ``true`` if successful, ``false`` otherwise.
 getSoilMoisture
 ^^^^^^^^^^^^^^^
 
-Returns the last value successfully reported through ``setSoilMoisture()``.
+Returns the cached soil moisture percent. This is ``0`` until the first ``setSoilMoisture()``. The cluster attribute stays null until a publish succeeds.
 
 .. code-block:: arduino
 
@@ -109,7 +114,7 @@ Assignment and conversion operators call ``setSoilMoisture()`` / ``getSoilMoistu
 Implementation notes
 ********************
 
-* ``SoilMoistureMeasuredValue`` is not available through ``getAttributeVal()`` / ``updateAttributeVal()``; use ``setSoilMoisture()`` which calls ``SoilMeasurementCluster::SetSoilMoistureMeasuredValue()`` under the CHIP stack lock.
+* ``SoilMoistureMeasuredValue`` is not available through ``getAttributeVal()`` / ``updateAttributeVal()``; use ``setSoilMoisture()`` which calls ``SoilMeasurement::SetSoilMoistureMeasuredValue()`` under the CHIP stack lock. A repeated call with the same percent is skipped only after that publish succeeds.
 * Unlike ``MatterHumiditySensor``, there is no 1/100th percent precision.
 
 Example
