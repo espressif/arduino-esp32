@@ -22,6 +22,7 @@ on:
     paths:
       - ".github/scripts/install*.sh"
       - ".github/workflows/tests*"
+      - ".github/scripts/tests*"
       - ".github/scripts/sketch_utils.sh"
       - "tools/arduino_cmake.py"
       - "tests/**"

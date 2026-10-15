@@ -1,6 +1,6 @@
 # Hash Validation Test
 
-Validates the Hash library including HEXBuilder, MD5Builder, SHA-1/2/3 builders, and PBKDF2-HMAC using known-answer test vectors from NIST FIPS 180-4, FIPS 202, RFC 1321, and RFC 6070.
+Validates the Hash library including HEXBuilder, MD5Builder, SHA-1/2/3 builders, HMAC, and PBKDF2-HMAC using known-answer test vectors from NIST FIPS 180-4, FIPS 202, RFC 1321, RFC 2104/2202/4231, RFC 6070, and Python 3 `hmac.new(..., hashlib.<alg>)`.
 
 ## Test Cases
 
@@ -73,6 +73,41 @@ Validates the Hash library including HEXBuilder, MD5Builder, SHA-1/2/3 builders,
 | `test_pbkdf2_sha256_c1` | PBKDF2-HMAC-SHA256 with 1 iteration |
 | `test_pbkdf2_sha1_c4096` | PBKDF2-HMAC-SHA1 with 4096 iterations |
 | `test_pbkdf2_setters` | PBKDF2 using setter methods for algorithm/password/salt/iterations |
+| `test_pbkdf2_sha512_c1` | PBKDF2-HMAC-SHA512 with 1 iteration (128-byte HMAC block) |
+| `test_pbkdf2_sha384_c1` | PBKDF2-HMAC-SHA384 with 1 iteration |
+| `test_pbkdf2_sha3_256_c1` | PBKDF2-HMAC-SHA3-256 with 1 iteration |
+| `test_hmac_sha1_rfc2202` | HMAC-SHA-1 RFC 2202 test case 1 |
+| `test_hmac_sha256_rfc4231_1` | HMAC-SHA-256 RFC 4231 test case 1 |
+| `test_hmac_sha256_rfc4231_2` | HMAC-SHA-256 RFC 4231 test case 2 (string key) |
+| `test_hmac_sha256_rfc4231_6` | HMAC-SHA-256 RFC 4231 test case 6 (key longer than block) |
+| `test_hmac_sha512_rfc4231_1` | HMAC-SHA-512 RFC 4231 test case 1 (128-byte block) |
+| `test_hmac_sha256_multi_chunk` | HMAC-SHA-256 with data added in two chunks |
+| `test_hmac_sha256_add_stream` | HMAC-SHA-256 from StreamString |
+| `test_hmac_sha3_256` | HMAC-SHA3-256 using the hash rate from `getBlockSize()` |
+| `test_hmac_sha3_224` | HMAC-SHA3-224 (144-byte rate, the HMAC pad maximum) |
+| `test_hmac_unknown_block_size` | HMAC refuses a hash that does not report a block size |
+| `test_hash_block_sizes` | `getBlockSize()` for MD5, SHA-1/2/3 |
+| `test_hmac_md5` | HMAC-MD5 RFC 2104 test case 1 |
+| `test_hmac_sha224` | HMAC-SHA-224, Python hashlib cross-check |
+| `test_hmac_sha384` | HMAC-SHA-384, Python hashlib cross-check |
+| `test_hmac_sha3_384` | HMAC-SHA3-384 using the SHA-3 rate |
+| `test_hmac_sha3_512` | HMAC-SHA3-512 using the SHA-3 rate |
+| `test_hmac_empty_key_empty_msg` | HMAC-SHA-256 of empty key and empty message |
+| `test_hmac_empty_message` | HMAC-SHA-256 of key `"key"` and empty message |
+| `test_hmac_binary_key_and_data` | HMAC-SHA-256 with binary key and `NUL`/`0xff` data |
+| `test_hmac_long_key_sha3_256` | HMAC-SHA3-256 with a 200-byte key (hashed down to the rate) |
+| `test_hmac_rfc4231_3` | HMAC-SHA-256 RFC 4231 test case 3 |
+| `test_hmac_set_key_overloads` | `setKey(bytes / char* / String)` produce the same MAC |
+| `test_hmac_set_hash_algorithm` | Construct empty, then `setHashAlgorithm()` SHA-1 then SHA-256 |
+| `test_hmac_explicit_block_size` | Explicit SHA-256 block size accepted; oversized block rejected |
+| `test_hmac_getbytes_getchars` | `getBytes()` / `getChars()` match `toString()` |
+| `test_hmac_reset` | Second `begin()`/`add()`/`calculate()` on the same object |
+| `test_hmac_add_string_and_hex` | `add(String)` and `addHexString()` (char* and String) |
+| `test_hmac_key_with_spaces` | HMAC-SHA-256 with spaces in the key |
+| `test_hmac_md5_string_key` | HMAC-MD5 RFC 2202 test case 2 |
+| `test_hmac_calculate_before_begin` | `calculate()` before `begin()` yields an empty digest |
+| `test_hmac_null_key` | `setKey(NULL)` after a successful MAC clears the cached result |
+| `test_hmac_add_stream_large_maxlen` | `addStream()` with `size_t` max length still hashes the stream |
 | `test_sha256_55bytes` | SHA-256 padding boundary at 55 bytes |
 | `test_sha256_56bytes` | SHA-256 padding boundary at 56 bytes |
 | `test_sha384_112bytes` | SHA-384 padding boundary at 112 bytes |

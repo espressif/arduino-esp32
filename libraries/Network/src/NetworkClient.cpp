@@ -309,7 +309,7 @@ int NetworkClient::connect(const char *host, uint16_t port) {
 
 int NetworkClient::connect(const char *host, uint16_t port, int32_t timeout_ms) {
   IPAddress srv((uint32_t)0);
-  if (!Network.hostByName(host, srv)) {
+  if (Network.hostByName(host, srv) != 1) {
     return 0;
   }
   return connect(srv, port, timeout_ms);

@@ -232,7 +232,7 @@ static int cmd_ping(int argc, char **argv) {
   }
 
   IPAddress addr;
-  if (!Network.hostByName(host, addr)) {
+  if (Network.hostByName(host, addr) != 1) {
     printf("ping: unknown host '%s'\n", host);
     return 1;
   }

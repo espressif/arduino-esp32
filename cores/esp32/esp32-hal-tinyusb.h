@@ -31,6 +31,20 @@ extern "C" {
 #define USB_ESPRESSIF_VID                0x303A
 #define USB_STRING_DESCRIPTOR_ARRAY_SIZE 10
 
+// P4 device ports: 0 = HS, 1 = FS on the USB Serial/JTAG pins (GPIO24/25).
+#ifndef ARDUINO_USB_PORT
+#define ARDUINO_USB_PORT 0
+#endif
+#if CONFIG_IDF_TARGET_ESP32P4 && (ARDUINO_USB_PORT < 0 || ARDUINO_USB_PORT > 1)
+#error Invalid ESP32-P4 USB device port
+#endif
+
+#if CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT != 0
+// The precompiled SDK supports HS, but descriptors must match the selected port.
+#undef CFG_TUD_ENDPOINT_SIZE
+#define CFG_TUD_ENDPOINT_SIZE 64
+#endif
+
 #ifndef CFG_TUD_ENDPOINT_SIZE
 #if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
 #define CFG_TUD_ENDPOINT_SIZE 512
@@ -38,7 +52,7 @@ extern "C" {
 #define CFG_TUD_ENDPOINT_SIZE 64
 #endif
 #endif
-#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
+#if (CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT == 0) || CONFIG_IDF_TARGET_ESP32S31
 #define CFG_TUD_NUM_EPS    15
 #define CFG_TUD_NUM_IN_EPS 8
 #else

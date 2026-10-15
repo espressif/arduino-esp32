@@ -680,6 +680,9 @@ esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
 esp32p4.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32p4.menu.USBMode.default.build.usb_mode=0
+esp32p4.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+esp32p4.menu.USBMode.tinyusb_fs.build.usb_mode=0
+esp32p4.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 esp32p4.menu.CDCOnBoot.cdc=Enabled
 esp32p4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -752,6 +755,10 @@ esp32p4.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MODE
 esp32p4.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 esp32p4.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
 esp32p4.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+esp32p4.menu.PartitionScheme.esp_sr_16_app4M=ESP SR 16M (4MB APP/4MB SPIFFS/3.9MB MODEL)
+esp32p4.menu.PartitionScheme.esp_sr_16_app4M.upload.maximum_size=4194304
+esp32p4.menu.PartitionScheme.esp_sr_16_app4M.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+esp32p4.menu.PartitionScheme.esp_sr_16_app4M.build.partitions=esp_sr_16_app4M
 esp32p4.menu.PartitionScheme.custom=Custom
 esp32p4.menu.PartitionScheme.custom.build.partitions=
 esp32p4.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -3477,6 +3484,9 @@ esp32p4_core_board.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32p4_core_board.menu.USBMode.default.build.usb_mode=0
 esp32p4_core_board.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32p4_core_board.menu.USBMode.hwcdc.build.usb_mode=1
+esp32p4_core_board.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+esp32p4_core_board.menu.USBMode.tinyusb_fs.build.usb_mode=0
+esp32p4_core_board.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 esp32p4_core_board.menu.CDCOnBoot.default=Disabled
 esp32p4_core_board.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -3540,6 +3550,10 @@ esp32p4_core_board.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS
 esp32p4_core_board.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 esp32p4_core_board.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
 esp32p4_core_board.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+esp32p4_core_board.menu.PartitionScheme.esp_sr_16_app4M=ESP SR 16M (4MB APP/4MB SPIFFS/3.9MB MODEL)
+esp32p4_core_board.menu.PartitionScheme.esp_sr_16_app4M.upload.maximum_size=4194304
+esp32p4_core_board.menu.PartitionScheme.esp_sr_16_app4M.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+esp32p4_core_board.menu.PartitionScheme.esp_sr_16_app4M.build.partitions=esp_sr_16_app4M
 esp32p4_core_board.menu.PartitionScheme.custom=Custom
 esp32p4_core_board.menu.PartitionScheme.custom.build.partitions=
 esp32p4_core_board.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -3575,6 +3589,116 @@ esp32p4_core_board.menu.DebugLevel.verbose.build.code_debug=5
 esp32p4_core_board.menu.EraseFlash.none=Disabled
 esp32p4_core_board.menu.EraseFlash.all=Enabled
 esp32p4_core_board.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+esp_mosaico.name=Espressif ESP-Mosaico V1.2
+
+esp_mosaico.bootloader.tool=esptool_py
+esp_mosaico.bootloader.tool.default=esptool_py
+esp_mosaico.upload.tool=esptool_py
+esp_mosaico.upload.tool.default=esptool_py
+esp_mosaico.upload.tool.network=esp_ota
+esp_mosaico.upload.maximum_size=3145728
+esp_mosaico.upload.maximum_data_size=327680
+esp_mosaico.upload.flags=
+esp_mosaico.upload.extra_flags=
+esp_mosaico.upload.erase_cmd=
+esp_mosaico.upload.use_1200bps_touch=true
+esp_mosaico.upload.wait_for_upload_port=true
+esp_mosaico.serial.disableDTR=false
+esp_mosaico.serial.disableRTS=false
+
+esp_mosaico.build.tarch=riscv32
+esp_mosaico.build.target=esp
+esp_mosaico.build.mcu=esp32s31
+esp_mosaico.build.core=esp32
+esp_mosaico.build.variant=esp_mosaico
+esp_mosaico.build.board=ESP_MOSAICO
+esp_mosaico.build.bootloader_addr=0x2000
+esp_mosaico.build.usb_mode=0
+esp_mosaico.build.cdc_on_boot=1
+esp_mosaico.build.msc_on_boot=0
+esp_mosaico.build.dfu_on_boot=0
+esp_mosaico.build.f_cpu=320000000L
+esp_mosaico.build.flash_size=16MB
+esp_mosaico.build.flash_freq=80m
+esp_mosaico.build.flash_mode=dio
+esp_mosaico.build.boot=qio
+esp_mosaico.build.boot_freq=80m
+esp_mosaico.build.partitions=app3M_fat9M_16MB
+esp_mosaico.build.defines=-DBOARD_HAS_PSRAM
+esp_mosaico.build.loop_core=-DARDUINO_RUNNING_CORE=1
+esp_mosaico.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+esp_mosaico.build.psram_type=opi
+esp_mosaico.build.memory_type={build.boot}_{build.psram_type}
+
+esp_mosaico.menu.USBMode.default=USB-OTG (TinyUSB)
+esp_mosaico.menu.USBMode.default.build.usb_mode=0
+esp_mosaico.menu.USBMode.hwcdc=Hardware CDC and JTAG (Expansion Pins)
+esp_mosaico.menu.USBMode.hwcdc.build.usb_mode=1
+esp_mosaico.menu.USBMode.hwcdc.upload.use_1200bps_touch=false
+esp_mosaico.menu.USBMode.hwcdc.upload.wait_for_upload_port=false
+
+esp_mosaico.menu.CDCOnBoot.cdc=Enabled
+esp_mosaico.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+esp_mosaico.menu.CDCOnBoot.default=Disabled
+esp_mosaico.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp_mosaico.menu.CDCOnBoot.default.upload.use_1200bps_touch=false
+esp_mosaico.menu.CDCOnBoot.default.upload.wait_for_upload_port=false
+
+esp_mosaico.menu.MSCOnBoot.default=Disabled
+esp_mosaico.menu.MSCOnBoot.default.build.msc_on_boot=0
+esp_mosaico.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+esp_mosaico.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+esp_mosaico.menu.DFUOnBoot.default=Disabled
+esp_mosaico.menu.DFUOnBoot.default.build.dfu_on_boot=0
+esp_mosaico.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+esp_mosaico.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+esp_mosaico.menu.JTAGAdapter.default=Disabled
+esp_mosaico.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp_mosaico.menu.JTAGAdapter.builtin=Integrated USB JTAG (Expansion Pins)
+esp_mosaico.menu.JTAGAdapter.builtin.build.openocdscript=esp32s31-builtin.cfg
+esp_mosaico.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+esp_mosaico.menu.JTAGAdapter.external=FTDI Adapter
+esp_mosaico.menu.JTAGAdapter.external.build.openocdscript=esp32s31-ftdi.cfg
+esp_mosaico.menu.JTAGAdapter.external.build.copy_jtag_files=1
+
+esp_mosaico.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp_mosaico.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp_mosaico.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp_mosaico.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp_mosaico.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp_mosaico.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp_mosaico.menu.PartitionScheme.default_16MB=16M with spiffs (6.25MB APP/3.43MB SPIFFS)
+esp_mosaico.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+esp_mosaico.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+
+esp_mosaico.menu.UploadSpeed.921600=921600
+esp_mosaico.menu.UploadSpeed.921600.upload.speed=921600
+esp_mosaico.menu.UploadSpeed.460800=460800
+esp_mosaico.menu.UploadSpeed.460800.upload.speed=460800
+esp_mosaico.menu.UploadSpeed.115200=115200
+esp_mosaico.menu.UploadSpeed.115200.upload.speed=115200
+
+esp_mosaico.menu.DebugLevel.none=None
+esp_mosaico.menu.DebugLevel.none.build.code_debug=0
+esp_mosaico.menu.DebugLevel.error=Error
+esp_mosaico.menu.DebugLevel.error.build.code_debug=1
+esp_mosaico.menu.DebugLevel.warn=Warn
+esp_mosaico.menu.DebugLevel.warn.build.code_debug=2
+esp_mosaico.menu.DebugLevel.info=Info
+esp_mosaico.menu.DebugLevel.info.build.code_debug=3
+esp_mosaico.menu.DebugLevel.debug=Debug
+esp_mosaico.menu.DebugLevel.debug.build.code_debug=4
+esp_mosaico.menu.DebugLevel.verbose=Verbose
+esp_mosaico.menu.DebugLevel.verbose.build.code_debug=5
+
+esp_mosaico.menu.EraseFlash.none=Disabled
+esp_mosaico.menu.EraseFlash.all=Enabled
+esp_mosaico.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -7016,6 +7140,159 @@ lilygo_t3s3.menu.Revision.Radio_SX1280PA.build.variant=lilygo_t3_s3_sx1280pa
 lilygo_t3s3.menu.Revision.Radio_LR1121=Radio-LR1121
 lilygo_t3s3.menu.Revision.Radio_LR1121.build.board=LILYGO_T3S3_LR1121
 lilygo_t3s3.menu.Revision.Radio_LR1121.build.variant=lilygo_t3_s3_lr1121
+
+##############################################################
+
+lilygo_tdeck.name=LilyGo T-Deck
+
+lilygo_tdeck.bootloader.tool=esptool_py
+lilygo_tdeck.bootloader.tool.default=esptool_py
+
+lilygo_tdeck.upload.tool=esptool_py
+lilygo_tdeck.upload.tool.default=esptool_py
+lilygo_tdeck.upload.tool.network=esp_ota
+
+lilygo_tdeck.upload.maximum_size=1310720
+lilygo_tdeck.upload.maximum_data_size=327680
+lilygo_tdeck.upload.flags=
+lilygo_tdeck.upload.erase_cmd=
+lilygo_tdeck.upload.extra_flags=
+lilygo_tdeck.upload.use_1200bps_touch=false
+lilygo_tdeck.upload.wait_for_upload_port=false
+
+lilygo_tdeck.serial.disableDTR=false
+lilygo_tdeck.serial.disableRTS=false
+
+lilygo_tdeck.build.tarch=xtensa
+lilygo_tdeck.build.bootloader_addr=0x0
+lilygo_tdeck.build.target=esp32s3
+lilygo_tdeck.build.mcu=esp32s3
+lilygo_tdeck.build.core=esp32
+lilygo_tdeck.build.variant=lilygo_tdeck
+lilygo_tdeck.build.board=LILYGO_T_DECK
+
+lilygo_tdeck.build.usb_mode=1
+lilygo_tdeck.build.cdc_on_boot=0
+lilygo_tdeck.build.msc_on_boot=0
+lilygo_tdeck.build.dfu_on_boot=0
+lilygo_tdeck.build.f_cpu=240000000L
+lilygo_tdeck.build.flash_size=16MB
+lilygo_tdeck.build.flash_freq=80m
+lilygo_tdeck.build.flash_mode=dio
+lilygo_tdeck.build.boot=qio
+lilygo_tdeck.build.boot_freq=80m
+lilygo_tdeck.build.partitions=app3M_fat9M_16MB
+lilygo_tdeck.build.defines=-DBOARD_HAS_PSRAM -DARDUINO_T_DECK -DARDUINO_LILYGO_LORA_SX1262
+lilygo_tdeck.build.loop_core=
+lilygo_tdeck.build.event_core=
+lilygo_tdeck.build.psram_type=opi
+lilygo_tdeck.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+lilygo_tdeck.menu.JTAGAdapter.default=Disabled
+lilygo_tdeck.menu.JTAGAdapter.default.build.copy_jtag_files=0
+lilygo_tdeck.menu.JTAGAdapter.builtin=Integrated USB JTAG
+lilygo_tdeck.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+lilygo_tdeck.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+lilygo_tdeck.menu.LoopCore.1=Core 1
+lilygo_tdeck.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lilygo_tdeck.menu.LoopCore.0=Core 0
+lilygo_tdeck.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+lilygo_tdeck.menu.EventsCore.1=Core 1
+lilygo_tdeck.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+lilygo_tdeck.menu.EventsCore.0=Core 0
+lilygo_tdeck.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+lilygo_tdeck.menu.USBMode.hwcdc=Hardware CDC and JTAG
+lilygo_tdeck.menu.USBMode.hwcdc.build.usb_mode=1
+lilygo_tdeck.menu.USBMode.default=USB-OTG (TinyUSB)
+lilygo_tdeck.menu.USBMode.default.build.usb_mode=0
+
+lilygo_tdeck.menu.CDCOnBoot.default=Enabled
+lilygo_tdeck.menu.CDCOnBoot.default.build.cdc_on_boot=1
+lilygo_tdeck.menu.CDCOnBoot.cdc=Disabled
+lilygo_tdeck.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+lilygo_tdeck.menu.MSCOnBoot.default=Disabled
+lilygo_tdeck.menu.MSCOnBoot.default.build.msc_on_boot=0
+lilygo_tdeck.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+lilygo_tdeck.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+lilygo_tdeck.menu.DFUOnBoot.default=Disabled
+lilygo_tdeck.menu.DFUOnBoot.default.build.dfu_on_boot=0
+lilygo_tdeck.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+lilygo_tdeck.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+lilygo_tdeck.menu.UploadMode.default=UART0 / Hardware CDC
+lilygo_tdeck.menu.UploadMode.default.upload.use_1200bps_touch=false
+lilygo_tdeck.menu.UploadMode.default.upload.wait_for_upload_port=false
+lilygo_tdeck.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+lilygo_tdeck.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+lilygo_tdeck.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+lilygo_tdeck.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+lilygo_tdeck.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+lilygo_tdeck.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+lilygo_tdeck.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+lilygo_tdeck.menu.PartitionScheme.fatflash.build.partitions=ffat
+lilygo_tdeck.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+lilygo_tdeck.menu.PartitionScheme.rainmaker=RainMaker
+lilygo_tdeck.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+lilygo_tdeck.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+lilygo_tdeck.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MODEL)
+lilygo_tdeck.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+lilygo_tdeck.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+lilygo_tdeck.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+lilygo_tdeck.menu.PartitionScheme.custom=Custom
+lilygo_tdeck.menu.PartitionScheme.custom.build.partitions=
+lilygo_tdeck.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+lilygo_tdeck.menu.CPUFreq.240=240MHz (WiFi)
+lilygo_tdeck.menu.CPUFreq.240.build.f_cpu=240000000L
+lilygo_tdeck.menu.CPUFreq.160=160MHz (WiFi)
+lilygo_tdeck.menu.CPUFreq.160.build.f_cpu=160000000L
+lilygo_tdeck.menu.CPUFreq.80=80MHz (WiFi)
+lilygo_tdeck.menu.CPUFreq.80.build.f_cpu=80000000L
+lilygo_tdeck.menu.CPUFreq.40=40MHz
+lilygo_tdeck.menu.CPUFreq.40.build.f_cpu=40000000L
+lilygo_tdeck.menu.CPUFreq.20=20MHz
+lilygo_tdeck.menu.CPUFreq.20.build.f_cpu=20000000L
+lilygo_tdeck.menu.CPUFreq.10=10MHz
+lilygo_tdeck.menu.CPUFreq.10.build.f_cpu=10000000L
+
+lilygo_tdeck.menu.UploadSpeed.921600=921600
+lilygo_tdeck.menu.UploadSpeed.921600.upload.speed=921600
+lilygo_tdeck.menu.UploadSpeed.115200=115200
+lilygo_tdeck.menu.UploadSpeed.115200.upload.speed=115200
+lilygo_tdeck.menu.UploadSpeed.256000.windows=256000
+lilygo_tdeck.menu.UploadSpeed.256000.upload.speed=256000
+lilygo_tdeck.menu.UploadSpeed.230400.windows.upload.speed=256000
+lilygo_tdeck.menu.UploadSpeed.230400=230400
+lilygo_tdeck.menu.UploadSpeed.230400.upload.speed=230400
+lilygo_tdeck.menu.UploadSpeed.460800.linux=460800
+lilygo_tdeck.menu.UploadSpeed.460800.macosx=460800
+lilygo_tdeck.menu.UploadSpeed.460800.upload.speed=460800
+lilygo_tdeck.menu.UploadSpeed.512000.windows=512000
+lilygo_tdeck.menu.UploadSpeed.512000.upload.speed=512000
+
+lilygo_tdeck.menu.DebugLevel.none=None
+lilygo_tdeck.menu.DebugLevel.none.build.code_debug=0
+lilygo_tdeck.menu.DebugLevel.error=Error
+lilygo_tdeck.menu.DebugLevel.error.build.code_debug=1
+lilygo_tdeck.menu.DebugLevel.warn=Warn
+lilygo_tdeck.menu.DebugLevel.warn.build.code_debug=2
+lilygo_tdeck.menu.DebugLevel.info=Info
+lilygo_tdeck.menu.DebugLevel.info.build.code_debug=3
+lilygo_tdeck.menu.DebugLevel.debug=Debug
+lilygo_tdeck.menu.DebugLevel.debug.build.code_debug=4
+lilygo_tdeck.menu.DebugLevel.verbose=Verbose
+lilygo_tdeck.menu.DebugLevel.verbose.build.code_debug=5
+
+lilygo_tdeck.menu.EraseFlash.none=Disabled
+lilygo_tdeck.menu.EraseFlash.all=Enabled
+lilygo_tdeck.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -14190,6 +14467,14 @@ dfrobot_firebeetle2_esp32p4.menu.ChipVariant.postv3=v3.00 or newer
 dfrobot_firebeetle2_esp32p4.menu.ChipVariant.postv3.build.chip_variant=esp32p4
 dfrobot_firebeetle2_esp32p4.menu.ChipVariant.postv3.build.f_cpu=400000000L
 
+dfrobot_firebeetle2_esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG
+dfrobot_firebeetle2_esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
+dfrobot_firebeetle2_esp32p4.menu.USBMode.default=USB-OTG (TinyUSB)
+dfrobot_firebeetle2_esp32p4.menu.USBMode.default.build.usb_mode=0
+dfrobot_firebeetle2_esp32p4.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+dfrobot_firebeetle2_esp32p4.menu.USBMode.tinyusb_fs.build.usb_mode=0
+dfrobot_firebeetle2_esp32p4.menu.USBMode.tinyusb_fs.build.usb_port=1
+
 ## IDE 2.0 Seems to not update the value
 dfrobot_firebeetle2_esp32p4.menu.JTAGAdapter.default=Disabled
 dfrobot_firebeetle2_esp32p4.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -14243,6 +14528,10 @@ dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16_app4M=ESP SR 16M (4MB APP/4MB SPIFFS/3.9MB MODEL)
+dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16_app4M.upload.maximum_size=4194304
+dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16_app4M.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.esp_sr_16_app4M.build.partitions=esp_sr_16_app4M
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.custom=Custom
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.custom.build.partitions=
 dfrobot_firebeetle2_esp32p4.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -15079,6 +15368,117 @@ adafruit_metro_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_metro_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp-zigbee-core.zczr.release -lesp-zigbee-idf.remote.release -lesp-zigbee.release
+
+##############################################################
+# Adafruit Metro ESP32-P4
+
+adafruit_metro_esp32p4.name=Adafruit Metro ESP32-P4
+
+adafruit_metro_esp32p4.vid.0=0x239A
+adafruit_metro_esp32p4.pid.0=0x817B
+adafruit_metro_esp32p4.vid.1=0x239A
+adafruit_metro_esp32p4.pid.1=0x017B
+adafruit_metro_esp32p4.vid.2=0x239A
+adafruit_metro_esp32p4.pid.2=0x817C
+adafruit_metro_esp32p4.upload_port.0.vid=0x239A
+adafruit_metro_esp32p4.upload_port.0.pid=0x817B
+adafruit_metro_esp32p4.upload_port.1.vid=0x239A
+adafruit_metro_esp32p4.upload_port.1.pid=0x017B
+adafruit_metro_esp32p4.upload_port.2.vid=0x239A
+adafruit_metro_esp32p4.upload_port.2.pid=0x817C
+
+adafruit_metro_esp32p4.bootloader.tool=esptool_py
+adafruit_metro_esp32p4.bootloader.tool.default=esptool_py
+adafruit_metro_esp32p4.upload.tool=esptool_py
+adafruit_metro_esp32p4.upload.tool.default=esptool_py
+adafruit_metro_esp32p4.upload.tool.network=esp_ota
+adafruit_metro_esp32p4.upload.maximum_size=6553600
+adafruit_metro_esp32p4.upload.maximum_data_size=327680
+adafruit_metro_esp32p4.upload.flags=
+adafruit_metro_esp32p4.upload.erase_cmd=
+adafruit_metro_esp32p4.upload.extra_flags=
+adafruit_metro_esp32p4.upload.use_1200bps_touch=false
+adafruit_metro_esp32p4.upload.wait_for_upload_port=false
+adafruit_metro_esp32p4.serial.disableDTR=false
+adafruit_metro_esp32p4.serial.disableRTS=false
+
+adafruit_metro_esp32p4.build.tarch=riscv32
+adafruit_metro_esp32p4.build.target=esp
+adafruit_metro_esp32p4.build.mcu=esp32p4
+adafruit_metro_esp32p4.build.core=esp32
+adafruit_metro_esp32p4.build.variant=adafruit_metro_esp32p4
+adafruit_metro_esp32p4.build.chip_variant=esp32p4_es
+adafruit_metro_esp32p4.build.board=ADAFRUIT_METRO_ESP32P4
+adafruit_metro_esp32p4.build.bootloader_addr=0x2000
+adafruit_metro_esp32p4.build.usb_mode=1
+adafruit_metro_esp32p4.build.usb_port=1
+adafruit_metro_esp32p4.build.cdc_on_boot=1
+adafruit_metro_esp32p4.build.msc_on_boot=0
+adafruit_metro_esp32p4.build.dfu_on_boot=0
+adafruit_metro_esp32p4.build.f_cpu=360000000L
+adafruit_metro_esp32p4.build.flash_size=16MB
+adafruit_metro_esp32p4.build.flash_freq=80m
+adafruit_metro_esp32p4.build.img_freq=80m
+adafruit_metro_esp32p4.build.flash_mode=dio
+adafruit_metro_esp32p4.build.boot=qio
+adafruit_metro_esp32p4.build.partitions=default_16MB
+adafruit_metro_esp32p4.build.defines=-DBOARD_HAS_PSRAM
+
+adafruit_metro_esp32p4.menu.ChipVariant.prev3=Before v3.00
+adafruit_metro_esp32p4.menu.ChipVariant.prev3.build.chip_variant=esp32p4_es
+adafruit_metro_esp32p4.menu.ChipVariant.prev3.build.f_cpu=360000000L
+adafruit_metro_esp32p4.menu.ChipVariant.postv3=v3.00 or newer
+adafruit_metro_esp32p4.menu.ChipVariant.postv3.build.chip_variant=esp32p4
+adafruit_metro_esp32p4.menu.ChipVariant.postv3.build.f_cpu=400000000L
+
+adafruit_metro_esp32p4.menu.PSRAM.enabled=Enabled
+adafruit_metro_esp32p4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_metro_esp32p4.menu.PSRAM.disabled=Disabled
+adafruit_metro_esp32p4.menu.PSRAM.disabled.build.defines=
+
+adafruit_metro_esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG (USB-C)
+adafruit_metro_esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
+adafruit_metro_esp32p4.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed, USB-C)
+adafruit_metro_esp32p4.menu.USBMode.tinyusb_fs.build.usb_mode=0
+adafruit_metro_esp32p4.menu.USBMode.tinyusb_fs.build.usb_port=1
+
+adafruit_metro_esp32p4.menu.CDCOnBoot.cdc=Enabled
+adafruit_metro_esp32p4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+adafruit_metro_esp32p4.menu.CDCOnBoot.default=Disabled
+adafruit_metro_esp32p4.menu.CDCOnBoot.default.build.cdc_on_boot=0
+adafruit_metro_esp32p4.menu.UploadMode.default=UART0 / Hardware CDC
+adafruit_metro_esp32p4.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_metro_esp32p4.menu.UploadMode.default.upload.wait_for_upload_port=false
+adafruit_metro_esp32p4.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+adafruit_metro_esp32p4.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_metro_esp32p4.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+adafruit_metro_esp32p4.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+adafruit_metro_esp32p4.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+adafruit_metro_esp32p4.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+
+adafruit_metro_esp32p4.menu.UploadSpeed.921600=921600
+adafruit_metro_esp32p4.menu.UploadSpeed.921600.upload.speed=921600
+adafruit_metro_esp32p4.menu.UploadSpeed.115200=115200
+adafruit_metro_esp32p4.menu.UploadSpeed.115200.upload.speed=115200
+adafruit_metro_esp32p4.menu.UploadSpeed.460800=460800
+adafruit_metro_esp32p4.menu.UploadSpeed.460800.upload.speed=460800
+
+adafruit_metro_esp32p4.menu.DebugLevel.none=None
+adafruit_metro_esp32p4.menu.DebugLevel.none.build.code_debug=0
+adafruit_metro_esp32p4.menu.DebugLevel.error=Error
+adafruit_metro_esp32p4.menu.DebugLevel.error.build.code_debug=1
+adafruit_metro_esp32p4.menu.DebugLevel.warn=Warn
+adafruit_metro_esp32p4.menu.DebugLevel.warn.build.code_debug=2
+adafruit_metro_esp32p4.menu.DebugLevel.info=Info
+adafruit_metro_esp32p4.menu.DebugLevel.info.build.code_debug=3
+adafruit_metro_esp32p4.menu.DebugLevel.debug=Debug
+adafruit_metro_esp32p4.menu.DebugLevel.debug.build.code_debug=4
+adafruit_metro_esp32p4.menu.DebugLevel.verbose=Verbose
+adafruit_metro_esp32p4.menu.DebugLevel.verbose.build.code_debug=5
+adafruit_metro_esp32p4.menu.EraseFlash.none=Disabled
+adafruit_metro_esp32p4.menu.EraseFlash.all=Enabled
+adafruit_metro_esp32p4.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 # Adafruit Metro ESP32-S3
@@ -24252,6 +24652,9 @@ m5stack_tab5.menu.USBMode.hwcdc=Hardware CDC and JTAG
 m5stack_tab5.menu.USBMode.hwcdc.build.usb_mode=1
 m5stack_tab5.menu.USBMode.default=USB-OTG (TinyUSB)
 m5stack_tab5.menu.USBMode.default.build.usb_mode=0
+m5stack_tab5.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+m5stack_tab5.menu.USBMode.tinyusb_fs.build.usb_mode=0
+m5stack_tab5.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 m5stack_tab5.menu.CDCOnBoot.cdc=Enabled
 m5stack_tab5.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -44947,6 +45350,9 @@ waveshare_p4_poe_eth.menu.USBMode.default=USB-OTG (TinyUSB)
 waveshare_p4_poe_eth.menu.USBMode.default.build.usb_mode=0
 waveshare_p4_poe_eth.menu.USBMode.hwcdc=Hardware CDC and JTAG
 waveshare_p4_poe_eth.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_p4_poe_eth.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+waveshare_p4_poe_eth.menu.USBMode.tinyusb_fs.build.usb_mode=0
+waveshare_p4_poe_eth.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 waveshare_p4_poe_eth.menu.CDCOnBoot.default=Disabled
 waveshare_p4_poe_eth.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -45019,6 +45425,10 @@ waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIF
 waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
 waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16_app4M=ESP SR 16M (4MB APP/4MB SPIFFS/3.9MB MODEL)
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16_app4M.upload.maximum_size=4194304
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16_app4M.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16_app4M.build.partitions=esp_sr_16_app4M
 waveshare_p4_poe_eth.menu.PartitionScheme.custom=Custom
 waveshare_p4_poe_eth.menu.PartitionScheme.custom.build.partitions=
 waveshare_p4_poe_eth.menu.PartitionScheme.custom.upload.maximum_size=33554432
@@ -55810,6 +56220,232 @@ yb_esp32s3_dac.menu.EraseFlash.all=Enabled
 yb_esp32s3_dac.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+yb_esp32s3_rs485.name=YelloByte YB-ESP32-S3-RS485
+
+yb_esp32s3_rs485.bootloader.tool=esptool_py
+yb_esp32s3_rs485.bootloader.tool.default=esptool_py
+
+yb_esp32s3_rs485.upload.tool=esptool_py
+yb_esp32s3_rs485.upload.tool.default=esptool_py
+yb_esp32s3_rs485.upload.tool.network=esp_ota
+
+yb_esp32s3_rs485.upload.maximum_size=1310720
+yb_esp32s3_rs485.upload.maximum_data_size=327680
+yb_esp32s3_rs485.upload.flags=
+yb_esp32s3_rs485.upload.erase_cmd=
+yb_esp32s3_rs485.upload.extra_flags=
+yb_esp32s3_rs485.upload.use_1200bps_touch=false
+yb_esp32s3_rs485.upload.wait_for_upload_port=false
+
+yb_esp32s3_rs485.serial.disableDTR=false
+yb_esp32s3_rs485.serial.disableRTS=false
+
+yb_esp32s3_rs485.build.tarch=xtensa
+yb_esp32s3_rs485.build.bootloader_addr=0x0
+yb_esp32s3_rs485.build.target=esp32s3
+yb_esp32s3_rs485.build.mcu=esp32s3
+yb_esp32s3_rs485.build.core=esp32
+yb_esp32s3_rs485.build.variant=yb_esp32s3_rs485
+yb_esp32s3_rs485.build.board=YB_ESP32S3_RS485
+
+yb_esp32s3_rs485.build.usb_mode=1
+yb_esp32s3_rs485.build.cdc_on_boot=0
+yb_esp32s3_rs485.build.msc_on_boot=0
+yb_esp32s3_rs485.build.dfu_on_boot=0
+yb_esp32s3_rs485.build.f_cpu=240000000L
+yb_esp32s3_rs485.build.flash_size=8MB
+yb_esp32s3_rs485.build.flash_freq=80m
+yb_esp32s3_rs485.build.flash_mode=dio
+yb_esp32s3_rs485.build.boot=qio
+yb_esp32s3_rs485.build.partitions=default
+yb_esp32s3_rs485.build.defines=
+yb_esp32s3_rs485.build.loop_core=
+yb_esp32s3_rs485.build.event_core=
+yb_esp32s3_rs485.build.flash_type=qio
+yb_esp32s3_rs485.build.psram_type=qspi
+yb_esp32s3_rs485.build.memory_type={build.flash_type}_{build.psram_type}
+
+yb_esp32s3_rs485.menu.JTAGAdapter.default=Disabled
+yb_esp32s3_rs485.menu.JTAGAdapter.default.build.copy_jtag_files=0
+yb_esp32s3_rs485.menu.JTAGAdapter.external=FTDI Adapter
+yb_esp32s3_rs485.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+yb_esp32s3_rs485.menu.JTAGAdapter.external.build.copy_jtag_files=1
+yb_esp32s3_rs485.menu.JTAGAdapter.bridge=ESP USB Bridge
+yb_esp32s3_rs485.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+yb_esp32s3_rs485.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+yb_esp32s3_rs485.menu.LoopCore.1=Core 1
+yb_esp32s3_rs485.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+yb_esp32s3_rs485.menu.LoopCore.0=Core 0
+yb_esp32s3_rs485.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+yb_esp32s3_rs485.menu.EventsCore.1=Core 1
+yb_esp32s3_rs485.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+yb_esp32s3_rs485.menu.EventsCore.0=Core 0
+yb_esp32s3_rs485.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+yb_esp32s3_rs485.menu.USBMode.hwcdc=Hardware CDC and JTAG
+yb_esp32s3_rs485.menu.USBMode.hwcdc.build.usb_mode=1
+yb_esp32s3_rs485.menu.USBMode.default=USB-OTG (TinyUSB)
+yb_esp32s3_rs485.menu.USBMode.default.build.usb_mode=0
+
+yb_esp32s3_rs485.menu.CDCOnBoot.default=Disabled
+yb_esp32s3_rs485.menu.CDCOnBoot.default.build.cdc_on_boot=0
+yb_esp32s3_rs485.menu.CDCOnBoot.cdc=Enabled
+yb_esp32s3_rs485.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+yb_esp32s3_rs485.menu.MSCOnBoot.default=Disabled
+yb_esp32s3_rs485.menu.MSCOnBoot.default.build.msc_on_boot=0
+yb_esp32s3_rs485.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+yb_esp32s3_rs485.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+yb_esp32s3_rs485.menu.DFUOnBoot.default=Disabled
+yb_esp32s3_rs485.menu.DFUOnBoot.default.build.dfu_on_boot=0
+yb_esp32s3_rs485.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+yb_esp32s3_rs485.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+yb_esp32s3_rs485.menu.UploadMode.default=UART0 / Hardware CDC
+yb_esp32s3_rs485.menu.UploadMode.default.upload.use_1200bps_touch=false
+yb_esp32s3_rs485.menu.UploadMode.default.upload.wait_for_upload_port=false
+yb_esp32s3_rs485.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+yb_esp32s3_rs485.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+yb_esp32s3_rs485.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+yb_esp32s3_rs485.menu.PSRAM.enabled=QSPI PSRAM
+yb_esp32s3_rs485.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+yb_esp32s3_rs485.menu.PSRAM.enabled.build.psram_type=qspi
+yb_esp32s3_rs485.menu.PSRAM.disabled=Disabled
+yb_esp32s3_rs485.menu.PSRAM.disabled.build.defines=
+yb_esp32s3_rs485.menu.PSRAM.disabled.build.psram_type=qspi
+yb_esp32s3_rs485.menu.PSRAM.opi=OPI PSRAM
+yb_esp32s3_rs485.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+yb_esp32s3_rs485.menu.PSRAM.opi.build.psram_type=opi
+
+yb_esp32s3_rs485.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+yb_esp32s3_rs485.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+yb_esp32s3_rs485.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+yb_esp32s3_rs485.menu.PartitionScheme.default_16MB=16M with spiffs (6.25MB APP/3.43MB SPIFFS)
+yb_esp32s3_rs485.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+yb_esp32s3_rs485.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+yb_esp32s3_rs485.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+yb_esp32s3_rs485.menu.PartitionScheme.default.build.partitions=default
+yb_esp32s3_rs485.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+yb_esp32s3_rs485.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+yb_esp32s3_rs485.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+yb_esp32s3_rs485.menu.PartitionScheme.minimal.build.partitions=minimal
+yb_esp32s3_rs485.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+yb_esp32s3_rs485.menu.PartitionScheme.no_ota.build.partitions=no_ota
+yb_esp32s3_rs485.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+yb_esp32s3_rs485.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+yb_esp32s3_rs485.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+yb_esp32s3_rs485.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+yb_esp32s3_rs485.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+yb_esp32s3_rs485.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+yb_esp32s3_rs485.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+yb_esp32s3_rs485.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+yb_esp32s3_rs485.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+yb_esp32s3_rs485.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+yb_esp32s3_rs485.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+yb_esp32s3_rs485.menu.PartitionScheme.huge_app.build.partitions=huge_app
+yb_esp32s3_rs485.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+yb_esp32s3_rs485.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+yb_esp32s3_rs485.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+yb_esp32s3_rs485.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+yb_esp32s3_rs485.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
+yb_esp32s3_rs485.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
+yb_esp32s3_rs485.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+yb_esp32s3_rs485.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+yb_esp32s3_rs485.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+yb_esp32s3_rs485.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+yb_esp32s3_rs485.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+yb_esp32s3_rs485.menu.PartitionScheme.fatflash.build.partitions=ffat
+yb_esp32s3_rs485.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+yb_esp32s3_rs485.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+yb_esp32s3_rs485.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+yb_esp32s3_rs485.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+yb_esp32s3_rs485.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MODEL)
+yb_esp32s3_rs485.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+yb_esp32s3_rs485.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+yb_esp32s3_rs485.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+yb_esp32s3_rs485.menu.PartitionScheme.custom=Custom
+yb_esp32s3_rs485.menu.PartitionScheme.custom.build.partitions=
+yb_esp32s3_rs485.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+yb_esp32s3_rs485.menu.CPUFreq.240=240MHz (WiFi)
+yb_esp32s3_rs485.menu.CPUFreq.240.build.f_cpu=240000000L
+yb_esp32s3_rs485.menu.CPUFreq.160=160MHz (WiFi)
+yb_esp32s3_rs485.menu.CPUFreq.160.build.f_cpu=160000000L
+yb_esp32s3_rs485.menu.CPUFreq.80=80MHz (WiFi)
+yb_esp32s3_rs485.menu.CPUFreq.80.build.f_cpu=80000000L
+yb_esp32s3_rs485.menu.CPUFreq.40=40MHz
+yb_esp32s3_rs485.menu.CPUFreq.40.build.f_cpu=40000000L
+yb_esp32s3_rs485.menu.CPUFreq.20=20MHz
+yb_esp32s3_rs485.menu.CPUFreq.20.build.f_cpu=20000000L
+yb_esp32s3_rs485.menu.CPUFreq.10=10MHz
+yb_esp32s3_rs485.menu.CPUFreq.10.build.f_cpu=10000000L
+
+yb_esp32s3_rs485.menu.FlashMode.qio=QIO 80MHz
+yb_esp32s3_rs485.menu.FlashMode.qio.build.flash_mode=dio
+yb_esp32s3_rs485.menu.FlashMode.qio.build.boot=qio
+yb_esp32s3_rs485.menu.FlashMode.qio.build.boot_freq=80m
+yb_esp32s3_rs485.menu.FlashMode.qio.build.flash_freq=80m
+yb_esp32s3_rs485.menu.FlashMode.qio120=QIO 120MHz
+yb_esp32s3_rs485.menu.FlashMode.qio120.build.flash_mode=dio
+yb_esp32s3_rs485.menu.FlashMode.qio120.build.boot=qio
+yb_esp32s3_rs485.menu.FlashMode.qio120.build.boot_freq=120m
+yb_esp32s3_rs485.menu.FlashMode.qio120.build.flash_freq=80m
+yb_esp32s3_rs485.menu.FlashMode.dio=DIO 80MHz
+yb_esp32s3_rs485.menu.FlashMode.dio.build.flash_mode=dio
+yb_esp32s3_rs485.menu.FlashMode.dio.build.boot=dio
+yb_esp32s3_rs485.menu.FlashMode.dio.build.boot_freq=80m
+yb_esp32s3_rs485.menu.FlashMode.dio.build.flash_freq=80m
+yb_esp32s3_rs485.menu.FlashMode.opi=OPI 80MHz
+yb_esp32s3_rs485.menu.FlashMode.opi.build.flash_mode=dout
+yb_esp32s3_rs485.menu.FlashMode.opi.build.boot=opi
+yb_esp32s3_rs485.menu.FlashMode.opi.build.boot_freq=80m
+yb_esp32s3_rs485.menu.FlashMode.opi.build.flash_freq=80m
+
+yb_esp32s3_rs485.menu.FlashSize.8M=8MB (64Mb)
+yb_esp32s3_rs485.menu.FlashSize.8M.build.flash_size=8MB
+yb_esp32s3_rs485.menu.FlashSize.4M=4MB (32Mb)
+yb_esp32s3_rs485.menu.FlashSize.4M.build.flash_size=4MB
+yb_esp32s3_rs485.menu.FlashSize.16M=16MB (128Mb)
+yb_esp32s3_rs485.menu.FlashSize.16M.build.flash_size=16MB
+
+yb_esp32s3_rs485.menu.UploadSpeed.921600=921600
+yb_esp32s3_rs485.menu.UploadSpeed.921600.upload.speed=921600
+yb_esp32s3_rs485.menu.UploadSpeed.115200=115200
+yb_esp32s3_rs485.menu.UploadSpeed.115200.upload.speed=115200
+yb_esp32s3_rs485.menu.UploadSpeed.256000.windows=256000
+yb_esp32s3_rs485.menu.UploadSpeed.256000.upload.speed=256000
+yb_esp32s3_rs485.menu.UploadSpeed.230400.windows.upload.speed=256000
+yb_esp32s3_rs485.menu.UploadSpeed.230400=230400
+yb_esp32s3_rs485.menu.UploadSpeed.230400.upload.speed=230400
+yb_esp32s3_rs485.menu.UploadSpeed.460800.linux=460800
+yb_esp32s3_rs485.menu.UploadSpeed.460800.macosx=460800
+yb_esp32s3_rs485.menu.UploadSpeed.460800.upload.speed=460800
+yb_esp32s3_rs485.menu.UploadSpeed.512000.windows=512000
+yb_esp32s3_rs485.menu.UploadSpeed.512000.upload.speed=512000
+
+yb_esp32s3_rs485.menu.DebugLevel.none=None
+yb_esp32s3_rs485.menu.DebugLevel.none.build.code_debug=0
+yb_esp32s3_rs485.menu.DebugLevel.error=Error
+yb_esp32s3_rs485.menu.DebugLevel.error.build.code_debug=1
+yb_esp32s3_rs485.menu.DebugLevel.warn=Warn
+yb_esp32s3_rs485.menu.DebugLevel.warn.build.code_debug=2
+yb_esp32s3_rs485.menu.DebugLevel.info=Info
+yb_esp32s3_rs485.menu.DebugLevel.info.build.code_debug=3
+yb_esp32s3_rs485.menu.DebugLevel.debug=Debug
+yb_esp32s3_rs485.menu.DebugLevel.debug.build.code_debug=4
+yb_esp32s3_rs485.menu.DebugLevel.verbose=Verbose
+yb_esp32s3_rs485.menu.DebugLevel.verbose.build.code_debug=5
+
+yb_esp32s3_rs485.menu.EraseFlash.none=Disabled
+yb_esp32s3_rs485.menu.EraseFlash.all=Enabled
+yb_esp32s3_rs485.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
 # Huidu HD-WF2 - esp32-s3 HUB75 driver board
 # https://www.hdwell.com/Product/index46.html
 
@@ -56501,59 +57137,78 @@ rakwireless_rak3112.menu.EraseFlash.all=Enabled
 rakwireless_rak3112.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
-kodedot.name=kode dot
+# Kode Dot (ESP32-P4) running kodeOS. Upload writes the sketch, and nothing
+# else, into kodeOS's mailbox at 0x1C00000; kodeOS installs it as an app and
+# runs it in place. Tools -> Burn Bootloader erases the whole device, kodeOS
+# included: do not use it on this board.
+kodedot.name=Kode Dot
 
 kodedot.bootloader.tool=esptool_py
 kodedot.bootloader.tool.default=esptool_py
 
 kodedot.upload.tool=esptool_py_app_only
 kodedot.upload.tool.default=esptool_py_app_only
-kodedot.upload.tool.network=esp_ota
 
-kodedot.upload.maximum_size=8388608
+# Wraps for a sketch that runs from a DATA partition; see variants/kodedot/kode_flash_guard.cpp.
+kodedot.compiler.c.elf.extra_flags=-Wl,--wrap=esp_ota_get_running_partition -Wl,--wrap=esp_ota_get_next_update_partition -Wl,--wrap=esp_image_verify
+
+kodedot.upload.maximum_size=4186112
 kodedot.upload.maximum_data_size=327680
 kodedot.upload.flags=
 kodedot.upload.extra_flags=
+kodedot.upload.erase_cmd=
 kodedot.upload.use_1200bps_touch=false
 kodedot.upload.wait_for_upload_port=false
 kodedot.upload.speed=921600
 
-
 kodedot.serial.disableDTR=false
 kodedot.serial.disableRTS=false
 
-kodedot.build.tarch=xtensa
-kodedot.build.bootloader_addr=0x0
-kodedot.build.target=esp32s3
-kodedot.build.mcu=esp32s3
+kodedot.build.tarch=riscv32
+kodedot.build.target=esp
+kodedot.build.mcu=esp32p4
 kodedot.build.core=esp32
 kodedot.build.variant=kodedot
+kodedot.build.chip_variant=esp32p4
 kodedot.build.board=KODE_DOT
+kodedot.build.bootloader_addr=0x2000
 
 kodedot.build.usb_mode=1
 kodedot.build.cdc_on_boot=1
 kodedot.build.msc_on_boot=0
 kodedot.build.dfu_on_boot=0
 
-kodedot.build.f_cpu=240000000L
-
-kodedot.build.flash_offset=0x400000
+kodedot.build.f_cpu=400000000L
+kodedot.build.flash_offset=0x1C00000
 kodedot.build.flash_size=32MB
 kodedot.build.flash_freq=80m
+kodedot.build.img_freq=80m
 kodedot.build.flash_mode=dio
-kodedot.build.psram_type=opi
-
-kodedot.build.custom_partitions=kodedot_partitions
-
-kodedot.build.defines=
-
-kodedot.build.loop_core=-DARDUINO_RUNNING_CORE=1
-kodedot.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+kodedot.build.boot=dio
+kodedot.build.partitions=default
+kodedot.build.defines=-DBOARD_HAS_PSRAM -DKODE_SKETCH_NAME="{build.project_name}"
 
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
 
-kodedot.recipe.output.save_file={build.project_name}.ino.bin
+# Debug settings; see variants/kodedot/kodedot-debug.cfg.
+kodedot.debug_config.kodedot.cortex-debug.custom.name=Arduino on Kode Dot
+kodedot.debug_config.kodedot.cortex-debug.custom.serverArgs.0=-c
+kodedot.debug_config.kodedot.cortex-debug.custom.serverArgs.1=set ::kodedot_bin {{build.path}/{build.project_name}.bin}
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.0=set remote hardware-watchpoint-limit 2
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.1=eval "monitor kodedot_check 0x%x", &esp_app_desc
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.2=monitor reset halt
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.3=monitor gdb sync
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.4=thb setup
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideAttachCommands.5=c
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.0=monitor reset halt
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.1=monitor gdb sync
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.2=thb setup
+kodedot.debug_config.kodedot.cortex-debug.custom.overrideRestartCommands.3=c
+kodedot.debug.additional_config=debug_config.kodedot
+kodedot.debug.server.openocd.scripts.1={build.variant.path}/kodedot-debug.cfg
+# No ESP32-P4 SVD ships with the core: an empty path keeps the IDE from reporting it missing.
+kodedot.debug.svd_file=
 
 kodedot.menu.DebugLevel.none=None
 kodedot.menu.DebugLevel.none.build.code_debug=0
@@ -57248,6 +57903,9 @@ esp32p4_4ds_mipi.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32p4_4ds_mipi.menu.USBMode.default.build.usb_mode=0
 esp32p4_4ds_mipi.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32p4_4ds_mipi.menu.USBMode.hwcdc.build.usb_mode=1
+esp32p4_4ds_mipi.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+esp32p4_4ds_mipi.menu.USBMode.tinyusb_fs.build.usb_mode=0
+esp32p4_4ds_mipi.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 esp32p4_4ds_mipi.menu.CDCOnBoot.default=Disabled
 esp32p4_4ds_mipi.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -57408,6 +58066,9 @@ esp32p4_4ds_mipi_round.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32p4_4ds_mipi_round.menu.USBMode.default.build.usb_mode=0
 esp32p4_4ds_mipi_round.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32p4_4ds_mipi_round.menu.USBMode.hwcdc.build.usb_mode=1
+esp32p4_4ds_mipi_round.menu.USBMode.tinyusb_fs=USB-OTG (TinyUSB Full Speed)
+esp32p4_4ds_mipi_round.menu.USBMode.tinyusb_fs.build.usb_mode=0
+esp32p4_4ds_mipi_round.menu.USBMode.tinyusb_fs.build.usb_port=1
 
 esp32p4_4ds_mipi_round.menu.CDCOnBoot.default=Disabled
 esp32p4_4ds_mipi_round.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -60643,8 +61304,8 @@ xteink_x4.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp-zigbee-core.zczr.release 
 ozobot_drvkit.name=Ozobot DRVKit
 ozobot_drvkit.vid.0=0x2D81
 ozobot_drvkit.pid.0=0x1901
-ozobot_drvkit.upload_port.0.vid=0x303A
-ozobot_drvkit.upload_port.0.pid=0x1001
+ozobot_drvkit.upload_port.0.vid=0x2D81
+ozobot_drvkit.upload_port.0.pid=0x1901
 
 ozobot_drvkit.bootloader.tool=esptool_py
 ozobot_drvkit.bootloader.tool.default=esptool_py
