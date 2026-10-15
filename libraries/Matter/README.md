@@ -144,10 +144,10 @@ Key rules:
 **Lifecycle**
 
 - `begin()` must run before `Matter.begin()`.
-- `end()` finishes an active Boost: it restores a temporary setpoint, with no BoostEnded event.
+- `end()` finishes an active Boost: it restores a temporary setpoint, with no BoostEnded event. If that restore is outside Min/Max, the saved target is kept and retried after a later limit change.
 - Before the stack starts, `end()` destroys the endpoint and frees both delegates, so `begin()` can run again.
-- After `Matter.begin()`, `end()` only stops sketch-side updates. The endpoint stays until reboot.
-- A sketch can still call `setBoostState()` for a local boost on or off.
+- After `Matter.begin()`, `end()` shuts down Water Heater Mode and detaches both delegates. They stay allocated. The endpoint stays until reboot.
+- A sketch can still call `setBoostState()` for a local boost on or off. Boost completion holds the CHIP stack lock for the whole transition once the stack is running.
 
 ### Delegate-Based Clusters (Valve Configuration and Control)
 

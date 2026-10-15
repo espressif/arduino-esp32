@@ -136,7 +136,21 @@ public:
     return const_cast<chip::app::Clusters::ModeBase::Instance *>(GetInstance());
   }
 
+  void detach() {
+    if (owner == nullptr) {
+      return;
+    }
+    chip::app::Clusters::ModeBase::Instance *modeInstance = instance();
+    owner = nullptr;
+    if (modeInstance != nullptr) {
+      modeInstance->Shutdown();
+    }
+  }
+
   CHIP_ERROR Init() override {
+    if (owner == nullptr) {
+      return CHIP_NO_ERROR;
+    }
     chip::app::Clusters::ModeBase::Instance *modeInstance = instance();
     if (modeInstance == nullptr) {
       return CHIP_NO_ERROR;
@@ -178,6 +192,10 @@ public:
   }
 
   void HandleChangeToMode(uint8_t newMode, chip::app::Clusters::ModeBase::Commands::ChangeToModeResponse::Type &response) override {
+    if (owner == nullptr) {
+      response.status = static_cast<uint8_t>(chip::app::Clusters::ModeBase::StatusCode::kUnsupportedMode);
+      return;
+    }
     if (newMode != MatterWaterHeater::WATER_HEATER_MODE_OFF && newMode != MatterWaterHeater::WATER_HEATER_MODE_MANUAL &&
         newMode != MatterWaterHeater::WATER_HEATER_MODE_ECO) {
       // Reject modes this endpoint does not advertise.
@@ -199,10 +217,30 @@ class MatterWaterHeater::ManagementDelegate : public chip::app::Clusters::WaterH
 public:
   explicit ManagementDelegate(MatterWaterHeater *owner) : owner(owner) {}
 
+  bool attached() const {
+    return owner != nullptr;
+  }
+
+  void detach() {
+    if (owner == nullptr) {
+      return;
+    }
+    cachedHeaterTypes = owner->heaterTypes;
+    cachedHeatDemand = owner->heatDemand;
+    cachedTankVolume = owner->tankVolume;
+    cachedEstimatedHeatRequired = owner->estimatedHeatRequired;
+    cachedTankPercentage = owner->tankPercentage;
+    cachedBoostState = owner->boostState;
+    owner = nullptr;
+  }
+
   chip::Protocols::InteractionModel::Status HandleBoost(
     uint32_t duration, chip::Optional<bool> oneShot, chip::Optional<bool> emergencyBoost, chip::Optional<int16_t> temporarySetpoint,
     chip::Optional<chip::Percent> targetPercentage, chip::Optional<chip::Percent> targetReheat
   ) override {
+    if (owner == nullptr) {
+      return chip::Protocols::InteractionModel::Status::Failure;
+    }
     // TargetReheat would require reheating after the tank cools. This endpoint has no reheat threshold.
     // EmergencyBoost is a hint to use extra sources; ignore it and keep the normal HeatDemand bits.
     if (targetReheat.HasValue()) {
@@ -229,8 +267,9 @@ public:
         return chip::Protocols::InteractionModel::Status::ConstraintError;
       }
     } else if (owner->boostHasTemporarySetpoint) {
-      (void)owner->setHeatingSetpointRaw(owner->boostSavedHeatingSetpoint);
-      owner->boostHasTemporarySetpoint = false;
+      if (!owner->restoreBoostSetpoint()) {
+        return chip::Protocols::InteractionModel::Status::ConstraintError;
+      }
     }
 
     owner->boostOneShot = oneShot.ValueOr(false);
@@ -253,6 +292,9 @@ public:
   }
 
   chip::Protocols::InteractionModel::Status HandleCancelBoost() override {
+    if (owner == nullptr) {
+      return chip::Protocols::InteractionModel::Status::Failure;
+    }
     if (owner->boostState == MatterWaterHeater::BOOST_INACTIVE && !owner->boostTimerArmed) {
       return chip::Protocols::InteractionModel::Status::Success;
     }
@@ -261,31 +303,43 @@ public:
   }
 
   chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap> GetHeaterTypes() override {
-    return chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap>(owner->heaterTypes);
+    const uint8_t value = (owner != nullptr) ? owner->heaterTypes : cachedHeaterTypes;
+    return chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap>(value);
   }
 
   chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap> GetHeatDemand() override {
-    return chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap>(owner->heatDemand);
+    const uint8_t value = (owner != nullptr) ? owner->heatDemand : cachedHeatDemand;
+    return chip::BitMask<chip::app::Clusters::WaterHeaterManagement::WaterHeaterHeatSourceBitmap>(value);
   }
 
   uint16_t GetTankVolume() override {
-    return owner->tankVolume;
+    return (owner != nullptr) ? owner->tankVolume : cachedTankVolume;
   }
 
   chip::Energy_mWh GetEstimatedHeatRequired() override {
+    if (owner == nullptr) {
+      return cachedEstimatedHeatRequired;
+    }
     return owner->getEstimatedHeatRequired();
   }
 
   chip::Percent GetTankPercentage() override {
-    return owner->tankPercentage;
+    return (owner != nullptr) ? owner->tankPercentage : cachedTankPercentage;
   }
 
   chip::app::Clusters::WaterHeaterManagement::BoostStateEnum GetBoostState() override {
-    return static_cast<chip::app::Clusters::WaterHeaterManagement::BoostStateEnum>(owner->boostState);
+    const uint8_t value = (owner != nullptr) ? owner->boostState : cachedBoostState;
+    return static_cast<chip::app::Clusters::WaterHeaterManagement::BoostStateEnum>(value);
   }
 
 private:
   MatterWaterHeater *owner;
+  uint8_t cachedHeaterTypes = 0;
+  uint8_t cachedHeatDemand = 0;
+  uint16_t cachedTankVolume = 0;
+  int64_t cachedEstimatedHeatRequired = 0;
+  uint8_t cachedTankPercentage = 0;
+  uint8_t cachedBoostState = MatterWaterHeater::BOOST_INACTIVE;
 };
 
 MatterWaterHeater::MatterWaterHeater() {}
@@ -490,13 +544,25 @@ bool MatterWaterHeater::begin() {
 }
 
 void MatterWaterHeater::end() {
-  if (initialized) {
+  const bool stackStarted = ArduinoMatter::isStackStarted();
+  if (stackStarted) {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    if (initialized && !boostFinishing) {
+      boostFinishing = true;
+      finishBoostBody(false);
+      boostFinishing = false;
+    } else if (!boostFinishing) {
+      cancelBoostTimer();
+    }
+    detachDelegates();
+    initialized = false;
+  } else if (initialized) {
     finishBoost(false);
   } else {
     cancelBoostTimer();
   }
 
-  if (!ArduinoMatter::isStackStarted()) {
+  if (!stackStarted) {
     if (getEndPointId() != 0) {
       endpoint_t *ep = endpoint::get(node::get(), getEndPointId());
       if (ep != nullptr) {
@@ -513,11 +579,19 @@ void MatterWaterHeater::end() {
     return;
   }
 
-  initialized = false;
   if (getEndPointId() != 0) {
     log_w(
       "MatterWaterHeater::end() after Matter.begin() leaves endpoint %u until reboot; begin() cannot recreate it.", getEndPointId()
     );
+  }
+}
+
+void MatterWaterHeater::detachDelegates() {
+  if (modeDelegate != nullptr) {
+    modeDelegate->detach();
+  }
+  if (managementDelegate != nullptr) {
+    managementDelegate->detach();
   }
 }
 
@@ -658,6 +732,7 @@ bool MatterWaterHeater::setAbsoluteMinimumHeatingSetpoint(float temperature) {
   }
 
   absoluteMinimumHeatingSetpoint = value;
+  retryBoostSetpointRestore();
   return true;
 }
 
@@ -688,6 +763,7 @@ bool MatterWaterHeater::setMinimumHeatingSetpoint(float temperature) {
     setHeatingSetpointRaw(value);
   }
 
+  retryBoostSetpointRestore();
   return true;
 }
 
@@ -732,6 +808,7 @@ bool MatterWaterHeater::setAbsoluteMaximumHeatingSetpoint(float temperature) {
   }
 
   absoluteMaximumHeatingSetpoint = value;
+  retryBoostSetpointRestore();
   return true;
 }
 
@@ -762,6 +839,7 @@ bool MatterWaterHeater::setMaximumHeatingSetpoint(float temperature) {
     setHeatingSetpointRaw(value);
   }
 
+  retryBoostSetpointRestore();
   return true;
 }
 
@@ -1019,10 +1097,22 @@ void MatterWaterHeater::finishBoost(bool emitEndedEvent) {
   }
   boostFinishing = true;
 
+  // Hold the CHIP lock for the whole completion so a controller Boost cannot arm a new
+  // timer between cancel and the session clear. Before Matter.begin() the lock is not ready.
+  if (ArduinoMatter::isStackStarted()) {
+    lock::ScopedChipStackLock lock(portMAX_DELAY);
+    finishBoostBody(emitEndedEvent);
+  } else {
+    finishBoostBody(emitEndedEvent);
+  }
+
+  boostFinishing = false;
+}
+
+void MatterWaterHeater::finishBoostBody(bool emitEndedEvent) {
   cancelBoostTimer();
   if (boostHasTemporarySetpoint) {
-    (void)setHeatingSetpointRaw(boostSavedHeatingSetpoint);
-    boostHasTemporarySetpoint = false;
+    (void)restoreBoostSetpoint();
   }
   boostOneShot = false;
   boostHasTargetPercentage = false;
@@ -1031,7 +1121,7 @@ void MatterWaterHeater::finishBoost(bool emitEndedEvent) {
     (void)applyBoostState(BOOST_INACTIVE);
   }
 
-  if (emitEndedEvent && managementDelegate != nullptr) {
+  if (emitEndedEvent && managementDelegate != nullptr && managementDelegate->attached()) {
     // GenerateEvent() requires the CHIP stack lock. Controller CancelBoost / the boost
     // timer already hold it; setBoostState() from loop() does not.
     ManagementDelegate *delegate = managementDelegate;
@@ -1052,8 +1142,45 @@ void MatterWaterHeater::finishBoost(bool emitEndedEvent) {
       log_w("Failed to emit Water Heater BoostEnded: %" CHIP_ERROR_FORMAT, err.Format());
     }
   }
+}
 
-  boostFinishing = false;
+bool MatterWaterHeater::restoreBoostSetpoint() {
+  if (!boostHasTemporarySetpoint) {
+    return true;
+  }
+  if (!setHeatingSetpointRaw(boostSavedHeatingSetpoint)) {
+    log_e(
+      "Cannot restore Water Heater setpoint to %.02fC; temporary target stays until the saved value is inside Min/Max.",
+      static_cast<float>(boostSavedHeatingSetpoint) / 100.0f
+    );
+    return false;
+  }
+  boostHasTemporarySetpoint = false;
+  return true;
+}
+
+void MatterWaterHeater::retryBoostSetpointRestore() {
+  if (!boostHasTemporarySetpoint || boostState == BOOST_ACTIVE) {
+    return;
+  }
+  if (boostSavedHeatingSetpoint < minimumHeatingSetpoint || boostSavedHeatingSetpoint > maximumHeatingSetpoint) {
+    return;
+  }
+  (void)restoreBoostSetpoint();
+}
+
+void MatterWaterHeater::scheduleBoostSetpointRestore() {
+  if (!boostHasTemporarySetpoint || boostState == BOOST_ACTIVE) {
+    return;
+  }
+  if (!chip::DeviceLayer::SystemLayer().IsInitialized()) {
+    retryBoostSetpointRestore();
+    return;
+  }
+  const CHIP_ERROR err = chip::DeviceLayer::SystemLayer().ScheduleLambda([this]() { retryBoostSetpointRestore(); });
+  if (err != CHIP_NO_ERROR) {
+    log_w("Failed to schedule Water Heater setpoint restore: %" CHIP_ERROR_FORMAT, err.Format());
+  }
 }
 
 void MatterWaterHeater::maybeFinishOneShotBoost() {
@@ -1150,6 +1277,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
             return false;
           }
           absoluteMinimumHeatingSetpoint = val->val.i16;
+          scheduleBoostSetpointRestore();
           return true;
 
         case Thermostat::Attributes::MinHeatSetpointLimit::Id:
@@ -1157,6 +1285,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
             return false;
           }
           minimumHeatingSetpoint = val->val.i16;
+          scheduleBoostSetpointRestore();
           return true;
 
         case Thermostat::Attributes::AbsMaxHeatSetpointLimit::Id:
@@ -1165,6 +1294,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
             return false;
           }
           absoluteMaximumHeatingSetpoint = val->val.i16;
+          scheduleBoostSetpointRestore();
           return true;
 
         case Thermostat::Attributes::MaxHeatSetpointLimit::Id:
@@ -1172,6 +1302,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
             return false;
           }
           maximumHeatingSetpoint = val->val.i16;
+          scheduleBoostSetpointRestore();
           return true;
 
         case Thermostat::Attributes::SystemMode::Id:

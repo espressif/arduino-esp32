@@ -61,8 +61,8 @@ public:
   // On failure after partial create, the endpoint is destroyed so begin() may be retried.
   bool begin();
   // Before Matter.begin(): destroys the endpoint and frees both delegates so begin() can run again.
-  // After Matter.begin(): cancels an active boost timer and stops sketch-side updates. The Matter
-  // endpoint and CHIP Instances stay until reboot; begin() will fail.
+  // After Matter.begin(): finishes Boost, shuts down Water Heater Mode, and detaches both delegates
+  // (they stay allocated). The Matter endpoint stays until reboot; begin() will fail.
   void end();
 
   // Thermostat / local temperature
@@ -180,6 +180,13 @@ private:
   bool armBoostTimer(uint32_t durationSeconds);
   void cancelBoostTimer();
   void finishBoost(bool emitEndedEvent);
+  void finishBoostBody(bool emitEndedEvent);
+  // Puts the pre-Boost setpoint back. On failure the saved target and flag are kept.
+  bool restoreBoostSetpoint();
+  // Retries restoreBoostSetpoint() once Boost is inactive and the saved target is inside Min/Max.
+  void retryBoostSetpointRestore();
+  void scheduleBoostSetpointRestore();
+  void detachDelegates();
   void maybeFinishOneShotBoost();
   bool applyBoostState(BoostState_t state);
 

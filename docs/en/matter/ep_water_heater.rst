@@ -71,9 +71,9 @@ Typical usage:
 end
 ^^^
 
-Stops sketch-side updates. If a Boost session is active, restores any temporary heating setpoint and clears Boost (no **BoostEnded** event).
+Stops sketch-side updates. If a Boost session is active, restores any temporary heating setpoint and clears Boost (no **BoostEnded** event). When the saved target is outside the current ``Min`` / ``Max``, the temporary setpoint stays and the saved target is kept until a later limit change makes it legal. The temporary value is not clamped.
 
-Before ``Matter.begin()``, ``end()`` then destroys the endpoint and frees both delegates so ``begin()`` can be called again. After ``Matter.begin()``, the Matter endpoint and CHIP Instances stay until reboot; a later ``begin()`` fails.
+Before ``Matter.begin()``, ``end()`` then destroys the endpoint and frees both delegates so ``begin()`` can be called again. After ``Matter.begin()``, ``end()`` shuts down Water Heater Mode and detaches both delegates. The delegates stay allocated with no owner, so destroying the Arduino object does not leave CHIP calling into freed memory. The Matter endpoint stays until reboot; a later ``begin()`` fails.
 
 .. code-block:: arduino
 
@@ -169,7 +169,7 @@ A controller **Boost** sets **BoostState** to Active. It may apply a temporary h
 
 **oneShot** ends Boost once the local temperature has been reached. If a target tank percentage is present, that percentage must be reached too.
 
-**CancelBoost** and ``setBoostState(BOOST_INACTIVE)`` restore a temporary setpoint and emit **BoostEnded**.
+**CancelBoost** and ``setBoostState(BOOST_INACTIVE)`` restore a temporary setpoint and emit **BoostEnded**. Once the stack is running, that completion holds the CHIP stack lock for the whole transition. If the saved setpoint is outside ``Min`` / ``Max``, Boost still ends, the temporary target stays, and the saved value is retried after a later limit change.
 
 **EmergencyBoost** is ignored. No extra heat sources are turned on, and the command still succeeds. **TargetReheat** is rejected with ``InvalidCommand``.
 
