@@ -37,7 +37,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - Matter Water Heater (device type 0x050F)
 - Simulated tank temperature, heating setpoint, tank percentage, estimated heat required, and heat demand
 - Water Heater Mode (Off / Manual / Eco) and Thermostat System Mode (Off / Heat)
-- Controller **Boost** / **CancelBoost** (duration, one-shot, optional temporary setpoint). **EmergencyBoost** and **TargetReheat** are not supported; Boost commands that set them are rejected with `InvalidCommand`.
+- Controller **Boost** / **CancelBoost** (duration, one-shot, optional temporary setpoint). **EmergencyBoost** is ignored. **TargetReheat** is rejected with `InvalidCommand`.
 - Serial `Controller:` lines for Boost, system mode, water heater mode, and target temperature (same as the basic example)
 - `MatterWaterHeater::begin()` provisions Water Heater Management **EnergyManagement** and **TankPercent** (call before `Matter.begin()`)
 - After `begin()`, the sketch sets the controller setpoint dial to **25 °C … 60 °C** (`setAbsoluteMinimumHeatingSetpoint()` / `setAbsoluteMaximumHeatingSetpoint()`, then `Min` / `Max`). The API cannot go outside the library span **20 °C … 85 °C**. Tank temperature is independent (starts at 20 °C, cools to 16 °C).
@@ -87,10 +87,10 @@ Open the Serial Monitor at **115200**. Wi-Fi connection messages appear only on 
 Controller CASE session is up.
 Ready | operation: Heat | target: 48.0 C | water heater mode: Manual
 ready | Temp: 20.0 C | Setpoint: 48.0 C | Op: Heat | Mode: Manual | System: Heat | Boost: off | Tank: 0 % | HeatReq: 3.256 kWh | HeatDemand: Boiler
-tick | Temp: 20.5 C | Setpoint: 48.0 C | Op: Heat | Mode: Manual | System: Heat | Boost: off | Tank: 1 % | HeatReq: 3.198 kWh | HeatDemand: Boiler
+tick | Temp: 20.5 C | Setpoint: 48.0 C | Op: Heat | Mode: Manual | System: Heat | Boost: off | Tank: 14 % | HeatReq: 3.198 kWh | HeatDemand: Boiler
 Controller: Boost on
 Operation: Boost
-boost-on | Temp: 24.0 C | Setpoint: 48.0 C | Op: Boost | Mode: Manual | System: Heat | Boost: on | Tank: 14 % | HeatReq: 2.791 kWh | HeatDemand: Immersion 1+Immersion 2+Boiler
+boost-on | Temp: 24.0 C | Setpoint: 48.0 C | Op: Boost | Mode: Manual | System: Heat | Boost: on | Tank: 25 % | HeatReq: 2.791 kWh | HeatDemand: Immersion 1+Immersion 2+Boiler
 Controller: target temperature 42.0 C
 ```
 
@@ -126,7 +126,7 @@ Every five seconds the sketch updates the simulated tank:
 
 The **25 °C … 60 °C** dial is `OccupiedHeatingSetpoint` only. `LocalTemperature` can sit below the dial minimum (this sketch starts at 20 °C). A controller that still shows **20 °C … 85 °C** after a flash may be using the range from first commissioning; re-interview the node so it re-reads `AbsMin` / `AbsMax`.
 
-Tank percentage is derived from temperature versus the setpoint. **EstimatedHeatRequired** is the remaining energy to reach the heating goal (`volume × ΔT × 1.163 Wh/L·°C`, stored as mWh). Eco uses the 40 °C cap as the goal (less energy than Manual/Boost at the same tank temperature). Off still reports energy if the tank is below that goal; the value falls as the tank heats and is 0 at the goal. Reaching the target during **Boost** ends Boost so System Mode Heat continues. **Off** applies when System Mode is Off or Water Heater Mode is Off. Only an active Boost keeps heating. Controller writes print `Controller:` lines immediately (Boost, system mode, water heater mode, target temperature), then a `changed` / `boost-on` / `boost-off` snapshot.
+Tank percentage on the `ready` line is 0% from `setup()`. Each later tick maps `(temperature - 16) / (setpoint - 16)`. **EstimatedHeatRequired** is the remaining energy to reach the heating goal (`volume × ΔT × 1.163 Wh/L·°C`, stored as mWh). Eco uses the 40 °C cap as the goal (less energy than Manual/Boost at the same tank temperature). Off still reports energy if the tank is below that goal; the value falls as the tank heats and is 0 at the goal. Reaching the target during **Boost** ends Boost so System Mode Heat continues. **Off** applies when System Mode is Off or Water Heater Mode is Off. Only an active Boost keeps heating. Controller writes print `Controller:` lines immediately (Boost, system mode, water heater mode, target temperature), then a `changed` / `boost-on` / `boost-off` snapshot.
 
 ### HeatDemand (Serial names)
 
@@ -145,13 +145,13 @@ This sketch uses a **boiler** as the everyday heater (common on the market). Whi
 
 `Other` is in `HeaterTypes` so the helper has a name for that bit; this sketch does not turn it on. Eco / Manual / Boost change **which subset** is on, not the meaning of HeatDemand (it is still “sources drawing power now”).
 
-The sketch chooses this subset with `setHeatDemand()` after each mode change and on every five-second update. Without the sketch, the library reports all of `HeaterTypes` while heating. After a controller change to `HeaterTypes`, HeatDemand can therefore read all bits until the next update, at most five seconds.
+The sketch chooses this subset with `setHeatDemand()` after each mode change and on every five-second update. Without the sketch, the library reports all of `HeaterTypes` while heating. A library sync (system mode, water heater mode, or Boost) can therefore show every bit until the next update, at most five seconds. **HeaterTypes** is not client-writable.
 
 The [basic example](../MatterWaterHeater) prints the same attribute as `on` / `idle` and does not name the heater type.
 
 ### Hub Boost / CancelBoost
 
-After commissioning, send **Boost** from a Matter controller that exposes Water Heater Management commands. The serial log prints `Controller: Boost on` and `boost-on`. While Boost is Active this sketch heats at 1.0 °C per tick (double Manual), even if Mode or System is Off. **CancelBoost**, a duration timeout, or a one-shot that has reached the setpoint (and optional target tank %) prints `Controller: Cancel Boost` / `boost-off` and restores any temporary setpoint the command applied. Boost commands that include **EmergencyBoost** or **TargetReheat** are rejected with `InvalidCommand`.
+After commissioning, send **Boost** from a Matter controller that exposes Water Heater Management commands. The serial log prints `Controller: Boost on` and `boost-on`. While Boost is Active this sketch heats at 1.0 °C per tick (double Manual), even if Mode or System is Off. **CancelBoost**, a duration timeout, or a one-shot that has reached the setpoint (and optional target tank %) prints `Controller: Cancel Boost` / `boost-off` and restores any temporary setpoint the command applied. **EmergencyBoost** is ignored. Boost commands that include **TargetReheat** are rejected with `InvalidCommand`.
 
 You can also call `waterHeater.setBoostState(MatterWaterHeater::BOOST_ACTIVE)` locally; the same heating path and log apply. There is no Arduino API that sends the Matter Boost command fields (duration, oneShot, temporarySetpoint).
 
@@ -173,7 +173,7 @@ For a real appliance, read tank temperature from a sensor, drive the heating ele
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured (ESP32 / ESP32-S2 need Wi-Fi in the sketch or another commissioning path).
 - **Tank attributes missing on hub**: Call `waterHeater.begin()` before `Matter.begin()` so EnergyManagement and TankPercent features are provisioned.
-- **HeatDemand does not match hub after mode change**: Confirm `MatterWaterHeater` is up to date. Controller writes to SystemMode, Boost, HeaterTypes or Water Heater Mode sync HeatDemand in the library.
+- **HeatDemand does not match hub after mode change**: Confirm `MatterWaterHeater` is up to date. Controller writes to SystemMode, Boost, or Water Heater Mode sync HeatDemand in the library. This sketch then restores its subset on the next update.
 - **Hub Boost / CancelBoost does nothing**: Confirm `MatterWaterHeater` is up to date. Those commands are handled by the Water Heater Management delegate (`setBoostState()` still works for local on/off).
 - **Failed to commission**: Erase flash (**Erase All Flash Before Sketch Upload**) or use another Matter node on the same fabric.
 - **No serial output**: Check baud rate (115200) and USB connection.

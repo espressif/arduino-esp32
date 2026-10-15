@@ -86,14 +86,14 @@ Open the Serial Monitor at **115200**. `matterWaitUntilReady()` prints the pairi
 ```
 Controller CASE session is up.
 Ready | operation: Heat | target: 48.0 C | water heater mode: Manual
-Temp: 20.5 C | Setpoint: 48.0 C | HeatDemand: on | Heat
+Temp: 16.5 C | Setpoint: 48.0 C | HeatDemand: on | Heat
 Controller: Boost on
 Operation: Boost
 Controller: target temperature 42.0 C
 Target reached. HeatDemand idle; leaving Boost for Heat.
+Temp: 42.0 C | Setpoint: 42.0 C | HeatDemand: idle | Heat
 Controller: Cancel Boost
 Operation: Heat
-Temp: 42.0 C | Setpoint: 42.0 C | HeatDemand: idle | Heat
 ```
 
 `HeatDemand: on` is the Matter **HeatDemand** attribute (which heater types are drawing power: immersion, heat pump, boiler, …). Reaching the setpoint in **Heat** idles HeatDemand and keeps System Mode Heat. Reaching it during **Boost** ends Boost so heating continues in Heat. **Off** is only when the controller writes System Mode Off (that cools the tank).
