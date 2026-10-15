@@ -15,7 +15,7 @@ The ``MatterWaterHeater`` class provides a water heater endpoint for Matter netw
 * Tank volume, tank percentage, and estimated heat required (optional WHM features provisioned in ``begin()``).
 * Boost state, including hub **Boost** / **CancelBoost** (duration, one-shot, optional temporary setpoint).
 * Water heater mode (Off / Manual / Eco).
-* Automatic **HeatDemand** sync when system mode, boost, or heater types change (including Matter controller writes).
+* Automatic **HeatDemand** sync when system mode, boost, water heater mode, or heater types change. A controller **SystemMode** write (Off or Heat) and **ChangeToMode** use that same sync.
 * Thermostat heating setpoint limits (``AbsMin`` / ``AbsMax`` / ``Min`` / ``Max``) so controllers can show a heating range.
 * Matter standard compliance.
 
@@ -46,7 +46,7 @@ Initialization
 begin
 ^^^^^
 
-Creates the Water Heater device type, installs the Water Heater Management delegate (**Boost** / **CancelBoost**), adds **EnergyManagement** and **TankPercent** features so ``TankVolume``, ``EstimatedHeatRequired``, and ``TankPercentage`` attributes exist, and adds Thermostat ``AbsMin`` / ``AbsMax`` / ``Min`` / ``MaxHeatSetpointLimit`` so controllers can read a heating range. Pins Water Heater Mode to **Manual** so the CHIP mode server does not start on **Off**. Call before ``Matter.begin()``; calling ``begin()`` after the Matter stack has started fails.
+Creates the Water Heater device type, installs the Water Heater Management delegate (**Boost** / **CancelBoost**), adds **EnergyManagement** and **TankPercent** so ``TankVolume``, ``EstimatedHeatRequired``, and ``TankPercentage`` exist, and enables the Water Heater Mode **OnOff** feature so the Off mode tag is valid. It also adds Thermostat ``AbsMin`` / ``AbsMax`` / ``Min`` / ``MaxHeatSetpointLimit``. Pins Water Heater Mode to **Manual** so the mode server does not start on **Off**. Call before ``Matter.begin()``; calling ``begin()`` after the stack has started fails.
 
 .. code-block:: arduino
 
@@ -60,7 +60,7 @@ Typical usage:
 
     waterHeater.begin();
     waterHeater.setHeaterTypes(MatterWaterHeater::IMMERSION_ELEMENT_1);
-    waterHeater.setTankVolume(100);
+    waterHeater.setTankVolume(100); // litres
     waterHeater.setSystemMode(MatterWaterHeater::SYSTEM_MODE_HEAT);
     Matter.begin();
 
@@ -94,6 +94,8 @@ Thermostat system mode (heating-only endpoint):
 
 * ``SYSTEM_MODE_OFF`` - Off.
 * ``SYSTEM_MODE_HEAT`` - Heat.
+
+A controller write of any other System Mode is rejected.
 
 HeaterType_t
 ^^^^^^^^^^^^
@@ -151,15 +153,15 @@ setSystemMode / setBoostState / setWaterHeaterMode
     bool setBoostState(BoostState_t state);
     bool setWaterHeaterMode(WaterHeaterMode_t mode);
 
-``setSystemMode()`` and ``setBoostState()`` update **HeatDemand** automatically. When a Matter controller writes **SystemMode** or **HeaterTypes**, the endpoint runs the same **HeatDemand** sync logic.
+``setSystemMode()``, ``setBoostState()``, and ``setWaterHeaterMode()`` update **HeatDemand**. A controller **SystemMode** write does the same sync. Only Off and Heat are accepted.
 
-**HeaterTypes**, **HeatDemand**, **TankVolume**, **TankPercentage**, **EstimatedHeatRequired**, and **BoostState** are code-driven (the WHM Delegate). Do not write them with ``updateAttributeVal()``; CHIP and the hub read the Arduino cache. The setters report changes to subscribers.
+**HeaterTypes**, **HeatDemand**, **TankVolume**, **TankPercentage**, **EstimatedHeatRequired**, and **BoostState** are code-driven (the WHM Delegate). Do not write them with ``updateAttributeVal()``; CHIP and the hub read the Arduino cache. The setters report changes to subscribers. **HeaterTypes** is not client-writable.
 
-A controller **Boost** command is handled by the Water Heater Management delegate: it sets **BoostState** to Active, optionally applies a temporary heating setpoint, arms a duration timer (``duration`` ``0`` means no auto-timeout), and can cancel itself when **oneShot** is set and the local temperature (and optional target tank percentage) has been reached. **CancelBoost** and ``setBoostState(BOOST_INACTIVE)`` restore a temporary setpoint and emit **BoostEnded**. **EmergencyBoost** and **TargetReheat** are accepted but not acted on yet.
+A controller **Boost** sets **BoostState** to Active, may apply a temporary heating setpoint, and arms a duration timer. ``duration`` ``0`` is a local extension: Boost stays active until **CancelBoost** or ``setBoostState(BOOST_INACTIVE)``, with no auto-timeout. **oneShot** ends Boost once the local temperature, and the target tank percentage when that field is present, has been reached. **CancelBoost** and ``setBoostState(BOOST_INACTIVE)`` restore a temporary setpoint and emit **BoostEnded**. **EmergencyBoost** is ignored: no extra heat sources are turned on, and the command still succeeds. **TargetReheat** is rejected with ``InvalidCommand``.
 
 Thermostat **SystemMode** Heat/Off is independent of Water Heater Mode (Off / Manual / Eco). A controller **Boost** does not change Water Heater Mode.
 
-``setWaterHeaterMode()`` updates the CHIP mode-base **CurrentMode** (Off / Manual / Eco). Before ``Matter.begin()`` the value is cached and applied when the mode server starts. A controller ``ChangeToMode`` command updates the same cache.
+``setWaterHeaterMode()`` updates the CHIP mode-base **CurrentMode** (Off / Manual / Eco). Before ``Matter.begin()`` the value is cached and applied when the mode server starts. A controller ``ChangeToMode`` command updates the same cache and **HeatDemand**. Mode Off stops normal heating demand; an active Boost still demands heat.
 
 setHeaterTypes / setHeatDemand
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -171,7 +173,7 @@ setHeaterTypes / setHeatDemand
 
 ``HeaterTypes`` is the product capability (which heat sources exist). ``HeatDemand`` is which of those sources are drawing power **right now** (a subset of ``HeaterTypes``, or ``0``).
 
-``setSystemMode()`` and ``setBoostState()`` call ``syncHeatDemand()``: **Boost** active or **SystemMode** Heat copies ``HeaterTypes`` into ``HeatDemand``; **SystemMode** Off with Boost inactive sets ``HeatDemand`` to ``0``. Use ``setHeatDemand()`` for finer-grained reporting while System Mode stays Heat — typically ``setHeatDemand(0)`` once the tank is at the setpoint (the element is off; the mode is still Heat). The value is stored in the Arduino cache that ``GetHeatDemand()`` returns.
+``setSystemMode()``, ``setBoostState()``, ``setWaterHeaterMode()``, and ``setHeaterTypes()`` call ``syncHeatDemand()``. **Boost** copies ``HeaterTypes`` into ``HeatDemand`` even when System Mode or Water Heater Mode is Off. Otherwise **SystemMode** Heat with Water Heater Mode not Off copies ``HeaterTypes``; every other case sets ``HeatDemand`` to ``0``. ``setHeatDemand()`` can report a subset while System Mode stays Heat (for example ``0`` once the tank is at the setpoint). The next sync replaces that subset with ``0`` or every ``HeaterTypes`` bit. The value is stored in the Arduino cache that ``GetHeatDemand()`` returns.
 
 Example Serial logs print that bitmap in words, not hex. The basic sketch prints ``on`` / ``idle``. ``MatterWaterHeaterAdvanced`` advertises every ``HeaterType_t`` bit, names them all (``Immersion 1``, ``Immersion 2``, ``Heat pump``, ``Boiler``, ``Other``; combinations use ``+``), and reports a subset while heating: **Manual** uses the boiler (a common market source), **Eco** the heat pump, **Boost** boiler plus both immersion elements, and ``idle`` when the tank is at the goal or not heating. ``OTHER`` stays in ``HeaterTypes`` so the Serial helper has a name for that bit.
 
@@ -183,7 +185,7 @@ setTankVolume / setTankPercentage
     bool setTankVolume(uint16_t tankVolume);
     bool setTankPercentage(uint8_t tankPercentage);
 
-``begin()`` provisions the optional WHM features so the Delegate can serve these attributes. The setters update the Arduino cache (``GetTankVolume()`` / ``GetTankPercentage()``) and report; they do not use the ember store.
+``TankVolume`` is the tank capacity in litres (``uint16``). ``TankPercentage`` is 0–100; values above 100 are rejected. ``begin()`` provisions the optional WHM features so the Delegate can serve these attributes. The setters update the Arduino cache (``GetTankVolume()`` / ``GetTankPercentage()``) and report; they do not use the ember store.
 
 setEstimatedHeatRequired / getEstimatedHeatRequired
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -215,7 +217,7 @@ These Thermostat attributes are the **controller setpoint range** (the target di
     float getAbsoluteMinimumHeatingSetpoint();
     float getAbsoluteMaximumHeatingSetpoint();
 
-Call the absolute setters first when narrowing the product range. ``Min`` / ``Max`` must stay inside ``AbsMin`` / ``AbsMax``. The absolute setters themselves reject values outside **20 °C … 85 °C**, so the sketch cannot move the dial below 20 °C or above 85 °C with this API. Occupied heating setpoint writes are then clamped to the configured ``Min`` / ``Max``. A controller may cache the range at commissioning; a later change may need a re-interview before the dial updates.
+Call the absolute setters first when narrowing the product range. ``Min`` / ``Max`` must stay inside ``AbsMin`` / ``AbsMax``. The absolute setters reject values outside **20 °C … 85 °C**, and they reject a new absolute minimum above the current absolute maximum or a new absolute maximum below the current absolute minimum. A controller **OccupiedHeatingSetpoint** outside ``Min`` / ``Max`` is rejected, as are limit writes that would cross. A controller may cache the range at commissioning; a later change may need a re-interview before the dial updates.
 
 Example
 -------
