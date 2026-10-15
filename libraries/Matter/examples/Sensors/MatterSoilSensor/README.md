@@ -37,7 +37,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 - Matter protocol implementation for a soil sensor device (device type `0x0045`, Soil Measurement cluster `0x0430`)
 - Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
 - Soil moisture reporting as whole percent (0–100); no sub-percent precision
-- Automatic simulation of soil moisture readings (20% to 60% range)
+- Automatic simulation of soil moisture readings (rises from 20% to 60%, then falls back to 20%, in 1% steps)
 - Periodic sensor updates every 5 seconds
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
@@ -63,7 +63,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 2. Install ESP32 Arduino Core with Matter support
 3. ESP32 Arduino libraries:
    - `Matter`
-   - `Wi-Fi` (only for ESP32 and ESP32-S2)
+   - `WiFi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
@@ -112,8 +112,11 @@ QR code URL: https://project-chip.github.io/connectedhomeip/qrcode.html?data=...
 ...
 [ready] net=wifi commissioned=Y connected=Y controller=Y
 Controller CASE session is up.
+Current Soil Moisture is 20%
 Current Soil Moisture is 21%
-Current Soil Moisture is 22%
+...
+Current Soil Moisture is 60%
+Current Soil Moisture is 59%
 ...
 ```
 
@@ -125,7 +128,7 @@ Current Soil Moisture is 22%
 
 ### Sensor Simulation
 
-The example cycles soil moisture from 20% to 60% in 1% steps every 5 seconds. Map your probe reading to 0–100 before calling `setSoilMoisture()`.
+The example starts at 20% and changes by 1% every 5 seconds, rising to 60% and then falling back to 20%. Map your probe reading to 0–100 before calling `setSoilMoisture()`.
 
 ### Smart Home Integration
 

@@ -32,15 +32,21 @@ MatterButton button;
 
 // Simulate a soil moisture sensor - add your preferred soil moisture sensor library code here
 uint8_t getSimulatedSoilMoisture() {
-  // The Soil Measurement cluster only reports whole percent [0..100]
+  // Whole percent [0..100]. Sweeps 20%..60% up, then down, in 1% steps.
   static uint8_t simulatedSoilMoistureHWSensor = 20;
+  static int8_t direction = 1;
 
-  simulatedSoilMoistureHWSensor++;
-  if (simulatedSoilMoistureHWSensor > 60) {
-    simulatedSoilMoistureHWSensor = 20;
+  uint8_t reading = simulatedSoilMoistureHWSensor;
+  int16_t next = (int16_t)simulatedSoilMoistureHWSensor + direction;
+  if (next >= 60) {
+    next = 60;
+    direction = -1;
+  } else if (next <= 20) {
+    next = 20;
+    direction = 1;
   }
-
-  return simulatedSoilMoistureHWSensor;
+  simulatedSoilMoistureHWSensor = (uint8_t)next;
+  return reading;
 }
 
 void setup() {
@@ -52,7 +58,7 @@ void setup() {
   matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD);
 #endif
 
-  // Live Soil Measurement cluster exists only after Matter.begin(); set readings after start.
+  // Simulated Sensor - it shall initially print 20% and then rise to 60% and fall back to 20% in 1% steps
   SoilSensor.begin();
 
   matterSetExampleIdentity("Soil Sensor");
