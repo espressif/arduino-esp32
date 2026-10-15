@@ -77,20 +77,20 @@ jobs:
       chunks: ${{ steps.set-chunks.outputs.chunks }}
     steps:
       - name: Install universal-ctags
-        uses: awalsh128/cache-apt-pkgs-action@2c09a5e66da6c8016428a2172bd76e5e4f14bb17 # v1.5.3
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
         with:
           packages: libicu74 libjansson4 libxml2 libyaml-0-2 universal-ctags
           version: 1
           execute_install_scripts: true
 
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 2
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
 
       - name: Check if official variants changed
         id: check-variants
@@ -116,7 +116,7 @@ jobs:
           python3 ./.github/scripts/get_affected.py $extra_flags ${{ steps.changed-files.outputs.all_changed_files }} > affected_sketches.txt
 
       - name: Upload affected sketches
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: affected_sketches
@@ -124,7 +124,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload debug artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: get_affected_debug
@@ -148,13 +148,13 @@ jobs:
         chunk: ${{ fromJson(needs.gen-chunks.outputs.chunks) }}
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.x"
 
       - name: Get libs cache
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
           path: |
@@ -181,7 +181,7 @@ jobs:
         run: echo "COMPILE_COMMANDS_DIR=${{ github.workspace }}/compile_commands" >> $GITHUB_ENV
 
       - name: Download affected sketches
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: affected_sketches
 
@@ -190,7 +190,7 @@ jobs:
 
       #Upload cli compile json as artifact
       - name: Upload cli compile json
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pr_cli_compile_${{ matrix.chunk }}
           path: cli_compile_${{ matrix.chunk }}.json
@@ -198,7 +198,7 @@ jobs:
 
       - name: Upload compile commands
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: compile_commands_${{ matrix.chunk }}
           path: compile_commands/
@@ -217,9 +217,9 @@ jobs:
         os: [windows-latest, macOS-latest]
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.x"
 
@@ -243,7 +243,7 @@ jobs:
     steps:
       # Check out repository
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           fetch-depth: "0"
@@ -262,7 +262,7 @@ jobs:
           echo "dir=$dir" >> "$GITHUB_OUTPUT"
 
       - name: Download sketches reports artifact
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: pr_cli_compile_*
           merge-multiple: true
@@ -301,7 +301,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download compile commands artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: compile_commands_*
           merge-multiple: true
@@ -322,7 +322,7 @@ jobs:
 
       - name: Upload merged compile commands
         if: steps.check-files.outputs.has_files == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: compile_commands
           path: compile_commands.json
@@ -340,7 +340,7 @@ jobs:
         run: echo $PR_NUM > pr_num.txt
 
       - name: Upload PR number
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pr_number
           path: ./pr_num.txt
