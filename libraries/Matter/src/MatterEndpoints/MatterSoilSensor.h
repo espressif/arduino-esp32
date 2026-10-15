@@ -44,7 +44,8 @@ public:
 
   // set the soil moisture percent [0..100]
   bool setSoilMoisture(uint8_t soilMoisturePercent);
-  // returns the last cached soil moisture percent [0..100] (last successful setSoilMoisture() or pending cache)
+  // returns the cached soil moisture percent [0..100]. This is 0 until the first setSoilMoisture().
+  // The cluster attribute stays null until a publish succeeds.
   uint8_t getSoilMoisture() {
     return soilMoisture;
   }
@@ -68,6 +69,8 @@ protected:
 
   bool started = false;
   bool hasPendingMoistureReport = false;
+  // true only after SetSoilMoistureMeasuredValue() succeeds for the cached percent
+  bool moisturePublished = false;
   uint8_t soilMoisture = 0;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

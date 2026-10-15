@@ -105,6 +105,7 @@ bool MatterSoilSensor::createSoilSensorEndpoint() {
   started = true;
   soilMoisture = 0;
   hasPendingMoistureReport = false;
+  moisturePublished = false;
 
   return true;
 }
@@ -131,6 +132,7 @@ bool MatterSoilSensor::begin(uint8_t initialSoilMoisturePercent) {
     started = false;
     soilMoisture = 0;
     hasPendingMoistureReport = false;
+    moisturePublished = false;
     return false;
   }
 
@@ -140,6 +142,7 @@ bool MatterSoilSensor::begin(uint8_t initialSoilMoisturePercent) {
 void MatterSoilSensor::end() {
   started = false;
   hasPendingMoistureReport = false;
+  moisturePublished = false;
 }
 
 void MatterSoilSensor::onStackStarted() {
@@ -156,7 +159,9 @@ void MatterSoilSensor::onStackStarted() {
   SoilMoistureValue val(soilMoisture);
   if (SoilMeasurement::SetSoilMoistureMeasuredValue(getEndPointId(), val) != CHIP_NO_ERROR) {
     log_e("Failed to apply cached Soil Sensor moisture value after Matter.begin().");
+    return;
   }
+  moisturePublished = true;
 }
 
 bool MatterSoilSensor::setSoilMoisture(uint8_t soilMoisturePercent) {
@@ -169,14 +174,14 @@ bool MatterSoilSensor::setSoilMoisture(uint8_t soilMoisturePercent) {
     return false;
   }
 
-  if (soilMoisture == soilMoisturePercent && findRegisteredCluster(SoilMeasurement::Id) != nullptr) {
-    hasPendingMoistureReport = true;
+  if (moisturePublished && soilMoisture == soilMoisturePercent && findRegisteredCluster(SoilMeasurement::Id) != nullptr) {
     return true;
   }
 
   if (findRegisteredCluster(SoilMeasurement::Id) == nullptr) {
     soilMoisture = soilMoisturePercent;
     hasPendingMoistureReport = true;
+    moisturePublished = false;
     return true;
   }
 
@@ -188,6 +193,7 @@ bool MatterSoilSensor::setSoilMoisture(uint8_t soilMoisturePercent) {
   }
   soilMoisture = soilMoisturePercent;
   hasPendingMoistureReport = true;
+  moisturePublished = true;
   log_v("Soil Sensor set to %u Percent", soilMoisturePercent);
 
   return true;
