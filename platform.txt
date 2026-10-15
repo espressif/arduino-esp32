@@ -134,11 +134,11 @@ recipe.hooks.prebuild.4.pattern=/usr/bin/env bash -c "[ -f "{build.source.path}"
 recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\bootloader.bin" ( COPY /y "{build.source.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( IF EXIST "{build.variant.path}\{build.custom_bootloader}.bin" ( COPY "{build.variant.path}\{build.custom_bootloader}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( "{tools.esptool_py.path}\{tools.esptool_py.cmd}" {recipe.hooks.prebuild.4.pattern_args} "{build.path}\{build.project_name}.bootloader.bin" "{compiler.sdk.path}\bin\bootloader_{build.boot}_{build.boot_freq}.elf" ) )
 
 # Check if custom build options exist in the sketch folder
-recipe.hooks.prebuild.5.pattern=/usr/bin/env bash -c "[ ! -f "{build.source.path}"/build_opt.h ] || cp -f "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h"
-recipe.hooks.prebuild.6.pattern=/usr/bin/env bash -c "[ -f "{build.path}"/build_opt.h ] || : > "{build.path}"/build_opt.h"
+recipe.hooks.prebuild.5.pattern=/usr/bin/env bash -c "[ ! -f "{build.source.path}"/build_opt.h ] || cmp -s "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h || cp -f "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h"
+recipe.hooks.prebuild.6.pattern=/usr/bin/env bash -c "[ -f "{build.source.path}"/build_opt.h ] || ( [ -f "{build.path}"/build_opt.h ] && [ ! -s "{build.path}"/build_opt.h ] ) || : > "{build.path}"/build_opt.h"
 
-recipe.hooks.prebuild.5.pattern.windows=cmd /c if exist "{build.source.path}\build_opt.h" COPY /y "{build.source.path}\build_opt.h" "{build.path}\build_opt.h"
-recipe.hooks.prebuild.6.pattern.windows=cmd /c if not exist "{build.path}\build_opt.h" type nul > "{build.path}\build_opt.h"
+recipe.hooks.prebuild.5.pattern.windows=cmd /c if exist "{build.source.path}\build_opt.h" ( fc /b "{build.source.path}\build_opt.h" "{build.path}\build_opt.h" >nul 2>nul || COPY /y "{build.source.path}\build_opt.h" "{build.path}\build_opt.h" )
+recipe.hooks.prebuild.6.pattern.windows=cmd /c if not exist "{build.source.path}\build_opt.h" ( if not exist "{build.path}\build_opt.h" ( type nul > "{build.path}\build_opt.h" ) else ( for %I in ( "{build.path}\build_opt.h" ) do if not %~zI==0 type nul > "{build.path}\build_opt.h" ) )
 
 # Set -DARDUINO_CORE_BUILD only on core file compilation
 file_opts.path={build.path}/file_opts

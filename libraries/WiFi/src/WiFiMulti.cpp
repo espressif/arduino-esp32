@@ -64,7 +64,7 @@ bool WiFiMulti::addAP(const char *ssid, const char *passphrase) {
 #endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
   WifiAPlist_t newAP;
 
-  if (!ssid || *ssid == '\0' || strlen(ssid) > 31) {
+  if (!ssid || *ssid == '\0' || strlen(ssid) > 32) {
     // fail SSID too long or missing!
     log_e("[WIFI][APlistAdd] no ssid or ssid too long");
     return false;
