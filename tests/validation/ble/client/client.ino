@@ -345,7 +345,7 @@ bool scanForServer() {
   BLEScan scan = BLE.getScan();
   scan.onResult([&](BLEAdvertisedDevice dev) {
     syncPhaseFromHost();
-    if (dev.getName() == targetName) {
+    if (!found && dev.getName() == targetName) {
       Serial.println("[CLIENT] Found target server!");
       targetAddr = dev.getAddress();
       found = true;
@@ -355,9 +355,15 @@ bool scanForServer() {
 
   for (int attempt = 1; attempt <= 5 && !found; attempt++) {
     Serial.printf("[CLIENT] Scanning (attempt %d)...\n", attempt);
+    scan.clearDuplicateCache();
     scan.start(5000);
+    unsigned long startMs = millis();
+    while (!found && millis() - startMs < 5000) {
+      delay(50);
+    }
     if (!found) {
-      delay(1000);
+      scan.stop();
+      delay(200);
     }
   }
   scan.resetCallbacks();
@@ -544,6 +550,12 @@ void setup() {
       for (int i = 1; i <= 2; i++) {
         reportLongRead("Long read", i, longChr.readValue());
       }
+      String boundaryVal = longChr.readValue();
+      uint16_t expectedBoundaryLen = client.getMTU() > 1 ? (client.getMTU() - 1) : 512;
+      Serial.printf(
+        "[CLIENT] Long read boundary: len=%u expected=%u gen=%c uniform=%d\n", (unsigned)boundaryVal.length(), (unsigned)expectedBoundaryLen,
+        boundaryVal.length() ? boundaryVal[0] : '?', (int)valueIsUniform(boundaryVal)
+      );
     }
 
     // The server rewrites this value continuously during Phase 4.
@@ -2037,11 +2049,22 @@ void setup() {
 
       strCheck(BLEUUID("180D").bitSize() == 16);
       strCheck(BLEUUID("0000180D").bitSize() == 32);
+      constexpr BLEUUID cUuidEmpty;
+      constexpr BLEUUID cUuid16 = BLEUUID::from16(0x180D);
+      constexpr BLEUUID cUuid128(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+      static_assert(!cUuidEmpty.isValid());
+      static_assert(cUuid16.isValid() && cUuid16.bitSize() == 16);
+      static_assert(cUuid128.isValid() && cUuid128.bitSize() == 128);
+      strCheck(cUuid16 == BLEUUID(static_cast<uint16_t>(0x180D)) && cUuid16.toUint16() == 0x180D);
+      strCheck(cUuid128 == BLEUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e"));
       BLERemoteService goodStr = ec.getService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
       strCheck(goodStr && good && goodStr.getUUID() == good.getUUID());
+      strCheck(good.getClient() && good.getClient().isConnected());
+      BLERemoteDescriptor detachedDesc;
       if (goodStr) {
         BLERemoteCharacteristic rwStr = goodStr.getCharacteristic("beb5483e-36e1-4688-b7f5-ea07361b26a8");
         strCheck(rwStr && rwStr.getUUID() == rwCharUUID);
+        strCheck(rwStr.getRemoteService() && rwStr.getRemoteService().getUUID() == goodStr.getUUID());
         String valByClient = ec.getValue("4fafc201-1fb5-459e-8fcc-c5c9c331914b", "beb5483e-36e1-4688-b7f5-ea07361b26a8");
         strCheck(valByClient.length() > 0);
         String valBySvc = goodStr.getValue("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -2059,6 +2082,8 @@ void setup() {
         if (descStr) {
           BLERemoteDescriptor roStr = descStr.getDescriptor("b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91");
           strCheck(static_cast<bool>(roStr));
+          strCheck(roStr.getRemoteCharacteristic() && roStr.getRemoteCharacteristic().getUUID() == descStr.getUUID());
+          detachedDesc = roStr;
         }
       }
 
@@ -2092,6 +2117,11 @@ void setup() {
       ec.disconnect();
       delay(1500);
       Serial.printf("[CLIENT] Phase23 postDisc isConnected=%d\n", (int)ec.isConnected());
+      strCheck(!good.getClient());
+      good = BLERemoteService();
+      goodStr = BLERemoteService();
+      strCheck(!rwC.getRemoteService());
+      strCheck(detachedDesc && !detachedDesc.getRemoteCharacteristic() && !detachedDesc.writeValue("x"));
       BTStatus rwAfter = rwC.writeValue(String("after"));
       Serial.printf("[CLIENT] Phase23 writeAfterDisc ok=%d\n", (int)(bool)rwAfter);
 

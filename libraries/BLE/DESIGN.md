@@ -212,9 +212,8 @@ BLE objects form strict ownership trees:
 - Client → RemoteService → RemoteCharacteristic → RemoteDescriptor
 
 Parent Impls hold `std::shared_ptr` to child Impls (strong ownership).
-Local server-side child Impls hold a raw `Impl*` back-reference to their parent.
-Before `end()` or a removal API releases the local tree's ownership, the library clears every raw back-reference and converts any externally retained child handle into a detached shell.
-Remote client-side child Impls instead hold a `std::weak_ptr` back-reference. A retained remote child can therefore safely outlive its client or parent handle; parent navigation then returns an empty handle and operations that require the connection fail safely.
+Child Impls (both local server-side and remote client-side) hold a raw `Impl*` back-reference to their parent.
+Before `end()`, a disconnect/removal API, or parent destruction releases a tree's ownership, the library clears every raw back-reference and converts any externally retained child handle into a detached shell; parent navigation then returns an empty handle and operations that require the parent/connection fail safely.
 Each remote service also captures the client's connection generation, so recycling a native connection handle cannot make a stale remote tree operate on a later link.
 Using `shared_ptr` in both directions would create reference cycles and leak everything.
 
@@ -225,7 +224,7 @@ This solves two problems that arise because internal code often holds only a raw
 
 1. **Callback dispatch** — Backend event handlers (static C callbacks from NimBLE/Bluedroid) receive a raw `Impl*` via context pointers. To invoke the user's `std::function` callback they must construct a public handle (e.g. `BLECharacteristic`), which requires a `shared_ptr<Impl>`. `shared_from_this()` safely promotes the raw pointer without creating a second ownership group.
 
-2. **Local child-to-parent navigation** — Methods like `BLEDescriptor::getCharacteristic()` and `BLEService::getServer()` need to return a public handle from the non-owning raw parent `Impl*`. `shared_from_this()` on the parent Impl produces the `shared_ptr` needed to construct that handle. Remote children lock their weak parent reference instead.
+2. **Child-to-parent navigation** — Methods like `BLEDescriptor::getCharacteristic()`, `BLEService::getServer()`, and `BLERemoteCharacteristic::getRemoteService()` need to return a public handle from the non-owning raw parent `Impl*`. `shared_from_this()` on the parent Impl produces the `shared_ptr` needed to construct that handle.
 
 **Safety constraint:** `shared_from_this()` may only be called on an Impl that is already owned by at least one `shared_ptr`. This is always the case in practice because Impls are created via `std::make_shared` in factory methods (`createServer`, `createService`, etc.) and the parent keeps the owning `shared_ptr` alive for the entire lifetime of the child.
 

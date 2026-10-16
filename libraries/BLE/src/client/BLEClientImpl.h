@@ -50,6 +50,8 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   std::vector<std::shared_ptr<BLERemoteService::Impl>> discoveredServices;
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
+  void clearDiscoveredServices();
+
   BLEClient::ConnectHandler onConnectCb = nullptr;
   BLEClient::DisconnectHandler onDisconnectCb = nullptr;
   BLEClient::ConnectFailHandler onConnectFailCb = nullptr;
@@ -58,6 +60,7 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   BLEClient::IdentityHandler onIdentityCb = nullptr;
 
   ~BLEClientImplCommon() {
+    clearDiscoveredServices();
     if (mtx) {
       vSemaphoreDelete(mtx);
     }

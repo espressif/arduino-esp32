@@ -76,12 +76,16 @@ struct BLERemoteCharacteristic::Impl : BLERemoteCharacteristicImplCommon {
   BLESync writeSync{"writeSync"};
   BLESync dscDiscoverSync{"dscDiscoverSync"};
 
+  ~Impl();
+
   static int readCb(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
   static int writeCb(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
   static int dscDiscoveryCb(uint16_t connHandle, const struct ble_gatt_error *error, uint16_t chrHandle, const struct ble_gatt_dsc *dsc, void *arg);
-  static int onNotifyCb_static(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
 
-  static void registerForNotify(uint16_t connHandle, uint16_t attrHandle, const std::shared_ptr<BLERemoteCharacteristic::Impl> &impl);
+  static void (*clearNotifyRoutesHook)(uint16_t connHandle);
+  static void (*handleNotifyRxHook)(uint16_t connHandle, uint16_t attrHandle, struct os_mbuf *om, bool isNotify);
+
+  static void registerForNotify(uint16_t connHandle, uint16_t attrHandle, BLERemoteCharacteristic::Impl *impl);
   static void unregisterForNotify(uint16_t connHandle, uint16_t attrHandle);
   static void clearNotifyRoutes(uint16_t connHandle);
   static void handleNotifyRx(uint16_t connHandle, uint16_t attrHandle, struct os_mbuf *om, bool isNotify);

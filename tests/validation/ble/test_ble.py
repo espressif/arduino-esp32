@@ -170,6 +170,15 @@ def _phase_gatt_rw(server, client):
     # Blob. onRead must run once per read: a value stitched from several onRead
     # calls is not uniform, and an extra call shifts the second read past 'B'.
     _expect_long_reads(client, "Long read", "AB")
+    m_bnd = client.expect(
+        r"\[CLIENT\] Long read boundary: len=(\d+) expected=(\d+) gen=(\S) uniform=([01])",
+        timeout=15,
+    )
+    assert int(m_bnd.group(1)) == int(m_bnd.group(2)), (
+        f"Exact (MTU-1) long read returned {int(m_bnd.group(1))} bytes, expected {int(m_bnd.group(2))}"
+    )
+    assert m_bnd.group(3).decode() == "C", f"Exact (MTU-1) long read gen={m_bnd.group(3).decode()}, expected 'C'"
+    assert int(m_bnd.group(4)) == 1, "Exact (MTU-1) long read was corrupted by concurrent setValue()"
 
     # The server rewrites this value every few ms, so without a per-connection
     # copy the Read Blob would return the tail of a newer value.

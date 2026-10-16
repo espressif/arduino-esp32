@@ -42,20 +42,20 @@
 
 namespace {
 
-std::shared_ptr<BLEClient::Impl> remoteClient(const std::shared_ptr<BLERemoteService::Impl> &service) {
+BLEClient::Impl *remoteClient(const BLERemoteService::Impl *service) {
   if (!service) {
     return nullptr;
   }
-  auto client = service->client.lock();
+  auto *client = service->client;
   return client && client->connected && client->connectionGeneration.load() == service->clientGeneration ? client : nullptr;
 }
 
-std::shared_ptr<BLEClient::Impl> remoteClient(const std::shared_ptr<BLERemoteCharacteristic::Impl> &chr) {
-  return chr ? remoteClient(chr->service.lock()) : nullptr;
+BLEClient::Impl *remoteClient(const std::shared_ptr<BLERemoteCharacteristic::Impl> &chr) {
+  return chr ? remoteClient(chr->service) : nullptr;
 }
 
-std::shared_ptr<BLEClient::Impl> remoteClient(const std::shared_ptr<BLERemoteDescriptor::Impl> &desc) {
-  return desc ? remoteClient(desc->chr.lock()) : nullptr;
+BLEClient::Impl *remoteClient(const std::shared_ptr<BLERemoteDescriptor::Impl> &desc) {
+  return (desc && desc->chr) ? remoteClient(desc->chr->service) : nullptr;
 }
 
 }  // namespace
@@ -67,7 +67,7 @@ BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &uuid)
   BLE_CHECK_IMPL(BLERemoteCharacteristic());
 
   // Discover characteristics if not yet done
-  auto client = impl.client.lock();
+  auto *client = impl.client;
   if (!impl.characteristicsDiscovered && client && client->connected) {
     uint16_t count = 0;
     esp_gatt_status_t st =
@@ -84,7 +84,7 @@ BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &uuid)
           cImpl->handle = chars[i].char_handle;
           cImpl->defHandle = chars[i].char_handle;
           cImpl->properties = chars[i].properties;
-          cImpl->service = _impl;
+          cImpl->service = _impl.get();
           impl.characteristics.push_back(cImpl);
         }
       }
@@ -108,7 +108,7 @@ std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() cons
   }
 
   // Trigger discovery through non-const cast (discovery is a lazy-init pattern)
-  auto client = _impl->client.lock();
+  auto *client = _impl->client;
   if (!_impl->characteristicsDiscovered && client && client->connected) {
     auto *self = const_cast<BLERemoteService *>(this);
     self->getCharacteristic(BLEUUID(static_cast<uint16_t>(0)));  // triggers discovery
@@ -243,7 +243,7 @@ bool BLERemoteCharacteristic::readInto(uint32_t timeoutMs) {
 
     if (retry == 0 && isAuthGattStatus(client->lastReadStatus)) {
       log_d("RemoteCharacteristic %s: auth error on read, initiating security", _impl->uuid.toString().c_str());
-      if (!initiateSecurityAndWait(client.get())) {
+      if (!initiateSecurityAndWait(client)) {
         log_w("RemoteCharacteristic %s: security initiation failed", _impl->uuid.toString().c_str());
         return false;
       }
@@ -264,9 +264,6 @@ BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *data, size_t len, bo
   auto client = remoteClient(_impl);
   if (!client) {
     return BTStatus::InvalidState;
-  }
-  if (!client->connected) {
-    return BTStatus::NotConnected;
   }
 
   log_d("RemoteCharacteristic %s: write len=%u withResponse=%d (connId=%u)", _impl->uuid.toString().c_str(), len, withResponse, client->connId.load());
@@ -300,7 +297,7 @@ BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *data, size_t len, bo
 
     if (retry == 0 && isAuthGattStatus(client->lastWriteStatus)) {
       log_d("RemoteCharacteristic %s: auth error on write, initiating security", _impl->uuid.toString().c_str());
-      if (!initiateSecurityAndWait(client.get())) {
+      if (!initiateSecurityAndWait(client)) {
         return BTStatus::AuthFailed;
       }
       continue;
@@ -320,14 +317,11 @@ BTStatus BLERemoteCharacteristic::subscribe(bool notifications, NotifyCallback c
   if (!client) {
     return BTStatus::InvalidState;
   }
-  if (!client->connected) {
-    return BTStatus::NotConnected;
-  }
 
   log_d("RemoteCharacteristic %s: subscribe %s (connId=%u)", _impl->uuid.toString().c_str(), notifications ? "notify" : "indicate", client->connId.load());
   {
     BLELockGuard lock(client->mtx);
-    _impl->onNotifyCb = callback;
+    _impl->onNotifyCb = std::move(callback);
   }
 
   // Register for notifications/indications with the Bluedroid stack
@@ -356,9 +350,6 @@ BTStatus BLERemoteCharacteristic::unsubscribe() {
   auto client = remoteClient(_impl);
   if (!client) {
     return BTStatus::InvalidState;
-  }
-  if (!client->connected) {
-    return BTStatus::NotConnected;
   }
 
   log_d("RemoteCharacteristic %s: unsubscribe (connId=%u)", _impl->uuid.toString().c_str(), client->connId.load());
@@ -406,7 +397,7 @@ BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &uuid) 
           auto dImpl = std::make_shared<BLERemoteDescriptor::Impl>();
           dImpl->uuid = bluedroidUuidToPublic(descs[i].uuid);
           dImpl->handle = descs[i].handle;
-          dImpl->chr = _impl;
+          dImpl->chr = _impl.get();
           impl.descriptors.push_back(dImpl);
         }
       }
@@ -535,9 +526,6 @@ BTStatus BLERemoteDescriptor::writeValue(const uint8_t *data, size_t len, bool w
   auto client = remoteClient(_impl);
   if (!client) {
     return BTStatus::InvalidState;
-  }
-  if (!client->connected) {
-    return BTStatus::NotConnected;
   }
 
   esp_gatt_write_type_t writeType = withResponse ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP;

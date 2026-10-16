@@ -46,7 +46,7 @@ void BLEClient::onConnect(ConnectHandler handler) {
 #if BLE_GATT_CLIENT_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onConnectCb = handler;
+  impl.onConnectCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT client disabled)", __func__);
@@ -57,7 +57,7 @@ void BLEClient::onDisconnect(DisconnectHandler handler) {
 #if BLE_GATT_CLIENT_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onDisconnectCb = handler;
+  impl.onDisconnectCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT client disabled)", __func__);
@@ -68,7 +68,7 @@ void BLEClient::onConnectFail(ConnectFailHandler handler) {
 #if BLE_GATT_CLIENT_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onConnectFailCb = handler;
+  impl.onConnectFailCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT client disabled)", __func__);
@@ -79,7 +79,7 @@ void BLEClient::onMtuChanged(MtuChangedHandler handler) {
 #if BLE_GATT_CLIENT_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onMtuChangedCb = handler;
+  impl.onMtuChangedCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT client disabled)", __func__);
@@ -90,7 +90,7 @@ void BLEClient::onConnParamsUpdateRequest(ConnParamsReqHandler handler) {
 #if BLE_GATT_CLIENT_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onConnParamsReqCb = handler;
+  impl.onConnParamsReqCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT client disabled)", __func__);
@@ -101,7 +101,7 @@ void BLEClient::onIdentity(IdentityHandler handler) {
 #if BLE_GATT_CLIENT_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onIdentityCb = handler;
+  impl.onIdentityCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT client disabled)", __func__);

@@ -38,10 +38,9 @@
 // BLECharacteristic notification & descriptor helpers (Bluedroid)
 // --------------------------------------------------------------------------
 
-// Hands one notification (need_confirm=false) to the stack, or holds it if an
-// indication on the same characteristic is currently in flight on connHandle
-// (so ESP_GATTS_CONF_EVT can distinguish indication confirmations from
-// notification completions).
+// Hands one notification (need_confirm=false) to the stack and records it in
+// pendingNotifies so ESP_GATTS_CONF_EVT can distinguish local notification
+// completions from peer indication confirmations without delaying notifications.
 BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length) {
   BLEServer::Impl *server = impl.activeServer();
   if (!server) {
@@ -49,50 +48,20 @@ BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t con
   }
 
   esp_err_t err = ESP_OK;
-  bool wasHeld = false;
-  bool wasFull = false;
-  bool pumpAfterReject = false;
   {
     BLELockGuard serverLock(server->mtx);
     if (!server->active || !server->started || server->gattsIf == ESP_GATT_IF_NONE || !server->connFind(connHandle) || !server->characteristicCanSend(&impl)) {
       return BTStatus::InvalidState;
     }
-    auto *link = server->indicationLink(connHandle);
-    if (link && link->inFlight.get() == &impl) {
-      auto &ns = server->notifyStateFor(connHandle);
-      if (ns.heldNotifies.size() >= BLEServer::Impl::kMaxHeldNotifications) {
-        wasFull = true;
-      } else {
-        ns.heldNotifies.push_back({impl.shared_from_this(), std::vector<uint8_t>(data, data + length)});
-        wasHeld = true;
-      }
-    } else {
-      auto &ns = server->notifyStateFor(connHandle);
-      ns.notifiesPending++;
-      err = esp_ble_gatts_send_indicate(server->gattsIf, connHandle, impl.handle, length, const_cast<uint8_t *>(data), false);
-      if (err != ESP_OK) {
-        if (--ns.notifiesPending == 0 && ns.pumpWaiting) {
-          ns.pumpWaiting = false;
-          pumpAfterReject = true;
-        }
-      }
+    err = esp_ble_gatts_send_indicate(server->gattsIf, connHandle, impl.handle, length, const_cast<uint8_t *>(data), false);
+    if (err == ESP_OK) {
+      server->addPendingNotify(connHandle, impl.handle);
     }
   }
 
-  if (wasHeld) {
-    return BTStatus::OK;
-  }
-  if (wasFull) {
-    log_w("Characteristic %s: notify conn=%u - too many held behind an unconfirmed indication", impl.uuid.toString().c_str(), connHandle);
-    impl.dispatchStatus(BLECharacteristic::ERROR_GATT, 0);
-    return BTStatus::Busy;
-  }
   if (err != ESP_OK) {
     log_e("Characteristic %s: esp_ble_gatts_send_indicate (notify) conn=%u: %s", impl.uuid.toString().c_str(), connHandle, esp_err_to_name(err));
     impl.dispatchStatus((err == ESP_ERR_INVALID_STATE) ? BLECharacteristic::ERROR_NO_CLIENT : BLECharacteristic::ERROR_GATT, static_cast<uint32_t>(err));
-    if (pumpAfterReject) {
-      server->pumpIndications(connHandle);
-    }
     return BTStatus::Fail;
   }
   return BTStatus::OK;

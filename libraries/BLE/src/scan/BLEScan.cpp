@@ -83,7 +83,7 @@ bool BLEScan::isScanning() const {
 void BLEScan::onResult(ResultHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.onResultCb = callback;
+  impl.onResultCb = std::move(callback);
 #else
   (void)callback;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -93,7 +93,7 @@ void BLEScan::onResult(ResultHandler callback) {
 void BLEScan::onComplete(CompleteHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.onCompleteCb = callback;
+  impl.onCompleteCb = std::move(callback);
 #else
   (void)callback;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -114,7 +114,7 @@ void BLEScan::resetCallbacks() {
 void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.periodicSyncCb = handler;
+  impl.periodicSyncCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -124,7 +124,7 @@ void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.periodicReportCb = handler;
+  impl.periodicReportCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -134,7 +134,7 @@ void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.periodicLostCb = handler;
+  impl.periodicLostCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (scanning disabled)", __func__);

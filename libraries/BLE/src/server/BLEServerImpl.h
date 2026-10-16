@@ -65,12 +65,13 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
   // read (ATT_READ_REQ followed by ATT_READ_BLOB_REQs; Core Vol 3 Part F §3.2.9).
   // Because ATT is strictly sequential per bearer, at most one long read can be
   // in progress per connection at any time. Guarded by mtx.
+  static constexpr size_t kMaxLongReads = 9;
   struct LongReadState {
     uint16_t connHandle = 0;
     uint16_t attrHandle = 0;
     std::vector<uint8_t> value;
   };
-  std::vector<LongReadState> longReads;
+  LongReadState longReads[kMaxLongReads];
 
   // Outgoing indications, per connection. ATT allows one unconfirmed indication
   // per bearer (Core Vol 3 Part F §3.3.2) and neither stack queues the next one,
@@ -94,13 +95,16 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
   uint32_t indicationSeq = 0;
   std::vector<IndicationLink> indicationLinks;
 
+  bool (*indicationDoneHook)(BLEServerImplCommon *, uint16_t connHandle, uint16_t attrHandle, BLECharacteristic::NotifyStatus status, uint32_t code) = nullptr;
+  bool (*indicationBusyHook)(BLEServerImplCommon *, uint16_t connHandle, uint16_t attrHandle, uint32_t code) = nullptr;
+  void (*retryIndicationsHook)(BLEServerImplCommon *) = nullptr;
+  void (*dropIndicationsHook)(BLEServerImplCommon *, uint16_t connHandle) = nullptr;
+  bool (*serviceHasPendingSendsHook)(BLEServerImplCommon *, const BLEService::Impl *svc) = nullptr;
+
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
-  ~BLEServerImplCommon() {
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
-  }
+  BLEServerImplCommon();
+  ~BLEServerImplCommon();
 
   // Connection table helpers. Caller must hold mtx.
 
@@ -141,7 +145,7 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
    * @brief Drop the long-read snapshot for @p connHandle once the final Read Blob is served.
    * @note Caller holds @c mtx.
    */
-  void finishLongRead(uint16_t connHandle, uint16_t offset, uint16_t mtu);
+  void finishLongRead(uint16_t connHandle, uint16_t attrHandle, uint16_t offset, uint16_t mtu);
 
   // Indication queue. These take mtx themselves and report outcomes through the
   // characteristic's onStatus outside the lock.
@@ -221,12 +225,6 @@ enum class BLEIndicationSend : uint8_t {
   Busy,    // The stack is still waiting on an indication this queue did not send.
   Failed,  // Rejected; status/code say why.
 };
-
-/**
- * @brief Whether an indication on @p connHandle must wait for in-flight notifications to complete (Bluedroid).
- * @note Called with @c impl->mtx held.
- */
-bool bleServerDeferIndication(BLEServer::Impl *impl, uint16_t connHandle);
 
 /**
  * @brief Hand one indication to the native stack.

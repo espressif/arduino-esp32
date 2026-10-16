@@ -49,6 +49,22 @@
 // GATT access callback for characteristics
 // --------------------------------------------------------------------------
 
+static int appendLongReadToMbuf(
+  BLEServer::Impl *server, SemaphoreHandle_t attrMtx, const std::vector<uint8_t> &value, uint16_t conn_handle, uint16_t attr_handle,
+  struct ble_gatt_access_ctxt *ctxt
+) {
+  uint16_t mtu = (conn_handle != BLE_HS_CONN_HANDLE_NONE) ? ble_att_mtu(conn_handle) : 0;
+  BLELockGuard serverLock(server ? server->mtx : nullptr);
+  BLELockGuard lock(attrMtx);
+  const std::vector<uint8_t> &src = server ? server->selectLongRead(conn_handle, attr_handle, ctxt->offset, mtu, value) : value;
+  size_t copyLen = (mtu > 1 && ctxt->offset <= src.size()) ? std::min<size_t>(src.size(), static_cast<size_t>(ctxt->offset) + mtu - 1) : src.size();
+  int rc = os_mbuf_append(ctxt->om, src.data(), copyLen);
+  if (server) {
+    server->finishLongRead(conn_handle, attr_handle, ctxt->offset, mtu);
+  }
+  return (rc == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+}
+
 /**
  * @brief NimBLE GATT read/write access handler for a characteristic: invokes user read/write hooks and copies value to or from the mbuf.
  * @param conn_handle Connection handle, or @c BLE_HS_CONN_HANDLE_NONE when not connection-scoped.
@@ -97,15 +113,7 @@ int BLECharacteristic::Impl::accessCallback(uint16_t conn_handle, uint16_t attr_
         }
       }
 
-      uint16_t mtu = (conn_handle != BLE_HS_CONN_HANDLE_NONE) ? ble_att_mtu(conn_handle) : 0;
-      BLELockGuard serverLock(server ? server->mtx : nullptr);
-      BLELockGuard lock(impl->mtx);
-      const std::vector<uint8_t> &src = server ? server->selectLongRead(conn_handle, attr_handle, ctxt->offset, mtu, impl->value) : impl->value;
-      int rc = os_mbuf_append(ctxt->om, src.data(), src.size());
-      if (server) {
-        server->finishLongRead(conn_handle, ctxt->offset, mtu);
-      }
-      return (rc == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+      return appendLongReadToMbuf(server, impl->mtx, impl->value, conn_handle, attr_handle, ctxt);
     }
 
     case BLE_GATT_ACCESS_OP_WRITE_CHR:
@@ -177,15 +185,7 @@ int BLECharacteristic::Impl::descAccessCallback(uint16_t conn_handle, uint16_t a
           readCb(dsc, BLEConnInfoImpl::fromDesc(conn_desc));
         }
       }
-      uint16_t mtu = (conn_handle != BLE_HS_CONN_HANDLE_NONE) ? ble_att_mtu(conn_handle) : 0;
-      BLELockGuard serverLock(server ? server->mtx : nullptr);
-      BLELockGuard lock(desc->mtx);
-      const std::vector<uint8_t> &src = server ? server->selectLongRead(conn_handle, attr_handle, ctxt->offset, mtu, desc->value) : desc->value;
-      int rc = os_mbuf_append(ctxt->om, src.data(), src.size());
-      if (server) {
-        server->finishLongRead(conn_handle, ctxt->offset, mtu);
-      }
-      return (rc == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+      return appendLongReadToMbuf(server, desc->mtx, desc->value, conn_handle, attr_handle, ctxt);
     }
 
     case BLE_GATT_ACCESS_OP_WRITE_DSC:
@@ -387,6 +387,7 @@ static std::vector<std::vector<ble_gatt_dsc_def>> s_gattDscs;
 static std::vector<std::vector<const ble_gatt_svc_def *>> s_gattIncludes;
 
 int nimbleRegisterGattServices(const std::vector<std::shared_ptr<BLEService::Impl>> &services) {
+
   log_d("GATT: registering %u service(s)", (unsigned)services.size());
   s_gattSvcs.clear();
   s_gattChrs.clear();
@@ -399,11 +400,6 @@ int nimbleRegisterGattServices(const std::vector<std::shared_ptr<BLEService::Imp
     std::vector<ble_gatt_chr_def> chrs;
 
     for (auto &chr : svc->characteristics) {
-      if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/true)) {
-        log_e("GATT: characteristic %s rejected by validation", chr->uuid.toString().c_str());
-        return BLE_HS_EINVAL;
-      }
-
       nimbleUuidFromPublic(chr->uuid, chr->nimbleUUID);
       std::vector<ble_gatt_dsc_def> dscs;
       for (auto &dscImpl : chr->descriptors) {

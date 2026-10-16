@@ -27,6 +27,7 @@
 
 #include "BLE.h"
 
+#include "BLE.nimble.h"
 #include "server/BLEServer.nimble.h"
 #include "gatt/BLEGattAttributes.nimble.h"
 #include "types/BLEConnInfo.nimble.h"
@@ -226,10 +227,6 @@ uint16_t BLEServer::getPeerMTU(uint16_t connHandle) const {
   return ble_att_mtu(connHandle);
 }
 
-bool bleServerDeferIndication(BLEServer::Impl *, uint16_t) {
-  return false;
-}
-
 BLEIndicationSend bleServerSendIndication(
   BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
 ) {
@@ -398,7 +395,9 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         }
         shouldAdvertise = impl->advertiseOnDisconnect;
       }
-      impl->dropIndications(connHandle);
+      if (impl->dropIndicationsHook) {
+        impl->dropIndicationsHook(impl, connHandle);
+      }
       impl->dispatchDisconnect(connInfo, reason);
 
       if (shouldAdvertise) {
@@ -477,14 +476,11 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
 #if BLE_SMP_SUPPORTED
       if (status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
-        BLESecurity::Impl::deleteStaleBond(desc.peer_id_addr);
+        ble_store_util_delete_peer(&desc.peer_id_addr);
       } else if (status != 0) {
         log_w("Server: pairing/encryption failed on conn %u, host status=0x%04x", connHandle, status);
       }
-      auto *sec = BLESecurity::Impl::instance();
-      if (sec) {
-        sec->notifyAuthComplete(connInfo, status == 0);
-      }
+      nimbleForwardSecurityGapEvent(event);
 #endif /* BLE_SMP_SUPPORTED */
       return 0;
     }
@@ -513,59 +509,9 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
 #if BLE_SMP_SUPPORTED
     case BLE_GAP_EVENT_PASSKEY_ACTION:
-    {
-      uint16_t connHandle = event->passkey.conn_handle;
-
-      struct ble_gap_conn_desc desc;
-      int rc = ble_gap_conn_find(connHandle, &desc);
-      if (rc != 0) {
-        return 0;
-      }
-
-      BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(desc);
-      auto *sec = BLESecurity::Impl::instance();
-      if (!sec) {
-        return 0;
-      }
-
-      if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
-        struct ble_sm_io pkey = {};
-        pkey.action = BLE_SM_IOACT_DISP;
-        pkey.passkey = sec->resolvePasskeyForDisplay(connInfo);
-        ble_sm_inject_io(connHandle, &pkey);
-      } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
-        struct ble_sm_io pkey = {};
-        pkey.action = BLE_SM_IOACT_INPUT;
-        pkey.passkey = sec->resolvePasskeyForInput(connInfo);
-        ble_sm_inject_io(connHandle, &pkey);
-      } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
-        struct ble_sm_io pkey = {};
-        pkey.action = BLE_SM_IOACT_NUMCMP;
-        pkey.numcmp_accept = sec->resolveNumericComparison(connInfo, event->passkey.params.numcmp) ? 1 : 0;
-        ble_sm_inject_io(connHandle, &pkey);
-      }
-      return 0;
-    }
-
     case BLE_GAP_EVENT_PARING_COMPLETE:  // Name is misspelled in NimBLE
-    {
-      // Arrives before the keys are persisted, so it only reports; BLE_GAP_EVENT_ENC_CHANGE
-      // is still what drives notifyAuthComplete().
-      BLESecurity::Impl::reportPairingComplete(event->pairing_complete.conn_handle, event->pairing_complete.status);
-      return 0;
-    }
-
     case BLE_GAP_EVENT_REPEAT_PAIRING:
-    {
-      struct ble_gap_conn_desc desc;
-      int rc = ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc);
-      if (rc != 0) {
-        return BLE_GAP_REPEAT_PAIRING_IGNORE;
-      }
-
-      ble_store_util_delete_peer(&desc.peer_id_addr);
-      return BLE_GAP_REPEAT_PAIRING_RETRY;
-    }
+      return nimbleForwardSecurityGapEvent(event);
 #endif /* BLE_SMP_SUPPORTED */
 
     case BLE_GAP_EVENT_SUBSCRIBE:
@@ -654,7 +600,7 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         } else {
           result = BLECharacteristic::ERROR_INDICATE_FAILURE;
         }
-        bool completed = impl->indicationDone(connHandle, attrHandle, result, (status == BLE_HS_EDONE) ? 0 : status);
+        bool completed = impl->indicationDoneHook && impl->indicationDoneHook(impl, connHandle, attrHandle, result, (status == BLE_HS_EDONE) ? 0 : status);
         if (completed && status == BLE_HS_ETIMEOUT) {
           ble_gap_terminate(connHandle, BLE_ERR_REM_USER_CONN_TERM);
         }
@@ -689,30 +635,8 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
     }
 
 #if defined(BLE_GAP_EVENT_AUTHORIZE)
-    // Per-access authorization callback from the NimBLE stack. Triggered
-    // when an attribute was registered with BLE_GATT_CHR_F_{READ,WRITE}_AUTHOR
-    // and the connection is not yet marked as authorized via
-    // ble_gap_dev_authorization(). We route the decision into the
-    // application-supplied BLESecurity::onAuthorization() handler so the
-    // sketch can accept/reject every ATT read or write individually.
     case BLE_GAP_EVENT_AUTHORIZE:
-    {
-      uint16_t connHandle = event->authorize.conn_handle;
-      uint16_t attrHandle = event->authorize.attr_handle;
-      bool isRead = (event->authorize.is_read != 0);
-
-      BLEConnInfo conn;
-      struct ble_gap_conn_desc desc {};
-      if (ble_gap_conn_find(connHandle, &desc) == 0) {
-        conn = BLEConnInfoImpl::fromDesc(desc);
-      }
-
-      auto *sec = BLESecurity::Impl::instance();
-      bool allowed = sec ? sec->notifyAuthorization(conn, attrHandle, isRead) : false;
-      event->authorize.out_response = allowed ? BLE_GAP_AUTHORIZE_ACCEPT : BLE_GAP_AUTHORIZE_REJECT;
-      log_d("Server: BLE_GAP_EVENT_AUTHORIZE handle=%u attr=%u read=%d -> %s", connHandle, attrHandle, (int)isRead, allowed ? "ACCEPT" : "REJECT");
-      return 0;
-    }
+      return nimbleForwardSecurityGapEvent(event);
 #endif
 
     default: return 0;

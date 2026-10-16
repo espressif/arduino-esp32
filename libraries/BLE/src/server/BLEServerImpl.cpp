@@ -41,6 +41,14 @@
 // Connection helpers (shared between backends)
 // --------------------------------------------------------------------------
 
+BLEServerImplCommon::BLEServerImplCommon() = default;
+
+BLEServerImplCommon::~BLEServerImplCommon() {
+  if (mtx) {
+    vSemaphoreDelete(mtx);
+  }
+}
+
 void BLEServerImplCommon::connSet(uint16_t connHandle, const BLEConnInfo &connInfo) {
   for (auto &entry : connections) {
     if (entry.first == connHandle) {
@@ -52,9 +60,9 @@ void BLEServerImplCommon::connSet(uint16_t connHandle, const BLEConnInfo &connIn
 }
 
 void BLEServerImplCommon::connErase(uint16_t connHandle) {
-  for (auto it = longReads.begin(); it != longReads.end(); ++it) {
-    if (it->connHandle == connHandle) {
-      longReads.erase(it);
+  for (auto &lr : longReads) {
+    if (!lr.value.empty() && lr.connHandle == connHandle) {
+      lr.value.clear();
       break;
     }
   }
@@ -83,37 +91,44 @@ const std::vector<uint8_t> &BLEServerImplCommon::selectLongRead(
   uint16_t connHandle, uint16_t attrHandle, uint16_t offset, uint16_t mtu, const std::vector<uint8_t> &current
 ) {
   if (offset == 0) {
-    for (auto it = longReads.begin(); it != longReads.end(); ++it) {
-      if (it->connHandle == connHandle) {
-        if (mtu <= 1 || current.size() < static_cast<size_t>(mtu - 1)) {
-          longReads.erase(it);
-          return current;
+    bool isLong = (mtu > 1 && current.size() >= static_cast<size_t>(mtu - 1));
+    LongReadState *freeSlot = nullptr;
+    for (auto &lr : longReads) {
+      if (!lr.value.empty() && lr.connHandle == connHandle) {
+        if (isLong) {
+          lr.attrHandle = attrHandle;
+          lr.value = current;
+        } else {
+          lr.value.clear();
         }
-        it->attrHandle = attrHandle;
-        it->value = current;
-        return it->value;
+        return current;
+      }
+      if (lr.value.empty() && !freeSlot) {
+        freeSlot = &lr;
       }
     }
-    if (mtu <= 1 || current.size() < static_cast<size_t>(mtu - 1)) {
-      return current;
+    if (isLong) {
+      LongReadState *slot = freeSlot ? freeSlot : &longReads[0];
+      slot->connHandle = connHandle;
+      slot->attrHandle = attrHandle;
+      slot->value = current;
     }
-    longReads.push_back({connHandle, attrHandle, current});
-    return longReads.back().value;
+    return current;
   }
-  for (const auto &entry : longReads) {
-    if (entry.connHandle == connHandle && entry.attrHandle == attrHandle) {
-      return entry.value;
+  for (const auto &lr : longReads) {
+    if (!lr.value.empty() && lr.connHandle == connHandle && lr.attrHandle == attrHandle) {
+      return lr.value;
     }
   }
   return current;
 }
 
-void BLEServerImplCommon::finishLongRead(uint16_t connHandle, uint16_t offset, uint16_t mtu) {
-  for (auto it = longReads.begin(); it != longReads.end(); ++it) {
-    if (it->connHandle == connHandle) {
-      size_t size = it->value.size();
+void BLEServerImplCommon::finishLongRead(uint16_t connHandle, uint16_t attrHandle, uint16_t offset, uint16_t mtu) {
+  for (auto &lr : longReads) {
+    if (!lr.value.empty() && lr.connHandle == connHandle && lr.attrHandle == attrHandle) {
+      size_t size = lr.value.size();
       if (mtu <= 1 || offset > size || size - offset < static_cast<size_t>(mtu - 1)) {
-        longReads.erase(it);
+        lr.value.clear();
       }
       return;
     }
@@ -133,20 +148,8 @@ namespace {
 // Core Vol 3 Part F §3.3.3: a transaction not completed within 30 seconds times out.
 constexpr uint32_t kAttTransactionTimeoutMs = 30000;
 
-struct IndicationReport {
-  std::shared_ptr<BLECharacteristic::Impl> chr;
-  BLECharacteristic::NotifyStatus status;
-  uint32_t code;
-};
-
 uint32_t nowMs() {
   return pdTICKS_TO_MS(xTaskGetTickCount());
-}
-
-void dispatchReports(const std::vector<IndicationReport> &reports) {
-  for (const auto &r : reports) {
-    r.chr->dispatchStatus(r.status, r.code);
-  }
 }
 
 }  // namespace
@@ -232,8 +235,6 @@ bool BLEServerImplCommon::pumpIndications(uint16_t connHandle) {
       if (!valid) {
         link->frontBusy = false;
         link->queue.erase(link->queue.begin());
-      } else if (bleServerDeferIndication(server, connHandle)) {
-        return firstOk;
       } else {
         payload = front.payload;
         seq = ++indicationSeq;
@@ -292,6 +293,23 @@ BTStatus BLEServerImplCommon::indicate(uint16_t connHandle, const std::shared_pt
     if (!active || !started || !characteristicCanSend(chr.get())) {
       return BTStatus::InvalidState;
     }
+    if (!indicationDoneHook) {
+      indicationDoneHook = [](BLEServerImplCommon *s, uint16_t c, uint16_t a, BLECharacteristic::NotifyStatus st, uint32_t cd) {
+        return s->indicationDone(c, a, st, cd);
+      };
+      indicationBusyHook = [](BLEServerImplCommon *s, uint16_t c, uint16_t a, uint32_t cd) {
+        return s->indicationBusy(c, a, cd);
+      };
+      retryIndicationsHook = [](BLEServerImplCommon *s) {
+        s->retryIndications();
+      };
+      dropIndicationsHook = [](BLEServerImplCommon *s, uint16_t c) {
+        s->dropIndications(c);
+      };
+      serviceHasPendingSendsHook = [](BLEServerImplCommon *s, const BLEService::Impl *svc) {
+        return s->serviceHasPendingSends(svc);
+      };
+    }
     IndicationLink &link = indicationLinkFor(connHandle);
     if (link.queue.size() < kMaxQueuedIndications) {
       sendNow = !link.inFlight && !link.stackBusy && link.queue.empty();
@@ -329,7 +347,7 @@ bool BLEServerImplCommon::serviceHasPendingSends(const BLEService::Impl *svc) {
 }
 
 bool BLEServerImplCommon::indicationDone(uint16_t connHandle, uint16_t attrHandle, BLECharacteristic::NotifyStatus status, uint32_t code) {
-  std::vector<IndicationReport> reports;
+  std::shared_ptr<BLECharacteristic::Impl> completedChr;
   bool linkEnded = status == BLECharacteristic::ERROR_NO_CLIENT || status == BLECharacteristic::ERROR_INDICATE_TIMEOUT;
   {
     BLELockGuard lock(mtx);
@@ -338,10 +356,9 @@ bool BLEServerImplCommon::indicationDone(uint16_t connHandle, uint16_t attrHandl
       return false;
     }
     if (link->inFlight && link->inFlight->handle == attrHandle) {
-      reports.push_back({link->inFlight, status, code});
-      link->inFlight.reset();
+      completedChr = std::move(link->inFlight);
       link->frontBusy = false;
-      if (!link->queue.empty() && link->queue.front().chr.get() == reports.back().chr.get()) {
+      if (!link->queue.empty() && link->queue.front().chr == completedChr) {
         link->queue.erase(link->queue.begin());
       }
     } else if (!link->inFlight && link->stackBusy) {
@@ -349,15 +366,13 @@ bool BLEServerImplCommon::indicationDone(uint16_t connHandle, uint16_t attrHandl
     } else {
       return false;
     }
-    if (linkEnded) {
-      for (auto &item : link->queue) {
-        reports.push_back({item.chr, BLECharacteristic::ERROR_NO_CLIENT, 0});
-      }
-      eraseIndicationLink(connHandle);
-    }
   }
-  dispatchReports(reports);
-  if (!linkEnded) {
+  if (completedChr) {
+    completedChr->dispatchStatus(status, code);
+  }
+  if (linkEnded) {
+    dropIndications(connHandle);
+  } else {
     pumpIndications(connHandle);
   }
   return true;
@@ -390,7 +405,8 @@ bool BLEServerImplCommon::indicationBusy(uint16_t connHandle, uint16_t attrHandl
 }
 
 void BLEServerImplCommon::retryIndications() {
-  std::vector<uint16_t> conns;
+  uint16_t conns[16];
+  size_t count = 0;
   {
     BLELockGuard lock(mtx);
     if (!active) {
@@ -399,36 +415,45 @@ void BLEServerImplCommon::retryIndications() {
     for (auto &link : indicationLinks) {
       if (link.stackBusy) {
         link.stackBusy = false;
-        conns.push_back(link.connHandle);
+        if (count < sizeof(conns) / sizeof(conns[0])) {
+          conns[count++] = link.connHandle;
+        }
       }
     }
   }
-  for (uint16_t connHandle : conns) {
-    pumpIndications(connHandle);
+  for (size_t i = 0; i < count; ++i) {
+    pumpIndications(conns[i]);
   }
 }
 
 void BLEServerImplCommon::dropIndications(uint16_t connHandle) {
-  std::vector<IndicationReport> reports;
+  IndicationLink removed;
+  bool found = false;
   {
     BLELockGuard lock(mtx);
-    IndicationLink *link = indicationLink(connHandle);
-    if (!link) {
-      return;
-    }
-    if (link->inFlight) {
-      bool timedOut = nowMs() - link->sentAtMs >= kAttTransactionTimeoutMs;
-      reports.push_back({link->inFlight, timedOut ? BLECharacteristic::ERROR_INDICATE_TIMEOUT : BLECharacteristic::ERROR_NO_CLIENT, 0});
-      if (!link->queue.empty() && link->queue.front().chr == link->inFlight) {
-        link->queue.erase(link->queue.begin());
+    for (auto it = indicationLinks.begin(); it != indicationLinks.end(); ++it) {
+      if (it->connHandle == connHandle) {
+        removed = std::move(*it);
+        indicationLinks.erase(it);
+        found = true;
+        break;
       }
     }
-    for (auto &item : link->queue) {
-      reports.push_back({item.chr, BLECharacteristic::ERROR_NO_CLIENT, 0});
-    }
-    eraseIndicationLink(connHandle);
   }
-  dispatchReports(reports);
+  if (!found) {
+    return;
+  }
+  if (removed.inFlight) {
+    bool timedOut = nowMs() - removed.sentAtMs >= kAttTransactionTimeoutMs;
+    removed.inFlight->dispatchStatus(timedOut ? BLECharacteristic::ERROR_INDICATE_TIMEOUT : BLECharacteristic::ERROR_NO_CLIENT, 0);
+  }
+  for (auto &item : removed.queue) {
+    if (item.chr == removed.inFlight) {
+      removed.inFlight.reset();
+      continue;
+    }
+    item.chr->dispatchStatus(BLECharacteristic::ERROR_NO_CLIENT, 0);
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -443,12 +468,13 @@ void BLEServerImplCommon::dispatchConnect(const BLEConnInfo &connInfo) {
   decltype(onConnectCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onConnectCb) {
+      return;
+    }
     cb = onConnectCb;
   }
   BLEServer serverHandle(shared_from_this());
-  if (cb) {
-    cb(serverHandle, connInfo);
-  }
+  cb(serverHandle, connInfo);
 }
 
 void BLEServerImplCommon::dispatchDisconnect(const BLEConnInfo &connInfo, uint8_t reason) {
@@ -456,12 +482,13 @@ void BLEServerImplCommon::dispatchDisconnect(const BLEConnInfo &connInfo, uint8_
   decltype(onDisconnectCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onDisconnectCb) {
+      return;
+    }
     cb = onDisconnectCb;
   }
   BLEServer serverHandle(shared_from_this());
-  if (cb) {
-    cb(serverHandle, connInfo, reason);
-  }
+  cb(serverHandle, connInfo, reason);
 }
 
 void BLEServerImplCommon::dispatchMtuChanged(const BLEConnInfo &connInfo, uint16_t mtu) {
@@ -469,12 +496,13 @@ void BLEServerImplCommon::dispatchMtuChanged(const BLEConnInfo &connInfo, uint16
   decltype(onMtuChangedCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onMtuChangedCb) {
+      return;
+    }
     cb = onMtuChangedCb;
   }
   BLEServer serverHandle(shared_from_this());
-  if (cb) {
-    cb(serverHandle, connInfo, mtu);
-  }
+  cb(serverHandle, connInfo, mtu);
 }
 
 void BLEServerImplCommon::dispatchConnParamsUpdate(const BLEConnInfo &connInfo) {
@@ -485,64 +513,70 @@ void BLEServerImplCommon::dispatchConnParamsUpdate(const BLEConnInfo &connInfo) 
   decltype(onConnParamsCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onConnParamsCb) {
+      return;
+    }
     cb = onConnParamsCb;
   }
   BLEServer serverHandle(shared_from_this());
-  if (cb) {
-    cb(serverHandle, connInfo);
-  }
+  cb(serverHandle, connInfo);
 }
 
 void BLEServerImplCommon::dispatchIdentityResolved(const BLEConnInfo &connInfo) {
   decltype(onIdentityCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onIdentityCb) {
+      return;
+    }
     cb = onIdentityCb;
   }
   BLEServer serverHandle(shared_from_this());
-  if (cb) {
-    cb(serverHandle, connInfo);
-  }
+  cb(serverHandle, connInfo);
 }
 
 static void shelveServices(std::vector<std::shared_ptr<BLEService::Impl>> roots) {
-  std::vector<BLEService::Impl *> visited;
   while (!roots.empty()) {
     std::shared_ptr<BLEService::Impl> svc = std::move(roots.back());
     roots.pop_back();
-    if (!svc || std::find(visited.begin(), visited.end(), svc.get()) != visited.end()) {
+    if (!svc) {
       continue;
     }
-    visited.push_back(svc.get());
-
-    for (const auto &included : svc->includedServices) {
-      roots.push_back(included);
+    for (auto &included : svc->includedServices) {
+      roots.push_back(std::move(included));
     }
     bleDetachLocalService(svc);
   }
 }
 
 void BLEServerImplCommon::releaseGattTree() {
-  std::vector<uint16_t> links;
+  uint16_t links[16];
+  size_t linkCount = 0;
   std::vector<std::shared_ptr<BLEService::Impl>> tree;
   {
     BLELockGuard lock(mtx);
     for (const auto &link : indicationLinks) {
-      links.push_back(link.connHandle);
+      if (linkCount < sizeof(links) / sizeof(links[0])) {
+        links[linkCount++] = link.connHandle;
+      }
     }
     tree.swap(services);
     active = false;
     started = false;
-    std::vector<std::pair<uint16_t, BLEConnInfo>>().swap(connections);
-    std::vector<LongReadState>().swap(longReads);
+    connections.clear();
+    for (auto &lr : longReads) {
+      lr.value.clear();
+    }
   }
-  for (uint16_t connHandle : links) {
-    dropIndications(connHandle);
+  if (dropIndicationsHook) {
+    for (size_t i = 0; i < linkCount; ++i) {
+      dropIndicationsHook(this, links[i]);
+    }
   }
   shelveServices(std::move(tree));
   {
     BLELockGuard lock(mtx);
-    std::vector<IndicationLink>().swap(indicationLinks);
+    indicationLinks.clear();
     advertiseOnDisconnect = true;
     onConnectCb = nullptr;
     onDisconnectCb = nullptr;
@@ -559,7 +593,7 @@ void bleDetachLocalDescriptor(const std::shared_ptr<BLEDescriptor::Impl> &desc) 
   BLELockGuard lock(desc->mtx);
   desc->handle = 0;
   desc->chr = nullptr;
-  std::vector<uint8_t>().swap(desc->value);
+  desc->value.clear();
   desc->onReadCb = nullptr;
   desc->onWriteCb = nullptr;
 }
@@ -573,8 +607,8 @@ void bleDetachLocalCharacteristic(const std::shared_ptr<BLECharacteristic::Impl>
     BLELockGuard lock(chr->mtx);
     chr->handle = 0;
     chr->service = nullptr;
-    std::vector<std::pair<uint16_t, uint16_t>>().swap(chr->subscribers);
-    std::vector<uint8_t>().swap(chr->value);
+    chr->subscribers.clear();
+    chr->value.clear();
     chr->onReadCb = nullptr;
     chr->onWriteCb = nullptr;
     chr->onNotifyCb = nullptr;
@@ -591,7 +625,7 @@ void bleDetachLocalService(const std::shared_ptr<BLEService::Impl> &svc) {
   if (!svc) {
     return;
   }
-  std::vector<std::shared_ptr<BLEService::Impl>>().swap(svc->includedServices);
+  svc->includedServices.clear();
   std::vector<std::shared_ptr<BLECharacteristic::Impl>> chrs;
   chrs.swap(svc->characteristics);
   svc->handle = 0;

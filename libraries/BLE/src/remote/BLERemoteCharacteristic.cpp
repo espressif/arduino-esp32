@@ -36,6 +36,12 @@
  *       pattern when discovery and notify registration overlap).
  */
 
+BLERemoteCharacteristicImplCommon::~BLERemoteCharacteristicImplCommon() {
+  for (auto &dsc : descriptors) {
+    dsc->chr = nullptr;
+  }
+}
+
 BLERemoteCharacteristic::BLERemoteCharacteristic() : _impl(nullptr) {}
 
 BLERemoteCharacteristic::operator bool() const {
@@ -143,7 +149,7 @@ BTStatus BLERemoteCharacteristic::writeValue(uint8_t value, bool withResponse) {
 }
 
 BLERemoteService BLERemoteCharacteristic::getRemoteService() const {
-  return _impl ? BLERemoteService(_impl->service.lock()) : BLERemoteService();
+  return (_impl && _impl->service) ? BLERemoteService(_impl->service->shared_from_this()) : BLERemoteService();
 }
 
 String BLERemoteCharacteristic::toString() const {

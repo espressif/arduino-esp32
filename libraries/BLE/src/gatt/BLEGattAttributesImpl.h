@@ -89,18 +89,32 @@ struct BLECharacteristicImplCommon : std::enable_shared_from_this<BLECharacteris
     }
   }
 
+  void (*dispatchNotifyHook)(BLECharacteristicImplCommon *) = nullptr;
+  void (*dispatchStatusHook)(BLECharacteristicImplCommon *, BLECharacteristic::NotifyStatus, uint32_t) = nullptr;
+  static void invokeDispatchNotify(BLECharacteristicImplCommon *self);
+  static void invokeDispatchStatus(BLECharacteristicImplCommon *self, BLECharacteristic::NotifyStatus status, uint32_t code);
+
   // Handlers are copied under mtx and invoked outside it.
-  void dispatchNotify();
-  void dispatchStatus(BLECharacteristic::NotifyStatus status, uint32_t code);
+  void dispatchNotify() {
+    if (dispatchNotifyHook) {
+      dispatchNotifyHook(this);
+    }
+  }
+  void dispatchStatus(BLECharacteristic::NotifyStatus status, uint32_t code) {
+    if (dispatchStatusHook) {
+      dispatchStatusHook(this, status, code);
+    }
+  }
 
   /** @brief Owning active server, or null when this characteristic is detached/inactive. */
   BLEServer::Impl *activeServer();
 
   /** @brief Shared implementation of notify() and indicate() across all subscribed connections. */
-  BTStatus sendToSubscribers(const uint8_t *data, size_t length, bool indicate);
+  using SendFn = BTStatus (*)(BLECharacteristic::Impl &chr, BLEServer::Impl *server, uint16_t connHandle, const uint8_t *data, size_t length);
+  BTStatus sendToSubscribers(const uint8_t *data, size_t length, bool indicate, SendFn sendFn);
 
   /** @brief Shared implementation of notify(connHandle) and indicate(connHandle). */
-  BTStatus sendToConnection(uint16_t connHandle, const uint8_t *data, size_t length, bool indicate);
+  BTStatus sendToConnection(uint16_t connHandle, const uint8_t *data, size_t length, bool indicate, SendFn sendFn);
 
   // Handle factory for backend code that is not a friend of BLECharacteristic: mints
   // a handle through the private ctor, which only this befriended ImplCommon can call.

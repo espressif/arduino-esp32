@@ -58,6 +58,7 @@ struct BLEClient::Impl : BLEClientImplCommon {
 
   bool discovering = false;
   BLESync discoverSync{"discoverSync"};
+  BLESync authSync{"clientAuthSync"};
 
   static int gapEventHandler(struct ble_gap_event *event, void *arg);
   static int serviceDiscoveryCb(uint16_t connHandle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);

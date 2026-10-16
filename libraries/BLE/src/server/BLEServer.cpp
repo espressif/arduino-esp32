@@ -37,7 +37,7 @@ void BLEServer::onConnect(ConnectHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onConnectCb = handler;
+  impl.onConnectCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -48,7 +48,7 @@ void BLEServer::onDisconnect(DisconnectHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onDisconnectCb = handler;
+  impl.onDisconnectCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -59,7 +59,7 @@ void BLEServer::onMtuChanged(MtuChangedHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onMtuChangedCb = handler;
+  impl.onMtuChangedCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -70,7 +70,7 @@ void BLEServer::onConnParamsUpdate(ConnParamsHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onConnParamsCb = handler;
+  impl.onConnParamsCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -81,7 +81,7 @@ void BLEServer::onIdentity(IdentityHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onIdentityCb = handler;
+  impl.onIdentityCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -199,7 +199,7 @@ BTStatus BLEServer::removeService(const BLEService &service) {
     if (!found) {
       return BTStatus::InvalidState;
     }
-    if (impl.serviceHasPendingSends(service._impl.get())) {
+    if (impl.serviceHasPendingSendsHook && impl.serviceHasPendingSendsHook(&impl, service._impl.get())) {
       log_w("Server: cannot remove a service with pending notifications or indications");
       return BTStatus::Busy;
     }

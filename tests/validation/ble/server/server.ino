@@ -40,6 +40,13 @@ static_assert(acceptsMutableHandle<BLEL2CAPServer::AcceptHandler, void(BLEL2CAPC
 static_assert(acceptsMutableHandle<BLEL2CAPServer::DataHandler, void(BLEL2CAPChannel &, const uint8_t *, size_t)>);
 static_assert(acceptsMutableHandle<BLEL2CAPServer::DisconnectHandler, void(BLEL2CAPChannel &)>);
 
+constexpr BLEUUID kConstexprUuidEmpty;
+constexpr BLEUUID kConstexprUuid16 = BLEUUID::from16(0x180D);
+constexpr BLEUUID kConstexprUuid128(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+static_assert(!kConstexprUuidEmpty.isValid());
+static_assert(kConstexprUuid16.isValid() && kConstexprUuid16.bitSize() == 16);
+static_assert(kConstexprUuid128.isValid() && kConstexprUuid128.bitSize() == 128);
+
 static const BLEUUID SERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static const BLEUUID RW_CHAR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 static const BLEUUID NOTIFY_CHAR_UUID("cba1d466-344c-4be3-ab3f-189f80dd7518");
@@ -214,6 +221,8 @@ static void fillLongValue(uint8_t *buf, char first, uint32_t n) {
 // Phase 4: loop() rewrites this value every few ms, much faster than the
 // connection interval between a Read and its Read Blob. Each long read must
 // still return one value, not the head of one and the tail of the next.
+BLECharacteristic longChr;
+std::atomic<bool> longChrMutatePending{false};
 BLECharacteristic snapshotChr;
 
 // Phase 5 onNotify/onStatus. Handlers record; loop() logs so the output stays
@@ -561,10 +570,24 @@ bool phase_gatt_setup() {
   auto constLookupChr = svc.createCharacteristic(CONST_LOOKUP_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
   constLookupChr.setValue("const_initial");
 
-  auto longChr = svc.createCharacteristic(LONG_READ_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+  longChr = svc.createCharacteristic(LONG_READ_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
   longChr.onRead([](BLECharacteristic &chr, const BLEConnInfo &conn) {
     static uint8_t buf[LONG_READ_LEN];  // keep 512 bytes off the BLE task stack
-    fillLongValue(buf, 'A', ++longChrReads);
+    uint32_t readNum = ++longChrReads;
+    fillLongValue(buf, 'A', readNum);
+    if (readNum == 3) {
+      // Exact (MTU - 1) boundary: the initial ATT Read Response fills MTU - 1
+      // bytes, so the client must follow up with a Read Blob at offset = MTU - 1
+      // expecting 0 bytes even if loop() rewrites the attribute to 512 bytes
+      // before the Read Blob arrives.
+      size_t exactLen = conn.getMTU() > 1 ? static_cast<size_t>(conn.getMTU() - 1) : sizeof(buf);
+      if (exactLen > sizeof(buf)) {
+        exactLen = sizeof(buf);
+      }
+      chr.setValue(buf, exactLen);
+      longChrMutatePending.store(true, std::memory_order_release);
+      return;
+    }
     chr.setValue(buf, sizeof(buf));
   });
 
@@ -836,6 +859,10 @@ void loop() {
     uint32_t n = 1;
     BLE.createServer().startAdvertising();
     while (currentPhase == 4) {
+      if (longChrMutatePending.exchange(false, std::memory_order_acq_rel)) {
+        memset(buf, 'Z', sizeof(buf));
+        longChr.setValue(buf, sizeof(buf));
+      }
       fillLongValue(buf, 'A', ++n);
       snapshotChr.setValue(buf, sizeof(buf));
       delay(2);
@@ -1843,6 +1870,8 @@ void loop() {
     strCheck(BLEUUID("180D").bitSize() == 16);
     strCheck(BLEUUID("0000180D").bitSize() == 32);
     strCheck(BLEUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b") == SERVICE_UUID);
+    strCheck(kConstexprUuid16 == u16 && kConstexprUuid16.toUint16() == 0x180D && kConstexprUuid16.to128() == u128);
+    strCheck(kConstexprUuid128 == BLEUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e"));
 
     BLEService svcByStr = srv.getService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
     strCheck(svcByStr && primarySvc && svcByStr.getHandle() == primarySvc.getHandle());

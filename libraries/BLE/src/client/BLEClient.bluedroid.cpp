@@ -418,7 +418,7 @@ BTStatus BLEClient::discoverServices() {
 
   {
     BLELockGuard lock(impl.mtx);
-    impl.discoveredServices.clear();
+    impl.clearDiscoveredServices();
   }
 
   impl.discoverSync.take();
@@ -800,7 +800,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       client->secBonded = false;
       {
         BLELockGuard lock(client->mtx);
-        client->discoveredServices.clear();
+        client->clearDiscoveredServices();
       }
       break;
     }
@@ -816,7 +816,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       svc->uuid = bluedroidUuidToPublic(param->search_res.srvc_id.uuid);
       svc->startHandle = param->search_res.start_handle;
       svc->endHandle = param->search_res.end_handle;
-      svc->client = client->shared_from_this();
+      svc->client = client;
       svc->clientGeneration = client->connectionGeneration.load();
       BLELockGuard lock(client->mtx);
       client->discoveredServices.push_back(svc);

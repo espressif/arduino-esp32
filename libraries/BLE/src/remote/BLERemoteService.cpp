@@ -23,6 +23,12 @@
 #include "core/BLEBackend.h"
 #include "core/BLEImplHelpers.h"
 
+BLERemoteServiceImplCommon::~BLERemoteServiceImplCommon() {
+  for (auto &chr : characteristics) {
+    chr->service = nullptr;
+  }
+}
+
 BLERemoteService::BLERemoteService() : _impl(nullptr) {}
 
 BLERemoteService::operator bool() const {
@@ -38,11 +44,10 @@ uint16_t BLERemoteService::getHandle() const {
 }
 
 BLEClient BLERemoteService::getClient() const {
-  if (!_impl) {
+  if (!_impl || !_impl->client) {
     return BLEClient();
   }
-  auto client = _impl->client.lock();
-  return client ? BLEClient::Impl::makeHandle(client.get()) : BLEClient();
+  return BLEClient::Impl::makeHandle(_impl->client);
 }
 
 String BLERemoteService::getValue(const BLEUUID &charUUID) {
