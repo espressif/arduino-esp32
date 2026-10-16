@@ -1334,7 +1334,7 @@ bool ETHClass::_setLinkSpeed(uint16_t speed) {
 bool ETHClass::setLinkSpeed(uint16_t speed) {
   if (speed != 10 && speed != 100
 #if CONFIG_SOC_EMAC_SUPPORT_1000M
-  && speed != 1000
+      && speed != 1000
 #endif
   ) {
     log_e("Unsupported link speed: %d Mbps", speed);
