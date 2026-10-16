@@ -49,6 +49,7 @@ uint32_t timerGetFrequency(hw_timer_t *timer);
 
 void timerAttachInterrupt(hw_timer_t *timer, void (*userFunc)(void));
 void timerAttachInterruptArg(hw_timer_t *timer, void (*userFunc)(void *), void *arg);
+void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void *), void *arg, bool functional);
 void timerDetachInterrupt(hw_timer_t *timer);
 
 void timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count);
