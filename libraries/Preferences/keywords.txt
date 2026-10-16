@@ -31,6 +31,7 @@ putFloat	KEYWORD2
 putDouble	KEYWORD2
 putBool	KEYWORD2
 putString	KEYWORD2
+putStdString	KEYWORD2
 putBytes	KEYWORD2
 
 getChar	KEYWORD2
@@ -47,6 +48,7 @@ getFloat	KEYWORD2
 getDouble	KEYWORD2
 getBool	KEYWORD2
 getString	KEYWORD2
+getStdString	KEYWORD2
 getBytes	KEYWORD2
 
 #######################################
