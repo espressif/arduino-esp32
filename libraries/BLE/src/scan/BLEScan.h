@@ -220,7 +220,7 @@ public:
    * @brief Retrieve a snapshot of the current scan results.
    * @return Copy of the accumulated scan results.
    */
-  Results getResults();
+  Results getResults() const;
 
   /**
    * @brief Discard all accumulated scan results.

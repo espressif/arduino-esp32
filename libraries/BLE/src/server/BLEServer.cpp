@@ -37,7 +37,7 @@ void BLEServer::onConnect(ConnectHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onConnectCb = handler;
+  impl.onConnectCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -48,7 +48,7 @@ void BLEServer::onDisconnect(DisconnectHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onDisconnectCb = handler;
+  impl.onDisconnectCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -59,7 +59,7 @@ void BLEServer::onMtuChanged(MtuChangedHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onMtuChangedCb = handler;
+  impl.onMtuChangedCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -70,7 +70,7 @@ void BLEServer::onConnParamsUpdate(ConnParamsHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onConnParamsCb = handler;
+  impl.onConnParamsCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -81,7 +81,7 @@ void BLEServer::onIdentity(IdentityHandler handler) {
 #if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.onIdentityCb = handler;
+  impl.onIdentityCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (GATT server disabled)", __func__);
@@ -100,8 +100,6 @@ void BLEServer::resetCallbacks() {
 #endif
 }
 
-#if BLE_GATT_SERVER_SUPPORTED
-
 // Shared Impl helpers (connection table + callback dispatch) live in the
 // implementation layer: server/BLEServerImpl.cpp.
 
@@ -112,12 +110,18 @@ void BLEServer::resetCallbacks() {
 void BLEServer::advertiseOnDisconnect(bool enable) {
   BLE_CHECK_IMPL();
   log_d("Server: advertiseOnDisconnect=%d", enable);
+  BLELockGuard lock(impl.mtx);
   impl.advertiseOnDisconnect = enable;
 }
 
 BLEService BLEServer::createService(const BLEUUID &uuid, uint32_t numHandles, uint8_t instId) {
+#if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL(BLEService());
   BLELockGuard lock(impl.mtx);
+  if (!impl.active) {
+    log_w("Server: createService called outside an initialized BLE session");
+    return BLEService();
+  }
 
   // Return the existing service if this UUID+instId was already created.
   for (auto &svc : impl.services) {
@@ -132,13 +136,19 @@ BLEService BLEServer::createService(const BLEUUID &uuid, uint32_t numHandles, ui
   svc->uuid = uuid;
   svc->numHandles = numHandles;
   svc->instId = instId;
-  svc->server = _impl.get();
+  svc->server = &impl;
   impl.services.push_back(svc);
 
   return BLEService(svc);
+#else
+  (void)uuid;
+  (void)numHandles;
+  (void)instId;
+  return BLEService();
+#endif
 }
 
-BLEService BLEServer::getService(const BLEUUID &uuid) {
+BLEService BLEServer::getService(const BLEUUID &uuid) const {
   BLE_CHECK_IMPL(BLEService());
   BLELockGuard lock(impl.mtx);
   // First match wins when several services share a UUID (different instId).
@@ -164,11 +174,46 @@ std::vector<BLEService> BLEServer::getServices() const {
 
 BTStatus BLEServer::removeService(const BLEService &service) {
 #if BLE_GATT_SERVER_SUPPORTED
-  if (!_impl || !service._impl) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!service._impl) {
     return BTStatus::InvalidState;
   }
+  {
+    BLELockGuard lock(impl.mtx);
+    if (!impl.active) {
+      return BTStatus::InvalidState;
+    }
+    bool found = false;
+    for (const auto &owner : impl.services) {
+      if (owner.get() == service._impl.get()) {
+        found = true;
+        continue;
+      }
+      for (const auto &included : owner->includedServices) {
+        if (included.get() == service._impl.get()) {
+          log_w("Server: cannot remove a service while another registered service includes it");
+          return BTStatus::Busy;
+        }
+      }
+    }
+    if (!found) {
+      return BTStatus::InvalidState;
+    }
+    if (impl.serviceHasPendingSendsHook && impl.serviceHasPendingSendsHook(&impl, service._impl.get())) {
+      log_w("Server: cannot remove a service with pending notifications or indications");
+      return BTStatus::Busy;
+    }
+    service._impl->removing = true;
+  }
   // Backend-specific: Bluedroid deletes the service; NimBLE rebuilds the GATT table.
-  return bleServerRemoveService(_impl.get(), service._impl);
+  BTStatus status = bleServerRemoveService(&impl, service._impl);
+  if (!status) {
+    BLELockGuard lock(impl.mtx);
+    if (service._impl->server == &impl) {
+      service._impl->removing = false;
+    }
+  }
+  return status;
 #else
   (void)service;
   return BTStatus::NotSupported;
@@ -176,7 +221,8 @@ BTStatus BLEServer::removeService(const BLEService &service) {
 }
 
 bool BLEServer::isStarted() const {
-  return _impl && _impl->started;
+  BLE_CHECK_IMPL(false);
+  return impl.started;
 }
 
 size_t BLEServer::getConnectedCount() const {
@@ -210,7 +256,7 @@ BLEConnInfo BLEServer::getConnInfo(uint16_t connHandle) const {
   return BLEConnInfo();
 }
 
-BLEAdvertising BLEServer::getAdvertising() {
+BLEAdvertising BLEServer::getAdvertising() const {
   return BLE.getAdvertising();
 }
 
@@ -221,7 +267,5 @@ BTStatus BLEServer::startAdvertising() {
 BTStatus BLEServer::stopAdvertising() {
   return BLE.stopAdvertising();
 }
-
-#endif /* BLE_GATT_SERVER_SUPPORTED */
 
 #endif /* BLE_ENABLED */

@@ -60,13 +60,13 @@ public:
    * @param data    Pointer to the received bytes.
    * @param len     Number of bytes received.
    */
-  using DataHandler = std::function<void(const BLEL2CAPChannel &channel, const uint8_t *data, size_t len)>;
+  using DataHandler = std::function<void(BLEL2CAPChannel &channel, const uint8_t *data, size_t len)>;
 
   /**
    * @brief Callback invoked when the channel is disconnected.
    * @param channel The channel that was disconnected.
    */
-  using DisconnectHandler = std::function<void(const BLEL2CAPChannel &channel)>;
+  using DisconnectHandler = std::function<void(BLEL2CAPChannel &channel)>;
 
   /**
    * @brief Send data over the L2CAP channel.
@@ -167,7 +167,7 @@ public:
    * @brief Callback invoked when a new L2CAP channel is accepted.
    * @param channel The newly accepted channel handle.
    */
-  using AcceptHandler = std::function<void(const BLEL2CAPChannel &channel)>;
+  using AcceptHandler = std::function<void(BLEL2CAPChannel &channel)>;
 
   /**
    * @brief Callback invoked when data arrives on any channel owned by this server.
@@ -175,13 +175,13 @@ public:
    * @param data    Pointer to the received bytes.
    * @param len     Number of bytes received.
    */
-  using DataHandler = std::function<void(const BLEL2CAPChannel &channel, const uint8_t *data, size_t len)>;
+  using DataHandler = std::function<void(BLEL2CAPChannel &channel, const uint8_t *data, size_t len)>;
 
   /**
    * @brief Callback invoked when a channel owned by this server disconnects.
    * @param channel The channel that was disconnected.
    */
-  using DisconnectHandler = std::function<void(const BLEL2CAPChannel &channel)>;
+  using DisconnectHandler = std::function<void(BLEL2CAPChannel &channel)>;
 
   /**
    * @brief Register a handler for incoming channel connections.

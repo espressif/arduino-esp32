@@ -73,7 +73,8 @@ void BLEScan::setFilterDuplicates(bool filter) {
 }
 
 bool BLEScan::isScanning() const {
-  return _impl && _impl->isScanning;
+  BLE_CHECK_IMPL(false);
+  return impl.isScanning;
 }
 
 // Callback setters store the handler and no-op with a warning when scanning is
@@ -82,7 +83,7 @@ bool BLEScan::isScanning() const {
 void BLEScan::onResult(ResultHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.onResultCb = callback;
+  impl.onResultCb = std::move(callback);
 #else
   (void)callback;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -92,7 +93,7 @@ void BLEScan::onResult(ResultHandler callback) {
 void BLEScan::onComplete(CompleteHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.onCompleteCb = callback;
+  impl.onCompleteCb = std::move(callback);
 #else
   (void)callback;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -113,7 +114,7 @@ void BLEScan::resetCallbacks() {
 void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.periodicSyncCb = handler;
+  impl.periodicSyncCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -123,7 +124,7 @@ void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.periodicReportCb = handler;
+  impl.periodicReportCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -133,19 +134,17 @@ void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.periodicLostCb = handler;
+  impl.periodicLostCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (scanning disabled)", __func__);
 #endif
 }
 
-#if BLE_SCANNING_SUPPORTED
-
 // Result-management helpers are thread-safe: each acquires impl.mtx before
 // touching the shared results set.
 
-BLEScan::Results BLEScan::getResults() {
+BLEScan::Results BLEScan::getResults() const {
   BLE_CHECK_IMPL(BLEScan::Results());
   BLELockGuard lock(impl.mtx);
   return impl.results;
@@ -196,7 +195,5 @@ void BLEScan::Results::dump() const {
     log_i("[%d] %s", i, _devices[i].toString().c_str());
   }
 }
-
-#endif /* BLE_SCANNING_SUPPORTED */
 
 #endif /* BLE_ENABLED */

@@ -92,6 +92,10 @@ struct BLESecurityImplCommon {
   /// Runtime ATT read/write authorization hook. Fail-closed: with no
   /// AuthorizationHandler installed this returns false, so a ReadAuthorized/
   /// WriteAuthorized declaration without a handler denies access.
+  bool (*notifyAuthorizationHook)(BLESecurityImplCommon *, const BLEConnInfo &, uint16_t, bool) = nullptr;
+  static bool invokeNotifyAuthorization(BLESecurityImplCommon *self, const BLEConnInfo &conn, uint16_t attrHandle, bool isRead) {
+    return self->notifyAuthorization(conn, attrHandle, isRead);
+  }
   bool notifyAuthorization(const BLEConnInfo &conn, uint16_t attrHandle, bool isRead);
 
   /// Numeric-comparison confirmation. With no ConfirmPassKeyHandler installed this

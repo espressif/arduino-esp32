@@ -69,6 +69,11 @@ extern "C" void ble_store_config_init(void);
 // reference so it is re-initialized after a stack restart (see the definition
 // for the use-after-free this prevents across BLE.end()/begin()).
 void nimbleResetReAdvertiseEvent();
+
+static int (*s_serverGapEventHook)(struct ble_gap_event *) = nullptr;
+#endif
+#if BLE_SMP_SUPPORTED
+static int (*s_securityGapEventHook)(struct ble_gap_event *) = nullptr;
 #endif
 
 // --------------------------------------------------------------------------
@@ -81,21 +86,58 @@ void BLEClass::Impl::hostTask(void *param) {
   nimble_port_freertos_deinit();
 }
 
+int nimbleForwardServerGapEvent(struct ble_gap_event *event) {
+#if BLE_GATT_SERVER_SUPPORTED
+  if (s_serverGapEventHook) {
+    return s_serverGapEventHook(event);
+  }
+#else
+  (void)event;
+#endif
+  return 0;
+}
+
+int nimbleForwardSecurityGapEvent(struct ble_gap_event *event) {
+#if BLE_SMP_SUPPORTED
+  if (s_securityGapEventHook) {
+    return s_securityGapEventHook(event);
+  }
+  if (!event) {
+    return 0;
+  }
+  if (event->type == BLE_GAP_EVENT_REPEAT_PAIRING) {
+    struct ble_gap_conn_desc desc;
+    if (ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc) != 0) {
+      return BLE_GAP_REPEAT_PAIRING_IGNORE;
+    }
+    ble_store_util_delete_peer(&desc.peer_id_addr);
+    return BLE_GAP_REPEAT_PAIRING_RETRY;
+  }
+#if defined(BLE_GAP_EVENT_AUTHORIZE)
+  if (event->type == BLE_GAP_EVENT_AUTHORIZE) {
+    event->authorize.out_response = BLE_GAP_AUTHORIZE_REJECT;
+  }
+#endif
+#else
+  (void)event;
+#endif
+  return 0;
+}
+
 int BLEClass::Impl::onStoreStatus(struct ble_store_status_event *event, void *arg) {
-  if (event->event_code == BLE_STORE_EVENT_FULL) {
-    auto *sec = BLESecurity::Impl::instance();
-    if (sec) {
-      struct ble_store_key_sec key = {};
-      struct ble_store_value_sec value = {};
-      key.idx = 0;
-      if (ble_store_read_peer_sec(&key, &value) == 0) {
-        BTAddress oldest(value.peer_addr.val, static_cast<BTAddress::Type>(value.peer_addr.type));
-        if (sec->notifyBondOverflow(oldest)) {
-          return 0;
-        }
+#if BLE_SMP_SUPPORTED
+  if (event->event_code == BLE_STORE_EVENT_FULL && BLE._impl && BLE._impl->securityOverflowHook) {
+    struct ble_store_key_sec key = {};
+    struct ble_store_value_sec value = {};
+    key.idx = 0;
+    if (ble_store_read_peer_sec(&key, &value) == 0) {
+      BTAddress oldest(value.peer_addr.val, static_cast<BTAddress::Type>(value.peer_addr.type));
+      if (BLE._impl->securityOverflowHook(oldest)) {
+        return 0;
       }
     }
   }
+#endif
   return ble_store_util_status_rr(event, arg);
 }
 
@@ -157,9 +199,6 @@ void BLEClass::Impl::onSync() {
 BLEClass::BLEClass() : _impl(new Impl()) {}
 
 BLEClass::~BLEClass() {
-  if (_initialized) {
-    end(false);
-  }
   delete _impl;
   _impl = nullptr;
 }
@@ -233,8 +272,8 @@ BTStatus BLEClass::begin(const String &deviceName) {
   // getSecurity() keeps its Impl in a function-local static that outlives an
   // end()/begin() cycle. Re-push the retained configuration so those defaults
   // do not silently overwrite security settings the application already made.
-  if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
-    sec->applySecurityParams();
+  if (_impl->securityBeginHook) {
+    _impl->securityBeginHook();
   }
 #endif
 
@@ -260,26 +299,48 @@ void BLEClass::end(bool releaseMemory) {
   // For scanning, stop() is sufficient; scan results are cleared by
   // startBlocking()/clearResults() and there is no equivalent accumulated state.
 #if BLE_ADVERTISING_SUPPORTED
-  getAdvertising().reset();
+  if (_impl->adv) {
+    BLEAdvertising(std::shared_ptr<BLEAdvertising::Impl>(_impl->adv, [](BLEAdvertising::Impl *) {})).reset();
+  }
 #endif
 #if BLE_SCANNING_SUPPORTED
-  getScan().stop();
-  // Terminate any established periodic syncs while the host is still enabled so
-  // applications need not call terminatePeriodicSync() before end() (no-op if
-  // none are tracked). Doing this after nimble_port_stop() would race the host
-  // teardown and log a benign BLE_HS_EDISABLED.
-  getScan().terminateAllPeriodicSyncs();
+  if (_impl->scan) {
+    BLEScan scan(std::shared_ptr<BLEScan::Impl>(_impl->scan, [](BLEScan::Impl *) {}));
+    scan.stop();
+    // Terminate any established periodic syncs while the host is still enabled so
+    // applications need not call terminatePeriodicSync() before end() (no-op if
+    // none are tracked). Doing this after nimble_port_stop() would race the host
+    // teardown and log a benign BLE_HS_EDISABLED.
+    scan.terminateAllPeriodicSyncs();
+  }
 #endif
 
+  // Close the public session before native shutdown callbacks run. Keep the
+  // GATT tree alive until the host has stopped, but reject re-entrant server
+  // creation and value sends while it is stopping.
+  _initialized = false;
 #if BLE_GATT_SERVER_SUPPORTED
-  // nimble_port_deinit() just freed the npl event pool; drop the deferred
-  // re-advertise event's now-dangling backing pointer so a later begin()
-  // re-initializes it instead of dispatching a stale/NULL callback.
-  nimbleResetReAdvertiseEvent();
+  if (_impl->serverStopHook) {
+    _impl->serverStopHook();
+  }
+  if (_impl->server) {
+    BLELockGuard lock(_impl->server->mtx);
+    _impl->server->active = false;
+  }
 #endif
 
   nimble_port_stop();
   nimble_port_deinit();
+  _impl->synced = false;
+
+#if BLE_GATT_SERVER_SUPPORTED
+  // Native callbacks can retain raw pointers into the GATT tree. Release it
+  // only after the host task has stopped and deinit has discarded those
+  // registrations.
+  if (_impl->server) {
+    _impl->server->releaseGattTree();
+  }
+#endif
 
 #if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
   hostedDeinitBLE();
@@ -290,9 +351,6 @@ void BLEClass::end(bool releaseMemory) {
     btMemRelease(BT_MODE_BLE);
 #endif
   }
-
-  _impl->synced = false;
-  _initialized = false;
 }
 
 // --------------------------------------------------------------------------
@@ -599,6 +657,7 @@ BLEScan BLEClass::getScan() {
   }
   if (!slot) {
     slot = std::make_shared<BLEScan::Impl>();
+    _impl->scan = slot.get();
   }
   return BLEScan(slot);
 }
@@ -618,6 +677,7 @@ BLEAdvertising BLEClass::getAdvertising() {
   }
   if (!slot) {
     slot = std::make_shared<BLEAdvertising::Impl>();
+    _impl->adv = slot.get();
   }
   return BLEAdvertising(slot);
 }
@@ -648,16 +708,31 @@ BTStatus BLEClass::stopAdvertising() {
 
 #if BLE_GATT_SERVER_SUPPORTED
 BLEServer BLEClass::createServer() {
-  static std::shared_ptr<BLEServer::Impl> slot;
+  // Process-lifetime singleton. end() clears its GATT tree but keeps this slot so
+  // existing BLEServer handles remain the same server after begin().
+  static std::shared_ptr<BLEServer::Impl> s_server;
   if (!isInitialized()) {
     log_e("createServer: BLE not initialized");
     return BLEServer();
   }
-  if (!slot) {
+  if (!s_server) {
     log_d("createServer: creating new server instance");
-    slot = std::make_shared<BLEServer::Impl>();
+    s_server = std::make_shared<BLEServer::Impl>();
+    _impl->server = s_server.get();
+    _impl->serverStopHook = nimbleResetReAdvertiseEvent;
+    s_serverGapEventHook = [](struct ble_gap_event *event) -> int {
+      if (s_server) {
+        BLEServer srv(s_server);
+        return BLEServerImplCommon::forwardGapEvent(srv, event);
+      }
+      return 0;
+    };
   }
-  return BLEServer(slot);
+  {
+    BLELockGuard lock(s_server->mtx);
+    s_server->active = true;
+  }
+  return BLEServer(s_server);
 }
 #else
 BLEServer BLEClass::createServer() {
@@ -691,6 +766,15 @@ BLESecurity BLEClass::getSecurity() {
   if (!slot) {
     slot = std::make_shared<BLESecurity::Impl>();
     BLESecurity::Impl::s_instance = slot.get();
+    s_securityGapEventHook = BLESecurity::Impl::handleGapEvent;
+    _impl->securityBeginHook = []() {
+      if (slot) {
+        slot->applySecurityParams();
+      }
+    };
+    _impl->securityOverflowHook = [](const BTAddress &oldest) -> bool {
+      return slot ? slot->notifyBondOverflow(oldest) : false;
+    };
   }
   return BLESecurity(slot);
 }

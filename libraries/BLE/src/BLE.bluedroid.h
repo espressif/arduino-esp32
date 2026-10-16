@@ -69,6 +69,25 @@ struct BLEClass::Impl {
   BLEClass::RawEventHandler customGapHandler = nullptr;
   BLEClass::RawEventHandler customGattcHandler = nullptr;
   BLEClass::RawEventHandler customGattsHandler = nullptr;
+#if BLE_ADVERTISING_SUPPORTED
+  void (*advGapHook)(esp_gap_ble_cb_event_t, esp_ble_gap_cb_param_t *) = nullptr;
+#endif
+#if BLE_SCANNING_SUPPORTED
+  void (*scanGapHook)(esp_gap_ble_cb_event_t, esp_ble_gap_cb_param_t *) = nullptr;
+#endif
+#if BLE_GATT_SERVER_SUPPORTED
+  BLEServer::Impl *server = nullptr;
+  void (*serverGapHook)(esp_gap_ble_cb_event_t, esp_ble_gap_cb_param_t *) = nullptr;
+  void (*serverGattsHook)(esp_gatts_cb_event_t, esp_gatt_if_t, esp_ble_gatts_cb_param_t *) = nullptr;
+#endif
+#if BLE_GATT_CLIENT_SUPPORTED
+  void (*clientGapHook)(esp_gap_ble_cb_event_t, esp_ble_gap_cb_param_t *) = nullptr;
+  void (*clientGattcHook)(esp_gattc_cb_event_t, esp_gatt_if_t, esp_ble_gattc_cb_param_t *) = nullptr;
+#endif
+#if BLE_SMP_SUPPORTED
+  void (*securityGapHook)(esp_gap_ble_cb_event_t, esp_ble_gap_cb_param_t *) = nullptr;
+  void (*securityBeginHook)() = nullptr;
+#endif
 
   static void gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 #if BLE_GATT_SERVER_SUPPORTED

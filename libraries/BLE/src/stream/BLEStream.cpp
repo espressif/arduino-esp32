@@ -28,10 +28,10 @@
 #include "remote/BLERemoteService.h"
 #include "cbuf.h"
 
-// Nordic UART Service UUIDs
-static const BLEUUID kNUS_ServiceUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
-static const BLEUUID kNUS_RxCharUUID("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
-static const BLEUUID kNUS_TxCharUUID("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+// Nordic UART Service UUIDs (6e40000x-b5a3-f393-e0a9-e50e24dcca9e)
+static constexpr BLEUUID kNUS_ServiceUUID(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+static constexpr BLEUUID kNUS_RxCharUUID(0x6e, 0x40, 0x00, 0x02, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+static constexpr BLEUUID kNUS_TxCharUUID(0x6e, 0x40, 0x00, 0x03, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
 
 BLEUUID BLEStream::nusServiceUUID() {
   return kNUS_ServiceUUID;
@@ -419,19 +419,19 @@ BLEStream::operator bool() const {
 
 void BLEStream::onConnect(ConnectHandler handler) {
   if (_impl) {
-    _impl->onConnectCb = handler;
+    _impl->onConnectCb = std::move(handler);
   }
 }
 
 void BLEStream::onDisconnect(DisconnectHandler handler) {
   if (_impl) {
-    _impl->onDisconnectCb = handler;
+    _impl->onDisconnectCb = std::move(handler);
   }
 }
 
 void BLEStream::onPeerData(PeerDataHandler handler) {
   if (_impl) {
-    _impl->onPeerDataCb = handler;
+    _impl->onPeerDataCb = std::move(handler);
   }
 }
 

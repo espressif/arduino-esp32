@@ -36,9 +36,9 @@
 #if BLE_NIMBLE
 
 #include "BLE.h"
+#include "BLE.nimble.h"
 #include "advertising/BLEAdvertising.nimble.h"
 
-#include "server/BLEServerImpl.h"
 #include "core/BLEImplHelpers.h"
 #include "advertising/BLEAdvScanHelpers.h"
 #include "advertising/BLEAdvertisingData.h"
@@ -83,11 +83,7 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
     impl->isAdvertising = false;
   }
 
-  BLEServer server = BLE.createServer();
-  if (server) {
-    return BLEServerImplCommon::forwardGapEvent(server, event);
-  }
-  return 0;
+  return nimbleForwardServerGapEvent(event);
 }
 
 // --------------------------------------------------------------------------

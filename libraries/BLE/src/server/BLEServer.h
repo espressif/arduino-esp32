@@ -78,7 +78,7 @@ public:
    * @param server The server handle that accepted the connection.
    * @param conn   Connection information for the new link.
    */
-  using ConnectHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn)>;
+  using ConnectHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when a central disconnects.
@@ -86,7 +86,7 @@ public:
    * @param conn   Connection information for the terminated link.
    * @param reason HCI disconnect reason code (e.g. 0x13 = Remote User Terminated).
    */
-  using DisconnectHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn, uint8_t reason)>;
+  using DisconnectHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn, uint8_t reason)>;
 
   /**
    * @brief Callback invoked when the ATT MTU is negotiated or changed.
@@ -94,21 +94,21 @@ public:
    * @param conn   Connection information.
    * @param mtu    The newly agreed ATT MTU size in bytes.
    */
-  using MtuChangedHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn, uint16_t mtu)>;
+  using MtuChangedHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn, uint16_t mtu)>;
 
   /**
    * @brief Callback invoked when connection parameters are updated.
    * @param server The server handle.
    * @param conn   Connection information reflecting the updated parameters.
    */
-  using ConnParamsHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn)>;
+  using ConnParamsHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when identity resolution completes for a peer.
    * @param server The server handle.
    * @param conn   Connection information with resolved identity address.
    */
-  using IdentityHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn)>;
+  using IdentityHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn)>;
 
   /**
    * @brief Create a new GATT service and register it on this server.
@@ -127,7 +127,7 @@ public:
    * @param uuid UUID of the service to find.
    * @return The matching BLEService handle, or an invalid handle if not found.
    */
-  BLEService getService(const BLEUUID &uuid);
+  BLEService getService(const BLEUUID &uuid) const;
 
   /**
    * @brief Get all services registered on this server.
@@ -141,6 +141,9 @@ public:
    * @note Bluedroid: deletes the GATT service via the controller.
    * @note NimBLE: rebuilds the whole GATT table (no per-service delete); active
    *       connections may be affected — prefer calling when no central is connected.
+   * @note Returns @c Busy while the service is included by another service or
+   *       has an outgoing value in flight. On success, retained handles to the
+   *       service and its children become detached shells.
    *
    * @param service The service to remove.
    * @return BTStatus indicating success or the error encountered.
@@ -150,6 +153,8 @@ public:
   /**
    * @brief Start the GATT server and register all added services with the stack.
    * @return BTStatus indicating success or the error encountered.
+   * @note After @c BLE.end() the server is not started and has no services.
+   *       Recreate the GATT tree, then call @c start() again.
    */
   BTStatus start();
 
@@ -204,7 +209,7 @@ public:
    * @brief Get the advertising handle associated with this server.
    * @return A BLEAdvertising handle for configuring and controlling advertisements.
    */
-  BLEAdvertising getAdvertising();
+  BLEAdvertising getAdvertising() const;
 
   /**
    * @brief Start advertising using the current advertising configuration.

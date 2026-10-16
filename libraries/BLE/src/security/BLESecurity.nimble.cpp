@@ -41,6 +41,7 @@
 #include "BLE.h"
 
 #include "security/BLESecurity.nimble.h"
+#include "types/BLEConnInfo.nimble.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
 #include "esp32-hal-log.h"
@@ -50,6 +51,7 @@
 #include <esp_random.h>
 #include <host/ble_gap.h>
 #include <host/ble_store.h>
+#include <host/ble_sm.h>
 
 /**
  * @brief Pushes the current @c Impl SMP settings into the NimBLE host @c ble_hs_cfg.
@@ -114,6 +116,85 @@ void BLESecurity::Impl::deleteStaleBond(const ble_addr_t &peerIdAddr) {
     return;
   }
   log_w("Security: the peer no longer holds the bonding key, deleted the stale bond so the next attempt can pair again");
+}
+
+int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *event) {
+  auto *sec = BLESecurity::Impl::instance();
+  if (!event) {
+    return 0;
+  }
+  switch (event->type) {
+    case BLE_GAP_EVENT_ENC_CHANGE:
+    {
+      if (!sec) {
+        return 0;
+      }
+      struct ble_gap_conn_desc desc;
+      if (ble_gap_conn_find(event->enc_change.conn_handle, &desc) == 0) {
+        sec->notifyAuthComplete(BLEConnInfoImpl::fromDesc(desc), event->enc_change.status == 0);
+      }
+      return 0;
+    }
+
+    case BLE_GAP_EVENT_PASSKEY_ACTION:
+    {
+      if (!sec) {
+        return 0;
+      }
+      uint16_t connHandle = event->passkey.conn_handle;
+      struct ble_gap_conn_desc desc;
+      if (ble_gap_conn_find(connHandle, &desc) != 0) {
+        return 0;
+      }
+      BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(desc);
+      struct ble_sm_io pkey = {};
+      pkey.action = event->passkey.params.action;
+      if (pkey.action == BLE_SM_IOACT_DISP) {
+        pkey.passkey = sec->resolvePasskeyForDisplay(connInfo);
+      } else if (pkey.action == BLE_SM_IOACT_INPUT) {
+        pkey.passkey = sec->resolvePasskeyForInput(connInfo);
+      } else if (pkey.action == BLE_SM_IOACT_NUMCMP) {
+        pkey.numcmp_accept = sec->resolveNumericComparison(connInfo, event->passkey.params.numcmp) ? 1 : 0;
+      } else {
+        return 0;
+      }
+      ble_sm_inject_io(connHandle, &pkey);
+      return 0;
+    }
+
+    case BLE_GAP_EVENT_PARING_COMPLETE:
+      reportPairingComplete(event->pairing_complete.conn_handle, event->pairing_complete.status);
+      return 0;
+
+    case BLE_GAP_EVENT_REPEAT_PAIRING:
+    {
+      struct ble_gap_conn_desc desc;
+      if (ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc) != 0) {
+        return BLE_GAP_REPEAT_PAIRING_IGNORE;
+      }
+      ble_store_util_delete_peer(&desc.peer_id_addr);
+      return BLE_GAP_REPEAT_PAIRING_RETRY;
+    }
+
+#if defined(BLE_GAP_EVENT_AUTHORIZE)
+    case BLE_GAP_EVENT_AUTHORIZE:
+    {
+      uint16_t connHandle = event->authorize.conn_handle;
+      uint16_t attrHandle = event->authorize.attr_handle;
+      bool isRead = (event->authorize.is_read != 0);
+      BLEConnInfo conn;
+      struct ble_gap_conn_desc desc {};
+      if (ble_gap_conn_find(connHandle, &desc) == 0) {
+        conn = BLEConnInfoImpl::fromDesc(desc);
+      }
+      bool allowed = sec ? sec->notifyAuthorization(conn, attrHandle, isRead) : false;
+      event->authorize.out_response = allowed ? BLE_GAP_AUTHORIZE_ACCEPT : BLE_GAP_AUTHORIZE_REJECT;
+      return 0;
+    }
+#endif
+
+    default: return 0;
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -332,6 +413,10 @@ uint32_t BLESecurity::Impl::resolvePasskeyForDisplay(const BLEConnInfo &) {
 void BLESecurity::Impl::reportPairingComplete(uint16_t, int) {}
 
 void BLESecurity::Impl::deleteStaleBond(const ble_addr_t &) {}
+
+int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *) {
+  return 0;
+}
 
 #endif /* BLE_SMP_SUPPORTED */
 

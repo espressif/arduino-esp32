@@ -36,6 +36,12 @@
  *       pattern when discovery and notify registration overlap).
  */
 
+BLERemoteCharacteristicImplCommon::~BLERemoteCharacteristicImplCommon() {
+  for (auto &dsc : descriptors) {
+    dsc->chr = nullptr;
+  }
+}
+
 BLERemoteCharacteristic::BLERemoteCharacteristic() : _impl(nullptr) {}
 
 BLERemoteCharacteristic::operator bool() const {
@@ -76,7 +82,7 @@ bool BLERemoteCharacteristic::canBroadcast() const {
   return _impl && (_impl->properties & static_cast<uint8_t>(BLEProperty::Broadcast));
 }
 
-const uint8_t *BLERemoteCharacteristic::readRawData(size_t *len) {
+const uint8_t *BLERemoteCharacteristic::readRawData(size_t *len) const {
   if (!_impl || _impl->value.empty()) {
     if (len) {
       *len = 0;
@@ -143,7 +149,6 @@ BTStatus BLERemoteCharacteristic::writeValue(uint8_t value, bool withResponse) {
 }
 
 BLERemoteService BLERemoteCharacteristic::getRemoteService() const {
-  // Non-owning handle: the parent service is owned by the discovering client.
   return (_impl && _impl->service) ? BLERemoteService(_impl->service->shared_from_this()) : BLERemoteService();
 }
 

@@ -28,8 +28,7 @@
 
 /**
  * @file
- * @brief Stack-agnostic @ref BLECharacteristic helpers; ATT server events,
- *        notify/indicate, and registration live in the selected backend.
+ * @brief Stack-agnostic @ref BLECharacteristic helpers and shared notify/indicate dispatch.
  */
 
 BLECharacteristic::BLECharacteristic() : _impl(nullptr) {}
@@ -59,11 +58,13 @@ void BLECharacteristic::setValue(double v) {
 }
 
 BLEProperty BLECharacteristic::getProperties() const {
-  return _impl ? _impl->properties : BLEProperty{};
+  BLE_CHECK_IMPL(BLEProperty{});
+  return impl.properties;
 }
 
 BLEPermission BLECharacteristic::getPermissions() const {
-  return _impl ? _impl->permissions : BLEPermission{};
+  BLE_CHECK_IMPL(BLEPermission{});
+  return impl.permissions;
 }
 
 void BLECharacteristic::setPermissions(BLEPermission permissions) {
@@ -73,7 +74,7 @@ void BLECharacteristic::setPermissions(BLEPermission permissions) {
   impl.permissions = permissions;
 }
 
-BLEDescriptor BLECharacteristic::getDescriptor(const BLEUUID &uuid) {
+BLEDescriptor BLECharacteristic::getDescriptor(const BLEUUID &uuid) const {
   BLE_CHECK_IMPL(BLEDescriptor());
   for (auto &d : impl.descriptors) {
     if (d->uuid == uuid) {
@@ -94,30 +95,48 @@ std::vector<BLEDescriptor> BLECharacteristic::getDescriptors() const {
 }
 
 void BLECharacteristic::removeDescriptor(const BLEDescriptor &desc) {
-  if (!_impl || !desc._impl) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLE_CHECK_IMPL();
+  if (!desc._impl) {
     return;
   }
-  auto &descs = _impl->descriptors;
-  for (auto it = descs.begin(); it != descs.end(); ++it) {
-    if (*it == desc._impl) {
-      descs.erase(it);
-      break;
+  std::shared_ptr<BLEDescriptor::Impl> removed;
+  {
+    BLELockGuard lock(impl.mtx);
+    if (impl.service && impl.service->started) {
+      log_w("Characteristic %s: removeDescriptor is only allowed before the service is started", impl.uuid.toString().c_str());
+      return;
+    }
+    auto &descs = impl.descriptors;
+    for (auto it = descs.begin(); it != descs.end(); ++it) {
+      if (*it == desc._impl) {
+        removed = *it;
+        descs.erase(it);
+        break;
+      }
     }
   }
+  bleDetachLocalDescriptor(removed);
+#else
+  (void)desc;
+#endif
 }
 
 BLEUUID BLECharacteristic::getUUID() const {
-  return _impl ? _impl->uuid : BLEUUID();
+  BLE_CHECK_IMPL(BLEUUID());
+  return impl.uuid;
 }
 
 uint16_t BLECharacteristic::getHandle() const {
-  return _impl ? _impl->handle : 0;
+  BLE_CHECK_IMPL(0);
+  return impl.handle;
 }
 
 BLEService BLECharacteristic::getService() const {
   // The returned handle uses a non-owning shared_ptr (service lifetime is owned
   // by the server), so it must not outlive the server.
-  return _impl && _impl->service ? BLEService(_impl->service->shared_from_this()) : BLEService();
+  BLE_CHECK_IMPL(BLEService());
+  return impl.service ? BLEService(impl.service->shared_from_this()) : BLEService();
 }
 
 String BLECharacteristic::toString() const {
@@ -131,31 +150,249 @@ void BLECharacteristic::setValue(int value) {
 
 void BLECharacteristic::onRead(ReadHandler handler) {
   BLE_CHECK_IMPL();
-  impl.onReadCb = handler;
+  BLELockGuard lock(impl.mtx);
+  impl.onReadCb = std::move(handler);
 }
 
 void BLECharacteristic::onWrite(WriteHandler handler) {
   BLE_CHECK_IMPL();
-  impl.onWriteCb = handler;
+  BLELockGuard lock(impl.mtx);
+  impl.onWriteCb = std::move(handler);
 }
 
 void BLECharacteristic::onNotify(NotifyHandler handler) {
   BLE_CHECK_IMPL();
-  impl.onNotifyCb = handler;
+  BLELockGuard lock(impl.mtx);
+  impl.onNotifyCb = std::move(handler);
+  impl.dispatchNotifyHook = BLECharacteristicImplCommon::invokeDispatchNotify;
 }
 
 void BLECharacteristic::onSubscribe(SubscribeHandler handler) {
   BLE_CHECK_IMPL();
-  impl.onSubscribeCb = handler;
+  BLELockGuard lock(impl.mtx);
+  impl.onSubscribeCb = std::move(handler);
 }
 
 void BLECharacteristic::onStatus(StatusHandler handler) {
   BLE_CHECK_IMPL();
-  impl.onStatusCb = handler;
+  BLELockGuard lock(impl.mtx);
+  impl.onStatusCb = std::move(handler);
+  impl.dispatchStatusHook = BLECharacteristicImplCommon::invokeDispatchStatus;
 }
+
+void BLECharacteristicImplCommon::invokeDispatchNotify(BLECharacteristicImplCommon *self) {
+  BLECharacteristic::NotifyHandler cb;
+  {
+    BLELockGuard lock(self->mtx);
+    if (!self->onNotifyCb) {
+      return;
+    }
+    cb = self->onNotifyCb;
+  }
+  BLECharacteristic chr = makeHandle(self->shared_from_this());
+  cb(chr);
+}
+
+void BLECharacteristicImplCommon::invokeDispatchStatus(BLECharacteristicImplCommon *self, BLECharacteristic::NotifyStatus status, uint32_t code) {
+  BLECharacteristic::StatusHandler cb;
+  {
+    BLELockGuard lock(self->mtx);
+    if (!self->onStatusCb) {
+      return;
+    }
+    cb = self->onStatusCb;
+  }
+  BLECharacteristic chr = makeHandle(self->shared_from_this());
+  cb(chr, status, code);
+}
+
+#if BLE_GATT_SERVER_SUPPORTED
+
+BLEServer::Impl *BLECharacteristicImplCommon::activeServer() {
+  BLEService::Impl *svc = nullptr;
+  BLEServer::Impl *server = nullptr;
+  {
+    BLELockGuard lock(mtx);
+    if (handle == 0 || !service || !service->server) {
+      return nullptr;
+    }
+    svc = service;
+    server = svc->server;
+  }
+  BLELockGuard lock(server->mtx);
+  if (!server->active || !server->started || !svc->started || svc->removing || svc->server != server) {
+    return nullptr;
+  }
+  return server;
+}
+
+static BTStatus sendNotifyAdapter(BLECharacteristic::Impl &chr, BLEServer::Impl *, uint16_t connHandle, const uint8_t *data, size_t length) {
+  return bleCharacteristicSendNotify(chr, connHandle, data, length);
+}
+
+static BTStatus sendIndicateAdapter(BLECharacteristic::Impl &chr, BLEServer::Impl *server, uint16_t connHandle, const uint8_t *data, size_t length) {
+  return server->indicate(connHandle, chr.shared_from_this(), std::vector<uint8_t>(data, data + length));
+}
+
+BTStatus BLECharacteristicImplCommon::sendToSubscribers(const uint8_t *data, size_t length, bool indicate, SendFn sendFn) {
+  BLEServer::Impl *server = activeServer();
+  if (!server) {
+    log_w("Characteristic %s: %s called while not registered on an active server", uuid.toString().c_str(), indicate ? "indicate" : "notify");
+    return BTStatus::InvalidState;
+  }
+  BLEProperty requiredProp = indicate ? BLEProperty::Indicate : BLEProperty::Notify;
+  if (!(properties & requiredProp)) {
+    log_w("Characteristic %s: %s called but property not set", uuid.toString().c_str(), indicate ? "indicate" : "notify");
+    return BTStatus::InvalidState;
+  }
+
+  uint16_t cccdBit = indicate ? BLE_CCCD_INDICATE : BLE_CCCD_NOTIFY;
+  uint16_t targets[16];
+  size_t count = 0;
+  bool anyConnection = false;
+  {
+    BLELockGuard lock(server->mtx);
+    anyConnection = !server->connections.empty();
+    for (const auto &[connHandle, subVal] : subscribers) {
+      if ((subVal & cccdBit) && count < (sizeof(targets) / sizeof(targets[0]))) {
+        targets[count++] = connHandle;
+      }
+    }
+  }
+  if (count == 0) {
+    dispatchStatus(anyConnection ? BLECharacteristic::ERROR_NO_SUBSCRIBER : BLECharacteristic::ERROR_NO_CLIENT, 0);
+    return BTStatus::OK;
+  }
+
+  dispatchNotify();
+  BLELockGuard valueLock((!data || length == 0) ? mtx : nullptr);
+  const uint8_t *payloadPtr = (!data || length == 0) ? value.data() : data;
+  size_t payloadLen = (!data || length == 0) ? value.size() : length;
+
+  auto &self = static_cast<BLECharacteristic::Impl &>(*this);
+  BTStatus result = BTStatus::OK;
+  for (size_t i = 0; i < count; ++i) {
+    BTStatus s = sendFn(self, server, targets[i], payloadPtr, payloadLen);
+    if (s == BTStatus::Busy) {
+      result = BTStatus::Busy;
+    } else if (!s && result) {
+      result = s;
+    }
+  }
+  return indicate ? result : BTStatus::OK;
+}
+
+BTStatus BLECharacteristicImplCommon::sendToConnection(uint16_t connHandle, const uint8_t *data, size_t length, bool indicate, SendFn sendFn) {
+  BLEServer::Impl *server = activeServer();
+  if (!server) {
+    log_w("Characteristic %s: %s(conn) called while not registered on an active server", uuid.toString().c_str(), indicate ? "indicate" : "notify");
+    return BTStatus::InvalidState;
+  }
+  BLEProperty requiredProp = indicate ? BLEProperty::Indicate : BLEProperty::Notify;
+  if (!(properties & requiredProp)) {
+    log_w("Characteristic %s: %s(conn) called but property not set", uuid.toString().c_str(), indicate ? "indicate" : "notify");
+    return BTStatus::InvalidState;
+  }
+
+  uint16_t cccdBit = indicate ? BLE_CCCD_INDICATE : BLE_CCCD_NOTIFY;
+  bool connected = false;
+  uint16_t subVal = 0;
+  {
+    BLELockGuard lock(server->mtx);
+    connected = server->connFind(connHandle) != nullptr;
+    for (const auto &sub : subscribers) {
+      if (sub.first == connHandle) {
+        subVal = sub.second;
+        break;
+      }
+    }
+  }
+  if (!connected) {
+    log_w("Characteristic %s: %s(conn=%u) but not connected", uuid.toString().c_str(), indicate ? "indicate" : "notify", connHandle);
+    dispatchStatus(BLECharacteristic::ERROR_NO_CLIENT, 0);
+    return BTStatus::NotConnected;
+  }
+  if (!(subVal & cccdBit)) {
+    log_w("Characteristic %s: %s(conn=%u) but the client has not enabled it", uuid.toString().c_str(), indicate ? "indicate" : "notify", connHandle);
+    dispatchStatus(indicate ? BLECharacteristic::ERROR_INDICATE_DISABLED : BLECharacteristic::ERROR_NOTIFY_DISABLED, 0);
+    return BTStatus::InvalidState;
+  }
+
+  dispatchNotify();
+  BLELockGuard valueLock((!data || length == 0) ? mtx : nullptr);
+  const uint8_t *payloadPtr = (!data || length == 0) ? value.data() : data;
+  size_t payloadLen = (!data || length == 0) ? value.size() : length;
+
+  auto &self = static_cast<BLECharacteristic::Impl &>(*this);
+  return sendFn(self, server, connHandle, payloadPtr, payloadLen);
+}
+
+BTStatus BLECharacteristic::notify(const uint8_t *data, size_t length) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.sendToSubscribers(data, length, /*indicate=*/false, sendNotifyAdapter);
+}
+
+BTStatus BLECharacteristic::notify(uint16_t connHandle, const uint8_t *data, size_t length) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.sendToConnection(connHandle, data, length, /*indicate=*/false, sendNotifyAdapter);
+}
+
+BTStatus BLECharacteristic::indicate(const uint8_t *data, size_t length) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.sendToSubscribers(data, length, /*indicate=*/true, sendIndicateAdapter);
+}
+
+BTStatus BLECharacteristic::indicate(uint16_t connHandle, const uint8_t *data, size_t length) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.sendToConnection(connHandle, data, length, /*indicate=*/true, sendIndicateAdapter);
+}
+
+void BLECharacteristic::setDescription(const String &desc) {
+  if (!_impl) {
+    return;
+  }
+  auto existing = getDescriptor(BLEUUID(BLE_DSC_UUID16_USER_DESC));
+  if (existing) {
+    existing.setValue(desc);
+  } else {
+    auto d = createDescriptor(BLEUUID(BLE_DSC_UUID16_USER_DESC), BLEPermission::ReadOpen, desc.length() + 1);
+    d.setValue(desc);
+  }
+}
+
+#else /* !BLE_GATT_SERVER_SUPPORTED */
+
+BTStatus BLECharacteristic::notify(const uint8_t *, size_t) {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLECharacteristic::notify(uint16_t, const uint8_t *, size_t) {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLECharacteristic::indicate(const uint8_t *, size_t) {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLECharacteristic::indicate(uint16_t, const uint8_t *, size_t) {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &, BLEPermission, size_t) {
+  return BLEDescriptor();
+}
+
+void BLECharacteristic::setDescription(const String &) {}
+
+#endif /* BLE_GATT_SERVER_SUPPORTED */
 
 void BLECharacteristic::resetCallbacks() {
   BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
   impl.onReadCb = nullptr;
   impl.onWriteCb = nullptr;
   impl.onNotifyCb = nullptr;

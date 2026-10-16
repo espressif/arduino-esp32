@@ -86,6 +86,10 @@ public:
    * @brief Shut down the BLE stack.
    *
    * Stops advertising, disconnects all peers, and deinitializes the host.
+   * Local GATT services created since the last @ref begin are released; handles
+   * the sketch still holds become detached shells (still non-null, but with no
+   * parent or native handle). @ref createServer returns the same server after a
+   * later @ref begin — rebuild the database before @c start().
    *
    * @param releaseMemory  If true, also releases the Bluetooth controller
    *                       memory. After this, begin() cannot reinitialize BLE

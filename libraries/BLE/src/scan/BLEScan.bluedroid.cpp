@@ -59,6 +59,10 @@ void BLEScan::clearDuplicateCache() {
 BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
 
+  if (impl.isScanning) {
+    stop();
+  }
+
   if (!appendToExistingResults) {
     BLELockGuard lock(impl.mtx);
     impl.results = BLEScan::Results();
@@ -93,8 +97,10 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
 
   // Extended scan duration is in 10 ms units; 0 == scan until stopped.
   uint32_t durationUnits = (durationMs == 0) ? 0 : (durationMs / 10);
+  impl.isScanning = true;
   err = esp_ble_gap_start_ext_scan(durationUnits, 0);
   if (err != ESP_OK) {
+    impl.isScanning = false;
     log_e("esp_ble_gap_start_ext_scan: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
@@ -126,9 +132,11 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
 
   // Bluedroid uses seconds; convert ms -> s, 0 means infinite
   uint32_t durationSec = durationMs / 1000;
+  impl.isScanning = true;
 
   err = esp_ble_gap_start_scanning(durationSec);
   if (err != ESP_OK) {
+    impl.isScanning = false;
     log_e("esp_ble_gap_start_scanning: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
@@ -182,6 +190,9 @@ BTStatus BLEScan::stop() {
 BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedConfig, const ExtScanConfig *uncodedConfig) {
 #if BLE5_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.isScanning) {
+    stop();
+  }
   {
     BLELockGuard lock(impl.mtx);
     impl.results = BLEScan::Results();
@@ -218,8 +229,10 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
   }
 
   uint32_t durationUnits = (durationMs == 0) ? 0 : (durationMs / 10);
+  impl.isScanning = true;
   err = esp_ble_gap_start_ext_scan(durationUnits, 0);
   if (err != ESP_OK) {
+    impl.isScanning = false;
     log_e("esp_ble_gap_start_ext_scan: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
@@ -346,9 +359,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
     case ESP_GAP_BLE_SCAN_START_COMPLETE_EVT:
       log_d("SCAN_START_COMPLETE status=%d", param->scan_start_cmpl.status);
-      if (param->scan_start_cmpl.status == ESP_BT_STATUS_SUCCESS) {
-        inst->isScanning = true;
-      }
+      inst->isScanning = (param->scan_start_cmpl.status == ESP_BT_STATUS_SUCCESS);
       break;
 
     case ESP_GAP_BLE_SCAN_STOP_COMPLETE_EVT:
@@ -366,9 +377,29 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             break;
           }
 
+          BTAddress addr = BTAddress::fromEspBdAddr(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
+          if (param->scan_rst.ble_evt_type == ESP_BLE_EVT_SCAN_RSP || (param->scan_rst.adv_data_len == 0 && param->scan_rst.scan_rsp_len > 0)) {
+            BLEAdvertisedDevice merged;
+            bool found = false;
+            BLEScan::ResultHandler cb;
+            {
+              BLELockGuard lock(inst->mtx);
+              found = BLEScanImplCommon::mergeScanResponse(
+                inst->results, addr, 0xFF, param->scan_rst.ble_adv + param->scan_rst.adv_data_len, param->scan_rst.scan_rsp_len, param->scan_rst.rssi, merged
+              );
+              cb = inst->onResultCb;
+            }
+            if (found) {
+              if (cb) {
+                cb(merged);
+              }
+              break;
+            }
+          }
+
           // Build advertised device from scan result
           auto devImpl = std::make_shared<BLEAdvertisedDevice::Impl>();
-          devImpl->address = BTAddress::fromEspBdAddr(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
+          devImpl->address = addr;
           devImpl->addrType = static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type);
           devImpl->rssi = param->scan_rst.rssi;
           devImpl->hasRSSI = true;
@@ -408,10 +439,15 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
               // sets from one address (different SIDs) are not duplicates. Legacy
               // PDUs carry SID 0xFF, so this stays address-based among legacy
               // entries while not colliding with extended sets from the same peer.
+              // A subsequent report that adds a scan-response name or expands the
+              // payload is not suppressed as a duplicate.
               if (inst->filterDuplicates) {
                 for (const auto &existing : inst->results) {
                   if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
-                    isDuplicate = true;
+                    const bool addsScanRsp = (!existing.haveName() && dev.haveName()) || (existing.getPayloadLength() < dev.getPayloadLength());
+                    if (!addsScanRsp) {
+                      isDuplicate = true;
+                    }
                     break;
                   }
                 }
@@ -467,9 +503,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
     case ESP_GAP_BLE_EXT_SCAN_START_COMPLETE_EVT:
       log_d("EXT_SCAN_START_COMPLETE status=%d", param->ext_scan_start.status);
-      if (param->ext_scan_start.status == ESP_BT_STATUS_SUCCESS) {
-        inst->isScanning = true;
-      }
+      inst->isScanning = (param->ext_scan_start.status == ESP_BT_STATUS_SUCCESS);
       break;
 
     case ESP_GAP_BLE_EXT_SCAN_STOP_COMPLETE_EVT:
@@ -488,7 +522,8 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
       // Merge scan responses (which carry the Local Name) into the device from
       // the preceding advertisement.
-      const bool isScanRsp = (r.event_type & ESP_BLE_ADV_REPORT_EXT_SCAN_RSP) != 0;
+      const bool isScanRsp = (r.event_type & ESP_BLE_ADV_REPORT_EXT_SCAN_RSP) != 0 || r.event_type == ESP_BLE_LEGACY_ADV_TYPE_SCAN_RSP_TO_ADV_IND
+                             || r.event_type == ESP_BLE_LEGACY_ADV_TYPE_SCAN_RSP_TO_ADV_SCAN_IND;
       if (isScanRsp) {
         BLEAdvertisedDevice merged;
         bool found = false;
@@ -536,7 +571,10 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
           // (different SIDs) are not duplicates of each other.
           for (const auto &existing : inst->results) {
             if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
-              isDuplicate = true;
+              const bool addsScanRsp = (!existing.haveName() && dev.haveName()) || (existing.getPayloadLength() < dev.getPayloadLength());
+              if (!addsScanRsp) {
+                isDuplicate = true;
+              }
               break;
             }
           }

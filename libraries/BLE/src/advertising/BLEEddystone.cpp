@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <cstring>
 
-static const BLEUUID kEddystoneUUID(static_cast<uint16_t>(0xFEAA));
+static constexpr BLEUUID kEddystoneUUID = BLEUUID::from16(0xFEAA);
 
 // =========================================================================
 // BLEEddystoneURL

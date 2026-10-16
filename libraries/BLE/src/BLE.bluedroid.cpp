@@ -93,19 +93,29 @@ void BLEClass::Impl::gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_pa
   }
 
 #if BLE_GATT_SERVER_SUPPORTED
-  BLEServer::Impl::handleGAP(event, param);
+  if (impl->serverGapHook) {
+    impl->serverGapHook(event, param);
+  }
 #endif
 #if BLE_ADVERTISING_SUPPORTED
-  BLEAdvertising::Impl::handleGAP(event, param);
+  if (impl->advGapHook) {
+    impl->advGapHook(event, param);
+  }
 #endif
 #if BLE_SCANNING_SUPPORTED
-  BLEScan::Impl::handleGAP(event, param);
+  if (impl->scanGapHook) {
+    impl->scanGapHook(event, param);
+  }
 #endif
 #if BLE_GATT_CLIENT_SUPPORTED
-  BLEClient::Impl::handleGAP(event, param);
+  if (impl->clientGapHook) {
+    impl->clientGapHook(event, param);
+  }
 #endif
 #if BLE_SMP_SUPPORTED
-  bluedroidSecurityHandleGAP(event, param);
+  if (impl->securityGapHook) {
+    impl->securityGapHook(event, param);
+  }
 #endif
 
   if (impl->customGapHandler) {
@@ -126,7 +136,9 @@ void BLEClass::Impl::gattsCallback(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     return;
   }
 
-  BLEServer::Impl::handleGATTS(event, gatts_if, param);
+  if (impl->serverGattsHook) {
+    impl->serverGattsHook(event, gatts_if, param);
+  }
 
   if (impl->customGattsHandler) {
     impl->customGattsHandler(reinterpret_cast<void *>(&event), param);
@@ -147,7 +159,9 @@ void BLEClass::Impl::gattcCallback(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     return;
   }
 
-  BLEClient::Impl::handleGATTC(event, gattc_if, param);
+  if (impl->clientGattcHook) {
+    impl->clientGattcHook(event, gattc_if, param);
+  }
 
   if (impl->customGattcHandler) {
     impl->customGattcHandler(reinterpret_cast<void *>(&event), param);
@@ -162,9 +176,6 @@ void BLEClass::Impl::gattcCallback(esp_gattc_cb_event_t event, esp_gatt_if_t gat
 BLEClass::BLEClass() : _impl(new Impl()) {}
 
 BLEClass::~BLEClass() {
-  if (_initialized) {
-    end(false);
-  }
   delete _impl;
   _impl = nullptr;
 }
@@ -242,8 +253,8 @@ BTStatus BLEClass::begin(const String &deviceName) {
   // defaults. Re-push the retained configuration so the two cannot disagree:
   // without this, an end()/begin() round-trip silently dropped every security
   // setting while getSecurity() still reported the old values.
-  if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
-    sec->applySecurityParams();
+  if (_impl->securityBeginHook) {
+    _impl->securityBeginHook();
   }
 #endif
 
@@ -257,27 +268,65 @@ void BLEClass::end(bool releaseMemory) {
   }
 
 #if BLE_GATT_SERVER_SUPPORTED
-  BLEServer::Impl::invalidate();
+  // Prevent deferred work from racing host shutdown. Keep the GATT tree alive
+  // until Bluedroid is fully stopped so any final native callbacks can still
+  // resolve their attribute handles safely.
+  if (_impl->server) {
+    if (_impl->server->advRestartTimer) {
+      esp_timer_stop(_impl->server->advRestartTimer);
+    }
+    if (_impl->server->indicationRetryTimer) {
+      esp_timer_stop(_impl->server->indicationRetryTimer);
+    }
+  }
 #endif
   // Reset advertising state before tearing down the stack.  The Bluedroid
   // stack is still running here, so the public reset() can call stop() through
   // the normal async path (esp_ble_gap_stop_advertising + wait), then wipe all
   // accumulated configuration (serviceUUIDs, appearance, etc.).
 #if BLE_ADVERTISING_SUPPORTED
-  getAdvertising().reset();
+  if (BLEAdvertising::Impl::s_instance) {
+    BLEAdvertising(std::shared_ptr<BLEAdvertising::Impl>(BLEAdvertising::Impl::s_instance, [](BLEAdvertising::Impl *) {})).reset();
+  }
 #endif
   // Stop any active scan while the stack is still enabled so a late scan-result
   // callback cannot fire into the scan handler after esp_bluedroid_disable().
 #if BLE_SCANNING_SUPPORTED
-  if (getScan().isScanning()) {
-    getScan().stop();
+  if (BLEScan::Impl::s_instance) {
+    BLEScan scan(std::shared_ptr<BLEScan::Impl>(BLEScan::Impl::s_instance, [](BLEScan::Impl *) {}));
+    if (scan.isScanning()) {
+      scan.stop();
+    }
+    scan.terminateAllPeriodicSyncs();
   }
-  // Tear down periodic syncs while the host is still enabled (DESIGN.md contract).
-  getScan().terminateAllPeriodicSyncs();
+#endif
+
+  // Close the public session before native shutdown callbacks run. The GATT
+  // tree stays attached until deinit, but callbacks cannot re-enter
+  // createServer() or send through a host that is stopping.
+  _initialized = false;
+#if BLE_GATT_SERVER_SUPPORTED
+  if (_impl->server) {
+    BLELockGuard lock(_impl->server->mtx);
+    _impl->server->active = false;
+  }
 #endif
 
   esp_bluedroid_disable();
   esp_bluedroid_deinit();
+
+#if BLE_GATT_SERVER_SUPPORTED
+  if (_impl->server) {
+    _impl->server->gattsIf = ESP_GATT_IF_NONE;
+    _impl->server->pendingHandle = nullptr;
+    _impl->server->prepWrites.clear();
+    {
+      BLELockGuard lock(_impl->server->mtx);
+      _impl->server->pendingNotifies.clear();
+    }
+    _impl->server->releaseGattTree();
+  }
+#endif
 
   esp_bt_controller_disable();
   esp_bt_controller_deinit();
@@ -285,8 +334,6 @@ void BLEClass::end(bool releaseMemory) {
   if (releaseMemory) {
     btMemRelease(BT_MODE_BLE);
   }
-
-  _initialized = false;
 }
 
 // --------------------------------------------------------------------------
@@ -579,6 +626,7 @@ BLEScan BLEClass::getScan() {
   if (!slot) {
     slot = std::make_shared<BLEScan::Impl>();
     BLEScan::Impl::s_instance = slot.get();
+    _impl->scanGapHook = BLEScan::Impl::handleGAP;
   }
   return BLEScan(slot);
 }
@@ -599,6 +647,7 @@ BLEAdvertising BLEClass::getAdvertising() {
   if (!slot) {
     slot = std::make_shared<BLEAdvertising::Impl>();
     BLEAdvertising::Impl::s_instance = slot.get();
+    _impl->advGapHook = BLEAdvertising::Impl::handleGAP;
   }
   return BLEAdvertising(slot);
 }
@@ -638,26 +687,38 @@ BLEServer BLEClass::createServer() {
     log_e("createServer: BLE not initialized");
     return BLEServer();
   }
+  _impl->serverGapHook = BLEServer::Impl::handleGAP;
+  _impl->serverGattsHook = BLEServer::Impl::handleGATTS;
   if (!slot) {
     auto fresh = std::make_shared<BLEServer::Impl>();
-    BLEServer::Impl::s_instance = fresh.get();
     esp_timer_create_args_t timerArgs = {};
     timerArgs.callback = [](void *) {
       BLE.startAdvertising();
     };
     timerArgs.name = "ble_adv_restart";
-    esp_timer_create(&timerArgs, &fresh->advRestartTimer);
+    esp_err_t err = esp_timer_create(&timerArgs, &fresh->advRestartTimer);
+    if (err != ESP_OK) {
+      log_e("createServer: advertising timer: %s", esp_err_to_name(err));
+      return BLEServer();
+    }
+    BLEServer::Impl::s_instance = fresh.get();
     if (!bluedroidRegisterGattsApp(fresh)) {
       BLEServer::Impl::s_instance = nullptr;
       return BLEServer();
     }
     slot = fresh;
+    _impl->server = slot.get();
   } else if (slot->gattsIf == ESP_GATT_IF_NONE) {
     if (!bluedroidRegisterGattsApp(slot)) {
-      BLEServer::Impl::s_instance = nullptr;
-      slot.reset();
+      BLEServer::Impl::s_instance = slot.get();
+      BLELockGuard lock(slot->mtx);
+      slot->active = false;
       return BLEServer();
     }
+  }
+  {
+    BLELockGuard lock(slot->mtx);
+    slot->active = true;
   }
   return BLEServer(slot);
 }
@@ -674,6 +735,8 @@ BLEClient BLEClass::createClient() {
     log_e("createClient: BLE not initialized");
     return BLEClient();
   }
+  _impl->clientGapHook = BLEClient::Impl::handleGAP;
+  _impl->clientGattcHook = BLEClient::Impl::handleGATTC;
   auto impl = std::make_shared<BLEClient::Impl>();
   if (!bluedroidRegisterClient(impl)) {
     return BLEClient();
@@ -697,6 +760,12 @@ BLESecurity BLEClass::getSecurity() {
   if (!slot) {
     slot = std::make_shared<BLESecurity::Impl>();
     BLESecurity::Impl::s_instance = slot.get();
+    _impl->securityGapHook = bluedroidSecurityHandleGAP;
+    _impl->securityBeginHook = []() {
+      if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
+        sec->applySecurityParams();
+      }
+    };
     slot->applySecurityParams();
   }
   return BLESecurity(slot);

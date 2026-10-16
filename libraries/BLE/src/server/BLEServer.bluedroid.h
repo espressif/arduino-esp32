@@ -60,6 +60,24 @@ struct BLEServer::Impl : BLEServerImplCommon {
   // Drop any buffered fragments for connId (no-op if absent).
   void erasePrepWrites(uint16_t connId);
 
+  // Bluedroid delivers notification completions and indication confirmations via
+  // the same ESP_GATTS_CONF_EVT (with conn_id, handle, and status). Track the
+  // count of outstanding notifications per (connId, attrHandle) so local
+  // notification CONF events are distinguished from peer indication confirmations
+  // without holding notifications behind unconfirmed indications. Guarded by mtx.
+  struct PendingNotify {
+    uint16_t connId = 0;
+    uint16_t attrHandle = 0;
+    uint16_t count = 0;
+  };
+  std::vector<PendingNotify> pendingNotifies;
+
+  void addPendingNotify(uint16_t connId, uint16_t attrHandle);
+  bool consumePendingNotify(uint16_t connId, uint16_t attrHandle);
+  void erasePendingNotifies(uint16_t connId);
+  bool hasPendingNotifications(const BLEService::Impl *svc) const;
+  void scheduleBusyRetry();
+
   BLESync regSync{"regSync"};
   BLESync createSync{"createSync"};
   BLESync connectSync{"connectSync"};
@@ -77,9 +95,16 @@ struct BLEServer::Impl : BLEServerImplCommon {
   // Timer for deferred advertising restart (avoids blocking the BTC task)
   esp_timer_handle_t advRestartTimer = nullptr;
 
+  // Lazy-created timer for retrying an indication refused with ESP_GATT_BUSY.
+  esp_timer_handle_t indicationRetryTimer = nullptr;
+
   ~Impl() {
     if (advRestartTimer) {
       esp_timer_delete(advRestartTimer);
+    }
+    if (indicationRetryTimer) {
+      esp_timer_stop(indicationRetryTimer);
+      esp_timer_delete(indicationRetryTimer);
     }
   }
 

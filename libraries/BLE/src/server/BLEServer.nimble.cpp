@@ -27,6 +27,7 @@
 
 #include "BLE.h"
 
+#include "BLE.nimble.h"
 #include "server/BLEServer.nimble.h"
 #include "gatt/BLEGattAttributes.nimble.h"
 #include "types/BLEConnInfo.nimble.h"
@@ -40,6 +41,7 @@
 
 #if BLE_GATT_SERVER_SUPPORTED
 
+#include "gatt/BLECharacteristicValidation.h"
 #include <host/ble_hs.h>
 #include <host/ble_att.h>
 #include <services/gap/ble_svc_gap.h>
@@ -108,12 +110,28 @@ void nimbleResetReAdvertiseEvent() {
  *       of all services; per-service create/delete is not used.
  */
 static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
-  ble_gatts_reset();
+  for (const auto &svc : impl.services) {
+    for (const auto &chr : svc->characteristics) {
+      if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/true)) {
+        log_e("GATT: characteristic %s rejected by validation", chr->uuid.toString().c_str());
+        return BTStatus::InvalidState;
+      }
+    }
+  }
+
+  // ble_gatts_reset() is EBUSY while a central is connected or GAP is active
+  // (adv/scan/connect). Ignoring that and calling ble_svc_gap_init() panics
+  // inside ble_gatts_add_svcs (SYSINIT_PANIC_ASSERT rc==0).
+  int rc = ble_gatts_reset();
+  if (rc != 0) {
+    log_w("ble_gatts_reset: rc=%d (GATT table immutable while connected or advertising)", rc);
+    return rc == BLE_HS_EBUSY ? BTStatus::Busy : BTStatus::Fail;
+  }
   ble_svc_gap_init();
   ble_svc_gatt_init();
 
   if (!impl.services.empty()) {
-    int rc = nimbleRegisterGattServices(impl.services);
+    rc = nimbleRegisterGattServices(impl.services);
     if (rc != 0) {
       log_e("nimbleRegisterGattServices: rc=%d", rc);
       return BTStatus::Fail;
@@ -123,7 +141,7 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
     }
   }
 
-  int rc = ble_gatts_start();
+  rc = ble_gatts_start();
   if (rc != 0) {
     log_e("ble_gatts_start: rc=%d", rc);
     return BTStatus::Fail;
@@ -142,11 +160,25 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
 // nimbleRebuildGattDatabase, not incremental Bluedroid-style create per service.
 BTStatus BLEServer::start() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (impl.started) {
+  bool active;
+  bool wasStarted;
+  {
+    BLELockGuard lock(impl.mtx);
+    active = impl.active;
+    wasStarted = impl.started;
+  }
+  if (!active) {
+    return BTStatus::InvalidState;
+  }
+  if (wasStarted) {
     // Check if new services were added after the initial start
     // (characteristics with handle == 0 have not been registered).
     bool hasNew = false;
     for (auto &s : impl.services) {
+      if (!s->started) {
+        hasNew = true;
+        break;
+      }
       for (auto &c : s->characteristics) {
         if (c->handle == 0) {
           hasNew = true;
@@ -193,6 +225,41 @@ BTStatus BLEServer::connect(const BTAddress &address) {
 
 uint16_t BLEServer::getPeerMTU(uint16_t connHandle) const {
   return ble_att_mtu(connHandle);
+}
+
+BLEIndicationSend bleServerSendIndication(
+  BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
+) {
+  {
+    BLELockGuard lock(impl->mtx);
+    if (!impl->active || !impl->started || !impl->connFind(connHandle)) {
+      status = BLECharacteristic::ERROR_NO_CLIENT;
+      code = BLE_HS_ENOTCONN;
+      return BLEIndicationSend::Failed;
+    }
+  }
+  struct os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
+  if (!om) {
+    log_e("Server: indicate - no memory for mbuf (conn=%u)", connHandle);
+    status = BLECharacteristic::ERROR_INDICATE_FAILURE;
+    code = BLE_HS_ENOMEM;
+    return BLEIndicationSend::Failed;
+  }
+  // EALREADY: the connection's indication slot is held by one NimBLE sent
+  // itself (e.g. Service Changed); the queue retries when that one completes.
+  int rc = ble_gatts_indicate_custom(connHandle, attrHandle, om);
+  if (rc == 0) {
+    return BLEIndicationSend::Sent;
+  }
+  if (rc == BLE_HS_EALREADY) {
+    status = BLECharacteristic::ERROR_INDICATE_FAILURE;
+    code = BLE_HS_EALREADY;
+    return BLEIndicationSend::Busy;
+  }
+  log_w("Server: indicate failed for conn=%u handle=%u rc=%d", connHandle, attrHandle, rc);
+  status = (rc == BLE_HS_ENOTCONN) ? BLECharacteristic::ERROR_NO_CLIENT : BLECharacteristic::ERROR_INDICATE_FAILURE;
+  code = rc;
+  return BLEIndicationSend::Failed;
 }
 
 // Parameters are validated locally against the BT Core Spec ranges (v5.x, Vol 6, Part B,
@@ -328,6 +395,9 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         }
         shouldAdvertise = impl->advertiseOnDisconnect;
       }
+      if (impl->dropIndicationsHook) {
+        impl->dropIndicationsHook(impl, connHandle);
+      }
       impl->dispatchDisconnect(connInfo, reason);
 
       if (shouldAdvertise) {
@@ -406,14 +476,11 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
 #if BLE_SMP_SUPPORTED
       if (status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
-        BLESecurity::Impl::deleteStaleBond(desc.peer_id_addr);
+        ble_store_util_delete_peer(&desc.peer_id_addr);
       } else if (status != 0) {
         log_w("Server: pairing/encryption failed on conn %u, host status=0x%04x", connHandle, status);
       }
-      auto *sec = BLESecurity::Impl::instance();
-      if (sec) {
-        sec->notifyAuthComplete(connInfo, status == 0);
-      }
+      nimbleForwardSecurityGapEvent(event);
 #endif /* BLE_SMP_SUPPORTED */
       return 0;
     }
@@ -442,59 +509,9 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
 #if BLE_SMP_SUPPORTED
     case BLE_GAP_EVENT_PASSKEY_ACTION:
-    {
-      uint16_t connHandle = event->passkey.conn_handle;
-
-      struct ble_gap_conn_desc desc;
-      int rc = ble_gap_conn_find(connHandle, &desc);
-      if (rc != 0) {
-        return 0;
-      }
-
-      BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(desc);
-      auto *sec = BLESecurity::Impl::instance();
-      if (!sec) {
-        return 0;
-      }
-
-      if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
-        struct ble_sm_io pkey = {};
-        pkey.action = BLE_SM_IOACT_DISP;
-        pkey.passkey = sec->resolvePasskeyForDisplay(connInfo);
-        ble_sm_inject_io(connHandle, &pkey);
-      } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
-        struct ble_sm_io pkey = {};
-        pkey.action = BLE_SM_IOACT_INPUT;
-        pkey.passkey = sec->resolvePasskeyForInput(connInfo);
-        ble_sm_inject_io(connHandle, &pkey);
-      } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
-        struct ble_sm_io pkey = {};
-        pkey.action = BLE_SM_IOACT_NUMCMP;
-        pkey.numcmp_accept = sec->resolveNumericComparison(connInfo, event->passkey.params.numcmp) ? 1 : 0;
-        ble_sm_inject_io(connHandle, &pkey);
-      }
-      return 0;
-    }
-
     case BLE_GAP_EVENT_PARING_COMPLETE:  // Name is misspelled in NimBLE
-    {
-      // Arrives before the keys are persisted, so it only reports; BLE_GAP_EVENT_ENC_CHANGE
-      // is still what drives notifyAuthComplete().
-      BLESecurity::Impl::reportPairingComplete(event->pairing_complete.conn_handle, event->pairing_complete.status);
-      return 0;
-    }
-
     case BLE_GAP_EVENT_REPEAT_PAIRING:
-    {
-      struct ble_gap_conn_desc desc;
-      int rc = ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc);
-      if (rc != 0) {
-        return BLE_GAP_REPEAT_PAIRING_IGNORE;
-      }
-
-      ble_store_util_delete_peer(&desc.peer_id_addr);
-      return BLE_GAP_REPEAT_PAIRING_RETRY;
-    }
+      return nimbleForwardSecurityGapEvent(event);
 #endif /* BLE_SMP_SUPPORTED */
 
     case BLE_GAP_EVENT_SUBSCRIBE:
@@ -534,7 +551,6 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
                   }
                 }
               }
-              subscribeCb = chr->onSubscribeCb;
               chrImpl = chr;
               break;
             }
@@ -543,6 +559,10 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
             break;
           }
         }
+      }
+      if (chrImpl) {
+        BLELockGuard lock(chrImpl->mtx);
+        subscribeCb = chrImpl->onSubscribeCb;
       }
       if (subscribeCb) {
         BLECharacteristic characteristic = BLECharacteristicImplCommon::makeHandle(chrImpl);
@@ -557,34 +577,66 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
     case BLE_GAP_EVENT_NOTIFY_TX:
     {
+      int status = event->notify_tx.status;
+      uint16_t connHandle = event->notify_tx.conn_handle;
+      uint16_t attrHandle = event->notify_tx.attr_handle;
+      if (status != 0 && status != BLE_HS_EDONE) {
+        log_w("Server: %s on handle %u conn=%u failed, status=%d", event->notify_tx.indication ? "indication" : "notification", attrHandle, connHandle, status);
+      }
+
+      if (event->notify_tx.indication) {
+        // status 0 only means the indication went out; the confirmation
+        // (BLE_HS_EDONE) or failure follows in a later event.
+        if (status == 0) {
+          return 0;
+        }
+        BLECharacteristic::NotifyStatus result;
+        if (status == BLE_HS_EDONE) {
+          result = BLECharacteristic::SUCCESS_INDICATE;
+        } else if (status == BLE_HS_ENOTCONN) {
+          result = BLECharacteristic::ERROR_NO_CLIENT;
+        } else if (status == BLE_HS_ETIMEOUT) {
+          result = BLECharacteristic::ERROR_INDICATE_TIMEOUT;
+        } else {
+          result = BLECharacteristic::ERROR_INDICATE_FAILURE;
+        }
+        bool completed = impl->indicationDoneHook && impl->indicationDoneHook(impl, connHandle, attrHandle, result, (status == BLE_HS_EDONE) ? 0 : status);
+        if (completed && status == BLE_HS_ETIMEOUT) {
+          ble_gap_terminate(connHandle, BLE_ERR_REM_USER_CONN_TERM);
+        }
+        return 0;
+      }
+
+      std::shared_ptr<BLECharacteristic::Impl> chrImpl;
+      {
+        BLELockGuard lock(impl->mtx);
+        for (auto &svc : impl->services) {
+          for (auto &chr : svc->characteristics) {
+            if (chr->handle == attrHandle) {
+              chrImpl = chr;
+              break;
+            }
+          }
+          if (chrImpl) {
+            break;
+          }
+        }
+      }
+      if (chrImpl) {
+        BLECharacteristic::NotifyStatus result = BLECharacteristic::SUCCESS_NOTIFY;
+        if (status == BLE_HS_ENOTCONN) {
+          result = BLECharacteristic::ERROR_NO_CLIENT;
+        } else if (status != 0) {
+          result = BLECharacteristic::ERROR_GATT;
+        }
+        chrImpl->dispatchStatus(result, status);
+      }
       return 0;
     }
 
 #if defined(BLE_GAP_EVENT_AUTHORIZE)
-    // Per-access authorization callback from the NimBLE stack. Triggered
-    // when an attribute was registered with BLE_GATT_CHR_F_{READ,WRITE}_AUTHOR
-    // and the connection is not yet marked as authorized via
-    // ble_gap_dev_authorization(). We route the decision into the
-    // application-supplied BLESecurity::onAuthorization() handler so the
-    // sketch can accept/reject every ATT read or write individually.
     case BLE_GAP_EVENT_AUTHORIZE:
-    {
-      uint16_t connHandle = event->authorize.conn_handle;
-      uint16_t attrHandle = event->authorize.attr_handle;
-      bool isRead = (event->authorize.is_read != 0);
-
-      BLEConnInfo conn;
-      struct ble_gap_conn_desc desc {};
-      if (ble_gap_conn_find(connHandle, &desc) == 0) {
-        conn = BLEConnInfoImpl::fromDesc(desc);
-      }
-
-      auto *sec = BLESecurity::Impl::instance();
-      bool allowed = sec ? sec->notifyAuthorization(conn, attrHandle, isRead) : false;
-      event->authorize.out_response = allowed ? BLE_GAP_AUTHORIZE_ACCEPT : BLE_GAP_AUTHORIZE_REJECT;
-      log_d("Server: BLE_GAP_EVENT_AUTHORIZE handle=%u attr=%u read=%d -> %s", connHandle, attrHandle, (int)isRead, allowed ? "ACCEPT" : "REJECT");
-      return 0;
-    }
+      return nimbleForwardSecurityGapEvent(event);
 #endif
 
     default: return 0;
@@ -611,11 +663,13 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
     return BTStatus::InvalidState;
   }
 
+  size_t originalIndex = 0;
   bool inList = false;
   {
     BLELockGuard lock(impl->mtx);
-    for (auto &s : impl->services) {
-      if (s.get() == svc.get()) {
+    for (size_t i = 0; i < impl->services.size(); ++i) {
+      if (impl->services[i].get() == svc.get()) {
+        originalIndex = i;
         inList = true;
         break;
       }
@@ -635,13 +689,29 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
     }
   }
 
-  if (!impl->started) {
+  if (!svc->started || !impl->started) {
+    bleDetachLocalService(svc);
     return BTStatus::OK;
   }
 
   BTStatus st = nimbleRebuildGattDatabase(*impl);
   if (st == BTStatus::OK) {
+    bleDetachLocalService(svc);
     log_i("Server: service removed, %u service(s) registered", (unsigned)impl->services.size());
+    return BTStatus::OK;
+  }
+
+  // reset() has already replaced the native database. Restore the local service
+  // at its original position and rebuild again so a failed removal is atomic
+  // from the public API's perspective.
+  {
+    BLELockGuard lock(impl->mtx);
+    size_t insertIndex = originalIndex < impl->services.size() ? originalIndex : impl->services.size();
+    impl->services.insert(impl->services.begin() + insertIndex, svc);
+  }
+  BTStatus rollback = nimbleRebuildGattDatabase(*impl);
+  if (rollback != BTStatus::OK) {
+    log_e("Server: failed to restore GATT database after service-removal failure");
   }
   return st;
 }
