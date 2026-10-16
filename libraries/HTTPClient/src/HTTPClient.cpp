@@ -1390,6 +1390,10 @@ int HTTPClient::writeToStreamDataBlock(Stream *stream, int size) {
   uint8_t *buff = (uint8_t *)malloc(buff_size);
 
   if (buff) {
+    // a server gone silent without closing stays connected(): give up
+    // after _tcpTimeout without data, as handleHeaderResponse() does
+    unsigned long lastDataTime = millis();
+
     // read all data from server
     while (connected() && (len > 0 || len == -1)) {
 
@@ -1420,6 +1424,19 @@ int HTTPClient::writeToStreamDataBlock(Stream *stream, int size) {
 
         // read data
         int bytesRead = _client->readBytes(buff, readBytes);
+
+        // readBytes() returns nothing once the stream timeout passes without
+        // data, or at once over TLS when nothing has arrived yet
+        if (bytesRead == 0) {
+          if ((millis() - lastDataTime) >= _tcpTimeout) {
+            log_w("read timeout after %d bytes", bytesWritten);
+            free(buff);
+            return HTTPC_ERROR_READ_TIMEOUT;
+          }
+          delay(1);
+          continue;
+        }
+        lastDataTime = millis();
 
         // write it to Stream
         int bytesWrite = stream->write(buff, bytesRead);
@@ -1468,6 +1485,11 @@ int HTTPClient::writeToStreamDataBlock(Stream *stream, int size) {
 
         delay(0);
       } else {
+        if ((millis() - lastDataTime) >= _tcpTimeout) {
+          log_w("read timeout after %d bytes", bytesWritten);
+          free(buff);
+          return HTTPC_ERROR_READ_TIMEOUT;
+        }
         delay(1);
       }
     }
