@@ -2,7 +2,7 @@
 
 Commission with CHIPoBLE, then let Matter shut NimBLE down and return BLE RAM to the heap. When reclaim finishes, `Matter.onBLEMemoryReleased()` runs so the sketch can allocate a larger buffer from `loop()`.
 
-**Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`) in this sketch.** Matter owns NimBLE. After BLE is deinitialized, `BLEDevice::init()` cannot start this boot.
+**Do not use the Arduino `BLE` library (`BLE.h`) in this sketch.** Matter owns NimBLE. After BLE is deinitialized, `BLE.begin()` cannot start this boot.
 
 ## What it does
 

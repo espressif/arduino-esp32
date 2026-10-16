@@ -15,7 +15,7 @@
 // CHIPoBLE Thread commissioning. The commissioner delivers the Thread dataset
 // over BLE. Do not commit a sketch dataset — that fights the hub.
 // For on-network Thread (BLE off + network key in the sketch) see MatterOnNetworkThread.
-// Do not start Arduino ESPmDNS. Do not use BLE.h / BLEDevice.
+// Do not start Arduino ESPmDNS. Do not use BLE.h.
 //
 // Supported SoCs: C5 (Tools → Matter Network → Thread), C6, and H2.
 // ESP32 / S2 / S3 / C3: no Matter-over-Thread in the prebuild — this sketch will halt.
@@ -69,7 +69,11 @@ void setup() {
 
   OnOffLight.begin();
   OnOffLight.onChange(onOffLightCallback);
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
+  if (!Matter.isStackStarted()) {
+    halt("Matter.begin() failed. The Matter stack did not start.");
+  }
   Serial.printf("BLE commissioning enabled: %s\r\n", Matter.isBLECommissioningEnabled() ? "YES" : "NO");
   Serial.printf("Thread Network Commissioning is on endpoint %u.\r\n", Matter.getNetworkEndPointId(MATTER_NETWORK_THREAD));
   matterWaitUntilReady();

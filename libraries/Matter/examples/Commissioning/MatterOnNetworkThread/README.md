@@ -8,7 +8,7 @@ This is the on-network half of the Thread pair. The other half is [MatterCHIPoBL
 
 **Do not start Arduino `ESPmDNS`.** CHIP owns the mDNS responder.
 
-**Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`) in this sketch.**
+**Do not use the Arduino `BLE` library (`BLE.h`) in this sketch.**
 
 **Do not call `OThread.begin()` before `Matter.begin()`.** CHIP starts the Thread stack; `OThread.begin()` afterwards attaches to it (`isAttachedToExternalStack()`). Calling `begin()` first would start a second stack.
 

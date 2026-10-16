@@ -4,7 +4,7 @@ This example shows how to take over handling of specific ZCL cluster commands us
 
 ## Overview
 
-Normally, when a Zigbee controller sends a cluster-specific command (e.g. On/Off Toggle), the ZBOSS stack processes it internally and updates the attributes. Commands you register with the privilege command API are different: per the ESP Zigbee SDK, those commands **skip stack handling** and are delivered to your application callback instead. You must implement the behavior you want for those commands (e.g. update attributes and hardware); unregistered commands continue to be handled by the stack as usual.
+Normally, when a Zigbee controller sends a cluster-specific command (e.g. On/Off Toggle), the Zigbee stack processes it internally and updates the attributes. Commands you register with the privilege command API are different: per the ESP Zigbee SDK, those commands **skip stack handling** and are delivered to your application callback instead. You must implement the behavior you want for those commands (e.g. update attributes and hardware); unregistered commands continue to be handled by the stack as usual.
 
 This is useful for:
 - Implementing custom behavior for commands like "Off with effect" (command `0x40` on the On/Off cluster)
@@ -15,7 +15,7 @@ This is useful for:
 
 1. **Register commands** with `addPrivilegeCommand(cluster_id, command_id)` so that those command IDs on that cluster are **not** processed by the stack and are reported to your callback
 2. **Set a callback** with `onPrivilegeCommand(callback)` to handle those commands
-3. The callback receives an `esp_zb_zcl_privilege_command_message_t` with full command details (cluster, command ID, source address, payload)
+3. The callback receives an `ezb_zcl_manuf_spec_cmd_message_t` with full command details (cluster, command ID, source address, payload)
 
 Commands that are **not** registered remain fully handled by the stack (for example, this sketch leaves On / Off / Toggle to the stack and only registers `0x40`).
 

@@ -11,6 +11,11 @@
 #include <unity.h>
 #include "zigbee_endpoint_matrix.h"
 
+// These tests run before the end device joins, so nothing is bound to the coordinator's endpoints.
+// Reports go to bound destinations only (EZB_ADDR_MODE_NONE), so the SDK must reject them here;
+// the end device covers the bound report path.
+#define TEST_ASSERT_REPORT_UNBOUND(report_call) TEST_ASSERT_FALSE_MESSAGE((report_call), #report_call " must fail with no bound destination")
+
 // --- callback state shared across tests ---
 
 static volatile bool light_cb_called = false;
@@ -191,17 +196,6 @@ static void test_window_covering(void) {
   TEST_ASSERT_TRUE(epCovering.setTiltPercentage(75));
 }
 
-static void fake_ias_zone_enroll_attrs(uint8_t endpoint) {
-  esp_zb_ieee_addr_t fake_cie = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-  uint8_t zone_id = 0;
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
-    endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, &fake_cie, false
-  );
-  esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID, &zone_id, false);
-  esp_zb_lock_release();
-}
-
 static void test_ias_zone_devices(void) {
   // Non-enrolled devices must refuse to set+report
   TEST_ASSERT_FALSE_MESSAGE(epContact.enrolled(), "contact should start un-enrolled");
@@ -213,16 +207,13 @@ static void test_ias_zone_devices(void) {
   TEST_ASSERT_FALSE_MESSAGE(epDoorHandle.enrolled(), "door handle should start un-enrolled");
   TEST_ASSERT_FALSE_MESSAGE(epDoorHandle.setClosed(), "setClosed must fail when not enrolled");
 
-  // Simulate enrollment via the production reboot-restore path
-  fake_ias_zone_enroll_attrs(ZB_EP_CONTACT);
+  // SDK v2 restore sets ZoneState = ENROLLED directly; CIE address is no longer required.
   TEST_ASSERT_TRUE_MESSAGE(epContact.restoreIASZoneEnroll(), "contact restoreIASZoneEnroll failed");
   TEST_ASSERT_TRUE_MESSAGE(epContact.enrolled(), "contact should be enrolled after restore");
 
-  fake_ias_zone_enroll_attrs(ZB_EP_VIBRATION);
   TEST_ASSERT_TRUE_MESSAGE(epVibration.restoreIASZoneEnroll(), "vibration restoreIASZoneEnroll failed");
   TEST_ASSERT_TRUE_MESSAGE(epVibration.enrolled(), "vibration should be enrolled after restore");
 
-  fake_ias_zone_enroll_attrs(ZB_EP_DOOR_HANDLE);
   TEST_ASSERT_TRUE_MESSAGE(epDoorHandle.restoreIASZoneEnroll(), "door handle restoreIASZoneEnroll failed");
   TEST_ASSERT_TRUE_MESSAGE(epDoorHandle.enrolled(), "door handle should be enrolled after restore");
 
@@ -248,12 +239,12 @@ static void test_temp_humidity_sensor(void) {
 
   TEST_ASSERT_TRUE(epTemp.setTemperature(20.0f));
   TEST_ASSERT_TRUE(epTemp.setTemperature(25.5f));
-  TEST_ASSERT_TRUE(epTemp.reportTemperature());
+  TEST_ASSERT_REPORT_UNBOUND(epTemp.reportTemperature());
 
   TEST_ASSERT_TRUE(epTemp.setHumidity(55.0f));
   TEST_ASSERT_TRUE(epTemp.setHumidity(60.5f));
-  TEST_ASSERT_TRUE(epTemp.reportHumidity());
-  TEST_ASSERT_TRUE(epTemp.report());
+  TEST_ASSERT_REPORT_UNBOUND(epTemp.reportHumidity());
+  TEST_ASSERT_REPORT_UNBOUND(epTemp.report());
 }
 
 static void test_environmental_sensors(void) {
@@ -265,30 +256,30 @@ static void test_environmental_sensors(void) {
   TEST_ASSERT_TRUE(epWind.setReporting(1, 300, 0.5f));
 
   TEST_ASSERT_TRUE(epPressure.setPressure(1013));
-  TEST_ASSERT_TRUE(epPressure.report());
+  TEST_ASSERT_REPORT_UNBOUND(epPressure.report());
 
   TEST_ASSERT_TRUE(epFlow.setFlow(12.5f));
-  TEST_ASSERT_TRUE(epFlow.report());
+  TEST_ASSERT_REPORT_UNBOUND(epFlow.report());
 
   TEST_ASSERT_TRUE(epIlluminance.setIlluminance(500));
   TEST_ASSERT_TRUE(epIlluminance.setIlluminance(1000));
-  TEST_ASSERT_TRUE(epIlluminance.report());
+  TEST_ASSERT_REPORT_UNBOUND(epIlluminance.report());
 
   TEST_ASSERT_TRUE(epOccupancy.setOccupancy(true));
   TEST_ASSERT_TRUE(epOccupancy.setOccupancy(false));
-  TEST_ASSERT_TRUE(epOccupancy.report());
+  TEST_ASSERT_REPORT_UNBOUND(epOccupancy.report());
 
   TEST_ASSERT_TRUE(epCo2.setCarbonDioxide(400.0f));
   TEST_ASSERT_TRUE(epCo2.setCarbonDioxide(800.0f));
-  TEST_ASSERT_TRUE(epCo2.report());
+  TEST_ASSERT_REPORT_UNBOUND(epCo2.report());
 
   TEST_ASSERT_TRUE(epPm25.setPM25(12.5f));
   TEST_ASSERT_TRUE(epPm25.setPM25(25.0f));
-  TEST_ASSERT_TRUE(epPm25.report());
+  TEST_ASSERT_REPORT_UNBOUND(epPm25.report());
 
   TEST_ASSERT_TRUE(epWind.setWindSpeed(3.5f));
   TEST_ASSERT_TRUE(epWind.setWindSpeed(10.0f));
-  TEST_ASSERT_TRUE(epWind.reportWindSpeed());
+  TEST_ASSERT_REPORT_UNBOUND(epWind.reportWindSpeed());
 }
 
 // ==================== Analog / Binary / Multistate ====================
@@ -297,7 +288,7 @@ static void test_analog_io(void) {
   epAnalog.onAnalogOutputChange(onAnalogOutCb);
 
   TEST_ASSERT_TRUE(epAnalog.setAnalogInput(1.5f));
-  TEST_ASSERT_TRUE(epAnalog.reportAnalogInput());
+  TEST_ASSERT_REPORT_UNBOUND(epAnalog.reportAnalogInput());
 
   TEST_ASSERT_TRUE(epAnalog.setAnalogOutput(42.5f));
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 42.5f, epAnalog.getAnalogOutput());
@@ -306,14 +297,14 @@ static void test_analog_io(void) {
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 42.5f, analog_out_cb_value);
 
   TEST_ASSERT_TRUE(epAnalog.setAnalogOutput(0.0f));
-  TEST_ASSERT_TRUE(epAnalog.reportAnalogOutput());
+  TEST_ASSERT_REPORT_UNBOUND(epAnalog.reportAnalogOutput());
 }
 
 static void test_binary_io(void) {
   epBinary.onBinaryOutputChange(onBinaryOutCb);
 
   TEST_ASSERT_TRUE(epBinary.setBinaryInput(true));
-  TEST_ASSERT_TRUE(epBinary.reportBinaryInput());
+  TEST_ASSERT_REPORT_UNBOUND(epBinary.reportBinaryInput());
 
   TEST_ASSERT_TRUE(epBinary.setBinaryOutput(true));
   TEST_ASSERT_TRUE(epBinary.getBinaryOutput());
@@ -323,7 +314,7 @@ static void test_binary_io(void) {
 
   TEST_ASSERT_TRUE(epBinary.setBinaryOutput(false));
   TEST_ASSERT_FALSE(epBinary.getBinaryOutput());
-  TEST_ASSERT_TRUE(epBinary.reportBinaryOutput());
+  TEST_ASSERT_REPORT_UNBOUND(epBinary.reportBinaryOutput());
 }
 
 static void test_multistate_io(void) {
@@ -333,7 +324,7 @@ static void test_multistate_io(void) {
 
   TEST_ASSERT_TRUE(epMultistate.setMultistateInput(1));
   TEST_ASSERT_EQUAL(1, epMultistate.getMultistateInput());
-  TEST_ASSERT_TRUE(epMultistate.reportMultistateInput());
+  TEST_ASSERT_REPORT_UNBOUND(epMultistate.reportMultistateInput());
 
   TEST_ASSERT_TRUE(epMultistate.setMultistateOutput(2));
   TEST_ASSERT_EQUAL(2, epMultistate.getMultistateOutput());
@@ -343,7 +334,7 @@ static void test_multistate_io(void) {
 
   TEST_ASSERT_TRUE(epMultistate.setMultistateOutput(0));
   TEST_ASSERT_EQUAL(0, epMultistate.getMultistateOutput());
-  TEST_ASSERT_TRUE(epMultistate.reportMultistateOutput());
+  TEST_ASSERT_REPORT_UNBOUND(epMultistate.reportMultistateOutput());
 }
 
 static void test_electrical_measurement(void) {
@@ -351,8 +342,8 @@ static void test_electrical_measurement(void) {
 
   TEST_ASSERT_TRUE(epElectrical.setDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 120));
   TEST_ASSERT_TRUE(epElectrical.setDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT, 5));
-  TEST_ASSERT_TRUE(epElectrical.reportDC(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE));
-  TEST_ASSERT_TRUE(epElectrical.reportDC(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT));
+  TEST_ASSERT_REPORT_UNBOUND(epElectrical.reportDC(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE));
+  TEST_ASSERT_REPORT_UNBOUND(epElectrical.reportDC(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT));
 }
 
 // ==================== Runner ====================

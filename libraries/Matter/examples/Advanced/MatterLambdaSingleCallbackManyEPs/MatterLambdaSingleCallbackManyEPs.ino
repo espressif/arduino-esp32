@@ -77,6 +77,7 @@ void setup() {
     });
   }
   // last step, starting Matter Stack
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
   matterWaitUntilReady();
 }

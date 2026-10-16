@@ -130,7 +130,10 @@ public:
     _onCloseCB = onChangeCB;
   }
 
-  // User Callback for whenever the lift percentage is changed
+  // Called when TargetPositionLiftPercent100ths changes. Returning true accepts
+  // the target write. The sketch must then report CurrentPosition (and Stall)
+  // when the covering actually arrives — CHIP leaves OperationalStatus at
+  // Opening/Closing until Current equals Target.
   using EndPointLiftCB = std::function<bool(uint8_t)>;
   void onGoToLiftPercentage(EndPointLiftCB onChangeCB) {
     _onGoToLiftPercentageCB = onChangeCB;
@@ -166,9 +169,11 @@ protected:
   uint8_t currentLiftPercent = 0;
   uint16_t currentLiftPercent100ths = 0;
   uint16_t currentLiftPosition = 0;
+  uint16_t targetLiftPercent100ths = 0;
   uint8_t currentTiltPercent = 0;
   uint16_t currentTiltPercent100ths = 0;
   uint16_t currentTiltPosition = 0;
+  uint16_t targetTiltPercent100ths = 0;
   uint16_t installedOpenLimitLift = 0;
   uint16_t installedClosedLimitLift = 65534;
   uint16_t installedOpenLimitTilt = 0;

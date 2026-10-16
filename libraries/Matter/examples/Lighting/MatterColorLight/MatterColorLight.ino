@@ -106,6 +106,7 @@ void setup() {
   });
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Color Light");
   Matter.begin();
   matterWaitUntilReady();
   Serial.printf(
