@@ -79,9 +79,23 @@ int NetworkManager::hostByName(const char *aHostname, IPAddress &aResult) {
 
   // If the state of IP addresses has changed, clear the DNS cache
   if (hasGlobalV6 != hasGlobalV6Now || hasGlobalV4 != hasGlobalV4Now) {
+    const bool previousGlobalV6 = hasGlobalV6;
+    const bool previousGlobalV4 = hasGlobalV4;
+    // Publish before dispatch so a synchronous DNS callback cannot clear again.
     hasGlobalV6 = hasGlobalV6Now;
     hasGlobalV4 = hasGlobalV4Now;
-    dns_clear_cache();
+    // Clearing can synchronously invoke pending DNS callbacks, which need the
+    // TCP/IP context too (for example, SNTP may create a UDP PCB).
+    const esp_err_t clearResult = esp_netif_tcpip_exec([](void *) {
+      dns_clear_cache();
+      return ESP_OK;
+    }, nullptr);
+    if (clearResult != ESP_OK) {
+      hasGlobalV6 = previousGlobalV6;
+      hasGlobalV4 = previousGlobalV4;
+      log_e("DNS cache clear failed: %d", clearResult);
+      return 0;
+    }
     log_d("Clearing DNS cache");
   }
 
