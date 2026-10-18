@@ -2,7 +2,17 @@
 
 # Source centralized SoC configuration
 SCRIPTS_DIR_CONFIG="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPTS_DIR_CONFIG/../.." && pwd)"
 source "${SCRIPTS_DIR_CONFIG}/socs_config.sh"
+
+# Activate virtual environment if it exists in tests/ or repo root (tests/ takes priority)
+if [ -d "$REPO_ROOT/tests/.venv" ]; then
+    source "$REPO_ROOT/tests/.venv/bin/activate"
+    echo "Using virtual environment from $REPO_ROOT/tests/.venv"
+elif [ -d "$REPO_ROOT/.venv" ]; then
+    source "$REPO_ROOT/.venv/bin/activate"
+    echo "Using virtual environment from $REPO_ROOT/.venv"
+fi
 
 # Check if a test is a multi-device test
 function is_multi_device_test {
