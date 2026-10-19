@@ -14,7 +14,7 @@ static const uint8_t PIN_NEOPIXEL = 1;
 static const uint8_t NEOPIXEL_PIN = 1;
 
 //By making LED_BUILTIN have the same value of RGB_BUILTIN
-//NeoPixel LED can also be used as LED_BUILTIN with digitalMode() + digitalWrite()
+//NeoPixel LED can also be used as LED_BUILTIN with pinMode() + digitalWrite()
 static const uint8_t LED_BUILTIN = PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
