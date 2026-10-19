@@ -67,7 +67,7 @@ env:
 jobs:
   gen-chunks:
     name: Generate chunks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     outputs:
       should_run: ${{ steps.check-variants.outputs.should_run }}
@@ -79,8 +79,8 @@ jobs:
       - name: Install universal-ctags
         uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
         with:
-          packages: libicu74 libjansson4 libxml2 libyaml-0-2 universal-ctags
-          version: 1
+          packages: libjansson4 libseccomp2 libxml2-16 libyaml-0-2 universal-ctags
+          version: 2
           execute_install_scripts: true
 
       - name: Checkout repository
