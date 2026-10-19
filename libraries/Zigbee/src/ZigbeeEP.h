@@ -111,6 +111,12 @@ public:
   bool setBatteryVoltage(uint8_t voltage);                                                                 // voltage in 100mV (example value 35 for 3.5V)
   bool reportBatteryPercentage();                                                                          // battery voltage is not reportable attribute
 
+  // Persist a local attribute in the Zigbee NVS dataset. Call after the attribute exists
+  // (typically after role() + cluster setup, before or after begin()). The next local write
+  // is stored and restored on reboot.
+  bool setAttributePersistent(uint16_t cluster_id, uint16_t attr_id, bool persistent = true, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER);
+  bool getAttribute(uint16_t cluster_id, uint16_t attr_id, void *value, uint16_t value_size, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER);
+
   // Set time
   bool addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
   // Activate the Time cluster server so the Time attribute (0x0000) can be served/written.

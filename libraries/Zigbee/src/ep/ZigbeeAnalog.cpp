@@ -47,15 +47,21 @@ bool ZigbeeAnalog::addAnalogInput() {
   }
   ezb_zcl_cluster_desc_t analog_input_cluster = ezb_zcl_analog_input_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER);
 
-  // The optional Description attribute is added lazily by setAnalogInputDescription(). The SDK sizes a
-  // string attribute's storage to the first value's length and never grows it, so adding a short
-  // default here would overflow the heap if a longer description is set later.
+  // Default description (ZCL string: length byte + text); setAnalogInputDescription() can replace it with any length.
+  char default_description[] = "\x0C"
+                               "Analog Input";
   uint32_t application_type = 0x00000000 | (ZB_ANALOG_INPUT_GROUP_ID << 24);
   float resolution = 0.1;  // Default resolution of 0.1
   float min = -FLT_MAX;    // Default min value for float
   float max = FLT_MAX;     // Default max value for float
 
-  ezb_err_t ret = ezb_zcl_analog_input_cluster_desc_add_attr(analog_input_cluster, EZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  ezb_err_t ret = ezb_zcl_analog_input_cluster_desc_add_attr(analog_input_cluster, EZB_ZCL_ATTR_ANALOG_INPUT_DESCRIPTION_ID, (void *)default_description);
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to add description attribute: 0x%x", ret);
+    return false;
+  }
+
+  ret = ezb_zcl_analog_input_cluster_desc_add_attr(analog_input_cluster, EZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != EZB_ERR_NONE) {
     log_e("Failed to add application type attribute: 0x%x", ret);
     return false;
@@ -109,15 +115,21 @@ bool ZigbeeAnalog::addAnalogOutput() {
   }
   ezb_zcl_cluster_desc_t analog_output_cluster = ezb_zcl_analog_output_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER);
 
-  // The optional Description attribute is added lazily by setAnalogOutputDescription(). The SDK sizes a
-  // string attribute's storage to the first value's length and never grows it, so adding a short
-  // default here would overflow the heap if a longer description is set later.
+  // Default description (ZCL string: length byte + text); setAnalogOutputDescription() can replace it with any length.
+  char default_description[] = "\x0D"
+                               "Analog Output";
   uint32_t application_type = 0x00000000 | (ZB_ANALOG_OUTPUT_GROUP_ID << 24);
   float resolution = 1;  // Default resolution of 1
   float min = -FLT_MAX;  // Default min value for float
   float max = FLT_MAX;   // Default max value for float
 
-  ezb_err_t ret = ezb_zcl_analog_output_cluster_desc_add_attr(analog_output_cluster, EZB_ZCL_ATTR_ANALOG_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  ezb_err_t ret = ezb_zcl_analog_output_cluster_desc_add_attr(analog_output_cluster, EZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID, (void *)default_description);
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to add description attribute: 0x%x", ret);
+    return false;
+  }
+
+  ret = ezb_zcl_analog_output_cluster_desc_add_attr(analog_output_cluster, EZB_ZCL_ATTR_ANALOG_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != EZB_ERR_NONE) {
     log_e("Failed to add application type attribute: 0x%x", ret);
     return false;
@@ -184,6 +196,14 @@ void ZigbeeAnalog::analogOutputChanged() {
   } else {
     log_w("No callback function set for analog output change");
   }
+}
+
+bool ZigbeeAnalog::getAnalogInput(float &analog) {
+  if (!(_analog_clusters & ANALOG_INPUT)) {
+    log_e("Analog Input cluster not added");
+    return false;
+  }
+  return getAttribute(EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID, &analog, sizeof(analog));
 }
 
 bool ZigbeeAnalog::setAnalogInput(float analog) {

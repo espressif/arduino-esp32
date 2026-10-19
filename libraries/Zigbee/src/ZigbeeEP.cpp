@@ -117,6 +117,54 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   }
 }
 
+bool ZigbeeEP::setAttributePersistent(uint16_t cluster_id, uint16_t attr_id, bool persistent, uint8_t cluster_role) {
+  ezb_zcl_attr_desc_t attr = EZB_INVALID_ZCL_ATTR_DESC;
+  const bool registered = Zigbee.endpointsRegistered();
+
+  if (registered) {
+    if (!esp_zigbee_lock_acquire(portMAX_DELAY)) {
+      log_w("Cannot set attribute persistent: failed to acquire Zigbee lock");
+      return false;
+    }
+    attr = ezb_zcl_get_attr_desc(_endpoint, cluster_id, cluster_role, attr_id, EZB_ZCL_STD_MANUF_CODE);
+  } else {
+    if (_ep_desc == nullptr) {
+      log_e("Cannot set attribute persistent: endpoint is not created");
+      return false;
+    }
+    attr = getEpClusterAttrDesc(cluster_id, cluster_role, attr_id);
+  }
+
+  if (attr == EZB_INVALID_ZCL_ATTR_DESC) {
+    if (registered) {
+      esp_zigbee_lock_release();
+    }
+    log_e("Cannot set attribute persistent: attribute 0x%04x not found", attr_id);
+    return false;
+  }
+
+  ezb_zcl_attr_access_t access = ezb_zcl_attr_desc_get_access(attr);
+  if (persistent) {
+    access |= EZB_ZCL_ATTR_ACCESS_PERSISTENT;
+  } else {
+    access = (ezb_zcl_attr_access_t)(access & ~EZB_ZCL_ATTR_ACCESS_PERSISTENT);
+  }
+  ezb_err_t err = ezb_zcl_attr_desc_set_access(attr, access);
+  if (registered) {
+    esp_zigbee_lock_release();
+  }
+  if (err != EZB_ERR_NONE) {
+    log_e("Failed to set attribute persistent flag: 0x%x", err);
+    return false;
+  }
+  log_v("Attribute 0x%04x persistent %s", attr_id, persistent ? "enabled" : "disabled");
+  return true;
+}
+
+bool ZigbeeEP::getAttribute(uint16_t cluster_id, uint16_t attr_id, void *value, uint16_t value_size, uint8_t cluster_role) {
+  return getClusterAttribute(cluster_id, cluster_role, attr_id, value, value_size);
+}
+
 ezb_zcl_status_t ZigbeeEP::setClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, bool check) {
   if (!Zigbee.initialized()) {
     log_w("Cannot set attribute: Zigbee stack not initialized");

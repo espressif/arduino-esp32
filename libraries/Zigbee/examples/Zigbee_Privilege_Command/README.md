@@ -23,12 +23,12 @@ Commands that are **not** registered remain fully handled by the stack (for exam
 
 Currently, this example supports the following targets.
 
-| Supported Targets | ESP32-C6 | ESP32-H2 |
-| ----------------- | -------- | -------- |
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-H2 | ESP32-S31 |
+| ----------------- | -------- | -------- | -------- | --------- |
 
 ## Hardware Required
 
-* One development board (ESP32-H2 or ESP32-C6) running this example as a Zigbee end device
+* One development board (ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31) running this example as a Zigbee end device
 * A Zigbee coordinator to send commands — use the `Zigbee_On_Off_Switch` example on another board, or any Zigbee controller (e.g. Zigbee2MQTT)
 * A USB cable for power supply and programming
 
@@ -94,6 +94,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+* ESP32-C5 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c5_datasheet_en.pdf)
 * ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
 * ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
+* ESP32-S31 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s31_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)

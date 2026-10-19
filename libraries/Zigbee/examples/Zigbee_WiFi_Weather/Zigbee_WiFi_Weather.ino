@@ -17,7 +17,7 @@
  *
  * The example fetches outdoor temperature, humidity and pressure from Open-Meteo
  * over Wi-Fi, then reports them on Zigbee endpoints. Zigbee.stop() / Zigbee.start()
- * free the shared radio for Wi-Fi on dual-radio SoCs (ESP32-C6, ESP32-S31).
+ * free the shared radio for Wi-Fi on dual-radio SoCs (ESP32-C5, ESP32-C6, ESP32-S31).
  *
  * The device is a Zigbee end device so pausing Zigbee does not interrupt mesh routing.
  *

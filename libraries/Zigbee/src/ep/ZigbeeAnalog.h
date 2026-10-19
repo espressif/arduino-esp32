@@ -61,7 +61,8 @@ public:
   bool setAnalogInput(float analog);
   bool setAnalogOutput(float analog);
 
-  // Get the Analog Output value
+  // Get the Analog Input/Output value
+  bool getAnalogInput(float &analog);
   float getAnalogOutput() {
     return _output_state;
   }
