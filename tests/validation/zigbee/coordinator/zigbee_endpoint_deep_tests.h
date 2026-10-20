@@ -386,6 +386,51 @@ static void test_electrical_measurement(void) {
   TEST_ASSERT_REPORT_UNBOUND(epElectrical.reportDC(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT));
 }
 
+static void test_door_lock(void) {
+  TEST_ASSERT_EQUAL_UINT16(10, epDoorLock.getMaxUsers());
+
+  TEST_ASSERT_TRUE(epDoorLock.setLockState(DOOR_LOCK_STATE_LOCKED));
+  TEST_ASSERT_TRUE(epDoorLock.isLocked());
+  TEST_ASSERT_EQUAL(DOOR_LOCK_STATE_LOCKED, epDoorLock.getLockState());
+  TEST_ASSERT_TRUE(epDoorLock.setLockState(DOOR_LOCK_STATE_UNLOCKED));
+  TEST_ASSERT_FALSE(epDoorLock.isLocked());
+
+  // PIN boundaries and duplicates
+  TEST_ASSERT_FALSE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "123"));      // too short
+  TEST_ASSERT_FALSE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "12345678901234567"));  // too long
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "1234"));
+  TEST_ASSERT_EQUAL(0, epDoorLock.checkPin("1234"));
+  TEST_ASSERT_FALSE(epDoorLock.setUser(1, DOOR_LOCK_USER_ENABLED, "1234"));  // duplicate
+  TEST_ASSERT_TRUE(epDoorLock.setUser(1, DOOR_LOCK_USER_ENABLED, "5678"));
+  TEST_ASSERT_EQUAL(1, epDoorLock.checkPin("5678"));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("0000"));
+
+  // Enable / disable / clear
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_DISABLED, "1234"));
+  TEST_ASSERT_EQUAL(DOOR_LOCK_USER_DISABLED, epDoorLock.getUserStatus(0));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("1234"));
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "1234"));
+  TEST_ASSERT_EQUAL(0, epDoorLock.checkPin("1234"));
+  epDoorLock.clearUsers();
+  TEST_ASSERT_EQUAL(DOOR_LOCK_USER_AVAILABLE, epDoorLock.getUserStatus(0));
+  TEST_ASSERT_EQUAL(DOOR_LOCK_USER_AVAILABLE, epDoorLock.getUserStatus(1));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("1234"));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("5678"));
+
+  // Persistence round trip: store, clear RAM while storage is off (blob kept), then reload
+  TEST_ASSERT_TRUE(epDoorLock.setUserStorage(true));
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "9999"));
+  TEST_ASSERT_EQUAL(0, epDoorLock.checkPin("9999"));
+  TEST_ASSERT_TRUE(epDoorLock.setUserStorage(false));
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_AVAILABLE, nullptr));  // clear RAM only; NVS blob kept
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("9999"));
+  TEST_ASSERT_TRUE(epDoorLock.setUserStorage(true));  // loadUsers() restores from NVS
+  TEST_ASSERT_EQUAL(0, epDoorLock.checkPin("9999"));
+  epDoorLock.clearUsers();  // also erases the NVS blob
+  TEST_ASSERT_TRUE(epDoorLock.setUserStorage(true));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("9999"));
+}
+
 // ==================== Runner ====================
 
 static void run_all_zigbee_endpoint_deep_tests(void) {
@@ -403,6 +448,7 @@ static void run_all_zigbee_endpoint_deep_tests(void) {
   RUN_TEST(test_binary_io);
   RUN_TEST(test_multistate_io);
   RUN_TEST(test_electrical_measurement);
+  RUN_TEST(test_door_lock);
 }
 
 #endif  // CONFIG_ZB_ENABLED
