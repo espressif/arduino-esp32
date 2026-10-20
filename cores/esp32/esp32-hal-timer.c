@@ -31,9 +31,12 @@
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrArg)(void *);
 
+extern void cleanupFunctional(void *arg);
+
 typedef struct {
   voidFuncPtr fn;
   void *arg;
+  bool functional;
 } interrupt_config_t;
 
 struct timer_struct_t {
@@ -160,7 +163,11 @@ hw_timer_t *timerBegin(uint32_t frequency) {
     .flags.intr_shared = true,
   };
 
-  hw_timer_t *timer = malloc(sizeof(hw_timer_t));
+  hw_timer_t *timer = (hw_timer_t *)calloc(1, sizeof(hw_timer_t));
+  if (timer == NULL) {
+    log_e("Failed to allocate timer structure");
+    return NULL;
+  }
 
   err = gptimer_new_timer(&config, &timer->timer_handle);
   if (err != ESP_OK) {
@@ -186,6 +193,10 @@ void timerEnd(hw_timer_t *timer) {
       log_e("Failed to destroy GPTimer, error num=%d", err);
       return;
     }
+    if (timer->interrupt_handle.functional && timer->interrupt_handle.arg) {
+      cleanupFunctional(timer->interrupt_handle.arg);
+      timer->interrupt_handle.arg = NULL;
+    }
     free(timer);
   }
 }
@@ -203,7 +214,7 @@ bool IRAM_ATTR timerFnWrapper(gptimer_handle_t timer, const gptimer_alarm_event_
   return false;
 }
 
-void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void *), void *arg) {
+void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void *), void *arg, bool functional) {
   if (timer == NULL) {
     log_e("Timer handle is NULL");
     return;
@@ -213,13 +224,20 @@ void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void 
     .on_alarm = timerFnWrapper,
   };
 
-  timer->interrupt_handle.fn = (voidFuncPtr)userFunc;
-  timer->interrupt_handle.arg = arg;
-
   if (timer->timer_started == true) {
     gptimer_stop(timer->timer_handle);
   }
   gptimer_disable(timer->timer_handle);
+
+  // if new attach without detach remove old functional info
+  if (timer->interrupt_handle.functional && timer->interrupt_handle.arg) {
+    cleanupFunctional(timer->interrupt_handle.arg);
+  }
+
+  timer->interrupt_handle.fn = (voidFuncPtr)userFunc;
+  timer->interrupt_handle.arg = arg;
+  timer->interrupt_handle.functional = functional;
+
   err = gptimer_register_event_callbacks(timer->timer_handle, &cbs, &timer->interrupt_handle);
   if (err != ESP_OK) {
     log_e("Timer Attach Interrupt failed, error num=%d", err);
@@ -231,11 +249,11 @@ void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void 
 }
 
 void timerAttachInterruptArg(hw_timer_t *timer, void (*userFunc)(void *), void *arg) {
-  timerAttachInterruptFunctionalArg(timer, userFunc, arg);
+  timerAttachInterruptFunctionalArg(timer, userFunc, arg, false);
 }
 
 void timerAttachInterrupt(hw_timer_t *timer, voidFuncPtr userFunc) {
-  timerAttachInterruptFunctionalArg(timer, (voidFuncPtrArg)userFunc, NULL);
+  timerAttachInterruptFunctionalArg(timer, (voidFuncPtrArg)userFunc, NULL, false);
 }
 
 void timerDetachInterrupt(hw_timer_t *timer) {
@@ -245,8 +263,12 @@ void timerDetachInterrupt(hw_timer_t *timer) {
   }
   esp_err_t err = ESP_OK;
   err = gptimer_set_alarm_action(timer->timer_handle, NULL);
+  if (timer->interrupt_handle.functional && timer->interrupt_handle.arg) {
+    cleanupFunctional(timer->interrupt_handle.arg);
+  }
   timer->interrupt_handle.fn = NULL;
   timer->interrupt_handle.arg = NULL;
+  timer->interrupt_handle.functional = false;
   if (err != ESP_OK) {
     log_e("Timer Detach Interrupt failed, error num=%d", err);
   }
