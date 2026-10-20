@@ -105,6 +105,7 @@ void setup() {
   });
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Dimmable Plugin");
   Matter.begin();
   matterWaitUntilReady();
   Serial.printf("Initial state: %s | level: %u\r\n", DimmablePlugin ? "ON" : "OFF", DimmablePlugin.getLevel());

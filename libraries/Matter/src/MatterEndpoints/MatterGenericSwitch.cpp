@@ -56,7 +56,9 @@ bool MatterGenericSwitch::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
 }
 
 bool MatterGenericSwitch::begin(uint32_t featureFlags, uint8_t multiPressMax) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter Generic Switch with Endpoint Id %u device has already been created.", getEndPointId());
