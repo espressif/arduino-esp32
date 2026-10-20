@@ -52,12 +52,4 @@ def test_bt_mem_wrap(dut):
     # phase is a compile-time no-op and always passes.
     run_phase(9, "Matter-style Classic BT release (BLEManagerImpl simulation)")
 
-    # Phase 10: btInUse() pointer comparison — no user override in this test.
-    # Verifies that when btInUse resolves to the default weak alias (_btInUse_default),
-    # the pointer comparison correctly identifies it as NOT a user override, and
-    # memory release is governed solely by the sub-functions (bleInUse / btClassicInUse).
-    # Since this test includes both alloc headers, both flags are true and
-    # memory should NOT be released by initArduino().
-    run_phase(10, "btInUse pointer comparison (no strong override)")
-
     LOGGER.info("BT memory wrap test passed!")

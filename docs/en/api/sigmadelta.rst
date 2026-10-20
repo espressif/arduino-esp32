@@ -5,7 +5,8 @@ SigmaDelta
 About
 -----
 
-ESP32 provides a second-order sigma delta modulation module and 8 (4 for ESP32-C3)
+ESP32 provides a second-order sigma delta modulation module and 8 (4 for ESP32-C3,
+ESP32-C5, ESP32-C6 and ESP32-H2)
 independent modulation channels. The channels are capable to output 1-bit
 signals (output index: 100 ~ 107) with sigma delta modulation.
 
@@ -16,8 +17,11 @@ ESP32     8
 ESP32-S2  8
 ESP32-S3  8
 ESP32-C3  4
+ESP32-C5  4
 ESP32-C6  4
 ESP32-H2  4
+ESP32-P4  8
+ESP32-S31 8
 ========= =============================
 
 Arduino-ESP32 SigmaDelta API

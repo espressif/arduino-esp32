@@ -176,6 +176,7 @@ Currently, the default FQBNs are:
 * ``espressif:esp32:esp32h2``
 * ``espressif:esp32:esp32p4:PSRAM=enabled,USBMode=hwcdc,ChipVariant=postv3`` (``CDCOnBoot`` is forced last: ``cdc`` locally, ``default`` / Disabled in CI)
 * ``espressif:esp32:esp32c5:PSRAM=enabled``
+* ``espressif:esp32:esp32s31:USBMode=default``
 
 There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.yml`` file.
 
@@ -582,6 +583,21 @@ For example, for a ``wifi_ap`` test on ``esp32``:
 * Device0 (ap): ``$HOME/.arduino/tests/esp32/wifi_ap/ap/build.tmp``
 * Device1 (client): ``$HOME/.arduino/tests/esp32/wifi_ap/client/build.tmp``
 
+Mixed-target builds (different SoC per DUT) use a pipe in ``-t``. Binaries still land under each SoC's existing path, so a comma build and a pipe build are interchangeable:
+
+.. code-block:: bash
+
+    # Two independent same-target builds (both sketches for each SoC)
+    ./.github/scripts/tests_build.sh -s ble -t esp32s31,esp32c6
+
+    # Or one mixed multi-DUT build (device0=esp32s31, device1=esp32c6)
+    ./.github/scripts/tests_build.sh -s ble -t esp32s31|esp32c6
+
+Either form produces:
+
+* Device0: ``$HOME/.arduino/tests/esp32s31/ble/server/build.tmp``
+* Device1: ``$HOME/.arduino/tests/esp32c6/ble/client/build.tmp``
+
 Running Multi-Device Tests
 """"""""""""""""""""""""""
 
@@ -598,6 +614,12 @@ Then, to run a specific test (using ``wifi_ap`` as an example):
 
     ./.github/scripts/tests_run.sh -s wifi_ap -t esp32
 
+To run a mixed-target multi-DUT test (dut0 and dut1 on different SoCs):
+
+.. code-block:: bash
+
+    ./.github/scripts/tests_run.sh -s ble -t esp32s31|esp32c6
+
 To run all tests (chunk run):
 
 .. code-block:: bash
@@ -608,6 +630,7 @@ To run all tests (chunk run):
 
     Both ``ESPPORT1`` and ``ESPPORT2`` environment variables must be set before running multi-device tests.
     The sketch directory name must match the value in the ``multi_device`` configuration in ``ci.yml``, and the ``.ino`` file must have the same name as the directory.
+    Pipe-separated ``-t`` (e.g. ``esp32s31|esp32c6``) is only valid for multi-device tests; comma-separated ``-t`` still means independent same-target jobs.
 
 Documentation Checks
 ********************

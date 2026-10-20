@@ -1,6 +1,6 @@
 # Zigbee Validation Test
 
-Validates **ZigbeeCore** and all 26 Zigbee endpoint classes from `Zigbee.h`: stack configuration, endpoint registration, deep on-device API tests (getters, callbacks, reporting), network form/join, and coordinator→end-device ZCL interop. This is a **multi-DUT** test on ESP32-C6 / ESP32-H2.
+Validates **ZigbeeCore** and all 26 Zigbee endpoint classes from `Zigbee.h`: stack configuration, endpoint registration, deep on-device API tests (getters, callbacks, reporting), network form/join, and coordinator→end-device ZCL interop. This is a **multi-DUT** test on ESP32-C5 / C6 / H2 / S31.
 
 ## Architecture
 
@@ -25,9 +25,9 @@ Endpoint registration and pre-`begin()` configuration live in `coordinator/zigbe
 
 | Test Function | Description |
 |---|---|
-| `test_coordinator_config` | `ZigbeeCore` setters/getters before `begin()` (scan duration, debug, binding, radio/host config) |
-| `test_coordinator_register_all_endpoints` | Register all 26 endpoint types + pre-`begin()` cluster configuration |
-| `test_coordinator_begin` | `begin()`, verify duplicate `begin()` returns `false` |
+| `test_coordinator_config` | `ZigbeeCore` setters/getters, then `role(ZIGBEE_COORDINATOR)` (channel mask and native radio are applied here) |
+| `test_coordinator_register_all_endpoints` | Register all 26 endpoint types + cluster configuration (after `role()`) |
+| `test_coordinator_begin` | `begin()`, verify a second `begin()` reports the stack is already running |
 | `test_coordinator_stop_start` | `stop()` / `start()` pause and resume |
 | `test_coordinator_role` | `getRole()` returns coordinator |
 | `test_coordinator_form_network` | `openNetwork()`, `connected()`, prints `NETWORK_READY` |
@@ -39,9 +39,9 @@ After Unity, `loop()` runs coordinator→end-device switch/light interop when py
 
 | Test Function | Description |
 |---|---|
-| `test_end_device_config` | `ZigbeeCore` setters/getters before `begin()` |
-| `test_end_device_add_endpoints` | `ZigbeeLight` and `ZigbeeTempSensor` registration |
-| `test_end_device_begin` | `begin()`, verify duplicate `begin()` returns `false` |
+| `test_end_device_config` | `ZigbeeCore` setters/getters, then `role(ZIGBEE_END_DEVICE)` |
+| `test_end_device_add_endpoints` | `ZigbeeLight` and `ZigbeeTempSensor` registration (after `role()`) |
+| `test_end_device_begin` | `begin()`, verify a second `begin()` reports the stack is already running |
 | `test_end_device_stop_start` | `stop()` / `start()` |
 | `test_end_device_role` | `getRole()` returns end device |
 | `test_end_device_join_network` | Join coordinator network, `connected()`, prints `JOINED` |
@@ -51,7 +51,7 @@ After Unity, `loop()` runs coordinator→end-device switch/light interop when py
 
 ## Requirements
 
-- **Hardware**: Two ESP32-C6 or ESP32-H2 boards (802.15.4 radio required)
+- **Hardware**: Two boards of ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31 (802.15.4 radio required)
 - **Wokwi/QEMU**: Not supported (802.15.4 radio not simulated)
 - **CI Runner**: `two_duts`
 - **SoC Config**: `CONFIG_ZB_ENABLED=y`, `CONFIG_SOC_IEEE802154_SUPPORTED=y`
@@ -71,8 +71,14 @@ The coordinator and end device flash at different speeds; pytest drives the end 
 
 ## Notes
 
-- `Zigbee.begin()` is called once per boot; a second call returns `false`.
+- SDK v2 startup/lifecycle requirements:
+  - Call `role()` before `begin()`.
+  - `role()` is called once per boot; a second call succeeds and does not re-init.
+  - Endpoint setters require `role()` first.
+  - `begin()` is called once; a second call returns the current `started()` state and does not restart the stack.
 - Unlike Matter validation, Zigbee cannot decommission/reboot mid-suite on a single DUT — depth comes from getter round-trips, callbacks, reporting, pre-begin cluster config, and real ZCL over the air with a second board.
 - Thermostat, gateway, and range-extender endpoints are registered on the coordinator but have no simple local attribute setters in the Arduino API; control paths are covered via registration and ZCL examples.
+- The coordinator's deep tests run before the end device joins, so nothing is bound to its endpoints. Attribute reports only go to bound destinations, so the coordinator asserts that `report*()` fails there; the end device's `reportTemperature()` after joining covers the bound path.
+- `stop()` disables the 802.15.4 radio, which wipes its MAC settings (channel, PAN ID, addresses, rx-on-when-idle). Both `*_stop_start` tests run before forming or joining the network, so a regression in restoring those settings shows up as a failed join.
 - ED→coordinator switch control is not covered (would need bind/discover APIs); coordinator→ED interop uses automatic binding on join.
 - `scanNetworks`, `factoryReset`, and RCP host mode are not covered here (see library examples).

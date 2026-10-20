@@ -9,6 +9,10 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${ROOT}"
+
 # pull all submodules
 git submodule update --init --recursive
 
@@ -16,11 +20,22 @@ git submodule update --init --recursive
 REPO_SRCS=$(find cores/esp32/ libraries/ -name 'examples' -prune -o -name '*.c' -print -o -name '*.cpp' -print | sort)
 
 # find all source files named in CMakeLists.txt COMPONENT_SRCS
-CMAKE_SRCS=$(cmake --trace-expand -P CMakeLists.txt 2>&1 | grep set\(srcs | cut -d'(' -f3 | sed 's/ )//' | sed 's/srcs //' | tr ' ;' '\n' | sort)
+# file(GLOB ...) expands to absolute paths; normalize back to repo-relative paths
+CMAKE_SRCS=$(
+  cmake --trace-expand -P CMakeLists.txt 2>&1 \
+    | grep 'set(srcs' \
+    | cut -d'(' -f3 \
+    | sed 's/ )$//' \
+    | sed 's/^srcs //' \
+    | tr ' ;' '\n' \
+    | sed "s|^${ROOT}/||" \
+    | grep -v '^$' \
+    | sort -u
+)
 
 if ! diff -u0 --label "Repo Files" --label "srcs" <(echo "$REPO_SRCS") <(echo "$CMAKE_SRCS"); then
     echo "Source files in repo (-) and source files in CMakeLists.txt (+) don't match"
-    echo "Edit CMakeLists.txt as appropriate to add/remove source files from COMPONENT_SRCS"
+    echo "Edit CMakeLists.txt as appropriate to add/remove source files (or file(GLOB ...) patterns) from COMPONENT_SRCS"
     exit 1
 fi
 

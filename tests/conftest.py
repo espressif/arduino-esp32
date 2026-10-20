@@ -42,3 +42,11 @@ def is_valid_ipv4(ip):
 def rand_str4():
     # Generate a random string of 4 characters
     return "".join(random.choices(string.ascii_letters + string.digits, k=4))
+
+
+def expect_exact_and_capture(dut, pattern, timeout, captured=b""):
+    # expect_exact() discards the output it consumes, so Unity results printed before the marker
+    # would be missing from expect_unity_test_output(). Returns captured plus the consumed output,
+    # to be passed later as expect_unity_test_output(extra_before=...).
+    dut.expect_exact(pattern, timeout=timeout)
+    return captured + dut.pexpect_proc.before
