@@ -90,15 +90,15 @@ Temp: 16.5 C | Setpoint: 48.0 C | HeatDemand: on | Heat
 Controller: Boost on
 Operation: Boost
 Controller: target temperature 42.0 C
-Target reached. HeatDemand idle; leaving Boost for Heat.
-Temp: 42.0 C | Setpoint: 42.0 C | HeatDemand: idle | Heat
+Target reached. Leaving Boost; Heat continues.
+Temp: 42.0 C | Setpoint: 48.0 C | HeatDemand: on | Heat
 ```
 
 `HeatDemand: on` is the Matter **HeatDemand** attribute: which heater types are drawing power (immersion, heat pump, boiler, …).
 
 Reaching the setpoint in **Heat** idles HeatDemand and keeps System Mode Heat. Reaching it during **Boost** ends Boost, then heating continues in Heat. **Off** is only when the controller writes System Mode Off. That cools the tank.
 
-A controller **Boost** command may use a long duration and no one-shot; this sketch ends that Boost at the setpoint so Boost does not stay active after the tank is hot. HeatDemand is chosen again after the temperature write, so a one-shot that finishes in the library does not leave demand on for the rest of that tick.
+A controller **Boost** command may use a long duration and no one-shot; this sketch ends that Boost when the tank reaches the Boost setpoint. If that restores a higher heating setpoint, HeatDemand stays on. HeatDemand is chosen again after the temperature write, so a one-shot that finishes in the library does not leave demand on for the rest of that tick.
 
 ## Using the Device
 

@@ -165,14 +165,22 @@ void loop() {
     waterHeater.setHeatDemand(0);
   }
 
-  // A Boost command may have a long duration and no oneShot. End Boost at the setpoint so
-  // System Mode Heat continues without Boost. Off is only when the controller writes System Mode Off.
+  // A Boost command may have a long duration and no oneShot. End Boost at its setpoint so
+  // System Mode Heat continues. A temporary target below the restored setpoint leaves the
+  // tank cold, so HeatDemand stays on. Off is only when the controller writes System Mode Off.
   if (waterHeater.getBoostState() == MatterWaterHeater::BOOST_ACTIVE && temperature >= setpoint) {
-    Serial.println("Target reached. HeatDemand idle; leaving Boost for Heat.");
     waterHeater.setBoostState(MatterWaterHeater::BOOST_INACTIVE);
     prevBoost = waterHeater.getBoostState();
-    // setBoostState() syncs HeatDemand back to HeaterTypes while System Mode stays Heat.
-    waterHeater.setHeatDemand(0);
+    const float setpointNow = waterHeater.getHeatingSetpoint();
+    prevSetpoint = setpointNow;
+    const bool heatingNow = system == MatterWaterHeater::SYSTEM_MODE_HEAT && mode != MatterWaterHeater::WATER_HEATER_MODE_OFF;
+    if (heatingNow && temperature < setpointNow) {
+      waterHeater.setHeatDemand(waterHeater.getHeaterTypes());
+      Serial.println("Target reached. Leaving Boost; Heat continues.");
+    } else {
+      waterHeater.setHeatDemand(0);
+      Serial.println("Target reached. HeatDemand idle; leaving Boost for Heat.");
+    }
   } else {
     const bool demandOnNow = waterHeater.getHeatDemand() != 0;
     static bool wasAtTarget = false;

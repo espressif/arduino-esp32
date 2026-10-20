@@ -340,14 +340,24 @@ void loop() {
 
   updateEstimatedHeatRequired();
 
-  // A Boost command may have a long duration and no oneShot. End Boost at the heating
-  // setpoint so System Mode Heat continues. oneShot / duration still finish in-library.
+  // A Boost command may have a long duration and no oneShot. End Boost at its setpoint so
+  // System Mode Heat continues. A temporary target below the restored goal leaves the tank
+  // cold, so HeatDemand, tank percentage, and estimated heat are chosen again. oneShot /
+  // duration still finish in the library.
   if (waterHeater.getBoostState() == MatterWaterHeater::BOOST_ACTIVE && temperature >= setpoint) {
-    Serial.println("Target reached. HeatDemand idle; leaving Boost for Heat.");
     waterHeater.setBoostState(MatterWaterHeater::BOOST_INACTIVE);
     prevBoost = waterHeater.getBoostState();
-    // setBoostState() syncs HeatDemand to HeaterTypes; the tank is at the goal.
-    waterHeater.setHeatDemand(0);
+    prevSetpoint = waterHeater.getHeatingSetpoint();
+    const bool heatingNow = systemHeat && !modeOff;
+    if (heatingNow && temperature < heatingGoalC()) {
+      waterHeater.setHeatDemand(activeHeatSources(false, mode));
+      Serial.println("Target reached. Leaving Boost; Heat continues.");
+    } else {
+      waterHeater.setHeatDemand(0);
+      Serial.println("Target reached. HeatDemand idle; leaving Boost for Heat.");
+    }
+    updateTankPercentage(temperature);
+    updateEstimatedHeatRequired();
   } else {
     static bool wasAtTarget = false;
     const bool atTarget = heating && waterHeater.getHeatDemand() == 0;
