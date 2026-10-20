@@ -117,13 +117,23 @@ public:
   /**
    * @brief Write remaining bytes from a `Stream` to the update target
    *
-   * Uses `readBytes()` and will set `UPDATE_ERROR_STREAM` on timeout.
+   * Uses `readBytes()` and will set `UPDATE_ERROR_STREAM` once no data has
+   * arrived for the time set with `setStreamTimeout()` (30 s by default).
    * Suitable for slow sources such as `Serial`.
    *
    * @param data Stream to read from
    * @return Number of bytes written
    */
   size_t writeStream(Stream &data);
+
+  /**
+   * @brief Set how long `writeStream()` waits for data before giving up
+   *
+   * @param timeoutMs Time without data, in milliseconds (default 30000)
+   */
+  void setStreamTimeout(uint32_t timeoutMs) {
+    _streamTimeout = timeoutMs;
+  }
 
   /**
    * @brief Finalize the update
@@ -428,6 +438,7 @@ private:
   THandlerFunction_Progress _progress_callback;
   uint32_t _progress;
   uint32_t _command;
+  uint32_t _streamTimeout;
   const esp_partition_t *_partition;
 
   String _target_md5;

@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Download and Extract Artifacts
         continue-on-error: true
-        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
+        uses: dawidd6/action-download-artifact@eab87c9830c39eff17e5a6eadb20bfb4bc880477 # v27
         with:
           run_id: ${{ github.event.workflow_run.id }}
           path: ./artifacts
@@ -132,18 +132,18 @@ jobs:
       pull-requests: write
       contents: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: gh-pages
 
       - name: Download and Extract Artifacts
-        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
+        uses: dawidd6/action-download-artifact@eab87c9830c39eff17e5a6eadb20bfb4bc880477 # v27
         with:
           run_id: ${{ github.event.workflow_run.id }}
           path: ./artifacts
 
       - name: Download and Extract Artifacts
-        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
+        uses: dawidd6/action-download-artifact@eab87c9830c39eff17e5a6eadb20bfb4bc880477 # v27
         with:
           run_id: ${{ needs.get-artifacts.outputs.original_run_id }}
           path: ./build_artifacts
@@ -169,7 +169,7 @@ jobs:
 
       - name: Publish Unit Test Results
         id: publish-test-results
-        uses: EnricoMi/publish-unit-test-result-action@170bf24d20d201b842d7a52403b73ed297e6645b # v2.18.0
+        uses: EnricoMi/publish-unit-test-result-action@7622c5bf3d112a72ab4fa3951c2aa5723d8ab92d # v2.25.0
         with:
           commit: ${{ needs.get-artifacts.outputs.original_sha }}
           event_file: ./artifacts/parent-artifacts/event_file/event.json
@@ -184,7 +184,7 @@ jobs:
           json_suite_details: true
 
       - name: Upload JSON
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: unity_results
@@ -193,7 +193,7 @@ jobs:
 
       - name: Clean up caches
         if: always()
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           ORIGINAL_REF: ${{ needs.get-artifacts.outputs.original_ref }}
           ORIGINAL_EVENT: ${{ needs.get-artifacts.outputs.original_event }}
@@ -227,7 +227,7 @@ jobs:
             });
 
       - name: Report conclusion
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         if: always()
         env:
           ORIGINAL_EVENT: ${{ needs.get-artifacts.outputs.original_event }}
@@ -312,7 +312,7 @@ jobs:
 
       - name: Generate badge
         if: ${{ !cancelled() && steps.check-publish.outputs.should_publish == 'true' }}
-        uses: jaywcjlove/generated-badges@0e078ae4d4bab3777ea4f137de496ab44688f5ad # v1.0.13
+        uses: jaywcjlove/generated-badges@b9f9c103e884574d6330c09c2b3f597a106040c3 # v1.1.0
         with:
           label: Runtime Tests
           status: ${{ job.status == 'success' && 'passing' || 'failing' }}
