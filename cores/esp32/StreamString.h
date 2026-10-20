@@ -33,6 +33,10 @@ public:
   int read() override;
   int peek() override;
   void flush() override;
+
+private:
+  // read position
+  unsigned int _start = 0;
 };
 
 #endif /* STREAMSTRING_H_ */
