@@ -70,7 +70,7 @@ jobs:
             ./tools/xtensa-*
 
       - name: Compile sketch
-        uses: P-R-O-C-H-Y/compile-sketches@a62f069b92dc8f5053da4ac439ea6d1950cf6379 # main
+        uses: P-R-O-C-H-Y/compile-sketches@016e3c2dae7a68d7f759d358f1486a301f7e4150 # main
         with:
           platforms: |
             ${{ env.REPOSITORY }}
