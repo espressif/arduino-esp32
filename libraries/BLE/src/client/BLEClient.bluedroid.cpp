@@ -408,10 +408,13 @@ BTStatus BLEClient::disconnect() {
     log_e("esp_ble_gattc_close: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
-  if (wait && impl.connected) {
+  if (wait) {
+    // Wait unconditionally: esp_ble_gattc_close() may complete synchronously
+    // enough that `connected` is already cleared by CLOSE/DISCONNECT_EVT
+    // before we re-read it (notably on a shared ACL, where only CLOSE_EVT
+    // arrives). Re-reading the flag here raced that teardown and returned
+    // before onDisconnect had been dispatched.
     (void)impl.disconnectSync.wait(5000);
-  } else if (wait) {
-    impl.disconnectSync.give(BTStatus::OK);
   }
   return BTStatus::OK;
 }
@@ -491,7 +494,11 @@ void BLEClient::setMTU(uint16_t mtu) {
     return;
   }
 
-  esp_ble_gatt_set_local_mtu(mtu);
+  esp_err_t mtuErr = esp_ble_gatt_set_local_mtu(mtu);
+  if (mtuErr != ESP_OK) {
+    log_e("Client: esp_ble_gatt_set_local_mtu(%u): %s", mtu, esp_err_to_name(mtuErr));
+    return;
+  }
 
   if (_impl->connected) {
     _impl->mtuSync.take();
@@ -678,6 +685,49 @@ BTStatus BLEClient::setDataLen(uint16_t txOctets, uint16_t /*txTime*/) {
 #endif
 }
 
+// Idempotent virtual-disconnect teardown shared by DISCONNECT_EVT and
+// CLOSE_EVT. On a shared ACL (several GATTC apps on one physical link),
+// esp_ble_gattc_close() for one virtual connection produces CLOSE_EVT but no
+// DISCONNECT_EVT, so CLOSE_EVT must complete the same teardown. A later
+// DISCONNECT_EVT for the same conn_id no-ops because connId has already been
+// reset to 0xFFFF. Ordering (DESIGN.md): connection state, security flags and
+// the discovered tree are torn down BEFORE onDisconnect is dispatched, and
+// disconnectSync is given only after the dispatch so a blocking disconnect()
+// cannot return before the user callback has run.
+static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId, uint8_t reason) {
+  if (!client || evtConnId != client->connId.load()) {
+    return;
+  }
+  bool wasConnected = client->connected;
+  // Capture conn info before connId is reset so the callback still sees the
+  // connection that just ended.
+  BLEConnInfo conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
+  log_i("Client: disconnected, connId=%u reason=0x%02x", client->connId.load(), reason);
+
+  client->connected = false;
+  client->connId = 0xFFFF;
+  client->secEncrypted = false;
+  client->secAuthenticated = false;
+  client->secBonded = false;
+  {
+    BLELockGuard lock(client->mtx);
+    client->clearDiscoveredServices();
+  }
+
+  // Release any waiting syncs
+  client->connectSync.give(BTStatus::Fail);
+  client->discoverSync.give(BTStatus::Fail);
+  client->readSync.give(BTStatus::Fail);
+  client->writeSync.give(BTStatus::Fail);
+  client->mtuSync.give(BTStatus::Fail);
+  client->rssiSync.give(BTStatus::Fail);
+
+  if (wasConnected) {
+    client->dispatchDisconnect(conn, reason);
+  }
+  client->disconnectSync.give(BTStatus::OK);
+}
+
 // --------------------------------------------------------------------------
 // handleGATTC -- static event handler
 // --------------------------------------------------------------------------
@@ -785,42 +835,15 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
 
     case ESP_GATTC_DISCONNECT_EVT:
     {
-      if (param->disconnect.conn_id != client->connId) {
-        break;
-      }
-
-      bool wasConnected = client->connected;
-      client->connected = false;
-      uint8_t reason = param->disconnect.reason;
-      log_i("Client: disconnected, connId=%u reason=0x%02x", client->connId.load(), reason);
-
-      // Release any waiting syncs
-      client->connectSync.give(BTStatus::Fail);
-      client->discoverSync.give(BTStatus::Fail);
-      client->readSync.give(BTStatus::Fail);
-      client->writeSync.give(BTStatus::Fail);
-      client->mtuSync.give(BTStatus::Fail);
-      client->rssiSync.give(BTStatus::Fail);
-
-      if (wasConnected) {
-        BLEConnInfo conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
-        client->dispatchDisconnect(conn, reason);
-      }
-
-      client->connId = 0xFFFF;
-      client->secEncrypted = false;
-      client->secAuthenticated = false;
-      client->secBonded = false;
-      {
-        BLELockGuard lock(client->mtx);
-        client->clearDiscoveredServices();
-      }
-      client->disconnectSync.give(BTStatus::OK);
+      completeClientDisconnect(client, param->disconnect.conn_id, static_cast<uint8_t>(param->disconnect.reason));
       break;
     }
 
     case ESP_GATTC_CLOSE_EVT:
     {
+      // Virtual-connection close (e.g. close() on a shared ACL): no
+      // DISCONNECT_EVT follows, so this is the disconnect completion.
+      completeClientDisconnect(client, param->close.conn_id, static_cast<uint8_t>(param->close.reason));
       break;
     }
 
@@ -894,6 +917,11 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
             if (chr->handle == handle && chr->onNotifyCb) {
               onNotifyCb = chr->onNotifyCb;
               chrShared = chr->shared_from_this();
+              // Cache the payload into the characteristic value before
+              // dispatch (parity with NimBLE) so readRawData() after a
+              // notification returns these bytes, and pass the stable
+              // cached buffer rather than the transient stack buffer.
+              chr->value.assign(param->notify.value, param->notify.value + param->notify.value_len);
               break;
             }
           }
@@ -902,9 +930,12 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
           }
         }
       }
-      if (onNotifyCb) {
+      if (onNotifyCb && chrShared) {
         BLERemoteCharacteristic chrHandle = BLERemoteCharacteristicImplCommon::makeHandle(chrShared);
-        onNotifyCb(chrHandle, param->notify.value, param->notify.value_len, param->notify.is_notify);
+        onNotifyCb(
+          chrHandle, chrShared->value.data(), chrShared->value.size(),
+          param->notify.is_notify ? BLERemoteCharacteristic::Delivery::Notification : BLERemoteCharacteristic::Delivery::Indication
+        );
       }
       break;
     }
@@ -926,40 +957,16 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
 
     case ESP_GATTC_SRVC_CHG_EVT:
     {
-      log_i("Client: service changed indication received");
-      // Bluedroid's bta_gattc_process_srvc_chg_ind intercepts 0x2A05 (instead of
-      // delivering ESP_GATTC_NOTIFY_EVT) and clears notif_reg[] for the affected
-      // handle range. Re-register active characteristic subscriptions so surviving
-      // characteristics keep receiving notifications/indications, and invoke any
-      // user callback subscribed to 0x1801 / 0x2A05.
-      BLERemoteCharacteristic::NotifyCallback svcChgCb;
-      std::shared_ptr<BLERemoteCharacteristic::Impl> svcChgChr;
-      esp_bd_addr_t bda;
-      client->peerAddress.toEspBdAddr(bda);
+      log_i("Client: service changed indication received, invalidating discovered services");
+      // The peer's GATT table changed, so every cached handle may be stale.
+      // Do not fabricate a 0x2A05 payload and do not re-register notify routes
+      // by stale handle (previously done under the client mutex across stack
+      // calls). Invalidate the discovered tree instead: clearing it also drops
+      // the notify routes, which are resolved by scanning discoveredServices.
+      // The user re-discovers (discoverServices()) to rebuild fresh handles.
       {
         BLELockGuard lock(client->mtx);
-        for (auto &svc : client->discoveredServices) {
-          if (!svc) {
-            continue;
-          }
-          const bool isGattSvc = (svc->uuid == BLEUUID(static_cast<uint16_t>(0x1801)));
-          for (auto &chr : svc->characteristics) {
-            if (!chr || !chr->onNotifyCb) {
-              continue;
-            }
-            if (isGattSvc && chr->uuid == BLEUUID(static_cast<uint16_t>(0x2A05))) {
-              svcChgCb = chr->onNotifyCb;
-              svcChgChr = chr->shared_from_this();
-            } else {
-              (void)esp_ble_gattc_register_for_notify(client->gattcIf, bda, chr->handle);
-            }
-          }
-        }
-      }
-      if (svcChgCb && svcChgChr) {
-        const uint8_t range[4] = {0x01, 0x00, 0xFF, 0xFF};
-        BLERemoteCharacteristic chrHandle = BLERemoteCharacteristicImplCommon::makeHandle(svcChgChr);
-        svcChgCb(chrHandle, range, sizeof(range), false);
+        client->clearDiscoveredServices();
       }
       break;
     }

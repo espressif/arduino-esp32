@@ -300,7 +300,7 @@ BTStatus BLEClient::disconnect() {
     BLELockGuard lock(impl.mtx);
     if (!impl.connected) {
       log_w("Client: disconnect called but not connected");
-      return BTStatus::InvalidState;
+      return BTStatus::NotConnected;
     }
     handle = impl.connHandle;
   }
@@ -309,17 +309,27 @@ BTStatus BLEClient::disconnect() {
     impl.disconnectSync.take();
   }
   int rc = ble_gap_terminate(handle, BLE_ERR_REM_USER_CONN_TERM);
-  if (rc != 0 && rc != BLE_HS_ENOTCONN) {
+  if (rc == BLE_HS_ENOTCONN) {
+    // The stack has no such connection, so no DISCONNECT event can arrive to
+    // release the wait or dispatch onDisconnect; do not wait for one.
+    if (wait) {
+      impl.disconnectSync.give(BTStatus::NotConnected);
+    }
+    log_w("Client: ble_gap_terminate ENOTCONN (no disconnect event will arrive)");
+    return BTStatus::NotConnected;
+  }
+  if (rc != 0) {
     if (wait) {
       impl.disconnectSync.give(BTStatus::Fail);
     }
     log_e("Client: ble_gap_terminate rc=%d", rc);
     return BTStatus::Fail;
   }
-  if (wait && impl.connected) {
+  if (wait) {
+    // Wait unconditionally: the DISCONNECT handler may already have cleared
+    // `connected` before we could re-read it, and disconnect() must not
+    // return before onDisconnect has been dispatched.
     (void)impl.disconnectSync.wait(5000);
-  } else if (wait) {
-    impl.disconnectSync.give(BTStatus::OK);
   }
   return BTStatus::OK;
 }
@@ -358,7 +368,7 @@ BTStatus BLEClient::discoverServices() {
   {
     BLELockGuard lock(_impl->mtx);
     if (!_impl->connected) {
-      return BTStatus::InvalidState;
+      return BTStatus::NotConnected;
     }
     if (_impl->discovering) {
       return BTStatus::Fail;
@@ -401,10 +411,15 @@ BTStatus BLEClient::discoverServices() {
 
 void BLEClient::setMTU(uint16_t mtu) {
   BLE_CHECK_IMPL();
-  impl.preferredMTU = mtu;
-  if (mtu >= BLE_ATT_MTU_DFLT) {
-    ble_att_set_preferred_mtu(mtu);
+  // Let the stack validate the range: do not record the preference or start
+  // an exchange when it rejects the value (this API returns void, so the
+  // rejection is logged rather than returned as a BTStatus).
+  int mtuRc = ble_att_set_preferred_mtu(mtu);
+  if (mtuRc != 0) {
+    log_e("Client: ble_att_set_preferred_mtu(%u) rc=%d", mtu, mtuRc);
+    return;
   }
+  impl.preferredMTU = mtu;
   uint16_t handle;
   bool isConn;
   {
@@ -669,9 +684,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         impl->connHandle = BLE_HS_CONN_HANDLE_NONE;
         impl->clearDiscoveredServices();
       }
-      if (BLERemoteCharacteristic::Impl::clearNotifyRoutesHook) {
-        BLERemoteCharacteristic::Impl::clearNotifyRoutesHook(evtHandle);
-      }
+      BLERemoteCharacteristic::Impl::clearNotifyRoutes(evtHandle);
 
       BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(event->disconnect.conn);
       uint8_t reason = event->disconnect.reason;
@@ -770,8 +783,10 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         } else if (event->enc_change.status != 0) {
           log_w("Client: pairing/encryption failed on conn %u, host status=0x%04x", connHandle, event->enc_change.status);
         }
-        impl->authSync.give((event->enc_change.status == 0) ? BTStatus::OK : BTStatus::AuthFailed);
+        // Forward to the security layer first so the user's onAuthComplete
+        // runs before authSync releases a GATT op that is waiting to retry.
         nimbleForwardSecurityGapEvent(event);
+        impl->authSync.give((event->enc_change.status == 0) ? BTStatus::OK : BTStatus::AuthFailed);
       }
 #endif /* BLE_SMP_SUPPORTED */
       return 0;
@@ -779,11 +794,9 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
     case BLE_GAP_EVENT_NOTIFY_RX:
     {
-      if (BLERemoteCharacteristic::Impl::handleNotifyRxHook) {
-        BLERemoteCharacteristic::Impl::handleNotifyRxHook(
-          event->notify_rx.conn_handle, event->notify_rx.attr_handle, event->notify_rx.om, event->notify_rx.indication == 0
-        );
-      }
+      BLERemoteCharacteristic::Impl::handleNotifyRx(
+        event->notify_rx.conn_handle, event->notify_rx.attr_handle, event->notify_rx.om, event->notify_rx.indication == 0
+      );
       return 0;
     }
 
