@@ -82,8 +82,19 @@ bool BLERemoteCharacteristic::canBroadcast() const {
   return _impl && (_impl->properties & static_cast<uint8_t>(BLEProperty::Broadcast));
 }
 
+static SemaphoreHandle_t remoteChrMtx(const BLERemoteCharacteristic::Impl *impl) {
+  return (impl && impl->service && impl->service->client) ? impl->service->client->mtx : nullptr;
+}
+
 const uint8_t *BLERemoteCharacteristic::readRawData(size_t *len) const {
-  if (!_impl || _impl->value.empty()) {
+  if (!_impl) {
+    if (len) {
+      *len = 0;
+    }
+    return nullptr;
+  }
+  BLELockGuard lock(remoteChrMtx(_impl.get()));
+  if (_impl->value.empty()) {
     if (len) {
       *len = 0;
     }
@@ -99,6 +110,7 @@ String BLERemoteCharacteristic::readValue(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return String();
   }
+  BLELockGuard lock(remoteChrMtx(_impl.get()));
   return String(reinterpret_cast<const char *>(_impl->value.data()), _impl->value.size());
 }
 
@@ -106,6 +118,7 @@ uint8_t BLERemoteCharacteristic::readUInt8(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  BLELockGuard lock(remoteChrMtx(_impl.get()));
   return static_cast<uint8_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 1));
 }
 
@@ -113,6 +126,7 @@ uint16_t BLERemoteCharacteristic::readUInt16(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  BLELockGuard lock(remoteChrMtx(_impl.get()));
   return static_cast<uint16_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 2));
 }
 
@@ -120,6 +134,7 @@ uint32_t BLERemoteCharacteristic::readUInt32(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  BLELockGuard lock(remoteChrMtx(_impl.get()));
   return bleReadLEUint(_impl->value.data(), _impl->value.size(), 4);
 }
 
@@ -135,6 +150,7 @@ size_t BLERemoteCharacteristic::readValue(uint8_t *buf, size_t bufLen, uint32_t 
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  BLELockGuard lock(remoteChrMtx(_impl.get()));
   size_t copyLen = (_impl->value.size() < bufLen) ? _impl->value.size() : bufLen;
   memcpy(buf, _impl->value.data(), copyLen);
   return copyLen;

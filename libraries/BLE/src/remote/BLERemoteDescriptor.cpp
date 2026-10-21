@@ -41,10 +41,15 @@ BLERemoteCharacteristic BLERemoteDescriptor::getRemoteCharacteristic() const {
   return (_impl && _impl->chr) ? BLERemoteCharacteristic(_impl->chr->shared_from_this()) : BLERemoteCharacteristic();
 }
 
+static SemaphoreHandle_t remoteDescMtx(const BLERemoteDescriptor::Impl *impl) {
+  return (impl && impl->chr && impl->chr->service && impl->chr->service->client) ? impl->chr->service->client->mtx : nullptr;
+}
+
 String BLERemoteDescriptor::readValue(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return String();
   }
+  BLELockGuard lock(remoteDescMtx(_impl.get()));
   return String(reinterpret_cast<const char *>(_impl->value.data()), _impl->value.size());
 }
 
@@ -52,6 +57,7 @@ uint8_t BLERemoteDescriptor::readUInt8(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  BLELockGuard lock(remoteDescMtx(_impl.get()));
   return static_cast<uint8_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 1));
 }
 
@@ -59,6 +65,7 @@ uint16_t BLERemoteDescriptor::readUInt16(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  BLELockGuard lock(remoteDescMtx(_impl.get()));
   return static_cast<uint16_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 2));
 }
 
@@ -66,11 +73,19 @@ uint32_t BLERemoteDescriptor::readUInt32(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  BLELockGuard lock(remoteDescMtx(_impl.get()));
   return bleReadLEUint(_impl->value.data(), _impl->value.size(), 4);
 }
 
 const uint8_t *BLERemoteDescriptor::readRawData(size_t *len) const {
-  if (!_impl || _impl->value.empty()) {
+  if (!_impl) {
+    if (len) {
+      *len = 0;
+    }
+    return nullptr;
+  }
+  BLELockGuard lock(remoteDescMtx(_impl.get()));
+  if (_impl->value.empty()) {
     if (len) {
       *len = 0;
     }
@@ -98,7 +113,11 @@ bool BLERemoteDescriptor::isPresentationFormat() const {
 }
 
 static uint16_t getRemotePresentationFormatField(const BLERemoteDescriptor &desc, const BLERemoteDescriptor::Impl *impl, size_t offset, bool twoBytes) {
-  if (!impl || !desc.isPresentationFormat() || impl->value.size() < 7) {
+  if (!impl || !desc.isPresentationFormat()) {
+    return 0;
+  }
+  BLELockGuard lock(remoteDescMtx(impl));
+  if (impl->value.size() < 7) {
     return 0;
   }
   uint16_t val = impl->value[offset];

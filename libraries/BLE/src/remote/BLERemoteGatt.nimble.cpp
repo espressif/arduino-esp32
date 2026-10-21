@@ -276,6 +276,7 @@ struct RemoteReadContext {
   std::atomic<uint32_t> *readGeneration;
   BLESync *readSync;
   std::vector<uint8_t> *targetValue;
+  SemaphoreHandle_t valueMtx;
   int *lastAttError;
   uint32_t generation;
   std::vector<uint8_t> value;
@@ -306,6 +307,7 @@ static int handleRemoteReadCb(uint16_t, const struct ble_gatt_error *error, stru
       *context->lastAttError = error->status;
     }
     if (success) {
+      BLELockGuard lock(context->valueMtx);
       *context->targetValue = std::move(context->value);
     }
     context->readSync->give(success ? BTStatus::OK : BTStatus::Fail);
@@ -343,14 +345,18 @@ static bool performRemoteLongRead(
   // generation/sync handshake and waitRemoteOp() could wait indefinitely for
   // a callback belonging to the other op. RAII releases on every path.
   BLELockGuard opLock(opMtx);
+  SemaphoreHandle_t valueMtx = (svc && svc->client) ? svc->client->mtx : nullptr;
   for (int retry = 0; retry < 2; retry++) {
-    targetValue.clear();
+    {
+      BLELockGuard lock(valueMtx);
+      targetValue.clear();
+    }
     if (lastAttError) {
       *lastAttError = 0;
     }
     uint32_t generation = readGeneration.fetch_add(1) + 1;
     readSync.take();
-    auto *context = new (std::nothrow) RemoteReadContext{owner, &readGeneration, &readSync, &targetValue, lastAttError, generation, {}};
+    auto *context = new (std::nothrow) RemoteReadContext{owner, &readGeneration, &readSync, &targetValue, valueMtx, lastAttError, generation, {}};
     if (!context) {
       readSync.give(BTStatus::NoMemory);
       return false;
@@ -822,16 +828,25 @@ void BLERemoteCharacteristic::Impl::handleNotifyRx(uint16_t connHandle, uint16_t
   }
 
   uint16_t len = OS_MBUF_PKTLEN(om);
-  // Copy the payload into the characteristic's cached value before dispatch
-  // and pass that stable buffer: the mbuf is only valid for this call, and
-  // readRawData() after a notification must return the notified bytes.
-  implPtr->value.resize(len);
+  const uint8_t *dataPtr = nullptr;
+  std::vector<uint8_t> flatBuf;
   if (len > 0) {
-    os_mbuf_copydata(om, 0, len, implPtr->value.data());
+    if (SLIST_NEXT(om, om_next) == nullptr) {
+      dataPtr = om->om_data;
+    } else {
+      flatBuf.resize(len);
+      os_mbuf_copydata(om, 0, len, flatBuf.data());
+      dataPtr = flatBuf.data();
+    }
+  }
+  {
+    auto *svc = implPtr->service;
+    BLELockGuard lock(svc && svc->client ? svc->client->mtx : nullptr);
+    implPtr->value.assign(dataPtr, dataPtr + len);
   }
 
   BLERemoteCharacteristic chr = BLERemoteCharacteristicImplCommon::makeHandle(implPtr);
-  cb(chr, implPtr->value.data(), len, isNotify ? Delivery::Notification : Delivery::Indication);
+  cb(chr, dataPtr, len, isNotify ? Delivery::Notification : Delivery::Indication);
 }
 
 #else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
