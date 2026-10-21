@@ -61,17 +61,25 @@ static void userStoreNamespace(char *ns, size_t size, uint8_t endpoint) {
   snprintf(ns, size, "zbdl%u", endpoint);
 }
 
+bool ZigbeeDoorLock::ensureStoreLock() {
+  if (_store_lock != nullptr) {
+    return true;
+  }
+  _store_lock = xSemaphoreCreateMutex();
+  if (_store_lock == nullptr) {
+    log_e("Failed to create the user storage lock");
+    return false;
+  }
+  return true;
+}
+
 bool ZigbeeDoorLock::setUserStorage(bool enable) {
   if (!enable) {
     _store_users = false;
     return true;
   }
-  if (_store_lock == nullptr) {
-    _store_lock = xSemaphoreCreateMutex();
-    if (_store_lock == nullptr) {
-      log_e("Failed to create the user storage lock");
-      return false;
-    }
+  if (!ensureStoreLock()) {
+    return false;
   }
   _store_users = true;
   return loadUsers();
@@ -112,7 +120,7 @@ bool ZigbeeDoorLock::loadUsers() {
 }
 
 void ZigbeeDoorLock::saveUsers() {
-  if (!_store_users || _users == nullptr) {
+  if (!_store_users || _users == nullptr || _store_lock == nullptr) {
     return;
   }
   size_t size = ZB_DOOR_LOCK_STORE_HEADER + _max_users * sizeof(User);
@@ -121,6 +129,12 @@ void ZigbeeDoorLock::saveUsers() {
     log_e("Failed to allocate the door lock users for storing");
     return;
   }
+
+  // Hold the store lock across the snapshot and the NVS write so concurrent saves cannot
+  // commit an older table after a newer one (e.g. a revoked PIN becoming valid again).
+  char ns[16];
+  userStoreNamespace(ns, sizeof(ns), _endpoint);
+  xSemaphoreTake(_store_lock, portMAX_DELAY);
   portENTER_CRITICAL(&_users_lock);
   buf[0] = ZB_DOOR_LOCK_STORE_VERSION;
   buf[1] = _max_users & 0xff;
@@ -128,9 +142,6 @@ void ZigbeeDoorLock::saveUsers() {
   memcpy(buf + ZB_DOOR_LOCK_STORE_HEADER, _users, _max_users * sizeof(User));
   portEXIT_CRITICAL(&_users_lock);
 
-  char ns[16];
-  userStoreNamespace(ns, sizeof(ns), _endpoint);
-  xSemaphoreTake(_store_lock, portMAX_DELAY);
   nvs_handle_t handle;
   esp_err_t err = nvs_open(ns, NVS_READWRITE, &handle);
   if (err == ESP_OK) {
@@ -147,39 +158,71 @@ void ZigbeeDoorLock::saveUsers() {
   }
 }
 
+void ZigbeeDoorLock::eraseStoredUsers() {
+  if (!ensureStoreLock()) {
+    return;
+  }
+  char ns[16];
+  userStoreNamespace(ns, sizeof(ns), _endpoint);
+  xSemaphoreTake(_store_lock, portMAX_DELAY);
+  nvs_handle_t handle;
+  esp_err_t err = nvs_open(ns, NVS_READWRITE, &handle);
+  if (err == ESP_OK) {
+    err = nvs_erase_key(handle, "users");
+    if (err == ESP_OK || err == ESP_ERR_NVS_NOT_FOUND) {
+      err = nvs_commit(handle);
+    }
+    nvs_close(handle);
+  }
+  xSemaphoreGive(_store_lock);
+  if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+    log_e("Failed to erase the stored door lock users: %s", esp_err_to_name(err));
+  }
+}
+
 void ZigbeeDoorLock::clearUsers() {
   portENTER_CRITICAL(&_users_lock);
   if (_users != nullptr) {
     memset(_users, 0, _max_users * sizeof(User));
   }
   portEXIT_CRITICAL(&_users_lock);
-  saveUsers();
+  // Always remove the NVS blob, even when automatic storage is disabled, so a later
+  // setUserStorage(true) cannot restore revoked users.
+  eraseStoredUsers();
 }
 
 ZigbeeDoorLockState ZigbeeDoorLock::restoreLockState() {
-  uint8_t value = DOOR_LOCK_STATE_UNDEFINED;
-  if (getAttribute(EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_ATTR_DOOR_LOCK_LOCK_STATE_ID, &value, sizeof(value))) {
-    _lock_state = (ZigbeeDoorLockState)value;
+  // Keep the attribute read and the cache update under the same Zigbee lock.
+  if (!acquireCommandLock()) {
+    return _lock_state;
   }
+  ezb_zcl_attr_desc_t attr =
+    ezb_zcl_get_attr_desc(_endpoint, EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_LOCK_STATE_ID, EZB_ZCL_STD_MANUF_CODE);
+  if (attr != nullptr) {
+    uint8_t value = DOOR_LOCK_STATE_UNDEFINED;
+    if (ezb_zcl_attr_desc_get_value_size(attr) <= sizeof(value) && ezb_zcl_attr_desc_get_value(attr, &value) == EZB_ERR_NONE) {
+      _lock_state = (ZigbeeDoorLockState)value;
+    }
+  }
+  releaseCommandLock();
   return _lock_state;
 }
 
-// Advertise the PIN code capabilities (optional DoorLock attributes)
+// Advertise the PIN code capabilities (optional DoorLock attributes).
+// Uses addOrSetEpClusterAttr() so it also works from the constructor, before Zigbee.role().
 bool ZigbeeDoorLock::addPinAttributes() {
   uint16_t users = _max_users;
   uint8_t max_len = ZB_DOOR_LOCK_MAX_PIN_LENGTH;
   uint8_t min_len = ZB_DOOR_LOCK_MIN_PIN_LENGTH;
-  bool ok = configureEpClusterAttr(
-    "setMaxUsers", EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_NUMBER_OF_PIN_USERS_SUPPORTED_ID, (void *)&users,
+  bool ok = addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_NUMBER_OF_PIN_USERS_SUPPORTED_ID, &users,
     ezb_zcl_door_lock_cluster_desc_add_attr
   );
-  ok &= configureEpClusterAttr(
-    "setMaxUsers", EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_MAX_PIN_CODE_LENGTH_ID, (void *)&max_len,
-    ezb_zcl_door_lock_cluster_desc_add_attr
+  ok &= addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_MAX_PIN_CODE_LENGTH_ID, &max_len, ezb_zcl_door_lock_cluster_desc_add_attr
   );
-  ok &= configureEpClusterAttr(
-    "setMaxUsers", EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_MIN_PIN_CODE_LENGTH_ID, (void *)&min_len,
-    ezb_zcl_door_lock_cluster_desc_add_attr
+  ok &= addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_MIN_PIN_CODE_LENGTH_ID, &min_len, ezb_zcl_door_lock_cluster_desc_add_attr
   );
   if (!ok) {
     log_e("Failed to add the PIN code attributes to the door lock endpoint");
@@ -224,13 +267,26 @@ bool ZigbeeDoorLock::pinIsValid(const char *pin) {
   return len >= ZB_DOOR_LOCK_MIN_PIN_LENGTH && len <= ZB_DOOR_LOCK_MAX_PIN_LENGTH;
 }
 
+// Validate a ZCL octet-string PIN (first byte = length). Rejects embedded NUL so storing it as a
+// C string cannot silently shorten the credential (e.g. "1234\\0abcd" must not become "1234").
+bool ZigbeeDoorLock::pinOctetIsValid(const uint8_t *pin_code) {
+  if (pin_code == nullptr) {
+    return false;
+  }
+  uint8_t len = pin_code[0];
+  if (len < ZB_DOOR_LOCK_MIN_PIN_LENGTH || len > ZB_DOOR_LOCK_MAX_PIN_LENGTH) {
+    return false;
+  }
+  return memchr(&pin_code[1], 0, len) == nullptr;
+}
+
 // Must be called with _users_lock held
 int32_t ZigbeeDoorLock::findPinLocked(const char *pin, int32_t skip_user, bool enabled_only) {
   for (uint16_t i = 0; i < _max_users; i++) {
     if ((int32_t)i == skip_user || _users[i].status == DOOR_LOCK_USER_AVAILABLE) {
       continue;
     }
-    if (enabled_only && _users[i].status != DOOR_LOCK_USER_ENABLED) {
+    if (enabled_only && (_users[i].status != DOOR_LOCK_USER_ENABLED || _users[i].type != EZB_ZCL_DOOR_LOCK_USER_TYPE_UNRESTRICTED)) {
       continue;
     }
     if (strcmp(_users[i].pin, pin) == 0) {
@@ -282,6 +338,7 @@ bool ZigbeeDoorLock::setUser(uint16_t user_id, ZigbeeDoorLockUserStatus status, 
     memset(&_users[user_id], 0, sizeof(User));
     _users[user_id].status = status;
     if (status != DOOR_LOCK_USER_AVAILABLE) {
+      _users[user_id].type = EZB_ZCL_DOOR_LOCK_USER_TYPE_UNRESTRICTED;
       strlcpy(_users[user_id].pin, pin, sizeof(_users[user_id].pin));
     }
   }
@@ -368,12 +425,21 @@ bool ZigbeeDoorLock::setLockState(ZigbeeDoorLockState state) {
   }
 
   log_v("Updating door lock state to %u", value);
-  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_LOCK_STATE_ID, &value, false);
+  // Keep the attribute write and the cache update under the same Zigbee lock so a concurrent
+  // network Lock/Unlock command cannot leave _lock_state disagreeing with the attribute.
+  if (!acquireCommandLock()) {
+    return false;
+  }
+  ezb_zcl_status_t ret =
+    ezb_zcl_set_attr_value(_endpoint, EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_LOCK_STATE_ID, EZB_ZCL_STD_MANUF_CODE, &value, false);
+  if (ret == EZB_ZCL_STATUS_SUCCESS) {
+    _lock_state = state;
+  }
+  releaseCommandLock();
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set door lock state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
-  _lock_state = state;
   return reportLockState();
 }
 
@@ -433,29 +499,30 @@ void ZigbeeDoorLock::zbDoorLockSetPinCode(ezb_zcl_door_lock_set_pin_code_message
 
   uint16_t user_id = req->user_id;
   uint8_t pin_len = req->pin_code[0];
-  if (pin_len > ZB_DOOR_LOCK_MAX_PIN_LENGTH) {
-    return;  // Already rejected by the stack, kept as a guard for the buffer below
-  }
-  char pin[ZB_DOOR_LOCK_MAX_PIN_LENGTH + 1];
-  memcpy(pin, &req->pin_code[1], pin_len);
-  pin[pin_len] = '\0';
-
   if (user_id >= _max_users) {
     message->out.status = EZB_ZCL_DOOR_LOCK_CMD_STATUS_MEMORY_FULL;
     return;
   }
-  if ((req->user_status != DOOR_LOCK_USER_ENABLED && req->user_status != DOOR_LOCK_USER_DISABLED) || !pinIsValid(pin)) {
-    log_w("SetPINCode rejected: user %u, status %u, PIN length %u", user_id, req->user_status, pin_len);
+  // User types other than unrestricted are not supported yet (schedules / non-access). Accepting them
+  // would let checkPin() unlock for those users without enforcing their restrictions.
+  if ((req->user_status != DOOR_LOCK_USER_ENABLED && req->user_status != DOOR_LOCK_USER_DISABLED) ||
+      req->user_type != EZB_ZCL_DOOR_LOCK_USER_TYPE_UNRESTRICTED || !pinOctetIsValid(req->pin_code)) {
+    log_w(
+      "SetPINCode rejected: user %u, status %u, type %u, PIN length %u", user_id, req->user_status, req->user_type, pin_len
+    );
     return;
   }
+  char pin[ZB_DOOR_LOCK_MAX_PIN_LENGTH + 1];
+  memcpy(pin, &req->pin_code[1], pin_len);
+  pin[pin_len] = '\0';
 
   portENTER_CRITICAL(&_users_lock);
   if (findPinLocked(pin, user_id, false) >= 0) {
     message->out.status = EZB_ZCL_DOOR_LOCK_CMD_STATUS_DUPLICATE_CODE;
   } else {
     _users[user_id].status = req->user_status;
-    _users[user_id].type = req->user_type;
-    strlcpy(_users[user_id].pin, pin, sizeof(_users[user_id].pin));
+    _users[user_id].type = EZB_ZCL_DOOR_LOCK_USER_TYPE_UNRESTRICTED;
+    memcpy(_users[user_id].pin, pin, pin_len + 1);
     message->out.status = EZB_ZCL_DOOR_LOCK_CMD_STATUS_SUCCESS;
   }
   portEXIT_CRITICAL(&_users_lock);

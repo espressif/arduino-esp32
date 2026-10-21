@@ -200,6 +200,12 @@ bool ZigbeeEP::getClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, ui
     log_w("Cannot get attribute: attribute not found");
     return false;
   }
+  uint16_t attr_size = ezb_zcl_attr_desc_get_value_size(attr);
+  if (attr_size > value_size) {
+    esp_zigbee_lock_release();
+    log_e("Cannot get attribute: buffer too small (%u < %u)", value_size, attr_size);
+    return false;
+  }
   ezb_err_t err = ezb_zcl_attr_desc_get_value(attr, value);
   esp_zigbee_lock_release();
   if (err != EZB_ERR_NONE) {

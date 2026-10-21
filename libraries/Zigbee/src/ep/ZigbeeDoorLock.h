@@ -179,8 +179,11 @@ private:
     char pin[ZB_DOOR_LOCK_MAX_PIN_LENGTH + 1];
   };
   static bool pinIsValid(const char *pin);
+  static bool pinOctetIsValid(const uint8_t *pin_code);
+  bool ensureStoreLock();
   bool loadUsers();
   void saveUsers();
+  void eraseStoredUsers();
   int32_t findPinLocked(const char *pin, int32_t skip_user, bool enabled_only);
 
   bool (*_on_lock)();
