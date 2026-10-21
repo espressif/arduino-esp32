@@ -36,7 +36,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 10 | security | Numeric Comparison pairing, matching passkey, secure read |
 | 11 | ble5_phy_dle | PHY update + data-length extension (BLE5) |
 | 12 | reconnect | repeated connect/disconnect + Bluedroid app-id boundary stress |
-| 13 | blestream | NUS stream: writeTo/onData/peers, ping/pong, peek, bulk, disconnect |
+| 13 | blestream | NUS stream: failed-client-begin teardown, writeTo/onData/peers, ping/pong, peek, bulk, disconnect |
 | 14 | l2cap_coc | L2CAP CoC connect + echo |
 | 15 | introspection_and_permissions | client introspection, fail-closed masking, descriptor perms |
 | 16 | conninfo_and_params | `BLEConnInfo` matrix + MTU / conn-params callbacks + ordering |

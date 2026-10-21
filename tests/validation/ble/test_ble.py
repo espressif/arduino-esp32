@@ -389,6 +389,12 @@ def _phase_reconnect(server, client):
 
 def _phase_blestream(server, client):
     # Init + onConnect callback + connected()
+    server.expect_exact("[SERVER] BLEStream malformed NUS ready=1", timeout=20)
+    client.expect_exact("[CLIENT] BLEStream malformed begin armed", timeout=15)
+    client.write("PHASE13_MALFORMED_GO\n")
+    client.expect_exact("[CLIENT] BLEStream failed begin cleanup=1", timeout=20)
+    server.write("PHASE13_CONTINUE\n")
+    server.expect_exact("[SERVER] BLEStream malformed NUS removed=1", timeout=15)
     server.expect_exact("[SERVER] BLEStream init OK", timeout=20)
     client.expect_exact("[CLIENT] BLEStream init OK", timeout=30)
     server.expect_exact("[SERVER] BLEStream onConnect fired", timeout=15)

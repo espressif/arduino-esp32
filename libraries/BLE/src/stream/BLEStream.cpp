@@ -116,24 +116,6 @@ BTStatus BLEStream::begin(const String &deviceName) {
     return BTStatus::Fail;
   }
 
-  _impl->server.onConnect([this](BLEServer, const BLEConnInfo &connInfo) {
-    _impl->peerCount.fetch_add(1, std::memory_order_relaxed);
-    if (_impl->onConnectCb) {
-      _impl->onConnectCb(connInfo);
-    }
-  });
-
-  _impl->server.onDisconnect([this](BLEServer, const BLEConnInfo &connInfo, uint8_t reason) {
-    if (_impl->peerCount.load(std::memory_order_relaxed) > 0) {
-      _impl->peerCount.fetch_sub(1, std::memory_order_relaxed);
-    }
-    if (_impl->onDisconnectCb) {
-      _impl->onDisconnectCb(connInfo, reason);
-    }
-  });
-
-  _impl->server.advertiseOnDisconnect(true);
-
   BLEService svc = _impl->server.createService(kNUS_ServiceUUID);
 
   // TX characteristic: server notifies, client may also Read. Nordic's NUS
@@ -149,16 +131,6 @@ BTStatus BLEStream::begin(const String &deviceName) {
   // the common deployed NUS behavior; add encryption with
   // BLEPermission::WriteEncrypted if the profile calls for it.
   _impl->rxChr = svc.createCharacteristic(kNUS_RxCharUUID, BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen);
-  _impl->rxChr.onWrite([this](BLECharacteristic chr, const BLEConnInfo &connInfo) {
-    size_t len = 0;
-    const uint8_t *data = chr.getValue(&len);
-    if (data && len > 0) {
-      _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
-      if (_impl->onPeerDataCb) {
-        _impl->onPeerDataCb(connInfo, data, len);
-      }
-    }
-  });
 
   // Stop advertising before (re-)starting the server so the GATT table is
   // mutable (NimBLE requires no active GAP procedures during registration).
@@ -170,16 +142,45 @@ BTStatus BLEStream::begin(const String &deviceName) {
     return srvStatus;
   }
 
+  // From here onward callbacks capture this. Mark the mode first so every
+  // later failure can call end() and detach them before destruction.
+  _impl->mode = Impl::Mode::Server;
+  _impl->server.onConnect([this](BLEServer, const BLEConnInfo &connInfo) {
+    _impl->peerCount.fetch_add(1, std::memory_order_relaxed);
+    if (_impl->onConnectCb) {
+      _impl->onConnectCb(connInfo);
+    }
+  });
+  _impl->server.onDisconnect([this](BLEServer, const BLEConnInfo &connInfo, uint8_t reason) {
+    if (_impl->peerCount.load(std::memory_order_relaxed) > 0) {
+      _impl->peerCount.fetch_sub(1, std::memory_order_relaxed);
+    }
+    if (_impl->onDisconnectCb) {
+      _impl->onDisconnectCb(connInfo, reason);
+    }
+  });
+  _impl->server.advertiseOnDisconnect(true);
+  _impl->rxChr.onWrite([this](BLECharacteristic chr, const BLEConnInfo &connInfo) {
+    size_t len = 0;
+    const uint8_t *data = chr.getValue(&len);
+    if (data && len > 0) {
+      _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
+      if (_impl->onPeerDataCb) {
+        _impl->onPeerDataCb(connInfo, data, len);
+      }
+    }
+  });
+
   // Reconfigure advertising to include the NUS service UUID.
   adv.reset();
   adv.setName(deviceName);
   adv.addServiceUUID(kNUS_ServiceUUID);
   BTStatus advStatus = adv.start();
   if (!advStatus) {
+    end();
     return advStatus;
   }
 
-  _impl->mode = Impl::Mode::Server;
   return BTStatus::OK;
 }
 
@@ -201,6 +202,9 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
     return BTStatus::Fail;
   }
 
+  // Client lifecycle callbacks below capture this; mark the mode first so
+  // every failure path detaches them through end() before the object can die.
+  _impl->mode = Impl::Mode::Client;
   _impl->client.onConnect([this](BLEClient, const BLEConnInfo &connInfo) {
     _impl->peerCount = 1;
     if (_impl->onConnectCb) {
@@ -217,13 +221,14 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
 
   BTStatus s = _impl->client.connect(address, timeoutMs);
   if (!s) {
+    end();
     return s;
   }
 
   // Discover NUS service
   BLERemoteService svc = _impl->client.getService(kNUS_ServiceUUID);
   if (!svc) {
-    _impl->client.disconnect();
+    end();
     return BTStatus::NotFound;
   }
 
@@ -231,18 +236,21 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
   _impl->remoteRx = svc.getCharacteristic(kNUS_RxCharUUID);
 
   if (!_impl->remoteTx || !_impl->remoteRx) {
-    _impl->client.disconnect();
+    end();
     return BTStatus::NotFound;
   }
 
   // Subscribe to TX notifications (data from server -> us)
-  _impl->remoteTx.subscribe(BLESubscription::Notify, [this](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
+  s = _impl->remoteTx.subscribe(BLESubscription::Notify, [this](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
     if (data && len > 0) {
       _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
     }
   });
+  if (!s) {
+    end();
+    return s;
+  }
 
-  _impl->mode = Impl::Mode::Client;
   return BTStatus::OK;
 }
 

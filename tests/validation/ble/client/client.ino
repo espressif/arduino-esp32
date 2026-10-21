@@ -118,6 +118,7 @@ static const uint32_t PASSKEY_ENTRY_STATIC = 398215;
 // reset from the Arduino task before the phase-10 connect (no callback in flight).
 static const char *clientOrderTags[16];
 volatile int clientOrderN = 0;
+volatile bool phase13MalformedGo = false;
 volatile bool phase28StallGo = false;
 volatile bool phase28CleanupGo = false;
 static void recordClientEvent(const char *tag) {
@@ -153,6 +154,8 @@ void checkSerial() {
           currentPhase = phase;
           Serial.printf("[CLIENT] Phase %d started\n", phase);
         }
+      } else if (buf == "PHASE13_MALFORMED_GO") {
+        phase13MalformedGo = true;
       } else if (buf == "PHASE28_STALL_GO") {
         phase28StallGo = true;
       } else if (buf == "PHASE28_CLEANUP_GO") {
@@ -1149,6 +1152,20 @@ void setup() {
   waitForPhase(13);
   {
     bool stream_ok = false;
+    bool failedBeginClean = false;
+    Serial.println("[CLIENT] BLEStream malformed begin armed");
+    while (!phase13MalformedGo) {
+      checkSerial();
+      delay(10);
+    }
+    {
+      BLEStream failedStream;
+      BTStatus failedStatus = failedStream.beginClient(targetAddr, 5000);
+      failedBeginClean = failedStatus == BTStatus::NotFound;
+    }
+    delay(500);
+    failedBeginClean = failedBeginClean && heap_caps_check_integrity_all(true);
+    Serial.printf("[CLIENT] BLEStream failed begin cleanup=%d\n", (int)failedBeginClean);
     // Don't tear down BLE — BLEStream layers on the existing stack.
     // Give server time to reconfigure advertising with NUS service.
     delay(2000);

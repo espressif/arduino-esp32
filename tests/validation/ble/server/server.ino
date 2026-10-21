@@ -303,6 +303,7 @@ String bleStreamRxLine;
 volatile bool bleStreamConnectCb = false;
 volatile bool bleStreamDisconnectCb = false;
 volatile bool bleStreamWriteToDone = false;
+volatile bool phase13Continue = false;
 bool bleStreamPeekDone = false;
 bool l2capInitDone = false;
 
@@ -325,6 +326,8 @@ void checkSerial() {
           currentPhase = phase;
           Serial.printf("[SERVER] Phase %d started\n", phase);
         }
+      } else if (buf == "PHASE13_CONTINUE") {
+        phase13Continue = true;
       }
       buf = "";
     } else if (c != '\r') {
@@ -1004,6 +1007,27 @@ void loop() {
   // Phase 13: BLEStream (server side)
   if (currentPhase >= 13 && !bleStreamInitDone) {
     bleStreamInitDone = true;
+    BLEServer malformedServer = BLE.createServer();
+    BLEService malformedNus = malformedServer.createService(BLEStream::nusServiceUUID());
+    malformedNus.createCharacteristic(BLEStream::nusTxCharUUID(), BLEProperty::Read, BLEPermission::ReadOpen).setValue("no_cccd");
+    malformedNus.createCharacteristic(
+      BLEStream::nusRxCharUUID(), BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen
+    );
+    BLEAdvertising malformedAdv = BLE.getAdvertising();
+    malformedAdv.stop();
+    BTStatus malformedStart = malformedServer.start();
+    malformedAdv.reset();
+    malformedAdv.addServiceUUID(BLEStream::nusServiceUUID());
+    BTStatus malformedAdvStart = malformedAdv.start();
+    Serial.printf("[SERVER] BLEStream malformed NUS ready=%d\n", (int)(malformedStart && malformedAdvStart));
+    while (!phase13Continue) {
+      checkSerial();
+      delay(10);
+    }
+    malformedAdv.stop();
+    BTStatus malformedRemoved = malformedServer.removeService(malformedNus);
+    Serial.printf("[SERVER] BLEStream malformed NUS removed=%d\n", (int)(bool)malformedRemoved);
+
     bleStream.onConnect([](const BLEConnInfo &connInfo) {
       syncPhaseFromHost();
       bleStreamConnectCb = true;
