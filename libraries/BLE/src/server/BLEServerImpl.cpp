@@ -289,9 +289,10 @@ bool BLEServerImplCommon::pumpIndications(uint16_t connHandle) {
         link->frontBusy = false;
         link->queue.erase(link->queue.begin());
       } else {
-        // Move (not copy) the payload out; it is restored below if the stack
-        // refuses this attempt as Busy and the front must be retried later.
-        payload = std::move(front.payload);
+        // Keep front.payload intact while in flight: on Bluedroid a busy refusal
+        // arrives asynchronously via ESP_GATTS_CONF_EVT (indicationBusy()), which
+        // retries front.payload directly without re-entering this local scope.
+        payload = front.payload;
         seq = ++indicationSeq;
         link->inFlight = chr;
         link->inFlightSeq = seq;
@@ -321,10 +322,6 @@ bool BLEServerImplCommon::pumpIndications(uint16_t connHandle) {
       if (link && link->inFlightSeq == seq && link->inFlight == chr) {
         link->inFlight.reset();
         if (result == BLEIndicationSend::Busy && markFrontBusy(*link)) {
-          // The front stays queued for the busy retry; give it its payload back.
-          if (!link->queue.empty() && link->queue.front().chr == chr) {
-            link->queue.front().payload = std::move(payload);
-          }
           return firstOk;
         }
         link->frontBusy = false;
