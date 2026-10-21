@@ -35,6 +35,7 @@
  * @c BLEServerImplCommon are shared.
  */
 struct BLEServer::Impl : BLEServerImplCommon {
+  uint32_t identityDispatchedMask = 0;
   static int gapEventHandler(struct ble_gap_event *event, void *arg);
 };
 

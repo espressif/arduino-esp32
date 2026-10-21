@@ -21,16 +21,14 @@
  * @file BLEGattAttributes.bluedroid.h
  * @brief Bluedroid server-side GATT attribute Impls: BLEService, BLEDescriptor, BLECharacteristic.
  *
- * Bluedroid keeps no stack-specific state beyond the shared *ImplCommon bases,
- * so all three are empty derivations; they exist to give the backend contract a
- * concrete per-type Impl.
+ * Services, characteristics, and descriptors keep no stack-specific state
+ * beyond the shared *ImplCommon bases.
  */
 
 #include "core/BLEGuards.h"
 #if BLE_BLUEDROID
 
 #include "gatt/BLEGattAttributesImpl.h"
-#include <vector>
 
 struct BLEService::Impl : BLEServiceImplCommon {};
 

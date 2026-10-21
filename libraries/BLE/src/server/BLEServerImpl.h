@@ -30,7 +30,10 @@
 #if BLE_ENABLED
 
 #include "server/BLEServer.h"
+#include "gatt/BLECharacteristic.h"
 #include "core/BLEMutex.h"
+#include "core/BLESync.h"
+#include <atomic>
 #include <vector>
 #include <memory>
 #include <utility>
@@ -43,6 +46,10 @@
  * backend code accesses these members cast-free as @c impl.member.
  */
 struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
+  // True only while this singleton belongs to an initialized BLE session.
+  // Guarded by mtx. end() clears it before dispatching teardown statuses so a
+  // re-entrant callback cannot populate a GATT tree during shutdown.
+  bool active = false;
   bool started = false;
   bool advertiseOnDisconnect = true;
 
@@ -56,13 +63,47 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
 
   std::vector<std::pair<uint16_t, BLEConnInfo>> connections;
 
+  // Per-connection snapshot of an attribute value across a multi-packet long
+  // read (ATT_READ_REQ followed by ATT_READ_BLOB_REQs; Core Vol 3 Part F §3.2.9).
+  // Because ATT is strictly sequential per bearer, at most one long read can be
+  // in progress per connection at any time. Guarded by mtx.
+  static constexpr size_t kMaxLongReads = 9;
+  struct LongReadState {
+    uint16_t connHandle = 0;
+    uint16_t attrHandle = 0;
+    std::vector<uint8_t> value;
+  };
+  LongReadState longReads[kMaxLongReads];
+
+  // Outgoing indications, per connection. ATT allows one unconfirmed indication
+  // per bearer (Core Vol 3 Part F §3.3.2) and neither stack queues the next one,
+  // so later indications wait here and go out in call order as each one is
+  // confirmed. Guarded by mtx.
+  static constexpr size_t kMaxQueuedIndications = 8;
+  struct PendingValue {
+    std::shared_ptr<BLECharacteristic::Impl> chr;
+    std::vector<uint8_t> payload;
+  };
+  struct IndicationLink {
+    uint16_t connHandle = 0;
+    std::shared_ptr<BLECharacteristic::Impl> inFlight;  // Sent, awaiting confirmation.
+    uint32_t sentAtMs = 0;
+    uint32_t inFlightSeq = 0;
+    bool stackBusy = false;  // Stack holds an indication this queue did not send.
+    bool frontBusy = false;  // Queue front has been refused as busy since frontBusySinceMs.
+    uint32_t frontBusySinceMs = 0;
+    std::vector<PendingValue> queue;
+  };
+  uint32_t indicationSeq = 0;
+  std::vector<IndicationLink> indicationLinks;
+
+  BLESync disconnectSync{"srvDisconnectSync"};
+  std::atomic<uint16_t> pendingDisconnectHandle{0xFFFF};
+
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
-  ~BLEServerImplCommon() {
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
-  }
+  BLEServerImplCommon();
+  ~BLEServerImplCommon();
 
   // Connection table helpers. Caller must hold mtx.
 
@@ -88,12 +129,69 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
    */
   BLEConnInfo *connFind(uint16_t connHandle);
 
+  /** @brief Whether @p chr is still attached to a started, non-removing service on this server. Caller holds mtx. */
+  bool characteristicCanSend(const BLECharacteristic::Impl *chr) const;
+
+  /**
+   * @brief Select the attribute bytes to serve a read at @p offset, caching a snapshot on offset 0 when needed.
+   * @note Caller holds @c mtx.
+   */
+  const std::vector<uint8_t> &selectLongRead(
+    uint16_t connHandle, uint16_t attrHandle, uint16_t offset, uint16_t mtu, const std::vector<uint8_t> &current
+  );
+
+  /**
+   * @brief Drop the long-read snapshot for @p connHandle once the final Read Blob is served.
+   * @note Caller holds @c mtx.
+   */
+  void finishLongRead(uint16_t connHandle, uint16_t attrHandle, uint16_t offset, uint16_t mtu);
+
+  // Indication queue. These take mtx themselves and report outcomes through the
+  // characteristic's onStatus outside the lock.
+
+  /**
+   * @brief Send an indication to @p connHandle now, or queue it behind the one awaiting confirmation.
+   * @return OK when sent or queued; Busy when the queue is full; Fail when the stack rejected it.
+   */
+  BTStatus indicate(uint16_t connHandle, const std::shared_ptr<BLECharacteristic::Impl> &chr, std::vector<uint8_t> payload);
+
+  /**
+   * @brief Backend: an indication on @p connHandle reached its final state; sends the next one.
+   */
+  bool indicationDone(uint16_t connHandle, uint16_t attrHandle, BLECharacteristic::NotifyStatus status, uint32_t code);
+
+  /**
+   * @brief Backend: the stack asynchronously refused the in-flight indication as busy (Bluedroid).
+   */
+  bool indicationBusy(uint16_t connHandle, uint16_t attrHandle, uint32_t code);
+
+  /** @brief Backend: retry indications deferred by stackBusy. */
+  void retryIndications();
+
+  /**
+   * @brief Backend: @p connHandle closed. Reports any in-flight and queued indications.
+   */
+  void dropIndications(uint16_t connHandle);
+
+  /**
+   * @brief Whether removing @p svc would race an in-flight or queued send.
+   */
+  bool serviceHasPendingSends(const BLEService::Impl *svc);
+
   // Handle factory for backend code that holds a raw Impl* (e.g. a GAP callback's
   // void* arg) and is not a friend of BLEServer: rebuilds the owning shared_ptr via
   // shared_from_this() and mints the handle through the private ctor, which only this
   // befriended ImplCommon can call. Keeps the friend surface to one type per class.
   // See DESIGN.md "Handle construction: makeHandle vs. the private constructor".
   static BLEServer makeHandle(BLEServer::Impl *impl);
+
+  /**
+   * @brief Drop the GATT tree, connections, and indication queues.
+   * @note Called from @c BLE.end(). The server singleton stays so existing
+   *       @c BLEServer handles remain the same object after @c begin(); user-held
+   *       service/characteristic/descriptor handles become shells (DESIGN.md).
+   */
+  void releaseGattTree();
 
   // Stack-agnostic callback dispatch (copies the handler under mtx, invokes it
   // outside the lock). Shared by both backends.
@@ -109,7 +207,40 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
   static int forwardGapEvent(BLEServer &server, void *event) {
     return server.handleGapEvent(event);
   }
+
+  IndicationLink *indicationLink(uint16_t connHandle);
+  IndicationLink &indicationLinkFor(uint16_t connHandle);
+  void eraseIndicationLink(uint16_t connHandle);
+  bool pumpIndications(uint16_t connHandle);
+
+private:
+  void eraseIdleIndicationLink(uint16_t connHandle);
+  bool markFrontBusy(IndicationLink &link);
 };
+
+/** @brief Outcome of handing one indication to the stack (see @c bleServerSendIndication). */
+enum class BLEIndicationSend : uint8_t {
+  Sent,    // Accepted; the confirmation is reported through indicationDone().
+  Busy,    // The stack is still waiting on an indication this queue did not send.
+  Failed,  // Rejected; status/code say why.
+};
+
+/**
+ * @brief Hand one indication to the native stack.
+ * @param status Set on @c Failed: the onStatus code to report.
+ * @param code   Set on @c Failed: the stack error.
+ *
+ * Implemented per-backend (BLEServer.nimble.cpp / BLEServer.bluedroid.cpp) and called by the
+ * indication queue without mtx held.
+ */
+BLEIndicationSend bleServerSendIndication(
+  BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
+);
+
+/**
+ * @brief Send one notification to @p connHandle on the active backend.
+ */
+BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length);
 
 #if BLE_GATT_SERVER_SUPPORTED
 /**

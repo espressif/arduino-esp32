@@ -141,6 +141,9 @@ public:
    * @note Bluedroid: deletes the GATT service via the controller.
    * @note NimBLE: rebuilds the whole GATT table (no per-service delete); active
    *       connections may be affected — prefer calling when no central is connected.
+   * @note Returns @c Busy while the service is included by another service or
+   *       has an outgoing value in flight. On success, retained handles to the
+   *       service and its children become detached shells.
    *
    * @param service The service to remove.
    * @return BTStatus indicating success or the error encountered.
@@ -150,6 +153,8 @@ public:
   /**
    * @brief Start the GATT server and register all added services with the stack.
    * @return BTStatus indicating success or the error encountered.
+   * @note After @c BLE.end() the server is not started and has no services.
+   *       Recreate the GATT tree, then call @c start() again.
    */
   BTStatus start();
 

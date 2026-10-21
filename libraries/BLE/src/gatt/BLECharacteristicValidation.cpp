@@ -15,7 +15,7 @@
  */
 
 #include "core/BLEGuards.h"
-#if BLE_ENABLED
+#if BLE_ENABLED && BLE_GATT_SERVER_SUPPORTED
 
 #include "gatt/BLECharacteristicValidation.h"
 #include "core/BLEBackend.h"  // full BLECharacteristic::Impl / BLEDescriptor::Impl
@@ -495,4 +495,4 @@ bool bleValidateDescProps(const BLEUUID &descUuid, const BLEUUID &chrUuid, BLEPe
   return ok;
 }
 
-#endif /* BLE_ENABLED */
+#endif /* BLE_ENABLED && BLE_GATT_SERVER_SUPPORTED */
