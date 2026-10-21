@@ -30,6 +30,9 @@
 #include <memory>
 
 class BLEScan;
+class BLEBeacon;
+class BLEEddystoneURL;
+class BLEEddystoneTLM;
 
 /**
  * @brief Represents a single advertised BLE device discovered during scanning.
@@ -87,6 +90,18 @@ public:
    * @return The GAP appearance code, or 0 if not present.
    */
   uint16_t getAppearance() const;
+
+  /**
+   * @brief Get the advertised minimum preferred connection interval (AD type 0x12).
+   * @return Minimum connection interval in units of 1.25 ms, or 0 if not present.
+   */
+  uint16_t getMinPreferred() const;
+
+  /**
+   * @brief Get the advertised maximum preferred connection interval (AD type 0x12).
+   * @return Maximum connection interval in units of 1.25 ms, or 0 if not present.
+   */
+  uint16_t getMaxPreferred() const;
 
   /**
    * @brief Get the advertisement PDU type.
@@ -210,6 +225,12 @@ public:
   bool haveAppearance() const;
 
   /**
+   * @brief Check if preferred connection interval parameters (AD type 0x12) were present.
+   * @return True if the Slave Connection Interval Range AD structure is present.
+   */
+  bool havePreferredParams() const;
+
+  /**
    * @brief Check if manufacturer-specific data was present in the advertisement.
    * @return True if manufacturer data is present.
    */
@@ -279,6 +300,45 @@ public:
    * @return The detected FrameType, or Unknown if no known beacon format matches.
    */
   FrameType getFrameType() const;
+
+  /**
+   * @brief Parse this advertisement as an Apple iBeacon.
+   * @param beacon Output parameter populated when the advertisement is an iBeacon.
+   * @return True if this advertisement is a valid iBeacon and @p beacon was populated.
+   */
+  bool getBeacon(BLEBeacon &beacon) const;
+
+  /**
+   * @brief Return this advertisement parsed as an Apple iBeacon.
+   * @return Populated BLEBeacon if valid, or a default-constructed BLEBeacon otherwise.
+   */
+  BLEBeacon getBeacon() const;
+
+  /**
+   * @brief Parse this advertisement as an Eddystone-URL frame.
+   * @param url Output parameter populated when the advertisement contains an Eddystone-URL frame.
+   * @return True if an Eddystone-URL frame was found and @p url was populated.
+   */
+  bool getEddystoneURL(BLEEddystoneURL &url) const;
+
+  /**
+   * @brief Return this advertisement parsed as an Eddystone-URL frame.
+   * @return Populated BLEEddystoneURL if valid, or a default-constructed BLEEddystoneURL otherwise.
+   */
+  BLEEddystoneURL getEddystoneURL() const;
+
+  /**
+   * @brief Parse this advertisement as an Eddystone-TLM frame.
+   * @param tlm Output parameter populated when the advertisement contains an Eddystone-TLM frame.
+   * @return True if an Eddystone-TLM frame was found and @p tlm was populated.
+   */
+  bool getEddystoneTLM(BLEEddystoneTLM &tlm) const;
+
+  /**
+   * @brief Return this advertisement parsed as an Eddystone-TLM frame.
+   * @return Populated BLEEddystoneTLM if valid, or a default-constructed BLEEddystoneTLM otherwise.
+   */
+  BLEEddystoneTLM getEddystoneTLM() const;
 
   /**
    * @brief Get a human-readable representation of this advertised device.

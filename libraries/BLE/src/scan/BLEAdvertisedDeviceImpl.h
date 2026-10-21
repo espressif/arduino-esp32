@@ -32,17 +32,21 @@ struct BLEAdvertisedDeviceImplCommon {
   int8_t rssi = -128;
   int8_t txPower = -128;
   uint16_t appearance = 0;
+  uint16_t minPreferred = 0;
+  uint16_t maxPreferred = 0;
   BLEAdvType advType = BLEAdvType::ConnectableScannable;
 
   std::vector<uint8_t> mfgData;
   std::vector<BLEUUID> serviceUUIDs;
   std::vector<ServiceDataEntry> serviceData;
   std::vector<uint8_t> payload;
+  size_t advPayloadLen = 0;
 
   bool hasName = false;
   bool hasRSSI = false;
   bool hasTXPower = false;
   bool hasAppearance = false;
+  bool hasPreferredParams = false;
   bool hasMfgData = false;
   bool connectable = false;
   bool scannable = false;

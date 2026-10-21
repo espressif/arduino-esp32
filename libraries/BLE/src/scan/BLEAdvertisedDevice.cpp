@@ -21,6 +21,8 @@
 #if BLE_ENABLED
 
 #include "scan/BLEAdvertisedDeviceImpl.h"
+#include "advertising/BLEBeacon.h"
+#include "advertising/BLEEddystone.h"
 #include "core/BLEImplHelpers.h"
 #include "esp32-hal-log.h"
 #include "HEXBuilder.h"
@@ -60,6 +62,14 @@ int8_t BLEAdvertisedDevice::getTXPower() const {
 
 uint16_t BLEAdvertisedDevice::getAppearance() const {
   return _impl ? _impl->appearance : 0;
+}
+
+uint16_t BLEAdvertisedDevice::getMinPreferred() const {
+  return _impl ? _impl->minPreferred : 0;
+}
+
+uint16_t BLEAdvertisedDevice::getMaxPreferred() const {
+  return _impl ? _impl->maxPreferred : 0;
 }
 
 BLEAdvType BLEAdvertisedDevice::getAdvType() const {
@@ -180,6 +190,10 @@ bool BLEAdvertisedDevice::haveAppearance() const {
   return _impl && _impl->hasAppearance;
 }
 
+bool BLEAdvertisedDevice::havePreferredParams() const {
+  return _impl && _impl->hasPreferredParams;
+}
+
 bool BLEAdvertisedDevice::haveManufacturerData() const {
   return _impl && _impl->hasMfgData;
 }
@@ -243,6 +257,57 @@ BLEAdvertisedDevice::FrameType BLEAdvertisedDevice::getFrameType() const {
   return Unknown;
 }
 
+bool BLEAdvertisedDevice::getBeacon(BLEBeacon &beacon) const {
+  BLE_CHECK_IMPL(false);
+  if (!impl.hasMfgData || impl.mfgData.size() < 25 || impl.mfgData[2] != 0x02 || impl.mfgData[3] != 0x15) {
+    return false;
+  }
+  beacon.setFromPayload(impl.mfgData.data(), impl.mfgData.size());
+  return true;
+}
+
+BLEBeacon BLEAdvertisedDevice::getBeacon() const {
+  BLEBeacon beacon;
+  (void)getBeacon(beacon);
+  return beacon;
+}
+
+bool BLEAdvertisedDevice::getEddystoneURL(BLEEddystoneURL &url) const {
+  BLE_CHECK_IMPL(false);
+  const BLEUUID eddy = BLEEddystoneURL::serviceUUID();
+  for (const auto &sd : impl.serviceData) {
+    if (sd.uuid == eddy && sd.data.size() >= 3 && sd.data[0] == 0x10) {
+      url.setFromServiceData(sd.data.data(), sd.data.size());
+      return true;
+    }
+  }
+  return false;
+}
+
+BLEEddystoneURL BLEAdvertisedDevice::getEddystoneURL() const {
+  BLEEddystoneURL url;
+  (void)getEddystoneURL(url);
+  return url;
+}
+
+bool BLEAdvertisedDevice::getEddystoneTLM(BLEEddystoneTLM &tlm) const {
+  BLE_CHECK_IMPL(false);
+  const BLEUUID eddy = BLEEddystoneTLM::serviceUUID();
+  for (const auto &sd : impl.serviceData) {
+    if (sd.uuid == eddy && sd.data.size() >= 14 && sd.data[0] == 0x20) {
+      tlm.setFromServiceData(sd.data.data(), sd.data.size());
+      return true;
+    }
+  }
+  return false;
+}
+
+BLEEddystoneTLM BLEAdvertisedDevice::getEddystoneTLM() const {
+  BLEEddystoneTLM tlm;
+  (void)getEddystoneTLM(tlm);
+  return tlm;
+}
+
 String BLEAdvertisedDevice::toString() const {
   BLE_CHECK_IMPL("BLEAdvertisedDevice(empty)");
   String s = "Name: " + impl.name + ", Addr: " + impl.address.toString();
@@ -257,9 +322,11 @@ String BLEAdvertisedDevice::toString() const {
 void BLEAdvertisedDevice::mergeScanResponse(const uint8_t *data, size_t len, int8_t rssi) {
   BLE_CHECK_IMPL();
   if (data && len > 0) {
-    std::vector<uint8_t> combined(std::move(impl.payload));
+    const size_t baseLen = (impl.advPayloadLen > 0 && impl.advPayloadLen <= impl.payload.size()) ? impl.advPayloadLen : impl.payload.size();
+    std::vector<uint8_t> combined(impl.payload.begin(), impl.payload.begin() + baseLen);
     combined.insert(combined.end(), data, data + len);
     impl.clearParsedFields();
+    impl.advPayloadLen = baseLen;
     impl.parsePayload(combined.data(), combined.size());
 
     // Deduplicate UUIDs that may appear in both ADV_IND and SCAN_RSP.
