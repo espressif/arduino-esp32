@@ -413,16 +413,32 @@ static std::vector<ble_gatt_svc_def> s_gattSvcs;
 static std::vector<std::vector<ble_gatt_chr_def>> s_gattChrs;
 static std::vector<std::vector<ble_gatt_dsc_def>> s_gattDscs;
 static std::vector<std::vector<const ble_gatt_svc_def *>> s_gattIncludes;
+// Retain shared_ptr ownership of registered BLEService/BLECharacteristic/BLEDescriptor
+// Impl objects until the next GATT table rebuild or BLE.end(). When BLEServer::removeService()
+// hides an active service in place via ble_gatts_svc_set_visibility(), NimBLE's internal
+// ble_gatts_svc_entries and ble_att_svr_hidden_list continue to point to nimbleUUID inside
+// these Impl structs until ble_gatts_reset() or nimble_port_deinit().
+static std::vector<std::shared_ptr<BLEService::Impl>> s_retainedSvcs;
+static std::vector<std::shared_ptr<BLECharacteristic::Impl>> s_retainedChrs;
+static std::vector<std::shared_ptr<BLEDescriptor::Impl>> s_retainedDscs;
 
-int nimbleRegisterGattServices(const std::vector<std::shared_ptr<BLEService::Impl>> &services) {
-
-  log_d("GATT: registering %u service(s)", (unsigned)services.size());
+void nimbleClearRetainedGattDefs() {
   s_gattSvcs.clear();
   s_gattChrs.clear();
   s_gattDscs.clear();
   s_gattIncludes.clear();
+  s_retainedSvcs.clear();
+  s_retainedChrs.clear();
+  s_retainedDscs.clear();
+}
+
+int nimbleRegisterGattServices(const std::vector<std::shared_ptr<BLEService::Impl>> &services) {
+
+  log_d("GATT: registering %u service(s)", (unsigned)services.size());
+  nimbleClearRetainedGattDefs();
 
   for (auto &svc : services) {
+    s_retainedSvcs.push_back(svc);
     // Snapshot the tree before building: characteristics are appended under
     // the server mtx and descriptors under each chr->mtx (createCharacteristic
     // / createDescriptor), so iterating the live vectors here would race them.
@@ -436,6 +452,7 @@ int nimbleRegisterGattServices(const std::vector<std::shared_ptr<BLEService::Imp
     std::vector<ble_gatt_chr_def> chrs;
 
     for (auto &chr : svcChrs) {
+      s_retainedChrs.push_back(chr);
       nimbleUuidFromPublic(chr->uuid, chr->nimbleUUID);
       std::vector<std::shared_ptr<BLEDescriptor::Impl>> chrDscs;
       {
@@ -444,6 +461,7 @@ int nimbleRegisterGattServices(const std::vector<std::shared_ptr<BLEService::Imp
       }
       std::vector<ble_gatt_dsc_def> dscs;
       for (auto &dscImpl : chrDscs) {
+        s_retainedDscs.push_back(dscImpl);
         nimbleUuidFromPublic(dscImpl->uuid, dscImpl->nimbleUUID);
         ble_gatt_dsc_def d = {};
         d.uuid = &dscImpl->nimbleUUID.u;

@@ -151,6 +151,8 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
     for (auto &s : services) {
       s->started = true;
     }
+  } else {
+    nimbleClearRetainedGattDefs();
   }
 
   rc = ble_gatts_start();

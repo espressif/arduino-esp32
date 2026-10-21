@@ -78,5 +78,6 @@ struct BLECharacteristic::Impl : BLECharacteristicImplCommon {
  * @note Called from BLEServer::start() before ble_gatts_start().
  */
 int nimbleRegisterGattServices(const std::vector<std::shared_ptr<BLEService::Impl>> &services);
+void nimbleClearRetainedGattDefs();
 
 #endif /* BLE_NIMBLE */
