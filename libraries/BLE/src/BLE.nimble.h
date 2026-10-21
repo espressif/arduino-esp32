@@ -46,6 +46,20 @@ struct BLEClass::Impl {
   uint8_t ownAddrType = BLE_OWN_ADDR_PUBLIC;
   ble_gap_event_listener gapListener{};
   BLEClass::RawEventHandler customGapHandler = nullptr;
+#if BLE_ADVERTISING_SUPPORTED
+  BLEAdvertising::Impl *adv = nullptr;
+#endif
+#if BLE_SCANNING_SUPPORTED
+  BLEScan::Impl *scan = nullptr;
+#endif
+#if BLE_GATT_SERVER_SUPPORTED
+  BLEServer::Impl *server = nullptr;
+  void (*serverStopHook)() = nullptr;
+#endif
+#if BLE_SMP_SUPPORTED
+  void (*securityBeginHook)() = nullptr;
+  bool (*securityOverflowHook)(const BTAddress &oldest) = nullptr;
+#endif
 
   /** @brief FreeRTOS task body that runs the NimBLE host until the port is stopped. */
   static void hostTask(void *param);
@@ -61,5 +75,9 @@ struct BLEClass::Impl {
    */
   static int onStoreStatus(struct ble_store_status_event *event, void *arg);
 };
+
+int nimbleForwardServerGapEvent(struct ble_gap_event *event);
+int nimbleForwardSecurityGapEvent(struct ble_gap_event *event);
+bool nimbleIsHostTask();
 
 #endif /* BLE_NIMBLE */
