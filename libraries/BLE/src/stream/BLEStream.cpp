@@ -28,10 +28,10 @@
 #include "remote/BLERemoteService.h"
 #include "cbuf.h"
 
-// Nordic UART Service UUIDs
-static const BLEUUID kNUS_ServiceUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
-static const BLEUUID kNUS_RxCharUUID("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
-static const BLEUUID kNUS_TxCharUUID("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+// Nordic UART Service UUIDs (6e40000x-b5a3-f393-e0a9-e50e24dcca9e)
+static constexpr BLEUUID kNUS_ServiceUUID(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+static constexpr BLEUUID kNUS_RxCharUUID(0x6e, 0x40, 0x00, 0x02, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+static constexpr BLEUUID kNUS_TxCharUUID(0x6e, 0x40, 0x00, 0x03, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
 
 BLEUUID BLEStream::nusServiceUUID() {
   return kNUS_ServiceUUID;
@@ -90,11 +90,20 @@ BLEStream::BLEStream(size_t rxBufferSize) : _impl(new Impl(rxBufferSize)) {}
 
 BLEStream::~BLEStream() {
   end();
-  // The lambdas registered with _impl->client capture `this`.  Clear them
-  // before deleting _impl so the BLEClient::Impl (which may outlive us via
-  // nimbleRef) never invokes a callback on a destroyed BLEStream.
-  if (_impl && _impl->client) {
-    _impl->client.resetCallbacks();
+  // The lambdas registered with _impl->client, _impl->rxChr, and _impl->server
+  // capture `this`. Clear them before deleting _impl so an outliving handle
+  // never invokes a callback on a destroyed BLEStream.
+  if (_impl) {
+    if (_impl->rxChr) {
+      _impl->rxChr.resetCallbacks();
+    }
+    if (_impl->server) {
+      _impl->server.onConnect(nullptr);
+      _impl->server.onDisconnect(nullptr);
+    }
+    if (_impl->client) {
+      _impl->client.resetCallbacks();
+    }
   }
   delete _impl;
 }
@@ -251,8 +260,22 @@ void BLEStream::end() {
   if (!_impl) {
     return;
   }
-  if (_impl->mode == Impl::Mode::Client && _impl->client) {
-    _impl->client.disconnect();
+  if (_impl->mode == Impl::Mode::Server) {
+    if (_impl->rxChr) {
+      _impl->rxChr.resetCallbacks();
+    }
+    if (_impl->server) {
+      _impl->server.onConnect(nullptr);
+      _impl->server.onDisconnect(nullptr);
+    }
+  } else if (_impl->mode == Impl::Mode::Client) {
+    if (_impl->remoteTx) {
+      _impl->remoteTx.unsubscribe();
+    }
+    if (_impl->client) {
+      _impl->client.resetCallbacks();
+      _impl->client.disconnect();
+    }
   }
   _impl->peerCount = 0;
   _impl->mode = Impl::Mode::None;
@@ -310,7 +333,18 @@ size_t BLEStream::write(const uint8_t *buffer, size_t size) {
   if (_impl->mode == Impl::Mode::Server) {
     // Server sends via TX characteristic notifications
     // Chunk at MTU - 3 (ATT header overhead)
-    uint16_t mtu = BLE.getMTU();
+    uint16_t mtu = 0;
+    if (_impl->server) {
+      for (const auto &c : _impl->server.getConnections()) {
+        uint16_t cMtu = c.getMTU();
+        if (cMtu > 0 && (mtu == 0 || cMtu < mtu)) {
+          mtu = cMtu;
+        }
+      }
+    }
+    if (mtu == 0) {
+      mtu = BLE.getMTU();
+    }
     uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
     size_t sent = 0;
 
@@ -358,7 +392,13 @@ size_t BLEStream::writeTo(const BLEConnInfo &peer, const uint8_t *buffer, size_t
   }
 
   if (_impl->mode == Impl::Mode::Server) {
-    uint16_t mtu = BLE.getMTU();
+    uint16_t mtu = _impl->server ? _impl->server.getPeerMTU(peer.getHandle()) : 0;
+    if (mtu == 0) {
+      mtu = peer.getMTU();
+    }
+    if (mtu == 0) {
+      mtu = BLE.getMTU();
+    }
     uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
     size_t sent = 0;
 
@@ -419,19 +459,19 @@ BLEStream::operator bool() const {
 
 void BLEStream::onConnect(ConnectHandler handler) {
   if (_impl) {
-    _impl->onConnectCb = handler;
+    _impl->onConnectCb = std::move(handler);
   }
 }
 
 void BLEStream::onDisconnect(DisconnectHandler handler) {
   if (_impl) {
-    _impl->onDisconnectCb = handler;
+    _impl->onDisconnectCb = std::move(handler);
   }
 }
 
 void BLEStream::onPeerData(PeerDataHandler handler) {
   if (_impl) {
-    _impl->onPeerDataCb = handler;
+    _impl->onPeerDataCb = std::move(handler);
   }
 }
 
