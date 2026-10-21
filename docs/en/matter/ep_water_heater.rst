@@ -64,7 +64,7 @@ Typical usage:
 
     waterHeater.begin();
     waterHeater.setHeaterTypes(MatterWaterHeater::IMMERSION_ELEMENT_1);
-    waterHeater.setTankVolume(100); // litres
+    waterHeater.setTankVolume(100); // liters
     waterHeater.setSystemMode(MatterWaterHeater::SYSTEM_MODE_HEAT);
     Matter.begin();
 
@@ -216,7 +216,7 @@ setTankVolume / setTankPercentage
     bool setTankVolume(uint16_t tankVolume);
     bool setTankPercentage(uint8_t tankPercentage);
 
-``TankVolume`` is the tank capacity in litres (``uint16``). ``TankPercentage`` is 0–100; values above 100 are rejected. ``begin()`` provisions the optional WHM features so the Delegate can serve these attributes. The setters update the Arduino cache (``GetTankVolume()`` / ``GetTankPercentage()``) and report; they do not use the ember store.
+``TankVolume`` is the tank capacity in liters (``uint16``). ``TankPercentage`` is 0–100; values above 100 are rejected. ``begin()`` provisions the optional WHM features so the Delegate can serve these attributes. The setters update the Arduino cache (``GetTankVolume()`` / ``GetTankPercentage()``) and report; they do not use the ember store.
 
 setEstimatedHeatRequired / getEstimatedHeatRequired
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
