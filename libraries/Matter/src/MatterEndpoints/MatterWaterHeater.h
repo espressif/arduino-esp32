@@ -105,7 +105,7 @@ public:
   bool setHeatDemand(uint8_t heatDemand);
   uint8_t getHeatDemand();
 
-  // TankVolume (uint16, litres) / TankPercentage are code-driven (WHM Delegate). Setters update the
+  // TankVolume (uint16, liters) / TankPercentage are code-driven (WHM Delegate). Setters update the
   // Arduino cache and report; do not updateAttributeVal() them.
   bool setTankVolume(uint16_t tankVolume);
   uint16_t getTankVolume();
