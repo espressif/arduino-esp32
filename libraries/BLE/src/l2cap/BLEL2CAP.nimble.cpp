@@ -158,14 +158,12 @@ BTStatus BLEL2CAPChannel::disconnect() {
     log_e("L2CAP: ble_l2cap_disconnect rc=%d", rc);
     return BTStatus::Fail;
   }
-  if (wait && impl.connected) {
+  if (wait) {
     BTStatus st = impl.disconnectSync.wait(5000);
     if (st != BTStatus::OK) {
       log_e("L2CAP: disconnect timed out waiting for COC_DISCONNECTED");
       return st;
     }
-  } else if (wait) {
-    impl.disconnectSync.give(BTStatus::OK);
   }
   return BTStatus::OK;
 }
