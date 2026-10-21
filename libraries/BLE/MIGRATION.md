@@ -421,6 +421,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 Note:
 
 - `onRead` is invoked once per client read (including multi-packet long reads `> MTU - 1`, which are served from a per-connection snapshot of the value set in `onRead`). Calling `c.setValue(...)` inside `onRead` sets the value returned in that read response.
+- Handler handle parameters (`BLECharacteristic &c`, `BLEClient &`, …) are borrowed for the callback invocation only: copy the handle to retain it; do not retain the reference or move from it.
 - `onNotify` is invoked once per `notify()` / `indicate()` call, before the payload is built, when there is at least one recipient. Calling `c.setValue(...)` inside `onNotify` sets the value sent when `notify()` / `indicate()` was called without an explicit payload.
 
 ### Characteristic Properties
@@ -527,8 +528,11 @@ Note:
 | `pChr->writeValue(data, len, false)` | `chr.writeValue(data, len, false)` | Write without response |
 | `pChr->canRead()` | `chr.canRead()` | |
 | `pChr->canNotify()` | `chr.canNotify()` | |
-| `pChr->registerForNotify(callback)` | `chr.subscribe(true, lambda)` | `true`=notify, `false`=indicate |
+| `pChr->registerForNotify(callback)` | `chr.subscribe(BLESubscription::Notify, lambda)` | |
+| N/A | `chr.subscribe(BLESubscription::Notify \| BLESubscription::Indicate, lambda)` | New: notify + indicate (CCCD `0x0003`) |
 | N/A | `chr.unsubscribe()` | New |
+| N/A | `desc.isCCCD()` / `desc.isUserDescription()` / `desc.isPresentationFormat()` | New: descriptor kind checks |
+| N/A | `desc.getFormat()` / `getExponent()` / `getUnit()` / `getNamespace()` / `getFormatDescription()` | New: Presentation Format (0x2904) field getters; call `readValue()` first |
 | `pChr->getDescriptor(uuid)` → `BLERemoteDescriptor*` | `chr.getDescriptor(uuid)` → `BLERemoteDescriptor` | Value |
 | `pChr->getDescriptors()` | `chr.getDescriptors()` | Returns `vector<BLERemoteDescriptor>` |
 | `pDesc->readValue()` | `desc.readValue()` | Returns `String` |
@@ -862,7 +866,7 @@ BLERemoteService svc = client.getService(SVC_UUID);
 BLERemoteCharacteristic chr = svc.getCharacteristic(CHR_UUID);
 String val = chr.readValue();
 chr.writeValue("hello");
-chr.subscribe(true, [](BLERemoteCharacteristic &c, const uint8_t *data, size_t len, bool isNotify) {
+chr.subscribe(BLESubscription::Notify, [](BLERemoteCharacteristic &c, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery kind) {
     Serial.printf("Notification: %.*s\n", len, data);
 });
 ```
@@ -1255,7 +1259,7 @@ For users migrating from the official [ArduinoBLE](https://www.arduino.cc/refere
 | `BLECharacteristic chr("uuid", props, size)` | `svc.createCharacteristic(CHR_UUID, props, perms)` with `static const BLEUUID CHR_UUID("uuid")` | Factory method; permissions required |
 | `chr.writeValue(val)` | `chr.setValue(val)` (server-side) | |
 | `chr.readValue()` | `chr.getStringValue()` (server-side) | |
-| `chr.subscribe()` | `remoteChr.subscribe(true, callback)` (client-side) | |
+| `chr.subscribe()` | `remoteChr.subscribe(BLESubscription::Notify, callback)` (client-side) | |
 | `chr.setEventHandler(handler)` | `chr.onWrite(lambda)`, `chr.onRead(lambda)` | Per-event handlers |
 | `BLE.setLocalName("name")` | Set in `BLE.begin("name")` | |
 | `BLE.setDeviceName("name")` | Set in `BLE.begin("name")` | |

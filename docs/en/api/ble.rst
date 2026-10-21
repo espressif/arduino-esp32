@@ -577,6 +577,14 @@ Callbacks
 
 All callback setters accept ``std::function`` handlers.
 
+.. warning::
+
+    Mutable handle references passed to handlers (``BLEServer &``, ``BLECharacteristic &``,
+    ``BLEClient &``, and similar) are **borrowed for that callback invocation only**. They let
+    ``onRead``/``onNotify`` handlers call ``setValue()`` on the object being served, but the
+    reference must not be retained, stored, or moved from: copy the handle (a cheap shared-handle
+    copy) if it is needed after the handler returns.
+
 onConnect
 """""""""
 
@@ -1521,15 +1529,16 @@ Subscribe / Unsubscribe
 
 .. code-block:: cpp
 
-    using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, bool)>;
-    BTStatus subscribe(bool notifications = true, NotifyCallback callback = nullptr);
-    BTStatus subscribeBoth(NotifyCallback callback = nullptr);
+    enum class Delivery : uint8_t { Notification, Indication };
+    using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, Delivery)>;
+    BTStatus subscribe(BLESubscription mode, NotifyCallback callback = nullptr);
     BTStatus unsubscribe();
 
-Subscribe to notifications (``notifications = true``), indications (``notifications = false``), or
-both simultaneously (``subscribeBoth()``, which writes ``0x0003`` to the CCCD).
-The callback receives the characteristic, data pointer, data length, and a boolean indicating
-whether it was a notification (``true``) or indication (``false``).
+Subscribe to notifications (``BLESubscription::Notify``), indications (``BLESubscription::Indicate``),
+or both simultaneously (``BLESubscription::Notify | BLESubscription::Indicate``, which writes ``0x0003``
+to the CCCD). The selected bits replace any previous subscription; ``BLESubscription::None`` is rejected
+(use ``unsubscribe()``). The callback receives the characteristic, data pointer, data length, and a
+``Delivery`` value saying whether the value arrived as a notification or an indication.
 
 .. note::
 
@@ -1922,8 +1931,11 @@ Frame Type and Beacon / Eddystone Helpers
     FrameType getFrameType() const;
 
     BLEBeacon getBeacon() const;
+    bool getBeacon(BLEBeacon &beacon) const;
     BLEEddystoneURL getEddystoneURL() const;
+    bool getEddystoneURL(BLEEddystoneURL &url) const;
     BLEEddystoneTLM getEddystoneTLM() const;
+    bool getEddystoneTLM(BLEEddystoneTLM &tlm) const;
 
 toString
 ^^^^^^^^
