@@ -74,23 +74,24 @@ public:
 
   /**
    * @brief Callback invoked when a client reads this characteristic.
-   * @param chr The characteristic being read.
+   * @param chr The characteristic being read. Calling @c chr.setValue() here
+   *            sets the value returned in this read response.
    * @param conn Information about the connected client.
    */
-  using ReadHandler = std::function<void(const BLECharacteristic &chr, const BLEConnInfo &conn)>;
+  using ReadHandler = std::function<void(BLECharacteristic &chr, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when a client writes to this characteristic.
    * @param chr The characteristic being written (value already updated).
    * @param conn Information about the connected client.
    */
-  using WriteHandler = std::function<void(const BLECharacteristic &chr, const BLEConnInfo &conn)>;
+  using WriteHandler = std::function<void(BLECharacteristic &chr, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked after a notification is queued.
    * @param chr The characteristic whose notification was queued.
    */
-  using NotifyHandler = std::function<void(const BLECharacteristic &chr)>;
+  using NotifyHandler = std::function<void(BLECharacteristic &chr)>;
 
   /**
    * @brief Callback invoked when a client subscribes to or unsubscribes from
@@ -100,7 +101,7 @@ public:
    * @param subValue Bitmask: bit 0 = notifications, bit 1 = indications.
    *                 0 means the client unsubscribed.
    */
-  using SubscribeHandler = std::function<void(const BLECharacteristic &chr, const BLEConnInfo &conn, uint16_t subValue)>;
+  using SubscribeHandler = std::function<void(BLECharacteristic &chr, const BLEConnInfo &conn, uint16_t subValue)>;
 
   /**
    * @brief Callback invoked with the delivery status of a notification or indication.
@@ -108,7 +109,7 @@ public:
    * @param status Outcome of the operation.
    * @param code Backend-specific error code (0 on success).
    */
-  using StatusHandler = std::function<void(const BLECharacteristic &chr, NotifyStatus status, uint32_t code)>;
+  using StatusHandler = std::function<void(BLECharacteristic &chr, NotifyStatus status, uint32_t code)>;
 
   /**
    * @brief Register a callback invoked when a client reads this characteristic.
@@ -278,7 +279,7 @@ public:
    * @param uuid UUID to search for.
    * @return Handle to the descriptor, or an invalid handle if not found.
    */
-  BLEDescriptor getDescriptor(const BLEUUID &uuid);
+  BLEDescriptor getDescriptor(const BLEUUID &uuid) const;
 
   /**
    * @brief Get all descriptors attached to this characteristic.

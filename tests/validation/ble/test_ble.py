@@ -125,6 +125,7 @@ def _phase_gatt_setup_connect(server, client):
     server.expect_exact("[SERVER] GATT init OK", timeout=30)
     server.expect(r"\[SERVER\] Heap after init: \d+", timeout=10)
     server.expect_exact("[SERVER] Security configured", timeout=10)
+    server.expect_exact("[SERVER] Const lookups ok=1", timeout=10)
     server.expect(r"\[SERVER\] Heap after server: \d+", timeout=10)
     server.expect_exact("[SERVER] Server started", timeout=10)
     server.expect_exact("[SERVER] Advertising started", timeout=10)
@@ -151,6 +152,12 @@ def _phase_gatt_rw(server, client):
     client.expect_exact("[CLIENT] Write OK", timeout=10)
     server.expect_exact("[SERVER] Received write: Hello from client!", timeout=10)
     client.expect_exact("[CLIENT] Read-back: Hello from client!", timeout=10)
+
+    # The server's onRead handler calls setValue() on the handle it receives, so
+    # each read must return the value produced for that read.
+    client.expect_exact("[CLIENT] Dynamic read 1: dyn_chr_1", timeout=10)
+    client.expect_exact("[CLIENT] Dynamic read 2: dyn_chr_2", timeout=10)
+    client.expect_exact("[CLIENT] Dynamic cached: dyn_chr_2", timeout=10)
 
 
 def _phase_notifications(server, client):
@@ -180,6 +187,8 @@ def _phase_descriptor_read_write(server, client):
     client.expect_exact("[CLIENT] User description: Test Characteristic", timeout=10)
     client.expect(r"\[CLIENT\] Presentation format: \d+", timeout=10)
     client.expect_exact("[CLIENT] Format matches UTF8", timeout=10)
+    client.expect_exact("[CLIENT] Dynamic descriptor read 1: dyn_desc_1", timeout=10)
+    client.expect_exact("[CLIENT] Dynamic descriptor read 2: dyn_desc_2", timeout=10)
 
 
 def _phase_write_no_response(server, client):

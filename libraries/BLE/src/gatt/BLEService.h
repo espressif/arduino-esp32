@@ -95,7 +95,7 @@ public:
    * @param uuid UUID of the characteristic to find.
    * @return The matching BLECharacteristic handle, or an invalid handle if not found.
    */
-  BLECharacteristic getCharacteristic(const BLEUUID &uuid);
+  BLECharacteristic getCharacteristic(const BLEUUID &uuid) const;
 
   /**
    * @brief Get all characteristics belonging to this service.

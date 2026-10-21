@@ -44,7 +44,7 @@ void BLEService::addIncludedService(const BLEService &service) {
   _impl->includedServices.push_back(service._impl);
 }
 
-BLECharacteristic BLEService::getCharacteristic(const BLEUUID &uuid) {
+BLECharacteristic BLEService::getCharacteristic(const BLEUUID &uuid) const {
   BLE_CHECK_IMPL(BLECharacteristic());
   for (auto &chr : impl.characteristics) {
     if (chr->uuid == uuid) {

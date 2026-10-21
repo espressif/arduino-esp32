@@ -108,7 +108,7 @@ public:
    * @return Pointer to the internal buffer, or nullptr if no value has been read yet.
    * @note The pointer is invalidated by any subsequent read or write on this characteristic.
    */
-  const uint8_t *readRawData(size_t *len = nullptr);
+  const uint8_t *readRawData(size_t *len = nullptr) const;
 
   /**
    * @brief Write a value to the remote characteristic.
@@ -167,7 +167,7 @@ public:
    * @param length       Length of the payload in bytes.
    * @param isNotification True for a notification, false for an indication.
    */
-  using NotifyCallback = std::function<void(const BLERemoteCharacteristic &chr, const uint8_t *, size_t, bool)>;
+  using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, bool)>;
 
   /**
    * @brief Subscribe to notifications or indications from this characteristic.

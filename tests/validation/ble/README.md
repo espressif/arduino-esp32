@@ -27,10 +27,10 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 1 | basic_lifecycle | init / deinit / reinit / final deinit + **heap canary integrity around the first `begin()`** |
 | 2 | ble5_ext_periodic_adv | extended + periodic advertising and sync (BLE5) |
 | 3 | gatt_setup_connect | server start, scan, connect, service discovery, heap tracking |
-| 4 | gatt_read_write | characteristic read / write / read-back |
+| 4 | gatt_read_write | characteristic read / write / read-back + value supplied per read by `onRead` via `setValue()` |
 | 5 | notifications_indications | CCCD subscribe, notify, indicate, unsubscribe, subscriber count |
 | 6 | large_att_write | 512-byte write + read integrity |
-| 7 | descriptor_read_write | user description + presentation format descriptors |
+| 7 | descriptor_read_write | user description + presentation format descriptors + descriptor value supplied per read by `onRead` |
 | 8 | write_no_response | write-without-response path + **queued burst payload integrity** |
 | 9 | server_disconnect | server-initiated disconnect + client reconnect |
 | 10 | security | Numeric Comparison pairing, matching passkey, secure read |

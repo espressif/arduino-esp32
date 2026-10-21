@@ -69,17 +69,18 @@ public:
 
   /**
    * @brief Callback invoked when a client reads this descriptor.
-   * @param desc The descriptor being read.
+   * @param desc The descriptor being read. Calling @c desc.setValue() here
+   *             sets the value returned in this read response.
    * @param conn Information about the connected client.
    */
-  using ReadHandler = std::function<void(const BLEDescriptor &desc, const BLEConnInfo &conn)>;
+  using ReadHandler = std::function<void(BLEDescriptor &desc, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when a client writes to this descriptor.
    * @param desc The descriptor being written (value already updated).
    * @param conn Information about the connected client.
    */
-  using WriteHandler = std::function<void(const BLEDescriptor &desc, const BLEConnInfo &conn)>;
+  using WriteHandler = std::function<void(BLEDescriptor &desc, const BLEConnInfo &conn)>;
 
   /**
    * @brief Register a callback invoked when a client reads this descriptor.

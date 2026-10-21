@@ -73,7 +73,7 @@ void BLECharacteristic::setPermissions(BLEPermission permissions) {
   impl.permissions = permissions;
 }
 
-BLEDescriptor BLECharacteristic::getDescriptor(const BLEUUID &uuid) {
+BLEDescriptor BLECharacteristic::getDescriptor(const BLEUUID &uuid) const {
   BLE_CHECK_IMPL(BLEDescriptor());
   for (auto &d : impl.descriptors) {
     if (d->uuid == uuid) {

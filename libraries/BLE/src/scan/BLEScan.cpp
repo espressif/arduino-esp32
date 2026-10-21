@@ -145,7 +145,7 @@ void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
 // Result-management helpers are thread-safe: each acquires impl.mtx before
 // touching the shared results set.
 
-BLEScan::Results BLEScan::getResults() {
+BLEScan::Results BLEScan::getResults() const {
   BLE_CHECK_IMPL(BLEScan::Results());
   BLELockGuard lock(impl.mtx);
   return impl.results;

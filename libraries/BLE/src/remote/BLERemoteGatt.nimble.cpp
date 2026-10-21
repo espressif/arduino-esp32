@@ -652,7 +652,7 @@ bool BLERemoteCharacteristic::readInto(uint32_t) {
   return false;
 }
 
-const uint8_t *BLERemoteCharacteristic::readRawData(size_t *len) {
+const uint8_t *BLERemoteCharacteristic::readRawData(size_t *len) const {
   if (len) {
     *len = 0;
   }

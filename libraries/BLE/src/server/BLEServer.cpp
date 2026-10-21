@@ -138,7 +138,7 @@ BLEService BLEServer::createService(const BLEUUID &uuid, uint32_t numHandles, ui
   return BLEService(svc);
 }
 
-BLEService BLEServer::getService(const BLEUUID &uuid) {
+BLEService BLEServer::getService(const BLEUUID &uuid) const {
   BLE_CHECK_IMPL(BLEService());
   BLELockGuard lock(impl.mtx);
   // First match wins when several services share a UUID (different instId).
@@ -210,7 +210,7 @@ BLEConnInfo BLEServer::getConnInfo(uint16_t connHandle) const {
   return BLEConnInfo();
 }
 
-BLEAdvertising BLEServer::getAdvertising() {
+BLEAdvertising BLEServer::getAdvertising() const {
   return BLE.getAdvertising();
 }
 

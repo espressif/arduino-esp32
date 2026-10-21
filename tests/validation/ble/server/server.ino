@@ -5,7 +5,39 @@
 
 #include <Arduino.h>
 #include <BLE.h>
+#include <type_traits>
 #include "esp_heap_caps.h"
+
+// Every handler hands the callback a handle it can act on (chr.setValue() from
+// onRead, channel.write() from onData, server.startAdvertising() from
+// onDisconnect, ...), so each one must accept a callable that takes the handle
+// by non-const reference. A const-reference parameter would reject these.
+template<typename Handler, typename Fn> constexpr bool acceptsMutableHandle = std::is_constructible_v<Handler, Fn *>;
+
+static_assert(acceptsMutableHandle<BLECharacteristic::ReadHandler, void(BLECharacteristic &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLECharacteristic::WriteHandler, void(BLECharacteristic &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLECharacteristic::NotifyHandler, void(BLECharacteristic &)>);
+static_assert(acceptsMutableHandle<BLECharacteristic::SubscribeHandler, void(BLECharacteristic &, const BLEConnInfo &, uint16_t)>);
+static_assert(acceptsMutableHandle<BLECharacteristic::StatusHandler, void(BLECharacteristic &, BLECharacteristic::NotifyStatus, uint32_t)>);
+static_assert(acceptsMutableHandle<BLEDescriptor::ReadHandler, void(BLEDescriptor &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEDescriptor::WriteHandler, void(BLEDescriptor &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEServer::ConnectHandler, void(BLEServer &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEServer::DisconnectHandler, void(BLEServer &, const BLEConnInfo &, uint8_t)>);
+static_assert(acceptsMutableHandle<BLEServer::MtuChangedHandler, void(BLEServer &, const BLEConnInfo &, uint16_t)>);
+static_assert(acceptsMutableHandle<BLEServer::ConnParamsHandler, void(BLEServer &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEServer::IdentityHandler, void(BLEServer &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEClient::ConnectHandler, void(BLEClient &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLEClient::DisconnectHandler, void(BLEClient &, const BLEConnInfo &, uint8_t)>);
+static_assert(acceptsMutableHandle<BLEClient::ConnectFailHandler, void(BLEClient &, int)>);
+static_assert(acceptsMutableHandle<BLEClient::MtuChangedHandler, void(BLEClient &, const BLEConnInfo &, uint16_t)>);
+static_assert(acceptsMutableHandle<BLEClient::ConnParamsReqHandler, bool(BLEClient &, const BLEConnParams &)>);
+static_assert(acceptsMutableHandle<BLEClient::IdentityHandler, void(BLEClient &, const BLEConnInfo &)>);
+static_assert(acceptsMutableHandle<BLERemoteCharacteristic::NotifyCallback, void(BLERemoteCharacteristic &, const uint8_t *, size_t, bool)>);
+static_assert(acceptsMutableHandle<BLEL2CAPChannel::DataHandler, void(BLEL2CAPChannel &, const uint8_t *, size_t)>);
+static_assert(acceptsMutableHandle<BLEL2CAPChannel::DisconnectHandler, void(BLEL2CAPChannel &)>);
+static_assert(acceptsMutableHandle<BLEL2CAPServer::AcceptHandler, void(BLEL2CAPChannel &)>);
+static_assert(acceptsMutableHandle<BLEL2CAPServer::DataHandler, void(BLEL2CAPChannel &, const uint8_t *, size_t)>);
+static_assert(acceptsMutableHandle<BLEL2CAPServer::DisconnectHandler, void(BLEL2CAPChannel &)>);
 
 static const BLEUUID SERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static const BLEUUID RW_CHAR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -14,6 +46,10 @@ static const BLEUUID INDICATE_CHAR_UUID("d5f782b2-a36e-4d68-947c-0e9a5f2c78e1");
 static const BLEUUID SECURE_CHAR_UUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
 static const BLEUUID DESC_CHAR_UUID("a3c87501-8ed3-4bdf-8a39-a01bebede295");
 static const BLEUUID WRITENR_CHAR_UUID("1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e");
+// Phase 4 / Phase 7: values produced on demand by the onRead handler through
+// the handle it receives, so every read returns a fresh value.
+static const BLEUUID DYNAMIC_READ_CHAR_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a35");
+static const BLEUUID DYNAMIC_READ_DESC_UUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a36");
 // Phase 15 (introspection_and_permissions): R|W properties but only Read
 // permission. Exercises the fail-closed mapping: the Write property must be
 // stripped by the backend so the peer sees it as read-only, and writes must
@@ -130,6 +166,15 @@ static const uint8_t writeNrBurstBytes[] = {0xAA, 0xBB, 0xCC};
 static const size_t writeNrBurstLen = 3;
 uint8_t writeNrBurstSeen = 0;
 bool writeNrBurstOk = true;
+
+// Phase 4 / Phase 7 on-demand reads. Each read handler writes the next value
+// into the handle it receives; the stack sends that value in the same response.
+uint32_t dynamicChrReads = 0;
+uint32_t dynamicDescReads = 0;
+
+static void onDynamicChrRead(BLECharacteristic &chr, const BLEConnInfo &conn) {
+  chr.setValue(String("dyn_chr_") + String(++dynamicChrReads));
+}
 
 // Phase 24 BLE5 advanced — last PHY/DLE state observed by server callbacks.
 volatile uint8_t phase24TxPhy = 0;
@@ -403,6 +448,9 @@ bool phase_gatt_setup() {
     Serial.printf("[SERVER] Received %u bytes\n", (unsigned)len);
   });
 
+  auto dynamicChr = svc.createCharacteristic(DYNAMIC_READ_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+  dynamicChr.onRead(onDynamicChrRead);
+
   notifyChr = svc.createCharacteristic(NOTIFY_CHAR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
   notifyChr.onSubscribe([](BLECharacteristic chr, const BLEConnInfo &conn, uint16_t subValue) {
     syncPhaseFromHost();
@@ -437,6 +485,11 @@ bool phase_gatt_setup() {
   // access-profile rules so this is purely a permission-enforcement test.
   auto roDesc = descChr.createDescriptor(DESC_READONLY_UUID, BLEPermission::ReadOpen, 32);
   roDesc.setValue("ro_desc_val");
+
+  auto dynamicDesc = descChr.createDescriptor(DYNAMIC_READ_DESC_UUID, BLEPermission::ReadOpen, 32);
+  dynamicDesc.onRead([](BLEDescriptor &desc, const BLEConnInfo &conn) {
+    desc.setValue(String("dyn_desc_") + String(++dynamicDescReads));
+  });
 
   // Phase 8: WriteNR test characteristic
   auto writeNrChr = svc.createCharacteristic(WRITENR_CHAR_UUID, BLEProperty::Read | BLEProperty::WriteNR, BLEPermission::ReadWriteOpen);
@@ -503,6 +556,16 @@ bool phase_gatt_setup() {
       (int)conn.isBonded()
     );
   });
+
+  // Pure lookups must be callable through const handles (e.g. a const
+  // BLEServer & parameter in user code).
+  {
+    const BLEServer &constServer = server;
+    const BLEService constSvc = constServer.getService(SERVICE_UUID);
+    const BLECharacteristic constChr = constSvc.getCharacteristic(DESC_CHAR_UUID);
+    bool ok = constSvc && constChr && constChr.getDescriptor(DYNAMIC_READ_DESC_UUID) && constServer.getAdvertising();
+    Serial.printf("[SERVER] Const lookups ok=%d\n", (int)ok);
+  }
 
   server.start();
 
@@ -777,7 +840,7 @@ void loop() {
         l2capChannel = channel;
         Serial.println("[SERVER] L2CAP channel accepted");
       });
-      l2capServer.onData([](BLEL2CAPChannel channel, const uint8_t *data, size_t len) {
+      l2capServer.onData([](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
         syncPhaseFromHost();
         String msg((const char *)data, len);
         Serial.printf("[SERVER] L2CAP received: %s\n", msg.c_str());
@@ -1750,7 +1813,7 @@ void loop() {
       if (!l2capBulkServer) {
         Serial.println("[SERVER] Phase28 L2CAP init FAILED");
       } else {
-        l2capBulkServer.onData([](BLEL2CAPChannel channel, const uint8_t *data, size_t len) {
+        l2capBulkServer.onData([](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
           syncPhaseFromHost();
           if (!l2capBulkReplied) {
             // Bulk accumulation phase: sum SDU lengths until the target is met,

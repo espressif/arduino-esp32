@@ -18,6 +18,9 @@ static const BLEUUID indicateCharUUID("d5f782b2-a36e-4d68-947c-0e9a5f2c78e1");
 static const BLEUUID secureCharUUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
 static const BLEUUID descCharUUID("a3c87501-8ed3-4bdf-8a39-a01bebede295");
 static const BLEUUID writeNrCharUUID("1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e");
+// Phase 4 / Phase 7: the server's onRead handlers produce a fresh value per read.
+static const BLEUUID dynamicReadCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a35");
+static const BLEUUID dynamicReadDescUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a36");
 static const BLEUUID permFailClosedCharUUID("e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3a2f41");
 // Phase 15: custom-UUID descriptor on DESC_CHAR declared as read-only. The
 // client reads it (should succeed) and then writes to it (should be rejected
@@ -450,6 +453,21 @@ void setup() {
   val = rwChr.readValue();
   Serial.printf("[CLIENT] Read-back: %s\n", val.c_str());
 
+  {
+    BLERemoteCharacteristic dynamicChr = svc.getCharacteristic(dynamicReadCharUUID);
+    if (!dynamicChr) {
+      Serial.println("[CLIENT] Dynamic read char not found");
+    } else {
+      for (int i = 1; i <= 2; i++) {
+        Serial.printf("[CLIENT] Dynamic read %d: %s\n", i, dynamicChr.readValue().c_str());
+      }
+      const BLERemoteCharacteristic &constChr = dynamicChr;
+      size_t rawLen = 0;
+      const uint8_t *raw = constChr.readRawData(&rawLen);
+      Serial.printf("[CLIENT] Dynamic cached: %.*s\n", (int)rawLen, raw ? (const char *)raw : "");
+    }
+  }
+
   // ===== Phase 5: Notifications + Indications =====
   waitForPhase(5);
 
@@ -581,6 +599,15 @@ void setup() {
         }
       } else {
         Serial.println("[CLIENT] Presentation format not found");
+      }
+
+      BLERemoteDescriptor dynamicDesc = descChr.getDescriptor(dynamicReadDescUUID);
+      if (dynamicDesc) {
+        for (int i = 1; i <= 2; i++) {
+          Serial.printf("[CLIENT] Dynamic descriptor read %d: %s\n", i, dynamicDesc.readValue().c_str());
+        }
+      } else {
+        Serial.println("[CLIENT] Dynamic descriptor not found");
       }
     }
   }
@@ -1389,6 +1416,8 @@ void setup() {
     BLEAdvertisedDevice d;
     BLEScan::Results results = scn.startBlocking(8000);
     Serial.printf("[CLIENT] Phase20 results=%u isScanning=%d want=%s\n", (unsigned)results.size(), (int)scn.isScanning(), wantName.c_str());
+    const BLEScan &constScan = scn;
+    Serial.printf("[CLIENT] Phase20 cached results=%u\n", (unsigned)constScan.getResults().size());
     sawAdv = pickBest(results, d);
     // One retry if we only saw the primary ADV (no scan-response fields yet).
     if (sawAdv && !d.haveManufacturerData()) {
