@@ -612,10 +612,10 @@ void BLEServerImplCommon::releaseGattTree() {
       lr.value.clear();
     }
   }
+  shelveServices(std::move(tree));
   for (uint16_t link : links) {
     dropIndications(link);
   }
-  shelveServices(std::move(tree));
   {
     BLELockGuard lock(mtx);
     indicationLinks.clear();
