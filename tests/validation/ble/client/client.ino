@@ -368,13 +368,8 @@ bool scanForServer() {
 
   for (int attempt = 1; attempt <= 5 && !found; attempt++) {
     Serial.printf("[CLIENT] Scanning (attempt %d)...\n", attempt);
-    scan.start(5000);
-    unsigned long startMs = millis();
-    while (!found && millis() - startMs < 5000) {
-      delay(50);
-    }
+    (void)scan.startBlocking(5000);
     if (!found) {
-      scan.stop();
       delay(200);
     }
   }

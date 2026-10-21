@@ -522,10 +522,6 @@ bool phase_gatt_setup() {
   server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
     syncPhaseFromHost();
     Serial.println("[SERVER] Client connected");
-    // Phase 4 connects a second central while the first is still on the link.
-    if (currentPhase == 4 && s.getConnectedCount() < 2) {
-      s.startAdvertising();
-    }
   });
   server.onDisconnect([](BLEServer s, const BLEConnInfo &conn, uint8_t reason) {
     syncPhaseFromHost();
@@ -860,7 +856,6 @@ void loop() {
   if (currentPhase == 4) {
     static uint8_t buf[LONG_READ_LEN];
     uint32_t n = 1;
-    BLE.createServer().startAdvertising();
     while (currentPhase == 4) {
       if (longChrMutatePending.exchange(false, std::memory_order_acq_rel)) {
         // Let the BTC/NimBLE host task finish snapshotting the offset=0 read
