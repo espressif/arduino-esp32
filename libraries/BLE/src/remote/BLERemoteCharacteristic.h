@@ -27,6 +27,7 @@
 #include "WString.h"
 #include "BTStatus.h"
 #include "types/BLEUUID.h"
+#include "types/BLESubscription.h"
 #include <memory>
 
 class BLERemoteService;
@@ -160,35 +161,38 @@ public:
    */
   bool canBroadcast() const;
 
+  /** @brief How a server-initiated value was delivered to the client. */
+  enum class Delivery : uint8_t {
+    Notification,  ///< Handle Value Notification (unacknowledged).
+    Indication,    ///< Handle Value Indication (acknowledged by the client).
+  };
+
   /**
    * @brief Callback type for characteristic notifications and indications.
-   * @param chr          The characteristic that received the notification.
-   * @param data         Pointer to the notification payload.
-   * @param length       Length of the payload in bytes.
-   * @param isNotification True for a notification, false for an indication.
+   * @param chr    The characteristic that received the value.
+   * @param data   Pointer to the payload.
+   * @param length Length of the payload in bytes.
+   * @param kind   Whether the value arrived as a notification or an indication.
    * @note Runs on the BLE stack task. Do not call blocking GATT operations
    *       (@c readValue(), confirmed @c writeValue(), @c subscribe()) on @p chr
    *       here: they wait for a response that this same task delivers, so they
    *       stall until their timeout. A read also replaces the buffer @p data
    *       points into. Defer such work to another task.
    */
-  using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, bool)>;
+  using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, Delivery)>;
 
   /**
-   * @brief Subscribe to notifications or indications from this characteristic.
-   * @param notifications If true, subscribe to notifications; if false, subscribe to indications.
-   * @param callback      Optional callback invoked on each notification/indication.
+   * @brief Subscribe to server-initiated deliveries from this characteristic.
+   * @param mode     Deliveries to enable (@ref BLESubscription::Notify,
+   *                 @ref BLESubscription::Indicate, or both combined with
+   *                 `|`). Must not be @ref BLESubscription::None; use
+   *                 @c unsubscribe() to disable deliveries.
+   * @param callback Optional callback invoked on each delivery.
    * @return BTStatus indicating success or failure.
-   * @note Writes to the Client Characteristic Configuration Descriptor (CCCD).
+   * @note Writes the selected bits to the Client Characteristic Configuration
+   *       Descriptor (CCCD); the bits replace any previous subscription.
    */
-  BTStatus subscribe(bool notifications = true, NotifyCallback callback = nullptr);
-
-  /**
-   * @brief Subscribe to both notifications and indications from this characteristic (writes 0x0003 to CCCD).
-   * @param callback Optional callback invoked on each notification or indication.
-   * @return BTStatus indicating success or failure.
-   */
-  BTStatus subscribeBoth(NotifyCallback callback = nullptr);
+  BTStatus subscribe(BLESubscription mode, NotifyCallback callback = nullptr);
 
   /**
    * @brief Unsubscribe from notifications and indications.

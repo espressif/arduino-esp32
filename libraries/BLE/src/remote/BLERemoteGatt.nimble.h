@@ -55,6 +55,11 @@ struct BLERemoteService::Impl : BLERemoteServiceImplCommon {
   uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE;
   std::atomic<uint32_t> chrDiscoverGeneration{0};
   BLESync chrDiscoverSync{"chrDiscoverSync"};
+  // Serializes characteristic discovery on this service (see the
+  // characteristic opMtx note below); recursive for nested same-task use.
+  SemaphoreHandle_t opMtx = xSemaphoreCreateRecursiveMutex();
+
+  ~Impl();
 
   static int chrDiscoveryCb(uint16_t connHandle, const struct ble_gatt_error *error, const struct ble_gatt_chr *chr, void *arg);
 };
@@ -78,6 +83,12 @@ struct BLERemoteCharacteristic::Impl : BLERemoteCharacteristicImplCommon {
   BLESync readSync{"readSync"};
   BLESync writeSync{"writeSync"};
   BLESync dscDiscoverSync{"dscDiscoverSync"};
+  // Serializes blocking remote ops (read/write/descriptor discovery) on this
+  // characteristic. Recursive so nested ops on the same task (subscribe ->
+  // discover descriptors -> write CCCD) do not self-deadlock; a second task
+  // blocks until the in-flight op completes instead of corrupting the
+  // generation/sync handshake in waitRemoteOp().
+  SemaphoreHandle_t opMtx = xSemaphoreCreateRecursiveMutex();
 
   ~Impl();
 
@@ -85,11 +96,8 @@ struct BLERemoteCharacteristic::Impl : BLERemoteCharacteristicImplCommon {
   static int writeCb(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
   static int dscDiscoveryCb(uint16_t connHandle, const struct ble_gatt_error *error, uint16_t chrHandle, const struct ble_gatt_dsc *dsc, void *arg);
 
-  static void (*clearNotifyRoutesHook)(uint16_t connHandle);
-  static void (*handleNotifyRxHook)(uint16_t connHandle, uint16_t attrHandle, struct os_mbuf *om, bool isNotify);
-
-  static void registerForNotify(uint16_t connHandle, uint16_t attrHandle, BLERemoteCharacteristic::Impl *impl);
-  static void unregisterForNotify(uint16_t connHandle, uint16_t attrHandle);
+  static void registerForNotify(uint16_t connHandle, uint16_t attrHandle, const std::shared_ptr<BLERemoteCharacteristic::Impl> &impl);
+  static void unregisterForNotify(uint16_t connHandle, uint16_t attrHandle, const BLERemoteCharacteristic::Impl *impl);
   static void clearNotifyRoutes(uint16_t connHandle);
   static void handleNotifyRx(uint16_t connHandle, uint16_t attrHandle, struct os_mbuf *om, bool isNotify);
 };
@@ -107,6 +115,11 @@ struct BLERemoteDescriptor::Impl : BLERemoteDescriptorImplCommon {
   std::atomic<uint32_t> writeGeneration{0};
   BLESync readSync{"dscReadSync"};
   BLESync writeSync{"dscWriteSync"};
+  // Serializes blocking read/write ops on this descriptor (see the
+  // characteristic opMtx note above); recursive for nested same-task use.
+  SemaphoreHandle_t opMtx = xSemaphoreCreateRecursiveMutex();
+
+  ~Impl();
 
   static int readCb(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
   static int writeCb(uint16_t connHandle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);

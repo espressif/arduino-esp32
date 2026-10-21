@@ -628,7 +628,7 @@ void setup() {
   std::atomic<int> indicCount{0};
 
   BTStatus subStatus =
-    notifyChr.subscribe(true, [&notifReceived, &notifPayload](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, bool isNotify) {
+    notifyChr.subscribe(BLESubscription::Notify, [&notifReceived, &notifPayload](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, BLERemoteCharacteristic::Delivery) {
       syncPhaseFromHost();
       notifPayload = String((const char *)data, length);
       notifReceived = true;
@@ -660,8 +660,8 @@ void setup() {
   }
 
   subStatus = indicateChr.subscribe(
-    false,
-    [&indicReceived, &indicPayload, &indicLog, &indicCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, bool isNotify) {
+    BLESubscription::Indicate,
+    [&indicReceived, &indicPayload, &indicLog, &indicCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, BLERemoteCharacteristic::Delivery) {
       syncPhaseFromHost();
       int n = indicCount;
       if (n == 0) {
@@ -711,11 +711,12 @@ void setup() {
     String dualNotif[kDualMax];
     std::atomic<int> dualIndCount{0};
     std::atomic<int> dualNotifCount{0};
-    BTStatus ds = dualChr.subscribeBoth(
-      [&dualInd, &dualNotif, &dualIndCount, &dualNotifCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, bool isNotify) {
+    BTStatus ds = dualChr.subscribe(
+      BLESubscription::Notify | BLESubscription::Indicate,
+      [&dualInd, &dualNotif, &dualIndCount, &dualNotifCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, BLERemoteCharacteristic::Delivery kind) {
         syncPhaseFromHost();
         String v((const char *)data, length);
-        if (isNotify) {
+        if (kind == BLERemoteCharacteristic::Delivery::Notification) {
           int n = dualNotifCount;
           if (n < kDualMax) {
             dualNotif[n] = v;
@@ -1327,7 +1328,7 @@ void setup() {
         // getDescriptor() call) to confirm it auto-discovers on both backends
         // and stays strictly within each characteristic's handle range.
         auto rwDescriptors = rw.getDescriptors();
-        BTStatus rwSubNoCccd = rw.subscribe(true, nullptr);
+        BTStatus rwSubNoCccd = rw.subscribe(BLESubscription::Notify, nullptr);
         BTStatus rwUnsubNoCccd = rw.unsubscribe();
         Serial.printf(
           "[CLIENT] RW descriptor count: %u noCccdNotFound=%d\n", (unsigned)rwDescriptors.size(),
@@ -2667,16 +2668,18 @@ void setup() {
       if (!cs) {
         Serial.printf("[CLIENT] Phase33 connect FAILED: %s\n", cs.toString());
       } else {
+        volatile int svcChangedRx = 0;
+        BTStatus svcSubStatus = BTStatus::NotFound;
         BLERemoteService gattSvc = pc.getService(BLEUUID((uint16_t)0x1801));
         if (gattSvc) {
           BLERemoteCharacteristic svcChanged = gattSvc.getCharacteristic(BLEUUID((uint16_t)0x2A05));
           if (svcChanged) {
-            (void)svcChanged.subscribe(false, [](BLERemoteCharacteristic, const uint8_t *, size_t, bool) {});
+            svcSubStatus = svcChanged.subscribe(BLESubscription::Indicate, [&svcChangedRx](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery) { svcChangedRx++; });
           }
         }
         BLERemoteService svc = pc.getService(busySvcUUID);
         BLERemoteCharacteristic bc = svc ? svc.getCharacteristic(busyCharUUID) : BLERemoteCharacteristic();
-        BTStatus sub = bc ? bc.subscribe(false, [](BLERemoteCharacteristic, const uint8_t *, size_t, bool) {}) : BTStatus::NotFound;
+        BTStatus sub = bc ? bc.subscribe(BLESubscription::Indicate, [](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery) {}) : BTStatus::NotFound;
         subscribed = (bool)sub;
         if (!sub) {
           Serial.printf("[CLIENT] Phase33 subscribe FAILED: %s\n", sub.toString());
@@ -2684,6 +2687,9 @@ void setup() {
         delay(8000);
         pc.disconnect();
         delay(500);
+        Serial.printf(
+          "[CLIENT] Phase33 svcChangedRx=%d svcSubOk=%d\n", (int)svcChangedRx, (int)(bool)svcSubStatus
+        );
       }
     }
     Serial.printf("[CLIENT] Phase33 found=%d subscribed=%d\n", (int)found, (int)subscribed);
@@ -2778,8 +2784,8 @@ void setup() {
     std::atomic<int> peerIndicate{0};
     std::atomic<int> floodCount{0};
     BLERemoteCharacteristic::NotifyCallback onPeer = [&peerNotify, &peerIndicate,
-                                                      &floodCount](BLERemoteCharacteristic, const uint8_t *, size_t, bool isNotify) {
-      if (isNotify) {
+                                                      &floodCount](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery kind) {
+      if (kind == BLERemoteCharacteristic::Delivery::Notification) {
         if (peerNotify.fetch_add(1, std::memory_order_relaxed) > 0) {
           floodCount.fetch_add(1, std::memory_order_relaxed);
         }
@@ -2806,9 +2812,9 @@ void setup() {
         peer = edge ? edge.getCharacteristic(peerCharUUID) : BLERemoteCharacteristic();
         BLERemoteService qsvc = c1.getService(queueSvcUUID);
         BLERemoteCharacteristic queue = qsvc ? qsvc.getCharacteristic(queueCharUUID) : BLERemoteCharacteristic();
-        connected = peer && (bool)peer.subscribe(true, onPeer);
+        connected = peer && (bool)peer.subscribe(BLESubscription::Notify, onPeer);
         if (queue) {
-          (void)queue.subscribe(false, [](BLERemoteCharacteristic, const uint8_t *, size_t, bool) {});
+          (void)queue.subscribe(BLESubscription::Indicate, [](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery) {});
         }
       }
     }
@@ -2824,7 +2830,7 @@ void setup() {
       delay(20);
     }
     if (peer) {
-      (void)peer.subscribe(false, onPeer);
+      (void)peer.subscribe(BLESubscription::Indicate, onPeer);
     }
     start = millis();
     while (peerIndicate.load() == 0 && millis() - start < 15000) {

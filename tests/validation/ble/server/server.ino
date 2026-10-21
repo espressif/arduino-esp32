@@ -33,7 +33,7 @@ static_assert(acceptsMutableHandle<BLEClient::ConnectFailHandler, void(BLEClient
 static_assert(acceptsMutableHandle<BLEClient::MtuChangedHandler, void(BLEClient &, const BLEConnInfo &, uint16_t)>);
 static_assert(acceptsMutableHandle<BLEClient::ConnParamsReqHandler, bool(BLEClient &, const BLEConnParams &)>);
 static_assert(acceptsMutableHandle<BLEClient::IdentityHandler, void(BLEClient &, const BLEConnInfo &)>);
-static_assert(acceptsMutableHandle<BLERemoteCharacteristic::NotifyCallback, void(BLERemoteCharacteristic &, const uint8_t *, size_t, bool)>);
+static_assert(acceptsMutableHandle<BLERemoteCharacteristic::NotifyCallback, void(BLERemoteCharacteristic &, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery)>);
 static_assert(acceptsMutableHandle<BLEL2CAPChannel::DataHandler, void(BLEL2CAPChannel &, const uint8_t *, size_t)>);
 static_assert(acceptsMutableHandle<BLEL2CAPChannel::DisconnectHandler, void(BLEL2CAPChannel &)>);
 static_assert(acceptsMutableHandle<BLEL2CAPServer::AcceptHandler, void(BLEL2CAPChannel &)>);

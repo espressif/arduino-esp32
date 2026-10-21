@@ -90,7 +90,11 @@ BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &uuid)
         }
       }
     }
-    impl.characteristicsDiscovered = true;
+    // Only latch discovery on success; a failed query must be retryable
+    // rather than permanently reporting an empty characteristic list.
+    if (st == ESP_GATT_OK) {
+      impl.characteristicsDiscovered = true;
+    }
   }
 
   for (auto &c : impl.characteristics) {
@@ -272,6 +276,19 @@ static BTStatus performRemoteWrite(BLEClient::Impl *client, uint16_t handle, boo
     return BTStatus::InvalidState;
   }
 
+  if (!withResponse) {
+    // A no-response write is a single ATT Write Command and cannot exceed
+    // MTU-3; fail explicitly instead of issuing an oversized single write
+    // (parity with the NimBLE backend, which must not silently upgrade to a
+    // long write either).
+    uint16_t mtu = client->mtu.load();
+    size_t maxSingle = (mtu > 3) ? static_cast<size_t>(mtu - 3) : 0;
+    if (len > maxSingle) {
+      log_e("esp_ble_gattc_write no-rsp len=%u exceeds MTU-3 (%u)", (unsigned)len, (unsigned)maxSingle);
+      return BTStatus::InvalidParam;
+    }
+  }
+
   esp_gatt_write_type_t writeType = withResponse ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP;
 
   for (int retry = 0; retry < 2; retry++) {
@@ -328,9 +345,12 @@ static BTStatus performRemoteWrite(BLEClient::Impl *client, uint16_t handle, boo
 
 // Blocking: synchronous wait on the client read object after issuing esp_ble_gattc_read_char.
 bool BLERemoteCharacteristic::readInto(uint32_t timeoutMs) {
+  if (!_impl) {
+    return false;
+  }
   auto client = remoteClient(_impl);
-  if (!performRemoteRead(client, _impl ? _impl->handle : 0, false, _impl->value, timeoutMs)) {
-    log_w("RemoteCharacteristic %s: read failed/timed out", _impl ? _impl->uuid.toString().c_str() : "");
+  if (!performRemoteRead(client, _impl->handle, false, _impl->value, timeoutMs)) {
+    log_w("RemoteCharacteristic %s: read failed/timed out", _impl->uuid.toString().c_str());
     return false;
   }
   return true;
@@ -381,12 +401,12 @@ static BTStatus subscribeWithCccd(BLERemoteCharacteristic &chr, const std::share
 }
 
 // Blocking: CCCD write path uses a confirmed GATTC write with wait; CCCD subscription semantics apply.
-BTStatus BLERemoteCharacteristic::subscribe(bool notifications, NotifyCallback callback) {
-  return subscribeWithCccd(*this, _impl, notifications ? BLE_CCCD_NOTIFY : BLE_CCCD_INDICATE, std::move(callback));
-}
-
-BTStatus BLERemoteCharacteristic::subscribeBoth(NotifyCallback callback) {
-  return subscribeWithCccd(*this, _impl, static_cast<uint16_t>(BLE_CCCD_NOTIFY | BLE_CCCD_INDICATE), std::move(callback));
+BTStatus BLERemoteCharacteristic::subscribe(BLESubscription mode, NotifyCallback callback) {
+  if (mode == BLESubscription::None) {
+    log_w("RemoteCharacteristic: subscribe called with BLESubscription::None; use unsubscribe()");
+    return BTStatus::InvalidParam;
+  }
+  return subscribeWithCccd(*this, _impl, static_cast<uint16_t>(mode), std::move(callback));
 }
 
 // Blocking: writes 0x0000 to the CCCD descriptor with wait.
@@ -447,7 +467,9 @@ BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &uuid) 
         }
       }
     }
-    impl.descriptorsDiscovered = true;
+    if (st == ESP_GATT_OK) {
+      impl.descriptorsDiscovered = true;
+    }
   }
 
   for (auto &d : impl.descriptors) {
@@ -491,12 +513,7 @@ BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *, size_t, bool) {
   return BTStatus::NotSupported;
 }
 
-BTStatus BLERemoteCharacteristic::subscribe(bool, NotifyCallback) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLERemoteCharacteristic::subscribeBoth(NotifyCallback) {
+BTStatus BLERemoteCharacteristic::subscribe(BLESubscription, NotifyCallback) {
   log_w("GATT client not supported");
   return BTStatus::NotSupported;
 }
@@ -537,9 +554,12 @@ std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const
 
 // Blocking: esp_ble_gattc_read_char_descr and synchronous wait on the client read sync object.
 bool BLERemoteDescriptor::readInto(uint32_t timeoutMs) {
+  if (!_impl) {
+    return false;
+  }
   auto client = remoteClient(_impl);
-  if (!performRemoteRead(client, _impl ? _impl->handle : 0, true, _impl->value, timeoutMs)) {
-    log_w("RemoteDescriptor: read failed/timed out (handle=0x%04x)", _impl ? _impl->handle : 0);
+  if (!performRemoteRead(client, _impl->handle, true, _impl->value, timeoutMs)) {
+    log_w("RemoteDescriptor: read failed/timed out (handle=0x%04x)", _impl->handle);
     return false;
   }
   return true;

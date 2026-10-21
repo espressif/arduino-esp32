@@ -246,7 +246,7 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
   }
 
   // Subscribe to TX notifications (data from server -> us)
-  _impl->remoteTx.subscribe(true, [this](BLERemoteCharacteristic, const uint8_t *data, size_t len, bool) {
+  _impl->remoteTx.subscribe(BLESubscription::Notify, [this](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
     if (data && len > 0) {
       _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
     }

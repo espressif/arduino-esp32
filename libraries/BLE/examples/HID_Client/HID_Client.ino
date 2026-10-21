@@ -40,7 +40,7 @@ BLEClient client;
 volatile bool targetFound = false;
 volatile bool isConnected = false;
 
-static void onNotify(BLERemoteCharacteristic chr, const uint8_t *data, size_t len, bool isNotify) {
+static void onNotify(BLERemoteCharacteristic chr, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery kind) {
   if (len == sizeof(GamepadReport)) {
     auto *rpt = reinterpret_cast<const GamepadReport *>(data);
     Serial.printf("X=%4d  Y=%4d  Buttons=0x%02X [", rpt->x, rpt->y, rpt->buttons);
@@ -98,7 +98,7 @@ static bool connectAndSubscribe() {
       }
     }
 
-    BTStatus sub = chr.subscribe(true, onNotify);
+    BTStatus sub = chr.subscribe(BLESubscription::Notify, onNotify);
     if (sub) {
       Serial.printf("Subscribed to handle 0x%04X\n", chr.getHandle());
       subscribed = true;
