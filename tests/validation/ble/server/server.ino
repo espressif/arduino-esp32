@@ -2383,17 +2383,21 @@ void loop() {
     if (!phase_gatt_setup()) {
       Serial.println("[SERVER] Phase30 rebuild FAILED");
     } else {
+      Serial.printf("[SERVER] Phase30 isAdvAfterSetup=%d\n", (int)BLE.getAdvertising().isAdvertising());
       BLESecurity sec = BLE.getSecurity();
       auto before = sec.getBondedDevices();
       Serial.printf("[SERVER] Phase30 bondsBefore=%u\n", (unsigned)before.size());
-      // Wipe the server-side bond so the re-pair is genuinely fresh on both ends.
-      (void)sec.deleteAllBonds();
+      // Delete the server-side bond via the singular deleteBond() API so the
+      // re-pair is genuinely fresh on both ends.
+      BTStatus delStatus = before.empty() ? BTStatus::NotFound : sec.deleteBond(before[0]);
+      Serial.printf("[SERVER] Phase30 deleteOk=%d\n", (int)(bool)delStatus);
       serverIdentityCount.store(0, std::memory_order_relaxed);
       auto after = sec.getBondedDevices();
       Serial.printf("[SERVER] Phase30 bondsAfterDelete=%u\n", (unsigned)after.size());
       // Wait for the client to reconnect and re-pair against the secure char.
       unsigned long startWait = millis();
       bool rebonded = false;
+      Serial.printf("[SERVER] Phase30 isAdvAfterDelete=%d\n", (int)BLE.getAdvertising().isAdvertising());
       while ((millis() - startWait) < 20000) {
         BLEServer srv = BLE.createServer();
         auto conns = srv.getConnections();

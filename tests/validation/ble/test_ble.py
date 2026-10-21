@@ -119,7 +119,7 @@ def _phase_ble5_adv(server, client):
         if ble5_client:
             client.expect_exact("[CLIENT] BLE5 scan phase done", timeout=60)
 
-    return ble5_server, ble5_client
+    return ble5_server and ble5_client
 
 
 def _phase_gatt_setup_connect(server, client):
@@ -143,6 +143,10 @@ def _phase_gatt_setup_connect(server, client):
     client.expect(r"\[CLIENT\] Scanning \(attempt \d+\)\.\.\.", timeout=10)
     client.expect_exact("[CLIENT] Found target server!", timeout=60)
     client.expect_exact("[CLIENT] Connected", timeout=20)
+    m_cache = client.expect(r"\[CLIENT\] ScanCacheInCallback ok=([01])", timeout=10)
+    assert int(m_cache.group(1)) == 1, "scan results were not cached before onResult ran"
+    m_order = client.expect(r"\[CLIENT\] ConnectCallbackBeforeReturn ok=([01])", timeout=10)
+    assert int(m_order.group(1)) == 1, "onConnect had not fired when blocking connect() returned"
     server.expect_exact("[SERVER] Client connected", timeout=10)
 
     client.expect(r"\[CLIENT\] Connect time: \d+ ms", timeout=10)
@@ -312,6 +316,8 @@ def _phase_server_disconnect(server, client):
     server.expect_exact("[SERVER] Client disconnected", timeout=10)
     server.expect_exact("[SERVER] Server-initiated disconnect OK", timeout=10)
     client.expect_exact("[CLIENT] Server disconnected us", timeout=15)
+    m_td = client.expect(r"\[CLIENT\] DisconnectTornDownInCallback ok=([01])", timeout=10)
+    assert int(m_td.group(1)) == 1, "connection state was not torn down before onDisconnect ran"
     client.expect_exact("[CLIENT] Reconnected after server disconnect", timeout=30)
     server.expect_exact("[SERVER] Client connected", timeout=10)
 
@@ -621,7 +627,7 @@ def _phase_address_types(server, client):
             timeout=25,
         )
 
-    assert client_success >= 1, "expected at least one address-type connect roundtrip to succeed " "(Public or Random)"
+    assert client_success == 2, f"expected both Public and Random connect roundtrips to succeed, got {client_success}"
     server.expect_exact("[SERVER] Phase17 done", timeout=15)
     client.expect_exact("[CLIENT] Phase17 done", timeout=15)
 
@@ -741,7 +747,7 @@ def _phase_beacon_and_eddystone(server, client):
     ib = int(m.group(1))
     ur = int(m.group(2))
     tl = int(m.group(3))
-    assert ib + ur + tl >= 2, f"expected at least 2 of 3 beacon frames, got iBeacon={ib} url={ur} tlm={tl}"
+    assert ib == 1 and ur == 1 and tl == 1, f"expected all 3 beacon frames, got iBeacon={ib} url={ur} tlm={tl}"
     server.expect_exact("[SERVER] Phase21 done", timeout=10)
     client.expect_exact("[CLIENT] Phase21 done", timeout=10)
 
@@ -1072,11 +1078,13 @@ def _phase_conn_params_reject(server, client):
     """
     # If the client never (re)discovered the server there is nothing to
     # exercise — treat it as a skip rather than a hard failure.
-    m_f = client.expect(r"\[CLIENT\] Phase29 rescan found=([01])", timeout=45)
+    m_f = client.expect(r"\[CLIENT\] Phase29 rescan found=([01]) nimble=([01])", timeout=45)
+    is_nimble = int(m_f.group(2)) == 1
     if int(m_f.group(1)) == 0:
         client.expect_exact("[CLIENT] Phase29 done", timeout=15)
         server.expect(r"\[SERVER\] Phase29 (requestSent ok=[01]|no peer connected|rebuild FAILED)", timeout=30)
         server.expect_exact("[SERVER] Phase29 done", timeout=20)
+        assert not is_nimble, "Phase29: NimBLE client failed to rescan the server (not a skip)"
         return False
 
     server.expect(r"\[SERVER\] Phase29 (requestSent ok=[01]|no peer connected)", timeout=30)
@@ -1088,6 +1096,7 @@ def _phase_conn_params_reject(server, client):
     server.expect_exact("[SERVER] Phase29 done", timeout=20)
 
     if int(m_c.group(1)) == 0:
+        assert not is_nimble, "Phase29: conn-params pre-accept hook did not fire on NimBLE"
         # No pre-accept hook on this backend (Bluedroid) — nothing to assert.
         return False
     assert int(m_c.group(4)) == 1, (
@@ -1104,12 +1113,18 @@ def _phase_deletebond_roundtrip(server, client):
     """
     server.expect_exact("[SERVER] Services after begin: 0", timeout=45)
     server.expect(r"\[SERVER\] Phase30 bondsBefore=\d+", timeout=20)
+    m_sdel = server.expect(r"\[SERVER\] Phase30 deleteOk=([01])", timeout=15)
+    assert int(m_sdel.group(1)) == 1, "server deleteBond() failed"
     server.expect(r"\[SERVER\] Phase30 bondsAfterDelete=\d+", timeout=15)
+    m_adv = server.expect(r"\[SERVER\] Phase30 isAdvAfterDelete=([01])", timeout=15)
+    assert int(m_adv.group(1)) == 1, "advertising did not survive deleteBond() (stack preempt was not resumed)"
 
     m_cb = client.expect(r"\[CLIENT\] Phase30 bondsBefore=(\d+)\r?\n", timeout=45)
+    m_cdel = client.expect(r"\[CLIENT\] Phase30 deleteOk=([01])", timeout=15)
+    assert int(m_cdel.group(1)) == 1, "client deleteBond() failed"
     m_cd = client.expect(r"\[CLIENT\] Phase30 bondsAfterDelete=(\d+)\r?\n", timeout=15)
     assert int(m_cb.group(1)) >= 1, "client had no bond to delete (phase 10 pairing missing?)"
-    assert int(m_cd.group(1)) == 0, "client bond store not empty after deleteAllBonds"
+    assert int(m_cd.group(1)) == 0, "client bond store not empty after deleteBond"
 
     m_cr = client.expect(
         r"\[CLIENT\] Phase30 reEnc=([01]) reBond=([01]) bondsAfterRepair=(\d+)\r?\n",
@@ -1185,13 +1200,18 @@ def _phase_indication_busy_retry(server, client):
         r"\[SERVER\] Phase33 (no subscriber|serviceChanged=(0|1|n/a) confirmed=(\d+) failed=(\d+))\r?\n",
         timeout=60,
     )
+    m_rx = client.expect(r"\[CLIENT\] Phase33 svcChangedRx=(\d+) svcSubOk=([01])", timeout=60)
     client.expect_exact("[CLIENT] Phase33 found=1 subscribed=1", timeout=60)
     assert m.group(1) != b"no subscriber", "Phase33: client never subscribed"
     service_changed = m.group(2).decode()
     confirmed = int(m.group(3))
     failed = int(m.group(4))
-    LOGGER.info(f"Phase33: serviceChanged={service_changed} confirmed={confirmed} failed={failed}")
-    assert service_changed == "1", f"Phase33: removing the temporary service failed (serviceChanged={service_changed})"
+    svc_rx = int(m_rx.group(1))
+    LOGGER.info(f"Phase33: serviceChanged={service_changed} svcChangedRx={svc_rx} confirmed={confirmed} failed={failed}")
+    # The server line only proves removeService() succeeded; the client line
+    # proves a Service Changed indication was actually received over the air.
+    assert int(m_rx.group(2)) == 1, "Phase33: client failed to subscribe to Service Changed (0x2A05)"
+    assert svc_rx >= 1, "Phase33: client never received a Service Changed indication"
     assert (
         confirmed == 3 and failed == 0
     ), f"Phase33: expected 3 confirmed indications, got confirmed={confirmed} failed={failed}"
@@ -1397,6 +1417,10 @@ def test_ble(dut, ci_job_id, record_property):
             LOGGER.error("FAILED: phase %d (%s): %s", num, label, e)
             if num <= 15:  # original code called pytest.fail on phases 1–15
                 pytest.fail(f"phase {num} ({label}) failed: {e}")
+            # Later phases run sequentially against one setup() state machine
+            # per DUT; continuing after a failure only burns every remaining
+            # timeout against dead state. Stop at the first failure.
+            break
 
     summary = f"{len(passed)} passed, {len(failed)} failed out of {len(PHASE_LABELS)}"
     LOGGER.info("Summary: %s", summary)

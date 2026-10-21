@@ -10,9 +10,6 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include "client/BLEClient.bluedroid.h"
-#endif
 
 static const BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static const BLEUUID rwCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -82,6 +79,11 @@ volatile bool clientConnParamsUpdated = false;
 // (the historical Bluedroid CONNECT_EVT behavior).
 volatile bool clientConnectFired = false;
 volatile bool clientMtuAfterConnect = false;
+// Ordering guards: set inside onResult if the device is already in
+// getResults() (cache-before-callback), and inside onDisconnect if the
+// link state is already torn down (teardown-before-callback).
+volatile bool scanCacheInCallbackOk = false;
+volatile bool clientDisconnectTornDown = false;
 // Phase 10 — onIdentity must fire exactly once per connection on both backends
 // (NimBLE surfaces identity on both IDENTITY_RESOLVED and ENC_CHANGE and is
 // deduped in the library; Bluedroid fires it once from AUTH_CMPL). Reset before
@@ -345,7 +347,18 @@ bool scanForServer() {
   BLEScan scan = BLE.getScan();
   scan.onResult([&](BLEAdvertisedDevice dev) {
     syncPhaseFromHost();
+    if (!found && dev.haveName() && dev.getName().length() > 0) {
+      Serial.printf("[CLIENT] Scan saw name=%s\n", dev.getName().c_str());
+    }
     if (!found && dev.getName() == targetName) {
+      // DESIGN ordering: results are cached before onResult runs, so the
+      // device must already be visible through getResults() here.
+      for (const auto &cached : scan.getResults()) {
+        if (cached.getAddress() == dev.getAddress()) {
+          scanCacheInCallbackOk = true;
+          break;
+        }
+      }
       Serial.println("[CLIENT] Found target server!");
       targetAddr = dev.getAddress();
       found = true;
@@ -466,6 +479,12 @@ void setup() {
       clientIdentityCount = clientIdentityCount + 1;
       recordClientEvent("IDENTITY");
     });
+    c.onDisconnect([](BLEClient &cl, const BLEConnInfo &, uint8_t) {
+      syncPhaseFromHost();
+      // DESIGN ordering: connection state and the discovered tree are
+      // torn down before onDisconnect is delivered.
+      clientDisconnectTornDown = !cl.isConnected() && cl.getServices().empty();
+    });
   };
 
   if (!scanForServer()) {
@@ -483,6 +502,8 @@ void setup() {
     return;
   }
   Serial.println("[CLIENT] Connected");
+  Serial.printf("[CLIENT] ScanCacheInCallback ok=%d\n", (int)scanCacheInCallbackOk);
+  Serial.printf("[CLIENT] ConnectCallbackBeforeReturn ok=%d\n", (int)clientConnectFired);
   Serial.printf("[CLIENT] Connect time: %lu ms\n", (unsigned long)connectTime);
 
   uint16_t mtu = client.getMTU();
@@ -591,7 +612,9 @@ void setup() {
     delay(500);
     bool rec = false;
     for (int attempt = 0; attempt < 6 && !rec; attempt++) {
-      rec = (bool)client.connect(targetAddr);
+      BTStatus recStatus = client.connect(targetAddr);
+      rec = (bool)recStatus;
+      Serial.printf("[CLIENT] Snapshot abandon reconnect attempt=%d status=%s\n", attempt + 1, recStatus.toString());
       if (!rec) {
         delay(500);
       }
@@ -967,6 +990,7 @@ void setup() {
     } else {
       Serial.println("[CLIENT] Server disconnect timeout");
     }
+    Serial.printf("[CLIENT] DisconnectTornDownInCallback ok=%d\n", (int)clientDisconnectTornDown);
 
     // Reconnect after server-initiated disconnect
     delay(2000);
@@ -1092,15 +1116,13 @@ void setup() {
 
   Serial.println("[CLIENT] All cycles complete");
 
-  // --- App ID boundary stress test ---
-  // Pre-seed the app ID counter near ESP_APP_ID_MAX (0x7FFF) to exercise
-  // the wrap-around back to 0 and collision detection.
-#if defined(CONFIG_BLUEDROID_ENABLED)
+  // --- Repeated client create/connect stress (public API only) ---
+  // Exercises allocator reuse through the public contract. Internal
+  // app-ID wrap-around is a library-internal concern covered by unit
+  // tests, not by poking backend Impl state from a sketch.
   {
-    static const uint16_t PRESEED = 0x7FF8;
-    static const int STRESS_CYCLES = 15;  // wraps around at cycle ~8
-    BLEClient::Impl::s_nextAppId = PRESEED;
-    Serial.printf("[CLIENT] AppId stress: preseed=%u, cycles=%d\n", PRESEED, STRESS_CYCLES);
+    static const int STRESS_CYCLES = 15;
+    Serial.printf("[CLIENT] AppId stress: cycles=%d\n", STRESS_CYCLES);
 
     for (int i = 0; i < STRESS_CYCLES; i++) {
       BLEClient sc = BLE.createClient();
@@ -1121,9 +1143,6 @@ void setup() {
       }
     }
   }
-#else
-  Serial.println("[CLIENT] AppId stress SKIPPED (NimBLE)");
-#endif
 
   // ===== Phase 13: BLEStream =====
   waitForPhase(13);
@@ -2427,7 +2446,11 @@ void setup() {
     // Give the server time to rebuild its stack and re-advertise serverName.
     delay(1500);
     bool found = scanForServer();
-    Serial.printf("[CLIENT] Phase29 rescan found=%d\n", (int)found);
+#if defined(CONFIG_NIMBLE_ENABLED)
+    Serial.printf("[CLIENT] Phase29 rescan found=%d nimble=1\n", (int)found);
+#else
+    Serial.printf("[CLIENT] Phase29 rescan found=%d nimble=0\n", (int)found);
+#endif
     if (found) {
       BLEClient pc = BLE.createClient();
       installClientCallbacks(pc);
@@ -2473,13 +2496,25 @@ void setup() {
     BLESecurity sec = BLE.getSecurity();
     auto bondsBefore = sec.getBondedDevices();
     Serial.printf("[CLIENT] Phase30 bondsBefore=%u\n", (unsigned)bondsBefore.size());
-    (void)sec.deleteAllBonds();
+    // Exercise the singular deleteBond() API on the one stored bond.
+    BTStatus delStatus = bondsBefore.empty() ? BTStatus::NotFound : sec.deleteBond(bondsBefore[0]);
+    Serial.printf("[CLIENT] Phase30 deleteOk=%d\n", (int)(bool)delStatus);
     auto bondsAfterDelete = sec.getBondedDevices();
     Serial.printf("[CLIENT] Phase30 bondsAfterDelete=%u\n", (unsigned)bondsAfterDelete.size());
 
     delay(1500);
     bool found = scanForServer();
     Serial.printf("[CLIENT] Phase30 rescan found=%d\n", (int)found);
+    if (!found) {
+      // Diagnostic: dump whatever the radio actually heard so a silent
+      // advertiser and a name mismatch are distinguishable in the log.
+      BLEScan dumpScan = BLE.getScan();
+      BLEScan::Results dump = dumpScan.startBlocking(4000);
+      Serial.printf("[CLIENT] Phase30 scanDump count=%u\n", (unsigned)dump.size());
+      for (const auto &d : dump) {
+        Serial.printf("[CLIENT] Phase30 scanDump addr=%s name=%s\n", d.getAddress().toString().c_str(), d.getName().c_str());
+      }
+    }
     if (found) {
       BLEClient rc = BLE.createClient();
       installClientCallbacks(rc);
