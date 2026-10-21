@@ -255,7 +255,15 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t reason) {
     _impl->disconnectSync.take();
   }
   int rc = ble_gap_terminate(connHandle, reason);
-  if (rc != 0 && rc != BLE_HS_ENOTCONN) {
+  if (rc == BLE_HS_ENOTCONN) {
+    if (wait) {
+      _impl->pendingDisconnectHandle.store(0xFFFF);
+      _impl->disconnectSync.give(BTStatus::NotConnected);
+    }
+    log_w("Server: ble_gap_terminate ENOTCONN (no disconnect event will arrive)");
+    return BTStatus::NotConnected;
+  }
+  if (rc != 0) {
     if (wait) {
       _impl->pendingDisconnectHandle.store(0xFFFF);
       _impl->disconnectSync.give(BTStatus::Fail);
@@ -264,17 +272,7 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t reason) {
     return BTStatus::Fail;
   }
   if (wait) {
-    bool stillConn;
-    {
-      BLELockGuard lock(_impl->mtx);
-      stillConn = (_impl->connFind(connHandle) != nullptr);
-    }
-    BTStatus waited = BTStatus::OK;
-    if (stillConn) {
-      waited = _impl->disconnectSync.wait(5000);
-    } else {
-      _impl->disconnectSync.give(BTStatus::OK);
-    }
+    BTStatus waited = _impl->disconnectSync.wait(5000);
     _impl->pendingDisconnectHandle.store(0xFFFF);
     return waited;
   }

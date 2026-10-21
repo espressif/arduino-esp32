@@ -700,17 +700,7 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t /*reason*/) {
     return BTStatus::Fail;
   }
   if (wait) {
-    bool stillConn;
-    {
-      BLELockGuard lock(impl.mtx);
-      stillConn = (impl.connFind(connHandle) != nullptr);
-    }
-    BTStatus waited = BTStatus::OK;
-    if (stillConn) {
-      waited = impl.disconnectSync.wait(5000);
-    } else {
-      impl.disconnectSync.give(BTStatus::OK);
-    }
+    BTStatus waited = impl.disconnectSync.wait(5000);
     impl.pendingDisconnectHandle.store(0xFFFF);
     return waited;
   }
