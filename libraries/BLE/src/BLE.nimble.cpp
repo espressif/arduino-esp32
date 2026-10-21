@@ -330,6 +330,12 @@ void BLEClass::end(bool releaseMemory) {
     nimbleResetReAdvertiseEvent();
   }
 #endif
+#if BLE_L2CAP_SUPPORTED
+  // The host task is stopped, so no deferred orphan-disconnect event can run.
+  // Release its NPL backing storage before nimble_port_deinit() destroys the
+  // event pool; client contexts remain alive until cleanup below.
+  nimbleResetL2CAPDeferredEvent();
+#endif
   nimble_port_deinit();
   _impl->synced = false;
 

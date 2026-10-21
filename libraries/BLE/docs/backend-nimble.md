@@ -84,5 +84,9 @@ always cast-free `impl.member`.
   may block between chunks on `COC_TX_UNSTALLED` (NimBLE itself does not segment oversized SDUs).
   RX flatten uses a fixed 256-byte stack threshold; larger SDUs spill to the heap. Channel MTU
   is independent of that threshold (caller-configured: 128, 256, 512, …).
+- **Late L2CAP connect completion** is deferred onto a host-queue callout after a blocking
+  `connectL2CAP()` timeout. NimBLE invokes `COC_CONNECTED` before releasing its connect signaling
+  procedure, so the orphan disconnect cannot be submitted inline; its context remains owned until
+  `COC_DISCONNECTED` or host teardown.
 - **`onIdentity`** fires at most once per connection (`identityDispatched` latch, reset on CONNECT).
 - **`onConnParamsUpdateRequest`** is NimBLE-only (returns accept/reject; no Bluedroid equivalent).

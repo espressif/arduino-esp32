@@ -94,6 +94,7 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
  * @return true on success; false on allocation or connect failure.
  */
 bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanImpl, uint16_t connHandle, uint16_t psm, uint16_t mtu);
+void nimbleResetL2CAPDeferredEvent();
 void nimbleCleanupL2CAP();
 
 #endif /* BLE_L2CAP_SUPPORTED && BLE_NIMBLE */

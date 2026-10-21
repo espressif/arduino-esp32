@@ -1073,6 +1073,18 @@ def _phase_l2cap_bulk(server, client):
         server.expect_exact("[SERVER] Phase28 done", timeout=40)
         return False
 
+    client.expect_exact("[CLIENT] Phase28 stall armed write=1", timeout=15)
+    server.expect_exact("[SERVER] Phase28 delayed L2CAP accept entered", timeout=15)
+    client.write("PHASE28_STALL_GO\n")
+    m_timeout = client.expect(r"\[CLIENT\] Phase28 timeout returned empty=([01]) elapsed=(\d+)", timeout=10)
+    assert int(m_timeout.group(1)) == 1, "connectL2CAP did not return an empty handle after its timeout"
+    server.expect_exact("[SERVER] Phase28 delayed L2CAP accept released", timeout=10)
+    server.expect_exact("[SERVER] Phase28 L2CAP channel accepted count=1", timeout=10)
+    server.expect_exact("[SERVER] Phase28 L2CAP channel disconnected count=1", timeout=10)
+    client.write("PHASE28_CLEANUP_GO\n")
+    m_abandoned = client.expect(r"\[CLIENT\] Phase28 abandoned clean=([01]) elapsed=(\d+) write=([01])", timeout=10)
+    assert int(m_abandoned.group(1)) == 1, "late L2CAP connect cleanup corrupted state or returned outside the timeout window"
+    assert int(m_abandoned.group(3)) == 1, "failed to arm the delayed-peer L2CAP timeout scenario"
     client.expect_exact("[CLIENT] Phase28 L2CAP channel connected", timeout=30)
     # Bulk SDU must arrive intact (server echoes the accumulated byte count once
     # it reaches the target, proving credit replenishment mid transfer worked).

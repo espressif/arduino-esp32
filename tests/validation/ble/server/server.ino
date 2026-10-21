@@ -159,6 +159,8 @@ static const uint32_t PASSKEY_ENTRY_STATIC = 398215;
 // reached. Touched from the BLE task, read/reset from loop().
 volatile uint32_t l2capBulkBytes = 0;
 volatile bool l2capBulkReplied = false;
+std::atomic<uint32_t> l2capPhase28Accepts{0};
+std::atomic<uint32_t> l2capPhase28Disconnects{0};
 #if BLE_L2CAP_SUPPORTED
 BLEL2CAPServer l2capBulkServer;
 #endif
@@ -2316,12 +2318,24 @@ void loop() {
       BLEServer srv = BLE.createServer();
       srv.advertiseOnDisconnect(true);
       BLEService svc = srv.createService(SERVICE_UUID);
-      auto ch = svc.createCharacteristic(RW_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+      auto ch = svc.createCharacteristic(RW_CHAR_UUID, BLEProperty::Read | BLEProperty::WriteNR, BLEPermission::ReadWriteOpen);
       ch.setValue("l2cap_bulk");
+      ch.onWrite([](BLECharacteristic &chr, const BLEConnInfo &) {
+        if (chr.getStringValue() == "STALL_L2CAP") {
+          // Deliberately hold the peer host task past connectL2CAP's 5 s
+          // timeout. The late COC_CONNECTED must disconnect its abandoned
+          // channel and retain the callback context through COC_DISCONNECTED.
+          Serial.println("[SERVER] Phase28 delayed L2CAP accept entered");
+          delay(7000);
+          Serial.println("[SERVER] Phase28 delayed L2CAP accept released");
+        }
+      });
       srv.start();
 
       l2capBulkBytes = 0;
       l2capBulkReplied = false;
+      l2capPhase28Accepts = 0;
+      l2capPhase28Disconnects = 0;
       l2capBulkServer = BLE.createL2CAPServer(0x0080, 256);
       if (!l2capBulkServer) {
         Serial.println("[SERVER] Phase28 L2CAP init FAILED");
@@ -2347,7 +2361,12 @@ void loop() {
         });
         l2capBulkServer.onAccept([](BLEL2CAPChannel channel) {
           syncPhaseFromHost();
-          Serial.println("[SERVER] Phase28 L2CAP channel accepted");
+          uint32_t count = l2capPhase28Accepts.fetch_add(1) + 1;
+          Serial.printf("[SERVER] Phase28 L2CAP channel accepted count=%lu\n", (unsigned long)count);
+        });
+        l2capBulkServer.onDisconnect([](BLEL2CAPChannel &) {
+          uint32_t count = l2capPhase28Disconnects.fetch_add(1) + 1;
+          Serial.printf("[SERVER] Phase28 L2CAP channel disconnected count=%lu\n", (unsigned long)count);
         });
         Serial.println("[SERVER] Phase28 L2CAP init OK");
 

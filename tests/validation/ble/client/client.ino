@@ -118,6 +118,8 @@ static const uint32_t PASSKEY_ENTRY_STATIC = 398215;
 // reset from the Arduino task before the phase-10 connect (no callback in flight).
 static const char *clientOrderTags[16];
 volatile int clientOrderN = 0;
+volatile bool phase28StallGo = false;
+volatile bool phase28CleanupGo = false;
 static void recordClientEvent(const char *tag) {
   int n = clientOrderN;
   if (n < (int)(sizeof(clientOrderTags) / sizeof(clientOrderTags[0]))) {
@@ -151,6 +153,10 @@ void checkSerial() {
           currentPhase = phase;
           Serial.printf("[CLIENT] Phase %d started\n", phase);
         }
+      } else if (buf == "PHASE28_STALL_GO") {
+        phase28StallGo = true;
+      } else if (buf == "PHASE28_CLEANUP_GO") {
+        phase28CleanupGo = true;
       }
       buf = "";
     } else if (c != '\r') {
@@ -2359,7 +2365,38 @@ void setup() {
       if (!cs) {
         Serial.printf("[CLIENT] Phase28 connect FAILED: %s\n", cs.toString());
       } else {
-        BLEL2CAPChannel channel = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
+        BLERemoteService stallSvc = bc.getService(serviceUUID);
+        BLERemoteCharacteristic stallChr = stallSvc ? stallSvc.getCharacteristic(rwCharUUID) : BLERemoteCharacteristic();
+        static const uint8_t stallCommand[] = "STALL_L2CAP";
+        BTStatus stallWrite = stallChr ? stallChr.writeValue(stallCommand, sizeof(stallCommand) - 1, false) : BTStatus::NotFound;
+        Serial.printf("[CLIENT] Phase28 stall armed write=%d\n", (int)(bool)stallWrite);
+        while (!phase28StallGo) {
+          checkSerial();
+          delay(10);
+        }
+        unsigned long timeoutStart = millis();
+        BLEL2CAPChannel abandoned = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
+        unsigned long timeoutElapsed = millis() - timeoutStart;
+        if (abandoned) {
+          abandoned.disconnect();
+        }
+        Serial.printf("[CLIENT] Phase28 timeout returned empty=%d elapsed=%lu\n", (int)!abandoned, timeoutElapsed);
+        while (!phase28CleanupGo) {
+          checkSerial();
+          delay(10);
+        }
+        bool abandonedClean = stallWrite && !abandoned && timeoutElapsed >= 4500 && timeoutElapsed <= 6500 && heap_caps_check_integrity_all(true);
+        Serial.printf(
+          "[CLIENT] Phase28 abandoned clean=%d elapsed=%lu write=%d\n", (int)abandonedClean, timeoutElapsed, (int)(bool)stallWrite
+        );
+
+        BLEL2CAPChannel channel;
+        for (int attempt = 0; attempt < 4 && !channel; attempt++) {
+          channel = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
+          if (!channel) {
+            delay(250);
+          }
+        }
         if (!channel || !channel.isConnected()) {
           Serial.println("[CLIENT] Phase28 L2CAP open FAILED");
         } else {
