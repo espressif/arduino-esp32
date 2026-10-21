@@ -47,8 +47,10 @@ PHASE_LABELS = {
     30: "deletebond_roundtrip",
     31: "nc_reject",
     32: "passkey_entry",
-    33: "periodic_adv_lifecycle",
-    34: "memory_release",
+    33: "indication_busy_retry",
+    34: "periodic_adv_lifecycle",
+    35: "pending_send_edges",
+    36: "memory_release",
 }
 
 
@@ -125,9 +127,14 @@ def _phase_gatt_setup_connect(server, client):
     server.expect_exact("[SERVER] GATT init OK", timeout=30)
     server.expect(r"\[SERVER\] Heap after init: \d+", timeout=10)
     server.expect_exact("[SERVER] Security configured", timeout=10)
+    server.expect_exact("[SERVER] Services after begin: 0", timeout=10)
     server.expect_exact("[SERVER] Const lookups ok=1", timeout=10)
+    server.expect_exact("[SERVER] Const lookup handle writable=1", timeout=10)
     server.expect(r"\[SERVER\] Heap after server: \d+", timeout=10)
     server.expect_exact("[SERVER] Server started", timeout=10)
+    # Nobody can be connected before advertising starts.
+    server.expect_exact("[SERVER] No-client notify status=ERROR_NO_CLIENT onNotify=0", timeout=10)
+    server.expect_exact("[SERVER] No-client indicate status=ERROR_NO_CLIENT onNotify=0", timeout=10)
     server.expect_exact("[SERVER] Advertising started", timeout=10)
 
     client.expect(r"\[CLIENT\] Heap before init: \d+", timeout=30)
@@ -159,36 +166,121 @@ def _phase_gatt_rw(server, client):
     client.expect_exact("[CLIENT] Dynamic read 2: dyn_chr_2", timeout=10)
     client.expect_exact("[CLIENT] Dynamic cached: dyn_chr_2", timeout=10)
 
+    # 512 bytes do not fit one read response, so the client follows up with Read
+    # Blob. onRead must run once per read: a value stitched from several onRead
+    # calls is not uniform, and an extra call shifts the second read past 'B'.
+    _expect_long_reads(client, "Long read", "AB")
+    m_bnd = client.expect(
+        r"\[CLIENT\] Long read boundary: len=(\d+) expected=(\d+) gen=(\S) uniform=([01])",
+        timeout=15,
+    )
+    assert int(m_bnd.group(1)) == int(m_bnd.group(2)), (
+        f"Exact (MTU-1) long read returned {int(m_bnd.group(1))} bytes, expected {int(m_bnd.group(2))}"
+    )
+    assert m_bnd.group(3).decode() == "C", f"Exact (MTU-1) long read gen={m_bnd.group(3).decode()}, expected 'C'"
+    assert int(m_bnd.group(4)) == 1, "Exact (MTU-1) long read was corrupted by concurrent setValue()"
+
+    # The server rewrites this value every few ms, so without a per-connection
+    # copy the Read Blob would return the tail of a newer value.
+    for index in range(1, 11):
+        m = client.expect(rf"\[CLIENT\] Snapshot read {index}: len=(\d+) gen=\S uniform=([01])", timeout=15)
+        assert int(m.group(1)) == 512, f"Snapshot read {index} returned {int(m.group(1))} of 512 bytes"
+        assert int(m.group(2)) == 1, f"Snapshot read {index} mixed two values set during one long read"
+
+    client.expect_exact("[CLIENT] Const lookup read: set_via_const_lookup", timeout=10)
+
+    # A long read dropped by disconnect must fail cleanly; the reconnect
+    # re-read must be a uniform 512-byte snapshot. Two BLEClient instances on
+    # one board share a single ACL with this peripheral, so overlapping
+    # cross-client snapshots need a third DUT.
+    m_ab = client.expect(r"\[CLIENT\] Snapshot abandon empty=([01])", timeout=15)
+    assert int(m_ab.group(1)) == 1, "abandoned long read returned a value instead of failing"
+    m_rec = client.expect(r"\[CLIENT\] Snapshot abandon reconnect uniform=([01])", timeout=20)
+    assert int(m_rec.group(1)) == 1, "re-read after abandoned snapshot was not a uniform 512-byte value"
+
+
+def _expect_long_reads(client, label, generations):
+    for index, gen in enumerate(generations, start=1):
+        m = client.expect(rf"\[CLIENT\] {label} {index}: len=(\d+) gen=(\S) uniform=([01])", timeout=15)
+        assert int(m.group(1)) == 512, f"{label} {index} returned {int(m.group(1))} of 512 bytes"
+        assert int(m.group(3)) == 1, f"{label} {index} mixed values from several onRead calls"
+        got = m.group(2).decode()
+        assert got == gen, f"{label} {index} came from onRead call '{got}', expected '{gen}'"
+
 
 def _phase_notifications(server, client):
     client.expect_exact("[CLIENT] Subscribed to notifications", timeout=10)
     client.expect_exact("[CLIENT] Notification received: notify_test_1", timeout=30)
+    client.expect_exact("[CLIENT] Malformed CCCD rejected: 1", timeout=10)
     client.expect_exact("[CLIENT] Subscribed to indications", timeout=10)
     client.expect_exact("[CLIENT] Indication received: indicate_test_1", timeout=30)
+    # Sent back to back: ATT allows one unconfirmed indication per client, so
+    # the server must queue them and deliver all of them, in order.
+    m = client.expect(r"\[CLIENT\] Indication burst: (\S*)\r?\n", timeout=20)
+    burst = m.group(1).decode()
+    assert burst == "burst_1,burst_2,burst_3,burst_4", f"indication burst delivered '{burst}'"
+    # One characteristic with both kinds enabled; the server interleaves them,
+    # each notification sent while an indication is still unconfirmed.
+    m = client.expect(r"\[CLIENT\] Dual indications: (\S*)\r?\n", timeout=20)
+    dual_ind = m.group(1).decode()
+    m = client.expect(r"\[CLIENT\] Dual notifications: (\S*)\r?\n", timeout=5)
+    dual_notif = m.group(1).decode()
+    assert dual_ind == "di_1,di_2,di_3,di_4", f"dual characteristic delivered indications '{dual_ind}'"
+    assert dual_notif == "dn_1,dn_2,dn_3,dn_4", f"dual characteristic delivered notifications '{dual_notif}'"
     client.expect_exact("[CLIENT] Unsubscribed", timeout=15)
 
     # "Subscriber count: 1" may appear before phase expectations due to callback timing.
     # Keep the phase robust by validating sent events and final unsubscribe state.
     server.expect_exact("[SERVER] Notification sent", timeout=10)
+    # The client received "notify_test_1" (set by onNotify) rather than the
+    # "notify_stale" value set before notify(), so onNotify ran before the send.
+    server.expect_exact("[SERVER] Notify status=SUCCESS_NOTIFY code=0 onNotify=1", timeout=10)
     server.expect_exact("[SERVER] Indication sent", timeout=10)
+    server.expect_exact("[SERVER] Indicate status=SUCCESS_INDICATE code=0 onNotify=1", timeout=10)
+    server.expect_exact("[SERVER] Indicate burst accepted=4", timeout=10)
+    server.expect_exact("[SERVER] Indicate burst confirmed=4 failed=0", timeout=15)
+    m_ov = server.expect(
+        r"\[SERVER\] Indicate overflow accepted=(\d+) busy=(\d+) confirmed=(\d+) failed=(\d+)\r?\n",
+        timeout=20,
+    )
+    ov_accepted, ov_busy = int(m_ov.group(1)), int(m_ov.group(2))
+    ov_confirmed, ov_failed = int(m_ov.group(3)), int(m_ov.group(4))
+    assert ov_accepted >= 8, f"indication overflow accepted {ov_accepted}, queue holds 8 behind the in-flight one"
+    assert ov_busy >= 1, "indication overflow never returned Busy (queue-full untested)"
+    assert ov_confirmed == ov_accepted, f"queued overflow indications confirmed={ov_confirmed} accepted={ov_accepted}"
+    assert ov_failed == ov_busy, f"overflow Busy count {ov_busy} did not match failed statuses {ov_failed}"
+    # Notifications and indications on one characteristic complete through the
+    # same Bluedroid event; each status must be reported as the right kind.
+    server.expect_exact("[SERVER] Dual confirmed ind=4 notif=4 failed=0", timeout=15)
     server.expect_exact("[SERVER] Subscriber count: 0", timeout=10)
 
 
 def _phase_large_write(server, client):
+    server.expect_exact("[SERVER] No-subscriber notify status=ERROR_NO_SUBSCRIBER onNotify=0 subEvents=2", timeout=10)
     client.expect_exact("[CLIENT] Large write OK", timeout=30)
     server.expect_exact("[SERVER] Received 512 bytes", timeout=10)
     client.expect_exact("[CLIENT] Large read (512 bytes)", timeout=30)
     client.expect_exact("[CLIENT] Large data integrity OK", timeout=10)
+    client.expect_exact("[CLIENT] Shorter long write OK", timeout=30)
+    server.expect_exact("[SERVER] Received 510 bytes", timeout=10)
+    client.expect_exact("[CLIENT] Shorter long read (510 bytes)", timeout=30)
+    client.expect_exact("[CLIENT] Shorter long data integrity OK", timeout=10)
 
 
 def _phase_descriptor_read_write(server, client):
     client.expect_exact("[CLIENT] Found descriptor char", timeout=10)
-    client.expect(r"\[CLIENT\] Descriptor count: \d+", timeout=10)
+    client.expect_exact("[CLIENT] Descriptor count: 6", timeout=10)
     client.expect_exact("[CLIENT] User description: Test Characteristic", timeout=10)
-    client.expect(r"\[CLIENT\] Presentation format: \d+", timeout=10)
+    client.expect_exact("[CLIENT] Presentation format: 25 exp=-2 unit=0x2700 ns=1 desc=0x0042", timeout=10)
     client.expect_exact("[CLIENT] Format matches UTF8", timeout=10)
     client.expect_exact("[CLIENT] Dynamic descriptor read 1: dyn_desc_1", timeout=10)
     client.expect_exact("[CLIENT] Dynamic descriptor read 2: dyn_desc_2", timeout=10)
+    _expect_long_reads(client, "Long descriptor read", "ab")
+    server.expect_exact("[SERVER] Descriptor write count=1 len=13", timeout=10)
+    client.expect_exact("[CLIENT] Writable descriptor short write ok=1 readback=desc_short_ok", timeout=10)
+    server.expect_exact("[SERVER] Descriptor write count=2 len=510", timeout=20)
+    client.expect_exact("[CLIENT] Writable descriptor long write ok=1 len=510 uniform=1", timeout=20)
+    client.expect_exact("[CLIENT] Writable descriptor oversize rejected=1 rollbackLen=510 rollbackOk=1", timeout=20)
 
 
 def _phase_write_no_response(server, client):
@@ -217,17 +309,17 @@ def _phase_write_no_response(server, client):
 
 def _phase_server_disconnect(server, client):
     client.expect_exact("[CLIENT] Waiting for server disconnect...", timeout=10)
+    server.expect_exact("[SERVER] Client disconnected", timeout=10)
     server.expect_exact("[SERVER] Server-initiated disconnect OK", timeout=10)
     client.expect_exact("[CLIENT] Server disconnected us", timeout=15)
-    server.expect_exact("[SERVER] Client disconnected", timeout=10)
     client.expect_exact("[CLIENT] Reconnected after server disconnect", timeout=30)
     server.expect_exact("[SERVER] Client connected", timeout=10)
 
 
 def _phase_security(server, client):
-    m_server = server.expect(r"\[SERVER\] Passkey: (\d+)", timeout=30)
+    m_server = server.expect(r"\[SERVER\] Passkey: (\d+)\r?\n", timeout=30)
     server_pin = m_server.group(1).decode()
-    m_client = client.expect(r"\[CLIENT\] Passkey: (\d+)", timeout=30)
+    m_client = client.expect(r"\[CLIENT\] Passkey: (\d+)\r?\n", timeout=30)
     client_pin = m_client.group(1).decode()
     assert server_pin == client_pin, f"PIN mismatch: {server_pin} vs {client_pin}"
 
@@ -238,7 +330,7 @@ def _phase_security(server, client):
     # connection on both backends. NimBLE receives identity from both
     # IDENTITY_RESOLVED and ENC_CHANGE and dedupes it in the library; Bluedroid
     # fires it once from AUTH_CMPL. A count != 1 means the dedupe regressed.
-    m_id = client.expect(r"\[CLIENT\] Phase10 onIdentity count=(\d+)", timeout=10)
+    m_id = client.expect(r"\[CLIENT\] Phase10 onIdentity count=(\d+)\r?\n", timeout=10)
     assert int(m_id.group(1)) == 1, f"onIdentity fired {m_id.group(1)} times, expected exactly 1 (dedupe regressed)"
 
     # Cross-stack event-order parity: the client lifecycle callbacks for a fresh
@@ -382,18 +474,21 @@ def _phase_introspection_and_permissions(server, client):
     server.expect_exact("[SERVER] DescPerm 0x2901 no-read rejected: 1", timeout=10)
     server.expect_exact("[SERVER] DescPerm WriteAuthorized-no-write rejected: 1", timeout=10)
     server.expect_exact("[SERVER] DescPerm valid accepted: 1", timeout=10)
+    server.expect_exact("[SERVER] CharProp validation rejected=4/4 validAccepted=1", timeout=10)
+    server.expect_exact("[SERVER] IncludedService removeBusy=1 removeOrderOk=1 removeInvalidOk=1", timeout=10)
+    server.expect_exact("[SERVER] DescriptorHelpers ok=1", timeout=10)
     server.expect_exact("[SERVER] DescPerm validation done", timeout=10)
 
     client.expect_exact("[CLIENT] Reconnected for introspection", timeout=30)
-    m_rssi = client.expect(r"\[CLIENT\] RSSI: (-?\d+)", timeout=10)
+    m_rssi = client.expect(r"\[CLIENT\] RSSI: (-?\d+)\r?\n", timeout=10)
     rssi = int(m_rssi.group(1))
     # -128 is the sentinel getRSSI() returns when the read never completes, so
     # matching any integer here let a broken read pass as a success. Both DUTs
     # sit on the same bench, well inside this range.
     assert -110 <= rssi <= 20, f"getRSSI() returned {rssi}; -128 means the read failed or timed out"
-    m_svc = client.expect(r"\[CLIENT\] Service count: (\d+)", timeout=10)
+    m_svc = client.expect(r"\[CLIENT\] Service count: (\d+)\r?\n", timeout=10)
     assert int(m_svc.group(1)) >= 1, "Expected at least 1 service on server"
-    m_ch = client.expect(r"\[CLIENT\] Characteristic count: (\d+)", timeout=10)
+    m_ch = client.expect(r"\[CLIENT\] Characteristic count: (\d+)\r?\n", timeout=10)
     # 6 original + 1 new fail-closed char. Allow >= to be backend-tolerant.
     assert int(m_ch.group(1)) >= 6, "Expected at least 6 characteristics on service"
 
@@ -405,10 +500,12 @@ def _phase_introspection_and_permissions(server, client):
     client.expect_exact("[CLIENT] WriteNR: canWriteNoResponse=1 canWrite=0", timeout=10)
 
     # CCCD auto-created (NimBLE) or explicit (Bluedroid) — must be discoverable
-    # from the client either way. Aggregate getDescriptors() is called first
-    # to exercise the lazy auto-discovery on the aggregate getter.
-    client.expect(r"\[CLIENT\] Notify descriptor count: \d+", timeout=10)
+    # from the client either way, and descriptor discovery must stay strictly
+    # within each characteristic's handle range.
+    client.expect_exact("[CLIENT] RW descriptor count: 0 noCccdNotFound=1", timeout=10)
+    client.expect_exact("[CLIENT] Notify descriptor count: 1", timeout=10)
     client.expect_exact("[CLIENT] Notify CCCD found: 1", timeout=10)
+    client.expect_exact("[CLIENT] Dual descriptor count: 2 userDesc=Dual Characteristic", timeout=10)
 
     # Fail-closed permission masking: Write property must be stripped, reads
     # must succeed, writes must be rejected at the ATT layer.
@@ -447,9 +544,9 @@ def _phase_conninfo_and_params(server, client):
     # onMtuChanged MUST fire with a negotiated MTU above the 23-byte default.
     # (Regression guard: on Bluedroid the request used to be issued from a GATTC
     # event callback and silently never delivered CFG_MTU_EVT.)
-    m_mtu = client.expect(r"\[CLIENT\] MtuChanged seen=([01]) last=(\d+)", timeout=10)
+    m_mtu = client.expect(r"\[CLIENT\] MtuChanged seen=([01]) last=(\d+)\r?\n", timeout=10)
     assert int(m_mtu.group(1)) == 1, "client onMtuChanged never fired — MTU exchange did not complete"
-    assert int(m_mtu.group(2)) > 23, f"client negotiated MTU {m_mtu.group(2)} not above the 23-byte default"
+    assert int(m_mtu.group(2)) == 247, f"client negotiated MTU {m_mtu.group(2)} != 247 (setMTU(247) ignored?)"
     # Ordering contract (impl/CONTRACT.md "Client MTU exchange"): onMtuChanged
     # must fire after onConnect on both backends.
     m_order = client.expect(r"\[CLIENT\] MtuOrder afterConnect=([01]) mtuSeen=([01])", timeout=10)
@@ -464,9 +561,9 @@ def _phase_conninfo_and_params(server, client):
     server.expect(r"\[SERVER\] ConnInfo role central=[01] peripheral=[01]", timeout=10)
     server.expect(r"\[SERVER\] ConnInfo params interval=\d+ latency=\d+ timeout=\d+", timeout=10)
     server.expect(r"\[SERVER\] ConnInfo addr ota=\S+ id=\S+", timeout=10)
-    m_smtu = server.expect(r"\[SERVER\] MtuChanged seen=([01]) last=(\d+)", timeout=15)
+    m_smtu = server.expect(r"\[SERVER\] MtuChanged seen=([01]) last=(\d+)\r?\n", timeout=15)
     assert int(m_smtu.group(1)) == 1, "server onMtuChanged never fired — MTU exchange did not complete"
-    assert int(m_smtu.group(2)) > 23, f"server negotiated MTU {m_smtu.group(2)} not above the 23-byte default"
+    assert int(m_smtu.group(2)) == 247, f"server negotiated MTU {m_smtu.group(2)} != 247 (setMTU(247) ignored?)"
     server.expect(r"\[SERVER\] ConnParamsUpdate seen=[01] interval=\d+ latency=\d+ timeout=\d+", timeout=10)
     # getConnInfo(handle) must return a fresh snapshot reflecting the post-exchange
     # MTU/conn-params, reject a bogus handle, and behave the same on both stacks.
@@ -540,7 +637,7 @@ def _phase_authorization(server, client):
     client.expect_exact("[CLIENT] Phase18 done", timeout=10)
 
     m = server.expect(
-        r"\[SERVER\] Authz counters reads=(\d+) writesOK=(\d+) writesDeny=(\d+)",
+        r"\[SERVER\] Authz counters reads=(\d+) writesOK=(\d+) writesDeny=(\d+)\r?\n",
         timeout=30,
     )
     reads = int(m.group(1))
@@ -579,7 +676,7 @@ def _phase_adv_data_and_scan(server, client):
     # field, company id included, so an intact 0x02E5 + "ESP" is "e502455350".
     # The client prints this before prefInterval.
     m_mfg = client.expect(
-        r"\[CLIENT\] Phase20 mfgCompany=0x([0-9A-Fa-f]{4}) mfgLen=\d+ mfgHex=([0-9a-f]*)",
+        r"\[CLIENT\] Phase20 mfgCompany=0x([0-9A-Fa-f]{4}) mfgLen=\d+ mfgHex=([0-9a-f]*)\r?\n",
         timeout=30,
     )
     assert int(m_mfg.group(1), 16) == 0x02E5, f"manufacturer company id corrupted: got 0x{m_mfg.group(1)}"
@@ -591,7 +688,7 @@ def _phase_adv_data_and_scan(server, client):
     # prefInterval line *before* sawAdv, so match it first (a later expect would
     # consume past it and never find it).
     m_cpref = client.expect(
-        r"\[CLIENT\] Phase20 prefInterval have=([01]) min=0x([0-9A-Fa-f]+) max=0x([0-9A-Fa-f]+)",
+        r"\[CLIENT\] Phase20 prefInterval have=([01]) min=0x([0-9A-Fa-f]+) max=0x([0-9A-Fa-f]+)\r?\n",
         timeout=30,
     )
     assert int(m_cpref.group(1)) == 1, "client did not receive the Slave Connection Interval Range AD (0x12)"
@@ -661,8 +758,8 @@ def _phase_bond_and_whitelist(server, client):
     for tag, dut in [("SERVER", server), ("CLIENT", client)]:
         dut.expect(rf"\[{tag}\] Bond count: \d+", timeout=15)
         dut.expect(rf"\[{tag}\] Whitelist add=[01] isOn=[01] remove=[01] after=[01]", timeout=10)
-        m_local = dut.expect(rf"\[{tag}\] LocalIRK present=([01]) hex=([0-9a-fA-F]*)", timeout=10)
-        m_peer = dut.expect(rf"\[{tag}\] PeerIRK present=([01]) hex=([0-9a-fA-F]*)", timeout=10)
+        m_local = dut.expect(rf"\[{tag}\] LocalIRK present=([01]) hex=([0-9a-fA-F]*)\r?\n", timeout=10)
+        m_peer = dut.expect(rf"\[{tag}\] PeerIRK present=([01]) hex=([0-9a-fA-F]*)\r?\n", timeout=10)
         irks[(tag, "local")] = (int(m_local.group(1)), m_local.group(2).decode().lower())
         irks[(tag, "peer")] = (int(m_peer.group(1)), m_peer.group(2).decode().lower())
     server.expect_exact("[SERVER] Phase22 done", timeout=10)
@@ -694,7 +791,7 @@ def _phase_error_paths_and_misc(server, client):
     server.expect(r"\[SERVER\] Characteristic handle=\d+", timeout=5)
     server.expect(r"\[SERVER\] UUID bitSize16=16 bitSize128=128 to16=0x180D eq=\d+", timeout=5)
     server.expect(r"\[SERVER\] UUID bitSize32=32 to32=0x[0-9A-F]+", timeout=5)
-    m_str = server.expect(r"\[SERVER\] StrConv pass=(\d+) fail=(\d+)", timeout=5)
+    m_str = server.expect(r"\[SERVER\] StrConv pass=(\d+) fail=(\d+)\r?\n", timeout=5)
     assert int(m_str.group(1)) > 0, "server StrConv: expected at least one passing check"
     assert int(m_str.group(2)) == 0, "server StrConv: implicit const char* UUID conversion failed"
 
@@ -704,6 +801,9 @@ def _phase_error_paths_and_misc(server, client):
     assert int(m_us.group(1)) == 0, "client: unknown service must NOT resolve"
     m_uc = client.expect(r"\[CLIENT\] Phase23 getChar unknown ok=([01])", timeout=10)
     assert int(m_uc.group(1)) == 0, "client: unknown char must NOT resolve"
+    m_sv = client.expect(r"\[CLIENT\] Phase23 setValue clientOk=([01]) svcOk=([01])", timeout=10)
+    assert int(m_sv.group(1)) == 1, "BLEClient::setValue round-trip failed"
+    assert int(m_sv.group(2)) == 1, "BLERemoteService::setValue round-trip failed"
     client.expect(r"\[CLIENT\] Phase23 typed u8=\d+ u16=\d+ u32=\d+ f32=-?\d+", timeout=10)
     client.expect(r"\[CLIENT\] Phase23 readBuf len=\d+", timeout=10)
     client.expect(r"\[CLIENT\] Phase23 readRaw len=\d+ nonNull=[01]", timeout=10)
@@ -715,10 +815,17 @@ def _phase_error_paths_and_misc(server, client):
     assert int(m_wa.group(1)) == 0, "write-after-disconnect must fail"
     client.expect(r"\[CLIENT\] Phase23 connectAsync ok=[01]", timeout=10)
     client.expect(r"\[CLIENT\] Phase23 cancelConnect ok=[01]", timeout=10)
-    m_cstr = client.expect(r"\[CLIENT\] StrConv pass=(\d+) fail=(\d+)", timeout=10)
+    m_cstr = client.expect(r"\[CLIENT\] StrConv pass=(\d+) fail=(\d+)\r?\n", timeout=10)
     assert int(m_cstr.group(1)) > 0, "client StrConv: expected at least one passing check"
     assert int(m_cstr.group(2)) == 0, "client StrConv: implicit const char* UUID conversion failed"
     client.expect_exact("[CLIENT] Phase23 done", timeout=10)
+
+    # Targeted sends honor the client's CCCD (GATT §3.3.3.3): the client is
+    # connected but not subscribed, and a handle with no link has no client.
+    server.expect_exact("[SERVER] NotifyHandle ok=0 ret=InvalidState status=ERROR_NOTIFY_DISABLED", timeout=25)
+    server.expect_exact("[SERVER] IndicateHandle ok=0 ret=InvalidState status=ERROR_INDICATE_DISABLED", timeout=5)
+    server.expect_exact("[SERVER] NotifyBadHandle ok=0 ret=NotConnected status=ERROR_NO_CLIENT", timeout=5)
+    server.expect_exact("[SERVER] IsSubscribed handle", timeout=5)
     server.expect_exact("[SERVER] Phase23 done", timeout=25)
 
 
@@ -776,7 +883,11 @@ def _phase_hid_smoke(server, client):
       * Boot Output: Read + Write + WriteNR properties.
       * External Report Reference descriptor on Report Map.
     """
-    server.expect(r"\[SERVER\] Phase25 hidChars=\d+", timeout=30)
+    server.expect_exact("[SERVER] Phase25 teardown shells=1", timeout=30)
+    server.expect_exact("[SERVER] Phase25 services after begin: 0", timeout=30)
+    server.expect_exact("[SERVER] Phase25 removal shells=1", timeout=10)
+    server.expect_exact("[SERVER] Phase25 preRegRejected=4/4", timeout=10)
+    server.expect(r"\[SERVER\] Phase25 hidChars=\d+", timeout=10)
 
     m_mr = server.expect(r"\[SERVER\] Phase25 multiReport=([01])", timeout=10)
     assert int(m_mr.group(1)) == 1, "inputReport + outputReport must produce distinct characteristics"
@@ -785,6 +896,8 @@ def _phase_hid_smoke(server, client):
     assert int(m_cache.group(1)) == 1, "bootInput() must return the same handle on repeated calls"
 
     server.expect(r"\[SERVER\] Phase25 bootOut=[01]", timeout=10)
+    m_dyn = server.expect(r"\[SERVER\] Phase25 dynSvcStarted=([01]) handle=(\d+)\r?\n", timeout=10)
+    assert int(m_dyn.group(1)) == 1, "dynamic service addition after server.start() failed"
     server.expect(r"\[SERVER\] Phase25 HID adv ok=[01]", timeout=10)
     server.expect_exact("[SERVER] Phase25 HID ready", timeout=10)
 
@@ -797,7 +910,7 @@ def _phase_hid_smoke(server, client):
     assert int(m_svcs.group(2)) == 1, "HID Service (0x1812) must be discoverable"
     assert int(m_svcs.group(3)) == 1, "Battery Service (0x180F) must be discoverable"
 
-    m_ch = client.expect(r"\[CLIENT\] Phase25 hidChars=(\d+)", timeout=10)
+    m_ch = client.expect(r"\[CLIENT\] Phase25 hidChars=(\d+)\r?\n", timeout=10)
     assert int(m_ch.group(1)) >= 5, (
         "HID service must expose at least 5 characteristics "
         "(report map, protocol mode, hid info, input report, output report)"
@@ -812,7 +925,7 @@ def _phase_hid_smoke(server, client):
     client.expect(r"\[CLIENT\] Phase25 bootIn canRead=[01] canNotify=[01]", timeout=10)
     client.expect(r"\[CLIENT\] Phase25 bootOut canRead=[01] canWrite=[01] canWriteNR=[01]", timeout=10)
 
-    m_rpt = client.expect(r"\[CLIENT\] Phase25 reportCount=(\d+)", timeout=10)
+    m_rpt = client.expect(r"\[CLIENT\] Phase25 reportCount=(\d+)\r?\n", timeout=10)
     assert int(m_rpt.group(1)) >= 2, "Must have at least 2 Report characteristics (input + output)"
 
     m_boot = client.expect(
@@ -822,6 +935,7 @@ def _phase_hid_smoke(server, client):
     assert int(m_boot.group(1)) == 1, "Boot Keyboard Input must have Read + Notify properties"
     assert int(m_boot.group(2)) == 1, "Boot Keyboard Output must have Read + Write + WriteNR properties"
 
+    client.expect_exact("[CLIENT] Phase25 dynSvcRead=dyn_svc_ok", timeout=10)
     client.expect_exact("[CLIENT] Phase25 done", timeout=30)
     server.expect_exact("[SERVER] Phase25 done", timeout=30)
 
@@ -988,24 +1102,26 @@ def _phase_deletebond_roundtrip(server, client):
     both ends, the store is confirmed empty, then reading the authenticated
     characteristic forces a fresh pairing that re-establishes the bond.
     """
-    server.expect(r"\[SERVER\] Phase30 bondsBefore=\d+", timeout=45)
+    server.expect_exact("[SERVER] Services after begin: 0", timeout=45)
+    server.expect(r"\[SERVER\] Phase30 bondsBefore=\d+", timeout=20)
     server.expect(r"\[SERVER\] Phase30 bondsAfterDelete=\d+", timeout=15)
 
-    m_cb = client.expect(r"\[CLIENT\] Phase30 bondsBefore=(\d+)", timeout=45)
-    m_cd = client.expect(r"\[CLIENT\] Phase30 bondsAfterDelete=(\d+)", timeout=15)
+    m_cb = client.expect(r"\[CLIENT\] Phase30 bondsBefore=(\d+)\r?\n", timeout=45)
+    m_cd = client.expect(r"\[CLIENT\] Phase30 bondsAfterDelete=(\d+)\r?\n", timeout=15)
     assert int(m_cb.group(1)) >= 1, "client had no bond to delete (phase 10 pairing missing?)"
     assert int(m_cd.group(1)) == 0, "client bond store not empty after deleteAllBonds"
 
     m_cr = client.expect(
-        r"\[CLIENT\] Phase30 reEnc=([01]) reBond=([01]) bondsAfterRepair=(\d+)",
+        r"\[CLIENT\] Phase30 reEnc=([01]) reBond=([01]) bondsAfterRepair=(\d+)\r?\n",
         timeout=45,
     )
     assert int(m_cr.group(1)) == 1, "link not encrypted after deleteBond re-pair"
     assert int(m_cr.group(2)) == 1, "link not bonded after deleteBond re-pair"
     assert int(m_cr.group(3)) >= 1, "bond store still empty after re-pair (deleteBond round-trip failed)"
 
-    m_sr = server.expect(r"\[SERVER\] Phase30 rebonded=([01]) bondsAfterRepair=(\d+)", timeout=45)
+    m_sr = server.expect(r"\[SERVER\] Phase30 rebonded=([01]) bondsAfterRepair=(\d+) identityCount=(\d+)\r?\n", timeout=45)
     assert int(m_sr.group(1)) == 1, "server did not observe a bonded re-pair"
+    assert int(m_sr.group(3)) == 1, f"server onIdentity fired {int(m_sr.group(3))} times on re-pair, expected 1"
 
     client.expect_exact("[CLIENT] Phase30 done", timeout=15)
     server.expect_exact("[SERVER] Phase30 done", timeout=15)
@@ -1018,19 +1134,20 @@ def _phase_nc_reject(server, client):
     """
     m_c = client.expect(
         r"\[CLIENT\] Phase31 ncReject readOk=([01]) enc=([01]) bond=([01]) bonds=(\d+) "
-        r"authFired=([01]) authSuccess=([01])",
+        r"authFired=([01]) authSuccess=([01]) identityCount=(\d+)",
         timeout=60,
     )
     assert int(m_c.group(1)) == 0, "secure read succeeded despite the numeric-comparison reject"
     assert int(m_c.group(2)) == 0, "link encrypted despite the numeric-comparison reject"
     assert int(m_c.group(3)) == 0, "link bonded despite the numeric-comparison reject"
     assert int(m_c.group(4)) == 0, "a bond persisted despite the numeric-comparison reject"
-    # If auth-complete surfaced at all, it must report failure.
-    if int(m_c.group(5)) == 1:
-        assert int(m_c.group(6)) == 0, "auth-complete reported success despite the reject"
+    assert int(m_c.group(5)) == 1, "auth-complete did not fire on the rejecting central"
+    assert int(m_c.group(6)) == 0, "auth-complete reported success despite the reject"
+    assert int(m_c.group(7)) == 0, f"client onIdentity fired {int(m_c.group(7))} times despite failed pairing"
 
-    m_s = server.expect(r"\[SERVER\] Phase31 ncReject sawPeer=([01]) bonds=(\d+)", timeout=60)
+    m_s = server.expect(r"\[SERVER\] Phase31 ncReject sawPeer=([01]) bonds=(\d+) identityCount=(\d+)\r?\n", timeout=60)
     assert int(m_s.group(2)) == 0, "server retained a bond despite the numeric-comparison reject"
+    assert int(m_s.group(3)) == 0, f"server onIdentity fired {int(m_s.group(3))} times despite failed pairing"
 
     client.expect_exact("[CLIENT] Phase31 done", timeout=15)
     server.expect_exact("[SERVER] Phase31 done", timeout=15)
@@ -1050,7 +1167,7 @@ def _phase_passkey_entry(server, client):
     assert int(m_c.group(2)) == 1, "passkey-entry pairing did not bond"
     assert int(m_c.group(3)) >= 1, "no bond stored after passkey-entry pairing"
 
-    m_s = server.expect(r"\[SERVER\] Phase32 passkeyEntry rebonded=([01]) bonds=(\d+)", timeout=75)
+    m_s = server.expect(r"\[SERVER\] Phase32 passkeyEntry rebonded=([01]) bonds=(\d+)\r?\n", timeout=75)
     assert int(m_s.group(1)) == 1, "server did not observe a bonded passkey-entry pairing"
     assert int(m_s.group(2)) >= 1, "server stored no bond after passkey-entry pairing"
 
@@ -1058,44 +1175,118 @@ def _phase_passkey_entry(server, client):
     server.expect_exact("[SERVER] Phase32 done", timeout=15)
 
 
+def _phase_indication_busy_retry(server, client):
+    """Phase 33 — indications queued right behind one the stack sent itself.
+    On Bluedroid, deleting a started service makes the stack indicate Service
+    Changed; the server's next indications are refused with ESP_GATT_BUSY until
+    the client confirms it. The library must retry them, so all three are
+    confirmed. On NimBLE they simply go out (serviceChanged=n/a)."""
+    m = server.expect(
+        r"\[SERVER\] Phase33 (no subscriber|serviceChanged=(0|1|n/a) confirmed=(\d+) failed=(\d+))\r?\n",
+        timeout=60,
+    )
+    client.expect_exact("[CLIENT] Phase33 found=1 subscribed=1", timeout=60)
+    assert m.group(1) != b"no subscriber", "Phase33: client never subscribed"
+    service_changed = m.group(2).decode()
+    confirmed = int(m.group(3))
+    failed = int(m.group(4))
+    LOGGER.info(f"Phase33: serviceChanged={service_changed} confirmed={confirmed} failed={failed}")
+    assert service_changed == "1", f"Phase33: removing the temporary service failed (serviceChanged={service_changed})"
+    assert (
+        confirmed == 3 and failed == 0
+    ), f"Phase33: expected 3 confirmed indications, got confirmed={confirmed} failed={failed}"
+    server.expect_exact("[SERVER] Phase33 done", timeout=20)
+    client.expect_exact("[CLIENT] Phase33 done", timeout=20)
+
+
 def _phase_periodic_adv_lifecycle(server, client):
-    """Phase 33 — periodic-advertising teardown transitions the happy path never
+    """Phase 34 — periodic-advertising teardown transitions the happy path never
     reached: an explicit terminatePeriodicSync and an onPeriodicLost after the
     server stops the train. Self-skips without BLE5.
 
     Returns True if the phase ran, False if skipped.
     """
     m_s = server.expect(
-        r"\[SERVER\] Phase33 (periodic started|BLE5 not supported, skipping)",
+        r"\[SERVER\] Phase34 (periodic started|BLE5 not supported, skipping)",
         timeout=30,
     )
     if b"not supported" in m_s.group(0):
-        server.expect_exact("[SERVER] Phase33 done", timeout=15)
-        client.expect_exact("[CLIENT] Phase33 done", timeout=40)
+        server.expect_exact("[SERVER] Phase34 done", timeout=15)
+        client.expect_exact("[CLIENT] Phase34 done", timeout=40)
         return False
 
     m_c = client.expect(
-        r"\[CLIENT\] Phase33 (synced=([01]) dataRx=([01])|BLE5 not supported, skipping)",
+        r"\[CLIENT\] Phase34 (synced=([01]) dataRx=([01])|BLE5 not supported, skipping)",
         timeout=45,
     )
     if b"not supported" in m_c.group(0):
-        client.expect_exact("[CLIENT] Phase33 done", timeout=15)
-        server.expect_exact("[SERVER] Phase33 done", timeout=45)
+        client.expect_exact("[CLIENT] Phase34 done", timeout=15)
+        server.expect_exact("[SERVER] Phase34 done", timeout=45)
         return False
     assert int(m_c.group(2)) == 1, "periodic sync not established"
     assert int(m_c.group(3)) == 1, "periodic report not received"
 
     # At least one teardown transition must be observed: an explicit terminate
     # (deterministic) or a supervision-timeout sync-lost (timing dependent).
-    m_t = client.expect(r"\[CLIENT\] Phase33 lost=([01]) terminateOk=([01])", timeout=45)
+    m_t = client.expect(r"\[CLIENT\] Phase34 lost=([01]) terminateOk=([01])", timeout=45)
     assert (int(m_t.group(1)) == 1) or (
         int(m_t.group(2)) == 1
     ), "neither sync-lost nor explicit terminate observed (periodic teardown uncovered)"
 
-    server.expect_exact("[SERVER] Phase33 periodic stopped", timeout=45)
-    client.expect_exact("[CLIENT] Phase33 done", timeout=20)
-    server.expect_exact("[SERVER] Phase33 done", timeout=20)
+    server.expect_exact("[SERVER] Phase34 periodic stopped", timeout=45)
+    client.expect_exact("[CLIENT] Phase34 done", timeout=20)
+    server.expect_exact("[SERVER] Phase34 done", timeout=20)
     return True
+
+
+def _phase_pending_send_edges(server, client):
+    """Phase 35 — CCCD notify-vs-indicate bit routing on one ACL, in-flight
+    removeService Busy, short-timeout read then destroy/re-read, and a notify
+    flood. Per-peer CCCD, EATT, and withheld Handle Value Confirmation need a
+    third DUT or a public EATT API / a non-confirming peer.
+    """
+    m_c = client.expect(
+        r"\[CLIENT\] Phase35 found=1 connected=1 notify=(\d+) indicate=(\d+)\r?\n",
+        timeout=45,
+    )
+    assert int(m_c.group(1)) >= 1, "notify-only CCCD received no notification"
+    assert int(m_c.group(2)) >= 1, "indicate-only CCCD received no indication"
+
+    m_s_peer = server.expect(
+        r"\[SERVER\] Phase35 cccd notifyOk=(\d+) indicateDisabled=(\d+) indicateOk=(\d+) notifyDisabled=(\d+)\r?\n",
+        timeout=45,
+    )
+    assert int(m_s_peer.group(1)) >= 1, "notify() did not complete while CCCD notify was enabled"
+    assert int(m_s_peer.group(2)) >= 1, "indicate() while CCCD was notify-only was not ERROR_INDICATE_DISABLED"
+    assert int(m_s_peer.group(3)) >= 1, "indicate() did not complete after CCCD switched to indicate"
+    assert int(m_s_peer.group(4)) >= 1, "notify() while CCCD was indicate-only was not ERROR_NOTIFY_DISABLED"
+
+    m_rm = server.expect(
+        r"\[SERVER\] Phase35 removeBusy=([01]) accepted=(\d+) busy=(\d+) removeIdle=([01])",
+        timeout=20,
+    )
+    assert int(m_rm.group(1)) == 1, "removeService of a service with in-flight indications did not return Busy"
+    assert int(m_rm.group(2)) >= 8, "in-flight removeService did not fill the indication queue"
+    remove_idle = int(m_rm.group(4))
+    LOGGER.info("Phase35 removeIdle=%d", remove_idle)
+    assert remove_idle == 1, "removeService of an idle service after queue drained failed"
+
+    m_fl = server.expect(
+        r"\[SERVER\] Phase35 flood sent=(\d+) confirmed=(\d+) failed=(\d+)\r?\n",
+        timeout=25,
+    )
+    sent, confirmed, failed = (int(m_fl.group(i)) for i in range(1, 4))
+    LOGGER.info(f"Phase35 flood sent={sent} confirmed={confirmed} failed={failed}")
+    assert sent == 32, f"notify flood sent {sent} of 32"
+    assert confirmed == sent and failed == 0, f"notify flood did not complete: confirmed={confirmed} failed={failed}"
+    m_cf = client.expect(r"\[CLIENT\] Phase35 flood=(\d+)\r?\n", timeout=20)
+    assert int(m_cf.group(1)) >= 1, "client received no flooded notifications"
+
+    m_to = client.expect(r"\[CLIENT\] Phase35 timeoutEmpty=([01]) reread=([01])", timeout=20)
+    assert int(m_to.group(1)) == 1, "short readValue timeout did not fail (handle destroy/re-read untested)"
+    assert int(m_to.group(2)) == 1, "read after timeout + destroy did not return the characteristic value"
+    server.expect_exact("[SERVER] Phase35 done", timeout=20)
+    client.expect_exact("[CLIENT] Phase35 done", timeout=20)
 
 
 def _phase_memory_release(server, client):
@@ -1167,8 +1358,10 @@ def test_ble(dut, ci_job_id, record_property):
         30: (_phase_deletebond_roundtrip, server, client),
         31: (_phase_nc_reject, server, client),
         32: (_phase_passkey_entry, server, client),
-        33: (_phase_periodic_adv_lifecycle, server, client),  # skip if falsy
-        34: (_phase_memory_release, server, client),
+        33: (_phase_indication_busy_retry, server, client),
+        34: (_phase_periodic_adv_lifecycle, server, client),  # skip if falsy
+        35: (_phase_pending_send_edges, server, client),
+        36: (_phase_memory_release, server, client),
     }
 
     SKIP_REASONS = {
@@ -1180,7 +1373,7 @@ def test_ble(dut, ci_job_id, record_property):
         27: "BLE5 not supported",
         28: "L2CAP not supported",
         29: "conn-params pre-accept hook not supported (Bluedroid)",
-        33: "BLE5 not supported",
+        34: "BLE5 not supported",
     }
 
     passed, failed = [], []

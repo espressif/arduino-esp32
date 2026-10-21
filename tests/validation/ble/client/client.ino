@@ -5,8 +5,11 @@
 
 #include <Arduino.h>
 #include <BLE.h>
+#include <atomic>
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include "client/BLEClient.bluedroid.h"
 #endif
@@ -21,6 +24,35 @@ static const BLEUUID writeNrCharUUID("1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e");
 // Phase 4 / Phase 7: the server's onRead handlers produce a fresh value per read.
 static const BLEUUID dynamicReadCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a35");
 static const BLEUUID dynamicReadDescUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a36");
+// Phase 4 / Phase 7: 512-byte values produced per read by the server's onRead.
+static const BLEUUID longReadCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a37");
+static const BLEUUID longReadDescUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a38");
+static const BLEUUID snapshotCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3a");
+static const BLEUUID dualCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3b");
+static const BLEUUID tmpSvcUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3c");
+static const BLEUUID tmpCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3d");
+static const BLEUUID busySvcUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3e");
+static const BLEUUID busyCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a3f");
+static const BLEUUID edgeSvcUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a40");
+static const BLEUUID peerCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a41");
+static const BLEUUID queueSvcUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a42");
+static const BLEUUID queueCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a43");
+static const BLEUUID timeoutCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a44");
+static const BLEUUID writableDescUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a45");
+// Defined before any function so the Arduino preprocessor's injected prototypes
+// can name this type (it inserts them above the first function).
+struct LongReadJob {
+  BLERemoteCharacteristic chr;
+  String values[8];
+  size_t lengths[8] = {};
+  char gens[8] = {};
+  bool uniform[8] = {};
+  int count = 0;
+  uint32_t timeoutMs = 3000;
+  volatile bool done = false;
+};
+// Phase 4: value the server set through a handle from a const lookup.
+static const BLEUUID constLookupCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a39");
 static const BLEUUID permFailClosedCharUUID("e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3a2f41");
 // Phase 15: custom-UUID descriptor on DESC_CHAR declared as read-only. The
 // client reads it (should succeed) and then writes to it (should be rejected
@@ -135,6 +167,44 @@ void waitForPhase(int n) {
     checkSerial();
     delay(10);
   }
+}
+
+// The server fills each long value with a single letter that advances per
+// onRead call, so a read assembled from more than one onRead is not uniform.
+static void reportLongRead(const char *label, int index, const String &v) {
+  bool uniform = v.length() > 0;
+  for (size_t i = 1; uniform && i < v.length(); i++) {
+    uniform = (v[i] == v[0]);
+  }
+  Serial.printf("[CLIENT] %s %d: len=%u gen=%c uniform=%d\n", label, index, (unsigned)v.length(), v.length() ? v[0] : '?', (int)uniform);
+}
+
+static bool valueIsUniform(const String &v) {
+  if (v.length() == 0) {
+    return false;
+  }
+  for (size_t i = 1; i < v.length(); i++) {
+    if (v[i] != v[0]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static void fillLongReadJob(LongReadJob *job, int index, const String &v) {
+  job->values[index] = v;
+  job->lengths[index] = v.length();
+  job->gens[index] = v.length() ? v[0] : '?';
+  job->uniform[index] = valueIsUniform(v);
+}
+
+static void longReadJobTask(void *arg) {
+  auto *job = static_cast<LongReadJob *>(arg);
+  for (int i = 0; i < job->count; i++) {
+    fillLongReadJob(job, i, job->chr.readValue(job->timeoutMs));
+  }
+  job->done = true;
+  vTaskDelete(nullptr);
 }
 
 void readName() {
@@ -275,7 +345,7 @@ bool scanForServer() {
   BLEScan scan = BLE.getScan();
   scan.onResult([&](BLEAdvertisedDevice dev) {
     syncPhaseFromHost();
-    if (dev.getName() == targetName) {
+    if (!found && dev.getName() == targetName) {
       Serial.println("[CLIENT] Found target server!");
       targetAddr = dev.getAddress();
       found = true;
@@ -286,8 +356,13 @@ bool scanForServer() {
   for (int attempt = 1; attempt <= 5 && !found; attempt++) {
     Serial.printf("[CLIENT] Scanning (attempt %d)...\n", attempt);
     scan.start(5000);
+    unsigned long startMs = millis();
+    while (!found && millis() - startMs < 5000) {
+      delay(50);
+    }
     if (!found) {
-      delay(1000);
+      scan.stop();
+      delay(200);
     }
   }
   scan.resetCallbacks();
@@ -339,10 +414,6 @@ void setup() {
   BLESecurity sec = BLE.getSecurity();
   sec.setIOCapability(BLEIOCapability::DisplayYesNo);
   sec.setAuthenticationMode(true, true, true);
-  // Distribute both the encryption key and the identity key so phase 22
-  // can verify local/peer IRK round-trip across the bond.
-  sec.setInitiatorKeys(BLESecurity::KeyDist::EncKey | BLESecurity::KeyDist::IdKey);
-  sec.setResponderKeys(BLESecurity::KeyDist::EncKey | BLESecurity::KeyDist::IdKey);
   sec.onPassKeyDisplay([](const BLEConnInfo &conn, uint32_t passkey) {
     Serial.printf("[CLIENT] Passkey: %06lu\n", (unsigned long)passkey);
   });
@@ -466,6 +537,74 @@ void setup() {
       const uint8_t *raw = constChr.readRawData(&rawLen);
       Serial.printf("[CLIENT] Dynamic cached: %.*s\n", (int)rawLen, raw ? (const char *)raw : "");
     }
+
+    BLERemoteCharacteristic longChr = svc.getCharacteristic(longReadCharUUID);
+    if (!longChr) {
+      Serial.println("[CLIENT] Long read char not found");
+    } else {
+      for (int i = 1; i <= 2; i++) {
+        reportLongRead("Long read", i, longChr.readValue());
+      }
+      String boundaryVal = longChr.readValue();
+      uint16_t expectedBoundaryLen = client.getMTU() > 1 ? (client.getMTU() - 1) : 512;
+      Serial.printf(
+        "[CLIENT] Long read boundary: len=%u expected=%u gen=%c uniform=%d\n", (unsigned)boundaryVal.length(), (unsigned)expectedBoundaryLen,
+        boundaryVal.length() ? boundaryVal[0] : '?', (int)valueIsUniform(boundaryVal)
+      );
+    }
+
+    // The server rewrites this value continuously during Phase 4.
+    BLERemoteCharacteristic snapshotChr = svc.getCharacteristic(snapshotCharUUID);
+    if (!snapshotChr) {
+      Serial.println("[CLIENT] Snapshot char not found");
+    } else {
+      for (int i = 1; i <= 10; i++) {
+        reportLongRead("Snapshot read", i, snapshotChr.readValue());
+      }
+    }
+
+    BLERemoteCharacteristic constLookupChr = svc.getCharacteristic(constLookupCharUUID);
+    if (!constLookupChr) {
+      Serial.println("[CLIENT] Const lookup char not found");
+    } else {
+      Serial.printf("[CLIENT] Const lookup read: %s\n", constLookupChr.readValue().c_str());
+    }
+
+    // Two BLEClient instances on this board share one ACL with the peripheral
+    // (one local address). Abandon the in-flight long read by dropping that
+    // link, then reconnect so later phases still have a live svc/rwChr.
+    LongReadJob abandon;
+    abandon.chr = snapshotChr;
+    abandon.count = 1;
+    abandon.timeoutMs = 2000;
+    if (snapshotChr && xTaskCreate(longReadJobTask, "abandon", 8192, &abandon, 1, nullptr) == pdPASS) {
+      delay(40);
+      (void)client.disconnect();
+      unsigned long wait = millis();
+      while (!abandon.done && millis() - wait < 5000) {
+        delay(10);
+      }
+    } else {
+      abandon.done = true;
+    }
+    Serial.printf("[CLIENT] Snapshot abandon empty=%d\n", (int)(abandon.done && abandon.lengths[0] == 0));
+    delay(500);
+    bool rec = false;
+    for (int attempt = 0; attempt < 6 && !rec; attempt++) {
+      rec = (bool)client.connect(targetAddr);
+      if (!rec) {
+        delay(500);
+      }
+    }
+    bool recUniform = false;
+    if (rec) {
+      svc = client.getService(serviceUUID);
+      rwChr = svc ? svc.getCharacteristic(rwCharUUID) : BLERemoteCharacteristic();
+      BLERemoteCharacteristic sc = svc ? svc.getCharacteristic(snapshotCharUUID) : BLERemoteCharacteristic();
+      String v = sc ? sc.readValue() : String();
+      recUniform = (v.length() == 512) && valueIsUniform(v);
+    }
+    Serial.printf("[CLIENT] Snapshot abandon reconnect uniform=%d\n", (int)recUniform);
   }
 
   // ===== Phase 5: Notifications + Indications =====
@@ -483,6 +622,10 @@ void setup() {
   volatile bool indicReceived = false;
   String notifPayload;
   String indicPayload;
+  // The first indication is followed by a burst of 4 the server sends back to back.
+  static const int kIndicMax = 5;
+  String indicLog[kIndicMax];
+  std::atomic<int> indicCount{0};
 
   BTStatus subStatus =
     notifyChr.subscribe(true, [&notifReceived, &notifPayload](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, bool isNotify) {
@@ -505,12 +648,32 @@ void setup() {
   if (notifReceived) {
     Serial.printf("[CLIENT] Notification received: %s\n", notifPayload.c_str());
   }
+  BLERemoteDescriptor notifyCccd = notifyChr.getDescriptor(BLEUUID((uint16_t)0x2902));
+  uint8_t malformedCccd = 1;
+  BTStatus malformedCccdStatus = notifyCccd ? notifyCccd.writeValue(&malformedCccd, 1, true) : BTStatus::NotFound;
+  Serial.printf("[CLIENT] Malformed CCCD rejected: %d\n", (int)!malformedCccdStatus);
+  // Idempotent CCCD write (0x0001 while already subscribed to notifications)
+  // must succeed without firing onSubscribe a second time on the server.
+  if (notifyCccd) {
+    const uint8_t idempotentCccd[2] = {0x01, 0x00};
+    (void)notifyCccd.writeValue(idempotentCccd, sizeof(idempotentCccd), true);
+  }
 
-  subStatus = indicateChr.subscribe(false, [&indicReceived, &indicPayload](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, bool isNotify) {
-    syncPhaseFromHost();
-    indicPayload = String((const char *)data, length);
-    indicReceived = true;
-  });
+  subStatus = indicateChr.subscribe(
+    false,
+    [&indicReceived, &indicPayload, &indicLog, &indicCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, bool isNotify) {
+      syncPhaseFromHost();
+      int n = indicCount;
+      if (n == 0) {
+        indicPayload = String((const char *)data, length);
+        indicReceived = true;
+      }
+      if (n < kIndicMax) {
+        indicLog[n] = String((const char *)data, length);
+        indicCount = n + 1;
+      }
+    }
+  );
   if (subStatus) {
     Serial.println("[CLIENT] Subscribed to indications");
   } else {
@@ -525,6 +688,69 @@ void setup() {
   }
   if (indicReceived) {
     Serial.printf("[CLIENT] Indication received: %s\n", indicPayload.c_str());
+  }
+  {
+    unsigned long start = millis();
+    while (indicCount < kIndicMax && (millis() - start < 10000)) {
+      delay(50);
+    }
+    String burst;
+    for (int i = 1; i < indicCount; i++) {
+      burst += (i > 1) ? "," : "";
+      burst += indicLog[i];
+    }
+    Serial.printf("[CLIENT] Indication burst: %s\n", burst.c_str());
+  }
+
+  // Enable notifications and indications together on one characteristic; the
+  // server then interleaves the two kinds.
+  BLERemoteCharacteristic dualChr = svc.getCharacteristic(dualCharUUID);
+  {
+    static const int kDualMax = 4;
+    String dualInd[kDualMax];
+    String dualNotif[kDualMax];
+    std::atomic<int> dualIndCount{0};
+    std::atomic<int> dualNotifCount{0};
+    BTStatus ds = dualChr.subscribeBoth(
+      [&dualInd, &dualNotif, &dualIndCount, &dualNotifCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, bool isNotify) {
+        syncPhaseFromHost();
+        String v((const char *)data, length);
+        if (isNotify) {
+          int n = dualNotifCount;
+          if (n < kDualMax) {
+            dualNotif[n] = v;
+            dualNotifCount = n + 1;
+          }
+        } else {
+          int n = dualIndCount;
+          if (n < kDualMax) {
+            dualInd[n] = v;
+            dualIndCount = n + 1;
+          }
+        }
+      }
+    );
+    if (!ds) {
+      Serial.printf("[CLIENT] Dual subscribe FAILED: %s\n", ds.toString());
+    }
+    unsigned long start = millis();
+    while ((dualIndCount < kDualMax || dualNotifCount < kDualMax) && millis() - start < 10000) {
+      delay(50);
+    }
+    String ind, notif;
+    for (int i = 0; i < dualIndCount; i++) {
+      ind += (i > 0) ? "," : "";
+      ind += dualInd[i];
+    }
+    for (int i = 0; i < dualNotifCount; i++) {
+      notif += (i > 0) ? "," : "";
+      notif += dualNotif[i];
+    }
+    Serial.printf("[CLIENT] Dual indications: %s\n", ind.c_str());
+    Serial.printf("[CLIENT] Dual notifications: %s\n", notif.c_str());
+    // Let the server report its statuses before the unsubscribes below.
+    delay(500);
+    dualChr.unsubscribe();
   }
 
   notifyChr.unsubscribe();
@@ -564,6 +790,37 @@ void setup() {
     } else {
       Serial.println("[CLIENT] Large data integrity FAILED");
     }
+
+    // Overwrite the 512-byte value with a shorter >MTU Long Write (510 bytes >
+    // mtu - 3). Verifies Prepared Write + Execute Write starting at offset 0
+    // truncates the previous 512-byte attribute value to 510 bytes.
+    const size_t shortLongLen = 510;
+    uint8_t shortBuf[shortLongLen];
+    for (size_t i = 0; i < shortLongLen; i++) {
+      shortBuf[i] = (uint8_t)((i ^ 0xA5) & 0xFF);
+    }
+    status = rwChr.writeValue(shortBuf, shortLongLen);
+    if (status) {
+      Serial.println("[CLIENT] Shorter long write OK");
+    } else {
+      Serial.printf("[CLIENT] Shorter long write FAILED: %s\n", status.toString());
+    }
+    val = rwChr.readValue();
+    Serial.printf("[CLIENT] Shorter long read (%u bytes)\n", val.length());
+    bool shortMatch = (val.length() == shortLongLen);
+    if (shortMatch) {
+      for (size_t i = 0; i < val.length(); i++) {
+        if ((uint8_t)val[i] != (uint8_t)((i ^ 0xA5) & 0xFF)) {
+          shortMatch = false;
+          break;
+        }
+      }
+    }
+    if (shortMatch) {
+      Serial.println("[CLIENT] Shorter long data integrity OK");
+    } else {
+      Serial.println("[CLIENT] Shorter long data integrity FAILED");
+    }
   }
 
   // ===== Phase 7: Descriptor read/write =====
@@ -590,10 +847,16 @@ void setup() {
       BLERemoteDescriptor pfDesc = descChr.getDescriptor(BLEUUID(static_cast<uint16_t>(0x2904)));
       if (pfDesc) {
         String pfVal = pfDesc.readValue();
-        if (pfVal.length() >= 7) {
-          uint8_t format = (uint8_t)pfVal[0];
-          Serial.printf("[CLIENT] Presentation format: %u\n", format);
-          if (format == BLEDescriptor::FORMAT_UTF8) {
+        if (pfDesc.isPresentationFormat() && pfVal.length() >= 7) {
+          uint8_t format = pfDesc.getFormat();
+          int8_t exponent = pfDesc.getExponent();
+          uint16_t unit = pfDesc.getUnit();
+          uint8_t ns = pfDesc.getNamespace();
+          uint16_t pfDescVal = pfDesc.getFormatDescription();
+          Serial.printf(
+            "[CLIENT] Presentation format: %u exp=%d unit=0x%04X ns=%u desc=0x%04X\n", format, (int)exponent, (unsigned)unit, (unsigned)ns, (unsigned)pfDescVal
+          );
+          if (format == BLEDescriptor::FORMAT_UTF8 && exponent == -2 && unit == 0x2700 && ns == 1 && pfDescVal == 0x0042) {
             Serial.println("[CLIENT] Format matches UTF8");
           }
         }
@@ -608,6 +871,51 @@ void setup() {
         }
       } else {
         Serial.println("[CLIENT] Dynamic descriptor not found");
+      }
+
+      BLERemoteDescriptor longDesc = descChr.getDescriptor(longReadDescUUID);
+      if (longDesc) {
+        for (int i = 1; i <= 2; i++) {
+          reportLongRead("Long descriptor read", i, longDesc.readValue());
+        }
+      } else {
+        Serial.println("[CLIENT] Long descriptor not found");
+      }
+
+      BLERemoteDescriptor writableDesc = descChr.getDescriptor(writableDescUUID);
+      if (!writableDesc) {
+        Serial.println("[CLIENT] Writable descriptor not found");
+      } else {
+        BTStatus ws1 = writableDesc.writeValue("desc_short_ok");
+        String rb1 = writableDesc.readValue();
+        Serial.printf("[CLIENT] Writable descriptor short write ok=%d readback=%s\n", (int)(bool)ws1, rb1.c_str());
+
+        static uint8_t longDescWriteBuf[510];
+        memset(longDescWriteBuf, 'W', sizeof(longDescWriteBuf));
+        BTStatus ws2 = writableDesc.writeValue(longDescWriteBuf, sizeof(longDescWriteBuf));
+        String rb2 = writableDesc.readValue();
+        bool uniformW = (rb2.length() == sizeof(longDescWriteBuf));
+        for (size_t i = 0; uniformW && i < rb2.length(); i++) {
+          if (rb2[i] != 'W') {
+            uniformW = false;
+          }
+        }
+        Serial.printf("[CLIENT] Writable descriptor long write ok=%d len=%u uniform=%d\n", (int)(bool)ws2, (unsigned)rb2.length(), (int)uniformW);
+
+        // Oversize Long Write (512 > maxLen=510): Prepare Write chunks are queued
+        // and Execute Write must reject with INVALID_ATTR_VALUE_LEN and roll back
+        // without modifying the previous 510-byte 'W' value or firing onWrite.
+        static uint8_t oversizeDescBuf[512];
+        memset(oversizeDescBuf, 'X', sizeof(oversizeDescBuf));
+        BTStatus ws3 = writableDesc.writeValue(oversizeDescBuf, sizeof(oversizeDescBuf));
+        String rb3 = writableDesc.readValue();
+        bool rollbackOk = (rb3.length() == sizeof(longDescWriteBuf));
+        for (size_t i = 0; rollbackOk && i < rb3.length(); i++) {
+          if (rb3[i] != 'W') {
+            rollbackOk = false;
+          }
+        }
+        Serial.printf("[CLIENT] Writable descriptor oversize rejected=%d rollbackLen=%u rollbackOk=%d\n", (int)(!ws3), (unsigned)rb3.length(), (int)rollbackOk);
       }
     }
   }
@@ -913,7 +1221,7 @@ void setup() {
     } else {
       Serial.println("[CLIENT] L2CAP init OK");
       BLEL2CAPChannel channel = BLE.connectL2CAP(l2capClient.getHandle(), 0x0080, 128);
-      if (!channel) {
+      if (!channel || !channel.isConnected()) {
         Serial.println("[CLIENT] L2CAP open FAILED");
       } else {
         volatile bool dataReceived = false;
@@ -924,46 +1232,30 @@ void setup() {
           dataReceived = true;
         });
 
-        unsigned long connectStart = millis();
-        while (!channel.isConnected() && (millis() - connectStart < 10000)) {
+        Serial.println("[CLIENT] L2CAP channel connected");
+        const char *payload = "L2CAP_PING";
+        s = channel.write((const uint8_t *)payload, strlen(payload));
+        if (s) {
+          Serial.println("[CLIENT] L2CAP sent");
+        } else {
+          Serial.printf("[CLIENT] L2CAP write FAILED: %s\n", s.toString());
+        }
+
+        unsigned long rxStart = millis();
+        while (!dataReceived && (millis() - rxStart < 10000)) {
           delay(20);
         }
-        if (channel.isConnected()) {
-          Serial.println("[CLIENT] L2CAP channel connected");
-          const char *payload = "L2CAP_PING";
-          s = channel.write((const uint8_t *)payload, strlen(payload));
-          if (s) {
-            Serial.println("[CLIENT] L2CAP sent");
-          } else {
-            Serial.printf("[CLIENT] L2CAP write FAILED: %s\n", s.toString());
+        if (dataReceived) {
+          Serial.printf("[CLIENT] L2CAP received: %s\n", l2capRx.c_str());
+          if (l2capRx == "L2CAP_OK") {
+            Serial.println("[CLIENT] Status: l2cap done");
           }
-
-          unsigned long rxStart = millis();
-          while (!dataReceived && (millis() - rxStart < 10000)) {
-            delay(20);
-          }
-          if (dataReceived) {
-            Serial.printf("[CLIENT] L2CAP received: %s\n", l2capRx.c_str());
-            if (l2capRx == "L2CAP_OK") {
-              Serial.println("[CLIENT] Status: l2cap done");
-            }
-          } else {
-            Serial.println("[CLIENT] L2CAP receive timeout");
-          }
-          channel.disconnect();
         } else {
-          Serial.println("[CLIENT] L2CAP channel connect timeout");
+          Serial.println("[CLIENT] L2CAP receive timeout");
         }
+        channel.disconnect();
       }
       l2capClient.disconnect();
-      // disconnect() issues an async GAP terminate; wait for the link to
-      // actually drop before the next phase reconnects to the same peer.
-      // Otherwise NimBLE rejects the new connect with BLE_HS_EALREADY (a
-      // second link to a peer that is still terminating is not allowed).
-      unsigned long discStart = millis();
-      while (l2capClient.isConnected() && (millis() - discStart < 5000)) {
-        delay(20);
-      }
     }
 #endif
     if (!l2cap_supported) {
@@ -1032,11 +1324,23 @@ void setup() {
         Serial.printf("[CLIENT] WriteNR: canWriteNoResponse=%d canWrite=%d\n", (int)wn.canWriteNoResponse(), (int)wn.canWrite());
 
         // Exercise the aggregate descriptor getter FIRST (no prior targeted
-        // getDescriptor() call) to confirm it auto-discovers on both backends.
+        // getDescriptor() call) to confirm it auto-discovers on both backends
+        // and stays strictly within each characteristic's handle range.
+        auto rwDescriptors = rw.getDescriptors();
+        BTStatus rwSubNoCccd = rw.subscribe(true, nullptr);
+        BTStatus rwUnsubNoCccd = rw.unsubscribe();
+        Serial.printf(
+          "[CLIENT] RW descriptor count: %u noCccdNotFound=%d\n", (unsigned)rwDescriptors.size(),
+          (int)(rwSubNoCccd == BTStatus::NotFound && rwUnsubNoCccd == BTStatus::NotFound)
+        );
         auto ntDescriptors = nt.getDescriptors();
         Serial.printf("[CLIENT] Notify descriptor count: %u\n", (unsigned)ntDescriptors.size());
         auto cccd = nt.getDescriptor(BLEUUID(static_cast<uint16_t>(0x2902)));
         Serial.printf("[CLIENT] Notify CCCD found: %d\n", (int)(bool)cccd);
+        auto dualRemote = isvc.getCharacteristic(dualCharUUID);
+        auto dualDescriptors = dualRemote ? dualRemote.getDescriptors() : std::vector<BLERemoteDescriptor>{};
+        auto dualUd = dualRemote ? dualRemote.getDescriptor(BLEUUID(static_cast<uint16_t>(0x2901))) : BLERemoteDescriptor();
+        Serial.printf("[CLIENT] Dual descriptor count: %u userDesc=%s\n", (unsigned)dualDescriptors.size(), dualUd ? dualUd.readValue().c_str() : "none");
 
         // Fail-closed test: char declares Read|Write but only has Read
         // permission. The backend must strip the Write property bit, so:
@@ -1154,6 +1458,7 @@ void setup() {
       Serial.printf("[CLIENT] MtuOrder afterConnect=%d mtuSeen=%d\n", (int)clientMtuAfterConnect, (int)clientMtuChanged);
 
       pc.disconnect();
+      BLE.setMTU(512);
       delay(1000);
     }
     Serial.println("[CLIENT] Phase16 done");
@@ -1373,44 +1678,26 @@ void setup() {
     // time and drop scan responses; make sure the radio is quiet before
     // we start the measurement window.
     scn.stop();
-    delay(100);
     scn.resetCallbacks();
     scn.clearResults();
-    scn.clearDuplicateCache();
     scn.setActiveScan(true);  // need scan response for short-name
     scn.setFilterDuplicates(false);
     scn.setInterval(160);  // 100 ms
     scn.setWindow(96);     // 60 ms
     bool sawAdv = false;
     String wantName = String("ADV_") + targetName;
-    // Prefer the sighting that already merged the scan response (mfg / longer
-    // payload). Taking the first name match can be ADV_IND-only under load.
-    auto pickBest = [&](BLEScan::Results &results, BLEAdvertisedDevice &out) -> bool {
-      bool found = false;
-      size_t bestScore = 0;
+    auto findTarget = [&](BLEScan::Results &results, BLEAdvertisedDevice &out) -> bool {
       for (const auto &dev : results) {
-        BLEAdvertisedDevice d = dev;
-        String n = d.getName();
+        String n = dev.getName();
         Serial.printf(
-          "[CLIENT] Phase20 seen name=\"%s\" addr=%s payloadLen=%u\n", n.c_str(), d.getAddress().toString().c_str(), (unsigned)d.getPayloadLength()
+          "[CLIENT] Phase20 seen name=\"%s\" addr=%s payloadLen=%u\n", n.c_str(), dev.getAddress().toString().c_str(), (unsigned)dev.getPayloadLength()
         );
-        if (n != wantName) {
-          continue;
-        }
-        size_t score = d.getPayloadLength();
-        if (d.haveManufacturerData()) {
-          score += 100;
-        }
-        if (d.haveServiceData()) {
-          score += 50;
-        }
-        if (!found || score > bestScore) {
-          out = d;
-          bestScore = score;
-          found = true;
+        if (n == wantName) {
+          out = dev;
+          return true;
         }
       }
-      return found;
+      return false;
     };
 
     BLEAdvertisedDevice d;
@@ -1418,16 +1705,15 @@ void setup() {
     Serial.printf("[CLIENT] Phase20 results=%u isScanning=%d want=%s\n", (unsigned)results.size(), (int)scn.isScanning(), wantName.c_str());
     const BLEScan &constScan = scn;
     Serial.printf("[CLIENT] Phase20 cached results=%u\n", (unsigned)constScan.getResults().size());
-    sawAdv = pickBest(results, d);
+    sawAdv = findTarget(results, d);
     // One retry if we only saw the primary ADV (no scan-response fields yet).
     if (sawAdv && !d.haveManufacturerData()) {
       Serial.println("[CLIENT] Phase20 retry scan for scan response");
       scn.clearResults();
-      scn.clearDuplicateCache();
       results = scn.startBlocking(4000);
       Serial.printf("[CLIENT] Phase20 retry results=%u\n", (unsigned)results.size());
       BLEAdvertisedDevice retry;
-      if (pickBest(results, retry) && retry.getPayloadLength() >= d.getPayloadLength()) {
+      if (findTarget(results, retry) && retry.getPayloadLength() >= d.getPayloadLength()) {
         d = retry;
       }
     }
@@ -1456,26 +1742,11 @@ void setup() {
         "[CLIENT] Phase20 svcDataLen=%u advertisesSvc=%d payloadLen=%u\n", (unsigned)svcLen, (int)d.isAdvertisingService(svc16), (unsigned)d.getPayloadLength()
       );
       (void)svcRaw;
-      // Slave Connection Interval Range AD (0x12): parse it back out of the
-      // merged adv+scan-response payload and confirm the min/max the server
-      // set via setPreferredParams survived the round trip.
-      const uint8_t *pl = d.getPayload();
-      size_t plLen = d.getPayloadLength();
-      bool havePref = false;
-      uint16_t prefMin = 0, prefMax = 0;
-      for (size_t i = 0; pl && i + 1 < plLen;) {
-        uint8_t flen = pl[i];
-        if (flen == 0) {
-          break;
-        }
-        if (pl[i + 1] == 0x12 && flen >= 5 && (i + 1 + flen) <= plLen) {
-          prefMin = (uint16_t)pl[i + 2] | ((uint16_t)pl[i + 3] << 8);
-          prefMax = (uint16_t)pl[i + 4] | ((uint16_t)pl[i + 5] << 8);
-          havePref = true;
-          break;
-        }
-        i += flen + 1;
-      }
+      // Slave Connection Interval Range AD (0x12): parsed directly by
+      // BLEAdvertisedDevice::havePreferredParams / getMinPreferred / getMaxPreferred.
+      bool havePref = d.havePreferredParams();
+      uint16_t prefMin = d.getMinPreferred();
+      uint16_t prefMax = d.getMaxPreferred();
       Serial.printf("[CLIENT] Phase20 prefInterval have=%d min=0x%04X max=0x%04X\n", (int)havePref, (unsigned)prefMin, (unsigned)prefMax);
     }
     Serial.printf("[CLIENT] Phase20 sawAdv=%d\n", (int)sawAdv);
@@ -1487,7 +1758,6 @@ void setup() {
     scn.stop();
     delay(3000);
     scn.clearResults();
-    scn.clearDuplicateCache();
     String oszWant = String("OSZ_") + targetName;
     BLEScan::Results oszResults = scn.startBlocking(8000);
     int terminatorHidMfg = -1;
@@ -1530,10 +1800,8 @@ void setup() {
     bool sawIBeacon = false, sawEddyUrl = false, sawEddyTlm = false;
     BLEScan scn = BLE.getScan();
     scn.resetCallbacks();
-    scn.clearDuplicateCache();
     scn.setActiveScan(false);
     scn.setFilterDuplicates(false);
-    const BLEUUID eddyUUID((uint16_t)0xFEAA);
     unsigned long deadline = millis() + 18000;
     while (millis() < deadline && (!sawIBeacon || !sawEddyUrl || !sawEddyTlm)) {
       BLEScan::Results res = scn.startBlocking(3000);
@@ -1545,13 +1813,8 @@ void setup() {
             if (sawIBeacon) {
               break;
             }
-            size_t mfgLen = 0;
-            const uint8_t *mfg = d.getManufacturerData(&mfgLen);
-            // BLEBeacon::setFromPayload expects the stream *after* the
-            // 2-byte company ID.
-            if (mfg && mfgLen >= 25) {
-              BLEBeacon b;
-              b.setFromPayload(mfg + 2, mfgLen - 2);
+            BLEBeacon b;
+            if (d.getBeacon(b)) {
               Serial.printf(
                 "[CLIENT] Phase21 iBeacon major=0x%04X minor=0x%04X power=%d uuid=%s\n", (unsigned)b.getMajor(), (unsigned)b.getMinor(),
                 (int)b.getSignalPower(), b.getProximityUUID().toString().c_str()
@@ -1565,20 +1828,10 @@ void setup() {
             if (sawEddyUrl) {
               break;
             }
-            for (size_t i = 0; i < d.getServiceDataCount(); i++) {
-              if (!(d.getServiceDataUUID(i) == eddyUUID)) {
-                continue;
-              }
-              size_t sdLen = 0;
-              const uint8_t *sd = d.getServiceData(i, &sdLen);
-              if (!sd || sdLen < 2) {
-                continue;
-              }
-              BLEEddystoneURL url;
-              url.setFromServiceData(sd, sdLen);
+            BLEEddystoneURL url;
+            if (d.getEddystoneURL(url)) {
               Serial.printf("[CLIENT] Phase21 EddyURL url=%s tx=%d\n", url.getURL().c_str(), (int)url.getTxPower());
               sawEddyUrl = true;
-              break;
             }
             break;
           }
@@ -1587,23 +1840,13 @@ void setup() {
             if (sawEddyTlm) {
               break;
             }
-            for (size_t i = 0; i < d.getServiceDataCount(); i++) {
-              if (!(d.getServiceDataUUID(i) == eddyUUID)) {
-                continue;
-              }
-              size_t sdLen = 0;
-              const uint8_t *sd = d.getServiceData(i, &sdLen);
-              if (!sd || sdLen < 2) {
-                continue;
-              }
-              BLEEddystoneTLM tlm;
-              tlm.setFromServiceData(sd, sdLen);
+            BLEEddystoneTLM tlm;
+            if (d.getEddystoneTLM(tlm)) {
               Serial.printf(
                 "[CLIENT] Phase21 EddyTLM volt=%u temp=%d cnt=%lu up=%lu\n", (unsigned)tlm.getBatteryVoltage(), (int)tlm.getTemperature(),
                 (unsigned long)tlm.getAdvertisingCount(), (unsigned long)tlm.getUptime()
               );
               sawEddyTlm = true;
-              break;
             }
             break;
           }
@@ -1611,7 +1854,6 @@ void setup() {
         }
       }
       scn.clearResults();
-      scn.clearDuplicateCache();
     }
     Serial.printf("[CLIENT] Phase21 sawIBeacon=%d sawEddyURL=%d sawEddyTLM=%d\n", (int)sawIBeacon, (int)sawEddyUrl, (int)sawEddyTlm);
     Serial.println("[CLIENT] Phase21 done");
@@ -1626,6 +1868,8 @@ void setup() {
   waitForPhase(22);
   {
     BLESecurity s = BLE.getSecurity();
+    s.setInitiatorKeys(BLESecurity::KeyDist::EncKey | BLESecurity::KeyDist::IdKey);
+    s.setResponderKeys(BLESecurity::KeyDist::EncKey | BLESecurity::KeyDist::IdKey);
     auto bonds = s.getBondedDevices();
     Serial.printf("[CLIENT] Bond count: %u\n", (unsigned)bonds.size());
     for (size_t i = 0; i < bonds.size() && i < 4; i++) {
@@ -1723,19 +1967,41 @@ void setup() {
 
       strCheck(BLEUUID("180D").bitSize() == 16);
       strCheck(BLEUUID("0000180D").bitSize() == 32);
+      constexpr BLEUUID cUuidEmpty;
+      constexpr BLEUUID cUuid16 = BLEUUID::from16(0x180D);
+      constexpr BLEUUID cUuid128(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+      static_assert(!cUuidEmpty.isValid());
+      static_assert(cUuid16.isValid() && cUuid16.bitSize() == 16);
+      static_assert(cUuid128.isValid() && cUuid128.bitSize() == 128);
+      strCheck(cUuid16 == BLEUUID(static_cast<uint16_t>(0x180D)) && cUuid16.toUint16() == 0x180D);
+      strCheck(cUuid128 == BLEUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e"));
       BLERemoteService goodStr = ec.getService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
       strCheck(goodStr && good && goodStr.getUUID() == good.getUUID());
+      strCheck(good.getClient() && good.getClient().isConnected());
+      BLERemoteDescriptor detachedDesc;
       if (goodStr) {
         BLERemoteCharacteristic rwStr = goodStr.getCharacteristic("beb5483e-36e1-4688-b7f5-ea07361b26a8");
         strCheck(rwStr && rwStr.getUUID() == rwCharUUID);
+        strCheck(rwStr.getRemoteService() && rwStr.getRemoteService().getUUID() == goodStr.getUUID());
         String valByClient = ec.getValue("4fafc201-1fb5-459e-8fcc-c5c9c331914b", "beb5483e-36e1-4688-b7f5-ea07361b26a8");
         strCheck(valByClient.length() > 0);
         String valBySvc = goodStr.getValue("beb5483e-36e1-4688-b7f5-ea07361b26a8");
         strCheck(valBySvc.length() > 0);
+        BTStatus setByClient = ec.setValue("4fafc201-1fb5-459e-8fcc-c5c9c331914b", "beb5483e-36e1-4688-b7f5-ea07361b26a8", "via_client_set");
+        String afterClientSet = ec.getValue("4fafc201-1fb5-459e-8fcc-c5c9c331914b", "beb5483e-36e1-4688-b7f5-ea07361b26a8");
+        BTStatus setBySvc = goodStr.setValue("beb5483e-36e1-4688-b7f5-ea07361b26a8", "via_svc_set");
+        String afterSvcSet = goodStr.getValue("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+        bool clientSetOk = (bool)setByClient && (afterClientSet == "via_client_set");
+        bool svcSetOk = (bool)setBySvc && (afterSvcSet == "via_svc_set");
+        strCheck(clientSetOk);
+        strCheck(svcSetOk);
+        Serial.printf("[CLIENT] Phase23 setValue clientOk=%d svcOk=%d\n", (int)clientSetOk, (int)svcSetOk);
         BLERemoteCharacteristic descStr = goodStr.getCharacteristic("a3c87501-8ed3-4bdf-8a39-a01bebede295");
         if (descStr) {
           BLERemoteDescriptor roStr = descStr.getDescriptor("b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91");
           strCheck(static_cast<bool>(roStr));
+          strCheck(roStr.getRemoteCharacteristic() && roStr.getRemoteCharacteristic().getUUID() == descStr.getUUID());
+          detachedDesc = roStr;
         }
       }
 
@@ -1769,6 +2035,11 @@ void setup() {
       ec.disconnect();
       delay(1500);
       Serial.printf("[CLIENT] Phase23 postDisc isConnected=%d\n", (int)ec.isConnected());
+      strCheck(!good.getClient());
+      good = BLERemoteService();
+      goodStr = BLERemoteService();
+      strCheck(!rwC.getRemoteService());
+      strCheck(detachedDesc && !detachedDesc.getRemoteCharacteristic() && !detachedDesc.writeValue("x"));
       BTStatus rwAfter = rwC.writeValue(String("after"));
       Serial.printf("[CLIENT] Phase23 writeAfterDisc ok=%d\n", (int)(bool)rwAfter);
 
@@ -1949,6 +2220,9 @@ void setup() {
           Serial.printf("[CLIENT] Phase25 reportCount=%d\n", reportCount);
           Serial.printf("[CLIENT] Phase25 bootInOk=%d bootOutOk=%d\n", (int)bootInOk, (int)bootOutOk);
         }
+        BLERemoteService dynRemoteSvc = hc.getService(tmpSvcUUID);
+        String dynVal = dynRemoteSvc ? dynRemoteSvc.getValue(tmpCharUUID) : "";
+        Serial.printf("[CLIENT] Phase25 dynSvcRead=%s\n", dynVal.c_str());
         hc.disconnect();
       }
     }
@@ -2071,7 +2345,7 @@ void setup() {
         Serial.printf("[CLIENT] Phase28 connect FAILED: %s\n", cs.toString());
       } else {
         BLEL2CAPChannel channel = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
-        if (!channel) {
+        if (!channel || !channel.isConnected()) {
           Serial.println("[CLIENT] Phase28 L2CAP open FAILED");
         } else {
           volatile bool got = false;
@@ -2081,73 +2355,54 @@ void setup() {
             rx = String((const char *)data, len);
             got = true;
           });
-          unsigned long cstart = millis();
-          while (!channel.isConnected() && (millis() - cstart < 10000)) {
+          Serial.println("[CLIENT] Phase28 L2CAP channel connected");
+          // Bulk payload exceeds the peer CoC MTU (256); write() segments it
+          // and waits for COC_TX_UNSTALLED between chunks.
+          static uint8_t bulk[2000];
+          for (size_t i = 0; i < sizeof(bulk); i++) {
+            bulk[i] = (uint8_t)('A' + (i % 26));
+          }
+          BTStatus ws = channel.write(bulk, sizeof(bulk));
+          Serial.printf("[CLIENT] Phase28 bulk sent ok=%d bytes=%u\n", (int)(bool)ws, (unsigned)sizeof(bulk));
+          unsigned long rstart = millis();
+          while (!got && (millis() - rstart < 15000)) {
             delay(20);
           }
-          if (!channel.isConnected()) {
-            Serial.println("[CLIENT] Phase28 channel connect timeout");
-          } else {
-            Serial.println("[CLIENT] Phase28 L2CAP channel connected");
-            // Bulk payload exceeds the peer CoC MTU (256); write() segments it
-            // and waits for COC_TX_UNSTALLED between chunks.
-            static uint8_t bulk[2000];
-            for (size_t i = 0; i < sizeof(bulk); i++) {
-              bulk[i] = (uint8_t)('A' + (i % 26));
+          unsigned long ackTotal = 0;
+          bool bulkAck = false;
+          if (got) {
+            rx.trim();
+            if (rx.startsWith("P28BULK:")) {
+              ackTotal = (unsigned long)rx.substring(8).toInt();
+              bulkAck = (ackTotal == sizeof(bulk));
             }
-            BTStatus ws = channel.write(bulk, sizeof(bulk));
-            Serial.printf("[CLIENT] Phase28 bulk sent ok=%d bytes=%u\n", (int)(bool)ws, (unsigned)sizeof(bulk));
-            unsigned long rstart = millis();
-            while (!got && (millis() - rstart < 15000)) {
+          }
+          Serial.printf("[CLIENT] Phase28 bulkAck ok=%d total=%lu\n", (int)bulkAck, ackTotal);
+
+          // Reconnect: drop this channel and open a fresh one, then ping/pong.
+          channel.disconnect();
+          got = false;
+          rx = "";
+          bool reconnectOk = false;
+          BLEL2CAPChannel ch2 = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
+          if (ch2 && ch2.isConnected()) {
+            ch2.onData([&](BLEL2CAPChannel ch, const uint8_t *data, size_t len) {
+              syncPhaseFromHost();
+              rx = String((const char *)data, len);
+              got = true;
+            });
+            ch2.write((const uint8_t *)"PING", 4);
+            unsigned long p = millis();
+            while (!got && (millis() - p < 10000)) {
               delay(20);
             }
-            unsigned long ackTotal = 0;
-            bool bulkAck = false;
-            if (got) {
-              rx.trim();
-              if (rx.startsWith("P28BULK:")) {
-                ackTotal = (unsigned long)rx.substring(8).toInt();
-                bulkAck = (ackTotal == sizeof(bulk));
-              }
-            }
-            Serial.printf("[CLIENT] Phase28 bulkAck ok=%d total=%lu\n", (int)bulkAck, ackTotal);
-
-            // Reconnect: drop this channel and open a fresh one, then ping/pong.
-            channel.disconnect();
-            delay(1000);
-            got = false;
-            rx = "";
-            bool reconnectOk = false;
-            BLEL2CAPChannel ch2 = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
-            if (ch2) {
-              ch2.onData([&](BLEL2CAPChannel ch, const uint8_t *data, size_t len) {
-                syncPhaseFromHost();
-                rx = String((const char *)data, len);
-                got = true;
-              });
-              unsigned long r2 = millis();
-              while (!ch2.isConnected() && (millis() - r2 < 10000)) {
-                delay(20);
-              }
-              if (ch2.isConnected()) {
-                ch2.write((const uint8_t *)"PING", 4);
-                unsigned long p = millis();
-                while (!got && (millis() - p < 10000)) {
-                  delay(20);
-                }
-                rx.trim();
-                reconnectOk = got && (rx == "P28PONG");
-                ch2.disconnect();
-              }
-            }
-            Serial.printf("[CLIENT] Phase28 reconnect ok=%d\n", (int)reconnectOk);
+            rx.trim();
+            reconnectOk = got && (rx == "P28PONG");
+            ch2.disconnect();
           }
+          Serial.printf("[CLIENT] Phase28 reconnect ok=%d\n", (int)reconnectOk);
         }
         bc.disconnect();
-        unsigned long dstart = millis();
-        while (bc.isConnected() && (millis() - dstart < 5000)) {
-          delay(20);
-        }
       }
     }
 #endif
@@ -2278,6 +2533,7 @@ void setup() {
     clientRejectPairing = true;
     clientAuthCompleteFired = false;
     clientLastAuthSuccess = false;
+    clientIdentityCount = 0;
     BLESecurity sec = BLE.getSecurity();
     (void)sec.deleteAllBonds();
     delay(1500);
@@ -2312,8 +2568,8 @@ void setup() {
         BLEConnInfo ci = rc.getConnInfo();
         auto bonds = sec.getBondedDevices();
         Serial.printf(
-          "[CLIENT] Phase31 ncReject readOk=%d enc=%d bond=%d bonds=%u authFired=%d authSuccess=%d\n", (int)readOk, (int)ci.isEncrypted(), (int)ci.isBonded(),
-          (unsigned)bonds.size(), (int)clientAuthCompleteFired, (int)clientLastAuthSuccess
+          "[CLIENT] Phase31 ncReject readOk=%d enc=%d bond=%d bonds=%u authFired=%d authSuccess=%d identityCount=%d\n", (int)readOk, (int)ci.isEncrypted(),
+          (int)ci.isBonded(), (unsigned)bonds.size(), (int)clientAuthCompleteFired, (int)clientLastAuthSuccess, (int)clientIdentityCount
         );
         rc.disconnect();
         delay(500);
@@ -2384,20 +2640,71 @@ void setup() {
   }
 
   // ===========================================================================
-  // Phase 33: Periodic advertising lifecycle — sync, terminate, sync-lost (BLE5)
+  // Phase 33: Indications right behind one the stack sent itself
+  // ===========================================================================
+  // Subscribe to the server's Phase 33 characteristic and stay connected while
+  // it deletes a service (Bluedroid sends Service Changed) and indicates.
+  // The Service Changed handling may drop this subscription, so only the
+  // server's confirmation counts are asserted.
+  waitForPhase(33);
+  {
+    (void)BLE.getSecurity().deleteAllBonds();
+    // The server rebuilds its database before it advertises again.
+    delay(2000);
+    bool found = scanForServer();
+    bool subscribed = false;
+    if (found) {
+      BLEClient pc = BLE.createClient();
+      installClientCallbacks(pc);
+      BTStatus cs = BTStatus::Fail;
+      for (int attempt = 0; attempt < 6; attempt++) {
+        cs = pc.connect(targetAddr);
+        if (cs) {
+          break;
+        }
+        delay(500);
+      }
+      if (!cs) {
+        Serial.printf("[CLIENT] Phase33 connect FAILED: %s\n", cs.toString());
+      } else {
+        BLERemoteService gattSvc = pc.getService(BLEUUID((uint16_t)0x1801));
+        if (gattSvc) {
+          BLERemoteCharacteristic svcChanged = gattSvc.getCharacteristic(BLEUUID((uint16_t)0x2A05));
+          if (svcChanged) {
+            (void)svcChanged.subscribe(false, [](BLERemoteCharacteristic, const uint8_t *, size_t, bool) {});
+          }
+        }
+        BLERemoteService svc = pc.getService(busySvcUUID);
+        BLERemoteCharacteristic bc = svc ? svc.getCharacteristic(busyCharUUID) : BLERemoteCharacteristic();
+        BTStatus sub = bc ? bc.subscribe(false, [](BLERemoteCharacteristic, const uint8_t *, size_t, bool) {}) : BTStatus::NotFound;
+        subscribed = (bool)sub;
+        if (!sub) {
+          Serial.printf("[CLIENT] Phase33 subscribe FAILED: %s\n", sub.toString());
+        }
+        delay(8000);
+        pc.disconnect();
+        delay(500);
+      }
+    }
+    Serial.printf("[CLIENT] Phase33 found=%d subscribed=%d\n", (int)found, (int)subscribed);
+    Serial.println("[CLIENT] Phase33 done");
+  }
+
+  // ===========================================================================
+  // Phase 34: Periodic advertising lifecycle — sync, terminate, sync-lost (BLE5)
   // ===========================================================================
   // Re-sync to the server's periodic train (as in phase 2), then exercise the
   // teardown transitions the happy path never reached: an explicit
   // terminatePeriodicSync and an onPeriodicLost after the server stops the
   // train. Restores a normal stack afterward so memory_release still measures a
   // meaningful free. Self-skips without BLE5.
-  waitForPhase(33);
+  waitForPhase(34);
   {
     bool ble5_ok = false;
 #if BLE5_SUPPORTED
     BLE.end(false);
     delay(500);
-    BTStatus st = BLE.begin("BLE_CLT_P33");
+    BTStatus st = BLE.begin("BLE_CLT_P34");
     if (st) {
       volatile bool found = false;
       volatile bool synced = false;
@@ -2431,7 +2738,7 @@ void setup() {
       for (int i = 0; i < 150 && !(synced && dataRx); i++) {
         delay(100);
       }
-      Serial.printf("[CLIENT] Phase33 synced=%d dataRx=%d\n", (int)synced, (int)dataRx);
+      Serial.printf("[CLIENT] Phase34 synced=%d dataRx=%d\n", (int)synced, (int)dataRx);
       ble5_ok = synced && dataRx;
 
       // Observe supervision-timeout sync-lost once the server stops the train.
@@ -2444,7 +2751,7 @@ void setup() {
       if (synced) {
         tt = scan.terminatePeriodicSync(syncHandle);
       }
-      Serial.printf("[CLIENT] Phase33 lost=%d terminateOk=%d\n", (int)lost, (int)(bool)tt);
+      Serial.printf("[CLIENT] Phase34 lost=%d terminateOk=%d\n", (int)lost, (int)(bool)tt);
       scan.stop();
 
       // Restore a normal stack so memory_release measures a meaningful free.
@@ -2454,13 +2761,109 @@ void setup() {
     }
 #endif
     if (!ble5_ok) {
-      Serial.println("[CLIENT] Phase33 BLE5 not supported, skipping");
+      Serial.println("[CLIENT] Phase34 BLE5 not supported, skipping");
     }
-    Serial.println("[CLIENT] Phase33 done");
+    Serial.println("[CLIENT] Phase34 done");
   }
 
-  // ===== Phase 34: Memory release + reinit guard =====
-  waitForPhase(34);
+  // ===========================================================================
+  // Phase 35: CCCD bit routing, in-flight removeService, read-timeout recover,
+  //           notify flood
+  // ===========================================================================
+  waitForPhase(35);
+  {
+    delay(2000);
+    bool found = scanForServer();
+    std::atomic<int> peerNotify{0};
+    std::atomic<int> peerIndicate{0};
+    std::atomic<int> floodCount{0};
+    BLERemoteCharacteristic::NotifyCallback onPeer = [&peerNotify, &peerIndicate,
+                                                      &floodCount](BLERemoteCharacteristic, const uint8_t *, size_t, bool isNotify) {
+      if (isNotify) {
+        if (peerNotify.fetch_add(1, std::memory_order_relaxed) > 0) {
+          floodCount.fetch_add(1, std::memory_order_relaxed);
+        }
+      } else {
+        peerIndicate.fetch_add(1, std::memory_order_relaxed);
+      }
+    };
+    bool connected = false;
+    BLEClient c1;
+    BLERemoteCharacteristic peer;
+    if (found) {
+      c1 = BLE.createClient();
+      installClientCallbacks(c1);
+      BTStatus cs = BTStatus::Fail;
+      for (int attempt = 0; attempt < 6; attempt++) {
+        cs = c1.connect(targetAddr);
+        if (cs) {
+          break;
+        }
+        delay(500);
+      }
+      if (cs) {
+        BLERemoteService edge = c1.getService(edgeSvcUUID);
+        peer = edge ? edge.getCharacteristic(peerCharUUID) : BLERemoteCharacteristic();
+        BLERemoteService qsvc = c1.getService(queueSvcUUID);
+        BLERemoteCharacteristic queue = qsvc ? qsvc.getCharacteristic(queueCharUUID) : BLERemoteCharacteristic();
+        connected = peer && (bool)peer.subscribe(true, onPeer);
+        if (queue) {
+          (void)queue.subscribe(false, [](BLERemoteCharacteristic, const uint8_t *, size_t, bool) {});
+        }
+      }
+    }
+    unsigned long start = millis();
+    while (peerNotify.load() == 0 && millis() - start < 15000) {
+      delay(50);
+    }
+    start = millis();
+    while (floodCount.load() < 32 && millis() - start < 20000) {
+      if (peer) {
+        (void)peer.readValue(500);
+      }
+      delay(20);
+    }
+    if (peer) {
+      (void)peer.subscribe(false, onPeer);
+    }
+    start = millis();
+    while (peerIndicate.load() == 0 && millis() - start < 15000) {
+      delay(50);
+    }
+    Serial.printf(
+      "[CLIENT] Phase35 found=%d connected=%d notify=%d indicate=%d\n", (int)found, (int)connected, (int)peerNotify.load(), (int)peerIndicate.load()
+    );
+    Serial.printf("[CLIENT] Phase35 flood=%d\n", (int)floodCount.load());
+
+    // Let the server finish in-flight removeService (NimBLE GATT rebuild)
+    // before the authorized short-read, which shares the host task.
+    delay(2000);
+
+    bool timeoutEmpty = false;
+    bool rereadOk = false;
+    if (connected) {
+      {
+        BLERemoteService edge = c1.getService(edgeSvcUUID);
+        BLERemoteCharacteristic tc = edge ? edge.getCharacteristic(timeoutCharUUID) : BLERemoteCharacteristic();
+        String first = tc ? tc.readValue(200) : String();
+        timeoutEmpty = first.length() == 0;
+      }
+      delay(600);
+      BLERemoteService edge = c1.getService(edgeSvcUUID);
+      BLERemoteCharacteristic tc = edge ? edge.getCharacteristic(timeoutCharUUID) : BLERemoteCharacteristic();
+      String second = tc ? tc.readValue(3000) : String();
+      rereadOk = second == "timeout_ok";
+    }
+    Serial.printf("[CLIENT] Phase35 timeoutEmpty=%d reread=%d\n", (int)timeoutEmpty, (int)rereadOk);
+    if (c1) {
+      c1.disconnect();
+    }
+    delay(300);
+    Serial.println("[CLIENT] Phase35 done");
+  }
+
+  // ===== Phase 36: Memory release + reinit guard =====
+  waitForPhase(36);
 
   size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);
   Serial.printf("[CLIENT] Heap before release: %u\n", (unsigned)heapBeforeRelease);

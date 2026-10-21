@@ -26,11 +26,11 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 |---|---|---|
 | 1 | basic_lifecycle | init / deinit / reinit / final deinit + **heap canary integrity around the first `begin()`** |
 | 2 | ble5_ext_periodic_adv | extended + periodic advertising and sync (BLE5) |
-| 3 | gatt_setup_connect | server start, scan, connect, service discovery, heap tracking |
-| 4 | gatt_read_write | characteristic read / write / read-back + value supplied per read by `onRead` via `setValue()` |
-| 5 | notifications_indications | CCCD subscribe, notify, indicate, unsubscribe, subscriber count |
+| 3 | gatt_setup_connect | server start, scan, connect, service discovery, heap tracking + broadcast notify/indicate before anyone connects reports `ERROR_NO_CLIENT` + GATT tree empty after `begin()` |
+| 4 | gatt_read_write | characteristic read / write / read-back + value supplied per read by `onRead` via `setValue()` (short and 512-byte long reads, one `onRead` per read) + long reads of a value rewritten every few ms stay uniform (per-connection snapshot) + a long read abandoned by disconnect then a uniform re-read + write through a handle from a const lookup |
+| 5 | notifications_indications | CCCD subscribe/malformed-write rejection, notify, indicate, unsubscribe, subscriber count + `onNotify` supplying the payload and `onStatus` delivery results + 4 back-to-back indications queued and delivered in order + 12 further indications filling the 8-deep queue (`BTStatus::Busy`) + notifications interleaved with indications on one characteristic, each status reported as the right kind (`ERROR_NO_SUBSCRIBER` checked at the start of Phase 6) |
 | 6 | large_att_write | 512-byte write + read integrity |
-| 7 | descriptor_read_write | user description + presentation format descriptors + descriptor value supplied per read by `onRead` |
+| 7 | descriptor_read_write | user description + presentation format descriptors + descriptor value supplied per read by `onRead` (short and 512-byte long reads) |
 | 8 | write_no_response | write-without-response path + **queued burst payload integrity** |
 | 9 | server_disconnect | server-initiated disconnect + client reconnect |
 | 10 | security | Numeric Comparison pairing, matching passkey, secure read |
@@ -46,18 +46,20 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip + **malformed AD parser rejection** (issue #12801, truncated UUID lists, zero-length AD terminator) |
 | 21 | beacon_and_eddystone | iBeacon / Eddystone URL / Eddystone TLM frames |
 | 22 | bond_and_whitelist | bond enumeration, whitelist, IRK cross-check |
-| 23 | error_paths_and_misc | unknown UUIDs, typed reads, UUID algebra, write-after-disconnect |
+| 23 | error_paths_and_misc | unknown UUIDs, typed reads, UUID algebra, write-after-disconnect + `notify(conn)` / `indicate(conn)` refused for an unsubscribed client (`*_DISABLED`) or unconnected handle (`ERROR_NO_CLIENT`) |
 | 24 | ble5_advanced | default PHY, coded-PHY scan, per-connection PHY + DLE (BLE5) |
-| 25 | hid_smoke | HID-over-GATT service/report/boot-keyboard compliance |
+| 25 | hid_smoke | HID-over-GATT compliance + detached attribute shells after removal and an empty GATT tree after `end()`/`begin()` |
 | 26 | ble5_legacy_over_ext | legacy advertising routed over the extended engine (BLE5) |
 | 27 | ble5_legacy_plus_ext | concurrent legacy + user extended set on the reserved instance |
 | 28 | l2cap_bulk_reconnect | L2CAP CoC bulk transfer across the credit-stall boundary + channel reconnect |
 | 29 | conn_params_reject | central rejects the peripheral's conn-param update from its pre-accept hook (NimBLE) |
-| 30 | deletebond_roundtrip | `deleteBond` delete → verify empty → re-pair round trip |
+| 30 | deletebond_roundtrip | `deleteBond` delete → verify empty → re-pair round trip + GATT tree empty after `end()`/`begin()` |
 | 31 | nc_reject | central rejects Numeric Comparison; pairing aborts, link stays unencrypted/unbonded |
 | 32 | passkey_entry | Passkey-entry pairing (peripheral DisplayOnly + static passkey, central KeyboardOnly) |
-| 33 | periodic_adv_lifecycle | periodic-adv terminate + supervision-timeout sync-lost transitions (BLE5) |
-| 34 | memory_release | heap reclaimed on release; reinit blocked while released |
+| 33 | indication_busy_retry | indications sent right behind the stack's own Service Changed indication are retried and delivered in order |
+| 34 | periodic_adv_lifecycle | periodic-adv terminate + supervision-timeout sync-lost transitions (BLE5) |
+| 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, `removeService` of a service with in-flight indications returns `Busy`, short `readValue` timeout then destroy/re-read, notify flood |
+| 36 | memory_release | heap reclaimed on release; reinit blocked while released |
 
 Phase 20 also runs a single-device regression guard for the advertisement-data
 payload limits: a too-long complete name must degrade to a Shortened Local Name
@@ -132,14 +134,14 @@ payload.
 - NVS is erased at startup to ensure fresh pairing on every run.
 - Authentication is triggered on-demand (when reading the secure characteristic) rather than on connect, ensuring consistent ordering across Bluedroid and NimBLE.
 - The test verifies PIN match between server and client via assertion.
-- BLE5 phases (2, 11, 24, 26, 27, 33) and L2CAP (14, 28) self-skip on targets or builds without support, so the suite runs unchanged on non-BLE5 silicon.
+- BLE5 phases (2, 11, 24, 26, 27, 34) and L2CAP (14, 28) self-skip on targets or builds without support, so the suite runs unchanged on non-BLE5 silicon.
 - The conn-param reject phase (29) self-skips on Bluedroid, which negotiates connection-parameter updates inside L2CAP and exposes no application pre-accept hook.
 
 ## Coverage gaps (HITL-pending)
 
-The following remain to be added as multi-device cases and require a 2-device
-BLE5-capable rig to author and verify (see also known gaps in
-`libraries/BLE/DESIGN.md`):
+The following remain to be added as multi-device cases and require extra
+hardware or stack support that this 2-DUT suite cannot exercise (see also
+known gaps in `libraries/BLE/DESIGN.md`):
 
 - BLEStream / BluetoothSerial **multi-client server** (two simultaneous centrals,
   per-peer routing under load) — needs a third DUT or two external phones.
@@ -148,3 +150,11 @@ BLE5-capable rig to author and verify (see also known gaps in
   (blestream). See `libraries/BLE/examples/MultiClientUART` and
   `libraries/BluetoothSerial/examples/MultiClientSerial` for manual multi-central
   testing.
+- **EATT** (Enhanced ATT, multiple ATT bearers on one ACL) has no public API.
+  Two `BLEClient` instances on one central also share a single ACL with this
+  peripheral (one local address), so overlapping cross-client snapshots and
+  per-peer CCCD need a third DUT. Phase 4 covers abandon-and-reconnect on one
+  link; phase 35 covers CCCD notify-vs-indicate bit routing on one link.
+- **Withheld Handle Value Confirmation** / the 30 s ATT indication timeout: both
+  hosts auto-confirm indications, so a peer cannot be made to withhold CONF.
+  Phase 35 covers a short `readValue` timeout then destroy/re-read instead.
