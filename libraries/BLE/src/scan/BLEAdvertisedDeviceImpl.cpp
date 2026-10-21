@@ -33,9 +33,7 @@
 
 void BLEAdvertisedDeviceImplCommon::parsePayload(const uint8_t *data, size_t len) {
   payload.assign(data, data + len);
-  if (advPayloadLen == 0) {
-    advPayloadLen = len;
-  }
+  advPayloadLen = len;
   size_t pos = 0;
   while (pos < len) {
     uint8_t adLen = data[pos];

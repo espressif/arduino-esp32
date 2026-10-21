@@ -325,12 +325,12 @@ String BLEAdvertisedDevice::toString() const {
 void BLEAdvertisedDevice::mergeScanResponse(const uint8_t *data, size_t len, int8_t rssi) {
   BLE_CHECK_IMPL();
   if (data && len > 0) {
-    const size_t baseLen = (impl.advPayloadLen > 0 && impl.advPayloadLen <= impl.payload.size()) ? impl.advPayloadLen : impl.payload.size();
+    const size_t baseLen = (impl.advPayloadLen <= impl.payload.size()) ? impl.advPayloadLen : impl.payload.size();
     std::vector<uint8_t> combined(impl.payload.begin(), impl.payload.begin() + baseLen);
     combined.insert(combined.end(), data, data + len);
     impl.clearParsedFields();
-    impl.advPayloadLen = baseLen;
     impl.parsePayload(combined.data(), combined.size());
+    impl.advPayloadLen = baseLen;
 
     // Deduplicate UUIDs that may appear in both ADV_IND and SCAN_RSP.
     auto &uuids = impl.serviceUUIDs;
