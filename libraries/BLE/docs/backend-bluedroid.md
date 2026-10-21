@@ -74,6 +74,9 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
 - **Raw AD data only.** The native advertising path uses `esp_ble_gap_config_adv_data_raw` with
   bytes from `BLEAdvDataBuilder`, never `esp_ble_gap_config_adv_data` (which force-expands service
   UUIDs to 128 bits and would diverge from every other path).
+- **Legacy advertising duration.** The BLE 4.2 advertising API has no native duration argument, so
+  a one-shot `esp_timer` stops the session at the requested millisecond duration. Only that
+  timer-driven stop dispatches `onComplete`; an explicit `stop()` or restart is silent.
 - **MTU exchange is blocking inside `connect()`.** The ATT MTU exchange must complete before
   `connect()` returns; issuing another GATT/GAP op while it is in flight makes Bluedroid drop the
   pending procedure and never deliver `CFG_MTU_EVT`.

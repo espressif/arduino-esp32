@@ -1666,6 +1666,49 @@ void loop() {
     adv.stop();
     Serial.printf("[SERVER] Phase20 manualAdvCompletions=%lu\n", (unsigned long)manualAdvCompletions.load());
     adv.resetCallbacks();
+    std::atomic<uint32_t> timedAdvCompletions{0};
+    adv.onComplete([&timedAdvCompletions](uint8_t) {
+      timedAdvCompletions.fetch_add(1);
+    });
+    unsigned long timedStartMs = millis();
+    BTStatus timedStart = adv.start(300);
+    while (timedAdvCompletions.load() == 0 && millis() - timedStartMs < 3000) {
+      delay(10);
+    }
+    unsigned long timedElapsedMs = millis() - timedStartMs;
+    Serial.printf(
+      "[SERVER] Phase20 timedAdv start=%d completions=%lu isAdv=%d elapsed=%lu\n", (int)(bool)timedStart,
+      (unsigned long)timedAdvCompletions.load(), (int)adv.isAdvertising(), timedElapsedMs
+    );
+    adv.stop();
+    adv.resetCallbacks();
+    std::atomic<uint32_t> cancelledAdvCompletions{0};
+    adv.onComplete([&cancelledAdvCompletions](uint8_t) {
+      cancelledAdvCompletions.fetch_add(1);
+    });
+    BTStatus cancelStart = adv.start(600);
+    delay(100);
+    BTStatus cancelStop = adv.stop();
+    BTStatus replacementStart = adv.start();
+    delay(700);
+    Serial.printf(
+      "[SERVER] Phase20 cancelledAdv timedStart=%d stop=%d replacement=%d completions=%lu isAdv=%d\n", (int)(bool)cancelStart,
+      (int)(bool)cancelStop, (int)(bool)replacementStart, (unsigned long)cancelledAdvCompletions.load(), (int)adv.isAdvertising()
+    );
+    adv.stop();
+    adv.resetCallbacks();
+    int boundaryRestarts = 0;
+    for (int i = 0; i < 12; i++) {
+      BTStatus boundaryStart = adv.start(20);
+      delay(18 + (i % 5));
+      BTStatus boundaryReplacement = adv.start();
+      delay(30);
+      if (boundaryStart && boundaryReplacement && adv.isAdvertising()) {
+        boundaryRestarts++;
+      }
+      adv.stop();
+    }
+    Serial.printf("[SERVER] Phase20 boundaryRestarts=%d/12\n", boundaryRestarts);
     adv.reset();
     adv.addServiceUUID(SERVICE_UUID);
     adv.start();

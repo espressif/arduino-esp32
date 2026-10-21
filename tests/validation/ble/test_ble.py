@@ -718,6 +718,23 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_osz.group(2)) == 1, "client parsed a UUID out of a malformed or terminated AD structure"
     m_manual = server.expect(r"\[SERVER\] Phase20 manualAdvCompletions=(\d+)", timeout=25)
     assert int(m_manual.group(1)) == 0, "manual advertising stop/restart incorrectly dispatched onComplete"
+    m_timed = server.expect(
+        r"\[SERVER\] Phase20 timedAdv start=([01]) completions=(\d+) isAdv=([01]) elapsed=(\d+)",
+        timeout=10,
+    )
+    assert int(m_timed.group(1)) == 1, "timed advertising failed to start"
+    assert int(m_timed.group(2)) == 1, "timed advertising did not dispatch onComplete exactly once"
+    assert int(m_timed.group(3)) == 0, "timed advertising remained active after duration expiry"
+    elapsed_ms = int(m_timed.group(4))
+    assert 200 <= elapsed_ms <= 2500, f"300 ms advertising duration completed after {elapsed_ms} ms"
+    m_cancel = server.expect(
+        r"\[SERVER\] Phase20 cancelledAdv timedStart=([01]) stop=([01]) replacement=([01]) completions=(\d+) isAdv=([01])",
+        timeout=10,
+    )
+    assert all(int(m_cancel.group(i)) == 1 for i in range(1, 4)), "timed advertising cancellation/restart operation failed"
+    assert int(m_cancel.group(4)) == 0, "cancelled advertising duration dispatched onComplete"
+    assert int(m_cancel.group(5)) == 1, "a cancelled duration stopped the replacement advertising session"
+    server.expect_exact("[SERVER] Phase20 boundaryRestarts=12/12", timeout=30)
     # AD payload-limit regression: legacy 31-octet cap must be enforced (name
     # degrades to a Shortened Local Name, an oversized field is dropped whole),
     # while an extended payload accepts the full name.

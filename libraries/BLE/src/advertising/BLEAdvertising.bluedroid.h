@@ -23,20 +23,32 @@
 #include "core/BLESync.h"
 
 #include <esp_gap_ble_api.h>
+#include <esp_timer.h>
 #include <freertos/semphr.h>
+#include <atomic>
 #include <vector>
 
 // BLEAdvertising is entirely Bluedroid-specific (no cross-backend shared state), so
 // BLEAdvertising::Impl is defined directly here (a .bluedroid.* file) with no common base.
 struct BLEAdvertising::Impl {
-  bool isAdvertising = false;
+  std::atomic<bool> isAdvertising{false};
   BLESync advSync{"advSync"};
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  SemaphoreHandle_t callbackMtx = xSemaphoreCreateRecursiveMutex();
   BLEAdvertising::CompleteHandler onCompleteCb = nullptr;
+  esp_timer_handle_t durationTimer = nullptr;
+  std::atomic<bool> durationExpiryStop{false};
 
   ~Impl() {
+    if (durationTimer) {
+      esp_timer_stop_blocking(durationTimer, portMAX_DELAY);
+      esp_timer_delete(durationTimer);
+    }
     if (mtx) {
       vSemaphoreDelete(mtx);
+    }
+    if (callbackMtx) {
+      vSemaphoreDelete(callbackMtx);
     }
   }
 
@@ -60,6 +72,7 @@ struct BLEAdvertising::Impl {
   std::vector<uint8_t> rawScanRespData;
 
   static BLEAdvertising::Impl *s_instance;
+  static void durationTimerCb(void *arg);
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 
 #if BLE5_SUPPORTED

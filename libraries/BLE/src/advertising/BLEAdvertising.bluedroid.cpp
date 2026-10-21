@@ -61,6 +61,19 @@ static const uint32_t ADV_SYNC_TIMEOUT_MS = 2000;
 
 BLEAdvertising::Impl *BLEAdvertising::Impl::s_instance = nullptr;
 
+void BLEAdvertising::Impl::durationTimerCb(void *arg) {
+  auto *inst = static_cast<BLEAdvertising::Impl *>(arg);
+  if (!inst || !inst->isAdvertising) {
+    return;
+  }
+  inst->durationExpiryStop = true;
+  esp_err_t err = esp_ble_gap_stop_advertising();
+  if (err != ESP_OK) {
+    inst->durationExpiryStop = false;
+    log_e("advertising duration timer: esp_ble_gap_stop_advertising: %s", esp_err_to_name(err));
+  }
+}
+
 // --------------------------------------------------------------------------
 // Helpers: map BLEAdvType to Bluedroid esp_ble_adv_type_t
 // --------------------------------------------------------------------------
@@ -163,12 +176,25 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
     {
       log_d("ADV_STOP_COMPLETE status=%d", param->adv_stop_cmpl.status);
       inst->isAdvertising = false;
-      inst->advSync.give(param->adv_stop_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+      const bool durationExpired = inst->durationExpiryStop.exchange(false);
+      if (!durationExpired) {
+        inst->advSync.give(param->adv_stop_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+      }
       // Explicit stop is not session completion (duration / maxEvents), so it
       // must not dispatch onComplete. In particular, start() stops an active
       // session while holding mtx; trying to copy the callback here after
       // waking that waiter blocks the BTC task and prevents the following
       // advertising-data completion event from being delivered.
+      if (durationExpired && param->adv_stop_cmpl.status == ESP_BT_STATUS_SUCCESS) {
+        BLEAdvertising::CompleteHandler completeCb;
+        {
+          BLELockGuard lock(inst->callbackMtx);
+          completeCb = inst->onCompleteCb;
+        }
+        if (completeCb) {
+          completeCb(0);
+        }
+      }
       break;
     }
 
@@ -242,7 +268,7 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       if (param->adv_terminate.status == 0x3c || param->adv_terminate.status == 0x43) {
         BLEAdvertising::CompleteHandler cb;
         {
-          BLELockGuard lock(inst->mtx);
+          BLELockGuard lock(inst->callbackMtx);
           cb = inst->onCompleteCb;
         }
         if (cb) {
@@ -337,8 +363,8 @@ void BLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWh
 
 void BLEAdvertising::reset() {
   BLE_CHECK_IMPL();
-  if (impl.isAdvertising) {
-    stop();
+  if (impl.durationTimer || impl.isAdvertising) {
+    (void)stop();
   }
   impl.serviceUUIDs.clear();
   if (impl.name.length() > 0) {
@@ -409,7 +435,6 @@ void BLEAdvertising::setScanResponseData(const BLEAdvertisementData &data) {
 // start()
 // --------------------------------------------------------------------------
 
-// durationMs is currently unused on this Bluedroid path; advertising relies on start/stop events only.
 BTStatus BLEAdvertising::start(uint32_t durationMs) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
 
@@ -420,8 +445,11 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   // extended API with a legacy PDU on the reserved instance.
   return impl.startLegacyViaExtAdv(durationMs);
 #else
-  if (impl.isAdvertising) {
-    stop();
+  if (impl.durationTimer || impl.isAdvertising) {
+    BTStatus stopStatus = stop();
+    if (stopStatus != BTStatus::OK) {
+      return stopStatus;
+    }
   }
   log_d("start: customAdv=%d, customScanResp=%d, scanResp=%d", impl.customAdvData, impl.customScanRespData, impl.scanResp);
 
@@ -540,6 +568,28 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   }
 
   log_d("Advertising started");
+  if (durationMs != 0) {
+    if (!impl.durationTimer) {
+      esp_timer_create_args_t timerArgs = {};
+      timerArgs.callback = BLEAdvertising::Impl::durationTimerCb;
+      timerArgs.arg = &impl;
+      timerArgs.name = "ble_adv_dur";
+      timerArgs.dispatch_method = ESP_TIMER_TASK;
+      esp_err_t timerErr = esp_timer_create(&timerArgs, &impl.durationTimer);
+      if (timerErr != ESP_OK) {
+        log_e("advertising duration timer create: %s", esp_err_to_name(timerErr));
+        (void)stop();
+        return BTStatus::Fail;
+      }
+    }
+    esp_timer_stop(impl.durationTimer);
+    esp_err_t timerErr = esp_timer_start_once(impl.durationTimer, static_cast<uint64_t>(durationMs) * 1000ULL);
+    if (timerErr != ESP_OK) {
+      log_e("advertising duration timer start: %s", esp_err_to_name(timerErr));
+      (void)stop();
+      return BTStatus::Fail;
+    }
+  }
   return result;
 #endif /* BLE5_SUPPORTED */
 }
@@ -553,13 +603,21 @@ BTStatus BLEAdvertising::stop() {
 
   BLELockGuard lock(impl.mtx);
 
-  if (!impl.isAdvertising) {
+  if (impl.durationTimer) {
+    esp_err_t timerErr = esp_timer_stop_blocking(impl.durationTimer, portMAX_DELAY);
+    if (timerErr != ESP_OK && timerErr != ESP_ERR_INVALID_STATE) {
+      log_e("advertising duration timer stop: %s", esp_err_to_name(timerErr));
+      return BTStatus::Fail;
+    }
+  }
+  impl.advSync.take();
+  const bool timerStopInFlight = impl.durationExpiryStop.exchange(false);
+  if (!impl.isAdvertising && !timerStopInFlight) {
     return BTStatus::OK;
   }
 
 #if BLE5_SUPPORTED
   uint8_t stopInstance = Impl::kLegacyInstance;
-  impl.advSync.take();
   esp_err_t err = esp_ble_gap_ext_adv_stop(1, &stopInstance);
   if (err != ESP_OK) {
     log_e("esp_ble_gap_ext_adv_stop: %s", esp_err_to_name(err));
@@ -576,12 +634,13 @@ BTStatus BLEAdvertising::stop() {
   log_d("Advertising stopped");
   return BTStatus::OK;
 #else
-  impl.advSync.take();
-  esp_err_t err = esp_ble_gap_stop_advertising();
-  if (err != ESP_OK) {
-    log_e("esp_ble_gap_stop_advertising: %s", esp_err_to_name(err));
-    impl.advSync.give(BTStatus::Fail);
-    return BTStatus::Fail;
+  if (!timerStopInFlight) {
+    esp_err_t err = esp_ble_gap_stop_advertising();
+    if (err != ESP_OK) {
+      log_e("esp_ble_gap_stop_advertising: %s", esp_err_to_name(err));
+      impl.advSync.give(BTStatus::Fail);
+      return BTStatus::Fail;
+    }
   }
   BTStatus s = impl.advSync.wait(ADV_SYNC_TIMEOUT_MS);
   if (!s) {
@@ -600,13 +659,13 @@ BTStatus BLEAdvertising::stop() {
 
 void BLEAdvertising::onComplete(CompleteHandler h) {
   BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
+  BLELockGuard lock(impl.callbackMtx);
   impl.onCompleteCb = std::move(h);
 }
 
 void BLEAdvertising::resetCallbacks() {
   BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
+  BLELockGuard lock(impl.callbackMtx);
   impl.onCompleteCb = nullptr;
 }
 
