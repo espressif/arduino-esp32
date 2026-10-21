@@ -360,15 +360,17 @@ void BLEScan::clearDuplicateCache() { /* NimBLE manages this internally */ }
 
 BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (impl.isScanning && !appendToExistingResults) {
+  if (impl.isScanning) {
     stop();
   }
 
   if (!appendToExistingResults) {
+    BLELockGuard lock(impl.mtx);
     impl.results._devices.clear();
   }
 
   log_d("Scan: start duration=%u ms active=%d filterDuplicates=%d", durationMs, impl.activeScan, impl.filterDuplicates);
+  impl.scanSync.take();
 
 #if BLE5_SUPPORTED
   // On ext-adv-enabled controllers legacy ble_gap_disc results are delivered as
@@ -384,6 +386,7 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
     BLEScan::Impl::gapEventHandler, &impl
   );
   if (rc != 0) {
+    impl.scanSync.give(BTStatus::Fail);
     log_e("ble_gap_ext_disc: rc=%d", rc);
     return BTStatus::Fail;
   }
@@ -400,6 +403,7 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
     static_cast<uint8_t>(BLE.getOwnAddressType()), durationMs == 0 ? BLE_HS_FOREVER : (int32_t)durationMs, &params, BLEScan::Impl::gapEventHandler, &impl
   );
   if (rc != 0) {
+    impl.scanSync.give(BTStatus::Fail);
     log_e("ble_gap_disc: rc=%d", rc);
     return BTStatus::Fail;
   }
@@ -411,42 +415,11 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
 // Blocks until the scan completes or times out; completion is gated by the internal sync object.
 BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
   BLE_CHECK_IMPL(BLEScan::Results());
-  impl.results._devices.clear();
-  impl.scanSync.take();
-
-#if BLE5_SUPPORTED
-  // See BLEScan::start(): the ext-adv-enabled controller reports through
-  // BLE_GAP_EVENT_EXT_DISC, so use the extended discovery API here too.
-  struct ble_gap_ext_disc_params uncoded = {};
-  uncoded.passive = impl.activeScan ? 0 : 1;
-  uncoded.itvl = impl.interval;
-  uncoded.window = impl.window;
-
-  int rc = ble_gap_ext_disc(
-    static_cast<uint8_t>(BLE.getOwnAddressType()), durationMs == 0 ? 0 : (uint16_t)(durationMs / 10), 0, impl.filterDuplicates ? 1 : 0, 0, 0, &uncoded, NULL,
-    BLEScan::Impl::gapEventHandler, &impl
-  );
-  if (rc != 0) {
-    impl.scanSync.give(BTStatus::Fail);
-    log_e("ble_gap_ext_disc: rc=%d", rc);
+  if (start(durationMs, false) != BTStatus::OK) {
     return BLEScan::Results();
   }
-#else
-  struct ble_gap_disc_params params = {};
-  params.filter_duplicates = impl.filterDuplicates ? 1 : 0;
-  params.passive = impl.activeScan ? 0 : 1;
-  params.itvl = impl.interval;
-  params.window = impl.window;
-
-  int rc = ble_gap_disc(static_cast<uint8_t>(BLE.getOwnAddressType()), (int32_t)durationMs, &params, BLEScan::Impl::gapEventHandler, &impl);
-  if (rc != 0) {
-    impl.scanSync.give(BTStatus::Fail);
-    log_e("ble_gap_disc: rc=%d", rc);
-    return BLEScan::Results();
-  }
-#endif
-  impl.isScanning = true;
-  impl.scanSync.wait(durationMs + 2000);
+  impl.scanSync.wait(durationMs == 0 ? portMAX_DELAY : durationMs + 2000);
+  BLELockGuard lock(impl.mtx);
   return impl.results;
 }
 
@@ -462,13 +435,20 @@ BTStatus BLEScan::stop() {
     log_e("Scan: ble_gap_disc_cancel rc=%d", rc);
     return BTStatus::Fail;
   }
+  impl.scanSync.give(BTStatus::OK);
   return BTStatus::OK;
 }
 
 BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedConfig, const ExtScanConfig *uncodedConfig) {
 #if BLE5_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  impl.results._devices.clear();
+  if (impl.isScanning) {
+    stop();
+  }
+  {
+    BLELockGuard lock(impl.mtx);
+    impl.results._devices.clear();
+  }
 
   struct ble_gap_ext_disc_params uncodedParams = {};
   struct ble_gap_ext_disc_params codedParams = {};

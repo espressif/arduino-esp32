@@ -24,6 +24,7 @@
 #include "core/BLEMutex.h"
 #include "esp32-hal-log.h"
 
+#include <cstring>
 #include <utility>
 
 /**
@@ -73,7 +74,8 @@ void BLEScan::setFilterDuplicates(bool filter) {
 }
 
 bool BLEScan::isScanning() const {
-  return _impl && _impl->isScanning;
+  BLE_CHECK_IMPL(false);
+  return impl.isScanning;
 }
 
 // Callback setters store the handler and no-op with a warning when scanning is
@@ -82,7 +84,7 @@ bool BLEScan::isScanning() const {
 void BLEScan::onResult(ResultHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.onResultCb = callback;
+  impl.onResultCb = std::move(callback);
 #else
   (void)callback;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -92,7 +94,7 @@ void BLEScan::onResult(ResultHandler callback) {
 void BLEScan::onComplete(CompleteHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.onCompleteCb = callback;
+  impl.onCompleteCb = std::move(callback);
 #else
   (void)callback;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -113,7 +115,7 @@ void BLEScan::resetCallbacks() {
 void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.periodicSyncCb = handler;
+  impl.periodicSyncCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -123,7 +125,7 @@ void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.periodicReportCb = handler;
+  impl.periodicReportCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (scanning disabled)", __func__);
@@ -133,14 +135,12 @@ void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
-  impl.periodicLostCb = handler;
+  impl.periodicLostCb = std::move(handler);
 #else
   (void)handler;
   log_w("%s not supported (scanning disabled)", __func__);
 #endif
 }
-
-#if BLE_SCANNING_SUPPORTED
 
 // Result-management helpers are thread-safe: each acquires impl.mtx before
 // touching the shared results set.
@@ -178,10 +178,14 @@ void BLEScan::Results::appendOrReplace(const BLEAdvertisedDevice &device) {
     // no ADI and report SID 0xFF, so same-address legacy reports still collapse to
     // a single entry exactly as before.
     if (existing.getAddress() == device.getAddress() && existing.getAdvSID() == device.getAdvSID()) {
-      // Preserve an existing entry that has a name from a merged scan response
-      // when the incoming duplicate primary ADV carries no name. Overwriting
-      // would silently erase the name, causing getName() to return "".
-      if (existing.haveName() && !device.haveName()) {
+      // Preserve an existing entry that already merged a scan response (either a
+      // scan-response name, or a longer payload whose primary ADV prefix matches
+      // the incoming unmerged primary ADV) so a trailing ADV_IND does not erase
+      // scan-response fields such as name, manufacturer data, or service data.
+      const size_t existLen = existing.getPayloadLength();
+      const size_t newLen = device.getPayloadLength();
+      if ((existing.haveName() && !device.haveName())
+          || (existLen > newLen && (newLen == 0 || memcmp(existing.getPayload(), device.getPayload(), newLen) == 0))) {
         return;
       }
       existing = device;
@@ -196,7 +200,5 @@ void BLEScan::Results::dump() const {
     log_i("[%d] %s", i, _devices[i].toString().c_str());
   }
 }
-
-#endif /* BLE_SCANNING_SUPPORTED */
 
 #endif /* BLE_ENABLED */
