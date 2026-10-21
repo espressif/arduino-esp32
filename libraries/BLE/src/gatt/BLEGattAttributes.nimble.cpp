@@ -50,12 +50,14 @@
 // --------------------------------------------------------------------------
 
 static int appendLongReadToMbuf(
-  BLEServer::Impl *server, SemaphoreHandle_t attrMtx, const std::vector<uint8_t> &value, uint16_t conn_handle, uint16_t attr_handle,
-  struct ble_gatt_access_ctxt *ctxt
+  BLEServer::Impl *server, const std::vector<uint8_t> &value, uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt
 ) {
+  // `value` is a snapshot the caller took under the attribute's mtx and has
+  // already released (single lock order: attribute lock, then server lock,
+  // never nested). selectLongRead() either returns that snapshot or the
+  // per-connection long-read copy stored under the server lock.
   uint16_t mtu = (conn_handle != BLE_HS_CONN_HANDLE_NONE) ? ble_att_mtu(conn_handle) : 0;
   BLELockGuard serverLock(server ? server->mtx : nullptr);
-  BLELockGuard lock(attrMtx);
   const std::vector<uint8_t> &src = server ? server->selectLongRead(conn_handle, attr_handle, ctxt->offset, mtu, value) : value;
   size_t copyLen = (mtu > 1 && ctxt->offset <= src.size()) ? std::min<size_t>(src.size(), static_cast<size_t>(ctxt->offset) + mtu - 1) : src.size();
   int rc = os_mbuf_append(ctxt->om, src.data(), copyLen);
@@ -113,7 +115,12 @@ int BLECharacteristic::Impl::accessCallback(uint16_t conn_handle, uint16_t attr_
         }
       }
 
-      return appendLongReadToMbuf(server, impl->mtx, impl->value, conn_handle, attr_handle, ctxt);
+      std::vector<uint8_t> snapshot;
+      {
+        BLELockGuard lock(impl->mtx);
+        snapshot = impl->value;
+      }
+      return appendLongReadToMbuf(server, snapshot, conn_handle, attr_handle, ctxt);
     }
 
     case BLE_GATT_ACCESS_OP_WRITE_CHR:
@@ -185,7 +192,12 @@ int BLECharacteristic::Impl::descAccessCallback(uint16_t conn_handle, uint16_t a
           readCb(dsc, BLEConnInfoImpl::fromDesc(conn_desc));
         }
       }
-      return appendLongReadToMbuf(server, desc->mtx, desc->value, conn_handle, attr_handle, ctxt);
+      std::vector<uint8_t> snapshot;
+      {
+        BLELockGuard lock(desc->mtx);
+        snapshot = desc->value;
+      }
+      return appendLongReadToMbuf(server, snapshot, conn_handle, attr_handle, ctxt);
     }
 
     case BLE_GATT_ACCESS_OP_WRITE_DSC:
@@ -236,16 +248,32 @@ BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t con
       return BTStatus::InvalidState;
     }
     attrHandle = impl.handle;
+    // Register as pending while still holding server->mtx, before any native
+    // submission. Removal (which takes the same lock and consults
+    // serviceHasPendingSends()) therefore either runs first and makes the
+    // check above fail, or runs after and sees this pending entry and
+    // returns Busy. The entry is consumed by the NOTIFY_TX handler.
+    server->addPendingNotify(connHandle, attrHandle);
   }
   log_d("Characteristic %s: notify conn=%u len=%u", impl.uuid.toString().c_str(), connHandle, length);
   struct os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
   if (!om) {
+    {
+      BLELockGuard serverLock(server->mtx);
+      server->consumePendingNotify(connHandle, attrHandle);
+    }
     log_e("Characteristic %s: notify - no memory for mbuf", impl.uuid.toString().c_str());
     impl.dispatchStatus(BLECharacteristic::ERROR_GATT, BLE_HS_ENOMEM);
     return BTStatus::NoMemory;
   }
+  // server->mtx must NOT be held across this call: NOTIFY_TX is raised
+  // (possibly synchronously) from inside it and that handler takes mtx.
   int rc = ble_gatts_notify_custom(connHandle, attrHandle, om);
   if (rc != 0) {
+    // The stack rejected the submission, so no NOTIFY_TX will consume the
+    // pending entry; drop it (a no-op if the event already consumed it).
+    BLELockGuard serverLock(server->mtx);
+    server->consumePendingNotify(connHandle, attrHandle);
     log_w("Characteristic %s: notify failed for conn=%u rc=%d", impl.uuid.toString().c_str(), connHandle, rc);
   }
   return (rc == 0) ? BTStatus::OK : BTStatus::Fail;
@@ -398,14 +426,27 @@ int nimbleRegisterGattServices(const std::vector<std::shared_ptr<BLEService::Imp
   s_gattIncludes.clear();
 
   for (auto &svc : services) {
-    log_d("GATT: service %s with %u characteristic(s)", svc->uuid.toString().c_str(), (unsigned)svc->characteristics.size());
+    // Snapshot the tree before building: characteristics are appended under
+    // the server mtx and descriptors under each chr->mtx (createCharacteristic
+    // / createDescriptor), so iterating the live vectors here would race them.
+    std::vector<std::shared_ptr<BLECharacteristic::Impl>> svcChrs;
+    {
+      BLELockGuard lock(svc->server ? svc->server->mtx : nullptr);
+      svcChrs = svc->characteristics;
+    }
+    log_d("GATT: service %s with %u characteristic(s)", svc->uuid.toString().c_str(), (unsigned)svcChrs.size());
     nimbleUuidFromPublic(svc->uuid, svc->nimbleUUID);
     std::vector<ble_gatt_chr_def> chrs;
 
-    for (auto &chr : svc->characteristics) {
+    for (auto &chr : svcChrs) {
       nimbleUuidFromPublic(chr->uuid, chr->nimbleUUID);
+      std::vector<std::shared_ptr<BLEDescriptor::Impl>> chrDscs;
+      {
+        BLELockGuard lock(chr->mtx);
+        chrDscs = chr->descriptors;
+      }
       std::vector<ble_gatt_dsc_def> dscs;
-      for (auto &dscImpl : chr->descriptors) {
+      for (auto &dscImpl : chrDscs) {
         nimbleUuidFromPublic(dscImpl->uuid, dscImpl->nimbleUUID);
         ble_gatt_dsc_def d = {};
         d.uuid = &dscImpl->nimbleUUID.u;
@@ -443,11 +484,16 @@ int nimbleRegisterGattServices(const std::vector<std::shared_ptr<BLEService::Imp
   // s_gattSvcs.
   for (size_t i = 0; i < services.size(); ++i) {
     auto &svc = services[i];
-    if (svc->includedServices.empty()) {
+    std::vector<std::shared_ptr<BLEService::Impl>> included;
+    {
+      BLELockGuard lock(svc->server ? svc->server->mtx : nullptr);
+      included = svc->includedServices;
+    }
+    if (included.empty()) {
       continue;
     }
     std::vector<const ble_gatt_svc_def *> incPtrs;
-    for (auto &inc : svc->includedServices) {
+    for (auto &inc : included) {
       for (size_t j = 0; j < services.size(); ++j) {
         if (services[j] == inc) {
           incPtrs.push_back(&s_gattSvcs[j]);

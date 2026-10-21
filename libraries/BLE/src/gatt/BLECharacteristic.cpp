@@ -212,6 +212,10 @@ BLEServer::Impl *BLECharacteristicImplCommon::activeServer() {
   BLEService::Impl *svc = nullptr;
   BLEServer::Impl *server = nullptr;
   {
+    // Single lock order for the whole library: an attribute's mtx is taken
+    // alone to snapshot its state and released before the server mtx is
+    // taken; the two are never held nested in opposite orders (the long-read
+    // paths follow the same rule).
     BLELockGuard lock(mtx);
     if (handle == 0 || !service || !service->server) {
       return nullptr;
@@ -247,19 +251,19 @@ BTStatus BLECharacteristicImplCommon::sendToSubscribers(const uint8_t *data, siz
   }
 
   uint16_t cccdBit = indicate ? BLE_CCCD_INDICATE : BLE_CCCD_NOTIFY;
-  uint16_t targets[16];
-  size_t count = 0;
+  std::vector<uint16_t> targets;
   bool anyConnection = false;
   {
     BLELockGuard lock(server->mtx);
     anyConnection = !server->connections.empty();
+    targets.reserve(subscribers.size());
     for (const auto &[connHandle, subVal] : subscribers) {
-      if ((subVal & cccdBit) && count < (sizeof(targets) / sizeof(targets[0]))) {
-        targets[count++] = connHandle;
+      if (subVal & cccdBit) {
+        targets.push_back(connHandle);
       }
     }
   }
-  if (count == 0) {
+  if (targets.empty()) {
     dispatchStatus(anyConnection ? BLECharacteristic::ERROR_NO_SUBSCRIBER : BLECharacteristic::ERROR_NO_CLIENT, 0);
     return BTStatus::OK;
   }
@@ -277,7 +281,7 @@ BTStatus BLECharacteristicImplCommon::sendToSubscribers(const uint8_t *data, siz
 
   auto &self = static_cast<BLECharacteristic::Impl &>(*this);
   BTStatus result = BTStatus::OK;
-  for (size_t i = 0; i < count; ++i) {
+  for (size_t i = 0; i < targets.size(); ++i) {
     BTStatus s = sendFn(self, server, targets[i], payloadPtr, payloadLen);
     if (s == BTStatus::Busy) {
       result = BTStatus::Busy;

@@ -257,7 +257,8 @@ public:
    *         client's queue is full; outcomes are reported through @c onStatus().
    * @note Does not block. ATT allows one unconfirmed indication per client, so
    *       an indication sent while another is awaiting confirmation is queued
-   *       (up to 8 per client) and sent in order. @c onStatus() reports
+   *       behind it (1 in-flight + up to 8 queued per client, 9 accepted in
+   *       total before @c BTStatus::Busy) and sent in order. @c onStatus() reports
    *       @c SUCCESS_INDICATE once each one is confirmed. An indication the
    *       stack refuses because it is still waiting on one it sent itself
    *       (such as Service Changed) is retried until the ATT transaction
