@@ -72,7 +72,6 @@ public:
     return _ep_desc != nullptr;
   }
 
-
   // Set application version and hardware version
   void setVersion(uint8_t version);
   void setHardwareVersion(uint8_t version);
@@ -173,8 +172,8 @@ public:
   // list of all handlers function calls, to be override by EPs implementation
   virtual void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {};
   virtual void zbAttributeRead(uint16_t cluster_id, const ezb_zcl_attribute_t *attribute, uint8_t src_endpoint, ezb_address_t src_address) {};
-  virtual void
-    zbWriteAttributeResponse(uint16_t cluster_id, uint16_t attribute_id, ezb_zcl_status_t status, uint8_t src_endpoint, ezb_address_t src_address) {};
+  virtual void zbWriteAttributeResponse(uint16_t cluster_id, uint16_t attribute_id, ezb_zcl_status_t status, uint8_t src_endpoint, ezb_address_t src_address) {
+  };
   virtual void zbReadBasicCluster(const ezb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const ezb_zcl_set_attr_value_message_t *message);
   virtual void zbOTAState(bool otaActive);
@@ -275,12 +274,8 @@ protected:
   ezb_zcl_cluster_desc_t getEpClusterDesc(uint16_t cluster_id, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER) const;
   ezb_zcl_attr_desc_t getEpClusterAttrDesc(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id) const;
   bool setEpClusterAttrValue(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, const void *value) const;
-  bool addOrSetEpClusterAttr(
-    uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, const void *value, ep_cluster_desc_add_attr_fn add_attr
-  ) const;
-  bool configureEpClusterAttr(
-    const char *api, uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, ep_cluster_desc_add_attr_fn add_attr
-  );
+  bool addOrSetEpClusterAttr(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, const void *value, ep_cluster_desc_add_attr_fn add_attr) const;
+  bool configureEpClusterAttr(const char *api, uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, ep_cluster_desc_add_attr_fn add_attr);
 
   char _zb_manufacturer[ZB_MAX_NAME_LENGTH + 2];
   char _zb_model[ZB_MAX_NAME_LENGTH + 2];
@@ -292,8 +287,8 @@ protected:
   uint8_t _battery_voltage;     // BatteryVoltage in 100 mV, not in power_config cluster config
 
   ezb_zcl_time_cluster_server_config_t _time_server_cfg;
-  int32_t _time_gmt_offset;       // TimeZone, not in time server cluster config
-  bool _time_server = false;      // addTimeCluster() was called (a Time server cluster exists)
+  int32_t _time_gmt_offset;              // TimeZone, not in time server cluster config
+  bool _time_server = false;             // addTimeCluster() was called (a Time server cluster exists)
   bool _time_server_registered = false;  // registerTimeServer() succeeded (interface active)
 
   ezb_zcl_ota_upgrade_cluster_client_config_t _ota_client_cfg;

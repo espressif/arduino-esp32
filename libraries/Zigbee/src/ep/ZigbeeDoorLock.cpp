@@ -33,7 +33,9 @@ ZigbeeDoorLock::ZigbeeDoorLock(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _lock_type = DOOR_LOCK_TYPE_DEAD_BOLT;
 
   // ZHA template: Basic, Identify, Door Lock, Groups, Scenes.
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_DOOR_LOCK_DEVICE_ID, .app_device_version = 0, .reserved = 0};
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_DOOR_LOCK_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
   ezb_zha_door_lock_config_t door_lock_cfg = EZB_ZHA_DOOR_LOCK_CONFIG();
   door_lock_cfg.door_lock_cfg.lock_state = _lock_state;
   door_lock_cfg.door_lock_cfg.lock_type = _lock_type;
@@ -430,8 +432,9 @@ bool ZigbeeDoorLock::setLockState(ZigbeeDoorLockState state) {
   if (!acquireCommandLock()) {
     return false;
   }
-  ezb_zcl_status_t ret =
-    ezb_zcl_set_attr_value(_endpoint, EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_LOCK_STATE_ID, EZB_ZCL_STD_MANUF_CODE, &value, false);
+  ezb_zcl_status_t ret = ezb_zcl_set_attr_value(
+    _endpoint, EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_LOCK_STATE_ID, EZB_ZCL_STD_MANUF_CODE, &value, false
+  );
   if (ret == EZB_ZCL_STATUS_SUCCESS) {
     _lock_state = state;
   }
@@ -481,8 +484,9 @@ void ZigbeeDoorLock::zbDoorLockCmd(ezb_zcl_door_lock_lock_door_message_t *messag
   // Update the LockState attribute, the stack sends the report if reporting is configured by the coordinator.
   _lock_state = lock ? DOOR_LOCK_STATE_LOCKED : DOOR_LOCK_STATE_UNLOCKED;
   uint8_t value = (uint8_t)_lock_state;
-  ezb_zcl_status_t ret =
-    ezb_zcl_set_attr_value(_endpoint, EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_LOCK_STATE_ID, EZB_ZCL_STD_MANUF_CODE, &value, false);
+  ezb_zcl_status_t ret = ezb_zcl_set_attr_value(
+    _endpoint, EZB_ZCL_CLUSTER_ID_DOOR_LOCK, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_DOOR_LOCK_LOCK_STATE_ID, EZB_ZCL_STD_MANUF_CODE, &value, false
+  );
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set door lock state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     message->out.result = ret;
@@ -505,11 +509,9 @@ void ZigbeeDoorLock::zbDoorLockSetPinCode(ezb_zcl_door_lock_set_pin_code_message
   }
   // User types other than unrestricted are not supported yet (schedules / non-access). Accepting them
   // would let checkPin() unlock for those users without enforcing their restrictions.
-  if ((req->user_status != DOOR_LOCK_USER_ENABLED && req->user_status != DOOR_LOCK_USER_DISABLED) ||
-      req->user_type != EZB_ZCL_DOOR_LOCK_USER_TYPE_UNRESTRICTED || !pinOctetIsValid(req->pin_code)) {
-    log_w(
-      "SetPINCode rejected: user %u, status %u, type %u, PIN length %u", user_id, req->user_status, req->user_type, pin_len
-    );
+  if ((req->user_status != DOOR_LOCK_USER_ENABLED && req->user_status != DOOR_LOCK_USER_DISABLED) || req->user_type != EZB_ZCL_DOOR_LOCK_USER_TYPE_UNRESTRICTED
+      || !pinOctetIsValid(req->pin_code)) {
+    log_w("SetPINCode rejected: user %u, status %u, type %u, PIN length %u", user_id, req->user_status, req->user_type, pin_len);
     return;
   }
   char pin[ZB_DOOR_LOCK_MAX_PIN_LENGTH + 1];

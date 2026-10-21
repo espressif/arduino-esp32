@@ -371,9 +371,8 @@ bool ZigbeeEP::setEpClusterAttrValue(uint16_t cluster_id, uint8_t cluster_role, 
   return ezb_zcl_attr_desc_set_value(attr, value) == EZB_ERR_NONE;
 }
 
-bool ZigbeeEP::addOrSetEpClusterAttr(
-  uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, const void *value, ep_cluster_desc_add_attr_fn add_attr
-) const {
+bool ZigbeeEP::addOrSetEpClusterAttr(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, const void *value, ep_cluster_desc_add_attr_fn add_attr)
+  const {
   if (value == nullptr || add_attr == nullptr) {
     return false;
   }
@@ -493,13 +492,10 @@ bool ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_pe
     _battery_percentage = battery_percentage * 2;
     _battery_voltage = battery_voltage;
     ezb_zcl_cluster_desc_t power_config_cluster = ezb_zcl_power_config_create_cluster_desc(&_power_config_cfg, EZB_ZCL_CLUSTER_SERVER);
-    ezb_err_t ret = ezb_zcl_power_config_cluster_desc_add_attr(
-      power_config_cluster, EZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&_battery_percentage
-    );
+    ezb_err_t ret =
+      ezb_zcl_power_config_cluster_desc_add_attr(power_config_cluster, EZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&_battery_percentage);
     if (ret == EZB_ERR_NONE) {
-      ret = ezb_zcl_power_config_cluster_desc_add_attr(
-        power_config_cluster, EZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, (void *)&_battery_voltage
-      );
+      ret = ezb_zcl_power_config_cluster_desc_add_attr(power_config_cluster, EZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, (void *)&_battery_voltage);
     }
     if (ret == EZB_ERR_NONE) {
       ret = ezb_af_endpoint_add_cluster_desc(_ep_desc, power_config_cluster);
@@ -534,9 +530,8 @@ bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
 
 bool ZigbeeEP::setBatteryVoltage(uint8_t voltage) {
   _battery_voltage = voltage;
-  ezb_zcl_status_t ret = setClusterAttribute(
-    EZB_ZCL_CLUSTER_ID_POWER_CONFIG, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &_battery_voltage, false
-  );
+  ezb_zcl_status_t ret =
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_POWER_CONFIG, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &_battery_voltage, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set battery voltage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -793,9 +788,7 @@ bool ZigbeeEP::setTime(tm time) {
   }
   _time_server_cfg.time = zb_utctime_from_unix(unix_ts);
   log_d("Setting ZCL UTCTime to %" PRIu32 " s since 2000-01-01 UTC", _time_server_cfg.time);
-  ret = setClusterAttribute(
-    EZB_ZCL_CLUSTER_ID_TIME, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_TIME_TIME_ID, &_time_server_cfg.time, false
-  );
+  ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_TIME, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_TIME_TIME_ID, &_time_server_cfg.time, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set time: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -807,9 +800,7 @@ bool ZigbeeEP::setTimezone(int32_t gmt_offset) {
   ezb_zcl_status_t ret = EZB_ZCL_STATUS_SUCCESS;
   _time_gmt_offset = gmt_offset;
   log_d("Setting timezone to %" PRId32, _time_gmt_offset);
-  ret = setClusterAttribute(
-    EZB_ZCL_CLUSTER_ID_TIME, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &_time_gmt_offset, false
-  );
+  ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_TIME, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &_time_gmt_offset, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set timezone: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -860,9 +851,7 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, const uint8_t *ieee_a
     setTime(*timeinfo);
     // Update time status to synced
     _time_server_cfg.time_status |= EZB_ZCL_TIME_TIME_STATUS_SYNCHRONIZED;
-    setClusterAttribute(
-      EZB_ZCL_CLUSTER_ID_TIME, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_TIME_TIME_STATUS_ID, &_time_server_cfg.time_status, false
-    );
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_TIME, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_TIME_TIME_STATUS_ID, &_time_server_cfg.time_status, false);
 
     return *timeinfo;
   } else {
@@ -951,13 +940,9 @@ bool ZigbeeEP::addOTAClient(
     log_e("Failed to create OTA cluster");
     return false;
   }
-  ezb_err_t ret = ezb_zcl_ota_upgrade_cluster_desc_add_attr(
-    ota_cluster, EZB_ZCL_ATTR_OTA_UPGRADE_CURRENT_FILE_VERSION_ID, (void *)&_ota_current_file_version
-  );
+  ezb_err_t ret = ezb_zcl_ota_upgrade_cluster_desc_add_attr(ota_cluster, EZB_ZCL_ATTR_OTA_UPGRADE_CURRENT_FILE_VERSION_ID, (void *)&_ota_current_file_version);
   if (ret == EZB_ERR_NONE) {
-    ret = ezb_zcl_ota_upgrade_cluster_desc_add_attr(
-      ota_cluster, EZB_ZCL_ATTR_OTA_UPGRADE_DOWNLOADED_FILE_VERSION_ID, (void *)&_ota_downloaded_file_version
-    );
+    ret = ezb_zcl_ota_upgrade_cluster_desc_add_attr(ota_cluster, EZB_ZCL_ATTR_OTA_UPGRADE_DOWNLOADED_FILE_VERSION_ID, (void *)&_ota_downloaded_file_version);
   }
   if (ret == EZB_ERR_NONE) {
     ret = ezb_af_endpoint_add_cluster_desc(_ep_desc, ota_cluster);
@@ -1038,9 +1023,7 @@ void ZigbeeEP::addPrivilegeCommand(uint16_t cluster_id, uint16_t command_id) {
   log_w("addPrivilegeCommand() is not yet implemented");
 }
 
-bool ZigbeeEP::sendIASZoneEnrollResponse(
-  uint16_t dst_short_addr, uint8_t dst_endpoint, uint8_t zone_id, ezb_zcl_ias_zone_enroll_rsp_code_t response_code
-) {
+bool ZigbeeEP::sendIASZoneEnrollResponse(uint16_t dst_short_addr, uint8_t dst_endpoint, uint8_t zone_id, ezb_zcl_ias_zone_enroll_rsp_code_t response_code) {
   ezb_zcl_ias_zone_enroll_rsp_cmd_t cmd_resp;
   memset(&cmd_resp, 0, sizeof(cmd_resp));
   ezb_address_set_short(&cmd_resp.cmd_ctrl.dst_addr, dst_short_addr);

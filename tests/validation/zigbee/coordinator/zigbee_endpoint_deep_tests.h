@@ -396,7 +396,7 @@ static void test_door_lock(void) {
   TEST_ASSERT_FALSE(epDoorLock.isLocked());
 
   // PIN boundaries and duplicates
-  TEST_ASSERT_FALSE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "123"));      // too short
+  TEST_ASSERT_FALSE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "123"));                // too short
   TEST_ASSERT_FALSE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "12345678901234567"));  // too long
   TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "1234"));
   TEST_ASSERT_EQUAL(0, epDoorLock.checkPin("1234"));

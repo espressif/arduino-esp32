@@ -63,9 +63,9 @@ enum ZigbeeDoorLockOperationSource {
 // Operation event codes (ZCL Door Lock, Operation Event Code Value table). All the event sources share this value mapping,
 // but each code is only applicable to some of the sources. The value is not the bit position in the *OperationEventMask attributes.
 enum ZigbeeDoorLockEvent {
-  DOOR_LOCK_EVENT_UNKNOWN = 0x00,  // All sources
-  DOOR_LOCK_EVENT_LOCK = 0x01,     // All sources
-  DOOR_LOCK_EVENT_UNLOCK = 0x02,   // All sources
+  DOOR_LOCK_EVENT_UNKNOWN = 0x00,                          // All sources
+  DOOR_LOCK_EVENT_LOCK = 0x01,                             // All sources
+  DOOR_LOCK_EVENT_UNLOCK = 0x02,                           // All sources
   DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN = 0x03,         // Keypad, RF, RFID
   DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_SCHEDULE = 0x04,    // Keypad, RF, RFID
   DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN = 0x05,       // Keypad, RF, RFID
@@ -81,8 +81,8 @@ enum ZigbeeDoorLockEvent {
   DOOR_LOCK_EVENT_NON_ACCESS_USER = 0x0f,                  // Keypad
 };
 
-#define ZB_DOOR_LOCK_MAX_PIN_LENGTH 16  // Maximum number of characters of a PIN code
-#define ZB_DOOR_LOCK_MIN_PIN_LENGTH 4   // Minimum number of characters of a PIN code (advertised in the MinPINCodeLength attribute)
+#define ZB_DOOR_LOCK_MAX_PIN_LENGTH 16      // Maximum number of characters of a PIN code
+#define ZB_DOOR_LOCK_MIN_PIN_LENGTH 4       // Minimum number of characters of a PIN code (advertised in the MinPINCodeLength attribute)
 #define ZB_DOOR_LOCK_DEFAULT_USERS  10      // Default number of PIN users, see setMaxUsers()
 #define ZB_DOOR_LOCK_ALL_USERS      0xFFFF  // user_id passed to the onUserChange() callback when all the users were removed
 
