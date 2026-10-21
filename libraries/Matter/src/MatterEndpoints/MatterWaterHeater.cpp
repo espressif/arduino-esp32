@@ -99,8 +99,8 @@ bool addLegacyWhmEnergyManagement(cluster_t *cluster) {
   if (!orClusterFeatureMap(cluster, static_cast<uint32_t>(WaterHeaterManagement::Feature::kEnergyManagement))) {
     return false;
   }
-  return ::esp_matter::cluster::water_heater_management::attribute::create_tank_volume(cluster, 0) != nullptr &&
-         ::esp_matter::cluster::water_heater_management::attribute::create_estimated_heat_required(cluster, 0) != nullptr;
+  return ::esp_matter::cluster::water_heater_management::attribute::create_tank_volume(cluster, 0) != nullptr
+         && ::esp_matter::cluster::water_heater_management::attribute::create_estimated_heat_required(cluster, 0) != nullptr;
 }
 
 bool addLegacyWhmTankPercent(cluster_t *cluster) {
@@ -196,8 +196,8 @@ public:
       response.status = static_cast<uint8_t>(chip::app::Clusters::ModeBase::StatusCode::kUnsupportedMode);
       return;
     }
-    if (newMode != MatterWaterHeater::WATER_HEATER_MODE_OFF && newMode != MatterWaterHeater::WATER_HEATER_MODE_MANUAL &&
-        newMode != MatterWaterHeater::WATER_HEATER_MODE_ECO) {
+    if (newMode != MatterWaterHeater::WATER_HEATER_MODE_OFF && newMode != MatterWaterHeater::WATER_HEATER_MODE_MANUAL
+        && newMode != MatterWaterHeater::WATER_HEATER_MODE_ECO) {
       // Reject modes this endpoint does not advertise.
       response.status = static_cast<uint8_t>(chip::app::Clusters::ModeBase::StatusCode::kUnsupportedMode);
       return;
@@ -606,9 +606,7 @@ void MatterWaterHeater::end() {
   }
 
   if (getEndPointId() != 0) {
-    log_w(
-      "MatterWaterHeater::end() after Matter.begin() leaves endpoint %u until reboot; begin() cannot recreate it.", getEndPointId()
-    );
+    log_w("MatterWaterHeater::end() after Matter.begin() leaves endpoint %u until reboot; begin() cannot recreate it.", getEndPointId());
   }
 }
 
@@ -967,9 +965,7 @@ bool MatterWaterHeater::setHeatDemand(uint8_t value) {
     return false;
   }
   if (!heatDemandAllowed(value)) {
-    log_e(
-      "HeatDemand 0x%02x includes a source that is not in HeaterTypes 0x%02x.", static_cast<unsigned>(value), static_cast<unsigned>(heaterTypes)
-    );
+    log_e("HeatDemand 0x%02x includes a source that is not in HeaterTypes 0x%02x.", static_cast<unsigned>(value), static_cast<unsigned>(heaterTypes));
     return false;
   }
 
@@ -1119,8 +1115,7 @@ bool MatterWaterHeater::armBoostTimer(uint32_t durationSeconds) {
   }
 
   lock::ScopedChipStackLock lock(portMAX_DELAY);
-  const CHIP_ERROR err =
-    chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds32(durationSeconds), boostTimerCallback, this);
+  const CHIP_ERROR err = chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds32(durationSeconds), boostTimerCallback, this);
   if (err != CHIP_NO_ERROR) {
     log_e("Failed to start Water Heater boost timer: %" CHIP_ERROR_FORMAT, err.Format());
     return false;
@@ -1361,8 +1356,8 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           return true;
 
         case Thermostat::Attributes::AbsMinHeatSetpointLimit::Id:
-          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT
-              || val->val.i16 > minimumHeatingSetpoint || val->val.i16 > absoluteMaximumHeatingSetpoint) {
+          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT || val->val.i16 > minimumHeatingSetpoint
+              || val->val.i16 > absoluteMaximumHeatingSetpoint) {
             return false;
           }
           absoluteMinimumHeatingSetpoint = val->val.i16;
@@ -1378,8 +1373,8 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           return true;
 
         case Thermostat::Attributes::AbsMaxHeatSetpointLimit::Id:
-          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT
-              || val->val.i16 < maximumHeatingSetpoint || val->val.i16 < absoluteMinimumHeatingSetpoint) {
+          if (val->val.i16 < ABS_MIN_HEATING_SETPOINT || val->val.i16 > ABS_MAX_HEATING_SETPOINT || val->val.i16 < maximumHeatingSetpoint
+              || val->val.i16 < absoluteMinimumHeatingSetpoint) {
             return false;
           }
           absoluteMaximumHeatingSetpoint = val->val.i16;
@@ -1421,8 +1416,7 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           return true;
 
         case WaterHeaterManagement::Attributes::BoostState::Id:
-          if (!boostFinishing && val->val.u8 == BOOST_INACTIVE &&
-              (boostState == BOOST_ACTIVE || boostTimerArmed || boostHasTemporarySetpoint)) {
+          if (!boostFinishing && val->val.u8 == BOOST_INACTIVE && (boostState == BOOST_ACTIVE || boostTimerArmed || boostHasTemporarySetpoint)) {
             finishBoost(true);
             return true;
           }
@@ -1430,18 +1424,14 @@ bool MatterWaterHeater::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
           syncHeatDemand();
           return true;
 
-        case WaterHeaterManagement::Attributes::TankVolume::Id:
-          tankVolume = val->val.u16;
-          return true;
+        case WaterHeaterManagement::Attributes::TankVolume::Id: tankVolume = val->val.u16; return true;
 
         case WaterHeaterManagement::Attributes::TankPercentage::Id:
           tankPercentage = val->val.u8;
           maybeFinishOneShotBoost();
           return true;
 
-        case WaterHeaterManagement::Attributes::EstimatedHeatRequired::Id:
-          estimatedHeatRequired = val->val.i64;
-          return true;
+        case WaterHeaterManagement::Attributes::EstimatedHeatRequired::Id: estimatedHeatRequired = val->val.i64; return true;
 
         default: break;
       }

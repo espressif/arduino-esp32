@@ -41,9 +41,7 @@ static const char *waterHeaterModeName(MatterWaterHeater::WaterHeaterMode_t mode
   }
 }
 
-static const char *operationName(
-  MatterWaterHeater::BoostState_t boost, MatterWaterHeater::SystemMode_t system, MatterWaterHeater::WaterHeaterMode_t mode
-) {
+static const char *operationName(MatterWaterHeater::BoostState_t boost, MatterWaterHeater::SystemMode_t system, MatterWaterHeater::WaterHeaterMode_t mode) {
   if (boost == MatterWaterHeater::BOOST_ACTIVE) {
     return "Boost";
   }
@@ -99,8 +97,7 @@ void loop() {
     prevBoost = boost;
     prevSetpoint = setpoint;
     Serial.printf(
-      "Ready | operation: %s | target: %.1f C | water heater mode: %s\r\n", operationName(boost, system, mode), setpoint,
-      waterHeaterModeName(mode)
+      "Ready | operation: %s | target: %.1f C | water heater mode: %s\r\n", operationName(boost, system, mode), setpoint, waterHeaterModeName(mode)
     );
   } else {
     if (boost != prevBoost) {
@@ -132,8 +129,7 @@ void loop() {
 
   float temperature = waterHeater.getLocalTemperature();
   // Boost heats even if System or Mode is Off. Mode Off with Boost inactive lets the tank cool.
-  const bool heating = boostOn
-                       || (system == MatterWaterHeater::SYSTEM_MODE_HEAT && mode != MatterWaterHeater::WATER_HEATER_MODE_OFF);
+  const bool heating = boostOn || (system == MatterWaterHeater::SYSTEM_MODE_HEAT && mode != MatterWaterHeater::WATER_HEATER_MODE_OFF);
 
   if (heating && temperature < setpoint) {
     temperature += boostOn ? BOOST_HEAT_STEP_C : HEAT_STEP_C;
@@ -147,8 +143,7 @@ void loop() {
     if (boostStillOn != boostOn) {
       prevBoost = waterHeater.getBoostState();
     }
-    const bool heatingNow = boostStillOn
-                            || (system == MatterWaterHeater::SYSTEM_MODE_HEAT && mode != MatterWaterHeater::WATER_HEATER_MODE_OFF);
+    const bool heatingNow = boostStillOn || (system == MatterWaterHeater::SYSTEM_MODE_HEAT && mode != MatterWaterHeater::WATER_HEATER_MODE_OFF);
     if (heatingNow && temperature < setpointNow) {
       waterHeater.setHeatDemand(waterHeater.getHeaterTypes());
     } else {
@@ -186,10 +181,7 @@ void loop() {
     static bool wasAtTarget = false;
     const bool atTarget = heating && !demandOnNow;
     if (atTarget && !wasAtTarget) {
-      Serial.printf(
-        "Target reached. HeatDemand idle; operation stays %s.\r\n",
-        operationName(waterHeater.getBoostState(), system, mode)
-      );
+      Serial.printf("Target reached. HeatDemand idle; operation stays %s.\r\n", operationName(waterHeater.getBoostState(), system, mode));
     }
     wasAtTarget = atTarget;
   }
