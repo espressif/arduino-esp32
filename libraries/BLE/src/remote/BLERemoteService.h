@@ -60,7 +60,7 @@ public:
    * @return The matching characteristic, or an invalid handle if not found.
    * @note Triggers GATT characteristic discovery on first call.
    */
-  BLERemoteCharacteristic getCharacteristic(const BLEUUID &uuid);
+  BLERemoteCharacteristic getCharacteristic(const BLEUUID &uuid) const;
 
   /**
    * @brief Return all discovered characteristics of this service.

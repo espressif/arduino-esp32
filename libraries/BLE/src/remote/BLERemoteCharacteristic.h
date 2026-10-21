@@ -166,6 +166,11 @@ public:
    * @param data         Pointer to the notification payload.
    * @param length       Length of the payload in bytes.
    * @param isNotification True for a notification, false for an indication.
+   * @note Runs on the BLE stack task. Do not call blocking GATT operations
+   *       (@c readValue(), confirmed @c writeValue(), @c subscribe()) on @p chr
+   *       here: they wait for a response that this same task delivers, so they
+   *       stall until their timeout. A read also replaces the buffer @p data
+   *       points into. Defer such work to another task.
    */
   using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, bool)>;
 
@@ -179,6 +184,13 @@ public:
   BTStatus subscribe(bool notifications = true, NotifyCallback callback = nullptr);
 
   /**
+   * @brief Subscribe to both notifications and indications from this characteristic (writes 0x0003 to CCCD).
+   * @param callback Optional callback invoked on each notification or indication.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus subscribeBoth(NotifyCallback callback = nullptr);
+
+  /**
    * @brief Unsubscribe from notifications and indications.
    * @return BTStatus indicating success or failure.
    */
@@ -190,7 +202,7 @@ public:
    * @return The matching descriptor, or an invalid handle if not found.
    * @note Triggers GATT descriptor discovery on first call.
    */
-  BLERemoteDescriptor getDescriptor(const BLEUUID &uuid);
+  BLERemoteDescriptor getDescriptor(const BLEUUID &uuid) const;
 
   /**
    * @brief Return all discovered descriptors of this characteristic.

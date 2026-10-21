@@ -385,8 +385,7 @@ BTStatus BLEClient::cancelConnect() {
   return BTStatus::OK;
 }
 
-// Disconnection and cleanup propagate asynchronously through GATTC events (DISCONNECT_EVT clears
-// state and may invoke user disconnect callbacks).
+// Blocks until DISCONNECT_EVT clears state and invokes user disconnect callbacks (when not on BTC_TASK).
 BTStatus BLEClient::disconnect() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
 
@@ -395,10 +394,24 @@ BTStatus BLEClient::disconnect() {
     return BTStatus::NotConnected;
   }
 
+  const char *taskName = pcTaskGetName(nullptr);
+  bool wait = !(taskName && strcmp(taskName, "BTC_TASK") == 0);
+  if (wait) {
+    impl.disconnectSync.take();
+  }
+
   esp_err_t err = esp_ble_gattc_close(impl.gattcIf, impl.connId);
   if (err != ESP_OK) {
+    if (wait) {
+      impl.disconnectSync.give(BTStatus::Fail);
+    }
     log_e("esp_ble_gattc_close: %s", esp_err_to_name(err));
     return BTStatus::Fail;
+  }
+  if (wait && impl.connected) {
+    (void)impl.disconnectSync.wait(5000);
+  } else if (wait) {
+    impl.disconnectSync.give(BTStatus::OK);
   }
   return BTStatus::OK;
 }
@@ -418,7 +431,7 @@ BTStatus BLEClient::discoverServices() {
 
   {
     BLELockGuard lock(impl.mtx);
-    impl.discoveredServices.clear();
+    impl.clearDiscoveredServices();
   }
 
   impl.discoverSync.take();
@@ -437,59 +450,6 @@ BTStatus BLEClient::discoverServices() {
 
   log_i("Discovered %u services", (unsigned)impl.discoveredServices.size());
   return BTStatus::OK;
-}
-
-// If services were not yet discovered and the client is connected, calls discoverServices()
-// (blocking) once before matching.
-BLERemoteService BLEClient::getService(const BLEUUID &uuid) {
-  BLE_CHECK_IMPL(BLERemoteService());
-
-  // Auto-discover if not done
-  if (impl.discoveredServices.empty() && impl.connected) {
-    if (!discoverServices()) {
-      return BLERemoteService();
-    }
-  }
-
-  BLELockGuard lock(impl.mtx);
-  for (auto &svc : impl.discoveredServices) {
-    log_d("getService: comparing %s == %s", svc->uuid.toString().c_str(), uuid.toString().c_str());
-    if (svc->uuid == uuid) {
-      return BLERemoteService(std::shared_ptr<BLERemoteService::Impl>(svc));
-    }
-  }
-  log_w("getService: UUID %s not found among %u discovered service(s)", uuid.toString().c_str(), (unsigned)impl.discoveredServices.size());
-  return BLERemoteService();
-}
-
-// Const overload triggers lazy discovery: if connected and the service list is empty, calls the
-// non-const discoverServices() synchronously (up to 10 s) to populate the list.
-std::vector<BLERemoteService> BLEClient::getServices() const {
-  std::vector<BLERemoteService> result;
-  if (!_impl) {
-    return result;
-  }
-
-  // Lazy discovery: mirror the const_cast pattern already used by
-  // BLERemoteService::getCharacteristics() / BLERemoteCharacteristic::getDescriptors()
-  // so a user calling only getServices() still gets back the actual remote services.
-  if (_impl->connected) {
-    bool empty;
-    {
-      BLELockGuard lock(_impl->mtx);
-      empty = _impl->discoveredServices.empty();
-    }
-    if (empty) {
-      auto *self = const_cast<BLEClient *>(this);
-      (void)self->discoverServices();
-    }
-  }
-
-  BLELockGuard lock(_impl->mtx);
-  for (auto &svc : _impl->discoveredServices) {
-    result.push_back(BLERemoteService(std::shared_ptr<BLERemoteService::Impl>(svc)));
-  }
-  return result;
 }
 
 // --------------------------------------------------------------------------
@@ -799,6 +759,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       if (param->open.status == ESP_GATT_OK) {
         client->connId = param->open.conn_id;
         client->connected = true;
+        client->connectionGeneration.fetch_add(1);
         // Fresh link starts unencrypted; clear any latched flags from a prior
         // connection on this client so getConnInfo() cannot report stale state.
         client->secEncrypted = false;
@@ -852,8 +813,9 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       client->secBonded = false;
       {
         BLELockGuard lock(client->mtx);
-        client->discoveredServices.clear();
+        client->clearDiscoveredServices();
       }
+      client->disconnectSync.give(BTStatus::OK);
       break;
     }
 
@@ -869,6 +831,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       svc->startHandle = param->search_res.start_handle;
       svc->endHandle = param->search_res.end_handle;
       svc->client = client;
+      svc->clientGeneration = client->connectionGeneration.load();
       BLELockGuard lock(client->mtx);
       client->discoveredServices.push_back(svc);
       break;
@@ -883,11 +846,17 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
     case ESP_GATTC_READ_CHAR_EVT:
     case ESP_GATTC_READ_DESCR_EVT:
     {
-      client->lastReadStatus = param->read.status;
-      if (param->read.status == ESP_GATT_OK) {
-        client->readBuf.assign(param->read.value, param->read.value + param->read.value_len);
-      } else {
-        client->readBuf.clear();
+      {
+        BLELockGuard lock(client->mtx);
+        if (client->pendingReadHandle == 0 || param->read.handle != client->pendingReadHandle) {
+          break;
+        }
+        client->lastReadStatus = param->read.status;
+        if (param->read.status == ESP_GATT_OK) {
+          client->readBuf.assign(param->read.value, param->read.value + param->read.value_len);
+        } else {
+          client->readBuf.clear();
+        }
       }
       client->readSync.give(param->read.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
       break;
@@ -896,7 +865,13 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
     case ESP_GATTC_WRITE_CHAR_EVT:
     case ESP_GATTC_WRITE_DESCR_EVT:
     {
-      client->lastWriteStatus = param->write.status;
+      {
+        BLELockGuard lock(client->mtx);
+        if (client->pendingWriteHandle == 0 || param->write.handle != client->pendingWriteHandle) {
+          break;
+        }
+        client->lastWriteStatus = param->write.status;
+      }
       client->writeSync.give(param->write.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
       break;
     }
@@ -952,6 +927,40 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
     case ESP_GATTC_SRVC_CHG_EVT:
     {
       log_i("Client: service changed indication received");
+      // Bluedroid's bta_gattc_process_srvc_chg_ind intercepts 0x2A05 (instead of
+      // delivering ESP_GATTC_NOTIFY_EVT) and clears notif_reg[] for the affected
+      // handle range. Re-register active characteristic subscriptions so surviving
+      // characteristics keep receiving notifications/indications, and invoke any
+      // user callback subscribed to 0x1801 / 0x2A05.
+      BLERemoteCharacteristic::NotifyCallback svcChgCb;
+      std::shared_ptr<BLERemoteCharacteristic::Impl> svcChgChr;
+      esp_bd_addr_t bda;
+      client->peerAddress.toEspBdAddr(bda);
+      {
+        BLELockGuard lock(client->mtx);
+        for (auto &svc : client->discoveredServices) {
+          if (!svc) {
+            continue;
+          }
+          const bool isGattSvc = (svc->uuid == BLEUUID(static_cast<uint16_t>(0x1801)));
+          for (auto &chr : svc->characteristics) {
+            if (!chr || !chr->onNotifyCb) {
+              continue;
+            }
+            if (isGattSvc && chr->uuid == BLEUUID(static_cast<uint16_t>(0x2A05))) {
+              svcChgCb = chr->onNotifyCb;
+              svcChgChr = chr->shared_from_this();
+            } else {
+              (void)esp_ble_gattc_register_for_notify(client->gattcIf, bda, chr->handle);
+            }
+          }
+        }
+      }
+      if (svcChgCb && svcChgChr) {
+        const uint8_t range[4] = {0x01, 0x00, 0xFF, 0xFF};
+        BLERemoteCharacteristic chrHandle = BLERemoteCharacteristicImplCommon::makeHandle(svcChgChr);
+        svcChgCb(chrHandle, range, sizeof(range), false);
+      }
       break;
     }
 
@@ -1113,14 +1122,6 @@ BTStatus BLEClient::disconnect() {
 BTStatus BLEClient::discoverServices() {
   log_w("GATT client not supported");
   return BTStatus::NotSupported;
-}
-
-BLERemoteService BLEClient::getService(const BLEUUID &) {
-  return BLERemoteService();
-}
-
-std::vector<BLERemoteService> BLEClient::getServices() const {
-  return {};
 }
 
 BTStatus BLEClient::secureConnection() {

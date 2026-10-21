@@ -216,7 +216,7 @@ public:
    * @param uuid  UUID of the service to look up.
    * @return A BLERemoteService handle. Check with `operator bool()` for validity.
    */
-  BLERemoteService getService(const BLEUUID &uuid);
+  BLERemoteService getService(const BLEUUID &uuid) const;
 
   /**
    * @brief Get all discovered remote services.

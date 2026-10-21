@@ -51,8 +51,10 @@ struct BLERemoteServiceImplCommon : std::enable_shared_from_this<BLERemoteServic
   uint16_t startHandle = 0;
   uint16_t endHandle = 0;
   BLEClient::Impl *client = nullptr;
+  uint32_t clientGeneration = 0;
   std::vector<std::shared_ptr<BLERemoteCharacteristic::Impl>> characteristics;
   bool characteristicsDiscovered = false;
+  ~BLERemoteServiceImplCommon();
 };
 
 /**
@@ -72,6 +74,8 @@ struct BLERemoteCharacteristicImplCommon : std::enable_shared_from_this<BLERemot
   bool descriptorsDiscovered = false;
   std::vector<uint8_t> value;  // Cached read/notified value
   BLERemoteCharacteristic::NotifyCallback onNotifyCb = nullptr;
+
+  ~BLERemoteCharacteristicImplCommon();
 
   // Handle factory for backend code that is not a friend of BLERemoteCharacteristic:
   // mints a handle through the private ctor, which only this befriended ImplCommon can

@@ -53,9 +53,10 @@ struct BLEClient::Impl : BLEClientImplCommon {
   std::atomic<bool> secAuthenticated{false};
   std::atomic<bool> secBonded{false};
 
-  BLESync regSync{"regSync"};            // For blocking GATTC app registration
-  BLESync connectSync{"connectSync"};    // For blocking connect
-  BLESync discoverSync{"discoverSync"};  // For blocking service discovery
+  BLESync regSync{"regSync"};                // For blocking GATTC app registration
+  BLESync connectSync{"connectSync"};        // For blocking connect
+  BLESync disconnectSync{"disconnectSync"};  // For blocking disconnect
+  BLESync discoverSync{"discoverSync"};      // For blocking service discovery
   // Only one GATT read/write can be in-flight per client at a time because
   // Bluedroid delivers completions without a per-characteristic token.
   BLESync readSync{"readSync"};
@@ -73,10 +74,10 @@ struct BLEClient::Impl : BLEClientImplCommon {
   uint8_t cachedRxPhy = 1;
 #endif
 
-  std::vector<std::shared_ptr<BLERemoteService::Impl>> discoveredServices;
-
-  // Temp buffer for read operations
+  // Temp buffer and active-handle filter for read/write operations (guarded by mtx).
   std::vector<uint8_t> readBuf;
+  uint16_t pendingReadHandle = 0;
+  uint16_t pendingWriteHandle = 0;
   esp_gatt_status_t lastReadStatus = ESP_GATT_OK;
   esp_gatt_status_t lastWriteStatus = ESP_GATT_OK;
   int8_t lastRssi = -128;

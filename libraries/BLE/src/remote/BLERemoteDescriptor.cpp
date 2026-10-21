@@ -38,7 +38,6 @@ uint16_t BLERemoteDescriptor::getHandle() const {
 }
 
 BLERemoteCharacteristic BLERemoteDescriptor::getRemoteCharacteristic() const {
-  // Non-owning handle: the parent characteristic is owned by the discovering service.
   return (_impl && _impl->chr) ? BLERemoteCharacteristic(_impl->chr->shared_from_this()) : BLERemoteCharacteristic();
 }
 
@@ -68,6 +67,65 @@ uint32_t BLERemoteDescriptor::readUInt32(uint32_t timeoutMs) {
     return 0;
   }
   return bleReadLEUint(_impl->value.data(), _impl->value.size(), 4);
+}
+
+const uint8_t *BLERemoteDescriptor::readRawData(size_t *len) const {
+  if (!_impl || _impl->value.empty()) {
+    if (len) {
+      *len = 0;
+    }
+    return nullptr;
+  }
+  if (len) {
+    *len = _impl->value.size();
+  }
+  return _impl->value.data();
+}
+
+bool BLERemoteDescriptor::isUserDescription() const {
+  BLE_CHECK_IMPL(false);
+  return impl.uuid == BLEUUID(static_cast<uint16_t>(0x2901));
+}
+
+bool BLERemoteDescriptor::isCCCD() const {
+  BLE_CHECK_IMPL(false);
+  return impl.uuid == BLEUUID(static_cast<uint16_t>(0x2902));
+}
+
+bool BLERemoteDescriptor::isPresentationFormat() const {
+  BLE_CHECK_IMPL(false);
+  return impl.uuid == BLEUUID(static_cast<uint16_t>(0x2904));
+}
+
+static uint16_t getRemotePresentationFormatField(const BLERemoteDescriptor &desc, const BLERemoteDescriptor::Impl *impl, size_t offset, bool twoBytes) {
+  if (!impl || !desc.isPresentationFormat() || impl->value.size() < 7) {
+    return 0;
+  }
+  uint16_t val = impl->value[offset];
+  if (twoBytes) {
+    val |= static_cast<uint16_t>(impl->value[offset + 1] << 8);
+  }
+  return val;
+}
+
+uint8_t BLERemoteDescriptor::getFormat() const {
+  return static_cast<uint8_t>(getRemotePresentationFormatField(*this, _impl.get(), 0, false));
+}
+
+int8_t BLERemoteDescriptor::getExponent() const {
+  return static_cast<int8_t>(getRemotePresentationFormatField(*this, _impl.get(), 1, false));
+}
+
+uint16_t BLERemoteDescriptor::getUnit() const {
+  return getRemotePresentationFormatField(*this, _impl.get(), 2, true);
+}
+
+uint8_t BLERemoteDescriptor::getNamespace() const {
+  return static_cast<uint8_t>(getRemotePresentationFormatField(*this, _impl.get(), 4, false));
+}
+
+uint16_t BLERemoteDescriptor::getFormatDescription() const {
+  return getRemotePresentationFormatField(*this, _impl.get(), 5, true);
 }
 
 BTStatus BLERemoteDescriptor::writeValue(const String &value, bool withResponse) {
