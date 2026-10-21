@@ -60,22 +60,9 @@ struct BLEServer::Impl : BLEServerImplCommon {
   // Drop any buffered fragments for connId (no-op if absent).
   void erasePrepWrites(uint16_t connId);
 
-  // Bluedroid delivers notification completions and indication confirmations via
-  // the same ESP_GATTS_CONF_EVT (with conn_id, handle, and status). Track the
-  // count of outstanding notifications per (connId, attrHandle) so local
-  // notification CONF events are distinguished from peer indication confirmations
-  // without holding notifications behind unconfirmed indications. Guarded by mtx.
-  struct PendingNotify {
-    uint16_t connId = 0;
-    uint16_t attrHandle = 0;
-    uint16_t count = 0;
-  };
-  std::vector<PendingNotify> pendingNotifies;
-
-  void addPendingNotify(uint16_t connId, uint16_t attrHandle);
-  bool consumePendingNotify(uint16_t connId, uint16_t attrHandle);
-  void erasePendingNotifies(uint16_t connId);
-  bool hasPendingNotifications(const BLEService::Impl *svc) const;
+  // Notification-completion tracking is shared: see pendingNotifies and its
+  // helpers on BLEServerImplCommon (both stacks deliver notification
+  // completions and indication confirmations through one event type).
   void scheduleBusyRetry();
 
   BLESync regSync{"regSync"};
@@ -109,7 +96,6 @@ struct BLEServer::Impl : BLEServerImplCommon {
   }
 
   static BLEServer::Impl *s_instance;
-  static void invalidate();
   static void handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 };

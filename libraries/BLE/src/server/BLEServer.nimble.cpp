@@ -110,8 +110,20 @@ void nimbleResetReAdvertiseEvent() {
  *       of all services; per-service create/delete is not used.
  */
 static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
-  for (const auto &svc : impl.services) {
-    for (const auto &chr : svc->characteristics) {
+  // Snapshot the service tree under mtx; registration below iterates the
+  // snapshot while createCharacteristic/createDescriptor may run on user tasks.
+  std::vector<std::shared_ptr<BLEService::Impl>> services;
+  {
+    BLELockGuard lock(impl.mtx);
+    services = impl.services;
+  }
+  for (const auto &svc : services) {
+    std::vector<std::shared_ptr<BLECharacteristic::Impl>> chrs;
+    {
+      BLELockGuard lock(impl.mtx);
+      chrs = svc->characteristics;
+    }
+    for (const auto &chr : chrs) {
       if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/true)) {
         log_e("GATT: characteristic %s rejected by validation", chr->uuid.toString().c_str());
         return BTStatus::InvalidState;
@@ -130,13 +142,13 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
   ble_svc_gap_init();
   ble_svc_gatt_init();
 
-  if (!impl.services.empty()) {
-    rc = nimbleRegisterGattServices(impl.services);
+  if (!services.empty()) {
+    rc = nimbleRegisterGattServices(services);
     if (rc != 0) {
       log_e("nimbleRegisterGattServices: rc=%d", rc);
       return BTStatus::Fail;
     }
-    for (auto &s : impl.services) {
+    for (auto &s : services) {
       s->started = true;
     }
   }
@@ -147,7 +159,7 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
     return BTStatus::Fail;
   }
 
-  for (auto &s : impl.services) {
+  for (auto &s : services) {
     if (ble_gatts_find_svc(&s->nimbleUUID.u, &s->handle) != 0) {
       s->handle = 0;
     }
@@ -185,6 +197,16 @@ BTStatus BLEServer::start() {
             hasNew = true;
             break;
           }
+          BLELockGuard chrLock(c->mtx);
+          for (auto &d : c->descriptors) {
+            if (d->handle == 0) {
+              hasNew = true;
+              break;
+            }
+          }
+          if (hasNew) {
+            break;
+          }
         }
         if (hasNew) {
           break;
@@ -215,12 +237,19 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t reason) {
     BLELockGuard lock(_impl->mtx);
     if (!_impl->connFind(connHandle)) {
       log_w("Server: disconnect handle=%u not connected", connHandle);
-      return BTStatus::Fail;
+      return BTStatus::NotConnected;
     }
   }
   bool wait = !nimbleIsHostTask();
   if (wait) {
-    _impl->pendingDisconnectHandle.store(connHandle);
+    // disconnectSync/pendingDisconnectHandle form a single wait slot: claim
+    // it atomically so two overlapping disconnect() waits cannot steal each
+    // other's completion (BLESync is strictly 1:1).
+    uint16_t expected = 0xFFFF;
+    if (!_impl->pendingDisconnectHandle.compare_exchange_strong(expected, connHandle)) {
+      log_w("Server: disconnect handle=%u - another disconnect wait is in progress", connHandle);
+      return BTStatus::Busy;
+    }
     _impl->disconnectSync.take();
   }
   int rc = ble_gap_terminate(connHandle, reason);
@@ -238,12 +267,14 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t reason) {
       BLELockGuard lock(_impl->mtx);
       stillConn = (_impl->connFind(connHandle) != nullptr);
     }
+    BTStatus waited = BTStatus::OK;
     if (stillConn) {
-      (void)_impl->disconnectSync.wait(5000);
+      waited = _impl->disconnectSync.wait(5000);
     } else {
       _impl->disconnectSync.give(BTStatus::OK);
     }
     _impl->pendingDisconnectHandle.store(0xFFFF);
+    return waited;
   }
   return BTStatus::OK;
 }
@@ -426,6 +457,7 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           impl->identityDispatchedMask &= ~(1u << connHandle);
         }
         impl->connErase(connHandle);
+        impl->erasePendingNotifies(connHandle);
         for (auto &svc : impl->services) {
           for (auto &chr : svc->characteristics) {
             auto &subs = chr->subscribers;
@@ -588,15 +620,21 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
       BLECharacteristic::SubscribeHandler subscribeCb;
       std::shared_ptr<BLECharacteristic::Impl> chrImpl;
+      bool subChanged = false;
       {
         BLELockGuard lock(impl->mtx);
         for (auto &svc : impl->services) {
           for (auto &chr : svc->characteristics) {
             if (chr->handle == attrHandle) {
+              // Suppress onSubscribe for a CCCD write that does not change
+              // the value (parity with the Bluedroid path, which compares
+              // against the previous subscription value).
+              uint16_t prevVal = 0;
               if (subVal > 0) {
                 bool found = false;
                 for (auto &kv : chr->subscribers) {
                   if (kv.first == connHandle) {
+                    prevVal = kv.second;
                     kv.second = subVal;
                     found = true;
                     break;
@@ -609,11 +647,13 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
                 auto &subs = chr->subscribers;
                 for (auto it = subs.begin(); it != subs.end(); ++it) {
                   if (it->first == connHandle) {
+                    prevVal = it->second;
                     subs.erase(it);
                     break;
                   }
                 }
               }
+              subChanged = (prevVal != subVal);
               chrImpl = chr;
               break;
             }
@@ -623,7 +663,7 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           }
         }
       }
-      if (chrImpl) {
+      if (chrImpl && subChanged) {
         BLELockGuard lock(chrImpl->mtx);
         subscribeCb = chrImpl->onSubscribeCb;
       }
@@ -675,9 +715,15 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         log_w("Server: notification on handle %u conn=%u failed, status=%d", attrHandle, connHandle, status);
       }
 
+      // A notification completion consumes the pending entry registered by
+      // bleCharacteristicSendNotify() before native submission. An event with
+      // no pending entry is not one of ours (already consumed on a failed
+      // synchronous submission); do not report it twice.
+      bool wasPending = false;
       std::shared_ptr<BLECharacteristic::Impl> chrImpl;
       {
         BLELockGuard lock(impl->mtx);
+        wasPending = impl->consumePendingNotify(connHandle, attrHandle);
         for (auto &svc : impl->services) {
           for (auto &chr : svc->characteristics) {
             if (chr->handle == attrHandle) {
@@ -690,7 +736,7 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           }
         }
       }
-      if (chrImpl) {
+      if (chrImpl && wasPending) {
         BLECharacteristic::NotifyStatus result = BLECharacteristic::SUCCESS_NOTIFY;
         if (status == BLE_HS_ENOTCONN) {
           result = BLECharacteristic::ERROR_NO_CLIENT;
@@ -729,6 +775,15 @@ int BLEServer::handleGapEvent(void *rawEvent) {
 BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
   if (!impl || !svc) {
     return BTStatus::InvalidState;
+  }
+
+  // Serialize with in-flight sends (shared check also runs in
+  // BLEServer::removeService; repeated here so direct callers are safe):
+  // a notification registered as pending or an indication in flight/queued
+  // makes removal Busy instead of racing the native submission.
+  if (impl->serviceHasPendingSends(svc.get())) {
+    log_w("Server: cannot remove a service with pending notifications or indications");
+    return BTStatus::Busy;
   }
 
   size_t originalIndex = 0;

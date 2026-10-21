@@ -66,7 +66,11 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
   // Per-connection snapshot of an attribute value across a multi-packet long
   // read (ATT_READ_REQ followed by ATT_READ_BLOB_REQs; Core Vol 3 Part F §3.2.9).
   // Because ATT is strictly sequential per bearer, at most one long read can be
-  // in progress per connection at any time. Guarded by mtx.
+  // in progress per connection at any time, so one slot per concurrent
+  // connection suffices; kMaxLongReads bounds the snapshot table to that many
+  // simultaneous long reads. When every slot is live, selectLongRead() serves
+  // the read from the current value without a snapshot rather than evicting
+  // another connection's in-progress snapshot. Guarded by mtx.
   static constexpr size_t kMaxLongReads = 9;
   struct LongReadState {
     uint16_t connHandle = 0;
@@ -75,10 +79,32 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
   };
   LongReadState longReads[kMaxLongReads];
 
+  // Notifications handed to the native stack but not yet completed by it.
+  // Both stacks report notification completion asynchronously (NimBLE
+  // NOTIFY_TX, Bluedroid ESP_GATTS_CONF_EVT), so a notification is registered
+  // here under mtx before native submission and consumed on completion. That
+  // makes service removal able to return Busy instead of racing an in-flight
+  // notification (DESIGN.md "Service removal"). Guarded by mtx; the helpers
+  // below assume the caller holds mtx.
+  struct PendingNotify {
+    uint16_t connHandle = 0;
+    uint16_t attrHandle = 0;
+    uint16_t count = 0;
+  };
+  std::vector<PendingNotify> pendingNotifies;
+  void addPendingNotify(uint16_t connHandle, uint16_t attrHandle);
+  bool consumePendingNotify(uint16_t connHandle, uint16_t attrHandle);
+  void erasePendingNotifies(uint16_t connHandle);
+  bool hasPendingNotifications(const BLEService::Impl *svc) const;
+
   // Outgoing indications, per connection. ATT allows one unconfirmed indication
   // per bearer (Core Vol 3 Part F §3.3.2) and neither stack queues the next one,
   // so later indications wait here and go out in call order as each one is
   // confirmed. Guarded by mtx.
+  // Capacity contract: 1 in-flight indication plus up to kMaxQueuedIndications
+  // waiting behind it. The queue vector keeps the in-flight entry at its front
+  // until confirmation, so indicate() admits up to 9 entries in total
+  // (1 in-flight + 8 queued) before returning Busy.
   static constexpr size_t kMaxQueuedIndications = 8;
   struct PendingValue {
     std::shared_ptr<BLECharacteristic::Impl> chr;
