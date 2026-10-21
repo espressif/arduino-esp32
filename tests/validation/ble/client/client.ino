@@ -2834,6 +2834,7 @@ void setup() {
     std::atomic<int> peerNotify{0};
     std::atomic<int> peerIndicate{0};
     std::atomic<int> floodCount{0};
+    std::atomic<int> queueIndicate{0};
     BLERemoteCharacteristic::NotifyCallback onPeer = [&peerNotify, &peerIndicate,
                                                       &floodCount](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery kind) {
       if (kind == BLERemoteCharacteristic::Delivery::Notification) {
@@ -2865,7 +2866,12 @@ void setup() {
         BLERemoteCharacteristic queue = qsvc ? qsvc.getCharacteristic(queueCharUUID) : BLERemoteCharacteristic();
         connected = peer && (bool)peer.subscribe(BLESubscription::Notify, onPeer);
         if (queue) {
-          (void)queue.subscribe(BLESubscription::Indicate, [](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery) {});
+          (void)queue.subscribe(
+            BLESubscription::Indicate,
+            [&queueIndicate](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery) {
+              queueIndicate.fetch_add(1, std::memory_order_relaxed);
+            }
+          );
         }
       }
     }
@@ -2892,9 +2898,14 @@ void setup() {
     );
     Serial.printf("[CLIENT] Phase35 flood=%d\n", (int)floodCount.load());
 
-    // Let the server finish in-flight removeService (NimBLE GATT rebuild)
-    // before the authorized short-read, which shares the host task.
-    delay(2000);
+    // Wait for all 9 queued indications on queueChr to arrive and for the
+    // server to finish removing queueSvc before issuing the authorized read.
+    start = millis();
+    while (queueIndicate.load() < 9 && millis() - start < 10000) {
+      delay(20);
+    }
+    delay(200);
+    Serial.printf("[CLIENT] Phase35 queueRx=%d\n", (int)queueIndicate.load());
 
     bool timeoutEmpty = false;
     bool rereadOk = false;

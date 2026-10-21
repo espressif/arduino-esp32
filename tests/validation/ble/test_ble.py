@@ -1306,6 +1306,8 @@ def _phase_pending_send_edges(server, client):
     assert confirmed == sent and failed == 0, f"notify flood did not complete: confirmed={confirmed} failed={failed}"
     m_cf = client.expect(r"\[CLIENT\] Phase35 flood=(\d+)\r?\n", timeout=20)
     assert int(m_cf.group(1)) >= 1, "client received no flooded notifications"
+    m_qrx = client.expect(r"\[CLIENT\] Phase35 queueRx=(\d+)\r?\n", timeout=20)
+    assert int(m_qrx.group(1)) >= 8, "client did not receive queued indications"
 
     m_to = client.expect(r"\[CLIENT\] Phase35 timeoutEmpty=([01]) reread=([01])", timeout=20)
     assert int(m_to.group(1)) == 1, "short readValue timeout did not fail (handle destroy/re-read untested)"
