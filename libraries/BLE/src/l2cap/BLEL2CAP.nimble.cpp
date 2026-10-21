@@ -26,6 +26,7 @@
 
 #include "l2cap/BLEL2CAP.nimble.h"
 #include "BLE.h"
+#include "BLE.nimble.h"
 #include "l2cap/BLEL2CAPImpl.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLESync.h"
@@ -145,10 +146,22 @@ BTStatus BLEL2CAPChannel::disconnect() {
     return BTStatus::InvalidState;
   }
 
+  bool wait = !nimbleIsHostTask();
+  if (wait) {
+    impl.disconnectSync.take();
+  }
   int rc = ble_l2cap_disconnect(impl.chan);
   if (rc != 0) {
+    if (wait) {
+      impl.disconnectSync.give(BTStatus::Fail);
+    }
     log_e("L2CAP: ble_l2cap_disconnect rc=%d", rc);
     return BTStatus::Fail;
+  }
+  if (wait && impl.connected) {
+    (void)impl.disconnectSync.wait(5000);
+  } else if (wait) {
+    impl.disconnectSync.give(BTStatus::OK);
   }
   return BTStatus::OK;
 }
@@ -311,17 +324,19 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
     {
       BLEL2CAPChannel::DisconnectHandler cb;
       BLEL2CAPChannel handle;
+      std::shared_ptr<BLEL2CAPChannel::Impl> discImpl;
       {
         BLELockGuard lock(server->mtx);
         for (auto it = server->channels.begin(); it != server->channels.end(); ++it) {
           if ((*it)->chan == event->disconnect.chan) {
-            (*it)->connected = false;
-            (*it)->chan = nullptr;
+            discImpl = *it;
+            discImpl->connected = false;
+            discImpl->chan = nullptr;
             // Unblock any write() waiting between SDUs.
-            (*it)->txSync.give(BTStatus::Fail);
+            discImpl->txSync.give(BTStatus::Fail);
 
-            cb = (*it)->onDisconnectCb;
-            handle = BLEL2CAPChannelImplCommon::makeHandle(*it);
+            cb = discImpl->onDisconnectCb;
+            handle = BLEL2CAPChannelImplCommon::makeHandle(discImpl);
             server->channels.erase(it);
             break;
           }
@@ -329,6 +344,9 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
       }
       if (cb) {
         cb(handle);
+      }
+      if (discImpl) {
+        discImpl->disconnectSync.give(BTStatus::OK);
       }
       break;
     }
@@ -453,9 +471,48 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
   return true;
 }
 
+struct L2CAPClientCtx {
+  std::shared_ptr<BLEL2CAPChannel::Impl> impl;
+};
+
+static SemaphoreHandle_t sClientCtxMtx = xSemaphoreCreateRecursiveMutex();
+static std::vector<L2CAPClientCtx *> sClientContexts;
+
+static void removeClientCtx(L2CAPClientCtx *ctx) {
+  {
+    BLELockGuard lock(sClientCtxMtx);
+    for (auto it = sClientContexts.begin(); it != sClientContexts.end(); ++it) {
+      if (*it == ctx) {
+        sClientContexts.erase(it);
+        break;
+      }
+    }
+  }
+  delete ctx;
+}
+
+void nimbleCleanupL2CAP() {
+  std::vector<L2CAPClientCtx *> pending;
+  {
+    BLELockGuard lock(sClientCtxMtx);
+    pending.swap(sClientContexts);
+  }
+  for (auto *ctx : pending) {
+    if (ctx->impl) {
+      ctx->impl->connected = false;
+      ctx->impl->chan = nullptr;
+      ctx->impl->txSync.give(BTStatus::Fail);
+      ctx->impl->connectSync.give(BTStatus::Fail);
+      ctx->impl->disconnectSync.give(BTStatus::OK);
+    }
+    delete ctx;
+  }
+}
+
 bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanImpl, uint16_t connHandle, uint16_t psm, uint16_t mtu) {
   chanImpl->psm = psm;
   chanImpl->connHandle = connHandle;
+  chanImpl->mtu = mtu;
 
   struct os_mbuf *sdu = ble_hs_mbuf_from_flat(nullptr, 0);
   if (!sdu) {
@@ -466,18 +523,18 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
     return false;
   }
 
-  struct ClientCtx {
-    std::shared_ptr<BLEL2CAPChannel::Impl> impl;
-  };
-
-  auto *ctx = new ClientCtx{chanImpl};
+  auto *ctx = new L2CAPClientCtx{chanImpl};
+  {
+    BLELockGuard lock(sClientCtxMtx);
+    sClientContexts.push_back(ctx);
+  }
 
   auto clientEventFn = [](struct ble_l2cap_event *event, void *arg) -> int {
-    auto *ctx = static_cast<ClientCtx *>(arg);
+    auto *ctx = static_cast<L2CAPClientCtx *>(arg);
     if (!ctx) {
       return 0;
     }
-    auto &impl = ctx->impl;
+    auto impl = ctx->impl;
 
     switch (event->type) {
       case BLE_L2CAP_EVENT_COC_CONNECTED:
@@ -485,9 +542,11 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
           impl->chan = event->connect.chan;
           impl->connected = true;
           impl->connHandle = event->connect.conn_handle;
+          impl->connectSync.give(BTStatus::OK);
         } else {
           log_w("L2CAP client connect failed: status=%d", event->connect.status);
-          delete ctx;
+          impl->connectSync.give(BTStatus::Fail);
+          removeClientCtx(ctx);
         }
         break;
 
@@ -505,7 +564,8 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
           BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(impl);
           cb(channel);
         }
-        delete ctx;
+        impl->disconnectSync.give(BTStatus::OK);
+        removeClientCtx(ctx);
         break;
       }
 
@@ -543,14 +603,26 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
     return 0;
   };
 
+  bool wait = !nimbleIsHostTask();
+  if (wait) {
+    chanImpl->connectSync.take();
+  }
   int rc = ble_l2cap_connect(connHandle, psm, mtu, sdu, clientEventFn, ctx);
   if (rc != 0) {
+    if (wait) {
+      chanImpl->connectSync.give(BTStatus::Fail);
+    }
     log_e("ble_l2cap_connect failed: rc=%d", rc);
-    delete ctx;
+    removeClientCtx(ctx);
     return false;
   }
 
-  chanImpl->mtu = mtu;
+  if (wait) {
+    BTStatus st = chanImpl->connectSync.wait(5000);
+    if (st != BTStatus::OK) {
+      return false;
+    }
+  }
   return true;
 }
 

@@ -42,6 +42,8 @@ struct BLEL2CAPChannel::Impl {
   /// Wakes a multi-SDU @c write() that hit @c BLE_HS_ESTALLED / @c BLE_HS_EBUSY
   /// waiting for peer credits (@c BLE_L2CAP_EVENT_COC_TX_UNSTALLED).
   BLESync txSync{"txSync"};
+  BLESync connectSync{"l2capConnectSync"};
+  BLESync disconnectSync{"l2capDisconnectSync"};
 
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
@@ -92,5 +94,6 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
  * @return true on success; false on allocation or connect failure.
  */
 bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanImpl, uint16_t connHandle, uint16_t psm, uint16_t mtu);
+void nimbleCleanupL2CAP();
 
 #endif /* BLE_L2CAP_SUPPORTED && BLE_NIMBLE */
