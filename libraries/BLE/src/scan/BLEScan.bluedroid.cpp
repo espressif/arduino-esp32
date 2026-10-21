@@ -115,16 +115,28 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
     return rc;
   }
 
+  const char *taskName = pcTaskGetName(nullptr);
+  const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
+
   // Extended scan duration is in 10 ms units; 0 == scan until stopped.
-  uint32_t durationUnits = (durationMs == 0) ? 0 : (durationMs / 10);
+  uint32_t durationUnits = (durationMs == 0) ? 0 : std::max<uint32_t>(1, (durationMs + 9) / 10);
   impl.scanSync.take();
+  if (!onBtcTask) {
+    impl.paramSync.take();
+  }
   impl.isScanning = true;
   err = esp_ble_gap_start_ext_scan(durationUnits, 0);
   if (err != ESP_OK) {
     impl.isScanning = false;
+    if (!onBtcTask) {
+      impl.paramSync.give(BTStatus::Fail);
+    }
     impl.scanSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_start_ext_scan: %s", esp_err_to_name(err));
     return BTStatus::Fail;
+  }
+  if (!onBtcTask) {
+    return impl.paramSync.wait(5000);
   }
   return BTStatus::OK;
 #else
@@ -152,6 +164,9 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
     return rc;
   }
 
+  const char *taskName = pcTaskGetName(nullptr);
+  const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
+
   // Bluedroid uses whole seconds. A sub-second duration would truncate to 0
   // (continuous) and a fractional one would lose its remainder, unlike
   // NimBLE's exact ms. Run those as a continuous scan stopped by a one-shot
@@ -160,14 +175,28 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   const bool needsTimer = (durationMs != 0 && (durationMs % 1000) != 0);
   uint32_t durationSec = needsTimer ? 0 : (durationMs / 1000);
   impl.scanSync.take();
+  if (!onBtcTask) {
+    impl.paramSync.take();
+  }
   impl.isScanning = true;
 
   err = esp_ble_gap_start_scanning(durationSec);
   if (err != ESP_OK) {
     impl.isScanning = false;
+    if (!onBtcTask) {
+      impl.paramSync.give(BTStatus::Fail);
+    }
     impl.scanSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_start_scanning: %s", esp_err_to_name(err));
     return BTStatus::Fail;
+  }
+
+  if (!onBtcTask) {
+    rc = impl.paramSync.wait(5000);
+    if (rc != BTStatus::OK) {
+      log_e("Scan start did not complete (status=%d)", static_cast<int>(rc.code()));
+      return rc;
+    }
   }
 
   if (needsTimer) {
@@ -298,15 +327,27 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
     return rc;
   }
 
-  uint32_t durationUnits = (durationMs == 0) ? 0 : (durationMs / 10);
+  const char *taskName = pcTaskGetName(nullptr);
+  const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
+
+  uint32_t durationUnits = (durationMs == 0) ? 0 : std::max<uint32_t>(1, (durationMs + 9) / 10);
   impl.scanSync.take();
+  if (!onBtcTask) {
+    impl.paramSync.take();
+  }
   impl.isScanning = true;
   err = esp_ble_gap_start_ext_scan(durationUnits, 0);
   if (err != ESP_OK) {
     impl.isScanning = false;
+    if (!onBtcTask) {
+      impl.paramSync.give(BTStatus::Fail);
+    }
     impl.scanSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_start_ext_scan: %s", esp_err_to_name(err));
     return BTStatus::Fail;
+  }
+  if (!onBtcTask) {
+    return impl.paramSync.wait(5000);
   }
   return BTStatus::OK;
 #else
@@ -430,12 +471,16 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
       break;
 
     case ESP_GAP_BLE_SCAN_START_COMPLETE_EVT:
+    {
       log_d("SCAN_START_COMPLETE status=%d", param->scan_start_cmpl.status);
-      inst->isScanning = (param->scan_start_cmpl.status == ESP_BT_STATUS_SUCCESS);
-      if (param->scan_start_cmpl.status != ESP_BT_STATUS_SUCCESS) {
+      bool ok = (param->scan_start_cmpl.status == ESP_BT_STATUS_SUCCESS);
+      inst->isScanning = ok;
+      inst->paramSync.give(ok ? BTStatus::OK : BTStatus::Fail);
+      if (!ok) {
         inst->scanSync.give(BTStatus::Fail);
       }
       break;
+    }
 
     case ESP_GAP_BLE_SCAN_STOP_COMPLETE_EVT:
     {
@@ -598,12 +643,16 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
       break;
 
     case ESP_GAP_BLE_EXT_SCAN_START_COMPLETE_EVT:
+    {
       log_d("EXT_SCAN_START_COMPLETE status=%d", param->ext_scan_start.status);
-      inst->isScanning = (param->ext_scan_start.status == ESP_BT_STATUS_SUCCESS);
-      if (param->ext_scan_start.status != ESP_BT_STATUS_SUCCESS) {
+      bool ok = (param->ext_scan_start.status == ESP_BT_STATUS_SUCCESS);
+      inst->isScanning = ok;
+      inst->paramSync.give(ok ? BTStatus::OK : BTStatus::Fail);
+      if (!ok) {
         inst->scanSync.give(BTStatus::Fail);
       }
       break;
+    }
 
     case ESP_GAP_BLE_EXT_SCAN_STOP_COMPLETE_EVT:
     {

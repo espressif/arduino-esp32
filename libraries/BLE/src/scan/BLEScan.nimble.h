@@ -41,13 +41,15 @@ struct BLEScan::Impl {
   // task (DISC_COMPLETE); atomic so the public isScanning() getter and the
   // start/stop guards observe it without locking across callbacks.
   std::atomic<bool> isScanning{false};
-  // Set by stop() before ble_gap_disc_cancel() and consumed (exchanged) by the
-  // DISC_COMPLETE handler: that completion belongs to the explicitly stopped
-  // session, so it must not clear a restarted session's isScanning, dispatch a
-  // spurious onComplete, or give the new session's scanSync. start() waits for
-  // this to clear (bounded) before starting a new session -- the same
-  // drain-the-stop-completion approach Bluedroid uses via its stopSync wait.
-  std::atomic<bool> stopPending{false};
+  uint32_t lastDurationMs = 0;
+#if BLE5_SUPPORTED
+  bool hasUncodedConfig = false;
+  uint16_t uncodedInterval = 0;
+  uint16_t uncodedWindow = 0;
+  bool hasCodedConfig = false;
+  uint16_t codedInterval = 0;
+  uint16_t codedWindow = 0;
+#endif
 
   BLEScan::ResultHandler onResultCb = nullptr;
   BLEScan::CompleteHandler onCompleteCb = nullptr;
