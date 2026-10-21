@@ -267,13 +267,10 @@ BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t con
     return BTStatus::NoMemory;
   }
   // server->mtx must NOT be held across this call: NOTIFY_TX is raised
-  // (possibly synchronously) from inside it and that handler takes mtx.
+  // from inside ble_gatts_notify_custom() on both success and failure, and
+  // that handler takes mtx and consumes the pendingNotify entry.
   int rc = ble_gatts_notify_custom(connHandle, attrHandle, om);
   if (rc != 0) {
-    // The stack rejected the submission, so no NOTIFY_TX will consume the
-    // pending entry; drop it (a no-op if the event already consumed it).
-    BLELockGuard serverLock(server->mtx);
-    server->consumePendingNotify(connHandle, attrHandle);
     log_w("Characteristic %s: notify failed for conn=%u rc=%d", impl.uuid.toString().c_str(), connHandle, rc);
   }
   return (rc == 0) ? BTStatus::OK : BTStatus::Fail;
