@@ -322,9 +322,17 @@ size_t BLEStream::write(const uint8_t *buffer, size_t size) {
 
   if (_impl->mode == Impl::Mode::Server) {
     // Server sends via TX characteristic notifications
-    // Chunk at MTU - 3 (ATT header overhead)
+    // Chunk at MTU - 3 (ATT header overhead) across subscribed peers
     uint16_t mtu = 0;
-    if (_impl->server) {
+    if (_impl->server && _impl->txChr) {
+      for (uint16_t h : _impl->txChr.getSubscribedConnections()) {
+        uint16_t cMtu = _impl->server.getPeerMTU(h);
+        if (cMtu > 0 && (mtu == 0 || cMtu < mtu)) {
+          mtu = cMtu;
+        }
+      }
+    }
+    if (mtu == 0 && _impl->server) {
       for (const auto &c : _impl->server.getConnections()) {
         uint16_t cMtu = c.getMTU();
         if (cMtu > 0 && (mtu == 0 || cMtu < mtu)) {
