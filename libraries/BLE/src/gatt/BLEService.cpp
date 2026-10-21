@@ -21,7 +21,9 @@
 #if BLE_ENABLED
 
 #include "core/BLEBackend.h"
+#if BLE_GATT_SERVER_SUPPORTED
 #include "gatt/BLECharacteristicValidation.h"
+#endif
 #include "core/BLEImplHelpers.h"
 #include "esp32-hal-log.h"
 
@@ -32,23 +34,32 @@ BLEService::operator bool() const {
 }
 
 void BLEService::addIncludedService(const BLEService &service) {
-  if (!_impl || !service._impl) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLE_CHECK_IMPL();
+  if (!service._impl) {
     return;
   }
-  for (auto &inc : _impl->includedServices) {
+  BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
+  for (auto &inc : impl.includedServices) {
     if (inc == service._impl) {
       return;
     }
   }
-  log_d("Service %s: addIncludedService %s", _impl->uuid.toString().c_str(), service._impl->uuid.toString().c_str());
-  _impl->includedServices.push_back(service._impl);
+  log_d("Service %s: addIncludedService %s", impl.uuid.toString().c_str(), service._impl->uuid.toString().c_str());
+  impl.includedServices.push_back(service._impl);
+#else
+  (void)service;
+#endif
 }
 
 BLECharacteristic BLEService::getCharacteristic(const BLEUUID &uuid) const {
   BLE_CHECK_IMPL(BLECharacteristic());
-  for (auto &chr : impl.characteristics) {
-    if (chr->uuid == uuid) {
-      return BLECharacteristic(chr);
+  {
+    BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
+    for (auto &chr : impl.characteristics) {
+      if (chr->uuid == uuid) {
+        return BLECharacteristic(chr);
+      }
     }
   }
   log_d("Service %s: getCharacteristic %s - not found", impl.uuid.toString().c_str(), uuid.toString().c_str());
@@ -58,6 +69,7 @@ BLECharacteristic BLEService::getCharacteristic(const BLEUUID &uuid) const {
 std::vector<BLECharacteristic> BLEService::getCharacteristics() const {
   std::vector<BLECharacteristic> result;
   BLE_CHECK_IMPL(result);
+  BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
   result.reserve(impl.characteristics.size());
   for (auto &chr : impl.characteristics) {
     result.push_back(BLECharacteristic(chr));
@@ -66,36 +78,62 @@ std::vector<BLECharacteristic> BLEService::getCharacteristics() const {
 }
 
 void BLEService::removeCharacteristic(const BLECharacteristic &chr) {
-  if (!_impl || !chr._impl) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLE_CHECK_IMPL();
+  if (!chr._impl) {
     return;
   }
-  auto &chars = _impl->characteristics;
-  for (auto it = chars.begin(); it != chars.end(); ++it) {
-    if (*it == chr._impl) {
-      log_d("Service %s: removeCharacteristic %s", _impl->uuid.toString().c_str(), chr.getUUID().toString().c_str());
-      chars.erase(it);
-      break;
+  if (impl.started) {
+    log_w("Service %s: removeCharacteristic is only allowed before the service is started", impl.uuid.toString().c_str());
+    return;
+  }
+
+  std::shared_ptr<BLECharacteristic::Impl> removed;
+  {
+    BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
+    if (impl.started) {
+      return;
+    }
+    auto &chars = impl.characteristics;
+    for (auto it = chars.begin(); it != chars.end(); ++it) {
+      if (*it == chr._impl) {
+        removed = *it;
+        chars.erase(it);
+        break;
+      }
     }
   }
+  if (removed) {
+    log_d("Service %s: removeCharacteristic %s", impl.uuid.toString().c_str(), chr.getUUID().toString().c_str());
+    bleDetachLocalCharacteristic(removed);
+  }
+#else
+  (void)chr;
+#endif
 }
 
 bool BLEService::isStarted() const {
-  return _impl && _impl->started;
+  BLE_CHECK_IMPL(false);
+  return impl.started;
 }
 
 BLEUUID BLEService::getUUID() const {
-  return _impl ? _impl->uuid : BLEUUID();
+  BLE_CHECK_IMPL(BLEUUID());
+  return impl.uuid;
 }
 
 uint16_t BLEService::getHandle() const {
-  return _impl ? _impl->handle : 0;
+  BLE_CHECK_IMPL(0);
+  return impl.handle;
 }
 
 BLEServer BLEService::getServer() const {
-  return _impl && _impl->server ? BLEServer(_impl->server->shared_from_this()) : BLEServer();
+  BLE_CHECK_IMPL(BLEServer());
+  return impl.server ? BLEServer(impl.server->shared_from_this()) : BLEServer();
 }
 
 BLECharacteristic BLEService::createCharacteristic(const BLEUUID &uuid, BLEProperty properties, BLEPermission permissions) {
+#if BLE_GATT_SERVER_SUPPORTED
   BLE_CHECK_IMPL(BLECharacteristic());
 
   log_d(
@@ -115,11 +153,20 @@ BLECharacteristic BLEService::createCharacteristic(const BLEUUID &uuid, BLEPrope
   auto chr = std::make_shared<BLECharacteristic::Impl>();
   chr->uuid = uuid;
   chr->properties = properties;
-  chr->service = _impl.get();
+  chr->service = &impl;
   chr->permissions = permissions;
 
-  impl.characteristics.push_back(chr);
+  {
+    BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
+    impl.characteristics.push_back(chr);
+  }
   return BLECharacteristic(chr);
+#else
+  (void)uuid;
+  (void)properties;
+  (void)permissions;
+  return BLECharacteristic();
+#endif
 }
 
 #endif /* BLE_ENABLED */
