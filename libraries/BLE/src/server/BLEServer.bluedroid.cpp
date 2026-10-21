@@ -565,6 +565,8 @@ BTStatus BLEServer::start() {
 
     // 2. Add characteristics (only unregistered ones; a handle != 0 means the
     // stack already has it, e.g. on a service re-registered after a stop).
+    bool reregFailed = false;
+    BTStatus reregSt = BTStatus::Fail;
     for (auto &chr : snapChrs(*svc)) {
       esp_err_t err = ESP_OK;
       BTStatus st = BTStatus::OK;
@@ -580,13 +582,17 @@ BTStatus BLEServer::start() {
         if (err != ESP_OK) {
           log_e("esp_ble_gatts_add_char: %s", esp_err_to_name(err));
           impl.pendingHandle = nullptr;
-          return BTStatus::Fail;
+          reregFailed = true;
+          reregSt = BTStatus::Fail;
+          break;
         }
         st = impl.createSync.wait(5000);
         impl.pendingHandle = nullptr;
         if (st != BTStatus::OK) {
           log_e("Add char failed/timeout");
-          return st;
+          reregFailed = true;
+          reregSt = st;
+          break;
         }
       }
 
@@ -605,15 +611,33 @@ BTStatus BLEServer::start() {
         if (err != ESP_OK) {
           log_e("esp_ble_gatts_add_char_descr: %s", esp_err_to_name(err));
           impl.pendingHandle = nullptr;
-          return BTStatus::Fail;
+          reregFailed = true;
+          reregSt = BTStatus::Fail;
+          break;
         }
         st = impl.createSync.wait(5000);
         impl.pendingHandle = nullptr;
         if (st != BTStatus::OK) {
           log_e("Add descr failed/timeout");
-          return st;
+          reregFailed = true;
+          reregSt = st;
+          break;
         }
       }
+      if (reregFailed) {
+        break;
+      }
+    }
+
+    if (reregFailed) {
+      if (wasStarted) {
+        impl.createSync.take();
+        if (esp_ble_gatts_start_service(svc->handle) == ESP_OK && impl.createSync.wait(5000) == BTStatus::OK) {
+          BLELockGuard lock(impl.mtx);
+          svc->started = true;
+        }
+      }
+      return reregSt;
     }
 
     // 4. Start service
