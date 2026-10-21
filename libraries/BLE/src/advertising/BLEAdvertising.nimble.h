@@ -67,6 +67,7 @@ struct BLEAdvertising::Impl {
   struct ExtInstance {
     bool slotInitialized = false;
     bool extAdvRegistered = false;
+    bool isAdvertising = false;
     struct ble_gap_ext_adv_params params {};
 #if BLE_PERIODIC_ADV_SUPPORTED
     bool periodicAdvRegistered = false;

@@ -36,9 +36,9 @@
 #if BLE_NIMBLE
 
 #include "BLE.h"
+#include "BLE.nimble.h"
 #include "advertising/BLEAdvertising.nimble.h"
 
-#include "server/BLEServerImpl.h"
 #include "core/BLEImplHelpers.h"
 #include "advertising/BLEAdvScanHelpers.h"
 #include "advertising/BLEAdvertisingData.h"
@@ -59,7 +59,16 @@
 int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *arg) {
   auto *impl = static_cast<BLEAdvertising::Impl *>(arg);
   if (event->type == BLE_GAP_EVENT_ADV_COMPLETE) {
+#if BLE5_SUPPORTED
+    uint8_t inst = event->adv_complete.instance;
+    if (inst == kLegacyInstance) {
+      impl->isAdvertising = false;
+    } else if (inst < kMaxExtInstances) {
+      impl->extInstances[inst].isAdvertising = false;
+    }
+#else
     impl->isAdvertising = false;
+#endif
     BLEAdvertising::CompleteHandler cb;
     {
       BLELockGuard lock(impl->mtx);
@@ -80,14 +89,17 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
   }
 
   if (event->type == BLE_GAP_EVENT_CONNECT) {
+#if BLE5_SUPPORTED
+    impl->isAdvertising = ble_gap_ext_adv_active(kLegacyInstance) != 0;
+    for (uint8_t i = 0; i < kLegacyInstance; i++) {
+      impl->extInstances[i].isAdvertising = ble_gap_ext_adv_active(i) != 0;
+    }
+#else
     impl->isAdvertising = false;
+#endif
   }
 
-  BLEServer server = BLE.createServer();
-  if (server) {
-    return BLEServerImplCommon::forwardGapEvent(server, event);
-  }
-  return 0;
+  return nimbleForwardServerGapEvent(event);
 }
 
 // --------------------------------------------------------------------------
@@ -176,13 +188,10 @@ void BLEAdvertising::reset() {
   // from BLEClass::end() while the host is still enabled (see NimBLECore.cpp).
   //
   // Stop every instance first: ble_gap_ext_adv_clear() returns BLE_HS_EBUSY (and
-  // logs an error) if any instance still has an active advertising op. That can
-  // happen when the legacy start()/stop() and extended startExtended()/
-  // stopExtended() paths are mixed, because they share a single `advertising`
-  // flag — e.g. stopExtended() clears the flag, so a following stop() no-ops and
-  // leaves the reserved legacy set enabled. Disabling each instance up-front is
-  // quiet for configured-but-inactive and unconfigured instances (indices stay
-  // within BLE_ADV_INSTANCES) and guarantees the clear succeeds cleanly.
+  // logs an error) if any instance still has an active advertising op. Disabling
+  // each instance up-front is quiet for configured-but-inactive and unconfigured
+  // instances (indices stay within BLE_ADV_INSTANCES) and guarantees the clear
+  // succeeds cleanly.
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
 #if BLE_PERIODIC_ADV_SUPPORTED
     if (impl.extInstances[i].periodicAdvRegistered) {
@@ -214,7 +223,7 @@ void BLEAdvertising::setScanResponseData(const BLEAdvertisementData &data) {
 BTStatus BLEAdvertising::start(uint32_t durationMs) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (impl.isAdvertising) {
-    return BTStatus::OK;
+    stop();
   }
 
 #if BLE5_SUPPORTED
@@ -754,7 +763,8 @@ BTStatus BLEAdvertising::setExtInstanceAddress(uint8_t instance, const BTAddress
 
 BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, uint8_t maxEvents) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!impl.extInstanceAt(instance)) {
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
     return BTStatus::InvalidParam;
   }
   int rc = impl.extEnsureConfigured(instance);
@@ -769,15 +779,19 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
     log_e("ext_adv_start inst %u: rc=%d", instance, rc);
     return BTStatus::Fail;
   }
-  impl.isAdvertising = true;
+  extInst->isAdvertising = true;
   log_i("Advertising: extended started (instance=%u)", instance);
   return BTStatus::OK;
 }
 
 BTStatus BLEAdvertising::stopExtended(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    return BTStatus::InvalidParam;
+  }
   int rc = ble_gap_ext_adv_stop(instance);
-  impl.isAdvertising = false;
+  extInst->isAdvertising = false;
   if (rc != 0 && rc != BLE_HS_EALREADY) {
     log_e("ext_adv_stop inst %u: rc=%d", instance, rc);
     return BTStatus::Fail;

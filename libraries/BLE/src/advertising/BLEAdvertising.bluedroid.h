@@ -73,6 +73,7 @@ struct BLEAdvertising::Impl {
     // Cleared whenever a setter mutates params; ensureExtConfigured() re-applies
     // them to the controller on the next data/start call and sets it true again.
     bool extAdvRegistered = false;
+    bool isAdvertising = false;
     esp_ble_gap_ext_adv_params_t params{};
 #if BLE_PERIODIC_ADV_SUPPORTED
     bool periodicAdvRegistered = false;
