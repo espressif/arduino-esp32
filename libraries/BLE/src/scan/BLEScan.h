@@ -89,7 +89,7 @@ public:
      *       and the incoming device has none, the existing entry is kept to avoid losing
      *       the scan-response data.
      */
-    void appendOrReplace(const BLEAdvertisedDevice &device);
+    BLEAdvertisedDevice appendOrReplace(const BLEAdvertisedDevice &device);
 
     /**
      * @brief Iterator begin for range-based for loops.

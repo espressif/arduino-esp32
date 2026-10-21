@@ -170,7 +170,7 @@ void BLEScan::erase(const BTAddress &address) {
   }
 }
 
-void BLEScan::Results::appendOrReplace(const BLEAdvertisedDevice &device) {
+BLEAdvertisedDevice BLEScan::Results::appendOrReplace(const BLEAdvertisedDevice &device) {
   for (auto &existing : _devices) {
     // BLE 5 lets one advertiser run several advertising sets concurrently from a
     // single address, distinguished by the Advertising SID (ADI). Key results on
@@ -186,13 +186,16 @@ void BLEScan::Results::appendOrReplace(const BLEAdvertisedDevice &device) {
       const size_t newLen = device.getPayloadLength();
       if ((existing.haveName() && !device.haveName())
           || (existLen > newLen && (newLen == 0 || memcmp(existing.getPayload(), device.getPayload(), newLen) == 0))) {
-        return;
+        // Cached merged entry wins; return it so callers dispatch the preserved
+        // device to onResult, not the incoming unmerged report.
+        return existing;
       }
       existing = device;
-      return;
+      return existing;
     }
   }
   _devices.push_back(device);
+  return device;
 }
 
 void BLEScan::Results::dump() const {

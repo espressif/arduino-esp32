@@ -24,6 +24,7 @@
 #include "core/BLEMutex.h"
 
 #include <esp_gap_ble_api.h>
+#include <esp_timer.h>
 
 #include <atomic>
 #include <vector>
@@ -49,6 +50,13 @@ struct BLEScan::Impl {
   BLESync stopSync{"scanStopSync"};
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
+  // Legacy Bluedroid scanning takes whole seconds; a sub-second or fractional
+  // duration is run as a continuous scan plus this one-shot timer (created
+  // lazily by start()). timerExpiryStop is set by the timer so the resulting
+  // SCAN_STOP_COMPLETE dispatches onComplete like a natural duration expiry.
+  esp_timer_handle_t durationTimer = nullptr;
+  std::atomic<bool> timerExpiryStop{false};
+
   BLEScan::ResultHandler onResultCb = nullptr;
   BLEScan::CompleteHandler onCompleteCb = nullptr;
   BLEScan::PeriodicSyncHandler periodicSyncCb = nullptr;
@@ -61,10 +69,16 @@ struct BLEScan::Impl {
 #endif
 
   ~Impl() {
+    if (durationTimer) {
+      esp_timer_stop(durationTimer);
+      esp_timer_delete(durationTimer);
+    }
     if (mtx) {
       vSemaphoreDelete(mtx);
     }
   }
+
+  static void durationTimerCb(void *arg);
 
   static BLEScan::Impl *s_instance;
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);

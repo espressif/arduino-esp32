@@ -259,7 +259,10 @@ BLEAdvertisedDevice::FrameType BLEAdvertisedDevice::getFrameType() const {
 
 bool BLEAdvertisedDevice::getBeacon(BLEBeacon &beacon) const {
   BLE_CHECK_IMPL(false);
-  if (!impl.hasMfgData || impl.mfgData.size() < 25 || impl.mfgData[2] != 0x02 || impl.mfgData[3] != 0x15) {
+  // iBeacon requires the Apple company ID (0x004C, little-endian 4C 00) before
+  // the 0x02 0x15 subtype; without it any vendor's 0x02 0x15 payload misparses.
+  if (!impl.hasMfgData || impl.mfgData.size() < 25 || impl.mfgData[0] != 0x4C || impl.mfgData[1] != 0x00 || impl.mfgData[2] != 0x02
+      || impl.mfgData[3] != 0x15) {
     return false;
   }
   beacon.setFromPayload(impl.mfgData.data(), impl.mfgData.size());

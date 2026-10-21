@@ -43,6 +43,22 @@
 
 BLEScan::Impl *BLEScan::Impl::s_instance = nullptr;
 
+// One-shot expiry for fractional/sub-second legacy durations: stop the
+// (continuous) stack scan; SCAN_STOP_COMPLETE then dispatches onComplete and
+// gives scanSync because timerExpiryStop is set (see handleGAP).
+void BLEScan::Impl::durationTimerCb(void *arg) {
+  auto *inst = static_cast<BLEScan::Impl *>(arg);
+  if (!inst || !inst->isScanning) {
+    return;
+  }
+  inst->timerExpiryStop = true;
+  esp_err_t err = esp_ble_gap_stop_scanning();
+  if (err != ESP_OK) {
+    inst->timerExpiryStop = false;
+    log_e("scan duration timer: esp_ble_gap_stop_scanning: %s", esp_err_to_name(err));
+  }
+}
+
 // --------------------------------------------------------------------------
 // Configuration
 // --------------------------------------------------------------------------
@@ -136,8 +152,13 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
     return rc;
   }
 
-  // Bluedroid uses seconds; convert ms -> s, 0 means infinite
-  uint32_t durationSec = durationMs / 1000;
+  // Bluedroid uses whole seconds. A sub-second duration would truncate to 0
+  // (continuous) and a fractional one would lose its remainder, unlike
+  // NimBLE's exact ms. Run those as a continuous scan stopped by a one-shot
+  // esp_timer at exactly durationMs; whole-second durations keep the native
+  // stack duration (whose INQ_CMPL expiry dispatches onComplete).
+  const bool needsTimer = (durationMs != 0 && (durationMs % 1000) != 0);
+  uint32_t durationSec = needsTimer ? 0 : (durationMs / 1000);
   impl.scanSync.take();
   impl.isScanning = true;
 
@@ -147,6 +168,29 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
     impl.scanSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_start_scanning: %s", esp_err_to_name(err));
     return BTStatus::Fail;
+  }
+
+  if (needsTimer) {
+    if (!impl.durationTimer) {
+      esp_timer_create_args_t timerArgs = {};
+      timerArgs.callback = BLEScan::Impl::durationTimerCb;
+      timerArgs.arg = &impl;
+      timerArgs.name = "ble_scan_dur";
+      timerArgs.dispatch_method = ESP_TIMER_TASK;
+      esp_err_t terr = esp_timer_create(&timerArgs, &impl.durationTimer);
+      if (terr != ESP_OK) {
+        log_e("scan duration timer create: %s", esp_err_to_name(terr));
+        (void)stop();
+        return BTStatus::Fail;
+      }
+    }
+    esp_timer_stop(impl.durationTimer);
+    esp_err_t terr = esp_timer_start_once(impl.durationTimer, static_cast<uint64_t>(durationMs) * 1000ULL);
+    if (terr != ESP_OK) {
+      log_e("scan duration timer start: %s", esp_err_to_name(terr));
+      (void)stop();
+      return BTStatus::Fail;
+    }
   }
 
   return BTStatus::OK;
@@ -176,6 +220,10 @@ BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
 
 BTStatus BLEScan::stop() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.durationTimer) {
+    esp_timer_stop(impl.durationTimer);
+  }
+  impl.timerExpiryStop = false;
   if (!impl.isScanning) {
     return BTStatus::OK;
   }
@@ -393,6 +441,20 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     {
       log_d("SCAN_STOP_COMPLETE status=%d", param->scan_stop_cmpl.status);
       inst->isScanning = false;
+      // A stop driven by the fractional-duration timer is a natural expiry:
+      // dispatch onComplete like ESP_GAP_SEARCH_INQ_CMPL_EVT does.
+      if (inst->timerExpiryStop.exchange(false)) {
+        BLEScan::CompleteHandler completeCb;
+        BLEScan::Results resultsCopy;
+        {
+          BLELockGuard lock(inst->mtx);
+          completeCb = inst->onCompleteCb;
+          resultsCopy = inst->results;
+        }
+        if (completeCb) {
+          completeCb(resultsCopy);
+        }
+      }
       BTStatus st = param->scan_stop_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail;
       inst->scanSync.give(st);
       inst->stopSync.give(st);
@@ -487,7 +549,8 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
               }
 
               if (!isDuplicate) {
-                inst->results.appendOrReplace(dev);
+                // Dispatch the winning (possibly preserved cached) entry.
+                dev = inst->results.appendOrReplace(dev);
                 resultCb = inst->onResultCb;
               }
             }
@@ -638,7 +701,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
           }
         }
         if (!isDuplicate) {
-          inst->results.appendOrReplace(dev);
+          dev = inst->results.appendOrReplace(dev);
           resultCb = inst->onResultCb;
         }
       }

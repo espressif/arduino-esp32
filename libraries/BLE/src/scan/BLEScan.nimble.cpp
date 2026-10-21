@@ -25,6 +25,7 @@
 #if BLE_NIMBLE
 
 #include "BLE.h"
+#include "BLE.nimble.h"
 
 #include "scan/BLEScan.nimble.h"
 #include "scan/BLEAdvertisedDeviceImpl.h"
@@ -63,9 +64,31 @@ void dispatchResult(BLEScan::Impl *impl, BLEAdvertisedDevice device) {
  * @param impl Scan implementation whose result list is updated.
  * @param device Advertised device to append or replace (by address).
  */
-void appendOrReplaceResult(BLEScan::Impl *impl, const BLEAdvertisedDevice &device) {
+BLEAdvertisedDevice appendOrReplaceResult(BLEScan::Impl *impl, const BLEAdvertisedDevice &device) {
   BLELockGuard lock(impl->mtx);
-  impl->results.appendOrReplace(device);
+  return impl->results.appendOrReplace(device);
+}
+
+// Bounded wait until a stop() initiated by us has been consumed by
+// DISC_COMPLETE. Must not run on the NimBLE host task (it delivers that event).
+bool waitForStopComplete(BLEScan::Impl *impl) {
+  if (!impl->stopPending.load()) {
+    return true;
+  }
+  if (nimbleIsHostTask()) {
+    return false;
+  }
+  for (int waited = 0; impl->stopPending.load() && waited < 2000; waited += 5) {
+    vTaskDelay(pdMS_TO_TICKS(5));
+  }
+  if (impl->stopPending.load()) {
+    // The completion was lost (host teardown or an already-terminated
+    // session that generates no DISC_COMPLETE). Clear the flag and let the
+    // caller proceed instead of wedging every later start(); a genuinely
+    // late completion then just ends an idle session.
+    impl->stopPending = false;
+  }
+  return true;
 }
 
 /**
@@ -250,13 +273,18 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       // Cache the result before invoking the callback so getResults() called from
       // inside onResult already includes this device.
       BLEAdvertisedDevice dev = impl->parseDiscEvent(&event->disc);
-      appendOrReplaceResult(impl, dev);
-      dispatchResult(impl, dev);
+      dispatchResult(impl, appendOrReplaceResult(impl, dev));
       return 0;
     }
 
     case BLE_GAP_EVENT_DISC_COMPLETE:
     {
+      // Completion of an explicit stop(): consume it silently. A restarted
+      // session may already be active -- do not clear its flag, fire its
+      // onComplete, or steal its scanSync token.
+      if (impl->stopPending.exchange(false)) {
+        return 0;
+      }
       {
         BLELockGuard lock(impl->mtx);
         impl->isScanning = false;
@@ -297,8 +325,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
       // Cache before invoking the callback (see BLE_GAP_EVENT_DISC).
       BLEAdvertisedDevice dev = impl->parseExtDiscEvent(&event->ext_disc);
-      appendOrReplaceResult(impl, dev);
-      dispatchResult(impl, dev);
+      dispatchResult(impl, appendOrReplaceResult(impl, dev));
       return 0;
     }
 
@@ -360,8 +387,17 @@ void BLEScan::clearDuplicateCache() { /* NimBLE manages this internally */ }
 
 BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  bool stoppedHere = false;
   if (impl.isScanning) {
     stop();
+    stoppedHere = true;
+  }
+  // A stop initiated by this very call must not block the restart: its
+  // DISC_COMPLETE is consumed by the handler without touching the new
+  // session (and on the host task it cannot have been delivered yet).
+  if (!stoppedHere && !waitForStopComplete(&impl)) {
+    log_e("Scan: previous stop has not completed yet");
+    return nimbleIsHostTask() ? BTStatus::InvalidState : BTStatus::Timeout;
   }
 
   if (!appendToExistingResults) {
@@ -426,24 +462,57 @@ BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
 BTStatus BLEScan::stop() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!impl.isScanning) {
+    // No session is active, so no DISC_COMPLETE can still be in flight for a
+    // live session; a leftover stopPending belongs to a session whose
+    // completion was lost across BLE.end() (host stopped before delivery).
+    // Clearing it here unwedges the next start().
+    impl.stopPending = false;
     return BTStatus::OK;
   }
   log_d("Scan: stop");
+  // Mark before cancel so the resulting DISC_COMPLETE is consumed as this
+  // stop's completion (see gapEventHandler), even if a new session has
+  // already started by the time it arrives.
+  impl.stopPending = true;
   int rc = ble_gap_disc_cancel();
   impl.isScanning = false;
-  if (rc != 0 && rc != BLE_HS_EALREADY) {
+  if (rc == BLE_HS_EALREADY) {
+    impl.stopPending = false;
+    return BTStatus::OK;
+  }
+  if (rc != 0) {
+    impl.stopPending = false;
     log_e("Scan: ble_gap_disc_cancel rc=%d", rc);
     return BTStatus::Fail;
   }
-  impl.scanSync.give(BTStatus::OK);
+  // Drain the stop completion before returning (bounded; skipped on the host
+  // task, which must not block -- there the pending flag alone suppresses the
+  // stale completion and a later start() will wait for / reject it).
+  if (!nimbleIsHostTask() && !waitForStopComplete(&impl)) {
+    // No DISC_COMPLETE within the bound: the completion was lost (e.g. the
+    // host is being torn down). Clear the flag so the next start() is not
+    // wedged; a genuinely late completion then just ends an idle session.
+    log_w("Scan: timed out waiting for DISC_COMPLETE after cancel");
+    impl.stopPending = false;
+  } else if (!impl.isScanning) {
+    // Wake a startBlocking() waiter on another task; a following start()
+    // drains this via scanSync.take(), so it cannot steal the new token.
+    impl.scanSync.give(BTStatus::OK);
+  }
   return BTStatus::OK;
 }
 
 BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedConfig, const ExtScanConfig *uncodedConfig) {
 #if BLE5_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  bool stoppedHere = false;
   if (impl.isScanning) {
     stop();
+    stoppedHere = true;
+  }
+  if (!stoppedHere && !waitForStopComplete(&impl)) {
+    log_e("Scan: previous stop has not completed yet");
+    return nimbleIsHostTask() ? BTStatus::InvalidState : BTStatus::Timeout;
   }
   {
     BLELockGuard lock(impl.mtx);
