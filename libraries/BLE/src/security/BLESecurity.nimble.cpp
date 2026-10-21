@@ -156,6 +156,17 @@ int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *event) {
       } else if (pkey.action == BLE_SM_IOACT_NUMCMP) {
         pkey.numcmp_accept = sec->resolveNumericComparison(connInfo, event->passkey.params.numcmp) ? 1 : 0;
       } else {
+        // BLE_SM_IOACT_OOB / BLE_SM_IOACT_OOB_SC (and any other unhandled
+        // action): OOB pairing is not supported by this library. Inject the
+        // zeroed pkey with the requested action set so NimBLE fails pairing
+        // promptly (OOB data not available) instead of stalling until the SMP
+        // timeout. For OOB_SC the zeroed oob_sc_data pointers do the same.
+        log_w("Security: unsupported passkey action %u (OOB not supported); failing pairing", pkey.action);
+        pkey.passkey = 0;
+        int rcOob = ble_sm_inject_io(connHandle, &pkey);
+        if (rcOob != 0) {
+          log_e("Security: ble_sm_inject_io for unsupported action failed rc=%d", rcOob);
+        }
         return 0;
       }
       int rc = ble_sm_inject_io(connHandle, &pkey);
