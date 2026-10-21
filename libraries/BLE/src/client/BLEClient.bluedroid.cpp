@@ -414,7 +414,7 @@ BTStatus BLEClient::disconnect() {
     // before we re-read it (notably on a shared ACL, where only CLOSE_EVT
     // arrives). Re-reading the flag here raced that teardown and returned
     // before onDisconnect had been dispatched.
-    (void)impl.disconnectSync.wait(5000);
+    return impl.disconnectSync.wait(5000);
   }
   return BTStatus::OK;
 }
@@ -792,15 +792,14 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
   switch (event) {
     case ESP_GATTC_CONNECT_EVT:
     {
-      client->connId = param->connect.conn_id;
-      client->connected = true;
-      // CONNECT carries ble_addr_type; OPEN does not. Refresh peerAddress so
-      // getConnInfo() / onConnect see the stack-reported type (may refine the
-      // type passed into connect()).
-      client->peerAddress = BTAddress::fromEspBdAddr(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
-      // MTU exchange is performed from the caller thread in connect(), not from
-      // any GATTC event callback: on Bluedroid a request issued at connection
-      // setup is silently dropped (no CFG_MTU_EVT delivered).
+      // CONNECT_EVT is broadcast by Bluedroid to every registered gattc_if when
+      // any physical ACL link comes up. Do NOT set client->connected or
+      // client->connId here: only ESP_GATTC_OPEN_EVT establishes this client's
+      // virtual connection. Just refine the peer's address type when this
+      // client's target BDA matches.
+      if (client->peerAddress.equalsEspBdAddr(param->connect.remote_bda)) {
+        client->peerAddress = BTAddress::fromEspBdAddr(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
+      }
       break;
     }
 
@@ -933,7 +932,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       if (onNotifyCb && chrShared) {
         BLERemoteCharacteristic chrHandle = BLERemoteCharacteristicImplCommon::makeHandle(chrShared);
         onNotifyCb(
-          chrHandle, chrShared->value.data(), chrShared->value.size(),
+          chrHandle, param->notify.value, param->notify.value_len,
           param->notify.is_notify ? BLERemoteCharacteristic::Delivery::Notification : BLERemoteCharacteristic::Delivery::Indication
         );
       }
@@ -957,16 +956,48 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
 
     case ESP_GATTC_SRVC_CHG_EVT:
     {
-      log_i("Client: service changed indication received, invalidating discovered services");
-      // The peer's GATT table changed, so every cached handle may be stale.
-      // Do not fabricate a 0x2A05 payload and do not re-register notify routes
-      // by stale handle (previously done under the client mutex across stack
-      // calls). Invalidate the discovered tree instead: clearing it also drops
-      // the notify routes, which are resolved by scanning discoveredServices.
-      // The user re-discovers (discoverServices()) to rebuild fresh handles.
+      log_i("Client: service changed indication received");
+      // Bluedroid's bta_gattc_process_srvc_chg_ind intercepts 0x2A05 (instead of
+      // delivering ESP_GATTC_NOTIFY_EVT) and clears notif_reg[] for the affected
+      // handle range. Re-register active characteristic subscriptions so surviving
+      // characteristics keep receiving notifications/indications, and invoke any
+      // user callback subscribed to 0x1801 / 0x2A05.
+      BLERemoteCharacteristic::NotifyCallback svcChgCb;
+      std::shared_ptr<BLERemoteCharacteristic::Impl> svcChgChr;
+      std::vector<uint16_t> notifyHandles;
+      esp_bd_addr_t bda;
+      client->peerAddress.toEspBdAddr(bda);
       {
         BLELockGuard lock(client->mtx);
-        client->clearDiscoveredServices();
+        for (auto &svc : client->discoveredServices) {
+          if (!svc) {
+            continue;
+          }
+          const bool isGattSvc = (svc->uuid == BLEUUID(static_cast<uint16_t>(0x1801)));
+          for (auto &chr : svc->characteristics) {
+            if (!chr || !chr->onNotifyCb) {
+              continue;
+            }
+            if (isGattSvc && chr->uuid == BLEUUID(static_cast<uint16_t>(0x2A05))) {
+              svcChgCb = chr->onNotifyCb;
+              svcChgChr = chr->shared_from_this();
+            } else {
+              notifyHandles.push_back(chr->handle);
+            }
+          }
+        }
+      }
+      for (uint16_t h : notifyHandles) {
+        (void)esp_ble_gattc_register_for_notify(client->gattcIf, bda, h);
+      }
+      if (svcChgCb && svcChgChr) {
+        static const uint8_t range[4] = {0x01, 0x00, 0xFF, 0xFF};
+        {
+          BLELockGuard lock(client->mtx);
+          svcChgChr->value.assign(range, range + sizeof(range));
+        }
+        BLERemoteCharacteristic chrHandle = BLERemoteCharacteristicImplCommon::makeHandle(svcChgChr);
+        svcChgCb(chrHandle, range, sizeof(range), BLERemoteCharacteristic::Delivery::Indication);
       }
       break;
     }

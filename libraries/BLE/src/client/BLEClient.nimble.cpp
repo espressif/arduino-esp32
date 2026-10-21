@@ -329,7 +329,7 @@ BTStatus BLEClient::disconnect() {
     // Wait unconditionally: the DISCONNECT handler may already have cleared
     // `connected` before we could re-read it, and disconnect() must not
     // return before onDisconnect has been dispatched.
-    (void)impl.disconnectSync.wait(5000);
+    return impl.disconnectSync.wait(5000);
   }
   return BTStatus::OK;
 }
