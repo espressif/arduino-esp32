@@ -84,6 +84,7 @@ bool BLEScan::isScanning() const {
 void BLEScan::onResult(ResultHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
   impl.onResultCb = std::move(callback);
 #else
   (void)callback;
@@ -94,6 +95,7 @@ void BLEScan::onResult(ResultHandler callback) {
 void BLEScan::onComplete(CompleteHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
   impl.onCompleteCb = std::move(callback);
 #else
   (void)callback;
@@ -104,6 +106,7 @@ void BLEScan::onComplete(CompleteHandler callback) {
 void BLEScan::resetCallbacks() {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
   impl.onResultCb = nullptr;
   impl.onCompleteCb = nullptr;
   impl.periodicSyncCb = nullptr;
@@ -115,6 +118,7 @@ void BLEScan::resetCallbacks() {
 void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
   impl.periodicSyncCb = std::move(handler);
 #else
   (void)handler;
@@ -125,6 +129,7 @@ void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
   impl.periodicReportCb = std::move(handler);
 #else
   (void)handler;
@@ -135,6 +140,7 @@ void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
   impl.periodicLostCb = std::move(handler);
 #else
   (void)handler;
