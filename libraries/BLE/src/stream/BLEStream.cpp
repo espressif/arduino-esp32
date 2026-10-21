@@ -89,22 +89,12 @@ struct BLEStream::Impl {
 BLEStream::BLEStream(size_t rxBufferSize) : _impl(new Impl(rxBufferSize)) {}
 
 BLEStream::~BLEStream() {
+  // end() already clears the callbacks this stream registered while it was
+  // live (server: rxChr + server handlers, client: client handlers). Do not
+  // clear them unconditionally here: after end() the server/client handles
+  // may be shared with (or have been re-registered by) another owner, and
+  // wiping their callbacks would break that owner.
   end();
-  // The lambdas registered with _impl->client, _impl->rxChr, and _impl->server
-  // capture `this`. Clear them before deleting _impl so an outliving handle
-  // never invokes a callback on a destroyed BLEStream.
-  if (_impl) {
-    if (_impl->rxChr) {
-      _impl->rxChr.resetCallbacks();
-    }
-    if (_impl->server) {
-      _impl->server.onConnect(nullptr);
-      _impl->server.onDisconnect(nullptr);
-    }
-    if (_impl->client) {
-      _impl->client.resetCallbacks();
-    }
-  }
   delete _impl;
 }
 
