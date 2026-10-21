@@ -48,6 +48,7 @@
 
 #include <esp_gap_ble_api.h>
 #include <esp_bt_defs.h>
+#include <algorithm>
 #include <string.h>
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
@@ -240,14 +241,15 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       } else if (handle < kMaxExtInstances) {
         inst->extInstances[handle].isAdvertising = false;
       }
-      if (param->adv_terminate.status == 0x3c) {
+      // 0x3c = Advertising Timeout (duration expired), 0x43 = Limit Reached (maxEvents expired).
+      if (param->adv_terminate.status == 0x3c || param->adv_terminate.status == 0x43) {
         BLEAdvertising::CompleteHandler cb;
         {
           BLELockGuard lock(inst->mtx);
           cb = inst->onCompleteCb;
         }
         if (cb) {
-          cb(handle);
+          cb((handle == kLegacyInstance) ? 0 : handle);
         }
       }
       break;
@@ -421,6 +423,9 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   // extended API with a legacy PDU on the reserved instance.
   return impl.startLegacyViaExtAdv(durationMs);
 #else
+  if (impl.isAdvertising) {
+    stop();
+  }
   log_d("start: customAdv=%d, customScanResp=%d, scanResp=%d", impl.customAdvData, impl.customScanRespData, impl.scanResp);
 
   BTStatus result = BTStatus::OK;
@@ -442,21 +447,23 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
       return result;
     }
 
-    // Raw scan response if provided
+    // Raw scan response if provided; otherwise clear any prior scan response.
+    impl.advSync.take();
     if (impl.customScanRespData) {
-      impl.advSync.take();
       err = esp_ble_gap_config_scan_rsp_data_raw(impl.rawScanRespData.data(), impl.rawScanRespData.size());
-      if (err != ESP_OK) {
-        log_e("esp_ble_gap_config_scan_rsp_data_raw: %s", esp_err_to_name(err));
-        impl.advSync.give(BTStatus::Fail);
-        result = BTStatus::Fail;
-        return result;
-      }
-      result = impl.advSync.wait(ADV_SYNC_TIMEOUT_MS);
-      if (!result) {
-        log_e("Timeout waiting for raw scan resp data set");
-        return result;
-      }
+    } else {
+      err = esp_ble_gap_config_scan_rsp_data_raw(nullptr, 0);
+    }
+    if (err != ESP_OK) {
+      log_e("esp_ble_gap_config_scan_rsp_data_raw: %s", esp_err_to_name(err));
+      impl.advSync.give(BTStatus::Fail);
+      result = BTStatus::Fail;
+      return result;
+    }
+    result = impl.advSync.wait(ADV_SYNC_TIMEOUT_MS);
+    if (!result) {
+      log_e("Timeout waiting for raw scan resp data set");
+      return result;
     }
   } else {
     // Serialize the AD payload ourselves and hand raw bytes to the controller,
@@ -486,22 +493,25 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
       return result;
     }
 
-    // Scan response is only valid for scannable PDUs.
+    // Scan response is only valid for scannable PDUs; clear any prior scan response when disabled.
+    BLEAdvertisementData scanRespData;
+    impl.advSync.take();
     if (nameInScanRsp) {
-      BLEAdvertisementData scanRespData = BLEAdvDataBuilder::buildLegacyScanRespData(advName);
-      impl.advSync.take();
+      scanRespData = BLEAdvDataBuilder::buildLegacyScanRespData(advName);
       err = esp_ble_gap_config_scan_rsp_data_raw(const_cast<uint8_t *>(scanRespData.data()), scanRespData.length());
-      if (err != ESP_OK) {
-        log_e("esp_ble_gap_config_scan_rsp_data_raw (scan resp): %s", esp_err_to_name(err));
-        impl.advSync.give(BTStatus::Fail);
-        result = BTStatus::Fail;
-        return result;
-      }
-      result = impl.advSync.wait(ADV_SYNC_TIMEOUT_MS);
-      if (!result) {
-        log_e("Timeout waiting for scan resp data set");
-        return result;
-      }
+    } else {
+      err = esp_ble_gap_config_scan_rsp_data_raw(nullptr, 0);
+    }
+    if (err != ESP_OK) {
+      log_e("esp_ble_gap_config_scan_rsp_data_raw (scan resp): %s", esp_err_to_name(err));
+      impl.advSync.give(BTStatus::Fail);
+      result = BTStatus::Fail;
+      return result;
+    }
+    result = impl.advSync.wait(ADV_SYNC_TIMEOUT_MS);
+    if (!result) {
+      log_e("Timeout waiting for scan resp data set");
+      return result;
     }
   }
 
@@ -791,7 +801,7 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
 
   esp_ble_gap_ext_adv_t startSet = {};
   startSet.instance = kLegacyInstance;
-  startSet.duration = (durationMs == 0) ? 0 : static_cast<int>(durationMs / 10);
+  startSet.duration = (durationMs == 0) ? 0 : static_cast<int>(std::max<uint32_t>(1, (durationMs + 9) / 10));
   startSet.max_events = 0;
   advSync.take();
   err = esp_ble_gap_ext_adv_start(1, &startSet);
@@ -977,7 +987,7 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
   }
   esp_ble_gap_ext_adv_t startSet = {};
   startSet.instance = instance;
-  startSet.duration = (durationMs == 0) ? 0 : static_cast<int>(durationMs / 10);
+  startSet.duration = (durationMs == 0) ? 0 : static_cast<int>(std::max<uint32_t>(1, (durationMs + 9) / 10));
   startSet.max_events = maxEvents;
   impl.advSync.take();
   esp_err_t err = esp_ble_gap_ext_adv_start(1, &startSet);

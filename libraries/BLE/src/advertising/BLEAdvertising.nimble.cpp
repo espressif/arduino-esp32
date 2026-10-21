@@ -48,6 +48,7 @@
 
 #include <host/ble_hs.h>
 #include <host/ble_gap.h>
+#include <algorithm>
 #include <cstring>
 
 /**
@@ -56,49 +57,12 @@
  * @param arg User pointer to BLEAdvertising::Impl.
  * @return 0 for handled; may forward to the server for connect events.
  */
-namespace {
-// Bounded wait until a stop() we initiated is consumed by ADV_COMPLETE.
-// Must not run on the NimBLE host task (it delivers that event).
-bool advWaitForStopComplete(BLEAdvertising::Impl *impl) {
-  if (!impl->legacyStopPending.load()) {
-    return true;
-  }
-  if (nimbleIsHostTask()) {
-    return false;
-  }
-  for (int waited = 0; impl->legacyStopPending.load() && waited < 2000; waited += 5) {
-    vTaskDelay(pdMS_TO_TICKS(5));
-  }
-  if (impl->legacyStopPending.load()) {
-    // Completion lost (host teardown / already-terminated set): clear and
-    // proceed rather than wedging every later start().
-    impl->legacyStopPending = false;
-  }
-  return true;
-}
-}  // namespace
-
 int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *arg) {
   auto *impl = static_cast<BLEAdvertising::Impl *>(arg);
   if (event->type == BLE_GAP_EVENT_ADV_COMPLETE) {
 #if BLE5_SUPPORTED
     uint8_t inst = event->adv_complete.instance;
     const bool isLegacy = (inst == kLegacyInstance);
-#else
-    const bool isLegacy = true;
-#endif
-    // Completion of an explicit stop(): consume silently -- a restarted
-    // session may already be active on this instance.
-    if (isLegacy && impl->legacyStopPending.exchange(false)) {
-      return 0;
-    }
-#if BLE5_SUPPORTED
-    if (!isLegacy && inst < kMaxExtInstances && impl->extInstances[inst].stopPending) {
-      impl->extInstances[inst].stopPending = false;
-      return 0;
-    }
-#endif
-#if BLE5_SUPPORTED
     bool wasAdvertising = false;
     if (isLegacy) {
       wasAdvertising = impl->isAdvertising;
@@ -108,6 +72,7 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
       impl->extInstances[inst].isAdvertising = false;
     }
 #else
+    const bool isLegacy = true;
     bool wasAdvertising = impl->isAdvertising;
     impl->isAdvertising = false;
 #endif
@@ -119,7 +84,7 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
     // to resume advertising. This library owns the advertising state, so it
     // resumes a set that was active when preempted; otherwise a bond
     // operation would silently end advertising for good.
-    const bool preempted = (event->adv_complete.reason == BLE_HS_EPREEMPTED) && wasAdvertising;
+    const bool preempted = (event->adv_complete.reason == BLE_HS_EPREEMPTED) && wasAdvertising && BLE.isInitialized();
     BLEAdvertising::CompleteHandler cb;
     {
       BLELockGuard lock(impl->mtx);
@@ -133,12 +98,11 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
       cb = nullptr;
     }
     if (cb) {
-      // Legacy advertising reports instance 0; extended advertising reports the
-      // set that completed (BT Core Spec v5.x, Vol 4, Part E, §7.7.65.18). The
-      // adv_complete.instance field only exists when extended advertising is
-      // compiled in.
+      // Legacy advertising reports instance 0 (even when routed over the
+      // reserved kLegacyInstance on BLE5 builds); extended advertising reports
+      // the set that completed (BT Core Spec v5.x, Vol 4, Part E, §7.7.65.18).
 #if BLE5_SUPPORTED
-      cb(event->adv_complete.instance);
+      cb(isLegacy ? 0 : inst);
 #else
       cb(0);
 #endif
@@ -238,7 +202,6 @@ void BLEAdvertising::reset() {
   if (impl.isAdvertising) {
     stop();
   }
-  impl.legacyStopPending = false;
   impl.serviceUUIDs.clear();
   impl.deviceName = "";
   impl.useCustomAdvData = false;
@@ -297,17 +260,8 @@ void BLEAdvertising::setScanResponseData(const BLEAdvertisementData &data) {
 BTStatus BLEAdvertising::start(uint32_t durationMs) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   impl.legacyDurationMs = durationMs;
-  bool stoppedHere = false;
   if (impl.isAdvertising) {
     stop();
-    stoppedHere = true;
-  }
-  // A stop initiated by this very call must not block the restart: its
-  // ADV_COMPLETE is consumed by the handler without touching the new
-  // session (and on the host task it cannot have been delivered yet).
-  if (!stoppedHere && !advWaitForStopComplete(&impl)) {
-    log_e("Advertising: previous stop has not completed yet");
-    return nimbleIsHostTask() ? BTStatus::InvalidState : BTStatus::Timeout;
   }
 
 #if BLE5_SUPPORTED
@@ -493,7 +447,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     (void)ble_gap_adv_rsp_set_data(nullptr, 0);
   }
 
-  int32_t duration = (durationMs == 0) ? BLE_HS_FOREVER : (durationMs / 10);
+  int32_t duration = (durationMs == 0) ? BLE_HS_FOREVER : static_cast<int32_t>(durationMs);
   int rc = ble_gap_adv_start(static_cast<uint8_t>(BLE.getOwnAddressType()), NULL, duration, &advParams, BLEAdvertising::Impl::gapEventCallback, &impl);
   if (rc != 0) {
     log_e("ble_gap_adv_start: rc=%d", rc);
@@ -514,13 +468,9 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
 BTStatus BLEAdvertising::stop() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!impl.isAdvertising) {
-    // Same unwedge as BLEScan::stop(): a leftover pending flag from a stop
-    // whose ADV_COMPLETE was lost across BLE.end() must not block start().
-    impl.legacyStopPending = false;
     return BTStatus::OK;
   }
   log_d("Advertising: stop");
-  impl.legacyStopPending = true;
 #if BLE5_SUPPORTED
   int rc = ble_gap_ext_adv_stop(Impl::kLegacyInstance);
 #else
@@ -530,22 +480,9 @@ BTStatus BLEAdvertising::stop() {
   // BLE_HS_EALREADY means "not currently advertising" which is our target
   // state; treat it as success, not an error.
   impl.isAdvertising = false;
-  if (rc == BLE_HS_EALREADY) {
-    impl.legacyStopPending = false;
-    return BTStatus::OK;
-  }
-  if (rc != 0) {
-    impl.legacyStopPending = false;
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
     log_e("Advertising: ble_gap_adv_stop rc=%d", rc);
     return BTStatus::Fail;
-  }
-  // Drain the ADV_COMPLETE for this stop before returning (bounded; skipped
-  // on the host task, where legacyStopPending alone suppresses it and a later
-  // start() waits for / rejects it).
-  if (!nimbleIsHostTask() && !advWaitForStopComplete(&impl)) {
-    // Completion lost (host teardown): unwedge the next start().
-    log_w("Advertising: timed out waiting for ADV_COMPLETE after stop");
-    impl.legacyStopPending = false;
   }
   log_i("Advertising: stopped");
   return BTStatus::OK;
@@ -683,7 +620,7 @@ int BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   }
 
   // Extended advertising duration is in 10 ms units; 0 == no expiration.
-  int duration = (durationMs == 0) ? 0 : static_cast<int>(durationMs / 10);
+  int duration = (durationMs == 0) ? 0 : static_cast<int>(std::max<uint32_t>(1, (durationMs + 9) / 10));
   return ble_gap_ext_adv_start(kLegacyInstance, duration, 0);
 }
 
@@ -868,25 +805,13 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
   if (!extInst) {
     return BTStatus::InvalidParam;
   }
-  if (extInst->stopPending) {
-    if (nimbleIsHostTask()) {
-      return BTStatus::InvalidState;
-    }
-    for (int waited = 0; extInst->stopPending && waited < 2000; waited += 5) {
-      vTaskDelay(pdMS_TO_TICKS(5));
-    }
-    if (extInst->stopPending) {
-      // Completion lost: clear and proceed (see advWaitForStopComplete).
-      extInst->stopPending = false;
-    }
-  }
   int rc = impl.extEnsureConfigured(instance);
   if (rc != 0) {
     log_e("ext_adv_configure inst %u: rc=%d", instance, rc);
     return BTStatus::Fail;
   }
   // Extended advertising duration is in 10 ms units; 0 == no expiration.
-  int duration = (durationMs == 0) ? 0 : static_cast<int>(durationMs / 10);
+  int duration = (durationMs == 0) ? 0 : static_cast<int>(std::max<uint32_t>(1, (durationMs + 9) / 10));
   rc = ble_gap_ext_adv_start(instance, duration, maxEvents);
   if (rc != 0) {
     log_e("ext_adv_start inst %u: rc=%d", instance, rc);
@@ -905,28 +830,11 @@ BTStatus BLEAdvertising::stopExtended(uint8_t instance) {
   if (!extInst) {
     return BTStatus::InvalidParam;
   }
-  extInst->stopPending = true;
   int rc = ble_gap_ext_adv_stop(instance);
   extInst->isAdvertising = false;
-  if (rc == BLE_HS_EALREADY) {
-    extInst->stopPending = false;
-    return BTStatus::OK;
-  }
-  if (rc != 0) {
-    extInst->stopPending = false;
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
     log_e("ext_adv_stop inst %u: rc=%d", instance, rc);
     return BTStatus::Fail;
-  }
-  if (!nimbleIsHostTask()) {
-    for (int waited = 0; extInst->stopPending && waited < 2000; waited += 5) {
-      vTaskDelay(pdMS_TO_TICKS(5));
-    }
-    if (extInst->stopPending) {
-      // No ADV_COMPLETE is coming for this stop (already-terminated set);
-      // clear so the next startExtended() is not wedged.
-      log_w("ext_adv_stop inst %u: timed out waiting for ADV_COMPLETE", instance);
-      extInst->stopPending = false;
-    }
   }
   return BTStatus::OK;
 }
