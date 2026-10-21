@@ -176,6 +176,9 @@ void BLEClass::Impl::gattcCallback(esp_gattc_cb_event_t event, esp_gatt_if_t gat
 BLEClass::BLEClass() : _impl(new Impl()) {}
 
 BLEClass::~BLEClass() {
+  if (_initialized) {
+    end(false);
+  }
   delete _impl;
   _impl = nullptr;
 }

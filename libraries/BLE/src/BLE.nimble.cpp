@@ -27,6 +27,9 @@
 #include "BLE.h"
 
 #include "BLE.nimble.h"
+#if BLE_SMP_SUPPORTED
+#include "security/BLESecurity.nimble.h"
+#endif
 #include "core/BLEImplHelpers.h"
 #include "core/BLEBackend.h"
 #if BLE_L2CAP_SUPPORTED
@@ -73,7 +76,10 @@ void nimbleResetReAdvertiseEvent();
 static int (*s_serverGapEventHook)(struct ble_gap_event *) = nullptr;
 #endif
 #if BLE_SMP_SUPPORTED
-static int (*s_securityGapEventHook)(struct ble_gap_event *) = nullptr;
+// Statically wired: BLESecurity::Impl::handleGapEvent is declared in
+// security/BLESecurity.nimble.h (no include cycle: it pulls only the public
+// security headers + ble_hs.h). getSecurity() re-assigns the same pointer.
+static int (*s_securityGapEventHook)(struct ble_gap_event *) = BLESecurity::Impl::handleGapEvent;
 #endif
 
 // --------------------------------------------------------------------------
@@ -108,29 +114,11 @@ int nimbleForwardServerGapEvent(struct ble_gap_event *event) {
 
 int nimbleForwardSecurityGapEvent(struct ble_gap_event *event) {
 #if BLE_SMP_SUPPORTED
+  // The hook is statically wired to BLESecurity::Impl::handleGapEvent (above),
+  // which itself handles REPEAT_PAIRING and AUTHORIZE; no duplicated fallback.
   if (s_securityGapEventHook) {
     return s_securityGapEventHook(event);
   }
-  if (!event) {
-    return 0;
-  }
-  if (event->type == BLE_GAP_EVENT_REPEAT_PAIRING) {
-    struct ble_gap_conn_desc desc;
-    if (ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc) != 0) {
-      return BLE_GAP_REPEAT_PAIRING_IGNORE;
-    }
-    ble_store_util_delete_peer(&desc.peer_id_addr);
-    return BLE_GAP_REPEAT_PAIRING_RETRY;
-  }
-#if defined(BLE_GAP_EVENT_AUTHORIZE)
-  if (event->type == BLE_GAP_EVENT_AUTHORIZE) {
-    log_w(
-      "BLESecurity: attribute 0x%04x requires authorization but no handler is installed — denying %s", event->authorize.attr_handle,
-      event->authorize.is_read ? "read" : "write"
-    );
-    event->authorize.out_response = BLE_GAP_AUTHORIZE_REJECT;
-  }
-#endif
 #else
   (void)event;
 #endif
@@ -212,6 +200,9 @@ void BLEClass::Impl::onSync() {
 BLEClass::BLEClass() : _impl(new Impl()) {}
 
 BLEClass::~BLEClass() {
+  if (_initialized) {
+    end(false);
+  }
   delete _impl;
   _impl = nullptr;
 }
@@ -336,9 +327,6 @@ void BLEClass::end(bool releaseMemory) {
   // creation and value sends while it is stopping.
   _initialized = false;
 #if BLE_GATT_SERVER_SUPPORTED
-  if (_impl->serverStopHook) {
-    _impl->serverStopHook();
-  }
   if (_impl->server) {
     BLELockGuard lock(_impl->server->mtx);
     _impl->server->active = false;
@@ -346,6 +334,14 @@ void BLEClass::end(bool releaseMemory) {
 #endif
 
   nimble_port_stop();
+#if BLE_GATT_SERVER_SUPPORTED
+  // Drop the deferred re-advertise event's backing reference only after the
+  // host task has stopped: while it was alive it could still dispatch that
+  // event, so resetting it before nimble_port_stop() raced the host task.
+  if (_impl->serverStopHook) {
+    _impl->serverStopHook();
+  }
+#endif
   nimble_port_deinit();
   _impl->synced = false;
 
