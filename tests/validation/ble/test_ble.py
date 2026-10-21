@@ -1200,14 +1200,18 @@ def _phase_indication_busy_retry(server, client):
         r"\[SERVER\] Phase33 (no subscriber|serviceChanged=(0|1|n/a) confirmed=(\d+) failed=(\d+))\r?\n",
         timeout=60,
     )
-    m_rx = client.expect(r"\[CLIENT\] Phase33 svcChangedRx=(\d+) svcSubOk=([01])", timeout=60)
+    m_rx = client.expect(r"\[CLIENT\] Phase33 svcChangedRx=(\d+) svcSubOk=([01]) busyPayloads=(\S*)\r?\n", timeout=60)
     client.expect_exact("[CLIENT] Phase33 found=1 subscribed=1", timeout=60)
     assert m.group(1) != b"no subscriber", "Phase33: client never subscribed"
     service_changed = m.group(2).decode()
     confirmed = int(m.group(3))
     failed = int(m.group(4))
     svc_rx = int(m_rx.group(1))
-    LOGGER.info(f"Phase33: serviceChanged={service_changed} svcChangedRx={svc_rx} confirmed={confirmed} failed={failed}")
+    busy_payloads = m_rx.group(3).decode()
+    LOGGER.info(
+        f"Phase33: serviceChanged={service_changed} svcChangedRx={svc_rx} "
+        f"confirmed={confirmed} failed={failed} busyPayloads={busy_payloads}"
+    )
     # The server line only proves removeService() succeeded; the client line
     # proves a Service Changed indication was actually received over the air.
     assert int(m_rx.group(2)) == 1, "Phase33: client failed to subscribe to Service Changed (0x2A05)"
@@ -1215,6 +1219,7 @@ def _phase_indication_busy_retry(server, client):
     assert (
         confirmed == 3 and failed == 0
     ), f"Phase33: expected 3 confirmed indications, got confirmed={confirmed} failed={failed}"
+    assert busy_payloads == "busy_1,busy_2,busy_3", f"Phase33: client received '{busy_payloads}', expected 'busy_1,busy_2,busy_3'"
     server.expect_exact("[SERVER] Phase33 done", timeout=20)
     client.expect_exact("[CLIENT] Phase33 done", timeout=20)
 

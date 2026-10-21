@@ -2699,6 +2699,8 @@ void setup() {
         Serial.printf("[CLIENT] Phase33 connect FAILED: %s\n", cs.toString());
       } else {
         volatile int svcChangedRx = 0;
+        std::atomic<int> busyIndCount{0};
+        String busyIndLog[3];
         BTStatus svcSubStatus = BTStatus::NotFound;
         BLERemoteService gattSvc = pc.getService(BLEUUID((uint16_t)0x1801));
         if (gattSvc) {
@@ -2709,16 +2711,35 @@ void setup() {
         }
         BLERemoteService svc = pc.getService(busySvcUUID);
         BLERemoteCharacteristic bc = svc ? svc.getCharacteristic(busyCharUUID) : BLERemoteCharacteristic();
-        BTStatus sub = bc ? bc.subscribe(BLESubscription::Indicate, [](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery) {}) : BTStatus::NotFound;
+        BTStatus sub = bc ? bc.subscribe(
+                              BLESubscription::Indicate,
+                              [&busyIndCount, &busyIndLog](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
+                                int n = busyIndCount.load(std::memory_order_relaxed);
+                                if (n < 3) {
+                                  busyIndLog[n] = String((const char *)data, len);
+                                  busyIndCount.store(n + 1, std::memory_order_release);
+                                }
+                              }
+                            )
+                          : BTStatus::NotFound;
         subscribed = (bool)sub;
         if (!sub) {
           Serial.printf("[CLIENT] Phase33 subscribe FAILED: %s\n", sub.toString());
         }
-        delay(8000);
+        unsigned long waitStart = millis();
+        while (busyIndCount.load(std::memory_order_acquire) < 3 && millis() - waitStart < 8000) {
+          delay(50);
+        }
+        String received;
+        int n = busyIndCount.load(std::memory_order_acquire);
+        for (int i = 0; i < n; i++) {
+          received += (i > 0) ? "," : "";
+          received += busyIndLog[i];
+        }
         pc.disconnect();
         delay(500);
         Serial.printf(
-          "[CLIENT] Phase33 svcChangedRx=%d svcSubOk=%d\n", (int)svcChangedRx, (int)(bool)svcSubStatus
+          "[CLIENT] Phase33 svcChangedRx=%d svcSubOk=%d busyPayloads=%s\n", (int)svcChangedRx, (int)(bool)svcSubStatus, received.c_str()
         );
       }
     }
