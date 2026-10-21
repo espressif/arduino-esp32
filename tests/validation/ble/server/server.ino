@@ -858,10 +858,10 @@ void loop() {
     uint32_t n = 1;
     while (currentPhase == 4) {
       if (longChrMutatePending.exchange(false, std::memory_order_acq_rel)) {
-        // Let the BTC/NimBLE host task finish snapshotting the offset=0 read
-        // response after onRead returns before overwriting the value prior to
-        // the peer's follow-up Read Blob request.
-        delay(1);
+        // Wait briefly so the BTC/NimBLE host task finishes snapshotting the
+        // offset=0 read response after onRead returns before overwriting the
+        // value prior to the peer's follow-up Read Blob request.
+        delay(5);
         memset(buf, 'Z', sizeof(buf));
         longChr.setValue(buf, sizeof(buf));
       }
