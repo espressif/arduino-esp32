@@ -1582,6 +1582,10 @@ void loop() {
     adv.setMaxPreferred(0x12);
     adv.setAppearance(0x0340);  // Generic Sensor
     adv.setScanResponse(true);
+    std::atomic<uint32_t> manualAdvCompletions{0};
+    adv.onComplete([&manualAdvCompletions](uint8_t) {
+      manualAdvCompletions.fetch_add(1);
+    });
 
     // Split across primary (31 B max) and scan response (31 B max).
     //   primary  -> flags (3) + name "ADV_xxxx" (~12) + appearance (4) + txPower (3)
@@ -1660,6 +1664,8 @@ void loop() {
     // Client may still be finishing the ADV_ retry; keep this window wide.
     delay(12000);
     adv.stop();
+    Serial.printf("[SERVER] Phase20 manualAdvCompletions=%lu\n", (unsigned long)manualAdvCompletions.load());
+    adv.resetCallbacks();
     adv.reset();
     adv.addServiceUUID(SERVICE_UUID);
     adv.start();

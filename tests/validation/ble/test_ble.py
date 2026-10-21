@@ -716,6 +716,8 @@ def _phase_adv_data_and_scan(server, client):
     )
     assert int(m_osz.group(1)) == 1, "client parsed a manufacturer AD hidden behind a zero-length AD terminator"
     assert int(m_osz.group(2)) == 1, "client parsed a UUID out of a malformed or terminated AD structure"
+    m_manual = server.expect(r"\[SERVER\] Phase20 manualAdvCompletions=(\d+)", timeout=25)
+    assert int(m_manual.group(1)) == 0, "manual advertising stop/restart incorrectly dispatched onComplete"
     # AD payload-limit regression: legacy 31-octet cap must be enforced (name
     # degrades to a Shortened Local Name, an oversized field is dropped whole),
     # while an extended payload accepts the full name.

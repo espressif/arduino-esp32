@@ -164,14 +164,11 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       log_d("ADV_STOP_COMPLETE status=%d", param->adv_stop_cmpl.status);
       inst->isAdvertising = false;
       inst->advSync.give(param->adv_stop_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
-      BLEAdvertising::CompleteHandler completeCb;
-      {
-        BLELockGuard lock(inst->mtx);
-        completeCb = inst->onCompleteCb;
-      }
-      if (completeCb) {
-        completeCb(0);
-      }
+      // Explicit stop is not session completion (duration / maxEvents), so it
+      // must not dispatch onComplete. In particular, start() stops an active
+      // session while holding mtx; trying to copy the callback here after
+      // waking that waiter blocks the BTC task and prevents the following
+      // advertising-data completion event from being delivered.
       break;
     }
 
