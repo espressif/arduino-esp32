@@ -193,14 +193,44 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       break;
 
     case ESP_GAP_BLE_EXT_ADV_START_COMPLETE_EVT:
+    {
       log_d("EXT_ADV_START_COMPLETE status=%d", param->ext_adv_start.status);
+      // Set the per-instance/legacy flag here on the BTC task, not on the
+      // caller after its advSync wait: an ADV_TERMINATED arriving between the
+      // give() and the caller-side assignment would be overwritten back to
+      // "advertising" by that assignment.
+      if (param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS) {
+        const uint8_t n = param->ext_adv_start.instance_num < EXT_ADV_NUM_SETS_MAX ? param->ext_adv_start.instance_num : EXT_ADV_NUM_SETS_MAX;
+        for (uint8_t i = 0; i < n; i++) {
+          const uint8_t h = param->ext_adv_start.instance[i];
+          if (h == kLegacyInstance) {
+            inst->isAdvertising = true;
+          } else if (h < kMaxExtInstances) {
+            inst->extInstances[h].isAdvertising = true;
+          }
+        }
+      }
       inst->advSync.give(param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
+    }
 
     case ESP_GAP_BLE_EXT_ADV_STOP_COMPLETE_EVT:
+    {
       log_d("EXT_ADV_STOP_COMPLETE status=%d", param->ext_adv_stop.status);
+      if (param->ext_adv_stop.status == ESP_BT_STATUS_SUCCESS) {
+        const uint8_t n = param->ext_adv_stop.instance_num < EXT_ADV_NUM_SETS_MAX ? param->ext_adv_stop.instance_num : EXT_ADV_NUM_SETS_MAX;
+        for (uint8_t i = 0; i < n; i++) {
+          const uint8_t h = param->ext_adv_stop.instance[i];
+          if (h == kLegacyInstance) {
+            inst->isAdvertising = false;
+          } else if (h < kMaxExtInstances) {
+            inst->extInstances[h].isAdvertising = false;
+          }
+        }
+      }
       inst->advSync.give(param->ext_adv_stop.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
+    }
 
     case ESP_GAP_BLE_ADV_TERMINATED_EVT:
     {
@@ -233,10 +263,16 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       break;
     case ESP_GAP_BLE_PERIODIC_ADV_START_COMPLETE_EVT:
       log_d("PERIODIC_ADV_START_COMPLETE status=%d", param->period_adv_start.status);
+      if (param->period_adv_start.instance < kMaxExtInstances) {
+        inst->extInstances[param->period_adv_start.instance].periodicAdvRunning = (param->period_adv_start.status == ESP_BT_STATUS_SUCCESS);
+      }
       inst->advSync.give(param->period_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
     case ESP_GAP_BLE_PERIODIC_ADV_STOP_COMPLETE_EVT:
       log_d("PERIODIC_ADV_STOP_COMPLETE status=%d", param->period_adv_stop.status);
+      if (param->period_adv_stop.instance < kMaxExtInstances) {
+        inst->extInstances[param->period_adv_stop.instance].periodicAdvRunning = false;
+      }
       inst->advSync.give(param->period_adv_stop.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
 #endif /* BLE_PERIODIC_ADV_SUPPORTED */
@@ -326,12 +362,31 @@ void BLEAdvertising::reset() {
   impl.rawAdvData.clear();
   impl.rawScanRespData.clear();
 #if BLE5_SUPPORTED
-  // Clear extended per-instance state (and the controller's sets, best-effort)
-  // so the process-wide static Impl starts clean across BLE.end()/begin().
-  (void)esp_ble_gap_ext_adv_set_clear();
+  // Stop every extended/periodic instance before clearing the controller's
+  // sets: esp_ble_gap_ext_adv_set_clear() fails / leaves sets behind while
+  // any instance is still advertising (mirrors the NimBLE reset()).
+  for (uint8_t i = 0; i < Impl::kLegacyInstance; i++) {
+#if BLE_PERIODIC_ADV_SUPPORTED
+    if (impl.extInstances[i].periodicAdvRunning) {
+      (void)stopPeriodicAdv(i);
+    }
+#endif
+    if (impl.extInstances[i].isAdvertising) {
+      (void)stopExtended(i);
+    }
+  }
+  // Legacy advertising (impl.isAdvertising, stopped above via stop()) runs on
+  // the reserved kLegacyInstance set over the extended API on this backend.
+  // Clear extended per-instance state (and the controller's sets) so the
+  // process-wide static Impl starts clean across BLE.end()/begin().
+  esp_err_t clearErr = esp_ble_gap_ext_adv_set_clear();
+  if (clearErr != ESP_OK) {
+    log_e("reset: esp_ble_gap_ext_adv_set_clear: %s", esp_err_to_name(clearErr));
+  }
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
     impl.extInstances[i] = Impl::ExtInstance{};
   }
+  impl.isAdvertising = false;
 #endif
 }
 
@@ -745,11 +800,8 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
     advSync.give(BTStatus::Fail);
     return BTStatus::Fail;
   }
-  st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
-  if (st) {
-    isAdvertising = true;
-  }
-  return st;
+  // isAdvertising is set by the EXT_ADV_START_COMPLETE handler (BTC task).
+  return advSync.wait(ADV_SYNC_TIMEOUT_MS);
 }
 
 void BLEAdvertising::setExtType(uint8_t instance, BLEAdvType type) {
@@ -934,11 +986,8 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
     impl.advSync.give(BTStatus::Fail);
     return BTStatus::Fail;
   }
-  st = impl.advSync.wait(ADV_SYNC_TIMEOUT_MS);
-  if (st) {
-    extInst->isAdvertising = true;
-  }
-  return st;
+  // extInst->isAdvertising is set by the EXT_ADV_START_COMPLETE handler.
+  return impl.advSync.wait(ADV_SYNC_TIMEOUT_MS);
 }
 
 BTStatus BLEAdvertising::stopExtended(uint8_t instance) {

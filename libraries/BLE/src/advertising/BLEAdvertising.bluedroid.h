@@ -77,6 +77,7 @@ struct BLEAdvertising::Impl {
     esp_ble_gap_ext_adv_params_t params{};
 #if BLE_PERIODIC_ADV_SUPPORTED
     bool periodicAdvRegistered = false;
+    bool periodicAdvRunning = false;
     esp_ble_gap_periodic_adv_params_t periodicParams{};
 #endif
   };

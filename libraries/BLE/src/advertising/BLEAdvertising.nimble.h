@@ -25,12 +25,21 @@
 
 #include <host/ble_gap.h>
 #include "core/BLEMutex.h"
+#include <atomic>
 #include <vector>
 
 // BLEAdvertising is entirely NimBLE-specific (no cross-backend shared state), so
 // BLEAdvertising::Impl is defined directly here (a .nimble.* file) with no common base.
 struct BLEAdvertising::Impl {
   bool isAdvertising = false;
+  // Set by stop() before stopping legacy advertising and consumed by the
+  // ADV_COMPLETE handler: that completion belongs to the stopped session, so
+  // it must not clear a restarted session's isAdvertising or fire onComplete.
+  // start() waits for it to clear (bounded) before starting again.
+  std::atomic<bool> legacyStopPending{false};
+  // Duration of the current legacy session, kept so a stack-preempted set
+  // (ADV_COMPLETE / BLE_HS_EPREEMPTED) resumes with the same limit.
+  uint32_t legacyDurationMs = 0;
   bool scanResponseEnabled = true;
   bool includeTxPower = false;
   uint16_t appearance = 0;
@@ -68,6 +77,12 @@ struct BLEAdvertising::Impl {
     bool slotInitialized = false;
     bool extAdvRegistered = false;
     bool isAdvertising = false;
+    // Plain bool (not atomic) to keep ExtInstance assignable for reset/clear;
+    // set by stopExtended() and consumed by ADV_COMPLETE, like isAdvertising.
+    bool stopPending = false;
+    // Session limits of the current start, for preempt resume (see Impl).
+    uint32_t durationMs = 0;
+    uint8_t maxEvents = 0;
     struct ble_gap_ext_adv_params params {};
 #if BLE_PERIODIC_ADV_SUPPORTED
     bool periodicAdvRegistered = false;
