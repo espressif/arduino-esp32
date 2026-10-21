@@ -54,11 +54,6 @@ struct BLEClass::Impl {
 #endif
 #if BLE_GATT_SERVER_SUPPORTED
   BLEServer::Impl *server = nullptr;
-  void (*serverStopHook)() = nullptr;
-#endif
-#if BLE_SMP_SUPPORTED
-  void (*securityBeginHook)() = nullptr;
-  bool (*securityOverflowHook)(const BTAddress &oldest) = nullptr;
 #endif
 
   /** @brief FreeRTOS task body that runs the NimBLE host until the port is stopped. */
