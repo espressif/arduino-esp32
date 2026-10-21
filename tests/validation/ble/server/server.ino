@@ -42,7 +42,7 @@ static_assert(acceptsMutableHandle<BLEL2CAPServer::DisconnectHandler, void(BLEL2
 
 constexpr BLEUUID kConstexprUuidEmpty;
 constexpr BLEUUID kConstexprUuid16 = BLEUUID::from16(0x180D);
-constexpr BLEUUID kConstexprUuid128(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+constexpr BLEUUID kConstexprUuid128 = BLEUUID::from128(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
 static_assert(!kConstexprUuidEmpty.isValid());
 static_assert(kConstexprUuid16.isValid() && kConstexprUuid16.bitSize() == 16);
 static_assert(kConstexprUuid128.isValid() && kConstexprUuid128.bitSize() == 128);
