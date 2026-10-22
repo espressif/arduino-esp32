@@ -112,6 +112,8 @@ reportBatteryPercentage	KEYWORD2
 readManufacturer	KEYWORD2
 readModel	KEYWORD2
 onIdentify	KEYWORD2
+identifyQuery	KEYWORD2
+onIdentifyQueryResponse	KEYWORD2
 addTimeCluster	KEYWORD2
 setTime	KEYWORD2
 setTimezone	KEYWORD2

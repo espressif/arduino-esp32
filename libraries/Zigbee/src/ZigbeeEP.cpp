@@ -101,6 +101,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ota_current_file_version = 0;
   _ota_downloaded_file_version = 0;
   _on_identify = nullptr;
+  _on_identify_query_response = nullptr;
   _on_ota_state_change = nullptr;
   _on_default_response = nullptr;
   _on_privilege_command = nullptr;
@@ -719,6 +720,40 @@ void ZigbeeEP::zbIdentify(const ezb_zcl_set_attr_value_message_t *message) {
   } else {
     log_w("Other identify commands are not implemented yet.");
   }
+}
+
+void ZigbeeEP::zbIdentifyQueryResponse(const ezb_zcl_identify_query_rsp_message_t *message) {
+  if (message == nullptr) {
+    return;
+  }
+  uint8_t src_endpoint = message->in.header ? message->in.header->src_ep : 0;
+  ezb_address_t src_address = message->in.header ? message->in.header->src_addr : EZB_ADDRESS_NONE();
+  log_v(
+    "Identify Query Response: timeout %u s from address(0x%x) endpoint(%u)", message->in.timeout,
+    (src_address.addr_mode == EZB_ADDR_MODE_SHORT) ? src_address.u.short_addr : 0, src_endpoint
+  );
+  if (_on_identify_query_response != NULL) {
+    _on_identify_query_response(message->in.timeout, src_endpoint, src_address);
+  }
+}
+
+bool ZigbeeEP::identifyQuery(uint16_t short_addr, uint8_t dst_endpoint) {
+  ezb_zcl_identify_query_cmd_t cmd_req = {};
+  ezb_address_set_short(&cmd_req.cmd_ctrl.dst_addr, short_addr);
+  cmd_req.cmd_ctrl.dst_ep = dst_endpoint;
+  cmd_req.cmd_ctrl.src_ep = _endpoint;
+
+  if (!acquireCommandLock()) {
+    return false;
+  }
+  ezb_err_t ret = ezb_zcl_identify_identify_query_cmd_req(&cmd_req);
+  releaseCommandLock();
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to send Identify Query: 0x%x", ret);
+    return false;
+  }
+  log_v("Identify Query sent to 0x%04x endpoint %u", short_addr, dst_endpoint);
+  return true;
 }
 
 void ZigbeeEP::zbOTAState(bool otaActive) {

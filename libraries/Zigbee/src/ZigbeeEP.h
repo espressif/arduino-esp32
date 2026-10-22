@@ -182,6 +182,7 @@ public:
     zbWriteAttributeResponse(uint16_t cluster_id, uint16_t attribute_id, ezb_zcl_status_t status, uint8_t src_endpoint, ezb_address_t src_address) {};
   virtual void zbReadBasicCluster(const ezb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const ezb_zcl_set_attr_value_message_t *message);
+  virtual void zbIdentifyQueryResponse(const ezb_zcl_identify_query_rsp_message_t *message);
   virtual void zbOTAState(bool otaActive);
   virtual void zbWindowCoveringMovementCmd(const ezb_zcl_window_covering_movement_message_t *message) {};
   virtual void zbReadTimeCluster(const ezb_zcl_attribute_t *attribute);  //already implemented
@@ -210,6 +211,15 @@ public:
     _on_identify = callback;
   }
 
+  // Fired when this endpoint receives an Identify Query Response (devices currently identifying).
+  void onIdentifyQueryResponse(void (*callback)(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address)) {
+    _on_identify_query_response = callback;
+  }
+
+  // Send Identify Query. Default broadcasts to all devices / all endpoints.
+  // Devices that are identifying reply with Identify Query Response (see onIdentifyQueryResponse).
+  bool identifyQuery(uint16_t short_addr = 0xFFFF, uint8_t dst_endpoint = EZB_AF_ENDPOINT_BROADCAST_ID);
+
   void onOTAStateChange(void (*callback)(bool state)) {
     _on_ota_state_change = callback;
   }
@@ -232,6 +242,7 @@ private:
   char *_read_manufacturer;
   char *_read_model;
   void (*_on_identify)(uint16_t time);
+  void (*_on_identify_query_response)(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address);
   void (*_on_ota_state_change)(bool state);
   void (*_on_default_response)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status);
   void (*_on_privilege_command)(const ezb_zcl_manuf_spec_cmd_message_t *message);

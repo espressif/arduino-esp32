@@ -62,7 +62,7 @@ setDeviceEnabled
 
 Sets the Basic cluster ``DeviceEnabled`` attribute (0x0012). When ``false``, the Zigbee stack ignores ZCL commands on this endpoint (the device stays on the network). The attribute is added if it is not already present. Can be called before or after ``Zigbee.begin()``.
 
-Handy for soft on/off of an endpoint without leaving the network: maintenance mode, temporarily ignoring hub commands while calibrating a sensor, or disabling a unused secondary endpoint on a multi-EP device. A coordinator or other client can also write this attribute remotely if it is exposed.
+Useful for soft on/off of an endpoint without leaving the network: maintenance mode, temporarily ignoring hub commands while calibrating a sensor, or disabling a unused secondary endpoint on a multi-EP device. A coordinator or other client can also write this attribute remotely if it is exposed.
 
 .. code-block:: arduino
 
@@ -390,6 +390,36 @@ Sets a callback function for identify events.
 
 * ``callback`` - Function to call when identify event occurs
 * ``time`` - Identify time in seconds
+
+identifyQuery
+^^^^^^^^^^^^^
+
+Sends an Identify Query command. Devices that are currently identifying reply with an Identify Query Response
+(see ``onIdentifyQueryResponse``). Useful for finding & binding style discovery: broadcast a query and collect
+responses from devices the user has put into identify mode (for example via the hub or a button).
+
+.. code-block:: arduino
+
+    bool identifyQuery(uint16_t short_addr = 0xFFFF, uint8_t dst_endpoint = EZB_AF_ENDPOINT_BROADCAST_ID);
+
+* ``short_addr`` - Destination short address (default ``0xFFFF`` = broadcast)
+* ``dst_endpoint`` - Destination endpoint (default broadcast endpoint)
+
+This function will return ``true`` if the command was sent, ``false`` otherwise.
+
+onIdentifyQueryResponse
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Sets a callback for Identify Query Response messages received on this endpoint.
+
+.. code-block:: arduino
+
+    void onIdentifyQueryResponse(void (*callback)(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address));
+
+* ``callback`` - Function to call for each response
+* ``timeout`` - Remaining identify time in seconds on the remote device
+* ``src_endpoint`` - Endpoint of the identifying device
+* ``src_address`` - Address of the identifying device
 
 onDefaultResponse
 ^^^^^^^^^^^^^^^^^
