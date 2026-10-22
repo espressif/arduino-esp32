@@ -73,6 +73,43 @@ struct BLEStream::Impl {
     BLELockGuard lock(roleMtx);
     return std::move(role);
   }
+
+  ConnectHandler loadConnectHandler() {
+    BLELockGuard lock(roleMtx);
+    return onConnectCb;
+  }
+
+  DisconnectHandler loadDisconnectHandler() {
+    BLELockGuard lock(roleMtx);
+    return onDisconnectCb;
+  }
+
+  PeerDataHandler loadPeerDataHandler() {
+    BLELockGuard lock(roleMtx);
+    return onPeerDataCb;
+  }
+
+  void storeConnectHandler(ConnectHandler handler) {
+    BLELockGuard lock(roleMtx);
+    onConnectCb = std::move(handler);
+  }
+
+  void storeDisconnectHandler(DisconnectHandler handler) {
+    BLELockGuard lock(roleMtx);
+    onDisconnectCb = std::move(handler);
+  }
+
+  void storePeerDataHandler(PeerDataHandler handler) {
+    BLELockGuard lock(roleMtx);
+    onPeerDataCb = std::move(handler);
+  }
+
+  void clearHandlers() {
+    BLELockGuard lock(roleMtx);
+    onConnectCb = nullptr;
+    onDisconnectCb = nullptr;
+    onPeerDataCb = nullptr;
+  }
 };
 
 #endif /* BLE_ENABLED */

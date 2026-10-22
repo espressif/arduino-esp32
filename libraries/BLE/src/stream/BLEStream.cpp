@@ -139,19 +139,19 @@ BLEStream::operator bool() const {
 
 void BLEStream::onConnect(ConnectHandler handler) {
   if (_impl) {
-    _impl->onConnectCb = std::move(handler);
+    _impl->storeConnectHandler(std::move(handler));
   }
 }
 
 void BLEStream::onDisconnect(DisconnectHandler handler) {
   if (_impl) {
-    _impl->onDisconnectCb = std::move(handler);
+    _impl->storeDisconnectHandler(std::move(handler));
   }
 }
 
 void BLEStream::onPeerData(PeerDataHandler handler) {
   if (_impl) {
-    _impl->onPeerDataCb = std::move(handler);
+    _impl->storePeerDataHandler(std::move(handler));
   }
 }
 
@@ -159,9 +159,7 @@ void BLEStream::resetCallbacks() {
   if (!_impl) {
     return;
   }
-  _impl->onConnectCb = nullptr;
-  _impl->onDisconnectCb = nullptr;
-  _impl->onPeerDataCb = nullptr;
+  _impl->clearHandlers();
 }
 
 #endif /* BLE_ENABLED */

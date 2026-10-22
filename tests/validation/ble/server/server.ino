@@ -6,6 +6,7 @@
 #include <Arduino.h>
 #include <BLE.h>
 #include <atomic>
+#include <memory>
 #include <type_traits>
 #include "esp_heap_caps.h"
 
@@ -302,7 +303,11 @@ bool bleStreamInitDone = false;
 bool bleStreamPhaseDone = false;
 int bleStreamStep = 0;
 String bleStreamRxLine;
-volatile bool bleStreamConnectCb = false;
+std::atomic<bool> bleStreamConnectCb{false};
+std::atomic<bool> bleStreamConnectCallbackActive{false};
+std::atomic<bool> bleStreamCallbackMutationDone{false};
+std::atomic<bool> bleStreamCallbackSnapshotSafe{false};
+std::weak_ptr<int> bleStreamCallbackLifetime;
 volatile bool bleStreamDisconnectCb = false;
 volatile bool bleStreamAllowReentrantEnd = false;
 volatile bool bleStreamReentrantEnd = false;
@@ -1050,10 +1055,23 @@ void loop() {
     BTStatus malformedRemoved = malformedServer.removeService(malformedNus);
     Serial.printf("[SERVER] BLEStream malformed NUS removed=%d\n", (int)(bool)malformedRemoved);
 
-    bleStream.onConnect([](const BLEConnInfo &connInfo) {
+    auto callbackLifetime = std::make_shared<int>(1);
+    bleStreamCallbackLifetime = callbackLifetime;
+    bleStream.onConnect([callbackLifetime](const BLEConnInfo &connInfo) {
       syncPhaseFromHost();
-      bleStreamConnectCb = true;
+      if (!callbackLifetime) {
+        return;
+      }
+      bleStreamConnectCallbackActive.store(true);
+      bleStreamConnectCb.store(true);
+      uint32_t deadline = millis() + 2000;
+      while (!bleStreamCallbackMutationDone.load() && (int32_t)(deadline - millis()) > 0) {
+        delay(1);
+      }
+      bleStreamCallbackSnapshotSafe.store(bleStreamCallbackMutationDone.load() && !bleStreamCallbackLifetime.expired());
+      bleStreamConnectCallbackActive.store(false);
     });
+    callbackLifetime.reset();
     bleStream.onDisconnect([](const BLEConnInfo &connInfo, uint8_t reason) {
       syncPhaseFromHost();
       bleStreamDisconnectCb = true;
@@ -1092,9 +1110,18 @@ void loop() {
   }
 
   if (currentPhase >= 13 && bleStreamInitDone && !bleStreamPhaseDone) {
+    // Mutate the registered handler while its copied snapshot is executing on
+    // the stack task. This deterministically exercises cross-task callback
+    // replacement without depending on a crash to detect the race.
+    if (bleStreamConnectCb.load() && bleStreamConnectCallbackActive.load() && !bleStreamCallbackMutationDone.load()) {
+      bleStream.onConnect(nullptr);
+      bleStreamCallbackMutationDone.store(true);
+    }
+
     // Step 0: Wait for onConnect callback
-    if (bleStreamStep == 0 && bleStreamConnectCb) {
+    if (bleStreamStep == 0 && bleStreamConnectCb.load() && !bleStreamConnectCallbackActive.load()) {
       Serial.println("[SERVER] BLEStream onConnect fired");
+      Serial.printf("[SERVER] BLEStream callback mutation safe=%d\n", (int)bleStreamCallbackSnapshotSafe.load());
       if (bleStream.connected()) {
         Serial.println("[SERVER] BLEStream connected OK");
         Serial.printf("[SERVER] BLEStream peerCount=%u\n", bleStream.peerCount());

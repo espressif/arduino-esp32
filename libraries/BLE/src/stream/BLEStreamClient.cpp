@@ -99,14 +99,16 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
   auto &active = *role;
   active.client.onConnect([this](BLEClient, const BLEConnInfo &connInfo) {
     _impl->peerCount = 1;
-    if (_impl->onConnectCb) {
-      _impl->onConnectCb(connInfo);
+    auto callback = _impl->loadConnectHandler();
+    if (callback) {
+      callback(connInfo);
     }
   });
   active.client.onDisconnect([this](BLEClient, const BLEConnInfo &connInfo, uint8_t reason) {
     _impl->peerCount = 0;
-    if (_impl->onDisconnectCb) {
-      _impl->onDisconnectCb(connInfo, reason);
+    auto callback = _impl->loadDisconnectHandler();
+    if (callback) {
+      callback(connInfo, reason);
     }
   });
 

@@ -173,16 +173,18 @@ BTStatus BLEStream::begin(const String &deviceName) {
   auto &active = *role;
   active.server.onConnect([this](BLEServer, const BLEConnInfo &connInfo) {
     _impl->peerCount.fetch_add(1, std::memory_order_relaxed);
-    if (_impl->onConnectCb) {
-      _impl->onConnectCb(connInfo);
+    auto callback = _impl->loadConnectHandler();
+    if (callback) {
+      callback(connInfo);
     }
   });
   active.server.onDisconnect([this](BLEServer, const BLEConnInfo &connInfo, uint8_t reason) {
     if (_impl->peerCount.load(std::memory_order_relaxed) > 0) {
       _impl->peerCount.fetch_sub(1, std::memory_order_relaxed);
     }
-    if (_impl->onDisconnectCb) {
-      _impl->onDisconnectCb(connInfo, reason);
+    auto callback = _impl->loadDisconnectHandler();
+    if (callback) {
+      callback(connInfo, reason);
     }
   });
   active.server.advertiseOnDisconnect(true);
@@ -191,8 +193,9 @@ BTStatus BLEStream::begin(const String &deviceName) {
     const uint8_t *data = chr.getValue(&len);
     if (data && len > 0) {
       _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
-      if (_impl->onPeerDataCb) {
-        _impl->onPeerDataCb(connInfo, data, len);
+      auto callback = _impl->loadPeerDataHandler();
+      if (callback) {
+        callback(connInfo, data, len);
       }
     }
   });

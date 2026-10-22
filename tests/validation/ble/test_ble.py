@@ -401,6 +401,7 @@ def _phase_blestream(server, client):
     server.expect_exact("[SERVER] BLEStream init OK", timeout=20)
     client.expect_exact("[CLIENT] BLEStream init OK", timeout=30)
     server.expect_exact("[SERVER] BLEStream onConnect fired", timeout=15)
+    server.expect_exact("[SERVER] BLEStream callback mutation safe=1", timeout=15)
     server.expect_exact("[SERVER] BLEStream connected OK", timeout=10)
     server.expect_exact("[SERVER] BLEStream peerCount=1", timeout=10)
     server.expect_exact("[SERVER] BLEStream peers=1", timeout=10)
