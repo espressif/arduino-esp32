@@ -51,7 +51,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 25 | hid_smoke | HID-over-GATT compliance + detached attribute shells after removal and an empty GATT tree after `end()`/`begin()` |
 | 26 | ble5_legacy_over_ext | legacy advertising routed over the extended engine (BLE5) |
 | 27 | ble5_legacy_plus_ext | concurrent legacy + user extended set on the reserved instance |
-| 28 | l2cap_bulk_reconnect | L2CAP CoC late-connect cleanup + bulk/credit-stall reconnect + peer-disconnect operation race + 64 retained-shell event-pool churn + `end()` during a stalled write and exact `NotConnected` shell status after rebegin |
+| 28 | l2cap_bulk_reconnect | L2CAP CoC late-connect cleanup + bulk/credit-stall reconnect + peer-disconnect operation race + 64 retained-shell event-pool churn/final-handle drops + `end()` during a stalled write and exact `NotConnected` shell status after rebegin |
 | 29 | conn_params_reject | central rejects the peripheral's conn-param update from its pre-accept hook (NimBLE) |
 | 30 | deletebond_roundtrip | `deleteBond` delete → verify empty → re-pair round trip + GATT tree empty after `end()`/`begin()` |
 | 31 | nc_reject | central rejects Numeric Comparison; pairing aborts, link stays unencrypted/unbonded |

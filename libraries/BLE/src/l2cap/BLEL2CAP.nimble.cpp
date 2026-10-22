@@ -59,7 +59,9 @@ static const uint8_t *flattenRxSdu(struct os_mbuf *rxBuf, uint8_t *stackBuf, siz
 }
 
 static SemaphoreHandle_t sL2CAPMtx = xSemaphoreCreateRecursiveMutex();
-static std::vector<std::weak_ptr<BLEL2CAPChannel::Impl>> sOperationChannels;
+// Strong ownership spans the complete host callback. Completion removes the
+// registry entry, while operationEventCallback keeps a local copy until return.
+static std::vector<std::shared_ptr<BLEL2CAPChannel::Impl>> sOperationChannels;
 static bool sL2CAPStopping = true;
 
 class L2CAPOperationGuard {
@@ -108,10 +110,7 @@ static void deinitOperationEventLocked(BLEL2CAPChannel::Impl *impl) {
   sOperationChannels.erase(
     std::remove_if(
       sOperationChannels.begin(), sOperationChannels.end(),
-      [impl](const std::weak_ptr<BLEL2CAPChannel::Impl> &entry) {
-        auto channel = entry.lock();
-        return !channel || channel.get() == impl;
-      }
+      [impl](const std::shared_ptr<BLEL2CAPChannel::Impl> &entry) { return entry.get() == impl; }
     ),
     sOperationChannels.end()
   );
@@ -275,8 +274,18 @@ static void runQueuedOperation(BLEL2CAPChannel::Impl *impl) {
 
 static void operationEventCallback(struct ble_npl_event *event) {
   auto *impl = static_cast<BLEL2CAPChannel::Impl *>(ble_npl_event_get_arg(event));
-  if (impl) {
-    runQueuedOperation(impl);
+  std::shared_ptr<BLEL2CAPChannel::Impl> owner;
+  {
+    BLELockGuard lock(sL2CAPMtx);
+    for (auto &channel : sOperationChannels) {
+      if (channel.get() == impl) {
+        owner = channel;
+        break;
+      }
+    }
+  }
+  if (owner) {
+    runQueuedOperation(owner.get());
   }
 }
 
@@ -487,10 +496,13 @@ uint16_t BLEL2CAPChannel::getMTU() const {
   if (!operationLock) {
     return 0;
   }
+  struct ble_l2cap_chan *chan = nullptr;
+  if (!l2capChannelSnapshot(_impl.get(), chan)) {
+    return 0;
+  }
   if (hostTask) {
-    struct ble_l2cap_chan *chan = nullptr;
     struct ble_l2cap_chan_info info;
-    return l2capChannelSnapshot(_impl.get(), chan) && ble_l2cap_get_chan_info(chan, &info) == 0 ? info.our_coc_mtu : 0;
+    return ble_l2cap_get_chan_info(chan, &info) == 0 ? info.our_coc_mtu : 0;
   }
   if (!queueOperation(_impl, BLEL2CAPChannel::Impl::Operation::GetMTU)) {
     (void)_impl->operationSync.wait(0);
@@ -824,11 +836,7 @@ void nimbleResetL2CAPDeferredEvent() {
   BLELockGuard lock(sL2CAPMtx);
   auto trackedChannels = std::move(sOperationChannels);
   sOperationChannels.clear();
-  for (auto &weak : trackedChannels) {
-    auto channel = weak.lock();
-    if (!channel) {
-      continue;
-    }
+  for (auto &channel : trackedChannels) {
     channel->operationHostRunning = false;
     completeOperationLocked(channel.get(), BTStatus::InvalidState);
     deinitOperationEventLocked(channel.get());

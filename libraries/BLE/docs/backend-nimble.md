@@ -93,7 +93,10 @@ always cast-free `impl.member`.
   NPL pool before waking the caller, so retained detached shells consume no slots. Shutdown closes
   the enqueue gate before stopping the host, then removes and deinitializes any still-active events
   and releases waiters before NimBLE destroys the pool. Detached shell write/disconnect calls return
-  `NotConnected` consistently before and after an `end()`/`begin()` cycle.
+  `NotConnected` consistently before and after an `end()`/`begin()` cycle, while detached `getMTU()`
+  returns zero without queueing. The active registry owns each Impl strongly and the event callback
+  takes a local strong copy before execution, covering the interval after completion wakes a caller
+  that immediately drops the final public handle.
 - **Late L2CAP connect completion** is deferred onto a host-queue callout after a blocking
   `connectL2CAP()` timeout. NimBLE invokes `COC_CONNECTED` before releasing its connect signaling
   procedure, so the orphan disconnect cannot be submitted inline; its context remains owned until

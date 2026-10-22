@@ -2628,9 +2628,18 @@ void setup() {
             BTStatus reboundWrite = retained.write((const uint8_t *)"x", 1);
             uint16_t reboundMtu = retained.getMTU();
             BTStatus reboundDisconnect = retained.disconnect();
+            bool finalDropClean = true;
+            for (auto &shell : churnShells) {
+              finalDropClean = finalDropClean && shell && shell.getMTU() == 0;
+              shell = BLEL2CAPChannel();
+            }
+            churnShells.clear();
+            delay(50);
+            finalDropClean = finalDropClean && heap_caps_check_integrity_all(true);
+            Serial.printf("[CLIENT] Phase28 final handle drop clean=%d\n", (int)finalDropClean);
             lifecycleClean =
               churnClean && rebegin && reboundWrite == BTStatus::NotConnected && reboundMtu == 0
-              && reboundDisconnect == BTStatus::NotConnected
+              && reboundDisconnect == BTStatus::NotConnected && finalDropClean
               && heap_caps_check_integrity_all(true);
             Serial.printf(
               "[CLIENT] Phase28 retained clean=%d end=%d/%u/%d rebegin=%d after=%d/%u/%d\n", (int)(endedClean && lifecycleClean),

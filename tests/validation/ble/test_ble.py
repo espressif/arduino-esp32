@@ -1117,6 +1117,8 @@ def _phase_l2cap_bulk(server, client):
     assert int(m_end.group(1)) == 1, "BLE.end() was not invoked while the L2CAP write was genuinely in flight"
     assert int(m_end.group(2)) == 1 and int(m_end.group(3)) == -4, "BLE.end() did not release the stalled writer with InvalidState"
     server.expect_exact("[SERVER] Phase28 shutdown stall released", timeout=10)
+    m_drop = client.expect(r"\[CLIENT\] Phase28 final handle drop clean=([01])", timeout=30)
+    assert int(m_drop.group(1)) == 1, "dropping the final detached handle raced its queued host callback or corrupted the heap"
     m_shell = client.expect(
         r"\[CLIENT\] Phase28 retained clean=([01]) end=(-?\d+)/(\d+)/(-?\d+) rebegin=([01]) after=(-?\d+)/(\d+)/(-?\d+)",
         timeout=30,
