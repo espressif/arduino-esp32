@@ -739,9 +739,10 @@ struct L2CAPClientCtx {
 };
 
 static std::vector<std::shared_ptr<L2CAPClientCtx>> sClientContexts;
-// Server Impls are owned by user handles; keep weak refs so nimbleCleanupL2CAP
-// can invalidate their accepted channels at BLE.end().
-static std::vector<std::weak_ptr<BLEL2CAPServer::Impl>> sL2CAPServers;
+// NimBLE retains the server callback argument for the host session, so the
+// registry must keep each registered Impl alive even if the sketch drops its
+// last public handle. Cleanup releases this ownership after host shutdown.
+static std::vector<std::shared_ptr<BLEL2CAPServer::Impl>> sL2CAPServers;
 static struct ble_npl_callout sAbandonedDisconnectCallout;
 static bool sAbandonedDisconnectCalloutInited = false;
 
@@ -856,11 +857,16 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
       return false;
     }
   }
+  uint32_t alignedBufSize = OS_ALIGN(static_cast<uint32_t>(mtu) + 4U, OS_ALIGNMENT);
+  if (alignedBufSize > UINT16_MAX) {
+    log_e("L2CAP server MTU %u exceeds allocatable SDU size", mtu);
+    return false;
+  }
   server->psm = psm;
   server->mtu = mtu;
 
   const int numBufs = CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM + 1;
-  const uint16_t bufSize = OS_ALIGN(mtu + 4, OS_ALIGNMENT);
+  const uint16_t bufSize = static_cast<uint16_t>(alignedBufSize);
   const size_t memSize = OS_MEMPOOL_SIZE(numBufs, bufSize) * sizeof(os_membuf_t);
 
   server->sduMem = static_cast<uint8_t *>(malloc(memSize));
@@ -912,7 +918,7 @@ static void removeClientCtx(L2CAPClientCtx *ctx) {
 
 void nimbleCleanupL2CAP() {
   std::vector<std::shared_ptr<L2CAPClientCtx>> pending;
-  std::vector<std::weak_ptr<BLEL2CAPServer::Impl>> servers;
+  std::vector<std::shared_ptr<BLEL2CAPServer::Impl>> servers;
   {
     BLELockGuard lock(sL2CAPMtx);
     pending.swap(sClientContexts);
@@ -931,11 +937,7 @@ void nimbleCleanupL2CAP() {
   }
   // Server-side channels: the host is stopped and operation events have been
   // removed, so invalidate every raw native pointer before the next begin().
-  for (auto &weak : servers) {
-    auto server = weak.lock();
-    if (!server) {
-      continue;
-    }
+  for (auto &server : servers) {
     BLELockGuard lock(server->mtx);
     for (auto &ch : server->channels) {
       {
@@ -947,6 +949,16 @@ void nimbleCleanupL2CAP() {
       completeOperation(ch.get(), BTStatus::InvalidState);
     }
     server->channels.clear();
+    server->onAcceptCb = nullptr;
+    server->onDataCb = nullptr;
+    server->onDisconnectCb = nullptr;
+    if (server->sduMem) {
+      os_mempool_deinit(&server->sduMemPool);
+      free(server->sduMem);
+      server->sduMem = nullptr;
+    }
+    server->sduPool = {};
+    server->sduMemPool = {};
   }
 }
 

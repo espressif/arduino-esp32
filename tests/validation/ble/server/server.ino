@@ -2380,6 +2380,13 @@ void loop() {
       if (!l2capBulkServer) {
         Serial.println("[SERVER] Phase28 L2CAP init FAILED");
       } else {
+        {
+          BLEL2CAPServer droppedServer = BLE.createL2CAPServer(0x0081, 128);
+          droppedServer.onData([](BLEL2CAPChannel &channel, const uint8_t *, size_t) {
+            channel.write((const uint8_t *)"P28DROP_OK", 10);
+          });
+        }
+        Serial.println("[SERVER] Phase28 dropped server handle");
         l2capBulkServer.onData([](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
           syncPhaseFromHost();
           if (len >= 4 && memcmp(data, "ENDR", 4) == 0) {
@@ -2426,6 +2433,10 @@ void loop() {
           Serial.printf("[SERVER] Phase28 L2CAP channel disconnected count=%lu\n", (unsigned long)count);
         });
         Serial.println("[SERVER] Phase28 L2CAP init OK");
+        BLEL2CAPServer oversizedL2cap = BLE.createL2CAPServer(0x0082, UINT16_MAX);
+        Serial.printf(
+          "[SERVER] Phase28 oversized MTU rejected=%d heap=%d\n", (int)!oversizedL2cap, (int)heap_caps_check_integrity_all(true)
+        );
 
         BLEAdvertising adv = BLE.getAdvertising();
         adv.reset();
