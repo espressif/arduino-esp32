@@ -1360,6 +1360,25 @@ def _phase_pending_send_edges(server, client):
     m_to = client.expect(r"\[CLIENT\] Phase35 timeoutEmpty=([01]) reread=([01])", timeout=20)
     assert int(m_to.group(1)) == 1, "short readValue timeout did not fail (handle destroy/re-read untested)"
     assert int(m_to.group(2)) == 1, "read after timeout + destroy did not return the characteristic value"
+    client.expect_exact("[CLIENT] Phase35 notifyTeardown trigger=1", timeout=15)
+    server.expect_exact("[SERVER] Phase35 notifyTeardown burst entered", timeout=15)
+    client.write("PHASE35_DISCONNECT_GO\n")
+    client.expect_exact("[CLIENT] Phase35 notifyTeardown armed=1 disconnected=1", timeout=15)
+    m_td = server.expect(
+        r"\[SERVER\] Phase35 notifyTeardown stack=(NimBLE|Bluedroid) attempted=(\d+) accepted=(\d+) atDisconnect=(\d+) final=(\d+) "
+        r"success=(\d+) noClient=(\d+) other=(\d+) late=(\d+)",
+        timeout=20,
+    )
+    attempted, accepted, at_disconnect, final, success, no_client, other, late = (int(m_td.group(i)) for i in range(2, 10))
+    assert accepted > 0, "notification teardown scenario accepted no sends"
+    assert at_disconnect == attempted and final == attempted, "notification attempts did not receive exactly one terminal status before onDisconnect"
+    assert late == 0, "notification status arrived after onDisconnect"
+    if m_td.group(1) == b"Bluedroid":
+        assert success + no_client == attempted and other == 0, "Bluedroid notification attempt did not receive success or link-loss status"
+        assert no_client > 0, "Bluedroid teardown left no pending notification to exercise ERROR_NO_CLIENT"
+    else:
+        assert success + no_client == accepted, "NimBLE accepted notification did not receive success or link-loss status"
+        assert other == attempted - accepted, "NimBLE synchronous rejection did not receive exactly one error status"
     server.expect_exact("[SERVER] Phase35 done", timeout=20)
     client.expect_exact("[CLIENT] Phase35 done", timeout=20)
 

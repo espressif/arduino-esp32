@@ -145,6 +145,7 @@ bool phase30Done = false;  // deletebond_roundtrip (HITL)
 bool phase31Done = false;  // nc_reject (HITL)
 bool phase32Done = false;  // passkey_entry (HITL)
 bool phase33Done = false;  // indication_busy_retry
+volatile bool phase33Continue = false;
 bool phase34Done = false;  // periodic_adv_lifecycle (HITL)
 bool phase35Done = false;  // pending_send_edges
 bool phase36Done = false;  // memory_release (tail of suite)
@@ -328,6 +329,8 @@ void checkSerial() {
         }
       } else if (buf == "PHASE13_CONTINUE") {
         phase13Continue = true;
+      } else if (buf == "PHASE33_CONTINUE") {
+        phase33Continue = true;
       }
       buf = "";
     } else if (c != '\r') {
@@ -2646,6 +2649,10 @@ void loop() {
       delay(500);
       BTStatus rm = srv.removeService(tmpSvc);
       const char *serviceChanged = rm ? "1" : "0";
+      while (!phase33Continue) {
+        checkSerial();
+        delay(10);
+      }
       for (int i = 1; i <= 3; i++) {
         char payload[16];
         int len = snprintf(payload, sizeof(payload), "busy_%d", i);
@@ -2743,20 +2750,45 @@ void loop() {
       std::atomic<uint32_t> floodOk{0};
       std::atomic<uint32_t> floodErr{0};
       std::atomic<bool> flooding{false};
+      std::atomic<bool> teardownFlooding{false};
+      std::atomic<bool> teardownDisconnected{false};
+      std::atomic<uint32_t> teardownAccepted{0};
+      std::atomic<uint32_t> teardownSuccess{0};
+      std::atomic<uint32_t> teardownNoClient{0};
+      std::atomic<uint32_t> teardownOther{0};
+      std::atomic<uint32_t> teardownTerminalAtDisconnect{0};
+      std::atomic<uint32_t> teardownLate{0};
       std::atomic<uint32_t> timeoutAttempts{0};
       std::atomic<bool> timeoutAllowed{false};
       uint16_t timeoutHandle = 0;
 
       BLEService edgeSvc = srv.createService(EDGE_SVC_UUID);
       BLECharacteristic peerChr =
-        edgeSvc.createCharacteristic(PEER_CHAR_UUID, BLEProperty::Read | BLEProperty::Notify | BLEProperty::Indicate, BLEPermission::ReadOpen);
+        edgeSvc.createCharacteristic(
+          PEER_CHAR_UUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::WriteNR | BLEProperty::Notify | BLEProperty::Indicate,
+          BLEPermission::ReadWriteOpen
+        );
       peerChr.onSubscribe([&peerCccd, &peerConn, &havePeer](BLECharacteristic, const BLEConnInfo &info, uint16_t subValue) {
         peerCccd = subValue;
         peerConn = info.getHandle();
         havePeer = true;
       });
       peerChr.onStatus([&peerNotifyOk, &peerIndicateOk, &peerNotifyDisabled, &peerIndicateDisabled, &floodOk, &floodErr,
-                        &flooding](BLECharacteristic &, BLECharacteristic::NotifyStatus status, uint32_t) {
+                        &flooding, &teardownFlooding, &teardownDisconnected, &teardownSuccess, &teardownNoClient, &teardownOther,
+                        &teardownLate](BLECharacteristic &, BLECharacteristic::NotifyStatus status, uint32_t) {
+        if (teardownFlooding.load(std::memory_order_relaxed)) {
+          if (teardownDisconnected.load(std::memory_order_relaxed)) {
+            teardownLate.fetch_add(1, std::memory_order_relaxed);
+          }
+          if (status == BLECharacteristic::SUCCESS_NOTIFY) {
+            teardownSuccess.fetch_add(1, std::memory_order_relaxed);
+          } else if (status == BLECharacteristic::ERROR_NO_CLIENT) {
+            teardownNoClient.fetch_add(1, std::memory_order_relaxed);
+          } else {
+            teardownOther.fetch_add(1, std::memory_order_relaxed);
+          }
+          return;
+        }
         if (flooding.load(std::memory_order_relaxed)) {
           if (status == BLECharacteristic::SUCCESS_NOTIFY) {
             floodOk.fetch_add(1, std::memory_order_relaxed);
@@ -2775,6 +2807,29 @@ void loop() {
           peerIndicateDisabled.fetch_add(1, std::memory_order_relaxed);
         }
       });
+      peerChr.onWrite([&teardownFlooding, &teardownAccepted](BLECharacteristic &chr, const BLEConnInfo &info) {
+        if (chr.getStringValue() != "drop_pending") {
+          return;
+        }
+        teardownFlooding = true;
+        Serial.println("[SERVER] Phase35 notifyTeardown burst entered");
+        for (int i = 0; i < 64; i++) {
+          uint8_t value = static_cast<uint8_t>(i);
+          if (chr.notify(info.getHandle(), &value, 1)) {
+            teardownAccepted.fetch_add(1, std::memory_order_relaxed);
+          }
+          delay(2);
+        }
+      });
+      srv.onDisconnect(
+        [&teardownDisconnected, &teardownTerminalAtDisconnect, &teardownSuccess, &teardownNoClient,
+         &teardownOther](BLEServer &, const BLEConnInfo &, uint8_t) {
+          teardownTerminalAtDisconnect =
+            teardownSuccess.load(std::memory_order_relaxed) + teardownNoClient.load(std::memory_order_relaxed)
+            + teardownOther.load(std::memory_order_relaxed);
+          teardownDisconnected = true;
+        }
+      );
 
       BLECharacteristic timeoutChr = edgeSvc.createCharacteristic(TIMEOUT_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadAuthorized);
       timeoutChr.setValue("timeout_ok");
@@ -2906,7 +2961,18 @@ void loop() {
       while (timeoutAttempts.load() == 0 && millis() - startWait < 15000) {
         delay(50);
       }
-      delay(1000);
+      startWait = millis();
+      while (!teardownDisconnected.load() && millis() - startWait < 15000) {
+        delay(20);
+      }
+      delay(500);
+      uint32_t finalTerminal = teardownSuccess + teardownNoClient + teardownOther;
+      Serial.printf(
+        "[SERVER] Phase35 notifyTeardown stack=%s attempted=64 accepted=%lu atDisconnect=%lu final=%lu success=%lu noClient=%lu other=%lu late=%lu\n",
+        BLE.getStackName(), (unsigned long)teardownAccepted.load(), (unsigned long)teardownTerminalAtDisconnect.load(),
+        (unsigned long)finalTerminal, (unsigned long)teardownSuccess.load(), (unsigned long)teardownNoClient.load(),
+        (unsigned long)teardownOther.load(), (unsigned long)teardownLate.load()
+      );
       peerChr.resetCallbacks();
       timeoutChr.resetCallbacks();
       queueChr.resetCallbacks();

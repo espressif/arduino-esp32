@@ -964,6 +964,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       log_i("Server: client disconnected, connId=%u reason=0x%02x", connId, reason);
       BLEConnInfo connInfo;
       bool shouldAdvertise = false;
+      std::vector<std::pair<std::shared_ptr<BLECharacteristic::Impl>, uint16_t>> droppedNotifications;
       {
         BLELockGuard lock(impl->mtx);
         if (const BLEConnInfo *existing = impl->connFind(connId)) {
@@ -983,6 +984,14 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
             }
           }
         }
+        for (const auto &pending : impl->pendingNotifies) {
+          if (pending.connHandle != connId || pending.count == 0) {
+            continue;
+          }
+          if (BLECharacteristic::Impl *found = findCharByHandle(impl, pending.attrHandle)) {
+            droppedNotifications.emplace_back(found->shared_from_this(), pending.count);
+          }
+        }
         impl->erasePendingNotifies(connId);
         impl->connErase(connId);
         shouldAdvertise = impl->advertiseOnDisconnect;
@@ -993,6 +1002,14 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       // Bluedroid drops the link when an indication waits 30 s for its
       // confirmation, without a CONF event; dropIndications() reports that one.
       impl->dropIndications(connId);
+      // Every accepted notification gets exactly one terminal status. Report
+      // link-loss before onDisconnect; any late CONF is ignored below because
+      // its pending entry has already been consumed here.
+      for (auto &[chr, count] : droppedNotifications) {
+        for (uint16_t i = 0; i < count; i++) {
+          chr->dispatchStatus(BLECharacteristic::ERROR_NO_CLIENT, 0);
+        }
+      }
       impl->dispatchDisconnect(connInfo, reason);
       if (impl->pendingDisconnectHandle.load() == connId) {
         impl->disconnectSync.give(BTStatus::OK);
@@ -1624,6 +1641,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       esp_gatt_status_t st = param->conf.status;
       std::shared_ptr<BLECharacteristic::Impl> chr;
       bool isIndication = false;
+      bool wasPendingNotification = false;
       {
         BLELockGuard lock(impl->mtx);
         if (BLECharacteristic::Impl *found = findCharByHandle(impl, attrHandle)) {
@@ -1634,6 +1652,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         // routed into indicationBusy() just because an indication happens
         // to be in flight on the same handle.
         if (impl->consumePendingNotify(connId, attrHandle)) {
+          wasPendingNotification = true;
           isIndication = false;
         } else if (auto *link = impl->indicationLink(connId); link && link->inFlight && link->inFlight->handle == attrHandle) {
           isIndication = true;
@@ -1644,7 +1663,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       // confirmation still follows as a second CONF event.
       bool sent = st == ESP_GATT_OK || st == ESP_GATT_CONGESTED;
       if (!isIndication) {
-        if (chr) {
+        if (wasPendingNotification && chr) {
           if (!sent) {
             log_w("Server: notification on handle %u connId=%u failed, status=%d", attrHandle, connId, st);
           }

@@ -121,6 +121,7 @@ volatile int clientOrderN = 0;
 volatile bool phase13MalformedGo = false;
 volatile bool phase28StallGo = false;
 volatile bool phase28CleanupGo = false;
+volatile bool phase35DisconnectGo = false;
 static void recordClientEvent(const char *tag) {
   int n = clientOrderN;
   if (n < (int)(sizeof(clientOrderTags) / sizeof(clientOrderTags[0]))) {
@@ -160,6 +161,8 @@ void checkSerial() {
         phase28StallGo = true;
       } else if (buf == "PHASE28_CLEANUP_GO") {
         phase28CleanupGo = true;
+      } else if (buf == "PHASE35_DISCONNECT_GO") {
+        phase35DisconnectGo = true;
       }
       buf = "";
     } else if (c != '\r') {
@@ -3010,15 +3013,25 @@ void setup() {
         timeoutEmpty = first.length() == 0;
       }
       delay(600);
+      (void)c1.discoverServices();
       BLERemoteService edge = c1.getService(edgeSvcUUID);
       BLERemoteCharacteristic tc = edge ? edge.getCharacteristic(timeoutCharUUID) : BLERemoteCharacteristic();
+      peer = edge ? edge.getCharacteristic(peerCharUUID) : BLERemoteCharacteristic();
       String second = tc ? tc.readValue(3000) : String();
       rereadOk = second == "timeout_ok";
     }
     Serial.printf("[CLIENT] Phase35 timeoutEmpty=%d reread=%d\n", (int)timeoutEmpty, (int)rereadOk);
-    if (c1) {
-      c1.disconnect();
+    BTStatus restoreNotify = peer ? peer.subscribe(BLESubscription::Notify, onPeer) : BTStatus::NotFound;
+    BTStatus dropStatus = peer ? peer.writeValue("drop_pending", false) : BTStatus::NotFound;
+    Serial.printf("[CLIENT] Phase35 notifyTeardown trigger=%d\n", (int)(restoreNotify && dropStatus));
+    while (!phase35DisconnectGo) {
+      checkSerial();
+      delay(1);
     }
+    BTStatus dropLink = c1.disconnect();
+    Serial.printf(
+      "[CLIENT] Phase35 notifyTeardown armed=%d disconnected=%d\n", (int)(restoreNotify && dropStatus), (int)(dropLink && !c1.isConnected())
+    );
     delay(300);
     Serial.println("[CLIENT] Phase35 done");
   }
