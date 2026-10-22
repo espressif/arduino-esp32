@@ -63,6 +63,7 @@ permissions:
 
 env:
   MAX_CHUNKS: 15
+  SKETCH_BUILD_JOBS: auto
 
 jobs:
   gen-chunks:

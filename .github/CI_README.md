@@ -270,10 +270,16 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 
 **Environment Variables:**
 - `MAX_CHUNKS=15` - Maximum parallel build jobs
+- `SKETCH_BUILD_JOBS=auto` - Concurrent sketches per runner. `auto` uses the available logical CPU count; set a
+  positive integer to cap concurrency, or `1` to restore serial execution.
 
 **Key Features:**
 - **Intelligent chunking**: Only rebuilds affected sketches
-- **Parallel execution**: Up to 15 simultaneous builds
+- **Two-level Linux parallelism**: Up to 15 chunk jobs, each building up to `SKETCH_BUILD_JOBS` sketches concurrently
+- **Cross-platform parallelism**: The Windows and macOS preset matrices use the same bounded sketch scheduler
+- **Safe build isolation**: Parallel workers use temporary per-sketch build directories while sharing ACmake's
+  concurrency-safe immutable cache. Duplicate sketch basenames cannot collide.
+- **CPU budgeting**: Inner Ninja parallelism is reduced automatically as outer sketch concurrency increases
 - **Dependency tracking**: Uses ctags for accurate change detection
 - **Size reports**: Generates JSON with sketch sizes for comparison
 - **Caching**: Libraries and tools cached between runs
@@ -1608,6 +1614,59 @@ When no explicit FQBN is provided via `ci.yml`, the following per-SoC defaults a
 - Sources `socs_config.sh` for targets
 - Builds tests with `arduino_cmake.py` by default, or Arduino CLI with `--arduino-cli`
 - Supports multiple test types
+- `--platform hardware|wokwi|qemu` (or `-H` / `-W` / `-Q`) builds only tests that the selected runtime
+  can execute. With no platform option, the build remains unfiltered so one CI artifact can serve every runtime.
+- `-j N` / `--jobs N` builds regular sketches for one target concurrently (default `1`). Declared Arduino
+  libraries are installed serially before workers start, and each worker keeps separate logs and output files.
+- When `CMAKE_BUILD_PARALLEL_LEVEL` is unset, parallel builds divide the detected logical CPUs across workers.
+  Set it explicitly to override the inner Ninja job count.
+
+**Examples:**
+```bash
+# Existing behavior: all validation tests for ESP32-S3, serial and unfiltered
+bash .github/scripts/tests_build.sh -c -type validation -t esp32s3
+
+# Local Wokwi build: skip hardware-only tests and compile four sketches at once
+bash .github/scripts/tests_build.sh -c -type validation -t esp32s3 -W -j 4
+
+# Pass ambiguous backend options after --
+bash .github/scripts/tests_build.sh -s gpio -t esp32s3 -j 4 -- -d debug
+```
+
+Parallel mode requires distinct sketch basenames because the established artifact layout is
+`~/.arduino/tests/<target>/<sketch>/build.tmp`. It also rejects `ARDUINO_BUILD_DIR`, which deliberately forces every
+build into one directory and is therefore serial-only. Multi-device tests remain serial and are always excluded from
+Wokwi/QEMU builds.
+
+**Benchmark reproduction:**
+Use the same outer/inner CPU budget for serial and parallel comparisons. For cold runs, clear both
+`~/.arduino/tests/<target>` and `python3 tools/arduino_cmake.py cache-clear`; for warm-cache runs, remove only the target
+build directory. The implementation benchmark used ESP32-S3 with Wokwi-enabled `gpio,uart,console,spi` and
+Wokwi-disabled `periman,clock,adc_pwm,power_management`, three repetitions per scenario, `-j 1` with 12 Ninja jobs
+versus `-j 4` with 3 Ninja jobs.
+
+Median results on a 14-core Apple Silicon host:
+- Unfiltered serial cold: 140.8 seconds
+- Platform-filtered serial cold: 71.7 seconds (1.96x)
+- Platform-filtered parallel cold: 58.9 seconds (2.39x)
+- Platform-filtered serial warm: 53.2 seconds (2.65x)
+- Platform-filtered parallel warm: 42.9 seconds (3.29x)
+
+Serial and parallel builds produced identical firmware binary hashes, ELF symbol/size signatures, and artifact counts.
+
+**Diverse workload benchmark:**
+A second benchmark used ten ESP32-S3 validation sketches spanning GPIO, UART, SPI, I2C, NVS, SD card, Wi-Fi, TLS/HTTP,
+PSRAM, and power management. NVS and Wi-Fi each built three FQBN configurations, for 14 firmware images per run. Three
+repetitions used the same 12-thread budget: `-j 1` with 12 Ninja jobs versus `-j 4` with 3 Ninja jobs.
+
+- Serial cold-cache median: 272.3 seconds
+- Parallel cold-cache median: 191.4 seconds (1.42x speedup, 29.7% less wall time)
+- Serial warm-cache median: 195.3 seconds
+- Parallel warm-cache median: 138.9 seconds (1.41x speedup, 28.9% less wall time)
+
+One parallel repetition was an outlier, while all 14 firmware variants still completed successfully; medians are
+reported to limit its effect. A separate same-cache equivalence run took 197.7 seconds serial and 141.3 seconds
+parallel, with identical firmware binary hashes, ELF sizes, and sorted symbol-table hashes for all 14 outputs.
 
 #### `tests_run.sh`
 **Purpose:** Run compiled tests on different platforms
