@@ -58,10 +58,29 @@ static const uint8_t *flattenRxSdu(struct os_mbuf *rxBuf, uint8_t *stackBuf, siz
   return dst;
 }
 
-static SemaphoreHandle_t sL2CAPMtx = xSemaphoreCreateRecursiveMutex();
+struct LazyL2CAPMutex {
+  SemaphoreHandle_t handle;
+  StaticSemaphore_t storage;
+
+  bool init() {
+    if (!handle) {
+      handle = xSemaphoreCreateRecursiveMutexStatic(&storage);
+    }
+    return handle != nullptr;
+  }
+
+  operator SemaphoreHandle_t() {
+    return handle;
+  }
+};
+
+static LazyL2CAPMutex sL2CAPMtx = {};
 // Strong ownership spans the complete host callback. Completion removes the
 // registry entry, while operationEventCallback keeps a local copy until return.
-static std::vector<std::shared_ptr<BLEL2CAPChannel::Impl>> sOperationChannels;
+static std::vector<std::shared_ptr<BLEL2CAPChannel::Impl>> &operationChannels() {
+  static std::vector<std::shared_ptr<BLEL2CAPChannel::Impl>> channels;
+  return channels;
+}
 static bool sL2CAPStopping = true;
 
 class L2CAPOperationGuard {
@@ -107,12 +126,13 @@ static void deinitOperationEventLocked(BLEL2CAPChannel::Impl *impl) {
     ble_npl_event_deinit(&impl->operationEvent);
     impl->operationEventInited = false;
   }
-  sOperationChannels.erase(
+  auto &channels = operationChannels();
+  channels.erase(
     std::remove_if(
-      sOperationChannels.begin(), sOperationChannels.end(),
+      channels.begin(), channels.end(),
       [impl](const std::shared_ptr<BLEL2CAPChannel::Impl> &entry) { return entry.get() == impl; }
     ),
-    sOperationChannels.end()
+    channels.end()
   );
 }
 
@@ -277,7 +297,7 @@ static void operationEventCallback(struct ble_npl_event *event) {
   std::shared_ptr<BLEL2CAPChannel::Impl> owner;
   {
     BLELockGuard lock(sL2CAPMtx);
-    for (auto &channel : sOperationChannels) {
+    for (auto &channel : operationChannels()) {
       if (channel.get() == impl) {
         owner = channel;
         break;
@@ -299,7 +319,7 @@ static bool queueOperation(const std::shared_ptr<BLEL2CAPChannel::Impl> &impl, B
   if (!impl->operationEventInited) {
     ble_npl_event_init(&impl->operationEvent, operationEventCallback, impl.get());
     impl->operationEventInited = true;
-    sOperationChannels.push_back(impl);
+    operationChannels().push_back(impl);
   }
   impl->operation = operation;
   impl->operationCancelled = false;
@@ -738,11 +758,19 @@ struct L2CAPClientCtx {
   TickType_t disconnectStartedAt = 0;
 };
 
-static std::vector<std::shared_ptr<L2CAPClientCtx>> sClientContexts;
+static std::vector<std::shared_ptr<L2CAPClientCtx>> &clientContexts() {
+  static std::vector<std::shared_ptr<L2CAPClientCtx>> contexts;
+  return contexts;
+}
+
 // NimBLE retains the server callback argument for the host session, so the
 // registry must keep each registered Impl alive even if the sketch drops its
 // last public handle. Cleanup releases this ownership after host shutdown.
-static std::vector<std::shared_ptr<BLEL2CAPServer::Impl>> sL2CAPServers;
+static std::vector<std::shared_ptr<BLEL2CAPServer::Impl>> &l2capServers() {
+  static std::vector<std::shared_ptr<BLEL2CAPServer::Impl>> servers;
+  return servers;
+}
+
 static struct ble_npl_callout sAbandonedDisconnectCallout;
 static bool sAbandonedDisconnectCalloutInited = false;
 
@@ -763,7 +791,7 @@ static bool scheduleAbandonedDisconnect() {
       std::vector<std::pair<std::shared_ptr<L2CAPClientCtx>, struct ble_l2cap_chan *>> pending;
       {
         BLELockGuard lock(sL2CAPMtx);
-        for (auto &ctx : sClientContexts) {
+        for (auto &ctx : clientContexts()) {
           if (ctx->disconnectQueued && ctx->abandonedChan) {
             ctx->disconnectQueued = false;
             pending.emplace_back(ctx, ctx->abandonedChan);
@@ -795,7 +823,7 @@ static bool scheduleAbandonedDisconnect() {
           std::vector<std::shared_ptr<L2CAPClientCtx>> unscheduled;
           {
             BLELockGuard lock(sL2CAPMtx);
-            for (auto &ctx : sClientContexts) {
+            for (auto &ctx : clientContexts()) {
               if (ctx->disconnectQueued) {
                 unscheduled.push_back(ctx);
               }
@@ -835,8 +863,8 @@ void nimblePrepareL2CAPShutdown() {
 
 void nimbleResetL2CAPDeferredEvent() {
   BLELockGuard lock(sL2CAPMtx);
-  auto trackedChannels = std::move(sOperationChannels);
-  sOperationChannels.clear();
+  auto trackedChannels = std::move(operationChannels());
+  operationChannels().clear();
   for (auto &channel : trackedChannels) {
     channel->operationHostRunning = false;
     completeOperationLocked(channel.get(), BTStatus::InvalidState);
@@ -848,6 +876,50 @@ void nimbleResetL2CAPDeferredEvent() {
     ble_npl_callout_deinit(&sAbandonedDisconnectCallout);
     sAbandonedDisconnectCalloutInited = false;
   }
+}
+
+BLEL2CAPServer BLEClass::createL2CAPServer(uint16_t psm, uint16_t mtu) {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
+    log_e("createL2CAPServer: BLE not initialized");
+    return BLEL2CAPServer();
+  }
+  if (!sL2CAPMtx.init()) {
+    log_e("createL2CAPServer: failed to allocate L2CAP mutex");
+    return BLEL2CAPServer();
+  }
+  _impl->storeHook(_impl->l2capBeginHook, nimbleStartL2CAPOperations);
+  _impl->storeHook(_impl->l2capPreEndHook, nimblePrepareL2CAPShutdown);
+  _impl->storeHook(_impl->l2capHostStoppedHook, nimbleResetL2CAPDeferredEvent);
+  _impl->storeHook(_impl->l2capPostEndHook, nimbleCleanupL2CAP);
+  nimbleStartL2CAPOperations();
+  auto impl = std::make_shared<BLEL2CAPServer::Impl>();
+  if (!nimbleSetupL2CAPServer(impl, psm, mtu)) {
+    return BLEL2CAPServer();
+  }
+  return BLEL2CAPServer(impl);
+}
+
+BLEL2CAPChannel BLEClass::connectL2CAP(uint16_t connHandle, uint16_t psm, uint16_t mtu) {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
+    log_e("connectL2CAP: BLE not initialized");
+    return BLEL2CAPChannel();
+  }
+  if (!sL2CAPMtx.init()) {
+    log_e("connectL2CAP: failed to allocate L2CAP mutex");
+    return BLEL2CAPChannel();
+  }
+  _impl->storeHook(_impl->l2capBeginHook, nimbleStartL2CAPOperations);
+  _impl->storeHook(_impl->l2capPreEndHook, nimblePrepareL2CAPShutdown);
+  _impl->storeHook(_impl->l2capHostStoppedHook, nimbleResetL2CAPDeferredEvent);
+  _impl->storeHook(_impl->l2capPostEndHook, nimbleCleanupL2CAP);
+  nimbleStartL2CAPOperations();
+  auto impl = std::make_shared<BLEL2CAPChannel::Impl>();
+  if (!nimbleSetupL2CAPChannel(impl, connHandle, psm, mtu)) {
+    return BLEL2CAPChannel();
+  }
+  return BLEL2CAPChannel(impl);
 }
 
 bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server, uint16_t psm, uint16_t mtu) {
@@ -903,16 +975,17 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
 
   {
     BLELockGuard lock(sL2CAPMtx);
-    sL2CAPServers.push_back(server);
+    l2capServers().push_back(server);
   }
   return true;
 }
 
 static void removeClientCtx(L2CAPClientCtx *ctx) {
   BLELockGuard lock(sL2CAPMtx);
-  for (auto it = sClientContexts.begin(); it != sClientContexts.end(); ++it) {
+  auto &contexts = clientContexts();
+  for (auto it = contexts.begin(); it != contexts.end(); ++it) {
     if (it->get() == ctx) {
-      sClientContexts.erase(it);
+      contexts.erase(it);
       break;
     }
   }
@@ -923,8 +996,8 @@ void nimbleCleanupL2CAP() {
   std::vector<std::shared_ptr<BLEL2CAPServer::Impl>> servers;
   {
     BLELockGuard lock(sL2CAPMtx);
-    pending.swap(sClientContexts);
-    servers.swap(sL2CAPServers);
+    pending.swap(clientContexts());
+    servers.swap(l2capServers());
   }
   for (auto &ctx : pending) {
     if (ctx->impl) {
@@ -996,7 +1069,7 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
   ctx->impl = chanImpl;
   {
     BLELockGuard lock(sL2CAPMtx);
-    sClientContexts.push_back(ctx);
+    clientContexts().push_back(ctx);
   }
 
   auto clientEventFn = [](struct ble_l2cap_event *event, void *arg) -> int {

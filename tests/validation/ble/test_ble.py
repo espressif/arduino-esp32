@@ -77,11 +77,13 @@ def _phase_basic(server, client):
         assert int(m.group(2)) == 1, f"{tag} BLE.begin() corrupted the heap"
 
     server.expect_exact("[SERVER] Init OK", timeout=30)
+    server.expect_exact("[SERVER] Bare lifecycle OK", timeout=30)
     server.expect_exact("[SERVER] Deinit OK", timeout=10)
     server.expect_exact("[SERVER] Reinit OK", timeout=30)
     server.expect_exact("[SERVER] Final deinit OK", timeout=10)
 
     client.expect_exact("[CLIENT] Init OK", timeout=30)
+    client.expect_exact("[CLIENT] Bare lifecycle OK", timeout=30)
     client.expect_exact("[CLIENT] Deinit OK", timeout=10)
     client.expect_exact("[CLIENT] Reinit OK", timeout=30)
     client.expect_exact("[CLIENT] Final deinit OK", timeout=10)

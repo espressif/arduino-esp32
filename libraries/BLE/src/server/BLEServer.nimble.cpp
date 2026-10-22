@@ -60,8 +60,12 @@ bool sReAdvEventInited = false;
 
 void reAdvertiseEventCb(struct ble_npl_event *event) {
   auto *server = static_cast<BLEServer::Impl *>(ble_npl_event_get_arg(event));
-  BLELockGuard lock(server ? server->mtx : nullptr);
-  if (server && server->active && server->advertiseOnDisconnect && BLE.isInitialized()) {
+  bool restart = false;
+  {
+    BLELockGuard lock(server ? server->mtx : nullptr);
+    restart = server && server->active && server->advertiseOnDisconnect;
+  }
+  if (restart && BLE.isInitialized()) {
     BLE.startAdvertising();
   }
 }

@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <vector>
+#include "freertos/FreeRTOS.h"
 #include "WString.h"
 #include "BTStatus.h"
 #include "BTAddress.h"
@@ -476,7 +477,9 @@ private:
   struct Impl;
   Impl *_impl;
 
+  mutable portMUX_TYPE _stateMux = portMUX_INITIALIZER_UNLOCKED;
   bool _initialized = false;
+  void setInitialized(bool initialized);
   BTAddress::Type _ownAddressType = BTAddress::Type::Public;
   String _deviceName;
   std::vector<BTAddress> _whiteList;

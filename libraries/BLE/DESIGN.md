@@ -402,6 +402,12 @@ Important lifecycle invariants:
 - `BLE.end(true)` is terminal for the process lifetime; reinitialization is blocked after controller memory release
 - factories return invalid handles when BLE is not initialized
 - shutdown must leave the library in a safe, non-dangling state even if public handles still exist
+- backend role handlers and teardown routines are linked lazily: factories and
+  stack callbacks publish/load their hook pointers through a short critical
+  section, without calling role code while that critical section is held
+- role factories and the begin/end state transition are serialized by the core
+  lifecycle mutex; `end()` closes factory admission before role teardown, while
+  long native shutdown runs without holding that mutex
 
 ### Design rule
 

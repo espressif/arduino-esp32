@@ -165,6 +165,7 @@ std::atomic<uint32_t> l2capPhase28Disconnects{0};
 #if BLE_L2CAP_SUPPORTED
 BLEL2CAPServer l2capBulkServer;
 #endif
+
 static const uint32_t L2CAP_BULK_TARGET = 2000;
 
 // Phase 16 — server callback aggregation (set from BLE stack task, read from loop).
@@ -385,6 +386,17 @@ bool phase_basic() {
   Serial.println("[SERVER] Init OK");
   Serial.printf("[SERVER] Device name: %s\n", BLE.getDeviceName().c_str());
   Serial.printf("[SERVER] Address: %s\n", BLE.getAddress().toString().c_str());
+
+  // No role has been created yet. This round-trip verifies that lazy
+  // role/teardown hooks tolerate an entirely bare stack and can install roles
+  // after the next begin().
+  BLE.end(false);
+  status = BLE.begin(serverName + "_bare_reinit");
+  if (!status) {
+    Serial.printf("[SERVER] Bare reinit FAILED: %s\n", status.toString());
+    return false;
+  }
+  Serial.println("[SERVER] Bare lifecycle OK");
 
   // NVS outlives reflashing, so bonds from an earlier run would otherwise leak
   // into the pairing phases and make them depend on whatever state the boards

@@ -301,6 +301,17 @@ bool phase_basic() {
   Serial.printf("[CLIENT] Device name: %s\n", BLE.getDeviceName().c_str());
   Serial.printf("[CLIENT] Address: %s\n", BLE.getAddress().toString().c_str());
 
+  // Exercise end()/begin() before any scan, client, security, or L2CAP role
+  // installs its lazy hooks, then prove roles can be installed in the new
+  // session.
+  BLE.end(false);
+  status = BLE.begin(targetName + "_client_bare_reinit");
+  if (!status) {
+    Serial.printf("[CLIENT] Bare reinit FAILED: %s\n", status.toString());
+    return false;
+  }
+  Serial.println("[CLIENT] Bare lifecycle OK");
+
   // NVS outlives reflashing, so bonds from an earlier run would otherwise leak
   // into the pairing phases and make them depend on whatever state the boards
   // were left in. Wipe once here, at boot, before any phase pairs.

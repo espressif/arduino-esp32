@@ -32,9 +32,6 @@
 #endif
 #include "core/BLEImplHelpers.h"
 #include "core/BLEBackend.h"
-#if BLE_L2CAP_SUPPORTED
-#include "l2cap/BLEL2CAP.nimble.h"
-#endif
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
@@ -67,13 +64,34 @@ extern "C" void ble_store_config_init(void);
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
+using NimBLEGapHook = int (*)(struct ble_gap_event *);
+static portMUX_TYPE s_gapHookMux = portMUX_INITIALIZER_UNLOCKED;
+#if BLE_GATT_SERVER_SUPPORTED
+static NimBLEGapHook s_serverGapEventHook = nullptr;
+#endif
+#if BLE_SMP_SUPPORTED
+static NimBLEGapHook s_securityGapEventHook = nullptr;
+#endif
+
+static NimBLEGapHook loadGapHook(NimBLEGapHook &slot) {
+  portENTER_CRITICAL(&s_gapHookMux);
+  NimBLEGapHook hook = slot;
+  portEXIT_CRITICAL(&s_gapHookMux);
+  return hook;
+}
+
+static void storeGapHook(NimBLEGapHook &slot, NimBLEGapHook hook) {
+  portENTER_CRITICAL(&s_gapHookMux);
+  slot = hook;
+  portEXIT_CRITICAL(&s_gapHookMux);
+}
+
 #if BLE_GATT_SERVER_SUPPORTED
 // Defined in BLEServer.nimble.cpp: drops the deferred re-advertise event's backing
 // reference so it is re-initialized after a stack restart (see the definition
 // for the use-after-free this prevents across BLE.end()/begin()).
 void nimbleResetReAdvertiseEvent();
 
-static int (*s_serverGapEventHook)(struct ble_gap_event *) = nullptr;
 #endif
 
 // --------------------------------------------------------------------------
@@ -97,8 +115,8 @@ void BLEClass::Impl::hostTask(void *param) {
 
 int nimbleForwardServerGapEvent(struct ble_gap_event *event) {
 #if BLE_GATT_SERVER_SUPPORTED
-  if (s_serverGapEventHook) {
-    return s_serverGapEventHook(event);
+  if (auto hook = loadGapHook(s_serverGapEventHook)) {
+    return hook(event);
   }
 #else
   (void)event;
@@ -108,25 +126,46 @@ int nimbleForwardServerGapEvent(struct ble_gap_event *event) {
 
 int nimbleForwardSecurityGapEvent(struct ble_gap_event *event) {
 #if BLE_SMP_SUPPORTED
-  return BLESecurity::Impl::handleGapEvent(event);
+  if (auto hook = loadGapHook(s_securityGapEventHook)) {
+    return hook(event);
+  }
+  if (!event) {
+    return 0;
+  }
+  if (event->type == BLE_GAP_EVENT_REPEAT_PAIRING) {
+    struct ble_gap_conn_desc desc;
+    if (ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc) != 0) {
+      return BLE_GAP_REPEAT_PAIRING_IGNORE;
+    }
+    ble_store_util_delete_peer(&desc.peer_id_addr);
+    return BLE_GAP_REPEAT_PAIRING_RETRY;
+  }
+#if defined(BLE_GAP_EVENT_AUTHORIZE)
+  if (event->type == BLE_GAP_EVENT_AUTHORIZE) {
+    log_w(
+      "BLESecurity: attribute 0x%04x requires authorization but no handler is installed - denying %s", event->authorize.attr_handle,
+      event->authorize.is_read ? "read" : "write"
+    );
+    event->authorize.out_response = BLE_GAP_AUTHORIZE_REJECT;
+  }
+#endif
 #else
   (void)event;
-  return 0;
 #endif
+  return 0;
 }
 
 int BLEClass::Impl::onStoreStatus(struct ble_store_status_event *event, void *arg) {
 #if BLE_SMP_SUPPORTED
-  if (event->event_code == BLE_STORE_EVENT_FULL) {
-    if (auto *sec = BLESecurity::Impl::instance()) {
-      struct ble_store_key_sec key = {};
-      struct ble_store_value_sec value = {};
-      key.idx = 0;
-      if (ble_store_read_peer_sec(&key, &value) == 0) {
-        BTAddress oldest(value.peer_addr.val, static_cast<BTAddress::Type>(value.peer_addr.type));
-        if (sec->notifyBondOverflow(oldest)) {
-          return 0;
-        }
+  auto overflowHook = BLE._impl ? BLE._impl->loadHook(BLE._impl->securityOverflowHook) : nullptr;
+  if (event->event_code == BLE_STORE_EVENT_FULL && overflowHook) {
+    struct ble_store_key_sec key = {};
+    struct ble_store_value_sec value = {};
+    key.idx = 0;
+    if (ble_store_read_peer_sec(&key, &value) == 0) {
+      BTAddress oldest(value.peer_addr.val, static_cast<BTAddress::Type>(value.peer_addr.type));
+      if (overflowHook(oldest)) {
+        return 0;
       }
     }
   }
@@ -192,7 +231,7 @@ void BLEClass::Impl::onSync() {
 BLEClass::BLEClass() : _impl(new Impl()) {}
 
 BLEClass::~BLEClass() {
-  if (_initialized) {
+  if (isInitialized()) {
     end(false);
   }
   delete _impl;
@@ -202,7 +241,14 @@ BLEClass::~BLEClass() {
 // When CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE is set, hostedInitBLE() runs first; a failed init returns BTStatus::Fail.
 // If a prior end(true) released controller memory, re-initialization is rejected with BTStatus::InvalidState.
 BTStatus BLEClass::begin(const String &deviceName) {
-  if (_initialized) {
+  if (!_impl || !_impl->lifecycleMtx) {
+    return BTStatus::NoMemory;
+  }
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (_impl->ending) {
+    return BTStatus::InvalidState;
+  }
+  if (isInitialized()) {
     return BTStatus::OK;
   }
 
@@ -257,9 +303,12 @@ BTStatus BLEClass::begin(const String &deviceName) {
   }
 
 #if BLE_L2CAP_SUPPORTED
-  nimbleStartL2CAPOperations();
+  if (auto hook = _impl->loadHook(_impl->l2capBeginHook)) {
+    hook();
+  }
 #endif
-  _initialized = true;
+  _impl->ending = false;
+  setInitialized(true);
   _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
   if (_impl->localMTU != BLE_ATT_MTU_DFLT) {
     (void)ble_att_set_preferred_mtu(_impl->localMTU);
@@ -270,8 +319,8 @@ BTStatus BLEClass::begin(const String &deviceName) {
   // getSecurity() keeps its Impl in a function-local static that outlives an
   // end()/begin() cycle. Re-push the retained configuration so those defaults
   // do not silently overwrite security settings the application already made.
-  if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
-    sec->applySecurityParams();
+  if (auto hook = _impl->loadHook(_impl->securityBeginHook)) {
+    hook();
   }
 #endif
 
@@ -282,8 +331,12 @@ BTStatus BLEClass::begin(const String &deviceName) {
 // hostedDeinitBLE() runs when CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE is set, after the NimBLE port is torn down.
 // Irreversible: after end(true) you cannot call begin() again without a hardware reset.
 void BLEClass::end(bool releaseMemory) {
-  if (!_impl || !_initialized) {
-    return;
+  {
+    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+    if (!_impl || !isInitialized() || _impl->ending) {
+      return;
+    }
+    _impl->ending = true;
   }
 
   // Reset advertising state before tearing down the stack.  reset() calls
@@ -297,19 +350,13 @@ void BLEClass::end(bool releaseMemory) {
   // For scanning, stop() is sufficient; scan results are cleared by
   // startBlocking()/clearResults() and there is no equivalent accumulated state.
 #if BLE_ADVERTISING_SUPPORTED
-  if (_impl->adv) {
-    getAdvertising().reset();
+  if (auto hook = _impl->loadHook(_impl->advEndHook)) {
+    hook();
   }
 #endif
 #if BLE_SCANNING_SUPPORTED
-  if (_impl->scan) {
-    BLEScan scan = getScan();
-    scan.stop();
-    // Terminate any established periodic syncs while the host is still enabled so
-    // applications need not call terminatePeriodicSync() before end() (no-op if
-    // none are tracked). Doing this after nimble_port_stop() would race the host
-    // teardown and log a benign BLE_HS_EDISABLED.
-    scan.terminateAllPeriodicSyncs();
+  if (auto hook = _impl->loadHook(_impl->scanEndHook)) {
+    hook();
   }
 #endif
 
@@ -319,13 +366,17 @@ void BLEClass::end(bool releaseMemory) {
 #if BLE_L2CAP_SUPPORTED
   // Close the operation queue before the public initialized flag changes so a
   // racing channel call cannot enqueue behind nimble_port_stop().
-  nimblePrepareL2CAPShutdown();
+  if (auto hook = _impl->loadHook(_impl->l2capPreEndHook)) {
+    hook();
+  }
 #endif
-  _initialized = false;
+  {
+    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+    setInitialized(false);
+  }
 #if BLE_GATT_SERVER_SUPPORTED
-  if (_impl->server) {
-    BLELockGuard lock(_impl->server->mtx);
-    _impl->server->active = false;
+  if (auto hook = _impl->loadHook(_impl->serverPreEndHook)) {
+    hook();
   }
 #endif
 
@@ -334,31 +385,34 @@ void BLEClass::end(bool releaseMemory) {
   // Drop the deferred re-advertise event's backing reference only after the
   // host task has stopped: while it was alive it could still dispatch that
   // event, so resetting it before nimble_port_stop() raced the host task.
-  if (_impl->server) {
-    nimbleResetReAdvertiseEvent();
+  if (auto hook = _impl->loadHook(_impl->serverHostStoppedHook)) {
+    hook();
   }
 #endif
 #if BLE_L2CAP_SUPPORTED
   // The host task is stopped, so remove every queued per-channel operation and
   // orphan-disconnect event, release their waiters, and return their NPL
   // backing storage before nimble_port_deinit() destroys the event pool.
-  nimbleResetL2CAPDeferredEvent();
+  if (auto hook = _impl->loadHook(_impl->l2capHostStoppedHook)) {
+    hook();
+  }
 #endif
   nimble_port_deinit();
   _impl->synced = false;
 
 #if BLE_L2CAP_SUPPORTED
-  nimbleCleanupL2CAP();
+  if (auto hook = _impl->loadHook(_impl->l2capPostEndHook)) {
+    hook();
+  }
 #endif
 
 #if BLE_GATT_SERVER_SUPPORTED
   // Native callbacks can retain raw pointers into the GATT tree. Release it
   // only after the host task has stopped and deinit has discarded those
   // registrations.
-  if (_impl->server) {
-    _impl->server->releaseGattTree();
+  if (auto hook = _impl->loadHook(_impl->serverPostEndHook)) {
+    hook();
   }
-  nimbleClearRetainedGattDefs();
 #endif
 
 #if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
@@ -370,6 +424,11 @@ void BLEClass::end(bool releaseMemory) {
     btMemRelease(BT_MODE_BLE);
 #endif
   }
+
+  {
+    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+    _impl->ending = false;
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -377,7 +436,7 @@ void BLEClass::end(bool releaseMemory) {
 // --------------------------------------------------------------------------
 
 BTAddress BLEClass::getAddress() const {
-  if (!_impl || !_initialized) {
+  if (!_impl || !isInitialized()) {
     return BTAddress();
   }
   uint8_t addr[6];
@@ -391,7 +450,7 @@ BTAddress BLEClass::getAddress() const {
 
 // On CONFIG_IDF_TARGET_ESP32, RPA default types map to a random public type and ble_hs_pvcy_rpa_config is toggled; other types disable host privacy in that build.
 BTStatus BLEClass::setOwnAddressType(BTAddress::Type type) {
-  if (!_impl || !_initialized) {
+  if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
   uint8_t nimbleType = static_cast<uint8_t>(type);
@@ -417,7 +476,7 @@ BTStatus BLEClass::setOwnAddressType(BTAddress::Type type) {
 }
 
 BTStatus BLEClass::setOwnAddress(const BTAddress &addr) {
-  if (!_impl || !_initialized) {
+  if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
   int rc = ble_hs_id_set_rnd(addr.data());
@@ -433,7 +492,7 @@ BTStatus BLEClass::setOwnAddress(const BTAddress &addr) {
 // --------------------------------------------------------------------------
 
 BTStatus BLEClass::setMTU(uint16_t mtu) {
-  if (!_impl || !_initialized) {
+  if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
   int rc = ble_att_set_preferred_mtu(mtu);
@@ -455,7 +514,7 @@ uint16_t BLEClass::getMTU() const {
 
 // Uses ble_store_read_our_sec index 0; the IRK is only present when the store entry includes it.
 bool BLEClass::getLocalIRK(uint8_t irk[16]) const {
-  if (!_impl || !_initialized || !irk) {
+  if (!_impl || !isInitialized() || !irk) {
     return false;
   }
   struct ble_store_key_sec key = {};
@@ -472,7 +531,7 @@ bool BLEClass::getLocalIRK(uint8_t irk[16]) const {
 
 // The scan is capped at 100 bonds to avoid unbounded store iteration.
 bool BLEClass::getPeerIRK(const BTAddress &peer, uint8_t irk[16]) const {
-  if (!_impl || !_initialized || !irk) {
+  if (!_impl || !isInitialized() || !irk) {
     return false;
   }
   int numBonds = 0;
@@ -501,7 +560,7 @@ bool BLEClass::getPeerIRK(const BTAddress &peer, uint8_t irk[16]) const {
 
 BTStatus BLEClass::setDefaultPhy(BLEPhy txPhy, BLEPhy rxPhy) {
 #if BLE5_SUPPORTED
-  if (!_impl || !_initialized) {
+  if (!_impl || !isInitialized()) {
     log_w("setDefaultPhy: BLE not initialized");
     return BTStatus::NotInitialized;
   }
@@ -533,7 +592,7 @@ BTStatus BLEClass::getDefaultPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
 
 // The entire list is re-sent to the stack on every change; duplicate add is a no-op to the driver.
 BTStatus BLEClass::whiteListAdd(const BTAddress &address) {
-  if (!_initialized) {
+  if (!isInitialized()) {
     return BTStatus::NotInitialized;
   }
   if (isOnWhiteList(address)) {
@@ -557,7 +616,7 @@ BTStatus BLEClass::whiteListAdd(const BTAddress &address) {
 
 // Like add, the whole whitelist array is set atomically in one ble_gap_wl_set call.
 BTStatus BLEClass::whiteListRemove(const BTAddress &address) {
-  if (!_initialized) {
+  if (!isInitialized()) {
     return BTStatus::NotInitialized;
   }
   for (auto it = _whiteList.begin(); it != _whiteList.end(); ++it) {
@@ -628,7 +687,7 @@ BTStatus BLEClass::setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t 
 // --------------------------------------------------------------------------
 
 BTStatus BLEClass::setCustomGapHandler(RawEventHandler handler) {
-  if (!_impl || !_initialized) {
+  if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
   _impl->customGapHandler = handler;
@@ -670,13 +729,19 @@ BTStatus BLEClass::setCustomGattsHandler(RawEventHandler /*handler*/) {
 #if BLE_SCANNING_SUPPORTED
 BLEScan BLEClass::getScan() {
   static std::shared_ptr<BLEScan::Impl> slot;
-  if (!isInitialized()) {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
     log_e("getScan: BLE not initialized");
     return BLEScan();
   }
   if (!slot) {
     slot = std::make_shared<BLEScan::Impl>();
     _impl->scan = slot.get();
+    _impl->storeHook(_impl->scanEndHook, +[]() {
+      BLEScan scan(slot);
+      scan.stop();
+      scan.terminateAllPeriodicSyncs();
+    });
   }
   return BLEScan(slot);
 }
@@ -690,13 +755,17 @@ BLEScan BLEClass::getScan() {
 #if BLE_ADVERTISING_SUPPORTED
 BLEAdvertising BLEClass::getAdvertising() {
   static std::shared_ptr<BLEAdvertising::Impl> slot;
-  if (!isInitialized()) {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
     log_e("getAdvertising: BLE not initialized");
     return BLEAdvertising();
   }
   if (!slot) {
     slot = std::make_shared<BLEAdvertising::Impl>();
     _impl->adv = slot.get();
+    _impl->storeHook(_impl->advEndHook, +[]() {
+      BLEAdvertising(slot).reset();
+    });
   }
   return BLEAdvertising(slot);
 }
@@ -730,22 +799,35 @@ BLEServer BLEClass::createServer() {
   // Process-lifetime singleton. end() clears its GATT tree but keeps this slot so
   // existing BLEServer handles remain the same server after begin().
   static std::shared_ptr<BLEServer::Impl> s_server;
-  if (!isInitialized()) {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
     log_e("createServer: BLE not initialized");
     return BLEServer();
   }
   if (!s_server) {
     log_d("createServer: creating new server instance");
     s_server = std::make_shared<BLEServer::Impl>();
-    _impl->server = s_server.get();
-    s_serverGapEventHook = [](struct ble_gap_event *event) -> int {
+    storeGapHook(s_serverGapEventHook, +[](struct ble_gap_event *event) -> int {
       if (s_server) {
         BLEServer srv(s_server);
         return BLEServerImplCommon::forwardGapEvent(srv, event);
       }
       return 0;
-    };
+    });
   }
+  _impl->storeHook(_impl->serverPreEndHook, +[]() {
+    if (s_server) {
+      BLELockGuard lock(s_server->mtx);
+      s_server->active = false;
+    }
+  });
+  _impl->storeHook(_impl->serverHostStoppedHook, nimbleResetReAdvertiseEvent);
+  _impl->storeHook(_impl->serverPostEndHook, +[]() {
+    if (s_server) {
+      s_server->releaseGattTree();
+    }
+    nimbleClearRetainedGattDefs();
+  });
   {
     BLELockGuard lock(s_server->mtx);
     s_server->active = true;
@@ -761,7 +843,8 @@ BLEServer BLEClass::createServer() {
 
 #if BLE_GATT_CLIENT_SUPPORTED
 BLEClient BLEClass::createClient() {
-  if (!isInitialized()) {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
     log_e("createClient: BLE not initialized");
     return BLEClient();
   }
@@ -777,13 +860,26 @@ BLEClient BLEClass::createClient() {
 #if BLE_SMP_SUPPORTED
 BLESecurity BLEClass::getSecurity() {
   static std::shared_ptr<BLESecurity::Impl> slot;
-  if (!isInitialized()) {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
     log_e("getSecurity: BLE not initialized");
     return BLESecurity();
   }
   if (!slot) {
     slot = std::make_shared<BLESecurity::Impl>();
     BLESecurity::Impl::s_instance = slot.get();
+    storeGapHook(s_securityGapEventHook, BLESecurity::Impl::handleGapEvent);
+    _impl->storeHook(_impl->securityBeginHook, +[]() {
+      if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
+        sec->applySecurityParams();
+      }
+    });
+    _impl->storeHook(_impl->securityOverflowHook, +[](const BTAddress &oldest) -> bool {
+      if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
+        return sec->notifyBondOverflow(oldest);
+      }
+      return false;
+    });
     slot->applySecurityParams();
   }
   return BLESecurity(slot);
@@ -792,32 +888,6 @@ BLESecurity BLEClass::getSecurity() {
 BLESecurity BLEClass::getSecurity() {
   log_w("SMP not supported");
   return BLESecurity();
-}
-#endif
-
-#if BLE_L2CAP_SUPPORTED
-BLEL2CAPServer BLEClass::createL2CAPServer(uint16_t psm, uint16_t mtu) {
-  if (!isInitialized()) {
-    log_e("createL2CAPServer: BLE not initialized");
-    return BLEL2CAPServer();
-  }
-  auto impl = std::make_shared<BLEL2CAPServer::Impl>();
-  if (!nimbleSetupL2CAPServer(impl, psm, mtu)) {
-    return BLEL2CAPServer();
-  }
-  return BLEL2CAPServer(impl);
-}
-
-BLEL2CAPChannel BLEClass::connectL2CAP(uint16_t connHandle, uint16_t psm, uint16_t mtu) {
-  if (!isInitialized()) {
-    log_e("connectL2CAP: BLE not initialized");
-    return BLEL2CAPChannel();
-  }
-  auto impl = std::make_shared<BLEL2CAPChannel::Impl>();
-  if (!nimbleSetupL2CAPChannel(impl, connHandle, psm, mtu)) {
-    return BLEL2CAPChannel();
-  }
-  return BLEL2CAPChannel(impl);
 }
 #endif
 
