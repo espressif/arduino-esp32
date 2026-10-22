@@ -390,6 +390,7 @@ def _phase_reconnect(server, client):
 def _phase_blestream(server, client):
     # Init + onConnect callback + connected()
     server.expect_exact("[SERVER] BLEStream malformed NUS ready=1", timeout=20)
+    server.expect_exact("[SERVER] BLEStream existing NUS rejected=1", timeout=15)
     client.expect_exact("[CLIENT] BLEStream malformed begin armed", timeout=15)
     client.write("PHASE13_MALFORMED_GO\n")
     client.expect_exact("[CLIENT] BLEStream failed begin cleanup=1", timeout=20)
@@ -432,8 +433,12 @@ def _phase_blestream(server, client):
     server.expect_exact("[SERVER] BLEStream server msg sent", timeout=10)
     client.expect_exact("[CLIENT] BLEStream server msg: server_says_hi", timeout=15)
 
-    # onDisconnect callback after client calls end()
-    server.expect_exact("[SERVER] BLEStream onDisconnect fired", timeout=15)
+    # Server end() owns the active teardown: callback fires before return,
+    # advertising remains stopped, and the client observes the disconnect.
+    server.expect_exact("[SERVER] BLEStream onDisconnect fired=1", timeout=15)
+    server.expect_exact("[SERVER] BLEStream end advertisingStopped=1", timeout=15)
+    server.expect_exact("[SERVER] BLEStream rebegin ok=1", timeout=15)
+    client.expect_exact("[CLIENT] BLEStream server end disconnected=1", timeout=15)
     client.expect_exact("[CLIENT] Status: blestream done", timeout=10)
 
 

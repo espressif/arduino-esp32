@@ -438,6 +438,7 @@ Current status: on NimBLE with `BLE5_SUPPORTED`, both the **receive** side (exte
 It follows the same stack-agnostic and lifecycle rules as the lower-level BLE objects.
 
 In **server mode**, multiple centrals may connect at once. As a single Arduino `Stream`, `write()`/`print()` broadcast to every subscribed peer and `read()`/`available()` drain one merged RX buffer. Additive APIs attribute traffic per peer: `peerCount()`, `peers()`, `writeTo(peer, ...)`, `onPeerData(...)`, and `disconnect(addr)`. Client mode remains 1:1. See `examples/MultiClientUART`.
+While active, server-mode `BLEStream` exclusively owns the NUS service, legacy advertising configuration, and the server's callback slots. `begin()` returns `Busy` if another owner already registered NUS. `end()` stops advertising, disconnects the server ACL peers, removes only NUS, and leaves the BLE stack and unrelated GATT services initialized.
 
 ### L2CAP CoC
 

@@ -304,6 +304,7 @@ String bleStreamRxLine;
 volatile bool bleStreamConnectCb = false;
 volatile bool bleStreamDisconnectCb = false;
 volatile bool bleStreamWriteToDone = false;
+volatile bool bleStreamEndRequested = false;
 volatile bool phase13Continue = false;
 bool bleStreamPeekDone = false;
 bool l2capInitDone = false;
@@ -1023,6 +1024,9 @@ void loop() {
     malformedAdv.addServiceUUID(BLEStream::nusServiceUUID());
     BTStatus malformedAdvStart = malformedAdv.start();
     Serial.printf("[SERVER] BLEStream malformed NUS ready=%d\n", (int)(malformedStart && malformedAdvStart));
+    BLEStream conflictStream;
+    BTStatus conflictStatus = conflictStream.begin(serverName);
+    Serial.printf("[SERVER] BLEStream existing NUS rejected=%d\n", (int)(conflictStatus == BTStatus::Busy));
     while (!phase13Continue) {
       checkSerial();
       delay(10);
@@ -1045,6 +1049,8 @@ void loop() {
         Serial.printf("[SERVER] BLEStream onPeerData: %s\n", peer.getAddress().toString().c_str());
         bleStream.writeTo(peer, (const uint8_t *)"STREAM_WRITE_TO_ACK\n", 20);
         bleStreamWriteToDone = true;
+      } else if (len >= 7 && memcmp(data, "end_now", 7) == 0) {
+        bleStreamEndRequested = true;
       }
     });
     BTStatus s = bleStream.begin(serverName);
@@ -1178,11 +1184,18 @@ void loop() {
       bleStreamStep = 6;
     }
 
-    // Step 6: Wait for onDisconnect callback
-    if (bleStreamStep == 6 && bleStreamDisconnectCb) {
-      Serial.println("[SERVER] BLEStream onDisconnect fired");
-      bleStreamPhaseDone = true;
+    // Step 6: end() while the peer is still connected. It must block through
+    // disconnect callback delivery, stop advertising, remove NUS, and permit
+    // a clean re-begin without disturbing the BLE stack.
+    if (bleStreamStep == 6 && bleStreamEndRequested) {
       bleStream.end();
+      Serial.printf("[SERVER] BLEStream onDisconnect fired=%d\n", (int)bleStreamDisconnectCb);
+      delay(100);
+      BLEAdvertising stoppedAdv = BLE.getAdvertising();
+      Serial.printf("[SERVER] BLEStream end advertisingStopped=%d\n", (int)!stoppedAdv.isAdvertising());
+      BTStatus restart = bleStream.begin(serverName);
+      Serial.printf("[SERVER] BLEStream rebegin ok=%d\n", (int)(bool)restart);
+      bleStreamPhaseDone = true;
     }
   }
 

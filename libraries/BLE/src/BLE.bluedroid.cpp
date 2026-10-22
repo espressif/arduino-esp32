@@ -41,6 +41,7 @@
 #include "security/BLESecurity.bluedroid.h"
 #endif
 #include "core/BLEImplHelpers.h"
+#include "core/BLEMutex.h"
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
@@ -677,9 +678,14 @@ BLEServer BLEClass::createServer() {
   if (!slot) {
     auto fresh = std::make_shared<BLEServer::Impl>();
     esp_timer_create_args_t timerArgs = {};
-    timerArgs.callback = [](void *) {
-      BLE.startAdvertising();
+    timerArgs.callback = [](void *arg) {
+      auto *server = static_cast<BLEServer::Impl *>(arg);
+      BLELockGuard lock(server ? server->mtx : nullptr);
+      if (server && server->active && server->advertiseOnDisconnect && BLE.isInitialized()) {
+        BLE.startAdvertising();
+      }
     };
+    timerArgs.arg = fresh.get();
     timerArgs.name = "ble_adv_restart";
     esp_err_t err = esp_timer_create(&timerArgs, &fresh->advRestartTimer);
     if (err != ESP_OK) {

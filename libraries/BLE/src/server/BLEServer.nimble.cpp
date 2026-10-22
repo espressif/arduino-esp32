@@ -58,13 +58,17 @@ namespace {
 struct ble_npl_event sReAdvEvent;
 bool sReAdvEventInited = false;
 
-void reAdvertiseEventCb(struct ble_npl_event *) {
-  BLE.startAdvertising();
+void reAdvertiseEventCb(struct ble_npl_event *event) {
+  auto *server = static_cast<BLEServer::Impl *>(ble_npl_event_get_arg(event));
+  BLELockGuard lock(server ? server->mtx : nullptr);
+  if (server && server->active && server->advertiseOnDisconnect && BLE.isInitialized()) {
+    BLE.startAdvertising();
+  }
 }
 
-void scheduleReAdvertise() {
+void scheduleReAdvertise(BLEServer::Impl *server) {
   if (!sReAdvEventInited) {
-    ble_npl_event_init(&sReAdvEvent, reAdvertiseEventCb, nullptr);
+    ble_npl_event_init(&sReAdvEvent, reAdvertiseEventCb, server);
     sReAdvEventInited = true;
   }
   ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &sReAdvEvent);
@@ -478,7 +482,7 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       }
 
       if (shouldAdvertise) {
-        scheduleReAdvertise();
+        scheduleReAdvertise(impl);
       }
       return 0;
     }

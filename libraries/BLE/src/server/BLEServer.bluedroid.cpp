@@ -1856,7 +1856,10 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
     return BTStatus::InvalidState;
   }
 
-  if (!svc->started || !impl->started) {
+  // Failed registration can leave a native service handle even though
+  // started was never set. Delete every native service; only handle-less
+  // staged services can be detached locally.
+  if (svc->handle == 0 || impl->gattsIf == ESP_GATT_IF_NONE) {
     {
       BLELockGuard lock(impl->mtx);
       for (auto it = impl->services.begin(); it != impl->services.end(); ++it) {

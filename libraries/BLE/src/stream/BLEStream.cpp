@@ -58,6 +58,7 @@ struct BLEStream::Impl {
 
   // Server mode
   BLEServer server;
+  BLEService service;
   BLECharacteristic txChr;  // Server TX (Notify) -> client receives
   BLECharacteristic rxChr;  // Server RX (Write)  -> client sends
 
@@ -116,7 +117,17 @@ BTStatus BLEStream::begin(const String &deviceName) {
     return BTStatus::Fail;
   }
 
-  BLEService svc = _impl->server.createService(kNUS_ServiceUUID);
+  // BLEStream exclusively owns the NUS service while active. Refuse to wrap
+  // or later delete a service created by another owner.
+  if (_impl->server.getService(kNUS_ServiceUUID)) {
+    _impl->server = BLEServer();
+    return BTStatus::Busy;
+  }
+  _impl->service = _impl->server.createService(kNUS_ServiceUUID);
+  if (!_impl->service) {
+    _impl->server = BLEServer();
+    return BTStatus::Fail;
+  }
 
   // TX characteristic: server notifies, client may also Read. Nordic's NUS
   // spec defines TX as notify-only, but BLEStream is a generic Arduino
@@ -125,12 +136,18 @@ BTStatus BLEStream::begin(const String &deviceName) {
   // commonly issue an ATT_READ on discovery to populate their UI. Allowing
   // Read returns the most recently notified bytes, which is the closest
   // meaningful "current value" and keeps generic clients happy.
-  _impl->txChr = svc.createCharacteristic(kNUS_TxCharUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
+  _impl->txChr = _impl->service.createCharacteristic(kNUS_TxCharUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
 
   // RX characteristic: client writes, server receives. Open access to match
   // the common deployed NUS behavior; add encryption with
   // BLEPermission::WriteEncrypted if the profile calls for it.
-  _impl->rxChr = svc.createCharacteristic(kNUS_RxCharUUID, BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen);
+  _impl->rxChr = _impl->service.createCharacteristic(kNUS_RxCharUUID, BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen);
+  if (!_impl->txChr || !_impl->rxChr) {
+    (void)_impl->server.removeService(_impl->service);
+    _impl->service = BLEService();
+    _impl->server = BLEServer();
+    return BTStatus::Fail;
+  }
 
   // Stop advertising before (re-)starting the server so the GATT table is
   // mutable (NimBLE requires no active GAP procedures during registration).
@@ -139,6 +156,11 @@ BTStatus BLEStream::begin(const String &deviceName) {
 
   BTStatus srvStatus = _impl->server.start();
   if (!srvStatus) {
+    (void)_impl->server.removeService(_impl->service);
+    _impl->service = BLEService();
+    _impl->txChr = BLECharacteristic();
+    _impl->rxChr = BLECharacteristic();
+    _impl->server = BLEServer();
     return srvStatus;
   }
 
@@ -259,13 +281,42 @@ void BLEStream::end() {
     return;
   }
   if (_impl->mode == Impl::Mode::Server) {
+    if (_impl->server) {
+      // Close the restart gate before stopping advertising. Deferred backend
+      // restart callbacks take the same server mutex and re-check this flag.
+      _impl->server.advertiseOnDisconnect(false);
+    }
+    if (BLE.isInitialized()) {
+      BLEAdvertising adv = BLE.getAdvertising();
+      if (adv) {
+        (void)adv.stop();
+      }
+    }
+    if (_impl->server) {
+      // A BLE ACL is shared by every service. The documented server-mode end
+      // contract therefore disconnects all server peers, while preserving the
+      // stack and unrelated GATT services.
+      for (const auto &conn : _impl->server.getConnections()) {
+        (void)_impl->server.disconnect(conn.getHandle());
+      }
+    }
     if (_impl->rxChr) {
       _impl->rxChr.resetCallbacks();
+    }
+    if (_impl->txChr) {
+      _impl->txChr.resetCallbacks();
     }
     if (_impl->server) {
       _impl->server.onConnect(nullptr);
       _impl->server.onDisconnect(nullptr);
+      if (_impl->service) {
+        (void)_impl->server.removeService(_impl->service);
+      }
     }
+    _impl->service = BLEService();
+    _impl->txChr = BLECharacteristic();
+    _impl->rxChr = BLECharacteristic();
+    _impl->server = BLEServer();
   } else if (_impl->mode == Impl::Mode::Client) {
     if (_impl->remoteTx) {
       _impl->remoteTx.unsubscribe();
@@ -274,6 +325,9 @@ void BLEStream::end() {
       _impl->client.resetCallbacks();
       _impl->client.disconnect();
     }
+    _impl->remoteTx = BLERemoteCharacteristic();
+    _impl->remoteRx = BLERemoteCharacteristic();
+    _impl->client = BLEClient();
   }
   _impl->peerCount = 0;
   _impl->mode = Impl::Mode::None;

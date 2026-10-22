@@ -1237,6 +1237,12 @@ void setup() {
         Serial.printf("[CLIENT] BLEStream server msg: %s\n", rx.c_str());
       }
 
+      stream.println("end_now");
+      unsigned long endWait = millis();
+      while (stream.connected() && millis() - endWait < 10000) {
+        delay(20);
+      }
+      Serial.printf("[CLIENT] BLEStream server end disconnected=%d\n", (int)!stream.connected());
       stream_ok = true;
       stream.end();
     }

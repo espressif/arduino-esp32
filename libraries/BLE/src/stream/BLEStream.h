@@ -83,9 +83,11 @@ public:
    * @brief Start as a NUS server with advertising.
    * @param deviceName BLE device name (used for BLE.begin and advertising)
    * @return BTStatus::OK on success, BTStatus::InvalidState if already started,
-   *         or a backend error status on failure.
+   *         BTStatus::Busy if another owner already registered NUS, or a
+   *         backend error status on failure.
    * @note Initializes BLE if not already done, reconfigures advertising to include
-   *       the NUS service UUID, and enables auto-advertise on disconnect.
+   *       the NUS service UUID, and enables auto-advertise on disconnect. While
+   *       active it owns NUS, legacy advertising, and server callback slots.
    */
   BTStatus begin(const String &deviceName = "BLE_Stream");
 
@@ -102,7 +104,10 @@ public:
   BTStatus beginClient(const BTAddress &address, uint32_t timeoutMs = 5000);
 
   /**
-   * @brief Shut down the stream (stop advertising, disconnect, clean up).
+   * @brief Shut down the stream.
+   * @note Server mode stops legacy advertising, disconnects all server ACL
+   *       peers, and removes only NUS. The BLE stack and unrelated services
+   *       remain initialized.
    */
   void end();
 
