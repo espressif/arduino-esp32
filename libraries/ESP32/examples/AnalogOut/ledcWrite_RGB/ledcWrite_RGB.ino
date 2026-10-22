@@ -17,9 +17,9 @@ uint8_t ledB = 4;
 
 const boolean invert = true;  // set true if common anode, false if common cathode
 
-uint8_t color = 0;         // a value from 0 to 255 representing the hue
-uint32_t R, G, B;          // the Red Green and Blue color components
-uint8_t brightness = 255; // 255 is maximum brightness, but can be changed. Might need 256 for common anode to fully turn off.
+uint8_t color = 0;        // hue for hueToRGB(), 0 to 255
+uint32_t R, G, B;         // Red, Green and Blue PWM duties written with ledcWrite()
+uint8_t brightness = 255; // hueToRGB() scale 0-255, not LEDC 8-bit full on (that is 256)
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -35,9 +35,9 @@ void setup() {
 
 // void loop runs over and over again
 void loop() {
-  Serial.println("Send all LEDs a 256 and wait 2 seconds.");
-  // If your RGB LED turns off instead of on here you should check if the LED is common anode or cathode.
-  // If it doesn't fully turn off and is common anode try using 256.
+  Serial.println("Send all LEDs a 256 (8-bit LEDC full on) and wait 2 seconds.");
+  // If your RGB LED turns off instead of on here, check common anode vs cathode.
+  // invert == true (common anode): LEDC full on (256) turns the LED fully off.
   ledcWrite(ledR, 256);
   ledcWrite(ledG, 256);
   ledcWrite(ledB, 256);

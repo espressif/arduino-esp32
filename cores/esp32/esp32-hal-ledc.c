@@ -339,10 +339,10 @@ bool ledcWrite(uint8_t pin, uint32_t duty) {
   if (bus != NULL) {
 
     uint8_t group = (bus->channel / SOC_LEDC_CHANNEL_NUM), channel = (bus->channel % SOC_LEDC_CHANNEL_NUM);
-    uint32_t max_duty = (1 << bus->channel_resolution); // Max LEDC duty
+    uint32_t max_duty = (1U << bus->channel_resolution);  // Max LEDC duty [0, 2^resolution]
 
     if (duty > max_duty) {
-      log_w("Target duty %d was adjusted to the maximum duty %d", duty, max_duty);
+      log_w("Target duty %" PRIu32 " was adjusted to the maximum duty %" PRIu32, duty, max_duty);
       duty = max_duty;
     }
 
@@ -372,13 +372,12 @@ bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
   // Get the actual timer being used by this channel
   ledc_ll_get_channel_timer(LEDC_LL_GET_HW_FN(), group, (channel % SOC_LEDC_CHANNEL_NUM), &timer);
 
-  //Fixing if all bits in resolution is set = LEDC FULL ON
   uint32_t resolution = 0;
   ledc_ll_get_duty_resolution(LEDC_LL_GET_HW_FN(), group, timer, &resolution);
-  uint32_t max_duty = (1 << resolution); // Max LEDC duty
+  uint32_t max_duty = (1U << resolution);  // Max LEDC duty [0, 2^resolution]
 
   if (duty > max_duty) {
-    log_w("Target duty %d was adjusted to the maximum duty %d", duty, max_duty);
+    log_w("Target duty %" PRIu32 " was adjusted to the maximum duty %" PRIu32, duty, max_duty);
     duty = max_duty;
   }
 
@@ -571,19 +570,15 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
 #endif
     uint8_t group = (bus->channel / SOC_LEDC_CHANNEL_NUM), channel = (bus->channel % SOC_LEDC_CHANNEL_NUM);
 
-    uint32_t max_duty = (1 << bus->channel_resolution); // Max LEDC duty
+    uint32_t max_duty = (1U << bus->channel_resolution);  // Max LEDC duty [0, 2^resolution]
 
     if (target_duty > max_duty) {
-      log_w("Final duty %d was adjusted to the maximum duty %d", target_duty, max_duty);
+      log_w("Final duty %" PRIu32 " was adjusted to the maximum duty %" PRIu32, target_duty, max_duty);
       target_duty = max_duty;
     }
     if (start_duty > max_duty) {
-      log_w("Starting duty %d was adjusted to the maximum duty %d", start_duty, max_duty);
+      log_w("Starting duty %" PRIu32 " was adjusted to the maximum duty %" PRIu32, start_duty, max_duty);
       start_duty = max_duty;
-    }
-    if (start_duty >= target_duty) {
-      log_e("Starting duty must be lower than the final duty");
-      return false;
     }
 
     // Initialize fade service.
@@ -713,8 +708,8 @@ static uint32_t ledcGammaCorrection(uint32_t duty) {
     return 0;
   }
 
-  uint32_t max_duty = (1U << ledcGammaResolution) - 1;
-  if (duty >= (1U << ledcGammaResolution)) {
+  uint32_t max_duty = (1U << ledcGammaResolution);  // Max LEDC duty [0, 2^resolution]
+  if (duty >= max_duty) {
     return max_duty;
   }
 
@@ -843,18 +838,21 @@ void analogWrite(uint8_t pin, int value) {
         log_e("analogWrite setup failed (freq = %d, resolution = %u). Try setting different resolution or frequency", analog_frequency, analog_resolution);
         return;
       }
+      bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     }
-    // Arduino API says that duty goes from 0 to (2^resolution) - 1
-    // But LEDC works with duty from 0 to (2^resolution)
-    // Therefore, it will adjust Arduino MAX Duty to be the LEDC MAx Duty
-    uint32_t max_duty = (1 << bus->channel_resolution) - 1;
-    if (value < 0 || value > max_duty) {
-      log_e("Duty is out of range. Valid duty range for pin %d is 0 to %d", pin, max_duty);
+    if (bus == NULL) {
       return;
     }
-    if (value == max_duty) {
-      value = max_duty + 1;
-    }    
+    // Arduino API: value must be non-negative.
+    // Valid duty is 0 .. (2^resolution) - 1; LEDC hardware is 0 .. (2^resolution).
+    // Map Arduino max (and overflow) to LEDC full-on. Negative values are ignored.
+    if (value < 0) {
+      return;
+    }
+    uint32_t arduino_max = (1U << bus->channel_resolution) - 1;
+    if ((uint32_t)value >= arduino_max) {
+      value = (int)(arduino_max + 1);
+    }
     ledcWrite(pin, value);
   }
 }
