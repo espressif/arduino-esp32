@@ -20,13 +20,8 @@
 #if BLE_ENABLED
 
 #include <Arduino.h>
-#include <atomic>
 #include "stream/BLEStream.h"
-#include "BLE.h"
-#include "advertising/BLEAdvertising.h"
-#include "scan/BLEScan.h"
-#include "remote/BLERemoteService.h"
-#include "cbuf.h"
+#include "stream/BLEStreamImpl.h"
 
 // Nordic UART Service UUIDs (6e40000x-b5a3-f393-e0a9-e50e24dcca9e)
 static constexpr BLEUUID kNUS_ServiceUUID = BLEUUID::from128(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
@@ -46,44 +41,6 @@ BLEUUID BLEStream::nusTxCharUUID() {
 }
 
 // --------------------------------------------------------------------------
-// Impl
-// --------------------------------------------------------------------------
-
-struct BLEStream::Impl {
-  enum class Mode {
-    None,
-    Server,
-    Client
-  } mode = Mode::None;
-
-  // Server mode
-  BLEServer server;
-  BLEService service;
-  BLECharacteristic txChr;  // Server TX (Notify) -> client receives
-  BLECharacteristic rxChr;  // Server RX (Write)  -> client sends
-
-  // Client mode
-  BLEClient client;
-  BLERemoteCharacteristic remoteTx;  // Remote TX (subscribe for notifications)
-  BLERemoteCharacteristic remoteRx;  // Remote RX (write to send data)
-
-  cbuf rxBuf;
-  // Number of currently connected peers. In server mode multiple centrals can be
-  // connected at once (writes are notified to all subscribers, RX is merged into
-  // rxBuf); a plain bool would drop to "disconnected" when any one peer left while
-  // others were still connected. Written from the BLE event task in the
-  // connect/disconnect callbacks and read from the user task, so it is atomic to
-  // give well-defined concurrent access. Client mode uses 0/1.
-  std::atomic<int> peerCount{0};
-
-  ConnectHandler onConnectCb = nullptr;
-  DisconnectHandler onDisconnectCb = nullptr;
-  PeerDataHandler onPeerDataCb = nullptr;
-
-  explicit Impl(size_t rxBufSize) : rxBuf(rxBufSize) {}
-};
-
-// --------------------------------------------------------------------------
 // BLEStream lifecycle
 // --------------------------------------------------------------------------
 
@@ -99,238 +56,18 @@ BLEStream::~BLEStream() {
   delete _impl;
 }
 
-BTStatus BLEStream::begin(const String &deviceName) {
-  if (!_impl || _impl->mode != Impl::Mode::None) {
-    return BTStatus::InvalidState;
-  }
-
-  // Initialize BLE if not already
-  if (!BLE.isInitialized()) {
-    BTStatus s = BLE.begin(deviceName);
-    if (!s) {
-      return s;
-    }
-  }
-
-  _impl->server = BLE.createServer();
-  if (!_impl->server) {
-    return BTStatus::Fail;
-  }
-
-  // BLEStream exclusively owns the NUS service while active. Refuse to wrap
-  // or later delete a service created by another owner.
-  if (_impl->server.getService(kNUS_ServiceUUID)) {
-    _impl->server = BLEServer();
-    return BTStatus::Busy;
-  }
-  _impl->service = _impl->server.createService(kNUS_ServiceUUID);
-  if (!_impl->service) {
-    _impl->server = BLEServer();
-    return BTStatus::Fail;
-  }
-
-  // TX characteristic: server notifies, client may also Read. Nordic's NUS
-  // spec defines TX as notify-only, but BLEStream is a generic Arduino
-  // Stream wrapper that frequently talks to generic BLE tooling
-  // (nRF Connect, LightBlue, Web Bluetooth demos, etc.) — those clients
-  // commonly issue an ATT_READ on discovery to populate their UI. Allowing
-  // Read returns the most recently notified bytes, which is the closest
-  // meaningful "current value" and keeps generic clients happy.
-  _impl->txChr = _impl->service.createCharacteristic(kNUS_TxCharUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
-
-  // RX characteristic: client writes, server receives. Open access to match
-  // the common deployed NUS behavior; add encryption with
-  // BLEPermission::WriteEncrypted if the profile calls for it.
-  _impl->rxChr = _impl->service.createCharacteristic(kNUS_RxCharUUID, BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen);
-  if (!_impl->txChr || !_impl->rxChr) {
-    (void)_impl->server.removeService(_impl->service);
-    _impl->service = BLEService();
-    _impl->server = BLEServer();
-    return BTStatus::Fail;
-  }
-
-  // Stop advertising before (re-)starting the server so the GATT table is
-  // mutable (NimBLE requires no active GAP procedures during registration).
-  BLEAdvertising adv = BLE.getAdvertising();
-  adv.stop();
-
-  BTStatus srvStatus = _impl->server.start();
-  if (!srvStatus) {
-    (void)_impl->server.removeService(_impl->service);
-    _impl->service = BLEService();
-    _impl->txChr = BLECharacteristic();
-    _impl->rxChr = BLECharacteristic();
-    _impl->server = BLEServer();
-    return srvStatus;
-  }
-
-  // From here onward callbacks capture this. Mark the mode first so every
-  // later failure can call end() and detach them before destruction.
-  _impl->mode = Impl::Mode::Server;
-  _impl->server.onConnect([this](BLEServer, const BLEConnInfo &connInfo) {
-    _impl->peerCount.fetch_add(1, std::memory_order_relaxed);
-    if (_impl->onConnectCb) {
-      _impl->onConnectCb(connInfo);
-    }
-  });
-  _impl->server.onDisconnect([this](BLEServer, const BLEConnInfo &connInfo, uint8_t reason) {
-    if (_impl->peerCount.load(std::memory_order_relaxed) > 0) {
-      _impl->peerCount.fetch_sub(1, std::memory_order_relaxed);
-    }
-    if (_impl->onDisconnectCb) {
-      _impl->onDisconnectCb(connInfo, reason);
-    }
-  });
-  _impl->server.advertiseOnDisconnect(true);
-  _impl->rxChr.onWrite([this](BLECharacteristic chr, const BLEConnInfo &connInfo) {
-    size_t len = 0;
-    const uint8_t *data = chr.getValue(&len);
-    if (data && len > 0) {
-      _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
-      if (_impl->onPeerDataCb) {
-        _impl->onPeerDataCb(connInfo, data, len);
-      }
-    }
-  });
-
-  // Reconfigure advertising to include the NUS service UUID.
-  adv.reset();
-  adv.setName(deviceName);
-  adv.addServiceUUID(kNUS_ServiceUUID);
-  BTStatus advStatus = adv.start();
-  if (!advStatus) {
-    end();
-    return advStatus;
-  }
-
-  return BTStatus::OK;
-}
-
-BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
-  if (!_impl || _impl->mode != Impl::Mode::None) {
-    return BTStatus::InvalidState;
-  }
-
-  // Initialize BLE if not already
-  if (!BLE.isInitialized()) {
-    BTStatus s = BLE.begin("");
-    if (!s) {
-      return s;
-    }
-  }
-
-  _impl->client = BLE.createClient();
-  if (!_impl->client) {
-    return BTStatus::Fail;
-  }
-
-  // Client lifecycle callbacks below capture this; mark the mode first so
-  // every failure path detaches them through end() before the object can die.
-  _impl->mode = Impl::Mode::Client;
-  _impl->client.onConnect([this](BLEClient, const BLEConnInfo &connInfo) {
-    _impl->peerCount = 1;
-    if (_impl->onConnectCb) {
-      _impl->onConnectCb(connInfo);
-    }
-  });
-
-  _impl->client.onDisconnect([this](BLEClient, const BLEConnInfo &connInfo, uint8_t reason) {
-    _impl->peerCount = 0;
-    if (_impl->onDisconnectCb) {
-      _impl->onDisconnectCb(connInfo, reason);
-    }
-  });
-
-  BTStatus s = _impl->client.connect(address, timeoutMs);
-  if (!s) {
-    end();
-    return s;
-  }
-
-  // Discover NUS service
-  BLERemoteService svc = _impl->client.getService(kNUS_ServiceUUID);
-  if (!svc) {
-    end();
-    return BTStatus::NotFound;
-  }
-
-  _impl->remoteTx = svc.getCharacteristic(kNUS_TxCharUUID);
-  _impl->remoteRx = svc.getCharacteristic(kNUS_RxCharUUID);
-
-  if (!_impl->remoteTx || !_impl->remoteRx) {
-    end();
-    return BTStatus::NotFound;
-  }
-
-  // Subscribe to TX notifications (data from server -> us)
-  s = _impl->remoteTx.subscribe(BLESubscription::Notify, [this](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
-    if (data && len > 0) {
-      _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
-    }
-  });
-  if (!s) {
-    end();
-    return s;
-  }
-
-  return BTStatus::OK;
-}
-
 void BLEStream::end() {
   if (!_impl) {
     return;
   }
-  if (_impl->mode == Impl::Mode::Server) {
-    if (_impl->server) {
-      // Close the restart gate before stopping advertising. Deferred backend
-      // restart callbacks take the same server mutex and re-check this flag.
-      _impl->server.advertiseOnDisconnect(false);
-    }
-    if (BLE.isInitialized()) {
-      BLEAdvertising adv = BLE.getAdvertising();
-      if (adv) {
-        (void)adv.stop();
-      }
-    }
-    if (_impl->server) {
-      // A BLE ACL is shared by every service. The documented server-mode end
-      // contract therefore disconnects all server peers, while preserving the
-      // stack and unrelated GATT services.
-      for (const auto &conn : _impl->server.getConnections()) {
-        (void)_impl->server.disconnect(conn.getHandle());
-      }
-    }
-    if (_impl->rxChr) {
-      _impl->rxChr.resetCallbacks();
-    }
-    if (_impl->txChr) {
-      _impl->txChr.resetCallbacks();
-    }
-    if (_impl->server) {
-      _impl->server.onConnect(nullptr);
-      _impl->server.onDisconnect(nullptr);
-      if (_impl->service) {
-        (void)_impl->server.removeService(_impl->service);
-      }
-    }
-    _impl->service = BLEService();
-    _impl->txChr = BLECharacteristic();
-    _impl->rxChr = BLECharacteristic();
-    _impl->server = BLEServer();
-  } else if (_impl->mode == Impl::Mode::Client) {
-    if (_impl->remoteTx) {
-      _impl->remoteTx.unsubscribe();
-    }
-    if (_impl->client) {
-      _impl->client.resetCallbacks();
-      _impl->client.disconnect();
-    }
-    _impl->remoteTx = BLERemoteCharacteristic();
-    _impl->remoteRx = BLERemoteCharacteristic();
-    _impl->client = BLEClient();
+  // Keep the role alive locally while callbacks run. A disconnect callback may
+  // reenter end(); the nested call must observe no active role without deleting
+  // the role whose end() method is still executing.
+  auto role = _impl->takeRole();
+  if (role) {
+    role->end();
   }
   _impl->peerCount = 0;
-  _impl->mode = Impl::Mode::None;
 }
 
 bool BLEStream::connected() const {
@@ -348,13 +85,8 @@ std::vector<BLEConnInfo> BLEStream::peers() const {
   if (!_impl) {
     return {};
   }
-  if (_impl->mode == Impl::Mode::Server && _impl->server) {
-    return _impl->server.getConnections();
-  }
-  if (_impl->mode == Impl::Mode::Client && _impl->client && _impl->peerCount > 0) {
-    return {_impl->client.getConnInfo()};
-  }
-  return {};
+  auto role = _impl->loadRole();
+  return (role && !role->ending) ? role->peers() : std::vector<BLEConnInfo>{};
 }
 
 // --------------------------------------------------------------------------
@@ -378,131 +110,19 @@ size_t BLEStream::write(uint8_t c) {
 }
 
 size_t BLEStream::write(const uint8_t *buffer, size_t size) {
-  if (!_impl || _impl->peerCount <= 0 || size == 0) {
+  if (!_impl || _impl->peerCount <= 0 || !buffer || size == 0) {
     return 0;
   }
-
-  if (_impl->mode == Impl::Mode::Server) {
-    // Server sends via TX characteristic notifications
-    // Chunk at MTU - 3 (ATT header overhead) across subscribed peers
-    uint16_t mtu = 0;
-    if (_impl->server && _impl->txChr) {
-      for (uint16_t h : _impl->txChr.getSubscribedConnections()) {
-        uint16_t cMtu = _impl->server.getPeerMTU(h);
-        if (cMtu > 0 && (mtu == 0 || cMtu < mtu)) {
-          mtu = cMtu;
-        }
-      }
-    }
-    if (mtu == 0 && _impl->server) {
-      for (const auto &c : _impl->server.getConnections()) {
-        uint16_t cMtu = c.getMTU();
-        if (cMtu > 0 && (mtu == 0 || cMtu < mtu)) {
-          mtu = cMtu;
-        }
-      }
-    }
-    if (mtu == 0) {
-      mtu = BLE.getMTU();
-    }
-    uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
-    size_t sent = 0;
-
-    while (sent < size) {
-      size_t len = size - sent;
-      if (len > chunkSize) {
-        len = chunkSize;
-      }
-
-      _impl->txChr.setValue(buffer + sent, len);
-      BTStatus s = _impl->txChr.notify();
-      if (!s) {
-        break;
-      }
-      sent += len;
-    }
-    return sent;
-  } else if (_impl->mode == Impl::Mode::Client) {
-    // Client sends via RX characteristic writes
-    uint16_t mtu = _impl->client.getMTU();
-    uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
-    size_t sent = 0;
-
-    while (sent < size) {
-      size_t len = size - sent;
-      if (len > chunkSize) {
-        len = chunkSize;
-      }
-
-      BTStatus s = _impl->remoteRx.writeValue(buffer + sent, len, false);
-      if (!s) {
-        break;
-      }
-      sent += len;
-    }
-    return sent;
-  }
-
-  return 0;
+  auto role = _impl->loadRole();
+  return (role && !role->ending) ? role->write(buffer, size) : 0;
 }
 
 size_t BLEStream::writeTo(const BLEConnInfo &peer, const uint8_t *buffer, size_t size) {
   if (!_impl || _impl->peerCount <= 0 || !buffer || size == 0) {
     return 0;
   }
-
-  if (_impl->mode == Impl::Mode::Server) {
-    uint16_t mtu = _impl->server ? _impl->server.getPeerMTU(peer.getHandle()) : 0;
-    if (mtu == 0) {
-      mtu = peer.getMTU();
-    }
-    if (mtu == 0) {
-      mtu = BLE.getMTU();
-    }
-    uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
-    size_t sent = 0;
-
-    while (sent < size) {
-      size_t len = size - sent;
-      if (len > chunkSize) {
-        len = chunkSize;
-      }
-
-      _impl->txChr.setValue(buffer + sent, len);
-      BTStatus s = _impl->txChr.notify(peer.getHandle());
-      if (!s) {
-        break;
-      }
-      sent += len;
-    }
-    return sent;
-  }
-
-  if (_impl->mode == Impl::Mode::Client && _impl->client) {
-    BLEConnInfo conn = _impl->client.getConnInfo();
-    if (conn.getHandle() != peer.getHandle()) {
-      return 0;
-    }
-    uint16_t mtu = _impl->client.getMTU();
-    uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
-    size_t sent = 0;
-
-    while (sent < size) {
-      size_t len = size - sent;
-      if (len > chunkSize) {
-        len = chunkSize;
-      }
-
-      BTStatus s = _impl->remoteRx.writeValue(buffer + sent, len, false);
-      if (!s) {
-        break;
-      }
-      sent += len;
-    }
-    return sent;
-  }
-
-  return 0;
+  auto role = _impl->loadRole();
+  return (role && !role->ending) ? role->writeTo(peer, buffer, size) : 0;
 }
 
 void BLEStream::flush() {
@@ -510,7 +130,7 @@ void BLEStream::flush() {
 }
 
 BLEStream::operator bool() const {
-  return _impl && _impl->mode != Impl::Mode::None;
+  return _impl && _impl->loadRole() != nullptr;
 }
 
 // --------------------------------------------------------------------------

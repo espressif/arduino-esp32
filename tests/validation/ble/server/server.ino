@@ -304,6 +304,9 @@ int bleStreamStep = 0;
 String bleStreamRxLine;
 volatile bool bleStreamConnectCb = false;
 volatile bool bleStreamDisconnectCb = false;
+volatile bool bleStreamAllowReentrantEnd = false;
+volatile bool bleStreamReentrantEnd = false;
+volatile bool bleStreamConcurrentWriteRejected = false;
 volatile bool bleStreamWriteToDone = false;
 volatile bool bleStreamEndRequested = false;
 volatile bool phase13Continue = false;
@@ -1054,6 +1057,13 @@ void loop() {
     bleStream.onDisconnect([](const BLEConnInfo &connInfo, uint8_t reason) {
       syncPhaseFromHost();
       bleStreamDisconnectCb = true;
+      if (bleStreamAllowReentrantEnd) {
+        bleStreamAllowReentrantEnd = false;
+        // Exercise end() reentrancy while the outer server-mode end() is
+        // blocked waiting for this disconnect callback.
+        bleStream.end();
+        bleStreamReentrantEnd = !(bool)bleStream;
+      }
     });
     bleStream.onPeerData([](const BLEConnInfo &peer, const uint8_t *data, size_t len) {
       syncPhaseFromHost();
@@ -1063,6 +1073,14 @@ void loop() {
         bleStreamWriteToDone = true;
       } else if (len >= 7 && memcmp(data, "end_now", 7) == 0) {
         bleStreamEndRequested = true;
+        // Hold the stack callback until loop() removes role admission, then
+        // prove a callback-context write cannot race the active teardown.
+        uint32_t deadline = millis() + 2000;
+        while ((bool)bleStream && (int32_t)(deadline - millis()) > 0) {
+          delay(1);
+        }
+        bool admissionClosed = !(bool)bleStream;
+        bleStreamConcurrentWriteRejected = admissionClosed && bleStream.writeTo(peer, (const uint8_t *)"late", 4) == 0;
       }
     });
     BTStatus s = bleStream.begin(serverName);
@@ -1200,6 +1218,7 @@ void loop() {
     // disconnect callback delivery, stop advertising, remove NUS, and permit
     // a clean re-begin without disturbing the BLE stack.
     if (bleStreamStep == 6 && bleStreamEndRequested) {
+      bleStreamAllowReentrantEnd = true;
       bleStream.end();
       Serial.printf("[SERVER] BLEStream onDisconnect fired=%d\n", (int)bleStreamDisconnectCb);
       delay(100);
@@ -1207,6 +1226,10 @@ void loop() {
       Serial.printf("[SERVER] BLEStream end advertisingStopped=%d\n", (int)!stoppedAdv.isAdvertising());
       BTStatus restart = bleStream.begin(serverName);
       Serial.printf("[SERVER] BLEStream rebegin ok=%d\n", (int)(bool)restart);
+      Serial.printf(
+        "[SERVER] BLEStream reentrant end=%d concurrentWriteRejected=%d heap=%d\n", (int)bleStreamReentrantEnd,
+        (int)bleStreamConcurrentWriteRejected, (int)heap_caps_check_integrity_all(true)
+      );
       bleStreamPhaseDone = true;
     }
   }

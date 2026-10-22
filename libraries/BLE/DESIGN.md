@@ -59,6 +59,13 @@ front-door (`BLE.cpp`, `BLE.nimble.*`, `BLE.bluedroid.*`) sits at the `src/`
 root. The public handles own the API contract; backends implement that contract
 and must not redefine it.
 
+`BLEStream` additionally splits its server and client roles into separate
+translation units behind a small common role interface. Keep server-only
+sketches free of remote-client references (and vice versa); common lifecycle
+code must remove role admission under its short-lived mutex while retaining
+local shared ownership so concurrent operations and callback-reentrant `end()`
+cannot destroy the role whose teardown is executing.
+
 ## Backend model
 
 Backend choice is centralized in `core/BLEGuards.h`.

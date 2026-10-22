@@ -440,6 +440,7 @@ def _phase_blestream(server, client):
     server.expect_exact("[SERVER] BLEStream onDisconnect fired=1", timeout=15)
     server.expect_exact("[SERVER] BLEStream end advertisingStopped=1", timeout=15)
     server.expect_exact("[SERVER] BLEStream rebegin ok=1", timeout=15)
+    server.expect_exact("[SERVER] BLEStream reentrant end=1 concurrentWriteRejected=1 heap=1", timeout=15)
     client.expect_exact("[CLIENT] BLEStream server end disconnected=1", timeout=15)
     client.expect_exact("[CLIENT] Status: blestream done", timeout=10)
 
@@ -482,9 +483,12 @@ def _phase_introspection_and_permissions(server, client):
         by both backends — regression guard for the historical Bluedroid
         bug where descriptor permissions were hardcoded to READ|WRITE.
     """
-    # Server-side construction-time validator checks. These run in parallel
-    # with the client introspection (both are gated on Phase 15), so assert
-    # them up-front on the server stream before switching to the client.
+    # Both DUTs run in parallel. Consume the client's early reconnect marker
+    # first so its subsequent introspection burst cannot push that marker out
+    # of pytest-embedded's bounded expect window while server checks are read.
+    client.expect_exact("[CLIENT] Reconnected for introspection", timeout=30)
+
+    # Server-side construction-time validator checks.
     server.expect_exact("[SERVER] DescPerm validation start", timeout=15)
     server.expect_exact("[SERVER] DescPerm None rejected: 1", timeout=10)
     server.expect_exact("[SERVER] DescPerm 0x2904+Write rejected: 1", timeout=10)
@@ -498,7 +502,6 @@ def _phase_introspection_and_permissions(server, client):
     server.expect_exact("[SERVER] DescriptorHelpers ok=1", timeout=10)
     server.expect_exact("[SERVER] DescPerm validation done", timeout=10)
 
-    client.expect_exact("[CLIENT] Reconnected for introspection", timeout=30)
     m_rssi = client.expect(r"\[CLIENT\] RSSI: (-?\d+)\r?\n", timeout=10)
     rssi = int(m_rssi.group(1))
     # -128 is the sentinel getRSSI() returns when the read never completes, so
