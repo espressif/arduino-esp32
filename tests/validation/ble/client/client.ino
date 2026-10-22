@@ -2617,7 +2617,7 @@ void setup() {
             while (shutdownCreated && !shutdownJob.done && millis() - waiterWait < 5000) {
               delay(10);
             }
-            bool waiterReleased = stalledAtEnd && shutdownJob.done && shutdownJob.status == BTStatus::InvalidState;
+            bool waiterReleased = stalledAtEnd && shutdownJob.done && shutdownJob.status == BTStatus::NotConnected;
             BTStatus endedWrite = retained.write((const uint8_t *)"x", 1);
             uint16_t endedMtu = retained.getMTU();
             BTStatus endedDisconnect = retained.disconnect();
