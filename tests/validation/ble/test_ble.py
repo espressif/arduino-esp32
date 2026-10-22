@@ -1102,12 +1102,27 @@ def _phase_l2cap_bulk(server, client):
     m_ack = client.expect(r"\[CLIENT\] Phase28 bulkAck ok=([01]) total=(\d+)", timeout=60)
     assert int(m_ack.group(1)) == 1, f"L2CAP bulk transfer size mismatch (server acked {m_ack.group(2).decode()} bytes)"
     server.expect(r"\[SERVER\] Phase28 bulk got=\d+", timeout=30)
+    m_peer = server.expect(r"\[SERVER\] Phase28 peer race disconnect=(-?\d+)", timeout=30)
+    assert int(m_peer.group(1)) in (0, -12), "host-callback peer disconnect returned an unexpected status"
+    m_race = client.expect(
+        r"\[CLIENT\] Phase28 race clean=([01]) write=(-?\d+) mtu=(\d+) disconnect=(-?\d+)",
+        timeout=40,
+    )
+    assert int(m_race.group(1)) == 1, "L2CAP peer-disconnect race returned a dirty status or corrupted the heap"
+    m_shell = client.expect(
+        r"\[CLIENT\] Phase28 retained clean=([01]) end=(-?\d+)/(\d+)/(-?\d+) rebegin=([01]) after=(-?\d+)/(\d+)/(-?\d+)",
+        timeout=30,
+    )
+    assert int(m_shell.group(1)) == 1, "retained L2CAP shell or operation event was unsafe across end/rebegin"
+    assert int(m_shell.group(5)) == 1, "BLE rebegin failed after queued L2CAP operation cleanup"
     # Fresh channel after teardown must ping/pong — the accept path recovered.
     m_re = client.expect(r"\[CLIENT\] Phase28 reconnect ok=([01])", timeout=40)
     assert int(m_re.group(1)) == 1, "L2CAP channel reconnect ping/pong failed"
+    m_ops = client.expect(r"\[CLIENT\] Phase28 operation race ok=([01]) lifecycle=([01])", timeout=10)
+    assert int(m_ops.group(1)) == 1 and int(m_ops.group(2)) == 1, "L2CAP operation race/lifecycle regression failed"
 
     client.expect_exact("[CLIENT] Phase28 done", timeout=15)
-    server.expect_exact("[SERVER] Phase28 done", timeout=40)
+    server.expect_exact("[SERVER] Phase28 done", timeout=50)
     return True
 
 

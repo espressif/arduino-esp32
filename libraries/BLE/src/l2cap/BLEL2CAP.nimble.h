@@ -26,10 +26,21 @@
 #include "core/BLESync.h"
 #include <host/ble_hs.h>
 #include <host/ble_l2cap.h>
+#include <nimble/nimble_npl.h>
 #include <os/os_mbuf.h>
+#include <atomic>
 #include <vector>
 
+void nimbleReleaseL2CAPOperationEvent(BLEL2CAPChannel::Impl *impl);
+
 struct BLEL2CAPChannel::Impl {
+  enum class Operation : uint8_t {
+    None,
+    Write,
+    GetMTU,
+    Disconnect,
+  };
+
   struct ble_l2cap_chan *chan = nullptr;
   uint16_t psm = 0;
   uint16_t mtu = 0;
@@ -39,15 +50,30 @@ struct BLEL2CAPChannel::Impl {
   BLEL2CAPChannel::DataHandler onDataCb = nullptr;
   BLEL2CAPChannel::DisconnectHandler onDisconnectCb = nullptr;
 
-  /// Wakes a multi-SDU @c write() that hit @c BLE_HS_ESTALLED / @c BLE_HS_EBUSY
-  /// waiting for peer credits (@c BLE_L2CAP_EVENT_COC_TX_UNSTALLED).
-  BLESync txSync{"txSync"};
+  struct ble_npl_event operationEvent {};
+  bool operationEventInited = false;
+  bool operationHostRunning = false;
+  Operation operation = Operation::None;
+  std::atomic<bool> operationCancelled{false};
+  const uint8_t *writeData = nullptr;
+  size_t writeLen = 0;
+  size_t writeOffset = 0;
+  size_t writeChunkLen = 0;
+  size_t writeChunkMax = 0;
+  struct os_mbuf *writePendingMbuf = nullptr;
+  uint16_t operationMTU = 0;
+
+  BLESync operationSync{"l2capOperationSync"};
   BLESync connectSync{"l2capConnectSync"};
-  BLESync disconnectSync{"l2capDisconnectSync"};
 
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  SemaphoreHandle_t operationMtx = xSemaphoreCreateRecursiveMutex();
 
   ~Impl() {
+    nimbleReleaseL2CAPOperationEvent(this);
+    if (operationMtx) {
+      vSemaphoreDelete(operationMtx);
+    }
     if (mtx) {
       vSemaphoreDelete(mtx);
     }
@@ -94,6 +120,8 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
  * @return true on success; false on allocation or connect failure.
  */
 bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanImpl, uint16_t connHandle, uint16_t psm, uint16_t mtu);
+void nimbleStartL2CAPOperations();
+void nimblePrepareL2CAPShutdown();
 void nimbleResetL2CAPDeferredEvent();
 void nimbleCleanupL2CAP();
 

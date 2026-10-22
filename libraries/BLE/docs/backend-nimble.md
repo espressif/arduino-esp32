@@ -82,9 +82,16 @@ always cast-free `impl.member`.
   with legacy PDUs on a reserved top instance (`kLegacyInstance`) so they coexist with user
   `startExtended` sets. Extended scan reports merge scan responses via `mergeScanResponse`.
 - **L2CAP `write()`** splits payloads larger than `peer_coc_mtu` into MTU-sized SDUs and
-  may block between chunks on `COC_TX_UNSTALLED` (NimBLE itself does not segment oversized SDUs).
-  RX flatten uses a fixed 256-byte stack threshold; larger SDUs spill to the heap. Channel MTU
-  is independent of that threshold (caller-configured: 128, 256, 512, …).
+  application-task calls may block between chunks on `COC_TX_UNSTALLED` (NimBLE itself does not
+  segment oversized SDUs). Calls from host callbacks return `Busy` instead of blocking when more
+  credits are needed. RX flatten uses a fixed 256-byte stack threshold; larger SDUs spill to the
+  heap. Channel MTU is independent of that threshold (caller-configured: 128, 256, 512, …).
+- **L2CAP channel operations** from application tasks use one tracked host-queue event per channel
+  shell. The host task therefore owns all native channel-pointer dereferences, ordered with
+  `COC_DISCONNECTED`; one operation mutex covers each complete public write/get-MTU/disconnect
+  transaction. Shutdown closes the enqueue gate before stopping the host, then removes and
+  deinitializes every tracked event and releases waiters before NimBLE destroys its NPL event pool.
+  Retained detached shells can therefore survive `end()`/`begin()` without carrying stale NPL state.
 - **Late L2CAP connect completion** is deferred onto a host-queue callout after a blocking
   `connectL2CAP()` timeout. NimBLE invokes `COC_CONNECTED` before releasing its connect signaling
   procedure, so the orphan disconnect cannot be submitted inline; its context remains owned until

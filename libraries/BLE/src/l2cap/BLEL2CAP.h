@@ -72,16 +72,21 @@ public:
    * @brief Send data over the L2CAP channel.
    * @param data Pointer to the bytes to send.
    * @param len  Number of bytes to send.
-   * @return BTStatus::OK on success.
+   * @return @c BTStatus::OK on success, @c BTStatus::Busy when called from a
+   *         host callback and completion would require waiting for peer
+   *         credits, or @c BTStatus::NotConnected after channel teardown.
    * @note Payloads larger than the peer CoC MTU are split into MTU-sized SDUs.
    *       Multi-SDU writes may block briefly while waiting for peer credits
-   *       between chunks (@c BLE_L2CAP_EVENT_COC_TX_UNSTALLED).
+   *       between chunks (@c BLE_L2CAP_EVENT_COC_TX_UNSTALLED) when called
+   *       outside a BLE host callback.
    */
   BTStatus write(const uint8_t *data, size_t len);
 
   /**
    * @brief Disconnect this L2CAP channel.
-   * @return BTStatus::OK on success.
+   * @return @c BTStatus::OK on success, @c BTStatus::Busy if another channel
+   *         operation is active in a host callback, or
+   *         @c BTStatus::NotConnected if the channel is already detached.
    */
   BTStatus disconnect();
 

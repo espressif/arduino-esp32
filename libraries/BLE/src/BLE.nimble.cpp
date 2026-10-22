@@ -256,6 +256,9 @@ BTStatus BLEClass::begin(const String &deviceName) {
     return BTStatus::Timeout;
   }
 
+#if BLE_L2CAP_SUPPORTED
+  nimbleStartL2CAPOperations();
+#endif
   _initialized = true;
   _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
   if (_impl->localMTU != BLE_ATT_MTU_DFLT) {
@@ -313,6 +316,11 @@ void BLEClass::end(bool releaseMemory) {
   // Close the public session before native shutdown callbacks run. Keep the
   // GATT tree alive until the host has stopped, but reject re-entrant server
   // creation and value sends while it is stopping.
+#if BLE_L2CAP_SUPPORTED
+  // Close the operation queue before the public initialized flag changes so a
+  // racing channel call cannot enqueue behind nimble_port_stop().
+  nimblePrepareL2CAPShutdown();
+#endif
   _initialized = false;
 #if BLE_GATT_SERVER_SUPPORTED
   if (_impl->server) {
@@ -331,9 +339,9 @@ void BLEClass::end(bool releaseMemory) {
   }
 #endif
 #if BLE_L2CAP_SUPPORTED
-  // The host task is stopped, so no deferred orphan-disconnect event can run.
-  // Release its NPL backing storage before nimble_port_deinit() destroys the
-  // event pool; client contexts remain alive until cleanup below.
+  // The host task is stopped, so remove every queued per-channel operation and
+  // orphan-disconnect event, release their waiters, and return their NPL
+  // backing storage before nimble_port_deinit() destroys the event pool.
   nimbleResetL2CAPDeferredEvent();
 #endif
   nimble_port_deinit();

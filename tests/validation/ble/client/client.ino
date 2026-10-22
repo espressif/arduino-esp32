@@ -48,6 +48,13 @@ struct LongReadJob {
   uint32_t timeoutMs = 3000;
   volatile bool done = false;
 };
+struct L2CAPRaceJob {
+  BLEL2CAPChannel channel;
+  BTStatus status = BTStatus::Fail;
+  uint16_t mtu = 0;
+  volatile bool started = false;
+  volatile bool done = false;
+};
 // Phase 4: value the server set through a handle from a const lookup.
 static const BLEUUID constLookupCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a39");
 static const BLEUUID permFailClosedCharUUID("e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3a2f41");
@@ -219,6 +226,36 @@ static void longReadJobTask(void *arg) {
   }
   job->done = true;
   vTaskDelete(nullptr);
+}
+
+static uint8_t phase28RacePayload[4096];
+
+static void l2capRaceWriteTask(void *arg) {
+  auto *job = static_cast<L2CAPRaceJob *>(arg);
+  job->started = true;
+  job->status = job->channel.write(phase28RacePayload, sizeof(phase28RacePayload));
+  job->done = true;
+  vTaskDelete(nullptr);
+}
+
+static void l2capRaceMtuTask(void *arg) {
+  auto *job = static_cast<L2CAPRaceJob *>(arg);
+  job->started = true;
+  job->mtu = job->channel.getMTU();
+  job->done = true;
+  vTaskDelete(nullptr);
+}
+
+static void l2capRaceDisconnectTask(void *arg) {
+  auto *job = static_cast<L2CAPRaceJob *>(arg);
+  job->started = true;
+  job->status = job->channel.disconnect();
+  job->done = true;
+  vTaskDelete(nullptr);
+}
+
+static bool l2capRaceStatusClean(BTStatus status) {
+  return status == BTStatus::OK || status == BTStatus::Busy || status == BTStatus::NotConnected || status == BTStatus::InvalidState;
 }
 
 void readName() {
@@ -2458,10 +2495,14 @@ void setup() {
           Serial.printf("[CLIENT] Phase28 bulkAck ok=%d total=%lu\n", (int)bulkAck, ackTotal);
 
           // Reconnect: drop this channel and open a fresh one, then ping/pong.
+          // Keep the fresh handle for the peer-disconnect operation race and
+          // the end()/begin() detached-shell check below.
           channel.disconnect();
           got = false;
           rx = "";
           bool reconnectOk = false;
+          bool raceClean = false;
+          bool lifecycleClean = false;
           BLEL2CAPChannel ch2 = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
           if (ch2 && ch2.isConnected()) {
             ch2.onData([&](BLEL2CAPChannel ch, const uint8_t *data, size_t len) {
@@ -2476,11 +2517,73 @@ void setup() {
             }
             rx.trim();
             reconnectOk = got && (rx == "P28PONG");
-            ch2.disconnect();
+
+            memcpy(phase28RacePayload, "RACE", 4);
+            for (size_t i = 4; i < sizeof(phase28RacePayload); i++) {
+              phase28RacePayload[i] = (uint8_t)('a' + (i % 26));
+            }
+            static L2CAPRaceJob writeJob;
+            static L2CAPRaceJob mtuJob;
+            static L2CAPRaceJob disconnectJob;
+            writeJob.channel = ch2;
+            mtuJob.channel = ch2;
+            disconnectJob.channel = ch2;
+            writeJob.status = BTStatus::Fail;
+            mtuJob.mtu = 0;
+            disconnectJob.status = BTStatus::Fail;
+            writeJob.started = writeJob.done = false;
+            mtuJob.started = mtuJob.done = false;
+            disconnectJob.started = disconnectJob.done = false;
+
+            bool writeCreated = xTaskCreate(l2capRaceWriteTask, "l2cap-write", 6144, &writeJob, 1, nullptr) == pdPASS;
+            unsigned long startedAt = millis();
+            while (writeCreated && !writeJob.started && millis() - startedAt < 1000) {
+              delay(1);
+            }
+            bool mtuCreated = xTaskCreate(l2capRaceMtuTask, "l2cap-mtu", 4096, &mtuJob, 1, nullptr) == pdPASS;
+            bool disconnectCreated = xTaskCreate(l2capRaceDisconnectTask, "l2cap-disc", 4096, &disconnectJob, 1, nullptr) == pdPASS;
+            bool tasksCreated = writeCreated && mtuCreated && disconnectCreated;
+            unsigned long raceAt = millis();
+            while (
+              ((writeCreated && !writeJob.done) || (mtuCreated && !mtuJob.done) || (disconnectCreated && !disconnectJob.done))
+              && millis() - raceAt < 15000
+            ) {
+              delay(10);
+            }
+            raceClean =
+              tasksCreated && writeJob.done && mtuJob.done && disconnectJob.done && l2capRaceStatusClean(writeJob.status)
+              && (mtuJob.mtu == 0 || mtuJob.mtu == 256) && l2capRaceStatusClean(disconnectJob.status) && heap_caps_check_integrity_all(true);
+            Serial.printf(
+              "[CLIENT] Phase28 race clean=%d write=%d mtu=%u disconnect=%d\n", (int)raceClean, (int)writeJob.status, (unsigned)mtuJob.mtu,
+              (int)disconnectJob.status
+            );
+
+            BLEL2CAPChannel retained = ch2;
+            (void)bc.disconnect();
+            BLE.end(false);
+            BTStatus endedWrite = retained.write((const uint8_t *)"x", 1);
+            uint16_t endedMtu = retained.getMTU();
+            BTStatus endedDisconnect = retained.disconnect();
+            bool endedClean =
+              endedWrite == BTStatus::InvalidState && endedMtu == 0 && endedDisconnect == BTStatus::InvalidState
+              && heap_caps_check_integrity_all(true);
+
+            BTStatus rebegin = BLE.begin(targetName + "_client_phase28");
+            BTStatus reboundWrite = retained.write((const uint8_t *)"x", 1);
+            uint16_t reboundMtu = retained.getMTU();
+            BTStatus reboundDisconnect = retained.disconnect();
+            lifecycleClean =
+              rebegin && l2capRaceStatusClean(reboundWrite) && reboundMtu == 0 && l2capRaceStatusClean(reboundDisconnect)
+              && heap_caps_check_integrity_all(true);
+            Serial.printf(
+              "[CLIENT] Phase28 retained clean=%d end=%d/%u/%d rebegin=%d after=%d/%u/%d\n", (int)(endedClean && lifecycleClean),
+              (int)endedWrite, (unsigned)endedMtu, (int)endedDisconnect, (int)(bool)rebegin, (int)reboundWrite, (unsigned)reboundMtu,
+              (int)reboundDisconnect
+            );
           }
           Serial.printf("[CLIENT] Phase28 reconnect ok=%d\n", (int)reconnectOk);
+          Serial.printf("[CLIENT] Phase28 operation race ok=%d lifecycle=%d\n", (int)raceClean, (int)lifecycleClean);
         }
-        bc.disconnect();
       }
     }
 #endif

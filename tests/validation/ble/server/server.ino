@@ -2382,6 +2382,15 @@ void loop() {
       } else {
         l2capBulkServer.onData([](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
           syncPhaseFromHost();
+          if (len >= 4 && memcmp(data, "RACE", 4) == 0) {
+            // This callback is on the NimBLE host task. disconnect() must
+            // submit directly without blocking while the peer concurrently
+            // runs write/getMTU/disconnect from application tasks.
+            delay(20);
+            BTStatus status = channel.disconnect();
+            Serial.printf("[SERVER] Phase28 peer race disconnect=%d\n", (int)status);
+            return;
+          }
           if (!l2capBulkReplied) {
             // Bulk accumulation phase: sum SDU lengths until the target is met,
             // then echo the total so the client can verify integrity of size.
@@ -2416,8 +2425,12 @@ void loop() {
         adv.addServiceUUID(SERVICE_UUID);
         adv.start();
         Serial.println("[SERVER] Phase28 ready");
-        // Outlast the client's bulk + reconnect exchange.
-        delay(25000);
+        // Outlast the late-connect, bulk, reconnect, and operation-race
+        // exchanges, but finish promptly once all three channels detached.
+        unsigned long phase28Wait = millis();
+        while (l2capPhase28Disconnects.load() < 3 && millis() - phase28Wait < 40000) {
+          delay(20);
+        }
       }
     }
 #else
