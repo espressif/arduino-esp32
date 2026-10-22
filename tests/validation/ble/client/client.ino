@@ -10,6 +10,7 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <vector>
 
 static const BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static const BLEUUID rwCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -50,6 +51,8 @@ struct LongReadJob {
 };
 struct L2CAPRaceJob {
   BLEL2CAPChannel channel;
+  const uint8_t *data = nullptr;
+  size_t len = 0;
   BTStatus status = BTStatus::Fail;
   uint16_t mtu = 0;
   volatile bool started = false;
@@ -128,6 +131,7 @@ volatile int clientOrderN = 0;
 volatile bool phase13MalformedGo = false;
 volatile bool phase28StallGo = false;
 volatile bool phase28CleanupGo = false;
+volatile bool phase28EndGo = false;
 volatile bool phase35DisconnectGo = false;
 static void recordClientEvent(const char *tag) {
   int n = clientOrderN;
@@ -168,6 +172,8 @@ void checkSerial() {
         phase28StallGo = true;
       } else if (buf == "PHASE28_CLEANUP_GO") {
         phase28CleanupGo = true;
+      } else if (buf == "PHASE28_END_GO") {
+        phase28EndGo = true;
       } else if (buf == "PHASE35_DISCONNECT_GO") {
         phase35DisconnectGo = true;
       }
@@ -229,11 +235,12 @@ static void longReadJobTask(void *arg) {
 }
 
 static uint8_t phase28RacePayload[4096];
+static uint8_t phase28ShutdownPayload[8192];
 
 static void l2capRaceWriteTask(void *arg) {
   auto *job = static_cast<L2CAPRaceJob *>(arg);
   job->started = true;
-  job->status = job->channel.write(phase28RacePayload, sizeof(phase28RacePayload));
+  job->status = job->channel.write(job->data, job->len);
   job->done = true;
   vTaskDelete(nullptr);
 }
@@ -2526,6 +2533,8 @@ void setup() {
             static L2CAPRaceJob mtuJob;
             static L2CAPRaceJob disconnectJob;
             writeJob.channel = ch2;
+            writeJob.data = phase28RacePayload;
+            writeJob.len = sizeof(phase28RacePayload);
             mtuJob.channel = ch2;
             disconnectJob.channel = ch2;
             writeJob.status = BTStatus::Fail;
@@ -2558,22 +2567,70 @@ void setup() {
               (int)disconnectJob.status
             );
 
-            BLEL2CAPChannel retained = ch2;
-            (void)bc.disconnect();
+            // ESP-IDF's host event pool has only 19 host-side entries before
+            // controller additions. Retain 64 sequentially used channel shells
+            // so a leaked per-shell event deterministically exhausts the pool.
+            static std::vector<BLEL2CAPChannel> churnShells;
+            churnShells.clear();
+            churnShells.reserve(64);
+            bool churnClean = true;
+            for (int i = 0; i < 64; i++) {
+              BLEL2CAPChannel churn = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
+              uint16_t churnMtu = churn ? churn.getMTU() : 0;
+              BTStatus churnDisconnect = churn ? churn.disconnect() : BTStatus::InvalidState;
+              churnClean = churnClean && churn && churnMtu == 256 && churnDisconnect == BTStatus::OK;
+              churnShells.push_back(churn);
+            }
+            churnClean = churnClean && heap_caps_check_integrity_all(true);
+            Serial.printf("[CLIENT] Phase28 event churn clean=%d count=%u\n", (int)churnClean, (unsigned)churnShells.size());
+
+            BLEL2CAPChannel shutdownChannel = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
+            memcpy(phase28ShutdownPayload, "ENDR", 4);
+            for (size_t i = 4; i < sizeof(phase28ShutdownPayload); i++) {
+              phase28ShutdownPayload[i] = (uint8_t)('A' + (i % 26));
+            }
+            static L2CAPRaceJob shutdownJob;
+            shutdownJob.channel = shutdownChannel;
+            shutdownJob.data = phase28ShutdownPayload;
+            shutdownJob.len = sizeof(phase28ShutdownPayload);
+            shutdownJob.status = BTStatus::Fail;
+            shutdownJob.started = shutdownJob.done = false;
+            bool shutdownCreated =
+              shutdownChannel && xTaskCreate(l2capRaceWriteTask, "l2cap-end", 6144, &shutdownJob, 1, nullptr) == pdPASS;
+            unsigned long shutdownStart = millis();
+            while (shutdownCreated && !shutdownJob.started && millis() - shutdownStart < 1000) {
+              delay(1);
+            }
+            unsigned long endGoWait = millis();
+            while (!phase28EndGo && millis() - endGoWait < 15000) {
+              checkSerial();
+              delay(10);
+            }
+            bool stalledAtEnd = shutdownCreated && phase28EndGo && shutdownJob.started && !shutdownJob.done;
+            BLEL2CAPChannel retained = shutdownChannel;
             BLE.end(false);
+            unsigned long waiterWait = millis();
+            while (shutdownCreated && !shutdownJob.done && millis() - waiterWait < 5000) {
+              delay(10);
+            }
+            bool waiterReleased = stalledAtEnd && shutdownJob.done && shutdownJob.status == BTStatus::InvalidState;
             BTStatus endedWrite = retained.write((const uint8_t *)"x", 1);
             uint16_t endedMtu = retained.getMTU();
             BTStatus endedDisconnect = retained.disconnect();
             bool endedClean =
-              endedWrite == BTStatus::InvalidState && endedMtu == 0 && endedDisconnect == BTStatus::InvalidState
+              waiterReleased && endedWrite == BTStatus::NotConnected && endedMtu == 0 && endedDisconnect == BTStatus::NotConnected
               && heap_caps_check_integrity_all(true);
+            Serial.printf(
+              "[CLIENT] Phase28 end in-flight=%d released=%d status=%d\n", (int)stalledAtEnd, (int)waiterReleased, (int)shutdownJob.status
+            );
 
             BTStatus rebegin = BLE.begin(targetName + "_client_phase28");
             BTStatus reboundWrite = retained.write((const uint8_t *)"x", 1);
             uint16_t reboundMtu = retained.getMTU();
             BTStatus reboundDisconnect = retained.disconnect();
             lifecycleClean =
-              rebegin && l2capRaceStatusClean(reboundWrite) && reboundMtu == 0 && l2capRaceStatusClean(reboundDisconnect)
+              churnClean && rebegin && reboundWrite == BTStatus::NotConnected && reboundMtu == 0
+              && reboundDisconnect == BTStatus::NotConnected
               && heap_caps_check_integrity_all(true);
             Serial.printf(
               "[CLIENT] Phase28 retained clean=%d end=%d/%u/%d rebegin=%d after=%d/%u/%d\n", (int)(endedClean && lifecycleClean),

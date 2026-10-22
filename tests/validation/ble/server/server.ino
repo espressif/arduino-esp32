@@ -2382,6 +2382,14 @@ void loop() {
       } else {
         l2capBulkServer.onData([](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
           syncPhaseFromHost();
+          if (len >= 4 && memcmp(data, "ENDR", 4) == 0) {
+            // Hold receive processing long enough for the peer's multi-SDU
+            // write to stall, then let its BLE.end() release the waiter.
+            Serial.println("[SERVER] Phase28 shutdown stall entered");
+            delay(7000);
+            Serial.println("[SERVER] Phase28 shutdown stall released");
+            return;
+          }
           if (len >= 4 && memcmp(data, "RACE", 4) == 0) {
             // This callback is on the NimBLE host task. disconnect() must
             // submit directly without blocking while the peer concurrently
@@ -2425,10 +2433,9 @@ void loop() {
         adv.addServiceUUID(SERVICE_UUID);
         adv.start();
         Serial.println("[SERVER] Phase28 ready");
-        // Outlast the late-connect, bulk, reconnect, and operation-race
-        // exchanges, but finish promptly once all three channels detached.
+        // Outlast late-connect, bulk, race, 64-shell churn, and in-flight end.
         unsigned long phase28Wait = millis();
-        while (l2capPhase28Disconnects.load() < 3 && millis() - phase28Wait < 40000) {
+        while (l2capPhase28Disconnects.load() < 68 && millis() - phase28Wait < 120000) {
           delay(20);
         }
       }

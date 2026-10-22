@@ -1109,12 +1109,22 @@ def _phase_l2cap_bulk(server, client):
         timeout=40,
     )
     assert int(m_race.group(1)) == 1, "L2CAP peer-disconnect race returned a dirty status or corrupted the heap"
+    m_churn = client.expect(r"\[CLIENT\] Phase28 event churn clean=([01]) count=(\d+)", timeout=90)
+    assert int(m_churn.group(1)) == 1 and int(m_churn.group(2)) == 64, "per-channel operation events exhausted or leaked the NPL pool"
+    server.expect_exact("[SERVER] Phase28 shutdown stall entered", timeout=30)
+    client.write("PHASE28_END_GO\n")
+    m_end = client.expect(r"\[CLIENT\] Phase28 end in-flight=([01]) released=([01]) status=(-?\d+)", timeout=15)
+    assert int(m_end.group(1)) == 1, "BLE.end() was not invoked while the L2CAP write was genuinely in flight"
+    assert int(m_end.group(2)) == 1 and int(m_end.group(3)) == -4, "BLE.end() did not release the stalled writer with InvalidState"
+    server.expect_exact("[SERVER] Phase28 shutdown stall released", timeout=10)
     m_shell = client.expect(
         r"\[CLIENT\] Phase28 retained clean=([01]) end=(-?\d+)/(\d+)/(-?\d+) rebegin=([01]) after=(-?\d+)/(\d+)/(-?\d+)",
         timeout=30,
     )
     assert int(m_shell.group(1)) == 1, "retained L2CAP shell or operation event was unsafe across end/rebegin"
     assert int(m_shell.group(5)) == 1, "BLE rebegin failed after queued L2CAP operation cleanup"
+    assert (int(m_shell.group(2)), int(m_shell.group(3)), int(m_shell.group(4))) == (-7, 0, -7), "detached shell status after end was not NotConnected"
+    assert (int(m_shell.group(6)), int(m_shell.group(7)), int(m_shell.group(8))) == (-7, 0, -7), "detached shell status after rebegin was not NotConnected"
     # Fresh channel after teardown must ping/pong — the accept path recovered.
     m_re = client.expect(r"\[CLIENT\] Phase28 reconnect ok=([01])", timeout=40)
     assert int(m_re.group(1)) == 1, "L2CAP channel reconnect ping/pong failed"
@@ -1122,7 +1132,7 @@ def _phase_l2cap_bulk(server, client):
     assert int(m_ops.group(1)) == 1 and int(m_ops.group(2)) == 1, "L2CAP operation race/lifecycle regression failed"
 
     client.expect_exact("[CLIENT] Phase28 done", timeout=15)
-    server.expect_exact("[SERVER] Phase28 done", timeout=50)
+    server.expect_exact("[SERVER] Phase28 done", timeout=130)
     return True
 
 

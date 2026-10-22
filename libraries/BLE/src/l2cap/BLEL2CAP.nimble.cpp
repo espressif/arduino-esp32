@@ -95,6 +95,28 @@ static bool l2capChannelSnapshot(BLEL2CAPChannel::Impl *impl, struct ble_l2cap_c
   return impl->connected && chan;
 }
 
+static void deinitOperationEventLocked(BLEL2CAPChannel::Impl *impl) {
+  if (impl->operationEventInited) {
+    if (ble_npl_event_is_queued(&impl->operationEvent)) {
+      ble_npl_eventq_remove(nimble_port_get_dflt_eventq(), &impl->operationEvent);
+    }
+    // ESP-IDF's npl_freertos_event_run() does not touch the backing event after
+    // fn() returns, so the final callback may safely return its pool block here.
+    ble_npl_event_deinit(&impl->operationEvent);
+    impl->operationEventInited = false;
+  }
+  sOperationChannels.erase(
+    std::remove_if(
+      sOperationChannels.begin(), sOperationChannels.end(),
+      [impl](const std::weak_ptr<BLEL2CAPChannel::Impl> &entry) {
+        auto channel = entry.lock();
+        return !channel || channel.get() == impl;
+      }
+    ),
+    sOperationChannels.end()
+  );
+}
+
 static void completeOperationLocked(BLEL2CAPChannel::Impl *impl, BTStatus status) {
   if (impl->operation == BLEL2CAPChannel::Impl::Operation::None) {
     return;
@@ -110,6 +132,9 @@ static void completeOperationLocked(BLEL2CAPChannel::Impl *impl, BTStatus status
   impl->writeOffset = 0;
   impl->writeChunkLen = 0;
   impl->writeChunkMax = 0;
+  // Only queued or in-flight operations retain scarce NPL event backing.
+  // Release it before the caller wakes, including on disconnect and timeout.
+  deinitOperationEventLocked(impl);
   impl->operationSync.give(status);
 }
 
@@ -343,24 +368,8 @@ static void resumeWriteOperation(BLEL2CAPChannel::Impl *impl, int status) {
 
 void nimbleReleaseL2CAPOperationEvent(BLEL2CAPChannel::Impl *impl) {
   BLELockGuard lock(sL2CAPMtx);
-  if (impl->operationEventInited) {
-    if (ble_npl_event_is_queued(&impl->operationEvent)) {
-      ble_npl_eventq_remove(nimble_port_get_dflt_eventq(), &impl->operationEvent);
-    }
-    ble_npl_event_deinit(&impl->operationEvent);
-    impl->operationEventInited = false;
-  }
+  deinitOperationEventLocked(impl);
   completeOperationLocked(impl, BTStatus::InvalidState);
-  sOperationChannels.erase(
-    std::remove_if(
-      sOperationChannels.begin(), sOperationChannels.end(),
-      [impl](const std::weak_ptr<BLEL2CAPChannel::Impl> &entry) {
-        auto channel = entry.lock();
-        return !channel || channel.get() == impl;
-      }
-    ),
-    sOperationChannels.end()
-  );
 }
 
 // --------------------------------------------------------------------------
@@ -385,9 +394,12 @@ BTStatus BLEL2CAPChannel::write(const uint8_t *data, size_t len) {
   if (!operationLock) {
     return BTStatus::Busy;
   }
+  struct ble_l2cap_chan *chan = nullptr;
+  if (!l2capChannelSnapshot(&impl, chan)) {
+    return BTStatus::NotConnected;
+  }
   if (len == 0) {
-    struct ble_l2cap_chan *chan = nullptr;
-    return l2capChannelSnapshot(&impl, chan) ? BTStatus::OK : BTStatus::NotConnected;
+    return BTStatus::OK;
   }
 
   if (hostTask) {
@@ -413,11 +425,11 @@ BTStatus BLEL2CAPChannel::disconnect() {
   if (!operationLock) {
     return BTStatus::Busy;
   }
+  struct ble_l2cap_chan *chan = nullptr;
+  if (!l2capChannelSnapshot(&impl, chan)) {
+    return BTStatus::NotConnected;
+  }
   if (hostTask) {
-    struct ble_l2cap_chan *chan = nullptr;
-    if (!l2capChannelSnapshot(&impl, chan)) {
-      return BTStatus::NotConnected;
-    }
     int rc = ble_l2cap_disconnect(chan);
     return rc == 0 ? BTStatus::OK : l2capStatusFromRc(rc);
   }
@@ -810,22 +822,17 @@ void nimblePrepareL2CAPShutdown() {
 
 void nimbleResetL2CAPDeferredEvent() {
   BLELockGuard lock(sL2CAPMtx);
-  for (auto &weak : sOperationChannels) {
+  auto trackedChannels = std::move(sOperationChannels);
+  sOperationChannels.clear();
+  for (auto &weak : trackedChannels) {
     auto channel = weak.lock();
     if (!channel) {
       continue;
     }
-    if (channel->operationEventInited) {
-      if (ble_npl_event_is_queued(&channel->operationEvent)) {
-        ble_npl_eventq_remove(nimble_port_get_dflt_eventq(), &channel->operationEvent);
-      }
-      ble_npl_event_deinit(&channel->operationEvent);
-      channel->operationEventInited = false;
-    }
     channel->operationHostRunning = false;
     completeOperationLocked(channel.get(), BTStatus::InvalidState);
+    deinitOperationEventLocked(channel.get());
   }
-  sOperationChannels.clear();
 
   if (sAbandonedDisconnectCalloutInited) {
     ble_npl_callout_stop(&sAbandonedDisconnectCallout);
