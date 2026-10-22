@@ -419,6 +419,32 @@ void ZigbeeCore::closeNetwork() {
   }
 }
 
+void ZigbeeCore::setRouterRejoinRequired(bool required) {
+  if (!_initialized) {
+    log_w("setRouterRejoinRequired: call after role()");
+    return;
+  }
+  ezb_bdb_set_router_rejoin_required(required);
+  log_v("Router rejoin required: %s", required ? "true" : "false");
+}
+
+void ZigbeeCore::setAllowRejoinsWithWellKnownKey(bool allow) {
+  if (!_initialized) {
+    log_w("setAllowRejoinsWithWellKnownKey: call after role()");
+    return;
+  }
+  ezb_secur_tcpol_set_allow_rejoins_with_well_known_key(allow);
+  log_v("Allow rejoins with well-known key: %s", allow ? "true" : "false");
+}
+
+bool ZigbeeCore::getAllowRejoinsWithWellKnownKey() {
+  if (!_initialized) {
+    log_w("getAllowRejoinsWithWellKnownKey: call after role()");
+    return false;
+  }
+  return ezb_secur_tcpol_get_allow_rejoins_with_well_known_key();
+}
+
 // Application signal handler (registered via ezb_app_signal_add_handler()).
 // Returns true if the signal was fully handled, false to let the stack continue its default handling.
 bool zb_app_signal_handler(const ezb_app_signal_t *signal) {

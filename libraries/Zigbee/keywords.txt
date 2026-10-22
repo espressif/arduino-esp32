@@ -81,6 +81,9 @@ setTimeout	KEYWORD2
 setRebootOpenNetwork	KEYWORD2
 openNetwork	KEYWORD2
 closeNetwork	KEYWORD2
+setRouterRejoinRequired	KEYWORD2
+setAllowRejoinsWithWellKnownKey	KEYWORD2
+getAllowRejoinsWithWellKnownKey	KEYWORD2
 scanNetworks	KEYWORD2
 scanComplete	KEYWORD2
 getScanResult	KEYWORD2
@@ -105,6 +108,7 @@ setManualBinding	KEYWORD2
 setManufacturerAndModel	KEYWORD2
 setDeviceEnabled	KEYWORD2
 getDeviceEnabled	KEYWORD2
+setReportingDefaultResponse	KEYWORD2
 setPowerSource	KEYWORD2
 setBatteryPercentage	KEYWORD2
 setBatteryVoltage	KEYWORD2

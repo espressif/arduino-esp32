@@ -201,6 +201,13 @@ public:
   void openNetwork(uint8_t time);
   void closeNetwork();
 
+  // BDB / Trust Center policy (call after role(), typically before begin()).
+  // Router: require secure/TC rejoin during BDB commissioning init after reboot.
+  void setRouterRejoinRequired(bool required);
+  // Coordinator/TC: allow devices to rejoin using the well-known network key.
+  void setAllowRejoinsWithWellKnownKey(bool allow);
+  bool getAllowRejoinsWithWellKnownKey();
+
   //scan_duration Time spent scanning each channel, in units of ((1 << scan_duration) + 1) * a beacon time. (15.36 microseconds)
   void scanNetworks(uint32_t channel_mask = ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
   // Zigbee scan complete status check, -2: failed or not started, -1: running, 0: no networks found, >0: number of networks found

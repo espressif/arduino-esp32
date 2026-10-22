@@ -81,6 +81,27 @@ Returns the current ``DeviceEnabled`` value. Useful to check whether the endpoin
 
     bool getDeviceEnabled();
 
+setReportingDefaultResponse
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enables or disables Default Response on **automatic attribute reports** for one attribute.
+Call after ``setReporting()`` (reporting info must already exist; typically after ``Zigbee.begin()``).
+
+Controls whether automatic reports request a Default Response from the receiver.
+Leave enabled (default) when the sketch waits for DefaultRsp to confirm delivery (for example the
+sleepy temperature example). Set ``enabled`` to ``false`` only if reports are fire-and-forget and
+you want to avoid the extra response traffic.
+
+.. code-block:: arduino
+
+    bool setReportingDefaultResponse(uint16_t cluster_id, uint16_t attr_id, bool enabled, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER);
+
+* ``cluster_id`` / ``attr_id`` - Reportable attribute to configure
+* ``enabled`` - ``true`` to request DefaultRsp on reports, ``false`` to disable it
+* ``cluster_role`` - Cluster role (default server)
+
+This function will return ``true`` if set successfully, ``false`` otherwise.
+
 getEndpoint
 ^^^^^^^^^^^
 

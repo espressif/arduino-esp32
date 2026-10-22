@@ -294,6 +294,43 @@ Closes the network to prevent new devices from joining.
 
     void closeNetwork();
 
+setRouterRejoinRequired
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Controls whether a **router** must run the rejoin process during BDB commissioning initialization
+(for example after reboot). Call after ``role()``, typically before ``begin()``.
+
+Useful when a router should re-attach to the coordinator/Trust Center after power loss instead of
+assuming the previous network link is still valid.
+
+.. code-block:: arduino
+
+    void setRouterRejoinRequired(bool required);
+
+* ``required`` - ``true`` to require router rejoin on BDB init, ``false`` to skip it
+
+setAllowRejoinsWithWellKnownKey
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Trust Center / coordinator policy: whether devices may rejoin the network using the well-known
+network key. Call after ``role()``. Defaults depend on the stack; set explicitly for production
+networks that should reject rejoins with the well-known key.
+
+.. code-block:: arduino
+
+    void setAllowRejoinsWithWellKnownKey(bool allow);
+
+* ``allow`` - ``true`` to allow well-known-key rejoins, ``false`` to disallow them
+
+getAllowRejoinsWithWellKnownKey
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Returns the current Trust Center policy for well-known-key rejoins.
+
+.. code-block:: arduino
+
+    bool getAllowRejoinsWithWellKnownKey();
+
 Radio Configuration
 *******************
 

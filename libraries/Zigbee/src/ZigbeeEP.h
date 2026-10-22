@@ -122,6 +122,14 @@ public:
   bool setAttributePersistent(uint16_t cluster_id, uint16_t attr_id, bool persistent = true, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER);
   bool getAttribute(uint16_t cluster_id, uint16_t attr_id, void *value, uint16_t value_size, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER);
 
+  // Enable/disable Default Response on automatic attribute reports for one attribute.
+  // Call after setReporting() / once reporting info exists (typically after begin()).
+  // enabled=true (default SDK behavior): reports request a DefaultRsp from the receiver.
+  // enabled=false: saves airtime/power; do not wait for DefaultRsp on those reports.
+  bool setReportingDefaultResponse(
+    uint16_t cluster_id, uint16_t attr_id, bool enabled, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER
+  );
+
   // Set time
   bool addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
   // Activate the Time cluster server so the Time attribute (0x0000) can be served/written.
