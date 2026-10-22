@@ -57,6 +57,30 @@ Sets the hardware version for the endpoint. The value is added to the Basic clus
 
 * ``version`` - Hardware version (0-255)
 
+setDeviceEnabled
+^^^^^^^^^^^^^^^^
+
+Sets the Basic cluster ``DeviceEnabled`` attribute (0x0012). When ``false``, the Zigbee stack ignores ZCL commands on this endpoint (the device stays on the network). The attribute is added if it is not already present. Can be called before or after ``Zigbee.begin()``.
+
+Handy for soft on/off of an endpoint without leaving the network: maintenance mode, temporarily ignoring hub commands while calibrating a sensor, or disabling a unused secondary endpoint on a multi-EP device. A coordinator or other client can also write this attribute remotely if it is exposed.
+
+.. code-block:: arduino
+
+    bool setDeviceEnabled(bool enabled);
+
+* ``enabled`` - ``true`` to accept ZCL commands (default), ``false`` to ignore ZCL commands on this endpoint
+
+This function will return ``true`` if set successfully, ``false`` otherwise.
+
+getDeviceEnabled
+^^^^^^^^^^^^^^^^
+
+Returns the current ``DeviceEnabled`` value. Useful to check whether the endpoint is accepting commands (for example after a remote write or reboot). If the attribute is not present, returns ``true`` (ZCL default).
+
+.. code-block:: arduino
+
+    bool getDeviceEnabled();
+
 getEndpoint
 ^^^^^^^^^^^
 

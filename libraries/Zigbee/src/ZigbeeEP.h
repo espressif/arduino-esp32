@@ -101,6 +101,11 @@ public:
   // Set Manufacturer name and model
   bool setManufacturerAndModel(const char *name, const char *model);
 
+  // Basic cluster DeviceEnabled (0x0012). When false, the stack ignores ZCL commands on this endpoint.
+  // Can be called before or after begin(); attribute is added if missing.
+  bool setDeviceEnabled(bool enabled);
+  bool getDeviceEnabled();
+
   // Methods to read manufacturer and model name from selected endpoint and short address.
   char *readManufacturer(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
   char *readModel(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
@@ -279,6 +284,7 @@ protected:
   char _zb_model[ZB_MAX_NAME_LENGTH + 2];
   uint8_t _app_version;
   uint8_t _hw_version;
+  bool _device_enabled;
 
   ezb_zcl_power_config_cluster_server_config_t _power_config_cfg;
   uint8_t _battery_percentage;  // BatteryPercentageRemaining (0-200), not in power_config cluster config

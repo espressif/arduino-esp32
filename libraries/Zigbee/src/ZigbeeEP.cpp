@@ -78,6 +78,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ep_desc = nullptr;
   _app_version = 0;
   _hw_version = 0;
+  _device_enabled = EZB_ZCL_BASIC_DEVICE_ENABLED_DEFAULT_VALUE;
   _power_config_cfg = {
     .mains_voltage = EZB_ZCL_POWER_CONFIG_MAINS_VOLTAGE_DEFAULT_VALUE,
     .mains_voltage_min_threshold = EZB_ZCL_POWER_CONFIG_MAINS_VOLTAGE_MIN_THRESHOLD_DEFAULT_VALUE,
@@ -427,6 +428,25 @@ void ZigbeeEP::setHardwareVersion(uint8_t version) {
   if (ezb_zcl_basic_cluster_desc_add_attr(basic_cluster, EZB_ZCL_ATTR_BASIC_HW_VERSION_ID, (void *)&_hw_version) != EZB_ERR_NONE) {
     log_e("Failed to set hardware version");
   }
+}
+
+bool ZigbeeEP::setDeviceEnabled(bool enabled) {
+  _device_enabled = enabled;
+  return configureEpClusterAttr(
+    "setDeviceEnabled", EZB_ZCL_CLUSTER_ID_BASIC, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BASIC_DEVICE_ENABLED_ID, (void *)&_device_enabled,
+    ezb_zcl_basic_cluster_desc_add_attr
+  );
+}
+
+bool ZigbeeEP::getDeviceEnabled() {
+  bool enabled = _device_enabled;
+  if (Zigbee.endpointsRegistered()) {
+    if (!getAttribute(EZB_ZCL_CLUSTER_ID_BASIC, EZB_ZCL_ATTR_BASIC_DEVICE_ENABLED_ID, &enabled, sizeof(enabled))) {
+      // Attribute not present: ZCL treats the endpoint as enabled.
+      return true;
+    }
+  }
+  return enabled;
 }
 
 bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
