@@ -886,6 +886,7 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
   rc = os_mbuf_pool_init(&server->sduPool, &server->sduMemPool, bufSize, numBufs);
   if (rc != 0) {
     log_e("os_mbuf_pool_init failed: rc=%d", rc);
+    os_mempool_deinit(&server->sduMemPool);
     free(server->sduMem);
     server->sduMem = nullptr;
     return false;
@@ -894,6 +895,7 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
   rc = ble_l2cap_create_server(psm, mtu, BLEL2CAPServer::Impl::l2capEvent, server.get());
   if (rc != 0) {
     log_e("ble_l2cap_create_server failed: rc=%d", rc);
+    os_mempool_deinit(&server->sduMemPool);
     free(server->sduMem);
     server->sduMem = nullptr;
     return false;

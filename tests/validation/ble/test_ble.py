@@ -1075,6 +1075,7 @@ def _phase_l2cap_bulk(server, client):
         client.expect_exact("[CLIENT] Phase28 done", timeout=40)
         return False
     server.expect_exact("[SERVER] Phase28 oversized MTU rejected=1 heap=1", timeout=15)
+    server.expect_exact("[SERVER] Phase28 duplicate PSM rejected=1 heap=1", timeout=15)
 
     m_c = client.expect(
         r"\[CLIENT\] Phase28 (L2CAP not supported, skipping|rescan found=[01])",

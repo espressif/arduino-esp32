@@ -2430,6 +2430,10 @@ void loop() {
         Serial.printf(
           "[SERVER] Phase28 oversized MTU rejected=%d heap=%d\n", (int)!oversizedL2cap, (int)heap_caps_check_integrity_all(true)
         );
+        BLEL2CAPServer duplicateL2cap = BLE.createL2CAPServer(0x0080, 256);
+        Serial.printf(
+          "[SERVER] Phase28 duplicate PSM rejected=%d heap=%d\n", (int)!duplicateL2cap, (int)heap_caps_check_integrity_all(true)
+        );
         l2capBulkServer = BLEL2CAPServer();
         Serial.println("[SERVER] Phase28 dropped server handle");
 
