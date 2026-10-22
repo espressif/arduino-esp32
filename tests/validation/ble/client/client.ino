@@ -49,6 +49,7 @@ struct LongReadJob {
   uint32_t timeoutMs = 3000;
   volatile bool done = false;
 };
+#if BLE_L2CAP_SUPPORTED
 struct L2CAPRaceJob {
   BLEL2CAPChannel channel;
   const uint8_t *data = nullptr;
@@ -58,6 +59,7 @@ struct L2CAPRaceJob {
   volatile bool started = false;
   volatile bool done = false;
 };
+#endif
 // Phase 4: value the server set through a handle from a const lookup.
 static const BLEUUID constLookupCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a39");
 static const BLEUUID permFailClosedCharUUID("e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3a2f41");
@@ -234,6 +236,7 @@ static void longReadJobTask(void *arg) {
   vTaskDelete(nullptr);
 }
 
+#if BLE_L2CAP_SUPPORTED
 static uint8_t phase28RacePayload[4096];
 static uint8_t phase28ShutdownPayload[8192];
 
@@ -264,6 +267,7 @@ static void l2capRaceDisconnectTask(void *arg) {
 static bool l2capRaceStatusClean(BTStatus status) {
   return status == BTStatus::OK || status == BTStatus::Busy || status == BTStatus::NotConnected || status == BTStatus::InvalidState;
 }
+#endif
 
 void readName() {
   Serial.println("[CLIENT] Device ready for name");
