@@ -1233,6 +1233,17 @@ def _phase_indication_busy_retry(server, client):
     Changed; the server's next indications are refused with ESP_GATT_BUSY until
     the client confirms it. The library must retry them, so all three are
     confirmed. On NimBLE they simply go out (serviceChanged=n/a)."""
+    m_re = client.expect(
+        r"\[CLIENT\] Phase33 stack=(NimBLE|Bluedroid) staleRejected=([01]) rediscovered=([01]) resubscribed=([01]) "
+        r"payload4=([01]) fullRange=([01])",
+        timeout=60,
+    )
+    assert int(m_re.group(2)) == 1, "Phase33: backend retained a stale remote handle after Service Changed"
+    assert int(m_re.group(3)) == 1 and int(m_re.group(4)) == 1, "Phase33: client did not rediscover and restore subscriptions after Service Changed"
+    assert int(m_re.group(5)) == 1, "Phase33: Service Changed callback payload was not the required 4-byte handle range"
+    if m_re.group(1) == b"Bluedroid":
+        assert int(m_re.group(6)) == 1, "Phase33: Bluedroid did not report its documented conservative full range"
+    server.write("PHASE33_CONTINUE\n")
     m = server.expect(
         r"\[SERVER\] Phase33 (no subscriber|serviceChanged=(0|1|n/a) confirmed=(\d+) failed=(\d+))\r?\n",
         timeout=60,

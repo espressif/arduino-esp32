@@ -2752,7 +2752,9 @@ void setup() {
       if (!cs) {
         Serial.printf("[CLIENT] Phase33 connect FAILED: %s\n", cs.toString());
       } else {
-        volatile int svcChangedRx = 0;
+        std::atomic<int> svcChangedRx{0};
+        std::atomic<bool> svcChangedPayload4{false};
+        std::atomic<bool> svcChangedFullRange{false};
         std::atomic<int> busyIndCount{0};
         String busyIndLog[3];
         BTStatus svcSubStatus = BTStatus::NotFound;
@@ -2760,7 +2762,16 @@ void setup() {
         if (gattSvc) {
           BLERemoteCharacteristic svcChanged = gattSvc.getCharacteristic(BLEUUID((uint16_t)0x2A05));
           if (svcChanged) {
-            svcSubStatus = svcChanged.subscribe(BLESubscription::Indicate, [&svcChangedRx](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery) { svcChangedRx++; });
+            svcSubStatus = svcChanged.subscribe(
+              BLESubscription::Indicate,
+              [&svcChangedRx, &svcChangedPayload4, &svcChangedFullRange](
+                BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery
+              ) {
+                svcChangedRx.fetch_add(1, std::memory_order_relaxed);
+                svcChangedPayload4 = len == 4;
+                svcChangedFullRange = len == 4 && data[0] == 0x01 && data[1] == 0x00 && data[2] == 0xFF && data[3] == 0xFF;
+              }
+            );
           }
         }
         BLERemoteService svc = pc.getService(busySvcUUID);
@@ -2781,6 +2792,33 @@ void setup() {
           Serial.printf("[CLIENT] Phase33 subscribe FAILED: %s\n", sub.toString());
         }
         unsigned long waitStart = millis();
+        while (svcChangedRx.load(std::memory_order_relaxed) == 0 && millis() - waitStart < 10000) {
+          delay(20);
+        }
+        BTStatus staleStatus = bc ? bc.subscribe(BLESubscription::Indicate, nullptr) : BTStatus::InvalidState;
+        bool staleRejected = staleStatus == BTStatus::InvalidState;
+        BTStatus rediscovered = pc.discoverServices();
+        svc = rediscovered ? pc.getService(busySvcUUID) : BLERemoteService();
+        bc = svc ? svc.getCharacteristic(busyCharUUID) : BLERemoteCharacteristic();
+        BTStatus resub = bc ? bc.subscribe(
+                                BLESubscription::Indicate,
+                                [&busyIndCount, &busyIndLog](
+                                  BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery
+                                ) {
+                                  int n = busyIndCount.load(std::memory_order_relaxed);
+                                  if (n < 3) {
+                                    busyIndLog[n] = String((const char *)data, len);
+                                    busyIndCount.store(n + 1, std::memory_order_release);
+                                  }
+                                }
+                              )
+                            : BTStatus::NotFound;
+        subscribed = (bool)resub;
+        Serial.printf(
+          "[CLIENT] Phase33 stack=%s staleRejected=%d rediscovered=%d resubscribed=%d payload4=%d fullRange=%d\n", BLE.getStackName(),
+          (int)staleRejected, (int)(bool)rediscovered, (int)(bool)resub, (int)svcChangedPayload4.load(), (int)svcChangedFullRange.load()
+        );
+        waitStart = millis();
         while (busyIndCount.load(std::memory_order_acquire) < 3 && millis() - waitStart < 8000) {
           delay(50);
         }
@@ -2793,7 +2831,8 @@ void setup() {
         pc.disconnect();
         delay(500);
         Serial.printf(
-          "[CLIENT] Phase33 svcChangedRx=%d svcSubOk=%d busyPayloads=%s\n", (int)svcChangedRx, (int)(bool)svcSubStatus, received.c_str()
+          "[CLIENT] Phase33 svcChangedRx=%d svcSubOk=%d busyPayloads=%s\n", svcChangedRx.load(std::memory_order_relaxed),
+          (int)(bool)svcSubStatus, received.c_str()
         );
       }
     }

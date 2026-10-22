@@ -56,9 +56,9 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 30 | deletebond_roundtrip | `deleteBond` delete → verify empty → re-pair round trip + GATT tree empty after `end()`/`begin()` |
 | 31 | nc_reject | central rejects Numeric Comparison; pairing aborts, link stays unencrypted/unbonded |
 | 32 | passkey_entry | Passkey-entry pairing (peripheral DisplayOnly + static passkey, central KeyboardOnly) |
-| 33 | indication_busy_retry | indications sent right behind the stack's own Service Changed indication are retried and delivered in order |
+| 33 | indication_busy_retry | Service Changed invalidates stale remote handles, client rediscovery restores subscriptions, and indications sent behind the stack indication are retried in order |
 | 34 | periodic_adv_lifecycle | periodic-adv terminate + supervision-timeout sync-lost transitions (BLE5) |
-| 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, `removeService` of a service with in-flight indications returns `Busy`, short `readValue` timeout then destroy/re-read, notify flood |
+| 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, `removeService` of a service with in-flight indications returns `Busy`, short `readValue` timeout then destroy/re-read, notify flood + disconnect terminal-status ordering |
 | 36 | memory_release | heap reclaimed on release; reinit blocked while released |
 
 Phase 20 also runs a single-device regression guard for the advertisement-data

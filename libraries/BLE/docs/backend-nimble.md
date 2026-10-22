@@ -69,6 +69,7 @@ always cast-free `impl.member`.
 - **128-bit UUID byte order** is little-endian in `ble_uuid_any_t` and big-endian in `BLEUUID`;
   the `types/BLEUUID.nimble` converter reverses the 16 bytes.
 - **CCCD discovery** on `subscribe()`/`unsubscribe()` resolves `0x2902` via `getDescriptor(0x2902)` within the characteristic's bounded handle range rather than assuming `valHandle + 1`.
+- **Service Changed invalidation** caches and delivers the peer's real four-byte 0x2A05 range, but conservatively detaches the full discovered remote tree before the callback because remote handles do not retain enough range metadata for partial invalidation. The sketch must rediscover before reusing remote handles.
 - **Service removal while connected.** `ble_gatts_reset()` returns `BLE_HS_EBUSY` while GAP is active or a peer is connected; `bleServerRemoveService` falls back to `ble_gatts_svc_set_visibility(startHandle, 0)` + `ble_svc_gatt_changed(startHandle, endHandle)` so runtime removal and Service Changed (`0x2A05`) match Bluedroid.
 - **Re-advertise event lifetime.** `nimbleResetReAdvertiseEvent()` drops the deferred
   re-advertise event's backing reference on `end()` so a later `begin()` re-initializes it (avoids a

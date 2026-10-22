@@ -957,16 +957,12 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
     case ESP_GATTC_SRVC_CHG_EVT:
     {
       log_i("Client: service changed indication received");
-      // Bluedroid's bta_gattc_process_srvc_chg_ind intercepts 0x2A05 (instead of
-      // delivering ESP_GATTC_NOTIFY_EVT) and clears notif_reg[] for the affected
-      // handle range. Re-register active characteristic subscriptions so surviving
-      // characteristics keep receiving notifications/indications, and invoke any
-      // user callback subscribed to 0x1801 / 0x2A05.
+      // Bluedroid intercepts 0x2A05 instead of delivering NOTIFY_EVT and does
+      // not expose the changed range. Existing handles are therefore unsafe:
+      // invalidate the whole discovered tree and require rediscovery. Preserve
+      // the Service Changed callback itself long enough to report the event.
       BLERemoteCharacteristic::NotifyCallback svcChgCb;
       std::shared_ptr<BLERemoteCharacteristic::Impl> svcChgChr;
-      std::vector<uint16_t> notifyHandles;
-      esp_bd_addr_t bda;
-      client->peerAddress.toEspBdAddr(bda);
       {
         BLELockGuard lock(client->mtx);
         for (auto &svc : client->discoveredServices) {
@@ -981,16 +977,15 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
             if (isGattSvc && chr->uuid == BLEUUID(static_cast<uint16_t>(0x2A05))) {
               svcChgCb = chr->onNotifyCb;
               svcChgChr = chr->shared_from_this();
-            } else {
-              notifyHandles.push_back(chr->handle);
             }
           }
         }
-      }
-      for (uint16_t h : notifyHandles) {
-        (void)esp_ble_gattc_register_for_notify(client->gattcIf, bda, h);
+        client->clearDiscoveredServices();
       }
       if (svcChgCb && svcChgChr) {
+        // ESP_GATTC_SRVC_CHG_EVT omits the on-air range. Report the conservative
+        // full database range that matches the full-tree invalidation above;
+        // do not reuse or re-register any stale native handle.
         static const uint8_t range[4] = {0x01, 0x00, 0xFF, 0xFF};
         {
           BLELockGuard lock(client->mtx);

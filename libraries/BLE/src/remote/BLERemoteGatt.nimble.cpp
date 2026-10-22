@@ -823,7 +823,7 @@ void BLERemoteCharacteristic::Impl::handleNotifyRx(uint16_t connHandle, uint16_t
       ++it;
     }
   }
-  if (!implPtr || !cb || !remoteConnected(implPtr, connHandle)) {
+  if (!implPtr || !remoteConnected(implPtr, connHandle)) {
     return;
   }
 
@@ -839,14 +839,29 @@ void BLERemoteCharacteristic::Impl::handleNotifyRx(uint16_t connHandle, uint16_t
       dataPtr = flatBuf.data();
     }
   }
+  auto *svc = implPtr->service;
+  auto *client = svc ? svc->client : nullptr;
+  const bool serviceChanged =
+    !isNotify && len == 4 && svc && svc->uuid == BLEUUID::from16(0x1801) && implPtr->uuid == BLEUUID::from16(0x2A05);
   {
-    auto *svc = implPtr->service;
-    BLELockGuard lock(svc && svc->client ? svc->client->mtx : nullptr);
+    BLELockGuard lock(client ? client->mtx : nullptr);
     implPtr->value.assign(dataPtr, dataPtr + len);
+    if (serviceChanged && client) {
+      // Service Changed invalidates the indicated database range. NimBLE gives
+      // us the real payload, but remote handles do not retain per-attribute
+      // range metadata, so conservatively detach the full discovered tree just
+      // like Bluedroid. The callback below retains this characteristic handle.
+      client->clearDiscoveredServices();
+    }
+  }
+  if (serviceChanged) {
+    clearNotifyRoutes(connHandle);
   }
 
-  BLERemoteCharacteristic chr = BLERemoteCharacteristicImplCommon::makeHandle(implPtr);
-  cb(chr, dataPtr, len, isNotify ? Delivery::Notification : Delivery::Indication);
+  if (cb) {
+    BLERemoteCharacteristic chr = BLERemoteCharacteristicImplCommon::makeHandle(implPtr);
+    cb(chr, dataPtr, len, isNotify ? Delivery::Notification : Delivery::Indication);
+  }
 }
 
 #else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */

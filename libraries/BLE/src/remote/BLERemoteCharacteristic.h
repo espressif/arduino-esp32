@@ -178,6 +178,11 @@ public:
    *       here: they wait for a response that this same task delivers, so they
    *       stall until their timeout. A read also replaces the buffer @p data
    *       points into. Defer such work to another task.
+   * @note For the GATT Service Changed characteristic (0x2A05), the discovered
+   *       remote tree is invalidated before this callback. Bluedroid does not
+   *       expose the peer's changed-handle range, so its callback payload is
+   *       the conservative full range `01 00 FF FF`; rediscover services
+   *       before using any prior remote handle.
    */
   using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, Delivery)>;
 
