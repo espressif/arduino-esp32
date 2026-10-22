@@ -476,6 +476,17 @@ USBCDC::operator bool() const {
 #if !ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Native USB CDC selected
 // USBSerial is always available to be used
 USBCDC USBSerial(0);
+
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+// Used by loopTask for USB CDC events
+extern void USBSerialEvent(void) __attribute__((weak));
+
+extern "C" void arduinoUSBSerialEventRun(void) {
+  if (USBSerialEvent && USBSerial.available()) {
+    USBSerialEvent();
+  }
+}
+#endif
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */

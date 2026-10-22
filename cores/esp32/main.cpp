@@ -49,6 +49,11 @@ __attribute__((weak)) uint64_t getArduinoSetupWaitTime_ms(void) {
   return 0;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+// Do not extract the serial implementation solely to configure an unused UART.
+extern "C" void arduinoSerial0SetDefaultPins(void) __attribute__((weak));
+#endif
+
 void loopTask(void *pvParameters) {
   delay(getArduinoSetupWaitTime_ms());
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
@@ -60,7 +65,9 @@ void loopTask(void *pvParameters) {
 #endif
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
   // sets UART0 (default console) RX/TX pins as already configured in boot or as defined in variants/pins_arduino.h
-  Serial0.setPins(gpioNumberToDigitalPin(SOC_RX0), gpioNumberToDigitalPin(SOC_TX0));
+  if (arduinoSerial0SetDefaultPins) {
+    arduinoSerial0SetDefaultPins();
+  }
   // time in ms that the sketch may wait before starting its execution - default is zero
   // usually done for opening the Serial Monitor and seeing all debug messages
 #endif
@@ -82,6 +89,18 @@ void loopTask(void *pvParameters) {
     loop();
     if (serialEventRun) {
       serialEventRun();
+    } else {
+      // USB CDC events must still run when no HardwareSerial code is linked.
+#if HWCDC_SERIAL_IS_DEFINED == 1
+      if (arduinoHWCDCSerialEventRun) {
+        arduinoHWCDCSerialEventRun();
+      }
+#endif
+#if USB_SERIAL_IS_DEFINED == 1
+      if (arduinoUSBSerialEventRun) {
+        arduinoUSBSerialEventRun();
+      }
+#endif
     }
   }
 }
