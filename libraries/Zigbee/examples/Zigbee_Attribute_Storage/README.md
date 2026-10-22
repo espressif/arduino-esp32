@@ -2,7 +2,7 @@
 
 This example shows how to persist a Zigbee attribute in NVS. Analog Input `PresentValue`
 is marked persistent with `setAttributePersistent()`. After a reboot the last written
-value is restored from the Zigbee NVS dataset.
+value is restored from the Zigbee NVS dataset (shared `nvs` partition, namespace `zigbee`).
 
 # Supported Targets
 
@@ -41,7 +41,7 @@ Short-press BOOT to increment PresentValue, then reset the board. The next boot 
 Persistent PresentValue: 3.0
 ```
 
-A 3-second BOOT press factory-resets Zigbee NVS (including persisted attributes).
+A 3-second BOOT press factory-resets the Zigbee NVS namespace (including persisted attributes), without wiping Wi-Fi or Preferences.
 
 ## Troubleshooting
 

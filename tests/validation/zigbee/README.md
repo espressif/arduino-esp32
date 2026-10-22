@@ -71,6 +71,7 @@ The coordinator and end device flash at different speeds; pytest drives the end 
 
 ## Notes
 
+- Zigbee storage uses the shared `nvs` partition (namespace `zigbee`). `role(..., true)` erases that namespace only. Erase flash when upgrading from builds that used `zb_storage`.
 - SDK v2 startup/lifecycle requirements:
   - Call `role()` before `begin()`.
   - `role()` is called once per boot; a second call succeeds and does not re-init.
