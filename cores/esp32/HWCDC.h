@@ -112,6 +112,8 @@ public:
 #endif
 // HWCDCSerial is always available to be used
 extern HWCDC HWCDCSerial;
+// Dispatches HWCDCSerialEvent(); linked only together with HWCDCSerial.
+extern "C" void arduinoHWCDCSerialEventRun(void) __attribute__((weak));
 #endif
 
 #endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */
