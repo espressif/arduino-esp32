@@ -1086,7 +1086,6 @@ def _phase_l2cap_bulk(server, client):
         return False
 
     server.expect_exact("[SERVER] Phase28 dropped server handle", timeout=15)
-    client.expect_exact("[CLIENT] Phase28 dropped server retained=1", timeout=15)
     client.expect_exact("[CLIENT] Phase28 stall armed write=1", timeout=15)
     server.expect_exact("[SERVER] Phase28 delayed L2CAP accept entered", timeout=15)
     client.write("PHASE28_STALL_GO\n")

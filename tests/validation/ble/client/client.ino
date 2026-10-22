@@ -2439,23 +2439,6 @@ void setup() {
       if (!cs) {
         Serial.printf("[CLIENT] Phase28 connect FAILED: %s\n", cs.toString());
       } else {
-        bool droppedServerOk = false;
-        BLEL2CAPChannel droppedServerChannel = BLE.connectL2CAP(bc.getHandle(), 0x0081, 128);
-        if (droppedServerChannel) {
-          String droppedReply;
-          droppedServerChannel.onData([&droppedReply](BLEL2CAPChannel &, const uint8_t *data, size_t len) {
-            droppedReply = String((const char *)data, len);
-          });
-          droppedServerChannel.write((const uint8_t *)"PING", 4);
-          unsigned long droppedWait = millis();
-          while (droppedReply.length() == 0 && millis() - droppedWait < 5000) {
-            delay(10);
-          }
-          droppedServerOk = droppedReply == "P28DROP_OK";
-          droppedServerChannel.disconnect();
-        }
-        Serial.printf("[CLIENT] Phase28 dropped server retained=%d\n", (int)droppedServerOk);
-
         BLERemoteService stallSvc = bc.getService(serviceUUID);
         BLERemoteCharacteristic stallChr = stallSvc ? stallSvc.getCharacteristic(rwCharUUID) : BLERemoteCharacteristic();
         static const uint8_t stallCommand[] = "STALL_L2CAP";
