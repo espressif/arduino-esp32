@@ -24,10 +24,10 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 
 | Phase | Label | What it covers |
 |---|---|---|
-| 1 | basic_lifecycle | init / deinit / reinit / final deinit + **heap canary integrity around the first `begin()`** |
+| 1 | basic_lifecycle | init / deinit / reinit / final deinit + **heap canary integrity around the first `begin()`** + release of an unlimited `startBlocking(0)` scan by concurrent host shutdown |
 | 2 | ble5_ext_periodic_adv | extended + periodic advertising and sync (BLE5) |
 | 3 | gatt_setup_connect | server start, scan, connect, service discovery, heap tracking + broadcast notify/indicate before anyone connects reports `ERROR_NO_CLIENT` + GATT tree empty after `begin()` |
-| 4 | gatt_read_write | characteristic read / write / read-back + value supplied per read by `onRead` via `setValue()` (short and 512-byte long reads, one `onRead` per read) + long reads of a value rewritten every few ms stay uniform (per-connection snapshot) + a long read abandoned by disconnect then a uniform re-read + write through a handle from a const lookup |
+| 4 | gatt_read_write | characteristic read / write / read-back + value supplied per read by `onRead` via `setValue()` (short and 512-byte long reads, one `onRead` per read) + long reads of a value rewritten every few ms stay uniform (per-connection snapshot) + concurrent same-client blocking reads/writes keep distinct completion ownership + a long read abandoned by disconnect then a uniform re-read + write through a handle from a const lookup |
 | 5 | notifications_indications | CCCD subscribe/malformed-write rejection, notify, indicate, unsubscribe, subscriber count + `onNotify` supplying the payload and `onStatus` delivery results + 4 back-to-back indications queued and delivered in order + 12 further indications filling the 8-deep queue (`BTStatus::Busy`) + notifications interleaved with indications on one characteristic, each status reported as the right kind (`ERROR_NO_SUBSCRIBER` checked at the start of Phase 6) |
 | 6 | large_att_write | 512-byte write + read integrity |
 | 7 | descriptor_read_write | user description + presentation format descriptors + descriptor value supplied per read by `onRead` (short and 512-byte long reads) |
@@ -36,29 +36,29 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 10 | security | Numeric Comparison pairing, matching passkey, secure read |
 | 11 | ble5_phy_dle | PHY update + data-length extension (BLE5) |
 | 12 | reconnect | repeated connect/disconnect + Bluedroid app-id boundary stress |
-| 13 | blestream | NUS ownership rejection, failed-client-begin teardown, writeTo/onData/peers, ping/pong, peek, bulk, full `end()` cleanup + re-begin |
+| 13 | blestream | NUS ownership rejection, failed-client-begin paired connect/disconnect callbacks, writeTo/onData/peers, ping/pong, peek, bulk, full `end()` cleanup + re-begin, disconnect-race terminal handling, callback-context `end()` deferral/restart, final-public-owner destruction from a stack callback, deterministic worker/teardown failure recovery with admission held closed, and partial-start cleanup ownership/recovery |
 | 14 | l2cap_coc | L2CAP CoC connect + echo |
 | 15 | introspection_and_permissions | client introspection, fail-closed masking, descriptor perms |
 | 16 | conninfo_and_params | `BLEConnInfo` matrix + MTU / conn-params callbacks + ordering |
 | 17 | address_types | every `BTAddress::Type` + Public/Random connect roundtrip |
 | 18 | authorization | app-level authorization approve/deny of writes |
 | 19 | encrypted_perm_enforcement | encrypted characteristic read/write over paired link |
-| 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip + **malformed AD parser rejection** (issue #12801, truncated UUID lists, zero-length AD terminator) |
-| 21 | beacon_and_eddystone | iBeacon / Eddystone URL / Eddystone TLM frames |
+| 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + fresh-primary/cached-scan-response merge + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip + **malformed AD parser rejection** (issue #12801, truncated UUID lists, zero-length AD terminator) |
+| 21 | beacon_and_eddystone | iBeacon / Eddystone URL / plaintext Eddystone TLM frames + encrypted eTLM rejection |
 | 22 | bond_and_whitelist | bond enumeration, whitelist, IRK cross-check |
-| 23 | error_paths_and_misc | unknown UUIDs, typed reads, UUID algebra, write-after-disconnect + `notify(conn)` / `indicate(conn)` refused for an unsubscribed client (`*_DISABLED`) or unconnected handle (`ERROR_NO_CLIENT`) |
+| 23 | error_paths_and_misc | unknown UUIDs, typed reads, UUID algebra, cached-value/parent getter teardown race, concurrent lazy aggregate/targeted characteristic and descriptor discovery against disconnect invalidation, immediate recursive remote-tree detachment with retained parents, stale-handle rejection after reconnecting the same client generation, write-after-disconnect + `notify(conn)` / `indicate(conn)` refused for an unsubscribed client (`*_DISABLED`) or unconnected handle (`ERROR_NO_CLIENT`) |
 | 24 | ble5_advanced | default PHY, coded-PHY scan, per-connection PHY + DLE (BLE5) |
-| 25 | hid_smoke | HID-over-GATT compliance + detached attribute shells after removal and an empty GATT tree after `end()`/`begin()` |
+| 25 | hid_smoke | HID-over-GATT compliance + detached attribute shells/factory rejection after removal and an empty GATT tree after `end()`/`begin()` |
 | 26 | ble5_legacy_over_ext | legacy advertising routed over the extended engine (BLE5) |
 | 27 | ble5_legacy_plus_ext | concurrent legacy + user extended set on the reserved instance |
 | 28 | l2cap_bulk_reconnect | L2CAP CoC late-connect cleanup + bulk/credit-stall reconnect + peer-disconnect operation race + 64 retained-shell event-pool churn/final-handle drops + `end()` during a stalled write and exact `NotConnected` shell status after rebegin |
 | 29 | conn_params_reject | central rejects the peripheral's conn-param update from its pre-accept hook (NimBLE) |
-| 30 | deletebond_roundtrip | `deleteBond` delete → verify empty → re-pair round trip + GATT tree empty after `end()`/`begin()` |
+| 30 | deletebond_roundtrip | `deleteBond` during a finite scan (completion stays near the original deadline, neither early nor fully restarted), superseded-session completion isolation → verify empty → re-pair round trip + GATT tree empty after `end()`/`begin()` |
 | 31 | nc_reject | central rejects Numeric Comparison; pairing aborts, link stays unencrypted/unbonded |
 | 32 | passkey_entry | Passkey-entry pairing (peripheral DisplayOnly + static passkey, central KeyboardOnly) |
 | 33 | indication_busy_retry | Service Changed invalidates stale remote handles, client rediscovery restores subscriptions, and indications sent behind the stack indication are retried in order |
 | 34 | periodic_adv_lifecycle | periodic-adv terminate + supervision-timeout sync-lost transitions (BLE5) |
-| 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, `removeService` of a service with in-flight indications returns `Busy`, short `readValue` timeout then destroy/re-read, notify flood + disconnect terminal-status ordering |
+| 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, `removeService` of a service with in-flight indications returns `Busy`, concurrent long-read/service-removal parent retention, late completion isolation after read/confirmed-write/write-command timeouts, notify flood + disconnect terminal-status ordering, BlueDroid terminal-close final-owner release serialized before host deinit (including worker-start failure), and BLEStream client-role final-owner release serialized against concurrent `BLE.end()` |
 | 36 | memory_release | heap reclaimed on release; reinit blocked while released |
 
 Phase 20 also runs a single-device regression guard for the advertisement-data

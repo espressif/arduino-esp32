@@ -42,10 +42,13 @@ uint16_t BLEDescriptor::getHandle() const {
 }
 
 BLECharacteristic BLEDescriptor::getCharacteristic() const {
-  // Non-owning handle: the characteristic lifetime is owned by the service, so
-  // the returned handle must not outlive it.
   BLE_CHECK_IMPL(BLECharacteristic());
-  return impl.chr ? BLECharacteristic(impl.chr->shared_from_this()) : BLECharacteristic();
+  auto chr = impl.chrOwner.lock();
+  if (!chr) {
+    return BLECharacteristic();
+  }
+  BLELockGuard lock(impl.mtx);
+  return impl.chr == chr.get() ? BLECharacteristic(chr) : BLECharacteristic();
 }
 
 String BLEDescriptor::toString() const {

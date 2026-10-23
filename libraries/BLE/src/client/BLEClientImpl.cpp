@@ -31,7 +31,19 @@
 #include "core/BLEMutex.h"
 
 void BLEClientImplCommon::clearDiscoveredServices() {
+  BLELockGuard lock(mtx);
   for (auto &svc : discoveredServices) {
+    for (auto &chr : svc->characteristics) {
+      for (auto &desc : chr->descriptors) {
+        desc->chr = nullptr;
+      }
+      chr->descriptors.clear();
+      chr->descriptorsDiscovered = false;
+      chr->service = nullptr;
+      chr->onNotifyCb = nullptr;
+    }
+    svc->characteristics.clear();
+    svc->characteristicsDiscovered = false;
     svc->client = nullptr;
   }
   discoveredServices.clear();

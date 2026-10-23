@@ -19,8 +19,9 @@
 #include "core/BLEGuards.h"
 #if BLE_ENABLED
 
-#include "scan/BLEAdvertisedDevice.h"
+#include "scan/BLEAdvertisedDeviceImpl.h"
 #include "scan/BLEScan.h"
+#include <algorithm>
 #include <memory>
 
 /**
@@ -67,6 +68,67 @@ struct BLEScanImplCommon {
       }
     }
     return false;
+  }
+
+  /**
+   * @brief Merge the cached scan-response suffix into a fresh primary report.
+   * @param current Fresh primary advertising report.
+   * @param cached Previously cached report for the same advertising set.
+   * @param merged Receives a deep copy of @p current with the cached scan
+   *        response appended.
+   * @return true when @p cached contained a merged scan response.
+   *
+   * The fresh report remains the source of primary payload and metadata
+   * (notably RSSI). Only the scan-response suffix is retained.
+   */
+  static bool preserveScanResponse(
+    const BLEAdvertisedDevice &current, const BLEAdvertisedDevice &cached, BLEAdvertisedDevice &merged
+  ) {
+    if (!current._impl || !cached._impl
+        // Some backends deliver a complete fresh ADV+SCAN_RSP report. Its
+        // current suffix supersedes the cached response and must not be
+        // replaced with stale bytes.
+        || current._impl->advPayloadLen < current._impl->payload.size()
+        || cached._impl->advPayloadLen >= cached._impl->payload.size()) {
+      return false;
+    }
+    auto impl = std::make_shared<BLEAdvertisedDevice::Impl>(*current._impl);
+    merged = makeAdvertisedDeviceHandle(std::move(impl));
+    const size_t offset = cached._impl->advPayloadLen;
+    merged.mergeScanResponse(
+      cached._impl->payload.data() + offset, cached._impl->payload.size() - offset, current._impl->rssi
+    );
+    return true;
+  }
+
+  /** @brief Whether two reports carry the same primary/scan-response split and bytes. */
+  static bool samePayload(const BLEAdvertisedDevice &a, const BLEAdvertisedDevice &b) {
+    return a._impl && b._impl && a._impl->advPayloadLen == b._impl->advPayloadLen && a._impl->payload == b._impl->payload;
+  }
+
+  /** @brief Whether a fresh primary report matches the cached primary bytes. */
+  static bool samePrimaryPayload(const BLEAdvertisedDevice &cached, const BLEAdvertisedDevice &current) {
+    if (!cached._impl || !current._impl || current._impl->advPayloadLen != current._impl->payload.size()
+        || cached._impl->advPayloadLen != current._impl->payload.size()) {
+      return false;
+    }
+    return std::equal(
+      current._impl->payload.begin(), current._impl->payload.end(), cached._impl->payload.begin()
+    );
+  }
+
+  /** @brief Whether raw scan-response bytes match the cached response suffix. */
+  static bool sameScanResponsePayload(const BLEAdvertisedDevice &cached, const uint8_t *data, size_t len) {
+    if (!cached._impl || (!data && len != 0) || cached._impl->advPayloadLen > cached._impl->payload.size()) {
+      return false;
+    }
+    const size_t responseLen = cached._impl->payload.size() - cached._impl->advPayloadLen;
+    return responseLen == len
+           && std::equal(
+             cached._impl->payload.begin() + cached._impl->advPayloadLen,
+             cached._impl->payload.end(),
+             data
+           );
   }
 };
 

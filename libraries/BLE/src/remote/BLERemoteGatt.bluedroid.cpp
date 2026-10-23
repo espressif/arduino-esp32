@@ -42,20 +42,35 @@
 
 namespace {
 
-BLEClient::Impl *remoteClient(const BLERemoteService::Impl *service) {
-  if (!service) {
-    return nullptr;
+struct RemoteGattTarget {
+  std::shared_ptr<BLERemoteService::Impl> service;
+  std::shared_ptr<BLERemoteCharacteristic::Impl> characteristic;
+  std::shared_ptr<BLERemoteDescriptor::Impl> descriptor;
+};
+
+// Bluedroid's private GATTC queue has 30 entries and can reject an accepted
+// BTC write later without an operation token. Keep callback-safe Write Command
+// admission well below that native limit; all other public GATT procedures are
+// serialized, so this leaves ample headroom for their control traffic.
+static constexpr uint16_t kMaxPendingWriteCommands = 8;
+
+bool remoteTargetConnectedLocked(const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client) {
+  if (!target.service || !client || target.service->clientOwner.lock() != client || target.service->client != client.get()
+      || !client->connected || client->connectionGeneration.load() != target.service->clientGeneration) {
+    return false;
   }
-  auto *client = service->client;
-  return client && client->connected && client->connectionGeneration.load() == service->clientGeneration ? client : nullptr;
+  if (target.characteristic
+      && (target.characteristic->serviceOwner.lock() != target.service || target.characteristic->service != target.service.get())) {
+    return false;
+  }
+  return !target.descriptor
+         || (target.descriptor->chrOwner.lock() == target.characteristic && target.descriptor->chr == target.characteristic.get());
 }
 
-BLEClient::Impl *remoteClient(const std::shared_ptr<BLERemoteCharacteristic::Impl> &chr) {
-  return chr ? remoteClient(chr->service) : nullptr;
-}
-
-BLEClient::Impl *remoteClient(const std::shared_ptr<BLERemoteDescriptor::Impl> &desc) {
-  return (desc && desc->chr) ? remoteClient(desc->chr->service) : nullptr;
+std::shared_ptr<BLEClient::Impl> remoteClient(const RemoteGattTarget &target) {
+  auto client = target.service ? target.service->clientOwner.lock() : nullptr;
+  BLELockGuard lock(client ? client->mtx : nullptr);
+  return remoteTargetConnectedLocked(target, client) ? client : nullptr;
 }
 
 }  // namespace
@@ -67,9 +82,13 @@ BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &uuid)
   BLE_CHECK_IMPL(BLERemoteCharacteristic());
 
   // Discover characteristics if not yet done
-  auto *client = remoteClient(&impl);
+  RemoteGattTarget target{_impl, {}, {}};
+  auto client = remoteClient(target);
   BLELockGuard lock(client ? client->mtx : nullptr);
-  if (!impl.characteristicsDiscovered && client) {
+  if (!remoteTargetConnectedLocked(target, client)) {
+    return BLERemoteCharacteristic();
+  }
+  if (!impl.characteristicsDiscovered) {
     uint16_t count = 0;
     esp_gatt_status_t st =
       esp_ble_gattc_get_attr_count(client->gattcIf, client->connId, ESP_GATT_DB_CHARACTERISTIC, impl.startHandle, impl.endHandle, 0, &count);
@@ -86,6 +105,8 @@ BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &uuid)
           cImpl->defHandle = chars[i].char_handle;
           cImpl->properties = chars[i].properties;
           cImpl->service = _impl.get();
+          cImpl->serviceOwner = _impl;
+          cImpl->cacheMtx = impl.cacheMtx;
           impl.characteristics.push_back(cImpl);
         }
       }
@@ -112,12 +133,16 @@ std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() cons
     return result;
   }
 
-  auto *client = remoteClient(_impl.get());
+  RemoteGattTarget target{_impl, {}, {}};
+  auto client = remoteClient(target);
   if (!_impl->characteristicsDiscovered && client) {
     (void)getCharacteristic(BLEUUID(static_cast<uint16_t>(0)));  // triggers discovery
   }
 
   BLELockGuard lock(client ? client->mtx : nullptr);
+  if (!remoteTargetConnectedLocked(target, client)) {
+    return result;
+  }
   for (auto &c : _impl->characteristics) {
     result.push_back(BLERemoteCharacteristic(c));
   }
@@ -162,6 +187,18 @@ std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() cons
 #include <esp_gatt_defs.h>
 #include <string.h>
 
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+extern "C" {
+extern std::atomic<uint32_t> bleRemoteTestWriteTimeoutMs;
+extern std::atomic<bool> bleRemoteTestHoldWriteCommandCompletion;
+extern std::atomic<bool> bleRemoteTestReleaseWriteCommandCompletion;
+extern std::atomic<bool> bleRemoteTestHoldWriteResponseRetirement;
+extern std::atomic<bool> bleRemoteTestWriteCommandOverlappedWaiter;
+extern std::atomic<int> bleRemoteTestWriteCommandSubmitFailures;
+extern std::atomic<bool> bleRemoteTestWriteResponseStatusPreserved;
+}
+#endif
+
 // --------------------------------------------------------------------------
 // BLERemoteCharacteristic -- Bluedroid backend
 // --------------------------------------------------------------------------
@@ -187,7 +224,7 @@ static bool isAuthGattStatus(esp_gatt_status_t s) {
  * @param client GATT client implementation bound to the connection.
  * @return True if authentication-wait returns OK; false on stack errors or when SMP is unavailable.
  */
-static bool initiateSecurityAndWait(BLEClient::Impl *client) {
+static bool initiateSecurityAndWait(const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client) {
 #if BLE_SMP_SUPPORTED
   if (!client) {
     return false;
@@ -200,13 +237,19 @@ static bool initiateSecurityAndWait(BLEClient::Impl *client) {
     return false;
   }
 
-  // Prepare the sync BEFORE triggering encryption so the AUTH_CMPL_EVT
-  // give() can't race ahead of our wait().
-  secImpl->authSync.take();
-
-  esp_bd_addr_t bda;
-  client->peerAddress.toEspBdAddr(bda);
-  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
+  esp_err_t err;
+  {
+    BLELockGuard lock(client->mtx);
+    if (!remoteTargetConnectedLocked(target, client)) {
+      return false;
+    }
+    // Prepare the sync BEFORE triggering encryption so the AUTH_CMPL_EVT
+    // give() can't race ahead of our wait().
+    secImpl->authSync.take();
+    esp_bd_addr_t bda;
+    client->peerAddress.toEspBdAddr(bda);
+    err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
+  }
   if (err != ESP_OK) {
     secImpl->authSync.give(BTStatus::Fail);
     return false;
@@ -215,34 +258,49 @@ static bool initiateSecurityAndWait(BLEClient::Impl *client) {
   BTStatus st = secImpl->authSync.wait(10000);
   return st == BTStatus::OK;
 #else
+  (void)target;
+  (void)client;
   return false;
 #endif
 }
 
-static bool performRemoteRead(BLEClient::Impl *client, uint16_t handle, bool isDescr, std::vector<uint8_t> &value, uint32_t timeoutMs) {
-  if (!client || !client->connected) {
+static bool performRemoteRead(
+  const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client, uint16_t handle, bool isDescr,
+  std::vector<uint8_t> &value, uint32_t timeoutMs
+) {
+  if (!client) {
     return false;
   }
 
+  BLELockGuard operationLock(client->gattOpMtx);
   for (int retry = 0; retry < 2; retry++) {
+    esp_err_t err;
     {
       BLELockGuard lock(client->mtx);
+      if (!remoteTargetConnectedLocked(target, client)) {
+        return false;
+      }
+      // A timed-out request remains identifiable until its native completion
+      // arrives. Do not reuse the shared completion slot in the meantime: a
+      // late event for the same handle is otherwise indistinguishable from
+      // the new operation.
+      if (client->pendingReadHandle != 0) {
+        return false;
+      }
       client->readBuf.clear();
       client->lastReadStatus = ESP_GATT_OK;
       client->pendingReadHandle = handle;
+      client->readSync.take();
+      err = isDescr ? esp_ble_gattc_read_char_descr(client->gattcIf, client->connId, handle, ESP_GATT_AUTH_REQ_NONE)
+                    : esp_ble_gattc_read_char(client->gattcIf, client->connId, handle, ESP_GATT_AUTH_REQ_NONE);
+      if (err != ESP_OK) {
+        client->pendingReadHandle = 0;
+        client->readSync.give(BTStatus::Fail);
+      }
     }
-    client->readSync.take();
-
-    esp_err_t err = isDescr ? esp_ble_gattc_read_char_descr(client->gattcIf, client->connId, handle, ESP_GATT_AUTH_REQ_NONE)
-                            : esp_ble_gattc_read_char(client->gattcIf, client->connId, handle, ESP_GATT_AUTH_REQ_NONE);
 
     if (err != ESP_OK) {
-      {
-        BLELockGuard lock(client->mtx);
-        client->pendingReadHandle = 0;
-      }
       log_e("esp_ble_gattc_read: %s", esp_err_to_name(err));
-      client->readSync.give(BTStatus::Fail);
       return false;
     }
 
@@ -250,10 +308,14 @@ static bool performRemoteRead(BLEClient::Impl *client, uint16_t handle, bool isD
     esp_gatt_status_t lastStatus = ESP_GATT_OK;
     {
       BLELockGuard lock(client->mtx);
-      client->pendingReadHandle = 0;
+      if (st != BTStatus::Timeout) {
+        client->pendingReadHandle = 0;
+      }
       lastStatus = client->lastReadStatus;
-      if (st == BTStatus::OK) {
+      if (st == BTStatus::OK && remoteTargetConnectedLocked(target, client)) {
         value = std::move(client->readBuf);
+      } else if (st == BTStatus::OK) {
+        st = BTStatus::InvalidState;
       }
     }
     if (st == BTStatus::OK) {
@@ -261,7 +323,7 @@ static bool performRemoteRead(BLEClient::Impl *client, uint16_t handle, bool isD
     }
 
     if (retry == 0 && isAuthGattStatus(lastStatus)) {
-      if (!initiateSecurityAndWait(client)) {
+      if (!initiateSecurityAndWait(target, client)) {
         return false;
       }
       continue;
@@ -271,7 +333,10 @@ static bool performRemoteRead(BLEClient::Impl *client, uint16_t handle, bool isD
   return false;
 }
 
-static BTStatus performRemoteWrite(BLEClient::Impl *client, uint16_t handle, bool isDescr, const uint8_t *data, size_t len, bool withResponse) {
+static BTStatus performRemoteWrite(
+  const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client, uint16_t handle, bool isDescr,
+  const uint8_t *data, size_t len, bool withResponse
+) {
   if (!client) {
     return BTStatus::InvalidState;
   }
@@ -281,59 +346,193 @@ static BTStatus performRemoteWrite(BLEClient::Impl *client, uint16_t handle, boo
     // MTU-3; fail explicitly instead of issuing an oversized single write
     // (parity with the NimBLE backend, which must not silently upgrade to a
     // long write either).
-    uint16_t mtu = client->mtu.load();
+    uint16_t mtu;
+    {
+      BLELockGuard lock(client->mtx);
+      if (!remoteTargetConnectedLocked(target, client)) {
+        return BTStatus::InvalidState;
+      }
+      mtu = client->mtu.load();
+    }
     size_t maxSingle = (mtu > 3) ? static_cast<size_t>(mtu - 3) : 0;
     if (len > maxSingle) {
       log_e("esp_ble_gattc_write no-rsp len=%u exceeds MTU-3 (%u)", (unsigned)len, (unsigned)maxSingle);
       return BTStatus::InvalidParam;
     }
-  }
 
-  esp_gatt_write_type_t writeType = withResponse ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP;
-
-  for (int retry = 0; retry < 2; retry++) {
-    if (withResponse) {
-      {
-        BLELockGuard lock(client->mtx);
+    // Write Command must remain callable from the Bluedroid callback task.
+    // Admission and native submission are atomic under the client mutex, but
+    // completion remains asynchronous: another write gets Busy until the
+    // stack reports this command complete.
+    esp_err_t err;
+    {
+      BLELockGuard lock(client->mtx);
+      if (!remoteTargetConnectedLocked(target, client)) {
+        return BTStatus::InvalidState;
+      }
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+      if (client->pendingWriteWaiter && client->pendingWriteHandle != handle) {
+        bleRemoteTestWriteCommandOverlappedWaiter.store(true, std::memory_order_relaxed);
+      }
+#endif
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+      if (client->validationHoldWriteCommand && client->validationHeldWriteCommandEventSeen
+          && bleRemoteTestReleaseWriteCommandCompletion.exchange(false, std::memory_order_relaxed)) {
+        client->validationHoldWriteCommand = false;
+        client->validationHeldWriteCommandEventSeen = false;
+        client->pendingWriteHandle = 0;
+        client->pendingWriteCommands = 0;
+        client->pendingWriteOwner.reset();
+      }
+#endif
+      // A callback-issued Write Command may arrive while an unrelated
+      // response write is completing (commonly the CCCD write that enabled
+      // the callback). Different handles are unambiguous in WRITE_*_EVT, so
+      // allow that case; retain Busy for the same handle and for a held
+      // command whose completion has no independent waiter.
+      if ((client->pendingWriteHandle != 0
+           && (!client->pendingWriteWaiter || client->pendingWriteHandle == handle))
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+          || client->validationHoldWriteCommand
+#endif
+          || client->pendingWriteCommands >= kMaxPendingWriteCommands
+      ) {
+        return BTStatus::Busy;
+      }
+      // Do not disturb an unrelated response write's waiter/status. Its
+      // completion still owns pendingWriteHandle and writeSync.
+      if (!client->pendingWriteWaiter) {
         client->lastWriteStatus = ESP_GATT_OK;
+      }
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+      client->validationHoldWriteCommand =
+        bleRemoteTestHoldWriteCommandCompletion.exchange(false, std::memory_order_relaxed);
+      client->validationHeldWriteCommandEventSeen = false;
+      if (client->validationHoldWriteCommand) {
         client->pendingWriteHandle = handle;
       }
-      client->writeSync.take();
+#endif
+      bool forceSubmitFailure = false;
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+      int remainingFailures = bleRemoteTestWriteCommandSubmitFailures.load(std::memory_order_relaxed);
+      while (remainingFailures > 0
+             && !bleRemoteTestWriteCommandSubmitFailures.compare_exchange_weak(
+               remainingFailures, remainingFailures - 1, std::memory_order_relaxed
+             )) {}
+      forceSubmitFailure = remainingFailures > 0;
+#endif
+      err = forceSubmitFailure
+              ? ESP_FAIL
+              : isDescr ? esp_ble_gattc_write_char_descr(
+                            client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data),
+                            ESP_GATT_WRITE_TYPE_NO_RSP, ESP_GATT_AUTH_REQ_NONE
+                          )
+                        : esp_ble_gattc_write_char(
+                            client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data),
+                            ESP_GATT_WRITE_TYPE_NO_RSP, ESP_GATT_AUTH_REQ_NONE
+                          );
+      if (err != ESP_OK) {
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+        if (client->validationHoldWriteCommand) {
+          client->pendingWriteHandle = 0;
+        }
+        client->validationHoldWriteCommand = false;
+        client->validationHeldWriteCommandEventSeen = false;
+#endif
+      } else {
+        ++client->pendingWriteCommands;
+        client->pendingWriteOwner = client;
+      }
     }
+    if (err != ESP_OK) {
+      log_e("esp_ble_gattc_write no-rsp: %s", esp_err_to_name(err));
+      return BTStatus::Fail;
+    }
+    return BTStatus::OK;
+  }
 
-    esp_err_t err =
-      isDescr ? esp_ble_gattc_write_char_descr(client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data), writeType, ESP_GATT_AUTH_REQ_NONE)
-              : esp_ble_gattc_write_char(client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data), writeType, ESP_GATT_AUTH_REQ_NONE);
+  BLELockGuard operationLock(client->gattOpMtx);
+
+  for (int retry = 0; retry < 2; retry++) {
+    esp_err_t err;
+    {
+      BLELockGuard lock(client->mtx);
+      if (!remoteTargetConnectedLocked(target, client)) {
+        return BTStatus::InvalidState;
+      }
+      if (client->pendingWriteHandle != 0 || client->pendingWriteWaiter || client->pendingWriteCommands != 0) {
+        return BTStatus::Busy;
+      }
+      client->lastWriteStatus = ESP_GATT_OK;
+      client->pendingWriteHandle = handle;
+      client->pendingWriteWaiter = true;
+      client->pendingWriteOwner = client;
+      client->writeSync.take();
+      err =
+        isDescr ? esp_ble_gattc_write_char_descr(
+                    client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data),
+                    ESP_GATT_WRITE_TYPE_RSP, ESP_GATT_AUTH_REQ_NONE
+                  )
+                : esp_ble_gattc_write_char(
+                    client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data),
+                    ESP_GATT_WRITE_TYPE_RSP, ESP_GATT_AUTH_REQ_NONE
+                  );
+      if (err != ESP_OK) {
+        client->pendingWriteHandle = 0;
+        client->pendingWriteWaiter = false;
+        client->pendingWriteOwner.reset();
+        client->writeSync.give(BTStatus::Fail);
+      }
+    }
 
     if (err != ESP_OK) {
       log_e("esp_ble_gattc_write: %s", esp_err_to_name(err));
-      if (withResponse) {
-        {
-          BLELockGuard lock(client->mtx);
-          client->pendingWriteHandle = 0;
-        }
-        client->writeSync.give(BTStatus::Fail);
-      }
       return BTStatus::Fail;
     }
 
-    if (!withResponse) {
-      return BTStatus::OK;
+    uint32_t timeoutMs = 10000;
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+    uint32_t injectedTimeout = bleRemoteTestWriteTimeoutMs.exchange(0, std::memory_order_relaxed);
+    if (injectedTimeout > 0) {
+      timeoutMs = injectedTimeout;
     }
-
-    BTStatus st = client->writeSync.wait(10000);
+#endif
+    BTStatus st = client->writeSync.wait(timeoutMs);
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+    if (st != BTStatus::Timeout && bleRemoteTestHoldWriteResponseRetirement.load(std::memory_order_relaxed)) {
+      TickType_t deadline = xTaskGetTickCount() + pdMS_TO_TICKS(5000);
+      while (bleRemoteTestHoldWriteResponseRetirement.load(std::memory_order_relaxed)
+             && static_cast<int32_t>(deadline - xTaskGetTickCount()) > 0) {
+        vTaskDelay(1);
+      }
+    }
+#endif
     esp_gatt_status_t lastStatus = ESP_GATT_OK;
     {
       BLELockGuard lock(client->mtx);
-      client->pendingWriteHandle = 0;
+      if (st != BTStatus::Timeout) {
+        client->pendingWriteHandle = 0;
+        if (client->pendingWriteCommands == 0) {
+          client->pendingWriteOwner.reset();
+        }
+      }
+      client->pendingWriteWaiter = false;
       lastStatus = client->lastWriteStatus;
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+      if (bleRemoteTestWriteCommandOverlappedWaiter.load(std::memory_order_relaxed)) {
+        bleRemoteTestWriteResponseStatusPreserved.store(lastStatus == ESP_GATT_OK, std::memory_order_relaxed);
+      }
+#endif
+      if (st == BTStatus::OK && !remoteTargetConnectedLocked(target, client)) {
+        st = BTStatus::InvalidState;
+      }
     }
     if (st == BTStatus::OK) {
       return BTStatus::OK;
     }
 
     if (retry == 0 && isAuthGattStatus(lastStatus)) {
-      if (!initiateSecurityAndWait(client)) {
+      if (!initiateSecurityAndWait(target, client)) {
         return BTStatus::AuthFailed;
       }
       continue;
@@ -348,8 +547,10 @@ bool BLERemoteCharacteristic::readInto(uint32_t timeoutMs) {
   if (!_impl) {
     return false;
   }
-  auto client = remoteClient(_impl);
-  if (!performRemoteRead(client, _impl->handle, false, _impl->value, timeoutMs)) {
+  auto service = _impl->serviceOwner.lock();
+  RemoteGattTarget target{service, _impl, {}};
+  auto client = remoteClient(target);
+  if (!performRemoteRead(target, client, _impl->handle, false, _impl->value, timeoutMs)) {
     log_w("RemoteCharacteristic %s: read failed/timed out", _impl->uuid.toString().c_str());
     return false;
   }
@@ -362,8 +563,10 @@ bool BLERemoteCharacteristic::readInto(uint32_t timeoutMs) {
 
 // Blocking: when withResponse is true, esp_ble_gattc_write_char is followed by a wait on the client write sync. Long data may still be subject to the controller/ATT MTU.
 BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *data, size_t len, bool withResponse) {
-  auto client = remoteClient(_impl);
-  return performRemoteWrite(client, _impl ? _impl->handle : 0, false, data, len, withResponse);
+  auto service = _impl ? _impl->serviceOwner.lock() : nullptr;
+  RemoteGattTarget target{service, _impl, {}};
+  auto client = remoteClient(target);
+  return performRemoteWrite(target, client, _impl ? _impl->handle : 0, false, data, len, withResponse);
 }
 
 // --------------------------------------------------------------------------
@@ -371,21 +574,26 @@ BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *data, size_t len, bo
 // --------------------------------------------------------------------------
 
 static BTStatus subscribeWithCccd(BLERemoteCharacteristic &chr, const std::shared_ptr<BLERemoteCharacteristic::Impl> &impl, uint16_t cccdVal, BLERemoteCharacteristic::NotifyCallback callback) {
-  auto client = remoteClient(impl);
+  auto service = impl ? impl->serviceOwner.lock() : nullptr;
+  RemoteGattTarget target{service, impl, {}};
+  auto client = remoteClient(target);
   if (!client) {
     return BTStatus::InvalidState;
   }
 
   log_d("RemoteCharacteristic %s: subscribe cccd=0x%04x (connId=%u)", impl->uuid.toString().c_str(), cccdVal, client->connId.load());
+  esp_err_t err;
   {
     BLELockGuard lock(client->mtx);
+    if (!remoteTargetConnectedLocked(target, client)) {
+      return BTStatus::InvalidState;
+    }
     impl->onNotifyCb = std::move(callback);
+    esp_bd_addr_t bda;
+    client->peerAddress.toEspBdAddr(bda);
+    err = esp_ble_gattc_register_for_notify(client->gattcIf, bda, impl->handle);
   }
 
-  // Register for notifications/indications with the Bluedroid stack
-  esp_bd_addr_t bda;
-  client->peerAddress.toEspBdAddr(bda);
-  esp_err_t err = esp_ble_gattc_register_for_notify(client->gattcIf, bda, impl->handle);
   if (err != ESP_OK) {
     log_e("esp_ble_gattc_register_for_notify: %s", esp_err_to_name(err));
     return BTStatus::Fail;
@@ -411,7 +619,9 @@ BTStatus BLERemoteCharacteristic::subscribe(BLESubscription mode, NotifyCallback
 
 // Blocking: writes 0x0000 to the CCCD descriptor with wait.
 BTStatus BLERemoteCharacteristic::unsubscribe() {
-  auto client = remoteClient(_impl);
+  auto service = _impl ? _impl->serviceOwner.lock() : nullptr;
+  RemoteGattTarget target{service, _impl, {}};
+  auto client = remoteClient(target);
   if (!client) {
     return BTStatus::InvalidState;
   }
@@ -419,13 +629,14 @@ BTStatus BLERemoteCharacteristic::unsubscribe() {
   log_d("RemoteCharacteristic %s: unsubscribe (connId=%u)", _impl->uuid.toString().c_str(), client->connId.load());
   {
     BLELockGuard lock(client->mtx);
+    if (!remoteTargetConnectedLocked(target, client)) {
+      return BTStatus::InvalidState;
+    }
     _impl->onNotifyCb = nullptr;
+    esp_bd_addr_t bda;
+    client->peerAddress.toEspBdAddr(bda);
+    esp_ble_gattc_unregister_for_notify(client->gattcIf, bda, _impl->handle);
   }
-
-  // Unregister for notifications
-  esp_bd_addr_t bda;
-  client->peerAddress.toEspBdAddr(bda);
-  esp_ble_gattc_unregister_for_notify(client->gattcIf, bda, _impl->handle);
 
   // Write 0x0000 to CCCD
   uint16_t cccdVal = 0x0000;
@@ -447,9 +658,14 @@ BTStatus BLERemoteCharacteristic::unsubscribe() {
 BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &uuid) const {
   BLE_CHECK_IMPL(BLERemoteDescriptor());
 
-  auto client = remoteClient(_impl);
+  auto service = impl.serviceOwner.lock();
+  RemoteGattTarget target{service, _impl, {}};
+  auto client = remoteClient(target);
   BLELockGuard lock(client ? client->mtx : nullptr);
-  if (!impl.descriptorsDiscovered && client && client->connected) {
+  if (!remoteTargetConnectedLocked(target, client)) {
+    return BLERemoteDescriptor();
+  }
+  if (!impl.descriptorsDiscovered) {
     uint16_t count = 0;
     esp_gatt_status_t st = esp_ble_gattc_get_attr_count(client->gattcIf, client->connId, ESP_GATT_DB_DESCRIPTOR, 0, 0, impl.handle, &count);
 
@@ -463,6 +679,8 @@ BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &uuid) 
           dImpl->uuid = bluedroidUuidToPublic(descs[i].uuid);
           dImpl->handle = descs[i].handle;
           dImpl->chr = _impl.get();
+          dImpl->chrOwner = _impl;
+          dImpl->cacheMtx = impl.cacheMtx;
           impl.descriptors.push_back(dImpl);
         }
       }
@@ -486,12 +704,17 @@ std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const
     return result;
   }
 
-  auto client = remoteClient(_impl);
+  auto service = _impl->serviceOwner.lock();
+  RemoteGattTarget target{service, _impl, {}};
+  auto client = remoteClient(target);
   if (!_impl->descriptorsDiscovered && client && client->connected) {
     (void)getDescriptor(BLEUUID(static_cast<uint16_t>(0)));  // triggers discovery
   }
 
   BLELockGuard lock(client ? client->mtx : nullptr);
+  if (!remoteTargetConnectedLocked(target, client)) {
+    return result;
+  }
   for (auto &d : _impl->descriptors) {
     result.push_back(BLERemoteDescriptor(d));
   }
@@ -557,8 +780,11 @@ bool BLERemoteDescriptor::readInto(uint32_t timeoutMs) {
   if (!_impl) {
     return false;
   }
-  auto client = remoteClient(_impl);
-  if (!performRemoteRead(client, _impl->handle, true, _impl->value, timeoutMs)) {
+  auto characteristic = _impl->chrOwner.lock();
+  auto service = characteristic ? characteristic->serviceOwner.lock() : nullptr;
+  RemoteGattTarget target{service, characteristic, _impl};
+  auto client = remoteClient(target);
+  if (!performRemoteRead(target, client, _impl->handle, true, _impl->value, timeoutMs)) {
     log_w("RemoteDescriptor: read failed/timed out (handle=0x%04x)", _impl->handle);
     return false;
   }
@@ -571,8 +797,11 @@ bool BLERemoteDescriptor::readInto(uint32_t timeoutMs) {
 
 // Blocking on confirmed writes: esp_ble_gattc_write_char_descr and wait; used for CCCD subscription writes from higher layers.
 BTStatus BLERemoteDescriptor::writeValue(const uint8_t *data, size_t len, bool withResponse) {
-  auto client = remoteClient(_impl);
-  return performRemoteWrite(client, _impl ? _impl->handle : 0, true, data, len, withResponse);
+  auto characteristic = _impl ? _impl->chrOwner.lock() : nullptr;
+  auto service = characteristic ? characteristic->serviceOwner.lock() : nullptr;
+  RemoteGattTarget target{service, characteristic, _impl};
+  auto client = remoteClient(target);
+  return performRemoteWrite(target, client, _impl ? _impl->handle : 0, true, data, len, withResponse);
 }
 
 #else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */

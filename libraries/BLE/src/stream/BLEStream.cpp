@@ -22,6 +22,14 @@
 #include <Arduino.h>
 #include "stream/BLEStream.h"
 #include "stream/BLEStreamImpl.h"
+#include "esp32-hal-log.h"
+#if BLE_NIMBLE
+#include "BLE.nimble.h"
+#endif
+#include <cstring>
+#include <new>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 // Nordic UART Service UUIDs (6e40000x-b5a3-f393-e0a9-e50e24dcca9e)
 static constexpr BLEUUID kNUS_ServiceUUID = BLEUUID::from128(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
@@ -44,7 +52,62 @@ BLEUUID BLEStream::nusTxCharUUID() {
 // BLEStream lifecycle
 // --------------------------------------------------------------------------
 
-BLEStream::BLEStream(size_t rxBufferSize) : _impl(new Impl(rxBufferSize)) {}
+static bool bleStreamInCallbackTask();
+
+#if defined(BLE_STREAM_VALIDATION_HOOKS)
+extern "C" {
+extern std::atomic<int> bleStreamTestWorkerStartFailures;
+extern std::atomic<int> bleStreamTestTeardownFailures;
+extern std::atomic<bool> bleStreamTestHoldFinalRoleRelease;
+extern std::atomic<bool> bleStreamTestHostShutdownEntered;
+}
+
+static bool consumeValidationFailure(std::atomic<int> &remaining) {
+  int value = remaining.load(std::memory_order_relaxed);
+  while (value > 0) {
+    if (remaining.compare_exchange_weak(value, value - 1, std::memory_order_relaxed)) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
+struct BLEStream::Impl::RecoveryState {
+  StaticSemaphore_t mtxStorage{};
+  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutexStatic(&mtxStorage);
+  std::atomic<bool> hostShuttingDown{false};
+  std::vector<std::shared_ptr<Impl>> entries;
+};
+
+BLEStream::Impl::RecoveryState &BLEStream::Impl::recoveryState() {
+  // BLEClass's global destructor may invoke the registered post-end hook after
+  // ordinary function statics have been destroyed. This tiny registry is
+  // intentionally process-lifetime state; BLE.end() empties its entries.
+  alignas(RecoveryState) static uint8_t storage[sizeof(RecoveryState)];
+  static RecoveryState *state = new (storage) RecoveryState();
+  return *state;
+}
+
+BLEStream::BLEStream(size_t rxBufferSize) : _impl(std::make_shared<Impl>(rxBufferSize)) {}
+
+bool BLEStream::Impl::ensureEndRetryTimer() {
+  BLELockGuard lock(roleMtx);
+  if (endRetryTimer) {
+    return true;
+  }
+  esp_timer_create_args_t args = {};
+  args.callback = endRetryTimerCb;
+  args.arg = this;
+  args.dispatch_method = ESP_TIMER_TASK;
+  args.name = "ble_stream_end";
+  if (esp_timer_create(&args, &endRetryTimer) != ESP_OK) {
+    endRetryTimer = nullptr;
+    log_e("BLEStream: unable to create teardown retry timer");
+    return false;
+  }
+  return true;
+}
 
 BLEStream::~BLEStream() {
   // end() already clears the callbacks this stream registered while it was
@@ -52,33 +115,482 @@ BLEStream::~BLEStream() {
   // clear them unconditionally here: after end() the server/client handles
   // may be shared with (or have been re-registered by) another owner, and
   // wiping their callbacks would break that owner.
+  auto common = _impl;
   end();
-  delete _impl;
+  // An application-task destructor owns RAII completion, including retrying a
+  // transient native teardown failure or waiting for a previously deferred
+  // worker. Bound synchronous retries so a permanent controller failure cannot
+  // hang destruction forever. Callback-task destruction cannot block; its
+  // worker handoff retains both common and role until cleanup completes.
+  if (common && !bleStreamInCallbackTask()) {
+    for (uint8_t retry = 0; retry < 3 && common->loadRole(); retry++) {
+      auto role = common->loadRole();
+      if (role && role->endExecutorActive) {
+        break;
+      }
+      vTaskDelay(1);
+      end();
+    }
+    auto role = common->loadRole();
+    if (role && !role->endExecutorActive) {
+      log_e("BLEStream: quarantining teardown after bounded destructor retries");
+      Impl::quarantineEnd(common, role);
+    }
+  }
+  _impl.reset();
+}
+
+static bool bleStreamInCallbackTask() {
+#if BLE_NIMBLE
+  return nimbleIsHostTask();
+#elif BLE_BLUEDROID
+  TaskHandle_t current = xTaskGetCurrentTaskHandle();
+  const char *name = current ? pcTaskGetName(current) : nullptr;
+  return name && strcmp(name, "BTC_TASK") == 0;
+#else
+  return false;
+#endif
+}
+
+bool BLEStream::Impl::startEndWorker(Impl *common) {
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  if (state.hostShuttingDown.load(std::memory_order_relaxed)) {
+    return false;
+  }
+#if defined(BLE_STREAM_VALIDATION_HOOKS)
+  if (consumeValidationFailure(bleStreamTestWorkerStartFailures)) {
+    return false;
+  }
+#endif
+  return xTaskCreate(endWorker, "ble-stream-end", 6144, common, 1, nullptr) == pdPASS;
+}
+
+bool BLEStream::Impl::scheduleEndRetry(Impl *common) {
+  if (!common || !common->endRetryTimer) {
+    return false;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  if (state.hostShuttingDown.load(std::memory_order_relaxed)) {
+    return false;
+  }
+  uint8_t retry;
+  BLELockGuard lock(common->roleMtx);
+  if (++common->endRetryCount > 4) {
+    return false;
+  }
+  retry = common->endRetryCount;
+  if (common->endRetryArmed) {
+    esp_timer_stop(common->endRetryTimer);
+    common->endRetryArmed = false;
+  }
+  if (esp_timer_start_once(common->endRetryTimer, static_cast<uint64_t>(10000) << (retry - 1)) != ESP_OK) {
+    return false;
+  }
+  common->endRetryArmed = true;
+  return true;
+}
+
+bool BLEStream::Impl::claimEnd(
+  const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role, bool &hostShuttingDown
+) {
+  if (!common) {
+    return false;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  hostShuttingDown = state.hostShuttingDown.load(std::memory_order_relaxed);
+  if (!common->markRoleEnding(role)) {
+    return false;
+  }
+  for (const auto &entry : state.entries) {
+    if (entry == common) {
+      return true;
+    }
+  }
+  state.entries.push_back(common);
+  return true;
+}
+
+bool BLEStream::Impl::activateRole(const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role) {
+  if (!common || !role) {
+    return false;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  if (state.hostShuttingDown.load(std::memory_order_relaxed)) {
+    return false;
+  }
+  {
+    BLELockGuard roleLock(common->roleMtx);
+    if (common->role) {
+      return false;
+    }
+    role->starting = true;
+    common->role = role;
+  }
+  for (const auto &entry : state.entries) {
+    if (entry == common) {
+      return true;
+    }
+  }
+  state.entries.push_back(common);
+  return true;
+}
+
+bool BLEStream::Impl::finishRoleStart(const std::shared_ptr<Role> &role) {
+  if (!role) {
+    return false;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  role->starting = false;
+  return !state.hostShuttingDown.load(std::memory_order_relaxed) && !role->ending.load(std::memory_order_acquire);
+}
+
+bool BLEStream::Impl::cancelRoleStart(
+  const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role
+) {
+  if (!common || !role) {
+    return false;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  BLELockGuard roleLock(common->roleMtx);
+  role->starting = false;
+  if (state.hostShuttingDown.load(std::memory_order_relaxed) || role->ending.load(std::memory_order_acquire)
+      || common->role != role) {
+    return false;
+  }
+  common->role.reset();
+  for (auto it = state.entries.begin(); it != state.entries.end(); ++it) {
+    if (*it == common) {
+      state.entries.erase(it);
+      break;
+    }
+  }
+  return true;
+}
+
+void BLEStream::Impl::retainEnd(const std::shared_ptr<Impl> &common) {
+  if (!common) {
+    return;
+  }
+  auto &state = recoveryState();
+  BLELockGuard lock(state.mtx);
+  for (const auto &entry : state.entries) {
+    if (entry == common) {
+      return;
+    }
+  }
+  state.entries.push_back(common);
+}
+
+void BLEStream::Impl::completeEnd(
+  const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role
+) {
+  if (!common || !role) {
+    return;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  BLELockGuard roleLock(common->roleMtx);
+  if (common->role != role) {
+    return;
+  }
+  common->peerCount = 0;
+  common->role.reset();
+  if (common->deferredRole == role) {
+    common->deferredRole.reset();
+    common->deferredSelf.reset();
+    common->endRetryArmed = false;
+    common->endRetryCount = 0;
+  }
+  // Keep the registry gate closed while releasing the executor's final native
+  // owner. In particular, a BlueDroid client Role destructor unregisters its
+  // GATTC application; BLE.end() must not observe an empty registry and
+  // deinitialize the host until that destructor has finished.
+  role.reset();
+  for (auto it = state.entries.begin(); it != state.entries.end(); ++it) {
+    if (*it == common) {
+      state.entries.erase(it);
+      return;
+    }
+  }
+}
+
+void BLEStream::Impl::quarantineEnd(const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role) {
+  if (!common || !role) {
+    return;
+  }
+  // The ending Impl is published before any executor starts, but retain again
+  // defensively so every terminal handoff preserves cleanup ownership.
+  retainEnd(common);
+  role->detachCallbacks();
+  role->endExecutorActive = false;
+  common->peerCount = 0;
+  BLELockGuard lock(common->roleMtx);
+  if (common->deferredRole == role) {
+    common->deferredRole.reset();
+    common->deferredSelf.reset();
+    common->endRetryArmed = false;
+    common->endRetryCount = 0;
+  }
+}
+
+bool BLEStream::Impl::recoverQuarantined() {
+  auto &state = recoveryState();
+  for (;;) {
+    std::shared_ptr<Impl> common;
+    std::shared_ptr<Role> role;
+    bool endingPresent = false;
+    {
+      // Gate check and executor claim are one registry transaction. BLE.end()
+      // either closes the gate first, or sees this active executor and waits
+      // while the native host is still available.
+      BLELockGuard recoveryLock(state.mtx);
+      if (state.hostShuttingDown.load(std::memory_order_relaxed)) {
+        return false;
+      }
+      for (auto it = state.entries.begin(); it != state.entries.end();) {
+        common = *it;
+        role = common ? common->loadRole() : nullptr;
+        if (!common || !role) {
+          it = state.entries.erase(it);
+          common.reset();
+          role.reset();
+          continue;
+        }
+        if (!role->ending.load(std::memory_order_acquire)) {
+          common.reset();
+          role.reset();
+          ++it;
+          continue;
+        }
+        endingPresent = true;
+        if (role->starting.load(std::memory_order_acquire)) {
+          common.reset();
+          role.reset();
+          ++it;
+          continue;
+        }
+        bool expected = false;
+        if (role->endExecutorActive.compare_exchange_strong(expected, true)) {
+          break;
+        }
+        common.reset();
+        role.reset();
+        ++it;
+      }
+      if (!common || !role) {
+        return !endingPresent;
+      }
+    }
+
+    BTStatus status;
+#if defined(BLE_STREAM_VALIDATION_HOOKS)
+    status = consumeValidationFailure(bleStreamTestTeardownFailures) ? BTStatus::Busy : role->end();
+#else
+    status = role->end();
+#endif
+    if (status) {
+      completeEnd(common, role);
+    } else {
+      role->endExecutorActive = false;
+      return false;
+    }
+  }
+}
+
+void BLEStream::Impl::prepareHostShutdown() {
+  auto &state = recoveryState();
+#if defined(BLE_STREAM_VALIDATION_HOOKS)
+  if (bleStreamTestHoldFinalRoleRelease.load(std::memory_order_acquire)) {
+    bleStreamTestHostShutdownEntered.store(true, std::memory_order_release);
+  }
+#endif
+  std::vector<std::shared_ptr<Impl>> entries;
+  {
+    BLELockGuard recoveryLock(state.mtx);
+    state.hostShuttingDown.store(true, std::memory_order_relaxed);
+    entries = state.entries;
+    for (const auto &common : entries) {
+      auto role = common ? common->loadRole() : nullptr;
+      if (role) {
+        role->ending.store(true, std::memory_order_release);
+      }
+    }
+  }
+  // Cancel every dormant retry without holding the registry lock while an
+  // executor may need it to publish completion.
+  for (const auto &common : entries) {
+    if (common && common->endRetryTimer) {
+      esp_timer_stop_blocking(common->endRetryTimer, portMAX_DELAY);
+      BLELockGuard commonLock(common->roleMtx);
+      // A fired callback clears this before trying to start a worker. If it is
+      // still set after stop_blocking, shutdown canceled a dormant timer and
+      // therefore owns the executor claim.
+      if (common->endRetryArmed) {
+        common->endRetryArmed = false;
+        if (common->role) {
+          common->role->endExecutorActive = false;
+        }
+      }
+    }
+  }
+
+  // Native teardown workers may be waiting on stack completion, so let them
+  // finish while the host is still running. Once shutdown is set they cannot
+  // enqueue another worker/timer and instead settle into quarantine.
+  for (;;) {
+    bool active = false;
+    {
+      BLELockGuard recoveryLock(state.mtx);
+      entries = state.entries;
+    }
+    for (const auto &common : entries) {
+      auto role = common ? common->loadRole() : nullptr;
+      if (role
+          && (role->starting.load(std::memory_order_acquire) || role->endExecutorActive.load(std::memory_order_acquire))) {
+        active = true;
+        break;
+      }
+    }
+    if (!active) {
+      break;
+    }
+    vTaskDelay(1);
+  }
+}
+
+void BLEStream::Impl::releaseQuarantined() {
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  for (auto &common : state.entries) {
+    auto role = common ? common->loadRole() : nullptr;
+    if (!common || !role) {
+      continue;
+    }
+    role->detachCallbacks();
+    role->endExecutorActive = false;
+    common->peerCount = 0;
+    common->clearRole(role);
+    BLELockGuard commonLock(common->roleMtx);
+    common->deferredRole.reset();
+    common->deferredSelf.reset();
+    common->endRetryCount = 0;
+  }
+  state.entries.clear();
+  state.hostShuttingDown.store(false, std::memory_order_release);
+}
+
+void BLEStream::Impl::endRetryTimerCb(void *arg) {
+  auto *raw = static_cast<Impl *>(arg);
+  std::shared_ptr<Impl> common;
+  std::shared_ptr<Role> role;
+  {
+    BLELockGuard lock(raw ? raw->roleMtx : nullptr);
+    if (raw) {
+      common = raw->deferredSelf;
+      role = raw->deferredRole;
+      raw->endRetryArmed = false;
+    }
+  }
+  if (!common || !role) {
+    return;
+  }
+  if (!startEndWorker(common.get()) && !scheduleEndRetry(common.get())) {
+    log_e("BLEStream: deferred teardown retry limit reached");
+    quarantineEnd(common, role);
+  }
+}
+
+void BLEStream::Impl::endWorker(void *arg) {
+  auto *raw = static_cast<Impl *>(arg);
+  {
+    // FreeRTOS task deletion does not unwind C++ locals. Keep every owning
+    // shared_ptr inside this inner scope so its destructor runs before
+    // vTaskDelete() terminates the task.
+    std::shared_ptr<Impl> common;
+    std::shared_ptr<Role> role;
+    {
+      BLELockGuard lock(raw ? raw->roleMtx : nullptr);
+      if (raw) {
+        common = raw->deferredSelf;
+        role = raw->deferredRole;
+      }
+    }
+    if (common && role) {
+      BTStatus status;
+#if defined(BLE_STREAM_VALIDATION_HOOKS)
+      status = consumeValidationFailure(bleStreamTestTeardownFailures) ? BTStatus::Busy : role->end();
+#else
+      status = role->end();
+#endif
+      if (status) {
+        completeEnd(common, role);
+      } else if (!scheduleEndRetry(common.get())) {
+        log_e("BLEStream: deferred teardown quarantined (%s)", status.toString());
+        quarantineEnd(common, role);
+      }
+    }
+  }
+  vTaskDelete(nullptr);
 }
 
 void BLEStream::end() {
   if (!_impl) {
     return;
   }
-  // Keep the role alive locally while callbacks run. A disconnect callback may
-  // reenter end(); the nested call must observe no active role without deleting
-  // the role whose end() method is still executing.
-  auto role = _impl->takeRole();
-  if (role) {
-    role->end();
+  auto common = _impl;
+  std::shared_ptr<Impl::Role> role;
+  bool hostShuttingDown = false;
+  if (!Impl::claimEnd(common, role, hostShuttingDown)) {
+    return;
   }
-  _impl->peerCount = 0;
+  if (hostShuttingDown) {
+    Impl::quarantineEnd(common, role);
+    return;
+  }
+
+  // Service removal is blocking on Bluedroid and rebuilds the native table on
+  // NimBLE. Neither operation may run on the stack callback task that must
+  // deliver its completion. Retain both Impl and role until a worker finishes;
+  // begin() remains closed because the ending role stays installed. If either
+  // allocation fails, keep it closed and make end() retryable rather than
+  // silently exposing a half-torn-down stream.
+  if (bleStreamInCallbackTask()) {
+    {
+      BLELockGuard lock(common->roleMtx);
+      common->deferredSelf = common;
+      common->deferredRole = role;
+      common->endRetryCount = 0;
+    }
+    if (!Impl::startEndWorker(common.get()) && !Impl::scheduleEndRetry(common.get())) {
+      log_e("BLEStream: unable to defer callback-context teardown");
+      Impl::quarantineEnd(common, role);
+    }
+    return;
+  }
+
+  BTStatus status = role->end();
+  if (status) {
+    Impl::completeEnd(common, role);
+  } else {
+    role->endExecutorActive = false;
+    log_e("BLEStream: teardown failed (%s); call end() again", status.toString());
+  }
 }
 
 bool BLEStream::connected() const {
-  return _impl && _impl->peerCount > 0;
+  auto role = _impl ? _impl->loadRole() : nullptr;
+  return role && !role->ending && role->connectedCount() > 0;
 }
 
 size_t BLEStream::peerCount() const {
-  if (!_impl || _impl->peerCount < 0) {
-    return 0;
-  }
-  return static_cast<size_t>(_impl->peerCount);
+  auto role = _impl ? _impl->loadRole() : nullptr;
+  return (role && !role->ending) ? role->connectedCount() : 0;
 }
 
 std::vector<BLEConnInfo> BLEStream::peers() const {
@@ -110,19 +622,19 @@ size_t BLEStream::write(uint8_t c) {
 }
 
 size_t BLEStream::write(const uint8_t *buffer, size_t size) {
-  if (!_impl || _impl->peerCount <= 0 || !buffer || size == 0) {
+  if (!_impl || !buffer || size == 0) {
     return 0;
   }
   auto role = _impl->loadRole();
-  return (role && !role->ending) ? role->write(buffer, size) : 0;
+  return (role && !role->ending && role->connectedCount() > 0) ? role->write(buffer, size) : 0;
 }
 
 size_t BLEStream::writeTo(const BLEConnInfo &peer, const uint8_t *buffer, size_t size) {
-  if (!_impl || _impl->peerCount <= 0 || !buffer || size == 0) {
+  if (!_impl || !buffer || size == 0) {
     return 0;
   }
   auto role = _impl->loadRole();
-  return (role && !role->ending) ? role->writeTo(peer, buffer, size) : 0;
+  return (role && !role->ending && role->connectedCount() > 0) ? role->writeTo(peer, buffer, size) : 0;
 }
 
 void BLEStream::flush() {
@@ -130,7 +642,11 @@ void BLEStream::flush() {
 }
 
 BLEStream::operator bool() const {
-  return _impl && _impl->loadRole() != nullptr;
+  if (!_impl) {
+    return false;
+  }
+  auto role = _impl->loadRole();
+  return role && !role->ending;
 }
 
 // --------------------------------------------------------------------------

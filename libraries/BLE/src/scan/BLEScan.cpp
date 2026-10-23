@@ -18,13 +18,13 @@
 #if BLE_ENABLED
 
 #include "scan/BLEScan.h"
+#include "scan/BLEScanImpl.h"
 #include "core/BLEImplHelpers.h"
 #include "advertising/BLEAdvScanHelpers.h"
 #include "core/BLEBackend.h"
 #include "core/BLEMutex.h"
 #include "esp32-hal-log.h"
 
-#include <cstring>
 #include <utility>
 
 /**
@@ -45,6 +45,7 @@ void BLEScan::setInterval(uint16_t intervalMs) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
   log_d("Scan: setInterval %u ms", intervalMs);
+  BLELockGuard lock(impl.mtx);
   impl.interval = bleMsToUnits0625(intervalMs);
 #endif
 }
@@ -53,6 +54,7 @@ void BLEScan::setWindow(uint16_t windowMs) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
   log_d("Scan: setWindow %u ms", windowMs);
+  BLELockGuard lock(impl.mtx);
   impl.window = bleMsToUnits0625(windowMs);
 #endif
 }
@@ -61,6 +63,7 @@ void BLEScan::setActiveScan(bool active) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
   log_d("Scan: setActiveScan=%d", active);
+  BLELockGuard lock(impl.mtx);
   impl.activeScan = active;
 #endif
 }
@@ -69,6 +72,7 @@ void BLEScan::setFilterDuplicates(bool filter) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
   log_d("Scan: setFilterDuplicates=%d", filter);
+  BLELockGuard lock(impl.mtx);
   impl.filterDuplicates = filter;
 #endif
 }
@@ -184,19 +188,17 @@ BLEAdvertisedDevice BLEScan::Results::appendOrReplace(const BLEAdvertisedDevice 
     // no ADI and report SID 0xFF, so same-address legacy reports still collapse to
     // a single entry exactly as before.
     if (existing.getAddress() == device.getAddress() && existing.getAdvSID() == device.getAdvSID()) {
-      // Preserve an existing entry that already merged a scan response (either a
-      // scan-response name, or a longer payload whose primary ADV prefix matches
-      // the incoming unmerged primary ADV) so a trailing ADV_IND does not erase
-      // scan-response fields such as name, manufacturer data, or service data.
-      const size_t existLen = existing.getPayloadLength();
-      const size_t newLen = device.getPayloadLength();
-      if ((existing.haveName() && !device.haveName())
-          || (existLen > newLen && (newLen == 0 || memcmp(existing.getPayload(), device.getPayload(), newLen) == 0))) {
-        // Cached merged entry wins; return it so callers dispatch the preserved
-        // device to onResult, not the incoming unmerged report.
-        return existing;
+      // A fresh primary report supersedes the old primary payload and metadata,
+      // but it must not erase fields learned from the preceding scan response.
+      // Rebuild from the fresh report plus only the cached scan-response suffix;
+      // returning the whole cached object would preserve stale RSSI and changed
+      // manufacturer/service data from the old primary advertisement.
+      BLEAdvertisedDevice merged;
+      if (BLEScanImplCommon::preserveScanResponse(device, existing, merged)) {
+        existing = merged;
+      } else {
+        existing = device;
       }
-      existing = device;
       return existing;
     }
   }

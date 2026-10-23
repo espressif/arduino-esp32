@@ -314,7 +314,38 @@ volatile bool bleStreamReentrantEnd = false;
 volatile bool bleStreamConcurrentWriteRejected = false;
 volatile bool bleStreamWriteToDone = false;
 volatile bool bleStreamEndRequested = false;
+std::atomic<bool> bleStreamCallbackEndArmed{false};
+std::atomic<bool> bleStreamCallbackEndTriggered{false};
+std::atomic<bool> bleStreamCallbackEndReturned{false};
+std::shared_ptr<BLEStream> bleStreamFinalOwner;
+std::atomic<bool> bleStreamFinalOwnerDropped{false};
+extern "C" {
+std::atomic<int> bleStreamTestWorkerStartFailures{0};
+std::atomic<int> bleStreamTestTeardownFailures{0};
+std::atomic<int> bleStreamTestStartFailures{0};
+std::atomic<int> bleStreamTestRemoveFailures{0};
+std::atomic<int> bleStreamTestDisconnectRaces{0};
+std::atomic<bool> bleStreamTestHoldFinalRoleRelease{false};
+std::atomic<bool> bleStreamTestFinalRoleReleaseReached{false};
+std::atomic<bool> bleStreamTestHostShutdownEntered{false};
+std::atomic<uint32_t> bleRemoteTestWriteTimeoutMs{0};
+std::atomic<bool> bleRemoteTestHoldWriteCommandCompletion{false};
+std::atomic<bool> bleRemoteTestReleaseWriteCommandCompletion{false};
+std::atomic<bool> bleGattTestHoldNotifyCompletions{false};
+std::atomic<bool> bleGattTestForceTerminalClose{false};
+std::atomic<bool> bleGattTestHoldTerminalWorker{false};
+std::atomic<bool> bleGattTestTerminalWorkerEntered{false};
+std::atomic<bool> bleGattTestTerminalShutdownEntered{false};
+std::atomic<int> bleGattTestTerminalWorkerStartFailures{0};
+std::atomic<bool> bleScanTestForcePreemptedStop{false};
+std::atomic<int> bleScanTestCancelFailures{0};
+std::atomic<int> bleScanTestHeldContexts{0};
+std::atomic<int> bleScanTestRetiredContexts{0};
+}
 volatile bool phase13Continue = false;
+volatile bool phase35OwnerDropGo = false;
+volatile bool phase35StreamGo = false;
+volatile bool phase35StreamConnected = false;
 bool bleStreamPeekDone = false;
 bool l2capInitDone = false;
 
@@ -341,6 +372,12 @@ void checkSerial() {
         phase13Continue = true;
       } else if (buf == "PHASE33_CONTINUE") {
         phase33Continue = true;
+      } else if (buf == "PHASE35_OWNER_DROP_GO") {
+        phase35OwnerDropGo = true;
+      } else if (buf == "PHASE35_STREAM_GO") {
+        phase35StreamGo = true;
+      } else if (buf == "PHASE35_STREAM_CONNECTED") {
+        phase35StreamConnected = true;
       }
       buf = "";
     } else if (c != '\r') {
@@ -1081,6 +1118,13 @@ void loop() {
         // blocked waiting for this disconnect callback.
         bleStream.end();
         bleStreamReentrantEnd = !(bool)bleStream;
+      } else if (bleStreamCallbackEndArmed.exchange(false)) {
+        bleStreamCallbackEndTriggered = true;
+        // This is the outer end(), not a nested call. On both backends it must
+        // leave the stack callback promptly and finish service removal on an
+        // application worker before the role can be begun again.
+        bleStream.end();
+        bleStreamCallbackEndReturned = !(bool)bleStream;
       }
     });
     bleStream.onPeerData([](const BLEConnInfo &peer, const uint8_t *data, size_t len) {
@@ -1246,6 +1290,7 @@ void loop() {
     // a clean re-begin without disturbing the BLE stack.
     if (bleStreamStep == 6 && bleStreamEndRequested) {
       bleStreamAllowReentrantEnd = true;
+      bleStreamTestDisconnectRaces.store(1);
       bleStream.end();
       Serial.printf("[SERVER] BLEStream onDisconnect fired=%d\n", (int)bleStreamDisconnectCb);
       delay(100);
@@ -1256,6 +1301,87 @@ void loop() {
       Serial.printf(
         "[SERVER] BLEStream reentrant end=%d concurrentWriteRejected=%d heap=%d\n", (int)bleStreamReentrantEnd,
         (int)bleStreamConcurrentWriteRejected, (int)heap_caps_check_integrity_all(true)
+      );
+      bleStreamCallbackEndArmed = (bool)restart;
+      bleStreamStep = 7;
+    }
+
+    // Step 7: the client reconnects and disconnects. The disconnect callback
+    // above invokes the outer end() on the BLE stack task. Re-begin may only
+    // succeed after the deferred worker has removed NUS.
+    if (bleStreamStep == 7 && bleStreamCallbackEndTriggered.load()) {
+      static unsigned long callbackEndStart = millis();
+      BTStatus callbackRestart = bleStream.begin(serverName);
+      if (callbackRestart || millis() - callbackEndStart >= 8000) {
+        Serial.printf(
+          "[SERVER] BLEStream callback end returned=%d rebegin=%d heap=%d\n", (int)bleStreamCallbackEndReturned.load(),
+          (int)(bool)callbackRestart, (int)heap_caps_check_integrity_all(true)
+        );
+        if (callbackRestart) {
+          bleStream.end();
+          bleStreamFinalOwner = std::make_shared<BLEStream>();
+          // Deterministically exercise the callback handoff fallback: one
+          // worker-creation failure reaches the timer, then enough synthetic
+          // teardown failures exhaust the bounded worker retries and make the
+          // first recovery admission return Busy.
+          bleStreamTestWorkerStartFailures.store(1);
+          bleStreamTestTeardownFailures.store(5);
+          bleStreamFinalOwner->onConnect([](const BLEConnInfo &) {
+            // Drop the final public owner from the stack callback itself. The
+            // deferred teardown handoff must retain its Impl until NUS removal
+            // finishes on a worker.
+            bleStreamFinalOwner.reset();
+            bleStreamFinalOwnerDropped = true;
+          });
+          BTStatus finalOwnerStart = bleStreamFinalOwner->begin(serverName);
+          Serial.printf("[SERVER] BLEStream final owner ready=%d\n", (int)(bool)finalOwnerStart);
+          bleStreamStep = finalOwnerStart ? 8 : 9;
+        } else {
+          bleStreamStep = 9;
+        }
+      } else {
+        delay(50);
+      }
+    }
+
+    // Step 8: once the final owner has disappeared from onConnect, prove the
+    // worker completed native teardown by creating and removing NUS again.
+    if (bleStreamStep == 8 && bleStreamFinalOwnerDropped.load()) {
+      static unsigned long finalOwnerStart = millis();
+      static bool recoveryBlocked = false;
+      BLEStream probe;
+      BTStatus probeStart = probe.begin(serverName);
+      if (probeStart == BTStatus::Busy) {
+        recoveryBlocked = true;
+      }
+      if (probeStart || millis() - finalOwnerStart >= 8000) {
+        if (probeStart) {
+          probe.end();
+        }
+        Serial.printf(
+          "[SERVER] BLEStream final owner dropped=1 recoveryBlocked=%d workerFails=%d teardownFails=%d rebegin=%d heap=%d\n",
+          (int)recoveryBlocked, bleStreamTestWorkerStartFailures.load(), bleStreamTestTeardownFailures.load(),
+          (int)(bool)probeStart, (int)heap_caps_check_integrity_all(true)
+        );
+        bleStreamStep = 9;
+      } else {
+        delay(50);
+      }
+    }
+
+    if (bleStreamStep == 9) {
+      BLEStream partialStart;
+      bleStreamTestStartFailures.store(1);
+      bleStreamTestRemoveFailures.store(2);
+      BTStatus forcedFailure = partialStart.begin(serverName);
+      BTStatus recoveredStart = partialStart.begin(serverName);
+      if (recoveredStart) {
+        partialStart.end();
+      }
+      Serial.printf(
+        "[SERVER] BLEStream partial start failed=%d recovery=%d removeFails=%d heap=%d\n",
+        (int)!forcedFailure, (int)(bool)recoveredStart, bleStreamTestRemoveFailures.load(),
+        (int)heap_caps_check_integrity_all(true)
       );
       bleStreamPhaseDone = true;
     }
@@ -1286,10 +1412,20 @@ void loop() {
           Serial.printf("[SERVER] L2CAP reply FAILED: %s\n", s.toString());
         }
       });
+      BLE.createServer().advertiseOnDisconnect(true);
+      BLEAdvertising l2capAdvertising = BLE.getAdvertising();
+      l2capAdvertising.reset();
+      l2capAdvertising.setName(serverName);
+      (void)l2capAdvertising.start();
       Serial.println("[SERVER] L2CAP init OK");
     }
 #else
     l2capInitDone = true;
+    BLE.createServer().advertiseOnDisconnect(true);
+    BLEAdvertising l2capAdvertising = BLE.getAdvertising();
+    l2capAdvertising.reset();
+    l2capAdvertising.setName(serverName);
+    (void)l2capAdvertising.start();
     Serial.println("[SERVER] L2CAP not supported, skipping");
 #endif
   }
@@ -1671,6 +1807,10 @@ void loop() {
   if (currentPhase >= 20 && !phase20Done) {
     phase20Done = true;
     BLEServer srv = BLE.createServer();
+    // This phase owns the next advertising configuration. Close the automatic
+    // disconnect-restart gate before dropping the prior link so a deferred
+    // restart cannot overwrite the ADV_/OSZ_ payloads below with stale data.
+    srv.advertiseOnDisconnect(false);
     auto conns = srv.getConnections();
     for (auto &c : conns) {
       (void)srv.disconnect(c.getHandle());
@@ -1691,26 +1831,29 @@ void loop() {
       manualAdvCompletions.fetch_add(1);
     });
 
-    // Split across primary (31 B max) and scan response (31 B max).
-    //   primary  -> flags (3) + name "ADV_xxxx" (~12) + appearance (4) + txPower (3)
-    //   scan rsp -> manufacturer data (7) + svc data (6) + 16-bit svc UUID (4)
+    // Split across primary (31 B max) and scan response (31 B max). Keeping the
+    // name in SCAN_RSP lets this window also verify that a later primary report
+    // refreshes manufacturer data without losing cached scan-response fields.
+    //   primary  -> flags (3) + appearance (4) + txPower (3) + mfg data (7)
+    //               + UUID (4) + interval (6)
+    //   scan rsp -> name "ADV_xxxx" (~14) + svc data (6) + malformed AD (4)
+    // Keep both segments within the legacy 31-byte cap so the malformed field
+    // below is actually transmitted instead of being rejected by the builder.
     String advName = String("ADV_") + serverName;
     BLEAdvertisementData d;
     d.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
-    d.setName(advName);
     d.setAppearance(0x0340);
     d.setTxPower(-4);
+    uint8_t mfg[] = {'E', 'S', 'P'};
+    d.setManufacturerData(0x02E5, mfg, sizeof(mfg));
+    d.addServiceUUID(BLEUUID((uint16_t)0x180D));
+    d.setPreferredParams(0x0006, 0x0012);
     adv.setAdvertisementData(d);
 
     BLEAdvertisementData sr;
-    uint8_t mfg[] = {'E', 'S', 'P'};
-    sr.setManufacturerData(0x02E5, mfg, sizeof(mfg));
+    sr.setName(advName);
     uint8_t svcData[] = {0xAB, 0xCD};
     sr.setServiceData(BLEUUID((uint16_t)0x180D), svcData, sizeof(svcData));
-    sr.addServiceUUID(BLEUUID((uint16_t)0x180D));
-    // Slave Connection Interval Range AD (0x12): 6..18 in 1.25 ms units.
-    // Mirrors setMinPreferred/setMaxPreferred so the client can parse it back.
-    sr.setPreferredParams(0x0006, 0x0012);
     // Issue #12801, kept last: the length byte claims 20 octets when only 2
     // follow. Rejecting it must not disturb the real fields parsed above — a
     // parser missing the bounds check reads type 0xFF with a 19-byte length and
@@ -1722,8 +1865,26 @@ void loop() {
 
     BTStatus s = adv.start();
     Serial.printf("[SERVER] Phase20 advReady ok=%d isAdv=%d\n", (int)(bool)s, (int)adv.isAdvertising());
+    delay(5000);
+    BLEAdvertisementData refreshed;
+    refreshed.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
+    refreshed.setAppearance(0x0340);
+    refreshed.setTxPower(-4);
+    uint8_t refreshedMfg[] = {'N', 'E', 'W'};
+    refreshed.setManufacturerData(0x02E5, refreshedMfg, sizeof(refreshedMfg));
+    refreshed.addServiceUUID(BLEUUID((uint16_t)0x180D));
+    refreshed.setPreferredParams(0x0006, 0x0012);
+    adv.setAdvertisementData(refreshed);
+    BLEAdvertisementData refreshedSr;
+    refreshedSr.setName(advName);
+    uint8_t refreshedSvcData[] = {'N', 'R'};
+    refreshedSr.setServiceData(BLEUUID((uint16_t)0x180D), refreshedSvcData, sizeof(refreshedSvcData));
+    refreshedSr.addRaw(oversizeAd, sizeof(oversizeAd));
+    adv.setScanResponseData(refreshedSr);
+    BTStatus refreshStatus = adv.start();
+    Serial.printf("[SERVER] Phase20 primaryRefresh ok=%d\n", (int)(bool)refreshStatus);
     // Must outlast the client's active scan (+ optional scan-response retry).
-    delay(14000);
+    delay(9000);
     // Intentionally do NOT call adv.stop() here: calling adv.start() while
     // already advertising must stop and restart advertising with the updated
     // OSZ_ advertisement and scan-response payloads on both backends.
@@ -1859,6 +2020,9 @@ void loop() {
     }
     Serial.printf("[SERVER] Phase20 prefIntervalAD ok=%d\n", (int)prefOk);
 
+    // Restore the suite's normal reconnect policy after the phase-owned
+    // advertising transitions above.
+    srv.advertiseOnDisconnect(true);
     Serial.println("[SERVER] Phase20 done");
   }
 
@@ -1903,7 +2067,21 @@ void loop() {
     delay(4000);
     adv.stop();
 
-    // Eddystone TLM.
+    // Encrypted Eddystone eTLM (version 1) is intentionally unsupported by the
+    // plaintext decoder and must be rejected rather than exposed as telemetry.
+    BLEAdvertisementData encryptedTlm;
+    uint8_t encryptedFrame[18] = {
+      0x20, 0x01, 0x91, 0x82, 0x73, 0x64, 0x55, 0x46, 0x37,
+      0x28, 0x19, 0x0A, 0xFB, 0xEC, 0x12, 0x34, 0x56, 0x78
+    };
+    encryptedTlm.setServiceData(BLEEddystoneTLM::serviceUUID(), encryptedFrame, sizeof(encryptedFrame));
+    adv.setAdvertisementData(encryptedTlm);
+    s = adv.start();
+    Serial.printf("[SERVER] Phase21 EddystoneEncryptedTLM ok=%d\n", (int)(bool)s);
+    delay(3000);
+    adv.stop();
+
+    // Plaintext Eddystone TLM.
     BLEEddystoneTLM tlm;
     tlm.setBatteryVoltage(3000);
     tlm.setTemperature(25.5f);
@@ -2209,7 +2387,14 @@ void loop() {
       bool serviceRemoved = (bool)hidServer.removeService(removedSvc);
       bool serviceShell = removedSvc.getHandle() == 0 && !removedSvc.getServer() && removedSvc.getCharacteristics().empty() && removedChr.getHandle() == 0
                           && !removedChr.getService() && removedDesc.getHandle() == 0 && !removedDesc.getCharacteristic();
-      Serial.printf("[SERVER] Phase25 removal shells=%d\n", (int)(descriptorShell && characteristicShell && serviceRemoved && serviceShell));
+      BLECharacteristic lateChr =
+        removedSvc.createCharacteristic(TMP_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+      BLEDescriptor lateDesc = removedChr.createDescriptor(BLEUUID((uint16_t)0xA005), BLEPermission::ReadOpen);
+      bool detachedFactoriesRejected = !lateChr && !lateDesc;
+      Serial.printf(
+        "[SERVER] Phase25 removal shells=%d detachedFactoriesRejected=%d\n",
+        (int)(descriptorShell && characteristicShell && serviceRemoved && serviceShell), (int)detachedFactoriesRejected
+      );
 
       // Pre-registration characteristic validation (bleValidateCharForRegistration):
       //   1. ExtendedProps without 0x2900 descriptor -> InvalidState
@@ -2865,6 +3050,13 @@ void loop() {
       std::atomic<uint32_t> teardownLate{0};
       std::atomic<uint32_t> timeoutAttempts{0};
       std::atomic<bool> timeoutAllowed{false};
+      std::atomic<uint32_t> timeoutWriteAttempts{0};
+      std::atomic<bool> timeoutWriteAllowed{false};
+      std::atomic<uint32_t> callbackCommandRx{0};
+      std::atomic<uint16_t> ownerDropConn{0xffff};
+      std::atomic<bool> readRemoveArmed{false};
+      std::atomic<bool> readRemoveEntered{false};
+      std::atomic<bool> readRemoveRelease{false};
       uint16_t timeoutHandle = 0;
 
       BLEService edgeSvc = srv.createService(EDGE_SVC_UUID);
@@ -2912,20 +3104,34 @@ void loop() {
           peerIndicateDisabled.fetch_add(1, std::memory_order_relaxed);
         }
       });
-      peerChr.onWrite([&teardownFlooding, &teardownAccepted](BLECharacteristic &chr, const BLEConnInfo &info) {
-        if (chr.getStringValue() != "drop_pending") {
-          return;
-        }
-        teardownFlooding = true;
-        Serial.println("[SERVER] Phase35 notifyTeardown burst entered");
-        for (int i = 0; i < 64; i++) {
-          uint8_t value = static_cast<uint8_t>(i);
-          if (chr.notify(info.getHandle(), &value, 1)) {
-            teardownAccepted.fetch_add(1, std::memory_order_relaxed);
+      peerChr.onWrite(
+        [&teardownFlooding, &teardownAccepted, &callbackCommandRx, &ownerDropConn](BLECharacteristic &chr, const BLEConnInfo &info) {
+          String value = chr.getStringValue();
+          if (value == "callback-command") {
+            callbackCommandRx.fetch_add(1, std::memory_order_relaxed);
+            return;
           }
-          delay(2);
-        }
-      });
+          if (value == "owner-drop") {
+            ownerDropConn.store(info.getHandle(), std::memory_order_release);
+            Serial.println("[SERVER] Phase35 owner drop received");
+            return;
+          }
+          if (value != "drop_pending") {
+            return;
+          }
+          teardownFlooding = true;
+          if (strcmp(BLE.getStackName(), "Bluedroid") == 0) {
+            bleGattTestHoldNotifyCompletions.store(true, std::memory_order_relaxed);
+          }
+          Serial.println("[SERVER] Phase35 notifyTeardown burst entered");
+          for (int i = 0; i < 64; i++) {
+            uint8_t value = static_cast<uint8_t>(i);
+            if (chr.notify(info.getHandle(), &value, 1)) {
+              teardownAccepted.fetch_add(1, std::memory_order_relaxed);
+            }
+            delay(2);
+          }
+        });
       srv.onDisconnect(
         [&teardownDisconnected, &teardownTerminalAtDisconnect, &teardownSuccess, &teardownNoClient,
          &teardownOther](BLEServer &, const BLEConnInfo &, uint8_t) {
@@ -2936,11 +3142,26 @@ void loop() {
         }
       );
 
-      BLECharacteristic timeoutChr = edgeSvc.createCharacteristic(TIMEOUT_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadAuthorized);
+      BLECharacteristic timeoutChr = edgeSvc.createCharacteristic(
+        TIMEOUT_CHAR_UUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::WriteNR,
+        BLEPermission::ReadAuthorized | BLEPermission::WriteAuthorized
+      );
       timeoutChr.setValue("timeout_ok");
 
       BLEService queueSvc = srv.createService(QUEUE_SVC_UUID);
       BLECharacteristic queueChr = queueSvc.createCharacteristic(QUEUE_CHAR_UUID, BLEProperty::Read | BLEProperty::Indicate, BLEPermission::ReadOpen);
+      uint8_t queueReadValue[512];
+      memset(queueReadValue, 0x51, sizeof(queueReadValue));
+      queueChr.setValue(queueReadValue, sizeof(queueReadValue));
+      queueChr.onRead([&readRemoveArmed, &readRemoveEntered, &readRemoveRelease](BLECharacteristic &, const BLEConnInfo &) {
+        if (!readRemoveArmed.load()) {
+          return;
+        }
+        readRemoveEntered = true;
+        while (!readRemoveRelease.load()) {
+          delay(1);
+        }
+      });
       queueChr.onStatus([&queueOk, &queueErr](BLECharacteristic &, BLECharacteristic::NotifyStatus status, uint32_t) {
         if (status == BLECharacteristic::SUCCESS_INDICATE) {
           queueOk.fetch_add(1, std::memory_order_relaxed);
@@ -2951,20 +3172,32 @@ void loop() {
 
       srv.start();
       timeoutHandle = timeoutChr.getHandle();
+      BLEDescriptor autoCccd = peerChr.getDescriptor(BLEUUID(static_cast<uint16_t>(0x2902)));
+      BLECharacteristic autoCccdOwner = autoCccd.getCharacteristic();
+      bool autoCccdSupported = strcmp(BLE.getStackName(), "Bluedroid") == 0;
+      bool autoCccdOwnerOk =
+        !autoCccdSupported || (autoCccd && autoCccdOwner && autoCccdOwner.getHandle() == peerChr.getHandle());
+      Serial.printf(
+        "[SERVER] Phase35 autoCCCD supported=%d owner=%d\n", (int)autoCccdSupported, (int)autoCccdOwnerOk
+      );
       BLESecurity sec = BLE.getSecurity();
-      sec.onAuthorization([&timeoutAllowed, &timeoutAttempts, timeoutHandle](const BLEConnInfo &, uint16_t attrHandle, bool isRead) -> bool {
-        if (!isRead || attrHandle != timeoutHandle) {
+      sec.onAuthorization(
+        [&timeoutAllowed, &timeoutAttempts, &timeoutWriteAllowed, &timeoutWriteAttempts,
+         timeoutHandle](const BLEConnInfo &, uint16_t attrHandle, bool isRead) -> bool {
+        if (attrHandle != timeoutHandle) {
           return true;
         }
-        uint32_t n = timeoutAttempts.fetch_add(1, std::memory_order_relaxed);
-        if (n == 0) {
-          // A short delay keeps the ATT read outstanding so the client's
-          // 200 ms timeout expires before the error response is sent.
+        std::atomic<uint32_t> &attempts = isRead ? timeoutAttempts : timeoutWriteAttempts;
+        std::atomic<bool> &allowed = isRead ? timeoutAllowed : timeoutWriteAllowed;
+        uint32_t n = attempts.fetch_add(1, std::memory_order_relaxed);
+        if (n == 0 || (!isRead && n == 2)) {
+          // Keep the ATT request outstanding past the validation-only client
+          // timeout so its late response cannot be mistaken for a retry.
           delay(400);
-          timeoutAllowed = true;
+          allowed = true;
           return false;
         }
-        return timeoutAllowed.load();
+        return allowed.load();
       });
 
       adv = BLE.getAdvertising();
@@ -2992,6 +3225,11 @@ void loop() {
       while (peerNotifyOk.load() == 0 && millis() - startWait < 10000) {
         delay(20);
       }
+      startWait = millis();
+      while (callbackCommandRx.load() < 8 && millis() - startWait < 10000) {
+        delay(10);
+      }
+      Serial.printf("[SERVER] Phase35 callback command rx=%lu\n", (unsigned long)callbackCommandRx.load());
       flooding.store(true, std::memory_order_relaxed);
       const int kFlood = 32;
       int floodSent = 0;
@@ -3056,10 +3294,62 @@ void loop() {
       while (queueOk.load() + queueErr.load() < (uint32_t)(qAccepted + qBusy) && millis() - startWait < 10000) {
         delay(20);
       }
-      BTStatus removeIdle = srv.removeService(queueSvc);
+      readRemoveArmed = true;
+      Serial.println("[SERVER] Phase35 localReadRemove ready");
+      startWait = millis();
+      while (!readRemoveEntered.load() && millis() - startWait < 10000) {
+        delay(1);
+      }
+      struct RemoveServiceJob {
+        BLEServer server;
+        BLEService service;
+        std::atomic<bool> started{false};
+        std::atomic<bool> done{false};
+        BTStatus status{BTStatus::Fail};
+      };
+      static RemoveServiceJob removeJob;
+      removeJob.server = srv;
+      removeJob.service = queueSvc;
+      removeJob.started.store(false, std::memory_order_relaxed);
+      removeJob.done.store(false, std::memory_order_relaxed);
+      removeJob.status = BTStatus::Fail;
+      UBaseType_t removeTaskPriority = uxTaskPriorityGet(nullptr);
+      if (removeTaskPriority + 1 < configMAX_PRIORITIES) {
+        ++removeTaskPriority;
+      }
+      bool removeTaskCreated =
+        readRemoveEntered.load()
+        && xTaskCreate(
+             [](void *arg) {
+               auto *job = static_cast<RemoveServiceJob *>(arg);
+               job->started = true;
+               job->status = job->server.removeService(job->service);
+               job->done.store(true, std::memory_order_release);
+               vTaskDelete(nullptr);
+             },
+             "gatt-remove", 4096, &removeJob, removeTaskPriority, nullptr
+           )
+             == pdPASS;
+      startWait = millis();
+      while (removeTaskCreated && !removeJob.started.load() && millis() - startWait < 2000) {
+        delay(1);
+      }
+      readRemoveRelease = true;
+      startWait = millis();
+      while (removeTaskCreated && !removeJob.done.load(std::memory_order_acquire) && millis() - startWait < 10000) {
+        delay(1);
+      }
+      bool removeDone = removeJob.done.load(std::memory_order_acquire);
+      BTStatus removeIdle = removeDone ? removeJob.status : BTStatus::Fail;
       Serial.printf(
-        "[SERVER] Phase35 removeBusy=%d accepted=%d busy=%d removeIdle=%d\n", (int)(removeBusy == BTStatus::Busy), qAccepted, qBusy, (int)(bool)removeIdle
+        "[SERVER] Phase35 removeBusy=%d accepted=%d busy=%d readEntered=%d removeStarted=%d removeDone=%d removeIdle=%d\n",
+        (int)(removeBusy == BTStatus::Busy), qAccepted, qBusy, (int)readRemoveEntered.load(), (int)removeJob.started.load(),
+        (int)removeDone, (int)(bool)removeIdle
       );
+      if (removeDone) {
+        removeJob.server = BLEServer();
+        removeJob.service = BLEService();
+      }
       Serial.printf("[SERVER] Phase35 flood sent=%d confirmed=%lu failed=%lu\n", floodSent, (unsigned long)floodConfirmed, (unsigned long)floodFailed);
 
       startWait = millis();
@@ -3067,10 +3357,18 @@ void loop() {
         delay(50);
       }
       startWait = millis();
+      bool ownerDropDisconnectIssued = false;
       while (!teardownDisconnected.load() && millis() - startWait < 15000) {
+        checkSerial();
+        uint16_t ownerConn = ownerDropConn.load(std::memory_order_acquire);
+        if (!ownerDropDisconnectIssued && phase35OwnerDropGo && ownerConn != 0xffff) {
+          ownerDropDisconnectIssued = true;
+          (void)srv.disconnect(ownerConn);
+        }
         delay(20);
       }
       delay(500);
+      bleGattTestHoldNotifyCompletions.store(false, std::memory_order_relaxed);
       uint32_t finalTerminal = teardownSuccess + teardownNoClient + teardownOther;
       Serial.printf(
         "[SERVER] Phase35 notifyTeardown stack=%s attempted=64 accepted=%lu atDisconnect=%lu final=%lu success=%lu noClient=%lu other=%lu late=%lu\n",
@@ -3082,6 +3380,38 @@ void loop() {
       timeoutChr.resetCallbacks();
       queueChr.resetCallbacks();
       sec.onAuthorization(nullptr);
+      Serial.println("[SERVER] Phase35 BLEStream final release waiting");
+      while (!phase35StreamGo) {
+        checkSerial();
+        delay(1);
+      }
+      BLEStream finalReleasePeer;
+      BTStatus finalReleaseStart = finalReleasePeer.begin(serverName);
+      Serial.printf("[SERVER] Phase35 BLEStream final release ready=%d\n", (int)(bool)finalReleaseStart);
+      bool finalReleaseConnected = false;
+      startWait = millis();
+      while (finalReleaseStart && !phase35StreamConnected && millis() - startWait < 60000) {
+        checkSerial();
+        delay(20);
+      }
+      // The client's blocking connect may return before Bluedroid dispatches
+      // the server-side CONNECT event. Synchronize on the actual BLEStream
+      // state instead of sampling it at the serial barrier.
+      startWait = millis();
+      while (finalReleaseStart && phase35StreamConnected && !finalReleasePeer.connected() && millis() - startWait < 5000) {
+        delay(1);
+      }
+      finalReleaseConnected = phase35StreamConnected && finalReleasePeer.connected();
+      Serial.printf("[SERVER] Phase35 BLEStream final release connected=%d\n", (int)finalReleaseConnected);
+      startWait = millis();
+      while (finalReleaseConnected && finalReleasePeer.connected() && millis() - startWait < 15000) {
+        delay(20);
+      }
+      finalReleasePeer.end();
+      Serial.printf(
+        "[SERVER] Phase35 BLEStream final release done=%d\n",
+        (int)(finalReleaseConnected && !finalReleasePeer.connected())
+      );
       Serial.println("[SERVER] Phase35 done");
     }
   }

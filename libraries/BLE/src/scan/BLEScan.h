@@ -143,14 +143,16 @@ public:
 
   /**
    * @brief Enable or disable duplicate filtering.
-   * @param filter If true, the stack suppresses repeated advertisements from the same device.
+   * @param filter If true, suppress byte-identical reports from the same
+   *        address and advertising SID while still delivering changed payloads.
    */
   void setFilterDuplicates(bool filter);
 
   /**
-   * @brief Flush the controller's duplicate-address cache.
+   * @brief Clear the host duplicate history.
    *
-   * @note Only meaningful when duplicate filtering is enabled.
+   * The next report for each advertiser is delivered even when its bytes match
+   * the most recently cached result. The public scan results are not erased.
    */
   void clearDuplicateCache();
 
@@ -342,6 +344,13 @@ private:
    *        BLE.end(). No-op on backends without BLE5 periodic-sync support.
    */
   void terminateAllPeriodicSyncs();
+
+  /** @brief Internal teardown hook for backend scan-event storage. */
+  void resetBackendEvents();
+  /** @brief Internal lifecycle gates for backend callback retirement. */
+  void prepareBackendStart();
+  void beginBackendShutdown();
+  BTStatus stopBackend();
 
   friend class BLEClass;
 };

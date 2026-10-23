@@ -24,6 +24,7 @@
 #include "core/BLEImplHelpers.h"
 
 BLERemoteServiceImplCommon::~BLERemoteServiceImplCommon() {
+  BLELockGuard lock(cacheMtx ? cacheMtx->get() : nullptr);
   for (auto &chr : characteristics) {
     chr->service = nullptr;
   }
@@ -44,10 +45,12 @@ uint16_t BLERemoteService::getHandle() const {
 }
 
 BLEClient BLERemoteService::getClient() const {
-  if (!_impl || !_impl->client) {
+  if (!_impl) {
     return BLEClient();
   }
-  return BLEClient::Impl::makeHandle(_impl->client);
+  auto client = _impl->clientOwner.lock();
+  BLELockGuard lock(_impl->cacheMtx ? _impl->cacheMtx->get() : nullptr);
+  return (client && _impl->client == client.get()) ? BLEClient(client) : BLEClient();
 }
 
 String BLERemoteService::getValue(const BLEUUID &charUUID) {

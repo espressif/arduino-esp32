@@ -61,6 +61,12 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // Bluedroid delivers completions without a per-characteristic token.
   BLESync readSync{"readSync"};
   BLESync writeSync{"writeSync"};
+  // Bluedroid exposes one completion slot for reads and one for writes, with
+  // no caller token in completion events. Serialize a complete blocking GATT
+  // operation (including an authentication retry) so concurrent callers
+  // cannot replace the pending handle/sync state while another is waiting.
+  StaticSemaphore_t gattOpMtxStorage{};
+  SemaphoreHandle_t gattOpMtx = xSemaphoreCreateRecursiveMutexStatic(&gattOpMtxStorage);
   BLESync mtuSync{"mtuSync"};    // For MTU exchange
   BLESync rssiSync{"rssiSync"};  // For RSSI read
 #if BLE5_SUPPORTED
@@ -78,6 +84,14 @@ struct BLEClient::Impl : BLEClientImplCommon {
   std::vector<uint8_t> readBuf;
   uint16_t pendingReadHandle = 0;
   uint16_t pendingWriteHandle = 0;
+  uint16_t pendingWriteCommands = 0;
+  bool pendingWriteWaiter = false;
+  std::shared_ptr<Impl> pendingWriteOwner;
+  std::atomic<bool> terminalCloseRetryActive{false};
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+  bool validationHoldWriteCommand = false;
+  bool validationHeldWriteCommandEventSeen = false;
+#endif
   esp_gatt_status_t lastReadStatus = ESP_GATT_OK;
   esp_gatt_status_t lastWriteStatus = ESP_GATT_OK;
   int8_t lastRssi = -128;
@@ -85,9 +99,24 @@ struct BLEClient::Impl : BLEClientImplCommon {
   ~Impl();
 
   static uint16_t s_nextAppId;
-  static std::vector<BLEClient::Impl *> s_clients;
+  static StaticSemaphore_t s_clientsMtxStorage;
+  static SemaphoreHandle_t s_clientsMtx;
+  static std::vector<std::weak_ptr<BLEClient::Impl>> s_clients;
+  static std::atomic<uint32_t> s_terminalCloseWorkers;
+  static std::atomic<bool> s_terminalCloseAdmissionOpen;
+  static StaticSemaphore_t s_terminalCloseOwnersMtxStorage;
+  static SemaphoreHandle_t s_terminalCloseOwnersMtx;
+  static std::vector<std::shared_ptr<Impl>> s_terminalCloseOwners;
   static void handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
+  static std::vector<std::shared_ptr<Impl>> snapshotClients();
+  static void removeClient(Impl *client);
+  static void retainTerminalCloseOwner(const std::shared_ptr<Impl> &owner);
+  static std::shared_ptr<Impl> takeTerminalCloseOwner(Impl *client);
+  static void openTerminalCloseAdmission();
+  static void stopTerminalCloseWorkers();
+  static void invalidateAfterHostDeinit();
+  static void releaseTerminalCloseOwners();
 };
 
 /**

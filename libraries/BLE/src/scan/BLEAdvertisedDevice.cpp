@@ -297,7 +297,7 @@ bool BLEAdvertisedDevice::getEddystoneTLM(BLEEddystoneTLM &tlm) const {
   BLE_CHECK_IMPL(false);
   const BLEUUID eddy = BLEEddystoneTLM::serviceUUID();
   for (const auto &sd : impl.serviceData) {
-    if (sd.uuid == eddy && sd.data.size() >= 14 && sd.data[0] == 0x20) {
+    if (sd.uuid == eddy && sd.data.size() >= 14 && sd.data[0] == 0x20 && sd.data[1] == 0x00) {
       tlm.setFromServiceData(sd.data.data(), sd.data.size());
       return true;
     }

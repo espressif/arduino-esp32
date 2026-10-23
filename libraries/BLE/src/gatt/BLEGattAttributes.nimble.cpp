@@ -49,8 +49,18 @@
 // GATT access callback for characteristics
 // --------------------------------------------------------------------------
 
+static std::shared_ptr<BLEServer::Impl> attachedServer(const std::shared_ptr<BLEService::Impl> &service) {
+  auto server = service ? service->serverOwner.lock() : nullptr;
+  if (!service || !server) {
+    return {};
+  }
+  BLELockGuard lock(server->mtx);
+  return service->server == server.get() ? server : nullptr;
+}
+
 static int appendLongReadToMbuf(
-  BLEServer::Impl *server, const std::vector<uint8_t> &value, uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt
+  const std::shared_ptr<BLEServer::Impl> &server, const std::vector<uint8_t> &value, uint16_t conn_handle, uint16_t attr_handle,
+  struct ble_gatt_access_ctxt *ctxt
 ) {
   // `value` is a snapshot the caller took under the attribute's mtx and has
   // already released (single lock order: attribute lock, then server lock,
@@ -95,14 +105,16 @@ int BLECharacteristic::Impl::accessCallback(uint16_t conn_handle, uint16_t attr_
       log_d("Characteristic %s: read by conn=%u", impl->uuid.toString().c_str(), conn_handle);
 
       BLECharacteristic::ReadHandler readCb;
-      BLEServer::Impl *server = nullptr;
+      std::shared_ptr<BLEService::Impl> service;
       {
         BLELockGuard lock(impl->mtx);
         readCb = impl->onReadCb;
-        if (impl->service) {
-          server = impl->service->server;
+        service = impl->serviceOwner.lock();
+        if (!service || impl->service != service.get()) {
+          service.reset();
         }
       }
+      auto server = attachedServer(service);
       // NimBLE re-enters this callback for every Read Blob of a long read and
       // slices what is appended at ctxt->offset (answering Invalid Offset past
       // the end). onRead runs for the first request only, and the Read Blobs
@@ -177,14 +189,24 @@ int BLECharacteristic::Impl::descAccessCallback(uint16_t conn_handle, uint16_t a
     case BLE_GATT_ACCESS_OP_READ_DSC:
     {
       BLEDescriptor::ReadHandler readCb;
-      BLEServer::Impl *server = nullptr;
+      std::shared_ptr<BLECharacteristic::Impl> chr;
       {
         BLELockGuard lock(desc->mtx);
         readCb = desc->onReadCb;
-        if (desc->chr && desc->chr->service) {
-          server = desc->chr->service->server;
+        chr = desc->chrOwner.lock();
+        if (!chr || desc->chr != chr.get()) {
+          chr.reset();
         }
       }
+      std::shared_ptr<BLEService::Impl> service;
+      if (chr) {
+        BLELockGuard lock(chr->mtx);
+        service = chr->serviceOwner.lock();
+        if (!service || chr->service != service.get()) {
+          service.reset();
+        }
+      }
+      auto server = attachedServer(service);
       if (readCb && conn_handle != BLE_HS_CONN_HANDLE_NONE && ctxt->offset == 0) {
         struct ble_gap_conn_desc conn_desc;
         if (ble_gap_conn_find(conn_handle, &conn_desc) == 0) {
@@ -237,7 +259,8 @@ int BLECharacteristic::Impl::descAccessCallback(uint16_t conn_handle, uint16_t a
 // before ble_gatts_notify_custom returns, so server->mtx must NOT be held
 // across ble_gatts_notify_custom.
 BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length) {
-  BLEServer::Impl *server = impl.activeServer();
+  auto serverOwner = impl.activeServer();
+  BLEServer::Impl *server = serverOwner.get();
   if (!server) {
     return BTStatus::InvalidState;
   }
@@ -321,7 +344,7 @@ BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermis
 
   auto desc = std::make_shared<BLEDescriptor::Impl>();
   desc->uuid = uuid;
-  desc->chr = _impl.get();
+  desc->chrOwner = _impl;
   desc->permissions = perms;
   desc->maxLen = maxLen;
   nimbleUuidFromPublic(uuid, desc->nimbleUUID);
@@ -331,6 +354,11 @@ BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermis
 
   {
     BLELockGuard lock(impl.mtx);
+    if (!impl.service) {
+      log_w("Characteristic %s: createDescriptor called while detached", impl.uuid.toString().c_str());
+      return BLEDescriptor();
+    }
+    desc->chr = _impl.get();
     impl.descriptors.push_back(desc);
   }
 

@@ -258,6 +258,14 @@ BTStatus BLEClass::begin(const String &deviceName) {
   _impl->ending = false;
   setInitialized(true);
   _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
+#if BLE_SCANNING_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->scanBeginHook)) {
+    hook();
+  }
+#endif
+#if BLE_GATT_CLIENT_SUPPORTED
+  BLEClient::Impl::openTerminalCloseAdmission();
+#endif
 
 #if BLE_SMP_SUPPORTED
   // getSecurity() keeps its Impl in a function-local static that outlives an
@@ -281,6 +289,10 @@ void BLEClass::end(bool releaseMemory) {
       return;
     }
     _impl->ending = true;
+  }
+
+  if (auto hook = _impl->loadHook(_impl->streamPreEndHook)) {
+    hook();
   }
 
 #if BLE_GATT_SERVER_SUPPORTED
@@ -320,15 +332,30 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 #endif
+#if BLE_GATT_CLIENT_SUPPORTED
+  // Close terminal-retry admission and wait until no worker can enter a native
+  // GATTC API before Bluedroid is disabled.
+  BLEClient::Impl::stopTerminalCloseWorkers();
+#endif
 
   esp_bluedroid_disable();
   esp_bluedroid_deinit();
 
+#if BLE_GATT_CLIENT_SUPPORTED
+  // No GATTC callback can arrive after deinit. Detach retained public handles
+  // before a later begin() can reuse native interface IDs, then release clients
+  // quarantined by terminal-close submission failures.
+  BLEClient::Impl::invalidateAfterHostDeinit();
+  BLEClient::Impl::releaseTerminalCloseOwners();
+#endif
 #if BLE_GATT_SERVER_SUPPORTED
   if (auto hook = _impl->loadHook(_impl->serverPostEndHook)) {
     hook();
   }
 #endif
+  if (auto hook = _impl->loadHook(_impl->streamPostEndHook)) {
+    hook();
+  }
 
   esp_bt_controller_disable();
   esp_bt_controller_deinit();
@@ -341,6 +368,21 @@ void BLEClass::end(bool releaseMemory) {
     BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
     _impl->ending = false;
   }
+}
+
+bool BLEClass::setStreamEndHooks(void (*preHook)(), void (*postHook)()) {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lifecycle(_impl->lifecycleMtx);
+  if (_impl->ending) {
+    return false;
+  }
+  portENTER_CRITICAL(&_impl->hookMux);
+  _impl->streamPreEndHook = preHook;
+  _impl->streamPostEndHook = postHook;
+  portEXIT_CRITICAL(&_impl->hookMux);
+  return true;
 }
 
 // --------------------------------------------------------------------------
@@ -635,14 +677,16 @@ BLEScan BLEClass::getScan() {
     slot = std::make_shared<BLEScan::Impl>();
     BLEScan::Impl::s_instance = slot.get();
     _impl->storeHook(_impl->scanGapHook, BLEScan::Impl::handleGAP);
+    _impl->storeHook(_impl->scanBeginHook, +[]() {
+      BLEScan scan(slot);
+      scan.prepareBackendStart();
+    });
     _impl->storeHook(_impl->scanEndHook, +[]() {
       if (!slot) {
         return;
       }
       BLEScan scan(slot);
-      if (scan.isScanning()) {
-        scan.stop();
-      }
+      scan.beginBackendShutdown();
       scan.terminateAllPeriodicSyncs();
     });
   }

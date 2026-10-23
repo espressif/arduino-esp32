@@ -88,6 +88,7 @@ struct BLEClass::Impl {
 #endif
 #if BLE_SCANNING_SUPPORTED
   GapHook scanGapHook = nullptr;
+  LifecycleHook scanBeginHook = nullptr;
   LifecycleHook scanEndHook = nullptr;
 #endif
 #if BLE_GATT_SERVER_SUPPORTED
@@ -97,6 +98,8 @@ struct BLEClass::Impl {
   LifecycleHook serverDeactivateHook = nullptr;
   LifecycleHook serverPostEndHook = nullptr;
 #endif
+  LifecycleHook streamPreEndHook = nullptr;
+  LifecycleHook streamPostEndHook = nullptr;
 #if BLE_GATT_CLIENT_SUPPORTED
   GapHook clientGapHook = nullptr;
   GattcHook clientGattcHook = nullptr;

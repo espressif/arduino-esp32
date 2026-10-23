@@ -137,6 +137,7 @@ BLEService BLEServer::createService(const BLEUUID &uuid, uint32_t numHandles, ui
   svc->numHandles = numHandles;
   svc->instId = instId;
   svc->server = &impl;
+  svc->serverOwner = _impl;
   impl.services.push_back(svc);
 
   return BLEService(svc);

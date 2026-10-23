@@ -23,6 +23,26 @@
 #include "remote/BLERemoteService.h"
 #include "remote/BLERemoteCharacteristic.h"
 #include <algorithm>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
+#if defined(BLE_STREAM_VALIDATION_HOOKS)
+extern "C" {
+extern std::atomic<int> bleStreamTestDisconnectRaces;
+extern std::atomic<bool> bleStreamTestHoldFinalRoleRelease;
+extern std::atomic<bool> bleStreamTestFinalRoleReleaseReached;
+}
+
+static bool consumeValidationFailure(std::atomic<int> &remaining) {
+  int value = remaining.load(std::memory_order_relaxed);
+  while (value > 0) {
+    if (remaining.compare_exchange_weak(value, value - 1, std::memory_order_relaxed)) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
 
 struct BLEStreamClientRole final : BLEStream::Impl::Role {
   BLEStream::Impl &common;
@@ -32,15 +52,53 @@ struct BLEStreamClientRole final : BLEStream::Impl::Role {
 
   explicit BLEStreamClientRole(BLEStream::Impl &impl) : common(impl) {}
 
-  void end() override {
-    ending = true;
-    if (remoteTx) {
-      (void)remoteTx.unsubscribe();
+#if defined(BLE_STREAM_VALIDATION_HOOKS)
+  ~BLEStreamClientRole() override {
+    bleStreamTestFinalRoleReleaseReached.store(true, std::memory_order_release);
+    while (bleStreamTestHoldFinalRoleRelease.load(std::memory_order_acquire)) {
+      vTaskDelay(1);
     }
+  }
+#endif
+
+  BTStatus end() override {
+    ending = true;
+    BTStatus result = BTStatus::OK;
+    bool terminal = true;
+    if (client) {
+      if (client.isConnected()) {
+        result = client.disconnect();
+#if defined(BLE_STREAM_VALIDATION_HOOKS)
+        if (consumeValidationFailure(bleStreamTestDisconnectRaces)) {
+          result = BTStatus::NotConnected;
+        }
+#endif
+        // A peer may close the ACL after the state snapshot but before the
+        // disconnect request. The requested terminal state is already reached.
+        if (result == BTStatus::NotConnected) {
+          result = BTStatus::OK;
+        }
+        terminal = (result == BTStatus::OK);
+      }
+      if (terminal) {
+        client.resetCallbacks();
+      }
+    }
+    if (terminal) {
+      remoteTx = BLERemoteCharacteristic();
+      remoteRx = BLERemoteCharacteristic();
+    }
+    return result;
+  }
+
+  void detachCallbacks() override {
     if (client) {
       client.resetCallbacks();
-      (void)client.disconnect();
     }
+  }
+
+  size_t connectedCount() const override {
+    return (client && client.isConnected()) ? 1 : 0;
   }
 
   std::vector<BLEConnInfo> peers() const override {
@@ -79,8 +137,17 @@ private:
 };
 
 BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
+  if (!BLE.setStreamEndHooks(Impl::prepareHostShutdown, Impl::releaseQuarantined)) {
+    return BTStatus::Busy;
+  }
+  if (!Impl::recoverQuarantined()) {
+    return BTStatus::Busy;
+  }
   if (!_impl || _impl->loadRole()) {
     return BTStatus::InvalidState;
+  }
+  if (!_impl->ensureEndRetryTimer()) {
+    return BTStatus::NoMemory;
   }
   if (!BLE.isInitialized()) {
     BTStatus status = BLE.begin("");
@@ -95,18 +162,34 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
     return BTStatus::Fail;
   }
 
-  _impl->storeRole(role);
+  if (!Impl::activateRole(_impl, role)) {
+    return BTStatus::Busy;
+  }
+  auto abortStart = [&](BTStatus status) {
+    Impl::finishRoleStart(role);
+    end();
+    return status;
+  };
   auto &active = *role;
-  active.client.onConnect([this](BLEClient, const BLEConnInfo &connInfo) {
-    _impl->peerCount = 1;
-    auto callback = _impl->loadConnectHandler();
+  std::weak_ptr<Impl> common = _impl;
+  active.client.onConnect([common](BLEClient, const BLEConnInfo &connInfo) {
+    auto impl = common.lock();
+    if (!impl) {
+      return;
+    }
+    impl->peerCount = 1;
+    auto callback = impl->loadConnectHandler();
     if (callback) {
       callback(connInfo);
     }
   });
-  active.client.onDisconnect([this](BLEClient, const BLEConnInfo &connInfo, uint8_t reason) {
-    _impl->peerCount = 0;
-    auto callback = _impl->loadDisconnectHandler();
+  active.client.onDisconnect([common](BLEClient, const BLEConnInfo &connInfo, uint8_t reason) {
+    auto impl = common.lock();
+    if (!impl) {
+      return;
+    }
+    impl->peerCount = 0;
+    auto callback = impl->loadDisconnectHandler();
     if (callback) {
       callback(connInfo, reason);
     }
@@ -114,33 +197,34 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
 
   BTStatus status = active.client.connect(address, timeoutMs);
   if (!status) {
-    end();
-    return status;
+    return abortStart(status);
   }
 
   BLERemoteService service = active.client.getService(nusServiceUUID());
   if (!service) {
-    end();
-    return BTStatus::NotFound;
+    return abortStart(BTStatus::NotFound);
   }
   active.remoteTx = service.getCharacteristic(nusTxCharUUID());
   active.remoteRx = service.getCharacteristic(nusRxCharUUID());
   if (!active.remoteTx || !active.remoteRx) {
-    end();
-    return BTStatus::NotFound;
+    return abortStart(BTStatus::NotFound);
   }
 
   status = active.remoteTx.subscribe(
     BLESubscription::Notify,
-    [this](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
-      if (data && len > 0) {
-        _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
+    [common](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
+      auto impl = common.lock();
+      if (impl && data && len > 0) {
+        impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
       }
     }
   );
   if (!status) {
+    return abortStart(status);
+  }
+  if (!Impl::finishRoleStart(role)) {
     end();
-    return status;
+    return BTStatus::Busy;
   }
   return BTStatus::OK;
 }

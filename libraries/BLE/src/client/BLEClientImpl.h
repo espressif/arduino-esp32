@@ -48,7 +48,8 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   // value so a recycled native connection handle cannot revive stale services.
   std::atomic<uint32_t> connectionGeneration{0};
   std::vector<std::shared_ptr<BLERemoteService::Impl>> discoveredServices;
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  std::shared_ptr<BLESharedMutex> mtxOwner = std::make_shared<BLESharedMutex>();
+  SemaphoreHandle_t mtx = mtxOwner->get();
 
   void clearDiscoveredServices();
 
@@ -61,9 +62,6 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
 
   ~BLEClientImplCommon() {
     clearDiscoveredServices();
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
   }
 
   // Handle factory for backend code that holds a raw Impl* (e.g. a GAP callback's

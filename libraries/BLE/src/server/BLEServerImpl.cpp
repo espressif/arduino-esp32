@@ -75,7 +75,20 @@ void BLEServerImplCommon::connErase(uint16_t connHandle) {
 }
 
 bool BLEServerImplCommon::characteristicCanSend(const BLECharacteristic::Impl *chr) const {
-  return chr && chr->handle != 0 && chr->service && chr->service->started && !chr->service->removing && chr->service->server == this;
+  if (!chr) {
+    return false;
+  }
+  auto svc = chr->serviceOwner.lock();
+  if (!svc || !svc->started || svc->removing || svc->server != this) {
+    return false;
+  }
+  bool owned = std::any_of(svc->characteristics.begin(), svc->characteristics.end(), [chr](const auto &entry) {
+    return entry.get() == chr;
+  });
+  if (!owned) {
+    return false;
+  }
+  return chr->handle != 0;
 }
 
 void BLEServerImplCommon::addPendingNotify(uint16_t connHandle, uint16_t attrHandle) {
@@ -646,12 +659,20 @@ void bleDetachLocalCharacteristic(const std::shared_ptr<BLECharacteristic::Impl>
   if (!chr) {
     return;
   }
+  auto svc = chr->serviceOwner.lock();
+  auto server = svc ? svc->serverOwner.lock() : std::shared_ptr<BLEServer::Impl>();
+  if (server) {
+    BLELockGuard serverLock(server->mtx);
+    chr->subscribers.clear();
+  }
   std::vector<std::shared_ptr<BLEDescriptor::Impl>> descs;
   {
     BLELockGuard lock(chr->mtx);
     chr->handle = 0;
     chr->service = nullptr;
-    chr->subscribers.clear();
+    if (!server) {
+      chr->subscribers.clear();
+    }
     chr->value.clear();
     chr->onReadCb = nullptr;
     chr->onWriteCb = nullptr;
@@ -675,7 +696,7 @@ void bleDetachLocalService(const std::shared_ptr<BLEService::Impl> &svc) {
     // lock createService/createCharacteristic take). Snapshot and clear them
     // under it, then release it before detaching characteristics, each of
     // which takes its own chr->mtx in bleDetachLocalCharacteristic().
-    BLEServer::Impl *server = svc->server;
+    auto server = svc->serverOwner.lock();
     BLELockGuard lock(server ? server->mtx : nullptr);
     svc->includedServices.clear();
     chrs.swap(svc->characteristics);

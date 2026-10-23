@@ -472,10 +472,12 @@ public:
   BLEClass &operator=(BLEClass &&) = delete;
 
 private:
+  friend class BLEStream;
   // BLEClass::Impl is a nested member type, so its static stack callbacks can reach
   // this singleton's private state (_impl, _deviceName) directly -- no friend needed.
   struct Impl;
   Impl *_impl;
+  bool setStreamEndHooks(void (*preHook)(), void (*postHook)());
 
   mutable portMUX_TYPE _stateMux = portMUX_INITIALIZER_UNLOCKED;
   bool _initialized = false;

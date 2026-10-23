@@ -27,6 +27,7 @@
 #include "types/BLEConnInfo.h"
 #include "types/BLEUUID.h"
 #include <functional>
+#include <memory>
 #include <vector>
 
 struct BLEStreamServerRole;
@@ -270,7 +271,7 @@ private:
   friend struct BLEStreamServerRole;
   friend struct BLEStreamClientRole;
   struct Impl;
-  Impl *_impl;
+  std::shared_ptr<Impl> _impl;
 };
 
 #endif /* BLE_ENABLED */

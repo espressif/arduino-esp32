@@ -59,13 +59,17 @@ struct BLEClass::Impl {
 #endif
 #if BLE_SCANNING_SUPPORTED
   BLEScan::Impl *scan = nullptr;
+  LifecycleHook scanBeginHook = nullptr;
   LifecycleHook scanEndHook = nullptr;
+  LifecycleHook scanHostStoppedHook = nullptr;
 #endif
 #if BLE_GATT_SERVER_SUPPORTED
   LifecycleHook serverPreEndHook = nullptr;
   LifecycleHook serverHostStoppedHook = nullptr;
   LifecycleHook serverPostEndHook = nullptr;
 #endif
+  LifecycleHook streamPreEndHook = nullptr;
+  LifecycleHook streamPostEndHook = nullptr;
 #if BLE_L2CAP_SUPPORTED
   LifecycleHook l2capBeginHook = nullptr;
   LifecycleHook l2capPreEndHook = nullptr;

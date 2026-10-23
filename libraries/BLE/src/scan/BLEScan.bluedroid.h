@@ -44,7 +44,12 @@ struct BLEScan::Impl {
   // (scan-complete/stop GAP events); atomic so the public isScanning() getter
   // and the start/stop guards observe it without locking across callbacks.
   std::atomic<bool> isScanning{false};
+  // Closes native GAP admission before BLE.end() disables the host. The
+  // publisher count lets teardown wait for calls that crossed the gate.
+  std::atomic<bool> nativeAdmissionOpen{true};
+  std::atomic<uint32_t> nativePublishers{0};
   BLEScan::Results results;
+  std::vector<std::pair<BTAddress, uint8_t>> duplicateKeys;
   BLESync paramSync{"scanParamSync"};
   BLESync scanSync{"scanSync"};
   BLESync stopSync{"scanStopSync"};
@@ -79,6 +84,22 @@ struct BLEScan::Impl {
   }
 
   static void durationTimerCb(void *arg);
+
+  bool enterNativeCall() {
+    if (!nativeAdmissionOpen.load(std::memory_order_seq_cst)) {
+      return false;
+    }
+    nativePublishers.fetch_add(1, std::memory_order_seq_cst);
+    if (!nativeAdmissionOpen.load(std::memory_order_seq_cst)) {
+      nativePublishers.fetch_sub(1, std::memory_order_seq_cst);
+      return false;
+    }
+    return true;
+  }
+
+  void leaveNativeCall() {
+    nativePublishers.fetch_sub(1, std::memory_order_seq_cst);
+  }
 
   static BLEScan::Impl *s_instance;
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);

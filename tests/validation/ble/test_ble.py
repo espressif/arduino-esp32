@@ -84,6 +84,10 @@ def _phase_basic(server, client):
 
     client.expect_exact("[CLIENT] Init OK", timeout=30)
     client.expect_exact("[CLIENT] Bare lifecycle OK", timeout=30)
+    client.expect_exact(
+        "[CLIENT] Blocking scan shutdown task=1 active=1 released=1 cancelFallback=1 admission=1 heap=1",
+        timeout=15,
+    )
     client.expect_exact("[CLIENT] Deinit OK", timeout=10)
     client.expect_exact("[CLIENT] Reinit OK", timeout=30)
     client.expect_exact("[CLIENT] Final deinit OK", timeout=10)
@@ -194,6 +198,7 @@ def _phase_gatt_rw(server, client):
         assert int(m.group(2)) == 1, f"Snapshot read {index} mixed two values set during one long read"
 
     client.expect_exact("[CLIENT] Const lookup read: set_via_const_lookup", timeout=10)
+    client.expect_exact("[CLIENT] Concurrent GATT reads=1 writes=1 commands=1", timeout=120)
 
     # A long read dropped by disconnect must fail cleanly; the reconnect
     # re-read must be a uniform 512-byte snapshot. Two BLEClient instances on
@@ -395,6 +400,7 @@ def _phase_blestream(server, client):
     server.expect_exact("[SERVER] BLEStream existing NUS rejected=1", timeout=15)
     client.expect_exact("[CLIENT] BLEStream malformed begin armed", timeout=15)
     client.write("PHASE13_MALFORMED_GO\n")
+    client.expect_exact("[CLIENT] BLEStream failed begin events connect=1 disconnect=1", timeout=20)
     client.expect_exact("[CLIENT] BLEStream failed begin cleanup=1", timeout=20)
     server.write("PHASE13_CONTINUE\n")
     server.expect_exact("[SERVER] BLEStream malformed NUS removed=1", timeout=15)
@@ -428,7 +434,7 @@ def _phase_blestream(server, client):
     server.expect_exact("[SERVER] BLEStream peek read: peek_test", timeout=10)
 
     # Bulk write: 200-byte A-Z pattern (multi-MTU chunking + integrity)
-    client.expect_exact("[CLIENT] BLEStream bulk sent: 200 bytes", timeout=10)
+    client.expect_exact("[CLIENT] BLEStream bulk sent: 200 bytes returned=202", timeout=10)
     server.expect_exact("[SERVER] BLEStream bulk received: 200 bytes", timeout=15)
     server.expect_exact("[SERVER] BLEStream bulk integrity OK", timeout=10)
 
@@ -443,6 +449,20 @@ def _phase_blestream(server, client):
     server.expect_exact("[SERVER] BLEStream rebegin ok=1", timeout=15)
     server.expect_exact("[SERVER] BLEStream reentrant end=1 concurrentWriteRejected=1 heap=1", timeout=15)
     client.expect_exact("[CLIENT] BLEStream server end disconnected=1", timeout=15)
+    client.expect_exact("[CLIENT] BLEStream callback end cycle connected=1 disconnects=1", timeout=30)
+    server.expect_exact("[SERVER] BLEStream callback end returned=1 rebegin=1 heap=1", timeout=15)
+    server.expect_exact("[SERVER] BLEStream final owner ready=1", timeout=15)
+    m_final_client = client.expect(
+        r"\[CLIENT\] BLEStream final owner callback clean=([01]) connects=(\d+) disconnects=(\d+)",
+        timeout=30,
+    )
+    assert int(m_final_client.group(1)) == 1
+    assert int(m_final_client.group(2)) > 0 and int(m_final_client.group(3)) > 0
+    server.expect_exact(
+        "[SERVER] BLEStream final owner dropped=1 recoveryBlocked=1 workerFails=0 teardownFails=0 rebegin=1 heap=1",
+        timeout=20,
+    )
+    server.expect_exact("[SERVER] BLEStream partial start failed=1 recovery=1 removeFails=0 heap=1", timeout=20)
     client.expect_exact("[CLIENT] Status: blestream done", timeout=10)
 
 
@@ -695,8 +715,9 @@ def _phase_adv_data_and_scan(server, client):
     # 20 octets when only 2 follow. Rejecting it must leave the fields before it
     # intact — a parser missing the bounds check reads it as a 19-octet
     # manufacturer field and overwrites the genuine manufacturer data with
-    # out-of-bounds bytes. getManufacturerDataString() hex-encodes the whole
-    # field, company id included, so an intact 0x02E5 + "ESP" is "e502455350".
+    # out-of-bounds bytes. The server also updates the primary manufacturer
+    # field while retaining the same scan response; the final value must be
+    # 0x02E5 + "NEW" ("e5024e4557"), not the cached "ESP" primary.
     # The client prints this before prefInterval.
     m_mfg = client.expect(
         r"\[CLIENT\] Phase20 mfgCompany=0x([0-9A-Fa-f]{4}) mfgLen=\d+ mfgHex=([0-9a-f]*)\r?\n",
@@ -704,7 +725,7 @@ def _phase_adv_data_and_scan(server, client):
     )
     assert int(m_mfg.group(1), 16) == 0x02E5, f"manufacturer company id corrupted: got 0x{m_mfg.group(1)}"
     mfg_hex = m_mfg.group(2).decode()
-    assert mfg_hex == "e502455350", f"manufacturer data corrupted by the trailing oversized AD: got {mfg_hex}"
+    assert mfg_hex == "e5024e4557", f"fresh primary manufacturer data was lost or corrupted: got {mfg_hex}"
     # Slave Connection Interval Range AD (0x12): encoding guard on the server
     # (setPreferredParams / setMinPreferred / setMaxPreferred) plus the
     # over-the-air round trip parsed back by the client. The client emits the
@@ -717,6 +738,15 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_cpref.group(1)) == 1, "client did not receive the Slave Connection Interval Range AD (0x12)"
     assert int(m_cpref.group(2), 16) == 0x0006, f"preferred min interval mismatch: got 0x{m_cpref.group(2)}"
     assert int(m_cpref.group(3), 16) == 0x0012, f"preferred max interval mismatch: got 0x{m_cpref.group(3)}"
+    server.expect_exact("[SERVER] Phase20 primaryRefresh ok=1", timeout=20)
+    m_refresh = client.expect(r"\[CLIENT\] Phase20 primaryRefresh initial=([01]) refreshed=([01])", timeout=10)
+    assert int(m_refresh.group(1)) == 1, "client did not observe the initial primary advertisement"
+    assert int(m_refresh.group(2)) == 1, "cached scan response suppressed the refreshed primary advertisement"
+    m_scan_rsp = client.expect(r"\[CLIENT\] Phase20 scanRspRefresh initial=([01]) refreshed=([01])", timeout=10)
+    assert int(m_scan_rsp.group(1)) == 1, "client did not observe the initial scan response"
+    assert int(m_scan_rsp.group(2)) == 1, "cached scan response replaced a fresh scan response"
+    m_dup_clear = client.expect(r"\[CLIENT\] Phase20 duplicateCacheClear redispatched=([01])", timeout=10)
+    assert int(m_dup_clear.group(1)) == 1, "clearDuplicateCache did not make an identical report observable again"
     m = client.expect(r"\[CLIENT\] Phase20 sawAdv=([01])", timeout=30)
     assert int(m.group(1)) == 1, "client did not see the ADV_<name> payload"
     # Parser regression: after the ADV_ window the server advertises OSZ_<name>,
@@ -774,16 +804,18 @@ def _phase_beacon_and_eddystone(server, client):
     """Phase 21 — iBeacon / Eddystone URL / Eddystone TLM frame round-trip."""
     server.expect(r"\[SERVER\] Phase21 iBeacon adv ok=[01]", timeout=30)
     server.expect(r"\[SERVER\] Phase21 EddystoneURL ok=[01]", timeout=30)
+    server.expect(r"\[SERVER\] Phase21 EddystoneEncryptedTLM ok=[01]", timeout=30)
     server.expect(r"\[SERVER\] Phase21 EddystoneTLM ok=[01]", timeout=30)
 
     m = client.expect(
-        r"\[CLIENT\] Phase21 sawIBeacon=([01]) sawEddyURL=([01]) sawEddyTLM=([01])",
-        timeout=45,
+        r"\[CLIENT\] Phase21 sawIBeacon=([01]) sawEddyURL=([01]) sawEddyTLM=([01]) rejectedEncryptedTLM=([01])",
+        timeout=50,
     )
     ib = int(m.group(1))
     ur = int(m.group(2))
     tl = int(m.group(3))
     assert ib == 1 and ur == 1 and tl == 1, f"expected all 3 beacon frames, got iBeacon={ib} url={ur} tlm={tl}"
+    assert int(m.group(4)) == 1, "encrypted eTLM was decoded as plaintext telemetry"
     server.expect_exact("[SERVER] Phase21 done", timeout=10)
     client.expect_exact("[CLIENT] Phase21 done", timeout=10)
 
@@ -852,9 +884,23 @@ def _phase_error_paths_and_misc(server, client):
     client.expect(r"\[CLIENT\] Phase23 UUID eq=1 ne=1 lt=1", timeout=10)
     client.expect(r"\[CLIENT\] Phase23 UUID bitSize16=16 128=128 toUint16=0x180D", timeout=10)
     client.expect(r"\[CLIENT\] Phase23 UUID valid=1 defaultBool=0", timeout=10)
+    m_cache = client.expect(r"\[CLIENT\] Phase23 remote cache race clean=([01]) iterations=(\d+)", timeout=20)
+    assert int(m_cache.group(1)) == 1 and int(m_cache.group(2)) > 0, "remote cache/parent getters raced tree teardown"
     client.expect(r"\[CLIENT\] Phase23 postDisc isConnected=[01]", timeout=15)
     m_wa = client.expect(r"\[CLIENT\] Phase23 writeAfterDisc ok=([01])", timeout=10)
     assert int(m_wa.group(1)) == 0, "write-after-disconnect must fail"
+    m_discovery = client.expect(
+        r"\[CLIENT\] Phase23 lazy discovery race clean=([01]) serviceResults=(\d+) descriptorResults=(\d+)",
+        timeout=40,
+    )
+    assert int(m_discovery.group(1)) == 1, "lazy aggregate/targeted discovery raced cache invalidation"
+    m_gen = client.expect(
+        r"\[CLIENT\] Phase23 reconnect generation isolated=([01]) stale=InvalidState fresh=([01])",
+        timeout=25,
+    )
+    assert int(m_gen.group(1)) == 1 and int(m_gen.group(2)) == 1, (
+        "a retained remote handle crossed a disconnect/reconnect generation"
+    )
     client.expect(r"\[CLIENT\] Phase23 connectAsync ok=[01]", timeout=10)
     client.expect(r"\[CLIENT\] Phase23 cancelConnect ok=[01]", timeout=10)
     m_cstr = client.expect(r"\[CLIENT\] StrConv pass=(\d+) fail=(\d+)\r?\n", timeout=10)
@@ -927,7 +973,7 @@ def _phase_hid_smoke(server, client):
     """
     server.expect_exact("[SERVER] Phase25 teardown shells=1", timeout=30)
     server.expect_exact("[SERVER] Phase25 services after begin: 0", timeout=30)
-    server.expect_exact("[SERVER] Phase25 removal shells=1", timeout=10)
+    server.expect_exact("[SERVER] Phase25 removal shells=1 detachedFactoriesRejected=1", timeout=10)
     server.expect_exact("[SERVER] Phase25 preRegRejected=4/4", timeout=10)
     server.expect(r"\[SERVER\] Phase25 hidChars=\d+", timeout=10)
 
@@ -1198,6 +1244,29 @@ def _phase_deletebond_roundtrip(server, client):
     assert int(m_adv.group(1)) == 1, "advertising did not survive deleteBond() (stack preempt was not resumed)"
 
     m_cb = client.expect(r"\[CLIENT\] Phase30 bondsBefore=(\d+)\r?\n", timeout=45)
+    m_scan = client.expect(r"\[CLIENT\] Phase30 preemptScan start=([01]) complete=([01]) elapsed=(\d+)", timeout=15)
+    assert int(m_scan.group(1)) == 1, "finite scan did not start before deleteBond"
+    assert int(m_scan.group(2)) == 1, "preempted finite scan did not complete"
+    assert int(m_scan.group(3)) >= 3500, (
+        f"preempted 4-second scan completed prematurely ({int(m_scan.group(3))} ms)"
+    )
+    assert int(m_scan.group(3)) <= 5500, (
+        f"preempted 4-second scan restarted its full duration ({int(m_scan.group(3))} ms)"
+    )
+    m_replace = client.expect(
+        r"\[CLIENT\] Phase30 sessionReplace first=([01]) replacement=([01]) completions=(\d+) elapsed=(\d+) stopped=([01])",
+        timeout=10,
+    )
+    assert int(m_replace.group(1)) == 1 and int(m_replace.group(2)) == 1, "scan session replacement failed to start"
+    assert int(m_replace.group(3)) == 1, "superseded scan completion leaked into the replacement session"
+    assert 500 <= int(m_replace.group(4)) <= 2000, "replacement scan completed at the wrong session deadline"
+    assert int(m_replace.group(5)) == 1, "replacement scan remained active after completion"
+    m_preempt_stop = client.expect(r"\[CLIENT\] Phase30 preemptStop clean=([01]) retained=([01])", timeout=10)
+    assert int(m_preempt_stop.group(1)) == 1, "stop during native scan preemption leaked or freed its callback context early"
+    m_churn = client.expect(r"\[CLIENT\] Phase30 scanChurn clean=([01]) heapDelta=(-?\d+)", timeout=15)
+    assert int(m_churn.group(1)) == 1, f"repeated scan start/stop leaked or corrupted heap ({int(m_churn.group(2))} bytes)"
+    m_host_churn = client.expect(r"\[CLIENT\] Phase30 hostScanChurn clean=([01]) cycles=(0|48)", timeout=15)
+    assert int(m_host_churn.group(1)) == 1, "callback-context scan churn failed or exhausted NimBLE events"
     m_cdel = client.expect(r"\[CLIENT\] Phase30 deleteOk=([01])", timeout=15)
     assert int(m_cdel.group(1)) == 1, "client deleteBond() failed"
     m_cd = client.expect(r"\[CLIENT\] Phase30 bondsAfterDelete=(\d+)\r?\n", timeout=15)
@@ -1359,6 +1428,18 @@ def _phase_pending_send_edges(server, client):
     flood. Per-peer CCCD, EATT, and withheld Handle Value Confirmation need a
     third DUT or a public EATT API / a non-confirming peer.
     """
+    m_cmd = client.expect(
+        r"\[CLIENT\] Phase35 callback commands clean=([01]) overlap=([01]) state=([01]) "
+        r"accepted=(\d+) busy=(\d+) other=(\d+)",
+        timeout=30,
+    )
+    assert int(m_cmd.group(1)) == 1 and int(m_cmd.group(2)) == 1 and int(m_cmd.group(3)) == 1
+    bluedroid_commands = int(m_cmd.group(5)) == 1
+    assert int(m_cmd.group(4)) + int(m_cmd.group(5)) + int(m_cmd.group(6)) == (10 if bluedroid_commands else 9)
+    m_cccd = server.expect(r"\[SERVER\] Phase35 autoCCCD supported=([01]) owner=([01])", timeout=30)
+    assert int(m_cccd.group(1)) == int(bluedroid_commands) and int(m_cccd.group(2)) == 1
+    m_cmd_rx = server.expect(r"\[SERVER\] Phase35 callback command rx=(\d+)", timeout=30)
+    assert int(m_cmd_rx.group(1)) >= 8
     m_c = client.expect(
         r"\[CLIENT\] Phase35 found=1 connected=1 notify=(\d+) indicate=(\d+)\r?\n",
         timeout=45,
@@ -1375,13 +1456,21 @@ def _phase_pending_send_edges(server, client):
     assert int(m_s_peer.group(3)) >= 1, "indicate() did not complete after CCCD switched to indicate"
     assert int(m_s_peer.group(4)) >= 1, "notify() while CCCD was indicate-only was not ERROR_NOTIFY_DISABLED"
 
+    m_cf = client.expect(r"\[CLIENT\] Phase35 flood=(\d+)\r?\n", timeout=20)
+    assert int(m_cf.group(1)) >= 1, "client received no flooded notifications"
+    m_qrx = client.expect(r"\[CLIENT\] Phase35 queueRx=(\d+)\r?\n", timeout=20)
+    assert int(m_qrx.group(1)) >= 8, "client did not receive queued indications"
+    server.expect_exact("[SERVER] Phase35 localReadRemove ready", timeout=20)
+    client.write("PHASE35_READ_REMOVE_GO\n")
+    client.expect_exact("[CLIENT] Phase35 localReadRemove armed=1", timeout=20)
     m_rm = server.expect(
-        r"\[SERVER\] Phase35 removeBusy=([01]) accepted=(\d+) busy=(\d+) removeIdle=([01])",
+        r"\[SERVER\] Phase35 removeBusy=([01]) accepted=(\d+) busy=(\d+) readEntered=([01]) removeStarted=([01]) removeDone=([01]) removeIdle=([01])",
         timeout=20,
     )
     assert int(m_rm.group(1)) == 1, "removeService of a service with in-flight indications did not return Busy"
     assert int(m_rm.group(2)) >= 8, "in-flight removeService did not fill the indication queue"
-    remove_idle = int(m_rm.group(4))
+    assert all(int(m_rm.group(i)) == 1 for i in range(4, 7)), "local GATT read/remove barrier did not overlap"
+    remove_idle = int(m_rm.group(7))
     LOGGER.info("Phase35 removeIdle=%d", remove_idle)
     assert remove_idle == 1, "removeService of an idle service after queue drained failed"
 
@@ -1393,18 +1482,28 @@ def _phase_pending_send_edges(server, client):
     LOGGER.info(f"Phase35 flood sent={sent} confirmed={confirmed} failed={failed}")
     assert sent == 32, f"notify flood sent {sent} of 32"
     assert confirmed == sent and failed == 0, f"notify flood did not complete: confirmed={confirmed} failed={failed}"
-    m_cf = client.expect(r"\[CLIENT\] Phase35 flood=(\d+)\r?\n", timeout=20)
-    assert int(m_cf.group(1)) >= 1, "client received no flooded notifications"
-    m_qrx = client.expect(r"\[CLIENT\] Phase35 queueRx=(\d+)\r?\n", timeout=20)
-    assert int(m_qrx.group(1)) >= 8, "client did not receive queued indications"
+    m_read_remove = client.expect(r"\[CLIENT\] Phase35 localReadRemove clean=([01]) attempts=(\d+)", timeout=20)
+    assert int(m_read_remove.group(1)) == 1, "local GATT read/remove race did not finish cleanly"
+    assert int(m_read_remove.group(2)) > 0, "local GATT read/remove race attempted no reads"
 
-    m_to = client.expect(r"\[CLIENT\] Phase35 timeoutEmpty=([01]) reread=([01])", timeout=20)
+    m_to = client.expect(
+        r"\[CLIENT\] Phase35 timeoutEmpty=([01]) overlapRejected=([01]) reread=([01]) "
+        r"commandLateIsolated=([01]) writeLateIsolated=([01])",
+        timeout=30,
+    )
     assert int(m_to.group(1)) == 1, "short readValue timeout did not fail (handle destroy/re-read untested)"
-    assert int(m_to.group(2)) == 1, "read after timeout + destroy did not return the characteristic value"
+    assert int(m_to.group(2)) == 1, "overlapping read reused a completion slot abandoned by timeout"
+    assert int(m_to.group(3)) == 1, "read after timeout + destroy did not return the characteristic value"
+    assert int(m_to.group(4)) == 1, "late write-command completion was attributed to a newer command"
+    assert int(m_to.group(5)) == 1, "late confirmed-write completion was attributed to a newer write"
     client.expect_exact("[CLIENT] Phase35 notifyTeardown trigger=1", timeout=15)
     server.expect_exact("[SERVER] Phase35 notifyTeardown burst entered", timeout=15)
     client.write("PHASE35_DISCONNECT_GO\n")
-    client.expect_exact("[CLIENT] Phase35 notifyTeardown armed=1 disconnected=1", timeout=15)
+    if bluedroid_commands:
+        server.expect_exact("[SERVER] Phase35 owner drop received", timeout=15)
+        client.expect_exact("[CLIENT] Phase35 owner handles dropped=1", timeout=15)
+        server.write("PHASE35_OWNER_DROP_GO\n")
+    client.expect_exact("[CLIENT] Phase35 notifyTeardown armed=1 pendingOwner=1 disconnected=1", timeout=15)
     m_td = server.expect(
         r"\[SERVER\] Phase35 notifyTeardown stack=(NimBLE|Bluedroid) attempted=(\d+) accepted=(\d+) atDisconnect=(\d+) final=(\d+) "
         r"success=(\d+) noClient=(\d+) other=(\d+) late=(\d+)",
@@ -1420,6 +1519,19 @@ def _phase_pending_send_edges(server, client):
     else:
         assert success + no_client == accepted, "NimBLE accepted notification did not receive success or link-loss status"
         assert other == attempted - accepted, "NimBLE synchronous rejection did not receive exactly one error status"
+    client.expect_exact(
+        f"[CLIENT] Phase35 terminalShutdown supported={int(bluedroid_commands)} clean=1",
+        timeout=30,
+    )
+    server.expect_exact("[SERVER] Phase35 BLEStream final release waiting", timeout=20)
+    server.write("PHASE35_STREAM_GO\n")
+    server.expect_exact("[SERVER] Phase35 BLEStream final release ready=1", timeout=20)
+    client.expect_exact("[CLIENT] Phase35 BLEStream final release connected=1", timeout=60)
+    server.write("PHASE35_STREAM_CONNECTED\n")
+    server.expect_exact("[SERVER] Phase35 BLEStream final release connected=1", timeout=10)
+    client.write("PHASE35_STREAM_RELEASE_GO\n")
+    client.expect_exact("[CLIENT] Phase35 BLEStream final release clean=1", timeout=30)
+    server.expect_exact("[SERVER] Phase35 BLEStream final release done=1", timeout=20)
     server.expect_exact("[SERVER] Phase35 done", timeout=20)
     client.expect_exact("[CLIENT] Phase35 done", timeout=20)
 

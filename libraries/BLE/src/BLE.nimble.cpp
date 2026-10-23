@@ -310,6 +310,11 @@ BTStatus BLEClass::begin(const String &deviceName) {
   _impl->ending = false;
   setInitialized(true);
   _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
+#if BLE_SCANNING_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->scanBeginHook)) {
+    hook();
+  }
+#endif
   if (_impl->localMTU != BLE_ATT_MTU_DFLT) {
     (void)ble_att_set_preferred_mtu(_impl->localMTU);
   }
@@ -337,6 +342,10 @@ void BLEClass::end(bool releaseMemory) {
       return;
     }
     _impl->ending = true;
+  }
+
+  if (auto hook = _impl->loadHook(_impl->streamPreEndHook)) {
+    hook();
   }
 
   // Reset advertising state before tearing down the stack.  reset() calls
@@ -381,6 +390,14 @@ void BLEClass::end(bool releaseMemory) {
 #endif
 
   nimble_port_stop();
+#if BLE_SCANNING_SUPPORTED
+  // Native scan callbacks can remain retained in NimBLE's privacy-preemption
+  // slot after stop() reports EALREADY. Reclaim their contexts only now, when
+  // the host task can no longer dereference them.
+  if (auto hook = _impl->loadHook(_impl->scanHostStoppedHook)) {
+    hook();
+  }
+#endif
 #if BLE_GATT_SERVER_SUPPORTED
   // Drop the deferred re-advertise event's backing reference only after the
   // host task has stopped: while it was alive it could still dispatch that
@@ -414,6 +431,9 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 #endif
+  if (auto hook = _impl->loadHook(_impl->streamPostEndHook)) {
+    hook();
+  }
 
 #if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
   hostedDeinitBLE();
@@ -429,6 +449,21 @@ void BLEClass::end(bool releaseMemory) {
     BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
     _impl->ending = false;
   }
+}
+
+bool BLEClass::setStreamEndHooks(void (*preHook)(), void (*postHook)()) {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lifecycle(_impl->lifecycleMtx);
+  if (_impl->ending) {
+    return false;
+  }
+  portENTER_CRITICAL(&_impl->hookMux);
+  _impl->streamPreEndHook = preHook;
+  _impl->streamPostEndHook = postHook;
+  portEXIT_CRITICAL(&_impl->hookMux);
+  return true;
 }
 
 // --------------------------------------------------------------------------
@@ -737,10 +772,19 @@ BLEScan BLEClass::getScan() {
   if (!slot) {
     slot = std::make_shared<BLEScan::Impl>();
     _impl->scan = slot.get();
+    _impl->storeHook(_impl->scanBeginHook, +[]() {
+      BLEScan scan(slot);
+      scan.prepareBackendStart();
+    });
     _impl->storeHook(_impl->scanEndHook, +[]() {
       BLEScan scan(slot);
+      scan.beginBackendShutdown();
       scan.stop();
       scan.terminateAllPeriodicSyncs();
+    });
+    _impl->storeHook(_impl->scanHostStoppedHook, +[]() {
+      BLEScan scan(slot);
+      scan.resetBackendEvents();
     });
   }
   return BLEScan(slot);

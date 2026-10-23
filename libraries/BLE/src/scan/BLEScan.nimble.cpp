@@ -33,15 +33,37 @@
 #include "core/BLEImplHelpers.h"
 #include "advertising/BLEAdvScanHelpers.h"
 #include "esp32-hal-log.h"
+#include "esp_timer.h"
 
 #include <algorithm>
+#include <new>
+
+#if defined(BLE_SCAN_VALIDATION_HOOKS)
+extern "C" std::atomic<bool> bleScanTestForcePreemptedStop;
+extern "C" std::atomic<int> bleScanTestCancelFailures;
+extern "C" std::atomic<int> bleScanTestHeldContexts;
+extern "C" std::atomic<int> bleScanTestRetiredContexts;
+#endif
 
 #if BLE_SCANNING_SUPPORTED
 
 #include <host/ble_hs.h>
 #include <host/ble_gap.h>
+#include <nimble/nimble_port.h>
 
 namespace {
+
+bool duplicateKeySeen(const BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
+  return std::any_of(impl.duplicateKeys.begin(), impl.duplicateKeys.end(), [&](const auto &key) {
+    return key.first == address && key.second == sid;
+  });
+}
+
+void markDuplicateKey(BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
+  if (!duplicateKeySeen(impl, address, sid)) {
+    impl.duplicateKeys.emplace_back(address, sid);
+  }
+}
 
 /**
  * @brief Invokes the per-result callback with a discovered device, if set.
@@ -57,16 +79,6 @@ void dispatchResult(BLEScan::Impl *impl, BLEAdvertisedDevice device) {
   if (cb) {
     cb(device);
   }
-}
-
-/**
- * @brief Merges or appends a scan result into the in-memory result list.
- * @param impl Scan implementation whose result list is updated.
- * @param device Advertised device to append or replace (by address).
- */
-BLEAdvertisedDevice appendOrReplaceResult(BLEScan::Impl *impl, const BLEAdvertisedDevice &device) {
-  BLELockGuard lock(impl->mtx);
-  return impl->results.appendOrReplace(device);
 }
 
 /**
@@ -218,16 +230,77 @@ BLEAdvertisedDevice BLEScan::Impl::parseExtDiscEvent(const struct ble_gap_ext_di
 }
 #endif
 
-static BTStatus nimbleStartScanSession(BLEScan::Impl &impl);
+static BTStatus nimbleStartScanSession(BLEScan::Impl &impl, uint32_t durationMs, uint32_t generation);
+
+static void retireScanContextCb(struct ble_npl_event *event) {
+  auto *impl = static_cast<BLEScan::Impl *>(ble_npl_event_get_arg(event));
+  std::vector<BLEScan::Impl::EventContext *> retired;
+  {
+    BLELockGuard lock(impl ? impl->mtx : nullptr);
+    if (impl) {
+      retired.swap(impl->retiredScanContexts);
+    }
+  }
+  for (auto *context : retired) {
+    delete context;
+  }
+#if defined(BLE_SCAN_VALIDATION_HOOKS)
+  bleScanTestRetiredContexts.fetch_sub(static_cast<int>(retired.size()), std::memory_order_relaxed);
+#endif
+}
+
+static void retireScanContext(BLEScan::Impl::EventContext *context) {
+  if (!context) {
+    return;
+  }
+  BLEScan::Impl *impl = context->impl;
+  // On the host task no other scan callback can execute concurrently. The
+  // current result handler has already consumed its context before invoking
+  // user code, so a nested stop() may reclaim it directly.
+  if (nimbleIsHostTask()) {
+    delete context;
+    return;
+  }
+  bool shouldQueue = false;
+  {
+    BLELockGuard lock(impl->mtx);
+    impl->retiredScanContexts.push_back(context);
+#if defined(BLE_SCAN_VALIDATION_HOOKS)
+    bleScanTestRetiredContexts.fetch_add(1, std::memory_order_relaxed);
+#endif
+    if (!impl->retireShutdown.load(std::memory_order_seq_cst) && !impl->retireScanEventInited) {
+      ble_npl_event_init(&impl->retireScanEvent, retireScanContextCb, impl);
+      impl->retireScanEventInited = true;
+    }
+    shouldQueue = !impl->retireShutdown.load(std::memory_order_seq_cst) && impl->retireScanEventInited;
+  }
+  // One persistent event drains every pending context. Retry only for a bounded
+  // interval; BLE.end() closes the gate and reclaims anything still queued
+  // after the host has stopped.
+  for (uint8_t attempt = 0; shouldQueue && attempt < 8; ++attempt) {
+    ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &impl->retireScanEvent);
+    {
+      BLELockGuard lock(impl->mtx);
+      if (impl->retiredScanContexts.empty()) {
+        break;
+      }
+    }
+    if (impl->retireShutdown.load(std::memory_order_seq_cst)) {
+      break;
+    }
+    vTaskDelay(1);
+  }
+}
 
 /**
  * @brief NimBLE GAP event callback for scan, extended scan, and periodic sync events.
  * @param event GAP event from NimBLE.
- * @param arg User pointer to BLEScan::Impl.
+ * @param arg User pointer to BLEScan::Impl::EventContext.
  * @return 0 to indicate the event was handled (NimBLE convention); non-handled paths are not used here.
  */
 int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
-  auto *impl = static_cast<BLEScan::Impl *>(arg);
+  auto *context = static_cast<BLEScan::Impl::EventContext *>(arg);
+  auto *impl = context ? context->impl : nullptr;
   if (!impl) {
     return 0;
   }
@@ -235,17 +308,43 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
   switch (event->type) {
     case BLE_GAP_EVENT_DISC:
     {
+      {
+        BLELockGuard lock(impl->mtx);
+        if (!context->scanSession || context->generation != impl->activeGeneration || !impl->isScanning) {
+          return 0;
+        }
+      }
       if (event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
         BTAddress addr(event->disc.addr.val, static_cast<BTAddress::Type>(event->disc.addr.type));
         BLEAdvertisedDevice merged;
         bool found = false;
+        bool duplicate = false;
         {
           BLELockGuard lock(impl->mtx);
           // Legacy PDUs carry no ADI; match the legacy entry (SID 0xFF).
-          found = BLEScanImplCommon::mergeScanResponse(impl->results, addr, 0xFF, event->disc.data, event->disc.length_data, event->disc.rssi, merged);
+          for (const auto &existing : impl->results) {
+            if (existing.getAddress() == addr && existing.getAdvSID() == 0xFF) {
+              duplicate = impl->filterDuplicates && duplicateKeySeen(*impl, addr, 0xFF)
+                          && BLEScanImplCommon::sameScanResponsePayload(existing, event->disc.data, event->disc.length_data);
+              break;
+            }
+          }
+          if (!duplicate) {
+            found = BLEScanImplCommon::mergeScanResponse(
+              impl->results, addr, 0xFF, event->disc.data, event->disc.length_data, event->disc.rssi, merged
+            );
+            if (found && impl->filterDuplicates) {
+              markDuplicateKey(*impl, addr, 0xFF);
+            }
+          } else {
+            found = true;
+          }
         }
-        if (found) {
+        if (found && !duplicate) {
           dispatchResult(impl, merged);
+          return 0;
+        }
+        if (duplicate) {
           return 0;
         }
       }
@@ -253,33 +352,97 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       // Cache the result before invoking the callback so getResults() called from
       // inside onResult already includes this device.
       BLEAdvertisedDevice dev = impl->parseDiscEvent(&event->disc);
-      dispatchResult(impl, appendOrReplaceResult(impl, dev));
+      bool duplicate = false;
+      {
+        BLELockGuard lock(impl->mtx);
+        if (impl->filterDuplicates) {
+          const bool keySeen = duplicateKeySeen(*impl, dev.getAddress(), dev.getAdvSID());
+          for (const auto &existing : impl->results) {
+            if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
+              duplicate = keySeen && BLEScanImplCommon::samePrimaryPayload(existing, dev);
+              break;
+            }
+          }
+        }
+        if (!duplicate) {
+          dev = impl->results.appendOrReplace(dev);
+          if (impl->filterDuplicates) {
+            markDuplicateKey(*impl, dev.getAddress(), dev.getAdvSID());
+          }
+        }
+      }
+      if (!duplicate) {
+        dispatchResult(impl, dev);
+      }
       return 0;
     }
 
     case BLE_GAP_EVENT_DISC_COMPLETE:
     {
-      {
-        BLELockGuard lock(impl->mtx);
-        impl->isScanning = false;
-      }
       // BLE_HS_EPREEMPTED: NimBLE temporarily paused scanning to update the
       // controller resolving list (e.g. ble_gap_unpair / ble_hs_pvcy_add_entry).
       // Resume the scan automatically instead of treating it as completion.
-      if (event->disc_complete.reason == BLE_HS_EPREEMPTED) {
-        if (nimbleStartScanSession(*impl) == BTStatus::OK) {
-          return 0;
+      bool completeCurrent = false;
+      bool deleteContext = false;
+      {
+        BLELockGuard lock(impl->mtx);
+        if (context->scanSession && context->generation == impl->activeGeneration && impl->isScanning) {
+          if (event->disc_complete.reason == BLE_HS_EPREEMPTED) {
+            uint32_t remainingMs = 0;
+            bool expired = false;
+            if (impl->sessionDeadlineUs == 0) {
+              remainingMs = 0;
+            } else {
+              int64_t remainingUs = impl->sessionDeadlineUs - esp_timer_get_time();
+              expired = remainingUs <= 0;
+              if (!expired) {
+                remainingMs = static_cast<uint32_t>((remainingUs + 999) / 1000);
+              }
+            }
+            if (!expired) {
+              if (nimbleStartScanSession(*impl, remainingMs, context->generation) == BTStatus::OK) {
+                delete context;
+                return 0;
+              }
+              log_w("Scan: failed to resume after BLE_HS_EPREEMPTED");
+            }
+          }
+          impl->isScanning = false;
+          completeCurrent = true;
         }
-        log_w("Scan: failed to resume after BLE_HS_EPREEMPTED");
+        if (context->scanSession) {
+          if (impl->activeScanContext == context) {
+            impl->activeScanContext = nullptr;
+          }
+          auto held = std::find(impl->nativeHeldScanContexts.begin(), impl->nativeHeldScanContexts.end(), context);
+          if (held != impl->nativeHeldScanContexts.end()) {
+            impl->nativeHeldScanContexts.erase(held);
+#if defined(BLE_SCAN_VALIDATION_HOOKS)
+            bleScanTestHeldContexts.fetch_sub(1, std::memory_order_relaxed);
+#endif
+          }
+          deleteContext = !context->retireByStop;
+        }
       }
-      dispatchComplete(impl);
-      impl->scanSync.give(BTStatus::OK);
+      if (deleteContext) {
+        delete context;
+      }
+      if (completeCurrent) {
+        dispatchComplete(impl);
+        impl->scanSync.give(BTStatus::OK);
+      }
       return 0;
     }
 
 #if BLE5_SUPPORTED
     case BLE_GAP_EVENT_EXT_DISC:
     {
+      {
+        BLELockGuard lock(impl->mtx);
+        if (!context->scanSession || context->generation != impl->activeGeneration || !impl->isScanning) {
+          return 0;
+        }
+      }
       const struct ble_gap_ext_disc_desc &d = event->ext_disc;
       // A scan response carries the fields (notably the Local Name) that the
       // scanner solicited with SCAN_REQ; it must be merged into the device from
@@ -294,12 +457,30 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         BTAddress addr(d.addr.val, static_cast<BTAddress::Type>(d.addr.type));
         BLEAdvertisedDevice merged;
         bool found = false;
+        bool duplicate = false;
         {
           BLELockGuard lock(impl->mtx);
-          found = BLEScanImplCommon::mergeScanResponse(impl->results, addr, d.sid, d.data, d.length_data, d.rssi, merged);
+          for (const auto &existing : impl->results) {
+            if (existing.getAddress() == addr && existing.getAdvSID() == d.sid) {
+              duplicate = impl->filterDuplicates && duplicateKeySeen(*impl, addr, d.sid)
+                          && BLEScanImplCommon::sameScanResponsePayload(existing, d.data, d.length_data);
+              break;
+            }
+          }
+          if (!duplicate) {
+            found = BLEScanImplCommon::mergeScanResponse(impl->results, addr, d.sid, d.data, d.length_data, d.rssi, merged);
+            if (found && impl->filterDuplicates) {
+              markDuplicateKey(*impl, addr, d.sid);
+            }
+          } else {
+            found = true;
+          }
         }
-        if (found) {
+        if (found && !duplicate) {
           dispatchResult(impl, merged);
+          return 0;
+        }
+        if (duplicate) {
           return 0;
         }
         // No prior advertisement to merge into: fall through and surface the
@@ -308,7 +489,28 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
       // Cache before invoking the callback (see BLE_GAP_EVENT_DISC).
       BLEAdvertisedDevice dev = impl->parseExtDiscEvent(&event->ext_disc);
-      dispatchResult(impl, appendOrReplaceResult(impl, dev));
+      bool duplicate = false;
+      {
+        BLELockGuard lock(impl->mtx);
+        if (impl->filterDuplicates) {
+          const bool keySeen = duplicateKeySeen(*impl, dev.getAddress(), dev.getAdvSID());
+          for (const auto &existing : impl->results) {
+            if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
+              duplicate = keySeen && BLEScanImplCommon::samePrimaryPayload(existing, dev);
+              break;
+            }
+          }
+        }
+        if (!duplicate) {
+          dev = impl->results.appendOrReplace(dev);
+          if (impl->filterDuplicates) {
+            markDuplicateKey(*impl, dev.getAddress(), dev.getAdvSID());
+          }
+        }
+      }
+      if (!duplicate) {
+        dispatchResult(impl, dev);
+      }
       return 0;
     }
 
@@ -359,7 +561,11 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
-static BTStatus nimbleStartScanSession(BLEScan::Impl &impl) {
+static BTStatus nimbleStartScanSession(BLEScan::Impl &impl, uint32_t durationMs, uint32_t generation) {
+  auto *context = new (std::nothrow) BLEScan::Impl::EventContext{&impl, generation, true};
+  if (!context) {
+    return BTStatus::NoMemory;
+  }
 #if BLE5_SUPPORTED
   // On ext-adv-enabled controllers legacy ble_gap_disc results are delivered as
   // BLE_GAP_EVENT_EXT_DISC, so drive the extended discovery API directly (1M,
@@ -374,19 +580,23 @@ static BTStatus nimbleStartScanSession(BLEScan::Impl &impl) {
   coded.itvl = impl.hasCodedConfig ? impl.codedInterval : impl.interval;
   coded.window = impl.hasCodedConfig ? impl.codedWindow : impl.window;
 
-  uint16_t durationUnits =
-    (impl.lastDurationMs == 0) ? 0 : static_cast<uint16_t>(std::max<uint32_t>(1, (impl.lastDurationMs + 9) / 10));
+  uint16_t durationUnits = (durationMs == 0) ? 0 : static_cast<uint16_t>(std::max<uint32_t>(1, (durationMs + 9) / 10));
+  // Keep controller filtering disabled. Some controllers key legacy duplicates
+  // only by address/event type and suppress a same-length payload update. The
+  // host callback filters byte-identical primary and scan-response segments so
+  // changed data remains observable while the public duplicate policy holds.
   int rc = ble_gap_ext_disc(
-    static_cast<uint8_t>(BLE.getOwnAddressType()), durationUnits, 0, impl.filterDuplicates ? 1 : 0, 0, 0, &uncoded,
-    impl.hasCodedConfig ? &coded : NULL, BLEScan::Impl::gapEventHandler, &impl
+    static_cast<uint8_t>(BLE.getOwnAddressType()), durationUnits, 0, 0, 0, 0, &uncoded,
+    impl.hasCodedConfig ? &coded : NULL, BLEScan::Impl::gapEventHandler, context
   );
   if (rc != 0) {
+    delete context;
     log_e("ble_gap_ext_disc: rc=%d", rc);
     return BTStatus::Fail;
   }
 #else
   struct ble_gap_disc_params params = {};
-  params.filter_duplicates = impl.filterDuplicates ? 1 : 0;
+  params.filter_duplicates = 0;
   params.passive = impl.activeScan ? 0 : 1;
   params.itvl = impl.interval;
   params.window = impl.window;
@@ -394,44 +604,79 @@ static BTStatus nimbleStartScanSession(BLEScan::Impl &impl) {
   params.limited = 0;
 
   int rc = ble_gap_disc(
-    static_cast<uint8_t>(BLE.getOwnAddressType()), impl.lastDurationMs == 0 ? BLE_HS_FOREVER : (int32_t)impl.lastDurationMs, &params,
-    BLEScan::Impl::gapEventHandler, &impl
+    static_cast<uint8_t>(BLE.getOwnAddressType()), durationMs == 0 ? BLE_HS_FOREVER : (int32_t)durationMs, &params,
+    BLEScan::Impl::gapEventHandler, context
   );
   if (rc != 0) {
+    delete context;
     log_e("ble_gap_disc: rc=%d", rc);
     return BTStatus::Fail;
   }
 #endif
+  impl.activeScanContext = context;
   impl.isScanning = true;
   return BTStatus::OK;
 }
 
-// No-op: NimBLE manages duplicate filtering internally.
-void BLEScan::clearDuplicateCache() { /* NimBLE manages this internally */ }
+void BLEScan::clearDuplicateCache() {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.duplicateKeys.clear();
+}
+
+struct ScanSessionPublisher {
+  BLEScan::Impl &impl;
+  bool admitted;
+
+  explicit ScanSessionPublisher(BLEScan::Impl &value) : impl(value) {
+    impl.retirePublishers.fetch_add(1, std::memory_order_seq_cst);
+    admitted = !impl.retireShutdown.load(std::memory_order_seq_cst);
+  }
+
+  ~ScanSessionPublisher() {
+    impl.retirePublishers.fetch_sub(1, std::memory_order_seq_cst);
+  }
+
+  explicit operator bool() const {
+    return admitted;
+  }
+};
 
 BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  ScanSessionPublisher publisher(impl);
+  if (!publisher) {
+    return BTStatus::InvalidState;
+  }
   if (impl.isScanning) {
-    stop();
+    BTStatus stopStatus = stop();
+    if (!stopStatus) {
+      return stopStatus;
+    }
   }
 
   if (!appendToExistingResults) {
     BLELockGuard lock(impl.mtx);
     impl.results._devices.clear();
+    impl.duplicateKeys.clear();
   }
 
-  impl.lastDurationMs = durationMs;
+  {
+    BLELockGuard lock(impl.mtx);
+    impl.lastDurationMs = durationMs;
+    impl.sessionDeadlineUs = durationMs == 0 ? 0 : esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000;
 #if BLE5_SUPPORTED
-  impl.hasUncodedConfig = false;
-  impl.hasCodedConfig = false;
+    impl.hasUncodedConfig = false;
+    impl.hasCodedConfig = false;
 #endif
-
-  log_d("Scan: start duration=%u ms active=%d filterDuplicates=%d", durationMs, impl.activeScan, impl.filterDuplicates);
-  impl.scanSync.take();
-
-  if (nimbleStartScanSession(impl) != BTStatus::OK) {
-    impl.scanSync.give(BTStatus::Fail);
-    return BTStatus::Fail;
+    const uint32_t generation = ++impl.activeGeneration;
+    log_d("Scan: start duration=%u ms active=%d filterDuplicates=%d", durationMs, impl.activeScan, impl.filterDuplicates);
+    impl.scanSync.take();
+    BTStatus status = nimbleStartScanSession(impl, durationMs, generation);
+    if (status != BTStatus::OK) {
+      impl.scanSync.give(status);
+      return status;
+    }
   }
   return BTStatus::OK;
 }
@@ -447,48 +692,146 @@ BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
   return impl.results;
 }
 
-BTStatus BLEScan::stop() {
-  BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!impl.isScanning) {
-    return BTStatus::OK;
+static BTStatus nimbleStopScanSession(BLEScan::Impl &impl) {
+  BLEScan::Impl::EventContext *context = nullptr;
+  uint32_t previousGeneration = 0;
+  {
+    BLELockGuard lock(impl.mtx);
+    if (!impl.isScanning) {
+      return BTStatus::OK;
+    }
+    log_d("Scan: stop");
+    previousGeneration = impl.activeGeneration;
+    ++impl.activeGeneration;
+    impl.isScanning = false;
+    context = impl.activeScanContext;
+    if (context) {
+      context->retireByStop = true;
+    }
   }
-  log_d("Scan: stop");
-  int rc = ble_gap_disc_cancel();
-  impl.isScanning = false;
+  int rc;
+#if defined(BLE_SCAN_VALIDATION_HOOKS)
+  if (bleScanTestCancelFailures.exchange(0, std::memory_order_relaxed) > 0) {
+    rc = BLE_HS_EINVAL;
+  } else if (bleScanTestForcePreemptedStop.exchange(false, std::memory_order_relaxed)) {
+    // Model NimBLE's privacy-preemption window: the native operation retains
+    // its callback argument and completes later, while cancel sees no active
+    // discovery procedure.
+    rc = BLE_HS_EALREADY;
+  } else
+#endif
+  {
+    rc = ble_gap_disc_cancel();
+  }
   if (rc != 0 && rc != BLE_HS_EALREADY) {
+    bool deleteNow = false;
+    {
+      BLELockGuard lock(impl.mtx);
+      if (impl.activeScanContext == context) {
+        impl.activeGeneration = previousGeneration;
+        impl.isScanning = true;
+        if (context) {
+          context->retireByStop = false;
+        }
+      } else {
+        // A completion callback ran while cancel returned the error. It left
+        // reclamation to us because retireByStop was already set.
+        deleteNow = context != nullptr;
+      }
+    }
+    if (deleteNow) {
+      delete context;
+    }
     log_e("Scan: ble_gap_disc_cancel rc=%d", rc);
     return BTStatus::Fail;
   }
+  if (rc == BLE_HS_EALREADY && context) {
+    bool completionAlreadyRan = false;
+    {
+      BLELockGuard lock(impl.mtx);
+      if (impl.activeScanContext == context) {
+        // Privacy preemption temporarily removes the operation from the active
+        // GAP slot. Native code still owns this callback argument and will
+        // deliver DISC_COMPLETE after preemption ends.
+        impl.activeScanContext = nullptr;
+        context->retireByStop = false;
+        impl.nativeHeldScanContexts.push_back(context);
+#if defined(BLE_SCAN_VALIDATION_HOOKS)
+        bleScanTestHeldContexts.fetch_add(1, std::memory_order_relaxed);
+#endif
+      } else {
+        // DISC_COMPLETE ran after cancel() returned but before this lock. It
+        // observed retireByStop and deliberately left reclamation to stop().
+        completionAlreadyRan = true;
+      }
+    }
+    if (completionAlreadyRan) {
+      delete context;
+    }
+    impl.scanSync.give(BTStatus::OK);
+    return BTStatus::OK;
+  }
+  {
+    BLELockGuard lock(impl.mtx);
+    if (impl.activeScanContext == context) {
+      impl.activeScanContext = nullptr;
+    }
+  }
+  retireScanContext(context);
   impl.scanSync.give(BTStatus::OK);
   return BTStatus::OK;
+}
+
+BTStatus BLEScan::stop() {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  // Publish this caller before it acquires any context pointer. Shutdown closes
+  // the gate then waits for this count, while a caller that lost the gate race
+  // backs out without touching native-owned state.
+  ScanSessionPublisher publisher(impl);
+  if (!publisher) {
+    return BTStatus::OK;
+  }
+  return nimbleStopScanSession(impl);
 }
 
 BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedConfig, const ExtScanConfig *uncodedConfig) {
 #if BLE5_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  ScanSessionPublisher publisher(impl);
+  if (!publisher) {
+    return BTStatus::InvalidState;
+  }
   if (impl.isScanning) {
-    stop();
+    BTStatus stopStatus = stop();
+    if (!stopStatus) {
+      return stopStatus;
+    }
   }
   {
     BLELockGuard lock(impl.mtx);
     impl.results._devices.clear();
+    impl.duplicateKeys.clear();
   }
 
   // ExtScanConfig interval/window are in milliseconds (matching setInterval/setWindow);
   // impl.interval/impl.window are already stored in 0.625 ms controller units.
-  impl.lastDurationMs = durationMs;
-  impl.hasUncodedConfig = (uncodedConfig != nullptr);
-  if (uncodedConfig) {
-    impl.uncodedInterval = bleMsToUnits0625(uncodedConfig->interval);
-    impl.uncodedWindow = bleMsToUnits0625(uncodedConfig->window);
+  {
+    BLELockGuard lock(impl.mtx);
+    impl.lastDurationMs = durationMs;
+    impl.sessionDeadlineUs = durationMs == 0 ? 0 : esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000;
+    impl.hasUncodedConfig = (uncodedConfig != nullptr);
+    if (uncodedConfig) {
+      impl.uncodedInterval = bleMsToUnits0625(uncodedConfig->interval);
+      impl.uncodedWindow = bleMsToUnits0625(uncodedConfig->window);
+    }
+    impl.hasCodedConfig = (codedConfig != nullptr);
+    if (codedConfig) {
+      impl.codedInterval = bleMsToUnits0625(codedConfig->interval);
+      impl.codedWindow = bleMsToUnits0625(codedConfig->window);
+    }
+    const uint32_t generation = ++impl.activeGeneration;
+    return nimbleStartScanSession(impl, durationMs, generation);
   }
-  impl.hasCodedConfig = (codedConfig != nullptr);
-  if (codedConfig) {
-    impl.codedInterval = bleMsToUnits0625(codedConfig->interval);
-    impl.codedWindow = bleMsToUnits0625(codedConfig->window);
-  }
-
-  return nimbleStartScanSession(impl);
 #else
   log_w("Scan: startExtended not supported (BLE 5.0 unavailable)");
   return BTStatus::NotSupported;
@@ -512,7 +855,7 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
   bleAddr.type = static_cast<uint8_t>(addr.type());
   memcpy(bleAddr.val, addr.data(), 6);
 
-  int rc = ble_gap_periodic_adv_sync_create(&bleAddr, sid, &params, BLEScan::Impl::gapEventHandler, &impl);
+  int rc = ble_gap_periodic_adv_sync_create(&bleAddr, sid, &params, BLEScan::Impl::gapEventHandler, &impl.periodicContext);
   if (rc != 0) {
     log_e("ble_gap_periodic_adv_sync_create: rc=%d", rc);
     return BTStatus::Fail;
@@ -576,6 +919,70 @@ void BLEScan::terminateAllPeriodicSyncs() {
 #endif
 }
 
+void BLEScan::resetBackendEvents() {
+  if (!_impl) {
+    return;
+  }
+  std::vector<BLEScan::Impl::EventContext *> retired;
+  {
+    BLELockGuard lock(_impl->mtx);
+    if (_impl->retireScanEventInited) {
+      if (ble_npl_event_is_queued(&_impl->retireScanEvent)) {
+        ble_npl_eventq_remove(nimble_port_get_dflt_eventq(), &_impl->retireScanEvent);
+      }
+      ble_npl_event_deinit(&_impl->retireScanEvent);
+      _impl->retireScanEventInited = false;
+    }
+    retired.swap(_impl->retiredScanContexts);
+#if defined(BLE_SCAN_VALIDATION_HOOKS)
+    bleScanTestRetiredContexts.fetch_sub(static_cast<int>(retired.size()), std::memory_order_relaxed);
+#endif
+    retired.insert(retired.end(), _impl->nativeHeldScanContexts.begin(), _impl->nativeHeldScanContexts.end());
+#if defined(BLE_SCAN_VALIDATION_HOOKS)
+    bleScanTestHeldContexts.fetch_sub(static_cast<int>(_impl->nativeHeldScanContexts.size()), std::memory_order_relaxed);
+#endif
+    _impl->nativeHeldScanContexts.clear();
+    if (_impl->activeScanContext) {
+      retired.push_back(_impl->activeScanContext);
+      _impl->activeScanContext = nullptr;
+    }
+  }
+  for (auto *context : retired) {
+    delete context;
+  }
+}
+
+void BLEScan::prepareBackendStart() {
+  if (_impl) {
+    _impl->retireShutdown.store(false, std::memory_order_seq_cst);
+  }
+}
+
+void BLEScan::beginBackendShutdown() {
+  if (!_impl) {
+    return;
+  }
+  _impl->retireShutdown.store(true, std::memory_order_seq_cst);
+  // Every publisher uses a bounded enqueue loop and observes retireShutdown.
+  // Wait until none can touch the event before nimble_port_stop() and the
+  // post-host reset deinitialize its storage.
+  while (_impl->retirePublishers.load(std::memory_order_seq_cst) != 0) {
+    vTaskDelay(1);
+  }
+  // Public stop() is closed by the gate above, so cancel directly while the
+  // host is still running. This also releases an infinite startBlocking(0)
+  // waiter before nimble_port_stop() makes further completion impossible.
+  BTStatus stopStatus = nimbleStopScanSession(*_impl);
+  if (!stopStatus) {
+    {
+      BLELockGuard lock(_impl->mtx);
+      ++_impl->activeGeneration;
+      _impl->isScanning = false;
+    }
+    _impl->scanSync.give(stopStatus);
+  }
+}
+
 #else /* !BLE_SCANNING_SUPPORTED -- stubs */
 
 // Stubs for BLE_SCANNING_SUPPORTED == 0: log; start* return NotSupported or empty results/scan.
@@ -625,6 +1032,12 @@ BTStatus BLEScan::terminatePeriodicSync(uint16_t) {
 }
 
 void BLEScan::terminateAllPeriodicSyncs() {}
+
+void BLEScan::resetBackendEvents() {}
+
+void BLEScan::prepareBackendStart() {}
+
+void BLEScan::beginBackendShutdown() {}
 
 #endif /* BLE_SCANNING_SUPPORTED */
 

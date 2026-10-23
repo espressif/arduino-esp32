@@ -39,7 +39,14 @@ void BLEService::addIncludedService(const BLEService &service) {
   if (!service._impl) {
     return;
   }
-  BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
+  auto server = impl.serverOwner.lock();
+  if (!server) {
+    return;
+  }
+  BLELockGuard lock(server->mtx);
+  if (impl.server != server.get() || impl.removing) {
+    return;
+  }
   for (auto &inc : impl.includedServices) {
     if (inc == service._impl) {
       return;
@@ -54,8 +61,15 @@ void BLEService::addIncludedService(const BLEService &service) {
 
 BLECharacteristic BLEService::getCharacteristic(const BLEUUID &uuid) const {
   BLE_CHECK_IMPL(BLECharacteristic());
+  auto server = impl.serverOwner.lock();
+  if (!server) {
+    return BLECharacteristic();
+  }
   {
-    BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
+    BLELockGuard lock(server->mtx);
+    if (impl.server != server.get()) {
+      return BLECharacteristic();
+    }
     for (auto &chr : impl.characteristics) {
       if (chr->uuid == uuid) {
         return BLECharacteristic(chr);
@@ -69,7 +83,14 @@ BLECharacteristic BLEService::getCharacteristic(const BLEUUID &uuid) const {
 std::vector<BLECharacteristic> BLEService::getCharacteristics() const {
   std::vector<BLECharacteristic> result;
   BLE_CHECK_IMPL(result);
-  BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
+  auto server = impl.serverOwner.lock();
+  if (!server) {
+    return result;
+  }
+  BLELockGuard lock(server->mtx);
+  if (impl.server != server.get()) {
+    return result;
+  }
   result.reserve(impl.characteristics.size());
   for (auto &chr : impl.characteristics) {
     result.push_back(BLECharacteristic(chr));
@@ -83,15 +104,19 @@ void BLEService::removeCharacteristic(const BLECharacteristic &chr) {
   if (!chr._impl) {
     return;
   }
-  if (impl.started) {
-    log_w("Service %s: removeCharacteristic is only allowed before the service is started", impl.uuid.toString().c_str());
+  auto server = impl.serverOwner.lock();
+  if (!server) {
     return;
   }
 
   std::shared_ptr<BLECharacteristic::Impl> removed;
   {
-    BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
+    BLELockGuard lock(server->mtx);
+    if (impl.server != server.get()) {
+      return;
+    }
     if (impl.started) {
+      log_w("Service %s: removeCharacteristic is only allowed before the service is started", impl.uuid.toString().c_str());
       return;
     }
     auto &chars = impl.characteristics;
@@ -114,7 +139,12 @@ void BLEService::removeCharacteristic(const BLECharacteristic &chr) {
 
 bool BLEService::isStarted() const {
   BLE_CHECK_IMPL(false);
-  return impl.started;
+  auto server = impl.serverOwner.lock();
+  if (!server) {
+    return false;
+  }
+  BLELockGuard lock(server->mtx);
+  return impl.server == server.get() && impl.started;
 }
 
 BLEUUID BLEService::getUUID() const {
@@ -124,12 +154,22 @@ BLEUUID BLEService::getUUID() const {
 
 uint16_t BLEService::getHandle() const {
   BLE_CHECK_IMPL(0);
-  return impl.handle;
+  auto server = impl.serverOwner.lock();
+  if (!server) {
+    return 0;
+  }
+  BLELockGuard lock(server->mtx);
+  return impl.server == server.get() ? impl.handle : 0;
 }
 
 BLEServer BLEService::getServer() const {
   BLE_CHECK_IMPL(BLEServer());
-  return impl.server ? BLEServer(impl.server->shared_from_this()) : BLEServer();
+  auto server = impl.serverOwner.lock();
+  if (!server) {
+    return BLEServer();
+  }
+  BLELockGuard lock(server->mtx);
+  return impl.server == server.get() ? BLEServer(server) : BLEServer();
 }
 
 BLECharacteristic BLEService::createCharacteristic(const BLEUUID &uuid, BLEProperty properties, BLEPermission permissions) {
@@ -150,14 +190,25 @@ BLECharacteristic BLEService::createCharacteristic(const BLEUUID &uuid, BLEPrope
     return BLECharacteristic();
   }
 
+  auto server = impl.serverOwner.lock();
+  if (!server) {
+    log_w("Service %s: createCharacteristic called on a detached service", impl.uuid.toString().c_str());
+    return BLECharacteristic();
+  }
+
   auto chr = std::make_shared<BLECharacteristic::Impl>();
   chr->uuid = uuid;
   chr->properties = properties;
-  chr->service = &impl;
   chr->permissions = permissions;
+  chr->serviceOwner = _impl;
 
   {
-    BLELockGuard lock(impl.server ? impl.server->mtx : nullptr);
+    BLELockGuard lock(server->mtx);
+    if (impl.server != server.get() || impl.removing) {
+      log_w("Service %s: createCharacteristic called while detached or being removed", impl.uuid.toString().c_str());
+      return BLECharacteristic();
+    }
+    chr->service = &impl;
     impl.characteristics.push_back(chr);
   }
   return BLECharacteristic(chr);

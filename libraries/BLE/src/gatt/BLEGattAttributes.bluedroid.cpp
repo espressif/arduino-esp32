@@ -42,7 +42,8 @@
 // pendingNotifies so ESP_GATTS_CONF_EVT can distinguish local notification
 // completions from peer indication confirmations without delaying notifications.
 BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length) {
-  BLEServer::Impl *server = impl.activeServer();
+  auto serverOwner = impl.activeServer();
+  BLEServer::Impl *server = serverOwner.get();
   if (!server) {
     return BTStatus::InvalidState;
   }
@@ -84,12 +85,17 @@ BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermis
 
   auto desc = std::make_shared<BLEDescriptor::Impl>();
   desc->uuid = uuid;
-  desc->chr = _impl.get();
+  desc->chrOwner = _impl;
   desc->permissions = perms;
   desc->maxLen = maxLen;
   desc->value.reserve(maxLen);
   {
     BLELockGuard lock(impl.mtx);
+    if (!impl.service) {
+      log_w("Characteristic %s: createDescriptor called while detached", impl.uuid.toString().c_str());
+      return BLEDescriptor();
+    }
+    desc->chr = _impl.get();
     impl.descriptors.push_back(desc);
   }
   return BLEDescriptor(desc);

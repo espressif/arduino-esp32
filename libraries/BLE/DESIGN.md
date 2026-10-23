@@ -184,9 +184,15 @@ Every public handle's `std::shared_ptr<Impl>` constructor is **private** — han
 
 The point is to keep the `friend` surface minimal (item 5): each handle declares exactly one `friend struct BLE<T>ImplCommon` instead of befriending every backend TU and free function across both stacks. `makeHandle` additionally centralizes the raw-`Impl*` → owning-`shared_ptr` reconstruction (`impl->shared_from_this()`) for the callback paths that receive a bare `Impl*` through a `void *arg`, so that step is written and audited once rather than at every call site. The rejected alternatives: a **public constructor** would break encapsulation (any caller could wrap a foreign/dangling `Impl*`), and **per-backend `friend` declarations** would proliferate friendship (two backends × many TUs) for no clarity gain. So inside friend/public code the constructor is used directly; backend code uses `makeHandle`.
 
-**Exception: `BLEStream`** uses a raw `Impl*` (not `shared_ptr`) and is non-copyable/non-movable.
-It owns server or client resources exclusively and follows RAII semantics: `begin()`/`beginClient()` allocate, `end()` or the destructor releases.
-This is intentional — `BLEStream` wraps a higher-level convenience API (Arduino `Stream`) where shared-handle semantics do not apply.
+**Exception: `BLEStream`** is non-copyable/non-movable, but holds its `Impl` through
+`shared_ptr`. Callback-context `end()` may defer blocking native teardown to a
+worker, so that worker retains the Impl and active role until cleanup finishes.
+Retries are bounded and backed off; a role that still cannot be removed is
+quarantined without reopening admission, retried by a later BLEStream start,
+and retained until cleanup succeeds or `BLE.end()` has stopped the native host.
+The public object still has exclusive RAII semantics:
+`begin()`/`beginClient()` acquire resources, and `end()` or the destructor
+releases them.
 
 ## Ownership and lifetime rules
 
@@ -219,8 +225,15 @@ BLE objects form strict ownership trees:
 - Client → RemoteService → RemoteCharacteristic → RemoteDescriptor
 
 Parent Impls hold `std::shared_ptr` to child Impls (strong ownership).
-Child Impls (both local server-side and remote client-side) hold a raw `Impl*` back-reference to their parent.
-Before `end()`, a disconnect/removal API, or parent destruction releases a tree's ownership, the library clears every raw back-reference and converts any externally retained child handle into a detached shell; parent navigation then returns an empty handle and operations that require the parent/connection fail safely.
+Child Impls (both local server-side and remote client-side) hold a raw `Impl*`
+attachment marker plus a `std::weak_ptr` to the same parent. Code locks the weak
+owner first, then revalidates the raw marker under the hierarchy's mutex; it
+never traverses an unretained raw parent.
+Before `end()`, a disconnect/removal API, or parent destruction releases a
+tree's ownership, the library recursively clears every raw back-reference and
+child cache and converts any externally retained child handle into a detached
+shell; parent navigation then returns an empty handle and operations that
+require the parent/connection fail safely.
 Each remote service also captures the client's connection generation, so recycling a native connection handle cannot make a stale remote tree operate on a later link.
 Using `shared_ptr` in both directions would create reference cycles and leak everything.
 
@@ -231,9 +244,16 @@ This solves two problems that arise because internal code often holds only a raw
 
 1. **Callback dispatch** — Backend event handlers (static C callbacks from NimBLE/Bluedroid) receive a raw `Impl*` via context pointers. To invoke the user's `std::function` callback they must construct a public handle (e.g. `BLECharacteristic`), which requires a `shared_ptr<Impl>`. `shared_from_this()` safely promotes the raw pointer without creating a second ownership group.
 
-2. **Child-to-parent navigation** — Methods like `BLEDescriptor::getCharacteristic()`, `BLEService::getServer()`, and `BLERemoteCharacteristic::getRemoteService()` need to return a public handle from the non-owning raw parent `Impl*`. `shared_from_this()` on the parent Impl produces the `shared_ptr` needed to construct that handle.
+2. **Child-to-parent navigation** — Methods like
+   `BLEDescriptor::getCharacteristic()`, `BLEService::getServer()`, and
+   `BLERemoteCharacteristic::getRemoteService()` lock the child's weak parent
+   owner, then validate the raw attachment marker before constructing the
+   public handle.
 
-**Safety constraint:** `shared_from_this()` may only be called on an Impl that is already owned by at least one `shared_ptr`. This is always the case in practice because Impls are created via `std::make_shared` in factory methods (`createServer`, `createService`, etc.) and the parent keeps the owning `shared_ptr` alive for the entire lifetime of the child.
+**Safety constraint:** `shared_from_this()` may only be called on an Impl that is
+already owned by at least one `shared_ptr`. Impls are created via
+`std::make_shared` in factory methods, and callback paths only reconstruct a
+handle while the registered object is retained by the active native tree.
 
 ### Lifecycle after `BLE.end()`
 
@@ -601,6 +621,8 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
 - **`client.onConnParamsUpdateRequest`:** NimBLE-only. Bluedroid's L2CAP layer accepts/negotiates connection-parameter updates internally and only surfaces the result (`ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT`) after the fact, so there is no application pre-accept hook to bridge.
 - **`onStatus` delivery timing for notifications:** NimBLE reports `SUCCESS_NOTIFY` synchronously before `notify()` returns (its `ble_gatts_notify_custom()` raises the TX event inline); Bluedroid reports it asynchronously on the BTC task via `ESP_GATTS_CONF_EVT`. The status value and ordering relative to later sends are identical; only the execution context/timing differs, and normalizing it would require deferring NimBLE dispatch through a queue/task. Handlers must therefore not assume a task context (already required by the execution-context rule).
 - **Bluedroid `BLEConnInfo::keySize`:** `AUTH_CMPL` carries no key size; stays at default (NimBLE reports `sec_state.key_size`).
+- **Write Command admission backpressure:** Bluedroid accepts Write Commands through a private 30-entry asynchronous GATTC queue whose later queue-full event carries no operation token. The library therefore admits at most eight outstanding commands per client and returns `BTStatus::Busy` beyond that bound, leaving capacity for serialized control procedures. A callback-issued command may overlap a response write on a different attribute handle because completion events distinguish that case; the same-handle case remains `Busy`. NimBLE submits each command directly through the host and has no equivalent anonymous deferred queue, so it does not impose the artificial eight-command bound. Normalizing this would either expose Bluedroid to unattributable queue loss or add timing-based throttling to NimBLE without a completion signal.
+- **Local auto-CCCD visibility:** Bluedroid requires the library to materialize and register the `0x2902` descriptor, so it appears in local descriptor lookup and retains its characteristic parent. NimBLE synthesizes CCCDs inside the host when notify/indicate flags are registered and does not expose a corresponding local descriptor object to the application. Manually registering another NimBLE CCCD would duplicate the host-owned attribute, so local `getDescriptor(0x2902)` is intentionally backend-specific; remote discovery and subscription behavior remain common.
 - **Bluedroid Service Changed range:** `ESP_GATTC_SRVC_CHG_EVT` carries only the peer address because
   the stack consumes the 0x2A05 indication internally. The client invalidates its entire discovered
   tree and reports the conservative `0x0001–0xFFFF` range; NimBLE delivers the peer's exact payload.

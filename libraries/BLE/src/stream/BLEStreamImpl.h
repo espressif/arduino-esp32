@@ -22,15 +22,24 @@
 #include "stream/BLEStream.h"
 #include "core/BLEMutex.h"
 #include "cbuf.h"
+#include "esp_timer.h"
 #include <atomic>
 #include <memory>
+#include <vector>
 
 struct BLEStream::Impl {
   struct Role {
+    std::atomic<bool> starting{false};
     std::atomic<bool> ending{false};
+    // Claims the one teardown executor. If callback-context task creation
+    // fails, it is released while `ending` remains set so a later end() can
+    // retry without reopening begin/write admission.
+    std::atomic<bool> endExecutorActive{false};
 
     virtual ~Role() = default;
-    virtual void end() = 0;
+    virtual BTStatus end() = 0;
+    virtual void detachCallbacks() = 0;
+    virtual size_t connectedCount() const = 0;
     virtual std::vector<BLEConnInfo> peers() const = 0;
     virtual size_t write(const uint8_t *buffer, size_t size) = 0;
     virtual size_t writeTo(const BLEConnInfo &peer, const uint8_t *buffer, size_t size) = 0;
@@ -42,6 +51,14 @@ struct BLEStream::Impl {
   // snapshots keep the role alive without holding the admission lock while
   // backend operations or callbacks run.
   std::shared_ptr<Role> role;
+  // Callback-context teardown is handed to a worker. These references form a
+  // temporary self-retaining handoff so destruction cannot abandon native
+  // resources if worker task allocation must be retried.
+  std::shared_ptr<Impl> deferredSelf;
+  std::shared_ptr<Role> deferredRole;
+  esp_timer_handle_t endRetryTimer = nullptr;
+  bool endRetryArmed = false;
+  uint8_t endRetryCount = 0;
   cbuf rxBuf;
   // Server mode can have multiple peers; client mode uses 0/1. BLE callbacks
   // update this from the stack task while sketches read it from their task.
@@ -53,7 +70,30 @@ struct BLEStream::Impl {
 
   explicit Impl(size_t rxBufSize) : roleMtx(xSemaphoreCreateRecursiveMutexStatic(&roleMtxStorage)), rxBuf(rxBufSize) {}
 
+  bool ensureEndRetryTimer();
+  static bool startEndWorker(Impl *common);
+  static bool scheduleEndRetry(Impl *common);
+  static bool claimEnd(const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role, bool &hostShuttingDown);
+  static bool activateRole(const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role);
+  static bool finishRoleStart(const std::shared_ptr<Role> &role);
+  static bool cancelRoleStart(const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role);
+  static void retainEnd(const std::shared_ptr<Impl> &common);
+  static void completeEnd(const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role);
+  static void quarantineEnd(const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role);
+  static bool recoverQuarantined();
+  static void prepareHostShutdown();
+  static void releaseQuarantined();
+  static void endRetryTimerCb(void *arg);
+  static void endWorker(void *arg);
+
+  struct RecoveryState;
+  static RecoveryState &recoveryState();
+
   ~Impl() {
+    if (endRetryTimer) {
+      esp_timer_stop(endRetryTimer);
+      esp_timer_delete(endRetryTimer);
+    }
     if (roleMtx) {
       vSemaphoreDelete(roleMtx);
     }
@@ -69,9 +109,28 @@ struct BLEStream::Impl {
     role = std::move(value);
   }
 
-  std::shared_ptr<Role> takeRole() {
+  bool markRoleEnding(std::shared_ptr<Role> &out) {
     BLELockGuard lock(roleMtx);
-    return std::move(role);
+    if (!role) {
+      return false;
+    }
+    role->ending = true;
+    if (role->starting) {
+      return false;
+    }
+    bool expected = false;
+    if (!role->endExecutorActive.compare_exchange_strong(expected, true)) {
+      return false;
+    }
+    out = role;
+    return true;
+  }
+
+  void clearRole(const std::shared_ptr<Role> &expected) {
+    BLELockGuard lock(roleMtx);
+    if (role == expected) {
+      role.reset();
+    }
   }
 
   ConnectHandler loadConnectHandler() {

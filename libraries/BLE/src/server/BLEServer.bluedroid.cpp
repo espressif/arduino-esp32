@@ -44,7 +44,12 @@
 #include <esp_gap_ble_api.h>
 #include <esp_gatts_api.h>
 #include <esp_bt_device.h>
+#include <atomic>
 #include <string.h>
+
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+extern "C" std::atomic<bool> bleGattTestHoldNotifyCompletions;
+#endif
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
@@ -456,6 +461,7 @@ BTStatus BLEServer::start() {
           auto cccd = std::make_shared<BLEDescriptor::Impl>();
           cccd->uuid = BLEUUID(CCCD_UUID16);
           cccd->chr = chr.get();
+      cccd->chrOwner = chr;
           cccd->permissions = BLEPermission::ReadWriteOpen;
           cccd->value.resize(2, 0);
           BLELockGuard lock(chr->mtx);
@@ -1642,6 +1648,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       std::shared_ptr<BLECharacteristic::Impl> chr;
       bool isIndication = false;
       bool wasPendingNotification = false;
+      bool heldPendingNotification = false;
       {
         BLELockGuard lock(impl->mtx);
         if (BLECharacteristic::Impl *found = findCharByHandle(impl, attrHandle)) {
@@ -1651,12 +1658,29 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         // ESP_GATT_BUSY completion for a notification we sent must not be
         // routed into indicationBusy() just because an indication happens
         // to be in flight on the same handle.
-        if (impl->consumePendingNotify(connId, attrHandle)) {
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+        if (bleGattTestHoldNotifyCompletions.load(std::memory_order_relaxed)) {
+          for (const auto &pending : impl->pendingNotifies) {
+            if (pending.connHandle == connId && pending.attrHandle == attrHandle && pending.count > 0) {
+              heldPendingNotification = true;
+              break;
+            }
+          }
+        }
+#endif
+        if (heldPendingNotification) {
+          // Deterministic validation barrier: leave the accepted send pending
+          // so the real disconnect path must terminate it.
+        } else if (impl->consumePendingNotify(connId, attrHandle)) {
           wasPendingNotification = true;
           isIndication = false;
         } else if (auto *link = impl->indicationLink(connId); link && link->inFlight && link->inFlight->handle == attrHandle) {
           isIndication = true;
         }
+      }
+
+      if (heldPendingNotification) {
+        break;
       }
 
       // ESP_GATT_CONGESTED: the PDU was queued anyway. For an indication the

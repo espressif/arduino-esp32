@@ -38,18 +38,25 @@ uint16_t BLERemoteDescriptor::getHandle() const {
 }
 
 BLERemoteCharacteristic BLERemoteDescriptor::getRemoteCharacteristic() const {
-  return (_impl && _impl->chr) ? BLERemoteCharacteristic(_impl->chr->shared_from_this()) : BLERemoteCharacteristic();
+  if (!_impl) {
+    return BLERemoteCharacteristic();
+  }
+  auto chr = _impl->chrOwner.lock();
+  auto mtx = _impl->cacheMtx;
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
+  return (chr && _impl->chr == chr.get()) ? BLERemoteCharacteristic(chr) : BLERemoteCharacteristic();
 }
 
-static SemaphoreHandle_t remoteDescMtx(const BLERemoteDescriptor::Impl *impl) {
-  return (impl && impl->chr && impl->chr->service && impl->chr->service->client) ? impl->chr->service->client->mtx : nullptr;
+static std::shared_ptr<BLESharedMutex> remoteDescMtx(const BLERemoteDescriptor::Impl *impl) {
+  return impl ? impl->cacheMtx : nullptr;
 }
 
 String BLERemoteDescriptor::readValue(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return String();
   }
-  BLELockGuard lock(remoteDescMtx(_impl.get()));
+  auto mtx = remoteDescMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   return String(reinterpret_cast<const char *>(_impl->value.data()), _impl->value.size());
 }
 
@@ -57,7 +64,8 @@ uint8_t BLERemoteDescriptor::readUInt8(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
-  BLELockGuard lock(remoteDescMtx(_impl.get()));
+  auto mtx = remoteDescMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   return static_cast<uint8_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 1));
 }
 
@@ -65,7 +73,8 @@ uint16_t BLERemoteDescriptor::readUInt16(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
-  BLELockGuard lock(remoteDescMtx(_impl.get()));
+  auto mtx = remoteDescMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   return static_cast<uint16_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 2));
 }
 
@@ -73,7 +82,8 @@ uint32_t BLERemoteDescriptor::readUInt32(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
-  BLELockGuard lock(remoteDescMtx(_impl.get()));
+  auto mtx = remoteDescMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   return bleReadLEUint(_impl->value.data(), _impl->value.size(), 4);
 }
 
@@ -84,7 +94,8 @@ const uint8_t *BLERemoteDescriptor::readRawData(size_t *len) const {
     }
     return nullptr;
   }
-  BLELockGuard lock(remoteDescMtx(_impl.get()));
+  auto mtx = remoteDescMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   if (_impl->value.empty()) {
     if (len) {
       *len = 0;
@@ -116,7 +127,8 @@ static uint16_t getRemotePresentationFormatField(const BLERemoteDescriptor &desc
   if (!impl || !desc.isPresentationFormat()) {
     return 0;
   }
-  BLELockGuard lock(remoteDescMtx(impl));
+  auto mtx = remoteDescMtx(impl);
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   if (impl->value.size() < 7) {
     return 0;
   }

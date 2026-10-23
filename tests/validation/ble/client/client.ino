@@ -10,6 +10,7 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <cstring>
 #include <vector>
 
 static const BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
@@ -47,7 +48,50 @@ struct LongReadJob {
   bool uniform[8] = {};
   int count = 0;
   uint32_t timeoutMs = 3000;
-  volatile bool done = false;
+  std::atomic<bool> *go = nullptr;
+  std::atomic<bool> done{false};
+};
+struct GattWriteJob {
+  BLERemoteCharacteristic chr;
+  const char *value = nullptr;
+  int count = 0;
+  bool withResponse = true;
+  std::atomic<bool> *go = nullptr;
+  std::atomic<int> failures{0};
+  std::atomic<int> busyRetries{0};
+  std::atomic<bool> done{false};
+};
+struct ServiceDiscoveryRaceJob {
+  BLERemoteService service;
+  BLEUUID uuid;
+  bool aggregate = false;
+  std::atomic<bool> *go = nullptr;
+  std::atomic<bool> entered{false};
+  std::atomic<bool> done{false};
+  std::atomic<size_t> resultCount{0};
+  BLERemoteCharacteristic result;
+};
+struct DescriptorDiscoveryRaceJob {
+  BLERemoteCharacteristic chr;
+  BLEUUID uuid;
+  bool aggregate = false;
+  std::atomic<bool> *go = nullptr;
+  std::atomic<bool> entered{false};
+  std::atomic<bool> done{false};
+  std::atomic<size_t> resultCount{0};
+  BLERemoteDescriptor result;
+};
+struct BLEStreamShutdownRaceJob {
+  BLEStream *stream = nullptr;
+  std::atomic<bool> streamEndDone{false};
+  std::atomic<bool> hostEndDone{false};
+};
+struct ScanShutdownJob {
+  std::atomic<bool> started{false};
+  std::atomic<bool> done{false};
+};
+struct ScanHostShutdownJob {
+  std::atomic<bool> done{false};
 };
 #if BLE_L2CAP_SUPPORTED
 struct L2CAPRaceJob {
@@ -135,6 +179,40 @@ volatile bool phase28StallGo = false;
 volatile bool phase28CleanupGo = false;
 volatile bool phase28EndGo = false;
 volatile bool phase35DisconnectGo = false;
+volatile bool phase35ReadRemoveGo = false;
+volatile bool phase35StreamReleaseGo = false;
+extern "C" {
+std::atomic<int> bleStreamTestWorkerStartFailures{0};
+std::atomic<int> bleStreamTestTeardownFailures{0};
+std::atomic<int> bleStreamTestStartFailures{0};
+std::atomic<int> bleStreamTestRemoveFailures{0};
+std::atomic<int> bleStreamTestDisconnectRaces{0};
+std::atomic<bool> bleStreamTestHoldFinalRoleRelease{false};
+std::atomic<bool> bleStreamTestFinalRoleReleaseReached{false};
+std::atomic<bool> bleStreamTestHostShutdownEntered{false};
+std::atomic<uint32_t> bleRemoteTestWriteTimeoutMs{0};
+std::atomic<bool> bleRemoteTestHoldWriteCommandCompletion{false};
+std::atomic<bool> bleRemoteTestReleaseWriteCommandCompletion{false};
+std::atomic<bool> bleRemoteTestHoldWriteResponseRetirement{false};
+std::atomic<bool> bleRemoteTestWriteCommandOverlappedWaiter{false};
+std::atomic<int> bleRemoteTestWriteCommandSubmitFailures{0};
+std::atomic<int> bleRemoteTestWriteCommandCompletionFailures{0};
+std::atomic<bool> bleRemoteTestWriteResponseStatusPreserved{false};
+std::atomic<bool> bleRemoteTestCombinedWriteOwnerObserved{false};
+std::atomic<bool> bleRemoteTestCombinedWriteOwnerHeld{true};
+std::atomic<bool> bleGattTestHoldNotifyCompletions{false};
+std::atomic<bool> bleGattTestForceTerminalClose{false};
+std::atomic<bool> bleGattTestHoldTerminalWorker{false};
+std::atomic<bool> bleGattTestTerminalWorkerEntered{false};
+std::atomic<bool> bleGattTestTerminalShutdownEntered{false};
+std::atomic<int> bleGattTestTerminalWorkerStartFailures{0};
+std::atomic<bool> bleScanTestForcePreemptedStop{false};
+std::atomic<bool> bleScanTestBluedroidShutdownEntered{false};
+std::atomic<bool> bleScanTestHoldBluedroidShutdown{false};
+std::atomic<int> bleScanTestCancelFailures{0};
+std::atomic<int> bleScanTestHeldContexts{0};
+std::atomic<int> bleScanTestRetiredContexts{0};
+}
 static void recordClientEvent(const char *tag) {
   int n = clientOrderN;
   if (n < (int)(sizeof(clientOrderTags) / sizeof(clientOrderTags[0]))) {
@@ -178,6 +256,10 @@ void checkSerial() {
         phase28EndGo = true;
       } else if (buf == "PHASE35_DISCONNECT_GO") {
         phase35DisconnectGo = true;
+      } else if (buf == "PHASE35_READ_REMOVE_GO") {
+        phase35ReadRemoveGo = true;
+      } else if (buf == "PHASE35_STREAM_RELEASE_GO") {
+        phase35StreamReleaseGo = true;
       }
       buf = "";
     } else if (c != '\r') {
@@ -229,10 +311,108 @@ static void fillLongReadJob(LongReadJob *job, int index, const String &v) {
 
 static void longReadJobTask(void *arg) {
   auto *job = static_cast<LongReadJob *>(arg);
+  while (job->go && !job->go->load(std::memory_order_acquire)) {
+    taskYIELD();
+  }
   for (int i = 0; i < job->count; i++) {
     fillLongReadJob(job, i, job->chr.readValue(job->timeoutMs));
   }
-  job->done = true;
+  job->done.store(true, std::memory_order_release);
+  vTaskDelete(nullptr);
+}
+
+static void gattWriteJobTask(void *arg) {
+  auto *job = static_cast<GattWriteJob *>(arg);
+  while (job->go && !job->go->load(std::memory_order_acquire)) {
+    taskYIELD();
+  }
+  for (int i = 0; i < job->count; i++) {
+    BTStatus status = BTStatus::Busy;
+    for (int retry = 0; retry < 100 && status == BTStatus::Busy; retry++) {
+      status = job->chr.writeValue(String(job->value), job->withResponse);
+      if (status == BTStatus::Busy) {
+        job->busyRetries.fetch_add(1, std::memory_order_relaxed);
+        delay(1);
+      }
+    }
+    if (!status) {
+      job->failures.fetch_add(1, std::memory_order_relaxed);
+    }
+  }
+  job->done.store(true, std::memory_order_release);
+  vTaskDelete(nullptr);
+}
+
+static void serviceDiscoveryRaceTask(void *arg) {
+  auto *job = static_cast<ServiceDiscoveryRaceJob *>(arg);
+  while (job->go && !job->go->load(std::memory_order_acquire)) {
+    taskYIELD();
+  }
+  job->entered.store(true, std::memory_order_release);
+  size_t count = 0;
+  if (job->aggregate) {
+    auto results = job->service.getCharacteristics();
+    count = results.size();
+    if (!results.empty()) {
+      job->result = results.front();
+    }
+  } else {
+    job->result = job->service.getCharacteristic(job->uuid);
+    count = job->result ? 1 : 0;
+  }
+  job->resultCount.store(count, std::memory_order_relaxed);
+  job->done.store(true, std::memory_order_release);
+  vTaskDelete(nullptr);
+}
+
+static void descriptorDiscoveryRaceTask(void *arg) {
+  auto *job = static_cast<DescriptorDiscoveryRaceJob *>(arg);
+  while (job->go && !job->go->load(std::memory_order_acquire)) {
+    taskYIELD();
+  }
+  job->entered.store(true, std::memory_order_release);
+  size_t count = 0;
+  if (job->aggregate) {
+    auto results = job->chr.getDescriptors();
+    count = results.size();
+    if (!results.empty()) {
+      job->result = results.front();
+    }
+  } else {
+    job->result = job->chr.getDescriptor(job->uuid);
+    count = job->result ? 1 : 0;
+  }
+  job->resultCount.store(count, std::memory_order_relaxed);
+  job->done.store(true, std::memory_order_release);
+  vTaskDelete(nullptr);
+}
+
+static void bleStreamShutdownRaceEndTask(void *arg) {
+  auto *job = static_cast<BLEStreamShutdownRaceJob *>(arg);
+  job->stream->end();
+  job->streamEndDone.store(true, std::memory_order_release);
+  vTaskDelete(nullptr);
+}
+
+static void bleStreamShutdownRaceHostTask(void *arg) {
+  auto *job = static_cast<BLEStreamShutdownRaceJob *>(arg);
+  BLE.end(false);
+  job->hostEndDone.store(true, std::memory_order_release);
+  vTaskDelete(nullptr);
+}
+
+static void scanShutdownTask(void *arg) {
+  auto *job = static_cast<ScanShutdownJob *>(arg);
+  job->started.store(true, std::memory_order_release);
+  (void)BLE.getScan().startBlocking(0);
+  job->done.store(true, std::memory_order_release);
+  vTaskDelete(nullptr);
+}
+
+static void scanHostShutdownTask(void *arg) {
+  auto *job = static_cast<ScanHostShutdownJob *>(arg);
+  BLE.end(false);
+  job->done.store(true, std::memory_order_release);
   vTaskDelete(nullptr);
 }
 
@@ -311,6 +491,74 @@ bool phase_basic() {
     return false;
   }
   Serial.println("[CLIENT] Bare lifecycle OK");
+
+  // An unlimited blocking scan must be released by BLE.end(). Wait for the
+  // public scan state rather than a delay so shutdown overlaps a known active
+  // native session on both backends.
+  static ScanShutdownJob scanShutdown;
+  bool scanTaskStarted = xTaskCreate(scanShutdownTask, "scan-shutdown", 4096, &scanShutdown, 1, nullptr) == pdPASS;
+  BLEScan shutdownScan = BLE.getScan();
+  unsigned long scanStartDeadline = millis() + 5000;
+  while (scanTaskStarted && !shutdownScan.isScanning() && millis() < scanStartDeadline) {
+    delay(1);
+  }
+  bool scanWasActive = shutdownScan.isScanning();
+  bool bluedroidScan = strcmp(BLE.getStackName(), "Bluedroid") == 0;
+  bool injectCancelFailure = true;
+  bleScanTestCancelFailures.store(1);
+  bool shutdownAdmissionClean = true;
+  if (bluedroidScan) {
+    static ScanHostShutdownJob hostShutdown;
+    hostShutdown.done.store(false, std::memory_order_relaxed);
+    bleScanTestBluedroidShutdownEntered.store(false, std::memory_order_relaxed);
+    bleScanTestHoldBluedroidShutdown.store(true, std::memory_order_relaxed);
+    bool hostTaskStarted =
+      xTaskCreate(scanHostShutdownTask, "scan-host-end", 4096, &hostShutdown, 1, nullptr) == pdPASS;
+    unsigned long gateDeadline = millis() + 5000;
+    while (hostTaskStarted && !bleScanTestBluedroidShutdownEntered.load(std::memory_order_acquire)
+           && millis() < gateDeadline) {
+      delay(1);
+    }
+    bool gateClosed = bleScanTestBluedroidShutdownEntered.load(std::memory_order_acquire);
+    BTStatus duringShutdown = gateClosed ? shutdownScan.start(100) : BTStatus::Fail;
+    BTStatus stopDuringShutdown = gateClosed ? shutdownScan.stop() : BTStatus::Fail;
+    bleScanTestHoldBluedroidShutdown.store(false, std::memory_order_release);
+    while (hostTaskStarted && !hostShutdown.done.load(std::memory_order_acquire)) {
+      delay(1);
+    }
+    if (!hostTaskStarted) {
+      BLE.end(false);
+    }
+    BTStatus afterShutdown = shutdownScan.start(100);
+    BTStatus stopAfterShutdown = shutdownScan.stop();
+    shutdownAdmissionClean =
+      hostTaskStarted && gateClosed && duringShutdown == BTStatus::InvalidState
+      && stopDuringShutdown == BTStatus::OK && afterShutdown == BTStatus::InvalidState
+      && stopAfterShutdown == BTStatus::OK;
+  } else {
+    BLE.end(false);
+    shutdownAdmissionClean =
+      shutdownScan.start(100) == BTStatus::InvalidState && shutdownScan.stop() == BTStatus::OK;
+  }
+  unsigned long scanEndDeadline = millis() + 5000;
+  while (scanTaskStarted && !scanShutdown.done.load() && millis() < scanEndDeadline) {
+    delay(1);
+  }
+  bool scanReleased = scanShutdown.done.load();
+  bool cancelFallbackClean = !injectCancelFailure || bleScanTestCancelFailures.load() == 0;
+  Serial.printf(
+    "[CLIENT] Blocking scan shutdown task=%d active=%d released=%d cancelFallback=%d admission=%d heap=%d\n",
+    (int)scanTaskStarted, (int)scanWasActive, (int)scanReleased, (int)cancelFallbackClean,
+    (int)shutdownAdmissionClean, (int)heap_caps_check_integrity_all(true)
+  );
+  if (!scanTaskStarted || !scanWasActive || !scanReleased || !cancelFallbackClean || !shutdownAdmissionClean) {
+    return false;
+  }
+  status = BLE.begin(targetName + "_client_scan_reinit");
+  if (!status) {
+    Serial.printf("[CLIENT] Scan reinit FAILED: %s\n", status.toString());
+    return false;
+  }
 
   // NVS outlives reflashing, so bonds from an earlier run would otherwise leak
   // into the pairing phases and make them depend on whatever state the boards
@@ -655,26 +903,113 @@ void setup() {
       Serial.println("[CLIENT] Const lookup char not found");
     } else {
       Serial.printf("[CLIENT] Const lookup read: %s\n", constLookupChr.readValue().c_str());
+
+      // Bluedroid has one read and one write completion slot per client. Run
+      // same-client callers together to prove each blocking operation retains
+      // its slot through completion instead of replacing another caller's
+      // pending handle/synchronizer state.
+      static std::atomic<bool> readGo{false};
+      static LongReadJob readA;
+      static LongReadJob readB;
+      readA.chr = rwChr;
+      readA.count = 4;
+      readA.go = &readGo;
+      readB.chr = constLookupChr;
+      readB.count = 4;
+      readB.go = &readGo;
+      bool readCreatedA = xTaskCreate(longReadJobTask, "gatt-read-a", 6144, &readA, 1, nullptr) == pdPASS;
+      bool readCreatedB = xTaskCreate(longReadJobTask, "gatt-read-b", 6144, &readB, 1, nullptr) == pdPASS;
+      readGo.store(true, std::memory_order_release);
+      unsigned long raceWait = millis();
+      while (((readCreatedA && !readA.done.load(std::memory_order_acquire))
+              || (readCreatedB && !readB.done.load(std::memory_order_acquire)))
+             && millis() - raceWait < 30000) {
+        delay(10);
+      }
+      bool readsClean =
+        readCreatedA && readCreatedB && readA.done.load(std::memory_order_acquire)
+        && readB.done.load(std::memory_order_acquire);
+      for (int i = 0; i < 4 && readsClean; i++) {
+        readsClean = readA.values[i] == "Hello from client!" && readB.values[i] == "set_via_const_lookup";
+      }
+
+      static std::atomic<bool> writeGo{false};
+      static GattWriteJob writeA;
+      static GattWriteJob writeB;
+      writeA.chr = rwChr;
+      writeA.value = "race-a";
+      writeA.count = 3;
+      writeA.go = &writeGo;
+      writeB.chr = rwChr;
+      writeB.value = "race-b";
+      writeB.count = 3;
+      writeB.go = &writeGo;
+      bool writeCreatedA = xTaskCreate(gattWriteJobTask, "gatt-write-a", 6144, &writeA, 1, nullptr) == pdPASS;
+      bool writeCreatedB = xTaskCreate(gattWriteJobTask, "gatt-write-b", 6144, &writeB, 1, nullptr) == pdPASS;
+      writeGo.store(true, std::memory_order_release);
+      raceWait = millis();
+      while (((writeCreatedA && !writeA.done.load(std::memory_order_acquire))
+              || (writeCreatedB && !writeB.done.load(std::memory_order_acquire)))
+             && millis() - raceWait < 70000) {
+        delay(10);
+      }
+      bool writesClean =
+        writeCreatedA && writeCreatedB && writeA.done.load(std::memory_order_acquire)
+        && writeB.done.load(std::memory_order_acquire) && writeA.failures.load() == 0 && writeB.failures.load() == 0;
+
+      static std::atomic<bool> commandGo{false};
+      static GattWriteJob commandA;
+      static GattWriteJob commandB;
+      commandA.chr = rwChr;
+      commandA.value = "cmd-a";
+      commandA.count = 3;
+      commandA.withResponse = false;
+      commandA.go = &commandGo;
+      commandB.chr = rwChr;
+      commandB.value = "cmd-b";
+      commandB.count = 3;
+      commandB.withResponse = false;
+      commandB.go = &commandGo;
+      bool commandCreatedA = xTaskCreate(gattWriteJobTask, "gatt-cmd-a", 6144, &commandA, 1, nullptr) == pdPASS;
+      bool commandCreatedB = xTaskCreate(gattWriteJobTask, "gatt-cmd-b", 6144, &commandB, 1, nullptr) == pdPASS;
+      commandGo.store(true, std::memory_order_release);
+      raceWait = millis();
+      while (((commandCreatedA && !commandA.done.load(std::memory_order_acquire))
+              || (commandCreatedB && !commandB.done.load(std::memory_order_acquire)))
+             && millis() - raceWait < 70000) {
+        delay(10);
+      }
+      bool commandsClean =
+        commandCreatedA && commandCreatedB && commandA.done.load(std::memory_order_acquire)
+        && commandB.done.load(std::memory_order_acquire) && commandA.failures.load() == 0 && commandB.failures.load() == 0;
+      Serial.printf(
+        "[CLIENT] Concurrent GATT reads=%d writes=%d commands=%d\n", (int)readsClean, (int)writesClean, (int)commandsClean
+      );
     }
 
     // Two BLEClient instances on this board share one ACL with the peripheral
     // (one local address). Abandon the in-flight long read by dropping that
     // link, then reconnect so later phases still have a live svc/rwChr.
-    LongReadJob abandon;
+    static LongReadJob abandon;
     abandon.chr = snapshotChr;
     abandon.count = 1;
     abandon.timeoutMs = 2000;
+    abandon.done.store(false, std::memory_order_relaxed);
     if (snapshotChr && xTaskCreate(longReadJobTask, "abandon", 8192, &abandon, 1, nullptr) == pdPASS) {
       delay(40);
       (void)client.disconnect();
       unsigned long wait = millis();
-      while (!abandon.done && millis() - wait < 5000) {
+      while (!abandon.done.load(std::memory_order_acquire) && millis() - wait < 5000) {
         delay(10);
       }
     } else {
-      abandon.done = true;
+      abandon.done.store(true, std::memory_order_release);
     }
-    Serial.printf("[CLIENT] Snapshot abandon empty=%d\n", (int)(abandon.done && abandon.lengths[0] == 0));
+    bool abandonDone = abandon.done.load(std::memory_order_acquire);
+    Serial.printf("[CLIENT] Snapshot abandon empty=%d\n", (int)(abandonDone && abandon.lengths[0] == 0));
+    if (abandonDone) {
+      abandon.chr = BLERemoteCharacteristic();
+    }
     delay(500);
     bool rec = false;
     for (int attempt = 0; attempt < 6 && !rec; attempt++) {
@@ -1213,7 +1548,10 @@ void setup() {
   // ===== Phase 13: BLEStream =====
   waitForPhase(13);
   {
+    uint16_t streamPreviousMtu = BLE.getMTU();
+    (void)BLE.setMTU(100);
     bool stream_ok = false;
+    bool bulkWriteComplete = false;
     bool failedBeginClean = false;
     Serial.println("[CLIENT] BLEStream malformed begin armed");
     while (!phase13MalformedGo) {
@@ -1221,9 +1559,21 @@ void setup() {
       delay(10);
     }
     {
+      std::atomic<uint32_t> failedConnects{0};
+      std::atomic<uint32_t> failedDisconnects{0};
       BLEStream failedStream;
+      failedStream.onConnect([&](const BLEConnInfo &) {
+        failedConnects.fetch_add(1);
+      });
+      failedStream.onDisconnect([&](const BLEConnInfo &, uint8_t) {
+        failedDisconnects.fetch_add(1);
+      });
       BTStatus failedStatus = failedStream.beginClient(targetAddr, 5000);
-      failedBeginClean = failedStatus == BTStatus::NotFound;
+      failedBeginClean = failedStatus == BTStatus::NotFound && failedConnects.load() == 1 && failedDisconnects.load() == 1;
+      Serial.printf(
+        "[CLIENT] BLEStream failed begin events connect=%lu disconnect=%lu\n", (unsigned long)failedConnects.load(),
+        (unsigned long)failedDisconnects.load()
+      );
     }
     delay(500);
     failedBeginClean = failedBeginClean && heap_caps_check_integrity_all(true);
@@ -1285,8 +1635,9 @@ void setup() {
           bulk[i] = 'A' + (i % 26);
         }
         bulk[200] = '\0';
-        stream.println(bulk);
-        Serial.println("[CLIENT] BLEStream bulk sent: 200 bytes");
+        size_t bulkSent = stream.println(bulk);
+        Serial.printf("[CLIENT] BLEStream bulk sent: 200 bytes returned=%u\n", (unsigned)bulkSent);
+        bulkWriteComplete = bulkSent == 202;
       }
 
       // Receive server-initiated message (tests server→client direction)
@@ -1302,14 +1653,73 @@ void setup() {
         delay(20);
       }
       Serial.printf("[CLIENT] BLEStream server end disconnected=%d\n", (int)!stream.connected());
-      stream_ok = true;
+      stream_ok = bulkWriteComplete;
       stream.end();
+
+      // Reconnect to the server's restarted stream, then disconnect from the
+      // application task. The server's onDisconnect callback calls end() as
+      // the outer teardown operation, exercising callback-context deferral.
+      std::atomic<uint32_t> callbackEndDisconnects{0};
+      BLEStream callbackEndStream;
+      callbackEndStream.onDisconnect([&](const BLEConnInfo &, uint8_t) {
+        callbackEndDisconnects.fetch_add(1);
+      });
+      BTStatus callbackConnect = BTStatus::Fail;
+      for (int callbackAttempt = 0; callbackAttempt < 10 && !callbackConnect; callbackAttempt++) {
+        callbackConnect = callbackEndStream.beginClient(targetAddr, 5000);
+        if (!callbackConnect) {
+          delay(250);
+        }
+      }
+      if (callbackConnect) {
+        delay(300);
+        bleStreamTestDisconnectRaces.store(1);
+        callbackEndStream.end();
+      }
+      Serial.printf(
+        "[CLIENT] BLEStream callback end cycle connected=%d disconnects=%lu\n", (int)(bool)callbackConnect,
+        (unsigned long)callbackEndDisconnects.load()
+      );
+
+      // The server now owns its stream only through a shared_ptr and drops that
+      // final public owner from onConnect. The link may disappear before
+      // beginClient finishes discovery; callback delivery and clean disconnect
+      // are the invariant under test.
+      std::atomic<uint32_t> finalOwnerConnects{0};
+      std::atomic<uint32_t> finalOwnerDisconnects{0};
+      BLEStream finalOwnerClient;
+      finalOwnerClient.onConnect([&](const BLEConnInfo &) {
+        finalOwnerConnects.fetch_add(1);
+      });
+      finalOwnerClient.onDisconnect([&](const BLEConnInfo &, uint8_t) {
+        finalOwnerDisconnects.fetch_add(1);
+      });
+      for (int finalAttempt = 0; finalAttempt < 10 && finalOwnerConnects.load() == 0; finalAttempt++) {
+        (void)finalOwnerClient.beginClient(targetAddr, 5000);
+        if (finalOwnerConnects.load() == 0) {
+          delay(250);
+        }
+      }
+      unsigned long finalOwnerDeadline = millis() + 8000;
+      while (finalOwnerDisconnects.load() == 0 && millis() < finalOwnerDeadline) {
+        delay(20);
+      }
+      bool finalOwnerClean =
+        finalOwnerConnects.load() > 0 && finalOwnerDisconnects.load() > 0 && !finalOwnerClient.connected()
+        && heap_caps_check_integrity_all(true);
+      Serial.printf(
+        "[CLIENT] BLEStream final owner callback clean=%d connects=%lu disconnects=%lu\n", (int)finalOwnerClean,
+        (unsigned long)finalOwnerConnects.load(), (unsigned long)finalOwnerDisconnects.load()
+      );
+      finalOwnerClient.end();
+      stream_ok = stream_ok && finalOwnerClean;
     }
     if (stream_ok) {
       Serial.println("[CLIENT] Status: blestream done");
     } else {
       Serial.println("[CLIENT] BLEStream phase FAILED");
     }
+    (void)BLE.setMTU(streamPreviousMtu);
   }
 
   // ===== Phase 14: L2CAP CoC =====
@@ -1318,10 +1728,15 @@ void setup() {
     bool l2cap_supported = false;
 #if BLE_L2CAP_SUPPORTED
     l2cap_supported = true;
-    BTStatus s;
+    BTStatus s = BTStatus::Fail;
     BLEClient l2capClient = BLE.createClient();
     installClientCallbacks(l2capClient);
-    s = l2capClient.connect(targetAddr);
+    for (int attempt = 0; attempt < 6 && !s; attempt++) {
+      s = l2capClient.connect(targetAddr);
+      if (!s) {
+        delay(250);
+      }
+    }
     if (!s) {
       Serial.printf("[CLIENT] L2CAP connect FAILED: %s\n", s.toString());
     } else {
@@ -1787,11 +2202,37 @@ void setup() {
     scn.resetCallbacks();
     scn.clearResults();
     scn.setActiveScan(true);  // need scan response for short-name
-    scn.setFilterDuplicates(false);
+    // Changed same-length primary and scan-response payloads must still replace
+    // the cache while byte-identical reports remain filtered.
+    scn.setFilterDuplicates(true);
     scn.setInterval(160);  // 100 ms
     scn.setWindow(96);     // 60 ms
     bool sawAdv = false;
     String wantName = String("ADV_") + targetName;
+    std::atomic<bool> sawInitialPrimary{false};
+    std::atomic<bool> sawRefreshedPrimary{false};
+    std::atomic<bool> sawInitialScanRsp{false};
+    std::atomic<bool> sawRefreshedScanRsp{false};
+    std::atomic<uint32_t> targetReports{0};
+    scn.onResult([&](BLEAdvertisedDevice dev) {
+      if (dev.getName() != wantName) {
+        return;
+      }
+      targetReports.fetch_add(1, std::memory_order_relaxed);
+      String hex = dev.getManufacturerDataString();
+      if (hex == "e502455350") {
+        sawInitialPrimary = true;
+      } else if (hex == "e5024e4557") {
+        sawRefreshedPrimary = true;
+      }
+      size_t svcLen = 0;
+      const uint8_t *svcData = dev.getServiceData(0, &svcLen);
+      if (svcData && svcLen == 2 && svcData[0] == 0xAB && svcData[1] == 0xCD) {
+        sawInitialScanRsp = true;
+      } else if (svcData && svcLen == 2 && svcData[0] == 'N' && svcData[1] == 'R') {
+        sawRefreshedScanRsp = true;
+      }
+    });
     auto findTarget = [&](BLEScan::Results &results, BLEAdvertisedDevice &out) -> bool {
       for (const auto &dev : results) {
         String n = dev.getName();
@@ -1855,6 +2296,22 @@ void setup() {
       uint16_t prefMax = d.getMaxPreferred();
       Serial.printf("[CLIENT] Phase20 prefInterval have=%d min=0x%04X max=0x%04X\n", (int)havePref, (unsigned)prefMin, (unsigned)prefMax);
     }
+    Serial.printf(
+      "[CLIENT] Phase20 primaryRefresh initial=%d refreshed=%d\n", (int)sawInitialPrimary.load(), (int)sawRefreshedPrimary.load()
+    );
+    Serial.printf(
+      "[CLIENT] Phase20 scanRspRefresh initial=%d refreshed=%d\n", (int)sawInitialScanRsp.load(), (int)sawRefreshedScanRsp.load()
+    );
+    uint32_t reportsBeforeClear = targetReports.load(std::memory_order_relaxed);
+    scn.clearDuplicateCache();
+    BTStatus redispatchStart = scn.start(1200, true);
+    unsigned long redispatchDeadline = millis() + 3200;
+    while (scn.isScanning() && millis() < redispatchDeadline) {
+      delay(10);
+    }
+    bool duplicateRedispatched =
+      redispatchStart && targetReports.load(std::memory_order_relaxed) > reportsBeforeClear;
+    Serial.printf("[CLIENT] Phase20 duplicateCacheClear redispatched=%d\n", (int)duplicateRedispatched);
     Serial.printf("[CLIENT] Phase20 sawAdv=%d\n", (int)sawAdv);
 
     // Second scan: server switches to OSZ_<name>, whose scan response holds only
@@ -1889,6 +2346,7 @@ void setup() {
     Serial.printf("[CLIENT] Phase20 terminatorHidMfg=%d malformedUuidsRejected=%d\n", terminatorHidMfg, parseMalformedUuids);
 
     scn.clearResults();
+    scn.resetCallbacks();
     scn.setActiveScan(true);
     Serial.println("[CLIENT] Phase20 done");
   }
@@ -1896,20 +2354,20 @@ void setup() {
   // ===========================================================================
   // Phase 21: Beacon / Eddystone build + parse
   // ===========================================================================
-  // Server rotates three payloads (iBeacon → Eddystone URL → Eddystone TLM),
-  // each for ~4 s. We rely on BLEAdvertisedDevice::getFrameType() to route
+  // Server rotates iBeacon, URL, encrypted eTLM, then plaintext TLM payloads.
+  // We rely on BLEAdvertisedDevice::getFrameType() to route
   // each hit to the matching parser. The payload accessors below (mfgData,
   // serviceData) return the same structures the classifier inspected so we
   // don't need to redo any AD parsing.
   waitForPhase(21);
   {
-    bool sawIBeacon = false, sawEddyUrl = false, sawEddyTlm = false;
+    bool sawIBeacon = false, sawEddyUrl = false, sawEddyTlm = false, rejectedEncryptedTlm = false;
     BLEScan scn = BLE.getScan();
     scn.resetCallbacks();
     scn.setActiveScan(false);
     scn.setFilterDuplicates(false);
-    unsigned long deadline = millis() + 18000;
-    while (millis() < deadline && (!sawIBeacon || !sawEddyUrl || !sawEddyTlm)) {
+    unsigned long deadline = millis() + 22000;
+    while (millis() < deadline && (!sawIBeacon || !sawEddyUrl || !sawEddyTlm || !rejectedEncryptedTlm)) {
       BLEScan::Results res = scn.startBlocking(3000);
       for (const auto &dev : res) {
         BLEAdvertisedDevice d = dev;
@@ -1953,6 +2411,8 @@ void setup() {
                 (unsigned long)tlm.getAdvertisingCount(), (unsigned long)tlm.getUptime()
               );
               sawEddyTlm = true;
+            } else {
+              rejectedEncryptedTlm = true;
             }
             break;
           }
@@ -1961,7 +2421,10 @@ void setup() {
       }
       scn.clearResults();
     }
-    Serial.printf("[CLIENT] Phase21 sawIBeacon=%d sawEddyURL=%d sawEddyTLM=%d\n", (int)sawIBeacon, (int)sawEddyUrl, (int)sawEddyTlm);
+    Serial.printf(
+      "[CLIENT] Phase21 sawIBeacon=%d sawEddyURL=%d sawEddyTLM=%d rejectedEncryptedTLM=%d\n", (int)sawIBeacon, (int)sawEddyUrl,
+      (int)sawEddyTlm, (int)rejectedEncryptedTlm
+    );
     Serial.println("[CLIENT] Phase21 done");
   }
 
@@ -2137,17 +2600,256 @@ void setup() {
       BLEUUID ubad;
       Serial.printf("[CLIENT] Phase23 UUID valid=%d defaultBool=%d\n", (int)ua.isValid(), (int)(bool)ubad);
 
+      // Race cached-value and parent getters against remote-tree teardown. The
+      // retained children must keep their cache lock alive without retaining
+      // the parent service/client ownership tree.
+      struct RemoteReadRace {
+        BLERemoteCharacteristic chr;
+        BLERemoteDescriptor desc;
+        std::atomic<bool> stop{false};
+        std::atomic<bool> done{false};
+        std::atomic<uint32_t> iterations{0};
+      };
+      static RemoteReadRace remoteRace;
+      remoteRace.chr = rwC;
+      remoteRace.desc = detachedDesc;
+      remoteRace.stop.store(false, std::memory_order_relaxed);
+      remoteRace.done.store(false, std::memory_order_relaxed);
+      remoteRace.iterations.store(0, std::memory_order_relaxed);
+      bool remoteRaceCreated =
+        xTaskCreate(
+          [](void *arg) {
+            auto *race = static_cast<RemoteReadRace *>(arg);
+            while (!race->stop.load()) {
+              size_t len = 0;
+              (void)race->chr.readRawData(&len);
+              (void)race->chr.getRemoteService();
+              (void)race->desc.readRawData(&len);
+              (void)race->desc.getRemoteCharacteristic();
+              race->iterations.fetch_add(1);
+              taskYIELD();
+            }
+            race->done.store(true, std::memory_order_release);
+            vTaskDelete(nullptr);
+          },
+          "remote-cache", 4096, &remoteRace, 1, nullptr
+        )
+        == pdPASS;
+      delay(20);
+
+      // Leave only the client tree owning the parents. Disconnect now destroys
+      // those parents while the task above retains and reads only descendants.
+      good = BLERemoteService();
+      goodStr = BLERemoteService();
+
       // Disconnect + op-after-disconnect
       ec.disconnect();
       delay(1500);
+      remoteRace.stop = true;
+      unsigned long remoteRaceDeadline = millis() + 2000;
+      while (remoteRaceCreated && !remoteRace.done.load(std::memory_order_acquire) && millis() < remoteRaceDeadline) {
+        delay(1);
+      }
+      bool remoteRaceClean =
+        remoteRaceCreated && remoteRace.done.load(std::memory_order_acquire) && remoteRace.iterations.load() > 0
+        && heap_caps_check_integrity_all(true);
+      Serial.printf(
+        "[CLIENT] Phase23 remote cache race clean=%d iterations=%lu\n", (int)remoteRaceClean, (unsigned long)remoteRace.iterations.load()
+      );
+      strCheck(remoteRaceClean);
+      if (remoteRace.done.load(std::memory_order_acquire)) {
+        remoteRace.chr = BLERemoteCharacteristic();
+        remoteRace.desc = BLERemoteDescriptor();
+      }
       Serial.printf("[CLIENT] Phase23 postDisc isConnected=%d\n", (int)ec.isConnected());
-      strCheck(!good.getClient());
-      good = BLERemoteService();
-      goodStr = BLERemoteService();
+      // Disconnect must recursively detach externally retained descendants
+      // immediately; dropping the retained service handles must not be what
+      // finally clears child-to-parent navigation.
+      strCheck(!rwC.getRemoteService());
+      strCheck(detachedDesc && !detachedDesc.getRemoteCharacteristic());
       strCheck(!rwC.getRemoteService());
       strCheck(detachedDesc && !detachedDesc.getRemoteCharacteristic() && !detachedDesc.writeValue("x"));
       BTStatus rwAfter = rwC.writeValue(String("after"));
       Serial.printf("[CLIENT] Phase23 writeAfterDisc ok=%d\n", (int)(bool)rwAfter);
+
+      // Exercise the lazy-discovery publication flags directly: aggregate and
+      // targeted callers start together on a fresh cache while disconnect
+      // invalidates the owning client tree. Outcomes may be populated or empty
+      // depending on which operation wins, but both callers must terminate
+      // without racing vector publication or detached-parent cleanup.
+      BLEClient discoveryClient = BLE.createClient();
+      BTStatus discoveryConnect = discoveryClient.connect(targetAddr);
+      BLERemoteService discoveryService =
+        discoveryConnect ? discoveryClient.getService(serviceUUID) : BLERemoteService();
+      static std::atomic<bool> serviceDiscoveryGo{false};
+      static ServiceDiscoveryRaceJob serviceDiscoveryAggregate;
+      static ServiceDiscoveryRaceJob serviceDiscoveryTarget;
+      serviceDiscoveryAggregate.service = discoveryService;
+      serviceDiscoveryAggregate.uuid = rwCharUUID;
+      serviceDiscoveryAggregate.aggregate = true;
+      serviceDiscoveryAggregate.go = &serviceDiscoveryGo;
+      serviceDiscoveryAggregate.entered.store(false, std::memory_order_relaxed);
+      serviceDiscoveryAggregate.done.store(false, std::memory_order_relaxed);
+      serviceDiscoveryAggregate.result = BLERemoteCharacteristic();
+      serviceDiscoveryTarget.service = discoveryService;
+      serviceDiscoveryTarget.uuid = rwCharUUID;
+      serviceDiscoveryTarget.aggregate = false;
+      serviceDiscoveryTarget.go = &serviceDiscoveryGo;
+      serviceDiscoveryTarget.entered.store(false, std::memory_order_relaxed);
+      serviceDiscoveryTarget.done.store(false, std::memory_order_relaxed);
+      serviceDiscoveryTarget.result = BLERemoteCharacteristic();
+      bool serviceAggregateCreated =
+        discoveryService
+        && xTaskCreate(
+             serviceDiscoveryRaceTask, "svc-disc-all", 6144, &serviceDiscoveryAggregate, 1, nullptr
+           )
+             == pdPASS;
+      bool serviceTargetCreated =
+        discoveryService
+        && xTaskCreate(
+             serviceDiscoveryRaceTask, "svc-disc-one", 6144, &serviceDiscoveryTarget, 1, nullptr
+           )
+             == pdPASS;
+      serviceDiscoveryGo.store(true, std::memory_order_release);
+      unsigned long entryDeadline = millis() + 2000;
+      while (serviceAggregateCreated && serviceTargetCreated
+             && (!serviceDiscoveryAggregate.entered.load(std::memory_order_acquire)
+                 || !serviceDiscoveryTarget.entered.load(std::memory_order_acquire))
+             && millis() < entryDeadline) {
+        taskYIELD();
+      }
+      if (discoveryConnect) {
+        discoveryClient.disconnect();
+      }
+      unsigned long discoveryDeadline = millis() + 15000;
+      while (((serviceAggregateCreated && !serviceDiscoveryAggregate.done.load(std::memory_order_acquire))
+              || (serviceTargetCreated && !serviceDiscoveryTarget.done.load(std::memory_order_acquire)))
+             && millis() < discoveryDeadline) {
+        delay(1);
+      }
+      bool serviceDiscoveryClean =
+        serviceAggregateCreated && serviceTargetCreated
+        && serviceDiscoveryAggregate.done.load(std::memory_order_acquire)
+        && serviceDiscoveryTarget.done.load(std::memory_order_acquire)
+        && (!serviceDiscoveryAggregate.result || !serviceDiscoveryAggregate.result.getRemoteService())
+        && (!serviceDiscoveryTarget.result || !serviceDiscoveryTarget.result.getRemoteService());
+
+      BTStatus descriptorConnect = discoveryClient.connect(targetAddr);
+      BLERemoteService descriptorService =
+        descriptorConnect ? discoveryClient.getService(serviceUUID) : BLERemoteService();
+      BLERemoteCharacteristic descriptorChr =
+        descriptorService ? descriptorService.getCharacteristic(descCharUUID) : BLERemoteCharacteristic();
+      static std::atomic<bool> descriptorDiscoveryGo{false};
+      static DescriptorDiscoveryRaceJob descriptorDiscoveryAggregate;
+      static DescriptorDiscoveryRaceJob descriptorDiscoveryTarget;
+      descriptorDiscoveryAggregate.chr = descriptorChr;
+      descriptorDiscoveryAggregate.uuid = descReadOnlyUUID;
+      descriptorDiscoveryAggregate.aggregate = true;
+      descriptorDiscoveryAggregate.go = &descriptorDiscoveryGo;
+      descriptorDiscoveryAggregate.entered.store(false, std::memory_order_relaxed);
+      descriptorDiscoveryAggregate.done.store(false, std::memory_order_relaxed);
+      descriptorDiscoveryAggregate.result = BLERemoteDescriptor();
+      descriptorDiscoveryTarget.chr = descriptorChr;
+      descriptorDiscoveryTarget.uuid = descReadOnlyUUID;
+      descriptorDiscoveryTarget.aggregate = false;
+      descriptorDiscoveryTarget.go = &descriptorDiscoveryGo;
+      descriptorDiscoveryTarget.entered.store(false, std::memory_order_relaxed);
+      descriptorDiscoveryTarget.done.store(false, std::memory_order_relaxed);
+      descriptorDiscoveryTarget.result = BLERemoteDescriptor();
+      bool descriptorAggregateCreated =
+        descriptorChr
+        && xTaskCreate(
+             descriptorDiscoveryRaceTask, "dsc-disc-all", 6144, &descriptorDiscoveryAggregate, 1, nullptr
+           )
+             == pdPASS;
+      bool descriptorTargetCreated =
+        descriptorChr
+        && xTaskCreate(
+             descriptorDiscoveryRaceTask, "dsc-disc-one", 6144, &descriptorDiscoveryTarget, 1, nullptr
+           )
+             == pdPASS;
+      descriptorDiscoveryGo.store(true, std::memory_order_release);
+      entryDeadline = millis() + 2000;
+      while (descriptorAggregateCreated && descriptorTargetCreated
+             && (!descriptorDiscoveryAggregate.entered.load(std::memory_order_acquire)
+                 || !descriptorDiscoveryTarget.entered.load(std::memory_order_acquire))
+             && millis() < entryDeadline) {
+        taskYIELD();
+      }
+      if (descriptorConnect) {
+        discoveryClient.disconnect();
+      }
+      discoveryDeadline = millis() + 15000;
+      while (((descriptorAggregateCreated && !descriptorDiscoveryAggregate.done.load(std::memory_order_acquire))
+              || (descriptorTargetCreated && !descriptorDiscoveryTarget.done.load(std::memory_order_acquire)))
+             && millis() < discoveryDeadline) {
+        delay(1);
+      }
+      bool descriptorDiscoveryClean =
+        descriptorAggregateCreated && descriptorTargetCreated
+        && descriptorDiscoveryAggregate.done.load(std::memory_order_acquire)
+        && descriptorDiscoveryTarget.done.load(std::memory_order_acquire)
+        && (!descriptorDiscoveryAggregate.result || !descriptorDiscoveryAggregate.result.getRemoteCharacteristic())
+        && (!descriptorDiscoveryTarget.result || !descriptorDiscoveryTarget.result.getRemoteCharacteristic());
+
+      BTStatus freshDiscoveryConnect = discoveryClient.connect(targetAddr);
+      BLERemoteService freshDiscoveryService =
+        freshDiscoveryConnect ? discoveryClient.getService(serviceUUID) : BLERemoteService();
+      auto freshCharacteristics =
+        freshDiscoveryService ? freshDiscoveryService.getCharacteristics() : std::vector<BLERemoteCharacteristic>{};
+      BLERemoteCharacteristic freshDescriptorChr =
+        freshDiscoveryService ? freshDiscoveryService.getCharacteristic(descCharUUID) : BLERemoteCharacteristic();
+      auto freshDescriptors =
+        freshDescriptorChr ? freshDescriptorChr.getDescriptors() : std::vector<BLERemoteDescriptor>{};
+      bool freshDiscoveryClean = !freshCharacteristics.empty() && !freshDescriptors.empty();
+      if (freshDiscoveryConnect) {
+        discoveryClient.disconnect();
+      }
+      bool discoveryRaceClean =
+        serviceDiscoveryClean && descriptorDiscoveryClean && freshDiscoveryClean && heap_caps_check_integrity_all(true);
+      Serial.printf(
+        "[CLIENT] Phase23 lazy discovery race clean=%d serviceResults=%u descriptorResults=%u\n",
+        (int)discoveryRaceClean,
+        (unsigned)(serviceDiscoveryAggregate.resultCount.load() + serviceDiscoveryTarget.resultCount.load()),
+        (unsigned)(descriptorDiscoveryAggregate.resultCount.load() + descriptorDiscoveryTarget.resultCount.load())
+      );
+      strCheck(discoveryRaceClean);
+      if (serviceDiscoveryAggregate.done.load(std::memory_order_acquire)) {
+        serviceDiscoveryAggregate.service = BLERemoteService();
+        serviceDiscoveryAggregate.result = BLERemoteCharacteristic();
+      }
+      if (serviceDiscoveryTarget.done.load(std::memory_order_acquire)) {
+        serviceDiscoveryTarget.service = BLERemoteService();
+        serviceDiscoveryTarget.result = BLERemoteCharacteristic();
+      }
+      if (descriptorDiscoveryAggregate.done.load(std::memory_order_acquire)) {
+        descriptorDiscoveryAggregate.chr = BLERemoteCharacteristic();
+        descriptorDiscoveryAggregate.result = BLERemoteDescriptor();
+      }
+      if (descriptorDiscoveryTarget.done.load(std::memory_order_acquire)) {
+        descriptorDiscoveryTarget.chr = BLERemoteCharacteristic();
+        descriptorDiscoveryTarget.result = BLERemoteDescriptor();
+      }
+
+      // Reconnect the same client object before touching the retained old
+      // characteristic again. Native connection IDs are recyclable; the stale
+      // generation must remain detached even if the backend assigns the new
+      // link the same ID.
+      BTStatus reconnect = ec.connect(targetAddr);
+      BLERemoteService freshService = reconnect ? ec.getService(serviceUUID) : BLERemoteService();
+      BLERemoteCharacteristic freshRw = freshService ? freshService.getCharacteristic(rwCharUUID) : BLERemoteCharacteristic();
+      BTStatus staleOnNewGeneration = rwC.writeValue("stale_generation", false);
+      String freshValue = freshRw ? freshRw.readValue() : String();
+      bool generationIsolated = reconnect && freshRw && staleOnNewGeneration == BTStatus::InvalidState && freshValue.length() > 0;
+      Serial.printf(
+        "[CLIENT] Phase23 reconnect generation isolated=%d stale=%s fresh=%d\n", (int)generationIsolated,
+        staleOnNewGeneration.toString(), (int)(freshValue.length() > 0)
+      );
+      strCheck(generationIsolated);
+      if (reconnect) {
+        ec.disconnect();
+        delay(300);
+      }
 
       // connectAsync + cancelConnect
       BLEClient ac = BLE.createClient();
@@ -2738,8 +3440,124 @@ void setup() {
     BLESecurity sec = BLE.getSecurity();
     auto bondsBefore = sec.getBondedDevices();
     Serial.printf("[CLIENT] Phase30 bondsBefore=%u\n", (unsigned)bondsBefore.size());
+    // Delete while a finite scan is active. NimBLE preempts discovery to update
+    // its resolving list; the resumed scan must honor the original deadline
+    // rather than starting another full-duration interval.
+    BLEScan deadlineScan = BLE.getScan();
+    deadlineScan.stop();
+    deadlineScan.resetCallbacks();
+    deadlineScan.clearResults();
+    std::atomic<bool> deadlineScanComplete{false};
+    deadlineScan.onComplete([&](BLEScan::Results) {
+      deadlineScanComplete = true;
+    });
+    const uint32_t deadlineDurationMs = 4000;
+    unsigned long deadlineStart = millis();
+    BTStatus deadlineStartStatus = deadlineScan.start(deadlineDurationMs, false);
+    delay(2500);
     // Exercise the singular deleteBond() API on the one stored bond.
     BTStatus delStatus = bondsBefore.empty() ? BTStatus::NotFound : sec.deleteBond(bondsBefore[0]);
+    while (!deadlineScanComplete.load() && millis() - deadlineStart < 8000) {
+      delay(10);
+    }
+    unsigned long deadlineElapsed = millis() - deadlineStart;
+    if (!deadlineScanComplete.load()) {
+      deadlineScan.stop();
+    }
+    deadlineScan.resetCallbacks();
+    Serial.printf(
+      "[CLIENT] Phase30 preemptScan start=%d complete=%d elapsed=%lu\n", (int)(bool)deadlineStartStatus,
+      (int)deadlineScanComplete.load(), deadlineElapsed
+    );
+
+    // Supersede one active native session with another. A late completion from
+    // the cancelled session must not complete or signal the replacement.
+    std::atomic<uint32_t> replacementCompletions{0};
+    deadlineScan.onComplete([&](BLEScan::Results) {
+      replacementCompletions.fetch_add(1);
+    });
+    BTStatus supersededStart = deadlineScan.start(3000, false);
+    delay(100);
+    unsigned long replacementStartMs = millis();
+    BTStatus replacementStartStatus = deadlineScan.start(800, false);
+    while (replacementCompletions.load() == 0 && millis() - replacementStartMs < 2500) {
+      delay(10);
+    }
+    unsigned long replacementElapsed = millis() - replacementStartMs;
+    delay(100);
+    bool replacementStopped = !deadlineScan.isScanning();
+    deadlineScan.stop();
+    deadlineScan.resetCallbacks();
+    Serial.printf(
+      "[CLIENT] Phase30 sessionReplace first=%d replacement=%d completions=%lu elapsed=%lu stopped=%d\n", (int)(bool)supersededStart,
+      (int)(bool)replacementStartStatus, (unsigned long)replacementCompletions.load(), replacementElapsed, (int)replacementStopped
+    );
+#if defined(CONFIG_NIMBLE_ENABLED) && defined(BLE_SCAN_VALIDATION_HOOKS)
+    bleScanTestHeldContexts.store(0, std::memory_order_relaxed);
+    BTStatus preemptOwnedStart = deadlineScan.start(150, false);
+    bleScanTestForcePreemptedStop.store(true, std::memory_order_relaxed);
+    BTStatus preemptOwnedStop = deadlineScan.stop();
+    bool contextRetained = bleScanTestHeldContexts.load(std::memory_order_relaxed) == 1;
+    unsigned long contextDeadline = millis() + 1500;
+    while (bleScanTestHeldContexts.load(std::memory_order_relaxed) != 0 && millis() < contextDeadline) {
+      delay(1);
+    }
+    bool preemptStopClean =
+      preemptOwnedStart && preemptOwnedStop && contextRetained
+      && bleScanTestHeldContexts.load(std::memory_order_relaxed) == 0
+      && heap_caps_check_integrity_all(true);
+    Serial.printf("[CLIENT] Phase30 preemptStop clean=%d retained=%d\n", (int)preemptStopClean, (int)contextRetained);
+#else
+    Serial.println("[CLIENT] Phase30 preemptStop clean=1 retained=0");
+#endif
+    size_t scanHeapBefore = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    bool scanChurnOk = true;
+    for (int i = 0; i < 24; i++) {
+      scanChurnOk = scanChurnOk && (bool)deadlineScan.start(0, false);
+      scanChurnOk = scanChurnOk && (bool)deadlineScan.stop();
+    }
+#if defined(CONFIG_NIMBLE_ENABLED) && defined(BLE_SCAN_VALIDATION_HOOKS)
+    unsigned long retireDeadline = millis() + 2000;
+    while (bleScanTestRetiredContexts.load(std::memory_order_relaxed) != 0 && millis() < retireDeadline) {
+      delay(1);
+    }
+    scanChurnOk = scanChurnOk && bleScanTestRetiredContexts.load(std::memory_order_relaxed) == 0;
+#else
+    delay(50);
+#endif
+    size_t scanHeapAfter = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int32_t scanHeapDelta = static_cast<int32_t>(scanHeapBefore) - static_cast<int32_t>(scanHeapAfter);
+    scanChurnOk = scanChurnOk && scanHeapDelta <= 64 && heap_caps_check_integrity_all(true);
+    Serial.printf("[CLIENT] Phase30 scanChurn clean=%d heapDelta=%ld\n", (int)scanChurnOk, (long)scanHeapDelta);
+#if defined(CONFIG_NIMBLE_ENABLED)
+    std::atomic<bool> hostChurnEntered{false};
+    std::atomic<bool> hostChurnDone{false};
+    std::atomic<bool> hostChurnClean{true};
+    deadlineScan.onResult([&](BLEAdvertisedDevice) {
+      if (hostChurnEntered.exchange(true)) {
+        return;
+      }
+      bool clean = true;
+      for (int i = 0; i < 48; i++) {
+        clean = clean && (bool)deadlineScan.stop();
+        clean = clean && (bool)deadlineScan.start(0, false);
+      }
+      clean = clean && (bool)deadlineScan.stop() && heap_caps_check_integrity_all(true);
+      hostChurnClean = clean;
+      hostChurnDone = true;
+    });
+    BTStatus hostChurnStart = deadlineScan.start(0, false);
+    unsigned long hostChurnDeadline = millis() + 8000;
+    while (!hostChurnDone.load() && millis() < hostChurnDeadline) {
+      delay(10);
+    }
+    deadlineScan.stop();
+    deadlineScan.resetCallbacks();
+    bool hostChurnOk = hostChurnStart && hostChurnDone.load() && hostChurnClean.load();
+    Serial.printf("[CLIENT] Phase30 hostScanChurn clean=%d cycles=%d\n", (int)hostChurnOk, hostChurnDone.load() ? 48 : 0);
+#else
+    Serial.println("[CLIENT] Phase30 hostScanChurn clean=1 cycles=0");
+#endif
     Serial.printf("[CLIENT] Phase30 deleteOk=%d\n", (int)(bool)delStatus);
     auto bondsAfterDelete = sec.getBondedDevices();
     Serial.printf("[CLIENT] Phase30 bondsAfterDelete=%u\n", (unsigned)bondsAfterDelete.size());
@@ -3121,9 +3939,36 @@ void setup() {
     std::atomic<int> peerIndicate{0};
     std::atomic<int> floodCount{0};
     std::atomic<int> queueIndicate{0};
+    std::atomic<bool> callbackCommandAttempted{false};
+    std::atomic<int> callbackCommandAccepted{0};
+    std::atomic<int> callbackCommandBusy{0};
+    std::atomic<int> callbackCommandOther{0};
+    bool phase35Bluedroid = strcmp(BLE.getStackName(), "Bluedroid") == 0;
     BLERemoteCharacteristic::NotifyCallback onPeer = [&peerNotify, &peerIndicate,
-                                                      &floodCount](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery kind) {
+                                                      &floodCount, &callbackCommandAttempted,
+                                                      &callbackCommandAccepted, &callbackCommandBusy,
+                                                      &callbackCommandOther, phase35Bluedroid](
+                                                        BLERemoteCharacteristic chr, const uint8_t *, size_t,
+                                                        BLERemoteCharacteristic::Delivery kind
+                                                      ) {
       if (kind == BLERemoteCharacteristic::Delivery::Notification) {
+        bool expected = false;
+        if (callbackCommandAttempted.compare_exchange_strong(expected, true)) {
+          const int attempts = phase35Bluedroid ? 10 : 9;
+          for (int i = 0; i < attempts; i++) {
+            BTStatus status = chr.writeValue("callback-command", false);
+            if (status) {
+              callbackCommandAccepted.fetch_add(1, std::memory_order_relaxed);
+            } else if (status == BTStatus::Busy) {
+              callbackCommandBusy.fetch_add(1, std::memory_order_relaxed);
+            } else {
+              callbackCommandOther.fetch_add(1, std::memory_order_relaxed);
+            }
+          }
+          if (!phase35Bluedroid) {
+            bleRemoteTestHoldWriteResponseRetirement.store(false, std::memory_order_relaxed);
+          }
+        }
         if (peerNotify.fetch_add(1, std::memory_order_relaxed) > 0) {
           floodCount.fetch_add(1, std::memory_order_relaxed);
         }
@@ -3134,6 +3979,7 @@ void setup() {
     bool connected = false;
     BLEClient c1;
     BLERemoteCharacteristic peer;
+    BLERemoteCharacteristic queue;
     if (found) {
       c1 = BLE.createClient();
       installClientCallbacks(c1);
@@ -3149,8 +3995,10 @@ void setup() {
         BLERemoteService edge = c1.getService(edgeSvcUUID);
         peer = edge ? edge.getCharacteristic(peerCharUUID) : BLERemoteCharacteristic();
         BLERemoteService qsvc = c1.getService(queueSvcUUID);
-        BLERemoteCharacteristic queue = qsvc ? qsvc.getCharacteristic(queueCharUUID) : BLERemoteCharacteristic();
-        connected = peer && (bool)peer.subscribe(BLESubscription::Notify, onPeer);
+        queue = qsvc ? qsvc.getCharacteristic(queueCharUUID) : BLERemoteCharacteristic();
+        // Arm the passive indication channel first. The peer notification
+        // callback deliberately submits Write Commands from the stack task; it
+        // must not race this unrelated blocking CCCD write.
         if (queue) {
           (void)queue.subscribe(
             BLESubscription::Indicate,
@@ -3159,12 +4007,39 @@ void setup() {
             }
           );
         }
+        bleRemoteTestWriteCommandOverlappedWaiter.store(false, std::memory_order_relaxed);
+        bleRemoteTestHoldWriteResponseRetirement.store(phase35Bluedroid, std::memory_order_relaxed);
+        bleRemoteTestWriteCommandSubmitFailures.store(phase35Bluedroid ? 1 : 0, std::memory_order_relaxed);
+        bleRemoteTestWriteCommandCompletionFailures.store(phase35Bluedroid ? 1 : 0, std::memory_order_relaxed);
+        bleRemoteTestWriteResponseStatusPreserved.store(!phase35Bluedroid, std::memory_order_relaxed);
+        bleRemoteTestCombinedWriteOwnerObserved.store(!phase35Bluedroid, std::memory_order_relaxed);
+        bleRemoteTestCombinedWriteOwnerHeld.store(true, std::memory_order_relaxed);
+        connected = peer && (bool)peer.subscribe(BLESubscription::Notify, onPeer);
+        bleRemoteTestHoldWriteResponseRetirement.store(false, std::memory_order_relaxed);
       }
     }
     unsigned long start = millis();
     while (peerNotify.load() == 0 && millis() - start < 15000) {
       delay(50);
     }
+    bool bluedroidCommands = phase35Bluedroid;
+    bool callbackOverlap =
+      !bluedroidCommands || bleRemoteTestWriteCommandOverlappedWaiter.load(std::memory_order_relaxed);
+    bool callbackStateClean =
+      bleRemoteTestWriteResponseStatusPreserved.load(std::memory_order_relaxed)
+      && bleRemoteTestCombinedWriteOwnerObserved.load(std::memory_order_relaxed)
+      && bleRemoteTestCombinedWriteOwnerHeld.load(std::memory_order_relaxed);
+    bool callbackCommandsClean =
+      callbackOverlap && callbackStateClean && callbackCommandAttempted.load()
+      && ((bluedroidCommands && callbackCommandAccepted.load() == 8 && callbackCommandBusy.load() == 1
+           && callbackCommandOther.load() == 1)
+          || (!bluedroidCommands && callbackCommandAccepted.load() == 9 && callbackCommandBusy.load() == 0
+              && callbackCommandOther.load() == 0));
+    Serial.printf(
+      "[CLIENT] Phase35 callback commands clean=%d overlap=%d state=%d accepted=%d busy=%d other=%d\n",
+      (int)callbackCommandsClean, (int)callbackOverlap, (int)callbackStateClean, callbackCommandAccepted.load(),
+      callbackCommandBusy.load(), callbackCommandOther.load()
+    );
     start = millis();
     while (floodCount.load() < 32 && millis() - start < 20000) {
       if (peer) {
@@ -3184,23 +4059,69 @@ void setup() {
     );
     Serial.printf("[CLIENT] Phase35 flood=%d\n", (int)floodCount.load());
 
-    // Wait for all 9 queued indications on queueChr to arrive and for the
-    // server to finish removing queueSvc before issuing the authorized read.
+    // Wait for all queued indications before the harness arms the deterministic
+    // read/remove barrier on the server.
     start = millis();
     while (queueIndicate.load() < 9 && millis() - start < 10000) {
       delay(20);
     }
     delay(200);
     Serial.printf("[CLIENT] Phase35 queueRx=%d\n", (int)queueIndicate.load());
+    while (!phase35ReadRemoveGo) {
+      checkSerial();
+      delay(1);
+    }
+
+    struct LocalReadRemoveRace {
+      BLERemoteCharacteristic chr;
+      std::atomic<bool> done{false};
+      std::atomic<uint32_t> attempts{0};
+    };
+    static LocalReadRemoveRace readRemoveRace;
+    readRemoveRace.chr = queue;
+    readRemoveRace.done.store(false, std::memory_order_relaxed);
+    readRemoveRace.attempts.store(0, std::memory_order_relaxed);
+    bool readRemoveCreated =
+      queue
+      && xTaskCreate(
+           [](void *arg) {
+             auto *race = static_cast<LocalReadRemoveRace *>(arg);
+             (void)race->chr.readValue(5000);
+             race->attempts = 1;
+             race->done.store(true, std::memory_order_release);
+             vTaskDelete(nullptr);
+           },
+           "gatt-read-rm", 4096, &readRemoveRace, 1, nullptr
+         )
+           == pdPASS;
+    Serial.printf("[CLIENT] Phase35 localReadRemove armed=%d\n", (int)readRemoveCreated);
+    unsigned long readRemoveDeadline = millis() + 3000;
+    while (readRemoveCreated && !readRemoveRace.done.load(std::memory_order_acquire) && millis() < readRemoveDeadline) {
+      delay(1);
+    }
+    bool readRemoveClean =
+      readRemoveCreated && readRemoveRace.done.load(std::memory_order_acquire) && readRemoveRace.attempts.load() > 0
+      && heap_caps_check_integrity_all(true);
+    Serial.printf(
+      "[CLIENT] Phase35 localReadRemove clean=%d attempts=%lu\n", (int)readRemoveClean, (unsigned long)readRemoveRace.attempts.load()
+    );
+    if (readRemoveRace.done.load(std::memory_order_acquire)) {
+      readRemoveRace.chr = BLERemoteCharacteristic();
+    }
 
     bool timeoutEmpty = false;
+    bool timeoutOverlapRejected = false;
     bool rereadOk = false;
+    bool writeCommandLateIsolated = true;
+    bool writeLateIsolated = true;
     if (connected) {
       {
         BLERemoteService edge = c1.getService(edgeSvcUUID);
         BLERemoteCharacteristic tc = edge ? edge.getCharacteristic(timeoutCharUUID) : BLERemoteCharacteristic();
         String first = tc ? tc.readValue(200) : String();
         timeoutEmpty = first.length() == 0;
+        String overlap = tc ? tc.readValue(200) : String();
+        timeoutOverlapRejected = strcmp(BLE.getStackName(), "Bluedroid") != 0 || overlap.length() == 0;
       }
       delay(600);
       (void)c1.discoverServices();
@@ -3209,8 +4130,46 @@ void setup() {
       peer = edge ? edge.getCharacteristic(peerCharUUID) : BLERemoteCharacteristic();
       String second = tc ? tc.readValue(3000) : String();
       rereadOk = second == "timeout_ok";
+      if (tc && strcmp(BLE.getStackName(), "Bluedroid") == 0) {
+        bleRemoteTestHoldWriteCommandCompletion.store(true, std::memory_order_relaxed);
+        BTStatus firstCommand = tc.writeValue("late-command-1", false);
+        BTStatus overlapCommand = tc.writeValue("late-command-2", false);
+        bleRemoteTestReleaseWriteCommandCompletion.store(true, std::memory_order_relaxed);
+        BTStatus recoveredCommand = BTStatus::Busy;
+        for (int retry = 0; retry < 1000 && recoveredCommand == BTStatus::Busy; retry++) {
+          recoveredCommand = tc.writeValue("late-command-3", false);
+          if (recoveredCommand == BTStatus::Busy) {
+            delay(1);
+          }
+        }
+        writeCommandLateIsolated =
+          firstCommand == BTStatus::OK && overlapCommand == BTStatus::Busy && recoveredCommand == BTStatus::OK;
+
+        bleRemoteTestWriteTimeoutMs.store(200, std::memory_order_relaxed);
+        BTStatus firstWrite = BTStatus::Busy;
+        for (int retry = 0; retry < 1000 && firstWrite == BTStatus::Busy; retry++) {
+          firstWrite = tc.writeValue("late-write-1", true);
+          if (firstWrite == BTStatus::Busy) {
+            delay(1);
+          }
+        }
+        BTStatus overlapWrite = tc.writeValue("late-write-2", true);
+        BTStatus recoveredWrite = BTStatus::Busy;
+        for (int retry = 0; retry < 2000 && recoveredWrite == BTStatus::Busy; retry++) {
+          recoveredWrite = tc.writeValue("late-write-3", true);
+          if (recoveredWrite == BTStatus::Busy) {
+            delay(1);
+          }
+        }
+        writeLateIsolated =
+          firstWrite == BTStatus::Timeout && overlapWrite == BTStatus::Busy && recoveredWrite == BTStatus::OK;
+      }
     }
-    Serial.printf("[CLIENT] Phase35 timeoutEmpty=%d reread=%d\n", (int)timeoutEmpty, (int)rereadOk);
+    Serial.printf(
+      "[CLIENT] Phase35 timeoutEmpty=%d overlapRejected=%d reread=%d commandLateIsolated=%d writeLateIsolated=%d\n",
+      (int)timeoutEmpty, (int)timeoutOverlapRejected, (int)rereadOk, (int)writeCommandLateIsolated,
+      (int)writeLateIsolated
+    );
     BTStatus restoreNotify = peer ? peer.subscribe(BLESubscription::Notify, onPeer) : BTStatus::NotFound;
     BTStatus dropStatus = peer ? peer.writeValue("drop_pending", false) : BTStatus::NotFound;
     Serial.printf("[CLIENT] Phase35 notifyTeardown trigger=%d\n", (int)(restoreNotify && dropStatus));
@@ -3218,10 +4177,173 @@ void setup() {
       checkSerial();
       delay(1);
     }
-    BTStatus dropLink = c1.disconnect();
+    bool pendingOwnerArmed = true;
+    bool disconnected = false;
+    if (peer && strcmp(BLE.getStackName(), "Bluedroid") == 0) {
+      static std::atomic<bool> pendingOwnerDisconnected{false};
+      pendingOwnerDisconnected.store(false, std::memory_order_relaxed);
+      c1.onDisconnect([](BLEClient, const BLEConnInfo &, uint8_t) {
+        pendingOwnerDisconnected.store(true, std::memory_order_release);
+      });
+      bleRemoteTestHoldWriteCommandCompletion.store(true, std::memory_order_relaxed);
+      pendingOwnerArmed = (bool)peer.writeValue("owner-drop", false);
+      peer = BLERemoteCharacteristic();
+      queue = BLERemoteCharacteristic();
+      c1 = BLEClient();
+      Serial.println("[CLIENT] Phase35 owner handles dropped=1");
+      unsigned long ownerDropDeadline = millis() + 10000;
+      while (!pendingOwnerDisconnected.load(std::memory_order_acquire) && millis() < ownerDropDeadline) {
+        delay(1);
+      }
+      disconnected = pendingOwnerDisconnected.load(std::memory_order_acquire);
+    } else {
+      BTStatus dropLink = c1.disconnect();
+      disconnected = dropLink && !c1.isConnected();
+    }
     Serial.printf(
-      "[CLIENT] Phase35 notifyTeardown armed=%d disconnected=%d\n", (int)(restoreNotify && dropStatus), (int)(dropLink && !c1.isConnected())
+      "[CLIENT] Phase35 notifyTeardown armed=%d pendingOwner=%d disconnected=%d\n", (int)(restoreNotify && dropStatus),
+      (int)pendingOwnerArmed, (int)disconnected
     );
+
+    bool terminalShutdownSupported = strcmp(BLE.getStackName(), "Bluedroid") == 0;
+    bool terminalShutdownClean = !terminalShutdownSupported;
+    if (terminalShutdownSupported) {
+      BLEClient terminalClient = BLE.createClient();
+      BTStatus terminalConnect = BTStatus::Fail;
+      for (int retry = 0; retry < 5 && !terminalConnect; retry++) {
+        terminalConnect = terminalClient.connect(targetAddr);
+        if (!terminalConnect) {
+          delay(100);
+        }
+      }
+      BLERemoteService terminalService = terminalConnect ? terminalClient.getService(edgeSvcUUID) : BLERemoteService();
+      BLERemoteCharacteristic terminalChar =
+        terminalService ? terminalService.getCharacteristic(timeoutCharUUID) : BLERemoteCharacteristic();
+
+      // Force xTaskCreate failure once. The synchronous GAP-disconnect fallback
+      // must retain the client until its native disconnect callback arrives.
+      bleGattTestTerminalWorkerStartFailures.store(1);
+      bleGattTestForceTerminalClose.store(true);
+      BTStatus fallbackWrite = terminalChar ? terminalChar.writeValue("terminal-fallback", false) : BTStatus::NotFound;
+      unsigned long fallbackDeadline = millis() + 5000;
+      while (terminalClient.isConnected() && millis() < fallbackDeadline) {
+        delay(1);
+      }
+      bool fallbackClean =
+        fallbackWrite && !terminalClient.isConnected() && bleGattTestTerminalWorkerStartFailures.load() == 0;
+      bleGattTestForceTerminalClose.store(false);
+      terminalService = BLERemoteService();
+      terminalChar = BLERemoteCharacteristic();
+      terminalConnect = BTStatus::Fail;
+      for (int retry = 0; retry < 5 && !terminalConnect; retry++) {
+        terminalConnect = terminalClient.connect(targetAddr);
+        if (!terminalConnect) {
+          delay(100);
+        }
+      }
+      terminalService = terminalConnect ? terminalClient.getService(edgeSvcUUID) : BLERemoteService();
+      terminalChar = terminalService ? terminalService.getCharacteristic(timeoutCharUUID) : BLERemoteCharacteristic();
+
+      bleGattTestTerminalWorkerEntered.store(false);
+      bleGattTestTerminalShutdownEntered.store(false);
+      bleGattTestHoldTerminalWorker.store(true);
+      bleGattTestForceTerminalClose.store(true);
+      BTStatus terminalWrite = terminalChar ? terminalChar.writeValue("terminal-shutdown", false) : BTStatus::NotFound;
+      unsigned long terminalWorkerDeadline = millis() + 5000;
+      while (!bleGattTestTerminalWorkerEntered.load() && millis() < terminalWorkerDeadline) {
+        delay(1);
+      }
+      bool workerEntered = bleGattTestTerminalWorkerEntered.load();
+      bleGattTestForceTerminalClose.store(false);
+      terminalChar = BLERemoteCharacteristic();
+      terminalService = BLERemoteService();
+      terminalClient = BLEClient();
+
+      static BLEStreamShutdownRaceJob terminalShutdownRace;
+      terminalShutdownRace.hostEndDone.store(false);
+      bool hostTaskStarted =
+        workerEntered
+        && xTaskCreate(bleStreamShutdownRaceHostTask, "gatt-host-end", 6144, &terminalShutdownRace, 1, nullptr) == pdPASS;
+      unsigned long terminalShutdownDeadline = millis() + 5000;
+      while (hostTaskStarted && !bleGattTestTerminalShutdownEntered.load() && millis() < terminalShutdownDeadline) {
+        delay(1);
+      }
+      bool shutdownEntered = bleGattTestTerminalShutdownEntered.load();
+      bool shutdownBlocked = shutdownEntered && !terminalShutdownRace.hostEndDone.load();
+      bleGattTestHoldTerminalWorker.store(false);
+      while (hostTaskStarted && !terminalShutdownRace.hostEndDone.load()) {
+        delay(1);
+      }
+      if (!hostTaskStarted) {
+        BLE.end(false);
+      }
+      BTStatus terminalRebegin = BLE.begin(targetName + "_client_terminal_reinit");
+      terminalShutdownClean =
+        fallbackClean && terminalWrite && workerEntered && hostTaskStarted && shutdownBlocked
+        && terminalShutdownRace.hostEndDone.load() && terminalRebegin && heap_caps_check_integrity_all(true);
+    }
+    Serial.printf(
+      "[CLIENT] Phase35 terminalShutdown supported=%d clean=%d\n", (int)terminalShutdownSupported,
+      (int)terminalShutdownClean
+    );
+
+    BLEStream shutdownClient;
+    BTStatus shutdownConnect = BTStatus::Fail;
+    for (int shutdownAttempt = 0; shutdownAttempt < 10 && !shutdownConnect; shutdownAttempt++) {
+      shutdownConnect = shutdownClient.beginClient(targetAddr, 5000);
+      if (!shutdownConnect) {
+        delay(250);
+      }
+    }
+    Serial.printf("[CLIENT] Phase35 BLEStream final release connected=%d\n", (int)(bool)shutdownConnect);
+    while (shutdownConnect && !phase35StreamReleaseGo) {
+      checkSerial();
+      delay(1);
+    }
+    static BLEStreamShutdownRaceJob streamShutdownRace;
+    streamShutdownRace.stream = &shutdownClient;
+    streamShutdownRace.streamEndDone.store(false);
+    streamShutdownRace.hostEndDone.store(false);
+    bleStreamTestFinalRoleReleaseReached.store(false);
+    bleStreamTestHostShutdownEntered.store(false);
+    bleStreamTestHoldFinalRoleRelease.store(true);
+    bool streamTaskStarted =
+      shutdownConnect
+      && xTaskCreate(bleStreamShutdownRaceEndTask, "stream-final-end", 6144, &streamShutdownRace, 1, nullptr) == pdPASS;
+    unsigned long releaseDeadline = millis() + 5000;
+    while (streamTaskStarted && !bleStreamTestFinalRoleReleaseReached.load() && millis() < releaseDeadline) {
+      delay(1);
+    }
+    bool finalReleaseReached = bleStreamTestFinalRoleReleaseReached.load();
+    bool streamHostTaskStarted =
+      finalReleaseReached
+      && xTaskCreate(bleStreamShutdownRaceHostTask, "stream-host-end", 6144, &streamShutdownRace, 1, nullptr) == pdPASS;
+    unsigned long hostDeadline = millis() + 5000;
+    while (streamHostTaskStarted && !bleStreamTestHostShutdownEntered.load() && millis() < hostDeadline) {
+      delay(1);
+    }
+    bool streamHostEntered = bleStreamTestHostShutdownEntered.load();
+    bool streamHostBlocked =
+      streamHostEntered && !streamShutdownRace.hostEndDone.load() && !streamShutdownRace.streamEndDone.load();
+    bleStreamTestHoldFinalRoleRelease.store(false);
+    while (streamTaskStarted && !streamShutdownRace.streamEndDone.load()) {
+      delay(1);
+    }
+    while (streamHostTaskStarted && !streamShutdownRace.hostEndDone.load()) {
+      delay(1);
+    }
+    if (!streamTaskStarted) {
+      shutdownClient.end();
+    }
+    if (!streamHostTaskStarted) {
+      BLE.end(false);
+    }
+    BTStatus streamShutdownRebegin = BLE.begin(targetName + "_client_stream_reinit");
+    bool streamShutdownClean =
+      shutdownConnect && streamTaskStarted && streamHostTaskStarted && finalReleaseReached && streamHostBlocked
+      && streamShutdownRace.streamEndDone.load() && streamShutdownRace.hostEndDone.load() && streamShutdownRebegin
+      && heap_caps_check_integrity_all(true);
+    Serial.printf("[CLIENT] Phase35 BLEStream final release clean=%d\n", (int)streamShutdownClean);
     delay(300);
     Serial.println("[CLIENT] Phase35 done");
   }

@@ -842,6 +842,8 @@ int BLEClient::Impl::serviceDiscoveryCb(uint16_t connHandle, const struct ble_ga
     serviceImpl->endHandle = service->end_handle;
     serviceImpl->connHandle = connHandle;
     serviceImpl->client = impl;
+    serviceImpl->clientOwner = impl->shared_from_this();
+    serviceImpl->cacheMtx = impl->mtxOwner;
     {
       BLELockGuard lock(impl->mtx);
       if (!impl->connected || impl->connHandle != connHandle) {

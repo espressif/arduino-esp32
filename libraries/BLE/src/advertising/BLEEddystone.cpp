@@ -196,7 +196,7 @@ BLEAdvertisementData BLEEddystoneTLM::getAdvertisementData() const {
 }
 
 void BLEEddystoneTLM::setFromServiceData(const uint8_t *data, size_t len) {
-  if (len < 14 || data[0] != 0x20) {
+  if (len < 14 || data[0] != 0x20 || data[1] != 0x00) {
     return;
   }
   _voltage = (data[2] << 8) | data[3];

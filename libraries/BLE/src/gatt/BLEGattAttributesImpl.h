@@ -47,6 +47,10 @@ struct BLEServiceImplCommon : std::enable_shared_from_this<BLEService::Impl> {
   bool started = false;
   bool removing = false;
   BLEServer::Impl *server = nullptr;
+  // Stable non-owning control block used by retained service handles to keep
+  // the server alive while acquiring its mutex. Never reset during detach;
+  // server remains the authoritative attached/detached marker.
+  std::weak_ptr<BLEServer::Impl> serverOwner;
   std::vector<std::shared_ptr<BLECharacteristic::Impl>> characteristics;
   std::vector<std::shared_ptr<BLEService::Impl>> includedServices;
 
@@ -72,6 +76,9 @@ struct BLECharacteristicImplCommon : std::enable_shared_from_this<BLECharacteris
 
   std::vector<std::shared_ptr<BLEDescriptor::Impl>> descriptors;
   BLEService::Impl *service = nullptr;
+  // Breaks the service->characteristic ownership cycle while allowing a
+  // retained characteristic to safely acquire its parent during teardown.
+  std::weak_ptr<BLEService::Impl> serviceOwner;
 
   BLECharacteristic::ReadHandler onReadCb = nullptr;
   BLECharacteristic::WriteHandler onWriteCb = nullptr;
@@ -94,7 +101,7 @@ struct BLECharacteristicImplCommon : std::enable_shared_from_this<BLECharacteris
   void dispatchStatus(BLECharacteristic::NotifyStatus status, uint32_t code);
 
   /** @brief Owning active server, or null when this characteristic is detached/inactive. */
-  BLEServer::Impl *activeServer();
+  std::shared_ptr<BLEServer::Impl> activeServer();
 
   /** @brief Shared implementation of notify() and indicate() across all subscribed connections. */
   using SendFn = BTStatus (*)(BLECharacteristic::Impl &chr, BLEServer::Impl *server, uint16_t connHandle, const uint8_t *data, size_t length);
@@ -142,6 +149,7 @@ struct BLEDescriptorImplCommon : std::enable_shared_from_this<BLEDescriptor::Imp
   size_t maxLen = 512;
   std::vector<uint8_t> value;
   BLECharacteristic::Impl *chr = nullptr;
+  std::weak_ptr<BLECharacteristic::Impl> chrOwner;
   BLEPermission permissions{};
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
