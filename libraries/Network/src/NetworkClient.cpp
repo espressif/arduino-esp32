@@ -444,6 +444,13 @@ size_t NetworkClient::write(const uint8_t *buf, size_t size) {
       }
     }
   }
+  if (totalBytesSent < size && _connected) {
+    // Nothing could be sent for WIFI_CLIENT_MAX_WRITE_RETRY tries in a row: the peer has stopped
+    // acknowledging (it may be gone without a reset). Give up on the connection, as on a send
+    // error, so that later writes return at once rather than each waiting as long again.
+    log_w("write timed out on fd %d after %u of %u bytes, closing", fd(), (unsigned)totalBytesSent, (unsigned)size);
+    stop();
+  }
   return totalBytesSent;
 }
 
