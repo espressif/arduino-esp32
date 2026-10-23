@@ -658,6 +658,13 @@ function _reap_parallel_worker {
         printf 'Worker exited without status for %s (exit %s)\n' \
             "$(cat "$work_dir/name.$running_index")" "$wait_result" >> "$work_dir/log.$running_index"
     fi
+    local result_status=1
+    if [ -f "$work_dir/status.$running_index" ]; then
+        result_status=$(cat "$work_dir/status.$running_index")
+    fi
+    printf '[parallel] done  %s/%s %s (exit %s, active %s)\n' \
+        "$running_index" "${sketch_count:-?}" \
+        "$(cat "$work_dir/name.$running_index")" "$result_status" "$((active - 1))"
     unset "pids[$slot]"
     unset "slot_indices[$slot]"
     active=$((active - 1))
@@ -860,7 +867,15 @@ function build_sketch_list {
     local pids=()
     local slot_indices=()
     local active=0
+    local max_active=0
     local index=0
+    local sketch_count=0
+    local count_sketch
+    while IFS= read -r count_sketch || [ -n "$count_sketch" ]; do
+        [ -z "$count_sketch" ] && continue
+        sketch_count=$((sketch_count + 1))
+    done < "$list_file"
+    echo "Parallel sketch builds: ${sketch_count} sketches, ${jobs} jobs, inner ninja ${inner_jobs}, isolated-build-dirs=${isolated_build_dirs}"
     local saved_int_trap
     local saved_term_trap
     local saved_exit_trap
@@ -898,6 +913,8 @@ function build_sketch_list {
         done
         index=$((index + 1))
         printf '%s\n' "$sketchdir" > "$work_dir/name.$index"
+        printf '[parallel] start %s/%s %s (active %s/%s)\n' \
+            "$index" "$sketch_count" "$sketchdir" "$((active + 1))" "$jobs"
         (
             set +e
             worker_child_pid=""
@@ -926,6 +943,9 @@ function build_sketch_list {
         slot_indices[free_slot]=$index
         printf '%s\n' "${pids[$free_slot]}" > "$work_dir/pid.$index"
         active=$((active + 1))
+        if [ "$active" -gt "$max_active" ]; then
+            max_active=$active
+        fi
     done < "$list_file"
 
     local slot
@@ -975,7 +995,8 @@ function build_sketch_list {
             cat "$work_dir/log.$idx"
         done
     fi
-    printf '\nParallel build summary: %s succeeded, %s failed\n' "$succeeded" "$failed"
+    printf '\nParallel build summary: %s succeeded, %s failed (max active %s/%s)\n' \
+        "$succeeded" "$failed" "$max_active" "$jobs"
     if [ "${#failure_indices[@]}" -gt 0 ]; then
         for idx in "${failure_indices[@]}"; do
             local result=1

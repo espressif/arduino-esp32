@@ -335,7 +335,11 @@ def test_parallel_builds_are_bounded_and_have_per_build_outputs(tmp_path: Path) 
     assert result.returncode == 0, result.stderr
     state = _state(env)
     assert 1 < state["max_active"] <= 3
+    assert "Parallel sketch builds: 5 sketches, 3 jobs" in result.stdout
+    assert result.stdout.count("[parallel] start ") == 5
+    assert result.stdout.count("[parallel] done  ") == 5
     assert "Parallel build summary: 5 succeeded, 0 failed" in result.stdout
+    assert f"(max active {state['max_active']}/3)" in result.stdout
     for sketch in sketches:
         output = (
             tmp_path
