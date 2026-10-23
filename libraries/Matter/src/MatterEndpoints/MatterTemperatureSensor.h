@@ -55,5 +55,6 @@ protected:
   // internal function to set the raw temperature value (Matter Cluster)
   bool setRawTemperature(int16_t _rawTemperature);
   bool begin(int16_t _rawTemperature);
+  void onStackStarted() override;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

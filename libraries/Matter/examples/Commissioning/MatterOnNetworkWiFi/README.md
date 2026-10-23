@@ -4,7 +4,7 @@ Commission a Matter On/Off Light over Wi-Fi **without CHIPoBLE**. The sketch con
 
 This is the on-network half of the Wi-Fi pair. The other half is [MatterCHIPoBLEWiFi](../MatterCHIPoBLEWiFi) (BLE on, hub sends SSID/password).
 
-**Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`) in this sketch.** Matter owns NimBLE. `selectNetwork(MATTER_NETWORK_WIFI, true)` turns CHIPoBLE off and releases BLE RAM; it does not hand the radio to Arduino BLE.
+**Do not use the Arduino `BLE` library (`BLE.h`) in this sketch.** Matter owns NimBLE. `selectNetwork(MATTER_NETWORK_WIFI, true)` turns CHIPoBLE off and releases BLE RAM; it does not hand the radio to Arduino BLE.
 
 ## What it does
 

@@ -18,21 +18,38 @@ ZigbeeCore APIs
 Network Initialization
 **********************
 
-begin
-^^^^^
+role
+^^^^
 
-Initializes the Zigbee stack and starts the network.
+Sets the Zigbee device role and initializes the stack. This must be the first Zigbee call, before configuring endpoints and calling ``begin()``.
 
 .. code-block:: arduino
 
-    bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
-    bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
+    bool role(zigbee_role_t role, bool erase_nvs = false);
+    bool role(esp_zigbee_device_config_t *role_cfg, bool erase_nvs = false);
 
-* ``role`` - Device role (default: ``ZIGBEE_END_DEVICE``)
-* ``role_cfg`` - Custom role configuration structure
-* ``erase_nvs`` - Whether to erase NVS storage (default: ``false``)
+* ``role`` - Device role (``ZIGBEE_COORDINATOR``, ``ZIGBEE_ROUTER`` or ``ZIGBEE_END_DEVICE``)
+* ``role_cfg`` - Custom role configuration structure (e.g. for a sleepy end device or a custom ``max_children``)
+* ``erase_nvs`` - When ``true``, erase only the Zigbee NVS namespace (``zigbee``) on the shared ``nvs`` partition before init. Does not wipe Wi-Fi credentials or Preferences. Default: ``false``.
 
-This function will return ``true`` if initialization successful, ``false`` otherwise.
+This function will return ``true`` if the role was set and the stack initialized successfully, ``false`` otherwise.
+
+.. note::
+
+    Zigbee network state is stored in the default ``nvs`` partition (namespace ``zigbee``), shared with Wi-Fi and Preferences.
+    Zigbee partition schemes enlarge that partition and no longer use a separate ``zb_storage`` partition.
+    Upgrading from Arduino-ESP32 3.x (or early 4.0 builds that used ``zb_storage``) requires erasing flash or calling ``Zigbee.factoryReset()``; network state is not migrated in place.
+
+begin
+^^^^^
+
+Attaches all added endpoints, registers the device descriptor and starts the Zigbee stack. Call this after ``role()`` and after all endpoints have been added with ``addEndpoint()``.
+
+.. code-block:: arduino
+
+    bool begin();
+
+This function will return ``true`` if the stack started successfully, ``false`` otherwise.
 
 **Available Roles:**
 
@@ -203,7 +220,7 @@ Scans for available Zigbee networks.
 
 .. code-block:: arduino
 
-    void scanNetworks(uint32_t channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
+    void scanNetworks(uint32_t channel_mask = ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
 
 * ``channel_mask`` - Channels to scan (default: all channels)
 * ``scan_duration`` - Scan duration (default: 5)
@@ -277,6 +294,43 @@ Closes the network to prevent new devices from joining.
 
     void closeNetwork();
 
+setRouterRejoinRequired
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Controls whether a **router** must run the rejoin process during BDB commissioning initialization
+(for example after reboot). Call after ``role()``, typically before ``begin()``.
+
+Useful when a router should re-attach to the coordinator/Trust Center after power loss instead of
+assuming the previous network link is still valid.
+
+.. code-block:: arduino
+
+    void setRouterRejoinRequired(bool required);
+
+* ``required`` - ``true`` to require router rejoin on BDB init, ``false`` to skip it
+
+setAllowRejoinsWithWellKnownKey
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Trust Center / coordinator policy: whether devices may rejoin the network using the well-known
+network key. Call after ``role()``. Defaults depend on the stack; set explicitly for production
+networks that should reject rejoins with the well-known key.
+
+.. code-block:: arduino
+
+    void setAllowRejoinsWithWellKnownKey(bool allow);
+
+* ``allow`` - ``true`` to allow well-known-key rejoins, ``false`` to disallow them
+
+getAllowRejoinsWithWellKnownKey
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Returns the current Trust Center policy for well-known-key rejoins.
+
+.. code-block:: arduino
+
+    bool getAllowRejoinsWithWellKnownKey();
+
 Radio Configuration
 *******************
 
@@ -287,7 +341,7 @@ Sets the radio configuration.
 
 .. code-block:: arduino
 
-    void setRadioConfig(esp_zb_radio_config_t config);
+    void setRadioConfig(esp_zigbee_radio_config_t config);
 
 * ``config`` - Radio configuration structure
 
@@ -298,34 +352,9 @@ Gets the current radio configuration.
 
 .. code-block:: arduino
 
-    esp_zb_radio_config_t getRadioConfig();
+    esp_zigbee_radio_config_t getRadioConfig();
 
 This function will return current radio configuration.
-
-Host Configuration
-******************
-
-setHostConfig
-^^^^^^^^^^^^^
-
-Sets the host configuration.
-
-.. code-block:: arduino
-
-    void setHostConfig(esp_zb_host_config_t config);
-
-* ``config`` - Host configuration structure
-
-getHostConfig
-^^^^^^^^^^^^^
-
-Gets the current host configuration.
-
-.. code-block:: arduino
-
-    esp_zb_host_config_t getHostConfig();
-
-This function will return current host configuration.
 
 Debug and Utilities
 *******************
@@ -370,7 +399,7 @@ Sets a global callback for default response messages.
 
 .. code-block:: arduino
 
-    void onGlobalDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster));
+    void onGlobalDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status, uint8_t endpoint, uint16_t cluster));
 
 * ``callback`` - Function pointer to the callback function
 
@@ -386,7 +415,7 @@ Formats an IEEE address for display.
 
 .. code-block:: arduino
 
-    static const char *formatIEEEAddress(const esp_zb_ieee_addr_t addr);
+    static const char *formatIEEEAddress(const uint8_t *addr);
 
 * ``addr`` - IEEE address to format
 

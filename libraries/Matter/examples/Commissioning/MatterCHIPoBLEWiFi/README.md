@@ -4,7 +4,7 @@ Commission a Matter On/Off Light onto Wi-Fi **over CHIPoBLE**. The hub sends the
 
 This is the BLE half of the Wi-Fi pair. The other half is [MatterOnNetworkWiFi](../MatterOnNetworkWiFi) (BLE off + credentials in the sketch).
 
-**Do not start Arduino `ESPmDNS`.** **Do not use `BLE.h` / `BLEDevice`.**
+**Do not start Arduino `ESPmDNS`.** **Do not use `BLE.h`.**
 
 ## What it does
 

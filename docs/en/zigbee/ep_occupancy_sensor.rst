@@ -56,7 +56,7 @@ Sets the sensor type.
 
     bool setSensorType(uint8_t sensor_type);
 
-* ``sensor_type`` - Sensor type identifier (see esp_zb_zcl_occupancy_sensing_occupancy_sensor_type_t)
+* ``sensor_type`` - Sensor type identifier (see ``ezb_zcl_occupancy_sensing_server_occupancy_sensor_type_t``)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

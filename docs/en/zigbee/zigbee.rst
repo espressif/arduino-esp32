@@ -137,6 +137,15 @@ Common Issues
   * Verify that routers are properly configured
   * Check for interference from other 2.4 GHz devices
 
+Storage and migration
+*********************
+
+Zigbee persists network state in the default ``nvs`` partition (namespace ``zigbee``), the same partition used by Wi-Fi and Preferences.
+Zigbee partition schemes size that partition for both uses; there is no separate ``zb_storage`` partition.
+
+When upgrading from Arduino-ESP32 3.x, or from early 4.0 builds that still used ``zb_storage``, erase flash before upload
+(``Tools -> Erase All Flash Before Sketch Upload: Enabled``) or call ``Zigbee.factoryReset()``. In-place OTA does not keep the old network state.
+
 Factory Reset
 *************
 

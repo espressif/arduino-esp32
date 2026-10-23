@@ -1,0 +1,71 @@
+/*
+ * BLE Multi-Client Example -- New API
+ *
+ * Scans for devices advertising the Heart Rate service (0x180D),
+ * then connects to up to 3 servers simultaneously. Demonstrates
+ * the multi-instance client design.
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
+
+#include <Arduino.h>
+#include <BLE.h>
+#include <algorithm>
+
+static const BLEUUID SVC_UUID((uint16_t)0x180D);  // Heart Rate Service (Bluetooth SIG assigned)
+
+void onClientDisconnected(BLEClient client, const BLEConnInfo &conn, uint8_t reason) {
+  Serial.printf("Client disconnected from %s (reason 0x%02X)\n", conn.getAddress().toString().c_str(), reason);
+}
+
+void setup() {
+  Serial.begin(115200);
+  BTStatus status = BLE.begin("MultiClient");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
+
+  BLEScan scan = BLE.getScan();
+  scan.setActiveScan(true);
+
+  BLEScan::Results results = scan.startBlocking(5000);
+  Serial.printf("Found %d devices\n", results.size());
+
+  std::vector<BLEClient> clients;
+
+  size_t i = 0;
+  for (const BLEAdvertisedDevice &dev : results) {
+    if (i >= 3) {
+      break;
+    }
+    size_t index = i++;
+    if (!dev.isAdvertisingService(SVC_UUID)) {
+      continue;
+    }
+
+    BLEClient client = BLE.createClient();
+    client.onDisconnect(onClientDisconnected);
+    client.onConnect([index](BLEClient c, const BLEConnInfo &conn) {
+      Serial.printf("Client[%d] connected to %s\n", index, conn.getAddress().toString().c_str());
+    });
+
+    if (client.connect(dev)) {
+      if (client.discoverServices()) {
+        BLERemoteService svc = client.getService(SVC_UUID);
+        if (svc) {
+          Serial.printf("Client[%d] found Heart Rate service\n", index);
+        }
+      }
+      clients.push_back(client);
+    }
+  }
+
+  Serial.printf("Connected to %d servers\n", clients.size());
+}
+
+void loop() {
+  delay(1000);
+}

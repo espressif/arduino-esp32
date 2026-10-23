@@ -9,17 +9,17 @@ The ``MatterGenericSwitch`` class provides a generic switch endpoint for Matter 
 
 **Features:**
 
-* Configurable Switch cluster features (short click, long press, multi-press)
-* Individual event methods matching the Matter specification
-* ``click()`` convenience helper for simple automations
-* Automation trigger support for Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Configurable Switch cluster features (short click, long press, multi-press).
+* Individual event methods matching the Matter specification.
+* ``click()`` convenience helper for simple automations.
+* Automation trigger support for Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
 
-* Smart buttons and scene triggers
-* Remote controls with single, double, or long press
-* Event generators for smart home automation
+* Smart buttons and scene triggers.
+* Remote controls with single, double, or long press.
+* Event generators for smart home automation.
 
 Switch Cluster Features
 -----------------------
@@ -41,13 +41,13 @@ The Matter Switch cluster exposes optional **FeatureMap** bits. This class provi
 
 **Preset combinations:**
 
-* ``FEATURE_SIMPLE`` (default) — ``FEATURE_MOMENTARY | FEATURE_RELEASE`` for a single short click
-* ``FEATURE_ALL`` — all momentary gesture features above
+* ``FEATURE_SIMPLE`` (default) — ``FEATURE_MOMENTARY | FEATURE_RELEASE`` for a single short click.
+* ``FEATURE_ALL`` — all momentary gesture features above.
 
 **Dependencies:**
 
-* ``FEATURE_LONG_PRESS`` requires ``FEATURE_RELEASE``
-* ``FEATURE_MULTI_PRESS`` requires ``FEATURE_RELEASE``
+* ``FEATURE_LONG_PRESS`` requires ``FEATURE_RELEASE``.
+* ``FEATURE_MULTI_PRESS`` requires ``FEATURE_RELEASE``.
 
 API Reference
 -------------

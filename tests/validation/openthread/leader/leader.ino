@@ -40,14 +40,15 @@ void test_leader_cli_version(void) {
   TEST_ASSERT_TRUE(ot_test_cli_contains("version", "OPENTHREAD"));
 }
 
-void test_leader_cli_detached_state(void) {
-  TEST_ASSERT_TRUE(ot_test_cli_contains("state", "detached"));
+// OThread.begin(false) leaves the interface down, so the role stays "disabled" until "ifconfig up".
+void test_leader_cli_disabled_state(void) {
+  TEST_ASSERT_TRUE(ot_test_cli_contains("state", "disabled"));
 }
 
 void test_leader_cli_util_exec(void) {
   char buf[OT_TEST_CLI_BUF_SIZE];
   TEST_ASSERT_TRUE(ot_test_run_cli("state", buf, sizeof(buf)));
-  TEST_ASSERT_TRUE(strstr(buf, "detached") != nullptr);
+  TEST_ASSERT_TRUE(strstr(buf, "disabled") != nullptr);
 }
 
 // ==================== Network formation ====================
@@ -72,7 +73,7 @@ void test_leader_form_network(void) {
 
 void test_leader_ot_role(void) {
   TEST_ASSERT_EQUAL(OT_ROLE_LEADER, OThread.otGetDeviceRole());
-  TEST_ASSERT_EQUAL_STRING("leader", OThread.otGetStringDeviceRole());
+  TEST_ASSERT_EQUAL_STRING("Leader", OThread.otGetStringDeviceRole());
   TEST_ASSERT_TRUE(ot_test_cli_contains("state", "leader"));
 }
 
@@ -159,7 +160,7 @@ void setup() {
 
   RUN_TEST(test_leader_stack_running);
   RUN_TEST(test_leader_cli_version);
-  RUN_TEST(test_leader_cli_detached_state);
+  RUN_TEST(test_leader_cli_disabled_state);
   RUN_TEST(test_leader_cli_util_exec);
   RUN_TEST(test_leader_form_network);
   RUN_TEST(test_leader_ot_role);

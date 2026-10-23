@@ -1,6 +1,6 @@
 # Zigbee Validation Test
 
-Validates **ZigbeeCore** and all 26 Zigbee endpoint classes from `Zigbee.h`: stack configuration, endpoint registration, deep on-device API tests (getters, callbacks, reporting), network form/join, and coordinator→end-device ZCL interop. This is a **multi-DUT** test on ESP32-C6 / ESP32-H2.
+Validates **ZigbeeCore** and all 26 Zigbee endpoint classes from `Zigbee.h`: stack configuration, endpoint registration, deep on-device API tests (getters, callbacks, reporting), network form/join, and coordinator→end-device ZCL interop. This is a **multi-DUT** test on ESP32-C5 / C6 / H2 / S31.
 
 ## Architecture
 
@@ -25,13 +25,14 @@ Endpoint registration and pre-`begin()` configuration live in `coordinator/zigbe
 
 | Test Function | Description |
 |---|---|
-| `test_coordinator_config` | `ZigbeeCore` setters/getters before `begin()` (scan duration, debug, binding, radio/host config) |
-| `test_coordinator_register_all_endpoints` | Register all 26 endpoint types + pre-`begin()` cluster configuration |
-| `test_coordinator_begin` | `begin()`, verify duplicate `begin()` returns `false` |
+| `test_coordinator_config` | `ZigbeeCore` setters/getters, then `role(ZIGBEE_COORDINATOR)`; after `role()`, TC well-known-key policy get/set and `setRouterRejoinRequired(true)` |
+| `test_coordinator_register_all_endpoints` | Register all 26 endpoint types + cluster configuration (after `role()`) |
+| `test_coordinator_begin` | `begin()`, verify a second `begin()` reports the stack is already running |
 | `test_coordinator_stop_start` | `stop()` / `start()` pause and resume |
 | `test_coordinator_role` | `getRole()` returns coordinator |
 | `test_coordinator_form_network` | `openNetwork()`, `connected()`, prints `NETWORK_READY` |
-| `test_coordinator_endpoint_deep_tests` | 14 deep test groups: lights, outlet, fan, covering, IAS zones, temp/humidity, environmental sensors, analog/binary/multistate I/O, electrical measurement |
+| `test_coordinator_identify_query` | Register `onIdentifyQueryResponse` on gateway EP; assert broadcast `identifyQuery()` send succeeds (response covered in manual HIL) |
+| `test_coordinator_endpoint_deep_tests` | 15 deep test groups: lights (incl. DeviceEnabled get/set), outlet, fan, covering, IAS zones, temp/humidity, environmental sensors, analog/binary/multistate I/O, electrical measurement |
 
 After Unity, `loop()` runs coordinator→end-device switch/light interop when pytest sends `RUN_INTEROP`.
 
@@ -39,19 +40,19 @@ After Unity, `loop()` runs coordinator→end-device switch/light interop when py
 
 | Test Function | Description |
 |---|---|
-| `test_end_device_config` | `ZigbeeCore` setters/getters before `begin()` |
-| `test_end_device_add_endpoints` | `ZigbeeLight` and `ZigbeeTempSensor` registration |
-| `test_end_device_begin` | `begin()`, verify duplicate `begin()` returns `false` |
+| `test_end_device_config` | `ZigbeeCore` setters/getters; Preferences key survives `role(ZIGBEE_END_DEVICE, true)` (shared `nvs` erase is namespace-scoped) |
+| `test_end_device_add_endpoints` | `ZigbeeLight` and `ZigbeeTempSensor` registration (after `role()`) |
+| `test_end_device_begin` | `begin()`, verify a second `begin()` reports the stack is already running |
 | `test_end_device_stop_start` | `stop()` / `start()` |
 | `test_end_device_role` | `getRole()` returns end device |
 | `test_end_device_join_network` | Join coordinator network, `connected()`, prints `JOINED` |
-| `test_end_device_temp_sensor` | `setReporting`, `setTemperature`, `reportTemperature` after join |
+| `test_end_device_temp_sensor` | `setReporting`, `setReportingDefaultResponse` toggle, `setTemperature`, `reportTemperature` after join |
 | `test_end_device_zcl_interop` | Coordinator switch controls local light via binding (`RUN_INTEROP`) |
 | `test_end_device_light` | Local light callback, on/off, `restoreLight` |
 
 ## Requirements
 
-- **Hardware**: Two ESP32-C6 or ESP32-H2 boards (802.15.4 radio required)
+- **Hardware**: Two boards of ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31 (802.15.4 radio required)
 - **Wokwi/QEMU**: Not supported (802.15.4 radio not simulated)
 - **CI Runner**: `two_duts`
 - **SoC Config**: `CONFIG_ZB_ENABLED=y`, `CONFIG_SOC_IEEE802154_SUPPORTED=y`
@@ -63,16 +64,51 @@ The coordinator and end device flash at different speeds; pytest drives the end 
 
 1. Coordinator prints `[COORDINATOR] Ready`, runs Unity tests, then `[COORDINATOR] NETWORK_READY` → `API_TESTS_DONE` → `INTEROP_READY` → `DONE`
 2. End device prints `[ENDDEVICE] Ready`
-3. pytest sends `START` to the end device
-4. End device runs Unity tests, joins network, prints `[ENDDEVICE] JOINED`
+3. pytest writes `OPEN_NETWORK` to the coordinator and `START` to the end device (both must be driven together)
+4. Coordinator prints `[COORDINATOR] NETWORK_OPEN`; end device runs Unity tests, joins network, prints `[ENDDEVICE] JOINED`
 5. pytest sends `RUN_INTEROP` to both devices
 6. Coordinator prints `[COORDINATOR] INTEROP_ARMED`; switch drives end-device light → `[ENDDEVICE] REMOTE_LIGHT_ON` / `REMOTE_LIGHT_OFF` → `SWITCH_INTEROP_DONE` on both
 7. End device completes remaining Unity tests, prints `[ENDDEVICE] DONE`
 
 ## Notes
 
-- `Zigbee.begin()` is called once per boot; a second call returns `false`.
+- Zigbee storage uses the shared `nvs` partition (namespace `zigbee`). `role(..., true)` erases that namespace only. Erase flash when upgrading from builds that used `zb_storage`.
+- New Zigbee 4.0 API smoke covered here: DeviceEnabled, Identify Query send, TC well-known-key / router-rejoin policy, reporting DefaultRsp, Preferences survive `role(..., true)`. Over-the-air DeviceEnabled / Identify Query Response behavior is validated manually (HIL), not asserted in CI.
+
+## Manual HIL checklist (Zigbee 4.0 features)
+
+Run once on two DUTs (C6 preferred). Sniffer optional. OTA / parent-lost are out of scope.
+
+| # | Item | Depth | Notes |
+|---|---|---|---|
+| 1 | NVS erase safety | Required | Preferences key survives `role(..., true)`; Zigbee network state cleared. Covered in validation `test_end_device_config`; optional Wi-Fi board smoke. |
+| 2 | DeviceEnabled OTA | Required | Bind switch→light; toggle works; `setDeviceEnabled(false)` → On/Off ignored; re-enable → works. API get/set covered in coordinator deep tests. |
+| 3 | Identify Query Response | Required | Put ED into identify; coordinator `onIdentifyQueryResponse` + `identifyQuery()`; callback with non-zero timeout. Send covered in `test_coordinator_identify_query`. |
+| 4 | TC well-known key | Smoke | `setAllowRejoinsWithWellKnownKey(false)` before `openNetwork()`; production default documented. API covered in `test_coordinator_config`. |
+| 5 | Router rejoin | Smoke | Flash router example; `setRouterRejoinRequired(true)` after `role()` before `begin()`; power-cycle rejoins. |
+| 6 | 16MB partitions | Required | `FlashSize=16M`, `PartitionScheme=zigbee_16MB` (or `zigbee_zczr_16MB`); compile + flash + join once. |
+| 7 | Reporting DefaultRsp | Optional | Keep enabled for sleepy baseline; optionally disable and confirm no DefaultRsp. API toggle covered in `test_end_device_temp_sensor`. |
+
+### HIL session notes (2026-10-23)
+
+| # | Result |
+|---|---|
+| 1 | **Done (automated)** — Preferences `zbvalnvs`/`mark` survives `role(..., true)` in `test_end_device_config`. |
+| 2 | **API covered; OTA pending DUT** — DeviceEnabled get/set in coordinator deep tests. No USB DUTs attached this session for switch→light ignore check. |
+| 3 | **Send covered; response pending DUT** — `test_coordinator_identify_query` asserts broadcast send. Response callback needs ED in identify. |
+| 4 | **Smoke API done** — get/set well-known-key policy in `test_coordinator_config`. |
+| 5 | **Optional / not run** — no router board flashed this session. |
+| 6 | **Compile done** — `Zigbee_On_Off_Light` built with `FlashSize=16M`, `PartitionScheme=zigbee_16MB`, `ZigbeeMode=ed` on `espressif:esp32:esp32c6` (4.0.0 staging). Flash+join pending DUT. |
+| 7 | **API done** — DefaultRsp toggle in `test_end_device_temp_sensor`. |
+
+- SDK v2 startup/lifecycle requirements:
+  - Call `role()` before `begin()`.
+  - `role()` is called once per boot; a second call succeeds and does not re-init.
+  - Endpoint setters require `role()` first.
+  - `begin()` is called once; a second call returns the current `started()` state and does not restart the stack.
 - Unlike Matter validation, Zigbee cannot decommission/reboot mid-suite on a single DUT — depth comes from getter round-trips, callbacks, reporting, pre-begin cluster config, and real ZCL over the air with a second board.
 - Thermostat, gateway, and range-extender endpoints are registered on the coordinator but have no simple local attribute setters in the Arduino API; control paths are covered via registration and ZCL examples.
+- The coordinator's deep tests run before the end device joins, so nothing is bound to its endpoints. Attribute reports only go to bound destinations, so the coordinator asserts that `report*()` fails there; the end device's `reportTemperature()` after joining covers the bound path.
+- `stop()` disables the 802.15.4 radio, which wipes its MAC settings (channel, PAN ID, addresses, rx-on-when-idle). Both `*_stop_start` tests run before forming or joining the network, so a regression in restoring those settings shows up as a failed join.
 - ED→coordinator switch control is not covered (would need bind/discover APIs); coordinator→ED interop uses automatic binding on join.
 - `scanNetworks`, `factoryReset`, and RCP host mode are not covered here (see library examples).

@@ -10,6 +10,7 @@ targets:
   esp32c5: false
   esp32c6: false
   esp32h2: false
+  esp32s31: false
 requires:
   - CONFIG_OPENTHREAD_ENABLED=y
   - CONFIG_ESP_MATTER_ENABLE_DATA_MODEL=y

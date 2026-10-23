@@ -1,0 +1,5 @@
+fqbn_append: PartitionScheme=huge_app
+
+requires_any:
+  - CONFIG_SOC_BLE_SUPPORTED=y
+  - CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE=y
