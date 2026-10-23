@@ -2000,6 +2000,31 @@ void loop() {
     }
     Serial.printf("[SERVER] Phase20 prefIntervalAD ok=%d\n", (int)prefOk);
 
+    // reset() while a session is live must leave software+controller idle and
+    // allow a subsequent start(). Closed-gate / BLE4.2 must still clear
+    // isAdvertising (DESIGN.md lifecycle).
+    (void)adv.stop();
+    adv.reset();
+    BTStatus liveStart = adv.start();
+    adv.reset();
+    bool resetIdle = (bool)liveStart && !adv.isAdvertising();
+    BTStatus resetRestart = adv.start();
+    bool resetRestartOk = (bool)resetRestart && adv.isAdvertising();
+    Serial.printf("[SERVER] Phase20 resetWhileLive idle=%d restart=%d\n", (int)resetIdle, (int)resetRestartOk);
+    adv.stop();
+    adv.reset();
+
+    // Scan response disabled on the builder path: start() must not fail.
+    // Bluedroid clears a prior scan response with config_scan_rsp_data_raw(NULL, 0);
+    // IDF accepts that (only (NULL, nonzero) is ESP_ERR_INVALID_ARG).
+    adv.setType(BLEAdvType::ConnectableScannable);
+    adv.setScanResponse(false);
+    BTStatus scanOff = adv.start();
+    Serial.printf("[SERVER] Phase20 scanRespOff ok=%d isAdv=%d\n", (int)(bool)scanOff, (int)adv.isAdvertising());
+    adv.stop();
+    adv.setScanResponse(true);
+    adv.reset();
+
     // Restore the suite's normal reconnect policy after the phase-owned
     // advertising transitions above.
     srv.advertiseOnDisconnect(true);

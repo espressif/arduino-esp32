@@ -101,5 +101,12 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   periodic advertising TX, and periodic sync RX are implemented under `#if BLE5_SUPPORTED` /
   `BLE_PERIODIC_ADV_SUPPORTED` (the latter also requires `CONFIG_BT_BLE_50_PERIODIC_ADV_EN`).
   Classic esp32 Bluedroid libs stay on BLE 4.2 (`BLE5_SUPPORTED == 0`) and use the shared
-  `NotSupported` fallbacks.
+  `NotSupported` fallbacks. Admitted `reset()` and `beginBackendShutdown()` wait for each
+  extended/periodic stop complete, then for `EXT_ADV_SET_CLEAR_COMPLETE`. The ESP-IDF call
+  only queues BTC; the controller rejects `HCI_LE_Clear_Advertising_Sets` with Command
+  Disallowed while a set is still enabled (Vol 4, Part E, §7.8.60). Waiting keeps a
+  following `start()` from racing the still-queued clear.
+- **Legacy scan-response clear.** `start()` with no custom scan response (or `setScanResponse(false)`)
+  calls `esp_ble_gap_config_scan_rsp_data_raw(NULL, 0)`. IDF treats length 0 as a valid empty
+  payload; only a null pointer with nonzero length is `ESP_ERR_INVALID_ARG`.
 - **No `onConnParamsUpdateRequest`** — Bluedroid has no pre-accept hook; the API is NimBLE-only.

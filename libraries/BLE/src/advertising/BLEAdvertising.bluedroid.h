@@ -119,6 +119,10 @@ struct BLEAdvertising::Impl {
   BTStatus ensureExtConfigured(uint8_t instance);
   // Configure + set data + start the reserved legacy-PDU instance. Blocking.
   BTStatus startLegacyViaExtAdv(uint32_t durationMs);
+  // Stop every extended/periodic set, wait for the async completions, then
+  // HCI_LE_Clear_Advertising_Sets. Clear is Command Disallowed while advertising
+  // or periodic advertising is still enabled on any set (Vol 4, Part E, §7.8.60).
+  void stopAllExtendedThenClear();
 #if BLE_PERIODIC_ADV_SUPPORTED
   // Push periodic params when dirty; waits on advSync.
   BTStatus ensurePeriodicConfigured(uint8_t instance);

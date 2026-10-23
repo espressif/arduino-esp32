@@ -810,6 +810,13 @@ def _phase_adv_data_and_scan(server, client):
     assert (
         int(m_pref.group(1)) == 1
     ), "setPreferredParams did not emit a correct Slave Connection Interval Range AD (0x12)"
+    m_reset = server.expect(r"\[SERVER\] Phase20 resetWhileLive idle=([01]) restart=([01])", timeout=15)
+    assert int(m_reset.group(1)) == 1, "reset() while advertising did not leave isAdvertising false"
+    assert int(m_reset.group(2)) == 1, "start() after reset() while advertising failed"
+    m_scan_off = server.expect(r"\[SERVER\] Phase20 scanRespOff ok=([01]) isAdv=([01])", timeout=15)
+    assert int(m_scan_off.group(1)) == 1 and int(m_scan_off.group(2)) == 1, (
+        "start() with setScanResponse(false) failed (null/zero scan-rsp raw config)"
+    )
     client.expect_exact("[CLIENT] Phase20 done", timeout=15)
     server.expect_exact("[SERVER] Phase20 done", timeout=20)
 

@@ -242,6 +242,11 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       break;
     }
 
+    case ESP_GAP_BLE_EXT_ADV_SET_CLEAR_COMPLETE_EVT:
+      log_d("EXT_ADV_SET_CLEAR_COMPLETE status=%d", param->ext_adv_clear.status);
+      inst->advSync.give(param->ext_adv_clear.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+      break;
+
     case ESP_GAP_BLE_EXT_ADV_STOP_COMPLETE_EVT:
     {
       log_d("EXT_ADV_STOP_COMPLETE status=%d", param->ext_adv_stop.status);
@@ -397,25 +402,15 @@ void BLEAdvertising::reset() {
   if (admission) {
     // Stop every instance from this already-admitted reset() without
     // re-entering the gate through public stopExtended/stopPeriodicAdv.
-    // esp_ble_gap_ext_adv_set_clear() fails / leaves sets behind while any
-    // instance is still advertising (mirrors the NimBLE reset()).
-    for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
-#if BLE_PERIODIC_ADV_SUPPORTED
-      (void)esp_ble_gap_periodic_adv_stop(i);
-#endif
-      uint8_t inst = i;
-      (void)esp_ble_gap_ext_adv_stop(1, &inst);
-    }
-    esp_err_t clearErr = esp_ble_gap_ext_adv_set_clear();
-    if (clearErr != ESP_OK) {
-      log_e("reset: esp_ble_gap_ext_adv_set_clear: %s", esp_err_to_name(clearErr));
-    }
+    impl.stopAllExtendedThenClear();
   }
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
     impl.extInstances[i].reset();
   }
-  impl.isAdvertising = false;
 #endif
+  // Closed-gate reset() must still clear software flags (DESIGN.md lifecycle).
+  // BLE4.2 has no BLE5 block; stopBackend() may also have failed to wait.
+  impl.isAdvertising = false;
 }
 
 // --------------------------------------------------------------------------
@@ -484,6 +479,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     if (impl.customScanRespData) {
       err = esp_ble_gap_config_scan_rsp_data_raw(impl.rawScanRespData.data(), impl.rawScanRespData.size());
     } else {
+      // IDF accepts (NULL, 0): only (NULL, nonzero) is ESP_ERR_INVALID_ARG.
       err = esp_ble_gap_config_scan_rsp_data_raw(nullptr, 0);
     }
     if (err != ESP_OK) {
@@ -532,6 +528,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
       scanRespData = BLEAdvDataBuilder::buildLegacyScanRespData(advName);
       err = esp_ble_gap_config_scan_rsp_data_raw(const_cast<uint8_t *>(scanRespData.data()), scanRespData.length());
     } else {
+      // IDF accepts (NULL, 0): only (NULL, nonzero) is ESP_ERR_INVALID_ARG.
       err = esp_ble_gap_config_scan_rsp_data_raw(nullptr, 0);
     }
     if (err != ESP_OK) {
@@ -885,6 +882,36 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   }
   // isAdvertising is set by the EXT_ADV_START_COMPLETE handler (BTC task).
   return advSync.wait(ADV_SYNC_TIMEOUT_MS);
+}
+
+void BLEAdvertising::Impl::stopAllExtendedThenClear() {
+  for (uint8_t i = 0; i < kMaxExtInstances; i++) {
+#if BLE_PERIODIC_ADV_SUPPORTED
+    advSync.take();
+    esp_err_t perr = esp_ble_gap_periodic_adv_stop(i);
+    if (perr != ESP_OK) {
+      advSync.give(BTStatus::OK);
+    } else {
+      (void)advSync.wait(ADV_SYNC_TIMEOUT_MS);
+    }
+#endif
+    uint8_t inst = i;
+    advSync.take();
+    esp_err_t err = esp_ble_gap_ext_adv_stop(1, &inst);
+    if (err != ESP_OK) {
+      advSync.give(BTStatus::OK);
+    } else {
+      (void)advSync.wait(ADV_SYNC_TIMEOUT_MS);
+    }
+  }
+  advSync.take();
+  esp_err_t clearErr = esp_ble_gap_ext_adv_set_clear();
+  if (clearErr != ESP_OK) {
+    log_e("esp_ble_gap_ext_adv_set_clear: %s", esp_err_to_name(clearErr));
+    advSync.give(BTStatus::Fail);
+    return;
+  }
+  (void)advSync.wait(ADV_SYNC_TIMEOUT_MS);
 }
 
 void BLEAdvertising::setExtType(uint8_t instance, BLEAdvType type) {
@@ -1273,16 +1300,9 @@ void BLEAdvertising::beginBackendShutdown() {
   (void)stopBackend();
 #if BLE5_SUPPORTED
   // Do not trust software flags here: a closed-gate reset() can clear them
-  // without issuing native stops. Unconditionally stop every instance, then
-  // clear the controller sets (same as NimBLE beginBackendShutdown).
-  for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
-#if BLE_PERIODIC_ADV_SUPPORTED
-    (void)esp_ble_gap_periodic_adv_stop(i);
-#endif
-    uint8_t inst = i;
-    (void)esp_ble_gap_ext_adv_stop(1, &inst);
-  }
-  (void)esp_ble_gap_ext_adv_set_clear();
+  // without issuing native stops. Unconditionally stop every instance and wait
+  // before HCI_LE_Clear_Advertising_Sets (Vol 4, Part E, §7.8.60).
+  _impl->stopAllExtendedThenClear();
 #endif
   reset();
 }

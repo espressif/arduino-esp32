@@ -292,11 +292,13 @@ void BLEAdvertising::reset() {
     }
     (void)ble_gap_ext_adv_clear();
   }
-  impl.isAdvertising = false;
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
     impl.extInstances[i].reset();
   }
 #endif
+  // Closed-gate reset() must still clear software flags (DESIGN.md lifecycle),
+  // including BLE4.2 where there is no extended-instance block.
+  impl.isAdvertising = false;
 }
 
 void BLEAdvertising::setAdvertisementData(const BLEAdvertisementData &data) {
