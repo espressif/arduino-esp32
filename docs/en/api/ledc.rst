@@ -385,7 +385,7 @@ It is compatible with Arduinos analogWrite function.
   * Default resolution is 8 bits, so ``0`` to ``255``.
   * ``analogWrite()`` maps the Arduino maximum to LEDC full on (``2 ^ resolution``).
   * Values greater than ``(2 ^ resolution) - 1`` are treated as full on.
-  * Negative values are ignored and the pin duty is left unchanged.
+  * Negative values are ignored. The pin is not reconfigured and its duty is left unchanged.
   * LEDC functions such as ``ledcWrite()`` use the inclusive range [0, 2 ^ ``resolution``] instead.
 
 analogWriteResolution

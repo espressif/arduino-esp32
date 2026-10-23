@@ -776,6 +776,17 @@ static bool ledcFadeGammaConfig(uint8_t pin, uint32_t start_duty, uint32_t targe
     // Set the global resolution for gamma correction
     ledcGammaResolution = bus->channel_resolution;
 
+    // Clamp before IDF range-checks the raw endpoints. The gamma callback runs only after that check.
+    uint32_t max_duty = (1U << bus->channel_resolution);  // Max LEDC duty [0, 2^resolution]
+    if (target_duty > max_duty) {
+      log_w("Final duty %" PRIu32 " was adjusted to the maximum duty %" PRIu32, target_duty, max_duty);
+      target_duty = max_duty;
+    }
+    if (start_duty > max_duty) {
+      log_w("Starting duty %" PRIu32 " was adjusted to the maximum duty %" PRIu32, start_duty, max_duty);
+      start_duty = max_duty;
+    }
+
     // Fill multi-fade parameter list using ESP-IDF API
     esp_err_t err = ledc_fill_multi_fade_param_list(
       group, channel, start_duty, target_duty, linear_fade_segments, max_fade_time_ms, ledcGammaCorrection, SOC_LEDC_GAMMA_CURVE_FADE_RANGE_MAX, fade_params,
@@ -830,6 +841,10 @@ bool ledcFadeGammaWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t ta
 static uint8_t analog_resolution = 8;
 static int analog_frequency = 1000;
 void analogWrite(uint8_t pin, int value) {
+  // Reject before any pin setup. A negative value must not detach another peripheral or attach LEDC.
+  if (value < 0) {
+    return;
+  }
   // Use ledc hardware for internal pins
   if (pin < SOC_GPIO_PIN_COUNT) {
     ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
@@ -843,12 +858,8 @@ void analogWrite(uint8_t pin, int value) {
     if (bus == NULL) {
       return;
     }
-    // Arduino API: value must be non-negative.
-    // Valid duty is 0 .. (2^resolution) - 1; LEDC hardware is 0 .. (2^resolution).
-    // Map Arduino max (and overflow) to LEDC full-on. Negative values are ignored.
-    if (value < 0) {
-      return;
-    }
+    // Arduino duty is 0 .. (2^resolution) - 1; LEDC hardware is 0 .. (2^resolution).
+    // Map Arduino max (and overflow) to LEDC full-on.
     uint32_t arduino_max = (1U << bus->channel_resolution) - 1;
     if ((uint32_t)value >= arduino_max) {
       value = (int)(arduino_max + 1);

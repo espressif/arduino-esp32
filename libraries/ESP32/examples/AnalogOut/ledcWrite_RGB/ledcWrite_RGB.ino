@@ -54,10 +54,10 @@ void loop() {
 
     hueToRGB(color, brightness);  // call function to convert hue to RGB
 
-    // write the RGB values to the pins
-    ledcWrite(ledR, R);  // write red component to channel 1, etc.
-    ledcWrite(ledG, G);
-    ledcWrite(ledB, B);
+    // hueToRGB() stays on a 0..255 scale. At 8-bit, 255 is one step below LEDC full on/off, so map that endpoint to 256.
+    ledcWrite(ledR, R == 255 ? 256 : R);
+    ledcWrite(ledG, G == 255 ? 256 : G);
+    ledcWrite(ledB, B == 255 ? 256 : B);
 
     delay(100);  // full cycle of rgb over 256 colors takes 26 seconds
   }
