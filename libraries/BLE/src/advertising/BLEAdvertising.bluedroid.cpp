@@ -412,7 +412,7 @@ void BLEAdvertising::reset() {
     }
   }
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
-    impl.extInstances[i] = Impl::ExtInstance{};
+    impl.extInstances[i].reset();
   }
   impl.isAdvertising = false;
 #endif
@@ -1109,7 +1109,7 @@ BTStatus BLEAdvertising::removeExtended(uint8_t instance) {
     return BTStatus::Fail;
   }
   if (instance < Impl::kMaxExtInstances) {
-    impl.extInstances[instance] = Impl::ExtInstance{};
+    impl.extInstances[instance].reset();
   }
   return BTStatus::OK;
 }
@@ -1122,7 +1122,7 @@ BTStatus BLEAdvertising::clearExtended() {
     return BTStatus::Fail;
   }
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
-    impl.extInstances[i] = Impl::ExtInstance{};
+    impl.extInstances[i].reset();
   }
   return BTStatus::OK;
 }

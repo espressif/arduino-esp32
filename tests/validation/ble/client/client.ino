@@ -5,7 +5,10 @@
 
 #include <Arduino.h>
 #include <BLE.h>
+#include "core/BLEValidationHooks.h"
 #include <atomic>
+
+static_assert(BLE_VALIDATION_HOOKS, "validation sketches require -DBLE_VALIDATION_HOOKS");
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
@@ -181,38 +184,6 @@ volatile bool phase28EndGo = false;
 volatile bool phase35DisconnectGo = false;
 volatile bool phase35ReadRemoveGo = false;
 volatile bool phase35StreamReleaseGo = false;
-extern "C" {
-std::atomic<int> bleStreamTestWorkerStartFailures{0};
-std::atomic<int> bleStreamTestTeardownFailures{0};
-std::atomic<int> bleStreamTestStartFailures{0};
-std::atomic<int> bleStreamTestRemoveFailures{0};
-std::atomic<int> bleStreamTestDisconnectRaces{0};
-std::atomic<bool> bleStreamTestHoldFinalRoleRelease{false};
-std::atomic<bool> bleStreamTestFinalRoleReleaseReached{false};
-std::atomic<bool> bleStreamTestHostShutdownEntered{false};
-std::atomic<uint32_t> bleRemoteTestWriteTimeoutMs{0};
-std::atomic<bool> bleRemoteTestHoldWriteCommandCompletion{false};
-std::atomic<bool> bleRemoteTestReleaseWriteCommandCompletion{false};
-std::atomic<bool> bleRemoteTestHoldWriteResponseRetirement{false};
-std::atomic<bool> bleRemoteTestWriteCommandOverlappedWaiter{false};
-std::atomic<int> bleRemoteTestWriteCommandSubmitFailures{0};
-std::atomic<int> bleRemoteTestWriteCommandCompletionFailures{0};
-std::atomic<bool> bleRemoteTestWriteResponseStatusPreserved{false};
-std::atomic<bool> bleRemoteTestCombinedWriteOwnerObserved{false};
-std::atomic<bool> bleRemoteTestCombinedWriteOwnerHeld{true};
-std::atomic<bool> bleGattTestHoldNotifyCompletions{false};
-std::atomic<bool> bleGattTestForceTerminalClose{false};
-std::atomic<bool> bleGattTestHoldTerminalWorker{false};
-std::atomic<bool> bleGattTestTerminalWorkerEntered{false};
-std::atomic<bool> bleGattTestTerminalShutdownEntered{false};
-std::atomic<int> bleGattTestTerminalWorkerStartFailures{0};
-std::atomic<bool> bleScanTestForcePreemptedStop{false};
-std::atomic<bool> bleScanTestBluedroidShutdownEntered{false};
-std::atomic<bool> bleScanTestHoldBluedroidShutdown{false};
-std::atomic<int> bleScanTestCancelFailures{0};
-std::atomic<int> bleScanTestHeldContexts{0};
-std::atomic<int> bleScanTestRetiredContexts{0};
-}
 static void recordClientEvent(const char *tag) {
   int n = clientOrderN;
   if (n < (int)(sizeof(clientOrderTags) / sizeof(clientOrderTags[0]))) {
@@ -505,24 +476,24 @@ bool phase_basic() {
   bool scanWasActive = shutdownScan.isScanning();
   bool bluedroidScan = strcmp(BLE.getStackName(), "Bluedroid") == 0;
   bool injectCancelFailure = true;
-  bleScanTestCancelFailures.store(1);
+  BLEHooks.scan.cancelFailures.store(1);
   bool shutdownAdmissionClean = true;
   if (bluedroidScan) {
     static ScanHostShutdownJob hostShutdown;
     hostShutdown.done.store(false, std::memory_order_relaxed);
-    bleScanTestBluedroidShutdownEntered.store(false, std::memory_order_relaxed);
-    bleScanTestHoldBluedroidShutdown.store(true, std::memory_order_relaxed);
+    BLEHooks.scan.bluedroidShutdownEntered.store(false, std::memory_order_relaxed);
+    BLEHooks.scan.holdBluedroidShutdown.store(true, std::memory_order_relaxed);
     bool hostTaskStarted =
       xTaskCreate(scanHostShutdownTask, "scan-host-end", 4096, &hostShutdown, 1, nullptr) == pdPASS;
     unsigned long gateDeadline = millis() + 5000;
-    while (hostTaskStarted && !bleScanTestBluedroidShutdownEntered.load(std::memory_order_acquire)
+    while (hostTaskStarted && !BLEHooks.scan.bluedroidShutdownEntered.load(std::memory_order_acquire)
            && millis() < gateDeadline) {
       delay(1);
     }
-    bool gateClosed = bleScanTestBluedroidShutdownEntered.load(std::memory_order_acquire);
+    bool gateClosed = BLEHooks.scan.bluedroidShutdownEntered.load(std::memory_order_acquire);
     BTStatus duringShutdown = gateClosed ? shutdownScan.start(100) : BTStatus::Fail;
     BTStatus stopDuringShutdown = gateClosed ? shutdownScan.stop() : BTStatus::Fail;
-    bleScanTestHoldBluedroidShutdown.store(false, std::memory_order_release);
+    BLEHooks.scan.holdBluedroidShutdown.store(false, std::memory_order_release);
     while (hostTaskStarted && !hostShutdown.done.load(std::memory_order_acquire)) {
       delay(1);
     }
@@ -545,7 +516,7 @@ bool phase_basic() {
     delay(1);
   }
   bool scanReleased = scanShutdown.done.load();
-  bool cancelFallbackClean = !injectCancelFailure || bleScanTestCancelFailures.load() == 0;
+  bool cancelFallbackClean = !injectCancelFailure || BLEHooks.scan.cancelFailures.load() == 0;
   Serial.printf(
     "[CLIENT] Blocking scan shutdown task=%d active=%d released=%d cancelFallback=%d admission=%d heap=%d\n",
     (int)scanTaskStarted, (int)scanWasActive, (int)scanReleased, (int)cancelFallbackClean,
@@ -1545,6 +1516,83 @@ void setup() {
     }
   }
 
+  // NimBLE keepalive must outlive disconnectSync.give() until the host has
+  // finished dispatching the terminal event. Re-assigning nimbleRef for a
+  // reconnect in that window must not be wiped by the old handler's reset().
+#if BLE_NIMBLE && BLE_VALIDATION_HOOKS
+  {
+    BLEClient raceClient = BLE.createClient();
+    installClientCallbacks(raceClient);
+    BTStatus raceConnect = raceClient.connect(targetAddr);
+    BLEHooks.client.resetWhileConnected.store(false, std::memory_order_relaxed);
+    BLEHooks.client.nimbleRefHoldEntered.store(false, std::memory_order_relaxed);
+    BLEHooks.client.nimbleRefAssigned.store(false, std::memory_order_relaxed);
+    BLEHooks.client.nimbleRefEmptyOnConnect.store(false, std::memory_order_relaxed);
+    BLEHooks.client.holdNimbleRefReset.store(true, std::memory_order_relaxed);
+    struct NimbleRefRaceJob {
+      BLEClient client;
+      BTAddress addr;
+      std::atomic<bool> disconnectDone{false};
+      std::atomic<bool> connectDone{false};
+      BTStatus reconnect{BTStatus::Fail};
+    };
+    static NimbleRefRaceJob nimbleRefJob;
+    nimbleRefJob.client = raceClient;
+    nimbleRefJob.addr = targetAddr;
+    nimbleRefJob.disconnectDone.store(false, std::memory_order_relaxed);
+    nimbleRefJob.connectDone.store(false, std::memory_order_relaxed);
+    nimbleRefJob.reconnect = BTStatus::Fail;
+    UBaseType_t racePriority = uxTaskPriorityGet(nullptr);
+    if (racePriority + 1 < configMAX_PRIORITIES) {
+      ++racePriority;
+    }
+    bool raceStarted = raceConnect
+                       && xTaskCreate(
+                            [](void *arg) {
+                              auto *job = static_cast<NimbleRefRaceJob *>(arg);
+                              (void)job->client.disconnect();
+                              job->disconnectDone.store(true, std::memory_order_release);
+                              job->reconnect = job->client.connect(job->addr);
+                              job->connectDone.store(true, std::memory_order_release);
+                              vTaskDelete(nullptr);
+                            },
+                            "nimble-ref", 4096, &nimbleRefJob, racePriority, nullptr
+                          )
+                            == pdPASS;
+    unsigned long holdDeadline = millis() + 3000;
+    while (raceStarted && !BLEHooks.client.nimbleRefHoldEntered.load(std::memory_order_acquire) && millis() < holdDeadline) {
+      delay(1);
+    }
+    unsigned long assignedDeadline = millis() + 2000;
+    while (raceStarted && !BLEHooks.client.nimbleRefAssigned.load(std::memory_order_acquire) && millis() < assignedDeadline) {
+      delay(1);
+    }
+    BLEHooks.client.holdNimbleRefReset.store(false, std::memory_order_release);
+    unsigned long doneDeadline = millis() + 8000;
+    while (raceStarted && !nimbleRefJob.connectDone.load(std::memory_order_acquire) && millis() < doneDeadline) {
+      delay(1);
+    }
+    bool stillConnected = nimbleRefJob.client.isConnected();
+    bool emptyOnConnect = BLEHooks.client.nimbleRefEmptyOnConnect.load(std::memory_order_relaxed);
+    bool resetWhileConnected = BLEHooks.client.resetWhileConnected.load(std::memory_order_relaxed);
+    bool raceClean = raceStarted && nimbleRefJob.disconnectDone.load() && nimbleRefJob.connectDone.load() && nimbleRefJob.reconnect
+                     && stillConnected && !emptyOnConnect && !resetWhileConnected;
+    if (nimbleRefJob.client.isConnected()) {
+      (void)nimbleRefJob.client.disconnect();
+    }
+    nimbleRefJob.client = BLEClient();
+    delay(300);
+    Serial.printf(
+      "[CLIENT] Phase12 nimbleRef race supported=1 clean=%d emptyOnConnect=%d resetWhileConnected=%d reconnect=%d connected=%d\n",
+      (int)raceClean, (int)emptyOnConnect, (int)resetWhileConnected, (int)(bool)nimbleRefJob.reconnect, (int)stillConnected
+    );
+  }
+#else
+  Serial.println(
+    "[CLIENT] Phase12 nimbleRef race supported=0 clean=1 emptyOnConnect=0 resetWhileConnected=0 reconnect=1 connected=1"
+  );
+#endif
+
   // ===== Phase 13: BLEStream =====
   waitForPhase(13);
   {
@@ -1676,9 +1724,54 @@ void setup() {
       }
       if (callbackConnect) {
         delay(300);
-        bleStreamTestDisconnectRaces.store(1);
+        BLEHooks.stream.writeSawClearedHandle.store(false, std::memory_order_relaxed);
+        BLEHooks.stream.writeChunksEntered.store(false, std::memory_order_relaxed);
+        BLEHooks.stream.holdWriteChunks.store(true, std::memory_order_relaxed);
+        struct HandleRaceJob {
+          BLEStream *stream;
+          std::atomic<bool> done{false};
+          uint8_t payload[200];
+        };
+        static HandleRaceJob handleJob;
+        handleJob.stream = &callbackEndStream;
+        handleJob.done.store(false, std::memory_order_relaxed);
+        for (int i = 0; i < 200; i++) {
+          handleJob.payload[i] = static_cast<uint8_t>('A' + (i % 26));
+        }
+        UBaseType_t writePriority = uxTaskPriorityGet(nullptr);
+        if (writePriority + 1 < configMAX_PRIORITIES) {
+          ++writePriority;
+        }
+        bool writeStarted = xTaskCreate(
+                             [](void *arg) {
+                               auto *job = static_cast<HandleRaceJob *>(arg);
+                               (void)job->stream->write(job->payload, sizeof(job->payload));
+                               job->done.store(true, std::memory_order_release);
+                               vTaskDelete(nullptr);
+                             },
+                             "stream-wr", 4096, &handleJob, writePriority, nullptr
+                           )
+                           == pdPASS;
+        unsigned long enteredDeadline = millis() + 2000;
+        while (writeStarted && !BLEHooks.stream.writeChunksEntered.load(std::memory_order_acquire) && millis() < enteredDeadline) {
+          delay(1);
+        }
+        BLEHooks.stream.disconnectRaces.store(1);
         callbackEndStream.end();
+        BLEHooks.stream.holdWriteChunks.store(false, std::memory_order_release);
+        unsigned long writeDeadline = millis() + 2000;
+        while (writeStarted && !handleJob.done.load(std::memory_order_acquire) && millis() < writeDeadline) {
+          delay(1);
+        }
       }
+      bool handleRaceClean =
+        BLEHooks.stream.writeChunksEntered.load(std::memory_order_relaxed)
+        && !BLEHooks.stream.writeSawClearedHandle.load(std::memory_order_relaxed);
+      Serial.printf(
+        "[CLIENT] BLEStream handle reset race clean=%d sawCleared=%d entered=%d\n", (int)handleRaceClean,
+        (int)BLEHooks.stream.writeSawClearedHandle.load(), (int)BLEHooks.stream.writeChunksEntered.load()
+      );
+      stream_ok = stream_ok && handleRaceClean;
       Serial.printf(
         "[CLIENT] BLEStream callback end cycle connected=%d disconnects=%lu\n", (int)(bool)callbackConnect,
         (unsigned long)callbackEndDisconnects.load()
@@ -3495,19 +3588,19 @@ void setup() {
       "[CLIENT] Phase30 sessionReplace first=%d replacement=%d completions=%lu elapsed=%lu stopped=%d\n", (int)(bool)supersededStart,
       (int)(bool)replacementStartStatus, (unsigned long)replacementCompletions.load(), replacementElapsed, (int)replacementStopped
     );
-#if defined(CONFIG_NIMBLE_ENABLED) && defined(BLE_SCAN_VALIDATION_HOOKS)
-    bleScanTestHeldContexts.store(0, std::memory_order_relaxed);
+#if BLE_NIMBLE && BLE_VALIDATION_HOOKS
+    BLEHooks.scan.heldContexts.store(0, std::memory_order_relaxed);
     BTStatus preemptOwnedStart = deadlineScan.start(150, false);
-    bleScanTestForcePreemptedStop.store(true, std::memory_order_relaxed);
+    BLEHooks.scan.forcePreemptedStop.store(true, std::memory_order_relaxed);
     BTStatus preemptOwnedStop = deadlineScan.stop();
-    bool contextRetained = bleScanTestHeldContexts.load(std::memory_order_relaxed) == 1;
+    bool contextRetained = BLEHooks.scan.heldContexts.load(std::memory_order_relaxed) == 1;
     unsigned long contextDeadline = millis() + 1500;
-    while (bleScanTestHeldContexts.load(std::memory_order_relaxed) != 0 && millis() < contextDeadline) {
+    while (BLEHooks.scan.heldContexts.load(std::memory_order_relaxed) != 0 && millis() < contextDeadline) {
       delay(1);
     }
     bool preemptStopClean =
       preemptOwnedStart && preemptOwnedStop && contextRetained
-      && bleScanTestHeldContexts.load(std::memory_order_relaxed) == 0
+      && BLEHooks.scan.heldContexts.load(std::memory_order_relaxed) == 0
       && heap_caps_check_integrity_all(true);
     Serial.printf("[CLIENT] Phase30 preemptStop clean=%d retained=%d\n", (int)preemptStopClean, (int)contextRetained);
 #else
@@ -3519,12 +3612,12 @@ void setup() {
       scanChurnOk = scanChurnOk && (bool)deadlineScan.start(0, false);
       scanChurnOk = scanChurnOk && (bool)deadlineScan.stop();
     }
-#if defined(CONFIG_NIMBLE_ENABLED) && defined(BLE_SCAN_VALIDATION_HOOKS)
+#if BLE_NIMBLE && BLE_VALIDATION_HOOKS
     unsigned long retireDeadline = millis() + 2000;
-    while (bleScanTestRetiredContexts.load(std::memory_order_relaxed) != 0 && millis() < retireDeadline) {
+    while (BLEHooks.scan.retiredContexts.load(std::memory_order_relaxed) != 0 && millis() < retireDeadline) {
       delay(1);
     }
-    scanChurnOk = scanChurnOk && bleScanTestRetiredContexts.load(std::memory_order_relaxed) == 0;
+    scanChurnOk = scanChurnOk && BLEHooks.scan.retiredContexts.load(std::memory_order_relaxed) == 0;
 #else
     delay(50);
 #endif
@@ -3969,7 +4062,7 @@ void setup() {
             }
           }
           if (!phase35Bluedroid) {
-            bleRemoteTestHoldWriteResponseRetirement.store(false, std::memory_order_relaxed);
+            BLEHooks.remote.holdWriteResponseRetirement.store(false, std::memory_order_relaxed);
           }
         }
         if (peerNotify.fetch_add(1, std::memory_order_relaxed) > 0) {
@@ -4010,15 +4103,15 @@ void setup() {
             }
           );
         }
-        bleRemoteTestWriteCommandOverlappedWaiter.store(false, std::memory_order_relaxed);
-        bleRemoteTestHoldWriteResponseRetirement.store(phase35Bluedroid, std::memory_order_relaxed);
-        bleRemoteTestWriteCommandSubmitFailures.store(phase35Bluedroid ? 1 : 0, std::memory_order_relaxed);
-        bleRemoteTestWriteCommandCompletionFailures.store(phase35Bluedroid ? 1 : 0, std::memory_order_relaxed);
-        bleRemoteTestWriteResponseStatusPreserved.store(!phase35Bluedroid, std::memory_order_relaxed);
-        bleRemoteTestCombinedWriteOwnerObserved.store(!phase35Bluedroid, std::memory_order_relaxed);
-        bleRemoteTestCombinedWriteOwnerHeld.store(true, std::memory_order_relaxed);
+        BLEHooks.remote.writeCommandOverlappedWaiter.store(false, std::memory_order_relaxed);
+        BLEHooks.remote.holdWriteResponseRetirement.store(phase35Bluedroid, std::memory_order_relaxed);
+        BLEHooks.remote.writeCommandSubmitFailures.store(phase35Bluedroid ? 1 : 0, std::memory_order_relaxed);
+        BLEHooks.remote.writeCommandCompletionFailures.store(phase35Bluedroid ? 1 : 0, std::memory_order_relaxed);
+        BLEHooks.remote.writeResponseStatusPreserved.store(!phase35Bluedroid, std::memory_order_relaxed);
+        BLEHooks.remote.combinedWriteOwnerObserved.store(!phase35Bluedroid, std::memory_order_relaxed);
+        BLEHooks.remote.combinedWriteOwnerHeld.store(true, std::memory_order_relaxed);
         connected = peer && (bool)peer.subscribe(BLESubscription::Notify, onPeer);
-        bleRemoteTestHoldWriteResponseRetirement.store(false, std::memory_order_relaxed);
+        BLEHooks.remote.holdWriteResponseRetirement.store(false, std::memory_order_relaxed);
       }
     }
     unsigned long start = millis();
@@ -4027,11 +4120,11 @@ void setup() {
     }
     bool bluedroidCommands = phase35Bluedroid;
     bool callbackOverlap =
-      !bluedroidCommands || bleRemoteTestWriteCommandOverlappedWaiter.load(std::memory_order_relaxed);
+      !bluedroidCommands || BLEHooks.remote.writeCommandOverlappedWaiter.load(std::memory_order_relaxed);
     bool callbackStateClean =
-      bleRemoteTestWriteResponseStatusPreserved.load(std::memory_order_relaxed)
-      && bleRemoteTestCombinedWriteOwnerObserved.load(std::memory_order_relaxed)
-      && bleRemoteTestCombinedWriteOwnerHeld.load(std::memory_order_relaxed);
+      BLEHooks.remote.writeResponseStatusPreserved.load(std::memory_order_relaxed)
+      && BLEHooks.remote.combinedWriteOwnerObserved.load(std::memory_order_relaxed)
+      && BLEHooks.remote.combinedWriteOwnerHeld.load(std::memory_order_relaxed);
     bool callbackCommandsClean =
       callbackOverlap && callbackStateClean && callbackCommandAttempted.load()
       && ((bluedroidCommands && callbackCommandAccepted.load() == 8 && callbackCommandBusy.load() == 1
@@ -4060,6 +4153,10 @@ void setup() {
     Serial.printf(
       "[CLIENT] Phase35 found=%d connected=%d notify=%d indicate=%d\n", (int)found, (int)connected, (int)peerNotify.load(), (int)peerIndicate.load()
     );
+    if (peer) {
+      (void)peer.subscribe(BLESubscription::Notify | BLESubscription::Indicate, onPeer);
+    }
+    Serial.println("[CLIENT] Phase35 mixedCccd armed=1");
     Serial.printf("[CLIENT] Phase35 flood=%d\n", (int)floodCount.load());
 
     // Wait for all queued indications before the harness arms the deterministic
@@ -4134,10 +4231,10 @@ void setup() {
       String second = tc ? tc.readValue(3000) : String();
       rereadOk = second == "timeout_ok";
       if (tc && strcmp(BLE.getStackName(), "Bluedroid") == 0) {
-        bleRemoteTestHoldWriteCommandCompletion.store(true, std::memory_order_relaxed);
+        BLEHooks.remote.holdWriteCommandCompletion.store(true, std::memory_order_relaxed);
         BTStatus firstCommand = tc.writeValue("late-command-1", false);
         BTStatus overlapCommand = tc.writeValue("late-command-2", false);
-        bleRemoteTestReleaseWriteCommandCompletion.store(true, std::memory_order_relaxed);
+        BLEHooks.remote.releaseWriteCommandCompletion.store(true, std::memory_order_relaxed);
         BTStatus recoveredCommand = BTStatus::Busy;
         for (int retry = 0; retry < 1000 && recoveredCommand == BTStatus::Busy; retry++) {
           recoveredCommand = tc.writeValue("late-command-3", false);
@@ -4148,7 +4245,7 @@ void setup() {
         writeCommandLateIsolated =
           firstCommand == BTStatus::OK && overlapCommand == BTStatus::Busy && recoveredCommand == BTStatus::OK;
 
-        bleRemoteTestWriteTimeoutMs.store(200, std::memory_order_relaxed);
+        BLEHooks.remote.writeTimeoutMs.store(200, std::memory_order_relaxed);
         BTStatus firstWrite = BTStatus::Busy;
         for (int retry = 0; retry < 1000 && firstWrite == BTStatus::Busy; retry++) {
           firstWrite = tc.writeValue("late-write-1", true);
@@ -4188,7 +4285,7 @@ void setup() {
       c1.onDisconnect([](BLEClient, const BLEConnInfo &, uint8_t) {
         pendingOwnerDisconnected.store(true, std::memory_order_release);
       });
-      bleRemoteTestHoldWriteCommandCompletion.store(true, std::memory_order_relaxed);
+      BLEHooks.remote.holdWriteCommandCompletion.store(true, std::memory_order_relaxed);
       pendingOwnerArmed = (bool)peer.writeValue("owner-drop", false);
       peer = BLERemoteCharacteristic();
       queue = BLERemoteCharacteristic();
@@ -4225,16 +4322,16 @@ void setup() {
 
       // Force xTaskCreate failure once. The synchronous GAP-disconnect fallback
       // must retain the client until its native disconnect callback arrives.
-      bleGattTestTerminalWorkerStartFailures.store(1);
-      bleGattTestForceTerminalClose.store(true);
+      BLEHooks.gatt.terminalWorkerStartFailures.store(1);
+      BLEHooks.gatt.forceTerminalClose.store(true);
       BTStatus fallbackWrite = terminalChar ? terminalChar.writeValue("terminal-fallback", false) : BTStatus::NotFound;
       unsigned long fallbackDeadline = millis() + 5000;
       while (terminalClient.isConnected() && millis() < fallbackDeadline) {
         delay(1);
       }
       bool fallbackClean =
-        fallbackWrite && !terminalClient.isConnected() && bleGattTestTerminalWorkerStartFailures.load() == 0;
-      bleGattTestForceTerminalClose.store(false);
+        fallbackWrite && !terminalClient.isConnected() && BLEHooks.gatt.terminalWorkerStartFailures.load() == 0;
+      BLEHooks.gatt.forceTerminalClose.store(false);
       terminalService = BLERemoteService();
       terminalChar = BLERemoteCharacteristic();
       terminalConnect = BTStatus::Fail;
@@ -4247,17 +4344,17 @@ void setup() {
       terminalService = terminalConnect ? terminalClient.getService(edgeSvcUUID) : BLERemoteService();
       terminalChar = terminalService ? terminalService.getCharacteristic(timeoutCharUUID) : BLERemoteCharacteristic();
 
-      bleGattTestTerminalWorkerEntered.store(false);
-      bleGattTestTerminalShutdownEntered.store(false);
-      bleGattTestHoldTerminalWorker.store(true);
-      bleGattTestForceTerminalClose.store(true);
+      BLEHooks.gatt.terminalWorkerEntered.store(false);
+      BLEHooks.gatt.terminalShutdownEntered.store(false);
+      BLEHooks.gatt.holdTerminalWorker.store(true);
+      BLEHooks.gatt.forceTerminalClose.store(true);
       BTStatus terminalWrite = terminalChar ? terminalChar.writeValue("terminal-shutdown", false) : BTStatus::NotFound;
       unsigned long terminalWorkerDeadline = millis() + 5000;
-      while (!bleGattTestTerminalWorkerEntered.load() && millis() < terminalWorkerDeadline) {
+      while (!BLEHooks.gatt.terminalWorkerEntered.load() && millis() < terminalWorkerDeadline) {
         delay(1);
       }
-      bool workerEntered = bleGattTestTerminalWorkerEntered.load();
-      bleGattTestForceTerminalClose.store(false);
+      bool workerEntered = BLEHooks.gatt.terminalWorkerEntered.load();
+      BLEHooks.gatt.forceTerminalClose.store(false);
       terminalChar = BLERemoteCharacteristic();
       terminalService = BLERemoteService();
       terminalClient = BLEClient();
@@ -4268,12 +4365,12 @@ void setup() {
         workerEntered
         && xTaskCreate(bleStreamShutdownRaceHostTask, "gatt-host-end", 6144, &terminalShutdownRace, 1, nullptr) == pdPASS;
       unsigned long terminalShutdownDeadline = millis() + 5000;
-      while (hostTaskStarted && !bleGattTestTerminalShutdownEntered.load() && millis() < terminalShutdownDeadline) {
+      while (hostTaskStarted && !BLEHooks.gatt.terminalShutdownEntered.load() && millis() < terminalShutdownDeadline) {
         delay(1);
       }
-      bool shutdownEntered = bleGattTestTerminalShutdownEntered.load();
+      bool shutdownEntered = BLEHooks.gatt.terminalShutdownEntered.load();
       bool shutdownBlocked = shutdownEntered && !terminalShutdownRace.hostEndDone.load();
-      bleGattTestHoldTerminalWorker.store(false);
+      BLEHooks.gatt.holdTerminalWorker.store(false);
       while (hostTaskStarted && !terminalShutdownRace.hostEndDone.load()) {
         delay(1);
       }
@@ -4307,28 +4404,28 @@ void setup() {
     streamShutdownRace.stream = &shutdownClient;
     streamShutdownRace.streamEndDone.store(false);
     streamShutdownRace.hostEndDone.store(false);
-    bleStreamTestFinalRoleReleaseReached.store(false);
-    bleStreamTestHostShutdownEntered.store(false);
-    bleStreamTestHoldFinalRoleRelease.store(true);
+    BLEHooks.stream.finalRoleReleaseReached.store(false);
+    BLEHooks.stream.hostShutdownEntered.store(false);
+    BLEHooks.stream.holdFinalRoleRelease.store(true);
     bool streamTaskStarted =
       shutdownConnect
       && xTaskCreate(bleStreamShutdownRaceEndTask, "stream-final-end", 6144, &streamShutdownRace, 1, nullptr) == pdPASS;
     unsigned long releaseDeadline = millis() + 5000;
-    while (streamTaskStarted && !bleStreamTestFinalRoleReleaseReached.load() && millis() < releaseDeadline) {
+    while (streamTaskStarted && !BLEHooks.stream.finalRoleReleaseReached.load() && millis() < releaseDeadline) {
       delay(1);
     }
-    bool finalReleaseReached = bleStreamTestFinalRoleReleaseReached.load();
+    bool finalReleaseReached = BLEHooks.stream.finalRoleReleaseReached.load();
     bool streamHostTaskStarted =
       finalReleaseReached
       && xTaskCreate(bleStreamShutdownRaceHostTask, "stream-host-end", 6144, &streamShutdownRace, 1, nullptr) == pdPASS;
     unsigned long hostDeadline = millis() + 5000;
-    while (streamHostTaskStarted && !bleStreamTestHostShutdownEntered.load() && millis() < hostDeadline) {
+    while (streamHostTaskStarted && !BLEHooks.stream.hostShutdownEntered.load() && millis() < hostDeadline) {
       delay(1);
     }
-    bool streamHostEntered = bleStreamTestHostShutdownEntered.load();
+    bool streamHostEntered = BLEHooks.stream.hostShutdownEntered.load();
     bool streamHostBlocked =
       streamHostEntered && !streamShutdownRace.hostEndDone.load() && !streamShutdownRace.streamEndDone.load();
-    bleStreamTestHoldFinalRoleRelease.store(false);
+    BLEHooks.stream.holdFinalRoleRelease.store(false);
     while (streamTaskStarted && !streamShutdownRace.streamEndDone.load()) {
       delay(1);
     }

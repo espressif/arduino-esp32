@@ -38,12 +38,7 @@
 #include <algorithm>
 #include <new>
 
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-extern "C" std::atomic<bool> bleScanTestForcePreemptedStop;
-extern "C" std::atomic<int> bleScanTestCancelFailures;
-extern "C" std::atomic<int> bleScanTestHeldContexts;
-extern "C" std::atomic<int> bleScanTestRetiredContexts;
-#endif
+#include "core/BLEValidationHooks.h"
 
 #if BLE_SCANNING_SUPPORTED
 
@@ -244,8 +239,8 @@ static void retireScanContextCb(struct ble_npl_event *event) {
   for (auto *context : retired) {
     delete context;
   }
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-  bleScanTestRetiredContexts.fetch_sub(static_cast<int>(retired.size()), std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+  BLEHooks.scan.retiredContexts.fetch_sub(static_cast<int>(retired.size()), std::memory_order_relaxed);
 #endif
 }
 
@@ -265,8 +260,8 @@ static void retireScanContext(BLEScan::Impl::EventContext *context) {
   {
     BLELockGuard lock(impl->mtx);
     impl->retiredScanContexts.push_back(context);
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-    bleScanTestRetiredContexts.fetch_add(1, std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+    BLEHooks.scan.retiredContexts.fetch_add(1, std::memory_order_relaxed);
 #endif
     if (impl->nativeAdmission.isOpen() && !impl->retireScanEventInited) {
       ble_npl_event_init(&impl->retireScanEvent, retireScanContextCb, impl);
@@ -417,8 +412,8 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           auto held = std::find(impl->nativeHeldScanContexts.begin(), impl->nativeHeldScanContexts.end(), context);
           if (held != impl->nativeHeldScanContexts.end()) {
             impl->nativeHeldScanContexts.erase(held);
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-            bleScanTestHeldContexts.fetch_sub(1, std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+            BLEHooks.scan.heldContexts.fetch_sub(1, std::memory_order_relaxed);
 #endif
           }
           deleteContext = !context->retireByStop;
@@ -694,10 +689,10 @@ static BTStatus nimbleStopScanSession(BLEScan::Impl &impl) {
     }
   }
   int rc;
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-  if (bleScanTestCancelFailures.exchange(0, std::memory_order_relaxed) > 0) {
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.scan.cancelFailures.exchange(0, std::memory_order_relaxed) > 0) {
     rc = BLE_HS_EINVAL;
-  } else if (bleScanTestForcePreemptedStop.exchange(false, std::memory_order_relaxed)) {
+  } else if (BLEHooks.scan.forcePreemptedStop.exchange(false, std::memory_order_relaxed)) {
     // Model NimBLE's privacy-preemption window: the native operation retains
     // its callback argument and completes later, while cancel sees no active
     // discovery procedure.
@@ -740,8 +735,8 @@ static BTStatus nimbleStopScanSession(BLEScan::Impl &impl) {
         impl.activeScanContext = nullptr;
         context->retireByStop = false;
         impl.nativeHeldScanContexts.push_back(context);
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-        bleScanTestHeldContexts.fetch_add(1, std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+        BLEHooks.scan.heldContexts.fetch_add(1, std::memory_order_relaxed);
 #endif
       } else {
         // DISC_COMPLETE ran after cancel() returned but before this lock. It
@@ -932,12 +927,12 @@ void BLEScan::resetBackendEvents() {
       _impl->retireScanEventInited = false;
     }
     retired.swap(_impl->retiredScanContexts);
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-    bleScanTestRetiredContexts.fetch_sub(static_cast<int>(retired.size()), std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+    BLEHooks.scan.retiredContexts.fetch_sub(static_cast<int>(retired.size()), std::memory_order_relaxed);
 #endif
     retired.insert(retired.end(), _impl->nativeHeldScanContexts.begin(), _impl->nativeHeldScanContexts.end());
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-    bleScanTestHeldContexts.fetch_sub(static_cast<int>(_impl->nativeHeldScanContexts.size()), std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+    BLEHooks.scan.heldContexts.fetch_sub(static_cast<int>(_impl->nativeHeldScanContexts.size()), std::memory_order_relaxed);
 #endif
     _impl->nativeHeldScanContexts.clear();
     if (_impl->activeScanContext) {

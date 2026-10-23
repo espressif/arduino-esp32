@@ -187,17 +187,7 @@ std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() cons
 #include <esp_gatt_defs.h>
 #include <string.h>
 
-#if defined(BLE_GATT_VALIDATION_HOOKS)
-extern "C" {
-extern std::atomic<uint32_t> bleRemoteTestWriteTimeoutMs;
-extern std::atomic<bool> bleRemoteTestHoldWriteCommandCompletion;
-extern std::atomic<bool> bleRemoteTestReleaseWriteCommandCompletion;
-extern std::atomic<bool> bleRemoteTestHoldWriteResponseRetirement;
-extern std::atomic<bool> bleRemoteTestWriteCommandOverlappedWaiter;
-extern std::atomic<int> bleRemoteTestWriteCommandSubmitFailures;
-extern std::atomic<bool> bleRemoteTestWriteResponseStatusPreserved;
-}
-#endif
+#include "core/BLEValidationHooks.h"
 
 // --------------------------------------------------------------------------
 // BLERemoteCharacteristic -- Bluedroid backend
@@ -370,12 +360,12 @@ static BTStatus performRemoteWrite(
       if (!remoteTargetConnectedLocked(target, client)) {
         return BTStatus::InvalidState;
       }
-#if defined(BLE_GATT_VALIDATION_HOOKS)
+#if BLE_VALIDATION_HOOKS
       if (client->requestWaiter && client->requestHandle != handle) {
-        bleRemoteTestWriteCommandOverlappedWaiter.store(true, std::memory_order_relaxed);
+        BLEHooks.remote.writeCommandOverlappedWaiter.store(true, std::memory_order_relaxed);
       }
       if (client->validationHoldWriteCommand && client->validationHeldWriteCommandEventSeen
-          && bleRemoteTestReleaseWriteCommandCompletion.exchange(false, std::memory_order_relaxed)) {
+          && BLEHooks.remote.releaseWriteCommandCompletion.exchange(false, std::memory_order_relaxed)) {
         client->validationHoldWriteCommand = false;
         client->validationHeldWriteCommandEventSeen = false;
         if (client->commandCount > 0) {
@@ -391,7 +381,7 @@ static BTStatus performRemoteWrite(
       // the callback). Different handles are unambiguous in WRITE_*_EVT, so
       // allow that case; retain Busy for the same handle.
       if (client->commandCount >= kMaxPendingWriteCommands || client->requestHandle == handle
-#if defined(BLE_GATT_VALIDATION_HOOKS)
+#if BLE_VALIDATION_HOOKS
           || client->validationHoldWriteCommand
 #endif
       ) {
@@ -401,16 +391,16 @@ static BTStatus performRemoteWrite(
       if (!client->requestWaiter) {
         client->lastWriteStatus = ESP_GATT_OK;
       }
-#if defined(BLE_GATT_VALIDATION_HOOKS)
+#if BLE_VALIDATION_HOOKS
       client->validationHoldWriteCommand =
-        bleRemoteTestHoldWriteCommandCompletion.exchange(false, std::memory_order_relaxed);
+        BLEHooks.remote.holdWriteCommandCompletion.exchange(false, std::memory_order_relaxed);
       client->validationHeldWriteCommandEventSeen = false;
 #endif
       bool forceSubmitFailure = false;
-#if defined(BLE_GATT_VALIDATION_HOOKS)
-      int remainingFailures = bleRemoteTestWriteCommandSubmitFailures.load(std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+      int remainingFailures = BLEHooks.remote.writeCommandSubmitFailures.load(std::memory_order_relaxed);
       while (remainingFailures > 0
-             && !bleRemoteTestWriteCommandSubmitFailures.compare_exchange_weak(
+             && !BLEHooks.remote.writeCommandSubmitFailures.compare_exchange_weak(
                remainingFailures, remainingFailures - 1, std::memory_order_relaxed
              )) {}
       forceSubmitFailure = remainingFailures > 0;
@@ -426,7 +416,7 @@ static BTStatus performRemoteWrite(
                             ESP_GATT_WRITE_TYPE_NO_RSP, ESP_GATT_AUTH_REQ_NONE
                           );
       if (err != ESP_OK) {
-#if defined(BLE_GATT_VALIDATION_HOOKS)
+#if BLE_VALIDATION_HOOKS
         client->validationHoldWriteCommand = false;
         client->validationHeldWriteCommandEventSeen = false;
 #endif
@@ -482,17 +472,17 @@ static BTStatus performRemoteWrite(
     }
 
     uint32_t timeoutMs = 10000;
-#if defined(BLE_GATT_VALIDATION_HOOKS)
-    uint32_t injectedTimeout = bleRemoteTestWriteTimeoutMs.exchange(0, std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+    uint32_t injectedTimeout = BLEHooks.remote.writeTimeoutMs.exchange(0, std::memory_order_relaxed);
     if (injectedTimeout > 0) {
       timeoutMs = injectedTimeout;
     }
 #endif
     BTStatus st = client->writeSync.wait(timeoutMs);
-#if defined(BLE_GATT_VALIDATION_HOOKS)
-    if (st != BTStatus::Timeout && bleRemoteTestHoldWriteResponseRetirement.load(std::memory_order_relaxed)) {
+#if BLE_VALIDATION_HOOKS
+    if (st != BTStatus::Timeout && BLEHooks.remote.holdWriteResponseRetirement.load(std::memory_order_relaxed)) {
       TickType_t deadline = xTaskGetTickCount() + pdMS_TO_TICKS(5000);
-      while (bleRemoteTestHoldWriteResponseRetirement.load(std::memory_order_relaxed)
+      while (BLEHooks.remote.holdWriteResponseRetirement.load(std::memory_order_relaxed)
              && static_cast<int32_t>(deadline - xTaskGetTickCount()) > 0) {
         vTaskDelay(1);
       }
@@ -509,9 +499,9 @@ static BTStatus performRemoteWrite(
       }
       client->requestWaiter = false;
       lastStatus = client->lastWriteStatus;
-#if defined(BLE_GATT_VALIDATION_HOOKS)
-      if (bleRemoteTestWriteCommandOverlappedWaiter.load(std::memory_order_relaxed)) {
-        bleRemoteTestWriteResponseStatusPreserved.store(lastStatus == ESP_GATT_OK, std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+      if (BLEHooks.remote.writeCommandOverlappedWaiter.load(std::memory_order_relaxed)) {
+        BLEHooks.remote.writeResponseStatusPreserved.store(lastStatus == ESP_GATT_OK, std::memory_order_relaxed);
       }
 #endif
       if (st == BTStatus::OK && !remoteTargetConnectedLocked(target, client)) {

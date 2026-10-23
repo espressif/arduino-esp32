@@ -43,13 +43,7 @@
 
 BLEScan::Impl *BLEScan::Impl::s_instance = nullptr;
 
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-extern "C" {
-extern std::atomic<bool> bleScanTestBluedroidShutdownEntered;
-extern std::atomic<bool> bleScanTestHoldBluedroidShutdown;
-extern std::atomic<int> bleScanTestCancelFailures;
-}
-#endif
+#include "core/BLEValidationHooks.h"
 
 namespace {
 
@@ -310,10 +304,10 @@ BTStatus BLEScan::stopBackend() {
     impl.stopSync.take();
   }
   esp_err_t err;
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-  int remainingFailures = bleScanTestCancelFailures.load(std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+  int remainingFailures = BLEHooks.scan.cancelFailures.load(std::memory_order_relaxed);
   while (remainingFailures > 0
-         && !bleScanTestCancelFailures.compare_exchange_weak(
+         && !BLEHooks.scan.cancelFailures.compare_exchange_weak(
            remainingFailures, remainingFailures - 1, std::memory_order_relaxed
          )) {}
   bool forceStopFailure = remainingFailures > 0;
@@ -539,11 +533,9 @@ void BLEScan::beginBackendShutdown() {
     return;
   }
   _impl->nativeAdmission.close();
-#if defined(BLE_SCAN_VALIDATION_HOOKS)
-  bleScanTestBluedroidShutdownEntered.store(true, std::memory_order_release);
-  while (bleScanTestHoldBluedroidShutdown.load(std::memory_order_acquire)) {
-    vTaskDelay(1);
-  }
+#if BLE_VALIDATION_HOOKS
+  BLEHooks.scan.bluedroidShutdownEntered.store(true, std::memory_order_release);
+  BLEValidationHooks::holdWhile(BLEHooks.scan.holdBluedroidShutdown);
 #endif
   _impl->nativeAdmission.waitUntilIdle();
   bool wasScanning = _impl->isScanning.load(std::memory_order_acquire);

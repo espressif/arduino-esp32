@@ -53,8 +53,8 @@ struct BLEClient::Impl : BLEClientImplCommon {
   BLESync mtuSync{"mtuSync"};
 
   // Prevent destruction while NimBLE holds our raw pointer.
-  // Set before ble_gap_connect(); cleared in gapEventHandler after the
-  // terminal event (DISCONNECT or CONNECT-failure) has been fully dispatched.
+  // Set before ble_gap_connect(); moved off this member before unblocking the
+  // waiter so a reconnect cannot have its keepalive wiped by the dying handler.
   std::shared_ptr<BLEClient::Impl> nimbleRef;
 
   bool discovering = false;

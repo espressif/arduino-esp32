@@ -40,6 +40,8 @@
 
 #include <host/ble_att.h>
 
+#include "core/BLEValidationHooks.h"
+
 namespace {
 
 // dispatchConnect / dispatchDisconnect / dispatchConnectFail / dispatchMtuChanged
@@ -95,10 +97,19 @@ BTStatus BLEClient::connect(const BTAddress &address, uint32_t timeoutMs) {
   addr.type = static_cast<uint8_t>(address.type());
   memcpy(addr.val, address.data(), 6);
 
-  impl.nimbleRef = _impl;
+  {
+    BLELockGuard lock(impl.mtx);
+    impl.nimbleRef = _impl;
+  }
+#if BLE_VALIDATION_HOOKS
+  BLEHooks.client.nimbleRefAssigned.store(true, std::memory_order_release);
+#endif
   int rc = ble_gap_connect(static_cast<uint8_t>(BLE.getOwnAddressType()), &addr, timeoutMs, NULL, Impl::gapEventHandler, _impl.get());
   if (rc != 0) {
-    impl.nimbleRef.reset();
+    {
+      BLELockGuard lock(impl.mtx);
+      impl.nimbleRef.reset();
+    }
     impl.connectSync.give(BTStatus::Fail);
     log_e("ble_gap_connect: rc=%d", rc);
     return BTStatus::Fail;
@@ -179,12 +190,18 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
     extParams[i].max_ce_len = 0;
   }
 
-  impl.nimbleRef = _impl;
+  {
+    BLELockGuard lock(impl.mtx);
+    impl.nimbleRef = _impl;
+  }
   int rc = ble_gap_ext_connect(
     static_cast<uint8_t>(BLE.getOwnAddressType()), &addr, timeoutMs, phyMask, extParams, extParams + 1, extParams + 2, Impl::gapEventHandler, _impl.get()
   );
   if (rc != 0) {
-    impl.nimbleRef.reset();
+    {
+      BLELockGuard lock(impl.mtx);
+      impl.nimbleRef.reset();
+    }
     impl.connectSync.give(BTStatus::Fail);
     log_e("ble_gap_ext_connect: rc=%d", rc);
     return BTStatus::Fail;
@@ -262,12 +279,18 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
     extParams[i].max_ce_len = 0;
   }
 
-  impl.nimbleRef = _impl;
+  {
+    BLELockGuard lock(impl.mtx);
+    impl.nimbleRef = _impl;
+  }
   int rc = ble_gap_ext_connect(
     static_cast<uint8_t>(BLE.getOwnAddressType()), &addr, 30000, phyMask, extParams, extParams + 1, extParams + 2, Impl::gapEventHandler, _impl.get()
   );
   if (rc != 0) {
-    impl.nimbleRef.reset();
+    {
+      BLELockGuard lock(impl.mtx);
+      impl.nimbleRef.reset();
+    }
     log_e("connectAsync: rc=%d", rc);
     return BTStatus::Fail;
   }
@@ -638,14 +661,16 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
     {
       if (event->connect.status != 0) {
         log_e("Client: connection failed, status=%d", event->connect.status);
+        std::shared_ptr<Impl> dying;
         {
           BLELockGuard lock(impl->mtx);
           impl->connected = false;
           impl->connHandle = BLE_HS_CONN_HANDLE_NONE;
+          dying = std::move(impl->nimbleRef);
         }
         impl->connectSync.give(BTStatus::Fail);
         impl->dispatchConnectFail(event->connect.status);
-        impl->nimbleRef.reset();
+        (void)dying;
         return 0;
       }
 
@@ -667,6 +692,9 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         impl->dispatchConnect(connInfo);
       }
       impl->connectSync.give(BTStatus::OK);
+#if BLE_VALIDATION_HOOKS
+      BLEHooks.client.nimbleRefEmptyOnConnect.store(!impl->nimbleRef, std::memory_order_relaxed);
+#endif
       return 0;
     }
 
@@ -674,6 +702,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
     {
       uint16_t evtHandle = event->disconnect.conn.conn_handle;
       bool wasConnected;
+      std::shared_ptr<Impl> dying;
       {
         BLELockGuard lock(impl->mtx);
         if (evtHandle != impl->connHandle) {
@@ -683,6 +712,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         impl->connected = false;
         impl->connHandle = BLE_HS_CONN_HANDLE_NONE;
         impl->clearDiscoveredServices();
+        dying = std::move(impl->nimbleRef);
       }
       BLERemoteCharacteristic::Impl::clearNotifyRoutes(evtHandle);
 
@@ -697,7 +727,19 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         impl->dispatchDisconnect(connInfo, reason);
       }
       impl->disconnectSync.give(BTStatus::OK);
-      impl->nimbleRef.reset();
+#if BLE_VALIDATION_HOOKS
+      if (BLEHooks.client.holdNimbleRefReset.load(std::memory_order_acquire)) {
+        BLEHooks.client.nimbleRefHoldEntered.store(true, std::memory_order_release);
+        BLEValidationHooks::holdWhile(BLEHooks.client.holdNimbleRefReset);
+      }
+      {
+        BLELockGuard lock(impl->mtx);
+        if (impl->connected && !impl->nimbleRef) {
+          BLEHooks.client.resetWhileConnected.store(true, std::memory_order_relaxed);
+        }
+      }
+#endif
+      (void)dying;
       return 0;
     }
 

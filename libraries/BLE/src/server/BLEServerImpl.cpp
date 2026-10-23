@@ -94,17 +94,27 @@ bool BLEServerImplCommon::characteristicCanSend(const BLECharacteristic::Impl *c
 void BLEServerImplCommon::addPendingNotify(uint16_t connHandle, uint16_t attrHandle) {
   for (auto &entry : pendingNotifies) {
     if (entry.connHandle == connHandle && entry.attrHandle == attrHandle) {
-      entry.count++;
+      entry.reserved++;
       return;
     }
   }
-  pendingNotifies.push_back({connHandle, attrHandle, 1});
+  pendingNotifies.push_back({connHandle, attrHandle, 1, 0});
+}
+
+void BLEServerImplCommon::markNotifySubmitted(uint16_t connHandle, uint16_t attrHandle) {
+  for (auto &entry : pendingNotifies) {
+    if (entry.connHandle == connHandle && entry.attrHandle == attrHandle && entry.reserved > 0) {
+      entry.reserved--;
+      entry.submitted++;
+      return;
+    }
+  }
 }
 
 bool BLEServerImplCommon::consumePendingNotify(uint16_t connHandle, uint16_t attrHandle) {
   for (auto it = pendingNotifies.begin(); it != pendingNotifies.end(); ++it) {
-    if (it->connHandle == connHandle && it->attrHandle == attrHandle) {
-      if (--it->count == 0) {
+    if (it->connHandle == connHandle && it->attrHandle == attrHandle && it->submitted > 0) {
+      if (--it->submitted == 0 && it->reserved == 0) {
         pendingNotifies.erase(it);
       }
       return true;
@@ -128,7 +138,7 @@ bool BLEServerImplCommon::hasPendingNotifications(const BLEService::Impl *svc) c
     return false;
   }
   for (const auto &entry : pendingNotifies) {
-    if (entry.count > 0) {
+    if (entry.total() > 0) {
       for (const auto &chr : svc->characteristics) {
         if (chr->handle == entry.attrHandle) {
           return true;

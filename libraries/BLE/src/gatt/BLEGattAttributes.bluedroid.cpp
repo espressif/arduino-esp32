@@ -34,6 +34,8 @@
 
 #include <esp_gatts_api.h>
 
+#include "core/BLEValidationHooks.h"
+
 // --------------------------------------------------------------------------
 // BLECharacteristic notification & descriptor helpers (Bluedroid)
 // --------------------------------------------------------------------------
@@ -58,6 +60,17 @@ BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t con
     gattsIf = server->gattsIf;
     attrHandle = impl.handle;
     server->addPendingNotify(connHandle, attrHandle);
+  }
+
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.gatt.holdNotifySubmit.load(std::memory_order_acquire)) {
+    BLEHooks.gatt.notifySubmitEntered.store(true, std::memory_order_release);
+    BLEValidationHooks::holdWhile(BLEHooks.gatt.holdNotifySubmit);
+  }
+#endif
+  {
+    BLELockGuard serverLock(server->mtx);
+    server->markNotifySubmitted(connHandle, attrHandle);
   }
 
   esp_err_t err = esp_ble_gatts_send_indicate(gattsIf, connHandle, attrHandle, length, const_cast<uint8_t *>(data), false);

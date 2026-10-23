@@ -26,23 +26,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-extern "C" {
-extern std::atomic<int> bleStreamTestDisconnectRaces;
-extern std::atomic<bool> bleStreamTestHoldFinalRoleRelease;
-extern std::atomic<bool> bleStreamTestFinalRoleReleaseReached;
-}
-
-static bool consumeValidationFailure(std::atomic<int> &remaining) {
-  int value = remaining.load(std::memory_order_relaxed);
-  while (value > 0) {
-    if (remaining.compare_exchange_weak(value, value - 1, std::memory_order_relaxed)) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
+#include "core/BLEValidationHooks.h"
 
 struct BLEStreamClientRole final : BLEStream::Impl::Role {
   BLEStream::Impl &common;
@@ -52,12 +36,10 @@ struct BLEStreamClientRole final : BLEStream::Impl::Role {
 
   explicit BLEStreamClientRole(BLEStream::Impl &impl) : common(impl) {}
 
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
+#if BLE_VALIDATION_HOOKS
   ~BLEStreamClientRole() override {
-    bleStreamTestFinalRoleReleaseReached.store(true, std::memory_order_release);
-    while (bleStreamTestHoldFinalRoleRelease.load(std::memory_order_acquire)) {
-      vTaskDelay(1);
-    }
+    BLEHooks.stream.finalRoleReleaseReached.store(true, std::memory_order_release);
+    BLEValidationHooks::holdWhile(BLEHooks.stream.holdFinalRoleRelease);
   }
 #endif
 
@@ -68,8 +50,8 @@ struct BLEStreamClientRole final : BLEStream::Impl::Role {
     if (client) {
       if (client.isConnected()) {
         result = client.disconnect();
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-        if (consumeValidationFailure(bleStreamTestDisconnectRaces)) {
+#if BLE_VALIDATION_HOOKS
+        if (BLEValidationHooks::consumeFailure(BLEHooks.stream.disconnectRaces)) {
           result = BTStatus::NotConnected;
         }
 #endif
@@ -84,10 +66,8 @@ struct BLEStreamClientRole final : BLEStream::Impl::Role {
         client.resetCallbacks();
       }
     }
-    if (terminal) {
-      remoteTx = BLERemoteCharacteristic();
-      remoteRx = BLERemoteCharacteristic();
-    }
+    // Leave remoteTx/remoteRx installed until Role destruction. writeChunks()
+    // may already be iterating on another task that passed the ending check.
     return result;
   }
 
@@ -131,6 +111,15 @@ private:
         break;
       }
       sent += len;
+#if BLE_VALIDATION_HOOKS
+      if (BLEHooks.stream.holdWriteChunks.load(std::memory_order_acquire)) {
+        BLEHooks.stream.writeChunksEntered.store(true, std::memory_order_release);
+        BLEValidationHooks::holdWhile(BLEHooks.stream.holdWriteChunks);
+        if (!remoteRx) {
+          BLEHooks.stream.writeSawClearedHandle.store(true, std::memory_order_relaxed);
+        }
+      }
+#endif
     }
     return sent;
   }

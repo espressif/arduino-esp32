@@ -23,6 +23,7 @@
 #include "stream/BLEStream.h"
 #include "stream/BLEStreamImpl.h"
 #include "core/BLETask.h"
+#include "core/BLEValidationHooks.h"
 #include "esp32-hal-log.h"
 #include <new>
 #include <freertos/FreeRTOS.h>
@@ -50,25 +51,6 @@ BLEUUID BLEStream::nusTxCharUUID() {
 // --------------------------------------------------------------------------
 
 static constexpr uint8_t kEndRetryLimit = 4;
-
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-extern "C" {
-extern std::atomic<int> bleStreamTestWorkerStartFailures;
-extern std::atomic<int> bleStreamTestTeardownFailures;
-extern std::atomic<bool> bleStreamTestHoldFinalRoleRelease;
-extern std::atomic<bool> bleStreamTestHostShutdownEntered;
-}
-
-static bool consumeValidationFailure(std::atomic<int> &remaining) {
-  int value = remaining.load(std::memory_order_relaxed);
-  while (value > 0) {
-    if (remaining.compare_exchange_weak(value, value - 1, std::memory_order_relaxed)) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
 
 struct BLEStream::Impl::RecoveryState {
   StaticSemaphore_t mtxStorage{};
@@ -104,8 +86,8 @@ bool BLEStream::Impl::startEndWorker(Impl *common) {
   if (state.hostShuttingDown.load(std::memory_order_relaxed)) {
     return false;
   }
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-  if (consumeValidationFailure(bleStreamTestWorkerStartFailures)) {
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.stream.workerStartFailures)) {
     return false;
   }
 #endif
@@ -303,8 +285,8 @@ bool BLEStream::Impl::recoverQuarantined() {
     }
 
     BTStatus status;
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-    status = consumeValidationFailure(bleStreamTestTeardownFailures) ? BTStatus::Busy : role->end();
+#if BLE_VALIDATION_HOOKS
+    status = BLEValidationHooks::consumeFailure(BLEHooks.stream.teardownFailures) ? BTStatus::Busy : role->end();
 #else
     status = role->end();
 #endif
@@ -319,9 +301,9 @@ bool BLEStream::Impl::recoverQuarantined() {
 
 void BLEStream::Impl::prepareHostShutdown() {
   auto &state = recoveryState();
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-  if (bleStreamTestHoldFinalRoleRelease.load(std::memory_order_acquire)) {
-    bleStreamTestHostShutdownEntered.store(true, std::memory_order_release);
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.stream.holdFinalRoleRelease.load(std::memory_order_acquire)) {
+    BLEHooks.stream.hostShutdownEntered.store(true, std::memory_order_release);
   }
 #endif
   std::vector<std::shared_ptr<Impl>> entries;
@@ -401,8 +383,8 @@ void BLEStream::Impl::endWorker(void *arg) {
           quarantineEnd(common, role);
           break;
         }
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-        status = consumeValidationFailure(bleStreamTestTeardownFailures) ? BTStatus::Busy : role->end();
+#if BLE_VALIDATION_HOOKS
+        status = BLEValidationHooks::consumeFailure(BLEHooks.stream.teardownFailures) ? BTStatus::Busy : role->end();
 #else
         status = role->end();
 #endif

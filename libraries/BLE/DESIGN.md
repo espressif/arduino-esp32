@@ -48,8 +48,9 @@ Two folders hold code that is not owned by a single component:
 
 - `src/core/` — cross-cutting infrastructure: backend guards (`BLEGuards.h`),
   the `BLELockGuard`/`BLESync` primitives, the `BLE_CHECK_IMPL` helper, the
-  single backend selector `BLEBackend.h`, and the compile-time
-  `BLEBackendContract.h`.
+  single backend selector `BLEBackend.h`, the compile-time
+  `BLEBackendContract.h`, and the test-only `BLEValidationHooks` injector
+  (compiled in only when `BLE_VALIDATION_HOOKS` is set; not a public API).
 - `src/types/` — backend-agnostic value types shared across components
   (`BLEUUID`, `BLEConnInfo`, `BLEAdvTypes`, `BLEProperty`), including their
   small per-stack converter helpers (`BLEUUID.nimble.*`, etc.).
@@ -84,6 +85,7 @@ Feature guards (derived from Kconfig / SoC capabilities):
 - `BLE_SMP_SUPPORTED`: Security Manager Protocol available
 - `BLE_SCANNING_SUPPORTED`: BLE scanning available
 - `BLE_ADVERTISING_SUPPORTED`: BLE advertising available
+- `BLE_VALIDATION_HOOKS`: test-only injectors (`core/BLEValidationHooks`); off in production. The validation suite enables it with `-DBLE_VALIDATION_HOOKS`.
 - `BLE5_SUPPORTED`: BLE 5.0 features (extended advertising, PHY selection, periodic advertising)
 - `BLE_L2CAP_SUPPORTED`: L2CAP CoC channels; NimBLE only, requires explicit Kconfig
 
@@ -597,6 +599,7 @@ The public API is backend-agnostic; routing depends on `BLE5_SUPPORTED`:
 
 - **`BLE5_SUPPORTED == 0`:** `start()`/`stop()` and scan use the **native legacy** controller API. AD/scan-response payload is still serialized via `BLEAdvDataBuilder` and pushed with the controller's *raw* data API — never a per-stack field struct. Bluedroid must not use `esp_ble_gap_config_adv_data` (force-expands every service UUID to 128 bits).
 - **`BLE5_SUPPORTED == 1`:** the same public calls run over the **extended** controller API with **legacy PDUs**. A backend must: reserve the top controller instance for the legacy set (`kLegacyInstance`); map `advType` to legacy-PDU flags; build raw AD via `BLEAdvDataBuilder`; merge extended scan responses by address via `mergeScanResponse`; clear extended state in `reset()`; add its term to `BLE5_ADV_TX_SUPPORTED` so the shared `NotSupported` fallback disables itself.
+- **NimBLE advertising preemption:** `ADV_COMPLETE` with `BLE_HS_EPREEMPTED` resumes the set that was active. Resume uses the time remaining on an absolute session deadline (same rule as scan). `stop()` / `stopExtended()` / `reset()` bump `advSession` even when `isAdvertising` is already clear, so a public stop that races the resume window cancels it instead of letting advertising restart. Host-initiated disable does not generate `HCI_LE_Advertising_Set_Terminated` (Vol 4, Part E, §7.7.65.18); NimBLE synthesizes the preempted complete from `ble_gap_preempt_done`. A late `ADV_COMPLETE` from a previous session is ignored while the native instance is still active (`ble_gap_ext_adv_active` / `ble_gap_adv_active`), so it cannot clear a session that `start()` has already restarted. `isAdvertising` flags are `std::atomic<bool>` so `isAdvertising()` can sample them without taking `mtx`.
 
 **Preferred connection-interval AD (0x12) is emitted** when either `setMinPreferred` or `setMaxPreferred` is non-zero. `BLEAdvDataBuilder` places the Slave Connection Interval Range AD in the primary payload (a zero side copies the other bound), and `BLEAdvertisedDevice` parses AD `0x12` back via `havePreferredParams()`, `getMinPreferred()`, and `getMaxPreferred()`. Connection parameters are still negotiated post-connect; the AD is only a hint to centrals.
 
@@ -634,7 +637,7 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
   the stack consumes the 0x2A05 indication internally. The client invalidates its entire discovered
   tree and reports the conservative `0x0001–0xFFFF` range; NimBLE delivers the peer's exact payload.
 - **Bluedroid BLE5 surface:** extended adv/scan, PHY/DLE, periodic adv TX, and periodic sync RX are implemented under `BLE5_SUPPORTED` / `BLE_PERIODIC_ADV_SUPPORTED`. Classic esp32 Bluedroid libs remain BLE 4.2-only.
-- **HITL-pending coverage:** multi-central BLEStream under load (two simultaneous centrals with per-peer routing; needs a third DUT). Passkey-entry pairing + Numeric-Comparison reject, periodic terminate/sync-lost, L2CAP late-connect cleanup after caller timeout, bulk across the credit stall + reconnect, conn-param reject, and the `deleteBond` round-trip are covered by phases 28-34. Indication `ESP_GATT_BUSY` retry, indication queue-full, CCCD bit routing, in-flight `removeService`, abandoned long-read reconnect, and read-timeout destroy/re-read are covered by phases 4, 5, 33, and 35. See `tests/validation/ble/README.md`.
+- **HITL-pending coverage:** multi-central BLEStream under load (two simultaneous centrals with per-peer routing; needs a third DUT). Passkey-entry pairing + Numeric-Comparison reject, periodic terminate/sync-lost, L2CAP late-connect cleanup after caller timeout, bulk across the credit stall + reconnect, conn-param reject, and the `deleteBond` round-trip are covered by phases 28-34. Indication `ESP_GATT_BUSY` retry, indication queue-full, CCCD bit routing, in-flight `removeService`, abandoned long-read reconnect, read-timeout destroy/re-read, Bluedroid notify-reservation vs indication CONF demux, NimBLE `nimbleRef` keepalive vs `disconnectSync.give()`, BLEStream `writeChunks` vs `end()` handle reset, and NimBLE advertising stop-during-preempt plus remaining-duration resume are covered by phases 4, 5, 12, 13, 23, 33, and 35. See `tests/validation/ble/README.md`.
 - **Untestable on this API / 2-DUT rig:** EATT (no public API). Per-peer CCCD and overlapping snapshots on two ACL links (two `BLEClient` instances on one central share one ACL with the peripheral). Withholding Handle Value Confirmation (both hosts auto-confirm indications, so the 30 s ATT indication timeout cannot be forced without a non-confirming peer).
 
 ## Testing as executable design

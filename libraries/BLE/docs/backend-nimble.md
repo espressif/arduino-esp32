@@ -81,6 +81,17 @@ always cast-free `impl.member`.
 - **BLE5 routing.** When `BLE5_SUPPORTED`, legacy `start()`/`scan` use the extended controller API
   with legacy PDUs on a reserved top instance (`kLegacyInstance`) so they coexist with user
   `startExtended` sets. Extended scan reports merge scan responses via `mergeScanResponse`.
+- **Advertising preemption.** NimBLE reports `ADV_COMPLETE` / `BLE_HS_EPREEMPTED` when it
+  temporarily stops advertising (privacy list updates, `ble_gap_unpair`). Host-initiated disable
+  does not generate `HCI_LE_Advertising_Set_Terminated` (Vol 4, Part E, §7.7.65.18); the stack
+  synthesizes the preempted complete from `ble_gap_preempt_done`. The library resumes the set that
+  was active with the time remaining on the original session deadline. `stop()` bumps `advSession`
+  even if the advertising flag was already cleared by the complete event, so an application stop
+  that races the resume does not restart advertising. A late `ADV_COMPLETE` is ignored while
+  `ble_gap_ext_adv_active` / `ble_gap_adv_active` still reports the instance running, so a previous
+  stop cannot clear a session that `start()` has already restarted. Client `nimbleRef` is moved off
+  the member before `disconnectSync.give()` / `connectSync.give()` so a reconnect can install a new
+  keepalive without the dying handler wiping it.
 - **L2CAP `write()`** splits payloads larger than `peer_coc_mtu` into MTU-sized SDUs and
   application-task calls may block between chunks on `COC_TX_UNSTALLED` (NimBLE itself does not
   segment oversized SDUs). Calls from host callbacks return `Busy` instead of blocking when more

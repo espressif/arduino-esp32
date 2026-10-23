@@ -45,6 +45,8 @@
 
 #if BLE_GATT_SERVER_SUPPORTED
 
+#include "core/BLEValidationHooks.h"
+
 // --------------------------------------------------------------------------
 // GATT access callback for characteristics
 // --------------------------------------------------------------------------
@@ -277,6 +279,16 @@ BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t con
     // check above fail, or runs after and sees this pending entry and
     // returns Busy. The entry is consumed by the NOTIFY_TX handler.
     server->addPendingNotify(connHandle, attrHandle);
+  }
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.gatt.holdNotifySubmit.load(std::memory_order_acquire)) {
+    BLEHooks.gatt.notifySubmitEntered.store(true, std::memory_order_release);
+    BLEValidationHooks::holdWhile(BLEHooks.gatt.holdNotifySubmit);
+  }
+#endif
+  {
+    BLELockGuard serverLock(server->mtx);
+    server->markNotifySubmitted(connHandle, attrHandle);
   }
   log_d("Characteristic %s: notify conn=%u len=%u", impl.uuid.toString().c_str(), connHandle, length);
   struct os_mbuf *om = ble_hs_mbuf_from_flat(data, length);

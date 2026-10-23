@@ -47,9 +47,7 @@
 #include <atomic>
 #include <string.h>
 
-#if defined(BLE_GATT_VALIDATION_HOOKS)
-extern "C" std::atomic<bool> bleGattTestHoldNotifyCompletions;
-#endif
+#include "core/BLEValidationHooks.h"
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
@@ -991,11 +989,11 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
           }
         }
         for (const auto &pending : impl->pendingNotifies) {
-          if (pending.connHandle != connId || pending.count == 0) {
+          if (pending.connHandle != connId || pending.total() == 0) {
             continue;
           }
           if (BLECharacteristic::Impl *found = findCharByHandle(impl, pending.attrHandle)) {
-            droppedNotifications.emplace_back(found->shared_from_this(), pending.count);
+            droppedNotifications.emplace_back(found->shared_from_this(), pending.total());
           }
         }
         impl->erasePendingNotifies(connId);
@@ -1654,14 +1652,15 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         if (BLECharacteristic::Impl *found = findCharByHandle(impl, attrHandle)) {
           chr = found->shared_from_this();
         }
-        // Consume a pending notification first, regardless of status: an
+        // Consume a submitted notification first, regardless of status: an
         // ESP_GATT_BUSY completion for a notification we sent must not be
         // routed into indicationBusy() just because an indication happens
-        // to be in flight on the same handle.
-#if defined(BLE_GATT_VALIDATION_HOOKS)
-        if (bleGattTestHoldNotifyCompletions.load(std::memory_order_relaxed)) {
+        // to be in flight on the same handle. A reservation that has not
+        // been handed to the stack must not steal an indication confirmation.
+#if BLE_VALIDATION_HOOKS
+        if (BLEHooks.gatt.holdNotifyCompletions.load(std::memory_order_relaxed)) {
           for (const auto &pending : impl->pendingNotifies) {
-            if (pending.connHandle == connId && pending.attrHandle == attrHandle && pending.count > 0) {
+            if (pending.connHandle == connId && pending.attrHandle == attrHandle && pending.submitted > 0) {
               heldPendingNotification = true;
               break;
             }

@@ -392,6 +392,12 @@ def _phase_reconnect(server, client):
     )
     if b"FAILED" in m.group(0):
         raise RuntimeError(f"App ID stress test failed: {m.group(0).decode()}")
+    m_ref = client.expect(
+        r"\[CLIENT\] Phase12 nimbleRef race supported=([01]) clean=([01]) "
+        r"emptyOnConnect=([01]) resetWhileConnected=([01]) reconnect=([01]) connected=([01])",
+        timeout=30,
+    )
+    assert int(m_ref.group(2)) == 1, "NimBLE client keepalive was reset across reconnect"
 
 
 def _phase_blestream(server, client):
@@ -450,6 +456,13 @@ def _phase_blestream(server, client):
     server.expect_exact("[SERVER] BLEStream rebegin ok=1", timeout=15)
     server.expect_exact("[SERVER] BLEStream reentrant end=1 concurrentWriteRejected=1 heap=1", timeout=15)
     client.expect_exact("[CLIENT] BLEStream server end disconnected=1", timeout=15)
+    m_handle = client.expect(
+        r"\[CLIENT\] BLEStream handle reset race clean=([01]) sawCleared=([01]) entered=([01])",
+        timeout=15,
+    )
+    assert int(m_handle.group(1)) == 1 and int(m_handle.group(2)) == 0 and int(m_handle.group(3)) == 1, (
+        "BLEStream writeChunks observed a handle cleared by concurrent end()"
+    )
     client.expect_exact("[CLIENT] BLEStream callback end cycle connected=1 disconnects=1", timeout=30)
     server.expect_exact("[SERVER] BLEStream callback end returned=1 rebegin=1 heap=1", timeout=15)
     server.expect_exact("[SERVER] BLEStream final owner ready=1", timeout=15)
@@ -915,6 +928,22 @@ def _phase_error_paths_and_misc(server, client):
     server.expect_exact("[SERVER] IndicateHandle ok=0 ret=InvalidState status=ERROR_INDICATE_DISABLED", timeout=5)
     server.expect_exact("[SERVER] NotifyBadHandle ok=0 ret=NotConnected status=ERROR_NO_CLIENT", timeout=5)
     server.expect_exact("[SERVER] IsSubscribed handle", timeout=5)
+    m_adv_stop = server.expect(
+        r"\[SERVER\] Phase23 advPreemptStop supported=([01]) stopped=([01])",
+        timeout=15,
+    )
+    assert int(m_adv_stop.group(2)) == 1, "stop() during advertising preemption-resume did not cancel the resume"
+    m_adv_rem = server.expect(
+        r"\[SERVER\] Phase23 advRemaining supported=([01]) resumeMs=(\d+)",
+        timeout=15,
+    )
+    if int(m_adv_rem.group(1)) == 1:
+        resume_ms = int(m_adv_rem.group(2))
+        assert 1500 <= resume_ms <= 2500, (
+            f"preempted 3-second advertising restarted its full duration ({resume_ms} ms)"
+        )
+    else:
+        assert int(m_adv_rem.group(2)) == 0
     server.expect_exact("[SERVER] Phase23 done", timeout=25)
 
 
@@ -1456,6 +1485,19 @@ def _phase_pending_send_edges(server, client):
     assert int(m_s_peer.group(2)) >= 1, "indicate() while CCCD was notify-only was not ERROR_INDICATE_DISABLED"
     assert int(m_s_peer.group(3)) >= 1, "indicate() did not complete after CCCD switched to indicate"
     assert int(m_s_peer.group(4)) >= 1, "notify() while CCCD was indicate-only was not ERROR_NOTIFY_DISABLED"
+
+    client.expect_exact("[CLIENT] Phase35 mixedCccd armed=1", timeout=15)
+    m_mixed = server.expect(
+        r"\[SERVER\] Phase35 mixedSend first=(\S+) second=(\S+) steal=([01])",
+        timeout=20,
+    )
+    assert m_mixed.group(1) == b"SUCCESS_INDICATE", (
+        f"indication confirmation was demuxed as {m_mixed.group(1).decode()} while a notify was only reserved"
+    )
+    assert m_mixed.group(2) == b"SUCCESS_NOTIFY", (
+        f"held notification completed as {m_mixed.group(2).decode()} after the indication"
+    )
+    assert int(m_mixed.group(3)) == 0, "pending notify reservation stole the indication confirmation"
 
     m_cf = client.expect(r"\[CLIENT\] Phase35 flood=(\d+)\r?\n", timeout=20)
     assert int(m_cf.group(1)) >= 1, "client received no flooded notifications"

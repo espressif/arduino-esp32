@@ -77,12 +77,12 @@ bool BLEAdvertising::isAdvertising() const {
   if (!_impl) {
     return false;
   }
-  if (_impl->isAdvertising) {
+  if (_impl->isAdvertising.load()) {
     return true;
   }
 #if BLE5_SUPPORTED
   for (uint8_t i = 0; i < BLEAdvertising::Impl::kLegacyInstance; i++) {
-    if (_impl->extInstances[i].isAdvertising) {
+    if (_impl->extInstances[i].isAdvertising.load()) {
       return true;
     }
   }

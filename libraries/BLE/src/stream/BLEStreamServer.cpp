@@ -24,23 +24,7 @@
 #include "server/BLEServer.h"
 #include <algorithm>
 
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-extern "C" {
-extern std::atomic<int> bleStreamTestStartFailures;
-extern std::atomic<int> bleStreamTestRemoveFailures;
-extern std::atomic<int> bleStreamTestDisconnectRaces;
-}
-
-static bool consumeValidationFailure(std::atomic<int> &remaining) {
-  int value = remaining.load(std::memory_order_relaxed);
-  while (value > 0) {
-    if (remaining.compare_exchange_weak(value, value - 1, std::memory_order_relaxed)) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
+#include "core/BLEValidationHooks.h"
 
 struct BLEStreamServerRole final : BLEStream::Impl::Role {
   BLEStream::Impl &common;
@@ -76,8 +60,8 @@ struct BLEStreamServerRole final : BLEStream::Impl::Role {
       // disconnects all peers while preserving unrelated local services.
       for (const auto &conn : server.getConnections()) {
         BTStatus status = server.disconnect(conn.getHandle());
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-        if (consumeValidationFailure(bleStreamTestDisconnectRaces)) {
+#if BLE_VALIDATION_HOOKS
+        if (BLEValidationHooks::consumeFailure(BLEHooks.stream.disconnectRaces)) {
           status = BTStatus::NotConnected;
         }
 #endif
@@ -107,8 +91,8 @@ struct BLEStreamServerRole final : BLEStream::Impl::Role {
       server.onConnect(nullptr);
       server.onDisconnect(nullptr);
       if (service && service.getServer()) {
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-        if (consumeValidationFailure(bleStreamTestRemoveFailures)) {
+#if BLE_VALIDATION_HOOKS
+        if (BLEValidationHooks::consumeFailure(BLEHooks.stream.removeFailures)) {
           retainFailure(BTStatus::Busy);
         } else
 #endif
@@ -233,8 +217,8 @@ BTStatus BLEStream::begin(const String &deviceName) {
   };
   auto abortRegisteredStart = [&](BTStatus status) {
     BTStatus removeStatus;
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-    if (consumeValidationFailure(bleStreamTestRemoveFailures)) {
+#if BLE_VALIDATION_HOOKS
+    if (BLEValidationHooks::consumeFailure(BLEHooks.stream.removeFailures)) {
       removeStatus = BTStatus::Busy;
     } else
 #endif
@@ -271,8 +255,8 @@ BTStatus BLEStream::begin(const String &deviceName) {
   if (!status) {
     return abortRegisteredStart(status);
   }
-#if defined(BLE_STREAM_VALIDATION_HOOKS)
-  if (consumeValidationFailure(bleStreamTestStartFailures)) {
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.stream.startFailures)) {
     return abortRegisteredStart(BTStatus::Fail);
   }
 #endif

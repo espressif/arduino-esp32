@@ -35,8 +35,8 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 9 | server_disconnect | server-initiated disconnect + client reconnect |
 | 10 | security | Numeric Comparison pairing, matching passkey, secure read |
 | 11 | ble5_phy_dle | PHY update + data-length extension (BLE5) |
-| 12 | reconnect | repeated connect/disconnect + Bluedroid app-id boundary stress |
-| 13 | blestream | NUS ownership rejection, failed-client-begin paired connect/disconnect callbacks, writeTo/onData/peers, ping/pong, peek, bulk, full `end()` cleanup + re-begin, disconnect-race terminal handling, callback-context `end()` deferral/restart, final-public-owner destruction from a stack callback, deterministic worker/teardown failure recovery with admission held closed, and partial-start cleanup ownership/recovery |
+| 12 | reconnect | repeated connect/disconnect + Bluedroid app-id boundary stress + NimBLE `nimbleRef` keepalive vs `disconnectSync.give()` (Bluedroid reports `supported=0`) |
+| 13 | blestream | NUS ownership rejection, failed-client-begin paired connect/disconnect callbacks, writeTo/onData/peers, ping/pong, peek, bulk, full `end()` cleanup + re-begin, disconnect-race terminal handling, callback-context `end()` vs in-flight `writeChunks` handle reset, callback-context `end()` deferral/restart, final-public-owner destruction from a stack callback, deterministic worker/teardown failure recovery with admission held closed, and partial-start cleanup ownership/recovery |
 | 14 | l2cap_coc | L2CAP CoC connect + echo |
 | 15 | introspection_and_permissions | client introspection, fail-closed masking, descriptor perms |
 | 16 | conninfo_and_params | `BLEConnInfo` matrix + MTU / conn-params callbacks + ordering |
@@ -46,7 +46,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + fresh-primary/cached-scan-response merge + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip + **malformed AD parser rejection** (issue #12801, truncated UUID lists, zero-length AD terminator) |
 | 21 | beacon_and_eddystone | iBeacon / Eddystone URL / plaintext Eddystone TLM frames + encrypted eTLM rejection |
 | 22 | bond_and_whitelist | bond enumeration, whitelist, IRK cross-check |
-| 23 | error_paths_and_misc | unknown UUIDs, typed reads, UUID algebra, cached-value/parent getter teardown race, concurrent lazy aggregate/targeted characteristic and descriptor discovery against disconnect invalidation, immediate recursive remote-tree detachment with retained parents, stale-handle rejection after reconnecting the same client generation, write-after-disconnect + `notify(conn)` / `indicate(conn)` refused for an unsubscribed client (`*_DISABLED`) or unconnected handle (`ERROR_NO_CLIENT`) |
+| 23 | error_paths_and_misc | unknown UUIDs, typed reads, UUID algebra, cached-value/parent getter teardown race, concurrent lazy aggregate/targeted characteristic and descriptor discovery against disconnect invalidation, immediate recursive remote-tree detachment with retained parents, stale-handle rejection after reconnecting the same client generation, write-after-disconnect + `notify(conn)` / `indicate(conn)` refused for an unsubscribed client (`*_DISABLED`) or unconnected handle (`ERROR_NO_CLIENT`) + NimBLE advertising `stop()` during preemption-resume and remaining-duration resume (Bluedroid reports `supported=0`) |
 | 24 | ble5_advanced | default PHY, coded-PHY scan, per-connection PHY + DLE (BLE5) |
 | 25 | hid_smoke | HID-over-GATT compliance + detached attribute shells/factory rejection after removal and an empty GATT tree after `end()`/`begin()` |
 | 26 | ble5_legacy_over_ext | legacy advertising routed over the extended engine (BLE5) |
@@ -58,7 +58,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 32 | passkey_entry | Passkey-entry pairing (peripheral DisplayOnly + static passkey, central KeyboardOnly) |
 | 33 | indication_busy_retry | Service Changed invalidates stale remote handles, client rediscovery restores subscriptions, and indications sent behind the stack indication are retried in order |
 | 34 | periodic_adv_lifecycle | periodic-adv terminate + supervision-timeout sync-lost transitions (BLE5) |
-| 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, `removeService` of a service with in-flight indications returns `Busy`, concurrent long-read/service-removal parent retention, late completion isolation after read/confirmed-write/write-command timeouts, notify flood + disconnect terminal-status ordering, BlueDroid terminal-close final-owner release serialized before host deinit (including worker-start failure), and BLEStream client-role final-owner release serialized against concurrent `BLE.end()` |
+| 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, indication confirmation not stolen by a reserved-but-unsubmitted notification, `removeService` of a service with in-flight indications returns `Busy`, concurrent long-read/service-removal parent retention, late completion isolation after read/confirmed-write/write-command timeouts, notify flood + disconnect terminal-status ordering, BlueDroid terminal-close final-owner release serialized before host deinit (including worker-start failure), and BLEStream client-role final-owner release serialized against concurrent `BLE.end()` |
 | 36 | memory_release | heap reclaimed on release; reinit blocked while released |
 
 Phase 20 also runs a single-device regression guard for the advertisement-data
@@ -131,6 +131,10 @@ payload.
 
 ## Notes
 
+- Race injectors live in `libraries/BLE/src/core/BLEValidationHooks.{h,cpp}`
+  and are compiled in by `-DBLE_VALIDATION_HOOKS` in each sketch's `build_opt.h`.
+  Library code and both sketches share the `BLEHooks` singleton; do not re-declare
+  hook atomics in the `.ino` files.
 - NVS is erased at startup to ensure fresh pairing on every run.
 - Authentication is triggered on-demand (when reading the secure characteristic) rather than on connect, ensuring consistent ordering across Bluedroid and NimBLE.
 - The test verifies PIN match between server and client via assertion.

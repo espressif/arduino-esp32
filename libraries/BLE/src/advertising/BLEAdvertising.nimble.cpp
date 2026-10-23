@@ -48,8 +48,30 @@
 
 #include <host/ble_hs.h>
 #include <host/ble_gap.h>
+#include <esp_timer.h>
 #include <algorithm>
 #include <cstring>
+
+#include "core/BLEValidationHooks.h"
+#if BLE_VALIDATION_HOOKS
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#endif
+
+namespace {
+uint32_t remainingMsFromDeadline(int64_t deadlineUs, bool &expired) {
+  if (deadlineUs == 0) {
+    expired = false;
+    return 0;
+  }
+  int64_t remainingUs = deadlineUs - esp_timer_get_time();
+  expired = remainingUs <= 0;
+  if (expired) {
+    return 0;
+  }
+  return static_cast<uint32_t>((remainingUs + 999) / 1000);
+}
+}  // namespace
 
 /**
  * @brief NimBLE GAP callback for advertising: completion, connect, and server forwarding.
@@ -63,18 +85,26 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
 #if BLE5_SUPPORTED
     uint8_t inst = event->adv_complete.instance;
     const bool isLegacy = (inst == kLegacyInstance);
+    // A late complete from a previous stop must not clear a session that has
+    // already been restarted (ble_gap_ext_adv_active is the native truth).
+    if (isLegacy ? ble_gap_ext_adv_active(kLegacyInstance) : (inst < kMaxExtInstances && ble_gap_ext_adv_active(inst))) {
+      return 0;
+    }
     bool wasAdvertising = false;
     if (isLegacy) {
-      wasAdvertising = impl->isAdvertising;
-      impl->isAdvertising = false;
+      wasAdvertising = impl->isAdvertising.load();
+      impl->isAdvertising.store(false);
     } else if (inst < kMaxExtInstances) {
-      wasAdvertising = impl->extInstances[inst].isAdvertising;
-      impl->extInstances[inst].isAdvertising = false;
+      wasAdvertising = impl->extInstances[inst].isAdvertising.load();
+      impl->extInstances[inst].isAdvertising.store(false);
     }
 #else
     const bool isLegacy = true;
-    bool wasAdvertising = impl->isAdvertising;
-    impl->isAdvertising = false;
+    if (ble_gap_adv_active()) {
+      return 0;
+    }
+    bool wasAdvertising = impl->isAdvertising.load();
+    impl->isAdvertising.store(false);
 #endif
     // NimBLE preempts (stops) advertising internally for some operations --
     // e.g. ble_gap_unpair() removes the peer IRK from the controller
@@ -84,7 +114,17 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
     // to resume advertising. This library owns the advertising state, so it
     // resumes a set that was active when preempted; otherwise a bond
     // operation would silently end advertising for good.
-    const bool preempted = (event->adv_complete.reason == BLE_HS_EPREEMPTED) && wasAdvertising && BLE.isInitialized();
+#if BLE_VALIDATION_HOOKS
+    // Only consume the hook on a complete that could actually be a preemption
+    // of a live set. A leftover complete from an earlier stop() has
+    // wasAdvertising == false and must not steal the next test's arming.
+    const bool forcePreempted =
+      wasAdvertising && BLEHooks.adv.forcePreemptedComplete.exchange(false, std::memory_order_acq_rel);
+#else
+    const bool forcePreempted = false;
+#endif
+    const bool preempted =
+      (forcePreempted || event->adv_complete.reason == BLE_HS_EPREEMPTED) && wasAdvertising && BLE.isInitialized();
     BLEAdvertising::CompleteHandler cb;
     {
       BLELockGuard lock(impl->mtx);
@@ -108,18 +148,38 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
 #endif
     }
     if (preempted) {
-      // Resume the preempted set (see above) with the session limits it was
-      // started with. The set stayed configured, so restarting through the
-      // public API reuses its data and parameters. Remaining time is not
-      // tracked, so a timed session restarts its full duration.
+      // Resume the preempted set with the time left on the original deadline,
+      // matching BLEScan. A public stop() that races this window bumps
+      // advSession so the resume is abandoned.
+      const uint32_t session = impl->advSession.load(std::memory_order_relaxed);
+#if BLE_VALIDATION_HOOKS
+      BLEHooks.adv.preemptResumeEntered.store(true, std::memory_order_release);
+      BLEValidationHooks::holdWhile(BLEHooks.adv.holdPreemptResume);
+#endif
+      if (impl->advSession.load(std::memory_order_relaxed) != session) {
+        return 0;
+      }
+      bool expired = false;
+      uint32_t remainingMs = 0;
+#if BLE5_SUPPORTED
+      remainingMs = remainingMsFromDeadline(isLegacy ? impl->sessionDeadlineUs : (inst < kMaxExtInstances ? impl->extInstances[inst].sessionDeadlineUs : 0), expired);
+#else
+      remainingMs = remainingMsFromDeadline(impl->sessionDeadlineUs, expired);
+#endif
+      if (expired) {
+        return 0;
+      }
+#if BLE_VALIDATION_HOOKS
+      BLEHooks.adv.resumeDurationMs.store(remainingMs, std::memory_order_relaxed);
+#endif
 #if BLE5_SUPPORTED
       if (isLegacy) {
-        (void)BLE.getAdvertising().start(impl->legacyDurationMs);
+        (void)BLE.getAdvertising().start(remainingMs);
       } else if (inst < kMaxExtInstances) {
-        (void)BLE.getAdvertising().startExtended(inst, impl->extInstances[inst].durationMs, impl->extInstances[inst].maxEvents);
+        (void)BLE.getAdvertising().startExtended(inst, remainingMs, impl->extInstances[inst].maxEvents);
       }
 #else
-      (void)BLE.getAdvertising().start(impl->legacyDurationMs);
+      (void)BLE.getAdvertising().start(remainingMs);
 #endif
     }
     return 0;
@@ -200,8 +260,10 @@ void BLEAdvertising::setScanFilter(bool scanWl, bool connWl) {
 void BLEAdvertising::reset() {
   BLE_CHECK_IMPL();
   BLEAdmissionGuard admission(impl.nativeAdmission);
-  if (admission && impl.isAdvertising) {
+  if (admission) {
     (void)stopBackend();
+  } else {
+    impl.advSession.fetch_add(1, std::memory_order_relaxed);
   }
   impl.serviceUUIDs.clear();
   impl.deviceName = "";
@@ -232,7 +294,7 @@ void BLEAdvertising::reset() {
   }
   impl.isAdvertising = false;
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
-    impl.extInstances[i] = Impl::ExtInstance{};
+    impl.extInstances[i].reset();
   }
 #endif
 }
@@ -255,10 +317,12 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   if (!admission) {
     return BTStatus::InvalidState;
   }
-  impl.legacyDurationMs = durationMs;
-  if (impl.isAdvertising) {
+  if (impl.isAdvertising.load()) {
     (void)stopBackend();
   }
+  impl.legacyDurationMs = durationMs;
+  impl.sessionDeadlineUs = durationMs == 0 ? 0 : esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000;
+  impl.advSession.fetch_add(1, std::memory_order_relaxed);
 
 #if BLE5_SUPPORTED
   // On ext-adv-enabled controllers the native-legacy ble_gap_adv_* path does not
@@ -456,6 +520,25 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
 #endif /* BLE5_SUPPORTED */
 }
 
+#if BLE_VALIDATION_HOOKS
+// HCI_LE_Set_Extended_Advertising_Enable(disable) does not generate
+// HCI_LE_Advertising_Set_Terminated (Vol 4, Part E, §7.7.65.18). NimBLE
+// preemption therefore synthesizes ADV_COMPLETE / BLE_HS_EPREEMPTED from
+// ble_gap_preempt_done() after the native stop. Deliver that event on a
+// helper task so a public stop() can race the resume window.
+static void bleAdvTestDeliverPreemptedComplete(void *arg) {
+  auto *advImpl = static_cast<BLEAdvertising::Impl *>(arg);
+  struct ble_gap_event ev = {};
+  ev.type = BLE_GAP_EVENT_ADV_COMPLETE;
+  ev.adv_complete.reason = BLE_HS_EPREEMPTED;
+#if BLE5_SUPPORTED
+  ev.adv_complete.instance = BLEAdvertising::Impl::kLegacyInstance;
+#endif
+  (void)BLEAdvertising::Impl::gapEventCallback(&ev, advImpl);
+  vTaskDelete(nullptr);
+}
+#endif
+
 // The advertising flag is always cleared on return, even when ble_gap_adv_stop()
 // reports BLE_HS_EALREADY (advertising was not running, e.g. after a BLE.end() /
 // BLE.begin() stack restart). Leaving the flag set would make a subsequent start()
@@ -467,12 +550,26 @@ BTStatus BLEAdvertising::stop() {
   if (!admission) {
     return BTStatus::OK;
   }
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.adv.nativeStopKeepingFlag.exchange(false, std::memory_order_acq_rel)) {
+    // Leave isAdvertising set so the synthesized complete observes
+    // wasAdvertising and takes the preemption-resume path.
+#if BLE5_SUPPORTED
+    (void)ble_gap_ext_adv_stop(Impl::kLegacyInstance);
+#else
+    (void)ble_gap_adv_stop();
+#endif
+    (void)xTaskCreate(bleAdvTestDeliverPreemptedComplete, "advPreempt", 8192, &impl, tskIDLE_PRIORITY + 1, nullptr);
+    return BTStatus::OK;
+  }
+#endif
   return stopBackend();
 }
 
 BTStatus BLEAdvertising::stopBackend() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!impl.isAdvertising) {
+  impl.advSession.fetch_add(1, std::memory_order_relaxed);
+  if (!impl.isAdvertising.load()) {
     return BTStatus::OK;
   }
   log_d("Advertising: stop");
@@ -827,7 +924,9 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
     return BTStatus::Fail;
   }
   extInst->durationMs = durationMs;
+  extInst->sessionDeadlineUs = durationMs == 0 ? 0 : esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000;
   extInst->maxEvents = maxEvents;
+  impl.advSession.fetch_add(1, std::memory_order_relaxed);
   extInst->isAdvertising = true;
   log_i("Advertising: extended started (instance=%u)", instance);
   return BTStatus::OK;
@@ -843,6 +942,7 @@ BTStatus BLEAdvertising::stopExtended(uint8_t instance) {
   if (!extInst) {
     return BTStatus::InvalidParam;
   }
+  impl.advSession.fetch_add(1, std::memory_order_relaxed);
   int rc = ble_gap_ext_adv_stop(instance);
   extInst->isAdvertising = false;
   if (rc != 0 && rc != BLE_HS_EALREADY) {
@@ -860,7 +960,7 @@ BTStatus BLEAdvertising::removeExtended(uint8_t instance) {
     return BTStatus::Fail;
   }
   if (instance < Impl::kMaxExtInstances) {
-    impl.extInstances[instance] = Impl::ExtInstance{};
+    impl.extInstances[instance].reset();
   }
   return BTStatus::OK;
 }
@@ -873,7 +973,7 @@ BTStatus BLEAdvertising::clearExtended() {
     return BTStatus::Fail;
   }
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
-    impl.extInstances[i] = Impl::ExtInstance{};
+    impl.extInstances[i].reset();
   }
   return BTStatus::OK;
 }

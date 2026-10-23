@@ -88,7 +88,7 @@ struct BLEClient::Impl : BLEClientImplCommon {
   uint16_t commandCount = 0;
   std::shared_ptr<Impl> writeOwner;
   std::atomic<bool> terminalCloseRetryActive{false};
-#if defined(BLE_GATT_VALIDATION_HOOKS)
+#if BLE_VALIDATION_HOOKS
   bool validationHoldWriteCommand = false;
   bool validationHeldWriteCommandEventSeen = false;
 #endif

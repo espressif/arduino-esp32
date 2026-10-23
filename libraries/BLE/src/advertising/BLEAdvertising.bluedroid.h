@@ -88,13 +88,24 @@ struct BLEAdvertising::Impl {
     // Cleared whenever a setter mutates params; ensureExtConfigured() re-applies
     // them to the controller on the next data/start call and sets it true again.
     bool extAdvRegistered = false;
-    bool isAdvertising = false;
+    std::atomic<bool> isAdvertising{false};
     esp_ble_gap_ext_adv_params_t params{};
 #if BLE_PERIODIC_ADV_SUPPORTED
     bool periodicAdvRegistered = false;
     bool periodicAdvRunning = false;
     esp_ble_gap_periodic_adv_params_t periodicParams{};
 #endif
+    void reset() {
+      slotInitialized = false;
+      extAdvRegistered = false;
+      isAdvertising.store(false);
+      params = {};
+#if BLE_PERIODIC_ADV_SUPPORTED
+      periodicAdvRegistered = false;
+      periodicAdvRunning = false;
+      periodicParams = {};
+#endif
+    }
   };
   static constexpr uint8_t kMaxExtInstances = 2;  // instance 0 + reserved legacy set
   static constexpr uint8_t kLegacyInstance = kMaxExtInstances - 1;
