@@ -420,6 +420,7 @@ def _phase_blestream(server, client):
     client.expect_exact("[CLIENT] BLEStream writeTo probe sent", timeout=10)
     server.expect_exact("[SERVER] BLEStream onPeerData:", timeout=15)
     server.expect_exact("[SERVER] BLEStream writeTo ack sent", timeout=10)
+    client.expect_exact("[CLIENT] BLEStream onPeerData:", timeout=15)
     client.expect_exact("[CLIENT] BLEStream writeTo ack OK", timeout=15)
 
     # Basic ping/pong (client → server → client)

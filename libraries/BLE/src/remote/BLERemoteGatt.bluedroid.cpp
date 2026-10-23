@@ -371,46 +371,40 @@ static BTStatus performRemoteWrite(
         return BTStatus::InvalidState;
       }
 #if defined(BLE_GATT_VALIDATION_HOOKS)
-      if (client->pendingWriteWaiter && client->pendingWriteHandle != handle) {
+      if (client->requestWaiter && client->requestHandle != handle) {
         bleRemoteTestWriteCommandOverlappedWaiter.store(true, std::memory_order_relaxed);
       }
-#endif
-#if defined(BLE_GATT_VALIDATION_HOOKS)
       if (client->validationHoldWriteCommand && client->validationHeldWriteCommandEventSeen
           && bleRemoteTestReleaseWriteCommandCompletion.exchange(false, std::memory_order_relaxed)) {
         client->validationHoldWriteCommand = false;
         client->validationHeldWriteCommandEventSeen = false;
-        client->pendingWriteHandle = 0;
-        client->pendingWriteCommands = 0;
-        client->pendingWriteOwner.reset();
+        if (client->commandCount > 0) {
+          --client->commandCount;
+        }
+        if (client->requestHandle == 0 && client->commandCount == 0) {
+          client->writeOwner.reset();
+        }
       }
 #endif
       // A callback-issued Write Command may arrive while an unrelated
       // response write is completing (commonly the CCCD write that enabled
       // the callback). Different handles are unambiguous in WRITE_*_EVT, so
-      // allow that case; retain Busy for the same handle and for a held
-      // command whose completion has no independent waiter.
-      if ((client->pendingWriteHandle != 0
-           && (!client->pendingWriteWaiter || client->pendingWriteHandle == handle))
+      // allow that case; retain Busy for the same handle.
+      if (client->commandCount >= kMaxPendingWriteCommands || client->requestHandle == handle
 #if defined(BLE_GATT_VALIDATION_HOOKS)
           || client->validationHoldWriteCommand
 #endif
-          || client->pendingWriteCommands >= kMaxPendingWriteCommands
       ) {
         return BTStatus::Busy;
       }
-      // Do not disturb an unrelated response write's waiter/status. Its
-      // completion still owns pendingWriteHandle and writeSync.
-      if (!client->pendingWriteWaiter) {
+      // Do not disturb an unrelated response write's waiter/status.
+      if (!client->requestWaiter) {
         client->lastWriteStatus = ESP_GATT_OK;
       }
 #if defined(BLE_GATT_VALIDATION_HOOKS)
       client->validationHoldWriteCommand =
         bleRemoteTestHoldWriteCommandCompletion.exchange(false, std::memory_order_relaxed);
       client->validationHeldWriteCommandEventSeen = false;
-      if (client->validationHoldWriteCommand) {
-        client->pendingWriteHandle = handle;
-      }
 #endif
       bool forceSubmitFailure = false;
 #if defined(BLE_GATT_VALIDATION_HOOKS)
@@ -433,15 +427,12 @@ static BTStatus performRemoteWrite(
                           );
       if (err != ESP_OK) {
 #if defined(BLE_GATT_VALIDATION_HOOKS)
-        if (client->validationHoldWriteCommand) {
-          client->pendingWriteHandle = 0;
-        }
         client->validationHoldWriteCommand = false;
         client->validationHeldWriteCommandEventSeen = false;
 #endif
       } else {
-        ++client->pendingWriteCommands;
-        client->pendingWriteOwner = client;
+        ++client->commandCount;
+        client->writeOwner = client;
       }
     }
     if (err != ESP_OK) {
@@ -460,13 +451,13 @@ static BTStatus performRemoteWrite(
       if (!remoteTargetConnectedLocked(target, client)) {
         return BTStatus::InvalidState;
       }
-      if (client->pendingWriteHandle != 0 || client->pendingWriteWaiter || client->pendingWriteCommands != 0) {
+      if (client->requestHandle != 0 || client->requestWaiter || client->commandCount != 0) {
         return BTStatus::Busy;
       }
       client->lastWriteStatus = ESP_GATT_OK;
-      client->pendingWriteHandle = handle;
-      client->pendingWriteWaiter = true;
-      client->pendingWriteOwner = client;
+      client->requestHandle = handle;
+      client->requestWaiter = true;
+      client->writeOwner = client;
       client->writeSync.take();
       err =
         isDescr ? esp_ble_gattc_write_char_descr(
@@ -478,9 +469,9 @@ static BTStatus performRemoteWrite(
                     ESP_GATT_WRITE_TYPE_RSP, ESP_GATT_AUTH_REQ_NONE
                   );
       if (err != ESP_OK) {
-        client->pendingWriteHandle = 0;
-        client->pendingWriteWaiter = false;
-        client->pendingWriteOwner.reset();
+        client->requestHandle = 0;
+        client->requestWaiter = false;
+        client->writeOwner.reset();
         client->writeSync.give(BTStatus::Fail);
       }
     }
@@ -511,12 +502,12 @@ static BTStatus performRemoteWrite(
     {
       BLELockGuard lock(client->mtx);
       if (st != BTStatus::Timeout) {
-        client->pendingWriteHandle = 0;
-        if (client->pendingWriteCommands == 0) {
-          client->pendingWriteOwner.reset();
+        client->requestHandle = 0;
+        if (client->commandCount == 0) {
+          client->writeOwner.reset();
         }
       }
-      client->pendingWriteWaiter = false;
+      client->requestWaiter = false;
       lastStatus = client->lastWriteStatus;
 #if defined(BLE_GATT_VALIDATION_HOOKS)
       if (bleRemoteTestWriteCommandOverlappedWaiter.load(std::memory_order_relaxed)) {

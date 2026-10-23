@@ -66,6 +66,10 @@ void BLEAdvertising::Impl::durationTimerCb(void *arg) {
   if (!inst || !inst->isAdvertising) {
     return;
   }
+  BLEAdmissionGuard admission(inst->nativeAdmission);
+  if (!admission) {
+    return;
+  }
   inst->durationExpiryStop = true;
   esp_err_t err = esp_ble_gap_stop_advertising();
   if (err != ESP_OK) {
@@ -363,13 +367,16 @@ void BLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWh
 
 void BLEAdvertising::reset() {
   BLE_CHECK_IMPL();
-  if (impl.durationTimer || impl.isAdvertising) {
-    (void)stop();
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (admission && (impl.durationTimer || impl.isAdvertising)) {
+    (void)stopBackend();
   }
   impl.serviceUUIDs.clear();
   if (impl.name.length() > 0) {
     impl.name = "";
-    esp_ble_gap_set_device_name(BLE.getDeviceName().c_str());
+    if (admission) {
+      esp_ble_gap_set_device_name(BLE.getDeviceName().c_str());
+    }
   }
   impl.includeName = true;
   impl.scanResp = true;
@@ -387,26 +394,22 @@ void BLEAdvertising::reset() {
   impl.rawAdvData.clear();
   impl.rawScanRespData.clear();
 #if BLE5_SUPPORTED
-  // Stop every extended/periodic instance before clearing the controller's
-  // sets: esp_ble_gap_ext_adv_set_clear() fails / leaves sets behind while
-  // any instance is still advertising (mirrors the NimBLE reset()).
-  for (uint8_t i = 0; i < Impl::kLegacyInstance; i++) {
+  if (admission) {
+    // Stop every instance from this already-admitted reset() without
+    // re-entering the gate through public stopExtended/stopPeriodicAdv.
+    // esp_ble_gap_ext_adv_set_clear() fails / leaves sets behind while any
+    // instance is still advertising (mirrors the NimBLE reset()).
+    for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
 #if BLE_PERIODIC_ADV_SUPPORTED
-    if (impl.extInstances[i].periodicAdvRunning) {
-      (void)stopPeriodicAdv(i);
-    }
+      (void)esp_ble_gap_periodic_adv_stop(i);
 #endif
-    if (impl.extInstances[i].isAdvertising) {
-      (void)stopExtended(i);
+      uint8_t inst = i;
+      (void)esp_ble_gap_ext_adv_stop(1, &inst);
     }
-  }
-  // Legacy advertising (impl.isAdvertising, stopped above via stop()) runs on
-  // the reserved kLegacyInstance set over the extended API on this backend.
-  // Clear extended per-instance state (and the controller's sets) so the
-  // process-wide static Impl starts clean across BLE.end()/begin().
-  esp_err_t clearErr = esp_ble_gap_ext_adv_set_clear();
-  if (clearErr != ESP_OK) {
-    log_e("reset: esp_ble_gap_ext_adv_set_clear: %s", esp_err_to_name(clearErr));
+    esp_err_t clearErr = esp_ble_gap_ext_adv_set_clear();
+    if (clearErr != ESP_OK) {
+      log_e("reset: esp_ble_gap_ext_adv_set_clear: %s", esp_err_to_name(clearErr));
+    }
   }
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
     impl.extInstances[i] = Impl::ExtInstance{};
@@ -437,6 +440,10 @@ void BLEAdvertising::setScanResponseData(const BLEAdvertisementData &data) {
 
 BTStatus BLEAdvertising::start(uint32_t durationMs) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
 
   BLELockGuard lock(impl.mtx);
 
@@ -446,7 +453,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   return impl.startLegacyViaExtAdv(durationMs);
 #else
   if (impl.durationTimer || impl.isAdvertising) {
-    BTStatus stopStatus = stop();
+    BTStatus stopStatus = stopBackend();
     if (stopStatus != BTStatus::OK) {
       return stopStatus;
     }
@@ -578,7 +585,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
       esp_err_t timerErr = esp_timer_create(&timerArgs, &impl.durationTimer);
       if (timerErr != ESP_OK) {
         log_e("advertising duration timer create: %s", esp_err_to_name(timerErr));
-        (void)stop();
+        (void)stopBackend();
         return BTStatus::Fail;
       }
     }
@@ -586,7 +593,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     esp_err_t timerErr = esp_timer_start_once(impl.durationTimer, static_cast<uint64_t>(durationMs) * 1000ULL);
     if (timerErr != ESP_OK) {
       log_e("advertising duration timer start: %s", esp_err_to_name(timerErr));
-      (void)stop();
+      (void)stopBackend();
       return BTStatus::Fail;
     }
   }
@@ -599,6 +606,15 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
 // --------------------------------------------------------------------------
 
 BTStatus BLEAdvertising::stop() {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::OK;
+  }
+  return stopBackend();
+}
+
+BTStatus BLEAdvertising::stopBackend() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
 
   BLELockGuard lock(impl.mtx);
@@ -613,6 +629,7 @@ BTStatus BLEAdvertising::stop() {
   impl.advSync.take();
   const bool timerStopInFlight = impl.durationExpiryStop.exchange(false);
   if (!impl.isAdvertising && !timerStopInFlight) {
+    impl.advSync.give(BTStatus::OK);
     return BTStatus::OK;
   }
 
@@ -1032,6 +1049,10 @@ BTStatus BLEAdvertising::setExtInstanceAddress(uint8_t instance, const BTAddress
 
 BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, uint8_t maxEvents) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
   auto *extInst = impl.extInstanceAt(instance);
   if (!extInst) {
     return BTStatus::InvalidParam;
@@ -1058,6 +1079,10 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
 
 BTStatus BLEAdvertising::stopExtended(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::OK;
+  }
   auto *extInst = impl.extInstanceAt(instance);
   if (!extInst) {
     return BTStatus::InvalidParam;
@@ -1184,6 +1209,10 @@ BTStatus BLEAdvertising::setPeriodicAdvData(uint8_t instance, const BLEAdvertise
 
 BTStatus BLEAdvertising::startPeriodicAdv(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
   auto *extInst = impl.extInstanceAt(instance);
   if (!extInst) {
     return BTStatus::InvalidParam;
@@ -1212,6 +1241,10 @@ BTStatus BLEAdvertising::startPeriodicAdv(uint8_t instance) {
 
 BTStatus BLEAdvertising::stopPeriodicAdv(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::OK;
+  }
   impl.advSync.take();
   esp_err_t err = esp_ble_gap_periodic_adv_stop(instance);
   if (err != ESP_OK) {
@@ -1225,6 +1258,34 @@ BTStatus BLEAdvertising::stopPeriodicAdv(uint8_t instance) {
 #endif /* BLE_PERIODIC_ADV_SUPPORTED */
 
 #endif /* BLE5_SUPPORTED */
+
+void BLEAdvertising::prepareBackendStart() {
+  if (_impl) {
+    _impl->nativeAdmission.reopen();
+  }
+}
+
+void BLEAdvertising::beginBackendShutdown() {
+  if (!_impl) {
+    return;
+  }
+  _impl->nativeAdmission.closeAndWait();
+  (void)stopBackend();
+#if BLE5_SUPPORTED
+  // Do not trust software flags here: a closed-gate reset() can clear them
+  // without issuing native stops. Unconditionally stop every instance, then
+  // clear the controller sets (same as NimBLE beginBackendShutdown).
+  for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
+#if BLE_PERIODIC_ADV_SUPPORTED
+    (void)esp_ble_gap_periodic_adv_stop(i);
+#endif
+    uint8_t inst = i;
+    (void)esp_ble_gap_ext_adv_stop(1, &inst);
+  }
+  (void)esp_ble_gap_ext_adv_set_clear();
+#endif
+  reset();
+}
 
 #else /* !BLE_ADVERTISING_SUPPORTED -- stubs */
 
@@ -1270,6 +1331,14 @@ void BLEAdvertising::setScanFilter(bool, bool) {
 }
 
 void BLEAdvertising::reset() {}
+
+void BLEAdvertising::prepareBackendStart() {}
+
+void BLEAdvertising::beginBackendShutdown() {}
+
+BTStatus BLEAdvertising::stopBackend() {
+  return BTStatus::NotSupported;
+}
 
 void BLEAdvertising::setAdvertisementData(const BLEAdvertisementData &) {
   log_w("Advertising not supported");

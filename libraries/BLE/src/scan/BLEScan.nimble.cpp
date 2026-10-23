@@ -268,11 +268,11 @@ static void retireScanContext(BLEScan::Impl::EventContext *context) {
 #if defined(BLE_SCAN_VALIDATION_HOOKS)
     bleScanTestRetiredContexts.fetch_add(1, std::memory_order_relaxed);
 #endif
-    if (!impl->retireShutdown.load(std::memory_order_seq_cst) && !impl->retireScanEventInited) {
+    if (impl->nativeAdmission.isOpen() && !impl->retireScanEventInited) {
       ble_npl_event_init(&impl->retireScanEvent, retireScanContextCb, impl);
       impl->retireScanEventInited = true;
     }
-    shouldQueue = !impl->retireShutdown.load(std::memory_order_seq_cst) && impl->retireScanEventInited;
+    shouldQueue = impl->nativeAdmission.isOpen() && impl->retireScanEventInited;
   }
   // One persistent event drains every pending context. Retry only for a bounded
   // interval; BLE.end() closes the gate and reclaims anything still queued
@@ -285,7 +285,7 @@ static void retireScanContext(BLEScan::Impl::EventContext *context) {
         break;
       }
     }
-    if (impl->retireShutdown.load(std::memory_order_seq_cst)) {
+    if (!impl->nativeAdmission.isOpen()) {
       break;
     }
     vTaskDelay(1);
@@ -624,32 +624,16 @@ void BLEScan::clearDuplicateCache() {
   impl.duplicateKeys.clear();
 }
 
-struct ScanSessionPublisher {
-  BLEScan::Impl &impl;
-  bool admitted;
-
-  explicit ScanSessionPublisher(BLEScan::Impl &value) : impl(value) {
-    impl.retirePublishers.fetch_add(1, std::memory_order_seq_cst);
-    admitted = !impl.retireShutdown.load(std::memory_order_seq_cst);
-  }
-
-  ~ScanSessionPublisher() {
-    impl.retirePublishers.fetch_sub(1, std::memory_order_seq_cst);
-  }
-
-  explicit operator bool() const {
-    return admitted;
-  }
-};
+static BTStatus nimbleStopScanSession(BLEScan::Impl &impl);
 
 BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  ScanSessionPublisher publisher(impl);
+  BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
     return BTStatus::InvalidState;
   }
   if (impl.isScanning) {
-    BTStatus stopStatus = stop();
+    BTStatus stopStatus = nimbleStopScanSession(impl);
     if (!stopStatus) {
       return stopStatus;
     }
@@ -787,7 +771,7 @@ BTStatus BLEScan::stop() {
   // Publish this caller before it acquires any context pointer. Shutdown closes
   // the gate then waits for this count, while a caller that lost the gate race
   // backs out without touching native-owned state.
-  ScanSessionPublisher publisher(impl);
+  BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
     return BTStatus::OK;
   }
@@ -797,12 +781,12 @@ BTStatus BLEScan::stop() {
 BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedConfig, const ExtScanConfig *uncodedConfig) {
 #if BLE5_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  ScanSessionPublisher publisher(impl);
+  BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
     return BTStatus::InvalidState;
   }
   if (impl.isScanning) {
-    BTStatus stopStatus = stop();
+    BTStatus stopStatus = nimbleStopScanSession(impl);
     if (!stopStatus) {
       return stopStatus;
     }
@@ -846,6 +830,10 @@ BTStatus BLEScan::stopExtended() {
 BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount, uint16_t timeoutMs) {
 #if BLE5_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard publisher(impl.nativeAdmission);
+  if (!publisher) {
+    return BTStatus::InvalidState;
+  }
 
   struct ble_gap_periodic_sync_params params = {};
   params.skip = skipCount;
@@ -869,6 +857,11 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
 
 BTStatus BLEScan::cancelPeriodicSync() {
 #if BLE5_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard publisher(impl.nativeAdmission);
+  if (!publisher) {
+    return BTStatus::InvalidState;
+  }
   int rc = ble_gap_periodic_adv_sync_create_cancel();
   if (rc != 0) {
     log_e("Scan: cancelPeriodicSync failed rc=%d", rc);
@@ -883,6 +876,11 @@ BTStatus BLEScan::cancelPeriodicSync() {
 
 BTStatus BLEScan::terminatePeriodicSync(uint16_t syncHandle) {
 #if BLE5_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard publisher(impl.nativeAdmission);
+  if (!publisher) {
+    return BTStatus::InvalidState;
+  }
   int rc = ble_gap_periodic_adv_sync_terminate(syncHandle);
   if (rc != 0) {
     log_e("Scan: terminatePeriodicSync handle=%u rc=%d", syncHandle, rc);
@@ -954,7 +952,7 @@ void BLEScan::resetBackendEvents() {
 
 void BLEScan::prepareBackendStart() {
   if (_impl) {
-    _impl->retireShutdown.store(false, std::memory_order_seq_cst);
+    _impl->nativeAdmission.reopen();
   }
 }
 
@@ -962,13 +960,7 @@ void BLEScan::beginBackendShutdown() {
   if (!_impl) {
     return;
   }
-  _impl->retireShutdown.store(true, std::memory_order_seq_cst);
-  // Every publisher uses a bounded enqueue loop and observes retireShutdown.
-  // Wait until none can touch the event before nimble_port_stop() and the
-  // post-host reset deinitialize its storage.
-  while (_impl->retirePublishers.load(std::memory_order_seq_cst) != 0) {
-    vTaskDelay(1);
-  }
+  _impl->nativeAdmission.closeAndWait();
   // Public stop() is closed by the gate above, so cancel directly while the
   // host is still running. This also releases an infinite startBlocking(0)
   // waiter before nimble_port_stop() makes further completion impossible.

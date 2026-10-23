@@ -28,6 +28,7 @@
 #include "remote/BLERemoteGatt.bluedroid.h"
 #include "types/BLEUUID.bluedroid.h"
 #include "core/BLEImplHelpers.h"
+#include "core/BLEAdmission.h"
 #include "types/BLEConnInfoData.h"
 #include "types/BLEConnInfo.bluedroid.h"
 #include "esp32-hal-log.h"
@@ -64,8 +65,7 @@ StaticSemaphore_t BLEClient::Impl::s_clientsMtxStorage{};
 SemaphoreHandle_t BLEClient::Impl::s_clientsMtx =
   xSemaphoreCreateRecursiveMutexStatic(&BLEClient::Impl::s_clientsMtxStorage);
 std::vector<std::weak_ptr<BLEClient::Impl>> BLEClient::Impl::s_clients;
-std::atomic<uint32_t> BLEClient::Impl::s_terminalCloseWorkers{0};
-std::atomic<bool> BLEClient::Impl::s_terminalCloseAdmissionOpen{false};
+static BLEAdmissionGate s_terminalCloseAdmission(false);
 StaticSemaphore_t BLEClient::Impl::s_terminalCloseOwnersMtxStorage{};
 SemaphoreHandle_t BLEClient::Impl::s_terminalCloseOwnersMtx =
   xSemaphoreCreateRecursiveMutexStatic(&BLEClient::Impl::s_terminalCloseOwnersMtxStorage);
@@ -779,10 +779,10 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
     client->secAuthenticated = false;
     client->secBonded = false;
     client->pendingReadHandle = 0;
-    client->pendingWriteHandle = 0;
-    client->pendingWriteCommands = 0;
-    client->pendingWriteWaiter = false;
-    pendingWriteOwner = std::move(client->pendingWriteOwner);
+    client->requestHandle = 0;
+    client->requestWaiter = false;
+    client->commandCount = 0;
+    pendingWriteOwner = std::move(client->writeOwner);
     client->terminalCloseRetryActive = false;
 #if defined(BLE_GATT_VALIDATION_HOOKS)
     client->validationHoldWriteCommand = false;
@@ -863,22 +863,17 @@ static void terminalClientCloseTask(void *arg) {
   retryTerminalClientClose(owner);
   // FreeRTOS task deletion does not unwind C++ locals.
   owner.reset();
-  BLEClient::Impl::s_terminalCloseWorkers.fetch_sub(1, std::memory_order_seq_cst);
+  s_terminalCloseAdmission.leave();
   vTaskDelete(nullptr);
 }
 
 static void scheduleTerminalClientClose(BLEClient::Impl *client) {
-  if (!client || !BLEClient::Impl::s_terminalCloseAdmissionOpen.load(std::memory_order_seq_cst)) {
-    return;
-  }
-  BLEClient::Impl::s_terminalCloseWorkers.fetch_add(1, std::memory_order_seq_cst);
-  if (!BLEClient::Impl::s_terminalCloseAdmissionOpen.load(std::memory_order_seq_cst)) {
-    BLEClient::Impl::s_terminalCloseWorkers.fetch_sub(1, std::memory_order_seq_cst);
+  if (!client || !s_terminalCloseAdmission.enter()) {
     return;
   }
   bool expected = false;
   if (!client->terminalCloseRetryActive.compare_exchange_strong(expected, true)) {
-    BLEClient::Impl::s_terminalCloseWorkers.fetch_sub(1, std::memory_order_seq_cst);
+    s_terminalCloseAdmission.leave();
     return;
   }
   auto owner = client->shared_from_this();
@@ -904,25 +899,23 @@ static void scheduleTerminalClientClose(BLEClient::Impl *client) {
       // disconnect or host shutdown still releases it through normal teardown.
       log_e("Client: unable to schedule terminal close; connection quarantined");
     }
-    BLEClient::Impl::s_terminalCloseWorkers.fetch_sub(1, std::memory_order_seq_cst);
+    s_terminalCloseAdmission.leave();
   }
 }
 
 void BLEClient::Impl::openTerminalCloseAdmission() {
-  s_terminalCloseAdmissionOpen.store(true, std::memory_order_seq_cst);
+  s_terminalCloseAdmission.reopen();
 }
 
 void BLEClient::Impl::stopTerminalCloseWorkers() {
-  s_terminalCloseAdmissionOpen.store(false, std::memory_order_seq_cst);
+  s_terminalCloseAdmission.close();
 #if defined(BLE_GATT_VALIDATION_HOOKS)
   bleGattTestTerminalShutdownEntered.store(true, std::memory_order_release);
 #endif
   // BLE.end() has already cleared the initialized flag, which makes every
   // worker leave its bounded retry loop. Wait before traversing s_clients:
   // dropping a worker's final owner erases that client from this registry.
-  while (s_terminalCloseWorkers.load(std::memory_order_seq_cst) != 0) {
-    vTaskDelay(1);
-  }
+  s_terminalCloseAdmission.waitUntilIdle();
 }
 
 void BLEClient::Impl::invalidateAfterHostDeinit() {
@@ -946,10 +939,10 @@ void BLEClient::Impl::invalidateAfterHostDeinit() {
       client->clearDiscoveredServices();
       client->readBuf.clear();
       client->pendingReadHandle = 0;
-      client->pendingWriteHandle = 0;
-      client->pendingWriteCommands = 0;
-      client->pendingWriteWaiter = false;
-      client->pendingWriteOwner.reset();
+      client->requestHandle = 0;
+      client->requestWaiter = false;
+      client->commandCount = 0;
+      client->writeOwner.reset();
 #if defined(BLE_GATT_VALIDATION_HOOKS)
       client->validationHoldWriteCommand = false;
       client->validationHeldWriteCommandEventSeen = false;
@@ -1174,30 +1167,28 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       {
         BLELockGuard lock(client->mtx);
         esp_gatt_status_t completionStatus = param->write.status;
-        if (client->pendingWriteHandle != 0 && param->write.handle == client->pendingWriteHandle) {
+        if (client->requestHandle != 0 && param->write.handle == client->requestHandle) {
+          signalWaiter = client->requestWaiter;
+          bool holdResponseRetirement = false;
+#if defined(BLE_GATT_VALIDATION_HOOKS)
+          holdResponseRetirement =
+            client->requestWaiter
+            && bleRemoteTestHoldWriteResponseRetirement.load(std::memory_order_relaxed);
+#endif
+          if (!holdResponseRetirement) {
+            client->requestHandle = 0;
+            client->requestWaiter = false;
+            if (client->commandCount == 0) {
+              pendingWriteOwner = std::move(client->writeOwner);
+            }
+          }
+          client->lastWriteStatus = completionStatus;
+        } else if (client->commandCount > 0) {
 #if defined(BLE_GATT_VALIDATION_HOOKS)
           if (client->validationHoldWriteCommand) {
             client->validationHeldWriteCommandEventSeen = true;
             break;
           }
-#endif
-          signalWaiter = client->pendingWriteWaiter;
-          bool holdResponseRetirement = false;
-#if defined(BLE_GATT_VALIDATION_HOOKS)
-          holdResponseRetirement =
-            client->pendingWriteWaiter
-            && bleRemoteTestHoldWriteResponseRetirement.load(std::memory_order_relaxed);
-#endif
-          if (!holdResponseRetirement) {
-            client->pendingWriteHandle = 0;
-            client->pendingWriteWaiter = false;
-            if (client->pendingWriteCommands == 0) {
-              pendingWriteOwner = std::move(client->pendingWriteOwner);
-            }
-          }
-          client->lastWriteStatus = completionStatus;
-        } else if (client->pendingWriteCommands > 0) {
-#if defined(BLE_GATT_VALIDATION_HOOKS)
           int remainingFailures = bleRemoteTestWriteCommandCompletionFailures.load(std::memory_order_relaxed);
           while (remainingFailures > 0
                  && !bleRemoteTestWriteCommandCompletionFailures.compare_exchange_weak(
@@ -1206,15 +1197,15 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
           if (remainingFailures > 0) {
             completionStatus = ESP_GATT_ERROR;
           }
-          bool checkCombinedOwner = client->pendingWriteHandle != 0;
+          bool checkCombinedOwner = client->requestHandle != 0;
 #endif
-          if (--client->pendingWriteCommands == 0 && client->pendingWriteHandle == 0) {
-            pendingWriteOwner = std::move(client->pendingWriteOwner);
+          if (--client->commandCount == 0 && client->requestHandle == 0) {
+            pendingWriteOwner = std::move(client->writeOwner);
           }
 #if defined(BLE_GATT_VALIDATION_HOOKS)
           if (checkCombinedOwner) {
             bleRemoteTestCombinedWriteOwnerObserved.store(true, std::memory_order_relaxed);
-            if (!client->pendingWriteOwner) {
+            if (!client->writeOwner) {
               bleRemoteTestCombinedWriteOwnerHeld.store(false, std::memory_order_relaxed);
             }
             bleRemoteTestHoldWriteResponseRetirement.store(false, std::memory_order_release);

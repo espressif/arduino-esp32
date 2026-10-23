@@ -102,7 +102,7 @@ struct BLEStreamClientRole final : BLEStream::Impl::Role {
   }
 
   std::vector<BLEConnInfo> peers() const override {
-    if (client && common.peerCount > 0) {
+    if (client && client.isConnected()) {
       return {client.getConnInfo()};
     }
     return {};
@@ -146,9 +146,6 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
   if (!_impl || _impl->loadRole()) {
     return BTStatus::InvalidState;
   }
-  if (!_impl->ensureEndRetryTimer()) {
-    return BTStatus::NoMemory;
-  }
   if (!BLE.isInitialized()) {
     BTStatus status = BLE.begin("");
     if (!status) {
@@ -177,7 +174,6 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
     if (!impl) {
       return;
     }
-    impl->peerCount = 1;
     auto callback = impl->loadConnectHandler();
     if (callback) {
       callback(connInfo);
@@ -188,7 +184,6 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
     if (!impl) {
       return;
     }
-    impl->peerCount = 0;
     auto callback = impl->loadDisconnectHandler();
     if (callback) {
       callback(connInfo, reason);
@@ -210,13 +205,19 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
     return abortStart(BTStatus::NotFound);
   }
 
+  BLEClient streamClient = active.client;
   status = active.remoteTx.subscribe(
     BLESubscription::Notify,
-    [common](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
+    [common, streamClient](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
       auto impl = common.lock();
-      if (impl && data && len > 0) {
-        impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
+      if (!impl || !data || len == 0) {
+        return;
       }
+      auto callback = impl->loadPeerDataHandler();
+      if (callback) {
+        callback(streamClient.getConnInfo(), data, len);
+      }
+      impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
     }
   );
   if (!status) {

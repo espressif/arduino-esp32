@@ -204,9 +204,6 @@ BTStatus BLEStream::begin(const String &deviceName) {
   if (!_impl || _impl->loadRole()) {
     return BTStatus::InvalidState;
   }
-  if (!_impl->ensureEndRetryTimer()) {
-    return BTStatus::NoMemory;
-  }
   if (!BLE.isInitialized()) {
     BTStatus status = BLE.begin(deviceName);
     if (!status) {
@@ -287,7 +284,6 @@ BTStatus BLEStream::begin(const String &deviceName) {
     if (!impl) {
       return;
     }
-    impl->peerCount.store(static_cast<int>(server.getConnections().size()), std::memory_order_relaxed);
     auto callback = impl->loadConnectHandler();
     if (callback) {
       callback(connInfo);
@@ -298,7 +294,6 @@ BTStatus BLEStream::begin(const String &deviceName) {
     if (!impl) {
       return;
     }
-    impl->peerCount.store(static_cast<int>(server.getConnections().size()), std::memory_order_relaxed);
     auto callback = impl->loadDisconnectHandler();
     if (callback) {
       callback(connInfo, reason);
@@ -313,11 +308,11 @@ BTStatus BLEStream::begin(const String &deviceName) {
     size_t len = 0;
     const uint8_t *data = chr.getValue(&len);
     if (data && len > 0) {
-      impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
       auto callback = impl->loadPeerDataHandler();
       if (callback) {
         callback(connInfo, data, len);
       }
+      impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
     }
   });
 

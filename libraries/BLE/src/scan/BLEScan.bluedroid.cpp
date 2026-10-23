@@ -65,23 +65,6 @@ void markDuplicateKey(BLEScan::Impl &impl, const BTAddress &address, uint8_t sid
   }
 }
 
-class NativeCallGuard {
-public:
-  explicit NativeCallGuard(BLEScan::Impl &impl) : _impl(&impl), _admitted(impl.enterNativeCall()) {}
-  ~NativeCallGuard() {
-    if (_admitted) {
-      _impl->leaveNativeCall();
-    }
-  }
-  explicit operator bool() const {
-    return _admitted;
-  }
-
-private:
-  BLEScan::Impl *_impl;
-  bool _admitted;
-};
-
 }  // namespace
 
 // One-shot expiry for fractional/sub-second legacy durations: stop the
@@ -92,7 +75,7 @@ void BLEScan::Impl::durationTimerCb(void *arg) {
   if (!inst || !inst->isScanning) {
     return;
   }
-  NativeCallGuard admission(*inst);
+  BLEAdmissionGuard admission(inst->nativeAdmission);
   if (!admission) {
     return;
   }
@@ -120,13 +103,13 @@ void BLEScan::clearDuplicateCache() {
 
 BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  NativeCallGuard admission(impl);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
   }
 
   if (impl.isScanning) {
-    BTStatus stopStatus = stop();
+    BTStatus stopStatus = stopBackend();
     if (!stopStatus) {
       return stopStatus;
     }
@@ -264,7 +247,7 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
       esp_err_t terr = esp_timer_create(&timerArgs, &impl.durationTimer);
       if (terr != ESP_OK) {
         log_e("scan duration timer create: %s", esp_err_to_name(terr));
-        (void)stop();
+        (void)stopBackend();
         return BTStatus::Fail;
       }
     }
@@ -272,7 +255,7 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
     esp_err_t terr = esp_timer_start_once(impl.durationTimer, static_cast<uint64_t>(durationMs) * 1000ULL);
     if (terr != ESP_OK) {
       log_e("scan duration timer start: %s", esp_err_to_name(terr));
-      (void)stop();
+      (void)stopBackend();
       return BTStatus::Fail;
     }
   }
@@ -304,7 +287,7 @@ BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
 
 BTStatus BLEScan::stop() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  NativeCallGuard admission(impl);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::OK;
   }
@@ -362,12 +345,12 @@ BTStatus BLEScan::stopBackend() {
 BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedConfig, const ExtScanConfig *uncodedConfig) {
 #if BLE5_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  NativeCallGuard admission(impl);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
   }
   if (impl.isScanning) {
-    BTStatus stopStatus = stop();
+    BTStatus stopStatus = stopBackend();
     if (!stopStatus) {
       return stopStatus;
     }
@@ -452,7 +435,7 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
   if (!_impl) {
     return BTStatus::InvalidState;
   }
-  NativeCallGuard admission(*_impl);
+  BLEAdmissionGuard admission(_impl->nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
   }
@@ -484,7 +467,7 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
 BTStatus BLEScan::cancelPeriodicSync() {
 #if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  NativeCallGuard admission(impl);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
   }
@@ -503,7 +486,7 @@ BTStatus BLEScan::cancelPeriodicSync() {
 BTStatus BLEScan::terminatePeriodicSync(uint16_t syncHandle) {
 #if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  NativeCallGuard admission(impl);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
   }
@@ -547,7 +530,7 @@ void BLEScan::resetBackendEvents() {}
 
 void BLEScan::prepareBackendStart() {
   if (_impl) {
-    _impl->nativeAdmissionOpen.store(true, std::memory_order_seq_cst);
+    _impl->nativeAdmission.reopen();
   }
 }
 
@@ -555,16 +538,14 @@ void BLEScan::beginBackendShutdown() {
   if (!_impl) {
     return;
   }
-  _impl->nativeAdmissionOpen.store(false, std::memory_order_seq_cst);
+  _impl->nativeAdmission.close();
 #if defined(BLE_SCAN_VALIDATION_HOOKS)
   bleScanTestBluedroidShutdownEntered.store(true, std::memory_order_release);
   while (bleScanTestHoldBluedroidShutdown.load(std::memory_order_acquire)) {
     vTaskDelay(1);
   }
 #endif
-  while (_impl->nativePublishers.load(std::memory_order_seq_cst) != 0) {
-    vTaskDelay(1);
-  }
+  _impl->nativeAdmission.waitUntilIdle();
   bool wasScanning = _impl->isScanning.load(std::memory_order_acquire);
   BTStatus stopStatus = stopBackend();
   if (!stopStatus && wasScanning) {

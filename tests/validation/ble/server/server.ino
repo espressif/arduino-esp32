@@ -1321,9 +1321,9 @@ void loop() {
           bleStream.end();
           bleStreamFinalOwner = std::make_shared<BLEStream>();
           // Deterministically exercise the callback handoff fallback: one
-          // worker-creation failure reaches the timer, then enough synthetic
-          // teardown failures exhaust the bounded worker retries and make the
-          // first recovery admission return Busy.
+          // worker-creation failure quarantines immediately, then enough
+          // synthetic teardown failures exhaust the bounded worker retries and
+          // make the first recovery admission return Busy.
           bleStreamTestWorkerStartFailures.store(1);
           bleStreamTestTeardownFailures.store(5);
           bleStreamFinalOwner->onConnect([](const BLEConnInfo &) {

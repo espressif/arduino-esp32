@@ -25,11 +25,13 @@
 
 #include <host/ble_gap.h>
 #include "core/BLEMutex.h"
+#include "core/BLEAdmission.h"
 #include <vector>
 
 // BLEAdvertising is entirely NimBLE-specific (no cross-backend shared state), so
 // BLEAdvertising::Impl is defined directly here (a .nimble.* file) with no common base.
 struct BLEAdvertising::Impl {
+  BLEAdmissionGate nativeAdmission;
   bool isAdvertising = false;
   // Duration of the current legacy session, kept so a stack-preempted set
   // (ADV_COMPLETE / BLE_HS_EPREEMPTED) resumes with the same limit.

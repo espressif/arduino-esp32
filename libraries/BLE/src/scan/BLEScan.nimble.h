@@ -24,6 +24,7 @@
 #include "scan/BLEScan.h"
 #include "core/BLESync.h"
 #include "core/BLEMutex.h"
+#include "core/BLEAdmission.h"
 
 #include <host/ble_gap.h>
 
@@ -66,8 +67,7 @@ struct BLEScan::Impl {
   std::vector<EventContext *> nativeHeldScanContexts;
   struct ble_npl_event retireScanEvent {};
   bool retireScanEventInited = false;
-  std::atomic<bool> retireShutdown{false};
-  std::atomic<uint32_t> retirePublishers{0};
+  BLEAdmissionGate nativeAdmission;
 #if BLE5_SUPPORTED
   bool hasUncodedConfig = false;
   uint16_t uncodedInterval = 0;

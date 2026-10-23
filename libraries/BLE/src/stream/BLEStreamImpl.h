@@ -22,7 +22,6 @@
 #include "stream/BLEStream.h"
 #include "core/BLEMutex.h"
 #include "cbuf.h"
-#include "esp_timer.h"
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -32,8 +31,8 @@ struct BLEStream::Impl {
     std::atomic<bool> starting{false};
     std::atomic<bool> ending{false};
     // Claims the one teardown executor. If callback-context task creation
-    // fails, it is released while `ending` remains set so a later end() can
-    // retry without reopening begin/write admission.
+    // fails, it is released while `ending` remains set so a later start can
+    // recover the quarantined role without reopening begin/write admission.
     std::atomic<bool> endExecutorActive{false};
 
     virtual ~Role() = default;
@@ -56,13 +55,7 @@ struct BLEStream::Impl {
   // resources if worker task allocation must be retried.
   std::shared_ptr<Impl> deferredSelf;
   std::shared_ptr<Role> deferredRole;
-  esp_timer_handle_t endRetryTimer = nullptr;
-  bool endRetryArmed = false;
-  uint8_t endRetryCount = 0;
   cbuf rxBuf;
-  // Server mode can have multiple peers; client mode uses 0/1. BLE callbacks
-  // update this from the stack task while sketches read it from their task.
-  std::atomic<int> peerCount{0};
 
   ConnectHandler onConnectCb = nullptr;
   DisconnectHandler onDisconnectCb = nullptr;
@@ -70,9 +63,7 @@ struct BLEStream::Impl {
 
   explicit Impl(size_t rxBufSize) : roleMtx(xSemaphoreCreateRecursiveMutexStatic(&roleMtxStorage)), rxBuf(rxBufSize) {}
 
-  bool ensureEndRetryTimer();
   static bool startEndWorker(Impl *common);
-  static bool scheduleEndRetry(Impl *common);
   static bool claimEnd(const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role, bool &hostShuttingDown);
   static bool activateRole(const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role);
   static bool finishRoleStart(const std::shared_ptr<Role> &role);
@@ -83,17 +74,12 @@ struct BLEStream::Impl {
   static bool recoverQuarantined();
   static void prepareHostShutdown();
   static void releaseQuarantined();
-  static void endRetryTimerCb(void *arg);
   static void endWorker(void *arg);
 
   struct RecoveryState;
   static RecoveryState &recoveryState();
 
   ~Impl() {
-    if (endRetryTimer) {
-      esp_timer_stop(endRetryTimer);
-      esp_timer_delete(endRetryTimer);
-    }
     if (roleMtx) {
       vSemaphoreDelete(roleMtx);
     }

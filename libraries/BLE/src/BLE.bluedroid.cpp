@@ -42,6 +42,7 @@
 #endif
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
+#include "core/BLETask.h"
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
@@ -59,6 +60,9 @@
 #include <esp_bt_device.h>
 
 #include "core/BLESync.h"
+#include <cstring>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #if BLE_SMP_SUPPORTED
 // Defined in BluedroidSecurity.cpp
@@ -66,6 +70,12 @@ void bluedroidSecurityHandleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 #endif
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
+
+bool bleInStackCallbackTask() {
+  TaskHandle_t current = xTaskGetCurrentTaskHandle();
+  const char *name = current ? pcTaskGetName(current) : nullptr;
+  return name && strcmp(name, "BTC_TASK") == 0;
+}
 
 // BLEClass::Impl (Bluedroid backend state) is declared in BluedroidCore.h.
 
@@ -260,6 +270,11 @@ BTStatus BLEClass::begin(const String &deviceName) {
   _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
 #if BLE_SCANNING_SUPPORTED
   if (auto hook = _impl->loadHook(_impl->scanBeginHook)) {
+    hook();
+  }
+#endif
+#if BLE_ADVERTISING_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->advBeginHook)) {
     hook();
   }
 #endif
@@ -711,9 +726,15 @@ BLEAdvertising BLEClass::getAdvertising() {
     slot = std::make_shared<BLEAdvertising::Impl>();
     BLEAdvertising::Impl::s_instance = slot.get();
     _impl->storeHook(_impl->advGapHook, BLEAdvertising::Impl::handleGAP);
+    _impl->storeHook(_impl->advBeginHook, +[]() {
+      if (slot) {
+        BLEAdvertising(slot).prepareBackendStart();
+      }
+    });
     _impl->storeHook(_impl->advEndHook, +[]() {
       if (slot) {
-        BLEAdvertising(slot).reset();
+        BLEAdvertising adv(slot);
+        adv.beginBackendShutdown();
       }
     });
   }

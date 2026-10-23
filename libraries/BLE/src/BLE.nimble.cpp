@@ -32,6 +32,7 @@
 #endif
 #include "core/BLEImplHelpers.h"
 #include "core/BLEBackend.h"
+#include "core/BLETask.h"
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
@@ -103,6 +104,10 @@ static TaskHandle_t s_nimbleHostTaskHandle = nullptr;
 bool nimbleIsHostTask() {
   TaskHandle_t h = s_nimbleHostTaskHandle;
   return h != nullptr && xTaskGetCurrentTaskHandle() == h;
+}
+
+bool bleInStackCallbackTask() {
+  return nimbleIsHostTask();
 }
 
 void BLEClass::Impl::hostTask(void *param) {
@@ -312,6 +317,11 @@ BTStatus BLEClass::begin(const String &deviceName) {
   _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
 #if BLE_SCANNING_SUPPORTED
   if (auto hook = _impl->loadHook(_impl->scanBeginHook)) {
+    hook();
+  }
+#endif
+#if BLE_ADVERTISING_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->advBeginHook)) {
     hook();
   }
 #endif
@@ -779,7 +789,6 @@ BLEScan BLEClass::getScan() {
     _impl->storeHook(_impl->scanEndHook, +[]() {
       BLEScan scan(slot);
       scan.beginBackendShutdown();
-      scan.stop();
       scan.terminateAllPeriodicSyncs();
     });
     _impl->storeHook(_impl->scanHostStoppedHook, +[]() {
@@ -807,8 +816,11 @@ BLEAdvertising BLEClass::getAdvertising() {
   if (!slot) {
     slot = std::make_shared<BLEAdvertising::Impl>();
     _impl->adv = slot.get();
+    _impl->storeHook(_impl->advBeginHook, +[]() {
+      BLEAdvertising(slot).prepareBackendStart();
+    });
     _impl->storeHook(_impl->advEndHook, +[]() {
-      BLEAdvertising(slot).reset();
+      BLEAdvertising(slot).beginBackendShutdown();
     });
   }
   return BLEAdvertising(slot);

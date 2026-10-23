@@ -145,9 +145,8 @@ known gaps in `libraries/BLE/DESIGN.md`):
 
 - BLEStream / BluetoothSerial **multi-client server** (two simultaneous centrals,
   per-peer routing under load) — needs a third DUT or two external phones.
-  Single-peer `peerCount()`, `peers()`, `writeTo()`, `onPeerData`, and
-  `disconnect(addr)` are regression-guarded in phases 2 (bt_classic) and 13
-  (blestream). See `libraries/BLE/examples/MultiClientUART` and
+  Single-peer `peerCount()`, `peers()`, `writeTo()`, and `onPeerData` are
+  regression-guarded in phases 2 (bt_classic) and 13 (blestream). See `libraries/BLE/examples/MultiClientUART` and
   `libraries/BluetoothSerial/examples/MultiClientSerial` for manual multi-central
   testing.
 - **EATT** (Enhanced ATT, multiple ATT bearers on one ACL) has no public API.

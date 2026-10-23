@@ -21,6 +21,7 @@
 
 #include "advertising/BLEAdvertising.h"
 #include "core/BLESync.h"
+#include "core/BLEAdmission.h"
 
 #include <esp_gap_ble_api.h>
 #include <esp_timer.h>
@@ -31,6 +32,7 @@
 // BLEAdvertising is entirely Bluedroid-specific (no cross-backend shared state), so
 // BLEAdvertising::Impl is defined directly here (a .bluedroid.* file) with no common base.
 struct BLEAdvertising::Impl {
+  BLEAdmissionGate nativeAdmission;
   std::atomic<bool> isAdvertising{false};
   BLESync advSync{"advSync"};
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();

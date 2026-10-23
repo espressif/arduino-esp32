@@ -352,6 +352,9 @@ public:
 private:
   explicit BLEAdvertising(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
   std::shared_ptr<Impl> _impl;
+  void prepareBackendStart();
+  void beginBackendShutdown();
+  BTStatus stopBackend();
   friend class BLEClass;
 };
 

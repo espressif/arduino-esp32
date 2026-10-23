@@ -83,10 +83,10 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // Temp buffer and active-handle filter for read/write operations (guarded by mtx).
   std::vector<uint8_t> readBuf;
   uint16_t pendingReadHandle = 0;
-  uint16_t pendingWriteHandle = 0;
-  uint16_t pendingWriteCommands = 0;
-  bool pendingWriteWaiter = false;
-  std::shared_ptr<Impl> pendingWriteOwner;
+  uint16_t requestHandle = 0;
+  bool requestWaiter = false;
+  uint16_t commandCount = 0;
+  std::shared_ptr<Impl> writeOwner;
   std::atomic<bool> terminalCloseRetryActive{false};
 #if defined(BLE_GATT_VALIDATION_HOOKS)
   bool validationHoldWriteCommand = false;
@@ -102,8 +102,6 @@ struct BLEClient::Impl : BLEClientImplCommon {
   static StaticSemaphore_t s_clientsMtxStorage;
   static SemaphoreHandle_t s_clientsMtx;
   static std::vector<std::weak_ptr<BLEClient::Impl>> s_clients;
-  static std::atomic<uint32_t> s_terminalCloseWorkers;
-  static std::atomic<bool> s_terminalCloseAdmissionOpen;
   static StaticSemaphore_t s_terminalCloseOwnersMtxStorage;
   static SemaphoreHandle_t s_terminalCloseOwnersMtx;
   static std::vector<std::shared_ptr<Impl>> s_terminalCloseOwners;

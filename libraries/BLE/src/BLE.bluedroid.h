@@ -84,6 +84,7 @@ struct BLEClass::Impl {
   BLEClass::RawEventHandler customGattsHandler = nullptr;
 #if BLE_ADVERTISING_SUPPORTED
   GapHook advGapHook = nullptr;
+  LifecycleHook advBeginHook = nullptr;
   LifecycleHook advEndHook = nullptr;
 #endif
 #if BLE_SCANNING_SUPPORTED

@@ -1582,6 +1582,9 @@ void setup() {
     // Give server time to reconfigure advertising with NUS service.
     delay(2000);
     BLEStream stream;
+    stream.onPeerData([](const BLEConnInfo &peer, const uint8_t *, size_t) {
+      Serial.printf("[CLIENT] BLEStream onPeerData: %s\n", peer.getAddress().toString().c_str());
+    });
     for (int attempt = 1; attempt <= 5 && !stream_ok; attempt++) {
       BTStatus s = stream.beginClient(targetAddr, 7000);
       if (!s) {

@@ -22,11 +22,8 @@
 #include <Arduino.h>
 #include "stream/BLEStream.h"
 #include "stream/BLEStreamImpl.h"
+#include "core/BLETask.h"
 #include "esp32-hal-log.h"
-#if BLE_NIMBLE
-#include "BLE.nimble.h"
-#endif
-#include <cstring>
 #include <new>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -52,7 +49,7 @@ BLEUUID BLEStream::nusTxCharUUID() {
 // BLEStream lifecycle
 // --------------------------------------------------------------------------
 
-static bool bleStreamInCallbackTask();
+static constexpr uint8_t kEndRetryLimit = 4;
 
 #if defined(BLE_STREAM_VALIDATION_HOOKS)
 extern "C" {
@@ -91,65 +88,14 @@ BLEStream::Impl::RecoveryState &BLEStream::Impl::recoveryState() {
 
 BLEStream::BLEStream(size_t rxBufferSize) : _impl(std::make_shared<Impl>(rxBufferSize)) {}
 
-bool BLEStream::Impl::ensureEndRetryTimer() {
-  BLELockGuard lock(roleMtx);
-  if (endRetryTimer) {
-    return true;
-  }
-  esp_timer_create_args_t args = {};
-  args.callback = endRetryTimerCb;
-  args.arg = this;
-  args.dispatch_method = ESP_TIMER_TASK;
-  args.name = "ble_stream_end";
-  if (esp_timer_create(&args, &endRetryTimer) != ESP_OK) {
-    endRetryTimer = nullptr;
-    log_e("BLEStream: unable to create teardown retry timer");
-    return false;
-  }
-  return true;
-}
-
 BLEStream::~BLEStream() {
   // end() already clears the callbacks this stream registered while it was
   // live (server: rxChr + server handlers, client: client handlers). Do not
   // clear them unconditionally here: after end() the server/client handles
   // may be shared with (or have been re-registered by) another owner, and
   // wiping their callbacks would break that owner.
-  auto common = _impl;
   end();
-  // An application-task destructor owns RAII completion, including retrying a
-  // transient native teardown failure or waiting for a previously deferred
-  // worker. Bound synchronous retries so a permanent controller failure cannot
-  // hang destruction forever. Callback-task destruction cannot block; its
-  // worker handoff retains both common and role until cleanup completes.
-  if (common && !bleStreamInCallbackTask()) {
-    for (uint8_t retry = 0; retry < 3 && common->loadRole(); retry++) {
-      auto role = common->loadRole();
-      if (role && role->endExecutorActive) {
-        break;
-      }
-      vTaskDelay(1);
-      end();
-    }
-    auto role = common->loadRole();
-    if (role && !role->endExecutorActive) {
-      log_e("BLEStream: quarantining teardown after bounded destructor retries");
-      Impl::quarantineEnd(common, role);
-    }
-  }
   _impl.reset();
-}
-
-static bool bleStreamInCallbackTask() {
-#if BLE_NIMBLE
-  return nimbleIsHostTask();
-#elif BLE_BLUEDROID
-  TaskHandle_t current = xTaskGetCurrentTaskHandle();
-  const char *name = current ? pcTaskGetName(current) : nullptr;
-  return name && strcmp(name, "BTC_TASK") == 0;
-#else
-  return false;
-#endif
 }
 
 bool BLEStream::Impl::startEndWorker(Impl *common) {
@@ -164,32 +110,6 @@ bool BLEStream::Impl::startEndWorker(Impl *common) {
   }
 #endif
   return xTaskCreate(endWorker, "ble-stream-end", 6144, common, 1, nullptr) == pdPASS;
-}
-
-bool BLEStream::Impl::scheduleEndRetry(Impl *common) {
-  if (!common || !common->endRetryTimer) {
-    return false;
-  }
-  auto &state = recoveryState();
-  BLELockGuard recoveryLock(state.mtx);
-  if (state.hostShuttingDown.load(std::memory_order_relaxed)) {
-    return false;
-  }
-  uint8_t retry;
-  BLELockGuard lock(common->roleMtx);
-  if (++common->endRetryCount > 4) {
-    return false;
-  }
-  retry = common->endRetryCount;
-  if (common->endRetryArmed) {
-    esp_timer_stop(common->endRetryTimer);
-    common->endRetryArmed = false;
-  }
-  if (esp_timer_start_once(common->endRetryTimer, static_cast<uint64_t>(10000) << (retry - 1)) != ESP_OK) {
-    return false;
-  }
-  common->endRetryArmed = true;
-  return true;
 }
 
 bool BLEStream::Impl::claimEnd(
@@ -299,13 +219,10 @@ void BLEStream::Impl::completeEnd(
   if (common->role != role) {
     return;
   }
-  common->peerCount = 0;
   common->role.reset();
   if (common->deferredRole == role) {
     common->deferredRole.reset();
     common->deferredSelf.reset();
-    common->endRetryArmed = false;
-    common->endRetryCount = 0;
   }
   // Keep the registry gate closed while releasing the executor's final native
   // owner. In particular, a BlueDroid client Role destructor unregisters its
@@ -329,13 +246,10 @@ void BLEStream::Impl::quarantineEnd(const std::shared_ptr<Impl> &common, const s
   retainEnd(common);
   role->detachCallbacks();
   role->endExecutorActive = false;
-  common->peerCount = 0;
   BLELockGuard lock(common->roleMtx);
   if (common->deferredRole == role) {
     common->deferredRole.reset();
     common->deferredSelf.reset();
-    common->endRetryArmed = false;
-    common->endRetryCount = 0;
   }
 }
 
@@ -422,27 +336,9 @@ void BLEStream::Impl::prepareHostShutdown() {
       }
     }
   }
-  // Cancel every dormant retry without holding the registry lock while an
-  // executor may need it to publish completion.
-  for (const auto &common : entries) {
-    if (common && common->endRetryTimer) {
-      esp_timer_stop_blocking(common->endRetryTimer, portMAX_DELAY);
-      BLELockGuard commonLock(common->roleMtx);
-      // A fired callback clears this before trying to start a worker. If it is
-      // still set after stop_blocking, shutdown canceled a dormant timer and
-      // therefore owns the executor claim.
-      if (common->endRetryArmed) {
-        common->endRetryArmed = false;
-        if (common->role) {
-          common->role->endExecutorActive = false;
-        }
-      }
-    }
-  }
-
   // Native teardown workers may be waiting on stack completion, so let them
   // finish while the host is still running. Once shutdown is set they cannot
-  // enqueue another worker/timer and instead settle into quarantine.
+  // enqueue another worker and instead settle into quarantine.
   for (;;) {
     bool active = false;
     {
@@ -474,36 +370,13 @@ void BLEStream::Impl::releaseQuarantined() {
     }
     role->detachCallbacks();
     role->endExecutorActive = false;
-    common->peerCount = 0;
     common->clearRole(role);
     BLELockGuard commonLock(common->roleMtx);
     common->deferredRole.reset();
     common->deferredSelf.reset();
-    common->endRetryCount = 0;
   }
   state.entries.clear();
   state.hostShuttingDown.store(false, std::memory_order_release);
-}
-
-void BLEStream::Impl::endRetryTimerCb(void *arg) {
-  auto *raw = static_cast<Impl *>(arg);
-  std::shared_ptr<Impl> common;
-  std::shared_ptr<Role> role;
-  {
-    BLELockGuard lock(raw ? raw->roleMtx : nullptr);
-    if (raw) {
-      common = raw->deferredSelf;
-      role = raw->deferredRole;
-      raw->endRetryArmed = false;
-    }
-  }
-  if (!common || !role) {
-    return;
-  }
-  if (!startEndWorker(common.get()) && !scheduleEndRetry(common.get())) {
-    log_e("BLEStream: deferred teardown retry limit reached");
-    quarantineEnd(common, role);
-  }
 }
 
 void BLEStream::Impl::endWorker(void *arg) {
@@ -522,17 +395,27 @@ void BLEStream::Impl::endWorker(void *arg) {
       }
     }
     if (common && role) {
-      BTStatus status;
+      BTStatus status = BTStatus::Fail;
+      for (uint8_t retry = 0; retry < kEndRetryLimit; ++retry) {
+        if (recoveryState().hostShuttingDown.load(std::memory_order_relaxed)) {
+          quarantineEnd(common, role);
+          break;
+        }
 #if defined(BLE_STREAM_VALIDATION_HOOKS)
-      status = consumeValidationFailure(bleStreamTestTeardownFailures) ? BTStatus::Busy : role->end();
+        status = consumeValidationFailure(bleStreamTestTeardownFailures) ? BTStatus::Busy : role->end();
 #else
-      status = role->end();
+        status = role->end();
 #endif
-      if (status) {
-        completeEnd(common, role);
-      } else if (!scheduleEndRetry(common.get())) {
-        log_e("BLEStream: deferred teardown quarantined (%s)", status.toString());
-        quarantineEnd(common, role);
+        if (status) {
+          completeEnd(common, role);
+          break;
+        }
+        if (retry + 1 == kEndRetryLimit) {
+          log_e("BLEStream: deferred teardown quarantined (%s)", status.toString());
+          quarantineEnd(common, role);
+          break;
+        }
+        vTaskDelay(pdMS_TO_TICKS(10u << retry));
       }
     }
   }
@@ -560,14 +443,13 @@ void BLEStream::end() {
   // begin() remains closed because the ending role stays installed. If either
   // allocation fails, keep it closed and make end() retryable rather than
   // silently exposing a half-torn-down stream.
-  if (bleStreamInCallbackTask()) {
+  if (bleInStackCallbackTask()) {
     {
       BLELockGuard lock(common->roleMtx);
       common->deferredSelf = common;
       common->deferredRole = role;
-      common->endRetryCount = 0;
     }
-    if (!Impl::startEndWorker(common.get()) && !Impl::scheduleEndRetry(common.get())) {
+    if (!Impl::startEndWorker(common.get())) {
       log_e("BLEStream: unable to defer callback-context teardown");
       Impl::quarantineEnd(common, role);
     }
