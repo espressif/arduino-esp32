@@ -939,30 +939,52 @@ function build_sketch_list {
     local succeeded=0
     local failed=0
     local first_failure=0
+    local success_indices=()
+    local failure_indices=()
     local result_index
     for ((result_index = 1; result_index <= index; result_index++)); do
         local result=1
         if [ -f "$work_dir/status.$result_index" ]; then
             result=$(cat "$work_dir/status.$result_index")
         fi
-        local result_name
-        result_name=$(cat "$work_dir/name.$result_index")
-        printf '\n===== Build log: %s =====\n' "$result_name"
-        cat "$work_dir/log.$result_index"
         if [ -n "$log_compilation" ] && [ -f "$work_dir/sizes.$result_index" ]; then
             cat "$work_dir/sizes.$result_index" >> "$aggregate_sizes_file"
         fi
         if [ "$result" -eq 0 ]; then
             succeeded=$((succeeded + 1))
+            success_indices+=("$result_index")
         else
             failed=$((failed + 1))
+            failure_indices+=("$result_index")
             if [ "$first_failure" -eq 0 ]; then
                 first_failure=$result
             fi
-            printf 'FAILED: %s (exit %s)\n' "$result_name" "$result" >&2
         fi
     done
+
+    local idx
+    if [ "${#success_indices[@]}" -gt 0 ]; then
+        for idx in "${success_indices[@]}"; do
+            printf '\n===== Build log: %s =====\n' "$(cat "$work_dir/name.$idx")"
+            cat "$work_dir/log.$idx"
+        done
+    fi
+    if [ "${#failure_indices[@]}" -gt 0 ]; then
+        for idx in "${failure_indices[@]}"; do
+            printf '\n===== Build log: %s =====\n' "$(cat "$work_dir/name.$idx")"
+            cat "$work_dir/log.$idx"
+        done
+    fi
     printf '\nParallel build summary: %s succeeded, %s failed\n' "$succeeded" "$failed"
+    if [ "${#failure_indices[@]}" -gt 0 ]; then
+        for idx in "${failure_indices[@]}"; do
+            local result=1
+            if [ -f "$work_dir/status.$idx" ]; then
+                result=$(cat "$work_dir/status.$idx")
+            fi
+            printf 'FAILED: %s (exit %s)\n' "$(cat "$work_dir/name.$idx")" "$result"
+        done
+    fi
     _cleanup_parallel_workers
     _restore_trap INT "$saved_int_trap"
     _restore_trap TERM "$saved_term_trap"

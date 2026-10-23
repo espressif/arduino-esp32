@@ -377,6 +377,34 @@ def test_parallel_failures_aggregate_with_deterministic_logs(tmp_path: Path) -> 
     assert combined.index("Build log: " + str(sketches[1])) < combined.index(
         "Build log: " + str(sketches[2])
     )
+    summary_at = combined.index("Parallel build summary: 1 succeeded, 2 failed")
+    assert combined.index("FAILED: " + str(sketches[1])) > summary_at
+    assert combined.index("FAILED: " + str(sketches[2])) > summary_at
+    assert combined.rindex("FAILED:") > combined.rindex(
+        "Build log: " + str(sketches[2])
+    )
+
+
+def test_parallel_failure_logs_follow_success_logs(tmp_path: Path) -> None:
+    repo, env = _make_repo(tmp_path)
+    sketches = [
+        _make_sketch(repo / "tests", name) for name in ("fail-one", "ok", "fail-two")
+    ]
+    sketch_list = tmp_path / "sketches.list"
+    _write_list(sketch_list, sketches)
+    env["BUILD_TEST_FAILURES"] = "fail-one,fail-two"
+
+    result = _run(_build_list_command(repo, sketch_list, 3), repo, env)
+    stdout = result.stdout
+
+    assert result.returncode == 7
+    ok_log = stdout.index("Build log: " + str(sketches[1]))
+    fail_one_log = stdout.index("Build log: " + str(sketches[0]))
+    fail_two_log = stdout.index("Build log: " + str(sketches[2]))
+    summary = stdout.index("Parallel build summary: 1 succeeded, 2 failed")
+    assert ok_log < fail_one_log < fail_two_log < summary
+    assert stdout.index("FAILED: " + str(sketches[0])) > summary
+    assert stdout.index("FAILED: " + str(sketches[2])) > summary
 
 
 def test_worker_exit_without_status_is_detected_and_synthesized(tmp_path: Path) -> None:
@@ -1010,7 +1038,10 @@ def test_on_push_propagates_parallel_worker_failures(tmp_path: Path) -> None:
     assert (
         f"Parallel build summary: 0 succeeded, {len(sketches)} failed" in result.stdout
     )
-    assert result.stderr.count("FAILED:") == len(sketches)
+    assert result.stdout.count("FAILED:") == len(sketches)
+    assert result.stdout.rindex("FAILED:") > result.stdout.rindex(
+        "Parallel build summary:"
+    )
 
 
 @pytest.mark.parametrize("jobs", ["0", "-1", "invalid"])

@@ -17,8 +17,10 @@ from __future__ import annotations
 import base64
 import hashlib
 import io
+import os
 import shutil
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -1309,20 +1311,54 @@ def _bundle_bytes() -> bytes:
     return base64.standard_b64decode("".join(_BUNDLE_CHUNKS))
 
 
+def _extract_bundle(dest: Path) -> None:
+    dest.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(io.BytesIO(_bundle_bytes()), "r") as zf:
+        zf.extractall(dest)
+    (dest / ".ok").write_text("1", encoding="ascii")
+
+
 def _bundle_root() -> Path:
     digest = hashlib.sha256(_bundle_bytes()).hexdigest()[:20]
-    root = Path.home() / ".cache" / "arduino_cmake_portable" / digest
+    parent = Path.home() / ".cache" / "arduino_cmake_portable"
+    parent.mkdir(parents=True, exist_ok=True)
+    root = parent / digest
     marker = root / ".ok"
     init = root / "acmake" / "__init__.py"
     if marker.is_file() and init.is_file():
         return root
-    if root.exists():
-        shutil.rmtree(root, ignore_errors=True)
-    root.mkdir(parents=True, exist_ok=True)
-    data = _bundle_bytes()
-    with zipfile.ZipFile(io.BytesIO(data), "r") as zf:
-        zf.extractall(root)
-    marker.write_text("1", encoding="ascii")
+
+    tmp = Path(tempfile.mkdtemp(prefix="." + digest + ".tmp-", dir=parent))
+    try:
+        _extract_bundle(tmp)
+        try:
+            os.rename(tmp, root)
+            tmp = None
+        except OSError:
+            shutil.rmtree(tmp, ignore_errors=True)
+            tmp = None
+            if marker.is_file() and init.is_file():
+                return root
+            stale = parent / ("." + digest + ".stale-" + str(os.getpid()))
+            try:
+                os.rename(root, stale)
+            except OSError:
+                if marker.is_file() and init.is_file():
+                    return root
+                raise RuntimeError(
+                    "portable acmake cache exists but is incomplete: " + str(root)
+                ) from None
+            shutil.rmtree(stale, ignore_errors=True)
+            tmp = Path(tempfile.mkdtemp(prefix="." + digest + ".tmp-", dir=parent))
+            _extract_bundle(tmp)
+            os.rename(tmp, root)
+            tmp = None
+    except Exception:
+        if tmp is not None:
+            shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    if not (marker.is_file() and init.is_file()):
+        raise RuntimeError("failed to extract portable acmake into " + str(root))
     return root
 
 
