@@ -618,6 +618,19 @@ function logical_cpu_count {
     echo "$cpus"
 }
 
+function auto_sketch_jobs {
+    # Leave about half the cores for inner Ninja. Using every logical CPU as a
+    # sketch worker forces CMAKE_BUILD_PARALLEL_LEVEL=1 and is slower than
+    # master's serial sketches with a warm CMake dir and Ninja -jN.
+    local cpus
+    cpus=$(logical_cpu_count)
+    local jobs=$((cpus / 2))
+    if [ "$jobs" -lt 1 ]; then
+        jobs=1
+    fi
+    echo "$jobs"
+}
+
 function remove_trailing_comma {
     local file=$1
     local temp_file
@@ -925,7 +938,9 @@ function build_sketch_list {
                 worker_env+=("CMAKE_BUILD_PARALLEL_LEVEL=$inner_jobs")
             fi
             if [ "$isolated_build_dirs" -eq 1 ]; then
-                worker_env+=("ARDUINO_BUILD_DIR=$work_dir/build.$index")
+                # Reuse one CMake dir per worker slot so later sketches keep a
+                # warm configure/cache, matching master's shared ARDUINO_BUILD_DIR.
+                worker_env+=("ARDUINO_BUILD_DIR=$work_dir/build.slot.$free_slot")
             fi
             env "${worker_env[@]}" \
                 "$script_path" build "${build_args[@]}" --skip-install -s "$sketchdir" "${xtra_opts[@]}" &
@@ -1414,6 +1429,7 @@ Available commands:
     check_requirements: Check if target meets sketch requirements.
     platform_build_allowed: Check whether ci.yml allows a platform/target build.
     logical_cpu_count: Print the available logical CPU count.
+    auto_sketch_jobs: Print the default sketch-job count (half the logical CPUs, at least 1).
     remove_trailing_comma: Portably remove a trailing comma from a file's last line.
     install_libs: Install libraries from ci.yml file.
     default_upload_test_fqbn: Print default mock-upload FQBN for a SoC (target [pkg_prefix]).
@@ -1442,6 +1458,8 @@ case "$cmd" in
     "platform_build_allowed") platform_build_allowed "$@"
     ;;
     "logical_cpu_count") logical_cpu_count
+    ;;
+    "auto_sketch_jobs") auto_sketch_jobs
     ;;
     "remove_trailing_comma") remove_trailing_comma "$@"
     ;;

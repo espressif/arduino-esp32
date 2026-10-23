@@ -270,15 +270,15 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 
 **Environment Variables:**
 - `MAX_CHUNKS=15` - Maximum parallel build jobs
-- `SKETCH_BUILD_JOBS=auto` - Concurrent sketches per runner. `auto` uses the available logical CPU count; set a
-  positive integer to cap concurrency, or `1` to restore serial execution.
+- `SKETCH_BUILD_JOBS=auto` - Concurrent sketches per runner. `auto` uses half the available logical CPUs (at least 1)
+  so inner Ninja keeps the rest; set a positive integer to cap concurrency, or `1` to restore serial execution.
 
 **Key Features:**
 - **Intelligent chunking**: Only rebuilds affected sketches
 - **Two-level Linux parallelism**: Up to 15 chunk jobs, each building up to `SKETCH_BUILD_JOBS` sketches concurrently
 - **Cross-platform parallelism**: The Windows and macOS preset matrices use the same bounded sketch scheduler
-- **Safe build isolation**: Parallel workers use temporary per-sketch build directories while sharing ACmake's
-  concurrency-safe immutable cache. Duplicate sketch basenames cannot collide.
+- **Safe build isolation**: Parallel workers use temporary per-slot build directories (reused across sketches on
+  that worker) while sharing ACmake's concurrency-safe immutable cache. Duplicate sketch basenames cannot collide.
 - **CPU budgeting**: Inner Ninja parallelism is reduced automatically as outer sketch concurrency increases
 - **Dependency tracking**: Uses ctags for accurate change detection
 - **Size reports**: Generates JSON with sketch sizes for comparison

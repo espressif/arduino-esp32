@@ -10,7 +10,7 @@ export ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
 SKETCH_BUILD_JOBS="${SKETCH_BUILD_JOBS:-auto}"
 
 if [ "$SKETCH_BUILD_JOBS" = "auto" ]; then
-    SKETCH_BUILD_JOBS=$("${SCRIPTS_DIR}/sketch_utils.sh" logical_cpu_count)
+    SKETCH_BUILD_JOBS=$("${SCRIPTS_DIR}/sketch_utils.sh" auto_sketch_jobs)
 fi
 
 if ! [[ "$SKETCH_BUILD_JOBS" =~ ^[1-9][0-9]*$ ]]; then

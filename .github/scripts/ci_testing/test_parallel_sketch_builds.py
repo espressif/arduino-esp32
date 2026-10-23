@@ -139,6 +139,15 @@ def _run(
     )
 
 
+def _fake_logical_cpus(tmp_path: Path, env: dict[str, str], count: int) -> None:
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir(exist_ok=True)
+    getconf = fake_bin / "getconf"
+    getconf.write_text(f"#!/bin/sh\necho {count}\n", encoding="utf-8")
+    getconf.chmod(0o755)
+    env["PATH"] = f"{fake_bin}:{env['PATH']}"
+
+
 def _make_sketch(root: Path, name: str, ci_yml: str | None = None) -> Path:
     sketch = root / name
     sketch.mkdir(parents=True)
@@ -601,6 +610,28 @@ def test_isolated_parallel_build_dirs_allow_shared_override_and_duplicate_names(
     assert all(event["build_path"] != str(shared_override) for event in state["events"])
     assert not shared_override.exists()
     assert all(not Path(event["build_path"]).exists() for event in state["events"])
+    assert all("build.slot." in event["build_path"] for event in state["events"])
+
+
+def test_isolated_build_dirs_are_reused_per_worker_slot(tmp_path: Path) -> None:
+    repo, env = _make_repo(tmp_path)
+    sketches = [_make_sketch(repo / "tests", f"sketch-{index}") for index in range(5)]
+    sketch_list = tmp_path / "sketches.list"
+    _write_list(sketch_list, sketches)
+
+    result = _run(
+        _build_list_command(repo, sketch_list, 2, isolated_build_dirs=True),
+        repo,
+        env,
+    )
+
+    assert result.returncode == 0, result.stderr
+    state = _state(env)
+    paths = {event["build_path"] for event in state["events"]}
+    assert state["max_active"] == 2
+    assert len(state["events"]) == 5
+    assert len(paths) == 2
+    assert all("build.slot." in path for path in paths)
 
 
 def test_parallel_build_handles_paths_with_spaces(tmp_path: Path) -> None:
@@ -638,12 +669,7 @@ def test_automatic_inner_budget_uses_cpu_count_divided_by_jobs(tmp_path: Path) -
     sketches = [_make_sketch(repo / "tests", name) for name in ("one", "two", "three")]
     sketch_list = tmp_path / "sketches.list"
     _write_list(sketch_list, sketches)
-    fake_bin = tmp_path / "bin"
-    fake_bin.mkdir()
-    getconf = fake_bin / "getconf"
-    getconf.write_text("#!/bin/sh\necho 8\n", encoding="utf-8")
-    getconf.chmod(0o755)
-    env["PATH"] = f"{fake_bin}:{env['PATH']}"
+    _fake_logical_cpus(tmp_path, env, 8)
 
     result = _run(_build_list_command(repo, sketch_list, 3), repo, env)
 
@@ -671,6 +697,23 @@ def test_logical_cpu_count_uses_windows_environment_fallback(tmp_path: Path) -> 
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "6"
+
+
+@pytest.mark.parametrize("cpus,expected", [(1, 1), (2, 1), (3, 1), (4, 2), (8, 4)])
+def test_auto_sketch_jobs_use_half_the_logical_cpus(
+    tmp_path: Path, cpus: int, expected: int
+) -> None:
+    repo, env = _make_repo(tmp_path)
+    _fake_logical_cpus(tmp_path, env, cpus)
+
+    result = _run(
+        [str(repo / ".github" / "scripts" / "sketch_utils.sh"), "auto_sketch_jobs"],
+        repo,
+        env,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == str(expected)
 
 
 def test_libraries_are_preinstalled_serially_once_before_workers(
@@ -889,7 +932,7 @@ def test_on_push_parallelizes_duplicate_names_with_isolated_build_dirs(
     assert {event["sketch"] for event in state["events"]} == {
         str(sketch) for sketch in sketches
     }
-    assert len({event["build_path"] for event in state["events"]}) == len(sketches)
+    assert len({event["build_path"] for event in state["events"]}) == 3
     assert all(
         event["build_path"] != str(Path(env["HOME"]) / ".arduino" / "build.tmp")
         for event in state["events"]
@@ -921,7 +964,7 @@ def test_on_push_parallelizes_non_linux_presets(tmp_path: Path, os_name: str) ->
     assert {event["sketch"] for event in state["events"]} == {
         str(sketch) for sketch in sketches
     }
-    assert len({event["build_path"] for event in state["events"]}) == len(sketches)
+    assert len({event["build_path"] for event in state["events"]}) == 2
     assert all(not Path(event["build_path"]).exists() for event in state["events"])
 
     pref_args = [
@@ -961,17 +1004,11 @@ def test_on_push_non_linux_jobs_one_preserves_shared_build_dir(
     }
 
 
-def test_on_push_auto_jobs_match_available_logical_cpus(tmp_path: Path) -> None:
+def test_on_push_auto_jobs_use_half_the_logical_cpus(tmp_path: Path) -> None:
     repo, env = _make_repo(tmp_path)
     selected, sketches = _prepare_push_repo(repo)
     env["SKETCH_BUILD_JOBS"] = "auto"
-    cpu_result = _run(
-        [str(repo / ".github" / "scripts" / "sketch_utils.sh"), "logical_cpu_count"],
-        repo,
-        env,
-    )
-    assert cpu_result.returncode == 0, cpu_result.stderr
-    logical_cpus = int(cpu_result.stdout.strip())
+    _fake_logical_cpus(tmp_path, env, 4)
 
     result = _run(
         [
@@ -988,7 +1025,9 @@ def test_on_push_auto_jobs_match_available_logical_cpus(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert _state(env)["max_active"] == min(logical_cpus, len(sketches))
+    assert _state(env)["max_active"] == 2
+    assert "inner ninja 2" in result.stdout
+    assert len(sketches) == 4
 
 
 def test_on_push_jobs_one_preserves_shared_build_dir(tmp_path: Path) -> None:
