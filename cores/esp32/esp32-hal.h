@@ -132,6 +132,7 @@ void yield(void);
 #include "esp32-hal-cpu.h"
 #include "esp32-hal-hosted.h"
 
+// value must be non-negative: 0 (off) to (2^resolution)-1 (on). Default 8-bit: 0..255.
 void analogWrite(uint8_t pin, int value);
 void analogWriteFrequency(uint8_t pin, uint32_t freq);
 void analogWriteResolution(uint8_t pin, uint8_t bits);
