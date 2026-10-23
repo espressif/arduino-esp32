@@ -460,6 +460,8 @@ void ZigbeeEP::setHardwareVersion(uint8_t version) {
 
 bool ZigbeeEP::setDeviceEnabled(bool enabled) {
   _device_enabled = enabled;
+  // Before addEndpoint/begin: adds the Basic attr if missing (same pattern as setManufacturerAndModel).
+  // After begin: updates the live attr — call once before begin if you need runtime toggles.
   return configureEpClusterAttr(
     "setDeviceEnabled", EZB_ZCL_CLUSTER_ID_BASIC, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BASIC_DEVICE_ENABLED_ID, (void *)&_device_enabled,
     ezb_zcl_basic_cluster_desc_add_attr

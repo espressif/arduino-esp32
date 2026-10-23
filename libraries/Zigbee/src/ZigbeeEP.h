@@ -102,7 +102,7 @@ public:
   bool setManufacturerAndModel(const char *name, const char *model);
 
   // Basic cluster DeviceEnabled (0x0012). When false, the stack ignores ZCL commands on this endpoint.
-  // Can be called before or after begin(); attribute is added if missing.
+  // Call once before Zigbee.addEndpoint() to create the attribute; afterward set/get work across begin().
   bool setDeviceEnabled(bool enabled);
   bool getDeviceEnabled();
 

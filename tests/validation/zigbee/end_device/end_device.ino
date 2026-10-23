@@ -17,6 +17,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include <Zigbee.h>
+#include <Preferences.h>
 #include <unity.h>
 
 #define ZB_TIMEOUT_MS      30000
@@ -82,9 +83,24 @@ void test_end_device_config(void) {
   esp_zigbee_radio_config_t radio = Zigbee.getRadioConfig();
   TEST_ASSERT_EQUAL(ESP_ZIGBEE_RADIO_MODE_NATIVE, radio.radio_mode);
 
+  // Preferences must survive role(..., true) — only the "zigbee" NVS namespace is erased.
+  {
+    Preferences prefs;
+    TEST_ASSERT_TRUE(prefs.begin("zbvalnvs", false));
+    TEST_ASSERT_TRUE(prefs.putUChar("mark", 0xA5));
+    prefs.end();
+  }
+
   TEST_ASSERT_TRUE_MESSAGE(Zigbee.role(ZIGBEE_END_DEVICE, true), "role() failed");
   TEST_ASSERT_TRUE_MESSAGE(Zigbee.initialized(), "role() must initialize the stack");
   TEST_ASSERT_TRUE_MESSAGE(Zigbee.role(ZIGBEE_END_DEVICE), "duplicate role() must succeed");
+
+  {
+    Preferences prefs;
+    TEST_ASSERT_TRUE(prefs.begin("zbvalnvs", true));
+    TEST_ASSERT_EQUAL_UINT8(0xA5, prefs.getUChar("mark", 0));
+    prefs.end();
+  }
 }
 
 // ==================== Endpoints (before begin) ====================
@@ -160,6 +176,16 @@ void test_end_device_temp_sensor(void) {
   TEST_ASSERT_TRUE_MESSAGE(Zigbee.connected(), "must be joined before sensor tests");
 
   TEST_ASSERT_TRUE(zbTemp.setReporting(1, 300, 0.5f));
+  // Toggle reporting DefaultRsp, then leave enabled for confirmation-friendly reports.
+  TEST_ASSERT_TRUE(zbTemp.setReportingDefaultResponse(
+    EZB_ZCL_CLUSTER_ID_TEMPERATURE_MEASUREMENT, EZB_ZCL_ATTR_TEMPERATURE_MEASUREMENT_MEASURED_VALUE_ID, true
+  ));
+  TEST_ASSERT_TRUE(zbTemp.setReportingDefaultResponse(
+    EZB_ZCL_CLUSTER_ID_TEMPERATURE_MEASUREMENT, EZB_ZCL_ATTR_TEMPERATURE_MEASUREMENT_MEASURED_VALUE_ID, false
+  ));
+  TEST_ASSERT_TRUE(zbTemp.setReportingDefaultResponse(
+    EZB_ZCL_CLUSTER_ID_TEMPERATURE_MEASUREMENT, EZB_ZCL_ATTR_TEMPERATURE_MEASUREMENT_MEASURED_VALUE_ID, true
+  ));
   TEST_ASSERT_TRUE(zbTemp.setTemperature(22.5f));
   TEST_ASSERT_TRUE(zbTemp.reportTemperature());
 }

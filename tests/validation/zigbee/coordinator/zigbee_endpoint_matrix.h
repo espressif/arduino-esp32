@@ -67,6 +67,10 @@ static ZigbeeRangeExtender epRangeExt(ZB_EP_RANGE_EXT);
 
 static bool register_all_zigbee_endpoints(void) {
   epLight.setManufacturerAndModel("Espressif", "ZBValLight");
+  // Install Basic DeviceEnabled so deep tests can toggle it after begin().
+  if (!epLight.setDeviceEnabled(true)) {
+    return false;
+  }
   if (!Zigbee.addEndpoint(&epLight)) {
     return false;
   }

@@ -60,9 +60,11 @@ Sets the hardware version for the endpoint. The value is added to the Basic clus
 setDeviceEnabled
 ^^^^^^^^^^^^^^^^
 
-Sets the Basic cluster ``DeviceEnabled`` attribute (0x0012). When ``false``, the Zigbee stack ignores ZCL commands on this endpoint (the device stays on the network). The attribute is added if it is not already present. Can be called before or after ``Zigbee.begin()``.
+Sets the Basic cluster ``DeviceEnabled`` attribute (0x0012). When ``false``, the Zigbee stack ignores ZCL commands on this endpoint (the device stays on the network).
 
-Useful for soft on/off of an endpoint without leaving the network: maintenance mode, temporarily ignoring hub commands while calibrating a sensor, or disabling a unused secondary endpoint on a multi-EP device. A coordinator or other client can also write this attribute remotely if it is exposed.
+Call once **before** ``Zigbee.addEndpoint()`` to add the attribute to the endpoint descriptor (same pattern as ``setManufacturerAndModel()``). After that, ``setDeviceEnabled()`` / ``getDeviceEnabled()`` work before and after ``Zigbee.begin()``. If the attribute was never added, a call after ``begin()`` returns ``false``.
+
+Useful for soft on/off of an endpoint without leaving the network: maintenance mode, temporarily ignoring hub commands while calibrating a sensor, or disabling an unused secondary endpoint on a multi-EP device. A coordinator or other client can also write this attribute remotely once it is exposed.
 
 .. code-block:: arduino
 
