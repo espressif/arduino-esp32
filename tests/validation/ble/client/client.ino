@@ -1023,7 +1023,7 @@ void setup() {
   std::atomic<int> indicCount{0};
 
   BTStatus subStatus =
-    notifyChr.subscribe(BLESubscription::Notify, [&notifReceived, &notifPayload](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, BLERemoteCharacteristic::Delivery) {
+    notifyChr.subscribe(BLESubscription::Notify, [&notifReceived, &notifPayload](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, BLESubscription) {
       syncPhaseFromHost();
       notifPayload = String((const char *)data, length);
       notifReceived = true;
@@ -1056,7 +1056,7 @@ void setup() {
 
   subStatus = indicateChr.subscribe(
     BLESubscription::Indicate,
-    [&indicReceived, &indicPayload, &indicLog, &indicCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, BLERemoteCharacteristic::Delivery) {
+    [&indicReceived, &indicPayload, &indicLog, &indicCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, BLESubscription) {
       syncPhaseFromHost();
       int n = indicCount;
       if (n == 0) {
@@ -1108,10 +1108,10 @@ void setup() {
     std::atomic<int> dualNotifCount{0};
     BTStatus ds = dualChr.subscribe(
       BLESubscription::Notify | BLESubscription::Indicate,
-      [&dualInd, &dualNotif, &dualIndCount, &dualNotifCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, BLERemoteCharacteristic::Delivery kind) {
+      [&dualInd, &dualNotif, &dualIndCount, &dualNotifCount](BLERemoteCharacteristic chr, const uint8_t *data, size_t length, BLESubscription kind) {
         syncPhaseFromHost();
         String v((const char *)data, length);
-        if (kind == BLERemoteCharacteristic::Delivery::Notification) {
+        if (kind == BLESubscription::Notify) {
           int n = dualNotifCount;
           if (n < kDualMax) {
             dualNotif[n] = v;
@@ -3872,7 +3872,7 @@ void setup() {
             svcSubStatus = svcChanged.subscribe(
               BLESubscription::Indicate,
               [&svcChangedRx, &svcChangedPayload4, &svcChangedFullRange](
-                BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery
+                BLERemoteCharacteristic, const uint8_t *data, size_t len, BLESubscription
               ) {
                 svcChangedRx.fetch_add(1, std::memory_order_relaxed);
                 svcChangedPayload4 = len == 4;
@@ -3885,7 +3885,7 @@ void setup() {
         BLERemoteCharacteristic bc = svc ? svc.getCharacteristic(busyCharUUID) : BLERemoteCharacteristic();
         BTStatus sub = bc ? bc.subscribe(
                               BLESubscription::Indicate,
-                              [&busyIndCount, &busyIndLog](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
+                              [&busyIndCount, &busyIndLog](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLESubscription) {
                                 int n = busyIndCount.load(std::memory_order_relaxed);
                                 if (n < 3) {
                                   busyIndLog[n] = String((const char *)data, len);
@@ -3910,7 +3910,7 @@ void setup() {
         BTStatus resub = bc ? bc.subscribe(
                                 BLESubscription::Indicate,
                                 [&busyIndCount, &busyIndLog](
-                                  BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery
+                                  BLERemoteCharacteristic, const uint8_t *data, size_t len, BLESubscription
                                 ) {
                                   int n = busyIndCount.load(std::memory_order_relaxed);
                                   if (n < 3) {
@@ -4045,9 +4045,9 @@ void setup() {
                                                       &callbackCommandAccepted, &callbackCommandBusy,
                                                       &callbackCommandOther, phase35Bluedroid](
                                                         BLERemoteCharacteristic chr, const uint8_t *, size_t,
-                                                        BLERemoteCharacteristic::Delivery kind
+                                                        BLESubscription kind
                                                       ) {
-      if (kind == BLERemoteCharacteristic::Delivery::Notification) {
+      if (kind == BLESubscription::Notify) {
         bool expected = false;
         if (callbackCommandAttempted.compare_exchange_strong(expected, true)) {
           const int attempts = phase35Bluedroid ? 10 : 9;
@@ -4098,7 +4098,7 @@ void setup() {
         if (queue) {
           (void)queue.subscribe(
             BLESubscription::Indicate,
-            [&queueIndicate](BLERemoteCharacteristic, const uint8_t *, size_t, BLERemoteCharacteristic::Delivery) {
+            [&queueIndicate](BLERemoteCharacteristic, const uint8_t *, size_t, BLESubscription) {
               queueIndicate.fetch_add(1, std::memory_order_relaxed);
             }
           );

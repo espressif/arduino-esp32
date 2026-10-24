@@ -1247,7 +1247,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
         BLERemoteCharacteristic chrHandle = BLERemoteCharacteristicImplCommon::makeHandle(chrShared);
         onNotifyCb(
           chrHandle, param->notify.value, param->notify.value_len,
-          param->notify.is_notify ? BLERemoteCharacteristic::Delivery::Notification : BLERemoteCharacteristic::Delivery::Indication
+          param->notify.is_notify ? BLESubscription::Notify : BLESubscription::Indicate
         );
       }
       break;
@@ -1306,7 +1306,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
           svcChgChr->value.assign(range, range + sizeof(range));
         }
         BLERemoteCharacteristic chrHandle = BLERemoteCharacteristicImplCommon::makeHandle(svcChgChr);
-        svcChgCb(chrHandle, range, sizeof(range), BLERemoteCharacteristic::Delivery::Indication);
+        svcChgCb(chrHandle, range, sizeof(range), BLESubscription::Indicate);
       }
       break;
     }

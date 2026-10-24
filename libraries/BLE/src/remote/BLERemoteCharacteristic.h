@@ -161,18 +161,13 @@ public:
    */
   bool canBroadcast() const;
 
-  /** @brief How a server-initiated value was delivered to the client. */
-  enum class Delivery : uint8_t {
-    Notification,  ///< Handle Value Notification (unacknowledged).
-    Indication,    ///< Handle Value Indication (acknowledged by the client).
-  };
-
   /**
    * @brief Callback type for characteristic notifications and indications.
    * @param chr    The characteristic that received the value.
    * @param data   Pointer to the payload.
    * @param length Length of the payload in bytes.
-   * @param kind   Whether the value arrived as a notification or an indication.
+   * @param kind   @ref BLESubscription::Notify or @ref BLESubscription::Indicate
+   *               for this ATT PDU. Never @ref BLESubscription::None and never both bits.
    * @note Runs on the BLE stack task. Do not call blocking GATT operations
    *       (@c readValue(), confirmed @c writeValue(), @c subscribe()) on @p chr
    *       here: they wait for a response that this same task delivers, so they
@@ -184,7 +179,7 @@ public:
    *       the conservative full range `01 00 FF FF`; rediscover services
    *       before using any prior remote handle.
    */
-  using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, Delivery)>;
+  using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, BLESubscription)>;
 
   /**
    * @brief Subscribe to server-initiated deliveries from this characteristic.

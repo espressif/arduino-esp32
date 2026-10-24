@@ -976,7 +976,7 @@ void BLERemoteCharacteristic::Impl::handleNotifyRx(uint16_t connHandle, uint16_t
 
   if (cb) {
     BLERemoteCharacteristic chr = BLERemoteCharacteristicImplCommon::makeHandle(implPtr);
-    cb(chr, dataPtr, len, isNotify ? Delivery::Notification : Delivery::Indication);
+    cb(chr, dataPtr, len, isNotify ? BLESubscription::Notify : BLESubscription::Indicate);
   }
 }
 

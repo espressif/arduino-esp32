@@ -40,7 +40,7 @@ BLEClient client;
 volatile bool targetFound = false;
 volatile bool isConnected = false;
 
-static void onNotify(BLERemoteCharacteristic chr, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery kind) {
+static void onNotify(BLERemoteCharacteristic chr, const uint8_t *data, size_t len, BLESubscription kind) {
   if (len == sizeof(GamepadReport)) {
     auto *rpt = reinterpret_cast<const GamepadReport *>(data);
     Serial.printf("X=%4d  Y=%4d  Buttons=0x%02X [", rpt->x, rpt->y, rpt->buttons);

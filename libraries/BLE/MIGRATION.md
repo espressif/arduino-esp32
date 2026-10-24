@@ -866,7 +866,7 @@ BLERemoteService svc = client.getService(SVC_UUID);
 BLERemoteCharacteristic chr = svc.getCharacteristic(CHR_UUID);
 String val = chr.readValue();
 chr.writeValue("hello");
-chr.subscribe(BLESubscription::Notify, [](BLERemoteCharacteristic &c, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery kind) {
+chr.subscribe(BLESubscription::Notify, [](BLERemoteCharacteristic &c, const uint8_t *data, size_t len, BLESubscription kind) {
     Serial.printf("Notification: %.*s\n", len, data);
 });
 ```

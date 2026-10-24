@@ -23,13 +23,15 @@
 #include "types/BLEProperty.h"
 
 /**
- * @brief Which server-initiated deliveries a GATT client subscribes to.
+ * @brief Which server-initiated deliveries a GATT client subscribes to,
+ *        and which ATT PDU arrived in a subscribe callback.
  *
  * The two values are independent bits of the Client Characteristic
  * Configuration Descriptor (0x2902; Bluetooth Core Spec Vol 3, Part G,
  * §3.3.3.3): a characteristic that declares both the Notify and Indicate
  * properties may be sent either way, and the server chooses per
- * transmission. Combine with bitwise OR to receive both:
+ * transmission. Combine with bitwise OR to receive both. A subscribe
+ * callback reports exactly one of @ref Notify or @ref Indicate:
  *
  * @code
  * chr.subscribe(BLESubscription::Notify | BLESubscription::Indicate, cb);

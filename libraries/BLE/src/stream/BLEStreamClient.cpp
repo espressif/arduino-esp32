@@ -197,7 +197,7 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
   BLEClient streamClient = active.client;
   status = active.remoteTx.subscribe(
     BLESubscription::Notify,
-    [common, streamClient](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLERemoteCharacteristic::Delivery) {
+    [common, streamClient](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLESubscription) {
       auto impl = common.lock();
       if (!impl || !data || len == 0) {
         return;
