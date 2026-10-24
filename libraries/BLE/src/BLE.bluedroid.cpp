@@ -43,6 +43,7 @@
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
 #include "core/BLETask.h"
+#include "core/BLEValidationHooks.h"
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
@@ -789,6 +790,9 @@ BLEServer BLEClass::createServer() {
       if (!server) {
         return;
       }
+      // Hold reAdvMtx across startAdvertising() so a concurrent stop() waits
+      // for this in-flight restart to finish, then issues a native stop.
+      BLELockGuard reAdv(server->reAdvMtx);
       const uint32_t armed = server->reAdvArmedEpoch.load(std::memory_order_acquire);
       if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
         return;
@@ -802,6 +806,12 @@ BLEServer BLEClass::createServer() {
         return;
       }
       if (restart && BLE.isInitialized()) {
+#if BLE_VALIDATION_HOOKS
+        if (BLEHooks.adv.holdReAdvStart.load(std::memory_order_acquire)) {
+          BLEHooks.adv.reAdvStartEntered.store(true, std::memory_order_release);
+          BLEValidationHooks::holdWhile(BLEHooks.adv.holdReAdvStart);
+        }
+#endif
         BLE.startAdvertising();
       }
     };

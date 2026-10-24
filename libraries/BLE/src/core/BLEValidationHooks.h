@@ -73,6 +73,13 @@ public:
     std::atomic<bool> holdPreemptResume{false};
     std::atomic<bool> preemptResumeEntered{false};
     std::atomic<uint32_t> resumeDurationMs{0};
+    std::atomic<bool> injectStaleExtStopComplete{false};
+    std::atomic<bool> injectStaleLegacyStopComplete{false};
+    std::atomic<bool> injectStalePeriodicStopComplete{false};
+    std::atomic<bool> advertisingAfterStaleStop{false};
+    std::atomic<bool> periodicRunningAfterStaleStop{false};
+    std::atomic<bool> holdReAdvStart{false};
+    std::atomic<bool> reAdvStartEntered{false};
   } adv;
 
   struct Client {

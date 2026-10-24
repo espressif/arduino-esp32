@@ -50,6 +50,17 @@
 #include <host/ble_gap.h>
 #if BLE_GATT_SERVER_SUPPORTED
 void nimbleCancelPendingReAdvertise();
+void nimbleInvalidatePendingReAdvertise();
+SemaphoreHandle_t nimbleReAdvertiseMutex();
+
+// Taken before nativeAdmission so stop() can wait out an in-flight
+// advertiseOnDisconnect start() without inverting the admission gate.
+struct ReAdvGuard {
+  BLELockGuard lock;
+  ReAdvGuard() : lock(nimbleReAdvertiseMutex()) {
+    nimbleInvalidatePendingReAdvertise();
+  }
+};
 #endif
 #include <esp_timer.h>
 #include <algorithm>
@@ -262,6 +273,9 @@ void BLEAdvertising::setScanFilter(bool scanWl, bool connWl) {
 
 void BLEAdvertising::reset() {
   BLE_CHECK_IMPL();
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (admission) {
     (void)stopBackend();
@@ -318,13 +332,13 @@ void BLEAdvertising::setScanResponseData(const BLEAdvertisementData &data) {
 
 BTStatus BLEAdvertising::start(uint32_t durationMs) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
   }
-#if BLE_GATT_SERVER_SUPPORTED
-  nimbleCancelPendingReAdvertise();
-#endif
   if (impl.isAdvertising.load()) {
     (void)stopBackend();
   }
@@ -554,6 +568,9 @@ static void bleAdvTestDeliverPreemptedComplete(void *arg) {
 // BLEAdvertising::stop().
 BTStatus BLEAdvertising::stop() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::OK;
@@ -578,11 +595,13 @@ BTStatus BLEAdvertising::stopBackend() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   impl.advSession.fetch_add(1, std::memory_order_relaxed);
 #if BLE_GATT_SERVER_SUPPORTED
-  // Cancel even when advertising is already down: connectable advertising
+  // Invalidate even when advertising is already down: connectable advertising
   // stops on connect, but advertiseOnDisconnect may still have a host-queue
   // restart pending. BLEStream::begin() then rebuilds GATT (ble_gatts_reset
-  // is EBUSY while GAP is active).
-  nimbleCancelPendingReAdvertise();
+  // is EBUSY while GAP is active). Callers that must wait out an in-flight
+  // restart take ReAdvGuard before admission; this path must not take that
+  // mutex while already holding the admission gate.
+  nimbleInvalidatePendingReAdvertise();
 #endif
   if (!impl.isAdvertising.load()) {
     return BTStatus::OK;
@@ -918,6 +937,9 @@ BTStatus BLEAdvertising::setExtInstanceAddress(uint8_t instance, const BTAddress
 
 BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, uint8_t maxEvents) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
@@ -949,6 +971,9 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
 
 BTStatus BLEAdvertising::stopExtended(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::OK;
@@ -982,6 +1007,9 @@ BTStatus BLEAdvertising::removeExtended(uint8_t instance) {
 
 BTStatus BLEAdvertising::clearExtended() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::OK;
@@ -1070,6 +1098,9 @@ BTStatus BLEAdvertising::setPeriodicAdvData(uint8_t instance, const BLEAdvertise
 
 BTStatus BLEAdvertising::startPeriodicAdv(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
@@ -1106,6 +1137,9 @@ BTStatus BLEAdvertising::startPeriodicAdv(uint8_t instance) {
 
 BTStatus BLEAdvertising::stopPeriodicAdv(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::OK;

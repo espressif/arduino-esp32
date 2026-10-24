@@ -81,8 +81,11 @@ struct BLEServer::Impl : BLEServerImplCommon {
 
   // Timer for deferred advertising restart (avoids blocking the BTC task).
   // Epoch is bumped by stop()/start() so a late timer callback cannot restart
-  // advertising after the application has taken over the set.
+  // advertising after the application has taken over the set. reAdvMtx
+  // serializes an in-flight timer callback's start() against a concurrent
+  // public stop() so stop() waits for GAP to come up and then stops it.
   esp_timer_handle_t advRestartTimer = nullptr;
+  SemaphoreHandle_t reAdvMtx = xSemaphoreCreateRecursiveMutex();
   std::atomic<uint32_t> reAdvEpoch{0};
   std::atomic<uint32_t> reAdvArmedEpoch{0};
 
@@ -97,6 +100,9 @@ struct BLEServer::Impl : BLEServerImplCommon {
       esp_timer_stop(indicationRetryTimer);
       esp_timer_delete(indicationRetryTimer);
     }
+    if (reAdvMtx) {
+      vSemaphoreDelete(reAdvMtx);
+    }
   }
 
   static BLEServer::Impl *s_instance;
@@ -110,5 +116,7 @@ struct BLEServer::Impl : BLEServerImplCommon {
  */
 bool bluedroidRegisterGattsApp(const std::shared_ptr<BLEServer::Impl> &server);
 void bluedroidCancelPendingReAdvertise();
+void bluedroidInvalidatePendingReAdvertise();
+SemaphoreHandle_t bluedroidReAdvertiseMutex();
 
 #endif /* BLE_BLUEDROID */

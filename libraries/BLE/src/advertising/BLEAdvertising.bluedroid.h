@@ -77,6 +77,16 @@ struct BLEAdvertising::Impl {
   static void durationTimerCb(void *arg);
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 
+  // Which GAP complete may give() advSync. Unmatched stop/clear completes must
+  // not release a waiter for a different command, and must not clear
+  // isAdvertising / periodicAdvRunning (a leftover stop after start would
+  // leave the radio up while stop() no-ops).
+  enum class AdvWait : uint8_t { None, LegacyStop, ExtStop, ExtClear, PeriodicStop };
+  std::atomic<AdvWait> advWait{AdvWait::None};
+  void armAdvWait(AdvWait event);
+  bool giveIfAdvWait(AdvWait event, BTStatus status);
+  BTStatus finishAdvWait();
+
 #if BLE5_SUPPORTED
   // --- BLE5 extended advertising (TX) per-instance state ---
   // The public "legacy" start()/stop() run over the extended API on a reserved
@@ -123,13 +133,6 @@ struct BLEAdvertising::Impl {
   // HCI_LE_Clear_Advertising_Sets. Clear is Command Disallowed while advertising
   // or periodic advertising is still enabled on any set (Vol 4, Part E, §7.8.60).
   void stopAllExtendedThenClear();
-  // Which GAP complete may give() advSync. Unmatched stop/clear/periodic-stop
-  // events must not release a waiter for a different command.
-  enum class AdvWait : uint8_t { None, ExtStop, ExtClear, PeriodicStop };
-  std::atomic<AdvWait> advWait{AdvWait::None};
-  void armAdvWait(AdvWait event);
-  void giveIfAdvWait(AdvWait event, BTStatus status);
-  BTStatus finishAdvWait();
 #if BLE_PERIODIC_ADV_SUPPORTED
   // Push periodic params when dirty; waits on advSync.
   BTStatus ensurePeriodicConfigured(uint8_t instance);

@@ -35,6 +35,7 @@
 #include "types/BLEConnInfoData.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEBackend.h"
+#include "core/BLEValidationHooks.h"
 #include "esp32-hal-log.h"
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
@@ -59,8 +60,13 @@ struct ble_npl_event sReAdvEvent;
 bool sReAdvEventInited = false;
 std::atomic<uint32_t> sReAdvGen{0};
 std::atomic<uint32_t> sReAdvArmedGen{0};
+SemaphoreHandle_t sReAdvMtx = xSemaphoreCreateRecursiveMutex();
 
 void reAdvertiseEventCb(struct ble_npl_event *event) {
+  // Hold sReAdvMtx across startAdvertising() so a concurrent stop() waits for
+  // this in-flight restart to finish, then issues a native stop, instead of
+  // returning while GAP is still coming up (ble_gatts_reset() is EBUSY).
+  BLELockGuard reAdv(sReAdvMtx);
   const uint32_t armed = sReAdvArmedGen.load(std::memory_order_acquire);
   if (sReAdvGen.load(std::memory_order_acquire) != armed) {
     return;
@@ -77,6 +83,12 @@ void reAdvertiseEventCb(struct ble_npl_event *event) {
     return;
   }
   if (restart && BLE.isInitialized()) {
+#if BLE_VALIDATION_HOOKS
+    if (BLEHooks.adv.holdReAdvStart.load(std::memory_order_acquire)) {
+      BLEHooks.adv.reAdvStartEntered.store(true, std::memory_order_release);
+      BLEValidationHooks::holdWhile(BLEHooks.adv.holdReAdvStart);
+    }
+#endif
     BLE.startAdvertising();
   }
 }
@@ -100,11 +112,20 @@ void scheduleReAdvertise(BLEServer::Impl *server) {
 // nimble_port_run). BLEClass::end() calls this to drop the reference so the next
 // session re-initializes a fresh event; the freed pool block needs no explicit
 // return because deinit reclaims the whole buffer.
-void nimbleCancelPendingReAdvertise() {
+SemaphoreHandle_t nimbleReAdvertiseMutex() {
+  return sReAdvMtx;
+}
+
+void nimbleInvalidatePendingReAdvertise() {
   sReAdvGen.fetch_add(1, std::memory_order_acq_rel);
   if (sReAdvEventInited) {
     ble_npl_eventq_remove(nimble_port_get_dflt_eventq(), &sReAdvEvent);
   }
+}
+
+void nimbleCancelPendingReAdvertise() {
+  BLELockGuard reAdv(sReAdvMtx);
+  nimbleInvalidatePendingReAdvertise();
 }
 
 void nimbleResetReAdvertiseEvent() {

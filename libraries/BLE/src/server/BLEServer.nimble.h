@@ -39,4 +39,10 @@ struct BLEServer::Impl : BLEServerImplCommon {
   static int gapEventHandler(struct ble_gap_event *event, void *arg);
 };
 
+#if BLE_GATT_SERVER_SUPPORTED
+void nimbleCancelPendingReAdvertise();
+void nimbleInvalidatePendingReAdvertise();
+SemaphoreHandle_t nimbleReAdvertiseMutex();
+#endif
+
 #endif /* BLE_NIMBLE */

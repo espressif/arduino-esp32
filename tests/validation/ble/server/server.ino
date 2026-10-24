@@ -533,6 +533,42 @@ bool phase_ble5_adv() {
     "[SERVER] Phase2 resetWhileExt idle=%d restart=%d\n", (int)resetIdle, (int)((bool)resetRestart && adv.isAdvertising())
   );
   adv.stopExtended(0);
+
+  // Leftover EXT_ADV_STOP_COMPLETE after start() must not clear isAdvertising;
+  // otherwise stop() no-ops while the radio is still up (Command Disallowed on clear).
+#if BLE_BLUEDROID
+  BLEHooks.adv.injectStaleExtStopComplete.store(true, std::memory_order_relaxed);
+  BTStatus staleStart = adv.start();
+  int stillAdv = adv.isAdvertising();
+  BTStatus staleStop = adv.stop();
+  int idleAfter = !adv.isAdvertising();
+  BTStatus staleClear = adv.clearExtended();
+  Serial.printf(
+    "[SERVER] Phase2 staleStopFlag start=%d stillAdv=%d stop=%d idle=%d clear=%d skip=0\n", (int)(bool)staleStart, stillAdv,
+    (int)(bool)staleStop, idleAfter, (int)(bool)staleClear
+  );
+#else
+  Serial.printf("[SERVER] Phase2 staleStopFlag start=1 stillAdv=1 stop=1 idle=1 clear=1 skip=1\n");
+#endif
+
+#if BLE_BLUEDROID && BLE_PERIODIC_ADV_SUPPORTED
+  adv.setExtType(0, BLEAdvType::NonConnectable);
+  adv.setExtPhy(0, BLEPhy::PHY_1M, BLEPhy::PHY_2M);
+  adv.setExtSID(0, 1);
+  (void)adv.setExtAdvertisementData(0, extData);
+  (void)adv.startExtended(0, 0, 0);
+  BLEHooks.adv.periodicRunningAfterStaleStop.store(false, std::memory_order_relaxed);
+  BLEHooks.adv.injectStalePeriodicStopComplete.store(true, std::memory_order_relaxed);
+  BTStatus perStart = adv.startPeriodicAdv(0);
+  int stillPer = BLEHooks.adv.periodicRunningAfterStaleStop.load(std::memory_order_relaxed);
+  adv.stopPeriodicAdv(0);
+  adv.stopExtended(0);
+  Serial.printf(
+    "[SERVER] Phase2 stalePeriodicStop start=%d stillPer=%d skip=0\n", (int)(bool)perStart, stillPer
+  );
+#else
+  Serial.printf("[SERVER] Phase2 stalePeriodicStop start=1 stillPer=1 skip=1\n");
+#endif
   BLE.end(false);
   Serial.println("[SERVER] BLE5 adv phase done");
   return true;
@@ -2059,6 +2095,22 @@ void loop() {
     adv.setScanResponse(true);
     adv.reset();
 
+    // Leftover ADV_STOP_COMPLETE after start() must not clear isAdvertising.
+#if BLE_BLUEDROID && !BLE5_SUPPORTED
+    BLEHooks.adv.advertisingAfterStaleStop.store(false, std::memory_order_relaxed);
+    BLEHooks.adv.injectStaleLegacyStopComplete.store(true, std::memory_order_relaxed);
+    BTStatus staleStart = adv.start();
+    int stillAdv = BLEHooks.adv.advertisingAfterStaleStop.load(std::memory_order_relaxed);
+    BTStatus staleStop = adv.stop();
+    int idleAfter = !adv.isAdvertising();
+    Serial.printf(
+      "[SERVER] Phase20 staleLegacyStop start=%d stillAdv=%d stop=%d idle=%d skip=0\n", (int)(bool)staleStart, stillAdv,
+      (int)(bool)staleStop, idleAfter
+    );
+#else
+    Serial.printf("[SERVER] Phase20 staleLegacyStop start=1 stillAdv=1 stop=1 idle=1 skip=1\n");
+#endif
+
     // Restore the suite's normal reconnect policy after the phase-owned
     // advertising transitions above.
     srv.advertiseOnDisconnect(true);
@@ -3238,6 +3290,8 @@ void loop() {
             BLEHooks.gatt.holdNotifyCompletions.store(true, std::memory_order_relaxed);
           }
           Serial.println("[SERVER] Phase35 notifyTeardown burst entered");
+          BLEHooks.adv.reAdvStartEntered.store(false, std::memory_order_relaxed);
+          BLEHooks.adv.holdReAdvStart.store(true, std::memory_order_release);
           for (int i = 0; i < 64; i++) {
             uint8_t value = static_cast<uint8_t>(i);
             if (chr.notify(info.getHandle(), &value, 1)) {
@@ -3540,7 +3594,48 @@ void loop() {
         }
         delay(20);
       }
+      startWait = millis();
+      while (!BLEHooks.adv.reAdvStartEntered.load(std::memory_order_acquire) && millis() - startWait < 5000) {
+        delay(1);
+      }
+      struct ReAdvStopJob {
+        std::atomic<bool> done{false};
+        BTStatus status{BTStatus::Fail};
+      };
+      static ReAdvStopJob reAdvStopJob;
+      reAdvStopJob.done.store(false, std::memory_order_relaxed);
+      reAdvStopJob.status = BTStatus::Fail;
+      bool reAdvStopCreated = xTaskCreate(
+                               [](void *arg) {
+                                 auto *job = static_cast<ReAdvStopJob *>(arg);
+                                 job->status = BLE.getAdvertising().stop();
+                                 job->done.store(true, std::memory_order_release);
+                                 vTaskDelete(nullptr);
+                               },
+                               "reAdvStop", 4096, &reAdvStopJob, tskIDLE_PRIORITY + 1, nullptr
+                             )
+                             == pdPASS;
+      delay(20);
+      BLEHooks.adv.holdReAdvStart.store(false, std::memory_order_release);
+      startWait = millis();
+      while (reAdvStopCreated && !reAdvStopJob.done.load(std::memory_order_acquire) && millis() - startWait < 5000) {
+        delay(1);
+      }
+      delay(50);
+      Serial.printf(
+        "[SERVER] Phase35 reAdvStop entered=%d stop=%d idle=%d\n",
+        (int)BLEHooks.adv.reAdvStartEntered.load(std::memory_order_acquire), (int)(bool)reAdvStopJob.status,
+        (int)(reAdvStopJob.done.load(std::memory_order_acquire) && !BLE.getAdvertising().isAdvertising())
+      );
+      startWait = millis();
+      while (srv.getConnectedCount() > 0 && millis() - startWait < 2000) {
+        delay(10);
+      }
       delay(500);
+#if BLE_BLUEDROID
+      // Bluedroid terminalShutdown reconnects after this disconnect.
+      (void)BLE.getAdvertising().start();
+#endif
       BLEHooks.gatt.holdNotifyCompletions.store(false, std::memory_order_relaxed);
       uint32_t finalTerminal = teardownSuccess + teardownNoClient + teardownOther;
       Serial.printf(

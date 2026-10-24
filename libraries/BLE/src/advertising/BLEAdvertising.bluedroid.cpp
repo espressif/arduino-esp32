@@ -50,8 +50,20 @@
 #include <esp_bt_defs.h>
 #include <algorithm>
 #include <string.h>
+#include "core/BLEValidationHooks.h"
 #if BLE_GATT_SERVER_SUPPORTED
 void bluedroidCancelPendingReAdvertise();
+void bluedroidInvalidatePendingReAdvertise();
+SemaphoreHandle_t bluedroidReAdvertiseMutex();
+
+// Taken before nativeAdmission so stop() can wait out an in-flight
+// advertiseOnDisconnect start() without inverting the admission gate.
+struct ReAdvGuard {
+  BLELockGuard lock;
+  ReAdvGuard() : lock(bluedroidReAdvertiseMutex()) {
+    bluedroidInvalidatePendingReAdvertise();
+  }
+};
 #endif
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
@@ -177,30 +189,45 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
         inst->isAdvertising = true;
       }
       inst->advSync.give(param->adv_start_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+#if BLE_VALIDATION_HOOKS
+      if (BLEHooks.adv.injectStaleLegacyStopComplete.exchange(false, std::memory_order_acq_rel)
+          && param->adv_start_cmpl.status == ESP_BT_STATUS_SUCCESS) {
+        // Leftover ADV_STOP_COMPLETE after a successful start must not clear
+        // isAdvertising: stop() would then no-op while the radio is up.
+        esp_ble_gap_cb_param_t stale = {};
+        stale.adv_stop_cmpl.status = ESP_BT_STATUS_SUCCESS;
+        handleGAP(ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT, &stale);
+        BLEHooks.adv.advertisingAfterStaleStop.store(inst->isAdvertising, std::memory_order_relaxed);
+      }
+#endif
       break;
 
     case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT:
     {
       log_d("ADV_STOP_COMPLETE status=%d", param->adv_stop_cmpl.status);
-      inst->isAdvertising = false;
+      const bool ok = param->adv_stop_cmpl.status == ESP_BT_STATUS_SUCCESS;
       const bool durationExpired = inst->durationExpiryStop.exchange(false);
-      if (!durationExpired) {
-        inst->advSync.give(param->adv_stop_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
-      }
-      // Explicit stop is not session completion (duration / maxEvents), so it
-      // must not dispatch onComplete. In particular, start() stops an active
-      // session while holding mtx; trying to copy the callback here after
-      // waking that waiter blocks the BTC task and prevents the following
-      // advertising-data completion event from being delivered.
-      if (durationExpired && param->adv_stop_cmpl.status == ESP_BT_STATUS_SUCCESS) {
-        BLEAdvertising::CompleteHandler completeCb;
-        {
-          BLELockGuard lock(inst->callbackMtx);
-          completeCb = inst->onCompleteCb;
+      if (durationExpired) {
+        if (ok) {
+          inst->isAdvertising = false;
         }
-        if (completeCb) {
-          completeCb(0);
+        // Explicit stop is not session completion (duration / maxEvents), so it
+        // must not dispatch onComplete. In particular, start() stops an active
+        // session while holding mtx; trying to copy the callback here after
+        // waking that waiter blocks the BTC task and prevents the following
+        // advertising-data completion event from being delivered.
+        if (ok) {
+          BLEAdvertising::CompleteHandler completeCb;
+          {
+            BLELockGuard lock(inst->callbackMtx);
+            completeCb = inst->onCompleteCb;
+          }
+          if (completeCb) {
+            completeCb(0);
+          }
         }
+      } else if (inst->giveIfAdvWait(AdvWait::LegacyStop, ok ? BTStatus::OK : BTStatus::Fail) && ok) {
+        inst->isAdvertising = false;
       }
       break;
     }
@@ -242,6 +269,18 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
         }
       }
       inst->advSync.give(param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+#if BLE_VALIDATION_HOOKS
+      if (BLEHooks.adv.injectStaleExtStopComplete.exchange(false, std::memory_order_acq_rel)
+          && param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS) {
+        // Leftover EXT_ADV_STOP_COMPLETE after a successful start must not
+        // clear isAdvertising: stop() would then no-op while the radio is up.
+        esp_ble_gap_cb_param_t stale = {};
+        stale.ext_adv_stop.status = ESP_BT_STATUS_SUCCESS;
+        stale.ext_adv_stop.instance_num = param->ext_adv_start.instance_num;
+        memcpy(stale.ext_adv_stop.instance, param->ext_adv_start.instance, sizeof(stale.ext_adv_stop.instance));
+        handleGAP(ESP_GAP_BLE_EXT_ADV_STOP_COMPLETE_EVT, &stale);
+      }
+#endif
       break;
     }
 
@@ -253,7 +292,11 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
     case ESP_GAP_BLE_EXT_ADV_STOP_COMPLETE_EVT:
     {
       log_d("EXT_ADV_STOP_COMPLETE status=%d", param->ext_adv_stop.status);
-      if (param->ext_adv_stop.status == ESP_BT_STATUS_SUCCESS) {
+      const bool ok = param->ext_adv_stop.status == ESP_BT_STATUS_SUCCESS;
+      // Only wipe flags when this complete matches an armed stop wait. A late
+      // leftover stop after start() has already set isAdvertising would leave
+      // the radio up while stop() no-ops on the stale false flag.
+      if (inst->giveIfAdvWait(AdvWait::ExtStop, ok ? BTStatus::OK : BTStatus::Fail) && ok) {
         const uint8_t n = param->ext_adv_stop.instance_num < EXT_ADV_NUM_SETS_MAX ? param->ext_adv_stop.instance_num : EXT_ADV_NUM_SETS_MAX;
         for (uint8_t i = 0; i < n; i++) {
           const uint8_t h = param->ext_adv_stop.instance[i];
@@ -264,7 +307,6 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
           }
         }
       }
-      inst->giveIfAdvWait(AdvWait::ExtStop, param->ext_adv_stop.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
     }
 
@@ -304,19 +346,55 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
         inst->extInstances[param->period_adv_start.instance].periodicAdvRunning = (param->period_adv_start.status == ESP_BT_STATUS_SUCCESS);
       }
       inst->advSync.give(param->period_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+#if BLE_VALIDATION_HOOKS
+      if (BLEHooks.adv.injectStalePeriodicStopComplete.exchange(false, std::memory_order_acq_rel)
+          && param->period_adv_start.status == ESP_BT_STATUS_SUCCESS) {
+        esp_ble_gap_cb_param_t stale = {};
+        stale.period_adv_stop.status = ESP_BT_STATUS_SUCCESS;
+        stale.period_adv_stop.instance = param->period_adv_start.instance;
+        handleGAP(ESP_GAP_BLE_PERIODIC_ADV_STOP_COMPLETE_EVT, &stale);
+        if (param->period_adv_start.instance < kMaxExtInstances) {
+          BLEHooks.adv.periodicRunningAfterStaleStop.store(
+            inst->extInstances[param->period_adv_start.instance].periodicAdvRunning, std::memory_order_relaxed
+          );
+        }
+      }
+#endif
       break;
     case ESP_GAP_BLE_PERIODIC_ADV_STOP_COMPLETE_EVT:
+    {
       log_d("PERIODIC_ADV_STOP_COMPLETE status=%d", param->period_adv_stop.status);
-      if (param->period_adv_stop.instance < kMaxExtInstances) {
+      const bool ok = param->period_adv_stop.status == ESP_BT_STATUS_SUCCESS;
+      if (inst->giveIfAdvWait(AdvWait::PeriodicStop, ok ? BTStatus::OK : BTStatus::Fail) && ok
+          && param->period_adv_stop.instance < kMaxExtInstances) {
         inst->extInstances[param->period_adv_stop.instance].periodicAdvRunning = false;
       }
-      inst->giveIfAdvWait(AdvWait::PeriodicStop, param->period_adv_stop.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
+    }
 #endif /* BLE_PERIODIC_ADV_SUPPORTED */
 #endif /* BLE5_SUPPORTED */
 
     default: break;
   }
+}
+
+void BLEAdvertising::Impl::armAdvWait(AdvWait event) {
+  advWait.store(event, std::memory_order_release);
+}
+
+bool BLEAdvertising::Impl::giveIfAdvWait(AdvWait event, BTStatus status) {
+  AdvWait expected = event;
+  if (!advWait.compare_exchange_strong(expected, AdvWait::None, std::memory_order_acq_rel)) {
+    return false;
+  }
+  advSync.give(status);
+  return true;
+}
+
+BTStatus BLEAdvertising::Impl::finishAdvWait() {
+  BTStatus st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
+  advWait.store(AdvWait::None, std::memory_order_release);
+  return st;
 }
 
 // --------------------------------------------------------------------------
@@ -375,6 +453,9 @@ void BLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWh
 
 void BLEAdvertising::reset() {
   BLE_CHECK_IMPL();
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (admission && (impl.durationTimer || impl.isAdvertising)) {
     (void)stopBackend();
@@ -438,13 +519,13 @@ void BLEAdvertising::setScanResponseData(const BLEAdvertisementData &data) {
 
 BTStatus BLEAdvertising::start(uint32_t durationMs) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
   }
-#if BLE_GATT_SERVER_SUPPORTED
-  bluedroidCancelPendingReAdvertise();
-#endif
 
   BLELockGuard lock(impl.mtx);
 
@@ -610,6 +691,9 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
 
 BTStatus BLEAdvertising::stop() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::OK;
@@ -620,7 +704,11 @@ BTStatus BLEAdvertising::stop() {
 BTStatus BLEAdvertising::stopBackend() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
 #if BLE_GATT_SERVER_SUPPORTED
-  bluedroidCancelPendingReAdvertise();
+  // Invalidate without taking reAdvMtx: callers that must wait out an in-flight
+  // restart take ReAdvGuard before admission. Taking the mutex here while the
+  // admission gate is already held would deadlock the restart callback, which
+  // holds reAdvMtx and then takes admission inside startAdvertising().
+  bluedroidInvalidatePendingReAdvertise();
 #endif
 
   BLELockGuard lock(impl.mtx);
@@ -659,15 +747,18 @@ BTStatus BLEAdvertising::stopBackend() {
   log_d("Advertising stopped");
   return BTStatus::OK;
 #else
+  impl.armAdvWait(Impl::AdvWait::LegacyStop);
   if (!timerStopInFlight) {
     esp_err_t err = esp_ble_gap_stop_advertising();
     if (err != ESP_OK) {
       log_e("esp_ble_gap_stop_advertising: %s", esp_err_to_name(err));
+      impl.armAdvWait(Impl::AdvWait::None);
       impl.advSync.give(BTStatus::Fail);
       return BTStatus::Fail;
     }
   }
-  BTStatus s = impl.advSync.wait(ADV_SYNC_TIMEOUT_MS);
+  BTStatus s = impl.finishAdvWait();
+  impl.isAdvertising = false;
   if (!s) {
     log_e("Timeout waiting for adv stop");
     return s;
@@ -897,24 +988,6 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   return advSync.wait(ADV_SYNC_TIMEOUT_MS);
 }
 
-void BLEAdvertising::Impl::armAdvWait(AdvWait event) {
-  advWait.store(event, std::memory_order_release);
-}
-
-void BLEAdvertising::Impl::giveIfAdvWait(AdvWait event, BTStatus status) {
-  AdvWait expected = event;
-  if (!advWait.compare_exchange_strong(expected, AdvWait::None, std::memory_order_acq_rel)) {
-    return;
-  }
-  advSync.give(status);
-}
-
-BTStatus BLEAdvertising::Impl::finishAdvWait() {
-  BTStatus st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
-  advWait.store(AdvWait::None, std::memory_order_release);
-  return st;
-}
-
 void BLEAdvertising::Impl::stopAllExtendedThenClear() {
   for (uint8_t i = 0; i < kMaxExtInstances; i++) {
 #if BLE_PERIODIC_ADV_SUPPORTED
@@ -1113,6 +1186,9 @@ BTStatus BLEAdvertising::setExtInstanceAddress(uint8_t instance, const BTAddress
 
 BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, uint8_t maxEvents) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
@@ -1143,6 +1219,9 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
 
 BTStatus BLEAdvertising::stopExtended(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::OK;
@@ -1182,6 +1261,9 @@ BTStatus BLEAdvertising::removeExtended(uint8_t instance) {
 
 BTStatus BLEAdvertising::clearExtended() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::OK;
@@ -1288,6 +1370,9 @@ BTStatus BLEAdvertising::setPeriodicAdvData(uint8_t instance, const BLEAdvertise
 
 BTStatus BLEAdvertising::startPeriodicAdv(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
@@ -1320,6 +1405,9 @@ BTStatus BLEAdvertising::startPeriodicAdv(uint8_t instance) {
 
 BTStatus BLEAdvertising::stopPeriodicAdv(uint8_t instance) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+#if BLE_GATT_SERVER_SUPPORTED
+  ReAdvGuard reAdv;
+#endif
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::OK;

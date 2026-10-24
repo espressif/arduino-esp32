@@ -22,7 +22,12 @@ Bluedroid.
   re-enter the BTC task, so the server schedules it on an `esp_timer` (`advRestartTimer`).
   `stop()`/`start()` cancel that timer and bump `reAdvEpoch` even when advertising is already down,
   matching NimBLE so a late disconnect restart cannot collide with a sketch that has taken over
-  advertising.
+  advertising. The timer callback holds `reAdvMtx` across `startAdvertising()`; public advertising
+  calls take that mutex before admission so `stop()` waits the in-flight restart out and then stops
+  native GAP. `ADV_STOP_COMPLETE` / `EXT_ADV_STOP_COMPLETE` / `PERIODIC_ADV_STOP_COMPLETE` clear
+  advertising flags only when `giveIfAdvWait` consumes the matching wait (`LegacyStop` / `ExtStop` /
+  `PeriodicStop`), so a leftover stop after start cannot leave the radio up while `isAdvertising()`
+  is false. Duration-expiry still uses `durationExpiryStop` and `onComplete`.
 
 ## Event routing
 

@@ -202,7 +202,12 @@ constexpr uint16_t CCCD_UUID16 = BLE_DSC_UUID16_CCCD;
 
 BLEServer::Impl *BLEServer::Impl::s_instance = nullptr;
 
-void bluedroidCancelPendingReAdvertise() {
+SemaphoreHandle_t bluedroidReAdvertiseMutex() {
+  auto *srv = BLEServer::Impl::s_instance;
+  return srv ? srv->reAdvMtx : nullptr;
+}
+
+void bluedroidInvalidatePendingReAdvertise() {
   auto *srv = BLEServer::Impl::s_instance;
   if (!srv) {
     return;
@@ -211,6 +216,11 @@ void bluedroidCancelPendingReAdvertise() {
   if (srv->advRestartTimer) {
     esp_timer_stop(srv->advRestartTimer);
   }
+}
+
+void bluedroidCancelPendingReAdvertise() {
+  BLELockGuard reAdv(bluedroidReAdvertiseMutex());
+  bluedroidInvalidatePendingReAdvertise();
 }
 
 // --------------------------------------------------------------------------

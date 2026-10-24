@@ -77,6 +77,9 @@ always cast-free `impl.member`.
   `nimble_port_deinit()`). `stop()`/`start()` also dequeue that event and bump a generation so a
   late `advertiseOnDisconnect` restart cannot enable GAP while `ble_gatts_reset()` is running
   (`BLE_HS_EBUSY` — NimBLE host refuses GATT rebuild while advertising or a connection is active).
+  An in-flight host-queue callback that has already been dequeued still holds `sReAdvMtx` across
+  `startAdvertising()`; public advertising calls take that mutex before admission so `stop()` waits
+  the restart out and then stops native GAP.
 - **MTU exchange** runs after `connect()` returns, but `onConnect` has already fired, so
   `onMtuChanged` still lands after `onConnect` (matches Bluedroid ordering). Blocking `connect()`
   waits on `mtuSync` so `getMTU()` is valid on return.

@@ -115,6 +115,30 @@ def _assert_phase2_clear_and_reset(server, timeout):
     assert int(m_reset.group(1)) == 1 and int(m_reset.group(2)) == 1, (
         "reset() while extended+periodic advertising did not leave idle then restart"
     )
+    m_stale = server.expect(
+        r"\[SERVER\] Phase2 staleStopFlag start=([01]) stillAdv=([01]) stop=([01]) idle=([01]) clear=([01]) skip=([01])",
+        timeout=timeout,
+    )
+    if int(m_stale.group(6)) == 0:
+        assert (
+            int(m_stale.group(1)) == 1
+            and int(m_stale.group(2)) == 1
+            and int(m_stale.group(3)) == 1
+            and int(m_stale.group(4)) == 1
+            and int(m_stale.group(5)) == 1
+        ), (
+            "leftover EXT_ADV_STOP_COMPLETE after start() must not clear isAdvertising "
+            "(stop() would no-op while the radio is up)"
+        )
+    m_per = server.expect(
+        r"\[SERVER\] Phase2 stalePeriodicStop start=([01]) stillPer=([01]) skip=([01])",
+        timeout=timeout,
+    )
+    if int(m_per.group(3)) == 0:
+        assert int(m_per.group(1)) == 1 and int(m_per.group(2)) == 1, (
+            "leftover PERIODIC_ADV_STOP_COMPLETE after startPeriodicAdv() must not "
+            "clear periodicAdvRunning"
+        )
 
 
 def _phase_ble5_adv(server, client):
@@ -843,6 +867,20 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_scan_off.group(1)) == 1 and int(m_scan_off.group(2)) == 1, (
         "start() with setScanResponse(false) failed (null/zero scan-rsp raw config)"
     )
+    m_legacy_stale = server.expect(
+        r"\[SERVER\] Phase20 staleLegacyStop start=([01]) stillAdv=([01]) stop=([01]) idle=([01]) skip=([01])",
+        timeout=15,
+    )
+    if int(m_legacy_stale.group(5)) == 0:
+        assert (
+            int(m_legacy_stale.group(1)) == 1
+            and int(m_legacy_stale.group(2)) == 1
+            and int(m_legacy_stale.group(3)) == 1
+            and int(m_legacy_stale.group(4)) == 1
+        ), (
+            "leftover ADV_STOP_COMPLETE after start() must not clear isAdvertising "
+            "(stop() would no-op while the radio is up)"
+        )
     client.expect_exact("[CLIENT] Phase20 done", timeout=15)
     server.expect_exact("[SERVER] Phase20 done", timeout=20)
 
@@ -1580,6 +1618,13 @@ def _phase_pending_send_edges(server, client):
         client.expect_exact("[CLIENT] Phase35 owner handles dropped=1", timeout=15)
         server.write("PHASE35_OWNER_DROP_GO\n")
     client.expect_exact("[CLIENT] Phase35 notifyTeardown armed=1 pendingOwner=1 disconnected=1", timeout=15)
+    m_re_adv = server.expect(
+        r"\[SERVER\] Phase35 reAdvStop entered=([01]) stop=([01]) idle=([01])",
+        timeout=20,
+    )
+    assert int(m_re_adv.group(1)) == 1 and int(m_re_adv.group(2)) == 1 and int(m_re_adv.group(3)) == 1, (
+        "in-flight advertiseOnDisconnect restart must be waited out by stop() so advertising is idle"
+    )
     m_td = server.expect(
         r"\[SERVER\] Phase35 notifyTeardown stack=(NimBLE|Bluedroid) attempted=(\d+) accepted=(\d+) atDisconnect=(\d+) final=(\d+) "
         r"success=(\d+) noClient=(\d+) other=(\d+) late=(\d+)",
