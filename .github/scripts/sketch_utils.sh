@@ -428,6 +428,8 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
 
     mkdir -p "$ARDUINO_CACHE_DIR"
     for i in $(seq 0 $((len - 1))); do
+        local compile_start
+        compile_start=$(date +%s)
         if [ -n "$ARDUINO_BUILD_DIR" ]; then
             # Full override from env var (non-test builds like on-push.sh)
             build_dir="$ARDUINO_BUILD_DIR"
@@ -474,6 +476,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             echo "ERROR: Compilation failed with error code $exit_status"
             exit "$exit_status"
         fi
+        record_compile_timing "$sketchdir" "$(( $(date +%s) - compile_start ))" "${target:-}"
 
         # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
         # For multi-device tests, ci.yml lives in the parent test directory (-td),
@@ -518,6 +521,46 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     unset fqbn
     unset xtra_opts
     unset options
+}
+
+function record_compile_timing { # record_compile_timing <sketchdir> <seconds> [target]
+    local sketchdir="$1"
+    local seconds="$2"
+    local target="${3:-}"
+    local timings_file="${COMPILE_TIMINGS_FILE:-}"
+    local relpath
+
+    [ -n "$timings_file" ] || return 0
+    [[ "$seconds" =~ ^[0-9]+$ ]] || return 0
+
+    relpath="$sketchdir"
+    if [ -n "${REPO_ROOT:-}" ]; then
+        relpath="${sketchdir#"$REPO_ROOT"/}"
+    fi
+    if [[ "$relpath" == *"/libraries/"* ]]; then
+        relpath="libraries/${relpath#*/libraries/}"
+    fi
+
+    mkdir -p "$(dirname "$timings_file")"
+    python3 - "$timings_file" "$relpath" "$seconds" "$target" <<'PY'
+import json
+import sys
+
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
+
+path, sketch, seconds, target = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
+record = {"path": sketch.replace("\\", "/"), "seconds": seconds}
+if target:
+    record["target"] = target
+line = json.dumps(record, sort_keys=True) + "\n"
+with open(path, "a", encoding="utf-8") as fh:
+    if fcntl is not None:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+    fh.write(line)
+PY
 }
 
 function count_sketches { # count_sketches <path> [target] [ignore-requirements] [file] [platform] [output-file]
@@ -886,6 +929,7 @@ function build_sketch_list {
     local max_active=0
     local index=0
     local warmed_up=0
+    local slot_seeded=0
     local sketch_count=0
     local count_sketch
     while IFS= read -r count_sketch || [ -n "$count_sketch" ]; do
@@ -924,6 +968,24 @@ function build_sketch_list {
                 && { [ -f "$work_dir/status.$running_index" ] || ! kill -0 "$running_pid" 2>/dev/null; }; then
                     _reap_parallel_worker "$slot"
                     completed_slot=$slot
+                    if [ "$isolated_build_dirs" -eq 1 ] && [ "$jobs" -gt 1 ] \
+                    && [ "$slot_seeded" -eq 0 ]; then
+                        local seed_src="$work_dir/build.slot.$completed_slot"
+                        if [ -d "$seed_src" ]; then
+                            echo "[parallel] seed slot cache from build.slot.$completed_slot"
+                            local seed_slot
+                            for ((seed_slot = 0; seed_slot < jobs; seed_slot++)); do
+                                if [ "$seed_slot" -eq "$completed_slot" ]; then
+                                    continue
+                                fi
+                                local seed_dst="$work_dir/build.slot.$seed_slot"
+                                if [ ! -e "$seed_dst" ]; then
+                                    cp -a "$seed_src" "$seed_dst"
+                                fi
+                            done
+                            slot_seeded=1
+                        fi
+                    fi
                     warmed_up=1
                     concurrency=$jobs
                     break
@@ -1046,6 +1108,57 @@ function build_sketch_list {
     return "$first_failure"
 }
 
+function find_chunk_assignment_file { # find_chunk_assignment_file <chunk_index> [sketches_file]
+    local chunk_index=$1
+    local sketches_file=${2:-}
+    local dirs=()
+    local dir
+    if [ -n "${CHUNK_LIST_DIR:-}" ]; then
+        dirs+=("$CHUNK_LIST_DIR")
+    fi
+    if [ -n "${GITHUB_WORKSPACE:-}" ]; then
+        dirs+=("$GITHUB_WORKSPACE/chunks")
+    fi
+    dirs+=("$PWD/chunks")
+    if [ -n "$sketches_file" ]; then
+        dirs+=("$(dirname "$sketches_file")/chunks")
+    fi
+    for dir in "${dirs[@]}"; do
+        if [ -f "$dir/chunk_${chunk_index}.txt" ]; then
+            printf '%s\n' "$dir/chunk_${chunk_index}.txt"
+            return 0
+        fi
+    done
+    return 1
+}
+
+function pack_chunk_sketches { # pack_chunk_sketches <list_file> <chunk_index> <chunk_max> <out_file>
+    local list_file=$1
+    local chunk_index=$2
+    local chunk_max=$3
+    local out_file=$4
+    local pack_dir
+    pack_dir=$(mktemp -d "${TMPDIR:-/tmp}/arduino-chunk-assign.XXXXXX") || return 1
+    local root="${ARDUINO_ESP32_PATH:-${GITHUB_WORKSPACE:-$SCRIPTS_DIR/../..}}"
+    if ! python3 "${SCRIPTS_DIR}/chunk_assign.py" \
+        --list "$list_file" \
+        --max "$chunk_max" \
+        --out-dir "$pack_dir" \
+        --root "$root" >/dev/null; then
+        rm -rf "$pack_dir"
+        echo "ERROR: chunk_assign.py failed" >&2
+        return 1
+    fi
+    if [ ! -f "$pack_dir/chunk_${chunk_index}.txt" ]; then
+        : > "$out_file"
+        rm -rf "$pack_dir"
+        return 0
+    fi
+    cp "$pack_dir/chunk_${chunk_index}.txt" "$out_file"
+    rm -rf "$pack_dir"
+    return 0
+}
+
 function build_sketches { # build_sketches <ide_path> <user_path> <target> <path> <chunk> <total-chunks> [extra-options]
     local args=()
     local jobs=1
@@ -1140,49 +1253,42 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
     set +e
     local sketchcount
     local sketches_file_for_invocation
+    local assigned_chunk_file=""
     sketches_file_for_invocation=$(mktemp "${TMPDIR:-/tmp}/arduino-sketches.XXXXXX") || return 1
-    if [ -n "$sketches_file" ]; then
-        sketchcount=$(count_sketches "$path" "$target" "0" "$sketches_file" "$platform" "$sketches_file_for_invocation")
+    if assigned_chunk_file=$(find_chunk_assignment_file "$chunk_index" "$sketches_file"); then
+        echo "Using affinity assignment: $assigned_chunk_file"
+        sketchcount=$(count_sketches "$path" "$target" "0" "$assigned_chunk_file" "$platform" "$sketches_file_for_invocation")
     else
-        sketchcount=$(count_sketches "$path" "$target" "" "" "$platform" "$sketches_file_for_invocation")
+        local candidates_file
+        candidates_file=$(mktemp "${TMPDIR:-/tmp}/arduino-sketch-candidates.XXXXXX") || return 1
+        if [ -n "$sketches_file" ]; then
+            sketchcount=$(count_sketches "$path" "$target" "0" "$sketches_file" "$platform" "$candidates_file")
+        else
+            sketchcount=$(count_sketches "$path" "$target" "" "" "$platform" "$candidates_file")
+        fi
+        if [ "$sketchcount" -gt 0 ]; then
+            if ! pack_chunk_sketches "$candidates_file" "$chunk_index" "$chunk_max" "$sketches_file_for_invocation"; then
+                rm -f "$candidates_file" "$sketches_file_for_invocation"
+                return 1
+            fi
+            sketchcount=$(grep -cve '^$' "$sketches_file_for_invocation" || true)
+            : "${sketchcount:=0}"
+        else
+            : > "$sketches_file_for_invocation"
+        fi
+        rm -f "$candidates_file"
     fi
     set -e
 
-    local chunk_size
-    local all_chunks
-    chunk_size=$(( sketchcount / chunk_max ))
-    all_chunks=$(( chunk_max * chunk_size ))
-    if [ "$all_chunks" -lt "$sketchcount" ]; then
-        chunk_size=$(( chunk_size + 1 ))
+    if [ "$sketchcount" -le 0 ]; then
+        echo "No sketches to build for $target in this chunk"
+        rm -f "$sketches_file_for_invocation"
+        return 0
     fi
 
-    local start_index=0
-    local end_index=0
-    if [ "$chunk_index" -ge "$chunk_max" ]; then
-        start_index=$chunk_index
-        end_index=$sketchcount
-    else
-        start_index=$(( chunk_index * chunk_size ))
-        if [ "$sketchcount" -le "$start_index" ]; then
-            echo "No sketches to build for $target in this chunk"
-            rm -f "$sketches_file_for_invocation"
-            return 0
-        fi
-
-        end_index=$(( $(( chunk_index + 1 )) * chunk_size ))
-        if [ "$end_index" -gt "$sketchcount" ]; then
-            end_index=$sketchcount
-        fi
-    fi
-
-    local start_num
-    start_num=$(( start_index + 1 ))
     echo "Found $sketchcount Sketches for target '$target'";
     echo "Chunk Index : $chunk_index"
     echo "Chunk Count : $chunk_max"
-    echo "Chunk Size  : $chunk_size"
-    echo "Start Sketch: $start_num"
-    echo "End Sketch  : $end_index"
 
     #if fqbn is not passed then set it to default for compilation log
     if [ -z "$fqbn" ]; then
@@ -1209,13 +1315,9 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
     while IFS= read -r sketch || [ -n "$sketch" ]; do
         local sketchdir
 
+        [ -z "$sketch" ] && continue
         sketchdir=$(dirname "$sketch")
         sketchnum=$((sketchnum + 1))
-
-        if [ "$sketchnum" -le "$start_index" ] \
-        || [ "$sketchnum" -gt "$end_index" ]; then
-            continue
-        fi
         printf '%s\n' "$sketchdir" >> "$chunk_sketches_file"
     done < "$sketches_file_for_invocation"
     rm -f "$sketches_file_for_invocation"
@@ -1227,7 +1329,7 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
     fi
 
     if [ "$jobs" -eq 1 ]; then
-        local serial_index=$start_index
+        local serial_index=0
         local serial_result=0
         while IFS= read -r sketchdir || [ -n "$sketchdir" ]; do
             [ -z "$sketchdir" ] && continue
@@ -1245,7 +1347,7 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
             return "$serial_result"
         fi
     else
-        local parallel_index=$start_index
+        local parallel_index=0
         while IFS= read -r sketchdir || [ -n "$sketchdir" ]; do
             [ -z "$sketchdir" ] && continue
             parallel_index=$((parallel_index + 1))

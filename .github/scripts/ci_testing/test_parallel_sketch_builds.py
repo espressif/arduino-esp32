@@ -49,6 +49,7 @@ event = {
     "build_path": str(build_path),
     "cmake_jobs": os.environ.get("CMAKE_BUILD_PARALLEL_LEVEL"),
     "args": args,
+    "preexisting": (build_path / "compile_commands.json").exists(),
 }
 update_state(1, event)
 try:
@@ -171,8 +172,14 @@ def _make_repo(tmp_path: Path) -> tuple[Path, dict[str, str]]:
         "tests_build.sh",
         "tests_run.sh",
         "on-push.sh",
+        "chunk_assign.py",
     ):
         shutil.copy2(SCRIPT_DIR / name, scripts / name)
+    shutil.copytree(
+        SCRIPT_DIR / "ci_chunking",
+        scripts / "ci_chunking",
+        ignore=shutil.ignore_patterns("__pycache__"),
+    )
 
     (scripts / "install-arduino-core-esp32.sh").write_text(":\n", encoding="utf-8")
     (scripts / "install-arduino-cli.sh").write_text(":\n", encoding="utf-8")
@@ -330,6 +337,30 @@ def test_build_list_defaults_to_serial_output(tmp_path: Path) -> None:
     assert _state(env)["max_active"] == 1
     assert "Parallel build summary" not in result.stdout
     assert [event["cmake_jobs"] for event in _state(env)["events"]] == [None, None]
+
+
+def test_build_list_records_compile_timings(tmp_path: Path) -> None:
+    repo, env = _make_repo(tmp_path)
+    sketches = [
+        _make_sketch(repo / "libraries" / "Matter" / "examples", "OnOff"),
+        _make_sketch(repo / "libraries" / "WiFi" / "examples", "Scan"),
+    ]
+    sketch_list = tmp_path / "sketches.list"
+    _write_list(sketch_list, sketches)
+    timings = repo / "compile_timings_0.jsonl"
+    env["COMPILE_TIMINGS_FILE"] = str(timings)
+    env["BUILD_TEST_DELAY"] = "0"
+
+    result = _run(_build_list_command(repo, sketch_list), repo, env)
+
+    assert result.returncode == 0, result.stderr
+    lines = [json.loads(line) for line in timings.read_text(encoding="utf-8").splitlines() if line]
+    assert len(lines) == 2
+    paths = {record["path"] for record in lines}
+    assert any("Matter" in path for path in paths)
+    assert any("WiFi" in path for path in paths)
+    assert all(record["seconds"] >= 0 for record in lines)
+    assert all("sizes" not in record for record in lines)
 
 
 def test_parallel_builds_are_bounded_and_have_per_build_outputs(tmp_path: Path) -> None:
@@ -635,6 +666,30 @@ def test_isolated_build_dirs_are_reused_per_worker_slot(tmp_path: Path) -> None:
     assert len(state["events"]) == 5
     assert len(paths) == 2
     assert all("build.slot." in path for path in paths)
+
+
+def test_isolated_slot_cache_is_seeded_from_warmup_slot(tmp_path: Path) -> None:
+    repo, env = _make_repo(tmp_path)
+    sketches = [_make_sketch(repo / "tests", f"sketch-{index}") for index in range(4)]
+    sketch_list = tmp_path / "sketches.list"
+    _write_list(sketch_list, sketches)
+
+    result = _run(
+        _build_list_command(repo, sketch_list, 2, isolated_build_dirs=True),
+        repo,
+        env,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "[parallel] seed slot cache from build.slot." in result.stdout
+    first_by_path: dict[str, bool] = {}
+    for event in _state(env)["events"]:
+        path = event["build_path"]
+        if path not in first_by_path:
+            first_by_path[path] = event["preexisting"]
+    assert len(first_by_path) == 2
+    assert sum(1 for existed in first_by_path.values() if existed) == 1
+    assert sum(1 for existed in first_by_path.values() if not existed) == 1
 
 
 def test_parallel_build_handles_paths_with_spaces(tmp_path: Path) -> None:

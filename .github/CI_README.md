@@ -138,6 +138,8 @@ Workflows source the configuration in their setup steps and use the arrays to dy
   - `.github/scripts/on-push.sh`
   - `.github/scripts/sketch_utils.sh`
   - `.github/scripts/get_affected.py`
+  - `.github/scripts/chunk_assign.py`
+  - `.github/scripts/ci_chunking/**`
   - `.github/scripts/socs_config.sh`
   - `!*.md`
   - `!*.txt`
@@ -155,14 +157,15 @@ Workflows source the configuration in their setup steps and use the arrays to dy
 **Steps:**
 1. Install universal-ctags for symbol parsing
 2. Checkout repository (fetch-depth: 2 for diff)
-3. Get changed files using `tj-actions/changed-files`
-4. **Check Official Variants** - Calls `check_official_variants.sh` with `BUILD_TEST_TARGETS`
-5. **Set Chunks** - Runs `get_affected.py` to:
+3. Restore `compile_costs.json` from a previous Linux compile run when one exists
+4. Get changed files using `tj-actions/changed-files`
+5. **Check Official Variants** - Calls `check_official_variants.sh` with `BUILD_TEST_TARGETS`
+6. **Set Chunks** - Runs `get_affected.py` to:
    - Parse C/C++ dependencies using ctags
    - Build forward/reverse dependency graphs
    - Determine affected sketches from changed files
-   - Distribute sketches across chunks for parallel builds
-6. Upload affected sketches and debug artifacts
+   - Pack sketches into chunks by library affinity and compile cost (`ci_chunking`)
+7. Upload `affected_sketches.txt`, per-chunk lists under `chunks/`, and debug artifacts
 
 **Outputs:**
 - `should_run` - Whether workflow should proceed (based on variant check)
@@ -261,9 +264,15 @@ FQBNs are resolved at runtime via `default_upload_test_fqbn()` in `sketch_utils.
    - Key: `libs-{os}-{arch}-{hash(package_esp32_index.template.json, tools/get.py)}`
    - Includes: esp32-arduino-libs, esptool, toolchains
 4. Set log level (none/error/warn/info/debug/verbose)
-5. Download affected sketches list
-6. **Build sketches** - Runs `on-push.sh` with chunk parameters
-7. Upload compile results JSON
+5. Download affected sketches list and `chunks/chunk_N.txt`
+6. Restore ACmake object cache (`/tmp/acmake_objcache`); save from chunk 0 only
+7. **Build sketches** - Runs `on-push.sh` with the pre-assigned chunk list
+8. Upload per-sketch compile timings (`compile_timings_N.jsonl`) and compile results JSON
+
+#### 2b. `update-compile-costs`
+**Runs after:** `build-arduino-linux` (even if some chunks failed)
+
+Merges the uploaded JSONL timings into `compile_costs.json` (EMA + library source fingerprint) and saves the table for the next `gen-chunks` restore. Size JSON is not modified.
 
 **SoC Config Usage:**
 The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_SOCS minus SKIP_LIB_BUILD_SOCS), building sketches for each supported SoC.
@@ -276,15 +285,26 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 
 **Key Features:**
 - **Intelligent chunking**: Only rebuilds affected sketches
+- **Affinity packing**: `get_affected.py` groups sketches by the libraries they compile (include graph collapsed
+  to `libraries/<name>/`, not per-`.cpp` sets) and LPT-packs bins so expensive libraries stay in as few jobs as
+  will fit. Build jobs consume `chunks/chunk_N.txt` instead of equal-count index slices
+- **Learning-augmented costs**: prior is `max(seed, wrapper TUs × 0.35s, prebuilt .a MB × 4s)` so Matter’s
+  28 MB `libespressif__esp_matter.a` is not treated as a 10-file wrapper. CI timings update
+  `compile_costs.json`. A fingerprint of wrapper sources plus archive sizes detects drift when static libs change.
 - **Two-level Linux parallelism**: Up to 15 chunk jobs, each building up to `SKETCH_BUILD_JOBS` sketches concurrently
 - **Cross-platform parallelism**: The Windows and macOS preset matrices use the same bounded sketch scheduler
 - **Safe build isolation**: Parallel workers use temporary per-slot build directories (reused across sketches on
   that worker) while sharing ACmake's concurrency-safe immutable cache. Duplicate sketch basenames cannot collide.
+- **Slot seeding**: After the warmup sketch, slot 0's CMake tree is copied into the other slots so the second
+  worker is a cache hit instead of a second cold configure
 - **CPU budgeting**: The first sketch warms the shared object cache at full `-jN`; later sketch jobs split
   Ninja so two compiles cannot oversubscribe the runner
+- **Object cache restore**: Linux jobs restore `/tmp/acmake_objcache` so `core.a` / library objects can survive
+  across runners; chunk 0 saves the cache
 - **Dependency tracking**: Uses ctags for accurate change detection
-- **Size reports**: Generates JSON with sketch sizes for comparison
-- **Caching**: Libraries and tools cached between runs
+- **Size reports**: Generates JSON with sketch sizes for comparison. The size reporter matches by
+  `(target, sketch path)`, not chunk index, so rebalancing chunks does not break deltas
+- **Caching**: Libraries, tools, and ACmake object cache between runs
 
 #### 3. `build-arduino-win-mac`
 **Runs on:** Windows-latest, macOS-latest
@@ -1284,6 +1304,7 @@ bash .github/scripts/ci_testing/release_validation.sh 3.3.10
 | `ci_testing/test_ide_v1_docker.sh` | IDE v1 install/compile via Docker (linux/windows containers) |
 | `ci_testing/test_mock_bootloader.py` | flasher.py + socket:// integration (protocol tests in [esp32-mock-bootloader](https://github.com/espressif/esp32-mock-bootloader)) |
 | `ci_testing/test_find_boards.py` | Local unit tests for `find_boards.sh` (all/new/official + formats) |
+| `ci_testing/test_ci_chunking.py` | Affinity grouping, cost packing, Matter colocation |
 | `ci_testing/mock_upload_validation.sh` | Local wrapper for `test-mock-upload.sh` |
 | `test-mock-upload.sh` | PR/push mock upload CI entry (cli + builder) |
 | `mock_upload_lib.sh` | Mock upload helpers (bootloader, twice-upload, logging) |
@@ -1715,6 +1736,20 @@ For offline `new`/`official` runs, set `FIND_BOARDS_BASE_FILE` to a local base `
 - Uses ctags for symbol mapping
 - Determines which sketches need rebuilding
 - Supports both Arduino and IDF component modes
+- Sketch mode calls `ci_chunking` to pack compile chunks and write `chunks/chunk_N.txt` plus `chunks/chunks.json`
+
+#### `chunk_assign.py` / `ci_chunking/`
+**Purpose:** Group sketches by library affinity and pack a fixed number of compile bins
+
+**Features:**
+- Walk the forward include graph (when provided) to the libraries a sketch will compile
+- Keep expensive libraries (Matter, BLE, OTA, …) in as few bins as will fit
+- LPT onto `MAX_CHUNKS` with submodular bin cost (each library pays cold once per chunk)
+- Guess-then-measure costs: `prior_cold` from library sources, then `--update-costs` merges JSONL timings
+- CLI: `python3 .github/scripts/chunk_assign.py --list affected_sketches.txt --max 15 --out-dir chunks/ --print-summary`
+- Update costs: `python3 .github/scripts/chunk_assign.py --update-costs compile_timings/ --costs compile_costs.json`
+
+**Local testing:** `python3 -m pytest .github/scripts/ci_testing/test_ci_chunking.py -p no:pytest_embedded`
 
 #### `install-*.sh`
 **Purpose:** Install Arduino CLI, IDE, and core
