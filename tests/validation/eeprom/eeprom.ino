@@ -179,6 +179,87 @@ void test_read_write_empty_string(void) {
   TEST_ASSERT_EQUAL_STRING("", result.c_str());
 }
 
+// Keep a physical guard byte beyond the logical EEPROM size so regressions
+// can be detected without writing into unrelated memory. No NVS is used here.
+class StringBoundaryEEPROM : public EEPROMClass {
+  uint8_t _storage[9];
+
+public:
+  StringBoundaryEEPROM() {
+    memset(_storage, 0xA5, sizeof(_storage));
+    _data = _storage;
+    _size = sizeof(_storage) - 1;
+  }
+
+  ~StringBoundaryEEPROM() {
+    // The base destructor must not commit or delete the fixture's array.
+    _data = NULL;
+    _size = 0;
+  }
+
+  const uint8_t *storage() const {
+    return _storage;
+  }
+};
+
+static const uint8_t untouchedStringStorage[] = {0xA5, 0xA5, 0xA5, 0xA5, 0xA5, 0xA5, 0xA5, 0xA5, 0xA5};
+
+void test_write_string_exact_fit(void) {
+  StringBoundaryEEPROM eeprom;
+  const uint8_t expected[] = {0xA5, 0xA5, 0xA5, 0xA5, 'a', 'b', 'c', 0, 0xA5};
+  TEST_ASSERT_EQUAL(3, eeprom.writeString(4, "abc"));
+  TEST_ASSERT_EQUAL_MEMORY(expected, eeprom.storage(), sizeof(expected));
+  TEST_ASSERT_TRUE(eeprom.isDirty());
+
+  const uint8_t expectedObject[] = {0xA5, 0xA5, 0xA5, 0xA5, 'x', 'y', 'z', 0, 0xA5};
+  TEST_ASSERT_EQUAL(3, eeprom.writeString(4, String("xyz")));
+  TEST_ASSERT_EQUAL_MEMORY(expectedObject, eeprom.storage(), sizeof(expectedObject));
+}
+
+void test_write_string_requires_terminator_space(void) {
+  StringBoundaryEEPROM eeprom;
+  TEST_ASSERT_EQUAL(0, eeprom.writeString(4, "abcd"));
+  TEST_ASSERT_EQUAL_MEMORY(untouchedStringStorage, eeprom.storage(), sizeof(untouchedStringStorage));
+  TEST_ASSERT_FALSE(eeprom.isDirty());
+}
+
+void test_write_string_object_requires_terminator_space(void) {
+  StringBoundaryEEPROM eeprom;
+  TEST_ASSERT_EQUAL(0, eeprom.writeString(4, String("abcd")));
+  TEST_ASSERT_EQUAL_MEMORY(untouchedStringStorage, eeprom.storage(), sizeof(untouchedStringStorage));
+  TEST_ASSERT_FALSE(eeprom.isDirty());
+}
+
+void test_write_string_empty_at_last_byte(void) {
+  StringBoundaryEEPROM eeprom;
+  const uint8_t expected[] = {0xA5, 0xA5, 0xA5, 0xA5, 0xA5, 0xA5, 0xA5, 0, 0xA5};
+  TEST_ASSERT_EQUAL(0, eeprom.writeString(7, ""));
+  TEST_ASSERT_EQUAL_MEMORY(expected, eeprom.storage(), sizeof(expected));
+  TEST_ASSERT_TRUE(eeprom.isDirty());
+}
+
+void test_write_string_empty_at_end_rejected(void) {
+  StringBoundaryEEPROM eeprom;
+  TEST_ASSERT_EQUAL(0, eeprom.writeString(8, ""));
+  TEST_ASSERT_EQUAL_MEMORY(untouchedStringStorage, eeprom.storage(), sizeof(untouchedStringStorage));
+  TEST_ASSERT_FALSE(eeprom.isDirty());
+}
+
+void test_write_string_character_at_last_byte_rejected(void) {
+  StringBoundaryEEPROM eeprom;
+  TEST_ASSERT_EQUAL(0, eeprom.writeString(7, "x"));
+  TEST_ASSERT_EQUAL_MEMORY(untouchedStringStorage, eeprom.storage(), sizeof(untouchedStringStorage));
+  TEST_ASSERT_FALSE(eeprom.isDirty());
+}
+
+void test_write_string_invalid_addresses(void) {
+  StringBoundaryEEPROM eeprom;
+  TEST_ASSERT_EQUAL(0, eeprom.writeString(-1, "x"));
+  TEST_ASSERT_EQUAL(0, eeprom.writeString(9, "x"));
+  TEST_ASSERT_EQUAL_MEMORY(untouchedStringStorage, eeprom.storage(), sizeof(untouchedStringStorage));
+  TEST_ASSERT_FALSE(eeprom.isDirty());
+}
+
 // ==================== Bytes ====================
 
 void test_read_write_bytes(void) {
@@ -287,6 +368,13 @@ void setup() {
   RUN_TEST(test_read_write_string_cstr);
   RUN_TEST(test_read_write_string_obj);
   RUN_TEST(test_read_write_empty_string);
+  RUN_TEST(test_write_string_exact_fit);
+  RUN_TEST(test_write_string_requires_terminator_space);
+  RUN_TEST(test_write_string_object_requires_terminator_space);
+  RUN_TEST(test_write_string_empty_at_last_byte);
+  RUN_TEST(test_write_string_empty_at_end_rejected);
+  RUN_TEST(test_write_string_character_at_last_byte_rejected);
+  RUN_TEST(test_write_string_invalid_addresses);
 
   // Bytes
   RUN_TEST(test_read_write_bytes);
