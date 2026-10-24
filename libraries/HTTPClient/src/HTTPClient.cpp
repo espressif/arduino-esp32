@@ -827,7 +827,7 @@ int HTTPClient::sendRequest(const char *type, Stream *stream, size_t size) {
           // some time for the stream
           delay(1);
 
-          int leftBytes = (readBytes - bytesWrite);
+          int leftBytes = (bytesRead - bytesWrite);
 
           // retry to send the missed bytes
           bytesWrite = _client->write((const uint8_t *)(buff + bytesWrite), leftBytes);
@@ -850,7 +850,7 @@ int HTTPClient::sendRequest(const char *type, Stream *stream, size_t size) {
 
         // count bytes to read left
         if (len > 0) {
-          len -= readBytes;
+          len -= bytesRead;
         }
 
         delay(0);
