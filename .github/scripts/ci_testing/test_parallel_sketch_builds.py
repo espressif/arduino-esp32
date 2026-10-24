@@ -36,6 +36,7 @@ def update_state(delta, event=None):
         state["active"] += delta
         state["max_active"] = max(state["max_active"], state["active"])
         if event is not None:
+            event["active"] = state["active"]
             state["events"].append(event)
         state_path.write_text(json.dumps(state))
 
@@ -445,7 +446,7 @@ def test_worker_exit_without_status_is_detected_and_synthesized(tmp_path: Path) 
         while time.monotonic() < deadline:
             state_path = Path(env["BUILD_TEST_STATE"])
             if state_path.exists() and _state(env)["active"] >= 2:
-                pid_files = list(worker_tmp.glob("arduino-build-workers.*/pid.1"))
+                pid_files = list(worker_tmp.glob("arduino-build-workers.*/pid.*"))
                 if pid_files:
                     worker_pid = int(pid_files[0].read_text(encoding="utf-8"))
                     break
@@ -474,13 +475,15 @@ def test_signal_cleanup_removes_workers_without_killing_unrelated_jobs(
     expected_code: int,
 ) -> None:
     repo, env = _make_repo(tmp_path)
-    sketches = [_make_sketch(repo / "tests", name) for name in ("one", "two")]
+    sketches = [
+        _make_sketch(repo / "tests", name) for name in ("one", "two", "three", "four")
+    ]
     sketch_list = tmp_path / "sketches.list"
     _write_list(sketch_list, sketches)
     worker_tmp = tmp_path / "worker-tmp"
     worker_tmp.mkdir()
     env["TMPDIR"] = str(worker_tmp)
-    env["BUILD_TEST_DELAY"] = "5"
+    env["BUILD_TEST_DELAY"] = "2"
     unrelated = subprocess.Popen(["sleep", "10"])
     process = subprocess.Popen(
         _build_list_command(repo, sketch_list, 2),
@@ -491,7 +494,7 @@ def test_signal_cleanup_removes_workers_without_killing_unrelated_jobs(
         stderr=subprocess.PIPE,
     )
     try:
-        deadline = time.monotonic() + 5
+        deadline = time.monotonic() + 8
         while time.monotonic() < deadline:
             state_path = Path(env["BUILD_TEST_STATE"])
             if state_path.exists() and _state(env)["active"] >= 2:
@@ -590,7 +593,7 @@ def test_isolated_parallel_build_dirs_allow_shared_override_and_duplicate_names(
     repo, env = _make_repo(tmp_path)
     sketches = [
         _make_sketch(repo / parent, "duplicate")
-        for parent in ("first", "second", "third")
+        for parent in ("first", "second", "third", "fourth")
     ]
     sketch_list = tmp_path / "sketches.list"
     _write_list(sketch_list, sketches)
@@ -664,7 +667,7 @@ def test_existing_cmake_parallel_level_is_preserved(tmp_path: Path) -> None:
     assert [event["cmake_jobs"] for event in _state(env)["events"]] == ["9", "9"]
 
 
-def test_automatic_inner_budget_keeps_full_cpu_count(tmp_path: Path) -> None:
+def test_automatic_inner_budget_warms_up_then_splits_cpus(tmp_path: Path) -> None:
     repo, env = _make_repo(tmp_path)
     sketches = [_make_sketch(repo / "tests", name) for name in ("one", "two", "three")]
     sketch_list = tmp_path / "sketches.list"
@@ -674,7 +677,10 @@ def test_automatic_inner_budget_keeps_full_cpu_count(tmp_path: Path) -> None:
     result = _run(_build_list_command(repo, sketch_list, 3), repo, env)
 
     assert result.returncode == 0, result.stderr
-    assert [event["cmake_jobs"] for event in _state(env)["events"]] == ["8", "8", "8"]
+    events = _state(env)["events"]
+    assert [event["cmake_jobs"] for event in events] == ["8", "2", "2"]
+    assert [event["active"] for event in events] == [1, 1, 2]
+    assert "inner ninja 8 then 2" in result.stdout
     assert "CMAKE_BUILD_PARALLEL_LEVEL" not in env
 
 
@@ -737,7 +743,7 @@ def test_libraries_are_preinstalled_serially_once_before_workers(
 
 def test_parallel_build_preserves_arduino_cli_backend(tmp_path: Path) -> None:
     repo, env = _make_repo(tmp_path)
-    sketches = [_make_sketch(repo / "tests", name) for name in ("one", "two")]
+    sketches = [_make_sketch(repo / "tests", name) for name in ("one", "two", "three")]
     sketch_list = tmp_path / "sketches.list"
     _write_list(sketch_list, sketches)
     command = _build_list_command(repo, sketch_list, 2)
@@ -1026,7 +1032,7 @@ def test_on_push_auto_jobs_use_half_the_logical_cpus(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert _state(env)["max_active"] == 2
-    assert "inner ninja 4" in result.stdout
+    assert "inner ninja 4 then 2" in result.stdout
     assert len(sketches) == 4
 
 

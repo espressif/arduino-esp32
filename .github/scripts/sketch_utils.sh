@@ -619,9 +619,8 @@ function logical_cpu_count {
 }
 
 function auto_sketch_jobs {
-    # Two-wide (or more on bigger machines) pipelines independent links.
-    # Inner Ninja still uses every logical CPU; dividing that budget made
-    # first-library compiles slower than master's serial -jN.
+    # Two-wide (or more on bigger machines) pipelines independent links
+    # after a one-sketch warmup at full Ninja width.
     local cpus
     cpus=$(logical_cpu_count)
     local jobs=$((cpus / 2))
@@ -865,11 +864,18 @@ function build_sketch_list {
     work_dir=$(mktemp -d "${TMPDIR:-/tmp}/arduino-build-workers.XXXXXX") || return 1
     local cleanup_done=0
     local automatic_inner_jobs=0
-    local inner_jobs="${CMAKE_BUILD_PARALLEL_LEVEL:-}"
-    if [ -z "$inner_jobs" ]; then
-        # Keep Ninja at full machine width. Sketch jobs overlap CMake/link;
-        # starving Ninja made HTTP/Matter first compiles slower than serial.
-        inner_jobs=$(logical_cpu_count)
+    local warmup_inner_jobs="${CMAKE_BUILD_PARALLEL_LEVEL:-}"
+    local split_inner_jobs="${CMAKE_BUILD_PARALLEL_LEVEL:-}"
+    if [ -z "$warmup_inner_jobs" ]; then
+        # First sketch of each batch compiles the shared cache at full -jN.
+        # Later sketches split that budget so two Ninja jobs cannot oversubscribe.
+        local logical_cpus
+        logical_cpus=$(logical_cpu_count)
+        warmup_inner_jobs=$logical_cpus
+        split_inner_jobs=$((logical_cpus / jobs))
+        if [ "$split_inner_jobs" -lt 1 ]; then
+            split_inner_jobs=1
+        fi
         automatic_inner_jobs=1
     fi
 
@@ -879,13 +885,18 @@ function build_sketch_list {
     local active=0
     local max_active=0
     local index=0
+    local warmed_up=0
     local sketch_count=0
     local count_sketch
     while IFS= read -r count_sketch || [ -n "$count_sketch" ]; do
         [ -z "$count_sketch" ] && continue
         sketch_count=$((sketch_count + 1))
     done < "$list_file"
-    echo "Parallel sketch builds: ${sketch_count} sketches, ${jobs} jobs, inner ninja ${inner_jobs}, isolated-build-dirs=${isolated_build_dirs}"
+    local inner_banner="inner ninja ${warmup_inner_jobs}"
+    if [ "$warmup_inner_jobs" != "$split_inner_jobs" ]; then
+        inner_banner="inner ninja ${warmup_inner_jobs} then ${split_inner_jobs}"
+    fi
+    echo "Parallel sketch builds: ${sketch_count} sketches, ${jobs} jobs, ${inner_banner}, isolated-build-dirs=${isolated_build_dirs}"
     local saved_int_trap
     local saved_term_trap
     local saved_exit_trap
@@ -899,7 +910,11 @@ function build_sketch_list {
     while IFS= read -r sketchdir || [ -n "$sketchdir" ]; do
         [ -z "$sketchdir" ] && continue
 
-        while [ "$active" -ge "$jobs" ]; do
+        local concurrency=$jobs
+        if [ "$warmed_up" -eq 0 ]; then
+            concurrency=1
+        fi
+        while [ "$active" -ge "$concurrency" ]; do
             local completed_slot=-1
             local slot
             for ((slot = 0; slot < jobs; slot++)); do
@@ -909,6 +924,8 @@ function build_sketch_list {
                 && { [ -f "$work_dir/status.$running_index" ] || ! kill -0 "$running_pid" 2>/dev/null; }; then
                     _reap_parallel_worker "$slot"
                     completed_slot=$slot
+                    warmed_up=1
+                    concurrency=$jobs
                     break
                 fi
             done
@@ -922,9 +939,13 @@ function build_sketch_list {
             free_slot=$((free_slot + 1))
         done
         index=$((index + 1))
+        local worker_inner_jobs=$split_inner_jobs
+        if [ "$warmed_up" -eq 0 ]; then
+            worker_inner_jobs=$warmup_inner_jobs
+        fi
         printf '%s\n' "$sketchdir" > "$work_dir/name.$index"
         printf '[parallel] start %s/%s %s (active %s/%s)\n' \
-            "$index" "$sketch_count" "$sketchdir" "$((active + 1))" "$jobs"
+            "$index" "$sketch_count" "$sketchdir" "$((active + 1))" "$concurrency"
         (
             set +e
             worker_child_pid=""
@@ -932,7 +953,7 @@ function build_sketch_list {
             trap 'if [ -n "$worker_child_pid" ]; then kill -TERM "$worker_child_pid" 2>/dev/null || true; wait "$worker_child_pid" 2>/dev/null || true; fi; exit 143' TERM
             worker_env=("ARDUINO_BUILD_SIZES_FILE=$work_dir/sizes.$index")
             if [ "$automatic_inner_jobs" -eq 1 ]; then
-                worker_env+=("CMAKE_BUILD_PARALLEL_LEVEL=$inner_jobs")
+                worker_env+=("CMAKE_BUILD_PARALLEL_LEVEL=$worker_inner_jobs")
             fi
             if [ "$isolated_build_dirs" -eq 1 ]; then
                 # Reuse one CMake dir per worker slot so later sketches keep a

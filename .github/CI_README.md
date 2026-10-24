@@ -271,8 +271,8 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 **Environment Variables:**
 - `MAX_CHUNKS=15` - Maximum parallel build jobs
 - `SKETCH_BUILD_JOBS=auto` - Concurrent sketches per runner. `auto` uses half the available logical CPUs (at least 1)
-  as sketch workers; each worker's Ninja still uses every logical CPU. Set a positive integer to cap sketch
-  concurrency, or `1` to restore serial execution.
+  as sketch workers. The first sketch of each batch uses every logical CPU for Ninja; later sketches split that
+  budget across workers. Set a positive integer to cap sketch concurrency, or `1` to restore serial execution.
 
 **Key Features:**
 - **Intelligent chunking**: Only rebuilds affected sketches
@@ -280,8 +280,8 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 - **Cross-platform parallelism**: The Windows and macOS preset matrices use the same bounded sketch scheduler
 - **Safe build isolation**: Parallel workers use temporary per-slot build directories (reused across sketches on
   that worker) while sharing ACmake's concurrency-safe immutable cache. Duplicate sketch basenames cannot collide.
-- **CPU budgeting**: Sketch jobs pipeline independent links; inner Ninja keeps the full logical CPU count so
-  first-library compiles stay as fast as serial `-jN`
+- **CPU budgeting**: The first sketch warms the shared object cache at full `-jN`; later sketch jobs split
+  Ninja so two compiles cannot oversubscribe the runner
 - **Dependency tracking**: Uses ctags for accurate change detection
 - **Size reports**: Generates JSON with sketch sizes for comparison
 - **Caching**: Libraries and tools cached between runs
@@ -1620,8 +1620,8 @@ When no explicit FQBN is provided via `ci.yml`, the following per-SoC defaults a
   can execute. With no platform option, the build remains unfiltered so one CI artifact can serve every runtime.
 - `-j N` / `--jobs N` builds regular sketches for one target concurrently (default `1`). Declared Arduino
   libraries are installed serially before workers start, and each worker keeps separate logs and output files.
-- When `CMAKE_BUILD_PARALLEL_LEVEL` is unset, parallel builds give each worker Ninja the full logical CPU count.
-  Set it explicitly to override the inner Ninja job count.
+- When `CMAKE_BUILD_PARALLEL_LEVEL` is unset, the first parallel sketch uses every logical CPU for Ninja and
+  later sketches divide that count across workers. Set it explicitly to override the inner Ninja job count.
 
 **Examples:**
 ```bash
