@@ -664,7 +664,7 @@ def test_existing_cmake_parallel_level_is_preserved(tmp_path: Path) -> None:
     assert [event["cmake_jobs"] for event in _state(env)["events"]] == ["9", "9"]
 
 
-def test_automatic_inner_budget_uses_cpu_count_divided_by_jobs(tmp_path: Path) -> None:
+def test_automatic_inner_budget_keeps_full_cpu_count(tmp_path: Path) -> None:
     repo, env = _make_repo(tmp_path)
     sketches = [_make_sketch(repo / "tests", name) for name in ("one", "two", "three")]
     sketch_list = tmp_path / "sketches.list"
@@ -674,7 +674,7 @@ def test_automatic_inner_budget_uses_cpu_count_divided_by_jobs(tmp_path: Path) -
     result = _run(_build_list_command(repo, sketch_list, 3), repo, env)
 
     assert result.returncode == 0, result.stderr
-    assert [event["cmake_jobs"] for event in _state(env)["events"]] == ["2", "2", "2"]
+    assert [event["cmake_jobs"] for event in _state(env)["events"]] == ["8", "8", "8"]
     assert "CMAKE_BUILD_PARALLEL_LEVEL" not in env
 
 
@@ -1026,7 +1026,7 @@ def test_on_push_auto_jobs_use_half_the_logical_cpus(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert _state(env)["max_active"] == 2
-    assert "inner ninja 2" in result.stdout
+    assert "inner ninja 4" in result.stdout
     assert len(sketches) == 4
 
 

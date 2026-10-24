@@ -619,9 +619,9 @@ function logical_cpu_count {
 }
 
 function auto_sketch_jobs {
-    # Leave about half the cores for inner Ninja. Using every logical CPU as a
-    # sketch worker forces CMAKE_BUILD_PARALLEL_LEVEL=1 and is slower than
-    # master's serial sketches with a warm CMake dir and Ninja -jN.
+    # Two-wide (or more on bigger machines) pipelines independent links.
+    # Inner Ninja still uses every logical CPU; dividing that budget made
+    # first-library compiles slower than master's serial -jN.
     local cpus
     cpus=$(logical_cpu_count)
     local jobs=$((cpus / 2))
@@ -867,12 +867,9 @@ function build_sketch_list {
     local automatic_inner_jobs=0
     local inner_jobs="${CMAKE_BUILD_PARALLEL_LEVEL:-}"
     if [ -z "$inner_jobs" ]; then
-        local logical_cpus
-        logical_cpus=$(logical_cpu_count)
-        inner_jobs=$((logical_cpus / jobs))
-        if [ "$inner_jobs" -lt 1 ]; then
-            inner_jobs=1
-        fi
+        # Keep Ninja at full machine width. Sketch jobs overlap CMake/link;
+        # starving Ninja made HTTP/Matter first compiles slower than serial.
+        inner_jobs=$(logical_cpu_count)
         automatic_inner_jobs=1
     fi
 
