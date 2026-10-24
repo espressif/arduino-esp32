@@ -202,6 +202,17 @@ constexpr uint16_t CCCD_UUID16 = BLE_DSC_UUID16_CCCD;
 
 BLEServer::Impl *BLEServer::Impl::s_instance = nullptr;
 
+void bluedroidCancelPendingReAdvertise() {
+  auto *srv = BLEServer::Impl::s_instance;
+  if (!srv) {
+    return;
+  }
+  srv->reAdvEpoch.fetch_add(1, std::memory_order_acq_rel);
+  if (srv->advRestartTimer) {
+    esp_timer_stop(srv->advRestartTimer);
+  }
+}
+
 // --------------------------------------------------------------------------
 // Callback dispatch (snapshot under lock, invoke outside)
 // --------------------------------------------------------------------------
@@ -1022,6 +1033,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         // Defer to esp_timer task — calling BLE.startAdvertising() directly
         // from the BTC callback would deadlock (BLESync blocks for GAP
         // events that are also delivered on the BTC task).
+        impl->reAdvArmedEpoch.store(impl->reAdvEpoch.load(std::memory_order_relaxed), std::memory_order_release);
         esp_timer_start_once(impl->advRestartTimer, 0);
       }
       break;

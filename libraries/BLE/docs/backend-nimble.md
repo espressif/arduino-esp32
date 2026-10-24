@@ -74,13 +74,20 @@ always cast-free `impl.member`.
 - **Re-advertise event lifetime.** `nimbleResetReAdvertiseEvent()` drops the deferred
   re-advertise event's backing reference on `end()` so a later `begin()` re-initializes it (avoids a
   use-after-free across a stack restart — the FreeRTOS NimBLE port frees the event pool on
-  `nimble_port_deinit()`).
+  `nimble_port_deinit()`). `stop()`/`start()` also dequeue that event and bump a generation so a
+  late `advertiseOnDisconnect` restart cannot enable GAP while `ble_gatts_reset()` is running
+  (`BLE_HS_EBUSY` — NimBLE host refuses GATT rebuild while advertising or a connection is active).
 - **MTU exchange** runs after `connect()` returns, but `onConnect` has already fired, so
   `onMtuChanged` still lands after `onConnect` (matches Bluedroid ordering). Blocking `connect()`
   waits on `mtuSync` so `getMTU()` is valid on return.
 - **BLE5 routing.** When `BLE5_SUPPORTED`, legacy `start()`/`scan` use the extended controller API
   with legacy PDUs on a reserved top instance (`kLegacyInstance`) so they coexist with user
   `startExtended` sets. Extended scan reports merge scan responses via `mergeScanResponse`.
+  `ble_gap_ext_adv_clear()` returns `BLE_HS_EBUSY` if any instance (or periodic advertising) is
+  still active, matching `HCI_LE_Clear_Advertising_Sets` Command Disallowed (Vol 4, Part E,
+  §7.8.60). Public `clearExtended()` returns `Fail` and leaves advertising flags unchanged in that
+  case; after `BLE.end()` it returns `OK` with no native call (stop-like). Reset/shutdown stop every
+  instance first so the following clear can succeed.
 - **Advertising preemption.** NimBLE reports `ADV_COMPLETE` / `BLE_HS_EPREEMPTED` when it
   temporarily stops advertising (privacy list updates, `ble_gap_unpair`). Host-initiated disable
   does not generate `HCI_LE_Advertising_Set_Terminated` (Vol 4, Part E, §7.7.65.18); the stack

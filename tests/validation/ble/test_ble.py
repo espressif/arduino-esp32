@@ -93,6 +93,30 @@ def _phase_basic(server, client):
     client.expect_exact("[CLIENT] Final deinit OK", timeout=10)
 
 
+def _assert_phase2_clear_and_reset(server, timeout):
+    m_busy = server.expect(
+        r"\[SERVER\] Phase2 clearWhileLive ok=([01]) stillAdv=([01])",
+        timeout=timeout,
+    )
+    assert int(m_busy.group(1)) == 0 and int(m_busy.group(2)) == 1, (
+        "clearExtended() while advertising must Fail and leave isAdvertising true"
+    )
+    m_clr = server.expect(
+        r"\[SERVER\] Phase2 clearThenRestart clear=([01]) idle=([01]) restart=([01])",
+        timeout=timeout,
+    )
+    assert int(m_clr.group(1)) == 1 and int(m_clr.group(2)) == 1 and int(m_clr.group(3)) == 1, (
+        "clearExtended() then startExtended() did not leave idle then restart"
+    )
+    m_reset = server.expect(
+        r"\[SERVER\] Phase2 resetWhileExt idle=([01]) restart=([01])",
+        timeout=timeout,
+    )
+    assert int(m_reset.group(1)) == 1 and int(m_reset.group(2)) == 1, (
+        "reset() while extended+periodic advertising did not leave idle then restart"
+    )
+
+
 def _phase_ble5_adv(server, client):
     """Returns (ble5_server, ble5_client) booleans."""
     m_server = server.expect(r"\[SERVER\] (BLE5 init OK|BLE5 not supported, skipping)", timeout=30)
@@ -112,6 +136,7 @@ def _phase_ble5_adv(server, client):
         client.expect_exact("[CLIENT] Periodic data received", timeout=30)
         client.expect_exact("[CLIENT] Periodic test complete", timeout=10)
 
+        _assert_phase2_clear_and_reset(server, timeout=30)
         server.expect_exact("[SERVER] BLE5 adv phase done", timeout=30)
         client.expect_exact("[CLIENT] BLE5 scan phase done", timeout=10)
     else:
@@ -121,7 +146,8 @@ def _phase_ble5_adv(server, client):
         # would otherwise release phase 3 while that side is still advertising,
         # and the peer would scan for a server that cannot answer yet.
         if ble5_server:
-            server.expect_exact("[SERVER] BLE5 adv phase done", timeout=60)
+            _assert_phase2_clear_and_reset(server, timeout=60)
+            server.expect_exact("[SERVER] BLE5 adv phase done", timeout=30)
         if ble5_client:
             client.expect_exact("[CLIENT] BLE5 scan phase done", timeout=60)
 

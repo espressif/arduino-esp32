@@ -497,7 +497,41 @@ bool phase_ble5_adv() {
 
   delay(20000);
 
+  // HCI_LE_Clear_Advertising_Sets is Command Disallowed while a set is enabled
+  // (Vol 4, Part E, §7.8.60). Fail must leave isAdvertising true.
+  BTStatus busyClear = adv.clearExtended();
+  Serial.printf(
+    "[SERVER] Phase2 clearWhileLive ok=%d stillAdv=%d\n", (int)(bool)busyClear, (int)adv.isAdvertising()
+  );
+
   adv.stopPeriodicAdv(0);
+  adv.stopExtended(0);
+  // clearExtended() must consume SET_CLEAR_COMPLETE itself so a following
+  // startExtended() is not released by that leftover GAP event.
+  BTStatus cl = adv.clearExtended();
+  bool idle = !adv.isAdvertising();
+  BTStatus rs = adv.startExtended(0, 0, 0);
+  bool restarted = (bool)rs && adv.isAdvertising();
+  Serial.printf("[SERVER] Phase2 clearThenRestart clear=%d idle=%d restart=%d\n", (int)(bool)cl, (int)idle, (int)restarted);
+  adv.stopExtended(0);
+
+  // reset() while extended+periodic are live (stopAllExtendedThenClear).
+  adv.setExtType(0, BLEAdvType::NonConnectable);
+  adv.setExtPhy(0, BLEPhy::PHY_1M, BLEPhy::PHY_2M);
+  adv.setExtSID(0, 1);
+  (void)adv.setExtAdvertisementData(0, extData);
+  (void)adv.startExtended(0, 0, 0);
+  (void)adv.startPeriodicAdv(0);
+  adv.reset();
+  bool resetIdle = !adv.isAdvertising();
+  adv.setExtType(0, BLEAdvType::NonConnectable);
+  adv.setExtPhy(0, BLEPhy::PHY_1M, BLEPhy::PHY_2M);
+  adv.setExtSID(0, 1);
+  (void)adv.setExtAdvertisementData(0, extData);
+  BTStatus resetRestart = adv.startExtended(0, 0, 0);
+  Serial.printf(
+    "[SERVER] Phase2 resetWhileExt idle=%d restart=%d\n", (int)resetIdle, (int)((bool)resetRestart && adv.isAdvertising())
+  );
   adv.stopExtended(0);
   BLE.end(false);
   Serial.println("[SERVER] BLE5 adv phase done");
@@ -3524,6 +3558,9 @@ void loop() {
         checkSerial();
         delay(1);
       }
+      // begin() stops advertising and rebuilds GATT. A pending
+      // advertiseOnDisconnect restart from the teardown disconnect must not
+      // win that window (NimBLE ble_gatts_reset is EBUSY while GAP is active).
       BLEStream finalReleasePeer;
       BTStatus finalReleaseStart = finalReleasePeer.begin(serverName);
       Serial.printf("[SERVER] Phase35 BLEStream final release ready=%d\n", (int)(bool)finalReleaseStart);

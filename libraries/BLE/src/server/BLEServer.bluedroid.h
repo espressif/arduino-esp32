@@ -79,8 +79,12 @@ struct BLEServer::Impl : BLEServerImplCommon {
   // Used during start() to pass handle results from async GATTS events
   uint16_t *pendingHandle = nullptr;
 
-  // Timer for deferred advertising restart (avoids blocking the BTC task)
+  // Timer for deferred advertising restart (avoids blocking the BTC task).
+  // Epoch is bumped by stop()/start() so a late timer callback cannot restart
+  // advertising after the application has taken over the set.
   esp_timer_handle_t advRestartTimer = nullptr;
+  std::atomic<uint32_t> reAdvEpoch{0};
+  std::atomic<uint32_t> reAdvArmedEpoch{0};
 
   // Lazy-created timer for retrying an indication refused with ESP_GATT_BUSY.
   esp_timer_handle_t indicationRetryTimer = nullptr;
@@ -105,5 +109,6 @@ struct BLEServer::Impl : BLEServerImplCommon {
  * @return true on successful registration; false on registration failure or timeout.
  */
 bool bluedroidRegisterGattsApp(const std::shared_ptr<BLEServer::Impl> &server);
+void bluedroidCancelPendingReAdvertise();
 
 #endif /* BLE_BLUEDROID */

@@ -57,13 +57,24 @@ namespace {
 // defers via esp_timer for the same reason.
 struct ble_npl_event sReAdvEvent;
 bool sReAdvEventInited = false;
+std::atomic<uint32_t> sReAdvGen{0};
+std::atomic<uint32_t> sReAdvArmedGen{0};
 
 void reAdvertiseEventCb(struct ble_npl_event *event) {
+  const uint32_t armed = sReAdvArmedGen.load(std::memory_order_acquire);
+  if (sReAdvGen.load(std::memory_order_acquire) != armed) {
+    return;
+  }
   auto *server = static_cast<BLEServer::Impl *>(ble_npl_event_get_arg(event));
   bool restart = false;
   {
     BLELockGuard lock(server ? server->mtx : nullptr);
     restart = server && server->active && server->advertiseOnDisconnect;
+  }
+  // stop()/start() bump the generation so a public advertising call that races
+  // this deferred restart cannot collide with ble_gatts_reset() (EBUSY).
+  if (sReAdvGen.load(std::memory_order_acquire) != armed) {
+    return;
   }
   if (restart && BLE.isInitialized()) {
     BLE.startAdvertising();
@@ -75,6 +86,7 @@ void scheduleReAdvertise(BLEServer::Impl *server) {
     ble_npl_event_init(&sReAdvEvent, reAdvertiseEventCb, server);
     sReAdvEventInited = true;
   }
+  sReAdvArmedGen.store(sReAdvGen.load(std::memory_order_relaxed), std::memory_order_release);
   ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &sReAdvEvent);
 }
 
@@ -88,8 +100,16 @@ void scheduleReAdvertise(BLEServer::Impl *server) {
 // nimble_port_run). BLEClass::end() calls this to drop the reference so the next
 // session re-initializes a fresh event; the freed pool block needs no explicit
 // return because deinit reclaims the whole buffer.
+void nimbleCancelPendingReAdvertise() {
+  sReAdvGen.fetch_add(1, std::memory_order_acq_rel);
+  if (sReAdvEventInited) {
+    ble_npl_eventq_remove(nimble_port_get_dflt_eventq(), &sReAdvEvent);
+  }
+}
+
 void nimbleResetReAdvertiseEvent() {
   log_d("resetting sReAdvEvent, inited=%d", sReAdvEventInited);
+  nimbleCancelPendingReAdvertise();
   if (sReAdvEventInited) {
     // ble_npl_event_deinit() releases the backend-specific backing storage
     // (e.g. returns the block to S31's btdm_osal event pool) instead of just

@@ -48,6 +48,9 @@
 
 #include <host/ble_hs.h>
 #include <host/ble_gap.h>
+#if BLE_GATT_SERVER_SUPPORTED
+void nimbleCancelPendingReAdvertise();
+#endif
 #include <esp_timer.h>
 #include <algorithm>
 #include <cstring>
@@ -319,6 +322,9 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   if (!admission) {
     return BTStatus::InvalidState;
   }
+#if BLE_GATT_SERVER_SUPPORTED
+  nimbleCancelPendingReAdvertise();
+#endif
   if (impl.isAdvertising.load()) {
     (void)stopBackend();
   }
@@ -571,6 +577,13 @@ BTStatus BLEAdvertising::stop() {
 BTStatus BLEAdvertising::stopBackend() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   impl.advSession.fetch_add(1, std::memory_order_relaxed);
+#if BLE_GATT_SERVER_SUPPORTED
+  // Cancel even when advertising is already down: connectable advertising
+  // stops on connect, but advertiseOnDisconnect may still have a host-queue
+  // restart pending. BLEStream::begin() then rebuilds GATT (ble_gatts_reset
+  // is EBUSY while GAP is active).
+  nimbleCancelPendingReAdvertise();
+#endif
   if (!impl.isAdvertising.load()) {
     return BTStatus::OK;
   }
@@ -969,11 +982,16 @@ BTStatus BLEAdvertising::removeExtended(uint8_t instance) {
 
 BTStatus BLEAdvertising::clearExtended() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::OK;
+  }
   int rc = ble_gap_ext_adv_clear();
   if (rc != 0) {
     log_e("ext_adv_clear: rc=%d", rc);
     return BTStatus::Fail;
   }
+  impl.isAdvertising = false;
   for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
     impl.extInstances[i].reset();
   }

@@ -123,6 +123,13 @@ struct BLEAdvertising::Impl {
   // HCI_LE_Clear_Advertising_Sets. Clear is Command Disallowed while advertising
   // or periodic advertising is still enabled on any set (Vol 4, Part E, §7.8.60).
   void stopAllExtendedThenClear();
+  // Which GAP complete may give() advSync. Unmatched stop/clear/periodic-stop
+  // events must not release a waiter for a different command.
+  enum class AdvWait : uint8_t { None, ExtStop, ExtClear, PeriodicStop };
+  std::atomic<AdvWait> advWait{AdvWait::None};
+  void armAdvWait(AdvWait event);
+  void giveIfAdvWait(AdvWait event, BTStatus status);
+  BTStatus finishAdvWait();
 #if BLE_PERIODIC_ADV_SUPPORTED
   // Push periodic params when dirty; waits on advSync.
   BTStatus ensurePeriodicConfigured(uint8_t instance);

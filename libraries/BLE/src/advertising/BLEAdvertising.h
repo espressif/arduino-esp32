@@ -285,6 +285,11 @@ public:
 
   /**
    * @brief Remove all extended advertising instances.
+   *
+   * Blocks until the controller has finished the clear. Fails and leaves
+   * advertising flags unchanged if any set is still enabled (stop first).
+   * After `BLE.end()`, returns `OK` without a native call (stop-like).
+   *
    * @return BTStatus indicating success or error.
    */
   BTStatus clearExtended();

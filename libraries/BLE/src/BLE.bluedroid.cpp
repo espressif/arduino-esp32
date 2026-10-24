@@ -786,10 +786,20 @@ BLEServer BLEClass::createServer() {
     esp_timer_create_args_t timerArgs = {};
     timerArgs.callback = [](void *arg) {
       auto *server = static_cast<BLEServer::Impl *>(arg);
+      if (!server) {
+        return;
+      }
+      const uint32_t armed = server->reAdvArmedEpoch.load(std::memory_order_acquire);
+      if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
+        return;
+      }
       bool restart = false;
       {
-        BLELockGuard lock(server ? server->mtx : nullptr);
-        restart = server && server->active && server->advertiseOnDisconnect;
+        BLELockGuard lock(server->mtx);
+        restart = server->active && server->advertiseOnDisconnect;
+      }
+      if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
+        return;
       }
       if (restart && BLE.isInitialized()) {
         BLE.startAdvertising();
