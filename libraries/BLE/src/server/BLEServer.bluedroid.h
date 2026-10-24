@@ -60,6 +60,11 @@ struct BLEServer::Impl : BLEServerImplCommon {
   // Drop any buffered fragments for connId (no-op if absent).
   void erasePrepWrites(uint16_t connId);
 
+  // Notification-completion tracking is shared: see pendingNotifies and its
+  // helpers on BLEServerImplCommon (both stacks deliver notification
+  // completions and indication confirmations through one event type).
+  void scheduleBusyRetry();
+
   BLESync regSync{"regSync"};
   BLESync createSync{"createSync"};
   BLESync connectSync{"connectSync"};
@@ -74,17 +79,33 @@ struct BLEServer::Impl : BLEServerImplCommon {
   // Used during start() to pass handle results from async GATTS events
   uint16_t *pendingHandle = nullptr;
 
-  // Timer for deferred advertising restart (avoids blocking the BTC task)
+  // Timer for deferred advertising restart (avoids blocking the BTC task).
+  // Epoch is bumped by stop()/start() so a late timer callback cannot restart
+  // advertising after the application has taken over the set. reAdvMtx
+  // serializes an in-flight timer callback's start() against a concurrent
+  // public stop() so stop() waits for GAP to come up and then stops it.
   esp_timer_handle_t advRestartTimer = nullptr;
+  SemaphoreHandle_t reAdvMtx = xSemaphoreCreateRecursiveMutex();
+  std::atomic<uint32_t> reAdvEpoch{0};
+  std::atomic<uint32_t> reAdvArmedEpoch{0};
+
+  // Lazy-created timer for retrying an indication refused with ESP_GATT_BUSY.
+  esp_timer_handle_t indicationRetryTimer = nullptr;
 
   ~Impl() {
     if (advRestartTimer) {
       esp_timer_delete(advRestartTimer);
     }
+    if (indicationRetryTimer) {
+      esp_timer_stop(indicationRetryTimer);
+      esp_timer_delete(indicationRetryTimer);
+    }
+    if (reAdvMtx) {
+      vSemaphoreDelete(reAdvMtx);
+    }
   }
 
   static BLEServer::Impl *s_instance;
-  static void invalidate();
   static void handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 };
@@ -94,5 +115,8 @@ struct BLEServer::Impl : BLEServerImplCommon {
  * @return true on successful registration; false on registration failure or timeout.
  */
 bool bluedroidRegisterGattsApp(const std::shared_ptr<BLEServer::Impl> &server);
+void bluedroidCancelPendingReAdvertise();
+void bluedroidInvalidatePendingReAdvertise();
+SemaphoreHandle_t bluedroidReAdvertiseMutex();
 
 #endif /* BLE_BLUEDROID */

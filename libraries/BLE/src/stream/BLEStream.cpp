@@ -20,18 +20,19 @@
 #if BLE_ENABLED
 
 #include <Arduino.h>
-#include <atomic>
 #include "stream/BLEStream.h"
-#include "BLE.h"
-#include "advertising/BLEAdvertising.h"
-#include "scan/BLEScan.h"
-#include "remote/BLERemoteService.h"
-#include "cbuf.h"
+#include "stream/BLEStreamImpl.h"
+#include "core/BLETask.h"
+#include "core/BLEValidationHooks.h"
+#include "esp32-hal-log.h"
+#include <new>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
-// Nordic UART Service UUIDs
-static const BLEUUID kNUS_ServiceUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
-static const BLEUUID kNUS_RxCharUUID("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
-static const BLEUUID kNUS_TxCharUUID("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+// Nordic UART Service UUIDs (6e40000x-b5a3-f393-e0a9-e50e24dcca9e)
+static constexpr BLEUUID kNUS_ServiceUUID = BLEUUID::from128(0x6e, 0x40, 0x00, 0x01, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+static constexpr BLEUUID kNUS_RxCharUUID = BLEUUID::from128(0x6e, 0x40, 0x00, 0x02, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
+static constexpr BLEUUID kNUS_TxCharUUID = BLEUUID::from128(0x6e, 0x40, 0x00, 0x03, 0xb5, 0xa3, 0xf3, 0x93, 0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
 
 BLEUUID BLEStream::nusServiceUUID() {
   return kNUS_ServiceUUID;
@@ -46,240 +47,422 @@ BLEUUID BLEStream::nusTxCharUUID() {
 }
 
 // --------------------------------------------------------------------------
-// Impl
-// --------------------------------------------------------------------------
-
-struct BLEStream::Impl {
-  enum class Mode {
-    None,
-    Server,
-    Client
-  } mode = Mode::None;
-
-  // Server mode
-  BLEServer server;
-  BLECharacteristic txChr;  // Server TX (Notify) -> client receives
-  BLECharacteristic rxChr;  // Server RX (Write)  -> client sends
-
-  // Client mode
-  BLEClient client;
-  BLERemoteCharacteristic remoteTx;  // Remote TX (subscribe for notifications)
-  BLERemoteCharacteristic remoteRx;  // Remote RX (write to send data)
-
-  cbuf rxBuf;
-  // Number of currently connected peers. In server mode multiple centrals can be
-  // connected at once (writes are notified to all subscribers, RX is merged into
-  // rxBuf); a plain bool would drop to "disconnected" when any one peer left while
-  // others were still connected. Written from the BLE event task in the
-  // connect/disconnect callbacks and read from the user task, so it is atomic to
-  // give well-defined concurrent access. Client mode uses 0/1.
-  std::atomic<int> peerCount{0};
-
-  ConnectHandler onConnectCb = nullptr;
-  DisconnectHandler onDisconnectCb = nullptr;
-  PeerDataHandler onPeerDataCb = nullptr;
-
-  explicit Impl(size_t rxBufSize) : rxBuf(rxBufSize) {}
-};
-
-// --------------------------------------------------------------------------
 // BLEStream lifecycle
 // --------------------------------------------------------------------------
 
-BLEStream::BLEStream(size_t rxBufferSize) : _impl(new Impl(rxBufferSize)) {}
+static constexpr uint8_t kEndRetryLimit = 4;
+
+struct BLEStream::Impl::RecoveryState {
+  StaticSemaphore_t mtxStorage{};
+  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutexStatic(&mtxStorage);
+  std::atomic<bool> hostShuttingDown{false};
+  std::vector<std::shared_ptr<Impl>> entries;
+};
+
+BLEStream::Impl::RecoveryState &BLEStream::Impl::recoveryState() {
+  // BLEClass's global destructor may invoke the registered post-end hook after
+  // ordinary function statics have been destroyed. This tiny registry is
+  // intentionally process-lifetime state; BLE.end() empties its entries.
+  alignas(RecoveryState) static uint8_t storage[sizeof(RecoveryState)];
+  static RecoveryState *state = new (storage) RecoveryState();
+  return *state;
+}
+
+BLEStream::BLEStream(size_t rxBufferSize) : _impl(std::make_shared<Impl>(rxBufferSize)) {}
 
 BLEStream::~BLEStream() {
+  // end() already clears the callbacks this stream registered while it was
+  // live (server: rxChr + server handlers, client: client handlers). Do not
+  // clear them unconditionally here: after end() the server/client handles
+  // may be shared with (or have been re-registered by) another owner, and
+  // wiping their callbacks would break that owner.
   end();
-  // The lambdas registered with _impl->client capture `this`.  Clear them
-  // before deleting _impl so the BLEClient::Impl (which may outlive us via
-  // nimbleRef) never invokes a callback on a destroyed BLEStream.
-  if (_impl && _impl->client) {
-    _impl->client.resetCallbacks();
-  }
-  delete _impl;
+  _impl.reset();
 }
 
-BTStatus BLEStream::begin(const String &deviceName) {
-  if (!_impl || _impl->mode != Impl::Mode::None) {
-    return BTStatus::InvalidState;
+bool BLEStream::Impl::startEndWorker(Impl *common) {
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  if (state.hostShuttingDown.load(std::memory_order_relaxed)) {
+    return false;
   }
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.stream.workerStartFailures)) {
+    return false;
+  }
+#endif
+  return xTaskCreate(endWorker, "ble-stream-end", 6144, common, 1, nullptr) == pdPASS;
+}
 
-  // Initialize BLE if not already
-  if (!BLE.isInitialized()) {
-    BTStatus s = BLE.begin(deviceName);
-    if (!s) {
-      return s;
+bool BLEStream::Impl::claimEnd(
+  const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role, bool &hostShuttingDown
+) {
+  if (!common) {
+    return false;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  hostShuttingDown = state.hostShuttingDown.load(std::memory_order_relaxed);
+  if (!common->markRoleEnding(role)) {
+    return false;
+  }
+  for (const auto &entry : state.entries) {
+    if (entry == common) {
+      return true;
     }
   }
+  state.entries.push_back(common);
+  return true;
+}
 
-  _impl->server = BLE.createServer();
-  if (!_impl->server) {
-    return BTStatus::Fail;
+bool BLEStream::Impl::activateRole(const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role) {
+  if (!common || !role) {
+    return false;
   }
-
-  _impl->server.onConnect([this](BLEServer, const BLEConnInfo &connInfo) {
-    _impl->peerCount.fetch_add(1, std::memory_order_relaxed);
-    if (_impl->onConnectCb) {
-      _impl->onConnectCb(connInfo);
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  if (state.hostShuttingDown.load(std::memory_order_relaxed)) {
+    return false;
+  }
+  {
+    BLELockGuard roleLock(common->roleMtx);
+    if (common->role) {
+      return false;
     }
-  });
-
-  _impl->server.onDisconnect([this](BLEServer, const BLEConnInfo &connInfo, uint8_t reason) {
-    if (_impl->peerCount.load(std::memory_order_relaxed) > 0) {
-      _impl->peerCount.fetch_sub(1, std::memory_order_relaxed);
+    role->starting = true;
+    common->role = role;
+  }
+  for (const auto &entry : state.entries) {
+    if (entry == common) {
+      return true;
     }
-    if (_impl->onDisconnectCb) {
-      _impl->onDisconnectCb(connInfo, reason);
+  }
+  state.entries.push_back(common);
+  return true;
+}
+
+bool BLEStream::Impl::finishRoleStart(const std::shared_ptr<Role> &role) {
+  if (!role) {
+    return false;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  role->starting = false;
+  return !state.hostShuttingDown.load(std::memory_order_relaxed) && !role->ending.load(std::memory_order_acquire);
+}
+
+bool BLEStream::Impl::cancelRoleStart(
+  const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role
+) {
+  if (!common || !role) {
+    return false;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  BLELockGuard roleLock(common->roleMtx);
+  role->starting = false;
+  if (state.hostShuttingDown.load(std::memory_order_relaxed) || role->ending.load(std::memory_order_acquire)
+      || common->role != role) {
+    return false;
+  }
+  common->role.reset();
+  for (auto it = state.entries.begin(); it != state.entries.end(); ++it) {
+    if (*it == common) {
+      state.entries.erase(it);
+      break;
     }
-  });
+  }
+  return true;
+}
 
-  _impl->server.advertiseOnDisconnect(true);
+void BLEStream::Impl::retainEnd(const std::shared_ptr<Impl> &common) {
+  if (!common) {
+    return;
+  }
+  auto &state = recoveryState();
+  BLELockGuard lock(state.mtx);
+  for (const auto &entry : state.entries) {
+    if (entry == common) {
+      return;
+    }
+  }
+  state.entries.push_back(common);
+}
 
-  BLEService svc = _impl->server.createService(kNUS_ServiceUUID);
+void BLEStream::Impl::completeEnd(
+  const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role
+) {
+  if (!common || !role) {
+    return;
+  }
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  BLELockGuard roleLock(common->roleMtx);
+  if (common->role != role) {
+    return;
+  }
+  common->role.reset();
+  if (common->deferredRole == role) {
+    common->deferredRole.reset();
+    common->deferredSelf.reset();
+  }
+  // Keep the registry gate closed while releasing the executor's final native
+  // owner. In particular, a BlueDroid client Role destructor unregisters its
+  // GATTC application; BLE.end() must not observe an empty registry and
+  // deinitialize the host until that destructor has finished.
+  role.reset();
+  for (auto it = state.entries.begin(); it != state.entries.end(); ++it) {
+    if (*it == common) {
+      state.entries.erase(it);
+      return;
+    }
+  }
+}
 
-  // TX characteristic: server notifies, client may also Read. Nordic's NUS
-  // spec defines TX as notify-only, but BLEStream is a generic Arduino
-  // Stream wrapper that frequently talks to generic BLE tooling
-  // (nRF Connect, LightBlue, Web Bluetooth demos, etc.) — those clients
-  // commonly issue an ATT_READ on discovery to populate their UI. Allowing
-  // Read returns the most recently notified bytes, which is the closest
-  // meaningful "current value" and keeps generic clients happy.
-  _impl->txChr = svc.createCharacteristic(kNUS_TxCharUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
+void BLEStream::Impl::quarantineEnd(const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role) {
+  if (!common || !role) {
+    return;
+  }
+  // The ending Impl is published before any executor starts, but retain again
+  // defensively so every terminal handoff preserves cleanup ownership.
+  retainEnd(common);
+  role->detachCallbacks();
+  role->endExecutorActive = false;
+  BLELockGuard lock(common->roleMtx);
+  if (common->deferredRole == role) {
+    common->deferredRole.reset();
+    common->deferredSelf.reset();
+  }
+}
 
-  // RX characteristic: client writes, server receives. Open access to match
-  // the common deployed NUS behavior; add encryption with
-  // BLEPermission::WriteEncrypted if the profile calls for it.
-  _impl->rxChr = svc.createCharacteristic(kNUS_RxCharUUID, BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen);
-  _impl->rxChr.onWrite([this](BLECharacteristic chr, const BLEConnInfo &connInfo) {
-    size_t len = 0;
-    const uint8_t *data = chr.getValue(&len);
-    if (data && len > 0) {
-      _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
-      if (_impl->onPeerDataCb) {
-        _impl->onPeerDataCb(connInfo, data, len);
+bool BLEStream::Impl::recoverQuarantined() {
+  auto &state = recoveryState();
+  for (;;) {
+    std::shared_ptr<Impl> common;
+    std::shared_ptr<Role> role;
+    bool endingPresent = false;
+    {
+      // Gate check and executor claim are one registry transaction. BLE.end()
+      // either closes the gate first, or sees this active executor and waits
+      // while the native host is still available.
+      BLELockGuard recoveryLock(state.mtx);
+      if (state.hostShuttingDown.load(std::memory_order_relaxed)) {
+        return false;
+      }
+      for (auto it = state.entries.begin(); it != state.entries.end();) {
+        common = *it;
+        role = common ? common->loadRole() : nullptr;
+        if (!common || !role) {
+          it = state.entries.erase(it);
+          common.reset();
+          role.reset();
+          continue;
+        }
+        if (!role->ending.load(std::memory_order_acquire)) {
+          common.reset();
+          role.reset();
+          ++it;
+          continue;
+        }
+        endingPresent = true;
+        if (role->starting.load(std::memory_order_acquire)) {
+          common.reset();
+          role.reset();
+          ++it;
+          continue;
+        }
+        bool expected = false;
+        if (role->endExecutorActive.compare_exchange_strong(expected, true)) {
+          break;
+        }
+        common.reset();
+        role.reset();
+        ++it;
+      }
+      if (!common || !role) {
+        return !endingPresent;
       }
     }
-  });
 
-  // Stop advertising before (re-)starting the server so the GATT table is
-  // mutable (NimBLE requires no active GAP procedures during registration).
-  BLEAdvertising adv = BLE.getAdvertising();
-  adv.stop();
-
-  BTStatus srvStatus = _impl->server.start();
-  if (!srvStatus) {
-    return srvStatus;
+    BTStatus status;
+#if BLE_VALIDATION_HOOKS
+    status = BLEValidationHooks::consumeFailure(BLEHooks.stream.teardownFailures) ? BTStatus::Busy : role->end();
+#else
+    status = role->end();
+#endif
+    if (status) {
+      completeEnd(common, role);
+    } else {
+      role->endExecutorActive = false;
+      return false;
+    }
   }
-
-  // Reconfigure advertising to include the NUS service UUID.
-  adv.reset();
-  adv.setName(deviceName);
-  adv.addServiceUUID(kNUS_ServiceUUID);
-  BTStatus advStatus = adv.start();
-  if (!advStatus) {
-    return advStatus;
-  }
-
-  _impl->mode = Impl::Mode::Server;
-  return BTStatus::OK;
 }
 
-BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
-  if (!_impl || _impl->mode != Impl::Mode::None) {
-    return BTStatus::InvalidState;
+void BLEStream::Impl::prepareHostShutdown() {
+  auto &state = recoveryState();
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.stream.holdFinalRoleRelease.load(std::memory_order_acquire)) {
+    BLEHooks.stream.hostShutdownEntered.store(true, std::memory_order_release);
   }
-
-  // Initialize BLE if not already
-  if (!BLE.isInitialized()) {
-    BTStatus s = BLE.begin("");
-    if (!s) {
-      return s;
+#endif
+  std::vector<std::shared_ptr<Impl>> entries;
+  {
+    BLELockGuard recoveryLock(state.mtx);
+    state.hostShuttingDown.store(true, std::memory_order_relaxed);
+    entries = state.entries;
+    for (const auto &common : entries) {
+      auto role = common ? common->loadRole() : nullptr;
+      if (role) {
+        role->ending.store(true, std::memory_order_release);
+      }
     }
   }
-
-  _impl->client = BLE.createClient();
-  if (!_impl->client) {
-    return BTStatus::Fail;
-  }
-
-  _impl->client.onConnect([this](BLEClient, const BLEConnInfo &connInfo) {
-    _impl->peerCount = 1;
-    if (_impl->onConnectCb) {
-      _impl->onConnectCb(connInfo);
+  // Native teardown workers may be waiting on stack completion, so let them
+  // finish while the host is still running. Once shutdown is set they cannot
+  // enqueue another worker and instead settle into quarantine.
+  for (;;) {
+    bool active = false;
+    {
+      BLELockGuard recoveryLock(state.mtx);
+      entries = state.entries;
     }
-  });
-
-  _impl->client.onDisconnect([this](BLEClient, const BLEConnInfo &connInfo, uint8_t reason) {
-    _impl->peerCount = 0;
-    if (_impl->onDisconnectCb) {
-      _impl->onDisconnectCb(connInfo, reason);
+    for (const auto &common : entries) {
+      auto role = common ? common->loadRole() : nullptr;
+      if (role
+          && (role->starting.load(std::memory_order_acquire) || role->endExecutorActive.load(std::memory_order_acquire))) {
+        active = true;
+        break;
+      }
     }
-  });
-
-  BTStatus s = _impl->client.connect(address, timeoutMs);
-  if (!s) {
-    return s;
-  }
-
-  // Discover NUS service
-  BLERemoteService svc = _impl->client.getService(kNUS_ServiceUUID);
-  if (!svc) {
-    _impl->client.disconnect();
-    return BTStatus::NotFound;
-  }
-
-  _impl->remoteTx = svc.getCharacteristic(kNUS_TxCharUUID);
-  _impl->remoteRx = svc.getCharacteristic(kNUS_RxCharUUID);
-
-  if (!_impl->remoteTx || !_impl->remoteRx) {
-    _impl->client.disconnect();
-    return BTStatus::NotFound;
-  }
-
-  // Subscribe to TX notifications (data from server -> us)
-  _impl->remoteTx.subscribe(true, [this](BLERemoteCharacteristic, const uint8_t *data, size_t len, bool) {
-    if (data && len > 0) {
-      _impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
+    if (!active) {
+      break;
     }
-  });
+    vTaskDelay(1);
+  }
+}
 
-  _impl->mode = Impl::Mode::Client;
-  return BTStatus::OK;
+void BLEStream::Impl::releaseQuarantined() {
+  auto &state = recoveryState();
+  BLELockGuard recoveryLock(state.mtx);
+  for (auto &common : state.entries) {
+    auto role = common ? common->loadRole() : nullptr;
+    if (!common || !role) {
+      continue;
+    }
+    role->detachCallbacks();
+    role->endExecutorActive = false;
+    common->clearRole(role);
+    BLELockGuard commonLock(common->roleMtx);
+    common->deferredRole.reset();
+    common->deferredSelf.reset();
+  }
+  state.entries.clear();
+  state.hostShuttingDown.store(false, std::memory_order_release);
+}
+
+void BLEStream::Impl::endWorker(void *arg) {
+  auto *raw = static_cast<Impl *>(arg);
+  {
+    // FreeRTOS task deletion does not unwind C++ locals. Keep every owning
+    // shared_ptr inside this inner scope so its destructor runs before
+    // vTaskDelete() terminates the task.
+    std::shared_ptr<Impl> common;
+    std::shared_ptr<Role> role;
+    {
+      BLELockGuard lock(raw ? raw->roleMtx : nullptr);
+      if (raw) {
+        common = raw->deferredSelf;
+        role = raw->deferredRole;
+      }
+    }
+    if (common && role) {
+      BTStatus status = BTStatus::Fail;
+      for (uint8_t retry = 0; retry < kEndRetryLimit; ++retry) {
+        if (recoveryState().hostShuttingDown.load(std::memory_order_relaxed)) {
+          quarantineEnd(common, role);
+          break;
+        }
+#if BLE_VALIDATION_HOOKS
+        status = BLEValidationHooks::consumeFailure(BLEHooks.stream.teardownFailures) ? BTStatus::Busy : role->end();
+#else
+        status = role->end();
+#endif
+        if (status) {
+          completeEnd(common, role);
+          break;
+        }
+        if (retry + 1 == kEndRetryLimit) {
+          log_e("BLEStream: deferred teardown quarantined (%s)", status.toString());
+          quarantineEnd(common, role);
+          break;
+        }
+        vTaskDelay(pdMS_TO_TICKS(10u << retry));
+      }
+    }
+  }
+  vTaskDelete(nullptr);
 }
 
 void BLEStream::end() {
   if (!_impl) {
     return;
   }
-  if (_impl->mode == Impl::Mode::Client && _impl->client) {
-    _impl->client.disconnect();
+  auto common = _impl;
+  std::shared_ptr<Impl::Role> role;
+  bool hostShuttingDown = false;
+  if (!Impl::claimEnd(common, role, hostShuttingDown)) {
+    return;
   }
-  _impl->peerCount = 0;
-  _impl->mode = Impl::Mode::None;
+  if (hostShuttingDown) {
+    Impl::quarantineEnd(common, role);
+    return;
+  }
+
+  // Service removal is blocking on Bluedroid and rebuilds the native table on
+  // NimBLE. Neither operation may run on the stack callback task that must
+  // deliver its completion. Retain both Impl and role until a worker finishes;
+  // begin() remains closed because the ending role stays installed. If either
+  // allocation fails, keep it closed and make end() retryable rather than
+  // silently exposing a half-torn-down stream.
+  if (bleInStackCallbackTask()) {
+    {
+      BLELockGuard lock(common->roleMtx);
+      common->deferredSelf = common;
+      common->deferredRole = role;
+    }
+    if (!Impl::startEndWorker(common.get())) {
+      log_e("BLEStream: unable to defer callback-context teardown");
+      Impl::quarantineEnd(common, role);
+    }
+    return;
+  }
+
+  BTStatus status = role->end();
+  if (status) {
+    Impl::completeEnd(common, role);
+  } else {
+    role->endExecutorActive = false;
+    log_e("BLEStream: teardown failed (%s); call end() again", status.toString());
+  }
 }
 
 bool BLEStream::connected() const {
-  return _impl && _impl->peerCount > 0;
+  auto role = _impl ? _impl->loadRole() : nullptr;
+  return role && !role->ending && role->connectedCount() > 0;
 }
 
 size_t BLEStream::peerCount() const {
-  if (!_impl || _impl->peerCount < 0) {
-    return 0;
-  }
-  return static_cast<size_t>(_impl->peerCount);
+  auto role = _impl ? _impl->loadRole() : nullptr;
+  return (role && !role->ending) ? role->connectedCount() : 0;
 }
 
 std::vector<BLEConnInfo> BLEStream::peers() const {
   if (!_impl) {
     return {};
   }
-  if (_impl->mode == Impl::Mode::Server && _impl->server) {
-    return _impl->server.getConnections();
-  }
-  if (_impl->mode == Impl::Mode::Client && _impl->client && _impl->peerCount > 0) {
-    return {_impl->client.getConnInfo()};
-  }
-  return {};
+  auto role = _impl->loadRole();
+  return (role && !role->ending) ? role->peers() : std::vector<BLEConnInfo>{};
 }
 
 // --------------------------------------------------------------------------
@@ -303,106 +486,19 @@ size_t BLEStream::write(uint8_t c) {
 }
 
 size_t BLEStream::write(const uint8_t *buffer, size_t size) {
-  if (!_impl || _impl->peerCount <= 0 || size == 0) {
+  if (!_impl || !buffer || size == 0) {
     return 0;
   }
-
-  if (_impl->mode == Impl::Mode::Server) {
-    // Server sends via TX characteristic notifications
-    // Chunk at MTU - 3 (ATT header overhead)
-    uint16_t mtu = BLE.getMTU();
-    uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
-    size_t sent = 0;
-
-    while (sent < size) {
-      size_t len = size - sent;
-      if (len > chunkSize) {
-        len = chunkSize;
-      }
-
-      _impl->txChr.setValue(buffer + sent, len);
-      BTStatus s = _impl->txChr.notify();
-      if (!s) {
-        break;
-      }
-      sent += len;
-    }
-    return sent;
-  } else if (_impl->mode == Impl::Mode::Client) {
-    // Client sends via RX characteristic writes
-    uint16_t mtu = _impl->client.getMTU();
-    uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
-    size_t sent = 0;
-
-    while (sent < size) {
-      size_t len = size - sent;
-      if (len > chunkSize) {
-        len = chunkSize;
-      }
-
-      BTStatus s = _impl->remoteRx.writeValue(buffer + sent, len, false);
-      if (!s) {
-        break;
-      }
-      sent += len;
-    }
-    return sent;
-  }
-
-  return 0;
+  auto role = _impl->loadRole();
+  return (role && !role->ending && role->connectedCount() > 0) ? role->write(buffer, size) : 0;
 }
 
 size_t BLEStream::writeTo(const BLEConnInfo &peer, const uint8_t *buffer, size_t size) {
-  if (!_impl || _impl->peerCount <= 0 || !buffer || size == 0) {
+  if (!_impl || !buffer || size == 0) {
     return 0;
   }
-
-  if (_impl->mode == Impl::Mode::Server) {
-    uint16_t mtu = BLE.getMTU();
-    uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
-    size_t sent = 0;
-
-    while (sent < size) {
-      size_t len = size - sent;
-      if (len > chunkSize) {
-        len = chunkSize;
-      }
-
-      _impl->txChr.setValue(buffer + sent, len);
-      BTStatus s = _impl->txChr.notify(peer.getHandle());
-      if (!s) {
-        break;
-      }
-      sent += len;
-    }
-    return sent;
-  }
-
-  if (_impl->mode == Impl::Mode::Client && _impl->client) {
-    BLEConnInfo conn = _impl->client.getConnInfo();
-    if (conn.getHandle() != peer.getHandle()) {
-      return 0;
-    }
-    uint16_t mtu = _impl->client.getMTU();
-    uint16_t chunkSize = (mtu > 3) ? (mtu - 3) : 20;
-    size_t sent = 0;
-
-    while (sent < size) {
-      size_t len = size - sent;
-      if (len > chunkSize) {
-        len = chunkSize;
-      }
-
-      BTStatus s = _impl->remoteRx.writeValue(buffer + sent, len, false);
-      if (!s) {
-        break;
-      }
-      sent += len;
-    }
-    return sent;
-  }
-
-  return 0;
+  auto role = _impl->loadRole();
+  return (role && !role->ending && role->connectedCount() > 0) ? role->writeTo(peer, buffer, size) : 0;
 }
 
 void BLEStream::flush() {
@@ -410,7 +506,11 @@ void BLEStream::flush() {
 }
 
 BLEStream::operator bool() const {
-  return _impl && _impl->mode != Impl::Mode::None;
+  if (!_impl) {
+    return false;
+  }
+  auto role = _impl->loadRole();
+  return role && !role->ending;
 }
 
 // --------------------------------------------------------------------------
@@ -419,19 +519,19 @@ BLEStream::operator bool() const {
 
 void BLEStream::onConnect(ConnectHandler handler) {
   if (_impl) {
-    _impl->onConnectCb = handler;
+    _impl->storeConnectHandler(std::move(handler));
   }
 }
 
 void BLEStream::onDisconnect(DisconnectHandler handler) {
   if (_impl) {
-    _impl->onDisconnectCb = handler;
+    _impl->storeDisconnectHandler(std::move(handler));
   }
 }
 
 void BLEStream::onPeerData(PeerDataHandler handler) {
   if (_impl) {
-    _impl->onPeerDataCb = handler;
+    _impl->storePeerDataHandler(std::move(handler));
   }
 }
 
@@ -439,9 +539,7 @@ void BLEStream::resetCallbacks() {
   if (!_impl) {
     return;
   }
-  _impl->onConnectCb = nullptr;
-  _impl->onDisconnectCb = nullptr;
-  _impl->onPeerDataCb = nullptr;
+  _impl->clearHandlers();
 }
 
 #endif /* BLE_ENABLED */

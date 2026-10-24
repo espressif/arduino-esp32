@@ -87,12 +87,17 @@ BLEAdvertisementData BLEBeacon::getAdvertisementData() const {
 }
 
 void BLEBeacon::setFromPayload(const uint8_t *payload, size_t len) {
-  // Expects manufacturer-specific data (after company ID):
-  // type(1) + length(1) + UUID(16) + major(2) + minor(2) + power(1) = 23 bytes.
-  if (len < 23) {
+  if (!payload) {
     return;
   }
-  if (payload[0] != 0x02 || payload[1] != 0x15) {
+  // Accept either 25-byte manufacturer-specific data (company ID (2) + 0x02 0x15 + body)
+  // or 23-byte payload starting directly after the company ID (0x02 0x15 + body).
+  if (len >= 25 && payload[2] == 0x02 && payload[3] == 0x15) {
+    _manufacturerId = static_cast<uint16_t>(payload[0] | (payload[1] << 8));
+    payload += 2;
+    len -= 2;
+  }
+  if (len < 23 || payload[0] != 0x02 || payload[1] != 0x15) {
     return;
   }
 

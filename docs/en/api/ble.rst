@@ -231,6 +231,10 @@ end
 ^^^
 
 Deinitialize the BLE stack. Pass ``true`` to release controller memory (cannot re-initialize after).
+Local GATT services are dropped; ``createServer()`` still returns the same server object after a later
+``begin()``, so the sketch must recreate services before ``start()``. User-held service and characteristic
+handles become detached shells: they remain non-null because the sketch still owns them, but no longer have
+a parent or native attribute handle.
 
 .. code-block:: cpp
 
@@ -526,7 +530,7 @@ getService
 
 .. code-block:: cpp
 
-    BLEService getService(const BLEUUID &uuid);
+    BLEService getService(const BLEUUID &uuid) const;
 
 Retrieve a service by UUID. Returns a null handle if not found.
 
@@ -573,12 +577,20 @@ Callbacks
 
 All callback setters accept ``std::function`` handlers.
 
+.. warning::
+
+    Mutable handle references passed to handlers (``BLEServer &``, ``BLECharacteristic &``,
+    ``BLEClient &``, and similar) are **borrowed for that callback invocation only**. They let
+    ``onRead``/``onNotify`` handlers call ``setValue()`` on the object being served, but the
+    reference must not be retained, stored, or moved from: copy the handle (a cheap shared-handle
+    copy) if it is needed after the handler returns.
+
 onConnect
 """""""""
 
 .. code-block:: cpp
 
-    using ConnectHandler = std::function<void(BLEServer server, const BLEConnInfo &conn)>;
+    using ConnectHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn)>;
     void onConnect(ConnectHandler handler);
 
 Called when a remote device connects to this server.
@@ -588,7 +600,7 @@ onDisconnect
 
 .. code-block:: cpp
 
-    using DisconnectHandler = std::function<void(BLEServer server, const BLEConnInfo &conn, uint8_t reason)>;
+    using DisconnectHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn, uint8_t reason)>;
     void onDisconnect(DisconnectHandler handler);
 
 Called when a remote device disconnects. ``reason`` is the HCI disconnect reason code (e.g. ``0x13`` = remote
@@ -599,7 +611,7 @@ onMtuChanged
 
 .. code-block:: cpp
 
-    using MtuChangedHandler = std::function<void(BLEServer server, const BLEConnInfo &conn, uint16_t mtu)>;
+    using MtuChangedHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn, uint16_t mtu)>;
     void onMtuChanged(MtuChangedHandler handler);
 
 Called when the ATT MTU is renegotiated for a connection.
@@ -609,7 +621,7 @@ onConnParamsUpdate
 
 .. code-block:: cpp
 
-    using ConnParamsHandler = std::function<void(BLEServer server, const BLEConnInfo &conn)>;
+    using ConnParamsHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn)>;
     void onConnParamsUpdate(ConnParamsHandler handler);
 
 Called when connection parameters are updated.
@@ -619,7 +631,7 @@ onIdentity
 
 .. code-block:: cpp
 
-    using IdentityHandler = std::function<void(BLEServer server, const BLEConnInfo &conn)>;
+    using IdentityHandler = std::function<void(BLEServer &server, const BLEConnInfo &conn)>;
     void onIdentity(IdentityHandler handler);
 
 Called when a peer's identity address is resolved (e.g. after bonding with IRK exchange).
@@ -650,7 +662,7 @@ getAdvertising
 
 .. code-block:: cpp
 
-    BLEAdvertising getAdvertising();
+    BLEAdvertising getAdvertising() const;
 
 Get the advertising controller associated with this server.
 
@@ -791,7 +803,7 @@ getCharacteristic
 
 .. code-block:: cpp
 
-    BLECharacteristic getCharacteristic(const BLEUUID &uuid);
+    BLECharacteristic getCharacteristic(const BLEUUID &uuid) const;
 
 getCharacteristics
 """"""""""""""""""
@@ -866,17 +878,21 @@ onRead
 
 .. code-block:: cpp
 
-    using ReadHandler = std::function<void(BLECharacteristic chr, const BLEConnInfo &conn)>;
+    using ReadHandler = std::function<void(BLECharacteristic &chr, const BLEConnInfo &conn)>;
     void onRead(ReadHandler handler);
 
-Called before a client reads the characteristic value. Use this to update the value dynamically.
+Called before a client reads the characteristic value. Use this to update the value dynamically:
+calling ``chr.setValue()`` inside the handler sets the value returned in that read. The handler runs once per
+read, including long reads of values larger than the MTU, which are served from the value set here. The library
+keeps a per-connection copy of that value until the long read completes, so a concurrent ``setValue()`` cannot mix
+two values in one read.
 
 onWrite
 """""""
 
 .. code-block:: cpp
 
-    using WriteHandler = std::function<void(BLECharacteristic chr, const BLEConnInfo &conn)>;
+    using WriteHandler = std::function<void(BLECharacteristic &chr, const BLEConnInfo &conn)>;
     void onWrite(WriteHandler handler);
 
 Called after a client writes to the characteristic. Retrieve the new value with ``getValue()``.
@@ -886,17 +902,19 @@ onNotify
 
 .. code-block:: cpp
 
-    using NotifyHandler = std::function<void(BLECharacteristic chr)>;
+    using NotifyHandler = std::function<void(BLECharacteristic &chr)>;
     void onNotify(NotifyHandler handler);
 
-Called when a notification is sent.
+Called once per ``notify()`` / ``indicate()`` call, before the payload is built, when there is at least one
+recipient. When ``notify()`` or ``indicate()`` is called without a payload, a value set here with
+``chr.setValue()`` is the one sent to every recipient.
 
 onSubscribe
 """""""""""
 
 .. code-block:: cpp
 
-    using SubscribeHandler = std::function<void(BLECharacteristic chr, const BLEConnInfo &conn, uint16_t subValue)>;
+    using SubscribeHandler = std::function<void(BLECharacteristic &chr, const BLEConnInfo &conn, uint16_t subValue)>;
     void onSubscribe(SubscribeHandler handler);
 
 Called when a client subscribes to or unsubscribes from notifications/indications. ``subValue`` indicates
@@ -907,10 +925,25 @@ onStatus
 
 .. code-block:: cpp
 
-    using StatusHandler = std::function<void(BLECharacteristic chr, NotifyStatus status, uint32_t code)>;
+    using StatusHandler = std::function<void(BLECharacteristic &chr, NotifyStatus status, uint32_t code)>;
     void onStatus(StatusHandler handler);
 
-Called with delivery status after a notification or indication is sent.
+Called with the delivery status of each notification or indication:
+
+* ``SUCCESS_NOTIFY`` once a notification has been sent.
+* ``SUCCESS_INDICATE`` once the client has confirmed an indication.
+* ``ERROR_NO_CLIENT`` when no client is connected, the target connection handle is not connected, or the
+  link drops before delivery.
+* ``ERROR_NO_SUBSCRIBER`` when ``notify()`` or ``indicate()`` (without a connection handle) finds clients
+  connected but none subscribed.
+* ``ERROR_NOTIFY_DISABLED`` / ``ERROR_INDICATE_DISABLED`` when the client targeted by ``notify(connHandle)`` /
+  ``indicate(connHandle)`` has not enabled notifications / indications.
+* ``ERROR_INDICATE_TIMEOUT`` when an indication is not confirmed within 30 seconds (the link is then closed),
+  ``ERROR_INDICATE_FAILURE`` when it cannot be sent, is rejected, or the per-client queue is full, and
+  ``ERROR_GATT`` for other failures. ``code`` carries the backend error code.
+
+The handler may run on the task that called ``notify()`` (NimBLE reports notification results before ``notify()``
+returns) or on the BLE stack task.
 
 resetCallbacks
 """"""""""""""
@@ -968,7 +1001,9 @@ notify
     BTStatus notify(uint16_t connHandle, const uint8_t *data = nullptr, size_t length = 0);
 
 Send a notification to all subscribers or to a specific connection. If ``data`` is ``nullptr``, the current
-characteristic value is sent.
+characteristic value is sent. The broadcast overload returns ``BTStatus::OK`` even when there is no recipient
+(reported through ``onStatus``). ``notify(connHandle)`` returns ``BTStatus::NotConnected`` if the handle is not
+connected and ``BTStatus::InvalidState`` if that client has not enabled notifications.
 
 indicate
 """"""""
@@ -979,7 +1014,15 @@ indicate
     BTStatus indicate(uint16_t connHandle, const uint8_t *data = nullptr, size_t length = 0);
 
 Send an indication to all subscribers or to a specific connection. Indications require acknowledgment
-from the client.
+from the client, and ATT allows only one unconfirmed indication per client. The call does not block: an
+indication sent while another is awaiting confirmation is queued (up to 8 per client) and sent in order, and
+``onStatus`` reports ``SUCCESS_INDICATE`` as each one is confirmed. ``indicate(connHandle)`` returns
+``BTStatus::NotConnected`` / ``BTStatus::InvalidState`` like ``notify(connHandle)``, and ``BTStatus::Busy`` when the
+queue for that client is full.
+
+An indication the stack refuses because it is still waiting for the client to confirm one the stack sent itself (such
+as Service Changed) is retried until the 30 s ATT transaction timeout passes. Notifications sent while an indication
+is awaiting confirmation on the same characteristic are sent immediately on both backends.
 
 Properties and Permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1007,7 +1050,7 @@ getDescriptor
 
 .. code-block:: cpp
 
-    BLEDescriptor getDescriptor(const BLEUUID &uuid);
+    BLEDescriptor getDescriptor(const BLEUUID &uuid) const;
 
 getDescriptors
 """"""""""""""
@@ -1064,8 +1107,8 @@ Callbacks
 
 .. code-block:: cpp
 
-    using ReadHandler = std::function<void(BLEDescriptor desc, const BLEConnInfo &conn)>;
-    using WriteHandler = std::function<void(BLEDescriptor desc, const BLEConnInfo &conn)>;
+    using ReadHandler = std::function<void(BLEDescriptor &desc, const BLEConnInfo &conn)>;
+    using WriteHandler = std::function<void(BLEDescriptor &desc, const BLEConnInfo &conn)>;
     void onRead(ReadHandler handler);
     void onWrite(WriteHandler handler);
 
@@ -1168,6 +1211,12 @@ Presentation Format Convenience (0x2904)
     void setUnit(uint16_t unit);
     void setNamespace(uint8_t ns);
     void setFormatDescription(uint16_t description);
+
+    uint8_t getFormat() const;
+    int8_t getExponent() const;
+    uint16_t getUnit() const;
+    uint8_t getNamespace() const;
+    uint16_t getFormatDescription() const;
 
 FORMAT Constants
 ^^^^^^^^^^^^^^^^
@@ -1294,7 +1343,7 @@ getService
 
 .. code-block:: cpp
 
-    BLERemoteService getService(const BLEUUID &uuid);
+    BLERemoteService getService(const BLEUUID &uuid) const;
 
 Discover and return a specific service by UUID. Triggers service discovery if not already cached.
 
@@ -1331,12 +1380,12 @@ Callbacks
 
 .. code-block:: cpp
 
-    using ConnectHandler = std::function<void(BLEClient client, const BLEConnInfo &conn)>;
-    using DisconnectHandler = std::function<void(BLEClient client, const BLEConnInfo &conn, uint8_t reason)>;
-    using ConnectFailHandler = std::function<void(BLEClient client, int reason)>;
-    using MtuChangedHandler = std::function<void(BLEClient client, const BLEConnInfo &conn, uint16_t mtu)>;
-    using ConnParamsReqHandler = std::function<bool(BLEClient client, const BLEConnParams &params)>;
-    using IdentityHandler = std::function<void(BLEClient client, const BLEConnInfo &conn)>;
+    using ConnectHandler = std::function<void(BLEClient &client, const BLEConnInfo &conn)>;
+    using DisconnectHandler = std::function<void(BLEClient &client, const BLEConnInfo &conn, uint8_t reason)>;
+    using ConnectFailHandler = std::function<void(BLEClient &client, int reason)>;
+    using MtuChangedHandler = std::function<void(BLEClient &client, const BLEConnInfo &conn, uint16_t mtu)>;
+    using ConnParamsReqHandler = std::function<bool(BLEClient &client, const BLEConnParams &params)>;
+    using IdentityHandler = std::function<void(BLEClient &client, const BLEConnInfo &conn)>;
 
     void onConnect(ConnectHandler handler);
     void onDisconnect(DisconnectHandler handler);
@@ -1405,7 +1454,7 @@ Characteristic Access
 
 .. code-block:: cpp
 
-    BLERemoteCharacteristic getCharacteristic(const BLEUUID &uuid);
+    BLERemoteCharacteristic getCharacteristic(const BLEUUID &uuid) const;
     std::vector<BLERemoteCharacteristic> getCharacteristics() const;
 
 Convenience Read/Write
@@ -1447,7 +1496,7 @@ Reading Values
     uint32_t readUInt32(uint32_t timeoutMs = 3000);
     float readFloat(uint32_t timeoutMs = 3000);
     size_t readValue(uint8_t *buf, size_t bufLen, uint32_t timeoutMs = 3000);
-    const uint8_t *readRawData(size_t *len = nullptr);
+    const uint8_t *readRawData(size_t *len = nullptr) const;
 
 The typed read methods (``readUInt8``, ``readFloat``, etc.) perform a remote GATT read and interpret the
 result. ``readRawData()`` returns the cached raw bytes from the last read without triggering a new one.
@@ -1480,20 +1529,30 @@ Subscribe / Unsubscribe
 
 .. code-block:: cpp
 
-    using NotifyCallback = std::function<void(BLERemoteCharacteristic chr, const uint8_t *, size_t, bool)>;
-    BTStatus subscribe(bool notifications = true, NotifyCallback callback = nullptr);
+    enum class Delivery : uint8_t { Notification, Indication };
+    using NotifyCallback = std::function<void(BLERemoteCharacteristic &chr, const uint8_t *, size_t, Delivery)>;
+    BTStatus subscribe(BLESubscription mode, NotifyCallback callback = nullptr);
     BTStatus unsubscribe();
 
-Subscribe to notifications (``notifications = true``) or indications (``notifications = false``).
-The callback receives the characteristic, data pointer, data length, and a boolean indicating
-whether it was a notification (``true``) or indication (``false``).
+Subscribe to notifications (``BLESubscription::Notify``), indications (``BLESubscription::Indicate``),
+or both simultaneously (``BLESubscription::Notify | BLESubscription::Indicate``, which writes ``0x0003``
+to the CCCD). The selected bits replace any previous subscription; ``BLESubscription::None`` is rejected
+(use ``unsubscribe()``). The callback receives the characteristic, data pointer, data length, and a
+``Delivery`` value saying whether the value arrived as a notification or an indication.
+
+.. note::
+
+    The callback runs on the BLE stack task. Do not call blocking GATT operations (``readValue()``, confirmed
+    ``writeValue()``, ``subscribe()``) on the characteristic from inside it: they wait for a response that the same
+    task delivers and stall until they time out. A read also replaces the buffer the data pointer refers to.
+    Defer such work to another task.
 
 Descriptor Access
 ^^^^^^^^^^^^^^^^^
 
 .. code-block:: cpp
 
-    BLERemoteDescriptor getDescriptor(const BLEUUID &uuid);
+    BLERemoteDescriptor getDescriptor(const BLEUUID &uuid) const;
     std::vector<BLERemoteDescriptor> getDescriptors() const;
 
 Accessors
@@ -1525,6 +1584,25 @@ Reading Values
     uint8_t readUInt8(uint32_t timeoutMs = 3000);
     uint16_t readUInt16(uint32_t timeoutMs = 3000);
     uint32_t readUInt32(uint32_t timeoutMs = 3000);
+    const uint8_t *readRawData(size_t *len = nullptr) const;
+
+Presentation Format Convenience (0x2904)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: cpp
+
+    uint8_t getFormat() const;
+    int8_t getExponent() const;
+    uint16_t getUnit() const;
+    uint8_t getNamespace() const;
+    uint16_t getFormatDescription() const;
+
+    bool isUserDescription() const;    // UUID == 0x2901
+    bool isCCCD() const;               // UUID == 0x2902
+    bool isPresentationFormat() const;  // UUID == 0x2904
+
+The ``getFormat()`` / ``getExponent()`` / ``getUnit()`` / ``getNamespace()`` / ``getFormatDescription()``
+getters parse the cached 7-byte Presentation Format payload populated by ``readValue()``.
 
 Writing Values
 ^^^^^^^^^^^^^^
@@ -1686,7 +1764,7 @@ Results Management
 
 .. code-block:: cpp
 
-    BLEScan::Results getResults();
+    BLEScan::Results getResults() const;
     void clearResults();
     void erase(const BTAddress &address);
 
@@ -1811,6 +1889,18 @@ Presence Checks
     bool haveTXPower() const;
     bool haveAppearance() const;
     bool haveManufacturerData() const;
+    bool havePreferredParams() const;
+
+Preferred Connection Parameters (AD 0x12)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: cpp
+
+    uint16_t getMinPreferred() const;
+    uint16_t getMaxPreferred() const;
+
+Returns the Slave Connection Interval Range (AD type ``0x12``) bounds in 1.25 ms units when
+``havePreferredParams()`` is true, or ``0`` otherwise.
 
 Connectable / Scannable / Directed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1832,13 +1922,20 @@ BLE 5.0 Extended Info
     uint8_t getAdvSID() const;
     uint16_t getPeriodicInterval() const;
 
-Frame Type
-^^^^^^^^^^
+Frame Type and Beacon / Eddystone Helpers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: cpp
 
     enum FrameType { Unknown, IBeacon, EddystoneUUID, EddystoneURL, EddystoneTLM };
     FrameType getFrameType() const;
+
+    BLEBeacon getBeacon() const;
+    bool getBeacon(BLEBeacon &beacon) const;
+    BLEEddystoneURL getEddystoneURL() const;
+    bool getEddystoneURL(BLEEddystoneURL &url) const;
+    BLEEddystoneTLM getEddystoneTLM() const;
+    bool getEddystoneTLM(BLEEddystoneTLM &tlm) const;
 
 toString
 ^^^^^^^^
@@ -2864,8 +2961,8 @@ Callbacks
 
 .. code-block:: cpp
 
-    using DataHandler = std::function<void(BLEL2CAPChannel channel, const uint8_t *data, size_t len)>;
-    using DisconnectHandler = std::function<void(BLEL2CAPChannel channel)>;
+    using DataHandler = std::function<void(BLEL2CAPChannel &channel, const uint8_t *data, size_t len)>;
+    using DisconnectHandler = std::function<void(BLEL2CAPChannel &channel)>;
     BTStatus onData(DataHandler handler);
     BTStatus onDisconnect(DisconnectHandler handler);
     BTStatus resetCallbacks();
@@ -2893,9 +2990,9 @@ Callbacks
 
 .. code-block:: cpp
 
-    using AcceptHandler = std::function<void(BLEL2CAPChannel channel)>;
-    using DataHandler = std::function<void(BLEL2CAPChannel channel, const uint8_t *data, size_t len)>;
-    using DisconnectHandler = std::function<void(BLEL2CAPChannel channel)>;
+    using AcceptHandler = std::function<void(BLEL2CAPChannel &channel)>;
+    using DataHandler = std::function<void(BLEL2CAPChannel &channel, const uint8_t *data, size_t len)>;
+    using DisconnectHandler = std::function<void(BLEL2CAPChannel &channel)>;
     BTStatus onAccept(AcceptHandler handler);
     BTStatus onData(DataHandler handler);
     BTStatus onDisconnect(DisconnectHandler handler);
@@ -2974,7 +3071,8 @@ Multi-peer (server mode)
 
 * ``peerCount()`` -- number of connected centrals (0 or 1 in client mode).
 * ``peers()`` -- snapshot of connected peers (``BLEConnInfo`` values).
-* ``writeTo()`` -- notify only the given peer's TX subscription (server mode).
+* ``writeTo()`` -- notify only the given peer's TX subscription (server mode). Returns 0 if that peer has not
+  enabled TX notifications.
 
 .. code-block:: cpp
 

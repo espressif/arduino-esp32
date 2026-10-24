@@ -68,20 +68,61 @@ always cast-free `impl.member`.
   matching the targeted getters.
 - **128-bit UUID byte order** is little-endian in `ble_uuid_any_t` and big-endian in `BLEUUID`;
   the `types/BLEUUID.nimble` converter reverses the 16 bytes.
-- **CCCD is assumed at value-handle + 1** on the subscribe path.
+- **CCCD discovery** on `subscribe()`/`unsubscribe()` resolves `0x2902` via `getDescriptor(0x2902)` within the characteristic's bounded handle range rather than assuming `valHandle + 1`.
+- **Service Changed invalidation** caches and delivers the peer's real four-byte 0x2A05 range, but conservatively detaches the full discovered remote tree before the callback because remote handles do not retain enough range metadata for partial invalidation. The sketch must rediscover before reusing remote handles.
+- **Service removal while connected.** `ble_gatts_reset()` returns `BLE_HS_EBUSY` while GAP is active or a peer is connected; `bleServerRemoveService` falls back to `ble_gatts_svc_set_visibility(startHandle, 0)` + `ble_svc_gatt_changed(startHandle, endHandle)` so runtime removal and Service Changed (`0x2A05`) match Bluedroid.
 - **Re-advertise event lifetime.** `nimbleResetReAdvertiseEvent()` drops the deferred
   re-advertise event's backing reference on `end()` so a later `begin()` re-initializes it (avoids a
   use-after-free across a stack restart — the FreeRTOS NimBLE port frees the event pool on
-  `nimble_port_deinit()`).
+  `nimble_port_deinit()`). `stop()`/`start()` also dequeue that event and bump a generation so a
+  late `advertiseOnDisconnect` restart cannot enable GAP while `ble_gatts_reset()` is running
+  (`BLE_HS_EBUSY` — NimBLE host refuses GATT rebuild while advertising or a connection is active).
+  An in-flight host-queue callback that has already been dequeued still holds `sReAdvMtx` across
+  `startAdvertising()`; public advertising calls take that mutex before admission so `stop()` waits
+  the restart out and then stops native GAP.
 - **MTU exchange** runs after `connect()` returns, but `onConnect` has already fired, so
   `onMtuChanged` still lands after `onConnect` (matches Bluedroid ordering). Blocking `connect()`
   waits on `mtuSync` so `getMTU()` is valid on return.
 - **BLE5 routing.** When `BLE5_SUPPORTED`, legacy `start()`/`scan` use the extended controller API
   with legacy PDUs on a reserved top instance (`kLegacyInstance`) so they coexist with user
   `startExtended` sets. Extended scan reports merge scan responses via `mergeScanResponse`.
+  `ble_gap_ext_adv_clear()` returns `BLE_HS_EBUSY` if any instance (or periodic advertising) is
+  still active, matching `HCI_LE_Clear_Advertising_Sets` Command Disallowed (Vol 4, Part E,
+  §7.8.60). Public `clearExtended()` returns `Fail` and leaves advertising flags unchanged in that
+  case; after `BLE.end()` it returns `OK` with no native call (stop-like). Reset/shutdown stop every
+  instance first so the following clear can succeed.
+- **Advertising preemption.** NimBLE reports `ADV_COMPLETE` / `BLE_HS_EPREEMPTED` when it
+  temporarily stops advertising (privacy list updates, `ble_gap_unpair`). Host-initiated disable
+  does not generate `HCI_LE_Advertising_Set_Terminated` (Vol 4, Part E, §7.7.65.18); the stack
+  synthesizes the preempted complete from `ble_gap_preempt_done`. The library resumes the set that
+  was active with the time remaining on the original session deadline. `stop()` bumps `advSession`
+  even if the advertising flag was already cleared by the complete event, so an application stop
+  that races the resume does not restart advertising. A late `ADV_COMPLETE` is ignored while
+  `ble_gap_ext_adv_active` / `ble_gap_adv_active` still reports the instance running, so a previous
+  stop cannot clear a session that `start()` has already restarted. Client `nimbleRef` is moved off
+  the member before `disconnectSync.give()` / `connectSync.give()` so a reconnect can install a new
+  keepalive without the dying handler wiping it.
 - **L2CAP `write()`** splits payloads larger than `peer_coc_mtu` into MTU-sized SDUs and
-  may block between chunks on `COC_TX_UNSTALLED` (NimBLE itself does not segment oversized SDUs).
-  RX flatten uses a fixed 256-byte stack threshold; larger SDUs spill to the heap. Channel MTU
-  is independent of that threshold (caller-configured: 128, 256, 512, …).
+  application-task calls may block between chunks on `COC_TX_UNSTALLED` (NimBLE itself does not
+  segment oversized SDUs). Calls from host callbacks return `Busy` instead of blocking when more
+  credits are needed. RX flatten uses a fixed 256-byte stack threshold; larger SDUs spill to the
+  heap. Channel MTU is independent of that threshold (caller-configured: 128, 256, 512, …).
+- **L2CAP channel operations** from application tasks use a tracked host-queue event while an
+  operation is queued or in flight. The host task therefore owns all native channel-pointer
+  dereferences, ordered with `COC_DISCONNECTED`; one operation mutex covers each complete public
+  write/get-MTU/disconnect transaction. Completion returns the event backing to ESP-IDF's bounded
+  NPL pool before waking the caller, so retained detached shells consume no slots. Shutdown closes
+  the enqueue gate before stopping the host, then removes and deinitializes any still-active events
+  and releases waiters before NimBLE destroys the pool. Detached shell write/disconnect calls return
+  `NotConnected` consistently before and after an `end()`/`begin()` cycle, while detached `getMTU()`
+  returns zero without queueing. The active registry owns each Impl strongly and the event callback
+  takes a local strong copy before execution, covering the interval after completion wakes a caller
+  that immediately drops the final public handle.
+- **Late L2CAP connect completion** is deferred onto a host-queue callout after a blocking
+  `connectL2CAP()` timeout. NimBLE invokes `COC_CONNECTED` before releasing its connect signaling
+  procedure, so the orphan disconnect cannot be submitted inline; its context remains owned until
+  `COC_DISCONNECTED` or host teardown.
+- **Registered L2CAP servers** remain strongly owned by the backend until host shutdown because
+  NimBLE retains their callback argument even when the sketch drops its public server handle.
 - **`onIdentity`** fires at most once per connection (`identityDispatched` latch, reset on CONNECT).
 - **`onConnParamsUpdateRequest`** is NimBLE-only (returns accept/reject; no Bluedroid equivalent).

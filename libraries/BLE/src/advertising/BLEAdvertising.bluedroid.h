@@ -21,22 +21,36 @@
 
 #include "advertising/BLEAdvertising.h"
 #include "core/BLESync.h"
+#include "core/BLEAdmission.h"
 
 #include <esp_gap_ble_api.h>
+#include <esp_timer.h>
 #include <freertos/semphr.h>
+#include <atomic>
 #include <vector>
 
 // BLEAdvertising is entirely Bluedroid-specific (no cross-backend shared state), so
 // BLEAdvertising::Impl is defined directly here (a .bluedroid.* file) with no common base.
 struct BLEAdvertising::Impl {
-  bool isAdvertising = false;
+  BLEAdmissionGate nativeAdmission;
+  std::atomic<bool> isAdvertising{false};
   BLESync advSync{"advSync"};
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  SemaphoreHandle_t callbackMtx = xSemaphoreCreateRecursiveMutex();
   BLEAdvertising::CompleteHandler onCompleteCb = nullptr;
+  esp_timer_handle_t durationTimer = nullptr;
+  std::atomic<bool> durationExpiryStop{false};
 
   ~Impl() {
+    if (durationTimer) {
+      esp_timer_stop_blocking(durationTimer, portMAX_DELAY);
+      esp_timer_delete(durationTimer);
+    }
     if (mtx) {
       vSemaphoreDelete(mtx);
+    }
+    if (callbackMtx) {
+      vSemaphoreDelete(callbackMtx);
     }
   }
 
@@ -60,7 +74,18 @@ struct BLEAdvertising::Impl {
   std::vector<uint8_t> rawScanRespData;
 
   static BLEAdvertising::Impl *s_instance;
+  static void durationTimerCb(void *arg);
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
+
+  // Which GAP complete may give() advSync. Unmatched stop/clear completes must
+  // not release a waiter for a different command, and must not clear
+  // isAdvertising / periodicAdvRunning (a leftover stop after start would
+  // leave the radio up while stop() no-ops).
+  enum class AdvWait : uint8_t { None, LegacyStop, ExtStop, ExtClear, PeriodicStop };
+  std::atomic<AdvWait> advWait{AdvWait::None};
+  void armAdvWait(AdvWait event);
+  bool giveIfAdvWait(AdvWait event, BTStatus status);
+  BTStatus finishAdvWait();
 
 #if BLE5_SUPPORTED
   // --- BLE5 extended advertising (TX) per-instance state ---
@@ -73,11 +98,24 @@ struct BLEAdvertising::Impl {
     // Cleared whenever a setter mutates params; ensureExtConfigured() re-applies
     // them to the controller on the next data/start call and sets it true again.
     bool extAdvRegistered = false;
+    std::atomic<bool> isAdvertising{false};
     esp_ble_gap_ext_adv_params_t params{};
 #if BLE_PERIODIC_ADV_SUPPORTED
     bool periodicAdvRegistered = false;
+    bool periodicAdvRunning = false;
     esp_ble_gap_periodic_adv_params_t periodicParams{};
 #endif
+    void reset() {
+      slotInitialized = false;
+      extAdvRegistered = false;
+      isAdvertising.store(false);
+      params = {};
+#if BLE_PERIODIC_ADV_SUPPORTED
+      periodicAdvRegistered = false;
+      periodicAdvRunning = false;
+      periodicParams = {};
+#endif
+    }
   };
   static constexpr uint8_t kMaxExtInstances = 2;  // instance 0 + reserved legacy set
   static constexpr uint8_t kLegacyInstance = kMaxExtInstances - 1;
@@ -91,6 +129,10 @@ struct BLEAdvertising::Impl {
   BTStatus ensureExtConfigured(uint8_t instance);
   // Configure + set data + start the reserved legacy-PDU instance. Blocking.
   BTStatus startLegacyViaExtAdv(uint32_t durationMs);
+  // Stop every extended/periodic set, wait for the async completions, then
+  // HCI_LE_Clear_Advertising_Sets. Clear is Command Disallowed while advertising
+  // or periodic advertising is still enabled on any set (Vol 4, Part E, §7.8.60).
+  void stopAllExtendedThenClear();
 #if BLE_PERIODIC_ADV_SUPPORTED
   // Push periodic params when dirty; waits on advSync.
   BTStatus ensurePeriodicConfigured(uint8_t instance);

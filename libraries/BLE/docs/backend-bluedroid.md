@@ -20,6 +20,14 @@ Bluedroid.
   cache directly without per-request callbacks.
 - **Deferred advertising restart.** Restarting advertising from inside a GATTS/GAP callback would
   re-enter the BTC task, so the server schedules it on an `esp_timer` (`advRestartTimer`).
+  `stop()`/`start()` cancel that timer and bump `reAdvEpoch` even when advertising is already down,
+  matching NimBLE so a late disconnect restart cannot collide with a sketch that has taken over
+  advertising. The timer callback holds `reAdvMtx` across `startAdvertising()`; public advertising
+  calls take that mutex before admission so `stop()` waits the in-flight restart out and then stops
+  native GAP. `ADV_STOP_COMPLETE` / `EXT_ADV_STOP_COMPLETE` / `PERIODIC_ADV_STOP_COMPLETE` clear
+  advertising flags only when `giveIfAdvWait` consumes the matching wait (`LegacyStop` / `ExtStop` /
+  `PeriodicStop`), so a leftover stop after start cannot leave the radio up while `isAdvertising()`
+  is false. Duration-expiry still uses `durationExpiryStop` and `onComplete`.
 
 ## Event routing
 
@@ -74,6 +82,9 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
 - **Raw AD data only.** The native advertising path uses `esp_ble_gap_config_adv_data_raw` with
   bytes from `BLEAdvDataBuilder`, never `esp_ble_gap_config_adv_data` (which force-expands service
   UUIDs to 128 bits and would diverge from every other path).
+- **Legacy advertising duration.** The BLE 4.2 advertising API has no native duration argument, so
+  a one-shot `esp_timer` stops the session at the requested millisecond duration. Only that
+  timer-driven stop dispatches `onComplete`; an explicit `stop()` or restart is silent.
 - **MTU exchange is blocking inside `connect()`.** The ATT MTU exchange must complete before
   `connect()` returns; issuing another GATT/GAP op while it is in flight makes Bluedroid drop the
   pending procedure and never deliver `CFG_MTU_EVT`.
@@ -87,6 +98,10 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   (NimBLE reports `sec_state.key_size`).
 - **Prepared (long) writes** are buffered per connection id in `BLEServer::Impl` (a flat vector
   keyed by `conn_id`, avoiding `<unordered_map>` in every build).
+- **Service Changed invalidates the full remote tree.** Bluedroid consumes the 0x2A05 indication
+  internally and exposes only the peer address, not its handle range. The backend therefore
+  detaches every discovered remote handle and reports the conservative full range
+  `0x0001–0xFFFF` to a registered Service Changed callback; callers must rediscover.
 - **Security flags** (encrypted/authenticated/bonded) are latched from `AUTH_CMPL` onto every
   connected client sharing the peer's ACL (Bluedroid multiplexes GATTC app-ids over one physical
   link) and cleared on (re)connect/disconnect.
@@ -94,5 +109,15 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   periodic advertising TX, and periodic sync RX are implemented under `#if BLE5_SUPPORTED` /
   `BLE_PERIODIC_ADV_SUPPORTED` (the latter also requires `CONFIG_BT_BLE_50_PERIODIC_ADV_EN`).
   Classic esp32 Bluedroid libs stay on BLE 4.2 (`BLE5_SUPPORTED == 0`) and use the shared
-  `NotSupported` fallbacks.
+  `NotSupported` fallbacks.   Admitted `reset()` and `beginBackendShutdown()` wait for each
+  extended/periodic stop complete, then for `EXT_ADV_SET_CLEAR_COMPLETE`.   Public
+  `clearExtended()` does the same wait and only clears software flags on success.
+  The ESP-IDF call only queues BTC; the controller rejects `HCI_LE_Clear_Advertising_Sets`
+  with Command Disallowed while a set is still enabled (Vol 4, Part E, §7.8.60).
+  Those GAP completes signal `advSync` only when that command is armed, so a
+  fire-and-forget clear or an extra periodic-stop cannot release a later
+  `start()`/`startExtended()` wait.
+- **Legacy scan-response clear.** `start()` with no custom scan response (or `setScanResponse(false)`)
+  calls `esp_ble_gap_config_scan_rsp_data_raw(NULL, 0)`. IDF treats length 0 as a valid empty
+  payload; only a null pointer with nonzero length is `ESP_ERR_INVALID_ARG`.
 - **No `onConnParamsUpdateRequest`** — Bluedroid has no pre-accept hook; the API is NimBLE-only.

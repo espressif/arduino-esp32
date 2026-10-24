@@ -25,14 +25,13 @@
 #include "BTStatus.h"
 #include "BTAddress.h"
 #include "types/BLEConnInfo.h"
-#include "server/BLEServer.h"
-#include "client/BLEClient.h"
-#include "gatt/BLECharacteristic.h"
-#include "remote/BLERemoteCharacteristic.h"
 #include "types/BLEUUID.h"
-#include <memory>
 #include <functional>
+#include <memory>
 #include <vector>
+
+struct BLEStreamServerRole;
+struct BLEStreamClientRole;
 
 /**
  * @brief Arduino Stream interface over BLE using the Nordic UART Service (NUS).
@@ -83,9 +82,13 @@ public:
    * @brief Start as a NUS server with advertising.
    * @param deviceName BLE device name (used for BLE.begin and advertising)
    * @return BTStatus::OK on success, BTStatus::InvalidState if already started,
-   *         or a backend error status on failure.
+   *         BTStatus::Busy if another owner already registered NUS, or a
+   *         backend error status on failure.
    * @note Initializes BLE if not already done, reconfigures advertising to include
-   *       the NUS service UUID, and enables auto-advertise on disconnect.
+   *       the NUS service UUID, and enables auto-advertise on disconnect. While
+   *       active it owns NUS, legacy advertising, and server callback slots.
+   * @note Serialize begin(), beginClient(), end(), and destruction on the
+   *       application task; concurrent lifecycle transitions are unsupported.
    */
   BTStatus begin(const String &deviceName = "BLE_Stream");
 
@@ -98,11 +101,18 @@ public:
    *         or a backend error status on connection failure.
    * @note Blocks until the connection completes or times out, then discovers the
    *       NUS service and subscribes to TX notifications.
+   * @note Serialize begin(), beginClient(), end(), and destruction on the
+   *       application task; concurrent lifecycle transitions are unsupported.
    */
   BTStatus beginClient(const BTAddress &address, uint32_t timeoutMs = 5000);
 
   /**
-   * @brief Shut down the stream (stop advertising, disconnect, clean up).
+   * @brief Shut down the stream.
+   * @note Server mode stops legacy advertising, disconnects all server ACL
+   *       peers, and removes only NUS. The BLE stack and unrelated services
+   *       remain initialized.
+   * @note Serialize lifecycle calls on the application task. Calling end()
+   *       reentrantly from this stream's disconnect callback is safe.
    */
   void end();
 
@@ -180,7 +190,8 @@ public:
    * @param peer Connection metadata for the target peer.
    * @param buffer Data to send.
    * @param size Number of bytes to send.
-   * @return Number of bytes sent, or 0 on failure or if not connected.
+   * @return Number of bytes sent, or 0 on failure, if not connected, or (server
+   *         mode) if the peer has not enabled TX notifications.
    */
   size_t writeTo(const BLEConnInfo &peer, const uint8_t *buffer, size_t size);
 
@@ -257,8 +268,10 @@ public:
   static BLEUUID nusTxCharUUID();
 
 private:
+  friend struct BLEStreamServerRole;
+  friend struct BLEStreamClientRole;
   struct Impl;
-  Impl *_impl;
+  std::shared_ptr<Impl> _impl;
 };
 
 #endif /* BLE_ENABLED */

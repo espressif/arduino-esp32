@@ -39,7 +39,16 @@ BLEClass::operator bool() const {
 // --------------------------------------------------------------------------
 
 bool BLEClass::isInitialized() const {
-  return _initialized;
+  portENTER_CRITICAL(&_stateMux);
+  bool initialized = _initialized;
+  portEXIT_CRITICAL(&_stateMux);
+  return initialized;
+}
+
+void BLEClass::setInitialized(bool initialized) {
+  portENTER_CRITICAL(&_stateMux);
+  _initialized = initialized;
+  portEXIT_CRITICAL(&_stateMux);
 }
 
 String BLEClass::getDeviceName() const {
@@ -106,7 +115,7 @@ String BLEClass::getPeerIRKReverse(const BTAddress &peer) const {
 }
 
 void BLEClass::setPower(int8_t txPowerDbm) {
-  if (!_initialized) {
+  if (!isInitialized()) {
     return;
   }
 #if SOC_BLE_SUPPORTED
@@ -136,7 +145,7 @@ void BLEClass::setPower(int8_t txPowerDbm) {
 }
 
 int8_t BLEClass::getPower() const {
-  if (!_initialized) {
+  if (!isInitialized()) {
     return -128;
   }
 #if SOC_BLE_SUPPORTED

@@ -26,6 +26,7 @@
 #if BLE_BLUEDROID
 
 #include "BLE.h"
+#include "core/BLEMutex.h"
 #include "core/BLESync.h"
 
 #include <esp_gap_ble_api.h>
@@ -59,8 +60,20 @@ inline esp_ble_gap_phy_mask_t blePhyToPrefMask(BLEPhy phy) {
  * BLE._impl directly.
  */
 struct BLEClass::Impl {
+  using GapHook = void (*)(esp_gap_ble_cb_event_t, esp_ble_gap_cb_param_t *);
+#if BLE_GATT_SERVER_SUPPORTED
+  using GattsHook = void (*)(esp_gatts_cb_event_t, esp_gatt_if_t, esp_ble_gatts_cb_param_t *);
+#endif
+#if BLE_GATT_CLIENT_SUPPORTED
+  using GattcHook = void (*)(esp_gattc_cb_event_t, esp_gatt_if_t, esp_ble_gattc_cb_param_t *);
+#endif
+  using LifecycleHook = void (*)();
+
   uint16_t localMTU = 23;
   uint8_t ownAddrType = BLE_ADDR_TYPE_PUBLIC;
+  bool ending = false;
+  SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutex();
+  portMUX_TYPE hookMux = portMUX_INITIALIZER_UNLOCKED;
   BLESync privacySync{"privacySync"};
   /// Bridges @c esp_ble_gap_update_whitelist (async) to the blocking public
   /// @c whiteListAdd / @c whiteListRemove APIs. Signaled from
@@ -69,6 +82,46 @@ struct BLEClass::Impl {
   BLEClass::RawEventHandler customGapHandler = nullptr;
   BLEClass::RawEventHandler customGattcHandler = nullptr;
   BLEClass::RawEventHandler customGattsHandler = nullptr;
+#if BLE_ADVERTISING_SUPPORTED
+  GapHook advGapHook = nullptr;
+  LifecycleHook advBeginHook = nullptr;
+  LifecycleHook advEndHook = nullptr;
+#endif
+#if BLE_SCANNING_SUPPORTED
+  GapHook scanGapHook = nullptr;
+  LifecycleHook scanBeginHook = nullptr;
+  LifecycleHook scanEndHook = nullptr;
+#endif
+#if BLE_GATT_SERVER_SUPPORTED
+  GapHook serverGapHook = nullptr;
+  GattsHook serverGattsHook = nullptr;
+  LifecycleHook serverPreEndHook = nullptr;
+  LifecycleHook serverDeactivateHook = nullptr;
+  LifecycleHook serverPostEndHook = nullptr;
+#endif
+  LifecycleHook streamPreEndHook = nullptr;
+  LifecycleHook streamPostEndHook = nullptr;
+#if BLE_GATT_CLIENT_SUPPORTED
+  GapHook clientGapHook = nullptr;
+  GattcHook clientGattcHook = nullptr;
+#endif
+#if BLE_SMP_SUPPORTED
+  GapHook securityGapHook = nullptr;
+  LifecycleHook securityBeginHook = nullptr;
+#endif
+
+  template <typename Hook> Hook loadHook(Hook &slot) {
+    portENTER_CRITICAL(&hookMux);
+    Hook hook = slot;
+    portEXIT_CRITICAL(&hookMux);
+    return hook;
+  }
+
+  template <typename Hook> void storeHook(Hook &slot, Hook hook) {
+    portENTER_CRITICAL(&hookMux);
+    slot = hook;
+    portEXIT_CRITICAL(&hookMux);
+  }
 
   static void gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 #if BLE_GATT_SERVER_SUPPORTED
@@ -77,6 +130,12 @@ struct BLEClass::Impl {
 #if BLE_GATT_CLIENT_SUPPORTED
   static void gattcCallback(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 #endif
+
+  ~Impl() {
+    if (lifecycleMtx) {
+      vSemaphoreDelete(lifecycleMtx);
+    }
+  }
 };
 
 #endif /* BLE_BLUEDROID */

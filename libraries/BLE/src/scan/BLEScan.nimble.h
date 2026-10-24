@@ -24,6 +24,7 @@
 #include "scan/BLEScan.h"
 #include "core/BLESync.h"
 #include "core/BLEMutex.h"
+#include "core/BLEAdmission.h"
 
 #include <host/ble_gap.h>
 
@@ -33,6 +34,13 @@
 // BLEScan is entirely NimBLE-specific (no cross-backend shared state), so
 // BLEScan::Impl is defined directly here (a .nimble.* file) with no common base.
 struct BLEScan::Impl {
+  struct EventContext {
+    BLEScan::Impl *impl;
+    uint32_t generation;
+    bool scanSession;
+    bool retireByStop = false;  // Protected by the owning Impl::mtx.
+  };
+
   uint16_t interval = BLE_GAP_SCAN_FAST_INTERVAL_MIN;
   uint16_t window = BLE_GAP_SCAN_FAST_WINDOW;
   bool activeScan = true;
@@ -41,13 +49,42 @@ struct BLEScan::Impl {
   // task (DISC_COMPLETE); atomic so the public isScanning() getter and the
   // start/stop guards observe it without locking across callbacks.
   std::atomic<bool> isScanning{false};
+  uint32_t lastDurationMs = 0;
+  // Absolute session deadline. A controller preemption resumes only for the
+  // remaining interval instead of starting lastDurationMs again. Zero denotes
+  // an unlimited scan. Protected by mtx.
+  int64_t sessionDeadlineUs = 0;
+  // Identifies the logical scan whose completion may update state and release
+  // scanSync. Each native resume after preemption keeps the same generation;
+  // a user stop/restart advances it. Protected by mtx.
+  uint32_t activeGeneration = 0;
+  EventContext *activeScanContext = nullptr;
+  std::vector<EventContext *> retiredScanContexts;
+  // stop() can receive BLE_HS_EALREADY while NimBLE has temporarily moved the
+  // operation into its privacy-preemption slot. Native code still owns the
+  // callback argument in that state, so keep it alive until DISC_COMPLETE or
+  // until the host has fully stopped.
+  std::vector<EventContext *> nativeHeldScanContexts;
+  struct ble_npl_event retireScanEvent {};
+  bool retireScanEventInited = false;
+  BLEAdmissionGate nativeAdmission;
+#if BLE5_SUPPORTED
+  bool hasUncodedConfig = false;
+  uint16_t uncodedInterval = 0;
+  uint16_t uncodedWindow = 0;
+  bool hasCodedConfig = false;
+  uint16_t codedInterval = 0;
+  uint16_t codedWindow = 0;
+#endif
 
   BLEScan::ResultHandler onResultCb = nullptr;
   BLEScan::CompleteHandler onCompleteCb = nullptr;
 
   BLEScan::Results results;
+  std::vector<std::pair<BTAddress, uint8_t>> duplicateKeys;
   BLESync scanSync{"scanSync"};
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  EventContext periodicContext{this, 0, false};
 
   BLEScan::PeriodicSyncHandler periodicSyncCb = nullptr;
   BLEScan::PeriodicReportHandler periodicReportCb = nullptr;

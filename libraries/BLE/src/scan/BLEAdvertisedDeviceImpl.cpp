@@ -33,6 +33,7 @@
 
 void BLEAdvertisedDeviceImplCommon::parsePayload(const uint8_t *data, size_t len) {
   payload.assign(data, data + len);
+  advPayloadLen = len;
   size_t pos = 0;
   while (pos < len) {
     uint8_t adLen = data[pos];
@@ -75,6 +76,13 @@ void BLEAdvertisedDeviceImplCommon::parsePayload(const uint8_t *data, size_t len
         if (dataLen >= 1) {
           txPower = static_cast<int8_t>(adData[0]);
           hasTXPower = true;
+        }
+        break;
+      case 0x12:  // Slave Connection Interval Range (CSS Part A §1.9)
+        if (dataLen >= 4) {
+          minPreferred = static_cast<uint16_t>(adData[0] | (adData[1] << 8));
+          maxPreferred = static_cast<uint16_t>(adData[2] | (adData[3] << 8));
+          hasPreferredParams = true;
         }
         break;
       case 0x19:  // Appearance
@@ -130,12 +138,15 @@ void BLEAdvertisedDeviceImplCommon::clearParsedFields() {
   name = "";
   txPower = -128;
   appearance = 0;
+  minPreferred = 0;
+  maxPreferred = 0;
   mfgData.clear();
   serviceUUIDs.clear();
   serviceData.clear();
   hasName = false;
   hasTXPower = false;
   hasAppearance = false;
+  hasPreferredParams = false;
   hasMfgData = false;
 }
 

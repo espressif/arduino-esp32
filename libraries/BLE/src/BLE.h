@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <vector>
+#include "freertos/FreeRTOS.h"
 #include "WString.h"
 #include "BTStatus.h"
 #include "BTAddress.h"
@@ -86,6 +87,10 @@ public:
    * @brief Shut down the BLE stack.
    *
    * Stops advertising, disconnects all peers, and deinitializes the host.
+   * Local GATT services created since the last @ref begin are released; handles
+   * the sketch still holds become detached shells (still non-null, but with no
+   * parent or native handle). @ref createServer returns the same server after a
+   * later @ref begin — rebuild the database before @c start().
    *
    * @param releaseMemory  If true, also releases the Bluetooth controller
    *                       memory. After this, begin() cannot reinitialize BLE
@@ -467,12 +472,16 @@ public:
   BLEClass &operator=(BLEClass &&) = delete;
 
 private:
+  friend class BLEStream;
   // BLEClass::Impl is a nested member type, so its static stack callbacks can reach
   // this singleton's private state (_impl, _deviceName) directly -- no friend needed.
   struct Impl;
   Impl *_impl;
+  bool setStreamEndHooks(void (*preHook)(), void (*postHook)());
 
+  mutable portMUX_TYPE _stateMux = portMUX_INITIALIZER_UNLOCKED;
   bool _initialized = false;
+  void setInitialized(bool initialized);
   BTAddress::Type _ownAddressType = BTAddress::Type::Public;
   String _deviceName;
   std::vector<BTAddress> _whiteList;

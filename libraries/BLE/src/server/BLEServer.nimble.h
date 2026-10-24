@@ -35,7 +35,14 @@
  * @c BLEServerImplCommon are shared.
  */
 struct BLEServer::Impl : BLEServerImplCommon {
+  uint32_t identityDispatchedMask = 0;
   static int gapEventHandler(struct ble_gap_event *event, void *arg);
 };
+
+#if BLE_GATT_SERVER_SUPPORTED
+void nimbleCancelPendingReAdvertise();
+void nimbleInvalidatePendingReAdvertise();
+SemaphoreHandle_t nimbleReAdvertiseMutex();
+#endif
 
 #endif /* BLE_NIMBLE */

@@ -81,6 +81,61 @@ public:
   uint32_t readUInt32(uint32_t timeoutMs = 3000);
 
   /**
+   * @brief Get a pointer to the cached raw data from the last read.
+   * @param len If non-null, receives the data length in bytes.
+   * @return Pointer to the internal value buffer, or nullptr if empty.
+   */
+  const uint8_t *readRawData(size_t *len = nullptr) const;
+
+  /**
+   * @brief Check whether this descriptor is a User Description (UUID 0x2901).
+   * @return true if UUID matches 0x2901.
+   */
+  bool isUserDescription() const;
+
+  /**
+   * @brief Check whether this descriptor is a CCCD (UUID 0x2902).
+   * @return true if UUID matches 0x2902.
+   */
+  bool isCCCD() const;
+
+  /**
+   * @brief Check whether this descriptor is a Presentation Format (UUID 0x2904).
+   * @return true if UUID matches 0x2904.
+   */
+  bool isPresentationFormat() const;
+
+  /**
+   * @brief Get the format field from the cached Presentation Format descriptor (0x2904) value.
+   * @return Format code, or 0 if not a valid 7-byte 0x2904 descriptor. Call readValue() first.
+   */
+  uint8_t getFormat() const;
+
+  /**
+   * @brief Get the exponent field from the cached Presentation Format descriptor (0x2904) value.
+   * @return Signed exponent, or 0 if not a valid 7-byte 0x2904 descriptor. Call readValue() first.
+   */
+  int8_t getExponent() const;
+
+  /**
+   * @brief Get the unit field from the cached Presentation Format descriptor (0x2904) value.
+   * @return Bluetooth Assigned Number for the unit, or 0 if not a valid 7-byte 0x2904 descriptor. Call readValue() first.
+   */
+  uint16_t getUnit() const;
+
+  /**
+   * @brief Get the namespace field from the cached Presentation Format descriptor (0x2904) value.
+   * @return Bluetooth namespace code, or 0 if not a valid 7-byte 0x2904 descriptor. Call readValue() first.
+   */
+  uint8_t getNamespace() const;
+
+  /**
+   * @brief Get the description field from the cached Presentation Format descriptor (0x2904) value.
+   * @return Bluetooth SIG description value, or 0 if not a valid 7-byte 0x2904 descriptor. Call readValue() first.
+   */
+  uint16_t getFormatDescription() const;
+
+  /**
    * @brief Write a value to the remote descriptor.
    * @param data         Pointer to the data to write.
    * @param len          Number of bytes to write.

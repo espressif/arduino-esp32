@@ -67,8 +67,6 @@ static bool hexToByte(const char *hex, uint8_t &out) {
   return true;
 }
 
-BLEUUID::BLEUUID() {}
-
 BLEUUID::BLEUUID(const char *uuid) {
   if (uuid == nullptr) {
     return;
@@ -222,10 +220,6 @@ String BLEUUID::toString() const {
   return String(buf);
 }
 
-uint8_t BLEUUID::bitSize() const {
-  return _bitSize;
-}
-
 BLEUUID BLEUUID::to128() const {
   if (!isValid() || _bitSize == 128) {
     return *this;
@@ -235,18 +229,6 @@ BLEUUID BLEUUID::to128() const {
   BLEUUID result = *this;
   result._bitSize = 128;
   return result;
-}
-
-bool BLEUUID::isValid() const {
-  return _bitSize != 0;
-}
-
-uint16_t BLEUUID::toUint16() const {
-  return (static_cast<uint16_t>(_uuid[2]) << 8) | _uuid[3];
-}
-
-uint32_t BLEUUID::toUint32() const {
-  return (static_cast<uint32_t>(_uuid[0]) << 24) | (static_cast<uint32_t>(_uuid[1]) << 16) | (static_cast<uint32_t>(_uuid[2]) << 8) | _uuid[3];
 }
 
 #endif /* BLE_ENABLED */

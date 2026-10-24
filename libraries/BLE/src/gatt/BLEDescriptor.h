@@ -69,17 +69,23 @@ public:
 
   /**
    * @brief Callback invoked when a client reads this descriptor.
-   * @param desc The descriptor being read.
+   * @param desc The descriptor being read. Calling @c desc.setValue() here
+   *             sets the value returned in this read response.
    * @param conn Information about the connected client.
+   * @note Invoked once per client read, including long reads (see
+   *       @c BLECharacteristic::ReadHandler).
+   * @note The mutable @p desc reference is borrowed for the callback. Copy the
+   *       handle to retain it; do not retain a pointer or reference to the
+   *       callback parameter itself. This also applies to @c WriteHandler.
    */
-  using ReadHandler = std::function<void(const BLEDescriptor &desc, const BLEConnInfo &conn)>;
+  using ReadHandler = std::function<void(BLEDescriptor &desc, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when a client writes to this descriptor.
    * @param desc The descriptor being written (value already updated).
    * @param conn Information about the connected client.
    */
-  using WriteHandler = std::function<void(const BLEDescriptor &desc, const BLEConnInfo &conn)>;
+  using WriteHandler = std::function<void(BLEDescriptor &desc, const BLEConnInfo &conn)>;
 
   /**
    * @brief Register a callback invoked when a client reads this descriptor.
@@ -258,6 +264,36 @@ public:
    * @note No-op unless this is a 0x2904 descriptor with a value of at least 7 bytes.
    */
   void setFormatDescription(uint16_t description);
+
+  /**
+   * @brief Get the format field of a Presentation Format descriptor (0x2904).
+   * @return Format code, or 0 if not a valid 7-byte 0x2904 descriptor.
+   */
+  uint8_t getFormat() const;
+
+  /**
+   * @brief Get the exponent field of a Presentation Format descriptor (0x2904).
+   * @return Signed exponent, or 0 if not a valid 7-byte 0x2904 descriptor.
+   */
+  int8_t getExponent() const;
+
+  /**
+   * @brief Get the unit field of a Presentation Format descriptor (0x2904).
+   * @return Bluetooth Assigned Number for the unit, or 0 if not a valid 7-byte 0x2904 descriptor.
+   */
+  uint16_t getUnit() const;
+
+  /**
+   * @brief Get the namespace field of a Presentation Format descriptor (0x2904).
+   * @return Bluetooth namespace code, or 0 if not a valid 7-byte 0x2904 descriptor.
+   */
+  uint8_t getNamespace() const;
+
+  /**
+   * @brief Get the description field of a Presentation Format descriptor (0x2904).
+   * @return Bluetooth SIG description value, or 0 if not a valid 7-byte 0x2904 descriptor.
+   */
+  uint16_t getFormatDescription() const;
 
   // Format constants (Bluetooth Assigned Numbers, Format Types)
   static constexpr uint8_t FORMAT_BOOLEAN = 1;   ///< Boolean.

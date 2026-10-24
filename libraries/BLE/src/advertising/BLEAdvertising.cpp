@@ -74,7 +74,20 @@ void BLEAdvertising::clearServiceUUIDs() {
 // --------------------------------------------------------------------------
 
 bool BLEAdvertising::isAdvertising() const {
-  return _impl && _impl->isAdvertising;
+  if (!_impl) {
+    return false;
+  }
+  if (_impl->isAdvertising.load()) {
+    return true;
+  }
+#if BLE5_SUPPORTED
+  for (uint8_t i = 0; i < BLEAdvertising::Impl::kLegacyInstance; i++) {
+    if (_impl->extInstances[i].isAdvertising.load()) {
+      return true;
+    }
+  }
+#endif
+  return false;
 }
 
 // --------------------------------------------------------------------------

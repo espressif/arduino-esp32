@@ -32,17 +32,23 @@ BLEDescriptor::operator bool() const {
 }
 
 BLEUUID BLEDescriptor::getUUID() const {
-  return _impl ? _impl->uuid : BLEUUID();
+  BLE_CHECK_IMPL(BLEUUID());
+  return impl.uuid;
 }
 
 uint16_t BLEDescriptor::getHandle() const {
-  return _impl ? _impl->handle : 0;
+  BLE_CHECK_IMPL(0);
+  return impl.handle;
 }
 
 BLECharacteristic BLEDescriptor::getCharacteristic() const {
-  // Non-owning handle: the characteristic lifetime is owned by the service, so
-  // the returned handle must not outlive it.
-  return _impl && _impl->chr ? BLECharacteristic(_impl->chr->shared_from_this()) : BLECharacteristic();
+  BLE_CHECK_IMPL(BLECharacteristic());
+  auto chr = impl.chrOwner.lock();
+  if (!chr) {
+    return BLECharacteristic();
+  }
+  BLELockGuard lock(impl.mtx);
+  return impl.chr == chr.get() ? BLECharacteristic(chr) : BLECharacteristic();
 }
 
 String BLEDescriptor::toString() const {
@@ -55,19 +61,24 @@ void BLEDescriptor::setValue(const String &value) {
 }
 
 size_t BLEDescriptor::getLength() const {
-  return _impl ? _impl->value.size() : 0;
+  BLE_CHECK_IMPL(0);
+  BLELockGuard lock(impl.mtx);
+  return impl.value.size();
 }
 
 bool BLEDescriptor::isUserDescription() const {
-  return _impl && _impl->uuid == BLEUUID(static_cast<uint16_t>(0x2901));
+  BLE_CHECK_IMPL(false);
+  return impl.uuid == BLEUUID(static_cast<uint16_t>(0x2901));
 }
 
 bool BLEDescriptor::isCCCD() const {
-  return _impl && _impl->uuid == BLEUUID(static_cast<uint16_t>(0x2902));
+  BLE_CHECK_IMPL(false);
+  return impl.uuid == BLEUUID(static_cast<uint16_t>(0x2902));
 }
 
 bool BLEDescriptor::isPresentationFormat() const {
-  return _impl && _impl->uuid == BLEUUID(static_cast<uint16_t>(0x2904));
+  BLE_CHECK_IMPL(false);
+  return impl.uuid == BLEUUID(static_cast<uint16_t>(0x2904));
 }
 
 void BLEDescriptor::setUserDescription(const String &description) {
@@ -77,95 +88,151 @@ void BLEDescriptor::setUserDescription(const String &description) {
 }
 
 String BLEDescriptor::getUserDescription() const {
-  if (!isUserDescription() || !_impl) {
+  BLE_CHECK_IMPL("");
+  if (!isUserDescription()) {
     return "";
   }
-  return String(reinterpret_cast<const char *>(_impl->value.data()), _impl->value.size());
+  BLELockGuard lock(impl.mtx);
+  return String(reinterpret_cast<const char *>(impl.value.data()), impl.value.size());
 }
 
 bool BLEDescriptor::getNotifications() const {
-  return isCCCD() && _impl && _impl->value.size() >= 2 && (_impl->value[0] & 0x01);
+  BLE_CHECK_IMPL(false);
+  if (!isCCCD()) {
+    return false;
+  }
+  BLELockGuard lock(impl.mtx);
+  return impl.value.size() >= 2 && (impl.value[0] & 0x01);
 }
 
 bool BLEDescriptor::getIndications() const {
-  return isCCCD() && _impl && _impl->value.size() >= 2 && (_impl->value[0] & 0x02);
+  BLE_CHECK_IMPL(false);
+  if (!isCCCD()) {
+    return false;
+  }
+  BLELockGuard lock(impl.mtx);
+  return impl.value.size() >= 2 && (impl.value[0] & 0x02);
 }
 
 void BLEDescriptor::setNotifications(bool enable) {
-  if (!isCCCD() || !_impl) {
+  BLE_CHECK_IMPL();
+  if (!isCCCD()) {
     return;
   }
-  if (_impl->value.size() < 2) {
-    _impl->value.resize(2, 0);
+  BLELockGuard lock(impl.mtx);
+  if (impl.value.size() < 2) {
+    impl.value.resize(2, 0);
   }
   if (enable) {
-    _impl->value[0] |= 0x01;
+    impl.value[0] |= 0x01;
   } else {
-    _impl->value[0] &= ~0x01;
+    impl.value[0] &= ~0x01;
   }
 }
 
 void BLEDescriptor::setIndications(bool enable) {
-  if (!isCCCD() || !_impl) {
+  BLE_CHECK_IMPL();
+  if (!isCCCD()) {
     return;
   }
-  if (_impl->value.size() < 2) {
-    _impl->value.resize(2, 0);
+  BLELockGuard lock(impl.mtx);
+  if (impl.value.size() < 2) {
+    impl.value.resize(2, 0);
   }
   if (enable) {
-    _impl->value[0] |= 0x02;
+    impl.value[0] |= 0x02;
   } else {
-    _impl->value[0] &= ~0x02;
+    impl.value[0] &= ~0x02;
   }
 }
 
 // Presentation Format layout (0x2904): [0]=format, [1]=exponent, [2..3]=unit,
 // [4]=namespace, [5..6]=description; multi-byte fields are little-endian.
 
-void BLEDescriptor::setFormat(uint8_t format) {
-  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
-    _impl->value[0] = format;
+static void setPresentationFormatField(BLEDescriptor &desc, BLEDescriptor::Impl *impl, size_t offset, uint16_t val, bool twoBytes) {
+  if (!impl || !desc.isPresentationFormat()) {
+    return;
   }
+  BLELockGuard lock(impl->mtx);
+  if (impl->value.size() < 7) {
+    impl->value.resize(7, 0);
+  }
+  impl->value[offset] = static_cast<uint8_t>(val & 0xFF);
+  if (twoBytes) {
+    impl->value[offset + 1] = static_cast<uint8_t>(val >> 8);
+  }
+}
+
+void BLEDescriptor::setFormat(uint8_t format) {
+  setPresentationFormatField(*this, _impl.get(), 0, format, false);
 }
 
 void BLEDescriptor::setExponent(int8_t exponent) {
-  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
-    _impl->value[1] = static_cast<uint8_t>(exponent);
-  }
+  setPresentationFormatField(*this, _impl.get(), 1, static_cast<uint8_t>(exponent), false);
 }
 
 void BLEDescriptor::setUnit(uint16_t unit) {
-  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
-    _impl->value[2] = unit & 0xFF;
-    _impl->value[3] = unit >> 8;
-  }
+  setPresentationFormatField(*this, _impl.get(), 2, unit, true);
 }
 
 void BLEDescriptor::setNamespace(uint8_t ns) {
-  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
-    _impl->value[4] = ns;
-  }
+  setPresentationFormatField(*this, _impl.get(), 4, ns, false);
 }
 
 void BLEDescriptor::setFormatDescription(uint16_t description) {
-  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
-    _impl->value[5] = description & 0xFF;
-    _impl->value[6] = description >> 8;
+  setPresentationFormatField(*this, _impl.get(), 5, description, true);
+}
+
+static uint16_t getPresentationFormatField(const BLEDescriptor &desc, const BLEDescriptor::Impl *impl, size_t offset, bool twoBytes) {
+  if (!impl || !desc.isPresentationFormat()) {
+    return 0;
   }
+  BLELockGuard lock(impl->mtx);
+  if (impl->value.size() < 7) {
+    return 0;
+  }
+  uint16_t val = impl->value[offset];
+  if (twoBytes) {
+    val |= static_cast<uint16_t>(impl->value[offset + 1] << 8);
+  }
+  return val;
+}
+
+uint8_t BLEDescriptor::getFormat() const {
+  return static_cast<uint8_t>(getPresentationFormatField(*this, _impl.get(), 0, false));
+}
+
+int8_t BLEDescriptor::getExponent() const {
+  return static_cast<int8_t>(getPresentationFormatField(*this, _impl.get(), 1, false));
+}
+
+uint16_t BLEDescriptor::getUnit() const {
+  return getPresentationFormatField(*this, _impl.get(), 2, true);
+}
+
+uint8_t BLEDescriptor::getNamespace() const {
+  return static_cast<uint8_t>(getPresentationFormatField(*this, _impl.get(), 4, false));
+}
+
+uint16_t BLEDescriptor::getFormatDescription() const {
+  return getPresentationFormatField(*this, _impl.get(), 5, true);
 }
 
 void BLEDescriptor::onRead(ReadHandler handler) {
   BLE_CHECK_IMPL();
-  impl.onReadCb = handler;
+  BLELockGuard lock(impl.mtx);
+  impl.onReadCb = std::move(handler);
 }
 
 void BLEDescriptor::onWrite(WriteHandler handler) {
   BLE_CHECK_IMPL();
-  impl.onWriteCb = handler;
+  BLELockGuard lock(impl.mtx);
+  impl.onWriteCb = std::move(handler);
 }
 
 void BLEDescriptor::resetCallbacks() {
   BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
   impl.onReadCb = nullptr;
   impl.onWriteCb = nullptr;
 }
@@ -174,6 +241,7 @@ BLEDescriptor::BLEDescriptor(const BLEUUID &uuid, uint16_t maxLength) : _impl(nu
   // Creates an unattached Impl; the buffer is reserved to maxLength but empty.
   auto d = std::make_shared<BLEDescriptor::Impl>();
   d->uuid = uuid;
+  d->maxLen = maxLength;
   d->value.reserve(maxLength);
   _impl = d;
 }

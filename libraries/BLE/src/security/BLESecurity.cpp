@@ -62,43 +62,43 @@ void BLESecurity::regenPassKeyOnConnect(bool enable) {
 void BLESecurity::onPassKeyRequest(PassKeyRequestHandler handler) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.passKeyRequestCb = handler;
+  impl.passKeyRequestCb = std::move(handler);
 }
 
 void BLESecurity::onPassKeyDisplay(PassKeyDisplayHandler handler) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.passKeyDisplayCb = handler;
+  impl.passKeyDisplayCb = std::move(handler);
 }
 
 void BLESecurity::onConfirmPassKey(ConfirmPassKeyHandler handler) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.confirmPassKeyCb = handler;
+  impl.confirmPassKeyCb = std::move(handler);
 }
 
 void BLESecurity::onSecurityRequest(SecurityRequestHandler handler) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.securityRequestCb = handler;
+  impl.securityRequestCb = std::move(handler);
 }
 
 void BLESecurity::onAuthorization(AuthorizationHandler handler) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.authorizationCb = handler;
+  impl.authorizationCb = std::move(handler);
 }
 
 void BLESecurity::onAuthenticationComplete(AuthCompleteHandler handler) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.authCompleteCb = handler;
+  impl.authCompleteCb = std::move(handler);
 }
 
 void BLESecurity::onBondStoreOverflow(BondStoreOverflowHandler handler) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.bondOverflowCb = handler;
+  impl.bondOverflowCb = std::move(handler);
 }
 
 void BLESecurity::resetCallbacks() {
