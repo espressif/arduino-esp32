@@ -90,6 +90,10 @@ def _split_group(
     n_parts = max(1, n_parts)
     if n_parts <= 1:
         return [ordered], 1
+    # Each extra part pays `cold` again. Skip the split unless the warm tail
+    # that packing would cut is larger than that extra cold.
+    if warm_tail <= cold:
+        return [ordered], 1
     size, extra = divmod(len(ordered), n_parts)
     parts: list[list[str]] = []
     index = 0

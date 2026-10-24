@@ -18,7 +18,9 @@ from ci_chunking.affinity import (
 from ci_chunking.costs import (
     CACHED_COLD_FRACTION,
     CostTable,
+    DEFAULT_COLD,
     EMA_ALPHA,
+    SEC_PER_SOURCE,
     SKETCH_REMAINDER,
     bin_cost,
     cold_cost,
@@ -252,14 +254,15 @@ def _write_library_sources(root: Path, library: str, files: dict[str, str]) -> N
 
 
 def test_prior_cold_scales_with_source_count(tmp_path: Path) -> None:
+    n_files = 50
     _write_library_sources(
         tmp_path,
         "HeavyLib",
-        {f"file_{index}.cpp": f"int v{index};\n" for index in range(40)},
+        {f"file_{index}.cpp": f"int v{index};\n" for index in range(n_files)},
     )
-    assert source_count("HeavyLib", tmp_path) == 40
-    assert prior_cold("HeavyLib", tmp_path) == 14
-    assert prior_cold("MissingLib", tmp_path) == 8
+    assert source_count("HeavyLib", tmp_path) == n_files
+    assert prior_cold("HeavyLib", tmp_path) == int(round(SEC_PER_SOURCE * n_files))
+    assert prior_cold("MissingLib", tmp_path) == DEFAULT_COLD
 
 
 def test_fingerprint_change_blends_toward_new_prior(tmp_path: Path) -> None:
@@ -398,7 +401,10 @@ def test_live_subset_priors_rank_expensive_libraries() -> None:
     assert source_count("Matter", PROJECT_ROOT) > source_count("EEPROM", PROJECT_ROOT)
     assert table.cold("Matter") > table.cold("EEPROM")
     assert table.cold("Matter") >= 100
-    assert table.cold("BLE") >= table.cold("WiFi")
+    assert table.cold("Matter") > table.cold("BLE")
+    assert table.cold("Matter") > table.cold("WiFi")
+    assert table.cold("WiFi") > table.cold("EEPROM")
+    assert table.cold("BLE") > table.cold("EEPROM")
     assert library_fingerprint("Matter", PROJECT_ROOT)
     assert library_fingerprint("BLE", PROJECT_ROOT) != library_fingerprint("WiFi", PROJECT_ROOT)
     archives = PROJECT_ROOT / "tools" / "esp32-arduino-libs" / "esp32" / "lib"
