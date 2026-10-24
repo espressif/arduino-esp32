@@ -13,6 +13,8 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 | `test_tcp_timeout` | Connect to unreachable IP with 2 s timeout, verify failure |
 | `test_tcp_large_payload` | Request 1024-byte response, verify total read > 1024 |
 | `test_tcp_server_echo` | Start local server, connect, send/receive echo |
+| `test_udp_write_before_begin` | Verify single-byte, buffer, and zero-length writes return zero before initialization |
+| `test_udp_write_after_stop` | Verify buffer writes succeed while initialized and single-byte and buffer writes return zero after stopping |
 | `test_udp_send_receive` | UDP loopback: send/receive on localhost |
 | `test_udp_multi_packet` | Send 5 UDP packets, verify at least 4 received |
 | `test_udp_remote_info` | Verify remote IP and port after receiving UDP packet |
