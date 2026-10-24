@@ -929,7 +929,6 @@ function build_sketch_list {
     local max_active=0
     local index=0
     local warmed_up=0
-    local slot_seeded=0
     local sketch_count=0
     local count_sketch
     while IFS= read -r count_sketch || [ -n "$count_sketch" ]; do
@@ -968,24 +967,6 @@ function build_sketch_list {
                 && { [ -f "$work_dir/status.$running_index" ] || ! kill -0 "$running_pid" 2>/dev/null; }; then
                     _reap_parallel_worker "$slot"
                     completed_slot=$slot
-                    if [ "$isolated_build_dirs" -eq 1 ] && [ "$jobs" -gt 1 ] \
-                    && [ "$slot_seeded" -eq 0 ]; then
-                        local seed_src="$work_dir/build.slot.$completed_slot"
-                        if [ -d "$seed_src" ]; then
-                            echo "[parallel] seed slot cache from build.slot.$completed_slot"
-                            local seed_slot
-                            for ((seed_slot = 0; seed_slot < jobs; seed_slot++)); do
-                                if [ "$seed_slot" -eq "$completed_slot" ]; then
-                                    continue
-                                fi
-                                local seed_dst="$work_dir/build.slot.$seed_slot"
-                                if [ ! -e "$seed_dst" ]; then
-                                    cp -a "$seed_src" "$seed_dst"
-                                fi
-                            done
-                            slot_seeded=1
-                        fi
-                    fi
                     warmed_up=1
                     concurrency=$jobs
                     break

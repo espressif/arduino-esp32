@@ -295,8 +295,6 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 - **Cross-platform parallelism**: The Windows and macOS preset matrices use the same bounded sketch scheduler
 - **Safe build isolation**: Parallel workers use temporary per-slot build directories (reused across sketches on
   that worker) while sharing ACmake's concurrency-safe immutable cache. Duplicate sketch basenames cannot collide.
-- **Slot seeding**: After the warmup sketch, slot 0's CMake tree is copied into the other slots so the second
-  worker is a cache hit instead of a second cold configure
 - **CPU budgeting**: The first sketch warms the shared object cache at full `-jN`; later sketch jobs split
   Ninja so two compiles cannot oversubscribe the runner
 - **Object cache restore**: Linux jobs restore `/tmp/acmake_objcache` so `core.a` / library objects can survive

@@ -252,15 +252,13 @@ class CostTable:
         stored_fp = str(entry.get("fingerprint") or "")
         stored_c = int(entry.get("cold", prior_c))
         stored_w = int(entry.get("warm", prior_w))
-        if current_fp and stored_fp == current_fp:
+        if not current_fp or not stored_fp or stored_fp == current_fp:
             return stored_c, stored_w
-        if stored_fp and current_fp and stored_fp != current_fp:
-            # Concept drift: library sources changed. Pull toward the new prior.
-            return (
-                int(round(0.3 * stored_c + 0.7 * prior_c)),
-                int(round(0.3 * stored_w + 0.7 * prior_w)),
-            )
-        return stored_c, stored_w
+        # Concept drift: library sources or archives changed. Pull toward the new prior.
+        return (
+            int(round(0.3 * stored_c + 0.7 * prior_c)),
+            int(round(0.3 * stored_w + 0.7 * prior_w)),
+        )
 
     def update_from_timings(self, records: list[dict]) -> None:
         from ci_chunking.affinity import CORE_BUCKET, OTHER_BUCKET, library_of_path

@@ -668,7 +668,7 @@ def test_isolated_build_dirs_are_reused_per_worker_slot(tmp_path: Path) -> None:
     assert all("build.slot." in path for path in paths)
 
 
-def test_isolated_slot_cache_is_seeded_from_warmup_slot(tmp_path: Path) -> None:
+def test_isolated_slots_do_not_copy_cmake_cache(tmp_path: Path) -> None:
     repo, env = _make_repo(tmp_path)
     sketches = [_make_sketch(repo / "tests", f"sketch-{index}") for index in range(4)]
     sketch_list = tmp_path / "sketches.list"
@@ -681,15 +681,14 @@ def test_isolated_slot_cache_is_seeded_from_warmup_slot(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert "[parallel] seed slot cache from build.slot." in result.stdout
+    assert "seed slot cache" not in result.stdout
     first_by_path: dict[str, bool] = {}
     for event in _state(env)["events"]:
         path = event["build_path"]
         if path not in first_by_path:
             first_by_path[path] = event["preexisting"]
     assert len(first_by_path) == 2
-    assert sum(1 for existed in first_by_path.values() if existed) == 1
-    assert sum(1 for existed in first_by_path.values() if not existed) == 1
+    assert all(existed is False for existed in first_by_path.values())
 
 
 def test_parallel_build_handles_paths_with_spaces(tmp_path: Path) -> None:
