@@ -19,8 +19,14 @@ USAGE:
 
     Options:
         --arduino-cli   Use arduino-cli for compilation instead of arduino_cmake.py
+        --platform      Filter builds for hardware, wokwi, or qemu
+        -H / -W / -Q   Short aliases for --platform hardware/wokwi/qemu
+        -j / --jobs N   Build up to N regular sketches in parallel (default: 1)
+        --              Stop parsing build-script options; remaining arguments
+                        are passed to the compiler unchanged
 
-    If no -t target is specified, builds for all BUILD_TEST_TARGETS
+    If no -t target is specified, builds for the selected platform's targets.
+    Without --platform/-H/-W/-Q, builds for all BUILD_TEST_TARGETS unfiltered.
     If no -s sketch is specified, builds all sketches (chunk mode)
 "
 
@@ -77,6 +83,17 @@ function build_multi_device_test {
     local devices
 
     test_name=$(basename "$test_dir")
+
+    if [ -n "$platform" ]; then
+        if [ "$platform" = "wokwi" ] || [ "$platform" = "qemu" ]; then
+            echo "Skipping multi-device test $test_name for platform $platform"
+            return 0
+        fi
+        if ! "${SKETCH_UTILS}" platform_build_allowed "$test_dir" "$platform" "$target"; then
+            echo "Skipping multi-device test $test_name for $target (platform $platform disabled)"
+            return 0
+        fi
+    fi
 
     # Check if target is supported by this test
     if [ -f "$test_dir/ci.yml" ]; then
@@ -142,7 +159,7 @@ function build_multi_device_test {
         fi
 
         ${SKETCH_UTILS} build "${build_args[@]}" -s "$sketch_dir" \
-            -td "$test_dir" -bn "$test_name" "${fa_args[@]}"
+            -td "$test_dir" -bn "$test_name" "${fa_args[@]}" "${compiler_args[@]}"
         result=$?
         if [ $result -ne 0 ]; then
             echo "ERROR: Failed to build sketch $sketch_name for test $test_name"
@@ -157,9 +174,22 @@ SCRIPTS_DIR="./.github/scripts"
 BUILD_CMD=""
 
 chunk_build=0
+platform=""
+jobs=1
+forwarded_build_args=()
+multi_build_args=()
+compiler_args=()
 
 while [ -n "$1" ]; do
     case $1 in
+    -- )
+        shift
+        while [ -n "$1" ]; do
+            compiler_args+=("$1")
+            shift
+        done
+        break
+        ;;
     -c )
         chunk_build=1
         ;;
@@ -170,6 +200,27 @@ while [ -n "$1" ]; do
     -t )
         shift
         target=$1
+        ;;
+    -i )
+        option=$1
+        shift
+        forwarded_build_args+=("$option" "$1")
+        multi_build_args+=("$option" "$1")
+        ;;
+    -m|-f )
+        option=$1
+        shift
+        forwarded_build_args+=("$option" "$1")
+        ;;
+    -d|-l|-fqbn|-o )
+        option=$1
+        shift
+        forwarded_build_args+=("$option" "$1")
+        multi_build_args+=("$option" "$1")
+        ;;
+    -j|--jobs )
+        shift
+        jobs=$1
         ;;
     -h )
         echo "$USAGE"
@@ -186,12 +237,41 @@ while [ -n "$1" ]; do
     --arduino-cli )
         use_arduino_cli=1
         ;;
+    --platform )
+        shift
+        platform=$1
+        case "$platform" in
+            hardware|wokwi|qemu) ;;
+            *)
+                echo "ERROR: --platform must be one of: hardware, wokwi, qemu"
+                exit 2
+                ;;
+        esac
+        ;;
+    -H )
+        platform="hardware"
+        ;;
+    -W )
+        platform="wokwi"
+        ;;
+    -Q )
+        platform="qemu"
+        ;;
     * )
-        break
+        compiler_args+=("$1")
         ;;
     esac
     shift
 done
+
+if ! [[ "$jobs" =~ ^[1-9][0-9]*$ ]]; then
+    echo "ERROR: -j/--jobs must be a positive integer"
+    exit 2
+fi
+if [ "$jobs" -gt 1 ] && [ -n "${ARDUINO_BUILD_DIR:-}" ]; then
+    echo "ERROR: -j/--jobs greater than 1 cannot be used with ARDUINO_BUILD_DIR; parallel sketches require separate artifact directories"
+    exit 2
+fi
 
 set -e
 source "${SCRIPTS_DIR}/env.sh"
@@ -217,17 +297,26 @@ if [ -n "$sketch" ]; then
     IFS=',' read -ra sketches_to_build <<< "$sketch"
 fi
 
+# Select platform-specific defaults only when filtering was explicitly enabled.
+# An explicit -t list has already populated targets_to_build and always wins.
+case "$platform" in
+    hardware) default_targets=("${HW_TEST_TARGETS[@]}") ;;
+    wokwi)    default_targets=("${WOKWI_TEST_TARGETS[@]}") ;;
+    qemu)     default_targets=("${QEMU_TEST_TARGETS[@]}") ;;
+    *)        default_targets=("${BUILD_TEST_TARGETS[@]}") ;;
+esac
+
 # Handle default target and sketch logic
 if [ -z "$target" ] && [ -z "$sketch" ]; then
     # No target or sketch specified - build all sketches for all targets
     echo "No target or sketch specified, building all sketches for all targets"
     chunk_build=1
-    targets_to_build=("${BUILD_TEST_TARGETS[@]}")
+    targets_to_build=("${default_targets[@]}")
     sketches_to_build=()
 elif [ -z "$target" ]; then
     # No target specified, but sketch(es) specified - build sketches for all targets
     echo "No target specified, building sketch(es) '${sketches_to_build[*]}' for all targets"
-    targets_to_build=("${BUILD_TEST_TARGETS[@]}")
+    targets_to_build=("${default_targets[@]}")
 elif [ -z "$sketch" ]; then
     # No sketch specified, but target(s) specified - build all sketches for targets
     echo "No sketch specified, building all sketches for target(s) '${targets_to_build[*]}'"
@@ -249,6 +338,15 @@ fi
 for current_target in "${targets_to_build[@]}"; do
     echo "Building for target: $current_target"
 
+    platform_marker="$HOME/.arduino/tests/$current_target/platform_filter.txt"
+    if [ -n "$platform" ]; then
+        mkdir -p "$(dirname "$platform_marker")"
+        printf '%s\n' "$platform" > "${platform_marker}.tmp.$$"
+        mv -f "${platform_marker}.tmp.$$" "$platform_marker"
+    else
+        rm -f "$platform_marker"
+    fi
+
     if [ $chunk_build -eq 1 ]; then
         # For chunk builds, we need to handle multi-device tests separately
         # First, build all multi-device tests, then build regular tests
@@ -258,7 +356,8 @@ for current_target in "${targets_to_build[@]}"; do
         if [ -d "$test_folder" ]; then
             for test_dir in "$test_folder"/*; do
                 if [ -d "$test_dir" ] && [ "$(is_multi_device_test "$test_dir")" -eq 1 ]; then
-                    build_multi_device_test "$test_dir" "$current_target" "${args[@]}" "-t" "$current_target" "$@"
+                    build_multi_device_test "$test_dir" "$current_target" "${args[@]}" "-t" "$current_target" \
+                        "${multi_build_args[@]}"
                     result=$?
                     if [ $result -ne 0 ]; then
                         multi_device_error=$result
@@ -271,7 +370,11 @@ for current_target in "${targets_to_build[@]}"; do
         local_args=("${args[@]}")
         BUILD_CMD="${SKETCH_UTILS} chunk_build"
         local_args+=("-p" "$test_folder" "-i" "0" "-m" "1" "-t" "$current_target")
-        ${BUILD_CMD} "${local_args[@]}" "$@"
+        if [ -n "$platform" ]; then
+            local_args+=("--platform" "$platform")
+        fi
+        local_args+=("-j" "$jobs")
+        ${BUILD_CMD} "${local_args[@]}" "${forwarded_build_args[@]}" "${compiler_args[@]}"
         regular_error=$?
 
         # Return error if either multi-device or regular builds failed
@@ -283,6 +386,8 @@ for current_target in "${targets_to_build[@]}"; do
         fi
     else
         # Build specific sketches
+        explicit_sketches_file=$(mktemp "${TMPDIR:-/tmp}/arduino-explicit-sketches.XXXXXX") || exit 1
+        explicit_error=0
         for current_sketch in "${sketches_to_build[@]}"; do
             echo "  Building sketch: $current_sketch"
 
@@ -299,13 +404,33 @@ for current_target in "${targets_to_build[@]}"; do
             # Check if this is a multi-device test
             test_dir="$sketch_test_folder/$current_sketch"
             if [ -d "$test_dir" ] && [ "$(is_multi_device_test "$test_dir")" -eq 1 ]; then
-                build_multi_device_test "$test_dir" "$current_target" "${args[@]}" "-t" "$current_target" "$@"
+                build_multi_device_test "$test_dir" "$current_target" "${args[@]}" "-t" "$current_target" \
+                    "${multi_build_args[@]}"
+                result=$?
+                if [ "$result" -ne 0 ]; then
+                    explicit_error=$result
+                fi
             else
-                local_args=("${args[@]}")
-                BUILD_CMD="${SCRIPTS_DIR}/sketch_utils.sh build"
-                local_args+=("-s" "$sketch_test_folder/$current_sketch" "-t" "$current_target")
-                ${BUILD_CMD} "${local_args[@]}" "$@"
+                if [ -n "$platform" ] \
+                && ! "${SKETCH_UTILS}" platform_build_allowed "$sketch_test_folder/$current_sketch" "$platform" "$current_target"; then
+                    echo "Skipping $current_sketch for $current_target (platform $platform disabled)"
+                    continue
+                fi
+                printf '%s\n' "$sketch_test_folder/$current_sketch" >> "$explicit_sketches_file"
             fi
         done
+        if [ -s "$explicit_sketches_file" ]; then
+            local_args=("${args[@]}" "-t" "$current_target")
+            "${SKETCH_UTILS}" build_list -F "$explicit_sketches_file" -j "$jobs" \
+                "${local_args[@]}" "${forwarded_build_args[@]}" "${compiler_args[@]}"
+            result=$?
+            if [ "$result" -ne 0 ]; then
+                explicit_error=$result
+            fi
+        fi
+        rm -f "$explicit_sketches_file"
+        if [ "$explicit_error" -ne 0 ]; then
+            exit "$explicit_error"
+        fi
     fi
 done

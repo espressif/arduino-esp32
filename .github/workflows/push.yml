@@ -44,6 +44,8 @@ on:
       - ".github/scripts/on-push.sh"
       - ".github/scripts/sketch_utils.sh"
       - ".github/scripts/get_affected.py"
+      - ".github/scripts/chunk_assign.py"
+      - ".github/scripts/ci_chunking/**"
       - ".github/scripts/socs_config.sh"
       - "variants/**"
       - "!*.md"
@@ -63,6 +65,7 @@ permissions:
 
 env:
   MAX_CHUNKS: 15
+  SKETCH_BUILD_JOBS: auto
 
 jobs:
   gen-chunks:
@@ -88,6 +91,14 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Restore compile costs
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: compile_costs.json
+          key: compile-costs-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            compile-costs-${{ runner.os }}-
+
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
@@ -106,6 +117,7 @@ jobs:
         env:
           IS_PR: ${{ github.event_name == 'pull_request' }}
           MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
+          COMPILE_COSTS_FILE: compile_costs.json
           FORCE_RECOMPILE_ALL: ${{ contains(github.event.pull_request.labels.*.name, 'Force Full Compilation') || github.event.inputs.force_recompile_all }}
         run: |
           extra_flags="--debug"
@@ -114,13 +126,16 @@ jobs:
           fi
           (which ctags-universal || which ctags) || (echo "Error: Neither ctags-universal nor ctags found in PATH" && exit 1)
           python3 ./.github/scripts/get_affected.py $extra_flags ${{ steps.changed-files.outputs.all_changed_files }} > affected_sketches.txt
+          mkdir -p chunks
 
       - name: Upload affected sketches
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: affected_sketches
-          path: affected_sketches.txt
+          path: |
+            affected_sketches.txt
+            chunks/
           if-no-files-found: error
 
       - name: Upload debug artifacts
@@ -134,6 +149,7 @@ jobs:
             ctags_tags.jsonl
             dependencies.json
             dependencies_reverse.json
+            chunks/chunks.json
           if-no-files-found: warn
 
   # Ubuntu
@@ -185,8 +201,35 @@ jobs:
         with:
           name: affected_sketches
 
+      - name: Restore ACmake object cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /tmp/acmake_objcache
+          key: acmake-objcache-${{ runner.os }}-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}
+          restore-keys: |
+            acmake-objcache-${{ runner.os }}-
+
       - name: Build selected sketches
+        env:
+          COMPILE_TIMINGS_FILE: ${{ github.workspace }}/compile_timings_${{ matrix.chunk }}.jsonl
         run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ needs.gen-chunks.outputs.chunk_count }} 1 ${{ env.LOG_LEVEL }} affected_sketches.txt
+
+      - name: Save ACmake object cache
+        if: matrix.chunk == 0 || matrix.chunk == '0'
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /tmp/acmake_objcache
+          key: acmake-objcache-${{ runner.os }}-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}
+
+      - name: Upload compile timings
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: compile_timings_${{ matrix.chunk }}
+          path: compile_timings_${{ matrix.chunk }}.jsonl
+          if-no-files-found: warn
+          overwrite: true
 
       #Upload cli compile json as artifact
       - name: Upload cli compile json
@@ -204,6 +247,57 @@ jobs:
           path: compile_commands/
           if-no-files-found: warn
           overwrite: true
+
+  update-compile-costs:
+    name: Update compile costs
+    needs: [gen-chunks, build-arduino-linux]
+    if: ${{ always() && !cancelled() && needs.gen-chunks.outputs.should_run == 'true' && needs.gen-chunks.outputs.should_build == '1' && needs.build-arduino-linux.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Restore compile costs
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: compile_costs.json
+          key: compile-costs-${{ runner.os }}-${{ github.run_id }}-skip
+          restore-keys: |
+            compile-costs-${{ runner.os }}-
+
+      - name: Download compile timings
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          pattern: compile_timings_*
+          merge-multiple: true
+          path: compile_timings
+
+      - name: Merge timings into compile costs
+        run: |
+          if ! compgen -G "compile_timings/*" > /dev/null; then
+            echo "No compile timings uploaded"
+            exit 0
+          fi
+          python3 .github/scripts/chunk_assign.py \
+            --update-costs compile_timings \
+            --costs compile_costs.json \
+            --root .
+
+      - name: Save compile costs
+        if: hashFiles('compile_costs.json') != ''
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: compile_costs.json
+          key: compile-costs-${{ runner.os }}-${{ github.run_id }}
+
+      - name: Upload compile costs
+        if: hashFiles('compile_costs.json') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: compile_costs
+          path: compile_costs.json
+          if-no-files-found: warn
 
   # Windows and MacOS
   build-arduino-win-mac:

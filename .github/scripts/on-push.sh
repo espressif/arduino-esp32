@@ -7,6 +7,16 @@ SCRIPTS_DIR="./.github/scripts"
 source "${SCRIPTS_DIR}/socs_config.sh"
 
 export ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
+SKETCH_BUILD_JOBS="${SKETCH_BUILD_JOBS:-auto}"
+
+if [ "$SKETCH_BUILD_JOBS" = "auto" ]; then
+    SKETCH_BUILD_JOBS=$("${SCRIPTS_DIR}/sketch_utils.sh" auto_sketch_jobs)
+fi
+
+if ! [[ "$SKETCH_BUILD_JOBS" =~ ^[1-9][0-9]*$ ]]; then
+    echo "ERROR: SKETCH_BUILD_JOBS must be 'auto' or a positive integer"
+    exit 2
+fi
 
 function build {
     local target=$1
@@ -18,13 +28,20 @@ function build {
     shift 6
     local sketches=("$@")
 
-    local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
+    local BUILD_SKETCH_LIST="${SCRIPTS_DIR}/sketch_utils.sh build_list"
     local BUILD_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
 
     local args=("-au" "$ARDUINO_USR_PATH" "-t" "$target")
 
     if [ "$OS_IS_LINUX" == "1" ]; then
-        args+=("-p" "$ARDUINO_ESP32_PATH/libraries" "-i" "$chunk_index" "-m" "$chunks_cnt" "-d" "$log_level")
+        args+=(
+            "-p" "$ARDUINO_ESP32_PATH/libraries"
+            "-i" "$chunk_index"
+            "-m" "$chunks_cnt"
+            "-d" "$log_level"
+            "-j" "$SKETCH_BUILD_JOBS"
+            "--isolated-build-dirs"
+        )
         if [ -n "$sketches_file" ]; then
             args+=("-f" "$sketches_file")
         fi
@@ -33,21 +50,32 @@ function build {
         fi
         ${BUILD_SKETCHES} "${args[@]}"
     else
+        local sketches_list
+        local result
+        local xtra_opts=()
+        sketches_list=$(mktemp "${TMPDIR:-/tmp}/arduino-push-sketches.XXXXXX") || return 1
         for sketch in "${sketches[@]}"; do
-            local sargs=("${args[@]}")
+            printf '%s\n' "$(dirname "$sketch")" >> "$sketches_list"
+        done
+        if [ "$OS_IS_WINDOWS" == "1" ] && [ -d "$ARDUINO_IDE_PATH/tools-builder" ]; then
             local ctags_version
             local preprocessor_version
-            sargs+=("-s" "$(dirname "$sketch")")
-            if [ "$OS_IS_WINDOWS" == "1" ] && [ -d "$ARDUINO_IDE_PATH/tools-builder" ]; then
-                ctags_version=$(ls "$ARDUINO_IDE_PATH/tools-builder/ctags/")
-                preprocessor_version=$(ls "$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/")
-                sargs+=(
-                    "-prefs=runtime.tools.ctags.path=$ARDUINO_IDE_PATH/tools-builder/ctags/$ctags_version"
-                    "-prefs=runtime.tools.arduino-preprocessor.path=$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/$preprocessor_version"
-                )
-            fi
-            ${BUILD_SKETCH} "${sargs[@]}"
-        done
+            ctags_version=$(ls "$ARDUINO_IDE_PATH/tools-builder/ctags/")
+            preprocessor_version=$(ls "$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/")
+            xtra_opts+=(
+                "-prefs=runtime.tools.ctags.path=$ARDUINO_IDE_PATH/tools-builder/ctags/$ctags_version"
+                "-prefs=runtime.tools.arduino-preprocessor.path=$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/$preprocessor_version"
+            )
+        fi
+
+        if ${BUILD_SKETCH_LIST} -F "$sketches_list" -j "$SKETCH_BUILD_JOBS" \
+            --isolated-build-dirs "${args[@]}" -i "$chunk_index" "${xtra_opts[@]}"; then
+            result=0
+        else
+            result=$?
+        fi
+        rm -f "$sketches_list"
+        return "$result"
     fi
 }
 
@@ -97,8 +125,8 @@ for target in "${CORE_SOCS[@]}"; do
 done
 
 if [ "$BUILD_LOG" -eq 1 ]; then
-    #remove last comma from the last JSON object
-    sed -i '$ s/,$//' "$sizes_file"
+    # Remove the last comma from the last JSON object.
+    "${SCRIPTS_DIR}/sketch_utils.sh" remove_trailing_comma "$sizes_file"
     #echo end of JSON array
     echo "]}" >> "$sizes_file"
 fi

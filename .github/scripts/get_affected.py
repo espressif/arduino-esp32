@@ -62,6 +62,8 @@ High-level workflow
      - `should_build`: Whether to build the sketches or component examples
      - `chunks`: A list of chunk indices to build (maximum is defined by `MAX_CHUNKS`)
      - `chunk_count`: The number of chunks to build (maximum is defined by `MAX_CHUNKS`)
+     Sketch mode packs by library affinity (see ``ci_chunking``) and writes ``chunks/chunk_N.txt``.
+     Component mode keeps equal-count ``chunk_count`` and does not write ``chunks/``.
 
 Build file patterns
 --------------------
@@ -111,7 +113,12 @@ import fnmatch
 import logging
 
 script_dir = Path(__file__).resolve().parent
+if str(script_dir) not in sys.path:
+    sys.path.insert(0, str(script_dir))
 project_root = (script_dir / "../../").resolve()
+
+from ci_chunking.costs import load_cost_table  # noqa: E402
+from ci_chunking.pack import assign, format_chunks_json, print_summary, write_assignment  # noqa: E402
 
 logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s', stream=sys.stderr)
 
@@ -170,6 +177,8 @@ build_files = [
     ".github/scripts/on-push.sh",
     ".github/scripts/sketch_utils.sh",
     ".github/scripts/get_affected.py",
+    ".github/scripts/chunk_assign.py",
+    ".github/scripts/ci_chunking/**",
     ".github/scripts/install-*",
     "variants/esp32*/**",
 ]
@@ -1065,26 +1074,28 @@ def set_ci_output(print_vars: bool=True):
         sketch_count = len(affected_sketches)
         if sketch_count > 0:
             f.write(f"should_build=1\n")
-            # Calculate optimal chunk count to avoid creating empty chunks
-            # Use the same algorithm as sketch_utils.sh to determine how many chunks are actually needed
-            if sketch_count <= max_chunks:
-                # If we have fewer sketches than max chunks, use one chunk per sketch
-                chunk_count = sketch_count
-                print(f"Creating {chunk_count} chunks for {sketch_count} sketches (one per sketch).", file=sys.stderr)
+            if component_mode:
+                if sketch_count <= max_chunks:
+                    chunk_count = sketch_count
+                    print(f"Creating {chunk_count} chunks for {sketch_count} examples (one per example).", file=sys.stderr)
+                else:
+                    chunk_size = (sketch_count + max_chunks - 1) // max_chunks
+                    chunks_needed = (sketch_count + chunk_size - 1) // chunk_size
+                    chunk_count = min(chunks_needed, max_chunks)
+                    print(f"More examples ({sketch_count}) than max chunks ({max_chunks}). Using {chunk_count} chunks with ~{chunk_size} examples each.", file=sys.stderr)
             else:
-                # If we have more sketches than max chunks, distribute across max_chunks
-                # Calculate chunk size: ceil(sketch_count / max_chunks)
-                chunk_size = (sketch_count + max_chunks - 1) // max_chunks  # ceiling division
-                # Calculate actual chunks needed
-                chunks_needed = (sketch_count + chunk_size - 1) // chunk_size  # ceiling division
-                chunk_count = min(chunks_needed, max_chunks)
-                print(f"More sketches ({sketch_count}) than max chunks ({max_chunks}). Using {chunk_count} chunks with ~{chunk_size} sketches each.", file=sys.stderr)
-
-            chunks='["0"'
-            for i in range(1, chunk_count):
-                chunks+=f",\"{i}\""
-            chunks+="]"
-            f.write(f"chunks={chunks}\n")
+                assignment = assign(
+                    affected_sketches,
+                    max_chunks,
+                    dependencies=dependencies,
+                    project_root=project_root,
+                    cost_table=load_cost_table(project_root),
+                )
+                chunks_dir = Path(os.environ.get("CHUNK_LIST_DIR", "chunks"))
+                write_assignment(assignment, chunks_dir)
+                print_summary(assignment, sys.stderr)
+                chunk_count = assignment.chunk_count
+            f.write(f"chunks={format_chunks_json(chunk_count)}\n")
         else:
             f.write(f"should_build=0\n")
             chunk_count = 0
