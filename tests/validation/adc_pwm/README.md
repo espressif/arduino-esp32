@@ -12,7 +12,8 @@ Single-device Unity test for ADC, LEDC (PWM), and SigmaDelta peripherals.
 | `test_adc_attenuation` | `analogSetAttenuation` ADC_0db / ADC_11db |
 | `test_adc_continuous` | `analogContinuous` DMA mode with ISR completion |
 | `test_ledc_attach_detach` | `ledcAttach` / `ledcDetach` |
-| `test_ledc_write_duty` | `ledcWrite` at 0 / 128 / 255 |
+| `test_ledc_write_duty` | `ledcWrite` / `ledcWriteChannel` at 0 / 128 / 255 / 256 and overflow clamp |
+| `test_analog_write_duty` | `analogWrite` map to full on; negative value ignored |
 | `test_ledc_read_freq` | `ledcReadFreq` matches set frequency |
 | `test_ledc_change_frequency` | `ledcChangeFrequency` to 10 kHz |
 | `test_ledc_fade` | `ledcFade` 0 to 255 over 500 ms |
