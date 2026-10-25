@@ -1124,6 +1124,15 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   // The pins will be properly attached when the driver is installed in uartBegin()
   if (!uartIsDriverInstalled(uart)) {
     log_v("UART%u: Driver not yet installed, storing pins for later attachment (RX:%d, TX:%d)", uart_num, rxPin, txPin);
+    if (uart_num == 0 && _uart0ConsolePinsFromBoot) {
+      // Moving a console pad registered at boot: release it now so Peripheral Manager does not keep
+      // a stale UART0 owner whose detach callback would act on the newly stored pin.
+      int8_t oldRx = (rxPin >= 0 && rxPin != uart->_rxPin) ? uart->_rxPin : UART_PIN_NO_CHANGE;
+      int8_t oldTx = (txPin >= 0 && txPin != uart->_txPin) ? uart->_txPin : UART_PIN_NO_CHANGE;
+      if (oldRx >= 0 || oldTx >= 0) {
+        _uartDetachPins(0, oldRx, oldTx, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+      }
+    }
     if (rxPin >= 0) {
       uart->_rxPin = rxPin;
     }
