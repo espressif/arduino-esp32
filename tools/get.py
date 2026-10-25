@@ -24,6 +24,13 @@ import zipfile
 import re
 import time
 import argparse
+import threading
+
+try:
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+except ImportError:
+    ThreadPoolExecutor = None
+    as_completed = None
 
 # Initialize start_time globally
 start_time = -1
@@ -48,6 +55,17 @@ elif __file__:
     current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
 
 dist_dir = current_dir + "/dist/"
+verbose = False
+_tls = threading.local()
+
+
+def log(message):
+    """Print a complete status line, tagged with the current tool when set."""
+    label = getattr(_tls, "tool", None)
+    if label:
+        print("[{0}] {1}".format(label, message))
+    else:
+        print(message)
 
 
 def is_safe_archive_path(path):
@@ -185,7 +203,7 @@ def verify_files(filename, destination, rename_to):
             file_list = archive.namelist()
         except zipfile.BadZipFile:
             if verbose:
-                print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
+                log("Verification failed; aborted in {0}".format(format_time(time.time() - t1)))
             return False
     elif filename.endswith(".tar.gz"):
         try:
@@ -193,7 +211,7 @@ def verify_files(filename, destination, rename_to):
             file_list = archive.getnames()
         except tarfile.ReadError:
             if verbose:
-                print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
+                log("Verification failed; aborted in {0}".format(format_time(time.time() - t1)))
             return False
     elif filename.endswith(".tar.xz"):
         try:
@@ -201,7 +219,7 @@ def verify_files(filename, destination, rename_to):
             file_list = archive.getnames()
         except tarfile.ReadError:
             if verbose:
-                print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
+                log("Verification failed; aborted in {0}".format(format_time(time.time() - t1)))
             return False
     else:
         raise NotImplementedError("Unsupported archive type")
@@ -214,18 +232,50 @@ def verify_files(filename, destination, rename_to):
             local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
             if not os.path.exists(local_path):
                 if verbose:
-                    print(f"\nMissing {zipped_file} on location: {extracted_dir_path}")
-                    print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
+                    log("Missing {0} on location: {1}".format(zipped_file, extracted_dir_path))
+                    log("Verification failed; aborted in {0}".format(format_time(time.time() - t1)))
                 return False
             print_verification_progress(total_files, i, t1)
     except Exception as e:
-        print(f"\nError: {e}")
+        log("Error: {0}".format(e))
         return False
 
     if verbose:
-        print(f"\nVerification passed; completed in {format_time(time.time() - t1)}")
+        log("Verification passed; completed in {0}".format(format_time(time.time() - t1)))
 
     return True
+
+
+def installed_tool_dir(destination, checksum):
+    """Return an extracted tool directory whose ``.package_checksum`` matches."""
+    try:
+        names = os.listdir(destination)
+    except OSError:
+        return None
+    for name in names:
+        checksum_path = os.path.join(destination, name, ".package_checksum")
+        if not os.path.isfile(checksum_path):
+            continue
+        try:
+            with open(checksum_path, "r") as f:
+                current = f.read()
+        except OSError:
+            continue
+        if current == checksum:
+            return name
+    return None
+
+
+def should_skip_install_verification(destination, checksum, force_download, force_extract):
+    """True when that checksum is already installed.
+
+    Used only with ``--skip-verify`` (CI cache restore). Dist archives are not
+    required. A missing or mismatched ``.package_checksum`` is a new install
+    and must still be hashed and verified.
+    """
+    if force_download or force_extract:
+        return False
+    return installed_tool_dir(destination, checksum) is not None
 
 
 def is_latest_version(destination, dirname, rename_to, cfile, checksum):
@@ -238,21 +288,21 @@ def is_latest_version(destination, dirname, rename_to, cfile, checksum):
             current_version = f.read()
 
         if verbose:
-            print(f"\nTool: {rename_to}")
-            print(f"Current version: {current_version}")
-            print(f"Expected version: {expected_version}")
+            log("Tool: {0}".format(rename_to))
+            log("Current version: {0}".format(current_version))
+            log("Expected version: {0}".format(expected_version))
 
         if current_version and current_version == expected_version:
             if verbose:
-                print("Latest version already installed. Skipping extraction")
+                log("Latest version already installed. Skipping extraction")
             return True
 
         if verbose:
-            print("New version detected")
+            log("New version detected")
 
     except Exception as e:
         if verbose:
-            print(f"Failed to verify version for {rename_to}: {e}")
+            log("Failed to verify version for {0}: {1}".format(rename_to, e))
 
     return False
 
@@ -263,7 +313,7 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     cfile = None  # Compressed file
     file_is_corrupted = False
     if not force_extract:
-        print(" > Verify archive... ", end="", flush=True)
+        log("Verify archive")
 
     try:
         if filename.endswith("tar.gz"):
@@ -271,30 +321,30 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
                 cfile = tarfile.open(filename, "r:gz")
                 dirname = archive_root_dir(cfile.getnames())
             else:
-                print("File corrupted!")
+                log("File corrupted")
                 file_is_corrupted = True
         elif filename.endswith("tar.xz"):
             if tarfile.is_tarfile(filename):
                 cfile = tarfile.open(filename, "r:xz")
                 dirname = archive_root_dir(cfile.getnames())
             else:
-                print("File corrupted!")
+                log("File corrupted")
                 file_is_corrupted = True
         elif filename.endswith("zip"):
             if zipfile.is_zipfile(filename):
                 cfile = zipfile.ZipFile(filename)
                 dirname = archive_root_dir(cfile.namelist())
             else:
-                print("File corrupted!")
+                log("File corrupted")
                 file_is_corrupted = True
         else:
             raise NotImplementedError("Unsupported archive type")
     except EOFError:
-        print("File corrupted or incomplete!")
+        log("File corrupted or incomplete")
         cfile = None
         file_is_corrupted = True
     except ValueError as e:
-        print(f"Security validation failed: {e}")
+        log("Security validation failed: {0}".format(e))
         cfile = None
         file_is_corrupted = True
 
@@ -302,7 +352,7 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
         corrupted_filename = filename + ".corrupted"
         os.rename(filename, corrupted_filename)
         if verbose:
-            print(f"Renaming corrupted archive to {corrupted_filename}")
+            log("Renaming corrupted archive to {0}".format(corrupted_filename))
         return False
 
     # A little trick to rename tool directories so they don't contain version number
@@ -316,14 +366,14 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     if not force_extract:
         if is_latest_version(destination, dirname, rename_to, cfile, checksum):
             if verify_files(filename, destination, rename_to):
-                print(" Files ok. Skipping Extraction")
+                log("Files ok. Skipping extraction")
                 return True
-        print(" Extracting archive...")
+        log("Extracting archive")
     else:
-        print(" Forcing extraction")
+        log("Forcing extraction")
 
     if os.path.isdir(os.path.join(destination, rename_to)):
-        print("Removing existing {0} ...".format(rename_to))
+        log("Removing existing {0}".format(rename_to))
         shutil.rmtree(os.path.join(destination, rename_to), ignore_errors=True)
 
     if filename.endswith("tar.gz"):
@@ -342,7 +392,7 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
         raise NotImplementedError("Unsupported archive type")
 
     if rename_to != dirname:
-        print("Renaming {0} to {1} ...".format(dirname, rename_to))
+        log("Renaming {0} to {1}".format(dirname, rename_to))
         shutil.move(dirname, rename_to)
 
     # Add execute permission to esptool on non-Windows platforms
@@ -353,11 +403,12 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     with open(os.path.join(destination, rename_to, ".package_checksum"), "w") as f:
         f.write(checksum)
 
+    # Newly extracted packages are always member-checked, even if --skip-verify.
     if verify_files(filename, destination, rename_to):
-        print(" Files extracted successfully.")
+        log("Files extracted successfully")
         return True
     else:
-        print(" Failed to extract files.")
+        log("Failed to extract files")
         return False
 
 
@@ -411,19 +462,33 @@ def download_file(url, filename):
             raise Exception("Non-existing file or connection error")
 
 
-def get_tool(tool, force_download, force_extract):
+def get_tool(tool, force_download, force_extract, skip_verify=False):
     sys_name = platform.system()
     archive_name = tool["archiveFileName"]
     checksum = tool["checksum"][8:]
     local_path = dist_dir + archive_name
     url = tool["url"]
     start_time = time.time()
-    print("")
+    previous_label = getattr(_tls, "tool", None)
+    _tls.tool = archive_name
+    try:
+        return _get_tool(tool, force_download, force_extract, skip_verify, sys_name, archive_name, checksum, local_path, url, start_time)
+    finally:
+        _tls.tool = previous_label
+
+
+def _get_tool(tool, force_download, force_extract, skip_verify, sys_name, archive_name, checksum, local_path, url, start_time):
+    if skip_verify and should_skip_install_verification(
+        ".", checksum, force_download, force_extract
+    ):
+        log("Already installed. Skipping verification")
+        sys.stdout.flush()
+        return True
     if not os.path.isfile(local_path) or force_download:
         if verbose:
-            print("Downloading '" + archive_name + "' to '" + local_path + "'")
+            log("Downloading to '{0}'".format(local_path))
         else:
-            print("Downloading '" + archive_name + "' ...")
+            log("Downloading")
         sys.stdout.flush()
         if "CYGWIN_NT" in sys_name:
             import ssl
@@ -445,14 +510,13 @@ def get_tool(tool, force_download, force_extract):
                     urlretrieve(url, local_path, report_progress)
                 except:  # noqa: E722
                     download_file_with_progress(url, local_path, start_time)
-                sys.stdout.write(" - Done\n")
-                sys.stdout.flush()
+                log("Download done")
     else:
-        print("Tool {0} already downloaded".format(archive_name))
+        log("Already downloaded")
         sys.stdout.flush()
 
     if sha256sum(local_path) != checksum:
-        print("Checksum mismatch for {0}".format(archive_name))
+        log("Checksum mismatch")
         return False
 
     return unpack(local_path, ".", force_extract, checksum)
@@ -536,6 +600,102 @@ def identify_platform():
     return arduino_platform_names[sys_name][bits]
 
 
+def default_job_count():
+    try:
+        cpu = os.cpu_count() or 4
+    except AttributeError:
+        cpu = 4
+    return max(1, min(8, cpu))
+
+
+def resolve_job_count(n_tools, requested=None):
+    if n_tools <= 0:
+        return 1
+    if requested is None:
+        requested = default_job_count()
+    jobs = int(requested)
+    if jobs < 1:
+        raise ValueError("jobs must be >= 1")
+    return max(1, min(jobs, n_tools))
+
+
+class _LockedStdio(object):
+    def __init__(self, stream):
+        self._stream = stream
+        self._lock = threading.Lock()
+
+    def write(self, data):
+        with self._lock:
+            return self._stream.write(data)
+
+    def flush(self):
+        with self._lock:
+            return self._stream.flush()
+
+    def isatty(self):
+        return False
+
+    def __getattr__(self, name):
+        return getattr(self._stream, name)
+
+
+def _install_tool_with_retry(tool, force_download, force_extract, skip_verify):
+    archive_name = tool["archiveFileName"]
+    previous_label = getattr(_tls, "tool", None)
+    _tls.tool = archive_name
+    try:
+        if get_tool(tool, force_download, force_extract, skip_verify):
+            return None
+        if verbose:
+            log("Corrupted. Re-downloading")
+        if get_tool(tool, True, force_extract, skip_verify):
+            return None
+        log("Corrupted, and re-downloading did not help")
+        return archive_name
+    finally:
+        _tls.tool = previous_label
+
+
+def install_tools(tools_to_download, force_download, force_extract, skip_verify, jobs, is_test=False):
+    """Download, verify, and extract each tool. Returns a list of failed archive names."""
+    if is_test:
+        for tool in tools_to_download:
+            print("Would install: {0}".format(tool["archiveFileName"]))
+        return []
+
+    jobs = resolve_job_count(len(tools_to_download), jobs)
+    print("\nDownloading and extracting tools ({0} job{1})...".format(jobs, "" if jobs == 1 else "s"))
+
+    if jobs == 1 or ThreadPoolExecutor is None:
+        if jobs > 1 and ThreadPoolExecutor is None:
+            print("concurrent.futures not available; installing serially")
+        failed = []
+        for tool in tools_to_download:
+            name = _install_tool_with_retry(tool, force_download, force_extract, skip_verify)
+            if name:
+                failed.append(name)
+        return failed
+
+    old_out, old_err = sys.stdout, sys.stderr
+    sys.stdout = _LockedStdio(old_out)
+    sys.stderr = _LockedStdio(old_err)
+    failed = []
+    try:
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = [
+                pool.submit(_install_tool_with_retry, tool, force_download, force_extract, skip_verify)
+                for tool in tools_to_download
+            ]
+            for fut in as_completed(futures):
+                name = fut.result()
+                if name:
+                    failed.append(name)
+    finally:
+        sys.stdout = old_out
+        sys.stderr = old_err
+    return failed
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download and extract tools")
 
@@ -557,6 +717,23 @@ if __name__ == "__main__":
         help="Remove files from the dist/ folder that are not required by the current tools list",
     )
 
+    parser.add_argument(
+        "-s",
+        "--skip-verify",
+        action="store_true",
+        required=False,
+        help="Skip archive hashing and member checks when .package_checksum already matches (for CI cache restores without dist/)",
+    )
+
+    parser.add_argument(
+        "-j",
+        "--jobs",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Install tools in parallel (default: min(8, CPU count))",
+    )
+
     parser.add_argument("-t", "--test", action="store_true", required=False, help=argparse.SUPPRESS)
 
     args = parser.parse_args()
@@ -566,13 +743,19 @@ if __name__ == "__main__":
     force_extract = args.force_extract
     force_all = args.force_all
     should_clean_unused = args.clean_unused
+    skip_verify = args.skip_verify
     is_test = args.test
+    jobs = args.jobs
 
     # Set current directory to the script location
     if getattr(sys, "frozen", False):
         os.chdir(os.path.dirname(sys.executable))
     else:
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    if jobs is not None and jobs < 1:
+        print("error: --jobs must be >= 1", file=sys.stderr)
+        sys.exit(2)
 
     if is_test and (force_download or force_extract or force_all):
         print("Cannot combine test (-t) and forced execution (-d | -e | -f)")
@@ -593,18 +776,9 @@ if __name__ == "__main__":
     )
     mkdir_p(dist_dir)
 
-    print("\nDownloading and extracting tools...")
-
-    for tool in tools_to_download:
-        if is_test:
-            print("Would install: {0}".format(tool["archiveFileName"]))
-        else:
-            if not get_tool(tool, force_download, force_extract):
-                if verbose:
-                    print(f"Tool {tool['archiveFileName']} was corrupted. Re-downloading...\n")
-                if not get_tool(tool, True, force_extract):
-                    print(f"Tool {tool['archiveFileName']} was corrupted, but re-downloading did not help!\n")
-                    sys.exit(1)
+    failed = install_tools(tools_to_download, force_download, force_extract, skip_verify, jobs, is_test)
+    if failed:
+        sys.exit(1)
 
     if should_clean_unused:
         print("\nCleaning unused files from dist/...")

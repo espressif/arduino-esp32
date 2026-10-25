@@ -60,8 +60,7 @@ High-level workflow
    - If the script is running in a CI environment, set the following environment variables:
      - `recompile_preset`: Whether the preset sketches should be recompiled
      - `should_build`: Whether to build the sketches or component examples
-     - `chunks`: A list of chunk indices to build (maximum is defined by `MAX_CHUNKS`)
-     - `chunk_count`: The number of chunks to build (maximum is defined by `MAX_CHUNKS`)
+   - Chunk membership is assigned later by ``assign_chunks.py`` (cost-based LPT).
 
 Build file patterns
 --------------------
@@ -150,8 +149,6 @@ def resolve_changed_path_to_project_relative(path: str) -> str:
 
 is_ci = os.environ.get("CI", "false").lower() == "true"
 is_pr = os.environ.get("IS_PR", "true").lower() == "true"
-max_chunks = int(os.environ.get("MAX_CHUNKS", "15"))
-chunk_count = 0
 force_recompile_all = False
 
 # Whether to analyze component examples instead of sketches.
@@ -170,6 +167,9 @@ build_files = [
     ".github/scripts/on-push.sh",
     ".github/scripts/sketch_utils.sh",
     ".github/scripts/get_affected.py",
+    ".github/scripts/assign_chunks.py",
+    ".github/scripts/merge_sketch_costs.py",
+    ".github/scripts/ci_chunking/**",
     ".github/scripts/install-*",
     "variants/esp32*/**",
 ]
@@ -1064,31 +1064,15 @@ def set_ci_output(print_vars: bool=True):
         f.write(f"recompile_preset={recompile_preset}\n")
         sketch_count = len(affected_sketches)
         if sketch_count > 0:
-            f.write(f"should_build=1\n")
-            # Calculate optimal chunk count to avoid creating empty chunks
-            # Use the same algorithm as sketch_utils.sh to determine how many chunks are actually needed
-            if sketch_count <= max_chunks:
-                # If we have fewer sketches than max chunks, use one chunk per sketch
-                chunk_count = sketch_count
-                print(f"Creating {chunk_count} chunks for {sketch_count} sketches (one per sketch).", file=sys.stderr)
-            else:
-                # If we have more sketches than max chunks, distribute across max_chunks
-                # Calculate chunk size: ceil(sketch_count / max_chunks)
-                chunk_size = (sketch_count + max_chunks - 1) // max_chunks  # ceiling division
-                # Calculate actual chunks needed
-                chunks_needed = (sketch_count + chunk_size - 1) // chunk_size  # ceiling division
-                chunk_count = min(chunks_needed, max_chunks)
-                print(f"More sketches ({sketch_count}) than max chunks ({max_chunks}). Using {chunk_count} chunks with ~{chunk_size} sketches each.", file=sys.stderr)
-
-            chunks='["0"'
-            for i in range(1, chunk_count):
-                chunks+=f",\"{i}\""
-            chunks+="]"
-            f.write(f"chunks={chunks}\n")
+            f.write("should_build=1\n")
+            print(
+                f"{sketch_count} affected sketches; chunk assignment is done by assign_chunks.py.",
+                file=sys.stderr,
+            )
         else:
-            f.write(f"should_build=0\n")
-            chunk_count = 0
-        f.write(f"chunk_count={chunk_count}\n")
+            f.write("should_build=0\n")
+            f.write("chunk_count=0\n")
+            f.write("chunks=[]\n")
     finally:
         # Close file if we opened it (CI mode)
         if is_ci:

@@ -138,6 +138,10 @@ Workflows source the configuration in their setup steps and use the arrays to dy
   - `.github/scripts/on-push.sh`
   - `.github/scripts/sketch_utils.sh`
   - `.github/scripts/get_affected.py`
+  - `.github/scripts/assign_chunks.py`
+  - `.github/scripts/merge_sketch_costs.py`
+  - `.github/scripts/ci_chunking/**`
+  - `.github/scripts/merge_ccache.py`
   - `.github/scripts/socs_config.sh`
   - `!*.md`
   - `!*.txt`
@@ -161,8 +165,9 @@ Workflows source the configuration in their setup steps and use the arrays to dy
    - Parse C/C++ dependencies using ctags
    - Build forward/reverse dependency graphs
    - Determine affected sketches from changed files
-   - Distribute sketches across chunks for parallel builds
-6. Upload affected sketches and debug artifacts
+6. **Lookup Linux ccache** - `actions/cache/restore` with `lookup-only` on the same `ccache-linux-{platform-hash}-` key the build jobs restore. Hit (exact SHA or prefix) → `--mode warm`; miss → `--mode cold`.
+7. **Assign chunks** - `assign_chunks.py` packs the affected list with LPT using that mode's costs from `size_test/<branch>/sketch_costs.json` on gh-pages (in-repo `fallback_costs.json` if that file is missing). Writes `chunk_N.txt`.
+8. Upload `affected_sketches.txt`, `chunk_*.txt`, and debug artifacts
 
 **Outputs:**
 - `should_run` - Whether workflow should proceed (based on variant check)
@@ -259,11 +264,14 @@ FQBNs are resolved at runtime via `default_upload_test_fqbn()` in `sketch_utils.
 2. Setup Python 3.x
 3. **Get libs cache** - Restores cached tools and libraries
    - Key: `libs-{os}-{arch}-{hash(package_esp32_index.template.json, tools/get.py)}`
-   - Includes: esp32-arduino-libs, esptool, toolchains
-4. Set log level (none/error/warn/info/debug/verbose)
-5. Download affected sketches list
-6. **Build sketches** - Runs `on-push.sh` with chunk parameters
-7. Upload compile results JSON
+   - Includes: extracted `esp32-arduino-libs`, esptool, and toolchains (`tools/dist` archives are not cached)
+   - On a cache hit, CI sets `ESP32_LIBS_CACHE_HIT=1` so `get.py --skip-verify` skips download, hashing, and member checks when `.package_checksum` matches. Local/default runs still verify even when `.package_checksum` matches.
+4. Install `ccache` and restore `${{ github.workspace }}/.ccache` (`ccache-linux-{platform-hash}-{sha}`, prefix restore-keys without sha)
+5. Set log level (none/error/warn/info/debug/verbose)
+6. Download affected sketches list (`chunk_{n}.txt` is the pre-assigned membership)
+7. **Build sketches** - Runs `on-push.sh` with `-f chunk_{n}.txt -i {n} -m 1` (`ccache -z` before, `ccache -sv` after). `-f` is the assigned set; `-i` names `cli_compile_{n}.json`.
+8. On `push` to `master`/`release/*`, upload the job `.ccache` as `ccache_chunk_{n}` (1-day artifact; hidden files included)
+9. Upload compile results JSON and per-sketch wall times (`sketch_times_{n}.jsonl`)
 
 **SoC Config Usage:**
 The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_SOCS minus SKIP_LIB_BUILD_SOCS), building sketches for each supported SoC.
@@ -272,11 +280,11 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 - `MAX_CHUNKS=15` - Maximum parallel build jobs
 
 **Key Features:**
-- **Intelligent chunking**: Only rebuilds affected sketches
+- **Intelligent chunking**: Only rebuilds affected sketches; Linux jobs are balanced by measured warm compile cost (LPT), not equal sketch count
 - **Parallel execution**: Up to 15 simultaneous builds
 - **Dependency tracking**: Uses ctags for accurate change detection
 - **Size reports**: Generates JSON with sketch sizes for comparison
-- **Caching**: Libraries and tools cached between runs
+- **Caching**: Libraries and tools cached between runs. Linux compile jobs restore a 2 GB `ccache` (content-hashed, depend mode, no `CCACHE_BASEDIR` — Ninja runs in `~/.arduino/build.tmp`). On master/release, `merge-ccache` unions every chunk's store and saves one key. Merged-cache warm vs fill (fork runs 40210957855 / 40207997338): Linux wall 34.3 → 27.7 min (−19%), average 23.5 → 14.7 min (−37%), 100% hits, store 1.1 GB. Windows (~35 min) was the wall before Windows ccache.
 
 #### 3. `build-arduino-win-mac`
 **Runs on:** Windows-latest, macOS-latest
@@ -290,32 +298,51 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 **Steps:**
 1. Checkout repository
 2. Setup Python 3.x
-3. Install yq (Windows only - macOS/Linux have it by default)
-4. **Build preset sketches** - Runs `on-push.sh` without parameters
+3. Install yq and ccache (Windows only - macOS/Linux have yq by default)
+4. Restore `${{ github.workspace }}/.ccache` on Windows (`ccache-windows-{platform-hash}-{sha}`, prefix restore-keys without sha)
+5. **Build preset sketches** - Runs `on-push.sh` without parameters (`ccache -z` before, `ccache -sv` after on Windows)
    - Builds hardcoded list of representative sketches
    - Tests WiFiClientSecure, BLE Server, Camera, Insights examples
+6. On `push` to `master`/`release/*`, save the Windows ccache (single job, no merge)
 
 **Why Preset Sketches:**
 - Windows/macOS builds are slower than Linux
 - Full matrix would take too long
 - Preset ensures cross-platform compatibility for critical examples
 
-#### 4. `save-baseline-artifacts`
+#### 4. `merge-ccache`
+**Runs on:** Ubuntu-latest
+
+**Conditions:**
+- Push to `master` or `release/*` after Linux compile jobs finish (runs even if some chunks failed)
+- `should_build == 1`
+
+**Purpose:** Union per-chunk ccache directories into one GitHub Actions cache so the next run warms every slice, not only Matter.
+
+**Steps:**
+1. Download `ccache_chunk_*` artifacts
+2. Run `merge_ccache.py` (hex buckets only; skip `tmp` / stats / `CACHEDIR.TAG`)
+3. `ccache -c` with `CCACHE_MAXSIZE=2G`
+4. Save `ccache-linux-{platform-hash}-{sha}`
+
+#### 5. `save-baseline-artifacts`
 **Runs on:** Ubuntu-latest
 
 **Conditions:**
 - Only on push to `master` or `release/*` branches
 - After `build-arduino-linux` completes
 
-**Purpose:** Archive compile results as the size baseline for PRs targeting that branch
+**Purpose:** Archive compile results as the size baseline for PRs targeting that branch, and merge per-sketch compile costs used to pack chunks.
 
 **Steps:**
-1. Checkout gh-pages branch
-2. Replace `size_test/<branch>/` with all compile result artifacts (`/` in the branch name becomes `_`, e.g. `size_test/master`, `size_test/release_v4.0.x`)
-3. Commit and push to gh-pages branch (rebases and retries if another branch pushed first)
-4. Enables size comparison with future PRs targeting the same branch
+1. Load previous `size_test/<branch>/sketch_costs.json` from gh-pages (kept aside so a fill does not wipe warm times)
+2. Download `pr_cli_compile_*` and `sketch_times_*`
+3. `merge_sketch_costs.py` updates `warm_s` or `cold_s` from that run's ccache hit rate (~100% hits → warm, ~0% → cold; mixed leaves both sides unchanged) and stamps `last_updated`
+4. Replace `size_test/<branch>/` size JSON (`cli_compile_*.json`) and write sibling `sketch_costs.json` (`/` in the branch name becomes `_`)
+5. Commit and push to gh-pages (rebases and retries if another branch pushed first)
+6. Size comments read only `cli_compile_*.json`; chunk assignment reads `sketch_costs.json`
 
-#### 5. `upload-pr-number`
+#### 6. `upload-pr-number`
 **Runs on:** Ubuntu-latest
 
 **Conditions:**
@@ -409,6 +436,7 @@ The main workflow coordinates the initial testing stages using GitHub Actions wo
    - **Calls `tests_qemu.yml`**: QEMU tests (disabled by default - Wokwi provides better coverage)
    - Runs in parallel for faster feedback
    - Both have access to PR context and can download artifacts
+   - On schedule / workflow_dispatch, **Merge tests ccache** unions `ccache_tests_*` artifacts and saves `ccache-tests-linux-{platform-hash}-{sha}` (2 GB). PRs restore that key and do not save.
 
 4. **Triggers Downstream**:
    - Completion triggers `tests_hw_wokwi.yml` via workflow_run
@@ -447,10 +475,9 @@ Each build produces binaries organized by chip and test type, including:
 - `ci.yml` (test requirements and configurations)
 
 **Caching Strategy:**
-Build artifacts are cached with a key based on PR number and commit SHA. This allows:
-- Fast rebuilds when retrying failed tests
-- Skipping builds when only test code changes
-- Reduced CI time and resource usage
+- Build artifacts are cached with a key based on PR number and commit SHA. Re-runs of the same commit skip compilation.
+- When a compile does run, the job restores a tests-only `ccache` (`ccache-tests-linux-{platform-hash}-{sha}`, prefix restore-keys without sha, 2 GB, same `CCACHE_*` env as `push.yml`). It does not restore the Compilation Tests store: test argv includes `-I{sketch}` and `-include {per-test build_opt.h}`, so those hashes never match example sketches.
+- Schedule and workflow_dispatch upload each job `.ccache` as `ccache_tests_{chip}_{type}` (1-day artifact) and merge into one GHA key. PRs restore only. Seed with a dispatch (or wait for the nightly); the next Runtime Tests run then hits the same test TUs. `fqbn_append` and first-seen `.ino` files still miss until compiled once under this store.
 
 ---
 
@@ -1304,7 +1331,7 @@ bash .github/scripts/ci_testing/release_validation.sh 3.3.10
 **Purpose:** Post compile size comparison comment to PR. Every `master` and `release/*` branch uses the same baseline path (`size_test/<branch>/` on gh-pages), saved automatically on push.
 
 **Jobs:**
-1. Resolve the PR base branch (`master` or `release/*`) and download its compile results from gh-pages (`size_test/<branch>/`). Skipped if no baseline exists yet for that branch (created on the next push to that branch).
+1. Resolve the PR base branch (`master` or `release/*`) and download its compile results from gh-pages (`size_test/<branch>/cli_compile_*.json`). Skipped if no baseline exists yet for that branch (created on the next push to that branch). `sketch_costs.json` in that folder is ignored.
 2. Download compile results from PR
 3. Compare sizes
 4. Generate markdown table
@@ -1545,10 +1572,10 @@ bash .github/scripts/check_official_variants.sh \
 ```
 
 **Logic:**
-- Always run if not a PR
+- Always run if not a PR (including empty commits — no path diff)
 - Check if any official variant files changed
 - Check if any non-variant files changed
-- Skip only if PR changes non-official variants exclusively
+- Skip only if PR changes non-official variants exclusively, or a PR has no changed files
 
 ### Build Scripts
 
@@ -1557,7 +1584,8 @@ bash .github/scripts/check_official_variants.sh \
 
 **Features:**
 - Builds all targets from `BUILD_TEST_TARGETS`
-- Supports chunked parallel builds
+- Linux: consumes a pre-assigned `chunk_N.txt` (`-i N -m 1`) so `sketch_utils.sh chunk_build` does not re-slice by count. `-i` is the size-report index (`cli_compile_N.json`).
+- Windows/macOS: still build the hardcoded preset sketches
 - Generates compile size reports
 - Uses `sketch_utils.sh` for actual compilation
 
@@ -1654,6 +1682,27 @@ For offline `new`/`official` runs, set `FIND_BOARDS_BASE_FILE` to a local base `
 - Uses ctags for symbol mapping
 - Determines which sketches need rebuilding
 - Supports both Arduino and IDF component modes
+- Does not slice sketches into chunks; that is `assign_chunks.py`
+
+#### `assign_chunks.py`
+**Purpose:** Pack affected sketches into Compilation Tests chunks
+
+**Features:**
+- Longest-processing-time (LPT) assignment from measured `warm_s` or `cold_s`. `gen-chunks` chooses the side with a Linux ccache lookup: matching key → warm, no key → cold.
+- Reads `size_test/<branch>/sketch_costs.json` from gh-pages when present
+- Falls back to in-repo `ci_chunking/fallback_costs.json` prefix weights
+- Fallback numbers are **per-sketch totals** (sum of SoC wall times), not per-SoC. Seeded from Compilation Tests fill 40243089597 (0% ccache hits) and warm 40246412066 (100% hits). If gh-pages has only `cold_s` (or only `warm_s`), assignment scales that side by the default cold/warm ratio instead of ignoring it. OpenThread/Zigbee/USB/BluetoothSerial sit below the default because they compile fewer SoCs. `MatterOnNetworkEthernet` is cheap when warm (~59 s) but a fill outlier (~648 s).
+- Writes `chunk_N.txt` plus `chunk_count` / `chunks` on `GITHUB_OUTPUT`
+- Logs per-chunk predicted load, library mix, cost-source counts, and the heaviest sketches
+- One sketch per chunk when `n <= MAX_CHUNKS`
+
+#### `merge_sketch_costs.py`
+**Purpose:** Merge per-sketch wall times into the gh-pages sibling `sketch_costs.json`
+
+**Features:**
+- Writes a sketch database (`warm_s` / `cold_s` per sketch). `last_updated` is a stamp of which side the last merge wrote (`warm` / `cold` / `mixed`); assignment still picks the side at runtime from the Linux ccache lookup
+- Classifies the incoming run from `ccache -s` dumps only to choose which field to update
+- A fill does not wipe warm times; mixed hit rates leave both sides unchanged
 
 #### `install-*.sh`
 **Purpose:** Install Arduino CLI, IDE, and core

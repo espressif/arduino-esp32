@@ -44,6 +44,11 @@ on:
       - ".github/scripts/on-push.sh"
       - ".github/scripts/sketch_utils.sh"
       - ".github/scripts/get_affected.py"
+      - ".github/scripts/assign_chunks.py"
+      - ".github/scripts/merge_sketch_costs.py"
+      - ".github/scripts/ci_chunking/**"
+      - ".github/scripts/check_official_variants.sh"
+      - ".github/scripts/merge_ccache.py"
       - ".github/scripts/socs_config.sh"
       - "variants/**"
       - "!*.md"
@@ -73,8 +78,8 @@ jobs:
       should_run: ${{ steps.check-variants.outputs.should_run }}
       should_build: ${{ steps.set-chunks.outputs.should_build }}
       recompile_preset: ${{ steps.set-chunks.outputs.recompile_preset }}
-      chunk_count: ${{ steps.set-chunks.outputs.chunk_count }}
-      chunks: ${{ steps.set-chunks.outputs.chunks }}
+      chunk_count: ${{ steps.assign-chunks.outputs.chunk_count || steps.set-chunks.outputs.chunk_count }}
+      chunks: ${{ steps.assign-chunks.outputs.chunks || steps.set-chunks.outputs.chunks }}
     steps:
       - name: Install universal-ctags
         uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
@@ -115,12 +120,63 @@ jobs:
           (which ctags-universal || which ctags) || (echo "Error: Neither ctags-universal nor ctags found in PATH" && exit 1)
           python3 ./.github/scripts/get_affected.py $extra_flags ${{ steps.changed-files.outputs.all_changed_files }} > affected_sketches.txt
 
+      # Same key/restore-keys as the Linux build jobs. lookup-only: do not download.
+      # Exact or prefix match → warm costs (a ccache will be restored). Miss → cold.
+      - name: Lookup Linux ccache
+        id: ccache-lookup
+        if: steps.check-variants.outputs.should_run == 'true' && steps.set-chunks.outputs.should_build == '1'
+        continue-on-error: true
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-linux-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-${{ github.sha }}
+          restore-keys: |
+            ccache-linux-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-
+          lookup-only: true
+
+      - name: Assign chunks
+        id: assign-chunks
+        if: steps.check-variants.outputs.should_run == 'true' && steps.set-chunks.outputs.should_build == '1'
+        env:
+          MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
+          BASE_REF: ${{ github.event.pull_request.base.ref || github.ref_name }}
+          CACHE_HIT: ${{ steps.ccache-lookup.outputs.cache-hit }}
+          CACHE_MATCHED_KEY: ${{ steps.ccache-lookup.outputs.cache-matched-key }}
+        run: |
+          set -euo pipefail
+          dir="size_test/${BASE_REF//\//_}"
+          costs_args=()
+          if git fetch --depth 1 origin gh-pages && \
+             git show "FETCH_HEAD:$dir/sketch_costs.json" > sketch_costs.json && \
+             [ -s sketch_costs.json ]; then
+            costs_args=(--costs sketch_costs.json)
+            echo "Loaded $dir/sketch_costs.json from gh-pages"
+          else
+            echo "No gh-pages sketch costs for $dir; using in-repo fallback"
+            rm -f sketch_costs.json
+          fi
+          if [ "$CACHE_HIT" = "true" ] || [ -n "${CACHE_MATCHED_KEY:-}" ]; then
+            mode=warm
+          else
+            mode=cold
+          fi
+          echo "Assigning chunks with --mode $mode (cache-hit=${CACHE_HIT:-false} matched=${CACHE_MATCHED_KEY:-none})"
+          python3 ./.github/scripts/assign_chunks.py \
+            --input affected_sketches.txt \
+            --out . \
+            --max-chunks "$MAX_CHUNKS" \
+            --mode "$mode" \
+            "${costs_args[@]}" \
+            --fallback .github/scripts/ci_chunking/fallback_costs.json
+
       - name: Upload affected sketches
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: affected_sketches
-          path: affected_sketches.txt
+          path: |
+            affected_sketches.txt
+            chunk_*.txt
           if-no-files-found: error
 
       - name: Upload debug artifacts
@@ -146,6 +202,18 @@ jobs:
       fail-fast: false
       matrix:
         chunk: ${{ fromJson(needs.gen-chunks.outputs.chunks) }}
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: 2G
+      CCACHE_COMPILERCHECK: content
+      # Do not set CCACHE_BASEDIR. Ninja's WORKING_DIRECTORY is
+      # ~/.arduino/build.tmp, outside the checkout; rewriting
+      # -iprefix / @flags/includes relative to that CWD breaks
+      # __has_include (empty PPP.cpp.o, undefined refs at link).
+      # GHA Linux workspace paths are stable, so rewriting is not needed.
+      CCACHE_NOHASHDIR: 1
+      CCACHE_DEPEND: 1
+      CCACHE_SLOPPINESS: include_file_mtime,include_file_ctime,time_macros
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -153,18 +221,28 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Install ccache
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: ccache
+          version: 1
+
       - name: Get libs cache
+        id: libs-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
           path: |
-            ./tools/dist
             ./tools/esp32-arduino-libs
             ./tools/esptool
             ./tools/mk*
             ./tools/openocd-esp32
             ./tools/riscv32-*
             ./tools/xtensa-*
+
+      - name: Skip tool verification on libs cache hit
+        if: steps.libs-cache.outputs.cache-hit == 'true'
+        run: echo "ESP32_LIBS_CACHE_HIT=1" >> "$GITHUB_ENV"
 
       - name: Set Log Level
         run: |
@@ -185,8 +263,40 @@ jobs:
         with:
           name: affected_sketches
 
+      - name: Restore ccache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-linux-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-${{ github.sha }}
+          restore-keys: |
+            ccache-linux-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-
+
+      - name: Zero ccache stats
+        run: ccache -z
+
       - name: Build selected sketches
-        run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ needs.gen-chunks.outputs.chunk_count }} 1 ${{ env.LOG_LEVEL }} affected_sketches.txt
+        run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 1 1 ${{ env.LOG_LEVEL }} chunk_${{ matrix.chunk }}.txt
+
+      - name: Show ccache stats
+        if: always()
+        run: |
+          ccache -sv
+          ccache -s > "ccache_stats_${{ matrix.chunk }}.txt" || true
+
+      - name: Upload ccache
+        if: >
+          success() &&
+          github.event_name == 'push' &&
+          (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/'))
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ccache_chunk_${{ matrix.chunk }}
+          path: ${{ github.workspace }}/.ccache
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: warn
+          overwrite: true
 
       #Upload cli compile json as artifact
       - name: Upload cli compile json
@@ -194,6 +304,21 @@ jobs:
         with:
           name: pr_cli_compile_${{ matrix.chunk }}
           path: cli_compile_${{ matrix.chunk }}.json
+          overwrite: true
+
+      - name: Upload sketch times
+        if: >
+          always() &&
+          github.event_name == 'push' &&
+          (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/'))
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sketch_times_${{ matrix.chunk }}
+          path: |
+            sketch_times_${{ matrix.chunk }}.jsonl
+            ccache_stats_${{ matrix.chunk }}.txt
+          if-no-files-found: warn
+          retention-days: 1
           overwrite: true
 
       - name: Upload compile commands
@@ -215,6 +340,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, macOS-latest]
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: 2G
+      CCACHE_COMPILERCHECK: content
+      # Do not set CCACHE_BASEDIR. Same as Linux: Ninja's WORKING_DIRECTORY
+      # is ~/.arduino/build.tmp, outside the checkout.
+      CCACHE_NOHASHDIR: 1
+      CCACHE_DEPEND: 1
+      CCACHE_SLOPPINESS: include_file_mtime,include_file_ctime,time_macros
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -224,14 +358,110 @@ jobs:
           python-version: "3.x"
 
       # Already installed by default in MacOS and Linux
-      - name: Install yq (Windows)
+      - name: Install yq and ccache (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          choco install yq -y
+          choco install yq ccache -y
           yq --version
+          ccache --version
+
+      - name: Restore ccache
+        if: matrix.os == 'windows-latest'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-windows-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-${{ github.sha }}
+          restore-keys: |
+            ccache-windows-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-
+
+      - name: Zero ccache stats
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: ccache -z
 
       - name: Build Sketches
         run: bash ./.github/scripts/on-push.sh
+
+      - name: Show ccache stats
+        if: always() && matrix.os == 'windows-latest'
+        shell: bash
+        run: ccache -sv
+
+      - name: Save ccache
+        if: >
+          success() &&
+          matrix.os == 'windows-latest' &&
+          github.event_name == 'push' &&
+          (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/'))
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-windows-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-${{ github.sha }}
+
+  # Union per-chunk ccache dirs into one GHA cache. Artifacts (1-day) avoid
+  # 15 cache keys against the 10 GB quota; the next run restores this key.
+  merge-ccache:
+    name: Merge ccache
+    needs: [gen-chunks, build-arduino-linux]
+    if: >
+      always() &&
+      !cancelled() &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) &&
+      needs.gen-chunks.outputs.should_run == 'true' &&
+      needs.gen-chunks.outputs.should_build == '1' &&
+      contains(fromJSON('["success", "failure"]'), needs.build-arduino-linux.result)
+    runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: 2G
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install ccache
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: ccache
+          version: 1
+
+      - name: Download chunk caches
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: ccache_chunk_*
+          path: ccache_chunks
+          merge-multiple: false
+          if-no-files-found: warn
+
+      - name: Merge chunk caches
+        id: merge
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          srcs=(ccache_chunks/ccache_chunk_*)
+          if [ ${#srcs[@]} -eq 0 ]; then
+            echo "No ccache chunk artifacts; skipping save"
+            echo "has_cache=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          merged=$(python3 .github/scripts/merge_ccache.py "$CCACHE_DIR" "${srcs[@]}")
+          echo "$merged"
+          rm -rf ccache_chunks
+          if [[ "$merged" == merged\ 0\ caches:* || "$merged" == *"0 files added, 0 already present" ]]; then
+            echo "No ccache objects to save"
+            echo "has_cache=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ccache -c
+          ccache -sv
+          echo "has_cache=true" >> "$GITHUB_OUTPUT"
+
+      - name: Save ccache
+        if: steps.merge.outputs.has_cache == 'true'
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-linux-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-${{ github.sha }}
 
   # Save artifacts to gh-pages as the sizes baseline for PRs targeting this branch.
   # master -> size_test/master, release/v4.0.x -> size_test/release_v4.0.x
@@ -248,28 +478,80 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
           fetch-depth: "0"
 
-      - name: Switch branch
-        run: git checkout remotes/origin/gh-pages
-
-      # Pushes recompile every sketch, so the old baseline is fully replaced.
       - name: Set baseline directory
         id: baseline
         env:
           REF_NAME: ${{ github.ref_name }}
+        run: echo "dir=size_test/${REF_NAME//\//_}" >> "$GITHUB_OUTPUT"
+
+      - name: Load previous sketch costs
+        env:
+          BASELINE_DIR: ${{ steps.baseline.outputs.dir }}
         run: |
-          dir="size_test/${REF_NAME//\//_}"
-          rm -rf "$dir"
-          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+          git fetch origin gh-pages
+          if git show "origin/gh-pages:$BASELINE_DIR/sketch_costs.json" > /tmp/prev_sketch_costs.json && \
+             [ -s /tmp/prev_sketch_costs.json ]; then
+            echo "Loaded previous sketch_costs.json"
+          else
+            rm -f /tmp/prev_sketch_costs.json
+            echo "No previous sketch_costs.json"
+          fi
 
       - name: Download sketches reports artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: pr_cli_compile_*
           merge-multiple: true
-          path: ${{ steps.baseline.outputs.dir }}
+          path: /tmp/cli_compile
 
-      - name: List files in the directory
-        run: ls -R "${{ steps.baseline.outputs.dir }}"
+      - name: Download sketch times
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: sketch_times_*
+          merge-multiple: true
+          path: /tmp/sketch_times
+
+      - name: Merge sketch costs
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          times=(/tmp/sketch_times/*.jsonl)
+          stats=(/tmp/sketch_times/*.txt)
+          args=()
+          if [ -s /tmp/prev_sketch_costs.json ]; then
+            args+=(--prev /tmp/prev_sketch_costs.json)
+          fi
+          if [ ${#times[@]} -gt 0 ]; then
+            args+=(--times "${times[@]}")
+          fi
+          if [ ${#stats[@]} -gt 0 ]; then
+            args+=(--stats "${stats[@]}")
+          fi
+          python3 .github/scripts/merge_sketch_costs.py \
+            "${args[@]}" \
+            --out /tmp/sketch_costs.json \
+            --sha "$SHA"
+
+      - name: Switch branch
+        run: git checkout remotes/origin/gh-pages
+
+      # Pushes recompile every sketch, so the old size baseline is fully replaced.
+      # sketch_costs.json is merged (warm vs cold) before this wipe.
+      - name: Write baseline files
+        env:
+          BASELINE_DIR: ${{ steps.baseline.outputs.dir }}
+        run: |
+          set -euo pipefail
+          rm -rf "$BASELINE_DIR"
+          mkdir -p "$BASELINE_DIR"
+          cp /tmp/cli_compile/*.json "$BASELINE_DIR/"
+          if [ -s /tmp/sketch_costs.json ]; then
+            cp /tmp/sketch_costs.json "$BASELINE_DIR/sketch_costs.json"
+          fi
+          ls -R "$BASELINE_DIR"
 
       - name: Commit json files to gh-pages
         env:
