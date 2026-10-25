@@ -61,12 +61,6 @@ void serialEvent5(void) __attribute__((weak));
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 // There is always Seria0 for UART0
 HardwareSerial Serial0(0);
-
-// Strong provider is linked only with the actual HardwareSerial implementation.
-extern "C" void arduinoSerial0SetDefaultPins(void) {
-  Serial0.setPins(gpioNumberToDigitalPin(SOC_RX0), gpioNumberToDigitalPin(SOC_TX0));
-}
-
 #if SOC_UART_NUM > 1
 HardwareSerial Serial1(1);
 #endif

@@ -49,11 +49,6 @@ __attribute__((weak)) uint64_t getArduinoSetupWaitTime_ms(void) {
   return 0;
 }
 
-#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
-// Do not extract the serial implementation solely to configure an unused UART.
-extern "C" void arduinoSerial0SetDefaultPins(void) __attribute__((weak));
-#endif
-
 void loopTask(void *pvParameters) {
   delay(getArduinoSetupWaitTime_ms());
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
@@ -65,9 +60,9 @@ void loopTask(void *pvParameters) {
 #endif
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
   // sets UART0 (default console) RX/TX pins as already configured in boot or as defined in variants/pins_arduino.h
-  if (arduinoSerial0SetDefaultPins) {
-    arduinoSerial0SetDefaultPins();
-  }
+  // Uses the UART HAL directly so the pads stay registered with Peripheral Manager
+  // without linking HardwareSerial into sketches that never use Serial0.
+  uartSetPins(0, gpioNumberToDigitalPin(SOC_RX0), gpioNumberToDigitalPin(SOC_TX0), -1, -1);
   // time in ms that the sketch may wait before starting its execution - default is zero
   // usually done for opening the Serial Monitor and seeing all debug messages
 #endif
