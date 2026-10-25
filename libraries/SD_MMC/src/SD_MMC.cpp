@@ -224,10 +224,7 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
     }
   }
 
-  sdmmc_host_t host = SDMMC_HOST_DEFAULT();
-  host.flags = SDMMC_HOST_FLAG_4BIT;
 #if (defined(CONFIG_IDF_TARGET_ESP32P4) || defined(CONFIG_IDF_TARGET_ESP32S31)) && defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
-  host.slot = SDMMC_HOST_SLOT_0;
   // reconfigure slot_config to remove all pins in order to use IO_MUX
   // Use 0 instead of GPIO_NUM_NC (-1) because ESP-IDF's s_check_pin_not_set()
   // function uses !pin which doesn't work correctly with -1 (GPIO_NUM_NC)
@@ -247,27 +244,53 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
     .width = 4,
     .flags = 0,
   };
+#endif  // slot 0 IOMUX
+
 #ifdef SOC_SDMMC_UHS_I_SUPPORTED
-  if (sdmmc_frequency == SDMMC_FREQ_DDR50) {
-    host.flags |= SDMMC_HOST_FLAG_DDR;
-    slot_config.flags = SDMMC_SLOT_FLAG_UHS1;
-  }
-  if (sdmmc_frequency == SDMMC_FREQ_SDR50) {
-    slot_config.flags = SDMMC_SLOT_FLAG_UHS1;
-  }
+  // One retry at 40 MHz when UHS-I is requested but the card never switches to 1.8 V.
+  // IDF still programs host.max_freq_khz in that case (sdmmc_enable_hs_mode_and_check).
+  bool uhs_fallback = false;
+mount_again:
+  slot_config.flags = 0;
 #endif
+  sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+  // Keep DEINIT_ARG. SDMMC_HOST_DEFAULT stores sdmmc_host_deinit_slot in deinit_p.
+  // Clearing the flag makes VFS call that function with no slot, so the slot
+  // handle is null, slot 0 stays reserved, and a UHS fallback cannot mount.
+  host.flags = SDMMC_HOST_FLAG_4BIT | SDMMC_HOST_FLAG_DEINIT_ARG;
+#if (defined(CONFIG_IDF_TARGET_ESP32P4) || defined(CONFIG_IDF_TARGET_ESP32S31)) && defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
+  host.slot = SDMMC_HOST_SLOT_0;
 #else
   host.slot = SDMMC_HOST_SLOT_1;
 #endif
-  host.max_freq_khz = sdmmc_frequency;
 #ifdef BOARD_HAS_1BIT_SDMMC
   mode1bit = true;
 #endif
   if (mode1bit) {
-    host.flags = SDMMC_HOST_FLAG_1BIT;  //use 1-line SD mode
+    host.flags = SDMMC_HOST_FLAG_1BIT | SDMMC_HOST_FLAG_DEINIT_ARG;
     slot_config.width = 1;
   }
   _mode1bit = mode1bit;
+
+#ifdef SOC_SDMMC_UHS_I_SUPPORTED
+  // UHS-I SDR50/DDR50 are 1.8 V and 4-line, slot 0 only.
+  const bool uhs_slot = !mode1bit && host.slot == SDMMC_HOST_SLOT_0;
+  if (!uhs_slot && sdmmc_frequency > SDMMC_FREQ_HIGHSPEED) {
+    log_w("UHS-I needs 4-line slot 0, using %d kHz", SDMMC_FREQ_HIGHSPEED);
+    sdmmc_frequency = SDMMC_FREQ_HIGHSPEED;
+  } else if (sdmmc_frequency == SDMMC_FREQ_DDR50) {
+    host.flags |= SDMMC_HOST_FLAG_DDR;
+    slot_config.flags |= SDMMC_SLOT_FLAG_UHS1;
+  } else if (sdmmc_frequency == SDMMC_FREQ_SDR50) {
+    slot_config.flags |= SDMMC_SLOT_FLAG_UHS1;
+  } else if (sdmmc_frequency > SDMMC_FREQ_HIGHSPEED) {
+    // Any other value above high speed is not a UHS-I mode.
+    // IDF would still program that clock at 3.3 V, so clamp before the mount.
+    log_w("SDMMC frequency %d kHz is not DDR50 or SDR50, using %d kHz", sdmmc_frequency, SDMMC_FREQ_HIGHSPEED);
+    sdmmc_frequency = SDMMC_FREQ_HIGHSPEED;
+  }
+#endif
+  host.max_freq_khz = sdmmc_frequency;
 
 #ifdef SOC_SDMMC_IO_POWER_EXTERNAL
   if (_power_channel == -1) {
@@ -313,7 +336,7 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   if (ret != ESP_OK) {
     if (ret == ESP_FAIL) {
       log_e("Failed to mount filesystem. If you want the card to be formatted, set format_if_mount_failed = true.");
-    } else if (ret == ESP_ERR_INVALID_STATE) {
+    } else if (ret == ESP_ERR_INVALID_STATE && _card != nullptr) {
       _impl->mountpoint(mountpoint);
       log_w("SD Already mounted");
       return true;
@@ -328,9 +351,30 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
       ldoSdmmcDriverDetached((uint8_t)_power_channel);
     }
 #endif
+#ifdef SOC_SDMMC_UHS_I_SUPPORTED
+    if (!uhs_fallback && ret != ESP_FAIL && sdmmc_frequency > SDMMC_FREQ_HIGHSPEED) {
+      log_w("SDMMC init failed (0x%x) at %d kHz, retrying at %d kHz", ret, sdmmc_frequency, SDMMC_FREQ_HIGHSPEED);
+      _card = NULL;
+      sdmmc_frequency = SDMMC_FREQ_HIGHSPEED;
+      uhs_fallback = true;
+      goto mount_again;
+    }
+#endif
     _card = NULL;
     return false;
   }
+#ifdef SOC_SDMMC_UHS_I_SUPPORTED
+  // Mount can succeed with is_uhs1 clear while the host clock is still SDR50.
+  // That is 100 MHz at 3.3 V. Drop it and mount at high speed.
+  if (!uhs_fallback && !_card->is_uhs1 && _card->real_freq_khz > SDMMC_FREQ_HIGHSPEED) {
+    log_w("SDMMC clock %d kHz without UHS-I, retrying at %d kHz", _card->real_freq_khz, SDMMC_FREQ_HIGHSPEED);
+    _impl->mountpoint(mountpoint);
+    sdmmc_frequency = SDMMC_FREQ_HIGHSPEED;
+    uhs_fallback = true;
+    end();
+    goto mount_again;
+  }
+#endif
   _impl->mountpoint(mountpoint);
   _pdrv = ff_diskio_get_pdrv_card(_card);
 
