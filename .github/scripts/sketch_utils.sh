@@ -1278,7 +1278,7 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
         log_fqbn=$fqbn
     fi
 
-    sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
+    sizes_file="${ARDUINO_BUILD_SIZES_FILE:-$GITHUB_WORKSPACE/cli_compile_$chunk_index.json}"
     if [ -n "$log_compilation" ]; then
         #echo board,target and start of sketches to sizes_file json
         echo "{ \"board\": \"$log_fqbn\",

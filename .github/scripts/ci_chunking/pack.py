@@ -209,6 +209,79 @@ def assign(
     )
 
 
+def assign_equal_count(
+    sketches: list[str],
+    max_chunks: int,
+    dependencies: dict[str, list[str]] | None = None,
+    project_root: Path | None = None,
+    cost_table: CostTable | None = None,
+) -> Assignment:
+    """Contiguous equal-count slices. Used as SoC-outer sketch shards.
+
+    Sharing-oblivious on purpose: with one SoC per GHA job, library cold is
+    paid once per (shard, SoC). Replay on CI JSONL showed this beats affinity
+    LPT for Linux wall when the matrix is ``CORE_SOCS x shards``.
+    """
+    unique: list[str] = []
+    seen: set[str] = set()
+    for raw in sketches:
+        sketch = posix_path(raw)
+        if not sketch or sketch in seen:
+            continue
+        seen.add(sketch)
+        unique.append(sketch)
+
+    if max_chunks < 1:
+        raise ValueError("max_chunks must be >= 1")
+
+    if not unique:
+        return Assignment(
+            bins=[],
+            costs=[],
+            libraries_of={},
+            groups={},
+            chunk_count=0,
+            cmax=0,
+            cost_table=cost_table,
+        )
+
+    if cost_table is None:
+        cost_table = load_cost_table(project_root)
+
+    libraries_of = _libraries_map(unique, dependencies, project_root)
+    ordered = sorted(unique)
+    machine_count = min(max_chunks, len(ordered))
+    size, extra = divmod(len(ordered), machine_count)
+    bins: list[list[str]] = []
+    index = 0
+    for part_i in range(machine_count):
+        take = size + (1 if part_i < extra else 0)
+        bins.append(ordered[index : index + take])
+        index += take
+
+    groups: dict[str, list[str]] = {"equal": list(ordered)}
+    costs = [bin_cost(bin_sketches, libraries_of, cost_table) for bin_sketches in bins]
+    connectivity: dict[str, int] = {}
+    for bin_sketches in bins:
+        present: set[str] = set()
+        for sketch in bin_sketches:
+            present |= set(libraries_of[sketch])
+        for lib in present:
+            connectivity[lib] = connectivity.get(lib, 0) + 1
+
+    return Assignment(
+        bins=bins,
+        costs=costs,
+        libraries_of={sketch: sorted(libs) for sketch, libs in libraries_of.items()},
+        groups=groups,
+        splits=[],
+        chunk_count=len(bins),
+        cmax=max(costs) if costs else 0,
+        connectivity=dict(sorted(connectivity.items())),
+        cost_table=cost_table,
+    )
+
+
 def write_assignment(assignment: Assignment, out_dir: Path) -> None:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -20,7 +20,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from ci_chunking.affinity import find_sketches_under, posix_path  # noqa: E402
 from ci_chunking.costs import load_cost_table, load_timing_records  # noqa: E402
-from ci_chunking.pack import assign, print_summary, write_assignment  # noqa: E402
+from ci_chunking.pack import assign, assign_equal_count, print_summary, write_assignment  # noqa: E402
 
 
 def _read_list(path: Path) -> list[str]:
@@ -89,6 +89,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Print Cmax, extra colds, and per-bin library sets to stderr.",
     )
     parser.add_argument(
+        "--equal",
+        action="store_true",
+        help="Pack with contiguous equal-count slices instead of library-affinity LPT.",
+    )
+    parser.add_argument(
         "--costs",
         type=Path,
         default=None,
@@ -145,7 +150,8 @@ def main(argv: list[str] | None = None) -> int:
         relative_to = Path(project_root) if tree_root.name == "libraries" else tree_root
         sketches.extend(find_sketches_under(tree_root, relative_to=relative_to))
 
-    assignment = assign(
+    packer = assign_equal_count if args.equal else assign
+    assignment = packer(
         sketches,
         args.max,
         dependencies=_load_dependencies(args.dependencies),

@@ -1005,6 +1005,39 @@ def test_on_push_parallelizes_duplicate_names_with_isolated_build_dirs(
     assert len(sizes["boards"][0]["sketches"]) == len(sketches)
 
 
+def test_on_push_build_target_limits_core_socs(tmp_path: Path) -> None:
+    repo, env = _make_repo(tmp_path)
+    selected, sketches = _prepare_push_repo(repo)
+    (repo / ".github" / "scripts" / "socs_config.sh").write_text(
+        "CORE_SOCS=(esp32 esp32s3)\n",
+        encoding="utf-8",
+    )
+    env["BUILD_TARGET"] = "esp32s3"
+    env["SKETCH_BUILD_JOBS"] = "1"
+
+    result = _run(
+        [
+            str(repo / ".github" / "scripts" / "on-push.sh"),
+            "0",
+            "1",
+            "1",
+            "none",
+            str(selected),
+        ],
+        repo,
+        env,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stderr
+    sizes_path = repo / "cli_compile_esp32s3_0.json"
+    assert sizes_path.is_file()
+    assert not (repo / "cli_compile_0.json").exists()
+    sizes = json.loads(sizes_path.read_text(encoding="utf-8"))
+    assert len(sizes["boards"]) == 1
+    assert len(sizes["boards"][0]["sketches"]) == len(sketches)
+
+
 @pytest.mark.parametrize("os_name", ["macos", "windows"])
 def test_on_push_parallelizes_non_linux_presets(tmp_path: Path, os_name: str) -> None:
     repo, env = _make_repo(tmp_path)

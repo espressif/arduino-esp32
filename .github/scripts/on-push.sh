@@ -6,6 +6,11 @@ set -e
 SCRIPTS_DIR="./.github/scripts"
 source "${SCRIPTS_DIR}/socs_config.sh"
 
+# Linux SoC-outer jobs set BUILD_TARGET to one CORE_SOCS id.
+if [ -n "${BUILD_TARGET:-}" ]; then
+    CORE_SOCS=("$BUILD_TARGET")
+fi
+
 export ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
 SKETCH_BUILD_JOBS="${SKETCH_BUILD_JOBS:-auto}"
 
@@ -111,8 +116,13 @@ SKETCHES_ESP32=(
     "$ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
     "$ARDUINO_ESP32_PATH/libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino"
 )
-#create sizes_file
-sizes_file="$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
+#create sizes_file (include target so SoC-outer matrix jobs do not collide)
+if [ -n "${BUILD_TARGET:-}" ]; then
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_${BUILD_TARGET}_${CHUNK_INDEX}.json"
+else
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
+fi
+export ARDUINO_BUILD_SIZES_FILE="$sizes_file"
 
 if [ "$BUILD_LOG" -eq 1 ]; then
     #create sizes_file and echo start of JSON array with "boards" key

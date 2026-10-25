@@ -62,7 +62,9 @@ High-level workflow
      - `should_build`: Whether to build the sketches or component examples
      - `chunks`: A list of chunk indices to build (maximum is defined by `MAX_CHUNKS`)
      - `chunk_count`: The number of chunks to build (maximum is defined by `MAX_CHUNKS`)
-     Sketch mode packs by library affinity (see ``ci_chunking``) and writes ``chunks/chunk_N.txt``.
+     Sketch mode packs with ``ci_chunking`` (affinity LPT, or equal-count when
+     ``CHUNK_PACK=equal``) and writes ``chunks/chunk_N.txt``. Linux compile jobs
+     then cross those shards with ``targets`` (CORE_SOCS) for SoC-outer builds.
      Component mode keeps equal-count ``chunk_count`` and does not write ``chunks/``.
 
 Build file patterns
@@ -118,7 +120,13 @@ if str(script_dir) not in sys.path:
 project_root = (script_dir / "../../").resolve()
 
 from ci_chunking.costs import load_cost_table  # noqa: E402
-from ci_chunking.pack import assign, format_chunks_json, print_summary, write_assignment  # noqa: E402
+from ci_chunking.pack import (  # noqa: E402
+    assign,
+    assign_equal_count,
+    format_chunks_json,
+    print_summary,
+    write_assignment,
+)
 
 logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s', stream=sys.stderr)
 
@@ -158,6 +166,7 @@ def resolve_changed_path_to_project_relative(path: str) -> str:
 is_ci = os.environ.get("CI", "false").lower() == "true"
 is_pr = os.environ.get("IS_PR", "true").lower() == "true"
 max_chunks = int(os.environ.get("MAX_CHUNKS", "15"))
+chunk_pack = os.environ.get("CHUNK_PACK", "affinity").strip().lower()
 chunk_count = 0
 force_recompile_all = False
 
@@ -1054,6 +1063,23 @@ def check_preset_files_affected():
                 recompile_preset = 1
                 break
 
+def core_socs_json() -> str:
+    """JSON array of CORE_SOCS from socs_config.sh (Linux SoC-outer matrix)."""
+    script = script_dir / "socs_config.sh"
+    if not script.is_file():
+        return ""
+    try:
+        output = subprocess.check_output(
+            ["bash", "-c", f'source "{script}" && printf "%s\\n" "${{CORE_SOCS[@]}}"'],
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        logging.warning("Could not load CORE_SOCS: %s", exc)
+        return ""
+    targets = [line.strip() for line in output.splitlines() if line.strip()]
+    return json.dumps(targets) if targets else ""
+
+
 def set_ci_output(print_vars: bool=True):
     """
     Set GITHUB_OUTPUT environment variable
@@ -1084,7 +1110,8 @@ def set_ci_output(print_vars: bool=True):
                     chunk_count = min(chunks_needed, max_chunks)
                     print(f"More examples ({sketch_count}) than max chunks ({max_chunks}). Using {chunk_count} chunks with ~{chunk_size} examples each.", file=sys.stderr)
             else:
-                assignment = assign(
+                packer = assign_equal_count if chunk_pack == "equal" else assign
+                assignment = packer(
                     affected_sketches,
                     max_chunks,
                     dependencies=dependencies,
@@ -1100,6 +1127,9 @@ def set_ci_output(print_vars: bool=True):
             f.write(f"should_build=0\n")
             chunk_count = 0
         f.write(f"chunk_count={chunk_count}\n")
+        targets = core_socs_json()
+        if targets:
+            f.write(f"targets={targets}\n")
     finally:
         # Close file if we opened it (CI mode)
         if is_ci:

@@ -30,7 +30,7 @@ from ci_chunking.costs import (
     static_archive_bytes,
     warm_cost,
 )
-from ci_chunking.pack import assign, write_assignment
+from ci_chunking.pack import assign, assign_equal_count, write_assignment
 
 
 def _matter_sketches(count: int, header: str = "Matter.h") -> list[str]:
@@ -61,6 +61,51 @@ def test_path_fallback_groups_by_parent_library() -> None:
         if any("WiFi" in sketch for sketch in bin_sketches)
     ]
     assert len(wifi_bins) == 1
+
+
+def test_equal_count_is_contiguous_and_balanced() -> None:
+    sketches = [
+        f"libraries/Lib/examples/S{index}/S{index}.ino" for index in range(10)
+    ]
+    assignment = assign_equal_count(sketches, max_chunks=4)
+    assert assignment.chunk_count == 4
+    sizes = [len(bin_sketches) for bin_sketches in assignment.bins]
+    assert max(sizes) - min(sizes) <= 1
+    assert sorted(sketch for bin_sketches in assignment.bins for sketch in bin_sketches) == sorted(
+        sketches
+    )
+    # Does not use affinity LPT: sketches stay in sorted contiguous slices.
+    assert assignment.bins[0] == sketches[:3]
+
+
+def test_chunk_assign_equal_flag(tmp_path: Path) -> None:
+    sketches = [
+        f"libraries/Lib/examples/S{index}/S{index}.ino" for index in range(6)
+    ]
+    listing = tmp_path / "affected_sketches.txt"
+    listing.write_text("".join(f"{sketch}\n" for sketch in sketches), encoding="utf-8")
+    out_dir = tmp_path / "chunks"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT_DIR / "chunk_assign.py"),
+            "--list",
+            str(listing),
+            "--max",
+            "2",
+            "--equal",
+            "--out-dir",
+            str(out_dir),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    payload = json.loads((out_dir / "chunks.json").read_text(encoding="utf-8"))
+    assert payload["chunk_count"] == 2
+    assert payload["bins"][0]["sketches"] == sketches[:3]
+    assert payload["bins"][1]["sketches"] == sketches[3:]
 
 
 def test_packing_is_deterministic() -> None:
