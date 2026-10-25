@@ -138,6 +138,7 @@ Workflows source the configuration in their setup steps and use the arrays to dy
   - `.github/scripts/on-push.sh`
   - `.github/scripts/sketch_utils.sh`
   - `.github/scripts/get_affected.py`
+  - `.github/scripts/ccache_writer_chunk.py`
   - `.github/scripts/socs_config.sh`
   - `!*.md`
   - `!*.txt`
@@ -169,6 +170,7 @@ Workflows source the configuration in their setup steps and use the arrays to dy
 - `should_build` - Whether any sketches need building
 - `chunk_count` - Number of parallel chunks needed
 - `chunks` - JSON array of chunk indices
+- `ccache_save_chunk` - Linux chunk that saves ccache on master/release pushes (Matter slice, else 0)
 
 **SoC Config Usage:**
 The script sources `socs_config.sh` and uses `BUILD_TEST_TARGETS` to determine which variants are considered official.
@@ -260,10 +262,12 @@ FQBNs are resolved at runtime via `default_upload_test_fqbn()` in `sketch_utils.
 3. **Get libs cache** - Restores cached tools and libraries
    - Key: `libs-{os}-{arch}-{hash(package_esp32_index.template.json, tools/get.py)}`
    - Includes: esp32-arduino-libs, esptool, toolchains
-4. Set log level (none/error/warn/info/debug/verbose)
-5. Download affected sketches list
-6. **Build sketches** - Runs `on-push.sh` with chunk parameters
-7. Upload compile results JSON
+4. Install `ccache` and restore `${{ github.workspace }}/.ccache` (`ccache-linux-{platform-hash}-{sha}`, prefix restore-keys without sha)
+5. Set log level (none/error/warn/info/debug/verbose)
+6. Download affected sketches list
+7. **Build sketches** - Runs `on-push.sh` with chunk parameters (`ccache -z` before, `ccache -sv` after)
+8. Save ccache only on `push` to `master`/`release/*` from `ccache_save_chunk` (Matter path slice; else chunk 0)
+9. Upload compile results JSON
 
 **SoC Config Usage:**
 The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_SOCS minus SKIP_LIB_BUILD_SOCS), building sketches for each supported SoC.
@@ -276,7 +280,7 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 - **Parallel execution**: Up to 15 simultaneous builds
 - **Dependency tracking**: Uses ctags for accurate change detection
 - **Size reports**: Generates JSON with sketch sizes for comparison
-- **Caching**: Libraries and tools cached between runs
+- **Caching**: Libraries and tools cached between runs. Linux compile jobs restore a 2 GB `ccache` (content-hashed, depend mode, no `CCACHE_BASEDIR` — Ninja runs in `~/.arduino/build.tmp`); only the Matter writer chunk saves it on master/release. Compare Linux Cmax and `ccache -sv` after the second warm run against ~49 min on master.
 
 #### 3. `build-arduino-win-mac`
 **Runs on:** Windows-latest, macOS-latest

@@ -257,7 +257,7 @@ def is_latest_version(destination, dirname, rename_to, cfile, checksum):
     return False
 
 
-def unpack(filename, destination, force_extract, checksum):  # noqa: C901
+def unpack(filename, destination, force_extract, checksum, skip_verify=False):  # noqa: C901
     sys_name = platform.system()
     dirname = ""
     cfile = None  # Compressed file
@@ -315,6 +315,9 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
 
     if not force_extract:
         if is_latest_version(destination, dirname, rename_to, cfile, checksum):
+            if skip_verify:
+                print(" Version matches. Skipping verification")
+                return True
             if verify_files(filename, destination, rename_to):
                 print(" Files ok. Skipping Extraction")
                 return True
@@ -411,7 +414,7 @@ def download_file(url, filename):
             raise Exception("Non-existing file or connection error")
 
 
-def get_tool(tool, force_download, force_extract):
+def get_tool(tool, force_download, force_extract, skip_verify=False):
     sys_name = platform.system()
     archive_name = tool["archiveFileName"]
     checksum = tool["checksum"][8:]
@@ -455,7 +458,7 @@ def get_tool(tool, force_download, force_extract):
         print("Checksum mismatch for {0}".format(archive_name))
         return False
 
-    return unpack(local_path, ".", force_extract, checksum)
+    return unpack(local_path, ".", force_extract, checksum, skip_verify)
 
 
 def clean_dist(tools_to_download):
@@ -557,6 +560,14 @@ if __name__ == "__main__":
         help="Remove files from the dist/ folder that are not required by the current tools list",
     )
 
+    parser.add_argument(
+        "-s",
+        "--skip-verify",
+        action="store_true",
+        required=False,
+        help="Skip archive verification when the installed version already matches",
+    )
+
     parser.add_argument("-t", "--test", action="store_true", required=False, help=argparse.SUPPRESS)
 
     args = parser.parse_args()
@@ -566,6 +577,7 @@ if __name__ == "__main__":
     force_extract = args.force_extract
     force_all = args.force_all
     should_clean_unused = args.clean_unused
+    skip_verify = args.skip_verify
     is_test = args.test
 
     # Set current directory to the script location
@@ -599,10 +611,10 @@ if __name__ == "__main__":
         if is_test:
             print("Would install: {0}".format(tool["archiveFileName"]))
         else:
-            if not get_tool(tool, force_download, force_extract):
+            if not get_tool(tool, force_download, force_extract, skip_verify):
                 if verbose:
                     print(f"Tool {tool['archiveFileName']} was corrupted. Re-downloading...\n")
-                if not get_tool(tool, True, force_extract):
+                if not get_tool(tool, True, force_extract, skip_verify):
                     print(f"Tool {tool['archiveFileName']} was corrupted, but re-downloading did not help!\n")
                     sys.exit(1)
 
