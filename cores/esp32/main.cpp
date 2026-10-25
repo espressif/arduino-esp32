@@ -60,9 +60,9 @@ void loopTask(void *pvParameters) {
 #endif
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
   // sets UART0 (default console) RX/TX pins as already configured in boot or as defined in variants/pins_arduino.h
-  // Uses the UART HAL directly so the pads stay registered with Peripheral Manager
-  // without linking HardwareSerial into sketches that never use Serial0.
-  uartSetPins(0, gpioNumberToDigitalPin(SOC_RX0), gpioNumberToDigitalPin(SOC_TX0), -1, -1);
+  // Registers the UART0 console pads with Peripheral Manager through the UART HAL, so it does not
+  // link HardwareSerial into sketches that never use Serial0.
+  uartRegisterConsolePins(SOC_RX0, SOC_TX0);
   // time in ms that the sketch may wait before starting its execution - default is zero
   // usually done for opening the Serial Monitor and seeing all debug messages
 #endif
