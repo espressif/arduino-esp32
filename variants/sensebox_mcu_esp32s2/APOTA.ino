@@ -2,6 +2,7 @@
 // APOTA opens an access point which waits to receive a .bin file on /sketch.
 // After successful upload, the file is written to OTA0_Partition, and the microcontroller reboots to the newly uploaded sketch.
 
+#include <Arduino.h>
 #define DISPLAY_ENABLED
 // Prints per-upload timing (total, Update.write, display) to Serial.
 #define OTA_TIMING_DEBUG
@@ -151,7 +152,9 @@ void setupDisplay() {
 }
 
 void displayStatusBar(int progress) {
-  if (!displayEnabled) return;
+  if (!displayEnabled) {
+    return;
+  }
 
   display.clearDisplay();
   display.setCursor(16, 8);
@@ -173,7 +176,9 @@ void displayStatusBar(int progress) {
 }
 
 void displayWelcomeScreen() {
-  if (!displayEnabled) return;
+  if (!displayEnabled) {
+    return;
+  }
 
   display.clearDisplay();
 
@@ -197,7 +202,9 @@ void displayWelcomeScreen() {
 }
 
 void displaySuccessScreen() {
-  if (!displayEnabled) return;
+  if (!displayEnabled) {
+    return;
+  }
 
   display.clearDisplay();
 
@@ -216,7 +223,9 @@ void displaySuccessScreen() {
 }
 
 void wipeDisplay() {
-  if (!displayEnabled) return;
+  if (!displayEnabled) {
+    return;
+  }
 
   display.clearDisplay();
   display.println("");
@@ -349,12 +358,13 @@ void setupOTA() {
         }
 #ifdef OTA_TIMING_DEBUG
         unsigned long totalMs = millis() - uploadStartMs;
-        Serial.printf("OTA timing: %u bytes in %lu ms (%.1f KB/s), %lu chunks\n",
-                      upload.totalSize, totalMs,
-                      totalMs > 0 ? upload.totalSize / 1.024 / totalMs : 0.0,
-                      chunkCount);
-        Serial.printf("OTA timing: Update.write %lu ms, display %lu ms, rest (network/parser) %lu ms\n",
-                      writeTimeMs, displayTimeMs, totalMs - writeTimeMs - displayTimeMs);
+        Serial.printf(
+          "OTA timing: %u bytes in %lu ms (%.1f KB/s), %lu chunks\n", upload.totalSize, totalMs, totalMs > 0 ? upload.totalSize / 1.024 / totalMs : 0.0,
+          chunkCount
+        );
+        Serial.printf(
+          "OTA timing: Update.write %lu ms, display %lu ms, rest (network/parser) %lu ms\n", writeTimeMs, displayTimeMs, totalMs - writeTimeMs - displayTimeMs
+        );
 #endif
       } else if (upload.status == UPLOAD_FILE_ABORTED) {
         // Connection dropped mid-upload. The response handler is not called
@@ -394,7 +404,7 @@ void setup() {
   // Set the ESP32 as an access point
   setupOTA();
   // WebServer only stores request headers that are registered up front
-  const char *headerKeys[] = { MD5_HEADER };
+  const char *headerKeys[] = {MD5_HEADER};
   server.collectHeaders(headerKeys, 1);
   server.begin();
 }
