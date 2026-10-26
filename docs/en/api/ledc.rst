@@ -10,6 +10,10 @@ although it can also be used to generate PWM signals for other purposes.
 ESP32 SoCs have from 6 to 16 LEDC channels (see the table below) which can
 generate independent waveforms, for example to drive RGB LED devices.
 
+.. warning::
+
+   **Breaking change (4.0.x):** ``ledcWrite()`` and related LEDC APIs use duty **0** … **2^resolution** (inclusive). Full on is **2^resolution**, not **(2^resolution) - 1**. Sketches that used ``ledcWrite(pin, (1 << resolution) - 1)`` for 100% duty must use ``ledcWrite(pin, 1 << resolution)`` instead. ``analogWrite()`` still uses **0** … **(2^resolution) - 1** and maps the maximum to LEDC full on. See :doc:`/migration_guides/ledc_duty_range`.
+
 ================= ======== ====== ===================
 ESP32 SoC         Channels Groups Timers (per group)
 ================= ======== ====== ===================
@@ -181,7 +185,7 @@ This function is used to set duty for the LEDC pin.
     bool ledcWrite(uint8_t pin, uint32_t duty);
 
 * ``pin`` select LEDC pin.
-* ``duty`` select duty to be set for selected LEDC pin.
+* ``duty`` select duty to be set for selected LEDC pin. Valid range is [0, 2 ^ ``resolution``] (inclusive, full on). Values above the maximum are clamped to full on.
 
 This function will return ``true`` if setting duty is successful.
 If ``false`` is returned, error occurs and duty was not set.
@@ -196,7 +200,7 @@ This function is used to set duty for the LEDC channel.
     bool ledcWriteChannel(uint8_t channel, uint32_t duty);
 
 * ``channel`` select LEDC channel.
-* ``duty`` select duty to be set for selected LEDC channel.
+* ``duty`` select duty to be set for selected LEDC channel. Valid range is [0, 2 ^ ``resolution``] (inclusive, full on). Values above the maximum are clamped to full on.
 
 This function will return ``true`` if setting duty is successful.
 If ``false`` is returned, error occurs and duty was not set.
@@ -324,8 +328,8 @@ This function is used to setup and start fade for the LEDC pin.
     bool ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms);
 
 * ``pin`` select LEDC pin.
-* ``start_duty`` select starting duty of fade.
-* ``target_duty`` select target duty of fade.
+* ``start_duty`` select starting duty of fade. Valid range is [0, 2 ^ ``resolution``] (inclusive, full on).
+* ``target_duty`` select target duty of fade. Valid range is [0, 2 ^ ``resolution``] (inclusive, full on).
 * ``max_fade_time_ms`` select maximum time for fade.
 
 This function will return ``true`` if configuration is successful.
@@ -341,8 +345,8 @@ This function is used to setup and start fade for the LEDC pin with interrupt.
     bool ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void));
 
 * ``pin`` select LEDC pin.
-* ``start_duty`` select starting duty of fade.
-* ``target_duty`` select target duty of fade.
+* ``start_duty`` select starting duty of fade. Valid range is [0, 2 ^ ``resolution``] (inclusive, full on).
+* ``target_duty`` select target duty of fade. Valid range is [0, 2 ^ ``resolution``] (inclusive, full on).
 * ``max_fade_time_ms`` select maximum time for fade.
 * ``userFunc`` function to be called when interrupt is triggered.
 
@@ -359,8 +363,8 @@ This function is used to setup and start fade for the LEDC pin with interrupt us
     bool ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void*), void * arg);
 
 * ``pin`` select LEDC pin.
-* ``start_duty`` select starting duty of fade.
-* ``target_duty`` select target duty of fade.
+* ``start_duty`` select starting duty of fade. Valid range is [0, 2 ^ ``resolution``] (inclusive, full on).
+* ``target_duty`` select target duty of fade. Valid range is [0, 2 ^ ``resolution``] (inclusive, full on).
 * ``max_fade_time_ms`` select maximum time for fade.
 * ``userFunc`` function to be called when interrupt is triggered.
 * ``arg`` pointer to the interrupt arguments.
@@ -379,9 +383,14 @@ It is compatible with Arduinos analogWrite function.
     void analogWrite(uint8_t pin, int value);
 
 * ``pin`` select the GPIO pin.
-* ``value`` select the duty cycle of pwm.
+* ``value`` PWM duty. Must be non-negative.
 
-  * range is from 0 (always off) to 255 (always on).
+  * Valid range is ``0`` (always off) to ``(2 ^ resolution) - 1`` (always on).
+  * Default resolution is 8 bits, so ``0`` to ``255``.
+  * ``analogWrite()`` maps the Arduino maximum to LEDC full on (``2 ^ resolution``).
+  * Values greater than ``(2 ^ resolution) - 1`` are treated as full on.
+  * Negative values are ignored. The pin is not reconfigured and its duty is left unchanged.
+  * LEDC functions such as ``ledcWrite()`` use the inclusive range [0, 2 ^ ``resolution``] instead.
 
 analogWriteResolution
 *********************
