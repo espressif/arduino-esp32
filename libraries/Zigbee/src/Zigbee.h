@@ -34,6 +34,8 @@
 //// Controllers
 #include "ep/ZigbeeThermostat.h"
 #include "ep/ZigbeeFanControl.h"
+////Locks
+#include "ep/ZigbeeDoorLock.h"
 ////Outlets
 #include "ep/ZigbeePowerOutlet.h"
 //// Sensors
