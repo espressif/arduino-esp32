@@ -61,7 +61,7 @@ public:
 static TickSource tickSource;
 
 // Keep the std::function object in IRAM when CONFIG_ARDUINO_ISR_IRAM is set.
-IRAM_ATTR std::function<void()> onTimerFn = [&]() {
+IRAM_ATTR std::function<void()> onTimerFn = []() {
   isrCounter = isrCounter + 1;
 };
 
