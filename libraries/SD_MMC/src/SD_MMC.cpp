@@ -33,11 +33,28 @@
 #include "esp32-hal-periman.h"
 #include "esp32-hal-ldo.h"
 
-#if SOC_SDMMC_IO_POWER_EXTERNAL
+#if SOC_SDMMC_IO_POWER_EXTERNAL || SOC_SDMMC_IO_UHS_POWER_EXTERNAL
 #include "sd_pwr_ctrl_by_on_chip_ldo.h"
+#endif
+#ifdef SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+#include "hal/sdmmc_ll.h"
 #endif
 
 using namespace fs;
+
+#if SOC_SDMMC_IO_POWER_EXTERNAL || SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+static void sdmmcReleaseLdo(int8_t channel, void *handle) {
+  if (channel == -1 || handle == nullptr) {
+    return;
+  }
+#ifdef SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+  // CMD11 leaves the SD pins on the 1.8 V LDO. The next mount starts at 3.3 V.
+  sdmmc_ll_switch_io_power_control_src(SDMMC_LL_IO_POWER_CONTROL_SRC_INTERNAL);
+#endif
+  sd_pwr_ctrl_del_on_chip_ldo((sd_pwr_ctrl_handle_t)handle);
+  ldoSdmmcDriverDetached((uint8_t)channel);
+}
+#endif
 
 SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
 #if defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC) && !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32S31)
@@ -84,6 +101,14 @@ SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
 #endif
 #if defined(SOC_SDMMC_IO_POWER_EXTERNAL) && defined(BOARD_SDMMC_POWER_CHANNEL)
   _power_channel = BOARD_SDMMC_POWER_CHANNEL;
+#elif defined(SOC_SDMMC_IO_UHS_POWER_EXTERNAL)
+  // One LDO unit, VO1. PSRAM already holds it at 1.8 V. The SD driver acquires
+  // that same fixed voltage, so the two owners share the channel.
+#ifdef BOARD_SDMMC_POWER_CHANNEL
+  _power_channel = BOARD_SDMMC_POWER_CHANNEL;
+#else
+  _power_channel = 1;
+#endif
 #endif
 }
 
@@ -159,7 +184,7 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3) {
 #endif
 }
 
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+#if SOC_SDMMC_IO_POWER_EXTERNAL || SOC_SDMMC_IO_UHS_POWER_EXTERNAL
 bool SDMMCFS::setPowerChannel(int power_channel) {
   if (_card != nullptr) {
     log_e("SD_MMC.setPowerChannel must be called before SD_MMC.begin");
@@ -273,7 +298,7 @@ mount_again:
   _mode1bit = mode1bit;
 
 #ifdef SOC_SDMMC_UHS_I_SUPPORTED
-  // UHS-I SDR50/DDR50 are 1.8 V and 4-line, slot 0 only.
+  // UHS-I is 1.8 V and 4-line, slot 0 only.
   const bool uhs_slot = !mode1bit && host.slot == SDMMC_HOST_SLOT_0;
   if (!uhs_slot && sdmmc_frequency > SDMMC_FREQ_HIGHSPEED) {
     log_w("UHS-I needs 4-line slot 0, using %d kHz", SDMMC_FREQ_HIGHSPEED);
@@ -286,15 +311,29 @@ mount_again:
   } else if (sdmmc_frequency > SDMMC_FREQ_HIGHSPEED) {
     // Any other value above high speed is not a UHS-I mode.
     // IDF would still program that clock at 3.3 V, so clamp before the mount.
-    log_w("SDMMC frequency %d kHz is not DDR50 or SDR50, using %d kHz", sdmmc_frequency, SDMMC_FREQ_HIGHSPEED);
+    log_w("SDMMC frequency %d kHz is not a supported UHS-I mode, using %d kHz", sdmmc_frequency, SDMMC_FREQ_HIGHSPEED);
     sdmmc_frequency = SDMMC_FREQ_HIGHSPEED;
   }
 #endif
+#ifdef SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+  // Same as the IDF sdmmc example. IOMUX setup does not enable pull-ups.
+  slot_config.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
+#endif
   host.max_freq_khz = sdmmc_frequency;
 
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
-  if (_power_channel == -1) {
-    log_i("On-chip power channel specified, use external power for SDMMC");
+#if SOC_SDMMC_IO_POWER_EXTERNAL || SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+  bool acquire_ldo = (_power_channel != -1);
+#if SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+  // Fixed 1.8 V rail. A 3.3 V mount must not acquire it: card_init would try to
+  // adjust the rail and the non-adjustable channel would reject that.
+  acquire_ldo = acquire_ldo && ((slot_config.flags & SDMMC_SLOT_FLAG_UHS1) != 0);
+#endif
+  if (!acquire_ldo) {
+#if SOC_SDMMC_IO_POWER_EXTERNAL
+    if (_power_channel == -1) {
+      log_i("On-chip power channel specified, use external power for SDMMC");
+    }
+#endif
   } else {
     sd_pwr_ctrl_ldo_config_t ldo_config = {
       .ldo_chan_id = _power_channel,
@@ -305,11 +344,25 @@ mount_again:
     if (sd_pwr_ctrl_new_on_chip_ldo(&ldo_config, &pwr_ctrl_handle) != ESP_OK) {
       log_e("Failed to create a new on-chip LDO power control driver");
       ldoSdmmcDriverCreateFailed((uint8_t)_power_channel);
+#if SOC_SDMMC_IO_UHS_POWER_EXTERNAL && SOC_SDMMC_UHS_I_SUPPORTED
+      if (!uhs_fallback) {
+        log_w("SDMMC UHS-I needs the 1.8 V LDO, using %d kHz", SDMMC_FREQ_HIGHSPEED);
+        sdmmc_frequency = SDMMC_FREQ_HIGHSPEED;
+        uhs_fallback = true;
+        goto mount_again;
+      }
+#endif
       return false;
     }
-    host.pwr_ctrl_handle = pwr_ctrl_handle;
     _pwr_ctrl_handle = pwr_ctrl_handle;
     ldoSdmmcDriverAttached((uint8_t)_power_channel);
+    host.pwr_ctrl_handle = pwr_ctrl_handle;
+#if SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+    // Fixed 1800 mV rail. card_init does (int)(io_voltage * 1000) before CMD0.
+    // 1.8f rounds to 1800, which this LDO accepts. CMD11 then moves the pins onto it.
+    host.io_voltage = 1.8f;
+    log_i("SDMMC UHS-I using 1.8 V LDO channel %d", _power_channel);
+#endif
   }
 #endif
 
@@ -343,12 +396,11 @@ mount_again:
     } else {
       log_e("Failed to initialize the card (0x%x). Make sure SD card lines have pull-up resistors in place.", ret);
     }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
-    if (_power_channel != -1 && host.pwr_ctrl_handle != NULL) {
-      sd_pwr_ctrl_del_on_chip_ldo(host.pwr_ctrl_handle);
+#if SOC_SDMMC_IO_POWER_EXTERNAL || SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+    if (_power_channel != -1 && _pwr_ctrl_handle != nullptr) {
+      sdmmcReleaseLdo(_power_channel, _pwr_ctrl_handle);
       host.pwr_ctrl_handle = NULL;
       _pwr_ctrl_handle = nullptr;
-      ldoSdmmcDriverDetached((uint8_t)_power_channel);
     }
 #endif
 #ifdef SOC_SDMMC_UHS_I_SUPPORTED
@@ -408,9 +460,9 @@ err:
 
 void SDMMCFS::end() {
   if (_card) {
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
-    sd_pwr_ctrl_handle_t pwr_ctrl = (sd_pwr_ctrl_handle_t)_pwr_ctrl_handle;
-    if (pwr_ctrl == NULL && _power_channel != -1) {
+#if SOC_SDMMC_IO_POWER_EXTERNAL || SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+    void *pwr_ctrl = _pwr_ctrl_handle;
+    if (pwr_ctrl == nullptr && _power_channel != -1) {
       pwr_ctrl = _card->host.pwr_ctrl_handle;
     }
 #endif
@@ -428,11 +480,10 @@ void SDMMCFS::end() {
 #if defined(BOARD_SDMMC_POWER_PIN)
     perimanClearPinBus(BOARD_SDMMC_POWER_PIN);
 #endif
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
-    if (_power_channel != -1 && pwr_ctrl != NULL) {
-      sd_pwr_ctrl_del_on_chip_ldo(pwr_ctrl);
+#if SOC_SDMMC_IO_POWER_EXTERNAL || SOC_SDMMC_IO_UHS_POWER_EXTERNAL
+    if (_power_channel != -1 && pwr_ctrl != nullptr) {
+      sdmmcReleaseLdo(_power_channel, pwr_ctrl);
       _pwr_ctrl_handle = nullptr;
-      ldoSdmmcDriverDetached((uint8_t)_power_channel);
     }
 #endif
   }
@@ -494,6 +545,21 @@ int SDMMCFS::numSectors() {
     return 0;
   }
   return (totalBytes() / _card->csd.sector_size);
+}
+
+int SDMMCFS::cardClockKHz() {
+  if (!_card) {
+    return 0;
+  }
+  return _card->real_freq_khz;
+}
+
+bool SDMMCFS::cardIsDDR() {
+  return _card && _card->is_ddr;
+}
+
+bool SDMMCFS::cardIsUHS1() {
+  return _card && _card->is_uhs1;
 }
 
 bool SDMMCFS::readRAW(uint8_t *buffer, uint32_t sector) {
