@@ -171,7 +171,8 @@ typedef enum {
 } i2c_stretch_cause_t;
 
 static inline i2c_stretch_cause_t i2c_ll_stretch_cause(i2c_dev_t *hw) {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 \
+  || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
   return hw->sr.stretch_cause;
 #elif CONFIG_IDF_TARGET_ESP32S2
   return hw->status_reg.stretch_cause;
@@ -338,14 +339,13 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     frequency = 100000L;
   }
   frequency = (frequency * 5) / 4;
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 \
-  || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0) || CONFIG_IDF_TARGET_ESP32P4)
   I2C_RCC_ATOMIC() {
     i2c_ll_enable_bus_clock(i2c->num, true);
     i2c_ll_reset_register(i2c->num);
+    i2c_ll_enable_controller_clock(i2c->dev, true);
   }
-#else
+#elif !CONFIG_IDF_TARGET_ESP32C5 && !CONFIG_IDF_TARGET_ESP32C61
   if (i2c->num == 0) {
     periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
 #if SOC_HP_I2C_NUM > 1
@@ -353,8 +353,12 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     periph_ll_enable_clk_clear_rst(PERIPH_I2C1_MODULE);
 #endif
   }
+  i2c_ll_enable_controller_clock(i2c->dev, true);
+#else  // C5 & C61
+  i2c_ll_enable_bus_clock(i2c->num, true);
+  i2c_ll_reset_register(i2c->num);
+  i2c_ll_enable_controller_clock(i2c->dev, true);
 #endif
-#endif  // !defined(CONFIG_IDF_TARGET_ESP32P4)
 
 #if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)) || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)) \
   || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 3) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0))
@@ -808,6 +812,14 @@ static void i2c_slave_isr_handler(void *arg) {
       while (xQueueReceiveFromISR(i2c->tx_queue, &d, (BaseType_t *const)&pxHigherPriorityTaskWoken) == pdTRUE);  //flush partial write
 #endif
     }
+#if CONFIG_IDF_TARGET_ESP32C5
+    // Workaround for c5 digital bug. Please note that following code has no
+    // functionality. It's just use for workaround the potential issue for avoiding
+    // secondary transaction.
+    i2c_ll_slave_enable_auto_start(i2c->dev, true);
+    i2c_ll_start_trans(i2c->dev);
+    i2c_ll_slave_enable_auto_start(i2c->dev, false);
+#endif
   }
 
 #ifndef CONFIG_IDF_TARGET_ESP32

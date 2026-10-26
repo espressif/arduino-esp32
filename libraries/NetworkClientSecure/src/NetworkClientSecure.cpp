@@ -137,7 +137,7 @@ int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *CA_cer
 
 int NetworkClientSecure::connect(const char *host, uint16_t port, const char *CA_cert, const char *cert, const char *private_key) {
   IPAddress address;
-  if (!Network.hostByName(host, address)) {
+  if (Network.hostByName(host, address) != 1) {
     return 0;
   }
 
@@ -189,7 +189,7 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *ps
   log_v("start_ssl_client with PSK");
 
   IPAddress address;
-  if (!Network.hostByName(host, address)) {
+  if (Network.hostByName(host, address) != 1) {
     return 0;
   }
 

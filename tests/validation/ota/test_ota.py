@@ -18,9 +18,11 @@ ESP32_ROOT = Path(__file__).resolve().parents[3]
 ESPOTA = ESP32_ROOT / "tools" / "espota.py"
 LOGGER = logging.getLogger(__name__)
 
-# IPv4 or IPv6 (may contain ':'); auth is last space-separated token
-ARDUINO_OTA_BEGIN_RE = re.compile(rb"ARDUINO_OTA_BEGIN (\S+) ([0-9]+) (\S+)")
-ARDUINO_OTA_BEGIN_MAPPED_RE = re.compile(rb"ARDUINO_OTA_BEGIN_MAPPED (\S+) ([0-9]+) (\S+)")
+# IPv4 or IPv6 (may contain ':'); auth is last space-separated token.
+# Require a newline so pexpect cannot match a truncated password (e.g. "test" of "test-ota-v6").
+ARDUINO_OTA_BEGIN_RE = re.compile(rb"ARDUINO_OTA_BEGIN (\S+) ([0-9]+) (\S+)\r?\n")
+ARDUINO_OTA_BEGIN_MAPPED_RE = re.compile(rb"ARDUINO_OTA_BEGIN_MAPPED (\S+) ([0-9]+) (\S+)\r?\n")
+ARDUINO_OTA_BEGIN_BADAUTH_RE = re.compile(rb"ARDUINO_OTA_BEGIN_BADAUTH (\S+) ([0-9]+) (\S+)\r?\n")
 
 
 def _is_ipv6(addr: str) -> bool:
@@ -137,6 +139,7 @@ def _run_espota(
     host_ip: str,
     firmware: Path,
     password: str | None,
+    expect_ok: bool = True,
 ) -> None:
     if not ESPOTA.is_file():
         pytest.fail(f"espota.py not found at {ESPOTA}")
@@ -172,8 +175,10 @@ def _run_espota(
         LOGGER.info("espota stdout:\n%s", result.stdout)
     if result.stderr:
         LOGGER.info("espota stderr:\n%s", result.stderr)
-    if result.returncode != 0:
+    if expect_ok and result.returncode != 0:
         pytest.fail(f"espota failed (exit {result.returncode}) for {dut_ip}:{dut_port}")
+    if not expect_ok and result.returncode == 0:
+        pytest.fail(f"espota unexpectedly succeeded for wrong-auth upload to {dut_ip}:{dut_port}")
 
 
 def _expect_unity_with_arduino_ota(dut, firmware: Path, host_ip: str, host_ipv6: str, timeout: float = 300) -> None:
@@ -184,7 +189,7 @@ def _expect_unity_with_arduino_ota(dut, firmware: Path, host_ip: str, host_ipv6:
     while True:
         remaining = max(1.0, deadline - time.time())
         match = dut.expect(
-            [ARDUINO_OTA_BEGIN_MAPPED_RE, ARDUINO_OTA_BEGIN_RE, UNITY_SUMMARY_LINE_REGEX],
+            [ARDUINO_OTA_BEGIN_MAPPED_RE, ARDUINO_OTA_BEGIN_BADAUTH_RE, ARDUINO_OTA_BEGIN_RE, UNITY_SUMMARY_LINE_REGEX],
             timeout=remaining,
         )
         log += dut.pexpect_proc.before
@@ -194,14 +199,18 @@ def _expect_unity_with_arduino_ota(dut, firmware: Path, host_ip: str, host_ipv6:
             matched = matched.encode()
 
         mapped = ARDUINO_OTA_BEGIN_MAPPED_RE.search(matched)
+        badauth = ARDUINO_OTA_BEGIN_BADAUTH_RE.search(matched)
         begin = ARDUINO_OTA_BEGIN_RE.search(matched)
-        if mapped or begin:
+        if mapped or badauth or begin:
             log += matched
-            m = mapped or begin
+            m = mapped or badauth or begin
             dut_ip = m.group(1).decode()
             dut_port = int(m.group(2).decode())
             auth = m.group(3).decode()
-            password = None if auth == "NONE" else auth
+            if badauth:
+                password = "definitely-wrong-password"
+            else:
+                password = None if auth == "NONE" else auth
 
             if mapped:
                 # Dual-stack edge case: talk to the DUT IPv4 via IPv4-mapped IPv6 literals.
@@ -220,7 +229,7 @@ def _expect_unity_with_arduino_ota(dut, firmware: Path, host_ip: str, host_ipv6:
             LOGGER.info("ArduinoOTA requested: ip=%s port=%s auth=%s host=%s", dut_ip, dut_port, auth, bind_ip)
             # Give the DUT a moment to enter ArduinoOTA.handle() wait loop
             time.sleep(0.5)
-            _run_espota(dut_ip, dut_port, bind_ip, firmware, password)
+            _run_espota(dut_ip, dut_port, bind_ip, firmware, password, expect_ok=not badauth)
             continue
 
         # Unity summary reached — parse cases into the junit report

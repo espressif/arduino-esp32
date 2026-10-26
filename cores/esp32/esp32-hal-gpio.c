@@ -182,7 +182,7 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val) {
   if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL) {
     gpio_set_level((gpio_num_t)pin, val);
   } else {
-    log_e("IO %u is not set as GPIO. Execute digitalMode(%u, OUTPUT) first.", pin, pin);
+    log_e("IO %u is not set as GPIO. Execute pinMode(%u, OUTPUT) first.", pin, pin);
   }
 }
 

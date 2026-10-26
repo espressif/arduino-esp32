@@ -1,3 +1,5 @@
+fqbn_append: PartitionScheme=huge_app
+
 requires:
   - CONFIG_SOC_BT_SUPPORTED=y
 

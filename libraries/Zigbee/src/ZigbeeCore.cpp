@@ -322,7 +322,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         }
       } else {
         /* commissioning failed */
-        log_w("Commissioning failed, trying again...", esp_err_to_name(err_status));
+        log_w("Commissioning failed (status: %s), trying again...", esp_err_to_name(err_status));
         esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_INITIALIZATION, 500);
       }
       break;
