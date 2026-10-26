@@ -174,7 +174,8 @@ Currently, the default FQBNs are:
 * ``espressif:esp32:esp32c3``
 * ``espressif:esp32:esp32c6``
 * ``espressif:esp32:esp32h2``
-* ``espressif:esp32:esp32p4:USBMode=default,ChipVariant=postv3``
+* ``espressif:esp32:esp32p4:PSRAM=enabled,USBMode=hwcdc,ChipVariant=postv3`` (``CDCOnBoot`` is forced last: ``cdc`` locally, ``default`` / Disabled in CI)
+* ``espressif:esp32:esp32c5:PSRAM=enabled``
 
 There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.yml`` file.
 
@@ -184,7 +185,30 @@ If you just want to append a string to the default FQBNs, you can use the ``fqbn
 
     fqbn_append: DebugLevel=debug
 
-If you want to override the default FQBNs, you can use the ``fqbn`` field. It is a dictionary where the key is the target name and the value is a list of FQBNs.
+Each menu option is kept only once, so a key set in ``fqbn_append`` replaces the default value for that key instead of being listed twice.
+This makes it possible to turn off an option that is enabled by default, such as compiling for ESP32 with ``espressif:esp32:esp32:PSRAM=disabled``:
+
+.. code-block:: yaml
+
+    fqbn_append: PSRAM=disabled
+
+On ESP32-P4, ``CDCOnBoot`` is an exception: after the FQBN is fully resolved (including a full ``fqbn:`` list),
+the scripts force ``CDCOnBoot=cdc`` (Enabled) for local runs and ``CDCOnBoot=default`` (Disabled) when ``CI=true``.
+Do not set ``CDCOnBoot`` in ``ci.yml``.
+
+When the options differ per target, ``fqbn_append`` can be a dictionary instead. The ``default`` entry is applied to every target and the entry
+matching the target is merged on top of it, so only the difference has to be spelled out. This is needed for options that do not exist on every
+target: ESP32-C3, ESP32-C6 and ESP32-H2 have no PSRAM menu and would fail to compile if they were given ``PSRAM=disabled``.
+
+.. code-block:: yaml
+
+    fqbn_append:
+      default: PartitionScheme=huge_app
+      esp32: PSRAM=disabled
+      esp32s3: PSRAM=disabled
+
+The options are applied lowest priority first: the default FQBN for the target, then ``fqbn_append``, then the debug level passed on the
+command line. If you want to override the default FQBNs entirely, you can use the ``fqbn`` field. It is a dictionary where the key is the target name and the value is a list of FQBNs.
 The FQBNs in the list will be used in sequence to compile the sketch. For example, to compile a sketch for ESP32-S2 with and without PSRAM enabled, you would use:
 
 .. code-block:: yaml

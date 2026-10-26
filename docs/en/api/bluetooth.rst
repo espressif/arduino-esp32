@@ -7,6 +7,30 @@ About
 
 .. note:: This is a work in progress project and this section is still missing. If you want to contribute, please see the `Contributions Guide <../contributing.html>`_.
 
+The BluetoothSerial library provides Bluetooth Classic support on SoCs that include it.
+
+If you use the ``BluetoothSerial`` library, the core keeps the Bluetooth memory regions
+reserved automatically.
+
+Using ESP-IDF Bluetooth APIs directly
+-------------------------------------
+
+If your sketch calls ESP-IDF Bluetooth APIs directly instead of using Arduino libraries,
+include the matching header in at least one source file:
+
+* **BLE:** ``esp32-hal-alloc-ble-mem.h``
+* **Bluetooth Classic:** ``esp32-hal-alloc-bt-classic-mem.h``
+
+For example:
+
+.. code-block:: arduino
+
+    #include "esp32-hal-alloc-bt-classic-mem.h"
+
+This tells the core that Bluetooth is in use. During ``initArduino()``, the core will not
+release the corresponding controller and host memory back to the heap. Without the
+correct include, Bluetooth initialization can fail or behave unpredictably.
+
 Examples
 --------
 

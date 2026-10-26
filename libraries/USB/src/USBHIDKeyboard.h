@@ -150,6 +150,10 @@ typedef struct {
   uint8_t keys[6];
 } KeyReport;
 
+// USB host: boot-protocol reports use the same modifier bits and keyboard-page usages as above.
+// Inverse of press() / layout: USBHostKeyboard.toAscii() / toVirtualKey()
+// (USBHostHIDKeyboard.h includes USBHostHIDKeyboardDecode.h).
+
 class USBHIDKeyboard : public USBHIDDevice, public Print {
 private:
   USBHID hid;

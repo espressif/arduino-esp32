@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterOnOffPlugin.h>
 
 using namespace esp_matter;
@@ -79,6 +78,7 @@ bool MatterOnOffPlugin::begin(bool initialState) {
   }
   onOffState = initialState;
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("On-Off Plugin created with endpoint_id %u", getEndPointId());
 
   started = true;

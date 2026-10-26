@@ -23,12 +23,12 @@ class MatterWaterFreezeDetector : public MatterEndPoint {
 public:
   MatterWaterFreezeDetector();
   ~MatterWaterFreezeDetector();
-  // begin Matter Water Freeze Detector endpoint with initial freeze state
-  bool begin(bool _freezeState = false);
+  // begin Matter Water Freeze Detector endpoint. Fabric StateValue starts false.
+  bool begin();
   // this will just stop processing Water Freeze Detector Matter events
   void end();
 
-  // set the freeze state
+  // set the freeze state. Call after Matter.begin() with the real sensor reading.
   bool setFreeze(bool _freezeState);
   // returns the freeze state
   bool getFreeze() {

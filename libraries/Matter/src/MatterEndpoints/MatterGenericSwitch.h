@@ -50,7 +50,7 @@ public:
   void multiPressOngoing(uint8_t count);   // MultiPressOngoing
   void multiPressComplete(uint8_t count);  // MultiPressComplete
 
-  // Convenience: sends InitialPress and ShortRelease when release feature is enabled
+  // Convenience: InitialPress then ShortRelease (when FEATURE_RELEASE) in one Matter-task lambda
   void click();
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.

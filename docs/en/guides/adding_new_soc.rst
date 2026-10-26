@@ -199,6 +199,10 @@ to a defconfig fragment filename under ``configs/`` (e.g. ``"80m"`` means
    * - ``chip_variant``
      - Optional. Output directory name when it differs from ``target`` (e.g. ``esp32p4_es``
        for an early-silicon variant). Defaults to ``target``.
+   * - ``matter_lib_suffix`` / ``matter_harvest``
+     - Optional, ESP32-C5 only. After the main ``idf-libs`` step, rebuild Matter
+       with ``configs/defconfig.<defconfig>`` and copy a second suffixed archive
+       into the same published folder. Not a second ``chip_variant``.
    * - ``skip``
      - Set to ``1`` for component-only support. Remove when promoting to full support.
    * - ``features``

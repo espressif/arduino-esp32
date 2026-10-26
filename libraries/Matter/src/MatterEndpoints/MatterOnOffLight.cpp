@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterOnOffLight.h>
 
 using namespace esp_matter;
@@ -80,6 +79,7 @@ bool MatterOnOffLight::begin(bool initialState) {
   }
 
   setEndPointId(endpoint::get_id(endpoint));
+
   log_i("On-Off Light created with endpoint_id %u", getEndPointId());
 
   started = true;

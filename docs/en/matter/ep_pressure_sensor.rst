@@ -11,7 +11,7 @@ The ``MatterPressureSensor`` class provides a pressure sensor endpoint for Matte
 * Pressure measurement reporting in hectopascals (hPa)
 * Read-only sensor (no control functionality)
 * Automatic pressure updates
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -129,5 +129,5 @@ Example
 Pressure Sensor
 ***************
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterPressureSensor/MatterPressureSensor.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Sensors/MatterPressureSensor/MatterPressureSensor.ino
     :language: arduino

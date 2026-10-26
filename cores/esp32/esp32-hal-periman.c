@@ -103,7 +103,7 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
 #if CONFIG_ETH_USE_ESP32_EMAC
     case ESP32_BUS_TYPE_ETHERNET_RMII: return "ETHERNET_RMII";
     case ESP32_BUS_TYPE_ETHERNET_CLK:  return "ETHERNET_CLK";
-    case ESP32_BUS_TYPE_ETHERNET_MCD:  return "ETHERNET_MCD";
+    case ESP32_BUS_TYPE_ETHERNET_MDC:  return "ETHERNET_MDC";
     case ESP32_BUS_TYPE_ETHERNET_MDIO: return "ETHERNET_MDIO";
     case ESP32_BUS_TYPE_ETHERNET_PWR:  return "ETHERNET_PWR";
 #endif

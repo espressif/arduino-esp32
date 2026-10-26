@@ -10,10 +10,10 @@ The ``MatterFan`` class provides a fan endpoint for Matter networks with speed a
 **Features:**
 * On/off control
 * Fan speed control (0-100%)
-* Fan mode control (OFF, LOW, MEDIUM, HIGH, ON, AUTO, SMART)
+* Fan mode control (OFF, LOW, MEDIUM, HIGH, AUTO). ``ON`` and ``SMART`` are remapped, not stored
 * Fan mode sequence configuration
 * Callback support for state, speed, and mode changes
-* Integration with Apple HomeKit, Amazon Alexa, and Google Home
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
 **Use Cases:**
@@ -50,7 +50,7 @@ Initializes the Matter fan endpoint with optional initial speed, mode, and mode 
 
     bool begin(uint8_t percent = 0, FanMode_t fanMode = FAN_MODE_OFF, FanModeSequence_t fanModeSeq = FAN_MODE_SEQ_OFF_HIGH);
 
-* ``percent`` - Initial speed percentage (0-100, default: 0)
+* ``percent`` - Initial speed percentage (0-100, default: 0). Forced to ``0`` when ``fanMode`` is ``FAN_MODE_OFF``. In Auto, this is ``PercentCurrent`` only; ``PercentSetting`` is null.
 * ``fanMode`` - Initial fan mode (default: ``FAN_MODE_OFF``)
 * ``fanModeSeq`` - Fan mode sequence configuration (default: ``FAN_MODE_SEQ_OFF_HIGH``)
 
@@ -107,9 +107,11 @@ Fan mode enumeration:
 * ``FAN_MODE_LOW`` - Low speed
 * ``FAN_MODE_MEDIUM`` - Medium speed
 * ``FAN_MODE_HIGH`` - High speed
-* ``FAN_MODE_ON`` - Fan is on
-* ``FAN_MODE_AUTO`` - Auto mode
-* ``FAN_MODE_SMART`` - Smart mode
+* ``FAN_MODE_ON`` - Alias: stored as ``FAN_MODE_HIGH``
+* ``FAN_MODE_AUTO`` - Auto mode (only valid in an Auto sequence)
+* ``FAN_MODE_SMART`` - Alias: stored as ``FAN_MODE_AUTO`` if the sequence includes Auto, otherwise ``FAN_MODE_HIGH``
+
+Matter ``FanModeSequence`` never includes On or Smart. CHIP remaps those writes the same way.
 
 Fan Mode Sequences
 ******************
@@ -174,6 +176,8 @@ Sets the fan speed percentage.
 * ``newPercent`` - Speed percentage (0-100)
 * ``performUpdate`` - Perform update after setting (default: ``true``)
 
+Writes nullable ``PercentSetting`` and non-nullable ``PercentCurrent`` separately. In Auto, Matter may null ``PercentSetting``; ``PercentCurrent`` stays 0-100.
+
 getSpeedPercent
 ^^^^^^^^^^^^^^^
 
@@ -195,8 +199,12 @@ Sets the fan mode.
 
     bool setMode(FanMode_t newMode, bool performUpdate = true);
 
-* ``newMode`` - Fan mode to set
+* ``newMode`` - Fan mode to set. ``FAN_MODE_ON`` and ``FAN_MODE_SMART`` are remapped as described under ``FanMode_t``
 * ``performUpdate`` - Perform update after setting (default: ``true``)
+
+Matches CHIP after the mode write: ``FAN_MODE_OFF`` sets ``PercentSetting`` and ``PercentCurrent`` to ``0``; ``FAN_MODE_AUTO`` nulls ``PercentSetting`` and leaves ``PercentCurrent`` as the actual speed.
+
+This function will return ``false`` if the remapped mode is not in the sequence passed to ``begin()``.
 
 getMode
 ^^^^^^^
@@ -288,5 +296,5 @@ Example
 Fan Control
 ***********
 
-.. literalinclude:: ../../../libraries/Matter/examples/MatterFan/MatterFan.ino
+.. literalinclude:: ../../../libraries/Matter/examples/Control/MatterFan/MatterFan.ino
     :language: arduino

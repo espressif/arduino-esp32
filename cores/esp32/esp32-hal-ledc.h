@@ -91,6 +91,11 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
 /**
  * @brief Attach a pin to the LEDC driver, with a given frequency, resolution and channel.
  *
+ * Frequency and resolution come from a hardware timer. Channels in the same group
+ * with matching freq/resolution reuse that timer; ledcChangeFrequency() then affects
+ * all of them. Different channel numbers alone do not guarantee independent frequencies.
+ * On ESP32, channels 0-7 and 8-15 are separate groups with separate timers.
+ *
  * @param pin GPIO pin
  * @param freq frequency of PWM signal
  * @param resolution resolution for LEDC pin
@@ -172,6 +177,8 @@ bool ledcDetach(uint8_t pin);
 
 /**
  * @brief Change the frequency and resolution of a given LEDC pin.
+ *
+ * Updates the pin's timer. Any other channel sharing that timer is changed as well.
  *
  * @param pin GPIO pin
  * @param freq frequency of PWM signal

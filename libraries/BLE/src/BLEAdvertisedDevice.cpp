@@ -430,8 +430,12 @@ bool BLEAdvertisedDevice::haveTXPower() {
 void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len) {
   uint8_t length;
   uint8_t ad_type;
-  uint8_t sizeConsumed = 0;
+  size_t sizeConsumed = 0;
   bool finished = false;
+
+  if (payload == nullptr || total_len == 0) {
+    return;
+  }
 
   // Store/append raw payload data for later retrieval
   // This handles both ADV and Scan Response packets by merging them
@@ -458,7 +462,23 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
   }
 
   while (!finished) {
-    length = *payload;           // Retrieve the length of the record.
+    if (sizeConsumed >= total_len) {
+      break;
+    }
+
+    length = *payload;  // Retrieve the length of the record.
+
+    if (length == 0) {  // Terminator record
+      break;
+    }
+
+    // Reject AD structures that extend past the valid buffer. Otherwise we can
+    // read stale controller/stack memory and produce garbled names/data.
+    if ((size_t)length + 1 > total_len - sizeConsumed) {
+      log_e("AD structure length %u exceeds remaining %lu bytes", length, (unsigned long)(total_len - sizeConsumed));
+      break;
+    }
+
     payload++;                   // Skip to type
     sizeConsumed += 1 + length;  // increase the size consumed.
 
@@ -499,6 +519,12 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
         case ESP_BLE_AD_TYPE_16SRV_PART:  // 0x02
         case ESP_BLE_AD_TYPE_16SRV_CMPL:  // 0x03
         {                                 // Adv Data Type: ESP_BLE_AD_TYPE_16SRV_PART/CMPL
+          // A UUID list must be a whole number of UUIDs. A partial entry means the
+          // field is malformed, so reject it instead of parsing a truncated list.
+          if (length < 2 || (length % 2) != 0) {
+            log_e("Malformed 16-bit UUID list length: %u", length);
+            break;
+          }
           for (int var = 0; var < length / 2; ++var) {
             setServiceUUID(BLEUUID(*reinterpret_cast<uint16_t *>(payload + var * 2)));
           }
@@ -508,23 +534,27 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
         case ESP_BLE_AD_TYPE_32SRV_PART:  // 0x04
         case ESP_BLE_AD_TYPE_32SRV_CMPL:  // 0x05
         {                                 // Adv Data Type: ESP_BLE_AD_TYPE_32SRV_PART/CMPL
+          if (length < 4 || (length % 4) != 0) {
+            log_e("Malformed 32-bit UUID list length: %u", length);
+            break;
+          }
           for (int var = 0; var < length / 4; ++var) {
             setServiceUUID(BLEUUID(*reinterpret_cast<uint32_t *>(payload + var * 4)));
           }
           break;
         }  // 0x04, 0x05
 
-        case ESP_BLE_AD_TYPE_128SRV_CMPL:  // 0x07
-        {                                  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_CMPL
-          setServiceUUID(BLEUUID(payload, 16, false));
-          break;
-        }  // 0x07
-
         case ESP_BLE_AD_TYPE_128SRV_PART:  // 0x06
-        {                                  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_PART
+        case ESP_BLE_AD_TYPE_128SRV_CMPL:  // 0x07
+        {                                  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_PART/CMPL
+          // Legacy ADV only: one 128-bit UUID fits. Reject any other length.
+          if (length != 16) {
+            log_e("Malformed 128-bit UUID length: %u", length);
+            break;
+          }
           setServiceUUID(BLEUUID(payload, 16, false));
           break;
-        }  // 0x06
+        }  // 0x06, 0x07
 
         // See CSS Part A 1.4 Manufacturer Specific Data
         case ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE:  // 0xFF

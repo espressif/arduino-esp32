@@ -21,6 +21,7 @@
 
 class MatterDimmablePlugin : public MatterEndPoint {
 public:
+  // Arduino full-scale input (0–255). Matter CurrentLevel is 1–254; 0 and 255 are clamped.
   static const uint8_t MAX_LEVEL = 255;
 
   MatterDimmablePlugin();
@@ -43,7 +44,7 @@ public:
     _onChangeOnOffCB = onChangeCB;
   }
 
-  // User Callback for whenever the Plugin level value [0..255] is changed by the Matter Controller
+  // User Callback for whenever the Plugin level value [1..254] is changed by the Matter Controller
   using EndPointLevelCB = std::function<bool(uint8_t)>;
   void onChangeLevel(EndPointLevelCB onChangeCB) {
     _onChangeLevelCB = onChangeCB;
