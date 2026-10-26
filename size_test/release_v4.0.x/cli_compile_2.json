@@ -2,22 +2,6 @@
 { "board": "espressif:esp32:esp32s31",
                 "target": "esp32s31",
                 "sketches": [
-{"name": "libraries/ESP32/examples/CI/CIBoardsTest",
-                "sizes": [{
-                        "flash_bytes": 370770,
-                        "flash_percentage": 28,
-                        "ram_bytes": 26260,
-                        "ram_percentage": 8
-                        }]
-                },
-{"name": "libraries/ESP32/examples/ChipID/GetChipID",
-                "sizes": [{
-                        "flash_bytes": 313802,
-                        "flash_percentage": 24,
-                        "ram_bytes": 23368,
-                        "ram_percentage": 7
-                        }]
-                },
 {"name": "libraries/ESP32/examples/DeepSleep/TimerWakeUp",
                 "sizes": [{
                         "flash_bytes": 325950,
@@ -199,6 +183,30 @@
                         "flash_bytes": 311554,
                         "flash_percentage": 24,
                         "ram_bytes": 23312,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial/BaudRateDetect_Demo",
+                "sizes": [{
+                        "flash_bytes": 311924,
+                        "flash_percentage": 24,
+                        "ram_bytes": 23320,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial/HardwareFlowControl_Demo",
+                "sizes": [{
+                        "flash_bytes": 314886,
+                        "flash_percentage": 24,
+                        "ram_bytes": 23328,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
+                "sizes": [{
+                        "flash_bytes": 311278,
+                        "flash_percentage": 24,
+                        "ram_bytes": 23320,
                         "ram_percentage": 7
                         }]
                 }
