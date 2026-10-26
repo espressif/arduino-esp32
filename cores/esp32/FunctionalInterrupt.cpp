@@ -14,7 +14,7 @@ typedef void (*voidFuncPtrArg)(void *);
 extern "C" {
 extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc, void *arg, int intr_type, bool functional);
 #if SOC_GPTIMER_SUPPORTED
-extern void timerAttachInterruptFunctionalArg(hw_timer_t *timer, voidFuncPtrArg userFunc, void *arg, bool functional);
+extern void __timerAttachInterruptFunctionalArg(hw_timer_t *timer, voidFuncPtrArg userFunc, void *arg, bool functional);
 #endif
 }
 
@@ -35,7 +35,7 @@ void timerAttachInterrupt(hw_timer_t *timer, std::function<void(void)> userFunc)
   if (timer == NULL) {
     return;
   }
-  timerAttachInterruptFunctionalArg(timer, (voidFuncPtrArg)interruptFunctional, new InterruptArgStructure{userFunc}, true);
+  __timerAttachInterruptFunctionalArg(timer, (voidFuncPtrArg)interruptFunctional, new InterruptArgStructure{userFunc}, true);
 }
 #endif
 

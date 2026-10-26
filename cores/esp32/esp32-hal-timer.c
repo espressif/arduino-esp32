@@ -231,7 +231,7 @@ bool IRAM_ATTR timerFnWrapper(gptimer_handle_t timer, const gptimer_alarm_event_
   return false;
 }
 
-void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void *), void *arg, bool functional) {
+void __timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void *), void *arg, bool functional) {
   if (timer == NULL) {
     log_e("Timer handle is NULL");
     return;
@@ -256,11 +256,11 @@ void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void 
 }
 
 void timerAttachInterruptArg(hw_timer_t *timer, void (*userFunc)(void *), void *arg) {
-  timerAttachInterruptFunctionalArg(timer, userFunc, arg, false);
+  __timerAttachInterruptFunctionalArg(timer, userFunc, arg, false);
 }
 
 void timerAttachInterrupt(hw_timer_t *timer, voidFuncPtr userFunc) {
-  timerAttachInterruptFunctionalArg(timer, (voidFuncPtrArg)userFunc, NULL, false);
+  __timerAttachInterruptFunctionalArg(timer, (voidFuncPtrArg)userFunc, NULL, false);
 }
 
 void timerDetachInterrupt(hw_timer_t *timer) {
