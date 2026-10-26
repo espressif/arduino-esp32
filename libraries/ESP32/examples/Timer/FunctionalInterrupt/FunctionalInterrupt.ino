@@ -6,10 +6,15 @@
    Hardware Timer FunctionalInterrupt Example
    ==========================================
 
-   Attaches a capturing lambda to a hardware timer using
-   timerAttachInterrupt() from FunctionalInterrupt.h.
+   Shows the different ways to declare a hardware timer callback:
+     1. C function pointer          - timerAttachInterrupt(timer, &fn)
+     2. Capturing lambda            - needs FunctionalInterrupt.h
+     3. IRAM_ATTR std::function     - preferred when CONFIG_ARDUINO_ISR_IRAM is set
+     4. std::bind to a member       - class instance as the callback
+     5. timerAttachInterruptArg     - C callback with a context pointer
 
-   Press the BOOT button to stop and free the timer.
+   The sketch re-attaches a different style every 5 alarms. Press BOOT to
+   stop and free the timer.
 */
 
 #include <Arduino.h>
@@ -18,11 +23,73 @@
 hw_timer_t *timer = NULL;
 volatile uint32_t isrCounter = 0;
 
-// Capturing lambda: non-capturing lambdas can be ambiguous with the C overload.
-// IRAM_ATTR keeps the std::function object in IRAM when CONFIG_ARDUINO_ISR_IRAM is set.
-IRAM_ATTR std::function<void()> onTimer = [&]() {
+enum DemoMode : uint8_t {
+  MODE_C_PTR = 0,
+  MODE_LAMBDA,
+  MODE_STD_FUNCTION,
+  MODE_BIND,
+  MODE_ARG,
+  MODE_COUNT
+};
+
+static const char *modeName[MODE_COUNT] = {
+  "C function pointer",
+  "capturing lambda",
+  "IRAM_ATTR std::function",
+  "std::bind member",
+  "timerAttachInterruptArg",
+};
+
+static uint8_t currentMode = MODE_C_PTR;
+
+static void ARDUINO_ISR_ATTR bumpCounter() {
+  isrCounter = isrCounter + 1;
+}
+
+static void ARDUINO_ISR_ATTR bumpCounterArg(void *arg) {
+  volatile uint32_t *count = (volatile uint32_t *)arg;
+  *count = *count + 1;
+}
+
+class TickSource {
+public:
+  void ARDUINO_ISR_ATTR isr() {
+    isrCounter = isrCounter + 1;
+  }
+};
+
+static TickSource tickSource;
+
+// Keep the std::function object in IRAM when CONFIG_ARDUINO_ISR_IRAM is set.
+IRAM_ATTR std::function<void()> onTimerFn = [&]() {
   isrCounter = isrCounter + 1;
 };
+
+static void attachMode(uint8_t mode) {
+  switch (mode) {
+    case MODE_C_PTR:
+      // Exact match for the C overload. No FunctionalInterrupt.h required.
+      timerAttachInterrupt(timer, &bumpCounter);
+      break;
+    case MODE_LAMBDA:
+      // Non-capturing lambdas can be ambiguous with the C overload; capture.
+      timerAttachInterrupt(timer, [&]() {
+        isrCounter = isrCounter + 1;
+      });
+      break;
+    case MODE_STD_FUNCTION:
+      timerAttachInterrupt(timer, onTimerFn);
+      break;
+    case MODE_BIND:
+      timerAttachInterrupt(timer, std::bind(&TickSource::isr, &tickSource));
+      break;
+    case MODE_ARG:
+      // C API with a user pointer. Same idea as GPIO attachInterruptArg().
+      timerAttachInterruptArg(timer, bumpCounterArg, (void *)&isrCounter);
+      break;
+    default: break;
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -31,6 +98,7 @@ void setup() {
   pinMode(BOOT_PIN, INPUT_PULLUP);
 
   Serial.println("Hardware Timer FunctionalInterrupt Example");
+  Serial.println("Re-attaches a different callback style every 5 ticks.");
   Serial.println("Press BOOT to stop the timer.");
 
   timer = timerBegin(1000000);
@@ -39,7 +107,8 @@ void setup() {
     return;
   }
 
-  timerAttachInterrupt(timer, onTimer);
+  attachMode(currentMode);
+  Serial.printf("Using %s\n", modeName[currentMode]);
   // Alarm every second, auto-reload, unlimited count
   timerAlarm(timer, 1000000, true, 0);
 }
@@ -50,7 +119,13 @@ void loop() {
 
   if (count != lastCount) {
     lastCount = count;
-    Serial.printf("Timer lambda fired %" PRIu32 " times\n", count);
+    Serial.printf("[%s] fired %" PRIu32 " times\n", modeName[currentMode], count);
+
+    if ((count % 5) == 0) {
+      currentMode = (currentMode + 1) % MODE_COUNT;
+      attachMode(currentMode);
+      Serial.printf("Switched to %s\n", modeName[currentMode]);
+    }
   }
 
   if (digitalRead(BOOT_PIN) == LOW) {

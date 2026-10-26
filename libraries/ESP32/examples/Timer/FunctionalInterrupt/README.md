@@ -1,20 +1,36 @@
 # Hardware Timer FunctionalInterrupt Example
 
-This example attaches a capturing C++ lambda to a hardware timer using
-`timerAttachInterrupt()` from `FunctionalInterrupt.h`. The callback increments
-a counter every second. Press the BOOT button to stop and free the timer.
+This example attaches several kinds of callbacks to one hardware timer so you
+can compare the APIs. Every 5 alarms it re-attaches the next style. Press the
+BOOT button to stop and free the timer.
 
 ## Supported Targets
 
 All Arduino-ESP32 targets that provide a general-purpose hardware timer
 (`SOC_GPTIMER_SUPPORTED`).
 
-## How to Use Example
+## Callback styles
 
-* Include `<FunctionalInterrupt.h>` to get the `std::function` overload of `timerAttachInterrupt()`.
-* A capturing lambda (or `std::function<void(void)>`) selects the C++ overload.
-* A raw function pointer still uses the C overload.
-* A non-capturing lambda can match both; capture a variable or wrap it in `std::function` if the compiler reports an ambiguity.
+1. **C function pointer** — `timerAttachInterrupt(timer, &bumpCounter)`. This is
+   the C overload. `FunctionalInterrupt.h` is not required for this form.
+2. **Capturing lambda** — `timerAttachInterrupt(timer, [&]() { ... })`. Include
+   `FunctionalInterrupt.h`. A non-capturing lambda can be ambiguous with the C
+   overload; capture a variable or wrap it in `std::function<void(void)>`.
+3. **`IRAM_ATTR std::function`** — store the functor in a global
+   `IRAM_ATTR std::function<void()>` and pass that. Prefer this when
+   `CONFIG_ARDUINO_ISR_IRAM` is enabled.
+4. **`std::bind` member** — `timerAttachInterrupt(timer, std::bind(&TickSource::isr, &tickSource))`.
+   Same pattern as the GPIO `FunctionalInterrupt` example.
+5. **`timerAttachInterruptArg`** — C callback with a context pointer, like GPIO
+   `attachInterruptArg()`.
+
+Re-attaching replaces the previous callback. `timerDetachInterrupt()` and
+`timerEnd()` release any heap-allocated `std::function` state.
+
+Keep ISR work short. Use `volatile` for data shared with `loop()`.
+`std::function::operator()` and most lambda bodies are not placed in IRAM.
+
+## How to Use Example
 
 ### Hardware Connection
 
@@ -28,14 +44,9 @@ auto-reload, unlimited count:
 
 ```cpp
 timer = timerBegin(1000000);
-timerAttachInterrupt(timer, onTimer);
+attachMode(currentMode);
 timerAlarm(timer, 1000000, true, 0);
 ```
-
-The callback is a global `IRAM_ATTR std::function<void()>`. Keep ISR work short
-and use `volatile` for data shared with `loop()`. When `CONFIG_ARDUINO_ISR_IRAM`
-is enabled, `std::function::operator()` and most lambda bodies are not placed in
-IRAM; prefer this global `IRAM_ATTR` form.
 
 #### Using Arduino IDE
 
@@ -46,10 +57,15 @@ IRAM; prefer this global `IRAM_ATTR` form.
 
 ```
 Hardware Timer FunctionalInterrupt Example
+Re-attaches a different callback style every 5 ticks.
 Press BOOT to stop the timer.
-Timer lambda fired 1 times
-Timer lambda fired 2 times
-Timer lambda fired 3 times
+Using C function pointer
+[C function pointer] fired 1 times
+[C function pointer] fired 5 times
+Switched to capturing lambda
+[capturing lambda] fired 6 times
+Switched to IRAM_ATTR std::function
+...
 Timer stopped
 ```
 
@@ -59,7 +75,7 @@ Timer stopped
 
 * **No serial output:** Check the USB cable, the USB-to-serial driver, and the selected COM port.
 * **Compile error about ambiguous `timerAttachInterrupt`:** The lambda does not capture. Capture a variable or wrap it in `std::function<void(void)>`.
-* **Timer never fires:** Confirm the sketch includes `FunctionalInterrupt.h` and that `timerBegin()` did not return `NULL`.
+* **Timer never fires:** Confirm `timerBegin()` did not return `NULL`.
 
 If the error persists, you can ask for help at the official [ESP32 forum](https://esp32.com) or see [Contribute](#contribute).
 
