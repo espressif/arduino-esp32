@@ -37,7 +37,7 @@ This function will return ``true`` if the role was set and the stack initialized
 .. note::
 
     Zigbee network state is stored in the default ``nvs`` partition (namespace ``zigbee``), shared with Wi-Fi and Preferences.
-    Zigbee partition schemes enlarge that partition and no longer use a separate ``zb_storage`` partition.
+    Zigbee partition schemes no longer use a separate ``zb_storage`` partition.
     Upgrading from Arduino-ESP32 3.x (or early 4.0 builds that used ``zb_storage``) requires erasing flash or calling ``Zigbee.factoryReset()``; network state is not migrated in place.
 
 begin
