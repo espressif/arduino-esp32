@@ -170,6 +170,42 @@ This function is used to attach interrupt to timer.
 * ``timer`` timer struct.
 * ``userFunc`` function to be called when interrupt is triggered.
 
+The C++ overload accepts ``std::function<void(void)>``, so capturing lambdas and bound member functions can be used as the callback. Include ``FunctionalInterrupt.h`` to use this overload. It is available only when the SoC has a general-purpose timer (``SOC_GPTIMER_SUPPORTED``).
+
+.. code-block:: arduino
+
+    #include <FunctionalInterrupt.h>
+
+    void timerAttachInterrupt(hw_timer_t * timer, std::function<void(void)> userFunc);
+
+A function pointer matches the C overload. A capturing lambda matches the C++ overload. A non-capturing lambda can convert to both; capture a variable or wrap the lambda in ``std::function<void(void)>`` to select the C++ overload.
+
+Timer callbacks run in ISR context. Keep the handler short. Use ``volatile`` for data shared with ``loop()``. When ``CONFIG_ARDUINO_ISR_IRAM`` is enabled, prefer a global ``IRAM_ATTR std::function<void()>``; ``std::function::operator()`` and most lambda bodies are not placed in IRAM.
+
+Re-attaching a callback replaces the previous one. ``timerDetachInterrupt`` and ``timerEnd`` release any heap-allocated ``std::function`` state.
+
+.. code-block:: arduino
+
+    #include <Arduino.h>
+    #include <FunctionalInterrupt.h>
+
+    hw_timer_t *timer = NULL;
+    volatile uint32_t counter = 0;
+
+    void setup() {
+      Serial.begin(115200);
+      timer = timerBegin(1000000);
+      timerAttachInterrupt(timer, [&]() {
+        counter = counter + 1;
+      });
+      timerAlarm(timer, 1000000, true, 0);
+    }
+
+    void loop() {
+      Serial.printf("Counter: %" PRIu32 "\n", counter);
+      delay(1000);
+    }
+
 timerAttachInterruptArg
 ***********************
 
