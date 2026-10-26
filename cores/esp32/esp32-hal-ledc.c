@@ -442,16 +442,15 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq) {
 
     bus->freq_hz = freq;
     uint32_t res_freq = ledc_get_freq(group, bus->timer_num);
-    ledcWrite(pin, 0x200); // LEDC 50% duty is 2^10 / 2 = 0x200
+    ledcWrite(pin, 0x200);  // LEDC 50% duty is 2^10 / 2 = 0x200
     return res_freq;
   }
   return 0;
 }
 
 uint32_t ledcWriteNote(uint8_t pin, note_t note, uint8_t octave) {
-  const uint16_t noteFrequencyBase[12] = {
-    // C   C#     D    Eb    E     F     F#    G     G#    A     Bb     B
-    4186, 4435, 4699, 4978, 5274, 5588, 5920, 6272, 6645, 7040, 7459, 7902
+  const uint16_t noteFrequencyBase[12] = {// C   C#     D    Eb    E     F     F#    G     G#    A     Bb     B
+                                          4186, 4435, 4699, 4978, 5274, 5588, 5920, 6272, 6645, 7040, 7459, 7902
   };
 
   if (octave > 8 || note >= NOTE_MAX) {

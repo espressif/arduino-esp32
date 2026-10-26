@@ -17,9 +17,9 @@ uint8_t ledB = 4;
 
 const boolean invert = true;  // set true if common anode, false if common cathode
 
-uint8_t color = 0;        // hue for hueToRGB(), 0 to 255
-uint32_t R, G, B;         // Red, Green and Blue PWM duties written with ledcWrite()
-uint8_t brightness = 255; // hueToRGB() scale 0-255, not LEDC 8-bit full on (that is 256)
+uint8_t color = 0;         // hue for hueToRGB(), 0 to 255
+uint32_t R, G, B;          // Red, Green and Blue PWM duties written with ledcWrite()
+uint8_t brightness = 255;  // hueToRGB() scale 0-255, not LEDC 8-bit full on (that is 256)
 
 // the setup routine runs once when you press reset:
 void setup() {
