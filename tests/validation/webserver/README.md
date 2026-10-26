@@ -38,6 +38,7 @@ Each case first confirms the endpoint behaves correctly for a well-formed reques
 | `digest_auth` | Digest auth keeps more than one nonce valid at once, and a correct response for an unknown nonce is challenged with `stale=true` ([#12915](https://github.com/espressif/arduino-esp32/issues/12915)). |
 | `digest_auth_edges` | Signed-nonce edges: opaque is stable, nonces are unique and replayable, a matching query-string URI authenticates while a mismatched query is a non-stale 401, RFC 2069 still authenticates, a tampered/truncated nonce is `stale=true`, wrong username is not, a stale retry succeeds, and an unauthenticated 401 does not leak `stale` or log out the first client. |
 | `path_traversal` | `serveStatic()` must not serve files outside its configured root via `..` dot segments. |
+| `header_injection` | `sendHeader()` must drop CR, LF and NUL in the name and value, including a NUL that precedes CRLF (so `String::indexOf` cannot skip the guard). |
 | `arg_poison` | A completed field from an aborted, unauthenticated multipart request must not shadow a later request's named arguments. |
 | `arg_flood` | An oversized query string (many `&` separators) must not trigger an unbounded allocation that resets the device. |
 | `upload_null_deref` | A non-multipart POST to an upload route must not dereference a null upload object. |
