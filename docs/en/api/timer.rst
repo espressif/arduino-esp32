@@ -180,7 +180,9 @@ The C++ overload accepts ``std::function<void(void)>``, so capturing lambdas and
 
 A function pointer matches the C overload. A capturing lambda matches the C++ overload. A non-capturing lambda can convert to both; capture a variable or wrap the lambda in ``std::function<void(void)>`` to select the C++ overload.
 
-Timer callbacks run in ISR context. Keep the handler short. Use ``volatile`` for data shared with ``loop()``. When ``CONFIG_ARDUINO_ISR_IRAM`` is enabled, prefer a global ``IRAM_ATTR std::function<void()>``; ``std::function::operator()`` and most lambda bodies are not placed in IRAM.
+Timer callbacks run in ISR context. Keep the handler short. Use ``volatile`` for data shared with ``loop()``.
+
+Do not declare a ``std::function`` object with ``IRAM_ATTR``. That places a writable C++ object in instruction RAM. On RISC-V targets (ESP32-C6 and similar) the constructor then store-faults during ``do_global_ctors`` before ``setup()`` runs. For an IRAM-safe callback, use a C function pointer marked ``ARDUINO_ISR_ATTR``. ``std::function::operator()`` and most lambda bodies stay in flash.
 
 Re-attaching a callback replaces the previous one. ``timerDetachInterrupt`` and ``timerEnd`` release any heap-allocated ``std::function`` state.
 

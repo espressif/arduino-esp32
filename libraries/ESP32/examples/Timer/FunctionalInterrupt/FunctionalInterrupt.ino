@@ -9,7 +9,7 @@
    Shows the different ways to declare a hardware timer callback:
      1. C function pointer          - timerAttachInterrupt(timer, &fn)
      2. Capturing lambda            - needs FunctionalInterrupt.h
-     3. IRAM_ATTR std::function     - preferred when CONFIG_ARDUINO_ISR_IRAM is set
+     3. std::function object        - stored in DRAM, not IRAM
      4. std::bind to a member       - class instance as the callback
      5. timerAttachInterruptArg     - C callback with a context pointer
 
@@ -35,7 +35,7 @@ enum DemoMode : uint8_t {
 static const char *modeName[MODE_COUNT] = {
   "C function pointer",
   "capturing lambda",
-  "IRAM_ATTR std::function",
+  "std::function object",
   "std::bind member",
   "timerAttachInterruptArg",
 };
@@ -60,8 +60,10 @@ public:
 
 static TickSource tickSource;
 
-// Keep the std::function object in IRAM when CONFIG_ARDUINO_ISR_IRAM is set.
-IRAM_ATTR std::function<void()> onTimerFn = []() {
+// std::function is a writable C++ object. Do not mark it IRAM_ATTR: on RISC-V
+// (ESP32-C6 and similar) that places it in instruction RAM and the constructor
+// store-faults at boot.
+std::function<void()> onTimerFn = []() {
   isrCounter = isrCounter + 1;
 };
 

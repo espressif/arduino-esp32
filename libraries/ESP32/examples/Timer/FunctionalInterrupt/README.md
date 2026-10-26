@@ -16,9 +16,10 @@ All Arduino-ESP32 targets that provide a general-purpose hardware timer
 2. **Capturing lambda** — `timerAttachInterrupt(timer, [&]() { ... })`. Include
    `FunctionalInterrupt.h`. A non-capturing lambda can be ambiguous with the C
    overload; capture a variable or wrap it in `std::function<void(void)>`.
-3. **`IRAM_ATTR std::function`** — store the functor in a global
-   `IRAM_ATTR std::function<void()>` and pass that. Prefer this when
-   `CONFIG_ARDUINO_ISR_IRAM` is enabled.
+3. **`std::function` object** — store the functor in DRAM
+   (`std::function<void()> onTimerFn = ...`) and pass that. Do **not**
+   mark the object `IRAM_ATTR`: on RISC-V (ESP32-C6 and similar) the
+   constructor writes into instruction RAM and store-faults at boot.
 4. **`std::bind` member** — `timerAttachInterrupt(timer, std::bind(&TickSource::isr, &tickSource))`.
    Same pattern as the GPIO `FunctionalInterrupt` example.
 5. **`timerAttachInterruptArg`** — C callback with a context pointer, like GPIO
@@ -29,6 +30,7 @@ Re-attaching replaces the previous callback. `timerDetachInterrupt()` and
 
 Keep ISR work short. Use `volatile` for data shared with `loop()`.
 `std::function::operator()` and most lambda bodies are not placed in IRAM.
+For an IRAM-safe callback, use a C function pointer with `ARDUINO_ISR_ATTR`.
 
 ## How to Use Example
 
@@ -64,7 +66,7 @@ Using C function pointer
 [C function pointer] fired 5 times
 Switched to capturing lambda
 [capturing lambda] fired 6 times
-Switched to IRAM_ATTR std::function
+Switched to std::function object
 ...
 Timer stopped
 ```
@@ -76,6 +78,8 @@ Timer stopped
 * **No serial output:** Check the USB cable, the USB-to-serial driver, and the selected COM port.
 * **Compile error about ambiguous `timerAttachInterrupt`:** The lambda does not capture. Capture a variable or wrap it in `std::function<void(void)>`.
 * **Timer never fires:** Confirm `timerBegin()` did not return `NULL`.
+* **Store access fault at boot (ESP32-C6 and other RISC-V chips):** A
+  `std::function` was declared `IRAM_ATTR`. Keep the object in DRAM.
 
 If the error persists, you can ask for help at the official [ESP32 forum](https://esp32.com) or see [Contribute](#contribute).
 
