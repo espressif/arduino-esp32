@@ -247,7 +247,7 @@ This function is used to configure alarm value and autoreload of the timer. Alar
 Example Applications
 ********************
 
-There are 2 examples uses of Timer:
+There are 3 example uses of Timer:
 
 Repeat timer example:
 
@@ -258,3 +258,9 @@ Watchdog timer example:
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Timer/WatchdogTimer/WatchdogTimer.ino
     :language: arduino
+
+Functional interrupt (``std::function`` / lambda) example:
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Timer/FunctionalInterrupt/FunctionalInterrupt.ino
+    :language: arduino
+
