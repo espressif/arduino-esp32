@@ -63,6 +63,15 @@ std::atomic<uint32_t> sReAdvArmedGen{0};
 SemaphoreHandle_t sReAdvMtx = xSemaphoreCreateRecursiveMutex();
 
 void reAdvertiseEventCb(struct ble_npl_event *event) {
+#if BLE_VALIDATION_HOOKS
+  // Park before taking the mutex so a preemption resume can run its
+  // lock-only ReAdvGuard without waiting out this restart (and without this
+  // restart holding the mutex across the resume window).
+  if (BLEHooks.adv.holdReAdvBeforeMutex.load(std::memory_order_acquire)) {
+    BLEHooks.adv.reAdvBeforeMutexEntered.store(true, std::memory_order_release);
+    BLEValidationHooks::holdWhile(BLEHooks.adv.holdReAdvBeforeMutex);
+  }
+#endif
   // Hold sReAdvMtx across startAdvertising() so a concurrent stop() waits for
   // this in-flight restart to finish, then issues a native stop, instead of
   // returning while GAP is still coming up (ble_gatts_reset() is EBUSY).

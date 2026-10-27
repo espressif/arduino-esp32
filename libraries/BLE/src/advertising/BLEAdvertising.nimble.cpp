@@ -55,10 +55,14 @@ SemaphoreHandle_t nimbleReAdvertiseMutex();
 
 // Taken before nativeAdmission so stop() can wait out an in-flight
 // advertiseOnDisconnect start() without inverting the admission gate.
+// Public start()/stop() cancel a queued restart; preemption resume only
+// takes the mutex so stop() can wait it out without dropping that restart.
 struct ReAdvGuard {
   BLELockGuard lock;
-  ReAdvGuard() : lock(nimbleReAdvertiseMutex()) {
-    nimbleInvalidatePendingReAdvertise();
+  explicit ReAdvGuard(bool invalidatePending = true) : lock(nimbleReAdvertiseMutex()) {
+    if (invalidatePending) {
+      nimbleInvalidatePendingReAdvertise();
+    }
   }
 };
 #endif
@@ -170,18 +174,20 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
     }
     if (preempted) {
       // Resume the preempted set with the time left on the original deadline,
-      // matching BLEScan. Take ReAdvGuard before the session recheck so a
+      // matching BLEScan. Take the restart mutex before the session recheck so a
       // concurrent public stop() either bumps advSession first (resume aborts)
       // or waits until this resume finishes and then stops the radio. Do not
-      // call public start()/startExtended(): those fetch_add a new session and
-      // would undo stop().
+      // invalidate a queued advertiseOnDisconnect restart: if this session's
+      // deadline has expired, that restart is what brings advertising back.
+      // Do not call public start()/startExtended(): those fetch_add a new
+      // session and would undo stop().
       const uint32_t session = impl->advSession.load(std::memory_order_relaxed);
 #if BLE_VALIDATION_HOOKS
       BLEHooks.adv.preemptResumeEntered.store(true, std::memory_order_release);
       BLEValidationHooks::holdWhile(BLEHooks.adv.holdPreemptResume);
 #endif
 #if BLE_GATT_SERVER_SUPPORTED
-      ReAdvGuard reAdv;
+      ReAdvGuard reAdv(false);
 #endif
       if (impl->advSession.load(std::memory_order_relaxed) != session) {
         return 0;
@@ -398,6 +404,11 @@ void BLEAdvertising::reset() {
   impl.isAdvertising = false;
 }
 
+#if BLE_VALIDATION_HOOKS
+static void bleAdvTestDeliverPreemptedComplete(void *arg);
+static void nimbleInjectPreemptedCompleteIfArmed(BLEAdvertising::Impl *impl);
+#endif
+
 void BLEAdvertising::setAdvertisementData(const BLEAdvertisementData &data) {
   BLE_CHECK_IMPL();
   impl.customAdvData = data;
@@ -455,6 +466,9 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     "Advertising: started (legacy over ext instance %u, duration=%u ms, %u service UUID(s))", Impl::kLegacyInstance, durationMs,
     (unsigned)impl.serviceUUIDs.size()
   );
+#if BLE_VALIDATION_HOOKS
+  nimbleInjectPreemptedCompleteIfArmed(&impl);
+#endif
   return BTStatus::OK;
 #else
   struct ble_gap_adv_params advParams = {};
@@ -636,6 +650,9 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   }
 
   log_i("Advertising: started (duration=%u ms, %u service UUID(s))", durationMs, (unsigned)impl.serviceUUIDs.size());
+#if BLE_VALIDATION_HOOKS
+  nimbleInjectPreemptedCompleteIfArmed(&impl);
+#endif
   return BTStatus::OK;
 #endif /* BLE5_SUPPORTED */
 }
@@ -656,6 +673,20 @@ static void bleAdvTestDeliverPreemptedComplete(void *arg) {
 #endif
   (void)BLEAdvertising::Impl::gapEventCallback(&ev, advImpl);
   vTaskDelete(nullptr);
+}
+
+static void nimbleInjectPreemptedCompleteIfArmed(BLEAdvertising::Impl *impl) {
+  if (!BLEHooks.adv.injectPreemptedComplete.exchange(false, std::memory_order_acq_rel)) {
+    return;
+  }
+  // Native-stop without public stop() so a queued advertiseOnDisconnect restart
+  // is not cancelled before the synthesized preemption resume runs.
+#if BLE5_SUPPORTED
+  (void)ble_gap_ext_adv_stop(BLEAdvertising::Impl::kLegacyInstance);
+#else
+  (void)ble_gap_adv_stop();
+#endif
+  (void)xTaskCreate(bleAdvTestDeliverPreemptedComplete, "advPreempt", 8192, impl, tskIDLE_PRIORITY + 1, nullptr);
 }
 #endif
 

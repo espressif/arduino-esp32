@@ -81,6 +81,9 @@ public:
     std::atomic<bool> periodicRunningAfterStaleStop{false};
     std::atomic<bool> holdReAdvStart{false};
     std::atomic<bool> reAdvStartEntered{false};
+    std::atomic<bool> holdReAdvBeforeMutex{false};
+    std::atomic<bool> reAdvBeforeMutexEntered{false};
+    std::atomic<bool> injectPreemptedComplete{false};
     std::atomic<bool> injectNativeStopFail{false};
     std::atomic<bool> injectExtStopFail{false};
     std::atomic<int> lastNativeStartRc{0};

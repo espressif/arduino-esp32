@@ -2256,6 +2256,17 @@ void loop() {
     delay(3000);
     adv.stop();
 
+    // First service-data byte 0x01 is not an Eddystone frame type (eTLM is
+    // still 0x20 with version 0x01). getFrameType() must not report TLM.
+    BLEAdvertisementData unknownEddy;
+    uint8_t unknownFrame[2] = {0x01, 0x00};
+    unknownEddy.setServiceData(BLEEddystoneTLM::serviceUUID(), unknownFrame, sizeof(unknownFrame));
+    adv.setAdvertisementData(unknownEddy);
+    s = adv.start();
+    Serial.printf("[SERVER] Phase21 EddystoneUnknown01 ok=%d\n", (int)(bool)s);
+    delay(2500);
+    adv.stop();
+
     // Plaintext Eddystone TLM.
     BLEEddystoneTLM tlm;
     tlm.setBatteryVoltage(3000);
@@ -2516,9 +2527,61 @@ void loop() {
       uint32_t resumeMs = BLEHooks.adv.resumeDurationMs.load(std::memory_order_relaxed);
       (void)raceAdv.stop();
       Serial.printf("[SERVER] Phase23 advRemaining supported=1 resumeMs=%lu\n", (unsigned long)resumeMs);
+
+      BLEServer raceSrv = BLE.createServer();
+      raceSrv.advertiseOnDisconnect(true);
+      (void)raceAdv.stop();
+      advWait = millis() + 1000;
+      while (raceAdv.isAdvertising() && millis() < advWait) {
+        delay(1);
+      }
+      (void)raceAdv.start();
+      Serial.println("[SERVER] Phase23 reAdvRaceReady");
+      unsigned long peerWait = millis() + 15000;
+      while (raceSrv.getConnectedCount() == 0 && millis() < peerWait) {
+        delay(20);
+      }
+      bool hadPeer = raceSrv.getConnectedCount() > 0;
+      BLEHooks.adv.preemptResumeEntered.store(false, std::memory_order_relaxed);
+      BLEHooks.adv.reAdvBeforeMutexEntered.store(false, std::memory_order_relaxed);
+      BLEHooks.adv.holdPreemptResume.store(true, std::memory_order_relaxed);
+      BLEHooks.adv.holdReAdvBeforeMutex.store(true, std::memory_order_relaxed);
+      BLEHooks.adv.injectPreemptedComplete.store(true, std::memory_order_relaxed);
+      (void)raceAdv.start(200);
+      enteredDeadline = millis() + 2000;
+      while (!BLEHooks.adv.preemptResumeEntered.load(std::memory_order_acquire) && millis() < enteredDeadline) {
+        delay(1);
+      }
+      bool resumeEntered = BLEHooks.adv.preemptResumeEntered.load(std::memory_order_acquire);
+      Serial.println("[SERVER] Phase23 reAdvRaceHolding");
+      unsigned long discWait = millis() + 10000;
+      while ((raceSrv.getConnectedCount() > 0 || !BLEHooks.adv.reAdvBeforeMutexEntered.load(std::memory_order_acquire))
+             && millis() < discWait) {
+        delay(10);
+      }
+      bool restartQueued = BLEHooks.adv.reAdvBeforeMutexEntered.load(std::memory_order_acquire);
+      delay(250);
+      BLEHooks.adv.holdPreemptResume.store(false, std::memory_order_release);
+      delay(50);
+      BLEHooks.adv.holdReAdvBeforeMutex.store(false, std::memory_order_release);
+      advWait = millis() + 2000;
+      while (!raceAdv.isAdvertising() && millis() < advWait) {
+        delay(10);
+      }
+      bool restarted = raceAdv.isAdvertising();
+      Serial.printf(
+        "[SERVER] Phase23 advReAdvRace supported=1 hadPeer=%d resumeEntered=%d queued=%d restarted=%d\n", (int)hadPeer,
+        (int)resumeEntered, (int)restartQueued, (int)restarted
+      );
+      BLEHooks.adv.holdPreemptResume.store(false, std::memory_order_release);
+      BLEHooks.adv.holdReAdvBeforeMutex.store(false, std::memory_order_release);
+      (void)raceAdv.stop();
 #else
       Serial.println("[SERVER] Phase23 advPreemptStop supported=0 stopped=1");
       Serial.println("[SERVER] Phase23 advRemaining supported=0 resumeMs=0");
+      Serial.println("[SERVER] Phase23 reAdvRaceReady");
+      Serial.println("[SERVER] Phase23 reAdvRaceHolding");
+      Serial.println("[SERVER] Phase23 advReAdvRace supported=0 hadPeer=0 resumeEntered=0 queued=0 restarted=1");
 #endif
       (void)raceAdv.start();
     }

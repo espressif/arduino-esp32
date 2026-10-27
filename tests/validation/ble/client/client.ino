@@ -164,6 +164,8 @@ volatile bool clientConnParamsReqFired = false;
 volatile bool clientRejectPairing = false;
 volatile bool clientAuthCompleteFired = false;
 volatile bool clientLastAuthSuccess = false;
+volatile bool phase23ReAdvGo = false;
+volatile bool phase23ReAdvDisc = false;
 volatile bool phase36ConnectGo = false;
 volatile bool phase36OobGo = false;
 volatile bool phase36OobScGo = false;
@@ -234,6 +236,10 @@ void checkSerial() {
         phase35ReadRemoveGo = true;
       } else if (buf == "PHASE35_STREAM_RELEASE_GO") {
         phase35StreamReleaseGo = true;
+      } else if (buf == "PHASE23_READV_GO") {
+        phase23ReAdvGo = true;
+      } else if (buf == "PHASE23_READV_DISC") {
+        phase23ReAdvDisc = true;
       } else if (buf == "PHASE36_CONNECT_GO") {
         phase36ConnectGo = true;
       } else if (buf == "PHASE36_OOB_GO") {
@@ -2475,12 +2481,13 @@ void setup() {
   waitForPhase(21);
   {
     bool sawIBeacon = false, sawEddyUrl = false, sawEddyTlm = false, rejectedEncryptedTlm = false;
+    int eddy01Frame = -1;
     BLEScan scn = BLE.getScan();
     scn.resetCallbacks();
     scn.setActiveScan(false);
     scn.setFilterDuplicates(false);
-    unsigned long deadline = millis() + 22000;
-    while (millis() < deadline && (!sawIBeacon || !sawEddyUrl || !sawEddyTlm || !rejectedEncryptedTlm)) {
+    unsigned long deadline = millis() + 25000;
+    while (millis() < deadline && (!sawIBeacon || !sawEddyUrl || !sawEddyTlm || !rejectedEncryptedTlm || eddy01Frame < 0)) {
       BLEScan::Results res = scn.startBlocking(3000);
       for (const auto &dev : res) {
         BLEAdvertisedDevice d = dev;
@@ -2531,12 +2538,20 @@ void setup() {
           }
           default: break;
         }
+        const BLEUUID eddy = BLEEddystoneTLM::serviceUUID();
+        for (size_t i = 0; i < d.getServiceDataCount(); i++) {
+          size_t sdLen = 0;
+          const uint8_t *sd = d.getServiceData(i, &sdLen);
+          if (d.getServiceDataUUID(i) == eddy && sd && sdLen >= 1 && sd[0] == 0x01) {
+            eddy01Frame = static_cast<int>(d.getFrameType());
+          }
+        }
       }
       scn.clearResults();
     }
     Serial.printf(
-      "[CLIENT] Phase21 sawIBeacon=%d sawEddyURL=%d sawEddyTLM=%d rejectedEncryptedTLM=%d\n", (int)sawIBeacon, (int)sawEddyUrl,
-      (int)sawEddyTlm, (int)rejectedEncryptedTlm
+      "[CLIENT] Phase21 sawIBeacon=%d sawEddyURL=%d sawEddyTLM=%d rejectedEncryptedTLM=%d eddy01Frame=%d\n", (int)sawIBeacon,
+      (int)sawEddyUrl, (int)sawEddyTlm, (int)rejectedEncryptedTlm, eddy01Frame
     );
     Serial.println("[CLIENT] Phase21 done");
   }
@@ -2982,6 +2997,22 @@ void setup() {
       }
     }
     Serial.printf("[CLIENT] StrConv pass=%d fail=%d\n", strPass, strFail);
+    Serial.println("[CLIENT] Phase23 reAdvRace idle");
+    waitForHostGo(phase23ReAdvGo, 25000);
+    {
+      BLEClient raceCl = BLE.createClient();
+      BTStatus raceCs = raceCl.connect(targetAddr);
+      Serial.printf("[CLIENT] Phase23 reAdvRace connected=%d\n", (int)(bool)raceCs);
+      waitForHostGo(phase23ReAdvDisc, 15000);
+      if (raceCl.isConnected()) {
+        raceCl.disconnect();
+        unsigned long discWait = millis() + 3000;
+        while (raceCl.isConnected() && millis() < discWait) {
+          delay(20);
+        }
+      }
+      Serial.println("[CLIENT] Phase23 reAdvRace disconnected");
+    }
     Serial.println("[CLIENT] Phase23 done");
   }
 

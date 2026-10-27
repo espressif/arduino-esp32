@@ -246,11 +246,13 @@ BLEAdvertisedDevice::FrameType BLEAdvertisedDevice::getFrameType() const {
     if (!(sd.uuid == eddy) || sd.data.empty()) {
       continue;
     }
+    // Frame type is the first service-data byte (Eddystone protocol). Encrypted
+    // TLM is still frame 0x20; version 0x01 lives in byte 1 and is rejected by
+    // getEddystoneTLM(), not classified here as a different frame type.
     switch (sd.data[0]) {
       case 0x00: return EddystoneUUID;
       case 0x10: return EddystoneURL;
       case 0x20: return EddystoneTLM;
-      case 0x01: return EddystoneTLM;  // encrypted TLM (eTLM)
     }
   }
 

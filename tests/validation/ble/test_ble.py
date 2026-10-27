@@ -924,10 +924,12 @@ def _phase_beacon_and_eddystone(server, client):
     server.expect(r"\[SERVER\] Phase21 iBeacon adv ok=[01]", timeout=30)
     server.expect(r"\[SERVER\] Phase21 EddystoneURL ok=[01]", timeout=30)
     server.expect(r"\[SERVER\] Phase21 EddystoneEncryptedTLM ok=[01]", timeout=30)
+    server.expect(r"\[SERVER\] Phase21 EddystoneUnknown01 ok=[01]", timeout=30)
     server.expect(r"\[SERVER\] Phase21 EddystoneTLM ok=[01]", timeout=30)
 
     m = client.expect(
-        r"\[CLIENT\] Phase21 sawIBeacon=([01]) sawEddyURL=([01]) sawEddyTLM=([01]) rejectedEncryptedTLM=([01])",
+        r"\[CLIENT\] Phase21 sawIBeacon=([01]) sawEddyURL=([01]) sawEddyTLM=([01]) "
+        r"rejectedEncryptedTLM=([01]) eddy01Frame=(-?\d+)",
         timeout=50,
     )
     ib = int(m.group(1))
@@ -935,6 +937,7 @@ def _phase_beacon_and_eddystone(server, client):
     tl = int(m.group(3))
     assert ib == 1 and ur == 1 and tl == 1, f"expected all 3 beacon frames, got iBeacon={ib} url={ur} tlm={tl}"
     assert int(m.group(4)) == 1, "encrypted eTLM was decoded as plaintext telemetry"
+    assert int(m.group(5)) == 0, "FEAA service-data starting with 0x01 must not classify as Eddystone TLM"
     server.expect_exact("[SERVER] Phase21 done", timeout=10)
     client.expect_exact("[CLIENT] Phase21 done", timeout=10)
 
@@ -1025,7 +1028,7 @@ def _phase_error_paths_and_misc(server, client):
     m_cstr = client.expect(r"\[CLIENT\] StrConv pass=(\d+) fail=(\d+)\r?\n", timeout=10)
     assert int(m_cstr.group(1)) > 0, "client StrConv: expected at least one passing check"
     assert int(m_cstr.group(2)) == 0, "client StrConv: implicit const char* UUID conversion failed"
-    client.expect_exact("[CLIENT] Phase23 done", timeout=10)
+    client.expect_exact("[CLIENT] Phase23 reAdvRace idle", timeout=10)
 
     # Targeted sends honor the client's CCCD (GATT §3.3.3.3): the client is
     # connected but not subscribed, and a handle with no link has no client.
@@ -1049,6 +1052,26 @@ def _phase_error_paths_and_misc(server, client):
         )
     else:
         assert int(m_adv_rem.group(2)) == 0
+    server.expect_exact("[SERVER] Phase23 reAdvRaceReady", timeout=15)
+    client.write("PHASE23_READV_GO\n")
+    m_race_conn = client.expect(r"\[CLIENT\] Phase23 reAdvRace connected=([01])", timeout=20)
+    server.expect_exact("[SERVER] Phase23 reAdvRaceHolding", timeout=15)
+    client.write("PHASE23_READV_DISC\n")
+    client.expect_exact("[CLIENT] Phase23 reAdvRace disconnected", timeout=15)
+    m_race = server.expect(
+        r"\[SERVER\] Phase23 advReAdvRace supported=([01]) hadPeer=([01]) resumeEntered=([01]) "
+        r"queued=([01]) restarted=([01])",
+        timeout=20,
+    )
+    assert int(m_race.group(5)) == 1, (
+        "advertiseOnDisconnect restart was dropped by a preemption resume"
+    )
+    if int(m_race.group(1)) == 1:
+        assert int(m_race_conn.group(1)) == 1, "reAdvRace client failed to connect"
+        assert int(m_race.group(2)) == 1, "server did not see the reAdvRace peer"
+        assert int(m_race.group(3)) == 1, "preemption resume did not enter"
+        assert int(m_race.group(4)) == 1, "advertiseOnDisconnect restart was not queued"
+    client.expect_exact("[CLIENT] Phase23 done", timeout=15)
     server.expect_exact("[SERVER] Phase23 done", timeout=25)
 
 
