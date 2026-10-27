@@ -437,8 +437,7 @@ static bool phase1DeferredEndCycle(const String &rebeginName, bool injectWorkerF
     }
     delay(20);
   }
-  return started && completed.load(std::memory_order_acquire) && beginDuring == static_cast<int>(BTStatus::InvalidState)
-         && recovered;
+  return started && completed.load(std::memory_order_acquire) && beginDuring == static_cast<int>(BTStatus::InvalidState) && recovered;
 }
 
 // ========================= Phase 1 — Basic Lifecycle =========================
@@ -479,8 +478,8 @@ bool phase_basic() {
   BLE.end(false);
   BTStatus afterIdleTrueEnd = BLE.begin(serverName + "_idle_true_end");
   Serial.printf(
-    "[SERVER] Phase1 deferredEnd during=%d failSpawn=%d idleTrue=%d afterIdle=%d heap=%d\n", (int)deferredDuring,
-    (int)deferredFailSpawn, (int)(bool)afterIdleTrue, (int)(bool)afterIdleTrueEnd, (int)heap_caps_check_integrity_all(true)
+    "[SERVER] Phase1 deferredEnd during=%d failSpawn=%d idleTrue=%d afterIdle=%d heap=%d\n", (int)deferredDuring, (int)deferredFailSpawn,
+    (int)(bool)afterIdleTrue, (int)(bool)afterIdleTrueEnd, (int)heap_caps_check_integrity_all(true)
   );
   if (!deferredDuring || !deferredFailSpawn || !afterIdleTrue || !afterIdleTrueEnd) {
     return false;
