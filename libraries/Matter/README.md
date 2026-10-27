@@ -116,6 +116,40 @@ Key rules:
 - **Call the setter after the endpoint `begin()`.** Before `Matter.begin()` the value is cached and pushed when the cluster is created. After start it writes the live cluster. Typical sketches still do `begin()`, `Matter.begin()`, then the setter.
 - Do not use `updateAttributeVal()` for Boolean State `StateValue`, and do not use CHIP's `BooleanState::FindClusterOnEndpoint()` (ESP-Matter does not link that helper).
 
+### Water Heater (Water Heater Management optional features)
+
+`MatterWaterHeater` uses CHIP delegates for Water Heater Management and Water Heater Mode. Thermostat uses the esp-matter ember/data-model path.
+
+**Water Heater Mode**
+
+- A CHIP ModeBase server. `begin()` installs a `ModeBase::Delegate` with Off, Manual and Eco.
+- Manual is pinned, so ModeBase does not start on Off.
+- `setWaterHeaterMode()` calls `UpdateCurrentMode()`.
+
+**Water Heater Management**
+
+- `begin()` installs a `WaterHeaterManagement::Delegate`, so CHIP creates a `WaterHeaterManagement::Instance`.
+- Controllers read the WHM attributes from the Arduino cache.
+- Boost and CancelBoost are handled in the library: duration timer, optional one-shot, optional temporary setpoint and optional target tank percentage. A heating-setpoint write that is already reached ends a one-shot, including when duration is 0.
+- These attributes are code-driven, so do not call `updateAttributeVal()` on them: HeaterTypes, HeatDemand, TankVolume, TankPercentage, EstimatedHeatRequired and BoostState.
+- `esp_matter::endpoint::water_heater::create()` only creates the mandatory WHM attributes and OccupiedHeatingSetpoint.
+- TankVolume, EstimatedHeatRequired and TankPercentage need `feature::energy_management::add()` and `feature::tank_percent::add()` (or the legacy equivalent).
+- Thermostat AbsMin, AbsMax, Min and MaxHeatSetpointLimit are added in `MatterWaterHeater::begin()`, so controllers can read a heating range.
+
+**HeatDemand**
+
+- `setSystemMode()`, `setBoostState()`, `setWaterHeaterMode()`, `setHeaterTypes()`, and a controller write to SystemMode keep HeatDemand in sync through `syncHeatDemand()`.
+- `setHeatDemand()` returns false when any bit is outside HeaterTypes.
+- HeaterTypes is not client-writable.
+
+**Lifecycle**
+
+- `begin()` must run before `Matter.begin()`.
+- `end()` finishes an active Boost: it restores a temporary setpoint, with no BoostEnded event. If that restore is outside Min/Max, the saved target is kept and retried after a later limit change.
+- Before the stack starts, `end()` destroys the endpoint, clears TagList state, and frees both delegates, so `begin()` can run again.
+- After `Matter.begin()`, `end()` shuts down Water Heater Mode, detaches both delegates, and clears the endpoint callback pointer. They stay allocated. A queued setpoint restore is dropped. The endpoint stays until reboot.
+- A sketch can still call `setBoostState()` for a local boost on or off. Boost completion holds the CHIP stack lock for the whole transition once the stack is running.
+
 ### Delegate-Based Clusters (Valve Configuration and Control)
 
 `MatterWaterValve` uses the Valve Configuration and Control cluster, which is a code-driven `chip::app::Clusters::ValveConfigurationAndControlCluster` object: its `CurrentState`/`TargetState`/`OpenDuration`/`RemainingDuration`/`ValveFault` attributes live in that object and are not reachable through `getAttributeVal()`/`setAttributeVal()`/`updateAttributeVal()`. Open/Close commands (whether sent by a Matter controller or triggered locally) are only ever delivered through a `chip::app::Clusters::ValveConfigurationAndControl::Delegate`, which is attached to the live cluster in `onStackStarted()` (the cluster object only exists after `Matter.begin()`).
@@ -203,6 +237,7 @@ All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.
 | `MatterThermostat` | Thermostat |
 | `MatterWindowCovering` | Window Covering |
 | `MatterTemperatureControlledCabinet` | Temperature Controlled Cabinet |
+| `MatterWaterHeater` | Water Heater |
 | `MatterWaterValve` | Water Valve |
 
 ## Node identity and commissioning

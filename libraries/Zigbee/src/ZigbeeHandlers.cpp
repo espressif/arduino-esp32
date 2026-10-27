@@ -51,6 +51,8 @@ static esp_err_t zb_cmd_ias_zone_enroll_request_handler(const ezb_zcl_ias_zone_e
 static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const ezb_zcl_ias_zone_enroll_rsp_message_t *message);
 static esp_err_t zb_cmd_default_resp_handler(const ezb_zcl_cmd_default_rsp_message_t *message);
 static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_covering_movement_message_t *message);
+static esp_err_t zb_door_lock_cmd_handler(ezb_zcl_door_lock_lock_door_message_t *message, bool lock);
+template<typename T> static void zb_door_lock_user_cmd_handler(T *message, void (ZigbeeEP::*handler)(T *));
 static esp_err_t zb_ota_upgrade_status_handler(const ezb_zcl_ota_upgrade_client_progress_message_t *message);
 static esp_err_t zb_ota_upgrade_query_image_resp_handler(ezb_zcl_ota_upgrade_query_next_image_rsp_message_t *message);
 static esp_err_t zb_manuf_spec_command_handler(const ezb_zcl_manuf_spec_cmd_message_t *message);
@@ -61,26 +63,38 @@ static esp_err_t zb_manuf_spec_command_handler(const ezb_zcl_manuf_spec_cmd_mess
 // returns below are kept only for local control flow/logging.
 static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, void *message) {
   switch (callback_id) {
-    case EZB_ZCL_CORE_SET_ATTR_VALUE_CB_ID:   zb_attribute_set_handler((ezb_zcl_set_attr_value_message_t *)message); break;
-    case EZB_ZCL_CORE_REPORT_ATTR_CB_ID:      zb_attribute_reporting_handler((ezb_zcl_cmd_report_attr_message_t *)message); break;
-    case EZB_ZCL_CORE_READ_ATTR_RSP_CB_ID:    zb_cmd_read_attr_resp_handler((ezb_zcl_cmd_read_attr_rsp_message_t *)message); break;
-    case EZB_ZCL_CORE_WRITE_ATTR_RSP_CB_ID:   zb_cmd_write_attr_resp_handler((ezb_zcl_cmd_write_attr_rsp_message_t *)message); break;
+    case EZB_ZCL_CORE_SET_ATTR_VALUE_CB_ID:    zb_attribute_set_handler((ezb_zcl_set_attr_value_message_t *)message); break;
+    case EZB_ZCL_CORE_REPORT_ATTR_CB_ID:       zb_attribute_reporting_handler((ezb_zcl_cmd_report_attr_message_t *)message); break;
+    case EZB_ZCL_CORE_READ_ATTR_RSP_CB_ID:     zb_cmd_read_attr_resp_handler((ezb_zcl_cmd_read_attr_rsp_message_t *)message); break;
+    case EZB_ZCL_CORE_WRITE_ATTR_RSP_CB_ID:    zb_cmd_write_attr_resp_handler((ezb_zcl_cmd_write_attr_rsp_message_t *)message); break;
     case EZB_ZCL_CORE_CONFIG_REPORT_RSP_CB_ID: zb_configure_report_resp_handler((ezb_zcl_cmd_config_report_rsp_message_t *)message); break;
     case EZB_ZCL_CORE_IAS_ZONE_STATUS_CHANGE_NOTIF_CB_ID:
       zb_cmd_ias_zone_status_change_handler((ezb_zcl_ias_zone_status_change_notif_message_t *)message);
       break;
-    case EZB_ZCL_CORE_IAS_ZONE_ENROLL_CB_ID:
-      zb_cmd_ias_zone_enroll_request_handler((ezb_zcl_ias_zone_enroll_req_message_t *)message);
+    case EZB_ZCL_CORE_IAS_ZONE_ENROLL_CB_ID:          zb_cmd_ias_zone_enroll_request_handler((ezb_zcl_ias_zone_enroll_req_message_t *)message); break;
+    case EZB_ZCL_CORE_IAS_ZONE_ENROLL_RSP_CB_ID:      zb_cmd_ias_zone_enroll_response_handler((ezb_zcl_ias_zone_enroll_rsp_message_t *)message); break;
+    case EZB_ZCL_CORE_WINDOW_COVERING_MOVEMENT_CB_ID: zb_window_covering_movement_resp_handler((ezb_zcl_window_covering_movement_message_t *)message); break;
+    case EZB_ZCL_CORE_DOOR_LOCK_LOCK_DOOR_CB_ID:      zb_door_lock_cmd_handler((ezb_zcl_door_lock_lock_door_message_t *)message, true); break;
+    case EZB_ZCL_CORE_DOOR_LOCK_UNLOCK_DOOR_CB_ID:    zb_door_lock_cmd_handler((ezb_zcl_door_lock_lock_door_message_t *)message, false); break;
+    case EZB_ZCL_CORE_DOOR_LOCK_SET_PIN_CODE_CB_ID:
+      zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_set_pin_code_message_t *)message, &ZigbeeEP::zbDoorLockSetPinCode);
       break;
-    case EZB_ZCL_CORE_IAS_ZONE_ENROLL_RSP_CB_ID:
-      zb_cmd_ias_zone_enroll_response_handler((ezb_zcl_ias_zone_enroll_rsp_message_t *)message);
+    case EZB_ZCL_CORE_DOOR_LOCK_GET_PIN_CODE_CB_ID:
+      zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_get_pin_code_message_t *)message, &ZigbeeEP::zbDoorLockGetPinCode);
       break;
-    case EZB_ZCL_CORE_WINDOW_COVERING_MOVEMENT_CB_ID:
-      zb_window_covering_movement_resp_handler((ezb_zcl_window_covering_movement_message_t *)message);
+    case EZB_ZCL_CORE_DOOR_LOCK_CLEAR_PIN_CODE_CB_ID:
+      zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_clear_pin_code_message_t *)message, &ZigbeeEP::zbDoorLockClearPinCode);
       break;
-    case EZB_ZCL_CORE_OTA_UPGRADE_CLIENT_PROGRESS_CB_ID:
-      zb_ota_upgrade_status_handler((ezb_zcl_ota_upgrade_client_progress_message_t *)message);
+    case EZB_ZCL_CORE_DOOR_LOCK_CLEAR_ALL_PIN_CODES_CB_ID:
+      zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_clear_all_pin_codes_message_t *)message, &ZigbeeEP::zbDoorLockClearAllPinCodes);
       break;
+    case EZB_ZCL_CORE_DOOR_LOCK_SET_USER_STATUS_CB_ID:
+      zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_set_user_status_message_t *)message, &ZigbeeEP::zbDoorLockSetUserStatus);
+      break;
+    case EZB_ZCL_CORE_DOOR_LOCK_GET_USER_STATUS_CB_ID:
+      zb_door_lock_user_cmd_handler((ezb_zcl_door_lock_get_user_status_message_t *)message, &ZigbeeEP::zbDoorLockGetUserStatus);
+      break;
+    case EZB_ZCL_CORE_OTA_UPGRADE_CLIENT_PROGRESS_CB_ID: zb_ota_upgrade_status_handler((ezb_zcl_ota_upgrade_client_progress_message_t *)message); break;
     case EZB_ZCL_CORE_OTA_UPGRADE_QUERY_NEXT_IMAGE_RSP_CB_ID:
       zb_ota_upgrade_query_image_resp_handler((ezb_zcl_ota_upgrade_query_next_image_rsp_message_t *)message);
       break;
@@ -245,8 +259,8 @@ static esp_err_t zb_configure_report_resp_handler(const ezb_zcl_cmd_config_repor
   ezb_zcl_config_report_rsp_variable_t *variable = message->in.variables;
   while (variable) {
     log_v(
-      "Configure report response: status(%d), cluster(0x%x), direction(0x%x), attribute(0x%x)", variable->status, message->info.cluster_id,
-      variable->direction, variable->attr_id
+      "Configure report response: status(%d), cluster(0x%x), direction(0x%x), attribute(0x%x)", variable->status, message->info.cluster_id, variable->direction,
+      variable->attr_id
     );
     variable = variable->next;
   }
@@ -341,6 +355,38 @@ static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_c
   return ESP_OK;
 }
 
+static esp_err_t zb_door_lock_cmd_handler(ezb_zcl_door_lock_lock_door_message_t *message, bool lock) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  log_v("Received door %s command: endpoint(%u), cluster(0x%x)", lock ? "lock" : "unlock", message->info.dst_ep, message->info.cluster_id);
+
+  // The command is answered with a failure unless an endpoint accepts it
+  message->out.result = EZB_ZCL_STATUS_FAIL;
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_ep == (*it)->getEndpoint()) {
+      (*it)->zbDoorLockCmd(message, lock);  //method zbDoorLockCmd must be implemented in specific EP class
+    }
+  }
+  return ESP_OK;
+}
+
+// PIN code / user status commands: dispatched to the endpoint, which fills in the response status.
+// Without an endpoint that handles the command, the status in the response stays "failure".
+template<typename T> static void zb_door_lock_user_cmd_handler(T *message, void (ZigbeeEP::*handler)(T *)) {
+  if (!message) {
+    log_e("Empty message");
+    return;
+  }
+  message->out.result = EZB_ZCL_STATUS_FAIL;
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_ep == (*it)->getEndpoint()) {
+      ((*it)->*handler)(message);
+    }
+  }
+}
+
 static esp_err_t esp_element_ota_data(uint32_t total_size, const void *payload, uint16_t payload_size, void **outbuf, uint16_t *outlen) {
   static uint16_t tagid = 0;
   void *data_buf = NULL;
@@ -420,7 +466,8 @@ static esp_err_t zb_ota_upgrade_status_handler(const ezb_zcl_ota_upgrade_client_
         return ret;
       }
       break;
-    case EZB_ZCL_OTA_UPGRADE_PROGRESS_RECEIVING: {
+    case EZB_ZCL_OTA_UPGRADE_PROGRESS_RECEIVING:
+    {
       uint8_t block_size = message->in.receiving.block_size;
       uint8_t *block = message->in.receiving.block;
       offset += block_size;
@@ -462,8 +509,7 @@ static esp_err_t zb_ota_upgrade_status_handler(const ezb_zcl_ota_upgrade_client_
     case EZB_ZCL_OTA_UPGRADE_PROGRESS_FINISH:
       log_i("Zigbee - OTA Finish");
       log_i(
-        "Zigbee - OTA Information: total size: %" PRIu32 " bytes, cost time: %" PRId32 " ms,", offset,
-        (int32_t)((esp_timer_get_time() - start_time) / 1000)
+        "Zigbee - OTA Information: total size: %" PRIu32 " bytes, cost time: %" PRId32 " ms,", offset, (int32_t)((esp_timer_get_time() - start_time) / 1000)
       );
       for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
         (*it)->zbOTAState(false);  // Notify that OTA is no longer active
@@ -503,9 +549,7 @@ static esp_err_t zb_ota_upgrade_query_image_resp_handler(ezb_zcl_ota_upgrade_que
   if (message->info.status == EZB_ZCL_STATUS_SUCCESS) {
     const ezb_zcl_ota_upgrade_new_image_t *image = &message->in.image;
     log_i("Zigbee - Queried OTA image from endpoint: %u", image->ep_id);
-    log_i(
-      "Zigbee - Image version: 0x%08" PRIx32 ", manufacturer code: 0x%04x, image size: %" PRIu32, image->file_version, image->manuf_code, image->size
-    );
+    log_i("Zigbee - Image version: 0x%08" PRIx32 ", manufacturer code: 0x%04x, image size: %" PRIu32, image->file_version, image->manuf_code, image->size);
     if (image->size == 0) {
       log_i("Zigbee - Rejecting OTA image upgrade, image size is 0");
       message->out.result = EZB_ZCL_STATUS_FAIL;
@@ -539,7 +583,9 @@ static esp_err_t zb_cmd_default_resp_handler(const ezb_zcl_cmd_default_rsp_messa
   );
 
   // Call global callback if set
-  Zigbee.callDefaultResponseCallback((zb_cmd_type_t)message->in.rsp_to_cmd, (ezb_zcl_status_t)message->in.status_code, message->info.dst_ep, message->info.cluster_id);
+  Zigbee.callDefaultResponseCallback(
+    (zb_cmd_type_t)message->in.rsp_to_cmd, (ezb_zcl_status_t)message->in.status_code, message->info.dst_ep, message->info.cluster_id
+  );
 
   // List through all Zigbee EPs and call the callback function, with the message
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
