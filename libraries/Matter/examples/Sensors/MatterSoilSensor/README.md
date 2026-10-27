@@ -36,7 +36,7 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 - Matter protocol implementation for a soil sensor device (device type `0x0045`, Soil Measurement cluster `0x0430`)
 - Default network and CHIPoBLE as in the Supported Targets table (ESP32-C6 dual-stack uses Wi-Fi unless you call `selectNetwork()`)
-- Soil moisture reporting as whole percent (0–100); no sub-percent precision
+- Soil moisture reporting from 0–100%; no sub-percent precision
 - Automatic simulation of soil moisture readings (rises from 20% to 60%, then falls back to 20%, in 1% steps)
 - Periodic sensor updates every 5 seconds
 - Button control for factory reset (decommission)
@@ -144,7 +144,7 @@ Commission with a Matter-compatible hub (Home Assistant, Apple Home, Google Home
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Readings not updating**: Verify `setSoilMoisture()` runs after `Matter.begin()` and returns `true`
-- **Values out of range**: Soil Measurement accepts whole percent 0–100 only
+- **Values out of range**: Soil Measurement accepts 0–100% only
 - **Failed to commission**: Long-press factory reset or erase flash before upload
 - **No serial output**: Check baud rate (115200) and USB connection
 

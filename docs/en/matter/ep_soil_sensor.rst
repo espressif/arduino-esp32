@@ -9,7 +9,7 @@ The ``MatterSoilSensor`` class provides a soil sensor endpoint for Matter networ
 
 **Features:**
 
-* Soil moisture reporting as whole percent (0–100).
+* Soil moisture reporting from 0–100%.
 * Read-only measurement path via ``setSoilMoisture()`` (no sub-percent precision).
 * Built on the ``esp_matter::endpoint::soil_sensor`` device-type wrapper with a code-driven Soil Measurement cluster.
 * Matter standard compliance.
@@ -50,7 +50,7 @@ Creates the endpoint (Descriptor, Identify, device type, Soil Measurement cluste
 
 ``begin()`` takes no initial moisture value. The measured attribute stays null until the first successful ``setSoilMoisture()``.
 
-``begin(uint8_t)`` does the same and then seeds the moisture cache. ``initialSoilMoisturePercent`` is a whole percent in ``[0..100]``. When this call happens before ``Matter.begin()``, the value is applied in ``onStackStarted()`` once the live cluster is registered.
+``begin(uint8_t)`` does the same and then seeds the moisture cache. ``initialSoilMoisturePercent`` is a whole number in ``[0..100]``. When this call happens before ``Matter.begin()``, the value is applied in ``onStackStarted()`` once the live cluster is registered.
 
 Both return ``true`` if successful, ``false`` otherwise.
 
@@ -79,20 +79,20 @@ Soil moisture
 setSoilMoisture
 ^^^^^^^^^^^^^^^
 
-Sets the reported soil moisture percent after endpoint ``begin()``. Before ``Matter.begin()`` the value is cached and applied when the live cluster is registered; afterward it updates the live cluster directly.
+Sets the reported soil moisture (0–100%) after endpoint ``begin()``. Before ``Matter.begin()`` the value is cached and applied when the live cluster is registered; afterward it updates the live cluster directly.
 
 .. code-block:: arduino
 
     bool setSoilMoisture(uint8_t soilMoisturePercent);
 
-* ``soilMoisturePercent`` - Whole percent in ``[0..100]``.
+* ``soilMoisturePercent`` - Whole number in ``[0..100]``.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
 getSoilMoisture
 ^^^^^^^^^^^^^^^
 
-Returns the cached soil moisture percent. This is ``0`` until the first ``setSoilMoisture()``. The cluster attribute stays null until a publish succeeds.
+Returns the cached soil moisture (0–100%). This is ``0`` until the first ``setSoilMoisture()``. The cluster attribute stays null until a publish succeeds.
 
 .. code-block:: arduino
 
@@ -114,8 +114,8 @@ Assignment and conversion operators call ``setSoilMoisture()`` / ``getSoilMoistu
 Implementation notes
 ********************
 
-* ``SoilMoistureMeasuredValue`` is not available through ``getAttributeVal()`` / ``updateAttributeVal()``; use ``setSoilMoisture()`` which calls ``SoilMeasurement::SetSoilMoistureMeasuredValue()`` under the CHIP stack lock. A repeated call with the same percent is skipped only after that publish succeeds.
-* Unlike ``MatterHumiditySensor``, there is no 1/100th percent precision.
+* ``SoilMoistureMeasuredValue`` is not available through ``getAttributeVal()`` / ``updateAttributeVal()``; use ``setSoilMoisture()`` which calls ``SoilMeasurement::SetSoilMoistureMeasuredValue()`` under the CHIP stack lock. A repeated call with the same value is skipped only after that publish succeeds.
+* Unlike ``MatterHumiditySensor``, there is no sub-percent precision.
 
 Example
 -------
