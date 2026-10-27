@@ -25,10 +25,6 @@
 // If reading/writing to the SD card is unstable,
 // you can define BOARD_MAX_SDMMC_FREQ with lower value (Ex. SDMMC_FREQ_DEFAULT)
 // in pins_arduino.h for your board variant.
-// On UHS-I SoCs the default is SDR50 (100 MHz, 4-line slot 0). begin()
-// requests the 1.8 V switch and, if the card stays at 3.3 V or UHS init
-// fails, mounts again at SDMMC_FREQ_HIGHSPEED. Any other frequency above
-// high speed is clamped to SDMMC_FREQ_HIGHSPEED.
 #ifndef BOARD_MAX_SDMMC_FREQ
 #ifdef SOC_SDMMC_UHS_I_SUPPORTED
 #define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_SDR50
