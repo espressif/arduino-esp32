@@ -22,6 +22,9 @@ static const BLEUUID RW_CHAR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 // prove classic-service + audio coexistence in one attribute table.
 static const BLEUUID AUDIO_COEX_SVC_UUID("a10c0001-0000-1000-8000-00805f9b34fb");
 static const BLEUUID AUDIO_COEX_CHAR_UUID("a10c0002-0000-1000-8000-00805f9b34fb");
+static const BLEUUID AUDIO_COEX_CHAR2_UUID("a10c0007-0000-1000-8000-00805f9b34fb");
+static const BLEUUID AUDIO_REMOVE_SVC_UUID("a10c0003-0000-1000-8000-00805f9b34fb");
+static const BLEUUID AUDIO_REMOVE_CHAR_UUID("a10c0004-0000-1000-8000-00805f9b34fb");
 
 // Phase 10 (stereo): the stereo broadcast is encrypted; the client uses the same code.
 static const char STEREO_BROADCAST_CODE[] = "ArduinoStereo";
@@ -72,6 +75,7 @@ volatile uint64_t lc3RxEnergy = 0;
 volatile uint32_t hoUnicastRx = 0;
 volatile uint32_t hoBroadcastRx = 0;
 volatile bool hoBigJoined = false;
+volatile bool audioEndCallbackEntered = false;
 
 // ========================= Phase coordination ================================
 
@@ -124,6 +128,11 @@ void setup() {
     delay(100);
   }
   readName();
+#if defined(CONFIG_IDF_TARGET_ESP32S31)
+  Serial.println("[SERVER] Audio validation required: 1");
+#else
+  Serial.println("[SERVER] Audio validation required: 0");
+#endif
 
   // Bring up a baseline stack so the first phase's BLE.end()/begin() cycle has a
   // live stack to tear down (each audio phase re-begins its own stack anyway).
@@ -164,7 +173,20 @@ void loop() {
         BLECharacteristic coexChr =
           coexSvc.createCharacteristic(AUDIO_COEX_CHAR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
         coexChr.setValue("coexist");
-        srv.start();  // stages the custom service (add_svcs) in audio mode
+        coexChr.onRead([](BLECharacteristic &, const BLEConnInfo &) {
+          audioEndCallbackEntered = true;
+          BLE.end(false);
+        });
+        BTStatus firstStage = srv.start();
+
+        // Re-stage before the audio commit after extending both an existing
+        // service and the service list. NimBLE must publish only the final
+        // immutable definition batch (no duplicate or dangling svc_def).
+        coexSvc.createCharacteristic(AUDIO_COEX_CHAR2_UUID, BLEProperty::Read, BLEPermission::ReadOpen).setValue("restaged");
+        BLEService removeSvc = srv.createService(AUDIO_REMOVE_SVC_UUID);
+        removeSvc.createCharacteristic(AUDIO_REMOVE_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen).setValue("remove");
+        BTStatus secondStage = srv.start();
+        Serial.printf("[SERVER] Audio GATT staging first=%d second=%d\n", firstStage ? 1 : 0, secondStage ? 1 : 0);
 
         BTStatus astart = audio.start();  // single coordinated ble_gatts_start()
         Serial.printf("[SERVER] Audio start: %s\n", astart.toString());
@@ -175,25 +197,74 @@ void loop() {
         BLEAudioCodecConfig cfg = BLEAudioCodecConfig::fromPreset(BLEAudioCodecPreset::LC3_16_2_1);
         Serial.printf("[SERVER] Audio preset LC3_16_2_1 sr=%lu octets=%u\n", (unsigned long)cfg.samplingRateHz, (unsigned)cfg.octetsPerFrame);
 
-        BTStatus aend = audio.end();
-        if (ab && astart && aend) {
-          Serial.println("[SERVER] Audio lifecycle OK");
-        } else {
-          Serial.printf("[SERVER] Audio lifecycle FAILED begin=%d start=%d end=%d\n", ab ? 1 : 0, astart ? 1 : 0, aend ? 1 : 0);
-        }
+        // Once audio owns the committed table, service removal must hide only
+        // that range and a late NimBLE restage must not reset the whole table.
+        BTStatus removed = srv.removeService(removeSvc);
+        BLEService lateSvc = srv.createService(BLEUUID("a10c0005-0000-1000-8000-00805f9b34fb"));
+        lateSvc.createCharacteristic(BLEUUID("a10c0006-0000-1000-8000-00805f9b34fb"), BLEProperty::Read, BLEPermission::ReadOpen);
+        BTStatus restaged = srv.start();
+#if BLE_NIMBLE
+        bool gattGuarded = removed && restaged == BTStatus::InvalidState;
+#else
+        bool gattGuarded = removed;
+#endif
+        Serial.printf("[SERVER] Audio GATT remove=%d guarded=%d\n", removed ? 1 : 0, gattGuarded ? 1 : 0);
 
-        // Re-initialization in the same boot: end() released the engine
-        // (common_deinit), so begin() + start() must work again with a
-        // different role set (a broadcast source, which adds no GATT service).
-        BTStatus rb = audio.begin();
+        // Read from the peer enters through the stack callback. BLE.end() in
+        // that callback must defer, stop the still-active audio controller,
+        // close retained-operation admission, and finish on its worker.
+        BLEScan retainedScan = BLE.getScan();
+        BLEAdvertising adv = BLE.getAdvertising();
+        adv.reset();
+        adv.setType(BLEAdvType::ConnectableScannable);
+        adv.setName(serverName);
+        adv.addServiceUUID(AUDIO_COEX_SVC_UUID);
+        audioEndCallbackEntered = false;
+        BTStatus advStart = adv.start();
+        unsigned long callbackDeadline = millis() + 20000;
+        while (!audioEndCallbackEntered && millis() < callbackDeadline) {
+          checkSerial();
+          delay(20);
+        }
+        unsigned long endDeadline = millis() + 10000;
+        // isInitialized() is cleared before the deferred worker finishes, so
+        // wait out isEnding() too or the following BLE.begin() returns InvalidState.
+        while ((BLE.isInitialized() || BLE.isEnding()) && millis() < endDeadline) {
+          delay(20);
+        }
+        BTStatus pastAfterEnd = retainedScan.receivePeriodicSync(0xFFFF);
+        BTStatus audioAfterEnd = audio.begin();
+#if BLE_NIMBLE
+        bool admissionClosed = pastAfterEnd == BTStatus::InvalidState && audioAfterEnd == BTStatus::InvalidState;
+#else
+        bool admissionClosed = pastAfterEnd == BTStatus::NotSupported && audioAfterEnd == BTStatus::InvalidState;
+#endif
+        bool activeEnded = audioEndCallbackEntered && !BLE.isInitialized() && !BLE.isEnding() && !audio.isActive();
+        Serial.printf(
+          "[SERVER] Audio callback end=%d activeEnded=%d admission=%d\n", audioEndCallbackEntered ? 1 : 0, activeEnded ? 1 : 0,
+          admissionClosed ? 1 : 0
+        );
+
+        // Re-initialize both BLE and audio after callback-safe terminal
+        // teardown, using a different role set.
+        BTStatus bleRebegin = BLE.begin(serverName);
+        BTStatus rb = bleRebegin ? audio.begin() : BTStatus::Fail;
         BTStatus rs = BTStatus::Fail;
+        BTStatus aend = BTStatus::Fail;
         if (rb) {
           BLEAudioBroadcastSource reSrc = audio.createBroadcastSource();
           reSrc.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
           rs = audio.start();
-          audio.end();
+          aend = audio.end();
         }
         Serial.printf("[SERVER] Audio reinit begin=%d start=%d\n", rb ? 1 : 0, rs ? 1 : 0);
+        if (ab && firstStage && secondStage && astart && gattGuarded && advStart && activeEnded && admissionClosed && rb && rs && aend) {
+          Serial.println("[SERVER] Audio lifecycle OK");
+        } else {
+          Serial.printf(
+            "[SERVER] Audio lifecycle FAILED begin=%d start=%d end=%d\n", ab ? 1 : 0, astart ? 1 : 0, aend ? 1 : 0
+          );
+        }
       }
     }
     // Restore a normal connectable stack so memory_release frees real state.
@@ -221,6 +292,7 @@ void loop() {
     isoCisConnected = false;
     isoCisRxCount = 0;
     BTStatus s = BLE.begin(serverName);
+    uint32_t returned = 0;
     if (!s) {
       Serial.printf("[SERVER] IsoCis init FAILED: %s\n", s.toString());
     } else {
@@ -237,7 +309,6 @@ void loop() {
       BLEIso::CisParams params;  // defaults: 120 B SDU, 10 ms, 2M PHY
       params.returnSduSize = 120;  // bidirectional: the Peripheral streams back
       BLEIso::Channel *cis = BLEIso::listenCis(params);
-      uint32_t returned = 0;
       if (cis) {
         cis->onConnected([](BLEIso::Channel &) {
           syncPhaseFromHost();
@@ -278,15 +349,21 @@ void loop() {
       } else {
         Serial.println("[SERVER] IsoCis listen FAILED");
       }
-      BLEIso::end();
-      Serial.printf(
-        "[SERVER] IsoCis result connected=%d received=%lu returned=%lu\n", (int)isoCisConnected, (unsigned long)isoCisRxCount, (unsigned long)returned
-      );
     }
-    // Restore a normal connectable stack for the next phase.
+    // Leave the standalone ISO owner active and make BLE.end() release it.
+    // A fresh BLEIso::begin() after host re-init proves common_deinit did not
+    // leave stale ownership or channel state behind.
     BLE.end(false);
+    bool isoCoreEnded = !BLEIso::isActive();
     delay(500);
-    (void)BLE.begin(serverName);
+    BTStatus restore = BLE.begin(serverName);
+    BTStatus isoRetry = restore ? BLEIso::begin() : BTStatus::Fail;
+    bool isoLifecycle = isoCoreEnded && restore && isoRetry;
+    BLEIso::end();
+    Serial.printf(
+      "[SERVER] IsoCis result connected=%d received=%lu returned=%lu lifecycle=%d\n", (int)isoCisConnected, (unsigned long)isoCisRxCount,
+      (unsigned long)returned, isoLifecycle ? 1 : 0
+    );
 #else
     Serial.println("[SERVER] IsoCis not supported");
 #endif

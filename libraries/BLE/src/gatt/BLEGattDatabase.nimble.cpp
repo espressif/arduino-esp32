@@ -29,6 +29,7 @@
 #include "BLE.h"
 #include "server/BLEServer.nimble.h"
 #include "gatt/BLEGattAttributes.nimble.h"
+#include "gatt/BLECharacteristicValidation.h"
 #include "esp32-hal-log.h"
 
 #if BLE_AUDIO_SUPPORTED
@@ -43,18 +44,60 @@
 namespace BLEGattDatabase {
 
 namespace {
-// Stage a server's services into the (already-initialised) attribute table.
-// add_svcs only; no reset / init / start.
-BTStatus addServerServices(BLEServer::Impl &impl) {
-  if (impl.services.empty()) {
+BLEServer::Impl *sAudioServer = nullptr;
+bool sAudioDefsAdded = false;
+
+std::vector<std::shared_ptr<BLEService::Impl>> snapshotServices(BLEServer::Impl &impl) {
+  BLELockGuard lock(impl.mtx);
+  return impl.services;
+}
+
+bool validateServices(BLEServer::Impl &impl, const std::vector<std::shared_ptr<BLEService::Impl>> &services) {
+  for (const auto &svc : services) {
+    std::vector<std::shared_ptr<BLECharacteristic::Impl>> chrs;
+    {
+      BLELockGuard lock(impl.mtx);
+      chrs = svc->characteristics;
+    }
+    for (const auto &chr : chrs) {
+      if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/true)) {
+        log_e("GATT: characteristic %s rejected by validation", chr->uuid.toString().c_str());
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+void clearRegistration(BLEServer::Impl &impl, const std::vector<std::shared_ptr<BLEService::Impl>> &services) {
+  BLELockGuard lock(impl.mtx);
+  impl.started = false;
+  for (auto &svc : services) {
+    svc->started = false;
+    svc->handle = 0;
+    for (auto &chr : svc->characteristics) {
+      chr->handle = 0;
+      BLELockGuard chrLock(chr->mtx);
+      for (auto &dsc : chr->descriptors) {
+        dsc->handle = 0;
+      }
+    }
+  }
+}
+
+BTStatus addServerServices(
+  BLEServer::Impl &impl, const std::vector<std::shared_ptr<BLEService::Impl>> &services
+) {
+  if (services.empty()) {
+    nimbleClearRetainedGattDefs();
     return BTStatus::OK;
   }
-  int rc = nimbleRegisterGattServices(impl.services);
+  int rc = nimbleRegisterGattServices(services);
   if (rc != 0) {
     log_e("nimbleRegisterGattServices: rc=%d", rc);
     return BTStatus::Fail;
   }
-  for (auto &s : impl.services) {
+  for (auto &s : services) {
     s->started = true;
   }
   return BTStatus::OK;
@@ -79,35 +122,115 @@ bool audioModeActive() {
 #endif
 }
 
+bool audioModeFrozen() {
+#if BLE_AUDIO_SUPPORTED
+  return bleAudioEngineIsStarted();
+#else
+  return false;
+#endif
+}
+
 BTStatus stageServer(BLEServer::Impl &impl) {
-  // In audio mode the engine already ran svc_gap_init/svc_gatt_init in
-  // common_init and will perform the single ble_gatts_start in common_start
-  // (BLEAudio::start()). Here we only contribute the server's services.
-  BTStatus st = addServerServices(impl);
-  if (st != BTStatus::OK) {
-    return st;
+  // Do not call ble_gatts_add_svcs here. NimBLE retains that call's svc_def
+  // pointer, so rebuilding our vectors on a second start() would dangle the
+  // first pointer and adding the complete tree again would duplicate services.
+  // Keep only the contributor; audio.start() publishes its latest tree once.
+  auto services = snapshotServices(impl);
+  if (!validateServices(impl, services)) {
+    return BTStatus::InvalidState;
+  }
+  if (sAudioDefsAdded) {
+    log_w("GATT: audio commit preparation is already in progress");
+    return BTStatus::InvalidState;
+  }
+  if (sAudioServer != nullptr && sAudioServer != &impl) {
+    log_e("GATT: only one BLEServer may contribute to the audio database");
+    return BTStatus::InvalidState;
+  }
+  sAudioServer = &impl;
+  for (auto &svc : services) {
+    svc->started = true;
   }
   applyDeviceName();
   impl.started = true;
   return BTStatus::OK;
 }
 
+BTStatus prepareAudioCommit() {
+  if (sAudioServer == nullptr || sAudioDefsAdded) {
+    return BTStatus::OK;
+  }
+  auto services = snapshotServices(*sAudioServer);
+  if (!validateServices(*sAudioServer, services)) {
+    return BTStatus::InvalidState;
+  }
+  BTStatus st = addServerServices(*sAudioServer, services);
+  if (st != BTStatus::OK) {
+    clearRegistration(*sAudioServer, services);
+    return st;
+  }
+  sAudioDefsAdded = true;
+  return BTStatus::OK;
+}
+
+void finishAudioCommit(bool success) {
+  if (sAudioServer == nullptr) {
+    return;
+  }
+  auto services = snapshotServices(*sAudioServer);
+  if (!success) {
+    BLELockGuard lock(sAudioServer->mtx);
+    sAudioServer->started = false;
+    return;
+  }
+  for (auto &svc : services) {
+    if (ble_gatts_find_svc(&svc->nimbleUUID.u, &svc->handle) != 0) {
+      svc->handle = 0;
+    }
+  }
+  sAudioServer->started = true;
+}
+
+void resetAudioStaging() {
+  if (sAudioServer != nullptr) {
+    clearRegistration(*sAudioServer, snapshotServices(*sAudioServer));
+  }
+  sAudioServer = nullptr;
+  sAudioDefsAdded = false;
+  nimbleClearRetainedGattDefs();
+}
+
 BTStatus commitServerStandalone(BLEServer::Impl &impl) {
   // Classic single-owner path (no LE Audio): full rebuild + commit. This is
   // the behaviour the previous nimbleRebuildGattDatabase() provided.
-  ble_gatts_reset();
+  auto services = snapshotServices(impl);
+  if (!validateServices(impl, services)) {
+    return BTStatus::InvalidState;
+  }
+  int rc = ble_gatts_reset();
+  if (rc != 0) {
+    return rc == BLE_HS_EBUSY ? BTStatus::Busy : BTStatus::Fail;
+  }
   ble_svc_gap_init();
   ble_svc_gatt_init();
 
-  BTStatus st = addServerServices(impl);
+  BTStatus st = addServerServices(impl, services);
   if (st != BTStatus::OK) {
+    clearRegistration(impl, services);
     return st;
   }
 
-  int rc = ble_gatts_start();
+  rc = ble_gatts_start();
   if (rc != 0) {
     log_e("ble_gatts_start: rc=%d", rc);
+    clearRegistration(impl, services);
     return BTStatus::Fail;
+  }
+
+  for (auto &svc : services) {
+    if (ble_gatts_find_svc(&svc->nimbleUUID.u, &svc->handle) != 0) {
+      svc->handle = 0;
+    }
   }
 
   applyDeviceName();

@@ -38,8 +38,8 @@ the suite runs unchanged on non-audio silicon.
 
 | Phase | Label | What it covers |
 |---|---|---|
-| 1 | audio_lifecycle | LE Audio engine bring-up (`common_init`/`start`) + classic-service coexistence committed into one GATT table via `BLEGattDatabase` (fails if `begin()`, `start()` or `end()` fails), then `audio.end()` -> `audio.begin()` -> `audio.start()` re-initialization with a different role set |
-| 2 | iso_cis | `BLEIso` CIS transport integrity: server = CIS Peripheral (`listenCis`), client = CIS Central (`connectCis`) on a bidirectional CIS (`returnSduSize`); counts transparent SDUs streamed Central->Peripheral and Peripheral->Central with channel-managed sequence numbers, then `disconnect()`s the CIS (host ISO) |
+| 1 | audio_lifecycle | LE Audio engine bring-up (`common_init`/`start`) + classic-service coexistence committed into one GATT table via `BLEGattDatabase`; removes one classic service and rejects late NimBLE restaging while the audio table is frozen; a classic read callback requests `BLE.end()`, which must defer safely, release the active controller, close retained PAST admission, and permit BLE/audio re-initialization with a different role set |
+| 2 | iso_cis | `BLEIso` CIS transport integrity: server = CIS Peripheral (`listenCis`), client = CIS Central (`connectCis`) on a bidirectional CIS (`returnSduSize`); counts transparent SDUs streamed Central->Peripheral and Peripheral->Central with channel-managed sequence numbers, then leaves the standalone transport active for `BLE.end()` to release and proves it can claim the host again after re-init |
 | 3 | iso_bis | `BLEIso` BIS transport integrity: server = BIS Broadcaster (`createBig` on ext/periodic adv), client = BIS Receiver (`syncBig` via forwarded BIGInfo); counts SDUs Broadcaster->Receiver, then the Broadcaster terminates the BIG with `disconnect()` (host ISO + BLE5) |
 | 4 | bap_unicast | BAP unicast transport integrity: server = Unicast Server (PACS/ASCS, coexisting with a classic GATT service), client = Unicast Client running the full discover->config->QoS->enable->CIS->start setup; asserts the discovered sink PACS covers the configured preset (`BLEAudioUnicastPeerInfo::sinkPresets`), that the stream reached Streaming, and counts transparent SDUs streamed Client->Server sink ASE (Unicast Server / Unicast Client) |
 | 5 | bap_broadcast | BAP broadcast transport integrity: server = Broadcast Source (ext/periodic adv + BASE, streaming a BIG), client = Broadcast Sink scanning + PA-syncing + BIG-syncing; asserts the BASE was parsed (`onBaseReceived`) and counts transparent SDUs sent by the Source and received by the Sink over the BIS (Broadcast Source / Broadcast Sink) |
@@ -122,6 +122,11 @@ the suite runs unchanged on non-audio silicon.
   the unicast server, the broadcast sink and the scan delegator on the server. The acceptor's broadcast sink
   does not scan on its own: it only syncs when the initiator adds the broadcast through
   BASS during the handover.
+- On general targets unsupported phases report `SKIP`. On `esp32s31`, both
+  sketches mark audio validation as required and pytest fails if any phase
+  1–12 attempts to skip; phase 13 must also pass. Run the suite once with the
+  normal NimBLE S31 libraries and once with libraries rebuilt using the
+  lib-builder's temporary Bluedroid overlay.
 - Every connected audio phase opens its link with `BLEAudio::connect()` and waits for
   `onLinkReady()`, so the engine secures and discovers the link on both NimBLE and
   Bluedroid before any profile procedure starts.

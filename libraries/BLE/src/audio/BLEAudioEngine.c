@@ -55,6 +55,11 @@
 
 static const char *TAG = "BLEAudio";
 
+/* Backend GATT coordination; no-op on Bluedroid. */
+extern int bleAudioHostPrepareGatt(void);
+extern void bleAudioHostFinishGatt(bool success);
+extern void bleAudioHostResetGatt(void);
+
 // --------------------------------------------------------------------------
 // State
 // --------------------------------------------------------------------------
@@ -382,6 +387,11 @@ int bleAudioEngineStart(void) {
   if (s_started) {
     return 0;
   }
+  int prepare_err = bleAudioHostPrepareGatt();
+  if (prepare_err != 0) {
+    ESP_LOGE(TAG, "host GATT preparation failed: %d", prepare_err);
+    return prepare_err;
+  }
 #if CONFIG_BT_CSIP_SET_MEMBER
   esp_err_t err = esp_ble_audio_common_start(&s_start_info);
 #else
@@ -389,9 +399,11 @@ int bleAudioEngineStart(void) {
   esp_err_t err = esp_ble_audio_common_start(&info);
 #endif
   if (err != ESP_OK) {
+    bleAudioHostFinishGatt(false);
     ESP_LOGE(TAG, "esp_ble_audio_common_start failed: %d", err);
     return (int)err;
   }
+  bleAudioHostFinishGatt(true);
   s_started = true;
   ESP_LOGD(TAG, "engine started (GATT committed)");
   return 0;
@@ -412,6 +424,7 @@ int bleAudioEngineDeinit(void) {
     ESP_LOGE(TAG, "esp_ble_audio_common_deinit failed: %d (stop every stream first)", err);
     return (int)err;
   }
+  bleAudioHostResetGatt();
   bleIsoAttachShared(false);
   for (int i = 0; i < MAX_UNITS; i++) {
     if (s_units[i] && s_units[i]->on_deinit) {

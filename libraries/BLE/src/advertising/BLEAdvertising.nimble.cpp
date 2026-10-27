@@ -640,6 +640,11 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   ble_addr_t peerAddr = toNimblePeerAddr(impl.directedPeer);
   const ble_addr_t *directAddr = bleAdvTypeIsDirected(impl.advType) ? &peerAddr : nullptr;
   int rc = ble_gap_adv_start(static_cast<uint8_t>(BLE.getOwnAddressType()), directAddr, duration, &advParams, BLEAdvertising::Impl::gapEventCallback, &impl);
+  if (rc == BLE_HS_EALREADY) {
+    impl.isAdvertising = false;
+    log_e("ble_gap_adv_start: advertising already active outside BLEAdvertising");
+    return BTStatus::InvalidState;
+  }
   if (rc != 0) {
     impl.isAdvertising = false;
     log_e("ble_gap_adv_start: rc=%d", rc);

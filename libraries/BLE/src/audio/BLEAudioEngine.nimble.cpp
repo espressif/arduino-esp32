@@ -20,6 +20,9 @@
 
 #include "audio/BLEAudioEngine.nimble.h"
 #include "audio/BLEAudioEngine.h"
+#if BLE_GATT_SERVER_SUPPORTED
+#include "gatt/BLEGattDatabase.h"
+#endif
 
 #include <host/ble_hs.h>
 
@@ -52,6 +55,29 @@ extern "C" int bleAudioNimbleSecure(uint16_t conn_handle) {
 extern "C" int bleAudioNimbleExchangeMtu(uint16_t conn_handle) {
   int rc = ble_gattc_exchange_mtu(conn_handle, nullptr, nullptr);
   return rc == BLE_HS_EALREADY ? 0 : rc;
+}
+
+extern "C" int bleAudioHostPrepareGatt(void) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BTStatus status = BLEGattDatabase::prepareAudioCommit();
+  return status ? 0 : static_cast<int>(status);
+#else
+  return 0;
+#endif
+}
+
+extern "C" void bleAudioHostFinishGatt(bool success) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLEGattDatabase::finishAudioCommit(success);
+#else
+  (void)success;
+#endif
+}
+
+extern "C" void bleAudioHostResetGatt(void) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLEGattDatabase::resetAudioStaging();
+#endif
 }
 
 namespace BLEAudioEngine {

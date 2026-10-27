@@ -43,4 +43,14 @@ void forwardHostGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *p
 
 }  // namespace BLEAudioEngine
 
+// Bluedroid registers the classic server and LE Audio as separate GATTS apps,
+// so no cross-owner GATT commit coordination is required.
+extern "C" int bleAudioHostPrepareGatt(void) {
+  return 0;
+}
+
+extern "C" void bleAudioHostFinishGatt(bool) {}
+
+extern "C" void bleAudioHostResetGatt(void) {}
+
 #endif /* BLE_BLUEDROID && BLE_AUDIO_SUPPORTED */

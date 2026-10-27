@@ -120,6 +120,14 @@ public:
   bool isInitialized() const;
 
   /**
+   * @brief Whether shutdown has claimed the current BLE session.
+   *
+   * Primarily used by retained subsystem handles to reject native operations
+   * during callback-deferred teardown.
+   */
+  bool isEnding() const;
+
+  /**
    * @brief Boolean conversion — equivalent to isInitialized().
    *
    * @return true if BLE is initialized and ready.

@@ -42,7 +42,12 @@
 #endif
 #if BLE_AUDIO_SUPPORTED
 #include "audio/BLEAudioImpl.h"
+#include "audio/BLEAudioEngine.h"
 #include "audio/BLEAudioEngine.bluedroid.h"
+#endif
+#if BLE_ISO_SUPPORTED
+#include "iso/BLEIso.h"
+#include "iso/BLEIsoHost.h"
 #endif
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
@@ -79,7 +84,11 @@ void bluedroidSecurityHandleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 bool bleInStackCallbackTask() {
   TaskHandle_t current = xTaskGetCurrentTaskHandle();
   const char *name = current ? pcTaskGetName(current) : nullptr;
-  return name && strcmp(name, "BTC_TASK") == 0;
+  return name && (strcmp(name, "BTC_TASK") == 0
+#if BLE_AUDIO_SUPPORTED || BLE_ISO_SUPPORTED
+                  || strcmp(name, "iso_task") == 0
+#endif
+                 );
 }
 
 // BLEClass::Impl (Bluedroid backend state) is declared in BluedroidCore.h.
@@ -131,7 +140,9 @@ void BLEClass::Impl::gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_pa
 #if BLE_AUDIO_SUPPORTED
   // SMP completion has no BTA path into the LE Audio engine; it gates the
   // engine's GATT discovery on audio links.
-  BLEAudioEngine::forwardHostGapEvent(event, param);
+  if (auto hook = impl->loadHook(impl->audioGapHook)) {
+    hook(event, param);
+  }
 #endif
 #if BLE_SMP_SUPPORTED
   if (auto hook = impl->loadHook(impl->securityGapHook)) {
@@ -202,6 +213,14 @@ BLEClass::~BLEClass() {
   }
   delete _impl;
   _impl = nullptr;
+}
+
+bool BLEClass::isEnding() const {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lifecycle(_impl->lifecycleMtx);
+  return _impl->ending;
 }
 
 // Fails with InvalidState if a prior end(true) already released controller memory; that state blocks re-begin in-process.
@@ -287,6 +306,9 @@ BTStatus BLEClass::begin(const String &deviceName) {
   if (auto hook = _impl->loadHook(_impl->advBeginHook)) {
     hook();
   }
+#endif
+#if BLE_ISO_SUPPORTED
+  _impl->storeHook(_impl->isoPreEndHook, BLEIso::end);
 #endif
 #if BLE_GATT_CLIENT_SUPPORTED
   BLEClient::Impl::openTerminalCloseAdmission();
@@ -381,6 +403,39 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 
+  // ISO groups own advertising resources. Tear ISO and Audio down while GAP,
+  // GATT and the controller can still deliver their asynchronous completions.
+#if BLE_ISO_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->isoPreEndHook)) {
+    hook();
+  }
+  // The core is about to destroy the host, so a transport that failed to
+  // release ownership must not keep claiming it (that would make every later
+  // audio.begin() fail as "standalone BLEIso session owns the host").
+  bleIsoForceRelease();
+  if (BLEIso::isActive()) {
+    log_e("BLE.end: ISO teardown did not complete; host shutdown aborted");
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endTask = nullptr;
+    _impl->endRunning = false;
+    _impl->ending = false;
+    return;
+  }
+#endif
+#if BLE_AUDIO_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->audioPreEndHook)) {
+    hook();
+  }
+  if (bleAudioEngineIsInitialized()) {
+    log_e("BLE.end: audio teardown did not complete; host shutdown aborted");
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endTask = nullptr;
+    _impl->endRunning = false;
+    _impl->ending = false;
+    return;
+  }
+#endif
+
 #if BLE_GATT_SERVER_SUPPORTED
   // Prevent deferred work from racing host shutdown. Keep the GATT tree alive
   // until Bluedroid is fully stopped so any final native callbacks can still
@@ -405,7 +460,6 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 #endif
-
   // Close the public session before native shutdown callbacks run. The GATT
   // tree stays attached until deinit, but callbacks cannot re-enter
   // createServer() or send through a host that is stopping.
@@ -423,13 +477,6 @@ void BLEClass::end(bool releaseMemory) {
   // GATTC API before Bluedroid is disabled.
   BLEClient::Impl::stopTerminalCloseWorkers();
 #endif
-#if BLE_AUDIO_SUPPORTED
-  // The LE Audio host must be released while Bluedroid is still enabled.
-  if (bleAudioEngineIsInitialized()) {
-    getAudioController().end();
-  }
-#endif
-
   esp_bluedroid_disable();
   esp_bluedroid_deinit();
 
@@ -1041,14 +1088,35 @@ BLESecurity BLEClass::getSecurity() {
 #endif
 
 #if BLE_AUDIO_SUPPORTED
-BLEAudio BLEClass::getAudioController() {
+namespace {
+std::shared_ptr<BLEAudio::Impl> &audioControllerSlot() {
   static std::shared_ptr<BLEAudio::Impl> slot;
-  if (!isInitialized()) {
+  return slot;
+}
+}  // namespace
+
+BLEAudio BLEClass::getAudioController() {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
     log_e("getAudioController: BLE not initialized");
     return BLEAudio();
   }
+  auto &slot = audioControllerSlot();
   if (!slot) {
     slot = std::make_shared<BLEAudio::Impl>();
+    _impl->storeHook(_impl->audioGapHook, BLEAudioEngine::forwardHostGapEvent);
+    _impl->storeHook(
+      _impl->audioPreEndHook,
+      +[]() {
+        auto &audio = audioControllerSlot();
+        if (audio) {
+          BTStatus status = BLEAudio(audio).end();
+          if (!status) {
+            log_e("BLE.end: audio teardown failed (%s)", status.toString());
+          }
+        }
+      }
+    );
   }
   return BLEAudio(slot);
 }

@@ -427,9 +427,12 @@ service-init calls are non-idempotent). The coordinator has two modes:
   rebuild, exactly as before. Non-audio behaviour is unchanged.
 - **Audio** (engine present): the LE Audio engine performs the service inits (in `esp_ble_audio_common_init`)
   and the single `ble_gatts_start` (in `esp_ble_audio_common_start`, triggered by `BLEAudio::start()`); the
-  classic server only *stages* its services (`ble_gatts_add_svcs`). This lets an ordinary `BLEServer` service and
-  the audio profiles coexist in one committed GATT table. Required ordering: `BLE.begin()` -> `audio.begin()` ->
-  create/stage server services -> `audio.start()`.
+  classic server only records itself as a contributor. Immediately before the audio commit, the coordinator
+  snapshots its latest tree and calls `ble_gatts_add_svcs` exactly once. Deferring publication makes repeated
+  pre-commit `server.start()` calls safe when more services or characteristics are added: NimBLE never retains a
+  pointer to a replaced definition array and no service is added twice. This lets an ordinary `BLEServer` service
+  and the audio profiles coexist in one committed GATT table. Required ordering: `BLE.begin()` -> `audio.begin()`
+  -> create/stage server services -> `audio.start()`.
 
 Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive()` returns
 `bleAudioEngineIsInitialized()` (false when the engine is not compiled in), so audio mode is exactly the window
@@ -437,6 +440,11 @@ between `audio.begin()` and `audio.end()`. The dependency points one way — the
 host-agnostic engine. The engine's only per-backend files are the thin event forwarders
 `audio/BLEAudioEngine.nimble.*` (GATT events, plus the two NimBLE calls kept out of the Zephyr-based C units) and
 `audio/BLEAudioEngine.bluedroid.*` (SMP completion).
+
+After `audio.start()` the NimBLE table is frozen: a later `BLEServer::start()` that would add attributes returns
+`InvalidState` instead of resetting the audio-owned table. Removing an already committed classic service remains
+supported; the server hides only that service's handle range and emits Service Changed. `audio.end()` clears the
+audio commit state so a later `audio.begin()` may stage a new table.
 
 On Bluedroid, incremental multi-app GATTS registration already allows coexistence: the engine registers its own
 BTA GATTS/GATTC apps, so the Bluedroid server path stays thin and does not use the coordinator. Audio centrals must
@@ -476,6 +484,14 @@ Important lifecycle invariants:
 - role factories and the begin/end state transition are serialized by the core
   lifecycle mutex; `end()` closes factory admission before role teardown, while
   long native shutdown runs without holding that mutex
+- audio and standalone ISO register lazy pre-end hooks with the core. `BLE.end()`
+  runs them while the host is still up, before clearing the public session; an
+  active audio controller is therefore released even when the sketch omits
+  `audio.end()`, and standalone `BLEIso` ownership cannot leak into the next
+  `begin()`
+- `BLE.end()` called from a host/BTC callback claims the ending state and
+  defers the same ordered teardown to its worker; audio/ISO teardown must never
+  bypass that callback-safe path
 
 ### Design rule
 
@@ -541,6 +557,10 @@ stage their registration between `audio.begin()` and `audio.start()` (the contro
 `roleApplies` "accumulate then commit" model), and `start()` performs the single
 coordinated `ble_gatts_start()` so audio profiles and a classic `BLEServer` coexist in
 one GATT table (see [Service staging and startup](#service-staging-and-startup)).
+The core forwards host GAP/GATT events to the engine through lazy hooks and runs
+audio plus standalone-ISO teardown before host shutdown. These hooks preserve the
+normal callback-safe `BLE.end()` worker and lifecycle admission rules; audio is
+not a second owner of the BLE singleton lifecycle.
 
 The full audio-layer architecture, engine boundary, event and stream paths, per-role feature guards,
 and per-role spec-compliance checklist live in the dedicated maintainer doc

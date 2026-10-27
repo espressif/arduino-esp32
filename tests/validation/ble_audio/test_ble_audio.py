@@ -61,23 +61,31 @@ def _phase_audio_lifecycle(server, client):
 
     Returns False (SKIP) when the LE Audio engine is not compiled into the build.
     """
-    m = server.expect(
-        r"\[SERVER\] (Audio lifecycle OK|Audio lifecycle FAILED begin=(\d+) start=(\d+) end=(\d+)|"
-        r"Audio not supported, skipping)",
-        timeout=30,
-    )
-    # The client only acknowledges the phase; either line is fine there.
-    client.expect(r"\[CLIENT\] (Audio lifecycle OK|Audio not supported, skipping)", timeout=20)
-    if b"not supported" in m.group(0):
+    mg = server.expect(r"\[SERVER\] (Audio GATT remove=(\d+) guarded=(\d+)|Audio not supported, skipping)", timeout=30)
+    if b"not supported" in mg.group(0):
+        client.expect_exact("[CLIENT] Audio not supported, skipping", timeout=20)
         server.expect_exact("[SERVER] Phase1 audio done", timeout=10)
         client.expect_exact("[CLIENT] Phase1 audio done", timeout=20)
         return False
+    assert int(mg.group(2)) == 1, "classic service removal failed while audio owned the GATT table"
+    assert int(mg.group(3)) == 1, "late GATT restaging was not guarded while audio owned the table"
+    me = server.expect(r"\[SERVER\] Audio callback end=(\d+) activeEnded=(\d+) admission=(\d+)", timeout=40)
+    assert int(me.group(1)) == 1, "client did not enter the callback-safe BLE.end() path"
+    assert int(me.group(2)) == 1, "BLE.end() did not tear down the active audio controller"
+    assert int(me.group(3)) == 1, "retained PAST calls were not rejected after BLE.end()"
+    mr = server.expect(r"\[SERVER\] Audio reinit begin=(\d+) start=(\d+)", timeout=20)
+    assert int(mr.group(1)) == 1, "audio.begin() failed after callback-safe BLE.end()"
+    assert int(mr.group(2)) == 1, "audio.start() failed after callback-safe BLE.end()"
+    m = server.expect(
+        r"\[SERVER\] (Audio lifecycle OK|Audio lifecycle FAILED begin=(\d+) start=(\d+) end=(\d+))",
+        timeout=30,
+    )
+    cr = client.expect(r"\[CLIENT\] Audio callback read: (\d+)", timeout=30)
+    assert int(cr.group(1)) == 1, "client did not find/read the classic service committed with audio"
+    client.expect(r"\[CLIENT\] (Audio lifecycle OK|Audio not supported, skipping)", timeout=20)
     assert b"FAILED" not in m.group(0), (
         f"audio lifecycle failed: begin={m.group(2)} start={m.group(3)} end={m.group(4)}"
     )
-    mr = server.expect(r"\[SERVER\] Audio reinit begin=(\d+) start=(\d+)", timeout=20)
-    assert int(mr.group(1)) == 1, "audio.begin() failed after audio.end() (re-initialization)"
-    assert int(mr.group(2)) == 1, "audio.start() failed after re-initialization"
     server.expect_exact("[SERVER] Phase1 audio done", timeout=20)
     client.expect_exact("[CLIENT] Phase1 audio done", timeout=10)
     return True
@@ -91,8 +99,14 @@ def _phase_iso_cis(server, client):
     into either build (the only rig that truly runs this is a dual-ISO
     esp32s31<->esp32s31 pair).
     """
-    ms = server.expect(r"\[SERVER\] IsoCis (not supported|result connected=(\d+) received=(\d+) returned=(\d+))", timeout=60)
-    mc = client.expect(r"\[CLIENT\] IsoCis (not supported|result connected=(\d+) sent=(\d+) received=(\d+))", timeout=90)
+    ms = server.expect(
+        r"\[SERVER\] IsoCis (not supported|result connected=(\d+) received=(\d+) returned=(\d+) lifecycle=(\d+))",
+        timeout=60,
+    )
+    mc = client.expect(
+        r"\[CLIENT\] IsoCis (not supported|result connected=(\d+) sent=(\d+) received=(\d+) lifecycle=(\d+))",
+        timeout=90,
+    )
     server.expect_exact("[SERVER] Phase2 iso_cis done", timeout=40)
     client.expect_exact("[CLIENT] Phase2 iso_cis done", timeout=40)
 
@@ -103,6 +117,8 @@ def _phase_iso_cis(server, client):
     returned = int(ms.group(4))
     sent = int(mc.group(3))
     returned_rx = int(mc.group(4))
+    assert int(ms.group(5)) == 1, "server BLE.end() did not release standalone ISO ownership"
+    assert int(mc.group(5)) == 1, "client BLE.end() did not release standalone ISO ownership"
     assert sent > 0, "CIS Central sent no SDUs"
     assert received > 0, f"CIS Peripheral received no SDUs (Central sent {sent})"
     assert returned > 0, "CIS Peripheral sent no SDUs back"
@@ -467,6 +483,10 @@ def test_ble_audio(dut, ci_job_id, record_property):
     client.write(name)
     server.expect_exact(f"[SERVER] Name: {name}", timeout=10)
     client.expect_exact(f"[CLIENT] Target: {name}", timeout=10)
+    sr = server.expect(r"\[SERVER\] Audio validation required: ([01])", timeout=10)
+    cr = client.expect(r"\[CLIENT\] Audio validation required: ([01])", timeout=10)
+    assert sr.group(1) == cr.group(1), "server/client target requirements disagree"
+    audio_required = sr.group(1) == b"1"
 
     # (phase_fn, *args); all audio phases self-skip on unsupported builds.
     PHASES = {
@@ -509,6 +529,7 @@ def test_ble_audio(dut, ci_job_id, record_property):
         try:
             result = fn(*args)
             if num in SKIP_REASONS and not result:
+                assert not audio_required, f"esp32s31 validation must execute phase {num} ({label}); skip-green is forbidden"
                 record_property(f"phase_{label}", f"SKIP: {SKIP_REASONS[num]}")
                 LOGGER.info("SKIPPED: phase %d (%s)", num, label)
             else:

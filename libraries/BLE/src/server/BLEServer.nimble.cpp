@@ -226,9 +226,7 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
   // (adv/scan/connect). Ignoring that and calling ble_svc_gap_init() panics
   // inside ble_gatts_add_svcs (SYSINIT_PANIC_ASSERT rc==0).
   int rc = ble_gatts_reset();
-  if (rc == BLE_HS_EALREADY) {
-    log_d("Server: disconnect handle=%u already in progress", connHandle);
-  } else if (rc != 0) {
+  if (rc != 0) {
     log_w("ble_gatts_reset: rc=%d (GATT table immutable while connected or advertising)", rc);
     return rc == BLE_HS_EBUSY ? BTStatus::Busy : BTStatus::Fail;
   }

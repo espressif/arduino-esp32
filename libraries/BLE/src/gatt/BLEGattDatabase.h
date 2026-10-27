@@ -37,9 +37,9 @@
  *  - **Audio** (engine present): the LE Audio engine does `svc_gap_init` /
  *    `svc_gatt_init` (in `esp_ble_audio_common_init`) and the single
  *    `ble_gatts_start` (in `esp_ble_audio_common_start`). Here the coordinator
- *    must NOT reset or start; `BLEServer::start()` only *stages* its services
- *    (`ble_gatts_add_svcs`) and the engine's `common_start` commits everything
- *    at once via `BLEAudio::start()`.
+ *    must NOT reset or start. `BLEServer::start()` records the server as a
+ *    contributor; its latest service tree is added once, immediately before
+ *    the engine commits it from `BLEAudio::start()`.
  *
  * The coordinator does not carry a separate "audio mode" flag: `audioModeActive()`
  * is derived from the LE Audio engine's own lifecycle (`bleAudioEngineIsInitialized()`),
@@ -49,7 +49,7 @@
  *
  * Required ordering in audio mode (documented in AUDIO.md):
  *   BLE.begin() -> audio.begin() (common_init) -> create/stage BLEServer
- *   services -> audio.start() (single commit).
+ *   services -> audio.start() (single add + commit).
  *
  * NimBLE-only: on Bluedroid, incremental multi-app GATTS registration already
  * lets audio coexist through a separate GATTS app, so the Bluedroid server
@@ -75,16 +75,33 @@ namespace BLEGattDatabase {
 bool audioModeActive();
 
 /**
- * @brief Stage a server's services without committing (audio mode).
+ * @brief Whether the engine has already committed the audio GATT table.
  *
- * Performs `ble_gatts_add_svcs` only -- no reset, no init, no start. The
- * accumulated table is committed later by the engine's single
- * `ble_gatts_start` (triggered from BLEAudio::start()).
+ * Once true the table is frozen until audio.end(): the classic server may
+ * neither stage more services nor reset the engine-owned table.
+ */
+bool audioModeFrozen();
+
+/**
+ * @brief Record a server's services for the pending audio commit.
+ *
+ * No native pointers are published here. Repeated calls therefore safely
+ * replace the pending snapshot after services, characteristics, or descriptors
+ * are added. The latest tree is published once by @ref prepareAudioCommit.
  *
  * @param impl Server state whose @c services are staged; marks them started.
  * @return BTStatus::OK on success, or BTStatus::Fail on a registration error.
  */
 BTStatus stageServer(BLEServer::Impl &impl);
+
+/** @brief Publish the latest recorded server tree immediately before audio starts. */
+BTStatus prepareAudioCommit();
+
+/** @brief Resolve service handles after the audio engine's GATT commit. */
+void finishAudioCommit(bool success);
+
+/** @brief Forget audio staging after the engine/host releases native definitions. */
+void resetAudioStaging();
 
 /**
  * @brief Fully register a server's GATT database standalone (no audio).

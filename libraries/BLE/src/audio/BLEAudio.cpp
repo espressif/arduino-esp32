@@ -97,8 +97,8 @@ BLEAudio::operator bool() const {
  * leaving the controller inactive and begin() retryable.
  */
 BTStatus BLEAudio::begin() {
-  if (!_impl) {
-    log_e("Audio: begin() on a null handle; use BLE.getAudioController() after BLE.begin()");
+  if (!_impl || !BLE.isInitialized() || BLE.isEnding()) {
+    log_e("Audio: begin() requires an active BLE session");
     return BTStatus::InvalidState;
   }
   if (_impl->active) {
@@ -128,7 +128,7 @@ BTStatus BLEAudio::begin() {
  * the roles already applied stay registered until end().
  */
 BTStatus BLEAudio::start() {
-  if (!_impl || !_impl->active) {
+  if (!_impl || !_impl->active || !BLE.isInitialized() || BLE.isEnding()) {
     log_e("Audio: start() before begin()");
     return BTStatus::InvalidState;
   }
@@ -209,7 +209,7 @@ bool BLEAudio::isStarted() const {
  * as on Bluedroid. The client is kept in `roles` so it lives until end().
  */
 BTStatus BLEAudio::connect(const BTAddress &address) {
-  if (!_impl || !_impl->started) {
+  if (!_impl || !_impl->started || !BLE.isInitialized() || BLE.isEnding()) {
     log_e("Audio: connect() before start()");
     return BTStatus::InvalidState;
   }

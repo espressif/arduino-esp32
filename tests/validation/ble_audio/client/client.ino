@@ -99,7 +99,9 @@ bool findTarget(BTAddress &addr) {
 #if BLE_AUDIO_SUPPORTED
 // Connect through the audio controller and wait until the peer's GATT database
 // is known. Needs audio.onLinkReady() to store audioLinkConn.
-uint16_t audioConnect(BLEAudio &audio, const BTAddress &addr) {
+// A guarded lambda avoids the Arduino preprocessor injecting an unguarded
+// BLEAudio-typed function prototype into audio-disabled builds.
+auto audioConnect = [](BLEAudio &audio, const BTAddress &addr) -> uint16_t {
   audioLinkConn = 0xFFFF;
   if (!audio.connect(addr)) {
     return 0xFFFF;
@@ -108,7 +110,7 @@ uint16_t audioConnect(BLEAudio &audio, const BTAddress &addr) {
     delay(50);
   }
   return audioLinkConn;
-}
+};
 #endif
 
 void readName() {
@@ -130,6 +132,11 @@ void setup() {
     delay(100);
   }
   readName();
+#if defined(CONFIG_IDF_TARGET_ESP32S31)
+  Serial.println("[CLIENT] Audio validation required: 1");
+#else
+  Serial.println("[CLIENT] Audio validation required: 0");
+#endif
 
   // Baseline stack so the first phase's BLE.end()/begin() cycle has a live stack
   // to tear down; also keeps `status` in scope for the memory_release phase.
@@ -140,7 +147,34 @@ void setup() {
   // acknowledges the phase so the two-DUT handshake stays in lockstep.
   waitForPhase(1);
 #if BLE_AUDIO_SUPPORTED
-  Serial.println("[CLIENT] Audio lifecycle OK");
+  {
+    BTAddress addr;
+    bool requested = false;
+    if (findTarget(addr)) {
+      BLEClient callbackClient = BLE.createClient();
+      if (callbackClient.connect(addr)) {
+        BLERemoteService svc = callbackClient.getService(BLEUUID("a10c0001-0000-1000-8000-00805f9b34fb"));
+        BLERemoteCharacteristic chr =
+          svc ? svc.getCharacteristic(BLEUUID("a10c0002-0000-1000-8000-00805f9b34fb")) : BLERemoteCharacteristic();
+        if (chr) {
+          requested = true;
+          (void)chr.readValue();
+        }
+      }
+    }
+    Serial.printf("[CLIENT] Audio callback read: %d\n", requested ? 1 : 0);
+    Serial.println("[CLIENT] Audio lifecycle OK");
+  }
+  // Tear the phase's stack down here. Leaving it up would keep the ACL from
+  // the read above alive, and the next phases bring ISO up (LE Set Host
+  // Feature bit 32 is Command Disallowed while connected).
+  BLE.end(false);
+  {
+    unsigned long dl = millis() + 10000;
+    while ((BLE.isInitialized() || BLE.isEnding()) && millis() < dl) {
+      delay(20);
+    }
+  }
 #else
   Serial.println("[CLIENT] Audio not supported, skipping");
 #endif
@@ -159,6 +193,7 @@ void setup() {
     isoCisClientConnected = false;
     isoCisClientRxCount = 0;
     BTStatus st = BLE.begin("BLE_CLT_ISO");
+    uint32_t sent = 0;
     if (st) {
       BLEScan scn = BLE.getScan();
       scn.resetCallbacks();
@@ -179,13 +214,15 @@ void setup() {
         }
         scn.clearResults();
       }
-      uint32_t sent = 0;
       if (found) {
+        // ISO must be brought up before the ACL exists: LE Set Host Feature
+        // (bit 32) is Command Disallowed on a connection, so begin() after
+        // connect() fails with IsoEnableCisFail[524].
+        BTStatus ib = BLEIso::begin();
+        Serial.printf("[CLIENT] IsoCis transport: %s\n", ib.toString());
         BLEClient client = BLE.createClient();
         BTStatus cs = client.connect(addr);
         if (cs) {
-          BTStatus ib = BLEIso::begin();
-          Serial.printf("[CLIENT] IsoCis transport: %s\n", ib.toString());
           BLEIso::CisParams params;
           params.returnSduSize = 120;  // bidirectional: must match the server
           BLEIso::Channel *cis = BLEIso::connectCis(client.getHandle(), params);
@@ -223,7 +260,6 @@ void setup() {
           } else {
             Serial.println("[CLIENT] IsoCis connect FAILED");
           }
-          BLEIso::end();
           client.disconnect();
         } else {
           Serial.println("[CLIENT] IsoCis ACL connect FAILED");
@@ -231,13 +267,23 @@ void setup() {
       } else {
         Serial.println("[CLIENT] IsoCis target not found");
       }
-      Serial.printf(
-        "[CLIENT] IsoCis result connected=%d sent=%lu received=%lu\n", (int)isoCisClientConnected, (unsigned long)sent, (unsigned long)isoCisClientRxCount
-      );
     }
+    // Exercise standalone ISO ownership cleanup through BLE.end(), then prove
+    // the host can be claimed again after BLE re-initialization.
     BLE.end(false);
+    bool isoCoreEnded = !BLEIso::isActive();
     delay(500);
-    (void)BLE.begin("BLE_CLT");
+    BTStatus restore = BLE.begin("BLE_CLT");
+    BTStatus isoRetry = restore ? BLEIso::begin() : BTStatus::Fail;
+    bool isoLifecycle = isoCoreEnded && restore && isoRetry;
+    BLEIso::end();
+    Serial.printf(
+      "[CLIENT] IsoCis teardown coreEnded=%d restore=%d retry=%d\n", isoCoreEnded ? 1 : 0, restore ? 1 : 0, isoRetry ? 1 : 0
+    );
+    Serial.printf(
+      "[CLIENT] IsoCis result connected=%d sent=%lu received=%lu lifecycle=%d\n", (int)isoCisClientConnected, (unsigned long)sent,
+      (unsigned long)isoCisClientRxCount, isoLifecycle ? 1 : 0
+    );
   }
 #else
   Serial.println("[CLIENT] IsoCis not supported");

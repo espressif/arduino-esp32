@@ -37,7 +37,9 @@ Bluedroid.
 Native events reach the shared handlers as follows:
 
 - **GAP.** `BLEClass::Impl::gapCallback` dispatches to advertising, scan, GATT, security, and any
-  custom user handler, and signals local-privacy completion.
+  custom user handler, and signals local-privacy completion. When LE Audio is
+  instantiated it also forwards every host GAP event to the engine; ISO events
+  reach the raw transport through that engine bridge.
 - **GATTS.** `BLEClass::Impl::gattsCallback` forwards to `BLEServer::Impl::handleGATTS`
   (registration, connect/disconnect, read/write, prepared writes, MTU).
 - **GATTC.** `BLEClass::Impl::gattcCallback` forwards to `BLEClient::Impl` (open/close, search,
@@ -86,6 +88,17 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   `CONFIG_BT_BLE_42_FEATURES_SUPPORTED` is on. BLE5-only Bluedroid builds (esp32s31 and
   other `SOC_BLE_50` targets with BLE 4.2 disabled) must use `esp_ble_gattc_enh_open` /
   `esp_ble_gattc_aux_open`. The client sets `is_aux` from `BLE5_SUPPORTED`.
+- **LE Audio central links.** Audio peers must be opened with
+  `BLEAudio::connect()`, which uses the engine's own GATTC interface. Bluedroid
+  supports classic `BLEServer` coexistence through incremental multi-app
+  registration and therefore does not use NimBLE's `BLEGattDatabase`
+  coordinator. The core still runs the audio/raw-ISO pre-end hooks before
+  disabling Bluedroid, including on callback-deferred `BLE.end()`.
+- **PAST receive API.** The public
+  `BLEScan::receivePeriodicSync()`/`cancelPeriodicSyncReceive()` surface is
+  explicit `NotSupported` on Bluedroid; engine-owned Broadcast
+  Assistant/Scan Delegator PAST remains available when the rebuilt library
+  enables `CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER`.
 - **Raw AD data only.** The native advertising path uses `esp_ble_gap_config_adv_data_raw` with
   bytes from `BLEAdvDataBuilder`, never `esp_ble_gap_config_adv_data` (which force-expands service
   UUIDs to 128 bits and would diverge from every other path).

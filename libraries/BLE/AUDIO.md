@@ -47,6 +47,10 @@ See [Feature guards](#feature-guards).
   → Tx streams), when the `esp_audio_codec` managed component is present.
 - **Re-initialization:** `audio.end()` runs `esp_ble_audio_common_deinit`, so
   `audio.begin()` may run again in the same boot with a different set of roles.
+- **Core-owned terminal teardown:** `BLE.end()` invokes the audio and raw-ISO
+  pre-end hooks while the host is still running. It releases an active audio
+  controller even when the sketch omitted `audio.end()` and releases a
+  standalone `BLEIso` owner before host deinitialization.
 
 ### Not exposed / known limits
 
@@ -174,6 +178,14 @@ Invariants:
   audio contexts are the exception: they may change at runtime.
 - `audio.end()` is refused (`InvalidState`) while a stream is still up; stop
   the streams first. After a successful `end()`, `begin()` may run again.
+- `BLE.end()` is the terminal owner of the whole session. It calls
+  `audio.end()` while the host is usable, then tears the host down. If invoked
+  from a NimBLE/BTC callback, the core defers this same sequence to its
+  callback-safe worker; retained audio handles become inactive and may be
+  reused only after the next `BLE.begin()`.
+- A standalone `BLEIso::begin()` session follows the same rule:
+  `BLE.end()` calls `BLEIso::end()` automatically, so the ISO host owner and
+  channel pool cannot survive into a later BLE session.
 - Client roles (`*Controller`, `*Initiator`, `UnicastClient`, the assistant)
   still need `begin()`/`start()` to register their engine callbacks, and act
   only once a link is ready.
@@ -397,13 +409,21 @@ preset obligations. Non-exhaustive, but these are the ones that bite:
 
 An ordinary `BLEServer` custom service and the audio profiles live in **one**
 committed GATT table. The audio engine performs the service inits and the single
-`ble_gatts_start`; the classic server only *stages* its services. The required
-ordering is `BLE.begin()` → `audio.begin()` → create/stage server services →
-`audio.start()`. This is a NimBLE-side concern (Bluedroid's incremental
+`ble_gatts_start`; the classic server only *stages* its services. Repeated
+pre-commit staging is safe: the coordinator publishes the latest complete tree
+once, immediately before `audio.start()` commits it. The required ordering is
+`BLE.begin()` → `audio.begin()` → create/stage server services → `audio.start()`.
+This is a NimBLE-side concern (Bluedroid's incremental
 multi-app GATTS registration already allows coexistence). The full contract —
 including the `BLEGattDatabase` coordinator's standalone vs. audio mode and why
 the dependency points one way (NimBLE coordinator observes the host-agnostic
 engine) — is documented in `DESIGN.md` → "Service staging and startup".
+
+On NimBLE the committed table is frozen after `audio.start()`. Adding and
+starting new attributes then returns `InvalidState`; call `audio.end()` and
+stage a new table instead. Removing a classic service that was part of the
+commit remains legal: its range is hidden and Service Changed is emitted
+without resetting the audio table.
 
 ## Testing
 
@@ -415,9 +435,13 @@ Audio behavior is exercised by:
   broadcast, broadcast assistant, CAP handover, memory release.
 - Host-interop: `tests/validation/ble_audio_host/` (ESP DUT + Linux Bumble).
 
-Phases self-skip when a role or host tool is unavailable. When a role's
-on-air behavior changes, update the suite — the suites are the executable
-contract.
+Phases self-skip when a role or host tool is unavailable on general targets.
+On an `esp32s31` dual-DUT job phases 1–13 are mandatory and a missing
+audio/ISO guard is a failure, not a skip. Validate both the normal NimBLE
+library and an S31 library rebuilt with the lib-builder's temporary
+`defconfig.esp32s31_bluedroid.disabled` overlay; the overlay must not remain
+active in the builder checkout. When a role's on-air behavior changes, update
+the suite — the suites are the executable contract.
 
 ## Maintainer rules (audio-specific)
 
