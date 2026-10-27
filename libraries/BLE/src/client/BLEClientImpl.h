@@ -30,9 +30,11 @@
 #if BLE_ENABLED
 
 #include "client/BLEClient.h"
+#include "remote/BLERemoteService.h"
 #include "core/BLEMutex.h"
 #include <atomic>
 #include <memory>
+#include <vector>
 
 /**
  * @brief Shared, stack-agnostic state for a GATT client.
@@ -42,7 +44,14 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   // Set on the BLE event task (connect/disconnect callbacks) and read on the
   // user task (isConnected), so it is atomic for well-defined concurrent access.
   std::atomic<bool> connected{false};
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  // Incremented for every successful link. Remote GATT handles capture this
+  // value so a recycled native connection handle cannot revive stale services.
+  std::atomic<uint32_t> connectionGeneration{0};
+  std::vector<std::shared_ptr<BLERemoteService::Impl>> discoveredServices;
+  std::shared_ptr<BLESharedMutex> mtxOwner = std::make_shared<BLESharedMutex>();
+  SemaphoreHandle_t mtx = mtxOwner->get();
+
+  void clearDiscoveredServices();
 
   BLEClient::ConnectHandler onConnectCb = nullptr;
   BLEClient::DisconnectHandler onDisconnectCb = nullptr;
@@ -52,9 +61,7 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   BLEClient::IdentityHandler onIdentityCb = nullptr;
 
   ~BLEClientImplCommon() {
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
+    clearDiscoveredServices();
   }
 
   // Handle factory for backend code that holds a raw Impl* (e.g. a GAP callback's

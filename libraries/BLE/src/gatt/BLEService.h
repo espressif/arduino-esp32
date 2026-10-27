@@ -95,7 +95,7 @@ public:
    * @param uuid UUID of the characteristic to find.
    * @return The matching BLECharacteristic handle, or an invalid handle if not found.
    */
-  BLECharacteristic getCharacteristic(const BLEUUID &uuid);
+  BLECharacteristic getCharacteristic(const BLEUUID &uuid) const;
 
   /**
    * @brief Get all characteristics belonging to this service.
@@ -106,7 +106,9 @@ public:
   /**
    * @brief Remove a characteristic from this service.
    * @param chr The characteristic to remove.
-   * @note Only the first matching characteristic is removed; no-op if not present.
+   * @note This is a pre-start database-building operation. It is a no-op after
+   *       the service starts. Only the first matching characteristic is removed.
+   *       A retained handle to the removed characteristic becomes a detached shell.
    */
   void removeCharacteristic(const BLECharacteristic &chr);
 

@@ -22,15 +22,26 @@
 #if BLE_NIMBLE
 
 #include "advertising/BLEAdvertising.h"
+#include "BTAddress.h"
 
 #include <host/ble_gap.h>
 #include "core/BLEMutex.h"
+#include "core/BLEAdmission.h"
+#include <atomic>
 #include <vector>
 
 // BLEAdvertising is entirely NimBLE-specific (no cross-backend shared state), so
 // BLEAdvertising::Impl is defined directly here (a .nimble.* file) with no common base.
 struct BLEAdvertising::Impl {
-  bool isAdvertising = false;
+  BLEAdmissionGate nativeAdmission;
+  std::atomic<bool> isAdvertising{false};
+  // Duration of the current legacy session, kept so a stack-preempted set
+  // (ADV_COMPLETE / BLE_HS_EPREEMPTED) resumes with the same limit.
+  uint32_t legacyDurationMs = 0;
+  int64_t sessionDeadlineUs = 0;
+  // Bumped on every public stop() (even when the flag is already clear) so a
+  // pending preemption-resume cannot restart a session the app canceled.
+  std::atomic<uint32_t> advSession{0};
   bool scanResponseEnabled = true;
   bool includeTxPower = false;
   uint16_t appearance = 0;
@@ -39,6 +50,7 @@ struct BLEAdvertising::Impl {
   uint16_t minPreferred = 0;
   uint16_t maxPreferred = 0;
   BLEAdvType advType = BLEAdvType::ConnectableScannable;
+  BTAddress directedPeer;
   uint8_t filterPolicy = 0;
 
   std::vector<BLEUUID> serviceUUIDs;
@@ -67,11 +79,29 @@ struct BLEAdvertising::Impl {
   struct ExtInstance {
     bool slotInitialized = false;
     bool extAdvRegistered = false;
+    std::atomic<bool> isAdvertising{false};
+    // Session limits of the current start, for preempt resume (see Impl).
+    uint32_t durationMs = 0;
+    int64_t sessionDeadlineUs = 0;
+    uint8_t maxEvents = 0;
     struct ble_gap_ext_adv_params params {};
 #if BLE_PERIODIC_ADV_SUPPORTED
     bool periodicAdvRegistered = false;
     struct ble_gap_periodic_adv_params periodicParams {};
 #endif
+    void reset() {
+      slotInitialized = false;
+      extAdvRegistered = false;
+      isAdvertising.store(false);
+      durationMs = 0;
+      sessionDeadlineUs = 0;
+      maxEvents = 0;
+      params = {};
+#if BLE_PERIODIC_ADV_SUPPORTED
+      periodicAdvRegistered = false;
+      periodicParams = {};
+#endif
+    }
   };
 #if defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES)
   static constexpr uint8_t kMaxExtInstances = CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES + 1;

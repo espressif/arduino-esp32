@@ -61,36 +61,48 @@ public:
   enum NotifyStatus {
     SUCCESS_INDICATE,         ///< Indication sent and confirmed.
     SUCCESS_NOTIFY,           ///< Notification sent.
-    ERROR_INDICATE_DISABLED,  ///< Client has not enabled indications.
-    ERROR_NOTIFY_DISABLED,    ///< Client has not enabled notifications.
+    ERROR_INDICATE_DISABLED,  ///< Target client has not enabled indications.
+    ERROR_NOTIFY_DISABLED,    ///< Target client has not enabled notifications.
     ERROR_GATT,               ///< Low-level GATT error.
-    ERROR_NO_CLIENT,          ///< Target connection handle is invalid.
-    ERROR_NO_SUBSCRIBER,      ///< No clients are subscribed.
-    ERROR_INDICATE_TIMEOUT,   ///< Indication confirmation timed out.
-    ERROR_INDICATE_FAILURE,   ///< Indication confirmation failed.
+    ERROR_NO_CLIENT,          ///< No client connected, target handle invalid, or the link dropped before delivery.
+    ERROR_NO_SUBSCRIBER,      ///< Clients are connected but none is subscribed.
+    ERROR_INDICATE_TIMEOUT,   ///< Indication not confirmed within 30 s (the link is then closed).
+    ERROR_INDICATE_FAILURE,   ///< Indication could not be sent, was rejected, or the queue was full.
   };
 
   // Handler types
 
   /**
    * @brief Callback invoked when a client reads this characteristic.
-   * @param chr The characteristic being read.
+   * @param chr The characteristic being read. Calling @c chr.setValue() here
+   *            sets the value returned in this read response.
    * @param conn Information about the connected client.
+   * @note Invoked once per client read. A long read (value larger than
+   *       MTU - 1) is served from the value set here; the follow-up Read Blob
+   *       requests do not invoke the handler again. The library keeps a
+   *       per-connection copy of that value until the read completes, so a
+   *       concurrent setValue() cannot mix two values in one long read.
+   * @note The mutable @p chr reference is borrowed for the callback. Copy the
+   *       handle to retain it; do not retain a pointer or reference to the
+   *       callback parameter itself. This rule applies to every handler below.
    */
-  using ReadHandler = std::function<void(const BLECharacteristic &chr, const BLEConnInfo &conn)>;
+  using ReadHandler = std::function<void(BLECharacteristic &chr, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when a client writes to this characteristic.
    * @param chr The characteristic being written (value already updated).
    * @param conn Information about the connected client.
    */
-  using WriteHandler = std::function<void(const BLECharacteristic &chr, const BLEConnInfo &conn)>;
+  using WriteHandler = std::function<void(BLECharacteristic &chr, const BLEConnInfo &conn)>;
 
   /**
-   * @brief Callback invoked after a notification is queued.
-   * @param chr The characteristic whose notification was queued.
+   * @brief Callback invoked once per @c notify() / @c indicate() call, right
+   *        before the payload is built, when there is at least one recipient.
+   * @param chr The characteristic about to be sent. When @c notify() /
+   *            @c indicate() was called without a payload, a value set here
+   *            with @c chr.setValue() is the one sent to every recipient.
    */
-  using NotifyHandler = std::function<void(const BLECharacteristic &chr)>;
+  using NotifyHandler = std::function<void(BLECharacteristic &chr)>;
 
   /**
    * @brief Callback invoked when a client subscribes to or unsubscribes from
@@ -100,15 +112,24 @@ public:
    * @param subValue Bitmask: bit 0 = notifications, bit 1 = indications.
    *                 0 means the client unsubscribed.
    */
-  using SubscribeHandler = std::function<void(const BLECharacteristic &chr, const BLEConnInfo &conn, uint16_t subValue)>;
+  using SubscribeHandler = std::function<void(BLECharacteristic &chr, const BLEConnInfo &conn, uint16_t subValue)>;
 
   /**
    * @brief Callback invoked with the delivery status of a notification or indication.
    * @param chr The characteristic that sent the notification/indication.
-   * @param status Outcome of the operation.
+   * @param status Outcome of the operation: @c SUCCESS_NOTIFY once a
+   *               notification is sent, @c SUCCESS_INDICATE once the client
+   *               confirms an indication, an @c ERROR_* value otherwise.
+   *               A broadcast @c notify() / @c indicate() with no recipient
+   *               reports @c ERROR_NO_CLIENT (nobody connected) or
+   *               @c ERROR_NO_SUBSCRIBER (nobody subscribed); the per-connection
+   *               overloads report @c ERROR_NO_CLIENT or
+   *               @c ERROR_NOTIFY_DISABLED / @c ERROR_INDICATE_DISABLED.
    * @param code Backend-specific error code (0 on success).
+   * @note May run on the calling task (NimBLE reports notification results
+   *       before @c notify() returns) or on the BLE stack task.
    */
-  using StatusHandler = std::function<void(const BLECharacteristic &chr, NotifyStatus status, uint32_t code)>;
+  using StatusHandler = std::function<void(BLECharacteristic &chr, NotifyStatus status, uint32_t code)>;
 
   /**
    * @brief Register a callback invoked when a client reads this characteristic.
@@ -125,7 +146,7 @@ public:
   void onWrite(WriteHandler handler);
 
   /**
-   * @brief Register a callback invoked after a notification is queued.
+   * @brief Register a callback invoked once per notify() / indicate() call, before sending.
    * @param handler The notify callback, or nullptr to clear.
    */
   void onNotify(NotifyHandler handler);
@@ -207,10 +228,12 @@ public:
   // Notifications / Indications
 
   /**
-   * @brief Send a notification to all subscribed clients.
+   * @brief Send a notification to all clients that enabled notifications.
    * @param data Optional payload. If nullptr, the current stored value is sent.
    * @param length Number of bytes in @p data (ignored when @p data is nullptr).
-   * @return BTStatus indicating success or failure.
+   * @return BTStatus::OK when the call was accepted, including when there is no
+   *         recipient (reported through @c onStatus()); per-client delivery
+   *         results are reported through @c onStatus().
    */
   BTStatus notify(const uint8_t *data = nullptr, size_t length = 0);
 
@@ -219,17 +242,27 @@ public:
    * @param connHandle Connection handle of the target client.
    * @param data Optional payload. If nullptr, the current stored value is sent.
    * @param length Number of bytes in @p data (ignored when @p data is nullptr).
-   * @return BTStatus indicating success or failure.
+   * @return BTStatus::OK if sent, BTStatus::NotConnected if @p connHandle is
+   *         not connected, BTStatus::InvalidState if that client has not
+   *         enabled notifications, or another error status.
    */
   BTStatus notify(uint16_t connHandle, const uint8_t *data = nullptr, size_t length = 0);
 
   /**
-   * @brief Send an indication to all subscribed clients.
+   * @brief Send an indication to all clients that enabled indications.
    * @param data Optional payload. If nullptr, the current stored value is sent.
    * @param length Number of bytes in @p data (ignored when @p data is nullptr).
-   * @return BTStatus indicating success or failure.
-   * @note Indications require confirmation from each client; this call may block
-   *       until all confirmations are received or timeout.
+   * @return BTStatus::OK when every recipient accepted or queued the call
+   *         (including when there is no recipient), or @c BTStatus::Busy if any
+   *         client's queue is full; outcomes are reported through @c onStatus().
+   * @note Does not block. ATT allows one unconfirmed indication per client, so
+   *       an indication sent while another is awaiting confirmation is queued
+   *       behind it (1 in-flight + up to 8 queued per client, 9 accepted in
+   *       total before @c BTStatus::Busy) and sent in order. @c onStatus() reports
+   *       @c SUCCESS_INDICATE once each one is confirmed. An indication the
+   *       stack refuses because it is still waiting on one it sent itself
+   *       (such as Service Changed) is retried until the ATT transaction
+   *       timeout (30 s) passes.
    */
   BTStatus indicate(const uint8_t *data = nullptr, size_t length = 0);
 
@@ -238,7 +271,11 @@ public:
    * @param connHandle Connection handle of the target client.
    * @param data Optional payload. If nullptr, the current stored value is sent.
    * @param length Number of bytes in @p data (ignored when @p data is nullptr).
-   * @return BTStatus indicating success or failure.
+   * @return BTStatus::OK if sent or queued, BTStatus::NotConnected if
+   *         @p connHandle is not connected, BTStatus::InvalidState if that
+   *         client has not enabled indications, BTStatus::Busy if its queue
+   *         is full, or another error status.
+   * @note Queued like the broadcast overload.
    */
   BTStatus indicate(uint16_t connHandle, const uint8_t *data = nullptr, size_t length = 0);
 
@@ -278,7 +315,7 @@ public:
    * @param uuid UUID to search for.
    * @return Handle to the descriptor, or an invalid handle if not found.
    */
-  BLEDescriptor getDescriptor(const BLEUUID &uuid);
+  BLEDescriptor getDescriptor(const BLEUUID &uuid) const;
 
   /**
    * @brief Get all descriptors attached to this characteristic.
@@ -289,6 +326,9 @@ public:
   /**
    * @brief Remove a descriptor from this characteristic.
    * @param desc Handle to the descriptor to remove.
+   * @note This is a pre-start database-building operation. It is a no-op after
+   *       the owning service starts. A retained descriptor handle becomes a
+   *       detached shell.
    */
   void removeDescriptor(const BLEDescriptor &desc);
 

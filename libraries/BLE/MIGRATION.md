@@ -117,10 +117,10 @@ class MyCallbacks : public BLEServerCallbacks {
 pServer->setCallbacks(new MyCallbacks());  // leaked!
 
 // v4.0 -- lambdas, no allocation
-server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
+server.onConnect([](BLEServer &s, const BLEConnInfo &conn) {
     Serial.println("Connected");
 });
-server.onDisconnect([](BLEServer s, const BLEConnInfo &conn, uint8_t reason) {
+server.onDisconnect([](BLEServer &s, const BLEConnInfo &conn, uint8_t reason) {
     Serial.printf("Disconnected, reason: 0x%02X\n", reason);
 });
 ```
@@ -328,7 +328,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | Old (v3.x) | New (v4.0) | Notes |
 |---|---|---|
 | `BLEDevice::init("name")` | `BLE.begin("name")` | Returns `BTStatus` |
-| `BLEDevice::deinit(release)` | `BLE.end(release)` | |
+| `BLEDevice::deinit(release)` | `BLE.end(release)` | Drops local GATT services; rebuild before next `server.start()` |
 | `BLEDevice::getAddress()` | `BLE.getAddress()` | Returns `BTAddress` |
 | `BLEDevice::setPower(level)` | `BLE.setPower(dbm)` | Now in dBm directly |
 | `BLEDevice::getPower()` | `BLE.getPower()` | Returns `int8_t` dBm |
@@ -353,12 +353,13 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | Old (v3.x) | New (v4.0) | Notes |
 |---|---|---|
 | `pServer->createService(uuid)` | `server.createService(uuid)` | `uuid` is `const BLEUUID &`; define `static const BLEUUID` at file scope |
-| `pServer->getServiceByUUID(uuid)` | `server.getService(uuid)` | |
+| `pServer->getServiceByUUID(uuid)` | `server.getService(uuid)` | `const`-qualified |
 | N/A | `server.getServices()` | New: returns all services |
-| `pServer->removeService(svc)` | `server.removeService(svc)` | Returns `BTStatus` |
+| `pServer->removeService(svc)` | `server.removeService(svc)` | Returns `BTStatus` (`Busy` if included by another service or a send is in flight) |
 | N/A | `server.start()` | **New and required** |
 | `pServer->getConnectedCount()` | `server.getConnectedCount()` | |
 | N/A | `server.getConnections()` | New: returns `vector<BLEConnInfo>` |
+| N/A | `server.getConnInfo(connHandle)` | New: returns refreshed `BLEConnInfo` for `connHandle` |
 | `pServer->disconnect(connId)` | `server.disconnect(connHandle)` | |
 | `pServer->advertiseOnDisconnect(bool)` | `server.advertiseOnDisconnect(bool)` | |
 | `pServer->getPeerMTU(connId)` | `server.getPeerMTU(connHandle)` | |
@@ -370,9 +371,9 @@ Follow these steps to convert a v3.x sketch to v4.0:
 
 | Old (v3.x) | New (v4.0) |
 |---|---|
-| `class MyCallbacks : public BLEServerCallbacks { void onConnect(BLEServer*) ... }` | `server.onConnect([](BLEServer s, const BLEConnInfo &conn) { ... })` |
-| `void onDisconnect(BLEServer*)` | `server.onDisconnect([](BLEServer s, const BLEConnInfo &conn, uint8_t reason) { ... })` |
-| `void onMtuChanged(BLEServer*, esp_ble_gatts_cb_param_t*)` | `server.onMtuChanged([](BLEServer s, const BLEConnInfo &conn, uint16_t mtu) { ... })` |
+| `class MyCallbacks : public BLEServerCallbacks { void onConnect(BLEServer*) ... }` | `server.onConnect([](BLEServer &s, const BLEConnInfo &conn) { ... })` |
+| `void onDisconnect(BLEServer*)` | `server.onDisconnect([](BLEServer &s, const BLEConnInfo &conn, uint8_t reason) { ... })` |
+| `void onMtuChanged(BLEServer*, esp_ble_gatts_cb_param_t*)` | `server.onMtuChanged([](BLEServer &s, const BLEConnInfo &conn, uint16_t mtu) { ... })` |
 | `pServer->setCallbacks(new MyCallbacks())` | Individual `server.on*(lambda)` calls |
 | N/A | `server.onConnParamsUpdate(lambda)` |
 | N/A | `server.onIdentity(lambda)` |
@@ -382,16 +383,19 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | Old (v3.x) | New (v4.0) | Notes |
 |---|---|---|
 | `pService->createCharacteristic(uuid, props)` → `BLECharacteristic*` | `svc.createCharacteristic(uuid, props, perms)` → `BLECharacteristic` | Same `const BLEUUID &` convention; `BLEProperty` + required `BLEPermission` |
+| `pService->getCharacteristic(uuid)` → `BLECharacteristic*` | `svc.getCharacteristic(uuid)` → `BLECharacteristic` | Value; `const`-qualified |
+| N/A | `svc.getCharacteristics()` | New: returns `vector<BLECharacteristic>` |
+| N/A | `svc.removeCharacteristic(chr)` | New: pre-start only; detaches `chr` into shell |
 | `pChar->setValue("hello")` | `chr.setValue("hello")` | |
 | `pChar->setValue(data, len)` | `chr.setValue(data, len)` | |
 | `pChar->setValue(uint32_t)` | `chr.setValue(uint32_t)` | Also: `uint16_t`, `int`, `float`, `double` |
 | `pChar->getValue()` → `std::string` | `chr.getStringValue()` → `String` | |
 | `pChar->getData()` → `uint8_t*` | `chr.getValue(&len)` → `const uint8_t*` | Returns length via pointer |
 | `pChar->getLength()` | Length via `chr.getValue(&len)` | |
-| `pChar->notify()` | `chr.notify()` | Returns `BTStatus` |
-| `pChar->indicate()` | `chr.indicate()` | Returns `BTStatus` |
-| N/A | `chr.notify(connHandle, data, len)` | New: per-connection |
-| N/A | `chr.indicate(connHandle, data, len)` | New: per-connection |
+| `pChar->notify()` | `chr.notify()` | Returns `BTStatus::OK`; per-client / no-recipient status via `onStatus()` |
+| `pChar->indicate()` | `chr.indicate()` | Non-blocking (queues up to 8 per client); returns `BTStatus` |
+| N/A | `chr.notify(connHandle, data, len)` | New: per-connection (`NotConnected` / `InvalidState` / `Busy`) |
+| N/A | `chr.indicate(connHandle, data, len)` | New: per-connection (`NotConnected` / `InvalidState` / `Busy`) |
 | `pChar->getSubscribedCount()` | `chr.getSubscribedCount()` | |
 | N/A | `chr.isSubscribed(connHandle)` | New |
 | N/A | `chr.getSubscribedConnections()` | New |
@@ -407,12 +411,18 @@ Follow these steps to convert a v3.x sketch to v4.0:
 
 | Old (v3.x) | New (v4.0) |
 |---|---|
-| `class MyChrCb : public BLECharacteristicCallbacks { void onRead(...) ... }` | `chr.onRead([](BLECharacteristic c, const BLEConnInfo &conn) { ... })` |
-| `void onWrite(BLECharacteristic *pChr)` | `chr.onWrite([](BLECharacteristic c, const BLEConnInfo &conn) { ... })` |
-| `void onNotify(BLECharacteristic *pChr)` | `chr.onNotify([](BLECharacteristic c) { ... })` |
-| `void onSubscribe(BLECharacteristic*, ..., uint16_t subValue)` | `chr.onSubscribe([](BLECharacteristic c, const BLEConnInfo &conn, uint16_t subValue) { ... })` |
-| `void onStatus(BLECharacteristic*, Status, uint32_t)` | `chr.onStatus([](BLECharacteristic c, BLECharacteristic::NotifyStatus status, uint32_t code) { ... })` |
+| `class MyChrCb : public BLECharacteristicCallbacks { void onRead(...) ... }` | `chr.onRead([](BLECharacteristic &c, const BLEConnInfo &conn) { ... })` |
+| `void onWrite(BLECharacteristic *pChr)` | `chr.onWrite([](BLECharacteristic &c, const BLEConnInfo &conn) { ... })` |
+| `void onNotify(BLECharacteristic *pChr)` | `chr.onNotify([](BLECharacteristic &c) { ... })` |
+| `void onSubscribe(BLECharacteristic*, ..., uint16_t subValue)` | `chr.onSubscribe([](BLECharacteristic &c, const BLEConnInfo &conn, uint16_t subValue) { ... })` |
+| `void onStatus(BLECharacteristic*, Status, uint32_t)` | `chr.onStatus([](BLECharacteristic &c, BLECharacteristic::NotifyStatus status, uint32_t code) { ... })` |
 | `pChar->setCallbacks(new MyChrCb())` | Individual `chr.on*(lambda)` calls |
+
+Note:
+
+- `onRead` is invoked once per client read (including multi-packet long reads `> MTU - 1`, which are served from a per-connection snapshot of the value set in `onRead`). Calling `c.setValue(...)` inside `onRead` sets the value returned in that read response.
+- Handler handle parameters (`BLECharacteristic &c`, `BLEClient &`, …) are borrowed for the callback invocation only: copy the handle to retain it; do not retain the reference or move from it.
+- `onNotify` is invoked once per `notify()` / `indicate()` call, before the payload is built, when there is at least one recipient. Calling `c.setValue(...)` inside `onNotify` sets the value sent when `notify()` / `indicate()` was called without an explicit payload.
 
 ### Characteristic Properties
 
@@ -455,8 +465,12 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | `p2904->setNamespace(ns)` | `fmt.setNamespace(ns)` | |
 | `p2904->setDescription(desc)` | `fmt.setFormatDescription(desc)` | |
 | `pChar->createDescriptor(uuid)` | `chr.createDescriptor(uuid, perms, maxLen)` | Returns `BLEDescriptor` value |
+| `pChar->getDescriptorByUUID(uuid)` | `chr.getDescriptor(uuid)` | `const`-qualified |
+| N/A | `chr.getDescriptors()` | New: returns `vector<BLEDescriptor>` |
+| N/A | `chr.removeDescriptor(desc)` | New: pre-start only; detaches `desc` into shell |
 | `pDesc->setValue(data, len)` | `desc.setValue(data, len)` | |
 | `pDesc->getValue()` | `desc.getValue(&len)` | |
+| `pDesc->setCallbacks(new MyDescCb())` | `desc.onRead([](BLEDescriptor &d, const BLEConnInfo &conn) { ... })` / `desc.onWrite(...)` | Calling `d.setValue(...)` in `onRead` sets the read response |
 
 ### GATT Client
 
@@ -489,10 +503,10 @@ Follow these steps to convert a v3.x sketch to v4.0:
 
 | Old (v3.x) | New (v4.0) |
 |---|---|
-| `class MyCb : public BLEClientCallbacks { void onConnect(BLEClient*) }` | `client.onConnect([](BLEClient c, const BLEConnInfo &conn) { ... })` |
-| `void onDisconnect(BLEClient*)` | `client.onDisconnect([](BLEClient c, const BLEConnInfo &conn, uint8_t reason) { ... })` |
+| `class MyCb : public BLEClientCallbacks { void onConnect(BLEClient*) }` | `client.onConnect([](BLEClient &c, const BLEConnInfo &conn) { ... })` |
+| `void onDisconnect(BLEClient*)` | `client.onDisconnect([](BLEClient &c, const BLEConnInfo &conn, uint8_t reason) { ... })` |
 | `pClient->setCallbacks(new MyCb())` | Individual `client.on*(lambda)` calls |
-| N/A | `client.onConnectFail([](BLEClient c, int reason) { ... })` |
+| N/A | `client.onConnectFail([](BLEClient &c, int reason) { ... })` |
 | N/A | `client.onMtuChanged(lambda)` |
 | N/A | `client.onConnParamsUpdateRequest(lambda)` |
 | N/A | `client.onIdentity(lambda)` |
@@ -502,6 +516,9 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | Old (v3.x) | New (v4.0) | Notes |
 |---|---|---|
 | `pSvc->getCharacteristic(uuid)` → `BLERemoteCharacteristic*` | `svc.getCharacteristic(uuid)` → `BLERemoteCharacteristic` | Value |
+| `pSvc->getCharacteristics()` | `svc.getCharacteristics()` | Returns `vector<BLERemoteCharacteristic>` |
+| `pSvc->getValue(chrUUID)` | `svc.getValue(chrUUID)` | Returns `String` |
+| `pSvc->setValue(chrUUID, val)` | `svc.setValue(chrUUID, val)` | Returns `BTStatus` |
 | `pChr->readValue()` → `std::string` | `chr.readValue()` → `String` | |
 | `pChr->readUInt8()` | `chr.readUInt8()` | |
 | `pChr->readUInt16()` | `chr.readUInt16()` | |
@@ -511,13 +528,17 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | `pChr->writeValue(data, len, false)` | `chr.writeValue(data, len, false)` | Write without response |
 | `pChr->canRead()` | `chr.canRead()` | |
 | `pChr->canNotify()` | `chr.canNotify()` | |
-| `pChr->registerForNotify(callback)` | `chr.subscribe(true, lambda)` | `true`=notify, `false`=indicate |
+| `pChr->registerForNotify(callback)` | `chr.subscribe(BLESubscription::Notify, lambda)` | |
+| N/A | `chr.subscribe(BLESubscription::Notify \| BLESubscription::Indicate, lambda)` | New: notify + indicate (CCCD `0x0003`) |
 | N/A | `chr.unsubscribe()` | New |
+| N/A | `desc.isCCCD()` / `desc.isUserDescription()` / `desc.isPresentationFormat()` | New: descriptor kind checks |
+| N/A | `desc.getFormat()` / `getExponent()` / `getUnit()` / `getNamespace()` / `getFormatDescription()` | New: Presentation Format (0x2904) field getters; call `readValue()` first |
 | `pChr->getDescriptor(uuid)` → `BLERemoteDescriptor*` | `chr.getDescriptor(uuid)` → `BLERemoteDescriptor` | Value |
+| `pChr->getDescriptors()` | `chr.getDescriptors()` | Returns `vector<BLERemoteDescriptor>` |
 | `pDesc->readValue()` | `desc.readValue()` | Returns `String` |
-| `pDesc->writeValue(data, len)` | `desc.writeValue(data, len)` | Returns `BTStatus` |
+| `pDesc->writeValue(data, len)` | `desc.writeValue(data, len)` | Returns `BTStatus` (supports long writes `> MTU - 3`) |
 | N/A | `chr.readValue(buf, bufLen, timeout)` | New: read into buffer |
-| N/A | `chr.readRawData(&len)` | New: cached raw data |
+| N/A | `chr.readRawData(&len)` | New: cached raw data (`const`-qualified) |
 | N/A | `chr.getRemoteService()` | New |
 | N/A | `desc.getRemoteCharacteristic()` | New |
 
@@ -590,6 +611,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | `pAdv->removeServiceUUID(uuid)` | `adv.removeServiceUUID(uuid)` | |
 | `pAdv->setScanResponse(bool)` | `adv.setScanResponse(bool)` | |
 | `pAdv->setAdvertisementType(type)` | `adv.setType(type)` | Uses `BLEAdvType` enum |
+| N/A | `adv.setDirectedAddress(addr)` | Required before `start()` of directed types (InitA) |
 | `pAdv->setMinInterval(min)` | `adv.setInterval(min, max)` | Combined |
 | `pAdv->setMaxInterval(max)` | `adv.setInterval(min, max)` | Combined |
 | `pAdv->setMinPreferred(val)` | `adv.setMinPreferred(val)` | |
@@ -788,10 +810,10 @@ void setup() {
     BLE.begin("MyServer");
 
     BLEServer server = BLE.createServer();
-    server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
+    server.onConnect([](BLEServer &s, const BLEConnInfo &conn) {
         Serial.println("Connected");
     });
-    server.onDisconnect([](BLEServer s, const BLEConnInfo &conn, uint8_t reason) {
+    server.onDisconnect([](BLEServer &s, const BLEConnInfo &conn, uint8_t reason) {
         Serial.println("Disconnected");
     });
     server.advertiseOnDisconnect(true);
@@ -845,7 +867,7 @@ BLERemoteService svc = client.getService(SVC_UUID);
 BLERemoteCharacteristic chr = svc.getCharacteristic(CHR_UUID);
 String val = chr.readValue();
 chr.writeValue("hello");
-chr.subscribe(true, [](BLERemoteCharacteristic c, const uint8_t *data, size_t len, bool isNotify) {
+chr.subscribe(BLESubscription::Notify, [](BLERemoteCharacteristic &c, const uint8_t *data, size_t len, BLESubscription kind) {
     Serial.printf("Notification: %.*s\n", len, data);
 });
 ```
@@ -956,11 +978,11 @@ pChar->notify();
 
 **After (v4.0):**
 ```cpp
-chr.onWrite([](BLECharacteristic c, const BLEConnInfo &conn) {
+chr.onWrite([](BLECharacteristic &c, const BLEConnInfo &conn) {
     String val = c.getStringValue();
     Serial.printf("Written: %s\n", val.c_str());
 });
-chr.onSubscribe([](BLECharacteristic c, const BLEConnInfo &conn, uint16_t subValue) {
+chr.onSubscribe([](BLECharacteristic &c, const BLEConnInfo &conn, uint16_t subValue) {
     Serial.printf("Subscription changed: %u\n", subValue);
 });
 chr.notify();  // notify all subscribers
@@ -1185,6 +1207,12 @@ These features are new and were not available in v3.x:
 
 12. **BLEStream multi-central** -- Server-mode `BLEStream` accepts multiple centrals. Plain `write()`/`read()` stay broadcast/merged for `Stream` compatibility; use `peerCount()`, `peers()`, `writeTo()`, and `onPeerData()` when you need per-peer routing. See `examples/MultiClientUART`.
 
+13. **`indicate()` no longer blocks** -- In v3.x, `indicate()` waited for the client's confirmation. In v4.0 it returns immediately; indications sent while one is still unconfirmed are queued per client (up to 8) and sent in order. Use `onStatus()` (`SUCCESS_INDICATE`) to learn when each one is confirmed.
+
+14. **Rebuild the GATT database after `BLE.end()`** -- `createServer()` still returns the same server object, but `end()` drops its services. After `begin()`, call `createService()` again (and `start()`) before advertising. Handles kept from the previous session are shells.
+
+15. **Do not call blocking GATT operations inside `subscribe()` callbacks** -- `BLERemoteCharacteristic::NotifyCallback` runs on the BLE stack task. Calling blocking GATT operations (`readValue()`, confirmed `writeValue()`, `subscribe()`) on the characteristic from inside the callback waits for a response delivered by that same task and will time out (and `readValue()` replaces the buffer `data` points into). Defer such work to another task or `loop()`.
+
 ---
 
 ## NimBLE-Specific Migration Notes
@@ -1232,7 +1260,7 @@ For users migrating from the official [ArduinoBLE](https://www.arduino.cc/refere
 | `BLECharacteristic chr("uuid", props, size)` | `svc.createCharacteristic(CHR_UUID, props, perms)` with `static const BLEUUID CHR_UUID("uuid")` | Factory method; permissions required |
 | `chr.writeValue(val)` | `chr.setValue(val)` (server-side) | |
 | `chr.readValue()` | `chr.getStringValue()` (server-side) | |
-| `chr.subscribe()` | `remoteChr.subscribe(true, callback)` (client-side) | |
+| `chr.subscribe()` | `remoteChr.subscribe(BLESubscription::Notify, callback)` (client-side) | |
 | `chr.setEventHandler(handler)` | `chr.onWrite(lambda)`, `chr.onRead(lambda)` | Per-event handlers |
 | `BLE.setLocalName("name")` | Set in `BLE.begin("name")` | |
 | `BLE.setDeviceName("name")` | Set in `BLE.begin("name")` | |

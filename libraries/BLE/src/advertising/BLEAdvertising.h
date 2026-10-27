@@ -94,9 +94,26 @@ public:
   void setType(BLEAdvType type);
 
   /**
-   * @brief Set the advertising interval range.
-   * @param minMs Minimum advertising interval in milliseconds.
-   * @param maxMs Maximum advertising interval in milliseconds.
+   * @brief Set the peer address used as InitA in directed advertising PDUs.
+   *
+   * Directed types (@c DirectedHighDuty, @c DirectedLowDuty, @c ConnectableDirected)
+   * require a non-zero address before @c start() (BT Core Spec Vol 6, Part B, §4.4.2.4).
+   * High-duty directed advertising is also limited to 1.28 s (§4.4.2.4.2).
+   * A zero address clears the stored peer.
+   * @param address Target initiator address (typically the central's identity).
+   */
+  void setDirectedAddress(const BTAddress &address);
+
+  /**
+   * @brief Peer address last passed to @c setDirectedAddress.
+   * @return The stored InitA, or a zero address if none was set.
+   */
+  BTAddress getDirectedAddress() const;
+
+  /**
+   * @brief Set the legacy advertising interval range.
+   * @param minMs Minimum advertising interval in milliseconds (converted to 0.625 ms units).
+   * @param maxMs Maximum advertising interval in milliseconds (converted to 0.625 ms units).
    */
   void setInterval(uint16_t minMs, uint16_t maxMs);
 
@@ -153,6 +170,9 @@ public:
   /**
    * @brief Start legacy advertising.
    * @param durationMs Duration in milliseconds. 0 = advertise indefinitely.
+   *        Finite values that exceed the HCI 16-bit 10 ms unit field (~655.35 s)
+   *        return InvalidParam. High-duty directed advertising is limited to 1.28 s.
+   *        Directed types with a zero @c setDirectedAddress also return InvalidParam.
    * @return BTStatus indicating success or error.
    */
   BTStatus start(uint32_t durationMs = 0);
@@ -164,7 +184,11 @@ public:
   BTStatus stop();
 
   /**
-   * @brief Check whether legacy advertising is currently active.
+   * @brief Check whether any advertising set is currently active.
+   *
+   * True when the legacy set is running, or when any extended advertising
+   * instance is running. @c stop() still stops only the legacy set; use
+   * @c stopExtended() for a specific extended instance.
    * @return true if advertising is running, false otherwise.
    */
   bool isAdvertising() const;
@@ -196,8 +220,9 @@ public:
   /**
    * @brief Set the advertising interval range for an extended advertising instance.
    * @param instance Advertising instance index.
-   * @param minInterval Minimum advertising interval (controller units, 0.625 ms each).
-   * @param maxInterval Maximum advertising interval (controller units, 0.625 ms each).
+   * @param minInterval Minimum advertising interval in controller units (0.625 ms each), not milliseconds.
+   * @param maxInterval Maximum advertising interval in controller units (0.625 ms each), not milliseconds.
+   * @note Unlike @c setInterval(), these arguments are already in 0.625 ms units.
    */
   void setExtInterval(uint8_t instance, uint16_t minInterval, uint16_t maxInterval);
 
@@ -285,6 +310,11 @@ public:
 
   /**
    * @brief Remove all extended advertising instances.
+   *
+   * Blocks until the controller has finished the clear. Fails and leaves
+   * advertising flags unchanged if any set is still enabled (stop first).
+   * After `BLE.end()`, returns `OK` without a native call (stop-like).
+   *
    * @return BTStatus indicating success or error.
    */
   BTStatus clearExtended();
@@ -352,6 +382,9 @@ public:
 private:
   explicit BLEAdvertising(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
   std::shared_ptr<Impl> _impl;
+  void prepareBackendStart();
+  void beginBackendShutdown();
+  BTStatus stopBackend();
   friend class BLEClass;
 };
 

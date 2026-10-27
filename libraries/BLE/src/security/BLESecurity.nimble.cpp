@@ -41,8 +41,10 @@
 #include "BLE.h"
 
 #include "security/BLESecurity.nimble.h"
+#include "types/BLEConnInfo.nimble.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
+#include "core/BLEValidationHooks.h"
 #include "esp32-hal-log.h"
 
 #if BLE_SMP_SUPPORTED
@@ -50,6 +52,7 @@
 #include <esp_random.h>
 #include <host/ble_gap.h>
 #include <host/ble_store.h>
+#include <host/ble_sm.h>
 
 /**
  * @brief Pushes the current @c Impl SMP settings into the NimBLE host @c ble_hs_cfg.
@@ -65,6 +68,12 @@ void BLESecurity::Impl::applySecurityParams() const {
   ble_hs_cfg.sm_bonding = bonding ? 1 : 0;
   ble_hs_cfg.sm_mitm = mitm ? 1 : 0;
   ble_hs_cfg.sm_sc = sc ? 1 : 0;
+  ble_hs_cfg.sm_oob_data_flag = 0;
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.security.advertiseOob.load(std::memory_order_relaxed)) {
+    ble_hs_cfg.sm_oob_data_flag = 1;
+  }
+#endif
   ble_hs_cfg.sm_our_key_dist = initKeyDist;
   ble_hs_cfg.sm_their_key_dist = respKeyDist;
 }
@@ -114,6 +123,109 @@ void BLESecurity::Impl::deleteStaleBond(const ble_addr_t &peerIdAddr) {
     return;
   }
   log_w("Security: the peer no longer holds the bonding key, deleted the stale bond so the next attempt can pair again");
+}
+
+int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *event) {
+  auto *sec = BLESecurity::Impl::instance();
+  if (!event) {
+    return 0;
+  }
+  switch (event->type) {
+    case BLE_GAP_EVENT_ENC_CHANGE:
+    {
+      if (!sec) {
+        return 0;
+      }
+      struct ble_gap_conn_desc desc;
+      if (ble_gap_conn_find(event->enc_change.conn_handle, &desc) == 0) {
+        sec->notifyAuthComplete(BLEConnInfoImpl::fromDesc(desc), event->enc_change.status == 0);
+      }
+      return 0;
+    }
+
+    case BLE_GAP_EVENT_PASSKEY_ACTION:
+    {
+      if (!sec) {
+        return 0;
+      }
+      uint16_t connHandle = event->passkey.conn_handle;
+      struct ble_gap_conn_desc desc;
+      if (ble_gap_conn_find(connHandle, &desc) != 0) {
+        return 0;
+      }
+      BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(desc);
+      struct ble_sm_io pkey = {};
+      pkey.action = event->passkey.params.action;
+      if (pkey.action == BLE_SM_IOACT_DISP) {
+        pkey.passkey = sec->resolvePasskeyForDisplay(connInfo);
+      } else if (pkey.action == BLE_SM_IOACT_INPUT) {
+        pkey.passkey = sec->resolvePasskeyForInput(connInfo);
+      } else if (pkey.action == BLE_SM_IOACT_NUMCMP) {
+        pkey.numcmp_accept = sec->resolveNumericComparison(connInfo, event->passkey.params.numcmp) ? 1 : 0;
+      } else if (pkey.action == BLE_SM_IOACT_OOB) {
+        // Legacy OOB inject copies a 16-byte TK (ble_sm.c). A zeroed TK is the
+        // public Temporary Key and pairing would succeed. OOB is not supported;
+        // fail with OOB Not Available and wake the auth waiter. NimBLE has no
+        // reject flag on BLE_SM_IOACT_OOB inject (unlike NUMCMP).
+        log_w("Security: legacy OOB not supported; failing pairing");
+        sec->notifyAuthComplete(connInfo, false);
+        return BLE_HS_SM_US_ERR(BLE_SM_ERR_OOB);
+      } else if (pkey.action == BLE_SM_IOACT_OOB_SC) {
+        // Null oob_sc_data pointers make ble_sm_inject_io set BLE_SM_ERR_OOB.
+        log_w("Security: OOB-SC not supported; failing pairing");
+        int rcOob = ble_sm_inject_io(connHandle, &pkey);
+        if (rcOob != 0) {
+          log_e("Security: ble_sm_inject_io for OOB-SC failed rc=%d", rcOob);
+        }
+        sec->notifyAuthComplete(connInfo, false);
+        return 0;
+      } else {
+        log_w("Security: unsupported passkey action %u; failing pairing", pkey.action);
+        sec->notifyAuthComplete(connInfo, false);
+        return BLE_HS_SM_US_ERR(BLE_SM_ERR_UNSPECIFIED);
+      }
+      int rc = ble_sm_inject_io(connHandle, &pkey);
+      if (rc == 0 && pkey.action == BLE_SM_IOACT_NUMCMP && pkey.numcmp_accept == 0) {
+        // Upstream NimBLE's ble_sm_inject_io (ble_sm.c) sets res.sm_err = BLE_SM_ERR_NUMCMP
+        // and transmits Pairing Failed to the peer, but omits res.app_status and res.enc_cb,
+        // so BLE_GAP_EVENT_ENC_CHANGE never fires locally on the side that rejected.
+        sec->notifyAuthComplete(connInfo, false);
+        return BLE_HS_SM_US_ERR(BLE_SM_ERR_NUMCMP);
+      }
+      return 0;
+    }
+
+    case BLE_GAP_EVENT_PARING_COMPLETE: reportPairingComplete(event->pairing_complete.conn_handle, event->pairing_complete.status); return 0;
+
+    case BLE_GAP_EVENT_REPEAT_PAIRING:
+    {
+      struct ble_gap_conn_desc desc;
+      if (ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc) != 0) {
+        return BLE_GAP_REPEAT_PAIRING_IGNORE;
+      }
+      ble_store_util_delete_peer(&desc.peer_id_addr);
+      return BLE_GAP_REPEAT_PAIRING_RETRY;
+    }
+
+#if defined(BLE_GAP_EVENT_AUTHORIZE)
+    case BLE_GAP_EVENT_AUTHORIZE:
+    {
+      uint16_t connHandle = event->authorize.conn_handle;
+      uint16_t attrHandle = event->authorize.attr_handle;
+      bool isRead = (event->authorize.is_read != 0);
+      BLEConnInfo conn;
+      struct ble_gap_conn_desc desc {};
+      if (ble_gap_conn_find(connHandle, &desc) == 0) {
+        conn = BLEConnInfoImpl::fromDesc(desc);
+      }
+      bool allowed = sec ? sec->notifyAuthorization(conn, attrHandle, isRead) : false;
+      event->authorize.out_response = allowed ? BLE_GAP_AUTHORIZE_ACCEPT : BLE_GAP_AUTHORIZE_REJECT;
+      return 0;
+    }
+#endif
+
+    default: return 0;
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -332,6 +444,10 @@ uint32_t BLESecurity::Impl::resolvePasskeyForDisplay(const BLEConnInfo &) {
 void BLESecurity::Impl::reportPairingComplete(uint16_t, int) {}
 
 void BLESecurity::Impl::deleteStaleBond(const ble_addr_t &) {}
+
+int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *) {
+  return 0;
+}
 
 #endif /* BLE_SMP_SUPPORTED */
 

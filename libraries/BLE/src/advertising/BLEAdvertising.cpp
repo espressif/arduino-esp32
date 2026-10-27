@@ -23,7 +23,9 @@
 #include "core/BLEBackend.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
+#include "advertising/BLEAdvertising.h"
 #include "advertising/BLEAdvertisingData.h"
+#include "BTAddress.h"
 #include "esp32-hal-log.h"
 
 #include <algorithm>
@@ -74,7 +76,32 @@ void BLEAdvertising::clearServiceUUIDs() {
 // --------------------------------------------------------------------------
 
 bool BLEAdvertising::isAdvertising() const {
-  return _impl && _impl->isAdvertising;
+  if (!_impl) {
+    return false;
+  }
+  if (_impl->isAdvertising.load()) {
+    return true;
+  }
+#if BLE5_SUPPORTED
+  for (uint8_t i = 0; i < BLEAdvertising::Impl::kLegacyInstance; i++) {
+    if (_impl->extInstances[i].isAdvertising.load()) {
+      return true;
+    }
+  }
+#endif
+  return false;
+}
+
+void BLEAdvertising::setDirectedAddress(const BTAddress &address) {
+  BLE_CHECK_IMPL();
+  impl.directedPeer = address;
+}
+
+BTAddress BLEAdvertising::getDirectedAddress() const {
+  if (!_impl) {
+    return BTAddress();
+  }
+  return _impl->directedPeer;
 }
 
 // --------------------------------------------------------------------------

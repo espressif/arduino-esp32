@@ -22,6 +22,7 @@
 #if BLE_NIMBLE
 
 #include "client/BLEClientImpl.h"
+#include "remote/BLERemoteService.h"
 #include "types/BLEConnInfo.nimble.h"
 #include "core/BLESync.h"
 
@@ -45,24 +46,20 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // fires at most once per connection. Reset on each CONNECT event. Guarded by mtx.
   bool identityDispatched = false;
   BLESync connectSync{"connectSync"};
+  BLESync disconnectSync{"disconnectSync"};
   // Lets the blocking connect() wait for the initial ATT MTU exchange to finish
   // so getMTU() is accurate as soon as connect() returns (ordering contract in
   // DESIGN.md). Signaled by mtuExchangeCb.
   BLESync mtuSync{"mtuSync"};
 
   // Prevent destruction while NimBLE holds our raw pointer.
-  // Set before ble_gap_connect(); cleared in gapEventHandler after the
-  // terminal event (DISCONNECT or CONNECT-failure) has been fully dispatched.
+  // Set before ble_gap_connect(); moved off this member before unblocking the
+  // waiter so a reconnect cannot have its keepalive wiped by the dying handler.
   std::shared_ptr<BLEClient::Impl> nimbleRef;
 
-  struct RemoteServiceEntry {
-    BLEUUID uuid;
-    uint16_t startHandle;
-    uint16_t endHandle;
-  };
-  std::vector<RemoteServiceEntry> discoveredServices;
   bool discovering = false;
   BLESync discoverSync{"discoverSync"};
+  BLESync authSync{"clientAuthSync"};
 
   static int gapEventHandler(struct ble_gap_event *event, void *arg);
   static int serviceDiscoveryCb(uint16_t connHandle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);

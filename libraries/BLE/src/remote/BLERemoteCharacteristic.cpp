@@ -36,6 +36,13 @@
  *       pattern when discovery and notify registration overlap).
  */
 
+BLERemoteCharacteristicImplCommon::~BLERemoteCharacteristicImplCommon() {
+  BLELockGuard lock(cacheMtx ? cacheMtx->get() : nullptr);
+  for (auto &dsc : descriptors) {
+    dsc->chr = nullptr;
+  }
+}
+
 BLERemoteCharacteristic::BLERemoteCharacteristic() : _impl(nullptr) {}
 
 BLERemoteCharacteristic::operator bool() const {
@@ -76,8 +83,20 @@ bool BLERemoteCharacteristic::canBroadcast() const {
   return _impl && (_impl->properties & static_cast<uint8_t>(BLEProperty::Broadcast));
 }
 
-const uint8_t *BLERemoteCharacteristic::readRawData(size_t *len) {
-  if (!_impl || _impl->value.empty()) {
+static std::shared_ptr<BLESharedMutex> remoteChrMtx(const BLERemoteCharacteristic::Impl *impl) {
+  return impl ? impl->cacheMtx : nullptr;
+}
+
+const uint8_t *BLERemoteCharacteristic::readRawData(size_t *len) const {
+  if (!_impl) {
+    if (len) {
+      *len = 0;
+    }
+    return nullptr;
+  }
+  auto mtx = remoteChrMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
+  if (_impl->value.empty()) {
     if (len) {
       *len = 0;
     }
@@ -93,6 +112,8 @@ String BLERemoteCharacteristic::readValue(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return String();
   }
+  auto mtx = remoteChrMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   return String(reinterpret_cast<const char *>(_impl->value.data()), _impl->value.size());
 }
 
@@ -100,6 +121,8 @@ uint8_t BLERemoteCharacteristic::readUInt8(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  auto mtx = remoteChrMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   return static_cast<uint8_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 1));
 }
 
@@ -107,6 +130,8 @@ uint16_t BLERemoteCharacteristic::readUInt16(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  auto mtx = remoteChrMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   return static_cast<uint16_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 2));
 }
 
@@ -114,6 +139,8 @@ uint32_t BLERemoteCharacteristic::readUInt32(uint32_t timeoutMs) {
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  auto mtx = remoteChrMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   return bleReadLEUint(_impl->value.data(), _impl->value.size(), 4);
 }
 
@@ -129,6 +156,8 @@ size_t BLERemoteCharacteristic::readValue(uint8_t *buf, size_t bufLen, uint32_t 
   if (!readInto(timeoutMs)) {
     return 0;
   }
+  auto mtx = remoteChrMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
   size_t copyLen = (_impl->value.size() < bufLen) ? _impl->value.size() : bufLen;
   memcpy(buf, _impl->value.data(), copyLen);
   return copyLen;
@@ -143,8 +172,13 @@ BTStatus BLERemoteCharacteristic::writeValue(uint8_t value, bool withResponse) {
 }
 
 BLERemoteService BLERemoteCharacteristic::getRemoteService() const {
-  // Non-owning handle: the parent service is owned by the discovering client.
-  return (_impl && _impl->service) ? BLERemoteService(_impl->service->shared_from_this()) : BLERemoteService();
+  if (!_impl) {
+    return BLERemoteService();
+  }
+  auto service = _impl->serviceOwner.lock();
+  auto mtx = remoteChrMtx(_impl.get());
+  BLELockGuard lock(mtx ? mtx->get() : nullptr);
+  return (service && _impl->service == service.get()) ? BLERemoteService(service) : BLERemoteService();
 }
 
 String BLERemoteCharacteristic::toString() const {

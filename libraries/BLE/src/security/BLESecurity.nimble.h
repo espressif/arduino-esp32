@@ -63,6 +63,8 @@ struct BLESecurity::Impl : BLESecurityImplCommon {
   /// @note Called when encryption fails with @c BLE_ERR_PINKEY_MISSING. The peer cannot produce
   ///       the LTK, so every attempt on this link fails the same way until the stale bond goes.
   static void deleteStaleBond(const ble_addr_t &peerIdAddr);
+
+  static int handleGapEvent(struct ble_gap_event *event);
 };
 
 #endif /* BLE_NIMBLE */

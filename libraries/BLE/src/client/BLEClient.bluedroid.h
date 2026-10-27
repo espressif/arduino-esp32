@@ -53,13 +53,20 @@ struct BLEClient::Impl : BLEClientImplCommon {
   std::atomic<bool> secAuthenticated{false};
   std::atomic<bool> secBonded{false};
 
-  BLESync regSync{"regSync"};            // For blocking GATTC app registration
-  BLESync connectSync{"connectSync"};    // For blocking connect
-  BLESync discoverSync{"discoverSync"};  // For blocking service discovery
+  BLESync regSync{"regSync"};                // For blocking GATTC app registration
+  BLESync connectSync{"connectSync"};        // For blocking connect
+  BLESync disconnectSync{"disconnectSync"};  // For blocking disconnect
+  BLESync discoverSync{"discoverSync"};      // For blocking service discovery
   // Only one GATT read/write can be in-flight per client at a time because
   // Bluedroid delivers completions without a per-characteristic token.
   BLESync readSync{"readSync"};
   BLESync writeSync{"writeSync"};
+  // Bluedroid exposes one completion slot for reads and one for writes, with
+  // no caller token in completion events. Serialize a complete blocking GATT
+  // operation (including an authentication retry) so concurrent callers
+  // cannot replace the pending handle/sync state while another is waiting.
+  StaticSemaphore_t gattOpMtxStorage{};
+  SemaphoreHandle_t gattOpMtx = xSemaphoreCreateRecursiveMutexStatic(&gattOpMtxStorage);
   BLESync mtuSync{"mtuSync"};    // For MTU exchange
   BLESync rssiSync{"rssiSync"};  // For RSSI read
 #if BLE5_SUPPORTED
@@ -73,10 +80,18 @@ struct BLEClient::Impl : BLEClientImplCommon {
   uint8_t cachedRxPhy = 1;
 #endif
 
-  std::vector<std::shared_ptr<BLERemoteService::Impl>> discoveredServices;
-
-  // Temp buffer for read operations
+  // Temp buffer and active-handle filter for read/write operations (guarded by mtx).
   std::vector<uint8_t> readBuf;
+  uint16_t pendingReadHandle = 0;
+  uint16_t requestHandle = 0;
+  bool requestWaiter = false;
+  uint16_t commandCount = 0;
+  std::shared_ptr<Impl> writeOwner;
+  std::atomic<bool> terminalCloseRetryActive{false};
+#if BLE_VALIDATION_HOOKS
+  bool validationHoldWriteCommand = false;
+  bool validationHeldWriteCommandEventSeen = false;
+#endif
   esp_gatt_status_t lastReadStatus = ESP_GATT_OK;
   esp_gatt_status_t lastWriteStatus = ESP_GATT_OK;
   int8_t lastRssi = -128;
@@ -84,9 +99,22 @@ struct BLEClient::Impl : BLEClientImplCommon {
   ~Impl();
 
   static uint16_t s_nextAppId;
-  static std::vector<BLEClient::Impl *> s_clients;
+  static StaticSemaphore_t s_clientsMtxStorage;
+  static SemaphoreHandle_t s_clientsMtx;
+  static std::vector<std::weak_ptr<BLEClient::Impl>> s_clients;
+  static StaticSemaphore_t s_terminalCloseOwnersMtxStorage;
+  static SemaphoreHandle_t s_terminalCloseOwnersMtx;
+  static std::vector<std::shared_ptr<Impl>> s_terminalCloseOwners;
   static void handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
+  static std::vector<std::shared_ptr<Impl>> snapshotClients();
+  static void removeClient(Impl *client);
+  static void retainTerminalCloseOwner(const std::shared_ptr<Impl> &owner);
+  static std::shared_ptr<Impl> takeTerminalCloseOwner(Impl *client);
+  static void openTerminalCloseAdmission();
+  static void stopTerminalCloseWorkers();
+  static void invalidateAfterHostDeinit();
+  static void releaseTerminalCloseOwners();
 };
 
 /**

@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <cstring>
 
-static const BLEUUID kEddystoneUUID(static_cast<uint16_t>(0xFEAA));
+static constexpr BLEUUID kEddystoneUUID = BLEUUID::from16(0xFEAA);
 
 // =========================================================================
 // BLEEddystoneURL
@@ -196,7 +196,7 @@ BLEAdvertisementData BLEEddystoneTLM::getAdvertisementData() const {
 }
 
 void BLEEddystoneTLM::setFromServiceData(const uint8_t *data, size_t len) {
-  if (len < 14 || data[0] != 0x20) {
+  if (len < 14 || data[0] != 0x20 || data[1] != 0x00) {
     return;
   }
   _voltage = (data[2] << 8) | data[3];

@@ -30,64 +30,88 @@
 #include "core/BLEBackend.h"
 #include "core/BLEMutex.h"
 
+void BLEClientImplCommon::clearDiscoveredServices() {
+  BLELockGuard lock(mtx);
+  for (auto &svc : discoveredServices) {
+    for (auto &chr : svc->characteristics) {
+      for (auto &desc : chr->descriptors) {
+        desc->chr = nullptr;
+      }
+      chr->descriptors.clear();
+      chr->descriptorsDiscovered = false;
+      chr->service = nullptr;
+      chr->onNotifyCb = nullptr;
+    }
+    svc->characteristics.clear();
+    svc->characteristicsDiscovered = false;
+    svc->client = nullptr;
+  }
+  discoveredServices.clear();
+}
+
 void BLEClientImplCommon::dispatchConnect(const BLEConnInfo &connInfo) {
   decltype(onConnectCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onConnectCb) {
+      return;
+    }
     cb = onConnectCb;
   }
   BLEClient clientHandle(shared_from_this());
-  if (cb) {
-    cb(clientHandle, connInfo);
-  }
+  cb(clientHandle, connInfo);
 }
 
 void BLEClientImplCommon::dispatchDisconnect(const BLEConnInfo &connInfo, uint8_t reason) {
   decltype(onDisconnectCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onDisconnectCb) {
+      return;
+    }
     cb = onDisconnectCb;
   }
   BLEClient clientHandle(shared_from_this());
-  if (cb) {
-    cb(clientHandle, connInfo, reason);
-  }
+  cb(clientHandle, connInfo, reason);
 }
 
 void BLEClientImplCommon::dispatchConnectFail(int reason) {
   decltype(onConnectFailCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onConnectFailCb) {
+      return;
+    }
     cb = onConnectFailCb;
   }
   BLEClient clientHandle(shared_from_this());
-  if (cb) {
-    cb(clientHandle, reason);
-  }
+  cb(clientHandle, reason);
 }
 
 void BLEClientImplCommon::dispatchMtuChanged(const BLEConnInfo &connInfo, uint16_t mtu) {
   decltype(onMtuChangedCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onMtuChangedCb) {
+      return;
+    }
     cb = onMtuChangedCb;
   }
   BLEClient clientHandle(shared_from_this());
-  if (cb) {
-    cb(clientHandle, connInfo, mtu);
-  }
+  cb(clientHandle, connInfo, mtu);
 }
 
 void BLEClientImplCommon::dispatchIdentityResolved(const BLEConnInfo &connInfo) {
   decltype(onIdentityCb) cb;
   {
     BLELockGuard lock(mtx);
+    if (!onIdentityCb) {
+      return;
+    }
     cb = onIdentityCb;
   }
   BLEClient clientHandle(shared_from_this());
-  if (cb) {
-    cb(clientHandle, connInfo);
-  }
+  cb(clientHandle, connInfo);
 }
 
 #if BLE_GATT_CLIENT_SUPPORTED

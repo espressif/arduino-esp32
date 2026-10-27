@@ -22,23 +22,23 @@
 
 #include <cstring>
 
-static const BLEUUID kDevInfoSvcUUID(static_cast<uint16_t>(0x180A));
-static const BLEUUID kHIDSvcUUID(static_cast<uint16_t>(0x1812));
-static const BLEUUID kBatterySvcUUID(static_cast<uint16_t>(0x180F));
+static constexpr BLEUUID kDevInfoSvcUUID = BLEUUID::from16(0x180A);
+static constexpr BLEUUID kHIDSvcUUID = BLEUUID::from16(0x1812);
+static constexpr BLEUUID kBatterySvcUUID = BLEUUID::from16(0x180F);
 
-static const BLEUUID kMfgNameUUID(static_cast<uint16_t>(0x2A29));
-static const BLEUUID kPnpIdUUID(static_cast<uint16_t>(0x2A50));
-static const BLEUUID kHIDInfoUUID(static_cast<uint16_t>(0x2A4A));
-static const BLEUUID kReportMapUUID(static_cast<uint16_t>(0x2A4B));
-static const BLEUUID kHIDControlUUID(static_cast<uint16_t>(0x2A4C));
-static const BLEUUID kProtocolModeUUID(static_cast<uint16_t>(0x2A4E));
-static const BLEUUID kReportUUID(static_cast<uint16_t>(0x2A4D));
-static const BLEUUID kBatteryLevelUUID(static_cast<uint16_t>(0x2A19));
-static const BLEUUID kBootInputUUID(static_cast<uint16_t>(0x2A22));
-static const BLEUUID kBootOutputUUID(static_cast<uint16_t>(0x2A32));
+static constexpr BLEUUID kMfgNameUUID = BLEUUID::from16(0x2A29);
+static constexpr BLEUUID kPnpIdUUID = BLEUUID::from16(0x2A50);
+static constexpr BLEUUID kHIDInfoUUID = BLEUUID::from16(0x2A4A);
+static constexpr BLEUUID kReportMapUUID = BLEUUID::from16(0x2A4B);
+static constexpr BLEUUID kHIDControlUUID = BLEUUID::from16(0x2A4C);
+static constexpr BLEUUID kProtocolModeUUID = BLEUUID::from16(0x2A4E);
+static constexpr BLEUUID kReportUUID = BLEUUID::from16(0x2A4D);
+static constexpr BLEUUID kBatteryLevelUUID = BLEUUID::from16(0x2A19);
+static constexpr BLEUUID kBootInputUUID = BLEUUID::from16(0x2A22);
+static constexpr BLEUUID kBootOutputUUID = BLEUUID::from16(0x2A32);
 
-static const BLEUUID kReportRefDescUUID(static_cast<uint16_t>(0x2908));
-static const BLEUUID kExtReportRefDescUUID(static_cast<uint16_t>(0x2907));
+static constexpr BLEUUID kReportRefDescUUID = BLEUUID::from16(0x2908);
+static constexpr BLEUUID kExtReportRefDescUUID = BLEUUID::from16(0x2907);
 
 BLEHIDDevice::BLEHIDDevice(BLEServer server) : _server(server) {
   _devInfoSvc = _server.createService(kDevInfoSvcUUID);

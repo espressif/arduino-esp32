@@ -104,10 +104,11 @@ public:
 
   /**
    * @brief Parse iBeacon fields from a raw manufacturer-specific payload.
-   * @param payload Pointer to the manufacturer-specific data bytes (starting at the
-   *                iBeacon type byte, i.e. after the company ID).
+   * @param payload Pointer to the manufacturer-specific data bytes (either 25+ bytes
+   *                including the 2-byte company ID, or 23+ bytes starting at the
+   *                iBeacon type/length header 0x02 0x15).
    * @param len     Length of the payload in bytes.
-   * @note No-op unless len >= 23 and the header is the iBeacon type/length (0x02 0x15).
+   * @note No-op unless the payload contains a valid 23-byte iBeacon body starting with 0x02 0x15.
    */
   void setFromPayload(const uint8_t *payload, size_t len);
 

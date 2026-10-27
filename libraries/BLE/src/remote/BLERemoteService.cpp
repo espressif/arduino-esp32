@@ -23,6 +23,13 @@
 #include "core/BLEBackend.h"
 #include "core/BLEImplHelpers.h"
 
+BLERemoteServiceImplCommon::~BLERemoteServiceImplCommon() {
+  BLELockGuard lock(cacheMtx ? cacheMtx->get() : nullptr);
+  for (auto &chr : characteristics) {
+    chr->service = nullptr;
+  }
+}
+
 BLERemoteService::BLERemoteService() : _impl(nullptr) {}
 
 BLERemoteService::operator bool() const {
@@ -38,9 +45,12 @@ uint16_t BLERemoteService::getHandle() const {
 }
 
 BLEClient BLERemoteService::getClient() const {
-  // makeHandle rebuilds the owning shared_ptr from the raw BLEClient::Impl* via
-  // shared_from_this(); the client is owned by whoever established the connection.
-  return (_impl && _impl->client) ? BLEClient::Impl::makeHandle(_impl->client) : BLEClient();
+  if (!_impl) {
+    return BLEClient();
+  }
+  auto client = _impl->clientOwner.lock();
+  BLELockGuard lock(_impl->cacheMtx ? _impl->cacheMtx->get() : nullptr);
+  return (client && _impl->client == client.get()) ? BLEClient(client) : BLEClient();
 }
 
 String BLERemoteService::getValue(const BLEUUID &charUUID) {

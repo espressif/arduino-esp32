@@ -44,7 +44,7 @@ public:
   /**
    * @brief Construct an invalid (empty) UUID.
    */
-  BLEUUID();
+  constexpr BLEUUID() = default;
 
   /**
    * @brief Construct from a string representation.
@@ -70,6 +70,26 @@ public:
    * @param uuid128 16-byte array where uuid128[0] is the most significant byte.
    */
   BLEUUID(const uint8_t uuid128[16]);
+
+  /**
+   * @brief Construct a 16-bit UUID at compile time.
+   */
+  static constexpr BLEUUID from16(uint16_t uuid16) {
+    return BLEUUID(
+      0x00, 0x00, static_cast<uint8_t>((uuid16 >> 8) & 0xFF), static_cast<uint8_t>(uuid16 & 0xFF), 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b,
+      0x34, 0xfb, 16
+    );
+  }
+
+  /**
+   * @brief Construct a 128-bit UUID at compile time from 16 big-endian bytes.
+   */
+  static constexpr BLEUUID from128(
+    uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6, uint8_t b7, uint8_t b8, uint8_t b9, uint8_t b10, uint8_t b11,
+    uint8_t b12, uint8_t b13, uint8_t b14, uint8_t b15
+  ) {
+    return BLEUUID(b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, 128);
+  }
 
   /**
    * @brief Construct a 128-bit UUID from raw bytes with explicit byte order.
@@ -117,7 +137,9 @@ public:
    * @brief Get the native bit size (16, 32, or 128).
    * @return The bit size, or 0 if the UUID is invalid/unset.
    */
-  uint8_t bitSize() const;
+  constexpr uint8_t bitSize() const {
+    return _bitSize;
+  }
 
   /**
    * @brief Convert to full 128-bit form using the Bluetooth Base UUID.
@@ -132,13 +154,15 @@ public:
    * @brief Check if the UUID has been set to a valid value.
    * @return True if the UUID is valid (bitSize() != 0).
    */
-  bool isValid() const;
+  constexpr bool isValid() const {
+    return _bitSize != 0;
+  }
 
   /**
    * @brief Equivalent to isValid().
    * @return True if the UUID is valid.
    */
-  explicit operator bool() const {
+  constexpr explicit operator bool() const {
     return isValid();
   }
 
@@ -147,7 +171,7 @@ public:
    * @return Pointer to the 16-byte internal array.
    * @note Only meaningful for 128-bit UUIDs or after calling to128().
    */
-  const uint8_t *data() const {
+  constexpr const uint8_t *data() const {
     return _uuid;
   }
 
@@ -156,16 +180,31 @@ public:
    * @return The 16-bit value.
    * @note Only valid when bitSize() == 16.
    */
-  uint16_t toUint16() const;
+  constexpr uint16_t toUint16() const {
+    return (static_cast<uint16_t>(_uuid[2]) << 8) | _uuid[3];
+  }
 
   /**
    * @brief Get the 32-bit UUID value.
    * @return The 32-bit value.
    * @note Only valid when bitSize() == 32.
    */
-  uint32_t toUint32() const;
+  constexpr uint32_t toUint32() const {
+    return (static_cast<uint32_t>(_uuid[0]) << 24) | (static_cast<uint32_t>(_uuid[1]) << 16) | (static_cast<uint32_t>(_uuid[2]) << 8) | _uuid[3];
+  }
 
 private:
+  /**
+   * @brief Construct a 128-bit UUID at compile time from 16 big-endian bytes.
+   * @note Private: only used by the constexpr factory @ref from16 (a member, so
+   *       it retains access). No in-tree external users exist.
+   */
+  constexpr BLEUUID(
+    uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6, uint8_t b7, uint8_t b8, uint8_t b9, uint8_t b10, uint8_t b11,
+    uint8_t b12, uint8_t b13, uint8_t b14, uint8_t b15, uint8_t bitSize = 128
+  )
+    : _uuid{b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15}, _bitSize(bitSize) {}
+
   uint8_t _uuid[16]{};
   uint8_t _bitSize = 0;
 

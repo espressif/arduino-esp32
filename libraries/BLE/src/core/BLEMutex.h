@@ -71,3 +71,30 @@ public:
 private:
   SemaphoreHandle_t _mtx;
 };
+
+/**
+ * @brief Reference-countable owner for a recursive FreeRTOS mutex.
+ *
+ * Child handles can retain this object after their parent is detached, keeping
+ * the synchronization primitive alive without retaining the parent itself.
+ */
+class BLESharedMutex {
+public:
+  BLESharedMutex() : _mtx(xSemaphoreCreateRecursiveMutex()) {}
+
+  ~BLESharedMutex() {
+    if (_mtx) {
+      vSemaphoreDelete(_mtx);
+    }
+  }
+
+  BLESharedMutex(const BLESharedMutex &) = delete;
+  BLESharedMutex &operator=(const BLESharedMutex &) = delete;
+
+  SemaphoreHandle_t get() const {
+    return _mtx;
+  }
+
+private:
+  SemaphoreHandle_t _mtx;
+};

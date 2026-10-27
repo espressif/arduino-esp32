@@ -182,3 +182,14 @@
 #else
 #define BLE_L2CAP_SUPPORTED 0
 #endif
+
+/*
+ * Validation-suite injectors. Off in production. The suite passes
+ * -DBLE_VALIDATION_HOOKS via tests/validation/ble/{client,server}/build_opt.h.
+ */
+#if defined(BLE_VALIDATION_HOOKS)
+#undef BLE_VALIDATION_HOOKS
+#define BLE_VALIDATION_HOOKS 1
+#else
+#define BLE_VALIDATION_HOOKS 0
+#endif

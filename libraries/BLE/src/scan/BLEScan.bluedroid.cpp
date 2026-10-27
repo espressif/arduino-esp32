@@ -36,20 +36,59 @@
 
 #include <esp_gap_ble_api.h>
 #include <algorithm>
+#include <cstring>
 #include <vector>
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
 BLEScan::Impl *BLEScan::Impl::s_instance = nullptr;
 
+#include "core/BLEValidationHooks.h"
+
+namespace {
+
+bool duplicateKeySeen(const BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
+  return std::any_of(impl.duplicateKeys.begin(), impl.duplicateKeys.end(), [&](const auto &key) {
+    return key.first == address && key.second == sid;
+  });
+}
+
+void markDuplicateKey(BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
+  if (!duplicateKeySeen(impl, address, sid)) {
+    impl.duplicateKeys.emplace_back(address, sid);
+  }
+}
+
+}  // namespace
+
+// One-shot expiry for fractional/sub-second legacy durations: stop the
+// (continuous) stack scan; SCAN_STOP_COMPLETE then dispatches onComplete and
+// gives scanSync because timerExpiryStop is set (see handleGAP).
+void BLEScan::Impl::durationTimerCb(void *arg) {
+  auto *inst = static_cast<BLEScan::Impl *>(arg);
+  if (!inst || !inst->isScanning) {
+    return;
+  }
+  BLEAdmissionGuard admission(inst->nativeAdmission);
+  if (!admission) {
+    return;
+  }
+  inst->timerExpiryStop = true;
+  esp_err_t err = esp_ble_gap_stop_scanning();
+  if (err != ESP_OK) {
+    inst->timerExpiryStop = false;
+    log_e("scan duration timer: esp_ble_gap_stop_scanning: %s", esp_err_to_name(err));
+  }
+}
+
 // --------------------------------------------------------------------------
 // Configuration
 // --------------------------------------------------------------------------
 
 void BLEScan::clearDuplicateCache() {
-#ifdef ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_LIST_CLEAN_ALL
-  esp_ble_gap_clean_duplicate_scan_exceptional_list(ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_LIST_CLEAN_ALL, NULL, 0);
-#endif
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.duplicateKeys.clear();
 }
 
 // --------------------------------------------------------------------------
@@ -58,10 +97,27 @@ void BLEScan::clearDuplicateCache() {
 
 BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
+  if (!bleGapDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
+  }
+
+  if (impl.isScanning) {
+    BTStatus stopStatus = stopBackend();
+    if (!stopStatus) {
+      return stopStatus;
+    }
+  }
 
   if (!appendToExistingResults) {
-    BLELockGuard lock(impl.mtx);
-    impl.results = BLEScan::Results();
+    {
+      BLELockGuard lock(impl.mtx);
+      impl.results = BLEScan::Results();
+    }
+    clearDuplicateCache();
   }
 
 #if BLE5_SUPPORTED
@@ -72,31 +128,50 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   esp_ble_ext_scan_params_t extParams = {};
   extParams.own_addr_type = static_cast<esp_ble_addr_type_t>(BLE.getOwnAddressType());
   extParams.filter_policy = BLE_SCAN_FILTER_ALLOW_ALL;
-  extParams.scan_duplicate = impl.filterDuplicates ? BLE_SCAN_DUPLICATE_ENABLE : BLE_SCAN_DUPLICATE_DISABLE;
+  // Controller duplicate filters may suppress a same-address report even when
+  // its payload changed. Keep native filtering off and apply the public policy
+  // to byte-identical reports in the GAP callback instead.
+  extParams.scan_duplicate = BLE_SCAN_DUPLICATE_DISABLE;
   extParams.cfg_mask = ESP_BLE_GAP_EXT_SCAN_CFG_UNCODE_MASK;
   extParams.uncoded_cfg.scan_type = impl.activeScan ? BLE_SCAN_TYPE_ACTIVE : BLE_SCAN_TYPE_PASSIVE;
   extParams.uncoded_cfg.scan_interval = impl.interval;
   extParams.uncoded_cfg.scan_window = impl.window;
 
-  impl.scanSync.take();
+  impl.paramSync.take();
   esp_err_t err = esp_ble_gap_set_ext_scan_params(&extParams);
   if (err != ESP_OK) {
-    impl.scanSync.give(BTStatus::Fail);
+    impl.paramSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_set_ext_scan_params: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
-  BTStatus rc = impl.scanSync.wait(5000);
+  BTStatus rc = impl.paramSync.wait(5000);
   if (rc != BTStatus::OK) {
     log_e("Ext scan param set did not complete (status=%d)", static_cast<int>(rc.code()));
     return rc;
   }
 
+  const char *taskName = pcTaskGetName(nullptr);
+  const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
+
   // Extended scan duration is in 10 ms units; 0 == scan until stopped.
-  uint32_t durationUnits = (durationMs == 0) ? 0 : (durationMs / 10);
+  uint32_t durationUnits = bleGapDurationMsTo10ms(durationMs);
+  impl.scanSync.take();
+  if (!onBtcTask) {
+    impl.paramSync.take();
+  }
+  impl.isScanning = true;
   err = esp_ble_gap_start_ext_scan(durationUnits, 0);
   if (err != ESP_OK) {
+    impl.isScanning = false;
+    if (!onBtcTask) {
+      impl.paramSync.give(BTStatus::Fail);
+    }
+    impl.scanSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_start_ext_scan: %s", esp_err_to_name(err));
     return BTStatus::Fail;
+  }
+  if (!onBtcTask) {
+    return impl.paramSync.wait(5000);
   }
   return BTStatus::OK;
 #else
@@ -107,30 +182,79 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   scanParams.scan_filter_policy = BLE_SCAN_FILTER_ALLOW_ALL;
   scanParams.scan_interval = impl.interval;
   scanParams.scan_window = impl.window;
-  scanParams.scan_duplicate = impl.filterDuplicates ? BLE_SCAN_DUPLICATE_ENABLE : BLE_SCAN_DUPLICATE_DISABLE;
+  scanParams.scan_duplicate = BLE_SCAN_DUPLICATE_DISABLE;
 
   // Set scan params and wait for completion event
-  impl.scanSync.take();
+  impl.paramSync.take();
   esp_err_t err = esp_ble_gap_set_scan_params(&scanParams);
   if (err != ESP_OK) {
-    impl.scanSync.give(BTStatus::Fail);
+    impl.paramSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_set_scan_params: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
 
-  BTStatus rc = impl.scanSync.wait(5000);
+  BTStatus rc = impl.paramSync.wait(5000);
   if (rc != BTStatus::OK) {
     log_e("Scan param set did not complete (status=%d)", static_cast<int>(rc.code()));
     return rc;
   }
 
-  // Bluedroid uses seconds; convert ms -> s, 0 means infinite
-  uint32_t durationSec = durationMs / 1000;
+  const char *taskName = pcTaskGetName(nullptr);
+  const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
+
+  // Bluedroid uses whole seconds. A sub-second duration would truncate to 0
+  // (continuous) and a fractional one would lose its remainder, unlike
+  // NimBLE's exact ms. Run those as a continuous scan stopped by a one-shot
+  // esp_timer at exactly durationMs; whole-second durations keep the native
+  // stack duration (whose INQ_CMPL expiry dispatches onComplete).
+  const bool needsTimer = (durationMs != 0 && (durationMs % 1000) != 0);
+  uint32_t durationSec = needsTimer ? 0 : (durationMs / 1000);
+  impl.scanSync.take();
+  if (!onBtcTask) {
+    impl.paramSync.take();
+  }
+  impl.isScanning = true;
 
   err = esp_ble_gap_start_scanning(durationSec);
   if (err != ESP_OK) {
+    impl.isScanning = false;
+    if (!onBtcTask) {
+      impl.paramSync.give(BTStatus::Fail);
+    }
+    impl.scanSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_start_scanning: %s", esp_err_to_name(err));
     return BTStatus::Fail;
+  }
+
+  if (!onBtcTask) {
+    rc = impl.paramSync.wait(5000);
+    if (rc != BTStatus::OK) {
+      log_e("Scan start did not complete (status=%d)", static_cast<int>(rc.code()));
+      return rc;
+    }
+  }
+
+  if (needsTimer) {
+    if (!impl.durationTimer) {
+      esp_timer_create_args_t timerArgs = {};
+      timerArgs.callback = BLEScan::Impl::durationTimerCb;
+      timerArgs.arg = &impl;
+      timerArgs.name = "ble_scan_dur";
+      timerArgs.dispatch_method = ESP_TIMER_TASK;
+      esp_err_t terr = esp_timer_create(&timerArgs, &impl.durationTimer);
+      if (terr != ESP_OK) {
+        log_e("scan duration timer create: %s", esp_err_to_name(terr));
+        (void)stopBackend();
+        return BTStatus::Fail;
+      }
+    }
+    esp_timer_stop(impl.durationTimer);
+    esp_err_t terr = esp_timer_start_once(impl.durationTimer, static_cast<uint64_t>(durationMs) * 1000ULL);
+    if (terr != ESP_OK) {
+      log_e("scan duration timer start: %s", esp_err_to_name(terr));
+      (void)stopBackend();
+      return BTStatus::Fail;
+    }
   }
 
   return BTStatus::OK;
@@ -146,10 +270,8 @@ BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
     return BLEScan::Results();
   }
 
-  // start() already armed scanSync (took it and consumed the param-set
-  // completion), so the semaphore is drained and ready. Wait directly for the
-  // scan-completion (INQ_CMPL_EVT) give(); re-taking here would race with an
-  // early completion and drop the signal.
+  // start() already armed scanSync before launching the scan, so the semaphore
+  // is drained and ready. Wait directly for the scan-completion or stop give().
   uint32_t waitMs = (durationMs == 0) ? portMAX_DELAY : durationMs + 2000;
   BTStatus waitSt = impl.scanSync.wait(waitMs);
   if (waitSt != BTStatus::OK) {
@@ -162,16 +284,51 @@ BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
 
 BTStatus BLEScan::stop() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-#if BLE5_SUPPORTED
-  esp_err_t err = esp_ble_gap_stop_ext_scan();
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::OK;
+  }
+  return stopBackend();
+}
+
+BTStatus BLEScan::stopBackend() {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.durationTimer) {
+    esp_timer_stop(impl.durationTimer);
+  }
+  impl.timerExpiryStop = false;
+  if (!impl.isScanning) {
+    return BTStatus::OK;
+  }
+  TaskHandle_t cur = xTaskGetCurrentTaskHandle();
+  const char *tn = cur ? pcTaskGetName(cur) : "";
+  const bool waitStop = (!tn || strcmp(tn, "BTC_TASK") != 0);
+  if (waitStop) {
+    impl.stopSync.take();
+  }
+  esp_err_t err;
+#if BLE_VALIDATION_HOOKS
+  int remainingFailures = BLEHooks.scan.cancelFailures.load(std::memory_order_relaxed);
+  while (remainingFailures > 0 && !BLEHooks.scan.cancelFailures.compare_exchange_weak(remainingFailures, remainingFailures - 1, std::memory_order_relaxed)) {}
+  bool forceStopFailure = remainingFailures > 0;
 #else
-  esp_err_t err = esp_ble_gap_stop_scanning();
+  bool forceStopFailure = false;
+#endif
+#if BLE5_SUPPORTED
+  err = forceStopFailure ? ESP_FAIL : esp_ble_gap_stop_ext_scan();
+#else
+  err = forceStopFailure ? ESP_FAIL : esp_ble_gap_stop_scanning();
 #endif
   if (err != ESP_OK) {
+    if (waitStop) {
+      impl.stopSync.give(BTStatus::Fail);
+    }
     log_e("stop scanning: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
-  impl.isScanning = false;
+  if (waitStop) {
+    return impl.stopSync.wait(2000);
+  }
   return BTStatus::OK;
 }
 
@@ -182,15 +339,29 @@ BTStatus BLEScan::stop() {
 BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedConfig, const ExtScanConfig *uncodedConfig) {
 #if BLE5_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
+  if (!bleGapDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
+  }
+  if (impl.isScanning) {
+    BTStatus stopStatus = stopBackend();
+    if (!stopStatus) {
+      return stopStatus;
+    }
+  }
   {
     BLELockGuard lock(impl.mtx);
     impl.results = BLEScan::Results();
   }
+  clearDuplicateCache();
 
   esp_ble_ext_scan_params_t extParams = {};
   extParams.own_addr_type = static_cast<esp_ble_addr_type_t>(BLE.getOwnAddressType());
   extParams.filter_policy = BLE_SCAN_FILTER_ALLOW_ALL;
-  extParams.scan_duplicate = impl.filterDuplicates ? BLE_SCAN_DUPLICATE_ENABLE : BLE_SCAN_DUPLICATE_DISABLE;
+  extParams.scan_duplicate = BLE_SCAN_DUPLICATE_DISABLE;
   esp_ble_scan_type_t type = impl.activeScan ? BLE_SCAN_TYPE_ACTIVE : BLE_SCAN_TYPE_PASSIVE;
   // ExtScanConfig interval/window are in milliseconds; impl.interval/window are
   // already in 0.625 ms controller units.
@@ -205,23 +376,39 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
     extParams.coded_cfg.scan_window = bleMsToUnits0625(codedConfig->window);
   }
 
-  impl.scanSync.take();
+  impl.paramSync.take();
   esp_err_t err = esp_ble_gap_set_ext_scan_params(&extParams);
   if (err != ESP_OK) {
-    impl.scanSync.give(BTStatus::Fail);
+    impl.paramSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_set_ext_scan_params: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
-  BTStatus rc = impl.scanSync.wait(5000);
+  BTStatus rc = impl.paramSync.wait(5000);
   if (rc != BTStatus::OK) {
     return rc;
   }
 
-  uint32_t durationUnits = (durationMs == 0) ? 0 : (durationMs / 10);
+  const char *taskName = pcTaskGetName(nullptr);
+  const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
+
+  uint32_t durationUnits = bleGapDurationMsTo10ms(durationMs);
+  impl.scanSync.take();
+  if (!onBtcTask) {
+    impl.paramSync.take();
+  }
+  impl.isScanning = true;
   err = esp_ble_gap_start_ext_scan(durationUnits, 0);
   if (err != ESP_OK) {
+    impl.isScanning = false;
+    if (!onBtcTask) {
+      impl.paramSync.give(BTStatus::Fail);
+    }
+    impl.scanSync.give(BTStatus::Fail);
     log_e("esp_ble_gap_start_ext_scan: %s", esp_err_to_name(err));
     return BTStatus::Fail;
+  }
+  if (!onBtcTask) {
+    return impl.paramSync.wait(5000);
   }
   return BTStatus::OK;
 #else
@@ -243,6 +430,10 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
   // which passes &impl as the GAP callback context). Avoid BLE_CHECK_IMPL here —
   // it would leave an unused `impl` reference under -Werror=unused-variable.
   if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  BLEAdmissionGuard admission(_impl->nativeAdmission);
+  if (!admission) {
     return BTStatus::InvalidState;
   }
 
@@ -272,6 +463,11 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
 
 BTStatus BLEScan::cancelPeriodicSync() {
 #if BLE_PERIODIC_ADV_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
   esp_err_t err = esp_ble_gap_periodic_adv_sync_cancel();
   if (err != ESP_OK) {
     log_e("esp_ble_gap_periodic_adv_sync_cancel: %s", esp_err_to_name(err));
@@ -286,6 +482,11 @@ BTStatus BLEScan::cancelPeriodicSync() {
 
 BTStatus BLEScan::terminatePeriodicSync(uint16_t syncHandle) {
 #if BLE_PERIODIC_ADV_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
   esp_err_t err = esp_ble_gap_periodic_adv_sync_terminate(syncHandle);
   if (err != ESP_OK) {
     log_e("esp_ble_gap_periodic_adv_sync_terminate handle=%u: %s", syncHandle, esp_err_to_name(err));
@@ -322,6 +523,37 @@ void BLEScan::terminateAllPeriodicSyncs() {
 #endif
 }
 
+void BLEScan::resetBackendEvents() {}
+
+void BLEScan::prepareBackendStart() {
+  if (_impl) {
+    _impl->nativeAdmission.reopen();
+  }
+}
+
+void BLEScan::beginBackendShutdown() {
+  if (!_impl) {
+    return;
+  }
+  _impl->nativeAdmission.close();
+#if BLE_VALIDATION_HOOKS
+  BLEHooks.scan.bluedroidShutdownEntered.store(true, std::memory_order_release);
+  BLEValidationHooks::holdWhile(BLEHooks.scan.holdBluedroidShutdown);
+#endif
+  _impl->nativeAdmission.waitUntilIdle();
+  bool wasScanning = _impl->isScanning.load(std::memory_order_acquire);
+  BTStatus stopStatus = stopBackend();
+  if (!stopStatus && wasScanning) {
+    // The native host will be deinitialized next, so no completion is
+    // guaranteed after a failed stop submission. Retire the public session
+    // and release an unlimited startBlocking() waiter deterministically.
+    _impl->isScanning.store(false, std::memory_order_release);
+    _impl->timerExpiryStop.store(false, std::memory_order_release);
+    _impl->scanSync.give(BTStatus::Fail);
+    _impl->stopSync.give(BTStatus::Fail);
+  }
+}
+
 // --------------------------------------------------------------------------
 // GAP event handler (called from BluedroidCore gapCallback)
 // --------------------------------------------------------------------------
@@ -341,20 +573,46 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
     case ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT:
       log_d("SCAN_PARAM_SET_COMPLETE status=%d", param->scan_param_cmpl.status);
-      inst->scanSync.give(param->scan_param_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+      inst->paramSync.give(param->scan_param_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
 
     case ESP_GAP_BLE_SCAN_START_COMPLETE_EVT:
+    {
       log_d("SCAN_START_COMPLETE status=%d", param->scan_start_cmpl.status);
-      if (param->scan_start_cmpl.status == ESP_BT_STATUS_SUCCESS) {
-        inst->isScanning = true;
+      bool ok = (param->scan_start_cmpl.status == ESP_BT_STATUS_SUCCESS);
+      inst->isScanning = ok;
+      inst->paramSync.give(ok ? BTStatus::OK : BTStatus::Fail);
+      if (!ok) {
+        inst->scanSync.give(BTStatus::Fail);
       }
       break;
+    }
 
     case ESP_GAP_BLE_SCAN_STOP_COMPLETE_EVT:
+    {
       log_d("SCAN_STOP_COMPLETE status=%d", param->scan_stop_cmpl.status);
-      inst->isScanning = false;
+      BTStatus st = param->scan_stop_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail;
+      if (st) {
+        inst->isScanning = false;
+      }
+      // A stop driven by the fractional-duration timer is a natural expiry:
+      // dispatch onComplete like ESP_GAP_SEARCH_INQ_CMPL_EVT does.
+      if (inst->timerExpiryStop.exchange(false) && st) {
+        BLEScan::CompleteHandler completeCb;
+        BLEScan::Results resultsCopy;
+        {
+          BLELockGuard lock(inst->mtx);
+          completeCb = inst->onCompleteCb;
+          resultsCopy = inst->results;
+        }
+        if (completeCb) {
+          completeCb(resultsCopy);
+        }
+      }
+      inst->scanSync.give(st);
+      inst->stopSync.give(st);
       break;
+    }
 
     case ESP_GAP_BLE_SCAN_RESULT_EVT:
     {
@@ -366,9 +624,43 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             break;
           }
 
+          BTAddress addr = BTAddress::fromEspBdAddr(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
+          if (param->scan_rst.ble_evt_type == ESP_BLE_EVT_SCAN_RSP || (param->scan_rst.adv_data_len == 0 && param->scan_rst.scan_rsp_len > 0)) {
+            BLEAdvertisedDevice merged;
+            bool found = false;
+            bool duplicate = false;
+            BLEScan::ResultHandler cb;
+            {
+              BLELockGuard lock(inst->mtx);
+              const uint8_t *scanRsp = param->scan_rst.ble_adv + param->scan_rst.adv_data_len;
+              for (const auto &existing : inst->results) {
+                if (existing.getAddress() == addr && existing.getAdvSID() == 0xFF) {
+                  duplicate = inst->filterDuplicates && duplicateKeySeen(*inst, addr, 0xFF)
+                              && BLEScanImplCommon::sameScanResponsePayload(existing, scanRsp, param->scan_rst.scan_rsp_len);
+                  break;
+                }
+              }
+              if (!duplicate) {
+                found = BLEScanImplCommon::mergeScanResponse(inst->results, addr, 0xFF, scanRsp, param->scan_rst.scan_rsp_len, param->scan_rst.rssi, merged);
+                if (found && inst->filterDuplicates) {
+                  markDuplicateKey(*inst, addr, 0xFF);
+                }
+                cb = inst->onResultCb;
+              } else {
+                found = true;
+              }
+            }
+            if (found) {
+              if (!duplicate && cb) {
+                cb(merged);
+              }
+              break;
+            }
+          }
+
           // Build advertised device from scan result
           auto devImpl = std::make_shared<BLEAdvertisedDevice::Impl>();
-          devImpl->address = BTAddress::fromEspBdAddr(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
+          devImpl->address = addr;
           devImpl->addrType = static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type);
           devImpl->rssi = param->scan_rst.rssi;
           devImpl->hasRSSI = true;
@@ -394,6 +686,10 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
           }
 
           devImpl->parsePayload(param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len);
+          // parsePayload() defaults the primary length to the complete buffer.
+          // Bluedroid combines legacy ADV and SCAN_RSP bytes in that buffer, so
+          // restore the native split after parsing for later scan-response reuse.
+          devImpl->advPayloadLen = param->scan_rst.adv_data_len;
 
           BLEAdvertisedDevice dev = BLEScanImplCommon::makeAdvertisedDeviceHandle(devImpl);
 
@@ -408,17 +704,24 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
               // sets from one address (different SIDs) are not duplicates. Legacy
               // PDUs carry SID 0xFF, so this stays address-based among legacy
               // entries while not colliding with extended sets from the same peer.
+              // Suppress only byte-identical reports. Same-length primary or
+              // scan-response updates are fresh data, not duplicates.
               if (inst->filterDuplicates) {
+                const bool keySeen = duplicateKeySeen(*inst, dev.getAddress(), dev.getAdvSID());
                 for (const auto &existing : inst->results) {
                   if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
-                    isDuplicate = true;
+                    isDuplicate = keySeen && BLEScanImplCommon::samePayload(existing, dev);
                     break;
                   }
                 }
               }
 
               if (!isDuplicate) {
-                inst->results.appendOrReplace(dev);
+                // Dispatch the winning (possibly preserved cached) entry.
+                dev = inst->results.appendOrReplace(dev);
+                if (inst->filterDuplicates) {
+                  markDuplicateKey(*inst, dev.getAddress(), dev.getAdvSID());
+                }
                 resultCb = inst->onResultCb;
               }
             }
@@ -462,21 +765,50 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     // --- BLE5 extended scan (see BLEScan::start ext path) ---
     case ESP_GAP_BLE_SET_EXT_SCAN_PARAMS_COMPLETE_EVT:
       log_d("SET_EXT_SCAN_PARAMS_COMPLETE status=%d", param->set_ext_scan_params.status);
-      inst->scanSync.give(param->set_ext_scan_params.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+      inst->paramSync.give(param->set_ext_scan_params.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
 
     case ESP_GAP_BLE_EXT_SCAN_START_COMPLETE_EVT:
+    {
       log_d("EXT_SCAN_START_COMPLETE status=%d", param->ext_scan_start.status);
-      if (param->ext_scan_start.status == ESP_BT_STATUS_SUCCESS) {
-        inst->isScanning = true;
+      bool ok = (param->ext_scan_start.status == ESP_BT_STATUS_SUCCESS);
+      inst->isScanning = ok;
+      inst->paramSync.give(ok ? BTStatus::OK : BTStatus::Fail);
+      if (!ok) {
+        inst->scanSync.give(BTStatus::Fail);
       }
       break;
+    }
 
     case ESP_GAP_BLE_EXT_SCAN_STOP_COMPLETE_EVT:
+    {
       log_d("EXT_SCAN_STOP_COMPLETE status=%d", param->ext_scan_stop.status);
-      inst->isScanning = false;
-      inst->scanSync.give(param->ext_scan_stop.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+      BTStatus st = param->ext_scan_stop.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail;
+      if (st) {
+        inst->isScanning = false;
+      }
+      inst->scanSync.give(st);
+      inst->stopSync.give(st);
       break;
+    }
+
+    case ESP_GAP_BLE_SCAN_TIMEOUT_EVT:
+    {
+      log_d("SCAN_TIMEOUT_EVT");
+      inst->isScanning = false;
+      BLEScan::CompleteHandler completeCb;
+      BLEScan::Results resultsCopy;
+      {
+        BLELockGuard lock(inst->mtx);
+        completeCb = inst->onCompleteCb;
+        resultsCopy = inst->results;
+      }
+      if (completeCb) {
+        completeCb(resultsCopy);
+      }
+      inst->scanSync.give();
+      break;
+    }
 
     case ESP_GAP_BLE_EXT_ADV_REPORT_EVT:
     {
@@ -488,18 +820,34 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
       // Merge scan responses (which carry the Local Name) into the device from
       // the preceding advertisement.
-      const bool isScanRsp = (r.event_type & ESP_BLE_ADV_REPORT_EXT_SCAN_RSP) != 0;
+      const bool isScanRsp = (r.event_type & ESP_BLE_ADV_REPORT_EXT_SCAN_RSP) != 0 || r.event_type == ESP_BLE_LEGACY_ADV_TYPE_SCAN_RSP_TO_ADV_IND
+                             || r.event_type == ESP_BLE_LEGACY_ADV_TYPE_SCAN_RSP_TO_ADV_SCAN_IND;
       if (isScanRsp) {
         BLEAdvertisedDevice merged;
         bool found = false;
+        bool duplicate = false;
         BLEScan::ResultHandler cb;
         {
           BLELockGuard lock(inst->mtx);
-          found = BLEScanImplCommon::mergeScanResponse(inst->results, addr, r.sid, r.adv_data, r.adv_data_len, r.rssi, merged);
-          cb = inst->onResultCb;
+          for (const auto &existing : inst->results) {
+            if (existing.getAddress() == addr && existing.getAdvSID() == r.sid) {
+              duplicate = inst->filterDuplicates && duplicateKeySeen(*inst, addr, r.sid)
+                          && BLEScanImplCommon::sameScanResponsePayload(existing, r.adv_data, r.adv_data_len);
+              break;
+            }
+          }
+          if (!duplicate) {
+            found = BLEScanImplCommon::mergeScanResponse(inst->results, addr, r.sid, r.adv_data, r.adv_data_len, r.rssi, merged);
+            if (found && inst->filterDuplicates) {
+              markDuplicateKey(*inst, addr, r.sid);
+            }
+            cb = inst->onResultCb;
+          } else {
+            found = true;
+          }
         }
         if (found) {
-          if (cb) {
+          if (!duplicate && cb) {
             cb(merged);
           }
           break;
@@ -532,17 +880,21 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
       {
         BLELockGuard lock(inst->mtx);
         if (inst->filterDuplicates) {
+          const bool keySeen = duplicateKeySeen(*inst, dev.getAddress(), dev.getAdvSID());
           // Match appendOrReplace: distinct advertising sets from one address
           // (different SIDs) are not duplicates of each other.
           for (const auto &existing : inst->results) {
             if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
-              isDuplicate = true;
+              isDuplicate = keySeen && BLEScanImplCommon::samePrimaryPayload(existing, dev);
               break;
             }
           }
         }
         if (!isDuplicate) {
-          inst->results.appendOrReplace(dev);
+          dev = inst->results.appendOrReplace(dev);
+          if (inst->filterDuplicates) {
+            markDuplicateKey(*inst, dev.getAddress(), dev.getAdvSID());
+          }
           resultCb = inst->onResultCb;
         }
       }
@@ -639,6 +991,10 @@ BTStatus BLEScan::stop() {
   return BTStatus::NotSupported;
 }
 
+BTStatus BLEScan::stopBackend() {
+  return BTStatus::NotSupported;
+}
+
 BTStatus BLEScan::startExtended(uint32_t, const ExtScanConfig *, const ExtScanConfig *) {
   log_w("Scanning not supported");
   return BTStatus::NotSupported;
@@ -665,6 +1021,12 @@ BTStatus BLEScan::terminatePeriodicSync(uint16_t) {
 }
 
 void BLEScan::terminateAllPeriodicSyncs() {}
+
+void BLEScan::resetBackendEvents() {}
+
+void BLEScan::prepareBackendStart() {}
+
+void BLEScan::beginBackendShutdown() {}
 
 #endif /* BLE_SCANNING_SUPPORTED */
 

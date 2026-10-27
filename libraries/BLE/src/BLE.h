@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <vector>
+#include "freertos/FreeRTOS.h"
 #include "WString.h"
 #include "BTStatus.h"
 #include "BTAddress.h"
@@ -54,7 +55,8 @@
  * operations, etc.) are NOT internally synchronized. Call them from
  * a single task — typically the Arduino loop task. BLE callbacks execute
  * on the stack's own task (NimBLE host task or Bluedroid BTC task) and
- * must not call BLEClass methods that mutate state.
+ * must not block. @ref end from a callback is supported (it defers
+ * teardown); do not call @ref begin from a callback.
  *
  * Usage:
  * @code
@@ -79,6 +81,8 @@ public:
    *
    * @param deviceName  Advertised device name. Empty string keeps the default.
    * @return BTStatus indicating success or the specific initialization error.
+   *         @c InvalidState if @ref end is in progress, including a
+   *         callback-context @ref end whose teardown worker has not finished.
    */
   BTStatus begin(const String &deviceName = "");
 
@@ -86,6 +90,15 @@ public:
    * @brief Shut down the BLE stack.
    *
    * Stops advertising, disconnects all peers, and deinitializes the host.
+   * Local GATT services created since the last @ref begin are released; handles
+   * the sketch still holds become detached shells (still non-null, but with no
+   * parent or native handle). @ref createServer returns the same server after a
+   * later @ref begin — rebuild the database before @c start().
+   *
+   * From the stack callback task this claims shutdown immediately so a following
+   * @ref begin returns @c InvalidState, then defers the teardown body to a
+   * worker. If that worker cannot be created, the next user-thread @ref end
+   * completes it.
    *
    * @param releaseMemory  If true, also releases the Bluetooth controller
    *                       memory. After this, begin() cannot reinitialize BLE
@@ -96,7 +109,11 @@ public:
   /**
    * @brief Check whether the BLE stack has been initialized.
    *
-   * @return true if begin() completed successfully and end() has not been called.
+   * @return true if begin() completed successfully and end() has not yet
+   *         cleared the public session. A deferred callback-context end() may
+   *         still report true until teardown runs (the worker, or a later
+   *         user-thread @ref end if the worker could not be created); @ref begin
+   *         returns @c InvalidState for that window.
    */
   bool isInitialized() const;
 
@@ -467,12 +484,16 @@ public:
   BLEClass &operator=(BLEClass &&) = delete;
 
 private:
+  friend class BLEStream;
   // BLEClass::Impl is a nested member type, so its static stack callbacks can reach
   // this singleton's private state (_impl, _deviceName) directly -- no friend needed.
   struct Impl;
   Impl *_impl;
+  bool setStreamEndHooks(void (*preHook)(), void (*postHook)());
 
+  mutable portMUX_TYPE _stateMux = portMUX_INITIALIZER_UNLOCKED;
   bool _initialized = false;
+  void setInitialized(bool initialized);
   BTAddress::Type _ownAddressType = BTAddress::Type::Public;
   String _deviceName;
   std::vector<BTAddress> _whiteList;

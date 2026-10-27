@@ -22,8 +22,8 @@ bool connected = false;
 volatile bool doConnect = false;
 BTAddress serverAddress;
 
-void onNotification(BLERemoteCharacteristic chr, const uint8_t *data, size_t len, bool isNotify) {
-  Serial.printf("[%s] data(%d bytes): %.*s\n", isNotify ? "NOTIFY" : "INDICATE", (int)len, (int)len, data);
+void onNotification(BLERemoteCharacteristic chr, const uint8_t *data, size_t len, BLESubscription kind) {
+  Serial.printf("[%s] data(%d bytes): %.*s\n", kind == BLESubscription::Notify ? "NOTIFY" : "INDICATE", (int)len, (int)len, data);
 }
 
 // NOTE: Keep this callback lightweight. Blocking BLE operations (createClient,
@@ -83,7 +83,7 @@ bool connectToServer() {
 
   if (chr.canNotify()) {
     Serial.print("Subscribing to notifications... ");
-    status = chr.subscribe(true, onNotification);
+    status = chr.subscribe(BLESubscription::Notify, onNotification);
     if (status) {
       Serial.println("OK");
     } else {
