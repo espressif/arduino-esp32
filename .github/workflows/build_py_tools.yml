@@ -24,7 +24,7 @@ jobs:
       all_changed_files: ${{ steps.verify-changed-files.outputs.all_changed_files }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 2
           ref: ${{ github.event.pull_request.head.ref }}
@@ -36,7 +36,7 @@ jobs:
           echo "Make sure you are using a branch inside the repository and not a fork."
 
       - name: Verify Python Tools Changed
-        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         id: verify-changed-files
         with:
           fetch_depth: "2"
@@ -99,13 +99,13 @@ jobs:
           done
 
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Python 3
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: 3.x
 
@@ -123,7 +123,7 @@ jobs:
 
       - name: Sign binaries
         if: matrix.os == 'windows-latest'
-        uses: espressif/release-sign@33f3684091168d78b2cf6c8265bd9968c376254c # master
+        uses: espressif/release-sign@d960931564d5b899bb6bd10dde1e9290c5c8a580 # master
         with:
           path: ./${{ env.DISTPATH }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -151,7 +151,7 @@ jobs:
           bash .github/scripts/upload_py_tools.sh "${{ env.CHANGED_TOOLS }}"
 
       - name: Archive artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ env.DISTPATH }}
           path: ${{ env.DISTPATH }}

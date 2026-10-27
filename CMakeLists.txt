@@ -228,6 +228,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterWindowCovering.cpp
   libraries/Matter/src/MatterEndpoints/MatterLightSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterSoilSensor.cpp
+  libraries/Matter/src/MatterEndpoints/MatterWaterHeater.cpp
   libraries/Matter/src/MatterEndpoints/MatterWaterValve.cpp
   libraries/Matter/src/Matter.cpp
   libraries/Matter/src/MatterHelpers.cpp
@@ -370,6 +371,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeBinary.cpp
   libraries/Zigbee/src/ep/ZigbeePowerOutlet.cpp
   libraries/Zigbee/src/ep/ZigbeeFanControl.cpp
+  libraries/Zigbee/src/ep/ZigbeeDoorLock.cpp
   libraries/Zigbee/src/ep/ZigbeeMultistate.cpp
   )
 

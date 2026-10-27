@@ -25,8 +25,19 @@
 // If reading/writing to the SD card is unstable,
 // you can define BOARD_MAX_SDMMC_FREQ with lower value (Ex. SDMMC_FREQ_DEFAULT)
 // in pins_arduino.h for your board variant.
+// On UHS-I SoCs the default is SDR50 (100 MHz, 4-line slot 0). begin()
+// requests the 1.8 V switch and, if the card stays at 3.3 V or UHS init
+// fails, mounts again at SDMMC_FREQ_HIGHSPEED. Any other frequency above
+// high speed is clamped to SDMMC_FREQ_HIGHSPEED. ESP32-S31 powers the
+// SDR50 switch from on-chip LDO channel 1 (fixed 1.8 V, shared with PSRAM)
+// and publishes that handle with io_voltage 1.8 V, unless
+// BOARD_SDMMC_POWER_CHANNEL or setPowerChannel() says otherwise.
 #ifndef BOARD_MAX_SDMMC_FREQ
+#ifdef SOC_SDMMC_UHS_I_SUPPORTED
+#define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_SDR50
+#else
 #define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_HIGHSPEED
+#endif
 #endif
 
 namespace fs {
@@ -40,7 +51,7 @@ protected:
   int8_t _pin_d1 = -1;
   int8_t _pin_d2 = -1;
   int8_t _pin_d3 = -1;
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+#if defined(SOC_SDMMC_IO_POWER_EXTERNAL) || defined(SOC_SDMMC_IO_UHS_POWER_EXTERNAL)
   int8_t _power_channel = -1;
   void *_pwr_ctrl_handle = nullptr;  // sd_pwr_ctrl; IDF unmount does not delete this
 #endif
@@ -51,7 +62,7 @@ public:
   SDMMCFS(FSImplPtr impl);
   bool setPins(int clk, int cmd, int d0);
   bool setPins(int clk, int cmd, int d0, int d1, int d2, int d3);
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+#if defined(SOC_SDMMC_IO_POWER_EXTERNAL) || defined(SOC_SDMMC_IO_UHS_POWER_EXTERNAL)
   bool setPowerChannel(int power_channel);
 #endif
   bool begin(
@@ -65,6 +76,9 @@ public:
   uint64_t usedBytes();
   int sectorSize();
   int numSectors();
+  int cardClockKHz();
+  bool cardIsDDR();
+  bool cardIsUHS1();
   bool readRAW(uint8_t *buffer, uint32_t sector);
   bool writeRAW(uint8_t *buffer, uint32_t sector);
 

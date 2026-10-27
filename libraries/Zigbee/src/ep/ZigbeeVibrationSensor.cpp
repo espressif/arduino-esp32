@@ -42,6 +42,9 @@ ZigbeeVibrationSensor::ZigbeeVibrationSensor(uint8_t endpoint) : ZigbeeEP(endpoi
   ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
   ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
   ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_ias_zone_create_cluster_desc(&_ias_zone_cfg, EZB_ZCL_CLUSTER_SERVER));
+  setAttributePersistent(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATE_ID);
+  setAttributePersistent(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID);
+  setAttributePersistent(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_ATTR_IAS_ZONE_ZONE_ID_ID);
 }
 
 void ZigbeeVibrationSensor::setIASClientEndpoint(uint8_t ep_number) {
@@ -85,6 +88,17 @@ void ZigbeeVibrationSensor::zbIASZoneEnrollResponse(const ezb_zcl_ias_zone_enrol
       }
       _zone_id = message->in.payload.zone_id;
       _enrolled = true;
+      // Re-write so the persist dataset is updated (enroll handler only sets the descriptors).
+      uint8_t zone_state = EZB_ZCL_IAS_ZONE_ZONE_STATE_ENROLLED;
+      ezb_zcl_set_attr_value(
+        _endpoint, EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_ID_ID, EZB_ZCL_STD_MANUF_CODE, &_zone_id, false
+      );
+      ezb_zcl_set_attr_value(
+        _endpoint, EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATE_ID, EZB_ZCL_STD_MANUF_CODE, &zone_state, false
+      );
+      ezb_zcl_set_attr_value(
+        _endpoint, EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, EZB_ZCL_STD_MANUF_CODE, _ias_cie_addr, false
+      );
     }
   } else {
     log_w("Received message ignored. Cluster ID: %u not supported for IAS Zone", message->info.cluster_id);
@@ -114,17 +128,27 @@ bool ZigbeeVibrationSensor::requestIASZoneEnroll() {
 }
 
 bool ZigbeeVibrationSensor::restoreIASZoneEnroll() {
-  // Workaround: IAS Zone attributes are not persisted across reboot, so re-assert ZoneState = ENROLLED
-  // to resume notifications to the persisted CIE binding.
-  uint8_t zone_state = EZB_ZCL_IAS_ZONE_ZONE_STATE_ENROLLED;
-  ezb_zcl_status_t ret =
-    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATE_ID, &zone_state, false);
-  if (ret != EZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to restore IAS Zone enroll: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+  uint8_t zone_state = EZB_ZCL_IAS_ZONE_ZONE_STATE_NOT_ENROLLED;
+  if (!getClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATE_ID, &zone_state, sizeof(zone_state))) {
+    log_e("Failed to read persisted IAS Zone state");
+    return false;
+  }
+  if (zone_state != EZB_ZCL_IAS_ZONE_ZONE_STATE_ENROLLED) {
+    log_d("IAS Zone is not enrolled");
+    return false;
+  }
+  if (!getClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_ID_ID, &_zone_id, sizeof(_zone_id))) {
+    log_e("Failed to read persisted IAS Zone id");
+    return false;
+  }
+  if (!getClusterAttribute(
+        EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, _ias_cie_addr, sizeof(_ias_cie_addr)
+      )) {
+    log_e("Failed to read persisted IAS CIE address");
     return false;
   }
   _enrolled = true;
-  log_d("Restored IAS Zone enrollment (ZoneState set to ENROLLED)");
+  log_d("Restored IAS Zone enrollment (ZoneId %u)", _zone_id);
   return true;
 }
 

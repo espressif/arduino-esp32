@@ -40,7 +40,7 @@
 #include "ep/ZigbeeWindowCovering.h"
 
 #define ZIGBEE_COVERING_ENDPOINT 10
-#define BUTTON_PIN               9  // ESP32-C6/H2 Boot button
+#define BUTTON_PIN               BOOT_PIN
 
 #define MAX_LIFT 200  // centimeters from open position (0-900)
 #define MIN_LIFT 0

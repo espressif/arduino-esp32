@@ -196,24 +196,59 @@ static void test_window_covering(void) {
   TEST_ASSERT_TRUE(epCovering.setTiltPercentage(75));
 }
 
+// Writes the persisted IAS Zone attributes the same way an enroll response would
+// (there is no CIE on the bench, so the enroll is simulated).
+static void setIASZoneEnrollState(ZigbeeEP &ep, bool enrolled) {
+  uint8_t zone_state = enrolled ? EZB_ZCL_IAS_ZONE_ZONE_STATE_ENROLLED : EZB_ZCL_IAS_ZONE_ZONE_STATE_NOT_ENROLLED;
+  uint8_t zone_id = 1;
+  uint8_t cie_addr[8] = {0};  // EUI-64
+  TEST_ASSERT_TRUE(esp_zigbee_lock_acquire(portMAX_DELAY));
+  ezb_zcl_status_t ret = ezb_zcl_set_attr_value(
+    ep.getEndpoint(), EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_ID_ID, EZB_ZCL_STD_MANUF_CODE, &zone_id, false
+  );
+  if (ret == EZB_ZCL_STATUS_SUCCESS) {
+    ret = ezb_zcl_set_attr_value(
+      ep.getEndpoint(), EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, EZB_ZCL_STD_MANUF_CODE, cie_addr, false
+    );
+  }
+  if (ret == EZB_ZCL_STATUS_SUCCESS) {
+    ret = ezb_zcl_set_attr_value(
+      ep.getEndpoint(), EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATE_ID, EZB_ZCL_STD_MANUF_CODE, &zone_state, false
+    );
+  }
+  esp_zigbee_lock_release();
+  TEST_ASSERT_EQUAL_MESSAGE(EZB_ZCL_STATUS_SUCCESS, ret, "failed to write IAS Zone enroll attributes");
+}
+
 static void test_ias_zone_devices(void) {
+  // ZoneState is persistent: make sure a previous run did not leave the zones enrolled
+  setIASZoneEnrollState(epContact, false);
+  setIASZoneEnrollState(epVibration, false);
+  setIASZoneEnrollState(epDoorHandle, false);
+
   // Non-enrolled devices must refuse to set+report
   TEST_ASSERT_FALSE_MESSAGE(epContact.enrolled(), "contact should start un-enrolled");
   TEST_ASSERT_FALSE_MESSAGE(epContact.setClosed(), "setClosed must fail when not enrolled");
+  TEST_ASSERT_FALSE_MESSAGE(epContact.restoreIASZoneEnroll(), "contact restore must fail when not enrolled");
 
   TEST_ASSERT_FALSE_MESSAGE(epVibration.enrolled(), "vibration should start un-enrolled");
   TEST_ASSERT_FALSE_MESSAGE(epVibration.setVibration(true), "setVibration must fail when not enrolled");
+  TEST_ASSERT_FALSE_MESSAGE(epVibration.restoreIASZoneEnroll(), "vibration restore must fail when not enrolled");
 
   TEST_ASSERT_FALSE_MESSAGE(epDoorHandle.enrolled(), "door handle should start un-enrolled");
   TEST_ASSERT_FALSE_MESSAGE(epDoorHandle.setClosed(), "setClosed must fail when not enrolled");
+  TEST_ASSERT_FALSE_MESSAGE(epDoorHandle.restoreIASZoneEnroll(), "door handle restore must fail when not enrolled");
 
-  // SDK v2 restore sets ZoneState = ENROLLED directly; CIE address is no longer required.
+  // Simulate a persisted enroll (ZoneState = ENROLLED) and restore it
+  setIASZoneEnrollState(epContact, true);
   TEST_ASSERT_TRUE_MESSAGE(epContact.restoreIASZoneEnroll(), "contact restoreIASZoneEnroll failed");
   TEST_ASSERT_TRUE_MESSAGE(epContact.enrolled(), "contact should be enrolled after restore");
 
+  setIASZoneEnrollState(epVibration, true);
   TEST_ASSERT_TRUE_MESSAGE(epVibration.restoreIASZoneEnroll(), "vibration restoreIASZoneEnroll failed");
   TEST_ASSERT_TRUE_MESSAGE(epVibration.enrolled(), "vibration should be enrolled after restore");
 
+  setIASZoneEnrollState(epDoorHandle, true);
   TEST_ASSERT_TRUE_MESSAGE(epDoorHandle.restoreIASZoneEnroll(), "door handle restoreIASZoneEnroll failed");
   TEST_ASSERT_TRUE_MESSAGE(epDoorHandle.enrolled(), "door handle should be enrolled after restore");
 
@@ -229,6 +264,11 @@ static void test_ias_zone_devices(void) {
   TEST_ASSERT_TRUE(epDoorHandle.setOpen());
   TEST_ASSERT_TRUE(epDoorHandle.setTilted());
   TEST_ASSERT_TRUE(epDoorHandle.setClosed());
+
+  // Do not leave a persisted enroll in NVS for the next run
+  setIASZoneEnrollState(epContact, false);
+  setIASZoneEnrollState(epVibration, false);
+  setIASZoneEnrollState(epDoorHandle, false);
 }
 
 // ==================== Sensors ====================
@@ -346,6 +386,51 @@ static void test_electrical_measurement(void) {
   TEST_ASSERT_REPORT_UNBOUND(epElectrical.reportDC(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT));
 }
 
+static void test_door_lock(void) {
+  TEST_ASSERT_EQUAL_UINT16(10, epDoorLock.getMaxUsers());
+
+  TEST_ASSERT_TRUE(epDoorLock.setLockState(DOOR_LOCK_STATE_LOCKED));
+  TEST_ASSERT_TRUE(epDoorLock.isLocked());
+  TEST_ASSERT_EQUAL(DOOR_LOCK_STATE_LOCKED, epDoorLock.getLockState());
+  TEST_ASSERT_TRUE(epDoorLock.setLockState(DOOR_LOCK_STATE_UNLOCKED));
+  TEST_ASSERT_FALSE(epDoorLock.isLocked());
+
+  // PIN boundaries and duplicates
+  TEST_ASSERT_FALSE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "123"));                // too short
+  TEST_ASSERT_FALSE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "12345678901234567"));  // too long
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "1234"));
+  TEST_ASSERT_EQUAL(0, epDoorLock.checkPin("1234"));
+  TEST_ASSERT_FALSE(epDoorLock.setUser(1, DOOR_LOCK_USER_ENABLED, "1234"));  // duplicate
+  TEST_ASSERT_TRUE(epDoorLock.setUser(1, DOOR_LOCK_USER_ENABLED, "5678"));
+  TEST_ASSERT_EQUAL(1, epDoorLock.checkPin("5678"));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("0000"));
+
+  // Enable / disable / clear
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_DISABLED, "1234"));
+  TEST_ASSERT_EQUAL(DOOR_LOCK_USER_DISABLED, epDoorLock.getUserStatus(0));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("1234"));
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "1234"));
+  TEST_ASSERT_EQUAL(0, epDoorLock.checkPin("1234"));
+  epDoorLock.clearUsers();
+  TEST_ASSERT_EQUAL(DOOR_LOCK_USER_AVAILABLE, epDoorLock.getUserStatus(0));
+  TEST_ASSERT_EQUAL(DOOR_LOCK_USER_AVAILABLE, epDoorLock.getUserStatus(1));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("1234"));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("5678"));
+
+  // Persistence round trip: store, clear RAM while storage is off (blob kept), then reload
+  TEST_ASSERT_TRUE(epDoorLock.setUserStorage(true));
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_ENABLED, "9999"));
+  TEST_ASSERT_EQUAL(0, epDoorLock.checkPin("9999"));
+  TEST_ASSERT_TRUE(epDoorLock.setUserStorage(false));
+  TEST_ASSERT_TRUE(epDoorLock.setUser(0, DOOR_LOCK_USER_AVAILABLE, nullptr));  // clear RAM only; NVS blob kept
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("9999"));
+  TEST_ASSERT_TRUE(epDoorLock.setUserStorage(true));  // loadUsers() restores from NVS
+  TEST_ASSERT_EQUAL(0, epDoorLock.checkPin("9999"));
+  epDoorLock.clearUsers();  // also erases the NVS blob
+  TEST_ASSERT_TRUE(epDoorLock.setUserStorage(true));
+  TEST_ASSERT_EQUAL(-1, epDoorLock.checkPin("9999"));
+}
+
 // ==================== Runner ====================
 
 static void run_all_zigbee_endpoint_deep_tests(void) {
@@ -363,6 +448,7 @@ static void run_all_zigbee_endpoint_deep_tests(void) {
   RUN_TEST(test_binary_io);
   RUN_TEST(test_multistate_io);
   RUN_TEST(test_electrical_measurement);
+  RUN_TEST(test_door_lock);
 }
 
 #endif  // CONFIG_ZB_ENABLED

@@ -60,6 +60,17 @@ typedef enum {
 static constexpr uint32_t sd_go_idle_delay_ms = 20;
 static constexpr uint32_t sd_op_cond_timeout_ms = 3000;
 
+// SPI data response token (sent by the card after each data block): xxx0sss1
+// Same decoding as ESP-IDF sdmmc (sd_protocol_defs.h)
+#define SD_SPI_DATA_RSP_VALID(resp_byte) (((resp_byte) & 0x11) == 0x1)
+#define SD_SPI_DATA_RSP(resp_byte)       (((resp_byte) >> 1) & 0x7)
+#define SD_SPI_DATA_ACCEPTED             0x2
+#define SD_SPI_DATA_CRC_ERROR            0x5
+#define SD_SPI_DATA_WR_ERROR             0x6
+
+// Tokens
+#define SD_TOKEN_STOP_TRAN 0xFD  // Stop Tran token for multi-block write
+
 typedef struct {
   uint8_t ssPin;
   SPIClass *spi;
@@ -102,22 +113,30 @@ const char *fferr2str[] = {
  * SD SPI
  * */
 
+// Wait until the card is not busy (DO is held low while busy).
+// Same as ESP-IDF sdspi poll_busy: require two nonzero samples and do not reset
+// the counter on 0x00 (an idle byte before busy may count toward readiness).
 bool sdWait(uint8_t pdrv, int timeout) {
-  char resp;
+  uint8_t resp;
+  int nonzero_count = 0;
   uint32_t start = millis();
 
   do {
     resp = s_cards[pdrv]->spi->transfer(0xFF);
-  } while (resp == 0x00 && (millis() - start) < (unsigned int)timeout);
+    if (resp != 0x00 && ++nonzero_count == 2) {
+      return true;
+    }
+  } while ((millis() - start) < (unsigned int)timeout);
 
-  if (!resp) {
-    log_w("Wait Failed");
-  }
-  return (resp > 0x00);
+  log_w("Wait Failed");
+  return false;
 }
 
+// Send the Stop Tran token followed by one stuff byte (the card asserts busy one byte after the token).
+// The caller must then wait for the card to finish programming (sdWait) before releasing CS.
 void sdStop(uint8_t pdrv) {
-  s_cards[pdrv]->spi->write(0xFD);
+  const uint8_t stop[2] = {SD_TOKEN_STOP_TRAN, 0xFF};
+  s_cards[pdrv]->spi->writeBytes(stop, sizeof(stop));
 }
 
 void sdDeselectCard(uint8_t pdrv) {
@@ -227,7 +246,10 @@ bool sdReadBytes(uint8_t pdrv, char *buffer, int length) {
   return (!card->supports_crc || crc == CRC16(buffer, length));
 }
 
-char sdWriteBytes(uint8_t pdrv, const char *buffer, char token) {
+// Writes one data block and returns the raw data response token (xxx0sss1),
+// or 0 (never a valid token, bit 0 is always 1) if the card was busy for too long.
+// Decode with SD_SPI_DATA_RSP_VALID() / SD_SPI_DATA_RSP().
+uint8_t sdWriteBytes(uint8_t pdrv, const char *buffer, char token) {
   ardu_sdcard_t *card = s_cards[pdrv];
   unsigned short crc = (card->supports_crc) ? CRC16(buffer, 512) : 0xFFFF;
   if (!sdWait(pdrv, 500)) {
@@ -237,7 +259,7 @@ char sdWriteBytes(uint8_t pdrv, const char *buffer, char token) {
   card->spi->write(token);
   card->spi->writeBytes((uint8_t *)buffer, 512);
   card->spi->write16(crc);
-  return (card->spi->transfer(0xFF) & 0x1F);
+  return card->spi->transfer(0xFF);
 }
 
 /*
@@ -313,13 +335,18 @@ bool sdWriteSector(uint8_t pdrv, const char *buffer, unsigned long long sector) 
       return false;
     }
     if (!sdCommand(pdrv, WRITE_BLOCK_SINGLE, (s_cards[pdrv]->type == CARD_SDHC) ? sector : sector << 9, NULL)) {
-      char token = sdWriteBytes(pdrv, buffer, 0xFE);
+      uint8_t token = sdWriteBytes(pdrv, buffer, 0xFE);
       sdDeselectCard(pdrv);
 
-      if (token == 0x0A) {
-        continue;
-      } else if (token == 0x0C) {
+      if (!SD_SPI_DATA_RSP_VALID(token)) {
+        log_e("Invalid data response token 0x%02x", token);
         return false;
+      }
+      switch (SD_SPI_DATA_RSP(token)) {
+        case SD_SPI_DATA_ACCEPTED:  break;
+        case SD_SPI_DATA_CRC_ERROR: continue;  // resend
+        case SD_SPI_DATA_WR_ERROR:  log_e("Card reported a write error"); return false;
+        default:                    log_e("Unexpected data response token 0x%02x", token); return false;
       }
 
       unsigned int resp;
@@ -336,80 +363,81 @@ bool sdWriteSector(uint8_t pdrv, const char *buffer, unsigned long long sector) 
 }
 
 bool sdWriteSectors(uint8_t pdrv, const char *buffer, unsigned long long sector, int count) {
-  char token;
+  uint8_t token;
   const char *currentBuffer = buffer;
-  unsigned long long currentSector = sector;
   int currentCount = count;
   ardu_sdcard_t *card = s_cards[pdrv];
 
-  for (int f = 0; f < 3;) {
-    if (card->type != CARD_MMC) {
-      if (sdTransaction(pdrv, SET_WR_BLK_ERASE_COUNT, currentCount, NULL)) {
-        return false;
-      }
-    }
-
-    if (!sdSelectCard(pdrv)) {
+  if (card->type != CARD_MMC) {
+    if (sdTransaction(pdrv, SET_WR_BLK_ERASE_COUNT, currentCount, NULL)) {
       return false;
     }
+  }
 
-    if (!sdCommand(pdrv, WRITE_BLOCK_MULTIPLE, (card->type == CARD_SDHC) ? currentSector : currentSector << 9, NULL)) {
-      do {
-        token = sdWriteBytes(pdrv, currentBuffer, 0xFC);
-        if (token != 0x05) {
-          f++;
-          break;
-        }
-        currentBuffer += 512;
-        f = 0;
-      } while (--currentCount);
+  if (!sdSelectCard(pdrv)) {
+    return false;
+  }
 
-      if (!sdWait(pdrv, 500)) {
-        break;
-      }
+  if (sdCommand(pdrv, WRITE_BLOCK_MULTIPLE, (card->type == CARD_SDHC) ? sector : sector << 9, NULL)) {
+    sdDeselectCard(pdrv);
+    return false;
+  }
 
-      if (currentCount == 0) {
-        sdStop(pdrv);
-        sdDeselectCard(pdrv);
-
-        unsigned int resp;
-        if (sdTransaction(pdrv, SEND_STATUS, 0, &resp) || resp) {
-          return false;
-        }
-        return true;
-      } else {
-        if (sdCommand(pdrv, STOP_TRANSMISSION, 0, NULL)) {
-          break;
-        }
-
-        if (token == 0x0A) {
-          sdDeselectCard(pdrv);
-          unsigned int writtenBlocks = 0;
-          if (card->type != CARD_MMC && sdSelectCard(pdrv)) {
-            if (!sdCommand(pdrv, SEND_NUM_WR_BLOCKS, 0, NULL)) {
-              char acmdData[4];
-              if (sdReadBytes(pdrv, acmdData, 4)) {
-                writtenBlocks = acmdData[0] << 24;
-                writtenBlocks |= acmdData[1] << 16;
-                writtenBlocks |= acmdData[2] << 8;
-                writtenBlocks |= acmdData[3];
-              }
-            }
-            sdDeselectCard(pdrv);
-          }
-          currentBuffer = buffer + (writtenBlocks << 9);
-          currentSector = sector + writtenBlocks;
-          currentCount = count - writtenBlocks;
-          continue;
-        } else {
-          break;
-        }
-      }
-    } else {
+  do {
+    token = sdWriteBytes(pdrv, currentBuffer, 0xFC);
+    if (!SD_SPI_DATA_RSP_VALID(token) || SD_SPI_DATA_RSP(token) != SD_SPI_DATA_ACCEPTED) {
       break;
     }
+    currentBuffer += 512;
+  } while (--currentCount);
+
+  if (currentCount == 0) {
+    // Wait for the last block to finish programming, then Stop Tran + stuff byte,
+    // and wait again with CS still low (as ESP-IDF sdspi does) before status check.
+    if (!sdWait(pdrv, 500)) {
+      sdDeselectCard(pdrv);
+      return false;
+    }
+    sdStop(pdrv);
+    if (!sdWait(pdrv, 500)) {
+      sdDeselectCard(pdrv);
+      return false;
+    }
+    sdDeselectCard(pdrv);
+
+    unsigned int resp;
+    if (sdTransaction(pdrv, SEND_STATUS, 0, &resp) || resp) {
+      return false;
+    }
+    return true;
   }
+
+  // Multi-block write failed mid-transfer. Stop the card and fail the request.
+  // ESP-IDF does the same: return the data-token error (e.g. CRC) and only use
+  // ACMD22 for diagnostics — retrying from ACMD22 against the original request
+  // base can walk the write pointer backwards and never exhaust the retry budget.
+  // Do not sdWait here: a rejected block (CRC/write error) does not assert busy.
+  sdCommand(pdrv, STOP_TRANSMISSION, 0, NULL);
   sdDeselectCard(pdrv);
+
+  if (card->type != CARD_MMC && sdSelectCard(pdrv)) {
+    unsigned int writtenBlocks = 0;
+    if (!sdCommand(pdrv, SEND_NUM_WR_BLOCKS, 0, NULL)) {
+      char acmdData[4];
+      if (sdReadBytes(pdrv, acmdData, 4)) {
+        writtenBlocks = acmdData[0] << 24;
+        writtenBlocks |= acmdData[1] << 16;
+        writtenBlocks |= acmdData[2] << 8;
+        writtenBlocks |= acmdData[3];
+      }
+    }
+    sdDeselectCard(pdrv);
+    log_e("Multi-block write failed (token=0x%02x), wrote %u of %d blocks", token, writtenBlocks, count);
+  } else if (SD_SPI_DATA_RSP_VALID(token) && SD_SPI_DATA_RSP(token) == SD_SPI_DATA_CRC_ERROR) {
+    log_e("Data CRC error during multi-block write");
+  } else {
+    log_e("Data response error 0x%02x during multi-block write", token);
+  }
   return false;
 }
 
