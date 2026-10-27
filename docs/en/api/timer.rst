@@ -265,4 +265,3 @@ Functional interrupt (``std::function`` / lambda) example:
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Timer/FunctionalInterrupt/FunctionalInterrupt.ino
     :language: arduino
-

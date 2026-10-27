@@ -33,11 +33,7 @@ enum DemoMode : uint8_t {
 };
 
 static const char *modeName[MODE_COUNT] = {
-  "C function pointer",
-  "capturing lambda",
-  "std::function object",
-  "std::bind member",
-  "timerAttachInterruptArg",
+  "C function pointer", "capturing lambda", "std::function object", "std::bind member", "timerAttachInterruptArg",
 };
 
 static uint8_t currentMode = MODE_C_PTR;
@@ -79,12 +75,8 @@ static void attachMode(uint8_t mode) {
         isrCounter = isrCounter + 1;
       });
       break;
-    case MODE_STD_FUNCTION:
-      timerAttachInterrupt(timer, onTimerFn);
-      break;
-    case MODE_BIND:
-      timerAttachInterrupt(timer, std::bind(&TickSource::isr, &tickSource));
-      break;
+    case MODE_STD_FUNCTION: timerAttachInterrupt(timer, onTimerFn); break;
+    case MODE_BIND:         timerAttachInterrupt(timer, std::bind(&TickSource::isr, &tickSource)); break;
     case MODE_ARG:
       // C API with a user pointer. Same idea as GPIO attachInterruptArg().
       timerAttachInterruptArg(timer, bumpCounterArg, (void *)&isrCounter);
