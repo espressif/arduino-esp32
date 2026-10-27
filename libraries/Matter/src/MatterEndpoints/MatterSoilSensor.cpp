@@ -70,9 +70,7 @@ bool MatterSoilSensor::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
       val->val.u32
     );
   } else {
-    log_d(
-      "Soil Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: (null)", endpoint_id, cluster_id, attribute_id
-    );
+    log_d("Soil Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: (null)", endpoint_id, cluster_id, attribute_id);
   }
   return true;
 }
