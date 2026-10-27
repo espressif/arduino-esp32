@@ -1,6 +1,6 @@
 # Timer Validation Test
 
-Validates the hardware timer API: timer read/write, interrupt attach/detach, frequency divider accuracy, one-shot alarm, auto-reload counting, stop/start behavior, multiple concurrent timers, and XTAL clock source selection.
+Validates the hardware timer API: timer read/write, interrupt attach/detach, `std::function` / lambda callbacks, frequency divider accuracy, one-shot alarm, auto-reload counting, stop/start behavior, multiple concurrent timers, and XTAL clock source selection.
 
 ## Test Cases
 
@@ -8,6 +8,9 @@ Validates the hardware timer API: timer read/write, interrupt attach/detach, fre
 |---|---|
 | `timer_read_test` | Write a value to timer, read it back, verify match |
 | `timer_interrupt_test` | Attach interrupt, verify alarm fires; detach, verify it stops |
+| `timer_functional_interrupt_test` | Capturing lambda callback fires on auto-reload alarm |
+| `timer_functional_reattach_test` | Re-attach replaces the previous lambda; old callback stops |
+| `timer_functional_detach_test` | Detach stops further lambda fires; `timerEnd` in tearDown |
 | `timer_divider_test` | Compare timer counts at different frequencies (4 MHz, 8 MHz, 250 kHz) |
 | `timer_oneshot_test` | One-shot alarm fires exactly once |
 | `timer_auto_reload_test` | Auto-reload alarm fires ~4 times in 1.1 s at 0.25 s period |
