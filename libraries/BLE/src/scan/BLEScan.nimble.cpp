@@ -325,9 +325,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
             }
           }
           if (!duplicate) {
-            found = BLEScanImplCommon::mergeScanResponse(
-              impl->results, addr, 0xFF, event->disc.data, event->disc.length_data, event->disc.rssi, merged
-            );
+            found = BLEScanImplCommon::mergeScanResponse(impl->results, addr, 0xFF, event->disc.data, event->disc.length_data, event->disc.rssi, merged);
             if (found && impl->filterDuplicates) {
               markDuplicateKey(*impl, addr, 0xFF);
             }
@@ -457,8 +455,8 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           BLELockGuard lock(impl->mtx);
           for (const auto &existing : impl->results) {
             if (existing.getAddress() == addr && existing.getAdvSID() == d.sid) {
-              duplicate = impl->filterDuplicates && duplicateKeySeen(*impl, addr, d.sid)
-                          && BLEScanImplCommon::sameScanResponsePayload(existing, d.data, d.length_data);
+              duplicate =
+                impl->filterDuplicates && duplicateKeySeen(*impl, addr, d.sid) && BLEScanImplCommon::sameScanResponsePayload(existing, d.data, d.length_data);
               break;
             }
           }
@@ -581,8 +579,8 @@ static BTStatus nimbleStartScanSession(BLEScan::Impl &impl, uint32_t durationMs,
   // host callback filters byte-identical primary and scan-response segments so
   // changed data remains observable while the public duplicate policy holds.
   int rc = ble_gap_ext_disc(
-    static_cast<uint8_t>(BLE.getOwnAddressType()), durationUnits, 0, 0, 0, 0, &uncoded,
-    impl.hasCodedConfig ? &coded : NULL, BLEScan::Impl::gapEventHandler, context
+    static_cast<uint8_t>(BLE.getOwnAddressType()), durationUnits, 0, 0, 0, 0, &uncoded, impl.hasCodedConfig ? &coded : NULL, BLEScan::Impl::gapEventHandler,
+    context
   );
   if (rc != 0) {
     delete context;
@@ -599,8 +597,7 @@ static BTStatus nimbleStartScanSession(BLEScan::Impl &impl, uint32_t durationMs,
   params.limited = 0;
 
   int rc = ble_gap_disc(
-    static_cast<uint8_t>(BLE.getOwnAddressType()), durationMs == 0 ? BLE_HS_FOREVER : (int32_t)durationMs, &params,
-    BLEScan::Impl::gapEventHandler, context
+    static_cast<uint8_t>(BLE.getOwnAddressType()), durationMs == 0 ? BLE_HS_FOREVER : (int32_t)durationMs, &params, BLEScan::Impl::gapEventHandler, context
   );
   if (rc != 0) {
     delete context;

@@ -229,8 +229,7 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       }
       inst->advSync.give(param->adv_start_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
 #if BLE_VALIDATION_HOOKS
-      if (BLEHooks.adv.injectStaleLegacyStopComplete.exchange(false, std::memory_order_acq_rel)
-          && param->adv_start_cmpl.status == ESP_BT_STATUS_SUCCESS) {
+      if (BLEHooks.adv.injectStaleLegacyStopComplete.exchange(false, std::memory_order_acq_rel) && param->adv_start_cmpl.status == ESP_BT_STATUS_SUCCESS) {
         // Leftover ADV_STOP_COMPLETE after a successful start must not clear
         // isAdvertising: stop() would then no-op while the radio is up.
         esp_ble_gap_cb_param_t stale = {};
@@ -302,8 +301,7 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       }
       inst->advSync.give(param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
 #if BLE_VALIDATION_HOOKS
-      if (BLEHooks.adv.injectStaleExtStopComplete.exchange(false, std::memory_order_acq_rel)
-          && param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS) {
+      if (BLEHooks.adv.injectStaleExtStopComplete.exchange(false, std::memory_order_acq_rel) && param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS) {
         // Leftover EXT_ADV_STOP_COMPLETE after a successful start must not
         // clear isAdvertising: stop() would then no-op while the radio is up.
         esp_ble_gap_cb_param_t stale = {};
@@ -372,16 +370,14 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       }
       inst->advSync.give(param->period_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
 #if BLE_VALIDATION_HOOKS
-      if (BLEHooks.adv.injectStalePeriodicStopComplete.exchange(false, std::memory_order_acq_rel)
-          && param->period_adv_start.status == ESP_BT_STATUS_SUCCESS) {
+      if (BLEHooks.adv.injectStalePeriodicStopComplete.exchange(false, std::memory_order_acq_rel) && param->period_adv_start.status == ESP_BT_STATUS_SUCCESS) {
         esp_ble_gap_cb_param_t stale = {};
         stale.period_adv_stop.status = ESP_BT_STATUS_SUCCESS;
         stale.period_adv_stop.instance = param->period_adv_start.instance;
         handleGAP(ESP_GAP_BLE_PERIODIC_ADV_STOP_COMPLETE_EVT, &stale);
         if (param->period_adv_start.instance < kMaxExtInstances) {
           BLEHooks.adv.periodicRunningAfterStaleStop.store(
-            inst->extInstances[param->period_adv_start.instance].periodicAdvRunning.load(std::memory_order_relaxed),
-            std::memory_order_relaxed
+            inst->extInstances[param->period_adv_start.instance].periodicAdvRunning.load(std::memory_order_relaxed), std::memory_order_relaxed
           );
         }
       }
@@ -391,8 +387,7 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
     {
       log_d("PERIODIC_ADV_STOP_COMPLETE status=%d", param->period_adv_stop.status);
       const bool ok = param->period_adv_stop.status == ESP_BT_STATUS_SUCCESS;
-      if (inst->giveIfAdvWait(AdvWait::PeriodicStop, ok ? BTStatus::OK : BTStatus::Fail) && ok
-          && param->period_adv_stop.instance < kMaxExtInstances) {
+      if (inst->giveIfAdvWait(AdvWait::PeriodicStop, ok ? BTStatus::OK : BTStatus::Fail) && ok && param->period_adv_stop.instance < kMaxExtInstances) {
         inst->extInstances[param->period_adv_stop.instance].periodicAdvRunning = false;
       }
       break;
@@ -1002,67 +997,67 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
 
   // ADV_DIRECT_IND carries only AdvA and InitA (Vol 6, Part B, §2.3.1.2).
   if (!bleAdvTypeIsDirected(advType)) {
-  {
-    // Point directly at the source bytes (a member vector for custom data, or a
-    // locally built payload) instead of copying into a temporary; the payload
-    // stays alive across the config call and its completion wait.
-    BLEAdvertisementData built;
-    const uint8_t *advPtr = rawAdvData.data();
-    size_t advLen = rawAdvData.size();
-    if (!customAdvData) {
-      built =
-        BLEAdvDataBuilder::buildLegacyAdvData(advName, serviceUUIDs, appearance, includeTxPower, BLE.getPower(), nameInScanRsp, minPreferred, maxPreferred);
-      advPtr = built.data();
-      advLen = built.length();
+    {
+      // Point directly at the source bytes (a member vector for custom data, or a
+      // locally built payload) instead of copying into a temporary; the payload
+      // stays alive across the config call and its completion wait.
+      BLEAdvertisementData built;
+      const uint8_t *advPtr = rawAdvData.data();
+      size_t advLen = rawAdvData.size();
+      if (!customAdvData) {
+        built =
+          BLEAdvDataBuilder::buildLegacyAdvData(advName, serviceUUIDs, appearance, includeTxPower, BLE.getPower(), nameInScanRsp, minPreferred, maxPreferred);
+        advPtr = built.data();
+        advLen = built.length();
+      }
+      advSync.take();
+      err = esp_ble_gap_config_ext_adv_data_raw(kLegacyInstance, advLen, advPtr);
+      if (err != ESP_OK) {
+        log_e("legacy config_ext_adv_data_raw: %s", esp_err_to_name(err));
+        advSync.give(BTStatus::Fail);
+        return BTStatus::Fail;
+      }
+      st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
+      if (!st) {
+        return st;
+      }
     }
-    advSync.take();
-    err = esp_ble_gap_config_ext_adv_data_raw(kLegacyInstance, advLen, advPtr);
-    if (err != ESP_OK) {
-      log_e("legacy config_ext_adv_data_raw: %s", esp_err_to_name(err));
-      advSync.give(BTStatus::Fail);
-      return BTStatus::Fail;
-    }
-    st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
-    if (!st) {
-      return st;
-    }
-  }
 
-  if (scannable && scanResp) {
-    BLEAdvertisementData built;
-    const uint8_t *rspPtr = rawScanRespData.data();
-    size_t rspLen = rawScanRespData.size();
-    if (!customScanRespData) {
-      built = BLEAdvDataBuilder::buildLegacyScanRespData(advName);
-      rspPtr = built.data();
-      rspLen = built.length();
+    if (scannable && scanResp) {
+      BLEAdvertisementData built;
+      const uint8_t *rspPtr = rawScanRespData.data();
+      size_t rspLen = rawScanRespData.size();
+      if (!customScanRespData) {
+        built = BLEAdvDataBuilder::buildLegacyScanRespData(advName);
+        rspPtr = built.data();
+        rspLen = built.length();
+      }
+      advSync.take();
+      err = esp_ble_gap_config_ext_scan_rsp_data_raw(kLegacyInstance, rspLen, rspPtr);
+      if (err != ESP_OK) {
+        log_e("legacy config_ext_scan_rsp_data_raw: %s", esp_err_to_name(err));
+        advSync.give(BTStatus::Fail);
+        return BTStatus::Fail;
+      }
+      st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
+      if (!st) {
+        return st;
+      }
+    } else {
+      // Clearing a prior scan response is required when scanResp is now off;
+      // otherwise the controller keeps radiating the last SCAN_RSP.
+      advSync.take();
+      err = esp_ble_gap_config_ext_scan_rsp_data_raw(kLegacyInstance, 0, nullptr);
+      if (err != ESP_OK) {
+        log_e("legacy clear ext scan rsp: %s", esp_err_to_name(err));
+        advSync.give(BTStatus::Fail);
+        return BTStatus::Fail;
+      }
+      st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
+      if (!st) {
+        return st;
+      }
     }
-    advSync.take();
-    err = esp_ble_gap_config_ext_scan_rsp_data_raw(kLegacyInstance, rspLen, rspPtr);
-    if (err != ESP_OK) {
-      log_e("legacy config_ext_scan_rsp_data_raw: %s", esp_err_to_name(err));
-      advSync.give(BTStatus::Fail);
-      return BTStatus::Fail;
-    }
-    st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
-    if (!st) {
-      return st;
-    }
-  } else {
-    // Clearing a prior scan response is required when scanResp is now off;
-    // otherwise the controller keeps radiating the last SCAN_RSP.
-    advSync.take();
-    err = esp_ble_gap_config_ext_scan_rsp_data_raw(kLegacyInstance, 0, nullptr);
-    if (err != ESP_OK) {
-      log_e("legacy clear ext scan rsp: %s", esp_err_to_name(err));
-      advSync.give(BTStatus::Fail);
-      return BTStatus::Fail;
-    }
-    st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
-    if (!st) {
-      return st;
-    }
-  }
   }
 
   esp_ble_gap_ext_adv_t startSet = {};

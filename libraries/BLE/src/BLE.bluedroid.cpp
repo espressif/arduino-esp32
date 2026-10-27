@@ -714,18 +714,24 @@ BLEScan BLEClass::getScan() {
     slot = std::make_shared<BLEScan::Impl>();
     BLEScan::Impl::s_instance = slot.get();
     _impl->storeHook(_impl->scanGapHook, BLEScan::Impl::handleGAP);
-    _impl->storeHook(_impl->scanBeginHook, +[]() {
-      BLEScan scan(slot);
-      scan.prepareBackendStart();
-    });
-    _impl->storeHook(_impl->scanEndHook, +[]() {
-      if (!slot) {
-        return;
+    _impl->storeHook(
+      _impl->scanBeginHook,
+      +[]() {
+        BLEScan scan(slot);
+        scan.prepareBackendStart();
       }
-      BLEScan scan(slot);
-      scan.beginBackendShutdown();
-      scan.terminateAllPeriodicSyncs();
-    });
+    );
+    _impl->storeHook(
+      _impl->scanEndHook,
+      +[]() {
+        if (!slot) {
+          return;
+        }
+        BLEScan scan(slot);
+        scan.beginBackendShutdown();
+        scan.terminateAllPeriodicSyncs();
+      }
+    );
   }
   return BLEScan(slot);
 }
@@ -748,17 +754,23 @@ BLEAdvertising BLEClass::getAdvertising() {
     slot = std::make_shared<BLEAdvertising::Impl>();
     BLEAdvertising::Impl::s_instance = slot.get();
     _impl->storeHook(_impl->advGapHook, BLEAdvertising::Impl::handleGAP);
-    _impl->storeHook(_impl->advBeginHook, +[]() {
-      if (slot) {
-        BLEAdvertising(slot).prepareBackendStart();
+    _impl->storeHook(
+      _impl->advBeginHook,
+      +[]() {
+        if (slot) {
+          BLEAdvertising(slot).prepareBackendStart();
+        }
       }
-    });
-    _impl->storeHook(_impl->advEndHook, +[]() {
-      if (slot) {
-        BLEAdvertising adv(slot);
-        adv.beginBackendShutdown();
+    );
+    _impl->storeHook(
+      _impl->advEndHook,
+      +[]() {
+        if (slot) {
+          BLEAdvertising adv(slot);
+          adv.beginBackendShutdown();
+        }
       }
-    });
+    );
   }
   return BLEAdvertising(slot);
 }
@@ -861,40 +873,49 @@ BLEServer BLEClass::createServer() {
     BLELockGuard lock(slot->mtx);
     slot->active = true;
   }
-  _impl->storeHook(_impl->serverPreEndHook, +[]() {
-    auto *srv = BLEServer::Impl::s_instance;
-    if (!srv) {
-      return;
+  _impl->storeHook(
+    _impl->serverPreEndHook,
+    +[]() {
+      auto *srv = BLEServer::Impl::s_instance;
+      if (!srv) {
+        return;
+      }
+      if (srv->advRestartTimer) {
+        esp_timer_stop(srv->advRestartTimer);
+      }
+      if (srv->indicationRetryTimer) {
+        esp_timer_stop(srv->indicationRetryTimer);
+      }
     }
-    if (srv->advRestartTimer) {
-      esp_timer_stop(srv->advRestartTimer);
-    }
-    if (srv->indicationRetryTimer) {
-      esp_timer_stop(srv->indicationRetryTimer);
-    }
-  });
-  _impl->storeHook(_impl->serverDeactivateHook, +[]() {
-    auto *srv = BLEServer::Impl::s_instance;
-    if (!srv) {
-      return;
-    }
-    BLELockGuard lock(srv->mtx);
-    srv->active = false;
-  });
-  _impl->storeHook(_impl->serverPostEndHook, +[]() {
-    auto *srv = BLEServer::Impl::s_instance;
-    if (!srv) {
-      return;
-    }
-    srv->gattsIf = ESP_GATT_IF_NONE;
-    srv->pendingHandle = nullptr;
-    srv->prepWrites.clear();
-    {
+  );
+  _impl->storeHook(
+    _impl->serverDeactivateHook,
+    +[]() {
+      auto *srv = BLEServer::Impl::s_instance;
+      if (!srv) {
+        return;
+      }
       BLELockGuard lock(srv->mtx);
-      srv->pendingNotifies.clear();
+      srv->active = false;
     }
-    srv->releaseGattTree();
-  });
+  );
+  _impl->storeHook(
+    _impl->serverPostEndHook,
+    +[]() {
+      auto *srv = BLEServer::Impl::s_instance;
+      if (!srv) {
+        return;
+      }
+      srv->gattsIf = ESP_GATT_IF_NONE;
+      srv->pendingHandle = nullptr;
+      srv->prepWrites.clear();
+      {
+        BLELockGuard lock(srv->mtx);
+        srv->pendingNotifies.clear();
+      }
+      srv->releaseGattTree();
+    }
+  );
   return BLEServer(slot);
 }
 #else
@@ -938,11 +959,14 @@ BLESecurity BLEClass::getSecurity() {
     slot = std::make_shared<BLESecurity::Impl>();
     BLESecurity::Impl::s_instance = slot.get();
     _impl->storeHook(_impl->securityGapHook, bluedroidSecurityHandleGAP);
-    _impl->storeHook(_impl->securityBeginHook, +[]() {
-      if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
-        sec->applySecurityParams();
+    _impl->storeHook(
+      _impl->securityBeginHook,
+      +[]() {
+        if (BLESecurity::Impl *sec = BLESecurity::Impl::instance()) {
+          sec->applySecurityParams();
+        }
       }
-    });
+    );
     slot->applySecurityParams();
   }
   return BLESecurity(slot);

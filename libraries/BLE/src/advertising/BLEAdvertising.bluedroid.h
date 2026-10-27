@@ -82,7 +82,13 @@ struct BLEAdvertising::Impl {
   // not release a waiter for a different command, and must not clear
   // isAdvertising / periodicAdvRunning (a leftover stop after start would
   // leave the radio up while stop() no-ops).
-  enum class AdvWait : uint8_t { None, LegacyStop, ExtStop, ExtClear, PeriodicStop };
+  enum class AdvWait : uint8_t {
+    None,
+    LegacyStop,
+    ExtStop,
+    ExtClear,
+    PeriodicStop
+  };
   std::atomic<AdvWait> advWait{AdvWait::None};
   void armAdvWait(AdvWait event);
   bool giveIfAdvWait(AdvWait event, BTStatus status);

@@ -41,20 +41,15 @@ struct RemoteGattTarget {
   std::shared_ptr<BLERemoteDescriptor::Impl> descriptor;
 };
 
-bool remoteTargetConnectedLocked(
-  const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client, uint16_t connHandle
-) {
-  if (!target.service || !client || target.service->clientOwner.lock() != client || target.service->client != client.get()
-      || !client->connected || client->connectionGeneration.load() != target.service->clientGeneration || client->connHandle != connHandle
-      || !nimbleIsGattConnected(connHandle)) {
+bool remoteTargetConnectedLocked(const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client, uint16_t connHandle) {
+  if (!target.service || !client || target.service->clientOwner.lock() != client || target.service->client != client.get() || !client->connected
+      || client->connectionGeneration.load() != target.service->clientGeneration || client->connHandle != connHandle || !nimbleIsGattConnected(connHandle)) {
     return false;
   }
-  if (target.characteristic
-      && (target.characteristic->serviceOwner.lock() != target.service || target.characteristic->service != target.service.get())) {
+  if (target.characteristic && (target.characteristic->serviceOwner.lock() != target.service || target.characteristic->service != target.service.get())) {
     return false;
   }
-  return !target.descriptor
-         || (target.descriptor->chrOwner.lock() == target.characteristic && target.descriptor->chr == target.characteristic.get());
+  return !target.descriptor || (target.descriptor->chrOwner.lock() == target.characteristic && target.descriptor->chr == target.characteristic.get());
 }
 
 bool remoteConnected(const RemoteGattTarget &target, uint16_t connHandle) {
@@ -141,9 +136,7 @@ BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &uuid)
         impl.chrDiscoverSync.give(BTStatus::InvalidState);
         return BLERemoteCharacteristic();
       }
-      rc = ble_gattc_disc_all_chrs(
-        impl.connHandle, impl.startHandle, impl.endHandle, BLERemoteService::Impl::chrDiscoveryCb, context
-      );
+      rc = ble_gattc_disc_all_chrs(impl.connHandle, impl.startHandle, impl.endHandle, BLERemoteService::Impl::chrDiscoveryCb, context);
     }
     if (rc != 0) {
       delete context;
@@ -391,8 +384,7 @@ static bool initiateSecurityAndWait(const RemoteGattTarget &target, uint16_t con
 }
 
 static bool performRemoteLongRead(
-  const std::shared_ptr<void> &owner, const RemoteGattTarget &target, uint16_t connHandle, uint16_t attrHandle,
-  std::atomic<uint32_t> &readGeneration,
+  const std::shared_ptr<void> &owner, const RemoteGattTarget &target, uint16_t connHandle, uint16_t attrHandle, std::atomic<uint32_t> &readGeneration,
   BLESync &readSync, std::vector<uint8_t> &targetValue, int *lastAttError, ble_gatt_attr_fn *cb, uint32_t timeoutMs, SemaphoreHandle_t opMtx
 ) {
   // Serialize per-Impl ops for the whole blocking procedure (including the
@@ -419,8 +411,7 @@ static bool performRemoteLongRead(
       }
       generation = readGeneration.fetch_add(1) + 1;
       readSync.take();
-      auto *context =
-        new (std::nothrow) RemoteReadContext{owner, &readGeneration, &readSync, &targetValue, valueMtx, lastAttError, generation, {}};
+      auto *context = new (std::nothrow) RemoteReadContext{owner, &readGeneration, &readSync, &targetValue, valueMtx, lastAttError, generation, {}};
       if (!context) {
         readSync.give(BTStatus::NoMemory);
         return false;
@@ -506,8 +497,7 @@ bool BLERemoteCharacteristic::readInto(uint32_t timeoutMs) {
 
 // Blocking: ble_gattc_write_flat, ble_gattc_write_long (prepared write/execute), or ble_gattc_write_no_rsp_flat; confirmed paths wait on the write sync.
 static BTStatus performRemoteWrite(
-  const std::shared_ptr<void> &owner, const RemoteGattTarget &target, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data,
-  size_t len,
+  const std::shared_ptr<void> &owner, const RemoteGattTarget &target, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t len,
   bool withResponse, std::atomic<uint32_t> &writeGeneration, BLESync &writeSync, int *lastAttError, ble_gatt_attr_fn *cb, SemaphoreHandle_t opMtx
 ) {
   BLELockGuard opLock(opMtx);
@@ -618,13 +608,14 @@ BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *data, size_t len, bo
 
   log_d("RemoteCharacteristic %s: write len=%u withResponse=%d (conn=%u)", _impl->uuid.toString().c_str(), len, withResponse, _impl->connHandle);
   return performRemoteWrite(
-    _impl, {service, _impl, {}}, _impl->connHandle, _impl->handle, data, len, withResponse, _impl->writeGeneration, _impl->writeSync,
-    &_impl->lastAttError,
+    _impl, {service, _impl, {}}, _impl->connHandle, _impl->handle, data, len, withResponse, _impl->writeGeneration, _impl->writeSync, &_impl->lastAttError,
     BLERemoteCharacteristic::Impl::writeCb, _impl->opMtx
   );
 }
 
-static BTStatus subscribeWithCccd(BLERemoteCharacteristic &chr, const std::shared_ptr<BLERemoteCharacteristic::Impl> &impl, uint16_t cccdVal, BLERemoteCharacteristic::NotifyCallback callback) {
+static BTStatus subscribeWithCccd(
+  BLERemoteCharacteristic &chr, const std::shared_ptr<BLERemoteCharacteristic::Impl> &impl, uint16_t cccdVal, BLERemoteCharacteristic::NotifyCallback callback
+) {
   if (!impl || !remoteConnected(impl, impl->connHandle)) {
     return BTStatus::InvalidState;
   }
@@ -744,9 +735,7 @@ BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &uuid) 
         impl.dscDiscoverSync.give(BTStatus::InvalidState);
         return BLERemoteDescriptor();
       }
-      rc = ble_gattc_disc_all_dscs(
-        impl.connHandle, impl.handle, endHandle, BLERemoteCharacteristic::Impl::dscDiscoveryCb, context
-      );
+      rc = ble_gattc_disc_all_dscs(impl.connHandle, impl.handle, endHandle, BLERemoteCharacteristic::Impl::dscDiscoveryCb, context);
     }
     if (rc != 0) {
       delete context;
@@ -965,8 +954,7 @@ void BLERemoteCharacteristic::Impl::handleNotifyRx(uint16_t connHandle, uint16_t
   }
   auto svc = implPtr->serviceOwner.lock();
   auto client = svc ? svc->clientOwner.lock() : nullptr;
-  const bool serviceChanged =
-    !isNotify && len == 4 && svc && svc->uuid == BLEUUID::from16(0x1801) && implPtr->uuid == BLEUUID::from16(0x2A05);
+  const bool serviceChanged = !isNotify && len == 4 && svc && svc->uuid == BLEUUID::from16(0x1801) && implPtr->uuid == BLEUUID::from16(0x2A05);
   {
     BLELockGuard lock(client ? client->mtx : nullptr);
     if (!svc || !client || implPtr->service != svc.get() || svc->client != client.get()) {
@@ -1066,8 +1054,7 @@ bool BLERemoteDescriptor::readInto(uint32_t timeoutMs) {
   }
 
   if (!performRemoteLongRead(
-        _impl, {svc, chr, _impl}, _impl->connHandle, _impl->handle, _impl->readGeneration, _impl->readSync, _impl->value,
-        &_impl->lastAttError,
+        _impl, {svc, chr, _impl}, _impl->connHandle, _impl->handle, _impl->readGeneration, _impl->readSync, _impl->value, &_impl->lastAttError,
         BLERemoteDescriptor::Impl::readCb, timeoutMs, _impl->opMtx
       )) {
     log_w("RemoteDescriptor: read failed/timed out (handle=0x%04x)", _impl->handle);
@@ -1085,8 +1072,7 @@ BTStatus BLERemoteDescriptor::writeValue(const uint8_t *data, size_t len, bool w
     return BTStatus::InvalidState;
   }
   return performRemoteWrite(
-    _impl, {svc, chr, _impl}, _impl->connHandle, _impl->handle, data, len, withResponse, _impl->writeGeneration, _impl->writeSync,
-    &_impl->lastAttError,
+    _impl, {svc, chr, _impl}, _impl->connHandle, _impl->handle, data, len, withResponse, _impl->writeGeneration, _impl->writeSync, &_impl->lastAttError,
     BLERemoteDescriptor::Impl::writeCb, _impl->opMtx
   );
 }

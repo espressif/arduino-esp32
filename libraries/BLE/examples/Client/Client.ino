@@ -23,9 +23,7 @@ volatile bool doConnect = false;
 BTAddress serverAddress;
 
 void onNotification(BLERemoteCharacteristic chr, const uint8_t *data, size_t len, BLESubscription kind) {
-  Serial.printf(
-    "[%s] data(%d bytes): %.*s\n", kind == BLESubscription::Notify ? "NOTIFY" : "INDICATE", (int)len, (int)len, data
-  );
+  Serial.printf("[%s] data(%d bytes): %.*s\n", kind == BLESubscription::Notify ? "NOTIFY" : "INDICATE", (int)len, (int)len, data);
 }
 
 // NOTE: Keep this callback lightweight. Blocking BLE operations (createClient,

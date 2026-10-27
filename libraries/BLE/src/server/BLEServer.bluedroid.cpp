@@ -1741,9 +1741,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         if (st != ESP_GATT_OK) {
           log_w("Server: indication on handle %u connId=%u failed, status=%d", attrHandle, connId, st);
         }
-        impl->indicationDone(
-          connId, attrHandle, (st == ESP_GATT_OK) ? BLECharacteristic::SUCCESS_INDICATE : BLECharacteristic::ERROR_INDICATE_FAILURE, st
-        );
+        impl->indicationDone(connId, attrHandle, (st == ESP_GATT_OK) ? BLECharacteristic::SUCCESS_INDICATE : BLECharacteristic::ERROR_INDICATE_FAILURE, st);
       }
       break;
     }

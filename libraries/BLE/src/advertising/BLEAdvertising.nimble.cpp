@@ -143,13 +143,11 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
     // Only consume the hook on a complete that could actually be a preemption
     // of a live set. A leftover complete from an earlier stop() has
     // wasAdvertising == false and must not steal the next test's arming.
-    const bool forcePreempted =
-      wasAdvertising && BLEHooks.adv.forcePreemptedComplete.exchange(false, std::memory_order_acq_rel);
+    const bool forcePreempted = wasAdvertising && BLEHooks.adv.forcePreemptedComplete.exchange(false, std::memory_order_acq_rel);
 #else
     const bool forcePreempted = false;
 #endif
-    const bool preempted =
-      (forcePreempted || event->adv_complete.reason == BLE_HS_EPREEMPTED) && wasAdvertising && BLE.isInitialized();
+    const bool preempted = (forcePreempted || event->adv_complete.reason == BLE_HS_EPREEMPTED) && wasAdvertising && BLE.isInitialized();
     BLEAdvertising::CompleteHandler cb;
     {
       BLELockGuard lock(impl->mtx);
@@ -195,7 +193,8 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
       bool expired = false;
       uint32_t remainingMs = 0;
 #if BLE5_SUPPORTED
-      remainingMs = remainingMsFromDeadline(isLegacy ? impl->sessionDeadlineUs : (inst < kMaxExtInstances ? impl->extInstances[inst].sessionDeadlineUs : 0), expired);
+      remainingMs =
+        remainingMsFromDeadline(isLegacy ? impl->sessionDeadlineUs : (inst < kMaxExtInstances ? impl->extInstances[inst].sessionDeadlineUs : 0), expired);
 #else
       remainingMs = remainingMsFromDeadline(impl->sessionDeadlineUs, expired);
 #endif
@@ -267,9 +266,7 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
       int32_t duration = (remainingMs == 0) ? BLE_HS_FOREVER : static_cast<int32_t>(remainingMs);
       ble_addr_t peerAddr = toNimblePeerAddr(impl->directedPeer);
       const ble_addr_t *directAddr = bleAdvTypeIsDirected(impl->advType) ? &peerAddr : nullptr;
-      int rc = ble_gap_adv_start(
-        static_cast<uint8_t>(BLE.getOwnAddressType()), directAddr, duration, &advParams, BLEAdvertising::Impl::gapEventCallback, impl
-      );
+      int rc = ble_gap_adv_start(static_cast<uint8_t>(BLE.getOwnAddressType()), directAddr, duration, &advParams, BLEAdvertising::Impl::gapEventCallback, impl);
       if (rc != 0) {
         impl->isAdvertising = false;
         resumeSt = BTStatus::Fail;
@@ -871,56 +868,56 @@ int BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   // ADV_DIRECT_IND carries only AdvA and InitA (Vol 6, Part B, §2.3.1.2).
   // NimBLE rejects ble_gap_ext_adv_set_data on a legacy directed set.
   if (!params.directed) {
-  // Primary advertisement data. The name is carried in the scan response when
-  // scan response is enabled and the PDU is scannable (CSS Part A §1.2).
-  const bool nameInScanRsp = scanResponseEnabled && scannable;
-  if (useCustomAdvData) {
-    struct os_mbuf *om = ble_hs_mbuf_from_flat(customAdvData.data(), customAdvData.length());
-    if (!om) {
-      return BLE_HS_ENOMEM;
-    }
-    rc = ble_gap_ext_adv_set_data(kLegacyInstance, om);
-  } else {
-    BLEAdvertisementData adv =
-      BLEAdvDataBuilder::buildLegacyAdvData(name, serviceUUIDs, appearance, includeTxPower, BLE.getPower(), nameInScanRsp, minPreferred, maxPreferred);
-    struct os_mbuf *om = ble_hs_mbuf_from_flat(adv.data(), adv.length());
-    if (!om) {
-      return BLE_HS_ENOMEM;
-    }
-    rc = ble_gap_ext_adv_set_data(kLegacyInstance, om);
-  }
-  if (rc != 0) {
-    return rc;
-  }
-
-  // Scan response (only valid for scannable PDUs).
-  if (scannable && scanResponseEnabled) {
-    struct os_mbuf *om;
-    if (useCustomScanRsp) {
-      om = ble_hs_mbuf_from_flat(customScanRspData.data(), customScanRspData.length());
+    // Primary advertisement data. The name is carried in the scan response when
+    // scan response is enabled and the PDU is scannable (CSS Part A §1.2).
+    const bool nameInScanRsp = scanResponseEnabled && scannable;
+    if (useCustomAdvData) {
+      struct os_mbuf *om = ble_hs_mbuf_from_flat(customAdvData.data(), customAdvData.length());
+      if (!om) {
+        return BLE_HS_ENOMEM;
+      }
+      rc = ble_gap_ext_adv_set_data(kLegacyInstance, om);
     } else {
-      BLEAdvertisementData rsp = BLEAdvDataBuilder::buildLegacyScanRespData(name);
-      om = ble_hs_mbuf_from_flat(rsp.data(), rsp.length());
+      BLEAdvertisementData adv =
+        BLEAdvDataBuilder::buildLegacyAdvData(name, serviceUUIDs, appearance, includeTxPower, BLE.getPower(), nameInScanRsp, minPreferred, maxPreferred);
+      struct os_mbuf *om = ble_hs_mbuf_from_flat(adv.data(), adv.length());
+      if (!om) {
+        return BLE_HS_ENOMEM;
+      }
+      rc = ble_gap_ext_adv_set_data(kLegacyInstance, om);
     }
-    if (!om) {
-      return BLE_HS_ENOMEM;
-    }
-    rc = ble_gap_ext_adv_rsp_set_data(kLegacyInstance, om);
     if (rc != 0) {
       return rc;
     }
-  } else if (scannable) {
-    // NimBLE rejects a null mbuf (ble_gap_ext_adv_set). An empty buffer is the
-    // HCI-legal way to drop a prior SCAN_RSP (Vol 4, Part E, §7.8.55).
-    struct os_mbuf *om = ble_hs_mbuf_from_flat("", 0);
-    if (!om) {
-      return BLE_HS_ENOMEM;
+
+    // Scan response (only valid for scannable PDUs).
+    if (scannable && scanResponseEnabled) {
+      struct os_mbuf *om;
+      if (useCustomScanRsp) {
+        om = ble_hs_mbuf_from_flat(customScanRspData.data(), customScanRspData.length());
+      } else {
+        BLEAdvertisementData rsp = BLEAdvDataBuilder::buildLegacyScanRespData(name);
+        om = ble_hs_mbuf_from_flat(rsp.data(), rsp.length());
+      }
+      if (!om) {
+        return BLE_HS_ENOMEM;
+      }
+      rc = ble_gap_ext_adv_rsp_set_data(kLegacyInstance, om);
+      if (rc != 0) {
+        return rc;
+      }
+    } else if (scannable) {
+      // NimBLE rejects a null mbuf (ble_gap_ext_adv_set). An empty buffer is the
+      // HCI-legal way to drop a prior SCAN_RSP (Vol 4, Part E, §7.8.55).
+      struct os_mbuf *om = ble_hs_mbuf_from_flat("", 0);
+      if (!om) {
+        return BLE_HS_ENOMEM;
+      }
+      rc = ble_gap_ext_adv_rsp_set_data(kLegacyInstance, om);
+      if (rc != 0) {
+        return rc;
+      }
     }
-    rc = ble_gap_ext_adv_rsp_set_data(kLegacyInstance, om);
-    if (rc != 0) {
-      return rc;
-    }
-  }
   }
 
   // Extended advertising duration is in 10 ms units; 0 == no expiration.

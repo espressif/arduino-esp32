@@ -41,9 +41,9 @@
  * OR of its parts, exactly like @ref BLEProperty.
  */
 enum class BLESubscription : uint8_t {
-  None = 0x00,        ///< Subscribed to nothing (see `unsubscribe()`).
-  Notify = 0x01,      ///< Notifications enabled (CCCD bit 0).
-  Indicate = 0x02,    ///< Indications enabled (CCCD bit 1).
+  None = 0x00,      ///< Subscribed to nothing (see `unsubscribe()`).
+  Notify = 0x01,    ///< Notifications enabled (CCCD bit 0).
+  Indicate = 0x02,  ///< Indications enabled (CCCD bit 1).
 };
 
 static_assert(static_cast<uint8_t>(BLESubscription::Notify) == BLE_CCCD_NOTIFY, "BLESubscription::Notify must be CCCD bit 0");

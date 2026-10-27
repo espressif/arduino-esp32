@@ -55,16 +55,14 @@ struct RemoteGattTarget {
 static constexpr uint16_t kMaxPendingWriteCommands = 8;
 
 bool remoteTargetConnectedLocked(const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client) {
-  if (!target.service || !client || target.service->clientOwner.lock() != client || target.service->client != client.get()
-      || !client->connected || client->connectionGeneration.load() != target.service->clientGeneration) {
+  if (!target.service || !client || target.service->clientOwner.lock() != client || target.service->client != client.get() || !client->connected
+      || client->connectionGeneration.load() != target.service->clientGeneration) {
     return false;
   }
-  if (target.characteristic
-      && (target.characteristic->serviceOwner.lock() != target.service || target.characteristic->service != target.service.get())) {
+  if (target.characteristic && (target.characteristic->serviceOwner.lock() != target.service || target.characteristic->service != target.service.get())) {
     return false;
   }
-  return !target.descriptor
-         || (target.descriptor->chrOwner.lock() == target.characteristic && target.descriptor->chr == target.characteristic.get());
+  return !target.descriptor || (target.descriptor->chrOwner.lock() == target.characteristic && target.descriptor->chr == target.characteristic.get());
 }
 
 std::shared_ptr<BLEClient::Impl> remoteClient(const RemoteGattTarget &target) {
@@ -255,8 +253,7 @@ static bool initiateSecurityAndWait(const RemoteGattTarget &target, const std::s
 }
 
 static bool performRemoteRead(
-  const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client, uint16_t handle, bool isDescr,
-  std::vector<uint8_t> &value, uint32_t timeoutMs
+  const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client, uint16_t handle, bool isDescr, std::vector<uint8_t> &value, uint32_t timeoutMs
 ) {
   if (!client) {
     return false;
@@ -324,8 +321,8 @@ static bool performRemoteRead(
 }
 
 static BTStatus performRemoteWrite(
-  const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client, uint16_t handle, bool isDescr,
-  const uint8_t *data, size_t len, bool withResponse
+  const RemoteGattTarget &target, const std::shared_ptr<BLEClient::Impl> &client, uint16_t handle, bool isDescr, const uint8_t *data, size_t len,
+  bool withResponse
 ) {
   if (!client) {
     return BTStatus::InvalidState;
@@ -392,29 +389,23 @@ static BTStatus performRemoteWrite(
         client->lastWriteStatus = ESP_GATT_OK;
       }
 #if BLE_VALIDATION_HOOKS
-      client->validationHoldWriteCommand =
-        BLEHooks.remote.holdWriteCommandCompletion.exchange(false, std::memory_order_relaxed);
+      client->validationHoldWriteCommand = BLEHooks.remote.holdWriteCommandCompletion.exchange(false, std::memory_order_relaxed);
       client->validationHeldWriteCommandEventSeen = false;
 #endif
       bool forceSubmitFailure = false;
 #if BLE_VALIDATION_HOOKS
       int remainingFailures = BLEHooks.remote.writeCommandSubmitFailures.load(std::memory_order_relaxed);
       while (remainingFailures > 0
-             && !BLEHooks.remote.writeCommandSubmitFailures.compare_exchange_weak(
-               remainingFailures, remainingFailures - 1, std::memory_order_relaxed
-             )) {}
+             && !BLEHooks.remote.writeCommandSubmitFailures.compare_exchange_weak(remainingFailures, remainingFailures - 1, std::memory_order_relaxed)) {}
       forceSubmitFailure = remainingFailures > 0;
 #endif
-      err = forceSubmitFailure
-              ? ESP_FAIL
-              : isDescr ? esp_ble_gattc_write_char_descr(
-                            client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data),
-                            ESP_GATT_WRITE_TYPE_NO_RSP, ESP_GATT_AUTH_REQ_NONE
-                          )
-                        : esp_ble_gattc_write_char(
-                            client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data),
-                            ESP_GATT_WRITE_TYPE_NO_RSP, ESP_GATT_AUTH_REQ_NONE
-                          );
+      err = forceSubmitFailure ? ESP_FAIL
+            : isDescr          ? esp_ble_gattc_write_char_descr(
+                          client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data), ESP_GATT_WRITE_TYPE_NO_RSP, ESP_GATT_AUTH_REQ_NONE
+                        )
+                      : esp_ble_gattc_write_char(
+                          client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data), ESP_GATT_WRITE_TYPE_NO_RSP, ESP_GATT_AUTH_REQ_NONE
+                        );
       if (err != ESP_OK) {
 #if BLE_VALIDATION_HOOKS
         client->validationHoldWriteCommand = false;
@@ -449,15 +440,12 @@ static BTStatus performRemoteWrite(
       client->requestWaiter = true;
       client->writeOwner = client;
       client->writeSync.take();
-      err =
-        isDescr ? esp_ble_gattc_write_char_descr(
-                    client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data),
-                    ESP_GATT_WRITE_TYPE_RSP, ESP_GATT_AUTH_REQ_NONE
-                  )
-                : esp_ble_gattc_write_char(
-                    client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data),
-                    ESP_GATT_WRITE_TYPE_RSP, ESP_GATT_AUTH_REQ_NONE
-                  );
+      err = isDescr ? esp_ble_gattc_write_char_descr(
+                        client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data), ESP_GATT_WRITE_TYPE_RSP, ESP_GATT_AUTH_REQ_NONE
+                      )
+                    : esp_ble_gattc_write_char(
+                        client->gattcIf, client->connId, handle, len, const_cast<uint8_t *>(data), ESP_GATT_WRITE_TYPE_RSP, ESP_GATT_AUTH_REQ_NONE
+                      );
       if (err != ESP_OK) {
         client->requestHandle = 0;
         client->requestWaiter = false;
@@ -482,8 +470,7 @@ static BTStatus performRemoteWrite(
 #if BLE_VALIDATION_HOOKS
     if (st != BTStatus::Timeout && BLEHooks.remote.holdWriteResponseRetirement.load(std::memory_order_relaxed)) {
       TickType_t deadline = xTaskGetTickCount() + pdMS_TO_TICKS(5000);
-      while (BLEHooks.remote.holdWriteResponseRetirement.load(std::memory_order_relaxed)
-             && static_cast<int32_t>(deadline - xTaskGetTickCount()) > 0) {
+      while (BLEHooks.remote.holdWriteResponseRetirement.load(std::memory_order_relaxed) && static_cast<int32_t>(deadline - xTaskGetTickCount()) > 0) {
         vTaskDelay(1);
       }
     }
@@ -554,7 +541,9 @@ BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *data, size_t len, bo
 // Subscribe / Unsubscribe
 // --------------------------------------------------------------------------
 
-static BTStatus subscribeWithCccd(BLERemoteCharacteristic &chr, const std::shared_ptr<BLERemoteCharacteristic::Impl> &impl, uint16_t cccdVal, BLERemoteCharacteristic::NotifyCallback callback) {
+static BTStatus subscribeWithCccd(
+  BLERemoteCharacteristic &chr, const std::shared_ptr<BLERemoteCharacteristic::Impl> &impl, uint16_t cccdVal, BLERemoteCharacteristic::NotifyCallback callback
+) {
   auto service = impl ? impl->serviceOwner.lock() : nullptr;
   RemoteGattTarget target{service, impl, {}};
   auto client = remoteClient(target);

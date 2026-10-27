@@ -169,9 +169,8 @@ BLEConnInfo *BLEServerImplCommon::connFind(uint16_t connHandle) {
   return nullptr;
 }
 
-const std::vector<uint8_t> &BLEServerImplCommon::selectLongRead(
-  uint16_t connHandle, uint16_t attrHandle, uint16_t offset, uint16_t mtu, const std::vector<uint8_t> &current
-) {
+const std::vector<uint8_t> &
+  BLEServerImplCommon::selectLongRead(uint16_t connHandle, uint16_t attrHandle, uint16_t offset, uint16_t mtu, const std::vector<uint8_t> &current) {
   if (offset == 0) {
     bool isLong = (mtu > 1 && current.size() >= static_cast<size_t>(mtu - 1));
     LongReadState *connSlot = nullptr;

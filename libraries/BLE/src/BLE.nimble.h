@@ -82,14 +82,14 @@ struct BLEClass::Impl {
   SecurityOverflowHook securityOverflowHook = nullptr;
 #endif
 
-  template <typename Hook> Hook loadHook(Hook &slot) {
+  template<typename Hook> Hook loadHook(Hook &slot) {
     portENTER_CRITICAL(&hookMux);
     Hook hook = slot;
     portEXIT_CRITICAL(&hookMux);
     return hook;
   }
 
-  template <typename Hook> void storeHook(Hook &slot, Hook hook) {
+  template<typename Hook> void storeHook(Hook &slot, Hook hook) {
     portENTER_CRITICAL(&hookMux);
     slot = hook;
     portEXIT_CRITICAL(&hookMux);

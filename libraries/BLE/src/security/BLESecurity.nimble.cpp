@@ -195,9 +195,7 @@ int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *event) {
       return 0;
     }
 
-    case BLE_GAP_EVENT_PARING_COMPLETE:
-      reportPairingComplete(event->pairing_complete.conn_handle, event->pairing_complete.status);
-      return 0;
+    case BLE_GAP_EVENT_PARING_COMPLETE: reportPairingComplete(event->pairing_complete.conn_handle, event->pairing_complete.status); return 0;
 
     case BLE_GAP_EVENT_REPEAT_PAIRING:
     {

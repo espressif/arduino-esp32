@@ -99,23 +99,23 @@ def _assert_phase2_clear_and_reset(server, timeout):
         r"\[SERVER\] Phase2 clearWhileLive ok=([01]) stillAdv=([01])",
         timeout=timeout,
     )
-    assert int(m_busy.group(1)) == 0 and int(m_busy.group(2)) == 1, (
-        "clearExtended() while advertising must Fail and leave isAdvertising true"
-    )
+    assert (
+        int(m_busy.group(1)) == 0 and int(m_busy.group(2)) == 1
+    ), "clearExtended() while advertising must Fail and leave isAdvertising true"
     m_clr = server.expect(
         r"\[SERVER\] Phase2 clearThenRestart clear=([01]) idle=([01]) restart=([01])",
         timeout=timeout,
     )
-    assert int(m_clr.group(1)) == 1 and int(m_clr.group(2)) == 1 and int(m_clr.group(3)) == 1, (
-        "clearExtended() then startExtended() did not leave idle then restart"
-    )
+    assert (
+        int(m_clr.group(1)) == 1 and int(m_clr.group(2)) == 1 and int(m_clr.group(3)) == 1
+    ), "clearExtended() then startExtended() did not leave idle then restart"
     m_reset = server.expect(
         r"\[SERVER\] Phase2 resetWhileExt idle=([01]) restart=([01])",
         timeout=timeout,
     )
-    assert int(m_reset.group(1)) == 1 and int(m_reset.group(2)) == 1, (
-        "reset() while extended+periodic advertising did not leave idle then restart"
-    )
+    assert (
+        int(m_reset.group(1)) == 1 and int(m_reset.group(2)) == 1
+    ), "reset() while extended+periodic advertising did not leave idle then restart"
     m_stale = server.expect(
         r"\[SERVER\] Phase2 staleStopFlag start=([01]) stillAdv=([01]) stop=([01]) idle=([01]) clear=([01]) skip=([01])",
         timeout=timeout,
@@ -137,8 +137,7 @@ def _assert_phase2_clear_and_reset(server, timeout):
     )
     if int(m_per.group(3)) == 0:
         assert int(m_per.group(1)) == 1 and int(m_per.group(2)) == 1, (
-            "leftover PERIODIC_ADV_STOP_COMPLETE after startPeriodicAdv() must not "
-            "clear periodicAdvRunning"
+            "leftover PERIODIC_ADV_STOP_COMPLETE after startPeriodicAdv() must not " "clear periodicAdvRunning"
         )
 
 
@@ -153,7 +152,9 @@ def _phase_ble5_adv(server, client):
     if ble5_server and ble5_client:
         server.expect_exact("[SERVER] Extended adv configured", timeout=10)
         m_dur = server.expect(r"\[SERVER\] Phase2 durationInvalid=([01])", timeout=10)
-        assert int(m_dur.group(1)) == 1, "startExtended() duration that overflows 16-bit 10 ms units must be InvalidParam"
+        assert (
+            int(m_dur.group(1)) == 1
+        ), "startExtended() duration that overflows 16-bit 10 ms units must be InvalidParam"
         server.expect_exact("[SERVER] Extended adv started", timeout=10)
         server.expect_exact("[SERVER] Periodic adv started", timeout=10)
 
@@ -237,9 +238,9 @@ def _phase_gatt_rw(server, client):
         r"\[CLIENT\] Long read boundary: len=(\d+) expected=(\d+) gen=(\S) uniform=([01])",
         timeout=15,
     )
-    assert int(m_bnd.group(1)) == int(m_bnd.group(2)), (
-        f"Exact (MTU-1) long read returned {int(m_bnd.group(1))} bytes, expected {int(m_bnd.group(2))}"
-    )
+    assert int(m_bnd.group(1)) == int(
+        m_bnd.group(2)
+    ), f"Exact (MTU-1) long read returned {int(m_bnd.group(1))} bytes, expected {int(m_bnd.group(2))}"
     assert m_bnd.group(3).decode() == "C", f"Exact (MTU-1) long read gen={m_bnd.group(3).decode()}, expected 'C'"
     assert int(m_bnd.group(4)) == 1, "Exact (MTU-1) long read was corrupted by concurrent setValue()"
 
@@ -513,9 +514,9 @@ def _phase_blestream(server, client):
         r"\[CLIENT\] BLEStream handle reset race clean=([01]) sawCleared=([01]) entered=([01])",
         timeout=15,
     )
-    assert int(m_handle.group(1)) == 1 and int(m_handle.group(2)) == 0 and int(m_handle.group(3)) == 1, (
-        "BLEStream writeChunks observed a handle cleared by concurrent end()"
-    )
+    assert (
+        int(m_handle.group(1)) == 1 and int(m_handle.group(2)) == 0 and int(m_handle.group(3)) == 1
+    ), "BLEStream writeChunks observed a handle cleared by concurrent end()"
     client.expect_exact("[CLIENT] BLEStream callback end cycle connected=1 disconnects=1", timeout=30)
     server.expect_exact("[SERVER] BLEStream callback end returned=1 rebegin=1 heap=1", timeout=15)
     server.expect_exact("[SERVER] BLEStream final owner ready=1", timeout=15)
@@ -544,7 +545,9 @@ def _phase_l2cap(server, client):
         server.expect_exact("[SERVER] L2CAP received: L2CAP_PING", timeout=15)
         server.expect_exact("[SERVER] L2CAP reply sent", timeout=10)
         m_host_busy = server.expect(r"\[SERVER\] L2CAP hostWriteBusy=([01])", timeout=10)
-        assert int(m_host_busy.group(1)) == 1, "host-callback L2CAP write larger than one SDU must return Busy before sending"
+        assert (
+            int(m_host_busy.group(1)) == 1
+        ), "host-callback L2CAP write larger than one SDU must return Busy before sending"
         client.expect_exact("[CLIENT] L2CAP received: L2CAP_OK", timeout=15)
         client.expect_exact("[CLIENT] Status: l2cap done", timeout=10)
         return True
@@ -847,7 +850,9 @@ def _phase_adv_data_and_scan(server, client):
         r"\[SERVER\] Phase20 cancelledAdv timedStart=([01]) stop=([01]) replacement=([01]) completions=(\d+) isAdv=([01])",
         timeout=10,
     )
-    assert all(int(m_cancel.group(i)) == 1 for i in range(1, 4)), "timed advertising cancellation/restart operation failed"
+    assert all(
+        int(m_cancel.group(i)) == 1 for i in range(1, 4)
+    ), "timed advertising cancellation/restart operation failed"
     assert int(m_cancel.group(4)) == 0, "cancelled advertising duration dispatched onComplete"
     assert int(m_cancel.group(5)) == 1, "a cancelled duration stopped the replacement advertising session"
     server.expect_exact("[SERVER] Phase20 boundaryRestarts=12/12", timeout=30)
@@ -869,21 +874,16 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_reset.group(1)) == 1, "reset() while advertising did not leave isAdvertising false"
     assert int(m_reset.group(2)) == 1, "start() after reset() while advertising failed"
     m_scan_off = server.expect(r"\[SERVER\] Phase20 scanRespOff ok=([01]) isAdv=([01])", timeout=15)
-    assert int(m_scan_off.group(1)) == 1 and int(m_scan_off.group(2)) == 1, (
-        "start() with setScanResponse(false) failed (null/zero scan-rsp raw config)"
-    )
+    assert (
+        int(m_scan_off.group(1)) == 1 and int(m_scan_off.group(2)) == 1
+    ), "start() with setScanResponse(false) failed (null/zero scan-rsp raw config)"
     m_dur = server.expect(
         r"\[SERVER\] Phase20 durationInvalid wrap=([01]) scanWrap=([01]) highDuty=([01]) noPeer=([01])",
         timeout=10,
     )
     assert (
-        int(m_dur.group(1)) == 1
-        and int(m_dur.group(2)) == 1
-        and int(m_dur.group(3)) == 1
-        and int(m_dur.group(4)) == 1
-    ), (
-        "duration overflow / high-duty directed forever / directed without peer must be InvalidParam"
-    )
+        int(m_dur.group(1)) == 1 and int(m_dur.group(2)) == 1 and int(m_dur.group(3)) == 1 and int(m_dur.group(4)) == 1
+    ), "duration overflow / high-duty directed forever / directed without peer must be InvalidParam"
     m_stop = server.expect(
         r"\[SERVER\] Phase20 failedStop fail=([01]) stuck=([01]) retry=([01]) idle=([01])",
         timeout=15,
@@ -898,9 +898,9 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_restart.group(1)) == 1, "onComplete handler must be able to call start() without deadlocking"
     m_rebuild = server.expect(r"\[SERVER\] Phase20 rebuildFail rm=([01]) retry=([01]) skip=([01])", timeout=15)
     if int(m_rebuild.group(3)) == 0:
-        assert int(m_rebuild.group(1)) == 1 and int(m_rebuild.group(2)) == 1, (
-            "failed NimBLE GATT rebuild must clear started so start() retries"
-        )
+        assert (
+            int(m_rebuild.group(1)) == 1 and int(m_rebuild.group(2)) == 1
+        ), "failed NimBLE GATT rebuild must clear started so start() retries"
     m_legacy_stale = server.expect(
         r"\[SERVER\] Phase20 staleLegacyStop start=([01]) stillAdv=([01]) stop=([01]) idle=([01]) skip=([01])",
         timeout=15,
@@ -1020,9 +1020,9 @@ def _phase_error_paths_and_misc(server, client):
         r"\[CLIENT\] Phase23 reconnect generation isolated=([01]) stale=InvalidState fresh=([01])",
         timeout=25,
     )
-    assert int(m_gen.group(1)) == 1 and int(m_gen.group(2)) == 1, (
-        "a retained remote handle crossed a disconnect/reconnect generation"
-    )
+    assert (
+        int(m_gen.group(1)) == 1 and int(m_gen.group(2)) == 1
+    ), "a retained remote handle crossed a disconnect/reconnect generation"
     client.expect(r"\[CLIENT\] Phase23 connectAsync ok=[01]", timeout=10)
     client.expect(r"\[CLIENT\] Phase23 cancelConnect ok=[01]", timeout=10)
     m_cstr = client.expect(r"\[CLIENT\] StrConv pass=(\d+) fail=(\d+)\r?\n", timeout=10)
@@ -1047,9 +1047,7 @@ def _phase_error_paths_and_misc(server, client):
     )
     if int(m_adv_rem.group(1)) == 1:
         resume_ms = int(m_adv_rem.group(2))
-        assert 1500 <= resume_ms <= 2500, (
-            f"preempted 3-second advertising restarted its full duration ({resume_ms} ms)"
-        )
+        assert 1500 <= resume_ms <= 2500, f"preempted 3-second advertising restarted its full duration ({resume_ms} ms)"
     else:
         assert int(m_adv_rem.group(2)) == 0
     server.expect_exact("[SERVER] Phase23 reAdvRaceReady", timeout=15)
@@ -1063,9 +1061,7 @@ def _phase_error_paths_and_misc(server, client):
         r"queued=([01]) restarted=([01])",
         timeout=20,
     )
-    assert int(m_race.group(5)) == 1, (
-        "advertiseOnDisconnect restart was dropped by a preemption resume"
-    )
+    assert int(m_race.group(5)) == 1, "advertiseOnDisconnect restart was dropped by a preemption resume"
     if int(m_race.group(1)) == 1:
         assert int(m_race_conn.group(1)) == 1, "reAdvRace client failed to connect"
         assert int(m_race.group(2)) == 1, "server did not see the reAdvRace peer"
@@ -1307,7 +1303,9 @@ def _phase_l2cap_bulk(server, client):
     server.expect_exact("[SERVER] Phase28 L2CAP channel disconnected count=1", timeout=10)
     client.write("PHASE28_CLEANUP_GO\n")
     m_abandoned = client.expect(r"\[CLIENT\] Phase28 abandoned clean=([01]) elapsed=(\d+) write=([01])", timeout=10)
-    assert int(m_abandoned.group(1)) == 1, "late L2CAP connect cleanup corrupted state or returned outside the timeout window"
+    assert (
+        int(m_abandoned.group(1)) == 1
+    ), "late L2CAP connect cleanup corrupted state or returned outside the timeout window"
     assert int(m_abandoned.group(3)) == 1, "failed to arm the delayed-peer L2CAP timeout scenario"
     client.expect_exact("[CLIENT] Phase28 L2CAP channel connected", timeout=30)
     # Bulk SDU must arrive intact (server echoes the accumulated byte count once
@@ -1323,23 +1321,37 @@ def _phase_l2cap_bulk(server, client):
     )
     assert int(m_race.group(1)) == 1, "L2CAP peer-disconnect race returned a dirty status or corrupted the heap"
     m_churn = client.expect(r"\[CLIENT\] Phase28 event churn clean=([01]) count=(\d+)", timeout=90)
-    assert int(m_churn.group(1)) == 1 and int(m_churn.group(2)) == 64, "per-channel operation events exhausted or leaked the NPL pool"
+    assert (
+        int(m_churn.group(1)) == 1 and int(m_churn.group(2)) == 64
+    ), "per-channel operation events exhausted or leaked the NPL pool"
     server.expect_exact("[SERVER] Phase28 shutdown stall entered", timeout=30)
     client.write("PHASE28_END_GO\n")
     m_end = client.expect(r"\[CLIENT\] Phase28 end in-flight=([01]) released=([01]) status=(-?\d+)", timeout=15)
     assert int(m_end.group(1)) == 1, "BLE.end() was not invoked while the L2CAP write was genuinely in flight"
-    assert int(m_end.group(2)) == 1 and int(m_end.group(3)) == -7, "BLE.end() did not release the stalled writer with NotConnected"
+    assert (
+        int(m_end.group(2)) == 1 and int(m_end.group(3)) == -7
+    ), "BLE.end() did not release the stalled writer with NotConnected"
     server.expect_exact("[SERVER] Phase28 shutdown stall released", timeout=10)
     m_drop = client.expect(r"\[CLIENT\] Phase28 final handle drop clean=([01])", timeout=30)
-    assert int(m_drop.group(1)) == 1, "dropping the final detached handle raced its queued host callback or corrupted the heap"
+    assert (
+        int(m_drop.group(1)) == 1
+    ), "dropping the final detached handle raced its queued host callback or corrupted the heap"
     m_shell = client.expect(
         r"\[CLIENT\] Phase28 retained clean=([01]) end=(-?\d+)/(\d+)/(-?\d+) rebegin=([01]) after=(-?\d+)/(\d+)/(-?\d+)",
         timeout=30,
     )
     assert int(m_shell.group(1)) == 1, "retained L2CAP shell or operation event was unsafe across end/rebegin"
     assert int(m_shell.group(5)) == 1, "BLE rebegin failed after queued L2CAP operation cleanup"
-    assert (int(m_shell.group(2)), int(m_shell.group(3)), int(m_shell.group(4))) == (-7, 0, -7), "detached shell status after end was not NotConnected"
-    assert (int(m_shell.group(6)), int(m_shell.group(7)), int(m_shell.group(8))) == (-7, 0, -7), "detached shell status after rebegin was not NotConnected"
+    assert (int(m_shell.group(2)), int(m_shell.group(3)), int(m_shell.group(4))) == (
+        -7,
+        0,
+        -7,
+    ), "detached shell status after end was not NotConnected"
+    assert (int(m_shell.group(6)), int(m_shell.group(7)), int(m_shell.group(8))) == (
+        -7,
+        0,
+        -7,
+    ), "detached shell status after rebegin was not NotConnected"
     # Fresh channel after teardown must ping/pong — the accept path recovered.
     m_re = client.expect(r"\[CLIENT\] Phase28 reconnect ok=([01])", timeout=40)
     assert int(m_re.group(1)) == 1, "L2CAP channel reconnect ping/pong failed"
@@ -1405,12 +1417,10 @@ def _phase_deletebond_roundtrip(server, client):
     m_scan = client.expect(r"\[CLIENT\] Phase30 preemptScan start=([01]) complete=([01]) elapsed=(\d+)", timeout=15)
     assert int(m_scan.group(1)) == 1, "finite scan did not start before deleteBond"
     assert int(m_scan.group(2)) == 1, "preempted finite scan did not complete"
-    assert int(m_scan.group(3)) >= 3500, (
-        f"preempted 4-second scan completed prematurely ({int(m_scan.group(3))} ms)"
-    )
-    assert int(m_scan.group(3)) <= 5500, (
-        f"preempted 4-second scan restarted its full duration ({int(m_scan.group(3))} ms)"
-    )
+    assert int(m_scan.group(3)) >= 3500, f"preempted 4-second scan completed prematurely ({int(m_scan.group(3))} ms)"
+    assert (
+        int(m_scan.group(3)) <= 5500
+    ), f"preempted 4-second scan restarted its full duration ({int(m_scan.group(3))} ms)"
     m_replace = client.expect(
         r"\[CLIENT\] Phase30 sessionReplace first=([01]) replacement=([01]) completions=(\d+) elapsed=(\d+) stopped=([01])",
         timeout=10,
@@ -1420,9 +1430,13 @@ def _phase_deletebond_roundtrip(server, client):
     assert 500 <= int(m_replace.group(4)) <= 2000, "replacement scan completed at the wrong session deadline"
     assert int(m_replace.group(5)) == 1, "replacement scan remained active after completion"
     m_preempt_stop = client.expect(r"\[CLIENT\] Phase30 preemptStop clean=([01]) retained=([01])", timeout=10)
-    assert int(m_preempt_stop.group(1)) == 1, "stop during native scan preemption leaked or freed its callback context early"
+    assert (
+        int(m_preempt_stop.group(1)) == 1
+    ), "stop during native scan preemption leaked or freed its callback context early"
     m_churn = client.expect(r"\[CLIENT\] Phase30 scanChurn clean=([01]) heapDelta=(-?\d+)", timeout=15)
-    assert int(m_churn.group(1)) == 1, f"repeated scan start/stop leaked or corrupted heap ({int(m_churn.group(2))} bytes)"
+    assert (
+        int(m_churn.group(1)) == 1
+    ), f"repeated scan start/stop leaked or corrupted heap ({int(m_churn.group(2))} bytes)"
     m_host_churn = client.expect(r"\[CLIENT\] Phase30 hostScanChurn clean=([01]) cycles=(0|48)", timeout=15)
     assert int(m_host_churn.group(1)) == 1, "callback-context scan churn failed or exhausted NimBLE events"
     m_cdel = client.expect(r"\[CLIENT\] Phase30 deleteOk=([01])", timeout=15)
@@ -1439,7 +1453,9 @@ def _phase_deletebond_roundtrip(server, client):
     assert int(m_cr.group(2)) == 1, "link not bonded after deleteBond re-pair"
     assert int(m_cr.group(3)) >= 1, "bond store still empty after re-pair (deleteBond round-trip failed)"
 
-    m_sr = server.expect(r"\[SERVER\] Phase30 rebonded=([01]) bondsAfterRepair=(\d+) identityCount=(\d+)\r?\n", timeout=45)
+    m_sr = server.expect(
+        r"\[SERVER\] Phase30 rebonded=([01]) bondsAfterRepair=(\d+) identityCount=(\d+)\r?\n", timeout=45
+    )
     assert int(m_sr.group(1)) == 1, "server did not observe a bonded re-pair"
     assert int(m_sr.group(3)) == 1, f"server onIdentity fired {int(m_sr.group(3))} times on re-pair, expected 1"
 
@@ -1507,7 +1523,9 @@ def _phase_indication_busy_retry(server, client):
         timeout=60,
     )
     assert int(m_re.group(2)) == 1, "Phase33: backend retained a stale remote handle after Service Changed"
-    assert int(m_re.group(3)) == 1 and int(m_re.group(4)) == 1, "Phase33: client did not rediscover and restore subscriptions after Service Changed"
+    assert (
+        int(m_re.group(3)) == 1 and int(m_re.group(4)) == 1
+    ), "Phase33: client did not rediscover and restore subscriptions after Service Changed"
     assert int(m_re.group(5)) == 1, "Phase33: Service Changed callback payload was not the required 4-byte handle range"
     if m_re.group(1) == b"Bluedroid":
         assert int(m_re.group(6)) == 1, "Phase33: Bluedroid did not report its documented conservative full range"
@@ -1535,7 +1553,9 @@ def _phase_indication_busy_retry(server, client):
     assert (
         confirmed == 3 and failed == 0
     ), f"Phase33: expected 3 confirmed indications, got confirmed={confirmed} failed={failed}"
-    assert busy_payloads == "busy_1,busy_2,busy_3", f"Phase33: client received '{busy_payloads}', expected 'busy_1,busy_2,busy_3'"
+    assert (
+        busy_payloads == "busy_1,busy_2,busy_3"
+    ), f"Phase33: client received '{busy_payloads}', expected 'busy_1,busy_2,busy_3'"
     server.expect_exact("[SERVER] Phase33 done", timeout=20)
     client.expect_exact("[CLIENT] Phase33 done", timeout=20)
 
@@ -1590,9 +1610,9 @@ def _phase_pending_send_edges(server, client):
     assert int(m_rb_ready.group(1)) == 1, "CCCD write failure must fail subscribe before the notify overlap window"
     server.write("PHASE35_CCCD_GO\n")
     m_sub_rb = client.expect(r"\[CLIENT\] Phase35 subscribeRollback fail=([01]) resub=([01])", timeout=45)
-    assert int(m_sub_rb.group(1)) == 1 and int(m_sub_rb.group(2)) == 1, (
-        "CCCD write failure must roll back the notify callback and allow a later subscribe"
-    )
+    assert (
+        int(m_sub_rb.group(1)) == 1 and int(m_sub_rb.group(2)) == 1
+    ), "CCCD write failure must roll back the notify callback and allow a later subscribe"
     m_cmd = client.expect(
         r"\[CLIENT\] Phase35 callback commands clean=([01]) overlap=([01]) state=([01]) "
         r"accepted=(\d+) busy=(\d+) other=(\d+)",
@@ -1626,12 +1646,12 @@ def _phase_pending_send_edges(server, client):
         r"\[SERVER\] Phase35 mixedSend first=(\S+) second=(\S+) steal=([01])",
         timeout=20,
     )
-    assert m_mixed.group(1) == b"SUCCESS_INDICATE", (
-        f"indication confirmation was demuxed as {m_mixed.group(1).decode()} while a notify was only reserved"
-    )
-    assert m_mixed.group(2) == b"SUCCESS_NOTIFY", (
-        f"held notification completed as {m_mixed.group(2).decode()} after the indication"
-    )
+    assert (
+        m_mixed.group(1) == b"SUCCESS_INDICATE"
+    ), f"indication confirmation was demuxed as {m_mixed.group(1).decode()} while a notify was only reserved"
+    assert (
+        m_mixed.group(2) == b"SUCCESS_NOTIFY"
+    ), f"held notification completed as {m_mixed.group(2).decode()} after the indication"
     assert int(m_mixed.group(3)) == 0, "pending notify reservation stole the indication confirmation"
 
     m_mixed_sub = server.expect(
@@ -1696,23 +1716,31 @@ def _phase_pending_send_edges(server, client):
         r"\[SERVER\] Phase35 reAdvStop entered=([01]) stop=([01]) idle=([01])",
         timeout=20,
     )
-    assert int(m_re_adv.group(1)) == 1 and int(m_re_adv.group(2)) == 1 and int(m_re_adv.group(3)) == 1, (
-        "in-flight advertiseOnDisconnect restart must be waited out by stop() so advertising is idle"
-    )
+    assert (
+        int(m_re_adv.group(1)) == 1 and int(m_re_adv.group(2)) == 1 and int(m_re_adv.group(3)) == 1
+    ), "in-flight advertiseOnDisconnect restart must be waited out by stop() so advertising is idle"
     m_td = server.expect(
         r"\[SERVER\] Phase35 notifyTeardown stack=(NimBLE|Bluedroid) attempted=(\d+) accepted=(\d+) atDisconnect=(\d+) final=(\d+) "
         r"success=(\d+) noClient=(\d+) other=(\d+) late=(\d+)",
         timeout=20,
     )
-    attempted, accepted, at_disconnect, final, success, no_client, other, late = (int(m_td.group(i)) for i in range(2, 10))
+    attempted, accepted, at_disconnect, final, success, no_client, other, late = (
+        int(m_td.group(i)) for i in range(2, 10)
+    )
     assert accepted > 0, "notification teardown scenario accepted no sends"
-    assert at_disconnect == attempted and final == attempted, "notification attempts did not receive exactly one terminal status before onDisconnect"
+    assert (
+        at_disconnect == attempted and final == attempted
+    ), "notification attempts did not receive exactly one terminal status before onDisconnect"
     assert late == 0, "notification status arrived after onDisconnect"
     if m_td.group(1) == b"Bluedroid":
-        assert success + no_client == attempted and other == 0, "Bluedroid notification attempt did not receive success or link-loss status"
+        assert (
+            success + no_client == attempted and other == 0
+        ), "Bluedroid notification attempt did not receive success or link-loss status"
         assert no_client > 0, "Bluedroid teardown left no pending notification to exercise ERROR_NO_CLIENT"
     else:
-        assert success + no_client == accepted, "NimBLE accepted notification did not receive success or link-loss status"
+        assert (
+            success + no_client == accepted
+        ), "NimBLE accepted notification did not receive success or link-loss status"
         assert other == attempted - accepted, "NimBLE synchronous rejection did not receive exactly one error status"
     client.expect_exact(
         f"[CLIENT] Phase35 terminalShutdown supported={int(bluedroid_commands)} clean=1",
@@ -1734,8 +1762,12 @@ def _phase_pending_send_edges(server, client):
 def _assert_oob_reject(match, label):
     found, connected, read_ok, enc, bond, auth_fired, auth_success = (int(match.group(i)) for i in range(1, 8))
     assert found == 1 and connected == 1, f"{label}: client did not find and connect to the server"
-    assert read_ok == 0 and enc == 0 and bond == 0, f"{label}: OOB pairing must not encrypt, bond, or complete a secure read"
-    assert auth_fired == 1 and auth_success == 0, f"{label}: library must report authentication failure, not hang or succeed"
+    assert (
+        read_ok == 0 and enc == 0 and bond == 0
+    ), f"{label}: OOB pairing must not encrypt, bond, or complete a secure read"
+    assert (
+        auth_fired == 1 and auth_success == 0
+    ), f"{label}: library must report authentication failure, not hang or succeed"
 
 
 def _phase_directed_adv_and_oob(server, client):
@@ -1763,7 +1795,9 @@ def _phase_directed_adv_and_oob(server, client):
         timeout=40,
     )
     assert int(m_sl.group(1)) == 1 and int(m_sl.group(2)) == 0, "legacy OOB must connect and must not store a bond"
-    assert int(m_sl.group(3)) == 1 and int(m_sl.group(4)) == 0, "legacy OOB must report authentication failure on the server"
+    assert (
+        int(m_sl.group(3)) == 1 and int(m_sl.group(4)) == 0
+    ), "legacy OOB must report authentication failure on the server"
     server.expect_exact("[SERVER] Phase36 oobScReady", timeout=15)
     client.write("PHASE36_OOB_SC_GO\n")
     m_csc = client.expect(
@@ -1777,7 +1811,9 @@ def _phase_directed_adv_and_oob(server, client):
         timeout=40,
     )
     assert int(m_ssc.group(1)) == 1 and int(m_ssc.group(2)) == 0, "OOB-SC must connect and must not store a bond"
-    assert int(m_ssc.group(3)) == 1 and int(m_ssc.group(4)) == 0, "OOB-SC must report authentication failure on the server"
+    assert (
+        int(m_ssc.group(3)) == 1 and int(m_ssc.group(4)) == 0
+    ), "OOB-SC must report authentication failure on the server"
     client.expect_exact("[CLIENT] Phase36 done", timeout=15)
     server.expect_exact("[SERVER] Phase36 done", timeout=15)
 

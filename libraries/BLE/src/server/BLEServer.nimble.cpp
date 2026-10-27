@@ -707,8 +707,7 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 #if BLE_SMP_SUPPORTED
     case BLE_GAP_EVENT_PASSKEY_ACTION:
     case BLE_GAP_EVENT_PARING_COMPLETE:  // Name is misspelled in NimBLE
-    case BLE_GAP_EVENT_REPEAT_PAIRING:
-      return nimbleForwardSecurityGapEvent(event);
+    case BLE_GAP_EVENT_REPEAT_PAIRING:  return nimbleForwardSecurityGapEvent(event);
 #endif /* BLE_SMP_SUPPORTED */
 
     case BLE_GAP_EVENT_SUBSCRIBE:
@@ -851,8 +850,7 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
     }
 
 #if defined(BLE_GAP_EVENT_AUTHORIZE)
-    case BLE_GAP_EVENT_AUTHORIZE:
-      return nimbleForwardSecurityGapEvent(event);
+    case BLE_GAP_EVENT_AUTHORIZE: return nimbleForwardSecurityGapEvent(event);
 #endif
 
     default: return 0;

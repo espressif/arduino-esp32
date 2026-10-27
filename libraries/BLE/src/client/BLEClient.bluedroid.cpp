@@ -62,13 +62,11 @@ static constexpr uint16_t APP_ID_INVALID = UINT16_MAX;
 static constexpr uint8_t GATTC_OWN_ADDR_TYPE_LOCAL_DEFAULT = 0xff;
 uint16_t BLEClient::Impl::s_nextAppId = 0;
 StaticSemaphore_t BLEClient::Impl::s_clientsMtxStorage{};
-SemaphoreHandle_t BLEClient::Impl::s_clientsMtx =
-  xSemaphoreCreateRecursiveMutexStatic(&BLEClient::Impl::s_clientsMtxStorage);
+SemaphoreHandle_t BLEClient::Impl::s_clientsMtx = xSemaphoreCreateRecursiveMutexStatic(&BLEClient::Impl::s_clientsMtxStorage);
 std::vector<std::weak_ptr<BLEClient::Impl>> BLEClient::Impl::s_clients;
 static BLEAdmissionGate s_terminalCloseAdmission(false);
 StaticSemaphore_t BLEClient::Impl::s_terminalCloseOwnersMtxStorage{};
-SemaphoreHandle_t BLEClient::Impl::s_terminalCloseOwnersMtx =
-  xSemaphoreCreateRecursiveMutexStatic(&BLEClient::Impl::s_terminalCloseOwnersMtxStorage);
+SemaphoreHandle_t BLEClient::Impl::s_terminalCloseOwnersMtx = xSemaphoreCreateRecursiveMutexStatic(&BLEClient::Impl::s_terminalCloseOwnersMtxStorage);
 std::vector<std::shared_ptr<BLEClient::Impl>> BLEClient::Impl::s_terminalCloseOwners;
 
 #include "core/BLEValidationHooks.h"
@@ -868,14 +866,10 @@ static void scheduleTerminalClientClose(BLEClient::Impl *client) {
   bool forceTaskFailure = false;
 #if BLE_VALIDATION_HOOKS
   int remaining = BLEHooks.gatt.terminalWorkerStartFailures.load(std::memory_order_relaxed);
-  while (remaining > 0
-         && !BLEHooks.gatt.terminalWorkerStartFailures.compare_exchange_weak(
-           remaining, remaining - 1, std::memory_order_relaxed
-         )) {}
+  while (remaining > 0 && !BLEHooks.gatt.terminalWorkerStartFailures.compare_exchange_weak(remaining, remaining - 1, std::memory_order_relaxed)) {}
   forceTaskFailure = remaining > 0;
 #endif
-  if (!taskArg || forceTaskFailure
-      || xTaskCreate(terminalClientCloseTask, "ble-gatt-close", 3072, taskArg, 1, nullptr) != pdPASS) {
+  if (!taskArg || forceTaskFailure || xTaskCreate(terminalClientCloseTask, "ble-gatt-close", 3072, taskArg, 1, nullptr) != pdPASS) {
     delete taskArg;
     client->terminalCloseRetryActive = false;
     esp_bd_addr_t peer;
@@ -1157,9 +1151,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
           signalWaiter = client->requestWaiter;
           bool holdResponseRetirement = false;
 #if BLE_VALIDATION_HOOKS
-          holdResponseRetirement =
-            client->requestWaiter
-            && BLEHooks.remote.holdWriteResponseRetirement.load(std::memory_order_relaxed);
+          holdResponseRetirement = client->requestWaiter && BLEHooks.remote.holdWriteResponseRetirement.load(std::memory_order_relaxed);
 #endif
           if (!holdResponseRetirement) {
             client->requestHandle = 0;
@@ -1177,9 +1169,8 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
           }
           int remainingFailures = BLEHooks.remote.writeCommandCompletionFailures.load(std::memory_order_relaxed);
           while (remainingFailures > 0
-                 && !BLEHooks.remote.writeCommandCompletionFailures.compare_exchange_weak(
-                   remainingFailures, remainingFailures - 1, std::memory_order_relaxed
-                 )) {}
+                 && !BLEHooks.remote.writeCommandCompletionFailures.compare_exchange_weak(remainingFailures, remainingFailures - 1, std::memory_order_relaxed)
+          ) {}
           if (remainingFailures > 0) {
             completionStatus = ESP_GATT_ERROR;
           }
@@ -1245,10 +1236,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       }
       if (onNotifyCb && chrShared) {
         BLERemoteCharacteristic chrHandle = BLERemoteCharacteristicImplCommon::makeHandle(chrShared);
-        onNotifyCb(
-          chrHandle, param->notify.value, param->notify.value_len,
-          param->notify.is_notify ? BLESubscription::Notify : BLESubscription::Indicate
-        );
+        onNotifyCb(chrHandle, param->notify.value, param->notify.value_len, param->notify.is_notify ? BLESubscription::Notify : BLESubscription::Indicate);
       }
       break;
     }

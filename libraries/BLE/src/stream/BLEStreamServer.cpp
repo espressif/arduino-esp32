@@ -239,12 +239,8 @@ BTStatus BLEStream::begin(const String &deviceName) {
     return cancelStart(BTStatus::Fail);
   }
 
-  role->txChr = role->service.createCharacteristic(
-    nusTxCharUUID(), BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen
-  );
-  role->rxChr = role->service.createCharacteristic(
-    nusRxCharUUID(), BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen
-  );
+  role->txChr = role->service.createCharacteristic(nusTxCharUUID(), BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
+  role->rxChr = role->service.createCharacteristic(nusRxCharUUID(), BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen);
   if (!role->txChr || !role->rxChr) {
     return abortRegisteredStart(BTStatus::Fail);
   }

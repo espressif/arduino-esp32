@@ -94,9 +94,7 @@ bool BLEStream::Impl::startEndWorker(Impl *common) {
   return xTaskCreate(endWorker, "ble-stream-end", 6144, common, 1, nullptr) == pdPASS;
 }
 
-bool BLEStream::Impl::claimEnd(
-  const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role, bool &hostShuttingDown
-) {
+bool BLEStream::Impl::claimEnd(const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role, bool &hostShuttingDown) {
   if (!common) {
     return false;
   }
@@ -151,9 +149,7 @@ bool BLEStream::Impl::finishRoleStart(const std::shared_ptr<Role> &role) {
   return !state.hostShuttingDown.load(std::memory_order_relaxed) && !role->ending.load(std::memory_order_acquire);
 }
 
-bool BLEStream::Impl::cancelRoleStart(
-  const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role
-) {
+bool BLEStream::Impl::cancelRoleStart(const std::shared_ptr<Impl> &common, const std::shared_ptr<Role> &role) {
   if (!common || !role) {
     return false;
   }
@@ -161,8 +157,7 @@ bool BLEStream::Impl::cancelRoleStart(
   BLELockGuard recoveryLock(state.mtx);
   BLELockGuard roleLock(common->roleMtx);
   role->starting = false;
-  if (state.hostShuttingDown.load(std::memory_order_relaxed) || role->ending.load(std::memory_order_acquire)
-      || common->role != role) {
+  if (state.hostShuttingDown.load(std::memory_order_relaxed) || role->ending.load(std::memory_order_acquire) || common->role != role) {
     return false;
   }
   common->role.reset();
@@ -189,9 +184,7 @@ void BLEStream::Impl::retainEnd(const std::shared_ptr<Impl> &common) {
   state.entries.push_back(common);
 }
 
-void BLEStream::Impl::completeEnd(
-  const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role
-) {
+void BLEStream::Impl::completeEnd(const std::shared_ptr<Impl> &common, std::shared_ptr<Role> &role) {
   if (!common || !role) {
     return;
   }
@@ -329,8 +322,7 @@ void BLEStream::Impl::prepareHostShutdown() {
     }
     for (const auto &common : entries) {
       auto role = common ? common->loadRole() : nullptr;
-      if (role
-          && (role->starting.load(std::memory_order_acquire) || role->endExecutorActive.load(std::memory_order_acquire))) {
+      if (role && (role->starting.load(std::memory_order_acquire) || role->endExecutorActive.load(std::memory_order_acquire))) {
         active = true;
         break;
       }

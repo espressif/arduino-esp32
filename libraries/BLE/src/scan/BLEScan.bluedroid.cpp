@@ -309,10 +309,7 @@ BTStatus BLEScan::stopBackend() {
   esp_err_t err;
 #if BLE_VALIDATION_HOOKS
   int remainingFailures = BLEHooks.scan.cancelFailures.load(std::memory_order_relaxed);
-  while (remainingFailures > 0
-         && !BLEHooks.scan.cancelFailures.compare_exchange_weak(
-           remainingFailures, remainingFailures - 1, std::memory_order_relaxed
-         )) {}
+  while (remainingFailures > 0 && !BLEHooks.scan.cancelFailures.compare_exchange_weak(remainingFailures, remainingFailures - 1, std::memory_order_relaxed)) {}
   bool forceStopFailure = remainingFailures > 0;
 #else
   bool forceStopFailure = false;
@@ -644,9 +641,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
                 }
               }
               if (!duplicate) {
-                found = BLEScanImplCommon::mergeScanResponse(
-                  inst->results, addr, 0xFF, scanRsp, param->scan_rst.scan_rsp_len, param->scan_rst.rssi, merged
-                );
+                found = BLEScanImplCommon::mergeScanResponse(inst->results, addr, 0xFF, scanRsp, param->scan_rst.scan_rsp_len, param->scan_rst.rssi, merged);
                 if (found && inst->filterDuplicates) {
                   markDuplicateKey(*inst, addr, 0xFF);
                 }

@@ -170,9 +170,7 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
    * @brief Select the attribute bytes to serve a read at @p offset, caching a snapshot on offset 0 when needed.
    * @note Caller holds @c mtx.
    */
-  const std::vector<uint8_t> &selectLongRead(
-    uint16_t connHandle, uint16_t attrHandle, uint16_t offset, uint16_t mtu, const std::vector<uint8_t> &current
-  );
+  const std::vector<uint8_t> &selectLongRead(uint16_t connHandle, uint16_t attrHandle, uint16_t offset, uint16_t mtu, const std::vector<uint8_t> &current);
 
   /**
    * @brief Drop the long-read snapshot for @p connHandle once the final Read Blob is served.

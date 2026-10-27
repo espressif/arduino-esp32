@@ -130,7 +130,9 @@ static void deinitOperationEventLocked(BLEL2CAPChannel::Impl *impl) {
   channels.erase(
     std::remove_if(
       channels.begin(), channels.end(),
-      [impl](const std::shared_ptr<BLEL2CAPChannel::Impl> &entry) { return entry.get() == impl; }
+      [impl](const std::shared_ptr<BLEL2CAPChannel::Impl> &entry) {
+        return entry.get() == impl;
+      }
     ),
     channels.end()
   );
@@ -247,9 +249,7 @@ static void runQueuedOperation(BLEL2CAPChannel::Impl *impl) {
 
   if (!impl->operationCancelled.load()) {
     switch (impl->operation) {
-      case BLEL2CAPChannel::Impl::Operation::Write:
-        processQueuedWrite(impl);
-        break;
+      case BLEL2CAPChannel::Impl::Operation::Write: processQueuedWrite(impl); break;
 
       case BLEL2CAPChannel::Impl::Operation::GetMTU:
       {
@@ -280,8 +280,7 @@ static void runQueuedOperation(BLEL2CAPChannel::Impl *impl) {
         break;
       }
 
-      case BLEL2CAPChannel::Impl::Operation::None:
-        break;
+      case BLEL2CAPChannel::Impl::Operation::None: break;
     }
   }
 
@@ -785,54 +784,58 @@ static bool scheduleAbandonedDisconnect() {
     return false;
   }
   if (!sAbandonedDisconnectCalloutInited) {
-    int initRc = ble_npl_callout_init(&sAbandonedDisconnectCallout, nimble_port_get_dflt_eventq(), [](struct ble_npl_event *) {
-      std::vector<std::pair<std::shared_ptr<L2CAPClientCtx>, struct ble_l2cap_chan *>> pending;
-      {
-        BLELockGuard lock(sL2CAPMtx);
-        for (auto &ctx : clientContexts()) {
-          if (ctx->disconnectQueued && ctx->abandonedChan) {
-            ctx->disconnectQueued = false;
-            pending.emplace_back(ctx, ctx->abandonedChan);
-          }
-        }
-      }
-      bool retry = false;
-      std::vector<std::shared_ptr<L2CAPClientCtx>> terminateLinks;
-      for (auto &[ctx, chan] : pending) {
-        int rc = ble_l2cap_disconnect(chan);
-        if (rc != 0) {
+    int initRc = ble_npl_callout_init(
+      &sAbandonedDisconnectCallout, nimble_port_get_dflt_eventq(),
+      [](struct ble_npl_event *) {
+        std::vector<std::pair<std::shared_ptr<L2CAPClientCtx>, struct ble_l2cap_chan *>> pending;
+        {
           BLELockGuard lock(sL2CAPMtx);
-          if (!sL2CAPStopping && xTaskGetTickCount() - ctx->disconnectStartedAt < pdMS_TO_TICKS(30000)) {
-            ctx->disconnectQueued = true;
-            retry = true;
-          } else {
-            log_e("L2CAP: deferred orphan disconnect failed: rc=%d", rc);
-            terminateLinks.push_back(ctx);
-          }
-        }
-      }
-      for (auto &ctx : terminateLinks) {
-        forceAbandonedLinkCleanup(ctx->impl->connHandle);
-      }
-      if (retry) {
-        int resetRc = ble_npl_callout_reset(&sAbandonedDisconnectCallout, ble_npl_time_ms_to_ticks32(100));
-        if (resetRc != 0) {
-          log_e("L2CAP: orphan disconnect retry scheduling failed: rc=%d", resetRc);
-          std::vector<std::shared_ptr<L2CAPClientCtx>> unscheduled;
-          {
-            BLELockGuard lock(sL2CAPMtx);
-            for (auto &ctx : clientContexts()) {
-              if (ctx->disconnectQueued) {
-                unscheduled.push_back(ctx);
-              }
+          for (auto &ctx : clientContexts()) {
+            if (ctx->disconnectQueued && ctx->abandonedChan) {
+              ctx->disconnectQueued = false;
+              pending.emplace_back(ctx, ctx->abandonedChan);
             }
           }
-          for (auto &ctx : unscheduled) {
-            forceAbandonedLinkCleanup(ctx->impl->connHandle);
+        }
+        bool retry = false;
+        std::vector<std::shared_ptr<L2CAPClientCtx>> terminateLinks;
+        for (auto &[ctx, chan] : pending) {
+          int rc = ble_l2cap_disconnect(chan);
+          if (rc != 0) {
+            BLELockGuard lock(sL2CAPMtx);
+            if (!sL2CAPStopping && xTaskGetTickCount() - ctx->disconnectStartedAt < pdMS_TO_TICKS(30000)) {
+              ctx->disconnectQueued = true;
+              retry = true;
+            } else {
+              log_e("L2CAP: deferred orphan disconnect failed: rc=%d", rc);
+              terminateLinks.push_back(ctx);
+            }
           }
         }
-      }
-    }, nullptr);
+        for (auto &ctx : terminateLinks) {
+          forceAbandonedLinkCleanup(ctx->impl->connHandle);
+        }
+        if (retry) {
+          int resetRc = ble_npl_callout_reset(&sAbandonedDisconnectCallout, ble_npl_time_ms_to_ticks32(100));
+          if (resetRc != 0) {
+            log_e("L2CAP: orphan disconnect retry scheduling failed: rc=%d", resetRc);
+            std::vector<std::shared_ptr<L2CAPClientCtx>> unscheduled;
+            {
+              BLELockGuard lock(sL2CAPMtx);
+              for (auto &ctx : clientContexts()) {
+                if (ctx->disconnectQueued) {
+                  unscheduled.push_back(ctx);
+                }
+              }
+            }
+            for (auto &ctx : unscheduled) {
+              forceAbandonedLinkCleanup(ctx->impl->connHandle);
+            }
+          }
+        }
+      },
+      nullptr
+    );
     if (initRc != 0) {
       log_e("L2CAP: orphan disconnect callout init failed: rc=%d", initRc);
       return false;

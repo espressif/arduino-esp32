@@ -76,8 +76,8 @@ public:
    */
   static constexpr BLEUUID from16(uint16_t uuid16) {
     return BLEUUID(
-      0x00, 0x00, static_cast<uint8_t>((uuid16 >> 8) & 0xFF), static_cast<uint8_t>(uuid16 & 0xFF),
-      0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb, 16
+      0x00, 0x00, static_cast<uint8_t>((uuid16 >> 8) & 0xFF), static_cast<uint8_t>(uuid16 & 0xFF), 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b,
+      0x34, 0xfb, 16
     );
   }
 
@@ -85,8 +85,8 @@ public:
    * @brief Construct a 128-bit UUID at compile time from 16 big-endian bytes.
    */
   static constexpr BLEUUID from128(
-    uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6, uint8_t b7,
-    uint8_t b8, uint8_t b9, uint8_t b10, uint8_t b11, uint8_t b12, uint8_t b13, uint8_t b14, uint8_t b15
+    uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6, uint8_t b7, uint8_t b8, uint8_t b9, uint8_t b10, uint8_t b11,
+    uint8_t b12, uint8_t b13, uint8_t b14, uint8_t b15
   ) {
     return BLEUUID(b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, 128);
   }
@@ -200,9 +200,8 @@ private:
    *       it retains access). No in-tree external users exist.
    */
   constexpr BLEUUID(
-    uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6, uint8_t b7,
-    uint8_t b8, uint8_t b9, uint8_t b10, uint8_t b11, uint8_t b12, uint8_t b13, uint8_t b14, uint8_t b15,
-    uint8_t bitSize = 128
+    uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6, uint8_t b7, uint8_t b8, uint8_t b9, uint8_t b10, uint8_t b11,
+    uint8_t b12, uint8_t b13, uint8_t b14, uint8_t b15, uint8_t bitSize = 128
   )
     : _uuid{b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15}, _bitSize(bitSize) {}
 

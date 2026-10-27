@@ -81,23 +81,19 @@ struct BLEScanImplCommon {
    * The fresh report remains the source of primary payload and metadata
    * (notably RSSI). Only the scan-response suffix is retained.
    */
-  static bool preserveScanResponse(
-    const BLEAdvertisedDevice &current, const BLEAdvertisedDevice &cached, BLEAdvertisedDevice &merged
-  ) {
-    if (!current._impl || !cached._impl
+  static bool preserveScanResponse(const BLEAdvertisedDevice &current, const BLEAdvertisedDevice &cached, BLEAdvertisedDevice &merged) {
+    if (!current._impl
+        || !cached._impl
         // Some backends deliver a complete fresh ADV+SCAN_RSP report. Its
         // current suffix supersedes the cached response and must not be
         // replaced with stale bytes.
-        || current._impl->advPayloadLen < current._impl->payload.size()
-        || cached._impl->advPayloadLen >= cached._impl->payload.size()) {
+        || current._impl->advPayloadLen < current._impl->payload.size() || cached._impl->advPayloadLen >= cached._impl->payload.size()) {
       return false;
     }
     auto impl = std::make_shared<BLEAdvertisedDevice::Impl>(*current._impl);
     merged = makeAdvertisedDeviceHandle(std::move(impl));
     const size_t offset = cached._impl->advPayloadLen;
-    merged.mergeScanResponse(
-      cached._impl->payload.data() + offset, cached._impl->payload.size() - offset, current._impl->rssi
-    );
+    merged.mergeScanResponse(cached._impl->payload.data() + offset, cached._impl->payload.size() - offset, current._impl->rssi);
     return true;
   }
 
@@ -112,9 +108,7 @@ struct BLEScanImplCommon {
         || cached._impl->advPayloadLen != current._impl->payload.size()) {
       return false;
     }
-    return std::equal(
-      current._impl->payload.begin(), current._impl->payload.end(), cached._impl->payload.begin()
-    );
+    return std::equal(current._impl->payload.begin(), current._impl->payload.end(), cached._impl->payload.begin());
   }
 
   /** @brief Whether raw scan-response bytes match the cached response suffix. */
@@ -123,12 +117,7 @@ struct BLEScanImplCommon {
       return false;
     }
     const size_t responseLen = cached._impl->payload.size() - cached._impl->advPayloadLen;
-    return responseLen == len
-           && std::equal(
-             cached._impl->payload.begin() + cached._impl->advPayloadLen,
-             cached._impl->payload.end(),
-             data
-           );
+    return responseLen == len && std::equal(cached._impl->payload.begin() + cached._impl->advPayloadLen, cached._impl->payload.end(), data);
   }
 };
 
