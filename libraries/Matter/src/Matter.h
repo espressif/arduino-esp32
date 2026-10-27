@@ -43,6 +43,7 @@
 #include <MatterEndpoints/MatterThermostat.h>
 #include <MatterEndpoints/MatterWindowCovering.h>
 #include <MatterEndpoints/MatterLightSensor.h>
+#include <MatterEndpoints/MatterSoilSensor.h>
 #include <MatterEndpoints/MatterWaterHeater.h>
 #include <MatterEndpoints/MatterWaterValve.h>
 

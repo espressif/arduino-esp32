@@ -156,6 +156,12 @@ Key rules:
 
 `MatterWaterValve` implements a private nested `ValveDelegate` that bridges `HandleOpenValve()`/`HandleCloseValve()`/`HandleRemainingDurationTick()` to the `onOpen()`/`onClose()` user callbacks and commits internal state (`currentState`, `targetState`, `openDuration`, `remainingDuration`) only once the callback has run - the same "commit after confirmation" spirit as the Setter Pattern above, just confirmed by a delegate callback instead of an Ember store update. `onOpen()` returns `bool` (failure keeps the valve reported closed); rollback `CloseValve()` may invoke `onClose()` to align the cluster. `onClose()` is `void` because the CHIP delegate has no close-failure path. Open level/percent is not supported on this endpoint. CHIP `OpenValve()` sets TargetState to Open and starts the remaining-duration timer *after* `HandleOpenValve()` returns, so a failed `onOpen()` schedules `CloseValve()` on the Matter event loop instead of calling it from inside the delegate. Local `open()` CloseValve only if that schedule failed, so `onClose()` does not run twice. `open()`/`close()`/`setValveFault()` drive the cluster object found with `findRegisteredCluster()` (`OpenValve()`, `CloseValve()`, `SetValveFault()`) under `lock::ScopedChipStackLock`; `OpenValve()`/`CloseValve()` synchronously invoke the delegate before returning, so by the time these calls return, internal state already reflects the outcome. `open()`/`close()` require `Matter.begin()` to have run; `setValveFault()` after accessory `begin()` (including before `Matter.begin()`) is cached and applied at stack start. The SDK's own timer drives the `RemainingDuration` countdown and automatically closes the valve when a timed open elapses (calling `HandleCloseValve()` the same way a remote Close command would) - no per-second polling is needed in the sketch.
 
+### Soil Measurement (code-driven cluster)
+
+`MatterSoilSensor` uses `esp_matter::endpoint::soil_sensor::create()` (Soil Sensor device type `0x0045`) and the ESP-Matter Soil Measurement integration (`SetSoilMoistureLimits()` before `Matter.begin()`, then `SetSoilMoistureMeasuredValue()` / `findRegisteredCluster()` after the stack starts). The live `SoilMeasurementCluster` is registered by ESP-Matter's `data_model_provider/clusters/soil_measurement/integration.cpp`, not by Arduino code. `setSoilMoisture()` caches readings before `Matter.begin()` and applies them in `onStackStarted()`, like `MatterHumiditySensor`.
+
+Like Boolean State, `SoilMoistureMeasuredValue` is served by that live cluster instance, not the Ember attribute store. Use `setSoilMoisture()` (which calls ESP-Matter's `SetSoilMoistureMeasuredValue()` once the stack is up). The no-argument `begin()` leaves the measured attribute null until the first `setSoilMoisture()` call; `begin(uint8_t)` seeds an initial value. A later `setSoilMoisture()` of the same value is skipped only after that value has been published.
+
 ### Controller-Originated Changes (attributeChangeCB)
 
 When a Matter controller changes an attribute (e.g., turning a light on via an app), the flow is:
@@ -225,6 +231,7 @@ All device classes inherit `MatterEndPoint`. After `begin()` and before `Matter.
 | `MatterWaterLeakDetector` | Water Leak Detector (Boolean State) |
 | `MatterWaterFreezeDetector` | Water Freeze Detector (Boolean State) |
 | `MatterRainSensor` | Rain Sensor (Boolean State) |
+| `MatterSoilSensor` | Soil Sensor (code-driven Soil Measurement cluster) |
 
 **Control and other**
 
