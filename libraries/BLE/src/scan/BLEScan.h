@@ -275,6 +275,28 @@ public:
   BTStatus createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
 
   /**
+   * @brief Enable Periodic Advertising Sync Transfer (PAST) receive on a connection.
+   *
+   * A connected Broadcast Assistant (BASS) typically pushes PA sync via PAST
+   * rather than asking the delegator to scan. @p connHandle is the ACL that
+   * will deliver HCI LE Periodic Advertising Sync Transfer Received.
+   * Pass the same handle to @ref cancelPeriodicSyncReceive to disarm.
+   *
+   * @param connHandle ACL connection handle of the assistant.
+   * @param skipCount Max number of periodic events the receiver may skip. 0 = none.
+   * @param timeoutMs Synchronization supervision timeout in milliseconds.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus receivePeriodicSync(uint16_t connHandle, uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
+
+  /**
+   * @brief Disable PAST receive previously enabled by @ref receivePeriodicSync.
+   * @param connHandle ACL connection handle of the assistant.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus cancelPeriodicSyncReceive(uint16_t connHandle);
+
+  /**
    * @brief Cancel a pending periodic sync creation.
    * @return BTStatus indicating success or error.
    */

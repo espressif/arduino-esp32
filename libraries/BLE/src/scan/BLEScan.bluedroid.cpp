@@ -424,6 +424,19 @@ BTStatus BLEScan::stopExtended() {
   return stop();
 }
 
+BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, uint16_t timeoutMs) {
+  (void)connHandle;
+  (void)skipCount;
+  (void)timeoutMs;
+  log_w("Scan: receivePeriodicSync (PAST) not implemented on Bluedroid");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t connHandle) {
+  (void)connHandle;
+  return BTStatus::NotSupported;
+}
+
 BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount, uint16_t timeoutMs) {
 #if BLE_PERIODIC_ADV_SUPPORTED
   // Null-check only: the create_sync call does not touch Impl state (unlike NimBLE,
@@ -1006,6 +1019,16 @@ BTStatus BLEScan::stopExtended() {
 }
 
 BTStatus BLEScan::createPeriodicSync(const BTAddress &, uint8_t, uint16_t, uint16_t) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::receivePeriodicSync(uint16_t, uint16_t, uint16_t) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t) {
   log_w("Scanning not supported");
   return BTStatus::NotSupported;
 }

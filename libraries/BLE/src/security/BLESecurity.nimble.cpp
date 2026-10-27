@@ -338,7 +338,9 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
     return BTStatus::InvalidState;
   }
   int rc = ble_gap_security_initiate(connHandle);
-  if (rc != 0) {
+  if (rc == BLE_HS_EALREADY) {
+    log_d("Security: procedure already in progress on handle=%u", connHandle);
+  } else if (rc != 0) {
     log_e("Security: ble_gap_security_initiate handle=%u rc=%d", connHandle, rc);
     return BTStatus::Fail;
   }

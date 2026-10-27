@@ -88,6 +88,8 @@ Feature guards (derived from Kconfig / SoC capabilities):
 - `BLE_VALIDATION_HOOKS`: test-only injectors (`core/BLEValidationHooks`); off in production. The validation suite enables it with `-DBLE_VALIDATION_HOOKS`.
 - `BLE5_SUPPORTED`: BLE 5.0 features (extended advertising, PHY selection, periodic advertising)
 - `BLE_L2CAP_SUPPORTED`: L2CAP CoC channels; NimBLE only, requires explicit Kconfig
+- `BLE_ISO_SUPPORTED`: host isochronous transport (CIS/BIG), exposed as the `BLEIso` API (`src/iso/`). Gates the per-role guards `BLE_ISO_CIS_CENTRAL_SUPPORTED`, `BLE_ISO_CIS_PERIPHERAL_SUPPORTED`, `BLE_ISO_BROADCASTER_SUPPORTED` and `BLE_ISO_SYNC_RECEIVER_SUPPORTED` (`CONFIG_BT_ISO_CENTRAL` / `PERIPHERAL` / `BROADCASTER` / `SYNC_RECEIVER`)
+- `BLE_AUDIO_SUPPORTED`: the LE Audio engine (GAF profiles); implies ISO. Gates a family of per-role guards (`BLE_AUDIO_UNICAST_SERVER_SUPPORTED`, `BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED`, …) documented in [`AUDIO.md`](AUDIO.md)
 
 ### Hosted BLE
 
@@ -337,6 +339,11 @@ It is shared with BT Classic infrastructure and is intentionally tiny.
 - use specific statuses (`Timeout`, `NotFound`, `NotSupported`, `AlreadyConnected`, `InvalidState`, etc.) instead of generic failure where possible
 - do not mix `bool`, raw stack error codes, and silent failure semantics in new public BLE APIs
 - convert backend-native errors into `BTStatus` at the boundary
+- a request whose target state is already in effect (stop, cancel, disconnect, set-same-value) returns `OK`
+- a request rejected because another operation is still in progress returns `Busy`; retrying later can succeed
+- `InvalidState` means a precondition is not met, including "already running with different parameters"
+- stack "already" codes (`BLE_HS_EALREADY`, `-EALREADY`) are handled per call site, since they mean a no-op for some
+  calls and a rejection for others
 
 ## GATT model and rules
 
@@ -409,6 +416,31 @@ Hard errors prevent registration; soft violations surface as log warnings.
 Creating services and characteristics builds up an in-memory GATT model.
 `BLEServer::start()` is the registration point that pushes that model into the backend stack.
 Code should not assume that `createService()` alone means the service already exists in the controller.
+
+On NimBLE, `BLEServer::start()` does not own the attribute-table lifecycle directly. It delegates to the
+unified coordinator `gatt/BLEGattDatabase`, which is the single owner of `ble_gatts_reset` /
+`ble_svc_gap_init` / `ble_svc_gatt_init` / `ble_gatts_start`. This is required for correctness: NimBLE cannot
+support two independent GATT owners (a second `ble_gatts_start()` reallocates and wipes the first table, and the
+service-init calls are non-idempotent). The coordinator has two modes:
+
+- **Standalone** (no LE Audio): the coordinator performs the full `reset -> svc init -> add_svcs -> start`
+  rebuild, exactly as before. Non-audio behaviour is unchanged.
+- **Audio** (engine present): the LE Audio engine performs the service inits (in `esp_ble_audio_common_init`)
+  and the single `ble_gatts_start` (in `esp_ble_audio_common_start`, triggered by `BLEAudio::start()`); the
+  classic server only *stages* its services (`ble_gatts_add_svcs`). This lets an ordinary `BLEServer` service and
+  the audio profiles coexist in one committed GATT table. Required ordering: `BLE.begin()` -> `audio.begin()` ->
+  create/stage server services -> `audio.start()`.
+
+Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive()` returns
+`bleAudioEngineIsInitialized()` (false when the engine is not compiled in), so audio mode is exactly the window
+between `audio.begin()` and `audio.end()`. The dependency points one way — the NimBLE-only coordinator observes the
+host-agnostic engine. The engine's only per-backend files are the thin event forwarders
+`audio/BLEAudioEngine.nimble.*` (GATT events, plus the two NimBLE calls kept out of the Zephyr-based C units) and
+`audio/BLEAudioEngine.bluedroid.*` (SMP completion).
+
+On Bluedroid, incremental multi-app GATTS registration already allows coexistence: the engine registers its own
+BTA GATTS/GATTC apps, so the Bluedroid server path stays thin and does not use the coordinator. Audio centrals must
+open links with `BLEAudio::connect()`, which goes through the engine's GATTC interface.
 
 ### Descriptor rules
 
@@ -490,6 +522,29 @@ Even so, the public API remains generic and does not expose backend types.
 `BLE.connectL2CAP()` blocks via `BLESync` until `BLE_L2CAP_EVENT_COC_CONNECTED` completes (or returns an empty `BLEL2CAPChannel` on failure/timeout). Channel-native `write()`, `getMTU()`, and `disconnect()` calls from application tasks are submitted through a per-channel event on the NimBLE host queue; this serializes native channel-pointer access with `COC_DISCONNECTED`, which owns pointer invalidation. Each whole public channel operation is also serialized so one operation cannot consume another operation's `BLESync` wakeup. Calls already on the host task execute directly and never wait for flow-control events: a write that would need a later `COC_TX_UNSTALLED` returns `Busy`.
 `write()` splits payloads larger than the peer CoC MTU into MTU-sized SDUs and application-task calls may block briefly between chunks while waiting for peer credits (`COC_TX_UNSTALLED`). NimBLE itself does not segment oversized SDUs — that is done in the Arduino wrapper. A channel allocates NPL event backing only while an operation is queued or in flight and returns it to the bounded ESP-IDF pool before waking the caller; retained detached shells therefore consume no event slots. The active-operation registry holds a strong Impl reference, and the queued callback takes its own strong copy before running, so waking the caller and dropping the final public handle cannot free callback state. L2CAP shutdown closes an enqueue gate before stopping the host; after `nimble_port_stop()` and before `nimble_port_deinit()`, every still-active tracked event is removed/deinitialized and all operation waiters are released. Client channel contexts are then cleaned up by `nimbleCleanupL2CAP()`. Operations on a detached non-null channel shell return `NotConnected` (including after `end()` and a later `begin()`); only an empty handle returns `InvalidState`. Detached `getMTU()` returns zero without queueing host work.
 On receive, SDUs up to a fixed 256-byte stack threshold are flattened without a heap allocation; larger SDUs (when the channel MTU is bigger) spill to a heap vector. Channel MTU itself is whatever the caller configured (128, 256, 512, …) and is independent of that RX threshold. After flatten, the received `sdu_rx` mbuf is freed and a fresh buffer is posted via `ble_l2cap_recv_ready` — omitting the free drains the CoC pool and stalls peer credits.
+
+### LE Audio
+
+LE Audio (`src/audio/`) is a **shared component** built on the host-agnostic
+ESP-BLE-AUDIO engine; the only host-specific files are the thin
+`BLEAudioEngine.nimble.*` / `BLEAudioEngine.bluedroid.*` glue that forwards host
+GAP/GATT events to the engine. The `BLEAudio` controller is a shared handle minted
+from the `BLE` singleton (`BLE.getAudioController()`); its `create*()` factories mint
+value-type role handles (unicast/broadcast data plane and Broadcast Assistant;
+CAP/CSIP coordination; VCP/MICP/MCP/CCP control; TMAP/GMAP/HAS/PBP identity) whose
+audio flows through `BLEAudioStream` handles, with a turnkey LC3 player/recorder on
+top. Every engine call is isolated in C engine units (`audio/BLEAudioEngine*.{h,c}`)
+behind an `extern "C"` boundary, and engine events reach the role handles through one
+event bridge; no `esp_ble_audio_*` type ever appears in a header reachable from
+`<BLE.h>`. Roles
+stage their registration between `audio.begin()` and `audio.start()` (the controller's
+`roleApplies` "accumulate then commit" model), and `start()` performs the single
+coordinated `ble_gatts_start()` so audio profiles and a classic `BLEServer` coexist in
+one GATT table (see [Service staging and startup](#service-staging-and-startup)).
+
+The full audio-layer architecture, engine boundary, event and stream paths, per-role feature guards,
+and per-role spec-compliance checklist live in the dedicated maintainer doc
+[`AUDIO.md`](AUDIO.md).
 
 ## Backend contract
 
@@ -686,6 +741,7 @@ If you are modifying this library:
 - prefer adapting backend code to the shared API rather than changing the shared API to fit one backend
 - look for existing patterns in handle ownership, callback dispatch, and `BTStatus` conversion before inventing a new one
 - treat `MIGRATION.md` as a user-facing transition guide and this document as the maintainer-facing architecture guide
+- for LE Audio work, read [`AUDIO.md`](AUDIO.md) — it is the maintainer-facing guide for the `src/audio/` subsystem (vendor boundary, controller commit model, per-role guards and spec obligations)
 
 If the code and this document disagree, follow the code and update this document.
 

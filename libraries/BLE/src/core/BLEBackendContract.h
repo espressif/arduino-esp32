@@ -70,4 +70,13 @@ static_assert(std::is_base_of<BLESecurityImplCommon, BLESecurity::Impl>::value, 
 static_assert(sizeof(BLEScan::Impl) > 0, "BLEScan::Impl must be defined by the active backend");
 static_assert(sizeof(BLEAdvertising::Impl) > 0, "BLEAdvertising::Impl must be defined by the active backend");
 
+// --- LE Audio: "fully shared" component (host-agnostic engine, no per-backend Impl). ---
+// Mirrors BLEAdvertisedDevice: the concrete Impl is defined once in the shared
+// header and must derive from the shared base. Only checked when the engine is
+// compiled in (BLE_AUDIO_SUPPORTED), since the types don't exist otherwise.
+#if BLE_AUDIO_SUPPORTED
+#include "audio/BLEAudioImpl.h"
+static_assert(std::is_base_of<BLEAudioImplCommon, BLEAudio::Impl>::value, "BLEAudio::Impl must inherit BLEAudioImplCommon");
+#endif
+
 #endif /* BLE_ENABLED */

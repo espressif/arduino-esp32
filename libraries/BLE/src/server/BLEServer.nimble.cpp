@@ -30,6 +30,7 @@
 #include "BLE.nimble.h"
 #include "server/BLEServer.nimble.h"
 #include "gatt/BLEGattAttributes.nimble.h"
+#include "gatt/BLEGattDatabase.h"
 #include "types/BLEConnInfo.nimble.h"
 #include "security/BLESecurity.h"
 #include "types/BLEConnInfoData.h"
@@ -37,6 +38,12 @@
 #include "core/BLEBackend.h"
 #include "core/BLEValidationHooks.h"
 #include "esp32-hal-log.h"
+#if BLE_ISO_SUPPORTED
+#include "iso/BLEIso.nimble.h"
+#endif
+#if BLE_AUDIO_SUPPORTED
+#include "audio/BLEAudioEngine.nimble.h"
+#endif
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
@@ -184,6 +191,16 @@ static void nimbleClearGattRegistration(BLEServer::Impl &impl, const std::vector
 }
 
 static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
+  if (BLEGattDatabase::audioModeFrozen()) {
+    log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
+    return BTStatus::InvalidState;
+  }
+  if (BLEGattDatabase::audioModeActive()) {
+    // The engine owns the single ble_gatts_start; the classic server only
+    // stages its services between audio.begin() and audio.start().
+    return BLEGattDatabase::stageServer(impl);
+  }
+
   // Snapshot the service tree under mtx; registration below iterates the
   // snapshot while createCharacteristic/createDescriptor may run on user tasks.
   std::vector<std::shared_ptr<BLEService::Impl>> services;
@@ -209,7 +226,9 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
   // (adv/scan/connect). Ignoring that and calling ble_svc_gap_init() panics
   // inside ble_gatts_add_svcs (SYSINIT_PANIC_ASSERT rc==0).
   int rc = ble_gatts_reset();
-  if (rc != 0) {
+  if (rc == BLE_HS_EALREADY) {
+    log_d("Server: disconnect handle=%u already in progress", connHandle);
+  } else if (rc != 0) {
     log_w("ble_gatts_reset: rc=%d (GATT table immutable while connected or advertising)", rc);
     return rc == BLE_HS_EBUSY ? BTStatus::Busy : BTStatus::Fail;
   }
@@ -498,6 +517,13 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
   if (!impl) {
     return 0;
   }
+
+#if BLE_ISO_SUPPORTED
+  BLEIso::forwardHostGapEvent(event);
+#endif
+#if BLE_AUDIO_SUPPORTED
+  BLEAudioEngine::forwardHostGattEvent(event);
+#endif
 
   switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
@@ -923,6 +949,24 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
 
   if (!svc->started || !impl->started) {
     bleDetachLocalService(svc);
+    return BTStatus::OK;
+  }
+
+  // The engine owns the committed table in audio mode. Never reset it; hide
+  // the removed range and signal Service Changed instead.
+  if (BLEGattDatabase::audioModeFrozen()) {
+    if (startHandle == 0 && ble_gatts_find_svc(&svc->nimbleUUID.u, &startHandle) == 0) {
+      svc->handle = startHandle;
+    }
+    if (startHandle == 0 || ble_gatts_svc_set_visibility(startHandle, 0) != 0) {
+      BLELockGuard lock(impl->mtx);
+      size_t insertIndex = originalIndex < impl->services.size() ? originalIndex : impl->services.size();
+      impl->services.insert(impl->services.begin() + insertIndex, svc);
+      return BTStatus::Busy;
+    }
+    bleDetachLocalService(svc);
+    ble_svc_gatt_changed(startHandle, endHandle);
+    log_i("Server: service hidden in audio GATT table (handle=%u..%u)", startHandle, endHandle);
     return BTStatus::OK;
   }
 

@@ -34,6 +34,12 @@
 #include "core/BLEBackend.h"
 #include "core/BLETask.h"
 #include "core/BLEValidationHooks.h"
+#if BLE_AUDIO_SUPPORTED
+#include "audio/BLEAudioImpl.h"
+#endif
+#if BLE_ISO_SUPPORTED
+#include "iso/BLEIso.h"
+#endif
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
@@ -326,6 +332,9 @@ BTStatus BLEClass::begin(const String &deviceName) {
     hook();
   }
 #endif
+#if BLE_ISO_SUPPORTED
+  _impl->storeHook(_impl->isoPreEndHook, BLEIso::end);
+#endif
   if (_impl->localMTU != BLE_ATT_MTU_DFLT) {
     (void)ble_att_set_preferred_mtu(_impl->localMTU);
   }
@@ -437,6 +446,16 @@ void BLEClass::end(bool releaseMemory) {
 #endif
 #if BLE_SCANNING_SUPPORTED
   if (auto hook = _impl->loadHook(_impl->scanEndHook)) {
+    hook();
+  }
+#endif
+#if BLE_AUDIO_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->audioPreEndHook)) {
+    hook();
+  }
+#endif
+#if BLE_ISO_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->isoPreEndHook)) {
     hook();
   }
 #endif
@@ -1043,6 +1062,40 @@ BLESecurity BLEClass::getSecurity() {
 BLESecurity BLEClass::getSecurity() {
   log_w("SMP not supported");
   return BLESecurity();
+}
+#endif
+
+#if BLE_AUDIO_SUPPORTED
+namespace {
+std::shared_ptr<BLEAudio::Impl> &audioControllerSlot() {
+  static std::shared_ptr<BLEAudio::Impl> slot;
+  return slot;
+}
+}  // namespace
+
+BLEAudio BLEClass::getAudioController() {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
+    log_e("getAudioController: BLE not initialized");
+    return BLEAudio();
+  }
+  auto &slot = audioControllerSlot();
+  if (!slot) {
+    slot = std::make_shared<BLEAudio::Impl>();
+    _impl->storeHook(
+      _impl->audioPreEndHook,
+      +[]() {
+        auto &audio = audioControllerSlot();
+        if (audio) {
+          BTStatus status = BLEAudio(audio).end();
+          if (!status) {
+            log_e("BLE.end: audio teardown failed (%s)", status.toString());
+          }
+        }
+      }
+    );
+  }
+  return BLEAudio(slot);
 }
 #endif
 

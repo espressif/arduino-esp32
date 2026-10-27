@@ -44,6 +44,8 @@
 #include "hid/BLEHIDDevice.h"
 #include "stream/BLEStream.h"
 #include "l2cap/BLEL2CAP.h"
+#include "iso/BLEIso.h"
+#include "audio/BLEAudio.h"
 
 /**
  * @brief Global BLE singleton -- the entry point for all BLE operations.
@@ -197,6 +199,20 @@ public:
    * @return A BLESecurity handle for configuring pairing and bonding.
    */
   BLESecurity getSecurity();
+
+#if BLE_AUDIO_SUPPORTED
+  /**
+   * @brief Get the LE Audio controller handle (GAF entry point).
+   *
+   * The first call allocates the single engine-backed implementation;
+   * subsequent calls return a handle to the same instance. Only valid after
+   * begin(). Named "controller" because it manages the audio subsystem -- it
+   * does not itself carry audio data.
+   *
+   * @return A BLEAudio handle. Check with `operator bool()` for validity.
+   */
+  BLEAudio getAudioController();
+#endif
 
   /**
    * @brief Create a new GATT client instance.

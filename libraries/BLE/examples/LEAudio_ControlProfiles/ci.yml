@@ -1,0 +1,8 @@
+fqbn_append: PartitionScheme=huge_app
+
+requires:
+  - CONFIG_BT_CAP_INITIATOR=y
+  - CONFIG_BT_VCP_VOL_CTLR=y
+  - CONFIG_BT_MICP_MIC_CTLR=y
+  - CONFIG_BT_MCC=y
+  - CONFIG_BT_CCP_CALL_CONTROL_CLIENT=y

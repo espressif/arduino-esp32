@@ -40,6 +40,10 @@
 #if BLE_SMP_SUPPORTED
 #include "security/BLESecurity.bluedroid.h"
 #endif
+#if BLE_AUDIO_SUPPORTED
+#include "audio/BLEAudioImpl.h"
+#include "audio/BLEAudioEngine.bluedroid.h"
+#endif
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
 #include "core/BLETask.h"
@@ -123,6 +127,11 @@ void BLEClass::Impl::gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_pa
   if (auto hook = impl->loadHook(impl->clientGapHook)) {
     hook(event, param);
   }
+#endif
+#if BLE_AUDIO_SUPPORTED
+  // SMP completion has no BTA path into the LE Audio engine; it gates the
+  // engine's GATT discovery on audio links.
+  BLEAudioEngine::forwardHostGapEvent(event, param);
 #endif
 #if BLE_SMP_SUPPORTED
   if (auto hook = impl->loadHook(impl->securityGapHook)) {
@@ -413,6 +422,12 @@ void BLEClass::end(bool releaseMemory) {
   // Close terminal-retry admission and wait until no worker can enter a native
   // GATTC API before Bluedroid is disabled.
   BLEClient::Impl::stopTerminalCloseWorkers();
+#endif
+#if BLE_AUDIO_SUPPORTED
+  // The LE Audio host must be released while Bluedroid is still enabled.
+  if (bleAudioEngineIsInitialized()) {
+    getAudioController().end();
+  }
 #endif
 
   esp_bluedroid_disable();
@@ -1022,6 +1037,20 @@ BLESecurity BLEClass::getSecurity() {
 BLESecurity BLEClass::getSecurity() {
   log_w("SMP not supported");
   return BLESecurity();
+}
+#endif
+
+#if BLE_AUDIO_SUPPORTED
+BLEAudio BLEClass::getAudioController() {
+  static std::shared_ptr<BLEAudio::Impl> slot;
+  if (!isInitialized()) {
+    log_e("getAudioController: BLE not initialized");
+    return BLEAudio();
+  }
+  if (!slot) {
+    slot = std::make_shared<BLEAudio::Impl>();
+  }
+  return BLEAudio(slot);
 }
 #endif
 
