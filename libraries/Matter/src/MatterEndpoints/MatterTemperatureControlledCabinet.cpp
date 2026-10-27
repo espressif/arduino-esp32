@@ -212,7 +212,7 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
   // No need to manually set attributes here as they are already created with the config values
 
   temperature_controlled_cabinet::config_t cabinet_config;
-  cabinet_config.temperature_control.features.temperature_number.temp_setpoint = _rawTempSetpoint;
+  cabinet_config.temperature_control.features.temperature_number.temperature_setpoint = _rawTempSetpoint;
   cabinet_config.temperature_control.features.temperature_number.min_temperature = _rawMinTemperature;
   cabinet_config.temperature_control.features.temperature_number.max_temperature = _rawMaxTemperature;
   cabinet_config.temperature_control.features.temperature_step.step = _rawStep;
@@ -323,7 +323,7 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
   // Use official temperature_controlled_cabinet endpoint with temperature_level feature
   temperature_controlled_cabinet::config_t cabinet_config;
   // Initialize temperature_number config (not used but required for struct)
-  cabinet_config.temperature_control.features.temperature_number.temp_setpoint = 0;
+  cabinet_config.temperature_control.features.temperature_number.temperature_setpoint = 0;
   cabinet_config.temperature_control.features.temperature_number.min_temperature = 0;
   cabinet_config.temperature_control.features.temperature_number.max_temperature = 0;
   cabinet_config.temperature_control.features.temperature_step.step = 0;
