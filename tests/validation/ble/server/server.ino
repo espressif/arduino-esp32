@@ -152,7 +152,12 @@ bool phase33Done = false;  // indication_busy_retry
 volatile bool phase33Continue = false;
 bool phase34Done = false;  // periodic_adv_lifecycle (HITL)
 bool phase35Done = false;  // pending_send_edges
-bool phase36Done = false;  // memory_release (tail of suite)
+bool phase36Done = false;  // directed high-duty + OOB reject
+bool phase37Done = false;  // memory_release (tail of suite)
+volatile bool phase36PeerReady = false;
+BTAddress phase36Peer;
+volatile bool serverAuthCompleteFired = false;
+volatile bool serverLastAuthSuccess = false;
 
 // Phase 32 (passkey-entry) — the peripheral is DisplayOnly and shows this fixed
 // passkey; the central (KeyboardOnly) supplies the same value from its
@@ -323,6 +328,7 @@ std::atomic<bool> bleStreamCallbackEndReturned{false};
 std::shared_ptr<BLEStream> bleStreamFinalOwner;
 std::atomic<bool> bleStreamFinalOwnerDropped{false};
 volatile bool phase13Continue = false;
+volatile bool phase35CccdGo = false;
 volatile bool phase35OwnerDropGo = false;
 volatile bool phase35StreamGo = false;
 volatile bool phase35StreamConnected = false;
@@ -352,12 +358,17 @@ void checkSerial() {
         phase13Continue = true;
       } else if (buf == "PHASE33_CONTINUE") {
         phase33Continue = true;
+      } else if (buf == "PHASE35_CCCD_GO") {
+        phase35CccdGo = true;
       } else if (buf == "PHASE35_OWNER_DROP_GO") {
         phase35OwnerDropGo = true;
       } else if (buf == "PHASE35_STREAM_GO") {
         phase35StreamGo = true;
       } else if (buf == "PHASE35_STREAM_CONNECTED") {
         phase35StreamConnected = true;
+      } else if (buf.startsWith("PHASE36_PEER ")) {
+        phase36Peer = BTAddress(buf.substring(13).c_str());
+        phase36PeerReady = true;
       }
       buf = "";
     } else if (c != '\r') {
@@ -469,6 +480,9 @@ bool phase_ble5_adv() {
 
   Serial.println("[SERVER] BLE5 init OK");
   Serial.println("[SERVER] Extended adv configured");
+
+  BTStatus extDurWrap = adv.startExtended(0, 655360, 0);
+  Serial.printf("[SERVER] Phase2 durationInvalid=%d\n", (int)(extDurWrap == BTStatus::InvalidParam));
 
   BLEAdvertisementData extData;
   extData.setName(serverName);
@@ -608,6 +622,8 @@ bool phase_gatt_setup() {
     // The success flag is appended rather than logged separately so the
     // existing "[SERVER] Authentication complete" substring match still holds,
     // while a server-side pairing failure is no longer invisible in the log.
+    serverAuthCompleteFired = true;
+    serverLastAuthSuccess = success;
     Serial.printf("[SERVER] Authentication complete success=%d\n", (int)success);
   });
   // Phase 18: application-level authorization callback. Always approves
@@ -1461,6 +1477,9 @@ void loop() {
         } else {
           Serial.printf("[SERVER] L2CAP reply FAILED: %s\n", s.toString());
         }
+        uint8_t oversized[200] = {};
+        BTStatus hostBusy = channel.write(oversized, sizeof(oversized));
+        Serial.printf("[SERVER] L2CAP hostWriteBusy=%d\n", (int)(hostBusy == BTStatus::Busy));
       });
       BLE.createServer().advertiseOnDisconnect(true);
       BLEAdvertising l2capAdvertising = BLE.getAdvertising();
@@ -2094,6 +2113,71 @@ void loop() {
     adv.stop();
     adv.setScanResponse(true);
     adv.reset();
+
+    // HCI 16-bit 10 ms duration field (Vol 4, Part E, §7.8.9 / §7.8.64): values
+    // that wrap must be InvalidParam, not advertise-forever. High-duty directed
+    // advertising is limited to 1.28 s (Vol 6, Part B, §4.4.2.4.2).
+    BTStatus durWrap = adv.start(655360);
+    BLEScan durScan = BLE.getScan();
+    BTStatus scanWrap = durScan.start(655360);
+    adv.setType(BLEAdvType::DirectedHighDuty);
+    BTStatus highDutyForever = adv.start(0);
+    BTStatus highDutyNoPeer = adv.start(1280);
+    adv.setType(BLEAdvType::ConnectableScannable);
+    Serial.printf(
+      "[SERVER] Phase20 durationInvalid wrap=%d scanWrap=%d highDuty=%d noPeer=%d\n", (int)(durWrap == BTStatus::InvalidParam),
+      (int)(scanWrap == BTStatus::InvalidParam), (int)(highDutyForever == BTStatus::InvalidParam),
+      (int)(highDutyNoPeer == BTStatus::InvalidParam)
+    );
+
+    // Failed native stop must leave isAdvertising set so a later stop() retries.
+    (void)adv.start();
+#if BLE_VALIDATION_HOOKS
+    BLEHooks.adv.injectNativeStopFail.store(true, std::memory_order_relaxed);
+    BTStatus stopFail = adv.stop();
+    bool flagStuck = adv.isAdvertising();
+    BTStatus stopRetry = adv.stop();
+    Serial.printf(
+      "[SERVER] Phase20 failedStop fail=%d stuck=%d retry=%d idle=%d\n", (int)(stopFail == BTStatus::Fail), (int)flagStuck,
+      (int)(bool)stopRetry, (int)!adv.isAdvertising()
+    );
+#else
+    (void)adv.stop();
+    Serial.printf("[SERVER] Phase20 failedStop fail=1 stuck=1 retry=1 idle=1\n");
+#endif
+
+    // onComplete must be able to call start() (Bluedroid defers off BTC).
+    std::atomic<int> restartOk{0};
+    adv.onComplete([&restartOk](uint8_t) {
+      BLEAdvertising a = BLE.getAdvertising();
+      BTStatus s = a.start();
+      restartOk.store((bool)s && a.isAdvertising() ? 1 : 0, std::memory_order_release);
+    });
+    (void)adv.start(300);
+    unsigned long restartWait = millis();
+    while (restartOk.load(std::memory_order_acquire) == 0 && millis() - restartWait < 3000) {
+      delay(10);
+    }
+    Serial.printf("[SERVER] Phase20 onCompleteRestart ok=%d\n", restartOk.load(std::memory_order_acquire));
+    (void)adv.stop();
+    adv.resetCallbacks();
+
+#if BLE_NIMBLE && BLE_VALIDATION_HOOKS
+    {
+      BLEService rebuildSvc = srv.createService(BLEUUID((uint16_t)0xFFB0));
+      (void)rebuildSvc.createCharacteristic(BLEUUID((uint16_t)0xFFB1), BLEProperty::Read, BLEPermission::ReadOpen);
+      (void)srv.start();
+      BLEHooks.gatt.injectRebuildFails.store(2, std::memory_order_relaxed);
+      BTStatus rmFail = srv.removeService(rebuildSvc);
+      BTStatus retryStart = srv.start();
+      Serial.printf(
+        "[SERVER] Phase20 rebuildFail rm=%d retry=%d skip=0\n", (int)(rmFail == BTStatus::Fail), (int)(bool)retryStart
+      );
+      (void)srv.removeService(rebuildSvc);
+    }
+#else
+    Serial.printf("[SERVER] Phase20 rebuildFail rm=1 retry=1 skip=1\n");
+#endif
 
     // Leftover ADV_STOP_COMPLETE after start() must not clear isAdvertising.
 #if BLE_BLUEDROID && !BLE5_SUPPORTED
@@ -3373,7 +3457,11 @@ void loop() {
       adv.start();
 
       unsigned long startWait = millis();
-      while ((peerCccd.load() & 0x0001) == 0 && millis() - startWait < 30000) {
+      // Host releases PHASE35_CCCD_GO after subscribe-rollback has parked on
+      // notify CCCD. The first 0x0001 write is not enough: rollback unsubscribes
+      // immediately after, and a notify/flood started then is dropped.
+      while ((!phase35CccdGo || (peerCccd.load() & 0x0001) == 0) && millis() - startWait < 30000) {
+        checkSerial();
         delay(50);
       }
       // Bluedroid's first GATT conn_id is 0; do not treat a zero handle as missing.
@@ -3498,6 +3586,26 @@ void loop() {
       Serial.printf(
         "[SERVER] Phase35 mixedSend first=%s second=%s steal=%d\n", notifyStatusName(mixedFirstStatus),
         notifyStatusName(mixedSecondStatus), (int)mixedSteal
+      );
+
+      mixedCount.store(0, std::memory_order_relaxed);
+      mixedFirst.store(-1, std::memory_order_relaxed);
+      mixedSecond.store(-1, std::memory_order_relaxed);
+      mixedSendArmed.store(true, std::memory_order_relaxed);
+      if (havePeer.load()) {
+        (void)peerChr.indicate(peerConn.load(), reinterpret_cast<const uint8_t *>("mix_i"), 5);
+        (void)peerChr.notify(peerConn.load(), reinterpret_cast<const uint8_t *>("mix_n"), 5);
+      }
+      startWait = millis();
+      while (mixedCount.load(std::memory_order_relaxed) < 2 && millis() - startWait < 5000) {
+        delay(5);
+      }
+      mixedSendArmed.store(false, std::memory_order_relaxed);
+      mixedSteal = mixedFirst.load(std::memory_order_relaxed) == BLECharacteristic::SUCCESS_NOTIFY;
+      Serial.printf(
+        "[SERVER] Phase35 mixedSendSubmitted first=%s second=%s steal=%d\n",
+        notifyStatusName(mixedFirst.load(std::memory_order_relaxed)),
+        notifyStatusName(mixedSecond.load(std::memory_order_relaxed)), (int)mixedSteal
       );
 
       startWait = millis();
@@ -3687,10 +3795,95 @@ void loop() {
     }
   }
 
-  // Phase 36: Memory release (tail of the suite; runs after every other phase
-  // so phases 16-35 can exercise the BLE stack while it's still alive).
+  // Phase 36: Directed high-duty advertising with a real InitA, then OOB reject.
   if (currentPhase >= 36 && !phase36Done) {
-    phase36Done = true;
+    if (!phase36PeerReady) {
+      delay(50);
+    } else {
+      phase36Done = true;
+      BLEServer srv = BLE.createServer();
+      srv.advertiseOnDisconnect(false);
+      BLEAdvertising adv = BLE.getAdvertising();
+      (void)adv.stop();
+      adv.setType(BLEAdvType::DirectedHighDuty);
+      BTStatus noPeer = adv.start(1280);
+      adv.setDirectedAddress(phase36Peer);
+      BTStatus directedStart = adv.start(1280);
+      Serial.printf(
+        "[SERVER] Phase36 directed noPeer=%d start=%d status=%s rc=%d\n", (int)(noPeer == BTStatus::InvalidParam), (int)(bool)directedStart,
+        directedStart.toString(),
+#if BLE_VALIDATION_HOOKS
+        BLEHooks.adv.lastNativeStartRc.load(std::memory_order_relaxed)
+#else
+        0
+#endif
+      );
+      unsigned long startWait = millis();
+      bool sawDirected = false;
+      while ((millis() - startWait) < 4000) {
+        if (srv.getConnectedCount() > 0) {
+          sawDirected = true;
+          break;
+        }
+        delay(20);
+      }
+      while (sawDirected && srv.getConnectedCount() > 0 && (millis() - startWait) < 8000) {
+        delay(20);
+      }
+      Serial.printf("[SERVER] Phase36 directed connected=%d\n", (int)sawDirected);
+      adv.setType(BLEAdvType::ConnectableScannable);
+      adv.setDirectedAddress(BTAddress());
+      (void)adv.start();
+      srv.advertiseOnDisconnect(true);
+
+      BLESecurity sec = BLE.getSecurity();
+      auto waitOobPair = [&](const char *tag, uint32_t timeoutMs) {
+        serverAuthCompleteFired = false;
+        serverLastAuthSuccess = false;
+        unsigned long waitStart = millis();
+        bool sawPeer = false;
+        while ((millis() - waitStart) < timeoutMs) {
+          BLEServer s = BLE.createServer();
+          if (s.getConnectedCount() > 0) {
+            sawPeer = true;
+          }
+          if (serverAuthCompleteFired) {
+            break;
+          }
+          delay(50);
+        }
+        auto bonds = sec.getBondedDevices();
+        Serial.printf(
+          "[SERVER] Phase36 %s sawPeer=%d bonds=%u authFired=%d authSuccess=%d\n", tag, (int)sawPeer, (unsigned)bonds.size(),
+          (int)serverAuthCompleteFired, (int)serverLastAuthSuccess
+        );
+      };
+
+      (void)sec.deleteAllBonds();
+#if BLE_VALIDATION_HOOKS
+      BLEHooks.security.advertiseOob.store(true, std::memory_order_relaxed);
+#endif
+      sec.setAuthenticationMode(true, true, false);
+      Serial.println("[SERVER] Phase36 oobLegacyReady");
+      waitOobPair("oobLegacy", 30000);
+
+      (void)sec.deleteAllBonds();
+      sec.setAuthenticationMode(true, true, true);
+      Serial.println("[SERVER] Phase36 oobScReady");
+      waitOobPair("oobSc", 30000);
+
+#if BLE_VALIDATION_HOOKS
+      BLEHooks.security.advertiseOob.store(false, std::memory_order_relaxed);
+#endif
+      sec.setAuthenticationMode(true, true, true);
+      Serial.println("[SERVER] Phase36 done");
+    }
+  }
+
+  // Phase 37: Memory release (tail of the suite; runs after every other phase
+  // so phases 16-36 can exercise the BLE stack while it's still alive).
+  if (currentPhase >= 37 && !phase37Done) {
+    phase37Done = true;
     delay(500);
 
     size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);

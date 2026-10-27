@@ -81,10 +81,13 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
 
   // Notifications are reserved under mtx before native submission (so
   // removeService can return Busy) and marked submitted once the stack accepts
-  // the PDU. Completions consume submitted entries only: a reservation that has
-  // not been handed to the stack must not steal an indication confirmation
-  // (Bluedroid ESP_GATTS_CONF_EVT has no notify/indicate bit). Guarded by mtx;
-  // the helpers below assume the caller holds mtx.
+  // the PDU. Completions consume submitted entries first: a Bluedroid notify
+  // CONF is local TX-complete and arrives before the peer indication confirm,
+  // so preferring an in-flight indication would steal leftover notify CONFs
+  // once the next queued indication is sent. A reservation that has not been
+  // handed to the stack must not steal an indication confirmation
+  // (ESP_GATTS_CONF_EVT has no notify/indicate bit). Guarded by mtx; the
+  // helpers below assume the caller holds mtx.
   struct PendingNotify {
     uint16_t connHandle = 0;
     uint16_t attrHandle = 0;
@@ -98,6 +101,7 @@ struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> {
   void addPendingNotify(uint16_t connHandle, uint16_t attrHandle);
   void markNotifySubmitted(uint16_t connHandle, uint16_t attrHandle);
   bool consumePendingNotify(uint16_t connHandle, uint16_t attrHandle);
+  void unreservePendingNotify(uint16_t connHandle, uint16_t attrHandle);
   void erasePendingNotifies(uint16_t connHandle);
   bool hasPendingNotifications(const BLEService::Impl *svc) const;
 

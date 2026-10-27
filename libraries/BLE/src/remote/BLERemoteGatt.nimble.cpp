@@ -30,6 +30,7 @@
 #include "esp32-hal-log.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
+#include "core/BLEValidationHooks.h"
 #if BLE_GATT_CLIENT_SUPPORTED
 
 namespace {
@@ -642,10 +643,21 @@ static BTStatus subscribeWithCccd(BLERemoteCharacteristic &chr, const std::share
 
   BLERemoteCharacteristic::Impl::registerForNotify(impl->connHandle, impl->handle, impl);
 
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.remote.injectCccdWriteFail.exchange(false, std::memory_order_acq_rel)) {
+    log_w("RemoteCharacteristic %s: injected CCCD write fail", impl->uuid.toString().c_str());
+    BLERemoteCharacteristic::Impl::unregisterForNotify(impl->connHandle, impl->handle, impl.get());
+    BLELockGuard lock(impl->cacheMtx ? impl->cacheMtx->get() : nullptr);
+    impl->onNotifyCb = nullptr;
+    return BTStatus::Fail;
+  }
+#endif
   BTStatus status = cccd.writeValue(reinterpret_cast<const uint8_t *>(&cccdVal), sizeof(cccdVal), true);
   if (status != BTStatus::OK) {
     log_w("RemoteCharacteristic %s: subscribe failed/timed out", impl->uuid.toString().c_str());
     BLERemoteCharacteristic::Impl::unregisterForNotify(impl->connHandle, impl->handle, impl.get());
+    BLELockGuard lock(impl->cacheMtx ? impl->cacheMtx->get() : nullptr);
+    impl->onNotifyCb = nullptr;
   } else {
     log_i("RemoteCharacteristic %s: subscribed (cccd=0x%04x)", impl->uuid.toString().c_str(), cccdVal);
   }

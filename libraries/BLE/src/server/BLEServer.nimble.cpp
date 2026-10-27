@@ -158,6 +158,22 @@ void nimbleResetReAdvertiseEvent() {
  * @note Unlike Bluedroid, registration always uses a full @c ble_gatts_reset and re-register
  *       of all services; per-service create/delete is not used.
  */
+static void nimbleClearGattRegistration(BLEServer::Impl &impl, const std::vector<std::shared_ptr<BLEService::Impl>> &services) {
+  BLELockGuard lock(impl.mtx);
+  impl.started = false;
+  for (auto &s : services) {
+    s->started = false;
+    s->handle = 0;
+    for (auto &c : s->characteristics) {
+      c->handle = 0;
+      BLELockGuard chrLock(c->mtx);
+      for (auto &d : c->descriptors) {
+        d->handle = 0;
+      }
+    }
+  }
+}
+
 static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
   // Snapshot the service tree under mtx; registration below iterates the
   // snapshot while createCharacteristic/createDescriptor may run on user tasks.
@@ -191,10 +207,19 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
   ble_svc_gap_init();
   ble_svc_gatt_init();
 
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.gatt.injectRebuildFails)) {
+    log_e("nimbleRebuildGattDatabase: injected fail after reset");
+    nimbleClearGattRegistration(impl, services);
+    return BTStatus::Fail;
+  }
+#endif
+
   if (!services.empty()) {
     rc = nimbleRegisterGattServices(services);
     if (rc != 0) {
       log_e("nimbleRegisterGattServices: rc=%d", rc);
+      nimbleClearGattRegistration(impl, services);
       return BTStatus::Fail;
     }
     for (auto &s : services) {
@@ -207,6 +232,7 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
   rc = ble_gatts_start();
   if (rc != 0) {
     log_e("ble_gatts_start: rc=%d", rc);
+    nimbleClearGattRegistration(impl, services);
     return BTStatus::Fail;
   }
 
@@ -500,12 +526,25 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(event->disconnect.conn);
 
       bool shouldAdvertise = false;
+      std::vector<std::pair<std::shared_ptr<BLECharacteristic::Impl>, uint16_t>> droppedNotifications;
       {
         BLELockGuard lock(impl->mtx);
         if (connHandle < 32) {
           impl->identityDispatchedMask &= ~(1u << connHandle);
         }
         impl->connErase(connHandle);
+        for (const auto &pending : impl->pendingNotifies) {
+          if (pending.connHandle != connHandle || pending.total() == 0) {
+            continue;
+          }
+          for (auto &svc : impl->services) {
+            for (auto &chr : svc->characteristics) {
+              if (chr->handle == pending.attrHandle) {
+                droppedNotifications.emplace_back(chr, pending.total());
+              }
+            }
+          }
+        }
         impl->erasePendingNotifies(connHandle);
         for (auto &svc : impl->services) {
           for (auto &chr : svc->characteristics) {
@@ -521,6 +560,11 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         shouldAdvertise = impl->advertiseOnDisconnect;
       }
       impl->dropIndications(connHandle);
+      for (auto &[chr, count] : droppedNotifications) {
+        for (uint16_t i = 0; i < count; i++) {
+          chr->dispatchStatus(BLECharacteristic::ERROR_NO_CLIENT, 0);
+        }
+      }
       impl->dispatchDisconnect(connInfo, reason);
       if (impl->pendingDisconnectHandle.load() == connHandle) {
         impl->disconnectSync.give(BTStatus::OK);
@@ -878,9 +922,9 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
   BTStatus st = nimbleRebuildGattDatabase(*impl);
   if (st == BTStatus::OK) {
     bleDetachLocalService(svc);
-    if (startHandle != 0) {
-      ble_svc_gatt_changed(startHandle, endHandle);
-    }
+    // Handles were reassigned by the rebuild; advertise the full ATT range
+    // rather than the pre-reset values (Vol 3, Part G, §7.1).
+    ble_svc_gatt_changed(0x0001, 0xFFFF);
     log_i("Server: service removed, %u service(s) registered", (unsigned)impl->services.size());
     return BTStatus::OK;
   }

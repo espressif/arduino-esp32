@@ -236,6 +236,7 @@ namespace {
  * @return Pointer to the characteristic @c Impl, or null if not found.
  */
 BLECharacteristic::Impl *findCharByHandle(BLEServer::Impl *impl, uint16_t handle) {
+  BLELockGuard lock(impl->mtx);
   for (auto &svc : impl->services) {
     for (auto &chr : svc->characteristics) {
       if (chr->handle == handle) {
@@ -253,8 +254,10 @@ BLECharacteristic::Impl *findCharByHandle(BLEServer::Impl *impl, uint16_t handle
  * @return Pointer to the descriptor @c Impl, or null if not found.
  */
 BLEDescriptor::Impl *findDescByHandle(BLEServer::Impl *impl, uint16_t handle) {
+  BLELockGuard lock(impl->mtx);
   for (auto &svc : impl->services) {
     for (auto &chr : svc->characteristics) {
+      BLELockGuard chrLock(chr->mtx);
       for (auto &desc : chr->descriptors) {
         if (desc->handle == handle) {
           return desc.get();
@@ -480,11 +483,23 @@ BTStatus BLEServer::start() {
           auto cccd = std::make_shared<BLEDescriptor::Impl>();
           cccd->uuid = BLEUUID(CCCD_UUID16);
           cccd->chr = chr.get();
-      cccd->chrOwner = chr;
+          cccd->chrOwner = chr;
           cccd->permissions = BLEPermission::ReadWriteOpen;
           cccd->value.resize(2, 0);
           BLELockGuard lock(chr->mtx);
-          chr->descriptors.push_back(cccd);
+          if (!chr->service) {
+            continue;
+          }
+          bool stillMissing = true;
+          for (auto &d : chr->descriptors) {
+            if (d->uuid == BLEUUID(CCCD_UUID16)) {
+              stillMissing = false;
+              break;
+            }
+          }
+          if (stillMissing) {
+            chr->descriptors.push_back(cccd);
+          }
         }
       }
       if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/false)) {
@@ -1674,11 +1689,11 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         if (BLECharacteristic::Impl *found = findCharByHandle(impl, attrHandle)) {
           chr = found->shared_from_this();
         }
-        // Consume a submitted notification first, regardless of status: an
-        // ESP_GATT_BUSY completion for a notification we sent must not be
-        // routed into indicationBusy() just because an indication happens
-        // to be in flight on the same handle. A reservation that has not
-        // been handed to the stack must not steal an indication confirmation.
+        // Consume a submitted notify first: its CONF is local TX-complete and
+        // arrives before the peer indication confirm. Preferring in-flight
+        // indication would steal leftover notify CONFs after the next queued
+        // indication is sent. A reservation that has not been handed to the
+        // stack must still not steal an indication confirmation.
 #if BLE_VALIDATION_HOOKS
         if (BLEHooks.gatt.holdNotifyCompletions.load(std::memory_order_relaxed)) {
           for (const auto &pending : impl->pendingNotifies) {

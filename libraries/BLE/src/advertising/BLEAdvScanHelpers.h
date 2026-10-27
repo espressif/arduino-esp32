@@ -98,4 +98,11 @@ inline BLEExtAdvProps advTypeToExtAdvProps(BLEAdvType type, bool legacyPdu) {
   return p;
 }
 
+/**
+ * @brief True when @p type is a directed advertising PDU (InitA required).
+ */
+inline bool bleAdvTypeIsDirected(BLEAdvType type) {
+  return advTypeToExtAdvProps(type, true).directed;
+}
+
 #endif /* BLE_ENABLED */

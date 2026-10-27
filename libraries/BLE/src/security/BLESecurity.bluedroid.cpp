@@ -43,6 +43,7 @@
 #include "core/BLEImplHelpers.h"
 #include "core/BLESync.h"
 #include "core/BLEMutex.h"
+#include "core/BLEValidationHooks.h"
 #include "types/BLEConnInfoData.h"
 #include "types/BLEConnInfo.bluedroid.h"
 #include "esp32-hal-log.h"
@@ -149,6 +150,16 @@ void BLESecurity::Impl::applySecurityParams() {
   if (err != ESP_OK) {
     log_e("esp_ble_gap_set_security_param(SET_RSP_KEY): %s", esp_err_to_name(err));
   }
+  uint8_t oobSupport = 0;
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.security.advertiseOob.load(std::memory_order_relaxed)) {
+    oobSupport = 1;
+  }
+#endif
+  err = esp_ble_gap_set_security_param(ESP_BLE_SM_OOB_SUPPORT, &oobSupport, sizeof(oobSupport));
+  if (err != ESP_OK) {
+    log_e("esp_ble_gap_set_security_param(OOB_SUPPORT): %s", esp_err_to_name(err));
+  }
 }
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
@@ -244,6 +255,20 @@ void BLESecurity::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_p
         accept = confirmCb(conn, param->ble_security.key_notif.passkey);
       }
       esp_ble_confirm_reply(param->ble_security.key_notif.bd_addr, accept);
+      break;
+    }
+
+    case ESP_GAP_BLE_OOB_REQ_EVT:
+    case ESP_GAP_BLE_SC_OOB_REQ_EVT:
+    {
+      // OOB is not supported. Do not reply with a zero TK: that is the public
+      // Temporary Key and pairing would succeed (Vol 3, Part H, §2.3.5.4).
+      // Wake the auth waiter and drop the ACL so SMP aborts instead of hanging
+      // on a TK the application cannot supply.
+      log_w("Security: OOB not supported; failing pairing");
+      BLEConnInfo conn = BLEConnInfoImpl::make(param->ble_security.ble_req.bd_addr);
+      sec->notifyAuthComplete(conn, false);
+      (void)esp_ble_gap_disconnect(param->ble_security.ble_req.bd_addr);
       break;
     }
 

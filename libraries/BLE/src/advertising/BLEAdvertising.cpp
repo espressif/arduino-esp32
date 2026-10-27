@@ -23,7 +23,9 @@
 #include "core/BLEBackend.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
+#include "advertising/BLEAdvertising.h"
 #include "advertising/BLEAdvertisingData.h"
+#include "BTAddress.h"
 #include "esp32-hal-log.h"
 
 #include <algorithm>
@@ -88,6 +90,18 @@ bool BLEAdvertising::isAdvertising() const {
   }
 #endif
   return false;
+}
+
+void BLEAdvertising::setDirectedAddress(const BTAddress &address) {
+  BLE_CHECK_IMPL();
+  impl.directedPeer = address;
+}
+
+BTAddress BLEAdvertising::getDirectedAddress() const {
+  if (!_impl) {
+    return BTAddress();
+  }
+  return _impl->directedPeer;
 }
 
 // --------------------------------------------------------------------------

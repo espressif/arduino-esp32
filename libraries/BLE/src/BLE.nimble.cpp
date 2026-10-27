@@ -343,9 +343,30 @@ BTStatus BLEClass::begin(const String &deviceName) {
   return BTStatus::OK;
 }
 
+namespace {
+struct BleEndJob {
+  bool releaseMemory;
+};
+
+void bleEndWorker(void *arg) {
+  auto *job = static_cast<BleEndJob *>(arg);
+  BLE.end(job->releaseMemory);
+  delete job;
+  vTaskDelete(nullptr);
+}
+}  // namespace
+
 // hostedDeinitBLE() runs when CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE is set, after the NimBLE port is torn down.
 // Irreversible: after end(true) you cannot call begin() again without a hardware reset.
 void BLEClass::end(bool releaseMemory) {
+  if (bleInStackCallbackTask()) {
+    auto *job = new (std::nothrow) BleEndJob{releaseMemory};
+    if (!job || xTaskCreate(bleEndWorker, "ble-end", 6144, job, 1, nullptr) != pdPASS) {
+      log_e("BLE.end: cannot defer stack-task teardown");
+      delete job;
+    }
+    return;
+  }
   {
     BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
     if (!_impl || !isInitialized() || _impl->ending) {
@@ -735,12 +756,12 @@ BTStatus BLEClass::setCustomGapHandler(RawEventHandler handler) {
   if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
-  _impl->customGapHandler = handler;
+  _impl->storeHook(_impl->customGapHandler, handler);
 
   auto wrapper = [](struct ble_gap_event *event, void *arg) -> int {
     auto *impl = static_cast<BLEClass::Impl *>(arg);
-    if (impl->customGapHandler) {
-      return impl->customGapHandler(event, nullptr);
+    if (auto custom = impl->loadHook(impl->customGapHandler)) {
+      return custom(event, nullptr);
     }
     return 0;
   };

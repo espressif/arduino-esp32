@@ -68,20 +68,19 @@ BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t con
     BLEValidationHooks::holdWhile(BLEHooks.gatt.holdNotifySubmit);
   }
 #endif
-  {
-    BLELockGuard serverLock(server->mtx);
-    server->markNotifySubmitted(connHandle, attrHandle);
-  }
-
   esp_err_t err = esp_ble_gatts_send_indicate(gattsIf, connHandle, attrHandle, length, const_cast<uint8_t *>(data), false);
   if (err != ESP_OK) {
     {
       BLELockGuard serverLock(server->mtx);
-      server->consumePendingNotify(connHandle, attrHandle);
+      server->unreservePendingNotify(connHandle, attrHandle);
     }
     log_e("Characteristic %s: esp_ble_gatts_send_indicate (notify) conn=%u: %s", impl.uuid.toString().c_str(), connHandle, esp_err_to_name(err));
     impl.dispatchStatus((err == ESP_ERR_INVALID_STATE) ? BLECharacteristic::ERROR_NO_CLIENT : BLECharacteristic::ERROR_GATT, static_cast<uint32_t>(err));
     return BTStatus::Fail;
+  }
+  {
+    BLELockGuard serverLock(server->mtx);
+    server->markNotifySubmitted(connHandle, attrHandle);
   }
   return BTStatus::OK;
 }

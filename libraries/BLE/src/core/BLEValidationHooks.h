@@ -56,6 +56,7 @@ public:
     std::atomic<int> terminalWorkerStartFailures{0};
     std::atomic<bool> holdNotifySubmit{false};
     std::atomic<bool> notifySubmitEntered{false};
+    std::atomic<int> injectRebuildFails{0};
   } gatt;
 
   struct Scan {
@@ -80,6 +81,9 @@ public:
     std::atomic<bool> periodicRunningAfterStaleStop{false};
     std::atomic<bool> holdReAdvStart{false};
     std::atomic<bool> reAdvStartEntered{false};
+    std::atomic<bool> injectNativeStopFail{false};
+    std::atomic<bool> injectExtStopFail{false};
+    std::atomic<int> lastNativeStartRc{0};
   } adv;
 
   struct Client {
@@ -89,6 +93,13 @@ public:
     std::atomic<bool> nimbleRefEmptyOnConnect{false};
     std::atomic<bool> resetWhileConnected{false};
   } client;
+
+  struct Security {
+    // When true, applySecurityParams advertises the SMP AuthReq OOB flag so a
+    // peer can select legacy OOB / OOB-SC. Production builds never set this;
+    // the library still rejects those methods (no public OOB TK API).
+    std::atomic<bool> advertiseOob{false};
+  } security;
 
   struct Remote {
     std::atomic<uint32_t> writeTimeoutMs{0};
@@ -101,6 +112,7 @@ public:
     std::atomic<bool> writeResponseStatusPreserved{false};
     std::atomic<bool> combinedWriteOwnerObserved{false};
     std::atomic<bool> combinedWriteOwnerHeld{true};
+    std::atomic<bool> injectCccdWriteFail{false};
   } remote;
 
   static bool consumeFailure(std::atomic<int> &remaining);

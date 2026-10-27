@@ -250,7 +250,7 @@ BLEAdvertisedDevice::FrameType BLEAdvertisedDevice::getFrameType() const {
       case 0x00: return EddystoneUUID;
       case 0x10: return EddystoneURL;
       case 0x20: return EddystoneTLM;
-      default:   break;
+      case 0x01: return EddystoneTLM;  // encrypted TLM (eTLM)
     }
   }
 

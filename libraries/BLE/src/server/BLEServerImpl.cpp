@@ -123,6 +123,17 @@ bool BLEServerImplCommon::consumePendingNotify(uint16_t connHandle, uint16_t att
   return false;
 }
 
+void BLEServerImplCommon::unreservePendingNotify(uint16_t connHandle, uint16_t attrHandle) {
+  for (auto it = pendingNotifies.begin(); it != pendingNotifies.end(); ++it) {
+    if (it->connHandle == connHandle && it->attrHandle == attrHandle && it->reserved > 0) {
+      if (--it->reserved == 0 && it->submitted == 0) {
+        pendingNotifies.erase(it);
+      }
+      return;
+    }
+  }
+}
+
 void BLEServerImplCommon::erasePendingNotifies(uint16_t connHandle) {
   for (auto it = pendingNotifies.begin(); it != pendingNotifies.end();) {
     if (it->connHandle == connHandle) {

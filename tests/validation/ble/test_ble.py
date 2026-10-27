@@ -50,7 +50,8 @@ PHASE_LABELS = {
     33: "indication_busy_retry",
     34: "periodic_adv_lifecycle",
     35: "pending_send_edges",
-    36: "memory_release",
+    36: "directed_adv_and_oob",
+    37: "memory_release",
 }
 
 
@@ -151,6 +152,8 @@ def _phase_ble5_adv(server, client):
 
     if ble5_server and ble5_client:
         server.expect_exact("[SERVER] Extended adv configured", timeout=10)
+        m_dur = server.expect(r"\[SERVER\] Phase2 durationInvalid=([01])", timeout=10)
+        assert int(m_dur.group(1)) == 1, "startExtended() duration that overflows 16-bit 10 ms units must be InvalidParam"
         server.expect_exact("[SERVER] Extended adv started", timeout=10)
         server.expect_exact("[SERVER] Periodic adv started", timeout=10)
 
@@ -540,6 +543,8 @@ def _phase_l2cap(server, client):
         client.expect_exact("[CLIENT] L2CAP sent", timeout=10)
         server.expect_exact("[SERVER] L2CAP received: L2CAP_PING", timeout=15)
         server.expect_exact("[SERVER] L2CAP reply sent", timeout=10)
+        m_host_busy = server.expect(r"\[SERVER\] L2CAP hostWriteBusy=([01])", timeout=10)
+        assert int(m_host_busy.group(1)) == 1, "host-callback L2CAP write larger than one SDU must return Busy before sending"
         client.expect_exact("[CLIENT] L2CAP received: L2CAP_OK", timeout=15)
         client.expect_exact("[CLIENT] Status: l2cap done", timeout=10)
         return True
@@ -867,6 +872,35 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_scan_off.group(1)) == 1 and int(m_scan_off.group(2)) == 1, (
         "start() with setScanResponse(false) failed (null/zero scan-rsp raw config)"
     )
+    m_dur = server.expect(
+        r"\[SERVER\] Phase20 durationInvalid wrap=([01]) scanWrap=([01]) highDuty=([01]) noPeer=([01])",
+        timeout=10,
+    )
+    assert (
+        int(m_dur.group(1)) == 1
+        and int(m_dur.group(2)) == 1
+        and int(m_dur.group(3)) == 1
+        and int(m_dur.group(4)) == 1
+    ), (
+        "duration overflow / high-duty directed forever / directed without peer must be InvalidParam"
+    )
+    m_stop = server.expect(
+        r"\[SERVER\] Phase20 failedStop fail=([01]) stuck=([01]) retry=([01]) idle=([01])",
+        timeout=15,
+    )
+    assert (
+        int(m_stop.group(1)) == 1
+        and int(m_stop.group(2)) == 1
+        and int(m_stop.group(3)) == 1
+        and int(m_stop.group(4)) == 1
+    ), "failed native advertising stop must leave isAdvertising set so a later stop() retries"
+    m_restart = server.expect(r"\[SERVER\] Phase20 onCompleteRestart ok=([01])", timeout=15)
+    assert int(m_restart.group(1)) == 1, "onComplete handler must be able to call start() without deadlocking"
+    m_rebuild = server.expect(r"\[SERVER\] Phase20 rebuildFail rm=([01]) retry=([01]) skip=([01])", timeout=15)
+    if int(m_rebuild.group(3)) == 0:
+        assert int(m_rebuild.group(1)) == 1 and int(m_rebuild.group(2)) == 1, (
+            "failed NimBLE GATT rebuild must clear started so start() retries"
+        )
     m_legacy_stale = server.expect(
         r"\[SERVER\] Phase20 staleLegacyStop start=([01]) stillAdv=([01]) stop=([01]) idle=([01]) skip=([01])",
         timeout=15,
@@ -1529,6 +1563,13 @@ def _phase_pending_send_edges(server, client):
     flood. Per-peer CCCD, EATT, and withheld Handle Value Confirmation need a
     third DUT or a public EATT API / a non-confirming peer.
     """
+    m_rb_ready = client.expect(r"\[CLIENT\] Phase35 rollbackReady fail=([01])", timeout=45)
+    assert int(m_rb_ready.group(1)) == 1, "CCCD write failure must fail subscribe before the notify overlap window"
+    server.write("PHASE35_CCCD_GO\n")
+    m_sub_rb = client.expect(r"\[CLIENT\] Phase35 subscribeRollback fail=([01]) resub=([01])", timeout=45)
+    assert int(m_sub_rb.group(1)) == 1 and int(m_sub_rb.group(2)) == 1, (
+        "CCCD write failure must roll back the notify callback and allow a later subscribe"
+    )
     m_cmd = client.expect(
         r"\[CLIENT\] Phase35 callback commands clean=([01]) overlap=([01]) state=([01]) "
         r"accepted=(\d+) busy=(\d+) other=(\d+)",
@@ -1569,6 +1610,16 @@ def _phase_pending_send_edges(server, client):
         f"held notification completed as {m_mixed.group(2).decode()} after the indication"
     )
     assert int(m_mixed.group(3)) == 0, "pending notify reservation stole the indication confirmation"
+
+    m_mixed_sub = server.expect(
+        r"\[SERVER\] Phase35 mixedSendSubmitted first=(\S+) second=(\S+) steal=([01])",
+        timeout=20,
+    )
+    mixed_sub_statuses = {m_mixed_sub.group(1), m_mixed_sub.group(2)}
+    assert mixed_sub_statuses == {b"SUCCESS_INDICATE", b"SUCCESS_NOTIFY"}, (
+        "indicate() then notify() must complete as one SUCCESS_INDICATE and one SUCCESS_NOTIFY, "
+        f"got first={m_mixed_sub.group(1).decode()} second={m_mixed_sub.group(2).decode()}"
+    )
 
     m_cf = client.expect(r"\[CLIENT\] Phase35 flood=(\d+)\r?\n", timeout=20)
     assert int(m_cf.group(1)) >= 1, "client received no flooded notifications"
@@ -1657,6 +1708,57 @@ def _phase_pending_send_edges(server, client):
     client.expect_exact("[CLIENT] Phase35 done", timeout=20)
 
 
+def _assert_oob_reject(match, label):
+    found, connected, read_ok, enc, bond, auth_fired, auth_success = (int(match.group(i)) for i in range(1, 8))
+    assert found == 1 and connected == 1, f"{label}: client did not find and connect to the server"
+    assert read_ok == 0 and enc == 0 and bond == 0, f"{label}: OOB pairing must not encrypt, bond, or complete a secure read"
+    assert auth_fired == 1 and auth_success == 0, f"{label}: library must report authentication failure, not hang or succeed"
+
+
+def _phase_directed_adv_and_oob(server, client):
+    m_addr = client.expect(r"\[CLIENT\] Phase36 addr=([0-9A-Fa-f:]{17})", timeout=20)
+    addr = m_addr.group(1).decode()
+    server.write(f"PHASE36_PEER {addr}\n")
+    m_dir = server.expect(r"\[SERVER\] Phase36 directed noPeer=([01]) start=([01]) status=(\S+) rc=(-?\d+)", timeout=15)
+    assert int(m_dir.group(1)) == 1, "directed start without setDirectedAddress must be InvalidParam"
+    assert int(m_dir.group(2)) == 1, "directed high-duty start with the client address failed"
+    client.write("PHASE36_CONNECT_GO\n")
+    m_cc = client.expect(r"\[CLIENT\] Phase36 directed connected=([01])", timeout=10)
+    assert int(m_cc.group(1)) == 1, "client did not connect to high-duty directed advertising"
+    m_sc = server.expect(r"\[SERVER\] Phase36 directed connected=([01])", timeout=10)
+    assert int(m_sc.group(1)) == 1, "server did not observe the directed-advertising connection"
+    server.expect_exact("[SERVER] Phase36 oobLegacyReady", timeout=15)
+    client.write("PHASE36_OOB_GO\n")
+    m_cl = client.expect(
+        r"\[CLIENT\] Phase36 oobLegacy found=([01]) connected=([01]) readOk=([01]) enc=([01]) "
+        r"bond=([01]) authFired=([01]) authSuccess=([01])",
+        timeout=40,
+    )
+    _assert_oob_reject(m_cl, "legacy OOB")
+    m_sl = server.expect(
+        r"\[SERVER\] Phase36 oobLegacy sawPeer=([01]) bonds=(\d+) authFired=([01]) authSuccess=([01])",
+        timeout=40,
+    )
+    assert int(m_sl.group(1)) == 1 and int(m_sl.group(2)) == 0, "legacy OOB must connect and must not store a bond"
+    assert int(m_sl.group(3)) == 1 and int(m_sl.group(4)) == 0, "legacy OOB must report authentication failure on the server"
+    server.expect_exact("[SERVER] Phase36 oobScReady", timeout=15)
+    client.write("PHASE36_OOB_SC_GO\n")
+    m_csc = client.expect(
+        r"\[CLIENT\] Phase36 oobSc found=([01]) connected=([01]) readOk=([01]) enc=([01]) "
+        r"bond=([01]) authFired=([01]) authSuccess=([01])",
+        timeout=40,
+    )
+    _assert_oob_reject(m_csc, "OOB-SC")
+    m_ssc = server.expect(
+        r"\[SERVER\] Phase36 oobSc sawPeer=([01]) bonds=(\d+) authFired=([01]) authSuccess=([01])",
+        timeout=40,
+    )
+    assert int(m_ssc.group(1)) == 1 and int(m_ssc.group(2)) == 0, "OOB-SC must connect and must not store a bond"
+    assert int(m_ssc.group(3)) == 1 and int(m_ssc.group(4)) == 0, "OOB-SC must report authentication failure on the server"
+    client.expect_exact("[CLIENT] Phase36 done", timeout=15)
+    server.expect_exact("[SERVER] Phase36 done", timeout=15)
+
+
 def _phase_memory_release(server, client):
     MIN_FREED = 10240
 
@@ -1729,7 +1831,8 @@ def test_ble(dut, ci_job_id, record_property):
         33: (_phase_indication_busy_retry, server, client),
         34: (_phase_periodic_adv_lifecycle, server, client),  # skip if falsy
         35: (_phase_pending_send_edges, server, client),
-        36: (_phase_memory_release, server, client),
+        36: (_phase_directed_adv_and_oob, server, client),
+        37: (_phase_memory_release, server, client),
     }
 
     SKIP_REASONS = {

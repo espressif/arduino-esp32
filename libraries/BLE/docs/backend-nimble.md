@@ -85,7 +85,13 @@ always cast-free `impl.member`.
   waits on `mtuSync` so `getMTU()` is valid on return.
 - **BLE5 routing.** When `BLE5_SUPPORTED`, legacy `start()`/`scan` use the extended controller API
   with legacy PDUs on a reserved top instance (`kLegacyInstance`) so they coexist with user
-  `startExtended` sets. Extended scan reports merge scan responses via `mergeScanResponse`.
+  `startExtended` sets. `setScanResponse(false)` pushes an empty scan-response mbuf (`ble_gap_ext_adv_set`
+  rejects a null mbuf). Extended scan reports merge scan responses via `mergeScanResponse`.
+  Directed `start()` passes `setDirectedAddress` as `ble_gap_adv_start` `direct_addr` / ext `params.peer`.
+  BLE5 directed `start()` removes the reserved instance first so leftover AD/SCAN_RSP cannot make
+  high-duty `Set_Ext_Adv_Params` return HCI Invalid Parameters (0x12).
+- **SMP OOB.** Production never sets `ble_hs_cfg.sm_oob_data_flag`. Legacy OOB is rejected with
+  `BLE_SM_ERR_OOB` (no zero TK inject); OOB-SC injects null `oob_sc_data` pointers.
   `ble_gap_ext_adv_clear()` returns `BLE_HS_EBUSY` if any instance (or periodic advertising) is
   still active, matching `HCI_LE_Clear_Advertising_Sets` Command Disallowed (Vol 4, Part E,
   §7.8.60). Public `clearExtended()` returns `Fail` and leaves advertising flags unchanged in that
@@ -95,7 +101,9 @@ always cast-free `impl.member`.
   temporarily stops advertising (privacy list updates, `ble_gap_unpair`). Host-initiated disable
   does not generate `HCI_LE_Advertising_Set_Terminated` (Vol 4, Part E, §7.7.65.18); the stack
   synthesizes the preempted complete from `ble_gap_preempt_done`. The library resumes the set that
-  was active with the time remaining on the original session deadline. `stop()` bumps `advSession`
+  was active with the time remaining on the original session deadline. Resume takes the
+  advertiseOnDisconnect mutex, rechecks `advSession`, and must not call public `start()` (that
+  would `fetch_add` a new session and undo `stop()`). `stop()` bumps `advSession`
   even if the advertising flag was already cleared by the complete event, so an application stop
   that races the resume does not restart advertising. A late `ADV_COMPLETE` is ignored while
   `ble_gap_ext_adv_active` / `ble_gap_adv_active` still reports the instance running, so a previous
@@ -104,8 +112,8 @@ always cast-free `impl.member`.
   keepalive without the dying handler wiping it.
 - **L2CAP `write()`** splits payloads larger than `peer_coc_mtu` into MTU-sized SDUs and
   application-task calls may block between chunks on `COC_TX_UNSTALLED` (NimBLE itself does not
-  segment oversized SDUs). Calls from host callbacks return `Busy` instead of blocking when more
-  credits are needed. RX flatten uses a fixed 256-byte stack threshold; larger SDUs spill to the
+  segment oversized SDUs). Calls from host callbacks return `Busy` before any send when the buffer
+  is larger than one SDU (a retry would otherwise resend a prefix) or when more credits are needed. RX flatten uses a fixed 256-byte stack threshold; larger SDUs spill to the
   heap. Channel MTU is independent of that threshold (caller-configured: 128, 256, 512, …).
 - **L2CAP channel operations** from application tasks use a tracked host-queue event while an
   operation is queued or in flight. The host task therefore owns all native channel-pointer

@@ -164,6 +164,9 @@ volatile bool clientConnParamsReqFired = false;
 volatile bool clientRejectPairing = false;
 volatile bool clientAuthCompleteFired = false;
 volatile bool clientLastAuthSuccess = false;
+volatile bool phase36ConnectGo = false;
+volatile bool phase36OobGo = false;
+volatile bool phase36OobScGo = false;
 // Phase 32 — the central is KeyboardOnly and supplies this fixed passkey (shown
 // by the DisplayOnly peripheral via a matching static passkey) so passkey-entry
 // pairing succeeds deterministically without a human in the loop.
@@ -231,6 +234,12 @@ void checkSerial() {
         phase35ReadRemoveGo = true;
       } else if (buf == "PHASE35_STREAM_RELEASE_GO") {
         phase35StreamReleaseGo = true;
+      } else if (buf == "PHASE36_CONNECT_GO") {
+        phase36ConnectGo = true;
+      } else if (buf == "PHASE36_OOB_GO") {
+        phase36OobGo = true;
+      } else if (buf == "PHASE36_OOB_SC_GO") {
+        phase36OobScGo = true;
       }
       buf = "";
     } else if (c != '\r') {
@@ -665,6 +674,14 @@ bool scanForServer() {
   }
   scan.resetCallbacks();
   return found;
+}
+
+static void waitForHostGo(volatile bool &flag, uint32_t timeoutMs) {
+  uint32_t deadline = millis() + timeoutMs;
+  while (!flag && (int32_t)(deadline - millis()) > 0) {
+    checkSerial();
+    delay(10);
+  }
 }
 
 void setup() {
@@ -4104,13 +4121,32 @@ void setup() {
           );
         }
         BLEHooks.remote.writeCommandOverlappedWaiter.store(false, std::memory_order_relaxed);
-        BLEHooks.remote.holdWriteResponseRetirement.store(phase35Bluedroid, std::memory_order_relaxed);
+        BLEHooks.remote.holdWriteResponseRetirement.store(false, std::memory_order_relaxed);
         BLEHooks.remote.writeCommandSubmitFailures.store(phase35Bluedroid ? 1 : 0, std::memory_order_relaxed);
         BLEHooks.remote.writeCommandCompletionFailures.store(phase35Bluedroid ? 1 : 0, std::memory_order_relaxed);
         BLEHooks.remote.writeResponseStatusPreserved.store(!phase35Bluedroid, std::memory_order_relaxed);
         BLEHooks.remote.combinedWriteOwnerObserved.store(!phase35Bluedroid, std::memory_order_relaxed);
         BLEHooks.remote.combinedWriteOwnerHeld.store(true, std::memory_order_relaxed);
         connected = peer && (bool)peer.subscribe(BLESubscription::Notify, onPeer);
+        bool failOk = false;
+#if BLE_VALIDATION_HOOKS
+        if (connected) {
+          (void)peer.unsubscribe();
+          BLEHooks.remote.injectCccdWriteFail.store(true, std::memory_order_relaxed);
+          failOk = peer.subscribe(BLESubscription::Notify, onPeer) != BTStatus::OK;
+        }
+        Serial.printf("[CLIENT] Phase35 rollbackReady fail=%d\n", (int)failOk);
+#else
+        failOk = true;
+        Serial.printf("[CLIENT] Phase35 rollbackReady fail=1\n");
+#endif
+        BLEHooks.remote.holdWriteResponseRetirement.store(phase35Bluedroid, std::memory_order_relaxed);
+        BTStatus resub = BTStatus::Fail;
+        if (peer) {
+          resub = peer.subscribe(BLESubscription::Notify, onPeer);
+          connected = (bool)resub;
+        }
+        Serial.printf("[CLIENT] Phase35 subscribeRollback fail=%d resub=%d\n", (int)failOk, (int)connected);
         BLEHooks.remote.holdWriteResponseRetirement.store(false, std::memory_order_relaxed);
       }
     }
@@ -4448,8 +4484,82 @@ void setup() {
     Serial.println("[CLIENT] Phase35 done");
   }
 
-  // ===== Phase 36: Memory release + reinit guard =====
+  // ===== Phase 36: Directed high-duty advertising + OOB reject =====
   waitForPhase(36);
+  {
+    Serial.printf("[CLIENT] Phase36 addr=%s\n", BLE.getAddress().toString().c_str());
+    waitForHostGo(phase36ConnectGo, 15000);
+    clientAuthCompleteFired = false;
+    clientLastAuthSuccess = false;
+    BLEClient dc = BLE.createClient();
+    installClientCallbacks(dc);
+    BTStatus dcs = dc.connect(targetAddr);
+    Serial.printf("[CLIENT] Phase36 directed connected=%d\n", (int)(bool)dcs);
+    if (dcs) {
+      dc.disconnect();
+      delay(300);
+    }
+    waitForHostGo(phase36OobGo, 20000);
+#if BLE_VALIDATION_HOOKS
+    BLEHooks.security.advertiseOob.store(true, std::memory_order_relaxed);
+#endif
+    BLESecurity sec = BLE.getSecurity();
+    (void)sec.deleteAllBonds();
+    sec.setAuthenticationMode(true, true, false);
+    auto oobAttempt = [&](const char *tag) {
+      clientAuthCompleteFired = false;
+      clientLastAuthSuccess = false;
+      (void)sec.deleteAllBonds();
+      delay(300);
+      bool found = scanForServer();
+      bool connected = false;
+      bool readOk = false;
+      bool enc = false;
+      bool bond = false;
+      if (found) {
+        BLEClient rc = BLE.createClient();
+        installClientCallbacks(rc);
+        BTStatus cs = rc.connect(targetAddr);
+        connected = (bool)cs;
+        if (cs) {
+          (void)rc.secureConnection();
+          uint32_t deadline = millis() + 10000;
+          while (!clientAuthCompleteFired && (int32_t)(deadline - millis()) > 0) {
+            delay(20);
+          }
+          BLERemoteService svc = rc.getService(serviceUUID);
+          if (svc) {
+            BLERemoteCharacteristic sc = svc.getCharacteristic(secureCharUUID);
+            if (sc) {
+              String v = sc.readValue();
+              readOk = (v.length() > 0);
+            }
+          }
+          BLEConnInfo ci = rc.getConnInfo();
+          enc = ci.isEncrypted();
+          bond = ci.isBonded();
+          rc.disconnect();
+          delay(500);
+        }
+      }
+      Serial.printf(
+        "[CLIENT] Phase36 %s found=%d connected=%d readOk=%d enc=%d bond=%d authFired=%d authSuccess=%d\n", tag, (int)found,
+        (int)connected, (int)readOk, (int)enc, (int)bond, (int)clientAuthCompleteFired, (int)clientLastAuthSuccess
+      );
+    };
+    oobAttempt("oobLegacy");
+    waitForHostGo(phase36OobScGo, 20000);
+    sec.setAuthenticationMode(true, true, true);
+    oobAttempt("oobSc");
+#if BLE_VALIDATION_HOOKS
+    BLEHooks.security.advertiseOob.store(false, std::memory_order_relaxed);
+#endif
+    sec.setAuthenticationMode(true, true, true);
+    Serial.println("[CLIENT] Phase36 done");
+  }
+
+  // ===== Phase 37: Memory release + reinit guard =====
+  waitForPhase(37);
 
   size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);
   Serial.printf("[CLIENT] Heap before release: %u\n", (unsigned)heapBeforeRelease);

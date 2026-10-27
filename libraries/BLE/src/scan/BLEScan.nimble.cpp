@@ -575,7 +575,7 @@ static BTStatus nimbleStartScanSession(BLEScan::Impl &impl, uint32_t durationMs,
   coded.itvl = impl.hasCodedConfig ? impl.codedInterval : impl.interval;
   coded.window = impl.hasCodedConfig ? impl.codedWindow : impl.window;
 
-  uint16_t durationUnits = (durationMs == 0) ? 0 : static_cast<uint16_t>(std::max<uint32_t>(1, (durationMs + 9) / 10));
+  uint16_t durationUnits = bleGapDurationMsTo10ms(durationMs);
   // Keep controller filtering disabled. Some controllers key legacy duplicates
   // only by address/event type and suppress a same-length payload update. The
   // host callback filters byte-identical primary and scan-response segments so
@@ -626,6 +626,9 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
     return BTStatus::InvalidState;
+  }
+  if (!bleGapDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
   }
   if (impl.isScanning) {
     BTStatus stopStatus = nimbleStopScanSession(impl);
@@ -779,6 +782,9 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
   BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
     return BTStatus::InvalidState;
+  }
+  if (!bleGapDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
   }
   if (impl.isScanning) {
     BTStatus stopStatus = nimbleStopScanSession(impl);

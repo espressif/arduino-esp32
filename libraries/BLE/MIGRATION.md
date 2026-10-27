@@ -611,6 +611,7 @@ Note:
 | `pAdv->removeServiceUUID(uuid)` | `adv.removeServiceUUID(uuid)` | |
 | `pAdv->setScanResponse(bool)` | `adv.setScanResponse(bool)` | |
 | `pAdv->setAdvertisementType(type)` | `adv.setType(type)` | Uses `BLEAdvType` enum |
+| N/A | `adv.setDirectedAddress(addr)` | Required before `start()` of directed types (InitA) |
 | `pAdv->setMinInterval(min)` | `adv.setInterval(min, max)` | Combined |
 | `pAdv->setMaxInterval(max)` | `adv.setInterval(min, max)` | Combined |
 | `pAdv->setMinPreferred(val)` | `adv.setMinPreferred(val)` | |

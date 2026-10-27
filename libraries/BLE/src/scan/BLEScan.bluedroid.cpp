@@ -101,6 +101,9 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   if (!admission) {
     return BTStatus::InvalidState;
   }
+  if (!bleGapDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
+  }
 
   if (impl.isScanning) {
     BTStatus stopStatus = stopBackend();
@@ -151,7 +154,7 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
 
   // Extended scan duration is in 10 ms units; 0 == scan until stopped.
-  uint32_t durationUnits = (durationMs == 0) ? 0 : std::max<uint32_t>(1, (durationMs + 9) / 10);
+  uint32_t durationUnits = bleGapDurationMsTo10ms(durationMs);
   impl.scanSync.take();
   if (!onBtcTask) {
     impl.paramSync.take();
@@ -343,6 +346,9 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
   if (!admission) {
     return BTStatus::InvalidState;
   }
+  if (!bleGapDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
+  }
   if (impl.isScanning) {
     BTStatus stopStatus = stopBackend();
     if (!stopStatus) {
@@ -388,7 +394,7 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
   const char *taskName = pcTaskGetName(nullptr);
   const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
 
-  uint32_t durationUnits = (durationMs == 0) ? 0 : std::max<uint32_t>(1, (durationMs + 9) / 10);
+  uint32_t durationUnits = bleGapDurationMsTo10ms(durationMs);
   impl.scanSync.take();
   if (!onBtcTask) {
     impl.paramSync.take();

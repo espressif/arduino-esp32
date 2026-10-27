@@ -97,3 +97,34 @@ inline uint32_t bleReadLEUint(const uint8_t *data, size_t len, size_t count) {
   }
   return value;
 }
+
+// HCI LE advertising/scan duration fields are 16-bit counts of 10 ms units
+// (Vol 4, Part E, §7.8.9 / §7.8.64). 0 means "no expiration". Values that do
+// not fit must be rejected as InvalidParam; saturating or wrapping would make
+// a finite request advertise/scan forever.
+inline constexpr uint32_t BLE_GAP_DURATION_10MS_MAX = 0xFFFF;
+inline constexpr uint32_t BLE_HIGH_DUTY_DIRECTED_MAX_MS = 1280;
+
+inline bool bleGapDurationMsValid(uint32_t durationMs) {
+  if (durationMs == 0) {
+    return true;
+  }
+  return ((durationMs + 9u) / 10u) <= BLE_GAP_DURATION_10MS_MAX;
+}
+
+inline uint16_t bleGapDurationMsTo10ms(uint32_t durationMs) {
+  if (durationMs == 0) {
+    return 0;
+  }
+  uint32_t units = (durationMs + 9u) / 10u;
+  if (units < 1) {
+    units = 1;
+  }
+  return static_cast<uint16_t>(units);
+}
+
+// High duty cycle directed advertising is limited to 1.28 s
+// (Vol 6, Part B, §4.4.2.4.2). Duration 0 (forever) is invalid.
+inline bool bleHighDutyDirectedDurationMsValid(uint32_t durationMs) {
+  return durationMs != 0 && durationMs <= BLE_HIGH_DUTY_DIRECTED_MAX_MS;
+}

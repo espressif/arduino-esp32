@@ -22,6 +22,7 @@
 #if BLE_NIMBLE
 
 #include "advertising/BLEAdvertising.h"
+#include "BTAddress.h"
 
 #include <host/ble_gap.h>
 #include "core/BLEMutex.h"
@@ -49,6 +50,7 @@ struct BLEAdvertising::Impl {
   uint16_t minPreferred = 0;
   uint16_t maxPreferred = 0;
   BLEAdvType advType = BLEAdvType::ConnectableScannable;
+  BTAddress directedPeer;
   uint8_t filterPolicy = 0;
 
   std::vector<BLEUUID> serviceUUIDs;

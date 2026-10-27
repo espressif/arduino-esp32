@@ -27,7 +27,8 @@ Bluedroid.
   native GAP. `ADV_STOP_COMPLETE` / `EXT_ADV_STOP_COMPLETE` / `PERIODIC_ADV_STOP_COMPLETE` clear
   advertising flags only when `giveIfAdvWait` consumes the matching wait (`LegacyStop` / `ExtStop` /
   `PeriodicStop`), so a leftover stop after start cannot leave the radio up while `isAdvertising()`
-  is false. Duration-expiry still uses `durationExpiryStop` and `onComplete`.
+  is false. Duration-expiry still uses `durationExpiryStop` and dispatches `onComplete` on a worker
+  (not BTC) so a handler may call `start()`. A failed native stop leaves `isAdvertising` set.
 
 ## Event routing
 
@@ -40,7 +41,11 @@ Native events reach the shared handlers as follows:
 - **GATTC.** `BLEClass::Impl::gattcCallback` forwards to `BLEClient::Impl` (open/close, search,
   notify, MTU).
 - **SMP.** `bluedroidSecurityHandleGAP` feeds the shared `BLESecurityImplCommon` pairing/notify
-  hooks on `BLESecurity::Impl::instance()`.
+  hooks on `BLESecurity::Impl::instance()`. OOB is not supported: `ESP_GAP_BLE_OOB_REQ_EVT` /
+  `ESP_GAP_BLE_SC_OOB_REQ_EVT` disconnect the ACL instead of injecting a zero TK (the public
+  Temporary Key). Directed advertising copies `setDirectedAddress` into `peer_addr` /
+  `peer_addr_type`. BLE5 directed `start()` zeros leftover AD/SCAN_RSP on the reserved instance
+  before `ext_adv_set_params` so high-duty directed is not HCI Invalid Parameters (0x12).
 - **Connection info.** Handlers build `BLEConnInfo` through `BLEConnInfoImpl::make` /
   `setMTU` / `setConnParams` / `updateSecurityFlags` / `updateSecurityFromAuthComplete`
   (`types/BLEConnInfo.bluedroid`).
@@ -121,3 +126,7 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   calls `esp_ble_gap_config_scan_rsp_data_raw(NULL, 0)`. IDF treats length 0 as a valid empty
   payload; only a null pointer with nonzero length is `ESP_ERR_INVALID_ARG`.
 - **No `onConnParamsUpdateRequest`** — Bluedroid has no pre-accept hook; the API is NimBLE-only.
+- **`ESP_GATTS_CONF_EVT` has no notify/indicate bit.** A notify CONF is local TX-complete and
+  arrives before the peer indication confirm, so submitted notifications are consumed first;
+  an in-flight indication is the fallback. Reservations that have not been handed to the stack
+  must not consume a CONF.

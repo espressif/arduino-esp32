@@ -94,6 +94,7 @@ struct BLEServer::Impl : BLEServerImplCommon {
 
   ~Impl() {
     if (advRestartTimer) {
+      esp_timer_stop(advRestartTimer);
       esp_timer_delete(advRestartTimer);
     }
     if (indicationRetryTimer) {

@@ -51,6 +51,8 @@
 #include <algorithm>
 #include <string.h>
 #include "core/BLEValidationHooks.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #if BLE_GATT_SERVER_SUPPORTED
 void bluedroidCancelPendingReAdvertise();
 void bluedroidInvalidatePendingReAdvertise();
@@ -69,6 +71,43 @@ struct ReAdvGuard {
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
 static const uint32_t ADV_SYNC_TIMEOUT_MS = 2000;
+
+namespace {
+struct CompleteDispatch {
+  BLEAdvertising::CompleteHandler cb;
+  uint8_t instance;
+};
+
+void completeDispatchTask(void *arg) {
+  auto *job = static_cast<CompleteDispatch *>(arg);
+  if (job->cb) {
+    job->cb(job->instance);
+  }
+  delete job;
+  vTaskDelete(nullptr);
+}
+
+// onComplete runs from duration expiry / ADV_TERMINATED. Those GAP events
+// arrive on BTC; start() waits on advSync from that same task, so invoking
+// a handler that calls start() inline deadlocks. Defer to a worker.
+void dispatchOnComplete(BLEAdvertising::Impl *inst, uint8_t instance) {
+  BLEAdvertising::CompleteHandler completeCb;
+  {
+    BLELockGuard lock(inst->callbackMtx);
+    completeCb = inst->onCompleteCb;
+  }
+  if (!completeCb) {
+    return;
+  }
+  auto *job = new (std::nothrow) CompleteDispatch{std::move(completeCb), instance};
+  if (!job) {
+    return;
+  }
+  if (xTaskCreate(completeDispatchTask, "ble-adv-done", 4096, job, tskIDLE_PRIORITY + 1, nullptr) != pdPASS) {
+    delete job;
+  }
+}
+}  // namespace
 
 // --------------------------------------------------------------------------
 // Static instance for event routing
@@ -217,14 +256,7 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
         // waking that waiter blocks the BTC task and prevents the following
         // advertising-data completion event from being delivered.
         if (ok) {
-          BLEAdvertising::CompleteHandler completeCb;
-          {
-            BLELockGuard lock(inst->callbackMtx);
-            completeCb = inst->onCompleteCb;
-          }
-          if (completeCb) {
-            completeCb(0);
-          }
+          dispatchOnComplete(inst, 0);
         }
       } else if (inst->giveIfAdvWait(AdvWait::LegacyStop, ok ? BTStatus::OK : BTStatus::Fail) && ok) {
         inst->isAdvertising = false;
@@ -320,14 +352,7 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       }
       // 0x3c = Advertising Timeout (duration expired), 0x43 = Limit Reached (maxEvents expired).
       if (param->adv_terminate.status == 0x3c || param->adv_terminate.status == 0x43) {
-        BLEAdvertising::CompleteHandler cb;
-        {
-          BLELockGuard lock(inst->callbackMtx);
-          cb = inst->onCompleteCb;
-        }
-        if (cb) {
-          cb((handle == kLegacyInstance) ? 0 : handle);
-        }
+        dispatchOnComplete(inst, (handle == kLegacyInstance) ? 0 : handle);
       }
       break;
     }
@@ -355,7 +380,8 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
         handleGAP(ESP_GAP_BLE_PERIODIC_ADV_STOP_COMPLETE_EVT, &stale);
         if (param->period_adv_start.instance < kMaxExtInstances) {
           BLEHooks.adv.periodicRunningAfterStaleStop.store(
-            inst->extInstances[param->period_adv_start.instance].periodicAdvRunning, std::memory_order_relaxed
+            inst->extInstances[param->period_adv_start.instance].periodicAdvRunning.load(std::memory_order_relaxed),
+            std::memory_order_relaxed
           );
         }
       }
@@ -467,9 +493,9 @@ void BLEAdvertising::reset() {
       esp_ble_gap_set_device_name(BLE.getDeviceName().c_str());
     }
   }
-  impl.includeName = true;
   impl.scanResp = true;
   impl.advType = BLEAdvType::ConnectableScannable;
+  impl.directedPeer = BTAddress();
   impl.minInterval = 0x20;
   impl.maxInterval = 0x40;
   impl.minPreferred = 0;
@@ -525,6 +551,15 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   BLEAdmissionGuard admission(impl.nativeAdmission);
   if (!admission) {
     return BTStatus::InvalidState;
+  }
+  if (!bleGapDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
+  }
+  if (impl.advType == BLEAdvType::DirectedHighDuty && !bleHighDutyDirectedDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
+  }
+  if (bleAdvTypeIsDirected(impl.advType) && impl.directedPeer.isZero()) {
+    return BTStatus::InvalidParam;
   }
 
   BLELockGuard lock(impl.mtx);
@@ -640,7 +675,12 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     advParams.own_addr_type = static_cast<esp_ble_addr_type_t>(BLE.getOwnAddressType());
     advParams.channel_map = ADV_CHNL_ALL;
     advParams.adv_filter_policy = mapFilterPolicy(impl.scanRequestWhitelistOnly, impl.connectWhitelistOnly);
-    advParams.peer_addr_type = BLE_ADDR_TYPE_PUBLIC;
+    if (bleAdvTypeIsDirected(impl.advType)) {
+      impl.directedPeer.toEspBdAddr(advParams.peer_addr);
+      advParams.peer_addr_type = static_cast<esp_ble_addr_type_t>(impl.directedPeer.type());
+    } else {
+      advParams.peer_addr_type = BLE_ADDR_TYPE_PUBLIC;
+    }
 
     // --- Start advertising ---
     impl.advSync.take();
@@ -731,25 +771,34 @@ BTStatus BLEAdvertising::stopBackend() {
   uint8_t stopInstance = Impl::kLegacyInstance;
   impl.armAdvWait(Impl::AdvWait::ExtStop);
   esp_err_t err = esp_ble_gap_ext_adv_stop(1, &stopInstance);
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.adv.injectNativeStopFail.exchange(false, std::memory_order_acq_rel)) {
+    err = ESP_FAIL;
+  }
+#endif
   if (err != ESP_OK) {
     log_e("esp_ble_gap_ext_adv_stop: %s", esp_err_to_name(err));
     impl.armAdvWait(Impl::AdvWait::None);
     impl.advSync.give(BTStatus::Fail);
-    impl.isAdvertising = false;
     return BTStatus::Fail;
   }
   BTStatus s = impl.finishAdvWait();
-  impl.isAdvertising = false;
   if (!s) {
     log_e("Timeout waiting for ext adv stop");
     return s;
   }
+  impl.isAdvertising = false;
   log_d("Advertising stopped");
   return BTStatus::OK;
 #else
   impl.armAdvWait(Impl::AdvWait::LegacyStop);
   if (!timerStopInFlight) {
     esp_err_t err = esp_ble_gap_stop_advertising();
+#if BLE_VALIDATION_HOOKS
+    if (BLEHooks.adv.injectNativeStopFail.exchange(false, std::memory_order_acq_rel)) {
+      err = ESP_FAIL;
+    }
+#endif
     if (err != ESP_OK) {
       log_e("esp_ble_gap_stop_advertising: %s", esp_err_to_name(err));
       impl.armAdvWait(Impl::AdvWait::None);
@@ -758,11 +807,11 @@ BTStatus BLEAdvertising::stopBackend() {
     }
   }
   BTStatus s = impl.finishAdvWait();
-  impl.isAdvertising = false;
   if (!s) {
     log_e("Timeout waiting for adv stop");
     return s;
   }
+  impl.isAdvertising = false;
 
   log_d("Advertising stopped");
   return BTStatus::OK;
@@ -901,7 +950,12 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   params.interval_max = maxInterval;
   params.channel_map = ADV_CHNL_ALL;
   params.own_addr_type = static_cast<esp_ble_addr_type_t>(BLE.getOwnAddressType());
-  params.peer_addr_type = BLE_ADDR_TYPE_PUBLIC;
+  if (bleAdvTypeIsDirected(advType)) {
+    directedPeer.toEspBdAddr(params.peer_addr);
+    params.peer_addr_type = static_cast<esp_ble_addr_type_t>(directedPeer.type());
+  } else {
+    params.peer_addr_type = BLE_ADDR_TYPE_PUBLIC;
+  }
   params.filter_policy = mapFilterPolicy(scanRequestWhitelistOnly, connectWhitelistOnly);
   params.primary_phy = ESP_BLE_GAP_PRI_PHY_1M;  // legacy PDUs are 1M only
   params.secondary_phy = ESP_BLE_GAP_PHY_1M;
@@ -909,8 +963,29 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   params.tx_power = EXT_ADV_TX_PWR_NO_PREFERENCE;
   params.scan_req_notif = false;
 
+  esp_err_t err;
+  // ADV_DIRECT_IND carries no AD or SCAN_RSP (Vol 6, Part B, §2.3.1.2). Drop
+  // leftover payload before Set_Ext_Adv_Params: high-duty directed with data
+  // is Invalid HCI Command Parameters (Vol 4, Part E, §7.8.53).
+  if (bleAdvTypeIsDirected(advType)) {
+    advSync.take();
+    err = esp_ble_gap_config_ext_adv_data_raw(kLegacyInstance, 0, nullptr);
+    if (err == ESP_OK) {
+      (void)advSync.wait(ADV_SYNC_TIMEOUT_MS);
+    } else {
+      advSync.give(BTStatus::Fail);
+    }
+    advSync.take();
+    err = esp_ble_gap_config_ext_scan_rsp_data_raw(kLegacyInstance, 0, nullptr);
+    if (err == ESP_OK) {
+      (void)advSync.wait(ADV_SYNC_TIMEOUT_MS);
+    } else {
+      advSync.give(BTStatus::Fail);
+    }
+  }
+
   advSync.take();
-  esp_err_t err = esp_ble_gap_ext_adv_set_params(kLegacyInstance, &params);
+  err = esp_ble_gap_ext_adv_set_params(kLegacyInstance, &params);
   if (err != ESP_OK) {
     log_e("legacy ext_adv_set_params: %s", esp_err_to_name(err));
     advSync.give(BTStatus::Fail);
@@ -925,6 +1000,8 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   String advName = name.length() > 0 ? name : BLE.getDeviceName();
   const bool nameInScanRsp = scanResp && scannable;
 
+  // ADV_DIRECT_IND carries only AdvA and InitA (Vol 6, Part B, §2.3.1.2).
+  if (!bleAdvTypeIsDirected(advType)) {
   {
     // Point directly at the source bytes (a member vector for custom data, or a
     // locally built payload) instead of copying into a temporary; the payload
@@ -971,11 +1048,26 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
     if (!st) {
       return st;
     }
+  } else {
+    // Clearing a prior scan response is required when scanResp is now off;
+    // otherwise the controller keeps radiating the last SCAN_RSP.
+    advSync.take();
+    err = esp_ble_gap_config_ext_scan_rsp_data_raw(kLegacyInstance, 0, nullptr);
+    if (err != ESP_OK) {
+      log_e("legacy clear ext scan rsp: %s", esp_err_to_name(err));
+      advSync.give(BTStatus::Fail);
+      return BTStatus::Fail;
+    }
+    st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
+    if (!st) {
+      return st;
+    }
+  }
   }
 
   esp_ble_gap_ext_adv_t startSet = {};
   startSet.instance = kLegacyInstance;
-  startSet.duration = (durationMs == 0) ? 0 : static_cast<int>(std::max<uint32_t>(1, (durationMs + 9) / 10));
+  startSet.duration = bleGapDurationMsTo10ms(durationMs);
   startSet.max_events = 0;
   advSync.take();
   err = esp_ble_gap_ext_adv_start(1, &startSet);
@@ -991,25 +1083,44 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
 void BLEAdvertising::Impl::stopAllExtendedThenClear() {
   for (uint8_t i = 0; i < kMaxExtInstances; i++) {
 #if BLE_PERIODIC_ADV_SUPPORTED
-    advSync.take();
-    armAdvWait(AdvWait::PeriodicStop);
-    esp_err_t perr = esp_ble_gap_periodic_adv_stop(i);
-    if (perr != ESP_OK) {
-      armAdvWait(AdvWait::None);
-      advSync.give(BTStatus::OK);
-    } else {
-      (void)finishAdvWait();
+    if (extInstances[i].periodicAdvRunning.load()) {
+      advSync.take();
+      armAdvWait(AdvWait::PeriodicStop);
+      esp_err_t perr = esp_ble_gap_periodic_adv_stop(i);
+      if (perr != ESP_OK) {
+        log_e("periodic_adv_stop inst %u: %s", i, esp_err_to_name(perr));
+        armAdvWait(AdvWait::None);
+        advSync.give(BTStatus::Fail);
+        return;
+      }
+      if (!finishAdvWait()) {
+        log_e("periodic_adv_stop inst %u wait failed", i);
+        return;
+      }
     }
 #endif
+    const bool running = (i == kLegacyInstance) ? isAdvertising.load() : extInstances[i].isAdvertising.load();
+    if (!running) {
+      continue;
+    }
     uint8_t inst = i;
     advSync.take();
     armAdvWait(AdvWait::ExtStop);
     esp_err_t err = esp_ble_gap_ext_adv_stop(1, &inst);
+#if BLE_VALIDATION_HOOKS
+    if (BLEHooks.adv.injectExtStopFail.exchange(false, std::memory_order_acq_rel)) {
+      err = ESP_FAIL;
+    }
+#endif
     if (err != ESP_OK) {
+      log_e("ext_adv_stop inst %u: %s", i, esp_err_to_name(err));
       armAdvWait(AdvWait::None);
-      advSync.give(BTStatus::OK);
-    } else {
-      (void)finishAdvWait();
+      advSync.give(BTStatus::Fail);
+      return;
+    }
+    if (!finishAdvWait()) {
+      log_e("ext_adv_stop inst %u wait failed", i);
+      return;
     }
   }
   advSync.take();
@@ -1197,6 +1308,12 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
   if (!extInst) {
     return BTStatus::InvalidParam;
   }
+  if (!bleGapDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
+  }
+  if ((extInst->params.type & ESP_BLE_GAP_SET_EXT_ADV_PROP_HD_DIRECTED) && !bleHighDutyDirectedDurationMsValid(durationMs)) {
+    return BTStatus::InvalidParam;
+  }
   // Ensure params are applied even if the caller started without setting data.
   BTStatus st = impl.ensureExtConfigured(instance);
   if (!st) {
@@ -1204,7 +1321,7 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
   }
   esp_ble_gap_ext_adv_t startSet = {};
   startSet.instance = instance;
-  startSet.duration = (durationMs == 0) ? 0 : static_cast<int>(std::max<uint32_t>(1, (durationMs + 9) / 10));
+  startSet.duration = bleGapDurationMsTo10ms(durationMs);
   startSet.max_events = maxEvents;
   impl.advSync.take();
   esp_err_t err = esp_ble_gap_ext_adv_start(1, &startSet);

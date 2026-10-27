@@ -577,15 +577,37 @@ static BTStatus subscribeWithCccd(BLERemoteCharacteristic &chr, const std::share
 
   if (err != ESP_OK) {
     log_e("esp_ble_gattc_register_for_notify: %s", esp_err_to_name(err));
+    BLELockGuard clearLock(client->mtx);
+    impl->onNotifyCb = nullptr;
     return BTStatus::Fail;
   }
 
   BLERemoteDescriptor cccd = chr.getDescriptor(BLEUUID(BLE_DSC_UUID16_CCCD));
   if (cccd) {
-    return cccd.writeValue(reinterpret_cast<const uint8_t *>(&cccdVal), sizeof(cccdVal), true);
+#if BLE_VALIDATION_HOOKS
+    if (BLEHooks.remote.injectCccdWriteFail.exchange(false, std::memory_order_acq_rel)) {
+      BLELockGuard clearLock(client->mtx);
+      impl->onNotifyCb = nullptr;
+      esp_bd_addr_t bdaClear;
+      client->peerAddress.toEspBdAddr(bdaClear);
+      esp_ble_gattc_unregister_for_notify(client->gattcIf, bdaClear, impl->handle);
+      return BTStatus::Fail;
+    }
+#endif
+    BTStatus st = cccd.writeValue(reinterpret_cast<const uint8_t *>(&cccdVal), sizeof(cccdVal), true);
+    if (st != BTStatus::OK) {
+      BLELockGuard clearLock(client->mtx);
+      impl->onNotifyCb = nullptr;
+      esp_bd_addr_t bdaClear;
+      client->peerAddress.toEspBdAddr(bdaClear);
+      esp_ble_gattc_unregister_for_notify(client->gattcIf, bdaClear, impl->handle);
+    }
+    return st;
   }
 
   log_w("RemoteCharacteristic %s: CCCD descriptor (0x2902) not found", impl->uuid.toString().c_str());
+  BLELockGuard clearLock(client->mtx);
+  impl->onNotifyCb = nullptr;
   return BTStatus::NotFound;
 }
 

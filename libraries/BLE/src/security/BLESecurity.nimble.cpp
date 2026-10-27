@@ -44,6 +44,7 @@
 #include "types/BLEConnInfo.nimble.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
+#include "core/BLEValidationHooks.h"
 #include "esp32-hal-log.h"
 
 #if BLE_SMP_SUPPORTED
@@ -67,6 +68,12 @@ void BLESecurity::Impl::applySecurityParams() const {
   ble_hs_cfg.sm_bonding = bonding ? 1 : 0;
   ble_hs_cfg.sm_mitm = mitm ? 1 : 0;
   ble_hs_cfg.sm_sc = sc ? 1 : 0;
+  ble_hs_cfg.sm_oob_data_flag = 0;
+#if BLE_VALIDATION_HOOKS
+  if (BLEHooks.security.advertiseOob.load(std::memory_order_relaxed)) {
+    ble_hs_cfg.sm_oob_data_flag = 1;
+  }
+#endif
   ble_hs_cfg.sm_our_key_dist = initKeyDist;
   ble_hs_cfg.sm_their_key_dist = respKeyDist;
 }
@@ -155,19 +162,27 @@ int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *event) {
         pkey.passkey = sec->resolvePasskeyForInput(connInfo);
       } else if (pkey.action == BLE_SM_IOACT_NUMCMP) {
         pkey.numcmp_accept = sec->resolveNumericComparison(connInfo, event->passkey.params.numcmp) ? 1 : 0;
-      } else {
-        // BLE_SM_IOACT_OOB / BLE_SM_IOACT_OOB_SC (and any other unhandled
-        // action): OOB pairing is not supported by this library. Inject the
-        // zeroed pkey with the requested action set so NimBLE fails pairing
-        // promptly (OOB data not available) instead of stalling until the SMP
-        // timeout. For OOB_SC the zeroed oob_sc_data pointers do the same.
-        log_w("Security: unsupported passkey action %u (OOB not supported); failing pairing", pkey.action);
-        pkey.passkey = 0;
+      } else if (pkey.action == BLE_SM_IOACT_OOB) {
+        // Legacy OOB inject copies a 16-byte TK (ble_sm.c). A zeroed TK is the
+        // public Temporary Key and pairing would succeed. OOB is not supported;
+        // fail with OOB Not Available and wake the auth waiter. NimBLE has no
+        // reject flag on BLE_SM_IOACT_OOB inject (unlike NUMCMP).
+        log_w("Security: legacy OOB not supported; failing pairing");
+        sec->notifyAuthComplete(connInfo, false);
+        return BLE_HS_SM_US_ERR(BLE_SM_ERR_OOB);
+      } else if (pkey.action == BLE_SM_IOACT_OOB_SC) {
+        // Null oob_sc_data pointers make ble_sm_inject_io set BLE_SM_ERR_OOB.
+        log_w("Security: OOB-SC not supported; failing pairing");
         int rcOob = ble_sm_inject_io(connHandle, &pkey);
         if (rcOob != 0) {
-          log_e("Security: ble_sm_inject_io for unsupported action failed rc=%d", rcOob);
+          log_e("Security: ble_sm_inject_io for OOB-SC failed rc=%d", rcOob);
         }
+        sec->notifyAuthComplete(connInfo, false);
         return 0;
+      } else {
+        log_w("Security: unsupported passkey action %u; failing pairing", pkey.action);
+        sec->notifyAuthComplete(connInfo, false);
+        return BLE_HS_SM_US_ERR(BLE_SM_ERR_UNSPECIFIED);
       }
       int rc = ble_sm_inject_io(connHandle, &pkey);
       if (rc == 0 && pkey.action == BLE_SM_IOACT_NUMCMP && pkey.numcmp_accept == 0) {

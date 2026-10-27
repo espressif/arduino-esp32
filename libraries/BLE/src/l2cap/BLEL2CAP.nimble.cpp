@@ -360,25 +360,24 @@ static BTStatus writeDirectFromHost(BLEL2CAPChannel::Impl *impl, const uint8_t *
     return BTStatus::Fail;
   }
 
-  size_t offset = 0;
-  while (offset < len) {
-    size_t chunk = std::min(static_cast<size_t>(info.peer_coc_mtu), len - offset);
-    struct os_mbuf *om = ble_hs_mbuf_from_flat(data + offset, chunk);
-    if (!om) {
-      return BTStatus::NoMemory;
-    }
-    int rc = ble_l2cap_send(chan, om);
-    if (rc == 0 || rc == BLE_HS_ESTALLED) {
-      offset += chunk;
-      if (rc == BLE_HS_ESTALLED && offset < len) {
-        return BTStatus::Busy;
-      }
-      continue;
-    }
-    os_mbuf_free_chain(om);
-    return l2capStatusFromRc(rc);
+  // The host callback cannot wait for TX_UNSTALLED. A buffer larger than one
+  // SDU would otherwise send a prefix and then return Busy, so a retry would
+  // resend that prefix. Refuse before any send; the queued path handles
+  // multi-SDU writes.
+  if (len > info.peer_coc_mtu) {
+    return BTStatus::Busy;
   }
-  return BTStatus::OK;
+
+  struct os_mbuf *om = ble_hs_mbuf_from_flat(data, len);
+  if (!om) {
+    return BTStatus::NoMemory;
+  }
+  int rc = ble_l2cap_send(chan, om);
+  if (rc == 0 || rc == BLE_HS_ESTALLED) {
+    return BTStatus::OK;
+  }
+  os_mbuf_free_chain(om);
+  return l2capStatusFromRc(rc);
 }
 
 static void finishOperationForDisconnect(BLEL2CAPChannel::Impl *impl) {
@@ -716,7 +715,6 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
         log_e("Failed to allocate SDU for L2CAP accept");
         return BLE_HS_ENOMEM;
       }
-      event->accept.conn_handle = event->accept.conn_handle;
       event->accept.peer_sdu_size = server->mtu;
       struct ble_l2cap_chan_info info;
       ble_l2cap_get_chan_info(event->accept.chan, &info);
@@ -901,20 +899,24 @@ BLEL2CAPServer BLEClass::createL2CAPServer(uint16_t psm, uint16_t mtu) {
 }
 
 BLEL2CAPChannel BLEClass::connectL2CAP(uint16_t connHandle, uint16_t psm, uint16_t mtu) {
-  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-  if (!isInitialized() || _impl->ending) {
-    log_e("connectL2CAP: BLE not initialized");
-    return BLEL2CAPChannel();
+  {
+    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+    if (!isInitialized() || _impl->ending) {
+      log_e("connectL2CAP: BLE not initialized");
+      return BLEL2CAPChannel();
+    }
+    if (!sL2CAPMtx.init()) {
+      log_e("connectL2CAP: failed to allocate L2CAP mutex");
+      return BLEL2CAPChannel();
+    }
+    _impl->storeHook(_impl->l2capBeginHook, nimbleStartL2CAPOperations);
+    _impl->storeHook(_impl->l2capPreEndHook, nimblePrepareL2CAPShutdown);
+    _impl->storeHook(_impl->l2capHostStoppedHook, nimbleResetL2CAPDeferredEvent);
+    _impl->storeHook(_impl->l2capPostEndHook, nimbleCleanupL2CAP);
+    nimbleStartL2CAPOperations();
   }
-  if (!sL2CAPMtx.init()) {
-    log_e("connectL2CAP: failed to allocate L2CAP mutex");
-    return BLEL2CAPChannel();
-  }
-  _impl->storeHook(_impl->l2capBeginHook, nimbleStartL2CAPOperations);
-  _impl->storeHook(_impl->l2capPreEndHook, nimblePrepareL2CAPShutdown);
-  _impl->storeHook(_impl->l2capHostStoppedHook, nimbleResetL2CAPDeferredEvent);
-  _impl->storeHook(_impl->l2capPostEndHook, nimbleCleanupL2CAP);
-  nimbleStartL2CAPOperations();
+  // Wait for COC_CONNECTED without holding lifecycleMtx: BLE.end() takes that
+  // mutex and would deadlock for the 5 s connect wait.
   auto impl = std::make_shared<BLEL2CAPChannel::Impl>();
   if (!nimbleSetupL2CAPChannel(impl, connHandle, psm, mtu)) {
     return BLEL2CAPChannel();

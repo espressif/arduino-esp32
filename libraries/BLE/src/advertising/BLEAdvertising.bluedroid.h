@@ -20,6 +20,7 @@
 #if BLE_BLUEDROID
 
 #include "advertising/BLEAdvertising.h"
+#include "BTAddress.h"
 #include "core/BLESync.h"
 #include "core/BLEAdmission.h"
 
@@ -56,9 +57,9 @@ struct BLEAdvertising::Impl {
 
   std::vector<BLEUUID> serviceUUIDs;
   String name;
-  bool includeName = true;
   bool scanResp = true;
   BLEAdvType advType = BLEAdvType::ConnectableScannable;
+  BTAddress directedPeer;
   uint16_t minInterval = 0x20;
   uint16_t maxInterval = 0x40;
   uint16_t minPreferred = 0;
@@ -102,7 +103,7 @@ struct BLEAdvertising::Impl {
     esp_ble_gap_ext_adv_params_t params{};
 #if BLE_PERIODIC_ADV_SUPPORTED
     bool periodicAdvRegistered = false;
-    bool periodicAdvRunning = false;
+    std::atomic<bool> periodicAdvRunning{false};
     esp_ble_gap_periodic_adv_params_t periodicParams{};
 #endif
     void reset() {
@@ -112,7 +113,7 @@ struct BLEAdvertising::Impl {
       params = {};
 #if BLE_PERIODIC_ADV_SUPPORTED
       periodicAdvRegistered = false;
-      periodicAdvRunning = false;
+      periodicAdvRunning.store(false);
       periodicParams = {};
 #endif
     }

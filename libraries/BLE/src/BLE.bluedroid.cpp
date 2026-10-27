@@ -130,8 +130,8 @@ void BLEClass::Impl::gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_pa
   }
 #endif
 
-  if (impl->customGapHandler) {
-    impl->customGapHandler(reinterpret_cast<void *>(&event), param);
+  if (auto custom = impl->loadHook(impl->customGapHandler)) {
+    custom(reinterpret_cast<void *>(&event), param);
   }
 }
 
@@ -152,8 +152,8 @@ void BLEClass::Impl::gattsCallback(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     hook(event, gatts_if, param);
   }
 
-  if (impl->customGattsHandler) {
-    impl->customGattsHandler(reinterpret_cast<void *>(&event), param);
+  if (auto custom = impl->loadHook(impl->customGattsHandler)) {
+    custom(reinterpret_cast<void *>(&event), param);
   }
 }
 #endif
@@ -175,8 +175,8 @@ void BLEClass::Impl::gattcCallback(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     hook(event, gattc_if, param);
   }
 
-  if (impl->customGattcHandler) {
-    impl->customGattcHandler(reinterpret_cast<void *>(&event), param);
+  if (auto custom = impl->loadHook(impl->customGattcHandler)) {
+    custom(reinterpret_cast<void *>(&event), param);
   }
 }
 #endif
@@ -297,8 +297,29 @@ BTStatus BLEClass::begin(const String &deviceName) {
   return BTStatus::OK;
 }
 
+namespace {
+struct BleEndJob {
+  bool releaseMemory;
+};
+
+void bleEndWorker(void *arg) {
+  auto *job = static_cast<BleEndJob *>(arg);
+  BLE.end(job->releaseMemory);
+  delete job;
+  vTaskDelete(nullptr);
+}
+}  // namespace
+
 // Irreversible: after end(true) BLE memory is freed via btMemRelease() and begin() cannot succeed again without a hardware reset.
 void BLEClass::end(bool releaseMemory) {
+  if (bleInStackCallbackTask()) {
+    auto *job = new (std::nothrow) BleEndJob{releaseMemory};
+    if (!job || xTaskCreate(bleEndWorker, "ble-end", 6144, job, 1, nullptr) != pdPASS) {
+      log_e("BLE.end: cannot defer stack-task teardown");
+      delete job;
+    }
+    return;
+  }
   {
     BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
     if (!isInitialized() || _impl->ending) {
@@ -655,7 +676,7 @@ BTStatus BLEClass::setCustomGapHandler(RawEventHandler handler) {
   if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
-  _impl->customGapHandler = handler;
+  _impl->storeHook(_impl->customGapHandler, handler);
   return BTStatus::OK;
 }
 
@@ -664,7 +685,7 @@ BTStatus BLEClass::setCustomGattcHandler(RawEventHandler handler) {
   if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
-  _impl->customGattcHandler = handler;
+  _impl->storeHook(_impl->customGattcHandler, handler);
   return BTStatus::OK;
 }
 
@@ -673,7 +694,7 @@ BTStatus BLEClass::setCustomGattsHandler(RawEventHandler handler) {
   if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
-  _impl->customGattsHandler = handler;
+  _impl->storeHook(_impl->customGattsHandler, handler);
   return BTStatus::OK;
 }
 
