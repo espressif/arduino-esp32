@@ -2,163 +2,171 @@
 { "board": "espressif:esp32:esp32s31",
                 "target": "esp32s31",
                 "sketches": [
+{"name": "libraries/USB/examples/CompositeDevice",
+                "sizes": [{
+                        "flash_bytes": 415742,
+                        "flash_percentage": 32,
+                        "ram_bytes": 72616,
+                        "ram_percentage": 22
+                        }]
+                },
 {"name": "libraries/USB/examples/ConsumerControl",
                 "sizes": [{
-                        "flash_bytes": 358958,
+                        "flash_bytes": 359254,
                         "flash_percentage": 27,
-                        "ram_bytes": 72152,
+                        "ram_bytes": 72160,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/CustomHIDDevice",
                 "sizes": [{
-                        "flash_bytes": 378752,
+                        "flash_bytes": 379048,
                         "flash_percentage": 29,
-                        "ram_bytes": 72168,
+                        "ram_bytes": 72184,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/FirmwareMSC",
                 "sizes": [{
-                        "flash_bytes": 391700,
+                        "flash_bytes": 392088,
                         "flash_percentage": 30,
-                        "ram_bytes": 71688,
+                        "ram_bytes": 71696,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/Gamepad",
                 "sizes": [{
-                        "flash_bytes": 379122,
+                        "flash_bytes": 379418,
                         "flash_percentage": 29,
-                        "ram_bytes": 72176,
+                        "ram_bytes": 72184,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
-                        "flash_bytes": 382286,
+                        "flash_bytes": 382582,
                         "flash_percentage": 29,
-                        "ram_bytes": 72256,
+                        "ram_bytes": 72272,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
                 "sizes": [{
-                        "flash_bytes": 360498,
+                        "flash_bytes": 360794,
                         "flash_percentage": 28,
-                        "ram_bytes": 72176,
+                        "ram_bytes": 72192,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
                 "sizes": [{
-                        "flash_bytes": 360746,
+                        "flash_bytes": 361042,
                         "flash_percentage": 28,
-                        "ram_bytes": 72176,
+                        "ram_bytes": 72192,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
                 "sizes": [{
-                        "flash_bytes": 360986,
+                        "flash_bytes": 361282,
                         "flash_percentage": 28,
-                        "ram_bytes": 72176,
+                        "ram_bytes": 72184,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
                 "sizes": [{
-                        "flash_bytes": 375976,
+                        "flash_bytes": 376272,
                         "flash_percentage": 29,
-                        "ram_bytes": 71864,
+                        "ram_bytes": 71872,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/KeyboardAndMouseControl",
                 "sizes": [{
-                        "flash_bytes": 380394,
+                        "flash_bytes": 380690,
                         "flash_percentage": 29,
-                        "ram_bytes": 72216,
+                        "ram_bytes": 72224,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/MIDI/MidiController",
                 "sizes": [{
-                        "flash_bytes": 385096,
+                        "flash_bytes": 385392,
                         "flash_percentage": 29,
-                        "ram_bytes": 72400,
+                        "ram_bytes": 72416,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/MIDI/MidiInterface",
                 "sizes": [{
-                        "flash_bytes": 374632,
+                        "flash_bytes": 374928,
                         "flash_percentage": 29,
-                        "ram_bytes": 71824,
+                        "ram_bytes": 71840,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
                 "sizes": [{
-                        "flash_bytes": 381792,
+                        "flash_bytes": 382088,
                         "flash_percentage": 29,
-                        "ram_bytes": 72152,
+                        "ram_bytes": 72160,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/MIDI/MidiMusicBox",
                 "sizes": [{
-                        "flash_bytes": 378154,
+                        "flash_bytes": 378450,
                         "flash_percentage": 29,
-                        "ram_bytes": 72168,
+                        "ram_bytes": 72176,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/MIDI/ReceiveMidi",
                 "sizes": [{
-                        "flash_bytes": 375798,
+                        "flash_bytes": 376094,
                         "flash_percentage": 29,
-                        "ram_bytes": 71824,
+                        "ram_bytes": 71840,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/Mouse/ButtonMouseControl",
                 "sizes": [{
-                        "flash_bytes": 359402,
+                        "flash_bytes": 359698,
                         "flash_percentage": 27,
-                        "ram_bytes": 72184,
+                        "ram_bytes": 72192,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/SystemControl",
                 "sizes": [{
-                        "flash_bytes": 358966,
+                        "flash_bytes": 359262,
                         "flash_percentage": 27,
-                        "ram_bytes": 72152,
+                        "ram_bytes": 72160,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostCDC_MSC_HID",
                 "sizes": [{
-                        "flash_bytes": 436510,
+                        "flash_bytes": 436806,
                         "flash_percentage": 33,
-                        "ram_bytes": 71352,
+                        "ram_bytes": 71360,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostGamepad",
                 "sizes": [{
-                        "flash_bytes": 376040,
+                        "flash_bytes": 376336,
                         "flash_percentage": 29,
-                        "ram_bytes": 71072,
+                        "ram_bytes": 71080,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 385350,
+                        "flash_bytes": 385646,
                         "flash_percentage": 29,
-                        "ram_bytes": 71256,
+                        "ram_bytes": 71264,
                         "ram_percentage": 22
                         }]
                 },
@@ -172,41 +180,33 @@
                 },
 {"name": "libraries/USB/examples/USBHostKeyboard",
                 "sizes": [{
-                        "flash_bytes": 380754,
+                        "flash_bytes": 381050,
                         "flash_percentage": 29,
-                        "ram_bytes": 71008,
+                        "ram_bytes": 71016,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostMSC_Test",
                 "sizes": [{
-                        "flash_bytes": 427608,
+                        "flash_bytes": 427904,
                         "flash_percentage": 33,
-                        "ram_bytes": 71648,
+                        "ram_bytes": 71656,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostMouse",
                 "sizes": [{
-                        "flash_bytes": 376020,
+                        "flash_bytes": 376316,
                         "flash_percentage": 29,
-                        "ram_bytes": 70992,
+                        "ram_bytes": 71008,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostMouseCallback",
                 "sizes": [{
-                        "flash_bytes": 375784,
+                        "flash_bytes": 376080,
                         "flash_percentage": 29,
-                        "ram_bytes": 70992,
-                        "ram_percentage": 22
-                        }]
-                },
-{"name": "libraries/USB/examples/USBHostSerial",
-                "sizes": [{
-                        "flash_bytes": 375668,
-                        "flash_percentage": 29,
-                        "ram_bytes": 70944,
+                        "ram_bytes": 71000,
                         "ram_percentage": 22
                         }]
                 }
@@ -215,6 +215,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientInsecure",
+                "sizes": [{
+                        "flash_bytes": 1055615,
+                        "flash_percentage": 81,
+                        "ram_bytes": 50040,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
                 "sizes": [{
                         "flash_bytes": 1055627,
@@ -329,7 +337,7 @@
                 },
 {"name": "libraries/SD_MMC/examples/SDMMC_Test",
                 "sizes": [{
-                        "flash_bytes": 398097,
+                        "flash_bytes": 398085,
                         "flash_percentage": 30,
                         "ram_bytes": 24392,
                         "ram_percentage": 7
@@ -337,7 +345,7 @@
                 },
 {"name": "libraries/SD_MMC/examples/SDMMC_time",
                 "sizes": [{
-                        "flash_bytes": 1056737,
+                        "flash_bytes": 1056725,
                         "flash_percentage": 81,
                         "ram_bytes": 50480,
                         "ram_percentage": 15
@@ -358,20 +366,20 @@
                         "ram_bytes": 23728,
                         "ram_percentage": 7
                         }]
-                },
-{"name": "libraries/SPIFFS/examples/SPIFFS_time",
-                "sizes": [{
-                        "flash_bytes": 1007877,
-                        "flash_percentage": 77,
-                        "ram_bytes": 50128,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureBuiltinCACertBundle",
+                "sizes": [{
+                        "flash_bytes": 1176477,
+                        "flash_percentage": 37,
+                        "ram_bytes": 38820,
+                        "ram_percentage": 12
+                        }]
+                },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                 "sizes": [{
                         "flash_bytes": 1142617,
@@ -507,20 +515,20 @@
                         "ram_bytes": 14564,
                         "ram_percentage": 4
                         }]
-                },
-{"name": "libraries/SPIFFS/examples/SPIFFS_time",
-                "sizes": [{
-                        "flash_bytes": 1052807,
-                        "flash_percentage": 80,
-                        "ram_bytes": 38716,
-                        "ram_percentage": 12
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_node",
+                "sizes": [{
+                        "flash_bytes": 1137775,
+                        "flash_percentage": 87,
+                        "ram_bytes": 64116,
+                        "ram_percentage": 20
+                        }]
+                },
 {"name": "libraries/PPP/examples/PPP_Basic",
                 "sizes": [{
                         "flash_bytes": 577026,
@@ -696,20 +704,20 @@
                         "ram_bytes": 19204,
                         "ram_percentage": 6
                         }]
-                },
-{"name": "libraries/Update/examples/Signed_OTA_Update",
-                "sizes": [{
-                        "flash_bytes": 1245739,
-                        "flash_percentage": 95,
-                        "ram_bytes": 52448,
-                        "ram_percentage": 16
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/switch",
+                "sizes": [{
+                        "flash_bytes": 1098197,
+                        "flash_percentage": 84,
+                        "ram_bytes": 60388,
+                        "ram_percentage": 18
+                        }]
+                },
 {"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_collector",
                 "sizes": [{
                         "flash_bytes": 1072085,
@@ -885,20 +893,20 @@
                         "ram_bytes": 47408,
                         "ram_percentage": 14
                         }]
-                },
-{"name": "libraries/Update/examples/OTAWebUpdater",
-                "sizes": [{
-                        "flash_bytes": 1159841,
-                        "flash_percentage": 88,
-                        "ram_bytes": 47320,
-                        "ram_percentage": 14
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_server",
+                "sizes": [{
+                        "flash_bytes": 1083493,
+                        "flash_percentage": 83,
+                        "ram_bytes": 57192,
+                        "ram_percentage": 17
+                        }]
+                },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/light",
                 "sizes": [{
                         "flash_bytes": 1100009,
@@ -1018,14 +1026,6 @@
                         "ram_bytes": 57184,
                         "ram_percentage": 17
                         }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query",
-                "sizes": [{
-                        "flash_bytes": 1076645,
-                        "flash_percentage": 82,
-                        "ram_bytes": 57168,
-                        "ram_percentage": 17
-                        }]
                 }
 ]
 },
@@ -1114,25 +1114,25 @@
                 },
 {"name": "libraries/USB/examples/USBHostCDC_MSC_HID",
                 "sizes": [{
-                        "flash_bytes": 469216,
+                        "flash_bytes": 472116,
                         "flash_percentage": 36,
-                        "ram_bytes": 72616,
+                        "ram_bytes": 72664,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostGamepad",
                 "sizes": [{
-                        "flash_bytes": 403824,
+                        "flash_bytes": 406724,
                         "flash_percentage": 31,
-                        "ram_bytes": 72288,
+                        "ram_bytes": 72328,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 413694,
+                        "flash_bytes": 416594,
                         "flash_percentage": 32,
-                        "ram_bytes": 72488,
+                        "ram_bytes": 72528,
                         "ram_percentage": 22
                         }]
                 },
@@ -1146,25 +1146,25 @@
                 },
 {"name": "libraries/USB/examples/USBHostKeyboard",
                 "sizes": [{
-                        "flash_bytes": 408642,
+                        "flash_bytes": 411542,
                         "flash_percentage": 31,
-                        "ram_bytes": 72224,
+                        "ram_bytes": 72264,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostMSC_Test",
                 "sizes": [{
-                        "flash_bytes": 459832,
+                        "flash_bytes": 462732,
                         "flash_percentage": 35,
-                        "ram_bytes": 72864,
+                        "ram_bytes": 72912,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostMouse",
                 "sizes": [{
-                        "flash_bytes": 403844,
+                        "flash_bytes": 406744,
                         "flash_percentage": 31,
-                        "ram_bytes": 72224,
+                        "ram_bytes": 72272,
                         "ram_percentage": 22
                         }]
                 }
@@ -1173,9 +1173,17 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/USB/examples/Gamepad",
+                "sizes": [{
+                        "flash_bytes": 327885,
+                        "flash_percentage": 25,
+                        "ram_bytes": 50192,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
-                        "flash_bytes": 329665,
+                        "flash_bytes": 330265,
                         "flash_percentage": 25,
                         "ram_bytes": 50256,
                         "ram_percentage": 15
@@ -1183,31 +1191,31 @@
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
                 "sizes": [{
-                        "flash_bytes": 312469,
+                        "flash_bytes": 313069,
                         "flash_percentage": 24,
-                        "ram_bytes": 50176,
+                        "ram_bytes": 50192,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
                 "sizes": [{
-                        "flash_bytes": 312793,
+                        "flash_bytes": 313393,
                         "flash_percentage": 24,
-                        "ram_bytes": 50176,
+                        "ram_bytes": 50192,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
                 "sizes": [{
-                        "flash_bytes": 312925,
+                        "flash_bytes": 313525,
                         "flash_percentage": 24,
-                        "ram_bytes": 50160,
+                        "ram_bytes": 50176,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
                 "sizes": [{
-                        "flash_bytes": 322593,
+                        "flash_bytes": 323193,
                         "flash_percentage": 25,
                         "ram_bytes": 49824,
                         "ram_percentage": 15
@@ -1215,7 +1223,7 @@
                 },
 {"name": "libraries/USB/examples/KeyboardAndMouseControl",
                 "sizes": [{
-                        "flash_bytes": 328161,
+                        "flash_bytes": 328761,
                         "flash_percentage": 25,
                         "ram_bytes": 50224,
                         "ram_percentage": 15
@@ -1223,15 +1231,15 @@
                 },
 {"name": "libraries/USB/examples/MIDI/MidiController",
                 "sizes": [{
-                        "flash_bytes": 334837,
+                        "flash_bytes": 335437,
                         "flash_percentage": 26,
-                        "ram_bytes": 50272,
+                        "ram_bytes": 50288,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/MIDI/MidiInterface",
                 "sizes": [{
-                        "flash_bytes": 321441,
+                        "flash_bytes": 322041,
                         "flash_percentage": 25,
                         "ram_bytes": 49776,
                         "ram_percentage": 15
@@ -1239,23 +1247,23 @@
                 },
 {"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
                 "sizes": [{
-                        "flash_bytes": 329145,
-                        "flash_percentage": 25,
-                        "ram_bytes": 50144,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
-                "sizes": [{
-                        "flash_bytes": 326221,
+                        "flash_bytes": 329745,
                         "flash_percentage": 25,
                         "ram_bytes": 50160,
                         "ram_percentage": 15
                         }]
                 },
+{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+                "sizes": [{
+                        "flash_bytes": 326821,
+                        "flash_percentage": 25,
+                        "ram_bytes": 50176,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/USB/examples/MIDI/ReceiveMidi",
                 "sizes": [{
-                        "flash_bytes": 322353,
+                        "flash_bytes": 322953,
                         "flash_percentage": 25,
                         "ram_bytes": 49776,
                         "ram_percentage": 15
@@ -1263,31 +1271,31 @@
                 },
 {"name": "libraries/USB/examples/Mouse/ButtonMouseControl",
                 "sizes": [{
-                        "flash_bytes": 311557,
+                        "flash_bytes": 312157,
                         "flash_percentage": 24,
-                        "ram_bytes": 50160,
+                        "ram_bytes": 50176,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/SystemControl",
                 "sizes": [{
-                        "flash_bytes": 311133,
+                        "flash_bytes": 311733,
                         "flash_percentage": 24,
-                        "ram_bytes": 50144,
+                        "ram_bytes": 50160,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostCDC_MSC_HID",
                 "sizes": [{
-                        "flash_bytes": 376813,
+                        "flash_bytes": 377417,
                         "flash_percentage": 29,
-                        "ram_bytes": 49264,
+                        "ram_bytes": 49280,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostGamepad",
                 "sizes": [{
-                        "flash_bytes": 319109,
+                        "flash_bytes": 319709,
                         "flash_percentage": 24,
                         "ram_bytes": 48992,
                         "ram_percentage": 15
@@ -1295,7 +1303,7 @@
                 },
 {"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 327101,
+                        "flash_bytes": 327701,
                         "flash_percentage": 25,
                         "ram_bytes": 49184,
                         "ram_percentage": 15
@@ -1303,25 +1311,17 @@
                 },
 {"name": "libraries/USB/examples/USBHostKeyboard",
                 "sizes": [{
-                        "flash_bytes": 323009,
+                        "flash_bytes": 323609,
                         "flash_percentage": 25,
-                        "ram_bytes": 48928,
+                        "ram_bytes": 48944,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostMSC_Test",
                 "sizes": [{
-                        "flash_bytes": 368629,
+                        "flash_bytes": 369229,
                         "flash_percentage": 28,
                         "ram_bytes": 49552,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/USB/examples/USBHostMouse",
-                "sizes": [{
-                        "flash_bytes": 319249,
-                        "flash_percentage": 24,
-                        "ram_bytes": 48912,
                         "ram_percentage": 15
                         }]
                 }
@@ -1330,6 +1330,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+                "sizes": [{
+                        "flash_bytes": 968294,
+                        "flash_percentage": 74,
+                        "ram_bytes": 47776,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/Ticker/examples/Blinker",
                 "sizes": [{
                         "flash_bytes": 300735,
@@ -1356,87 +1364,87 @@
                 },
 {"name": "libraries/USB/examples/AudioCard",
                 "sizes": [{
-                        "flash_bytes": 424891,
+                        "flash_bytes": 425495,
                         "flash_percentage": 32,
-                        "ram_bytes": 56992,
+                        "ram_bytes": 57008,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/AudioCardMultiRate",
                 "sizes": [{
-                        "flash_bytes": 446907,
+                        "flash_bytes": 447511,
                         "flash_percentage": 34,
-                        "ram_bytes": 56000,
+                        "ram_bytes": 56016,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/CompositeDevice",
                 "sizes": [{
-                        "flash_bytes": 424507,
+                        "flash_bytes": 425119,
                         "flash_percentage": 32,
-                        "ram_bytes": 56304,
+                        "ram_bytes": 56320,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/ConsumerControl",
                 "sizes": [{
-                        "flash_bytes": 374387,
+                        "flash_bytes": 374991,
                         "flash_percentage": 29,
-                        "ram_bytes": 55840,
+                        "ram_bytes": 55856,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/CustomHIDDevice",
                 "sizes": [{
-                        "flash_bytes": 389231,
+                        "flash_bytes": 389827,
                         "flash_percentage": 30,
-                        "ram_bytes": 55856,
+                        "ram_bytes": 55872,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/FirmwareMSC",
                 "sizes": [{
-                        "flash_bytes": 405171,
+                        "flash_bytes": 405855,
                         "flash_percentage": 31,
-                        "ram_bytes": 55696,
+                        "ram_bytes": 55712,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/Gamepad",
                 "sizes": [{
-                        "flash_bytes": 389807,
+                        "flash_bytes": 390403,
                         "flash_percentage": 30,
-                        "ram_bytes": 55872,
+                        "ram_bytes": 55888,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
-                        "flash_bytes": 392107,
+                        "flash_bytes": 392703,
                         "flash_percentage": 30,
-                        "ram_bytes": 55952,
+                        "ram_bytes": 55968,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
                 "sizes": [{
-                        "flash_bytes": 375743,
+                        "flash_bytes": 376339,
                         "flash_percentage": 29,
-                        "ram_bytes": 55872,
+                        "ram_bytes": 55888,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
                 "sizes": [{
-                        "flash_bytes": 376071,
+                        "flash_bytes": 376667,
                         "flash_percentage": 29,
-                        "ram_bytes": 55872,
+                        "ram_bytes": 55888,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
                 "sizes": [{
-                        "flash_bytes": 376199,
+                        "flash_bytes": 376795,
                         "flash_percentage": 29,
                         "ram_bytes": 55872,
                         "ram_percentage": 17
@@ -1444,57 +1452,49 @@
                 },
 {"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
                 "sizes": [{
-                        "flash_bytes": 389787,
+                        "flash_bytes": 390387,
                         "flash_percentage": 30,
-                        "ram_bytes": 55872,
+                        "ram_bytes": 55888,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/KeyboardAndMouseControl",
                 "sizes": [{
-                        "flash_bytes": 390659,
+                        "flash_bytes": 391263,
                         "flash_percentage": 30,
-                        "ram_bytes": 55904,
+                        "ram_bytes": 55920,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/MIDI/MidiController",
                 "sizes": [{
-                        "flash_bytes": 397479,
+                        "flash_bytes": 398103,
                         "flash_percentage": 30,
-                        "ram_bytes": 56128,
+                        "ram_bytes": 56144,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/MIDI/MidiInterface",
                 "sizes": [{
-                        "flash_bytes": 388639,
-                        "flash_percentage": 30,
-                        "ram_bytes": 55824,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
-                "sizes": [{
-                        "flash_bytes": 391655,
-                        "flash_percentage": 30,
-                        "ram_bytes": 55824,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
-                "sizes": [{
-                        "flash_bytes": 388715,
+                        "flash_bytes": 389243,
                         "flash_percentage": 30,
                         "ram_bytes": 55840,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
+{"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
                 "sizes": [{
-                        "flash_bytes": 389547,
+                        "flash_bytes": 392267,
                         "flash_percentage": 30,
-                        "ram_bytes": 55824,
+                        "ram_bytes": 55840,
+                        "ram_percentage": 17
+                        }]
+                },
+{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+                "sizes": [{
+                        "flash_bytes": 389323,
+                        "flash_percentage": 30,
+                        "ram_bytes": 55856,
                         "ram_percentage": 17
                         }]
                 }
