@@ -50,9 +50,17 @@
                         "ram_percentage": 15
                         }]
                 },
+{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+                "sizes": [{
+                        "flash_bytes": 291660,
+                        "flash_percentage": 22,
+                        "ram_bytes": 22220,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 290168,
+                        "flash_bytes": 290252,
                         "flash_percentage": 22,
                         "ram_bytes": 22220,
                         "ram_percentage": 7
@@ -60,7 +68,7 @@
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 289988,
+                        "flash_bytes": 290080,
                         "flash_percentage": 22,
                         "ram_bytes": 22188,
                         "ram_percentage": 7
@@ -145,23 +153,23 @@
                         "ram_bytes": 46152,
                         "ram_percentage": 14
                         }]
-                },
-{"name": "libraries/ESP_NOW/examples/ESP_NOW_Serial",
-                "sizes": [{
-                        "flash_bytes": 904332,
-                        "flash_percentage": 69,
-                        "ram_bytes": 46048,
-                        "ram_percentage": 14
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/ESP32/examples/Timer/RepeatTimer",
+                "sizes": [{
+                        "flash_bytes": 287340,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13560,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 287022,
+                        "flash_bytes": 287182,
                         "flash_percentage": 22,
                         "ram_bytes": 13544,
                         "ram_percentage": 4
@@ -294,20 +302,20 @@
                         "ram_bytes": 37412,
                         "ram_percentage": 11
                         }]
-                },
-{"name": "libraries/HTTPClient/examples/BasicHttpsClient",
-                "sizes": [{
-                        "flash_bytes": 1137125,
-                        "flash_percentage": 87,
-                        "ram_bytes": 37452,
-                        "ram_percentage": 11
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/HTTPClient/examples/ReuseConnection",
+                "sizes": [{
+                        "flash_bytes": 1197719,
+                        "flash_percentage": 91,
+                        "ram_bytes": 50428,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/HTTPClient/examples/StreamHttpClient",
                 "sizes": [{
                         "flash_bytes": 1197105,
@@ -475,20 +483,20 @@
                         "ram_bytes": 100660,
                         "ram_percentage": 31
                         }]
-                },
-{"name": "libraries/Matter/examples/Commissioning/MatterCHIPoBLEWiFi",
-                "sizes": [{
-                        "flash_bytes": 2134189,
-                        "flash_percentage": 68,
-                        "ram_bytes": 96764,
-                        "ram_percentage": 30
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/HTTPClient/examples/CustomHeaders",
+                "sizes": [{
+                        "flash_bytes": 1104110,
+                        "flash_percentage": 84,
+                        "ram_bytes": 43232,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/HTTPClient/examples/HTTPClientEnterprise",
                 "sizes": [{
                         "flash_bytes": 1139032,
@@ -656,14 +664,6 @@
                         "ram_bytes": 137268,
                         "ram_percentage": 42
                         }]
-                },
-{"name": "libraries/Matter/examples/Commissioning/MatterCHIPoBLERelease",
-                "sizes": [{
-                        "flash_bytes": 2674684,
-                        "flash_percentage": 85,
-                        "ram_bytes": 137784,
-                        "ram_percentage": 42
-                        }]
                 }
 ]
 },
@@ -718,9 +718,17 @@
                         "ram_percentage": 4
                         }]
                 },
+{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+                "sizes": [{
+                        "flash_bytes": 292340,
+                        "flash_percentage": 22,
+                        "ram_bytes": 14236,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 290366,
+                        "flash_bytes": 290520,
                         "flash_percentage": 22,
                         "ram_bytes": 14220,
                         "ram_percentage": 4
@@ -728,7 +736,7 @@
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 290168,
+                        "flash_bytes": 290328,
                         "flash_percentage": 22,
                         "ram_bytes": 14212,
                         "ram_percentage": 4
@@ -779,14 +787,6 @@
                         "flash_bytes": 345100,
                         "flash_percentage": 26,
                         "ram_bytes": 14648,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/Hash/examples/HEX",
-                "sizes": [{
-                        "flash_bytes": 282086,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13852,
                         "ram_percentage": 4
                         }]
                 }
@@ -875,9 +875,17 @@
                         "ram_percentage": 10
                         }]
                 },
+{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+                "sizes": [{
+                        "flash_bytes": 336362,
+                        "flash_percentage": 26,
+                        "ram_bytes": 23640,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 334456,
+                        "flash_bytes": 334600,
                         "flash_percentage": 26,
                         "ram_bytes": 23632,
                         "ram_percentage": 7
@@ -885,8 +893,8 @@
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 334156,
-                        "flash_percentage": 25,
+                        "flash_bytes": 334312,
+                        "flash_percentage": 26,
                         "ram_bytes": 23616,
                         "ram_percentage": 7
                         }]
@@ -914,20 +922,20 @@
                         "ram_bytes": 23976,
                         "ram_percentage": 7
                         }]
-                },
-{"name": "libraries/ESP_HostedOTA/examples/ESP_HostedOTA",
-                "sizes": [{
-                        "flash_bytes": 1050050,
-                        "flash_percentage": 80,
-                        "ram_bytes": 32592,
-                        "ram_percentage": 10
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/HTTPClient/examples/BasicHttpsClient",
+                "sizes": [{
+                        "flash_bytes": 999187,
+                        "flash_percentage": 76,
+                        "ram_bytes": 42780,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/HTTPClient/examples/CustomHeaders",
                 "sizes": [{
                         "flash_bytes": 952331,
@@ -1071,20 +1079,20 @@
                         "ram_bytes": 44004,
                         "ram_percentage": 13
                         }]
-                },
-{"name": "libraries/LittleFS/examples/LITTLEFS_test",
-                "sizes": [{
-                        "flash_bytes": 283804,
-                        "flash_percentage": 22,
-                        "ram_bytes": 17200,
-                        "ram_percentage": 5
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/ESP_NOW/examples/ESP_NOW_Serial",
+                "sizes": [{
+                        "flash_bytes": 860218,
+                        "flash_percentage": 66,
+                        "ram_bytes": 45228,
+                        "ram_percentage": 14
+                        }]
+                },
 {"name": "libraries/ESP_SR/examples/Basic",
                 "sizes": [{
                         "flash_bytes": 2446890,
@@ -1103,7 +1111,7 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                 "sizes": [{
-                        "flash_bytes": 881254,
+                        "flash_bytes": 881238,
                         "flash_percentage": 67,
                         "ram_bytes": 47356,
                         "ram_percentage": 14
@@ -1135,7 +1143,7 @@
                 },
 {"name": "libraries/Ethernet/examples/ETH_WIFI_BRIDGE",
                 "sizes": [{
-                        "flash_bytes": 965815,
+                        "flash_bytes": 965799,
                         "flash_percentage": 74,
                         "ram_bytes": 45664,
                         "ram_percentage": 14
@@ -1183,7 +1191,7 @@
                 },
 {"name": "libraries/HTTPClient/examples/CustomHeaders",
                 "sizes": [{
-                        "flash_bytes": 986010,
+                        "flash_bytes": 985994,
                         "flash_percentage": 75,
                         "ram_bytes": 46804,
                         "ram_percentage": 14
@@ -1243,14 +1251,6 @@
                         "flash_percentage": 74,
                         "ram_bytes": 49660,
                         "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/Hash/examples/HEX",
-                "sizes": [{
-                        "flash_bytes": 280607,
-                        "flash_percentage": 21,
-                        "ram_bytes": 22068,
-                        "ram_percentage": 7
                         }]
                 }
 ]

@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureEnterprise",
+                "sizes": [{
+                        "flash_bytes": 1029368,
+                        "flash_percentage": 33,
+                        "ram_bytes": 47752,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                 "sizes": [{
                         "flash_bytes": 996284,
@@ -145,20 +153,20 @@
                         "ram_bytes": 22212,
                         "ram_percentage": 7
                         }]
-                },
-{"name": "libraries/Ticker/examples/TickerParameter",
-                "sizes": [{
-                        "flash_bytes": 271576,
-                        "flash_percentage": 21,
-                        "ram_bytes": 22244,
-                        "ram_percentage": 7
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/Preferences/examples/Prefs2Struct",
+                "sizes": [{
+                        "flash_bytes": 287068,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13224,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Preferences/examples/StartCounter",
                 "sizes": [{
                         "flash_bytes": 286730,
@@ -294,20 +302,20 @@
                         "ram_bytes": 40384,
                         "ram_percentage": 12
                         }]
-                },
-{"name": "libraries/Update/examples/OTAWebUpdater",
-                "sizes": [{
-                        "flash_bytes": 1071039,
-                        "flash_percentage": 82,
-                        "ram_bytes": 40280,
-                        "ram_percentage": 12
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/switch",
+                "sizes": [{
+                        "flash_bytes": 1107879,
+                        "flash_percentage": 85,
+                        "ram_bytes": 56808,
+                        "ram_percentage": 17
+                        }]
+                },
 {"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_collector",
                 "sizes": [{
                         "flash_bytes": 1098809,
@@ -475,20 +483,20 @@
                         "ram_bytes": 50064,
                         "ram_percentage": 15
                         }]
-                },
-{"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
-                "sizes": [{
-                        "flash_bytes": 1150815,
-                        "flash_percentage": 88,
-                        "ram_bytes": 52904,
-                        "ram_percentage": 16
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover",
+                "sizes": [{
+                        "flash_bytes": 1011954,
+                        "flash_percentage": 77,
+                        "ram_bytes": 59328,
+                        "ram_percentage": 18
+                        }]
+                },
 {"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/light",
                 "sizes": [{
                         "flash_bytes": 1042300,
@@ -656,20 +664,20 @@
                         "ram_bytes": 43804,
                         "ram_percentage": 13
                         }]
-                },
-{"name": "libraries/Update/examples/HTTPS_OTA_Update",
-                "sizes": [{
-                        "flash_bytes": 1125180,
-                        "flash_percentage": 86,
-                        "ram_bytes": 43616,
-                        "ram_percentage": 13
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD/notes_server",
+                "sizes": [{
+                        "flash_bytes": 1030285,
+                        "flash_percentage": 79,
+                        "ram_bytes": 57880,
+                        "ram_percentage": 18
+                        }]
+                },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_client",
                 "sizes": [{
                         "flash_bytes": 1037473,
@@ -781,20 +789,20 @@
                         "ram_bytes": 58376,
                         "ram_percentage": 18
                         }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode",
-                "sizes": [{
-                        "flash_bytes": 1026831,
-                        "flash_percentage": 78,
-                        "ram_bytes": 57920,
-                        "ram_percentage": 18
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/USB/examples/CustomHIDDevice",
+                "sizes": [{
+                        "flash_bytes": 310834,
+                        "flash_percentage": 24,
+                        "ram_bytes": 23808,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/USB/examples/FirmwareMSC",
                 "sizes": [{
                         "flash_bytes": 307334,
@@ -914,20 +922,20 @@
                         "ram_bytes": 23808,
                         "ram_percentage": 7
                         }]
-                },
-{"name": "libraries/USB/examples/USBHostCDC_MSC_HID",
-                "sizes": [{
-                        "flash_bytes": 465522,
-                        "flash_percentage": 36,
-                        "ram_bytes": 73032,
-                        "ram_percentage": 22
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
+                "sizes": [{
+                        "flash_bytes": 304020,
+                        "flash_percentage": 23,
+                        "ram_bytes": 49560,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
                 "sizes": [{
                         "flash_bytes": 311792,
@@ -1071,20 +1079,20 @@
                         "ram_bytes": 57152,
                         "ram_percentage": 17
                         }]
-                },
-{"name": "libraries/USB/examples/USBSerial",
-                "sizes": [{
-                        "flash_bytes": 308384,
-                        "flash_percentage": 24,
-                        "ram_bytes": 48864,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/USB/examples/CustomHIDDevice",
+                "sizes": [{
+                        "flash_bytes": 378020,
+                        "flash_percentage": 29,
+                        "ram_bytes": 55280,
+                        "ram_percentage": 17
+                        }]
+                },
 {"name": "libraries/USB/examples/FirmwareMSC",
                 "sizes": [{
                         "flash_bytes": 393992,
@@ -1242,14 +1250,6 @@
                         "flash_bytes": 378720,
                         "flash_percentage": 29,
                         "ram_bytes": 54432,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/USB/examples/USBHostMSC_Test",
-                "sizes": [{
-                        "flash_bytes": 424688,
-                        "flash_percentage": 32,
-                        "ram_bytes": 55048,
                         "ram_percentage": 17
                         }]
                 }

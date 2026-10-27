@@ -60,7 +60,7 @@
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterrupt",
                 "sizes": [{
-                        "flash_bytes": 288032,
+                        "flash_bytes": 288104,
                         "flash_percentage": 22,
                         "ram_bytes": 22676,
                         "ram_percentage": 7
@@ -68,7 +68,7 @@
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptLambda",
                 "sizes": [{
-                        "flash_bytes": 288328,
+                        "flash_bytes": 288400,
                         "flash_percentage": 22,
                         "ram_bytes": 22668,
                         "ram_percentage": 7
@@ -161,7 +161,7 @@
                 "sketches": [
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptLambda",
                 "sizes": [{
-                        "flash_bytes": 304236,
+                        "flash_bytes": 304314,
                         "flash_percentage": 23,
                         "ram_bytes": 14580,
                         "ram_percentage": 4
@@ -680,7 +680,7 @@
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterrupt",
                 "sizes": [{
-                        "flash_bytes": 287476,
+                        "flash_bytes": 287554,
                         "flash_percentage": 22,
                         "ram_bytes": 14540,
                         "ram_percentage": 4
@@ -688,7 +688,7 @@
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptLambda",
                 "sizes": [{
-                        "flash_bytes": 307116,
+                        "flash_bytes": 307194,
                         "flash_percentage": 23,
                         "ram_bytes": 15320,
                         "ram_percentage": 5
@@ -845,7 +845,7 @@
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterrupt",
                 "sizes": [{
-                        "flash_bytes": 331852,
+                        "flash_bytes": 331930,
                         "flash_percentage": 25,
                         "ram_bytes": 24280,
                         "ram_percentage": 7
@@ -853,7 +853,7 @@
                 },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptLambda",
                 "sizes": [{
-                        "flash_bytes": 331878,
+                        "flash_bytes": 331956,
                         "flash_percentage": 25,
                         "ram_bytes": 24272,
                         "ram_percentage": 7
@@ -1056,9 +1056,17 @@
                         "ram_percentage": 13
                         }]
                 },
+{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+                "sizes": [{
+                        "flash_bytes": 253524,
+                        "flash_percentage": 19,
+                        "ram_bytes": 16944,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 252056,
+                        "flash_bytes": 252144,
                         "flash_percentage": 19,
                         "ram_bytes": 16944,
                         "ram_percentage": 5
@@ -1066,17 +1074,9 @@
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 251884,
+                        "flash_bytes": 251988,
                         "flash_percentage": 19,
                         "ram_bytes": 16920,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Touch/TouchButton",
-                "sizes": [{
-                        "flash_bytes": 259708,
-                        "flash_percentage": 20,
-                        "ram_bytes": 17296,
                         "ram_percentage": 5
                         }]
                 }

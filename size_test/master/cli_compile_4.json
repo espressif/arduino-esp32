@@ -295,11 +295,11 @@
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/ESP32/examples/Timer/RepeatTimer",
+{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
                 "sizes": [{
-                        "flash_bytes": 287184,
+                        "flash_bytes": 289160,
                         "flash_percentage": 22,
-                        "ram_bytes": 13560,
+                        "ram_bytes": 13576,
                         "ram_percentage": 4
                         }]
                 }
@@ -308,9 +308,17 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+                "sizes": [{
+                        "flash_bytes": 309300,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17836,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 307338,
+                        "flash_bytes": 307486,
                         "flash_percentage": 23,
                         "ram_bytes": 17820,
                         "ram_percentage": 5
@@ -318,7 +326,7 @@
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 307142,
+                        "flash_bytes": 307298,
                         "flash_percentage": 23,
                         "ram_bytes": 17812,
                         "ram_percentage": 5
@@ -475,14 +483,6 @@
                         "ram_bytes": 50172,
                         "ram_percentage": 15
                         }]
-                },
-{"name": "libraries/HTTPClient/examples/ReuseConnection",
-                "sizes": [{
-                        "flash_bytes": 1197719,
-                        "flash_percentage": 91,
-                        "ram_bytes": 50428,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
@@ -505,9 +505,17 @@
                         "ram_percentage": 13
                         }]
                 },
+{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+                "sizes": [{
+                        "flash_bytes": 266890,
+                        "flash_percentage": 20,
+                        "ram_bytes": 14300,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 264912,
+                        "flash_bytes": 265062,
                         "flash_percentage": 20,
                         "ram_bytes": 14284,
                         "ram_percentage": 4
@@ -515,7 +523,7 @@
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 264714,
+                        "flash_bytes": 264872,
                         "flash_percentage": 20,
                         "ram_bytes": 14276,
                         "ram_percentage": 4
@@ -654,14 +662,6 @@
                         "flash_bytes": 1146444,
                         "flash_percentage": 87,
                         "ram_bytes": 43472,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/CustomHeaders",
-                "sizes": [{
-                        "flash_bytes": 1104110,
-                        "flash_percentage": 84,
-                        "ram_bytes": 43232,
                         "ram_percentage": 13
                         }]
                 }
@@ -928,6 +928,14 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/ESP32/examples/Touch/TouchButton",
+                "sizes": [{
+                        "flash_bytes": 259708,
+                        "flash_percentage": 20,
+                        "ram_bytes": 17296,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Touch/TouchInterrupt",
                 "sizes": [{
                         "flash_bytes": 259600,
@@ -1071,14 +1079,6 @@
                         "ram_bytes": 42756,
                         "ram_percentage": 13
                         }]
-                },
-{"name": "libraries/HTTPClient/examples/BasicHttpsClient",
-                "sizes": [{
-                        "flash_bytes": 999187,
-                        "flash_percentage": 76,
-                        "ram_bytes": 42780,
-                        "ram_percentage": 13
-                        }]
                 }
 ]
 },
@@ -1149,9 +1149,17 @@
                         "ram_percentage": 14
                         }]
                 },
+{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+                "sizes": [{
+                        "flash_bytes": 290779,
+                        "flash_percentage": 22,
+                        "ram_bytes": 22492,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 289327,
+                        "flash_bytes": 289411,
                         "flash_percentage": 22,
                         "ram_bytes": 22476,
                         "ram_percentage": 7
@@ -1159,7 +1167,7 @@
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 289159,
+                        "flash_bytes": 289251,
                         "flash_percentage": 22,
                         "ram_bytes": 22468,
                         "ram_percentage": 7
@@ -1240,14 +1248,6 @@
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Network",
                 "sizes": [{
                         "flash_bytes": 861202,
-                        "flash_percentage": 66,
-                        "ram_bytes": 45228,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/ESP_NOW/examples/ESP_NOW_Serial",
-                "sizes": [{
-                        "flash_bytes": 860234,
                         "flash_percentage": 66,
                         "ram_bytes": 45228,
                         "ram_percentage": 14
