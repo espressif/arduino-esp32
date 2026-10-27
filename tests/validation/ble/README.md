@@ -24,7 +24,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 
 | Phase | Label | What it covers |
 |---|---|---|
-| 1 | basic_lifecycle | init / deinit / reinit / final deinit + **heap canary integrity around the first `begin()`** + release of an unlimited `startBlocking(0)` scan by concurrent host shutdown |
+| 1 | basic_lifecycle | init / deinit / reinit / final deinit + **heap canary integrity around the first `begin()`** + **callback-context `BLE.end()` rejects same-callback `begin()` and recovers after a failed `ble-end` worker** + **idle `end(true)` after `end(false)` must not latch into a later `end(false)`** + release of an unlimited `startBlocking(0)` scan by concurrent host shutdown |
 | 2 | ble5_ext_periodic_adv | extended + periodic advertising and sync (BLE5) + **clearExtended() while live must Fail and leave advertising on** + **clearExtended() then startExtended() restart** + **reset() while extended+periodic then restart** + **leftover EXT_ADV_STOP_COMPLETE / PERIODIC_ADV_STOP_COMPLETE after start must not clear flags** (Bluedroid BLE5; skip on NimBLE / classic) |
 | 3 | gatt_setup_connect | server start, scan, connect, service discovery, heap tracking + broadcast notify/indicate before anyone connects reports `ERROR_NO_CLIENT` + GATT tree empty after `begin()` |
 | 4 | gatt_read_write | characteristic read / write / read-back + value supplied per read by `onRead` via `setValue()` (short and 512-byte long reads, one `onRead` per read) + long reads of a value rewritten every few ms stay uniform (per-connection snapshot) + concurrent same-client blocking reads/writes keep distinct completion ownership + a long read abandoned by disconnect then a uniform re-read + write through a handle from a const lookup |
@@ -103,7 +103,12 @@ terminator probe:
 Phase 1 checks heap integrity (`heap_caps_check_integrity_all`) immediately before
 and after the first `BLE.begin()` on both devices. A stack init that overruns a
 heap block corrupts a canary silently and only panics much later in unrelated
-code, so the check has to sit right around the call.
+code, so the check has to sit right around the call. It then calls `BLE.end()`
+from scan `onComplete` (BTC / NimBLE host) and asserts that a same-callback
+`begin()` returns `InvalidState`, including when worker creation is injected to
+fail; a later user-thread `end()`/`begin()` recovers the stack. An idle
+`end(true)` after `end(false)` must not latch into the next session: a
+following `end(false)`/`begin()` still succeeds.
 
 Phase 8 follows the single write-without-response with a burst of three packets
 sent back to back, with no delay and no ATT response in between so they queue up

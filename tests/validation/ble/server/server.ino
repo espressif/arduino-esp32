@@ -404,6 +404,43 @@ void readName() {
   Serial.printf("[SERVER] Name: %s\n", serverName.c_str());
 }
 
+// Scan onComplete runs on BTC / the NimBLE host task. BLE.end() from that
+// callback must reject a same-callback begin() with InvalidState, then recover.
+static bool phase1DeferredEndCycle(const String &rebeginName, bool injectWorkerFail) {
+  std::atomic<bool> completed{false};
+  std::atomic<int> during{static_cast<int>(BTStatus::Fail)};
+  BLEScan scan = BLE.getScan();
+  scan.resetCallbacks();
+  scan.onComplete([&](BLEScan::Results &) {
+    scan.resetCallbacks();
+    if (injectWorkerFail) {
+      BLEHooks.lifecycle.endWorkerStartFailures.store(1);
+    }
+    BLE.end(false);
+    during.store(static_cast<int>(BLE.begin(rebeginName + "_during")), std::memory_order_relaxed);
+    completed.store(true, std::memory_order_release);
+  });
+  BTStatus started = scan.start(200);
+  unsigned long deadline = millis() + 5000;
+  while (started && !completed.load(std::memory_order_acquire) && millis() < deadline) {
+    delay(1);
+  }
+  int beginDuring = during.load(std::memory_order_relaxed);
+  scan.resetCallbacks();
+  BLE.end(false);
+  BTStatus recovered = BTStatus::Fail;
+  unsigned long rebeginDeadline = millis() + 8000;
+  while (millis() < rebeginDeadline) {
+    recovered = BLE.begin(rebeginName);
+    if (recovered) {
+      break;
+    }
+    delay(20);
+  }
+  return started && completed.load(std::memory_order_acquire) && beginDuring == static_cast<int>(BTStatus::InvalidState)
+         && recovered;
+}
+
 // ========================= Phase 1 — Basic Lifecycle =========================
 
 bool phase_basic() {
@@ -433,6 +470,21 @@ bool phase_basic() {
     return false;
   }
   Serial.println("[SERVER] Bare lifecycle OK");
+
+  bool deferredDuring = phase1DeferredEndCycle(serverName + "_deferred", false);
+  bool deferredFailSpawn = phase1DeferredEndCycle(serverName + "_deferred_fail", true);
+  BLE.end(false);
+  BLE.end(true);
+  BTStatus afterIdleTrue = BLE.begin(serverName + "_idle_true");
+  BLE.end(false);
+  BTStatus afterIdleTrueEnd = BLE.begin(serverName + "_idle_true_end");
+  Serial.printf(
+    "[SERVER] Phase1 deferredEnd during=%d failSpawn=%d idleTrue=%d afterIdle=%d heap=%d\n", (int)deferredDuring,
+    (int)deferredFailSpawn, (int)(bool)afterIdleTrue, (int)(bool)afterIdleTrueEnd, (int)heap_caps_check_integrity_all(true)
+  );
+  if (!deferredDuring || !deferredFailSpawn || !afterIdleTrue || !afterIdleTrueEnd) {
+    return false;
+  }
 
   // NVS outlives reflashing, so bonds from an earlier run would otherwise leak
   // into the pairing phases and make them depend on whatever state the boards

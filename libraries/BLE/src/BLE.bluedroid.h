@@ -28,6 +28,7 @@
 #include "BLE.h"
 #include "core/BLEMutex.h"
 #include "core/BLESync.h"
+#include "freertos/task.h"
 
 #include <esp_gap_ble_api.h>
 #if BLE_GATT_SERVER_SUPPORTED
@@ -72,6 +73,9 @@ struct BLEClass::Impl {
   uint16_t localMTU = 23;
   uint8_t ownAddrType = BLE_ADDR_TYPE_PUBLIC;
   bool ending = false;
+  bool endRunning = false;
+  bool endReleaseMemory = false;
+  TaskHandle_t endTask = nullptr;
   SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutex();
   portMUX_TYPE hookMux = portMUX_INITIALIZER_UNLOCKED;
   BLESync privacySync{"privacySync"};

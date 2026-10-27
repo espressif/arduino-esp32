@@ -28,6 +28,7 @@
 
 #include "BLE.h"
 #include "core/BLEMutex.h"
+#include "freertos/task.h"
 #include <host/ble_gap.h>
 #include <host/ble_hs.h>
 #include <host/ble_att.h>
@@ -49,6 +50,9 @@ struct BLEClass::Impl {
   uint16_t localMTU = BLE_ATT_MTU_DFLT;
   uint8_t ownAddrType = BLE_OWN_ADDR_PUBLIC;
   bool ending = false;
+  bool endRunning = false;
+  bool endReleaseMemory = false;
+  TaskHandle_t endTask = nullptr;
   SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutex();
   portMUX_TYPE hookMux = portMUX_INITIALIZER_UNLOCKED;
   ble_gap_event_listener gapListener{};

@@ -12,7 +12,9 @@ specific to NimBLE.
 - **Host task.** `BLEClass::begin()` initializes the controller, configures the NimBLE port and
   store, and starts the NimBLE host on its own FreeRTOS task (`BLEClass::Impl::hostTask` runs
   `nimble_port_run()`). All host callbacks execute on that task, so any state they share with the
-  application task is mutex-guarded.
+  application task is mutex-guarded. `BLE.end()` from the host task claims `ending` before
+  returning and defers teardown to a `ble-end` worker so `begin()` cannot revive the session
+  while the host is still up.
 - **Sync/reset.** The host signals readiness via `BLEClass::Impl::onSync` (sets the GAP name and
   ensures an identity address) and clears readiness on `onReset`.
 - **Async GATT client.** NimBLE's GATT client is callback-driven. The remote read/write/subscribe

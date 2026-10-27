@@ -55,7 +55,8 @@
  * operations, etc.) are NOT internally synchronized. Call them from
  * a single task — typically the Arduino loop task. BLE callbacks execute
  * on the stack's own task (NimBLE host task or Bluedroid BTC task) and
- * must not call BLEClass methods that mutate state.
+ * must not block. @ref end from a callback is supported (it defers
+ * teardown); do not call @ref begin from a callback.
  *
  * Usage:
  * @code
@@ -80,6 +81,8 @@ public:
    *
    * @param deviceName  Advertised device name. Empty string keeps the default.
    * @return BTStatus indicating success or the specific initialization error.
+   *         @c InvalidState if @ref end is in progress, including a
+   *         callback-context @ref end whose teardown worker has not finished.
    */
   BTStatus begin(const String &deviceName = "");
 
@@ -92,6 +95,11 @@ public:
    * parent or native handle). @ref createServer returns the same server after a
    * later @ref begin — rebuild the database before @c start().
    *
+   * From the stack callback task this claims shutdown immediately so a following
+   * @ref begin returns @c InvalidState, then defers the teardown body to a
+   * worker. If that worker cannot be created, the next user-thread @ref end
+   * completes it.
+   *
    * @param releaseMemory  If true, also releases the Bluetooth controller
    *                       memory. After this, begin() cannot reinitialize BLE
    *                       without a full reboot.
@@ -101,7 +109,11 @@ public:
   /**
    * @brief Check whether the BLE stack has been initialized.
    *
-   * @return true if begin() completed successfully and end() has not been called.
+   * @return true if begin() completed successfully and end() has not yet
+   *         cleared the public session. A deferred callback-context end() may
+   *         still report true until teardown runs (the worker, or a later
+   *         user-thread @ref end if the worker could not be created); @ref begin
+   *         returns @c InvalidState for that window.
    */
   bool isInitialized() const;
 

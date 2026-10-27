@@ -11,7 +11,9 @@ Bluedroid.
 
 - **No dedicated host task.** Bluedroid runs its own BTC task internally. Application-registered
   GAP/GATTS/GATTC callbacks are invoked on that single BTC task, so the only concurrency to guard
-  is BTC-task vs. application-task access to shared state.
+  is BTC-task vs. application-task access to shared state. `BLE.end()` from BTC claims `ending`
+  before returning and defers teardown to a `ble-end` worker so `begin()` cannot revive the
+  session while the host is still up.
 - **App-id registration.** The GATTS server and GATTC client each register an application id and
   receive a `gatts_if` / `gattc_if`. Registration is asynchronous: `begin()`/`start()` block on a
   `BLESync` until the `REG_EVT` (and, for the server, service-creation events) arrive.

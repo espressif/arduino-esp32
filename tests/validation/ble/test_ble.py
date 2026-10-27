@@ -79,12 +79,30 @@ def _phase_basic(server, client):
 
     server.expect_exact("[SERVER] Init OK", timeout=30)
     server.expect_exact("[SERVER] Bare lifecycle OK", timeout=30)
+    m_s_end = server.expect(
+        r"\[SERVER\] Phase1 deferredEnd during=([01]) failSpawn=([01]) idleTrue=([01]) afterIdle=([01]) heap=([01])",
+        timeout=30,
+    )
+    assert int(m_s_end.group(1)) == 1, "callback-context BLE.end() allowed begin() before teardown"
+    assert int(m_s_end.group(2)) == 1, "failed ble-end worker left begin() able to revive the stack"
+    assert int(m_s_end.group(3)) == 1, "idle end(true) after end(false) blocked re-begin"
+    assert int(m_s_end.group(4)) == 1, "idle end(true) latched into a later end(false) and released controller memory"
+    assert int(m_s_end.group(5)) == 1, "SERVER heap corrupted around deferred BLE.end()"
     server.expect_exact("[SERVER] Deinit OK", timeout=10)
     server.expect_exact("[SERVER] Reinit OK", timeout=30)
     server.expect_exact("[SERVER] Final deinit OK", timeout=10)
 
     client.expect_exact("[CLIENT] Init OK", timeout=30)
     client.expect_exact("[CLIENT] Bare lifecycle OK", timeout=30)
+    m_c_end = client.expect(
+        r"\[CLIENT\] Phase1 deferredEnd during=([01]) failSpawn=([01]) idleTrue=([01]) afterIdle=([01]) heap=([01])",
+        timeout=30,
+    )
+    assert int(m_c_end.group(1)) == 1, "callback-context BLE.end() allowed begin() before teardown"
+    assert int(m_c_end.group(2)) == 1, "failed ble-end worker left begin() able to revive the stack"
+    assert int(m_c_end.group(3)) == 1, "idle end(true) after end(false) blocked re-begin"
+    assert int(m_c_end.group(4)) == 1, "idle end(true) latched into a later end(false) and released controller memory"
+    assert int(m_c_end.group(5)) == 1, "CLIENT heap corrupted around deferred BLE.end()"
     client.expect_exact(
         "[CLIENT] Blocking scan shutdown task=1 active=1 released=1 cancelFallback=1 admission=1 heap=1",
         timeout=15,

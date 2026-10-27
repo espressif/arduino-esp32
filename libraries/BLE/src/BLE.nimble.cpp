@@ -33,6 +33,7 @@
 #include "core/BLEImplHelpers.h"
 #include "core/BLEBackend.h"
 #include "core/BLETask.h"
+#include "core/BLEValidationHooks.h"
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
@@ -344,15 +345,18 @@ BTStatus BLEClass::begin(const String &deviceName) {
 }
 
 namespace {
-struct BleEndJob {
-  bool releaseMemory;
-};
-
-void bleEndWorker(void *arg) {
-  auto *job = static_cast<BleEndJob *>(arg);
-  BLE.end(job->releaseMemory);
-  delete job;
+void bleEndWorker(void *) {
+  BLE.end(false);
   vTaskDelete(nullptr);
+}
+
+bool bleStartEndWorker() {
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.lifecycle.endWorkerStartFailures)) {
+    return false;
+  }
+#endif
+  return xTaskCreate(bleEndWorker, "ble-end", 6144, nullptr, 1, nullptr) == pdPASS;
 }
 }  // namespace
 
@@ -360,19 +364,56 @@ void bleEndWorker(void *arg) {
 // Irreversible: after end(true) you cannot call begin() again without a hardware reset.
 void BLEClass::end(bool releaseMemory) {
   if (bleInStackCallbackTask()) {
-    auto *job = new (std::nothrow) BleEndJob{releaseMemory};
-    if (!job || xTaskCreate(bleEndWorker, "ble-end", 6144, job, 1, nullptr) != pdPASS) {
+    // Claim ending before returning so begin() cannot treat the still-live
+    // stack as a successful re-init. The worker, or a later user-thread end(),
+    // runs the teardown body.
+    {
+      BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+      if (!_impl || (!isInitialized() && !_impl->endRunning)) {
+        return;
+      }
+      if (releaseMemory) {
+        _impl->endReleaseMemory = true;
+      }
+      if (_impl->ending) {
+        return;
+      }
+      _impl->ending = true;
+    }
+    if (!bleStartEndWorker()) {
       log_e("BLE.end: cannot defer stack-task teardown");
-      delete job;
     }
     return;
   }
-  {
-    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-    if (!_impl || !isInitialized() || _impl->ending) {
-      return;
+
+  while (true) {
+    bool waitForWorker = false;
+    {
+      BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+      if (!_impl) {
+        return;
+      }
+      if (!isInitialized() && !_impl->endRunning) {
+        return;
+      }
+      if (releaseMemory) {
+        _impl->endReleaseMemory = true;
+      }
+      if (_impl->endRunning) {
+        if (_impl->endTask == xTaskGetCurrentTaskHandle()) {
+          return;
+        }
+        waitForWorker = true;
+      } else {
+        _impl->ending = true;
+        _impl->endRunning = true;
+        _impl->endTask = xTaskGetCurrentTaskHandle();
+      }
     }
-    _impl->ending = true;
+    if (!waitForWorker) {
+      break;
+    }
+    vTaskDelay(1);
   }
 
   if (auto hook = _impl->loadHook(_impl->streamPreEndHook)) {
@@ -470,12 +511,19 @@ void BLEClass::end(bool releaseMemory) {
   hostedDeinitBLE();
 #endif
 
-  if (releaseMemory) {
+  bool release = false;
+  {
+    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+    release = _impl->endReleaseMemory;
+    _impl->endReleaseMemory = false;
+    _impl->endTask = nullptr;
+    _impl->endRunning = false;
+  }
+  if (release) {
 #if SOC_BLE_SUPPORTED && CONFIG_BT_CONTROLLER_ENABLED
     btMemRelease(BT_MODE_BLE);
 #endif
   }
-
   {
     BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
     _impl->ending = false;
