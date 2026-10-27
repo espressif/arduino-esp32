@@ -114,8 +114,8 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   periodic advertising TX, and periodic sync RX are implemented under `#if BLE5_SUPPORTED` /
   `BLE_PERIODIC_ADV_SUPPORTED` (the latter also requires `CONFIG_BT_BLE_50_PERIODIC_ADV_EN`).
   Classic esp32 Bluedroid libs stay on BLE 4.2 (`BLE5_SUPPORTED == 0`) and use the shared
-  `NotSupported` fallbacks.   Admitted `reset()` and `beginBackendShutdown()` wait for each
-  extended/periodic stop complete, then for `EXT_ADV_SET_CLEAR_COMPLETE`.   Public
+  `NotSupported` fallbacks. Admitted `reset()` and `beginBackendShutdown()` wait for each
+  extended/periodic stop complete, then for `EXT_ADV_SET_CLEAR_COMPLETE`. Public
   `clearExtended()` does the same wait and only clears software flags on success.
   The ESP-IDF call only queues BTC; the controller rejects `HCI_LE_Clear_Advertising_Sets`
   with Command Disallowed while a set is still enabled (Vol 4, Part E, §7.8.60).

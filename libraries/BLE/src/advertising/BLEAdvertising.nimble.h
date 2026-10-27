@@ -40,7 +40,7 @@ struct BLEAdvertising::Impl {
   uint32_t legacyDurationMs = 0;
   int64_t sessionDeadlineUs = 0;
   // Bumped on every public stop() (even when the flag is already clear) so a
-  // pending preemption-resume cannot restart a session the app cancelled.
+  // pending preemption-resume cannot restart a session the app canceled.
   std::atomic<uint32_t> advSession{0};
   bool scanResponseEnabled = true;
   bool includeTxPower = false;

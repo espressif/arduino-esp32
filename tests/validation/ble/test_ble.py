@@ -117,7 +117,8 @@ def _assert_phase2_clear_and_reset(server, timeout):
         int(m_reset.group(1)) == 1 and int(m_reset.group(2)) == 1
     ), "reset() while extended+periodic advertising did not leave idle then restart"
     m_stale = server.expect(
-        r"\[SERVER\] Phase2 staleStopFlag start=([01]) stillAdv=([01]) stop=([01]) idle=([01]) clear=([01]) skip=([01])",
+        r"\[SERVER\] Phase2 staleStopFlag start=([01]) stillAdv=([01]) stop=([01]) "
+        r"idle=([01]) clear=([01]) skip=([01])",
         timeout=timeout,
     )
     if int(m_stale.group(6)) == 0:
@@ -847,14 +848,15 @@ def _phase_adv_data_and_scan(server, client):
     elapsed_ms = int(m_timed.group(4))
     assert 200 <= elapsed_ms <= 2500, f"300 ms advertising duration completed after {elapsed_ms} ms"
     m_cancel = server.expect(
-        r"\[SERVER\] Phase20 cancelledAdv timedStart=([01]) stop=([01]) replacement=([01]) completions=(\d+) isAdv=([01])",
+        r"\[SERVER\] Phase20 cancelledAdv timedStart=([01]) stop=([01]) replacement=([01]) "
+        r"completions=(\d+) isAdv=([01])",
         timeout=10,
     )
     assert all(
         int(m_cancel.group(i)) == 1 for i in range(1, 4)
     ), "timed advertising cancellation/restart operation failed"
-    assert int(m_cancel.group(4)) == 0, "cancelled advertising duration dispatched onComplete"
-    assert int(m_cancel.group(5)) == 1, "a cancelled duration stopped the replacement advertising session"
+    assert int(m_cancel.group(4)) == 0, "canceled advertising duration dispatched onComplete"
+    assert int(m_cancel.group(5)) == 1, "a canceled duration stopped the replacement advertising session"
     server.expect_exact("[SERVER] Phase20 boundaryRestarts=12/12", timeout=30)
     # AD payload-limit regression: legacy 31-octet cap must be enforced (name
     # degrades to a Shortened Local Name, an oversized field is dropped whole),
@@ -1337,7 +1339,8 @@ def _phase_l2cap_bulk(server, client):
         int(m_drop.group(1)) == 1
     ), "dropping the final detached handle raced its queued host callback or corrupted the heap"
     m_shell = client.expect(
-        r"\[CLIENT\] Phase28 retained clean=([01]) end=(-?\d+)/(\d+)/(-?\d+) rebegin=([01]) after=(-?\d+)/(\d+)/(-?\d+)",
+        r"\[CLIENT\] Phase28 retained clean=([01]) end=(-?\d+)/(\d+)/(-?\d+) rebegin=([01]) "
+        r"after=(-?\d+)/(\d+)/(-?\d+)",
         timeout=30,
     )
     assert int(m_shell.group(1)) == 1, "retained L2CAP shell or operation event was unsafe across end/rebegin"
@@ -1422,7 +1425,8 @@ def _phase_deletebond_roundtrip(server, client):
         int(m_scan.group(3)) <= 5500
     ), f"preempted 4-second scan restarted its full duration ({int(m_scan.group(3))} ms)"
     m_replace = client.expect(
-        r"\[CLIENT\] Phase30 sessionReplace first=([01]) replacement=([01]) completions=(\d+) elapsed=(\d+) stopped=([01])",
+        r"\[CLIENT\] Phase30 sessionReplace first=([01]) replacement=([01]) completions=(\d+) "
+        r"elapsed=(\d+) stopped=([01])",
         timeout=10,
     )
     assert int(m_replace.group(1)) == 1 and int(m_replace.group(2)) == 1, "scan session replacement failed to start"
@@ -1672,7 +1676,8 @@ def _phase_pending_send_edges(server, client):
     client.write("PHASE35_READ_REMOVE_GO\n")
     client.expect_exact("[CLIENT] Phase35 localReadRemove armed=1", timeout=20)
     m_rm = server.expect(
-        r"\[SERVER\] Phase35 removeBusy=([01]) accepted=(\d+) busy=(\d+) readEntered=([01]) removeStarted=([01]) removeDone=([01]) removeIdle=([01])",
+        r"\[SERVER\] Phase35 removeBusy=([01]) accepted=(\d+) busy=(\d+) readEntered=([01]) "
+        r"removeStarted=([01]) removeDone=([01]) removeIdle=([01])",
         timeout=20,
     )
     assert int(m_rm.group(1)) == 1, "removeService of a service with in-flight indications did not return Busy"
@@ -1720,8 +1725,9 @@ def _phase_pending_send_edges(server, client):
         int(m_re_adv.group(1)) == 1 and int(m_re_adv.group(2)) == 1 and int(m_re_adv.group(3)) == 1
     ), "in-flight advertiseOnDisconnect restart must be waited out by stop() so advertising is idle"
     m_td = server.expect(
-        r"\[SERVER\] Phase35 notifyTeardown stack=(NimBLE|Bluedroid) attempted=(\d+) accepted=(\d+) atDisconnect=(\d+) final=(\d+) "
-        r"success=(\d+) noClient=(\d+) other=(\d+) late=(\d+)",
+        r"\[SERVER\] Phase35 notifyTeardown stack=(NimBLE|Bluedroid) attempted=(\d+) "
+        r"accepted=(\d+) atDisconnect=(\d+) final=(\d+) success=(\d+) noClient=(\d+) "
+        r"other=(\d+) late=(\d+)",
         timeout=20,
     )
     attempted, accepted, at_disconnect, final, success, no_client, other, late = (

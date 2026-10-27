@@ -677,7 +677,7 @@ static void nimbleInjectPreemptedCompleteIfArmed(BLEAdvertising::Impl *impl) {
     return;
   }
   // Native-stop without public stop() so a queued advertiseOnDisconnect restart
-  // is not cancelled before the synthesized preemption resume runs.
+  // is not canceled before the synthesized preemption resume runs.
 #if BLE5_SUPPORTED
   (void)ble_gap_ext_adv_stop(BLEAdvertising::Impl::kLegacyInstance);
 #else

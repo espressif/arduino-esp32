@@ -102,7 +102,7 @@ always cast-free `impl.member`.
   does not generate `HCI_LE_Advertising_Set_Terminated` (Vol 4, Part E, §7.7.65.18); the stack
   synthesizes the preempted complete from `ble_gap_preempt_done`. The library resumes the set that
   was active with the time remaining on the original session deadline. Resume takes the
-  advertiseOnDisconnect mutex without cancelling a queued disconnect restart, rechecks
+  advertiseOnDisconnect mutex without canceling a queued disconnect restart, rechecks
   `advSession`, and must not call public `start()` (that would `fetch_add` a new session and
   undo `stop()`). Public `stop()`/`start()` still cancel that restart. `stop()` bumps `advSession`
   even if the advertising flag was already cleared by the complete event, so an application stop

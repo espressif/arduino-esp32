@@ -29,7 +29,7 @@
  * Compiled in only when @c BLE_VALIDATION_HOOKS is set. Production builds
  * compile this header to nothing. The singleton is defined in
  * @c BLEValidationHooks.cpp so sketches and library TUs share one object
- * instead of each sketch re-declaring the same @c extern "C" atomics.
+ * instead of each sketch redeclaring the same @c extern "C" atomics.
  */
 class BLEValidationHooks {
 public:

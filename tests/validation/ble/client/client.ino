@@ -3542,7 +3542,7 @@ void setup() {
     );
 
     // Supersede one active native session with another. A late completion from
-    // the cancelled session must not complete or signal the replacement.
+    // the canceled session must not complete or signal the replacement.
     std::atomic<uint32_t> replacementCompletions{0};
     deadlineScan.onComplete([&](BLEScan::Results) {
       replacementCompletions.fetch_add(1);

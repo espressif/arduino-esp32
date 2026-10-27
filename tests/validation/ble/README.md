@@ -134,7 +134,7 @@ payload.
 
 - Race injectors live in `libraries/BLE/src/core/BLEValidationHooks.{h,cpp}`
   and are compiled in by `-DBLE_VALIDATION_HOOKS` in each sketch's `build_opt.h`.
-  Library code and both sketches share the `BLEHooks` singleton; do not re-declare
+  Library code and both sketches share the `BLEHooks` singleton; do not redeclare
   hook atomics in the `.ino` files.
 - NVS is erased at startup to ensure fresh pairing on every run.
 - Authentication is triggered on-demand (when reading the secure characteristic) rather than on connect, ensuring consistent ordering across Bluedroid and NimBLE.
