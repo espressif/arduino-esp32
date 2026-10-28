@@ -733,7 +733,10 @@ if __name__ == "__main__":
         "--skip-verify",
         action="store_true",
         required=False,
-        help="Skip archive hashing and member checks when .package_checksum already matches (for CI cache restores without dist/)",
+        help=(
+            "Skip archive hashing and member checks when .package_checksum "
+            "already matches (for CI cache restores without dist/)"
+        ),
     )
 
     parser.add_argument(
