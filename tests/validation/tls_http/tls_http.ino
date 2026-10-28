@@ -3,7 +3,7 @@
  *
  * Covers:
  *   NetworkClientSecure: TLS handshake with CA cert, reject invalid cert,
- *                        setInsecure(), send/receive over TLS
+ *                        setInsecure(), send/receive over TLS, setCiphers()
  *   HTTPClient: GET (200 + body), POST (echo payload), custom headers,
  *               timeout, HTTPS via NetworkClientSecure
  *
@@ -126,6 +126,76 @@ void test_tls_send_receive(void) {
 
   TEST_ASSERT_TRUE_MESSAGE(has_data, "No response data received");
   TEST_ASSERT_TRUE(line.startsWith("HTTP/1.1 200"));
+}
+
+// ==================== setCiphers Tests ====================
+
+static const int cipher_list_standard[] = {MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, MBEDTLS_TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, 0};
+
+// 0xFFFF is a reserved/unassigned ciphersuite ID: mbedTLS accepts it in the list but never offers
+// it, so this leaves the client with no ciphersuite it can actually propose during the handshake.
+static const int cipher_list_unsupported[] = {0xFFFF, 0};
+
+void test_tls_ciphers_restrict_connect(void) {
+  TEST_ASSERT_TRUE_MESSAGE(ca_cert_len > 0, "No CA cert received from test driver");
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  NetworkClientSecure client;
+  client.setCACert(ca_cert);
+  client.setCiphers(cipher_list_standard);
+  bool ok = tlsConnect(client, "postman-echo.com", 443);
+  bool connected = ok && client.connected();
+  client.stop();
+  TEST_ASSERT_TRUE_MESSAGE(ok, "TLS connect with restricted ciphersuite list failed");
+  TEST_ASSERT_TRUE(connected);
+}
+
+void test_tls_ciphers_unsupported_fails(void) {
+  TEST_ASSERT_TRUE_MESSAGE(ca_cert_len > 0, "No CA cert received from test driver");
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  NetworkClientSecure client;
+  client.setCACert(ca_cert);
+  client.setCiphers(cipher_list_unsupported);
+  bool ok = tlsConnect(client, "postman-echo.com", 443);
+  client.stop();
+  TEST_ASSERT_FALSE_MESSAGE(ok, "TLS connect unexpectedly succeeded with no usable ciphersuite offered");
+}
+
+void test_tls_ciphers_reset_to_default(void) {
+  TEST_ASSERT_TRUE_MESSAGE(ca_cert_len > 0, "No CA cert received from test driver");
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  NetworkClientSecure client;
+  client.setCACert(ca_cert);
+
+  client.setCiphers(cipher_list_unsupported);
+  bool restricted_ok = tlsConnect(client, "postman-echo.com", 443);
+  client.stop();
+  TEST_ASSERT_FALSE_MESSAGE(restricted_ok, "Restricted connect unexpectedly succeeded");
+
+  client.setCiphers(nullptr);
+  bool default_ok = tlsConnect(client, "postman-echo.com", 443);
+  bool connected = default_ok && client.connected();
+  client.stop();
+  TEST_ASSERT_TRUE_MESSAGE(default_ok, "TLS connect after resetting ciphersuites to default failed");
+  TEST_ASSERT_TRUE(connected);
+}
+
+void test_tls_ciphers_count_overload(void) {
+  TEST_ASSERT_TRUE_MESSAGE(ca_cert_len > 0, "No CA cert received from test driver");
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  NetworkClientSecure client;
+  client.setCACert(ca_cert);
+  // count is unused (kept only for BearSSL-style source compatibility); pass a deliberately
+  // wrong value to confirm it has no effect on the connection.
+  client.setCiphers(cipher_list_standard, 1234);
+  bool ok = tlsConnect(client, "postman-echo.com", 443);
+  bool connected = ok && client.connected();
+  client.stop();
+  TEST_ASSERT_TRUE_MESSAGE(ok, "TLS connect via setCiphers(list, count) overload failed");
+  TEST_ASSERT_TRUE(connected);
 }
 
 // ==================== HTTP Client Tests ====================
@@ -316,6 +386,10 @@ void setup() {
   RUN_TEST(test_tls_with_ca);
   RUN_TEST(test_tls_insecure);
   RUN_TEST(test_tls_send_receive);
+  RUN_TEST(test_tls_ciphers_restrict_connect);
+  RUN_TEST(test_tls_ciphers_unsupported_fails);
+  RUN_TEST(test_tls_ciphers_reset_to_default);
+  RUN_TEST(test_tls_ciphers_count_overload);
   RUN_TEST(test_http_get);
   RUN_TEST(test_http_post);
   RUN_TEST(test_http_custom_header);

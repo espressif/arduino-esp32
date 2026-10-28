@@ -4,6 +4,8 @@
 
 #include <Arduino.h>
 #define DISPLAY_ENABLED
+// Prints per-upload timing (total, Update.write, display) to Serial.
+#define OTA_TIMING_DEBUG
 
 #include <WiFi.h>
 #include <WebServer.h>
@@ -25,13 +27,40 @@ Adafruit_NeoPixel rgb_led_1 = Adafruit_NeoPixel(1, 1, NEO_GRB + NEO_KHZ800);
 #include "esp_partition.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
+#if __has_include("esp_mac.h")
+#include "esp_mac.h"  // esp_read_mac() moved here in ESP-IDF 5 (Arduino core 3.x)
+#endif
 
 String ssid;
 uint8_t mac[6];
 
 // Create an instance of the server
 WebServer server(80);
-bool displayEnabled;
+bool displayEnabled = false;
+const uint8_t DISPLAY_ADDRESS = 0x3D;
+
+// Redraw the progress bar only every PROGRESS_STEP percent. Redrawing it for
+// every ~1.4 KB upload chunk sends the whole frame buffer over I2C each time
+// and slows the upload down considerably.
+const int PROGRESS_STEP = 5;
+int lastProgress = -1;
+// Content-Length of the request, only used for the progress display. It
+// includes the multipart overhead, so it is not passed to Update.begin().
+size_t uploadExpectedSize = 0;
+// Set only once Update.end() succeeded, so a request without a file or with
+// an interrupted body is never answered with "OK"
+bool updateSucceeded = false;
+
+// Optional MD5 of the .bin file, sent by the app as "x-MD5" header. When
+// present, Update.end() rejects a corrupted upload instead of flashing it.
+const char *MD5_HEADER = "x-MD5";
+
+#ifdef OTA_TIMING_DEBUG
+unsigned long uploadStartMs = 0;
+unsigned long writeTimeMs = 0;
+unsigned long displayTimeMs = 0;
+unsigned long chunkCount = 0;
+#endif
 
 const int BUTTON_PIN = 0;                       // GPIO for the button
 volatile unsigned long lastPressTime = 0;       // Time of last button press
@@ -73,10 +102,14 @@ void IRAM_ATTR handleButtonPress() {
 
   // Debounce: If the current press is too close to the last one, ignore it
   if (currentTime - lastPressTime > 50) {
+    // A press after the double-press interval starts a new sequence,
+    // otherwise a late second press would count towards the next one
+    if (currentTime - lastPressTime > doublePressInterval) {
+      pressCount = 0;
+    }
     pressCount++;  // Count the button press
 
-    // Check if this is the second press within the double-press interval
-    if (pressCount == 2 && (currentTime - lastPressTime <= doublePressInterval)) {
+    if (pressCount == 2) {
       doublePressDetected = true;  // Double press detected
       pressCount = 0;              // Reset counter
     }
@@ -102,7 +135,15 @@ void setBootPartitionToOTA0() {
 }
 
 void setupDisplay() {
-  displayEnabled = display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
+  // display.begin() only fails when the frame buffer cannot be allocated, it
+  // does not notice a missing display. Probe the I2C address instead, so no
+  // time is wasted sending frames to a display that is not connected.
+  Wire.begin();
+  Wire.beginTransmission(DISPLAY_ADDRESS);
+  bool displayFound = Wire.endTransmission() == 0;
+  Serial.printf("Display %s\n", displayFound ? "found" : "not found, display output disabled");
+
+  displayEnabled = displayFound && display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
   if (displayEnabled) {
     display.display();
     delay(100);
@@ -111,6 +152,10 @@ void setupDisplay() {
 }
 
 void displayStatusBar(int progress) {
+  if (!displayEnabled) {
+    return;
+  }
+
   display.clearDisplay();
   display.setCursor(16, 8);
   display.println("Sketch is being");
@@ -131,6 +176,10 @@ void displayStatusBar(int progress) {
 }
 
 void displayWelcomeScreen() {
+  if (!displayEnabled) {
+    return;
+  }
+
   display.clearDisplay();
 
   // Draw WiFi symbol
@@ -153,6 +202,10 @@ void displayWelcomeScreen() {
 }
 
 void displaySuccessScreen() {
+  if (!displayEnabled) {
+    return;
+  }
+
   display.clearDisplay();
 
   // Draw WiFi symbol
@@ -170,13 +223,20 @@ void displaySuccessScreen() {
 }
 
 void wipeDisplay() {
+  if (!displayEnabled) {
+    return;
+  }
+
   display.clearDisplay();
   display.println("");
   display.display();
 }
 
 void setupWiFi() {
-  WiFi.macAddress(mac);
+  // WiFi.macAddress() returns 00:00:00:00:00:00 on Arduino core 3.x while WiFi
+  // is not started yet. Read the station MAC directly instead, so the SSID
+  // stays the same as with older cores.
+  esp_read_mac(mac, ESP_MAC_WIFI_STA);
   char macLastFour[5];
   snprintf(macLastFour, sizeof(macLastFour), "%02X%02X", mac[4], mac[5]);
   ssid = "senseBox:" + String(macLastFour);
@@ -191,6 +251,9 @@ void setupWiFi() {
 
   // Start the access point
   WiFi.softAP(ssid.c_str());
+
+  // Disable WiFi power saving, it adds latency to every received packet
+  WiFi.setSleep(false);
 }
 
 void setupOTA() {
@@ -198,42 +261,117 @@ void setupOTA() {
   server.on(
     "/sketch", HTTP_POST,
     []() {
+      // Respond first so the app does not wait for the success screen
+      bool failed = !updateSucceeded;
       server.sendHeader("Connection", "close");
-      server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+      if (failed) {
+        String error = Update.hasError() ? Update.errorString() : "Update incomplete";
+        Serial.printf("Update failed: %s\n", error.c_str());
+        server.send(500, "text/plain", String("FAIL: ") + error);
+      } else {
+        server.send(200, "text/plain", "OK");
+      }
+      // send() only queues the response. Give the TCP stack time to deliver it
+      // and close the connection cleanly before ESP.restart() tears down the
+      // access point, otherwise the app waits for a response that never comes.
+      delay(500);
+      server.client().stop();
+
+      if (failed) {
+        // Keep the access point open so the upload can simply be retried
+        Update.abort();
+        displayWelcomeScreen();
+        return;
+      }
+
+#ifdef DISPLAY_ENABLED
+      if (displayEnabled) {
+        displaySuccessScreen();
+        delay(3000);
+        wipeDisplay();
+      }
+#endif
       ESP.restart();
     },
     []() {
       HTTPUpload &upload = server.upload();
 
       if (upload.status == UPLOAD_FILE_START) {
-        Serial.setDebugOutput(true);
-        size_t fsize = UPDATE_SIZE_UNKNOWN;
-        if (server.clientContentLength() > 0) {
-          fsize = server.clientContentLength();
-        }
-        Serial.printf("Receiving Update: %s, Size: %lu\n", upload.filename.c_str(), (unsigned long)fsize);
+        lastProgress = -1;
+        updateSucceeded = false;
+#ifdef OTA_TIMING_DEBUG
+        uploadStartMs = millis();
+        writeTimeMs = 0;
+        displayTimeMs = 0;
+        chunkCount = 0;
+#endif
+        uploadExpectedSize = server.clientContentLength();
+        Serial.printf("Receiving Update: %s, Request size: %u\n", upload.filename.c_str(), uploadExpectedSize);
 
-        Serial.printf("Update: %s\n", upload.filename.c_str());
-        if (!Update.begin(fsize)) {  //start with max available size
+        // A previous upload may have been interrupted without cleanup
+        if (Update.isRunning()) {
+          Update.abort();
+        }
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {  //start with max available size
           Update.printError(Serial);
+        } else if (server.hasHeader(MD5_HEADER)) {
+          String md5 = server.header(MD5_HEADER);
+          if (md5.length() == 32) {
+            Update.setMD5(md5.c_str());
+            Serial.printf("Expecting MD5: %s\n", md5.c_str());
+          } else {
+            Serial.printf("Ignoring invalid MD5 header: %s\n", md5.c_str());
+          }
         }
       } else if (upload.status == UPLOAD_FILE_WRITE) {
+#ifdef OTA_TIMING_DEBUG
+        chunkCount++;
+        unsigned long t0 = millis();
+#endif
         /* flashing firmware to ESP*/
-        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+        size_t written = Update.write(upload.buf, upload.currentSize);
+#ifdef OTA_TIMING_DEBUG
+        writeTimeMs += millis() - t0;
+#endif
+        if (written != upload.currentSize) {
           Update.printError(Serial);
         } else {
-          int progress = (Update.progress() * 100) / Update.size();
-          displayStatusBar(progress);  // Update progress on status bar
+          int progress = uploadExpectedSize > 0 ? min(100, (int)((Update.progress() * 100) / uploadExpectedSize)) : 0;
+          if (progress / PROGRESS_STEP != lastProgress / PROGRESS_STEP) {
+            lastProgress = progress;
+#ifdef DISPLAY_ENABLED
+#ifdef OTA_TIMING_DEBUG
+            unsigned long t1 = millis();
+#endif
+            displayStatusBar(progress);  // Update progress on status bar
+#ifdef OTA_TIMING_DEBUG
+            displayTimeMs += millis() - t1;
+#endif
+#endif
+          }
         }
       } else if (upload.status == UPLOAD_FILE_END) {
-        if (Update.end(true)) {  //true to set the size to the current progress
-          displaySuccessScreen();
-          delay(3000);
-          wipeDisplay();
-        } else {
+        // end() also verifies the MD5 if one was set
+        updateSucceeded = Update.end(true);  //true to set the size to the current progress
+        if (!updateSucceeded) {
           Update.printError(Serial);
         }
-        Serial.setDebugOutput(false);
+#ifdef OTA_TIMING_DEBUG
+        unsigned long totalMs = millis() - uploadStartMs;
+        Serial.printf(
+          "OTA timing: %u bytes in %lu ms (%.1f KB/s), %lu chunks\n", upload.totalSize, totalMs, totalMs > 0 ? upload.totalSize / 1.024 / totalMs : 0.0,
+          chunkCount
+        );
+        Serial.printf(
+          "OTA timing: Update.write %lu ms, display %lu ms, rest (network/parser) %lu ms\n", writeTimeMs, displayTimeMs, totalMs - writeTimeMs - displayTimeMs
+        );
+#endif
+      } else if (upload.status == UPLOAD_FILE_ABORTED) {
+        // Connection dropped mid-upload. The response handler is not called
+        // in this case, so clean up here to allow a new attempt.
+        Serial.println("Upload aborted");
+        Update.abort();
+        displayWelcomeScreen();
       }
       yield();
     }
@@ -258,8 +396,16 @@ void setup() {
   setupDisplay();
 #endif
   setupWiFi();
+#ifdef DISPLAY_ENABLED
+  // Draw once here instead of in every loop() pass: each redraw blocks
+  // handleClient() for the duration of an I2C frame transfer
+  displayWelcomeScreen();
+#endif
   // Set the ESP32 as an access point
   setupOTA();
+  // WebServer only stores request headers that are registered up front
+  const char *headerKeys[] = {MD5_HEADER};
+  server.collectHeaders(headerKeys, 1);
   server.begin();
 }
 
@@ -267,22 +413,10 @@ void loop() {
   // Handle client requests
   server.handleClient();
 
-#ifdef DISPLAY_ENABLED
-  displayWelcomeScreen();
-#endif
-
   if (doublePressDetected) {
     Serial.println("Double press detected!");
+    // Restarts on success, only returns if OTA0 was not found
     setBootPartitionToOTA0();
-#ifdef DISPLAY_ENABLED
-    display.setCursor(0, 0);
-    display.setTextSize(1);
-    display.setTextColor(WHITE, BLACK);
-    display.println("");
-    display.display();
-    delay(50);
-#endif
-    // Restart to boot from the new partition
     esp_restart();
   }
 }
