@@ -454,6 +454,7 @@ uint32_t USBCDC::baudRate() {
 }
 
 bool USBCDC::notifyState(bool dcd, bool dsr, bool brk) {
+#if CFG_TUD_CDC_NOTIFY
   if (itf >= CFG_TUD_CDC || !tud_cdc_n_connected(itf)) {
     return false;
   }
@@ -462,7 +463,11 @@ bool USBCDC::notifyState(bool dcd, bool dsr, bool brk) {
   state.dcd = dcd;
   state.dsr = dsr;
   state.brk = brk;
-  return tud_cdc_n_notify_uart_state(itf, state);
+  return tud_cdc_n_notify_uart_state(itf, &state);
+#else
+  log_e("CFG_TUD_CDC_NOTIFY is not enabled");
+  return false
+#endif
 }
 
 void USBCDC::setDebugOutput(bool en) {
