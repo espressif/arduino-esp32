@@ -341,16 +341,12 @@ static void check_udp_loopback(int family, bool bindSender) {
 #endif
 
   TEST_ASSERT_EQUAL(0, bind(udpLoopbackReceiverFd, reinterpret_cast<sockaddr *>(&address), addressLength));
-  TEST_ASSERT_EQUAL(
-    0, getsockname(udpLoopbackReceiverFd, reinterpret_cast<sockaddr *>(&address), &addressLength)
-  );
+  TEST_ASSERT_EQUAL(0, getsockname(udpLoopbackReceiverFd, reinterpret_cast<sockaddr *>(&address), &addressLength));
   uint16_t port = udp_loopback_socket_port(address);
   TEST_ASSERT_NOT_EQUAL(0, port);
 
   timeval timeout = {3, 0};
-  TEST_ASSERT_EQUAL(
-    0, setsockopt(udpLoopbackReceiverFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout))
-  );
+  TEST_ASSERT_EQUAL(0, setsockopt(udpLoopbackReceiverFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
 
   if (bindSender) {
     TEST_ASSERT_EQUAL(1, udpLoopbackSender.begin(destination, 0));
@@ -366,9 +362,7 @@ static void check_udp_loopback(int family, bool bindSender) {
     uint8_t received[sizeof(payload) + 1] = {};
     sockaddr_storage source = {};
     socklen_t sourceLength = sizeof(source);
-    int count = recvfrom(
-      udpLoopbackReceiverFd, received, sizeof(received), 0, reinterpret_cast<sockaddr *>(&source), &sourceLength
-    );
+    int count = recvfrom(udpLoopbackReceiverFd, received, sizeof(received), 0, reinterpret_cast<sockaddr *>(&source), &sourceLength);
     TEST_ASSERT_EQUAL(sizeof(payload), count);
     TEST_ASSERT_EQUAL_MEMORY(payload, received, sizeof(payload));
     TEST_ASSERT_EQUAL(family, source.ss_family);
