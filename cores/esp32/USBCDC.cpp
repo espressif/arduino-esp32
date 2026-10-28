@@ -453,6 +453,18 @@ uint32_t USBCDC::baudRate() {
   return bit_rate;
 }
 
+bool USBCDC::notifyState(bool dcd, bool dsr, bool brk) {
+  if (itf >= CFG_TUD_CDC || !tud_cdc_n_connected(itf)) {
+    return false;
+  }
+  cdc_notify_uart_state_t state;
+  state.value = 0;
+  state.dcd = dcd;
+  state.dsr = dsr;
+  state.brk = brk;
+  return tud_cdc_n_notify_uart_state(itf, state);
+}
+
 void USBCDC::setDebugOutput(bool en) {
   if (itf) {
     return;

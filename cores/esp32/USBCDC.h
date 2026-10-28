@@ -103,6 +103,7 @@ public:
     return write((uint8_t)n);
   }
   uint32_t baudRate();
+  bool notifyState(bool dcd, bool dsr, bool brk);
   void setDebugOutput(bool);
   operator bool() const;
 
