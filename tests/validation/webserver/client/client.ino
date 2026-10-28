@@ -862,8 +862,7 @@ void testHeaderInjection() {
     return;
   }
 
-  String nulCrlf =
-    http_raw("GET /echo_header?x=%00%0D%0AX-Injected:%20yes HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  String nulCrlf = http_raw("GET /echo_header?x=%00%0D%0AX-Injected:%20yes HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
   if (get_status_code(nulCrlf) != 200 || !containsRaw(nulCrlf, "ECHO_OK")) {
     report("header_injection", false, "nul+crlf value rejected the response");
     return;
@@ -889,8 +888,7 @@ void testHeaderInjection() {
     return;
   }
 
-  String nameNulCrlf =
-    http_raw("GET /echo_header?n=%00%0D%0AX-Injected:%20yes HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  String nameNulCrlf = http_raw("GET /echo_header?n=%00%0D%0AX-Injected:%20yes HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
   if (get_status_code(nameNulCrlf) != 200 || !containsRaw(nameNulCrlf, "ECHO_OK")) {
     report("header_injection", false, "nul+crlf name rejected the response");
     return;
