@@ -30,6 +30,7 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 | `test_udp_ipv6_with_local_bind` | Verify an explicitly bound IPv6 sender still sends successfully |
 | `test_udp_socket_family_after_stop` | Send IPv4 → IPv6 → IPv4 on one sender with `stop()` between families |
 | `test_dns_server_captive` | Start DNSServer on softAP, verify `start()` succeeds |
+| `test_ap_invalid_subnet_preserves_dhcp` | Reject an unsupported SoftAP subnet without changing its IP or stopping DHCP |
 | `test_mdns_begin` | Start mDNS with hostname |
 | `test_mdns_service` | Register HTTP and custom UDP services via mDNS |
 
