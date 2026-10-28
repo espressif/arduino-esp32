@@ -170,6 +170,44 @@ This function is used to attach interrupt to timer.
 * ``timer`` timer struct.
 * ``userFunc`` function to be called when interrupt is triggered.
 
+The C++ overload accepts ``std::function<void(void)>``, so capturing lambdas and bound member functions can be used as the callback. Include ``FunctionalInterrupt.h`` to use this overload. It is available only when the SoC has a general-purpose timer (``SOC_GPTIMER_SUPPORTED``).
+
+.. code-block:: arduino
+
+    #include <FunctionalInterrupt.h>
+
+    void timerAttachInterrupt(hw_timer_t * timer, std::function<void(void)> userFunc);
+
+A function pointer matches the C overload. A capturing lambda matches the C++ overload. A non-capturing lambda can convert to both; capture a variable or wrap the lambda in ``std::function<void(void)>`` to select the C++ overload.
+
+Timer callbacks run in ISR context. Keep the handler short. Use ``volatile`` for data shared with ``loop()``.
+
+Do not declare a ``std::function`` object with ``IRAM_ATTR``. That places a writable C++ object in instruction RAM. On RISC-V targets (ESP32-C6 and similar) the constructor then store-faults during ``do_global_ctors`` before ``setup()`` runs. For an IRAM-safe callback, use a C function pointer marked ``ARDUINO_ISR_ATTR``. ``std::function::operator()`` and most lambda bodies stay in flash.
+
+Re-attaching a callback replaces the previous one. ``timerDetachInterrupt`` and ``timerEnd`` release any heap-allocated ``std::function`` state.
+
+.. code-block:: arduino
+
+    #include <Arduino.h>
+    #include <FunctionalInterrupt.h>
+
+    hw_timer_t *timer = NULL;
+    volatile uint32_t counter = 0;
+
+    void setup() {
+      Serial.begin(115200);
+      timer = timerBegin(1000000);
+      timerAttachInterrupt(timer, [&]() {
+        counter = counter + 1;
+      });
+      timerAlarm(timer, 1000000, true, 0);
+    }
+
+    void loop() {
+      Serial.printf("Counter: %" PRIu32 "\n", counter);
+      delay(1000);
+    }
+
 timerAttachInterruptArg
 ***********************
 
@@ -211,7 +249,7 @@ This function is used to configure alarm value and autoreload of the timer. Alar
 Example Applications
 ********************
 
-There are 2 examples uses of Timer:
+There are 3 example uses of Timer:
 
 Repeat timer example:
 
@@ -221,4 +259,9 @@ Repeat timer example:
 Watchdog timer example:
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Timer/WatchdogTimer/WatchdogTimer.ino
+    :language: arduino
+
+Functional interrupt (``std::function`` / lambda) example:
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Timer/FunctionalInterrupt/FunctionalInterrupt.ino
     :language: arduino

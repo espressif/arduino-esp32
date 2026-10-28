@@ -1,6 +1,6 @@
 # Networking Validation Test
 
-Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, send/receive, timeout, large payload), TCP server echo, UDP (send/receive, multi-packet, remote info, IPv4/IPv6 loopback sends), DNS server (captive portal), and mDNS (hostname and service registration).
+Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, send/receive, timeout, large payload), TCP server echo, HTTPClient stream uploads (short reads and writes), UDP (send/receive, multi-packet, remote info, IPv4/IPv6 loopback sends), DNS server (captive portal), and mDNS (hostname and service registration).
 
 ## Test Cases
 
@@ -13,6 +13,12 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 | `test_tcp_timeout` | Connect to unreachable IP with 2 s timeout, verify failure |
 | `test_tcp_large_payload` | Request 1024-byte response, verify total read > 1024 |
 | `test_tcp_server_echo` | Start local server, connect, send/receive echo |
+| `test_http_stream_full_read` | Upload from a stream that supplies each requested chunk |
+| `test_http_stream_short_read` | Retry an upload when each stream read supplies only part of the requested data |
+| `test_http_stream_short_read_short_write` | Verify short stream reads and short transport writes are accounted for independently |
+| `test_http_stream_full_read_short_write` | Retry short transport writes after a full stream read |
+| `test_http_stream_content_length_limit` | Upload only the requested portion of a longer stream |
+| `test_http_stream_failed_retry` | Report payload failure when the transport cannot finish a partial write |
 | `test_udp_send_receive` | UDP loopback: send/receive on localhost |
 | `test_udp_multi_packet` | Send 5 UDP packets, verify at least 4 received |
 | `test_udp_remote_info` | Verify remote IP and port after receiving UDP packet |
