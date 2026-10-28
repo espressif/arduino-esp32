@@ -35,7 +35,8 @@ public:
   NetworkInterface();
   virtual ~NetworkInterface();
 
-  // For server interfaces (WiFi AP), dns1 is the DHCP lease range start and dns2 is the DNS. dns3 is not used
+  // IPv6 DNS addresses are supported when IPv6 is enabled. For server interfaces (Wi-Fi AP), dns1 is the DHCP lease range start and dns2 is the IPv4 DNS.
+  // dns3 is not used for server interfaces.
   bool config(
     IPAddress local_ip = (uint32_t)0x00000000, IPAddress gateway = (uint32_t)0x00000000, IPAddress subnet = (uint32_t)0x00000000,
     IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000, IPAddress dns3 = (uint32_t)0x00000000
