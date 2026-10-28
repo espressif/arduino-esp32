@@ -466,7 +466,7 @@ bool USBCDC::notifyState(bool dcd, bool dsr, bool brk) {
   return tud_cdc_n_notify_uart_state(itf, &state);
 #else
   log_e("CFG_TUD_CDC_NOTIFY is not enabled");
-  return false
+  return false;
 #endif
 }
 
