@@ -197,9 +197,8 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *ps
     return 0;
   }
 
-  int ret = start_ssl_client(
-    sslclient.get(), address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos, _cipher_list
-  );
+  int ret =
+    start_ssl_client(sslclient.get(), address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos, _cipher_list);
   sslclient->last_error = ret;
   if (ret < 0) {
     log_e("start_ssl_client: connect failed %d", ret);

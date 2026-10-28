@@ -20,13 +20,31 @@
 #include <NetworkServer.h>
 #include <DNSServer.h>
 #include <ESPmDNS.h>
+#include <lwip/inet.h>
+#include <lwip/sockets.h>
+#include <sys/time.h>
+#include <unistd.h>
 #include <string.h>
 #include <unity.h>
 
 #define WIFI_TIMEOUT_MS 15000
 
+#if defined(CONFIG_LWIP_NETIF_LOOPBACK) && CONFIG_LWIP_NETIF_LOOPBACK
+#define NETWORKING_HAS_LWIP_LOOPBACK 1
+#else
+#define NETWORKING_HAS_LWIP_LOOPBACK 0
+#endif
+
+#if defined(LWIP_IPV6) && LWIP_IPV6
+#define NETWORKING_HAS_LWIP_IPV6 1
+#else
+#define NETWORKING_HAS_LWIP_IPV6 0
+#endif
+
 static String wifi_ssid;
 static String wifi_pass;
+static NetworkUDP udpLoopbackSender;
+static int udpLoopbackReceiverFd = -1;
 
 class ShortReadStream : public Stream {
   const char *_data;
@@ -134,7 +152,13 @@ public:
 };
 
 void setUp(void) {}
-void tearDown(void) {}
+void tearDown(void) {
+  udpLoopbackSender.stop();
+  if (udpLoopbackReceiverFd >= 0) {
+    close(udpLoopbackReceiverFd);
+    udpLoopbackReceiverFd = -1;
+  }
+}
 
 static bool connectWiFi() {
   if (WiFi.STA.status() == WL_CONNECTED) {
@@ -354,6 +378,30 @@ void test_http_stream_failed_retry(void) {
 
 // ==================== UDP ====================
 
+void test_udp_write_before_begin(void) {
+  NetworkUDP udp;
+  const uint8_t data[] = {0x01, 0x02, 0x03};
+
+  TEST_ASSERT_EQUAL(0, udp.write(data[0]));
+  TEST_ASSERT_EQUAL(0, udp.write(data, sizeof(data)));
+  TEST_ASSERT_EQUAL(0, udp.write(data, 0));
+}
+
+void test_udp_write_after_stop(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  NetworkUDP udp;
+  const uint8_t data[] = {0x01, 0x02, 0x03};
+
+  TEST_ASSERT_TRUE(udp.beginPacket(IPAddress(127, 0, 0, 1), 9999));
+  TEST_ASSERT_EQUAL(sizeof(data), udp.write(data, sizeof(data)));
+  TEST_ASSERT_EQUAL(0, udp.write(data, 0));
+  udp.stop();
+
+  TEST_ASSERT_EQUAL(0, udp.write(data[0]));
+  TEST_ASSERT_EQUAL(0, udp.write(data, sizeof(data)));
+}
+
 void test_udp_send_receive(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
 
@@ -441,6 +489,122 @@ void test_udp_remote_info(void) {
   receiver.stop();
   sender.stop();
 }
+
+// Verify lazy socket creation and socket-family changes after stop().
+#if NETWORKING_HAS_LWIP_LOOPBACK
+static uint16_t udp_loopback_socket_port(const sockaddr_storage &address) {
+#if NETWORKING_HAS_LWIP_IPV6
+  if (address.ss_family == AF_INET6) {
+    return ntohs(reinterpret_cast<const sockaddr_in6 *>(&address)->sin6_port);
+  }
+#endif
+  return ntohs(reinterpret_cast<const sockaddr_in *>(&address)->sin_port);
+}
+
+static void check_udp_loopback(int family, bool bindSender) {
+  udpLoopbackReceiverFd = socket(family, SOCK_DGRAM, 0);
+  TEST_ASSERT_GREATER_OR_EQUAL(0, udpLoopbackReceiverFd);
+
+  sockaddr_storage address = {};
+  socklen_t addressLength = sizeof(sockaddr_in);
+  IPAddress destination;
+  if (family == AF_INET) {
+    auto *addr = reinterpret_cast<sockaddr_in *>(&address);
+    addr->sin_family = AF_INET;
+    addr->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addressLength = sizeof(*addr);
+    destination = IPAddress(127, 0, 0, 1);
+  }
+#if NETWORKING_HAS_LWIP_IPV6
+  else {
+    auto *addr = reinterpret_cast<sockaddr_in6 *>(&address);
+    addr->sin6_family = AF_INET6;
+    TEST_ASSERT_EQUAL(1, inet_pton(AF_INET6, "::1", &addr->sin6_addr));
+    addressLength = sizeof(*addr);
+    destination = IPAddress(IPv6, reinterpret_cast<const uint8_t *>(&addr->sin6_addr));
+  }
+#endif
+
+  TEST_ASSERT_EQUAL(0, bind(udpLoopbackReceiverFd, reinterpret_cast<sockaddr *>(&address), addressLength));
+  TEST_ASSERT_EQUAL(0, getsockname(udpLoopbackReceiverFd, reinterpret_cast<sockaddr *>(&address), &addressLength));
+  uint16_t port = udp_loopback_socket_port(address);
+  TEST_ASSERT_NOT_EQUAL(0, port);
+
+  timeval timeout = {3, 0};
+  TEST_ASSERT_EQUAL(0, setsockopt(udpLoopbackReceiverFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+
+  if (bindSender) {
+    TEST_ASSERT_EQUAL(1, udpLoopbackSender.begin(destination, 0));
+  }
+
+  uint16_t firstSourcePort = 0;
+  for (uint8_t i = 0; i < 2; i++) {
+    const uint8_t payload[] = {'U', 'D', 'P', 0, i};
+    TEST_ASSERT_EQUAL(1, udpLoopbackSender.beginPacket(destination, port));
+    TEST_ASSERT_EQUAL(sizeof(payload), udpLoopbackSender.write(payload, sizeof(payload)));
+    TEST_ASSERT_EQUAL(1, udpLoopbackSender.endPacket());
+
+    uint8_t received[sizeof(payload) + 1] = {};
+    sockaddr_storage source = {};
+    socklen_t sourceLength = sizeof(source);
+    int count = recvfrom(udpLoopbackReceiverFd, received, sizeof(received), 0, reinterpret_cast<sockaddr *>(&source), &sourceLength);
+    TEST_ASSERT_EQUAL(sizeof(payload), count);
+    TEST_ASSERT_EQUAL_MEMORY(payload, received, sizeof(payload));
+    TEST_ASSERT_EQUAL(family, source.ss_family);
+
+    uint16_t sourcePort = udp_loopback_socket_port(source);
+    TEST_ASSERT_NOT_EQUAL(0, sourcePort);
+    if (i == 0) {
+      firstSourcePort = sourcePort;
+    } else {
+      TEST_ASSERT_EQUAL(firstSourcePort, sourcePort);
+    }
+  }
+
+  close(udpLoopbackReceiverFd);
+  udpLoopbackReceiverFd = -1;
+}
+
+void test_udp_ipv4_without_local_bind(void) {
+  check_udp_loopback(AF_INET, false);
+}
+
+void test_udp_ipv6_without_local_bind(void) {
+#if NETWORKING_HAS_LWIP_IPV6
+  check_udp_loopback(AF_INET6, false);
+#else
+  TEST_IGNORE_MESSAGE("IPv6 is disabled");
+#endif
+}
+
+void test_udp_ipv4_with_local_bind(void) {
+  check_udp_loopback(AF_INET, true);
+}
+
+void test_udp_ipv6_with_local_bind(void) {
+#if NETWORKING_HAS_LWIP_IPV6
+  check_udp_loopback(AF_INET6, true);
+#else
+  TEST_IGNORE_MESSAGE("IPv6 is disabled");
+#endif
+}
+
+void test_udp_socket_family_after_stop(void) {
+#if NETWORKING_HAS_LWIP_IPV6
+  check_udp_loopback(AF_INET, false);
+  udpLoopbackSender.stop();
+  check_udp_loopback(AF_INET6, false);
+  udpLoopbackSender.stop();
+  check_udp_loopback(AF_INET, false);
+#else
+  TEST_IGNORE_MESSAGE("IPv6 is disabled");
+#endif
+}
+#else
+void test_udp_loopback_requires_configuration(void) {
+  TEST_IGNORE_MESSAGE("Loopback support is disabled");
+}
+#endif
 
 // ==================== DNS Server ====================
 
@@ -540,6 +704,8 @@ void setup() {
   RUN_TEST(test_tcp_timeout);
   RUN_TEST(test_tcp_large_payload);
   RUN_TEST(test_tcp_server_echo);
+  RUN_TEST(test_udp_write_before_begin);
+  RUN_TEST(test_udp_write_after_stop);
   RUN_TEST(test_http_stream_full_read);
   RUN_TEST(test_http_stream_short_read);
   RUN_TEST(test_http_stream_short_read_short_write);
@@ -549,6 +715,15 @@ void setup() {
   RUN_TEST(test_udp_send_receive);
   RUN_TEST(test_udp_multi_packet);
   RUN_TEST(test_udp_remote_info);
+#if NETWORKING_HAS_LWIP_LOOPBACK
+  RUN_TEST(test_udp_ipv4_without_local_bind);
+  RUN_TEST(test_udp_ipv6_without_local_bind);
+  RUN_TEST(test_udp_ipv4_with_local_bind);
+  RUN_TEST(test_udp_ipv6_with_local_bind);
+  RUN_TEST(test_udp_socket_family_after_stop);
+#else
+  RUN_TEST(test_udp_loopback_requires_configuration);
+#endif
   RUN_TEST(test_dns_server_captive);
   RUN_TEST(test_mdns_begin);
   RUN_TEST(test_mdns_service);
