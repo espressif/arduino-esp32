@@ -472,15 +472,26 @@ def get_tool(tool, force_download, force_extract, skip_verify=False):
     previous_label = getattr(_tls, "tool", None)
     _tls.tool = archive_name
     try:
-        return _get_tool(tool, force_download, force_extract, skip_verify, sys_name, archive_name, checksum, local_path, url, start_time)
+        return _get_tool(
+            tool,
+            force_download,
+            force_extract,
+            skip_verify,
+            sys_name,
+            archive_name,
+            checksum,
+            local_path,
+            url,
+            start_time,
+        )
     finally:
         _tls.tool = previous_label
 
 
-def _get_tool(tool, force_download, force_extract, skip_verify, sys_name, archive_name, checksum, local_path, url, start_time):
-    if skip_verify and should_skip_install_verification(
-        ".", checksum, force_download, force_extract
-    ):
+def _get_tool(
+    tool, force_download, force_extract, skip_verify, sys_name, archive_name, checksum, local_path, url, start_time
+):
+    if skip_verify and should_skip_install_verification(".", checksum, force_download, force_extract):
         log("Already installed. Skipping verification")
         sys.stdout.flush()
         return True
