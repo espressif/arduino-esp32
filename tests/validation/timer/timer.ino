@@ -1,5 +1,6 @@
 /* HW Timer test */
 #include <Arduino.h>
+#include <FunctionalInterrupt.h>
 #include <atomic>
 #include <unity.h>
 
@@ -211,6 +212,71 @@ void timer_multiple_test(void) {
   timer = timerBegin(TIMER_FREQUENCY);
 }
 
+// ==================== Functional (std::function) callbacks ====================
+
+static std::atomic<int> functional_count{0};
+static std::atomic<int> functional_first_count{0};
+static std::atomic<int> functional_second_count{0};
+
+void timer_functional_interrupt_test(void) {
+  functional_count = 0;
+  timerAttachInterrupt(timer, [&]() {
+    functional_count.fetch_add(1, std::memory_order_relaxed);
+  });
+  timerAlarm(timer, TIMER_FREQUENCY / 4, true, 0);
+  timerStart(timer);
+
+  delay(1100);
+  timerStop(timer);
+
+  TEST_ASSERT_GREATER_OR_EQUAL(3, functional_count.load(std::memory_order_relaxed));
+  TEST_ASSERT_LESS_OR_EQUAL(6, functional_count.load(std::memory_order_relaxed));
+}
+
+void timer_functional_reattach_test(void) {
+  functional_first_count = 0;
+  functional_second_count = 0;
+
+  timerAttachInterrupt(timer, [&]() {
+    functional_first_count.fetch_add(1, std::memory_order_relaxed);
+  });
+  timerAlarm(timer, TIMER_FREQUENCY / 4, true, 0);
+  timerStart(timer);
+
+  delay(600);
+  TEST_ASSERT_GREATER_THAN(0, functional_first_count.load(std::memory_order_relaxed));
+
+  timerAttachInterrupt(timer, [&]() {
+    functional_second_count.fetch_add(1, std::memory_order_relaxed);
+  });
+
+  int first_frozen = functional_first_count.load(std::memory_order_relaxed);
+  delay(600);
+  timerStop(timer);
+
+  TEST_ASSERT_EQUAL(first_frozen, functional_first_count.load(std::memory_order_relaxed));
+  TEST_ASSERT_GREATER_THAN(0, functional_second_count.load(std::memory_order_relaxed));
+}
+
+void timer_functional_detach_test(void) {
+  functional_count = 0;
+  timerAttachInterrupt(timer, [&]() {
+    functional_count.fetch_add(1, std::memory_order_relaxed);
+  });
+  timerAlarm(timer, TIMER_FREQUENCY / 4, true, 0);
+  timerStart(timer);
+
+  delay(600);
+  TEST_ASSERT_GREATER_THAN(0, functional_count.load(std::memory_order_relaxed));
+
+  timerDetachInterrupt(timer);
+  int frozen = functional_count.load(std::memory_order_relaxed);
+  delay(600);
+  timerStop(timer);
+
+  TEST_ASSERT_EQUAL(frozen, functional_count.load(std::memory_order_relaxed));
+}
+
 void setup() {
   Serial.begin(115200);
   while (!Serial) {
@@ -220,6 +286,9 @@ void setup() {
   UNITY_BEGIN();
   RUN_TEST(timer_read_test);
   RUN_TEST(timer_interrupt_test);
+  RUN_TEST(timer_functional_interrupt_test);
+  RUN_TEST(timer_functional_reattach_test);
+  RUN_TEST(timer_functional_detach_test);
   RUN_TEST(timer_divider_test);
   RUN_TEST(timer_oneshot_test);
   RUN_TEST(timer_auto_reload_test);

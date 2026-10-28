@@ -41,6 +41,7 @@ protected:
   const char *_pskIdent;  // identity for PSK cipher suites
   const char *_psKey;     // key in hex for PSK cipher suites
   const char **_alpn_protos;
+  const int *_cipher_list;
   bool _use_ca_bundle;
 
 public:
@@ -79,6 +80,19 @@ public:
   bool verify(const char *fingerprint, const char *domain_name);
   void setHandshakeTimeout(unsigned long handshake_timeout);
   void setAlpnProtocols(const char **alpn_protos);
+  /**
+   * Restrict the TLS ciphersuites offered during the handshake.
+   *
+   * @param ciphersuites A 0-terminated array of mbedTLS `MBEDTLS_TLS_*` ciphersuite IDs, or `nullptr`
+   *                      to restore mbedTLS's default list. The array is not copied: it must remain
+   *                      valid for as long as this client may (re)connect, e.g. a `static` or global
+   *                      array, the same requirement as `setAlpnProtocols()` and `setCACert()`.
+   *
+   * Note: ciphersuite IDs that are not enabled in the mbedTLS build are silently ignored and will
+   * only surface later as a handshake failure. A restrictive list combined with `setPreSharedKey()`
+   * can also filter out every PSK-capable ciphersuite.
+   */
+  void setCiphers(const int *ciphersuites);
 
   void useBuiltinCACertBundle();
 
