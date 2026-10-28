@@ -292,7 +292,9 @@ size_t NetworkUDP::write(uint8_t data) {
 size_t NetworkUDP::write(const uint8_t *buffer, size_t size) {
   size_t i;
   for (i = 0; i < size; i++) {
-    write(buffer[i]);
+    if (!write(buffer[i])) {
+      break;
+    }
   }
   return i;
 }

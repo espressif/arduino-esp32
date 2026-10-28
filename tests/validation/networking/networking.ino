@@ -354,6 +354,30 @@ void test_http_stream_failed_retry(void) {
 
 // ==================== UDP ====================
 
+void test_udp_write_before_begin(void) {
+  NetworkUDP udp;
+  const uint8_t data[] = {0x01, 0x02, 0x03};
+
+  TEST_ASSERT_EQUAL(0, udp.write(data[0]));
+  TEST_ASSERT_EQUAL(0, udp.write(data, sizeof(data)));
+  TEST_ASSERT_EQUAL(0, udp.write(data, 0));
+}
+
+void test_udp_write_after_stop(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  NetworkUDP udp;
+  const uint8_t data[] = {0x01, 0x02, 0x03};
+
+  TEST_ASSERT_TRUE(udp.beginPacket(IPAddress(127, 0, 0, 1), 9999));
+  TEST_ASSERT_EQUAL(sizeof(data), udp.write(data, sizeof(data)));
+  TEST_ASSERT_EQUAL(0, udp.write(data, 0));
+  udp.stop();
+
+  TEST_ASSERT_EQUAL(0, udp.write(data[0]));
+  TEST_ASSERT_EQUAL(0, udp.write(data, sizeof(data)));
+}
+
 void test_udp_send_receive(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
 
@@ -540,6 +564,8 @@ void setup() {
   RUN_TEST(test_tcp_timeout);
   RUN_TEST(test_tcp_large_payload);
   RUN_TEST(test_tcp_server_echo);
+  RUN_TEST(test_udp_write_before_begin);
+  RUN_TEST(test_udp_write_after_stop);
   RUN_TEST(test_http_stream_full_read);
   RUN_TEST(test_http_stream_short_read);
   RUN_TEST(test_http_stream_short_read_short_write);

@@ -13,6 +13,8 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 | `test_tcp_timeout` | Connect to unreachable IP with 2 s timeout, verify failure |
 | `test_tcp_large_payload` | Request 1024-byte response, verify total read > 1024 |
 | `test_tcp_server_echo` | Start local server, connect, send/receive echo |
+| `test_udp_write_before_begin` | Verify single-byte, buffer, and zero-length writes return zero before initialization |
+| `test_udp_write_after_stop` | Verify buffer writes succeed while initialized and single-byte and buffer writes return zero after stopping |
 | `test_http_stream_full_read` | Upload from a stream that supplies each requested chunk |
 | `test_http_stream_short_read` | Retry an upload when each stream read supplies only part of the requested data |
 | `test_http_stream_short_read_short_write` | Verify short stream reads and short transport writes are accounted for independently |
