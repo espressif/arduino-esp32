@@ -409,7 +409,6 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
     // A rejected configuration must leave the current SoftAP configuration operational.
     dhcps_lease_t lease;
     lease.enable = true;
-    uint8_t CIDR = calculateSubnetCIDR(subnet);
     log_v(
       "SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dns1.toString().c_str(),
       subnet.toString().c_str()
@@ -417,8 +416,10 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
     // netmask must have room for at least 12 IP addresses (AP + GW + 10 DHCP Leasing addresses)
     // netmask also must be limited to the last 8 bits of IPv4, otherwise this function won't work
     // IDF NETIF checks netmask for the 3rd byte: https://github.com/espressif/esp-idf/blob/master/components/esp_netif/lwip/esp_netif_lwip.c#L1857-L1862
-    if (CIDR > 28 || CIDR < 24) {
-      log_e("Bad netmask. It must be from /24 to /28 (255.255.255. 0<->240)");
+    const bool validPrefix = subnet[0] == 255 && subnet[1] == 255 && subnet[2] == 255;
+    const bool validLastByte = subnet[3] == 0 || subnet[3] == 128 || subnet[3] == 192 || subnet[3] == 224 || subnet[3] == 240;
+    if (!validPrefix || !validLastByte) {
+      log_e("Bad netmask. SoftAP requires a contiguous /24 to /28 netmask.");
       return false;
     }
 #define _byte_swap32(num) (((num >> 24) & 0xff) | ((num << 8) & 0xff0000) | ((num >> 8) & 0xff00) | ((num << 24) & 0xff000000))

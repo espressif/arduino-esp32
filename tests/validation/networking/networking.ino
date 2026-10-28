@@ -630,11 +630,8 @@ void test_dns_server_captive(void) {
 #endif
 }
 
-void test_ap_invalid_subnet_preserves_dhcp(void) {
-#if !SOC_WIFI_SUPPORTED
-  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
-#else
-  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+#if SOC_WIFI_SUPPORTED
+static void verifyRejectedApConfig(IPAddress subnet, IPAddress leaseStart, const char *reason) {
   if (!WiFi.AP.create("ESP32_Config_Test", "12345678")) {
     WiFi.AP.end();
     TEST_FAIL_MESSAGE("Failed to start SoftAP");
@@ -642,23 +639,47 @@ void test_ap_invalid_subnet_preserves_dhcp(void) {
   }
 
   IPAddress oldIP = WiFi.AP.localIP();
+  IPAddress oldSubnet = WiFi.AP.subnetMask();
+  IPAddress oldGateway = WiFi.AP.gatewayIP();
   esp_netif_dhcp_status_t oldDhcpStatus;
-  TEST_ASSERT_EQUAL(ESP_OK, esp_netif_dhcps_get_status(WiFi.AP.netif(), &oldDhcpStatus));
-  TEST_ASSERT_EQUAL(ESP_NETIF_DHCP_STARTED, oldDhcpStatus);
+  esp_err_t oldDhcpStatusResult = esp_netif_dhcps_get_status(WiFi.AP.netif(), &oldDhcpStatus);
 
-  bool configResult = WiFi.AP.config(
-    IPAddress(10, 20, 30, 40), IPAddress(10, 20, 30, 40), IPAddress(255, 255, 254, 0)
-  );
+  bool configResult = WiFi.AP.config(IPAddress(10, 20, 30, 40), IPAddress(10, 20, 30, 40), subnet, leaseStart);
   IPAddress currentIP = WiFi.AP.localIP();
+  IPAddress currentSubnet = WiFi.AP.subnetMask();
+  IPAddress currentGateway = WiFi.AP.gatewayIP();
   esp_netif_dhcp_status_t currentDhcpStatus;
   esp_err_t dhcpStatusResult = esp_netif_dhcps_get_status(WiFi.AP.netif(), &currentDhcpStatus);
 
   WiFi.AP.end();
+  delay(100);
 
-  TEST_ASSERT_FALSE_MESSAGE(configResult, "SoftAP accepted an unsupported /23 netmask");
+  TEST_ASSERT_EQUAL(ESP_OK, oldDhcpStatusResult);
+  TEST_ASSERT_EQUAL(ESP_NETIF_DHCP_STARTED, oldDhcpStatus);
+  TEST_ASSERT_FALSE_MESSAGE(configResult, reason);
   TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldIP, (uint32_t)currentIP, "Rejected config changed the SoftAP IP");
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldSubnet, (uint32_t)currentSubnet, "Rejected config changed the SoftAP subnet");
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldGateway, (uint32_t)currentGateway, "Rejected config changed the SoftAP gateway");
   TEST_ASSERT_EQUAL(ESP_OK, dhcpStatusResult);
   TEST_ASSERT_EQUAL_MESSAGE(ESP_NETIF_DHCP_STARTED, currentDhcpStatus, "Rejected config stopped the DHCP server");
+}
+#endif
+
+void test_ap_invalid_subnet_preserves_dhcp(void) {
+#if !SOC_WIFI_SUPPORTED
+  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
+#else
+  verifyRejectedApConfig(IPAddress(255, 255, 254, 0), IPAddress(), "SoftAP accepted an unsupported /23 netmask");
+#endif
+}
+
+void test_ap_malformed_subnet_preserves_dhcp(void) {
+#if !SOC_WIFI_SUPPORTED
+  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
+#else
+  // The old CIDR counter treated 255.255.255.1 as /24. Use an even lease start
+  // so other lease-range checks do not reject the configuration first.
+  verifyRejectedApConfig(IPAddress(255, 255, 255, 1), IPAddress(10, 20, 30, 42), "SoftAP accepted a non-contiguous netmask");
 #endif
 }
 
@@ -759,6 +780,7 @@ void setup() {
 #endif
   RUN_TEST(test_dns_server_captive);
   RUN_TEST(test_ap_invalid_subnet_preserves_dhcp);
+  RUN_TEST(test_ap_malformed_subnet_preserves_dhcp);
   RUN_TEST(test_mdns_begin);
   RUN_TEST(test_mdns_service);
 
