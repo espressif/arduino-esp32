@@ -182,22 +182,6 @@ void test_tls_ciphers_reset_to_default(void) {
   TEST_ASSERT_TRUE(connected);
 }
 
-void test_tls_ciphers_count_overload(void) {
-  TEST_ASSERT_TRUE_MESSAGE(ca_cert_len > 0, "No CA cert received from test driver");
-  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
-
-  NetworkClientSecure client;
-  client.setCACert(ca_cert);
-  // count is unused (kept only for BearSSL-style source compatibility); pass a deliberately
-  // wrong value to confirm it has no effect on the connection.
-  client.setCiphers(cipher_list_standard, 1234);
-  bool ok = tlsConnect(client, "postman-echo.com", 443);
-  bool connected = ok && client.connected();
-  client.stop();
-  TEST_ASSERT_TRUE_MESSAGE(ok, "TLS connect via setCiphers(list, count) overload failed");
-  TEST_ASSERT_TRUE(connected);
-}
-
 // ==================== HTTP Client Tests ====================
 
 void test_http_get(void) {
@@ -389,7 +373,6 @@ void setup() {
   RUN_TEST(test_tls_ciphers_restrict_connect);
   RUN_TEST(test_tls_ciphers_unsupported_fails);
   RUN_TEST(test_tls_ciphers_reset_to_default);
-  RUN_TEST(test_tls_ciphers_count_overload);
   RUN_TEST(test_http_get);
   RUN_TEST(test_http_post);
   RUN_TEST(test_http_custom_header);

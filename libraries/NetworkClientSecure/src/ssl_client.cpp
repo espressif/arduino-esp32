@@ -196,7 +196,7 @@ int start_ssl_client(
       return handle_error(ret);
     }
   }
-  
+
   if (ciphersuites != NULL) {
     mbedtls_ssl_conf_ciphersuites(&ssl_client->ssl_conf, ciphersuites);
   }
