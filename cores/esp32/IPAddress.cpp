@@ -98,7 +98,7 @@ IPAddress::IPAddress(IPType ip_type, const uint8_t *address, uint8_t z) {
   }
 }
 
-IPAddress::IPAddress(const char *address) {
+IPAddress::IPAddress(const char *address) : IPAddress(IPv4) {
   fromString(address);
 }
 
@@ -113,9 +113,18 @@ String IPAddress::toString(bool includeZone) const {
 }
 
 bool IPAddress::fromString(const char *address) {
-  if (!fromString4(address)) {
-    return fromString6(address);
+  if (address == nullptr) {
+    return false;
   }
+
+  IPAddress parsed(IPv4);
+  if (!parsed.fromString4(address)) {
+    parsed = IPAddress(IPv6);
+    if (!parsed.fromString6(address)) {
+      return false;
+    }
+  }
+  *this = parsed;
   return true;
 }
 
