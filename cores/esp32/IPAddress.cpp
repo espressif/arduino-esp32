@@ -117,14 +117,10 @@ bool IPAddress::fromString(const char *address) {
     return false;
   }
 
-  IPAddress parsed(IPv4);
-  if (!parsed.fromString4(address)) {
-    parsed = IPAddress(IPv6);
-    if (!parsed.fromString6(address)) {
-      return false;
-    }
+  _zone = IP6_NO_ZONE;
+  if (!fromString4(address)) {
+    return fromString6(address);
   }
-  *this = parsed;
   return true;
 }
 

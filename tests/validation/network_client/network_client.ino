@@ -165,22 +165,30 @@ void test_ip_address_invalid_string_constructor_is_initialized(void) {
   IPAddress invalid_ipv6("2001:db8::zzzz");
 
   TEST_ASSERT_EQUAL(IPv4, invalid_ipv4.type());
-  TEST_ASSERT_TRUE(invalid_ipv4 == IPAddress(0, 0, 0, 0));
+  TEST_ASSERT_EQUAL_UINT8(0, invalid_ipv4.zone());
   TEST_ASSERT_EQUAL(IPv4, invalid_ipv6.type());
-  TEST_ASSERT_TRUE(invalid_ipv6 == IPAddress(0, 0, 0, 0));
+  TEST_ASSERT_EQUAL_UINT8(0, invalid_ipv6.zone());
 }
 
-void test_ip_address_failed_parse_preserves_address(void) {
-  IPAddress address("fe80::1%2");
-  const IPAddress expected(address);
+void test_ip_address_null_string_constructor_is_initialized(void) {
+  IPAddress address(static_cast<const char *>(nullptr));
 
+  TEST_ASSERT_EQUAL(IPv4, address.type());
+  TEST_ASSERT_TRUE(address == IPAddress(0, 0, 0, 0));
+}
+
+void test_ip_address_rejects_invalid_input(void) {
+  IPAddress address("fe80::1%2");
+
+  TEST_ASSERT_FALSE(address.fromString("192.0.2.999"));
   TEST_ASSERT_FALSE(address.fromString("2001:db8::zzzz"));
+  TEST_ASSERT_FALSE(address.fromString(static_cast<const char *>(nullptr)));
+
+  TEST_ASSERT_TRUE(address.fromString("fe80::2"));
+  const IPAddress expected(0xfe, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2);
   TEST_ASSERT_EQUAL(IPv6, address.type());
   TEST_ASSERT_TRUE(address == expected);
-  TEST_ASSERT_EQUAL_UINT8(3, address.zone());
-  TEST_ASSERT_FALSE(address.fromString(static_cast<const char *>(nullptr)));
-  TEST_ASSERT_TRUE(address == expected);
-  TEST_ASSERT_EQUAL_UINT8(3, address.zone());
+  TEST_ASSERT_EQUAL_UINT8(0, address.zone());
 }
 
 void test_network_client_default_disconnected(void) {
@@ -446,7 +454,8 @@ void setup() {
   RUN_TEST(test_ip_address_scoped_ipv6_string);
   RUN_TEST(test_ip_address_reparse_clears_ipv6_zone);
   RUN_TEST(test_ip_address_invalid_string_constructor_is_initialized);
-  RUN_TEST(test_ip_address_failed_parse_preserves_address);
+  RUN_TEST(test_ip_address_null_string_constructor_is_initialized);
+  RUN_TEST(test_ip_address_rejects_invalid_input);
   RUN_TEST(test_network_client_default_disconnected);
   RUN_TEST(test_network_client_fd_constructor_and_stop);
   RUN_TEST(test_network_client_available_read_peek_clear);

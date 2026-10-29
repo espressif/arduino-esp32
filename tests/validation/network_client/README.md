@@ -3,8 +3,9 @@
 Validates the `NetworkClient` API using localhost TCP loopback sockets. No Wi-Fi or external network is required.
 
 Also validates `IPAddress` string parsing: IPv4, IPv6, scoped IPv6, clearing a
-previous zone, invalid constructors, and preserving an address after a failed
-parse. These cases run through the existing NetworkClient test driver so they
+previous zone, initialized string constructors, and rejection of invalid or null
+input. Failed parses do not promise to preserve the previous address. These
+cases run through the existing NetworkClient test driver so they
 are available to the CI runner that checks out test scripts from the base branch.
 
 ## Test Cases
