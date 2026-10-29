@@ -344,6 +344,14 @@ void BLESecurity::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_p
 // Stack-specific BLESecurity methods
 // --------------------------------------------------------------------------
 
+bool BLESecurity::isConfigured() const {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lock(_impl->mtx);
+  return _impl->configuredByApp;
+}
+
 void BLESecurity::setIOCapability(BLEIOCapability cap) {
   BLE_CHECK_IMPL();
   // Config fields are read on the host task during pairing (guarded by mtx there),
@@ -351,6 +359,7 @@ void BLESecurity::setIOCapability(BLEIOCapability cap) {
   // mtx; it only pushes to the native stack (no user callback).
   BLELockGuard lock(impl.mtx);
   impl.ioCap = cap;
+  impl.configuredByApp = true;
   impl.applySecurityParams();
 }
 
@@ -360,6 +369,7 @@ void BLESecurity::setAuthenticationMode(bool bond, bool mitm, bool sc) {
   impl.bonding = bond;
   impl.mitm = mitm;
   impl.secureConnection = sc;
+  impl.configuredByApp = true;
   impl.applySecurityParams();
 }
 

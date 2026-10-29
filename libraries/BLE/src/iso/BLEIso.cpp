@@ -23,8 +23,8 @@
 #include "esp32-hal-log.h"
 
 #include "esp_ble_iso_common_api.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "core/BLESync.h"
+#include "core/BLETask.h"
 
 #include <cstring>
 
@@ -157,6 +157,44 @@ struct SyncArm {
 SyncArm sSync;
 #endif
 
+constexpr uint32_t kIdleTimeoutMs = 5000;
+BLESync sIdleSync{"iso-idle"};
+
+bool allDisconnected() {
+  for (int i = 0; i < kMaxChan; i++) {
+    if (sSlots[i].used && sSlots[i].chan.state != BT_ISO_STATE_DISCONNECTED) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void notifyIsoIdle() {
+  if (allDisconnected()) {
+    sIdleSync.give(BTStatus::OK);
+  }
+}
+
+bool waitDisconnected() {
+  if (allDisconnected()) {
+    return true;
+  }
+  if (bleInStackCallbackTask()) {
+    log_e("BLEIso: cannot wait for ISO disconnect from a stack callback");
+    return false;
+  }
+  sIdleSync.take();
+  if (allDisconnected()) {
+    sIdleSync.give(BTStatus::OK);
+  }
+  BTStatus st = sIdleSync.wait(kIdleTimeoutMs);
+  if (st != BTStatus::OK || !allDisconnected()) {
+    log_e("BLEIso: timed out waiting for ISO channels to disconnect");
+    return false;
+  }
+  return true;
+}
+
 bool slotOk(int slot) {
   return slot >= 0 && slot < kMaxChan && sSlots[slot].used;
 }
@@ -237,6 +275,7 @@ void onChanDisconnected(esp_ble_iso_chan_t *chan, uint8_t reason) {
   }
 #endif
   ChannelAccess::disconnected(sChannels[slot], reason);
+  notifyIsoIdle();
 }
 
 // Hot path (once per SDU interval): decode the flags and forward, no logging.
@@ -443,6 +482,12 @@ uint8_t packBroadcastCode(const String &code, uint8_t *out) {
  * A CIG left by a previous CIS is terminated first, so an idle Central slot
  * can reconnect with new QoS. Completion arrives via onChanConnected().
  */
+#if BLE_BLUEDROID
+/* GATTC conn ids are per-interface; esp_ble_iso_chan_connect() keys its ACL
+ * table by the HCI connection handle (see bt_le_acl_conn_find()). */
+extern "C" uint16_t bleClientAclHandle(uint16_t connId);
+#endif
+
 esp_err_t cisConnect(int slot, uint16_t connHandle, const CisParams &p) {
   // The CIG holds this slot's channel from a previous CIS: free it before the slot is reset.
   if (sCig) {
@@ -476,6 +521,9 @@ esp_err_t cisConnect(int slot, uint16_t connHandle, const CisParams &p) {
 
   esp_ble_iso_connect_param_t connectParam = {};
   connectParam.iso_chan = &s.chan;
+#if BLE_BLUEDROID
+  connHandle = bleClientAclHandle(connHandle);
+#endif
   err = esp_ble_iso_chan_connect(&connectParam, connHandle, 1);
   if (err != ESP_OK) {
     // Drop the CIG too: the caller releases the slot, whose channel it references.
@@ -771,7 +819,6 @@ void end() {
     return;
   }
 
-  bool submitted = true;
 #if ISO_UNICAST
   for (int i = 0; i < kMaxChan; i++) {
     if (!sSlots[i].used || (sSlots[i].kind != Kind::CisCentral && sSlots[i].kind != Kind::CisPeripheral)
@@ -779,9 +826,8 @@ void end() {
       continue;
     }
     esp_err_t err = esp_ble_iso_chan_disconnect(&sSlots[i].chan);
-    if (err != ESP_OK) {
+    if (err != ESP_OK && sSlots[i].chan.state != BT_ISO_STATE_DISCONNECTED) {
       log_e("BLEIso: channel %d disconnect during end failed: %d", i, err);
-      submitted = false;
     }
   }
 #endif
@@ -790,7 +836,6 @@ void end() {
     esp_err_t err = esp_ble_iso_big_terminate(sBigTx);
     if (err != ESP_OK) {
       log_e("BLEIso: BIG terminate during end failed: %d", err);
-      submitted = false;
     }
   }
 #endif
@@ -800,43 +845,12 @@ void end() {
     esp_err_t err = esp_ble_iso_big_terminate(sSync.big);
     if (err != ESP_OK) {
       log_e("BLEIso: BIG sync terminate during end failed: %d", err);
-      submitted = false;
     }
   }
 #endif
-  if (!submitted) {
-    return;
-  }
 
-  // Disconnect and BIG termination complete asynchronously. Keep the host and
-  // every backing Slot alive until all channel callbacks report DISCONNECTED;
-  // common_deinit rejects a channel in DISCONNECTING state.
-  constexpr TickType_t kEndTimeout = pdMS_TO_TICKS(5000);
-  TickType_t start = xTaskGetTickCount();
-  while (true) {
-    bool disconnected = true;
-    for (int i = 0; i < kMaxChan; i++) {
-      if (sSlots[i].used && sSlots[i].chan.state != BT_ISO_STATE_DISCONNECTED) {
-        disconnected = false;
-        break;
-      }
-    }
-    if (disconnected) {
-      break;
-    }
-    if (xTaskGetTickCount() - start >= kEndTimeout) {
-      log_e("BLEIso: timed out waiting for ISO channels to disconnect");
-      // BLE.end() is already tearing the host down, so a still-disconnecting
-      // channel must not leave the transport claiming a host that is about to
-      // disappear: that stale ownership then blocks every later audio.begin()
-      // with "a standalone BLEIso session owns the host". Drop our state; the
-      // host teardown that follows releases the native channel anyway.
-      resetState();
-      sOwnsHost = false;
-      sActive = false;
-      return;
-    }
-    vTaskDelay(1);
+  if (!waitDisconnected()) {
+    return;
   }
 
 #if BLE_ISO_CIS_CENTRAL_SUPPORTED
@@ -846,6 +860,7 @@ void end() {
       log_e("BLEIso: CIG terminate during end failed: %d", err);
       return;
     }
+    sCig = nullptr;
   }
 #endif
 #if BLE_ISO_CIS_PERIPHERAL_SUPPORTED
@@ -872,12 +887,6 @@ void end() {
     esp_err_t err = esp_ble_iso_common_deinit(nullptr);
     if (err != ESP_OK) {
       log_e("BLEIso: ISO deinit failed: %d (disconnect every CIS/BIS first)", err);
-      // Refusing deinit must not leave the transport claiming the host: the
-      // core tears it down regardless, and a stale sOwnsHost then makes every
-      // later audio.begin() fail as "standalone BLEIso session owns the host".
-      resetState();
-      sOwnsHost = false;
-      sActive = false;
       return;
     }
     sOwnsHost = false;
@@ -982,25 +991,6 @@ void bleIsoOnGapEvent(void *event) {
   if (BLEIso::sSharedHost) {
     BLEIso::onGapEvent(static_cast<esp_ble_iso_gap_app_event_t *>(event));
   }
-}
-
-void bleIsoForceRelease(void) {
-  if (!BLEIso::sActive) {
-    return;
-  }
-  // Best effort first, so a healthy teardown still releases natively.
-  BLEIso::end();
-  if (!BLEIso::sActive) {
-    return;
-  }
-  // A native step failed and end() kept the state for a retry that cannot
-  // happen here: the core is about to tear the host down. Drop our claim so
-  // the next session can initialize (and audio, which refuses while a
-  // standalone ISO session owns the host).
-  log_w("BLEIso: forced release after incomplete teardown");
-  BLEIso::resetState();
-  BLEIso::sOwnsHost = false;
-  BLEIso::sActive = false;
 }
 
 #endif /* BLE_ISO_SUPPORTED */

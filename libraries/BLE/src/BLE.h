@@ -166,6 +166,18 @@ public:
   BTAddress::Type getOwnAddressType() const;
 
   /**
+   * @brief Random device address programmed by `setOwnAddressType(BTAddress::Random)`.
+   *
+   * @internal Used by the Bluedroid advertising backend: extended advertising
+   * sets need the set-level random address (HCI_LE_Set_Extended_Advertising_
+   * Set_Random_Address) before they can be enabled with a random own address.
+   *
+   * @param out  Receives the 6-byte address (LSB-first) when one is programmed.
+   * @return true when an address is available.
+   */
+  bool getOwnRandomAddress(uint8_t out[6]) const;
+
+  /**
    * @brief Override the local Bluetooth address.
    *
    * @note Must be called before begin(), or the stack may ignore the change.

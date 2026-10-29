@@ -50,7 +50,9 @@ See [Feature guards](#feature-guards).
 - **Core-owned terminal teardown:** `BLE.end()` invokes the audio and raw-ISO
   pre-end hooks while the host is still running. It releases an active audio
   controller even when the sketch omitted `audio.end()` and releases a
-  standalone `BLEIso` owner before host deinitialization.
+  standalone `BLEIso` owner before host deinitialization. Native deinit that
+  refuses (a stream still up) aborts `BLE.end()`: Arduino keeps ownership and
+  the host stays up.
 
 ### Not exposed / known limits
 
@@ -62,6 +64,7 @@ See [Feature guards](#feature-guards).
 | **BASS receive-state cleanup** | The Scan Delegator does not remove stale receive states on its own; the assistant must remove them. |
 | **One PA sync at a time** | The broadcast sink follows one source; an assistant request is refused while a PA sync is in use. |
 | **GATT frozen after `start()`** | Roles that register services must be created before `audio.start()`; swapping roles needs `audio.end()` → `audio.begin()`. |
+| **Standalone `BLEIso` CIS on Bluedroid** | The ISO transport only tracks ACLs opened through its own GATT interface (`esp_ble_iso_bluedroid_get_gattc_if()`). `BLEIso::connectCis()` on an ACL opened by `BLEClient` fails with `ESP_ERR_NOT_FOUND`; open audio links with `audio.connect()` instead. |
 | **Preview status** | The LE Audio APIs are still marked preview in IDF. |
 
 ## Layering
@@ -176,10 +179,14 @@ Invariants:
   roles) is read by `start()`; changing it afterwards does not change the
   registered services (the setters that are easy to misuse warn). Available
   audio contexts are the exception: they may change at runtime.
-- `audio.end()` is refused (`InvalidState`) while a stream is still up; stop
-  the streams first. After a successful `end()`, `begin()` may run again.
+- `audio.end()` stops leftover BAP transports and waits for ISO channels to
+  disconnect (`BLESync`, same 5 s bound as `BLEIso::end()` and Broadcast
+  Source/Sink `stop()`) before `common_deinit`. It is refused if a CONNECTED
+  ISO channel remains, and ownership is kept. After a successful `end()`,
+  `begin()` may run again.
 - `BLE.end()` is the terminal owner of the whole session. It calls
-  `audio.end()` while the host is usable, then tears the host down. If invoked
+  `audio.end()` while the host is usable, then tears the host down. If audio
+  or ISO teardown fails, host shutdown is aborted. If invoked
   from a NimBLE/BTC callback, the core defers this same sequence to its
   callback-safe worker; retained audio handles become inactive and may be
   reused only after the next `BLE.begin()`.
@@ -198,6 +205,19 @@ engine's GATT client, and on both hosts the engine then encrypts the link (with
 the `BLESecurity` settings), exchanges the MTU and discovers the peer.
 `audio.onLinkReady(conn)` fires when that discovery finished, for links opened
 by either side; client roles may use `conn` from then on.
+
+Discovery is gated on the security outcome, not on the MTU alone: PACS, ASCS
+and the other LE Audio services carry encrypted-only permissions on Bluedroid
+(the NimBLE adapter does not enforce them, which is why an unencrypted
+discovery can appear to work there). `audio.begin()` therefore applies the
+Just Works association model — no I/O capability, no MITM, bonding, Secure
+Connections — when the sketch has not configured `BLESecurity` itself; a
+sketch that needs passkey or numeric comparison reconfigures it after
+`begin()`. An encrypted link is established with
+`esp_ble_set_encryption(ESP_BLE_SEC_ENCRYPT_NO_MITM)` from the esp_timer task,
+never from the connection callback: a request queued while the host is still
+processing the ACL-up event is dropped and SMP then times out
+(`AUTH_CMPL` reason `0x66`, connection timeout).
 
 Control client roles bind their peer through `BLEAudioControlLink`: calling
 `discover(conn)` before the link is ready is accepted, and the service

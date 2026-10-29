@@ -65,8 +65,12 @@ def _start_phase(server, client, phase_num):
     LOGGER.info("Sending START_PHASE_%d to both devices", phase_num)
     server.write(f"START_PHASE_{phase_num}\n")
     client.write(f"START_PHASE_{phase_num}\n")
-    server.expect_exact(f"[SERVER] Phase {phase_num} started", timeout=10)
-    client.expect_exact(f"[CLIENT] Phase {phase_num} started", timeout=10)
+    # 25 s, not 10 s: a phase body may still be finishing a blocking library call
+    # that has its own 10 s bound (service discovery aborted by the peer tearing
+    # the link down at the start of this phase), and the marker is only printed
+    # once loop() runs again.
+    server.expect_exact(f"[SERVER] Phase {phase_num} started", timeout=25)
+    client.expect_exact(f"[CLIENT] Phase {phase_num} started", timeout=25)
 
 
 def _phase_basic(server, client):

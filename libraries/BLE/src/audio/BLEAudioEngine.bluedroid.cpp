@@ -20,6 +20,7 @@
 
 #include "audio/BLEAudioEngine.bluedroid.h"
 #include "audio/BLEAudioEngine.h"
+#include "esp32-hal-log.h"
 
 /**
  * @file BLEAudioEngine.bluedroid.cpp
@@ -36,7 +37,16 @@ namespace BLEAudioEngine {
  * GATT discovery on a link once its encryption completes.
  */
 void forwardHostGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
-  if (event == ESP_GAP_BLE_AUTH_CMPL_EVT && param != nullptr && bleAudioEngineIsInitialized()) {
+  if (event != ESP_GAP_BLE_AUTH_CMPL_EVT || param == nullptr) {
+    return;
+  }
+  // Audio links are encrypted before discovery; without this the failure only
+  // shows up later as a rejected PACS/ASCS read.
+  log_d(
+    "audio link: pairing complete success=%d reason=0x%02x auth_mode=%d", (int)param->ble_security.auth_cmpl.success,
+    (unsigned)param->ble_security.auth_cmpl.fail_reason, (int)param->ble_security.auth_cmpl.auth_mode
+  );
+  if (bleAudioEngineIsInitialized()) {
     bleAudioEngineGapPostEvent((uint16_t)event, param);
   }
 }

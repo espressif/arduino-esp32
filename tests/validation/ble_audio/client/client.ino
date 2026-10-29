@@ -250,17 +250,11 @@ void setup() {
               delay(10);
             }
             delay(1000);
-            // The host refuses to deinit ISO with a live CIS: take it down first.
-            if (cis->disconnect()) {
-              unsigned long ddl = millis() + 3000;
-              while (cis->isConnected() && millis() < ddl) {
-                delay(50);
-              }
-            }
+            // Leave the CIS and ACL up so BLE.end() must terminate them over HCI
+            // and wait for DISCONNECTED (same contract as the server).
           } else {
             Serial.println("[CLIENT] IsoCis connect FAILED");
           }
-          client.disconnect();
         } else {
           Serial.println("[CLIENT] IsoCis ACL connect FAILED");
         }
@@ -333,16 +327,19 @@ void setup() {
         while (millis() < deadline) {
           delay(100);
         }
-        scan.stop();
+        // Leave the BIG sync up so BLE.end() must terminate it over HCI.
       } else {
         Serial.println("[CLIENT] IsoBis sync arm FAILED");
       }
-      BLEIso::end();
-      Serial.printf("[CLIENT] IsoBis result synced=%d received=%lu\n", (int)isoBisClientSynced, (unsigned long)isoBisRxCount);
     }
     BLE.end(false);
+    bool isoCoreEnded = !BLEIso::isActive();
     delay(500);
-    (void)BLE.begin("BLE_CLT");
+    BTStatus restore = BLE.begin("BLE_CLT");
+    BTStatus isoRetry = restore ? BLEIso::begin() : BTStatus::Fail;
+    bool isoLifecycle = isoCoreEnded && restore && isoRetry;
+    BLEIso::end();
+    Serial.printf("[CLIENT] IsoBis result synced=%d received=%lu lifecycle=%d\n", (int)isoBisClientSynced, (unsigned long)isoBisRxCount, isoLifecycle ? 1 : 0);
   }
 #else
   Serial.println("[CLIENT] IsoBis not supported");
@@ -444,9 +441,10 @@ void setup() {
     delay(500);
     bapBcastRxCount = 0;
     bapBaseSeen = false;
+    BLEAudio audio;
     BTStatus st = BLE.begin("BLE_CLT_BCAST");
     if (st) {
-      BLEAudio audio = BLE.getAudioController();
+      audio = BLE.getAudioController();
       if (audio.begin()) {
         BLEAudioBroadcastSink sink = audio.createBroadcastSink();
         sink.setTargetName(targetName);
@@ -465,15 +463,24 @@ void setup() {
           while (millis() < deadline) {
             delay(100);
           }
-          sink.stop();
+          // Leave the BIG up so BLE.end() must stop leftover BAP and wait for ISO idle.
         }
-        audio.end();
       }
-      Serial.printf("[CLIENT] BapBroadcast result received=%lu base=%d\n", (unsigned long)bapBcastRxCount, (int)bapBaseSeen);
     }
     BLE.end(false);
+    bool audioCoreEnded = !audio.isActive();
     delay(500);
-    (void)BLE.begin("BLE_CLT");
+    BTStatus restore = BLE.begin("BLE_CLT");
+    BTStatus retry = BTStatus::Fail;
+    if (restore) {
+      audio = BLE.getAudioController();
+      retry = audio.begin();
+      if (retry) {
+        (void)audio.end();
+      }
+    }
+    bool audioLifecycle = audioCoreEnded && restore && retry;
+    Serial.printf("[CLIENT] BapBroadcast result received=%lu base=%d lifecycle=%d\n", (unsigned long)bapBcastRxCount, (int)bapBaseSeen, audioLifecycle ? 1 : 0);
   }
 #else
   Serial.println("[CLIENT] BapBroadcast not supported");

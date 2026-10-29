@@ -61,7 +61,7 @@ def _phase_audio_lifecycle(server, client):
 
     Returns False (SKIP) when the LE Audio engine is not compiled into the build.
     """
-    mg = server.expect(r"\[SERVER\] (Audio GATT remove=(\d+) guarded=(\d+)|Audio not supported, skipping)", timeout=30)
+    mg = server.expect(r"\[SERVER\] (Audio GATT remove=(\d+) guarded=(\d+)|Audio not supported, skipping)", timeout=60)
     if b"not supported" in mg.group(0):
         client.expect_exact("[CLIENT] Audio not supported, skipping", timeout=20)
         server.expect_exact("[SERVER] Phase1 audio done", timeout=10)
@@ -131,8 +131,8 @@ def _phase_iso_bis(server, client):
 
     Returns False (SKIP) when host ISO or BLE5 is not compiled into either build.
     """
-    ms = server.expect(r"\[SERVER\] IsoBis (not supported|result connected=(\d+) sent=(\d+))", timeout=60)
-    mc = client.expect(r"\[CLIENT\] IsoBis (not supported|result synced=(\d+) received=(\d+))", timeout=90)
+    ms = server.expect(r"\[SERVER\] IsoBis (not supported|result connected=(\d+) sent=(\d+) lifecycle=(\d+))", timeout=60)
+    mc = client.expect(r"\[CLIENT\] IsoBis (not supported|result synced=(\d+) received=(\d+) lifecycle=(\d+))", timeout=90)
     server.expect_exact("[SERVER] Phase3 iso_bis done", timeout=40)
     client.expect_exact("[CLIENT] Phase3 iso_bis done", timeout=40)
 
@@ -141,6 +141,8 @@ def _phase_iso_bis(server, client):
 
     sent = int(ms.group(3))
     received = int(mc.group(3))
+    assert int(ms.group(4)) == 1, "server BLE.end() did not release standalone ISO over a live BIG"
+    assert int(mc.group(4)) == 1, "client BLE.end() did not release standalone ISO over a live BIG"
     assert sent > 0, "BIS Broadcaster streamed no SDUs"
     assert received > 0, f"BIS Receiver received no SDUs (Broadcaster sent {sent})"
     return True
@@ -180,8 +182,8 @@ def _phase_bap_broadcast(server, client):
     BIG, and counts SDUs received. Returns False (SKIP) when the LE Audio engine
     is not compiled into either build (only a dual-audio esp32s31 pair runs it).
     """
-    ms = server.expect(r"\[SERVER\] BapBroadcast (not supported|result sent=(\d+))", timeout=90)
-    mc = client.expect(r"\[CLIENT\] BapBroadcast (not supported|result received=(\d+) base=(\d+))", timeout=120)
+    ms = server.expect(r"\[SERVER\] BapBroadcast (not supported|result sent=(\d+) lifecycle=(\d+))", timeout=90)
+    mc = client.expect(r"\[CLIENT\] BapBroadcast (not supported|result received=(\d+) base=(\d+) lifecycle=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase5 bap_broadcast done", timeout=40)
     client.expect_exact("[CLIENT] Phase5 bap_broadcast done", timeout=40)
 
@@ -191,6 +193,8 @@ def _phase_bap_broadcast(server, client):
     sent = int(ms.group(2))
     received = int(mc.group(2))
     base = int(mc.group(3))
+    assert int(ms.group(3)) == 1, "server BLE.end() did not release audio over a live BIG"
+    assert int(mc.group(4)) == 1, "client BLE.end() did not release audio over a live BIG"
     assert sent > 0, "Broadcast Source streamed no SDUs"
     assert base == 1, "Broadcast Sink never reported the source's BASE (onBaseReceived)"
     assert received > 0, f"Broadcast Sink received no SDUs (Source sent {sent})"

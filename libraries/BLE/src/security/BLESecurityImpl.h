@@ -55,6 +55,10 @@ struct BLESecurityImplCommon {
   // setAuthenticationMode, ...) while the host task reads them during pairing.
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
+  /// True once the sketch configured the association model itself. The LE Audio
+  /// engine applies its own Just Works defaults only while this is false.
+  bool configuredByApp = false;
+
   BLEIOCapability ioCap = BLEIOCapability::NoInputNoOutput;
   bool mitm = false;
   bool forceAuth = false;

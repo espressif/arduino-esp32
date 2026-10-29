@@ -204,6 +204,8 @@ int bleAudioEngineStart(void);
 
 /**
  * @brief `esp_ble_audio_common_deinit` (also releases ISO and every profile).
+ *
+ * Callers must wait until ISO channels are down first (see `BLEAudio::end()`).
  * @return ESP_ERR_INVALID_STATE while a stream is still up; nothing is released.
  */
 int bleAudioEngineDeinit(void);

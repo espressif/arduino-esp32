@@ -462,10 +462,6 @@ void BLEClass::end(bool releaseMemory) {
   if (auto hook = _impl->loadHook(_impl->isoPreEndHook)) {
     hook();
   }
-  // The core is about to destroy the host, so a transport that failed to
-  // release ownership must not keep claiming it (that would make every later
-  // audio.begin() fail as "standalone BLEIso session owns the host").
-  bleIsoForceRelease();
   if (BLEIso::isActive()) {
     log_e("BLE.end: ISO teardown did not complete; host shutdown aborted");
     BLELockGuard lifecycle(_impl->lifecycleMtx);

@@ -136,12 +136,13 @@ public:
   /**
    * @brief Release every audio profile, ISO resource and all engine state.
    *
-   * Refused while a stream is still up: stop the streams first. After a
-   * successful end(), begin() may be called again with a new set of roles.
-   * Also run by `BLE.end()`. Does not shut down the host stack.
+   * Stops leftover BAP transports and waits for ISO idle before native
+   * deinit. Refused while a CONNECTED ISO channel remains: stop the streams
+   * first. After a successful end(), begin() may be called again with a new
+   * set of roles. Also run by `BLE.end()`. Does not shut down the host stack.
    *
-   * @return BTStatus::OK (also when not active); InvalidState while streams
-   *         are active.
+   * @return BTStatus::OK (also when not active); Fail/InvalidState while
+   *         streams are still up.
    */
   BTStatus end();
 

@@ -203,10 +203,16 @@ void loop() {
         BLEService lateSvc = srv.createService(BLEUUID("a10c0005-0000-1000-8000-00805f9b34fb"));
         lateSvc.createCharacteristic(BLEUUID("a10c0006-0000-1000-8000-00805f9b34fb"), BLEProperty::Read, BLEPermission::ReadOpen);
         BTStatus restaged = srv.start();
+        // `removed` is true when the removal was accepted. On NimBLE the
+        // engine-owned table must additionally refuse the late restage; on
+        // Bluedroid the classic server is a separate GATTS app, so both the
+        // removal and the restage stay legal while audio owns its own table
+        // (the audio read/teardown below proves the engine survived them).
 #if BLE_NIMBLE
-        bool gattGuarded = removed && restaged == BTStatus::InvalidState;
+        bool gattGuarded = static_cast<bool>(removed) && restaged == BTStatus::InvalidState;
 #else
-        bool gattGuarded = removed;
+        (void)restaged;
+        bool gattGuarded = static_cast<bool>(removed);
 #endif
         Serial.printf("[SERVER] Audio GATT remove=%d guarded=%d\n", removed ? 1 : 0, gattGuarded ? 1 : 0);
 
@@ -380,6 +386,7 @@ void loop() {
     BLE.end(false);
     delay(500);
     isoBisConnected = false;
+    uint32_t sent = 0;
     BTStatus s = BLE.begin(serverName);
     if (!s) {
       Serial.printf("[SERVER] IsoBis init FAILED: %s\n", s.toString());
@@ -403,7 +410,6 @@ void loop() {
 
       BLEIso::BigParams params;  // defaults: 120 B SDU, 10 ms, 2M PHY
       BLEIso::Channel *bis = BLEIso::createBig(0, params);
-      uint32_t sent = 0;
       if (bis) {
         bis->onConnected([](BLEIso::Channel &) {
           syncPhaseFromHost();
@@ -423,19 +429,22 @@ void loop() {
           }
           delay(10);
         }
-        bis->disconnect();  // terminate the BIG before the transport goes down
-        delay(200);
+        // Leave the BIG connected so BLE.end() must terminate it over HCI and
+        // wait for DISCONNECTED. Software-resetting a live BIG panics the controller.
       } else {
         Serial.println("[SERVER] IsoBis create FAILED");
       }
-      BLEIso::end();
-      adv.stopPeriodicAdv(0);
-      adv.stopExtended(0);
-      Serial.printf("[SERVER] IsoBis result connected=%d sent=%lu\n", (int)isoBisConnected, (unsigned long)sent);
     }
     BLE.end(false);
+    bool isoCoreEnded = !BLEIso::isActive();
     delay(500);
-    (void)BLE.begin(serverName);
+    BTStatus restore = BLE.begin(serverName);
+    BTStatus isoRetry = restore ? BLEIso::begin() : BTStatus::Fail;
+    bool isoLifecycle = isoCoreEnded && restore && isoRetry;
+    BLEIso::end();
+    Serial.printf(
+      "[SERVER] IsoBis result connected=%d sent=%lu lifecycle=%d\n", (int)isoBisConnected, (unsigned long)sent, isoLifecycle ? 1 : 0
+    );
 #else
     Serial.println("[SERVER] IsoBis not supported");
 #endif
@@ -516,9 +525,10 @@ void loop() {
     delay(500);
     bool bcStreaming = false;
     uint32_t sent = 0;
+    BLEAudio audio;
     BTStatus s = BLE.begin(serverName);
     if (s) {
-      BLEAudio audio = BLE.getAudioController();
+      audio = BLE.getAudioController();
       if (audio.begin()) {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
         source.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setBroadcastId(0x123456).setName(serverName);
@@ -546,15 +556,24 @@ void loop() {
             }
             syncPhaseFromHost();
           }
-          source.stop();
+          // Leave the BIG up so BLE.end() must stop leftover BAP and wait for ISO idle.
         }
-        audio.end();
       }
-      Serial.printf("[SERVER] BapBroadcast result sent=%lu\n", (unsigned long)sent);
     }
     BLE.end(false);
+    bool audioCoreEnded = !audio.isActive();
     delay(500);
-    (void)BLE.begin(serverName);
+    BTStatus restore = BLE.begin(serverName);
+    BTStatus retry = BTStatus::Fail;
+    if (restore) {
+      audio = BLE.getAudioController();
+      retry = audio.begin();
+      if (retry) {
+        (void)audio.end();
+      }
+    }
+    bool audioLifecycle = audioCoreEnded && restore && retry;
+    Serial.printf("[SERVER] BapBroadcast result sent=%lu lifecycle=%d\n", (unsigned long)sent, audioLifecycle ? 1 : 0);
 #else
     Serial.println("[SERVER] BapBroadcast not supported");
 #endif

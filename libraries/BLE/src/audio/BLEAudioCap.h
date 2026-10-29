@@ -182,7 +182,7 @@ public:
    * @brief Start a broadcast source with @p channels BIS on advertising
    *        instance @p advInstance (onBroadcastStarted() follows).
    */
-  BTStatus startBroadcast(uint8_t channels = 1, uint8_t advInstance = 1);
+  BTStatus startBroadcast(uint8_t channels = 1, uint8_t advInstance = 0);
   /** @brief Stop and delete the broadcast source (onBroadcastStopped() follows). */
   BTStatus stopBroadcast();
   /** @return true while a broadcast (plain or handed over) is streaming. */
@@ -196,7 +196,7 @@ public:
    * The acceptors are told to receive the broadcast; the sink streams keep
    * their handles and go on carrying audio as BIS. Source streams stop.
    */
-  BTStatus handoverToBroadcast(uint8_t advInstance = 1);
+  BTStatus handoverToBroadcast(uint8_t advInstance = 0);
   /** @brief Move a handed-over broadcast back to unicast on the same acceptors. */
   BTStatus handoverToUnicast();
 

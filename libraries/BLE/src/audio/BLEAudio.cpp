@@ -18,9 +18,12 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include "audio/BLEAudioImpl.h"
+#include "audio/BLEAudioEngineBap.h"
 #include "audio/BLEAudioStreamInternal.h"
 #include "BLE.h"
 #include "client/BLEClient.h"
+#include "core/BLESync.h"
+#include "core/BLETask.h"
 #include "esp32-hal-log.h"
 
 /**
@@ -69,6 +72,30 @@ BLEAudioQos BLEAudioQos::fromPreset(BLEAudioCodecPreset preset, bool broadcast) 
 
 namespace {
 
+constexpr uint32_t kIdleTimeoutMs = 5000;
+BLESync sBapIdleSync{"bap-idle"};
+
+bool waitBapIdle() {
+  if (!bleAudioBapIsoBusy()) {
+    return true;
+  }
+  if (bleInStackCallbackTask()) {
+    log_e("Audio: cannot wait for ISO idle from a stack callback");
+    return false;
+  }
+  sBapIdleSync.take();
+  if (!bleAudioBapIsoBusy()) {
+    sBapIdleSync.give(BTStatus::OK);
+    return true;
+  }
+  BTStatus st = sBapIdleSync.wait(kIdleTimeoutMs);
+  if (st != BTStatus::OK || bleAudioBapIsoBusy()) {
+    log_e("Audio: timed out waiting for ISO streams to disconnect");
+    return false;
+  }
+  return true;
+}
+
 /**
  * @brief Engine event sink registered by begin() (Bluetooth host task).
  *
@@ -77,9 +104,16 @@ namespace {
  */
 void engineSink(const ble_audio_evt_t *evt, void *ctx) {
   static_cast<BLEAudio::Impl *>(ctx)->dispatch(*evt);
+  bleAudioNotifyBapIdle();
 }
 
 }  // namespace
+
+extern "C" void bleAudioNotifyBapIdle(void) {
+  if (!bleAudioBapIsoBusy()) {
+    sBapIdleSync.give(BTStatus::OK);
+  }
+}
 
 // --------------------------------------------------------------------------
 // Lifecycle
@@ -115,6 +149,17 @@ BTStatus BLEAudio::begin() {
     log_e("Audio: BAP attach failed (err=%d)", err);
     (void)bleAudioEngineDeinit();
     return bleAudioStatus(err);
+  }
+  // Every LE Audio link is encrypted before any profile is discovered, and on
+  // Bluedroid PACS/ASCS carry encrypted-only permissions (a plain discovery on
+  // an unencrypted link is rejected with Insufficient Authentication). Apply the
+  // Just Works association model unless the sketch already chose one, so
+  // audio.begin() alone yields a usable link. Reconfigure BLE.getSecurity()
+  // afterwards for passkey/numeric-comparison setups.
+  BLESecurity sec = BLE.getSecurity();
+  if (sec && !sec.isConfigured()) {
+    sec.setIOCapability(BLEIOCapability::NoInputNoOutput);
+    sec.setAuthenticationMode(true, false, true);
   }
   _impl->active = true;
   log_i("Audio: engine initialized");
@@ -159,18 +204,23 @@ BTStatus BLEAudio::start() {
 }
 
 /**
- * The engine refuses to deinit while an ISO stream is up; in that case
- * nothing is released and the controller stays usable. On success the role
- * handlers are dropped before the roles themselves, so no event can reach a
- * role being destroyed.
+ * Stop leftover BAP transports and wait for every pool ISO channel to go
+ * DISCONNECTED. Native deinit is refused while a stream is still up; in that
+ * case nothing is released and the controller stays usable. On success the
+ * role handlers are dropped before the roles themselves, so no event can
+ * reach a role being destroyed.
  */
 BTStatus BLEAudio::end() {
   if (!_impl || !_impl->active) {
     return BTStatus::OK;
   }
+  bleAudioBapStopLeftover();
+  if (!waitBapIdle()) {
+    return BTStatus::Fail;
+  }
   int err = bleAudioEngineDeinit();
   if (err != 0) {
-    log_w("Audio: end() refused while streams are active; stop them first (err=%d)", err);
+    log_e("Audio: end() refused while streams are active; stop them first (err=%d)", err);
     return bleAudioStatus(err);
   }
   for (auto &h : _impl->handlers) {

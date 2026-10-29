@@ -117,14 +117,20 @@ public:
    * last start().
    *
    * @param advInstance Extended advertising instance reserved for the broadcast.
-   *                    Do not use it for anything else while broadcasting.
+   *                    Must be a user-addressable set (below the reserved
+   *                    legacy instance). Default 0 is the first user set;
+   *                    1 is the legacy instance on targets with only two
+   *                    extended slots (e.g. ESP32-S31).
    * @return BTStatus::OK when started; InvalidState before audio.start(),
    *         while streaming or without streams; another error when creating
    *         the source or the advertising failed.
    */
-  BTStatus start(uint8_t advInstance = 1);
+  BTStatus start(uint8_t advInstance = 0);
   /**
    * @brief Terminate the BIG and stop the advertising instance (onStopped() follows).
+   *
+   * Blocks until the BIG is down (or 5 s) so a following `audio.end()` /
+   * `BLE.end()` does not tear the host down over a live ISO channel.
    * @return BTStatus::OK on success; InvalidState when not started.
    */
   BTStatus stop();

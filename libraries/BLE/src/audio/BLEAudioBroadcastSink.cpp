@@ -24,6 +24,8 @@
 #include "BLE.h"
 #include "scan/BLEScan.h"
 #include "esp32-hal-log.h"
+#include "core/BLESync.h"
+#include "core/BLETask.h"
 
 /**
  * @file BLEAudioBroadcastSink.cpp
@@ -75,7 +77,29 @@ struct BLEAudioBroadcastSink::Impl {
   bool syncPending = false;               ///< PA sync create / PAST receive in flight.
   bool synced = false;                    ///< PA sync established.
   bool streaming = false;                 ///< BIG joined.
+  BLESync stopSync{"bsink-stop"};
   std::vector<BLEAudioStream> streams;    ///< One Rx stream per BIS.
+
+  BTStatus waitStopped() {
+    if (!streaming) {
+      return BTStatus::OK;
+    }
+    if (bleInStackCallbackTask()) {
+      log_e("BroadcastSink: cannot wait for BIG leave from a stack callback");
+      return BTStatus::InvalidState;
+    }
+    stopSync.take();
+    if (!streaming) {
+      stopSync.give(BTStatus::OK);
+      return BTStatus::OK;
+    }
+    BTStatus st = stopSync.wait(5000);
+    if (st != BTStatus::OK || streaming) {
+      log_e("BroadcastSink: timed out waiting for BIG to leave");
+      return st == BTStatus::OK ? BTStatus::Fail : st;
+    }
+    return BTStatus::OK;
+  }
 
   SourceFoundCallback foundCb;
   Callback syncedCb;
@@ -272,6 +296,7 @@ struct BLEAudioBroadcastSink::Impl {
       case BLE_AUDIO_EVT_BSINK_STOPPED:
         streaming = false;
         log_i("BroadcastSink: BIG left (reason 0x%02x)", (unsigned)(uint8_t)e.err);
+        stopSync.give(BTStatus::OK);
         if (stoppedCb) {
           stoppedCb((uint8_t)e.err);
         }
@@ -282,6 +307,7 @@ struct BLEAudioBroadcastSink::Impl {
         // receive occupies the controller's single sync-create slot, so it is
         // only armed on request, never speculatively on connect.
         const auto *r = static_cast<const ble_audio_bsink_pa_req_t *>(e.data);
+        log_d("evt PA_REQ past=%d bid=0x%06lx", r->past, (unsigned long)r->broadcast_id);
         BLEScan sc = BLE.getScan();
         BTStatus st = r->past ? sc.receivePeriodicSync(e.conn_handle, 0, kPaSyncTimeoutMs)
                               : sc.createPeriodicSync(BTAddress(r->addr, static_cast<BTAddress::Type>(r->addr_type)), r->sid, 0, kPaSyncTimeoutMs);
@@ -424,7 +450,7 @@ BTStatus BLEAudioBroadcastSink::syncTo(const BLEAudioBroadcastSourceInfo &source
 
 /**
  * Tear down in reverse order: scan, BIG, pending sync create, established PA
- * sync. Every step is best effort so a partial failure still releases the rest.
+ * sync. PA/scan resources are released only after the BIG has left.
  */
 BTStatus BLEAudioBroadcastSink::stop() {
   if (!_impl) {
@@ -435,6 +461,11 @@ BTStatus BLEAudioBroadcastSink::stop() {
   int err = bleAudioBsinkStop();
   if (err != 0) {
     log_w("BroadcastSink: leaving the BIG failed (err=%d)", err);
+    return bleAudioStatus(err);
+  }
+  BTStatus st = _impl->waitStopped();
+  if (!st) {
+    return st;
   }
   BLEScan sc = BLE.getScan();
   if (_impl->syncPending) {
@@ -445,7 +476,7 @@ BTStatus BLEAudioBroadcastSink::stop() {
   if (sh != 0xFFFF) {
     (void)sc.terminatePeriodicSync(sh);
   }
-  return bleAudioStatus(err);
+  return BTStatus::OK;
 }
 
 bool BLEAudioBroadcastSink::isStreaming() const {

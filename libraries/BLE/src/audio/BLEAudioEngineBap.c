@@ -268,6 +268,12 @@ struct ble_audio_slot {
 static ble_audio_slot_t s_pool[POOL_ALLOC];
 static const uint8_t s_kind_limit[] = {POOL_US, POOL_UC, POOL_BSRC, POOL_BSNK}; /* Indexed by kind. */
 static ble_audio_stream_cbs_t s_cbs;  /* C++ stream callbacks (bleAudioStreamSetCallbacks). */
+#if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
+static bool s_bsnk_joined; /* BSINK_STARTED already emitted for the current BIG. */
+#endif
+#if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+static bool s_bsrc_up; /* BSRC_STARTED already emitted for the current BIG. */
+#endif
 
 #define BAP(slot) (&(slot)->cap.bap_stream)
 
@@ -346,6 +352,13 @@ static void op_stopped(esp_ble_audio_bap_stream_t *stream, uint8_t reason) {
   if (s_cbs.stopped) {
     s_cbs.stopped(s->owner, reason);
   }
+  bleAudioNotifyBapIdle();
+}
+
+static void op_disconnected(esp_ble_audio_bap_stream_t *stream, uint8_t reason) {
+  (void)stream;
+  (void)reason;
+  bleAudioNotifyBapIdle();
 }
 
 /*
@@ -369,6 +382,7 @@ static void op_released(esp_ble_audio_bap_stream_t *stream) {
     s->partner = NULL;
     uc_check_released();
   }
+  bleAudioNotifyBapIdle();
 }
 
 /* Hot path (once per SDU interval): map the ISO flags onto BLE_AUDIO_SDU_* and forward. */
@@ -408,6 +422,7 @@ static esp_ble_audio_bap_stream_ops_t s_ops = {
   .recv = op_recv,
   .sent = op_sent,
   .connected = op_connected,
+  .disconnected = op_disconnected,
 };
 
 void bleAudioStreamSetCallbacks(const ble_audio_stream_cbs_t *cbs) {
@@ -479,6 +494,35 @@ int bleAudioStreamSend(ble_audio_slot_t *slot, const uint8_t *sdu, uint16_t len)
 
 bool bleAudioStreamIsStreaming(const ble_audio_slot_t *slot) {
   return slot && slot->streaming;
+}
+
+bool bleAudioBapIsoBusy(void) {
+  for (int i = 0; i < POOL_ALLOC; i++) {
+    ble_audio_slot_t *s = &s_pool[i];
+    if (!s->in_use) {
+      continue;
+    }
+    if (s->streaming) {
+      return true;
+    }
+    struct bt_iso_chan *iso = BAP(s)->iso;
+    if (iso != NULL && iso->state != BT_ISO_STATE_DISCONNECTED) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void bleAudioBapStopLeftover(void) {
+#if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+  (void)bleAudioBsrcStop();
+#endif
+#if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
+  (void)bleAudioBsinkStop();
+#endif
+#if BLE_AUDIO_UNICAST_CLIENT_SUPPORTED
+  (void)bleAudioUcStop();
+#endif
 }
 
 bool bleAudioStreamIsTx(const ble_audio_slot_t *slot) {
@@ -700,6 +744,7 @@ static size_t build_cap_data(uint8_t *d, const ble_audio_pac_t *p) {
  * a specific context can still configure the direction. Staging is closed
  * after the first successful commit.
  */
+
 int bleAudioPacsCommit(void) {
   if (s_pacs_committed || (!s_pac[0].used && !s_pac[1].used)) {
     return 0;
@@ -729,8 +774,32 @@ int bleAudioPacsCommit(void) {
     r->codec.meta_len = build_ctx_meta(r->meta, ESP_BLE_AUDIO_METADATA_TYPE_PREF_CONTEXT, ctx);
     r->codec.meta = r->meta;
     r->cap.codec_cap = &r->codec;
-    if ((err = esp_ble_audio_pacs_cap_register(dir, &r->cap)) != ESP_OK || (err = esp_ble_audio_pacs_set_location(dir, r->location)) != ESP_OK
-        || (err = esp_ble_audio_pacs_set_supported_contexts(dir, ctx)) != ESP_OK || (err = esp_ble_audio_pacs_set_available_contexts(dir, ctx)) != ESP_OK) {
+    err = esp_ble_audio_pacs_cap_register(dir, &r->cap);
+    if (err == ESP_OK) {
+      err = esp_ble_audio_pacs_set_location(dir, r->location);
+    }
+    if (err == ESP_OK) {
+      err = esp_ble_audio_pacs_set_supported_contexts(dir, ctx);
+      if (err == -EALREADY) {
+        /* The lib publishes the supported-contexts value of a PAC record once
+         * per boot: after the first successful set it answers later sets with
+         * -EALREADY and keeps serving the first value, even when the value
+         * differs from what the role set now stage (verified on hardware:
+         * cap_register/set_location/set_available all re-accept a re-commit,
+         * only set_supported does not). Failing the commit instead would also
+         * abort the broadcast sink/delegator role bring-up, whose teardown
+         * leaves the stack's broadcast BIG callbacks unregistered for every
+         * later broadcast sink session of the same boot. Treat the constraint
+         * as benign: the first published value stays in effect. */
+        ESP_LOGD(TAG, "PACS %s supported contexts already published this boot, keeping it",
+                 i == 0 ? "sink" : "source");
+        err = ESP_OK;
+      }
+    }
+    if (err == ESP_OK) {
+      err = esp_ble_audio_pacs_set_available_contexts(dir, ctx);
+    }
+    if (err != ESP_OK) {
       ESP_LOGE(TAG, "PACS %s record/location/contexts setup failed: %d", i == 0 ? "sink" : "source", err);
       return (int)err;
     }
@@ -744,6 +813,35 @@ int bleAudioPacsSetAvailable(uint8_t dir, uint16_t contexts) {
     return ESP_ERR_INVALID_STATE;
   }
   return (int)esp_ble_audio_pacs_set_available_contexts((esp_ble_audio_dir_t)dir, contexts);
+}
+
+/**
+ * Unregister the PACS records this engine committed so the next `begin()` can
+ * register a (possibly different) role set. The lib keeps its own registration
+ * state across `common_deinit`, so skipping this makes the next
+ * `esp_ble_audio_pacs_register()` fail with `-EALREADY`. The published
+ * supported-contexts value survives unregister too (write-once per boot); see
+ * `bleAudioPacsCommit`.
+ */
+int bleAudioPacsRelease(void) {
+  if (!s_pacs_committed) {
+    return 0;
+  }
+  for (int i = 0; i < 2; i++) {
+    pac_rec_t *r = &s_pac[i];
+    if (!r->used) {
+      continue;
+    }
+    esp_ble_audio_dir_t dir = (i == 0) ? ESP_BLE_AUDIO_DIR_SINK : ESP_BLE_AUDIO_DIR_SOURCE;
+    (void)esp_ble_audio_pacs_cap_unregister(dir, &r->cap);
+  }
+  esp_err_t err = esp_ble_audio_pacs_unregister();
+  memset(s_pac, 0, sizeof(s_pac));
+  s_pacs_committed = false;
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "PACS unregister failed: %d", err);
+  }
+  return (int)err;
 }
 
 /* ── Unicast server ─────────────────────────────────────────────────────── */
@@ -1276,6 +1374,9 @@ static void uc_discover(esp_ble_conn_t *conn, int err, esp_ble_audio_dir_t dir) 
   p->info.sink_eps = p->n_snk;
   p->info.source_eps = p->n_src;
   int result = (p->n_snk + p->n_src) ? 0 : (err ? err : p->sink_err);
+  if (result != 0) {
+    ESP_LOGE(TAG, "unicast client: discovery of conn %u found no ASE (err %d sink_err %d)", p->conn, err, p->sink_err);
+  }
   bleAudioEngineEmit(BLE_AUDIO_EVT_UC_DISCOVERED, p->conn, result, &p->info);
 }
 
@@ -1296,6 +1397,13 @@ static esp_ble_audio_bap_unicast_client_cb_t s_uc_cb = {
 };
 
 static void uc_reset(void) {
+  if (s_uc.group) {
+    esp_err_t err = esp_ble_audio_bap_unicast_group_delete(s_uc.group);
+    if (err != ESP_OK) {
+      ESP_LOGW(TAG, "unicast client: group delete on reset failed (%d)", err);
+    }
+    s_uc.group = NULL;
+  }
   memset(&s_uc, 0, sizeof(s_uc));
   for (int i = 0; i < UC_MAX_PEERS; i++) {
     s_uc.peers[i].conn = CONN_NONE;
@@ -1329,15 +1437,21 @@ int bleAudioUcInit(void) {
 /* Rediscovering a known peer starts from a clean entry. */
 int bleAudioUcDiscover(uint16_t conn_handle) {
   if (!s_uc.registered) {
+    ESP_LOGE(TAG, "unicast client: discover conn %u before init", conn_handle);
     return ESP_ERR_INVALID_STATE;
   }
   uc_peer_t *p = uc_peer(conn_handle, true);
   if (p == NULL) {
+    ESP_LOGE(TAG, "unicast client: no peer slot for conn %u", conn_handle);
     return ESP_ERR_NO_MEM;
   }
   memset(p, 0, sizeof(*p));
   p->conn = conn_handle;
-  return (int)esp_ble_audio_bap_unicast_client_discover(conn_handle, ESP_BLE_AUDIO_DIR_SINK);
+  int err = (int)esp_ble_audio_bap_unicast_client_discover(conn_handle, ESP_BLE_AUDIO_DIR_SINK);
+  if (err != 0) {
+    ESP_LOGE(TAG, "unicast client: PACS/ASCS discover conn %u failed: %d", conn_handle, err);
+  }
+  return err;
 }
 
 int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
@@ -1460,11 +1574,16 @@ static bool s_bsrc_cb_linked;
 /* BIG created / terminated; per-BIS state arrives through the stream ops. */
 static void bsrc_started(esp_ble_audio_bap_broadcast_source_t *source) {
   (void)source;
+  if (s_bsrc_up) {
+    return;
+  }
+  s_bsrc_up = true;
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STARTED, CONN_NONE, 0, NULL);
 }
 
 static void bsrc_stopped(esp_ble_audio_bap_broadcast_source_t *source, uint8_t reason) {
   (void)source;
+  s_bsrc_up = false;
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STOPPED, CONN_NONE, reason, NULL);
 }
 
@@ -1510,6 +1629,10 @@ int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *location
     if (s == NULL || s->kind != BLE_AUDIO_STREAM_BROADCAST_SOURCE) {
       return ESP_ERR_INVALID_ARG;
     }
+    /* Every BIS must carry the subgroup QoS; the lib builds one ISO channel
+     * per stream. Leaving slots[1+] at the slot_init zero-fill made stereo
+     * Create BIG hang with no complete event (1-BIS phase 5 was fine). */
+    (void)bleAudioStreamSetQos(s, qos);
     memset(&sp[i], 0, sizeof(sp[i]));
     sp[i].stream = BAP(s);
     if (locations && locations[i]) {
@@ -1565,6 +1688,7 @@ int bleAudioBsrcStart(uint8_t adv_handle) {
   if (s_bsrc.source == NULL) {
     return ESP_ERR_INVALID_STATE;
   }
+  s_bsrc_up = false;
   esp_ble_audio_bap_broadcast_adv_info_t info = {.adv_handle = adv_handle};
   if (!s_bsrc.adv_added) {
     esp_err_t err = esp_ble_audio_bap_broadcast_adv_add(&info);
@@ -1575,10 +1699,15 @@ int bleAudioBsrcStart(uint8_t adv_handle) {
     s_bsrc.adv_added = true;
     s_bsrc.adv_handle = adv_handle;
   }
-  return (int)esp_ble_audio_bap_broadcast_source_start(s_bsrc.source, adv_handle);
+  esp_err_t err = esp_ble_audio_bap_broadcast_source_start(s_bsrc.source, adv_handle);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "broadcast source: start on advertising set %u failed: %d", adv_handle, err);
+  }
+  return (int)err;
 }
 
 int bleAudioBsrcStop(void) {
+  s_bsrc_up = false;
   return s_bsrc.source ? (int)esp_ble_audio_bap_broadcast_source_stop(s_bsrc.source) : ESP_ERR_INVALID_STATE;
 }
 
@@ -1866,12 +1995,42 @@ static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_bl
 
 static void bsnk_started(esp_ble_audio_bap_broadcast_sink_t *sink) {
   (void)sink;
+  if (s_bsnk_joined) {
+    return;
+  }
+  s_bsnk_joined = true;
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_STARTED, CONN_NONE, 0, NULL);
 }
+
+/*
+ * Upstream `bt_bap_broadcast_sink_register_cb` arms the stack's ISO BIG
+ * callbacks under a once-per-boot static flag, while a sink delete
+ * (`esp_ble_audio_bap_broadcast_sink_delete`) unregisters them again: after the
+ * first removed sink of the boot, BIG Sync Established can no longer reach
+ * `started`, so rebuilds or a later session stay silent even when the sink is
+ * recreated (verified on hardware). The lib is prebuilt, so re-arm at our
+ * layer: this engine-owned BIG callback travels with a live sync and fires the
+ * sink `started` the delete took away. It is registered for every sink
+ * session - after a stack end/init the shim's listener list is rebuilt empty -
+ * and it survives every lib-owned delete because the lib only unregisters its
+ * own callback pointer. `started` fires for BIG Sync Established; the
+ * `syncing` gate keeps it silent on the broadcast source's own BIG and before
+ * a sync request is in flight.
+ */
+static void bsnk_big_started(struct bt_iso_big *big) {
+  (void)big;
+  if (!s_bsnk.syncing) {
+    return;
+  }
+  bsnk_started(NULL);
+}
+
+static struct bt_iso_big_cb s_bsnk_bigcb = {.started = bsnk_big_started};
 
 static void bsnk_stopped(esp_ble_audio_bap_broadcast_sink_t *sink, uint8_t reason) {
   (void)sink;
   s_bsnk.syncing = false;
+  s_bsnk_joined = false;
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_STOPPED, CONN_NONE, reason, NULL);
   /* Delete here, after BASS bis_sync was cleared, then keep a fresh sink on
    * the PA so BASE/BIGInfo keep arriving for a later resync. */
@@ -2022,6 +2181,13 @@ static void bsnk_on_gap(const esp_ble_audio_gap_app_event_t *ev) {
 }
 
 int bleAudioBsinkInit(bool delegator) {
+  int rc = bt_iso_big_register_cb(&s_bsnk_bigcb);
+  /* -EEXIST: the shim's list still carries it from an earlier init of this
+   * stack session; the node is the same struct pointer in either case. */
+  if (rc != 0 && rc != -EEXIST) {
+    ESP_LOGE(TAG, "broadcast sink: ISO BIG started backstop registration failed: %d", rc);
+    return rc;
+  }
   if (!s_bsnk.cb_registered) {
     esp_err_t err = esp_ble_audio_bap_broadcast_sink_register_cb(&s_bsnk_cb);
     /* After a re-init the table may still be linked from the previous session; that is fine. */
@@ -2091,9 +2257,9 @@ void bleAudioBsinkSetBisMask(uint32_t mask) {
 
 /* Leaves the BIG but keeps the PA sync; hold blocks the automatic resync on the next BIGInfo. */
 int bleAudioBsinkStop(void) {
-  s_bsnk.hold = true;
   s_bsnk.armed = false;
   if (s_bsnk.sink && s_bsnk.syncing) {
+    s_bsnk.hold = true;
     return (int)esp_ble_audio_bap_broadcast_sink_stop(s_bsnk.sink);
   }
   return 0;
@@ -2157,7 +2323,9 @@ static void bap_on_gap(const void *event) {
 /* Engine deinit: forget every registration so the next start re-registers from scratch. */
 static void bap_on_deinit(void) {
   /* C++ stream handles may outlive the session: keep their slots owned so a
-   * later bleAudioStreamFree() cannot release a slot another owner took. */
+   * later bleAudioStreamFree() cannot release a slot another owner took.
+   * A successful end() waits for ISO idle before this runs. roles.clear()
+   * then frees the slots through the C++ destructors. */
   for (int i = 0; i < POOL_SIZE; i++) {
     ble_audio_slot_t *s = &s_pool[i];
     if (s->in_use) {
@@ -2173,9 +2341,18 @@ static void bap_on_deinit(void) {
   uc_reset();
 #endif
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+  /* Drop the lib-owned source. memset alone leaked it and the next session
+   * then failed HCI Create BIG (ISO_MAX_BIG=1 still held). */
+  bleAudioBsrcDelete();
+  s_bsrc_up = false;
   memset(&s_bsrc, 0, sizeof(s_bsrc));
 #endif
 #if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
+  if (s_bsnk.sink) {
+    (void)esp_ble_audio_bap_broadcast_sink_delete(s_bsnk.sink);
+    s_bsnk.sink = NULL;
+  }
+  s_bsnk_joined = false;
   memset(&s_bsnk, 0, sizeof(s_bsnk));
   s_bsnk.sync_handle = SYNC_NONE;
 #endif

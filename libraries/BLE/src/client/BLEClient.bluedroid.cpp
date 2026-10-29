@@ -105,6 +105,18 @@ std::vector<std::shared_ptr<BLEClient::Impl>> BLEClient::Impl::snapshotClients()
   return clients;
 }
 
+extern "C" uint16_t bleClientAclHandle(uint16_t connId) {
+  for (auto &client : BLEClient::Impl::snapshotClients()) {
+    if (client->connId.load() == connId) {
+      uint16_t h = client->aclHandle.load();
+      if (h != 0xFFFF) {
+        return h;
+      }
+    }
+  }
+  return connId; /* Not one of ours (already an ACL handle). */
+}
+
 void BLEClient::Impl::removeClient(Impl *client) {
   BLELockGuard lock(s_clientsMtx);
   for (auto it = s_clients.begin(); it != s_clients.end();) {
@@ -1031,6 +1043,9 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       // client's target BDA matches.
       if (client->peerAddress.equalsEspBdAddr(param->connect.remote_bda)) {
         client->peerAddress = BTAddress::fromEspBdAddr(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
+        // The HCI ACL handle is the key the ISO transport uses (GATTS/GATTC
+        // conn ids are per-interface and mean nothing to it).
+        client->aclHandle = param->connect.conn_handle;
       }
       break;
     }

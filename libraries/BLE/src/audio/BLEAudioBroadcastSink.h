@@ -145,7 +145,12 @@ public:
    *         before audio.start() or while a sync is pending or established.
    */
   BTStatus syncTo(const BLEAudioBroadcastSourceInfo &source);
-  /** @brief Leave the BIG, drop the PA sync and stop scanning. */
+  /**
+   * @brief Leave the BIG, drop the PA sync and stop scanning.
+   *
+   * Blocks until the BIG is down (or 5 s) so a following `audio.end()` /
+   * `BLE.end()` does not tear the host down over a live ISO channel.
+   */
   BTStatus stop();
   /** @brief Whether the BIG is joined (between onStarted() and onStopped()). */
   bool isStreaming() const;

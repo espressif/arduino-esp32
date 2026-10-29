@@ -27,6 +27,8 @@
 #include "advertising/BLEAdvertisementData.h"
 #include "esp_random.h"
 #include "esp32-hal-log.h"
+#include "core/BLESync.h"
+#include "core/BLETask.h"
 
 /**
  * @file BLEAudioBroadcastSource.cpp
@@ -76,9 +78,31 @@ struct BLEAudioBroadcastSource::Impl {
   bool dirty = true;                      ///< A baked-in setting changed; re-create at start().
   bool streaming = false;                 ///< BIG up (BSRC_STARTED .. BSRC_STOPPED).
   int16_t advInstance = -1;               ///< Advertising instance in use, -1 when stopped.
+  BLESync stopSync{"bsrc-stop"};
   std::vector<BLEAudioStream> streams;    ///< One Tx stream per BIS.
   Callback startedCb;
   StoppedCallback stoppedCb;
+
+  BTStatus waitStopped() {
+    if (!streaming) {
+      return BTStatus::OK;
+    }
+    if (bleInStackCallbackTask()) {
+      log_e("BroadcastSource: cannot wait for BIG terminate from a stack callback");
+      return BTStatus::InvalidState;
+    }
+    stopSync.take();
+    if (!streaming) {
+      stopSync.give(BTStatus::OK);
+      return BTStatus::OK;
+    }
+    BTStatus st = stopSync.wait(5000);
+    if (st != BTStatus::OK || streaming) {
+      log_e("BroadcastSource: timed out waiting for BIG to terminate");
+      return st == BTStatus::OK ? BTStatus::Fail : st;
+    }
+    return BTStatus::OK;
+  }
 
   /** @brief Match the owned streams to the channel count (stops at the first pool failure). */
   void resizeStreams() {
@@ -234,6 +258,7 @@ struct BLEAudioBroadcastSource::Impl {
     } else if (e.type == BLE_AUDIO_EVT_BSRC_STOPPED) {
       streaming = false;
       log_i("BroadcastSource: BIG terminated (reason 0x%02x)", (unsigned)(uint8_t)e.err);
+      stopSync.give(BTStatus::OK);
       if (stoppedCb) {
         stoppedCb((uint8_t)e.err);
       }
@@ -358,7 +383,7 @@ BTStatus BLEAudioBroadcastSource::start(uint8_t advInstance) {
   return BTStatus::OK;
 }
 
-/** The advertising is stopped even when the BIG terminate fails, so the instance is released. */
+/** Advertising is released only after the BIG has terminated. */
 BTStatus BLEAudioBroadcastSource::stop() {
   if (!_impl || _impl->advInstance < 0) {
     return BTStatus::InvalidState;
@@ -366,12 +391,17 @@ BTStatus BLEAudioBroadcastSource::stop() {
   int err = bleAudioBsrcStop();
   if (err != 0) {
     log_w("BroadcastSource: BIG terminate failed (err=%d)", err);
+    return bleAudioStatus(err);
+  }
+  BTStatus st = _impl->waitStopped();
+  if (!st) {
+    return st;
   }
   BLEAdvertising adv = BLE.getAdvertising();
   (void)adv.stopPeriodicAdv((uint8_t)_impl->advInstance);
   (void)adv.stopExtended((uint8_t)_impl->advInstance);
   _impl->advInstance = -1;
-  return bleAudioStatus(err);
+  return BTStatus::OK;
 }
 
 bool BLEAudioBroadcastSource::isStreaming() const {

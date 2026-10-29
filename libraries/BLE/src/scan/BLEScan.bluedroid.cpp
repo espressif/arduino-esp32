@@ -829,7 +829,8 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
         break;
       }
       const esp_ble_gap_ext_adv_report_t &r = param->ext_adv_report.params;
-      BTAddress addr(r.addr, static_cast<BTAddress::Type>(r.addr_type));
+      // `r.addr` is an esp_bd_addr_t (MSB-first); BTAddress stores LSB-first.
+      BTAddress addr = BTAddress::fromEspBdAddr(r.addr, static_cast<BTAddress::Type>(r.addr_type));
 
       // Merge scan responses (which carry the Local Name) into the device from
       // the preceding advertisement.
@@ -954,6 +955,10 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
       }
       break;
     }
+
+    case ESP_GAP_BLE_PERIODIC_ADV_CREATE_SYNC_COMPLETE_EVT:
+      log_w("PERIODIC_ADV_CREATE_SYNC_COMPLETE status=%d", param->period_adv_create_sync.status);
+      break;
 
     case ESP_GAP_BLE_PERIODIC_ADV_SYNC_LOST_EVT:
     {

@@ -68,6 +68,7 @@
 #endif
 #include <esp_gatt_common_api.h>
 #include <esp_bt_device.h>
+#include <esp_random.h>
 
 #include "core/BLESync.h"
 #include <cstring>
@@ -107,6 +108,10 @@ void BLEClass::Impl::gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_pa
   if (event == ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT) {
     BTStatus st = (param->local_privacy_cmpl.status == ESP_BT_STATUS_SUCCESS) ? BTStatus::OK : BTStatus::Fail;
     impl->privacySync.give(st);
+  }
+
+  if (event == ESP_GAP_BLE_SET_STATIC_RAND_ADDR_EVT) {
+    impl->randAddrSync.give(param->set_rand_addr_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
   }
 
   if (event == ESP_GAP_BLE_UPDATE_WHITELIST_COMPLETE_EVT) {
@@ -409,10 +414,6 @@ void BLEClass::end(bool releaseMemory) {
   if (auto hook = _impl->loadHook(_impl->isoPreEndHook)) {
     hook();
   }
-  // The core is about to destroy the host, so a transport that failed to
-  // release ownership must not keep claiming it (that would make every later
-  // audio.begin() fail as "standalone BLEIso session owns the host").
-  bleIsoForceRelease();
   if (BLEIso::isActive()) {
     log_e("BLE.end: ISO teardown did not complete; host shutdown aborted");
     BLELockGuard lifecycle(_impl->lifecycleMtx);
@@ -546,14 +547,21 @@ BTAddress BLEClass::getAddress() const {
   return BTAddress::fromEspBdAddr(addr, BTAddress::Type::Public);
 }
 
-// Toggles esp_ble_gap_config_local_privacy only when the desired privacy level differs from the current state; uses a 2 s privacySync wait.
+// Configures the controller-side identity backing BTAddress::Type:
+//   Public                  -> public device address, LL privacy off
+//   Random                  -> random *device* address (needs HCI_LE_Set_Random_Address)
+//   PublicID / RandomID     -> resolvable private address, LL privacy on
+// Privacy is toggled only when the desired level differs from the current one
+// (2 s privacySync wait); a plain random address is programmed once, because the
+// controller rejects an advertising enable with 0x12 (Invalid HCI Command
+// Parameters) while own_addr_type is Random but no random address exists.
 BTStatus BLEClass::setOwnAddressType(BTAddress::Type type) {
   if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
-  bool privacyNeeded = (type != BTAddress::Type::Public);
-  bool privacyCurrent = (_impl->ownAddrType != BLE_ADDR_TYPE_PUBLIC);
-  if (privacyNeeded != privacyCurrent) {
+
+  const bool privacyNeeded = (type == BTAddress::Type::PublicID || type == BTAddress::Type::RandomID);
+  if (privacyNeeded != _impl->privacyEnabled) {
     _impl->privacySync.take();
     esp_err_t err = esp_ble_gap_config_local_privacy(privacyNeeded);
     if (err != ESP_OK) {
@@ -562,13 +570,53 @@ BTStatus BLEClass::setOwnAddressType(BTAddress::Type type) {
     }
     BTStatus st = _impl->privacySync.wait(2000);
     if (st != BTStatus::OK) {
-      log_e("setOwnAddressType: privacy config timeout");
+      // Leaving the controller in the previous privacy state keeps ownAddrType
+      // consistent with it; the caller sees the failure.
+      log_e("setOwnAddressType: privacy config failed: %s", st.toString());
       return st;
     }
+    _impl->privacyEnabled = privacyNeeded;
+    if (privacyNeeded) {
+      // A static random address is meaningless while privacy generates an RPA.
+      _impl->randomAddrSet = false;
+    }
   }
+
+  if (type == BTAddress::Type::Random && !_impl->randomAddrSet) {
+    esp_bd_addr_t rnd;
+    for (int i = 0; i < 6; i++) {
+      rnd[i] = static_cast<uint8_t>(esp_random());
+    }
+    // Static random address: the two most significant bits of the most
+    // significant octet (esp_bd_addr_t is MSB-first) are both set.
+    rnd[0] = static_cast<uint8_t>((rnd[0] & 0x3F) | 0xC0);
+    _impl->randAddrSync.take();
+    esp_err_t err = esp_ble_gap_set_rand_addr(rnd);
+    if (err != ESP_OK) {
+      _impl->randAddrSync.give(BTStatus::Fail);
+      log_e("setOwnAddressType: esp_ble_gap_set_rand_addr: %s", esp_err_to_name(err));
+      return BTStatus::Fail;
+    }
+    BTStatus st = _impl->randAddrSync.wait(2000);
+    if (st != BTStatus::OK) {
+      log_e("setOwnAddressType: random address config failed: %s", st.toString());
+      return st;
+    }
+    memcpy(_impl->ownRandomAddr, rnd, sizeof(_impl->ownRandomAddr));
+    _impl->randomAddrSet = true;
+  }
+
   _impl->ownAddrType = static_cast<uint8_t>(type);
   _ownAddressType = type;
   return BTStatus::OK;
+}
+
+bool BLEClass::getOwnRandomAddress(uint8_t out[6]) const {
+  if (!_impl || !_impl->randomAddrSet || !out) {
+    return false;
+  }
+  memcpy(out, _impl->ownRandomAddr, 6);
+  return true;
 }
 
 // Setting a random static identity is not implemented on the Bluedroid path; always returns NotSupported.

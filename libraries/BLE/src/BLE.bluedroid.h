@@ -72,6 +72,14 @@ struct BLEClass::Impl {
 
   uint16_t localMTU = 23;
   uint8_t ownAddrType = BLE_ADDR_TYPE_PUBLIC;
+  /// Controller LL privacy state (resolvable private addresses), toggled by
+  /// @c BLEClass::setOwnAddressType for the *ID address types only.
+  bool privacyEnabled = false;
+  /// Random device address programmed for @c BTAddress::Type::Random
+  /// (esp_bd_addr_t, MSB-first). Kept so the advertising backend can mirror it
+  /// into the set-level random address the controller requires.
+  uint8_t ownRandomAddr[6] = {};
+  bool randomAddrSet = false;
   bool ending = false;
   bool endRunning = false;
   bool endReleaseMemory = false;
@@ -79,6 +87,9 @@ struct BLEClass::Impl {
   SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutex();
   portMUX_TYPE hookMux = portMUX_INITIALIZER_UNLOCKED;
   BLESync privacySync{"privacySync"};
+  /// Bridges @c esp_ble_gap_set_rand_addr (async) to @c setOwnAddressType.
+  /// Signaled from @c ESP_GAP_BLE_SET_STATIC_RAND_ADDR_EVT.
+  BLESync randAddrSync{"randAddrSync"};
   /// Bridges @c esp_ble_gap_update_whitelist (async) to the blocking public
   /// @c whiteListAdd / @c whiteListRemove APIs. Signaled from
   /// @c ESP_GAP_BLE_UPDATE_WHITELIST_COMPLETE_EVT.

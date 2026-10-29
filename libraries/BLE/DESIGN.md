@@ -488,7 +488,11 @@ Important lifecycle invariants:
   runs them while the host is still up, before clearing the public session; an
   active audio controller is therefore released even when the sketch omits
   `audio.end()`, and standalone `BLEIso` ownership cannot leak into the next
-  `begin()`
+  `begin()`. `BLEIso::end()`, `BLEAudio::end()`, and Broadcast Source/Sink
+  `stop()` wait on native ISO disconnect (`BLESync`, 5 s) and keep ownership
+  on failure. If ISO or audio is still live after the hook, `BLE.end()` aborts
+  host shutdown: a CONNECTED BIG must be terminated over HCI, not
+  software-reset (controller assert).
 - `BLE.end()` called from a host/BTC callback claims the ending state and
   defers the same ordered teardown to its worker; audio/ISO teardown must never
   bypass that callback-safe path
@@ -520,7 +524,15 @@ Gate backend availability through `BLE5_SUPPORTED` and runtime status reporting,
 
 The extended/periodic **advertising** API is **per instance, per setter** (`setExt*`, `startExtended`, `setPeriodicAdv*`, `startPeriodicAdv`), mirroring the legacy setter style and the BLE5 receive side — not a config-struct form.
 Because extended advertising is inherently multi-instance (SID, secondary PHY, per-set data, anonymous mode), it needs its own per-instance surface distinct from the single-instance legacy path; legacy stays the simple default.
-Current status: on NimBLE with `BLE5_SUPPORTED`, both the **receive** side (extended discovery + periodic sync) and the **transmit** side (extended + periodic advertising) are implemented over the extended controller API. When BLE5 is enabled, legacy `start()`/`stop()` and scanning are also routed through the extended engine using legacy PDUs (a reserved top instance broadcasts the legacy `ADV_IND` so it can coexist with user extended sets) — see [Advertising / scanning routing](#advertising--scanning-capability-gated-routing) below. Bluedroid mirrors that surface when `BLE5_SUPPORTED` is on (BLE5-capable chips with `CONFIG_BT_BLE_50_FEATURES_SUPPORTED`): extended adv/scan, connection PHY/DLE, `setDefaultPhy`, periodic advertising TX (`CONFIG_BT_BLE_50_PERIODIC_ADV_EN`), and periodic sync RX. Classic esp32 stays on BLE 4.2 and uses the shared `NotSupported` fallbacks. Where a backend lacks a capability, the `NotSupported` behavior is a single shared fallback in the stack-agnostic layer, not a per-backend copy. On non-BLE-5 builds every BLE5 method returns `BTStatus::NotSupported` (setters are no-ops), so callers must check the returned status. On-air BLE5 TX/sync verification requires a 2-DUT BLE5 rig (HITL).
+Current status: on NimBLE with `BLE5_SUPPORTED`, both the **receive** side (extended discovery + periodic sync) and the **transmit** side (extended + periodic advertising) are implemented over the extended controller API. When BLE5 is enabled, legacy `start()`/`stop()` and scanning are also routed through the extended engine using legacy PDUs (a reserved top instance broadcasts the legacy `ADV_IND` so it can coexist with user extended sets) — see [Advertising / scanning routing](#advertising--scanning-capability-gated-routing) below. Bluedroid mirrors that surface when `BLE5_SUPPORTED` is on (BLE5-capable chips with `CONFIG_BT_BLE_50_FEATURES_SUPPORTED`): extended adv/scan, connection PHY/DLE, `setDefaultPhy`, periodic advertising TX (`CONFIG_BT_BLE_50_PERIODIC_ADV_EN`), and periodic sync RX. Classic esp32 stays on BLE 4.2 and uses the shared `NotSupported` fallbacks.
+Bluedroid-specific constraints found while validating the S31 BLE5 suite:
+extended-advertising report addresses arrive as `esp_bd_addr_t` (MSB-first) and
+must go through `BTAddress::fromEspBdAddr`; a set advertising with
+`BTAddress::Type::Random` needs its own random address
+(`esp_ble_gap_ext_adv_set_rand_addr`) after `Set_Extended_Adv_Params` created
+the set — the device-level address alone makes the enable fail with `0x12`; and
+`ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_HD_DIR` omits the `Directed` bit, so
+high-duty directed advertising must send `0x1D` (not `0x19`). Where a backend lacks a capability, the `NotSupported` behavior is a single shared fallback in the stack-agnostic layer, not a per-backend copy. On non-BLE-5 builds every BLE5 method returns `BTStatus::NotSupported` (setters are no-ops), so callers must check the returned status. On-air BLE5 TX/sync verification requires a 2-DUT BLE5 rig (HITL).
 
 ### BLEStream
 

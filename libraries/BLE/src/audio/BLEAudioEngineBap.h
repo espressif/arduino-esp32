@@ -107,6 +107,23 @@ int bleAudioStreamSend(ble_audio_slot_t *slot, const uint8_t *sdu, uint16_t len)
 
 /** @brief True between the started and stopped callbacks. */
 bool bleAudioStreamIsStreaming(const ble_audio_slot_t *slot);
+/**
+ * @brief True while any pool stream is still streaming or its ISO channel
+ *        is not DISCONNECTED.
+ */
+bool bleAudioBapIsoBusy(void);
+/**
+ * @brief Issue leftover BAP transport stops (broadcast source/sink, unicast
+ *        client). Completions are asynchronous; wait until
+ *        @ref bleAudioBapIsoBusy is false.
+ */
+void bleAudioBapStopLeftover(void);
+/**
+ * @brief Wake `BLEAudio::end()` once every pool ISO channel is idle.
+ *
+ * Safe from the host task. Implemented in `BLEAudio.cpp`.
+ */
+void bleAudioNotifyBapIdle(void);
 /** @brief True when the local device transmits on this stream. */
 bool bleAudioStreamIsTx(const ble_audio_slot_t *slot);
 /** @brief ACL of a unicast stream; BLE_AUDIO_CONN_NONE for broadcast or unbound streams. */
@@ -170,6 +187,14 @@ void bleAudioPacsAdd(uint8_t dir, const ble_audio_pac_t *pac, uint32_t location,
  * @return 0 (also when nothing was staged or it already ran) or the stack error.
  */
 int bleAudioPacsCommit(void);
+
+/**
+ * @brief Unregister PAC records and PACS before `common_deinit`.
+ *
+ * Best-effort: NimBLE cannot delete a single GATT service, so native
+ * unregister may fail. The cap list is still dropped.
+ */
+int bleAudioPacsRelease(void);
 
 /** @brief Change the available contexts after start (e.g. while busy); ESP_ERR_INVALID_STATE before commit. */
 int bleAudioPacsSetAvailable(uint8_t dir, uint16_t contexts);

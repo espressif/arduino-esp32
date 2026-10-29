@@ -234,9 +234,18 @@ int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *event) {
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
+bool BLESecurity::isConfigured() const {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lock(_impl->mtx);
+  return _impl->configuredByApp;
+}
+
 void BLESecurity::setIOCapability(BLEIOCapability cap) {
   BLE_CHECK_IMPL();
   impl.ioCap = cap;
+  impl.configuredByApp = true;
   impl.applySecurityParams();
 }
 
@@ -245,6 +254,7 @@ void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool secureConn
   impl.bonding = bonding;
   impl.mitm = mitm;
   impl.sc = secureConnection;
+  impl.configuredByApp = true;
   impl.applySecurityParams();
 }
 

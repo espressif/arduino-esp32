@@ -1422,12 +1422,17 @@ void loop() {
       static unsigned long callbackEndStart = millis();
       BTStatus callbackRestart = bleStream.begin(serverName);
       if (callbackRestart || millis() - callbackEndStart >= 8000) {
+        // Tear the transient advertising down before anything else: the peer
+        // connects by address, so leaving it up while printing would let it
+        // connect to this throwaway instance instead of the final owner.
+        if (callbackRestart) {
+          bleStream.end();
+        }
         Serial.printf(
           "[SERVER] BLEStream callback end returned=%d rebegin=%d heap=%d\n", (int)bleStreamCallbackEndReturned.load(), (int)(bool)callbackRestart,
           (int)heap_caps_check_integrity_all(true)
         );
         if (callbackRestart) {
-          bleStream.end();
           bleStreamFinalOwner = std::make_shared<BLEStream>();
           // Deterministically exercise the callback handoff fallback: one
           // worker-creation failure quarantines immediately, then enough
@@ -1687,6 +1692,14 @@ void loop() {
       // controller may take several intervals before the new values propagate.
       unsigned long paramWait = millis();
       while (!phase16ConnParamsSeen && (millis() - paramWait) < 10000) {
+        delay(50);
+      }
+      // The ATT MTU exchange is not ordered against the conn-params update:
+      // Bluedroid serialises it behind the automatic service discovery, so it
+      // can complete after the param update. Sample only once both landed (or
+      // the bound expires) so this measures the events, not the race.
+      unsigned long mtuWait = millis();
+      while (!phase16MtuSeen && (millis() - mtuWait) < 10000) {
         delay(50);
       }
       Serial.printf("[SERVER] MtuChanged seen=%d last=%u\n", (int)phase16MtuSeen, (unsigned)phase16LastMtu);

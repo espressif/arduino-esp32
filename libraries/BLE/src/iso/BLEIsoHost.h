@@ -57,18 +57,6 @@ void bleIsoAttachShared(bool attached);
 /** @brief GAP app event from the audio engine's callback (`esp_ble_iso_gap_app_event_t *`). */
 void bleIsoOnGapEvent(void *event);
 
-/**
- * @brief Release ISO ownership unconditionally, for `BLE.end()`.
- *
- * `BLEIso::end()` keeps its state when a native teardown step fails, so a
- * standalone user can retry. The core cannot retry: it is about to destroy the
- * host, and a transport still claiming ownership then makes every later
- * `audio.begin()` fail with "standalone BLEIso session owns the host". This
- * runs `end()` and then drops the Arduino-side state regardless of the result;
- * the controller teardown that follows releases the native objects anyway.
- */
-void bleIsoForceRelease(void);
-
 #ifdef __cplusplus
 }
 #endif
