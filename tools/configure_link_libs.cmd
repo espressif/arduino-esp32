@@ -21,8 +21,6 @@ if not exist "%LD_LIBS%" (
 	exit /b 1
 )
 
-if not exist "%BUILD_PATH%" mkdir "%BUILD_PATH%"
-
 set "SWAP_MATTER_BT=0"
 if exist "%BUILD_PATH%\libraries\Matter" if exist "%SDK_PATH%\lib\libbt.matter.a" set "SWAP_MATTER_BT=1"
 

@@ -23,8 +23,6 @@ if [ ! -f "$LD_LIBS" ]; then
 	exit 1
 fi
 
-mkdir -p "$BUILD_PATH"
-
 if [ -d "${BUILD_PATH}/libraries/Matter" ] && [ -f "$LIBBT_MATTER_A" ]; then
 	sed -E 's/(^| )-lbt( |$)/\1-lbt.matter\2/g' "$LD_LIBS" > "$OUT"
 else
