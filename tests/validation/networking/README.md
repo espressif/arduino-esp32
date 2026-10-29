@@ -30,6 +30,7 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 | `test_udp_ipv6_with_local_bind` | Verify an explicitly bound IPv6 sender still sends successfully |
 | `test_udp_socket_family_after_stop` | Send IPv4 → IPv6 → IPv4 on one sender with `stop()` between families |
 | `test_dns_server_captive` | Start DNSServer on softAP, verify `start()` succeeds |
+| `test_dns_question_stays_within_packet` | Drop UDP queries with a missing QName terminator, a terminator only in QType, or a truncated QClass; then answer a valid root query |
 | `test_mdns_begin` | Start mDNS with hostname |
 | `test_mdns_service` | Register HTTP and custom UDP services via mDNS |
 
@@ -38,7 +39,7 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 - **Hardware**: Any ESP32 with Wi-Fi
 - **Wokwi**: Supported (uses `Wokwi-GUEST` network)
 - **CI Runner**: `wifi_router` (for hardware)
-- UDP loopback checks are ignored when `CONFIG_LWIP_NETIF_LOOPBACK` is disabled; IPv6 checks are ignored when IPv6 is disabled.
+- UDP loopback and DNS packet bounds checks are ignored when `CONFIG_LWIP_NETIF_LOOPBACK` is disabled; IPv6 checks are ignored when IPv6 is disabled.
 
 ## Serial Protocol
 
