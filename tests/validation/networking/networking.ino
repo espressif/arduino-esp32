@@ -665,6 +665,10 @@ void test_dns_question_stays_within_packet() {
   TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1003, truncatedQuestion, sizeof(truncatedQuestion)));
   expectNoReply(fd);
 
+  const uint8_t terminatorAtPacketEnd[] = {3, 'a', 'b', 'c', 1, 1, 1, 0};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1005, terminatorAtPacketEnd, sizeof(terminatorAtPacketEnd)));
+  expectNoReply(fd);
+
   timeout.tv_sec = 2;
   timeout.tv_usec = 0;
   TEST_ASSERT_EQUAL(0, setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
@@ -678,6 +682,17 @@ void test_dns_question_stays_within_packet() {
   TEST_ASSERT_EQUAL_HEX8(0x10, reply[0]);
   TEST_ASSERT_EQUAL_HEX8(0x04, reply[1]);
   DNSHeader response;
+  memcpy(&response, reply, sizeof(response));
+  TEST_ASSERT_EQUAL(DNS_QR_RESPONSE, response.QR);
+  TEST_ASSERT_EQUAL_UINT16(1, ntohs(response.ANCount));
+
+  const uint8_t namedQuestion[] = {3, 'a', 'b', 'c', 0, 0, 1, 0, 1};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1006, namedQuestion, sizeof(namedQuestion)));
+  received = recvfrom(fd, reply, sizeof(reply), 0, nullptr, nullptr);
+  TEST_ASSERT_GREATER_OR_EQUAL(DNS_HEADER_SIZE + sizeof(namedQuestion), received);
+  TEST_ASSERT_EQUAL_HEX8(0x10, reply[0]);
+  TEST_ASSERT_EQUAL_HEX8(0x06, reply[1]);
+  TEST_ASSERT_EQUAL_MEMORY(namedQuestion, reply + DNS_HEADER_SIZE, sizeof(namedQuestion));
   memcpy(&response, reply, sizeof(response));
   TEST_ASSERT_EQUAL(DNS_QR_RESPONSE, response.QR);
   TEST_ASSERT_EQUAL_UINT16(1, ntohs(response.ANCount));
