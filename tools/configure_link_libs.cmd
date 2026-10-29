@@ -25,10 +25,13 @@ set "SWAP_MATTER_BT=0"
 if exist "%BUILD_PATH%\libraries\Matter" if exist "%SDK_PATH%\lib\libbt.matter.a" set "SWAP_MATTER_BT=1"
 
 if "!SWAP_MATTER_BT!"=="1" (
+	REM Pass paths via env vars so PowerShell never single-quotes user/profile paths (e.g. O'Brien).
+	set "CONFIGURE_LD_LIBS=!LD_LIBS!"
+	set "CONFIGURE_OUT=!OUT!"
 	powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-		"$t=[IO.File]::ReadAllText('!LD_LIBS!');" ^
-		"$t=[regex]::Replace($t,'(^| )-lbt( |$)','${1}-lbt.matter${2}');" ^
-		"[IO.File]::WriteAllText('!OUT!', $t)"
+		"$t=[IO.File]::ReadAllText($env:CONFIGURE_LD_LIBS);" ^
+		"$t=[regex]::Replace($t,'(^| )-lbt( |$)','$1-lbt.matter$2');" ^
+		"[IO.File]::WriteAllText($env:CONFIGURE_OUT, $t)"
 	if errorlevel 1 (
 		echo configure_link_libs: failed to write %OUT% >&2
 		exit /b 1
