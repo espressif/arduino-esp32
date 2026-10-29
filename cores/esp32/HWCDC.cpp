@@ -26,6 +26,8 @@
 #include "soc/periph_defs.h"
 #include "soc/io_mux_reg.h"
 #include "soc/usb_serial_jtag_struct.h"
+#include "soc/usb_serial_jtag_reg.h"
+#include "esp_timer.h"
 #include <string.h>
 #pragma GCC diagnostic ignored "-Wvolatile"
 #include "hal/usb_serial_jtag_ll.h"
@@ -46,6 +48,22 @@ static volatile size_t tx_stash_len = 0;
 static intr_handle_t intr_handle = NULL;
 static SemaphoreHandle_t tx_lock = NULL;
 static volatile bool connected = false;
+// Time of the last IN token on the serial endpoint. The host polls that
+// endpoint while the COM port is open and stops when the port is closed.
+// SOF (isPlugged) keeps running either way.
+static volatile int64_t last_in_token_us = 0;
+// A host DTR change or SET_LINE_CODING observed after begin(). Absent on C3/S3.
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+static volatile int64_t line_event_us = 0;
+#endif
+// Session bookkeeping for while(!Serial) after esptool. Task context only.
+static int64_t burst_start_us = 0;
+static bool saw_gap_after_tokens = false;
+static bool tokens_seen = false;
+// Host poll quieter than this means the COM port is closed.
+static const int64_t HWCDC_TOKEN_RECENT_US = 20000;
+// Unbroken polling this long means the monitor was already open across reset.
+static const int64_t HWCDC_TOKEN_STABLE_US = 100000;
 
 // Protects TX state shared between the producer task and the ISR (which may
 // run on the other core on dual-core SoCs). It covers:
@@ -134,18 +152,79 @@ static esp_err_t
   return esp_event_handler_register_with(arduino_hw_cdc_event_loop_handle, event_base, event_id, event_handler, event_handler_arg);
 }
 
+static void hw_cdc_post_link_event(int32_t event_id) {
+  if (arduino_hw_cdc_event_loop_handle == NULL) {
+    return;
+  }
+  arduino_hw_cdc_event_data_t event = {0};
+  if (xPortInIsrContext()) {
+    BaseType_t xTaskWoken = pdFALSE;
+    esp_event_isr_post_to(arduino_hw_cdc_event_loop_handle, ARDUINO_HW_CDC_EVENTS, event_id, &event, sizeof(event), &xTaskWoken);
+    if (xTaskWoken == pdTRUE) {
+      portYIELD_FROM_ISR();
+    }
+  } else {
+    esp_event_post_to(arduino_hw_cdc_event_loop_handle, ARDUINO_HW_CDC_EVENTS, event_id, &event, sizeof(event), 0);
+  }
+}
+
+// Posts connect/disconnect only when the state actually changes.
+static void hw_cdc_set_connected(bool now) {
+  portENTER_CRITICAL_SAFE(&hw_cdc_tx_mux);
+  bool prev = connected;
+  connected = now;
+  portEXIT_CRITICAL_SAFE(&hw_cdc_tx_mux);
+  if (prev == now) {
+    return;
+  }
+  hw_cdc_post_link_event(now ? ARDUINO_HW_CDC_CONNECTED_EVENT : ARDUINO_HW_CDC_DISCONNECTED_EVENT);
+}
+
+static void hw_cdc_reset_session(void) {
+  last_in_token_us = 0;
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+  line_event_us = 0;
+#endif
+  burst_start_us = 0;
+  saw_gap_after_tokens = false;
+  tokens_seen = false;
+  connected = false;
+}
+
 static void hw_cdc_isr_handler(void *arg) {
   portBASE_TYPE xTaskWoken = 0;
   uint32_t usbjtag_intr_status = 0;
   arduino_hw_cdc_event_data_t event = {0};
   usbjtag_intr_status = usb_serial_jtag_ll_get_intsts_mask();
 
+  // Record the poll first. A DTR edge in this same ISR must stay newer than
+  // this token so a closing edge is not immediately treated as open.
+  if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_TOKEN_REC_IN_EP1) {
+    portENTER_CRITICAL_ISR(&hw_cdc_tx_mux);
+    last_in_token_us = esp_timer_get_time();
+    portEXIT_CRITICAL_ISR(&hw_cdc_tx_mux);
+    usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_TOKEN_REC_IN_EP1);
+  }
+
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+  if (usbjtag_intr_status & (USB_SERIAL_JTAG_DTR_CHG_INT_ST | USB_SERIAL_JTAG_SET_LINE_CODE_INT_ST)) {
+    // Edge only: the register map has no live DTR level. The edge invalidates
+    // tokens from before it. The next IN token, if the host keeps polling,
+    // is what marks the port open again.
+    portENTER_CRITICAL_ISR(&hw_cdc_tx_mux);
+    line_event_us = esp_timer_get_time();
+    portEXIT_CRITICAL_ISR(&hw_cdc_tx_mux);
+  }
+  if (usbjtag_intr_status & (USB_SERIAL_JTAG_DTR_CHG_INT_ST | USB_SERIAL_JTAG_RTS_CHG_INT_ST | USB_SERIAL_JTAG_SET_LINE_CODE_INT_ST)) {
+    usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_DTR_CHG_INT_ST | USB_SERIAL_JTAG_RTS_CHG_INT_ST | USB_SERIAL_JTAG_SET_LINE_CODE_INT_ST);
+  }
+#endif
+
   if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY) {
-    // IN_EMPTY firing means the host just picked up our last IN packet, so the
-    // CDC link is healthy regardless of any transient isPlugged() glitches
-    // (isPlugged() is driven by a tick-hook SOF watchdog with several ms of
-    // tolerance and can briefly flap to false even while USB is fine).
-    connected = true;
+    // IN_EMPTY means the host took a queued IN packet. Connection state comes
+    // from IN tokens (and DTR/line coding where that hardware exists), not
+    // from this bit: flushing an empty FIFO also completes an IN and used to
+    // look like the serial monitor had opened.
     if (tx_ring_buf != NULL && usb_serial_jtag_ll_txfifo_writable() == 1) {
       size_t queued_size = 0;
       uint8_t *queued_buff = NULL;
@@ -236,7 +315,6 @@ static void hw_cdc_isr_handler(void *arg) {
     }
     event.rx.len = i;
     arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_RX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
-    connected = true;
   }
 
   if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
@@ -244,8 +322,11 @@ static void hw_cdc_isr_handler(void *arg) {
     arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_BUS_RESET_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
     portENTER_CRITICAL_ISR(&hw_cdc_tx_mux);
     tx_stash_len = 0;
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+    line_event_us = esp_timer_get_time();
+#endif
     portEXIT_CRITICAL_ISR(&hw_cdc_tx_mux);
-    connected = false;
+    hw_cdc_set_connected(false);
   }
 
   // SOF ISR is causing esptool to be unable to upload firmware to the board
@@ -270,24 +351,66 @@ bool HWCDC::isCDC_Connected() {
   // !isPlugged() reading (the SOF watchdog has a few-ms tolerance and is
   // known to flap even on a healthy link) would otherwise silently drop bytes
   // we already pulled out of the ring buffer into the stash.
+  // Do not flush the TX FIFO from here. That ACK looks like the host opened
+  // the port, which is how while(!Serial) used to pass right after esptool.
   if (!isPlugged()) {
-    connected = false;
+    hw_cdc_set_connected(false);
     return false;
   }
 
-  if (connected) {
-    return true;
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+  // 0: bus is in reset. 1: reset has been released.
+  if ((REG_READ(USB_SERIAL_JTAG_BUS_RESET_ST_REG) & USB_SERIAL_JTAG_USB_BUS_RESET_ST) == 0) {
+    hw_cdc_set_connected(false);
+    return false;
   }
+#endif
 
-  // Not yet (re)connected. Make sure the IN_EMPTY interrupt is armed and that
-  // there is something for the host to clock out so the next IN token will
-  // generate the interrupt that flips us back to connected = true. We arm on
-  // every call (not just once) so that a stalled int_ena -- whether from a
-  // producer/ISR race or from the ISR's empty-branch disable -- always gets
-  // re-enabled, breaking what would otherwise be a permanent TX deadlock.
+  // Re-arm IN_EMPTY on every check so a stalled int_ena cannot leave TX
+  // without a wakeup. This does not by itself mark the port open.
   hw_cdc_enable_tx_intr();
-  usb_serial_jtag_ll_txfifo_flush();
-  return false;
+
+  // Also reached from cdc0_write_char() in ISR context. The session flags are
+  // task-and-ISR shared, so the decision stays inside the same mux as the
+  // token timestamp. The event itself is posted after the mux is released.
+  int64_t now = 0;
+  int64_t token_us = 0;
+  bool open = false;
+  portENTER_CRITICAL_SAFE(&hw_cdc_tx_mux);
+  now = esp_timer_get_time();
+  token_us = last_in_token_us;
+  const bool recent = token_us != 0 && (now - token_us) <= HWCDC_TOKEN_RECENT_US;
+  if (!recent) {
+    if (tokens_seen) {
+      saw_gap_after_tokens = true;
+    }
+    burst_start_us = 0;
+  } else {
+    if (burst_start_us == 0) {
+      burst_start_us = now;
+    }
+    tokens_seen = true;
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+    const int64_t line_us = line_event_us;
+    if (line_us != 0 && token_us <= line_us) {
+      // DTR or SET_LINE_CODING just changed. Writes stay non-blocking until a
+      // later IN token shows the host is still polling.
+      open = false;
+    } else if (line_us != 0 && token_us > line_us) {
+      open = true;
+    } else {
+      open = saw_gap_after_tokens || (now - burst_start_us) >= HWCDC_TOKEN_STABLE_US;
+    }
+#else
+    // C3/S3 have no DTR bit. Leftover esptool polling is the burst that is
+    // already running at begin(). A later burst, or one burst that never
+    // stops, is the serial monitor.
+    open = saw_gap_after_tokens || (now - burst_start_us) >= HWCDC_TOKEN_STABLE_US;
+#endif
+  }
+  portEXIT_CRITICAL_SAFE(&hw_cdc_tx_mux);
+  hw_cdc_set_connected(open);
+  return open;
 }
 
 static void flushTXBuffer(const uint8_t *buffer, size_t size) {
@@ -408,6 +531,7 @@ bool HWCDC::deinit(void *busptr) {
 }
 
 void HWCDC::begin(unsigned long baud) {
+  uint32_t intr_mask;
   if (tx_lock == NULL) {
     tx_lock = xSemaphoreCreateMutex();
   }
@@ -453,8 +577,19 @@ void HWCDC::begin(unsigned long baud) {
   USB_SERIAL_JTAG.conf0.dp_pullup = 1;
   // Enable USB pad function
   USB_SERIAL_JTAG.conf0.usb_pad_enable = 1;
+  // Drop the bootloader/esptool session. begin() does not touch D+/D-.
+  // Pulling those pins down here disconnects the device and the next upload
+  // cannot find the COM port.
   usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
-  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
+  usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
+  hw_cdc_set_connected(false);
+  hw_cdc_reset_session();
+  intr_mask = USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET
+              | USB_SERIAL_JTAG_INTR_TOKEN_REC_IN_EP1;
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+  intr_mask |= USB_SERIAL_JTAG_DTR_CHG_INT_ENA | USB_SERIAL_JTAG_RTS_CHG_INT_ENA | USB_SERIAL_JTAG_SET_LINE_CODE_INT_ENA;
+#endif
+  usb_serial_jtag_ll_ena_intr_mask(intr_mask);
   // SOF ISR is causing esptool to be unable to upload firmware to the board
   // usb_serial_jtag_ll_ena_intr_mask(
   //   USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET | USB_SERIAL_JTAG_INTR_SOF
@@ -498,7 +633,7 @@ void HWCDC::end() {
   }
   HWCDC::deinit(this);
   setDebugOutput(false);
-  connected = false;
+  hw_cdc_reset_session();
 }
 
 void HWCDC::setTxTimeoutMs(uint32_t timeout) {
@@ -547,11 +682,8 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
   if (!isCDC_Connected()) {
     // just pop/push RingBuffer and apply FIFO policy
     flushTXBuffer(buffer, size);
-    // Kick the ISR after queuing: the not-connected path doesn't otherwise
-    // re-arm IN_EMPTY, which means a transient isPlugged() glitch that flipped
-    // `connected` to false would leave new data sitting in the ring with no
-    // wakeup pending -- a permanent hang. Re-arming here lets the ISR drain
-    // the ring and flip `connected` back to true on the next host pickup.
+    // Re-arm IN_EMPTY so a transient unplug does not leave the ring without
+    // a wakeup. Opening the port is decided from IN tokens, not from this.
     hw_cdc_enable_tx_intr();
   } else {
     size_t to_send = size, so_far = 0;
@@ -590,11 +722,19 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
       if (xRingbufferSend(tx_ring_buf, (void *)(buffer + so_far), chunk, tx_timeout_ms / portTICK_PERIOD_MS) != pdTRUE) {
         // Kick the ISR in case it stopped draining the ring.
         hw_cdc_enable_tx_intr();
+        // The monitor closed while this write was waiting. Do not finish the
+        // 20-attempt backpressure budget; that budget is only for a host that
+        // is still polling.
+        if (!isCDC_Connected()) {
+          gave_up_disconnect = true;
+          size = so_far;
+          break;
+        }
         consec_timeouts++;
         if (consec_timeouts >= max_consec_timeouts) {
           // Bounded-progress deadline reached. Decide why and bail out.
           if (!isPlugged()) {
-            connected = false;
+            hw_cdc_set_connected(false);
             gave_up_disconnect = true;
           }
           size = so_far;
@@ -644,7 +784,8 @@ void HWCDC::flush(void) {
       hw_cdc_enable_tx_intr();
     }
     uint32_t tries = tx_timeout_ms;  // waits 1ms per ISR sending data attempt, in case CDC is unplugged
-    while (connected && tries && uxItemsWaiting) {
+    bool open = true;
+    while (open && tries && uxItemsWaiting) {
       delay(1);
       UBaseType_t lastUxItemsWaiting = uxItemsWaiting;
       vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
@@ -652,10 +793,11 @@ void HWCDC::flush(void) {
         tries--;
       }
       hw_cdc_enable_tx_intr();
+      open = isCDC_Connected();
     }
-    if (tries == 0) {  // CDC isn't connected anymore...
-      connected = false;
-      flushTXBuffer(NULL, 0);  // flushes all TX Buffer
+    if (!open) {
+      // Host stopped polling. Drop the queue instead of waiting out a closed port.
+      flushTXBuffer(NULL, 0);
     }
   }
   xSemaphoreGive(tx_lock);

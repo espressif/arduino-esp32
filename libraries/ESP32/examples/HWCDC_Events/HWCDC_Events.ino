@@ -31,6 +31,7 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
   if (event_base == ARDUINO_HW_CDC_EVENTS) {
     switch (event_id) {
       case ARDUINO_HW_CDC_CONNECTED_EVENT: Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_CONNECTED_EVENT"); break;
+      case ARDUINO_HW_CDC_DISCONNECTED_EVENT: Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_DISCONNECTED_EVENT"); break;
       case ARDUINO_HW_CDC_BUS_RESET_EVENT: Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_BUS_RESET_EVENT"); break;
       case ARDUINO_HW_CDC_RX_EVENT:
         Serial0.println("\nCDC EVENT:: ARDUINO_HW_CDC_RX_EVENT");
