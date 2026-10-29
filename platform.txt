@@ -56,8 +56,7 @@ compiler.c.flags=-MMD -c "@{compiler.sdk.path}/flags/c_flags" {compiler.warning_
 compiler.cpp.flags=-MMD -c "@{compiler.sdk.path}/flags/cpp_flags" {compiler.warning_flags} {compiler.optimization_flags} {compiler.common_werror_flags}
 compiler.S.flags=-MMD -c -x assembler-with-cpp "@{compiler.sdk.path}/flags/S_flags" {compiler.warning_flags} {compiler.optimization_flags}
 compiler.c.elf.flags="-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" "-L{compiler.sdk.path}/{build.memory_type}" "-Wl,--wrap=esp_panic_handler" "-Wl,--wrap=esp_bt_mem_release" "-Wl,--wrap=esp_bt_controller_mem_release" "-Wl,--wrap=_Z21esp_matter_mem_callocjj" "-Wl,--wrap=_Z22esp_matter_mem_reallocPvj" "-Wl,--wrap=_Z19esp_matter_mem_freePv" "@{compiler.sdk.path}/flags/ld_flags" "@{compiler.sdk.path}/flags/ld_scripts"
-# IDE link libs: link_libs.rsp (configure_link_libs.sh / .cmd). Matter sketches on SDKs with
-# lib/libbt.matter.a (lib-builder bt_matter_harvest: esp32c3, esp32c5, esp32h2) -> -lbt.matter in link_libs.rsp.
+# IDE link: link_libs.rsp is written at prelink by configure_link_libs.sh / .cmd (copy or Matter -lbt swap).
 build.link_libs.path={build.path}/link_libs.rsp
 compiler.c.elf.libs=@{build.link_libs.path}
 compiler.ar.flags=cr
@@ -160,11 +159,7 @@ recipe.hooks.core.postbuild.1.pattern.windows=cmd /c type nul > "{file_opts.path
 recipe.hooks.prebuild.8.pattern=/usr/bin/env bash -c "cp -f "{compiler.sdk.path}"/sdkconfig "{build.path}"/sdkconfig"
 recipe.hooks.prebuild.8.pattern.windows=cmd /c COPY /y "{compiler.sdk.path}\sdkconfig" "{build.path}\sdkconfig"
 
-# Seed link_libs.rsp from flags/ld_libs (prelink hook may swap BT for Matter on IDE only).
-recipe.hooks.prebuild.9.pattern=/usr/bin/env bash -c "cp -f "{compiler.sdk.path}"/flags/ld_libs "{build.link_libs.path}""
-recipe.hooks.prebuild.9.pattern.windows=cmd /c COPY /y "{compiler.sdk.path}\flags\ld_libs" "{build.link_libs.path}"
-
-# IDE Matter library: configure_link_libs (requires lib/libbt.matter.a on c3/c5/h2 harvest SDKs).
+# link_libs.rsp: configure_link_libs (prelink) copies flags/ld_libs or applies Matter -lbt swap.
 recipe.hooks.linking.prelink.1.pattern={tools.configure_link_libs.cmd} "{build.path}" "{compiler.sdk.path}"
 # Do not wrap in cmd /c; IDE already runs .pattern.windows via cmd and tools.*.cmd.windows is quoted.
 recipe.hooks.linking.prelink.1.pattern.windows={tools.configure_link_libs.cmd} "{build.path}" "{compiler.sdk.path}"
