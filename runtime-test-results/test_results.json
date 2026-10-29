@@ -1,23 +1,23 @@
 {
-  "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec",
+  "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774",
   "tests_failed": true,
   "test_data": {
     "hardware": {
       "adc_pwm": {
         "esp32": {
           "failures": 0,
-          "total": 12,
-          "errors": 12
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 12,
-          "errors": 12
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 12,
-          "errors": 12
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -31,18 +31,18 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 12,
-          "errors": 12
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 12,
-          "errors": 12
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 12,
-          "errors": 12
+          "total": 1,
+          "errors": 1
         }
       },
       "ble": {
@@ -151,18 +151,18 @@
       "clock": {
         "esp32": {
           "failures": 0,
-          "total": 7,
-          "errors": 7
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 7,
-          "errors": 7
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 7,
-          "errors": 7
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -176,18 +176,18 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 7,
-          "errors": 7
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 7,
-          "errors": 7
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 7,
-          "errors": 7
+          "total": 1,
+          "errors": 1
         }
       },
       "dac": {
@@ -232,18 +232,18 @@
       "eeprom": {
         "esp32": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -257,18 +257,18 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 1,
+          "errors": 1
         }
       },
       "esp_now": {
@@ -303,21 +303,33 @@
           "errors": 1
         }
       },
+      "ethernet": {
+        "esp32": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32p4": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        }
+      },
       "fs": {
         "esp32": {
           "failures": 0,
-          "total": 61,
-          "errors": 61
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 61,
-          "errors": 61
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 61,
-          "errors": 61
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -331,35 +343,35 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 61,
-          "errors": 61
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 61,
-          "errors": 61
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 61,
-          "errors": 61
+          "total": 1,
+          "errors": 1
         }
       },
       "hash": {
         "esp32": {
           "failures": 0,
-          "total": 72,
-          "errors": 72
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 72,
-          "errors": 72
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 72,
-          "errors": 72
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -373,18 +385,18 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 72,
-          "errors": 72
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 72,
-          "errors": 72
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 72,
-          "errors": 72
+          "total": 1,
+          "errors": 1
         }
       },
       "hello_world": {
@@ -432,13 +444,18 @@
       "i2s": {
         "esp32": {
           "failures": 0,
-          "total": 38,
-          "errors": 38
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 43,
-          "errors": 43
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c5": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -450,27 +467,37 @@
           "total": 1,
           "errors": 1
         },
+        "esp32p4": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
         "esp32s2": {
           "failures": 0,
-          "total": 38,
-          "errors": 38
+          "total": 1,
+          "errors": 1
+        },
+        "esp32s3": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
         }
       },
       "multitasking": {
         "esp32": {
           "failures": 0,
-          "total": 10,
-          "errors": 10
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 9,
-          "errors": 9
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 9,
-          "errors": 9
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -484,35 +511,35 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 10,
-          "errors": 10
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 9,
-          "errors": 9
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 10,
-          "errors": 10
+          "total": 1,
+          "errors": 1
         }
       },
       "network_client": {
         "esp32": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -526,35 +553,35 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         }
       },
       "networking": {
         "esp32": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -563,30 +590,30 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 1,
+          "errors": 1
         }
       },
       "nvs": {
         "esp32": {
           "failures": 0,
-          "total": 54,
-          "errors": 54
+          "total": 2,
+          "errors": 2
         },
         "esp32c3": {
           "failures": 0,
-          "total": 54,
-          "errors": 54
+          "total": 2,
+          "errors": 2
         },
         "esp32c5": {
           "failures": 0,
-          "total": 27,
-          "errors": 27
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -600,25 +627,25 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 108,
-          "errors": 108
+          "total": 4,
+          "errors": 4
         },
         "esp32s2": {
           "failures": 0,
-          "total": 54,
-          "errors": 54
+          "total": 2,
+          "errors": 2
         },
         "esp32s3": {
           "failures": 0,
-          "total": 81,
-          "errors": 81
+          "total": 3,
+          "errors": 3
         }
       },
       "ota": {
         "esp32": {
           "failures": 0,
-          "total": 52,
-          "errors": 52
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
@@ -627,8 +654,8 @@
         },
         "esp32c5": {
           "failures": 0,
-          "total": 52,
-          "errors": 52
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -637,13 +664,13 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 52,
-          "errors": 52
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 52,
-          "errors": 52
+          "total": 1,
+          "errors": 1
         }
       },
       "periman": {
@@ -691,18 +718,18 @@
       "power_management": {
         "esp32": {
           "failures": 0,
-          "total": 5,
-          "errors": 5
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 5,
-          "errors": 5
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 5,
-          "errors": 5
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -716,45 +743,45 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 5,
-          "errors": 5
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 5,
-          "errors": 5
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 5,
-          "errors": 5
+          "total": 1,
+          "errors": 1
         }
       },
       "psram": {
         "esp32": {
           "failures": 0,
-          "total": 14,
-          "errors": 14
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 14,
-          "errors": 14
+          "total": 1,
+          "errors": 1
         },
         "esp32p4": {
           "failures": 0,
-          "total": 11,
-          "errors": 11
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 14,
-          "errors": 14
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 14,
-          "errors": 14
+          "total": 1,
+          "errors": 1
         }
       },
       "signed_ota": {
@@ -792,18 +819,18 @@
       "ticker": {
         "esp32": {
           "failures": 0,
-          "total": 19,
-          "errors": 19
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 19,
-          "errors": 19
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 19,
-          "errors": 19
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -817,35 +844,35 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 19,
-          "errors": 19
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 19,
-          "errors": 19
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 19,
-          "errors": 19
+          "total": 1,
+          "errors": 1
         }
       },
       "timer": {
         "esp32": {
           "failures": 0,
-          "total": 7,
-          "errors": 7
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -859,84 +886,84 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         }
       },
       "tls_http": {
         "esp32": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 1,
+          "errors": 1
         }
       },
       "touch": {
         "esp32": {
           "failures": 0,
-          "total": 3,
-          "errors": 3
+          "total": 1,
+          "errors": 1
         },
         "esp32p4": {
           "failures": 0,
-          "total": 3,
-          "errors": 3
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 3,
-          "errors": 3
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 3,
-          "errors": 3
+          "total": 1,
+          "errors": 1
         }
       },
       "uart": {
         "esp32": {
           "failures": 0,
-          "total": 26,
-          "errors": 26
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 25,
-          "errors": 25
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 25,
-          "errors": 25
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -950,35 +977,35 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 25,
-          "errors": 25
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 26,
-          "errors": 26
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 25,
-          "errors": 25
+          "total": 1,
+          "errors": 1
         }
       },
       "unity": {
         "esp32": {
           "failures": 0,
-          "total": 15,
-          "errors": 15
+          "total": 1,
+          "errors": 1
         },
         "esp32c3": {
           "failures": 0,
-          "total": 15,
-          "errors": 15
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 15,
-          "errors": 15
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -992,18 +1019,18 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 15,
-          "errors": 15
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 15,
-          "errors": 15
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 15,
-          "errors": 15
+          "total": 1,
+          "errors": 1
         }
       },
       "webserver": {
@@ -1041,18 +1068,18 @@
       "wifi": {
         "esp32": {
           "failures": 0,
-          "total": 34,
-          "errors": 34
+          "total": 2,
+          "errors": 2
         },
         "esp32c3": {
           "failures": 0,
-          "total": 17,
-          "errors": 17
+          "total": 1,
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
-          "total": 17,
-          "errors": 17
+          "total": 1,
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -1061,13 +1088,13 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 34,
-          "errors": 34
+          "total": 2,
+          "errors": 2
         },
         "esp32s3": {
           "failures": 0,
-          "total": 51,
-          "errors": 51
+          "total": 3,
+          "errors": 3
         }
       },
       "wifi_ap": {
@@ -1139,18 +1166,18 @@
       "keyboard_layout": {
         "esp32p4": {
           "failures": 0,
-          "total": 10,
-          "errors": 10
+          "total": 1,
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
-          "total": 10,
-          "errors": 10
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
-          "total": 10,
-          "errors": 10
+          "total": 1,
+          "errors": 1
         }
       }
     },
@@ -1159,12 +1186,12 @@
         "esp32": {
           "failures": 0,
           "total": 17,
-          "errors": 17
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 17,
-          "errors": 17
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1179,66 +1206,66 @@
         "esp32p4": {
           "failures": 0,
           "total": 17,
-          "errors": 17
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 17,
-          "errors": 17
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 17,
-          "errors": 17
+          "errors": 0
         }
       },
       "eeprom": {
         "esp32": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 38,
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 38,
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
-          "total": 31,
+          "total": 38,
           "errors": 0
         },
         "esp32h2": {
           "failures": 0,
-          "total": 31,
+          "total": 38,
           "errors": 0
         },
         "esp32p4": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 38,
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 38,
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
-          "total": 31,
-          "errors": 31
+          "total": 38,
+          "errors": 0
         }
       },
       "fs": {
         "esp32": {
           "failures": 0,
           "total": 61,
-          "errors": 61
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 61,
-          "errors": 61
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1253,29 +1280,29 @@
         "esp32p4": {
           "failures": 0,
           "total": 61,
-          "errors": 61
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 61,
-          "errors": 61
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 61,
-          "errors": 61
+          "errors": 0
         }
       },
       "gpio": {
         "esp32": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1290,29 +1317,29 @@
         "esp32p4": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         }
       },
       "hash": {
         "esp32": {
           "failures": 0,
           "total": 107,
-          "errors": 107
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 107,
-          "errors": 107
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1327,29 +1354,29 @@
         "esp32p4": {
           "failures": 0,
           "total": 107,
-          "errors": 107
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 107,
-          "errors": 107
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 107,
-          "errors": 107
+          "errors": 0
         }
       },
       "hello_world": {
         "esp32": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1364,29 +1391,29 @@
         "esp32p4": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         }
       },
       "i2c_master": {
         "esp32": {
           "failures": 0,
           "total": 8,
-          "errors": 8
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 8,
-          "errors": 8
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1401,29 +1428,66 @@
         "esp32p4": {
           "failures": 0,
           "total": 7,
-          "errors": 7
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 8,
-          "errors": 8
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 8,
-          "errors": 8
+          "errors": 0
+        }
+      },
+      "mdns_cleanup": {
+        "esp32": {
+          "failures": 0,
+          "total": 6,
+          "errors": 0
+        },
+        "esp32c3": {
+          "failures": 0,
+          "total": 6,
+          "errors": 0
+        },
+        "esp32c6": {
+          "failures": 0,
+          "total": 6,
+          "errors": 0
+        },
+        "esp32h2": {
+          "failures": 0,
+          "total": 6,
+          "errors": 0
+        },
+        "esp32p4": {
+          "failures": 0,
+          "total": 6,
+          "errors": 0
+        },
+        "esp32s2": {
+          "failures": 0,
+          "total": 6,
+          "errors": 0
+        },
+        "esp32s3": {
+          "failures": 0,
+          "total": 6,
+          "errors": 0
         }
       },
       "multitasking": {
         "esp32": {
           "failures": 0,
           "total": 10,
-          "errors": 10
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 9,
-          "errors": 9
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1438,29 +1502,29 @@
         "esp32p4": {
           "failures": 0,
           "total": 10,
-          "errors": 10
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 9,
-          "errors": 9
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 10,
-          "errors": 10
+          "errors": 0
         }
       },
       "network_client": {
         "esp32": {
           "failures": 0,
           "total": 13,
-          "errors": 13
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 13,
-          "errors": 13
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1475,61 +1539,61 @@
         "esp32p4": {
           "failures": 0,
           "total": 13,
-          "errors": 13
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 13,
-          "errors": 13
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 13,
-          "errors": 13
+          "errors": 0
         }
       },
       "networking": {
         "esp32": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 26,
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 26,
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
-          "total": 13,
+          "total": 26,
           "errors": 0
         },
         "esp32p4": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 26,
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 26,
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
-          "total": 13,
-          "errors": 13
+          "total": 26,
+          "errors": 0
         }
       },
       "nvs": {
         "esp32": {
           "failures": 0,
           "total": 52,
-          "errors": 52
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 52,
-          "errors": 52
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1544,51 +1608,51 @@
         "esp32p4": {
           "failures": 0,
           "total": 104,
-          "errors": 104
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 52,
-          "errors": 52
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 78,
-          "errors": 78
+          "errors": 0
         }
       },
       "psram": {
         "esp32": {
           "failures": 0,
           "total": 14,
-          "errors": 14
+          "errors": 0
         },
         "esp32p4": {
           "failures": 0,
           "total": 11,
-          "errors": 11
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 14,
-          "errors": 14
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 14,
-          "errors": 14
+          "errors": 0
         }
       },
       "sdcard": {
         "esp32": {
           "failures": 0,
           "total": 11,
-          "errors": 11
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 11,
-          "errors": 11
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1603,29 +1667,29 @@
         "esp32p4": {
           "failures": 0,
           "total": 11,
-          "errors": 11
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 11,
-          "errors": 11
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 11,
-          "errors": 11
+          "errors": 0
         }
       },
       "spi": {
         "esp32": {
           "failures": 0,
           "total": 16,
-          "errors": 16
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 16,
-          "errors": 16
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1640,29 +1704,29 @@
         "esp32p4": {
           "failures": 0,
           "total": 16,
-          "errors": 16
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 16,
-          "errors": 16
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 16,
-          "errors": 16
+          "errors": 0
         }
       },
       "ticker": {
         "esp32": {
           "failures": 0,
           "total": 19,
-          "errors": 19
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 19,
-          "errors": 19
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1677,29 +1741,29 @@
         "esp32p4": {
           "failures": 0,
           "total": 19,
-          "errors": 19
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 19,
-          "errors": 19
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 19,
-          "errors": 19
+          "errors": 0
         }
       },
       "timer": {
         "esp32": {
           "failures": 0,
-          "total": 7,
-          "errors": 7
+          "total": 10,
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 11,
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1713,52 +1777,30 @@
         },
         "esp32p4": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 11,
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
+          "total": 11,
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
-          "total": 8,
-          "errors": 8
-        }
-      },
-      "tls_http": {
-        "esp32": {
-          "failures": 0,
-          "total": 8,
-          "errors": 8
-        },
-        "esp32c3": {
-          "failures": 0,
-          "total": 8,
-          "errors": 8
-        },
-        "esp32s2": {
-          "failures": 0,
-          "total": 8,
-          "errors": 8
-        },
-        "esp32s3": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 11,
+          "errors": 0
         }
       },
       "uart": {
         "esp32": {
           "failures": 0,
           "total": 26,
-          "errors": 26
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 25,
-          "errors": 25
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1773,29 +1815,29 @@
         "esp32p4": {
           "failures": 0,
           "total": 25,
-          "errors": 25
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 26,
-          "errors": 26
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 25,
-          "errors": 25
+          "errors": 0
         }
       },
       "unity": {
         "esp32": {
           "failures": 0,
           "total": 15,
-          "errors": 15
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 15,
-          "errors": 15
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
@@ -1810,71 +1852,66 @@
         "esp32p4": {
           "failures": 0,
           "total": 15,
-          "errors": 15
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 15,
-          "errors": 15
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 15,
-          "errors": 15
+          "errors": 0
         }
       },
       "wifi": {
         "esp32": {
           "failures": 0,
           "total": 34,
-          "errors": 34
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 17,
-          "errors": 17
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
           "total": 17,
           "errors": 0
         },
-        "esp32p4": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        },
         "esp32s2": {
           "failures": 0,
           "total": 34,
-          "errors": 34
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 51,
-          "errors": 51
+          "errors": 0
         }
       },
       "keyboard_layout": {
         "esp32p4": {
           "failures": 0,
           "total": 10,
-          "errors": 10
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 10,
-          "errors": 10
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
           "total": 10,
-          "errors": 10
+          "errors": 0
         }
       }
     }
   },
-  "generated_at": "2026-10-28T00:47:26.326699+00:00",
+  "generated_at": "2026-10-29T01:28:06.459313+00:00",
   "cache": {
     "hardware": {
       "ble": {
@@ -3244,550 +3281,550 @@
         "esp32": {
           "total": 17,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038234+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455911+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 17,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038253+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455926+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 17,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325766+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455930+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 17,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325781+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455932+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 17,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038267+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455935+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 17,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038270+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455937+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 17,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038273+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455939+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "fs": {
         "esp32": {
           "total": 61,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038297+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455957+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 61,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038300+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455959+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 61,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325795+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455961+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 61,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325797+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455963+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 61,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038308+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455965+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 61,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038338+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455967+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 61,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038349+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455969+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "gpio": {
         "esp32": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038354+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455972+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038357+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455974+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325801+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455976+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325803+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455978+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038365+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455980+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038368+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455984+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038371+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455986+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "hash": {
         "esp32": {
           "total": 107,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038374+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455989+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 107,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038377+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455991+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 107,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325806+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455993+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 107,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325808+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455995+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 107,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038386+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455997+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 107,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038388+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455999+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 107,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038395+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456002+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "hello_world": {
         "esp32": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038398+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456004+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038401+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456006+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325812+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456008+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325813+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456010+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038409+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456012+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038412+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456014+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 1,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038414+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456016+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "i2c_master": {
         "esp32": {
           "total": 8,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038418+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456019+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 8,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038421+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456021+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 8,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325817+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456023+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 7,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325819+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456025+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 7,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038429+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456027+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 8,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038431+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456030+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 8,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038434+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456032+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "keyboard_layout": {
         "esp32p4": {
           "total": 10,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038439+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456035+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 10,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038442+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456038+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 10,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038445+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456040+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "nvs": {
         "esp32": {
           "total": 52,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038513+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456107+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 52,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038516+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456109+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 104,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325842+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456111+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 104,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325844+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456115+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 104,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038524+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456117+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 52,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038527+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456119+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 78,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038529+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456121+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "psram": {
         "esp32": {
           "total": 14,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038533+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456124+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038537+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456127+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 14,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038539+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456129+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 14,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038542+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456131+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "sdcard": {
         "esp32": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038546+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456133+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038548+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456135+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325850+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456137+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325851+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456139+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038557+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456141+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038559+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456143+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038562+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456145+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "timer": {
         "esp32": {
-          "total": 7,
+          "total": 10,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038608+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456178+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
-          "total": 8,
+          "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038611+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456180+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325865+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456184+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325867+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456186+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
-          "total": 8,
+          "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038619+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456188+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
-          "total": 8,
+          "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038622+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456190+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
-          "total": 8,
+          "total": 11,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038625+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456192+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "uart": {
         "esp32": {
           "total": 26,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038628+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456195+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 25,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038631+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456197+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 25,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325874+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456199+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 25,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325876+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456201+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 25,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038639+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456203+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 26,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038642+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456205+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 25,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038645+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456207+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "unity": {
         "esp32": {
           "total": 15,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038648+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456210+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 15,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038651+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456212+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 15,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325880+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456214+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 15,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325881+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456216+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 15,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038660+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456218+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 15,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038662+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456220+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 15,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038665+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456222+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "wifi": {
         "esp32": {
           "total": 34,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038668+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456225+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 17,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038671+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456227+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 17,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325885+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456229+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 1,
@@ -3798,272 +3835,272 @@
         "esp32s2": {
           "total": 34,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038680+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456232+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 51,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038683+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456234+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "network_client": {
         "esp32": {
           "total": 13,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038474+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456079+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 13,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038476+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456081+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 13,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325831+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456083+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 13,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325833+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456085+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 13,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038485+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456087+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 13,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038489+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456089+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 13,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038492+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456091+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "eeprom": {
         "esp32": {
-          "total": 31,
+          "total": 38,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038276+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455942+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
-          "total": 31,
+          "total": 38,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038279+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455944+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
-          "total": 31,
+          "total": 38,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325788+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455946+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
-          "total": 31,
+          "total": 38,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325790+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.455948+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
-          "total": 31,
+          "total": 38,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038288+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455950+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
-          "total": 31,
+          "total": 38,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038291+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455952+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
-          "total": 31,
+          "total": 38,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038294+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.455954+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "multitasking": {
         "esp32": {
           "total": 10,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038454+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456064+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 9,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038457+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456066+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 9,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325825+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456068+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 9,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325828+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456070+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 10,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038465+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456072+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 9,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038467+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456074+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 10,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038470+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456076+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "ticker": {
         "esp32": {
           "total": 19,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038587+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456162+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 19,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038590+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456165+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 19,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325860+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456167+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 19,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325862+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456169+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 19,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038599+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456171+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 19,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038602+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456173+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 19,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038605+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456175+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "spi": {
         "esp32": {
           "total": 16,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038565+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456148+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
           "total": 16,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038568+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456150+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
           "total": 16,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325855+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456152+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32h2": {
           "total": 16,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325856+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456154+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
           "total": 16,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038577+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456156+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
           "total": 16,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038581+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456158+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
           "total": 16,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038584+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456160+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "networking": {
         "esp32": {
-          "total": 13,
+          "total": 26,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038495+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456093+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c3": {
-          "total": 13,
+          "total": 26,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038498+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456095+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32c6": {
-          "total": 13,
+          "total": 26,
           "failures": 0,
-          "timestamp": "2026-10-28T00:47:26.325838+00:00",
-          "commit_sha": "8e29d4de275cf58c767f453ff6ed26bea692dfec"
+          "timestamp": "2026-10-29T01:28:06.456097+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32p4": {
-          "total": 13,
+          "total": 26,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038504+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456100+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s2": {
-          "total": 13,
+          "total": 26,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038507+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456102+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         },
         "esp32s3": {
-          "total": 13,
+          "total": 26,
           "failures": 0,
-          "timestamp": "2026-10-27T01:00:59.038509+00:00",
-          "commit_sha": "ef9b38092dd7f16ed086eca0f266a38d6bf7f5e0"
+          "timestamp": "2026-10-29T01:28:06.456104+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       },
       "tls_http": {
@@ -4090,6 +4127,50 @@
           "failures": 1,
           "timestamp": "2026-07-03T03:03:02.771585+00:00",
           "commit_sha": "9690b7efdc978f1040d69e714bac46bce5802004"
+        }
+      },
+      "mdns_cleanup": {
+        "esp32": {
+          "total": 6,
+          "failures": 0,
+          "timestamp": "2026-10-29T01:28:06.456043+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
+        },
+        "esp32c3": {
+          "total": 6,
+          "failures": 0,
+          "timestamp": "2026-10-29T01:28:06.456047+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
+        },
+        "esp32c6": {
+          "total": 6,
+          "failures": 0,
+          "timestamp": "2026-10-29T01:28:06.456049+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
+        },
+        "esp32h2": {
+          "total": 6,
+          "failures": 0,
+          "timestamp": "2026-10-29T01:28:06.456055+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
+        },
+        "esp32p4": {
+          "total": 6,
+          "failures": 0,
+          "timestamp": "2026-10-29T01:28:06.456057+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
+        },
+        "esp32s2": {
+          "total": 6,
+          "failures": 0,
+          "timestamp": "2026-10-29T01:28:06.456059+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
+        },
+        "esp32s3": {
+          "total": 6,
+          "failures": 0,
+          "timestamp": "2026-10-29T01:28:06.456061+00:00",
+          "commit_sha": "387c69d039405df51e594590a4e2e8b93ed76774"
         }
       }
     }
