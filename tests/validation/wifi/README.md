@@ -20,6 +20,7 @@ Validates Wi-Fi STA and AP functionality: connection, IP/SSID/MAC/RSSI/channel/B
 | `test_sta_auto_reconnect` | Set/get auto-reconnect flag |
 | `test_scan_networks` | Scan and find target SSID in results |
 | `test_static_ip` | Configure static IP, verify, restore DHCP |
+| `test_network_info_uses_local_ip` | Verify network ID and broadcast address use the interface IP when its configured gateway is off-subnet |
 | `test_soft_ap` | Start soft AP, verify IP and SSID, check station count |
 | `test_event_fires_on_connect` | Register GOT_IP event handler, verify it fires on connect |
 | `test_mode_switching` | Switch between STA, AP, AP_STA, OFF modes |

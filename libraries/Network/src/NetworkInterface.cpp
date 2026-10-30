@@ -742,7 +742,7 @@ IPAddress NetworkInterface::broadcastIP() const {
   if (esp_netif_get_ip_info(_esp_netif, &ip)) {
     return IPAddress();
   }
-  return calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+  return calculateBroadcast(IPAddress(ip.ip.addr), IPAddress(ip.netmask.addr));
 }
 
 IPAddress NetworkInterface::networkID() const {
@@ -753,7 +753,7 @@ IPAddress NetworkInterface::networkID() const {
   if (esp_netif_get_ip_info(_esp_netif, &ip)) {
     return IPAddress();
   }
-  return calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+  return calculateNetworkID(IPAddress(ip.ip.addr), IPAddress(ip.netmask.addr));
 }
 
 uint8_t NetworkInterface::subnetCIDR() const {
