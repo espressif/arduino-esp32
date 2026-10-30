@@ -58,6 +58,7 @@ The checks above introduce bounds on request size and shape. These cases pin dow
 | `static_root` | `serveStatic()` whose filesystem root is `/` still serves files (the mapping used by the `WebServer` example). |
 | `raw_body` | A non-multipart body on a route registered with an upload-style callback still streams to that callback via `server.raw()`. |
 | `many_args` | A urlencoded form with 100 fields is parsed in full, not silently reduced to zero arguments. |
+| `post_content_length` | Bytes following the declared POST body stay out of parsed form arguments. |
 | `long_uri` | A ~900 byte query string is served normally, while an over-long request-target is answered with `414` instead of a dropped connection. |
 | `regex_route` | A `UriRegex` route still matches a normal-length path, including one with nested quantifiers. |
 

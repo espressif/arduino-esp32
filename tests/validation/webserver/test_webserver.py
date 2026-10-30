@@ -78,6 +78,7 @@ def test_webserver(dut, ci_job_id):
         ("static_root", 15),  # serveStatic mapped to the filesystem root
         ("raw_body", 20),  # non-multipart body still streams to the callback
         ("many_args", 15),  # form with many fields still fully parsed
+        ("post_content_length", 15),  # trailing bytes stay outside the declared POST body
         ("long_uri", 20),  # long query served, over-long target answered 414
         ("long_line", 60),  # unterminated protocol line refused, long header accepted
         ("regex_route", 15),  # regex route still matches a normal-length path
