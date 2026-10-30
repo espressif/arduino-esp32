@@ -122,18 +122,22 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Get libs cache
+        id: libs-cache
         if: runner.os == 'Linux'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
           path: |
-            ./tools/dist
             ./tools/esp32-arduino-libs
             ./tools/esptool
             ./tools/mk*
             ./tools/openocd-esp32
             ./tools/riscv32-*
             ./tools/xtensa-*
+
+      - name: Skip tool verification on libs cache hit
+        if: runner.os == 'Linux' && steps.libs-cache.outputs.cache-hit == 'true'
+        run: echo "ESP32_LIBS_CACHE_HIT=1" >> "$GITHUB_ENV"
 
       - name: Run mock upload tests
         shell: bash

@@ -97,6 +97,69 @@ jobs:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
 
+  # Union per-chip ccache dirs into one GHA cache. Artifacts (1-day) avoid
+  # one key per matrix cell against the 10 GB quota. Runtime Tests has no
+  # master push, so save on schedule / workflow_dispatch; PRs restore only.
+  merge-tests-ccache:
+    name: Merge tests ccache
+    needs: call-build-tests
+    if: >
+      always() &&
+      !cancelled() &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+      contains(fromJSON('["success", "failure"]'), needs.call-build-tests.result)
+    runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: 2G
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install ccache
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: ccache
+          version: 1
+
+      - name: Download job caches
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: ccache_tests_*
+          path: ccache_chunks
+          merge-multiple: false
+          if-no-files-found: warn
+
+      - name: Merge job caches
+        id: merge
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          srcs=(ccache_chunks/ccache_tests_*)
+          if [ ${#srcs[@]} -eq 0 ]; then
+            echo "No tests ccache artifacts; skipping save"
+            echo "has_cache=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          merged=$(python3 .github/scripts/merge_ccache.py "$CCACHE_DIR" "${srcs[@]}")
+          echo "$merged"
+          rm -rf ccache_chunks
+          if [[ "$merged" == merged\ 0\ caches:* || "$merged" == *"0 files added, 0 already present" ]]; then
+            echo "No ccache objects to save"
+            echo "has_cache=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ccache -c
+          ccache -sv
+          echo "has_cache=true" >> "$GITHUB_OUTPUT"
+
+      - name: Save ccache
+        if: steps.merge.outputs.has_cache == 'true'
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-tests-linux-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-${{ github.sha }}
+
   call-qemu-tests:
     name: QEMU
     uses: ./.github/workflows/tests_qemu.yml
