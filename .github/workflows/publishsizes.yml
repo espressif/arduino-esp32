@@ -142,7 +142,7 @@ jobs:
             exit 0
           fi
           dir="size_test/${base_ref//\//_}"
-          if ! compgen -G "$dir/*.json" > /dev/null; then
+          if ! compgen -G "$dir/cli_compile_*.json" > /dev/null; then
             msg="Baseline '$dir' not found on gh-pages (saved on pushes to $base_ref). Available: $(ls size_test 2>/dev/null | tr '\n' ' ')"
             if [[ -n "$INPUT_BASELINE_BRANCH" ]]; then
               echo "::error::$msg"
@@ -153,7 +153,7 @@ jobs:
             exit 0
           fi
           echo "Comparing PR #$pr_num against $base_ref ($dir)"
-          mv "$dir"/*.json artifacts/sizes-report/master/
+          mv "$dir"/cli_compile_*.json artifacts/sizes-report/master/
           echo "pr_num=$pr_num" >> "$GITHUB_OUTPUT"
           echo "base_ref=$base_ref" >> "$GITHUB_OUTPUT"
           echo "found=true" >> "$GITHUB_OUTPUT"

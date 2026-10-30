@@ -25,10 +25,11 @@ This initializes the ESP Insights agent.
 
 .. code-block:: arduino
 
-    bool begin(const char *auth_key, const char *node_id = NULL, uint32_t log_type = 0xFFFFFFFF, bool alloc_ext_ram = false);
+    bool begin(const char *auth_key, const char *node_id = NULL, uint32_t log_type = 0xFFFFFFFF, bool alloc_ext_ram = false, bool use_default_transport = true);
 
 * ``auth_key`` Auth key generated using Insights dashboard
 * ``log_type`` Type of logs to be captured (value can be a mask of ESP_DIAG_LOG_TYPE_ERROR,  ESP_DIAG_LOG_TYPE_WARNING and ESP_DIAG_LOG_TYPE_EVENT)
+* ``use_default_transport`` Use the transport (HTTPS or MQTT) selected in sdkconfig. Set to ``false`` to use a custom transport registered with ``esp_insights_transport_register()``
 
 This function will return
 
@@ -42,7 +43,7 @@ Read insights data from buffers and send it to the cloud. Call to this function 
 
 .. code-block:: arduino
 
-    bool sendData()
+    bool send();
 
 This function will return
 
@@ -57,15 +58,6 @@ Deinitialize ESP Insights.
 .. code-block:: arduino
 
     void end();
-
-Insights.disable
-****************
-
-Disable ESP Insights.
-
-.. code-block:: arduino
-
-    void disable();
 
 ESP Insights Metrics API
 ------------------------
@@ -135,8 +127,8 @@ Add metrics of type X to storage, where X is one of: Bool, Int, Uint, Float, Str
 
 This function will return
 
-1. `ESP_OK` : On success
-2. Error in case of failure
+1. true : On success
+2. false in case of failure
 
 Insights.metrics.dumpHeap
 *************************
@@ -190,7 +182,7 @@ If the interval is set to 0, Wi-Fi metrics collection disabled.
 
 .. code-block:: arduino
 
-    void setHeapPeriod(uint32_t period);
+    void setWiFiPeriod(uint32_t period);
 
 * ``period`` : Period interval in seconds
 
@@ -241,7 +233,7 @@ Unregister all previously registered variables
 
 .. code-block:: arduino
 
-    bool unregisterAll();
+    bool removeAll();
 
 This function will return
 

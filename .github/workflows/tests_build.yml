@@ -21,6 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       id: ${{ github.event.pull_request.number || github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ inputs.chip }}-${{ inputs.type }}
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: 2G
+      CCACHE_COMPILERCHECK: content
+      # Do not set CCACHE_BASEDIR. Ninja's WORKING_DIRECTORY is
+      # ~/.arduino/tests/<chip>/.../build.tmp, outside the checkout.
+      CCACHE_NOHASHDIR: 1
+      CCACHE_DEPEND: 1
+      CCACHE_SLOPPINESS: include_file_mtime,include_file_ctime,time_macros
     steps:
       - name: Check if already built
         id: cache-build-binaries
@@ -54,12 +62,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Get libs cache
+        id: libs-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: ${{ steps.check-build.outputs.enabled == 'true' }}
         with:
           key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
           path: |
-            ./tools/dist
             ./tools/esp32-arduino-libs
             ./tools/esptool
             ./tools/mk*
@@ -67,10 +75,57 @@ jobs:
             ./tools/riscv32-*
             ./tools/xtensa-*
 
+      - name: Skip tool verification on libs cache hit
+        if: ${{ steps.check-build.outputs.enabled == 'true' && steps.libs-cache.outputs.cache-hit == 'true' }}
+        run: echo "ESP32_LIBS_CACHE_HIT=1" >> "$GITHUB_ENV"
+
+      - name: Install ccache
+        if: ${{ steps.check-build.outputs.enabled == 'true' }}
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: ccache
+          version: 1
+
+      # Tests-only store. Compilation Tests hashes do not match
+      # tests argv (-I sketch path, per-test build_opt.h).
+      - name: Restore ccache
+        if: ${{ steps.check-build.outputs.enabled == 'true' }}
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-tests-linux-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-${{ github.sha }}
+          restore-keys: |
+            ccache-tests-linux-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-
+
+      - name: Zero ccache stats
+        if: ${{ steps.check-build.outputs.enabled == 'true' }}
+        run: ccache -z
+
       - name: Build sketches
         if: ${{ steps.check-build.outputs.enabled == 'true' }}
         run: |
           bash .github/scripts/tests_build.sh -c -type ${{ inputs.type }} -t ${{ inputs.chip }}
+
+      - name: Show ccache stats
+        if: always() && steps.check-build.outputs.enabled == 'true'
+        run: ccache -sv
+
+      # 1-day artifacts for merge in tests.yml. Runtime Tests has no
+      # master push, so seed on schedule / workflow_dispatch only.
+      - name: Upload ccache
+        if: >
+          success() &&
+          steps.check-build.outputs.enabled == 'true' &&
+          (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ccache_tests_${{ inputs.chip }}_${{ inputs.type }}
+          path: ${{ github.workspace }}/.ccache
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: warn
+          overwrite: true
 
       - name: Upload ${{ inputs.chip }} ${{ inputs.type }} binaries as cache
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

@@ -215,7 +215,11 @@ int NetworkUDP::beginPacket() {
     return 1;
   }
 
+#if LWIP_IPV6
+  if ((udp_server = socket((remote_ip.type() == IPv6) ? AF_INET6 : AF_INET, SOCK_DGRAM, 0)) == -1) {
+#else
   if ((udp_server = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+#endif
     log_e("could not create socket: %d", errno);
     return 0;
   }
@@ -292,7 +296,9 @@ size_t NetworkUDP::write(uint8_t data) {
 size_t NetworkUDP::write(const uint8_t *buffer, size_t size) {
   size_t i;
   for (i = 0; i < size; i++) {
-    write(buffer[i]);
+    if (!write(buffer[i])) {
+      break;
+    }
   }
   return i;
 }
