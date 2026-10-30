@@ -225,6 +225,30 @@ void test_static_ip(void) {
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
 }
 
+#if CONFIG_LWIP_IPV6
+void test_ipv6_dns_configuration(void) {
+  const uint8_t main_dns_bytes[16] = {
+    0x20, 0x01, 0x48, 0x60, 0x48, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88
+  };
+  const uint8_t backup_dns_bytes[16] = {
+    0x20, 0x01, 0x48, 0x60, 0x48, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x88, 0x44
+  };
+  const IPAddress main_dns(IPv6, main_dns_bytes);
+  const IPAddress backup_dns(IPv6, backup_dns_bytes);
+
+  TEST_ASSERT_TRUE(WiFi.STA.begin(false));
+  TEST_ASSERT_TRUE(WiFi.STA.config(IPAddress(192, 0, 2, 10), IPAddress(192, 0, 2, 1), IPAddress(255, 255, 255, 0), main_dns));
+  TEST_ASSERT_TRUE(WiFi.STA.dnsIP(1, backup_dns));
+  TEST_ASSERT_EQUAL(IPv6, WiFi.STA.dnsIP(0).type());
+  TEST_ASSERT_EQUAL(IPv6, WiFi.STA.dnsIP(1).type());
+  TEST_ASSERT_TRUE(main_dns == WiFi.STA.dnsIP(0));
+  TEST_ASSERT_TRUE(backup_dns == WiFi.STA.dnsIP(1));
+
+  TEST_ASSERT_TRUE(WiFi.STA.config(INADDR_NONE, INADDR_NONE, INADDR_NONE));
+  TEST_ASSERT_TRUE(WiFi.STA.end());
+}
+#endif
+
 // ==================== AP Mode ====================
 
 void test_soft_ap(void) {
@@ -349,6 +373,9 @@ void setup() {
   RUN_TEST(test_sta_auto_reconnect);
   RUN_TEST(test_scan_networks);
   RUN_TEST(test_static_ip);
+#if CONFIG_LWIP_IPV6
+  RUN_TEST(test_ipv6_dns_configuration);
+#endif
   RUN_TEST(test_soft_ap);
   RUN_TEST(test_event_fires_on_connect);
   RUN_TEST(test_mode_switching);

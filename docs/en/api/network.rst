@@ -416,6 +416,8 @@ IP Configuration
     bool dnsIP(uint8_t dns_no, IPAddress ip);
 
 Configures static IP address, gateway, subnet mask, and DNS servers.
+IPv6 DNS addresses can be configured and retrieved when IPv6 is enabled. For server interfaces (Wi-Fi AP), the DHCP lease range start and DNS server must remain
+IPv4 addresses.
 For server interfaces (Wi-Fi AP), ``dns1`` is the DHCP lease range start and ``dns2`` is the DNS server.
 
 **Example:**
