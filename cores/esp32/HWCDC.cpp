@@ -738,6 +738,16 @@ void HWCDC::setDebugOutput(bool en) {
 #if ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Hardware JTAG CDC selected
 // USBSerial is always available to be used
 HWCDC HWCDCSerial;
+
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+extern void HWCDCSerialEvent(void) __attribute__((weak));
+
+extern "C" void arduinoHWCDCSerialEventRun(void) {
+  if (HWCDCSerialEvent && HWCDCSerial.available()) {
+    HWCDCSerialEvent();
+  }
+}
+#endif
 #endif
 
 #endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */

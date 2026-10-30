@@ -262,6 +262,10 @@ static bool _uartDetachSharedPin(uint8_t uart_num, int8_t pin);
 static bool _uartAttachSharedPin(uint8_t uart_num, int8_t pin);
 static bool _uartDetachBus_RX_TX(void *busptr);
 
+// True while the UART0 console pads are registered from the ROM routing only (see uartRegisterConsolePins()).
+// The next driver attach must then configure them fully instead of treating them as already attached.
+static bool _uart0ConsolePinsFromBoot = false;
+
 static bool _uartApplyOneWireOpenDrain(int8_t pin, bool enable) {
   if (pin < 0) {
     return true;
@@ -568,6 +572,10 @@ static bool _uartDetachBus_RX(void *busptr) {
   }
   if (bus->_txPin < 0) {  // both rx and tx pins are detached, terminate the uart driver
     log_d("_uartDetachBus_RX: both RX and TX pins detached for UART%u, terminating driver", bus->num);
+    if (!uartIsDriverInstalled(bus)) {
+      // No driver to terminate (pads registered at boot): release the UART route on this last pad.
+      return _uartDetachPins(bus->num, bus->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
     hardware_serial_end(bus->num);
     return true;
   }
@@ -590,6 +598,10 @@ static bool _uartDetachBus_TX(void *busptr) {
   }
   if (bus->_rxPin < 0) {  // both rx and tx pins are detached, terminate the uart driver
     log_d("_uartDetachBus_TX: both RX and TX pins detached for UART%u, terminating driver", bus->num);
+    if (!uartIsDriverInstalled(bus)) {
+      // No driver to terminate (pads registered at boot): release the UART route on this last pad.
+      return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, bus->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
     hardware_serial_end(bus->num);
     return true;
   }
@@ -809,6 +821,9 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
 
   bool retCode = true;
   bool attachSuccess;
+  if (uart_num == 0) {
+    _uart0ConsolePinsFromBoot = false;
+  }
   if (rxPin >= 0) {
     attachSuccess = true;
     // forces a clean detaching from a previous peripheral
@@ -987,7 +1002,7 @@ static void _uartDetectPin(int8_t pin, const char *funcName, peripheral_bus_type
   bool isUART = (t >= _UART_PERIMAN_TYPE_MIN && t <= _UART_PERIMAN_TYPE_MAX);
   int8_t prevU = isUART ? perimanGetPinBusNum(pin) : -1;
 
-  *needsAttach = (t != expectedType || target_uart != prevU);
+  *needsAttach = (t != expectedType || target_uart != prevU || (target_uart == 0 && _uart0ConsolePinsFromBoot));
   if (prevUARTOut != NULL) {
     *prevUARTOut = prevU;  // Set to actual UART if owned, -1 otherwise
   }
@@ -1055,6 +1070,32 @@ static bool _uartDetachConflictingPin(int8_t pin, uint8_t target_uart_num, const
   return _uartDetachPins(prevUART, d_rx, d_tx, d_cts, d_rts);
 }
 
+void uartRegisterConsolePins(int8_t rxPin, int8_t txPin) {
+  uart_t *uart = &_uart_bus_array[0];
+  if (uartIsDriverInstalled(uart)) {
+    uartSetPins(0, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    return;
+  }
+  // ROM has already routed UART0 to its default pads. Record that ownership so that another
+  // peripheral taking either pad runs the UART detach, which releases the UART route there.
+  bool registered = false;
+  if (rxPin >= 0 && perimanGetPinBusType(rxPin) == ESP32_BUS_TYPE_INIT && perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART_RX, (void *)uart, 0, -1)) {
+    if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX) == NULL) {
+      perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX, _uartDetachBus_RX);
+    }
+    uart->_rxPin = rxPin;
+    registered = true;
+  }
+  if (txPin >= 0 && perimanGetPinBusType(txPin) == ESP32_BUS_TYPE_INIT && perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART_TX, (void *)uart, 0, -1)) {
+    if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_TX) == NULL) {
+      perimanSetBusDeinit(ESP32_BUS_TYPE_UART_TX, _uartDetachBus_TX);
+    }
+    uart->_txPin = txPin;
+    registered = true;
+  }
+  _uart0ConsolePinsFromBoot = registered;
+}
+
 bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin) {
   // check uart_num and pins
   if (!_uartValidatePins(uart_num, rxPin, txPin, ctsPin, rtsPin)) {
@@ -1083,6 +1124,15 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   // The pins will be properly attached when the driver is installed in uartBegin()
   if (!uartIsDriverInstalled(uart)) {
     log_v("UART%u: Driver not yet installed, storing pins for later attachment (RX:%d, TX:%d)", uart_num, rxPin, txPin);
+    if (uart_num == 0 && _uart0ConsolePinsFromBoot) {
+      // Moving a console pad registered at boot: release it now so Peripheral Manager does not keep
+      // a stale UART0 owner whose detach callback would act on the newly stored pin.
+      int8_t oldRx = (rxPin >= 0 && rxPin != uart->_rxPin) ? uart->_rxPin : UART_PIN_NO_CHANGE;
+      int8_t oldTx = (txPin >= 0 && txPin != uart->_txPin) ? uart->_txPin : UART_PIN_NO_CHANGE;
+      if (oldRx >= 0 || oldTx >= 0) {
+        _uartDetachPins(0, oldRx, oldTx, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+      }
+    }
     if (rxPin >= 0) {
       uart->_rxPin = rxPin;
     }
