@@ -322,6 +322,13 @@ static void hw_cdc_isr_handler(void *arg) {
     arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_BUS_RESET_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
     portENTER_CRITICAL_ISR(&hw_cdc_tx_mux);
     tx_stash_len = 0;
+    // A USB reset is shorter than the 20 ms recent-token window. Drop the
+    // pre-reset burst so C3/S3 cannot reopen from it. DTR chips still require
+    // an IN token newer than the stamp below.
+    last_in_token_us = 0;
+    burst_start_us = 0;
+    saw_gap_after_tokens = false;
+    tokens_seen = false;
 #ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
     line_event_us = esp_timer_get_time();
 #endif
