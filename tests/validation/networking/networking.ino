@@ -15,6 +15,7 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include <esp_netif.h>
 #include <NetworkClient.h>
 #include <NetworkUdp.h>
 #include <NetworkServer.h>
@@ -629,6 +630,75 @@ void test_dns_server_captive(void) {
 #endif
 }
 
+#if SOC_WIFI_SUPPORTED
+static void verifyRejectedApConfig(IPAddress subnet, IPAddress leaseStart, const char *reason) {
+  if (!WiFi.AP.create("ESP32_Config_Test", "12345678")) {
+    WiFi.AP.end();
+    TEST_FAIL_MESSAGE("Failed to start SoftAP");
+    return;
+  }
+
+  // AP creation can return before esp-netif has started the DHCP server.
+  // Establish the running baseline before attempting the rejected configuration.
+  esp_netif_dhcp_status_t oldDhcpStatus = ESP_NETIF_DHCP_INIT;
+  esp_err_t oldDhcpStatusResult;
+  const unsigned long dhcpWaitStart = millis();
+  do {
+    oldDhcpStatusResult = esp_netif_dhcps_get_status(WiFi.AP.netif(), &oldDhcpStatus);
+    if (oldDhcpStatusResult != ESP_OK || oldDhcpStatus == ESP_NETIF_DHCP_STARTED) {
+      break;
+    }
+    delay(10);
+  } while (millis() - dhcpWaitStart < 3000);
+
+  if (oldDhcpStatusResult != ESP_OK || oldDhcpStatus != ESP_NETIF_DHCP_STARTED) {
+    WiFi.AP.end();
+    TEST_ASSERT_EQUAL_MESSAGE(ESP_OK, oldDhcpStatusResult, "Failed to read the initial DHCP server status");
+    TEST_ASSERT_EQUAL_MESSAGE(ESP_NETIF_DHCP_STARTED, oldDhcpStatus, "DHCP server did not start before reconfiguration");
+    return;
+  }
+
+  IPAddress oldIP = WiFi.AP.localIP();
+  IPAddress oldSubnet = WiFi.AP.subnetMask();
+  IPAddress oldGateway = WiFi.AP.gatewayIP();
+
+  bool configResult = WiFi.AP.config(IPAddress(10, 20, 30, 40), IPAddress(10, 20, 30, 40), subnet, leaseStart);
+  IPAddress currentIP = WiFi.AP.localIP();
+  IPAddress currentSubnet = WiFi.AP.subnetMask();
+  IPAddress currentGateway = WiFi.AP.gatewayIP();
+  esp_netif_dhcp_status_t currentDhcpStatus = ESP_NETIF_DHCP_INIT;
+  esp_err_t dhcpStatusResult = esp_netif_dhcps_get_status(WiFi.AP.netif(), &currentDhcpStatus);
+
+  WiFi.AP.end();
+  delay(100);
+
+  TEST_ASSERT_FALSE_MESSAGE(configResult, reason);
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldIP, (uint32_t)currentIP, "Rejected config changed the SoftAP IP");
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldSubnet, (uint32_t)currentSubnet, "Rejected config changed the SoftAP subnet");
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldGateway, (uint32_t)currentGateway, "Rejected config changed the SoftAP gateway");
+  TEST_ASSERT_EQUAL(ESP_OK, dhcpStatusResult);
+  TEST_ASSERT_EQUAL_MESSAGE(ESP_NETIF_DHCP_STARTED, currentDhcpStatus, "Rejected config stopped the DHCP server");
+}
+#endif
+
+void test_ap_invalid_subnet_preserves_dhcp(void) {
+#if !SOC_WIFI_SUPPORTED
+  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
+#else
+  verifyRejectedApConfig(IPAddress(255, 255, 254, 0), IPAddress(), "SoftAP accepted an unsupported /23 netmask");
+#endif
+}
+
+void test_ap_malformed_subnet_preserves_dhcp(void) {
+#if !SOC_WIFI_SUPPORTED
+  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
+#else
+  // The old CIDR counter treated 255.255.255.1 as /24. Use an even lease start
+  // so other lease-range checks do not reject the configuration first.
+  verifyRejectedApConfig(IPAddress(255, 255, 255, 1), IPAddress(10, 20, 30, 42), "SoftAP accepted a non-contiguous netmask");
+#endif
+}
+
 // ==================== mDNS ====================
 
 void test_mdns_begin(void) {
@@ -725,6 +795,8 @@ void setup() {
   RUN_TEST(test_udp_loopback_requires_configuration);
 #endif
   RUN_TEST(test_dns_server_captive);
+  RUN_TEST(test_ap_invalid_subnet_preserves_dhcp);
+  RUN_TEST(test_ap_malformed_subnet_preserves_dhcp);
   RUN_TEST(test_mdns_begin);
   RUN_TEST(test_mdns_service);
 

@@ -248,6 +248,9 @@ Where:
 
 The function will return ``true`` if the configuration is successful.
 
+The SoftAP subnet mask must be contiguous and between ``/24`` and ``/28``.
+An invalid mask returns ``false`` without changing the existing AP IP configuration or DHCP server state.
+
 AP Connection
 -------------
 
