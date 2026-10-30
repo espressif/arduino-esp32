@@ -1,6 +1,6 @@
 @echo off
 REM SPDX-License-Identifier: Apache-2.0
-REM Arduino IDE only (Windows): write {build.path}\link_libs.rsp for the final link.
+REM Arduino IDE only (Windows): write {build.path}\link_libs.txt for the final link.
 REM Matter sketch + lib\libbt.matter.a: replace -lbt with -lbt.matter in flags\ld_libs.
 
 setlocal EnableExtensions EnableDelayedExpansion
@@ -13,7 +13,7 @@ if "%~2"=="" (
 set "BUILD_PATH=%~1"
 set "SDK_PATH=%~2"
 set "FLAGS_DIR=%SDK_PATH%\flags"
-set "OUT=%BUILD_PATH%\link_libs.rsp"
+set "OUT=%BUILD_PATH%\link_libs.txt"
 set "LD_LIBS=%FLAGS_DIR%\ld_libs"
 
 if not exist "%LD_LIBS%" (
