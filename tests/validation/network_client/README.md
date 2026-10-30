@@ -12,6 +12,9 @@ Validates the `NetworkClient` API using localhost TCP loopback sockets. No Wi-Fi
 | `test_network_client_read_bytes_large_payload` | `readBytes()` across multiple RX buffer fills (>1436 bytes) |
 | `test_network_client_write_variants` | `write(uint8_t)`, `write(buf)`, `write_P()` |
 | `test_network_client_write_stream` | `write(Stream&)`, `write(Stream&, length)` |
+| `test_network_client_write_stream_stops_on_short_write` | Both stream overloads stop consuming after a partial transport write and report the accepted byte count |
+| `test_network_client_write_stream_stops_on_zero_write` | Both stream overloads stop consuming after a failed transport write |
+| `test_network_client_write_stream_stops_when_source_stalls` | Unbounded stream write exits when `available()` is positive but `readBytes()` returns zero |
 | `test_network_client_connect_loopback_ip` | `connect(IPAddress, port)`, `setConnectionTimeout()`, `write()`, `readBytes()` |
 | `test_network_client_connect_loopback_host` | `connect(host, port, timeout)` via `Network.hostByName()` literal parse |
 | `test_network_client_connect_timeout` | `connect()` failure on closed loopback ports |

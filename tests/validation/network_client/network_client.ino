@@ -49,6 +49,44 @@ public:
   }
 };
 
+class ShortWriteClient : public NetworkClient {
+  size_t _maxAccepted;
+  size_t _writeCalls = 0;
+
+public:
+  explicit ShortWriteClient(size_t maxAccepted) : _maxAccepted(maxAccepted) {}
+
+  using NetworkClient::write;
+
+  size_t write(const uint8_t *, size_t size) override {
+    ++_writeCalls;
+    return size < _maxAccepted ? size : _maxAccepted;
+  }
+
+  size_t writeCalls() const {
+    return _writeCalls;
+  }
+};
+
+class StalledStream : public Stream {
+public:
+  int available() override {
+    return 1;
+  }
+
+  int read() override {
+    return -1;
+  }
+
+  int peek() override {
+    return -1;
+  }
+
+  size_t write(uint8_t) override {
+    return 0;
+  }
+};
+
 static int create_loopback_listener(uint16_t *bound_port) {
   int listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
   TEST_ASSERT_GREATER_OR_EQUAL_MESSAGE(0, listen_fd, "socket() failed");
@@ -251,6 +289,49 @@ void test_network_client_write_stream(void) {
   close(peer_fd);
 }
 
+void test_network_client_write_stream_stops_on_short_write(void) {
+  uint8_t data[2721] = {};
+  TestStream unbounded(data, sizeof(data));
+  ShortWriteClient unboundedClient(5);
+
+  TEST_ASSERT_EQUAL(5, unboundedClient.write(unbounded));
+  TEST_ASSERT_EQUAL(1, unboundedClient.writeCalls());
+  TEST_ASSERT_EQUAL(sizeof(data) - 1360, unbounded.available());
+
+  TestStream bounded(data, sizeof(data));
+  ShortWriteClient boundedClient(5);
+
+  TEST_ASSERT_EQUAL(5, boundedClient.write(bounded, sizeof(data)));
+  TEST_ASSERT_EQUAL(1, boundedClient.writeCalls());
+  TEST_ASSERT_EQUAL(sizeof(data) - 1360, bounded.available());
+}
+
+void test_network_client_write_stream_stops_on_zero_write(void) {
+  uint8_t data[2721] = {};
+  TestStream unbounded(data, sizeof(data));
+  ShortWriteClient unboundedClient(0);
+
+  TEST_ASSERT_EQUAL(0, unboundedClient.write(unbounded));
+  TEST_ASSERT_EQUAL(1, unboundedClient.writeCalls());
+  TEST_ASSERT_EQUAL(sizeof(data) - 1360, unbounded.available());
+
+  TestStream bounded(data, sizeof(data));
+  ShortWriteClient boundedClient(0);
+
+  TEST_ASSERT_EQUAL(0, boundedClient.write(bounded, sizeof(data)));
+  TEST_ASSERT_EQUAL(1, boundedClient.writeCalls());
+  TEST_ASSERT_EQUAL(sizeof(data) - 1360, bounded.available());
+}
+
+void test_network_client_write_stream_stops_when_source_stalls(void) {
+  StalledStream source;
+  source.setTimeout(10);
+  ShortWriteClient client(1);
+
+  TEST_ASSERT_EQUAL(0, client.write(source));
+  TEST_ASSERT_EQUAL(0, client.writeCalls());
+}
+
 void test_network_client_connect_loopback_ip(void) {
   uint16_t port = 0;
   int listen_fd = create_loopback_listener(&port);
@@ -387,6 +468,9 @@ void setup() {
   RUN_TEST(test_network_client_read_bytes_large_payload);
   RUN_TEST(test_network_client_write_variants);
   RUN_TEST(test_network_client_write_stream);
+  RUN_TEST(test_network_client_write_stream_stops_on_short_write);
+  RUN_TEST(test_network_client_write_stream_stops_on_zero_write);
+  RUN_TEST(test_network_client_write_stream_stops_when_source_stalls);
   RUN_TEST(test_network_client_connect_loopback_ip);
   RUN_TEST(test_network_client_connect_loopback_host);
   RUN_TEST(test_network_client_connect_timeout);
