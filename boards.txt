@@ -32161,7 +32161,7 @@ esp32cam.upload.maximum_data_size=327680
 esp32cam.upload.flags=
 esp32cam.upload.erase_cmd=
 esp32cam.upload.extra_flags=
-esp32cam.upload.speed=460800
+esp32cam.upload.speed=115200
 
 esp32cam.serial.disableDTR=true
 esp32cam.serial.disableRTS=true
@@ -32245,6 +32245,21 @@ esp32cam.menu.DebugLevel.debug=Debug
 esp32cam.menu.DebugLevel.debug.build.code_debug=4
 esp32cam.menu.DebugLevel.verbose=Verbose
 esp32cam.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32cam.menu.UploadSpeed.115200=115200
+esp32cam.menu.UploadSpeed.115200.upload.speed=115200
+esp32cam.menu.UploadSpeed.460800.linux=460800
+esp32cam.menu.UploadSpeed.460800.macosx=460800
+esp32cam.menu.UploadSpeed.460800.upload.speed=460800
+esp32cam.menu.UploadSpeed.921600=921600
+esp32cam.menu.UploadSpeed.921600.upload.speed=921600
+esp32cam.menu.UploadSpeed.256000.windows=256000
+esp32cam.menu.UploadSpeed.256000.upload.speed=256000
+esp32cam.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32cam.menu.UploadSpeed.230400=230400
+esp32cam.menu.UploadSpeed.230400.upload.speed=230400
+esp32cam.menu.UploadSpeed.512000.windows=512000
+esp32cam.menu.UploadSpeed.512000.upload.speed=512000
 
 esp32cam.menu.EraseFlash.none=Disabled
 esp32cam.menu.EraseFlash.all=Enabled
