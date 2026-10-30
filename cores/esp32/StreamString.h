@@ -31,6 +31,7 @@ public:
 
   int available() override;
   int read() override;
+  size_t readBytes(char *buffer, size_t count) override;
   int peek() override;
   void flush() override;
 };
