@@ -30,9 +30,15 @@ Sets the Zigbee device role and initializes the stack. This must be the first Zi
 
 * ``role`` - Device role (``ZIGBEE_COORDINATOR``, ``ZIGBEE_ROUTER`` or ``ZIGBEE_END_DEVICE``)
 * ``role_cfg`` - Custom role configuration structure (e.g. for a sleepy end device or a custom ``max_children``)
-* ``erase_nvs`` - Whether to erase NVS storage (default: ``false``)
+* ``erase_nvs`` - When ``true``, erase only the Zigbee NVS namespace (``zigbee``) on the shared ``nvs`` partition before init. Does not wipe Wi-Fi credentials or Preferences. Default: ``false``.
 
 This function will return ``true`` if the role was set and the stack initialized successfully, ``false`` otherwise.
+
+.. note::
+
+    Zigbee network state is stored in the default ``nvs`` partition (namespace ``zigbee``), shared with Wi-Fi and Preferences.
+    Zigbee partition schemes no longer use a separate ``zb_storage`` partition.
+    Upgrading from Arduino-ESP32 3.x (or early 4.0 builds that used ``zb_storage``) requires erasing flash or calling ``Zigbee.factoryReset()``; network state is not migrated in place.
 
 begin
 ^^^^^
@@ -287,6 +293,43 @@ Closes the network to prevent new devices from joining.
 .. code-block:: arduino
 
     void closeNetwork();
+
+setRouterRejoinRequired
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Controls whether a **router** must run the rejoin process during BDB commissioning initialization
+(for example after reboot). Call after ``role()``, typically before ``begin()``.
+
+Useful when a router should re-attach to the coordinator/Trust Center after power loss instead of
+assuming the previous network link is still valid.
+
+.. code-block:: arduino
+
+    void setRouterRejoinRequired(bool required);
+
+* ``required`` - ``true`` to require router rejoin on BDB init, ``false`` to skip it
+
+setAllowRejoinsWithWellKnownKey
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Trust Center / coordinator policy: whether devices may rejoin the network using the well-known
+network key. Call after ``role()``. Defaults depend on the stack; set explicitly for production
+networks that should reject rejoins with the well-known key.
+
+.. code-block:: arduino
+
+    void setAllowRejoinsWithWellKnownKey(bool allow);
+
+* ``allow`` - ``true`` to allow well-known-key rejoins, ``false`` to disallow them
+
+getAllowRejoinsWithWellKnownKey
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Returns the current Trust Center policy for well-known-key rejoins.
+
+.. code-block:: arduino
+
+    bool getAllowRejoinsWithWellKnownKey();
 
 Radio Configuration
 *******************

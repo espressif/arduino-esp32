@@ -100,6 +100,11 @@ public:
   // Set Manufacturer name and model
   bool setManufacturerAndModel(const char *name, const char *model);
 
+  // Basic cluster DeviceEnabled (0x0012). When false, the stack ignores ZCL commands on this endpoint.
+  // Call once before Zigbee.addEndpoint() to create the attribute; afterward set/get work across begin().
+  bool setDeviceEnabled(bool enabled);
+  bool getDeviceEnabled();
+
   // Methods to read manufacturer and model name from selected endpoint and short address.
   char *readManufacturer(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
   char *readModel(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
@@ -115,6 +120,14 @@ public:
   // is stored and restored on reboot.
   bool setAttributePersistent(uint16_t cluster_id, uint16_t attr_id, bool persistent = true, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER);
   bool getAttribute(uint16_t cluster_id, uint16_t attr_id, void *value, uint16_t value_size, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER);
+
+  // Enable/disable Default Response on automatic attribute reports for one attribute.
+  // Call after setReporting() / once reporting info exists (typically after begin()).
+  // enabled=true (default SDK behavior): reports request a DefaultRsp from the receiver.
+  // enabled=false: saves airtime/power; do not wait for DefaultRsp on those reports.
+  bool setReportingDefaultResponse(
+    uint16_t cluster_id, uint16_t attr_id, bool enabled, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER
+  );
 
   // Set time
   bool addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
@@ -176,6 +189,7 @@ public:
   };
   virtual void zbReadBasicCluster(const ezb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const ezb_zcl_set_attr_value_message_t *message);
+  virtual void zbIdentifyQueryResponse(const ezb_zcl_identify_query_rsp_message_t *message);
   virtual void zbOTAState(bool otaActive);
   virtual void zbWindowCoveringMovementCmd(const ezb_zcl_window_covering_movement_message_t *message) {};
   virtual void zbDoorLockCmd(ezb_zcl_door_lock_lock_door_message_t *message, bool lock) {};
@@ -211,6 +225,15 @@ public:
     _on_identify = callback;
   }
 
+  // Fired when this endpoint receives an Identify Query Response (devices currently identifying).
+  void onIdentifyQueryResponse(void (*callback)(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address)) {
+    _on_identify_query_response = callback;
+  }
+
+  // Send Identify Query. Default broadcasts to all devices / all endpoints.
+  // Devices that are identifying reply with Identify Query Response (see onIdentifyQueryResponse).
+  bool identifyQuery(uint16_t short_addr = 0xFFFF, uint8_t dst_endpoint = EZB_AF_ENDPOINT_BROADCAST_ID);
+
   void onOTAStateChange(void (*callback)(bool state)) {
     _on_ota_state_change = callback;
   }
@@ -233,6 +256,7 @@ private:
   char *_read_manufacturer;
   char *_read_model;
   void (*_on_identify)(uint16_t time);
+  void (*_on_identify_query_response)(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address);
   void (*_on_ota_state_change)(bool state);
   void (*_on_default_response)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status);
   void (*_on_privilege_command)(const ezb_zcl_manuf_spec_cmd_message_t *message);
@@ -281,6 +305,7 @@ protected:
   char _zb_model[ZB_MAX_NAME_LENGTH + 2];
   uint8_t _app_version;
   uint8_t _hw_version;
+  bool _device_enabled;
 
   ezb_zcl_power_config_cluster_server_config_t _power_config_cfg;
   uint8_t _battery_percentage;  // BatteryPercentageRemaining (0-200), not in power_config cluster config

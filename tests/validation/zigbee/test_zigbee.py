@@ -1,4 +1,5 @@
 import logging
+import time
 from conftest import expect_exact_and_capture
 
 
@@ -24,11 +25,16 @@ def test_zigbee(dut):
     LOGGER.info("Waiting for end device to be ready...")
     end_device.expect_exact("[ENDDEVICE] Ready", timeout=180)
 
-    LOGGER.info("Starting end device Unity tests...")
+    # Both DUTs must be driven: re-open permit-join on the coordinator, then start
+    # the end device so its network steering overlaps an open join window.
+    LOGGER.info("Opening coordinator network and starting end device Unity tests...")
+    coordinator.write("OPEN_NETWORK\n")
+    coordinator.expect_exact("[COORDINATOR] NETWORK_OPEN", timeout=30)
+    time.sleep(1)
     end_device.write("START\n")
 
     LOGGER.info("Waiting for end device to join network...")
-    end_device_log = expect_exact_and_capture(end_device, "[ENDDEVICE] JOINED", timeout=60)
+    end_device_log = expect_exact_and_capture(end_device, "[ENDDEVICE] JOINED", timeout=90)
 
     LOGGER.info("Coordinator switch -> end device light interop...")
     coordinator.write("RUN_INTEROP\n")

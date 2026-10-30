@@ -19,7 +19,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include <set>
-#include "nvs_flash.h"
+#include "nvs.h"
 #include "esp_timer.h"
 #if SOC_IEEE802154_SUPPORTED
 #include "esp_ieee802154.h"
@@ -304,22 +304,26 @@ static void esp_zb_task(void *pvParameters) {
 
 // Zigbee stack init: esp_zigbee_init() + commissioning setup (no endpoint registration yet).
 bool ZigbeeCore::zigbeeStackInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs) {
-  // Persistent Zigbee data lives in the `zb_storage` NVS partition (subtype `nvs`).
-  esp_err_t nvs_err = nvs_flash_init_partition("zb_storage");
-  if (nvs_err == ESP_ERR_NVS_NO_FREE_PAGES || nvs_err == ESP_ERR_NVS_NEW_VERSION_FOUND || erase_nvs) {
-    nvs_flash_erase_partition("zb_storage");
-    nvs_err = nvs_flash_init_partition("zb_storage");
-  }
-  if (nvs_err != ESP_OK) {
-    log_e("Failed to initialize zb_storage NVS partition: %s", esp_err_to_name(nvs_err));
-    return false;
+  // Zigbee datasets use the default `nvs` partition (namespace "zigbee"), same as Matter/OpenThread
+  // and esp-zigbee-sdk 2.0.4+. Arduino already initializes that partition via nvs_flash_init().
+  if (erase_nvs) {
+    nvs_handle_t nvs_handle;
+    esp_err_t nvs_err = nvs_open("zigbee", NVS_READWRITE, &nvs_handle);
+    if (nvs_err == ESP_OK) {
+      nvs_erase_all(nvs_handle);
+      nvs_commit(nvs_handle);
+      nvs_close(nvs_handle);
+    } else if (nvs_err != ESP_ERR_NVS_NOT_FOUND) {
+      log_e("Failed to open Zigbee NVS namespace: %s", esp_err_to_name(nvs_err));
+      return false;
+    }
   }
 
   esp_zigbee_config_t zb_init_cfg = {
     .device_config = *zb_cfg,
     .platform_config =
       {
-        .storage_partition_name = "zb_storage",
+        .storage_partition_name = "nvs",
         .radio_config = _radio_config,
       },
   };
@@ -413,6 +417,32 @@ void ZigbeeCore::closeNetwork() {
     log_v("Closing network");
     ezb_bdb_close_network();
   }
+}
+
+void ZigbeeCore::setRouterRejoinRequired(bool required) {
+  if (!_initialized) {
+    log_w("setRouterRejoinRequired: call after role()");
+    return;
+  }
+  ezb_bdb_set_router_rejoin_required(required);
+  log_v("Router rejoin required: %s", required ? "true" : "false");
+}
+
+void ZigbeeCore::setAllowRejoinsWithWellKnownKey(bool allow) {
+  if (!_initialized) {
+    log_w("setAllowRejoinsWithWellKnownKey: call after role()");
+    return;
+  }
+  ezb_secur_tcpol_set_allow_rejoins_with_well_known_key(allow);
+  log_v("Allow rejoins with well-known key: %s", allow ? "true" : "false");
+}
+
+bool ZigbeeCore::getAllowRejoinsWithWellKnownKey() {
+  if (!_initialized) {
+    log_w("getAllowRejoinsWithWellKnownKey: call after role()");
+    return false;
+  }
+  return ezb_secur_tcpol_get_allow_rejoins_with_well_known_key();
 }
 
 // Application signal handler (registered via ezb_app_signal_add_handler()).

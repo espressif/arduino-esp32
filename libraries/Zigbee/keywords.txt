@@ -87,6 +87,9 @@ setTimeout	KEYWORD2
 setRebootOpenNetwork	KEYWORD2
 openNetwork	KEYWORD2
 closeNetwork	KEYWORD2
+setRouterRejoinRequired	KEYWORD2
+setAllowRejoinsWithWellKnownKey	KEYWORD2
+getAllowRejoinsWithWellKnownKey	KEYWORD2
 scanNetworks	KEYWORD2
 scanComplete	KEYWORD2
 getScanResult	KEYWORD2
@@ -109,6 +112,9 @@ bound	KEYWORD2
 allowMultipleBinding	KEYWORD2
 setManualBinding	KEYWORD2
 setManufacturerAndModel	KEYWORD2
+setDeviceEnabled	KEYWORD2
+getDeviceEnabled	KEYWORD2
+setReportingDefaultResponse	KEYWORD2
 setPowerSource	KEYWORD2
 setBatteryPercentage	KEYWORD2
 setBatteryVoltage	KEYWORD2
@@ -116,6 +122,8 @@ reportBatteryPercentage	KEYWORD2
 readManufacturer	KEYWORD2
 readModel	KEYWORD2
 onIdentify	KEYWORD2
+identifyQuery	KEYWORD2
+onIdentifyQueryResponse	KEYWORD2
 addTimeCluster	KEYWORD2
 setTime	KEYWORD2
 setTimezone	KEYWORD2

@@ -50,6 +50,7 @@ static esp_err_t zb_cmd_ias_zone_status_change_handler(const ezb_zcl_ias_zone_st
 static esp_err_t zb_cmd_ias_zone_enroll_request_handler(const ezb_zcl_ias_zone_enroll_req_message_t *message);
 static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const ezb_zcl_ias_zone_enroll_rsp_message_t *message);
 static esp_err_t zb_cmd_default_resp_handler(const ezb_zcl_cmd_default_rsp_message_t *message);
+static esp_err_t zb_cmd_identify_query_resp_handler(const ezb_zcl_identify_query_rsp_message_t *message);
 static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_covering_movement_message_t *message);
 static esp_err_t zb_door_lock_cmd_handler(ezb_zcl_door_lock_lock_door_message_t *message, bool lock);
 template<typename T> static void zb_door_lock_user_cmd_handler(T *message, void (ZigbeeEP::*handler)(T *));
@@ -98,7 +99,10 @@ static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, voi
     case EZB_ZCL_CORE_OTA_UPGRADE_QUERY_NEXT_IMAGE_RSP_CB_ID:
       zb_ota_upgrade_query_image_resp_handler((ezb_zcl_ota_upgrade_query_next_image_rsp_message_t *)message);
       break;
-    case EZB_ZCL_CORE_DEFAULT_RSP_CB_ID:    zb_cmd_default_resp_handler((ezb_zcl_cmd_default_rsp_message_t *)message); break;
+    case EZB_ZCL_CORE_DEFAULT_RSP_CB_ID: zb_cmd_default_resp_handler((ezb_zcl_cmd_default_rsp_message_t *)message); break;
+    case EZB_ZCL_CORE_IDENTIFY_QUERY_RSP_CB_ID:
+      zb_cmd_identify_query_resp_handler((ezb_zcl_identify_query_rsp_message_t *)message);
+      break;
     case EZB_ZCL_CORE_MANUF_SPEC_CMD_CB_ID: zb_manuf_spec_command_handler((ezb_zcl_manuf_spec_cmd_message_t *)message); break;
     default:                                log_w("Receive unhandled Zigbee action(0x%x) callback", (unsigned int)callback_id); break;
   }
@@ -591,6 +595,29 @@ static esp_err_t zb_cmd_default_resp_handler(const ezb_zcl_cmd_default_rsp_messa
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_ep == (*it)->getEndpoint()) {
       (*it)->zbDefaultResponse(message);  //method zbDefaultResponse is implemented in the common EP class
+    }
+  }
+  return ESP_OK;
+}
+
+static esp_err_t zb_cmd_identify_query_resp_handler(const ezb_zcl_identify_query_rsp_message_t *message) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  if (message->info.status != EZB_ZCL_STATUS_SUCCESS) {
+    log_e("Received Identify Query Response: error status(%d)", message->info.status);
+    return ESP_ERR_INVALID_ARG;
+  }
+  log_v(
+    "Identify Query Response: from address(0x%x) src_endpoint(%u) to dst_endpoint(%u), timeout %u s",
+    message->in.header ? message->in.header->src_addr.u.short_addr : 0, message->in.header ? message->in.header->src_ep : 0, message->info.dst_ep,
+    message->in.timeout
+  );
+
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_ep == (*it)->getEndpoint()) {
+      (*it)->zbIdentifyQueryResponse(message);
     }
   }
   return ESP_OK;

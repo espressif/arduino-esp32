@@ -78,6 +78,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ep_desc = nullptr;
   _app_version = 0;
   _hw_version = 0;
+  _device_enabled = EZB_ZCL_BASIC_DEVICE_ENABLED_DEFAULT_VALUE;
   _power_config_cfg = {
     .mains_voltage = EZB_ZCL_POWER_CONFIG_MAINS_VOLTAGE_DEFAULT_VALUE,
     .mains_voltage_min_threshold = EZB_ZCL_POWER_CONFIG_MAINS_VOLTAGE_MIN_THRESHOLD_DEFAULT_VALUE,
@@ -100,6 +101,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ota_current_file_version = 0;
   _ota_downloaded_file_version = 0;
   _on_identify = nullptr;
+  _on_identify_query_response = nullptr;
   _on_ota_state_change = nullptr;
   _on_default_response = nullptr;
   _on_privilege_command = nullptr;
@@ -291,6 +293,33 @@ bool ZigbeeEP::setClusterReporting(ezb_zcl_reporting_info_t reporting_info) {
   return true;
 }
 
+bool ZigbeeEP::setReportingDefaultResponse(uint16_t cluster_id, uint16_t attr_id, bool enabled, uint8_t cluster_role) {
+  if (!Zigbee.initialized()) {
+    log_w("Cannot set reporting default response: Zigbee stack not initialized");
+    return false;
+  }
+  if (!esp_zigbee_lock_acquire(portMAX_DELAY)) {
+    log_w("Cannot set reporting default response: failed to acquire Zigbee lock");
+    return false;
+  }
+  ezb_zcl_reporting_info_t reporting_info =
+    ezb_zcl_reporting_info_find(_endpoint, cluster_id, cluster_role, attr_id, EZB_ZCL_STD_MANUF_CODE);
+  if (reporting_info == EZB_ZCL_INVALID_REPORTING_INFO) {
+    esp_zigbee_lock_release();
+    log_e("Failed to find reporting info for cluster 0x%04x attr 0x%04x", cluster_id, attr_id);
+    return false;
+  }
+  // SDK flag disables DefaultRsp; invert the user-facing "enabled" argument.
+  ezb_err_t ret = ezb_zcl_reporting_info_set_dis_def_rsp(reporting_info, !enabled);
+  esp_zigbee_lock_release();
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to set reporting default response: 0x%x", ret);
+    return false;
+  }
+  log_v("Reporting DefaultRsp for cluster 0x%04x attr 0x%04x: %s", cluster_id, attr_id, enabled ? "enabled" : "disabled");
+  return true;
+}
+
 bool ZigbeeEP::configureClusterReporting(ezb_zcl_config_report_cmd_t *report_cmd) {
   if (report_cmd == nullptr) {
     log_e("Configure report command is null");
@@ -432,6 +461,27 @@ void ZigbeeEP::setHardwareVersion(uint8_t version) {
   if (ezb_zcl_basic_cluster_desc_add_attr(basic_cluster, EZB_ZCL_ATTR_BASIC_HW_VERSION_ID, (void *)&_hw_version) != EZB_ERR_NONE) {
     log_e("Failed to set hardware version");
   }
+}
+
+bool ZigbeeEP::setDeviceEnabled(bool enabled) {
+  _device_enabled = enabled;
+  // Before addEndpoint/begin: adds the Basic attr if missing (same pattern as setManufacturerAndModel).
+  // After begin: updates the live attr — call once before begin if you need runtime toggles.
+  return configureEpClusterAttr(
+    "setDeviceEnabled", EZB_ZCL_CLUSTER_ID_BASIC, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BASIC_DEVICE_ENABLED_ID, (void *)&_device_enabled,
+    ezb_zcl_basic_cluster_desc_add_attr
+  );
+}
+
+bool ZigbeeEP::getDeviceEnabled() {
+  bool enabled = _device_enabled;
+  if (Zigbee.endpointsRegistered()) {
+    if (!getAttribute(EZB_ZCL_CLUSTER_ID_BASIC, EZB_ZCL_ATTR_BASIC_DEVICE_ENABLED_ID, &enabled, sizeof(enabled))) {
+      // Attribute not present: ZCL treats the endpoint as enabled.
+      return true;
+    }
+  }
+  return enabled;
 }
 
 bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
@@ -700,6 +750,40 @@ void ZigbeeEP::zbIdentify(const ezb_zcl_set_attr_value_message_t *message) {
   } else {
     log_w("Other identify commands are not implemented yet.");
   }
+}
+
+void ZigbeeEP::zbIdentifyQueryResponse(const ezb_zcl_identify_query_rsp_message_t *message) {
+  if (message == nullptr) {
+    return;
+  }
+  uint8_t src_endpoint = message->in.header ? message->in.header->src_ep : 0;
+  ezb_address_t src_address = message->in.header ? message->in.header->src_addr : EZB_ADDRESS_NONE();
+  log_v(
+    "Identify Query Response: timeout %u s from address(0x%x) endpoint(%u)", message->in.timeout,
+    (src_address.addr_mode == EZB_ADDR_MODE_SHORT) ? src_address.u.short_addr : 0, src_endpoint
+  );
+  if (_on_identify_query_response != NULL) {
+    _on_identify_query_response(message->in.timeout, src_endpoint, src_address);
+  }
+}
+
+bool ZigbeeEP::identifyQuery(uint16_t short_addr, uint8_t dst_endpoint) {
+  ezb_zcl_identify_query_cmd_t cmd_req = {};
+  ezb_address_set_short(&cmd_req.cmd_ctrl.dst_addr, short_addr);
+  cmd_req.cmd_ctrl.dst_ep = dst_endpoint;
+  cmd_req.cmd_ctrl.src_ep = _endpoint;
+
+  if (!acquireCommandLock()) {
+    return false;
+  }
+  ezb_err_t ret = ezb_zcl_identify_identify_query_cmd_req(&cmd_req);
+  releaseCommandLock();
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to send Identify Query: 0x%x", ret);
+    return false;
+  }
+  log_v("Identify Query sent to 0x%04x endpoint %u", short_addr, dst_endpoint);
+  return true;
 }
 
 void ZigbeeEP::zbOTAState(bool otaActive) {
