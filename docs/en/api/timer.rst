@@ -5,9 +5,9 @@ Timer
 About
 -----
 
-The ESP32 SoCs contains from 2 to 4 hardware timers.
-They are all 64-bit (54-bit for ESP32-C3) generic timers based on 16-bit pre-scalers and 64-bit (54-bit for ESP32-C3)
-up / down counters which are capable of being auto-reloaded.
+ESP32 SoCs contain 2 to 4 general-purpose hardware timers. Each timer is based on a 16-bit prescaler and an up/down counter with auto-reload capability.
+
+Counters are 64-bit on ESP32 and ESP32-S2, and 54-bit on all other SoCs.
 
 ========= ================
 ESP32 SoC Number of timers
@@ -16,8 +16,11 @@ ESP32     4
 ESP32-S2  4
 ESP32-S3  4
 ESP32-C3  2
+ESP32-C5  2
 ESP32-C6  2
 ESP32-H2  2
+ESP32-P4  4
+ESP32-S31 4
 ========= ================
 
 Arduino-ESP32 Timer API

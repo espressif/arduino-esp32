@@ -135,6 +135,7 @@ void setup() {
   // Set the Matter Event Callback
   Matter.onEvent(onMatterEvent);
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
   matterWaitUntilReady();
   Serial.println("Matter Events example started.");

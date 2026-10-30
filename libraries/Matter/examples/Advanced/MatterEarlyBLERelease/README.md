@@ -7,7 +7,7 @@ One **On/Off Light**. Two ways to handle BLE RAM. Serial `[heap]` also prints PS
 | **1** (default) | On-network Wi-Fi (`selectNetwork(MATTER_NETWORK_WIFI, true)` + `WiFi.begin()`). No CHIPoBLE. | Released at `initArduino()` (`bleInUse()` returns `false`). |
 | **0** | CHIPoBLE. No sketch Wi-Fi. Hub sends credentials over BLE. | Library reclaim after `Matter.begin()` / commission. |
 
-**Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`).** Neither mode hands the radio to Arduino BLE.
+**Do not use the Arduino `BLE` library (`BLE.h`).** Neither mode hands the radio to Arduino BLE.
 
 ## `MATTER_EARLY_BLE_RELEASE`
 

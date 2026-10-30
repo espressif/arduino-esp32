@@ -1,6 +1,7 @@
 /*
  * Register all Zigbee endpoint classes from Zigbee.h on the coordinator.
- * Pre-begin configuration (min/max, clusters) lives in register_all_zigbee_endpoints().
+ * Endpoint configuration (min/max, clusters) lives in register_all_zigbee_endpoints().
+ * Zigbee.role() must already have been called; SDK v2 rejects EP setters before that.
  * Deep API tests are in zigbee_endpoint_deep_tests.h.
  */
 
@@ -36,6 +37,7 @@
 #define ZB_EP_ELECTRICAL      24
 #define ZB_EP_GATEWAY         25
 #define ZB_EP_RANGE_EXT       26
+#define ZB_EP_DOOR_LOCK       27
 
 static ZigbeeLight epLight(ZB_EP_LIGHT);
 static ZigbeeDimmableLight epDimmable(ZB_EP_DIMMABLE);
@@ -63,6 +65,7 @@ static ZigbeeDoorWindowHandle epDoorHandle(ZB_EP_DOOR_HANDLE);
 static ZigbeeElectricalMeasurement epElectrical(ZB_EP_ELECTRICAL);
 static ZigbeeGateway epGateway(ZB_EP_GATEWAY);
 static ZigbeeRangeExtender epRangeExt(ZB_EP_RANGE_EXT);
+static ZigbeeDoorLock epDoorLock(ZB_EP_DOOR_LOCK);
 
 static bool register_all_zigbee_endpoints(void) {
   epLight.setManufacturerAndModel("Espressif", "ZBValLight");
@@ -233,6 +236,14 @@ static bool register_all_zigbee_endpoints(void) {
 
   epRangeExt.setManufacturerAndModel("Espressif", "ZBValRange");
   if (!Zigbee.addEndpoint(&epRangeExt)) {
+    return false;
+  }
+
+  if (!epDoorLock.setMaxUsers(10) || !epDoorLock.setLockType(DOOR_LOCK_TYPE_DEAD_BOLT)) {
+    return false;
+  }
+  epDoorLock.setManufacturerAndModel("Espressif", "ZBValDoorLock");
+  if (!Zigbee.addEndpoint(&epDoorLock)) {
     return false;
   }
 

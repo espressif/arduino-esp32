@@ -8,18 +8,18 @@ About
 The ``MatterPressureSensor`` class provides a pressure sensor endpoint for Matter networks. This endpoint implements the Matter pressure sensing standard for read-only pressure reporting.
 
 **Features:**
-* Pressure measurement reporting in hectopascals (hPa)
-* Read-only sensor (no control functionality)
-* Automatic pressure updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Pressure measurement reporting in hectopascals (hPa).
+* Read-only sensor (no control functionality).
+* Automatic pressure updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Atmospheric pressure monitoring
-* Weather stations
-* Barometric pressure sensors
-* Pressure logging
-* Smart home weather monitoring
+* Atmospheric pressure monitoring.
+* Weather stations.
+* Barometric pressure sensors.
+* Pressure logging.
+* Smart home weather monitoring.
 
 API Reference
 -------------
@@ -48,7 +48,7 @@ Initializes the Matter pressure sensor endpoint with an initial pressure value.
 
     bool begin(double pressure = 0.00);
 
-* ``pressure`` - Initial pressure in hectopascals (hPa, default: 0.00)
+* ``pressure`` - Initial pressure in hectopascals (hPa, default: 0.00).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -75,7 +75,7 @@ Sets the reported pressure value.
 
     bool setPressure(double pressure);
 
-* ``pressure`` - Pressure in hectopascals (hPa)
+* ``pressure`` - Pressure in hectopascals (hPa).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

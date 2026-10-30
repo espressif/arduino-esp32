@@ -96,6 +96,8 @@ static const uint8_t BOOT_PIN = 9;
 static const uint8_t BOOT_PIN = 35;
 #elif CONFIG_IDF_TARGET_ESP32C5
 static const uint8_t BOOT_PIN = 28;
+#elif CONFIG_IDF_TARGET_ESP32S31
+static const uint8_t BOOT_PIN = 61;
 #else
 #error BOOT_PIN not defined for this chip!
 #endif
@@ -130,6 +132,7 @@ void yield(void);
 #include "esp32-hal-cpu.h"
 #include "esp32-hal-hosted.h"
 
+// value must be non-negative: 0 (off) to (2^resolution)-1 (on). Default 8-bit: 0..255.
 void analogWrite(uint8_t pin, int value);
 void analogWriteFrequency(uint8_t pin, uint32_t freq);
 void analogWriteResolution(uint8_t pin, uint8_t bits);

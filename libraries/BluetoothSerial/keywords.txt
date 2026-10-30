@@ -20,6 +20,12 @@ BluetoothSerial	KEYWORD1
 
 SerialBT	KEYWORD2
 hasClient	KEYWORD2
+peerCount	KEYWORD2
+peers	KEYWORD2
+writeTo	KEYWORD2
+onConnect	KEYWORD2
+onDisconnect	KEYWORD2
+onPeerData	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

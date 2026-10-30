@@ -29,10 +29,14 @@ extern "C" {
 #include "esp32-hal.h"
 
 typedef enum {
+  #if SOC_ADC_ATTEN_NUM == 1
+  ADC_11db,
+  #else
   ADC_0db,
   ADC_2_5db,
   ADC_6db,
   ADC_11db,
+  #endif
   ADC_ATTENDB_MAX
 } adc_attenuation_t;
 

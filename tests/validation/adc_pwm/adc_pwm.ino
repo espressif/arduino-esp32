@@ -104,7 +104,7 @@ void test_ledc_attach_detach(void) {
 }
 
 void test_ledc_write_duty(void) {
-  TEST_ASSERT_TRUE(ledcAttach(LEDC_PIN, LEDC_FREQ, LEDC_RES));
+  TEST_ASSERT_TRUE(ledcAttachChannel(LEDC_PIN, LEDC_FREQ, LEDC_RES, 0));
 
   TEST_ASSERT_TRUE(ledcWrite(LEDC_PIN, 0));
   delay(5);
@@ -114,10 +114,59 @@ void test_ledc_write_duty(void) {
   delay(5);
   TEST_ASSERT_EQUAL(128, ledcRead(LEDC_PIN));
 
+  /* 8-bit: 255 is 255/256, 256 is full on, overflow clamps to 256 */
   TEST_ASSERT_TRUE(ledcWrite(LEDC_PIN, 255));
   delay(5);
-  /* 8-bit duty max can read back as 255 or 256 depending on SoC/timer */
-  TEST_ASSERT_UINT32_WITHIN(1, 255, ledcRead(LEDC_PIN));
+  TEST_ASSERT_EQUAL(255, ledcRead(LEDC_PIN));
+
+  TEST_ASSERT_TRUE(ledcWrite(LEDC_PIN, 256));
+  delay(5);
+  TEST_ASSERT_EQUAL(256, ledcRead(LEDC_PIN));
+
+  TEST_ASSERT_TRUE(ledcWrite(LEDC_PIN, 1000));
+  delay(5);
+  TEST_ASSERT_EQUAL(256, ledcRead(LEDC_PIN));
+
+  TEST_ASSERT_TRUE(ledcWriteChannel(0, 255));
+  delay(5);
+  TEST_ASSERT_EQUAL(255, ledcRead(LEDC_PIN));
+
+  TEST_ASSERT_TRUE(ledcWriteChannel(0, 256));
+  delay(5);
+  TEST_ASSERT_EQUAL(256, ledcRead(LEDC_PIN));
+
+  TEST_ASSERT_TRUE(ledcWriteChannel(0, 1000));
+  delay(5);
+  TEST_ASSERT_EQUAL(256, ledcRead(LEDC_PIN));
+
+  ledcDetach(LEDC_PIN);
+}
+
+void test_analog_write_duty(void) {
+  /* Negative value must not attach LEDC or change an existing duty */
+  analogWrite(LEDC_PIN, -1);
+  TEST_ASSERT_FALSE(ledcDetach(LEDC_PIN));
+
+  analogWrite(LEDC_PIN, 128);
+  delay(5);
+  TEST_ASSERT_EQUAL(128, ledcRead(LEDC_PIN));
+
+  /* Default analog resolution is 8-bit: 255 and overflow map to LEDC full on (256) */
+  analogWrite(LEDC_PIN, 255);
+  delay(5);
+  TEST_ASSERT_EQUAL(256, ledcRead(LEDC_PIN));
+
+  analogWrite(LEDC_PIN, 300);
+  delay(5);
+  TEST_ASSERT_EQUAL(256, ledcRead(LEDC_PIN));
+
+  analogWrite(LEDC_PIN, 64);
+  delay(5);
+  TEST_ASSERT_EQUAL(64, ledcRead(LEDC_PIN));
+
+  analogWrite(LEDC_PIN, -1);
+  delay(5);
+  TEST_ASSERT_EQUAL(64, ledcRead(LEDC_PIN));
 
   ledcDetach(LEDC_PIN);
 }
@@ -190,6 +239,7 @@ void setup() {
 #if SOC_LEDC_SUPPORTED
   RUN_TEST(test_ledc_attach_detach);
   RUN_TEST(test_ledc_write_duty);
+  RUN_TEST(test_analog_write_duty);
   RUN_TEST(test_ledc_read_freq);
   RUN_TEST(test_ledc_change_frequency);
   RUN_TEST(test_ledc_fade);

@@ -14,6 +14,10 @@ USAGE:
     ${0} -s sketch1,sketch2 -t target1,target2
         Example: ${0} -s hello_world,gpio -t esp32,esp32s3
         Note: Comma-separated lists are supported for both targets and sketches
+    ${0} -s ble -t esp32s31|esp32c6
+        Mixed-target multi-DUT: device0 built for esp32s31, device1 for esp32c6.
+        Binaries stay under ~/.arduino/tests/<soc>/... (same as comma builds).
+        Pipe is only valid for multi-device tests.
     ${0} -clean
         Remove build and test generated files
 
@@ -67,7 +71,25 @@ function extract_target_and_args {
     done
 }
 
-# Build all sketches for a multi-device test
+# Strip -t and its value from an argument list (stdout: remaining args as lines)
+function filter_out_target_args {
+    local skip_next=0
+    for arg in "$@"; do
+        if [ $skip_next -eq 1 ]; then
+            skip_next=0
+            continue
+        fi
+        if [ "$arg" == "-t" ]; then
+            skip_next=1
+            continue
+        fi
+        printf '%s\n' "$arg"
+    done
+}
+
+# Build all sketches for a multi-device test.
+# $2 may be a single SoC (same-target) or pipe-separated SoCs (mixed-target: device0|device1|...).
+# Artifacts always land under ~/.arduino/tests/<soc>/<test>/<sketch>/build.tmp.
 function build_multi_device_test {
     local test_dir=$1
     local target=$2
@@ -75,42 +97,85 @@ function build_multi_device_test {
     local build_args=("$@")
     local test_name
     local devices
+    local dut_targets=()
+    local device_count=0
+    local is_mixed=0
 
     test_name=$(basename "$test_dir")
 
-    # Check if target is supported by this test
-    if [ -f "$test_dir/ci.yml" ]; then
-        # Check if target is explicitly disabled
-        is_target=$(yq eval ".targets.${target}" "$test_dir/ci.yml" 2>/dev/null)
-        if [[ "$is_target" == "false" ]]; then
-            echo "Skipping multi-device test $test_name for $target (explicitly disabled)"
-            return 0
-        fi
-
-        # Check if target meets the requirements using check_requirements from sketch_utils.sh
-        has_requirements=$(${SKETCH_UTILS} check_requirements "$test_dir" "tools/esp32-arduino-libs/$target/sdkconfig")
-        if [ "$has_requirements" == "0" ]; then
-            echo "Skipping multi-device test $test_name for $target (requirements not met)"
-            return 0
-        fi
+    IFS='|' read -ra dut_targets <<< "$target"
+    if [ ${#dut_targets[@]} -gt 1 ]; then
+        is_mixed=1
     fi
 
-    echo "Building multi-device test $test_name"
-
-    # Get the list of devices from ci.yml
-    devices=$(yq eval '.multi_device | keys | .[]' "$test_dir/ci.yml" 2>/dev/null)
+    # Get the list of devices from ci.yml (sorted to match run_multi_device_test / dut index)
+    devices=$(yq eval '.multi_device | keys | .[]' "$test_dir/ci.yml" 2>/dev/null | sort)
 
     if [[ -z "$devices" ]]; then
         echo "ERROR: No devices found in multi_device configuration for $test_name"
         return 1
     fi
 
+    for device in $devices; do
+        device_count=$((device_count + 1))
+    done
+
+    if [ $is_mixed -eq 1 ] && [ ${#dut_targets[@]} -ne "$device_count" ]; then
+        echo "ERROR: Mixed target '$target' has ${#dut_targets[@]} SoCs but $test_name has $device_count devices"
+        return 1
+    fi
+
+    # Same-target: duplicate the single SoC for every device
+    if [ $is_mixed -eq 0 ]; then
+        local single="${dut_targets[0]}"
+        dut_targets=()
+        for ((i=0; i<device_count; i++)); do
+            dut_targets+=("$single")
+        done
+    fi
+
+    # Per-DUT: skip entire mixed/same job if any SoC is disabled or fails requirements
+    if [ -f "$test_dir/ci.yml" ]; then
+        local soc
+        for soc in "${dut_targets[@]}"; do
+            local is_target
+            is_target=$(yq eval ".targets.${soc}" "$test_dir/ci.yml" 2>/dev/null)
+            if [[ "$is_target" == "false" ]]; then
+                echo "Skipping multi-device test $test_name for $target (explicitly disabled for $soc)"
+                return 0
+            fi
+
+            local has_requirements
+            has_requirements=$(${SKETCH_UTILS} check_requirements "$test_dir" "tools/esp32-arduino-libs/$soc/sdkconfig")
+            if [ "$has_requirements" == "0" ]; then
+                echo "Skipping multi-device test $test_name for $target (requirements not met for $soc)"
+                return 0
+            fi
+        done
+    fi
+
+    if [ $is_mixed -eq 1 ]; then
+        echo "Building multi-device test $test_name (mixed targets: $target)"
+    else
+        echo "Building multi-device test $test_name"
+    fi
+
+    # Drop any -t from caller args; we set -t per device below
+    local filtered_args=()
+    while IFS= read -r line; do
+        [ -n "$line" ] && filtered_args+=("$line")
+    done < <(filter_out_target_args "${build_args[@]}")
+
     local result=0
     local sketch_name
     local sketch_path
     local sketch_dir
     local device_fqbn_append
+    local device_target
+    local dev_idx=0
     for device in $devices; do
+        device_target="${dut_targets[$dev_idx]}"
+
         # multi_device values can be either a scalar (sketch name) or a map
         # with "sketch" and optional "fqbn_append" keys.
         local device_type
@@ -132,7 +197,7 @@ function build_multi_device_test {
             return 1
         fi
 
-        echo "Building sketch $sketch_name for multi-device test $test_name"
+        echo "Building sketch $sketch_name for multi-device test $test_name (target: $device_target)"
 
         # -td: ci.yml lives in the parent test directory
         # -bn: sets the parent build dir to the test name (nested: $test_name/$sketch_name/build.tmp)
@@ -141,13 +206,14 @@ function build_multi_device_test {
             fa_args=(-fa "$device_fqbn_append")
         fi
 
-        ${SKETCH_UTILS} build "${build_args[@]}" -s "$sketch_dir" \
+        ${SKETCH_UTILS} build "${filtered_args[@]}" -t "$device_target" -s "$sketch_dir" \
             -td "$test_dir" -bn "$test_name" "${fa_args[@]}"
         result=$?
         if [ $result -ne 0 ]; then
-            echo "ERROR: Failed to build sketch $sketch_name for test $test_name"
+            echo "ERROR: Failed to build sketch $sketch_name for test $test_name (target: $device_target)"
             return $result
         fi
+        dev_idx=$((dev_idx + 1))
     done
 
     return 0
@@ -245,9 +311,13 @@ else
     test_folder="$PWD/tests/$test_type"
 fi
 
-# Loop through all targets to build
+# Loop through all targets to build (each entry may be a SoC or a pipe-separated mixed pair)
 for current_target in "${targets_to_build[@]}"; do
     echo "Building for target: $current_target"
+    is_mixed_target=0
+    if [[ "$current_target" == *"|"* ]]; then
+        is_mixed_target=1
+    fi
 
     if [ $chunk_build -eq 1 ]; then
         # For chunk builds, we need to handle multi-device tests separately
@@ -265,6 +335,14 @@ for current_target in "${targets_to_build[@]}"; do
                     fi
                 fi
             done
+        fi
+
+        # Mixed-target jobs only apply to multi-device tests
+        if [ $is_mixed_target -eq 1 ]; then
+            if [ $multi_device_error -ne 0 ]; then
+                exit $multi_device_error
+            fi
+            continue
         fi
 
         # Now build regular (non-multi-device) tests using chunk_build
@@ -300,6 +378,9 @@ for current_target in "${targets_to_build[@]}"; do
             test_dir="$sketch_test_folder/$current_sketch"
             if [ -d "$test_dir" ] && [ "$(is_multi_device_test "$test_dir")" -eq 1 ]; then
                 build_multi_device_test "$test_dir" "$current_target" "${args[@]}" "-t" "$current_target" "$@"
+            elif [ $is_mixed_target -eq 1 ]; then
+                echo "ERROR: Mixed target '$current_target' is only valid for multi-device tests (got: $current_sketch)"
+                exit 1
             else
                 local_args=("${args[@]}")
                 BUILD_CMD="${SCRIPTS_DIR}/sketch_utils.sh build"
