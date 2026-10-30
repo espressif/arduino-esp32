@@ -17,6 +17,8 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
+#include <stdio.h>
+#include <string.h>
 #if !CONFIG_ENABLE_CHIPOBLE && (SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED)
 #include <WiFi.h>
 
@@ -46,6 +48,47 @@ void matterConnectWiFi(const char *ssid, const char *password) {
 }
 #endif /* !CONFIG_ENABLE_CHIPOBLE && Wi-Fi */
 
+// CONFIG_IDF_TARGET is "esp32c6" / "esp32" / "esp32s3". Product uses "ESP32-C6".
+static void matterExampleSocName(char *out, size_t outSize) {
+  if (out == nullptr || outSize < 6) {
+    return;
+  }
+  const char *target = CONFIG_IDF_TARGET;
+  size_t i = 0;
+  const char prefix[] = "ESP32";
+  for (; prefix[i] != '\0' && (i + 1) < outSize; i++) {
+    out[i] = prefix[i];
+  }
+  const size_t tlen = strlen(target);
+  if (tlen > 5 && (i + 1) < outSize) {
+    out[i++] = '-';
+    for (size_t j = 5; target[j] != '\0' && (i + 1) < outSize; j++) {
+      char c = target[j];
+      if (c >= 'a' && c <= 'z') {
+        c = static_cast<char>(c - 'a' + 'A');
+      }
+      out[i++] = c;
+    }
+  }
+  out[i] = '\0';
+}
+
+bool matterSetExampleIdentity(const char *endpointName) {
+  if (endpointName == nullptr || endpointName[0] == '\0') {
+    endpointName = "Matter";
+  }
+  Matter.setVendorName("Espressif");
+
+  char soc[16] = {};
+  matterExampleSocName(soc, sizeof(soc));
+
+  char product[33] = {};
+  snprintf(product, sizeof(product), "%s %s", soc, endpointName);
+
+  Matter.setProductName(product);
+  return Matter.setDeviceName(product);
+}
+
 static void printReadyStatus(bool commissioned, bool connected, bool online) {
   const char *net = "none";
   switch (Matter.getActiveNetwork()) {
@@ -58,6 +101,13 @@ static void printReadyStatus(bool commissioned, bool connected, bool online) {
 }
 
 void matterWaitUntilReady(uint32_t timeoutMs) {
+  if (!Matter.isStackStarted()) {
+    Serial.println("Matter.begin() failed. Pairing codes are not available.");
+    Serial.println("Halting. loop() will not run.");
+    while (true) {
+      delay(1000);
+    }
+  }
   if (!Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is not commissioned yet.");
     Serial.println("Commission it using the pairing code or QR code.");
@@ -102,6 +152,9 @@ void matterWaitUntilReady(uint32_t timeoutMs) {
 }
 
 void matterRestartIfNoFabric() {
+  if (!Matter.isStackStarted()) {
+    return;
+  }
   if (!Matter.isDeviceCommissioned()) {
     Serial.println("Matter fabric removed. Restarting.");
     delay(500);

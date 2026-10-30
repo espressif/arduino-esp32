@@ -236,7 +236,9 @@ MatterOccupancySensor::~MatterOccupancySensor() {
 }
 
 bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _occupancySensorType) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   // Initial HoldTime value is 0 (can be set later via setHoldTime() or setHoldTimeLimits())
   holdTime_seconds = 0;

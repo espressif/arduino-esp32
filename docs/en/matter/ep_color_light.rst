@@ -12,8 +12,7 @@ Changing the Color Control feature set (for example, removing color temperature 
 **Features:**
 * On/off control
 * RGB color control with HSV color model (brightness is HSV value; there is no separate brightness or color-temperature API)
-* State persistence support
-* Callback support for state and color changes
+* Callback support for on/off and color changes (persist in the sketch with Preferences or NVS if needed)
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 

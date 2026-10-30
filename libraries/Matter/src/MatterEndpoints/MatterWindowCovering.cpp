@@ -43,7 +43,9 @@ bool MatterWindowCovering::begin(
   uint8_t liftPercent, uint8_t tiltPercent, WindowCoveringType_t _coveringType, const PositionCalibration *liftCalibration,
   const PositionCalibration *tiltCalibration
 ) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter Window Covering with Endpoint Id %u device has already been created.", getEndPointId());

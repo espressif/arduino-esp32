@@ -11,8 +11,7 @@ The ``MatterColorTemperatureLight`` class provides a color temperature light end
 * On/off control
 * Brightness level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel)
 * Color temperature control (100-500 mireds; higher mireds are warmer)
-* State persistence support
-* Callback support for state, brightness, and temperature changes
+* Callback support for on/off, brightness, and color temperature (persist in the sketch with Preferences or NVS if needed)
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 

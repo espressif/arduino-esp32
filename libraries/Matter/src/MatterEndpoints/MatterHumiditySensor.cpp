@@ -43,7 +43,9 @@ MatterHumiditySensor::~MatterHumiditySensor() {
 }
 
 bool MatterHumiditySensor::begin(uint16_t _rawHumidity) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter Humidity Sensor with Endpoint Id %u device has already been created.", getEndPointId());
