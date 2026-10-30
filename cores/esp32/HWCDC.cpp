@@ -27,6 +27,13 @@
 #include "soc/io_mux_reg.h"
 #include "soc/usb_serial_jtag_struct.h"
 #include "soc/usb_serial_jtag_reg.h"
+// IDF 5.5 names this register USB_DEVICE_BUS_RESET_ST_REG on P4 v3.
+// Same address and the same USB_SERIAL_JTAG_USB_BUS_RESET_ST bit.
+#if defined(USB_SERIAL_JTAG_BUS_RESET_ST_REG)
+#define HWCDC_BUS_RESET_ST_REG USB_SERIAL_JTAG_BUS_RESET_ST_REG
+#elif defined(USB_DEVICE_BUS_RESET_ST_REG)
+#define HWCDC_BUS_RESET_ST_REG USB_DEVICE_BUS_RESET_ST_REG
+#endif
 #include "esp_timer.h"
 #include <string.h>
 #pragma GCC diagnostic ignored "-Wvolatile"
@@ -365,9 +372,9 @@ bool HWCDC::isCDC_Connected() {
     return false;
   }
 
-#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+#ifdef HWCDC_BUS_RESET_ST_REG
   // 0: bus is in reset. 1: reset has been released.
-  if ((REG_READ(USB_SERIAL_JTAG_BUS_RESET_ST_REG) & USB_SERIAL_JTAG_USB_BUS_RESET_ST) == 0) {
+  if ((REG_READ(HWCDC_BUS_RESET_ST_REG) & USB_SERIAL_JTAG_USB_BUS_RESET_ST) == 0) {
     hw_cdc_set_connected(false);
     return false;
   }
