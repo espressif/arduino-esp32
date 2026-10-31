@@ -519,10 +519,12 @@ Audio behavior is exercised by:
 Phases self-skip when a role or host tool is unavailable on general targets.
 On an `esp32s31` dual-DUT job phases 1–13 are mandatory and a missing
 audio/ISO guard is a failure, not a skip. Validate both the normal NimBLE
-library and an S31 library rebuilt with the lib-builder's temporary
-`defconfig.esp32s31_bluedroid.disabled` overlay; the overlay must not remain
-active in the builder checkout. When a role's on-air behavior changes, update
-the suite — the suites are the executable contract.
+library and an S31 library rebuilt from the lib-builder's
+`defconfig.esp32s31_bluedroid.disabled` overlay;
+`tools/select-ble-backend.sh bluedroid --build` promotes it only for the build
+and removes the promoted copy afterward, so the checkout never keeps an active
+overlay. When a role's on-air behavior changes, update the suite — the suites
+are the executable contract.
 
 ## Maintainer rules (audio-specific)
 
