@@ -122,8 +122,8 @@ typedef struct {
   uint16_t handle;
   esp_ble_conn_t *conn; /* from the discovery callbacks; set members need the object, not the handle */
 #if CAP_PAST
-  uint8_t addr_type;    ///< Peer identity, for hosts that address PAST by peer address.
-  uint8_t addr[6];
+  uint8_t addr_type;    ///< Peer OTA address type, for hosts that address PAST by peer address.
+  uint8_t addr[6];      ///< Peer address normalized to LSB-first.
 #endif
 #if CAP_UC
   uint8_t disc;         ///< D_* stage of an initiator discovery in flight.
@@ -139,6 +139,8 @@ typedef struct {
   bool cmd_coord;       ///< The peer's CAS includes CSIS.
   uint8_t cmd_stage;    ///< CMD_D_* step of the commander discovery after CAS.
   const void *cmd_ctlr; ///< VCP / MICP controller instance whose discovery is in flight.
+  bool cmd_discovering; ///< Controller discovery call in flight; its callback may run inline.
+  bool cmd_inline;      ///< The in-flight discovery callback already ran inline.
 #endif
 #if CAP_BASS
   bool bass;            ///< BASS discovered on the peer.
@@ -1330,9 +1332,22 @@ static void cmd_disc_step(cap_peer_t *p) {
   if (p->cmd_stage < CMD_D_VCP) {
     p->cmd_stage = CMD_D_VCP;
     esp_ble_audio_vcp_vol_ctlr_t *ctlr = NULL;
-    if (esp_ble_audio_vcp_vol_ctlr_get_by_conn(p->handle) == NULL && esp_ble_audio_vcp_vol_ctlr_discover(p->handle, &ctlr) == ESP_OK) {
-      p->cmd_ctlr = ctlr;
-      return;
+    if (esp_ble_audio_vcp_vol_ctlr_get_by_conn(p->handle) == NULL) {
+      p->cmd_ctlr = NULL;
+      p->cmd_inline = false;
+      p->cmd_discovering = true;
+      int err = esp_ble_audio_vcp_vol_ctlr_discover(p->handle, &ctlr);
+      p->cmd_discovering = false;
+      if (err == ESP_OK) {
+        if (p->cmd_inline) {
+          p->cmd_inline = false;
+          p->cmd_ctlr = NULL;
+          cmd_disc_step(p);
+        } else {
+          p->cmd_ctlr = ctlr;
+        }
+        return;
+      }
     }
   }
 #endif
@@ -1340,9 +1355,22 @@ static void cmd_disc_step(cap_peer_t *p) {
   if (p->cmd_stage < CMD_D_MICP) {
     p->cmd_stage = CMD_D_MICP;
     esp_ble_audio_micp_mic_ctlr_t *ctlr = NULL;
-    if (esp_ble_audio_micp_mic_ctlr_get_by_conn(p->handle) == NULL && esp_ble_audio_micp_mic_ctlr_discover(p->handle, &ctlr) == ESP_OK) {
-      p->cmd_ctlr = ctlr;
-      return;
+    if (esp_ble_audio_micp_mic_ctlr_get_by_conn(p->handle) == NULL) {
+      p->cmd_ctlr = NULL;
+      p->cmd_inline = false;
+      p->cmd_discovering = true;
+      int err = esp_ble_audio_micp_mic_ctlr_discover(p->handle, &ctlr);
+      p->cmd_discovering = false;
+      if (err == ESP_OK) {
+        if (p->cmd_inline) {
+          p->cmd_inline = false;
+          p->cmd_ctlr = NULL;
+          cmd_disc_step(p);
+        } else {
+          p->cmd_ctlr = ctlr;
+        }
+        return;
+      }
     }
   }
 #endif
@@ -1384,7 +1412,17 @@ static void cmd_discovered(esp_ble_conn_t *conn, int err, const esp_ble_audio_cs
 static void cmd_ctlr_discovered(const void *ctlr) {
   for (int i = 0; i < MAX_PEERS; i++) {
     cap_peer_t *p = &s_peers[i];
-    if (p->used && p->cmd_disc && p->cmd_ctlr == ctlr) {
+    if (!p->used || !p->cmd_disc) {
+      continue;
+    }
+    if (p->cmd_discovering) {
+      /* Bluedroid can invoke this callback inline, before cmd_disc_step()
+       * stored the returned instance. */
+      p->cmd_ctlr = ctlr;
+      p->cmd_inline = true;
+      return;
+    }
+    if (p->cmd_ctlr == ctlr) {
       p->cmd_ctlr = NULL;
       cmd_disc_step(p);
       return;
@@ -1865,7 +1903,8 @@ static void cap_on_gap(const void *event) {
     cap_peer_t *p = peer_get(ev->acl_connect.conn_handle, true);
     if (p) {
       p->addr_type = ev->acl_connect.dst.type;
-      memcpy(p->addr, ev->acl_connect.dst.val, sizeof(p->addr));
+      /* BLEAudioCap converts this profile address back through BTAddress. */
+      bleAudioAddrFromGap(p->addr, ev->acl_connect.dst.val);
     }
   }
 #endif

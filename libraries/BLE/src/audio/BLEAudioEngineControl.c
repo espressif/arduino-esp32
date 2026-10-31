@@ -113,6 +113,7 @@ static uint16_t s_roles;
 static struct {
   uint16_t conn;                        ///< Peer passed to the last Discover, CONN_NONE when idle.
   bool syncing; /* discovered, waiting for the first state read */
+  bool discovering;                     ///< Discover call in flight; its callback may run inline.
   ble_audio_vcp_discovered_t disc;      ///< Held until the first state read completes.
   esp_ble_audio_vcp_vol_ctlr_t *ctlr;   ///< Stack instance for the peer.
   esp_ble_audio_vocs_t *vocs;           ///< Peer's first VOCS instance, NULL when absent.
@@ -124,6 +125,7 @@ static struct {
 /** Microphone controller peer. */
 static struct {
   uint16_t conn;                        ///< Peer passed to the last Discover, CONN_NONE when idle.
+  bool discovering;                     ///< Discover call in flight; its callback may run inline.
   esp_ble_audio_micp_mic_ctlr_t *ctlr;  ///< Stack instance for the peer.
   esp_ble_audio_aics_t *aics;           ///< Peer's first microphone AICS instance, NULL when absent.
 } s_mctl = {.conn = CONN_NONE};
@@ -357,7 +359,12 @@ static uint16_t vctl_conn(const void *inst) {
  */
 static void vctl_discover(esp_ble_audio_vcp_vol_ctlr_t *ctlr, int err, uint8_t vocs_count, uint8_t aics_count) {
   if (ctlr != s_vctl.ctlr) {
-    return;
+    if (!s_vctl.discovering) {
+      return;
+    }
+    /* Bluedroid can invoke this callback inline, before
+     * bleAudioVcpCtlrDiscover() stored the returned instance. */
+    s_vctl.ctlr = ctlr;
   }
   s_vctl.disc.vocs_count = vocs_count;
   s_vctl.disc.aics_count = aics_count;
@@ -438,12 +445,18 @@ int bleAudioVcpCtlrDiscover(uint16_t conn_handle) {
   NEED_ROLE(ROLE_VCP_CTLR);
   /* A new Discover replaces the previous peer, even if it fails. */
   PEER_RESET(s_vctl);
+  s_vctl.conn = conn_handle;
+  s_vctl.discovering = true;
   esp_ble_audio_vcp_vol_ctlr_t *ctlr = NULL;
   int err = esp_ble_audio_vcp_vol_ctlr_discover(conn_handle, &ctlr);
   if (err == ESP_OK) {
-    s_vctl.conn = conn_handle;
-    s_vctl.ctlr = ctlr;
+    if (s_vctl.ctlr == NULL) {
+      s_vctl.ctlr = ctlr;
+    }
+  } else {
+    s_vctl.conn = CONN_NONE;
   }
+  s_vctl.discovering = false;
   return err;
 }
 
@@ -594,7 +607,13 @@ static uint16_t mctl_conn(const void *inst) {
  * change counter, so unlike VCP nothing needs to be read before writing.
  */
 static void mctl_discover(esp_ble_audio_micp_mic_ctlr_t *ctlr, int err, uint8_t aics_count) {
-  const uint16_t conn = mctl_conn(ctlr);
+  uint16_t conn = mctl_conn(ctlr);
+  if (conn == CONN_NONE && s_mctl.discovering) {
+    /* Bluedroid can invoke this callback inline, before
+     * bleAudioMicpCtlrDiscover() stored the returned instance. */
+    s_mctl.ctlr = ctlr;
+    conn = s_mctl.conn;
+  }
   if (conn == CONN_NONE) {
     return;
   }
@@ -654,12 +673,18 @@ int bleAudioMicpCtlrDiscover(uint16_t conn_handle) {
   NEED_ROLE(ROLE_MICP_CTLR);
   /* A new Discover replaces the previous peer, even if it fails. */
   PEER_RESET(s_mctl);
+  s_mctl.conn = conn_handle;
+  s_mctl.discovering = true;
   esp_ble_audio_micp_mic_ctlr_t *ctlr = NULL;
   int err = esp_ble_audio_micp_mic_ctlr_discover(conn_handle, &ctlr);
   if (err == ESP_OK) {
-    s_mctl.conn = conn_handle;
-    s_mctl.ctlr = ctlr;
+    if (s_mctl.ctlr == NULL) {
+      s_mctl.ctlr = ctlr;
+    }
+  } else {
+    s_mctl.conn = CONN_NONE;
   }
+  s_mctl.discovering = false;
   return err;
 }
 
