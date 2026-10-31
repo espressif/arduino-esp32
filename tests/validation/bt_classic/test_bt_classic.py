@@ -63,6 +63,9 @@ def test_bt_classic(dut, ci_job_id, record_property):
     # -------------------------------------------------------------------------
     _start_phase(server, client, 1)
 
+    # External Bluedroid owner: BLE and Classic must adopt it and leave it up
+    # when each library ends.
+    server.expect(r"\[SERVER\] ExtHost ble=1 bleKeep=1 spp=1 sppKeep=1", timeout=30)
     server.expect(r"\[SERVER\] Init OK, addr: [0-9a-fA-F:]+", timeout=30)
     server.expect_exact("[SERVER] Deinit OK", timeout=10)
     server.expect_exact("[SERVER] Reinit OK", timeout=30)
@@ -116,6 +119,10 @@ def test_bt_classic(dut, ci_job_id, record_property):
     client.expect(r"\[CLIENT\] Coex adopt ble=1 spp=1", timeout=20)
     server.expect_exact("[SERVER] Coex adopt teardown spp=1", timeout=20)
     client.expect_exact("[CLIENT] Coex adopt teardown spp=1", timeout=20)
+    # end(true) while Classic still owns the host: the shared host must stay up
+    # and the BLE library must be terminally released.
+    server.expect(r"\[SERVER\] Coex endtrue begin=1 keep=1 again=0", timeout=20)
+    client.expect(r"\[CLIENT\] Coex endtrue begin=1 keep=1 again=0", timeout=20)
 
     client.expect_exact("[CLIENT] Sent: DISCONNECT_ME", timeout=10)
     # onDisconnect callback may log before disconnect(addr) returns

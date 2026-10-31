@@ -64,6 +64,9 @@
   && __has_include("esp_bt.h") && defined(CONFIG_BT_CONTROLLER_ENABLED)
 
 #include "esp_bt.h"
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include "esp_bt_main.h"
+#endif
 
 static int pass_count = 0;
 static int fail_count = 0;
@@ -231,11 +234,19 @@ static void phase_8() {
   check(btStart(), "btStart() succeeds before any memory release");
   check(btStarted(), "btStarted() true after btStart");
 
+#if defined(CONFIG_BT_DUAL_MODE_ARCH)
+  // Split-controller targets: a partial release is a logical contract, so it
+  // is allowed while running and must not stop or narrow the controller.
+  check(btMemRelease(BT_MODE_BLE), "BTDM: release while running is logical-only");
+  check(btMemReleased(BT_MODE_BLE), "BTDM: contract set while running");
+  check(btStarted(), "BTDM: controller still running after logical release");
+#else
   // Attempt to release memory while the controller is still active.
   // ESP-IDF will reject the request; btMemRelease() must return false and
   // must NOT mark the memory as released.
   check(!btMemRelease(BT_MODE_BLE), "btMemRelease while BT is running returns false");
   check(!btMemReleased(BT_MODE_BLE), "tracking NOT updated after rejected release");
+#endif
 
   // Stop BT cleanly (disable + deinit → controller returns to IDLE state).
   check(btStop(), "btStop() succeeds");
@@ -290,6 +301,70 @@ static void phase_9() {
 }
 #endif
 
+// Phase 10: the shared Bluedroid host manager.
+//
+// Bluedroid is a single host. The core reference-counts it for BLE and
+// BluetoothSerial: the first user starts it, the last one stops it, and an
+// externally enabled host is adopted and left up. This phase exercises the
+// manager directly, then the memory policy it must preserve when
+// esp_bt_mem_release() is implemented on the split-controller targets.
+#if defined(CONFIG_BLUEDROID_ENABLED)
+static void phase_10() {
+  Serial.println("[BT_MEM_WRAP] Phase 10: shared Bluedroid host manager");
+
+  check(esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_UNINITIALIZED, "host uninitialized at boot");
+  check(!btStarted(), "controller idle at boot");
+
+  // First user starts the controller and host.
+  check(btBluedroidHostAcquire(), "first acquire starts the host");
+  check(esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED, "host enabled after first acquire");
+  check(btStarted(), "controller enabled after first acquire");
+
+  // Second user adopts the running host; the first release must leave it up.
+  check(btBluedroidHostAcquire(), "second acquire adopts the running host");
+  check(btBluedroidHostRelease() == BT_HOST_STILL_IN_USE, "first release leaves the host in use");
+  check(esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED, "host stays enabled while shared");
+
+  // Last user stops the host; the controller stop is deferred to finalize.
+  check(btBluedroidHostRelease() == BT_HOST_STOPPED, "last release stops the host");
+  check(esp_bluedroid_get_status() != ESP_BLUEDROID_STATUS_ENABLED, "host disabled after last release");
+  btBluedroidHostFinalize();
+  check(!btStarted(), "controller stopped after finalize");
+
+  // External owner: the host is already enabled outside the manager. Acquire
+  // adopts it; release must leave it running for that owner.
+  check(btStart(), "external btStart succeeds");
+  check(esp_bluedroid_init() == ESP_OK, "external host init succeeds");
+  check(esp_bluedroid_enable() == ESP_OK, "external host enable succeeds");
+  check(btBluedroidHostAcquire(), "acquire adopts the external host");
+  check(btBluedroidHostRelease() == BT_HOST_EXTERNAL, "release leaves the external host up");
+  check(esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED, "external host still enabled");
+  esp_bluedroid_disable();
+  esp_bluedroid_deinit();
+  btStop();
+  check(!btStarted(), "external host cleaned up");
+
+  // Memory policy: on a BTDM split-controller build a partial release is a
+  // logical contract only; it must not narrow or free the controller. A
+  // single-half build keeps the physical path, which will free the half when
+  // the controller implements esp_bt_mem_release().
+  check(!btMemReleased(BT_MODE_BLE), "BLE mem not released before policy check");
+#if defined(CONFIG_BT_DUAL_MODE_ARCH)
+  check(btMemRelease(BT_MODE_BLE), "BTDM: BLE release recorded");
+  check(btMemReleased(BT_MODE_BLE), "BTDM: BLE contract set");
+  check(btStart(), "BTDM: controller still starts after logical release");
+  check(btStop(), "BTDM: controller stops after logical release");
+#else
+  check(btMemRelease(BT_MODE_BLE), "single-half: BLE release succeeds");
+  check(btMemReleased(BT_MODE_BLE), "single-half: BLE contract set");
+#endif
+}
+#else
+static void phase_10() {
+  Serial.println("[BT_MEM_WRAP] Phase 10: SKIP (Bluedroid host manager not available on this host)");
+}
+#endif
+
 static void run_phase(int phase) {
   pass_count = 0;
   fail_count = 0;
@@ -304,6 +379,7 @@ static void run_phase(int phase) {
     case 7:  phase_7(); break;
     case 8:  phase_8(); break;
     case 9:  phase_9(); break;
+    case 10: phase_10(); break;
     default: Serial.printf("[BT_MEM_WRAP] ERROR: unknown phase %d\n", phase); return;
   }
 

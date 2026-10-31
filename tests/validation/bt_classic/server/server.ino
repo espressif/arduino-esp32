@@ -7,6 +7,8 @@
 
 #include <Arduino.h>
 #include <BLE.h>
+#include "esp32-hal-bt.h"
+#include "esp_bt_main.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "BluetoothSerial.h"
@@ -80,6 +82,26 @@ void setup() {
   // Phase 1: basic lifecycle
   // -------------------------------------------------------------------------
   waitForPhase(1);
+
+  // External host adoption: another component may enable Bluedroid before the
+  // Arduino libraries. The shared manager must adopt it and leave it up when
+  // each library ends; only the external owner may tear it down.
+  if (btStart()) {
+    (void)esp_bluedroid_init();
+    (void)esp_bluedroid_enable();
+  }
+  BTStatus extBle = BLE.begin(serverName + "_ext");
+  BLE.end(false);
+  bool extBleKeep = (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED);
+  BTStatus extSpp = SerialBT.begin(serverName, false);
+  SerialBT.end(false);
+  bool extSppKeep = (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED);
+  esp_bluedroid_disable();
+  esp_bluedroid_deinit();
+  btStop();
+  Serial.printf(
+    "[SERVER] ExtHost ble=%d bleKeep=%d spp=%d sppKeep=%d\n", (int)(bool)extBle, (int)extBleKeep, (int)(bool)extSpp, (int)extSppKeep
+  );
 
   // Start BLE before Classic: BLE owns the shared Bluedroid host and
   // BluetoothSerial adopts it below. The reverse order (Classic owns, BLE
@@ -233,6 +255,16 @@ void setup() {
     Serial.printf("[SERVER] Coex adopt ble=%d spp=%d\n", (int)(bool)bs, (int)SerialBT.hasClient());
     BLE.end(false);
     Serial.printf("[SERVER] Coex adopt teardown spp=%d\n", (int)SerialBT.hasClient());
+
+    // end(true) while Classic still owns the host: record the BLE terminal
+    // contract, leave the host up, and refuse a later BLE begin.
+    bs = BLE.begin(serverName + "_ble_endtrue");
+    BLE.end(true);
+    bool endTrueKeep = SerialBT.hasClient();
+    BTStatus endTrueAgain = BLE.begin(serverName + "_ble_endtrue2");
+    Serial.printf(
+      "[SERVER] Coex endtrue begin=%d keep=%d again=%d\n", (int)(bool)bs, (int)endTrueKeep, (int)(bool)endTrueAgain
+    );
   }
 
   // Server-initiated per-peer disconnect

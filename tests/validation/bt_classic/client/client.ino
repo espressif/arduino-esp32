@@ -206,6 +206,16 @@ void setup() {
     Serial.printf("[CLIENT] Coex adopt ble=%d spp=%d\n", (int)(bool)bs, (int)SerialBT.connected());
     BLE.end(false);
     Serial.printf("[CLIENT] Coex adopt teardown spp=%d\n", (int)SerialBT.connected());
+
+    // end(true) while Classic still owns the host: record the BLE terminal
+    // contract, leave the host up, and refuse a later BLE begin.
+    bs = BLE.begin(clientName + "_ble_endtrue");
+    BLE.end(true);
+    bool endTrueKeep = SerialBT.connected();
+    BTStatus endTrueAgain = BLE.begin(clientName + "_ble_endtrue2");
+    Serial.printf(
+      "[CLIENT] Coex endtrue begin=%d keep=%d again=%d\n", (int)(bool)bs, (int)endTrueKeep, (int)(bool)endTrueAgain
+    );
   }
 
   // Ask server to disconnect this peer by address
