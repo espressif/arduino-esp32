@@ -1337,14 +1337,16 @@ static void cmd_disc_step(cap_peer_t *p) {
       p->cmd_inline = false;
       p->cmd_discovering = true;
       int err = esp_ble_audio_vcp_vol_ctlr_discover(p->handle, &ctlr);
+      if (err == ESP_OK && !p->cmd_inline) {
+        /* Publish the instance before an asynchronous callback can run. */
+        p->cmd_ctlr = ctlr;
+      }
       p->cmd_discovering = false;
       if (err == ESP_OK) {
         if (p->cmd_inline) {
           p->cmd_inline = false;
           p->cmd_ctlr = NULL;
           cmd_disc_step(p);
-        } else {
-          p->cmd_ctlr = ctlr;
         }
         return;
       }
@@ -1360,14 +1362,16 @@ static void cmd_disc_step(cap_peer_t *p) {
       p->cmd_inline = false;
       p->cmd_discovering = true;
       int err = esp_ble_audio_micp_mic_ctlr_discover(p->handle, &ctlr);
+      if (err == ESP_OK && !p->cmd_inline) {
+        /* Publish the instance before an asynchronous callback can run. */
+        p->cmd_ctlr = ctlr;
+      }
       p->cmd_discovering = false;
       if (err == ESP_OK) {
         if (p->cmd_inline) {
           p->cmd_inline = false;
           p->cmd_ctlr = NULL;
           cmd_disc_step(p);
-        } else {
-          p->cmd_ctlr = ctlr;
         }
         return;
       }
