@@ -759,6 +759,29 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
   implemented, while a single-half build calls the physical API and will start freeing automatically
   when the controller supports it. Runtime classic/BLE separation is therefore a *build-time*
   property on these targets (pick a matching lib variant), not something `btStartMode()` can do.
+  **To reclaim the unused half in a BTDM build (when the S31 controller gains runtime mode
+  selection), change these together — implementing the release stubs alone is not enough:**
+  1. **Controller:** make `esp_bt_controller_enable(mode)` honour the requested mode (and the
+     broker/OSAL/coexistence path support a single half), and implement
+     `esp_bt_mem_release()` / `esp_bt_controller_mem_release()` with the idle-controller
+     precondition. Until the enable mode is honoured, the implementation must refuse to free a
+     half the build-time mode still needs; a direct IDF caller must not be able to strand the
+     other half.
+  2. **Core (`cores/esp32/esp32-hal-bt.c`):** remove or make capability-based the
+     `BT_MODE_MEM_RELEASE_PHYSICAL = 0` gate, remove the
+     `#if defined(CONFIG_BT_DUAL_MODE_ARCH)` clamp in `btStartMode()`, and remove the
+     `BT_MODE == ESP_BT_MODE_BTDM` logical-only early return in `btMemRelease()`. The existing
+     `initArduino()` release then frees the unused half at boot, and the first `btStartMode()`
+     narrows to the surviving half. Keep the ESP32 path (`BT_MODE_MEM_RELEASE_PHYSICAL = 1`)
+     unchanged.
+  3. **Validation:** in `tests/validation/bt_mem_wrap`, phase 8's
+     `CONFIG_BT_DUAL_MODE_ARCH` branch becomes the physical-rejection behaviour, phase 9's direct
+     Classic release + `btStartMode(BLE)` becomes valid, and phase 10's BTDM branch must assert
+     the unused half is freed and the surviving half still starts. Add a `bt_classic` scenario
+     that boots with the unused half released, narrows the controller, and still runs SPP/BLE.
+     Update the two READMEs and this section.
+  Until both steps 1 and 2 are done, the Arduino `btMemRelease()` never makes that safe-only
+  partial call in a BTDM build; a direct IDF caller is the implementation's responsibility.
 - **Bluedroid BLE5 surface:** extended adv/scan, PHY/DLE, periodic adv TX, and periodic-advertiser sync creation/report RX are implemented under `BLE5_SUPPORTED` / `BLE_PERIODIC_ADV_SUPPORTED`. The public PAST-receive method remains `NotSupported` on Bluedroid because IDF's receiver-parameter API is peer-address-keyed rather than ACL-handle-keyed; the LE Audio BASS path supplies that peer address through its private engine bridge. Classic esp32 Bluedroid libs remain BLE 4.2-only.
 - **HITL-pending coverage:** Bluedroid BLE5 leftover `EXT_ADV_STOP_COMPLETE` / `PERIODIC_ADV_STOP_COMPLETE` (phase 2 `staleStopFlag` / `stalePeriodicStop`) needs ESP32-S31 or other Bluedroid BLE5 silicon; this rig HITLs the 4.2 leftover `ADV_STOP_COMPLETE` path as phase 20 `staleLegacyStop`. Bluedroid BLE5 `clearExtended()` while a set is enabled (`HCI_LE_Clear_Advertising_Sets` Command Disallowed, flags retained) is the same contract as NimBLE `BLE_HS_EBUSY`; phase 2 `clearWhileLive` HITLs it on NimBLE. This rig has no Bluedroid BLE5 DUT (classic ESP32 is BLE 4.2-only). Multi-central BLEStream under load (two simultaneous centrals with per-peer routing; needs a third DUT). Passkey-entry pairing + Numeric-Comparison reject, periodic terminate/sync-lost, L2CAP late-connect cleanup after caller timeout, bulk across the credit stall + reconnect, conn-param reject, and the `deleteBond` round-trip are covered by phases 28-34. Directed high-duty advertising with a real InitA plus legacy OOB / OOB-SC reject are covered by phase 36. Indication `ESP_GATT_BUSY` retry, indication queue-full, CCCD bit routing, in-flight `removeService`, abandoned long-read reconnect, read-timeout destroy/re-read, Bluedroid notify-reservation vs indication CONF demux, NimBLE `nimbleRef` keepalive vs `disconnectSync.give()`, BLEStream `writeChunks` vs `end()` handle reset, and NimBLE advertising stop-during-preempt plus remaining-duration resume are covered by phases 4, 5, 12, 13, 23, 33, and 35. See `tests/validation/ble/README.md`.
 - **Untestable on this API / 2-DUT rig:** EATT (no public API). Per-peer CCCD and overlapping snapshots on two ACL links (two `BLEClient` instances on one central share one ACL with the peripheral). Withholding Handle Value Confirmation (both hosts auto-confirm indications, so the 30 s ATT indication timeout cannot be forced without a non-confirming peer).

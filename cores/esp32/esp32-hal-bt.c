@@ -48,6 +48,12 @@ static bool _classicMemReleased = true;  // No Classic BT on this chip
 // controller implements it.  btStartMode() must not act on the flags as
 // if memory were gone — narrowing a BTDM request to one half hands the host a
 // controller that lacks the other half (see btStartMode for the failure modes).
+//
+// Future (S31 runtime mode selection): once the controller honours the enable
+// mode and implements the release APIs, remove this gate, the
+// CONFIG_BT_DUAL_MODE_ARCH clamp in btStartMode(), and the BTDM early return in
+// btMemRelease() together. Implementing the release stubs alone is not enough.
+// See DESIGN.md, "To reclaim the unused half in a BTDM build".
 #if defined(CONFIG_BT_DUAL_MODE_ARCH)
 #define BT_MODE_MEM_RELEASE_PHYSICAL 0
 #else
@@ -489,7 +495,10 @@ bool btMemRelease(bt_mode mode) {
    * freeing either half would leave the enable path referencing freed memory.
    * Record the end(true) contract only. Single-half builds keep the physical
    * path: the other half is absent, and a future controller implementation
-   * will free the requested half without any code change here. */
+   * will free the requested half without any code change here.
+   * When the controller gains runtime mode selection, remove this early return
+   * together with the BT_MODE_MEM_RELEASE_PHYSICAL gate and the btStartMode
+   * clamp; see DESIGN.md, "To reclaim the unused half in a BTDM build". */
   if (BT_MODE == ESP_BT_MODE_BTDM) {
     _btUpdateMemReleasedFlags(esp_mode);
     return true;

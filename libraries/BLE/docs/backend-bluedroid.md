@@ -109,7 +109,9 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   contract without a physical free; the last user performs the teardown.
   `BluetoothSerial::end()` waits for `ESP_SPP_UNINIT_EVT` while it still holds
   the host reference, because `esp_spp_deinit()` is asynchronous and an
-  immediate re-`begin()` would otherwise race the old SPP instance.
+  immediate re-`begin()` would otherwise race the old SPP instance. The S31
+  memory-release policy and the coordinated future reclaim checklist are in
+  `DESIGN.md`, "To reclaim the unused half in a BTDM build".
 - **Raw ISO ACL tracking.** The ISO adapter records a physical LE ACL at GATTC
   CONNECT, not only at its own app's GATTC OPEN; `BLEIso::connectCis()` can
   therefore use an existing `BLEClient` handle. The later OPEN is idempotent,

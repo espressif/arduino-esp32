@@ -274,6 +274,13 @@ static void phase_8() {
 // This test verifies both invariants and then confirms that a subsequent
 // btStartMode(BT_MODE_BLE) succeeds — proving that the --wrap intercept does
 // not crash or corrupt state when called from the Matter stack.
+//
+// On split-controller (S31) BTDM builds this direct Classic release + BLE-only
+// start only becomes valid once the controller can select a single half at
+// runtime. Until then the implementation must refuse it (or this phase must be
+// skipped for CONFIG_BT_DUAL_MODE_ARCH); the Arduino btMemRelease() does not
+// make that call in a BTDM build. See DESIGN.md, "To reclaim the unused half
+// in a BTDM build".
 #if CONFIG_BT_CLASSIC_ENABLED
 static void phase_9() {
   Serial.println("[BT_MEM_WRAP] Phase 9: Matter-style Classic BT release (BLEManagerImpl simulation)");
@@ -308,6 +315,11 @@ static void phase_9() {
 // externally enabled host is adopted and left up. This phase exercises the
 // manager directly, then the memory policy it must preserve when
 // esp_bt_mem_release() is implemented on the split-controller targets.
+//
+// When the S31 controller gains runtime mode selection, flip the BTDM branch
+// below to the physical path and assert the unused half is freed while the
+// surviving half still starts. See DESIGN.md, "To reclaim the unused half in a
+// BTDM build".
 #if defined(CONFIG_BLUEDROID_ENABLED)
 static void phase_10() {
   Serial.println("[BT_MEM_WRAP] Phase 10: shared Bluedroid host manager");
