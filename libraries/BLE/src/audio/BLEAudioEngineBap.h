@@ -354,10 +354,12 @@ typedef struct {
   ble_audio_codec_t codec; /*!< First subgroup. */
 } ble_audio_bsink_base_t;
 
-/** A Broadcast Assistant asked us to sync; the C++ side creates the PA sync. */
+/** A Broadcast Assistant asked us to sync; the host bridge arms scan or PAST. */
 typedef struct {
   uint8_t addr_type;
   uint8_t addr[6];       /*!< LSB-first (taken from the BASS receive state). */
+  uint8_t peer_addr_type;
+  uint8_t peer_addr[6];  /*!< Assistant's ACL peer address, LSB-first. */
   uint8_t sid;
   uint32_t broadcast_id;
   bool past;             /*!< Wait for PAST on the ACL instead of scanning. */

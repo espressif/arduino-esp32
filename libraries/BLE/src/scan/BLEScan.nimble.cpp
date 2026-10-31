@@ -51,6 +51,9 @@
 
 namespace {
 
+constexpr uint16_t kMaxPeriodicSyncSkip = 0x01F3;
+constexpr uint16_t kMinPeriodicSyncTimeoutMs = 100;
+
 bool duplicateKeySeen(const BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
   return std::any_of(impl.duplicateKeys.begin(), impl.duplicateKeys.end(), [&](const auto &key) {
     return key.first == address && key.second == sid;
@@ -545,7 +548,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       return 0;
     }
 
-#ifdef BLE_GAP_EVENT_PERIODIC_TRANSFER
+#if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
     case BLE_GAP_EVENT_PERIODIC_TRANSFER:
 #ifdef BLE_GAP_EVENT_PERIODIC_TRANSFER_V2
     case BLE_GAP_EVENT_PERIODIC_TRANSFER_V2:
@@ -906,12 +909,12 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
 }
 
 BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, uint16_t timeoutMs) {
-#if BLE5_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
+#if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  // Core Vol 4, Part E, 7.8.91: skip <= 0x01F3 and sync timeout is
-  // 0x000A..0x4000 in 10-ms units. uint16_t milliseconds cannot exceed the
-  // upper bound, but values below 100 ms would be truncated to an invalid unit.
-  if (skipCount > 0x01F3 || timeoutMs < 100) {
+  // HCI skip is at most 0x01F3; the sync timeout is 10-ms units, so reject
+  // values below one valid unit before converting. uint16_t milliseconds
+  // cannot exceed the HCI upper timeout bound after conversion.
+  if (skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
     return BTStatus::InvalidParam;
   }
   BLEAdmissionGuard publisher(impl.nativeAdmission);
@@ -942,7 +945,7 @@ BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, u
 }
 
 BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t connHandle) {
-#if BLE5_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
+#if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {

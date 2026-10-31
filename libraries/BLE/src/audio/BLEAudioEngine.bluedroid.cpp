@@ -20,6 +20,9 @@
 
 #include "audio/BLEAudioEngine.bluedroid.h"
 #include "audio/BLEAudioEngine.h"
+#include "BLE.h"
+#include "scan/BLEScan.bluedroid.h"
+#include "BTAddress.h"
 #include "esp32-hal-log.h"
 
 /**
@@ -37,7 +40,24 @@ namespace BLEAudioEngine {
  * GATT discovery on a link once its encryption completes.
  */
 void forwardHostGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
-  if (event != ESP_GAP_BLE_AUTH_CMPL_EVT || param == nullptr) {
+  if (param == nullptr) {
+    return;
+  }
+#if BLE_PAST_SUPPORTED
+  if (event == ESP_GAP_BLE_PERIODIC_ADV_SET_INFO_TRANS_COMPLETE_EVT) {
+    if (param->period_adv_set_info_trans.status != ESP_BT_STATUS_SUCCESS) {
+      log_w("audio link: PAST set-info transfer failed status=%d", param->period_adv_set_info_trans.status);
+    }
+    return;
+  }
+  if (event == ESP_GAP_BLE_PERIODIC_ADV_SYNC_TRANS_COMPLETE_EVT) {
+    if (param->period_adv_sync_trans.status != ESP_BT_STATUS_SUCCESS) {
+      log_w("audio link: PAST sync transfer failed status=%d", param->period_adv_sync_trans.status);
+    }
+    return;
+  }
+#endif
+  if (event != ESP_GAP_BLE_AUTH_CMPL_EVT) {
     return;
   }
   // Audio links are encrypted before discovery; without this the failure only
@@ -52,6 +72,24 @@ void forwardHostGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *p
 }
 
 }  // namespace BLEAudioEngine
+
+extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip,
+                                                   uint16_t timeout_ms) {
+  if (!peer_addr) {
+    return static_cast<int>(BTStatus::InvalidParam);
+  }
+#if BLE_SCANNING_SUPPORTED
+  (void)BLE.getScan();
+  BTAddress address(peer_addr, static_cast<BTAddress::Type>(peer_addr_type));
+  return static_cast<int>(BLEScan::Impl::receivePeriodicSyncFromPeer(conn_handle, address, skip, timeout_ms));
+#else
+  (void)conn_handle;
+  (void)peer_addr_type;
+  (void)skip;
+  (void)timeout_ms;
+  return static_cast<int>(BTStatus::NotSupported);
+#endif
+}
 
 // Bluedroid registers the classic server and LE Audio as separate GATTS apps,
 // so no cross-owner GATT commit coordination is required.

@@ -271,6 +271,8 @@ public:
    * @param skipCount Max number of periodic events the receiver may skip. 0 = none.
    * @param timeoutMs Synchronization supervision timeout in milliseconds.
    * @return BTStatus indicating success or error.
+   * @note Bluedroid returns NotSupported because its native PAST-receive API is
+   *       keyed by peer address, while this public method accepts only a handle.
    */
   BTStatus createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
 
@@ -293,6 +295,7 @@ public:
    * @brief Disable PAST receive previously enabled by @ref receivePeriodicSync.
    * @param connHandle ACL connection handle of the assistant.
    * @return BTStatus indicating success or error.
+   * @note Bluedroid returns NotSupported for the same handle-to-address limitation.
    */
   BTStatus cancelPeriodicSyncReceive(uint16_t connHandle);
 

@@ -155,6 +155,13 @@
 #define BLE_PERIODIC_ADV_SUPPORTED 0
 #endif
 
+/* Periodic Advertising Sync Transfer (PAST) receiver support. */
+#if BLE_PERIODIC_ADV_SUPPORTED && ((BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_SYNC_TRANSFER)) || (BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER)))
+#define BLE_PAST_SUPPORTED 1
+#else
+#define BLE_PAST_SUPPORTED 0
+#endif
+
 /*
  * BLE 5.0 extended advertising *TX* is actually implemented in this build.
  * Distinct from BLE5_SUPPORTED (controller/stack capability): both backends

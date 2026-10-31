@@ -1589,7 +1589,8 @@ def _phase_indication_busy_retry(server, client):
 def _phase_periodic_adv_lifecycle(server, client):
     """Phase 34 — periodic-advertising teardown transitions the happy path never
     reached: an explicit terminatePeriodicSync and an onPeriodicLost after the
-    server stops the train. Self-skips without BLE5.
+    server stops the train, and verify the periodic-sync callback preserves the
+    advertiser address across backend byte orders. Self-skips without BLE5.
 
     Returns True if the phase ran, False if skipped.
     """
@@ -1603,7 +1604,7 @@ def _phase_periodic_adv_lifecycle(server, client):
         return False
 
     m_c = client.expect(
-        r"\[CLIENT\] Phase34 (synced=([01]) dataRx=([01])|BLE5 not supported, skipping)",
+        r"\[CLIENT\] Phase34 (synced=([01]) dataRx=([01]) addrMatch=([01])|BLE5 not supported, skipping)",
         timeout=45,
     )
     if b"not supported" in m_c.group(0):
@@ -1612,6 +1613,7 @@ def _phase_periodic_adv_lifecycle(server, client):
         return False
     assert int(m_c.group(2)) == 1, "periodic sync not established"
     assert int(m_c.group(3)) == 1, "periodic report not received"
+    assert int(m_c.group(4)) == 1, "periodic sync callback returned the wrong advertiser address"
 
     # At least one teardown transition must be observed: an explicit terminate
     # (deterministic) or a supervision-timeout sync-lost (timing dependent).

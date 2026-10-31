@@ -171,13 +171,11 @@ uint8_t bleAudioChannelCount(uint32_t chan_alloc);
 /* ── Addresses ──────────────────────────────────────────────────────────── */
 
 /**
- * @brief Copy an address from an engine GAP event into LSB-first order.
+ * @brief Copy a raw host-order address into the LSB-first order used by C++.
  *
- * The ISO host adapters copy the host's address bytes verbatim into
- * `esp_ble_audio_gap_app_event_t`, so they are MSB-first on Bluedroid and
- * LSB-first on NimBLE. Addresses inside profile structures (BASS receive
- * states, `esp_ble_conn_t`) are always LSB-first. Every address handed to
- * C++ is LSB-first, the order `BTAddress(const uint8_t *, Type)` expects.
+ * GAP event addresses and `esp_ble_conn_t::le.dst` retain host byte order:
+ * MSB-first on Bluedroid, LSB-first on NimBLE. BASS receive-state addresses
+ * are already LSB-first and must not be passed through this helper.
  */
 static inline void bleAudioAddrFromGap(uint8_t out[6], const uint8_t in[6]) {
 #if BLE_BLUEDROID
@@ -256,6 +254,17 @@ void bleAudioEngineGapPostEvent(uint16_t type, void *param);
  *         (BLEClient); the engine still secures and discovers it.
  */
 int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]);
+
+/**
+ * @brief Arm the selected host's PAST receiver for a BASS scan-delegator request.
+ * @param conn_handle ACL handle that requested the transfer.
+ * @param peer_addr_type Address type of the assistant.
+ * @param peer_addr Assistant address in LSB-first order.
+ * @param skip Max periodic events to skip.
+ * @param timeout_ms Periodic sync timeout in milliseconds.
+ * @return A `BTStatus` numeric code (0 on success).
+ */
+int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip, uint16_t timeout_ms);
 
 /** @brief Forget a pending bleAudioEngineConnect() whose host connect failed. */
 void bleAudioEngineCancelConnect(void);

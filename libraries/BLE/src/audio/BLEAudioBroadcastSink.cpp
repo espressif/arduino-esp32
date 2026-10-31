@@ -308,9 +308,13 @@ struct BLEAudioBroadcastSink::Impl {
         // only armed on request, never speculatively on connect.
         const auto *r = static_cast<const ble_audio_bsink_pa_req_t *>(e.data);
         log_d("evt PA_REQ past=%d bid=0x%06lx", r->past, (unsigned long)r->broadcast_id);
-        BLEScan sc = BLE.getScan();
-        BTStatus st = r->past ? sc.receivePeriodicSync(e.conn_handle, 0, kPaSyncTimeoutMs)
-                              : sc.createPeriodicSync(BTAddress(r->addr, static_cast<BTAddress::Type>(r->addr_type)), r->sid, 0, kPaSyncTimeoutMs);
+        BTStatus st;
+        if (r->past) {
+          st = static_cast<BTStatus::Code>(bleAudioEngineReceivePeriodicSync(e.conn_handle, r->peer_addr_type, r->peer_addr, 0, kPaSyncTimeoutMs));
+        } else {
+          BLEScan sc = BLE.getScan();
+          st = sc.createPeriodicSync(BTAddress(r->addr, static_cast<BTAddress::Type>(r->addr_type)), r->sid, 0, kPaSyncTimeoutMs);
+        }
         if (!st) {
           log_w("BroadcastSink: assistant sync request for 0x%06lX failed (%s)", (unsigned long)r->broadcast_id, st.toString());
         } else {

@@ -20,9 +20,11 @@
 
 #include "audio/BLEAudioEngine.nimble.h"
 #include "audio/BLEAudioEngine.h"
+#include "BLE.h"
 #if BLE_GATT_SERVER_SUPPORTED
 #include "gatt/BLEGattDatabase.h"
 #endif
+#include "scan/BLEScan.h"
 
 #include <host/ble_hs.h>
 
@@ -55,6 +57,15 @@ extern "C" int bleAudioNimbleSecure(uint16_t conn_handle) {
 extern "C" int bleAudioNimbleExchangeMtu(uint16_t conn_handle) {
   int rc = ble_gattc_exchange_mtu(conn_handle, nullptr, nullptr);
   return rc == BLE_HS_EALREADY ? 0 : rc;
+}
+
+extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip,
+                                                   uint16_t timeout_ms) {
+  (void)peer_addr_type;
+  if (!peer_addr) {
+    return static_cast<int>(BTStatus::InvalidParam);
+  }
+  return static_cast<int>(BLE.getScan().receivePeriodicSync(conn_handle, skip, timeout_ms));
 }
 
 extern "C" int bleAudioHostPrepareGatt(void) {

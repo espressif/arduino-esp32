@@ -1859,7 +1859,10 @@ void setup() {
           delay(250);
         }
       }
-      unsigned long finalOwnerDeadline = millis() + 8000;
+      // The server drops the final owner from its own onConnect, so the peer
+      // disconnect follows the deferred native teardown, which is not bounded by
+      // the connect itself (NimBLE's worker can take several seconds).
+      unsigned long finalOwnerDeadline = millis() + 15000;
       while (finalOwnerDisconnects.load() == 0 && millis() < finalOwnerDeadline) {
         delay(20);
       }
@@ -4000,6 +4003,7 @@ void setup() {
     if (st) {
       volatile bool found = false;
       volatile bool synced = false;
+      volatile bool syncAddrMatches = false;
       volatile bool dataRx = false;
       volatile bool lost = false;
       volatile uint16_t syncHandle = 0;
@@ -4014,6 +4018,7 @@ void setup() {
       });
       scan.onPeriodicSync([&](uint16_t handle, uint8_t sid, const BTAddress &addr, BLEPhy phy, uint16_t interval) {
         syncPhaseFromHost();
+        syncAddrMatches = addr == targetAddr;
         synced = true;
         syncHandle = handle;
       });
@@ -4030,7 +4035,7 @@ void setup() {
       for (int i = 0; i < 150 && !(synced && dataRx); i++) {
         delay(100);
       }
-      Serial.printf("[CLIENT] Phase34 synced=%d dataRx=%d\n", (int)synced, (int)dataRx);
+      Serial.printf("[CLIENT] Phase34 synced=%d dataRx=%d addrMatch=%d\n", (int)synced, (int)dataRx, (int)syncAddrMatches);
       ble5_ok = synced && dataRx;
 
       // Observe supervision-timeout sync-lost once the server stops the train.
