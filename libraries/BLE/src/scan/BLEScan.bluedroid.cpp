@@ -613,6 +613,12 @@ void BLEScan::beginBackendShutdown() {
   bool wasScanning = _impl->isScanning.load(std::memory_order_acquire);
   BTStatus stopStatus = stopBackend();
   if (!stopStatus && wasScanning) {
+    // A failed stop submission leaves the native scan active. Disabling the
+    // split S31 controller in that state asserts (btdm id 910), so retry the
+    // stop once before retiring the public session.
+    stopStatus = stopBackend();
+  }
+  if (!stopStatus && wasScanning) {
     // The native host will be deinitialized next, so no completion is
     // guaranteed after a failed stop submission. Retire the public session
     // and release an unlimited startBlocking() waiter deterministically.

@@ -37,6 +37,9 @@ volatile uint32_t bapBcastRxCount = 0;
 // is secured and discovered by the engine on both NimBLE and Bluedroid.
 volatile uint16_t audioLinkConn = 0xFFFF;
 
+// Phase 4: the pytest test signals after the server's unicast advertising is up.
+volatile bool phase4Go = false;
+
 // ========================= Phase coordination ================================
 
 void checkSerial() {
@@ -51,6 +54,8 @@ void checkSerial() {
           currentPhase = phase;
           Serial.printf("[CLIENT] Phase %d started\n", phase);
         }
+      } else if (buf == "PHASE4_GO") {
+        phase4Go = true;
       }
       buf = "";
     } else if (c != '\r') {
@@ -389,6 +394,15 @@ void setup() {
           bapTxStreaming = false;
         });
         if (audio.start()) {
+          // The pytest test signals after the server's unicast advertising is
+          // up. Scanning before that can latch the previous phase's advertising
+          // and then connect to a server that is still re-initializing.
+          phase4Go = false;
+          unsigned long goDeadline = millis() + 15000;
+          while (!phase4Go && millis() < goDeadline) {
+            checkSerial();
+            delay(10);
+          }
           BTAddress addr;
           if (findTarget(addr)) {
             uint16_t h = audioConnect(audio, addr);

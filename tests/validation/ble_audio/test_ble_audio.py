@@ -155,15 +155,26 @@ def _phase_bap_unicast(server, client):
     server's sink ASE over a CIS. Returns False (SKIP) when the LE Audio engine
     is not compiled into either build (only a dual-audio esp32s31 pair runs it).
     """
-    ms = server.expect(r"\[SERVER\] BapUnicast (not supported|result received=(\d+))", timeout=120)
+    ms = server.expect(r"\[SERVER\] BapUnicast (not supported|ready)", timeout=120)
+    if b"not supported" in ms.group(0):
+        client.expect(r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+))", timeout=120)
+        server.expect_exact("[SERVER] Phase4 bap_unicast done", timeout=40)
+        client.expect_exact("[CLIENT] Phase4 bap_unicast done", timeout=40)
+        return False
+
+    # The server's unicast advertising is up. Only now let the client scan and
+    # connect, so it cannot latch the previous phase's advertising.
+    client.write("PHASE4_GO\n")
+
+    ms2 = server.expect(r"\[SERVER\] BapUnicast result received=(\d+)", timeout=120)
     mc = client.expect(r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase4 bap_unicast done", timeout=40)
     client.expect_exact("[CLIENT] Phase4 bap_unicast done", timeout=40)
 
-    if b"not supported" in ms.group(0) or b"not supported" in mc.group(0):
+    if b"not supported" in mc.group(0):
         return False
 
-    received = int(ms.group(2))
+    received = int(ms2.group(1))
     streaming = int(mc.group(2))
     sent = int(mc.group(3))
     presets = int(mc.group(4))
