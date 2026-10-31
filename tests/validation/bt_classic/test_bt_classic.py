@@ -112,6 +112,10 @@ def test_bt_classic(dut, ci_job_id, record_property):
     server.expect(r"\[SERVER\] Coex ble=1 adv=1 connected=1 spp=1", timeout=60)
     server.expect_exact("[SERVER] Coex teardown spp=1", timeout=20)
     client.expect_exact("[CLIENT] Coex teardown spp=1", timeout=20)
+    server.expect(r"\[SERVER\] Coex adopt ble=1 spp=1", timeout=20)
+    client.expect(r"\[CLIENT\] Coex adopt ble=1 spp=1", timeout=20)
+    server.expect_exact("[SERVER] Coex adopt teardown spp=1", timeout=20)
+    client.expect_exact("[CLIENT] Coex adopt teardown spp=1", timeout=20)
 
     client.expect_exact("[CLIENT] Sent: DISCONNECT_ME", timeout=10)
     # onDisconnect callback may log before disconnect(addr) returns

@@ -78,6 +78,16 @@ void setup() {
   // -------------------------------------------------------------------------
   waitForPhase(1);
 
+  // Start BLE before Classic: BLE owns the shared Bluedroid host and
+  // BluetoothSerial adopts it below.
+  BTStatus bleOwner = BLE.begin(clientName + "_ble");
+  if (!bleOwner) {
+    Serial.println("[CLIENT] BLE owner init FAILED");
+    while (true) {
+      delay(1000);
+    }
+  }
+
   BTStatus status = SerialBT.begin(clientName, true);
   if (!status) {
     Serial.println("[CLIENT] Init FAILED");
@@ -168,9 +178,10 @@ void setup() {
     Serial.println("[CLIENT] Receive timeout");
   }
 
-  // BLE alongside the live SPP link (see the server side).
+  // BLE alongside the live SPP link (see the server side). BLE started first
+  // (phase 1), so ending it must leave the shared host up for Classic.
   {
-    BTStatus bs = BLE.begin(serverName + "_ble_cli");
+    BTStatus bs = BLE.begin(clientName + "_ble");
     bool bleConn = false;
     BLEScan scn = BLE.getScan();
     scn.setActiveScan(true);
@@ -189,6 +200,12 @@ void setup() {
     Serial.printf("[CLIENT] Coex ble=%d spp=%d\n", (int)((bool)bs && bleConn), (int)SerialBT.connected());
     BLE.end(false);
     Serial.printf("[CLIENT] Coex teardown spp=%d\n", (int)SerialBT.connected());
+
+    // Now BLE adopts the Classic-owned host and ends as a non-owner.
+    bs = BLE.begin(clientName + "_ble_adopt");
+    Serial.printf("[CLIENT] Coex adopt ble=%d spp=%d\n", (int)(bool)bs, (int)SerialBT.connected());
+    BLE.end(false);
+    Serial.printf("[CLIENT] Coex adopt teardown spp=%d\n", (int)SerialBT.connected());
   }
 
   // Ask server to disconnect this peer by address

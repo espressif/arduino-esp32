@@ -102,14 +102,22 @@ bool findTarget(BTAddress &addr) {
 // A guarded lambda avoids the Arduino preprocessor injecting an unguarded
 // BLEAudio-typed function prototype into audio-disabled builds.
 auto audioConnect = [](BLEAudio &audio, const BTAddress &addr) -> uint16_t {
-  audioLinkConn = 0xFFFF;
-  if (!audio.connect(addr)) {
-    return 0xFFFF;
+  // The peer's advertising/GATT commit can still be settling right after a
+  // phase transition; a failed ACL open is transient. Retry a bounded number
+  // of times, like the phase-24 client connection.
+  for (int attempt = 0; attempt < 3; attempt++) {
+    audioLinkConn = 0xFFFF;
+    if (audio.connect(addr)) {
+      for (int i = 0; i < 200 && audioLinkConn == 0xFFFF; i++) {
+        delay(50);
+      }
+      if (audioLinkConn != 0xFFFF) {
+        return audioLinkConn;
+      }
+    }
+    delay(500);
   }
-  for (int i = 0; i < 200 && audioLinkConn == 0xFFFF; i++) {
-    delay(50);
-  }
-  return audioLinkConn;
+  return 0xFFFF;
 };
 #endif
 
