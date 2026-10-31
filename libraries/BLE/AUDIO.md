@@ -19,8 +19,10 @@ shared between NimBLE and Bluedroid. Host-specific code is limited to the glue
 files (`BLEAudioEngine.nimble.cpp` / `BLEAudioEngine.bluedroid.cpp`, which
 forward host GAP/GATT events to the engine) and a few `BLE_NIMBLE` /
 `BLE_BLUEDROID` branches for the calls the engine leaves to the host: link
-encryption and the Bluedroid GATT client open in `BLEAudioEngine.c`, and the
-PAST send of the CAP handover in `BLEAudioCap.cpp`.
+encryption and the Bluedroid GATT client open in `BLEAudioEngine.c`, the PAST
+send of the CAP handover in `BLEAudioCap.cpp`, and the Bluedroid BASS PAST
+receiver setup (whose native API is keyed by the assistant's address rather
+than the engine ACL handle).
 
 The packaged Arduino libs track ESP-IDF **`release/v6.1`**. Only APIs present
 on that branch are used; features that exist only on `master` are not wired
@@ -64,7 +66,7 @@ See [Feature guards](#feature-guards).
 | **BASS receive-state cleanup** | The Scan Delegator does not remove stale receive states on its own; the assistant must remove them. |
 | **One PA sync at a time** | The broadcast sink follows one source; an assistant request is refused while a PA sync is in use. |
 | **GATT frozen after `start()`** | Roles that register services must be created before `audio.start()`; swapping roles needs `audio.end()` → `audio.begin()`. |
-| **Standalone `BLEIso` CIS on Bluedroid** | The ISO transport only tracks ACLs opened through its own GATT interface (`esp_ble_iso_bluedroid_get_gattc_if()`). `BLEIso::connectCis()` on an ACL opened by `BLEClient` fails with `ESP_ERR_NOT_FOUND`; open audio links with `audio.connect()` instead. |
+| **Standalone `BLEIso` CIS on Bluedroid** | The ISO transport adopts the physical ACL at GATTC CONNECT, independent of which GATTC app opened it; raw CIS may use a `BLEClient` ACL. LE Audio central links still use `audio.connect()` so the audio engine owns GATT discovery and security. |
 | **Preview status** | The LE Audio APIs are still marked preview in IDF. |
 
 ## Layering
@@ -95,6 +97,52 @@ Two rules keep this clean:
 2. **The engine boundary is C.** The `esp_ble_audio_*` headers pull in Zephyr
    headers that do not parse as C++, so every engine call lives in a C unit
    behind a narrow `extern "C"` header with plain-C payload structs.
+
+### Engine patches the Arduino layer depends on
+
+The library is meant to build against stock `release/v6.1` plus a small,
+reviewed keep-list of engine fixes (tracked as the uncommitted diff in the
+`esp-idf` tree the lib builder points `IDF_PATH` at). One of them is load-bearing
+for the control profiles on Bluedroid:
+
+- **`esp_ble_iso/.../adapter/bluedroid/gatt/gatt.c`, `gattc_disc_chrc_desc`**:
+  a characteristic with no descriptor (a read-only VCS *Volume Flags*, say) must
+  end the discovery with a NULL attr and `rc == 0`, the way the NimBLE adapter
+  does (`gatt.db.c`, `handle_gattc_disc_all_dscs`). It used to return
+  `-ENODEV`, which Zephyr-portable controllers read as a failed subscription
+  step — `libble_audio` aborted VCP/CSIS/CAP setup (`VcpVolCtlrSubFail[..][-19]`)
+  and the whole control-profile phase failed. This is a cross-adapter contract
+  fix, not a local workaround: Zephyr's `bt_gatt_discover()` reports "nothing
+  found" through the callback, never through its return code.
+- **`esp_ble_iso/.../adapter/bluedroid/gatt/gatt.c`, GATTC ACL registration**:
+  publish the physical ACL to the ISO host at GATTC CONNECT, not only at the
+  engine app's GATTC OPEN. Otherwise `BLEIso::connectCis()` cannot find an ACL
+  opened by another GATTC app such as Arduino `BLEClient` and returns
+  `ESP_ERR_NOT_FOUND`. An `acl_connect_posted` bit suppresses the duplicate
+  OPEN notification for engine-owned links; disconnect cleanup remains keyed
+  by the same captured ACL handle.
+- **`esp_ble_iso/host/common/app/gap.c` + `host/iso/iso.c`, ACL-loss cleanup**:
+  if the ACL disconnect arrives while a CIS is still attached, complete the
+  CIS channel locally before deleting the ACL slot. The S31 Bluedroid trace
+  showed a local CIS Disconnect reported as ACL handle `0x000` on the central,
+  while the peer received CIS handle `0x200` then ACL handle `0x000`; without
+  the fallback `BLEIso::end()` timed out waiting for the missing local CIS event.
+- **`esp_ble_audio/host/adapter/bluedroid/server.c` + `esp_ble_iso/.../gatt.c`,
+  GATT service delete completion**: `BTA_GATTS_DeleteService()` is asynchronous.
+  The adapter used to clear its service handle immediately, so Bluedroid could
+  still hold the old service while the next session created new ones after it.
+  A peer then discovered the stale service range and read handles that exist in
+  BTA but not in the engine's `gatt_db` (`GattsRdAttrNotFound[42]/[46]`, breaking
+  VCP/MICP discovery). Deinit now waits for `BTA_GATTS_DELELTE_EVT` before the
+  service handle is released.
+- **`esp_ble_audio/host/adapter/bluedroid/server.c` + `esp_ble_iso/.../gatt.c`,
+  unregistered-service proxy fallback**: Bluedroid creates the PACS service at
+  `audio.begin()` even when the application registers no PAC records, while the
+  engine only adds PACS to `gatt_db` when `esp_ble_audio_pacs_register()` runs.
+  A client then discovers PACS and reads its PAC records; the GATTS read/write
+  proxy searched only `gatt_db` and rejected them (`GattsRdAttrNotFound[42]/[46]`),
+  aborting the whole control-profile discovery. The proxy now falls back to the
+  adapter's created-service table, matching NimBLE, which always publishes PACS.
 
 ### File map
 
@@ -221,7 +269,13 @@ processing the ACL-up event is dropped and SMP then times out
 
 Control client roles bind their peer through `BLEAudioControlLink`: calling
 `discover(conn)` before the link is ready is accepted, and the service
-discovery runs as soon as the core `GATT_DISCOVERED` event arrives.
+discovery runs as soon as the core `GATT_DISCOVERED` event arrives. On
+Bluedroid the engine may invoke a role's discovery callback synchronously from
+inside the discover call (the GATT client is cache-backed), before the returned
+controller instance has been stored. The VCP and MICP units therefore bind the
+peer and mark the discovery in flight before calling the engine, and adopt the
+instance from the callback; the HAS client already matched on the connection
+handle for the same reason.
 
 ## Event bridge (control plane)
 
@@ -384,13 +438,20 @@ preset obligations. Non-exhaustive, but these are the ones that bite:
   in the extended adv and the **BASE** in periodic adv. The source assembles
   that payload (plus a PBA `0x1856` and Broadcast Name `0x30` so phone Auracast
   UIs can find and title it) through `BLEAdvertising`, so it behaves the same
-  on both hosts, and binds the BIG to the adv instance.
+  on both hosts, and binds the BIG to the adv instance. BIG-up is reported from
+  the BAP source callback; when a host only reports the per-BIS stream starts
+  (observed on Bluedroid), the engine emits BIG-up once every BIS stream of the
+  source is streaming, deduplicated against the native callback.
 - **Broadcast Sink** must publish **PACS** (sink caps) and, to be remotely
   assisted, the **Scan Delegator / BASS**. The sink does not advertise by
   itself: a sketch that wants assistants to reach it advertises connectably
   (see `LEAudio_BroadcastSink`). Auto-sync works without an assistant; with
   auto-sync off and the sink not started it only follows BASS requests (the
-  CAP handover acceptor case).
+  CAP handover acceptor case). On Bluedroid, a BASS PAST request carries the
+  assistant peer address through the engine event bridge so the host glue can
+  use IDF's address-keyed receive-parameter API; the public
+  `BLEScan::receivePeriodicSync()` remains `NotSupported` there for arbitrary
+  ACL handles.
 - **VCP Renderer** must publish **VCS** (and any compiled VOCS/AICS instances);
   **MICP Device** must publish **MICS** (+ AICS).
 - **CSIP Set Member** must expose **CSIS** with SIRK / Set Size / Rank, and (for

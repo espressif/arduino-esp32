@@ -93,12 +93,28 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   supports classic `BLEServer` coexistence through incremental multi-app
   registration and therefore does not use NimBLE's `BLEGattDatabase`
   coordinator. The core still runs the audio/raw-ISO pre-end hooks before
-  disabling Bluedroid, including on callback-deferred `BLE.end()`.
+  disabling Bluedroid, including on callback-deferred `BLE.end()`. Audio GATT
+  service deletion waits for BTA's delete completion before the next session
+  registers services, so handles cannot overlap stale BTA entries. The GATTS
+  read/write proxy also falls back to the adapter's created-service table for
+  services Bluedroid advertises but the engine did not register in `gatt_db`
+  (a PACS with no PAC records), matching NimBLE's always-present PACS.
+- **Raw ISO ACL tracking.** The ISO adapter records a physical LE ACL at GATTC
+  CONNECT, not only at its own app's GATTC OPEN; `BLEIso::connectCis()` can
+  therefore use an existing `BLEClient` handle. The later OPEN is idempotent,
+  and disconnect removes the same captured ACL entry. If a CIS disconnection
+  tears down its parent ACL before Bluedroid surfaces the local CIS-complete
+  event, the ISO host completes any remaining channels on ACL loss so
+  `BLEIso::end()` does not retain a dead CIS.
 - **PAST receive API.** The public
   `BLEScan::receivePeriodicSync()`/`cancelPeriodicSyncReceive()` surface is
-  explicit `NotSupported` on Bluedroid; engine-owned Broadcast
-  Assistant/Scan Delegator PAST remains available when the rebuilt library
-  enables `CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER`.
+  explicitly `NotSupported` on Bluedroid because IDF keys this API by peer
+  address, while the public method accepts only an ACL handle. The audio
+  Broadcast Sink's BASS path is supported when the rebuilt library enables
+  `CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER`: its synchronous request
+  event carries the assistant address to the Bluedroid host glue, which arms
+  mode `DUP_FILTER_DISABLED`; the GAP callback records the transferred sync
+  for normal callbacks and `BLE.end()` teardown.
 - **Raw AD data only.** The native advertising path uses `esp_ble_gap_config_adv_data_raw` with
   bytes from `BLEAdvDataBuilder`, never `esp_ble_gap_config_adv_data` (which force-expands service
   UUIDs to 128 bits and would diverge from every other path).
@@ -128,6 +144,8 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
 - **BLE5 ext-adv/scan + periodic.** Extended advertising TX, extended scan, connection PHY/DLE,
   periodic advertising TX, and periodic sync RX are implemented under `#if BLE5_SUPPORTED` /
   `BLE_PERIODIC_ADV_SUPPORTED` (the latter also requires `CONFIG_BT_BLE_50_PERIODIC_ADV_EN`).
+  Periodic-sync callback addresses are converted from Bluedroid's MSB-first `esp_bd_addr_t` to the
+  public LSB-first `BTAddress` representation.
   Classic esp32 Bluedroid libs stay on BLE 4.2 (`BLE5_SUPPORTED == 0`) and use the shared
   `NotSupported` fallbacks. Admitted `reset()` and `beginBackendShutdown()` wait for each
   extended/periodic stop complete, then for `EXT_ADV_SET_CLEAR_COMPLETE`. Public
