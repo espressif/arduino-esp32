@@ -497,6 +497,12 @@ Important lifecycle invariants:
 - `BLE.end()` called from a host/BTC callback claims the ending state and
   defers the same ordered teardown to its worker; audio/ISO teardown must never
   bypass that callback-safe path
+- Bluedroid is a single process-wide host. `btBluedroidHostAcquire()` /
+  `btBluedroidHostRelease()` reference-count it for BLE and BluetoothSerial:
+  the first user starts the controller and host, the last one stops them, and a
+  host already enabled by an external component is adopted and never stopped.
+  `end(true)` on a session that is not the last user records the terminal
+  contract without a physical release; the last user performs the teardown.
 
 ### Design rule
 

@@ -249,43 +249,28 @@ BTStatus BLEClass::begin(const String &deviceName) {
 #endif
 
   // Bluedroid is a single host shared with Bluetooth Classic (BluetoothSerial).
-  // When it is already up, adopt it instead of failing with "Bluedroid already
-  // initialised"; end() then leaves it running for that owner.
-  _impl->ownsHost = (esp_bluedroid_get_status() != ESP_BLUEDROID_STATUS_ENABLED);
-  if (_impl->ownsHost) {
-    log_i("Initializing BLE stack: Bluedroid");
-    if (!btStart()) {
-      log_e("btStart() failed");
-      _impl->ownsHost = false;
-      return BTStatus::Fail;
-    }
-    esp_err_t hostErr = ESP_OK;
-    if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
-      hostErr = esp_bluedroid_init();
-      if (hostErr != ESP_OK) {
-        log_e("esp_bluedroid_init: %s", esp_err_to_name(hostErr));
-        _impl->ownsHost = false;
-        return BTStatus::Fail;
-      }
-    }
-    if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_INITIALIZED) {
-      hostErr = esp_bluedroid_enable();
-      if (hostErr != ESP_OK) {
-        log_e("esp_bluedroid_enable: %s", esp_err_to_name(hostErr));
-        (void)esp_bluedroid_deinit();
-        _impl->ownsHost = false;
-        return BTStatus::Fail;
-      }
-    }
-  } else {
-    log_i("Adopting the running Bluedroid host (shared with Classic)");
+  // The core starts it for the first user and stops it for the last; a host
+  // already enabled by an external component is adopted and left up.
+  if (!btBluedroidHostAcquire()) {
+    log_e("Bluedroid host start failed");
+    return BTStatus::Fail;
   }
+  _impl->hostUser = true;
+
+  // Undo a failed begin without tearing down a host another user still owns.
+  auto abandonStart = [this]() {
+    if (_impl->hostUser) {
+      _impl->hostUser = false;
+      (void)btBluedroidHostRelease();
+    }
+  };
 
   esp_err_t err = ESP_OK;
 
   err = esp_ble_gap_register_callback(BLEClass::Impl::gapCallback);
   if (err != ESP_OK) {
     log_e("esp_ble_gap_register_callback: %s", esp_err_to_name(err));
+    abandonStart();
     return BTStatus::Fail;
   }
 
@@ -293,6 +278,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
   err = esp_ble_gatts_register_callback(BLEClass::Impl::gattsCallback);
   if (err != ESP_OK) {
     log_e("esp_ble_gatts_register_callback: %s", esp_err_to_name(err));
+    abandonStart();
     return BTStatus::Fail;
   }
 #endif
@@ -301,6 +287,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
   err = esp_ble_gattc_register_callback(BLEClass::Impl::gattcCallback);
   if (err != ESP_OK) {
     log_e("esp_ble_gattc_register_callback: %s", esp_err_to_name(err));
+    abandonStart();
     return BTStatus::Fail;
   }
 #endif
@@ -493,18 +480,15 @@ void BLEClass::end(bool releaseMemory) {
   // GATTC API before Bluedroid is disabled.
   BLEClient::Impl::stopTerminalCloseWorkers();
 #endif
-  // A host this session adopted (Classic owner, e.g. BluetoothSerial) must stay
-  // up: only the owner disables/deinitializes it.
-  bool ownedHost = false;
+  // Release this session's reference to the shared Bluedroid host. The core
+  // stops it for the last user unless an external owner keeps it up.
+  bool hostUser = false;
   {
     BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-    ownedHost = _impl->ownsHost;
-    _impl->ownsHost = false;
+    hostUser = _impl->hostUser;
+    _impl->hostUser = false;
   }
-  if (ownedHost) {
-    esp_bluedroid_disable();
-    esp_bluedroid_deinit();
-  }
+  const bt_host_release_result_t hostResult = hostUser ? btBluedroidHostRelease() : BT_HOST_STILL_IN_USE;
 
 #if BLE_GATT_CLIENT_SUPPORTED
   // No GATTC callback can arrive after deinit. Detach retained public handles
@@ -522,10 +506,9 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 
-  if (ownedHost) {
-    esp_bt_controller_disable();
-    esp_bt_controller_deinit();
-  }
+  // The host is down; complete the controller stop now that the post-end hooks
+  // have run (the previous ordering kept the controller up until this point).
+  btBluedroidHostFinalize();
 
   bool release = false;
   {
@@ -536,9 +519,14 @@ void BLEClass::end(bool releaseMemory) {
     _impl->endRunning = false;
   }
   // Releasing BLE controller memory under a still-running Classic owner would
-  // break that owner; only the last user may release it.
-  if (release && ownedHost) {
-    btMemRelease(BT_MODE_BLE);
+  // break that owner; only the last user that started the host may release it.
+  // Otherwise record the terminal end(true) contract without a physical free.
+  if (release && hostUser) {
+    if (hostResult == BT_HOST_STOPPED) {
+      btMemRelease(BT_MODE_BLE);
+    } else {
+      btMarkMemReleased(BT_MODE_BLE);
+    }
   }
   {
     BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);

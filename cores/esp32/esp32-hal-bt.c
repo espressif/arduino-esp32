@@ -67,6 +67,9 @@ __attribute__((weak)) bool bleInUse(void) {
 }
 
 #include "esp_bt.h"
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include "esp_bt_main.h"
+#endif
 
 #ifdef CONFIG_BTDM_CONTROLLER_MODE_BTDM
 #define BT_MODE ESP_BT_MODE_BTDM
@@ -104,6 +107,102 @@ static esp_bt_mode_t _btActiveMode = 0;
 bool btStarted() {
   return (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED);
 }
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+static StaticSemaphore_t _btHostMtxBuf;
+static SemaphoreHandle_t _btHostMtx = NULL;
+static int _btHostUsers = 0;
+static bool _btHostExternal = false;
+static bool _btHostStopPending = false;
+static portMUX_TYPE _btHostMux = portMUX_INITIALIZER_UNLOCKED;
+
+static SemaphoreHandle_t btHostMutex(void) {
+  portENTER_CRITICAL(&_btHostMux);
+  if (_btHostMtx == NULL) {
+    _btHostMtx = xSemaphoreCreateMutexStatic(&_btHostMtxBuf);
+  }
+  SemaphoreHandle_t mtx = _btHostMtx;
+  portEXIT_CRITICAL(&_btHostMux);
+  return mtx;
+}
+
+bool btBluedroidHostAcquire(void) {
+  SemaphoreHandle_t mtx = btHostMutex();
+  if (mtx == NULL || xSemaphoreTake(mtx, portMAX_DELAY) != pdTRUE) {
+    return false;
+  }
+
+  bool ok = true;
+  if (_btHostUsers == 0) {
+    _btHostExternal = (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED);
+    if (!_btHostExternal) {
+      if (!btStart()) {
+        ok = false;
+      } else if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_UNINITIALIZED &&
+                 esp_bluedroid_init() != ESP_OK) {
+        btStop();
+        ok = false;
+      } else if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_INITIALIZED &&
+                 esp_bluedroid_enable() != ESP_OK) {
+        esp_bluedroid_deinit();
+        btStop();
+        ok = false;
+      }
+    }
+  }
+  if (ok) {
+    _btHostUsers++;
+  }
+
+  xSemaphoreGive(mtx);
+  return ok;
+}
+
+bt_host_release_result_t btBluedroidHostRelease(void) {
+  SemaphoreHandle_t mtx = btHostMutex();
+  if (mtx == NULL || xSemaphoreTake(mtx, portMAX_DELAY) != pdTRUE) {
+    return BT_HOST_STILL_IN_USE;
+  }
+
+  bt_host_release_result_t result = BT_HOST_STILL_IN_USE;
+  if (_btHostUsers > 0 && --_btHostUsers == 0) {
+    if (_btHostExternal) {
+      _btHostExternal = false;
+      result = BT_HOST_EXTERNAL;
+    } else {
+      esp_bluedroid_disable();
+      esp_bluedroid_deinit();
+      _btHostStopPending = true;
+      result = BT_HOST_STOPPED;
+    }
+  }
+
+  xSemaphoreGive(mtx);
+  return result;
+}
+
+void btBluedroidHostFinalize(void) {
+  SemaphoreHandle_t mtx = btHostMutex();
+  if (mtx == NULL || xSemaphoreTake(mtx, portMAX_DELAY) != pdTRUE) {
+    return;
+  }
+  if (_btHostStopPending) {
+    _btHostStopPending = false;
+    btStop();
+  }
+  xSemaphoreGive(mtx);
+}
+#else
+bool btBluedroidHostAcquire(void) {
+  return true;
+}
+
+bt_host_release_result_t btBluedroidHostRelease(void) {
+  return BT_HOST_STOPPED;
+}
+
+void btBluedroidHostFinalize(void) {}
+#endif
 
 bool btStart() {
   return btStartMode(BT_MODE);

@@ -99,6 +99,17 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   read/write proxy also falls back to the adapter's created-service table for
   services Bluedroid advertises but the engine did not register in `gatt_db`
   (a PACS with no PAC records), matching NimBLE's always-present PACS.
+- **One Bluedroid host shared with Classic.** Bluedroid is a process-wide
+  host. `btBluedroidHostAcquire()`/`btBluedroidHostRelease()` in the core
+  reference-count it: the first user starts the controller and host, the last
+  one stops them, and a host already enabled by an external component is
+  adopted and left up. `BLE` and `BluetoothSerial` register their callbacks on
+  that host and never initialize or deinitialize it themselves. `BLE.end()`
+  while Classic still holds the host leaves it up and records the `end(true)`
+  contract without a physical free; the last user performs the teardown.
+  `BluetoothSerial::end()` waits for `ESP_SPP_UNINIT_EVT` while it still holds
+  the host reference, because `esp_spp_deinit()` is asynchronous and an
+  immediate re-`begin()` would otherwise race the old SPP instance.
 - **Raw ISO ACL tracking.** The ISO adapter records a physical LE ACL at GATTC
   CONNECT, not only at its own app's GATTC OPEN; `BLEIso::connectCis()` can
   therefore use an existing `BLEClient` handle. The later OPEN is idempotent,
