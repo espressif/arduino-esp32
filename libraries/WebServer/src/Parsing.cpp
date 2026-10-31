@@ -693,7 +693,10 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
               return _parseFormUploadAborted();
             }
           } else {
-            _currentUpload.reset(new HTTPUpload());
+            _currentUpload.reset(new (std::nothrow) HTTPUpload());
+            if (!_currentUpload) {
+              return _parseFormUploadAborted();
+            }
             _currentUpload->status = UPLOAD_FILE_START;
             _currentUpload->name = argName;
             _currentUpload->filename = argFilename;
