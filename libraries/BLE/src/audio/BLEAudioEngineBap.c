@@ -273,6 +273,7 @@ static bool s_bsnk_joined; /* BSINK_STARTED already emitted for the current BIG.
 #endif
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
 static bool s_bsrc_up; /* BSRC_STARTED already emitted for the current BIG. */
+static void bsrc_report_started(void);
 #endif
 
 #define BAP(slot) (&(slot)->cap.bap_stream)
@@ -338,6 +339,23 @@ static void op_started(esp_ble_audio_bap_stream_t *stream) {
   ble_audio_slot_t *s = slot_of(stream);
   s->streaming = true;
   s->seq = 0;
+#if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+  if (s->kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE && !s_bsrc_up) {
+    bool all_bis_started = true;
+    for (int i = 0; i < POOL_SIZE; i++) {
+      const ble_audio_slot_t *candidate = &s_pool[i];
+      if (candidate->in_use && candidate->kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE && !candidate->streaming) {
+        all_bis_started = false;
+        break;
+      }
+    }
+    if (all_bis_started) {
+      /* Some Bluedroid BIG paths notify every BIS stream but omit the
+       * source-level started callback. The stream states are authoritative. */
+      bsrc_report_started();
+    }
+  }
+#endif
   if (s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
     uc_on_stream_event(s, UC_STREAMING);
   }
@@ -1574,11 +1592,7 @@ static bool s_bsrc_cb_linked;
 /* BIG created / terminated; per-BIS state arrives through the stream ops. */
 static void bsrc_started(esp_ble_audio_bap_broadcast_source_t *source) {
   (void)source;
-  if (s_bsrc_up) {
-    return;
-  }
-  s_bsrc_up = true;
-  bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STARTED, CONN_NONE, 0, NULL);
+  bsrc_report_started();
 }
 
 static void bsrc_stopped(esp_ble_audio_bap_broadcast_source_t *source, uint8_t reason) {
@@ -1591,6 +1605,14 @@ static esp_ble_audio_bap_broadcast_source_cb_t s_bsrc_cb = {
   .started = bsrc_started,
   .stopped = bsrc_stopped,
 };
+
+static void bsrc_report_started(void) {
+  if (s_bsrc_up) {
+    return;
+  }
+  s_bsrc_up = true;
+  bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STARTED, CONN_NONE, 0, NULL);
+}
 
 int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec,
                        const ble_audio_qos_t *qos, uint16_t context, const uint8_t *code) {
@@ -2071,6 +2093,7 @@ static int sd_pa_sync_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_del
   int reply = -ENOTSUP;
   ble_audio_bsink_pa_req_t req = {
     .addr_type = rs->addr.type,
+    .peer_addr_type = conn ? conn->le.dst.type : 0,
     .sid = rs->adv_sid,
     .broadcast_id = rs->broadcast_id,
     .past = past,
@@ -2078,6 +2101,9 @@ static int sd_pa_sync_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_del
     .reply = &reply,
   };
   memcpy(req.addr, rs->addr.a.val, 6);
+  if (conn) {
+    bleAudioAddrFromGap(req.peer_addr, conn->le.dst.a.val);
+  }
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_PA_REQ, conn ? conn->handle : CONN_NONE, 0, &req);
   if (reply != 0) {
     return reply;
