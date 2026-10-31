@@ -71,6 +71,10 @@ struct BLEClass::Impl {
   using LifecycleHook = void (*)();
 
   uint16_t localMTU = 23;
+  /// True when begin() started the controller and Bluedroid host. False when
+  /// begin() adopted a host another component (BluetoothSerial) already runs:
+  /// end() must then leave it up for that owner.
+  bool ownsHost = false;
   uint8_t ownAddrType = BLE_ADDR_TYPE_PUBLIC;
   /// Controller LL privacy state (resolvable private addresses), toggled by
   /// @c BLEClass::setOwnAddressType for the *ID address types only.

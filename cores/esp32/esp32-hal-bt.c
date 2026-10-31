@@ -31,6 +31,27 @@ static bool _classicMemReleased = false;
 static bool _classicMemReleased = true;  // No Classic BT on this chip
 #endif
 
+// Does this target's controller really free the memory behind these flags?
+//
+// The ESP32's monolithic BTDM controller implements esp_bt_mem_release(): the
+// freed region is really gone and that mode can no longer run.
+//
+// The split-controller targets (ESP32-S31, ESP32-H4 — CONFIG_BT_DUAL_MODE_ARCH)
+// are built from independent BLE and BR/EDR halves (libble_app + libbredr_app)
+// joined by a broker.  There esp_bt_mem_release() /
+// esp_bt_controller_mem_release() are unimplemented stubs that log
+// "not implement yet!" and return ESP_OK without freeing anything, and both
+// halves stay resident regardless.  The flags below then express only the
+// end(true) contract ("this mode's library is terminally released"), never a
+// physical shortage, so btStartMode() must not act on them as if memory were
+// gone — narrowing a BTDM request to one half hands the host a controller that
+// lacks the other half (see btStartMode for the failure modes).
+#if defined(CONFIG_BT_DUAL_MODE_ARCH)
+#define BT_MODE_MEM_RELEASE_PHYSICAL 0
+#else
+#define BT_MODE_MEM_RELEASE_PHYSICAL 1
+#endif
+
 // Default behavior: release BTDM memory (~36KB) unless a BT library is used or user overrides.
 // BT libraries include esp32-hal-alloc-ble-mem.h and esp32-hal-alloc-bt-classic-mem.h which set
 // _bleLibraryInUse and _btClassicLibraryInUse to true via constructor.
@@ -104,9 +125,11 @@ bool btStartMode(bt_mode mode) {
   }
   // esp_bt_controller_enable(MODE) This mode must be equal as the mode in “cfg” of esp_bt_controller_init().
   cfg_bt_mode = esp_bt_mode;
+#if BT_MODE_MEM_RELEASE_PHYSICAL
   if (cfg_bt_mode == ESP_BT_MODE_CLASSIC_BT) {
     btMemRelease(BT_MODE_BLE);
   }
+#endif
 #else
   esp_bt_mode = BT_MODE;
 #endif
@@ -119,14 +142,33 @@ bool btStartMode(bt_mode mode) {
   if (available != esp_bt_mode) {
 #if CONFIG_SOC_BT_CLASSIC_SUPPORTED
     if (esp_bt_mode == ESP_BT_MODE_BTDM && available != ESP_BT_MODE_IDLE) {
+#if BT_MODE_MEM_RELEASE_PHYSICAL
       esp_bt_mode = available;
       cfg_bt_mode = esp_bt_mode;
+#endif
+      // else: nothing was actually freed (see BT_MODE_MEM_RELEASE_PHYSICAL) —
+      // keep the full mode so the host stack finds every half it probes.
     } else
 #endif
     {
       return false;
     }
   }
+
+#if defined(CONFIG_BT_DUAL_MODE_ARCH)
+  // Split-controller targets: the halves that exist are chosen at build time
+  // (BTDM_CTRL_MODE → BT_MODE) and the host stacks compiled into this build
+  // probe every half they were built for — a controller missing one makes the
+  // dual-mode Bluedroid host assert at disable or hang at enable. Unlike the
+  // ESP32's monolithic controller there is no per-mode runtime narrowing, so
+  // clamp the request to the built-in mode and say so.
+  if (esp_bt_mode != BT_MODE) {
+    log_w("btStartMode(%s) not available on this controller; running %s",
+          btModeStr(esp_bt_mode), btModeStr(BT_MODE));
+    esp_bt_mode = BT_MODE;
+    cfg_bt_mode = esp_bt_mode;
+  }
+#endif
 
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED) {
     return true;

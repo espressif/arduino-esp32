@@ -105,6 +105,14 @@ def test_bt_classic(dut, ci_job_id, record_property):
     server.expect_exact("[SERVER] Sent: HELLO_FROM_SERVER", timeout=10)
     client.expect_exact("[CLIENT] Received: HELLO_FROM_SERVER", timeout=15)
 
+    # BLE and Classic up at the same time: BLE must adopt the Bluedroid host that
+    # BluetoothSerial started, and BLE.end() must not tear it down for the SPP
+    # owner (the SPP link has to survive the BLE teardown below).
+    client.expect(r"\[CLIENT\] Coex ble=1 spp=1", timeout=60)
+    server.expect(r"\[SERVER\] Coex ble=1 adv=1 connected=1 spp=1", timeout=60)
+    server.expect_exact("[SERVER] Coex teardown spp=1", timeout=20)
+    client.expect_exact("[CLIENT] Coex teardown spp=1", timeout=20)
+
     client.expect_exact("[CLIENT] Sent: DISCONNECT_ME", timeout=10)
     # onDisconnect callback may log before disconnect(addr) returns
     server.expect_exact("[SERVER] onDisconnect:", timeout=15)

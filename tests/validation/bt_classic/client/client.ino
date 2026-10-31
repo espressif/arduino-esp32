@@ -6,6 +6,7 @@
 //   4. memory_release   — end(true)
 
 #include <Arduino.h>
+#include <BLE.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "BluetoothSerial.h"
@@ -165,6 +166,29 @@ void setup() {
     Serial.println("[CLIENT] Received: HELLO_FROM_SERVER");
   } else {
     Serial.println("[CLIENT] Receive timeout");
+  }
+
+  // BLE alongside the live SPP link (see the server side).
+  {
+    BTStatus bs = BLE.begin(serverName + "_ble_cli");
+    bool bleConn = false;
+    BLEScan scn = BLE.getScan();
+    scn.setActiveScan(true);
+    unsigned long coexDl = millis() + 20000;
+    while (!bleConn && millis() < coexDl) {
+      for (const auto &dev : scn.startBlocking(3000)) {
+        BLEAdvertisedDevice d = dev;
+        if (d.getName() == serverName + "_ble") {
+          BLEClient cli = BLE.createClient();
+          bleConn = static_cast<bool>(cli.connect(d.getAddress()));
+          break;
+        }
+      }
+      scn.clearResults();
+    }
+    Serial.printf("[CLIENT] Coex ble=%d spp=%d\n", (int)((bool)bs && bleConn), (int)SerialBT.connected());
+    BLE.end(false);
+    Serial.printf("[CLIENT] Coex teardown spp=%d\n", (int)SerialBT.connected());
   }
 
   // Ask server to disconnect this peer by address

@@ -248,25 +248,40 @@ BTStatus BLEClass::begin(const String &deviceName) {
   }
 #endif
 
-  log_i("Initializing BLE stack: Bluedroid");
-
-  if (!btStart()) {
-    log_e("btStart() failed");
-    return BTStatus::Fail;
+  // Bluedroid is a single host shared with Bluetooth Classic (BluetoothSerial).
+  // When it is already up, adopt it instead of failing with "Bluedroid already
+  // initialised"; end() then leaves it running for that owner.
+  _impl->ownsHost = (esp_bluedroid_get_status() != ESP_BLUEDROID_STATUS_ENABLED);
+  if (_impl->ownsHost) {
+    log_i("Initializing BLE stack: Bluedroid");
+    if (!btStart()) {
+      log_e("btStart() failed");
+      _impl->ownsHost = false;
+      return BTStatus::Fail;
+    }
+    esp_err_t hostErr = ESP_OK;
+    if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
+      hostErr = esp_bluedroid_init();
+      if (hostErr != ESP_OK) {
+        log_e("esp_bluedroid_init: %s", esp_err_to_name(hostErr));
+        _impl->ownsHost = false;
+        return BTStatus::Fail;
+      }
+    }
+    if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_INITIALIZED) {
+      hostErr = esp_bluedroid_enable();
+      if (hostErr != ESP_OK) {
+        log_e("esp_bluedroid_enable: %s", esp_err_to_name(hostErr));
+        (void)esp_bluedroid_deinit();
+        _impl->ownsHost = false;
+        return BTStatus::Fail;
+      }
+    }
+  } else {
+    log_i("Adopting the running Bluedroid host (shared with Classic)");
   }
 
-  esp_err_t err = esp_bluedroid_init();
-  if (err != ESP_OK) {
-    log_e("esp_bluedroid_init: %s", esp_err_to_name(err));
-    return BTStatus::Fail;
-  }
-
-  err = esp_bluedroid_enable();
-  if (err != ESP_OK) {
-    log_e("esp_bluedroid_enable: %s", esp_err_to_name(err));
-    esp_bluedroid_deinit();
-    return BTStatus::Fail;
-  }
+  esp_err_t err = ESP_OK;
 
   err = esp_ble_gap_register_callback(BLEClass::Impl::gapCallback);
   if (err != ESP_OK) {
@@ -478,8 +493,18 @@ void BLEClass::end(bool releaseMemory) {
   // GATTC API before Bluedroid is disabled.
   BLEClient::Impl::stopTerminalCloseWorkers();
 #endif
-  esp_bluedroid_disable();
-  esp_bluedroid_deinit();
+  // A host this session adopted (Classic owner, e.g. BluetoothSerial) must stay
+  // up: only the owner disables/deinitializes it.
+  bool ownedHost = false;
+  {
+    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+    ownedHost = _impl->ownsHost;
+    _impl->ownsHost = false;
+  }
+  if (ownedHost) {
+    esp_bluedroid_disable();
+    esp_bluedroid_deinit();
+  }
 
 #if BLE_GATT_CLIENT_SUPPORTED
   // No GATTC callback can arrive after deinit. Detach retained public handles
@@ -497,8 +522,10 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 
-  esp_bt_controller_disable();
-  esp_bt_controller_deinit();
+  if (ownedHost) {
+    esp_bt_controller_disable();
+    esp_bt_controller_deinit();
+  }
 
   bool release = false;
   {
@@ -508,7 +535,9 @@ void BLEClass::end(bool releaseMemory) {
     _impl->endTask = nullptr;
     _impl->endRunning = false;
   }
-  if (release) {
+  // Releasing BLE controller memory under a still-running Classic owner would
+  // break that owner; only the last user may release it.
+  if (release && ownedHost) {
     btMemRelease(BT_MODE_BLE);
   }
   {

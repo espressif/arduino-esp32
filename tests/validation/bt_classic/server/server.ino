@@ -6,6 +6,7 @@
 //   4. memory_release   — end(true)
 
 #include <Arduino.h>
+#include <BLE.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "BluetoothSerial.h"
@@ -194,6 +195,29 @@ void setup() {
   // Send response (broadcast write)
   SerialBT.print("HELLO_FROM_SERVER");
   Serial.println("[SERVER] Sent: HELLO_FROM_SERVER");
+
+  // BLE alongside the live SPP link. Bluedroid is one host shared by both
+  // stacks: BLE adopts the host that BluetoothSerial started, and BLE.end()
+  // must leave it up for the classic owner.
+  {
+    BTStatus bs = BLE.begin(serverName + "_ble");
+    BLEServer srv = BLE.createServer();
+    BLEAdvertising adv = BLE.getAdvertising();
+    adv.setType(BLEAdvType::ConnectableScannable);
+    adv.setName(serverName + "_ble");
+    BTStatus as = adv.start();
+    unsigned long coexDl = millis() + 30000;
+    while (srv.getConnectedCount() == 0 && millis() < coexDl) {
+      checkSerial();
+      delay(20);
+    }
+    bool bleConn = srv.getConnectedCount() > 0;
+    Serial.printf(
+      "[SERVER] Coex ble=%d adv=%d connected=%d spp=%d\n", (int)(bool)bs, (int)(bool)as, (int)bleConn, (int)SerialBT.hasClient()
+    );
+    BLE.end(false);
+    Serial.printf("[SERVER] Coex teardown spp=%d\n", (int)SerialBT.hasClient());
+  }
 
   // Server-initiated per-peer disconnect
   deadline = millis() + 15000;

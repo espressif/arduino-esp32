@@ -41,6 +41,15 @@ bool bleInUse(void);
 
 bool btStarted();
 bool btStart();
+// Start the controller in the given mode.
+//
+// On the ESP32 a request narrower than BTDM is honored: the freed mode's memory
+// is really gone (btMemRelease is physical) and the controller runs the
+// surviving half. On the split-controller targets (ESP32-S31, ESP32-H4) the
+// halves are fixed at build time and esp_bt_mem_release() frees nothing, so the
+// request is clamped to that built-in mode (with a log) instead of narrowing:
+// a single-half controller under the shared dual-mode Bluedroid host asserts or
+// hangs. See DESIGN.md, "Known non-normalizable divergences".
 bool btStartMode(bt_mode mode);
 bool btStop();
 
@@ -48,6 +57,11 @@ bool btStop();
 // ESP-IDF provides no API to query whether memory has been released,
 // so this function maintains the state internally.
 // Returns true on success or if memory was already released.
+//
+// The tracked state is the end(true) contract: the mode's library is terminally
+// released and cannot be restarted this boot. On the split-controller targets
+// this is a pure contract — the stub under it frees nothing — so it never
+// narrows a later btStartMode() request.
 bool btMemRelease(bt_mode mode);
 
 // Returns true if BT memory for the given mode has already been released.

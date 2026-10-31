@@ -112,6 +112,10 @@ struct BluetoothSerial::Impl {
   String localName;
   bool isInitiator = false;
   bool initialized = false;
+  /// True when begin() started the controller and Bluedroid host; false when it
+  /// adopted a host another component (the BLE library) already runs, which
+  /// end() must then leave up.
+  bool ownsHost = false;
   bool sspEnabled = false;
   bool ioCapInput = false;
   bool ioCapOutput = false;
@@ -647,37 +651,59 @@ BTStatus BluetoothSerial::begin(const String &localName, bool isInitiator) {
   _impl->localName = localName;
   _impl->isInitiator = isInitiator;
 
-  if (!btStarted() && !btStart()) {
-    log_e("btStart() failed");
-    return BTStatus::Fail;
+  // Bluedroid is a single host shared with BLE. When it is already up, adopt it
+  // instead of failing with "Bluedroid already initialised"; end() then leaves
+  // it running for that owner.
+  _impl->ownsHost = (esp_bluedroid_get_status() != ESP_BLUEDROID_STATUS_ENABLED);
+  if (_impl->ownsHost) {
+    if (!btStarted() && !btStart()) {
+      log_e("btStart() failed");
+      _impl->ownsHost = false;
+      return BTStatus::Fail;
+    }
+
+    esp_err_t hostErr = ESP_OK;
+    if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
+      hostErr = esp_bluedroid_init();
+      if (hostErr != ESP_OK) {
+        log_e("esp_bluedroid_init: %s", esp_err_to_name(hostErr));
+        _impl->ownsHost = false;
+        return BTStatus::Fail;
+      }
+    }
+    if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_INITIALIZED) {
+      hostErr = esp_bluedroid_enable();
+      if (hostErr != ESP_OK) {
+        log_e("esp_bluedroid_enable: %s", esp_err_to_name(hostErr));
+        (void)esp_bluedroid_deinit();
+        _impl->ownsHost = false;
+        return BTStatus::Fail;
+      }
+    }
   }
 
-  esp_err_t err = esp_bluedroid_init();
-  if (err != ESP_OK) {
-    log_e("esp_bluedroid_init: %s", esp_err_to_name(err));
-    return BTStatus::Fail;
-  }
+  esp_err_t err;
 
-  err = esp_bluedroid_enable();
-  if (err != ESP_OK) {
-    log_e("esp_bluedroid_enable: %s", esp_err_to_name(err));
-    esp_bluedroid_deinit();
-    return BTStatus::Fail;
-  }
+  // Undo a partial start: an adopted host is left running for its owner.
+  auto abandonStart = [this]() {
+    if (_impl->ownsHost) {
+      esp_bluedroid_disable();
+      esp_bluedroid_deinit();
+      _impl->ownsHost = false;
+    }
+  };
 
   err = esp_bt_gap_register_callback(Impl::gapCallback);
   if (err != ESP_OK) {
     log_e("esp_bt_gap_register_callback: %s", esp_err_to_name(err));
-    esp_bluedroid_disable();
-    esp_bluedroid_deinit();
+    abandonStart();
     return BTStatus::Fail;
   }
 
   err = esp_spp_register_callback(Impl::sppCallback);
   if (err != ESP_OK) {
     log_e("esp_spp_register_callback: %s", esp_err_to_name(err));
-    esp_bluedroid_disable();
-    esp_bluedroid_deinit();
+    abandonStart();
     return BTStatus::Fail;
   }
 
@@ -686,8 +712,7 @@ BTStatus BluetoothSerial::begin(const String &localName, bool isInitiator) {
   err = esp_spp_enhanced_init(&cfg);
   if (err != ESP_OK) {
     log_e("esp_spp_enhanced_init: %s", esp_err_to_name(err));
-    esp_bluedroid_disable();
-    esp_bluedroid_deinit();
+    abandonStart();
     return BTStatus::Fail;
   }
 
@@ -748,13 +773,16 @@ void BluetoothSerial::end(bool releaseMemory) {
   Impl::s_impl = nullptr;
 
   esp_spp_deinit();
-  esp_bluedroid_disable();
-  esp_bluedroid_deinit();
-
-  btStop();
-
-  if (releaseMemory) {
-    btMemRelease(BT_MODE_CLASSIC_BT);
+  // Only the owner tears the shared host down; an adopted host (BLE) keeps
+  // running.
+  if (_impl->ownsHost) {
+    esp_bluedroid_disable();
+    esp_bluedroid_deinit();
+    btStop();
+    if (releaseMemory) {
+      btMemRelease(BT_MODE_CLASSIC_BT);
+    }
+    _impl->ownsHost = false;
   }
 
   _impl->destroyResources();
