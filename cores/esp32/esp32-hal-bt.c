@@ -38,14 +38,16 @@ static bool _classicMemReleased = true;  // No Classic BT on this chip
 //
 // The split-controller targets (ESP32-S31, ESP32-H4 — CONFIG_BT_DUAL_MODE_ARCH)
 // are built from independent BLE and BR/EDR halves (libble_app + libbredr_app)
-// joined by a broker.  There esp_bt_mem_release() /
-// esp_bt_controller_mem_release() are unimplemented stubs that log
-// "not implement yet!" and return ESP_OK without freeing anything, and both
-// halves stay resident regardless.  The flags below then express only the
-// end(true) contract ("this mode's library is terminally released"), never a
-// physical shortage, so btStartMode() must not act on them as if memory were
-// gone — narrowing a BTDM request to one half hands the host a controller that
-// lacks the other half (see btStartMode for the failure modes).
+// joined by a broker.  Which halves exist is fixed at build time (BT_MODE), and
+// esp_bt_controller_enable() enables every built half; a BTDM build cannot be
+// narrowed to one half at runtime.  The memory-release APIs are also currently
+// stubs there, but the policy below does not depend on that: in a BTDM build a
+// release is recorded as the end(true) contract only (freeing one half would
+// leave the other enable path referencing freed memory), while a single-half
+// build calls the physical API and will start freeing automatically if the
+// controller implements it.  btStartMode() must not act on the flags as
+// if memory were gone — narrowing a BTDM request to one half hands the host a
+// controller that lacks the other half (see btStartMode for the failure modes).
 #if defined(CONFIG_BT_DUAL_MODE_ARCH)
 #define BT_MODE_MEM_RELEASE_PHYSICAL 0
 #else
@@ -381,7 +383,21 @@ esp_err_t __wrap_esp_bt_controller_mem_release(esp_bt_mode_t mode) {
 
 bool btMemRelease(bt_mode mode) {
 #if CONFIG_BT_CONTROLLER_ENABLED
-  esp_bt_mode_t esp_mode = _btAvailableMemForMode(_btModeToEspMode(mode));
+  esp_bt_mode_t esp_mode = _btModeToEspMode(mode);
+
+#if defined(CONFIG_BT_DUAL_MODE_ARCH)
+  /* A BTDM build compiles both halves and the controller enables both, so
+   * freeing either half would leave the enable path referencing freed memory.
+   * Record the end(true) contract only. Single-half builds keep the physical
+   * path: the other half is absent, and a future controller implementation
+   * will free the requested half without any code change here. */
+  if (BT_MODE == ESP_BT_MODE_BTDM) {
+    _btUpdateMemReleasedFlags(esp_mode);
+    return true;
+  }
+#endif
+
+  esp_mode = _btAvailableMemForMode(esp_mode);
   if (!esp_mode) {
     return true;  // Already released
   }
