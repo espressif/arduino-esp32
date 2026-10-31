@@ -759,6 +759,7 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
     return;
   }
   bool wasConnected;
+  BLEClient::DisconnectHandler disconnectHandler;
   BLEConnInfo conn;
   std::shared_ptr<BLEClient::Impl> pendingWriteOwner;
   std::shared_ptr<BLEClient::Impl> terminalCloseOwner;
@@ -768,6 +769,9 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
       return;
     }
     wasConnected = client->connected;
+    if (wasConnected) {
+      disconnectHandler = client->onDisconnectCb;
+    }
     // Capture conn info before connId is reset so the callback still sees the
     // connection that just ended.
     conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
@@ -800,7 +804,7 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
   client->rssiSync.give(BTStatus::Fail);
 
   if (wasConnected) {
-    client->dispatchDisconnect(conn, reason);
+    client->dispatchDisconnect(conn, reason, disconnectHandler);
   }
   client->disconnectSync.give(BTStatus::OK);
 }

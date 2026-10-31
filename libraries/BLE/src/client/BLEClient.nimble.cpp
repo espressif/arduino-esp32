@@ -746,6 +746,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
     {
       uint16_t evtHandle = event->disconnect.conn.conn_handle;
       bool wasConnected;
+      BLEClient::DisconnectHandler disconnectHandler;
       std::shared_ptr<Impl> dying;
       {
         BLELockGuard lock(impl->mtx);
@@ -753,6 +754,9 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           return 0;
         }
         wasConnected = impl->connected;
+        if (wasConnected) {
+          disconnectHandler = impl->onDisconnectCb;
+        }
         impl->connected = false;
         impl->connHandle = BLE_HS_CONN_HANDLE_NONE;
         impl->clearDiscoveredServices();
@@ -768,7 +772,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       // suppresses a spurious event when a failed connect attempt tears down.
       impl->authSync.give(BTStatus::Fail);
       if (wasConnected) {
-        impl->dispatchDisconnect(connInfo, reason);
+        impl->dispatchDisconnect(connInfo, reason, disconnectHandler);
       }
       impl->disconnectSync.give(BTStatus::OK);
 #if BLE_VALIDATION_HOOKS
