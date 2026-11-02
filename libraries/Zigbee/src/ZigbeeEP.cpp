@@ -472,8 +472,8 @@ bool ZigbeeEP::getDeviceEnabled() {
   bool enabled = _device_enabled;
   if (Zigbee.endpointsRegistered()) {
     if (!getAttribute(EZB_ZCL_CLUSTER_ID_BASIC, EZB_ZCL_ATTR_BASIC_DEVICE_ENABLED_ID, &enabled, sizeof(enabled))) {
-      // Attribute not present: ZCL treats the endpoint as enabled.
-      return true;
+      // Read failed (missing attr, lock, stack not ready): keep last set/default value.
+      return _device_enabled;
     }
   }
   return enabled;

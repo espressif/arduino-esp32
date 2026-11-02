@@ -310,9 +310,15 @@ bool ZigbeeCore::zigbeeStackInit(esp_zigbee_device_config_t *zb_cfg, bool erase_
     nvs_handle_t nvs_handle;
     esp_err_t nvs_err = nvs_open("zigbee", NVS_READWRITE, &nvs_handle);
     if (nvs_err == ESP_OK) {
-      nvs_erase_all(nvs_handle);
-      nvs_commit(nvs_handle);
+      nvs_err = nvs_erase_all(nvs_handle);
+      if (nvs_err == ESP_OK) {
+        nvs_err = nvs_commit(nvs_handle);
+      }
       nvs_close(nvs_handle);
+      if (nvs_err != ESP_OK) {
+        log_e("Failed to erase Zigbee NVS namespace: %s", esp_err_to_name(nvs_err));
+        return false;
+      }
     } else if (nvs_err != ESP_ERR_NVS_NOT_FOUND) {
       log_e("Failed to open Zigbee NVS namespace: %s", esp_err_to_name(nvs_err));
       return false;
