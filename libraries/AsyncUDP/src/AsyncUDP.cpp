@@ -58,7 +58,7 @@ extern "C" {
 #define UDP_MUTEX_UNLOCK()
 #endif  // CONFIG_LWIP_TCPIP_CORE_LOCKING
 
-static volatile size_t _udp_drops = 0; // Holds dropped incoming packets due to queue being full
+static volatile size_t _udp_drops = 0;  // Holds dropped incoming packets due to queue being full
 static const char *netif_ifkeys[TCPIP_ADAPTER_IF_MAX] = {"WIFI_STA_DEF", "WIFI_AP_DEF", "ETH_DEF", "PPP_DEF"};
 
 static esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void **netif) {
