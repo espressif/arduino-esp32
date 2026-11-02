@@ -28,10 +28,11 @@
 // On UHS-I SoCs the default is SDR50 (100 MHz, 4-line slot 0). begin()
 // requests the 1.8 V switch and, if the card stays at 3.3 V or UHS init
 // fails, mounts again at SDMMC_FREQ_HIGHSPEED. Any other frequency above
-// high speed is clamped to SDMMC_FREQ_HIGHSPEED. ESP32-S31 powers the
-// SDR50 switch from on-chip LDO channel 1 (fixed 1.8 V, shared with PSRAM)
-// and publishes that handle with io_voltage 1.8 V, unless
-// BOARD_SDMMC_POWER_CHANNEL or setPowerChannel() says otherwise.
+// high speed is clamped to SDMMC_FREQ_HIGHSPEED. ESP32-P4 stays at high
+// speed unless BOARD_SDMMC_POWER_CHANNEL or setPowerChannel() selects the
+// LDO that follows CMD11. ESP32-S31 powers the switch from on-chip LDO
+// channel 1 (fixed 1.8 V, shared with PSRAM) and publishes that handle
+// with io_voltage 1.8 V, unless the channel is overridden.
 #ifndef BOARD_MAX_SDMMC_FREQ
 #ifdef SOC_SDMMC_UHS_I_SUPPORTED
 #define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_SDR50

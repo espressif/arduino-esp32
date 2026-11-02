@@ -298,10 +298,16 @@ mount_again:
   _mode1bit = mode1bit;
 
 #ifdef SOC_SDMMC_UHS_I_SUPPORTED
-  // UHS-I is 1.8 V and 4-line, slot 0 only.
+  // UHS-I is 1.8 V and 4-line, slot 0 only. On the adjustable-LDO chips the
+  // host pads follow CMD11 only when a power channel was configured.
+#if defined(SOC_SDMMC_IO_POWER_EXTERNAL) && !defined(SOC_SDMMC_IO_UHS_POWER_EXTERNAL)
+  const bool uhs_power = _power_channel != -1;
+#else
+  const bool uhs_power = true;
+#endif
   const bool uhs_slot = !mode1bit && host.slot == SDMMC_HOST_SLOT_0;
-  if (!uhs_slot && sdmmc_frequency > SDMMC_FREQ_HIGHSPEED) {
-    log_w("UHS-I needs 4-line slot 0, using %d kHz", SDMMC_FREQ_HIGHSPEED);
+  if ((!uhs_slot || !uhs_power) && sdmmc_frequency > SDMMC_FREQ_HIGHSPEED) {
+    log_w("%s, using %d kHz", uhs_slot ? "UHS-I needs an on-chip LDO channel" : "UHS-I needs 4-line slot 0", SDMMC_FREQ_HIGHSPEED);
     sdmmc_frequency = SDMMC_FREQ_HIGHSPEED;
   } else if (sdmmc_frequency == SDMMC_FREQ_DDR50) {
     host.flags |= SDMMC_HOST_FLAG_DDR;
@@ -559,7 +565,12 @@ bool SDMMCFS::cardIsDDR() {
 }
 
 bool SDMMCFS::cardIsUHS1() {
+  // sdmmc_card_t::is_uhs1 arrived in ESP-IDF 5.4. IDF 5.3 still builds this file.
+#ifdef SOC_SDMMC_UHS_I_SUPPORTED
   return _card && _card->is_uhs1;
+#else
+  return false;
+#endif
 }
 
 bool SDMMCFS::readRAW(uint8_t *buffer, uint32_t sector) {
