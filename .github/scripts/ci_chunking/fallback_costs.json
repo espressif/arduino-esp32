@@ -1,0 +1,78 @@
+{
+  "default": {
+    "warm_s": 17.0,
+    "cold_s": 33.0
+  },
+  "prefixes": [
+    {
+      "prefix": "libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet/",
+      "warm_s": 59.0,
+      "cold_s": 648.0
+    },
+    {
+      "prefix": "libraries/ArduinoOTA/",
+      "warm_s": 37.0,
+      "cold_s": 176.0
+    },
+    {
+      "prefix": "libraries/DNSServer/",
+      "warm_s": 39.0,
+      "cold_s": 148.0
+    },
+    {
+      "prefix": "libraries/BLE/",
+      "warm_s": 27.0,
+      "cold_s": 147.0
+    },
+    {
+      "prefix": "libraries/HTTPUpdate/",
+      "warm_s": 27.0,
+      "cold_s": 135.0
+    },
+    {
+      "prefix": "libraries/Matter/",
+      "warm_s": 73.0,
+      "cold_s": 124.0
+    },
+    {
+      "prefix": "libraries/AsyncUDP/",
+      "warm_s": 34.0,
+      "cold_s": 121.0
+    },
+    {
+      "prefix": "libraries/RainMaker/",
+      "warm_s": 32.0,
+      "cold_s": 120.0
+    },
+    {
+      "prefix": "libraries/Zigbee/",
+      "warm_s": 13.0,
+      "cold_s": 71.0
+    },
+    {
+      "prefix": "libraries/HTTPUpdateServer/",
+      "warm_s": 32.0,
+      "cold_s": 58.0
+    },
+    {
+      "prefix": "libraries/WebServer/",
+      "warm_s": 28.0,
+      "cold_s": 44.0
+    },
+    {
+      "prefix": "libraries/USB/",
+      "warm_s": 9.0,
+      "cold_s": 12.0
+    },
+    {
+      "prefix": "libraries/OpenThread/",
+      "warm_s": 8.0,
+      "cold_s": 11.0
+    },
+    {
+      "prefix": "libraries/BluetoothSerial/",
+      "warm_s": 7.0,
+      "cold_s": 10.0
+    }
+  ]
+}

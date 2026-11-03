@@ -24,7 +24,9 @@ function build {
     local args=("-au" "$ARDUINO_USR_PATH" "-t" "$target")
 
     if [ "$OS_IS_LINUX" == "1" ]; then
-        args+=("-p" "$ARDUINO_ESP32_PATH/libraries" "-i" "$chunk_index" "-m" "$chunks_cnt" "-d" "$log_level")
+        # Membership is pre-assigned (chunk_N.txt). -i names cli_compile_N.json;
+        # chunk_build does not re-slice when -f is set.
+        args+=("-p" "$ARDUINO_ESP32_PATH/libraries" "-i" "$chunk_index" "-m" "1" "-d" "$log_level")
         if [ -n "$sketches_file" ]; then
             args+=("-f" "$sketches_file")
         fi
@@ -85,6 +87,15 @@ SKETCHES_ESP32=(
 )
 #create sizes_file
 sizes_file="$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
+
+if [ "$OS_IS_LINUX" == "1" ]; then
+    export SKETCH_TIMES_FILE="${GITHUB_WORKSPACE:-.}/sketch_times_${CHUNK_INDEX}.jsonl"
+    : > "$SKETCH_TIMES_FILE"
+    if [ -n "$SKETCHES_FILE" ] && [ ! -f "$SKETCHES_FILE" ]; then
+        echo "No sketches assigned to $SKETCHES_FILE"
+        : > "$SKETCHES_FILE"
+    fi
+fi
 
 if [ "$BUILD_LOG" -eq 1 ]; then
     #create sizes_file and echo start of JSON array with "boards" key

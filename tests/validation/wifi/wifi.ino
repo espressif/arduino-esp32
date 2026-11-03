@@ -244,6 +244,30 @@ void test_ipv6_dns_configuration(void) {
   TEST_ASSERT_TRUE(WiFi.STA.end());
 }
 #endif
+void test_network_info_uses_local_ip(void) {
+  IPAddress localIP(192, 168, 10, 25);
+  IPAddress gateway(10, 20, 30, 1);
+  IPAddress subnet(255, 255, 255, 0);
+  IPAddress dns(8, 8, 8, 8);
+
+  if (!WiFi.STA.config(localIP, gateway, subnet, dns)) {
+    WiFi.STA.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    TEST_FAIL_MESSAGE("Failed to configure static IP with an off-subnet gateway");
+    return;
+  }
+
+  IPAddress configuredIP = WiFi.STA.localIP();
+  IPAddress configuredGateway = WiFi.STA.gatewayIP();
+  IPAddress network = WiFi.STA.networkID();
+  IPAddress broadcast = WiFi.STA.broadcastIP();
+  bool dhcpRestored = WiFi.STA.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+
+  TEST_ASSERT_TRUE_MESSAGE(dhcpRestored, "Failed to restore DHCP configuration");
+  TEST_ASSERT_EQUAL((uint32_t)localIP, (uint32_t)configuredIP);
+  TEST_ASSERT_EQUAL((uint32_t)gateway, (uint32_t)configuredGateway);
+  TEST_ASSERT_EQUAL((uint32_t)IPAddress(192, 168, 10, 0), (uint32_t)network);
+  TEST_ASSERT_EQUAL((uint32_t)IPAddress(192, 168, 10, 255), (uint32_t)broadcast);
+}
 
 // ==================== AP Mode ====================
 
@@ -372,6 +396,7 @@ void setup() {
 #if CONFIG_LWIP_IPV6
   RUN_TEST(test_ipv6_dns_configuration);
 #endif
+  RUN_TEST(test_network_info_uses_local_ip);
   RUN_TEST(test_soft_ap);
   RUN_TEST(test_event_fires_on_connect);
   RUN_TEST(test_mode_switching);
