@@ -405,33 +405,10 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
 
   esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
   if (flags & ESP_NETIF_DHCP_SERVER) {
-
-    // Set DNS Server
-    if (d2.ip.u_addr.ip4.addr != 0) {
-      err = esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
-      if (err) {
-        log_e("Netif Set DNS Info Failed! 0x%04x: %s", err, esp_err_to_name(err));
-        return false;
-      }
-    }
-
-    // Stop DHCPS
-    err = esp_netif_dhcps_stop(_esp_netif);
-    if (err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED) {
-      log_e("DHCPS Stop Failed! 0x%04x: %s", err, esp_err_to_name(err));
-      return false;
-    }
-
-    // Set IPv4, Netmask, Gateway
-    err = esp_netif_set_ip_info(_esp_netif, &info);
-    if (err) {
-      log_e("Netif Set IP Failed! 0x%04x: %s", err, esp_err_to_name(err));
-      return false;
-    }
-
+    // Validate the DHCP lease before changing the interface or stopping its DHCP server.
+    // A rejected configuration must leave the current SoftAP configuration operational.
     dhcps_lease_t lease;
     lease.enable = true;
-    uint8_t CIDR = calculateSubnetCIDR(subnet);
     log_v(
       "SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dns1.toString().c_str(),
       subnet.toString().c_str()
@@ -439,9 +416,11 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
     // netmask must have room for at least 12 IP addresses (AP + GW + 10 DHCP Leasing addresses)
     // netmask also must be limited to the last 8 bits of IPv4, otherwise this function won't work
     // IDF NETIF checks netmask for the 3rd byte: https://github.com/espressif/esp-idf/blob/master/components/esp_netif/lwip/esp_netif_lwip.c#L1857-L1862
-    if (CIDR > 28 || CIDR < 24) {
-      log_e("Bad netmask. It must be from /24 to /28 (255.255.255. 0<->240)");
-      return false;  //  ESP_FAIL if initializing failed
+    const bool validPrefix = subnet[0] == 255 && subnet[1] == 255 && subnet[2] == 255;
+    const bool validLastByte = subnet[3] == 0 || subnet[3] == 128 || subnet[3] == 192 || subnet[3] == 224 || subnet[3] == 240;
+    if (!validPrefix || !validLastByte) {
+      log_e("Bad netmask. SoftAP requires a contiguous /24 to /28 netmask.");
+      return false;
     }
 #define _byte_swap32(num) (((num >> 24) & 0xff) | ((num << 8) & 0xff0000) | ((num >> 8) & 0xff00) | ((num << 24) & 0xff000000))
     // The code below is ready for any netmask, not limited to 255.255.255.0
@@ -484,8 +463,32 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
         "The GatewayP address (%s) can't be within the DHCP range (%s -- %s)", gateway.toString().c_str(),
         IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str()
       );
-      return false;  //  ESP_FAIL if initializing failed
+      return false;
     }
+
+    // Set DNS Server
+    if (d2.ip.u_addr.ip4.addr != 0) {
+      err = esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
+      if (err) {
+        log_e("Netif Set DNS Info Failed! 0x%04x: %s", err, esp_err_to_name(err));
+        return false;
+      }
+    }
+
+    // Stop DHCPS
+    err = esp_netif_dhcps_stop(_esp_netif);
+    if (err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED) {
+      log_e("DHCPS Stop Failed! 0x%04x: %s", err, esp_err_to_name(err));
+      return false;
+    }
+
+    // Set IPv4, Netmask, Gateway
+    err = esp_netif_set_ip_info(_esp_netif, &info);
+    if (err) {
+      log_e("Netif Set IP Failed! 0x%04x: %s", err, esp_err_to_name(err));
+      return false;
+    }
+
     // all done, just revert back byte order of DHCP lease range
     lease.start_ip.addr = _byte_swap32(lease.start_ip.addr);
     lease.end_ip.addr = _byte_swap32(lease.end_ip.addr);
