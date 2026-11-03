@@ -995,6 +995,19 @@ void testManyArgs() {
   report("many_args", ok, ok ? nullptr : got.c_str());
 }
 
+// Bytes sent after Content-Length must not become part of the POST body.
+void testPostContentLength() {
+  Serial.println("[CLIENT] Testing post_content_length");
+  String req = "POST /args HTTP/1.1\r\nHost: x\r\nContent-Type: application/x-www-form-urlencoded\r\n";
+  req += "Content-Length: 3\r\nConnection: close\r\n\r\n";
+  req += "a=1&b=2";  // only "a=1" belongs to this request
+
+  String response = http_raw(req, TEST_TIMEOUT, false);
+  String body = get_body(response);
+  bool ok = get_status_code(response) == 200 && body == "1";
+  report("post_content_length", ok, ok ? nullptr : body.c_str());
+}
+
 // A long-but-reasonable query string must be served; an over-long request-target
 // must be refused with 414 rather than a silently dropped connection.
 void testLongUri() {
@@ -1226,6 +1239,7 @@ void runTests() {
   testStaticRootMapping();
   testRawBody();
   testManyArgs();
+  testPostContentLength();
   testLongUri();
   testLongLine();
   testRegexRoute();
