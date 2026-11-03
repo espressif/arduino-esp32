@@ -479,6 +479,9 @@ static void flushTXBuffer(const uint8_t *buffer, size_t size) {
   usb_serial_jtag_ll_txfifo_flush();
 }
 
+// This is only necessary for the ESP32-C3 and ESP32-S3
+// Other newer SoC will install the default ets_putc2() function for USB CDC
+#ifndef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
   if (tx_ring_buf == NULL) {
     return;
@@ -497,6 +500,7 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
   }
   usb_serial_jtag_ll_txfifo_flush();
 }
+#endif
 
 HWCDC::HWCDC() {
   // SOF in ISR causes problems for uploading firmware
