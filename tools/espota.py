@@ -13,6 +13,7 @@
 # python espota.py -i <ESP_IP_addr> -I <Host_IP_addr> -p <ESP_port> -P <Host_port> [-a password] -f <sketch.bin>
 # Or to upload SPIFFS image:
 # python espota.py -i <ESP_IP_addr> -I <Host_IP_addr> -p <ESP_port> -P <HOST_port> [-a password] -s -f <spiffs.bin>
+# If authentication is required, omitting --auth prompts for the password without echoing it.
 #
 # Changes
 # 2015-09-18:
@@ -60,6 +61,8 @@ import socket
 import sys
 import os
 import argparse
+import getpass
+import warnings
 import logging
 import hashlib
 import random
@@ -294,6 +297,19 @@ def authenticate(
         return False, str(e)
 
 
+def has_windows_console_input():
+    import ctypes
+    import msvcrt
+
+    # isatty() also accepts NUL on Windows; check the actual stdin handle.
+    try:
+        handle = msvcrt.get_osfhandle(sys.stdin.fileno())
+        mode = ctypes.c_ulong()
+        return bool(ctypes.windll.kernel32.GetConsoleMode(ctypes.c_void_p(handle), ctypes.byref(mode)))
+    except (AttributeError, OSError, ValueError):
+        return False
+
+
 def serve(  # noqa: C901
     remote_addr, local_addr, remote_port, local_port, password, md5_target, filename, command=FLASH
 ):
@@ -345,6 +361,18 @@ def serve(  # noqa: C901
             # Detect protocol version based on nonce length:
             # - 32 chars = Old MD5 protocol (pre-3.3.1)
             # - 64 chars = New SHA256 protocol (3.3.1+)
+
+            if password is None and nonce_length in (32, 64):
+                try:
+                    if os.name == "nt" and not has_windows_console_input():
+                        raise EOFError
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("error", getpass.GetPassWarning)
+                        password = getpass.getpass("OTA password: ")
+                except (getpass.GetPassWarning, EOFError, KeyboardInterrupt):
+                    logging.error("Password input unavailable or cancelled. Use --auth for non-interactive uploads.")
+                    sock.close()
+                    return 1
 
             if nonce_length == 32:
                 # Scenario 1: Old device (pre-3.3.1) using MD5 protocol
@@ -617,7 +645,14 @@ def parse_args(unparsed_args):
     )
 
     # authentication
-    parser.add_argument("-a", "--auth", dest="auth", help="Set authentication password.", action="store", default="")
+    parser.add_argument(
+        "-a",
+        "--auth",
+        dest="auth",
+        help="Set authentication password. If omitted, prompt when the device requires authentication.",
+        action="store",
+        default=None,
+    )
     parser.add_argument(
         "-m",
         "--md5-target",
@@ -677,7 +712,9 @@ def main(args):
         log_level = logging.DEBUG
 
     logging.basicConfig(level=log_level, format="%(asctime)-8s [%(levelname)s]: %(message)s", datefmt="%H:%M:%S")
-    logging.debug("Options: %s", str(options))
+    log_options = vars(options).copy()
+    log_options["auth"] = "<redacted>" if options.auth is not None else None
+    logging.debug("Options: %s", log_options)
 
     # check options
     global PROGRESS
