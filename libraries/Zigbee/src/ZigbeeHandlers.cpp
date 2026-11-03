@@ -85,12 +85,10 @@ static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, voi
     case EZB_ZCL_CORE_OTA_UPGRADE_QUERY_NEXT_IMAGE_RSP_CB_ID:
       zb_ota_upgrade_query_image_resp_handler((ezb_zcl_ota_upgrade_query_next_image_rsp_message_t *)message);
       break;
-    case EZB_ZCL_CORE_DEFAULT_RSP_CB_ID: zb_cmd_default_resp_handler((ezb_zcl_cmd_default_rsp_message_t *)message); break;
-    case EZB_ZCL_CORE_IDENTIFY_QUERY_RSP_CB_ID:
-      zb_cmd_identify_query_resp_handler((ezb_zcl_identify_query_rsp_message_t *)message);
-      break;
-    case EZB_ZCL_CORE_MANUF_SPEC_CMD_CB_ID: zb_manuf_spec_command_handler((ezb_zcl_manuf_spec_cmd_message_t *)message); break;
-    default:                                log_w("Receive unhandled Zigbee action(0x%x) callback", (unsigned int)callback_id); break;
+    case EZB_ZCL_CORE_DEFAULT_RSP_CB_ID:        zb_cmd_default_resp_handler((ezb_zcl_cmd_default_rsp_message_t *)message); break;
+    case EZB_ZCL_CORE_IDENTIFY_QUERY_RSP_CB_ID: zb_cmd_identify_query_resp_handler((ezb_zcl_identify_query_rsp_message_t *)message); break;
+    case EZB_ZCL_CORE_MANUF_SPEC_CMD_CB_ID:     zb_manuf_spec_command_handler((ezb_zcl_manuf_spec_cmd_message_t *)message); break;
+    default:                                    log_w("Receive unhandled Zigbee action(0x%x) callback", (unsigned int)callback_id); break;
   }
 }
 

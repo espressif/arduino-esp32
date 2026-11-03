@@ -296,8 +296,7 @@ bool ZigbeeEP::setReportingDefaultResponse(uint16_t cluster_id, uint16_t attr_id
     log_w("Cannot set reporting default response: failed to acquire Zigbee lock");
     return false;
   }
-  ezb_zcl_reporting_info_t reporting_info =
-    ezb_zcl_reporting_info_find(_endpoint, cluster_id, cluster_role, attr_id, EZB_ZCL_STD_MANUF_CODE);
+  ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(_endpoint, cluster_id, cluster_role, attr_id, EZB_ZCL_STD_MANUF_CODE);
   if (reporting_info == EZB_ZCL_INVALID_REPORTING_INFO) {
     esp_zigbee_lock_release();
     log_e("Failed to find reporting info for cluster 0x%04x attr 0x%04x", cluster_id, attr_id);

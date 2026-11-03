@@ -21,9 +21,9 @@
 #if CONFIG_ZB_ENABLED
 
 #include "esp_zigbee.h"
-#include "ezbee/zha.h"                  // ZHA standard device IDs (EZB_ZHA_*_DEVICE_ID); not pulled in by esp_zigbee.h
-#include "ezbee/zdo/zdo_nwk_mgmt.h"     // Mgmt_Bind_req (binding table retrieval)
-#include "ezbee/zdo/zdo_dev_srv_disc.h" // Match_Desc_req (endpoint discovery)
+#include "ezbee/zha.h"                   // ZHA standard device IDs (EZB_ZHA_*_DEVICE_ID); not pulled in by esp_zigbee.h
+#include "ezbee/zdo/zdo_nwk_mgmt.h"      // Mgmt_Bind_req (binding table retrieval)
+#include "ezbee/zdo/zdo_dev_srv_disc.h"  // Match_Desc_req (endpoint discovery)
 #include <esp32-hal-log.h>
 #include <list>
 #include "ZigbeeTypes.h"
@@ -50,49 +50,39 @@ typedef enum {
 // All 2.4 GHz channels (11-26)
 #define ZB_TRANSCEIVER_ALL_CHANNELS_MASK 0x07FFF800
 
-#define ZIGBEE_DEFAULT_ED_CONFIG()                  \
-  {                                                 \
-    .device_type = EZB_NWK_DEVICE_TYPE_END_DEVICE,  \
-    .install_code_policy = false,                   \
-    .zed_config =                                   \
-      {                                             \
-        .ed_timeout = EZB_NWK_ED_TIMEOUT_64MIN,     \
-        .keep_alive = 3000,                         \
-      },                                            \
+#define ZIGBEE_DEFAULT_ED_CONFIG()                                               \
+  {                                                                              \
+    .device_type = EZB_NWK_DEVICE_TYPE_END_DEVICE, .install_code_policy = false, \
+    .zed_config = {                                                              \
+      .ed_timeout = EZB_NWK_ED_TIMEOUT_64MIN,                                    \
+      .keep_alive = 3000,                                                        \
+    },                                                                           \
   }
 
-#define ZIGBEE_DEFAULT_ROUTER_CONFIG()           \
-  {                                              \
-    .device_type = EZB_NWK_DEVICE_TYPE_ROUTER,   \
-    .install_code_policy = false,                \
-    .zczr_config = {.max_children = 10},         \
-  }
+#define ZIGBEE_DEFAULT_ROUTER_CONFIG() \
+  { .device_type = EZB_NWK_DEVICE_TYPE_ROUTER, .install_code_policy = false, .zczr_config = {.max_children = 10}, }
 
-#define ZIGBEE_DEFAULT_COORDINATOR_CONFIG()           \
-  {                                                   \
-    .device_type = EZB_NWK_DEVICE_TYPE_COORDINATOR,   \
-    .install_code_policy = false,                     \
-    .zczr_config = {.max_children = 10},              \
-  }
+#define ZIGBEE_DEFAULT_COORDINATOR_CONFIG() \
+  { .device_type = EZB_NWK_DEVICE_TYPE_COORDINATOR, .install_code_policy = false, .zczr_config = {.max_children = 10}, }
 
-#define ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG()     \
-  {                                                \
-    .radio_mode = ESP_ZIGBEE_RADIO_MODE_UART_RCP,  \
-    .radio_uart_config = {                         \
-      .port = UART_NUM_1,                          \
-      .uart_config =                               \
-        {                                          \
-          .baud_rate = 460800,                     \
-          .data_bits = UART_DATA_8_BITS,           \
-          .parity = UART_PARITY_DISABLE,           \
-          .stop_bits = UART_STOP_BITS_1,           \
-          .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,   \
-          .rx_flow_ctrl_thresh = 0,                \
-          .source_clk = UART_SCLK_DEFAULT,         \
-        },                                         \
-      .rx_pin = GPIO_NUM_NC,                       \
-      .tx_pin = GPIO_NUM_NC,                       \
-    },                                             \
+#define ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG()    \
+  {                                               \
+    .radio_mode = ESP_ZIGBEE_RADIO_MODE_UART_RCP, \
+    .radio_uart_config = {                        \
+      .port = UART_NUM_1,                         \
+      .uart_config =                              \
+        {                                         \
+          .baud_rate = 460800,                    \
+          .data_bits = UART_DATA_8_BITS,          \
+          .parity = UART_PARITY_DISABLE,          \
+          .stop_bits = UART_STOP_BITS_1,          \
+          .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,  \
+          .rx_flow_ctrl_thresh = 0,               \
+          .source_clk = UART_SCLK_DEFAULT,        \
+        },                                        \
+      .rx_pin = GPIO_NUM_NC,                      \
+      .tx_pin = GPIO_NUM_NC,                      \
+    },                                            \
   }
 
 class ZigbeeCore {
@@ -176,7 +166,7 @@ public:
 
   bool addEndpoint(ZigbeeEP *ep);
   //void removeEndpoint(ZigbeeEP *ep);
-  
+
   //   setRadioConfig() / setPrimaryChannelMask() must be called before role() is called.
   void setRadioConfig(esp_zigbee_radio_config_t config);
   esp_zigbee_radio_config_t getRadioConfig();
