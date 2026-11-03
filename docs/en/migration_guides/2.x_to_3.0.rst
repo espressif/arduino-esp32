@@ -46,6 +46,22 @@ Changes in APIs
 * Changed UUID data type from ``uint16_t`` to ``BLEUUID`` class.
 * ``BLEScan::start`` and ``BLEScan::getResults`` methods return type changed from ``BLEScanResults`` to ``BLEScanResults*``.
 
+FS
+**
+
+Changes in APIs
+^^^^^^^^^^^^^^^
+
+* The filesystem classes moved into the ``fs`` namespace. ``FS`` is now ``fs::FS``,
+  ``File`` is ``fs::File``, and the seek constants are ``fs::SeekSet``, ``fs::SeekCur``
+  and ``fs::SeekEnd``.
+* ``FS.h`` re-exports ``File``, ``FS`` and the seek constants into the global namespace,
+  so code that uses them without a namespace prefix compiles unchanged. ``SD.h``,
+  ``LittleFS.h`` and ``SPIFFS.h`` all include ``FS.h``, so the names arrive with any of them.
+* Defining ``FS_NO_GLOBALS`` suppresses that re-export. With it defined, the names have to
+  be spelled ``fs::FS``, ``fs::File`` and ``fs::SeekSet``; a bare ``FS`` then fails with
+  ``'FS' was not declared in this scope; did you mean 'fs::FS'?``.
+
 Hall Sensor
 ***********
 
