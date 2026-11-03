@@ -881,10 +881,20 @@ size_t HWCDC::read(uint8_t *buffer, size_t size) {
  * DEBUG
 */
 
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+// ROM installs ets_write_char_usb as putc2. The symbol is in the ROM
+// linker script and is not declared in rom/ets_sys.h.
+extern "C" void ets_install_usb_printf(void);
+#endif
+
 void HWCDC::setDebugOutput(bool en) {
   if (en) {
     uartSetDebug(NULL);
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+    ets_install_usb_printf();  // putc2 = ROM ets_write_char_usb
+#else
     ets_install_putc2((void (*)(char)) & cdc0_write_char);
+#endif
   } else {
     ets_install_putc2(NULL);
   }
