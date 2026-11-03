@@ -10,7 +10,8 @@
 # Arguments:
 #   event_name: GitHub event name (pull_request, push, etc.)
 #   target_list: Which target list to use (BUILD_TEST_TARGETS or IDF_COMPONENT_TARGETS)
-#   changed_files: Space-separated list of changed files (all remaining arguments)
+#   changed_files: Space-separated list of changed files (all remaining arguments).
+#                  May be empty (empty commit, no path changes).
 #
 # Output:
 #   Sets should_run=true or should_run=false to $GITHUB_OUTPUT
@@ -22,20 +23,13 @@ set -e
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPTS_DIR}/socs_config.sh"
 
-# Parse arguments
-EVENT_NAME="$1"
+# Parse arguments. changed_files may be empty (empty commit).
+EVENT_NAME="${1:-}"
 TARGET_LIST="${2:-BUILD_TEST_TARGETS}"
-shift 2
-CHANGED_FILES="$*"
+CHANGED_FILES="${*:3}"
 
-# Validate arguments
 if [ -z "$EVENT_NAME" ]; then
     echo "ERROR: event_name is required"
-    exit 1
-fi
-
-if [ -z "$CHANGED_FILES" ]; then
-    echo "ERROR: changed_files is required"
     exit 1
 fi
 
@@ -82,13 +76,17 @@ fi
 
 # If no official variants changed, check if non-variant files changed
 if [ "$should_run" == "false" ]; then
-    for file in $CHANGED_FILES; do
-        if [[ "$file" != variants/* ]]; then
-            should_run="true"
-            echo "Non-variant file changed: $file"
-            break
-        fi
-    done
+    if [ -z "$CHANGED_FILES" ]; then
+        echo "No changed files (empty commit); PR skips compilation"
+    else
+        for file in $CHANGED_FILES; do
+            if [[ "$file" != variants/* ]]; then
+                should_run="true"
+                echo "Non-variant file changed: $file"
+                break
+            fi
+        done
+    fi
 fi
 
 # Output result

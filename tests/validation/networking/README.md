@@ -31,6 +31,8 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 | `test_udp_socket_family_after_stop` | Send IPv4 → IPv6 → IPv4 on one sender with `stop()` between families |
 | `test_dns_server_captive` | Start DNSServer on softAP, verify `start()` succeeds |
 | `test_dns_question_stays_within_packet` | Drop queries with a missing or late QName terminator or truncated QClass; then answer root and named queries with the terminator at the last allowed position |
+| `test_ap_invalid_subnet_preserves_dhcp` | Reject an unsupported /23 SoftAP netmask without changing the IP, subnet, gateway, or DHCP state |
+| `test_ap_malformed_subnet_preserves_dhcp` | Reject a noncontiguous SoftAP netmask while preserving the prior network configuration and DHCP service |
 | `test_mdns_begin` | Start mDNS with hostname |
 | `test_mdns_service` | Register HTTP and custom UDP services via mDNS |
 

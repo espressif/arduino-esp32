@@ -57,17 +57,21 @@ jobs:
           ./.github/scripts/validate_board.sh "$board_name"
 
       - name: Get libs cache
+        id: libs-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
           path: |
-            ./tools/dist
             ./tools/esp32-arduino-libs
             ./tools/esptool
             ./tools/mk*
             ./tools/openocd-esp32
             ./tools/riscv32-*
             ./tools/xtensa-*
+
+      - name: Skip tool verification on libs cache hit
+        if: steps.libs-cache.outputs.cache-hit == 'true'
+        run: echo "ESP32_LIBS_CACHE_HIT=1" >> "$GITHUB_ENV"
 
       - name: Compile sketch
         uses: P-R-O-C-H-Y/compile-sketches@016e3c2dae7a68d7f759d358f1486a301f7e4150 # main
