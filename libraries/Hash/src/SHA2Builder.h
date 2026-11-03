@@ -39,6 +39,13 @@
 
 class SHA2Builder : public HashBuilder {
 protected:
+  // Block compressor and initial state selected by the concrete variant.
+  // Keeping them behind pointers lets a SHA-256-only build drop the SHA-512
+  // compressor, its round constants and the SHA-384/512 initial state instead
+  // of linking both because of a runtime branch.
+  typedef void (SHA2Builder::*BlockFunction)(const uint8_t *data);
+  typedef void (SHA2Builder::*InitFunction)();
+
   uint32_t state_32[8];   // SHA-224/256 state (256 bits)
   uint64_t state_64[8];   // SHA-384/512 state (512 bits)
   uint8_t buffer[128];    // Input buffer (max block size)
@@ -49,10 +56,45 @@ protected:
   bool is_sha512;         // Whether using SHA-512 family
   uint8_t hash[64];       // Hash result
   uint64_t total_length;  // Total length of input data
+  BlockFunction block_fn; // Compressor for this variant
+  InitFunction init_fn;   // Initial state for this variant
 
   void process_block_sha256(const uint8_t *data);
   void process_block_sha512(const uint8_t *data);
+  void init_sha224();
+  void init_sha256();
+  void init_sha384();
+  void init_sha512();
   void pad();
+
+  // Protected accessors so the concrete builders can select a variant
+  // without taking the address of a protected member of the base class.
+  static BlockFunction sha256Block() {
+    return &SHA2Builder::process_block_sha256;
+  }
+  static BlockFunction sha512Block() {
+    return &SHA2Builder::process_block_sha512;
+  }
+  static InitFunction sha224Init() {
+    return &SHA2Builder::init_sha224;
+  }
+  static InitFunction sha256Init() {
+    return &SHA2Builder::init_sha256;
+  }
+  static InitFunction sha384Init() {
+    return &SHA2Builder::init_sha384;
+  }
+  static InitFunction sha512Init() {
+    return &SHA2Builder::init_sha512;
+  }
+
+  // Constructor for the concrete variants. The generic public constructor
+  // below keeps working, but it is the only place that names every variant.
+  SHA2Builder(size_t hash_size, BlockFunction block_fn, InitFunction init_fn);
+
+private:
+  static BlockFunction blockForSize(size_t hash_size);
+  static InitFunction initForSize(size_t hash_size);
 
 public:
   using HashBuilder::add;
@@ -78,22 +120,22 @@ public:
 
 class SHA224Builder : public SHA2Builder {
 public:
-  SHA224Builder() : SHA2Builder(SHA2_224_HASH_SIZE) {}
+  SHA224Builder() : SHA2Builder(SHA2_224_HASH_SIZE, sha256Block(), sha224Init()) {}
 };
 
 class SHA256Builder : public SHA2Builder {
 public:
-  SHA256Builder() : SHA2Builder(SHA2_256_HASH_SIZE) {}
+  SHA256Builder() : SHA2Builder(SHA2_256_HASH_SIZE, sha256Block(), sha256Init()) {}
 };
 
 class SHA384Builder : public SHA2Builder {
 public:
-  SHA384Builder() : SHA2Builder(SHA2_384_HASH_SIZE) {}
+  SHA384Builder() : SHA2Builder(SHA2_384_HASH_SIZE, sha512Block(), sha384Init()) {}
 };
 
 class SHA512Builder : public SHA2Builder {
 public:
-  SHA512Builder() : SHA2Builder(SHA2_512_HASH_SIZE) {}
+  SHA512Builder() : SHA2Builder(SHA2_512_HASH_SIZE, sha512Block(), sha512Init()) {}
 };
 
 #endif
