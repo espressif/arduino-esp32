@@ -62,6 +62,9 @@
 #include "esp_rom_sys.h"
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "hal/usb_wrap_ll.h"
+#include "hal/usb_serial_jtag_ll.h"
+#include "soc/lp_system_reg.h"
+#include "esp_rom_sys.h"
 #endif
 
 typedef enum {
@@ -726,6 +729,26 @@ void usb_persist_restart(restart_type_t mode) {
     // Reset the whole system so ROM can reinitialize the USB peripheral.
     REG_SET_BIT(LP_SYSTEM_REG_SYS_CTRL_REG, LP_SYSTEM_REG_FORCE_DOWNLOAD_BOOT);
     esp_rom_software_reset_system();
+  }
+#elif CONFIG_IDF_TARGET_ESP32P4
+  if (mode == RESTART_BOOTLOADER || mode == RESTART_BOOTLOADER_DFU) {
+    // P4 ROM has no USB-OTG download or DFU: it downloads over USB Serial/JTAG on
+    // FSLS PHY0, so DFU_DETACH lands there too.
+    tud_disconnect();
+    vTaskDelay(pdMS_TO_TICKS(100));
+    deinit_usb_hal();
+#if ARDUINO_USB_PORT != 0
+    // The FS OTG port moved USB Serial/JTAG to PHY1. That mapping is in LP_SYS
+    // and survives a system reset, so give PHY0 back to ROM's Serial/JTAG.
+    usb_serial_jtag_ll_phy_select(0);
+    usb_serial_jtag_ll_phy_enable_pad(true);
+#endif
+    // Reset the whole system (not just the CPU) so ROM reinitializes Serial/JTAG.
+    REG_SET_BIT(LP_SYSTEM_REG_SYS_CTRL_REG, LP_SYSTEM_REG_FORCE_DOWNLOAD_BOOT);
+    esp_rom_software_reset_system();
+  } else if (mode < RESTART_TYPE_MAX) {
+    // No ROM USB persist on P4: restart like S2/S3 do with persist disabled.
+    esp_restart();
   }
 #endif
 }
