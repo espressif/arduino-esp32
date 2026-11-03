@@ -618,8 +618,16 @@ jobs:
 
       - name: Install Wokwi CLI
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        env:
+          WOKWI_CLI_VERSION: v0.29.1
+          # sha256 of wokwi-cli-linuxstatic-x64 as published with that release
+          WOKWI_CLI_SHA256: 3c9d6da007d008a3822ab468318037285440055132c59fd659d7306e40f14258
         run: |
-          curl -L https://wokwi.com/ci/install.sh | sh
+          mkdir -p "$HOME/bin"
+          curl -fsSL -o "$HOME/bin/wokwi-cli" "https://github.com/wokwi/wokwi-cli/releases/download/${WOKWI_CLI_VERSION}/wokwi-cli-linuxstatic-x64"
+          echo "${WOKWI_CLI_SHA256}  $HOME/bin/wokwi-cli" | sha256sum -c -
+          chmod +x "$HOME/bin/wokwi-cli"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
 
       - name: Get binaries
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
