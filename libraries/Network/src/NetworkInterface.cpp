@@ -30,8 +30,7 @@ static bool toDnsInfo(const IPAddress &ip, esp_netif_dns_info_t *dns) {
     dns->ip.type = ESP_IPADDR_TYPE_V6;
     for (size_t i = 0; i < 4; ++i) {
       const size_t offset = i * 4;
-      const uint32_t word = ((uint32_t)ip[offset] << 24) | ((uint32_t)ip[offset + 1] << 16) | ((uint32_t)ip[offset + 2] << 8)
-                            | (uint32_t)ip[offset + 3];
+      const uint32_t word = ((uint32_t)ip[offset] << 24) | ((uint32_t)ip[offset + 1] << 16) | ((uint32_t)ip[offset + 2] << 8) | (uint32_t)ip[offset + 3];
       dns->ip.u_addr.ip6.addr[i] = esp_netif_htonl(word);
     }
     dns->ip.u_addr.ip6.zone = ip.zone();
