@@ -595,7 +595,8 @@ jobs:
     needs: [promote-release, publish-release]
     if: ${{ !inputs.dry-run && needs.promote-release.result == 'success' }}
     uses: ./.github/workflows/upload-idf-component.yml
-    secrets: inherit
+    secrets:
+      IDF_COMPONENT_API_TOKEN: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
     with:
       tag: ${{ needs.publish-release.outputs.release_tag }}
       git_ref: ${{ needs.publish-release.outputs.tagged_sha }}

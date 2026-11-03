@@ -12,6 +12,10 @@ on:
         required: false
         type: string
         default: ""
+    secrets:
+      # What this workflow reads when called. A direct run takes it from the repository.
+      IDF_COMPONENT_API_TOKEN:
+        required: false
   workflow_dispatch:
     inputs:
       tag:
