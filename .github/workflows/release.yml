@@ -59,6 +59,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
           fetch-depth: 0
@@ -122,6 +123,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
           fetch-depth: 0
@@ -179,6 +181,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
 
@@ -245,6 +248,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
 
@@ -331,6 +335,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
           fetch-depth: 0
@@ -415,6 +420,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
           fetch-depth: 0
@@ -495,6 +501,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: ${{ inputs.ref }}
 
       - name: Set release variables
@@ -520,6 +527,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ inputs.ref }}
 
@@ -612,6 +620,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: ${{ inputs.ref }}
 
       - name: Notify Discord
