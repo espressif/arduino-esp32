@@ -56717,7 +56717,7 @@ rakwireless_rak3112.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 # Kode Dot (ESP32-P4) running kodeOS. Upload writes the sketch, and nothing
-# else, into kodeOS's mailbox at 0x1C00000; kodeOS installs it as an app and
+# else, into kodeOS's mailbox at 0x1A00000; kodeOS installs it as an app and
 # runs it in place. Tools -> Burn Bootloader erases the whole device, kodeOS
 # included: do not use it on this board.
 kodedot.name=Kode Dot
@@ -56731,7 +56731,7 @@ kodedot.upload.tool.default=esptool_py_app_only
 # Wraps for a sketch that runs from a DATA partition; see variants/kodedot/kode_flash_guard.cpp.
 kodedot.compiler.c.elf.extra_flags=-Wl,--wrap=esp_ota_get_running_partition -Wl,--wrap=esp_ota_get_next_update_partition -Wl,--wrap=esp_image_verify
 
-kodedot.upload.maximum_size=4186112
+kodedot.upload.maximum_size=6287360
 kodedot.upload.maximum_data_size=327680
 kodedot.upload.flags=
 kodedot.upload.extra_flags=
@@ -56758,7 +56758,7 @@ kodedot.build.msc_on_boot=0
 kodedot.build.dfu_on_boot=0
 
 kodedot.build.f_cpu=400000000L
-kodedot.build.flash_offset=0x1C00000
+kodedot.build.flash_offset=0x1A00000
 kodedot.build.flash_size=32MB
 kodedot.build.flash_freq=80m
 kodedot.build.img_freq=80m
