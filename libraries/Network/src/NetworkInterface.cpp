@@ -433,29 +433,6 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
       return false;
     }
 
-    // Set DNS Server
-    if (static_cast<uint32_t>(dns2) != 0) {
-      err = esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
-      if (err) {
-        log_e("Netif Set DNS Info Failed! 0x%04x: %s", err, esp_err_to_name(err));
-        return false;
-      }
-    }
-
-    // Stop DHCPS
-    err = esp_netif_dhcps_stop(_esp_netif);
-    if (err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED) {
-      log_e("DHCPS Stop Failed! 0x%04x: %s", err, esp_err_to_name(err));
-      return false;
-    }
-
-    // Set IPv4, Netmask, Gateway
-    err = esp_netif_set_ip_info(_esp_netif, &info);
-    if (err) {
-      log_e("Netif Set IP Failed! 0x%04x: %s", err, esp_err_to_name(err));
-      return false;
-    }
-
     // Validate the DHCP lease before changing the interface or stopping its DHCP server.
     // A rejected configuration must leave the current SoftAP configuration operational.
     dhcps_lease_t lease;
