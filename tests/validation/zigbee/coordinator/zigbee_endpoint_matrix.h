@@ -69,6 +69,10 @@ static ZigbeeDoorLock epDoorLock(ZB_EP_DOOR_LOCK);
 
 static bool register_all_zigbee_endpoints(void) {
   epLight.setManufacturerAndModel("Espressif", "ZBValLight");
+  // Install Basic DeviceEnabled so deep tests can toggle it after begin().
+  if (!epLight.setDeviceEnabled(true)) {
+    return false;
+  }
   if (!Zigbee.addEndpoint(&epLight)) {
     return false;
   }
