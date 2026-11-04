@@ -4,7 +4,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                 "sizes": [{
-                        "flash_bytes": 893760,
+                        "flash_bytes": 893572,
                         "flash_percentage": 68,
                         "ram_bytes": 45776,
                         "ram_percentage": 14
@@ -60,7 +60,7 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                 "sizes": [{
-                        "flash_bytes": 925572,
+                        "flash_bytes": 925380,
                         "flash_percentage": 71,
                         "ram_bytes": 47816,
                         "ram_percentage": 15
@@ -68,7 +68,7 @@
                 },
 {"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
                 "sizes": [{
-                        "flash_bytes": 1031756,
+                        "flash_bytes": 1031568,
                         "flash_percentage": 79,
                         "ram_bytes": 49184,
                         "ram_percentage": 15
@@ -76,7 +76,7 @@
                 },
 {"name": "libraries/Matter/examples/GettingStarted/MatterDeviceIdentity",
                 "sizes": [{
-                        "flash_bytes": 1560991,
+                        "flash_bytes": 1560811,
                         "flash_percentage": 50,
                         "ram_bytes": 105512,
                         "ram_percentage": 32
@@ -84,7 +84,7 @@
                 },
 {"name": "libraries/Matter/examples/GettingStarted/MatterStatus",
                 "sizes": [{
-                        "flash_bytes": 1554067,
+                        "flash_bytes": 1553883,
                         "flash_percentage": 49,
                         "ram_bytes": 105440,
                         "ram_percentage": 32
@@ -92,7 +92,7 @@
                 },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                 "sizes": [{
-                        "flash_bytes": 894048,
+                        "flash_bytes": 893868,
                         "flash_percentage": 68,
                         "ram_bytes": 45792,
                         "ram_percentage": 14
@@ -108,7 +108,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1041976,
+                        "flash_bytes": 1041868,
                         "flash_percentage": 79,
                         "ram_bytes": 49192,
                         "ram_percentage": 15
@@ -116,7 +116,7 @@
                 },
 {"name": "libraries/WebServer/examples/HelloServer",
                 "sizes": [{
-                        "flash_bytes": 970848,
+                        "flash_bytes": 970752,
                         "flash_percentage": 74,
                         "ram_bytes": 49520,
                         "ram_percentage": 15
@@ -124,15 +124,15 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiMulti",
                 "sizes": [{
-                        "flash_bytes": 989712,
-                        "flash_percentage": 76,
+                        "flash_bytes": 989532,
+                        "flash_percentage": 75,
                         "ram_bytes": 46424,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
                 "sizes": [{
-                        "flash_bytes": 893176,
+                        "flash_bytes": 892988,
                         "flash_percentage": 68,
                         "ram_bytes": 45744,
                         "ram_percentage": 14
@@ -140,7 +140,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanTime",
                 "sizes": [{
-                        "flash_bytes": 890476,
+                        "flash_bytes": 890288,
                         "flash_percentage": 68,
                         "ram_bytes": 45736,
                         "ram_percentage": 14
@@ -153,7 +153,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                 "sizes": [{
-                        "flash_bytes": 938663,
+                        "flash_bytes": 938351,
                         "flash_percentage": 72,
                         "ram_bytes": 35372,
                         "ram_percentage": 11
@@ -209,7 +209,7 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                 "sizes": [{
-                        "flash_bytes": 975149,
+                        "flash_bytes": 974835,
                         "flash_percentage": 74,
                         "ram_bytes": 37420,
                         "ram_percentage": 11
@@ -217,7 +217,7 @@
                 },
 {"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
                 "sizes": [{
-                        "flash_bytes": 1093547,
+                        "flash_bytes": 1093235,
                         "flash_percentage": 83,
                         "ram_bytes": 38796,
                         "ram_percentage": 12
@@ -241,7 +241,7 @@
                 },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                 "sizes": [{
-                        "flash_bytes": 939107,
+                        "flash_bytes": 938793,
                         "flash_percentage": 72,
                         "ram_bytes": 35388,
                         "ram_percentage": 11
@@ -257,7 +257,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1118445,
+                        "flash_bytes": 1118271,
                         "flash_percentage": 85,
                         "ram_bytes": 38360,
                         "ram_percentage": 12
@@ -265,7 +265,7 @@
                 },
 {"name": "libraries/WebServer/examples/HelloServer",
                 "sizes": [{
-                        "flash_bytes": 1043145,
+                        "flash_bytes": 1042989,
                         "flash_percentage": 80,
                         "ram_bytes": 39920,
                         "ram_percentage": 12
@@ -273,7 +273,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiMulti",
                 "sizes": [{
-                        "flash_bytes": 1042775,
+                        "flash_bytes": 1042463,
                         "flash_percentage": 80,
                         "ram_bytes": 36036,
                         "ram_percentage": 11
@@ -281,7 +281,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
                 "sizes": [{
-                        "flash_bytes": 936855,
+                        "flash_bytes": 936541,
                         "flash_percentage": 71,
                         "ram_bytes": 35356,
                         "ram_percentage": 11
@@ -289,7 +289,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanTime",
                 "sizes": [{
-                        "flash_bytes": 934825,
+                        "flash_bytes": 934509,
                         "flash_percentage": 71,
                         "ram_bytes": 35348,
                         "ram_percentage": 11
@@ -302,7 +302,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                 "sizes": [{
-                        "flash_bytes": 1010867,
+                        "flash_bytes": 1010553,
                         "flash_percentage": 77,
                         "ram_bytes": 48148,
                         "ram_percentage": 15
@@ -366,7 +366,7 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                 "sizes": [{
-                        "flash_bytes": 1047833,
+                        "flash_bytes": 1047519,
                         "flash_percentage": 80,
                         "ram_bytes": 50548,
                         "ram_percentage": 15
@@ -374,7 +374,7 @@
                 },
 {"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
                 "sizes": [{
-                        "flash_bytes": 1165719,
+                        "flash_bytes": 1165407,
                         "flash_percentage": 89,
                         "ram_bytes": 51572,
                         "ram_percentage": 16
@@ -398,7 +398,7 @@
                 },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                 "sizes": [{
-                        "flash_bytes": 1011297,
+                        "flash_bytes": 1010983,
                         "flash_percentage": 77,
                         "ram_bytes": 48164,
                         "ram_percentage": 15
@@ -438,7 +438,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1189475,
+                        "flash_bytes": 1189301,
                         "flash_percentage": 91,
                         "ram_bytes": 50536,
                         "ram_percentage": 15
@@ -446,7 +446,7 @@
                 },
 {"name": "libraries/WebServer/examples/HelloServer",
                 "sizes": [{
-                        "flash_bytes": 1114613,
+                        "flash_bytes": 1114455,
                         "flash_percentage": 85,
                         "ram_bytes": 52440,
                         "ram_percentage": 16
@@ -454,7 +454,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiMulti",
                 "sizes": [{
-                        "flash_bytes": 1115235,
+                        "flash_bytes": 1114923,
                         "flash_percentage": 85,
                         "ram_bytes": 48796,
                         "ram_percentage": 15
@@ -462,7 +462,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
                 "sizes": [{
-                        "flash_bytes": 1009161,
+                        "flash_bytes": 1008843,
                         "flash_percentage": 77,
                         "ram_bytes": 48124,
                         "ram_percentage": 15
@@ -470,7 +470,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanTime",
                 "sizes": [{
-                        "flash_bytes": 1007021,
+                        "flash_bytes": 1006707,
                         "flash_percentage": 77,
                         "ram_bytes": 48116,
                         "ram_percentage": 15
@@ -491,7 +491,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                 "sizes": [{
-                        "flash_bytes": 962678,
+                        "flash_bytes": 962366,
                         "flash_percentage": 73,
                         "ram_bytes": 41384,
                         "ram_percentage": 13
@@ -555,7 +555,7 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                 "sizes": [{
-                        "flash_bytes": 999168,
+                        "flash_bytes": 998854,
                         "flash_percentage": 76,
                         "ram_bytes": 43440,
                         "ram_percentage": 13
@@ -563,7 +563,7 @@
                 },
 {"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
                 "sizes": [{
-                        "flash_bytes": 1136920,
+                        "flash_bytes": 1136608,
                         "flash_percentage": 87,
                         "ram_bytes": 44800,
                         "ram_percentage": 14
@@ -587,7 +587,7 @@
                 },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                 "sizes": [{
-                        "flash_bytes": 963112,
+                        "flash_bytes": 962798,
                         "flash_percentage": 73,
                         "ram_bytes": 41400,
                         "ram_percentage": 13
@@ -627,7 +627,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1134328,
+                        "flash_bytes": 1134154,
                         "flash_percentage": 87,
                         "ram_bytes": 44364,
                         "ram_percentage": 14
@@ -635,7 +635,7 @@
                 },
 {"name": "libraries/WebServer/examples/HelloServer",
                 "sizes": [{
-                        "flash_bytes": 1067278,
+                        "flash_bytes": 1067122,
                         "flash_percentage": 81,
                         "ram_bytes": 45908,
                         "ram_percentage": 14
@@ -643,7 +643,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiMulti",
                 "sizes": [{
-                        "flash_bytes": 1067330,
+                        "flash_bytes": 1067018,
                         "flash_percentage": 81,
                         "ram_bytes": 42040,
                         "ram_percentage": 13
@@ -651,7 +651,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
                 "sizes": [{
-                        "flash_bytes": 960880,
+                        "flash_bytes": 960566,
                         "flash_percentage": 73,
                         "ram_bytes": 41360,
                         "ram_percentage": 13
@@ -659,7 +659,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanTime",
                 "sizes": [{
-                        "flash_bytes": 958828,
+                        "flash_bytes": 958514,
                         "flash_percentage": 73,
                         "ram_bytes": 41352,
                         "ram_percentage": 13
@@ -789,7 +789,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                 "sizes": [{
-                        "flash_bytes": 812856,
+                        "flash_bytes": 812542,
                         "flash_percentage": 62,
                         "ram_bytes": 30360,
                         "ram_percentage": 9
@@ -853,7 +853,7 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                 "sizes": [{
-                        "flash_bytes": 850126,
+                        "flash_bytes": 849812,
                         "flash_percentage": 65,
                         "ram_bytes": 32776,
                         "ram_percentage": 10
@@ -861,7 +861,7 @@
                 },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                 "sizes": [{
-                        "flash_bytes": 813282,
+                        "flash_bytes": 812970,
                         "flash_percentage": 62,
                         "ram_bytes": 30384,
                         "ram_percentage": 9
@@ -901,7 +901,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1063578,
+                        "flash_bytes": 1063404,
                         "flash_percentage": 81,
                         "ram_bytes": 32840,
                         "ram_percentage": 10
@@ -909,7 +909,7 @@
                 },
 {"name": "libraries/WebServer/examples/HelloServer",
                 "sizes": [{
-                        "flash_bytes": 904800,
+                        "flash_bytes": 904642,
                         "flash_percentage": 69,
                         "ram_bytes": 34480,
                         "ram_percentage": 11
@@ -917,7 +917,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiMulti",
                 "sizes": [{
-                        "flash_bytes": 814426,
+                        "flash_bytes": 814114,
                         "flash_percentage": 62,
                         "ram_bytes": 30360,
                         "ram_percentage": 9
@@ -925,7 +925,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
                 "sizes": [{
-                        "flash_bytes": 808012,
+                        "flash_bytes": 807702,
                         "flash_percentage": 62,
                         "ram_bytes": 30312,
                         "ram_percentage": 9
@@ -933,7 +933,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanTime",
                 "sizes": [{
-                        "flash_bytes": 808694,
+                        "flash_bytes": 808382,
                         "flash_percentage": 62,
                         "ram_bytes": 30312,
                         "ram_percentage": 9
@@ -946,7 +946,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                 "sizes": [{
-                        "flash_bytes": 814875,
+                        "flash_bytes": 814711,
                         "flash_percentage": 62,
                         "ram_bytes": 40708,
                         "ram_percentage": 12
@@ -1002,7 +1002,7 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                 "sizes": [{
-                        "flash_bytes": 846139,
+                        "flash_bytes": 845971,
                         "flash_percentage": 65,
                         "ram_bytes": 43100,
                         "ram_percentage": 13
@@ -1010,7 +1010,7 @@
                 },
 {"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
                 "sizes": [{
-                        "flash_bytes": 954211,
+                        "flash_bytes": 954035,
                         "flash_percentage": 73,
                         "ram_bytes": 44132,
                         "ram_percentage": 13
@@ -1018,7 +1018,7 @@
                 },
 {"name": "libraries/Matter/examples/GettingStarted/MatterDeviceIdentity",
                 "sizes": [{
-                        "flash_bytes": 1476032,
+                        "flash_bytes": 1475860,
                         "flash_percentage": 47,
                         "ram_bytes": 87900,
                         "ram_percentage": 27
@@ -1026,7 +1026,7 @@
                 },
 {"name": "libraries/Matter/examples/GettingStarted/MatterStatus",
                 "sizes": [{
-                        "flash_bytes": 1469520,
+                        "flash_bytes": 1469352,
                         "flash_percentage": 47,
                         "ram_bytes": 87828,
                         "ram_percentage": 27
@@ -1034,7 +1034,7 @@
                 },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                 "sizes": [{
-                        "flash_bytes": 815119,
+                        "flash_bytes": 814947,
                         "flash_percentage": 62,
                         "ram_bytes": 40724,
                         "ram_percentage": 12
@@ -1066,7 +1066,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 977500,
+                        "flash_bytes": 977388,
                         "flash_percentage": 75,
                         "ram_bytes": 43084,
                         "ram_percentage": 13
@@ -1074,7 +1074,7 @@
                 },
 {"name": "libraries/WebServer/examples/HelloServer",
                 "sizes": [{
-                        "flash_bytes": 906584,
+                        "flash_bytes": 906500,
                         "flash_percentage": 69,
                         "ram_bytes": 45020,
                         "ram_percentage": 14
@@ -1082,7 +1082,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiMulti",
                 "sizes": [{
-                        "flash_bytes": 909915,
+                        "flash_bytes": 909751,
                         "flash_percentage": 69,
                         "ram_bytes": 41364,
                         "ram_percentage": 13
@@ -1090,7 +1090,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
                 "sizes": [{
-                        "flash_bytes": 814827,
+                        "flash_bytes": 814655,
                         "flash_percentage": 62,
                         "ram_bytes": 40700,
                         "ram_percentage": 12
@@ -1098,7 +1098,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanTime",
                 "sizes": [{
-                        "flash_bytes": 811739,
+                        "flash_bytes": 811567,
                         "flash_percentage": 62,
                         "ram_bytes": 40668,
                         "ram_percentage": 12
@@ -1111,7 +1111,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                 "sizes": [{
-                        "flash_bytes": 849962,
+                        "flash_bytes": 849786,
                         "flash_percentage": 65,
                         "ram_bytes": 44964,
                         "ram_percentage": 14
@@ -1167,7 +1167,7 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                 "sizes": [{
-                        "flash_bytes": 881314,
+                        "flash_bytes": 881146,
                         "flash_percentage": 67,
                         "ram_bytes": 47356,
                         "ram_percentage": 14
@@ -1175,7 +1175,7 @@
                 },
 {"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
                 "sizes": [{
-                        "flash_bytes": 988722,
+                        "flash_bytes": 988542,
                         "flash_percentage": 75,
                         "ram_bytes": 48372,
                         "ram_percentage": 15
@@ -1199,7 +1199,7 @@
                 },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                 "sizes": [{
-                        "flash_bytes": 850162,
+                        "flash_bytes": 849978,
                         "flash_percentage": 65,
                         "ram_bytes": 44980,
                         "ram_percentage": 14
@@ -1239,7 +1239,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1017907,
+                        "flash_bytes": 1017795,
                         "flash_percentage": 78,
                         "ram_bytes": 47340,
                         "ram_percentage": 14
@@ -1247,7 +1247,7 @@
                 },
 {"name": "libraries/WebServer/examples/HelloServer",
                 "sizes": [{
-                        "flash_bytes": 947903,
+                        "flash_bytes": 947795,
                         "flash_percentage": 72,
                         "ram_bytes": 49292,
                         "ram_percentage": 15
@@ -1255,7 +1255,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiMulti",
                 "sizes": [{
-                        "flash_bytes": 943690,
+                        "flash_bytes": 943530,
                         "flash_percentage": 72,
                         "ram_bytes": 45620,
                         "ram_percentage": 14
@@ -1263,7 +1263,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
                 "sizes": [{
-                        "flash_bytes": 849910,
+                        "flash_bytes": 849722,
                         "flash_percentage": 65,
                         "ram_bytes": 44980,
                         "ram_percentage": 14
@@ -1271,7 +1271,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiScanTime",
                 "sizes": [{
-                        "flash_bytes": 846810,
+                        "flash_bytes": 846658,
                         "flash_percentage": 65,
                         "ram_bytes": 44924,
                         "ram_percentage": 14
