@@ -310,6 +310,25 @@ def has_windows_console_input():
         return False
 
 
+def reset_device_authentication(remote_addr, remote_port):
+    """Best-effort reset for a device left waiting for an authentication reply.
+
+    After the device sends an AUTH challenge it stays in its auth-wait state
+    until it receives an authentication packet.  If the user cancels the
+    prompt, send a deliberately invalid reply so the device returns to idle
+    instead of swallowing the next upload's invitation.
+    """
+    try:
+        family, remote_address = resolve_endpoint(remote_addr, remote_port, socket.SOCK_DGRAM)
+        sock2 = create_socket(family, socket.SOCK_DGRAM)
+        try:
+            sock2.sendto(("%d 0 0\n" % AUTH).encode(), remote_address)
+        finally:
+            sock2.close()
+    except Exception as e:
+        logging.debug("Could not reset device authentication state: %s", str(e))
+
+
 def serve(  # noqa: C901
     remote_addr, local_addr, remote_port, local_port, password, md5_target, filename, command=FLASH
 ):
@@ -369,8 +388,9 @@ def serve(  # noqa: C901
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", getpass.GetPassWarning)
                         password = getpass.getpass("OTA password: ")
-                except (getpass.GetPassWarning, EOFError, KeyboardInterrupt):
+                except (getpass.GetPassWarning, EOFError, KeyboardInterrupt, OSError):
                     logging.error("Password input unavailable or cancelled. Use --auth for non-interactive uploads.")
+                    reset_device_authentication(remote_addr, remote_port)
                     sock.close()
                     return 1
 
