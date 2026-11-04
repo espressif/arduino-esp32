@@ -93,8 +93,8 @@ UpdateClass::UpdateClass()
 #ifndef UPDATE_NOCRYPT
     _cryptKey(0), _cryptBuffer(0),
 #endif /* UPDATE_NOCRYPT */
-    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _command(U_FLASH), _partition(NULL), _sha256_ctx(NULL),
-    _sha256_valid(false), _sha512_ctx(NULL), _sha512_valid(false), _sha256Ops(NULL), _sha512Ops(NULL)
+    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _command(U_FLASH), _streamTimeout(30000), _partition(NULL),
+    _sha256_ctx(NULL), _sha256_valid(false), _sha512_ctx(NULL), _sha512_valid(false), _sha256Ops(NULL), _sha512Ops(NULL)
 #ifndef UPDATE_NOCRYPT
     ,
     _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
@@ -974,7 +974,6 @@ size_t UpdateClass::write(uint8_t *data, size_t len) {
 size_t UpdateClass::writeStream(Stream &data) {
   size_t written = 0;
   size_t toRead = 0;
-  int timeout_failures = 0;
 
   if (hasError() || !isRunning()) {
     return 0;
@@ -1005,16 +1004,17 @@ size_t UpdateClass::writeStream(Stream &data) {
     }
 
     /*
-        Init read&timeout counters and try to read, if read failed, increase counter,
-        wait 100ms and try to read again. If counter > 300 (30 sec), give up/abort
+        Try to read; if nothing came, wait 100ms and try again. Give up/abort once
+        nothing has come for _streamTimeout (setStreamTimeout(), 30 sec by default).
+        Measured in time rather than attempts, because readBytes() itself waits for
+        the stream's timeout before returning nothing
         */
     toRead = 0;
-    timeout_failures = 0;
+    uint32_t readStart = millis();
     while (!toRead) {
       toRead = data.readBytes(_buffer + _bufferLen, bytesToRead);
       if (toRead == 0) {
-        timeout_failures++;
-        if (timeout_failures >= 300) {
+        if (millis() - readStart >= _streamTimeout) {
           _abort(UPDATE_ERROR_STREAM);
           return written;
         }

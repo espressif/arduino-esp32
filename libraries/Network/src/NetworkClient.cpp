@@ -444,6 +444,13 @@ size_t NetworkClient::write(const uint8_t *buf, size_t size) {
       }
     }
   }
+  if (totalBytesSent < size && _connected) {
+    // Nothing could be sent for WIFI_CLIENT_MAX_WRITE_RETRY tries in a row: the peer has stopped
+    // acknowledging (it may be gone without a reset). Give up on the connection, as on a send
+    // error, so that later writes return at once rather than each waiting as long again.
+    log_w("write timed out on fd %d after %u of %u bytes, closing", fd(), (unsigned)totalBytesSent, (unsigned)size);
+    stop();
+  }
   return totalBytesSent;
 }
 
@@ -456,12 +463,19 @@ size_t NetworkClient::write(Stream &stream) {
   if (!buf) {
     return 0;
   }
-  size_t toRead = 0, toWrite = 0, written = 0;
-  size_t available = stream.available();
-  while (available) {
-    toRead = (available > 1360) ? 1360 : available;
-    toWrite = stream.readBytes(buf, toRead);
-    written += write(buf, toWrite);
+  size_t written = 0;
+  int available = stream.available();
+  while (available > 0) {
+    size_t toRead = (available > 1360) ? 1360 : available;
+    size_t toWrite = stream.readBytes(buf, toRead);
+    if (!toWrite) {
+      break;
+    }
+    size_t sent = write(buf, toWrite);
+    written += sent;
+    if (sent < toWrite) {
+      break;
+    }
     available = stream.available();
   }
   free(buf);
@@ -473,15 +487,19 @@ size_t NetworkClient::write(Stream &stream, size_t length) {
   if (!buf) {
     return 0;
   }
-  size_t toRead = 0, toWrite = 0, written = 0;
+  size_t written = 0;
   while (length) {
-    toRead = (length > 1360) ? 1360 : length;
-    toWrite = stream.readBytes(buf, toRead);
+    size_t toRead = (length > 1360) ? 1360 : length;
+    size_t toWrite = stream.readBytes(buf, toRead);
     if (!toWrite) {
       break;
     }
-    written += write(buf, toWrite);
-    length -= toWrite;
+    size_t sent = write(buf, toWrite);
+    written += sent;
+    if (sent < toWrite) {
+      break;
+    }
+    length -= sent;
   }
   free(buf);
   return written;

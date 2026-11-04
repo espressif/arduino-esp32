@@ -152,6 +152,8 @@ public:
   size_t broadcastTo(AsyncUDPMessage &message, uint16_t port, tcpip_adapter_if_t tcpip_if = TCPIP_ADAPTER_IF_MAX);
   size_t broadcast(AsyncUDPMessage &message);
 
+  size_t dropCount();
+
   IPAddress listenIP();
 #if CONFIG_LWIP_IPV6
   IPAddress listenIPv6();
