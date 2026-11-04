@@ -59,8 +59,8 @@ def test_webserver(dut, ci_job_id):
 
     # Each test case is reported by the client as "PASS <name>" or "FAIL <name>".
     # The stream cases validate the send(Stream&) overload; the remaining cases
-    # are regression checks for the request-parsing security reports and for the
-    # legitimate request shapes those checks must keep accepting.
+    # are regression checks for the request-parsing / sendHeader security reports
+    # and for the legitimate request shapes those checks must keep accepting.
     test_cases = [
         # send(Stream&) overload coverage
         ("stream_text", 10),
@@ -73,6 +73,7 @@ def test_webserver(dut, ci_job_id):
         ("digest_auth", 20),  # issue 12915: multi-client digest nonce + stale=true
         ("digest_auth_edges", 40),  # signed-nonce integrity, replay, query, RFC 2069, stale isolation
         ("path_traversal", 15),  # report 6: serveStatic dot-segment traversal
+        ("header_injection", 15),  # sendHeader NUL-prefixed CRLF bypass
         # Compatibility checks for the limits added by the fixes above
         ("static_root", 15),  # serveStatic mapped to the filesystem root
         ("raw_body", 20),  # non-multipart body still streams to the callback

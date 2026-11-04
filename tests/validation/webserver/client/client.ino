@@ -3,9 +3,9 @@
 
   Connects to the server's WiFi AP, then makes HTTP requests to test the
   WebServer::send(code, content_type, Stream&) overload and a set of
-  request-parsing robustness properties (see server.ino). Malicious/malformed
-  requests are crafted as raw bytes over WiFiClient so the server's parser is
-  exercised directly.
+  request-parsing and sendHeader robustness properties (see server.ino).
+  Malicious/malformed requests are crafted as raw bytes over WiFiClient so the
+  server's parser and header writer are exercised directly.
 
   Communicates with the Python test runner via serial protocol.
 */
@@ -189,6 +189,23 @@ String headerValue(const String &response, const char *name) {
     return "";
   }
   return response.substring(idx + prefix.length(), end);
+}
+
+// Length-aware search. String::indexOf uses strstr/strchr and misses a needle
+// that sits after an embedded NUL — the exact bytes a sendHeader bypass emits.
+bool containsRaw(const String &hay, const char *needle) {
+  const size_t nlen = strlen(needle);
+  const size_t hlen = hay.length();
+  if (nlen == 0 || hlen < nlen) {
+    return false;
+  }
+  const char *h = hay.c_str();
+  for (size_t i = 0; i + nlen <= hlen; i++) {
+    if (memcmp(h + i, needle, nlen) == 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 String quotedParam(const String &src, const char *key) {
@@ -815,6 +832,75 @@ void testPathTraversal() {
   report("path_traversal", !leaked, leaked ? "secret disclosed via traversal" : nullptr);
 }
 
+// sendHeader() must reject CR, LF and NUL in the name and value. A length-backed
+// String with an embedded NUL used to skip the strchr-based guard and still
+// emit the CRLF suffix, which a line-oriented parser reads as a new header.
+void testHeaderInjection() {
+  Serial.println("[CLIENT] Testing header_injection");
+
+  String benign = http_raw("GET /echo_header?x=hello HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  if (get_status_code(benign) != 200 || !containsRaw(benign, "ECHO_OK")) {
+    report("header_injection", false, "benign value not served");
+    return;
+  }
+  if (headerValue(benign, "X-Echo") != "hello") {
+    report("header_injection", false, "benign X-Echo missing");
+    return;
+  }
+  if (containsRaw(benign, "X-Injected:")) {
+    report("header_injection", false, "benign response contains injected header");
+    return;
+  }
+
+  String crlf = http_raw("GET /echo_header?x=%0D%0AX-Injected:%20yes HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  if (get_status_code(crlf) != 200 || !containsRaw(crlf, "ECHO_OK")) {
+    report("header_injection", false, "crlf value rejected the response");
+    return;
+  }
+  if (containsRaw(crlf, "X-Echo:") || containsRaw(crlf, "X-Injected:")) {
+    report("header_injection", false, "crlf value injected a header");
+    return;
+  }
+
+  String nulCrlf = http_raw("GET /echo_header?x=%00%0D%0AX-Injected:%20yes HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  if (get_status_code(nulCrlf) != 200 || !containsRaw(nulCrlf, "ECHO_OK")) {
+    report("header_injection", false, "nul+crlf value rejected the response");
+    return;
+  }
+  if (containsRaw(nulCrlf, "X-Echo:") || containsRaw(nulCrlf, "X-Injected:")) {
+    report("header_injection", false, "nul+crlf value injected a header");
+    return;
+  }
+
+  String embeddedNul = http_raw("GET /echo_header?x=hello%00world HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  if (get_status_code(embeddedNul) != 200 || !containsRaw(embeddedNul, "ECHO_OK")) {
+    report("header_injection", false, "embedded nul value rejected the response");
+    return;
+  }
+  if (containsRaw(embeddedNul, "X-Echo:")) {
+    report("header_injection", false, "embedded nul value was forwarded");
+    return;
+  }
+
+  String nameOk = http_raw("GET /echo_header?n=X-Custom HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  if (get_status_code(nameOk) != 200 || headerValue(nameOk, "X-Custom") != "ok") {
+    report("header_injection", false, "benign name not served");
+    return;
+  }
+
+  String nameNulCrlf = http_raw("GET /echo_header?n=%00%0D%0AX-Injected:%20yes HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", TEST_TIMEOUT, false);
+  if (get_status_code(nameNulCrlf) != 200 || !containsRaw(nameNulCrlf, "ECHO_OK")) {
+    report("header_injection", false, "nul+crlf name rejected the response");
+    return;
+  }
+  if (containsRaw(nameNulCrlf, "X-Injected:")) {
+    report("header_injection", false, "nul+crlf name injected a header");
+    return;
+  }
+
+  report("header_injection", true);
+}
+
 // Report 8: a completed field from an aborted, unauthenticated multipart
 // request must not shadow a later request's arguments.
 void testArgPoison() {
@@ -1134,6 +1220,7 @@ void runTests() {
   testDigestAuth();
   testDigestAuthEdges();
   testPathTraversal();
+  testHeaderInjection();
 
   // Compatibility checks: request shapes the robustness limits must still accept.
   testStaticRootMapping();

@@ -113,6 +113,13 @@ static void test_light_callback_and_restore(void) {
   epLight.restoreLight();
 }
 
+static void test_light_device_enabled(void) {
+  TEST_ASSERT_TRUE(epLight.setDeviceEnabled(false));
+  TEST_ASSERT_FALSE(epLight.getDeviceEnabled());
+  TEST_ASSERT_TRUE(epLight.setDeviceEnabled(true));
+  TEST_ASSERT_TRUE(epLight.getDeviceEnabled());
+}
+
 static void test_dimmable_levels(void) {
   epDimmable.onLightChange(onDimmableCb);
 
@@ -436,6 +443,7 @@ static void test_door_lock(void) {
 static void run_all_zigbee_endpoint_deep_tests(void) {
   RUN_TEST(test_light_onoff_roundtrip);
   RUN_TEST(test_light_callback_and_restore);
+  RUN_TEST(test_light_device_enabled);
   RUN_TEST(test_dimmable_levels);
   RUN_TEST(test_color_light_rgb_and_level);
   RUN_TEST(test_power_outlet);

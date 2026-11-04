@@ -2,7 +2,7 @@
 
 This example shows how to persist a Zigbee attribute in NVS. Analog Input `PresentValue`
 is marked persistent with `setAttributePersistent()`. After a reboot the last written
-value is restored from the Zigbee NVS dataset.
+value is restored from the Zigbee NVS dataset (shared `nvs` partition, namespace `zigbee`).
 
 # Supported Targets
 
@@ -22,7 +22,7 @@ Currently, this example supports the following targets.
 
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
 * Select Zigbee coordinator/router mode: `Tools -> Zigbee mode: Zigbee ZCZR (coordinator/router)`
-* Select Partition Scheme for Zigbee: `Tools -> Partition Scheme: Zigbee 8MB with spiffs` (or `Zigbee 4MB with spiffs` on 4MB boards)
+* Select Partition Scheme for Zigbee: `Tools -> Partition Scheme: Zigbee 8MB with spiffs` (or `Zigbee 4MB with spiffs` on 4 MB boards)
 * Leave `Erase All Flash Before Sketch Upload` **Disabled** after the first flash, or persist cannot be tested
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
 * Optional: Set debug level to verbose: `Tools -> Core Debug Level: Verbose`.
@@ -41,7 +41,7 @@ Short-press BOOT to increment PresentValue, then reset the board. The next boot 
 Persistent PresentValue: 3.0
 ```
 
-A 3-second BOOT press factory-resets Zigbee NVS (including persisted attributes).
+A 3-second BOOT press factory-resets the Zigbee NVS namespace (including persisted attributes), without wiping Wi-Fi or Preferences.
 
 ## Troubleshooting
 

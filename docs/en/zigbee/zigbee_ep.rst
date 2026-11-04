@@ -57,6 +57,53 @@ Sets the hardware version for the endpoint. The value is added to the Basic clus
 
 * ``version`` - Hardware version (0-255)
 
+setDeviceEnabled
+^^^^^^^^^^^^^^^^
+
+Sets the Basic cluster ``DeviceEnabled`` attribute (0x0012). When ``false``, the Zigbee stack ignores ZCL commands on this endpoint (the device stays on the network).
+
+Call once **before** ``Zigbee.addEndpoint()`` to add the attribute to the endpoint descriptor (same pattern as ``setManufacturerAndModel()``). After that, ``setDeviceEnabled()`` / ``getDeviceEnabled()`` work before and after ``Zigbee.begin()``. If the attribute was never added, a call after ``begin()`` returns ``false``.
+
+Useful for soft on/off of an endpoint without leaving the network: maintenance mode, temporarily ignoring hub commands while calibrating a sensor, or disabling an unused secondary endpoint on a multi-EP device. A coordinator or other client can also write this attribute remotely once it is exposed.
+
+.. code-block:: arduino
+
+    bool setDeviceEnabled(bool enabled);
+
+* ``enabled`` - ``true`` to accept ZCL commands (default), ``false`` to ignore ZCL commands on this endpoint
+
+This function will return ``true`` if set successfully, ``false`` otherwise.
+
+getDeviceEnabled
+^^^^^^^^^^^^^^^^
+
+Returns the current ``DeviceEnabled`` value. Useful to check whether the endpoint is accepting commands (for example after a remote write or reboot). If the attribute is not present, returns ``true`` (ZCL default).
+
+.. code-block:: arduino
+
+    bool getDeviceEnabled();
+
+setReportingDefaultResponse
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enables or disables Default Response on **automatic attribute reports** for one attribute.
+Call after ``setReporting()`` (reporting info must already exist; typically after ``Zigbee.begin()``).
+
+Controls whether automatic reports request a Default Response from the receiver.
+Leave enabled (default) when the sketch waits for DefaultRsp to confirm delivery (for example the
+sleepy temperature example). Set ``enabled`` to ``false`` only if reports are fire-and-forget and
+you want to avoid the extra response traffic.
+
+.. code-block:: arduino
+
+    bool setReportingDefaultResponse(uint16_t cluster_id, uint16_t attr_id, bool enabled, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER);
+
+* ``cluster_id`` / ``attr_id`` - Reportable attribute to configure
+* ``enabled`` - ``true`` to request DefaultRsp on reports, ``false`` to disable it
+* ``cluster_role`` - Cluster role (default server)
+
+This function will return ``true`` if set successfully, ``false`` otherwise.
+
 getEndpoint
 ^^^^^^^^^^^
 
@@ -366,6 +413,36 @@ Sets a callback function for identify events.
 
 * ``callback`` - Function to call when identify event occurs
 * ``time`` - Identify time in seconds
+
+identifyQuery
+^^^^^^^^^^^^^
+
+Sends an Identify Query command. Devices that are currently identifying reply with an Identify Query Response
+(see ``onIdentifyQueryResponse``). Useful for finding & binding style discovery: broadcast a query and collect
+responses from devices the user has put into identify mode (for example via the hub or a button).
+
+.. code-block:: arduino
+
+    bool identifyQuery(uint16_t short_addr = 0xFFFF, uint8_t dst_endpoint = EZB_AF_ENDPOINT_BROADCAST_ID);
+
+* ``short_addr`` - Destination short address (default ``0xFFFF`` = broadcast)
+* ``dst_endpoint`` - Destination endpoint (default broadcast endpoint)
+
+This function will return ``true`` if the command was sent, ``false`` otherwise.
+
+onIdentifyQueryResponse
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Sets a callback for Identify Query Response messages received on this endpoint.
+
+.. code-block:: arduino
+
+    void onIdentifyQueryResponse(void (*callback)(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address));
+
+* ``callback`` - Function to call for each response
+* ``timeout`` - Remaining identify time in seconds on the remote device
+* ``src_endpoint`` - Endpoint of the identifying device
+* ``src_address`` - Address of the identifying device
 
 onDefaultResponse
 ^^^^^^^^^^^^^^^^^

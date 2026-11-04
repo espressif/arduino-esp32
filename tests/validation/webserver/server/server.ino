@@ -6,7 +6,8 @@
   endpoints configured the same way as the upstream WebServer examples so the
   client device can exercise request-parsing robustness properties: malformed
   multipart bodies, oversized query strings, authentication headers,
-  static-file path traversal, regex routes and cross-request argument state.
+  static-file path traversal, regex routes, sendHeader CRLF/NUL injection,
+  and cross-request argument state.
 
   Communicates with the Python test runner via serial protocol.
 */
@@ -272,6 +273,18 @@ void registerEndpoints() {
     },
     handleRawBody
   );
+
+  // --- Header echo: sendHeader() must reject CR/LF/NUL in name and value ---
+  // Forwards request arguments the same way a vulnerable application would.
+  server.on("/echo_header", HTTP_GET, []() {
+    if (server.hasArg("n")) {
+      server.sendHeader(server.arg("n"), "ok");
+    }
+    if (server.hasArg("x")) {
+      server.sendHeader("X-Echo", server.arg("x"));
+    }
+    server.send(200, "text/plain", "ECHO_OK");
+  });
 
   // --- Static file serving with a non-root mapping (report 6) ---
   server.serveStatic("/static", LittleFS, STATIC_ROOT);
