@@ -22,7 +22,7 @@ Currently, this example supports the following targets.
 
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
 * Select Zigbee coordinator/router mode: `Tools -> Zigbee mode: Zigbee ZCZR (coordinator/router)`
-* Select Partition Scheme for Zigbee: `Tools -> Partition Scheme: Zigbee 8MB with spiffs` (or `Zigbee 4MB with spiffs` on 4MB boards)
+* Select Partition Scheme for Zigbee: `Tools -> Partition Scheme: Zigbee 8MB with spiffs` (or `Zigbee 4MB with spiffs` on 4 MB boards)
 * Leave `Erase All Flash Before Sketch Upload` **Disabled** after the first flash, or persist cannot be tested
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
 * Optional: Set debug level to verbose: `Tools -> Core Debug Level: Verbose`.

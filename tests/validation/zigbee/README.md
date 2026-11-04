@@ -86,7 +86,7 @@ Run once on two DUTs (C6 preferred). Sniffer optional. OTA / parent-lost are out
 | 3 | Identify Query Response | Required | Put ED into identify; coordinator `onIdentifyQueryResponse` + `identifyQuery()`; callback with non-zero timeout. Send covered in `test_coordinator_identify_query`. |
 | 4 | TC well-known key | Smoke | `setAllowRejoinsWithWellKnownKey(false)` before `openNetwork()`; production default documented. API covered in `test_coordinator_config`. |
 | 5 | Router rejoin | Smoke | Flash router example; `setRouterRejoinRequired(true)` after `role()` before `begin()`; power-cycle rejoins. |
-| 6 | 16MB partitions | Required | `FlashSize=16M`, `PartitionScheme=zigbee_16MB` (or `zigbee_zczr_16MB`); compile + flash + join once. |
+| 6 | 16 MB partitions | Required | `FlashSize=16M`, `PartitionScheme=zigbee_16MB` (or `zigbee_zczr_16MB`); compile + flash + join once. |
 | 7 | Reporting DefaultRsp | Optional | Keep enabled for sleepy baseline; optionally disable and confirm no DefaultRsp. API toggle covered in `test_end_device_temp_sensor`. |
 
 ### HIL session notes (2026-10-23)
