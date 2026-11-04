@@ -223,7 +223,7 @@ void ETHClass::setPollPeriod(uint32_t poll_period_ms) {
     .clock_config_out_in = {                                                       \
       .rmii = {                                                                    \
         .clock_mode = EMAC_CLK_EXT_IN,                                             \
-        .clock_gpio = (emac_rmii_clock_gpio_t) - 1                                 \
+        .clock_gpio = (emac_rmii_clock_gpio_t)ETH_RMII_CLK_IN                      \
       }                                                                            \
     },                                                                             \
   }
