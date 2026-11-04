@@ -47,13 +47,14 @@ static char *readBytesWithTimeout(NetworkClient &client, size_t maxLength, size_
   dataLength = 0;
   while (dataLength < maxLength) {
     int tries = timeout_ms;
-    size_t newLength;
-    while (!(newLength = client.available()) && tries--) {
+    int available;
+    while ((available = client.available()) == 0 && tries--) {
       delay(1);
     }
-    if (!newLength) {
+    if (available <= 0) {
       break;
     }
+    size_t newLength = std::min((size_t)available, maxLength - dataLength);
     if (!buf) {
       buf = (char *)malloc(newLength + 1);
       if (!buf) {
@@ -67,9 +68,12 @@ static char *readBytesWithTimeout(NetworkClient &client, size_t maxLength, size_
       }
       buf = newBuf;
     }
-    client.readBytes(buf + dataLength, newLength);
-    dataLength += newLength;
+    size_t bytesRead = client.readBytes(buf + dataLength, newLength);
+    dataLength += bytesRead;
     buf[dataLength] = '\0';
+    if (bytesRead == 0) {
+      break;
+    }
   }
   return buf;
 }

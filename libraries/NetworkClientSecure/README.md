@@ -94,6 +94,27 @@ const char *aws_protos[] = {"mqtt", NULL};
 wiFiClient.setAlpnProtocols(aws_protos);
 ```
 
+Restricting the TLS Ciphersuites
+---------------------------------
+
+Some servers expect a specific, narrower set of ciphersuites than mbedTLS offers by default, for example
+to match what a given user agent would send. `setCiphers()` lets you restrict the list of ciphersuites
+offered during the handshake to a 0-terminated array of mbedTLS `MBEDTLS_TLS_*` ciphersuite IDs. The
+array is not copied, so it must stay valid for as long as the client may (re)connect, the same
+requirement as `setAlpnProtocols()`:
+
+```
+static const int cipher_list[] = {MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, 0};
+...
+wiFiClient.setCiphers(cipher_list);
+```
+
+Call `setCiphers(nullptr)` to restore mbedTLS's default ciphersuite list.
+
+Note that ciphersuite IDs not enabled in the mbedTLS build are silently dropped and will only surface later as a handshake failure,
+and that a restrictive list combined with `setPreSharedKey()` can filter out every PSK-capable
+ciphersuite.
+
 Examples
 --------
 #### NetworkClientInsecure

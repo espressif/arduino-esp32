@@ -18,6 +18,29 @@
 static NetworkInterface *_interfaces[ESP_NETIF_ID_MAX] = {NULL, NULL, NULL, NULL, NULL, NULL};
 static esp_event_handler_instance_t _ip_ev_instance = NULL;
 
+static bool toDnsInfo(const IPAddress &ip, esp_netif_dns_info_t *dns) {
+  if (ip.type() == IPv4) {
+    dns->ip.type = ESP_IPADDR_TYPE_V4;
+    dns->ip.u_addr.ip4.addr = static_cast<uint32_t>(ip);
+    return true;
+  }
+
+#if CONFIG_LWIP_IPV6
+  if (ip.type() == IPv6) {
+    dns->ip.type = ESP_IPADDR_TYPE_V6;
+    for (size_t i = 0; i < 4; ++i) {
+      const size_t offset = i * 4;
+      const uint32_t word = ((uint32_t)ip[offset] << 24) | ((uint32_t)ip[offset + 1] << 16) | ((uint32_t)ip[offset + 2] << 8) | (uint32_t)ip[offset + 3];
+      dns->ip.u_addr.ip6.addr[i] = esp_netif_htonl(word);
+    }
+    dns->ip.u_addr.ip6.zone = ip.zone();
+    return true;
+  }
+#endif
+
+  return false;
+}
+
 static NetworkInterface *getNetifByEspNetif(esp_netif_t *esp_netif) {
   for (int i = 0; i < ESP_NETIF_ID_MAX; ++i) {
     if (_interfaces[i] != NULL && _interfaces[i]->netif() == esp_netif) {
@@ -360,13 +383,13 @@ bool NetworkInterface::dnsIP(uint8_t dns_no, IPAddress ip) {
     log_e("Server interfaces can have only one DNS server.");
     return false;
   }
-  esp_netif_dns_info_t d;
-  // ToDo: can this work with IPv6 addresses?
-  d.ip.type = IPADDR_TYPE_V4;
-  if (static_cast<uint32_t>(ip) != 0) {
-    d.ip.u_addr.ip4.addr = static_cast<uint32_t>(ip);
-  } else {
-    d.ip.u_addr.ip4.addr = 0;
+  if ((flags & ESP_NETIF_DHCP_SERVER) && ip.type() == IPv6) {
+    log_e("SoftAP DHCP can only advertise IPv4 DNS addresses.");
+    return false;
+  }
+  esp_netif_dns_info_t d = {};
+  if (!toDnsInfo(ip, &d)) {
+    return false;
   }
   if (esp_netif_set_dns_info(_esp_netif, (esp_netif_dns_type_t)dns_no, &d) != ESP_OK) {
     return false;
@@ -380,58 +403,40 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
   }
   esp_err_t err = ESP_OK;
   esp_netif_ip_info_t info;
-  esp_netif_dns_info_t d1;
-  esp_netif_dns_info_t d2;
-  esp_netif_dns_info_t d3;
-  d1.ip.type = IPADDR_TYPE_V4;
-  d2.ip.type = IPADDR_TYPE_V4;
-  d3.ip.type = IPADDR_TYPE_V4;
+  esp_netif_dns_info_t d1 = {};
+  esp_netif_dns_info_t d2 = {};
+  esp_netif_dns_info_t d3 = {};
 
   if (static_cast<uint32_t>(local_ip) != 0) {
     info.ip.addr = static_cast<uint32_t>(local_ip);
     info.gw.addr = static_cast<uint32_t>(gateway);
     info.netmask.addr = static_cast<uint32_t>(subnet);
-    d1.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
-    d2.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns2);
-    d3.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns3);
+    if (!toDnsInfo(dns1, &d1) || !toDnsInfo(dns2, &d2) || !toDnsInfo(dns3, &d3)) {
+      return false;
+    }
   } else {
     info.ip.addr = 0;
     info.gw.addr = 0;
     info.netmask.addr = 0;
+    d1.ip.type = ESP_IPADDR_TYPE_V4;
     d1.ip.u_addr.ip4.addr = 0;
+    d2.ip.type = ESP_IPADDR_TYPE_V4;
     d2.ip.u_addr.ip4.addr = 0;
+    d3.ip.type = ESP_IPADDR_TYPE_V4;
     d3.ip.u_addr.ip4.addr = 0;
   }
 
   esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
   if (flags & ESP_NETIF_DHCP_SERVER) {
-
-    // Set DNS Server
-    if (d2.ip.u_addr.ip4.addr != 0) {
-      err = esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
-      if (err) {
-        log_e("Netif Set DNS Info Failed! 0x%04x: %s", err, esp_err_to_name(err));
-        return false;
-      }
-    }
-
-    // Stop DHCPS
-    err = esp_netif_dhcps_stop(_esp_netif);
-    if (err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED) {
-      log_e("DHCPS Stop Failed! 0x%04x: %s", err, esp_err_to_name(err));
+    if (dns1.type() == IPv6 || dns2.type() == IPv6) {
+      log_e("SoftAP DHCP lease and DNS addresses must be IPv4.");
       return false;
     }
 
-    // Set IPv4, Netmask, Gateway
-    err = esp_netif_set_ip_info(_esp_netif, &info);
-    if (err) {
-      log_e("Netif Set IP Failed! 0x%04x: %s", err, esp_err_to_name(err));
-      return false;
-    }
-
+    // Validate the DHCP lease before changing the interface or stopping its DHCP server.
+    // A rejected configuration must leave the current SoftAP configuration operational.
     dhcps_lease_t lease;
     lease.enable = true;
-    uint8_t CIDR = calculateSubnetCIDR(subnet);
     log_v(
       "SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dns1.toString().c_str(),
       subnet.toString().c_str()
@@ -439,9 +444,11 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
     // netmask must have room for at least 12 IP addresses (AP + GW + 10 DHCP Leasing addresses)
     // netmask also must be limited to the last 8 bits of IPv4, otherwise this function won't work
     // IDF NETIF checks netmask for the 3rd byte: https://github.com/espressif/esp-idf/blob/master/components/esp_netif/lwip/esp_netif_lwip.c#L1857-L1862
-    if (CIDR > 28 || CIDR < 24) {
-      log_e("Bad netmask. It must be from /24 to /28 (255.255.255. 0<->240)");
-      return false;  //  ESP_FAIL if initializing failed
+    const bool validPrefix = subnet[0] == 255 && subnet[1] == 255 && subnet[2] == 255;
+    const bool validLastByte = subnet[3] == 0 || subnet[3] == 128 || subnet[3] == 192 || subnet[3] == 224 || subnet[3] == 240;
+    if (!validPrefix || !validLastByte) {
+      log_e("Bad netmask. SoftAP requires a contiguous /24 to /28 netmask.");
+      return false;
     }
 #define _byte_swap32(num) (((num >> 24) & 0xff) | ((num << 8) & 0xff0000) | ((num >> 8) & 0xff00) | ((num << 24) & 0xff000000))
     // The code below is ready for any netmask, not limited to 255.255.255.0
@@ -484,8 +491,32 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
         "The GatewayP address (%s) can't be within the DHCP range (%s -- %s)", gateway.toString().c_str(),
         IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str()
       );
-      return false;  //  ESP_FAIL if initializing failed
+      return false;
     }
+
+    // Set DNS Server
+    if (d2.ip.u_addr.ip4.addr != 0) {
+      err = esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
+      if (err) {
+        log_e("Netif Set DNS Info Failed! 0x%04x: %s", err, esp_err_to_name(err));
+        return false;
+      }
+    }
+
+    // Stop DHCPS
+    err = esp_netif_dhcps_stop(_esp_netif);
+    if (err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED) {
+      log_e("DHCPS Stop Failed! 0x%04x: %s", err, esp_err_to_name(err));
+      return false;
+    }
+
+    // Set IPv4, Netmask, Gateway
+    err = esp_netif_set_ip_info(_esp_netif, &info);
+    if (err) {
+      log_e("Netif Set IP Failed! 0x%04x: %s", err, esp_err_to_name(err));
+      return false;
+    }
+
     // all done, just revert back byte order of DHCP lease range
     lease.start_ip.addr = _byte_swap32(lease.start_ip.addr);
     lease.end_ip.addr = _byte_swap32(lease.end_ip.addr);
@@ -742,7 +773,7 @@ IPAddress NetworkInterface::broadcastIP() const {
   if (esp_netif_get_ip_info(_esp_netif, &ip)) {
     return IPAddress();
   }
-  return calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+  return calculateBroadcast(IPAddress(ip.ip.addr), IPAddress(ip.netmask.addr));
 }
 
 IPAddress NetworkInterface::networkID() const {
@@ -753,7 +784,7 @@ IPAddress NetworkInterface::networkID() const {
   if (esp_netif_get_ip_info(_esp_netif, &ip)) {
     return IPAddress();
   }
-  return calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+  return calculateNetworkID(IPAddress(ip.ip.addr), IPAddress(ip.netmask.addr));
 }
 
 uint8_t NetworkInterface::subnetCIDR() const {
