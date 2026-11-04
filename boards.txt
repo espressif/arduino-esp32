@@ -54105,6 +54105,157 @@ Pcbcupid_GLYPH_S3_PSRAM.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+pcbcupid_s3_wroom.name=Pcbcupid s3 wroom
+
+pcbcupid_s3_wroom.bootloader.tool=esptool_py
+pcbcupid_s3_wroom.bootloader.tool.default=esptool_py
+
+pcbcupid_s3_wroom.upload.tool=esptool_py
+pcbcupid_s3_wroom.upload.tool.default=esptool_py
+pcbcupid_s3_wroom.upload.tool.network=esp_ota
+pcbcupid_s3_wroom.upload.maximum_size=3342336
+pcbcupid_s3_wroom.upload.maximum_data_size=327680
+pcbcupid_s3_wroom.upload.flags=
+pcbcupid_s3_wroom.upload.erase_cmd=
+pcbcupid_s3_wroom.upload.extra_flags=
+pcbcupid_s3_wroom.upload.use_1200bps_touch=false
+pcbcupid_s3_wroom.upload.wait_for_upload_port=false
+
+pcbcupid_s3_wroom.serial.disableDTR=false
+pcbcupid_s3_wroom.serial.disableRTS=false
+
+pcbcupid_s3_wroom.build.tarch=xtensa
+pcbcupid_s3_wroom.build.target=esp32s3
+pcbcupid_s3_wroom.build.mcu=esp32s3
+pcbcupid_s3_wroom.build.core=esp32
+pcbcupid_s3_wroom.build.variant=pcbcupid_s3_wroom
+pcbcupid_s3_wroom.build.board=PCBCUPID_S3_WROOM
+pcbcupid_s3_wroom.build.bootloader_addr=0x0
+pcbcupid_s3_wroom.build.usb_mode=1
+pcbcupid_s3_wroom.build.cdc_on_boot=1
+pcbcupid_s3_wroom.build.msc_on_boot=0
+pcbcupid_s3_wroom.build.dfu_on_boot=0
+pcbcupid_s3_wroom.build.f_cpu=240000000L
+pcbcupid_s3_wroom.build.flash_size=8MB
+pcbcupid_s3_wroom.build.flash_freq=80m
+pcbcupid_s3_wroom.build.flash_mode=dio
+pcbcupid_s3_wroom.build.boot=qio
+pcbcupid_s3_wroom.build.boot_freq=80m
+pcbcupid_s3_wroom.build.partitions=default_8MB
+pcbcupid_s3_wroom.build.defines=-DBOARD_HAS_PSRAM
+pcbcupid_s3_wroom.build.memory_type=qio_qspi
+pcbcupid_s3_wroom.build.loop_core=
+pcbcupid_s3_wroom.build.event_core=
+
+pcbcupid_s3_wroom.menu.JTAGAdapter.default=Disabled
+pcbcupid_s3_wroom.menu.JTAGAdapter.default.build.copy_jtag_files=0
+pcbcupid_s3_wroom.menu.JTAGAdapter.builtin=Integrated USB JTAG
+pcbcupid_s3_wroom.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+pcbcupid_s3_wroom.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+pcbcupid_s3_wroom.menu.JTAGAdapter.external=FTDI Adapter
+pcbcupid_s3_wroom.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+pcbcupid_s3_wroom.menu.JTAGAdapter.external.build.copy_jtag_files=1
+pcbcupid_s3_wroom.menu.JTAGAdapter.bridge=ESP USB Bridge
+pcbcupid_s3_wroom.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+pcbcupid_s3_wroom.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+pcbcupid_s3_wroom.menu.USBMode.hwcdc=Hardware CDC and JTAG
+pcbcupid_s3_wroom.menu.USBMode.hwcdc.build.usb_mode=1
+pcbcupid_s3_wroom.menu.USBMode.otg=USB-OTG (TinyUSB)
+pcbcupid_s3_wroom.menu.USBMode.otg.build.usb_mode=0
+
+pcbcupid_s3_wroom.menu.UploadMode.default=UART0 / Hardware CDC
+pcbcupid_s3_wroom.menu.UploadMode.default.upload.use_1200bps_touch=false
+pcbcupid_s3_wroom.menu.UploadMode.default.upload.wait_for_upload_port=false
+pcbcupid_s3_wroom.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+pcbcupid_s3_wroom.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+pcbcupid_s3_wroom.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+pcbcupid_s3_wroom.menu.LoopCore.1=Core 1
+pcbcupid_s3_wroom.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+pcbcupid_s3_wroom.menu.LoopCore.0=Core 0
+pcbcupid_s3_wroom.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+pcbcupid_s3_wroom.menu.EventsCore.1=Core 1
+pcbcupid_s3_wroom.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+pcbcupid_s3_wroom.menu.EventsCore.0=Core 0
+pcbcupid_s3_wroom.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+pcbcupid_s3_wroom.menu.CDCOnBoot.default=Enabled
+pcbcupid_s3_wroom.menu.CDCOnBoot.default.build.cdc_on_boot=1
+pcbcupid_s3_wroom.menu.CDCOnBoot.cdc=Disabled
+pcbcupid_s3_wroom.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+pcbcupid_s3_wroom.menu.MSCOnBoot.default=Disabled
+pcbcupid_s3_wroom.menu.MSCOnBoot.default.build.msc_on_boot=0
+pcbcupid_s3_wroom.menu.MSCOnBoot.msc=Enabled
+pcbcupid_s3_wroom.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+pcbcupid_s3_wroom.menu.DFUOnBoot.default=Disabled
+pcbcupid_s3_wroom.menu.DFUOnBoot.default.build.dfu_on_boot=0
+pcbcupid_s3_wroom.menu.DFUOnBoot.dfu=Enabled
+pcbcupid_s3_wroom.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+pcbcupid_s3_wroom.menu.PartitionScheme.default_8MB=Default 8MB with spiffs (3MB APP/1.5MB SPIFFS)
+pcbcupid_s3_wroom.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+pcbcupid_s3_wroom.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+pcbcupid_s3_wroom.menu.CPUFreq.240=240MHz (WiFi)
+pcbcupid_s3_wroom.menu.CPUFreq.240.build.f_cpu=240000000L
+pcbcupid_s3_wroom.menu.CPUFreq.160=160MHz (WiFi)
+pcbcupid_s3_wroom.menu.CPUFreq.160.build.f_cpu=160000000L
+pcbcupid_s3_wroom.menu.CPUFreq.80=80MHz (WiFi)
+pcbcupid_s3_wroom.menu.CPUFreq.80.build.f_cpu=80000000L
+pcbcupid_s3_wroom.menu.CPUFreq.40=40MHz
+pcbcupid_s3_wroom.menu.CPUFreq.40.build.f_cpu=40000000L
+
+pcbcupid_s3_wroom.menu.FlashMode.qio=QIO
+pcbcupid_s3_wroom.menu.FlashMode.qio.build.flash_mode=dio
+pcbcupid_s3_wroom.menu.FlashMode.qio.build.boot=qio
+pcbcupid_s3_wroom.menu.FlashMode.dio=DIO
+pcbcupid_s3_wroom.menu.FlashMode.dio.build.flash_mode=dio
+pcbcupid_s3_wroom.menu.FlashMode.dio.build.boot=dio
+
+pcbcupid_s3_wroom.menu.FlashFreq.80=80MHz
+pcbcupid_s3_wroom.menu.FlashFreq.80.build.flash_freq=80m
+pcbcupid_s3_wroom.menu.FlashFreq.40=40MHz
+pcbcupid_s3_wroom.menu.FlashFreq.40.build.flash_freq=40m
+
+pcbcupid_s3_wroom.menu.FlashSize.8M=8MB (64Mb)
+pcbcupid_s3_wroom.menu.FlashSize.8M.build.flash_size=8MB
+
+pcbcupid_s3_wroom.menu.UploadSpeed.921600=921600
+pcbcupid_s3_wroom.menu.UploadSpeed.921600.upload.speed=921600
+pcbcupid_s3_wroom.menu.UploadSpeed.115200=115200
+pcbcupid_s3_wroom.menu.UploadSpeed.115200.upload.speed=115200
+pcbcupid_s3_wroom.menu.UploadSpeed.256000.windows=256000
+pcbcupid_s3_wroom.menu.UploadSpeed.256000.upload.speed=256000
+pcbcupid_s3_wroom.menu.UploadSpeed.230400=230400
+pcbcupid_s3_wroom.menu.UploadSpeed.230400.upload.speed=230400
+pcbcupid_s3_wroom.menu.UploadSpeed.460800.linux=460800
+pcbcupid_s3_wroom.menu.UploadSpeed.460800.macosx=460800
+pcbcupid_s3_wroom.menu.UploadSpeed.460800.upload.speed=460800
+pcbcupid_s3_wroom.menu.UploadSpeed.512000.windows=512000
+pcbcupid_s3_wroom.menu.UploadSpeed.512000.upload.speed=512000
+
+pcbcupid_s3_wroom.menu.DebugLevel.none=None
+pcbcupid_s3_wroom.menu.DebugLevel.none.build.code_debug=0
+pcbcupid_s3_wroom.menu.DebugLevel.error=Error
+pcbcupid_s3_wroom.menu.DebugLevel.error.build.code_debug=1
+pcbcupid_s3_wroom.menu.DebugLevel.warn=Warn
+pcbcupid_s3_wroom.menu.DebugLevel.warn.build.code_debug=2
+pcbcupid_s3_wroom.menu.DebugLevel.info=Info
+pcbcupid_s3_wroom.menu.DebugLevel.info.build.code_debug=3
+pcbcupid_s3_wroom.menu.DebugLevel.debug=Debug
+pcbcupid_s3_wroom.menu.DebugLevel.debug.build.code_debug=4
+pcbcupid_s3_wroom.menu.DebugLevel.verbose=Verbose
+pcbcupid_s3_wroom.menu.DebugLevel.verbose.build.code_debug=5
+
+pcbcupid_s3_wroom.menu.EraseFlash.none=Disabled
+pcbcupid_s3_wroom.menu.EraseFlash.all=Enabled
+pcbcupid_s3_wroom.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 # PCBCupid GLYPH C5
 pcbcupid_glyph_c5.name=Pcbcupid GLYPH C5
 
