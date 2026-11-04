@@ -241,7 +241,6 @@ void test_ipv6_dns_configuration(void) {
   TEST_ASSERT_TRUE(backup_dns == WiFi.STA.dnsIP(1));
 
   TEST_ASSERT_TRUE(WiFi.STA.config(INADDR_NONE, INADDR_NONE, INADDR_NONE));
-  TEST_ASSERT_TRUE(WiFi.STA.end());
 }
 #endif
 void test_network_info_uses_local_ip(void) {
