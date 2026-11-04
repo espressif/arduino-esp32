@@ -7,8 +7,8 @@
 set -euo pipefail
 
 if [ "$#" -ne 2 ]; then
-	echo "usage: configure_link_libs.sh <build.path> <compiler.sdk.path>" >&2
-	exit 2
+    echo "usage: configure_link_libs.sh <build.path> <compiler.sdk.path>" >&2
+    exit 2
 fi
 
 BUILD_PATH="$1"
@@ -19,14 +19,14 @@ LD_LIBS="${FLAGS_DIR}/ld_libs"
 LIBBT_MATTER_A="${SDK_PATH}/lib/libbt.matter.a"
 
 if [ ! -f "$LD_LIBS" ]; then
-	echo "configure_link_libs: missing ${LD_LIBS}" >&2
-	exit 1
+    echo "configure_link_libs: missing ${LD_LIBS}" >&2
+    exit 1
 fi
 
 if [ -d "${BUILD_PATH}/libraries/Matter" ] && [ -f "$LIBBT_MATTER_A" ]; then
-	sed -E 's/(^| )-lbt( |$)/\1-lbt.matter\2/g' "$LD_LIBS" > "$OUT"
+    sed -E 's/(^| )-lbt( |$)/\1-lbt.matter\2/g' "$LD_LIBS" > "$OUT"
 else
-	cp -f "$LD_LIBS" "$OUT"
+    cp -f "$LD_LIBS" "$OUT"
 fi
 
 exit 0
