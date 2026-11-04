@@ -51,16 +51,26 @@ static const uint8_t D7 = 7;
 static const uint8_t D8 = 8;
 static const uint8_t D9 = 9;
 static const uint8_t D10 = 10;
+static const uint8_t D11 = 11;
+static const uint8_t D12 = 12;
 static const uint8_t D13 = 13;
 static const uint8_t D14 = 14;
 static const uint8_t D15 = 15;
 static const uint8_t D16 = 16;
 static const uint8_t D17 = 17;
 static const uint8_t D18 = 18;
+static const uint8_t D21 = 21;
 static const uint8_t D35 = 35;
 static const uint8_t D36 = 36;
 static const uint8_t D37 = 37;
+static const uint8_t D38 = 38;
+static const uint8_t D39 = 39;
+static const uint8_t D40 = 40;
+static const uint8_t D41 = 41;
+static const uint8_t D42 = 42;
 static const uint8_t D43 = 43;
 static const uint8_t D44 = 44;
+static const uint8_t D47 = 47;
+static const uint8_t D48 = 48;
 
 #endif /* Pins_Arduino_h */
