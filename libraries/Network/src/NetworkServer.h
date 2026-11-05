@@ -40,11 +40,11 @@ public:
   void listenOnLocalhost() {}
 
   NetworkServer(uint16_t port = 80, uint8_t max_clients = 4)
-    : sockfd(-1), _accepted_sockfd(-1), _addr(), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
+    : _accepted_sockfd(-1), sockfd(-1), _addr(), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
     log_v("NetworkServer::NetworkServer(port=%u, ...)", port);
   }
   NetworkServer(const IPAddress &addr, uint16_t port = 80, uint8_t max_clients = 4)
-    : sockfd(-1), _accepted_sockfd(-1), _addr(addr), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
+    : _accepted_sockfd(-1), sockfd(-1), _addr(addr), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
     log_v("NetworkServer::NetworkServer(addr=%s, port=%u, ...)", addr.toString().c_str(), port);
   }
   ~NetworkServer() {
