@@ -91,11 +91,11 @@ platform build flags to compile that code out:
 
     -DWEBSERVER_DIGEST_AUTH=0
 
-Basic authentication and custom ``authenticate()`` callbacks that handle ``OTHER_AUTH`` keep working unchanged. A ``Digest``
-``Authorization`` header is rejected. ``requestAuthentication(DIGEST_AUTH)`` does not fall back to a ``Basic`` challenge, because that would
-invite the client to send credentials in the clear for a scheme the sketch did not ask for; it logs an error and answers ``403 Forbidden``
-instead, so a build that still selects Digest is denied rather than authenticated with a weaker scheme. The saving is several kilobytes of
-flash (about 9 KB in a large application, around 11 KB for a minimal ``WebServer`` sketch on an ESP32-S3).
+Basic authentication and custom ``authenticate()`` callbacks that handle ``OTHER_AUTH`` continue to work unchanged. An ``Authorization``
+header using Digest is rejected. ``requestAuthentication(DIGEST_AUTH)`` does not fall back to a ``Basic`` challenge because that would
+invite the client to send credentials in the clear using a scheme that the sketch did not request. Instead, it logs an error and responds
+with ``403 Forbidden``, so a build that still selects Digest is denied rather than authenticated with a weaker scheme. The saving is
+several kilobytes of flash (about 9 KB in a large application, around 11 KB for a minimal ``WebServer`` sketch on an ESP32-S3).
 
 The default is ``1``, which keeps the current behavior. The switch removes Digest support; it does not make the nonce signing optional.
 
