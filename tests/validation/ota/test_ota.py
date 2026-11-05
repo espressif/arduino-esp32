@@ -593,10 +593,10 @@ def test_explicit_md5_target_can_prompt(upload):
 
 
 @pytest.mark.parametrize("error", [EOFError, KeyboardInterrupt, OSError])
-def test_cancelled_input_aborts_before_authentication(upload, error, caplog):
+def test_canceled_input_aborts_before_authentication(upload, error, caplog):
     upload.prompt.side_effect = error
     assert upload.run() == 1
-    assert "Password input unavailable or cancelled" in caplog.text
+    assert "Password input unavailable or canceled" in caplog.text
     upload.authenticate.assert_not_called()
     upload.listener.accept.assert_not_called()
     upload.listener.close.assert_called_once()
@@ -690,7 +690,7 @@ def test_missing_console_subprocess_exits_promptly(tmp_path, stdin, creationflag
                     process.kill()
                     process.communicate()
         assert process.returncode == 1, stderr
-        assert "Password input unavailable or cancelled" in stderr
+        assert "Password input unavailable or canceled" in stderr
         assert "Use --auth" in stderr
 
 

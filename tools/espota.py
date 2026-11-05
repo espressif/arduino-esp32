@@ -389,7 +389,7 @@ def serve(  # noqa: C901
                         warnings.simplefilter("error", getpass.GetPassWarning)
                         password = getpass.getpass("OTA password: ")
                 except (getpass.GetPassWarning, EOFError, KeyboardInterrupt, OSError):
-                    logging.error("Password input unavailable or cancelled. Use --auth for non-interactive uploads.")
+                    logging.error("Password input unavailable or canceled. Use --auth for non-interactive uploads.")
                     reset_device_authentication(remote_addr, remote_port)
                     sock.close()
                     return 1
