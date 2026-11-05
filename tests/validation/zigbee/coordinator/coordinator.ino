@@ -47,7 +47,11 @@ static void poll_serial_commands(void) {
   while (Serial.available()) {
     String cmd = Serial.readStringUntil('\n');
     cmd.trim();
-    if (cmd == "RUN_INTEROP") {
+    if (cmd == "OPEN_NETWORK") {
+      // Re-open permit-join when the end device is about to start joining.
+      Zigbee.openNetwork(180);
+      Serial.println("[COORDINATOR] NETWORK_OPEN");
+    } else if (cmd == "RUN_INTEROP") {
       arm_switch_interop();
     }
   }
@@ -81,6 +85,13 @@ void test_coordinator_config(void) {
   TEST_ASSERT_TRUE_MESSAGE(Zigbee.role(ZIGBEE_COORDINATOR, true), "role() failed");
   TEST_ASSERT_TRUE_MESSAGE(Zigbee.initialized(), "role() must initialize the stack");
   TEST_ASSERT_TRUE_MESSAGE(Zigbee.role(ZIGBEE_COORDINATOR), "duplicate role() must succeed");
+
+  // TC / BDB policy APIs (after role())
+  Zigbee.setAllowRejoinsWithWellKnownKey(false);
+  TEST_ASSERT_FALSE(Zigbee.getAllowRejoinsWithWellKnownKey());
+  Zigbee.setAllowRejoinsWithWellKnownKey(true);
+  TEST_ASSERT_TRUE(Zigbee.getAllowRejoinsWithWellKnownKey());
+  Zigbee.setRouterRejoinRequired(true);  // callable on coordinator; no crash
 }
 
 // ==================== All endpoint types (before begin) ====================
@@ -145,6 +156,28 @@ void test_coordinator_form_network(void) {
   Serial.println("[COORDINATOR] NETWORK_READY");
 }
 
+// ==================== Identify Query send (after network up) ====================
+
+static volatile bool identify_query_rsp_seen = false;
+
+static void onIdentifyQueryRsp(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address) {
+  (void)timeout;
+  (void)src_endpoint;
+  (void)src_address;
+  identify_query_rsp_seen = true;
+}
+
+void test_coordinator_identify_query(void) {
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.connected(), "network required for Identify Query");
+
+  identify_query_rsp_seen = false;
+  // Gateway registers Identify client; use it to send the query.
+  epGateway.onIdentifyQueryResponse(onIdentifyQueryRsp);
+  // Broadcast send must succeed; a response is only expected if a peer is identifying (manual HIL).
+  TEST_ASSERT_TRUE_MESSAGE(epGateway.identifyQuery(), "identifyQuery() send failed");
+  (void)identify_query_rsp_seen;
+}
+
 // ==================== Deep endpoint APIs (after network up) ====================
 
 void test_coordinator_endpoint_deep_tests(void) {
@@ -171,6 +204,7 @@ void setup() {
   RUN_TEST(test_coordinator_stop_start);
   RUN_TEST(test_coordinator_role);
   RUN_TEST(test_coordinator_form_network);
+  RUN_TEST(test_coordinator_identify_query);
   RUN_TEST(test_coordinator_endpoint_deep_tests);
 
   UNITY_END();

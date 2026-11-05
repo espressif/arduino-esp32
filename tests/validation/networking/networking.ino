@@ -6,27 +6,160 @@
  *         NetworkServer (accept, echo),
  *         DNS resolution (hostByName),
  *         DNSServer (captive portal),
- *         ESPmDNS (hostname, service registration, query).
+ *         ESPmDNS (hostname, service registration, query),
+ *         HTTPClient stream uploads with short reads and writes.
  *
  * WiFi credentials are received from the Python test driver via serial.
  */
 
 #include <Arduino.h>
+#include <HTTPClient.h>
 #include <WiFi.h>
+#include <esp_netif.h>
 #include <NetworkClient.h>
 #include <NetworkUdp.h>
 #include <NetworkServer.h>
 #include <DNSServer.h>
 #include <ESPmDNS.h>
+#include <lwip/inet.h>
+#include <lwip/sockets.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <string.h>
 #include <unity.h>
 
 #define WIFI_TIMEOUT_MS 15000
 
+#if defined(CONFIG_LWIP_NETIF_LOOPBACK) && CONFIG_LWIP_NETIF_LOOPBACK
+#define NETWORKING_HAS_LWIP_LOOPBACK 1
+#else
+#define NETWORKING_HAS_LWIP_LOOPBACK 0
+#endif
+
+#if defined(LWIP_IPV6) && LWIP_IPV6
+#define NETWORKING_HAS_LWIP_IPV6 1
+#else
+#define NETWORKING_HAS_LWIP_IPV6 0
+#endif
+
 static String wifi_ssid;
 static String wifi_pass;
+static NetworkUDP udpLoopbackSender;
+static int udpLoopbackReceiverFd = -1;
+
+class ShortReadStream : public Stream {
+  const char *_data;
+  size_t _length;
+  size_t _position = 0;
+  size_t _readLimit;
+
+public:
+  ShortReadStream(const char *data, size_t readLimit) : _data(data), _length(strlen(data)), _readLimit(readLimit) {}
+
+  using Stream::readBytes;
+
+  int available() override {
+    return _length - _position;
+  }
+
+  int read() override {
+    return available() ? (uint8_t)_data[_position++] : -1;
+  }
+
+  int peek() override {
+    return available() ? (uint8_t)_data[_position] : -1;
+  }
+
+  size_t readBytes(uint8_t *buffer, size_t length) override {
+    // Advertise the remaining data, but return only part of each requested read.
+    if (length > _readLimit) {
+      length = _readLimit;
+    }
+    if (length > _length - _position) {
+      length = _length - _position;
+    }
+    memcpy(buffer, _data + _position, length);
+    _position += length;
+    return length;
+  }
+
+  size_t write(uint8_t) override {
+    return 0;
+  }
+};
+
+class UploadClient : public NetworkClient {
+  static constexpr const char *response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+  size_t _responsePosition = 0;
+  size_t _writeLimit;
+
+public:
+  String requestHeaders;
+  String requestBody;
+
+  UploadClient(size_t writeLimit = 0) : _writeLimit(writeLimit) {}
+
+  using NetworkClient::connect;
+  using NetworkClient::write;
+
+  int connect(const char *host, uint16_t port, int32_t timeout) override {
+    (void)host;
+    (void)port;
+    (void)timeout;
+    _connected = true;
+    return 1;
+  }
+
+  uint8_t connected() override {
+    return _connected;
+  }
+
+  void stop() override {
+    _connected = false;
+  }
+
+  int available() override {
+    return _connected && requestHeaders.length() ? strlen(response) - _responsePosition : 0;
+  }
+
+  int peek() override {
+    return available() ? response[_responsePosition] : -1;
+  }
+
+  int read() override {
+    return available() ? response[_responsePosition++] : -1;
+  }
+
+  int read(uint8_t *buffer, size_t size) override {
+    size_t count = 0;
+    while (count < size && available()) {
+      buffer[count++] = read();
+    }
+    return count;
+  }
+
+  size_t write(const uint8_t *buffer, size_t size) override {
+    // HTTPClient sends the headers in one write; limit only payload writes.
+    if (!requestHeaders.length()) {
+      requestHeaders.concat((const char *)buffer, size);
+      return size;
+    }
+    if (_writeLimit && size > _writeLimit) {
+      size = _writeLimit;
+    }
+    requestBody.concat((const char *)buffer, size);
+    return size;
+  }
+};
 
 void setUp(void) {}
-void tearDown(void) {}
+void tearDown(void) {
+  udpLoopbackSender.stop();
+  if (udpLoopbackReceiverFd >= 0) {
+    close(udpLoopbackReceiverFd);
+    udpLoopbackReceiverFd = -1;
+  }
+}
 
 static bool connectWiFi() {
   if (WiFi.STA.status() == WL_CONNECTED) {
@@ -191,7 +324,84 @@ void test_tcp_server_echo(void) {
   server.end();
 }
 
+// ==================== HTTPClient Stream Upload ====================
+
+static void check_http_stream_upload(size_t readLimit, size_t writeLimit, size_t uploadSize = 8) {
+  const char *data = "abcdefghij";
+  ShortReadStream stream(data, readLimit);
+  UploadClient client(writeLimit);
+  HTTPClient http;
+
+  TEST_ASSERT_TRUE(http.begin(client, "http://upload.invalid/"));
+  int code = http.sendRequest("POST", &stream, uploadSize);
+  http.end();
+
+  TEST_ASSERT_EQUAL(HTTP_CODE_OK, code);
+  TEST_ASSERT_EQUAL(uploadSize, client.requestBody.length());
+  TEST_ASSERT_EQUAL_MEMORY(data, client.requestBody.c_str(), uploadSize);
+  TEST_ASSERT_EQUAL(strlen(data) - uploadSize, stream.available());
+  String contentLength = String("Content-Length: ") + uploadSize + "\r\n";
+  TEST_ASSERT_TRUE(client.requestHeaders.indexOf(contentLength) >= 0);
+}
+
+void test_http_stream_full_read(void) {
+  check_http_stream_upload(8, 0);
+}
+
+void test_http_stream_short_read(void) {
+  check_http_stream_upload(4, 0);
+}
+
+void test_http_stream_short_read_short_write(void) {
+  check_http_stream_upload(4, 2);
+}
+
+void test_http_stream_full_read_short_write(void) {
+  check_http_stream_upload(8, 4);
+}
+
+void test_http_stream_content_length_limit(void) {
+  check_http_stream_upload(3, 0, 5);
+}
+
+void test_http_stream_failed_retry(void) {
+  ShortReadStream stream("abcdefgh", 4);
+  UploadClient client(1);
+  HTTPClient http;
+
+  TEST_ASSERT_TRUE(http.begin(client, "http://upload.invalid/"));
+  int code = http.sendRequest("POST", &stream, 8);
+  http.end();
+
+  TEST_ASSERT_EQUAL(HTTPC_ERROR_SEND_PAYLOAD_FAILED, code);
+  TEST_ASSERT_EQUAL_STRING("ab", client.requestBody.c_str());
+}
+
 // ==================== UDP ====================
+
+void test_udp_write_before_begin(void) {
+  NetworkUDP udp;
+  const uint8_t data[] = {0x01, 0x02, 0x03};
+
+  TEST_ASSERT_EQUAL(0, udp.write(data[0]));
+  TEST_ASSERT_EQUAL(0, udp.write(data, sizeof(data)));
+  TEST_ASSERT_EQUAL(0, udp.write(data, 0));
+}
+
+void test_udp_write_after_stop(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  NetworkUDP udp;
+  const uint8_t data[] = {0x01, 0x02, 0x03};
+
+  TEST_ASSERT_TRUE(udp.beginPacket(IPAddress(127, 0, 0, 1), 9999));
+  TEST_ASSERT_EQUAL(sizeof(data), udp.write(data, sizeof(data)));
+  TEST_ASSERT_EQUAL(0, udp.write(data, 0));
+  udp.stop();
+
+  TEST_ASSERT_EQUAL(0, udp.write(data[0]));
+  TEST_ASSERT_EQUAL(0, udp.write(data, sizeof(data)));
+}
 
 void test_udp_send_receive(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
@@ -281,7 +491,221 @@ void test_udp_remote_info(void) {
   sender.stop();
 }
 
+// Verify lazy socket creation and socket-family changes after stop().
+#if NETWORKING_HAS_LWIP_LOOPBACK
+static uint16_t udp_loopback_socket_port(const sockaddr_storage &address) {
+#if NETWORKING_HAS_LWIP_IPV6
+  if (address.ss_family == AF_INET6) {
+    return ntohs(reinterpret_cast<const sockaddr_in6 *>(&address)->sin6_port);
+  }
+#endif
+  return ntohs(reinterpret_cast<const sockaddr_in *>(&address)->sin_port);
+}
+
+static void check_udp_loopback(int family, bool bindSender) {
+  udpLoopbackReceiverFd = socket(family, SOCK_DGRAM, 0);
+  TEST_ASSERT_GREATER_OR_EQUAL(0, udpLoopbackReceiverFd);
+
+  sockaddr_storage address = {};
+  socklen_t addressLength = sizeof(sockaddr_in);
+  IPAddress destination;
+  if (family == AF_INET) {
+    auto *addr = reinterpret_cast<sockaddr_in *>(&address);
+    addr->sin_family = AF_INET;
+    addr->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addressLength = sizeof(*addr);
+    destination = IPAddress(127, 0, 0, 1);
+  }
+#if NETWORKING_HAS_LWIP_IPV6
+  else {
+    auto *addr = reinterpret_cast<sockaddr_in6 *>(&address);
+    addr->sin6_family = AF_INET6;
+    TEST_ASSERT_EQUAL(1, inet_pton(AF_INET6, "::1", &addr->sin6_addr));
+    addressLength = sizeof(*addr);
+    destination = IPAddress(IPv6, reinterpret_cast<const uint8_t *>(&addr->sin6_addr));
+  }
+#endif
+
+  TEST_ASSERT_EQUAL(0, bind(udpLoopbackReceiverFd, reinterpret_cast<sockaddr *>(&address), addressLength));
+  TEST_ASSERT_EQUAL(0, getsockname(udpLoopbackReceiverFd, reinterpret_cast<sockaddr *>(&address), &addressLength));
+  uint16_t port = udp_loopback_socket_port(address);
+  TEST_ASSERT_NOT_EQUAL(0, port);
+
+  timeval timeout = {3, 0};
+  TEST_ASSERT_EQUAL(0, setsockopt(udpLoopbackReceiverFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+
+  if (bindSender) {
+    TEST_ASSERT_EQUAL(1, udpLoopbackSender.begin(destination, 0));
+  }
+
+  uint16_t firstSourcePort = 0;
+  for (uint8_t i = 0; i < 2; i++) {
+    const uint8_t payload[] = {'U', 'D', 'P', 0, i};
+    TEST_ASSERT_EQUAL(1, udpLoopbackSender.beginPacket(destination, port));
+    TEST_ASSERT_EQUAL(sizeof(payload), udpLoopbackSender.write(payload, sizeof(payload)));
+    TEST_ASSERT_EQUAL(1, udpLoopbackSender.endPacket());
+
+    uint8_t received[sizeof(payload) + 1] = {};
+    sockaddr_storage source = {};
+    socklen_t sourceLength = sizeof(source);
+    int count = recvfrom(udpLoopbackReceiverFd, received, sizeof(received), 0, reinterpret_cast<sockaddr *>(&source), &sourceLength);
+    TEST_ASSERT_EQUAL(sizeof(payload), count);
+    TEST_ASSERT_EQUAL_MEMORY(payload, received, sizeof(payload));
+    TEST_ASSERT_EQUAL(family, source.ss_family);
+
+    uint16_t sourcePort = udp_loopback_socket_port(source);
+    TEST_ASSERT_NOT_EQUAL(0, sourcePort);
+    if (i == 0) {
+      firstSourcePort = sourcePort;
+    } else {
+      TEST_ASSERT_EQUAL(firstSourcePort, sourcePort);
+    }
+  }
+
+  close(udpLoopbackReceiverFd);
+  udpLoopbackReceiverFd = -1;
+}
+
+void test_udp_ipv4_without_local_bind(void) {
+  check_udp_loopback(AF_INET, false);
+}
+
+void test_udp_ipv6_without_local_bind(void) {
+#if NETWORKING_HAS_LWIP_IPV6
+  check_udp_loopback(AF_INET6, false);
+#else
+  TEST_IGNORE_MESSAGE("IPv6 is disabled");
+#endif
+}
+
+void test_udp_ipv4_with_local_bind(void) {
+  check_udp_loopback(AF_INET, true);
+}
+
+void test_udp_ipv6_with_local_bind(void) {
+#if NETWORKING_HAS_LWIP_IPV6
+  check_udp_loopback(AF_INET6, true);
+#else
+  TEST_IGNORE_MESSAGE("IPv6 is disabled");
+#endif
+}
+
+void test_udp_socket_family_after_stop(void) {
+#if NETWORKING_HAS_LWIP_IPV6
+  check_udp_loopback(AF_INET, false);
+  udpLoopbackSender.stop();
+  check_udp_loopback(AF_INET6, false);
+  udpLoopbackSender.stop();
+  check_udp_loopback(AF_INET, false);
+#else
+  TEST_IGNORE_MESSAGE("IPv6 is disabled");
+#endif
+}
+#else
+void test_udp_loopback_requires_configuration(void) {
+  TEST_IGNORE_MESSAGE("Loopback support is disabled");
+}
+#endif
+
 // ==================== DNS Server ====================
+
+#if NETWORKING_HAS_LWIP_LOOPBACK
+static constexpr uint16_t kDnsPort = 15353;
+
+static bool sendQuestion(int fd, const sockaddr_in &serverAddress, uint16_t id, const uint8_t *question, size_t questionLength) {
+  uint8_t packet[DNS_HEADER_SIZE + 32] = {};
+  if (questionLength > sizeof(packet) - DNS_HEADER_SIZE) {
+    return false;
+  }
+
+  packet[0] = id >> 8;
+  packet[1] = id & 0xff;
+  packet[2] = 0x01;  // recursion desired
+  packet[5] = 0x01;  // one question
+  memcpy(packet + DNS_HEADER_SIZE, question, questionLength);
+
+  size_t length = DNS_HEADER_SIZE + questionLength;
+  ssize_t sent = sendto(fd, packet, length, 0, reinterpret_cast<const sockaddr *>(&serverAddress), sizeof(serverAddress));
+  return sent >= 0 && static_cast<size_t>(sent) == length;
+}
+
+static void expectNoReply(int fd) {
+  uint8_t reply[64];
+  TEST_ASSERT_EQUAL(-1, recvfrom(fd, reply, sizeof(reply), 0, nullptr, nullptr));
+}
+
+void test_dns_question_stays_within_packet() {
+  DNSServer server;
+  TEST_ASSERT_TRUE(server.start(kDnsPort, "*", IPAddress(127, 0, 0, 1)));
+
+  int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  TEST_ASSERT_GREATER_OR_EQUAL(0, fd);
+
+  sockaddr_in localAddress = {};
+  localAddress.sin_family = AF_INET;
+  localAddress.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  TEST_ASSERT_EQUAL(0, bind(fd, reinterpret_cast<const sockaddr *>(&localAddress), sizeof(localAddress)));
+
+  timeval timeout = {0, 300000};
+  TEST_ASSERT_EQUAL(0, setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+
+  sockaddr_in serverAddress = {};
+  serverAddress.sin_family = AF_INET;
+  serverAddress.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  serverAddress.sin_port = htons(kDnsPort);
+
+  const uint8_t noTerminator[] = {3, 'a', 'b', 'c', 1, 1, 1, 1};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1001, noTerminator, sizeof(noTerminator)));
+  expectNoReply(fd);
+
+  const uint8_t terminatorInQType[] = {3, 'a', 'b', 'c', 0, 1, 0, 1};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1002, terminatorInQType, sizeof(terminatorInQType)));
+  expectNoReply(fd);
+
+  const uint8_t truncatedQuestion[] = {0, 0, 1, 0};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1003, truncatedQuestion, sizeof(truncatedQuestion)));
+  expectNoReply(fd);
+
+  const uint8_t terminatorAtPacketEnd[] = {3, 'a', 'b', 'c', 1, 1, 1, 0};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1005, terminatorAtPacketEnd, sizeof(terminatorAtPacketEnd)));
+  expectNoReply(fd);
+
+  timeout.tv_sec = 2;
+  timeout.tv_usec = 0;
+  TEST_ASSERT_EQUAL(0, setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+
+  const uint8_t rootQuestion[] = {0, 0, 1, 0, 1};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1004, rootQuestion, sizeof(rootQuestion)));
+
+  uint8_t reply[64];
+  int received = recvfrom(fd, reply, sizeof(reply), 0, nullptr, nullptr);
+  TEST_ASSERT_GREATER_THAN(DNS_HEADER_SIZE, received);
+  TEST_ASSERT_EQUAL_HEX8(0x10, reply[0]);
+  TEST_ASSERT_EQUAL_HEX8(0x04, reply[1]);
+  DNSHeader response;
+  memcpy(&response, reply, sizeof(response));
+  TEST_ASSERT_EQUAL(DNS_QR_RESPONSE, response.QR);
+  TEST_ASSERT_EQUAL_UINT16(1, ntohs(response.ANCount));
+
+  const uint8_t namedQuestion[] = {3, 'a', 'b', 'c', 0, 0, 1, 0, 1};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1006, namedQuestion, sizeof(namedQuestion)));
+  received = recvfrom(fd, reply, sizeof(reply), 0, nullptr, nullptr);
+  TEST_ASSERT_GREATER_OR_EQUAL(DNS_HEADER_SIZE + sizeof(namedQuestion), received);
+  TEST_ASSERT_EQUAL_HEX8(0x10, reply[0]);
+  TEST_ASSERT_EQUAL_HEX8(0x06, reply[1]);
+  TEST_ASSERT_EQUAL_MEMORY(namedQuestion, reply + DNS_HEADER_SIZE, sizeof(namedQuestion));
+  memcpy(&response, reply, sizeof(response));
+  TEST_ASSERT_EQUAL(DNS_QR_RESPONSE, response.QR);
+  TEST_ASSERT_EQUAL_UINT16(1, ntohs(response.ANCount));
+
+  close(fd);
+  server.stop();
+}
+#else
+void test_dns_question_stays_within_packet() {
+  TEST_IGNORE_MESSAGE("LwIP loopback support is disabled");
+}
+#endif
 
 void test_dns_server_captive(void) {
 #if !SOC_WIFI_SUPPORTED
@@ -301,6 +725,75 @@ void test_dns_server_captive(void) {
   dnsServer.stop();
   WiFi.AP.end();
   delay(100);
+#endif
+}
+
+#if SOC_WIFI_SUPPORTED
+static void verifyRejectedApConfig(IPAddress subnet, IPAddress leaseStart, const char *reason) {
+  if (!WiFi.AP.create("ESP32_Config_Test", "12345678")) {
+    WiFi.AP.end();
+    TEST_FAIL_MESSAGE("Failed to start SoftAP");
+    return;
+  }
+
+  // AP creation can return before esp-netif has started the DHCP server.
+  // Establish the running baseline before attempting the rejected configuration.
+  esp_netif_dhcp_status_t oldDhcpStatus = ESP_NETIF_DHCP_INIT;
+  esp_err_t oldDhcpStatusResult;
+  const unsigned long dhcpWaitStart = millis();
+  do {
+    oldDhcpStatusResult = esp_netif_dhcps_get_status(WiFi.AP.netif(), &oldDhcpStatus);
+    if (oldDhcpStatusResult != ESP_OK || oldDhcpStatus == ESP_NETIF_DHCP_STARTED) {
+      break;
+    }
+    delay(10);
+  } while (millis() - dhcpWaitStart < 3000);
+
+  if (oldDhcpStatusResult != ESP_OK || oldDhcpStatus != ESP_NETIF_DHCP_STARTED) {
+    WiFi.AP.end();
+    TEST_ASSERT_EQUAL_MESSAGE(ESP_OK, oldDhcpStatusResult, "Failed to read the initial DHCP server status");
+    TEST_ASSERT_EQUAL_MESSAGE(ESP_NETIF_DHCP_STARTED, oldDhcpStatus, "DHCP server did not start before reconfiguration");
+    return;
+  }
+
+  IPAddress oldIP = WiFi.AP.localIP();
+  IPAddress oldSubnet = WiFi.AP.subnetMask();
+  IPAddress oldGateway = WiFi.AP.gatewayIP();
+
+  bool configResult = WiFi.AP.config(IPAddress(10, 20, 30, 40), IPAddress(10, 20, 30, 40), subnet, leaseStart);
+  IPAddress currentIP = WiFi.AP.localIP();
+  IPAddress currentSubnet = WiFi.AP.subnetMask();
+  IPAddress currentGateway = WiFi.AP.gatewayIP();
+  esp_netif_dhcp_status_t currentDhcpStatus = ESP_NETIF_DHCP_INIT;
+  esp_err_t dhcpStatusResult = esp_netif_dhcps_get_status(WiFi.AP.netif(), &currentDhcpStatus);
+
+  WiFi.AP.end();
+  delay(100);
+
+  TEST_ASSERT_FALSE_MESSAGE(configResult, reason);
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldIP, (uint32_t)currentIP, "Rejected config changed the SoftAP IP");
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldSubnet, (uint32_t)currentSubnet, "Rejected config changed the SoftAP subnet");
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldGateway, (uint32_t)currentGateway, "Rejected config changed the SoftAP gateway");
+  TEST_ASSERT_EQUAL(ESP_OK, dhcpStatusResult);
+  TEST_ASSERT_EQUAL_MESSAGE(ESP_NETIF_DHCP_STARTED, currentDhcpStatus, "Rejected config stopped the DHCP server");
+}
+#endif
+
+void test_ap_invalid_subnet_preserves_dhcp(void) {
+#if !SOC_WIFI_SUPPORTED
+  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
+#else
+  verifyRejectedApConfig(IPAddress(255, 255, 254, 0), IPAddress(), "SoftAP accepted an unsupported /23 netmask");
+#endif
+}
+
+void test_ap_malformed_subnet_preserves_dhcp(void) {
+#if !SOC_WIFI_SUPPORTED
+  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
+#else
+  // The old CIDR counter treated 255.255.255.1 as /24. Use an even lease start
+  // so other lease-range checks do not reject the configuration first.
+  verifyRejectedApConfig(IPAddress(255, 255, 255, 1), IPAddress(10, 20, 30, 42), "SoftAP accepted a non-contiguous netmask");
 #endif
 }
 
@@ -379,10 +872,30 @@ void setup() {
   RUN_TEST(test_tcp_timeout);
   RUN_TEST(test_tcp_large_payload);
   RUN_TEST(test_tcp_server_echo);
+  RUN_TEST(test_udp_write_before_begin);
+  RUN_TEST(test_udp_write_after_stop);
+  RUN_TEST(test_http_stream_full_read);
+  RUN_TEST(test_http_stream_short_read);
+  RUN_TEST(test_http_stream_short_read_short_write);
+  RUN_TEST(test_http_stream_full_read_short_write);
+  RUN_TEST(test_http_stream_content_length_limit);
+  RUN_TEST(test_http_stream_failed_retry);
   RUN_TEST(test_udp_send_receive);
   RUN_TEST(test_udp_multi_packet);
   RUN_TEST(test_udp_remote_info);
+#if NETWORKING_HAS_LWIP_LOOPBACK
+  RUN_TEST(test_udp_ipv4_without_local_bind);
+  RUN_TEST(test_udp_ipv6_without_local_bind);
+  RUN_TEST(test_udp_ipv4_with_local_bind);
+  RUN_TEST(test_udp_ipv6_with_local_bind);
+  RUN_TEST(test_udp_socket_family_after_stop);
+#else
+  RUN_TEST(test_udp_loopback_requires_configuration);
+#endif
   RUN_TEST(test_dns_server_captive);
+  RUN_TEST(test_dns_question_stays_within_packet);
+  RUN_TEST(test_ap_invalid_subnet_preserves_dhcp);
+  RUN_TEST(test_ap_malformed_subnet_preserves_dhcp);
   RUN_TEST(test_mdns_begin);
   RUN_TEST(test_mdns_service);
 

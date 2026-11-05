@@ -38,6 +38,7 @@ Each case first confirms the endpoint behaves correctly for a well-formed reques
 | `digest_auth` | Digest auth keeps more than one nonce valid at once, and a correct response for an unknown nonce is challenged with `stale=true` ([#12915](https://github.com/espressif/arduino-esp32/issues/12915)). |
 | `digest_auth_edges` | Signed-nonce edges: opaque is stable, nonces are unique and replayable, a matching query-string URI authenticates while a mismatched query is a non-stale 401, RFC 2069 still authenticates, a tampered/truncated nonce is `stale=true`, wrong username is not, a stale retry succeeds, and an unauthenticated 401 does not leak `stale` or log out the first client. |
 | `path_traversal` | `serveStatic()` must not serve files outside its configured root via `..` dot segments. |
+| `header_injection` | `sendHeader()` must drop CR, LF and NUL in the name and value, including a NUL that precedes CRLF (so `String::indexOf` cannot skip the guard). |
 | `arg_poison` | A completed field from an aborted, unauthenticated multipart request must not shadow a later request's named arguments. |
 | `arg_flood` | An oversized query string (many `&` separators) must not trigger an unbounded allocation that resets the device. |
 | `upload_null_deref` | A non-multipart POST to an upload route must not dereference a null upload object. |
@@ -57,6 +58,7 @@ The checks above introduce bounds on request size and shape. These cases pin dow
 | `static_root` | `serveStatic()` whose filesystem root is `/` still serves files (the mapping used by the `WebServer` example). |
 | `raw_body` | A non-multipart body on a route registered with an upload-style callback still streams to that callback via `server.raw()`. |
 | `many_args` | A urlencoded form with 100 fields is parsed in full, not silently reduced to zero arguments. |
+| `post_content_length` | Bytes following the declared POST body stay out of parsed form arguments. |
 | `long_uri` | A ~900 byte query string is served normally, while an over-long request-target is answered with `414` instead of a dropped connection. |
 | `regex_route` | A `UriRegex` route still matches a normal-length path, including one with nested quantifiers. |
 

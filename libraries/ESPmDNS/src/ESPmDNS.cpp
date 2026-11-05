@@ -96,6 +96,10 @@ bool MDNSResponder::begin(const String &hostName) {
 }
 
 void MDNSResponder::end() {
+  if (results) {
+    mdns_query_results_free(results);
+    results = NULL;
+  }
   mdns_free();
 }
 

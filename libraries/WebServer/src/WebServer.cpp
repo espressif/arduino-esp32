@@ -611,13 +611,23 @@ void WebServer::stop() {
   close();
 }
 
+// RFC 9110 forbids NUL, CR and LF in field names and values. Scan by length:
+// Arduino String is length-backed and can hold an embedded NUL, while
+// String::indexOf(char) / strchr would stop there and miss a CRLF after it.
+static bool httpHeaderHasInvalidChar(const char *s, size_t n) {
+  if (s == nullptr) {
+    return n != 0;
+  }
+  return memchr(s, '\0', n) != nullptr || memchr(s, '\r', n) != nullptr || memchr(s, '\n', n) != nullptr;
+}
+
 void WebServer::sendHeader(const String &name, const String &value, bool first) {
-  if (name.indexOf('\r') != -1 || name.indexOf('\n') != -1) {
+  if (httpHeaderHasInvalidChar(name.c_str(), name.length())) {
     log_e("Invalid character in HTTP header name");
     return;
   }
 
-  if (value.indexOf('\r') != -1 || value.indexOf('\n') != -1) {
+  if (httpHeaderHasInvalidChar(value.c_str(), value.length())) {
     log_e("Invalid character in HTTP header value");
     return;
   }
@@ -667,7 +677,7 @@ void WebServer::chunkResponseBegin(const char *contentType) {
     return;
   }
 
-  if (strchr(contentType, '\r') || strchr(contentType, '\n')) {
+  if (contentType == nullptr || httpHeaderHasInvalidChar(contentType, strlen(contentType))) {
     log_e("Invalid character in content type");
     return;
   }

@@ -159,7 +159,6 @@ typedef emac_rmii_clock_mode_t eth_clock_mode_t;
 #ifndef ETH_RMII_RX3
 #define ETH_RMII_RX3 16
 #endif
-#endif
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 
 #ifndef ETH_PHY_SPI_FREQ_MHZ

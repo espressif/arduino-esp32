@@ -31,6 +31,13 @@ Validates the `EEPROM` library covering lifecycle, byte-level read/write, dirty 
 | `test_read_write_string_cstr` | `writeString` / `readString` with C-string |
 | `test_read_write_string_obj` | `writeString` / `readString` with Arduino `String` |
 | `test_read_write_empty_string` | Write and read an empty string |
+| `test_write_string_exact_fit` | Both string overloads accept characters plus a terminator ending at the final EEPROM byte |
+| `test_write_string_requires_terminator_space` | Reject a C-string whose characters fill all remaining storage |
+| `test_write_string_object_requires_terminator_space` | Reject an Arduino `String` with no room for its terminator |
+| `test_write_string_empty_at_last_byte` | An empty string can store its terminator in the last byte |
+| `test_write_string_empty_at_end_rejected` | An empty string at the one-past-end address leaves storage and the dirty flag unchanged |
+| `test_write_string_character_at_last_byte_rejected` | Reject a character when only one byte remains |
+| `test_write_string_invalid_addresses` | Negative and beyond-end string addresses leave storage unchanged |
 | `test_read_write_bytes` | `writeBytes` / `readBytes` raw byte array |
 | `test_template_put_get_struct` | `put` / `get` with a struct (template API) |
 | `test_get_data_ptr` | Direct memory access via `getDataPtr()` |
@@ -42,3 +49,7 @@ Validates the `EEPROM` library covering lifecycle, byte-level read/write, dirty 
 
 - **Hardware**: Any ESP32 variant
 - **Wokwi/QEMU**: Supported
+
+The string boundary cases use an in-memory `EEPROMClass` subclass with eight
+logical bytes and a ninth guard byte. They inspect the full buffer and dirty flag
+without accessing NVS, and can detect the original off-by-one writes safely.

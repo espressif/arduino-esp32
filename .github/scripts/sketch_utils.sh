@@ -412,6 +412,9 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         currfqbn=$(echo "$fqbn" | jq -r --argjson i "$i" '.[$i]')
         currfqbn=$(apply_cdc_on_boot_opt "$currfqbn")
 
+        local compile_start compile_end
+        compile_start=$(date +%s.%N 2>/dev/null || date +%s)
+
         if [ "${use_arduino_cli:-0}" -eq 1 ] && [ -f "$ide_path/arduino-cli" ]; then
             echo "Building $sketchname with arduino-cli and FQBN=$currfqbn"
             split_fqbn_for_cli "$currfqbn"
@@ -440,6 +443,20 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         fi
 
         exit_status=${PIPESTATUS[0]}
+        compile_end=$(date +%s.%N 2>/dev/null || date +%s)
+        if [ -n "${SKETCH_TIMES_FILE:-}" ]; then
+            local sketch_key
+            # Relative paths from assign_chunks.py are "libraries/...";
+            # installed paths are ".../libraries/...". Require only "libraries/".
+            if [[ "$sketchdir" == *libraries/* ]]; then
+                sketch_key="libraries/${sketchdir#*libraries/}/$(basename "$sketchdir").ino"
+            else
+                sketch_key="$(basename "$sketchdir")/$(basename "$sketchdir").ino"
+            fi
+            SKETCH_KEY="$sketch_key" SKETCH_TARGET="$target" \
+            COMPILE_START="$compile_start" COMPILE_END="$compile_end" \
+            python3 -c 'import json, os; print(json.dumps({"sketch": os.environ["SKETCH_KEY"], "target": os.environ["SKETCH_TARGET"], "wall_s": round(float(os.environ["COMPILE_END"]) - float(os.environ["COMPILE_START"]), 3)}))' >> "$SKETCH_TIMES_FILE"
+        fi
         if [ "$exit_status" -ne 0 ]; then
             echo "ERROR: Compilation failed with error code $exit_status"
             exit "$exit_status"
@@ -645,28 +662,32 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
     rm -rf sketches.txt
 
     local chunk_size
-    local all_chunks
-    chunk_size=$(( sketchcount / chunk_max ))
-    all_chunks=$(( chunk_max * chunk_size ))
-    if [ "$all_chunks" -lt "$sketchcount" ]; then
-        chunk_size=$(( chunk_size + 1 ))
-    fi
-
     local start_index=0
     local end_index=0
-    if [ "$chunk_index" -ge "$chunk_max" ]; then
-        start_index=$chunk_index
+    if [ -n "$sketches_file" ]; then
+        # File is already the assigned set. -i is only the size-report name.
+        chunk_size=$sketchcount
         end_index=$sketchcount
     else
-        start_index=$(( chunk_index * chunk_size ))
-        if [ "$sketchcount" -le "$start_index" ]; then
-            echo "No sketches to build for $target in this chunk"
-            return 0
+        local all_chunks
+        chunk_size=$(( sketchcount / chunk_max ))
+        all_chunks=$(( chunk_max * chunk_size ))
+        if [ "$all_chunks" -lt "$sketchcount" ]; then
+            chunk_size=$(( chunk_size + 1 ))
         fi
-
-        end_index=$(( $(( chunk_index + 1 )) * chunk_size ))
-        if [ "$end_index" -gt "$sketchcount" ]; then
+        if [ "$chunk_index" -ge "$chunk_max" ]; then
+            start_index=$chunk_index
             end_index=$sketchcount
+        else
+            start_index=$(( chunk_index * chunk_size ))
+            if [ "$sketchcount" -le "$start_index" ]; then
+                echo "No sketches to build for $target in this chunk"
+                return 0
+            fi
+            end_index=$(( $(( chunk_index + 1 )) * chunk_size ))
+            if [ "$end_index" -gt "$sketchcount" ]; then
+                end_index=$sketchcount
+            fi
         fi
     fi
 

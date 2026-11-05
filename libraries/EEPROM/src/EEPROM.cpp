@@ -472,24 +472,20 @@ size_t EEPROMClass::writeString(int address, const char *value) {
     return 0;
   }
 
-  if (address < 0 || address > _size) {
+  if (address < 0 || (size_t)address >= _size) {
     return 0;
   }
 
-  size_t len;
-  for (len = 0; len <= _size; len++) {
-    if (value[len] == 0) {
-      break;
-    }
-  }
-
-  if (address + len > _size) {
+  // The remaining storage must hold both the string and its terminating NUL.
+  size_t available = _size - (size_t)address;
+  size_t len = strnlen(value, available);
+  if (len == available) {
     return 0;
   }
 
   memcpy(_data + address, (const uint8_t *)value, len + 1);
   _dirty = true;
-  return strlen(value);
+  return len;
 }
 
 size_t EEPROMClass::writeString(int address, String value) {
