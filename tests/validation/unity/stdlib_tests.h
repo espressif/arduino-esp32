@@ -1,18 +1,14 @@
 /*
- * Signed integer conversion validation.
- *
+ * Signed integer conversion regressions for the existing Unity validation suite.
  * This example code is in the Public Domain (or CC0 licensed, at your option).
  */
 
-#include <Arduino.h>
+#pragma once
+
 #include <errno.h>
 #include <limits.h>
 #include <limits>
 #include <stdlib_noniso.h>
-#include <unity.h>
-
-void setUp(void) {}
-void tearDown(void) {}
 
 static constexpr long long kLongLongMin = std::numeric_limits<long long>::min();
 static constexpr long long kLongLongMax = std::numeric_limits<long long>::max();
@@ -99,17 +95,3 @@ void test_string_signed_minimum_values(void) {
   text += kLongLongMin;
   TEST_ASSERT_EQUAL_STRING("-9223372036854775808", text.c_str());
 }
-
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
-  UNITY_BEGIN();
-  RUN_TEST(test_ltoa_signed_limits);
-  RUN_TEST(test_lltoa_signed_limits);
-  RUN_TEST(test_signed_conversion_all_radices);
-  RUN_TEST(test_signed_conversion_invalid_radices);
-  RUN_TEST(test_string_signed_minimum_values);
-  UNITY_END();
-}
-
-void loop() {}

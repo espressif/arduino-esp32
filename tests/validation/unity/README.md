@@ -2,6 +2,10 @@
 
 Comprehensive smoke test that exercises the Unity assertion and control macros available in the ESP32 Arduino core build.
 
+Also runs signed integer conversion regressions from `stdlib_tests.h`. Keeping
+them in this existing suite lets the trusted base-branch runtime driver discover
+and execute them for pull requests.
+
 ## Test Cases
 
 | Test Function | Description |
@@ -21,6 +25,11 @@ Comprehensive smoke test that exercises the Unity assertion and control macros a
 | `test_hooks` | `setUp`/`tearDown` invocation and Unity version |
 | `test_pass_early` | `TEST_PASS_MESSAGE` early exit |
 | `test_ignore` | `TEST_IGNORE_MESSAGE` (counted as ignored, not failed) |
+| `test_ltoa_signed_limits` | 32-bit minimum, adjacent value, maximum, zero, and known binary/decimal/hex output |
+| `test_lltoa_signed_limits` | 64-bit minimum, adjacent value, maximum, zero, and known binary/decimal/hex output |
+| `test_signed_conversion_all_radices` | Boundary and ordinary values round-trip in every supported base (2 through 16) |
+| `test_signed_conversion_invalid_radices` | Unsupported bases return an empty string in the supplied buffer |
+| `test_string_signed_minimum_values` | Signed-minimum String construction, hexadecimal construction, `concat`, and `+=` |
 
 ## Not covered
 

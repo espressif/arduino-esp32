@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #include <math.h>
 #include <unity.h>
+#include "stdlib_tests.h"
 
 // Workaround for C++ until bundled Unity picks up esp-idf cast fix
 // (Unity*ToPtr returns const void*; C++ rejects implicit conversion to float*/double*).
@@ -418,6 +419,12 @@ void setup() {
   RUN_TEST(test_hooks);
   RUN_TEST(test_pass_early);
   RUN_TEST(test_ignore);
+
+  RUN_TEST(test_ltoa_signed_limits);
+  RUN_TEST(test_lltoa_signed_limits);
+  RUN_TEST(test_signed_conversion_all_radices);
+  RUN_TEST(test_signed_conversion_invalid_radices);
+  RUN_TEST(test_string_signed_minimum_values);
 
   UNITY_END();
 }
