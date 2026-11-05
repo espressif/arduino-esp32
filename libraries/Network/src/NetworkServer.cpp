@@ -19,6 +19,7 @@
 #include "NetworkServer.h"
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
+#include <errno.h>
 
 #undef write
 #undef close
@@ -61,12 +62,16 @@ NetworkClient NetworkServer::accept() {
   }
   if (client_sock >= 0) {
     int val = 1;
-    if (setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&val, sizeof(int)) == ESP_OK) {
+    bool configured = setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&val, sizeof(int)) == 0;
+    if (configured) {
       val = _noDelay;
-      if (setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(int)) == ESP_OK) {
-        return NetworkClient(client_sock);
-      }
+      configured = setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(int)) == 0;
     }
+    if (configured) {
+      return NetworkClient(client_sock);
+    }
+    log_e("setsockopt on accepted fd %d failed, errno: %d, \"%s\"", client_sock, errno, strerror(errno));
+    ::close(client_sock);
   }
   return NetworkClient();
 }

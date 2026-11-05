@@ -24,9 +24,12 @@
 #include "IPAddress.h"
 
 class NetworkServer {
+protected:
+  // Exposed to subclasses so the accept() error path can be exercised.
+  int _accepted_sockfd = -1;
+
 private:
   int sockfd;
-  int _accepted_sockfd = -1;
   IPAddress _addr;
   uint16_t _port;
   uint8_t _max_clients;
