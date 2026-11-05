@@ -696,7 +696,8 @@ def test_missing_console_subprocess_exits_promptly(tmp_path, stdin, creationflag
 
 @pytest.mark.skipif(sys.platform != "win32", reason="requires a Windows console")
 def test_windows_console_probe_accepts_console_input():
-    code = textwrap.dedent("""
+    code = textwrap.dedent(
+        """
         import importlib.util
         import sys
 
@@ -706,7 +707,8 @@ def test_windows_console_probe_accepts_console_input():
         with open("CONIN$", "r") as console:
             sys.stdin = console
             assert espota.has_windows_console_input()
-    """)
+    """
+    )
     result = subprocess.run(
         [sys.executable, "-c", code, str(ESPOTA)],
         creationflags=subprocess.CREATE_NO_WINDOW,
