@@ -1,14 +1,12 @@
 /*
- * String concatenation validation.
- *
+ * String concatenation regressions for the existing Unity validation suite.
  * This example code is in the Public Domain (or CC0 licensed, at your option).
  */
 
+#pragma once
+
 #include <Arduino.h>
 #include <unity.h>
-
-void setUp(void) {}
-void tearDown(void) {}
 
 static void assertString(const char *expected, const String &actual) {
   TEST_ASSERT_EQUAL_UINT(strlen(expected), actual.length());
@@ -86,20 +84,3 @@ void test_string_concat_binary_alias(void) {
   TEST_ASSERT_EQUAL_MEMORY(bytes, value.c_str() + sizeof(bytes), sizeof(bytes));
   TEST_ASSERT_EQUAL_CHAR('\0', value.c_str()[value.length()]);
 }
-
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
-  UNITY_BEGIN();
-  RUN_TEST(test_string_concat_cstr_inline_growth);
-  RUN_TEST(test_string_concat_cstr_inline_substring);
-  RUN_TEST(test_string_concat_cstr_heap_growth);
-  RUN_TEST(test_string_concat_buffer_heap_substring);
-  RUN_TEST(test_string_concat_cstr_reserved);
-  RUN_TEST(test_string_concat_self_overloads);
-  RUN_TEST(test_string_concat_external_and_empty);
-  RUN_TEST(test_string_concat_binary_alias);
-  UNITY_END();
-}
-
-void loop() {}
