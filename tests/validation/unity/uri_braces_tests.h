@@ -1,16 +1,14 @@
 /*
- * UriBraces route matching validation.
- *
+ * UriBraces regressions for the existing Unity validation suite.
  * This example code is in the Public Domain (or CC0 licensed, at your option).
  */
+
+#pragma once
 
 #include <Arduino.h>
 #include <WebServer.h>
 #include <uri/UriBraces.h>
 #include <unity.h>
-
-void setUp(void) {}
-void tearDown(void) {}
 
 void test_uri_braces_suffixed_argument(void) {
   UriBraces route("/files/{}.json");
@@ -89,20 +87,3 @@ void test_uri_braces_valid_after_rejection(void) {
   TEST_ASSERT_TRUE(route.canHandle("/files/recovered.json", args));
   TEST_ASSERT_EQUAL_STRING("recovered", args[0].c_str());
 }
-
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
-  UNITY_BEGIN();
-  RUN_TEST(test_uri_braces_suffixed_argument);
-  RUN_TEST(test_uri_braces_suffix_rejects_nested_paths);
-  RUN_TEST(test_uri_braces_multiple_arguments);
-  RUN_TEST(test_uri_braces_arguments_in_one_segment);
-  RUN_TEST(test_uri_braces_trailing_argument);
-  RUN_TEST(test_uri_braces_rejects_mismatched_literals);
-  RUN_TEST(test_uri_braces_empty_argument);
-  RUN_TEST(test_uri_braces_valid_after_rejection);
-  UNITY_END();
-}
-
-void loop() {}

@@ -6,6 +6,7 @@
  */
 
 #include <Arduino.h>
+#include "uri_braces_tests.h"
 #include <math.h>
 #include <unity.h>
 
@@ -415,6 +416,14 @@ void setup() {
 #endif
   RUN_TEST(test_message_variants);
   RUN_TEST(test_esp_err_helpers);
+  RUN_TEST(test_uri_braces_suffixed_argument);
+  RUN_TEST(test_uri_braces_suffix_rejects_nested_paths);
+  RUN_TEST(test_uri_braces_multiple_arguments);
+  RUN_TEST(test_uri_braces_arguments_in_one_segment);
+  RUN_TEST(test_uri_braces_trailing_argument);
+  RUN_TEST(test_uri_braces_rejects_mismatched_literals);
+  RUN_TEST(test_uri_braces_empty_argument);
+  RUN_TEST(test_uri_braces_valid_after_rejection);
   RUN_TEST(test_hooks);
   RUN_TEST(test_pass_early);
   RUN_TEST(test_ignore);
