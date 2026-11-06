@@ -6,6 +6,7 @@
  */
 
 #include <Arduino.h>
+#include <WebServer.h>
 #include "uri_braces_tests.h"
 #include <math.h>
 #include <unity.h>

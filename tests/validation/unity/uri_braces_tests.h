@@ -6,7 +6,6 @@
 #pragma once
 
 #include <Arduino.h>
-#include <WebServer.h>
 #include <uri/UriBraces.h>
 #include <unity.h>
 
