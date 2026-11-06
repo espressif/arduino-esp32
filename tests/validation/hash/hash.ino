@@ -532,6 +532,68 @@ void test_sha3_512_hash_size(void) {
   TEST_ASSERT_EQUAL(64, (int)h.getHashSize());
 }
 
+// Expected digests: Python 3 hashlib.sha3_<bits>(b'a' * length).hexdigest().
+static void assert_sha3_padding_boundaries(SHA3Builder &h, const char *const expected[4]) {
+  uint8_t input[2 * SHA3_224_RATE - 1];
+  memset(input, 'a', sizeof(input));
+  const size_t rate = h.getBlockSize();
+  const size_t lengths[] = {rate - 2, rate - 1, rate, 2 * rate - 1};
+
+  for (size_t i = 0; i < 4; i++) {
+    h.begin();
+    h.add(input, lengths[i]);
+    h.calculate();
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(expected[i], h.toString().c_str(), "Single update at padding boundary");
+
+    const size_t split = lengths[i] / 2;
+    h.begin();
+    h.add(input, split);
+    h.add(input + split, lengths[i] - split);
+    h.calculate();
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(expected[i], h.toString().c_str(), "Split update at padding boundary");
+  }
+}
+
+void test_sha3_224_padding_boundaries(void) {
+  SHA3_224Builder h;
+  const char *const expected[] = {
+    "fcba38d3feeb1adf8785f53eb63a6daad6dcfe14dbc39d18f33400db", "73b1b22b54f515f626a6abdde6af25cd4801dc6e9dc7fa3f77e1c122",
+    "f9019111996dcf160e284e320fd6d8825cabcd41a5ffdc4c5e9d64b6", "68f7e02cfc889be847b01fed97dd3ab512e75d067b15a76f358e77df"
+  };
+  assert_sha3_padding_boundaries(h, expected);
+}
+
+void test_sha3_256_padding_boundaries(void) {
+  SHA3_256Builder h;
+  const char *const expected[] = {
+    "58b970c37ac2d65b599b691868a61401a501c40f235d55f059d39a942f41dcee", "8094bb53c44cfb1e67b7c30447f9a1c33696d2463ecc1d9c92538913392843c9",
+    "3fc5559f14db8e453a0a3091edbd2bc25e11528d81c66fa570a4efdcc2695ee1", "e79e5c6fef1bb5fdea2717ca27e88399e9b64699d1b3eb8e30f314fa055214e8"
+  };
+  assert_sha3_padding_boundaries(h, expected);
+}
+
+void test_sha3_384_padding_boundaries(void) {
+  SHA3_384Builder h;
+  const char *const expected[] = {
+    "f193bc7a5497492e341f9bec46904a0908628d1b7fe6fe1c48634c07fc1213e39252becc097f3a4442036e34ffcccdf9",
+    "af61fb4fd1c6afe80857fcba888318a0a1426635b4509f09707e3787630bdb621655ffa54f5884088ccc000f81436414",
+    "3a4f3b6284e571238884e95655e8c8a60e068e4059a9734abc08823a900d161592860243f00619ae699a29092ed91a16",
+    "17c621a1bbaef3d24eb14b680a42225c5c56b7e27e562eb74eda1e1fc4d9714540dc59f8e322797574014fb42545f2aa"
+  };
+  assert_sha3_padding_boundaries(h, expected);
+}
+
+void test_sha3_512_padding_boundaries(void) {
+  SHA3_512Builder h;
+  const char *const expected[] = {
+    "c2fe788baed79cbf7c3a9375de174343d482d0fbddfae434242a18401c9fa46dde5bf60fd94330a13e2e1a5425f44c56ee885423634d1fc8c8dd87d74475a20d",
+    "070faf98d2a8fddf8ed886408744dc06456096c2e045f26f3c7b010530e6bbb3db535a54d636856f4e0e1e982461cb9a7e8e57ff8895cff1619af9f0e486e28c",
+    "a8ae722a78e10cbbc413886c02eb5b369a03f6560084aff566bd597bb7ad8c1ccd86e81296852359bf2faddb5153c0a7445722987875e74287adac21adebe952",
+    "1dfc536c0ef79e004ec6f18e3b24fd6c4c3076556424ef369e8734312d6594ff9b92a8f02d2980ab51c191a9cc3cf47d06265e81d306d4098cdf2b6bada1db27"
+  };
+  assert_sha3_padding_boundaries(h, expected);
+}
+
 // ==================== PBKDF2-HMAC (RFC 6070) ====================
 
 void test_pbkdf2_sha1_c1(void) {
@@ -1167,22 +1229,26 @@ void setup() {
   RUN_TEST(test_sha3_224_empty);
   RUN_TEST(test_sha3_224_abc);
   RUN_TEST(test_sha3_224_hash_size);
+  RUN_TEST(test_sha3_224_padding_boundaries);
 
   // SHA3-256
   RUN_TEST(test_sha3_256_empty);
   RUN_TEST(test_sha3_256_abc);
   RUN_TEST(test_sha3_256_hash_size);
   RUN_TEST(test_sha3_256_multi_chunk);
+  RUN_TEST(test_sha3_256_padding_boundaries);
 
   // SHA3-384
   RUN_TEST(test_sha3_384_empty);
   RUN_TEST(test_sha3_384_abc);
   RUN_TEST(test_sha3_384_hash_size);
+  RUN_TEST(test_sha3_384_padding_boundaries);
 
   // SHA3-512
   RUN_TEST(test_sha3_512_empty);
   RUN_TEST(test_sha3_512_abc);
   RUN_TEST(test_sha3_512_hash_size);
+  RUN_TEST(test_sha3_512_padding_boundaries);
 
   // PBKDF2-HMAC
   RUN_TEST(test_pbkdf2_sha1_c1);
