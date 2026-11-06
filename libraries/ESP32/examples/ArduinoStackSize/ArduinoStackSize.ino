@@ -15,21 +15,23 @@
     In this example, you can verify it by changing or just commenting out SET_LOOP_TASK_STACK_SIZE();
 */
 
+#include <Arduino.h>
+
 // This sets Arduino Stack Size - comment this line to use default 8K stack size
 SET_LOOP_TASK_STACK_SIZE(16 * 1024);  // 16KB
 
 void setup() {
   Serial.begin(115200);
 
-  Serial.printf("Arduino Stack was set to %d bytes", getArduinoLoopTaskStackSize());
+  Serial.printf("Arduino Stack was set to %lu bytes", (unsigned long)getArduinoLoopTaskStackSize());
 
   // Print unused stack for the task that is running setup()
-  Serial.printf("\nSetup() - Free Stack Space: %d", uxTaskGetStackHighWaterMark(NULL));
+  Serial.printf("\nSetup() - Free Stack Space: %u", uxTaskGetStackHighWaterMark(NULL));
 }
 
 void loop() {
   delay(1000);
 
   // Print unused stack for the task that is running loop() - the same as for setup()
-  Serial.printf("\nLoop() - Free Stack Space: %d", uxTaskGetStackHighWaterMark(NULL));
+  Serial.printf("\nLoop() - Free Stack Space: %u", uxTaskGetStackHighWaterMark(NULL));
 }

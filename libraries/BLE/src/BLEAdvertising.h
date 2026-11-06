@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEAdvertising.h
  *
  *  Created on: Jun 21, 2017
@@ -23,7 +42,6 @@
 
 #include "BLEUUID.h"
 #include <vector>
-#include "RTOS.h"
 #include "BLEUtils.h"
 
 /***************************************************************************
@@ -192,7 +210,8 @@ private:
   std::vector<BLEUUID> m_serviceUUIDs;
   bool m_customAdvData = false;
   bool m_customScanResponseData = false;
-  FreeRTOS::Semaphore m_semaphoreSetAdv = FreeRTOS::Semaphore("startAdvert");
+  bool m_advDataSet = false;
+  bool m_advConfiguring = false;
   bool m_scanResp = true;
 
   /***************************************************************************
@@ -203,6 +222,12 @@ private:
   esp_ble_adv_data_t m_advData;
   esp_ble_adv_data_t m_scanRespData;
   esp_ble_adv_params_t m_advParams;
+  bool m_nameInScanResp = false;      // true when device name overflows adv packet -> goes in scan response
+  bool m_advertisingPending = false;  // true when start_advertising was issued but start complete event not yet received
+  bool configureScanResponseData();
+  void freeServiceUUIDs();
+  uint16_t buildRawAdvData(uint8_t *buf, uint16_t bufLen, bool includeName = true);
+  uint16_t buildRawScanRespData(uint8_t *buf, uint16_t bufLen);
 #endif
 
   /***************************************************************************
@@ -213,7 +238,6 @@ private:
   ble_hs_adv_fields m_advData;
   ble_hs_adv_fields m_scanData;
   ble_gap_adv_params m_advParams;
-  bool m_advDataSet;
   void (*m_advCompCB)(BLEAdvertising *pAdv);
   uint8_t m_slaveItvl[4];
   uint32_t m_duration;

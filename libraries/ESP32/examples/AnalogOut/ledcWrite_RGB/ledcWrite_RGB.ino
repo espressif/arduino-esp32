@@ -8,6 +8,8 @@
   Some basic modifications were made by vseven, mostly commenting.
  */
 
+#include <Arduino.h>
+
 // Set up the rgb led names
 uint8_t ledR = 0;
 uint8_t ledG = 2;

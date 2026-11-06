@@ -16,7 +16,7 @@ We all know how important documentation is. This project is no different.
 
 This documentation was created in a collaborative and open way, letting everyone contribute, from a small typo fix to a new chapter writing. We try to motivate our community by giving all the support needed through this guide.
 
-The documentation is in **English only**. Future translations can be added when we finish the essential content in English first.
+The documentation is in **American English only**. Future translations can be added when we finish the essential content in English first.
 
 How to Collaborate
 ------------------
@@ -147,6 +147,11 @@ Documentation Rules
 Here are some guidelines to help you. We also recommend copying a sample file from the same category you are creating.
 
 This will help you to follow the structure as well as to get inspired.
+
+Espressif Manual of Style
+*************************
+
+The `Espressif Manual of Style <https://mos.espressif.com/index.html>`_ (esp-mos) describes established practices for Espressif documentation: punctuation, numbers, units, mathematical expressions, figures, color accessibility, tables, UI elements, and admonitions. Follow it when writing or editing pages here.
 
 Basic Structure
 ***************

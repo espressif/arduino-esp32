@@ -12,6 +12,8 @@
    4. wait
    5. Stop advertising.
 */
+
+#include <Arduino.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
@@ -124,7 +126,7 @@ void setup() {
 
 void loop() {
   if (deviceConnected) {
-    Serial.printf("*** NOTIFY: %d ***\n", value);
+    Serial.printf("*** NOTIFY: %u ***\n", value);
     pCharacteristic->setValue(&value, 1);
     pCharacteristic->notify();
     value++;

@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       idf_ver:
-        description: "IDF Versions"
-        default: "release-v5.3,release-v5.4,release-v5.5"
+        description: "Comma separated list of IDF branches to build"
+        default: "release-v5.5"
         type: "string"
         required: true
       idf_targets:
-        description: "IDF Targets"
-        default: "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
+        description: "Comma separated list of IDF targets to build (leave empty to use version-specific defaults from socs_config.sh)"
+        default: ""
         type: "string"
         required: false
   push:
@@ -26,24 +26,17 @@ on:
       - "idf_component_examples/**"
       - "idf_component.yml"
       - "Kconfig.projbuild"
-      - "CMakeLists.txt"
       - ".github/workflows/build_component.yml"
       - ".github/scripts/check-cmakelists.sh"
       - ".github/scripts/on-push-idf.sh"
       - ".github/scripts/sketch_utils.sh"
       - ".github/scripts/get_affected.py"
-      - "variants/esp32/**"
-      - "variants/esp32c2/**"
-      - "variants/esp32c3/**"
-      - "variants/esp32c5/**"
-      - "variants/esp32c6/**"
-      - "variants/esp32h2/**"
-      - "variants/esp32p4/**"
-      - "variants/esp32s2/**"
-      - "variants/esp32s3/**"
+      - ".github/scripts/socs_config.sh"
+      - "variants/**"
       - "!*.md"
       - "!*.txt"
       - "!*.properties"
+      - "CMakeLists.txt"
 
 permissions:
   contents: read
@@ -58,35 +51,86 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - run: bash ./.github/scripts/check-cmakelists.sh
+
+  check-examples:
+    name: Check Examples Match
+    runs-on: ubuntu-latest
+    if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check examples consistency
+        run: |
+          # Get list of folders in idf_component_examples (excluding hidden files)
+          actual_examples=$(find idf_component_examples -maxdepth 1 -type d ! -path idf_component_examples | sed 's|idf_component_examples/||' | sort)
+
+          # Extract example paths from idf_component.yml
+          declared_examples=$(grep -A 100 "^examples:" idf_component.yml | grep "path:" | sed 's/.*path: *\.\/idf_component_examples\///' | sort)
+
+          echo "=== Examples in idf_component_examples folder ==="
+          echo "$actual_examples"
+          echo ""
+          echo "=== Examples declared in idf_component.yml ==="
+          echo "$declared_examples"
+          echo ""
+
+          # Compare the two lists
+          if [ "$actual_examples" != "$declared_examples" ]; then
+            echo "❌ ERROR: Examples mismatch detected!"
+            echo ""
+            echo "Examples in folder but NOT in idf_component.yml:"
+            comm -23 <(echo "$actual_examples") <(echo "$declared_examples") | sed 's/^/  - /'
+            echo ""
+            echo "Examples in idf_component.yml but NOT in folder:"
+            comm -13 <(echo "$actual_examples") <(echo "$declared_examples") | sed 's/^/  - /'
+            exit 1
+          else
+            echo "✅ All examples match correctly!"
+          fi
 
   set-matrix:
     name: Set Matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     outputs:
+      should_run: ${{ steps.check-variants.outputs.should_run }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       should_build: ${{ steps.affected-examples.outputs.should_build }}
     steps:
       - name: Install universal-ctags
-        uses: awalsh128/cache-apt-pkgs-action@2c09a5e66da6c8016428a2172bd76e5e4f14bb17 # v1.5.3
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
         with:
-          packages: libicu74 libjansson4 libxml2 libyaml-0-2 universal-ctags
-          version: 1
+          packages: libjansson4 libseccomp2 libxml2-16 libyaml-0-2 universal-ctags
+          version: 2
           execute_install_scripts: true
 
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 2
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
+
+      - name: Check if official variants changed
+        id: check-variants
+        run: |
+          bash .github/scripts/check_official_variants.sh \
+            "${{ github.event_name }}" \
+            "IDF_COMPONENT_TARGETS" \
+            ${{ steps.changed-files.outputs.all_changed_files }}
 
       - name: Get affected examples
         id: affected-examples
+        if: steps.check-variants.outputs.should_run == 'true'
         env:
           IS_PR: ${{ github.event_name == 'pull_request' }}
         run: |
@@ -94,14 +138,16 @@ jobs:
           python3 ./.github/scripts/get_affected.py --debug --component ${{ steps.changed-files.outputs.all_changed_files }} > affected_examples.txt
 
       - name: Upload affected examples
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: affected_examples
           path: affected_examples.txt
           if-no-files-found: error
 
       - name: Upload debug artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: get_affected_debug
           path: |
@@ -114,27 +160,13 @@ jobs:
 
       - name: Get Matrix Combinations
         id: set-matrix
+        if: steps.check-variants.outputs.should_run == 'true'
         run: |
-          # Define version-specific target configurations
-          get_targets_for_version() {
-            case "$1" in
-              "release-v5.3")
-                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
-                ;;
-              "release-v5.4")
-                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
-                ;;
-              "release-v5.5")
-                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c5,esp32c6,esp32h2,esp32p4"
-                ;;
-              *)
-                echo ""
-                ;;
-            esac
-          }
+          # Source centralized SoC configuration
+          source .github/scripts/socs_config.sh
 
           # Default versions if not provided via inputs
-          DEFAULT_VERSIONS="release-v5.3,release-v5.4,release-v5.5"
+          DEFAULT_VERSIONS="release-v5.3,release-v5.4,release-v5.5,release-v6.0,release-v6.1"
 
           # Use inputs if provided, otherwise use defaults
           if [[ -n "${{ inputs.idf_ver }}" ]]; then
@@ -157,8 +189,8 @@ jobs:
               # Use provided targets for all versions
               targets="${{ inputs.idf_targets }}"
             else
-              # Use version-specific targets
-              targets=$(get_targets_for_version "$version")
+              # Use version-specific targets from centralized config
+              targets=$(get_targets_for_idf_version "$version")
             fi
 
             if [[ -n "$targets" ]]; then
@@ -189,21 +221,22 @@ jobs:
     name: Build IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
     runs-on: ubuntu-latest
     needs: set-matrix
-    if: ${{ needs.set-matrix.outputs.should_build == '1' }}
+    if: ${{ needs.set-matrix.outputs.should_run == 'true' && needs.set-matrix.outputs.should_build == '1' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
     container: espressif/idf:${{ matrix.idf_ver }}
     steps:
       - name: Check out arduino-esp32 as a component
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           submodules: recursive
           path: components/arduino-esp32
 
       # Need to install jq in the container to be able to use it in the script
       - name: Setup jq
-        uses: dcarbone/install-jq-action@e397bd87438d72198f81efd21f876461183d383a # v3.0.1
+        uses: dcarbone/install-jq-action@4fcb5062d7ce9bc4382d1a352d19ba3ba2c317c1 # v4.0.1
 
       - name: Setup yq
         run: |
@@ -214,7 +247,7 @@ jobs:
           yq --version
 
       - name: Download affected examples
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: affected_examples
 
@@ -227,7 +260,7 @@ jobs:
           ./components/arduino-esp32/.github/scripts/on-push-idf.sh affected_examples.txt
 
       - name: Upload generated sdkconfig files for debugging
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: sdkconfig-${{ matrix.idf_ver }}-${{ matrix.idf_target }}

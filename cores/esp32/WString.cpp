@@ -59,6 +59,13 @@ String::String(StringSumHelper &&rval) {
   init();
   move(rval);
 }
+
+String::String(std::initializer_list<char> list) {
+  init();
+  if (list.size() > 0) {
+    copy(list.begin(), list.size());
+  }
+}
 #endif
 
 String::String(char c) {

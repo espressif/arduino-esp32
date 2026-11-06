@@ -56,6 +56,10 @@ public:
   // Set the WindSpeed value in 0,01 m/s
   bool setWindSpeed(float value);
 
+  // Set the default (initial) value for the wind speed sensor in 0,01 m/s
+  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  bool setDefaultValue(float defaultValue);
+
   // Set the min and max value for the WindSpeed sensor
   bool setMinMaxValue(float min, float max);
 

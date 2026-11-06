@@ -27,10 +27,42 @@ env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 jobs:
-  compile-sketch:
+  gen-matrix:
     if: |
       contains(github.event.pull_request.labels.*.name, 'lib_test') ||
       (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate matrix
+        id: set-matrix
+        run: |
+          source .github/scripts/socs_config.sh
+
+          # Generate matrix with target and fqbn from BUILD_TEST_TARGETS
+          echo '{"include": [' > matrix.json
+          first=true
+          for target in "${BUILD_TEST_TARGETS[@]}"; do
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo ',' >> matrix.json
+            fi
+            echo "{\"target\": \"$target\", \"fqbn\": \"espressif:esp32:$target\"}" >> matrix.json
+          done
+          echo ']}' >> matrix.json
+
+          cat matrix.json
+          printf "matrix=%s\n" "$(cat matrix.json | jq -c .)" >> $GITHUB_OUTPUT
+
+  compile-sketch:
+    needs: gen-matrix
     runs-on: ubuntu-latest
     env:
       REPOSITORY: |
@@ -38,39 +70,17 @@ jobs:
           name: "espressif:esp32"
 
     strategy:
-      matrix:
-        target:
-          - esp32
-          - esp32s2
-          - esp32c3
-          - esp32s3
-          - esp32c6
-          - esp32h2
-          - esp32p4
-
-        include:
-          - target: esp32
-            fqbn: espressif:esp32:esp32
-          - target: esp32s2
-            fqbn: espressif:esp32:esp32s2
-          - target: esp32c3
-            fqbn: espressif:esp32:esp32c3
-          - target: esp32s3
-            fqbn: espressif:esp32:esp32s3
-          - target: esp32c6
-            fqbn: espressif:esp32:esp32c6
-          - target: esp32h2
-            fqbn: espressif:esp32:esp32h2
-          - target: esp32p4
-            fqbn: espressif:esp32:esp32p4
+      matrix: ${{ fromJson(needs.gen-matrix.outputs.matrix) }}
 
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Compile sketch
-        uses: P-R-O-C-H-Y/compile-sketches@a62f069b92dc8f5053da4ac439ea6d1950cf6379 # main
+        uses: P-R-O-C-H-Y/compile-sketches@016e3c2dae7a68d7f759d358f1486a301f7e4150 # main
         with:
           platforms: |
             ${{ env.REPOSITORY }}
@@ -85,7 +95,7 @@ jobs:
             - --warnings="all"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-${{ matrix.target }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}
@@ -97,7 +107,7 @@ jobs:
     steps:
       # Check out repository
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ env.GITHUB_TOKEN }}
           fetch-depth: "0"
@@ -107,7 +117,7 @@ jobs:
 
       # This step is needed to get the size data produced by the compile jobs
       - name: Download sketches reports artifact
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-*
           merge-multiple: true
@@ -143,7 +153,7 @@ jobs:
         run: echo $PR_NUM > pr_num.txt
 
       - name: Upload PR number
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pr_number
           path: ./pr_num.txt

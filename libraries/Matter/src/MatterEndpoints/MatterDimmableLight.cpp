@@ -16,12 +16,28 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterDimmableLight.h>
+#include <app/util/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
+
+// CurrentLevel is nullable uint8. 0 is below lighting MinLevel (1); 255 is the null sentinel.
+static uint8_t clampCurrentLevel(uint8_t value) {
+  if (value < 1) {
+    return 1;
+  }
+  return value > 254 ? 254 : value;
+}
+
+static bool currentLevelFromAttr(const esp_matter_attr_val_t *val, uint8_t *out) {
+  if (val == nullptr || chip::app::NumericAttributeTraits<uint8_t>::IsNullValue(val->val.u8)) {
+    return false;
+  }
+  *out = clampCurrentLevel(val->val.u8);
+  return true;
+}
 
 bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
   bool ret = true;
@@ -30,13 +46,16 @@ bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
     return false;
   }
 
-  log_d("Dimmable Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Dimmable Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
 
   if (endpoint_id == getEndPointId()) {
     switch (cluster_id) {
       case OnOff::Id:
         if (attribute_id == OnOff::Attributes::OnOff::Id) {
-          log_d("DimmableLight On/Off State changed to %d", val->val.b);
+          log_d("DimmableLight On/Off State changed to %u", val->val.b);
           if (_onChangeOnOffCB != NULL) {
             ret &= _onChangeOnOffCB(val->val.b);
           }
@@ -50,15 +69,20 @@ bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
         break;
       case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-          log_d("DimmableLight Brightness changed to %d", val->val.u8);
+          uint8_t level = 0;
+          if (!currentLevelFromAttr(val, &level)) {
+            log_d("DimmableLight CurrentLevel is null");
+            break;
+          }
+          log_d("DimmableLight Brightness changed to %u", level);
           if (_onChangeBrightnessCB != NULL) {
-            ret &= _onChangeBrightnessCB(val->val.u8);
+            ret &= _onChangeBrightnessCB(level);
           }
           if (_onChangeCB != NULL) {
-            ret &= _onChangeCB(onOffState, val->val.u8);
+            ret &= _onChangeCB(onOffState, level);
           }
           if (ret == true) {
-            brightnessLevel = val->val.u8;
+            brightnessLevel = level;
           }
         }
         break;
@@ -76,18 +100,18 @@ MatterDimmableLight::~MatterDimmableLight() {
 bool MatterDimmableLight::begin(bool initialState, uint8_t brightness) {
   ArduinoMatter::_init();
   if (getEndPointId() != 0) {
-    log_e("Matter Dimmable Light with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter Dimmable Light with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
   dimmable_light::config_t light_config;
   light_config.on_off.on_off = initialState;
-  light_config.on_off.lighting.start_up_on_off = nullptr;
+  light_config.on_off_lighting.start_up_on_off = nullptr;
   onOffState = initialState;
 
-  light_config.level_control.current_level = brightness;
-  light_config.level_control.lighting.start_up_current_level = nullptr;
-  brightnessLevel = brightness;
+  brightnessLevel = clampCurrentLevel(brightness);
+  light_config.level_control.current_level = brightnessLevel;
+  light_config.level_control_lighting.start_up_current_level = nullptr;
 
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = dimmable_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -97,7 +121,8 @@ bool MatterDimmableLight::begin(bool initialState, uint8_t brightness) {
   }
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Dimmable Light created with endpoint_id %d", getEndPointId());
+
+  log_i("Dimmable Light created with endpoint_id %u", getEndPointId());
 
   /* Mark deferred persistence for some attributes that might be changed rapidly */
   cluster_t *level_control_cluster = cluster::get(endpoint, LevelControl::Id);
@@ -159,24 +184,24 @@ bool MatterDimmableLight::setBrightness(uint8_t newBrightness) {
     return false;
   }
 
+  const uint8_t brightness = clampCurrentLevel(newBrightness);
   // avoid processing if there was no change
-  if (brightnessLevel == newBrightness) {
+  if (brightnessLevel == brightness) {
     return true;
   }
 
-  brightnessLevel = newBrightness;
+  brightnessLevel = brightness;
 
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, LevelControl::Id);
   esp_matter::attribute_t *attribute = attribute::get(cluster, LevelControl::Attributes::CurrentLevel::Id);
-
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  attribute::get_val(attribute, &val);
-
-  if (val.val.u8 != brightnessLevel) {
-    val.val.u8 = brightnessLevel;
-    attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
+  if (attribute == nullptr) {
+    log_e("Failed to get Dimmable Light CurrentLevel Attribute.");
+    return false;
   }
+
+  esp_matter_attr_val_t val = esp_matter_nullable_uint8(brightnessLevel);
+  attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
   return true;
 }
 

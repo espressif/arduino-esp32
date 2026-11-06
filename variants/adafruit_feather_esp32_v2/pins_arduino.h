@@ -35,6 +35,7 @@ static const uint8_t A13 = 35;
 
 // vbat measure
 #define BATT_MONITOR 35
+#define BAT_VOLT_PIN BATT_MONITOR
 
 // internal switch
 #define BUTTON 38

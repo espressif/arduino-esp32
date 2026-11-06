@@ -14,6 +14,7 @@
  *
  * Middleware are execute in order of addition, the ones attached to the server will be executed first.
  */
+#include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Middlewares.h>

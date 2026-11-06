@@ -19,6 +19,8 @@
  * Parameters can be changed by the user. In a single LED circuit, it will just blink.
  */
 
+#include <Arduino.h>
+
 // The effect seen in (Espressif devkits) ESP32C6, ESP32H2, ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
 #ifdef PIN_LED_RGB
 #define BUILTIN_RGBLED_PIN PIN_LED_RGB

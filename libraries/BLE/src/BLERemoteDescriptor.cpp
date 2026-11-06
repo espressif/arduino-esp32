@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLERemoteDescriptor.cpp
  *
  *  Created on: Jul 8, 2017
@@ -23,6 +42,7 @@
 #include "BLERemoteDescriptor.h"
 #include "GeneralUtils.h"
 #include "esp32-hal-log.h"
+#include <inttypes.h>
 
 /***************************************************************************
  *                           NimBLE includes                               *
@@ -100,7 +120,7 @@ uint32_t BLERemoteDescriptor::readUInt32() {
  */
 String BLERemoteDescriptor::toString() {
   char val[6];
-  snprintf(val, sizeof(val), "%d", getHandle());
+  snprintf(val, sizeof(val), "%u", getHandle());
   String res = "handle: ";
   res += val;
   res += ", uuid: " + getUUID().toString();
@@ -163,14 +183,15 @@ void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp
         m_value = "";
       }
       // Unlock the semaphore to ensure that the requester of the data can continue.
-      m_semaphoreReadDescrEvt.give();
+      // Pass the GATT status through the semaphore value for retry logic.
+      m_semaphoreReadDescrEvt.give(evtParam->read.status);
       break;
 
     case ESP_GATTC_WRITE_DESCR_EVT:
       if (evtParam->write.handle != getHandle()) {
         break;
       }
-      m_semaphoreWriteDescrEvt.give();
+      m_semaphoreWriteDescrEvt.give(evtParam->write.status);
       break;
     default: break;
   }
@@ -179,32 +200,55 @@ void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp
 String BLERemoteDescriptor::readValue() {
   log_v(">> readValue: %s", toString().c_str());
 
+  BLEClient *pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
+
   // Check to see that we are connected.
-  if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
+  if (!pClient->isConnected()) {
     log_e("Disconnected");
     return String();
   }
 
-  m_semaphoreReadDescrEvt.take("readValue");
+  // Wait for authentication to complete if security was started on connection
+  BLESecurity::waitForAuthenticationComplete();
 
-  // Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
-  esp_err_t errRc = ::esp_ble_gattc_read_char_descr(
-    m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(),
-    m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(),  // The connection ID to the BLE server
-    getHandle(),                                                            // The handle of this characteristic
-    (esp_gatt_auth_req_t)m_auth
-  );  // Security
+  int retryCount = 1;
+  uint32_t status = ESP_GATT_OK;
 
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return "";
-  }
+  do {
+    m_semaphoreReadDescrEvt.take("readValue");
 
-  // Block waiting for the event that indicates that the read has completed.  When it has, the String found
-  // in m_value will contain our data.
-  m_semaphoreReadDescrEvt.wait("readValue");
+    // Ask the BLE subsystem to retrieve the value for the remote hosted descriptor.
+    esp_err_t errRc = ::esp_ble_gattc_read_char_descr(
+      pClient->getGattcIf(),
+      pClient->getConnId(),  // The connection ID to the BLE server
+      getHandle(),           // The handle of this descriptor
+      (esp_gatt_auth_req_t)m_auth
+    );  // Security
 
-  log_v("<< readValue(): length: %d", m_value.length());
+    if (errRc != ESP_OK) {
+      log_e("esp_ble_gattc_read_char_descr: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreReadDescrEvt.give();
+      return "";
+    }
+
+    // Block waiting for the event that indicates that the read has completed.
+    // The GATT status is passed through the semaphore value.
+    status = m_semaphoreReadDescrEvt.wait("readValue");
+
+    switch (status) {
+      case ESP_GATT_OK: break;
+      case ESP_GATT_INSUF_AUTHENTICATION:
+      case ESP_GATT_INSUF_AUTHORIZATION:
+      case ESP_GATT_INSUF_ENCRYPTION:
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
+          break;
+        }
+      /* Else falls through. */
+      default: log_e("readValue: status=%d", status); break;
+    }
+  } while (status != ESP_GATT_OK && retryCount--);
+
+  log_v("<< readValue(): length: %u", m_value.length());
   return m_value;
 }  // readValue
 
@@ -217,27 +261,56 @@ String BLERemoteDescriptor::readValue() {
  */
 bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response) {
   log_v(">> writeValue: %s", toString().c_str());
+
+  BLEClient *pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
+
   // Check to see that we are connected.
-  if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
+  if (!pClient->isConnected()) {
     log_e("Disconnected");
     return false;
   }
 
-  m_semaphoreWriteDescrEvt.take("writeValue");
+  // Wait for authentication to complete if security was started on connection
+  BLESecurity::waitForAuthenticationComplete();
 
-  esp_err_t errRc = ::esp_ble_gattc_write_char_descr(
-    m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(), m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(), getHandle(),
-    length,  // Data length
-    data,    // Data
-    response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP, (esp_gatt_auth_req_t)m_auth
-  );
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_write_char_descr: %d", errRc);
-  }
+  int retryCount = 1;
+  uint32_t status = ESP_GATT_OK;
 
-  m_semaphoreWriteDescrEvt.wait("writeValue");
+  do {
+    m_semaphoreWriteDescrEvt.take("writeValue");
+
+    esp_err_t errRc = ::esp_ble_gattc_write_char_descr(
+      pClient->getGattcIf(), pClient->getConnId(), getHandle(),
+      length,  // Data length
+      data,    // Data
+      response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP, (esp_gatt_auth_req_t)m_auth
+    );
+
+    if (errRc != ESP_OK) {
+      log_e("esp_ble_gattc_write_char_descr: %d", errRc);
+      m_semaphoreWriteDescrEvt.give();
+      return false;
+    }
+
+    // Block waiting for the event that indicates that the write has completed.
+    // The GATT status is passed through the semaphore value.
+    status = m_semaphoreWriteDescrEvt.wait("writeValue");
+
+    switch (status) {
+      case ESP_GATT_OK: break;
+      case ESP_GATT_INSUF_AUTHENTICATION:
+      case ESP_GATT_INSUF_AUTHORIZATION:
+      case ESP_GATT_INSUF_ENCRYPTION:
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
+          break;
+        }
+      /* Else falls through. */
+      default: log_e("writeValue: status=%d", status); break;
+    }
+  } while (status != ESP_GATT_OK && retryCount--);
+
   log_v("<< writeValue");
-  return (errRc == ESP_OK);
+  return (status == ESP_GATT_OK);
 }  // writeValue
 
 #endif
@@ -328,7 +401,7 @@ exit:
   if (rc != 0) {
     log_e("<< readValue failed rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
   } else {
-    log_d("<< Descriptor readValue(): length: %d rc=%d", value.length(), rc);
+    log_d("<< Descriptor readValue(): length: %u rc=%d", value.length(), rc);
   }
 
   return value;
@@ -353,7 +426,7 @@ int BLERemoteDescriptor::onReadCB(uint16_t conn_handle, const struct ble_gatt_er
     return 0;
   }
 
-  log_d("Read complete; status=%d conn_handle=%d", error->status, conn_handle);
+  log_d("Read complete; status=%u conn_handle=%u", error->status, conn_handle);
 
   String *strBuf = static_cast<String *>(pTaskData->m_pBuf);
   int rc = error->status;
@@ -364,7 +437,7 @@ int BLERemoteDescriptor::onReadCB(uint16_t conn_handle, const struct ble_gatt_er
       if (((*strBuf).length() + data_len) > BLE_ATT_ATTR_MAX_LEN) {
         rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
       } else {
-        log_d("Got %d bytes", data_len);
+        log_d("Got %" PRIu32 " bytes", data_len);
         (*strBuf) += String((char *)attr->om->om_data, data_len);
         return 0;
       }
@@ -394,7 +467,7 @@ int BLERemoteDescriptor::onWriteCB(uint16_t conn_handle, const struct ble_gatt_e
     return 0;
   }
 
-  log_i("Write complete; status=%d conn_handle=%d", rc, conn_handle);
+  log_i("Write complete; status=%u conn_handle=%u", rc, conn_handle);
 
   BLEUtils::taskRelease(*pTaskData, rc);
   return 0;
@@ -432,7 +505,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
 
   do {
     if (length > mtu) {
-      log_i("long write %d bytes", length);
+      log_i("long write %lu bytes", (unsigned long)length);
       os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
       rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om, BLERemoteDescriptor::onWriteCB, &taskData);
     } else {
@@ -450,7 +523,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
       case 0:
       case BLE_HS_EDONE: rc = 0; break;
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
-        log_e("Long write not supported by peer; Truncating length to %d", mtu);
+        log_e("Long write not supported by peer; Truncating length to %u", mtu);
         retryCount++;
         length = mtu;
         break;
@@ -470,7 +543,7 @@ exit:
   if (rc != 0) {
     log_e("<< writeValue failed rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
   } else {
-    log_d("<< writeValue success. length: %d rc=%d", length, rc);
+    log_d("<< writeValue success. length: %lu rc=%d", (unsigned long)length, rc);
   }
 
   return (rc == 0);

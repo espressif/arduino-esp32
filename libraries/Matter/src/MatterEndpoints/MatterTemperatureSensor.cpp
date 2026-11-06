@@ -22,6 +22,18 @@ using namespace esp_matter;
 using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
 
+namespace {
+bool celsiusToRaw(double temperature, int16_t *rawOut) {
+  const double raw = temperature * 100.0;
+  if (raw < (double)INT16_MIN || raw > (double)INT16_MAX) {
+    log_e("Temperature %.02fC is out of range [%.02f..%.02f].", temperature, (double)INT16_MIN / 100.0, (double)INT16_MAX / 100.0);
+    return false;
+  }
+  *rawOut = static_cast<int16_t>(raw);
+  return true;
+}
+}  // namespace
+
 bool MatterTemperatureSensor::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
   bool ret = true;
   if (!started) {
@@ -29,8 +41,27 @@ bool MatterTemperatureSensor::attributeChangeCB(uint16_t endpoint_id, uint32_t c
     return false;
   }
 
-  log_d("Temperature Sensor Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Temperature Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
   return ret;
+}
+
+bool MatterTemperatureSensor::begin(double temperature) {
+  int16_t rawTemperatureValue = 0;
+  if (!celsiusToRaw(temperature, &rawTemperatureValue)) {
+    return false;
+  }
+  return begin(rawTemperatureValue);
+}
+
+bool MatterTemperatureSensor::setTemperature(double temperature) {
+  int16_t rawTemperatureValue = 0;
+  if (!celsiusToRaw(temperature, &rawTemperatureValue)) {
+    return false;
+  }
+  return setRawTemperature(rawTemperatureValue);
 }
 
 MatterTemperatureSensor::MatterTemperatureSensor() {}
@@ -43,7 +74,7 @@ bool MatterTemperatureSensor::begin(int16_t _rawTemperature) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Temperature Sensor with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Temperature Sensor with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -60,7 +91,8 @@ bool MatterTemperatureSensor::begin(int16_t _rawTemperature) {
   }
   rawTemperature = _rawTemperature;
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Temperature Sensor created with endpoint_id %d", getEndPointId());
+
+  log_i("Temperature Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;

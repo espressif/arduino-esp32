@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <SHA1Builder.h>
 
 // Occasionally it is useful to compare a password that the user

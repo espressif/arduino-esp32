@@ -34,6 +34,10 @@ typedef struct {
   bool lastStatusIsPressed;
 } TouchInterruptHandle_t;
 
+#ifndef SOC_TOUCH_SENSOR_NUM
+#define SOC_TOUCH_SENSOR_NUM (SOC_TOUCH_MAX_CHAN_ID + 1)
+#endif
+
 static TouchInterruptHandle_t __touchInterruptHandlers[SOC_TOUCH_SENSOR_NUM] = {
   0,
 };
@@ -117,8 +121,12 @@ bool touchDisable() {
   if (!enabled) {  // Already disabled
     return true;
   }
-  if (!running && (touch_sensor_disable(touch_sensor_handle) != ESP_OK)) {
-    log_e("Touch sensor still running or disable failed!");
+  if (running) {
+    log_e("Touch sensor still running!");
+    return false;
+  }
+  if (touch_sensor_disable(touch_sensor_handle) != ESP_OK) {
+    log_e("Touch sensor disable failed!");
     return false;
   }
   enabled = false;
@@ -129,8 +137,12 @@ bool touchStart() {
   if (running) {  // Already running
     return true;
   }
-  if (enabled && (touch_sensor_start_continuous_scanning(touch_sensor_handle) != ESP_OK)) {
-    log_e("Touch sensor not enabled or failed to start continuous scanning failed!");
+  if (!enabled) {
+    log_e("Touch sensor not enabled!");
+    return false;
+  }
+  if (touch_sensor_start_continuous_scanning(touch_sensor_handle) != ESP_OK) {
+    log_e("Touch sensor failed to start continuous scanning!");
     return false;
   }
   running = true;
@@ -186,10 +198,10 @@ bool touchBenchmarkThreshold(uint8_t pad) {
   for (int i = 0; i < _sample_num; i++) {
 #if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
     chan_cfg.abs_active_thresh[i] = (uint32_t)(benchmark[i] * (1 - s_thresh2bm_ratio));
-    log_v("Configured [CH %d] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.abs_active_thresh[i]);
+    log_v("Configured [CH %u] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.abs_active_thresh[i]);
 #else
     chan_cfg.active_thresh[i] = (uint32_t)(benchmark[i] * s_thresh2bm_ratio);
-    log_v("Configured [CH %d] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.active_thresh[i]);
+    log_v("Configured [CH %u] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.active_thresh[i]);
 #endif
   }
   /* Update the channel configuration */
@@ -395,7 +407,7 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
       return;
     }
 
-    touch_channel_config_t chan_cfg = {};
+    touch_channel_config_t chan_cfg = TOUCH_CHANNEL_DEFAULT_CONFIG();
     for (int i = 0; i < _sample_num; i++) {
 #if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
       chan_cfg.abs_active_thresh[i] = threshold;
@@ -416,17 +428,17 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
 
 // it keeps backwards compatibility
 static void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), touch_value_t threshold) {
-  __touchConfigInterrupt(pin, userFunc, NULL, threshold, false);
+  __touchConfigInterrupt(pin, userFunc, NULL, false, threshold);
 }
 
 // new additional version of the API with User Args
 static void __touchAttachArgsInterrupt(uint8_t pin, void (*userFunc)(void), void *args, touch_value_t threshold) {
-  __touchConfigInterrupt(pin, userFunc, args, threshold, true);
+  __touchConfigInterrupt(pin, userFunc, args, true, threshold);
 }
 
 // new additional API to detach touch ISR
 static void __touchDettachInterrupt(uint8_t pin) {
-  __touchConfigInterrupt(pin, NULL, NULL, 0, false);  // userFunc as NULL acts as detaching
+  __touchConfigInterrupt(pin, NULL, NULL, false, 0);  // userFunc as NULL acts as detaching
 }
 
 // /*
@@ -458,7 +470,7 @@ void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold) {
     }
   }
 
-  log_v("Touch sensor deep sleep wake-up configuration for pad %d with threshold %d", pad, threshold);
+  log_v("Touch sensor deep sleep wake-up configuration for pad %d with threshold %" PRIu32, pad, threshold);
   if (!touchStop() || !touchDisable()) {
     log_e("Touch sensor stop and disable failed!");
     return;

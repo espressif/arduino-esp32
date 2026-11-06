@@ -2,6 +2,7 @@
   To upload through terminal you can use: curl -F "image=@firmware.bin" esp32-webupdate.local/update
 */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <NetworkClient.h>
 #include <WebServer.h>

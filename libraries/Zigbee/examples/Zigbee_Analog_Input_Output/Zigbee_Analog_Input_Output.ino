@@ -26,6 +26,7 @@
  * Modified by Pat Clay
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ZCZR
 #error "Zigbee coordinator/router device mode is not selected in Tools->Zigbee mode"
 #endif

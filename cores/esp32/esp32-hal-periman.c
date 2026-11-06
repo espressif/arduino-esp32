@@ -6,6 +6,7 @@
 
 #include "esp32-hal-log.h"
 #include "esp32-hal-periman.h"
+#include "esp32-hal-ldo.h"
 #include "esp_bit_defs.h"
 
 typedef struct ATTR_PACKED {
@@ -23,12 +24,13 @@ static peripheral_pin_item_t pins[SOC_GPIO_PIN_COUNT];
 
 const char *perimanGetTypeName(peripheral_bus_type_t type) {
   switch (type) {
-    case ESP32_BUS_TYPE_INIT:     return "INIT";
-    case ESP32_BUS_TYPE_GPIO:     return "GPIO";
-    case ESP32_BUS_TYPE_UART_RX:  return "UART_RX";
-    case ESP32_BUS_TYPE_UART_TX:  return "UART_TX";
-    case ESP32_BUS_TYPE_UART_CTS: return "UART_CTS";
-    case ESP32_BUS_TYPE_UART_RTS: return "UART_RTS";
+    case ESP32_BUS_TYPE_INIT:       return "INIT";
+    case ESP32_BUS_TYPE_GPIO:       return "GPIO";
+    case ESP32_BUS_TYPE_UART_RX:    return "UART_RX";
+    case ESP32_BUS_TYPE_UART_TX:    return "UART_TX";
+    case ESP32_BUS_TYPE_UART_CTS:   return "UART_CTS";
+    case ESP32_BUS_TYPE_UART_RTS:   return "UART_RTS";
+    case ESP32_BUS_TYPE_UART_RX_TX: return "UART_RX_TX";
 #if SOC_SDM_SUPPORTED
     case ESP32_BUS_TYPE_SIGMADELTA: return "SIGMADELTA";
 #endif
@@ -101,7 +103,7 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
 #if CONFIG_ETH_USE_ESP32_EMAC
     case ESP32_BUS_TYPE_ETHERNET_RMII: return "ETHERNET_RMII";
     case ESP32_BUS_TYPE_ETHERNET_CLK:  return "ETHERNET_CLK";
-    case ESP32_BUS_TYPE_ETHERNET_MCD:  return "ETHERNET_MCD";
+    case ESP32_BUS_TYPE_ETHERNET_MDC:  return "ETHERNET_MDC";
     case ESP32_BUS_TYPE_ETHERNET_MDIO: return "ETHERNET_MDIO";
     case ESP32_BUS_TYPE_ETHERNET_PWR:  return "ETHERNET_PWR";
 #endif
@@ -110,6 +112,33 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
     case ESP32_BUS_TYPE_PPP_RX:  return "PPP_MODEM_RX";
     case ESP32_BUS_TYPE_PPP_RTS: return "PPP_MODEM_RTS";
     case ESP32_BUS_TYPE_PPP_CTS: return "PPP_MODEM_CTS";
+#endif
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED)
+    case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CLK: return "ESP_HOSTED_SDIO_CLK";
+    case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CMD: return "ESP_HOSTED_SDIO_CMD";
+    case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D0:  return "ESP_HOSTED_SDIO_D0";
+    case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D1:  return "ESP_HOSTED_SDIO_D1";
+    case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D2:  return "ESP_HOSTED_SDIO_D2";
+    case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D3:  return "ESP_HOSTED_SDIO_D3";
+    case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_RST: return "ESP_HOSTED_SDIO_RST";
+#endif
+#if SOC_LCDCAM_CAM_SUPPORTED
+    case ESP32_BUS_TYPE_LCDCAM_CAM_VSYNC: return "LCDCAM_CAM_VSYNC";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_HSYNC: return "LCDCAM_CAM_HSYNC";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_PCLK:  return "LCDCAM_CAM_PCLK";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_XCLK:  return "LCDCAM_CAM_XCLK";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D0:    return "LCDCAM_CAM_D0";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D1:    return "LCDCAM_CAM_D1";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D2:    return "LCDCAM_CAM_D2";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D3:    return "LCDCAM_CAM_D3";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D4:    return "LCDCAM_CAM_D4";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D5:    return "LCDCAM_CAM_D5";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D6:    return "LCDCAM_CAM_D6";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D7:    return "LCDCAM_CAM_D7";
+    case ESP32_BUS_TYPE_VIDEO_SCCB_SCL:   return "VIDEO_SCCB_SCL";
+    case ESP32_BUS_TYPE_VIDEO_SCCB_SDA:   return "VIDEO_SCCB_SDA";
+    case ESP32_BUS_TYPE_VIDEO_CAM_RESET:  return "VIDEO_CAM_RESET";
+    case ESP32_BUS_TYPE_VIDEO_CAM_PWDN:   return "VIDEO_CAM_PWDN";
 #endif
     default: return "UNKNOWN";
   }
@@ -157,6 +186,9 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void *bus, int8_t
   pins[pin].bus_num = bus_num;
   pins[pin].bus_channel = bus_channel;
   pins[pin].extra_type = NULL;
+#if defined(SOC_GP_LDO_SUPPORTED) && SOC_GP_LDO_SUPPORTED
+  ldoPerimanPinBusSet(pin, otype, type);
+#endif
   log_v("Pin %u successfully set to type %s (%u) with bus %p", pin, perimanGetTypeName(type), (unsigned int)type, bus);
   return true;
 }
@@ -236,9 +268,28 @@ bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t 
   return true;
 }
 
+// This no-op callback is used by perimanClearBusDeinit() to effectively disable bus deinit functionality
+// without setting the callback to NULL, which would cause errors in perimanSetPinBus() at line 146.
+static bool empty_bus_deinit_cb(void *bus) {
+  return true;
+}
+
+bool perimanClearBusDeinit(peripheral_bus_type_t type) {
+  if (type >= ESP32_BUS_TYPE_MAX || type == ESP32_BUS_TYPE_INIT) {
+    log_e("Invalid type: %s (%u)", perimanGetTypeName(type), (unsigned int)type);
+    return false;
+  }
+  deinit_functions[type] = empty_bus_deinit_cb;
+  log_v("Deinit function for type %s (%u) cleared", perimanGetTypeName(type), (unsigned int)type);
+  return true;
+}
+
 peripheral_bus_deinit_cb_t perimanGetBusDeinit(peripheral_bus_type_t type) {
   if (type >= ESP32_BUS_TYPE_MAX || type == ESP32_BUS_TYPE_INIT) {
     log_e("Invalid type: %s (%u)", perimanGetTypeName(type), (unsigned int)type);
+    return NULL;
+  }
+  if (deinit_functions[type] == empty_bus_deinit_cb) {
     return NULL;
   }
   return deinit_functions[type];

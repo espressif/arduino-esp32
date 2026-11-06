@@ -13,8 +13,9 @@
 // Note: this example is outdated and may not work!
 // For more examples see https://github.com/martinius96/ESP32-eduroam
 
+#include <Arduino.h>
 #include "sdkconfig.h"
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
 #error "WPA-Enterprise is only supported in SoCs with native Wi-Fi support"
 #endif
 
@@ -25,7 +26,6 @@
 #else
 #include "esp_wpa2.h"
 #endif
-#include <Wire.h>
 #define EAP_ANONYMOUS_IDENTITY "anonymous@example.com"  //anonymous identity
 #define EAP_IDENTITY           "id@example.com"         //user identity
 #define EAP_PASSWORD           "password"               //eduroam user password

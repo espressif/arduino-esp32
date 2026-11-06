@@ -1,0 +1,3 @@
+-Dmdns_query_ptr=mdns_test_query_ptr
+-Dmdns_query_results_free=mdns_test_query_results_free
+-Dmdns_free=mdns_test_free

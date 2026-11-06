@@ -35,6 +35,28 @@ Sets the manufacturer name and model identifier for the device.
 
 This function will return ``true`` if set successfully, ``false`` otherwise.
 
+setVersion
+^^^^^^^^^^
+
+Sets the application version for the endpoint. The value is stored in the endpoint config and added to the Basic cluster (Application Version attribute). Must be called before ``Zigbee.begin()``.
+
+.. code-block:: arduino
+
+    void setVersion(uint8_t version);
+
+* ``version`` - Application version (0-255)
+
+setHardwareVersion
+^^^^^^^^^^^^^^^^^^
+
+Sets the hardware version for the endpoint. The value is added to the Basic cluster (Hardware Version attribute). Must be called before ``Zigbee.begin()``.
+
+.. code-block:: arduino
+
+    void setHardwareVersion(uint8_t version);
+
+* ``version`` - Hardware version (0-255)
+
 getEndpoint
 ^^^^^^^^^^^
 

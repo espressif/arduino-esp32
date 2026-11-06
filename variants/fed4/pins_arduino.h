@@ -51,6 +51,7 @@ static const uint8_t T6 = 6;
 
 static const uint8_t BOOT_BTN = 0;
 static const uint8_t VBAT_VOLTAGE = 7;
+#define BAT_VOLT_PIN VBAT_VOLTAGE
 static const uint8_t LDO2 = 47;
 static const uint8_t STATUS_RGB = 35;
 static const uint8_t RGB_STRIP = 36;

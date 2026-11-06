@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <NetworkUdp.h>
@@ -38,9 +39,6 @@ void setup() {
   // Hostname defaults to esp3232-[MAC]
   // ArduinoOTA.setHostname("myesp32");
 
-  // No authentication by default
-  // ArduinoOTA.setPassword("admin");
-
   // Password can be set with plain text (will be hashed internally)
   // The authentication uses PBKDF2-HMAC-SHA256 with 10,000 iterations
   // ArduinoOTA.setPassword("admin");
@@ -50,6 +48,11 @@ void setup() {
   // ArduinoOTA.setPasswordHash("8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918");
 
   ArduinoOTA
+    .onPrepare([]() {
+      // Note: This is called before the OTA update begins, but after authentication.
+      // Useful to stop Interrupts or other hardware that might interfere with the update process.
+      Serial.println("Prepare for OTA update");
+    })
     .onStart([]() {
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH) {

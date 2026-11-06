@@ -1,6 +1,7 @@
 // This example demonstrates usage of BluetoothSerial method to retrieve MAC address of local BT device in various formats.
 // By Tomas Pilny - 2023
 
+#include <Arduino.h>
 #include "BluetoothSerial.h"
 
 String device_name = "ESP32-example";

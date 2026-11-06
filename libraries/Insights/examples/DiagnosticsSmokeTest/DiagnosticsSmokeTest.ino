@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "Insights.h"
 #include "WiFi.h"
 #include "inttypes.h"

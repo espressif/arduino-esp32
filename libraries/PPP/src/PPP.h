@@ -40,7 +40,10 @@ public:
   bool setPins(int8_t tx, int8_t rx, int8_t rts = -1, int8_t cts = -1, esp_modem_flow_ctrl_t flow_ctrl = ESP_MODEM_FLOW_CONTROL_NONE);
 
   // Using the reset pin of the module ensures that proper communication can be achieved
-  void setResetPin(int8_t rst, bool active_low = true, uint32_t reset_delay = 200);
+  void setResetPin(int8_t rst, bool active_low = true, uint32_t reset_delay = 200, uint32_t boot_delay = 100);
+
+  // If enabled, sends a burst of "AT" commands at startup, before sync, to force autobaud lock on some modems (e.g. SIM7070)
+  void sendAtBurst(bool en);
 
   // Modem DCE APIs
   int RSSI() const;
@@ -73,9 +76,24 @@ public:
   }
 
   // Send AT command with timeout in milliseconds
+  // Function deprecated - kept for backward compatibility
+  // Function may return empty string in multiple cases:
+  // - When timeout occurred;
+  // - When "OK" AT response was received;
+  // - When "ERROR" AT response was received.
+  // For more detailed return, usage of `bool PPPClass::cmd(at_command, response, timeout)` is recommended.
   String cmd(const char *at_command, int timeout);
   String cmd(String at_command, int timeout) {
     return cmd(at_command.c_str(), timeout);
+  }
+
+  // Send AT command with timeout in milliseconds
+  // When PPP is not started or timeout occurs: Function returns false; response string is not modified
+  // When AT error response is received: Function returns false; response contains "ERROR" or detailed AT response
+  // When AT success response is received: Function returns true; response contains "OK" or detailed AT response
+  bool cmd(const char *at_command, String &response, int timeout);
+  bool cmd(String at_command, String &response, int timeout) {
+    return cmd(at_command.c_str(), response, timeout);
   }
 
   // untested
@@ -102,6 +120,8 @@ private:
   int8_t _pin_rst;
   bool _pin_rst_act_low;
   uint32_t _pin_rst_delay;
+  uint32_t _boot_delay;
+  bool _sendAtBurst;
   const char *_pin;
   const char *_apn;
   int _rx_buffer_size;

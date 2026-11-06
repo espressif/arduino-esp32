@@ -67,7 +67,7 @@ uint8_t NetworkUDP::begin(IPAddress address, uint16_t port) {
     struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
     ip_addr_t addr;
     address.to_ip_addr_t(&addr);
-    memset((char *)tmpaddr, 0, sizeof(struct sockaddr_in));
+    memset((char *)tmpaddr, 0, sizeof(struct sockaddr_in6));
     tmpaddr->sin6_family = AF_INET6;
     tmpaddr->sin6_port = htons(server_port);
     tmpaddr->sin6_scope_id = addr.u_addr.ip6.zone;
@@ -215,7 +215,11 @@ int NetworkUDP::beginPacket() {
     return 1;
   }
 
+#if LWIP_IPV6
+  if ((udp_server = socket((remote_ip.type() == IPv6) ? AF_INET6 : AF_INET, SOCK_DGRAM, 0)) == -1) {
+#else
   if ((udp_server = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+#endif
     log_e("could not create socket: %d", errno);
     return 0;
   }
@@ -274,6 +278,13 @@ int NetworkUDP::endPacket() {
 }
 
 size_t NetworkUDP::write(uint8_t data) {
+  // tx_buffer is only allocated by begin()/beginPacket(). It is NULL before the
+  // first successful beginPacket(), after stop() frees it, or when beginPacket()
+  // failed (e.g. out of memory) and its return value was ignored. Guard against
+  // dereferencing a NULL buffer, which would otherwise crash the device.
+  if (tx_buffer == NULL) {
+    return 0;
+  }
   if (tx_buffer_len == 1460) {
     endPacket();
     tx_buffer_len = 0;
@@ -285,7 +296,9 @@ size_t NetworkUDP::write(uint8_t data) {
 size_t NetworkUDP::write(const uint8_t *buffer, size_t size) {
   size_t i;
   for (i = 0; i < size; i++) {
-    write(buffer[i]);
+    if (!write(buffer[i])) {
+      break;
+    }
   }
   return i;
 }
@@ -350,7 +363,19 @@ int NetworkUDP::parsePacket() {
 #endif  // LWIP_IPV6=1
   if (len > 0) {
     rx_buffer = new (std::nothrow) cbuf(len);
-    rx_buffer->write(buf, len);
+    if (!rx_buffer) {
+      log_e("failed to allocate %d bytes for the receive buffer", len);
+      free(buf);
+      return 0;
+    }
+    if (rx_buffer->write(buf, len) != (size_t)len) {
+      log_e("failed to buffer %d bytes of received UDP data", len);
+      cbuf *b = rx_buffer;
+      rx_buffer = NULL;
+      delete b;
+      free(buf);
+      return 0;
+    }
   }
   free(buf);
   return len;

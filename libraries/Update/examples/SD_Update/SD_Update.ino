@@ -14,6 +14,7 @@
    3. After successful update and reboot, ESP32 shall start the new app
 */
 
+#include <Arduino.h>
 #include <Update.h>
 #include <FS.h>
 #include <SD.h>

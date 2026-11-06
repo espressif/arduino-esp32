@@ -1,0 +1,6 @@
+requires:
+  - CONFIG_SOC_USB_OTG_SUPPORTED=y
+
+# The ESP-IDF USB Host Library is not part of the ESP32-S2 prebuilt libraries.
+targets:
+  esp32s2: false

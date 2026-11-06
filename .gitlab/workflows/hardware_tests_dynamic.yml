@@ -9,13 +9,21 @@ generate-hw-tests:
   stage: generate
   image: python:3.12-bookworm
   rules:
-    - if: $CI_PIPELINE_SOURCE == "trigger"
+    - if: $CI_PIPELINE_SOURCE == "trigger" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"
       when: on_success
   variables:
     DEBIAN_FRONTEND: "noninteractive"
     TEST_TYPES: $TEST_TYPES
     TEST_CHIPS: $TEST_CHIPS
+    GIT_STRATEGY: clone
   before_script:
+    - echo "Fetching ref $GITHUB_REF from GitHub:$GITHUB_REPOSITORY"
+    - REF_NAME=$(echo "$GITHUB_REF" | sed 's|refs/heads/||; s|refs/tags/||')
+    - git config --global http.version HTTP/1.1
+    - git config --global http.lowSpeedLimit 0
+    - git config --global http.lowSpeedTime 999999
+    - git fetch origin "$REF_NAME" --depth 1
+    - git checkout FETCH_HEAD
     - bash .gitlab/scripts/install_dependencies.sh
   script:
     - mkdir -p ~/.arduino/tests
@@ -42,12 +50,13 @@ trigger-hw-tests:
   stage: trigger
   needs: ["generate-hw-tests"]
   rules:
-    - if: $CI_PIPELINE_SOURCE == "trigger"
+    - if: $CI_PIPELINE_SOURCE == "trigger" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"
       when: on_success
   variables:
     # Forward common context to children
     BINARIES_RUN_ID: $BINARIES_RUN_ID
     GITHUB_REPOSITORY: $GITHUB_REPOSITORY
+    GITHUB_REF: $GITHUB_REF
     PIPELINE_ID: $PIPELINE_ID
   trigger:
     include:
@@ -60,10 +69,15 @@ collect-hw-results:
   image: python:3.12-bookworm
   needs: ["trigger-hw-tests"]
   rules:
-    - if: $CI_PIPELINE_SOURCE == "trigger"
+    - if: $CI_PIPELINE_SOURCE == "trigger" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"
       when: always
+  variables:
+    GIT_STRATEGY: none
   before_script:
     - apt-get update && apt-get install -y jq curl unzip
+    - echo "Cloning repository from GitHub:$GITHUB_REPOSITORY at ref $GITHUB_REF"
+    - REF_NAME=$(echo "$GITHUB_REF" | sed 's|refs/heads/||; s|refs/tags/||')
+    - git clone --branch "$REF_NAME" --depth 1 https://github.com/$GITHUB_REPOSITORY.git .
   script:
     - bash .gitlab/scripts/get_results.sh
   artifacts:

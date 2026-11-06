@@ -11,7 +11,8 @@ CONFIG_FREERTOS_HZ=1000
 # end of FREERTOS
 # end of Component config
 
-#
-# DIAGNOSTICS
-#
-CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP=y
+# IDF v6 requirements
+# esp-dsp and other things fail to build with picolibc
+CONFIG_LIBC_NEWLIB=y
+# required for tinyusb and some IDF components to build properly
+CONFIG_COMPILER_DISABLE_DEFAULT_ERRORS=y

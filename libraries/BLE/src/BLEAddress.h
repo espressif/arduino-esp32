@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEAddress.h
  *
  *  Created on: Jul 2, 2017
@@ -72,6 +91,8 @@ public:
   bool operator>(const BLEAddress &otherAddress) const;
   bool operator>=(const BLEAddress &otherAddress) const;
   uint8_t *getNative();
+  uint8_t getType() const;
+  void setType(uint8_t type);
   String toString() const;
 
   /***************************************************************************
@@ -79,8 +100,8 @@ public:
    ***************************************************************************/
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  BLEAddress(esp_bd_addr_t address);
-  BLEAddress(const String &stringAddress);
+  BLEAddress(esp_bd_addr_t address, uint8_t type = 0);
+  BLEAddress(const String &stringAddress, uint8_t type = 0);
 #endif
 
   /***************************************************************************
@@ -91,7 +112,6 @@ public:
   BLEAddress(ble_addr_t address);
   BLEAddress(const String &stringAddress, uint8_t type = BLE_ADDR_PUBLIC);
   BLEAddress(uint8_t address[ESP_BD_ADDR_LEN], uint8_t type = BLE_ADDR_PUBLIC);
-  uint8_t getType() const;
 #endif
 
 private:
@@ -100,14 +120,7 @@ private:
    ***************************************************************************/
 
   uint8_t m_address[ESP_BD_ADDR_LEN];
-
-  /***************************************************************************
-   *                       NimBLE private properties                         *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
   uint8_t m_addrType;
-#endif
 };
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */

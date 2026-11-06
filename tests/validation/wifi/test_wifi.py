@@ -1,16 +1,23 @@
 import logging
+import pytest
 
 
-def test_wifi(dut):
+def test_wifi(dut, wifi_ssid, wifi_pass):
     LOGGER = logging.getLogger(__name__)
 
-    LOGGER.info("Starting WiFi Scan")
-    dut.expect_exact("Scan start")
-    dut.expect_exact("Scan done")
-    dut.expect_exact("Wokwi-GUEST")
-    LOGGER.info("WiFi Scan done")
+    if not wifi_ssid:
+        pytest.fail("WiFi SSID is required but not provided. Use --wifi-ssid argument.")
 
-    LOGGER.info("Connecting to WiFi")
-    dut.expect_exact("WiFi connected")
-    dut.expect_exact("IP address:")
-    LOGGER.info("WiFi connected")
+    LOGGER.info("Waiting for device to be ready...")
+    dut.expect_exact("WIFI_READY")
+
+    dut.expect_exact("Send SSID:")
+    LOGGER.info(f"Sending WiFi credentials: SSID={wifi_ssid}")
+    dut.write(f"{wifi_ssid}\n")
+
+    dut.expect_exact("Send Password:")
+    LOGGER.info("Sending WiFi password")
+    dut.write(f"{wifi_pass or ''}\n")
+
+    LOGGER.info("Running WiFi Unity tests")
+    dut.expect_unity_test_output(timeout=120)

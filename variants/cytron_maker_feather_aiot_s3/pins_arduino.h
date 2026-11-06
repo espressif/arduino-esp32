@@ -14,7 +14,7 @@ static const uint8_t LED_BUILTIN = 2;                        // Status LED.
 #define BUILTIN_LED LED_BUILTIN                              // backward compatibility
 #define LED_BUILTIN LED_BUILTIN                              // allow testing #ifdef LED_BUILTIN
 static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT + 46;  // RGB LED.
-#define RGB_BUILTIN    RGB_BUILTIN                           // necessary to make digitalWrite/digitalMode find it
+#define RGB_BUILTIN    RGB_BUILTIN                           // necessary to make digitalWrite/pinMode find it
 #define RGB_BRIGHTNESS 64
 
 #define LED            LED_BUILTIN
@@ -29,6 +29,7 @@ static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT + 46;  // RGB LED.
 
 #define VIN             13  // Vin Sense.
 #define VBATT           13
+#define BAT_VOLT_PIN    VBATT
 #define VOLTAGE_MONITOR 13
 
 static const uint8_t TX = 15;

@@ -1,4 +1,5 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
  * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
  * esp-nimble-cpp, NimBLE-Arduino contributors.
  *

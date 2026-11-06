@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <NetworkClientSecure.h>
 #include <WiFi.h>
 

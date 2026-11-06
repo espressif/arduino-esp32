@@ -14,11 +14,17 @@ void blinkLED(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 void initVariant(void) {
-  // define button pin
+  // button on senseBox MCU Eye v1.5 and above
+  pinMode(21, INPUT_PULLUP);
+  // button on senseBox MCU Eye v1.4 and below
   pinMode(47, INPUT_PULLUP);
 
-  // Check if button is pressed
-  if (digitalRead(47) == LOW) {
+  bool btn21 = (digitalRead(21) == LOW);
+  bool btn47 = (digitalRead(47) == LOW);
+  bool triggerOTA = btn21 && btn47;
+
+  // Check if either button is pressed
+  if (triggerOTA) {
     // When the button is pressed and then released, boot into the OTA1 partition
     const esp_partition_t *ota1_partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, NULL);
 

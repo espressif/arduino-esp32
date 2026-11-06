@@ -16,31 +16,20 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <MatterEndPoint.h>
+#include <MatterTags.h>
+#include <string.h>
+#include <app/clusters/boolean-state-server/boolean-state-cluster.h>
+#include <data_model_provider/esp_matter_data_model_provider.h>
+
+using namespace chip::app::Clusters;
 
 uint16_t MatterEndPoint::secondary_network_endpoint_id = 0;
 
-// This function is called to create a secondary network interface endpoint.
-// It can be used for devices that support multiple network interfaces,
-// such as Ethernet, Thread and Wi-Fi.
 bool MatterEndPoint::createSecondaryNetworkInterface() {
-  if (secondary_network_endpoint_id != 0) {
-    log_v("Secondary network interface endpoint already exists with ID %d", secondary_network_endpoint_id);
-    return false;
-  }
-  // Create a secondary network interface endpoint
-  endpoint::secondary_network_interface::config_t secondary_network_interface_config;
-  secondary_network_interface_config.network_commissioning.feature_map = chip::to_underlying(
-    //chip::app::Clusters::NetworkCommissioning::Feature::kWiFiNetworkInterface) |
-    chip::app::Clusters::NetworkCommissioning::Feature::kThreadNetworkInterface
-  );
-  endpoint_t *endpoint = endpoint::secondary_network_interface::create(node::get(), &secondary_network_interface_config, ENDPOINT_FLAG_NONE, nullptr);
-  if (endpoint == nullptr) {
-    log_e("Failed to create secondary network interface endpoint");
-    return false;
-  }
-  secondary_network_endpoint_id = endpoint::get_id(endpoint);
-  log_i("Secondary Network Interface created with endpoint_id %d", secondary_network_endpoint_id);
-  return true;
+  log_w("createSecondaryNetworkInterface() is deprecated and does nothing. "
+        "Arduino Matter exposes Wi-Fi or Thread Network Commissioning on endpoint 0 "
+        "(ESP32-C6: Matter.selectNetwork()), not both.");
+  return false;
 }
 
 uint16_t MatterEndPoint::getSecondaryNetworkEndPointId() {
@@ -56,7 +45,7 @@ void MatterEndPoint::setEndPointId(uint16_t ep) {
     log_e("Invalid endpoint ID");
     return;
   }
-  log_v("Endpoint ID set to %d", ep);
+  log_v("Endpoint ID set to %u", ep);
 
   endpoint_id = ep;
 }
@@ -69,17 +58,17 @@ esp_matter::attribute_t *MatterEndPoint::getAttribute(uint32_t cluster_id, uint3
   }
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   if (endpoint == nullptr) {
-    log_e("Endpoint [%d] not found", endpoint_id);
+    log_e("Endpoint [%]u not found", endpoint_id);
     return nullptr;
   }
   cluster_t *cluster = cluster::get(endpoint, cluster_id);
   if (cluster == nullptr) {
-    log_e("Cluster [%d] not found", cluster_id);
+    log_e("Cluster [%]" PRIu32 " not found", cluster_id);
     return nullptr;
   }
   esp_matter::attribute_t *attribute = attribute::get(cluster, attribute_id);
   if (attribute == nullptr) {
-    log_e("Attribute [%d] not found", attribute_id);
+    log_e("Attribute [%]" PRIu32 " not found", attribute_id);
     return nullptr;
   }
   return attribute;
@@ -92,10 +81,10 @@ bool MatterEndPoint::getAttributeVal(uint32_t cluster_id, uint32_t attribute_id,
     return false;
   }
   if (attribute::get_val(attribute, attrVal) == ESP_OK) {
-    log_v("GET_VAL Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+    log_v("GET_VAL Success for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
     return true;
   }
-  log_e("GET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+  log_e("GET_VAL FAILED! for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
   return false;
 }
 
@@ -106,27 +95,50 @@ bool MatterEndPoint::setAttributeVal(uint32_t cluster_id, uint32_t attribute_id,
     return false;
   }
   if (attribute::set_val(attribute, attrVal) == ESP_OK) {
-    log_v("SET_VAL Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+    log_v("SET_VAL Success for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
     return true;
   }
-  log_e("SET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+  log_e("SET_VAL FAILED! for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
   return false;
 }
 
 // update the value of an attribute from its cluster id and attribute it
 bool MatterEndPoint::updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
   if (attribute::update(endpoint_id, cluster_id, attribute_id, attrVal) == ESP_OK) {
-    log_v("Update Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+    log_v("Update Success for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
     return true;
   }
-  log_e("Update FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+  log_e("Update FAILED! for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
   return false;
 }
 
+static BooleanStateCluster *getBooleanStateCluster(uint16_t endpoint_id) {
+  chip::app::ServerClusterInterface *iface =
+    esp_matter::data_model::provider::get_instance().registry().Get(chip::app::ConcreteClusterPath(endpoint_id, BooleanState::Id));
+  return static_cast<BooleanStateCluster *>(iface);
+}
+
+bool MatterEndPoint::setBooleanStateValue(bool value) {
+  BooleanStateCluster *cluster = getBooleanStateCluster(endpoint_id);
+  if (cluster == nullptr) {
+    log_e("BooleanState cluster not found on endpoint %u. Call Matter.begin() first.", endpoint_id);
+    return false;
+  }
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  cluster->SetStateValue(value);
+  return true;
+}
+
 // This callback is invoked when clients interact with the Identify Cluster of an specific endpoint.
-bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEnabled) {
+bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, const MatterIdentifyRequest &request) {
+  if (getEndPointId() != endpoint_id) {
+    log_w("Identify callback endpoint %u does not match this MatterEndPoint (%u)", endpoint_id, getEndPointId());
+    return false;
+  }
+  identifyRequest = request;
+  identifyRequest.valid = true;
   if (_onEndPointIdentifyCB) {
-    return _onEndPointIdentifyCB(identifyIsEnabled);
+    return _onEndPointIdentifyCB(identifyRequest.active);
   }
   return true;
 }
@@ -134,6 +146,105 @@ bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEna
 // User callback for the Identify Cluster functionality
 void MatterEndPoint::onIdentify(EndPointIdentifyCB onEndPointIdentifyCB) {
   _onEndPointIdentifyCB = onEndPointIdentifyCB;
+}
+
+MatterIdentifyRequest MatterEndPoint::getIdentifyRequest() const {
+  return identifyRequest;
+}
+
+// Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.
+bool MatterEndPoint::enableTagList() {
+  if (tagListEnabled) {
+    return true;
+  }
+  if (endpoint_id == 0) {
+    log_e("Endpoint ID is not set. Call the endpoint begin() first.");
+    return false;
+  }
+  endpoint_t *ep = endpoint::get(node::get(), endpoint_id);
+  if (ep == nullptr) {
+    log_e("Endpoint %u not found", endpoint_id);
+    return false;
+  }
+  cluster_t *descriptorCluster = cluster::get(ep, Descriptor::Id);
+  if (descriptorCluster == nullptr) {
+    log_e("Descriptor cluster not found on endpoint %u", endpoint_id);
+    return false;
+  }
+  if (cluster::descriptor::feature::tag_list::add(descriptorCluster) != ESP_OK) {
+    log_e("Failed to enable TagList feature on endpoint %u", endpoint_id);
+    return false;
+  }
+  tagListEnabled = true;
+  return true;
+}
+
+// Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
+bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
+  if (endpoint_id == 0) {
+    log_e("setTagList() requires the endpoint begin() to be called first.");
+    return false;
+  }
+  if (tagList == nullptr || count == 0) {
+    log_e("setTagList() requires a non-empty tag list.");
+    return false;
+  }
+  if (count > MAX_TAG_LIST_SIZE) {
+    log_e("setTagList() accepts at most %u tags", MAX_TAG_LIST_SIZE);
+    return false;
+  }
+
+  for (uint8_t i = 0; i < count; i++) {
+    const bool emptyLabel = (tagList[i].label == nullptr || tagList[i].label[0] == '\0');
+    if (tagList[i].namespaceId == MatterTags::Switches::NS && tagList[i].tag == MatterTags::Switches::Custom && emptyLabel) {
+      log_e("Switches Custom tag requires a non-empty label. Use MatterTags::Switches::createCustomTag().");
+      return false;
+    }
+    if (tagList[i].namespaceId == MatterTags::Position::NS && tagList[i].tag == MatterTags::Position::Row && emptyLabel) {
+      log_e("Position Row tag requires a non-empty label. Use MatterTags::Position::createRowTag().");
+      return false;
+    }
+    if (tagList[i].namespaceId == MatterTags::Position::NS && tagList[i].tag == MatterTags::Position::Column && emptyLabel) {
+      log_e("Position Column tag requires a non-empty label. Use MatterTags::Position::createColumnTag().");
+      return false;
+    }
+  }
+
+  if (!enableTagList()) {
+    return false;
+  }
+
+  endpoint_t *ep = endpoint::get(node::get(), endpoint_id);
+  if (ep == nullptr) {
+    log_e("Endpoint %u not found", endpoint_id);
+    return false;
+  }
+
+  Globals::Structs::SemanticTagStruct::Type tags[MAX_TAG_LIST_SIZE] = {};
+  for (uint8_t i = 0; i < count; i++) {
+    tags[i].mfgCode.SetNull();
+    tags[i].namespaceID = tagList[i].namespaceId;
+    tags[i].tag = tagList[i].tag;
+    if (tagList[i].label != nullptr) {
+      tags[i].label.Emplace(chip::CharSpan(tagList[i].label, strlen(tagList[i].label)));
+    }
+  }
+
+  esp_err_t err = endpoint::set_semantic_tags(ep, tags, count);
+  if (err != ESP_OK) {
+    log_e("Failed to set TagList attribute: %s", esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+
+// Convenience overload: ButtonOn.setTagList({MatterTags::Switches::On});
+bool MatterEndPoint::setTagList(std::initializer_list<MatterTag> tagList) {
+  if (tagList.size() > MAX_TAG_LIST_SIZE) {
+    log_e("setTagList() accepts at most %u tags", MAX_TAG_LIST_SIZE);
+    return false;
+  }
+  return setTagList(tagList.begin(), static_cast<uint8_t>(tagList.size()));
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

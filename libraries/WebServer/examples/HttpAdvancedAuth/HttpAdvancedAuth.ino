@@ -4,6 +4,7 @@
   This example code is in the public domain.
 */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>

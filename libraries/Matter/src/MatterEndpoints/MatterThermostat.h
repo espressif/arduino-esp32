@@ -65,8 +65,11 @@ public:
   ThermostatMode_t getMode() {
     return currentMode;
   }
-  // returns a friendly string for the Fan Mode
+  // returns a friendly string for the Thermostat SystemMode (unknown if out of range)
   static const char *getThermostatModeString(uint8_t mode) {
+    if (mode >= (sizeof(thermostatModeString) / sizeof(thermostatModeString[0]))) {
+      return "UNKNOWN";
+    }
     return thermostatModeString[mode];
   }
 
@@ -91,29 +94,27 @@ public:
   float getMaxCoolSetpoint() {
     return (float)kDefaultMaxCoolSetpointLimit / 100.00;
   }
-  // get the deadband in 1/10th of a Celsio degree
-  float getDeadBand() {
-    return (float)kDefaultDeadBand / 10.00;
-  }
+  // AUTO MinSetpointDeadBand in Celsius (cluster value is 1/10 °C). Falls back to 2.5 °C.
+  float getDeadBand();
 
   // generic function for setting the cooling and heating setpoints - checks if the setpoints are valid
   // it can be used to set both setpoints at the same time or only one of them, by setting the other to (float)0xffff
   // Heating Setpoint must be lower than Cooling Setpoint
   // When using AUTO mode the Cooling Setpoint must be higher than Heating Setpoint by at least the 2.5C (deadband)
   // Thermostat Matter Server will enforce those rules and the Max/Min setpoints limits as in the Matter Specification
-  bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCollingTemperature);
+  bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCoolingTemperature);
 
   // set the heating setpoint in 1/100th of a Celsio degree
   bool setHeatingSetpoint(double _setpointHeatingTemperature) {
-    return setCoolingHeatingSetpoints((double)0xffff, _setpointHeatingTemperature);
+    return setCoolingHeatingSetpoints(_setpointHeatingTemperature, (double)0xffff);
   }
   // get the heating setpoint in 1/100th of a Celsio degree
   double getHeatingSetpoint() {
     return heatingSetpointTemperature / 100.0;
   }
   // set the cooling setpoint in 1/100th of a Celsio degree
-  bool setCoolingSetpoint(double _setpointCollingTemperature) {
-    return setCoolingHeatingSetpoints(_setpointCollingTemperature, (double)0xffff);
+  bool setCoolingSetpoint(double _setpointCoolingTemperature) {
+    return setCoolingHeatingSetpoints((double)0xffff, _setpointCoolingTemperature);
   }
   // get the cooling setpoint in 1/100th of a Celsio degree
   double getCoolingSetpoint() {
@@ -202,6 +203,6 @@ protected:
   // clang-format on
 
   // string helper for the THERMOSTAT MODE
-  static const char *thermostatModeString[5];
+  static const char *thermostatModeString[10];
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

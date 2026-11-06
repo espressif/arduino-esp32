@@ -5,6 +5,7 @@
 // and also demonstrate that SerialBT have the same functionalities of a normal Serial
 // Note: Pairing is authenticated automatically by this device
 
+#include <Arduino.h>
 #include "BluetoothSerial.h"
 
 String device_name = "ESP32-BT-Slave";

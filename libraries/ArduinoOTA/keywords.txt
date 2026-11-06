@@ -16,6 +16,7 @@ ArduinoOTAClass	KEYWORD1
 begin	KEYWORD2
 end	KEYWORD2
 handle	KEYWORD2
+onPrepare	KEYWORD2
 onStart	KEYWORD2
 onEnd	KEYWORD2
 onError	KEYWORD2
@@ -29,6 +30,7 @@ setPartitionLabel	KEYWORD2
 getPartitionLabel	KEYWORD2
 setRebootOnSuccess	KEYWORD2
 setMdnsEnabled	KEYWORD2
+setSignature	KEYWORD2
 getCommand	KEYWORD2
 setTimeout	KEYWORD2
 

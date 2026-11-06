@@ -31,7 +31,8 @@
 // RTC
 #define RTC_INT 15
 // Partial voltage measurement method
-#define BAT_ADC 4
+#define BAT_ADC      4
+#define BAT_VOLT_PIN BAT_ADC
 // Onboard  QMI8658 IMU
 #define QMI_INT1 8
 

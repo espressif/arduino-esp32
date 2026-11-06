@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEUtils.h
  *
  *  Created on: Mar 25, 2017
@@ -108,6 +127,7 @@ public:
 #if defined(CONFIG_BLUEDROID_ENABLED)
   static const char *addressTypeToString(esp_ble_addr_type_t type);
   static String adFlagsToString(uint8_t adFlags);
+  static const char *authFailReasonToString(esp_ble_auth_fail_rsn_t reason);
   static const char *devTypeToString(esp_bt_dev_type_t type);
   static esp_gatt_id_t buildGattId(esp_bt_uuid_t uuid, uint8_t inst_id = 0);
   static esp_gatt_srvc_id_t buildGattSrvcId(esp_gatt_id_t gattId, bool is_primary = true);
@@ -141,6 +161,7 @@ public:
   static void dumpGapEvent(ble_gap_event *event, void *arg);
   static const char *gapEventToString(uint8_t eventType);
   static const char *returnCodeToString(int rc);
+  static const char *smErrorToString(uint8_t smErr);
   static int checkConnParams(ble_gap_conn_params *params);
   static bool taskWait(const BLETaskData &taskData, uint32_t timeout);
   static void taskRelease(const BLETaskData &taskData, int rc = 0);

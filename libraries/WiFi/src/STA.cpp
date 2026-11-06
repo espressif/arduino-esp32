@@ -6,7 +6,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -28,6 +28,14 @@
 #include "esp_eap_client.h"
 #else
 #include "esp_wpa2.h"
+#endif
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define esp_interface_t          wifi_interface_t
+#define ESP_IF_WIFI_STA          WIFI_IF_STA
+#define WIFI_REASON_ASSOC_EXPIRE WIFI_REASON_DISASSOC_DUE_TO_INACTIVITY
+#define WIFI_REASON_NOT_AUTHED   WIFI_REASON_CLASS2_FRAME_FROM_NONAUTH_STA
+#define WIFI_REASON_NOT_ASSOCED  WIFI_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
 #endif
 
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
@@ -234,7 +242,9 @@ STAClass::STAClass()
 }
 
 STAClass::~STAClass() {
-  end();
+  // Calling end() here causes a lot of WiFi code to be linked to the final executable by just including "WiFi.h"
+  // If globals are disabled, then the user should call WiFi.STA.end() before destroying the WiFi object
+  // end();
   _sta_network_if = NULL;
 }
 
@@ -357,7 +367,7 @@ bool STAClass::connect() {
  * @param passphrase const char *   Optional. Passphrase. Valid characters in a passphrase must be between ASCII 32-126 (decimal).
  * @param bssid uint8_t[6]          Optional. BSSID / MAC of AP
  * @param channel                   Optional. Channel of AP
- * @param connect                   Optional. call connect
+ * @param tryConnect                Optional. call connect
  * @return
  */
 bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel, const uint8_t *bssid, bool tryConnect) {
@@ -437,7 +447,7 @@ bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel
  * @param client_key const char*        Pointer to a string with the contents of a .key file with client key
  * @param bssid uint8_t[6]          Optional. BSSID / MAC of AP
  * @param channel                   Optional. Channel of AP
- * @param connect                   Optional. call connect
+ * @param tryConnect                Optional. call connect
  * @return
  */
 bool STAClass::connect(
@@ -525,25 +535,6 @@ bool STAClass::connect(
 #endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
 
 bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
-  if (eraseap) {
-    if (!started()) {
-      log_e("STA not started! You must call begin first.");
-      return false;
-    }
-    wifi_config_t conf;
-    memset(&conf, 0, sizeof(wifi_config_t));
-    esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &conf);
-    if (err != ESP_OK) {
-      log_e("STA clear config failed! 0x%x: %s", err, esp_err_to_name(err));
-      return false;
-    }
-  }
-
-  if (!connected()) {
-    log_w("STA already disconnected.");
-    return true;
-  }
-
   esp_err_t err = esp_wifi_disconnect();
   if (err != ESP_OK) {
     log_e("STA disconnect failed! 0x%x: %s", err, esp_err_to_name(err));
@@ -556,6 +547,20 @@ bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
       delay(5);
     }
     if (connected()) {
+      return false;
+    }
+  }
+
+  if (eraseap) {
+    if (!started()) {
+      log_e("STA not started! You must call begin first.");
+      return false;
+    }
+    wifi_config_t conf;
+    memset(&conf, 0, sizeof(wifi_config_t));
+    esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &conf);
+    if (err != ESP_OK) {
+      log_e("STA clear config failed! 0x%x: %s", err, esp_err_to_name(err));
       return false;
     }
   }
@@ -601,6 +606,50 @@ bool STAClass::getAutoReconnect() {
   return _autoReconnect;
 }
 
+/**
+ * Set STA inactive (beacon timeout) time.
+ * If the station does not receive a beacon from the connected AP within this time,
+ * it disconnects. Default is 6 seconds; minimum is 3 seconds.
+ * Must be called after STA has been started (e.g. after WiFi.begin()).
+ * @param seconds inactive time in seconds (>= 3)
+ * @return true on success
+ */
+bool STAClass::setInactiveTime(uint16_t seconds) {
+  static constexpr uint16_t kMinInactiveTimeSec = 3;
+  if (seconds < kMinInactiveTimeSec) {
+    log_e("Inactive time must be at least %u seconds", kMinInactiveTimeSec);
+    return false;
+  }
+  if (!started()) {
+    log_w("STA has not been started");
+    return false;
+  }
+  esp_err_t err = esp_wifi_set_inactive_time(WIFI_IF_STA, seconds);
+  if (err != ESP_OK) {
+    log_e("esp_wifi_set_inactive_time failed!: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
+/**
+ * Get STA inactive (beacon timeout) time in seconds.
+ * Must be called after STA has been started.
+ * @return inactive time in seconds, or 0 on failure
+ */
+uint16_t STAClass::getInactiveTime() {
+  if (!started()) {
+    log_w("STA has not been started");
+    return 0;
+  }
+  uint16_t seconds = 0;
+  esp_err_t err = esp_wifi_get_inactive_time(WIFI_IF_STA, &seconds);
+  if (err != ESP_OK) {
+    log_e("esp_wifi_get_inactive_time failed!: 0x%x: %s", err, esp_err_to_name(err));
+    return 0;
+  }
+  return seconds;
+}
+
 void STAClass::setMinSecurity(wifi_auth_mode_t minSecurity) {
   _minSecurity = minSecurity;
 }
@@ -617,9 +666,9 @@ String STAClass::SSID() const {
   if (!started()) {
     return String();
   }
-  wifi_ap_record_t info;
-  if (!esp_wifi_sta_get_ap_info(&info)) {
-    return String(reinterpret_cast<char *>(info.ssid));
+  wifi_config_t conf;
+  if (esp_wifi_get_config(WIFI_IF_STA, &conf) == ESP_OK) {
+    return String(reinterpret_cast<char *>(conf.sta.ssid));
   }
   return String();
 }
@@ -661,7 +710,7 @@ String STAClass::BSSIDstr() {
     return String();
   }
   char mac[18] = {0};
-  sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
+  snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
   return String(mac);
 }
 

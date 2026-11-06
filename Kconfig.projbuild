@@ -147,6 +147,12 @@ config ARDUINO_UDP_TASK_PRIORITY
     help
         Select at what priority you want the UDP task to run.
 
+config ARDUINO_UDP_TASK_STACK_SIZE
+    int "UDP task stack size"
+    default 4096
+    help
+        Amount of stack available for the UDP task.
+
 config ARDUINO_ISR_IRAM
     bool "Run interrupts in IRAM"
     default "n"
@@ -268,6 +274,11 @@ config ARDUINO_SELECTIVE_Wire
 
 config ARDUINO_SELECTIVE_ESP_SR
     bool "Enable ESP-SR"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_ESP_Video
+    bool "Enable ESP-Video"
     depends on ARDUINO_SELECTIVE_COMPILATION
     default y
 

@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "author": "lucasssvaz",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-p4-function-ev",
+      "id": "esp",
+      "top": 164.08,
+      "left": -76.03,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-microsd-card",
+      "id": "sd1",
+      "top": -26.23,
+      "left": 112.27,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-microsd-card",
+      "id": "sd2",
+      "top": -26.23,
+      "left": 237.07,
+      "rotate": 90,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [ "esp:37", "$serialMonitor:RX", "", [] ],
+    [ "esp:38", "$serialMonitor:TX", "", [] ],
+    [ "sd1:CS", "esp:10", "green", [ "h57.6", "v-38.16" ] ],
+    [ "sd1:DI", "esp:11", "green", [ "h48", "v-19.11" ] ],
+    [ "sd1:SCK", "esp:12", "green", [ "h38.4", "v9.77" ] ],
+    [ "sd1:DO", "esp:13", "green", [ "h67.2", "v38.69" ] ],
+    [ "sd1:VCC", "esp:3V3.1", "red", [ "v19.2", "h-105.74", "v115.2" ] ],
+    [ "sd2:VCC", "esp:3V3.1", "red", [ "v19.2", "h-230.54", "v115.2" ] ],
+    [ "esp:GND.1", "sd1:GND", "black", [ "v-9.6", "h-76.8", "v-86.4", "h115.2" ] ],
+    [ "esp:GND.1", "sd2:GND", "black", [ "v-9.6", "h-76.8", "v-86.4", "h240" ] ],
+    [ "esp:26", "sd2:CS", "green", [ "v0" ] ],
+    [ "esp:33", "sd2:DO", "green", [ "v-19.2", "h57.71" ] ],
+    [ "esp:36", "sd2:SCK", "green", [ "v-19.2", "h67.19" ] ],
+    [ "esp:32", "sd2:DI", "green", [ "v-28.8", "h38.31" ] ],
+    [ "esp:1", "sd1:SCK", "green", [ "v-19.2", "h-48" ] ],
+    [ "esp:2", "sd1:DO", "green", [ "v9.6", "h-124.8", "v-96", "h96.11" ] ],
+    [ "esp:3", "sd1:DI", "green", [ "v19.2", "h-124.8", "v-115.2", "h67.2", "v9.6" ] ],
+    [ "esp:8", "sd1:CS", "green", [ "v28.8", "h-67.2", "v-153.6", "h67.2" ] ]
+  ],
+  "dependencies": {}
+}

@@ -23,6 +23,12 @@
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
+/** Level step direction for setLightLevelStep (ZCL Step command: 0 = Up, 1 = Down) */
+enum ZigbeeLevelStepDirection {
+  ZIGBEE_LEVEL_STEP_UP = 0,
+  ZIGBEE_LEVEL_STEP_DOWN = 1
+};
+
 class ZigbeeColorDimmerSwitch : public ZigbeeEP {
 public:
   ZigbeeColorDimmerSwitch(uint8_t endpoint);
@@ -52,6 +58,11 @@ public:
   void setLightLevel(uint8_t level, uint16_t group_addr);
   void setLightLevel(uint8_t level, uint8_t endpoint, uint16_t short_addr);
   void setLightLevel(uint8_t level, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
+  void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time);
+  void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint16_t group_addr);
+  void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, uint16_t short_addr);
+  void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
 
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue);
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint16_t group_addr);

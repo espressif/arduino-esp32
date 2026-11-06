@@ -82,47 +82,47 @@ The measurable input voltage differs for each chip, see table below for detailed
 
    .. tab:: ESP32
 
-      =====================  ===========================================
-      Attenuation            Measurable input voltage range
-      =====================  ===========================================
-      ``ADC_ATTEN_DB_0``     100 mV ~ 950 mV
-      ``ADC_ATTEN_DB_2_5``   100 mV ~ 1250 mV
-      ``ADC_ATTEN_DB_6``     150 mV ~ 1750 mV
-      ``ADC_ATTEN_DB_11``    150 mV ~ 3100 mV
-      =====================  ===========================================
+      ================  ===============================
+      Attenuation       Measurable input voltage range
+      ================  ===============================
+      ``ADC_0db``       100 mV ~ 950 mV
+      ``ADC_2_5db``     100 mV ~ 1250 mV
+      ``ADC_6db``       150 mV ~ 1750 mV
+      ``ADC_11db``      150 mV ~ 3100 mV
+      ================  ===============================
 
    .. tab:: ESP32-S2
 
-      =====================  ===========================================
-      Attenuation            Measurable input voltage range
-      =====================  ===========================================
-      ``ADC_ATTEN_DB_0``     0 mV ~ 750 mV
-      ``ADC_ATTEN_DB_2_5``   0 mV ~ 1050 mV
-      ``ADC_ATTEN_DB_6``     0 mV ~ 1300 mV
-      ``ADC_ATTEN_DB_11``    0 mV ~ 2500 mV
-      =====================  ===========================================
+      ================  ===============================
+      Attenuation       Measurable input voltage range
+      ================  ===============================
+      ``ADC_0db``       0 mV ~ 750 mV
+      ``ADC_2_5db``     0 mV ~ 1050 mV
+      ``ADC_6db``       0 mV ~ 1300 mV
+      ``ADC_11db``      0 mV ~ 2500 mV
+      ================  ===============================
 
    .. tab:: ESP32-C3
 
-      =====================  ===========================================
-      Attenuation            Measurable input voltage range
-      =====================  ===========================================
-      ``ADC_ATTEN_DB_0``     0 mV ~ 750 mV
-      ``ADC_ATTEN_DB_2_5``   0 mV ~ 1050 mV
-      ``ADC_ATTEN_DB_6``     0 mV ~ 1300 mV
-      ``ADC_ATTEN_DB_11``    0 mV ~ 2500 mV
-      =====================  ===========================================
+      ================  ===============================
+      Attenuation       Measurable input voltage range
+      ================  ===============================
+      ``ADC_0db``       0 mV ~ 750 mV
+      ``ADC_2_5db``     0 mV ~ 1050 mV
+      ``ADC_6db``       0 mV ~ 1300 mV
+      ``ADC_11db``      0 mV ~ 2500 mV
+      ================  ===============================
 
    .. tab:: ESP32-S3
 
-      =====================  ===========================================
-      Attenuation            Measurable input voltage range
-      =====================  ===========================================
-      ``ADC_ATTEN_DB_0``     0 mV ~ 950 mV
-      ``ADC_ATTEN_DB_2_5``   0 mV ~ 1250 mV
-      ``ADC_ATTEN_DB_6``     0 mV ~ 1750 mV
-      ``ADC_ATTEN_DB_11``    0 mV ~ 3100 mV
-      =====================  ===========================================
+      ================  ===============================
+      Attenuation       Measurable input voltage range
+      ================  ===============================
+      ``ADC_0db``       0 mV ~ 950 mV
+      ``ADC_2_5db``     0 mV ~ 1250 mV
+      ``ADC_6db``       0 mV ~ 1750 mV
+      ``ADC_11db``      0 mV ~ 3100 mV
+      ================  ===============================
 
 .. code-block:: arduino
 
@@ -162,7 +162,7 @@ ADC Continuous mode is an API designed for performing analog conversions on mult
 with the feature of receiving a callback upon completion of these conversions to access the results.
 
 This API allows you to specify the desired number of conversions per pin within a single cycle, along with its corresponding sampling rate.
-The outcome of the ``analogContinuousRead`` function is an array of ``adc_continuous_data_t`` structures.
+The outcome of the ``analogContinuousRead`` function is an array of ``adc_continuous_result_t`` structures.
 These structures hold both the raw average value and the average value in millivolts for each pin.
 
 analogContinuous
@@ -186,7 +186,7 @@ If ``false`` is returned, error occurs and ADC continuous was not configured.
 analogContinuousRead
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to read ADC continuous data to the result buffer. The result buffer is an array of ``adc_continuous_data_t``.
+This function is used to read ADC continuous data to the result buffer. The result buffer is an array of ``adc_continuous_result_t``.
 
 .. code-block:: arduino
 
@@ -195,13 +195,13 @@ This function is used to read ADC continuous data to the result buffer. The resu
         uint8_t channel;       /*!<ADC channel */
         int avg_read_raw;      /*!<ADC average raw data */
         int avg_read_mvolts;   /*!<ADC average voltage in mV */
-    } adc_continuous_data_t;
+    } adc_continuous_result_t;
 
 .. code-block:: arduino
 
-    bool analogContinuousRead(adc_continuous_data_t ** buffer, uint32_t timeout_ms);
+    bool analogContinuousRead(adc_continuous_result_t ** buffer, uint32_t timeout_ms);
 
-* ``buffer`` conversion result buffer to read from ADC in adc_continuous_data_t format.
+* ``buffer`` conversion result buffer to read from ADC in adc_continuous_result_t format.
 * ``timeout_ms`` time to wait for data in milliseconds.
 
 This function will return ``true`` if reading is successful and ``buffer`` is filled with data.

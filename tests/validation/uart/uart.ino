@@ -28,10 +28,19 @@
  *            UARTx
  */
 
+#include <Arduino.h>
 #include <vector>
 #include <unity.h>
 #include "HardwareSerial.h"
 #include "esp_rom_gpio.h"
+#include "esp32-hal-periman.h"
+#include "driver/gpio.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+#include "esp_private/gpio.h"
+#else
+#include "hal/gpio_ll.h"
+#endif
+#include "hal/gpio_types.h"
 #include "Wire.h"
 
 /* Utility defines */
@@ -53,8 +62,11 @@ public:
     : uart_num(num), serial(serial_ref), peeked_char(-1), default_rx_pin(rx_pin), default_tx_pin(tx_pin), recv_msg("") {}
 
   void begin(unsigned long baudrate) {
-    // pinMode will force enabling the internal pullup resistor (IDF 5.3.2 Change)
-    pinMode(default_rx_pin, INPUT_PULLUP);
+    // pinMode clears the peripheral bus and detaches UART RX when Serial is already running.
+    // Internal RX pull is applied by the driver on begin(); only pre-configure GPIO when stopped.
+    if (!serial) {
+      pinMode(default_rx_pin, INPUT_PULLUP);
+    }
     serial.begin(baudrate, SERIAL_8N1, default_rx_pin, default_tx_pin);
     while (!serial) {
       delay(10);
@@ -70,14 +82,38 @@ public:
     peeked_char = -1;
   }
 
+  void clear_rx_buffer() {
+    // Drain any pending bytes from RX before starting a new assertion window.
+    while (serial.available()) {
+      serial.read();
+    }
+  }
+
   void transmit_and_check_msg(const String &msg_append, bool perform_assert = true) {
+    const String expected = "Hello from Serial" + String(uart_num) + " " + msg_append;
+    const int8_t rx_pin = uart_get_RxPin(uart_num);
+    uart_internal_loopback(uart_num, rx_pin);
     reset_buffers();
-    delay(100);
-    serial.print("Hello from Serial" + String(uart_num) + " " + msg_append);
+    clear_rx_buffer();
+    delay(10);
+    serial.print(expected);
     serial.flush();
-    delay(100);
+    uint32_t start = millis();
+    while (millis() - start < 500) {
+      while (serial.available()) {
+        onReceive();
+      }
+      if (recv_msg.length() >= expected.length()) {
+        break;
+      }
+      delay(5);
+    }
+    if (perform_assert && recv_msg != expected) {
+      Serial.printf("UART%d diag: rx=%d tx=%d avail=%u got='%s'\n", uart_num, rx_pin, uart_get_TxPin(uart_num), serial.available(), recv_msg.c_str());
+      Serial.flush();
+    }
     if (perform_assert) {
-      TEST_ASSERT_EQUAL_STRING(("Hello from Serial" + String(uart_num) + " " + msg_append).c_str(), recv_msg.c_str());
+      TEST_ASSERT_EQUAL_STRING(expected.c_str(), recv_msg.c_str());
       log_d("UART%d received message: %s\n", uart_num, recv_msg.c_str());
     }
   }
@@ -90,20 +126,92 @@ public:
     }
     while (available--) {
       c = (char)serial.read();
-      recv_msg += c;
+      if (c > 31 && c < 128) {
+        recv_msg += c;
+#if 0
+      } else {
+        Serial.printf("UART%d onReceive() got a non readable character 0x%x='%c'\r\n", uart_num, c, c);
+        Serial.flush();
+#endif
+      }
     }
   }
 };
 
 /* Utility global variables */
 
-[[maybe_unused]]
-static const int NEW_RX1 = 9;
-[[maybe_unused]]
-static const int NEW_TX1 = 10;
+// Alternate Serial1 split-pin pads from the board I2C bus (pins_arduino.h: SDA/SCL).
+static const int8_t NEW_RX1 = SDA;
+static const int8_t NEW_TX1 = SCL;
+
+// One-wire tests use SCL so they never share a GPIO with split-pin RX (SDA) in the same
+// test step. Sequential stages may reuse pads after end()/begin() (see same_pin_split_transition_test).
+static const int8_t TEST_AUX_PIN = SCL;
+
+static_assert(NEW_RX1 != NEW_TX1, "UART test alternate RX/TX pins (SDA/SCL) must differ");
+static_assert(NEW_RX1 != RX1 && NEW_RX1 != TX1, "SDA must not overlap Serial1 default pins on this board");
+static_assert(NEW_TX1 != RX1 && NEW_TX1 != TX1, "SCL must not overlap Serial1 default pins on this board");
+#if defined(RX2) && defined(TX2)
+static_assert(NEW_RX1 != RX2 && NEW_RX1 != TX2, "SDA must not overlap Serial2 default pins on this board");
+static_assert(NEW_TX1 != RX2 && NEW_TX1 != TX2, "SCL must not overlap Serial2 default pins on this board");
+#endif
+
 std::vector<UARTTestConfig *> uart_test_configs;
 
-/* Utility functions */
+static gpio_pull_mode_t read_rx_pull_mode(int8_t gpio) {
+  gpio_io_config_t cfg = {};
+  if (gpio_get_io_config((gpio_num_t)gpio, &cfg) != ESP_OK) {
+    return GPIO_FLOATING;
+  }
+  if (cfg.pu && cfg.pd) {
+    return GPIO_PULLUP_PULLDOWN;
+  }
+  if (cfg.pu) {
+    return GPIO_PULLUP_ONLY;
+  }
+  if (cfg.pd) {
+    return GPIO_PULLDOWN_ONLY;
+  }
+  return GPIO_FLOATING;
+}
+
+static bool read_open_drain_enabled(int8_t gpio) {
+  gpio_io_config_t cfg = {};
+  return gpio_get_io_config((gpio_num_t)gpio, &cfg) == ESP_OK && cfg.od;
+}
+
+// Temporarily force push-pull for internal loopback CI (no external pull-up).
+static void force_push_pull_for_loopback(int8_t gpio) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+  gpio_od_disable((gpio_num_t)gpio);
+#else
+  gpio_ll_od_disable(&GPIO, (uint32_t)gpio);
+#endif
+}
+
+static void reset_serial_pin_options(HardwareSerial &s) {
+  s.enableRxInternalPull(true);
+}
+
+static void test_serial_begin(HardwareSerial &s, int8_t rx, int8_t tx, unsigned long baud = 115200, bool invert = false) {
+  s.end();
+  s.setPins(rx, tx);
+  s.begin(baud, SERIAL_8N1, rx, tx, invert);
+}
+
+static void uart_test_register_on_receive(UARTTestConfig &config) {
+  UARTTestConfig *cfg = &config;
+  config.serial.onReceive([cfg]() {
+    cfg->onReceive();
+  });
+}
+
+static void uart_test_init_config(UARTTestConfig &config, unsigned long baudrate = 115200) {
+  config.end();
+  config.begin(baudrate);
+  uart_test_register_on_receive(config);
+  uart_internal_loopback(config.uart_num, uart_get_RxPin(config.uart_num));
+}
 
 extern "C" int8_t uart_get_RxPin(uint8_t uart_num);
 extern "C" int8_t uart_get_TxPin(uint8_t uart_num);
@@ -112,8 +220,8 @@ extern "C" int8_t uart_get_TxPin(uint8_t uart_num);
 
 // This task is used to send a message after a delay to test the auto baudrate detection
 void task_delayed_msg(void *pvParameters) {
-  HardwareSerial &selected_serial = uart_test_configs.size() == 1 ? Serial : Serial1;
-  delay(2000);
+  HardwareSerial &selected_serial = uart_test_configs.size() == 1 ? Serial0 : Serial1;
+  delay(1500);
   selected_serial.println("Hello to detect baudrate");
   selected_serial.flush();
   vTaskDelete(NULL);
@@ -124,13 +232,7 @@ void task_delayed_msg(void *pvParameters) {
 // This function is automatically called by unity before each test is run
 void setUp(void) {
   for (auto *ref : uart_test_configs) {
-    UARTTestConfig &config = *ref;
-    //log_d("Setup internal loop-back from and back to UART%d TX >> UART%d RX", config.uart_num, config.uart_num);
-    config.begin(115200);
-    config.serial.onReceive([&config]() {
-      config.onReceive();
-    });
-    uart_internal_loopback(config.uart_num, uart_get_RxPin(config.uart_num));
+    uart_test_init_config(*ref);
   }
 }
 
@@ -236,6 +338,10 @@ void enabled_uart_calls_test(void) {
   long int integer_ret;
   uint8_t test_buf[1];
 
+  UARTTestConfig &config = *uart_test_configs[0];
+  config.transmit_and_check_msg("", false);
+  TEST_ASSERT_GREATER_OR_EQUAL(0, config.peeked_char);
+
   log_d("Checking if Serial 1 can set the RX timeout while running");
   boolean_ret = Serial1.setRxTimeout(1);
   TEST_ASSERT_EQUAL(true, boolean_ret);
@@ -247,9 +353,6 @@ void enabled_uart_calls_test(void) {
   log_d("Checking if Serial 1 is writable while running");
   boolean_ret = Serial1.availableForWrite();
   TEST_ASSERT_EQUAL(true, boolean_ret);
-
-  log_d("Checking if Serial 1 is peekable while running");
-  TEST_ASSERT_GREATER_OR_EQUAL(0, uart_test_configs[0]->peeked_char);
 
   log_d("Checking if Serial 1 can read bytes while running");
   integer_ret = Serial1.readBytes(test_buf, 1);
@@ -271,10 +374,18 @@ void enabled_uart_calls_test(void) {
   log_d("Checking if Serial 1 debug output can be enabled while running");
   Serial1.setDebugOutput(true);
   Serial1.setDebugOutput(false);
+  Serial.setDebugOutput(true);  // restore the Console log output
 
   log_d("Checking if Serial 1 RX can be inverted while running");
   Serial1.setRxInvert(true);
   Serial1.setRxInvert(false);
+
+  log_d("Checking if Serial 1 TX can be inverted while running");
+  Serial1.setTxInvert(true);
+  Serial1.setTxInvert(false);
+
+  log_d("Checking if Serial 1 RX internal pull can't be changed while running");
+  TEST_ASSERT_FALSE(Serial1.enableRxInternalPull(true));
 
   Serial.println("Enabled UART calls test successful");
 }
@@ -346,10 +457,19 @@ void disabled_uart_calls_test(void) {
   log_d("Checking if Serial 1 debug output can be enabled when stopped");
   Serial1.setDebugOutput(true);
   Serial1.setDebugOutput(false);
+  Serial.setDebugOutput(true);  // restore the Console log output
 
   log_d("Checking if Serial 1 RX can be inverted when stopped");
   Serial1.setRxInvert(true);
   Serial1.setRxInvert(false);
+
+  log_d("Checking if Serial 1 TX can be inverted when stopped");
+  Serial1.setTxInvert(true);
+  Serial1.setTxInvert(false);
+
+  log_d("Checking if Serial 1 pin options can be set when stopped");
+  TEST_ASSERT_TRUE(Serial1.enableRxInternalPull(true));
+  reset_serial_pin_options(Serial1);
 
   Serial.println("Disabled UART calls test successful");
 }
@@ -369,21 +489,27 @@ void change_pins_test(void) {
     UARTTestConfig &config = *uart_test_configs[0];
     // pinMode will force enabling the internal pullup resistor (IDF 5.3.2 Change)
     pinMode(NEW_RX1, INPUT_PULLUP);
-    config.serial.setPins(NEW_RX1, NEW_TX1);
+    // Detaching both pins will result in stopping the UART driver
+    // Only detach one of the pins
+    config.serial.setPins(NEW_RX1, /*NEW_TX1*/ -1);
     TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(config.uart_num));
-    TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(config.uart_num));
+    //TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(config.uart_num));
 
     uart_internal_loopback(config.uart_num, NEW_RX1);
+    uart_test_register_on_receive(config);
     config.transmit_and_check_msg("using new pins");
   } else {
     for (int i = 0; i < TEST_UART_NUM; i++) {
       UARTTestConfig &config = *uart_test_configs[i];
       UARTTestConfig &next_uart = *uart_test_configs[(i + 1) % TEST_UART_NUM];
-      config.serial.setPins(next_uart.default_rx_pin, next_uart.default_tx_pin);
+      // Detaching both pins will result in stopping the UART driver
+      // Only detach one of the pins
+      config.serial.setPins(next_uart.default_rx_pin, /*next_uart.default_tx_pin*/ -1);
       TEST_ASSERT_EQUAL(uart_get_RxPin(config.uart_num), next_uart.default_rx_pin);
-      TEST_ASSERT_EQUAL(uart_get_TxPin(config.uart_num), next_uart.default_tx_pin);
+      //TEST_ASSERT_EQUAL(uart_get_TxPin(config.uart_num), next_uart.default_tx_pin);
 
       uart_internal_loopback(config.uart_num, next_uart.default_rx_pin);
+      uart_test_register_on_receive(config);
       config.transmit_and_check_msg("using new pins");
     }
   }
@@ -403,8 +529,7 @@ void auto_baudrate_test(void) {
 
   if (TEST_UART_NUM == 1) {
     selected_serial = &Serial1;
-    // UART1 pins were swapped because of ESP32-P4
-    uart_internal_loopback(0, /*RX1*/ TX1);
+    uart_internal_loopback(0, RX1);
   } else {
 #ifdef RX2
     selected_serial = &Serial2;
@@ -426,6 +551,7 @@ void auto_baudrate_test(void) {
   if (TEST_UART_NUM == 1) {
     Serial.end();
     Serial.begin(115200);
+    Serial.setDebugOutput(true);
   }
 
   TEST_ASSERT_UINT_WITHIN(2304, 115200, baudrate);
@@ -438,11 +564,15 @@ void auto_baudrate_test(void) {
 void periman_test(void) {
   log_d("Checking if peripheral manager can properly manage UART pins");
 
+  Wire.end();
+
   log_d("Setting up I2C on the same pins as UART");
 
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
-    Wire.begin(config.default_rx_pin, config.default_tx_pin);
+    // Detaching both pins will result in stopping the UART driver
+    // Only detach one of the pins
+    Wire.begin(config.default_rx_pin, /*config.default_tx_pin*/ -1);
     config.recv_msg = "";
 
     log_d("Trying to send message using UART%d with I2C enabled", config.uart_num);
@@ -451,12 +581,16 @@ void periman_test(void) {
 
     log_d("Disabling I2C and re-enabling UART%d", config.uart_num);
 
+    Wire.end();
     config.serial.setPins(config.default_rx_pin, config.default_tx_pin);
+    uart_test_register_on_receive(config);
     uart_internal_loopback(config.uart_num, config.default_rx_pin);
 
     log_d("Trying to send message using UART%d with I2C disabled", config.uart_num);
     config.transmit_and_check_msg("while I2C is disabled");
   }
+
+  Wire.end();
 
   Serial.println("Peripheral manager test successful");
 }
@@ -466,7 +600,7 @@ void change_cpu_frequency_test(void) {
   uint32_t old_freq = getCpuFrequencyMhz();
   uint32_t new_freq = getXtalFrequencyMhz();
 
-  log_d("Changing CPU frequency from %dMHz to %dMHz", old_freq, new_freq);
+  log_d("Changing CPU frequency from %" PRIu32 "MHz to %" PRIu32 "MHz", old_freq, new_freq);
   Serial.flush();
   setCpuFrequencyMhz(new_freq);
 
@@ -478,7 +612,7 @@ void change_cpu_frequency_test(void) {
     config.transmit_and_check_msg("with new CPU frequency");
   }
 
-  log_d("Changing CPU frequency back to %dMHz", old_freq);
+  log_d("Changing CPU frequency back to %" PRIu32 "MHz", old_freq);
   Serial.flush();
   setCpuFrequencyMhz(old_freq);
 
@@ -493,18 +627,604 @@ void change_cpu_frequency_test(void) {
   Serial.println("Change CPU frequency test successful");
 }
 
+// This test checks if hardware flow control (RTS/CTS) works correctly with internal loopback
+void hardware_flow_control_test(void) {
+  log_d("Starting hardware flow control test");
+
+  // Use board I2C pads (SDA/SCL) for CTS/RTS; default RX/TX stay on UART1 pins.
+  const int8_t TEST_RTS_PIN = NEW_TX1;
+  const int8_t TEST_CTS_PIN = NEW_RX1;
+
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
+
+    // Configure pins with CTS and RTS (can be called after begin())
+    log_d("Setting UART%d pins: RX=%d, TX=%d, CTS=%d, RTS=%d", config.uart_num, config.default_rx_pin, config.default_tx_pin, TEST_CTS_PIN, TEST_RTS_PIN);
+    bool pins_set = config.serial.setPins(config.default_rx_pin, config.default_tx_pin, TEST_CTS_PIN, TEST_RTS_PIN);
+    TEST_ASSERT_TRUE(pins_set);
+
+    // Enable hardware flow control
+    log_d("Enabling hardware flow control (RTS + CTS)");
+    bool flow_ctrl_set = config.serial.setHwFlowCtrlMode(UART_HW_FLOWCTRL_CTS_RTS, 64);
+    TEST_ASSERT_TRUE(flow_ctrl_set);
+
+    // Set up internal loopbacks: TX->RX and RTS->CTS
+    log_d("Setting up internal loopbacks: TX->RX and RTS->CTS");
+    uart_internal_loopback(config.uart_num, config.default_rx_pin);
+    uart_internal_hw_flow_ctrl_loopback(config.uart_num, TEST_CTS_PIN);
+    uart_test_register_on_receive(config);
+
+    delay(100);
+    config.transmit_and_check_msg("Hardware Flow Control ON");
+
+    // Test that flow control can be disabled
+    log_d("Testing disabling hardware flow control");
+    bool flow_ctrl_disabled = config.serial.setHwFlowCtrlMode(UART_HW_FLOWCTRL_DISABLE, 64);
+    TEST_ASSERT_TRUE(flow_ctrl_disabled);
+
+    // Test transmission still works after disabling flow control
+    delay(50);
+    config.transmit_and_check_msg("Hardware Flow Control OFF");
+  }
+
+  Serial.println("Hardware flow control test successful");
+}
+
+// This test checks if IRDA mode (setMode and setIrdaDirection) works correctly
+void irda_mode_test(void) {
+  log_d("Starting IRDA mode test");
+
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
+
+    // Test 1: Verify setIrdaDirection fails when IRDA mode is not enabled
+    log_d("Verifying UART%d rejects IRDA TX mode while in regular UART mode", config.uart_num);
+    bool mode_set = config.serial.setMode(UART_MODE_UART);
+    TEST_ASSERT_TRUE(mode_set);
+    bool irda_tx_set = config.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_FALSE(irda_tx_set);
+
+    // Test 2: Enable IRDA mode
+    log_d("Setting UART%d to IRDA mode", config.uart_num);
+    mode_set = config.serial.setMode(UART_MODE_IRDA);
+    TEST_ASSERT_TRUE(mode_set);
+
+    // Test 3: Set IRDA TX mode
+    log_d("Setting UART%d to IRDA TX mode (transmit)", config.uart_num);
+    irda_tx_set = config.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+
+    delay(50);
+
+    // Test 4: Set IRDA RX mode
+    log_d("Setting UART%d to IRDA RX mode (receive)", config.uart_num);
+    bool irda_rx_set = config.serial.setIrdaDirection(ESP32_UART_IRDA_RX);
+    TEST_ASSERT_TRUE(irda_rx_set);
+
+    delay(50);
+
+    // Test 5: Switch back to TX mode
+    log_d("Switching UART%d back to IRDA TX mode", config.uart_num);
+    irda_tx_set = config.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+
+    // Test 6: Return to regular UART mode for next tests
+    log_d("Setting UART%d back to regular UART mode", config.uart_num);
+    mode_set = config.serial.setMode(UART_MODE_UART);
+    TEST_ASSERT_TRUE(mode_set);
+  }
+
+  // Functional behavior test with two UARTs:
+  // UART A in IRDA RX mode should receive UART B data when UART B is in IRDA TX mode.
+  // After switching UART A to IRDA TX mode, it should no longer receive UART B data.
+  if (TEST_UART_NUM >= 2) {
+    UARTTestConfig &uartA = *uart_test_configs[0];
+    UARTTestConfig &uartB = *uart_test_configs[1];
+
+    // IrDA uses narrow pulses (3/16 of bit period); at high baud rates
+    // the pulses are too short for reliable cross-UART GPIO matrix loopback.
+    uartA.serial.updateBaudRate(9600);
+    uartB.serial.updateBaudRate(9600);
+    delay(500);
+
+    // Set both UARTs to IRDA mode
+    bool mode_set = uartA.serial.setMode(UART_MODE_IRDA);
+    TEST_ASSERT_TRUE(mode_set);
+    mode_set = uartB.serial.setMode(UART_MODE_IRDA);
+    TEST_ASSERT_TRUE(mode_set);
+
+    // Configure: UART A in RX mode, UART B in TX mode
+    bool irda_rx_set = uartA.serial.setIrdaDirection(ESP32_UART_IRDA_RX);
+    TEST_ASSERT_TRUE(irda_rx_set);
+    bool irda_tx_set = uartB.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+
+    // Set up internal loopback: UART B TX -> UART A RX
+    uart_internal_loopback(uartB.uart_num, uartA.default_rx_pin);
+    delay(50);
+
+    // Test 1: UART A should receive when in RX mode
+    log_d("Testing UART%d reception in IRDA RX mode", uartA.uart_num);
+    const char *msg_rx_enabled = "IRDA_RX_ENABLED";
+    uartA.reset_buffers();
+    uartA.clear_rx_buffer();
+    delay(50);
+    uartB.serial.print(msg_rx_enabled);
+    uartB.serial.flush();
+    delay(200);  // Give more time for IRDA hardware to process and callback to fire
+    log_d("UART%d received: '%s'", uartA.uart_num, uartA.recv_msg.c_str());
+    TEST_ASSERT_EQUAL_STRING(msg_rx_enabled, uartA.recv_msg.c_str());
+
+    // Test 2: Switch UART A to TX mode - should NOT receive
+    log_d("Switching UART%d to IRDA TX mode - should no longer receive", uartA.uart_num);
+    irda_tx_set = uartA.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+    delay(50);
+
+    const char *msg_rx_disabled = "IRDA_RX_DISABLED";
+    uartA.reset_buffers();
+    uartA.clear_rx_buffer();
+    delay(50);
+    uartB.serial.print(msg_rx_disabled);
+    uartB.serial.flush();
+    delay(200);  // Give time for any data to arrive (should be none)
+    log_d("UART%d received after TX mode switch: '%s' (should be empty)", uartA.uart_num, uartA.recv_msg.c_str());
+    TEST_ASSERT_EQUAL(0, uartA.recv_msg.length());
+
+    // Return both UARTs to regular UART mode
+    mode_set = uartA.serial.setMode(UART_MODE_UART);
+    TEST_ASSERT_TRUE(mode_set);
+    mode_set = uartB.serial.setMode(UART_MODE_UART);
+    TEST_ASSERT_TRUE(mode_set);
+    uart_internal_loopback(uartA.uart_num, uartA.default_rx_pin);
+    uart_internal_loopback(uartB.uart_num, uartB.default_rx_pin);
+  } else {
+    log_d("Skipping functional IRDA direction behavior check: requires at least 2 UARTs");
+  }
+
+  Serial.println("IRDA mode test successful");
+}
+
+// This test checks that moving both UART RX and TX pins to another UART terminates the source UART
+void inter_uart_pin_move_test(void) {
+  if (TEST_UART_NUM < 2) {
+    TEST_PASS_MESSAGE("Skipping: test requires 2+ UARTs");
+    return;
+  }
+
+  UARTTestConfig &uart1 = *uart_test_configs[0];
+  UARTTestConfig &uart2 = *uart_test_configs[1];
+
+  // Both UARTs should be running at test start (setUp ensures this)
+  TEST_ASSERT_TRUE(uart1.serial);
+  TEST_ASSERT_TRUE(uart2.serial);
+
+  // Move uart1 to use uart2's default pins: uart2 should be terminated
+  log_d("Moving UART%d to use UART%d pins (%d, %d)", uart1.uart_num, uart2.uart_num, uart2.default_rx_pin, uart2.default_tx_pin);
+  uart1.serial.setPins(uart2.default_rx_pin, uart2.default_tx_pin);
+
+  // uart2 should now be terminated (it lost both its RX and TX pins)
+  TEST_ASSERT_FALSE(uart2.serial);
+
+  // uart1 should still be running and using uart2's former pins
+  TEST_ASSERT_TRUE(uart1.serial);
+  TEST_ASSERT_EQUAL(uart2.default_rx_pin, uart_get_RxPin(uart1.uart_num));
+  TEST_ASSERT_EQUAL(uart2.default_tx_pin, uart_get_TxPin(uart1.uart_num));
+
+  // Confirm uart1 can still transmit on its new pins
+  uart_internal_loopback(uart1.uart_num, uart2.default_rx_pin);
+  uart1.transmit_and_check_msg("after inter-UART pin move");
+
+  Serial.println("Inter-UART pin move test successful");
+}
+
+// This test checks that swapping RX and TX pins within the same UART keeps it running
+void same_uart_pin_swap_test(void) {
+  UARTTestConfig &config = *uart_test_configs[0];
+
+  TEST_ASSERT_TRUE(config.serial);
+
+  int8_t orig_rx = config.default_rx_pin;
+  int8_t orig_tx = config.default_tx_pin;
+
+  // Swap RX and TX on the same UART
+  log_d("Swapping RX(%d) and TX(%d) on UART%d", orig_rx, orig_tx, config.uart_num);
+  bool ret = config.serial.setPins(orig_tx, orig_rx);
+  TEST_ASSERT_TRUE(ret);
+
+  // UART should still be running after a pin swap
+  TEST_ASSERT_TRUE(config.serial);
+  TEST_ASSERT_EQUAL(orig_tx, uart_get_RxPin(config.uart_num));
+  TEST_ASSERT_EQUAL(orig_rx, uart_get_TxPin(config.uart_num));
+
+  // Confirm transmission still works with swapped pins (re-set loopback for swapped RX)
+  uart_internal_loopback(config.uart_num, orig_tx);
+  config.transmit_and_check_msg("after pin swap");
+
+  Serial.println("Same UART pin swap test successful");
+}
+
+// This test checks that moving a UART's RX/TX to CTS/RTS (same UART) terminates the UART
+void move_rx_tx_to_cts_rts_test(void) {
+  UARTTestConfig &config = *uart_test_configs[0];
+
+  TEST_ASSERT_TRUE(config.serial);
+
+  // Move the UART's own RX and TX to CTS and RTS – it should no longer have valid RX/TX
+  log_d("Moving UART%d RX(%d)/TX(%d) to CTS/RTS", config.uart_num, config.default_rx_pin, config.default_tx_pin);
+  config.serial.setPins(-1, -1, config.default_rx_pin, config.default_tx_pin);
+
+  // UART should be terminated because it has no RX or TX pins
+  TEST_ASSERT_FALSE(config.serial);
+
+  Serial.println("Move RX/TX to CTS/RTS terminates UART test successful");
+}
+
+// This test checks that assigning another UART's RX/TX pins as CTS/RTS terminates the source UART
+void cross_uart_cts_rts_test(void) {
+  if (TEST_UART_NUM < 2) {
+    TEST_PASS_MESSAGE("Skipping: test requires 2+ UARTs");
+    return;
+  }
+
+  UARTTestConfig &uart1 = *uart_test_configs[0];
+  UARTTestConfig &uart2 = *uart_test_configs[1];
+
+  TEST_ASSERT_TRUE(uart1.serial);
+  TEST_ASSERT_TRUE(uart2.serial);
+
+  // uart2 takes uart1's RX/TX pins as its CTS/RTS.
+  // uart1 should be terminated (lost its only RX and TX pins).
+  // uart2 keeps its own RX/TX and additionally gets CTS/RTS.
+  log_d("UART%d taking UART%d pins (%d, %d) as CTS/RTS", uart2.uart_num, uart1.uart_num, uart1.default_rx_pin, uart1.default_tx_pin);
+  uart2.serial.setPins(-1, -1, uart1.default_rx_pin, uart1.default_tx_pin);
+
+  // uart1 should be terminated (lost its RX and TX)
+  TEST_ASSERT_FALSE(uart1.serial);
+
+  // uart2 should still be running (its own RX/TX are untouched)
+  TEST_ASSERT_TRUE(uart2.serial);
+
+  // Confirm uart2 can still transmit on its own RX/TX pins
+  uart_internal_loopback(uart2.uart_num, uart2.default_rx_pin);
+  uart2.transmit_and_check_msg("after cross-UART CTS/RTS assignment");
+
+  Serial.println("Cross-UART CTS/RTS terminates source UART test successful");
+}
+
+void rx_pull_pre_begin_api_test(void) {
+  log_d("RX pull API must be pre-begin only");
+
+  Serial1.end();
+  reset_serial_pin_options(Serial1);
+  TEST_ASSERT_TRUE(Serial1.enableRxInternalPull(true));
+
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  TEST_ASSERT_FALSE(Serial1.enableRxInternalPull(true));
+  Serial1.end();
+
+  Serial.println("RX pull pre-begin API test successful");
+}
+
+void rx_pull_inversion_test(void) {
+  log_d("RX internal pull vs inversion");
+
+  Serial1.end();
+  reset_serial_pin_options(Serial1);
+
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+  Serial1.end();
+
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1, 115200, true);
+  TEST_ASSERT_EQUAL(GPIO_PULLDOWN_ONLY, read_rx_pull_mode(NEW_RX1));
+  Serial1.end();
+
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  Serial1.setRxInvert(true);
+  TEST_ASSERT_EQUAL(GPIO_PULLDOWN_ONLY, read_rx_pull_mode(NEW_RX1));
+  Serial1.end();
+
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1, 115200, true);
+  Serial1.setRxInvert(false);
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+  Serial1.end();
+
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  Serial1.setTxInvert(true);
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+  Serial1.end();
+
+  Serial1.end();
+  reset_serial_pin_options(Serial1);
+  Serial1.enableRxInternalPull(false);
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_RX1));
+  Serial1.end();
+
+  Serial.println("RX pull inversion test successful");
+}
+
+void same_pin_validation_test(void) {
+  log_d("Same-pin auto-detects one-wire; -1 keep-current also enables it");
+
+  Serial1.end();
+  reset_serial_pin_options(Serial1);
+  TEST_ASSERT_TRUE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_TxPin(1));
+  Serial1.end();
+
+  // Explicit (p, p) then begin: shared periman type
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  TEST_ASSERT_FALSE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN, TEST_AUX_PIN, -1));
+  TEST_ASSERT_FALSE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN, -1, TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_TRUE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_TxPin(1));
+  TEST_ASSERT_FALSE(Serial1.setPins(-1, -1, TEST_AUX_PIN, -1));
+  TEST_ASSERT_FALSE(Serial1.setPins(-1, -1, -1, TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(TEST_AUX_PIN));
+
+  // Keeping both data pins while adding CTS must preserve one-wire ownership and the driver.
+  TEST_ASSERT_TRUE(Serial1.setPins(-1, -1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(Serial1.setPins(-1, -1, NEW_RX1, -1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_CTS, perimanGetPinBusType(NEW_RX1));
+  Serial1.end();
+
+  // Back to split, then implicit one-wire via setPins(-1, currentRx)
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  TEST_ASSERT_TRUE(Serial1.setPins(-1, NEW_RX1));
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_INIT, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(NEW_RX1));
+
+  // Leave one-wire while keeping RX via -1; the kept RX must regain its pull.
+  TEST_ASSERT_TRUE(Serial1.setPins(-1, NEW_TX1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_TX, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_FALSE(read_open_drain_enabled(NEW_RX1));
+
+  // Enter through the other implicit form, then leave while keeping TX via -1.
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_TX1, -1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_INIT, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_TX1));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(NEW_TX1));
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, -1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_TX, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_FALSE(read_open_drain_enabled(NEW_TX1));
+
+  // Explicit split -> one-wire collapsing onto the former RX pad, then re-expand to split.
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, NEW_RX1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_INIT, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(NEW_RX1));
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, NEW_TX1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_TX, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_FALSE(read_open_drain_enabled(NEW_RX1));
+  Serial1.end();
+
+  Serial.println("Same-pin validation test successful");
+}
+
+void same_pin_pull_disabled_test(void) {
+  log_d("One-wire mode disables RX internal pull");
+
+  Serial1.end();
+  reset_serial_pin_options(Serial1);
+  test_serial_begin(Serial1, TEST_AUX_PIN, TEST_AUX_PIN, 115200, true);
+  TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(TEST_AUX_PIN));
+  Serial1.end();
+
+  Serial.println("Same-pin pull disabled test successful");
+}
+
+void same_pin_transmission_test(void) {
+  log_d("One-wire UART echo on shared pin");
+
+  Serial1.end();
+  String recv;
+  reset_serial_pin_options(Serial1);
+  test_serial_begin(Serial1, TEST_AUX_PIN, TEST_AUX_PIN);
+  Serial1.onReceive([&recv]() {
+    while (Serial1.available()) {
+      char c = Serial1.read();
+      if (c > 31 && c < 128) {
+        recv += c;
+      }
+    }
+  });
+  uart_internal_loopback(1, TEST_AUX_PIN);
+  // The HAL configures the shared pad open-drain, whose released-HIGH level is only
+  // defined by an external pull-up. This CI sketch must run with no external parts
+  // (including in simulators), so drive the loopback push-pull for a deterministic
+  // pad level here. OD configuration itself is asserted in the validation/pull tests.
+  force_push_pull_for_loopback(TEST_AUX_PIN);
+  delay(50);
+  recv = "";
+  Serial1.print("ONEWIRE");
+  Serial1.flush();
+  delay(150);
+  TEST_ASSERT_EQUAL_STRING("ONEWIRE", recv.c_str());
+  Serial1.end();
+
+  Serial.println("Same-pin transmission test successful");
+}
+
+void same_pin_periman_test(void) {
+  log_d("One-wire pin uses UART_RX_TX periman type; external deinit terminates UART");
+
+  Serial1.end();
+  reset_serial_pin_options(Serial1);
+  test_serial_begin(Serial1, TEST_AUX_PIN, TEST_AUX_PIN);
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(Serial1);
+
+  pinMode(TEST_AUX_PIN, INPUT);
+  delay(50);
+  TEST_ASSERT_FALSE(Serial1);
+  Serial1.end();
+
+  Serial.println("Same-pin periman test successful");
+}
+
+void same_pin_mode_rejection_test(void) {
+  log_d("RS485 and IrDA reject same-pin configuration; setMode rejects active one-wire");
+
+  Serial1.end();
+  reset_serial_pin_options(Serial1);
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+
+  TEST_ASSERT_TRUE(Serial1.setMode(UART_MODE_RS485_HALF_DUPLEX));
+  TEST_ASSERT_FALSE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
+
+  TEST_ASSERT_TRUE(Serial1.setMode(UART_MODE_UART));
+  TEST_ASSERT_TRUE(Serial1.setMode(UART_MODE_IRDA));
+  TEST_ASSERT_FALSE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
+
+  TEST_ASSERT_TRUE(Serial1.setMode(UART_MODE_UART));
+  TEST_ASSERT_TRUE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
+  TEST_ASSERT_FALSE(Serial1.setMode(UART_MODE_RS485_HALF_DUPLEX));
+  TEST_ASSERT_FALSE(Serial1.setMode(UART_MODE_IRDA));
+  TEST_ASSERT_TRUE(Serial1.setMode(UART_MODE_UART));
+  Serial1.end();
+
+  Serial.println("Same-pin mode rejection test successful");
+}
+
+void same_pin_split_transition_test(void) {
+  log_d("Split <-> one-wire transitions keep driver alive");
+
+  Serial1.end();
+  String recv;
+  reset_serial_pin_options(Serial1);
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  Serial1.onReceive([&recv]() {
+    while (Serial1.available()) {
+      char c = Serial1.read();
+      if (c > 31 && c < 128) {
+        recv += c;
+      }
+    }
+  });
+  uart_internal_loopback(1, NEW_RX1);
+  delay(50);
+  recv = "";
+  Serial1.print("SPLIT");
+  Serial1.flush();
+  delay(150);
+  TEST_ASSERT_EQUAL_STRING("SPLIT", recv.c_str());
+  TEST_ASSERT_TRUE(Serial1);
+
+  Serial1.end();
+  test_serial_begin(Serial1, TEST_AUX_PIN, TEST_AUX_PIN);
+  Serial1.onReceive([&recv]() {
+    while (Serial1.available()) {
+      char c = Serial1.read();
+      if (c > 31 && c < 128) {
+        recv += c;
+      }
+    }
+  });
+  TEST_ASSERT_TRUE(Serial1);
+  uart_internal_loopback(1, TEST_AUX_PIN);
+  // Same-pin loopback is driven push-pull for a deterministic pad level with no
+  // external pull-up (see same_pin_transmission_test).
+  force_push_pull_for_loopback(TEST_AUX_PIN);
+  recv = "";
+  Serial1.print("SHARED");
+  Serial1.flush();
+  delay(150);
+  TEST_ASSERT_EQUAL_STRING("SHARED", recv.c_str());
+
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, NEW_TX1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  uart_internal_loopback(1, NEW_RX1);
+  recv = "";
+  Serial1.print("SPLIT2");
+  Serial1.flush();
+  delay(150);
+  TEST_ASSERT_EQUAL_STRING("SPLIT2", recv.c_str());
+  Serial1.end();
+
+  Serial.println("Same-pin split transition test successful");
+}
+
+void rx_pull_setpins_reattach_test(void) {
+  log_d("RX pull follows pin changes and setRxInvert()");
+
+  Serial1.end();
+  reset_serial_pin_options(Serial1);
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_TX1, NEW_RX1));
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_TX1));
+
+  Serial1.setRxInvert(true);
+  TEST_ASSERT_EQUAL(GPIO_PULLDOWN_ONLY, read_rx_pull_mode(NEW_TX1));
+  Serial1.end();
+
+  Serial.println("RX pull setPins reattach test successful");
+}
+
 /* Main functions */
 
 void setup() {
   Serial.begin(115200);
+  Serial.setDebugOutput(true);
   while (!Serial) {
     delay(10);
   }
 
   uart_test_configs = {
 #if SOC_UART_HP_NUM >= 2 && defined(RX1) && defined(TX1)
-    // inverting RX1<->TX1 because ESP32-P4 has a problem with loopback on RX1 :: GPIO11 <-- UART_TX SGINAL
-    new UARTTestConfig(1, Serial1, TX1, RX1),
+#if CONFIG_IDF_TARGET_ESP32P4
+    // Using an ESP32-P4X-Function-EV-Board requires the broken-out pins on J1
+    new UARTTestConfig(1, Serial1, 2, 3),  // RX1 = 2, TX1 = 3; ESP32-P4 only: TAB5 (ECO-2) = OK || P4X EV board = OK
+#else
+    // Non-ESP32-P4 targets should use the regular UART1 pins
+    new UARTTestConfig(1, Serial1, RX1, TX1),
+#endif
 #endif
 #if SOC_UART_HP_NUM >= 3 && defined(RX2) && defined(TX2)
     new UARTTestConfig(2, Serial2, RX2, TX2),
@@ -523,16 +1243,13 @@ void setup() {
   }
 
   log_d("TEST_UART_NUM = %d", TEST_UART_NUM);
-
+  Serial.printf("UART validation: TEST_UART_NUM=%d\r\n", TEST_UART_NUM);
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
-    config.begin(115200);
-    log_d("Setup internal loop-back from and back to UART%d TX >> UART%d RX", config.uart_num, config.uart_num);
-    config.serial.onReceive([&config]() {
-      config.onReceive();
-    });
-    uart_internal_loopback(config.uart_num, uart_get_RxPin(config.uart_num));
+    Serial.printf("  UART%d default RX=%d TX=%d\r\n", config.uart_num, config.default_rx_pin, config.default_tx_pin);
   }
+  Serial.printf("  Serial1 alt split RX=%d TX=%d one-wire=%d\r\n", NEW_RX1, NEW_TX1, TEST_AUX_PIN);
+  Serial.flush();
 
   log_d("Setup done. Starting tests");
 
@@ -549,7 +1266,22 @@ void setup() {
 #endif
   RUN_TEST(periman_test);
   RUN_TEST(change_pins_test);
+  RUN_TEST(irda_mode_test);
+  RUN_TEST(inter_uart_pin_move_test);
+  RUN_TEST(same_uart_pin_swap_test);
+  RUN_TEST(move_rx_tx_to_cts_rts_test);
+  RUN_TEST(cross_uart_cts_rts_test);
+  RUN_TEST(rx_pull_pre_begin_api_test);
+  RUN_TEST(rx_pull_inversion_test);
+  RUN_TEST(same_pin_validation_test);
+  RUN_TEST(same_pin_pull_disabled_test);
+  RUN_TEST(same_pin_transmission_test);
+  RUN_TEST(same_pin_periman_test);
+  RUN_TEST(same_pin_mode_rejection_test);
+  RUN_TEST(same_pin_split_transition_test);
+  RUN_TEST(rx_pull_setpins_reattach_test);
   RUN_TEST(end_when_stopped_test);
+  RUN_TEST(hardware_flow_control_test);
   UNITY_END();
 }
 

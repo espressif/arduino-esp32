@@ -27,15 +27,15 @@ void setup() {
   }
 
   log_d("Starting fibonacci calculation");
-  Serial.printf("Runs: %d\n", N_RUNS);
-  Serial.printf("N: %d\n", FIB_N);
+  Serial.printf("Runs: %u\n", N_RUNS);
+  Serial.printf("N: %u\n", FIB_N);
   Serial.flush();
   for (int i = 0; i < N_RUNS; i++) {
-    Serial.printf("Run %d\n", i);
+    Serial.printf("Run %u\n", i);
     unsigned long start = millis();
     fibonacci = fib(FIB_N);
     unsigned long elapsed = millis() - start;
-    Serial.printf("Fibonacci(N): %llu\n", fibonacci);
+    Serial.printf("Fibonacci(N): %" PRIu64 "\n", fibonacci);
     Serial.printf("Time: %lu.%03lu s\n", elapsed / 1000, elapsed % 1000);
     Serial.flush();
   }

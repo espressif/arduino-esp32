@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
@@ -83,7 +84,7 @@ void handleUpdate() {
       return;
     }
 
-    Serial.printf("Receiving Update: %s, Size: %d\n", upload.filename.c_str(), fsize);
+    Serial.printf("Receiving Update: %s, Size: %lu\n", upload.filename.c_str(), (unsigned long)fsize);
     if (!Update.begin(fsize)) {
       otaDone = 0;
       Update.printError(Serial);
@@ -96,7 +97,7 @@ void handleUpdate() {
     }
   } else if (authenticated && upload.status == UPLOAD_FILE_END) {
     if (Update.end(true)) {
-      Serial.printf("Update Success: %u bytes\nRebooting...\n", upload.totalSize);
+      Serial.printf("Update Success: %lu bytes\nRebooting...\n", (unsigned long)upload.totalSize);
     } else {
       Serial.printf("%s\n", Update.errorString());
       otaDone = 0;
@@ -131,7 +132,7 @@ void webServerInit() {
 
 void everySecond() {
   if (otaDone > 1) {
-    Serial.printf("ota: %d%%\n", otaDone);
+    Serial.printf("ota: %u%%\n", otaDone);
   }
 }
 

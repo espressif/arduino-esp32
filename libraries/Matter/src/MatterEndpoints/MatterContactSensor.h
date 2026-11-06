@@ -23,12 +23,12 @@ class MatterContactSensor : public MatterEndPoint {
 public:
   MatterContactSensor();
   ~MatterContactSensor();
-  // begin Matter Contact Sensor endpoint with initial contact state
-  bool begin(bool _contactState = false);
+  // begin Matter Contact Sensor endpoint. Fabric StateValue starts false (open).
+  bool begin();
   // this will just stop processing Contact Sensor Matter events
   void end();
 
-  // set the contact state
+  // set the contact state. Call after Matter.begin() with the real sensor reading.
   bool setContact(bool _contactState);
   // returns the contact state
   bool getContact() {

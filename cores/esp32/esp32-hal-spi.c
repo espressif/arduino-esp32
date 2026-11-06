@@ -26,11 +26,15 @@
 #include "soc/io_mux_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/rtc.h"
-#ifndef CONFIG_IDF_TARGET_ESP32C5
+#if !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32C61)
 #include "hal/clk_gate_ll.h"
 #endif
 #include "esp32-hal-periman.h"
+#include "esp_clk_tree.h"
 #include "esp_private/periph_ctrl.h"
+#if !CONFIG_IDF_TARGET_ESP32 && !CONFIG_IDF_TARGET_ESP32S2
+#include "hal/spi_ll.h"
+#endif
 
 #include "esp_system.h"
 #include "esp_intr_alloc.h"
@@ -62,12 +66,31 @@
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/ets_sys.h"
 #include "esp32p4/rom/gpio.h"
-#include "hal/spi_ll.h"
+#include "hal/clk_tree_ll.h"
+
+// ESP32P4 SPI clock source frequencies
+#define SPI_P4_SPLL_FREQ_HZ (CLK_LL_PLL_480M_FREQ_MHZ * MHZ)  // System PLL base frequency (480 MHz)
+#define SPI_P4_MAX_FREQ_HZ  80000000                          // SPI peripheral maximum frequency (80 MHz)
 #elif CONFIG_IDF_TARGET_ESP32C5
 #include "esp32c5/rom/ets_sys.h"
 #include "esp32c5/rom/gpio.h"
+#elif CONFIG_IDF_TARGET_ESP32C61
+#include "esp32c61/rom/ets_sys.h"
+#include "esp32c61/rom/gpio.h"
 #else
 #error Target CONFIG_IDF_TARGET is not supported
+#endif
+
+// APB_CLK is only a valid SPI clock source on the ESP32, S2, S3 and C3. The other targets have
+// their own source mux, in which the XTAL is the option that is always available and, unlike the
+// PLL taps, is neither gated nor rescaled by a CPU frequency change. The ESP32-P4 is left out
+// because it picks between the XTAL and the SPLL on its own, see spiFrequencyToClockDiv().
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
+#define ARDUINO_SPI_CLK_SRC         SPI_CLK_SRC_APB
+#define ARDUINO_SPI_CLK_FOLLOWS_APB 1
+#elif !defined(CONFIG_IDF_TARGET_ESP32P4)
+#define ARDUINO_SPI_CLK_SRC         SPI_CLK_SRC_XTAL
+#define ARDUINO_SPI_CLK_FOLLOWS_APB 0
 #endif
 
 struct spi_struct_t {
@@ -81,6 +104,11 @@ struct spi_struct_t {
   int8_t mosi;
   int8_t ss;
   bool ss_invert;
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  uint8_t clk_src;          // Clock source: 0=XTAL, 1=SPLL
+  uint32_t last_clock_div;  // Last clock divider calculated
+  uint8_t last_clk_src;     // Last clock source selected (0=XTAL, 1=SPLL)
+#endif
 };
 
 #if CONFIG_IDF_TARGET_ESP32S2
@@ -125,18 +153,7 @@ struct spi_struct_t {
 
 #define SPI_SS_IDX(p, n) ((p == 0) ? SPI_FSPI_SS_IDX(n) : ((p == 1) ? SPI_HSPI_SS_IDX(n) : 0))
 
-#elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C5
-// ESP32C3
-#define SPI_COUNT (1)
-
-#define SPI_CLK_IDX(p)  FSPICLK_OUT_IDX
-#define SPI_MISO_IDX(p) FSPIQ_OUT_IDX
-#define SPI_MOSI_IDX(p) FSPID_IN_IDX
-
-#define SPI_SPI_SS_IDX(n) ((n == 0) ? FSPICS0_OUT_IDX : ((n == 1) ? FSPICS1_OUT_IDX : ((n == 2) ? FSPICS2_OUT_IDX : FSPICS0_OUT_IDX)))
-#define SPI_SS_IDX(p, n)  SPI_SPI_SS_IDX(n)
-
-#else
+#elif CONFIG_IDF_TARGET_ESP32
 // ESP32
 #define SPI_COUNT (4)
 
@@ -149,6 +166,17 @@ struct spi_struct_t {
 #define SPI_VSPI_SS_IDX(n) ((n == 0) ? VSPICS0_OUT_IDX : ((n == 1) ? VSPICS1_OUT_IDX : ((n == 2) ? VSPICS2_OUT_IDX : VSPICS0_OUT_IDX)))
 #define SPI_SS_IDX(p, n)   ((p == 0) ? SPI_SPI_SS_IDX(n) : ((p == 1) ? SPI_SPI_SS_IDX(n) : ((p == 2) ? SPI_HSPI_SS_IDX(n) : ((p == 3) ? SPI_VSPI_SS_IDX(n) : 0))))
 
+#else
+// ESP32C2, C3, C5, C6, C61, H2
+#define SPI_COUNT (1)
+
+#define SPI_CLK_IDX(p)  FSPICLK_OUT_IDX
+#define SPI_MISO_IDX(p) FSPIQ_OUT_IDX
+#define SPI_MOSI_IDX(p) FSPID_IN_IDX
+
+#define SPI_SPI_SS_IDX(n) ((n == 0) ? FSPICS0_OUT_IDX : ((n == 1) ? FSPICS1_OUT_IDX : ((n == 2) ? FSPICS2_OUT_IDX : FSPICS0_OUT_IDX)))
+#define SPI_SS_IDX(p, n)  SPI_SPI_SS_IDX(n)
+
 #endif
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -159,17 +187,13 @@ static spi_t _spi_bus_array[] = {
 #if CONFIG_IDF_TARGET_ESP32S2 ||CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 1, -1, -1, -1, -1, false}
-#elif CONFIG_IDF_TARGET_ESP32C2
-  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1, false}
-#elif CONFIG_IDF_TARGET_ESP32C3
-  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1, false}
-#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C5
-  {(spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1, false}
-#else
+#elif CONFIG_IDF_TARGET_ESP32
   {(volatile spi_dev_t *)(DR_REG_SPI0_BASE), 0, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 1, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 2, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 3, -1, -1, -1, -1, false}
+#else // ESP32C2, C3, C5, C6, C61, H2
+  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1, false}
 #endif
 };
 // clang-format on
@@ -179,22 +203,21 @@ static spi_t _spi_bus_array[] = {
   } while (xSemaphoreTake(spi->lock, portMAX_DELAY) != pdPASS)
 #define SPI_MUTEX_UNLOCK() xSemaphoreGive(spi->lock)
 
+// clang-format off
 static spi_t _spi_bus_array[] = {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
-  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0, -1, -1, -1, -1, false}, {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 1, -1, -1, -1, -1, false}
-#elif CONFIG_IDF_TARGET_ESP32C2
-  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0, -1, -1, -1, -1, false}
-#elif CONFIG_IDF_TARGET_ESP32C3
-  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0, -1, -1, -1, -1, false}
-#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C5
-  {(spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0, -1, -1, -1, -1, false}
-#else
+  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0, -1, -1, -1, -1, false},
+  {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 1, -1, -1, -1, -1, false}
+#elif CONFIG_IDF_TARGET_ESP32
   {(volatile spi_dev_t *)(DR_REG_SPI0_BASE), NULL, 0, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), NULL, 1, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 2, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 3, -1, -1, -1, -1, false}
+#else // ESP32C2, C3, C5, C6, C61, H2
+  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0, -1, -1, -1, -1, false}
 #endif
 };
+// clang-format on
 #endif
 
 static bool spiDetachBus(void *bus) {
@@ -472,12 +495,121 @@ uint32_t spiGetClockDiv(spi_t *spi) {
   return spi->dev->clock.val;
 }
 
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+/**
+ * @brief Calculate SPI frequency from divider value and source frequency
+ *
+ * @param divider The clock divider value (must be > 0)
+ * @param source_freq The source clock frequency in Hz (e.g., 40MHz for XTAL, 480MHz for SPLL)
+ * @return uint32_t The calculated SPI clock frequency in Hz, or 0 if divider is 0
+ *
+ * @note ESP32P4-specific helper function. Calculates: frequency = source_freq / divider
+ */
+static inline uint32_t _dividerToFreq(uint32_t divider, uint32_t source_freq) {
+  if (divider == 0) {
+    return 0;  // Safety check
+  }
+  return source_freq / divider;
+}
+
+/**
+ * @brief Extract the divider value from a clockDiv register value
+ *
+ * @param clockDiv The SPI clock divider register value
+ * @return uint32_t The calculated divider: (clkdiv_pre + 1) * (clkcnt_n + 1)
+ *
+ * @note ESP32P4-specific helper function. Extracts clkcnt_n (bits 12-17) and
+ *       clkdiv_pre (bits 18-21) from the register value using bit shifts.
+ *       For SPI_CLK_EQU_SYSCLK (0x80000000), this naturally returns 1 (no division).
+ */
+static inline uint32_t _clockDivToDivider(uint32_t clockDiv) {
+  uint32_t clkcnt_n = (clockDiv >> 12) & 0x3F;
+  uint32_t clkdiv_pre = (clockDiv >> 18) & 0xF;
+  return ((clkdiv_pre + 1) * (clkcnt_n + 1));
+}
+#endif
+
+/**
+ * @brief Internal function to set SPI clock divider and handle ESP32P4 clock source switching
+ *
+ * @param spi Pointer to SPI bus structure
+ * @param clockDiv The clock divider register value to set
+ *
+ * @note This function does NOT acquire the SPI mutex - it must be called from within
+ *       a context that already holds the mutex.
+ *
+ * @note Callers (all properly acquire mutex before calling):
+ *       - spiSetClockDiv() - acquires mutex via SPI_MUTEX_LOCK() before calling
+ *       - spiTransaction() - acquires mutex via SPI_MUTEX_LOCK() before calling
+ *       - _on_apb_change() - acquires mutex via SPI_MUTEX_LOCK() before calling (APB_AFTER_CHANGE case)
+ *
+ * @note ESP32P4-specific behavior:
+ *       - Determines the appropriate clock source (XTAL or SPLL) based on the divider value
+ *       - Uses stored per-instance clock source information if available (from last calculation)
+ *       - Otherwise infers clock source by checking which gives a valid frequency:
+ *         * XTAL is capped at 40MHz, so if calculated frequency > 40MHz, must use SPLL
+ *         * For <= 40MHz frequencies, prefers XTAL if valid
+ *       - Switches clock source if needed (with proper clock gating and delay)
+ *       - Updates per-instance tracking variables (last_clock_div, last_clk_src)
+ */
+static void _spiSetClockDivInternal(spi_t *spi, uint32_t clockDiv) {
+  if (!spi) {
+    return;
+  }
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // ESP32P4: Determine clock source from divider
+  // The divider was calculated by spiFrequencyToClockDiv() which picks the best match
+  // We store which source was selected per SPI instance, so use that if available.
+  // Otherwise, infer from the divider by checking which gives a "more reasonable" frequency.
+  uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;  // Actual XTAL frequency (typically 40 MHz)
+  uint32_t spll_freq = SPI_P4_SPLL_FREQ_HZ;
+
+  uint8_t new_clk_src;
+  if (clockDiv == spi->last_clock_div && spi->last_clock_div != 0) {
+    new_clk_src = spi->last_clk_src;
+  } else {
+    uint32_t divider = _clockDivToDivider(clockDiv);
+    uint32_t freq_with_xtal = _dividerToFreq(divider, xtal_freq);
+    uint32_t freq_with_spll = _dividerToFreq(divider, spll_freq);
+
+    // Infer: Prefer XTAL whenever it yields a valid <= 40MHz SPI clock,
+    // and fall back to SPLL only when XTAL cannot produce a valid frequency.
+    if (freq_with_xtal > 0 && freq_with_xtal <= xtal_freq) {
+      new_clk_src = 0;  // XTAL
+    } else if (freq_with_spll > 0) {
+      new_clk_src = 1;  // SPLL
+    } else {
+      // Both inferred frequencies are invalid; keep current source to avoid unnecessary switching.
+      new_clk_src = spi->clk_src;
+    }
+  }
+
+  // Store the divider and source for this SPI instance
+  spi->last_clock_div = clockDiv;
+  spi->last_clk_src = new_clk_src;
+
+  if (spi->clk_src != new_clk_src) {
+    // Determine SPI host ID once to avoid duplicate conditionals
+    int host = (spi->num == FSPI) ? SPI2_HOST : SPI3_HOST;
+
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_clock(host, false);
+      spi_ll_set_clk_source(spi->dev, new_clk_src ? SPI_CLK_SRC_SPLL : SPI_CLK_SRC_XTAL);
+      spi_ll_enable_clock(host, true);
+    }
+    spi->clk_src = new_clk_src;
+    ets_delay_us(10);
+  }
+#endif
+  spi->dev->clock.val = clockDiv;
+}
+
 void spiSetClockDiv(spi_t *spi, uint32_t clockDiv) {
   if (!spi) {
     return;
   }
   SPI_MUTEX_LOCK();
-  spi->dev->clock.val = clockDiv;
+  _spiSetClockDivInternal(spi, clockDiv);
   SPI_MUTEX_UNLOCK();
 }
 
@@ -568,13 +700,50 @@ void spiSetBitOrder(spi_t *spi, uint8_t bitOrder) {
   SPI_MUTEX_UNLOCK();
 }
 
+#ifdef ARDUINO_SPI_CLK_SRC
+// Frequency of the clock source the peripheral is configured with, which is what the divider
+// math has to be based on. Asking the IDF keeps this right for every target: it resolves to the
+// current APB_CLK frequency where the source is APB_CLK, and to the measured crystal frequency
+// where it is the XTAL.
+static uint32_t spiSourceFrequency(void) {
+  uint32_t freq_hz = 0;
+  if (esp_clk_tree_src_get_freq_hz((soc_module_clk_t)ARDUINO_SPI_CLK_SRC, ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED, &freq_hz) != ESP_OK || freq_hz == 0) {
+    log_e("Could not read the SPI source clock frequency");
+    // Fall back to the source the peripheral was pinned to, since guessing the other one would
+    // put the divider math right back where it was before this frequency was read from the IDF
+#if ARDUINO_SPI_CLK_FOLLOWS_APB
+    return getApbFrequency();
+#else
+    return getXtalFrequencyMhz() * 1000000;
+#endif
+  }
+  return freq_hz;
+}
+#endif
+
 static void _on_apb_change(void *arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb) {
   spi_t *spi = (spi_t *)arg;
+  (void)old_apb;
+  (void)new_apb;
   if (ev_type == APB_BEFORE_CHANGE) {
     SPI_MUTEX_LOCK();
     while (spi->dev->cmd.usr);
   } else {
-    spi->dev->clock.val = spiFrequencyToClockDiv(old_apb / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1)));
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+    // ESP32P4: Use the stored clock source to determine base frequency
+    uint32_t base_freq = (spi->clk_src == 1) ? SPI_P4_SPLL_FREQ_HZ : (getXtalFrequencyMhz() * 1000000);
+    uint32_t current_freq = base_freq / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1));
+    uint32_t new_clockDiv = spiFrequencyToClockDiv(spi, current_freq);
+    // Use _spiSetClockDivInternal to ensure clock source is updated if needed
+    _spiSetClockDivInternal(spi, new_clockDiv);
+#else
+#if ARDUINO_SPI_CLK_FOLLOWS_APB
+    // The source moved with APB_CLK, so rescale the divider to keep the frequency the user asked
+    // for. Where the peripheral runs from the XTAL instead, its clock is unaffected by the change
+    // and touching the divider would only walk it away from that frequency.
+    spi->dev->clock.val = spiFrequencyToClockDiv(spi, old_apb / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1)));
+#endif
+#endif
     SPI_MUTEX_UNLOCK();
   }
 }
@@ -618,7 +787,7 @@ void spiStopBus(spi_t *spi) {
 
 spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder) {
   if (spi_num >= SPI_COUNT) {
-    log_e("SPI bus index %d is out of range", spi_num);
+    log_e("SPI bus index %u is out of range", spi_num);
     return NULL;
   }
 
@@ -639,6 +808,9 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
 #endif
 
 #if CONFIG_IDF_TARGET_ESP32S2
+#ifndef DPORT_PERIP_RST_EN_REG
+#define DPORT_PERIP_RST_EN_REG DPORT_PERIP_RST_EN0_REG
+#endif
   if (spi_num == FSPI) {
     DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI2_CLK_EN);
     DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI2_RST);
@@ -647,6 +819,21 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
     DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI3_RST);
   }
 #elif CONFIG_IDF_TARGET_ESP32S3
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  if (spi_num == FSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI2_HOST, true);
+      spi_ll_reset_register(SPI2_HOST);
+      spi_ll_enable_clock(SPI2_HOST, true);
+    }
+  } else if (spi_num == HSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI3_HOST, true);
+      spi_ll_reset_register(SPI3_HOST);
+      spi_ll_enable_clock(SPI3_HOST, true);
+    }
+  }
+#else
   if (spi_num == FSPI) {
     periph_ll_reset(PERIPH_SPI2_MODULE);
     periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
@@ -654,6 +841,7 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
     periph_ll_reset(PERIPH_SPI3_MODULE);
     periph_ll_enable_clk_clear_rst(PERIPH_SPI3_MODULE);
   }
+#endif
 #elif CONFIG_IDF_TARGET_ESP32
   if (spi_num == HSPI) {
     DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI2_CLK_EN);
@@ -668,6 +856,7 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
 #elif CONFIG_IDF_TARGET_ESP32P4
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
   if (spi_num == FSPI) {
     PERIPH_RCC_ACQUIRE_ATOMIC(PERIPH_GPSPI2_MODULE, ref_count) {
       if (ref_count == 0) {
@@ -689,10 +878,31 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
       }
     }
   }
+#else
+  if (spi_num == FSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI2_HOST, true);
+      spi_ll_reset_register(SPI2_HOST);
+      spi_ll_enable_clock(SPI2_HOST, true);
+    }
+  } else if (spi_num == HSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI3_HOST, true);
+      spi_ll_reset_register(SPI3_HOST);
+      spi_ll_enable_clock(SPI3_HOST, true);
+    }
+  }
+#endif
 #pragma GCC diagnostic pop
-#elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
+#elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
   periph_ll_reset(PERIPH_SPI2_MODULE);
   periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
+#else
+  PERIPH_RCC_ATOMIC() {
+    spi_ll_enable_bus_clock(SPI2_HOST, true);
+    spi_ll_reset_register(SPI2_HOST);
+    spi_ll_enable_clock(SPI2_HOST, true);
+  }
 #endif
 
   SPI_MUTEX_LOCK();
@@ -701,21 +911,33 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   spi->dev->clk_gate.clk_en = 1;
   spi->dev->clk_gate.mst_clk_sel = 1;
   spi->dev->clk_gate.mst_clk_active = 1;
-#if defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C2) || defined(CONFIG_IDF_TARGET_ESP32C3)
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // Initialize clock source to XTAL (will be changed to SPLL if needed)
+  spi->clk_src = 0;         // 0 = XTAL, 1 = SPLL
+  spi->last_clock_div = 0;  // Initialize per-instance storage
+  spi->last_clk_src = 0;    // Initialize per-instance storage
+#endif
+#if defined(CONFIG_IDF_TARGET_ESP32C2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
   spi->dev->dma_conf.tx_seg_trans_clr_en = 1;
   spi->dev->dma_conf.rx_seg_trans_clr_en = 1;
   spi->dev->dma_conf.dma_seg_trans_en = 0;
 #endif
+#endif
+#if defined(ARDUINO_SPI_CLK_SRC) && !CONFIG_IDF_TARGET_ESP32 && !CONFIG_IDF_TARGET_ESP32S2
+  // Pin the peripheral to the source spiSourceFrequency() reports instead of relying on the
+  // reset value of the mux. The bus is idle here, so the switch cannot disturb a transfer.
+  // The ESP32 and the S2 have no mux to begin with and are always clocked from APB_CLK.
+  spi_ll_set_clk_source((spi_dev_t *)spi->dev, ARDUINO_SPI_CLK_SRC);
 #endif
   spi->dev->user.usr_mosi = 1;
   spi->dev->user.usr_miso = 1;
   spi->dev->user.doutdin = 1;
   int i;
   for (i = 0; i < 16; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-    spi->dev->data_buf[i].val = 0x00000000;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
     spi->dev->data_buf[i] = 0x00000000;
+#else
+    spi->dev->data_buf[i].val = 0x00000000;
 #endif
   }
   SPI_MUTEX_UNLOCK();
@@ -760,10 +982,10 @@ void spiWrite(spi_t *spi, const uint32_t *data, uint8_t len) {
   spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
   for (i = 0; i < len; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-    spi->dev->data_buf[i].val = data[i];
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
     spi->dev->data_buf[i] = data[i];
+#else
+    spi->dev->data_buf[i].val = data[i];
 #endif
   }
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
@@ -787,10 +1009,10 @@ void spiTransfer(spi_t *spi, uint32_t *data, uint8_t len) {
   spi->dev->mosi_dlen.usr_mosi_dbitlen = (len * 32) - 1;
   spi->dev->miso_dlen.usr_miso_dbitlen = (len * 32) - 1;
   for (i = 0; i < len; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-    spi->dev->data_buf[i].val = data[i];
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
     spi->dev->data_buf[i] = data[i];
+#else
+    spi->dev->data_buf[i].val = data[i];
 #endif
   }
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
@@ -800,10 +1022,10 @@ void spiTransfer(spi_t *spi, uint32_t *data, uint8_t len) {
   spi->dev->cmd.usr = 1;
   while (spi->dev->cmd.usr);
   for (i = 0; i < len; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-    data[i] = spi->dev->data_buf[i].val;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
     data[i] = spi->dev->data_buf[i];
+#else
+    data[i] = spi->dev->data_buf[i].val;
 #endif
   }
   SPI_MUTEX_UNLOCK();
@@ -818,10 +1040,10 @@ void spiWriteByte(spi_t *spi, uint8_t data) {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
   spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
@@ -840,10 +1062,10 @@ uint8_t spiTransferByte(spi_t *spi, uint8_t data) {
   SPI_MUTEX_LOCK();
   spi->dev->mosi_dlen.usr_mosi_dbitlen = 7;
   spi->dev->miso_dlen.usr_miso_dbitlen = 7;
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -851,10 +1073,10 @@ uint8_t spiTransferByte(spi_t *spi, uint8_t data) {
 #endif
   spi->dev->cmd.usr = 1;
   while (spi->dev->cmd.usr);
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  data = spi->dev->data_buf[0].val & 0xFF;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   data = spi->dev->data_buf[0] & 0xFF;
+#else
+  data = spi->dev->data_buf[0].val & 0xFF;
 #endif
   SPI_MUTEX_UNLOCK();
   return data;
@@ -881,10 +1103,10 @@ void spiWriteWord(spi_t *spi, uint16_t data) {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
   spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -905,10 +1127,10 @@ uint16_t spiTransferWord(spi_t *spi, uint16_t data) {
   SPI_MUTEX_LOCK();
   spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
   spi->dev->miso_dlen.usr_miso_dbitlen = 15;
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -916,10 +1138,10 @@ uint16_t spiTransferWord(spi_t *spi, uint16_t data) {
 #endif
   spi->dev->cmd.usr = 1;
   while (spi->dev->cmd.usr);
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  data = spi->dev->data_buf[0].val;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   data = spi->dev->data_buf[0];
+#else
+  data = spi->dev->data_buf[0].val;
 #endif
   SPI_MUTEX_UNLOCK();
   if (!spi->dev->ctrl.rd_bit_order) {
@@ -940,10 +1162,10 @@ void spiWriteLong(spi_t *spi, uint32_t data) {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
   spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -964,10 +1186,10 @@ uint32_t spiTransferLong(spi_t *spi, uint32_t data) {
   SPI_MUTEX_LOCK();
   spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
   spi->dev->miso_dlen.usr_miso_dbitlen = 31;
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -975,10 +1197,10 @@ uint32_t spiTransferLong(spi_t *spi, uint32_t data) {
 #endif
   spi->dev->cmd.usr = 1;
   while (spi->dev->cmd.usr);
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  data = spi->dev->data_buf[0].val;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   data = spi->dev->data_buf[0];
+#else
+  data = spi->dev->data_buf[0].val;
 #endif
   SPI_MUTEX_UNLOCK();
   if (!spi->dev->ctrl.rd_bit_order) {
@@ -1014,10 +1236,10 @@ static void __spiTransferBytes(spi_t *spi, const uint8_t *data, uint8_t *out, ui
   spi->dev->miso_dlen.usr_miso_dbitlen = ((bytes * 8) - 1);
 
   for (i = 0; i < words; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-    spi->dev->data_buf[i].val = wordsBuf[i];  //copy buffer to spi fifo
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
     spi->dev->data_buf[i] = wordsBuf[i];  //copy buffer to spi fifo
+#else
+    spi->dev->data_buf[i].val = wordsBuf[i];  //copy buffer to spi fifo
 #endif
   }
 
@@ -1031,10 +1253,10 @@ static void __spiTransferBytes(spi_t *spi, const uint8_t *data, uint8_t *out, ui
 
   if (out) {
     for (i = 0; i < words; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-      wordsBuf[i] = spi->dev->data_buf[i].val;  //copy spi fifo to buffer
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
       wordsBuf[i] = spi->dev->data_buf[i];  //copy spi fifo to buffer
+#else
+      wordsBuf[i] = spi->dev->data_buf[i].val;  //copy spi fifo to buffer
 #endif
     }
     memcpy(out, bytesBuf, bytes);  //copy buffer to output
@@ -1100,7 +1322,8 @@ void spiTransaction(spi_t *spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bit
     return;
   }
   SPI_MUTEX_LOCK();
-  spi->dev->clock.val = clockDiv;
+  // Set clock divider (handles ESP32P4 clock source selection if needed)
+  _spiSetClockDivInternal(spi, clockDiv);
   switch (dataMode) {
     case SPI_MODE1:
 #if CONFIG_IDF_TARGET_ESP32
@@ -1172,10 +1395,10 @@ void ARDUINO_ISR_ATTR spiWriteByteNL(spi_t *spi, uint8_t data) {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
   spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -1191,10 +1414,10 @@ uint8_t spiTransferByteNL(spi_t *spi, uint8_t data) {
   }
   spi->dev->mosi_dlen.usr_mosi_dbitlen = 7;
   spi->dev->miso_dlen.usr_miso_dbitlen = 7;
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -1202,10 +1425,10 @@ uint8_t spiTransferByteNL(spi_t *spi, uint8_t data) {
 #endif
   spi->dev->cmd.usr = 1;
   while (spi->dev->cmd.usr);
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  data = spi->dev->data_buf[0].val & 0xFF;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   data = spi->dev->data_buf[0] & 0xFF;
+#else
+  data = spi->dev->data_buf[0].val & 0xFF;
 #endif
   return data;
 }
@@ -1221,10 +1444,10 @@ void ARDUINO_ISR_ATTR spiWriteShortNL(spi_t *spi, uint16_t data) {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
   spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -1243,10 +1466,10 @@ uint16_t spiTransferShortNL(spi_t *spi, uint16_t data) {
   }
   spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
   spi->dev->miso_dlen.usr_miso_dbitlen = 15;
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -1254,10 +1477,10 @@ uint16_t spiTransferShortNL(spi_t *spi, uint16_t data) {
 #endif
   spi->dev->cmd.usr = 1;
   while (spi->dev->cmd.usr);
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  data = spi->dev->data_buf[0].val & 0xFFFF;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   data = spi->dev->data_buf[0] & 0xFFFF;
+#else
+  data = spi->dev->data_buf[0].val & 0xFFFF;
 #endif
   if (!spi->dev->ctrl.rd_bit_order) {
     MSB_16_SET(data, data);
@@ -1276,10 +1499,10 @@ void ARDUINO_ISR_ATTR spiWriteLongNL(spi_t *spi, uint32_t data) {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
   spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -1298,10 +1521,10 @@ uint32_t spiTransferLongNL(spi_t *spi, uint32_t data) {
   }
   spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
   spi->dev->miso_dlen.usr_miso_dbitlen = 31;
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -1309,10 +1532,10 @@ uint32_t spiTransferLongNL(spi_t *spi, uint32_t data) {
 #endif
   spi->dev->cmd.usr = 1;
   while (spi->dev->cmd.usr);
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  data = spi->dev->data_buf[0].val;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   data = spi->dev->data_buf[0];
+#else
+  data = spi->dev->data_buf[0].val;
 #endif
   if (!spi->dev->ctrl.rd_bit_order) {
     MSB_32_SET(data, data);
@@ -1340,10 +1563,10 @@ void spiWriteNL(spi_t *spi, const void *data_in, uint32_t len) {
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
     for (size_t i = 0; i < c_longs; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-      spi->dev->data_buf[i].val = data[i];
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
       spi->dev->data_buf[i] = data[i];
+#else
+      spi->dev->data_buf[i].val = data[i];
 #endif
     }
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
@@ -1379,18 +1602,18 @@ void spiTransferBytesNL(spi_t *spi, const void *data_in, uint8_t *data_out, uint
     spi->dev->miso_dlen.usr_miso_dbitlen = (c_len * 8) - 1;
     if (data) {
       for (size_t i = 0; i < c_longs; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-        spi->dev->data_buf[i].val = data[i];
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         spi->dev->data_buf[i] = data[i];
+#else
+        spi->dev->data_buf[i].val = data[i];
 #endif
       }
     } else {
       for (size_t i = 0; i < c_longs; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-        spi->dev->data_buf[i].val = 0xFFFFFFFF;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         spi->dev->data_buf[i] = 0xFFFFFFFF;
+#else
+        spi->dev->data_buf[i].val = 0xFFFFFFFF;
 #endif
       }
     }
@@ -1403,16 +1626,16 @@ void spiTransferBytesNL(spi_t *spi, const void *data_in, uint8_t *data_out, uint
     if (result) {
       if (c_len & 3) {
         for (size_t i = 0; i < (c_longs - 1); i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-          result[i] = spi->dev->data_buf[i].val;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
           result[i] = spi->dev->data_buf[i];
+#else
+          result[i] = spi->dev->data_buf[i].val;
 #endif
         }
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-        uint32_t last_data = spi->dev->data_buf[c_longs - 1].val;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         uint32_t last_data = spi->dev->data_buf[c_longs - 1];
+#else
+        uint32_t last_data = spi->dev->data_buf[c_longs - 1].val;
 #endif
         uint8_t *last_out8 = (uint8_t *)&result[c_longs - 1];
         uint8_t *last_data8 = (uint8_t *)&last_data;
@@ -1421,10 +1644,10 @@ void spiTransferBytesNL(spi_t *spi, const void *data_in, uint8_t *data_out, uint
         }
       } else {
         for (size_t i = 0; i < c_longs; i++) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-          result[i] = spi->dev->data_buf[i].val;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
           result[i] = spi->dev->data_buf[i];
+#else
+          result[i] = spi->dev->data_buf[i].val;
 #endif
         }
       }
@@ -1463,10 +1686,10 @@ void spiTransferBitsNL(spi_t *spi, uint32_t data, uint32_t *out, uint8_t bits) {
 
   spi->dev->mosi_dlen.usr_mosi_dbitlen = (bits - 1);
   spi->dev->miso_dlen.usr_miso_dbitlen = (bits - 1);
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  spi->dev->data_buf[0].val = data;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   spi->dev->data_buf[0] = data;
+#else
+  spi->dev->data_buf[0].val = data;
 #endif
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
   spi->dev->cmd.update = 1;
@@ -1474,10 +1697,10 @@ void spiTransferBitsNL(spi_t *spi, uint32_t data, uint32_t *out, uint8_t bits) {
 #endif
   spi->dev->cmd.usr = 1;
   while (spi->dev->cmd.usr);
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  data = spi->dev->data_buf[0].val;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   data = spi->dev->data_buf[0];
+#else
+  data = spi->dev->data_buf[0].val;
 #endif
   if (out) {
     *out = data;
@@ -1515,30 +1738,30 @@ void ARDUINO_ISR_ATTR spiWritePixelsNL(spi_t *spi, const void *data_in, uint32_t
       if (msb) {
         if (l_bytes && i == (c_longs - 1)) {
           if (l_bytes == 2) {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-            MSB_16_SET(spi->dev->data_buf[i].val, data[i]);
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
             MSB_16_SET(spi->dev->data_buf[i], data[i]);
+#else
+            MSB_16_SET(spi->dev->data_buf[i].val, data[i]);
 #endif
           } else {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-            spi->dev->data_buf[i].val = data[i] & 0xFF;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
             spi->dev->data_buf[i] = data[i] & 0xFF;
+#else
+            spi->dev->data_buf[i].val = data[i] & 0xFF;
 #endif
           }
         } else {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-          MSB_PIX_SET(spi->dev->data_buf[i].val, data[i]);
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
           MSB_PIX_SET(spi->dev->data_buf[i], data[i]);
+#else
+          MSB_PIX_SET(spi->dev->data_buf[i].val, data[i]);
 #endif
         }
       } else {
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-        spi->dev->data_buf[i].val = data[i];
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         spi->dev->data_buf[i] = data[i];
+#else
+        spi->dev->data_buf[i].val = data[i];
 #endif
       }
     }
@@ -1576,23 +1799,56 @@ typedef union {
   };
 } spiClk_t;
 
-#define ClkRegToFreq(reg) (apb_freq / (((reg)->clkdiv_pre + 1) * ((reg)->clkcnt_n + 1)))
+#define ClkRegToFreq(reg) (src_freq / (((reg)->clkdiv_pre + 1) * ((reg)->clkcnt_n + 1)))
 
-uint32_t spiClockDivToFrequency(uint32_t clockDiv) {
-  uint32_t apb_freq = getApbFrequency();
+uint32_t spiClockDivToFrequency(spi_t *spi, uint32_t clockDiv) {
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // ESP32P4: Use the actual clock source being used by this SPI instance
+  uint32_t src_freq;
+  if (spi && spi->clk_src == 1) {
+    // SPLL is being used
+    src_freq = SPI_P4_SPLL_FREQ_HZ;
+  } else {
+    // XTAL is being used (default or if spi is NULL)
+    src_freq = getXtalFrequencyMhz() * 1000000;
+  }
+#else
+  // For non-ESP32P4 targets, ignore spi parameter; the whole bus shares one source.
+  (void)spi;
+  uint32_t src_freq = spiSourceFrequency();
+#endif
   spiClk_t reg = {clockDiv};
   return ClkRegToFreq(&reg);
 }
 
-uint32_t spiFrequencyToClockDiv(uint32_t freq) {
-  uint32_t apb_freq = getApbFrequency();
-
-  if (freq >= apb_freq) {
+/**
+ * @brief Calculate SPI clock divider register value for a given frequency and clock source
+ *
+ * @param freq Desired SPI clock frequency in Hz
+ * @param source_freq Source clock frequency in Hz (e.g., 40MHz for XTAL, 480MHz for SPLL)
+ * @return uint32_t Clock divider register value, or SPI_CLK_EQU_SYSCLK if freq >= source_freq
+ *
+ * @note This function calculates the optimal divider values (clkdiv_pre and clkcnt_n) to achieve
+ *       the desired frequency from the given source. It searches for the best match that produces
+ *       a frequency <= the desired frequency (never exceeding it).
+ *
+ * @note If the desired frequency is >= source_freq, returns SPI_CLK_EQU_SYSCLK (0x80000000)
+ *       which indicates the clock should equal the source without division.
+ *
+ * @note If the desired frequency is below the minimum achievable, returns the minimum divider
+ *       register value (0x7FFFF000).
+ *
+ * @note Used by spiFrequencyToClockDiv() to calculate dividers for both XTAL and SPLL sources
+ *       on ESP32P4, allowing selection of the source that gives the closest match.
+ */
+static uint32_t _spiFrequencyToClockDivWithSource(uint32_t freq, uint32_t source_freq) {
+  if (freq >= source_freq) {
     return SPI_CLK_EQU_SYSCLK;
   }
 
   const spiClk_t minFreqReg = {0x7FFFF000};
-  uint32_t minFreq = ClkRegToFreq((spiClk_t *)&minFreqReg);
+  // Calculate minFreq using the provided source frequency
+  uint32_t minFreq = source_freq / (((minFreqReg.clkdiv_pre + 1) * (minFreqReg.clkcnt_n + 1)));
   if (freq < minFreq) {
     return minFreqReg.value;
   }
@@ -1610,7 +1866,7 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq) {
     reg.clkcnt_n = calN;
 
     while (calPreVari++ <= 1) {
-      calPre = (((apb_freq / (reg.clkcnt_n + 1)) / freq) - 1) + calPreVari;
+      calPre = (((source_freq / (reg.clkcnt_n + 1)) / freq) - 1) + calPreVari;
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
       if (calPre > 0xF) {
         reg.clkdiv_pre = 0xF;
@@ -1624,12 +1880,13 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq) {
         reg.clkdiv_pre = calPre;
       }
       reg.clkcnt_l = ((reg.clkcnt_n + 1) / 2);
-      calFreq = ClkRegToFreq(&reg);
+      // Calculate frequency directly using source_freq instead of ClkRegToFreq macro
+      calFreq = source_freq / (((reg.clkdiv_pre + 1) * (reg.clkcnt_n + 1)));
       if (calFreq == freq) {
         memcpy(&bestReg, &reg, sizeof(bestReg));
         break;
       } else if (calFreq < freq) {
-        if ((freq - calFreq) < (freq - bestFreq)) {
+        if (bestFreq == 0 || (freq - calFreq) < (freq - bestFreq)) {
           bestFreq = calFreq;
           memcpy(&bestReg, &reg, sizeof(bestReg));
         }
@@ -1641,6 +1898,59 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq) {
     calN++;
   }
   return bestReg.value;
+}
+
+uint32_t spiFrequencyToClockDiv(spi_t *spi, uint32_t freq) {
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // ESP32P4: Limit frequency to SPI peripheral maximum
+  if (freq > SPI_P4_MAX_FREQ_HZ) {
+    freq = SPI_P4_MAX_FREQ_HZ;
+  }
+
+  // Try both clock sources and pick the one that gives frequency closest to desired
+  uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;  // Actual XTAL frequency (typically 40 MHz)
+  uint32_t spll_freq = SPI_P4_SPLL_FREQ_HZ;
+
+  // Calculate dividers for both sources
+  uint32_t div_xtal = _spiFrequencyToClockDivWithSource(freq, xtal_freq);
+  uint32_t div_spll = _spiFrequencyToClockDivWithSource(freq, spll_freq);
+
+  // Calculate actual frequencies each divider would produce
+  uint32_t divider_xtal = _clockDivToDivider(div_xtal);
+  uint32_t divider_spll = _clockDivToDivider(div_spll);
+  uint32_t freq_xtal = _dividerToFreq(divider_xtal, xtal_freq);
+  uint32_t freq_spll = _dividerToFreq(divider_spll, spll_freq);
+
+  // Pick the one closest to desired frequency
+  uint32_t diff_xtal = (freq > freq_xtal) ? (freq - freq_xtal) : (freq_xtal - freq);
+  uint32_t diff_spll = (freq > freq_spll) ? (freq - freq_spll) : (freq_spll - freq);
+
+  // Pick the one with closest difference to desired frequency
+  // If both are valid (XTAL capped at its actual frequency) and differences are equal, prefer XTAL
+  uint8_t best_is_spll;
+  if (diff_spll < diff_xtal) {
+    best_is_spll = 1;  // SPLL is closer
+  } else if (diff_xtal < diff_spll) {
+    best_is_spll = 0;  // XTAL is closer
+  } else {
+    // Equal differences: prefer XTAL if it's valid (freq_xtal <= xtal_freq), otherwise use SPLL
+    best_is_spll = (freq_xtal <= xtal_freq) ? 0 : 1;
+  }
+  uint32_t best_div = best_is_spll ? div_spll : div_xtal;
+
+  // Store the divider and source for this SPI instance (if spi is provided)
+  if (spi) {
+    spi->last_clock_div = best_div;
+    spi->last_clk_src = best_is_spll;
+  }
+
+  // Return divider for the clock source that gives closest match
+  return best_div;
+#else
+  // Non-ESP32P4: the peripheral stays on the source picked at bus init, spi parameter unused.
+  (void)spi;  // Suppress unused parameter warning
+  return _spiFrequencyToClockDivWithSource(freq, spiSourceFrequency());
+#endif
 }
 
 #endif /* SOC_GPSPI_SUPPORTED */

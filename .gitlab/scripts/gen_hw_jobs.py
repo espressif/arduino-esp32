@@ -2,6 +2,8 @@
 
 import argparse
 import json
+import logging
+import re
 import yaml
 import os
 import sys
@@ -17,6 +19,8 @@ import urllib.error
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
 TESTS_ROOT = REPO_ROOT / "tests"
+
+logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s", stream=sys.stderr)
 
 # Ensure we run from repo root so relative paths work consistently
 try:
@@ -58,8 +62,14 @@ def find_tests() -> list[Path]:
 
 def find_sketch_test_dirs(types_filter: list[str]) -> list[tuple[str, Path]]:
     """
-    Return list of (test_type, test_dir) where test_dir contains a sketch named <dir>/<dir>.ino
-    If types_filter provided, only include those types.
+    Return list of (test_type, test_dir) for all discoverable tests.
+
+    A test directory is included if it contains either:
+      - A sketch file named <dir>/<dir>.ino (regular single-device test), or
+      - A ci.yml with a ``multi_device`` key (multi-device test where individual
+        sketches live in sub-directories).
+
+    If *types_filter* is provided, only test types in the list are included.
     """
     results: list[tuple[str, Path]] = []
     if not TESTS_ROOT.exists():
@@ -77,6 +87,13 @@ def find_sketch_test_dirs(types_filter: list[str]) -> list[tuple[str, Path]]:
             ino = candidate / f"{sketch}.ino"
             if ino.exists():
                 results.append((test_type, candidate))
+                continue
+            # Check for multi-device test: ci.yml with multi_device key
+            ci_path = candidate / "ci.yml"
+            if ci_path.exists():
+                ci = read_yaml(ci_path)
+                if isinstance(ci.get("multi_device"), dict):
+                    results.append((test_type, candidate))
     return results
 
 
@@ -108,11 +125,13 @@ def test_enabled_for_target(ci_json: dict, chip: str) -> bool:
     return True
 
 
-def platform_allowed(ci_json: dict, platform: str = "hardware") -> bool:
+def platform_allowed(ci_json: dict, platform: str = "hardware", chip: str = "") -> bool:
     platforms = ci_json.get("platforms")
     if isinstance(platforms, dict):
         v = platforms.get(platform)
         if v is False:
+            return False
+        if chip and isinstance(v, dict) and v.get(chip) is False:
             return False
     return True
 
@@ -124,16 +143,41 @@ def sketch_name_from_ci(ci_path: Path) -> str:
 
 
 def sdkconfig_path_for(chip: str, sketch: str, ci_json: dict) -> Path:
-    # Match logic from tests_run.sh: if multiple FQBN entries -> build0.tmp
+    # Determine FQBN count (shared by both regular and multi-device tests)
     fqbn = ci_json.get("fqbn", {}) if isinstance(ci_json, dict) else {}
-    length = 0
+    fqbn_length = 0
     if isinstance(fqbn, dict):
         v = fqbn.get(chip)
         if isinstance(v, list):
-            length = len(v)
-    if length <= 1:
-        return Path.home() / f".arduino/tests/{chip}/{sketch}/build.tmp/sdkconfig"
-    return Path.home() / f".arduino/tests/{chip}/{sketch}/build0.tmp/sdkconfig"
+            fqbn_length = len(v)
+    build_suffix = "build0.tmp" if fqbn_length > 1 else "build.tmp"
+
+    # For multi-device tests the build directory uses a nested layout:
+    # {test_name}/{first_device}/build[0].tmp/ (see tests_build.sh build_multi_device_test).
+    multi_device = ci_json.get("multi_device") if isinstance(ci_json, dict) else None
+    if isinstance(multi_device, dict) and multi_device:
+        first_val = next(iter(multi_device.values()))
+        # multi_device values can be a scalar (sketch name) or a map with a "sketch" key
+        if isinstance(first_val, dict):
+            first_device = str(first_val.get("sketch", ""))
+        else:
+            first_device = str(first_val)
+        return Path.home() / f".arduino/tests/{chip}/{sketch}/{first_device}/{build_suffix}/sdkconfig"
+
+    return Path.home() / f".arduino/tests/{chip}/{sketch}/{build_suffix}/sdkconfig"
+
+
+def compile_requirement(req: str) -> re.Pattern | None:
+    # Mirror grep -E "^$requirement" in sketch_utils.sh
+    try:
+        return re.compile(req)
+    except re.error as e:
+        sys.stderr.write(f"[WARN] Invalid requirement regex '{req}': {e}\n")
+        return None
+
+
+def any_line_matches(lines: list[str], pattern: re.Pattern) -> bool:
+    return any(pattern.match(line) for line in lines)
 
 
 def sdk_meets_requirements(sdkconfig: Path, ci_json: dict) -> bool:
@@ -145,19 +189,30 @@ def sdk_meets_requirements(sdkconfig: Path, ci_json: dict) -> bool:
         requires = ci_json.get("requires") or []
         requires_any = ci_json.get("requires_any") or []
         content = sdkconfig.read_text(encoding="utf-8", errors="ignore")
+        lines = content.splitlines()
         # AND requirements
         for req in requires:
             if not isinstance(req, str):
                 continue
-            if not any(line.startswith(req) for line in content.splitlines()):
+            req = req.strip()
+            if not req:
+                continue
+            pattern = compile_requirement(req)
+            if pattern is None or not any_line_matches(lines, pattern):
                 return False
         # OR requirements
         if requires_any:
-            ok = any(
-                any(line.startswith(req) for line in content.splitlines())
-                for req in requires_any
-                if isinstance(req, str)
-            )
+            ok = False
+            for req in requires_any:
+                if not isinstance(req, str):
+                    continue
+                req = req.strip()
+                if not req:
+                    continue
+                pattern = compile_requirement(req)
+                if pattern is not None and any_line_matches(lines, pattern):
+                    ok = True
+                    break
             if not ok:
                 return False
         return True
@@ -322,8 +377,8 @@ def any_runner_matches(required_tags: Iterable[str], runners: list[dict]) -> boo
         except Exception as e:
             # Be robust to unexpected runner payloads
             runner_id = r.get("id", "unknown")
-            sys.stderr.write(f"[WARN] Error checking runner #{runner_id} against required tags: {e}\n")
-            sys.stderr.write(traceback.format_exc() + "\n")
+            logging.warning("Error checking runner #%s against required tags: %s", runner_id, e)
+            logging.debug(traceback.format_exc())
             continue
     return False
 
@@ -366,7 +421,7 @@ def main():
             if not test_enabled_for_target(ci, chip):
                 continue
             # Skip tests that explicitly disable the hardware platform
-            if not platform_allowed(ci, "hardware"):
+            if not platform_allowed(ci, "hardware", chip):
                 continue
             sdk = sdkconfig_path_for(chip, sketch, ci)
             if not args.dry_run and not sdk_meets_requirements(sdk, ci):
@@ -443,7 +498,8 @@ def main():
             # Clone base job and adjust (preserve key order using deepcopy)
             job = copy.deepcopy(base_job)
             # Ensure tags include SOC+extras
-            job["tags"] = tag_list
+            eco_tags = sorted(tag_list + ["eco_default"])
+            job["tags"] = eco_tags if any_runner_matches(eco_tags, available_runners) else tag_list
             vars_block = job.get("variables", {})
             vars_block["TEST_CHIP"] = chip
             vars_block["TEST_TYPE"] = test_type

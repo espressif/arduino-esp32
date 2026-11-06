@@ -65,6 +65,7 @@ static const uint8_t LED_BUILTIN = RGB_BUILTIN;
 static const uint8_t NEOPIXEL_PWR = 39;
 
 static const uint8_t VBAT_SENSE = 2;
+#define BAT_VOLT_PIN VBAT_SENSE
 static const uint8_t VBUS_SENSE = 34;
 
 #endif /* Pins_Arduino_h */

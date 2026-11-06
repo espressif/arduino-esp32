@@ -12,6 +12,8 @@
  *
  */
 
+#include <Arduino.h>
+
 #ifndef ARDUINO_USB_MODE
 #error This ESP32 SoC has no Native USB interface
 #elif ARDUINO_USB_MODE == 0
@@ -28,8 +30,9 @@ HWCDC HWCDCSerial;
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == ARDUINO_HW_CDC_EVENTS) {
     switch (event_id) {
-      case ARDUINO_HW_CDC_CONNECTED_EVENT: Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_CONNECTED_EVENT"); break;
-      case ARDUINO_HW_CDC_BUS_RESET_EVENT: Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_BUS_RESET_EVENT"); break;
+      case ARDUINO_HW_CDC_CONNECTED_EVENT:    Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_CONNECTED_EVENT"); break;
+      case ARDUINO_HW_CDC_DISCONNECTED_EVENT: Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_DISCONNECTED_EVENT"); break;
+      case ARDUINO_HW_CDC_BUS_RESET_EVENT:    Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_BUS_RESET_EVENT"); break;
       case ARDUINO_HW_CDC_RX_EVENT:
         Serial0.println("\nCDC EVENT:: ARDUINO_HW_CDC_RX_EVENT");
         // sends all bytes read from USB Hardware Serial to UART0
@@ -75,7 +78,7 @@ void loop() {
   Serial0.print(HWCDC_Status());
 
   if (HWCDCSerial) {
-    HWCDCSerial.printf("  [%ld] connected\n\r", counter);
+    HWCDCSerial.printf("  [%" PRIu32 "] connected\n\r", counter);
   }
   // sends all bytes read from UART0 to USB Hardware Serial
   while (Serial0.available()) {

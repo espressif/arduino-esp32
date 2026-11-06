@@ -10,6 +10,8 @@ an identifier that can be no more than a 32-bit integer
 created 2020-06-07 by cweinhofer
 with help from Cicicok */
 
+#include <Arduino.h>
+
 uint32_t chipId = 0;
 
 void setup() {
@@ -21,8 +23,8 @@ void loop() {
     chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
   }
 
-  Serial.printf("ESP32 Chip model = %s Rev %d\n", ESP.getChipModel(), ESP.getChipRevision());
-  Serial.printf("This chip has %d cores\n", ESP.getChipCores());
+  Serial.printf("ESP32 Chip model = %s Rev %u\n", ESP.getChipModel(), ESP.getChipRevision());
+  Serial.printf("This chip has %u cores\n", ESP.getChipCores());
   Serial.print("Chip ID: ");
   Serial.println(chipId);
 

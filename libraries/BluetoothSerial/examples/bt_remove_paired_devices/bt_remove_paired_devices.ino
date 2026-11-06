@@ -11,6 +11,7 @@
 // The only remedy is to delete this saved bound device from your device flash memory
 // and pair with the other device again.
 
+#include <Arduino.h>
 #include "BluetoothSerial.h"
 //#include "esp_bt_device.h"
 
@@ -26,7 +27,7 @@ char *bda2str(const uint8_t *bda, char *str, size_t size) {
   if (bda == NULL || str == NULL || size < 18) {
     return NULL;
   }
-  sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x", bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
+  snprintf(str, size, "%02x:%02x:%02x:%02x:%02x:%02x", bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
   return str;
 }
 

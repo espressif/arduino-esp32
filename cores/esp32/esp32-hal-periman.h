@@ -18,12 +18,13 @@ extern "C" {
 #define perimanClearPinBus(p) perimanSetPinBus(p, ESP32_BUS_TYPE_INIT, NULL, -1, -1)
 
 typedef enum {
-  ESP32_BUS_TYPE_INIT,      // IO has not been attached to a bus yet
-  ESP32_BUS_TYPE_GPIO,      // IO is used as GPIO
-  ESP32_BUS_TYPE_UART_RX,   // IO is used as UART RX pin
-  ESP32_BUS_TYPE_UART_TX,   // IO is used as UART TX pin
-  ESP32_BUS_TYPE_UART_CTS,  // IO is used as UART CTS pin
-  ESP32_BUS_TYPE_UART_RTS,  // IO is used as UART RTS pin
+  ESP32_BUS_TYPE_INIT,        // IO has not been attached to a bus yet
+  ESP32_BUS_TYPE_GPIO,        // IO is used as GPIO
+  ESP32_BUS_TYPE_UART_RX,     // IO is used as UART RX pin
+  ESP32_BUS_TYPE_UART_TX,     // IO is used as UART TX pin
+  ESP32_BUS_TYPE_UART_CTS,    // IO is used as UART CTS pin
+  ESP32_BUS_TYPE_UART_RTS,    // IO is used as UART RTS pin
+  ESP32_BUS_TYPE_UART_RX_TX,  // IO is used as open-drain UART RX and TX pin (one-wire mode)
 #if SOC_SDM_SUPPORTED
   ESP32_BUS_TYPE_SIGMADELTA,  // IO is used as SigmeDelta output
 #endif
@@ -97,17 +98,45 @@ typedef enum {
   ESP32_BUS_TYPE_ETHERNET_SPI,  // IO is used as ETHERNET SPI pin
 #endif
 #if CONFIG_ETH_USE_ESP32_EMAC
-  ESP32_BUS_TYPE_ETHERNET_RMII,  // IO is used as ETHERNET RMII pin
-  ESP32_BUS_TYPE_ETHERNET_CLK,   // IO is used as ETHERNET CLK pin
-  ESP32_BUS_TYPE_ETHERNET_MCD,   // IO is used as ETHERNET MCD pin
-  ESP32_BUS_TYPE_ETHERNET_MDIO,  // IO is used as ETHERNET MDIO pin
-  ESP32_BUS_TYPE_ETHERNET_PWR,   // IO is used as ETHERNET PWR pin
+  ESP32_BUS_TYPE_ETHERNET_RMII,                               // IO is used as ETHERNET RMII pin
+  ESP32_BUS_TYPE_ETHERNET_CLK,                                // IO is used as ETHERNET CLK pin
+  ESP32_BUS_TYPE_ETHERNET_MDC,                                // IO is used as ETHERNET MDC (Management Data Clock) pin
+  ESP32_BUS_TYPE_ETHERNET_MCD = ESP32_BUS_TYPE_ETHERNET_MDC,  // Deprecated alias for backward compatibility
+  ESP32_BUS_TYPE_ETHERNET_MDIO,                               // IO is used as ETHERNET MDIO pin
+  ESP32_BUS_TYPE_ETHERNET_PWR,                                // IO is used as ETHERNET PWR pin
 #endif
 #if CONFIG_LWIP_PPP_SUPPORT
   ESP32_BUS_TYPE_PPP_TX,   // IO is used as PPP Modem TX pin
   ESP32_BUS_TYPE_PPP_RX,   // IO is used as PPP Modem RX pin
   ESP32_BUS_TYPE_PPP_RTS,  // IO is used as PPP Modem RTS pin
   ESP32_BUS_TYPE_PPP_CTS,  // IO is used as PPP Modem CTS pin
+#endif
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED)
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CLK,  // IO is used as ESP-Hosted SDIO CLK pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CMD,  // IO is used as ESP-Hosted SDIO CMD pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D0,   // IO is used as ESP-Hosted SDIO D0 pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D1,   // IO is used as ESP-Hosted SDIO D1 pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D2,   // IO is used as ESP-Hosted SDIO D2 pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D3,   // IO is used as ESP-Hosted SDIO D3 pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_RST,  // IO is used as ESP-Hosted slave RESET pin
+#endif
+#if SOC_LCDCAM_CAM_SUPPORTED
+  ESP32_BUS_TYPE_LCDCAM_CAM_VSYNC,  // IO is used as LCDCAM CAM VSYNC pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_HSYNC,  // IO is used as LCDCAM CAM HSYNC/DE pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_PCLK,   // IO is used as LCDCAM CAM PCLK pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_XCLK,   // IO is used as LCDCAM CAM XCLK pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D0,     // IO is used as LCDCAM CAM D0 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D1,     // IO is used as LCDCAM CAM D1 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D2,     // IO is used as LCDCAM CAM D2 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D3,     // IO is used as LCDCAM CAM D3 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D4,     // IO is used as LCDCAM CAM D4 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D5,     // IO is used as LCDCAM CAM D5 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D6,     // IO is used as LCDCAM CAM D6 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D7,     // IO is used as LCDCAM CAM D7 pin
+  ESP32_BUS_TYPE_VIDEO_SCCB_SCL,    // IO is used as ESP Video SCCB SCL pin
+  ESP32_BUS_TYPE_VIDEO_SCCB_SDA,    // IO is used as ESP Video SCCB SDA pin
+  ESP32_BUS_TYPE_VIDEO_CAM_RESET,   // IO is used as ESP Video camera RESET pin
+  ESP32_BUS_TYPE_VIDEO_CAM_PWDN,    // IO is used as ESP Video camera PWDN pin
 #endif
   ESP32_BUS_TYPE_MAX
 } peripheral_bus_type_t;
@@ -133,6 +162,9 @@ int8_t perimanGetPinBusChannel(uint8_t pin);
 
 // Sets the peripheral destructor callback. Used to destroy bus when pin is assigned another function
 bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t cb);
+
+// Clears the peripheral destructor callback
+bool perimanClearBusDeinit(peripheral_bus_type_t type);
 
 // Get the peripheral destructor callback. It allows changing/restoring the peripheral pin function detaching, if necessary
 // returns NULL if none is set

@@ -26,6 +26,7 @@
  * Created by MikaFromTheRoof (https://github.com/MikaFromTheRoof)
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ED
 #error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif
@@ -107,7 +108,7 @@ void setup() {
   Serial.println();
 
   // Start illuminance sensor reading task
-  xTaskCreate(illuminance_sensor_value_update, "illuminance_sensor_update", 2048, NULL, 10, NULL);
+  xTaskCreate(illuminance_sensor_value_update, "illuminance_sensor_update", 3072, NULL, 10, NULL);
 
   // Set reporting schedule for illuminance value measurement in seconds, must be called after Zigbee.begin()
   // min_interval and max_interval in seconds, delta

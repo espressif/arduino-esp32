@@ -18,6 +18,7 @@ Note: Because ESP32 works at VCC=3.3v normal schematics for Serial MIDI connecti
 
 [1] - https://www.midi.org/specifications/midi-transports-specifications/5-pin-din-electrical-specs
 */
+#include <Arduino.h>
 #if ARDUINO_USB_MODE
 #warning This sketch should be used when USB is in OTG mode
 void setup() {}

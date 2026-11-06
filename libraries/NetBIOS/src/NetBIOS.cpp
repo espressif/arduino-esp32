@@ -77,6 +77,10 @@ void NetBIOS::_onPacket(AsyncUDPPacket &packet) {
     nbns_question_t *question = (nbns_question_t *)packet.data();
     if (0 == (question->flags1 & 0x80)) {
       char name[NBNS_MAX_HOSTNAME_LEN + 1];
+      // Ensure name_len cannot exceed the actual name buffer size
+      if (question->name_len == 0 || question->name_len > NBNS_MAX_HOSTNAME_LEN) {
+        return;  // Reject oversized or empty name
+      }
       _getnbname(&question->name[0], (char *)&name, question->name_len);
       if (_name.equals(name)) {
         nbns_answer_t nbnsa;

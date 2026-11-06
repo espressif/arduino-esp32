@@ -26,6 +26,7 @@
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ED
 #error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif
@@ -51,7 +52,7 @@ bool resend = false;
 /************************ Callbacks *****************************/
 #if USE_GLOBAL_ON_RESPONSE_CALLBACK
 void onGlobalResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster) {
-  Serial.printf("Global response command: %d, status: %s, endpoint: %d, cluster: 0x%04x\r\n", command, esp_zb_zcl_status_to_name(status), endpoint, cluster);
+  Serial.printf("Global response command: %d, status: %s, endpoint: %u, cluster: 0x%04x\r\n", command, esp_zb_zcl_status_to_name(status), endpoint, cluster);
   if ((command == ZB_CMD_REPORT_ATTRIBUTE) && (endpoint == TEMP_SENSOR_ENDPOINT_NUMBER)) {
     switch (status) {
       case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
@@ -135,6 +136,9 @@ void setup() {
   // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
   zbTempSensor.setMinMaxValue(10, 50);
 
+  // Set default (initial) value for the temperature sensor to 10.0°C to match the minimum temperature measurement value (default value is 0.0°C)
+  zbTempSensor.setDefaultValue(10.0);
+
   // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
   zbTempSensor.setTolerance(1);
 
@@ -142,8 +146,8 @@ void setup() {
   // The value can be also updated by calling zbTempSensor.setBatteryPercentage(percentage) or zbTempSensor.setBatteryVoltage(voltage) anytime after Zigbee.begin()
   zbTempSensor.setPowerSource(ZB_POWER_SOURCE_BATTERY, 100, 35);
 
-  // Add humidity cluster to the temperature sensor device with min, max and tolerance values
-  zbTempSensor.addHumiditySensor(0, 100, 1);
+  // Add humidity cluster to the temperature sensor device with min, max, tolerance and default values
+  zbTempSensor.addHumiditySensor(0, 100, 1, 0.0);
 
   // Set callback for default response to handle status of reported data, there are 2 options.
 
@@ -181,7 +185,7 @@ void setup() {
   Serial.println("Successfully connected to Zigbee network");
 
   // Start Temperature sensor reading task
-  xTaskCreate(meausureAndSleep, "temp_sensor_update", 2048, NULL, 10, NULL);
+  xTaskCreate(meausureAndSleep, "temp_sensor_update", 3072, NULL, 10, NULL);
 }
 
 void loop() {

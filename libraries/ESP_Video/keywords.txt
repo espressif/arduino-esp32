@@ -1,0 +1,71 @@
+#######################################
+# Syntax Coloring Map For ESP_Video
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ESP_Video	KEYWORD1
+ESPVideoClass	KEYWORD1
+ESPVideoCamConfigClass	KEYWORD1
+ESPVideoCSIConfigClass	KEYWORD1
+ESPVideoDVPPinsConfigClass	KEYWORD1
+ESPVideoDVPConfigClass	KEYWORD1
+ESPVideoBufferClass	KEYWORD1
+ESPVideoCaptureDevClass	KEYWORD1
+esp_video_init_sccb_config_t	KEYWORD1
+esp_cam_ctlr_dvp_pin_config_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+getSccbConfig	KEYWORD2
+getCsiInitConfig	KEYWORD2
+getDvpInitConfig	KEYWORD2
+getResetPin	KEYWORD2
+getPwdnPin	KEYWORD2
+getDontInitLdo	KEYWORD2
+getDvpPin	KEYWORD2
+getXclkFreq	KEYWORD2
+acquirePins	KEYWORD2
+releasePins	KEYWORD2
+begin	KEYWORD2
+end	KEYWORD2
+isCSIInitialized	KEYWORD2
+isDVPInitialized	KEYWORD2
+valid	KEYWORD2
+data	KEYWORD2
+size	KEYWORD2
+index	KEYWORD2
+requestBuffer	KEYWORD2
+startCapture	KEYWORD2
+stopCapture	KEYWORD2
+captureBuffer	KEYWORD2
+isOpened	KEYWORD2
+isCaptureStarted	KEYWORD2
+setSensorGain	KEYWORD2
+setSensorExposure	KEYWORD2
+setSensorExposureTime	KEYWORD2
+setSensorAETargetLevel	KEYWORD2
+setSensorJPEGQuality	KEYWORD2
+setSensorVFlip	KEYWORD2
+setSensorHFlip	KEYWORD2
+setSensorTestPattern	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+V4L2_BUF_TYPE_VIDEO_CAPTURE	LITERAL1
+V4L2_MEMORY_MMAP	LITERAL1
+V4L2_MEMORY_USERPTR	LITERAL1
+V4L2_CID_GAIN	LITERAL1
+V4L2_CID_EXPOSURE	LITERAL1
+V4L2_CID_EXPOSURE_ABSOLUTE	LITERAL1
+V4L2_CID_CAMERA_AE_LEVEL	LITERAL1
+V4L2_CID_JPEG_COMPRESSION_QUALITY	LITERAL1
+V4L2_CID_VFLIP	LITERAL1
+V4L2_CID_HFLIP	LITERAL1
+V4L2_CID_TEST_PATTERN	LITERAL1

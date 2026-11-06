@@ -58,6 +58,10 @@ public:
   // Set the PM2.5 value in 0.1 µg/m³
   bool setPM25(float pm25);
 
+  // Set the default (initial) value for the PM2.5 sensor in 0.1 µg/m³
+  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  bool setDefaultValue(float defaultValue);
+
   // Set the min and max value for the PM2.5 sensor in 0.1 µg/m³
   bool setMinMaxValue(float min, float max);
 

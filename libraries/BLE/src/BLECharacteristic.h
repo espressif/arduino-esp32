@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLECharacteristic.h
  *
  *  Created on: Jun 22, 2017
@@ -47,6 +66,8 @@
 #include <host/ble_gatt.h>
 #include <host/ble_att.h>
 #include "BLEConnInfo.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #define ESP_GATT_MAX_ATTR_LEN            BLE_ATT_ATTR_MAX_LEN
 #define ESP_GATT_CHAR_PROP_BIT_READ      BLE_GATT_CHR_PROP_READ
 #define ESP_GATT_CHAR_PROP_BIT_WRITE     BLE_GATT_CHR_PROP_WRITE

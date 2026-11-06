@@ -6,6 +6,7 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
+#include <Arduino.h>
 #include "WiFi.h"
 
 /*
@@ -36,9 +37,11 @@ void onFtmReport(arduino_event_t *event) {
   ftmSuccess = report->status == FTM_STATUS_SUCCESS;
   if (ftmSuccess) {
     // The estimated distance in meters may vary depending on some factors (see README file)
-    Serial.printf("FTM Estimate: Distance: %.2f m, Return Time: %lu ns\n", (float)report->dist_est / 100.0, report->rtt_est);
+    Serial.printf("FTM Estimate: Distance: %.2f m, Return Time: %" PRIu32 " ns\n", (float)report->dist_est / 100.0, report->rtt_est);
     // Pointer to FTM Report with multiple entries, should be freed after use
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
     free(report->ftm_report_data);
+#endif
   } else {
     Serial.print("FTM Error: ");
     Serial.println(status_str[report->status]);

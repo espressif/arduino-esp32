@@ -27,6 +27,7 @@
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ZCZR
 #error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
 #endif
@@ -57,10 +58,10 @@ void receiveSensorTemp(float temperature) {
 #else
 void receiveSensorTempWithSource(float temperature, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {
   if (src_address.addr_type == ESP_ZB_ZCL_ADDR_TYPE_SHORT) {
-    Serial.printf("Temperature sensor value: %.2f°C from endpoint %d, address 0x%04x\n", temperature, src_endpoint, src_address.u.short_addr);
+    Serial.printf("Temperature sensor value: %.2f°C from endpoint %u, address 0x%04x\n", temperature, src_endpoint, src_address.u.short_addr);
   } else {
     Serial.printf(
-      "Temperature sensor value: %.2f°C from endpoint %d, address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n", temperature, src_endpoint,
+      "Temperature sensor value: %.2f°C from endpoint %u, address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n", temperature, src_endpoint,
       src_address.u.ieee_addr[7], src_address.u.ieee_addr[6], src_address.u.ieee_addr[5], src_address.u.ieee_addr[4], src_address.u.ieee_addr[3],
       src_address.u.ieee_addr[2], src_address.u.ieee_addr[1], src_address.u.ieee_addr[0]
     );
@@ -90,7 +91,7 @@ void setup() {
 #endif
 
   // Set callback function for receiving sensor configuration
-  zbThermostat.onConfigReceive(receiveSensorConfig);
+  zbThermostat.onTempConfigReceive(receiveSensorConfig);
 
   //Optional: set Zigbee device name and model
   zbThermostat.setManufacturerAndModel("Espressif", "ZigbeeThermostat");
@@ -138,10 +139,10 @@ void setup() {
         "Device on endpoint %d, IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n", device->endpoint, device->ieee_addr[7], device->ieee_addr[6],
         device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]
       );
-      zbThermostat.getSensorSettings(device->endpoint, device->ieee_addr);
+      zbThermostat.getTemperatureSettings(device->endpoint, device->ieee_addr);
     } else {
-      Serial.printf("Device on endpoint %d, short address: 0x%x\r\n", device->endpoint, device->short_addr);
-      zbThermostat.getSensorSettings(device->endpoint, device->short_addr);
+      Serial.printf("Device on endpoint %u, short address: 0x%x\r\n", device->endpoint, device->short_addr);
+      zbThermostat.getTemperatureSettings(device->endpoint, device->short_addr);
     }
   }
 }

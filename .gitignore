@@ -1,3 +1,4 @@
+# Ignore toolchain directories
 tools/esp32-arduino-libs
 tools/xtensa-esp-elf
 tools/xtensa-esp32-elf
@@ -20,24 +21,34 @@ tools/openocd-esp32
 .*.swo
 *~
 
-# Ignore build folder
+# Ignore build, environment, and temporary files
 /build
+tmp/
+*.tmp
+.env
+.venv/
+venv/
+__pycache__/
+_build/
+.pytest_cache/
+.ruff_cache/
 
-# Ignore files built by Visual Studio/Visual Micro
+# Ignore files built by Visual Studio/Visual Micro and other IDEs
 [Dd]ebug/
 [Rr]elease/
+!.github/scripts/release
 .vs/
 __vm/
 *.vcxproj*
 .vscode/
 platform.sloeber.txt
 boards.sloeber.txt
+/.idea/
+.github/copilot-instructions.md
 
 # Ignore docs build (Sphinx)
 docs/build
 docs/source/_build
-__pycache__/
-_build/
 
 # Test log files
 *.log
@@ -45,6 +56,8 @@ debug.cfg
 debug.svd
 debug_custom.json
 libraries/Insights/examples/*/*.ino.zip
+test_results.json
+debug.xml
 
 # Vale Style
 .vale/styles/*

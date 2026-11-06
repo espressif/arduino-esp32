@@ -2,4 +2,4 @@ fqbn_append: PartitionScheme=huge_app
 
 requires_any:
   - CONFIG_SOC_WIFI_SUPPORTED=y
-  - CONFIG_ESP_WIFI_REMOTE_ENABLED=y
+  - CONFIG_ESP_HOSTED_ENABLED=y

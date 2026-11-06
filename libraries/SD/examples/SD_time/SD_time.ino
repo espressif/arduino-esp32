@@ -38,6 +38,7 @@
  * https://github.com/espressif/arduino-esp32/tree/master/libraries/SD
  */
 
+#include <Arduino.h>
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
@@ -245,7 +246,9 @@ void setup() {
   }
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-  Serial.printf("SD Card Size: %lluMB\n", cardSize);
+  Serial.print("SD Card Size: ");
+  Serial.print(cardSize);
+  Serial.println("MB");
 
   listDir(SD, "/", 0);
   removeDir(SD, "/mydir");

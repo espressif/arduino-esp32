@@ -17,7 +17,7 @@ void isr(void *param) {
 
 void checkPressed(struct Button *button) {
   if (button->pressed) {
-    Serial.printf("Button on pin %u has been pressed %lu times\n", button->PIN, button->numberKeyPresses);
+    Serial.printf("Button on pin %u has been pressed %" PRIu32 " times\n", button->PIN, button->numberKeyPresses);
     button->pressed = 0;
   }
 }

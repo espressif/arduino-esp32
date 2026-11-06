@@ -51,6 +51,7 @@ NetworkClientSecure::NetworkClientSecure() {
   _psKey = NULL;
   next = NULL;
   _alpn_protos = NULL;
+  _cipher_list = NULL;
   _use_ca_bundle = false;
 }
 
@@ -84,6 +85,7 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
   _psKey = NULL;
   next = NULL;
   _alpn_protos = NULL;
+  _cipher_list = NULL;
 }
 
 NetworkClientSecure::~NetworkClientSecure() {
@@ -137,7 +139,7 @@ int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *CA_cer
 
 int NetworkClientSecure::connect(const char *host, uint16_t port, const char *CA_cert, const char *cert, const char *private_key) {
   IPAddress address;
-  if (!Network.hostByName(host, address)) {
+  if (Network.hostByName(host, address) != 1) {
     return 0;
   }
 
@@ -145,7 +147,9 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *CA
 }
 
 int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *host, const char *CA_cert, const char *cert, const char *private_key) {
-  int ret = start_ssl_client(sslclient.get(), ip, port, host, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
+  int ret = start_ssl_client(
+    sslclient.get(), ip, port, host, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos, _cipher_list
+  );
 
   if (ret >= 0 && !_stillinPlainStart) {
     ret = ssl_starttls_handshake(sslclient.get());
@@ -189,11 +193,12 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *ps
   log_v("start_ssl_client with PSK");
 
   IPAddress address;
-  if (!Network.hostByName(host, address)) {
+  if (Network.hostByName(host, address) != 1) {
     return 0;
   }
 
-  int ret = start_ssl_client(sslclient.get(), address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
+  int ret =
+    start_ssl_client(sslclient.get(), address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos, _cipher_list);
   sslclient->last_error = ret;
   if (ret < 0) {
     log_e("start_ssl_client: connect failed %d", ret);
@@ -356,6 +361,11 @@ void NetworkClientSecure::setCACertBundle(const uint8_t *bundle, size_t size) {
   }
 }
 
+void NetworkClientSecure::useBuiltinCACertBundle() {
+  attach_ssl_certificate_bundle(sslclient.get(), true);
+  _use_ca_bundle = true;
+}
+
 void NetworkClientSecure::setCertificate(const char *client_ca) {
   if (_cert_free && _cert) {
     free((void *)_cert);
@@ -453,6 +463,10 @@ void NetworkClientSecure::setHandshakeTimeout(unsigned long handshake_timeout) {
 
 void NetworkClientSecure::setAlpnProtocols(const char **alpn_protos) {
   _alpn_protos = alpn_protos;
+}
+
+void NetworkClientSecure::setCiphers(const int *ciphersuites) {
+  _cipher_list = ciphersuites;
 }
 
 int NetworkClientSecure::fd() const {

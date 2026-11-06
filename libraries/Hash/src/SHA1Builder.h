@@ -46,6 +46,9 @@ public:
   size_t getHashSize() const override {
     return SHA1_HASH_SIZE;
   }
+  size_t getBlockSize() const override {
+    return 64;
+  }
 };
 
 #endif

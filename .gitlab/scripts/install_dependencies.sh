@@ -11,7 +11,8 @@ echo "[deps] Installing base packages"
 apt-get install -y jq unzip curl wget
 
 echo "[deps] Installing Python packages"
-pip3 install PyYAML
+# Pin PyYAML: 6.0.2+ PEP517/Cython isolated builds fail intermittently on some ARM CI runners.
+pip3 install PyYAML==6.0.1
 
 echo "[deps] Installing yq (mikefarah/yq) for current architecture"
 YQ_VERSION="v4.48.1"

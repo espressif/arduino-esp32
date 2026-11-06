@@ -47,6 +47,9 @@ public:
   size_t getHashSize() const override {
     return ESP_ROM_MD5_DIGEST_LEN;
   }
+  size_t getBlockSize() const override {
+    return 64;
+  }
 };
 
 #endif

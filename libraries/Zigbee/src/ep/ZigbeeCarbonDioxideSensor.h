@@ -58,6 +58,10 @@ public:
   // Set the carbon dioxide value in ppm
   bool setCarbonDioxide(float carbon_dioxide);
 
+  // Set the default (initial) value for the carbon dioxide sensor in ppm
+  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  bool setDefaultValue(float defaultValue);
+
   // Set the min and max value for the carbon dioxide sensor in ppm
   bool setMinMaxValue(float min, float max);
 

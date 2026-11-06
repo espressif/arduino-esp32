@@ -44,6 +44,7 @@ static const uint8_t T8 = 8;
 static const uint8_t T9 = 9;
 
 static const uint8_t VBAT_SENSE = 10;
+#define BAT_VOLT_PIN VBAT_SENSE
 static const uint8_t VBUS_SENSE = 33;
 
 static const uint8_t RGB_DATA = 18;

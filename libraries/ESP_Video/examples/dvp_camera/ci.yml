@@ -1,0 +1,4 @@
+fqbn_append: PartitionScheme=esp_sr_16,FlashSize=16M
+
+requires:
+  - CONFIG_ESP_VIDEO_ENABLE_DVP_VIDEO_DEVICE=y

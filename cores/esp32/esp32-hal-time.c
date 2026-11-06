@@ -16,6 +16,7 @@
 #include "lwip/apps/sntp.h"
 //#include "tcpip_adapter.h"
 #include "esp_netif.h"
+#include <time.h>
 
 #ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
 #include "lwip/priv/tcpip_priv.h"

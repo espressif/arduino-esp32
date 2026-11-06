@@ -119,5 +119,6 @@ static const uint8_t SDCK = 13;
 static const uint8_t SDDA = 14;
 
 static const uint8_t BAT = 3;
+#define BAT_VOLT_PIN BAT
 
 #endif /* Pins_Arduino_h */

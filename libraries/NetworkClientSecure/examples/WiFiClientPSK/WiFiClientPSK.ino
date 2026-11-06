@@ -10,6 +10,7 @@
   2018 - Adapted for PSK by Thorsten von Eicken
 */
 
+#include <Arduino.h>
 #include <NetworkClientSecure.h>
 #include <WiFi.h>
 

@@ -35,7 +35,7 @@ void rgbLedWriteOrdered(uint8_t pin, rgb_led_color_order_t order, uint8_t red_va
   pin = pin == RGB_BUILTIN ? pin - SOC_GPIO_PIN_COUNT : pin;
 #endif
   if (!rmtInit(pin, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
-    log_e("RGB LED driver initialization failed for GPIO%d!", pin);
+    log_e("RGB LED driver initialization failed for GPIO%u", pin);
     return;
   }
 

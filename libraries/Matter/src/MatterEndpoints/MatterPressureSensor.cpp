@@ -29,7 +29,10 @@ bool MatterPressureSensor::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
     return false;
   }
 
-  log_d("Pressure Sensor Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Pressure Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
   return ret;
 }
 
@@ -43,14 +46,14 @@ bool MatterPressureSensor::begin(int16_t _rawPressure) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Matter Pressure Sensor with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter Pressure Sensor with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
   pressure_sensor::config_t pressure_sensor_config;
-  pressure_sensor_config.pressure_measurement.pressure_measured_value = _rawPressure;
-  pressure_sensor_config.pressure_measurement.pressure_min_measured_value = nullptr;
-  pressure_sensor_config.pressure_measurement.pressure_max_measured_value = nullptr;
+  pressure_sensor_config.pressure_measurement.measured_value = _rawPressure;
+  pressure_sensor_config.pressure_measurement.min_measured_value = nullptr;
+  pressure_sensor_config.pressure_measurement.max_measured_value = nullptr;
 
   // endpoint handles can be used to add/modify clusters
   endpoint_t *endpoint = pressure_sensor::create(node::get(), &pressure_sensor_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -60,7 +63,8 @@ bool MatterPressureSensor::begin(int16_t _rawPressure) {
   }
   rawPressure = _rawPressure;
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Pressure Sensor created with endpoint_id %d", getEndPointId());
+
+  log_i("Pressure Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;
@@ -97,7 +101,7 @@ bool MatterPressureSensor::setRawPressure(int16_t _rawPressure) {
     }
     rawPressure = _rawPressure;
   }
-  log_v("Pressure Sensor set to %.02f Degrees", (float)_rawPressure / 100.00);
+  log_v("Pressure Sensor set to %d hPa", _rawPressure);
 
   return true;
 }

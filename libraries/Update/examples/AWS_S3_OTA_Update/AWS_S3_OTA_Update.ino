@@ -19,6 +19,7 @@
    // Check the bottom of this sketch for sample serial monitor log, during and after successful OTA Update
 */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <Update.h>
 

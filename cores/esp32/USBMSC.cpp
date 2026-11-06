@@ -24,7 +24,7 @@ extern "C" uint16_t tusb_msc_load_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t ep_num = tinyusb_get_free_duplex_endpoint();
   TU_VERIFY(ep_num != 0);
   uint8_t descriptor[TUD_MSC_DESC_LEN] = {// Interface number, string index, EP Out & EP In address, EP size
-                                          TUD_MSC_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), CFG_TUD_ENDOINT_SIZE)
+                                          TUD_MSC_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), CFG_TUD_ENDPOINT_SIZE)
   };
   *itf += 1;
   memcpy(dst, descriptor, TUD_MSC_DESC_LEN);
@@ -109,7 +109,7 @@ bool tud_msc_start_stop_cb(uint8_t lun, uint8_t power_condition, bool start, boo
 // Callback invoked when received READ10 command.
 // Copy disk's data to buffer (up to bufsize) and return number of copied bytes.
 int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
-  log_v("[%u], lba: %u, offset: %u, bufsize: %u", lun, lba, offset, bufsize);
+  log_v("[%u], lba: %" PRIu32 ", offset: %" PRIu32 ", bufsize: %" PRIu32, lun, lba, offset, bufsize);
   if (!msc_luns[lun].media_present) {
     return 0;
   }
@@ -122,7 +122,7 @@ int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void *buff
 // Callback invoked when received WRITE10 command.
 // Process data in buffer to disk's storage and return number of written bytes
 int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
-  log_v("[%u], lba: %u, offset: %u, bufsize: %u", lun, lba, offset, bufsize);
+  log_v("[%u], lba: %" PRIu32 ", offset: %" PRIu32 ", bufsize: %" PRIu32, lun, lba, offset, bufsize);
   if (!msc_luns[lun].media_present) {
     return 0;
   }

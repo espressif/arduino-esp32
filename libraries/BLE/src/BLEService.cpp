@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEService.cpp
  *
  *  Created on: Mar 25, 2017
@@ -21,6 +40,7 @@
  *****************************************************************************/
 
 #include <esp_err.h>
+#include <inttypes.h>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -154,7 +174,7 @@ void BLEService::executeDelete() {
  * @return N/A.
  */
 void BLEService::dump() {
-  log_d("Service: uuid:%s, handle: 0x%.2x", m_uuid.toString().c_str(), m_handle);
+  log_d("Service: uuid:%s, handle: 0x%02x", m_uuid.toString().c_str(), m_handle);
   log_d("Characteristics:\n%s", m_characteristicMap.toString().c_str());
 }  // dump
 
@@ -554,7 +574,7 @@ bool BLEService::start() {
     }
 
     size_t numChrs = m_characteristicMap.getRegisteredCharacteristicCount() - removedCount;
-    log_d("Adding %d characteristics for service %s", numChrs, toString().c_str());
+    log_d("Adding %lu characteristics for service %s", (unsigned long)numChrs, toString().c_str());
 
     if (!numChrs) {
       svc[0].characteristics = nullptr;
@@ -584,7 +604,7 @@ bool BLEService::start() {
           }
 
           size_t numDscs = pCharacteristic->m_descriptorMap.getRegisteredDescriptorCount() - removedCount;
-          log_d("Adding %d descriptors for characteristic %s", numDscs, pCharacteristic->getUUID().toString().c_str());
+          log_d("Adding %lu descriptors for characteristic %s", (unsigned long)numDscs, pCharacteristic->getUUID().toString().c_str());
 
           if (!numDscs) {
             pChr_a[i].descriptors = nullptr;

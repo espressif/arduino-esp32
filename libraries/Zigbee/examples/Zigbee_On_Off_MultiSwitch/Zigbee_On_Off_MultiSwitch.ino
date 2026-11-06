@@ -28,6 +28,7 @@
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ZCZR
 #error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
 #endif
@@ -123,9 +124,9 @@ void loop() {
     Serial.println("Bound devices:");
     zbSwitch.printBoundDevices(Serial);
     Serial.println("Lights configured:");
-    Serial.printf("Light 1: %d %s\n", light_1.endpoint, Zigbee.formatIEEEAddress(light_1.ieee_addr));
-    Serial.printf("Light 2: %d %s\n", light_2.endpoint, Zigbee.formatIEEEAddress(light_2.ieee_addr));
-    Serial.printf("Light 3: %d %s\n", light_3.endpoint, Zigbee.formatIEEEAddress(light_3.ieee_addr));
+    Serial.printf("Light 1: %u %s\n", light_1.endpoint, Zigbee.formatIEEEAddress(light_1.ieee_addr));
+    Serial.printf("Light 2: %u %s\n", light_2.endpoint, Zigbee.formatIEEEAddress(light_2.ieee_addr));
+    Serial.printf("Light 3: %u %s\n", light_3.endpoint, Zigbee.formatIEEEAddress(light_3.ieee_addr));
   }
   // Handle serial input to configure and control the lights
   if (Serial.available()) {

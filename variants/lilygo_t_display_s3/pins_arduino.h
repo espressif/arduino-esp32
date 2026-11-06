@@ -9,6 +9,7 @@
 static const uint8_t BUTTON_1 = 0;
 static const uint8_t BUTTON_2 = 14;
 static const uint8_t BAT_VOLT = 4;
+#define BAT_VOLT_PIN BAT_VOLT
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

@@ -25,13 +25,14 @@ http://arduino.cc/en/Reference/HomePage
 # Extends: https://github.com/pioarduino/platform-espressif32/blob/develop/builder/main.py
 
 from os.path import abspath, basename, isdir, isfile, join
-from copy import deepcopy
 from SCons.Script import DefaultEnvironment, SConscript
 
 env = DefaultEnvironment()
 platform = env.PioPlatform()
 board_config = env.BoardConfig()
 build_mcu = board_config.get("build.mcu", "").lower()
+chip_variant = board_config.get("build.chip_variant", "").lower()
+chip_variant = chip_variant if chip_variant else build_mcu
 partitions_name = board_config.get("build.partitions", board_config.get("build.arduino.partitions", ""))
 
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
@@ -80,7 +81,7 @@ def get_bootloader_image(variants_dir):
         else generate_bootloader_image(
             join(
                 FRAMEWORK_LIBS_DIR,
-                build_mcu,
+                chip_variant,
                 "bin",
                 "bootloader_${__get_board_boot_mode(__env__)}_${__get_board_f_boot(__env__)}.elf",
             )
@@ -159,7 +160,7 @@ def add_tinyuf2_extra_image():
 SConscript(
     join(
         FRAMEWORK_LIBS_DIR,
-        build_mcu,
+        chip_variant,
         "pioarduino-build.py",
     )
 )
@@ -210,13 +211,14 @@ env.Prepend(LIBS=libs)
 #
 
 env.Append(
+    ELF2BINFLAGS=["--elf-sha256-offset", "0xb0"],
     LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")],
     FLASH_EXTRA_IMAGES=[
         (
             (
                 "0x1000"
                 if build_mcu in ["esp32", "esp32s2"]
-                else ("0x2000" if build_mcu in ["esp32p4", "esp32c5"] else "0x0000")
+                else ("0x2000" if build_mcu in ["esp32p4", "esp32c5", "esp32s31"] else "0x0000")
             ),
             get_bootloader_image(variants_dir),
         ),
@@ -251,11 +253,3 @@ partition_table = env.Command(
     ),
 )
 env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
-
-#
-#  Adjust the `esptoolpy` command in the `ElfToBin` builder with firmware checksum offset
-#
-
-action = deepcopy(env["BUILDERS"]["ElfToBin"].action)
-action.cmd_list = env["BUILDERS"]["ElfToBin"].action.cmd_list.replace("-o", "--elf-sha256-offset 0xb0 -o")
-env["BUILDERS"]["ElfToBin"].action = action

@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "esp_camera.h"
 #include <WiFi.h>
 
@@ -47,6 +48,7 @@ void setup() {
   config.fb_location = CAMERA_FB_IN_PSRAM;
   config.jpeg_quality = 12;
   config.fb_count = 1;
+  config.jpeg_buffer_size = 0;
 
   // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
   //                      for larger pre-allocated frame buffer.

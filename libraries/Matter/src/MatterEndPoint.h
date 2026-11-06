@@ -1,9 +1,9 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -14,13 +14,49 @@
 
 #pragma once
 #include <sdkconfig.h>
+#include <MatterC5Network.h>
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Arduino.h>
 #include <esp_matter.h>
 #include <functional>
+#include <initializer_list>
 
 using namespace esp_matter;
+
+// A single Matter semantic tag (Descriptor cluster TagList entry). Tags disambiguate sibling
+// endpoints that expose the same device type, or otherwise clarify an endpoint's role/position
+// (e.g. tagging 3 buttons with Number (One/Two/Three) and Position (Top/Middle/Bottom) tags so a
+// controller can tell them apart).
+// namespaceId/tag values come from the Matter "Standard Namespaces" specification:
+// https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
+// See MatterTags.h for named constants covering the common namespaces (no magic numbers required)
+// and MatterTags::createTag() for a custom namespace/tag/label combination.
+struct MatterTag {
+  uint8_t namespaceId;
+  uint8_t tag;
+  const char *label = nullptr;  // optional, nullptr = no label
+};
+
+// Last Identify cluster event for an endpoint. Filled before onIdentify(bool) runs.
+// Call getIdentifyRequest() from that callback (or later) to read effect details.
+struct MatterIdentifyRequest {
+  // Matter Identify::TriggerEffect EffectIdentifierEnum
+  enum EffectId : uint8_t {
+    BLINK = 0x00,
+    BREATHE = 0x01,
+    OKAY = 0x02,
+    CHANNEL_CHANGE = 0x0B,
+    FINISH = 0xFE,
+    STOP = 0xFF
+  };
+
+  bool valid = false;              // false until this endpoint has received an Identify event
+  bool active = false;             // same value passed to onIdentify(bool)
+  uint8_t effectId = 0;            // EffectId; meaningful when fromTriggerEffect is true
+  uint8_t effectVariant = 0;       // usually Default (0)
+  bool fromTriggerEffect = false;  // false = Identify / IdentifyTime session
+};
 
 // Matter Endpoint Base Class. Controls the endpoint ID and allows the child class to overwrite attribute change call
 class MatterEndPoint {
@@ -35,12 +71,13 @@ public:
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   virtual bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) = 0;
 
-  // This function is called to create a secondary network interface endpoint.
-  // It can be used for devices that support multiple network interfaces,
-  // such as Ethernet, Thread and Wi-Fi.
+  // Deprecated. Arduino Matter exposes one Network Commissioning cluster on endpoint 0:
+  // Wi-Fi or Thread (ESP32-C6: Matter.selectNetwork()), not both. Does not create an endpoint.
+  [[deprecated("Use Matter.selectNetwork(MATTER_NETWORK_WIFI or MATTER_NETWORK_THREAD); Network Commissioning is on endpoint 0")]]
   bool createSecondaryNetworkInterface();
 
-  // This function is called to get the secondary network interface endpoint ID.
+  // Deprecated. Always 0; Network Commissioning is on endpoint 0.
+  [[deprecated("Network Commissioning is on endpoint 0; this always returns 0")]]
   uint16_t getSecondaryNetworkEndPointId();
 
   // This function is called to get the current Matter Accessory endpoint ID.
@@ -62,10 +99,30 @@ public:
   bool updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
 
   // This callback is invoked when clients interact with the Identify Cluster of an specific endpoint.
-  bool endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEnabled);
+  // Stores request, then calls onIdentify(request.active).
+  bool endpointIdentifyCB(uint16_t endpoint_id, const MatterIdentifyRequest &request);
 
   // User callback for the Identify Cluster functionality
   void onIdentify(EndPointIdentifyCB onEndPointIdentifyCB);
+
+  // Last Identify event for this endpoint (updated immediately before onIdentify()).
+  MatterIdentifyRequest getIdentifyRequest() const;
+
+  // Maximum number of Descriptor TagList entries per endpoint.
+  // Matches esp-matter ESP_MATTER_MAX_SEMANTIC_TAG_COUNT.
+  static constexpr uint8_t MAX_TAG_LIST_SIZE = 3;
+
+  // Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
+  // Enables the TagList feature on first use. Call after the endpoint begin() and before Matter.begin().
+  // At most MAX_TAG_LIST_SIZE entries are accepted.
+  // Switches Custom and Position Row/Column tags require a non-empty label;
+  // use createCustomTag(), createRowTag(), or createColumnTag().
+  // Each entry's optional `label` pointer, if set, must remain valid for as long as this endpoint is running
+  // (it is not copied).
+  bool setTagList(const MatterTag *tagList, uint8_t count);
+
+  // Convenience overload: Light1.setTagList({MatterTags::Position::Top, MatterTags::Number::One});
+  bool setTagList(std::initializer_list<MatterTag> tagList);
 
 protected:
   // used for secondary network interface endpoints
@@ -73,5 +130,17 @@ protected:
   // main endpoint ID
   uint16_t endpoint_id = 0;
   EndPointIdentifyCB _onEndPointIdentifyCB = nullptr;
+  MatterIdentifyRequest identifyRequest;
+  bool tagListEnabled = false;
+
+  // Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.
+  // Called automatically by setTagList(). Idempotent.
+  // Subclasses that want TagList advertised even when the sketch never calls setTagList()
+  // (Generic Switch) may call this from begin() after setEndPointId().
+  bool enableTagList();
+
+  // BooleanState::StateValue is internally managed in ESP Matter 1.5+ (code-driven cluster).
+  // attribute::update() returns ESP_ERR_NOT_SUPPORTED (262); use the cluster setter instead.
+  bool setBooleanStateValue(bool value);
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

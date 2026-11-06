@@ -45,9 +45,11 @@ void https_ota_task(void *param) {
   esp_https_ota_config_t cfg;
   cfg.http_config = (const esp_http_client_config_t *)param;
   cfg.http_client_init_cb = NULL;
-  cfg.bulk_flash_erase = false;       //Erase entire flash partition during initialization
+  cfg.bulk_flash_erase = false;  //Erase entire flash partition during initialization
+#if CONFIG_ESP_HTTPS_OTA_ENABLE_PARTIAL_DOWNLOAD
   cfg.partial_http_download = false;  //Enable Firmware image to be downloaded over multiple HTTP requests
   cfg.max_http_request_size = 0;      //Maximum request size for partial HTTP download
+#endif
 
   esp_err_t ret = esp_https_ota((const esp_https_ota_config_t *)&cfg);
   if (ret == ESP_OK) {

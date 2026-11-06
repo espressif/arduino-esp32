@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEDescriptor.cpp
  *
  *  Created on: Jun 22, 2017
@@ -24,11 +43,17 @@
 #include <stdlib.h>
 #include "sdkconfig.h"
 #include <esp_err.h>
+#include <inttypes.h>
 #include "BLE2904.h"
 #include "BLEService.h"
 #include "BLEDescriptor.h"
 #include "GeneralUtils.h"
 #include "esp32-hal-log.h"
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include "BLE2902.h"
+#include "BLEDevice.h"
+#endif
 
 /***************************************************************************
  *                           Common definitions                            *
@@ -148,7 +173,7 @@ BLECharacteristic *BLEDescriptor::getCharacteristic() const {
  * @param [in] pCallbacks An instance of a callback structure used to define any callbacks for the descriptor.
  */
 void BLEDescriptor::setCallbacks(BLEDescriptorCallbacks *pCallback) {
-  log_v(">> setCallbacks: 0x%x", (uint32_t)pCallback);
+  log_v(">> setCallbacks: %p", pCallback);
   if (pCallback != nullptr) {
     m_pCallback = pCallback;
   } else {
@@ -182,7 +207,7 @@ void BLEDescriptor::setHandle(uint16_t handle) {
  */
 void BLEDescriptor::setValue(const uint8_t *data, size_t length) {
   if (length > m_value.attr_max_len) {
-    log_e("Size %d too large, must be no bigger than %d", length, m_value.attr_max_len);
+    log_e("Size %lu too large, must be no bigger than %u", (unsigned long)length, m_value.attr_max_len);
     return;
   }
 
@@ -192,7 +217,7 @@ void BLEDescriptor::setValue(const uint8_t *data, size_t length) {
 #if CONFIG_BLUEDROID_ENABLED
   if (m_handle != NULL_HANDLE) {
     esp_ble_gatts_set_attr_value(m_handle, length, (const uint8_t *)data);
-    log_d("Set the value in the GATTS database using handle 0x%x", m_handle);
+    log_d("Set the value in the GATTS database using handle 0x%.2x", m_handle);
   }
 #endif
   m_semaphoreSetValue.give();
@@ -290,6 +315,18 @@ void BLEDescriptor::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_i
       if (param->write.handle == m_handle) {
         setValue(param->write.value, param->write.len);  // Set the value of the descriptor.
 
+        // If this is a CCCD (0x2902), persist the value for bonded device reconnection
+        if (m_bleUUID.equals(BLEUUID((uint16_t)0x2902)) && m_pCharacteristic != nullptr) {
+          BLE2902 *pCCCD = (BLE2902 *)this;
+          BLEAddress peerAddr(param->write.bda);
+          uint16_t charHandle = m_pCharacteristic->getHandle();
+          pCCCD->persistValue(peerAddr, charHandle);
+          log_d(
+            "CCCD write from %s: notifications=%s, indications=%s", peerAddr.toString().c_str(), pCCCD->getNotifications() ? "enabled" : "disabled",
+            pCCCD->getIndications() ? "enabled" : "disabled"
+          );
+        }
+
         if (m_pCallback != nullptr) {  // We have completed the write, if there is a user supplied callback handler, invoke it now.
           m_pCallback->onWrite(this);  // Invoke the onWrite callback handler.
         }
@@ -343,7 +380,6 @@ void BLEDescriptor::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_i
 int BLEDescriptor::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
   const ble_uuid_t *uuid;
   int rc;
-  struct ble_gap_conn_desc desc;
   BLEDescriptor *pDescriptor = (BLEDescriptor *)arg;
 
   log_d("Descriptor %s %s event", pDescriptor->getUUID().toString().c_str(), ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC ? "Read" : "Write");
@@ -353,12 +389,9 @@ int BLEDescriptor::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_han
     switch (ctxt->op) {
       case BLE_GATT_ACCESS_OP_READ_DSC:
       {
-        rc = ble_gap_conn_find(conn_handle, &desc);
-        assert(rc == 0);
-
-        // If the packet header is only 8 bytes this is a follow up of a long read
-        // so we don't want to call the onRead() callback again.
-        if (ctxt->om->om_pkthdr_len > 8 || pDescriptor->m_value.attr_len <= (ble_att_mtu(desc.conn_handle) - 3)) {
+        // Only call the onRead() callback if the buffer length is greater than 0 and conn_handle is not NONE
+        // For long reads, follow-up requests will have om_len == 0
+        if (ctxt->om->om_len > 0 && conn_handle != BLE_HS_CONN_HANDLE_NONE && pDescriptor->m_pCallback != nullptr) {
           pDescriptor->m_pCallback->onRead(pDescriptor);
         }
 
@@ -391,7 +424,9 @@ int BLEDescriptor::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_han
         }
 
         pDescriptor->setValue(buf, len);
-        pDescriptor->m_pCallback->onWrite(pDescriptor);
+        if (pDescriptor->m_pCallback != nullptr) {
+          pDescriptor->m_pCallback->onWrite(pDescriptor);
+        }
         return 0;
       }
 

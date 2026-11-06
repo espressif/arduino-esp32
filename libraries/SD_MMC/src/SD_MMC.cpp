@@ -31,6 +31,7 @@
 #include "soc/sdmmc_pins.h"
 #include "ff.h"
 #include "esp32-hal-periman.h"
+#include "esp32-hal-ldo.h"
 
 #if SOC_SDMMC_IO_POWER_EXTERNAL
 #include "sd_pwr_ctrl_by_on_chip_ldo.h"
@@ -228,7 +229,19 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
 #if defined(CONFIG_IDF_TARGET_ESP32P4) && defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
   host.slot = SDMMC_HOST_SLOT_0;
   // reconfigure slot_config to remove all pins in order to use IO_MUX
-  slot_config = {
+  // Use 0 instead of GPIO_NUM_NC (-1) because ESP-IDF's s_check_pin_not_set()
+  // function uses !pin which doesn't work correctly with -1 (GPIO_NUM_NC)
+  slot_config = sdmmc_slot_config_t{
+    .clk = GPIO_NUM_0,
+    .cmd = GPIO_NUM_0,
+    .d0 = GPIO_NUM_0,
+    .d1 = GPIO_NUM_0,
+    .d2 = GPIO_NUM_0,
+    .d3 = GPIO_NUM_0,
+    .d4 = GPIO_NUM_0,
+    .d5 = GPIO_NUM_0,
+    .d6 = GPIO_NUM_0,
+    .d7 = GPIO_NUM_0,
     .cd = SDMMC_SLOT_NO_CD,
     .wp = SDMMC_SLOT_NO_WP,
     .width = 4,
@@ -256,11 +269,15 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
     };
     sd_pwr_ctrl_handle_t pwr_ctrl_handle = NULL;
 
+    ldoSdmmcPrepareAcquire((uint8_t)_power_channel);
     if (sd_pwr_ctrl_new_on_chip_ldo(&ldo_config, &pwr_ctrl_handle) != ESP_OK) {
       log_e("Failed to create a new on-chip LDO power control driver");
+      ldoSdmmcDriverCreateFailed((uint8_t)_power_channel);
       return false;
     }
     host.pwr_ctrl_handle = pwr_ctrl_handle;
+    _pwr_ctrl_handle = pwr_ctrl_handle;
+    ldoSdmmcDriverAttached((uint8_t)_power_channel);
   }
 #endif
 
@@ -294,6 +311,14 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
     } else {
       log_e("Failed to initialize the card (0x%x). Make sure SD card lines have pull-up resistors in place.", ret);
     }
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+    if (_power_channel != -1 && host.pwr_ctrl_handle != NULL) {
+      sd_pwr_ctrl_del_on_chip_ldo(host.pwr_ctrl_handle);
+      host.pwr_ctrl_handle = NULL;
+      _pwr_ctrl_handle = nullptr;
+      ldoSdmmcDriverDetached((uint8_t)_power_channel);
+    }
+#endif
     _card = NULL;
     return false;
   }
@@ -330,6 +355,12 @@ err:
 
 void SDMMCFS::end() {
   if (_card) {
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+    sd_pwr_ctrl_handle_t pwr_ctrl = (sd_pwr_ctrl_handle_t)_pwr_ctrl_handle;
+    if (pwr_ctrl == NULL && _power_channel != -1) {
+      pwr_ctrl = _card->host.pwr_ctrl_handle;
+    }
+#endif
     esp_vfs_fat_sdcard_unmount(_impl->mountpoint(), _card);
     _impl->mountpoint(NULL);
     _card = NULL;
@@ -343,6 +374,13 @@ void SDMMCFS::end() {
     }
 #if defined(BOARD_SDMMC_POWER_PIN)
     perimanClearPinBus(BOARD_SDMMC_POWER_PIN);
+#endif
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+    if (_power_channel != -1 && pwr_ctrl != NULL) {
+      sd_pwr_ctrl_del_on_chip_ldo(pwr_ctrl);
+      _pwr_ctrl_handle = nullptr;
+      ldoSdmmcDriverDetached((uint8_t)_power_channel);
+    }
 #endif
   }
 }

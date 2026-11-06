@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEUtils.cpp
  *
  *  Created on: Mar 25, 2017
@@ -31,6 +50,7 @@
 #endif
 
 #include <esp_err.h>
+#include <inttypes.h>
 #include <map>
 #include <sstream>
 #include <iomanip>
@@ -673,7 +693,7 @@ char *BLEUtils::buildHexData(uint8_t *target, const uint8_t *source, uint8_t len
   char *startOfData = (char *)target;
 
   for (int i = 0; i < length; i++) {
-    sprintf((char *)target, "%.2x", (char)source[i]);
+    snprintf((char *)target, 3, "%02x", source[i]);
     target += 2;
   }
 
@@ -804,7 +824,7 @@ String BLEUtils::buildPrintData(uint8_t *source, size_t length) {
 static String gattIdToString(esp_gatt_id_t gattId) {
   String res = "uuid: " + BLEUUID(gattId.uuid).toString() + ", inst_id: ";
   char val[8];
-  snprintf(val, sizeof(val), "%d", (int)gattId.inst_id);
+  snprintf(val, sizeof(val), "%u", gattId.inst_id);
   res += val;
   return res;
 }  // gattIdToString
@@ -848,6 +868,48 @@ String BLEUtils::adFlagsToString(uint8_t adFlags) {
   }
   return res;
 }  // adFlagsToString
+
+/**
+ * @brief Convert a Bluedroid authentication failure reason to a string representation.
+ *
+ * The table is only compiled in when the error log level is enabled, since that is the
+ * only place these strings are consumed.
+ *
+ * @param [in] reason The reason reported in esp_ble_auth_cmpl_t::fail_reason.
+ * @return A string representation of the failure reason.
+ */
+const char *BLEUtils::authFailReasonToString(esp_ble_auth_fail_rsn_t reason) {
+  switch (reason) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    case ESP_AUTH_SMP_PASSKEY_FAIL:            return "Passkey entry failed or was canceled by the user";
+    case ESP_AUTH_SMP_OOB_FAIL:                return "OOB data is not available";
+    case ESP_AUTH_SMP_PAIR_AUTH_FAIL:          return "Authentication requirements cannot be met with these IO capabilities";
+    case ESP_AUTH_SMP_CONFIRM_VALUE_FAIL:      return "Confirm value does not match the calculated compare value";
+    case ESP_AUTH_SMP_PAIR_NOT_SUPPORT:        return "Pairing is not supported by the peer";
+    case ESP_AUTH_SMP_ENC_KEY_SIZE:            return "Resultant encryption key size is insufficient";
+    case ESP_AUTH_SMP_INVALID_CMD:             return "SMP command is not supported by the peer";
+    case ESP_AUTH_SMP_UNKNOWN_ERR:             return "Pairing failed for an unspecified reason";
+    case ESP_AUTH_SMP_REPEATED_ATTEMPT:        return "Too little time has elapsed since the last pairing or security request";
+    case ESP_AUTH_SMP_INVALID_PARAMETERS:      return "Command length is invalid or a parameter is out of range";
+    case ESP_AUTH_SMP_DHKEY_CHK_FAIL:          return "DHKey check value does not match the one calculated locally";
+    case ESP_AUTH_SMP_NUM_COMP_FAIL:           return "Numeric comparison values do not match";
+    case ESP_AUTH_SMP_BR_PARING_IN_PROGR:      return "Pairing over BR/EDR is already in progress";
+    case ESP_AUTH_SMP_XTRANS_DERIVE_NOT_ALLOW: return "BR/EDR link key cannot be used to derive LE transport keys";
+    case ESP_AUTH_SMP_INTERNAL_ERR:            return "Internal error in the pairing procedure";
+    case ESP_AUTH_SMP_UNKNOWN_IO:              return "Unknown IO capability, unable to decide the association model";
+    case ESP_AUTH_SMP_INIT_FAIL:               return "SMP pairing initiation failed";
+    case ESP_AUTH_SMP_CONFIRM_FAIL:            return "Confirm value does not match";
+    case ESP_AUTH_SMP_BUSY:                    return "A security request is already in progress";
+    case ESP_AUTH_SMP_ENC_FAIL:                return "The controller failed to start encryption";
+    case ESP_AUTH_SMP_STARTED:                 return "SMP pairing process started";
+    case ESP_AUTH_SMP_RSP_TIMEOUT:             return "Timed out waiting for an SMP command";
+    case ESP_AUTH_SMP_DIV_NOT_AVAIL:           return "Encrypted Diversifier value not available";
+    case ESP_AUTH_SMP_UNSPEC_ERR:              return "Unspecified failure reason";
+    case ESP_AUTH_SMP_CONN_TOUT:               return "Pairing failed due to a connection timeout";
+#endif
+    default: return "Unknown";
+  }
+}  // authFailReasonToString
 
 esp_gatt_id_t BLEUtils::buildGattId(esp_bt_uuid_t uuid, uint8_t inst_id) {
   esp_gatt_id_t retGattId;
@@ -1080,7 +1142,7 @@ void BLEUtils::dumpGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t
     case ESP_GAP_BLE_AUTH_CMPL_EVT:
     {
       log_v(
-        "[bd_addr: %s, key_present: %d, key: ***, key_type: %d, success: %d, fail_reason: %d, addr_type: ***, dev_type: %s]",
+        "[bd_addr: %s, key_present: %d, key: ***, key_type: %u, success: %d, fail_reason: %d, addr_type: ***, dev_type: %s]",
         BLEAddress(param->ble_security.auth_cmpl.bd_addr).toString().c_str(), param->ble_security.auth_cmpl.key_present, param->ble_security.auth_cmpl.key_type,
         param->ble_security.auth_cmpl.success, param->ble_security.auth_cmpl.fail_reason, BLEUtils::devTypeToString(param->ble_security.auth_cmpl.dev_type)
       );
@@ -1112,7 +1174,9 @@ void BLEUtils::dumpGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t
     // ESP_GAP_BLE_NC_REQ_EVT
     case ESP_GAP_BLE_NC_REQ_EVT:
     {
-      log_v("[bd_addr: %s, passkey: %d]", BLEAddress(param->ble_security.key_notif.bd_addr).toString().c_str(), param->ble_security.key_notif.passkey);
+      log_v(
+        "[bd_addr: %s, passkey: %06" PRIu32 "]", BLEAddress(param->ble_security.key_notif.bd_addr).toString().c_str(), param->ble_security.key_notif.passkey
+      );
       break;
     }  // ESP_GAP_BLE_NC_REQ_EVT
 
@@ -1229,7 +1293,7 @@ void BLEUtils::dumpGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t
     case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
     {
       log_v(
-        "[status: %d, bd_addr: %s, min_int: %d, max_int: %d, latency: %d, conn_int: %d, timeout: %d]", param->update_conn_params.status,
+        "[status: %d, bd_addr: %s, min_int: %u, max_int: %u, latency: %u, conn_int: %u, timeout: %u]", param->update_conn_params.status,
         BLEAddress(param->update_conn_params.bda).toString().c_str(), param->update_conn_params.min_int, param->update_conn_params.max_int,
         param->update_conn_params.latency, param->update_conn_params.conn_int, param->update_conn_params.timeout
       );
@@ -1273,7 +1337,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTC_CLOSE_EVT:
     {
       log_v(
-        "[status: %s, reason:%s, conn_id: %d]", BLEUtils::gattStatusToString(evtParam->close.status).c_str(),
+        "[status: %s, reason:%s, conn_id: %u]", BLEUtils::gattStatusToString(evtParam->close.status).c_str(),
         BLEUtils::gattCloseReasonToString(evtParam->close.reason).c_str(), evtParam->close.conn_id
       );
       break;
@@ -1287,7 +1351,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     // - esp_bd_addr_t     remote_bda
     case ESP_GATTC_CONNECT_EVT:
     {
-      log_v("[conn_id: %d, remote_bda: %s]", evtParam->connect.conn_id, BLEAddress(evtParam->connect.remote_bda).toString().c_str());
+      log_v("[conn_id: %u, remote_bda: %s]", evtParam->connect.conn_id, BLEAddress(evtParam->connect.remote_bda).toString().c_str());
       break;
     }
 
@@ -1300,7 +1364,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTC_DISCONNECT_EVT:
     {
       log_v(
-        "[reason: %s, conn_id: %d, remote_bda: %s]", BLEUtils::gattCloseReasonToString(evtParam->disconnect.reason).c_str(), evtParam->disconnect.conn_id,
+        "[reason: %s, conn_id: %u, remote_bda: %s]", BLEUtils::gattCloseReasonToString(evtParam->disconnect.reason).c_str(), evtParam->disconnect.conn_id,
         BLEAddress(evtParam->disconnect.remote_bda).toString().c_str()
       );
       break;
@@ -1324,7 +1388,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
 				if (evtParam->get_char.char_id.uuid.len == ESP_UUID_LEN_16) {
 					description = BLEUtils::gattCharacteristicUUIDToString(evtParam->get_char.char_id.uuid.uuid.uuid16);
 				}
-				log_v("[status: %s, conn_id: %d, srvc_id: %s, char_id: %s [description: %s]\nchar_prop: %s]",
+				log_v("[status: %s, conn_id: %u, srvc_id: %s, char_id: %s [description: %s]\nchar_prop: %s]",
 					BLEUtils::gattStatusToString(evtParam->get_char.status).c_str(),
 					evtParam->get_char.conn_id,
 					BLEUtils::gattServiceIdToString(evtParam->get_char.srvc_id).c_str(),
@@ -1333,7 +1397,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
 					BLEUtils::characteristicPropertiesToString(evtParam->get_char.char_prop).c_str()
 				);
 			} else {
-				log_v("[status: %s, conn_id: %d, srvc_id: %s]",
+				log_v("[status: %s, conn_id: %u, srvc_id: %s]",
 					BLEUtils::gattStatusToString(evtParam->get_char.status).c_str(),
 					evtParam->get_char.conn_id,
 					BLEUtils::gattServiceIdToString(evtParam->get_char.srvc_id).c_str()
@@ -1356,7 +1420,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTC_NOTIFY_EVT:
     {
       log_v(
-        "[conn_id: %d, remote_bda: %s, handle: %d 0x%.2x, value_len: %d, is_notify: %d]", evtParam->notify.conn_id,
+        "[conn_id: %u, remote_bda: %s, handle: %u 0x%02x, value_len: %u, is_notify: %d]", evtParam->notify.conn_id,
         BLEAddress(evtParam->notify.remote_bda).toString().c_str(), evtParam->notify.handle, evtParam->notify.handle, evtParam->notify.value_len,
         evtParam->notify.is_notify
       );
@@ -1374,7 +1438,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTC_OPEN_EVT:
     {
       log_v(
-        "[status: %s, conn_id: %d, remote_bda: %s, mtu: %d]", BLEUtils::gattStatusToString(evtParam->open.status).c_str(), evtParam->open.conn_id,
+        "[status: %s, conn_id: %u, remote_bda: %s, mtu: %u]", BLEUtils::gattStatusToString(evtParam->open.status).c_str(), evtParam->open.conn_id,
         BLEAddress(evtParam->open.remote_bda).toString().c_str(), evtParam->open.mtu
       );
       break;
@@ -1394,7 +1458,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTC_READ_CHAR_EVT:
     {
       log_v(
-        "[status: %s, conn_id: %d, handle: %d 0x%.2x, value_len: %d]", BLEUtils::gattStatusToString(evtParam->read.status).c_str(), evtParam->read.conn_id,
+        "[status: %s, conn_id: %u, handle: %u 0x%02x, value_len: %u]", BLEUtils::gattStatusToString(evtParam->read.status).c_str(), evtParam->read.conn_id,
         evtParam->read.handle, evtParam->read.handle, evtParam->read.value_len
       );
       if (evtParam->read.status == ESP_GATT_OK) {
@@ -1427,7 +1491,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTC_REG_FOR_NOTIFY_EVT:
     {
       log_v(
-        "[status: %s, handle: %d 0x%.2x]", BLEUtils::gattStatusToString(evtParam->reg_for_notify.status).c_str(), evtParam->reg_for_notify.handle,
+        "[status: %s, handle: %u 0x%02x]", BLEUtils::gattStatusToString(evtParam->reg_for_notify.status).c_str(), evtParam->reg_for_notify.handle,
         evtParam->reg_for_notify.handle
       );
       break;
@@ -1440,7 +1504,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     // - uint16_t          conn_id
     case ESP_GATTC_SEARCH_CMPL_EVT:
     {
-      log_v("[status: %s, conn_id: %d]", BLEUtils::gattStatusToString(evtParam->search_cmpl.status).c_str(), evtParam->search_cmpl.conn_id);
+      log_v("[status: %s, conn_id: %u]", BLEUtils::gattStatusToString(evtParam->search_cmpl.status).c_str(), evtParam->search_cmpl.conn_id);
       break;
     }  // ESP_GATTC_SEARCH_CMPL_EVT
 
@@ -1454,7 +1518,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTC_SEARCH_RES_EVT:
     {
       log_v(
-        "[conn_id: %d, start_handle: %d 0x%.2x, end_handle: %d 0x%.2x, srvc_id: %s", evtParam->search_res.conn_id, evtParam->search_res.start_handle,
+        "[conn_id: %u, start_handle: %u 0x%02x, end_handle: %u 0x%02x, srvc_id: %s", evtParam->search_res.conn_id, evtParam->search_res.start_handle,
         evtParam->search_res.start_handle, evtParam->search_res.end_handle, evtParam->search_res.end_handle,
         gattIdToString(evtParam->search_res.srvc_id).c_str()
       );
@@ -1471,7 +1535,7 @@ void BLEUtils::dumpGattClientEvent(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTC_WRITE_CHAR_EVT:
     {
       log_v(
-        "[status: %s, conn_id: %d, handle: %d 0x%.2x, offset: %d]", BLEUtils::gattStatusToString(evtParam->write.status).c_str(), evtParam->write.conn_id,
+        "[status: %s, conn_id: %u, handle: %u 0x%02x, offset: %u]", BLEUtils::gattStatusToString(evtParam->write.status).c_str(), evtParam->write.conn_id,
         evtParam->write.handle, evtParam->write.handle, evtParam->write.offset
       );
       break;
@@ -1499,7 +1563,7 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTS_ADD_CHAR_DESCR_EVT:
     {
       log_v(
-        "[status: %s, attr_handle: %d 0x%.2x, service_handle: %d 0x%.2x, char_uuid: %s]", gattStatusToString(evtParam->add_char_descr.status).c_str(),
+        "[status: %s, attr_handle: %u 0x%02x, service_handle: %u 0x%02x, char_uuid: %s]", gattStatusToString(evtParam->add_char_descr.status).c_str(),
         evtParam->add_char_descr.attr_handle, evtParam->add_char_descr.attr_handle, evtParam->add_char_descr.service_handle,
         evtParam->add_char_descr.service_handle, BLEUUID(evtParam->add_char_descr.descr_uuid).toString().c_str()
       );
@@ -1510,13 +1574,13 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     {
       if (evtParam->add_char.status == ESP_GATT_OK) {
         log_v(
-          "[status: %s, attr_handle: %d 0x%.2x, service_handle: %d 0x%.2x, char_uuid: %s]", gattStatusToString(evtParam->add_char.status).c_str(),
+          "[status: %s, attr_handle: %u 0x%02x, service_handle: %u 0x%02x, char_uuid: %s]", gattStatusToString(evtParam->add_char.status).c_str(),
           evtParam->add_char.attr_handle, evtParam->add_char.attr_handle, evtParam->add_char.service_handle, evtParam->add_char.service_handle,
           BLEUUID(evtParam->add_char.char_uuid).toString().c_str()
         );
       } else {
         log_e(
-          "[status: %s, attr_handle: %d 0x%.2x, service_handle: %d 0x%.2x, char_uuid: %s]", gattStatusToString(evtParam->add_char.status).c_str(),
+          "[status: %s, attr_handle: %u 0x%02x, service_handle: %u 0x%02x, char_uuid: %s]", gattStatusToString(evtParam->add_char.status).c_str(),
           evtParam->add_char.attr_handle, evtParam->add_char.attr_handle, evtParam->add_char.service_handle, evtParam->add_char.service_handle,
           BLEUUID(evtParam->add_char.char_uuid).toString().c_str()
         );
@@ -1531,26 +1595,26 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     // - uint16_t          conn_id – The connection used.
     case ESP_GATTS_CONF_EVT:
     {
-      log_v("[status: %s, conn_id: 0x%.2x]", gattStatusToString(evtParam->conf.status).c_str(), evtParam->conf.conn_id);
+      log_v("[status: %s, conn_id: 0x%02x]", gattStatusToString(evtParam->conf.status).c_str(), evtParam->conf.conn_id);
       break;
     }  // ESP_GATTS_CONF_EVT
 
     case ESP_GATTS_CONGEST_EVT:
     {
-      log_v("[conn_id: %d, congested: %d]", evtParam->congest.conn_id, evtParam->congest.congested);
+      log_v("[conn_id: %u, congested: %d]", evtParam->congest.conn_id, evtParam->congest.congested);
       break;
     }  // ESP_GATTS_CONGEST_EVT
 
     case ESP_GATTS_CONNECT_EVT:
     {
-      log_v("[conn_id: %d, remote_bda: %s]", evtParam->connect.conn_id, BLEAddress(evtParam->connect.remote_bda).toString().c_str());
+      log_v("[conn_id: %u, remote_bda: %s]", evtParam->connect.conn_id, BLEAddress(evtParam->connect.remote_bda).toString().c_str());
       break;
     }  // ESP_GATTS_CONNECT_EVT
 
     case ESP_GATTS_CREATE_EVT:
     {
       log_v(
-        "[status: %s, service_handle: %d 0x%.2x, service_id: [%s]]", gattStatusToString(evtParam->create.status).c_str(), evtParam->create.service_handle,
+        "[status: %s, service_handle: %u 0x%02x, service_id: [%s]]", gattStatusToString(evtParam->create.status).c_str(), evtParam->create.service_handle,
         evtParam->create.service_handle, gattServiceIdToString(evtParam->create.service_id).c_str()
       );
       break;
@@ -1558,7 +1622,7 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
 
     case ESP_GATTS_DISCONNECT_EVT:
     {
-      log_v("[conn_id: %d, remote_bda: %s]", evtParam->connect.conn_id, BLEAddress(evtParam->connect.remote_bda).toString().c_str());
+      log_v("[conn_id: %u, remote_bda: %s]", evtParam->connect.conn_id, BLEAddress(evtParam->connect.remote_bda).toString().c_str());
       break;
     }  // ESP_GATTS_DISCONNECT_EVT
 
@@ -1589,7 +1653,7 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
       }
 
       log_v(
-        "[conn_id: %d, trans_id: %d, bda: %s, exec_write_flag: 0x%.2x=%s]", evtParam->exec_write.conn_id, evtParam->exec_write.trans_id,
+        "[conn_id: %u, trans_id: %" PRIu32 ", bda: %s, exec_write_flag: 0x%02x=%s]", evtParam->exec_write.conn_id, evtParam->exec_write.trans_id,
         BLEAddress(evtParam->exec_write.bda).toString().c_str(), evtParam->exec_write.exec_write_flag, pWriteFlagText
       );
       break;
@@ -1598,14 +1662,14 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
 
     case ESP_GATTS_MTU_EVT:
     {
-      log_v("[conn_id: %d, mtu: %d]", evtParam->mtu.conn_id, evtParam->mtu.mtu);
+      log_v("[conn_id: %u, mtu: %u]", evtParam->mtu.conn_id, evtParam->mtu.mtu);
       break;
     }  // ESP_GATTS_MTU_EVT
 
     case ESP_GATTS_READ_EVT:
     {
       log_v(
-        "[conn_id: %d, trans_id: %d, bda: %s, handle: 0x%.2x, is_long: %d, need_rsp:%d]", evtParam->read.conn_id, evtParam->read.trans_id,
+        "[conn_id: %u, trans_id: %" PRIu32 ", bda: %s, handle: 0x%02x, is_long: %d, need_rsp:%d]", evtParam->read.conn_id, evtParam->read.trans_id,
         BLEAddress(evtParam->read.bda).toString().c_str(), evtParam->read.handle, evtParam->read.is_long, evtParam->read.need_rsp
       );
       break;
@@ -1613,13 +1677,13 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
 
     case ESP_GATTS_RESPONSE_EVT:
     {
-      log_v("[status: %s, handle: 0x%.2x]", gattStatusToString(evtParam->rsp.status).c_str(), evtParam->rsp.handle);
+      log_v("[status: %s, handle: 0x%02x]", gattStatusToString(evtParam->rsp.status).c_str(), evtParam->rsp.handle);
       break;
     }  // ESP_GATTS_RESPONSE_EVT
 
     case ESP_GATTS_REG_EVT:
     {
-      log_v("[status: %s, app_id: %d]", gattStatusToString(evtParam->reg.status).c_str(), evtParam->reg.app_id);
+      log_v("[status: %s, app_id: %u]", gattStatusToString(evtParam->reg.status).c_str(), evtParam->reg.app_id);
       break;
     }  // ESP_GATTS_REG_EVT
 
@@ -1630,7 +1694,7 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     // - uint16_t          service_handle
     case ESP_GATTS_START_EVT:
     {
-      log_v("[status: %s, service_handle: 0x%.2x]", gattStatusToString(evtParam->start.status).c_str(), evtParam->start.service_handle);
+      log_v("[status: %s, service_handle: 0x%02x]", gattStatusToString(evtParam->start.status).c_str(), evtParam->start.service_handle);
       break;
     }  // ESP_GATTS_START_EVT
 
@@ -1649,7 +1713,7 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     case ESP_GATTS_WRITE_EVT:
     {
       log_v(
-        "[conn_id: %d, trans_id: %d, bda: %s, handle: 0x%.2x, offset: %d, need_rsp: %d, is_prep: %d, len: %d]", evtParam->write.conn_id,
+        "[conn_id: %u, trans_id: %" PRIu32 ", bda: %s, handle: 0x%02x, offset: %u, need_rsp: %d, is_prep: %d, len: %u]", evtParam->write.conn_id,
         evtParam->write.trans_id, BLEAddress(evtParam->write.bda).toString().c_str(), evtParam->write.handle, evtParam->write.offset, evtParam->write.need_rsp,
         evtParam->write.is_prep, evtParam->write.len
       );
@@ -1677,7 +1741,7 @@ const char *BLEUtils::eventTypeToString(esp_ble_evt_type_t eventType) {
     case ESP_BLE_EVT_NON_CONN_ADV: return "ESP_BLE_EVT_NON_CONN_ADV";
     case ESP_BLE_EVT_SCAN_RSP:     return "ESP_BLE_EVT_SCAN_RSP";
 #endif
-    default: log_v("Unknown esp_ble_evt_type_t: %d (0x%.2x)", eventType, eventType); return "*** Unknown ***";
+    default: log_v("Unknown esp_ble_evt_type_t: %d (0x%02x)", eventType, eventType); return "*** Unknown ***";
   }
 }  // eventTypeToString
 
@@ -1717,7 +1781,7 @@ const char *BLEUtils::gapEventToString(uint32_t eventType) {
     case ESP_GAP_BLE_SET_STATIC_RAND_ADDR_EVT:           return "ESP_GAP_BLE_SET_STATIC_RAND_ADDR_EVT";
     case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:             return "ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT";
 #endif
-    default: log_v("gapEventToString: Unknown event type %d 0x%.2x", eventType, eventType); return "Unknown event type";
+    default: log_v("gapEventToString: Unknown event type %d 0x02x", eventType, eventType); return "Unknown event type";
   }
 }  // gapEventToString
 
@@ -1756,13 +1820,13 @@ String BLEUtils::gattcServiceElementToString(esp_gattc_service_elem_t *pGATTCSer
   String res;
   char val[6];
   res += "[uuid: " + BLEUUID(pGATTCServiceElement->uuid).toString() + ", start_handle: ";
-  snprintf(val, sizeof(val), "%d", pGATTCServiceElement->start_handle);
+  snprintf(val, sizeof(val), "%u", pGATTCServiceElement->start_handle);
   res += val;
   res += " 0x";
   snprintf(val, sizeof(val), "%04x", pGATTCServiceElement->start_handle);
   res += val;
   res += ", end_handle: ";
-  snprintf(val, sizeof(val), "%d", pGATTCServiceElement->end_handle);
+  snprintf(val, sizeof(val), "%u", pGATTCServiceElement->end_handle);
   res += val;
   res += " 0x";
   snprintf(val, sizeof(val), "%04x", pGATTCServiceElement->end_handle);
@@ -2097,6 +2161,41 @@ const char *BLEUtils::returnCodeToString(int rc) {
 }
 
 /**
+ * @brief Converts a raw SMP pairing failure reason to a text string.
+ *
+ * BLE_GAP_EVENT_PARING_COMPLETE reports the reason as a bare SMP code, unlike most
+ * NimBLE status values which are namespaced BLE_HS_* codes handled by returnCodeToString().
+ *
+ * The table is only compiled in when the error log level is enabled, since that is the
+ * only place these strings are consumed.
+ *
+ * @param [in] smErr The SMP reason code (Core spec Vol 3, Part H, 3.5.5).
+ * @return A string representation of the reason code.
+ */
+const char *BLEUtils::smErrorToString(uint8_t smErr) {
+  switch (smErr) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    case 0:                           return "Success";
+    case BLE_SM_ERR_PASSKEY:          return "Passkey entry failed or was canceled by the user";
+    case BLE_SM_ERR_OOB:              return "OOB data is not available";
+    case BLE_SM_ERR_AUTHREQ:          return "Authentication requirements cannot be met with these IO capabilities";
+    case BLE_SM_ERR_CONFIRM_MISMATCH: return "Confirm value does not match the calculated compare value";
+    case BLE_SM_ERR_PAIR_NOT_SUPP:    return "Pairing is not supported by the peer";
+    case BLE_SM_ERR_ENC_KEY_SZ:       return "Resultant encryption key size is insufficient";
+    case BLE_SM_ERR_CMD_NOT_SUPP:     return "SMP command is not supported by the peer";
+    case BLE_SM_ERR_UNSPECIFIED:      return "Pairing failed for an unspecified reason";
+    case BLE_SM_ERR_REPEATED:         return "Too little time has elapsed since the last pairing or security request";
+    case BLE_SM_ERR_INVAL:            return "Command length is invalid or a parameter is out of range";
+    case BLE_SM_ERR_DHKEY:            return "DHKey check value does not match the one calculated locally";
+    case BLE_SM_ERR_NUMCMP:           return "Numeric comparison values do not match";
+    case BLE_SM_ERR_ALREADY:          return "Pairing over BR/EDR is already in progress";
+    case BLE_SM_ERR_CROSS_TRANS:      return "BR/EDR link key cannot be used to derive LE transport keys";
+#endif
+    default: return "Unknown";
+  }
+}
+
+/**
  * @brief Utility function to log the gap event info.
  * @param [in] event A pointer to the gap event structure.
  * @param [in] arg Unused.
@@ -2187,7 +2286,20 @@ const char *BLEUtils::gapEventToString(uint8_t eventType) {
     case BLE_GAP_EVENT_SCAN_REQ_RCVD:  //23
       return "BLE_GAP_EVENT_SCAN_REQ_RCVD";
 #endif
-    default: log_d("gapEventToString: Unknown event type %d 0x%.2x", eventType, eventType); return "Unknown event type";
+
+    case BLE_GAP_EVENT_PARING_COMPLETE:  //27, name is misspelled in NimBLE
+      return "BLE_GAP_EVENT_PAIRING_COMPLETE";
+
+    case BLE_GAP_EVENT_SUBRATE_CHANGE:  //28
+      return "BLE_GAP_EVENT_SUBRATE_CHANGE";
+
+    case BLE_GAP_EVENT_DATA_LEN_CHG:  //34
+      return "BLE_GAP_EVENT_DATA_LEN_CHG";
+
+    case BLE_GAP_EVENT_LINK_ESTAB:  //38
+      return "BLE_GAP_EVENT_LINK_ESTAB";
+
+    default: log_d("gapEventToString: Unknown event type %d 0x%02x", eventType, eventType); return "Unknown event type";
   }
 #else   // #if defined(CONFIG_NIMBLE_ENABLE_GAP_EVENT_CODE_TEXT)
   return "";

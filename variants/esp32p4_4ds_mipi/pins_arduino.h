@@ -70,4 +70,11 @@ static const uint8_t T4 = 2;   // careful, also used as I2C SDA pin
 #define BOARD_SDMMC_POWER_PIN      45
 #define BOARD_SDMMC_POWER_ON_LEVEL LOW
 
+// On-chip GP LDO: periman enables VO4 when a GPIO in the range is used (see esp32-hal-ldo.c).
+#define BOARD_PERIMAN_IO_LDO_AUTO        1
+#define BOARD_PERIMAN_IO_LDO0_CHANNEL    4   // LDO_VO4 on ESP32-P4
+#define BOARD_PERIMAN_IO_LDO0_GPIO_MIN   39  // Function EV: GPIO 39-48 on VO4
+#define BOARD_PERIMAN_IO_LDO0_GPIO_MAX   48
+#define BOARD_PERIMAN_IO_LDO0_VOLTAGE_MV 3300
+
 #endif /* Pins_Arduino_h */

@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterOnOffPlugin.h>
 
 using namespace esp_matter;
@@ -30,10 +29,12 @@ bool MatterOnOffPlugin::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster
     return false;
   }
 
-  log_d("OnOff Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "OnOff Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32
+  );
 
   if (endpoint_id == getEndPointId()) {
-    log_d("OnOffPlugin state changed to %d", val->val.b);
+    log_d("OnOffPlugin state changed to %u", val->val.b);
     if (cluster_id == OnOff::Id) {
       if (attribute_id == OnOff::Attributes::OnOff::Id) {
         if (_onChangeOnOffCB != NULL) {
@@ -61,23 +62,24 @@ bool MatterOnOffPlugin::begin(bool initialState) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Matter On-Off Plugin with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter On-Off Plugin with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
-  on_off_plugin_unit::config_t plugin_config;
+  on_off_plug_in_unit::config_t plugin_config;
   plugin_config.on_off.on_off = initialState;
-  plugin_config.on_off.lighting.start_up_on_off = nullptr;
+  plugin_config.on_off_lighting.start_up_on_off = nullptr;
 
   // endpoint handles can be used to add/modify clusters.
-  endpoint_t *endpoint = on_off_plugin_unit::create(node::get(), &plugin_config, ENDPOINT_FLAG_NONE, (void *)this);
+  endpoint_t *endpoint = on_off_plug_in_unit::create(node::get(), &plugin_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create on-off plugin endpoint");
     return false;
   }
   onOffState = initialState;
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("On-Off Plugin created with endpoint_id %d", getEndPointId());
+
+  log_i("On-Off Plugin created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;
@@ -107,7 +109,7 @@ bool MatterOnOffPlugin::setOnOff(bool newState) {
   esp_matter_attr_val_t onoffVal = esp_matter_invalid(NULL);
 
   if (!getAttributeVal(OnOff::Id, OnOff::Attributes::OnOff::Id, &onoffVal)) {
-    log_e("Failed to get Pressure Sensor Attribute.");
+    log_e("Failed to get On-Off Plugin Attribute.");
     return false;
   }
   if (onoffVal.val.b != newState) {
@@ -115,7 +117,7 @@ bool MatterOnOffPlugin::setOnOff(bool newState) {
     bool ret;
     ret = updateAttributeVal(OnOff::Id, OnOff::Attributes::OnOff::Id, &onoffVal);
     if (!ret) {
-      log_e("Failed to update Pressure Sensor Measurement Attribute.");
+      log_e("Failed to update On-Off Plugin Attribute.");
       return false;
     }
     onOffState = newState;

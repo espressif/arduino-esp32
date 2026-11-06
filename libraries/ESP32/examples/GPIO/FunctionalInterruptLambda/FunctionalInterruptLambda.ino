@@ -144,13 +144,13 @@ void loop() {
   // Check for button presses
   if (buttonPressed) {
     buttonPressed = false;
-    Serial.printf("==> Button PRESSED! Count: %lu, LED: %s (FALLING edge)\r\n", buttonPressCount, ledState ? "ON" : "OFF");
+    Serial.printf("==> Button PRESSED! Count: %" PRIu32 ", LED: %s (FALLING edge)\r\n", buttonPressCount, ledState ? "ON" : "OFF");
   }
 
   // Check for button releases
   if (buttonReleased) {
     buttonReleased = false;
-    Serial.printf("==> Button RELEASED! Count: %lu (RISING edge)\r\n", buttonReleaseCount);
+    Serial.printf("==> Button RELEASED! Count: %" PRIu32 " (RISING edge)\r\n", buttonReleaseCount);
   }
 
   delay(10);

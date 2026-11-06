@@ -1,4 +1,7 @@
 /* HW Timer test */
+#include <Arduino.h>
+#include <FunctionalInterrupt.h>
+#include <atomic>
 #include <unity.h>
 
 #define TIMER_FREQUENCY          4000000
@@ -111,18 +114,186 @@ void timer_clock_select_test(void) {
   TEST_ASSERT_EQUAL(TIMER_FREQUENCY_XTAL_CLK, resolution);
 }
 
-void setup() {
+// ==================== One-Shot Alarm ====================
 
-  // Open serial communications and wait for port to open:
+static std::atomic<int> oneshot_count{0};
+
+void ARDUINO_ISR_ATTR onOneShotTimer() {
+  oneshot_count.fetch_add(1, std::memory_order_relaxed);
+}
+
+void timer_oneshot_test(void) {
+  oneshot_count = 0;
+  timerAttachInterrupt(timer, &onOneShotTimer);
+  // One-shot: count=1 means fire once then stop
+  timerAlarm(timer, TIMER_FREQUENCY, false, 1);
+  timerStart(timer);
+
+  delay(2000);
+
+  TEST_ASSERT_EQUAL(1, oneshot_count.load(std::memory_order_relaxed));
+  timerDetachInterrupt(timer);
+}
+
+// ==================== Auto-Reload Count ====================
+
+static std::atomic<int> reload_count{0};
+
+void ARDUINO_ISR_ATTR onReloadTimer() {
+  reload_count.fetch_add(1, std::memory_order_relaxed);
+}
+
+void timer_auto_reload_test(void) {
+  reload_count = 0;
+  timerAttachInterrupt(timer, &onReloadTimer);
+  // Auto-reload (true), unlimited (0) -- fires every 0.25s at 4MHz frequency
+  timerAlarm(timer, TIMER_FREQUENCY / 4, true, 0);
+  timerStart(timer);
+
+  delay(1100);
+  timerStop(timer);
+
+  // In ~1.1s with 0.25s period, expect ~4 fires
+  TEST_ASSERT_GREATER_OR_EQUAL(3, reload_count.load(std::memory_order_relaxed));
+  TEST_ASSERT_LESS_OR_EQUAL(6, reload_count.load(std::memory_order_relaxed));
+  timerDetachInterrupt(timer);
+}
+
+// ==================== Stop / Start ====================
+
+void timer_stop_start_test(void) {
+  timerStart(timer);
+  delay(100);
+  uint64_t val1 = timerRead(timer);
+  TEST_ASSERT_GREATER_THAN(0, val1);
+
+  timerStop(timer);
+  uint64_t val_stopped = timerRead(timer);
+  delay(100);
+  uint64_t val_after = timerRead(timer);
+  // Timer should not advance while stopped
+  TEST_ASSERT_EQUAL(val_stopped, val_after);
+
+  timerStart(timer);
+  delay(100);
+  uint64_t val_resumed = timerRead(timer);
+  TEST_ASSERT_GREATER_THAN(val_after, val_resumed);
+}
+
+// ==================== Multiple Timers ====================
+
+void timer_multiple_test(void) {
+  // End the default timer from setUp
+  timerEnd(timer);
+
+  hw_timer_t *t1 = timerBegin(TIMER_FREQUENCY);
+  hw_timer_t *t2 = timerBegin(TIMER_FREQUENCY / 2);
+  TEST_ASSERT_NOT_NULL(t1);
+  TEST_ASSERT_NOT_NULL(t2);
+
+  timerRestart(t1);
+  timerRestart(t2);
+  timerStart(t1);
+  timerStart(t2);
+
+  delay(500);
+
+  uint64_t v1 = timerRead(t1);
+  uint64_t v2 = timerRead(t2);
+
+  // t1 at 4MHz for 500ms ~ 2000000, t2 at 2MHz for 500ms ~ 1000000
+  TEST_ASSERT_INT_WITHIN(200000, 2000000, v1);
+  TEST_ASSERT_INT_WITHIN(100000, 1000000, v2);
+
+  timerEnd(t1);
+  timerEnd(t2);
+
+  // Re-init the default timer for tearDown
+  timer = timerBegin(TIMER_FREQUENCY);
+}
+
+// ==================== Functional (std::function) callbacks ====================
+
+static std::atomic<int> functional_count{0};
+static std::atomic<int> functional_first_count{0};
+static std::atomic<int> functional_second_count{0};
+
+void timer_functional_interrupt_test(void) {
+  functional_count = 0;
+  timerAttachInterrupt(timer, [&]() {
+    functional_count.fetch_add(1, std::memory_order_relaxed);
+  });
+  timerAlarm(timer, TIMER_FREQUENCY / 4, true, 0);
+  timerStart(timer);
+
+  delay(1100);
+  timerStop(timer);
+
+  TEST_ASSERT_GREATER_OR_EQUAL(3, functional_count.load(std::memory_order_relaxed));
+  TEST_ASSERT_LESS_OR_EQUAL(6, functional_count.load(std::memory_order_relaxed));
+}
+
+void timer_functional_reattach_test(void) {
+  functional_first_count = 0;
+  functional_second_count = 0;
+
+  timerAttachInterrupt(timer, [&]() {
+    functional_first_count.fetch_add(1, std::memory_order_relaxed);
+  });
+  timerAlarm(timer, TIMER_FREQUENCY / 4, true, 0);
+  timerStart(timer);
+
+  delay(600);
+  TEST_ASSERT_GREATER_THAN(0, functional_first_count.load(std::memory_order_relaxed));
+
+  timerAttachInterrupt(timer, [&]() {
+    functional_second_count.fetch_add(1, std::memory_order_relaxed);
+  });
+
+  int first_frozen = functional_first_count.load(std::memory_order_relaxed);
+  delay(600);
+  timerStop(timer);
+
+  TEST_ASSERT_EQUAL(first_frozen, functional_first_count.load(std::memory_order_relaxed));
+  TEST_ASSERT_GREATER_THAN(0, functional_second_count.load(std::memory_order_relaxed));
+}
+
+void timer_functional_detach_test(void) {
+  functional_count = 0;
+  timerAttachInterrupt(timer, [&]() {
+    functional_count.fetch_add(1, std::memory_order_relaxed);
+  });
+  timerAlarm(timer, TIMER_FREQUENCY / 4, true, 0);
+  timerStart(timer);
+
+  delay(600);
+  TEST_ASSERT_GREATER_THAN(0, functional_count.load(std::memory_order_relaxed));
+
+  timerDetachInterrupt(timer);
+  int frozen = functional_count.load(std::memory_order_relaxed);
+  delay(600);
+  timerStop(timer);
+
+  TEST_ASSERT_EQUAL(frozen, functional_count.load(std::memory_order_relaxed));
+}
+
+void setup() {
   Serial.begin(115200);
   while (!Serial) {
-    ;
+    delay(10);
   }
 
   UNITY_BEGIN();
   RUN_TEST(timer_read_test);
   RUN_TEST(timer_interrupt_test);
+  RUN_TEST(timer_functional_interrupt_test);
+  RUN_TEST(timer_functional_reattach_test);
+  RUN_TEST(timer_functional_detach_test);
   RUN_TEST(timer_divider_test);
+  RUN_TEST(timer_oneshot_test);
+  RUN_TEST(timer_auto_reload_test);
+  RUN_TEST(timer_stop_start_test);
+  RUN_TEST(timer_multiple_test);
 #if !CONFIG_IDF_TARGET_ESP32
   RUN_TEST(timer_clock_select_test);
 #endif

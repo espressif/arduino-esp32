@@ -25,6 +25,7 @@ static const uint8_t SDA = 8;
 static const uint8_t SCL = 10;
 
 static const uint8_t VBAT = 3;
+#define BAT_VOLT_PIN VBAT
 
 static const uint8_t SCK = 1;
 static const uint8_t MISO = 0;

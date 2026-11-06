@@ -1,9 +1,11 @@
+import argparse
 import json
 import logging
 import sys
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+from collections import defaultdict
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s', stream=sys.stderr)
@@ -12,23 +14,236 @@ SUCCESS_SYMBOL = ":white_check_mark:"
 FAILURE_SYMBOL = ":x:"
 ERROR_SYMBOL = ":fire:"
 
-# Load the JSON file passed as argument to the script
-with open(sys.argv[1], "r") as f:
+CACHE_STALE_DAYS = 7
+
+
+def _natural_sort_key(s):
+    """Sort key that treats embedded numbers numerically (e.g. 32 < 128 < 1024)."""
+    return [int(part) if part.isdigit() else part.lower() for part in re.split(r'(\d+)', s)]
+
+
+def _display_target(target):
+    """Format target name for display (e.g. 'esp32s3' -> 'ESP32-S3')."""
+    if target == "esp32":
+        return target.upper()
+    return target.replace("esp32", "esp32-").upper()
+
+
+def _junit_status(junit):
+    """Return (label, symbol) from a JUnit status dict, or default to Success."""
+    if junit and junit["errors"] > 0:
+        return "Error", ERROR_SYMBOL
+    if junit and junit["failures"] > 0:
+        return "Failure", FAILURE_SYMBOL
+    return "Success", SUCCESS_SYMBOL
+
+
+def _load_previous_results(path):
+    """Load previous test_results.json; return its dict or {} on any error."""
+    if not path:
+        return {}
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return {}
+        return data
+    except (OSError, json.JSONDecodeError) as e:
+        logging.debug(f"Could not read previous results from {path}: {e}")
+        return {}
+
+
+def _load_build_failure_cells(path):
+    """Load per-cell build failures: set of (platform, test_name, target)."""
+    if not path or not os.path.isfile(path):
+        return set()
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            return set()
+        cells = set()
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            platform = item.get("platform")
+            target = item.get("target")
+            sketch = item.get("sketch")
+            if platform and target and sketch:
+                cells.add((platform, sketch, target))
+        return cells
+    except (OSError, json.JSONDecodeError) as e:
+        logging.debug(f"Could not read build failure cells from {path}: {e}")
+        return set()
+
+
+def _is_cache_fresh(entry):
+    """Return True if the cache entry timestamp is within CACHE_STALE_DAYS."""
+    if not entry or "timestamp" not in entry:
+        return False
+    try:
+        ts = datetime.fromisoformat(entry["timestamp"])
+        # Make timezone-aware if naive (assume UTC)
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - ts) < timedelta(days=CACHE_STALE_DAYS)
+    except (ValueError, TypeError) as e:
+        logging.debug(f"Failed to parse cache timestamp: {e}")
+        return False
+
+
+def _make_cache_entry(total, failures, commit_sha):
+    """Build a fresh cache entry dict for a validation test cell."""
+    return {
+        "total": total,
+        "failures": failures,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "commit_sha": commit_sha,
+    }
+
+
+def _render_cached_cell(entry):
+    """Return the markdown cell text for a cached (stale-runner) result."""
+    total = entry.get("total", 0)
+    failures = entry.get("failures", 0)
+    passed = total - failures
+    symbol = FAILURE_SYMBOL if failures > 0 else SUCCESS_SYMBOL
+    return f"|{passed}/{total} {symbol}\\*"
+
+
+def _parse_performance_json(data, test_name_from_path=None):
+    """
+    Parse performance result JSON in canonical form only.
+    See .github/CI_README.md (Performance test result format).
+    Returns dict with test_name, runs, settings, metrics; or None if invalid.
+    """
+    if not isinstance(data, dict) or "test_name" not in data or "runs" not in data or "metrics" not in data:
+        logging.warning("Performance JSON missing test_name, runs, or metrics (canonical format required), skipping")
+        return None
+    runs = int(data["runs"])
+    if runs <= 0:
+        return None
+    metrics = data["metrics"]
+    if not metrics:
+        return None
+    test_name = test_name_from_path if test_name_from_path else data["test_name"]
+    return {
+        "test_name": test_name,
+        "runs": runs,
+        "settings": data.get("settings", ""),
+        "metrics": list(metrics),
+    }
+
+
+def _collect_and_aggregate_performance(perf_dir):
+    """
+    Find all result_*.json under perf_dir; collect by (target, test_name).
+    Each file's metric "value" is already the average from the test. Only when
+    multiple files exist for the same (target, test_name) do we compute a
+    weighted average across files. Otherwise we use the single file's values.
+    Path structure expected: .../<test_name>/<target>/result_*.json
+    """
+    by_target_test = defaultdict(list)  # (target, test_name) -> list of {runs, settings, metrics}
+
+    for root, _dirs, files in os.walk(perf_dir):
+        for f in files:
+            if not f.startswith("result_") or not f.endswith(".json"):
+                continue
+            path = os.path.join(root, f)
+            try:
+                with open(path, "r") as fp:
+                    data = json.load(fp)
+            except (json.JSONDecodeError, OSError) as e:
+                logging.warning("Failed to read %s: %s", path, e)
+                continue
+
+            parts = os.path.normpath(path).split(os.sep)
+            try:
+                target = parts[-2]
+                test_folder = parts[-3]
+            except IndexError:
+                target = "unknown"
+                test_folder = "unknown"
+
+            norm = _parse_performance_json(data, test_name_from_path=test_folder)
+            if norm is None:
+                continue
+
+            key = (target, norm["test_name"])
+            # Store as {runs, settings, metrics: {name: {value, unit}}}
+            metrics_dict = {}
+            for m in norm["metrics"]:
+                metrics_dict[m["name"]] = {"value": m["value"], "unit": m.get("unit", "")}
+            by_target_test[key].append({
+                "runs": norm["runs"],
+                "settings": norm.get("settings", ""),
+                "metrics": metrics_dict,
+            })
+
+    # Build output: one entry per (target, test_name). Single file -> use its values; multiple -> weighted average.
+    result = {}
+    for key, samples in by_target_test.items():
+        if not samples:
+            continue
+        total_runs = sum(s["runs"] for s in samples)
+        settings = samples[0].get("settings", "")
+        if len(samples) == 1:
+            # Use the test's values directly (already averages)
+            metrics_out = {}
+            for mname, m in samples[0]["metrics"].items():
+                metrics_out[mname] = {"avg": round(m["value"], 2), "unit": m.get("unit", "")}
+        else:
+            # Multiple files: weighted average per metric
+            metrics_out = {}
+            all_metric_names = set()
+            for s in samples:
+                all_metric_names.update(s["metrics"].keys())
+            for mname in all_metric_names:
+                value_sum = 0.0
+                runs_sum = 0
+                unit = ""
+                for s in samples:
+                    if mname not in s["metrics"]:
+                        continue
+                    m = s["metrics"][mname]
+                    value_sum += m["value"] * s["runs"]
+                    runs_sum += s["runs"]
+                    if m.get("unit"):
+                        unit = m["unit"]
+                metrics_out[mname] = {"avg": round(value_sum / runs_sum, 2) if runs_sum else 0, "unit": unit}
+        result[key] = {"runs": total_runs, "settings": settings, "metrics": metrics_out}
+
+    return result
+
+
+parser = argparse.ArgumentParser(description="Generate runtime test results report from JUnit/unity JSON and optional performance data.")
+parser.add_argument("--results", required=True, help="Path to the unity_results.json file")
+parser.add_argument("--sha", default=None, help="Commit SHA (falls back to GITHUB_SHA env var)")
+parser.add_argument("--perf-dir", default=None, help="Path to directory containing performance result_*.json files")
+parser.add_argument("--previous-results", default=None, help="Path to previous test_results.json (used to seed the result cache)")
+parser.add_argument(
+    "--build-failure-cells",
+    default=None,
+    help="Path to build_failure_cells.json (cells with no build artifact; show errors, not cache)",
+)
+args = parser.parse_args()
+
+with open(args.results, "r") as f:
     data = json.load(f)
     tests = sorted(data["stats"]["suite_details"], key=lambda x: x["name"])
 
-# Get commit SHA from command line argument or environment variable
-commit_sha = None
-if len(sys.argv) < 2 or len(sys.argv) > 3:
-    print(f"Usage: python {sys.argv[0]} <test_results.json> [commit_sha]", file=sys.stderr)
-    sys.exit(1)
-elif len(sys.argv) == 3:  # Commit SHA is provided as argument
-    commit_sha = sys.argv[2]
-elif "GITHUB_SHA" in os.environ:  # Commit SHA is provided as environment variable
-    commit_sha = os.environ["GITHUB_SHA"]
-else:  # Commit SHA is not provided
-    print("Commit SHA is not provided. Please provide it as an argument or set the GITHUB_SHA environment variable.", file=sys.stderr)
-    sys.exit(1)
+commit_sha = args.sha or os.environ.get("GITHUB_SHA")
+performance_data_dir = args.perf_dir.rstrip(os.sep) if args.perf_dir else None
+if not commit_sha:
+    parser.error("Commit SHA is required: provide via --sha or set the GITHUB_SHA environment variable.")
+
+# Load persistent result cache from previous run
+previous_results = _load_previous_results(args.previous_results)
+raw_result_cache = previous_results.get("cache", {})
+result_cache = raw_result_cache if isinstance(raw_result_cache, dict) else {}        # platform -> test_name -> target -> entry
+raw_perf_cache = previous_results.get("perf_cache", {})
+perf_cache = raw_perf_cache if isinstance(raw_perf_cache, dict) else {}     # test_name -> target -> entry
+build_failure_cells = _load_build_failure_cells(args.build_failure_cells)
 
 # Generate the table
 
@@ -63,19 +278,12 @@ except (json.JSONDecodeError, KeyError) as e:
     platform_targets = {"hardware": [], "wokwi": [], "qemu": []}
 
 proc_test_data = {}
-
-# Build executed tests map and collect targets
-executed_tests_index = {}  # {(platform, target, test_name): {tests, failures, errors}}
-executed_run_counts = {}   # {(platform, target, test_name): int}
+perf_junit_status = {}  # (target, test_name) -> {"tests": int, "failures": int, "errors": int}
 
 for test in tests:
-    if test["name"].startswith("performance_"):
-        continue
-
     try:
         test_type, platform, target, rest = test["name"].split("_", 3)
     except ValueError as e:
-        # Unexpected name, skip
         test_name = test.get("name", "unknown")
         logging.warning(f"Skipping test with unexpected name format '{test_name}': {e}")
         continue
@@ -83,6 +291,15 @@ for test in tests:
     # Remove an optional trailing numeric index (multi-FQBN builds)
     m = re.match(r"(.+?)(\d+)?$", rest)
     test_name = m.group(1) if m else rest
+
+    if test_type == "performance":
+        key = (target, test_name)
+        if key not in perf_junit_status:
+            perf_junit_status[key] = {"tests": 0, "failures": 0, "errors": 0}
+        perf_junit_status[key]["tests"] += test["tests"]
+        perf_junit_status[key]["failures"] += test["failures"]
+        perf_junit_status[key]["errors"] += test["errors"]
+        continue
 
     if platform not in proc_test_data:
         proc_test_data[platform] = {}
@@ -101,10 +318,8 @@ for test in tests:
     proc_test_data[platform][test_name][target]["failures"] += test["failures"]
     proc_test_data[platform][test_name][target]["errors"] += test["errors"]
 
-    executed_tests_index[(platform, target, test_name)] = proc_test_data[platform][test_name][target]
-    executed_run_counts[(platform, target, test_name)] = executed_run_counts.get((platform, target, test_name), 0) + 1
-
 # Render only executed tests grouped by platform/target/test
+any_cached_cell = False
 for platform in proc_test_data:
     print("")
     print(f"#### {platform.capitalize()}")
@@ -120,25 +335,35 @@ for platform in proc_test_data:
     print("Test", end="")
 
     for target in target_list:
-        # Make target name uppercase and add hyfen if not esp32
-        display_target = target
-        if target != "esp32":
-            display_target = target.replace("esp32", "esp32-")
-
-        print(f"|{display_target.upper()}", end="")
+        print(f"|{_display_target(target)}", end="")
 
     print("")
     print("-" + "|:-:" * len(target_list))
 
     platform_executed = proc_test_data.get(platform, {})
+    plat_cache = result_cache.setdefault(platform, {})
     for test_name in sorted(platform_executed.keys()):
+        test_cache = plat_cache.setdefault(test_name, {})
         print(f"{test_name}", end="")
         for target in target_list:
             executed_cell = platform_executed.get(test_name, {}).get(target)
             if executed_cell:
                 if executed_cell["errors"] > 0:
-                    print(f"|Error {ERROR_SYMBOL}", end="")
+                    # Test did not run — cache only when runner unavailable, not when build failed
+                    cached = test_cache.get(target)
+                    build_failed_cell = (platform, test_name, target) in build_failure_cells
+                    if not build_failed_cell and cached and _is_cache_fresh(cached):
+                        print(_render_cached_cell(cached), end="")
+                        any_cached_cell = True
+                    else:
+                        print(f"|Error {ERROR_SYMBOL}", end="")
                 else:
+                    # Test ran successfully (pass or fail) — update cache
+                    test_cache[target] = _make_cache_entry(
+                        executed_cell["total"],
+                        executed_cell["failures"],
+                        commit_sha,
+                    )
                     print(f"|{executed_cell['total']-executed_cell['failures']}/{executed_cell['total']}", end="")
                     if executed_cell["failures"] > 0:
                         print(f" {FAILURE_SYMBOL}", end="")
@@ -148,8 +373,84 @@ for platform in proc_test_data:
                 print("|-", end="")
         print("")
 
+# Performance Tests section (when performance_data_dir is provided)
+by_target_test = {}
+if performance_data_dir and os.path.isdir(performance_data_dir):
+    by_target_test = _collect_and_aggregate_performance(performance_data_dir)
+
+# Merge JUnit status with metric data. Also include tests that appear in
+# JUnit results but have no result_*.json files (failed/errored before
+# producing output).
+tests_with_targets = defaultdict(dict)  # test_name -> { target: entry }
+for (target, test_name), entry in by_target_test.items():
+    tests_with_targets[test_name][target] = entry
+for (target, test_name) in perf_junit_status:
+    if target not in tests_with_targets.get(test_name, {}):
+        tests_with_targets[test_name][target] = None
+
+if tests_with_targets:
+    print("")
+    print("### Performance Tests")
+    print("")
+
+    for test_name in sorted(tests_with_targets.keys()):
+        print(f"- **{test_name}**")
+        test_perf_cache = perf_cache.setdefault(test_name, {})
+        for target in sorted(tests_with_targets[test_name].keys()):
+            entry = tests_with_targets[test_name][target]
+            junit = perf_junit_status.get((target, test_name))
+            if junit and junit["errors"] > 0:
+                # Test did not run — cache only when runner unavailable, not when build failed
+                cached = test_perf_cache.get(target)
+                cached_status = cached.get("status") if cached else None
+                build_failed_cell = ("hardware", test_name, target) in build_failure_cells
+                if not build_failed_cell and cached and _is_cache_fresh(cached) and cached_status:
+                    status_label = cached_status.capitalize()
+                    status_symbol = SUCCESS_SYMBOL if cached_status == "success" else FAILURE_SYMBOL
+                    print(f"  - {_display_target(target)} - {status_label} - {status_symbol}\\*")
+                    any_cached_cell = True
+                    if cached.get("metrics"):
+                        settings_str = cached.get("settings") or ""
+                        runs = cached.get("runs", 0)
+                        runs_line = f"{settings_str} - {runs} runs" if settings_str else f"{runs} runs"
+                        print(f"    - {runs_line} (cached):")
+                        for mname in sorted(cached["metrics"].keys(), key=_natural_sort_key):
+                            agg = cached["metrics"][mname]
+                            avg = agg["avg"]
+                            unit = agg.get("unit", "")
+                            unit_str = f" {unit}" if unit else ""
+                            print(f"      - {mname}: {avg}{unit_str}")
+                else:
+                    print(f"  - {_display_target(target)} - Error - {ERROR_SYMBOL}")
+            else:
+                status_label, status_symbol = _junit_status(junit)
+                print(f"  - {_display_target(target)} - {status_label} - {status_symbol}")
+                # Update performance cache entry
+                perf_entry = {
+                    "status": status_label.lower(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "commit_sha": commit_sha,
+                }
+                if entry:
+                    settings_str = entry.get("settings") or ""
+                    runs = entry["runs"]
+                    runs_line = f"{settings_str} - {runs} runs" if settings_str else f"{runs} runs"
+                    print(f"    - {runs_line}:")
+                    for mname in sorted(entry["metrics"].keys(), key=_natural_sort_key):
+                        agg = entry["metrics"][mname]
+                        avg = agg["avg"]
+                        unit = agg.get("unit", "")
+                        unit_str = f" {unit}" if unit else ""
+                        print(f"      - {mname}: {avg}{unit_str}")
+                    perf_entry.update({"runs": entry["runs"], "settings": entry.get("settings", ""), "metrics": entry["metrics"]})
+                test_perf_cache[target] = perf_entry
+        print("")
+
 print("\n")
-print(f"Generated on: {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}")
+if any_cached_cell:
+    print("> \\* Result from last successful run (runner currently unavailable)")
+    print("")
+print(f"Generated on: {datetime.now(timezone.utc).strftime('%Y/%m/%d %H:%M:%S UTC')}")
 print("")
 
 try:
@@ -168,10 +469,22 @@ except KeyError as e:
 # Save test results to JSON file
 results_data = {
     "commit_sha": commit_sha,
-    "tests_failed": os.environ["IS_FAILING"] == "true",
+    "tests_failed": os.environ.get("IS_FAILING") == "true",
     "test_data": proc_test_data,
-    "generated_at": datetime.now().isoformat()
+    "generated_at": datetime.now(timezone.utc).isoformat(),
+    "cache": result_cache,
+    "perf_cache": perf_cache,
 }
+if tests_with_targets:
+    perf_out = {}
+    for test_name, targets in tests_with_targets.items():
+        for target, entry in targets.items():
+            status_label, _ = _junit_status(perf_junit_status.get((target, test_name)))
+            perf_entry = {"status": status_label.lower()}
+            if entry:
+                perf_entry.update({"runs": entry["runs"], "settings": entry["settings"], "metrics": entry["metrics"]})
+            perf_out[f"{target}_{test_name}"] = perf_entry
+    results_data["performance_data"] = perf_out
 
 with open("test_results.json", "w") as f:
     json.dump(results_data, f, indent=2)

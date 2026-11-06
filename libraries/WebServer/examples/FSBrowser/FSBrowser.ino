@@ -22,6 +22,7 @@
   access the sample web page at http://esp32fs.local
   edit the page by going to http://esp32fs.local/edit
 */
+#include <Arduino.h>
 #include <WiFi.h>
 #include <NetworkClient.h>
 #include <WebServer.h>

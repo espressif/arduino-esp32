@@ -95,15 +95,15 @@ public:
    */
   // Add an AC measurement type for selected phase type
   bool addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type);
-  // Set the AC measurement value for the given measurement type and phase type (uint16_t for voltage, current and frequency, int32_t for power)
+  // Set the AC measurement value for the given measurement type and phase type (uint16_t for voltage, current and frequency, int16_t for power)
   bool setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type, int32_t value);
-  // Set the AC min and max value for the given measurement type and phase type (uint16_t for voltage, current and frequency, int32_t for power)
+  // Set the AC min and max value for the given measurement type and phase type (uint16_t for voltage, current and frequency, int16_t for power)
   bool setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type, int32_t min, int32_t max);
   // Set the AC multiplier and divisor for the given measurement type (common for all phases)
   bool setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, uint16_t multiplier, uint16_t divisor);
   // Set the AC power factor for the given phase type (-100 to 100 %)
   bool setACPowerFactor(ZIGBEE_AC_PHASE_TYPE phase_type, int8_t power_factor);
-  // Set the AC reporting interval for the given measurement type and phase type in seconds and delta (measurement change - uint16_t for voltage, current and frequency, int32_t for power)
+  // Set the AC reporting interval for the given measurement type and phase type in seconds and delta (measurement change - uint16_t for voltage, current and frequency, int16_t for power)
   bool
     setACReporting(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type, uint16_t min_interval, uint16_t max_interval, int32_t delta);
   // Report the AC measurement value for the given measurement type and phase type

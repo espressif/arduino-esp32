@@ -1,4 +1,5 @@
 //This example demonstrates the ESP RainMaker with a custom Air Cooler device
+#include <Arduino.h>
 #include "RMaker.h"
 #include "WiFi.h"
 #include "WiFiProv.h"

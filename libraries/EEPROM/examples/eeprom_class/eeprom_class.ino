@@ -8,6 +8,7 @@
   converted to nvs by lbernstone - 06/22/2019
 */
 
+#include <Arduino.h>
 #include "EEPROM.h"
 
 // Instantiate eeprom objects with parameter/argument names and sizes

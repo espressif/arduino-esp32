@@ -23,7 +23,7 @@ function git_remove_from_pages {
     local sha
     local message
 
-    info=$(curl -s -k -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.object+json" -X GET "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path?ref=gh-pages")
+    info=$(curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.object+json" -X GET "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path?ref=gh-pages")
     type=$(echo "$info" | jq -r '.type')
 
     if [ ! "$type" == "file" ]; then
@@ -38,7 +38,7 @@ function git_remove_from_pages {
     sha=$(echo "$info" | jq -r '.sha')
     message="Deleting "$(basename "$path")
     local json="{\"branch\":\"gh-pages\",\"message\":\"$message\",\"sha\":\"$sha\"}"
-    echo "$json" | curl -s -k -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.raw+json" -X DELETE --data @- "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path"
+    echo "$json" | curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.raw+json" -X DELETE --data @- "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path"
 }
 
 function git_upload_to_pages {
@@ -56,7 +56,7 @@ function git_upload_to_pages {
     local sha=""
     local content=""
 
-    info=$(curl -s -k -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.object+json" -X GET "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path?ref=gh-pages")
+    info=$(curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.object+json" -X GET "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path?ref=gh-pages")
     type=$(echo "$info" | jq -r '.type')
     message=$(basename "$path")
 
@@ -74,7 +74,7 @@ function git_upload_to_pages {
     content=$(base64 -i "$src")
     data="{\"branch\":\"gh-pages\",\"message\":\"$message\",\"content\":\"$content\"$sha}"
 
-    echo "$data" | curl -s -k -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.raw+json" -X PUT --data @- "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path"
+    echo "$data" | curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.raw+json" -X PUT --data @- "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path"
 }
 
 function git_safe_upload_to_pages {

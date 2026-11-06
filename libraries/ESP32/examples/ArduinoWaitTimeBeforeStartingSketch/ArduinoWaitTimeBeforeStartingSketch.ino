@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 // macro SET_TIME_BEFORE_STARTING_SKETCH_MS(time_ms) can set a time in milliseconds
 // before the sketch would start its execution. It gives the user time to open the Serial Monitor
 

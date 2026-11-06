@@ -2,6 +2,10 @@
 
 set -e
 
+# Source centralized SoC configuration
+SCRIPTS_DIR="./.github/scripts"
+source "${SCRIPTS_DIR}/socs_config.sh"
+
 export ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
 
 function build {
@@ -17,10 +21,12 @@ function build {
     local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
     local BUILD_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
 
-    local args=("-ai" "$ARDUINO_IDE_PATH" "-au" "$ARDUINO_USR_PATH" "-t" "$target")
+    local args=("-au" "$ARDUINO_USR_PATH" "-t" "$target")
 
     if [ "$OS_IS_LINUX" == "1" ]; then
-        args+=("-p" "$ARDUINO_ESP32_PATH/libraries" "-i" "$chunk_index" "-m" "$chunks_cnt" "-d" "$log_level")
+        # Membership is pre-assigned (chunk_N.txt). -i names cli_compile_N.json;
+        # chunk_build does not re-slice when -f is set.
+        args+=("-p" "$ARDUINO_ESP32_PATH/libraries" "-i" "$chunk_index" "-m" "1" "-d" "$log_level")
         if [ -n "$sketches_file" ]; then
             args+=("-f" "$sketches_file")
         fi
@@ -47,8 +53,7 @@ function build {
     fi
 }
 
-if [ -z "$GITHUB_WORKSPACE" ]; then
-    export GITHUB_WORKSPACE="$PWD"
+if [ -z "$GITHUB_REPOSITORY" ]; then
     export GITHUB_REPOSITORY="espressif/arduino-esp32"
 fi
 
@@ -71,8 +76,7 @@ fi
 #echo "Updating submodules ..."
 #git -C "$GITHUB_WORKSPACE" submodule update --init --recursive > /dev/null 2>&1
 
-SCRIPTS_DIR="./.github/scripts"
-source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+source "${SCRIPTS_DIR}/env.sh"
 source "${SCRIPTS_DIR}/install-arduino-core-esp32.sh"
 
 SKETCHES_ESP32=(
@@ -84,20 +88,24 @@ SKETCHES_ESP32=(
 #create sizes_file
 sizes_file="$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
 
+if [ "$OS_IS_LINUX" == "1" ]; then
+    export SKETCH_TIMES_FILE="${GITHUB_WORKSPACE:-.}/sketch_times_${CHUNK_INDEX}.jsonl"
+    : > "$SKETCH_TIMES_FILE"
+    if [ -n "$SKETCHES_FILE" ] && [ ! -f "$SKETCHES_FILE" ]; then
+        echo "No sketches assigned to $SKETCHES_FILE"
+        : > "$SKETCHES_FILE"
+    fi
+fi
+
 if [ "$BUILD_LOG" -eq 1 ]; then
     #create sizes_file and echo start of JSON array with "boards" key
     echo "{\"boards\": [" > "$sizes_file"
 fi
 
-#build sketches for different targets
-build "esp32c5" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32p4" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32s3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32s2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32c3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32c6" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32h2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32"   "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
+#build sketches for different targets (using centralized config)
+for target in "${CORE_SOCS[@]}"; do
+    build "$target" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
+done
 
 if [ "$BUILD_LOG" -eq 1 ]; then
     #remove last comma from the last JSON object

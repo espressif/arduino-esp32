@@ -1,0 +1,35 @@
+name: "Backlog Management Bot"
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # Run daily at 4 AM UTC
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Run without modifying issues"
+        required: false
+        default: "0"
+
+permissions: 
+  issues: write
+  discussions: write
+  contents: read
+
+jobs:
+  backlog-bot:
+    name: "Check issues"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run backlog cleanup script
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const script = require('./.github/scripts/backlog-cleanup.js');
+            const dryRun = "${{ github.event.inputs.dry-run }}";
+            await script({ github, context, dryRun });

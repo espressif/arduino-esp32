@@ -150,7 +150,7 @@ This function will return ``true`` if successful, ``false`` otherwise.
 setACMeasurement
 ^^^^^^^^^^^^^^^^
 
-Sets the AC measurement value for a specific measurement type and phase.
+Sets the AC measurement value for a specific measurement type and phase. For power (``ZIGBEE_AC_MEASUREMENT_TYPE_POWER``) the value is ``int16_t``; for other measurement types (voltage, current, power factor, frequency) the value is ``uint16_t``.
 
 .. code-block:: arduino
 
@@ -158,14 +158,14 @@ Sets the AC measurement value for a specific measurement type and phase.
 
 * ``measurement_type`` - AC measurement type constant (ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR, ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY)
 * ``phase_type`` - Phase type constant (ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC, ZIGBEE_AC_PHASE_TYPE_A, ZIGBEE_AC_PHASE_TYPE_B, ZIGBEE_AC_PHASE_TYPE_C)
-* ``value`` - Measurement value
+* ``value`` - Measurement value (``int16_t`` for power, ``uint16_t`` for voltage, current, power factor, frequency)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
 setACMinMaxValue
 ^^^^^^^^^^^^^^^^
 
-Sets the minimum and maximum values for an AC measurement type and phase.
+Sets the minimum and maximum values for an AC measurement type and phase. For power (``ZIGBEE_AC_MEASUREMENT_TYPE_POWER``) min/max are ``int16_t``; for other measurement types (voltage, current, power factor, frequency) they are ``uint16_t``.
 
 .. code-block:: arduino
 
@@ -173,8 +173,8 @@ Sets the minimum and maximum values for an AC measurement type and phase.
 
 * ``measurement_type`` - AC measurement type constant (ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR, ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY)
 * ``phase_type`` - Phase type constant (ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC, ZIGBEE_AC_PHASE_TYPE_A, ZIGBEE_AC_PHASE_TYPE_B, ZIGBEE_AC_PHASE_TYPE_C)
-* ``min`` - Minimum value
-* ``max`` - Maximum value
+* ``min`` - Minimum value (``int16_t`` for power, ``uint16_t`` for voltage, current, power factor, frequency)
+* ``max`` - Maximum value (``int16_t`` for power, ``uint16_t`` for voltage, current, power factor, frequency)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -210,7 +210,7 @@ This function will return ``true`` if successful, ``false`` otherwise.
 setACReporting
 ^^^^^^^^^^^^^^
 
-Sets the reporting configuration for AC measurements.
+Sets the reporting configuration for AC measurements. For power (``ZIGBEE_AC_MEASUREMENT_TYPE_POWER``) delta is ``int16_t``; for other measurement types (voltage, current, power factor, frequency) delta is ``uint16_t``.
 
 .. code-block:: arduino
 
@@ -220,7 +220,7 @@ Sets the reporting configuration for AC measurements.
 * ``phase_type`` - Phase type constant (ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC, ZIGBEE_AC_PHASE_TYPE_A, ZIGBEE_AC_PHASE_TYPE_B, ZIGBEE_AC_PHASE_TYPE_C)
 * ``min_interval`` - Minimum reporting interval in seconds
 * ``max_interval`` - Maximum reporting interval in seconds
-* ``delta`` - Minimum change required to trigger a report
+* ``delta`` - Minimum change required to trigger a report (``int16_t`` for power, ``uint16_t`` for voltage, current, power factor, frequency)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

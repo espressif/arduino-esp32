@@ -70,3 +70,21 @@ void Ticker::_static_callback(void *arg) {
     _this->_callback_function();
   }
 }
+
+void Ticker::restart(float seconds) {
+  if (active()) {
+    esp_timer_restart(_timer, 1000000ULL * seconds);
+  }
+}
+
+void Ticker::restart_ms(uint64_t milliseconds) {
+  if (active()) {
+    esp_timer_restart(_timer, 1000ULL * milliseconds);
+  }
+}
+
+void Ticker::restart_us(uint64_t micros) {
+  if (active()) {
+    esp_timer_restart(_timer, micros);
+  }
+}

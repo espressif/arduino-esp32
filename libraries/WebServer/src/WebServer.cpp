@@ -30,8 +30,12 @@
 #include "WebServer.h"
 #include "FS.h"
 #include "detail/RequestHandlersImpl.h"
-#include "MD5Builder.h"
 #include "SHA1Builder.h"
+#if WEBSERVER_DIGEST_AUTH
+#include "MD5Builder.h"
+#include "SHA2Builder.h"
+#include "HMACBuilder.h"
+#endif
 #include "base64.h"
 
 static const char AUTHORIZATION_HEADER[] = "Authorization";
@@ -55,6 +59,9 @@ WebServer::~WebServer() {
   _clearRequestHeaders();
   _clearResponseHeaders();
   delete _chain;
+#if WEBSERVER_DIGEST_AUTH
+  forced_memzero(_digestSecret, sizeof(_digestSecret));
+#endif
 
   RequestHandler *handler = _firstHandler;
   while (handler) {
@@ -77,6 +84,7 @@ void WebServer::begin(uint16_t port) {
   _server.setNoDelay(true);
 }
 
+#if WEBSERVER_DIGEST_AUTH
 String WebServer::_extractParam(String &authReq, const String &param, const char delimit) {
   int _begin = authReq.indexOf(param);
   if (_begin == -1) {
@@ -92,6 +100,7 @@ static String md5str(String &in) {
   md5.calculate();
   return md5.toString();
 }
+#endif
 
 bool WebServer::authenticateBasicSHA1(const char *_username, const char *_sha1Base64orHex) {
   return WebServer::authenticate([_username, _sha1Base64orHex](HTTPAuthMethod mode, String username, String params[]) -> String * {
@@ -143,13 +152,21 @@ bool WebServer::authenticateBasicSHA1(const char *_username, const char *_sha1Ba
 
 bool WebServer::authenticate(const char *_username, const char *_password) {
   return WebServer::authenticate([_username, _password](HTTPAuthMethod mode, String username, String params[]) -> String * {
-    (void)mode;
     (void)params;
+    // Plaintext-password auth only applies to Basic/Digest. A bare or unknown
+    // Authorization scheme must not be treated as a successful username match.
+    if (mode != BASIC_AUTH && mode != DIGEST_AUTH) {
+      return NULL;
+    }
     return username.equalsConstantTime(_username) ? new String(_password) : NULL;
   });
 }
 
 bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
+#if WEBSERVER_DIGEST_AUTH
+  _digestNonceStale = false;
+#endif
+
   if (!hasHeader(FPSTR(AUTHORIZATION_HEADER))) {
     return false;
   }
@@ -191,6 +208,7 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     log_v("Authentication %s", ret ? "Success" : "Failed");
     return ret;
   } else if (authReq.startsWith(AuthTypeDigest)) {
+#if WEBSERVER_DIGEST_AUTH
     log_v("Trying to authenticate using Digest Auth");
     authReq = authReq.substring(7);
     log_v("%s", authReq.c_str());
@@ -200,6 +218,13 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     String _realm = _extractParam(authReq, F("realm=\""), '\"');
     String _uri = _extractParam(authReq, F("uri=\""), '\"');
     if (!_username.length()) {
+      goto exf;
+    }
+    // RFC 7616 binds the digest "uri" to the request-target, including any
+    // query string. Comparing only the path would let a captured header for
+    // /path?x=1 authenticate /path?x=2.
+    if (_uri != _currentRequestTarget) {
+      log_e("Authentication Failed: URI mismatch");
       goto exf;
     }
 
@@ -224,10 +249,6 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
       goto exf;
     }
 
-    if ((_opaque != _sopaque) || (_nonce != _snonce) || (_realm != _srealm)) {
-      goto exf;
-    }
-
     // parameters for the RFC 2617 newer Digest
     String _nc, _cnonce;
     if (authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
@@ -236,19 +257,8 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     }
 
     log_v("Hash of user:realm:pass=%s", _H1.c_str());
-    String _H2 = "";
-    if (_currentMethod == HTTP_GET) {
-      _H2 = md5str(String(F("GET:")) + _uri);
-    } else if (_currentMethod == HTTP_POST) {
-      _H2 = md5str(String(F("POST:")) + _uri);
-    } else if (_currentMethod == HTTP_PUT) {
-      _H2 = md5str(String(F("PUT:")) + _uri);
-    } else if (_currentMethod == HTTP_DELETE) {
-      _H2 = md5str(String(F("DELETE:")) + _uri);
-    } else {
-      _H2 = md5str(String(F("GET:")) + _uri);
-    }
-    log_v("Hash of GET:uri=%s", _H2.c_str());
+    String _H2 = md5str(String(http_method_str(_currentMethod)) + ':' + _currentRequestTarget);
+    log_v("Hash of method:uri=%s", _H2.c_str());
     String _responsecheck = "";
     if (authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
       _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _nc + ':' + _cnonce + F(":auth:") + _H2);
@@ -258,9 +268,26 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     authReq = "";
 
     log_v("The Proper response=%s", _responsecheck.c_str());
-    bool ret = _response == _responsecheck;
-    log_v("Authentication %s", ret ? "Success" : "Failed");
-    return ret;
+    if (!_response.equalsConstantTime(_responsecheck)) {
+      log_v("Authentication Failed");
+      return false;
+    }
+
+    // Credentials match the nonce the client sent. A signed nonce that is still
+    // within TTL is accepted even if another client has since been challenged.
+    // An expired or unknown nonce gets stale=true so the browser retries silently.
+    if (_isDigestNonceValid(_nonce) && _opaque.equalsConstantTime(_sopaque) && _realm.equalsConstantTime(_srealm)) {
+      log_v("Authentication Success");
+      return true;
+    }
+
+    _digestNonceStale = true;
+    log_v("Authentication Failed (stale nonce)");
+    return false;
+#else
+    log_v("Digest authentication is disabled (WEBSERVER_DIGEST_AUTH=0)");
+    goto exf;
+#endif
   } else if (authReq.length()) {
     // OTHER_AUTH
     log_v("Trying to authenticate using Other Auth, authReq=%s", authReq.c_str());
@@ -277,14 +304,108 @@ exf:
   return false;
 }
 
-String WebServer::_getRandomHexString() {
-  char buffer[33];  // buffer to hold 32 Hex Digit + /0
-  int i;
-  for (i = 0; i < 4; i++) {
-    sprintf(buffer + (i * 8), "%08lx", esp_random());
-  }
-  return String(buffer);
+#if WEBSERVER_DIGEST_AUTH
+static const size_t DIGEST_NONCE_TS_LEN = 4;
+static const size_t DIGEST_NONCE_RND_LEN = 4;
+static const size_t DIGEST_NONCE_MAC_LEN = 16;
+static const size_t DIGEST_NONCE_BIN_LEN = DIGEST_NONCE_TS_LEN + DIGEST_NONCE_RND_LEN + DIGEST_NONCE_MAC_LEN;
+static const size_t DIGEST_NONCE_HEX_LEN = DIGEST_NONCE_BIN_LEN * 2;
+static const char DIGEST_OPAQUE_LABEL[] = "WebServer-opaque";
+
+static void digestPutBe32(uint8_t *out, uint32_t value) {
+  out[0] = (uint8_t)(value >> 24);
+  out[1] = (uint8_t)(value >> 16);
+  out[2] = (uint8_t)(value >> 8);
+  out[3] = (uint8_t)value;
 }
+
+static uint32_t digestGetBe32(const uint8_t *in) {
+  return ((uint32_t)in[0] << 24) | ((uint32_t)in[1] << 16) | ((uint32_t)in[2] << 8) | (uint32_t)in[3];
+}
+
+void WebServer::_ensureDigestAuthMaterial() {
+  if (_digestSecretReady) {
+    return;
+  }
+
+  for (size_t i = 0; i < sizeof(_digestSecret); i += sizeof(uint32_t)) {
+    uint32_t rnd = esp_random();
+    size_t n = sizeof(_digestSecret) - i;
+    if (n > sizeof(rnd)) {
+      n = sizeof(rnd);
+    }
+    memcpy(_digestSecret + i, &rnd, n);
+  }
+
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(_digestSecret, sizeof(_digestSecret));
+  hmac.begin();
+  hmac.add(DIGEST_OPAQUE_LABEL);
+  hmac.calculate();
+  uint8_t mac[SHA2_256_HASH_SIZE];
+  hmac.getBytes(mac);
+  _sopaque = HEXBuilder::bytes2hex(mac, DIGEST_NONCE_MAC_LEN);
+  _digestSecretReady = true;
+}
+
+String WebServer::_makeDigestNonce() {
+  _ensureDigestAuthMaterial();
+
+  uint8_t msg[DIGEST_NONCE_TS_LEN + DIGEST_NONCE_RND_LEN];
+  digestPutBe32(msg, millis());
+  digestPutBe32(msg + DIGEST_NONCE_TS_LEN, esp_random());
+
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(_digestSecret, sizeof(_digestSecret));
+  hmac.begin();
+  hmac.add(msg, sizeof(msg));
+  hmac.calculate();
+  uint8_t mac[SHA2_256_HASH_SIZE];
+  hmac.getBytes(mac);
+
+  return HEXBuilder::bytes2hex(msg, sizeof(msg)) + HEXBuilder::bytes2hex(mac, DIGEST_NONCE_MAC_LEN);
+}
+
+bool WebServer::_isDigestNonceValid(const String &nonce) {
+  _ensureDigestAuthMaterial();
+
+  if (nonce.length() != DIGEST_NONCE_HEX_LEN || !HEXBuilder::isHexString(nonce)) {
+    return false;
+  }
+
+  uint8_t raw[DIGEST_NONCE_BIN_LEN];
+  if (HEXBuilder::hex2bytes(raw, sizeof(raw), nonce.c_str()) != sizeof(raw)) {
+    return false;
+  }
+
+  SHA256Builder sha256;
+  HMACBuilder hmac(&sha256);
+  hmac.setKey(_digestSecret, sizeof(_digestSecret));
+  hmac.begin();
+  hmac.add(raw, DIGEST_NONCE_TS_LEN + DIGEST_NONCE_RND_LEN);
+  hmac.calculate();
+  uint8_t mac[SHA2_256_HASH_SIZE];
+  hmac.getBytes(mac);
+
+  uint8_t diff = 0;
+  for (size_t i = 0; i < DIGEST_NONCE_MAC_LEN; i++) {
+    diff |= mac[i] ^ raw[DIGEST_NONCE_TS_LEN + DIGEST_NONCE_RND_LEN + i];
+  }
+  if (diff != 0) {
+    return false;
+  }
+
+#if WEBSERVER_DIGEST_NONCE_TTL > 0
+  uint32_t issued = digestGetBe32(raw);
+  if ((millis() - issued) > (uint32_t)WEBSERVER_DIGEST_NONCE_TTL) {
+    return false;
+  }
+#endif
+  return true;
+}
+#endif  // WEBSERVER_DIGEST_AUTH
 
 void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, const String &authFailMsg) {
   if (realm == NULL) {
@@ -292,16 +413,31 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
   } else {
     _srealm = String(realm);
   }
+#if WEBSERVER_DIGEST_AUTH
   if (mode == BASIC_AUTH) {
+    _digestNonceStale = false;
     sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeBasic + String(F(" realm=\"")) + _srealm + String(F("\"")));
   } else {
-    _snonce = _getRandomHexString();
-    _sopaque = _getRandomHexString();
-    sendHeader(
-      String(FPSTR(WWW_Authenticate)), AuthTypeDigest + String(F(" realm=\"")) + _srealm + String(F("\", qop=\"auth\", nonce=\"")) + _snonce
-                                         + String(F("\", opaque=\"")) + _sopaque + String(F("\""))
-    );
+    String header = AuthTypeDigest + String(F(" realm=\"")) + _srealm + String(F("\", qop=\"auth\", nonce=\"")) + _makeDigestNonce()
+                    + String(F("\", opaque=\"")) + _sopaque + String(F("\""));
+    if (_digestNonceStale) {
+      header += F(", stale=true");
+      _digestNonceStale = false;
+    }
+    sendHeader(String(FPSTR(WWW_Authenticate)), header);
   }
+#else
+  if (mode != BASIC_AUTH) {
+    // Do not downgrade to Basic: it would invite the client to send the
+    // credentials in the clear for a scheme the sketch did not ask for.
+    // Without a challenge the request cannot be authenticated, so deny it.
+    log_e("Digest authentication is disabled (WEBSERVER_DIGEST_AUTH=0); refusing to send a challenge");
+    using namespace mime;
+    send(403, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
+    return;
+  }
+  sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeBasic + String(F(" realm=\"")) + _srealm + String(F("\"")));
+#endif
   using namespace mime;
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
 }
@@ -401,7 +537,7 @@ bool WebServer::_removeRequestHandler(RequestHandler *handler) {
   return false;
 }
 
-void WebServer::serveStatic(const char *uri, FS &fs, const char *path, const char *cache_header) {
+void WebServer::serveStatic(const char *uri, fs::FS &fs, const char *path, const char *cache_header) {
   _addRequestHandler(new StaticRequestHandler(fs, path, uri, cache_header));
 }
 
@@ -503,13 +639,23 @@ void WebServer::stop() {
   close();
 }
 
+// RFC 9110 forbids NUL, CR and LF in field names and values. Scan by length:
+// Arduino String is length-backed and can hold an embedded NUL, while
+// String::indexOf(char) / strchr would stop there and miss a CRLF after it.
+static bool httpHeaderHasInvalidChar(const char *s, size_t n) {
+  if (s == nullptr) {
+    return n != 0;
+  }
+  return memchr(s, '\0', n) != nullptr || memchr(s, '\r', n) != nullptr || memchr(s, '\n', n) != nullptr;
+}
+
 void WebServer::sendHeader(const String &name, const String &value, bool first) {
-  if (name.indexOf('\r') != -1 || name.indexOf('\n') != -1) {
+  if (httpHeaderHasInvalidChar(name.c_str(), name.length())) {
     log_e("Invalid character in HTTP header name");
     return;
   }
 
-  if (value.indexOf('\r') != -1 || value.indexOf('\n') != -1) {
+  if (httpHeaderHasInvalidChar(value.c_str(), value.length())) {
     log_e("Invalid character in HTTP header value");
     return;
   }
@@ -559,7 +705,7 @@ void WebServer::chunkResponseBegin(const char *contentType) {
     return;
   }
 
-  if (strchr(contentType, '\r') || strchr(contentType, '\n')) {
+  if (contentType == nullptr || httpHeaderHasInvalidChar(contentType, strlen(contentType))) {
     log_e("Invalid character in content type");
     return;
   }
@@ -584,7 +730,7 @@ void WebServer::chunkWrite(const char *data, size_t length) {
   }
 
   char chunkSize[11];
-  snprintf(chunkSize, sizeof(chunkSize), "%zx\r\n", length);
+  snprintf(chunkSize, sizeof(chunkSize), "%lx\r\n", (unsigned long)length);
 
   if (_chunkedClient.write(chunkSize) != strlen(chunkSize)) {
     log_e("Failed to write chunk size");
@@ -615,7 +761,7 @@ void WebServer::chunkResponseEnd() {
     log_e("Failed to write terminating chunk");
   }
 
-  _chunkedClient.flush();
+  _chunkedClient.clear();
   _chunkedResponseActive = false;
   _chunked = false;
   _chunkedClient = NetworkClient();
@@ -694,6 +840,20 @@ void WebServer::send(int code, const char *content_type, const char *content) {
   send(code, content_type, passStr);
 }
 
+void WebServer::send(int code, const char *content_type, Stream &stream, size_t content_length) {
+  if (!content_length) {
+    content_length = stream.available();
+    if (!content_length) {
+      send(204);
+      return;
+    }
+  }
+  String header;
+  _prepareHeader(header, code, content_type, content_length);
+  _currentClientWrite(header.c_str(), header.length());
+  _currentClient.write(stream, content_length);
+}
+
 void WebServer::send_P(int code, PGM_P content_type, PGM_P content) {
   size_t contentLength = 0;
 
@@ -725,9 +885,9 @@ void WebServer::sendContent(const String &content) {
 void WebServer::sendContent(const char *content, size_t contentLength) {
   const char *footer = "\r\n";
   if (_chunked) {
-    char *chunkSize = (char *)malloc(11);
+    char *chunkSize = (char *)malloc(19);
     if (chunkSize) {
-      sprintf(chunkSize, "%x%s", contentLength, footer);
+      snprintf(chunkSize, 19, "%lx%s", (unsigned long)contentLength, footer);
       _currentClientWrite(chunkSize, strlen(chunkSize));
       free(chunkSize);
     }
@@ -748,9 +908,9 @@ void WebServer::sendContent_P(PGM_P content) {
 void WebServer::sendContent_P(PGM_P content, size_t size) {
   const char *footer = "\r\n";
   if (_chunked) {
-    char *chunkSize = (char *)malloc(11);
+    char *chunkSize = (char *)malloc(19);
     if (chunkSize) {
-      sprintf(chunkSize, "%x%s", size, footer);
+      snprintf(chunkSize, 19, "%lx%s", (unsigned long)size, footer);
       _currentClientWrite(chunkSize, strlen(chunkSize));
       free(chunkSize);
     }
@@ -772,6 +932,7 @@ void WebServer::_streamFileCore(const size_t fileSize, const String &fileName, c
     sendHeader(F("Content-Encoding"), F("gzip"));
   }
   send(code, contentType, "");
+  setContentLength(CONTENT_LENGTH_NOT_SET);
 }
 
 String WebServer::pathArg(unsigned int i) const {
@@ -911,6 +1072,7 @@ bool WebServer::_handleRequest() {
     _finalizeResponse();
   }
   _currentUri = "";
+  _currentRequestTarget = "";
   return handled;
 }
 

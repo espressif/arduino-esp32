@@ -29,7 +29,8 @@ static const uint8_t RTC_INT_PIN = 27;
 #if defined(ARDUINO_WATCHY_V10)
 static const uint8_t UP_BTN_PIN = 32;
 static const uint8_t BATT_ADC_PIN = 33;
-#define RTC_TYPE 1  //DS3231
+#define BAT_VOLT_PIN BATT_ADC_PIN
+#define RTC_TYPE     1  //DS3231
 #elif defined(ARDUINO_WATCHY_V15)
 static const uint8_t UP_BTN_PIN = 32;
 static const uint8_t BATT_ADC_PIN = 35;

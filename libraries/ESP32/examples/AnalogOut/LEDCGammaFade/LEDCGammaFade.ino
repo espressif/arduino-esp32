@@ -13,6 +13,8 @@
    Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
 */
 
+#include <Arduino.h>
+
 // use 12 bit precision for LEDC timer
 #define LEDC_TIMER_12_BIT 12
 
