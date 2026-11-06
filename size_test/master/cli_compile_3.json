@@ -4,7 +4,7 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 1112367,
+                        "flash_bytes": 1112667,
                         "flash_percentage": 35,
                         "ram_bytes": 41444,
                         "ram_percentage": 13
@@ -12,7 +12,7 @@
                 },
 {"name": "libraries/BLE/examples/EddystoneURL_Beacon",
                 "sizes": [{
-                        "flash_bytes": 1101863,
+                        "flash_bytes": 1102175,
                         "flash_percentage": 35,
                         "ram_bytes": 41548,
                         "ram_percentage": 13
@@ -20,7 +20,7 @@
                 },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                 "sizes": [{
-                        "flash_bytes": 1109135,
+                        "flash_bytes": 1109451,
                         "flash_percentage": 35,
                         "ram_bytes": 41380,
                         "ram_percentage": 13
@@ -28,7 +28,7 @@
                 },
 {"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 1107231,
+                        "flash_bytes": 1107527,
                         "flash_percentage": 35,
                         "ram_bytes": 41396,
                         "ram_percentage": 13
@@ -36,7 +36,7 @@
                 },
 {"name": "libraries/BluetoothSerial/examples/bt_remove_paired_devices",
                 "sizes": [{
-                        "flash_bytes": 1072796,
+                        "flash_bytes": 1073112,
                         "flash_percentage": 34,
                         "ram_bytes": 41932,
                         "ram_percentage": 13
@@ -44,7 +44,7 @@
                 },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
                 "sizes": [{
-                        "flash_bytes": 293980,
+                        "flash_bytes": 294268,
                         "flash_percentage": 9,
                         "ram_bytes": 22212,
                         "ram_percentage": 7
@@ -52,7 +52,7 @@
                 },
 {"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
                 "sizes": [{
-                        "flash_bytes": 281628,
+                        "flash_bytes": 281916,
                         "flash_percentage": 9,
                         "ram_bytes": 22172,
                         "ram_percentage": 7
@@ -60,15 +60,15 @@
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 298613,
-                        "flash_percentage": 9,
+                        "flash_bytes": 298901,
+                        "flash_percentage": 10,
                         "ram_bytes": 22956,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 283844,
+                        "flash_bytes": 284132,
                         "flash_percentage": 9,
                         "ram_bytes": 22180,
                         "ram_percentage": 7
@@ -76,15 +76,15 @@
                 },
 {"name": "libraries/ESP32/examples/Template/ExampleTemplate",
                 "sizes": [{
-                        "flash_bytes": 267572,
-                        "flash_percentage": 9,
-                        "ram_bytes": 22172,
+                        "flash_bytes": 260060,
+                        "flash_percentage": 8,
+                        "ram_bytes": 21932,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 290112,
+                        "flash_bytes": 290400,
                         "flash_percentage": 9,
                         "ram_bytes": 22188,
                         "ram_percentage": 7
@@ -92,7 +92,7 @@
                 },
 {"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
                 "sizes": [{
-                        "flash_bytes": 1099760,
+                        "flash_bytes": 1100060,
                         "flash_percentage": 35,
                         "ram_bytes": 49804,
                         "ram_percentage": 15
@@ -100,7 +100,7 @@
                 },
 {"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
                 "sizes": [{
-                        "flash_bytes": 994340,
+                        "flash_bytes": 992988,
                         "flash_percentage": 76,
                         "ram_bytes": 49928,
                         "ram_percentage": 15
@@ -108,7 +108,7 @@
                 },
 {"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 293700,
+                        "flash_bytes": 292360,
                         "flash_percentage": 22,
                         "ram_bytes": 22172,
                         "ram_percentage": 7
@@ -116,7 +116,7 @@
                 },
 {"name": "libraries/Matter/examples/Control/MatterEnhancedSmartButton",
                 "sizes": [{
-                        "flash_bytes": 1564919,
+                        "flash_bytes": 1565211,
                         "flash_percentage": 50,
                         "ram_bytes": 105448,
                         "ram_percentage": 32
@@ -124,7 +124,7 @@
                 },
 {"name": "libraries/Matter/examples/Sensors/MatterLightSensor",
                 "sizes": [{
-                        "flash_bytes": 1557895,
+                        "flash_bytes": 1558195,
                         "flash_percentage": 50,
                         "ram_bytes": 105480,
                         "ram_percentage": 32
@@ -132,7 +132,7 @@
                 },
 {"name": "libraries/SimpleBLE/examples/SimpleBleDevice",
                 "sizes": [{
-                        "flash_bytes": 1063264,
+                        "flash_bytes": 1063564,
                         "flash_percentage": 81,
                         "ram_bytes": 40940,
                         "ram_percentage": 12
@@ -140,7 +140,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                 "sizes": [{
-                        "flash_bytes": 1001075,
+                        "flash_bytes": 999659,
                         "flash_percentage": 76,
                         "ram_bytes": 52080,
                         "ram_percentage": 16
@@ -148,7 +148,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                 "sizes": [{
-                        "flash_bytes": 1001035,
+                        "flash_bytes": 999619,
                         "flash_percentage": 76,
                         "ram_bytes": 52096,
                         "ram_percentage": 16
@@ -156,7 +156,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                 "sizes": [{
-                        "flash_bytes": 1009047,
+                        "flash_bytes": 1007631,
                         "flash_percentage": 77,
                         "ram_bytes": 52104,
                         "ram_percentage": 16
@@ -164,7 +164,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiIPv6",
                 "sizes": [{
-                        "flash_bytes": 904332,
+                        "flash_bytes": 904620,
                         "flash_percentage": 69,
                         "ram_bytes": 47424,
                         "ram_percentage": 14
@@ -177,15 +177,15 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 643557,
+                        "flash_bytes": 643933,
                         "flash_percentage": 20,
-                        "ram_bytes": 17684,
+                        "ram_bytes": 17692,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/BLE/examples/EddystoneURL_Beacon",
                 "sizes": [{
-                        "flash_bytes": 608837,
+                        "flash_bytes": 609213,
                         "flash_percentage": 19,
                         "ram_bytes": 17876,
                         "ram_percentage": 5
@@ -193,15 +193,15 @@
                 },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                 "sizes": [{
-                        "flash_bytes": 614775,
+                        "flash_bytes": 615151,
                         "flash_percentage": 20,
-                        "ram_bytes": 17628,
+                        "ram_bytes": 17636,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 612917,
+                        "flash_bytes": 613293,
                         "flash_percentage": 19,
                         "ram_bytes": 17636,
                         "ram_percentage": 5
@@ -209,23 +209,23 @@
                 },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
                 "sizes": [{
-                        "flash_bytes": 292370,
+                        "flash_bytes": 292746,
                         "flash_percentage": 9,
-                        "ram_bytes": 13224,
+                        "ram_bytes": 13232,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
                 "sizes": [{
-                        "flash_bytes": 277038,
+                        "flash_bytes": 277422,
                         "flash_percentage": 9,
-                        "ram_bytes": 13200,
+                        "ram_bytes": 13208,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 298994,
+                        "flash_bytes": 299370,
                         "flash_percentage": 10,
                         "ram_bytes": 14372,
                         "ram_percentage": 4
@@ -233,31 +233,31 @@
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 279560,
+                        "flash_bytes": 279942,
                         "flash_percentage": 9,
-                        "ram_bytes": 13216,
+                        "ram_bytes": 13224,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/Template/ExampleTemplate",
                 "sizes": [{
-                        "flash_bytes": 261544,
+                        "flash_bytes": 253728,
                         "flash_percentage": 8,
-                        "ram_bytes": 13192,
+                        "ram_bytes": 13024,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 287206,
+                        "flash_bytes": 287584,
                         "flash_percentage": 9,
-                        "ram_bytes": 13544,
+                        "ram_bytes": 13552,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
                 "sizes": [{
-                        "flash_bytes": 1175183,
+                        "flash_bytes": 1175559,
                         "flash_percentage": 37,
                         "ram_bytes": 38848,
                         "ram_percentage": 12
@@ -265,23 +265,23 @@
                 },
 {"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
                 "sizes": [{
-                        "flash_bytes": 1070225,
+                        "flash_bytes": 1068629,
                         "flash_percentage": 82,
-                        "ram_bytes": 40320,
+                        "ram_bytes": 40328,
                         "ram_percentage": 12
                         }]
                 },
 {"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 292610,
+                        "flash_bytes": 290864,
                         "flash_percentage": 22,
-                        "ram_bytes": 13200,
+                        "ram_bytes": 13208,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/Matter/examples/Control/MatterEnhancedSmartButton",
                 "sizes": [{
-                        "flash_bytes": 1921723,
+                        "flash_bytes": 1922099,
                         "flash_percentage": 61,
                         "ram_bytes": 83676,
                         "ram_percentage": 26
@@ -289,7 +289,7 @@
                 },
 {"name": "libraries/Matter/examples/Sensors/MatterLightSensor",
                 "sizes": [{
-                        "flash_bytes": 1915555,
+                        "flash_bytes": 1915931,
                         "flash_percentage": 61,
                         "ram_bytes": 83716,
                         "ram_percentage": 26
@@ -297,33 +297,33 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                 "sizes": [{
-                        "flash_bytes": 1077267,
+                        "flash_bytes": 1075613,
                         "flash_percentage": 82,
-                        "ram_bytes": 42368,
+                        "ram_bytes": 42376,
                         "ram_percentage": 13
                         }]
                 },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                 "sizes": [{
-                        "flash_bytes": 1077251,
+                        "flash_bytes": 1075597,
                         "flash_percentage": 82,
-                        "ram_bytes": 42384,
+                        "ram_bytes": 42392,
                         "ram_percentage": 13
                         }]
                 },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                 "sizes": [{
-                        "flash_bytes": 1087027,
+                        "flash_bytes": 1085377,
                         "flash_percentage": 83,
-                        "ram_bytes": 42376,
+                        "ram_bytes": 42384,
                         "ram_percentage": 13
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiIPv6",
                 "sizes": [{
-                        "flash_bytes": 950615,
+                        "flash_bytes": 950991,
                         "flash_percentage": 73,
-                        "ram_bytes": 37012,
+                        "ram_bytes": 37020,
                         "ram_percentage": 11
                         }]
                 }
@@ -334,7 +334,7 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 809435,
+                        "flash_bytes": 809811,
                         "flash_percentage": 26,
                         "ram_bytes": 22928,
                         "ram_percentage": 7
@@ -342,7 +342,7 @@
                 },
 {"name": "libraries/BLE/examples/EddystoneURL_Beacon",
                 "sizes": [{
-                        "flash_bytes": 778637,
+                        "flash_bytes": 779013,
                         "flash_percentage": 25,
                         "ram_bytes": 23208,
                         "ram_percentage": 7
@@ -350,7 +350,7 @@
                 },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                 "sizes": [{
-                        "flash_bytes": 781021,
+                        "flash_bytes": 781397,
                         "flash_percentage": 25,
                         "ram_bytes": 22864,
                         "ram_percentage": 7
@@ -358,7 +358,7 @@
                 },
 {"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 779167,
+                        "flash_bytes": 779543,
                         "flash_percentage": 25,
                         "ram_bytes": 22872,
                         "ram_percentage": 7
@@ -366,7 +366,7 @@
                 },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
                 "sizes": [{
-                        "flash_bytes": 312538,
+                        "flash_bytes": 312918,
                         "flash_percentage": 10,
                         "ram_bytes": 17492,
                         "ram_percentage": 5
@@ -374,7 +374,7 @@
                 },
 {"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
                 "sizes": [{
-                        "flash_bytes": 297214,
+                        "flash_bytes": 297592,
                         "flash_percentage": 9,
                         "ram_bytes": 17468,
                         "ram_percentage": 5
@@ -382,15 +382,15 @@
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 317546,
+                        "flash_bytes": 317920,
                         "flash_percentage": 10,
-                        "ram_bytes": 18024,
+                        "ram_bytes": 18032,
                         "ram_percentage": 6
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 299732,
+                        "flash_bytes": 300112,
                         "flash_percentage": 10,
                         "ram_bytes": 17476,
                         "ram_percentage": 5
@@ -398,15 +398,15 @@
                 },
 {"name": "libraries/ESP32/examples/Template/ExampleTemplate",
                 "sizes": [{
-                        "flash_bytes": 280606,
+                        "flash_bytes": 271858,
                         "flash_percentage": 9,
-                        "ram_bytes": 17460,
+                        "ram_bytes": 17212,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 307322,
+                        "flash_bytes": 307702,
                         "flash_percentage": 10,
                         "ram_bytes": 17812,
                         "ram_percentage": 5
@@ -414,7 +414,7 @@
                 },
 {"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
                 "sizes": [{
-                        "flash_bytes": 1248303,
+                        "flash_bytes": 1248679,
                         "flash_percentage": 40,
                         "ram_bytes": 51032,
                         "ram_percentage": 16
@@ -422,7 +422,7 @@
                 },
 {"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
                 "sizes": [{
-                        "flash_bytes": 1141709,
+                        "flash_bytes": 1139985,
                         "flash_percentage": 87,
                         "ram_bytes": 52848,
                         "ram_percentage": 16
@@ -430,7 +430,7 @@
                 },
 {"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 312772,
+                        "flash_bytes": 311032,
                         "flash_percentage": 24,
                         "ram_bytes": 17468,
                         "ram_percentage": 5
@@ -438,7 +438,7 @@
                 },
 {"name": "libraries/Matter/examples/Control/MatterEnhancedSmartButton",
                 "sizes": [{
-                        "flash_bytes": 2128559,
+                        "flash_bytes": 2128935,
                         "flash_percentage": 68,
                         "ram_bytes": 96528,
                         "ram_percentage": 29
@@ -446,7 +446,7 @@
                 },
 {"name": "libraries/Matter/examples/Sensors/MatterLightSensor",
                 "sizes": [{
-                        "flash_bytes": 2120049,
+                        "flash_bytes": 2120425,
                         "flash_percentage": 67,
                         "ram_bytes": 96560,
                         "ram_percentage": 29
@@ -454,7 +454,7 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
                 "sizes": [{
-                        "flash_bytes": 1207359,
+                        "flash_bytes": 1207733,
                         "flash_percentage": 92,
                         "ram_bytes": 56428,
                         "ram_percentage": 17
@@ -462,7 +462,7 @@
                 },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_client",
                 "sizes": [{
-                        "flash_bytes": 1077947,
+                        "flash_bytes": 1078323,
                         "flash_percentage": 82,
                         "ram_bytes": 55644,
                         "ram_percentage": 17
@@ -470,7 +470,7 @@
                 },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
                 "sizes": [{
-                        "flash_bytes": 1073447,
+                        "flash_bytes": 1073823,
                         "flash_percentage": 82,
                         "ram_bytes": 56196,
                         "ram_percentage": 17
@@ -478,7 +478,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                 "sizes": [{
-                        "flash_bytes": 1148763,
+                        "flash_bytes": 1146981,
                         "flash_percentage": 88,
                         "ram_bytes": 54896,
                         "ram_percentage": 17
@@ -486,7 +486,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                 "sizes": [{
-                        "flash_bytes": 1148793,
+                        "flash_bytes": 1147009,
                         "flash_percentage": 88,
                         "ram_bytes": 54912,
                         "ram_percentage": 17
@@ -494,7 +494,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                 "sizes": [{
-                        "flash_bytes": 1158519,
+                        "flash_bytes": 1156741,
                         "flash_percentage": 88,
                         "ram_bytes": 54904,
                         "ram_percentage": 17
@@ -502,7 +502,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiIPv6",
                 "sizes": [{
-                        "flash_bytes": 1022827,
+                        "flash_bytes": 1023203,
                         "flash_percentage": 78,
                         "ram_bytes": 49780,
                         "ram_percentage": 15
@@ -515,7 +515,7 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 726340,
+                        "flash_bytes": 726716,
                         "flash_percentage": 23,
                         "ram_bytes": 18284,
                         "ram_percentage": 6
@@ -523,7 +523,7 @@
                 },
 {"name": "libraries/BLE/examples/EddystoneURL_Beacon",
                 "sizes": [{
-                        "flash_bytes": 712496,
+                        "flash_bytes": 712872,
                         "flash_percentage": 23,
                         "ram_bytes": 18568,
                         "ram_percentage": 6
@@ -531,7 +531,7 @@
                 },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                 "sizes": [{
-                        "flash_bytes": 716060,
+                        "flash_bytes": 716436,
                         "flash_percentage": 23,
                         "ram_bytes": 18220,
                         "ram_percentage": 6
@@ -539,15 +539,15 @@
                 },
 {"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 714208,
+                        "flash_bytes": 714584,
                         "flash_percentage": 23,
-                        "ram_bytes": 18228,
+                        "ram_bytes": 18236,
                         "ram_percentage": 6
                         }]
                 },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
                 "sizes": [{
-                        "flash_bytes": 270250,
+                        "flash_bytes": 270632,
                         "flash_percentage": 9,
                         "ram_bytes": 13964,
                         "ram_percentage": 4
@@ -555,7 +555,7 @@
                 },
 {"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
                 "sizes": [{
-                        "flash_bytes": 254882,
+                        "flash_bytes": 255260,
                         "flash_percentage": 8,
                         "ram_bytes": 13940,
                         "ram_percentage": 4
@@ -563,15 +563,15 @@
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 276392,
+                        "flash_bytes": 276768,
                         "flash_percentage": 9,
-                        "ram_bytes": 15088,
+                        "ram_bytes": 15096,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 257408,
+                        "flash_bytes": 257790,
                         "flash_percentage": 8,
                         "ram_bytes": 13948,
                         "ram_percentage": 4
@@ -579,15 +579,15 @@
                 },
 {"name": "libraries/ESP32/examples/Template/ExampleTemplate",
                 "sizes": [{
-                        "flash_bytes": 238296,
-                        "flash_percentage": 8,
-                        "ram_bytes": 13924,
+                        "flash_bytes": 229534,
+                        "flash_percentage": 7,
+                        "ram_bytes": 13684,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 264896,
+                        "flash_bytes": 265278,
                         "flash_percentage": 8,
                         "ram_bytes": 14276,
                         "ram_percentage": 4
@@ -595,15 +595,15 @@
                 },
 {"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
                 "sizes": [{
-                        "flash_bytes": 1185718,
+                        "flash_bytes": 1186094,
                         "flash_percentage": 38,
-                        "ram_bytes": 44868,
+                        "ram_bytes": 44876,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
                 "sizes": [{
-                        "flash_bytes": 1094352,
+                        "flash_bytes": 1092756,
                         "flash_percentage": 83,
                         "ram_bytes": 46316,
                         "ram_percentage": 14
@@ -611,15 +611,15 @@
                 },
 {"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 270314,
-                        "flash_percentage": 21,
+                        "flash_bytes": 268574,
+                        "flash_percentage": 20,
                         "ram_bytes": 13940,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/Matter/examples/Control/MatterEnhancedSmartButton",
                 "sizes": [{
-                        "flash_bytes": 2666568,
+                        "flash_bytes": 2666944,
                         "flash_percentage": 85,
                         "ram_bytes": 136956,
                         "ram_percentage": 42
@@ -627,7 +627,7 @@
                 },
 {"name": "libraries/Matter/examples/Sensors/MatterLightSensor",
                 "sizes": [{
-                        "flash_bytes": 2660832,
+                        "flash_bytes": 2661208,
                         "flash_percentage": 85,
                         "ram_bytes": 136988,
                         "ram_percentage": 42
@@ -635,7 +635,7 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
                 "sizes": [{
-                        "flash_bytes": 1131162,
+                        "flash_bytes": 1131538,
                         "flash_percentage": 86,
                         "ram_bytes": 60176,
                         "ram_percentage": 18
@@ -643,7 +643,7 @@
                 },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_client",
                 "sizes": [{
-                        "flash_bytes": 1019662,
+                        "flash_bytes": 1020038,
                         "flash_percentage": 78,
                         "ram_bytes": 59400,
                         "ram_percentage": 18
@@ -651,7 +651,7 @@
                 },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
                 "sizes": [{
-                        "flash_bytes": 1015138,
+                        "flash_bytes": 1015514,
                         "flash_percentage": 77,
                         "ram_bytes": 59952,
                         "ram_percentage": 18
@@ -659,7 +659,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                 "sizes": [{
-                        "flash_bytes": 1101422,
+                        "flash_bytes": 1099768,
                         "flash_percentage": 84,
                         "ram_bytes": 48364,
                         "ram_percentage": 15
@@ -667,7 +667,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                 "sizes": [{
-                        "flash_bytes": 1101406,
+                        "flash_bytes": 1099752,
                         "flash_percentage": 84,
                         "ram_bytes": 48380,
                         "ram_percentage": 15
@@ -675,7 +675,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                 "sizes": [{
-                        "flash_bytes": 1111174,
+                        "flash_bytes": 1109532,
                         "flash_percentage": 85,
                         "ram_bytes": 48388,
                         "ram_percentage": 15
@@ -683,9 +683,9 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiIPv6",
                 "sizes": [{
-                        "flash_bytes": 974898,
+                        "flash_bytes": 975274,
                         "flash_percentage": 74,
-                        "ram_bytes": 43024,
+                        "ram_bytes": 43032,
                         "ram_percentage": 13
                         }]
                 }
@@ -696,7 +696,7 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 758991,
+                        "flash_bytes": 759367,
                         "flash_percentage": 24,
                         "ram_bytes": 16876,
                         "ram_percentage": 5
@@ -704,15 +704,15 @@
                 },
 {"name": "libraries/BLE/examples/EddystoneURL_Beacon",
                 "sizes": [{
-                        "flash_bytes": 727837,
+                        "flash_bytes": 728213,
                         "flash_percentage": 23,
-                        "ram_bytes": 17096,
+                        "ram_bytes": 17104,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                 "sizes": [{
-                        "flash_bytes": 730495,
+                        "flash_bytes": 730871,
                         "flash_percentage": 23,
                         "ram_bytes": 16812,
                         "ram_percentage": 5
@@ -720,15 +720,15 @@
                 },
 {"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 728649,
+                        "flash_bytes": 729025,
                         "flash_percentage": 23,
-                        "ram_bytes": 16820,
+                        "ram_bytes": 16828,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
                 "sizes": [{
-                        "flash_bytes": 294906,
+                        "flash_bytes": 295282,
                         "flash_percentage": 9,
                         "ram_bytes": 13892,
                         "ram_percentage": 4
@@ -736,7 +736,7 @@
                 },
 {"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
                 "sizes": [{
-                        "flash_bytes": 279574,
+                        "flash_bytes": 279958,
                         "flash_percentage": 9,
                         "ram_bytes": 13852,
                         "ram_percentage": 4
@@ -744,15 +744,15 @@
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 301146,
+                        "flash_bytes": 301522,
                         "flash_percentage": 10,
-                        "ram_bytes": 15016,
+                        "ram_bytes": 15024,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 282098,
+                        "flash_bytes": 282474,
                         "flash_percentage": 9,
                         "ram_bytes": 13860,
                         "ram_percentage": 4
@@ -760,15 +760,15 @@
                 },
 {"name": "libraries/ESP32/examples/Template/ExampleTemplate",
                 "sizes": [{
-                        "flash_bytes": 263714,
+                        "flash_bytes": 255852,
                         "flash_percentage": 8,
-                        "ram_bytes": 13852,
+                        "ram_bytes": 13676,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 290360,
+                        "flash_bytes": 290738,
                         "flash_percentage": 9,
                         "ram_bytes": 14212,
                         "ram_percentage": 4
@@ -776,7 +776,7 @@
                 },
 {"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 295178,
+                        "flash_bytes": 293432,
                         "flash_percentage": 9,
                         "ram_bytes": 13852,
                         "ram_percentage": 4
@@ -784,41 +784,41 @@
                 },
 {"name": "libraries/Matter/examples/Control/MatterEnhancedSmartButton",
                 "sizes": [{
-                        "flash_bytes": 2229211,
+                        "flash_bytes": 2229587,
                         "flash_percentage": 71,
-                        "ram_bytes": 99432,
+                        "ram_bytes": 99440,
                         "ram_percentage": 30
                         }]
                 },
 {"name": "libraries/Matter/examples/Sensors/MatterLightSensor",
                 "sizes": [{
-                        "flash_bytes": 2222995,
+                        "flash_bytes": 2223371,
                         "flash_percentage": 71,
-                        "ram_bytes": 99464,
+                        "ram_bytes": 99472,
                         "ram_percentage": 30
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
                 "sizes": [{
-                        "flash_bytes": 1155537,
+                        "flash_bytes": 1155913,
                         "flash_percentage": 88,
-                        "ram_bytes": 58688,
+                        "ram_bytes": 58696,
                         "ram_percentage": 18
                         }]
                 },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_client",
                 "sizes": [{
-                        "flash_bytes": 1025683,
+                        "flash_bytes": 1026059,
                         "flash_percentage": 78,
-                        "ram_bytes": 57904,
+                        "ram_bytes": 57912,
                         "ram_percentage": 18
                         }]
                 },
 {"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
                 "sizes": [{
-                        "flash_bytes": 1021157,
+                        "flash_bytes": 1021533,
                         "flash_percentage": 78,
-                        "ram_bytes": 58456,
+                        "ram_bytes": 58464,
                         "ram_percentage": 18
                         }]
                 }
@@ -829,7 +829,7 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 831798,
+                        "flash_bytes": 832174,
                         "flash_percentage": 26,
                         "ram_bytes": 28312,
                         "ram_percentage": 9
@@ -837,7 +837,7 @@
                 },
 {"name": "libraries/BLE/examples/EddystoneURL_Beacon",
                 "sizes": [{
-                        "flash_bytes": 800210,
+                        "flash_bytes": 800586,
                         "flash_percentage": 25,
                         "ram_bytes": 28732,
                         "ram_percentage": 9
@@ -845,7 +845,7 @@
                 },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                 "sizes": [{
-                        "flash_bytes": 802752,
+                        "flash_bytes": 803128,
                         "flash_percentage": 26,
                         "ram_bytes": 28256,
                         "ram_percentage": 9
@@ -853,7 +853,7 @@
                 },
 {"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 800900,
+                        "flash_bytes": 801276,
                         "flash_percentage": 25,
                         "ram_bytes": 28264,
                         "ram_percentage": 9
@@ -861,7 +861,7 @@
                 },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
                 "sizes": [{
-                        "flash_bytes": 340384,
+                        "flash_bytes": 340758,
                         "flash_percentage": 11,
                         "ram_bytes": 23616,
                         "ram_percentage": 7
@@ -869,7 +869,7 @@
                 },
 {"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
                 "sizes": [{
-                        "flash_bytes": 325066,
+                        "flash_bytes": 325448,
                         "flash_percentage": 10,
                         "ram_bytes": 23592,
                         "ram_percentage": 7
@@ -877,15 +877,15 @@
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 352876,
+                        "flash_bytes": 353250,
                         "flash_percentage": 11,
-                        "ram_bytes": 24148,
+                        "ram_bytes": 24156,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 327592,
+                        "flash_bytes": 327966,
                         "flash_percentage": 10,
                         "ram_bytes": 23608,
                         "ram_percentage": 7
@@ -893,15 +893,15 @@
                 },
 {"name": "libraries/ESP32/examples/Template/ExampleTemplate",
                 "sizes": [{
-                        "flash_bytes": 307358,
-                        "flash_percentage": 10,
-                        "ram_bytes": 23584,
+                        "flash_bytes": 297290,
+                        "flash_percentage": 9,
+                        "ram_bytes": 23096,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 334336,
+                        "flash_bytes": 334710,
                         "flash_percentage": 11,
                         "ram_bytes": 23616,
                         "ram_percentage": 7
@@ -909,7 +909,7 @@
                 },
 {"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
                 "sizes": [{
-                        "flash_bytes": 1087714,
+                        "flash_bytes": 1088090,
                         "flash_percentage": 35,
                         "ram_bytes": 33232,
                         "ram_percentage": 10
@@ -917,15 +917,15 @@
                 },
 {"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
                 "sizes": [{
-                        "flash_bytes": 938282,
-                        "flash_percentage": 72,
+                        "flash_bytes": 936558,
+                        "flash_percentage": 71,
                         "ram_bytes": 34960,
                         "ram_percentage": 11
                         }]
                 },
 {"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 340620,
+                        "flash_bytes": 338876,
                         "flash_percentage": 26,
                         "ram_bytes": 23592,
                         "ram_percentage": 7
@@ -933,23 +933,23 @@
                 },
 {"name": "libraries/USB/examples/FirmwareMSC",
                 "sizes": [{
-                        "flash_bytes": 307334,
+                        "flash_bytes": 297266,
                         "flash_percentage": 23,
-                        "ram_bytes": 23584,
+                        "ram_bytes": 23096,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostKeyboard",
                 "sizes": [{
-                        "flash_bytes": 404572,
+                        "flash_bytes": 404948,
                         "flash_percentage": 31,
-                        "ram_bytes": 72696,
+                        "ram_bytes": 72704,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                 "sizes": [{
-                        "flash_bytes": 945336,
+                        "flash_bytes": 943552,
                         "flash_percentage": 72,
                         "ram_bytes": 37008,
                         "ram_percentage": 11
@@ -957,7 +957,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                 "sizes": [{
-                        "flash_bytes": 945360,
+                        "flash_bytes": 943578,
                         "flash_percentage": 72,
                         "ram_bytes": 37056,
                         "ram_percentage": 11
@@ -965,7 +965,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                 "sizes": [{
-                        "flash_bytes": 955106,
+                        "flash_bytes": 953328,
                         "flash_percentage": 73,
                         "ram_bytes": 37024,
                         "ram_percentage": 11
@@ -973,7 +973,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiIPv6",
                 "sizes": [{
-                        "flash_bytes": 831564,
+                        "flash_bytes": 831940,
                         "flash_percentage": 63,
                         "ram_bytes": 31992,
                         "ram_percentage": 10
@@ -986,7 +986,7 @@
                 "sketches": [
 {"name": "libraries/EEPROM/examples/eeprom_extra",
                 "sizes": [{
-                        "flash_bytes": 253372,
+                        "flash_bytes": 253652,
                         "flash_percentage": 19,
                         "ram_bytes": 16568,
                         "ram_percentage": 5
@@ -994,7 +994,7 @@
                 },
 {"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
                 "sizes": [{
-                        "flash_bytes": 240868,
+                        "flash_bytes": 241148,
                         "flash_percentage": 18,
                         "ram_bytes": 16528,
                         "ram_percentage": 5
@@ -1002,7 +1002,7 @@
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 259777,
+                        "flash_bytes": 260081,
                         "flash_percentage": 20,
                         "ram_bytes": 17100,
                         "ram_percentage": 5
@@ -1010,7 +1010,7 @@
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 243204,
+                        "flash_bytes": 243536,
                         "flash_percentage": 19,
                         "ram_bytes": 16536,
                         "ram_percentage": 5
@@ -1018,15 +1018,15 @@
                 },
 {"name": "libraries/ESP32/examples/Template/ExampleTemplate",
                 "sizes": [{
-                        "flash_bytes": 226672,
+                        "flash_bytes": 220012,
                         "flash_percentage": 17,
-                        "ram_bytes": 16528,
+                        "ram_bytes": 16368,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 251988,
+                        "flash_bytes": 252256,
                         "flash_percentage": 19,
                         "ram_bytes": 16920,
                         "ram_percentage": 5
@@ -1034,7 +1034,7 @@
                 },
 {"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
                 "sizes": [{
-                        "flash_bytes": 1034336,
+                        "flash_bytes": 1034620,
                         "flash_percentage": 33,
                         "ram_bytes": 43604,
                         "ram_percentage": 13
@@ -1042,7 +1042,7 @@
                 },
 {"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
                 "sizes": [{
-                        "flash_bytes": 929892,
+                        "flash_bytes": 928496,
                         "flash_percentage": 71,
                         "ram_bytes": 45388,
                         "ram_percentage": 14
@@ -1050,7 +1050,7 @@
                 },
 {"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 253340,
+                        "flash_bytes": 251956,
                         "flash_percentage": 19,
                         "ram_bytes": 16528,
                         "ram_percentage": 5
@@ -1058,7 +1058,7 @@
                 },
 {"name": "libraries/Matter/examples/Control/MatterEnhancedSmartButton",
                 "sizes": [{
-                        "flash_bytes": 1464867,
+                        "flash_bytes": 1465195,
                         "flash_percentage": 47,
                         "ram_bytes": 87652,
                         "ram_percentage": 27
@@ -1066,7 +1066,7 @@
                 },
 {"name": "libraries/Matter/examples/Sensors/MatterLightSensor",
                 "sizes": [{
-                        "flash_bytes": 1458231,
+                        "flash_bytes": 1458507,
                         "flash_percentage": 46,
                         "ram_bytes": 87684,
                         "ram_percentage": 27
@@ -1074,7 +1074,7 @@
                 },
 {"name": "libraries/USB/examples/FirmwareMSC",
                 "sizes": [{
-                        "flash_bytes": 326852,
+                        "flash_bytes": 327120,
                         "flash_percentage": 25,
                         "ram_bytes": 49008,
                         "ram_percentage": 15
@@ -1082,7 +1082,7 @@
                 },
 {"name": "libraries/USB/examples/USBHostKeyboard",
                 "sizes": [{
-                        "flash_bytes": 312072,
+                        "flash_bytes": 312340,
                         "flash_percentage": 24,
                         "ram_bytes": 48320,
                         "ram_percentage": 15
@@ -1090,7 +1090,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                 "sizes": [{
-                        "flash_bytes": 936728,
+                        "flash_bytes": 935240,
                         "flash_percentage": 71,
                         "ram_bytes": 47436,
                         "ram_percentage": 14
@@ -1098,7 +1098,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                 "sizes": [{
-                        "flash_bytes": 936696,
+                        "flash_bytes": 935208,
                         "flash_percentage": 71,
                         "ram_bytes": 47468,
                         "ram_percentage": 14
@@ -1106,7 +1106,7 @@
                 },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                 "sizes": [{
-                        "flash_bytes": 944940,
+                        "flash_bytes": 943452,
                         "flash_percentage": 72,
                         "ram_bytes": 47452,
                         "ram_percentage": 14
@@ -1114,7 +1114,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiIPv6",
                 "sizes": [{
-                        "flash_bytes": 824943,
+                        "flash_bytes": 825227,
                         "flash_percentage": 63,
                         "ram_bytes": 42340,
                         "ram_percentage": 13
@@ -1127,7 +1127,7 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 599358,
+                        "flash_bytes": 599622,
                         "flash_percentage": 19,
                         "ram_bytes": 27844,
                         "ram_percentage": 8
@@ -1135,7 +1135,7 @@
                 },
 {"name": "libraries/BLE/examples/EddystoneURL_Beacon",
                 "sizes": [{
-                        "flash_bytes": 571030,
+                        "flash_bytes": 571294,
                         "flash_percentage": 18,
                         "ram_bytes": 27988,
                         "ram_percentage": 9
@@ -1143,7 +1143,7 @@
                 },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                 "sizes": [{
-                        "flash_bytes": 573482,
+                        "flash_bytes": 573746,
                         "flash_percentage": 18,
                         "ram_bytes": 27780,
                         "ram_percentage": 8
@@ -1151,7 +1151,7 @@
                 },
 {"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 571070,
+                        "flash_bytes": 571334,
                         "flash_percentage": 18,
                         "ram_bytes": 27796,
                         "ram_percentage": 8
@@ -1159,7 +1159,7 @@
                 },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
                 "sizes": [{
-                        "flash_bytes": 290735,
+                        "flash_bytes": 290999,
                         "flash_percentage": 9,
                         "ram_bytes": 22108,
                         "ram_percentage": 7
@@ -1167,7 +1167,7 @@
                 },
 {"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
                 "sizes": [{
-                        "flash_bytes": 278619,
+                        "flash_bytes": 278883,
                         "flash_percentage": 9,
                         "ram_bytes": 22068,
                         "ram_percentage": 7
@@ -1175,15 +1175,15 @@
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 304048,
+                        "flash_bytes": 304312,
                         "flash_percentage": 10,
-                        "ram_bytes": 22640,
+                        "ram_bytes": 22648,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 280823,
+                        "flash_bytes": 281087,
                         "flash_percentage": 9,
                         "ram_bytes": 22092,
                         "ram_percentage": 7
@@ -1191,15 +1191,15 @@
                 },
 {"name": "libraries/ESP32/examples/Template/ExampleTemplate",
                 "sizes": [{
-                        "flash_bytes": 264695,
+                        "flash_bytes": 257759,
                         "flash_percentage": 8,
-                        "ram_bytes": 22068,
+                        "ram_bytes": 21812,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                 "sizes": [{
-                        "flash_bytes": 289267,
+                        "flash_bytes": 289531,
                         "flash_percentage": 9,
                         "ram_bytes": 22468,
                         "ram_percentage": 7
@@ -1207,7 +1207,7 @@
                 },
 {"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
                 "sizes": [{
-                        "flash_bytes": 1075011,
+                        "flash_bytes": 1075295,
                         "flash_percentage": 34,
                         "ram_bytes": 47900,
                         "ram_percentage": 15
@@ -1215,15 +1215,15 @@
                 },
 {"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
                 "sizes": [{
-                        "flash_bytes": 970683,
+                        "flash_bytes": 969339,
                         "flash_percentage": 74,
-                        "ram_bytes": 49660,
+                        "ram_bytes": 49668,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 290671,
+                        "flash_bytes": 289275,
                         "flash_percentage": 22,
                         "ram_bytes": 22068,
                         "ram_percentage": 7
@@ -1231,7 +1231,7 @@
                 },
 {"name": "libraries/Matter/examples/Control/MatterEnhancedSmartButton",
                 "sizes": [{
-                        "flash_bytes": 1697818,
+                        "flash_bytes": 1698042,
                         "flash_percentage": 54,
                         "ram_bytes": 106632,
                         "ram_percentage": 33
@@ -1239,7 +1239,7 @@
                 },
 {"name": "libraries/Matter/examples/Sensors/MatterLightSensor",
                 "sizes": [{
-                        "flash_bytes": 1691110,
+                        "flash_bytes": 1691414,
                         "flash_percentage": 54,
                         "ram_bytes": 106664,
                         "ram_percentage": 33
@@ -1247,39 +1247,39 @@
                 },
 {"name": "libraries/USB/examples/FirmwareMSC",
                 "sizes": [{
-                        "flash_bytes": 393992,
+                        "flash_bytes": 394260,
                         "flash_percentage": 30,
-                        "ram_bytes": 55128,
+                        "ram_bytes": 55136,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/USB/examples/USBHostKeyboard",
                 "sizes": [{
-                        "flash_bytes": 378720,
+                        "flash_bytes": 378984,
                         "flash_percentage": 29,
-                        "ram_bytes": 54432,
+                        "ram_bytes": 54440,
                         "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                 "sizes": [{
-                        "flash_bytes": 977003,
-                        "flash_percentage": 75,
-                        "ram_bytes": 51708,
+                        "flash_bytes": 975555,
+                        "flash_percentage": 74,
+                        "ram_bytes": 51716,
                         "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                 "sizes": [{
-                        "flash_bytes": 976947,
-                        "flash_percentage": 75,
-                        "ram_bytes": 51724,
+                        "flash_bytes": 975483,
+                        "flash_percentage": 74,
+                        "ram_bytes": 51732,
                         "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                 "sizes": [{
-                        "flash_bytes": 984843,
+                        "flash_bytes": 983427,
                         "flash_percentage": 75,
                         "ram_bytes": 51732,
                         "ram_percentage": 16
@@ -1287,7 +1287,7 @@
                 },
 {"name": "libraries/WiFi/examples/WiFiIPv6",
                 "sizes": [{
-                        "flash_bytes": 860078,
+                        "flash_bytes": 860354,
                         "flash_percentage": 66,
                         "ram_bytes": 46612,
                         "ram_percentage": 14
