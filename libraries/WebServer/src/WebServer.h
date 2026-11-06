@@ -324,7 +324,8 @@ protected:
   // both must return the same object. The returned object is the owner of the
   // accepted connection: if it is not _currentClient, do not also keep the
   // accepted client in _currentClient (use a local NetworkClient and transfer
-  // its handle, or dup the descriptor).
+  // its handle, or dup the descriptor). A failed accept must return a
+  // disconnected client.
   virtual NetworkClient &acceptClient() {
     _currentClient = _server.accept();
     return _currentClient;

@@ -181,7 +181,10 @@ protected:
   NetworkClient &acceptClient() override {
     NetworkClient accepted = _server.accept();
     if (!accepted) {
-      return _counting;
+      // A failed accept must return a disconnected client. Stop any leftover
+      // session so it cannot be mistaken for a newly accepted client.
+      _counting.stop();
+      return _currentClient;
     }
     _counting.adopt(accepted);
     _counting.resetStats();

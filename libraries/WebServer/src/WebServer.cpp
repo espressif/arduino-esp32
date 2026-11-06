@@ -630,6 +630,7 @@ void WebServer::handleClient() {
 
 void WebServer::close() {
   _server.close();
+  closeClient();
   _currentStatus = HC_NONE;
   if (!_headerKeysCount) {
     collectHeaders(0, 0);
