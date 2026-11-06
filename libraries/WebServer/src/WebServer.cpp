@@ -617,8 +617,7 @@ void WebServer::handleClient() {
   }
 
   if (!keepCurrentClient) {
-    activeClient.stop();
-    _currentClient = NetworkClient();
+    closeClient();
     _currentStatus = HC_NONE;
     _currentUpload.reset();
     _currentRaw.reset();

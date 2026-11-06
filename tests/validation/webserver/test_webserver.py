@@ -123,20 +123,29 @@ def test_webserver(dut, ci_job_id):
         if result == "PASS":
             LOGGER.info(f"PASS: {name}")
             if name in derived_cases:
-                # The server counts every byte written through client(). It must
+                # The server counts every byte read/written through client()
+                # and confirms closeClient() is called. The byte count must
                 # equal the raw response length the client received; otherwise
                 # some response path bypassed client().
-                m = server.expect(rf"\[SERVER\] STATS {name} bytes=(\d+) writes=(\d+) reads=(\d+)", timeout=timeout)
+                m = server.expect(
+                    rf"\[SERVER\] STATS {name} bytes=(\d+) writes=(\d+) reads=(\d+) closes=(\d+)", timeout=timeout
+                )
                 server_bytes = int(m.group(1))
                 server_writes = int(m.group(2))
                 server_reads = int(m.group(3))
-                LOGGER.info(f"{name}: client_len={client_len} server_bytes={server_bytes} writes={server_writes} reads={server_reads}")
+                server_closes = int(m.group(4))
+                LOGGER.info(
+                    f"{name}: client_len={client_len} server_bytes={server_bytes} "
+                    f"writes={server_writes} reads={server_reads} closes={server_closes}"
+                )
                 if server_bytes != client_len:
                     failures.append(f"{name} (server bytes {server_bytes} != client length {client_len})")
                 if server_writes == 0:
                     failures.append(f"{name} (no writes through client())")
                 if server_reads == 0:
                     failures.append(f"{name} (no reads through client())")
+                if server_closes == 0:
+                    failures.append(f"{name} (closeClient() was not called)")
         else:
             LOGGER.error(f"FAIL: {name}")
             failures.append(name)

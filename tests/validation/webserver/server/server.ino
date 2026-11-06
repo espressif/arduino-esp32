@@ -168,19 +168,30 @@ public:
     return _counting.bytesRead();
   }
 
+  size_t countingCloses() const {
+    return _closeCount;
+  }
+
 protected:
+  void closeClient() override {
+    _closeCount++;
+    WebServer::closeClient();
+  }
+
   NetworkClient &acceptClient() override {
-    _currentClient = _server.accept();
-    if (!_currentClient) {
-      return _currentClient;
+    NetworkClient accepted = _server.accept();
+    if (!accepted) {
+      return _counting;
     }
-    _counting.adopt(_currentClient);
+    _counting.adopt(accepted);
     _counting.resetStats();
+    _closeCount = 0;
     return _counting;
   }
 
 private:
   CountingClient _counting;
+  size_t _closeCount = 0;
 };
 
 static CountingServer derivedServer(DERIVED_SERVER_PORT);
@@ -511,8 +522,8 @@ void loop() {
 
   if (pendingStatsCase != nullptr) {
     Serial.printf(
-      "[SERVER] STATS %s bytes=%u writes=%u reads=%u\n", pendingStatsCase, (unsigned)derivedServer.countingBytes(),
-      (unsigned)derivedServer.countingWrites(), (unsigned)derivedServer.countingReads()
+      "[SERVER] STATS %s bytes=%u writes=%u reads=%u closes=%u\n", pendingStatsCase, (unsigned)derivedServer.countingBytes(),
+      (unsigned)derivedServer.countingWrites(), (unsigned)derivedServer.countingReads(), (unsigned)derivedServer.countingCloses()
     );
     pendingStatsCase = nullptr;
   }

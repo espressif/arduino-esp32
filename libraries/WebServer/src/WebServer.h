@@ -321,10 +321,21 @@ private:
 protected:
   // Accepts the next client. A derived class that wraps the accepted socket
   // (for example a TLS server) should override this together with client();
-  // both must return the same object.
+  // both must return the same object. The returned object is the owner of the
+  // accepted connection: if it is not _currentClient, do not also keep the
+  // accepted client in _currentClient (use a local NetworkClient and transfer
+  // its handle, or dup the descriptor).
   virtual NetworkClient &acceptClient() {
     _currentClient = _server.accept();
     return _currentClient;
+  }
+
+  // Called when the active connection is finished. The default stops client()
+  // and releases _currentClient. A derived class with a different ownership
+  // model can override this.
+  virtual void closeClient() {
+    client().stop();
+    _currentClient = NetworkClient();
   }
 
   virtual size_t _currentClientWrite(const char *b, size_t l) {
