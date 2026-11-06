@@ -67,6 +67,8 @@ Validates the `Update` API, `HTTPUpdate` library, and `ArduinoOTA` for unsigned 
 - **SoC Config**: `CONFIG_SOC_WIFI_SUPPORTED=y`
 - **IPv6**: Native IPv6 cases need global IPv6 on DUT and host; mapped/dual-stack cases need host AF_INET6; otherwise those cases are ignored (not failed)
 
+`test_ota.py` also contains host-side `tools/espota.py` tests that do not need a DUT. They cover the hidden password prompt (SHA-256 and legacy MD5), explicit passwords (including empty), no-auth devices, the MD5 fallback, canceled/non-interactive input, the device auth-state reset, debug-log redaction, and the Windows console probe.
+
 ## Serial Protocol
 
 1. DUT prints `OTA_READY`
