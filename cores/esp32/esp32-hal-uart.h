@@ -90,6 +90,10 @@ bool uartIsDriverInstalled(uart_t *uart);
 // Can be called before or after begin()
 bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
 
+// Registers the UART0 console pads (GPIO numbers) with Peripheral Manager at startup, before any driver is
+// installed, so another peripheral taking either pad releases the UART route on it. Called by loopTask.
+void uartRegisterConsolePins(int8_t rxPin, int8_t txPin);
+
 // helper functions
 int8_t uart_get_RxPin(uint8_t uart_num);
 int8_t uart_get_TxPin(uint8_t uart_num);
