@@ -30,10 +30,12 @@
 #include "WebServer.h"
 #include "FS.h"
 #include "detail/RequestHandlersImpl.h"
-#include "MD5Builder.h"
 #include "SHA1Builder.h"
+#if WEBSERVER_DIGEST_AUTH
+#include "MD5Builder.h"
 #include "SHA2Builder.h"
 #include "HMACBuilder.h"
+#endif
 #include "base64.h"
 
 static const char AUTHORIZATION_HEADER[] = "Authorization";
@@ -57,7 +59,9 @@ WebServer::~WebServer() {
   _clearRequestHeaders();
   _clearResponseHeaders();
   delete _chain;
+#if WEBSERVER_DIGEST_AUTH
   forced_memzero(_digestSecret, sizeof(_digestSecret));
+#endif
 
   RequestHandler *handler = _firstHandler;
   while (handler) {
@@ -80,6 +84,7 @@ void WebServer::begin(uint16_t port) {
   _server.setNoDelay(true);
 }
 
+#if WEBSERVER_DIGEST_AUTH
 String WebServer::_extractParam(String &authReq, const String &param, const char delimit) {
   int _begin = authReq.indexOf(param);
   if (_begin == -1) {
@@ -95,6 +100,7 @@ static String md5str(String &in) {
   md5.calculate();
   return md5.toString();
 }
+#endif
 
 bool WebServer::authenticateBasicSHA1(const char *_username, const char *_sha1Base64orHex) {
   return WebServer::authenticate([_username, _sha1Base64orHex](HTTPAuthMethod mode, String username, String params[]) -> String * {
@@ -157,7 +163,9 @@ bool WebServer::authenticate(const char *_username, const char *_password) {
 }
 
 bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
+#if WEBSERVER_DIGEST_AUTH
   _digestNonceStale = false;
+#endif
 
   if (!hasHeader(FPSTR(AUTHORIZATION_HEADER))) {
     return false;
@@ -200,6 +208,7 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     log_v("Authentication %s", ret ? "Success" : "Failed");
     return ret;
   } else if (authReq.startsWith(AuthTypeDigest)) {
+#if WEBSERVER_DIGEST_AUTH
     log_v("Trying to authenticate using Digest Auth");
     authReq = authReq.substring(7);
     log_v("%s", authReq.c_str());
@@ -275,6 +284,10 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     _digestNonceStale = true;
     log_v("Authentication Failed (stale nonce)");
     return false;
+#else
+    log_v("Digest authentication is disabled (WEBSERVER_DIGEST_AUTH=0)");
+    goto exf;
+#endif
   } else if (authReq.length()) {
     // OTHER_AUTH
     log_v("Trying to authenticate using Other Auth, authReq=%s", authReq.c_str());
@@ -291,6 +304,7 @@ exf:
   return false;
 }
 
+#if WEBSERVER_DIGEST_AUTH
 static const size_t DIGEST_NONCE_TS_LEN = 4;
 static const size_t DIGEST_NONCE_RND_LEN = 4;
 static const size_t DIGEST_NONCE_MAC_LEN = 16;
@@ -391,6 +405,7 @@ bool WebServer::_isDigestNonceValid(const String &nonce) {
 #endif
   return true;
 }
+#endif  // WEBSERVER_DIGEST_AUTH
 
 void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, const String &authFailMsg) {
   if (realm == NULL) {
@@ -398,6 +413,7 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
   } else {
     _srealm = String(realm);
   }
+#if WEBSERVER_DIGEST_AUTH
   if (mode == BASIC_AUTH) {
     _digestNonceStale = false;
     sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeBasic + String(F(" realm=\"")) + _srealm + String(F("\"")));
@@ -410,6 +426,18 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
     }
     sendHeader(String(FPSTR(WWW_Authenticate)), header);
   }
+#else
+  if (mode != BASIC_AUTH) {
+    // Do not downgrade to Basic: it would invite the client to send the
+    // credentials in the clear for a scheme the sketch did not ask for.
+    // Without a challenge the request cannot be authenticated, so deny it.
+    log_e("Digest authentication is disabled (WEBSERVER_DIGEST_AUTH=0); refusing to send a challenge");
+    using namespace mime;
+    send(403, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
+    return;
+  }
+  sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeBasic + String(F(" realm=\"")) + _srealm + String(F("\"")));
+#endif
   using namespace mime;
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
 }
