@@ -105,6 +105,18 @@ std::vector<std::shared_ptr<BLEClient::Impl>> BLEClient::Impl::snapshotClients()
   return clients;
 }
 
+extern "C" uint16_t bleClientAclHandle(uint16_t connId) {
+  for (auto &client : BLEClient::Impl::snapshotClients()) {
+    if (client->connId.load() == connId) {
+      uint16_t h = client->aclHandle.load();
+      if (h != 0xFFFF) {
+        return h;
+      }
+    }
+  }
+  return connId; /* Not one of ours (already an ACL handle). */
+}
+
 void BLEClient::Impl::removeClient(Impl *client) {
   BLELockGuard lock(s_clientsMtx);
   for (auto it = s_clients.begin(); it != s_clients.end();) {
@@ -747,6 +759,7 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
     return;
   }
   bool wasConnected;
+  BLEClient::DisconnectHandler disconnectHandler;
   BLEConnInfo conn;
   std::shared_ptr<BLEClient::Impl> pendingWriteOwner;
   std::shared_ptr<BLEClient::Impl> terminalCloseOwner;
@@ -756,6 +769,9 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
       return;
     }
     wasConnected = client->connected;
+    if (wasConnected) {
+      disconnectHandler = client->onDisconnectCb;
+    }
     // Capture conn info before connId is reset so the callback still sees the
     // connection that just ended.
     conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
@@ -788,7 +804,7 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
   client->rssiSync.give(BTStatus::Fail);
 
   if (wasConnected) {
-    client->dispatchDisconnect(conn, reason);
+    client->dispatchDisconnect(conn, reason, disconnectHandler);
   }
   client->disconnectSync.give(BTStatus::OK);
 }
@@ -1031,6 +1047,9 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       // client's target BDA matches.
       if (client->peerAddress.equalsEspBdAddr(param->connect.remote_bda)) {
         client->peerAddress = BTAddress::fromEspBdAddr(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
+        // The HCI ACL handle is the key the ISO transport uses (GATTS/GATTC
+        // conn ids are per-interface and mean nothing to it).
+        client->aclHandle = param->connect.conn_handle;
       }
       break;
     }

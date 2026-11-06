@@ -234,9 +234,18 @@ int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *event) {
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
+bool BLESecurity::isConfigured() const {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lock(_impl->mtx);
+  return _impl->configuredByApp;
+}
+
 void BLESecurity::setIOCapability(BLEIOCapability cap) {
   BLE_CHECK_IMPL();
   impl.ioCap = cap;
+  impl.configuredByApp = true;
   impl.applySecurityParams();
 }
 
@@ -245,6 +254,7 @@ void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool secureConn
   impl.bonding = bonding;
   impl.mitm = mitm;
   impl.sc = secureConnection;
+  impl.configuredByApp = true;
   impl.applySecurityParams();
 }
 
@@ -338,7 +348,9 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
     return BTStatus::InvalidState;
   }
   int rc = ble_gap_security_initiate(connHandle);
-  if (rc != 0) {
+  if (rc == BLE_HS_EALREADY) {
+    log_d("Security: procedure already in progress on handle=%u", connHandle);
+  } else if (rc != 0) {
     log_e("Security: ble_gap_security_initiate handle=%u rc=%d", connHandle, rc);
     return BTStatus::Fail;
   }

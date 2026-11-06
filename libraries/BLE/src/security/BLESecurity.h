@@ -61,6 +61,15 @@ public:
   void setIOCapability(BLEIOCapability cap);
 
   /**
+   * @brief Whether the sketch configured the association model itself.
+   *
+   * False until @ref setIOCapability or @ref setAuthenticationMode is called.
+   * The LE Audio engine uses this to apply its Just Works defaults without
+   * overriding a deliberate application choice.
+   */
+  bool isConfigured() const;
+
+  /**
    * @brief Set the authentication requirements for pairing.
    * @param bonding If true, enable bonding (persist keys across connections).
    * @param mitm If true, require MITM protection (passkey or numeric comparison).

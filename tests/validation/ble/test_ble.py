@@ -65,8 +65,12 @@ def _start_phase(server, client, phase_num):
     LOGGER.info("Sending START_PHASE_%d to both devices", phase_num)
     server.write(f"START_PHASE_{phase_num}\n")
     client.write(f"START_PHASE_{phase_num}\n")
-    server.expect_exact(f"[SERVER] Phase {phase_num} started", timeout=10)
-    client.expect_exact(f"[CLIENT] Phase {phase_num} started", timeout=10)
+    # 25 s, not 10 s: a phase body may still be finishing a blocking library call
+    # that has its own 10 s bound (service discovery aborted by the peer tearing
+    # the link down at the start of this phase), and the marker is only printed
+    # once loop() runs again.
+    server.expect_exact(f"[SERVER] Phase {phase_num} started", timeout=25)
+    client.expect_exact(f"[CLIENT] Phase {phase_num} started", timeout=25)
 
 
 def _phase_basic(server, client):
@@ -1585,7 +1589,8 @@ def _phase_indication_busy_retry(server, client):
 def _phase_periodic_adv_lifecycle(server, client):
     """Phase 34 — periodic-advertising teardown transitions the happy path never
     reached: an explicit terminatePeriodicSync and an onPeriodicLost after the
-    server stops the train. Self-skips without BLE5.
+    server stops the train, and verify the periodic-sync callback preserves the
+    advertiser address across backend byte orders. Self-skips without BLE5.
 
     Returns True if the phase ran, False if skipped.
     """
@@ -1599,7 +1604,7 @@ def _phase_periodic_adv_lifecycle(server, client):
         return False
 
     m_c = client.expect(
-        r"\[CLIENT\] Phase34 (synced=([01]) dataRx=([01])|BLE5 not supported, skipping)",
+        r"\[CLIENT\] Phase34 (synced=([01]) dataRx=([01]) addrMatch=([01])|BLE5 not supported, skipping)",
         timeout=45,
     )
     if b"not supported" in m_c.group(0):
@@ -1608,6 +1613,7 @@ def _phase_periodic_adv_lifecycle(server, client):
         return False
     assert int(m_c.group(2)) == 1, "periodic sync not established"
     assert int(m_c.group(3)) == 1, "periodic report not received"
+    assert int(m_c.group(4)) == 1, "periodic sync callback returned the wrong advertiser address"
 
     # At least one teardown transition must be observed: an explicit terminate
     # (deterministic) or a supervision-timeout sync-lost (timing dependent).

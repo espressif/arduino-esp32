@@ -1422,12 +1422,17 @@ void loop() {
       static unsigned long callbackEndStart = millis();
       BTStatus callbackRestart = bleStream.begin(serverName);
       if (callbackRestart || millis() - callbackEndStart >= 8000) {
+        // Tear the transient advertising down before anything else: the peer
+        // connects by address, so leaving it up while printing would let it
+        // connect to this throwaway instance instead of the final owner.
+        if (callbackRestart) {
+          bleStream.end();
+        }
         Serial.printf(
           "[SERVER] BLEStream callback end returned=%d rebegin=%d heap=%d\n", (int)bleStreamCallbackEndReturned.load(), (int)(bool)callbackRestart,
           (int)heap_caps_check_integrity_all(true)
         );
         if (callbackRestart) {
-          bleStream.end();
           bleStreamFinalOwner = std::make_shared<BLEStream>();
           // Deterministically exercise the callback handoff fallback: one
           // worker-creation failure quarantines immediately, then enough
@@ -1687,6 +1692,14 @@ void loop() {
       // controller may take several intervals before the new values propagate.
       unsigned long paramWait = millis();
       while (!phase16ConnParamsSeen && (millis() - paramWait) < 10000) {
+        delay(50);
+      }
+      // The ATT MTU exchange is not ordered against the conn-params update:
+      // Bluedroid serialises it behind the automatic service discovery, so it
+      // can complete after the param update. Sample only once both landed (or
+      // the bound expires) so this measures the events, not the race.
+      unsigned long mtuWait = millis();
+      while (!phase16MtuSeen && (millis() - mtuWait) < 10000) {
         delay(50);
       }
       Serial.printf("[SERVER] MtuChanged seen=%d last=%u\n", (int)phase16MtuSeen, (unsigned)phase16LastMtu);
@@ -2631,6 +2644,15 @@ void loop() {
   if (currentPhase >= 24 && !phase24Done) {
     phase24Done = true;
 #if BLE5_SUPPORTED
+    // Phase 23 can leave a deferred BLE.end() in flight. createServer() would
+    // then return an empty server while the stack is still ending, and the
+    // client's phase-24 connection would have no GATTS app to land on. Wait for
+    // the lifecycle to settle and re-begin if needed before creating the server.
+    for (int i = 0; i < 50 && !BLE.isInitialized(); i++) {
+      BLE.begin(serverName);
+      delay(100);
+    }
+
     BLEPhy tx = BLEPhy::PHY_1M;
     BLEPhy rx = BLEPhy::PHY_1M;
     BTStatus gd = BLE.getDefaultPhy(tx, rx);
@@ -2639,6 +2661,17 @@ void loop() {
     Serial.printf("[SERVER] Phase24 setDefaultPhy ok=%d\n", (int)(bool)sd);
 
     BLEServer srv = BLE.createServer();
+    // Phase 23's peer can still be in the list while its disconnect is in
+    // flight. Drop it explicitly and wait for the list to empty, so the
+    // dedicated phase-24 connection is the only one and conns[0] is it.
+    for (auto &c : srv.getConnections()) {
+      (void)srv.disconnect(c.getHandle());
+    }
+    unsigned long clearWait = millis() + 5000;
+    while (srv.getConnectedCount() > 0 && millis() < clearWait) {
+      delay(20);
+    }
+
     // Make sure we're advertising so the client's dedicated phase-24 connection
     // can be established, then wait for it. This exercises the per-connection
     // PHY/DLE path every run rather than only when a stale link lingers from

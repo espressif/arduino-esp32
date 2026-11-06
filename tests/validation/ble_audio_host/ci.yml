@@ -1,0 +1,25 @@
+tags:
+  - le_audio_host
+
+fqbn_append: PartitionScheme=huge_app
+
+platforms:
+  wokwi: false
+  qemu: false
+  hardware:
+    esp32: false
+    esp32s2: false
+    esp32s3: false
+    esp32c3: false
+    esp32c6: false
+    esp32h2: false
+    esp32c5: false
+    esp32c61: false
+    esp32p4: false
+
+requires:
+  - CONFIG_BT_LE_ISO_SUPPORT=y
+
+requires_any:
+  - CONFIG_SOC_BLE_SUPPORTED=y
+  - CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE=y

@@ -638,7 +638,7 @@ bool phase_ble5_scan() {
       Serial.println("[CLIENT] Found target via ext scan!");
       targetAddr = dev.getAddress();
       found = true;
-      scan.createPeriodicSync(targetAddr, 1);
+      scan.createPeriodicSync(targetAddr, dev.getAdvSID());
     }
   });
 
@@ -1836,6 +1836,14 @@ void setup() {
       // final public owner from onConnect. The link may disappear before
       // beginClient finishes discovery; callback delivery and clean disconnect
       // are the invariant under test.
+      //
+      // Settle first: the server verifies its own re-begin between tearing down
+      // this cycle and starting the final owner, so for a short window a
+      // re-advertised instance is up. A direct by-address connect landing in
+      // that window would be counted here and dropped again by the server's
+      // teardown, leaving the server's final owner waiting for a connection
+      // that already happened. The retry loop below only needs the final owner.
+      delay(750);
       std::atomic<uint32_t> finalOwnerConnects{0};
       std::atomic<uint32_t> finalOwnerDisconnects{0};
       BLEStream finalOwnerClient;
@@ -1851,7 +1859,10 @@ void setup() {
           delay(250);
         }
       }
-      unsigned long finalOwnerDeadline = millis() + 8000;
+      // The server drops the final owner from its own onConnect, so the peer
+      // disconnect follows the deferred native teardown, which is not bounded by
+      // the connect itself (NimBLE's worker can take several seconds).
+      unsigned long finalOwnerDeadline = millis() + 15000;
       while (finalOwnerDisconnects.load() == 0 && millis() < finalOwnerDeadline) {
         delay(20);
       }
@@ -2120,7 +2131,14 @@ void setup() {
       np.timeout = 400;  // 4 s
       BTStatus us = pc.updateConnParams(np);
       Serial.printf("[CLIENT] UpdateConnParams ok=%d\n", (int)(bool)us);
-      delay(2500);  // allow the controller to apply the new params
+      // Allow the controller to apply the new params, then give the ATT MTU
+      // exchange time to complete: Bluedroid serialises it behind the automatic
+      // service discovery, so CFG_MTU can land seconds after the link is up.
+      delay(2500);
+      unsigned long mtuWait = millis();
+      while (!clientMtuChanged && (millis() - mtuWait) < 8000) {
+        delay(50);
+      }
 
       Serial.printf("[CLIENT] MtuChanged seen=%d last=%u\n", (int)clientMtuChanged, (unsigned)clientMtuLast);
       // Ordering contract: when the MTU callback fired, onConnect must already
@@ -3985,6 +4003,7 @@ void setup() {
     if (st) {
       volatile bool found = false;
       volatile bool synced = false;
+      volatile bool syncAddrMatches = false;
       volatile bool dataRx = false;
       volatile bool lost = false;
       volatile uint16_t syncHandle = 0;
@@ -3999,6 +4018,7 @@ void setup() {
       });
       scan.onPeriodicSync([&](uint16_t handle, uint8_t sid, const BTAddress &addr, BLEPhy phy, uint16_t interval) {
         syncPhaseFromHost();
+        syncAddrMatches = addr == targetAddr;
         synced = true;
         syncHandle = handle;
       });
@@ -4015,7 +4035,7 @@ void setup() {
       for (int i = 0; i < 150 && !(synced && dataRx); i++) {
         delay(100);
       }
-      Serial.printf("[CLIENT] Phase34 synced=%d dataRx=%d\n", (int)synced, (int)dataRx);
+      Serial.printf("[CLIENT] Phase34 synced=%d dataRx=%d addrMatch=%d\n", (int)synced, (int)dataRx, (int)syncAddrMatches);
       ble5_ok = synced && dataRx;
 
       // Observe supervision-timeout sync-lost once the server stops the train.

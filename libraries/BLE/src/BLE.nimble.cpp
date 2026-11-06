@@ -34,6 +34,17 @@
 #include "core/BLEBackend.h"
 #include "core/BLETask.h"
 #include "core/BLEValidationHooks.h"
+#if BLE_AUDIO_SUPPORTED
+#include "audio/BLEAudioImpl.h"
+#include "audio/BLEAudioEngine.h"
+#endif
+#if BLE_ISO_SUPPORTED
+#include "iso/BLEIso.h"
+#include "iso/BLEIsoHost.h"
+#endif
+#if BLE_GATT_SERVER_SUPPORTED
+#include "gatt/BLEGattDatabase.h"
+#endif
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
@@ -44,6 +55,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <cstring>
 #include <nvs_flash.h>
 
 #if SOC_BLE_SUPPORTED
@@ -108,7 +120,16 @@ bool nimbleIsHostTask() {
 }
 
 bool bleInStackCallbackTask() {
-  return nimbleIsHostTask();
+  if (nimbleIsHostTask()) {
+    return true;
+  }
+#if BLE_AUDIO_SUPPORTED || BLE_ISO_SUPPORTED
+  TaskHandle_t current = xTaskGetCurrentTaskHandle();
+  const char *name = current ? pcTaskGetName(current) : nullptr;
+  return name && strcmp(name, "iso_task") == 0;
+#else
+  return false;
+#endif
 }
 
 void BLEClass::Impl::hostTask(void *param) {
@@ -244,6 +265,14 @@ BLEClass::~BLEClass() {
   _impl = nullptr;
 }
 
+bool BLEClass::isEnding() const {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lifecycle(_impl->lifecycleMtx);
+  return _impl->ending;
+}
+
 // When CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE is set, hostedInitBLE() runs first; a failed init returns BTStatus::Fail.
 // If a prior end(true) released controller memory, re-initialization is rejected with BTStatus::InvalidState.
 BTStatus BLEClass::begin(const String &deviceName) {
@@ -255,6 +284,10 @@ BTStatus BLEClass::begin(const String &deviceName) {
     return BTStatus::InvalidState;
   }
   if (isInitialized()) {
+    // Idempotent by design, but silent: a sketch that forgot end() keeps the
+    // previous stack (and its ACLs) alive, which then makes ISO/audio init
+    // fail later with an unrelated-looking controller error.
+    log_d("begin: BLE already initialized, keeping the current stack");
     return BTStatus::OK;
   }
 
@@ -325,6 +358,9 @@ BTStatus BLEClass::begin(const String &deviceName) {
   if (auto hook = _impl->loadHook(_impl->advBeginHook)) {
     hook();
   }
+#endif
+#if BLE_ISO_SUPPORTED
+  _impl->storeHook(_impl->isoPreEndHook, BLEIso::end);
 #endif
   if (_impl->localMTU != BLE_ATT_MTU_DFLT) {
     (void)ble_att_set_preferred_mtu(_impl->localMTU);
@@ -420,6 +456,35 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 
+  // ISO groups own their advertising/sync resources and both ISO and Audio
+  // need the live host to complete asynchronous stream termination.
+#if BLE_ISO_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->isoPreEndHook)) {
+    hook();
+  }
+  if (BLEIso::isActive()) {
+    log_e("BLE.end: ISO teardown did not complete; host shutdown aborted");
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endTask = nullptr;
+    _impl->endRunning = false;
+    _impl->ending = false;
+    return;
+  }
+#endif
+#if BLE_AUDIO_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->audioPreEndHook)) {
+    hook();
+  }
+  if (bleAudioEngineIsInitialized()) {
+    log_e("BLE.end: audio teardown did not complete; host shutdown aborted");
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endTask = nullptr;
+    _impl->endRunning = false;
+    _impl->ending = false;
+    return;
+  }
+#endif
+
   // Reset advertising state before tearing down the stack.  reset() calls
   // stop() first (handles BLE_HS_EALREADY gracefully for a fresh stack), then
   // wipes all accumulated configuration (serviceUUIDs, appearance, custom data,
@@ -440,7 +505,6 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 #endif
-
   // Close the public session before native shutdown callbacks run. Keep the
   // GATT tree alive until the host has stopped, but reject re-entrant server
   // creation and value sends while it is stopping.
@@ -974,7 +1038,7 @@ BLEServer BLEClass::createServer() {
       if (s_server) {
         s_server->releaseGattTree();
       }
-      nimbleClearRetainedGattDefs();
+      BLEGattDatabase::resetAudioStaging();
     }
   );
   {
@@ -1043,6 +1107,40 @@ BLESecurity BLEClass::getSecurity() {
 BLESecurity BLEClass::getSecurity() {
   log_w("SMP not supported");
   return BLESecurity();
+}
+#endif
+
+#if BLE_AUDIO_SUPPORTED
+namespace {
+std::shared_ptr<BLEAudio::Impl> &audioControllerSlot() {
+  static std::shared_ptr<BLEAudio::Impl> slot;
+  return slot;
+}
+}  // namespace
+
+BLEAudio BLEClass::getAudioController() {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || _impl->ending) {
+    log_e("getAudioController: BLE not initialized");
+    return BLEAudio();
+  }
+  auto &slot = audioControllerSlot();
+  if (!slot) {
+    slot = std::make_shared<BLEAudio::Impl>();
+    _impl->storeHook(
+      _impl->audioPreEndHook,
+      +[]() {
+        auto &audio = audioControllerSlot();
+        if (audio) {
+          BTStatus status = BLEAudio(audio).end();
+          if (!status) {
+            log_e("BLE.end: audio teardown failed (%s)", status.toString());
+          }
+        }
+      }
+    );
+  }
+  return BLEAudio(slot);
 }
 #endif
 

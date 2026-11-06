@@ -1170,9 +1170,11 @@ These features are new and were not available in v3.x:
 | Identity (RPA resolved) callback | `server.onIdentity(lambda)`, `client.onIdentity(lambda)` |
 | Stack identification | `BLE.getStack()`, `BLE.getStackName()` |
 | Hosted BLE (ESP32-P4) | `BLE.setPins(...)`, `BLE.isHostedBLE()` |
-| Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSync()`, `scan.terminatePeriodicSync(handle)` |
+| Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSync()`, `scan.terminatePeriodicSync(handle)`; NimBLE PAST receive: `scan.receivePeriodicSync(connHandle)`, `scan.cancelPeriodicSyncReceive(connHandle)` |
 | `BLEConnInfo` connection descriptor | Stack-agnostic connection info in all callbacks |
-| L2CAP CoC channels | `BLE.createL2CAPServer(psm, mtu)`, `BLE.connectL2CAP(connHandle, psm, mtu)` |
+| L2CAP CoC channels | `BLE.createL2CAPServer(psm, mtu)`, `BLE.connectL2CAP(connHandle, psm, mtu)` — see `examples/L2CAP_Server` + `examples/L2CAP_Client` |
+| Isochronous channels (raw CIS / BIS) | `BLEIso::begin()`, then `BLEIso::connectCis(connHandle, qos)` / `BLEIso::listenCis(qos)` (CIS, optionally bidirectional via `returnSduSize`) or `BLEIso::createBig(advHandle, qos)` / `BLEIso::syncBig(bisIndex, qos)` (BIS). Channels: `send(sdu, len)` with automatic sequence numbers, `onReceive()`, `disconnect()`. See `examples/ISO_CisCentral` + `ISO_CisPeripheral` and `ISO_BigBroadcaster` + `ISO_BigReceiver`. |
+| LE Audio (GAF) | `BLE.getAudioController()` → `audio.begin()`, `audio.create*()` role handles, `audio.start()`; `audio.connect(addr)` + `audio.onLinkReady()` for central links (required on Bluedroid). Roles: BAP unicast server/client (multi-stream), broadcast source/sink (1–2 BIS, Scan Delegator), Broadcast Assistant; CAP acceptor/initiator/commander incl. unicast↔broadcast handover; CSIP; VCP/MICP/MCP (GMCS)/CCP (GTBS); TMAP/GMAP/HAS/PBP. Audio flows through `BLEAudioStream` handles (`write()`, `onReceive()`); LC3 via `BLEAudioPlayer`/`BLEAudioRecorder` attached to streams (I2S or PCM callback). See the `examples/LEAudio_*` sketches and [AUDIO.md](AUDIO.md). |
 | BLEStream (NUS over Stream) | `BLEStream bleStream; bleStream.begin("name")` — Arduino `Stream` API over Nordic UART Service. Server mode accepts multiple centrals; `write()` broadcasts, `read()` merges RX. Per-peer: `peerCount()`, `peers()`, `writeTo()`, `onPeerData()`. Connect/disconnect callbacks receive `BLEConnInfo` and disconnect reason. |
 | Included Services | `svc.addIncludedService(otherSvc)` — GATT Included Service declarations |
 | HoGP spec-compliant HID | `BLEHIDDevice` auto-includes Battery Service, adds External Report Reference, auto-advertises HID UUID |
@@ -1212,6 +1214,19 @@ These features are new and were not available in v3.x:
 14. **Rebuild the GATT database after `BLE.end()`** -- `createServer()` still returns the same server object, but `end()` drops its services. After `begin()`, call `createService()` again (and `start()`) before advertising. Handles kept from the previous session are shells.
 
 15. **Do not call blocking GATT operations inside `subscribe()` callbacks** -- `BLERemoteCharacteristic::NotifyCallback` runs on the BLE stack task. Calling blocking GATT operations (`readValue()`, confirmed `writeValue()`, `subscribe()`) on the characteristic from inside the callback waits for a response delivered by that same task and will time out (and `readValue()` replaces the buffer `data` points into). Defer such work to another task or `loop()`.
+
+16. **Stage classic GATT before `audio.start()`** -- On NimBLE, LE Audio and
+classic `BLEServer` services share one coordinated table. Create the audio
+roles and classic services first, call `server.start()` to stage them, then
+call `audio.start()` once. Late additions return `InvalidState`; removing a
+previously committed classic service remains supported through visibility plus
+Service Changed.
+
+17. **Let `BLE.end()` own terminal audio/ISO teardown** -- `audio.end()` keeps
+the BLE host running and is refused while streams are live. For whole-stack
+shutdown, stop live streams and call `BLE.end()`; it releases an active audio
+controller and any standalone `BLEIso` session before disabling the host, and
+is safe to request from a BLE callback through its deferred worker.
 
 ---
 

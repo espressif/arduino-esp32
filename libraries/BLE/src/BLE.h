@@ -44,6 +44,8 @@
 #include "hid/BLEHIDDevice.h"
 #include "stream/BLEStream.h"
 #include "l2cap/BLEL2CAP.h"
+#include "iso/BLEIso.h"
+#include "audio/BLEAudio.h"
 
 /**
  * @brief Global BLE singleton -- the entry point for all BLE operations.
@@ -118,6 +120,14 @@ public:
   bool isInitialized() const;
 
   /**
+   * @brief Whether shutdown has claimed the current BLE session.
+   *
+   * Primarily used by retained subsystem handles to reject native operations
+   * during callback-deferred teardown.
+   */
+  bool isEnding() const;
+
+  /**
    * @brief Boolean conversion — equivalent to isInitialized().
    *
    * @return true if BLE is initialized and ready.
@@ -154,6 +164,18 @@ public:
    * @return The BTAddress::Type in use.
    */
   BTAddress::Type getOwnAddressType() const;
+
+  /**
+   * @brief Random device address programmed by `setOwnAddressType(BTAddress::Random)`.
+   *
+   * @internal Used by the Bluedroid advertising backend: extended advertising
+   * sets need the set-level random address (HCI_LE_Set_Extended_Advertising_
+   * Set_Random_Address) before they can be enabled with a random own address.
+   *
+   * @param out  Receives the 6-byte address (LSB-first) when one is programmed.
+   * @return true when an address is available.
+   */
+  bool getOwnRandomAddress(uint8_t out[6]) const;
 
   /**
    * @brief Override the local Bluetooth address.
@@ -197,6 +219,20 @@ public:
    * @return A BLESecurity handle for configuring pairing and bonding.
    */
   BLESecurity getSecurity();
+
+#if BLE_AUDIO_SUPPORTED
+  /**
+   * @brief Get the LE Audio controller handle (GAF entry point).
+   *
+   * The first call allocates the single engine-backed implementation;
+   * subsequent calls return a handle to the same instance. Only valid after
+   * begin(). Named "controller" because it manages the audio subsystem -- it
+   * does not itself carry audio data.
+   *
+   * @return A BLEAudio handle. Check with `operator bool()` for validity.
+   */
+  BLEAudio getAudioController();
+#endif
 
   /**
    * @brief Create a new GATT client instance.

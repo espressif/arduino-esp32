@@ -376,7 +376,7 @@ static bool initiateSecurityAndWait(const RemoteGattTarget &target, uint16_t con
     client->authSync.take();
     rc = ble_gap_security_initiate(connHandle);
   }
-  if (rc != 0) {
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
     client->authSync.give(BTStatus::Fail);
     return false;
   }
