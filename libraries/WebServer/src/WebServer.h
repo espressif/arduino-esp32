@@ -220,6 +220,8 @@ public:
   HTTPMethod method() const {
     return _currentMethod;
   }
+  // The client used for the current request. A derived class can override
+  // this (together with acceptClient()) to use a wrapped connection, e.g. TLS.
   virtual NetworkClient &client() {
     return _currentClient;
   }
@@ -263,7 +265,7 @@ public:
   int headers() const;                                                          // get header count
   bool hasHeader(const String &name) const;                                     // check if header exists
 
-  int clientContentLength() const;  // return "content-length" of incoming HTTP header from "_currentClient"
+  int clientContentLength() const;  // return "content-length" of incoming HTTP header from "client()"
   const String version() const;     // get the HTTP version string
   String hostHeader() const;        // get request host header if available or empty String if not
 
@@ -314,9 +316,17 @@ public:
 
 private:
   bool _chunkedResponseActive = false;
-  NetworkClient _chunkedClient;  // Store by value, no dangling pointer
+  NetworkClient *_chunkedClient = nullptr;  // Points at client(); preserves the derived write()
 
 protected:
+  // Accepts the next client. A derived class that wraps the accepted socket
+  // (for example a TLS server) should override this together with client();
+  // both must return the same object.
+  virtual NetworkClient &acceptClient() {
+    _currentClient = _server.accept();
+    return _currentClient;
+  }
+
   virtual size_t _currentClientWrite(const char *b, size_t l) {
     return client().write(b, l);
   }
