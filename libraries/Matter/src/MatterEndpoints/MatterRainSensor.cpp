@@ -43,7 +43,9 @@ MatterRainSensor::~MatterRainSensor() {
 }
 
 bool MatterRainSensor::begin() {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter Rain Sensor with Endpoint Id %u device has already been created.", getEndPointId());
@@ -53,7 +55,7 @@ bool MatterRainSensor::begin() {
   rain_sensor::config_t rain_sensor_config{};
   rain_sensor_config.boolean_state.state_value = false;
   // CHIP BooleanStateCluster still starts at false regardless of this field;
-  // apply the real sensor with setRain() after Matter.begin().
+  // setRain() after endpoint begin() caches the value and applies it at Matter.begin().
 
   endpoint_t *endpoint = rain_sensor::create(node::get(), &rain_sensor_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {

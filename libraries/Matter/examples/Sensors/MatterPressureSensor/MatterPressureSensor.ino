@@ -68,6 +68,7 @@ void setup() {
   SimulatedPressureSensor.begin(900.00);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Pressure Sensor");
   Matter.begin();
   matterWaitUntilReady();
 }

@@ -59,7 +59,9 @@ MatterOnOffPlugin::~MatterOnOffPlugin() {
 }
 
 bool MatterOnOffPlugin::begin(bool initialState) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter On-Off Plugin with Endpoint Id %u device has already been created.", getEndPointId());

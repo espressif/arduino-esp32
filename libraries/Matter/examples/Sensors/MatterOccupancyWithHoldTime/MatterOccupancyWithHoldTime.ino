@@ -151,6 +151,7 @@ void setup() {
   OccupancySensor.begin();
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Occupancy Sensor");
   Matter.begin();
 
   // Set HoldTimeLimits after Matter.begin() (optional, but recommended for validation)

@@ -78,6 +78,7 @@ void setup() {
   OnOffPlugin.onChange(setPluginOnOff);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("OnOff Plugin");
   Matter.begin();
   matterWaitUntilReady();
   Serial.printf("Initial state: %s\r\n", OnOffPlugin.getOnOff() ? "ON" : "OFF");

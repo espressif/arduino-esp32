@@ -123,6 +123,7 @@ void setup() {
   });
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Fan");
   Matter.begin();
   matterWaitUntilReady();
 }

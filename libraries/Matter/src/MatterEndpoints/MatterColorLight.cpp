@@ -233,7 +233,9 @@ MatterColorLight::~MatterColorLight() {
 }
 
 bool MatterColorLight::begin(bool initialState, espHsvColor_t _colorHSV) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter RGB Color Light with Endpoint Id %u device has already been created.", getEndPointId());

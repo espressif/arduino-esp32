@@ -70,6 +70,7 @@ void setup() {
   SimulatedThermostat.begin(MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_HEATING, MatterThermostat::THERMOSTAT_AUTO_MODE_ENABLED);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Thermostat");
   Matter.begin();
   matterWaitUntilReady();
 
