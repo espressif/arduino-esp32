@@ -15,7 +15,7 @@
 // CHIPoBLE commissioning, then automatic BLE RAM release after a fabric exists.
 // onBLEMemoryReleased() runs when that RAM is back on the heap — allocate large
 // buffers from loop(), not from the callback (it runs on the CHIP task).
-// Do not use the Arduino BLE library (BLE.h / BLEDevice) in this sketch.
+// Do not use the Arduino BLE library (BLE.h) in this sketch.
 // Fallback when CHIPoBLE is not in the build: matterConnectWiFi(WIFI_SSID, WIFI_PASSWORD); BLE RAM release does not apply.
 
 #include <Arduino.h>
@@ -107,6 +107,7 @@ void setup() {
 
   sHeapBeforeBegin = ESP.getFreeHeap();
   printHeap("Before Matter.begin()");
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
   sHeapAfterBegin = ESP.getFreeHeap();
   printHeap("After Matter.begin()");

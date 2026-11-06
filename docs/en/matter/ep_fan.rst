@@ -8,20 +8,20 @@ About
 The ``MatterFan`` class provides a fan endpoint for Matter networks with speed and mode control. This endpoint implements the Matter fan control standard.
 
 **Features:**
-* On/off control
-* Fan speed control (0-100%)
-* Fan mode control (OFF, LOW, MEDIUM, HIGH, AUTO). ``ON`` and ``SMART`` are remapped, not stored
-* Fan mode sequence configuration
-* Callback support for state, speed, and mode changes
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* On/off control.
+* Fan speed control (0-100%).
+* Fan mode control (OFF, LOW, MEDIUM, HIGH, AUTO). ``ON`` and ``SMART`` are remapped, not stored.
+* Fan mode sequence configuration.
+* Callback support for state, speed, and mode changes.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Smart ceiling fans
-* Exhaust fans
-* Ventilation fans
-* Fan speed controllers
-* HVAC fan control
+* Smart ceiling fans.
+* Exhaust fans.
+* Ventilation fans.
+* Fan speed controllers.
+* HVAC fan control.
 
 API Reference
 -------------
@@ -51,8 +51,8 @@ Initializes the Matter fan endpoint with optional initial speed, mode, and mode 
     bool begin(uint8_t percent = 0, FanMode_t fanMode = FAN_MODE_OFF, FanModeSequence_t fanModeSeq = FAN_MODE_SEQ_OFF_HIGH);
 
 * ``percent`` - Initial speed percentage (0-100, default: 0). Forced to ``0`` when ``fanMode`` is ``FAN_MODE_OFF``. In Auto, this is ``PercentCurrent`` only; ``PercentSetting`` is null.
-* ``fanMode`` - Initial fan mode (default: ``FAN_MODE_OFF``)
-* ``fanModeSeq`` - Fan mode sequence configuration (default: ``FAN_MODE_SEQ_OFF_HIGH``)
+* ``fanMode`` - Initial fan mode (default: ``FAN_MODE_OFF``).
+* ``fanModeSeq`` - Fan mode sequence configuration (default: ``FAN_MODE_SEQ_OFF_HIGH``).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -103,13 +103,13 @@ FanMode_t
 
 Fan mode enumeration:
 
-* ``FAN_MODE_OFF`` - Fan is off
-* ``FAN_MODE_LOW`` - Low speed
-* ``FAN_MODE_MEDIUM`` - Medium speed
-* ``FAN_MODE_HIGH`` - High speed
-* ``FAN_MODE_ON`` - Alias: stored as ``FAN_MODE_HIGH``
-* ``FAN_MODE_AUTO`` - Auto mode (only valid in an Auto sequence)
-* ``FAN_MODE_SMART`` - Alias: stored as ``FAN_MODE_AUTO`` if the sequence includes Auto, otherwise ``FAN_MODE_HIGH``
+* ``FAN_MODE_OFF`` - Fan is off.
+* ``FAN_MODE_LOW`` - Low speed.
+* ``FAN_MODE_MEDIUM`` - Medium speed.
+* ``FAN_MODE_HIGH`` - High speed.
+* ``FAN_MODE_ON`` - Alias: stored as ``FAN_MODE_HIGH``.
+* ``FAN_MODE_AUTO`` - Auto mode (only valid in an Auto sequence).
+* ``FAN_MODE_SMART`` - Alias: stored as ``FAN_MODE_AUTO`` if the sequence includes Auto, otherwise ``FAN_MODE_HIGH``.
 
 Matter ``FanModeSequence`` never includes On or Smart. CHIP remaps those writes the same way.
 
@@ -121,12 +121,12 @@ FanModeSequence_t
 
 Fan mode sequence enumeration:
 
-* ``FAN_MODE_SEQ_OFF_LOW_MED_HIGH`` - OFF, LOW, MEDIUM, HIGH
-* ``FAN_MODE_SEQ_OFF_LOW_HIGH`` - OFF, LOW, HIGH
-* ``FAN_MODE_SEQ_OFF_LOW_MED_HIGH_AUTO`` - OFF, LOW, MEDIUM, HIGH, AUTO
-* ``FAN_MODE_SEQ_OFF_LOW_HIGH_AUTO`` - OFF, LOW, HIGH, AUTO
-* ``FAN_MODE_SEQ_OFF_HIGH_AUTO`` - OFF, HIGH, AUTO
-* ``FAN_MODE_SEQ_OFF_HIGH`` - OFF, HIGH
+* ``FAN_MODE_SEQ_OFF_LOW_MED_HIGH`` - OFF, LOW, MEDIUM, HIGH.
+* ``FAN_MODE_SEQ_OFF_LOW_HIGH`` - OFF, LOW, HIGH.
+* ``FAN_MODE_SEQ_OFF_LOW_MED_HIGH_AUTO`` - OFF, LOW, MEDIUM, HIGH, AUTO.
+* ``FAN_MODE_SEQ_OFF_LOW_HIGH_AUTO`` - OFF, LOW, HIGH, AUTO.
+* ``FAN_MODE_SEQ_OFF_HIGH_AUTO`` - OFF, HIGH, AUTO.
+* ``FAN_MODE_SEQ_OFF_HIGH`` - OFF, HIGH.
 
 On/Off Control
 **************
@@ -140,8 +140,8 @@ Sets the on/off state of the fan.
 
     bool setOnOff(bool newState, bool performUpdate = true);
 
-* ``newState`` - New state (``true`` = on, ``false`` = off)
-* ``performUpdate`` - Perform update after setting (default: ``true``)
+* ``newState`` - New state (``true`` = on, ``false`` = off).
+* ``performUpdate`` - Perform update after setting (default: ``true``).
 
 getOnOff
 ^^^^^^^^
@@ -173,10 +173,10 @@ Sets the fan speed percentage.
 
     bool setSpeedPercent(uint8_t newPercent, bool performUpdate = true);
 
-* ``newPercent`` - Speed percentage (0-100)
-* ``performUpdate`` - Perform update after setting (default: ``true``)
+* ``newPercent`` - Speed percentage (0-100).
+* ``performUpdate`` - Perform update after setting (default: ``true``).
 
-Writes nullable ``PercentSetting`` and non-nullable ``PercentCurrent`` separately. In Auto, Matter may null ``PercentSetting``; ``PercentCurrent`` stays 0-100.
+Writes nullable ``PercentSetting`` and non-nullable ``PercentCurrent`` separately. In ``FAN_MODE_AUTO``, this updates ``PercentCurrent`` only so ``PercentSetting`` stays null (CHIP accepts a non-null Auto write; Arduino skips it). In other modes both attributes are written. After ``Matter.begin()``, a non-zero setting while Off turns the cluster on (Low/Med/High); ``0`` turns it Off. Arduino then refreshes ``getMode()`` / ``getOnOff()`` from the cluster. ``PercentCurrent`` stays 0-100.
 
 getSpeedPercent
 ^^^^^^^^^^^^^^^
@@ -199,8 +199,8 @@ Sets the fan mode.
 
     bool setMode(FanMode_t newMode, bool performUpdate = true);
 
-* ``newMode`` - Fan mode to set. ``FAN_MODE_ON`` and ``FAN_MODE_SMART`` are remapped as described under ``FanMode_t``
-* ``performUpdate`` - Perform update after setting (default: ``true``)
+* ``newMode`` - Fan mode to set. ``FAN_MODE_ON`` and ``FAN_MODE_SMART`` are remapped as described under ``FanMode_t``.
+* ``performUpdate`` - Perform update after setting (default: ``true``).
 
 Matches CHIP after the mode write: ``FAN_MODE_OFF`` sets ``PercentSetting`` and ``PercentCurrent`` to ``0``; ``FAN_MODE_AUTO`` nulls ``PercentSetting`` and leaves ``PercentCurrent`` as the actual speed.
 

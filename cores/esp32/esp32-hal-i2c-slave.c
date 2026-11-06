@@ -76,7 +76,7 @@
 
 #define I2C_SLAVE_USE_RX_QUEUE 0  // 1: Queue, 0: RingBuffer
 
-#ifdef CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
 #define I2C_SCL_IDX(p) ((p == 0) ? I2C0_SCL_PAD_OUT_IDX : ((p == 1) ? I2C1_SCL_PAD_OUT_IDX : 0))
 #define I2C_SDA_IDX(p) ((p == 0) ? I2C0_SDA_PAD_OUT_IDX : ((p == 1) ? I2C1_SDA_PAD_OUT_IDX : 0))
 #else
@@ -171,13 +171,12 @@ typedef enum {
 } i2c_stretch_cause_t;
 
 static inline i2c_stretch_cause_t i2c_ll_stretch_cause(i2c_dev_t *hw) {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 \
-  || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
-  return hw->sr.stretch_cause;
+#if CONFIG_IDF_TARGET_ESP32
+  return I2C_STRETCH_CAUSE_MAX;
 #elif CONFIG_IDF_TARGET_ESP32S2
   return hw->status_reg.stretch_cause;
 #else
-  return I2C_STRETCH_CAUSE_MAX;
+  return hw->sr.stretch_cause;
 #endif
 }
 
@@ -402,14 +401,14 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
   if (!i2c->intr_handle) {
     uint32_t flags = ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_SHARED;
     if (i2c->num == 0) {
-#if !defined(CONFIG_IDF_TARGET_ESP32P4)
+#if !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32S31)
       ret = esp_intr_alloc(ETS_I2C_EXT0_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
 #else
       ret = esp_intr_alloc(ETS_I2C0_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
 #endif
 #if SOC_HP_I2C_NUM > 1
     } else {
-#if !defined(CONFIG_IDF_TARGET_ESP32P4)
+#if !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32S31)
       ret = esp_intr_alloc(ETS_I2C_EXT1_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
 #else
       ret = esp_intr_alloc(ETS_I2C1_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);

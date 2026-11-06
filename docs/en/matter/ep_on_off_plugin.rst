@@ -8,18 +8,18 @@ About
 The ``MatterOnOffPlugin`` class provides an on/off plugin unit endpoint for Matter networks. This endpoint implements the Matter on/off plugin standard for controlling power outlets, relays, and other on/off devices.
 
 **Features:**
-* Simple on/off control
-* State persistence support
-* Callback support for state changes
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Simple on/off control.
+* State persistence support.
+* Callback support for state changes.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Smart power outlets
-* Relay control
-* Power switches
-* Smart plugs
-* On/off device control
+* Smart power outlets.
+* Relay control.
+* Power switches.
+* Smart plugs.
+* On/off device control.
 
 API Reference
 -------------
@@ -48,7 +48,7 @@ Initializes the Matter on/off plugin endpoint with an optional initial state.
 
     bool begin(bool initialState = false);
 
-* ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``)
+* ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -73,7 +73,7 @@ Sets the on/off state of the plugin.
 
     bool setOnOff(bool newState);
 
-* ``newState`` - New state (``true`` = on, ``false`` = off)
+* ``newState`` - New state (``true`` = on, ``false`` = off).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -147,7 +147,7 @@ Sets a callback function to be called when the plugin state changes.
 
     void onChange(EndPointCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when state changes
+* ``onChangeCB`` - Function to call when state changes.
 
 The callback signature is:
 
@@ -155,7 +155,7 @@ The callback signature is:
 
     bool onChangeCallback(bool newState);
 
-* ``newState`` - New on/off state (``true`` = on, ``false`` = off)
+* ``newState`` - New on/off state (``true`` = on, ``false`` = off).
 
 onChangeOnOff
 ^^^^^^^^^^^^^

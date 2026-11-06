@@ -115,7 +115,7 @@ MatterThermostat::~MatterThermostat() {
 }
 
 bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, ThermostatAutoMode_t _autoMode) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Thermostat with Endpoint Id %u device has already been created.", getEndPointId());

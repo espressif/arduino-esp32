@@ -70,8 +70,8 @@ Before uploading the sketch, configure the following:
 
 1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
-   const char *password = "your-password"; // Change to your Wi-Fi password
+   #define WIFI_SSID "your-ssid"         // Change to your Wi-Fi SSID
+   #define WIFI_PASSWORD "your-password" // Change to your Wi-Fi password
    ```
 
 2. **Power relay/dimmer pin configuration** (if not using built-in LED):

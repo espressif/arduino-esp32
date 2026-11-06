@@ -1,0 +1,701 @@
+# BLE Library Design
+
+## Purpose
+
+This document is for maintainers and AI tools.
+It describes the architecture, invariants, and design rules that should guide future changes.
+It intentionally does not describe every file.
+
+## Main goals
+
+The library is built around these goals:
+
+- expose one public BLE API for all supported BLE stacks
+- use value-style public handles instead of user-managed raw pointers
+- standardize result handling on `BTStatus`
+- separate GATT properties from security permissions
+- support multiple concurrent BLE clients
+- keep advanced features such as BLE5, BLEStream, and L2CAP behind the same design rules
+- fix long-standing lifecycle, ownership, and spec-compliance issues from the original Kolban-era library
+
+## Non-goals
+
+These are **not** design goals:
+
+- source compatibility with the legacy Kolban-style BLE API
+- ArduinoBLE API compatibility in the core library itself
+- exposing NimBLE- or Bluedroid-specific types in user-facing APIs
+- letting public behavior drift per backend
+
+Backend differences may exist internally, but they should stay behind the common API surface.
+
+## High-level architecture
+
+The library is organized by **component** (feature folder), not by layer. Each
+class lives in one folder that holds its whole vertical slice — public handle,
+shared implementation base, and both backend implementations — with the layer of
+each file encoded in its name rather than its directory:
+
+- **Public handle** — `component/BLEFoo.h` / `BLEFoo.cpp` (the API contract and
+  its backend-agnostic method bodies).
+- **Shared implementation base** — `component/BLEFooImpl.h` (`struct
+  BLEFooImplCommon`), compiled into every build.
+- **Backend implementations** — `component/BLEFoo.nimble.{h,cpp}` and
+  `component/BLEFoo.bluedroid.{h,cpp}` (`struct BLEFoo::Impl` and its native
+  callbacks), each compiled only for its stack.
+
+Two folders hold code that is not owned by a single component:
+
+- `src/core/` — cross-cutting infrastructure: backend guards (`BLEGuards.h`),
+  the `BLELockGuard`/`BLESync` primitives, the `BLE_CHECK_IMPL` helper, the
+  single backend selector `BLEBackend.h`, the compile-time
+  `BLEBackendContract.h`, and the test-only `BLEValidationHooks` injector
+  (compiled in only when `BLE_VALIDATION_HOOKS` is set; not a public API).
+- `src/types/` — backend-agnostic value types shared across components
+  (`BLEUUID`, `BLEConnInfo`, `BLEAdvTypes`, `BLEProperty`), including their
+  small per-stack converter helpers (`BLEUUID.nimble.*`, etc.).
+
+`src/BLE.h` is the umbrella that exposes the public handles; the `BLEClass`
+front-door (`BLE.cpp`, `BLE.nimble.*`, `BLE.bluedroid.*`) sits at the `src/`
+root. The public handles own the API contract; backends implement that contract
+and must not redefine it.
+
+`BLEStream` additionally splits its server and client roles into separate
+translation units behind a small common role interface. Keep server-only
+sketches free of remote-client references (and vice versa); common lifecycle
+code must remove role admission under its short-lived mutex while retaining
+local shared ownership so concurrent operations and callback-reentrant `end()`
+cannot destroy the role whose teardown is executing.
+
+## Backend model
+
+Backend choice is centralized in `core/BLEGuards.h`.
+All BLE code must use these guards instead of repeating raw SDK config checks.
+
+Stack selection guards:
+
+- `BLE_ENABLED`: any supported BLE backend is available
+- `BLE_NIMBLE`: NimBLE backend selected
+- `BLE_BLUEDROID`: Bluedroid backend selected
+
+Feature guards (derived from Kconfig / SoC capabilities):
+
+- `BLE_GATT_SERVER_SUPPORTED`: GATT server role available
+- `BLE_GATT_CLIENT_SUPPORTED`: GATT client role available
+- `BLE_SMP_SUPPORTED`: Security Manager Protocol available
+- `BLE_SCANNING_SUPPORTED`: BLE scanning available
+- `BLE_ADVERTISING_SUPPORTED`: BLE advertising available
+- `BLE_VALIDATION_HOOKS`: test-only injectors (`core/BLEValidationHooks`); off in production. The validation suite enables it with `-DBLE_VALIDATION_HOOKS`.
+- `BLE5_SUPPORTED`: BLE 5.0 features (extended advertising, PHY selection, periodic advertising)
+- `BLE_L2CAP_SUPPORTED`: L2CAP CoC channels; NimBLE only, requires explicit Kconfig
+
+### Hosted BLE
+
+NimBLE also runs on ESP32-P4 via the esp-hosted bridge (`CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE`).
+`BLEGuards.h` accounts for this: `BLE_NIMBLE` is set even when the SoC has no native BT controller.
+`BLEClass::isHostedBLE()` and `BLEClass::setPins()` expose the hosted-specific configuration.
+
+### Design rule
+
+Do not push backend-specific conditionals into user code or public APIs unless there is no alternative.
+If a feature is stack-exclusive, prefer keeping the public API and returning `BTStatus::NotSupported` at runtime with a log message.
+
+## Public object model
+
+### `BLE`
+
+`BLE` is the global entry point following the Arduino convention (`WiFi`, `Wire`, etc.).
+It owns stack initialization, shutdown, controller-level settings, and factories for the rest of the library.
+
+### Singleton-style handles
+
+These objects are effectively global shared handles returned by `BLE`:
+
+- `BLE.createServer()`
+- `BLE.getScan()`
+- `BLE.getAdvertising()`
+- `BLE.getSecurity()`
+
+Repeated calls return handles to the same underlying object. Implementations live in
+`BLE.<stack>.cpp`; each starts with the same two-line `isInitialized()` guard (written out
+directly, not through a shared wrapper), then writes its own lazy-singleton alloc and backend
+post-create wiring directly (Bluedroid additionally sets `s_instance` for GAP event routing and may
+call register helpers like `bluedroidRegisterGattsApp`). There's no generic factory helper: the
+lazy-singleton/fresh-instance split and the post-create logic genuinely differ per factory, so a
+shared "one size fits all" abstraction would either need to be bypassed regularly (as Bluedroid's
+`createServer` already must be, for its asynchronous GATTS registration retry) or made generic
+enough that it stopped being easier to read than the explicit code it replaced.
+`BLEClass()`/`~BLEClass()` need a complete `BLEClass::Impl` (backend-specific), so they're defined
+once per backend `BLE.<stack>.cpp` rather than shared — 7 identical lines duplicated is cheaper than a
+shared header for this one case.
+
+### Per-instance handles
+
+`BLE.createClient()` returns a fresh client instance each time.
+This is a hard design requirement: multi-client support must remain possible.
+Each backend's `createClient()` writes the same guard + fresh-alloc pattern directly; Bluedroid
+additionally delegates stack registration to `bluedroidRegisterClient` in `BLEClient.bluedroid.cpp`.
+
+### GATT handles
+
+Server-side and client-side GATT objects are lightweight handles:
+
+- local: `BLEService`, `BLECharacteristic`, `BLEDescriptor`
+- remote: `BLERemoteService`, `BLERemoteCharacteristic`, `BLERemoteDescriptor`
+
+These objects are copied by value but refer to shared underlying state.
+
+### Connection metadata
+
+`BLEConnInfo` is the stack-agnostic connection descriptor.
+It replaces backend-specific callback parameter types and stores its data inline.
+Public APIs should prefer `BLEConnInfo` over raw NimBLE/Bluedroid structs.
+
+## PIMPL pattern
+
+Every public BLE class that represents a radio resource uses the PIMPL pattern: the public header forward-declares `struct Impl` and holds only a `std::shared_ptr<Impl>` as its data member.
+The `Impl` struct is defined entirely inside the backend `.cpp` file, so public headers never include NimBLE or Bluedroid headers.
+This gives clean backend isolation: changing an Impl definition is a `.cpp`-only change with no effect on the public ABI.
+
+**Impl composition model (two-layer: shared base + concrete backend `Impl`).**
+Where a class has meaningful stack-agnostic state/logic, the concrete `Foo::Impl` — defined by the
+active backend — inherits the shared base directly. There is no intermediate mixin and no empty combiner:
+
+```cpp
+// server/BLEServerImpl.h  — shared, compiled in every build
+struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> { /* shared state + methods */ };
+
+// server/BLEServer.nimble.h   — the NimBLE build's concrete Impl
+struct BLEServer::Impl : BLEServerImplCommon { /* NimBLE state + static handlers */ };
+```
+
+- `_impl` is a `std::shared_ptr<Impl>` pointing at the concrete `Foo::Impl` (`make_shared<Impl>()`).
+- Stack-agnostic state and dispatch live in `*ImplCommon` (`src/<component>/BLEFooImpl.h`), shared by both backends (kills duplication — item 4).
+- Backend-only state/statics live on `Foo::Impl` itself, **defined in the backend file** (`<component>/BLEFoo.<stack>.h`). The file name (and the Doxygen "NimBLE-specific"/"Bluedroid-specific" brief) tells you a member's layer: `FooImplCommon::` = shared, `Foo::Impl::` in a `.nimble.*`/`.bluedroid.*` file = backend (item 2).
+- Access is **uniform and cast-free** via inheritance: `_impl->mtx`, `_impl->gattsIf`, `service->server->gattsIf` all resolve. No `static_cast`, no `backend()` helper, no mixin name to learn.
+- The single sanctioned access pattern in `.cpp` code is the `BLE_CHECK_IMPL(...)` null-guard macro, which yields a cast-free `impl` reference (item 3).
+- Backends reconstruct a public handle from a raw `Impl*` via `enable_shared_from_this` and a static `*ImplCommon::makeHandle` factory, avoiding extra `friend` declarations.
+
+This shared-base split is applied wherever there is real cross-backend duplication (Server, Service, Characteristic, Descriptor, Client, the three Remote types, Security, AdvertisedDevice). Classes that are inherently per-backend with no shared state (`BLEClass`, `Scan`, `Advertising`, `BLEL2CAPServer`) define `Foo::Impl` directly with no base. All backend `Impl` layouts are pulled in through the single umbrella selector `core/BLEBackend.h`, which also `#include`s the compile-time contract check `core/BLEBackendContract.h`; a CI guard (`tests/check_backend_isolation.sh`) fails the build if a public header names a backend type or includes a backend/selector header. Backend obligations are spelled out in [Backend contract](#backend-contract) below; stack-specific notes live in `docs/backend-nimble.md` and `docs/backend-bluedroid.md`.
+
+**Handle construction: `makeHandle` vs. the private constructor.**
+Every public handle's `std::shared_ptr<Impl>` constructor is **private** — handles must only be minted by the library, never fabricated by user code around an arbitrary `Impl*`. Code that needs to build a handle falls into two groups:
+
+- *Friends* of the handle — the owning public classes (e.g. `BLEServer` building a `BLEService`) and the class's own `*ImplCommon` — call the private constructor directly.
+- *Backend code* — the `BLEFoo.<stack>.cpp` translation units (the concrete `Foo::Impl` and its `static` GAP/GATT callbacks) — is deliberately **not** a friend. It mints handles through the one static factory `*ImplCommon::makeHandle(...)`, which is a member of the single befriended type per class.
+
+The point is to keep the `friend` surface minimal (item 5): each handle declares exactly one `friend struct BLE<T>ImplCommon` instead of befriending every backend TU and free function across both stacks. `makeHandle` additionally centralizes the raw-`Impl*` → owning-`shared_ptr` reconstruction (`impl->shared_from_this()`) for the callback paths that receive a bare `Impl*` through a `void *arg`, so that step is written and audited once rather than at every call site. The rejected alternatives: a **public constructor** would break encapsulation (any caller could wrap a foreign/dangling `Impl*`), and **per-backend `friend` declarations** would proliferate friendship (two backends × many TUs) for no clarity gain. So inside friend/public code the constructor is used directly; backend code uses `makeHandle`.
+
+**Exception: `BLEStream`** is non-copyable/non-movable, but holds its `Impl` through
+`shared_ptr`. Callback-context `end()` may defer blocking native teardown to a
+worker, so that worker retains the Impl and active role until cleanup finishes.
+The worker retries `role->end()` with a bounded backoff; if the worker cannot be
+created or retries are exhausted, the role is quarantined without reopening
+admission, retried by a later BLEStream start, and retained until cleanup
+succeeds or `BLE.end()` has stopped the native host.
+The public object still has exclusive RAII semantics:
+`begin()`/`beginClient()` acquire resources, and `end()` or the destructor
+releases them.
+
+## Ownership and lifetime rules
+
+BLE objects represent physical or radio resources — there is only one physical server, one physical connection, one characteristic attribute.
+These resources cannot be deep-copied.
+`std::shared_ptr<Impl>` is used instead of `std::unique_ptr<Impl>` for two reasons:
+
+- it allows multiple handles to the same resource from different places in user code (a global variable, a callback capture, a function parameter), all equally valid
+- `std::shared_ptr` type-erases its deleter, so it does not require the complete `Impl` type at the header declaration site — forward-declaring `struct Impl;` is sufficient
+
+Because `std::shared_ptr` has well-defined copy, move, and destruction semantics, all five special member functions are compiler-generated defaults on every public handle class.
+No user `delete` is ever needed or safe.
+
+Handle states and semantics:
+
+- **default-constructed**: empty handle, `operator bool() == false`
+- **copy**: both handles share the same Impl (refcount incremented); both are equally valid
+- **move**: source becomes empty, destination acquires ownership
+- **destruction**: refcount decremented; Impl is freed when the last handle is released
+- **multiple handles**: interchangeable — operations on any handle affect the same underlying resource
+
+The null-handle guard is standardized through the `BLE_CHECK_IMPL` macro in `core/BLEImplHelpers.h`.
+If a public handle has no Impl, methods return a safe default or `BTStatus::InvalidState`.
+
+### Parent-child ownership
+
+BLE objects form strict ownership trees:
+
+- Server → Service → Characteristic → Descriptor
+- Client → RemoteService → RemoteCharacteristic → RemoteDescriptor
+
+Parent Impls hold `std::shared_ptr` to child Impls (strong ownership).
+Child Impls (both local server-side and remote client-side) hold a raw `Impl*`
+attachment marker plus a `std::weak_ptr` to the same parent. Code locks the weak
+owner first, then revalidates the raw marker under the hierarchy's mutex; it
+never traverses an unretained raw parent.
+Before `end()`, a disconnect/removal API, or parent destruction releases a
+tree's ownership, the library recursively clears every raw back-reference and
+child cache and converts any externally retained child handle into a detached
+shell; parent navigation then returns an empty handle and operations that
+require the parent/connection fail safely.
+Each remote service also captures the client's connection generation, so recycling a native connection handle cannot make a stale remote tree operate on a later link.
+Using `shared_ptr` in both directions would create reference cycles and leak everything.
+
+### `enable_shared_from_this` and handle reconstruction
+
+Impl structs that need to reconstruct a public handle from a raw `Impl*` inherit from `std::enable_shared_from_this<Impl>`.
+This solves two problems that arise because internal code often holds only a raw `Impl*`:
+
+1. **Callback dispatch** — Backend event handlers (static C callbacks from NimBLE/Bluedroid) receive a raw `Impl*` via context pointers. To invoke the user's `std::function` callback they must construct a public handle (e.g. `BLECharacteristic`), which requires a `shared_ptr<Impl>`. `shared_from_this()` safely promotes the raw pointer without creating a second ownership group.
+
+2. **Child-to-parent navigation** — Methods like
+   `BLEDescriptor::getCharacteristic()`, `BLEService::getServer()`, and
+   `BLERemoteCharacteristic::getRemoteService()` lock the child's weak parent
+   owner, then validate the raw attachment marker before constructing the
+   public handle.
+
+**Safety constraint:** `shared_from_this()` may only be called on an Impl that is
+already owned by at least one `shared_ptr`. Impls are created via
+`std::make_shared` in factory methods, and callback paths only reconstruct a
+handle while the registered object is retained by the active native tree.
+
+### Lifecycle after `BLE.end()`
+
+When `BLE.end()` is called, each Impl releases its child ownership chains, frees internal heap allocations, and marks itself as not initialized.
+The bulk of memory is reclaimed immediately.
+If the user still holds a child handle, its Impl enters a minimal shell state that persists until the last handle is released, at which point the shell is freed automatically. Top-level singleton Impls remain library-owned but release their session resources.
+This means `BLE.end(true)` (controller memory release) works correctly even if the user has forgotten to clear global handles.
+`BLE.createServer()` is a process-lifetime singleton (one physical GATT server): `end()` keeps that object and drops its services, so a later `begin()` plus `createServer()` returns the same empty server. The sketch must recreate the GATT tree; calling `createService()` without `end()` having cleared the previous tree would otherwise register a second copy.
+
+Retained scan, advertising, and periodic-sync handles are closed by `BLEAdmissionGate` before the host is disabled, so a late `start()`/`stop()`/`reset()` cannot enter a native API after teardown has begun. Closed-gate `stop()` and `clearExtended()` are idempotent (`OK`); `start()` returns `InvalidState`; `cancelPeriodicSync` / `terminatePeriodicSync` also return `InvalidState` because they are not stop-like. `clearExtended()` while a set is still enabled returns `Fail` and leaves advertising flags unchanged. Closed-gate `reset()` still clears software config and advertising flags without native calls (including on BLE4.2, where there is no extended-instance block), so `beginBackendShutdown()` stops every advertising instance unconditionally, then `reset()` for the software clear. Bluedroid extended stop/clear is asynchronous: shutdown and admitted `reset()` wait for each `EXT_ADV_STOP_COMPLETE` (and periodic stop) before `HCI_LE_Clear_Advertising_Sets`, which is Command Disallowed while advertising or periodic advertising is still enabled on any set (Vol 4, Part E, §7.8.60). Public `clearExtended()` also waits for `EXT_ADV_SET_CLEAR_COMPLETE`. Stop, clear, and periodic-stop completes give `advSync` only when that command is the armed waiter, so a leftover or extra complete cannot release a different setup/start wait. NimBLE `ble_gap_ext_adv_stop`/`clear` are host-synchronous, so they do not wait on a completion event. Teardown itself is the shutdown caller and stops native sessions without re-entering the gate.
+
+### True value types
+
+The following types carry no Impl and use plain value semantics with no special considerations:
+`BTAddress`, `BTStatus`, `BLEUUID`, `BLEConnInfo`, `BLEAdvertisementData`, `BLEScan::Results`.
+
+### Design rule
+
+New public BLE handle types should follow the shared-handle model unless there is a strong, explicit reason not to.
+Do not introduce new user-owned heap objects for normal BLE flows.
+
+## Callback model
+
+All public BLE classes use per-event registration via `std::function`.
+Examples include `BLECharacteristic::onWrite(...)`, `BLEClient::onDisconnect(...)`, and `BLEScan::onResult(...)`.
+Every class that registers callbacks also provides `resetCallbacks()` to clear them all.
+
+Do not add new `Callbacks` abstract classes or function-pointer callback types.
+When extending the library, always use the per-event `std::function` registration style.
+
+### Callback dispatch rule
+
+Callbacks are copied under the object mutex and invoked after the lock is released.
+This avoids calling user code while internal locks are held.
+Preserve that pattern.
+
+Mutable handle references passed to callbacks are borrowed for that callback invocation.
+A callback may copy the handle (the normal cheap shared-handle copy) when it needs to retain it,
+but must not retain a pointer or reference to the callback parameter itself.
+
+### Execution-context rule
+
+BLE callbacks can run on stack-controlled contexts, not only on the Arduino `loop()` thread.
+They must stay short, avoid blocking the stack, and avoid assumptions about call ordering relative to sketch code.
+
+## Concurrency and synchronization
+
+This library uses FreeRTOS primitives directly.
+It deliberately avoids `std::mutex` to keep binary size down.
+
+Current primitives:
+
+- `BLELockGuard` (`core/BLEMutex.h`): RAII wrapper around a FreeRTOS recursive mutex
+- `BLESync` (`core/BLESync.h`): blocking bridge for async stack operations
+- `BLEAdmissionGate` (`core/BLEAdmission.h`): lock-free retained-handle native-call gate (increment in-flight, then sample the open flag)
+
+`BLESync` is used when the public API offers a blocking operation while the backend completes it asynchronously.
+The expected pattern is: prepare with `take()`, start async stack work, wait with `wait(timeoutMs)`, release from the stack callback with `give(status)`.
+
+`BLEAdmissionGate` is used when a retained public handle can still issue native calls after factory admission has closed. Shutdown stores the flag closed, waits until in-flight reaches zero, then disables the host. `begin()` reopens the gate. Scan, advertising, NimBLE periodic-sync, and Bluedroid terminal-close admission share this primitive. It is **not** a retain/dispatch registry: Bluedroid `snapshotClients`, terminal-close owners, NimBLE scan `EventContext` retirement, and BLEStream quarantine stay per-stack.
+
+### Design rules
+
+- use `SemaphoreHandle_t` + `BLELockGuard` for internal BLE mutexes
+- do not introduce `std::mutex` into BLE internals
+- when wrapping async backend flows with synchronous public APIs, use `BLESync` instead of ad-hoc synchronization
+- never invoke user callbacks while holding an internal mutex
+- do not invent a second open-flag plus in-flight counter; use `BLEAdmissionGate`
+
+## Error model
+
+`BTStatus` is the standard status/result type for BLE operations.
+It is shared with BT Classic infrastructure and is intentionally tiny.
+
+### Design rules
+
+- return `BTStatus` for operations that can fail
+- use specific statuses (`Timeout`, `NotFound`, `NotSupported`, `AlreadyConnected`, `InvalidState`, etc.) instead of generic failure where possible
+- do not mix `bool`, raw stack error codes, and silent failure semantics in new public BLE APIs
+- convert backend-native errors into `BTStatus` at the boundary
+
+## GATT model and rules
+
+### Properties vs permissions
+
+The library treats these as separate concepts:
+
+- `BLEProperty`: what a characteristic can do (read, write, notify, indicate, etc.)
+- `BLEPermission`: what security level is required to access it
+
+This separation is fundamental and must be preserved.
+Do not reintroduce stack-specific property/permission conflation into public APIs.
+
+`BLEProperty` is a flat list of supported ATT operations, not a hierarchy. No
+flag implies another. In particular `Write` (Write Request) and `WriteNR`
+(Write Command) are distinct operations and offering both is conventional, not
+suspicious: the Nordic UART RX characteristic and HID output reports created by
+this library both set both. Do not add a validator diagnostic for that
+combination; an earlier revision did, and it fired against the library's own
+services on every startup.
+
+#### Naming rule for `BLEPermission`
+
+There is exactly one permission type. An earlier revision had a `BLEPermission`
+bitmask enum plus a `BLEPermissions::` namespace of preset constants, which put
+`BLEPermission::ReadEncrypted` and `BLEPermissions::EncryptedRead` in the same
+API with different values. Do not bring that back.
+
+Every value is named `<direction><level>`, where direction is `Read`, `Write` or
+`ReadWrite` and level is `Open`, `Encrypted`, `Authenticated` or `Authorized`.
+Direction always comes first. When adding a value, follow the existing order
+rather than inventing a synonym: a name that differs from an existing one only
+by word order is a bug.
+
+The level is always present, including `Open`, so the enum is a complete 3x4
+grid with no special cases. Do not add a bare `Read` or `Write` shorthand for
+the open level. Keeping it spelled out means the unprotected option is never
+the shortest or most guessable name in a security enum, and it stops
+`BLEPermission::Read` from reading like a restatement of `BLEProperty::Read`
+when both appear in the same `createCharacteristic()` call.
+
+The `Authenticated` values include the `Encrypted` bit, because the ATT security
+hierarchy makes authenticated access imply an encrypted link, and because
+declaring one without the other was the most common mistake with the old preset
+constants. That makes them multi-bit values, so `operator&` on `BLEPermission`
+is a **containment** test (`(a & b) == b`) rather than a plain "any bit set"
+test. A plain bitwise AND would report a merely encrypted permission as
+authenticated. Backend mapping code must go through the typed operator; do not
+cast to `uint16_t` and test bits by hand.
+
+### IO capability is not part of `BLESecurity`
+
+`BLEIOCapability` (`types/BLEIOCapability.h`) is a top-level type, not a member
+of `BLESecurity`. It describes fixed hardware, what the board can show a user
+and what it can accept from them, while `BLESecurity` holds runtime pairing
+policy. `setAuthenticationMode()` is where strictness is decided. Keep device
+description and pairing policy in separate types.
+
+### GATT validation
+
+`gatt/BLECharacteristicValidation.h` provides spec-compliance checks run in two stages:
+
+- **Construction time**: validates properties and permissions against the Bluetooth Core Spec
+- **Registration time**: validates the complete descriptor set after any backend-specific auto-creation (e.g., Bluedroid CCCD)
+
+Hard errors prevent registration; soft violations surface as log warnings.
+
+### Service staging and startup
+
+Creating services and characteristics builds up an in-memory GATT model.
+`BLEServer::start()` is the registration point that pushes that model into the backend stack.
+Code should not assume that `createService()` alone means the service already exists in the controller.
+
+### Descriptor rules
+
+- CCCD is auto-created for notify/indicate characteristics
+- standard descriptor helpers are exposed through `BLEDescriptor`
+- descriptor behavior should remain stack-agnostic from the caller's perspective
+
+### Service removal
+
+`BLEServer::removeService()` has backend-specific implementation details:
+
+- NimBLE rebuilds the full GATT database when GAP is idle, or hides the service's attribute range (`ble_gatts_svc_set_visibility`) and emits Service Changed (`0x2A05`) while GAP is active or a peer is connected
+- Bluedroid deletes the service through the stack
+
+The public semantic is one API regardless.
+Any new code must preserve this abstraction.
+Send enqueueing and native submission must revalidate characteristic membership while holding the server lock. This serializes sends with removal: either the send becomes pending first and removal returns `Busy`, or removal marks the service and the send returns `InvalidState`.
+
+## Lifecycle rules
+
+`BLE.begin()` initializes the selected backend and `BLE.end()` shuts it down.
+The BLE singleton tracks whether the stack is initialized and whether controller memory was permanently released.
+
+Important lifecycle invariants:
+
+- most BLE work is invalid before `BLE.begin()`
+- `BLE.end(true)` is terminal for the process lifetime; reinitialization is blocked after controller memory release
+- factories return invalid handles when BLE is not initialized
+- shutdown must leave the library in a safe, non-dangling state even if public handles still exist
+- backend role handlers and teardown routines are linked lazily: factories and
+  stack callbacks publish/load their hook pointers through a short critical
+  section, without calling role code while that critical section is held
+- role factories and the begin/end state transition are serialized by the core
+  lifecycle mutex; `end()` closes factory admission before role teardown, while
+  long native shutdown runs without holding that mutex
+
+### Design rule
+
+Changes to lifecycle code must be validated against memory-release and reinitialization behavior.
+This is a critical contract for sketches that switch between radio features at runtime.
+
+## Stack-agnostic API rules
+
+The public API should describe BLE concepts, not backend implementation details.
+That means:
+
+- use `BTAddress`, not backend address structs
+- use `BLEConnInfo`, not backend callback params
+- keep backend names out of normal user-facing method signatures
+- keep feature parity where practical
+- if parity is impossible, fail predictably with `BTStatus::NotSupported`
+
+This rule applies even when one backend requires substantially more internal plumbing than the other.
+
+## Feature-specific notes
+
+### BLE5
+
+Extended advertising, periodic advertising, extended scanning, periodic sync, PHY control, and data length control all belong to the common API surface when supported.
+Gate backend availability through `BLE5_SUPPORTED` and runtime status reporting, not by fragmenting the public interface.
+
+The extended/periodic **advertising** API is **per instance, per setter** (`setExt*`, `startExtended`, `setPeriodicAdv*`, `startPeriodicAdv`), mirroring the legacy setter style and the BLE5 receive side — not a config-struct form.
+Because extended advertising is inherently multi-instance (SID, secondary PHY, per-set data, anonymous mode), it needs its own per-instance surface distinct from the single-instance legacy path; legacy stays the simple default.
+Current status: on NimBLE with `BLE5_SUPPORTED`, both the **receive** side (extended discovery + periodic sync) and the **transmit** side (extended + periodic advertising) are implemented over the extended controller API. When BLE5 is enabled, legacy `start()`/`stop()` and scanning are also routed through the extended engine using legacy PDUs (a reserved top instance broadcasts the legacy `ADV_IND` so it can coexist with user extended sets) — see [Advertising / scanning routing](#advertising--scanning-capability-gated-routing) below. Bluedroid mirrors that surface when `BLE5_SUPPORTED` is on (BLE5-capable chips with `CONFIG_BT_BLE_50_FEATURES_SUPPORTED`): extended adv/scan, connection PHY/DLE, `setDefaultPhy`, periodic advertising TX (`CONFIG_BT_BLE_50_PERIODIC_ADV_EN`), and periodic sync RX. Classic esp32 stays on BLE 4.2 and uses the shared `NotSupported` fallbacks. Where a backend lacks a capability, the `NotSupported` behavior is a single shared fallback in the stack-agnostic layer, not a per-backend copy. On non-BLE-5 builds every BLE5 method returns `BTStatus::NotSupported` (setters are no-ops), so callers must check the returned status. On-air BLE5 TX/sync verification requires a 2-DUT BLE5 rig (HITL).
+
+### BLEStream
+
+`BLEStream` is a higher-level convenience layer that exposes the Nordic UART Service through the Arduino `Stream` API.
+It follows the same stack-agnostic and lifecycle rules as the lower-level BLE objects.
+
+In **server mode**, multiple centrals may connect at once. As a single Arduino `Stream`, `write()`/`print()` broadcast to every subscribed peer and `read()`/`available()` drain one merged RX buffer. Additive APIs attribute traffic per peer: `peerCount()`, `peers()`, `writeTo(peer, ...)`, and `onPeerData(...)`. `peerCount()` and `peers()` are live stack connection state (`isConnected()` / `getConnections()`), not a second callback-updated counter. Client mode remains 1:1 and also fires `onPeerData` for notify payloads. See `examples/MultiClientUART`.
+While active, server-mode `BLEStream` exclusively owns the NUS service, legacy advertising configuration, and the server's callback slots. `begin()` returns `Busy` if another owner already registered NUS. `end()` stops advertising, disconnects the server ACL peers, removes only NUS, and leaves the BLE stack and unrelated GATT services initialized.
+
+### L2CAP CoC
+
+L2CAP CoC is guarded by `BLE_L2CAP_SUPPORTED` and only available when the backend and Kconfig support it.
+This is an accepted exception because capability depends on both backend and build configuration.
+Even so, the public API remains generic and does not expose backend types.
+`BLE.connectL2CAP()` blocks via `BLESync` until `BLE_L2CAP_EVENT_COC_CONNECTED` completes (or returns an empty `BLEL2CAPChannel` on failure/timeout). Channel-native `write()`, `getMTU()`, and `disconnect()` calls from application tasks are submitted through a per-channel event on the NimBLE host queue; this serializes native channel-pointer access with `COC_DISCONNECTED`, which owns pointer invalidation. Each whole public channel operation is also serialized so one operation cannot consume another operation's `BLESync` wakeup. Calls already on the host task execute directly and never wait for flow-control events: a write that would need a later `COC_TX_UNSTALLED` returns `Busy`.
+`write()` splits payloads larger than the peer CoC MTU into MTU-sized SDUs and application-task calls may block briefly between chunks while waiting for peer credits (`COC_TX_UNSTALLED`). NimBLE itself does not segment oversized SDUs — that is done in the Arduino wrapper. A channel allocates NPL event backing only while an operation is queued or in flight and returns it to the bounded ESP-IDF pool before waking the caller; retained detached shells therefore consume no event slots. The active-operation registry holds a strong Impl reference, and the queued callback takes its own strong copy before running, so waking the caller and dropping the final public handle cannot free callback state. L2CAP shutdown closes an enqueue gate before stopping the host; after `nimble_port_stop()` and before `nimble_port_deinit()`, every still-active tracked event is removed/deinitialized and all operation waiters are released. Client channel contexts are then cleaned up by `nimbleCleanupL2CAP()`. Operations on a detached non-null channel shell return `NotConnected` (including after `end()` and a later `begin()`); only an empty handle returns `InvalidState`. Detached `getMTU()` returns zero without queueing host work.
+On receive, SDUs up to a fixed 256-byte stack threshold are flattened without a heap allocation; larger SDUs (when the channel MTU is bigger) spill to a heap vector. Channel MTU itself is whatever the caller configured (128, 256, 512, …) and is independent of that RX threshold. After flatten, the received `sdu_rx` mbuf is freed and a fresh buffer is posted via `ble_l2cap_recv_ready` — omitting the free drains the CoC pool and stalls peer credits.
+
+## Backend contract
+
+Checklist for adding a third BLE backend (or understanding what an existing one owns). Codifies the two-layer Impl model above.
+
+### File layout (layer signal)
+
+Every file for a class lives in one per-class feature folder `src/<component>/`,
+with the layer of each file encoded in its name:
+
+```
+src/<component>/BLEFoo.h                  public handle  (backend-agnostic; no NimBLE/Bluedroid headers)
+src/<component>/BLEFoo.cpp                public-API method definitions, backend-agnostic bodies
+src/<component>/BLEFooImpl.{h,cpp}        struct BLEFooImplCommon      -> SHARED   (compiled in every build)
+src/<component>/BLEFoo.nimble.{h,cpp}     struct BLEFoo::Impl (NimBLE)    -> BACKEND (only NimBLE builds)
+src/<component>/BLEFoo.bluedroid.{h,cpp}  struct BLEFoo::Impl (Bluedroid) -> BACKEND (only Bluedroid builds)
+```
+
+The components are `server/`, `client/`, `gatt/` (Service/Characteristic/Descriptor),
+`remote/` (remote GATT), `scan/`, `advertising/`, `security/`, `l2cap/` (NimBLE only),
+`stream/`, and `hid/`. The `BLEClass` front-door is the `src/` root itself
+(`BLE.cpp`, `BLE.nimble.*`, `BLE.bluedroid.*`), and `src/BLE.h` is the public umbrella.
+Cross-cutting infrastructure lives in `src/core/` and shared value types in `src/types/`
+(see [High-level architecture](#high-level-architecture)). There is no `impl/` tree.
+
+A member on `BLEFooImplCommon` is **shared**. A member on `BLEFoo::Impl` (in a
+`.nimble.*`/`.bluedroid.*` file) is **stack-specific**. Access is always cast-free
+`impl.member`. The active backend is selected in exactly one place: `core/BLEBackend.h`.
+
+### HID descriptor headers (`hid/HIDTypes.h`, `hid/HIDKeyboardTypes.h`)
+
+The `hid/` component carries two spec-level helper headers used to build HID Report
+Descriptors. They live in `hid/` (not `src/` root, not `cores/`) because they are
+BLE-HID-specific: the USB stack builds descriptors with TinyUSB's own `TUD_HID_REPORT_DESC_*`
+macros and `HID_`-prefixed short-item macros, so nothing outside BLE consumes these files —
+moving them to `cores/` would share nothing and only pollute the core.
+
+The two headers differ in how they relate to the `BLE.h` umbrella:
+
+- **`hid/HIDTypes.h` — reaches `BLE.h` transitively.** It contains only macros and
+  constants (HID short-item macros, report types, `BLE_APPEARANCE_HID_*`) — it emits **no
+  data**, so including it widely costs nothing. `hid/BLEHIDDevice.h` needs it and is itself
+  listed in `BLE.h`, so any sketch that does `#include <BLE.h>` already has it. It is *not*
+  listed directly in `BLE.h` because the umbrella aggregates the public **class** headers;
+  the HID class owns its own dependency. To avoid a macro-vs-enum collision with TinyUSB's
+  `hid_report_type_t` in composite BLE + USB-HID sketches, the report-type constants are
+  named `BLE_HID_REPORT_TYPE_{INPUT,OUTPUT,FEATURE}` rather than the unprefixed `HID_*` form.
+
+- **`hid/HIDKeyboardTypes.h` — deliberately NOT in `BLE.h`.** It *defines* an actual
+  `const KEYMAP keymap[]` lookup table (ASCII → HID usage) in the header. At namespace scope
+  that `const` has internal linkage, so every translation unit that includes it gets its own
+  copy of the table baked into flash. Only ASCII-typing keyboard sketches need it. Pulling it
+  into `BLE.h` would force a keymap table into the flash of *every* BLE sketch — mice,
+  gamepads, sensors included — for no benefit. It is therefore an **opt-in** include:
+  keyboard sketches add `#include <hid/HIDKeyboardTypes.h>` explicitly.
+
+Rule of thumb: header defines only macros/`constexpr`/declarations → safe to reach `BLE.h`;
+header *emits* data (tables, non-inline globals) → keep it opt-in.
+
+### Backend subsystem pairs
+
+Each backend implementation is a `BLEFoo.<stack>.{h,cpp}` pair inside its component
+folder — a strict `.h`/`.cpp` **subsystem pair** (every `.cpp` has a same-named
+header; the two backends are structurally identical except NimBLE-only `L2CAP`):
+
+| Pair | Location | Owns |
+| --- | --- | --- |
+| `BLE` (Core) | `src/BLE.<stack>.*` | `BLEClass::Impl`: init/teardown, identity, MTU, IRK, whitelist, GAP hooks |
+| `BLEServer` | `server/` | `BLEServer::Impl`: GATTS registration + server GAP/GATTS events |
+| `BLEGattAttributes` | `gatt/` | Service / Characteristic / Descriptor `Impl`s (notify, permissions, registration) |
+| `BLEClient` | `client/` | `BLEClient::Impl`: connection management + GATTC events |
+| `BLERemoteGatt` | `remote/` | Remote service / characteristic / descriptor `Impl`s |
+| `BLEScan` / `BLEAdvertising` / `BLESecurity` | `scan/` `advertising/` `security/` | Respective `Impl`s |
+| `BLEConnInfo` / `BLEUUID` | `types/` | Native ↔ public bridges |
+| `BLEL2CAP` | `l2cap/` | *(NimBLE only)* L2CAP server/channel `Impl`s |
+
+`core/BLEBackend.h` includes the headers that define a `Foo::Impl` so the contract sees every `Impl`. See the backend notes in `docs/backend-nimble.md` and `docs/backend-bluedroid.md` for event-routing maps and quirks.
+
+### Accessing `_impl`
+
+`_impl` is null only for a default-constructed or moved-from handle. Use `BLE_CHECK_IMPL` (`core/BLEImplHelpers.h`):
+
+- **`BLEFoo.cpp` (public facade):** `BLE_CHECK_IMPL(<return-on-null>)` is mandatory as the first statement of any method that touches `_impl`.
+- **`BLEFoo.<stack>.cpp` (backend TUs):** prefer the macro; a hand-written `if (!_impl)` is allowed only when the null path needs extra work the macro cannot express. Never mix the macro and a manual `*_impl` alias in one method.
+- **Trivial validity checks** (e.g. `operator bool`): write `return _impl != nullptr;` directly.
+
+### What a backend must provide
+
+1. **Type definitions** — one `struct Foo::Impl` per PIMPL class, inheriting `FooImplCommon` when a shared base exists (enforced by `BLEBackendContract.h`). Baseless classes (`BLEClass`, `Scan`, `Advertising`, L2CAP) define `Foo::Impl` directly. `BLEAdvertisedDevice` is fully shared — no backend `Impl` needed.
+2. **Backend-specific public methods** — anything not already defined in `BLEFoo.cpp` that talks to the native stack. **Exception — `BLEClass`:** all lifecycle, identity, MTU/PHY/whitelist, custom handlers, **and** factory accessors live in `BLE.<stack>.cpp` only.
+3. **Agnostic hooks** declared in the shared base / `core/` and implemented per backend (e.g. `bleServerRemoveService`). Validation helpers such as `bleValidateCharProps` are shared — consume them, do not reimplement.
+4. **Lifecycle + event routing** — init/deinit in `BLE.<stack>.cpp`; route GAP/GATT into shared handlers (`handleGAP` / `handleGATTS` / `handleGATTC`, advertising/scan/security). Fire shared `BLESecurityImplCommon` pairing hooks on the process-wide `BLESecurity::Impl::instance()`.
+5. **Resource teardown in `end()`** — the library owns cleanup of resources it created. `end()` already resets advertising and stops scanning; backends with periodic-sync must call `BLEScan::terminateAllPeriodicSyncs()` **while the host is still enabled**. Terminating after host disable races teardown.
+
+### Observable ordering (must match across backends)
+
+- **Scan results:** cache into `results` **before** `onResult`, so `getResults()` inside the handler sees the current device.
+- **Client connect:** deliver `onConnect` **before** unblocking a blocking `connect()`.
+- **Client and server disconnect:** tear down connection state, discovered remote ownership, and notification routes before delivering `onDisconnect`; accepted sends that are still pending receive their terminal link-loss status before `onDisconnect` (NimBLE snapshots `pendingNotifies` and dispatches `ERROR_NO_CLIENT` the same way Bluedroid does); deliver disconnect only if the link had reached connected. When `BLEClient::disconnect()` or `BLEServer::disconnect()` is called from a user task (not the stack callback task), it blocks via `BLESync` until the disconnect event completes.
+- **Bluedroid notify/indicate CONF:** `ESP_GATTS_CONF_EVT` has no notify/indicate bit. A notify CONF is local TX-complete and arrives before the peer indication confirm, so a submitted notification is consumed first; an in-flight indication is the fallback. Preferring the in-flight indication would steal leftover notify CONFs once `indicationDone()` starts the next queued indication (ATT still has one outstanding; the stack returns Busy and a dual notify+indicate burst drops a payload). A reservation that has not been handed to the stack must not consume a CONF. Notifications are marked submitted only after `esp_ble_gatts_send_indicate` returns `ESP_OK`.
+- **NimBLE GATT rebuild:** a failed rebuild after `ble_gatts_reset()` clears `started` and attribute handles so the next `start()` retries instead of treating the empty table as live. After a successful rebuild, Service Changed uses the full ATT range `0x0001–0xFFFF` (handles were reassigned). The connected/EBUSY visibility path still uses the pre-reset range.
+- **`BLE.end()` from a stack callback:** claims `ending` under the lifecycle mutex (so `begin()` returns `InvalidState` and factories refuse) then defers the teardown body to a worker (`bleInStackCallbackTask()` + `xTaskCreate`), matching `BLEStream::end()`. Calling `end()` inline on the host/BTC task deadlocks deferred stream teardown that still needs the host. A failed worker create leaves `ending` set; the next user-thread `end()` runs the body. User-thread `end()` waits out an in-flight worker so returning means the host is down. A nested `end()` from the teardown task itself returns immediately so it cannot deadlock on its own `endRunning` flag. `end(true)` latches onto the in-flight session only; a no-op `end()` after the host is already down does not leak that latch into the next `begin()`.
+- **NimBLE L2CAP:** `connectL2CAP` drops `lifecycleMtx` before the 5 s `connectSync` wait. Host-callback writes larger than one peer CoC SDU return `Busy` before any send (a retry would otherwise resend a prefix).
+- **NimBLE legacy OOB:** `ble_sm_inject_io` copies a 16-byte TK; a zeroed TK is the public Temporary Key and pairing would succeed. OOB is not supported: fail with `BLE_SM_ERR_OOB` and wake the auth waiter. OOB-SC injects null `oob_sc_data` pointers, which NimBLE already maps to `BLE_SM_ERR_OOB`. Validation-only `BLEHooks.security.advertiseOob` sets `ble_hs_cfg.sm_oob_data_flag` so HITL can force `BLE_SM_IOACT_OOB` / `BLE_SM_IOACT_OOB_SC`.
+- **Bluedroid OOB:** `ESP_GAP_BLE_OOB_REQ_EVT` / `ESP_GAP_BLE_SC_OOB_REQ_EVT` must not reply with a zero TK (public Temporary Key). The library disconnects the ACL so SMP aborts. The same validation hook sets `ESP_BLE_SM_OOB_SUPPORT`.
+- **Directed advertising InitA:** `setDirectedAddress` supplies the peer address for `DirectedHighDuty` / `DirectedLowDuty` / `ConnectableDirected`. `start()` of a directed type with a zero address is `InvalidParam` (Vol 6, Part B, §4.4.2.4). High-duty directed is also capped at 1.28 s (§4.4.2.4.2). BLE5 `startLegacyViaExtAdv` drops leftover AD/SCAN_RSP on the reserved instance before `Set_Ext_Adv_Params` (NimBLE `ble_gap_ext_adv_remove`; Bluedroid zero-length data/scan-rsp). The controller rejects high-duty directed while the set still holds data (Vol 4, Part E, §7.8.53; HCI 0x12).
+- **Client MTU exchange:** initiate from the **caller's thread inside blocking `connect()`**, after the connect sync is released, and **block until it completes**. On NimBLE, `ble_att_set_preferred_mtu` is updated in `setMTU()` and before `ble_gattc_exchange_mtu()` in `connect()` so the ATT preferred MTU matches Bluedroid's `esp_ble_gatt_set_local_mtu`. Bluedroid drops a pending MTU procedure if another GATT/GAP op starts while it is in flight. `connectAsync()` does **not** auto-exchange — call `setMTU()` after `onConnect`. MTU is not yet negotiated *inside* `onConnect`.
+- **Default scan timing:** interval == window == 30 ms (continuous active scan) unless overridden.
+- **`BLEConnInfo::getIdAddress()`:** resolved identity when the stack provides one (NimBLE `peer_id_addr`), else OTA. Bluedroid has no resolved-identity field → always OTA, never empty.
+
+### Advertising / scanning: capability-gated routing
+
+The public API is backend-agnostic; routing depends on `BLE5_SUPPORTED`:
+
+- **`BLE5_SUPPORTED == 0`:** `start()`/`stop()` and scan use the **native legacy** controller API. AD/scan-response payload is still serialized via `BLEAdvDataBuilder` and pushed with the controller's *raw* data API — never a per-stack field struct. Bluedroid must not use `esp_ble_gap_config_adv_data` (force-expands every service UUID to 128 bits).
+- **`BLE5_SUPPORTED == 1`:** the same public calls run over the **extended** controller API with **legacy PDUs**. A backend must: reserve the top controller instance for the legacy set (`kLegacyInstance`); map `advType` to legacy-PDU flags; build raw AD via `BLEAdvDataBuilder`; merge extended scan responses by address via `mergeScanResponse`; clear extended state in `reset()`; add its term to `BLE5_ADV_TX_SUPPORTED` so the shared `NotSupported` fallback disables itself.
+- **NimBLE advertising preemption:** `ADV_COMPLETE` with `BLE_HS_EPREEMPTED` resumes the set that was active. Resume takes the advertiseOnDisconnect mutex **without** canceling a queued disconnect restart, rechecks `advSession`, and restarts the radio **without** calling public `start()`/`startExtended()` (those `fetch_add` a new session and would undo a concurrent `stop()`). Resume uses the time remaining on an absolute session deadline (same rule as scan). If that deadline has passed, the queued `advertiseOnDisconnect` restart is what brings advertising back. `stop()` / `stopExtended()` / `reset()` bump `advSession` even when `isAdvertising` is already clear, so a public stop that races the resume window cancels it instead of letting advertising restart. Host-initiated disable does not generate `HCI_LE_Advertising_Set_Terminated` (Vol 4, Part E, §7.7.65.18); NimBLE synthesizes the preempted complete from `ble_gap_preempt_done`. A late `ADV_COMPLETE` from a previous session is ignored while the native instance is still active (`ble_gap_ext_adv_active` / `ble_gap_adv_active`), so it cannot clear a session that `start()` has already restarted. `isAdvertising` is set **before** the native start and cleared on native failure so a synchronous complete cannot be overwritten by a post-return assignment. `isAdvertising` flags are `std::atomic<bool>` so `isAdvertising()` can sample them without taking `mtx`.
+- **Advertising / scan duration:** HCI duration fields are 16-bit counts of 10 ms units (Vol 4, Part E, §7.8.9 / §7.8.64). Finite values whose 10 ms encoding exceeds `0xFFFF` (~655.35 s) return `InvalidParam` rather than wrapping (wrap would advertise/scan forever). High-duty directed advertising is limited to 1.28 s (Vol 6, Part B, §4.4.2.4.2); duration 0 is invalid for that type. `isAdvertising()` is true when **any** set (legacy or extended) is running; `stop()` still stops only the legacy set.
+- **Bluedroid `onComplete`:** duration expiry and `ADV_TERMINATED` dispatch the handler on a worker task, not BTC. A sketch that calls `start()` from `onComplete` would otherwise deadlock on `advSync`.
+- **Failed advertising stop:** a native stop error or wait timeout leaves `isAdvertising` set so a later `stop()` retries. `stopAllExtendedThenClear` aborts without `HCI_LE_Clear_Advertising_Sets` if a per-instance stop fails (Vol 4, Part E, §7.8.60 Command Disallowed while enabled).
+- **BLE5 scan response off:** `start()` / `startLegacyViaExtAdv` push an empty scan-response payload when scan response is disabled (Bluedroid `config_ext_scan_rsp_data_raw(inst, 0, nullptr)`; NimBLE an empty mbuf — `ble_gap_ext_adv_set` rejects a null mbuf with `BLE_HS_EINVAL`). Otherwise the controller keeps radiating the previous SCAN_RSP.
+- **advertiseOnDisconnect restart:** disconnect defers `start()` off the stack callback (NimBLE host queue / Bluedroid `esp_timer`). Public `stop()` and `start()` cancel that pending restart even when advertising is already down. A NimBLE preemption resume must not: it only serializes with those calls so `stop()` can wait the resume out. Dequeue/epoch cancel is not enough for an in-flight callback that has already left the queue: both backends hold a recursive mutex across the restart `start()` and take that mutex *before* the advertising admission gate on public `stop()`/`start()` (and the other advertising entry points), so `stop()` waits for GAP to come up and then issues a native stop before `ble_gatts_reset()` (`BLE_HS_EBUSY` while GAP is active). Lock order is restart-mutex then admission; `stopBackend()` must not take the restart mutex while already admitted.
+- **Bluedroid stop completes:** `ADV_STOP_COMPLETE` / `EXT_ADV_STOP_COMPLETE` / `PERIODIC_ADV_STOP_COMPLETE` update `isAdvertising` / `periodicAdvRunning` only when `giveIfAdvWait` consumes the matching armed wait (`LegacyStop` / `ExtStop` / `PeriodicStop`). Duration-expiry stops still clear the flag and dispatch `onComplete` via `durationExpiryStop`. A leftover stop complete after a successful start must not clear the flag, or a later `stop()` no-ops while the radio is up.
+
+**Preferred connection-interval AD (0x12) is emitted** when either `setMinPreferred` or `setMaxPreferred` is non-zero. `BLEAdvDataBuilder` places the Slave Connection Interval Range AD in the primary payload (a zero side copies the other bound), and `BLEAdvertisedDevice` parses AD `0x12` back via `havePreferredParams()`, `getMinPreferred()`, and `getMaxPreferred()`. Connection parameters are still negotiated post-connect; the AD is only a hint to centrals.
+
+### Friend bridges (cross-class private access)
+
+Friendship is not inherited. When a backend `Impl` must touch privates of a *different* public class, use the existing agnostic bridge — do not add a backend `friend` to a public header:
+
+- `BLEScanImplCommon::makeAdvertisedDeviceHandle` / `mergeScanResponse`
+- `BLEL2CAPChannelImplCommon::makeHandle`
+- `BLEServerImplCommon::forwardGapEvent`
+- `*ImplCommon::makeHandle` — reconstruct a public handle from a raw `Impl*` in a `void *arg` callback
+
+### Naming conventions
+
+- Object mutex on every Impl: **`mtx`** (one name).
+- Callback storage: `on<Event>Cb`; public typedefs: `<Event>Handler`.
+- `connHandle` = stack-agnostic 16-bit connection handle; `connId` = Bluedroid-native GATT id (backend only); `handle` = GATT attribute handle.
+- Stack-specific free functions: `nimble*` / `bluedroid*` prefix. UUID converters: `<stack>Uuid{From,To}Public`. Uniform helpers: neutral `ble*` name.
+
+### Enforcement
+
+- **Compile time:** `core/BLEBackendContract.h` `static_assert`s shared-base inheritance and that baseless `Impl`s are defined.
+- **Isolation:** `tests/check_backend_isolation.sh` fails if a public `src/BLE*.h` names a backend type or includes a backend/selector header.
+- **Link time:** any public/agnostic method left undefined by the backend is a linker error.
+
+### Known non-normalizable divergences
+
+- **`BLEConnInfo` real PHY on Bluedroid:** on BLE5 builds, cached from `ESP_GAP_BLE_READ_PHY_COMPLETE_EVT` / `ESP_GAP_BLE_PHY_UPDATE_COMPLETE_EVT` (defaults to `PHY_1M` until the first event). On BLE 4.2-only controllers the read-PHY API is unavailable by design, so the field stays `PHY_1M`. Peer address type is taken from GATTS/GATTC connect and `AUTH_CMPL` events.
+- **`client.onConnParamsUpdateRequest`:** NimBLE-only. Bluedroid's L2CAP layer accepts/negotiates connection-parameter updates internally and only surfaces the result (`ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT`) after the fact, so there is no application pre-accept hook to bridge.
+- **`onStatus` delivery timing for notifications:** NimBLE reports `SUCCESS_NOTIFY` synchronously before `notify()` returns (its `ble_gatts_notify_custom()` raises the TX event inline); Bluedroid reports it asynchronously on the BTC task via `ESP_GATTS_CONF_EVT`. The status value and ordering relative to later sends are identical; only the execution context/timing differs, and normalizing it would require deferring NimBLE dispatch through a queue/task. Handlers must therefore not assume a task context (already required by the execution-context rule).
+- **Bluedroid `BLEConnInfo::keySize`:** `AUTH_CMPL` carries no key size; stays at default (NimBLE reports `sec_state.key_size`).
+- **Write Command admission backpressure:** Bluedroid accepts Write Commands through a private 30-entry asynchronous GATTC queue whose later queue-full event carries no operation token. The library therefore admits at most eight outstanding commands per client and returns `BTStatus::Busy` beyond that bound, leaving capacity for serialized control procedures. A callback-issued command may overlap a response write on a different attribute handle because completion events distinguish that case; the same-handle case remains `Busy`. A Write Request is also `Busy` while any command is outstanding. Concurrent Write Requests on one Bluedroid client (and on one NimBLE characteristic) block on an operation mutex rather than returning `Busy`. NimBLE submits each command directly through the host and has no equivalent anonymous deferred queue, so it does not impose the artificial eight-command bound; a same-handle command during an in-flight request blocks on that attribute's `opMtx` instead of returning `Busy`. Normalizing this would either expose Bluedroid to unattributable queue loss or add timing-based throttling to NimBLE without a completion signal.
+- **Local auto-CCCD visibility:** Bluedroid requires the library to materialize and register the `0x2902` descriptor, so it appears in local descriptor lookup and retains its characteristic parent. NimBLE synthesizes CCCDs inside the host when notify/indicate flags are registered and does not expose a corresponding local descriptor object to the application. Manually registering another NimBLE CCCD would duplicate the host-owned attribute, so local `getDescriptor(0x2902)` is intentionally backend-specific; remote discovery and subscription behavior remain common.
+- **Bluedroid Service Changed range:** `ESP_GATTC_SRVC_CHG_EVT` carries only the peer address because
+  the stack consumes the 0x2A05 indication internally. The client invalidates its entire discovered
+  tree and reports the conservative `0x0001–0xFFFF` range; NimBLE delivers the peer's exact payload.
+- **Bluedroid BLE5 surface:** extended adv/scan, PHY/DLE, periodic adv TX, and periodic sync RX are implemented under `BLE5_SUPPORTED` / `BLE_PERIODIC_ADV_SUPPORTED`. Classic esp32 Bluedroid libs remain BLE 4.2-only.
+- **HITL-pending coverage:** Bluedroid BLE5 leftover `EXT_ADV_STOP_COMPLETE` / `PERIODIC_ADV_STOP_COMPLETE` (phase 2 `staleStopFlag` / `stalePeriodicStop`) needs ESP32-S31 or other Bluedroid BLE5 silicon; this rig HITLs the 4.2 leftover `ADV_STOP_COMPLETE` path as phase 20 `staleLegacyStop`. Bluedroid BLE5 `clearExtended()` while a set is enabled (`HCI_LE_Clear_Advertising_Sets` Command Disallowed, flags retained) is the same contract as NimBLE `BLE_HS_EBUSY`; phase 2 `clearWhileLive` HITLs it on NimBLE. This rig has no Bluedroid BLE5 DUT (classic ESP32 is BLE 4.2-only). Multi-central BLEStream under load (two simultaneous centrals with per-peer routing; needs a third DUT). Passkey-entry pairing + Numeric-Comparison reject, periodic terminate/sync-lost, L2CAP late-connect cleanup after caller timeout, bulk across the credit stall + reconnect, conn-param reject, and the `deleteBond` round-trip are covered by phases 28-34. Directed high-duty advertising with a real InitA plus legacy OOB / OOB-SC reject are covered by phase 36. Indication `ESP_GATT_BUSY` retry, indication queue-full, CCCD bit routing, in-flight `removeService`, abandoned long-read reconnect, read-timeout destroy/re-read, Bluedroid notify-reservation vs indication CONF demux, NimBLE `nimbleRef` keepalive vs `disconnectSync.give()`, BLEStream `writeChunks` vs `end()` handle reset, and NimBLE advertising stop-during-preempt plus remaining-duration resume are covered by phases 4, 5, 12, 13, 23, 33, and 35. See `tests/validation/ble/README.md`.
+- **Untestable on this API / 2-DUT rig:** EATT (no public API). Per-peer CCCD and overlapping snapshots on two ACL links (two `BLEClient` instances on one central share one ACL with the peripheral). Withholding Handle Value Confirmation (both hosts auto-confirm indications, so the 30 s ATT indication timeout cannot be forced without a non-confirming peer).
+
+## Testing as executable design
+
+The BLE validation suite in `tests/validation/ble/` is the best executable summary of the intended behavior.
+It exercises lifecycle, GATT server/client setup, read/write/notify/indicate flows, large ATT writes, descriptor behavior, security/pairing (including OOB reject), directed advertising, BLE5 extended features, reconnect cycles, `BLEStream`, L2CAP CoC, long-read snapshot isolation, indication queue/BUSY retry and pending-send edges, and memory release.
+
+### Design rule
+
+When behavior changes, update the validation tests or add new ones so the intended contract stays executable.
+For cross-stack changes, think in terms of common behavior first and backend mechanics second.
+
+## Maintainer rules
+
+When changing this library, keep these rules in mind:
+
+1. **Protect the common API surface.** Public BLE APIs should not require NimBLE/Bluedroid conditionals in sketches.
+2. **Prefer handle semantics.** Public objects should remain cheap, copyable handles with shared ownership.
+3. **Use `BTStatus`.** New failure paths should be explicit and structured.
+4. **Preserve property/permission separation.** Do not collapse them back together.
+5. **Keep callbacks safe.** Copy callback state under lock, invoke outside the lock, and assume stack-thread execution.
+6. **Use the existing synchronization primitives.** `BLELockGuard`, `BLESync`, and `BLEAdmissionGate` are the standard internal tools.
+7. **Keep lifecycle strict.** Initialization, shutdown, and memory release semantics are core library contracts.
+8. **Treat tests as part of the design.** If the intended behavior changes, the validation suite should change with it.
+9. **Use feature guards correctly.** Check the right guard (`BLE_GATT_SERVER_SUPPORTED`, `BLE_SMP_SUPPORTED`, etc.) rather than the broad stack guard.
+
+## Practical guidance for AI tools
+
+If you are modifying this library:
+
+- start from the public contract in the headers and the validation tests
+- check whether the change affects both backends
+- prefer adapting backend code to the shared API rather than changing the shared API to fit one backend
+- look for existing patterns in handle ownership, callback dispatch, and `BTStatus` conversion before inventing a new one
+- treat `MIGRATION.md` as a user-facing transition guide and this document as the maintainer-facing architecture guide
+
+If the code and this document disagree, follow the code and update this document.
+
+## Reference material
+
+- ESP-IDF BT component: <https://github.com/espressif/esp-idf/tree/master/components/bt>
+- ESP-IDF NimBLE host: <https://github.com/espressif/esp-idf/tree/master/components/bt/host/nimble>
+- ESP-IDF NimBLE Kconfig options: <https://github.com/espressif/esp-idf/blob/master/components/bt/host/nimble/Kconfig.in>
+- ESP-IDF Bluedroid host: <https://github.com/espressif/esp-idf/tree/master/components/bt/host/bluedroid>
+- ESP-IDF Bluedroid Kconfig options: <https://github.com/espressif/esp-idf/blob/master/components/bt/host/bluedroid/Kconfig.in>
+- Pre-refactor library: <https://github.com/espressif/arduino-esp32/tree/494670d3c010115b06604e8b69ffd64781910486/libraries/BLE>
+- Original Kolban BLE library: <https://github.com/nkolban/ESP32_BLE_Arduino>
+- NimBLE-Arduino (h2zero): <https://github.com/h2zero/NimBLE-Arduino>

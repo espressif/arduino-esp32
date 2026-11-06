@@ -1,4 +1,4 @@
-// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@
 #include "ep/ZigbeeWindowCovering.h"
 
 #define ZIGBEE_COVERING_ENDPOINT 10
-#define BUTTON_PIN               9  // ESP32-C6/H2 Boot button
+#define BUTTON_PIN               BOOT_PIN
 
 #define MAX_LIFT 200  // centimeters from open position (0-900)
 #define MIN_LIFT 0
@@ -61,6 +61,14 @@ void setup() {
 
   // Init button for factory reset
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+  // Initialize Zigbee stack as end device
+  if (!Zigbee.role(ZIGBEE_END_DEVICE)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
 
   // Optional: set Zigbee device name and model
   zbCovering.setManufacturerAndModel("Espressif", "WindowBlinds");
@@ -84,16 +92,17 @@ void setup() {
   zbCovering.onGoToTiltPercentage(goToTiltPercentage);
   zbCovering.onStop(stopMotor);
 
-  // Add endpoint to Zigbee Core
-  Serial.println("Adding ZigbeeWindowCovering endpoint to Zigbee Core");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbCovering);
 
-  // When all EPs are registered, start Zigbee. By default acts as ZIGBEE_END_DEVICE
-  Serial.println("Calling Zigbee.begin()");
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {

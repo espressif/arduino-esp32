@@ -2,7 +2,7 @@
 USB API
 #######
 
-.. note:: This feature is only supported on ESP chips that have USB peripheral, like the ESP32-S2 and ESP32-S3. Some chips, like the ESP32-C3 include native CDC+JTAG peripheral that is not covered here.
+.. note:: This feature is only supported on ESP chips that have USB peripheral, like the ESP32-S2, ESP32-S3, ESP32-P4 and ESP32-S31. Some chips, like the ESP32-C3, include a native CDC+JTAG peripheral that is not covered here.
 
 About
 -----

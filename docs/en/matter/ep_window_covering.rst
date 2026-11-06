@@ -8,34 +8,34 @@ About
 The ``MatterWindowCovering`` class provides a window covering endpoint for Matter networks. This endpoint implements the Matter window covering standard for motorized blinds, shades, and other window coverings with lift and tilt control.
 
 **Features:**
-* Lift position and percentage control (0-100%, Matter: 0 = open, 100 = closed)
-* Lift and tilt percent100ths control (0-10000, direct Matter attribute mapping)
-* Local motor calibration for physical-unit to percentage conversion
-* Multiple window covering types support
-* Callback support for open, close, lift, tilt, and stop commands
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Lift position and percentage control (0-100%, Matter: 0 = open, 100 = closed).
+* Lift and tilt percent100ths control (0-10000, direct Matter attribute mapping).
+* Local motor calibration for physical-unit to percentage conversion.
+* Multiple window covering types support.
+* Callback support for open, close, lift, tilt, and stop commands.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Supported Window Covering Types:**
-* ``ROLLERSHADE`` - Lift support
-* ``ROLLERSHADE_2_MOTOR`` - Lift support
-* ``ROLLERSHADE_EXTERIOR`` - Lift support
-* ``ROLLERSHADE_EXTERIOR_2_MOTOR`` - Lift support
-* ``DRAPERY`` - Lift support
-* ``AWNING`` - Lift support
-* ``SHUTTER`` - Tilt support
-* ``BLIND_TILT_ONLY`` - Tilt support
-* ``BLIND_LIFT_AND_TILT`` - Lift and Tilt support
-* ``PROJECTOR_SCREEN`` - Lift support
+* ``ROLLERSHADE`` - Lift support.
+* ``ROLLERSHADE_2_MOTOR`` - Lift support.
+* ``ROLLERSHADE_EXTERIOR`` - Lift support.
+* ``ROLLERSHADE_EXTERIOR_2_MOTOR`` - Lift support.
+* ``DRAPERY`` - Lift support.
+* ``AWNING`` - Lift support.
+* ``SHUTTER`` - Tilt support.
+* ``BLIND_TILT_ONLY`` - Tilt support.
+* ``BLIND_LIFT_AND_TILT`` - Lift and Tilt support.
+* ``PROJECTOR_SCREEN`` - Lift support.
 
 ``begin()`` advertises only the features that type actually has (Lift and/or Tilt, plus position-aware). A shutter or tilt-only blind does not advertise Lift. Unused lift or tilt arguments and calibration are ignored (not cached). Lift setters return ``false`` on those types; lift getters return ``0``. Tilt setters return ``false`` on lift-only types; tilt getters return ``0``. ESP-Matter requires at least one of Lift or Tilt.
 
 **Use Cases:**
-* Motorized blinds
-* Automated shades
-* Smart window coverings
-* Projector screens
-* Awnings and drapes
+* Motorized blinds.
+* Automated shades.
+* Smart window coverings.
+* Projector screens.
+* Awnings and drapes.
 
 API Reference
 -------------
@@ -70,8 +70,8 @@ Initializes the Matter window covering endpoint with optional initial positions,
       const PositionCalibration *tiltCalibration = nullptr
     );
 
-* ``liftPercent`` - Initial lift percentage (0-100, default: 0 = fully open)
-* ``tiltPercent`` - Initial tilt percentage (0-100, default: 0 = fully open)
+* ``liftPercent`` - Initial lift percentage (0-100, default: 0 = fully open).
+* ``tiltPercent`` - Initial tilt percentage (0-100, default: 0 = fully open).
 * ``coveringType`` - Window covering type (default: ROLLERSHADE). This determines which features (lift, tilt, or both) are enabled.
 * ``liftCalibration`` - Optional local motor range for lift (open/closed physical units). Not exposed as a Matter attribute in ESP-Matter 1.5.
 * ``tiltCalibration`` - Optional local motor range for tilt. Not exposed as a Matter attribute in ESP-Matter 1.5.
@@ -113,7 +113,7 @@ Sets the window covering lift position in local motor units. Converts to Matter 
 
     bool setLiftPosition(uint16_t liftPosition);
 
-* ``liftPosition`` - Lift position in local motor units (e.g. centimeters)
+* ``liftPosition`` - Lift position in local motor units (e.g. centimeters).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -137,7 +137,7 @@ Sets the window covering lift position as a percentage. This method updates the 
 
     bool setLiftPercentage(uint8_t liftPercent);
 
-* ``liftPercent`` - Lift percentage (0-100, where 0 is fully open, 100 is fully closed)
+* ``liftPercent`` - Lift percentage (0-100, where 0 is fully open, 100 is fully closed).
 
 This function will return ``true`` if successful, ``false`` otherwise (including ``SHUTTER`` and ``BLIND_TILT_ONLY``, which have no Lift feature).
 
@@ -163,7 +163,7 @@ Sets the current lift position using Matter percent100ths (0-10000). This is the
 
     bool setCurrentLiftPercent100ths(uint16_t liftPercent100ths);
 
-* ``liftPercent100ths`` - Current lift position (0 = open, 10000 = closed)
+* ``liftPercent100ths`` - Current lift position (0 = open, 10000 = closed).
 
 getCurrentLiftPercent100ths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -186,7 +186,7 @@ Sets the window covering tilt position. Note that tilt is a rotation, not a line
 
     bool setTiltPosition(uint16_t tiltPosition);
 
-* ``tiltPosition`` - Tilt position value (absolute value for conversion, not a physical unit)
+* ``tiltPosition`` - Tilt position value (absolute value for conversion, not a physical unit).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -210,7 +210,7 @@ Sets the window covering tilt position as a percentage. This method updates the 
 
     bool setTiltPercentage(uint8_t tiltPercent);
 
-* ``tiltPercent`` - Tilt percentage (0-100, where 0 is fully open, 100 is fully closed)
+* ``tiltPercent`` - Tilt percentage (0-100, where 0 is fully open, 100 is fully closed).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -257,7 +257,7 @@ Sets the window covering ``Type`` attribute. Lift/Tilt ``FeatureMap`` bits are f
 
     bool setCoveringType(WindowCoveringType_t coveringType);
 
-* ``coveringType`` - Window covering type (see Window Covering Types enum)
+* ``coveringType`` - Window covering type (see Window Covering Types enum).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -322,7 +322,7 @@ Sets the local open limit for lift motor calibration (physical units when fully 
 
     bool setInstalledOpenLimitLift(uint16_t openLimit);
 
-* ``openLimit`` - Open limit position in your motor units (e.g. centimeters)
+* ``openLimit`` - Open limit position in your motor units (e.g. centimeters).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -346,7 +346,7 @@ Sets the local closed limit for lift motor calibration (physical units when full
 
     bool setInstalledClosedLimitLift(uint16_t closedLimit);
 
-* ``closedLimit`` - Closed limit position in your motor units (e.g. centimeters)
+* ``closedLimit`` - Closed limit position in your motor units (e.g. centimeters).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -370,7 +370,7 @@ Sets the local open limit for tilt motor calibration.
 
     bool setInstalledOpenLimitTilt(uint16_t openLimit);
 
-* ``openLimit`` - Open limit value for tilt conversion
+* ``openLimit`` - Open limit value for tilt conversion.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -396,7 +396,7 @@ Sets the local closed limit for tilt motor calibration.
 
     bool setInstalledClosedLimitTilt(uint16_t closedLimit);
 
-* ``closedLimit`` - Closed limit value for tilt conversion
+* ``closedLimit`` - Closed limit value for tilt conversion.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -425,7 +425,7 @@ Sets the target lift position in percent100ths (0-10000, where 0 is fully open, 
 
     bool setTargetLiftPercent100ths(uint16_t liftPercent100ths);
 
-* ``liftPercent100ths`` - Target lift position in percent100ths (0-10000)
+* ``liftPercent100ths`` - Target lift position in percent100ths (0-10000).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -442,6 +442,8 @@ Gets the current target lift position in percent100ths.
 
 This function will return the current target lift position in percent100ths (0-10000).
 
+``onGoToLiftPercentage()`` runs in PRE_UPDATE, so a cluster read would still be the previous ``TargetPositionLiftPercent100ths`` value. This getter returns the incoming request (cached from the write), which is the value to copy into the current lift position (``CurrentPositionLiftPercent100ths``) for an instant move.
+
 setTargetTiltPercent100ths
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -451,7 +453,7 @@ Sets the target tilt position in percent100ths (0-10000, where 0 is fully open, 
 
     bool setTargetTiltPercent100ths(uint16_t tiltPercent100ths);
 
-* ``tiltPercent100ths`` - Target tilt position in percent100ths (0-10000)
+* ``tiltPercent100ths`` - Target tilt position in percent100ths (0-10000).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -480,7 +482,7 @@ Sets the full operational status bitmap.
 
     bool setOperationalStatus(uint8_t operationalStatus);
 
-* ``operationalStatus`` - Full operational status bitmap value
+* ``operationalStatus`` - Full operational status bitmap value.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -507,7 +509,7 @@ Sets the operational state for a specific field (LIFT or TILT). The GLOBAL field
     bool setOperationalState(OperationalStatusField_t field, OperationalState_t state);
 
 * ``field`` - Field to set (``LIFT`` or ``TILT``). ``GLOBAL`` cannot be set directly.
-* ``state`` - Operational state (``STALL``, ``MOVING_UP_OR_OPEN``, or ``MOVING_DOWN_OR_CLOSE``)
+* ``state`` - Operational state (``STALL``, ``MOVING_UP_OR_OPEN``, or ``MOVING_DOWN_OR_CLOSE``).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -522,7 +524,7 @@ Gets the operational state for a specific field.
 
     OperationalState_t getOperationalState(OperationalStatusField_t field);
 
-* ``field`` - Field to get (``GLOBAL``, ``LIFT``, or ``TILT``)
+* ``field`` - Field to get (``GLOBAL``, ``LIFT``, or ``TILT``).
 
 This function will return the operational state for the specified field (``STALL``, ``MOVING_UP_OR_OPEN``, or ``MOVING_DOWN_OR_CLOSE``).
 
@@ -532,16 +534,16 @@ Event Handling
 The ``MatterWindowCovering`` class automatically detects Matter commands and calls the appropriate callbacks when registered. There are two types of callbacks:
 
 **Target Position Callbacks** (triggered when ``TargetPosition`` attributes change):
-* ``onOpen()`` - called when ``UpOrOpen`` command is received (sets target to 0% = fully open)
-* ``onClose()`` - called when ``DownOrClose`` command is received (sets target to 100% = fully closed)
-* ``onStop()`` - called when ``StopMotion`` command is received (sets target to current position)
-* ``onGoToLiftPercentage()`` - called when ``TargetPositionLiftPercent100ths`` changes (from any command, ``setTargetLiftPercent100ths()``, or direct attribute write)
-* ``onGoToTiltPercentage()`` - called when ``TargetPositionTiltPercent100ths`` changes (from any command, ``setTargetTiltPercent100ths()``, or direct attribute write)
+* ``onOpen()`` - called when ``UpOrOpen`` command is received (sets target to 0% = fully open).
+* ``onClose()`` - called when ``DownOrClose`` command is received (sets target to 100% = fully closed).
+* ``onStop()`` - called when ``StopMotion`` command is received (sets target to current position).
+* ``onGoToLiftPercentage()`` - called when ``TargetPositionLiftPercent100ths`` changes (from any command, ``setTargetLiftPercent100ths()``, or direct attribute write).
+* ``onGoToTiltPercentage()`` - called when ``TargetPositionTiltPercent100ths`` changes (from any command, ``setTargetTiltPercent100ths()``, or direct attribute write).
 
 **Current Position Callback** (triggered when ``CurrentPosition`` attributes change):
-* ``onChange()`` - called when ``CurrentPositionLiftPercent100ths`` or ``CurrentPositionTiltPercent100ths`` change (after ``setLiftPercentage()``/``setTiltPercentage()`` are called or when a Matter controller updates these attributes directly)
+* ``onChange()`` - called when ``CurrentPositionLiftPercent100ths`` or ``CurrentPositionTiltPercent100ths`` change (after ``setLiftPercentage()``/``setTiltPercentage()`` are called or when a Matter controller updates these attributes directly).
 
-**Important:** ``onChange()`` is **not** automatically called when Matter commands are executed. Commands modify ``TargetPosition``, not ``CurrentPosition``. To trigger ``onChange()``, your ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callback must call ``setLiftPercentage()`` or ``setTiltPercentage()`` when the physical device actually moves.
+**Important:** ``onChange()`` is **not** automatically called when Matter commands are executed. Commands modify ``TargetPosition``, not ``CurrentPosition``. CHIP then sets ``OperationalStatus`` to Opening/Closing until the current lift position matches the target (Alexa keeps showing "Opening" and the previous lift position). Returning true from ``onGoToLiftPercentage()`` only accepts the target. The callback must update the current lift position (prefer ``setCurrentLiftPercent100ths(getTargetLiftPercent100ths())``) and call ``setOperationalState(LIFT, STALL)`` when the covering arrives. That also fires ``onChange()``.
 
 **Note:** All callbacks are optional. If a specific callback is not registered, only the generic ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callbacks will be called (if registered).
 
@@ -554,7 +556,7 @@ Sets a callback function to be called when the ``UpOrOpen`` command is received 
 
     void onOpen(EndPointOpenCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when ``UpOrOpen`` command is received
+* ``onChangeCB`` - Function to call when ``UpOrOpen`` command is received.
 
 The callback signature is:
 
@@ -571,7 +573,7 @@ Sets a callback function to be called when the ``DownOrClose`` command is receiv
 
     void onClose(EndPointCloseCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when ``DownOrClose`` command is received
+* ``onChangeCB`` - Function to call when ``DownOrClose`` command is received.
 
 The callback signature is:
 
@@ -583,9 +585,9 @@ onGoToLiftPercentage
 ^^^^^^^^^^^^^^^^^^^^
 
 Sets a callback function to be called when ``TargetPositionLiftPercent100ths`` changes. This is triggered by:
-* Matter commands: ``UpOrOpen``, ``DownOrClose``, ``StopMotion``, ``GoToLiftPercentage``
-* Calling ``setTargetLiftPercent100ths()``
-* Direct attribute writes to ``TargetPositionLiftPercent100ths``
+* Matter commands: ``UpOrOpen``, ``DownOrClose``, ``StopMotion``, ``GoToLiftPercentage``.
+* Calling ``setTargetLiftPercent100ths()``.
+* Direct attribute writes to ``TargetPositionLiftPercent100ths``.
 
 This callback is always called when the target lift position changes, regardless of which command or method was used to change it.
 
@@ -595,7 +597,7 @@ This callback is always called when the target lift position changes, regardless
 
     void onGoToLiftPercentage(EndPointLiftCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when target lift percentage changes
+* ``onChangeCB`` - Function to call when target lift percentage changes.
 
 The callback signature is:
 
@@ -603,15 +605,15 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t liftPercent);
 
-* ``liftPercent`` - Target lift percentage (0-100, where 0 is fully open, 100 is fully closed)
+* ``liftPercent`` - Target lift percentage (0-100, where 0 is fully open, 100 is fully closed).
 
 onGoToTiltPercentage
 ^^^^^^^^^^^^^^^^^^^^
 
 Sets a callback function to be called when ``TargetPositionTiltPercent100ths`` changes. This is triggered by:
-* Matter commands: ``UpOrOpen``, ``DownOrClose``, ``StopMotion``, ``GoToTiltPercentage``
-* Calling ``setTargetTiltPercent100ths()``
-* Direct attribute writes to ``TargetPositionTiltPercent100ths``
+* Matter commands: ``UpOrOpen``, ``DownOrClose``, ``StopMotion``, ``GoToTiltPercentage``.
+* Calling ``setTargetTiltPercent100ths()``.
+* Direct attribute writes to ``TargetPositionTiltPercent100ths``.
 
 This callback is always called when the target tilt position changes, regardless of which command or method was used to change it.
 
@@ -621,7 +623,7 @@ This callback is always called when the target tilt position changes, regardless
 
     void onGoToTiltPercentage(EndPointTiltCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when target tilt percentage changes
+* ``onChangeCB`` - Function to call when target tilt percentage changes.
 
 The callback signature is:
 
@@ -629,7 +631,7 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t tiltPercent);
 
-* ``tiltPercent`` - Target tilt percentage (0-100, where 0 is fully open, 100 is fully closed)
+* ``tiltPercent`` - Target tilt percentage (0-100, where 0 is fully open, 100 is fully closed).
 
 onStop
 ^^^^^^
@@ -640,7 +642,7 @@ Sets a callback function to be called when the ``StopMotion`` command is receive
 
     void onStop(EndPointStopCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when ``StopMotion`` command is received
+* ``onChangeCB`` - Function to call when ``StopMotion`` command is received.
 
 The callback signature is:
 
@@ -654,8 +656,8 @@ onChange
 Sets a callback function to be called when ``CurrentPositionLiftPercent100ths`` or ``CurrentPositionTiltPercent100ths`` attributes change. This is different from ``onGoToLiftPercentage()`` and ``onGoToTiltPercentage()``, which are called when ``TargetPosition`` attributes change.
 
 **When ``onChange()`` is called:**
-* When ``CurrentPositionLiftPercent100ths`` changes (after ``setLiftPercentage()`` is called or when a Matter controller updates this attribute directly)
-* When ``CurrentPositionTiltPercent100ths`` changes (after ``setTiltPercentage()`` is called or when a Matter controller updates this attribute directly)
+* When ``CurrentPositionLiftPercent100ths`` changes (after ``setLiftPercentage()`` is called or when a Matter controller updates this attribute directly).
+* When ``CurrentPositionTiltPercent100ths`` changes (after ``setTiltPercentage()`` is called or when a Matter controller updates this attribute directly).
 
 **Important:** ``onChange()`` is **not** automatically called when Matter commands are executed. Commands modify ``TargetPosition`` attributes, which trigger ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callbacks instead. To trigger ``onChange()`` after a command, your ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callback must call ``setLiftPercentage()`` or ``setTiltPercentage()`` to update the ``CurrentPosition`` attributes when the physical device actually moves.
 
@@ -663,7 +665,7 @@ Sets a callback function to be called when ``CurrentPositionLiftPercent100ths`` 
 
     void onChange(EndPointCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when current position attributes change
+* ``onChangeCB`` - Function to call when current position attributes change.
 
 The callback signature is:
 
@@ -671,8 +673,8 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t liftPercent, uint8_t tiltPercent);
 
-* ``liftPercent`` - Current lift percentage (0-100)
-* ``tiltPercent`` - Current tilt percentage (0-100)
+* ``liftPercent`` - Current lift percentage (0-100).
+* ``tiltPercent`` - Current tilt percentage (0-100).
 
 updateAccessory
 ^^^^^^^^^^^^^^^

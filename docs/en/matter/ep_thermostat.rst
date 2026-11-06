@@ -8,21 +8,21 @@ About
 The ``MatterThermostat`` class provides a thermostat endpoint for Matter networks with temperature control, setpoints, and multiple operating modes. This endpoint implements the Matter thermostat standard.
 
 **Features:**
-* Multiple operating modes (OFF, HEAT, COOL, AUTO, etc.)
-* Heating and cooling setpoint control
-* Local temperature reporting
-* Automatic temperature regulation
-* Deadband control for AUTO mode
-* Callback support for mode, temperature, and setpoint changes
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Multiple operating modes (OFF, HEAT, COOL, AUTO, etc.).
+* Heating and cooling setpoint control.
+* Local temperature reporting.
+* Automatic temperature regulation.
+* Deadband control for AUTO mode.
+* Callback support for mode, temperature, and setpoint changes.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* HVAC systems
-* Smart thermostats
-* Temperature control systems
-* Climate control automation
-* Energy management systems
+* HVAC systems.
+* Smart thermostats.
+* Temperature control systems.
+* Climate control automation.
+* Energy management systems.
 
 API Reference
 -------------
@@ -51,8 +51,8 @@ Initializes the Matter thermostat endpoint with control sequence and auto mode s
 
     bool begin(ControlSequenceOfOperation_t controlSequence = THERMOSTAT_SEQ_OP_COOLING, ThermostatAutoMode_t autoMode = THERMOSTAT_AUTO_MODE_DISABLED);
 
-* ``controlSequence`` - Control sequence of operation (default: ``THERMOSTAT_SEQ_OP_COOLING``)
-* ``autoMode`` - Auto mode enabled/disabled (default: ``THERMOSTAT_AUTO_MODE_DISABLED``)
+* ``controlSequence`` - Control sequence of operation (default: ``THERMOSTAT_SEQ_OP_COOLING``).
+* ``autoMode`` - Auto mode enabled/disabled (default: ``THERMOSTAT_AUTO_MODE_DISABLED``).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -73,12 +73,12 @@ ControlSequenceOfOperation_t
 
 Control sequence enumeration:
 
-* ``THERMOSTAT_SEQ_OP_COOLING`` - Cooling only
-* ``THERMOSTAT_SEQ_OP_COOLING_REHEAT`` - Cooling with reheat
-* ``THERMOSTAT_SEQ_OP_HEATING`` - Heating only
-* ``THERMOSTAT_SEQ_OP_HEATING_REHEAT`` - Heating with reheat
-* ``THERMOSTAT_SEQ_OP_COOLING_HEATING`` - Cooling and heating
-* ``THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT`` - Cooling and heating with reheat
+* ``THERMOSTAT_SEQ_OP_COOLING`` - Cooling only.
+* ``THERMOSTAT_SEQ_OP_COOLING_REHEAT`` - Cooling with reheat.
+* ``THERMOSTAT_SEQ_OP_HEATING`` - Heating only.
+* ``THERMOSTAT_SEQ_OP_HEATING_REHEAT`` - Heating with reheat.
+* ``THERMOSTAT_SEQ_OP_COOLING_HEATING`` - Cooling and heating.
+* ``THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT`` - Cooling and heating with reheat.
 
 Thermostat Modes
 ****************
@@ -88,15 +88,15 @@ ThermostatMode_t
 
 Thermostat mode enumeration:
 
-* ``THERMOSTAT_MODE_OFF`` - Off
-* ``THERMOSTAT_MODE_AUTO`` - Auto mode
-* ``THERMOSTAT_MODE_COOL`` - Cooling mode
-* ``THERMOSTAT_MODE_HEAT`` - Heating mode
-* ``THERMOSTAT_MODE_EMERGENCY_HEAT`` - Emergency heat
-* ``THERMOSTAT_MODE_PRECOOLING`` - Precooling
-* ``THERMOSTAT_MODE_FAN_ONLY`` - Fan only
-* ``THERMOSTAT_MODE_DRY`` - Dry mode
-* ``THERMOSTAT_MODE_SLEEP`` - Sleep mode
+* ``THERMOSTAT_MODE_OFF`` - Off.
+* ``THERMOSTAT_MODE_AUTO`` - Auto mode.
+* ``THERMOSTAT_MODE_COOL`` - Cooling mode.
+* ``THERMOSTAT_MODE_HEAT`` - Heating mode.
+* ``THERMOSTAT_MODE_EMERGENCY_HEAT`` - Emergency heat.
+* ``THERMOSTAT_MODE_PRECOOLING`` - Precooling.
+* ``THERMOSTAT_MODE_FAN_ONLY`` - Fan only.
+* ``THERMOSTAT_MODE_DRY`` - Dry mode.
+* ``THERMOSTAT_MODE_SLEEP`` - Sleep mode.
 
 Mode Control
 ************
@@ -149,7 +149,7 @@ Sets the local temperature reading.
 
     bool setLocalTemperature(double temperature);
 
-* ``temperature`` - Temperature in Celsius
+* ``temperature`` - Temperature in Celsius.
 
 getLocalTemperature
 ^^^^^^^^^^^^^^^^^^^
@@ -172,8 +172,8 @@ Sets both cooling and heating setpoints.
 
     bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCoolingTemperature);
 
-* ``_setpointHeatingTemperature`` - Heating setpoint in Celsius (or 0xffff to keep current)
-* ``_setpointCoolingTemperature`` - Cooling setpoint in Celsius (or 0xffff to keep current)
+* ``_setpointHeatingTemperature`` - Heating setpoint in Celsius (or 0xffff to keep current).
+* ``_setpointCoolingTemperature`` - Cooling setpoint in Celsius (or 0xffff to keep current).
 
 **Note:** Heating setpoint must be lower than cooling setpoint. In AUTO mode, cooling setpoint must be at least 2.5°C higher than heating setpoint (deadband).
 

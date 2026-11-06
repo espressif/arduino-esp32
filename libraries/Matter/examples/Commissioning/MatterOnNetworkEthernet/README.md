@@ -4,7 +4,7 @@ Commission a Matter On/Off Light over Ethernet. Pair this with [MatterOnNetworkW
 
 **Do not start Arduino `ESPmDNS`.** CHIP owns the mDNS responder. `MDNS.begin()` overwrites the hostname; `MDNS.end()` destroys CHIP's services. `Matter.begin()` starts CHIP's responder; the sketch must not call `MDNS.begin()`.
 
-**Do not use the Arduino `BLE` library (`BLE.h` / `BLEDevice`) in this sketch.**
+**Do not use the Arduino `BLE` library (`BLE.h`) in this sketch.**
 
 ## What it does
 

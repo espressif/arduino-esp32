@@ -28,7 +28,7 @@ public:
   // this will just stop processing Contact Sensor Matter events
   void end();
 
-  // set the contact state. Call after Matter.begin() with the real sensor reading.
+  // set the contact state after endpoint begin(). Cached until Matter.begin() if the cluster is not live yet.
   bool setContact(bool _contactState);
   // returns the contact state
   bool getContact() {

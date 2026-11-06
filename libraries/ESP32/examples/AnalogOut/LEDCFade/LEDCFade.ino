@@ -19,7 +19,7 @@
 
 // define starting duty, target duty and maximum fade time
 #define LEDC_START_DUTY  (0)
-#define LEDC_TARGET_DUTY (4095)
+#define LEDC_TARGET_DUTY (4096)
 #define LEDC_FADE_TIME   (3000)
 
 bool fade_ended = false;  // status of LED fade
@@ -36,14 +36,14 @@ void setup() {
   // Setup timer with given frequency, resolution and attach it to a led pin with auto-selected channel
   ledcAttach(LED_PIN, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
 
-  // Setup and start fade on led (duty from 0 to 4095)
+  // Setup and start fade on led (duty from 0 to 4096)
   ledcFade(LED_PIN, LEDC_START_DUTY, LEDC_TARGET_DUTY, LEDC_FADE_TIME);
   Serial.println("LED Fade on started.");
 
   // Wait for fade to end with a safety margin (as the fade may not be finished exactly at the end of the time)
   delay(LEDC_FADE_TIME + 100);
 
-  // Setup and start fade off led and use ISR (duty from 4095 to 0)
+  // Setup and start fade off led and use ISR (duty from 4096 to 0)
   ledcFadeWithInterrupt(LED_PIN, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
   Serial.println("LED Fade off started.");
 }

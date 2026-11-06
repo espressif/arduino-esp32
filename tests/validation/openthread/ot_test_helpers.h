@@ -10,6 +10,8 @@
 #include <OThreadCLI.h>
 #include <OThreadCLI_Util.h>
 #include <StreamString.h>
+#include <algorithm>
+#include <vector>
 
 #define OT_TEST_CLI_BUF_SIZE   512
 #define OT_TEST_EXT_PAN_ID_LEN 8
@@ -30,13 +32,21 @@ inline void ot_test_drain_cli(void) {
 }
 
 inline bool ot_test_run_cli(const char *cmd, char *out, size_t out_len, uint32_t timeout_ms = 5000) {
-  (void)out_len;
   ot_test_drain_cli();
   if (out != nullptr && out_len > 0) {
     out[0] = '\0';
-    return otGetRespCmd(cmd, out, timeout_ms) && out[0] != '\0';
+    return otGetRespCmd(cmd, out, out_len, timeout_ms) && out[0] != '\0';
   }
-  return otGetRespCmd(cmd, nullptr, timeout_ms);
+  return otGetRespCmd(cmd, nullptr, 0, timeout_ms);
+}
+
+// CLI output is lowercase ("leader") while OThread.otGetStringDeviceRole() is capitalized ("Leader").
+inline bool ot_test_contains_ci(const String &haystack, const String &needle) {
+  String h = haystack;
+  String n = needle;
+  h.toLowerCase();
+  n.toLowerCase();
+  return h.indexOf(n) >= 0;
 }
 
 inline bool ot_test_cli_contains(const char *cmd, const char *needle) {
@@ -44,7 +54,7 @@ inline bool ot_test_cli_contains(const char *cmd, const char *needle) {
   if (!ot_test_run_cli(cmd, buf, sizeof(buf))) {
     return false;
   }
-  return strstr(buf, needle) != nullptr;
+  return ot_test_contains_ci(buf, needle);
 }
 
 inline bool ot_test_wait_cli_state(const char *role_substr, uint32_t timeout_ms) {
@@ -208,8 +218,9 @@ inline void ot_test_assert_network_getters(void) {
 }
 
 inline void ot_test_assert_attached_addresses(void) {
+  // 0x0000 is a valid RLOC16 (router ID 0, often the leader); 0xFFFE is OpenThread's invalid value.
   uint16_t rloc16 = OThread.getRloc16();
-  TEST_ASSERT_NOT_EQUAL(0, rloc16);
+  TEST_ASSERT_NOT_EQUAL_HEX16(0xFFFE, rloc16);
 
   IPAddress mesh = OThread.getMeshLocalEid();
   TEST_ASSERT_FALSE(mesh == IPAddress());
@@ -257,7 +268,7 @@ inline void ot_test_assert_cli_network_fields(void) {
 inline void ot_test_assert_cli_print_network_info(void) {
   StreamString out;
   TEST_ASSERT_TRUE(otPrintRespCLI("state", out, 5000));
-  TEST_ASSERT_TRUE(out.indexOf(OThread.otGetStringDeviceRole()) >= 0);
+  TEST_ASSERT_TRUE(ot_test_contains_ci(out, OThread.otGetStringDeviceRole()));
 
   out = StreamString();
   OThread.otPrintNetworkInformation(out);
@@ -270,4 +281,44 @@ inline void ot_test_assert_cli_print_network_info(void) {
 inline void ot_test_assert_dataset_hex(const String &hex) {
   TEST_ASSERT_TRUE_MESSAGE(hex.length() >= 100, "Dataset hex too short");
   TEST_ASSERT_EQUAL_MESSAGE(0, hex.length() % 2, "Dataset hex length must be even");
+}
+
+// Splits a MeshCoP dataset hex string into its TLVs (type + length + value), sorted.
+// Returns an empty vector if the encoding is malformed.
+inline std::vector<String> ot_test_dataset_tlvs(const String &hex) {
+  std::vector<String> tlvs;
+  size_t pos = 0;
+  while (pos + 4 <= hex.length()) {
+    size_t len = strtoul(hex.substring(pos + 2, pos + 4).c_str(), nullptr, 16);
+    size_t hdr = 4;
+    if (len == 0xFF) {
+      if (pos + 8 > hex.length()) {
+        return {};
+      }
+      len = strtoul(hex.substring(pos + 4, pos + 8).c_str(), nullptr, 16);
+      hdr = 8;
+    }
+    size_t end = pos + hdr + (len * 2);
+    if (end > hex.length()) {
+      return {};
+    }
+    String tlv = hex.substring(pos, end);
+    tlv.toLowerCase();
+    tlvs.push_back(tlv);
+    pos = end;
+  }
+  if (pos != hex.length()) {
+    return {};
+  }
+  std::sort(tlvs.begin(), tlvs.end());
+  return tlvs;
+}
+
+// Datasets are unordered TLV sets; the stack may re-serialize them in a different order.
+inline void ot_test_assert_dataset_equal(const String &expected_hex, const String &actual_hex) {
+  std::vector<String> expected = ot_test_dataset_tlvs(expected_hex);
+  std::vector<String> actual = ot_test_dataset_tlvs(actual_hex);
+  TEST_ASSERT_FALSE_MESSAGE(expected.empty(), "Expected dataset is not valid TLV encoding");
+  TEST_ASSERT_FALSE_MESSAGE(actual.empty(), "Active dataset is not valid TLV encoding");
+  TEST_ASSERT_TRUE_MESSAGE(expected == actual, "Active dataset differs from leader export");
 }

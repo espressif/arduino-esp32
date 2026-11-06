@@ -17,6 +17,8 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterPressureSensor.h>
+#include <app/clusters/pressure-measurement-server/PressureMeasurementCluster.h>
+#include <app/data-model/Nullable.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -43,7 +45,7 @@ MatterPressureSensor::~MatterPressureSensor() {
 }
 
 bool MatterPressureSensor::begin(int16_t _rawPressure) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter Pressure Sensor with Endpoint Id %u device has already been created.", getEndPointId());
@@ -74,35 +76,41 @@ void MatterPressureSensor::end() {
   started = false;
 }
 
+void MatterPressureSensor::onStackStarted() {
+  PressureMeasurementCluster *cluster = static_cast<PressureMeasurementCluster *>(findRegisteredCluster(PressureMeasurement::Id));
+  if (cluster == nullptr) {
+    log_e("PressureMeasurement cluster not found after Matter.begin().");
+    return;
+  }
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(rawPressure)) != CHIP_NO_ERROR) {
+    log_e("Failed to apply cached Pressure Sensor value after Matter.begin().");
+  }
+}
+
 bool MatterPressureSensor::setRawPressure(int16_t _rawPressure) {
   if (!started) {
     log_e("Matter Pressure Sensor device has not begun.");
     return false;
   }
 
-  // avoid processing if there was no change
-  if (rawPressure == _rawPressure) {
+  if (rawPressure == _rawPressure && findRegisteredCluster(PressureMeasurement::Id) != nullptr) {
     return true;
   }
 
-  esp_matter_attr_val_t pressureVal = esp_matter_invalid(NULL);
+  PressureMeasurementCluster *cluster = static_cast<PressureMeasurementCluster *>(findRegisteredCluster(PressureMeasurement::Id));
+  if (cluster == nullptr) {
+    rawPressure = _rawPressure;
+    return true;
+  }
 
-  if (!getAttributeVal(PressureMeasurement::Id, PressureMeasurement::Attributes::MeasuredValue::Id, &pressureVal)) {
-    log_e("Failed to get Pressure Sensor Attribute.");
+  lock::ScopedChipStackLock lock(portMAX_DELAY);
+  if (cluster->SetMeasuredValue(chip::app::DataModel::MakeNullable(_rawPressure)) != CHIP_NO_ERROR) {
+    log_e("Failed to update Pressure Sensor Measurement Attribute.");
     return false;
   }
-  if (pressureVal.val.i16 != _rawPressure) {
-    pressureVal.val.i16 = _rawPressure;
-    bool ret;
-    ret = updateAttributeVal(PressureMeasurement::Id, PressureMeasurement::Attributes::MeasuredValue::Id, &pressureVal);
-    if (!ret) {
-      log_e("Failed to update Pressure Sensor Measurement Attribute.");
-      return false;
-    }
-    rawPressure = _rawPressure;
-  }
+  rawPressure = _rawPressure;
   log_v("Pressure Sensor set to %d hPa", _rawPressure);
-
   return true;
 }
 

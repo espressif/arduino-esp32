@@ -36,6 +36,8 @@ The ESP32 is divided by family:
     * Wi-Fi only
 * ESP32-S3
     * Wi-Fi and BLE 5
+* ESP32-S31
+    * Wi-Fi 6, BLE 5, Bluetooth Classic and IEEE 802.15.4
 
 .. [#rebuild-required] This SoC is only supported using Arduino as an ESP-IDF component or by rebuilding the static libraries.
 
@@ -86,6 +88,7 @@ Espressif
     ESP32-DevKitC <ESP32-DevKitC-1>
     ESP32-S2-Saola-1 <ESP32-S2-Saola-1>
     ESP32-C3-DevKitM-1 <ESP32-C3-DevKitM-1>
+    ESP32-P4X-Function-EV-Board <ESP32-P4X-Function-EV-Board>
 
 .. note::
    Only a few development boards are described on this documentation page. For more information about other Espressif development boards please refer to the `Espressif website <https://www.espressif.com/en/products/devkits>`_.

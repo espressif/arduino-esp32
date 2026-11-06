@@ -55,17 +55,17 @@ public:
   // returns the temperature setpoint in Celsius
   double getTemperatureSetpoint();
 
-  // set the minimum temperature
+  // set the minimum temperature (before Matter.begin(); CHIP min is const after start)
   bool setMinTemperature(double temperature);
   // returns the minimum temperature in Celsius
   double getMinTemperature();
 
-  // set the maximum temperature
+  // set the maximum temperature (before Matter.begin(); CHIP max is const after start)
   bool setMaxTemperature(double temperature);
   // returns the maximum temperature in Celsius
   double getMaxTemperature();
 
-  // set the temperature step (optional, requires temperature_step feature)
+  // set the temperature step before Matter.begin() (CHIP step is const after start)
   bool setStep(double step);
   // returns the temperature step in Celsius
   double getStep();

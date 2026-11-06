@@ -33,6 +33,8 @@
 #include "esp32c5/rom/cache.h"
 #elif CONFIG_IDF_TARGET_ESP32C61
 #include "esp32c61/rom/cache.h"
+#elif CONFIG_IDF_TARGET_ESP32S31
+#include "esp32s31/rom/cache.h"
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif

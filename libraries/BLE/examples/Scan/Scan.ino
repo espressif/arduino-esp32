@@ -1,41 +1,82 @@
 /*
-   Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleScan.cpp
-   Ported to Arduino ESP32 by Evandro Copercini
-*/
+ * BLE Scan Example -- New API
+ *
+ * Performs a blocking BLE scan and prints all discovered devices
+ * with their name, address, RSSI, and advertised service UUIDs.
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
 
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEScan.h>
-#include <BLEAdvertisedDevice.h>
-
-int scanTime = 5;  //In seconds
-BLEScan *pBLEScan;
-
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice advertisedDevice) {
-    Serial.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str());
-  }
-};
+#include <BLE.h>
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Scanning...");
+  Serial.println();
+  Serial.println("=== BLE Scan Example ===");
 
-  BLEDevice::init("");
-  pBLEScan = BLEDevice::getScan();  //create new scan
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(true);  //active scan uses more power, but get results faster
-  pBLEScan->setInterval(100);
-  pBLEScan->setWindow(99);  // less or equal setInterval value
+  Serial.print("Initializing BLE... ");
+  BTStatus status = BLE.begin("Scanner");
+  if (!status) {
+    Serial.printf("FAILED! (%s)\n", status.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("OK");
+
+  BLEScan scan = BLE.getScan();
+  if (!scan) {
+    Serial.println("Failed to get scan object!");
+    while (true) {
+      delay(1000);
+    }
+  }
+
+  scan.setActiveScan(true);  // Request scan response data from advertisers
+  scan.setInterval(100);     // Scan interval in 0.625 ms units (100 = 62.5 ms)
+  scan.setWindow(99);        // Scan window in 0.625 ms units (nearly continuous scanning)
+  scan.setFilterDuplicates(true);
+
+  Serial.println("Starting scan for 5 seconds...");
+  Serial.println();
+  BLEScan::Results results = scan.startBlocking(5000);
+
+  Serial.printf("Scan complete! Found %d device(s):\n", results.size());
+  Serial.println("---------------------------------------------");
+  for (const BLEAdvertisedDevice &dev : results) {
+    Serial.printf("  Address: %s", dev.getAddress().toString().c_str());
+    if (dev.haveName()) {
+      Serial.printf("  Name: \"%s\"", dev.getName().c_str());
+    }
+    Serial.printf("  RSSI: %d dBm", dev.getRSSI());
+    if (dev.haveServiceUUID()) {
+      Serial.printf("  Service: %s", dev.getServiceUUID().toString().c_str());
+    }
+    if (dev.haveManufacturerData()) {
+      Serial.printf("  Mfg: 0x%04X", dev.getManufacturerCompanyId());
+    }
+    Serial.println();
+  }
+  Serial.println("---------------------------------------------");
+  Serial.println("Scan finished. Will scan again in 10 seconds.");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  BLEScanResults *foundDevices = pBLEScan->start(scanTime, false);
-  Serial.print("Devices found: ");
-  Serial.println(foundDevices->getCount());
-  Serial.println("Scan done!");
-  pBLEScan->clearResults();  // delete results fromBLEScan buffer to release memory
-  delay(2000);
+  delay(10000);
+  Serial.println();
+  Serial.println("Rescanning...");
+
+  BLEScan scan = BLE.getScan();
+  BLEScan::Results results = scan.startBlocking(5000);
+
+  Serial.printf("Found %d device(s):\n", results.size());
+  for (const BLEAdvertisedDevice &dev : results) {
+    Serial.printf("  %s", dev.getAddress().toString().c_str());
+    if (dev.haveName()) {
+      Serial.printf(" \"%s\"", dev.getName().c_str());
+    }
+    Serial.printf(" RSSI:%d", dev.getRSSI());
+    Serial.println();
+  }
 }
