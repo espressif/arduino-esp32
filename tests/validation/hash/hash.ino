@@ -6,6 +6,7 @@
  */
 
 #include <Arduino.h>
+#include <algorithm>
 #include <unity.h>
 #include <MD5Builder.h>
 #include <SHA1Builder.h>
@@ -14,6 +15,7 @@
 #include <PBKDF2_HMACBuilder.h>
 #include <HMACBuilder.h>
 #include <StreamString.h>
+#include <limits.h>
 
 class ZeroBlockHash : public SHA256Builder {
 public:
@@ -1090,6 +1092,129 @@ void test_sha256_10000a(void) {
   TEST_ASSERT_EQUAL_STRING("27dd1f61b867b6a0f6e9d8a41c43231de52107e53ae424de8f847b821db4b711", h.toString().c_str());
 }
 
+// ==================== Hash stream limits ====================
+
+class HashReadTestStream : public Stream {
+  const char *_data;
+  size_t _length;
+  size_t _position = 0;
+  size_t _chunkSize;
+
+public:
+  size_t readCalls = 0;
+  using Stream::readBytes;
+
+  explicit HashReadTestStream(const char *data, size_t chunkSize = SIZE_MAX) : _data(data), _length(strlen(data)), _chunkSize(chunkSize) {}
+
+  int available() override {
+    return _length - _position;
+  }
+  int read() override {
+    return _position < _length ? (uint8_t)_data[_position++] : -1;
+  }
+  int peek() override {
+    return _position < _length ? (uint8_t)_data[_position] : -1;
+  }
+  void flush() override {}
+  size_t write(uint8_t) override {
+    return 0;
+  }
+  size_t readBytes(char *buffer, size_t length) override {
+    readCalls++;
+    size_t count = std::min(length, std::min(_chunkSize, _length - _position));
+    memcpy(buffer, _data + _position, count);
+    _position += count;
+    return count;
+  }
+};
+
+class HashUnavailableTestStream : public HashReadTestStream {
+public:
+  HashUnavailableTestStream() : HashReadTestStream("abc") {}
+  int available() override {
+    return -1;
+  }
+};
+
+static void assert_hash_stream_limits(HashBuilder &hash, const char *abc, const char *ab, const char *empty) {
+  const size_t limits[] = {3, (size_t)INT_MAX, (size_t)INT_MAX + 1, (size_t)UINT32_MAX, SIZE_MAX};
+  for (size_t limit : limits) {
+    HashReadTestStream stream("abc");
+    hash.begin();
+    TEST_ASSERT_TRUE(hash.addStream(stream, limit));
+    TEST_ASSERT_EQUAL_INT(0, stream.available());
+    hash.calculate();
+    TEST_ASSERT_EQUAL_STRING(abc, hash.toString().c_str());
+  }
+
+  HashReadTestStream shortReads("abc", 1);
+  hash.begin();
+  TEST_ASSERT_TRUE(hash.addStream(shortReads, SIZE_MAX));
+  TEST_ASSERT_EQUAL_INT(0, shortReads.available());
+  TEST_ASSERT_EQUAL_UINT(3, shortReads.readCalls);
+  hash.calculate();
+  TEST_ASSERT_EQUAL_STRING(abc, hash.toString().c_str());
+
+  HashReadTestStream limited("abc");
+  hash.begin();
+  TEST_ASSERT_TRUE(hash.addStream(limited, 2));
+  TEST_ASSERT_EQUAL_INT(1, limited.available());
+  hash.calculate();
+  TEST_ASSERT_EQUAL_STRING(ab, hash.toString().c_str());
+
+  HashReadTestStream zeroLimit("abc");
+  hash.begin();
+  TEST_ASSERT_TRUE(hash.addStream(zeroLimit, 0));
+  TEST_ASSERT_EQUAL_INT(3, zeroLimit.available());
+  TEST_ASSERT_EQUAL_UINT(0, zeroLimit.readCalls);
+  hash.calculate();
+  TEST_ASSERT_EQUAL_STRING(empty, hash.toString().c_str());
+
+  HashReadTestStream stalled("abc", 0);
+  hash.begin();
+  TEST_ASSERT_FALSE(hash.addStream(stalled, SIZE_MAX));
+  TEST_ASSERT_EQUAL_INT(3, stalled.available());
+  TEST_ASSERT_EQUAL_UINT(1, stalled.readCalls);
+  hash.calculate();
+  TEST_ASSERT_EQUAL_STRING(empty, hash.toString().c_str());
+
+  HashUnavailableTestStream unavailable;
+  hash.begin();
+  TEST_ASSERT_TRUE(hash.addStream(unavailable, SIZE_MAX));
+  TEST_ASSERT_EQUAL_UINT(0, unavailable.readCalls);
+  hash.calculate();
+  TEST_ASSERT_EQUAL_STRING(empty, hash.toString().c_str());
+}
+
+// Expected digests: Python 3 hashlib.<algorithm>(b'abc' / b'ab' / b'').hexdigest().
+void test_md5_add_stream_limits(void) {
+  MD5Builder hash;
+  assert_hash_stream_limits(hash, "900150983cd24fb0d6963f7d28e17f72", "187ef4436122d1cc2f40dc2b92f0eba0", "d41d8cd98f00b204e9800998ecf8427e");
+}
+
+void test_sha1_add_stream_limits(void) {
+  SHA1Builder hash;
+  assert_hash_stream_limits(
+    hash, "a9993e364706816aba3e25717850c26c9cd0d89d", "da23614e02469a0d7c7bd1bdab5c9c474b1904dc", "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+  );
+}
+
+void test_sha256_add_stream_limits(void) {
+  SHA256Builder hash;
+  assert_hash_stream_limits(
+    hash, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", "fb8e20fc2e4c3f248c60c39bd652f3c1347298bb977b8b4d5903b85055620603",
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  );
+}
+
+void test_sha3_256_add_stream_limits(void) {
+  SHA3_256Builder hash;
+  assert_hash_stream_limits(
+    hash, "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532", "5c828b33397f4762922e39a60c35699d2550466a52dd15ed44da37eb0bdc61e6",
+    "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a"
+  );
+}
+
 // ==================== setup ====================
 
 void setup() {
@@ -1227,6 +1352,12 @@ void setup() {
   RUN_TEST(test_hmac_calculate_before_begin);
   RUN_TEST(test_hmac_null_key);
   RUN_TEST(test_hmac_add_stream_large_maxlen);
+
+  // Hash stream limits
+  RUN_TEST(test_md5_add_stream_limits);
+  RUN_TEST(test_sha1_add_stream_limits);
+  RUN_TEST(test_sha256_add_stream_limits);
+  RUN_TEST(test_sha3_256_add_stream_limits);
 
   // Padding boundaries
   RUN_TEST(test_sha256_55bytes);
