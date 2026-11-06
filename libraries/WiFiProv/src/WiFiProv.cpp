@@ -78,7 +78,9 @@ void WiFiProvClass ::initProvision(prov_scheme_t prov_scheme, scheme_handler_t s
     log_i("provInit was already done!");
     return;
   }
-  network_prov_mgr_config_t config;
+  // Zero-initialize so fields added by newer network_provisioning versions
+  // keep their defaults (e.g. wifi_conn_attempts and the manager mode).
+  network_prov_mgr_config_t config = {};
 #if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
   if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
     config.scheme = network_prov_scheme_ble;
