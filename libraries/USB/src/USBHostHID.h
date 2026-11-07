@@ -251,6 +251,8 @@ private:
 
   bool anyMounted(void) const;
   bool isRearmExempt(uint8_t dev_addr, uint8_t idx) const;
+  /** True while a peer-rearm hold is still in the future. 0 is inactive, not a deadline. */
+  bool peerPauseActive(void);
   void abortBusyPeers(void);
   /** Pause peer re-arm. include_sole sets skip 0xFF only when no claim exemption is in flight. */
   void schedulePeerRearm(uint32_t pause_ms, bool include_sole);

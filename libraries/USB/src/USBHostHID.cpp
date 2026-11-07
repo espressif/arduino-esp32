@@ -92,7 +92,15 @@ void USBHostHIDClass::requestPeerRearm(uint8_t new_dev_addr, uint8_t new_idx) {
   /* Defer the abort so it does not race hub enumeration in the same tuh_task window.
    * A claim must replace a 0xFF mark left by an attach abort. It must not replace an
    * exemption already naming a real iface — an unmount passes the departing address, and
-   * overwriting that would abort the device this request was meant to protect. */
+   * overwriting that would abort the device this request was meant to protect.
+   * A new sweep stamps its own time. One already in flight, including its retries, keeps
+   * the stamp from when it started, so an IN armed for that sweep is not aborted. */
+  if (!_rearm_peers) {
+    _sweep_ms = millis();
+    if (_sweep_ms == 0) {
+      _sweep_ms = 1;
+    }
+  }
   if (!_rearm_peers || _rearm_skip_addr == 0xFF) {
     _rearm_skip_addr = new_dev_addr;
     _rearm_skip_idx = new_idx;
@@ -100,6 +108,21 @@ void USBHostHIDClass::requestPeerRearm(uint8_t new_dev_addr, uint8_t new_idx) {
   _rearm_peers = true;
   _rearm_after_ms = millis() + 150;
   _rearm_tries = 0;
+}
+
+bool USBHostHIDClass::peerPauseActive(void) {
+  const uint32_t until = _peer_pause_until_ms;
+  if (until == 0) {
+    return false;
+  }
+  if ((int32_t)(millis() - until) < 0) {
+    return true;
+  }
+  /* Drop an expired deadline. A new pause scheduled since the read must stay. */
+  if (_peer_pause_until_ms == until) {
+    _peer_pause_until_ms = 0;
+  }
+  return false;
 }
 
 bool USBHostHIDClass::anyMounted(void) const {
@@ -429,9 +452,9 @@ void USBHostHIDClass::_onReport(uint8_t dev_addr, uint8_t idx, uint8_t const *re
     USBHostHIDDevice *dev = _devices[i];
     if (dev != nullptr && dev->matches(dev_addr, idx)) {
       dev->onReport(dev_addr, idx, report, len);
-      /* Skip immediate re-arm while the next device is still enumerating.
-       * Otherwise re-arm here — worker-only re-arm drops HID after a few reports on DWC2. */
-      if ((int32_t)(millis() - _peer_pause_until_ms) < 0) {
+      /* Hold only a low-speed IN across the next device's enumeration. A full-speed
+       * keyboard stays armed: aborting it is what left that iface silent. */
+      if (peerPauseActive() && tuh_speed_get(dev_addr) == TUSB_SPEED_LOW) {
         return;
       }
       if (tuh_hid_mounted(dev_addr, idx) && tuh_hid_receive_ready(dev_addr, idx)) {
@@ -580,17 +603,15 @@ void USBHostHIDClass::serviceReceivesFromHostTask() {
     _pending_idx = 0;
   }
 
-  /* New claim still arms during the pause (S2/S3 must not wait). The pause only holds peers. */
-  const bool peer_paused = (int32_t)(millis() - _peer_pause_until_ms) < 0;
+  /* New claim still arms during the pause (S2/S3 must not wait). The pause holds
+   * low-speed peers only; a full-speed IN keeps being re-armed below. */
+  const bool peer_paused = peerPauseActive();
   if (!peer_paused || _start_receive_pending) {
     startReceiveIfPending();
   }
-  if (peer_paused) {
-    return;
-  }
 
   bool rearm_peers = false;
-  if (_rearm_peers && (int32_t)(millis() - _rearm_after_ms) >= 0) {
+  if (!peer_paused && _rearm_peers && (int32_t)(millis() - _rearm_after_ms) >= 0) {
     rearm_peers = true;
     _rearm_peers = false;
   }
@@ -612,6 +633,10 @@ void USBHostHIDClass::serviceReceivesFromHostTask() {
     }
     /* Control pipe, independent of the interrupt IN below. */
     dev->serviceFromHostTask();
+
+    if (peer_paused && tuh_speed_get(a) == TUSB_SPEED_LOW) {
+      continue;
+    }
 
     const bool is_new = (a == _rearm_skip_addr && x == _rearm_skip_idx);
     /* A just-submitted IN is busy until the next report. Aborting it and then
