@@ -119,15 +119,17 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   tears down its parent ACL before Bluedroid surfaces the local CIS-complete
   event, the ISO host completes any remaining channels on ACL loss so
   `BLEIso::end()` does not retain a dead CIS.
-- **PAST receive API.** The public
-  `BLEScan::receivePeriodicSync()`/`cancelPeriodicSyncReceive()` surface is
-  explicitly `NotSupported` on Bluedroid because IDF keys this API by peer
-  address, while the public method accepts only an ACL handle. The audio
-  Broadcast Sink's BASS path is supported when the rebuilt library enables
-  `CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER`: its synchronous request
-  event carries the assistant address to the Bluedroid host glue, which arms
-  mode `DUP_FILTER_DISABLED`; the GAP callback records the transferred sync
-  for normal callbacks and `BLE.end()` teardown.
+- **PAST receive API.** IDF keys the receive-parameter API by peer address,
+  while the public surface is keyed by a connection handle. The Bluedroid
+  implementation resolves the handle against the live `BLEClient` and
+  `BLEServer` connection tables (GATT connection id, with the HCI ACL handle as
+  a fallback), then arms mode `DUP_FILTER_DISABLED`. `cancelPeriodicSyncReceive()`
+  restores `NO_SYNC_EVT` with default parameters because Bluedroid has no
+  dedicated disable command. The audio Broadcast Sink's BASS path uses the same
+  arming helper directly with the assistant address carried by the synchronous
+  request event, and requires
+  `CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER`; the GAP callback records the
+  transferred sync for normal callbacks and `BLE.end()` teardown.
 - **Raw AD data only.** The native advertising path uses `esp_ble_gap_config_adv_data_raw` with
   bytes from `BLEAdvDataBuilder`, never `esp_ble_gap_config_adv_data` (which force-expands service
   UUIDs to 128 bits and would diverge from every other path).

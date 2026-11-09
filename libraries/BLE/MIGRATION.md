@@ -1170,7 +1170,7 @@ These features are new and were not available in v3.x:
 | Identity (RPA resolved) callback | `server.onIdentity(lambda)`, `client.onIdentity(lambda)` |
 | Stack identification | `BLE.getStack()`, `BLE.getStackName()` |
 | Hosted BLE (ESP32-P4) | `BLE.setPins(...)`, `BLE.isHostedBLE()` |
-| Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSync()`, `scan.terminatePeriodicSync(handle)`; NimBLE PAST receive: `scan.receivePeriodicSync(connHandle)`, `scan.cancelPeriodicSyncReceive(connHandle)` |
+| Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSync()`, `scan.terminatePeriodicSync(handle)`; PAST receive (both stacks): `scan.receivePeriodicSync(connHandle)`, `scan.cancelPeriodicSyncReceive(connHandle)` — take the handle from `BLEClient::getHandle()` or `BLEConnInfo::getHandle()` |
 | `BLEConnInfo` connection descriptor | Stack-agnostic connection info in all callbacks |
 | L2CAP CoC channels | `BLE.createL2CAPServer(psm, mtu)`, `BLE.connectL2CAP(connHandle, psm, mtu)` — see `examples/L2CAP_Server` + `examples/L2CAP_Client` |
 | Isochronous channels (raw CIS / BIS) | `BLEIso::begin()`, then `BLEIso::connectCis(connHandle, qos)` / `BLEIso::listenCis(qos)` (CIS, optionally bidirectional via `returnSduSize`) or `BLEIso::createBig(advHandle, qos)` / `BLEIso::syncBig(bisIndex, qos)` (BIS). Channels: `send(sdu, len)` with automatic sequence numbers, `onReceive()`, `disconnect()`. See `examples/ISO_CisCentral` + `ISO_CisPeripheral` and `ISO_BigBroadcaster` + `ISO_BigReceiver`. |

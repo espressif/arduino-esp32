@@ -448,10 +448,9 @@ preset obligations. Non-exhaustive, but these are the ones that bite:
   (see `LEAudio_BroadcastSink`). Auto-sync works without an assistant; with
   auto-sync off and the sink not started it only follows BASS requests (the
   CAP handover acceptor case). On Bluedroid, a BASS PAST request carries the
-  assistant peer address through the engine event bridge so the host glue can
-  use IDF's address-keyed receive-parameter API; the public
-  `BLEScan::receivePeriodicSync()` remains `NotSupported` there for arbitrary
-  ACL handles.
+  assistant peer address through the engine event bridge; the public
+  `BLEScan::receivePeriodicSync()` resolves a live client/server handle to that
+  peer address and arms the same IDF receive-parameter API.
 - **VCP Renderer** must publish **VCS** (and any compiled VOCS/AICS instances);
   **MICP Device** must publish **MICS** (+ AICS).
 - **CSIP Set Member** must expose **CSIS** with SIRK / Set Size / Rank, and (for
