@@ -37,6 +37,27 @@ void readNames() {
   Serial.printf("[DUT0] My name: %s, Peer: %s\n", myName.c_str(), peerName.c_str());
 }
 
+bool waitForToken(const char *token, uint32_t timeoutMs) {
+  String line;
+  unsigned long deadline = millis() + timeoutMs;
+  while (millis() < deadline) {
+    while (Serial.available()) {
+      char c = (char)Serial.read();
+      if (c == '\n') {
+        line.trim();
+        if (line == token) {
+          return true;
+        }
+        line = "";
+      } else {
+        line += c;
+      }
+    }
+    delay(10);
+  }
+  return false;
+}
+
 void setup() {
   Serial.begin(115200);
   while (!Serial) {
@@ -167,6 +188,11 @@ void setup() {
     "[DUT0] Lookup stack=%s conns=%u reverseConns=%d hasClient=%d hasServer=%d\n", BLE.getStackName(), (unsigned)conns.size(), reverseConns,
     (int)hasClient, (int)hasServer
   );
+
+  if (!waitForToken("DISC_GO", 20000)) {
+    Serial.println("[DUT0] Timeout waiting for disconnect token");
+    return;
+  }
 
   client.disconnect();
   unsigned long cleanupWait = millis();

@@ -126,8 +126,9 @@ def test_ble_dual_role(dut, ci_job_id):
         assert conns0 == 1, f"NimBLE should expose one ACL descriptor, got {conns0}"
     assert stack0 == stack1, f"DUT stack mismatch: DUT0={stack0}, DUT1={stack1}"
 
-    dut1.expect_exact("[DUT1] Reverse cleanup done", timeout=20)
+    dut0.write("DISC_GO\n")
     dut0.expect_exact("[DUT0] Ready for sequential client", timeout=20)
+    dut1.expect_exact("[DUT1] Reverse cleanup done", timeout=20)
     dut1.write("SEQ_GO\n")
     dut1.expect_exact("[DUT1] Sequential client value: DUT0 data", timeout=30)
     dut1.expect_exact("[DUT1] Dual role OK", timeout=20)

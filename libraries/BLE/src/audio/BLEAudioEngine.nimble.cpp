@@ -25,6 +25,7 @@
 #include "gatt/BLEGattDatabase.h"
 #endif
 #include "scan/BLEScan.h"
+#include "esp32-hal-log.h"
 
 #include <host/ble_gap.h>
 #include <host/ble_hs.h>
@@ -90,6 +91,21 @@ extern "C" int bleAudioEngineSendPastSync(uint16_t sync_handle, uint16_t conn, u
   (void)service_data;
   return ESP_ERR_NOT_SUPPORTED;
 #endif
+}
+
+extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
+  int rc = ble_gap_terminate(conn_handle, BLE_ERR_REM_USER_CONN_TERM);
+  if (rc == 0) {
+    return 0;
+  }
+  if (rc == BLE_HS_EALREADY) {
+    return 0;
+  }
+  if (rc == BLE_HS_ENOTCONN) {
+    return static_cast<int>(BTStatus::NotConnected);
+  }
+  log_e("audio link: terminate handle=%u rc=%d", (unsigned)conn_handle, rc);
+  return static_cast<int>(BTStatus::Fail);
 }
 
 extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip,
