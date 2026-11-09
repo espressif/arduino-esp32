@@ -9059,9 +9059,6 @@ sparkfun_esp32p4_iot_redboard_wifi.build.defines=-DBOARD_HAS_PSRAM
 sparkfun_esp32p4_iot_redboard_wifi.menu.ChipVariant.postv3=v3.00 or newer
 sparkfun_esp32p4_iot_redboard_wifi.menu.ChipVariant.postv3.build.chip_variant=esp32p4
 sparkfun_esp32p4_iot_redboard_wifi.menu.ChipVariant.postv3.build.f_cpu=400000000L
-sparkfun_esp32p4_iot_redboard_wifi.menu.ChipVariant.prev3=Before v3.00
-sparkfun_esp32p4_iot_redboard_wifi.menu.ChipVariant.prev3.build.chip_variant=esp32p4_es
-sparkfun_esp32p4_iot_redboard_wifi.menu.ChipVariant.prev3.build.f_cpu=360000000L
 
 sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.default=Disabled
 sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -9239,9 +9236,6 @@ sparkfun_esp32p4_iot_redboard_poe.build.defines=-DBOARD_HAS_PSRAM
 sparkfun_esp32p4_iot_redboard_poe.menu.ChipVariant.postv3=v3.00 or newer
 sparkfun_esp32p4_iot_redboard_poe.menu.ChipVariant.postv3.build.chip_variant=esp32p4
 sparkfun_esp32p4_iot_redboard_poe.menu.ChipVariant.postv3.build.f_cpu=400000000L
-sparkfun_esp32p4_iot_redboard_poe.menu.ChipVariant.prev3=Before v3.00
-sparkfun_esp32p4_iot_redboard_poe.menu.ChipVariant.prev3.build.chip_variant=esp32p4_es
-sparkfun_esp32p4_iot_redboard_poe.menu.ChipVariant.prev3.build.f_cpu=360000000L
 
 sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.default=Disabled
 sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.default.build.copy_jtag_files=0
