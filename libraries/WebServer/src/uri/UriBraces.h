@@ -6,8 +6,8 @@
 class UriBraces : public Uri {
 
 public:
-  explicit UriBraces(const char *uri) : Uri(uri) {};
-  explicit UriBraces(const String &uri) : Uri(uri) {};
+  explicit UriBraces(const char *uri) : Uri(uri){};
+  explicit UriBraces(const String &uri) : Uri(uri){};
 
   Uri *clone() const override final {
     return new UriBraces(_uri);
