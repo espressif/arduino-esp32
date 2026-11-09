@@ -220,6 +220,8 @@ public:
   HTTPMethod method() const {
     return _currentMethod;
   }
+  // The client used for the current request. A derived class can override
+  // this (together with acceptClient()) to use a wrapped connection, e.g. TLS.
   virtual NetworkClient &client() {
     return _currentClient;
   }
@@ -263,7 +265,7 @@ public:
   int headers() const;                                                          // get header count
   bool hasHeader(const String &name) const;                                     // check if header exists
 
-  int clientContentLength() const;  // return "content-length" of incoming HTTP header from "_currentClient"
+  int clientContentLength() const;  // return "content-length" of incoming HTTP header from "client()"
   const String version() const;     // get the HTTP version string
   String hostHeader() const;        // get request host header if available or empty String if not
 
@@ -304,7 +306,7 @@ public:
 
   template<typename T> size_t streamFile(T &file, const String &contentType, const int code = 200) {
     _streamFileCore(file.size(), file.name(), contentType, code);
-    return _currentClient.write(file);
+    return client().write(file);
   }
 
   bool _eTagEnabled = false;
@@ -314,14 +316,34 @@ public:
 
 private:
   bool _chunkedResponseActive = false;
-  NetworkClient _chunkedClient;  // Store by value, no dangling pointer
+  NetworkClient *_chunkedClient = nullptr;  // Points at client(); preserves the derived write()
 
 protected:
+  // Accepts the next client. A derived class that wraps the accepted socket
+  // (for example a TLS server) should override this together with client();
+  // both must return the same object. The returned object is the owner of the
+  // accepted connection: if it is not _currentClient, do not also keep the
+  // accepted client in _currentClient (use a local NetworkClient and transfer
+  // its handle, or dup the descriptor). A failed accept must return a
+  // disconnected client.
+  virtual NetworkClient &acceptClient() {
+    _currentClient = _server.accept();
+    return _currentClient;
+  }
+
+  // Called when the active connection is finished. The default stops client()
+  // and releases _currentClient. A derived class with a different ownership
+  // model can override this.
+  virtual void closeClient() {
+    client().stop();
+    _currentClient = NetworkClient();
+  }
+
   virtual size_t _currentClientWrite(const char *b, size_t l) {
-    return _currentClient.write(b, l);
+    return client().write(b, l);
   }
   virtual size_t _currentClientWrite_P(PGM_P b, size_t l) {
-    return _currentClient.write_P(b, l);
+    return client().write_P(b, l);
   }
   void _addRequestHandler(RequestHandler *handler);
   bool _removeRequestHandler(RequestHandler *handler);
