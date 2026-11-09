@@ -356,15 +356,12 @@ void USBHostHIDClass::flushHostNotes() {
       case NOTE_PEER_REARM: log_v("[USBHostHID] peer rearm abort+receive dev=%u idx=%u", (unsigned)s->dev_addr, (unsigned)s->idx); break;
       case NOTE_DEV_MOUNT:
         log_v(
-          "[USBHost] device mounted daddr=%u vid=%04x pid=%04x speed=%s", (unsigned)s->dev_addr, (unsigned)s->extra, (unsigned)s->extra2, hidSpeedStr(s->protocol)
+          "[USBHost] device mounted daddr=%u vid=%04x pid=%04x speed=%s", (unsigned)s->dev_addr, (unsigned)s->extra, (unsigned)s->extra2,
+          hidSpeedStr(s->protocol)
         );
         break;
-      case NOTE_ATTACH_ABORT:
-        log_v(
-          "[USBHostHID] attach abort HID INs (deferred=%u enum_pause_ms=%u)", (unsigned)s->protocol, (unsigned)s->extra2
-        );
-        break;
-      default: break;
+      case NOTE_ATTACH_ABORT: log_v("[USBHostHID] attach abort HID INs (deferred=%u enum_pause_ms=%u)", (unsigned)s->protocol, (unsigned)s->extra2); break;
+      default:                break;
     }
     _host_note_r = (uint8_t)((r + 1u) % HOST_NOTE_SLOTS);
   }
