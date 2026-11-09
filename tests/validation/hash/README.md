@@ -112,6 +112,10 @@ Validates the Hash library including HEXBuilder, MD5Builder, SHA-1/2/3 builders,
 | `test_hmac_calculate_before_begin` | `calculate()` before `begin()` yields an empty digest |
 | `test_hmac_null_key` | `setKey(NULL)` after a successful MAC clears the cached result |
 | `test_hmac_add_stream_large_maxlen` | `addStream()` with `size_t` max length still hashes the stream |
+| `test_md5_add_stream_limits` | MD5 large/zero/partial stream limits, short reads, stalled reads, and unavailable input |
+| `test_sha1_add_stream_limits` | SHA-1 large/zero/partial stream limits, short reads, stalled reads, and unavailable input |
+| `test_sha256_add_stream_limits` | SHA-256 large/zero/partial stream limits, short reads, stalled reads, and unavailable input |
+| `test_sha3_256_add_stream_limits` | SHA3-256 large/zero/partial stream limits, short reads, stalled reads, and unavailable input |
 | `test_sha256_55bytes` | SHA-256 padding boundary at 55 bytes |
 | `test_sha256_56bytes` | SHA-256 padding boundary at 56 bytes |
 | `test_sha384_112bytes` | SHA-384 padding boundary at 112 bytes |

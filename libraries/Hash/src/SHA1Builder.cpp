@@ -248,8 +248,8 @@ void SHA1Builder::add(const uint8_t *data, size_t len) {
 }
 
 bool SHA1Builder::addStream(Stream &stream, const size_t maxLen) {
-  const int buf_size = 512;
-  int maxLengthLeft = maxLen;
+  const size_t buf_size = 512;
+  size_t maxLengthLeft = maxLen;
   uint8_t *buf = (uint8_t *)malloc(buf_size);
 
   if (!buf) {
@@ -260,7 +260,7 @@ bool SHA1Builder::addStream(Stream &stream, const size_t maxLen) {
   while ((bytesAvailable > 0) && (maxLengthLeft > 0)) {
 
     // determine number of bytes to read
-    int readBytes = bytesAvailable;
+    size_t readBytes = (size_t)bytesAvailable;
     if (readBytes > maxLengthLeft) {
       readBytes = maxLengthLeft;  // read only until max_len
     }
@@ -269,7 +269,7 @@ bool SHA1Builder::addStream(Stream &stream, const size_t maxLen) {
     }
 
     // read data and check if we got something
-    int numBytesRead = stream.readBytes(buf, readBytes);
+    size_t numBytesRead = stream.readBytes(buf, readBytes);
     if (numBytesRead < 1) {
       free(buf);
       return false;
