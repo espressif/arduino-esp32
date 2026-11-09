@@ -17,6 +17,14 @@ and execute them for pull requests.
 | `test_integers_within` | Delta and array-within macros |
 | `test_bits` | `TEST_ASSERT_BITS*` and bit high/low macros |
 | `test_strings_memory_ptr` | String, memory, and pointer comparisons |
+| `test_string_concat_cstr_inline_growth` | Own C-string append across inline-to-heap growth |
+| `test_string_concat_cstr_inline_substring` | Interior C-string append across inline-to-heap growth |
+| `test_string_concat_cstr_heap_growth` | Full self-append while growing a heap buffer |
+| `test_string_concat_buffer_heap_substring` | Interior byte-pointer append with an explicit length and heap growth |
+| `test_string_concat_cstr_reserved` | Reserved capacity, interior slices without growth, and small inline appends |
+| `test_string_concat_self_overloads` | String-object self-concatenation and own C-string `+=` |
+| `test_string_concat_external_and_empty` | External RAM/flash strings, empty appends, and null-source rejection |
+| `test_string_concat_binary_alias` | Explicit-length self-append preserves embedded NUL bytes |
 | `test_each_equal` | `TEST_ASSERT_EACH_EQUAL_*` scalar-to-array macros |
 | `test_float` | Float comparisons and special values (inf/nan) |
 | `test_double` | Double comparisons and special values |
@@ -41,3 +49,9 @@ and execute them for pull requests.
 
 - **Hardware**: Any ESP32 variant
 - **Wokwi/QEMU**: Supported
+
+String concatenation regressions are defined in `string_tests.h` and run through
+the existing `test_unity.py` driver, which is available in the trusted CI
+base-branch checkout. No external components are required. Hardware heap growth
+may extend an allocation in place; the same regressions can be run on a host
+with a forced-moving allocator to exercise heap relocation deterministically.

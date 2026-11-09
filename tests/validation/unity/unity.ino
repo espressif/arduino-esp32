@@ -30,6 +30,8 @@
 #undef TEST_ASSERT_EACH_EQUAL_DOUBLE
 #define TEST_ASSERT_EACH_EQUAL_DOUBLE(expected, actual, num_elements) UNITY_TEST_ASSERT_EACH_EQUAL_DOUBLE((expected), (actual), (num_elements), __LINE__, NULL)
 
+#include "string_tests.h"
+
 static int setUpCallCount;
 static int tearDownCallCount;
 
@@ -407,6 +409,14 @@ void setup() {
   RUN_TEST(test_integers_within);
   RUN_TEST(test_bits);
   RUN_TEST(test_strings_memory_ptr);
+  RUN_TEST(test_string_concat_cstr_inline_growth);
+  RUN_TEST(test_string_concat_cstr_inline_substring);
+  RUN_TEST(test_string_concat_cstr_heap_growth);
+  RUN_TEST(test_string_concat_buffer_heap_substring);
+  RUN_TEST(test_string_concat_cstr_reserved);
+  RUN_TEST(test_string_concat_self_overloads);
+  RUN_TEST(test_string_concat_external_and_empty);
+  RUN_TEST(test_string_concat_binary_alias);
   RUN_TEST(test_each_equal);
 #ifndef UNITY_EXCLUDE_FLOAT
   RUN_TEST(test_float);
