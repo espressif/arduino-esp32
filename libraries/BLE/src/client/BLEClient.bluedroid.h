@@ -45,6 +45,9 @@ struct BLEClient::Impl : BLEClientImplCommon {
   /// The ISO transport layers key their connection table by this handle, so
   /// BLEIso::connectCis() translates a library conn id through it.
   std::atomic<uint16_t> aclHandle{0xFFFF};
+  /// ACL link role: true when the local controller is the central. Bluedroid
+  /// broadcasts CONNECT to every GATTC app, including on peer-initiated links.
+  std::atomic<bool> central{true};
   esp_gatt_if_t gattcIf = ESP_GATT_IF_NONE;
   uint16_t appId = 0;
   std::atomic<uint16_t> mtu{23};

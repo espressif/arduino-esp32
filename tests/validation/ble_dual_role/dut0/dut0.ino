@@ -174,19 +174,9 @@ void setup() {
 
   BTAddress lookupAddr = (reverseConns > 0) ? reverseInfo.getAddress() : peerAddr;
   std::vector<BLEConnInfo> conns = BLE.getConnections(lookupAddr);
-  bool hasClient = false;
-  bool hasServer = false;
-  for (const auto &ci : conns) {
-    if (ci.getHandle() == client.getHandle() && ci.isCentral()) {
-      hasClient = true;
-    }
-    if (reverseConns > 0 && ci.getHandle() == reverseInfo.getHandle()) {
-      hasServer = true;
-    }
-  }
+  bool lookupCentral = !conns.empty() && conns[0].isCentral();
   Serial.printf(
-    "[DUT0] Lookup stack=%s conns=%u reverseConns=%d hasClient=%d hasServer=%d\n", BLE.getStackName(), (unsigned)conns.size(), reverseConns,
-    (int)hasClient, (int)hasServer
+    "[DUT0] Lookup stack=%s conns=%u reverseConns=%d central=%d\n", BLE.getStackName(), (unsigned)conns.size(), reverseConns, (int)lookupCentral
   );
 
   if (!waitForToken("DISC_GO", 20000)) {

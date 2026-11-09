@@ -364,7 +364,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | `pServer->getConnectedCount()` | `server.getConnectedCount()` | |
 | N/A | `server.getConnections()` | New: returns `vector<BLEConnInfo>` |
 | N/A | `server.getConnInfo(connHandle)` | New: returns refreshed `BLEConnInfo` for `connHandle` |
-| N/A | `BLE.getConnHandle(peerAddr)` / `BLE.getConnections(peerAddr)` | New: find the live handle(s) and role descriptors for a connected peer |
+| N/A | `BLE.getConnHandle(peerAddr)` / `BLE.getConnections(peerAddr)` | New: find the live handle and ACL descriptor for a connected peer |
 | `pServer->disconnect(connId)` | `server.disconnect(connHandle)` | |
 | `pServer->advertiseOnDisconnect(bool)` | `server.advertiseOnDisconnect(bool)` | |
 | `pServer->getPeerMTU(connId)` | `server.getPeerMTU(connHandle)` | |

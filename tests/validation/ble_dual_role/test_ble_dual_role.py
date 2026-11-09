@@ -64,7 +64,7 @@ def test_ble_dual_role(dut, ci_job_id):
         line = m.group(0)
         if b"Lookup stack=" in line:
             m_lookup1 = re.search(
-                r"Lookup stack=(\S+) conns=(\d+) clients=(\d+) hasServer=([01])\r?\n",
+                r"Lookup stack=(\S+) conns=(\d+) central=([01]) peripheral=([01])\r?\n",
                 line.decode(),
             )
             assert m_lookup1, line
@@ -74,21 +74,18 @@ def test_ble_dual_role(dut, ci_job_id):
     else:
         raise AssertionError("DUT1 did not report its lookup summary")
 
-    stack1, conns1, clients1, has_server1 = (
+    stack1, conns1, central1, peripheral1 = (
         m_lookup1.group(1),
         int(m_lookup1.group(2)),
         int(m_lookup1.group(3)),
         int(m_lookup1.group(4)),
     )
-    assert clients1 == reverse_clients, f"DUT1 reported clients={clients1}, saw {reverse_clients} success lines"
-    assert has_server1 == 1, "DUT1 getConnections() omitted its server connection"
+    assert conns1 == 1, f"DUT1 getConnections() should expose one ACL descriptor, got {conns1}"
+    assert central1 == 0 and peripheral1 == 1, "DUT1 descriptor has the wrong link role"
     if stack1 == "Bluedroid":
-        assert conns1 >= clients1 + 1, (
-            f"DUT1 expected client+server descriptors ({clients1}+1), got {conns1}"
-        )
+        assert reverse_clients >= 1, "Bluedroid reverse-client phase did not connect"
     else:
-        assert clients1 == 0, "NimBLE reverse-client phase should be skipped (one ACL per peer)"
-        assert conns1 == 1, f"NimBLE should expose one ACL descriptor, got {conns1}"
+        assert reverse_clients == 0, "NimBLE reverse-client phase should be skipped (one ACL per peer)"
 
     # DUT0 samples the same table while its client link is up.
     m0 = dut0.expect(
@@ -98,32 +95,22 @@ def test_ble_dual_role(dut, ci_job_id):
     if b"Lookup stack=" not in m0.group(0):
         m0 = dut0.expect(r"\[DUT0\] Lookup stack=[^\r\n]*\r?\n", timeout=30)
     m_lookup0 = re.search(
-        r"Lookup stack=(\S+) conns=(\d+) reverseConns=(\d+) hasClient=([01]) hasServer=([01])\r?\n",
+        r"Lookup stack=(\S+) conns=(\d+) reverseConns=(\d+) central=([01])\r?\n",
         m0.group(0).decode(),
     )
     assert m_lookup0, m0.group(0).decode()
-    stack0, conns0, reverse_conns, has_client0, has_server0 = (
+    stack0, conns0, reverse_conns, central0 = (
         m_lookup0.group(1),
         int(m_lookup0.group(2)),
         int(m_lookup0.group(3)),
         int(m_lookup0.group(4)),
-        int(m_lookup0.group(5)),
     )
-    assert has_client0 == 1, "DUT0 getConnections() omitted its client connection"
-    if reverse_conns > 0:
-        assert has_server0 == 1, "DUT0 getConnections() omitted its server connection"
-    if clients1 > 0:
-        assert reverse_conns >= 1, "DUT0 saw no server connection for DUT1's reverse client"
-    assert reverse_conns <= clients1 or clients1 == 0, (
-        f"DUT0 saw {reverse_conns} server connections for {clients1} reverse clients"
-    )
+    assert conns0 == 1, f"DUT0 getConnections() should expose one ACL descriptor, got {conns0}"
+    assert central0 == 1, "DUT0 descriptor has the wrong link role"
     if stack0 == "Bluedroid":
-        assert conns0 >= 1 + reverse_conns, (
-            f"DUT0 expected client+server descriptors (1+{reverse_conns}), got {conns0}"
-        )
+        assert reverse_conns >= 1, "DUT0 saw no server connection for DUT1's reverse client"
     else:
         assert reverse_conns == 0, "NimBLE reverse phase should be skipped"
-        assert conns0 == 1, f"NimBLE should expose one ACL descriptor, got {conns0}"
     assert stack0 == stack1, f"DUT stack mismatch: DUT0={stack0}, DUT1={stack1}"
 
     dut0.write("DISC_GO\n")

@@ -1182,35 +1182,16 @@ bool bluedroidFindPeerAddress(uint16_t connHandle, BTAddress &peerAddress) {
   return false;
 }
 
+void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnInfo> &connections);
+
 void bluedroidFindConnHandles(const BTAddress &peerAddress, std::vector<uint16_t> &handles) {
+  std::vector<BLEConnInfo> connections;
+  bluedroidFindConnections(peerAddress, connections);
   handles.clear();
-  if (!peerAddress) {
-    return;
+  handles.reserve(connections.size());
+  for (const auto &connection : connections) {
+    handles.push_back(connection.getHandle());
   }
-#if BLE_GATT_CLIENT_SUPPORTED
-  for (auto &client : BLEClient::Impl::snapshotClients()) {
-    if (!client || !client->connected.load()) {
-      continue;
-    }
-    if (client->peerAddress == peerAddress) {
-      handles.push_back(client->connId.load());
-    }
-  }
-#endif
-#if BLE_GATT_SERVER_SUPPORTED
-  auto *server = BLEServer::Impl::s_instance;
-  if (server) {
-    BLELockGuard lock(server->mtx);
-    for (auto &entry : server->connections) {
-      const BLEConnInfo &info = entry.second;
-      if (info.getAddress() == peerAddress || info.getIdAddress() == peerAddress) {
-        if (std::find(handles.begin(), handles.end(), entry.first) == handles.end()) {
-          handles.push_back(entry.first);
-        }
-      }
-    }
-  }
-#endif
 }
 
 bool bluedroidFindConnHandle(const BTAddress &peerAddress, uint16_t &connHandle) {
@@ -1228,17 +1209,28 @@ void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnI
   if (!peerAddress) {
     return;
   }
+
+  auto addUnique = [&](const BLEConnInfo &info) {
+    if (!info) {
+      return;
+    }
+    for (const auto &existing : connections) {
+      if (existing.getAddress() == info.getAddress()) {
+        return;  // one descriptor per ACL; keep the first (client) entry
+      }
+    }
+    BLEConnInfo copy = info;
+    BLEConnInfoImpl::clearVolatile(copy);
+    connections.push_back(copy);
+  };
+
 #if BLE_GATT_CLIENT_SUPPORTED
   for (auto &client : BLEClient::Impl::snapshotClients()) {
     if (!client || !client->connected.load() || client->peerAddress != peerAddress) {
       continue;
     }
     BLEClient handle = BLEClientImplCommon::makeHandle(client.get());
-    BLEConnInfo info = handle.getConnInfo();
-    if (info) {
-      BLEConnInfoImpl::clearVolatile(info);
-      connections.push_back(info);
-    }
+    addUnique(handle.getConnInfo());
   }
 #endif
 #if BLE_GATT_SERVER_SUPPORTED
@@ -1248,9 +1240,7 @@ void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnI
     for (auto &entry : server->connections) {
       const BLEConnInfo &info = entry.second;
       if (info.getAddress() == peerAddress || info.getIdAddress() == peerAddress) {
-        BLEConnInfo copy = info;
-        BLEConnInfoImpl::clearVolatile(copy);
-        connections.push_back(copy);
+        addUnique(info);
       }
     }
   }

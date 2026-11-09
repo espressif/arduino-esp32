@@ -593,7 +593,7 @@ BLEConnInfo BLEClient::getConnInfo() const {
   if (!_impl || !_impl->connected) {
     return BLEConnInfo();
   }
-  BLEConnInfo conn = BLEConnInfoImpl::make(_impl->connId, _impl->peerAddress, _impl->mtu, /*central=*/true);
+  BLEConnInfo conn = BLEConnInfoImpl::make(_impl->connId, _impl->peerAddress, _impl->mtu, _impl->central.load());
   // Bluedroid has no live security-level query, so reflect the flags latched from
   // AUTH_CMPL. Matches NimBLE getConnInfo() and the server's persisted flags.
   BLEConnInfoImpl::updateSecurityFlags(conn, _impl->secEncrypted, _impl->secAuthenticated, _impl->secBonded);
@@ -775,7 +775,7 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
     }
     // Capture conn info before connId is reset so the callback still sees the
     // connection that just ended.
-    conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
+    conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, client->central.load());
     client->connected = false;
     client->connId = 0xFFFF;
     client->secEncrypted = false;
@@ -1051,6 +1051,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
         // The HCI ACL handle is the key the ISO transport uses (GATTS/GATTC
         // conn ids are per-interface and mean nothing to it).
         client->aclHandle = param->connect.conn_handle;
+        client->central = (param->connect.link_role == 0);
       }
       break;
     }
@@ -1069,7 +1070,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
           client->secEncrypted = false;
           client->secAuthenticated = false;
           client->secBonded = false;
-          conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
+          conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, client->central.load());
         }
         log_i("Client: connected, connId=%u", client->connId.load());
         // The ATT MTU exchange is NOT requested here: on Bluedroid a request
@@ -1271,7 +1272,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       }
       client->mtuSync.give(param->cfg_mtu.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
 
-      BLEConnInfo conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
+      BLEConnInfo conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, client->central.load());
       client->dispatchMtuChanged(conn, client->mtu);
       break;
     }
@@ -1350,7 +1351,7 @@ void BLEClient::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       auto *c = owner.get();
       if (c->connected && c->peerAddress.equalsEspBdAddr(param->ble_security.auth_cmpl.bd_addr)) {
         c->peerAddress = BLEAddressUtil::fromNative(param->ble_security.auth_cmpl.bd_addr, addrType);
-        BLEConnInfo conn = BLEConnInfoImpl::make(c->connId, c->peerAddress, c->mtu, /*central=*/true);
+        BLEConnInfo conn = BLEConnInfoImpl::make(c->connId, c->peerAddress, c->mtu, c->central.load());
         BLEConnInfoImpl::updateSecurityFromAuthComplete(conn, param->ble_security.auth_cmpl.auth_mode);
         c->secEncrypted = conn.isEncrypted();
         c->secAuthenticated = conn.isAuthenticated();

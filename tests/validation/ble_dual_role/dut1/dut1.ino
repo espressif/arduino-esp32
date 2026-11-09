@@ -159,18 +159,11 @@ void setup() {
   }
 
   std::vector<BLEConnInfo> conns = BLE.getConnections(peerAddr);
-  int clientEntries = 0;
-  bool hasServer = false;
-  for (const auto &ci : conns) {
-    if (ci.isCentral()) {
-      clientEntries++;
-    }
-    if (ci.getHandle() == peerConnInfo.getHandle()) {
-      hasServer = true;
-    }
-  }
+  bool lookupCentral = !conns.empty() && conns[0].isCentral();
+  bool lookupPeripheral = !conns.empty() && conns[0].isPeripheral();
   Serial.printf(
-    "[DUT1] Lookup stack=%s conns=%u clients=%d hasServer=%d\n", BLE.getStackName(), (unsigned)conns.size(), clientEntries, (int)hasServer
+    "[DUT1] Lookup stack=%s conns=%u central=%d peripheral=%d\n", BLE.getStackName(), (unsigned)conns.size(), (int)lookupCentral,
+    (int)lookupPeripheral
   );
 
   // Give DUT0 time to sample its table, then tear the reverse links down and

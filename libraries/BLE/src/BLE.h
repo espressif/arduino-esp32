@@ -249,10 +249,10 @@ public:
   /**
    * @brief Find the connection handle for a connected peer.
    *
-   * This is the same handle reported by @c BLEClient::getHandle() and
-   * @c BLEConnInfo::getHandle(), and the one connection-scoped APIs take.
+   * This is the same handle reported by `BLEClient::getHandle()` and
+   * `BLEConnInfo::getHandle()`, and the one connection-scoped APIs take.
    * Accepts the peer's OTA address (the one reported by
-   * @c BLEConnInfo::getAddress()); NimBLE also matches the resolved identity
+   * `BLEConnInfo::getAddress()`); NimBLE also matches the resolved identity
    * address.
    *
    * @param peerAddress Peer address.
@@ -261,13 +261,12 @@ public:
   uint16_t getConnHandle(const BTAddress &peerAddress) const;
 
   /**
-   * @brief Find the unique live connection handle values for a connected peer.
+   * @brief Find the live connection handle for a connected peer.
    *
-   * A device can be both GATT client and server on the same ACL. On Bluedroid
-   * those roles may report different handles; this returns the unique numeric
-   * values. NimBLE reports the shared ACL handle once. Use
-   * @ref getConnections() when you need one descriptor per role/link even if
-   * the backend reuses a numeric handle.
+   * Returns one handle per ACL. Bluedroid may have several GATTC client
+   * objects and a GATTS server link on one ACL; the first client handle is
+   * returned, otherwise the server handle. Use the owning handle when you
+   * need a specific GATT application's connection.
    *
    * @param peerAddress Peer address.
    * @return Unique handles in client-before-server order; empty when the peer
@@ -276,16 +275,17 @@ public:
   std::vector<uint16_t> getConnHandles(const BTAddress &peerAddress) const;
 
   /**
-   * @brief Find every connection descriptor for a connected peer.
+   * @brief Find the connection descriptor for a connected peer.
    *
-   * Unlike @ref getConnHandles(), this preserves one entry per role/link even
-   * when the backend reuses the same numeric handle for a GATT client and a
-   * GATT server link. Use `BLEConnInfo::isCentral()` / `isPeripheral()` to pick
-   * the role and `getHandle()` for the native handle.
+   * Returns one descriptor per ACL on both backends. A local device can be both
+   * GATT client and server on that ACL; the descriptor's GAP role is the link
+   * role, and the handle is the application connection that owns the link.
+   * Use the owning `BLEClient`/`BLEServer` handle for a specific GATT
+   * application.
    *
    * @param peerAddress Peer address.
-   * @return Valid descriptors in client-before-server order; empty when the
-   *         peer is not connected.
+   * @return A valid descriptor, or an empty vector when the peer is not
+   *         connected.
    * @note PHY/RSSI are normalized as in @ref getConnInfo(const BTAddress &).
    */
   std::vector<BLEConnInfo> getConnections(const BTAddress &peerAddress) const;
