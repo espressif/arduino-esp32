@@ -15,6 +15,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "core/BLEAddress.h"
 
 #if BLE_BLUEDROID && BLE_AUDIO_SUPPORTED
 
@@ -89,6 +90,52 @@ extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t p
   (void)skip;
   (void)timeout_ms;
   return static_cast<int>(BTStatus::NotSupported);
+#endif
+}
+
+extern "C" void bleAudioAddrFromGap(uint8_t out[6], const uint8_t in[6]) {
+  for (int i = 0; i < 6; i++) {
+    out[i] = in[5 - i];
+  }
+}
+
+extern "C" int bleAudioEngineSendPast(uint8_t adv, uint16_t conn, uint16_t service_data, const uint8_t peer_addr[6], uint8_t peer_addr_type) {
+  (void)conn;
+#if BLE_PAST_SUPPORTED
+  if (peer_addr == nullptr) {
+    return ESP_ERR_INVALID_ARG;
+  }
+  BTAddress peer(peer_addr, static_cast<BTAddress::Type>(peer_addr_type));
+  uint8_t native[6];
+  BLEAddress::toNative(peer, native);
+  esp_err_t err = esp_ble_gap_periodic_adv_set_info_trans(native, service_data, adv);
+  return err == ESP_OK ? 0 : static_cast<int>(err);
+#else
+  (void)adv;
+  (void)service_data;
+  (void)peer_addr;
+  (void)peer_addr_type;
+  return ESP_ERR_NOT_SUPPORTED;
+#endif
+}
+
+extern "C" int bleAudioEngineSendPastSync(uint16_t sync_handle, uint16_t conn, uint16_t service_data, const uint8_t peer_addr[6], uint8_t peer_addr_type) {
+  (void)conn;
+#if BLE_PAST_SUPPORTED
+  if (peer_addr == nullptr) {
+    return ESP_ERR_INVALID_ARG;
+  }
+  BTAddress peer(peer_addr, static_cast<BTAddress::Type>(peer_addr_type));
+  uint8_t native[6];
+  BLEAddress::toNative(peer, native);
+  esp_err_t err = esp_ble_gap_periodic_adv_sync_trans(native, service_data, sync_handle);
+  return err == ESP_OK ? 0 : static_cast<int>(err);
+#else
+  (void)sync_handle;
+  (void)service_data;
+  (void)peer_addr;
+  (void)peer_addr_type;
+  return ESP_ERR_NOT_SUPPORTED;
 #endif
 }
 

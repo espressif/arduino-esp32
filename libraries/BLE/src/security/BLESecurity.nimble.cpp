@@ -366,6 +366,7 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
 }
 
 BTStatus BLESecurity::startSecurity(const BLEConnInfo &peer) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!(bool)peer) {
     return BTStatus::NotConnected;
   }

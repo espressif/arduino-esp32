@@ -40,6 +40,9 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include "audio/BLEAudioEngine.h"
+#if BLE_NIMBLE
+#include "audio/BLEAudioEngine.nimble.h"
+#endif
 #include "iso/BLEIsoHost.h"
 
 #include "esp_ble_audio_common_api.h"
@@ -267,16 +270,9 @@ static void link_on_connect(uint16_t conn, uint8_t status, uint8_t role, const s
     s_link_discovered[idx] = false;
     s_link_peer_valid[idx] = (peer != NULL);
     if (peer != NULL) {
-#if BLE_BLUEDROID
-      /* The Bluedroid adapter exposes esp_bd_addr_t (MSB first); keep the
-       * engine representation LSB-first like BTAddress and the other units. */
-      for (int i = 0; i < 6; i++) {
-        s_link_peer[idx].val[i] = peer->val[5 - i];
-      }
+      /* GAP event addresses are host-order; store the engine's LSB-first form. */
+      bleAudioAddrFromGap(s_link_peer[idx].val, peer->val);
       s_link_peer[idx].type = peer->type;
-#else
-      memcpy(&s_link_peer[idx], peer, sizeof(s_link_peer[idx]));
-#endif
     }
   }
   log_d("conn %u: connected, starting encryption", conn);
@@ -634,9 +630,7 @@ int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]) {
     return ESP_ERR_INVALID_STATE;
   }
   /* BTAddress is LSB-first; esp_ble_gattc_aux_open() takes MSB-first. */
-  for (int i = 0; i < 6; i++) {
-    s_connect_bda[i] = addr[5 - i];
-  }
+  bleAudioAddrFromGap(s_connect_bda, addr);
   esp_err_t err = esp_ble_gattc_aux_open(gattc_if, s_connect_bda, (esp_ble_addr_type_t)addr_type, true);
   if (err != ESP_OK) {
     log_e("esp_ble_gattc_aux_open failed: %d", err);

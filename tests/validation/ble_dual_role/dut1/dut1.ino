@@ -34,6 +34,27 @@ void readNames() {
   Serial.printf("[DUT1] My name: %s, Peer: %s\n", myName.c_str(), peerName.c_str());
 }
 
+bool waitForToken(const char *token, uint32_t timeoutMs) {
+  String line;
+  unsigned long deadline = millis() + timeoutMs;
+  while (millis() < deadline) {
+    while (Serial.available()) {
+      char c = (char)Serial.read();
+      if (c == '\n') {
+        line.trim();
+        if (line == token) {
+          return true;
+        }
+        line = "";
+      } else {
+        line += c;
+      }
+    }
+    delay(10);
+  }
+  return false;
+}
+
 void setup() {
   Serial.begin(115200);
   while (!Serial) {
@@ -111,22 +132,30 @@ void setup() {
   Serial.println("[DUT1] DUT0 client connected, opening reverse client");
   delay(1000);
 
-  BLEClient reverse1 = BLE.createClient();
-  BTStatus rs1 = reverse1.connect(peerAddr);
-  int reverseClients = rs1 ? 1 : 0;
-  if (rs1) {
-    Serial.println("[DUT1] Reverse client 1 connected");
-  } else {
-    Serial.printf("[DUT1] Reverse client 1 failed: %s\n", rs1.toString());
-  }
+  const bool isBluedroid = strcmp(BLE.getStackName(), "Bluedroid") == 0;
+  int reverseClients = 0;
+  BLEClient reverse1;
+  BLEClient reverse2;
+  if (isBluedroid) {
+    reverse1 = BLE.createClient();
+    BTStatus rs1 = reverse1.connect(peerAddr);
+    reverseClients = rs1 ? 1 : 0;
+    if (rs1) {
+      Serial.println("[DUT1] Reverse client 1 connected");
+    } else {
+      Serial.printf("[DUT1] Reverse client 1 failed: %s\n", rs1.toString());
+    }
 
-  BLEClient reverse2 = BLE.createClient();
-  BTStatus rs2 = reverseClients ? reverse2.connect(peerAddr) : BTStatus::Fail;
-  if (rs2) {
-    reverseClients++;
-    Serial.println("[DUT1] Reverse client 2 connected");
-  } else if (reverseClients) {
-    Serial.printf("[DUT1] Reverse client 2 failed: %s\n", rs2.toString());
+    reverse2 = BLE.createClient();
+    BTStatus rs2 = reverseClients ? reverse2.connect(peerAddr) : BTStatus::Fail;
+    if (rs2) {
+      reverseClients++;
+      Serial.println("[DUT1] Reverse client 2 connected");
+    } else if (reverseClients) {
+      Serial.printf("[DUT1] Reverse client 2 failed: %s\n", rs2.toString());
+    }
+  } else {
+    Serial.println("[DUT1] Reverse phase skipped on NimBLE");
   }
 
   std::vector<BLEConnInfo> conns = BLE.getConnections(peerAddr);
@@ -144,12 +173,36 @@ void setup() {
     "[DUT1] Lookup stack=%s conns=%u clients=%d hasServer=%d\n", BLE.getStackName(), (unsigned)conns.size(), clientEntries, (int)hasServer
   );
 
-  // Give DUT0 time to sample its table, then tear the reverse links down.
-  delay(2000);
+  // Give DUT0 time to sample its table, then tear the reverse links down and
+  // run the original DUT1-as-client phase on every backend.
+  delay(1000);
   if (reverseClients > 0) {
     reverse2.disconnect();
     reverse1.disconnect();
   }
+  delay(500);
+  Serial.println("[DUT1] Reverse cleanup done");
+  if (!waitForToken("SEQ_GO", 20000)) {
+    Serial.println("[DUT1] Timeout waiting for sequential phase");
+    return;
+  }
+
+  BLEClient sequential = BLE.createClient();
+  BTStatus ss = sequential.connect(peerAddr);
+  if (!ss) {
+    Serial.printf("[DUT1] Sequential connect FAILED: %s\n", ss.toString());
+    return;
+  }
+  BLERemoteService seqSvc = sequential.getService(SVC_UUID);
+  BLERemoteCharacteristic seqChr = seqSvc ? seqSvc.getCharacteristic(CHR_UUID) : BLERemoteCharacteristic();
+  if (!seqChr) {
+    Serial.println("[DUT1] Sequential characteristic not found");
+    sequential.disconnect();
+    return;
+  }
+  String seqVal = seqChr.readValue();
+  Serial.printf("[DUT1] Sequential client value: %s\n", seqVal.c_str());
+  sequential.disconnect();
   Serial.println("[DUT1] Dual role OK");
 }
 

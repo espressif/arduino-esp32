@@ -21,6 +21,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "core/BLEAddress.h"
 #if BLE_BLUEDROID
 
 #include "BLE.h"

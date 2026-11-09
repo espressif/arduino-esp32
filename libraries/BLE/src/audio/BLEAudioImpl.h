@@ -36,12 +36,14 @@
 #include "audio/BLEAudio.h"
 #if BLE_AUDIO_SUPPORTED
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <vector>
 #include "BTStatus.h"
 #include "audio/BLEAudioEngine.h"
+#include "client/BLEClient.h"
 
 struct BLEAudioImplCommon {
   /** @brief Role handler for one event group (host task). */
@@ -65,11 +67,17 @@ struct BLEAudioImplCommon {
   std::vector<std::function<BTStatus()>> roleApplies;
 
   /**
-   * Keeps every role (and helper objects such as the NimBLE connect client)
-   * alive until end(): registered services point into their roles' streams,
-   * so a role must not die when the sketch drops its handle.
+   * Keeps every role alive until end(): registered services point into their
+   * roles' streams, so a role must not die when the sketch drops its handle.
    */
   std::vector<std::shared_ptr<void>> roles;
+
+  /**
+   * NimBLE connect() fallback clients. Kept alive while the link is up and
+   * released on ACL_DISCONNECTED so repeated connect/disconnect cycles do not
+   * accumulate GATTC registrations.
+   */
+  std::vector<std::shared_ptr<BLEClient>> clients;
 
   /** One handler per event group; roles register theirs at creation, before start(). */
   EventHandler handlers[BLE_AUDIO_GRP_COUNT];
@@ -118,6 +126,10 @@ struct BLEAudioImplCommon {
           c = BLE_AUDIO_CONN_NONE;
         }
       }
+      clients.erase(std::remove_if(clients.begin(), clients.end(), [&](const std::shared_ptr<BLEClient> &client) {
+                      return !client || !client->isConnected() || client->getHandle() == e.conn_handle;
+                    }),
+                    clients.end());
     }
   }
 

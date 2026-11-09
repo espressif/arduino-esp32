@@ -29,12 +29,6 @@
 #include "esp_random.h"
 #include "esp32-hal-log.h"
 
-#if BLE_NIMBLE
-#include <host/ble_hs.h>
-#elif BLE_BLUEDROID
-#include "esp_gap_ble_api.h"
-#endif
-
 /**
  * @file BLEAudioCap.cpp
  * @brief CAP Initiator and Commander roles on the CAP engine unit.
@@ -85,16 +79,11 @@ const uint8_t *broadcastCode(const String &code, uint8_t out[BLE_AUDIO_BCODE_SIZ
 void sendPast(uint8_t adv, uint16_t conn, const ble_audio_cap_past_req_t &r) {
   const uint16_t serviceData = (uint16_t)r.src_id << 8;
   int err = -1;
-#if BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_SYNC_TRANSFER)
-  (void)r;
-  err = ble_gap_periodic_adv_sync_set_info(adv, conn, serviceData);
-#elif BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER)
-  (void)conn;
-  uint8_t bda[6];
-  BLEAddress::toNative(BTAddress(r.addr, static_cast<BTAddress::Type>(r.addr_type)), bda);
-  err = esp_ble_gap_periodic_adv_set_info_trans(bda, serviceData, adv);
+#if BLE_PAST_SUPPORTED
+  err = bleAudioEngineSendPast(adv, conn, serviceData, r.addr, r.addr_type);
 #else
   (void)adv;
+  (void)conn;
   (void)serviceData;
   (void)r;
 #endif

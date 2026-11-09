@@ -32,6 +32,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "core/BLEAddress.h"
 #if BLE_BLUEDROID
 
 #if BLE_ADVERTISING_SUPPORTED

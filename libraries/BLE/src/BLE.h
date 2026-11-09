@@ -25,7 +25,6 @@
 #include "WString.h"
 #include "BTStatus.h"
 #include "BTAddress.h"
-#include "core/BLEAddress.h"
 #include "types/BLEAdvTypes.h"
 #include "server/BLEServer.h"
 #include "client/BLEClient.h"
@@ -262,15 +261,17 @@ public:
   uint16_t getConnHandle(const BTAddress &peerAddress) const;
 
   /**
-   * @brief Find every live connection handle for a connected peer.
+   * @brief Find the unique live connection handle values for a connected peer.
    *
    * A device can be both GATT client and server on the same ACL. On Bluedroid
-   * those roles may report different handles; this returns all of them. On
-   * NimBLE both roles share one ACL handle, which is returned once.
+   * those roles may report different handles; this returns the unique numeric
+   * values. NimBLE reports the shared ACL handle once. Use
+   * @ref getConnections() when you need one descriptor per role/link even if
+   * the backend reuses a numeric handle.
    *
    * @param peerAddress Peer address.
-   * @return Live handles in client-before-server order; empty when the peer is
-   *         not connected.
+   * @return Unique handles in client-before-server order; empty when the peer
+   *         is not connected.
    */
   std::vector<uint16_t> getConnHandles(const BTAddress &peerAddress) const;
 

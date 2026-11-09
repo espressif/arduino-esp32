@@ -58,7 +58,7 @@ def test_ble_dual_role(dut, ci_job_id):
     reverse_clients = 0
     for _ in range(3):
         m = dut1.expect(
-            r"\[DUT1\] (Reverse client ([12]) (connected|failed: [^\r\n]*)|Lookup stack=[^\r\n]*)\r?\n",
+            r"\[DUT1\] (Reverse client ([12]) (connected|failed: [^\r\n]*)|Reverse phase skipped on NimBLE|Lookup stack=[^\r\n]*)\r?\n",
             timeout=40,
         )
         line = m.group(0)
@@ -86,6 +86,9 @@ def test_ble_dual_role(dut, ci_job_id):
         assert conns1 >= clients1 + 1, (
             f"DUT1 expected client+server descriptors ({clients1}+1), got {conns1}"
         )
+    else:
+        assert clients1 == 0, "NimBLE reverse-client phase should be skipped (one ACL per peer)"
+        assert conns1 == 1, f"NimBLE should expose one ACL descriptor, got {conns1}"
 
     # DUT0 samples the same table while its client link is up.
     m0 = dut0.expect(
@@ -118,9 +121,17 @@ def test_ble_dual_role(dut, ci_job_id):
         assert conns0 >= 1 + reverse_conns, (
             f"DUT0 expected client+server descriptors (1+{reverse_conns}), got {conns0}"
         )
+    else:
+        assert reverse_conns == 0, "NimBLE reverse phase should be skipped"
+        assert conns0 == 1, f"NimBLE should expose one ACL descriptor, got {conns0}"
     assert stack0 == stack1, f"DUT stack mismatch: DUT0={stack0}, DUT1={stack1}"
 
+    dut1.expect_exact("[DUT1] Reverse cleanup done", timeout=20)
+    dut0.expect_exact("[DUT0] Ready for sequential client", timeout=20)
+    dut1.write("SEQ_GO\n")
+    dut1.expect_exact("[DUT1] Sequential client value: DUT0 data", timeout=30)
     dut1.expect_exact("[DUT1] Dual role OK", timeout=20)
+    dut0.expect_exact("[DUT0] Sequential server ok=1 disconnected=1", timeout=30)
     dut0.expect_exact("[DUT0] Dual role OK", timeout=20)
 
     LOGGER.info("Dual-role test passed!")

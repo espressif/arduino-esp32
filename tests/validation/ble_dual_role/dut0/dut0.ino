@@ -14,7 +14,11 @@ String peerName;
 BTAddress peerAddr;
 volatile bool foundPeer = false;
 volatile int reverseConns = 0;
+volatile bool readyForSequential = false;
+volatile bool sequentialConnected = false;
+volatile bool sequentialDisconnected = false;
 BLEConnInfo reverseInfo;
+BLEConnInfo sequentialInfo;
 
 void readNames() {
   Serial.println("[DUT0] Device ready for names");
@@ -50,12 +54,28 @@ void setup() {
   // --- Server role ---
   BLEServer server = BLE.createServer();
   server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
-    reverseConns++;
-    reverseInfo = conn;
-    Serial.printf("[DUT0] Reverse client connected to our server count=%d handle=%u\n", reverseConns, (unsigned)conn.getHandle());
+    if (readyForSequential) {
+      sequentialConnected = true;
+      sequentialInfo = conn;
+      Serial.printf("[DUT0] Sequential client connected handle=%u\n", (unsigned)conn.getHandle());
+    } else {
+      reverseConns++;
+      reverseInfo = conn;
+      Serial.printf("[DUT0] Reverse client connected to our server count=%d handle=%u\n", reverseConns, (unsigned)conn.getHandle());
+    }
   });
   server.onDisconnect([](BLEServer s, const BLEConnInfo &conn, uint8_t reason) {
-    Serial.printf("[DUT0] Reverse client disconnected handle=%u reason=%u\n", (unsigned)conn.getHandle(), (unsigned)reason);
+    if (readyForSequential) {
+      if (conn.getHandle() == sequentialInfo.getHandle()) {
+        sequentialDisconnected = true;
+      }
+      Serial.printf("[DUT0] Sequential client disconnected handle=%u reason=%u\n", (unsigned)conn.getHandle(), (unsigned)reason);
+    } else {
+      if (reverseConns > 0) {
+        reverseConns--;
+      }
+      Serial.printf("[DUT0] Reverse client disconnected handle=%u reason=%u remaining=%d\n", (unsigned)conn.getHandle(), (unsigned)reason, reverseConns);
+    }
   });
   BLEService svc = server.createService(SVC_UUID);
   BLECharacteristic chr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
@@ -122,11 +142,14 @@ void setup() {
   // Keep our client link up while DUT1 opens one or more client links back to
   // our server. This is the simultaneous client+server case.
   Serial.println("[DUT0] Ready for reverse connect");
+  const bool isBluedroid = strcmp(BLE.getStackName(), "Bluedroid") == 0;
   unsigned long reverseWait = millis();
-  while (reverseConns == 0 && millis() - reverseWait < 20000) {
-    delay(100);
+  if (isBluedroid) {
+    while (reverseConns == 0 && millis() - reverseWait < 20000) {
+      delay(100);
+    }
+    delay(1500);  // let a second reverse client arrive if DUT1 opens one
   }
-  delay(1500);  // let a second reverse client arrive if DUT1 opens one
 
   BTAddress lookupAddr = (reverseConns > 0) ? reverseInfo.getAddress() : peerAddr;
   std::vector<BLEConnInfo> conns = BLE.getConnections(lookupAddr);
@@ -146,7 +169,24 @@ void setup() {
   );
 
   client.disconnect();
-  delay(1000);
+  unsigned long cleanupWait = millis();
+  while (reverseConns > 0 && millis() - cleanupWait < 5000) {
+    delay(50);
+  }
+  readyForSequential = true;
+  Serial.println("[DUT0] Ready for sequential client");
+
+  unsigned long sequentialWait = millis();
+  while (!sequentialConnected && millis() - sequentialWait < 20000) {
+    delay(50);
+  }
+  if (sequentialConnected) {
+    unsigned long disconnectWait = millis();
+    while (!sequentialDisconnected && millis() - disconnectWait < 10000) {
+      delay(50);
+    }
+  }
+  Serial.printf("[DUT0] Sequential server ok=%d disconnected=%d\n", (int)sequentialConnected, (int)sequentialDisconnected);
   Serial.println("[DUT0] Dual role OK");
 }
 

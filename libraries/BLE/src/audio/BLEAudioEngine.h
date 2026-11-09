@@ -54,7 +54,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -176,16 +175,11 @@ uint8_t bleAudioChannelCount(uint32_t chan_alloc);
  * GAP event addresses and `esp_ble_conn_t::le.dst` retain host byte order:
  * MSB-first on Bluedroid, LSB-first on NimBLE. BASS receive-state addresses
  * are already LSB-first and must not be passed through this helper.
+ *
+ * Implemented by the active backend (BLEAudioEngine.nimble.cpp /
+ * BLEAudioEngine.bluedroid.cpp).
  */
-static inline void bleAudioAddrFromGap(uint8_t out[6], const uint8_t in[6]) {
-#if BLE_BLUEDROID
-  for (int i = 0; i < 6; i++) {
-    out[i] = in[5 - i];
-  }
-#else
-  memcpy(out, in, 6);
-#endif
-}
+void bleAudioAddrFromGap(uint8_t out[6], const uint8_t in[6]);
 
 /* ── Lifecycle ──────────────────────────────────────────────────────────── */
 
@@ -267,6 +261,28 @@ int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]);
  */
 int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip, uint16_t timeout_ms);
 
+/**
+ * @brief Send periodic advertising set info to a connected peer (PAST sender).
+ * @param adv Advertising handle carrying the periodic train.
+ * @param conn ACL connection handle of the peer.
+ * @param service_data Service data for the receiver.
+ * @param peer_addr Peer address in LSB-first order.
+ * @param peer_addr_type Peer address type.
+ * @return 0 on success, or a native/ESP error code.
+ */
+int bleAudioEngineSendPast(uint8_t adv, uint16_t conn, uint16_t service_data, const uint8_t peer_addr[6], uint8_t peer_addr_type);
+
+/**
+ * @brief Transfer a local periodic sync to a connected peer (PAST sender).
+ * @param sync_handle Local periodic sync handle.
+ * @param conn ACL connection handle of the peer.
+ * @param peer_addr Peer address in LSB-first order.
+ * @param peer_addr_type Peer address type.
+ * @param service_data Service data for the receiver.
+ * @return 0 on success, or a native/ESP error code.
+ */
+int bleAudioEngineSendPastSync(uint16_t sync_handle, uint16_t conn, uint16_t service_data, const uint8_t peer_addr[6], uint8_t peer_addr_type);
+
 /** @brief Forget a pending bleAudioEngineConnect() whose host connect failed. */
 void bleAudioEngineCancelConnect(void);
 
@@ -284,22 +300,6 @@ int bleAudioEngineDisconnect(uint16_t conn_handle);
  * @return true when the engine has an address for that link.
  */
 bool bleAudioEngineLinkAddress(uint16_t conn_handle, uint8_t addr[6]);
-
-#if BLE_NIMBLE
-/*
- * NimBLE host calls used by the link bring-up in BLEAudioEngine.c. NimBLE
- * headers clash with the Zephyr headers of the C units, so they are
- * implemented in BLEAudioEngine.nimble.cpp.
- */
-
-/** @brief Start pairing/encryption on a central link (`ble_gap_security_initiate`). */
-int bleAudioNimbleSecure(uint16_t conn_handle);
-/**
- * @brief Start the ATT MTU exchange (`ble_gattc_exchange_mtu`); discovery runs on the MTU event.
- * @return 0 also when an exchange is already in progress.
- */
-int bleAudioNimbleExchangeMtu(uint16_t conn_handle);
-#endif
 
 #ifdef __cplusplus
 }

@@ -48,17 +48,6 @@
 #include <string.h>
 #include <errno.h>
 
-/* PAST senders, declared here: the host headers do not mix with the Zephyr ones. */
-#if BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_SYNC_TRANSFER)
-#define BA_HAVE_PAST 1
-int ble_gap_periodic_adv_sync_transfer(uint16_t sync_handle, uint16_t conn_handle, uint16_t service_data);
-#elif BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER)
-#define BA_HAVE_PAST 1
-esp_err_t esp_ble_gap_periodic_adv_sync_trans(uint8_t addr[6], uint16_t service_data, uint16_t sync_handle);
-#else
-#define BA_HAVE_PAST 0
-#endif
-
 #define CONN_NONE              BLE_AUDIO_CONN_NONE
 #define AD_TYPE_NAME_COMPLETE  0x09
 #define AD_TYPE_SERVICE_DATA16 0x16
@@ -129,11 +118,13 @@ static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator
     }
     /* Service data: bits 0-7 AdvA matches the added source (0), bits 8-15 Source_ID. */
     const uint16_t service_data = (uint16_t)id << 8;
-#if BA_HAVE_PAST && BLE_NIMBLE
-    err = ble_gap_periodic_adv_sync_transfer(s->sync_handle, conn->handle, service_data) == 0 ? 0 : ESP_FAIL;
-#elif BA_HAVE_PAST
-    /* Bluedroid keeps conn->le.dst in its own (MSB-first) order, as this API expects. */
-    err = (int)esp_ble_gap_periodic_adv_sync_trans(conn->le.dst.a.val, service_data, s->sync_handle);
+#if BLE_PAST_SUPPORTED
+    uint8_t peer_addr[6];
+    bleAudioAddrFromGap(peer_addr, conn->le.dst.a.val);
+    err = bleAudioEngineSendPastSync(s->sync_handle, conn->handle, service_data, peer_addr, conn->le.dst.type);
+    if (err == ESP_ERR_NOT_SUPPORTED) {
+      err = -ENOTSUP;
+    }
 #else
     (void)service_data;
     err = -ENOTSUP;

@@ -23,16 +23,17 @@
  *
  * `BTAddress` stores addresses LSB-first (the Bluetooth on-air order). Bluedroid
  * public APIs take `esp_bd_addr_t`, which is MSB-first; NimBLE APIs take
- * LSB-first bytes. Callers should keep using `BTAddress` and let these helpers
- * perform the single conversion at the backend boundary instead of spelling
- * `toEspBdAddr()` / `data()` at every call site.
+ * LSB-first bytes. Backend code uses these helpers at the native-call boundary
+ * instead of spelling `toEspBdAddr()` / `data()` at every call site.
+ *
+ * The declarations are stack-agnostic; the active backend's implementation is
+ * selected by the build (BLEAddress.nimble.cpp / BLEAddress.bluedroid.cpp).
  */
 
 #include "core/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BTAddress.h"
-#include <string.h>
 
 namespace BLEAddress {
 
@@ -41,26 +42,14 @@ namespace BLEAddress {
  * @param address Public LSB-first address.
  * @param out Receives 6 bytes in the backend's native order.
  */
-inline void toNative(const BTAddress &address, uint8_t out[6]) {
-#if BLE_BLUEDROID
-  address.toEspBdAddr(out);
-#else
-  memcpy(out, address.data(), 6);
-#endif
-}
+void toNative(const BTAddress &address, uint8_t out[6]);
 
 /**
  * @brief Build a @ref BTAddress from bytes in the active backend's native order.
  * @param in 6 bytes as returned by the native stack.
  * @param type Address type.
  */
-inline BTAddress fromNative(const uint8_t in[6], BTAddress::Type type = BTAddress::Type::Public) {
-#if BLE_BLUEDROID
-  return BTAddress::fromEspBdAddr(in, type);
-#else
-  return BTAddress(in, type);
-#endif
-}
+BTAddress fromNative(const uint8_t in[6], BTAddress::Type type = BTAddress::Type::Public);
 
 }  // namespace BLEAddress
 

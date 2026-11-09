@@ -945,6 +945,7 @@ BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, u
 }
 
 BTStatus BLEScan::receivePeriodicSync(const BLEConnInfo &peer, uint16_t skipCount, uint16_t timeoutMs) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!(bool)peer) {
     return BTStatus::NotConnected;
   }
@@ -975,6 +976,7 @@ BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t connHandle) {
 }
 
 BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &peer) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!(bool)peer) {
     return BTStatus::NotConnected;
   }

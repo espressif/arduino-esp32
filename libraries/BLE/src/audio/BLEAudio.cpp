@@ -25,6 +25,7 @@
 #include "core/BLESync.h"
 #include "core/BLETask.h"
 #include "esp32-hal-log.h"
+#include <algorithm>
 
 /**
  * @file BLEAudio.cpp
@@ -228,6 +229,7 @@ BTStatus BLEAudio::end() {
   }
   _impl->roleApplies.clear();
   _impl->roles.clear();
+  _impl->clients.clear();
   for (uint16_t &c : _impl->gattReady) {
     c = BLE_AUDIO_CONN_NONE;
   }
@@ -271,10 +273,14 @@ BTStatus BLEAudio::connect(const BTAddress &address) {
     }
     return bleAudioStatus(err);
   }
+  _impl->clients.erase(std::remove_if(_impl->clients.begin(), _impl->clients.end(), [](const std::shared_ptr<BLEClient> &client) {
+                         return !client || !client->isConnected();
+                       }),
+                       _impl->clients.end());
   auto client = std::make_shared<BLEClient>(BLE.createClient());
   BTStatus st = client->connectAsync(address);
   if (st) {
-    _impl->roles.push_back(client);
+    _impl->clients.push_back(client);
   } else {
     log_e("Audio: connect to %s failed (%s)", address.toString().c_str(), st.toString());
     bleAudioEngineCancelConnect();
@@ -283,7 +289,7 @@ BTStatus BLEAudio::connect(const BTAddress &address) {
 }
 
 BTStatus BLEAudio::disconnect(uint16_t connHandle) {
-  if (!_impl || !_impl->active || !BLE.isInitialized() || BLE.isEnding()) {
+  if (!_impl || !_impl->active || !_impl->started || !BLE.isInitialized() || BLE.isEnding()) {
     return BTStatus::InvalidState;
   }
   if (connHandle == BLE_AUDIO_CONN_NONE) {

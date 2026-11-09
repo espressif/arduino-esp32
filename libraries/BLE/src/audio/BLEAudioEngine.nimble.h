@@ -31,6 +31,31 @@
 
 #if BLE_NIMBLE && BLE_AUDIO_SUPPORTED
 
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*
+ * NimBLE host calls used by the link bring-up in BLEAudioEngine.c. NimBLE
+ * headers clash with the Zephyr headers of the C units, so they are
+ * implemented in BLEAudioEngine.nimble.cpp.
+ */
+
+/** @brief Start pairing/encryption on a central link (`ble_gap_security_initiate`). */
+int bleAudioNimbleSecure(uint16_t conn_handle);
+/**
+ * @brief Start the ATT MTU exchange (`ble_gattc_exchange_mtu`); discovery runs on the MTU event.
+ * @return 0 also when an exchange is already in progress.
+ */
+int bleAudioNimbleExchangeMtu(uint16_t conn_handle);
+
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef __cplusplus
 struct ble_gap_event;
 
 namespace BLEAudioEngine {
@@ -44,5 +69,6 @@ namespace BLEAudioEngine {
 void forwardHostGattEvent(struct ble_gap_event *event);
 
 }  // namespace BLEAudioEngine
+#endif /* __cplusplus */
 
 #endif /* BLE_NIMBLE && BLE_AUDIO_SUPPORTED */

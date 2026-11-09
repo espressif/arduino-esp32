@@ -2200,12 +2200,9 @@ void setup() {
       bool bogusOk =
         BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
         !(bool)BLE.getConnInfo(bogusPeer);
-      uint8_t nativeAddr[6];
-      BLEAddress::toNative(lookupPeer, nativeAddr);
-      bool addrRoundTrip = BLEAddress::fromNative(nativeAddr, lookupPeer.type()) == lookupPeer;
       Serial.printf(
-        "[CLIENT] Phase16 lookup byAddr=%d handles=%u info=%d conns=%u connsOk=%d bogus=%d roundTrip=%d\n", (int)(byAddr == pc.getHandle()),
-        (unsigned)byAddrHandles.size(), (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk, (int)addrRoundTrip
+        "[CLIENT] Phase16 lookup byAddr=%d handles=%u info=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == pc.getHandle()),
+        (unsigned)byAddrHandles.size(), (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
       );
 
 #if BLE_PAST_SUPPORTED

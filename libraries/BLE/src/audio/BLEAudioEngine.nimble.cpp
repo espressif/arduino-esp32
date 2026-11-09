@@ -60,6 +60,38 @@ extern "C" int bleAudioNimbleExchangeMtu(uint16_t conn_handle) {
   return rc == BLE_HS_EALREADY ? 0 : rc;
 }
 
+extern "C" void bleAudioAddrFromGap(uint8_t out[6], const uint8_t in[6]) {
+  memcpy(out, in, 6);
+}
+
+extern "C" int bleAudioEngineSendPast(uint8_t adv, uint16_t conn, uint16_t service_data, const uint8_t peer_addr[6], uint8_t peer_addr_type) {
+  (void)peer_addr;
+  (void)peer_addr_type;
+#if BLE_PAST_SUPPORTED
+  int rc = ble_gap_periodic_adv_sync_set_info(adv, conn, service_data);
+  return rc;
+#else
+  (void)adv;
+  (void)conn;
+  (void)service_data;
+  return ESP_ERR_NOT_SUPPORTED;
+#endif
+}
+
+extern "C" int bleAudioEngineSendPastSync(uint16_t sync_handle, uint16_t conn, uint16_t service_data, const uint8_t peer_addr[6], uint8_t peer_addr_type) {
+  (void)peer_addr;
+  (void)peer_addr_type;
+#if BLE_PAST_SUPPORTED
+  int rc = ble_gap_periodic_adv_sync_transfer(sync_handle, conn, service_data);
+  return rc;
+#else
+  (void)sync_handle;
+  (void)conn;
+  (void)service_data;
+  return ESP_ERR_NOT_SUPPORTED;
+#endif
+}
+
 extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip,
                                                    uint16_t timeout_ms) {
   (void)peer_addr_type;
