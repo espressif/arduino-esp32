@@ -119,8 +119,8 @@ void SHA3Builder::pad() {
   // Add the domain separator (0x06) at the current position
   buffer[buffer_size] = 0x06;
 
-  // Set the last byte to indicate the end (0x80)
-  buffer[rate - 1] = 0x80;
+  // Preserve the domain separator when both padding markers share a byte.
+  buffer[rate - 1] |= 0x80;
 }
 
 // Constructor
