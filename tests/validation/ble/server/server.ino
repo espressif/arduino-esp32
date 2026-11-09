@@ -1725,6 +1725,20 @@ void loop() {
         "[SERVER] Phase16 getConnInfo valid=%d mtu=%u timeout=%u bogusValid=%d refreshedMtu=%d refreshedParams=%d\n", (int)freshValid, (unsigned)fresh.getMTU(),
         (unsigned)fresh.getSupervisionTimeout(), (int)(bool)bogus, (int)refreshedMtu, (int)refreshedParams
       );
+
+      // PAST receive must resolve the peripheral-side connection handle the
+      // same way on both stacks.
+#if BLE_PAST_SUPPORTED
+      BLEScan pastScan = BLE.getScan();
+      BTStatus pastArm = pastScan.receivePeriodicSync(c.getHandle());
+      BTStatus pastBogus = pastScan.receivePeriodicSync(0xFFFF);
+      BTStatus pastCancel = pastScan.cancelPeriodicSyncReceive(c.getHandle());
+      Serial.printf(
+        "[SERVER] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel
+      );
+#else
+      Serial.println("[SERVER] Phase16 past supported=0");
+#endif
     }
     Serial.println("[SERVER] Phase16 done");
   }

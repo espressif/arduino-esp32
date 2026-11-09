@@ -2146,6 +2146,20 @@ void setup() {
       // regression this test guards against.
       Serial.printf("[CLIENT] MtuOrder afterConnect=%d mtuSeen=%d\n", (int)clientMtuAfterConnect, (int)clientMtuChanged);
 
+      // PAST receive must accept the same public connection handle on both
+      // stacks and reject an unknown one consistently.
+#if BLE_PAST_SUPPORTED
+      BLEScan pastScan = BLE.getScan();
+      BTStatus pastArm = pastScan.receivePeriodicSync(pc.getHandle());
+      BTStatus pastBogus = pastScan.receivePeriodicSync(0xFFFF);
+      BTStatus pastCancel = pastScan.cancelPeriodicSyncReceive(pc.getHandle());
+      Serial.printf(
+        "[CLIENT] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel
+      );
+#else
+      Serial.println("[CLIENT] Phase16 past supported=0");
+#endif
+
       pc.disconnect();
       BLE.setMTU(512);
       delay(1000);

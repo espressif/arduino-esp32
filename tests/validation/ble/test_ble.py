@@ -690,6 +690,11 @@ def _phase_conninfo_and_params(server, client):
     m_order = client.expect(r"\[CLIENT\] MtuOrder afterConnect=([01]) mtuSeen=([01])", timeout=10)
     assert int(m_order.group(2)) == 1, "client onMtuChanged never fired — MTU exchange did not complete"
     assert int(m_order.group(1)) == 1, "onMtuChanged fired before onConnect — MTU exchange ordering contract violated"
+    m_past = client.expect(r"\[CLIENT\] Phase16 past supported=([01])(?: arm=([01]) bogus=([01]) cancel=([01]))?", timeout=10)
+    if int(m_past.group(1)) == 1:
+        assert int(m_past.group(2)) == 1, "client PAST receive failed for a live connection handle"
+        assert int(m_past.group(3)) == 0, "client PAST receive accepted an unknown connection handle"
+        assert int(m_past.group(4)) == 1, "client PAST receive cancellation failed"
     client.expect_exact("[CLIENT] Phase16 done", timeout=10)
 
     server.expect_exact("[SERVER] Phase16 waiting for peer", timeout=15)
@@ -714,6 +719,11 @@ def _phase_conninfo_and_params(server, client):
     assert int(m_gci.group(4)) == 0, "getConnInfo(bogus handle) unexpectedly returned a valid snapshot"
     assert int(m_gci.group(5)) == 1, "getConnInfo did not reflect the refreshed (post-exchange) MTU"
     assert int(m_gci.group(6)) == 1, "getConnInfo did not reflect the refreshed connection parameters"
+    m_past_s = server.expect(r"\[SERVER\] Phase16 past supported=([01])(?: arm=([01]) bogus=([01]) cancel=([01]))?", timeout=10)
+    if int(m_past_s.group(1)) == 1:
+        assert int(m_past_s.group(2)) == 1, "server PAST receive failed for a live connection handle"
+        assert int(m_past_s.group(3)) == 0, "server PAST receive accepted an unknown connection handle"
+        assert int(m_past_s.group(4)) == 1, "server PAST receive cancellation failed"
     server.expect_exact("[SERVER] Phase16 done", timeout=10)
 
 

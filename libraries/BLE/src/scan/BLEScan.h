@@ -271,8 +271,6 @@ public:
    * @param skipCount Max number of periodic events the receiver may skip. 0 = none.
    * @param timeoutMs Synchronization supervision timeout in milliseconds.
    * @return BTStatus indicating success or error.
-   * @note Bluedroid returns NotSupported because its native PAST-receive API is
-   *       keyed by peer address, while this public method accepts only a handle.
    */
   BTStatus createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
 
@@ -280,11 +278,16 @@ public:
    * @brief Enable Periodic Advertising Sync Transfer (PAST) receive on a connection.
    *
    * A connected Broadcast Assistant (BASS) typically pushes PA sync via PAST
-   * rather than asking the delegator to scan. @p connHandle is the ACL that
-   * will deliver HCI LE Periodic Advertising Sync Transfer Received.
+   * rather than asking the delegator to scan. @p connHandle is the connection
+   * that will deliver HCI LE Periodic Advertising Sync Transfer Received.
    * Pass the same handle to @ref cancelPeriodicSyncReceive to disarm.
    *
-   * @param connHandle ACL connection handle of the assistant.
+   * Both backends accept the handle reported by @c BLEClient::getHandle() or
+   * @c BLEConnInfo::getHandle(); Bluedroid resolves its GATT connection id to
+   * the peer address internally. Returns @c NotConnected when no live link
+   * matches the handle.
+   *
+   * @param connHandle Connection handle of the assistant.
    * @param skipCount Max number of periodic events the receiver may skip. 0 = none.
    * @param timeoutMs Synchronization supervision timeout in milliseconds.
    * @return BTStatus indicating success or error.
@@ -293,9 +296,12 @@ public:
 
   /**
    * @brief Disable PAST receive previously enabled by @ref receivePeriodicSync.
-   * @param connHandle ACL connection handle of the assistant.
+   *
+   * Bluedroid has no dedicated disable command, so this restores the default
+   * receive parameters (the same no-sync mode NimBLE uses for cancellation).
+   *
+   * @param connHandle Connection handle of the assistant.
    * @return BTStatus indicating success or error.
-   * @note Bluedroid returns NotSupported for the same handle-to-address limitation.
    */
   BTStatus cancelPeriodicSyncReceive(uint16_t connHandle);
 

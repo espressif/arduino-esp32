@@ -240,7 +240,7 @@ void loop() {
         }
         BTStatus pastAfterEnd = retainedScan.receivePeriodicSync(0xFFFF);
         BTStatus audioAfterEnd = audio.begin();
-#if BLE_NIMBLE
+#if BLE_PAST_SUPPORTED
         bool admissionClosed = pastAfterEnd == BTStatus::InvalidState && audioAfterEnd == BTStatus::InvalidState;
 #else
         bool admissionClosed = pastAfterEnd == BTStatus::NotSupported && audioAfterEnd == BTStatus::InvalidState;
