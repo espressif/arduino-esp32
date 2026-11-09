@@ -1722,7 +1722,7 @@ void setup() {
       Serial.println("[CLIENT] BLEStream init OK");
       stream.setTimeout(10000);
 
-      if (stream.connected()) {
+      if (stream.isConnected()) {
         Serial.println("[CLIENT] BLEStream connected OK");
         auto peerList = stream.peers();
         Serial.printf("[CLIENT] BLEStream peers=%u\n", (unsigned)peerList.size());
@@ -1779,10 +1779,10 @@ void setup() {
 
       stream.println("end_now");
       unsigned long endWait = millis();
-      while (stream.connected() && millis() - endWait < 10000) {
+      while (stream.isConnected() && millis() - endWait < 10000) {
         delay(20);
       }
-      Serial.printf("[CLIENT] BLEStream server end disconnected=%d\n", (int)!stream.connected());
+      Serial.printf("[CLIENT] BLEStream server end disconnected=%d\n", (int)!stream.isConnected());
       stream_ok = bulkWriteComplete;
       stream.end();
 
@@ -1889,7 +1889,7 @@ void setup() {
         delay(20);
       }
       bool finalOwnerClean =
-        finalOwnerConnects.load() > 0 && finalOwnerDisconnects.load() > 0 && !finalOwnerClient.connected() && heap_caps_check_integrity_all(true);
+        finalOwnerConnects.load() > 0 && finalOwnerDisconnects.load() > 0 && !finalOwnerClient.isConnected() && heap_caps_check_integrity_all(true);
       Serial.printf(
         "[CLIENT] BLEStream final owner callback clean=%d connects=%lu disconnects=%lu\n", (int)finalOwnerClean, (unsigned long)finalOwnerConnects.load(),
         (unsigned long)finalOwnerDisconnects.load()
@@ -2200,9 +2200,12 @@ void setup() {
       bool bogusOk =
         BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
         !(bool)BLE.getConnInfo(bogusPeer);
+      uint8_t nativeAddr[6];
+      BLEAddress::toNative(lookupPeer, nativeAddr);
+      bool addrRoundTrip = BLEAddress::fromNative(nativeAddr, lookupPeer.type()) == lookupPeer;
       Serial.printf(
-        "[CLIENT] Phase16 lookup byAddr=%d handles=%u info=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == pc.getHandle()),
-        (unsigned)byAddrHandles.size(), (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
+        "[CLIENT] Phase16 lookup byAddr=%d handles=%u info=%d conns=%u connsOk=%d bogus=%d roundTrip=%d\n", (int)(byAddr == pc.getHandle()),
+        (unsigned)byAddrHandles.size(), (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk, (int)addrRoundTrip
       );
 
 #if BLE_PAST_SUPPORTED

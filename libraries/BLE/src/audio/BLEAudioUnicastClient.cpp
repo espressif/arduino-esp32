@@ -366,10 +366,6 @@ BTStatus BLEAudioUnicastClient::connectAndStart(uint16_t connHandle) {
   return BTStatus::OK;
 }
 
-BTStatus BLEAudioUnicastClient::connect(uint16_t connHandle) {
-  return connectAndStart(connHandle);
-}
-
 BTStatus BLEAudioUnicastClient::stop() {
   if (!_impl || !_impl->running) {
     return BTStatus::InvalidState;

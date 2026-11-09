@@ -96,14 +96,14 @@ extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
   BTAddress peer;
   uint8_t lsb[6];
   if (bleAudioEngineLinkAddress(conn_handle, lsb)) {
-    // The Bluedroid adapter stores the peer as an esp_bd_addr_t (MSB first).
-    peer = BTAddress::fromEspBdAddr(lsb);
+    // The engine normalizes link addresses to LSB-first (BTAddress order).
+    peer = BTAddress(lsb);
   } else if (!bluedroidFindPeerAddress(conn_handle, peer)) {
     return static_cast<int>(BTStatus::NotConnected);
   }
 
   esp_bd_addr_t bda;
-  peer.toEspBdAddr(bda);
+  BLEAddress::toNative(peer, bda);
   esp_err_t err = esp_ble_gap_disconnect(bda);
   if (err == ESP_OK) {
     return 0;

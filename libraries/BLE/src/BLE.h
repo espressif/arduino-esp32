@@ -25,6 +25,7 @@
 #include "WString.h"
 #include "BTStatus.h"
 #include "BTAddress.h"
+#include "core/BLEAddress.h"
 #include "types/BLEAdvTypes.h"
 #include "server/BLEServer.h"
 #include "client/BLEClient.h"

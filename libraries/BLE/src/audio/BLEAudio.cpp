@@ -264,9 +264,7 @@ BTStatus BLEAudio::connect(const BTAddress &address) {
     return BTStatus::InvalidState;
   }
   log_d("Audio: connecting to %s", address.toString().c_str());
-  uint8_t bda[6];
-  address.toEspBdAddr(bda);
-  int err = bleAudioEngineConnect(static_cast<uint8_t>(address.type()), bda);
+  int err = bleAudioEngineConnect(static_cast<uint8_t>(address.type()), address.data());
   if (err != ESP_ERR_NOT_SUPPORTED) {
     if (err != 0) {
       log_e("Audio: connect to %s failed (err=%d)", address.toString().c_str(), err);

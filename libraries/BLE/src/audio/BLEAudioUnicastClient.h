@@ -27,7 +27,7 @@
  * reports its own progress through `BLEAudioStream` callbacks; the client
  * reports the aggregate (discovered, all streaming, stopped, error).
  *
- * Single peer: `connect(connHandle)` discovers the peer once its GATT
+ * Single peer: `connectAndStart(connHandle)` discovers the peer once its GATT
  * database is known and starts the streams right away.
  *
  * Two peers (e.g. left + right earbuds, TMAP 2P_2CIS): call addPeer() for
@@ -144,9 +144,6 @@ public:
    *         NoMemory when the stream pool is exhausted.
    */
   BTStatus start();
-  /** @brief addPeer(), then start() as soon as the peer is discovered. */
-  BTStatus connect(uint16_t connHandle);
-
   /**
    * @brief addPeer(), then start() as soon as the peer is discovered.
    *

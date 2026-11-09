@@ -807,7 +807,7 @@ BTStatus BLEServer::updateConnParams(uint16_t connHandle, const BLEConnParams &p
   }
 
   esp_ble_conn_update_params_t connParams = {};
-  addr.toEspBdAddr(connParams.bda);
+  BLEAddress::toNative(addr, connParams.bda);
   connParams.min_int = params.minInterval;
   connParams.max_int = params.maxInterval;
   connParams.latency = params.latency;
@@ -832,7 +832,7 @@ BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
       log_w("Server: setPhy - unknown connHandle %u", connHandle);
       return BTStatus::NotConnected;
     }
-    conn->getAddress().toEspBdAddr(bda);
+    BLEAddress::toNative(conn->getAddress(), bda);
   }
   impl.phySync.take();
   esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
@@ -867,7 +867,7 @@ BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) co
       log_w("Server: getPhy - unknown connHandle %u", connHandle);
       return BTStatus::NotConnected;
     }
-    conn->getAddress().toEspBdAddr(bda);
+    BLEAddress::toNative(conn->getAddress(), bda);
   }
   impl.phySync.take();
   esp_err_t err = esp_ble_gap_read_phy(bda);
@@ -901,7 +901,7 @@ BTStatus BLEServer::setDataLen(uint16_t connHandle, uint16_t txOctets, uint16_t 
       log_w("Server: setDataLen - unknown connHandle %u", connHandle);
       return BTStatus::NotConnected;
     }
-    conn->getAddress().toEspBdAddr(bda);
+    BLEAddress::toNative(conn->getAddress(), bda);
   }
   impl.dataLenSync.take();
   esp_err_t err = esp_ble_gap_set_pkt_data_len(bda, txOctets);

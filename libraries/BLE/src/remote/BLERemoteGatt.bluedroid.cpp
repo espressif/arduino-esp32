@@ -235,7 +235,7 @@ static bool initiateSecurityAndWait(const RemoteGattTarget &target, const std::s
     // give() can't race ahead of our wait().
     secImpl->authSync.take();
     esp_bd_addr_t bda;
-    client->peerAddress.toEspBdAddr(bda);
+    BLEAddress::toNative(client->peerAddress, bda);
     err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
   }
   if (err != ESP_OK) {
@@ -579,7 +579,7 @@ static BTStatus subscribeWithCccd(
     }
     impl->onNotifyCb = std::move(callback);
     esp_bd_addr_t bda;
-    client->peerAddress.toEspBdAddr(bda);
+    BLEAddress::toNative(client->peerAddress, bda);
     err = esp_ble_gattc_register_for_notify(client->gattcIf, bda, impl->handle);
   }
 
@@ -595,7 +595,7 @@ static BTStatus subscribeWithCccd(
     BLELockGuard clearLock(client->mtx);
     impl->onNotifyCb = nullptr;
     esp_bd_addr_t bdaClear;
-    client->peerAddress.toEspBdAddr(bdaClear);
+    BLEAddress::toNative(client->peerAddress, bdaClear);
     esp_ble_gattc_unregister_for_notify(client->gattcIf, bdaClear, impl->handle);
     return BTStatus::Fail;
   }
@@ -605,7 +605,7 @@ static BTStatus subscribeWithCccd(
     BLELockGuard clearLock(client->mtx);
     impl->onNotifyCb = nullptr;
     esp_bd_addr_t bdaClear;
-    client->peerAddress.toEspBdAddr(bdaClear);
+    BLEAddress::toNative(client->peerAddress, bdaClear);
     esp_ble_gattc_unregister_for_notify(client->gattcIf, bdaClear, impl->handle);
   }
   return st;
@@ -654,7 +654,7 @@ BTStatus BLERemoteCharacteristic::unsubscribe() {
     }
     _impl->onNotifyCb = nullptr;
     esp_bd_addr_t bda;
-    client->peerAddress.toEspBdAddr(bda);
+    BLEAddress::toNative(client->peerAddress, bda);
     esp_ble_gattc_unregister_for_notify(client->gattcIf, bda, _impl->handle);
   }
 

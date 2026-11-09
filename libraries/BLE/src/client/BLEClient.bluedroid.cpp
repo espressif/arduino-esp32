@@ -250,7 +250,7 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
 #endif
 
   esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
+  BLEAddress::toNative(address, bda);
 
 #if BLE5_SUPPORTED
   {
@@ -354,7 +354,7 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
   impl.cachedRxPhy = 1;
 #endif
   esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
+  BLEAddress::toNative(address, bda);
 
 #if BLE5_SUPPORTED
   {
@@ -411,7 +411,7 @@ BTStatus BLEClient::cancelConnect() {
   }
 
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddress::toNative(impl.peerAddress, bda);
   esp_err_t err = esp_ble_gap_disconnect(bda);
   if (err != ESP_OK) {
     log_e("Client: cancelConnect esp_ble_gap_disconnect: %s", esp_err_to_name(err));
@@ -505,7 +505,7 @@ BTStatus BLEClient::secureConnection() {
   }
 
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddress::toNative(impl.peerAddress, bda);
   esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
   if (err != ESP_OK) {
     log_e("Client: esp_ble_set_encryption: %s", esp_err_to_name(err));
@@ -562,7 +562,7 @@ int8_t BLEClient::getRSSI() const {
   }
 
   esp_bd_addr_t bda;
-  _impl->peerAddress.toEspBdAddr(bda);
+  BLEAddress::toNative(_impl->peerAddress, bda);
 
   _impl->rssiSync.take();
   esp_err_t err = esp_ble_gap_read_rssi(bda);
@@ -620,7 +620,7 @@ BTStatus BLEClient::updateConnParams(const BLEConnParams &params) {
   }
 
   esp_ble_conn_update_params_t cp;
-  impl.peerAddress.toEspBdAddr(cp.bda);
+  BLEAddress::toNative(impl.peerAddress, cp.bda);
   cp.min_int = params.minInterval;
   cp.max_int = params.maxInterval;
   cp.latency = params.latency;
@@ -645,7 +645,7 @@ BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddress::toNative(impl.peerAddress, bda);
   impl.phySync.take();
   esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
   if (err != ESP_OK) {
@@ -675,7 +675,7 @@ BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddress::toNative(impl.peerAddress, bda);
   impl.phySync.take();
   esp_err_t err = esp_ble_gap_read_phy(bda);
   if (err != ESP_OK) {
@@ -704,7 +704,7 @@ BTStatus BLEClient::setDataLen(uint16_t txOctets, uint16_t /*txTime*/) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddress::toNative(impl.peerAddress, bda);
   impl.dataLenSync.take();
   esp_err_t err = esp_ble_gap_set_pkt_data_len(bda, txOctets);
   if (err != ESP_OK) {
@@ -835,7 +835,7 @@ static void retryTerminalClientClose(const std::shared_ptr<BLEClient::Impl> &own
 
   if (BLE.isInitialized() && client->connected) {
     esp_bd_addr_t peer;
-    client->peerAddress.toEspBdAddr(peer);
+    BLEAddress::toNative(client->peerAddress, peer);
     if (esp_ble_gap_disconnect(peer) == ESP_OK) {
       return;
     }
@@ -889,7 +889,7 @@ static void scheduleTerminalClientClose(BLEClient::Impl *client) {
     delete taskArg;
     client->terminalCloseRetryActive = false;
     esp_bd_addr_t peer;
-    client->peerAddress.toEspBdAddr(peer);
+    BLEAddress::toNative(client->peerAddress, peer);
     if (esp_ble_gap_disconnect(peer) != ESP_OK) {
       // Keep the terminal owner registry entry as a quarantine reference. A later explicit
       // disconnect or host shutdown still releases it through normal teardown.
@@ -1046,7 +1046,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       // virtual connection. Just refine the peer's address type when this
       // client's target BDA matches.
       if (client->peerAddress.equalsEspBdAddr(param->connect.remote_bda)) {
-        client->peerAddress = BTAddress::fromEspBdAddr(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
+        client->peerAddress = BLEAddress::fromNative(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
         // The HCI ACL handle is the key the ISO transport uses (GATTS/GATTC
         // conn ids are per-interface and mean nothing to it).
         client->aclHandle = param->connect.conn_handle;
@@ -1348,7 +1348,7 @@ void BLEClient::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     for (const auto &owner : clients) {
       auto *c = owner.get();
       if (c->connected && c->peerAddress.equalsEspBdAddr(param->ble_security.auth_cmpl.bd_addr)) {
-        c->peerAddress = BTAddress::fromEspBdAddr(param->ble_security.auth_cmpl.bd_addr, addrType);
+        c->peerAddress = BLEAddress::fromNative(param->ble_security.auth_cmpl.bd_addr, addrType);
         BLEConnInfo conn = BLEConnInfoImpl::make(c->connId, c->peerAddress, c->mtu, /*central=*/true);
         BLEConnInfoImpl::updateSecurityFromAuthComplete(conn, param->ble_security.auth_cmpl.auth_mode);
         c->secEncrypted = conn.isEncrypted();

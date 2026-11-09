@@ -214,6 +214,13 @@ BTAddress addr = dev.getAddress();
 String str = addr.toString();  // Arduino String
 ```
 
+`BTAddress` always stores the address LSB-first (the on-air order). Application
+code never needs the backend byte order: public APIs take `BTAddress`, and the
+library converts to `esp_bd_addr_t`/NimBLE's layout internally. If you must hand
+bytes to a raw stack API, use `BLEAddress::toNative(addr, out)` and
+`BLEAddress::fromNative(in, type)` from `core/BLEAddress.h` instead of calling
+`toEspBdAddr()`/`fromEspBdAddr()` directly.
+
 ### 8. Numbered Descriptor Subclasses Replaced
 
 Numbered descriptor subclasses (`BLE2901`, `BLE2902`, `BLE2904`) are replaced by a unified `BLEDescriptor` class with static factories and convenience methods.

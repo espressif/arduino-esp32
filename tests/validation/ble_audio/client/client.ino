@@ -412,7 +412,7 @@ void setup() {
           if (findTarget(addr)) {
             uint16_t h = audioConnect(audio, addr);
             if (h != 0xFFFF) {
-              BTStatus bs = uc.connect(h);
+              BTStatus bs = uc.connectAndStart(h);
               Serial.printf("[CLIENT] BapUnicast setup: %s\n", bs.toString());
               unsigned long cdl = millis() + 15000;
               while (!bapTxStreaming && millis() < cdl) {
@@ -571,7 +571,7 @@ void setup() {
           if (findTarget(addr)) {
             uint16_t h = audioConnect(audio, addr);
             if (h != 0xFFFF) {
-              BTStatus bs = uc.connect(h);
+              BTStatus bs = uc.connectAndStart(h);
               Serial.printf("[CLIENT] Lc3Loopback setup: %s\n", bs.toString());
               unsigned long cdl = millis() + 15000;
               while (!bapTxStreaming && millis() < cdl) {

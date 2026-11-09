@@ -681,7 +681,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     advParams.channel_map = ADV_CHNL_ALL;
     advParams.adv_filter_policy = mapFilterPolicy(impl.scanRequestWhitelistOnly, impl.connectWhitelistOnly);
     if (bleAdvTypeIsDirected(impl.advType)) {
-      impl.directedPeer.toEspBdAddr(advParams.peer_addr);
+      BLEAddress::toNative(impl.directedPeer, advParams.peer_addr);
       advParams.peer_addr_type = static_cast<esp_ble_addr_type_t>(impl.directedPeer.type());
     } else {
       advParams.peer_addr_type = BLE_ADDR_TYPE_PUBLIC;
@@ -996,7 +996,7 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   params.channel_map = ADV_CHNL_ALL;
   params.own_addr_type = static_cast<esp_ble_addr_type_t>(BLE.getOwnAddressType());
   if (bleAdvTypeIsDirected(advType)) {
-    directedPeer.toEspBdAddr(params.peer_addr);
+    BLEAddress::toNative(directedPeer, params.peer_addr);
     params.peer_addr_type = static_cast<esp_ble_addr_type_t>(directedPeer.type());
   } else {
     params.peer_addr_type = BLE_ADDR_TYPE_PUBLIC;
@@ -1336,7 +1336,7 @@ BTStatus BLEAdvertising::setExtInstanceAddress(uint8_t instance, const BTAddress
     return st;
   }
   esp_bd_addr_t bd;
-  addr.toEspBdAddr(bd);
+  BLEAddress::toNative(addr, bd);
   esp_err_t err = esp_ble_gap_ext_adv_set_rand_addr(instance, bd);
   if (err != ESP_OK) {
     log_e("ext_adv_set_rand_addr inst %u: %s", instance, esp_err_to_name(err));

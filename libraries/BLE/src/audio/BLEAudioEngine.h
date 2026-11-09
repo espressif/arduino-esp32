@@ -249,7 +249,8 @@ void bleAudioEngineGapPostEvent(uint16_t type, void *param);
  * an MTU exchange on NimBLE). On Bluedroid the connection is opened through
  * the engine's GATTC interface so its GATT events reach the audio profiles.
  *
- * @param addr Bluedroid (big-endian) address.
+ * @param addr_type Peer address type.
+ * @param addr Peer address in LSB-first order (BTAddress::data()).
  * @return ESP_ERR_NOT_SUPPORTED on NimBLE: open the link with the host GAP
  *         (BLEClient); the engine still secures and discovers it.
  */

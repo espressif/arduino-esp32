@@ -50,7 +50,7 @@ struct BLEStreamClientRole;
  * @code
  * BLEStream bleStream;
  * bleStream.begin("MyDevice");          // starts advertising
- * if (bleStream.connected()) {
+ * if (bleStream.isConnected()) {
  *   bleStream.println("Hello World!");
  *   if (bleStream.available()) {
  *     String s = bleStream.readStringUntil('\n');
@@ -123,14 +123,6 @@ public:
    *       this returns true while any of them remain connected. See @ref peerCount.
    */
   bool isConnected() const;
-
-  /**
-   * @brief Deprecated alias for isConnected().
-   * @return true if one or more peers are connected.
-   */
-  bool connected() const {
-    return isConnected();
-  }
 
   /**
    * @brief Number of currently connected peers.

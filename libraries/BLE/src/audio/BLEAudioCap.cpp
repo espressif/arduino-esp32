@@ -91,7 +91,7 @@ void sendPast(uint8_t adv, uint16_t conn, const ble_audio_cap_past_req_t &r) {
 #elif BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER)
   (void)conn;
   uint8_t bda[6];
-  BTAddress(r.addr, static_cast<BTAddress::Type>(r.addr_type)).toEspBdAddr(bda);
+  BLEAddress::toNative(BTAddress(r.addr, static_cast<BTAddress::Type>(r.addr_type)), bda);
   err = esp_ble_gap_periodic_adv_set_info_trans(bda, serviceData, adv);
 #else
   (void)adv;

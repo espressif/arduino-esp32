@@ -504,7 +504,7 @@ BTStatus BLEScan::Impl::setPeriodicSyncTransferParams(uint16_t connHandle, const
   params.cte_type = 0;
 
   esp_bd_addr_t bda;
-  peerAddress.toEspBdAddr(bda);
+  BLEAddress::toNative(peerAddress, bda);
   esp_err_t err = esp_ble_gap_set_periodic_adv_sync_trans_params(bda, &params);
   if (err != ESP_OK) {
     log_e("esp_ble_gap_set_periodic_adv_sync_trans_params handle=%u: %s", connHandle, esp_err_to_name(err));
@@ -593,7 +593,7 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
   params.filter_policy = 0;  // Use SID + address
   params.sid = sid;
   params.addr_type = static_cast<esp_ble_addr_type_t>(addr.type());
-  addr.toEspBdAddr(params.addr);
+  BLEAddress::toNative(addr, params.addr);
   params.skip = skipCount;
   params.sync_timeout = timeoutMs / 10;  // units of 10 ms
 
@@ -782,7 +782,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             break;
           }
 
-          BTAddress addr = BTAddress::fromEspBdAddr(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
+          BTAddress addr = BLEAddress::fromNative(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
           if (param->scan_rst.ble_evt_type == ESP_BLE_EVT_SCAN_RSP || (param->scan_rst.adv_data_len == 0 && param->scan_rst.scan_rsp_len > 0)) {
             BLEAdvertisedDevice merged;
             bool found = false;
@@ -975,7 +975,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
       }
       const esp_ble_gap_ext_adv_report_t &r = param->ext_adv_report.params;
       // `r.addr` is an esp_bd_addr_t (MSB-first); BTAddress stores LSB-first.
-      BTAddress addr = BTAddress::fromEspBdAddr(r.addr, static_cast<BTAddress::Type>(r.addr_type));
+      BTAddress addr = BLEAddress::fromNative(r.addr, static_cast<BTAddress::Type>(r.addr_type));
 
       // Merge scan responses (which carry the Local Name) into the device from
       // the preceding advertisement.
@@ -1081,7 +1081,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
         cb = inst->periodicSyncCb;
       }
       if (cb) {
-        BTAddress addr = BTAddress::fromEspBdAddr(e.adv_addr, static_cast<BTAddress::Type>(e.adv_addr_type));
+        BTAddress addr = BLEAddress::fromNative(e.adv_addr, static_cast<BTAddress::Type>(e.adv_addr_type));
         cb(e.sync_handle, e.sid, addr, static_cast<BLEPhy>(e.adv_phy), e.period_adv_interval);
       }
       break;
@@ -1111,7 +1111,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
         cb = inst->periodicSyncCb;
       }
       if (cb) {
-        BTAddress addr = BTAddress::fromEspBdAddr(e.adv_addr, static_cast<BTAddress::Type>(e.adv_addr_type));
+        BTAddress addr = BLEAddress::fromNative(e.adv_addr, static_cast<BTAddress::Type>(e.adv_addr_type));
         cb(e.sync_handle, e.adv_sid, addr, static_cast<BLEPhy>(e.adv_phy), e.adv_interval);
       }
       break;

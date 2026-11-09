@@ -1275,9 +1275,9 @@ void loop() {
     if (bleStreamStep == 0 && bleStreamConnectCb.load() && !bleStreamConnectCallbackActive.load()) {
       Serial.println("[SERVER] BLEStream onConnect fired");
       Serial.printf("[SERVER] BLEStream callback mutation safe=%d\n", (int)bleStreamCallbackSnapshotSafe.load());
-      if (bleStream.connected()) {
+      if (bleStream.isConnected()) {
         Serial.println("[SERVER] BLEStream connected OK");
-        Serial.printf("[SERVER] BLEStream alias isConnected=%d legacy=%d\n", (int)bleStream.isConnected(), (int)bleStream.connected());
+        Serial.printf("[SERVER] BLEStream alias isConnected=%d legacy=%d\n", (int)bleStream.isConnected(), (int)bleStream.isConnected());
         Serial.printf("[SERVER] BLEStream peerCount=%u\n", bleStream.peerCount());
         auto peerList = bleStream.peers();
         Serial.printf("[SERVER] BLEStream peers=%u\n", (unsigned)peerList.size());
@@ -3936,17 +3936,17 @@ void loop() {
       // the server-side CONNECT event. Synchronize on the actual BLEStream
       // state instead of sampling it at the serial barrier.
       startWait = millis();
-      while (finalReleaseStart && phase35StreamConnected && !finalReleasePeer.connected() && millis() - startWait < 5000) {
+      while (finalReleaseStart && phase35StreamConnected && !finalReleasePeer.isConnected() && millis() - startWait < 5000) {
         delay(1);
       }
-      finalReleaseConnected = phase35StreamConnected && finalReleasePeer.connected();
+      finalReleaseConnected = phase35StreamConnected && finalReleasePeer.isConnected();
       Serial.printf("[SERVER] Phase35 BLEStream final release connected=%d\n", (int)finalReleaseConnected);
       startWait = millis();
-      while (finalReleaseConnected && finalReleasePeer.connected() && millis() - startWait < 15000) {
+      while (finalReleaseConnected && finalReleasePeer.isConnected() && millis() - startWait < 15000) {
         delay(20);
       }
       finalReleasePeer.end();
-      Serial.printf("[SERVER] Phase35 BLEStream final release done=%d\n", (int)(finalReleaseConnected && !finalReleasePeer.connected()));
+      Serial.printf("[SERVER] Phase35 BLEStream final release done=%d\n", (int)(finalReleaseConnected && !finalReleasePeer.isConnected()));
       Serial.println("[SERVER] Phase35 done");
     }
   }

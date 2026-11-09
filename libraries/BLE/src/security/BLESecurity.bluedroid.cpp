@@ -424,7 +424,7 @@ BTStatus BLESecurity::deleteBond(const BTAddress &address) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
+  BLEAddress::toNative(address, bda);
   // esp_ble_remove_bond_device posts work to the BTC task and completes via
   // ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT — wait so the public API is
   // synchronous (matching NimBLE's ble_gap_unpair).
@@ -499,7 +499,7 @@ std::vector<BTAddress> BLESecurity::getBondedDevices() const {
   }
 
   for (int i = 0; i < num; i++) {
-    result.push_back(BTAddress::fromEspBdAddr(devList[i].bd_addr, BTAddress::Type::Public));
+    result.push_back(BLEAddress::fromNative(devList[i].bd_addr, BTAddress::Type::Public));
   }
   return result;
 }
@@ -516,7 +516,7 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
   }
 
   esp_bd_addr_t bda;
-  peerAddress.toEspBdAddr(bda);
+  BLEAddress::toNative(peerAddress, bda);
   esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
   if (err != ESP_OK) {
     log_e("Security: esp_ble_set_encryption handle=%u: %s", (unsigned)connHandle, esp_err_to_name(err));
@@ -537,7 +537,7 @@ BTStatus BLESecurity::startSecurity(const BLEConnInfo &peer) {
     return BTStatus::NotConnected;
   }
   esp_bd_addr_t bda;
-  peerAddress.toEspBdAddr(bda);
+  BLEAddress::toNative(peerAddress, bda);
   esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
   if (err != ESP_OK) {
     log_e("Security: esp_ble_set_encryption address=%s: %s", peerAddress.toString().c_str(), esp_err_to_name(err));
