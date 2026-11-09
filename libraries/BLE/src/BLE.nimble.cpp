@@ -1122,7 +1122,9 @@ BLEConnInfo BLEClass::getConnInfo(const BTAddress &peerAddress) const {
   if (ble_gap_conn_find_by_addr(&addr, &desc) != 0) {
     return BLEConnInfo();
   }
-  return BLEConnInfoImpl::fromDesc(desc);
+  BLEConnInfo info = BLEConnInfoImpl::fromDesc(desc);
+  BLEConnInfoImpl::clearVolatile(info);
+  return info;
 }
 
 #if BLE_SMP_SUPPORTED

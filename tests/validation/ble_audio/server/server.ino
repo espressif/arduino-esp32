@@ -62,6 +62,10 @@ volatile bool isoBisConnected = false;
 
 // BAP unicast server sink RX counter — written from the audio host task.
 volatile uint32_t bapSrvRxCount = 0;
+volatile uint16_t bapSrvConn = 0xFFFF;  // audio onLinkReady handle
+volatile bool bapSrvLinkDown = false;   // audio onDisconnected fired
+volatile bool bapSrvDisconnectReq = false;
+volatile bool bapSrvDisconnectDone = false;
 
 // LC3 loopback (phase 6) decode metrics — written from the pipeline PCM sink.
 // samples counts decoded 16-bit PCM samples; energy accumulates |amplitude| so
@@ -85,7 +89,9 @@ void checkSerial() {
     char c = (char)Serial.read();
     if (c == '\n') {
       buf.trim();
-      if (buf.startsWith("START_PHASE_")) {
+      if (buf == "SRV_DISC_GO") {
+        bapSrvDisconnectReq = true;
+      } else if (buf.startsWith("START_PHASE_")) {
         int phase = buf.substring(12).toInt();
         if (phase > currentPhase) {
           currentPhase = phase;
@@ -463,10 +469,21 @@ void loop() {
     BLE.end(false);
     delay(500);
     bapSrvRxCount = 0;
+    bapSrvConn = 0xFFFF;
+    bapSrvLinkDown = false;
+    bapSrvDisconnectReq = false;
+    bapSrvDisconnectDone = false;
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
       if (audio.begin()) {
+        audio.onLinkReady([](uint16_t conn) {
+          bapSrvConn = conn;
+          bapSrvLinkDown = false;
+        });
+        audio.onDisconnected([](uint16_t) {
+          bapSrvLinkDown = true;
+        });
         // Classic server contributes a marker service to the same GATT table.
         BLEServer srv = BLE.createServer();
         srv.advertiseOnDisconnect(true);
@@ -493,10 +510,31 @@ void loop() {
           adv.addServiceUUID(SERVICE_UUID);
           adv.start();
           Serial.println("[SERVER] BapUnicast ready");
-          // Covers the client's worst case: 15 s scan + link + 15 s start + 4 s streaming.
-          unsigned long deadline = millis() + 60000;
+          // Covers the client's worst case: 15 s scan + link + 15 s start +
+          // streaming, two extra connect/disconnect cycles and the server-
+          // initiated peripheral-link disconnect.
+          unsigned long deadline = millis() + 120000;
           while (millis() < deadline) {
             syncPhaseFromHost();
+            if (bapSrvDisconnectReq && !bapSrvDisconnectDone) {
+              if (bapSrvConn == 0xFFFF) {
+                auto conns = BLE.createServer().getConnections();
+                if (!conns.empty()) {
+                  bapSrvConn = conns[0].getHandle();
+                  bapSrvLinkDown = false;
+                }
+              }
+              if (bapSrvConn != 0xFFFF) {
+                BTStatus d = audio.disconnect(bapSrvConn);
+                unsigned long downWait = millis() + 5000;
+                while (!bapSrvLinkDown && millis() < downWait) {
+                  syncPhaseFromHost();
+                  delay(50);
+                }
+                Serial.printf("[SERVER] BapUnicast peripheralDisconnect ok=%d down=%d\n", (int)(bool)d, (int)bapSrvLinkDown);
+                bapSrvDisconnectDone = true;
+              }
+            }
             delay(100);
           }
         }

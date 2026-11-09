@@ -286,6 +286,7 @@ public:
    * @param peerAddress Peer address.
    * @return Valid descriptors in client-before-server order; empty when the
    *         peer is not connected.
+   * @note PHY/RSSI are normalized as in @ref getConnInfo(const BTAddress &).
    */
   std::vector<BLEConnInfo> getConnections(const BTAddress &peerAddress) const;
 
@@ -295,6 +296,9 @@ public:
    * @param peerAddress Peer address (OTA, or the identity address on NimBLE).
    * @return A valid BLEConnInfo snapshot, or an invalid one when the peer is
    *         not connected.
+   * @note The address lookup normalizes the volatile fields: TX/RX PHY are
+   *       reported as PHY_1M and RSSI as 0 on both backends. Use the owning
+   *       BLEClient/BLEServer handle for live PHY/RSSI values.
    */
   BLEConnInfo getConnInfo(const BTAddress &peerAddress) const;
 

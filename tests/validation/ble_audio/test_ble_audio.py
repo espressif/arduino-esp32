@@ -166,10 +166,18 @@ def _phase_bap_unicast(server, client):
     # connect, so it cannot latch the previous phase's advertising.
     client.write("PHASE4_GO\n")
 
-    ms2 = server.expect(r"\[SERVER\] BapUnicast result received=(\d+)", timeout=120)
     m_disc = client.expect(r"\[CLIENT\] BapUnicast disconnect ok=([01]) down=([01])", timeout=20)
     assert int(m_disc.group(1)) == 1, "BLEAudio::disconnect() failed for a live audio link"
     assert int(m_disc.group(2)) == 1, "BLEAudio::disconnect() did not deliver onDisconnected()"
+    m_cycles = client.expect(r"\[CLIENT\] BapUnicast disconnectCycles=(\d+)", timeout=40)
+    assert int(m_cycles.group(1)) == 2, "repeated audio connect/disconnect cycles failed or leaked"
+    client.expect(r"\[CLIENT\] BapUnicast peripheralDisconnect armed h=\d+", timeout=30)
+    server.write("SRV_DISC_GO\n")
+    m_pdisc_s = server.expect(r"\[SERVER\] BapUnicast peripheralDisconnect ok=([01]) down=([01])", timeout=30)
+    assert int(m_pdisc_s.group(1)) == 1 and int(m_pdisc_s.group(2)) == 1, "server peripheral-link disconnect failed"
+    m_pdisc_c = client.expect(r"\[CLIENT\] BapUnicast peripheralDisconnect down=([01])", timeout=20)
+    assert int(m_pdisc_c.group(1)) == 1, "client did not observe the server-initiated disconnect"
+    ms2 = server.expect(r"\[SERVER\] BapUnicast result received=(\d+)", timeout=120)
     mc = client.expect(r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase4 bap_unicast done", timeout=40)
     client.expect_exact("[CLIENT] Phase4 bap_unicast done", timeout=40)

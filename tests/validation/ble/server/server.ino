@@ -1753,6 +1753,8 @@ void loop() {
       }
       BLEConnInfo byAddrInfo = BLE.getConnInfo(c.getAddress());
       bool lookupInfoOk = (bool)byAddrInfo && byAddrInfo.getHandle() == c.getHandle();
+      bool lookupVolatileOk =
+        byAddrInfo.getRSSI() == 0 && byAddrInfo.getTxPhy() == BLEPhy::PHY_1M && byAddrInfo.getRxPhy() == BLEPhy::PHY_1M;
       std::vector<BLEConnInfo> byAddrConns = BLE.getConnections(c.getAddress());
       bool connsOk = false;
       for (const auto &ci : byAddrConns) {
@@ -1765,8 +1767,8 @@ void loop() {
         BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
         !(bool)BLE.getConnInfo(bogusPeer);
       Serial.printf(
-        "[SERVER] Phase16 lookup byAddr=%d handles=%u hasSelf=%d info=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == c.getHandle()),
-        (unsigned)byAddrHandles.size(), (int)hasSelf, (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
+        "[SERVER] Phase16 lookup byAddr=%d handles=%u hasSelf=%d info=%d volatile=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == c.getHandle()),
+        (unsigned)byAddrHandles.size(), (int)hasSelf, (int)lookupInfoOk, (int)lookupVolatileOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
       );
 
 #if BLE_PAST_SUPPORTED

@@ -119,4 +119,14 @@ void BLEConnInfoImpl::setPhy(BLEConnInfo &info, uint8_t txPhy, uint8_t rxPhy) {
   d->rxPhy = rxPhy;
 }
 
+void BLEConnInfoImpl::clearVolatile(BLEConnInfo &info) {
+  if (!info) {
+    return;
+  }
+  auto *d = info.data();
+  d->txPhy = 1;
+  d->rxPhy = 1;
+  d->rssi = 0;
+}
+
 #endif /* BLE_BLUEDROID */

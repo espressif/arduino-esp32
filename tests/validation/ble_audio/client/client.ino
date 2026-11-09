@@ -445,6 +445,44 @@ void setup() {
                 delay(50);
               }
               Serial.printf("[CLIENT] BapUnicast disconnect ok=%d down=%d\n", (int)(bool)disco, (int)audioLinkDown);
+
+              // Repeated connect/disconnect must not accumulate the NimBLE
+              // fallback clients or leak engine links.
+              int extraCycles = 0;
+              for (int cycle = 0; cycle < 2; cycle++) {
+                audioLinkDown = false;
+                uint16_t h2 = audioConnect(audio, addr);
+                if (h2 == 0xFFFF) {
+                  break;
+                }
+                BTStatus cycleDisco = audio.disconnect(h2);
+                unsigned long cycleDeadline = millis() + 5000;
+                while (!audioLinkDown && millis() < cycleDeadline) {
+                  checkSerial();
+                  delay(50);
+                }
+                if (!cycleDisco || !audioLinkDown) {
+                  break;
+                }
+                extraCycles++;
+              }
+              Serial.printf("[CLIENT] BapUnicast disconnectCycles=%d\n", extraCycles);
+
+              // Keep one link up and let the server initiate the disconnect;
+              // this exercises the peripheral-link path of audio.disconnect().
+              audioLinkDown = false;
+              uint16_t periphConn = audioConnect(audio, addr);
+              if (periphConn != 0xFFFF) {
+                Serial.printf("[CLIENT] BapUnicast peripheralDisconnect armed h=%u\n", (unsigned)periphConn);
+                unsigned long periphWait = millis() + 15000;
+                while (!audioLinkDown && millis() < periphWait) {
+                  checkSerial();
+                  delay(50);
+                }
+                Serial.printf("[CLIENT] BapUnicast peripheralDisconnect down=%d\n", (int)audioLinkDown);
+              } else {
+                Serial.println("[CLIENT] BapUnicast peripheralDisconnect arm failed");
+              }
             } else {
               Serial.println("[CLIENT] BapUnicast ACL connect FAILED");
             }

@@ -2189,6 +2189,8 @@ void setup() {
       std::vector<uint16_t> byAddrHandles = BLE.getConnHandles(lookupPeer);
       BLEConnInfo byAddrInfo = BLE.getConnInfo(lookupPeer);
       bool lookupInfoOk = (bool)byAddrInfo && byAddrInfo.getHandle() == pc.getHandle();
+      bool lookupVolatileOk =
+        byAddrInfo.getRSSI() == 0 && byAddrInfo.getTxPhy() == BLEPhy::PHY_1M && byAddrInfo.getRxPhy() == BLEPhy::PHY_1M;
       std::vector<BLEConnInfo> byAddrConns = BLE.getConnections(lookupPeer);
       bool connsOk = false;
       for (const auto &ci : byAddrConns) {
@@ -2201,8 +2203,8 @@ void setup() {
         BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
         !(bool)BLE.getConnInfo(bogusPeer);
       Serial.printf(
-        "[CLIENT] Phase16 lookup byAddr=%d handles=%u info=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == pc.getHandle()),
-        (unsigned)byAddrHandles.size(), (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
+        "[CLIENT] Phase16 lookup byAddr=%d handles=%u info=%d volatile=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == pc.getHandle()),
+        (unsigned)byAddrHandles.size(), (int)lookupInfoOk, (int)lookupVolatileOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
       );
 
 #if BLE_PAST_SUPPORTED

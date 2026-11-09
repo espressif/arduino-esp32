@@ -22,6 +22,7 @@
 
 #include "core/BLEGuards.h"
 #include "core/BLEAddressUtil.h"
+#include "types/BLEConnInfo.bluedroid.h"
 #if BLE_BLUEDROID
 
 #include "BLE.h"
@@ -1235,6 +1236,7 @@ void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnI
     BLEClient handle = BLEClientImplCommon::makeHandle(client.get());
     BLEConnInfo info = handle.getConnInfo();
     if (info) {
+      BLEConnInfoImpl::clearVolatile(info);
       connections.push_back(info);
     }
   }
@@ -1246,7 +1248,9 @@ void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnI
     for (auto &entry : server->connections) {
       const BLEConnInfo &info = entry.second;
       if (info.getAddress() == peerAddress || info.getIdAddress() == peerAddress) {
-        connections.push_back(info);
+        BLEConnInfo copy = info;
+        BLEConnInfoImpl::clearVolatile(copy);
+        connections.push_back(copy);
       }
     }
   }
@@ -1263,6 +1267,7 @@ bool bluedroidFindConnInfo(const BTAddress &peerAddress, BLEConnInfo &info) {
     if (client && client->connected.load() && client->connId.load() == connHandle) {
       BLEClient handle = BLEClientImplCommon::makeHandle(client.get());
       info = handle.getConnInfo();
+      BLEConnInfoImpl::clearVolatile(info);
       return static_cast<bool>(info);
     }
   }
@@ -1274,6 +1279,7 @@ bool bluedroidFindConnInfo(const BTAddress &peerAddress, BLEConnInfo &info) {
     BLEConnInfo *found = server->connFind(connHandle);
     if (found) {
       info = *found;
+      BLEConnInfoImpl::clearVolatile(info);
       return true;
     }
   }
