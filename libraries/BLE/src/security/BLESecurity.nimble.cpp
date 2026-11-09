@@ -350,11 +350,26 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
   int rc = ble_gap_security_initiate(connHandle);
   if (rc == BLE_HS_EALREADY) {
     log_d("Security: procedure already in progress on handle=%u", connHandle);
-  } else if (rc != 0) {
+    return BTStatus::OK;
+  }
+  if (rc == BLE_HS_ENOTCONN) {
+    return BTStatus::NotConnected;
+  }
+  if (rc == BLE_HS_EINVAL) {
+    return BTStatus::InvalidParam;
+  }
+  if (rc != 0) {
     log_e("Security: ble_gap_security_initiate handle=%u rc=%d", connHandle, rc);
     return BTStatus::Fail;
   }
   return BTStatus::OK;
+}
+
+BTStatus BLESecurity::startSecurity(const BLEConnInfo &peer) {
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  return startSecurity(peer.getHandle());
 }
 
 void BLESecurity::resetSecurity() {
@@ -441,6 +456,11 @@ BTStatus BLESecurity::deleteAllBonds() {
 }
 
 BTStatus BLESecurity::startSecurity(uint16_t) {
+  log_w("SMP not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLESecurity::startSecurity(const BLEConnInfo &) {
   log_w("SMP not supported");
   return BTStatus::NotSupported;
 }

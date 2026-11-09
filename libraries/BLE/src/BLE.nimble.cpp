@@ -34,6 +34,7 @@
 #include "core/BLEBackend.h"
 #include "core/BLETask.h"
 #include "core/BLEValidationHooks.h"
+#include "types/BLEConnInfo.nimble.h"
 #if BLE_AUDIO_SUPPORTED
 #include "audio/BLEAudioImpl.h"
 #include "audio/BLEAudioEngine.h"
@@ -1069,6 +1070,60 @@ BLEClient BLEClass::createClient() {
   return BLEClient();
 }
 #endif
+
+namespace {
+
+void peerAddressToNimble(const BTAddress &peerAddress, ble_addr_t &addr) {
+  memset(&addr, 0, sizeof(addr));
+  memcpy(addr.val, peerAddress.data(), sizeof(addr.val));
+  addr.type = static_cast<uint8_t>(peerAddress.type());
+}
+
+}  // namespace
+
+uint16_t BLEClass::getConnHandle(const BTAddress &peerAddress) const {
+  if (!isInitialized() || isEnding() || !_impl) {
+    return 0xFFFF;
+  }
+  ble_addr_t addr;
+  peerAddressToNimble(peerAddress, addr);
+  struct ble_gap_conn_desc desc;
+  if (ble_gap_conn_find_by_addr(&addr, &desc) != 0) {
+    return 0xFFFF;
+  }
+  return desc.conn_handle;
+}
+
+std::vector<uint16_t> BLEClass::getConnHandles(const BTAddress &peerAddress) const {
+  std::vector<uint16_t> handles;
+  uint16_t handle = getConnHandle(peerAddress);
+  if (handle != 0xFFFF) {
+    handles.push_back(handle);
+  }
+  return handles;
+}
+
+std::vector<BLEConnInfo> BLEClass::getConnections(const BTAddress &peerAddress) const {
+  std::vector<BLEConnInfo> connections;
+  BLEConnInfo info = getConnInfo(peerAddress);
+  if (info) {
+    connections.push_back(info);
+  }
+  return connections;
+}
+
+BLEConnInfo BLEClass::getConnInfo(const BTAddress &peerAddress) const {
+  if (!isInitialized() || isEnding() || !_impl) {
+    return BLEConnInfo();
+  }
+  ble_addr_t addr;
+  peerAddressToNimble(peerAddress, addr);
+  struct ble_gap_conn_desc desc;
+  if (ble_gap_conn_find_by_addr(&addr, &desc) != 0) {
+    return BLEConnInfo();
+  }
+  return BLEConnInfoImpl::fromDesc(desc);
+}
 
 #if BLE_SMP_SUPPORTED
 BLESecurity BLEClass::getSecurity() {

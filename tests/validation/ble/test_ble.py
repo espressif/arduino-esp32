@@ -416,6 +416,10 @@ def _phase_security(server, client):
     server.expect_exact("[SERVER] Authentication complete", timeout=30)
     client.expect_exact("[CLIENT] Authentication complete", timeout=30)
     client.expect_exact("[CLIENT] Secure read: Secure Data!", timeout=10)
+    m_sec = client.expect(r"\[CLIENT\] Phase10 startSecurity live=([01]) enc=([01]) bogus=([01])", timeout=10)
+    assert int(m_sec.group(1)) == 1, "startSecurity(handle) failed on a live connection"
+    assert int(m_sec.group(2)) == 1, "startSecurity(handle) did not encrypt the live connection"
+    assert int(m_sec.group(3)) == 1, "startSecurity(unknown handle) did not return NotConnected"
     # onIdentity dedupe: the peer identity is surfaced exactly once per
     # connection on both backends. NimBLE receives identity from both
     # IDENTITY_RESOLVED and ENC_CHANGE and dedupes it in the library; Bluedroid
@@ -492,6 +496,8 @@ def _phase_blestream(server, client):
     server.expect_exact("[SERVER] BLEStream onConnect fired", timeout=15)
     server.expect_exact("[SERVER] BLEStream callback mutation safe=1", timeout=15)
     server.expect_exact("[SERVER] BLEStream connected OK", timeout=10)
+    m_alias = server.expect(r"\[SERVER\] BLEStream alias isConnected=([01]) legacy=([01])", timeout=10)
+    assert int(m_alias.group(1)) == 1 and int(m_alias.group(2)) == 1, "BLEStream isConnected()/connected() disagree"
     server.expect_exact("[SERVER] BLEStream peerCount=1", timeout=10)
     server.expect_exact("[SERVER] BLEStream peers=1", timeout=10)
     server.expect(r"\[SERVER\] BLEStream peerAddr=[0-9a-fA-F:]+", timeout=10)
@@ -695,6 +701,19 @@ def _phase_conninfo_and_params(server, client):
         assert int(m_past.group(2)) == 1, "client PAST receive failed for a live connection handle"
         assert int(m_past.group(3)) == 0, "client PAST receive accepted an unknown connection handle"
         assert int(m_past.group(4)) == 1, "client PAST receive cancellation failed"
+    m_lookup = client.expect(
+        r"\[CLIENT\] Phase16 lookup byAddr=([01]) handles=(\d+) info=([01]) conns=(\d+) connsOk=([01]) bogus=([01])", timeout=10
+    )
+    assert int(m_lookup.group(1)) == 1, "client getConnHandle(address) did not return the live client handle"
+    assert int(m_lookup.group(2)) >= 1, "client getConnHandles(address) returned no handles"
+    assert int(m_lookup.group(3)) == 1, "client getConnInfo(address) did not match the live connection"
+    assert int(m_lookup.group(4)) >= 1, "client getConnections(address) returned no connection descriptors"
+    assert int(m_lookup.group(5)) == 1, "client getConnections(address) did not preserve the central role"
+    assert int(m_lookup.group(6)) == 1, "client lookup accepted an unknown peer address"
+    m_past_info = client.expect(r"\[CLIENT\] Phase16 pastInfo arm=([01]) stop=([01])", timeout=10)
+    assert int(m_past_info.group(1)) == 1 and int(m_past_info.group(2)) == 1, "client role-aware PAST overload failed"
+    m_stale = client.expect(r"\[CLIENT\] Phase16 lookup staleGone=([01])", timeout=10)
+    assert int(m_stale.group(1)) == 1, "client lookup retained a stale connection after disconnect"
     client.expect_exact("[CLIENT] Phase16 done", timeout=10)
 
     server.expect_exact("[SERVER] Phase16 waiting for peer", timeout=15)
@@ -724,6 +743,18 @@ def _phase_conninfo_and_params(server, client):
         assert int(m_past_s.group(2)) == 1, "server PAST receive failed for a live connection handle"
         assert int(m_past_s.group(3)) == 0, "server PAST receive accepted an unknown connection handle"
         assert int(m_past_s.group(4)) == 1, "server PAST receive cancellation failed"
+    m_lookup_s = server.expect(
+        r"\[SERVER\] Phase16 lookup byAddr=([01]) handles=(\d+) hasSelf=([01]) info=([01]) conns=(\d+) connsOk=([01]) bogus=([01])", timeout=10
+    )
+    assert int(m_lookup_s.group(1)) == 1, "server getConnHandle(address) did not return the live server handle"
+    assert int(m_lookup_s.group(2)) >= 1, "server getConnHandles(address) returned no handles"
+    assert int(m_lookup_s.group(3)) == 1, "server getConnHandles(address) omitted the server handle"
+    assert int(m_lookup_s.group(4)) == 1, "server getConnInfo(address) did not match the live connection"
+    assert int(m_lookup_s.group(5)) >= 1, "server getConnections(address) returned no connection descriptors"
+    assert int(m_lookup_s.group(6)) == 1, "server getConnections(address) did not preserve the peripheral role"
+    assert int(m_lookup_s.group(7)) == 1, "server lookup accepted an unknown peer address"
+    m_past_info_s = server.expect(r"\[SERVER\] Phase16 pastInfo arm=([01]) stop=([01])", timeout=10)
+    assert int(m_past_info_s.group(1)) == 1 and int(m_past_info_s.group(2)) == 1, "server role-aware PAST overload failed"
     server.expect_exact("[SERVER] Phase16 done", timeout=10)
 
 

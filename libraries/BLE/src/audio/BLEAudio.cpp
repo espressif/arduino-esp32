@@ -284,6 +284,20 @@ BTStatus BLEAudio::connect(const BTAddress &address) {
   return st;
 }
 
+BTStatus BLEAudio::disconnect(uint16_t connHandle) {
+  if (!_impl || !_impl->active || !BLE.isInitialized() || BLE.isEnding()) {
+    return BTStatus::InvalidState;
+  }
+  if (connHandle == BLE_AUDIO_CONN_NONE) {
+    return BTStatus::InvalidParam;
+  }
+  int err = bleAudioEngineDisconnect(connHandle);
+  if (err == 0) {
+    return BTStatus::OK;
+  }
+  return BTStatus(static_cast<BTStatus::Code>(err));
+}
+
 BLEAudio &BLEAudio::onLinkReady(LinkCallback cb) {
   if (_impl) {
     _impl->linkReadyCb = std::move(cb);

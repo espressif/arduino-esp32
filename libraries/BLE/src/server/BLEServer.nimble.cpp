@@ -381,11 +381,6 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t reason) {
 }
 
 // Not used on NimBLE (server role only); always returns BTStatus::NotSupported.
-BTStatus BLEServer::connect(const BTAddress &address) {
-  log_w("Server: connect not supported on NimBLE (server role only)");
-  return BTStatus::NotSupported;
-}
-
 uint16_t BLEServer::getPeerMTU(uint16_t connHandle) const {
   return ble_att_mtu(connHandle);
 }
@@ -1017,11 +1012,6 @@ BTStatus BLEServer::start() {
 }
 
 BTStatus BLEServer::disconnect(uint16_t, uint8_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::connect(const BTAddress &) {
   log_w("GATT server not supported");
   return BTStatus::NotSupported;
 }

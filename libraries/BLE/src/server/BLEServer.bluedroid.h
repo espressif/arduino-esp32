@@ -67,7 +67,6 @@ struct BLEServer::Impl : BLEServerImplCommon {
 
   BLESync regSync{"regSync"};
   BLESync createSync{"createSync"};
-  BLESync connectSync{"connectSync"};
 #if BLE5_SUPPORTED
   // Bridges async GAP PHY/DLE completions to the blocking public setPhy/getPhy/setDataLen APIs.
   BLESync phySync{"phySync"};

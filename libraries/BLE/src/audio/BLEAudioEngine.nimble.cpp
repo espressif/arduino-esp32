@@ -26,6 +26,7 @@
 #endif
 #include "scan/BLEScan.h"
 
+#include <host/ble_gap.h>
 #include <host/ble_hs.h>
 
 /**

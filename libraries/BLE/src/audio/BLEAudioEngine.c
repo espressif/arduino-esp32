@@ -191,6 +191,10 @@ static esp_bd_addr_t s_encBda;
 static uint16_t s_encConn = BLE_AUDIO_CONN_NONE;
 #endif
 static uint16_t s_links[MAX_LINKS] = {BLE_AUDIO_CONN_NONE, BLE_AUDIO_CONN_NONE, BLE_AUDIO_CONN_NONE, BLE_AUDIO_CONN_NONE};
+/* Per-slot peer address, recorded from ACL_CONNECT so disconnect() can reach
+ * links the engine opened itself (they are not in the library's client table). */
+static struct bt_le_addr s_link_peer[MAX_LINKS];
+static bool s_link_peer_valid[MAX_LINKS];
 /* Per-slot bring-up progress for the tracked links (index matches s_links). */
 static bool s_link_mtu_ok[MAX_LINKS];
 static bool s_link_secured[MAX_LINKS];
@@ -241,7 +245,7 @@ static void link_on_security(uint16_t conn);
  * PACS/ASCS require an encrypted link. When encryption cannot even start the
  * bring-up continues unencrypted, so peers without that requirement still work.
  */
-static void link_on_connect(uint16_t conn, uint8_t status, uint8_t role) {
+static void link_on_connect(uint16_t conn, uint8_t status, uint8_t role, const struct bt_le_addr *peer) {
   if (!s_connect_pending || role != HCI_ROLE_CENTRAL) {
     return;
   }
@@ -261,6 +265,10 @@ static void link_on_connect(uint16_t conn, uint8_t status, uint8_t role) {
     s_link_mtu_ok[idx] = false;
     s_link_secured[idx] = false;
     s_link_discovered[idx] = false;
+    s_link_peer_valid[idx] = (peer != NULL);
+    if (peer != NULL) {
+      memcpy(&s_link_peer[idx], peer, sizeof(s_link_peer[idx]));
+    }
   }
   log_d("conn %u: connected, starting encryption", conn);
 #if BLE_BLUEDROID
@@ -348,7 +356,7 @@ static void gap_cb(esp_ble_audio_gap_app_event_t *event) {
 
   switch (event->type) {
     case ESP_BLE_AUDIO_GAP_EVENT_ACL_CONNECT:
-      link_on_connect(event->acl_connect.conn_handle, event->acl_connect.status, event->acl_connect.role);
+      link_on_connect(event->acl_connect.conn_handle, event->acl_connect.status, event->acl_connect.role, &event->acl_connect.dst);
       bleAudioEngineEmit(BLE_AUDIO_EVT_ACL_CONNECTED, event->acl_connect.conn_handle, event->acl_connect.status, NULL);
       break;
     case ESP_BLE_AUDIO_GAP_EVENT_ACL_DISCONNECT: {
@@ -358,6 +366,7 @@ static void gap_cb(esp_ble_audio_gap_app_event_t *event) {
         s_link_mtu_ok[idx] = false;
         s_link_secured[idx] = false;
         s_link_discovered[idx] = false;
+        s_link_peer_valid[idx] = false;
       }
       bleAudioEngineEmit(BLE_AUDIO_EVT_ACL_DISCONNECTED, event->acl_disconnect.conn_handle, event->acl_disconnect.reason, NULL);
       break;
@@ -524,6 +533,7 @@ static void engine_reset_local(void) {
   s_connect_pending = false;
   for (int i = 0; i < MAX_LINKS; i++) {
     s_links[i] = BLE_AUDIO_CONN_NONE;
+    s_link_peer_valid[i] = false;
   }
   s_initialized = false;
   s_started = false;
@@ -632,6 +642,15 @@ int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]) {
 
 void bleAudioEngineCancelConnect(void) {
   s_connect_pending = false;
+}
+
+bool bleAudioEngineLinkAddress(uint16_t conn_handle, uint8_t addr[6]) {
+  int idx = link_index(conn_handle);
+  if (idx < 0 || !s_link_peer_valid[idx] || addr == NULL) {
+    return false;
+  }
+  memcpy(addr, s_link_peer[idx].val, 6);
+  return true;
 }
 
 /* Bluedroid only: the library owns the GAP callback and forwards AUTH_CMPL here. */

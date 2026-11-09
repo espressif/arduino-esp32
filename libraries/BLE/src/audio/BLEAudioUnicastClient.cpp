@@ -353,7 +353,7 @@ BTStatus BLEAudioUnicastClient::start() {
 }
 
 /** A peer that is already discovered starts immediately; otherwise on UC_DISCOVERED. */
-BTStatus BLEAudioUnicastClient::connect(uint16_t connHandle) {
+BTStatus BLEAudioUnicastClient::connectAndStart(uint16_t connHandle) {
   BTStatus st = addPeer(connHandle);
   if (!st) {
     return st;
@@ -364,6 +364,10 @@ BTStatus BLEAudioUnicastClient::connect(uint16_t connHandle) {
   }
   p->autoStart = true;
   return BTStatus::OK;
+}
+
+BTStatus BLEAudioUnicastClient::connect(uint16_t connHandle) {
+  return connectAndStart(connHandle);
 }
 
 BTStatus BLEAudioUnicastClient::stop() {

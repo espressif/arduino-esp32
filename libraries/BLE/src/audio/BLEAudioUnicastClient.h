@@ -146,6 +146,13 @@ public:
   BTStatus start();
   /** @brief addPeer(), then start() as soon as the peer is discovered. */
   BTStatus connect(uint16_t connHandle);
+
+  /**
+   * @brief addPeer(), then start() as soon as the peer is discovered.
+   *
+   * Clearer name for @ref connect(uint16_t); both are equivalent.
+   */
+  BTStatus connectAndStart(uint16_t connHandle);
   /**
    * @brief Release every stream and remove the CIG (onStopped() follows).
    * @return BTStatus::OK when the release started; InvalidState when not running.

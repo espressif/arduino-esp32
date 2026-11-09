@@ -36,6 +36,7 @@ volatile uint32_t bapBcastRxCount = 0;
 // Every connected audio phase opens its link with audioConnect() so the link
 // is secured and discovered by the engine on both NimBLE and Bluedroid.
 volatile uint16_t audioLinkConn = 0xFFFF;
+volatile bool audioLinkDown = false;
 
 // Phase 4: the pytest test signals after the server's unicast advertising is up.
 volatile bool phase4Go = false;
@@ -378,8 +379,12 @@ void setup() {
     if (st) {
       BLEAudio audio = BLE.getAudioController();
       if (audio.begin()) {
+        audioLinkDown = false;
         audio.onLinkReady([](uint16_t conn) {
           audioLinkConn = conn;
+        });
+        audio.onDisconnected([](uint16_t) {
+          audioLinkDown = true;
         });
         BLEAudioUnicastClient uc = audio.createUnicastClient();
         uc.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setSinkStreams(1);
@@ -432,6 +437,14 @@ void setup() {
               for (int i = 0; i < 60 && uc.isStreaming(); i++) {
                 delay(50);
               }
+              // Exercise the per-link disconnect API while the ACL is still up.
+              BTStatus disco = audio.disconnect(h);
+              unsigned long discoDeadline = millis() + 5000;
+              while (!audioLinkDown && millis() < discoDeadline) {
+                checkSerial();
+                delay(50);
+              }
+              Serial.printf("[CLIENT] BapUnicast disconnect ok=%d down=%d\n", (int)(bool)disco, (int)audioLinkDown);
             } else {
               Serial.println("[CLIENT] BapUnicast ACL connect FAILED");
             }

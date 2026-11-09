@@ -27,6 +27,7 @@
 
 #include "BLE.h"
 
+#include "BLE.bluedroid.h"
 #include "core/BLEBackend.h"
 #include "scan/BLEScan.bluedroid.h"
 #include "scan/BLEAdvertisedDeviceImpl.h"
@@ -61,46 +62,6 @@ void markDuplicateKey(BLEScan::Impl &impl, const BTAddress &address, uint8_t sid
   if (!duplicateKeySeen(impl, address, sid)) {
     impl.duplicateKeys.emplace_back(address, sid);
   }
-}
-
-/**
- * @brief Resolve a public connection handle to the peer address.
- *
- * Bluedroid's PAST-receive API is keyed by the peer's BD address, while the
- * public Arduino API is keyed by a connection handle. Accept the handle the
- * library exposes on a live link -- @c BLEClient::getHandle() /
- * @c BLEConnInfo::getHandle() (the GATT connection id on Bluedroid) -- and the
- * HCI ACL handle as a fallback, mirroring @c bleClientAclHandle().
- */
-bool peerAddressForHandle(uint16_t connHandle, BTAddress &address) {
-  if (connHandle == 0xFFFF) {
-    return false;
-  }
-
-  // Central links: the client keeps the GATT connection id and the ACL handle.
-  for (auto &client : BLEClient::Impl::snapshotClients()) {
-    if (!client || !client->connected.load()) {
-      continue;
-    }
-    if (client->connId.load() == connHandle || client->aclHandle.load() == connHandle) {
-      address = client->peerAddress;
-      return static_cast<bool>(address);
-    }
-  }
-
-  // Peripheral links: the server connection table is keyed by the handle the
-  // public API reports (the GATT connection id on Bluedroid).
-  auto *server = BLEServer::Impl::s_instance;
-  if (!server) {
-    return false;
-  }
-  BLELockGuard lock(server->mtx);
-  BLEConnInfo *info = server->connFind(connHandle);
-  if (!info) {
-    return false;
-  }
-  address = info->getAddress();
-  return static_cast<bool>(address);
 }
 
 }  // namespace
@@ -479,13 +440,36 @@ BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, u
     return BTStatus::InvalidState;
   }
   BTAddress peerAddress;
-  if (!peerAddressForHandle(connHandle, peerAddress)) {
+  if (!bluedroidFindPeerAddress(connHandle, peerAddress)) {
     log_w("Scan: PAST receive: no live connection for handle %u", (unsigned)connHandle);
     return BTStatus::NotConnected;
   }
   return Impl::receivePeriodicSyncFromPeer(connHandle, peerAddress, skipCount, timeoutMs);
 #else
   (void)connHandle;
+  (void)skipCount;
+  (void)timeoutMs;
+  log_w("Scan: receivePeriodicSync not supported (PAST unavailable)");
+  return BTStatus::NotSupported;
+#endif
+}
+
+BTStatus BLEScan::receivePeriodicSync(const BLEConnInfo &peer, uint16_t skipCount, uint16_t timeoutMs) {
+#if BLE_PAST_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  if (skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+    return BTStatus::InvalidParam;
+  }
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
+  return Impl::receivePeriodicSyncFromPeer(peer.getHandle(), peer.getAddress(), skipCount, timeoutMs);
+#else
+  (void)peer;
   (void)skipCount;
   (void)timeoutMs;
   log_w("Scan: receivePeriodicSync not supported (PAST unavailable)");
@@ -550,7 +534,7 @@ BTStatus BLEScan::Impl::receivePeriodicSyncFromPeer(uint16_t connHandle, const B
   return setPeriodicSyncTransferParams(connHandle, peerAddress, ESP_BLE_GAP_PAST_MODE_DUP_FILTER_DISABLED, skipCount, timeoutMs);
 }
 
-BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t connHandle) {
+BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t connHandle) {
 #if BLE_PAST_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard admission(impl.nativeAdmission);
@@ -558,8 +542,8 @@ BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t connHandle) {
     return BTStatus::InvalidState;
   }
   BTAddress peerAddress;
-  if (!peerAddressForHandle(connHandle, peerAddress)) {
-    log_w("Scan: PAST cancel: no live connection for handle %u", (unsigned)connHandle);
+  if (!bluedroidFindPeerAddress(connHandle, peerAddress)) {
+    log_w("Scan: PAST stop: no live connection for handle %u", (unsigned)connHandle);
     return BTStatus::NotConnected;
   }
   // Bluedroid has no dedicated disable command. Restore the same no-sync mode
@@ -567,7 +551,27 @@ BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t connHandle) {
   return Impl::setPeriodicSyncTransferParams(connHandle, peerAddress, ESP_BLE_GAP_PAST_MODE_NO_SYNC_EVT, 0, kMinPeriodicSyncTimeoutMs);
 #else
   (void)connHandle;
-  log_w("Scan: cancelPeriodicSyncReceive not supported (PAST unavailable)");
+  log_w("Scan: stopPeriodicSyncReceive not supported (PAST unavailable)");
+  return BTStatus::NotSupported;
+#endif
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &peer) {
+#if BLE_PAST_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
+  return Impl::setPeriodicSyncTransferParams(
+    peer.getHandle(), peer.getAddress(), ESP_BLE_GAP_PAST_MODE_NO_SYNC_EVT, 0, kMinPeriodicSyncTimeoutMs
+  );
+#else
+  (void)peer;
+  log_w("Scan: stopPeriodicSyncReceive not supported (PAST unavailable)");
   return BTStatus::NotSupported;
 #endif
 }
@@ -609,7 +613,7 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
 #endif
 }
 
-BTStatus BLEScan::cancelPeriodicSync() {
+BTStatus BLEScan::cancelPeriodicSyncCreate() {
 #if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard admission(impl.nativeAdmission);
@@ -1205,12 +1209,17 @@ BTStatus BLEScan::receivePeriodicSync(uint16_t, uint16_t, uint16_t) {
   return BTStatus::NotSupported;
 }
 
-BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t) {
+BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t) {
   log_w("Scanning not supported");
   return BTStatus::NotSupported;
 }
 
-BTStatus BLEScan::cancelPeriodicSync() {
+BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::cancelPeriodicSyncCreate() {
   log_w("Scanning not supported");
   return BTStatus::NotSupported;
 }

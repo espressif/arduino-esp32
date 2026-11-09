@@ -303,6 +303,19 @@ public:
   BTStatus startSecurity(uint16_t connHandle);
 
   /**
+   * @brief Initiate the security/pairing procedure using a connection descriptor.
+   *
+   * Role-aware variant for simultaneous client+server links: it uses the
+   * descriptor's address directly on Bluedroid, avoiding numeric handle
+   * collisions between the two roles.
+   *
+   * @param peer Connection descriptor from a client/server callback or
+   *             `BLE.getConnections()`.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus startSecurity(const BLEConnInfo &peer);
+
+  /**
    * @brief Block until authentication completes or the timeout elapses.
    * @param timeoutMs Maximum time to wait in milliseconds.
    * @return true if authentication completed (check the AuthCompleteHandler for success/failure),

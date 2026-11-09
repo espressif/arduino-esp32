@@ -123,7 +123,7 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   while the public surface is keyed by a connection handle. The Bluedroid
   implementation resolves the handle against the live `BLEClient` and
   `BLEServer` connection tables (GATT connection id, with the HCI ACL handle as
-  a fallback), then arms mode `DUP_FILTER_DISABLED`. `cancelPeriodicSyncReceive()`
+  a fallback), then arms mode `DUP_FILTER_DISABLED`. `stopPeriodicSyncReceive()`
   restores `NO_SYNC_EVT` with default parameters because Bluedroid has no
   dedicated disable command. The audio Broadcast Sink's BASS path uses the same
   arming helper directly with the assistant address carried by the synchronous

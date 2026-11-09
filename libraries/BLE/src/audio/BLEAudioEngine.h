@@ -269,6 +269,21 @@ int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_ty
 /** @brief Forget a pending bleAudioEngineConnect() whose host connect failed. */
 void bleAudioEngineCancelConnect(void);
 
+/**
+ * @brief Disconnect an LE Audio ACL.
+ * @param conn_handle Connection handle from onLinkReady().
+ * @return 0 on success, or a numeric @c BTStatus::Code on failure.
+ */
+int bleAudioEngineDisconnect(uint16_t conn_handle);
+
+/**
+ * @brief Look up the peer address the engine recorded for a tracked link.
+ * @param conn_handle Connection handle.
+ * @param addr Receives the peer address in LSB-first order.
+ * @return true when the engine has an address for that link.
+ */
+bool bleAudioEngineLinkAddress(uint16_t conn_handle, uint8_t addr[6]);
+
 #if BLE_NIMBLE
 /*
  * NimBLE host calls used by the link bring-up in BLEAudioEngine.c. NimBLE

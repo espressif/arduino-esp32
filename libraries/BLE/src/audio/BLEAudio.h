@@ -168,6 +168,19 @@ public:
    */
   BTStatus connect(const BTAddress &address);
 
+  /**
+   * @brief Disconnect an LE Audio ACL.
+   *
+   * Closes the link whether it was opened by connect() or by the peer. The
+   * engine emits its normal `BLE_AUDIO_EVT_ACL_DISCONNECTED` and
+   * onDisconnected() fires.
+   *
+   * @param connHandle Connection handle reported by onLinkReady().
+   * @return BTStatus::OK when the disconnect was issued; NotConnected when no
+   *         live link matches; InvalidState before start() or during shutdown.
+   */
+  BTStatus disconnect(uint16_t connHandle);
+
   // --- Link events (Bluetooth host task; keep callbacks short) ---
 
   /**

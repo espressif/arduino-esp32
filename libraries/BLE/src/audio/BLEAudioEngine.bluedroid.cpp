@@ -21,6 +21,7 @@
 #include "audio/BLEAudioEngine.bluedroid.h"
 #include "audio/BLEAudioEngine.h"
 #include "BLE.h"
+#include "BLE.bluedroid.h"
 #include "scan/BLEScan.bluedroid.h"
 #include "BTAddress.h"
 #include "esp32-hal-log.h"
@@ -89,6 +90,29 @@ extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t p
   (void)timeout_ms;
   return static_cast<int>(BTStatus::NotSupported);
 #endif
+}
+
+extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
+  BTAddress peer;
+  uint8_t lsb[6];
+  if (bleAudioEngineLinkAddress(conn_handle, lsb)) {
+    // The Bluedroid adapter stores the peer as an esp_bd_addr_t (MSB first).
+    peer = BTAddress::fromEspBdAddr(lsb);
+  } else if (!bluedroidFindPeerAddress(conn_handle, peer)) {
+    return static_cast<int>(BTStatus::NotConnected);
+  }
+
+  esp_bd_addr_t bda;
+  peer.toEspBdAddr(bda);
+  esp_err_t err = esp_ble_gap_disconnect(bda);
+  if (err == ESP_OK) {
+    return 0;
+  }
+  if (err == ESP_ERR_INVALID_STATE) {
+    return static_cast<int>(BTStatus::NotConnected);
+  }
+  log_e("audio link: disconnect handle=%u: %s", (unsigned)conn_handle, esp_err_to_name(err));
+  return static_cast<int>(BTStatus::Fail);
 }
 
 // Bluedroid registers the classic server and LE Audio as separate GATTS apps,

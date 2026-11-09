@@ -25,6 +25,7 @@
 #include "BTStatus.h"
 #include "BTAddress.h"
 #include "types/BLEAdvTypes.h"
+#include "types/BLEConnInfo.h"
 #include "scan/BLEAdvertisedDevice.h"
 #include <memory>
 #include <functional>
@@ -280,7 +281,7 @@ public:
    * A connected Broadcast Assistant (BASS) typically pushes PA sync via PAST
    * rather than asking the delegator to scan. @p connHandle is the connection
    * that will deliver HCI LE Periodic Advertising Sync Transfer Received.
-   * Pass the same handle to @ref cancelPeriodicSyncReceive to disarm.
+   * Pass the same handle to @ref stopPeriodicSyncReceive to disarm.
    *
    * Both backends accept the handle reported by @c BLEClient::getHandle() or
    * @c BLEConnInfo::getHandle(); Bluedroid resolves its GATT connection id to
@@ -295,6 +296,21 @@ public:
   BTStatus receivePeriodicSync(uint16_t connHandle, uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
 
   /**
+   * @brief Enable PAST receive using a specific connection descriptor.
+   *
+   * Role-aware variant for simultaneous GATT client+server links: it uses the
+   * descriptor's address directly on Bluedroid, so a numeric handle collision
+   * between the two roles cannot pick the wrong link.
+   *
+   * @param peer Connection descriptor from a client/server callback or
+   *             `BLE.getConnections()`.
+   * @param skipCount Max number of periodic events the receiver may skip.
+   * @param timeoutMs Synchronization supervision timeout in milliseconds.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus receivePeriodicSync(const BLEConnInfo &peer, uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
+
+  /**
    * @brief Disable PAST receive previously enabled by @ref receivePeriodicSync.
    *
    * Bluedroid has no dedicated disable command, so this restores the default
@@ -303,13 +319,21 @@ public:
    * @param connHandle Connection handle of the assistant.
    * @return BTStatus indicating success or error.
    */
-  BTStatus cancelPeriodicSyncReceive(uint16_t connHandle);
+  BTStatus stopPeriodicSyncReceive(uint16_t connHandle);
+
+  /**
+   * @brief Disable PAST receive using a specific connection descriptor.
+   * @param peer Connection descriptor from a client/server callback or
+   *             `BLE.getConnections()`.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus stopPeriodicSyncReceive(const BLEConnInfo &peer);
 
   /**
    * @brief Cancel a pending periodic sync creation.
    * @return BTStatus indicating success or error.
    */
-  BTStatus cancelPeriodicSync();
+  BTStatus cancelPeriodicSyncCreate();
 
   /**
    * @brief Terminate an established periodic sync.

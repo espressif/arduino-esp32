@@ -84,7 +84,7 @@ always cast-free `impl.member`.
   classic service hides its range and emits Service Changed without resetting
   the audio table.
 - **PAST receive.** `BLEScan::receivePeriodicSync()` and
-  `cancelPeriodicSyncReceive()` use NimBLE's periodic-transfer receive API when
+  `stopPeriodicSyncReceive()` use NimBLE's periodic-transfer receive API when
   `BLE_PAST_SUPPORTED` is set.
   They share the retained-handle admission gate with periodic sync creation,
   validate the Core skip/timeout ranges, map invalid parameters, missing ACLs,

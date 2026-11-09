@@ -473,7 +473,7 @@ BTStatus BLEAudioBroadcastSink::stop() {
   }
   BLEScan sc = BLE.getScan();
   if (_impl->syncPending) {
-    (void)sc.cancelPeriodicSync();
+    (void)sc.cancelPeriodicSyncCreate();
     _impl->syncPending = false;
   }
   const uint16_t sh = bleAudioBsinkSyncHandle();

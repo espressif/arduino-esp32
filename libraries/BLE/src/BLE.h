@@ -244,6 +244,58 @@ public:
    */
   BLEClient createClient();
 
+  // --- Connection lookup ---
+
+  /**
+   * @brief Find the connection handle for a connected peer.
+   *
+   * This is the same handle reported by @c BLEClient::getHandle() and
+   * @c BLEConnInfo::getHandle(), and the one connection-scoped APIs take.
+   * Accepts the peer's OTA address (the one reported by
+   * @c BLEConnInfo::getAddress()); NimBLE also matches the resolved identity
+   * address.
+   *
+   * @param peerAddress Peer address.
+   * @return The connection handle, or 0xFFFF if the peer is not connected.
+   */
+  uint16_t getConnHandle(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find every live connection handle for a connected peer.
+   *
+   * A device can be both GATT client and server on the same ACL. On Bluedroid
+   * those roles may report different handles; this returns all of them. On
+   * NimBLE both roles share one ACL handle, which is returned once.
+   *
+   * @param peerAddress Peer address.
+   * @return Live handles in client-before-server order; empty when the peer is
+   *         not connected.
+   */
+  std::vector<uint16_t> getConnHandles(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find every connection descriptor for a connected peer.
+   *
+   * Unlike @ref getConnHandles(), this preserves one entry per role/link even
+   * when the backend reuses the same numeric handle for a GATT client and a
+   * GATT server link. Use `BLEConnInfo::isCentral()` / `isPeripheral()` to pick
+   * the role and `getHandle()` for the native handle.
+   *
+   * @param peerAddress Peer address.
+   * @return Valid descriptors in client-before-server order; empty when the
+   *         peer is not connected.
+   */
+  std::vector<BLEConnInfo> getConnections(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find connection information for a connected peer.
+   *
+   * @param peerAddress Peer address (OTA, or the identity address on NimBLE).
+   * @return A valid BLEConnInfo snapshot, or an invalid one when the peer is
+   *         not connected.
+   */
+  BLEConnInfo getConnInfo(const BTAddress &peerAddress) const;
+
   // --- L2CAP CoC ---
 
   /**

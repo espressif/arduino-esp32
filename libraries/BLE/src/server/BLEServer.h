@@ -255,13 +255,6 @@ public:
   BTStatus disconnect(uint16_t connHandle, uint8_t reason = 0x13);
 
   /**
-   * @brief Initiate a connection to a remote device.
-   * @param address Bluetooth address of the device to connect to.
-   * @return BTStatus indicating success or the error encountered.
-   */
-  BTStatus connect(const BTAddress &address);
-
-  /**
    * @brief Get the negotiated ATT MTU for a specific connection.
    * @param connHandle Connection handle to query.
    * @return The current ATT MTU size in bytes for that connection.

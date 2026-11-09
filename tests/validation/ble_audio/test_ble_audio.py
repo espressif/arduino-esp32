@@ -167,6 +167,9 @@ def _phase_bap_unicast(server, client):
     client.write("PHASE4_GO\n")
 
     ms2 = server.expect(r"\[SERVER\] BapUnicast result received=(\d+)", timeout=120)
+    m_disc = client.expect(r"\[CLIENT\] BapUnicast disconnect ok=([01]) down=([01])", timeout=20)
+    assert int(m_disc.group(1)) == 1, "BLEAudio::disconnect() failed for a live audio link"
+    assert int(m_disc.group(2)) == 1, "BLEAudio::disconnect() did not deliver onDisconnected()"
     mc = client.expect(r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase4 bap_unicast done", timeout=40)
     client.expect_exact("[CLIENT] Phase4 bap_unicast done", timeout=40)

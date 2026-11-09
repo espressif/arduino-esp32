@@ -163,4 +163,25 @@ struct BLEClass::Impl {
   }
 };
 
+/**
+ * @brief Resolve a public connection handle to its peer address (Bluedroid).
+ *
+ * Searches the live client and server connection tables. Accepts the handle
+ * reported by `BLEClient::getHandle()` / `BLEConnInfo::getHandle()` and the
+ * HCI ACL handle as a fallback.
+ */
+bool bluedroidFindPeerAddress(uint16_t connHandle, BTAddress &peerAddress);
+
+/** @brief Find the public handle for a connected peer address (Bluedroid). */
+bool bluedroidFindConnHandle(const BTAddress &peerAddress, uint16_t &connHandle);
+
+/** @brief Collect every live handle for a connected peer address (Bluedroid). */
+void bluedroidFindConnHandles(const BTAddress &peerAddress, std::vector<uint16_t> &handles);
+
+/** @brief Collect one BLEConnInfo per role/link for a connected peer (Bluedroid). */
+void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnInfo> &connections);
+
+/** @brief Snapshot connection info for a connected peer address (Bluedroid). */
+bool bluedroidFindConnInfo(const BTAddress &peerAddress, BLEConnInfo &info);
+
 #endif /* BLE_BLUEDROID */

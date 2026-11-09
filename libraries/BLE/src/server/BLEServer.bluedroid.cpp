@@ -747,22 +747,6 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t /*reason*/) {
   return BTStatus::OK;
 }
 
-// Blocks on connectSync until OPEN_EVT reports the result of esp_ble_gatts_open.
-BTStatus BLEServer::connect(const BTAddress &address) {
-  BLE_CHECK_IMPL(BTStatus::InvalidState);
-  esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
-  impl.connectSync.take();
-  esp_err_t err = esp_ble_gatts_open(impl.gattsIf, bda, true);
-  if (err != ESP_OK) {
-    // Release the sync we just took: no OPEN_EVT will arrive to give() it.
-    impl.connectSync.give(BTStatus::Fail);
-    log_e("Server: esp_ble_gatts_open: %s", esp_err_to_name(err));
-    return BTStatus::Fail;
-  }
-  return impl.connectSync.wait(10000);
-}
-
 BLEIndicationSend bleServerSendIndication(
   BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
 ) {
@@ -1746,14 +1730,6 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       break;
     }
 
-      // ----- connect() blocking -----
-
-    case ESP_GATTS_OPEN_EVT:
-    {
-      impl->connectSync.give(param->open.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
-      break;
-    }
-
     default: break;
   }
 }
@@ -1972,11 +1948,6 @@ BTStatus BLEServer::start() {
 }
 
 BTStatus BLEServer::disconnect(uint16_t, uint8_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::connect(const BTAddress &) {
   log_w("GATT server not supported");
   return BTStatus::NotSupported;
 }

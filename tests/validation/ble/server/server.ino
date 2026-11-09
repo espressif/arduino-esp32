@@ -1277,6 +1277,7 @@ void loop() {
       Serial.printf("[SERVER] BLEStream callback mutation safe=%d\n", (int)bleStreamCallbackSnapshotSafe.load());
       if (bleStream.connected()) {
         Serial.println("[SERVER] BLEStream connected OK");
+        Serial.printf("[SERVER] BLEStream alias isConnected=%d legacy=%d\n", (int)bleStream.isConnected(), (int)bleStream.connected());
         Serial.printf("[SERVER] BLEStream peerCount=%u\n", bleStream.peerCount());
         auto peerList = bleStream.peers();
         Serial.printf("[SERVER] BLEStream peers=%u\n", (unsigned)peerList.size());
@@ -1732,12 +1733,49 @@ void loop() {
       BLEScan pastScan = BLE.getScan();
       BTStatus pastArm = pastScan.receivePeriodicSync(c.getHandle());
       BTStatus pastBogus = pastScan.receivePeriodicSync(0xFFFF);
-      BTStatus pastCancel = pastScan.cancelPeriodicSyncReceive(c.getHandle());
+      BTStatus pastCancel = pastScan.stopPeriodicSyncReceive(c.getHandle());
       Serial.printf(
         "[SERVER] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel
       );
 #else
       Serial.println("[SERVER] Phase16 past supported=0");
+#endif
+
+      // Connection lookup must resolve the peripheral-side handle from the
+      // peer address and include the server link in the multi-role list.
+      uint16_t byAddr = BLE.getConnHandle(c.getAddress());
+      std::vector<uint16_t> byAddrHandles = BLE.getConnHandles(c.getAddress());
+      bool hasSelf = false;
+      for (uint16_t h : byAddrHandles) {
+        if (h == c.getHandle()) {
+          hasSelf = true;
+        }
+      }
+      BLEConnInfo byAddrInfo = BLE.getConnInfo(c.getAddress());
+      bool lookupInfoOk = (bool)byAddrInfo && byAddrInfo.getHandle() == c.getHandle();
+      std::vector<BLEConnInfo> byAddrConns = BLE.getConnections(c.getAddress());
+      bool connsOk = false;
+      for (const auto &ci : byAddrConns) {
+        if (ci.getHandle() == c.getHandle() && ci.isPeripheral()) {
+          connsOk = true;
+        }
+      }
+      BTAddress bogusPeer("00:00:00:00:00:01");
+      bool bogusOk =
+        BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
+        !(bool)BLE.getConnInfo(bogusPeer);
+      Serial.printf(
+        "[SERVER] Phase16 lookup byAddr=%d handles=%u hasSelf=%d info=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == c.getHandle()),
+        (unsigned)byAddrHandles.size(), (int)hasSelf, (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
+      );
+
+#if BLE_PAST_SUPPORTED
+      BLEScan infoScan = BLE.getScan();
+      BTStatus pastInfoArm = infoScan.receivePeriodicSync(byAddrInfo);
+      BTStatus pastInfoStop = infoScan.stopPeriodicSyncReceive(byAddrInfo);
+      Serial.printf("[SERVER] Phase16 pastInfo arm=%d stop=%d\n", (int)(bool)pastInfoArm, (int)(bool)pastInfoStop);
+#else
+      Serial.println("[SERVER] Phase16 pastInfo supported=0");
 #endif
     }
     Serial.println("[SERVER] Phase16 done");

@@ -122,7 +122,15 @@ public:
    * @note In server mode multiple centrals may be connected simultaneously;
    *       this returns true while any of them remain connected. See @ref peerCount.
    */
-  bool connected() const;
+  bool isConnected() const;
+
+  /**
+   * @brief Deprecated alias for isConnected().
+   * @return true if one or more peers are connected.
+   */
+  bool connected() const {
+    return isConnected();
+  }
 
   /**
    * @brief Number of currently connected peers.

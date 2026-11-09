@@ -360,6 +360,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | `pServer->getConnectedCount()` | `server.getConnectedCount()` | |
 | N/A | `server.getConnections()` | New: returns `vector<BLEConnInfo>` |
 | N/A | `server.getConnInfo(connHandle)` | New: returns refreshed `BLEConnInfo` for `connHandle` |
+| N/A | `BLE.getConnHandle(peerAddr)` / `BLE.getConnections(peerAddr)` | New: find the live handle(s) and role descriptors for a connected peer |
 | `pServer->disconnect(connId)` | `server.disconnect(connHandle)` | |
 | `pServer->advertiseOnDisconnect(bool)` | `server.advertiseOnDisconnect(bool)` | |
 | `pServer->getPeerMTU(connId)` | `server.getPeerMTU(connHandle)` | |
@@ -561,7 +562,7 @@ Note:
 | N/A | `scan.startExtended(dur, coded, uncoded)` | New: BLE5 extended scan |
 | N/A | `scan.stopExtended()` | New: stop BLE5 extended scan |
 | N/A | `scan.createPeriodicSync(addr, sid)` | New: BLE5 periodic sync |
-| N/A | `scan.cancelPeriodicSync()` | New: cancel pending sync |
+| N/A | `scan.cancelPeriodicSyncCreate()` | New: cancel pending sync |
 | N/A | `scan.terminatePeriodicSync(handle)` | New: terminate established sync |
 | N/A | `scan.onPeriodicSync(lambda)` | New |
 | N/A | `scan.onPeriodicReport(lambda)` | New |
@@ -1170,7 +1171,7 @@ These features are new and were not available in v3.x:
 | Identity (RPA resolved) callback | `server.onIdentity(lambda)`, `client.onIdentity(lambda)` |
 | Stack identification | `BLE.getStack()`, `BLE.getStackName()` |
 | Hosted BLE (ESP32-P4) | `BLE.setPins(...)`, `BLE.isHostedBLE()` |
-| Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSync()`, `scan.terminatePeriodicSync(handle)`; PAST receive (both stacks): `scan.receivePeriodicSync(connHandle)`, `scan.cancelPeriodicSyncReceive(connHandle)` — take the handle from `BLEClient::getHandle()` or `BLEConnInfo::getHandle()` |
+| Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSyncCreate()`, `scan.terminatePeriodicSync(handle)`; PAST receive (both stacks): `scan.receivePeriodicSync(connHandle)`, `scan.stopPeriodicSyncReceive(connHandle)` — take the handle from `BLEClient::getHandle()` or `BLEConnInfo::getHandle()` |
 | `BLEConnInfo` connection descriptor | Stack-agnostic connection info in all callbacks |
 | L2CAP CoC channels | `BLE.createL2CAPServer(psm, mtu)`, `BLE.connectL2CAP(connHandle, psm, mtu)` — see `examples/L2CAP_Server` + `examples/L2CAP_Client` |
 | Isochronous channels (raw CIS / BIS) | `BLEIso::begin()`, then `BLEIso::connectCis(connHandle, qos)` / `BLEIso::listenCis(qos)` (CIS, optionally bidirectional via `returnSduSize`) or `BLEIso::createBig(advHandle, qos)` / `BLEIso::syncBig(bisIndex, qos)` (BIS). Channels: `send(sdu, len)` with automatic sequence numbers, `onReceive()`, `disconnect()`. See `examples/ISO_CisCentral` + `ISO_CisPeripheral` and `ISO_BigBroadcaster` + `ISO_BigReceiver`. |

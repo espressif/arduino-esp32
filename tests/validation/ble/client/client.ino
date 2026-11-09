@@ -1472,6 +1472,7 @@ void setup() {
     // event-order trace is reset here too so ORDER captures exactly this
     // pairing lifecycle (CONNECT -> MTU -> IDENTITY) for cross-stack parity.
     clientIdentityCount = 0;
+    clientMtuChanged = false;
     clientOrderN = 0;
     client = BLE.createClient();
     installClientCallbacks(client);
@@ -1481,6 +1482,24 @@ void setup() {
     } else {
       Serial.println("[CLIENT] Phase10 reconnected for pairing");
     }
+    // Exercise the explicit security procedure rather than relying on the
+    // encrypted characteristic to trigger pairing. Wait for the MTU exchange
+    // first so the CONNECT -> MTU -> IDENTITY order assertion stays valid.
+    unsigned long phase10MtuWait = millis() + 5000;
+    while (!clientMtuChanged && millis() < phase10MtuWait) {
+      checkSerial();
+      delay(20);
+    }
+    BLESecurity secStart = BLE.getSecurity();
+    BLEConnInfo secInfo = client.getConnInfo();
+    BTStatus secLive = secStart.startSecurity(secInfo);
+    unsigned long encWait = millis() + 15000;
+    while (!client.getConnInfo().isEncrypted() && millis() < encWait) {
+      checkSerial();
+      delay(50);
+    }
+    bool secEncrypted = client.getConnInfo().isEncrypted();
+    BTStatus secBogus = secStart.startSecurity(0xFFFF);
     svc = client.getService(serviceUUID);
     if (!svc) {
       Serial.println("[CLIENT] Service not found after phase10 reconnect");
@@ -1497,6 +1516,9 @@ void setup() {
     // Let any trailing identity callbacks settle, then report the dedupe count
     // and the recorded event order for cross-stack parity assertions.
     delay(500);
+    Serial.printf(
+      "[CLIENT] Phase10 startSecurity live=%d enc=%d bogus=%d\n", (int)(bool)secLive, (int)secEncrypted, (int)(secBogus == BTStatus::NotConnected)
+    );
     Serial.printf("[CLIENT] Phase10 onIdentity count=%d\n", clientIdentityCount);
     reportClientOrder("Phase10");
   }
@@ -2152,7 +2174,7 @@ void setup() {
       BLEScan pastScan = BLE.getScan();
       BTStatus pastArm = pastScan.receivePeriodicSync(pc.getHandle());
       BTStatus pastBogus = pastScan.receivePeriodicSync(0xFFFF);
-      BTStatus pastCancel = pastScan.cancelPeriodicSyncReceive(pc.getHandle());
+      BTStatus pastCancel = pastScan.stopPeriodicSyncReceive(pc.getHandle());
       Serial.printf(
         "[CLIENT] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel
       );
@@ -2160,7 +2182,44 @@ void setup() {
       Serial.println("[CLIENT] Phase16 past supported=0");
 #endif
 
+      // Connection lookup: address -> handle(s) -> info, with a bogus address
+      // rejected and a stale entry removed after disconnect.
+      BTAddress lookupPeer = pc.getPeerAddress();
+      uint16_t byAddr = BLE.getConnHandle(lookupPeer);
+      std::vector<uint16_t> byAddrHandles = BLE.getConnHandles(lookupPeer);
+      BLEConnInfo byAddrInfo = BLE.getConnInfo(lookupPeer);
+      bool lookupInfoOk = (bool)byAddrInfo && byAddrInfo.getHandle() == pc.getHandle();
+      std::vector<BLEConnInfo> byAddrConns = BLE.getConnections(lookupPeer);
+      bool connsOk = false;
+      for (const auto &ci : byAddrConns) {
+        if (ci.getHandle() == pc.getHandle() && ci.isCentral()) {
+          connsOk = true;
+        }
+      }
+      BTAddress bogusPeer("00:00:00:00:00:01");
+      bool bogusOk =
+        BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
+        !(bool)BLE.getConnInfo(bogusPeer);
+      Serial.printf(
+        "[CLIENT] Phase16 lookup byAddr=%d handles=%u info=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == pc.getHandle()),
+        (unsigned)byAddrHandles.size(), (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
+      );
+
+#if BLE_PAST_SUPPORTED
+      // Role-aware PAST overload: uses the descriptor address, so a client/
+      // server handle collision cannot select the wrong link.
+      BLEScan infoScan = BLE.getScan();
+      BTStatus pastInfoArm = infoScan.receivePeriodicSync(byAddrInfo);
+      BTStatus pastInfoStop = infoScan.stopPeriodicSyncReceive(byAddrInfo);
+      Serial.printf("[CLIENT] Phase16 pastInfo arm=%d stop=%d\n", (int)(bool)pastInfoArm, (int)(bool)pastInfoStop);
+#else
+      Serial.println("[CLIENT] Phase16 pastInfo supported=0");
+#endif
+
       pc.disconnect();
+      delay(1000);
+      bool staleGone = BLE.getConnHandle(lookupPeer) == 0xFFFF && BLE.getConnHandles(lookupPeer).empty();
+      Serial.printf("[CLIENT] Phase16 lookup staleGone=%d\n", (int)staleGone);
       BLE.setMTU(512);
       delay(1000);
     }

@@ -944,7 +944,14 @@ BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, u
 #endif
 }
 
-BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t connHandle) {
+BTStatus BLEScan::receivePeriodicSync(const BLEConnInfo &peer, uint16_t skipCount, uint16_t timeoutMs) {
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  return receivePeriodicSync(peer.getHandle(), skipCount, timeoutMs);
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t connHandle) {
 #if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard publisher(impl.nativeAdmission);
@@ -962,12 +969,19 @@ BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t connHandle) {
   return status;
 #else
   (void)connHandle;
-  log_w("Scan: cancelPeriodicSyncReceive not supported (PAST unavailable)");
+  log_w("Scan: stopPeriodicSyncReceive not supported (PAST unavailable)");
   return BTStatus::NotSupported;
 #endif
 }
 
-BTStatus BLEScan::cancelPeriodicSync() {
+BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &peer) {
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  return stopPeriodicSyncReceive(peer.getHandle());
+}
+
+BTStatus BLEScan::cancelPeriodicSyncCreate() {
 #if BLE5_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard publisher(impl.nativeAdmission);
@@ -976,12 +990,12 @@ BTStatus BLEScan::cancelPeriodicSync() {
   }
   int rc = ble_gap_periodic_adv_sync_create_cancel();
   if (rc != 0 && rc != BLE_HS_EALREADY) {
-    log_e("Scan: cancelPeriodicSync failed rc=%d", rc);
+    log_e("Scan: cancelPeriodicSyncCreate failed rc=%d", rc);
     return BTStatus::Fail;
   }
   return BTStatus::OK;
 #else
-  log_w("Scan: cancelPeriodicSync not supported (BLE 5.0 unavailable)");
+  log_w("Scan: cancelPeriodicSyncCreate not supported (BLE 5.0 unavailable)");
   return BTStatus::NotSupported;
 #endif
 }
@@ -1130,12 +1144,17 @@ BTStatus BLEScan::receivePeriodicSync(uint16_t, uint16_t, uint16_t) {
   return BTStatus::NotSupported;
 }
 
-BTStatus BLEScan::cancelPeriodicSyncReceive(uint16_t) {
+BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t) {
   log_w("Scanning not supported");
   return BTStatus::NotSupported;
 }
 
-BTStatus BLEScan::cancelPeriodicSync() {
+BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::cancelPeriodicSyncCreate() {
   log_w("Scanning not supported");
   return BTStatus::NotSupported;
 }

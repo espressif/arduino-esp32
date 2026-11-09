@@ -252,7 +252,10 @@ Central links to audio peers are opened with `audio.connect(address)`, not
 engine's GATT client, and on both hosts the engine then encrypts the link (with
 the `BLESecurity` settings), exchanges the MTU and discovers the peer.
 `audio.onLinkReady(conn)` fires when that discovery finished, for links opened
-by either side; client roles may use `conn` from then on.
+by either side; client roles may use `conn` from then on. `audio.disconnect(conn)`
+closes one audio ACL (whether the engine or the sketch opened it) and
+`onDisconnected(conn)` follows; use it instead of `BLE.end()` when only one
+peer should go away.
 
 Discovery is gated on the security outcome, not on the MTU alone: PACS, ASCS
 and the other LE Audio services carry encrypted-only permissions on Bluedroid

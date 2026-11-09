@@ -39,6 +39,7 @@
 
 #include "BLE.h"
 
+#include "BLE.bluedroid.h"
 #include "security/BLESecurity.bluedroid.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLESync.h"
@@ -504,9 +505,44 @@ std::vector<BTAddress> BLESecurity::getBondedDevices() const {
 }
 
 // connHandle is unused on the Bluedroid path; security parameters are applied globally to the stack rather than per connection.
-BTStatus BLESecurity::startSecurity(uint16_t /*connHandle*/) {
+BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   impl.applySecurityParams();
+
+  BTAddress peerAddress;
+  if (!bluedroidFindPeerAddress(connHandle, peerAddress)) {
+    log_w("Security: startSecurity handle=%u is not connected", (unsigned)connHandle);
+    return BTStatus::NotConnected;
+  }
+
+  esp_bd_addr_t bda;
+  peerAddress.toEspBdAddr(bda);
+  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
+  if (err != ESP_OK) {
+    log_e("Security: esp_ble_set_encryption handle=%u: %s", (unsigned)connHandle, esp_err_to_name(err));
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+}
+
+BTStatus BLESecurity::startSecurity(const BLEConnInfo &peer) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  impl.applySecurityParams();
+
+  BTAddress peerAddress = peer.getAddress();
+  if (!peerAddress) {
+    return BTStatus::NotConnected;
+  }
+  esp_bd_addr_t bda;
+  peerAddress.toEspBdAddr(bda);
+  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
+  if (err != ESP_OK) {
+    log_e("Security: esp_ble_set_encryption address=%s: %s", peerAddress.toString().c_str(), esp_err_to_name(err));
+    return BTStatus::Fail;
+  }
   return BTStatus::OK;
 }
 
@@ -598,6 +634,11 @@ std::vector<BTAddress> BLESecurity::getBondedDevices() const {
 
 BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
   (void)connHandle;
+  log_w("SMP not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLESecurity::startSecurity(const BLEConnInfo &) {
   log_w("SMP not supported");
   return BTStatus::NotSupported;
 }
