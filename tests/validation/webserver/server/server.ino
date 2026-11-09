@@ -20,7 +20,7 @@
 #include <uri/UriRegex.h>
 #include "esp_system.h"
 
-#define SERVER_PORT 80
+#define SERVER_PORT         80
 #define DERIVED_SERVER_PORT 8081
 
 static WebServer server(SERVER_PORT);

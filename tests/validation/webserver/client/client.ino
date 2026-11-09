@@ -15,9 +15,9 @@
 #include <WiFiClient.h>
 #include <MD5Builder.h>
 
-#define SERVER_PORT  80
+#define SERVER_PORT         80
 #define DERIVED_SERVER_PORT 8081
-#define TEST_TIMEOUT 5000
+#define TEST_TIMEOUT        5000
 // Time to let the server task settle / recover after each robustness probe.
 #define SETTLE_MS 1000
 
