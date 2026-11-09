@@ -21,7 +21,7 @@
  */
 
 #include "core/BLEGuards.h"
-#include "core/BLEAddress.h"
+#include "core/BLEAddressUtil.h"
 #if BLE_BLUEDROID
 
 #include "BLE.h"
@@ -563,7 +563,7 @@ BTAddress BLEClass::getAddress() const {
   if (!addr) {
     return BTAddress();
   }
-  return BLEAddress::fromNative(addr, BTAddress::Type::Public);
+  return BLEAddressUtil::fromNative(addr, BTAddress::Type::Public);
 }
 
 // Configures the controller-side identity backing BTAddress::Type:
@@ -704,8 +704,8 @@ bool BLEClass::getPeerIRK(const BTAddress &peer, uint8_t irk[16]) const {
       continue;
     }
 
-    BTAddress bondAddr = BLEAddress::fromNative(devList[i].bd_addr, BTAddress::Type::Public);
-    BTAddress identityAddr = BLEAddress::fromNative(devList[i].bond_key.pid_key.static_addr, BTAddress::Type::Public);
+    BTAddress bondAddr = BLEAddressUtil::fromNative(devList[i].bd_addr, BTAddress::Type::Public);
+    BTAddress identityAddr = BLEAddressUtil::fromNative(devList[i].bond_key.pid_key.static_addr, BTAddress::Type::Public);
 
     if (bondAddr == peer || identityAddr == peer) {
       bool nonzero = false;
@@ -772,7 +772,7 @@ BTStatus BLEClass::whiteListAdd(const BTAddress &address) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  BLEAddress::toNative(address, bda);
+  BLEAddressUtil::toNative(address, bda);
   _impl->whitelistSync.take();
   esp_err_t err = esp_ble_gap_update_whitelist(true, bda, static_cast<esp_ble_wl_addr_type_t>(address.type()));
   if (err != ESP_OK) {
@@ -798,7 +798,7 @@ BTStatus BLEClass::whiteListRemove(const BTAddress &address) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  BLEAddress::toNative(address, bda);
+  BLEAddressUtil::toNative(address, bda);
   _impl->whitelistSync.take();
   esp_err_t err = esp_ble_gap_update_whitelist(false, bda, static_cast<esp_ble_wl_addr_type_t>(address.type()));
   if (err != ESP_OK) {

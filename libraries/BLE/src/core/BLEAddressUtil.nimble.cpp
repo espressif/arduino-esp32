@@ -15,20 +15,22 @@
  */
 
 #include "core/BLEGuards.h"
-#if BLE_BLUEDROID
+#if BLE_NIMBLE
 
-#include "core/BLEAddress.h"
+#include "core/BLEAddressUtil.h"
 
-namespace BLEAddress {
+#include <string.h>
+
+namespace BLEAddressUtil {
 
 void toNative(const BTAddress &address, uint8_t out[6]) {
-  address.toEspBdAddr(out);
+  memcpy(out, address.data(), 6);
 }
 
 BTAddress fromNative(const uint8_t in[6], BTAddress::Type type) {
-  return BTAddress::fromEspBdAddr(in, type);
+  return BTAddress(in, type);
 }
 
-}  // namespace BLEAddress
+}  // namespace BLEAddressUtil
 
-#endif /* BLE_BLUEDROID */
+#endif /* BLE_NIMBLE */

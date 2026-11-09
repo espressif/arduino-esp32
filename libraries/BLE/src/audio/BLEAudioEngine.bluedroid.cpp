@@ -15,7 +15,7 @@
  */
 
 #include "core/BLEGuards.h"
-#include "core/BLEAddress.h"
+#include "core/BLEAddressUtil.h"
 
 #if BLE_BLUEDROID && BLE_AUDIO_SUPPORTED
 
@@ -107,7 +107,7 @@ extern "C" int bleAudioEngineSendPast(uint8_t adv, uint16_t conn, uint16_t servi
   }
   BTAddress peer(peer_addr, static_cast<BTAddress::Type>(peer_addr_type));
   uint8_t native[6];
-  BLEAddress::toNative(peer, native);
+  BLEAddressUtil::toNative(peer, native);
   esp_err_t err = esp_ble_gap_periodic_adv_set_info_trans(native, service_data, adv);
   return err == ESP_OK ? 0 : static_cast<int>(err);
 #else
@@ -127,7 +127,7 @@ extern "C" int bleAudioEngineSendPastSync(uint16_t sync_handle, uint16_t conn, u
   }
   BTAddress peer(peer_addr, static_cast<BTAddress::Type>(peer_addr_type));
   uint8_t native[6];
-  BLEAddress::toNative(peer, native);
+  BLEAddressUtil::toNative(peer, native);
   esp_err_t err = esp_ble_gap_periodic_adv_sync_trans(native, service_data, sync_handle);
   return err == ESP_OK ? 0 : static_cast<int>(err);
 #else
@@ -150,7 +150,7 @@ extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
   }
 
   esp_bd_addr_t bda;
-  BLEAddress::toNative(peer, bda);
+  BLEAddressUtil::toNative(peer, bda);
   esp_err_t err = esp_ble_gap_disconnect(bda);
   if (err == ESP_OK) {
     return 0;

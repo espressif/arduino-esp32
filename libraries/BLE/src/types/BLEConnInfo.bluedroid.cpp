@@ -23,7 +23,7 @@
 #if BLE_BLUEDROID
 
 #include "types/BLEConnInfo.bluedroid.h"
-#include "core/BLEAddress.h"
+#include "core/BLEAddressUtil.h"
 
 #include <esp_gap_ble_api.h>
 
@@ -42,7 +42,7 @@ bool authModeIsBonded(uint8_t authMode) {
 }  // namespace
 
 BLEConnInfo BLEConnInfoImpl::make(uint16_t connId, const uint8_t bda[6], uint16_t mtu, bool central, BTAddress::Type addrType) {
-  return make(connId, BLEAddress::fromNative(bda, addrType), mtu, central);
+  return make(connId, BLEAddressUtil::fromNative(bda, addrType), mtu, central);
 }
 
 BLEConnInfo BLEConnInfoImpl::make(uint16_t connId, const BTAddress &address, uint16_t mtu, bool central) {

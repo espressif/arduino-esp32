@@ -27,7 +27,7 @@
  * instead of spelling `toEspBdAddr()` / `data()` at every call site.
  *
  * The declarations are stack-agnostic; the active backend's implementation is
- * selected by the build (BLEAddress.nimble.cpp / BLEAddress.bluedroid.cpp).
+ * selected by the build (BLEAddressUtil.nimble.cpp / BLEAddressUtil.bluedroid.cpp).
  */
 
 #include "core/BLEGuards.h"
@@ -35,7 +35,7 @@
 
 #include "BTAddress.h"
 
-namespace BLEAddress {
+namespace BLEAddressUtil {
 
 /**
  * @brief Write @p address in the active BLE backend's native byte order.
@@ -51,6 +51,6 @@ void toNative(const BTAddress &address, uint8_t out[6]);
  */
 BTAddress fromNative(const uint8_t in[6], BTAddress::Type type = BTAddress::Type::Public);
 
-}  // namespace BLEAddress
+}  // namespace BLEAddressUtil
 
 #endif /* BLE_ENABLED */
