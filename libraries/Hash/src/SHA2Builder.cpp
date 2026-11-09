@@ -65,8 +65,30 @@ static const uint64_t sha512_k[80] = {0x428a2f98d728ae22ULL, 0x7137449123ef65cdU
 #define BYTESWAP32(x) ((((x) & 0xFF000000) >> 24) | (((x) & 0x00FF0000) >> 8) | (((x) & 0x0000FF00) << 8) | (((x) & 0x000000FF) << 24))
 #define BYTESWAP64(x) (((uint64_t)BYTESWAP32((uint32_t)((x) >> 32))) | (((uint64_t)BYTESWAP32((uint32_t)(x))) << 32))
 
-// Constructor
-SHA2Builder::SHA2Builder(size_t hash_size) : hash_size(hash_size), buffer_size(0), finalized(false), total_length(0) {
+// Select the compressor and initial state for the generic constructor.
+SHA2Builder::BlockFunction SHA2Builder::blockForSize(size_t hash_size) {
+  return (hash_size == SHA2_384_HASH_SIZE || hash_size == SHA2_512_HASH_SIZE) ? &SHA2Builder::process_block_sha512 : &SHA2Builder::process_block_sha256;
+}
+
+SHA2Builder::InitFunction SHA2Builder::initForSize(size_t hash_size) {
+  switch (hash_size) {
+    case SHA2_224_HASH_SIZE: return &SHA2Builder::init_sha224;
+    case SHA2_256_HASH_SIZE: return &SHA2Builder::init_sha256;
+    case SHA2_384_HASH_SIZE: return &SHA2Builder::init_sha384;
+    case SHA2_512_HASH_SIZE: return &SHA2Builder::init_sha512;
+    default:                 return &SHA2Builder::init_sha256;
+  }
+}
+
+// Generic constructor: selects the variant from the requested hash size.
+// This is the compatibility path for code that instantiates SHA2Builder
+// directly. It is the only place that names every variant, so a build that
+// only creates SHA-224/256 builders can drop the SHA-384/512 code.
+SHA2Builder::SHA2Builder(size_t hash_size) : SHA2Builder(hash_size, blockForSize(hash_size), initForSize(hash_size)) {}
+
+// Constructor used by the concrete builder classes.
+SHA2Builder::SHA2Builder(size_t hash_size, BlockFunction block_fn, InitFunction init_fn)
+  : block_size(0), hash_size(hash_size), buffer_size(0), finalized(false), is_sha512(false), total_length(0), block_fn(block_fn), init_fn(init_fn) {
   // Determine block size and algorithm family
   if (hash_size == SHA2_224_HASH_SIZE || hash_size == SHA2_256_HASH_SIZE) {
     block_size = SHA2_256_BLOCK_SIZE;
@@ -81,6 +103,50 @@ SHA2Builder::SHA2Builder(size_t hash_size) : hash_size(hash_size), buffer_size(0
   }
 }
 
+void SHA2Builder::init_sha224() {
+  state_32[0] = 0xc1059ed8;
+  state_32[1] = 0x367cd507;
+  state_32[2] = 0x3070dd17;
+  state_32[3] = 0xf70e5939;
+  state_32[4] = 0xffc00b31;
+  state_32[5] = 0x68581511;
+  state_32[6] = 0x64f98fa7;
+  state_32[7] = 0xbefa4fa4;
+}
+
+void SHA2Builder::init_sha256() {
+  state_32[0] = 0x6a09e667;
+  state_32[1] = 0xbb67ae85;
+  state_32[2] = 0x3c6ef372;
+  state_32[3] = 0xa54ff53a;
+  state_32[4] = 0x510e527f;
+  state_32[5] = 0x9b05688c;
+  state_32[6] = 0x1f83d9ab;
+  state_32[7] = 0x5be0cd19;
+}
+
+void SHA2Builder::init_sha384() {
+  state_64[0] = 0xcbbb9d5dc1059ed8ULL;
+  state_64[1] = 0x629a292a367cd507ULL;
+  state_64[2] = 0x9159015a3070dd17ULL;
+  state_64[3] = 0x152fecd8f70e5939ULL;
+  state_64[4] = 0x67332667ffc00b31ULL;
+  state_64[5] = 0x8eb44a8768581511ULL;
+  state_64[6] = 0xdb0c2e0d64f98fa7ULL;
+  state_64[7] = 0x47b5481dbefa4fa4ULL;
+}
+
+void SHA2Builder::init_sha512() {
+  state_64[0] = 0x6a09e667f3bcc908ULL;
+  state_64[1] = 0xbb67ae8584caa73bULL;
+  state_64[2] = 0x3c6ef372fe94f82bULL;
+  state_64[3] = 0xa54ff53a5f1d36f1ULL;
+  state_64[4] = 0x510e527fade682d1ULL;
+  state_64[5] = 0x9b05688c2b3e6c1fULL;
+  state_64[6] = 0x1f83d9abfb41bd6bULL;
+  state_64[7] = 0x5be0cd19137e2179ULL;
+}
+
 // Initialize the hash computation
 void SHA2Builder::begin() {
   // Clear the state and buffer
@@ -91,54 +157,8 @@ void SHA2Builder::begin() {
   finalized = false;
   total_length = 0;
 
-  // Initialize state based on algorithm
-  if (!is_sha512) {
-    // SHA-224/256 initial values
-    if (hash_size == SHA2_224_HASH_SIZE) {
-      // SHA-224 initial values
-      state_32[0] = 0xc1059ed8;
-      state_32[1] = 0x367cd507;
-      state_32[2] = 0x3070dd17;
-      state_32[3] = 0xf70e5939;
-      state_32[4] = 0xffc00b31;
-      state_32[5] = 0x68581511;
-      state_32[6] = 0x64f98fa7;
-      state_32[7] = 0xbefa4fa4;
-    } else {
-      // SHA-256 initial values
-      state_32[0] = 0x6a09e667;
-      state_32[1] = 0xbb67ae85;
-      state_32[2] = 0x3c6ef372;
-      state_32[3] = 0xa54ff53a;
-      state_32[4] = 0x510e527f;
-      state_32[5] = 0x9b05688c;
-      state_32[6] = 0x1f83d9ab;
-      state_32[7] = 0x5be0cd19;
-    }
-  } else {
-    // SHA-384/512 initial values
-    if (hash_size == SHA2_384_HASH_SIZE) {
-      // SHA-384 initial values
-      state_64[0] = 0xcbbb9d5dc1059ed8ULL;
-      state_64[1] = 0x629a292a367cd507ULL;
-      state_64[2] = 0x9159015a3070dd17ULL;
-      state_64[3] = 0x152fecd8f70e5939ULL;
-      state_64[4] = 0x67332667ffc00b31ULL;
-      state_64[5] = 0x8eb44a8768581511ULL;
-      state_64[6] = 0xdb0c2e0d64f98fa7ULL;
-      state_64[7] = 0x47b5481dbefa4fa4ULL;
-    } else {
-      // SHA-512 initial values
-      state_64[0] = 0x6a09e667f3bcc908ULL;
-      state_64[1] = 0xbb67ae8584caa73bULL;
-      state_64[2] = 0x3c6ef372fe94f82bULL;
-      state_64[3] = 0xa54ff53a5f1d36f1ULL;
-      state_64[4] = 0x510e527fade682d1ULL;
-      state_64[5] = 0x9b05688c2b3e6c1fULL;
-      state_64[6] = 0x1f83d9abfb41bd6bULL;
-      state_64[7] = 0x5be0cd19137e2179ULL;
-    }
-  }
+  // Apply the initial state for this variant
+  (this->*init_fn)();
 }
 
 // Process a block for SHA-256
@@ -256,22 +276,14 @@ void SHA2Builder::add(const uint8_t *data, size_t len) {
     offset += to_copy;
 
     if (buffer_size == block_size) {
-      if (is_sha512) {
-        process_block_sha512(buffer);
-      } else {
-        process_block_sha256(buffer);
-      }
+      (this->*block_fn)(buffer);
       buffer_size = 0;
     }
   }
 
   // Process full blocks
   while (offset + block_size <= len) {
-    if (is_sha512) {
-      process_block_sha512(data + offset);
-    } else {
-      process_block_sha256(data + offset);
-    }
+    (this->*block_fn)(data + offset);
     offset += block_size;
   }
 
@@ -336,11 +348,7 @@ void SHA2Builder::pad() {
     if (buffer_size < block_size) {
       buffer[buffer_size++] = 0x00;
     } else {
-      if (is_sha512) {
-        process_block_sha512(buffer);
-      } else {
-        process_block_sha256(buffer);
-      }
+      (this->*block_fn)(buffer);
       buffer_size = 0;
     }
   }
@@ -378,11 +386,7 @@ void SHA2Builder::calculate() {
   pad();
 
   // Process the final block
-  if (is_sha512) {
-    process_block_sha512(buffer);
-  } else {
-    process_block_sha256(buffer);
-  }
+  (this->*block_fn)(buffer);
 
   // Extract bytes from the state
   if (is_sha512) {

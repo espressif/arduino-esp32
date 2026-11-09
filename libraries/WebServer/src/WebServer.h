@@ -107,6 +107,15 @@ enum HTTPAuthMethod {
 #define WEBSERVER_DIGEST_NONCE_TTL 300000  // ms a signed digest nonce stays valid for any client. 0 disables expiry
 #endif
 
+// Set to 0 to compile Digest authentication out of the library (Basic and
+// custom schemes keep working). This saves the MD5/SHA-2/HMAC code that a
+// Basic-only application would otherwise link because Basic and Digest share
+// the same entry points. Digest requests are rejected, and a Digest challenge
+// is refused rather than silently downgraded to Basic.
+#ifndef WEBSERVER_DIGEST_AUTH
+#define WEBSERVER_DIGEST_AUTH 1
+#endif
+
 #define CONTENT_LENGTH_UNKNOWN ((size_t) - 1)
 #define CONTENT_LENGTH_NOT_SET ((size_t) - 2)
 
@@ -329,11 +338,13 @@ protected:
 
   void _streamFileCore(const size_t fileSize, const String &fileName, const String &contentType, const int code = 200);
 
+#if WEBSERVER_DIGEST_AUTH
   void _ensureDigestAuthMaterial();
   String _makeDigestNonce();
   bool _isDigestNonceValid(const String &nonce);
   // for extracting Auth parameters
   String _extractParam(String &authReq, const String &param, const char delimit = '"');
+#endif
 
   void _clearResponseHeaders();
   void _clearRequestHeaders();
@@ -379,10 +390,12 @@ protected:
   String _hostHeader;
   bool _chunked = false;
 
+#if WEBSERVER_DIGEST_AUTH
   uint8_t _digestSecret[32] = {};
   bool _digestSecretReady = false;
   bool _digestNonceStale = false;
   String _sopaque;
+#endif
   String _srealm;  // Store the Auth realm between Calls
 
   int _responseHeaderCount = 0;

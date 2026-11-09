@@ -12,6 +12,10 @@ on:
         required: false
         type: string
         default: ""
+    secrets:
+      # What this workflow reads when called. A direct run takes it from the repository.
+      IDF_COMPONENT_API_TOKEN:
+        required: false
   workflow_dispatch:
     inputs:
       tag:
@@ -48,6 +52,7 @@ jobs:
       # force-moved by rollback. git_ref, if set, is an extra SHA/tag check.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: refs/tags/${{ env.RELEASE_TAG }}
           submodules: "recursive"
 

@@ -62,7 +62,7 @@ The checks above introduce bounds on request size and shape. These cases pin dow
 | `long_uri` | A ~900 byte query string is served normally, while an over-long request-target is answered with `414` instead of a dropped connection. |
 | `regex_route` | A `UriRegex` route still matches a normal-length path, including one with nested quantifiers. |
 
-The limits are compile-time configurable: `WEBSERVER_MAX_URI_LEN`, `WEBSERVER_MAX_QUERY_ARGS`, `WEBSERVER_MAX_LINE_LEN`, `WEBSERVER_MAX_POST_ARG_LEN`, `WEBSERVER_MAX_MULTIPART_SKIP_LINES`, `WEBSERVER_MAX_LINE_WAIT`, `WEBSERVER_MAX_HEADER_WAIT`, `WEBSERVER_DIGEST_NONCE_TTL`, `WEBSERVER_MAX_REGEX_URI_LEN` and `WEBSERVER_MAX_BACKREF_REGEX_URI_LEN`.
+The limits are compile-time configurable: `WEBSERVER_MAX_URI_LEN`, `WEBSERVER_MAX_QUERY_ARGS`, `WEBSERVER_MAX_LINE_LEN`, `WEBSERVER_MAX_POST_ARG_LEN`, `WEBSERVER_MAX_MULTIPART_SKIP_LINES`, `WEBSERVER_MAX_LINE_WAIT`, `WEBSERVER_MAX_HEADER_WAIT`, `WEBSERVER_DIGEST_NONCE_TTL`, `WEBSERVER_MAX_REGEX_URI_LEN` and `WEBSERVER_MAX_BACKREF_REGEX_URI_LEN`. Digest authentication itself can be removed from the build with `WEBSERVER_DIGEST_AUTH=0`; the default is `1`.
 
 ## Requirements
 
