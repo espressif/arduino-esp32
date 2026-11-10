@@ -349,6 +349,10 @@ BLEAudioRecorder &BLEAudioRecorder::setPcmSource(BLEAudioPcmSource source) {
   return *this;
 }
 
+BTStatus BLEAudioRecorder::attach(BLEAudioStream stream) {
+  return attach(stream, BLEAudioStream());
+}
+
 BTStatus BLEAudioRecorder::attach(BLEAudioStream stream, BLEAudioStream right) {
   if (!*this) {
     return BTStatus::InvalidState;
@@ -358,7 +362,7 @@ BTStatus BLEAudioRecorder::attach(BLEAudioStream stream, BLEAudioStream right) {
   return _impl->attach(stream, right, BLEAudioStream::Direction::Tx, tap);
 }
 
-BTStatus BLEAudioRecorder::start() {
+BTStatus BLEAudioRecorder::startCapture() {
   if (!*this) {
     return BTStatus::InvalidState;
   }
@@ -374,7 +378,7 @@ BTStatus BLEAudioRecorder::start() {
   return _impl->start("ble_lc3_rec");
 }
 
-void BLEAudioRecorder::stop() {
+void BLEAudioRecorder::stopCapture() {
   if (_impl) {
     _impl->stop();
   }

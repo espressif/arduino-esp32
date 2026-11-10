@@ -659,7 +659,7 @@ void loop() {
           // the ASE; the player accepts it before that and waits for Streaming.
           BTStatus pb = player.begin();
           BTStatus pa = pb ? player.attach(us.stream(0)) : pb;
-          BTStatus ps = pa ? player.start() : pa;
+          BTStatus ps = pa ? player.startPlayback() : pa;
           Serial.printf("[SERVER] Lc3Loopback player: %s\n", ps.toString());
           if (ps) {
             BLEAdvertising adv = BLE.getAdvertising();

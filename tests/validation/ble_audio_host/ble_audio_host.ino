@@ -483,14 +483,14 @@ static void phaseUnicastAudio() {
       Serial.printf("[DUT] ASE configured dir=%s rate=%lu octets=%u\n", rx ? "sink" : "source", (unsigned long)c.samplingRateHz, (unsigned)c.octetsPerFrame);
       BTStatus r;
       if (rx) {
-        lc3Player.stop();
+        lc3Player.stopPlayback();
         r = lc3Player.attach(stream);
-        r = r ? lc3Player.start() : r;
+        r = r ? lc3Player.startPlayback() : r;
       } else {
-        lc3Recorder.stop();
+        lc3Recorder.stopCapture();
         lc3ToneRate = c.samplingRateHz;
         r = lc3Recorder.attach(stream);
-        r = r ? lc3Recorder.start() : r;
+        r = r ? lc3Recorder.startCapture() : r;
       }
       if (!r) {
         Serial.printf("[DUT] UnicastAudio %s attach FAILED: %s\n", rx ? "player" : "recorder", r.toString());
@@ -570,7 +570,7 @@ static void phaseBroadcastAudio() {
   lc3Recorder.setPcmSource(lc3Tone);
   BTStatus rb = lc3Recorder.begin();
   BTStatus ra = rb ? lc3Recorder.attach(src) : rb;
-  BTStatus rs = ra ? lc3Recorder.start() : ra;
+  BTStatus rs = ra ? lc3Recorder.startCapture() : ra;
   bool recOk = (bool)rs;
   if (!recOk) {
     Serial.printf("[DUT] BcastAudio recorder FAILED: %s\n", rs.toString());

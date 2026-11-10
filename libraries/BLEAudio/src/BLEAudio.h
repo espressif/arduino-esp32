@@ -133,6 +133,11 @@ public:
    * Create and configure every role before calling it. Calling it again
    * after success is a no-op.
    *
+   * This is the controller commit, not the LC3 data path: it does not start
+   * decoding or encoding. Attach the streams and call
+   * `BLEAudioPlayer::startPlayback()` / `BLEAudioRecorder::startCapture()`
+   * separately when the streams are configured.
+   *
    * @return BTStatus::OK on success; InvalidState before begin(); the error of
    *         the first role or engine step that failed otherwise.
    */

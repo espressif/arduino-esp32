@@ -21,8 +21,8 @@
  * @brief LC3 capture: I2S mic/ADC (or a PCM source) -> LC3 encode -> Tx BLEAudioStream(s).
  *
  * `begin()` sets the input, `attach()` binds the Tx stream(s) a role handed
- * you and `start()` spawns the encode task. While the streams are streaming,
- * one SDU per SDU interval is encoded and written, paced by a microsecond
+ * you and `startCapture()` spawns the encode task. While the streams are
+ * streaming, one SDU per SDU interval is encoded and written, paced by a microsecond
  * timer and kept in step with the controller through its SDU-completion
  * events. Stereo goes to one stream carrying two channels or to two mono
  * streams (`attach(left, right)`).
@@ -60,12 +60,24 @@ public:
   /** @brief Take PCM from @p source instead of I2S (before begin()). */
   BLEAudioRecorder &setPcmSource(BLEAudioPcmSource source);
 
-  /** @brief Feed one Tx stream (1 or 2 channels) or two mono Tx streams (left, right). */
-  BTStatus attach(BLEAudioStream stream, BLEAudioStream right = BLEAudioStream());
-  /** @brief Start the encode task; sending follows the attached streams' start/stop. */
-  BTStatus start();
-  /** @brief Stop the encode task; attachments are kept, so start() resumes. */
-  void stop();
+  /**
+   * @brief Feed one Tx stream (mono or interleaved stereo).
+   *
+   * One argument: the stream carries mono or interleaved stereo (1 or 2
+   * channels). Use the two-argument overload for two separate mono streams.
+   */
+  BTStatus attach(BLEAudioStream stream);
+  /** @brief Feed two separate mono Tx streams (left, right). */
+  BTStatus attach(BLEAudioStream stream, BLEAudioStream right);
+  /**
+   * @brief Start the encode task; sending follows the attached streams' start/stop.
+   *
+   * This is not BLEAudio::start(): the controller commits the roles and GATT
+   * table, while this method starts the LC3 task that produces the streams.
+   */
+  BTStatus startCapture();
+  /** @brief Stop the encode task; attachments are kept, so startCapture() resumes. */
+  void stopCapture();
   /** @return true while the encode task runs. */
   bool isRunning() const;
 
@@ -74,7 +86,7 @@ public:
   /** @brief Current sample rate in Hz; 0 while idle. */
   uint32_t sampleRate() const;
 
-  // --- Statistics (reset by start()) ---
+  // --- Statistics (reset by startCapture()) ---
 
   /** @brief SDUs accepted by the stack (counted per stream). */
   uint32_t sdusSent() const;

@@ -405,6 +405,10 @@ BLEAudioPlayer &BLEAudioPlayer::setJitterDepth(uint8_t sdus) {
   return *this;
 }
 
+BTStatus BLEAudioPlayer::attach(BLEAudioStream stream) {
+  return attach(stream, BLEAudioStream());
+}
+
 BTStatus BLEAudioPlayer::attach(BLEAudioStream stream, BLEAudioStream right) {
   if (!*this) {
     return BTStatus::InvalidState;
@@ -414,11 +418,11 @@ BTStatus BLEAudioPlayer::attach(BLEAudioStream stream, BLEAudioStream right) {
   return _impl->attach(stream, right, BLEAudioStream::Direction::Rx, tap);
 }
 
-BTStatus BLEAudioPlayer::start() {
+BTStatus BLEAudioPlayer::startPlayback() {
   if (!*this) {
     return BTStatus::InvalidState;
   }
-  // Statistics restart with each run; a start() while running keeps them.
+  // Statistics restart with each run; a startPlayback() while running keeps them.
   if (!_impl->running()) {
     _impl->received.store(0);
     _impl->dropped.store(0);
@@ -429,7 +433,7 @@ BTStatus BLEAudioPlayer::start() {
   return _impl->start("ble_lc3_play");
 }
 
-void BLEAudioPlayer::stop() {
+void BLEAudioPlayer::stopPlayback() {
   if (_impl) {
     _impl->stop();
   }

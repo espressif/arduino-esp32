@@ -621,7 +621,7 @@ void setup() {
                 // The client's streams exist once the setup started; the
                 // recorder task then encodes + sends autonomously.
                 BTStatus ra = recorder.attach(uc.stream(BLEAudioStream::Direction::Tx));
-                BTStatus rs = ra ? recorder.start() : ra;
+                BTStatus rs = ra ? recorder.startCapture() : ra;
                 Serial.printf("[CLIENT] Lc3Loopback recorder: %s\n", rs.toString());
                 delay(4000);
                 encSent = recorder.sdusSent();

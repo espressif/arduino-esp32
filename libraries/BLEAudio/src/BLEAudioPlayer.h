@@ -21,8 +21,8 @@
  * @brief LC3 playback: Rx BLEAudioStream(s) -> LC3 decode -> I2S DAC (or a PCM sink).
  *
  * `begin()` sets the output, `attach()` binds the Rx stream(s) a role handed
- * you and `start()` spawns the decode task. Each time the streams start, the
- * player sizes its jitter buffer from the negotiated QoS (presentation delay /
+ * you and `startPlayback()` spawns the decode task. Each time the streams
+ * start, the player sizes its jitter buffer from the negotiated QoS (presentation delay /
  * SDU interval, at least 2 SDUs), prefills it and plays; lost, invalid or late
  * SDUs are concealed with LC3 PLC. Stereo comes from one stream carrying two
  * channels or from two mono streams (`attach(left, right)`).
@@ -62,12 +62,24 @@ public:
   /** @brief Jitter-buffer depth in SDUs (min 2); 0 = from the stream QoS (default). */
   BLEAudioPlayer &setJitterDepth(uint8_t sdus);
 
-  /** @brief Play one Rx stream (1 or 2 channels) or two mono Rx streams (left, right). */
-  BTStatus attach(BLEAudioStream stream, BLEAudioStream right = BLEAudioStream());
-  /** @brief Start the decode task; playback follows the attached streams' start/stop. */
-  BTStatus start();
-  /** @brief Stop the decode task; attachments are kept, so start() resumes. */
-  void stop();
+  /**
+   * @brief Play one Rx stream (mono or interleaved stereo).
+   *
+   * One argument: the stream carries mono or interleaved stereo (1 or 2
+   * channels). Use the two-argument overload for two separate mono streams.
+   */
+  BTStatus attach(BLEAudioStream stream);
+  /** @brief Play two separate mono Rx streams (left, right). */
+  BTStatus attach(BLEAudioStream stream, BLEAudioStream right);
+  /**
+   * @brief Start the decode task; playback follows the attached streams' start/stop.
+   *
+   * This is not BLEAudio::start(): the controller commits the roles and GATT
+   * table, while this method starts the LC3 task that consumes the streams.
+   */
+  BTStatus startPlayback();
+  /** @brief Stop the decode task; attachments are kept, so startPlayback() resumes. */
+  void stopPlayback();
   /** @return true while the decode task runs. */
   bool isRunning() const;
 
@@ -76,7 +88,7 @@ public:
   /** @brief Current sample rate in Hz; 0 while idle. */
   uint32_t sampleRate() const;
 
-  // --- Statistics (reset by start()) ---
+  // --- Statistics (reset by startPlayback()) ---
 
   /** @brief SDUs delivered by the stack, whatever their status. */
   uint32_t sdusReceived() const;
