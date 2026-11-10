@@ -20,7 +20,7 @@
 #include <vector>
 #include "audio/BLEAudioUnicastClient.h"
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
 #include "esp32-hal-log.h"
 
 /**

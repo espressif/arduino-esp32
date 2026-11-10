@@ -18,8 +18,8 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioEngineBap.h"
-#include "audio/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioEngineBap.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
 #include "BLE.h"
 #include "client/BLEClient.h"
 #include "core/BLESync.h"

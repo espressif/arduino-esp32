@@ -18,7 +18,7 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include "audio/BLEAudioStream.h"
-#include "audio/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp32-hal-log.h"

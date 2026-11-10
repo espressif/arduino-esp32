@@ -443,8 +443,8 @@ Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive
 `bleAudioEngineIsInitialized()` (false when the engine is not compiled in), so audio mode is exactly the window
 between `audio.begin()` and `audio.end()`. The dependency points one way — the NimBLE-only coordinator observes the
 host-agnostic engine. The engine's only per-backend files are the thin event forwarders
-`audio/BLEAudioEngine.nimble.*` (GATT events, plus the two NimBLE calls kept out of the Zephyr-based C units) and
-`audio/BLEAudioEngine.bluedroid.*` (SMP completion).
+`audio/engine/BLEAudioEngine.nimble.*` (GATT events, plus the two NimBLE calls kept out of the Zephyr-based C units) and
+`audio/engine/BLEAudioEngine.bluedroid.*` (SMP completion).
 
 After `audio.start()` the NimBLE table is frozen: a later `BLEServer::start()` that would add attributes returns
 `InvalidState` instead of resetting the audio-owned table. Removing an already committed classic service remains
@@ -572,7 +572,7 @@ from the `BLE` singleton (`BLE.getAudioController()`); its `create*()` factories
 value-type role handles (unicast/broadcast data plane and Broadcast Assistant;
 CAP/CSIP coordination; VCP/MICP/MCP/CCP control; TMAP/GMAP/HAS/PBP identity) whose
 audio flows through `BLEAudioStream` handles, with a turnkey LC3 player/recorder on
-top. Every engine call is isolated in C engine units (`audio/BLEAudioEngine*.{h,c}`)
+top. Every engine call is isolated in C engine units (`audio/engine/BLEAudioEngine*.{h,c}`)
 behind an `extern "C"` boundary, and engine events reach the role handles through one
 event bridge; no `esp_ble_audio_*` type ever appears in a header reachable from
 `<BLE.h>`. Roles

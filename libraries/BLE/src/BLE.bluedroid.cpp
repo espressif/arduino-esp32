@@ -44,8 +44,8 @@
 #endif
 #if BLE_AUDIO_SUPPORTED
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioEngine.h"
-#include "audio/BLEAudioEngine.bluedroid.h"
+#include "audio/engine/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.bluedroid.h"
 #endif
 #if BLE_ISO_SUPPORTED
 #include "iso/BLEIso.h"

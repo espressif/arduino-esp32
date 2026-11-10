@@ -26,7 +26,7 @@
  * are the spec bitfields (TMAP Role, GMAP Role, UGG/UGT/BGS/BGR Features).
  */
 
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.h"
 #if BLE_AUDIO_SUPPORTED
 
 #ifdef __cplusplus

@@ -141,6 +141,8 @@ file(GLOB ARDUINO_LIBRARY_BLE_SRCS
   libraries/BLE/src/*.cpp
   libraries/BLE/src/*/*.cpp
   libraries/BLE/src/*/*.c
+  libraries/BLE/src/*/*/*.cpp
+  libraries/BLE/src/*/*/*.c
 )
 list(SORT ARDUINO_LIBRARY_BLE_SRCS)
 

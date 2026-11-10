@@ -42,7 +42,7 @@
 #include <memory>
 #include <vector>
 #include "BTStatus.h"
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.h"
 #include "client/BLEClient.h"
 
 struct BLEAudioImplCommon {

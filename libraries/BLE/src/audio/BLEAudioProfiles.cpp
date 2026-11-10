@@ -19,8 +19,8 @@
 
 #include "audio/BLEAudioProfiles.h"
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioStreamInternal.h"
-#include "audio/BLEAudioEngineProfiles.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioEngineProfiles.h"
 #include "esp32-hal-log.h"
 
 /**

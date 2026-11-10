@@ -30,7 +30,7 @@
  * Addresses are LSB-first on both hosts; address types are BT_ADDR_LE_*.
  */
 
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.h"
 #if BLE_AUDIO_SUPPORTED
 
 #ifdef __cplusplus

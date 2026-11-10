@@ -41,7 +41,7 @@
 #include "core/BLEGuards.h"
 #if BLE_AUDIO_SUPPORTED
 
-#include "audio/BLEAudioEngineBap.h"
+#include "audio/engine/BLEAudioEngineBap.h"
 
 #include "esp_ble_audio_bap_api.h"
 #include "esp_ble_audio_cap_api.h"

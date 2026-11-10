@@ -39,7 +39,7 @@
 #include <errno.h>
 #include "esp_err.h"
 #include "audio/BLEAudioStream.h"
-#include "audio/BLEAudioEngineBap.h"
+#include "audio/engine/BLEAudioEngineBap.h"
 
 // --------------------------------------------------------------------------
 // Stream state

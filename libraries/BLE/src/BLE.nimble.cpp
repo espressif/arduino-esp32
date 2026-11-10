@@ -37,7 +37,7 @@
 #include "types/BLEConnInfo.nimble.h"
 #if BLE_AUDIO_SUPPORTED
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.h"
 #endif
 #if BLE_ISO_SUPPORTED
 #include "iso/BLEIso.h"

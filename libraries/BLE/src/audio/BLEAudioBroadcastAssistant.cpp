@@ -20,8 +20,8 @@
 #include <cstring>
 #include "audio/BLEAudioBroadcastAssistant.h"
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioStreamInternal.h"
-#include "audio/BLEAudioEngineAssistant.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioEngineAssistant.h"
 #include "BLE.h"
 #include "scan/BLEScan.h"
 #include "esp32-hal-log.h"

@@ -27,7 +27,7 @@
  * return an esp_err_t value.
  */
 
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.h"
 #if BLE_AUDIO_SUPPORTED
 
 #ifdef __cplusplus

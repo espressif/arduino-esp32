@@ -3,7 +3,7 @@
 ## Purpose
 
 This document is for maintainers and AI tools working on the LE Audio subsystem
-of the BLE library (`src/audio/`). It describes the architecture, the engine
+of the BLE library (`src/audio/`; engine C units live in `src/audio/engine/`). It describes the architecture, the engine
 boundary, the event and stream paths, the lifecycle contract and the per-role
 spec-compliance obligations. It complements [`DESIGN.md`](DESIGN.md) (the
 library-wide architecture) — read that first. Where the two overlap (GATT
@@ -154,13 +154,13 @@ for the control profiles on Bluedroid:
 | `BLEAudioTypes.h` | Value types: codec config, QoS, presets, locations, contexts. |
 | `BLEAudioControlLink.h` | Internal: the peer a control client role drives; defers discovery until the link is GATT-discovered. |
 | `BLEAudioPlayer`, `BLEAudioRecorder`, `BLEAudioPipeline`, `BLEAudioI2s.h` | LC3 data plane. |
-| `BLEAudioEngine.{h,c}` | Engine lifecycle, event bridge, GAP/GATT plumbing, link bring-up, BAP presets. |
-| `BLEAudioEngineBap.{h,c}` | Stream slot pool, PACS, unicast server/client, broadcast source/sink, scan delegator. |
-| `BLEAudioEngineAssistant.{h,c}` | BAP Broadcast Assistant (BASS client), PAST. |
-| `BLEAudioEngineCap.{h,c}` | CAP acceptor/initiator/commander/handover, CSIP. |
-| `BLEAudioEngineControl.{h,c}` | VCP, MICP, MCP, CCP, HAS. |
-| `BLEAudioEngineProfiles.{h,c}` | TMAP, GMAP, PBP. |
-| `BLEAudioEngine.nimble.{h,cpp}` / `.bluedroid.{h,cpp}` | Host glue: forward the host's GAP/GATT events to the engine. |
+| `engine/BLEAudioEngine.{h,c}` | Engine lifecycle, event bridge, GAP/GATT plumbing, link bring-up, BAP presets. |
+| `engine/BLEAudioEngineBap.{h,c}` | Stream slot pool, PACS, unicast server/client, broadcast source/sink, scan delegator. |
+| `engine/BLEAudioEngineAssistant.{h,c}` | BAP Broadcast Assistant (BASS client), PAST. |
+| `engine/BLEAudioEngineCap.{h,c}` | CAP acceptor/initiator/commander/handover, CSIP. |
+| `engine/BLEAudioEngineControl.{h,c}` | VCP, MICP, MCP, CCP, HAS. |
+| `engine/BLEAudioEngineProfiles.{h,c}` | TMAP, GMAP, PBP. |
+| `engine/BLEAudioEngine.nimble.{h,cpp}` / `.bluedroid.{h,cpp}` | Host glue: forward the host's GAP/GATT events to the engine. |
 
 The raw isochronous channel API (`BLEIso`, public through `<BLE.h>`, examples
 `ISO_*`, tests `iso_cis` / `iso_bis`) lives in `src/iso/`. It carries

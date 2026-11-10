@@ -20,7 +20,7 @@
 #include <vector>
 #include "audio/BLEAudioBroadcastSource.h"
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
 #include "audio/BLEAudioProfiles.h"
 #include "BLE.h"
 #include "advertising/BLEAdvertising.h"

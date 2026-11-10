@@ -41,7 +41,7 @@
 #include "driver/i2s_std.h"
 #include "BTStatus.h"
 #include "audio/BLEAudioStream.h"
-#include "audio/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
 #include "audio/BLEAudioI2s.h"
 
 static constexpr uint32_t BLE_AUDIO_CODEC_STACK = 4096;   ///< Codec task stack (bytes); LC3 state lives on the heap.

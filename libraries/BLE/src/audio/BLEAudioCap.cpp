@@ -21,8 +21,8 @@
 #include <vector>
 #include "audio/BLEAudioCap.h"
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioStreamInternal.h"
-#include "audio/BLEAudioEngineCap.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioEngineCap.h"
 #include "BLE.h"
 #include "advertising/BLEAdvertising.h"
 #include "advertising/BLEAdvertisementData.h"

@@ -39,9 +39,9 @@
 #include "core/BLEGuards.h"
 #if BLE_AUDIO_SUPPORTED
 
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.h"
 #if BLE_NIMBLE
-#include "audio/BLEAudioEngine.nimble.h"
+#include "audio/engine/BLEAudioEngine.nimble.h"
 #endif
 #include "iso/BLEIsoHost.h"
 

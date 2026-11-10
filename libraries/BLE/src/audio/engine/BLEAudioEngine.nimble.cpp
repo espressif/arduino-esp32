@@ -18,8 +18,8 @@
 
 #if BLE_NIMBLE && BLE_AUDIO_SUPPORTED
 
-#include "audio/BLEAudioEngine.nimble.h"
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.nimble.h"
+#include "audio/engine/BLEAudioEngine.h"
 #include "BLE.h"
 #if BLE_GATT_SERVER_SUPPORTED
 #include "gatt/BLEGattDatabase.h"

@@ -19,8 +19,8 @@
 
 #if BLE_BLUEDROID && BLE_AUDIO_SUPPORTED
 
-#include "audio/BLEAudioEngine.bluedroid.h"
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.bluedroid.h"
+#include "audio/engine/BLEAudioEngine.h"
 #include "BLE.h"
 #include "BLE.bluedroid.h"
 #include "scan/BLEScan.bluedroid.h"

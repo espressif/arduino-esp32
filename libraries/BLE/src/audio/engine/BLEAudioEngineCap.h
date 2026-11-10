@@ -27,7 +27,7 @@
  * Functions of a role that is disabled in Kconfig return ESP_ERR_NOT_SUPPORTED.
  */
 
-#include "audio/BLEAudioEngineBap.h"
+#include "audio/engine/BLEAudioEngineBap.h"
 #if BLE_AUDIO_SUPPORTED
 
 #ifdef __cplusplus

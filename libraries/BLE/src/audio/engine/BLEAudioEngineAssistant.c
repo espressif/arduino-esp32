@@ -33,7 +33,7 @@
 #include "core/BLEGuards.h"
 #if BLE_AUDIO_SUPPORTED
 
-#include "audio/BLEAudioEngineAssistant.h"
+#include "audio/engine/BLEAudioEngineAssistant.h"
 
 #include "esp_err.h"
 

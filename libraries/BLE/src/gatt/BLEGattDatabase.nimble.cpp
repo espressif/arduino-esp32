@@ -33,7 +33,7 @@
 #include "esp32-hal-log.h"
 
 #if BLE_AUDIO_SUPPORTED
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.h"
 #endif
 
 #include <host/ble_hs.h>

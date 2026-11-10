@@ -22,8 +22,8 @@
 #include "audio/BLEAudioCoordinatedSet.h"
 #include "audio/BLEAudioCap.h"
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioStreamInternal.h"
-#include "audio/BLEAudioEngineCap.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioEngineCap.h"
 #include "esp32-hal-log.h"
 
 /**

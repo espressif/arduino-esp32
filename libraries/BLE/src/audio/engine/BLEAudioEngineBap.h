@@ -34,7 +34,7 @@
  * `esp_err_t` / negative errno from the stack.
  */
 
-#include "audio/BLEAudioEngine.h"
+#include "audio/engine/BLEAudioEngine.h"
 #if BLE_AUDIO_SUPPORTED
 
 #ifdef __cplusplus

@@ -31,8 +31,8 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include "audio/BLEAudioImpl.h"
-#include "audio/BLEAudioStreamInternal.h"
-#include "audio/BLEAudioEngineControl.h"
+#include "audio/engine/BLEAudioStreamInternal.h"
+#include "audio/engine/BLEAudioEngineControl.h"
 
 struct BLEAudioControlLink {
   /** Engine discovery entry point of the role, e.g. bleAudioVcpCtlrDiscover. */

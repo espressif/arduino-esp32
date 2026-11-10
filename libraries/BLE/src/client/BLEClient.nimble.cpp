@@ -32,7 +32,7 @@
 #include "iso/BLEIso.nimble.h"
 #endif
 #if BLE_AUDIO_SUPPORTED
-#include "audio/BLEAudioEngine.nimble.h"
+#include "audio/engine/BLEAudioEngine.nimble.h"
 #endif
 
 /**
