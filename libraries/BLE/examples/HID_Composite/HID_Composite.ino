@@ -387,7 +387,7 @@ void setup() {
   // Use HID_GENERIC appearance because this device is not exclusively a
   // keyboard or mouse -- it is a composite of several HID functions.
   BLEAdvertising adv = BLE.getAdvertising();
-  adv.setAppearance(BLE_APPEARANCE_HID_GENERIC);
+  adv.setAppearance(BLE_APPEARANCE_GENERIC_HID);
   adv.setScanResponse(true);
   adv.start();
 

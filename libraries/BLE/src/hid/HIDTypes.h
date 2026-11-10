@@ -129,16 +129,7 @@
 
 /** @} */
 
-/* BLE Appearance values — HID category (Bluetooth Assigned Numbers §2.6) */
-#define BLE_APPEARANCE_HID_GENERIC         0x03C0
-#define BLE_APPEARANCE_HID_KEYBOARD        0x03C1
-#define BLE_APPEARANCE_HID_MOUSE           0x03C2
-#define BLE_APPEARANCE_HID_JOYSTICK        0x03C3
-#define BLE_APPEARANCE_HID_GAMEPAD         0x03C4
-#define BLE_APPEARANCE_HID_DIGITIZER       0x03C5
-#define BLE_APPEARANCE_HID_CARD_READER     0x03C6
-#define BLE_APPEARANCE_HID_DIGITAL_PEN     0x03C7
-#define BLE_APPEARANCE_HID_BARCODE_SCANNER 0x03C8
+/* HID appearance values live in advertising/BLEAppearance.h. */
 
 /* HID Report */
 /* Where report IDs are used the first byte of 'data' will be the */

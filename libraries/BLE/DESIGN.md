@@ -631,7 +631,8 @@ moving them to `cores/` would share nothing and only pollute the core.
 The two headers differ in how they relate to the `BLE.h` umbrella:
 
 - **`hid/HIDTypes.h` — reaches `BLE.h` transitively.** It contains only macros and
-  constants (HID short-item macros, report types, `BLE_APPEARANCE_HID_*`) — it emits **no
+  constants (HID short-item macros and report types); the HID appearance values
+  live in `advertising/BLEAppearance.h`. It emits **no
   data**, so including it widely costs nothing. `hid/BLEHIDDevice.h` needs it and is itself
   listed in `BLE.h`, so any sketch that does `#include <BLE.h>` already has it. It is *not*
   listed directly in `BLE.h` because the umbrella aggregates the public **class** headers;

@@ -26,6 +26,7 @@
 #include "BTAddress.h"
 #include "types/BLEAdvTypes.h"
 #include "advertising/BLEAdvertisementData.h"
+#include "advertising/BLEAppearance.h"
 #include <memory>
 #include <functional>
 
@@ -140,6 +141,9 @@ public:
   /**
    * @brief Set the GAP appearance value in the advertisement.
    * @param appearance 16-bit appearance value as defined by the Bluetooth SIG.
+   *                   Use the named BLE_APPEARANCE_* values from
+   *                   advertising/BLEAppearance.h, e.g.
+   *                   BLE_APPEARANCE_AUDIO_SINK_STANDALONE_SPEAKER.
    */
   void setAppearance(uint16_t appearance);
 

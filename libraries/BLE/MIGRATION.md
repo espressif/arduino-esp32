@@ -739,20 +739,20 @@ Note:
 | N/A | `hid.bootInput()` → `BLECharacteristic` | New: Boot Keyboard Input (singleton, lazy-created) |
 | N/A | `hid.bootOutput()` → `BLECharacteristic` | New: Boot Keyboard Output (singleton, lazy-created) |
 | Manual `adv.addServiceUUID(0x1812)` | Automatic | HID Service UUID added to advertising by `BLEHIDDevice` constructor |
-| Manual `setAppearance(0x03C1)` | `setAppearance(BLE_APPEARANCE_HID_KEYBOARD)` | Named constants in `hid/HIDTypes.h` (reachable via `<BLE.h>`) |
+| Manual `setAppearance(0x03C1)` | `setAppearance(BLE_APPEARANCE_HID_KEYBOARD)` | Named constants in `advertising/BLEAppearance.h` (reachable via `<BLE.h>`) |
 | No included-service support | Battery Service auto-included in HID Service | Per HIDS 1.0 §3 |
 | No External Report Reference | Auto-added on Report Map (references Battery Level) | Per HIDS 1.0 §3.6 |
 
-**HID Appearance Constants** (defined in `hid/HIDTypes.h`, pulled in transitively by `<BLE.h>`):
+**HID Appearance Constants** (defined in `advertising/BLEAppearance.h`, reachable via `<BLE.h>`):
 
 | Constant | Value |
 |---|---|
-| `BLE_APPEARANCE_HID_GENERIC` | `0x03C0` |
+| `BLE_APPEARANCE_GENERIC_HID` | `0x03C0` |
 | `BLE_APPEARANCE_HID_KEYBOARD` | `0x03C1` |
 | `BLE_APPEARANCE_HID_MOUSE` | `0x03C2` |
 | `BLE_APPEARANCE_HID_JOYSTICK` | `0x03C3` |
 | `BLE_APPEARANCE_HID_GAMEPAD` | `0x03C4` |
-| `BLE_APPEARANCE_HID_DIGITIZER` | `0x03C5` |
+| `BLE_APPEARANCE_HID_DIGITIZER_TABLET` | `0x03C5` |
 | `BLE_APPEARANCE_HID_CARD_READER` | `0x03C6` |
 | `BLE_APPEARANCE_HID_DIGITAL_PEN` | `0x03C7` |
 | `BLE_APPEARANCE_HID_BARCODE_SCANNER` | `0x03C8` |
@@ -1187,7 +1187,7 @@ These features are new and were not available in v3.x:
 | Included Services | `svc.addIncludedService(otherSvc)` — GATT Included Service declarations |
 | HoGP spec-compliant HID | `BLEHIDDevice` auto-includes Battery Service, adds External Report Reference, auto-advertises HID UUID |
 | Boot Protocol characteristics | `hid.bootInput()`, `hid.bootOutput()` — singleton, lazy-created |
-| HID Appearance constants | `BLE_APPEARANCE_HID_KEYBOARD`, `BLE_APPEARANCE_HID_GAMEPAD`, etc. in `hid/HIDTypes.h` |
+| HID Appearance constants | `BLE_APPEARANCE_HID_KEYBOARD`, `BLE_APPEARANCE_HID_GAMEPAD`, etc. in `advertising/BLEAppearance.h` |
 
 ---
 
