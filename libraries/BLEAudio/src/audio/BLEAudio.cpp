@@ -18,6 +18,9 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include "audio/BLEAudioImpl.h"
+#include <type_traits>
+
+static_assert(std::is_base_of<BLEAudioImplCommon, BLEAudio::Impl>::value, "BLEAudio::Impl must inherit BLEAudioImplCommon");
 #include "audio/engine/BLEAudioEngineBap.h"
 #include "audio/engine/BLEAudioStreamInternal.h"
 #include "BLE.h"

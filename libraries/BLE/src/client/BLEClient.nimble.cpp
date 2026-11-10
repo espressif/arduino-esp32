@@ -27,12 +27,10 @@
 #include "types/BLEUUID.nimble.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEBackend.h"
+#include "core/BLEAudioHooks.h"
 #include "esp32-hal-log.h"
 #if BLE_ISO_SUPPORTED
 #include "iso/BLEIso.nimble.h"
-#endif
-#if BLE_AUDIO_SUPPORTED
-#include "audio/engine/BLEAudioEngine.nimble.h"
 #endif
 
 /**
@@ -697,7 +695,9 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
   BLEIso::forwardHostGapEvent(event);
 #endif
 #if BLE_AUDIO_SUPPORTED
-  BLEAudioEngine::forwardHostGattEvent(event);
+  if (bleAudioForwardHostGattEvent) {
+    bleAudioForwardHostGattEvent(event);
+  }
 #endif
 
   switch (event->type) {

@@ -127,6 +127,30 @@ public:
   /** @brief Sync to the first matching source automatically. Default on. */
   BLEAudioBroadcastSink &setAutoSync(bool enable);
 
+  /**
+   * @brief Configure a ready-to-start Auracast receiver.
+   *
+   * Shorthand for:
+   * @code
+   * setStreams(streams)
+   *   .setLocation(streams == 2 ? FrontLeft | FrontRight : Mono)
+   *   .setContexts(Media)
+   *   .setTargetName(targetName)
+   *   .setAutoSync(true);
+   * @endcode
+   *
+   * @param targetName Only sync to this Broadcast Name; empty (default) syncs
+   *                   to the first source found. With a name set, the sink
+   *                   ignores other broadcasts in range.
+   * @param streams    1 = mono (one BIS), 2 = stereo (two BISes). Default 2.
+   *
+   * Call it after createBroadcastSink() and before audio.start(), then
+   * start() to begin scanning. The Scan Delegator stays enabled when
+   * compiled in, so a phone or Broadcast Assistant can also select a source.
+   * Encryption stays opt-in: call setBroadcastCode() separately.
+   */
+  BLEAudioBroadcastSink &configureAuracast(const String &targetName = "", uint8_t streams = 2);
+
   // --- Control (after audio.start()) ---
 
   /**

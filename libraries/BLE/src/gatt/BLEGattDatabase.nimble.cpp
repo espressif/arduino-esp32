@@ -30,11 +30,8 @@
 #include "server/BLEServer.nimble.h"
 #include "gatt/BLEGattAttributes.nimble.h"
 #include "gatt/BLECharacteristicValidation.h"
+#include "core/BLEAudioHooks.h"
 #include "esp32-hal-log.h"
-
-#if BLE_AUDIO_SUPPORTED
-#include "audio/engine/BLEAudioEngine.h"
-#endif
 
 #include <host/ble_hs.h>
 #include <host/ble_att.h>
@@ -112,11 +109,13 @@ void applyDeviceName() {
 }  // namespace
 
 bool audioModeActive() {
-  // Single-sourced from the engine's own lifecycle: audio mode is exactly the
-  // window between audio.begin() (common_init) and audio.end(). This keeps the
-  // LE Audio engine free of any GATT-coordinator (NimBLE-only) knowledge.
+  // Single-sourced from the audio engine's own lifecycle through a weak hook:
+  // audio mode is exactly the window between audio.begin() (common_init) and
+  // audio.end(). This keeps the LE Audio engine free of any GATT-coordinator
+  // (NimBLE-only) knowledge, and the core links no audio code when BLEAudio is
+  // not part of the sketch.
 #if BLE_AUDIO_SUPPORTED
-  return bleAudioEngineIsInitialized();
+  return bleAudioGattActive && bleAudioGattActive();
 #else
   return false;
 #endif
@@ -124,7 +123,7 @@ bool audioModeActive() {
 
 bool audioModeFrozen() {
 #if BLE_AUDIO_SUPPORTED
-  return bleAudioEngineIsStarted();
+  return bleAudioGattFrozen && bleAudioGattFrozen();
 #else
   return false;
 #endif

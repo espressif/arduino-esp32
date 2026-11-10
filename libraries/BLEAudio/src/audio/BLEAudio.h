@@ -31,18 +31,23 @@
  * of every role created through it: roles stay registered until end(), even
  * if the sketch drops its handles.
  *
- * This header is also the audio component's aggregator: `src/BLE.h` includes
- * it so the whole audio API reaches sketches through `<BLE.h>` (like
- * `stream/BLEStream.h` and `l2cap/BLEL2CAP.h`). It must stay backend-agnostic:
- * no `esp_ble_audio_*` type appears here.
+ * This header is also the audio component's aggregator: the BLEAudio library
+ * exposes it through `<BLEAudio.h>`, which a sketch includes next to
+ * `<BLE.h>` when it uses audio. The core `<BLE.h>` does not include it, so a
+ * sketch that never touches LE Audio does not compile this engine. It must
+ * stay backend-agnostic: no `esp_ble_audio_*` type appears here.
  *
  * Lifecycle:
  * @code
+ * #include <BLE.h>
+ * #include <BLEAudio.h>
+ *
  * BLE.begin("Headset");
  * BLEAudio audio = BLE.getAudioController();  // handle to the single engine
  * audio.setPresentationDelay(40000);          // defaults, before creating roles
  * audio.begin();                              // engine init + event bridge
  * auto server = audio.createUnicastServer();  // create and configure roles
+ * server.configureHeadset();
  * audio.start();                              // register roles, single GATT commit
  * // ... stream ...
  * audio.end();                                // or BLE.end()

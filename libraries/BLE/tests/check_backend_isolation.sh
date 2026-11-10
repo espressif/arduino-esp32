@@ -15,20 +15,24 @@
 # limitations under the License.
 #
 # --------------------------------------------------------------------------
-# Backend-isolation guard for the public BLE API (review item 14).
+# Backend-isolation guard for the public BLE and BLEAudio APIs.
 #
-# The public surface is the umbrella header (src/BLE.h) plus every project
-# header it exposes (its direct #include "..." entries, e.g. gatt/BLEService.h,
-# client/BLEClient.h). Those headers must never leak backend detail:
+# The public surfaces are:
+#   * the core umbrella header (BLE/src/BLE.h) plus every project header it
+#     directly includes;
+#   * the LE Audio umbrella header (BLEAudio/src/audio/BLEAudio.h) plus every
+#     project header it directly includes.
+#
+# Those headers must never leak backend detail:
 #   * they must NOT include a backend selector or backend header
 #     (core/BLEBackend.h, or any *.nimble.h / *.bluedroid.h);
 #   * they must NOT name native stack types (esp_ble_*, ble_gap_*, ble_hs_*,
 #     ble_uuid_*) or per-type backend Impl structs in actual code.
 #
-# The set is derived from BLE.h so it stays correct as components move; the
-# implementation layer (shared *Impl.h bases, backend .nimble/.bluedroid files,
-# and internal helpers reached only from .cpp/backend files) is never scanned
-# and is free to name backend types.
+# The sets are derived from the umbrella headers so they stay correct as
+# components move; the implementation layer (shared *Impl.h bases, backend
+# .nimble/.bluedroid files, and internal helpers reached only from .cpp/backend
+# files) is never scanned and is free to name backend types.
 #
 # Comment lines (// ... and Doxygen ' * ...') are ignored so the invariant can
 # be described in prose without tripping the guard.
@@ -39,7 +43,8 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC_DIR="$(cd "${SCRIPT_DIR}/../src" && pwd)"
+BLE_SRC_DIR="$(cd "${SCRIPT_DIR}/../src" && pwd)"
+AUDIO_SRC_DIR="$(cd "${SCRIPT_DIR}/../../BLEAudio/src" 2>/dev/null && pwd || true)"
 
 status=0
 
@@ -65,47 +70,63 @@ strip_comments() {
     ' "$1"
 }
 
-# Build the public-surface header set: the umbrella BLE.h plus every project
-# header it directly includes that resolves to a file under src/.
-UMBRELLA="${SRC_DIR}/BLE.h"
-if [ ! -e "${UMBRELLA}" ]; then
-    echo "ERROR: umbrella header not found: ${UMBRELLA}"
-    exit 1
+# check_surface <label> <umbrella> <src-dir>
+#
+# Build the public-surface header set: the umbrella header plus every project
+# header it directly includes that resolves to a file under src-dir.
+check_surface() {
+    local label="$1"
+    local umbrella="$2"
+    local src_dir="$3"
+    local public_headers=()
+    local hdr name bad_inc bad_tok
+
+    if [ ! -e "${umbrella}" ]; then
+        echo "ERROR: ${label} umbrella header not found: ${umbrella}"
+        status=1
+        return
+    fi
+
+    public_headers=("${umbrella}")
+    while IFS= read -r inc; do
+        [ -e "${src_dir}/${inc}" ] && public_headers+=("${src_dir}/${inc}")
+    done < <(
+        grep -oE '^[[:space:]]*#[[:space:]]*include[[:space:]]*"[^"]+"' "${umbrella}" \
+            | sed -E 's/.*"([^"]+)".*/\1/'
+    )
+
+    for hdr in "${public_headers[@]}"; do
+        [ -e "$hdr" ] || continue
+        name="${label}/$(basename "$hdr")"
+
+        # 1) Forbidden includes (checked on raw #include lines): the backend selector
+        #    (core/BLEBackend.h) or any backend header by suffix (*.nimble.h /
+        #    *.bluedroid.h) wherever it lives.
+        bad_inc="$(grep -nE '^[[:space:]]*#[[:space:]]*include[[:space:]]*[<"]([^">]*\.(nimble|bluedroid)\.h|[^">]*BLEBackend\.h)' "$hdr" || true)"
+        if [ -n "$bad_inc" ]; then
+            echo "ERROR: ${name} includes a backend/selector header (public API must stay backend-agnostic):"
+            indent "$bad_inc"
+            status=1
+        fi
+
+        # 2) Forbidden tokens in real code (comments stripped first).
+        bad_tok="$(strip_comments "$hdr" | grep -nE 'esp_ble_|ble_gap_|ble_hs_|ble_uuid_|::Impl\b|Nimble[A-Za-z]*Impl|Bluedroid[A-Za-z]*Impl' || true)"
+        if [ -n "$bad_tok" ]; then
+            echo "ERROR: ${name} names a backend-specific type in code (public API must stay backend-agnostic):"
+            indent "$bad_tok"
+            status=1
+        fi
+    done
+}
+
+check_surface "BLE" "${BLE_SRC_DIR}/BLE.h" "${BLE_SRC_DIR}"
+
+if [ -n "${AUDIO_SRC_DIR}" ]; then
+    check_surface "BLEAudio" "${AUDIO_SRC_DIR}/audio/BLEAudio.h" "${AUDIO_SRC_DIR}"
 fi
 
-public_headers=("${UMBRELLA}")
-while IFS= read -r inc; do
-    [ -e "${SRC_DIR}/${inc}" ] && public_headers+=("${SRC_DIR}/${inc}")
-done < <(
-    grep -oE '^[[:space:]]*#[[:space:]]*include[[:space:]]*"[^"]+"' "${UMBRELLA}" \
-        | sed -E 's/.*"([^"]+)".*/\1/'
-)
-
-for hdr in "${public_headers[@]}"; do
-    [ -e "$hdr" ] || continue
-    name="$(basename "$hdr")"
-
-    # 1) Forbidden includes (checked on raw #include lines): the backend selector
-    #    (core/BLEBackend.h) or any backend header by suffix (*.nimble.h /
-    #    *.bluedroid.h) wherever it lives.
-    bad_inc="$(grep -nE '^[[:space:]]*#[[:space:]]*include[[:space:]]*[<"]([^">]*\.(nimble|bluedroid)\.h|[^">]*BLEBackend\.h)' "$hdr" || true)"
-    if [ -n "$bad_inc" ]; then
-        echo "ERROR: ${name} includes a backend/selector header (public API must stay backend-agnostic):"
-        indent "$bad_inc"
-        status=1
-    fi
-
-    # 2) Forbidden tokens in real code (comments stripped first).
-    bad_tok="$(strip_comments "$hdr" | grep -nE 'esp_ble_|ble_gap_|ble_hs_|ble_uuid_|::Impl\b|Nimble[A-Za-z]*Impl|Bluedroid[A-Za-z]*Impl' || true)"
-    if [ -n "$bad_tok" ]; then
-        echo "ERROR: ${name} names a backend-specific type in code (public API must stay backend-agnostic):"
-        indent "$bad_tok"
-        status=1
-    fi
-done
-
 if [ "$status" -eq 0 ]; then
-    echo "OK: public BLE headers are backend-agnostic."
+    echo "OK: public BLE and BLEAudio headers are backend-agnostic."
 fi
 
 exit "$status"

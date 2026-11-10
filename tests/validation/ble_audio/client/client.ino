@@ -8,6 +8,7 @@
 
 #include <Arduino.h>
 #include <BLE.h>
+#include <BLEAudio.h>
 #include "esp_heap_caps.h"
 
 // Phase 8 set control: CSIP coordinator lock/release plus CAP commander volume.

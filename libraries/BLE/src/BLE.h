@@ -45,7 +45,8 @@
 #include "stream/BLEStream.h"
 #include "l2cap/BLEL2CAP.h"
 #include "iso/BLEIso.h"
-#include "audio/BLEAudio.h"
+
+class BLEAudio;
 
 /**
  * @brief Global BLE singleton -- the entry point for all BLE operations.
@@ -223,6 +224,11 @@ public:
 #if BLE_AUDIO_SUPPORTED
   /**
    * @brief Get the LE Audio controller handle (GAF entry point).
+   *
+   * Declared in the core so a sketch that does not use LE Audio never compiles
+   * the audio engine. Include `<BLEAudio.h>` from the separate BLEAudio
+   * library before using the returned handle; without it `BLEAudio` is only
+   * forward-declared here.
    *
    * The first call allocates the single engine-backed implementation;
    * subsequent calls return a handle to the same instance. Only valid after

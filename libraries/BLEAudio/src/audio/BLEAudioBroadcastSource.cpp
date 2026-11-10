@@ -344,6 +344,14 @@ BLEAudioBroadcastSource &BLEAudioBroadcastSource::setPublicBroadcast(bool enable
   return *this;
 }
 
+BLEAudioBroadcastSource &BLEAudioBroadcastSource::configureAuracast(const String &name, uint8_t channels, BLEAudioCodecPreset preset) {
+  return setPreset(preset)
+    .setChannels(channels)
+    .setName(name)
+    .setContext(BLEAudioContext::Media)
+    .setPublicBroadcast(true);
+}
+
 // --------------------------------------------------------------------------
 // Control
 // --------------------------------------------------------------------------

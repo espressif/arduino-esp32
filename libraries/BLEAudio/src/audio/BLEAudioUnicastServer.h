@@ -104,6 +104,46 @@ public:
    */
   BLEAudioUnicastServer &setPresentationDelayRange(uint32_t minUs, uint32_t maxUs);
 
+  /**
+   * @brief Configure the usual speaker shape: one stereo-capable sink ASE.
+   *
+   * Shorthand for:
+   * @code
+   * setSinkStreams(1).setSourceStreams(0)
+   *   .setMaxChannelsPerStream(2)
+   *   .setSupportedPresets(LC3_16_2_1 | LC3_24_2_1 | LC3_48_2_1)
+   *   .setSinkContexts(Media | Conversational)
+   *   .setSinkLocation(FrontLeft | FrontRight);
+   * @endcode
+   *
+   * The single ASE accepts mono or stereo, so a phone can send one
+   * interleaved stream instead of one stream per speaker. Call it after
+   * createUnicastServer() and before audio.start(); individual setters can
+   * still override any field afterwards.
+   */
+  BLEAudioUnicastServer &configureMediaSink();
+
+  /**
+   * @brief Configure the usual headset shape: one sink ASE and one source ASE.
+   *
+   * Shorthand for:
+   * @code
+   * setSinkStreams(1).setSourceStreams(1)
+   *   .setMaxChannelsPerStream(2)
+   *   .setSupportedPresets(LC3_16_2_1 | LC3_24_2_1 | LC3_48_2_1)
+   *   .setSinkContexts(Media | Conversational)
+   *   .setSourceContexts(Conversational | Media)
+   *   .setSinkLocation(FrontLeft | FrontRight)
+   *   .setSourceLocation(Mono);
+   * @endcode
+   *
+   * The sink ASE renders phone media and call audio; the source ASE carries
+   * the headset microphone back to the phone. Call it after
+   * createUnicastServer() and before audio.start(); individual setters can
+   * still override any field afterwards.
+   */
+  BLEAudioUnicastServer &configureHeadset();
+
   // --- Runtime (after audio.start()) ---
 
   /**

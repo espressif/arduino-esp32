@@ -564,8 +564,11 @@ On receive, SDUs up to a fixed 256-byte stack threshold are flattened without a 
 
 ### LE Audio
 
-LE Audio (`src/audio/`) is a **shared component** built on the host-agnostic
-ESP-BLE-AUDIO engine; the only host-specific files are the thin
+LE Audio (`libraries/BLEAudio/src/audio/`) is a **separate Arduino library**
+built on the host-agnostic ESP-BLE-AUDIO engine. Keeping it out of `BLE` means
+a sketch that includes only `<BLE.h>` does not compile the audio engine; a
+sketch that includes `<BLEAudio.h>` gets the whole subsystem. The only
+host-specific files are the thin
 `BLEAudioEngine.nimble.*` / `BLEAudioEngine.bluedroid.*` glue that forwards host
 GAP/GATT events to the engine. The `BLEAudio` controller is a shared handle minted
 from the `BLE` singleton (`BLE.getAudioController()`); its `create*()` factories mint
@@ -575,7 +578,7 @@ audio flows through `BLEAudioStream` handles, with a turnkey LC3 player/recorder
 top. Every engine call is isolated in C engine units (`audio/engine/BLEAudioEngine*.{h,c}`)
 behind an `extern "C"` boundary, and engine events reach the role handles through one
 event bridge; no `esp_ble_audio_*` type ever appears in a header reachable from
-`<BLE.h>`. Roles
+`<BLEAudio.h>`. Roles
 stage their registration between `audio.begin()` and `audio.start()` (the controller's
 `roleApplies` "accumulate then commit" model), and `start()` performs the single
 coordinated `ble_gatts_start()` so audio profiles and a classic `BLEServer` coexist in
@@ -824,7 +827,7 @@ If you are modifying this library:
 - prefer adapting backend code to the shared API rather than changing the shared API to fit one backend
 - look for existing patterns in handle ownership, callback dispatch, and `BTStatus` conversion before inventing a new one
 - treat `MIGRATION.md` as a user-facing transition guide and this document as the maintainer-facing architecture guide
-- for LE Audio work, read [`AUDIO.md`](AUDIO.md) — it is the maintainer-facing guide for the `src/audio/` subsystem (vendor boundary, controller commit model, per-role guards and spec obligations)
+- for LE Audio work, read [`AUDIO.md`](AUDIO.md) — it is the maintainer-facing guide for the `libraries/BLEAudio/src/audio/` subsystem (vendor boundary, controller commit model, per-role guards and spec obligations)
 
 If the code and this document disagree, follow the code and update this document.
 

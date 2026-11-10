@@ -108,6 +108,29 @@ public:
    */
   BLEAudioBroadcastSource &setPublicBroadcast(bool enable);
 
+  /**
+   * @brief Configure a ready-to-start Auracast transmitter.
+   *
+   * Shorthand for:
+   * @code
+   * setPreset(preset).setChannels(channels).setName(name)
+   *   .setContext(Media).setPublicBroadcast(true);
+   * @endcode
+   *
+   * @param name     Broadcast Name shown by receivers and phone Auracast UIs
+   *                 (truncated to 32 characters).
+   * @param channels 1 = mono (one BIS), 2 = stereo (front-left + front-right
+   *                 BISes). Default 2.
+   * @param preset   Codec/QoS preset. Default LC3_48_2_1: 48 kHz music, the
+   *                 usual Auracast quality.
+   *
+   * Call it before start(). Encryption stays opt-in: call
+   * setBroadcastCode() separately. Individual setters can still override any
+   * field afterwards.
+   */
+  BLEAudioBroadcastSource &configureAuracast(const String &name, uint8_t channels = 2,
+                                             BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_48_2_1);
+
   // --- Control (after audio.start()) ---
 
   /**

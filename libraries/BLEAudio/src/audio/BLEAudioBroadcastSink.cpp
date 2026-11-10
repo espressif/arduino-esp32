@@ -427,6 +427,14 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setAutoSync(bool enable) {
   return *this;
 }
 
+BLEAudioBroadcastSink &BLEAudioBroadcastSink::configureAuracast(const String &targetName, uint8_t streams) {
+  return setStreams(streams)
+    .setLocation(streams == 2 ? BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight : BLEAudioLocation::Mono)
+    .setContexts(BLEAudioContext::Media)
+    .setTargetName(targetName)
+    .setAutoSync(true);
+}
+
 // --------------------------------------------------------------------------
 // Control
 // --------------------------------------------------------------------------

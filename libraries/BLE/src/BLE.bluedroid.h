@@ -112,7 +112,6 @@ struct BLEClass::Impl {
 #endif
 #if BLE_AUDIO_SUPPORTED
   GapHook audioGapHook = nullptr;
-  LifecycleHook audioPreEndHook = nullptr;
 #endif
 #if BLE_ISO_SUPPORTED
   LifecycleHook isoPreEndHook = nullptr;

@@ -3,7 +3,11 @@
 ## Purpose
 
 This document is for maintainers and AI tools working on the LE Audio subsystem
-of the BLE library (`src/audio/`; engine C units live in `src/audio/engine/`). It describes the architecture, the engine
+of the Arduino BLE stack. The code lives in the separate **`BLEAudio`** library
+(`libraries/BLEAudio/src/audio/`; engine C units live in
+`libraries/BLEAudio/src/audio/engine/`). Keeping it a separate Arduino library
+means a sketch that only includes `<BLE.h>` does not compile the audio engine.
+This document describes the architecture, the engine
 boundary, the event and stream paths, the lifecycle contract and the per-role
 spec-compliance obligations. It complements [`DESIGN.md`](DESIGN.md) (the
 library-wide architecture) — read that first. Where the two overlap (GATT
@@ -17,7 +21,9 @@ the Generic Audio Framework: PACS/ASCS/BAP/CAP and the control/top-level
 profiles). The engine API is **host-agnostic**, so almost the whole subsystem is
 shared between NimBLE and Bluedroid. Host-specific code is limited to the glue
 files (`BLEAudioEngine.nimble.cpp` / `BLEAudioEngine.bluedroid.cpp`, which
-forward host GAP/GATT events to the engine) and a few `BLE_NIMBLE` /
+forward host GAP/GATT events to the engine), the two
+`BLEAudioController.{nimble,bluedroid}.cpp` files (which define
+`BLE.getAudioController()` and the weak core hooks), and a few `BLE_NIMBLE` /
 `BLE_BLUEDROID` branches for the calls the engine leaves to the host: link
 encryption and the Bluedroid GATT client open in `BLEAudioEngine.c`, the PAST
 send of the CAP handover in `BLEAudioCap.cpp`, and the Bluedroid BASS PAST
@@ -73,7 +79,7 @@ See [Feature guards](#feature-guards).
 
 ```
 sketch
-  │  <BLE.h>  (audio/BLEAudio.h is the audio aggregator, pulled in by the umbrella)
+  │  <BLE.h> core BLE        <BLEAudio.h> LE Audio (separate library)
   ▼
 BLEAudio              controller handle (BLEAudio.{h,cpp}, BLEAudioImpl.h)
   │  create*() factories mint …
@@ -92,8 +98,8 @@ Two rules keep this clean:
 
 1. **Handle headers are backend-agnostic.** No `esp_ble_audio_*`, `bt_*`,
    `<zephyr/...>` or host type appears in a header a sketch can reach through
-   `<BLE.h>`. `tests/check_backend_isolation.sh` enforces this for the umbrella
-   and every header it includes directly (which includes `audio/BLEAudio.h`).
+   `<BLEAudio.h>`. `libraries/BLE/tests/check_backend_isolation.sh` enforces
+   this for both the core `<BLE.h>` surface and the `<BLEAudio.h>` surface.
 2. **The engine boundary is C.** The `esp_ble_audio_*` headers pull in Zephyr
    headers that do not parse as C++, so every engine call lives in a C unit
    behind a narrow `extern "C"` header with plain-C payload structs.
@@ -146,9 +152,12 @@ for the control profiles on Bluedroid:
 
 ### File map
 
+All paths are relative to `libraries/BLEAudio/src/audio/`.
+
 | Files | Role |
 | --- | --- |
 | `BLEAudio.{h,cpp}`, `BLEAudioImpl.h` | Controller: lifecycle, role factories, link events, the event dispatcher. |
+| `../BLEAudioController.{nimble,bluedroid}.cpp` (library root) | Core-facing entry point: `BLE.getAudioController()`, weak pre-end/GATT hooks. |
 | `BLEAudio<Role>.{h,cpp}` | Public role handles (UnicastServer/Client, BroadcastSource/Sink/Assistant, Cap, CoordinatedSet, Volume, Mic, Media, Call, HearingAid, Profiles). |
 | `BLEAudioStream.{h,cpp}`, `BLEAudioStreamInternal.h` | Stream handle, engine stream callbacks, public↔engine value conversions, `bleAudioStatus()` error mapping. |
 | `BLEAudioTypes.h` | Value types: codec config, QoS, presets, locations, contexts. |
@@ -197,9 +206,36 @@ This "stage between `begin()` and `start()`, then commit once" model is what
 lets many audio profiles and a coexisting classic `BLEServer` land in **one**
 committed GATT table. See `DESIGN.md` → "Service staging and startup".
 
+## Public examples and convenience helpers
+
+The `libraries/BLEAudio/examples/` sketches are grouped by **real use case**
+(headset, speaker, phone, Auracast source/sink, Broadcast Assistant, hearing
+aid), not one sketch per API role. They use the configuration helpers that
+cover the common device shapes:
+
+- `BLEAudioUnicastServer::configureMediaSink()` — one stereo-capable sink ASE,
+  media + conversational contexts, front-left/front-right locations.
+- `BLEAudioUnicastServer::configureHeadset()` — one sink ASE plus one source
+  ASE for the microphone, with the usual contexts and locations.
+- `BLEAudioBroadcastSource::configureAuracast(name, channels, preset)` — a
+  ready-to-start Auracast transmitter with a Broadcast Name, PBP announcement
+  and the 48 kHz stereo preset by default.
+- `BLEAudioBroadcastSink::configureAuracast(targetName, streams)` — a
+  ready-to-scan Auracast receiver with one or two BISes and auto-sync.
+
+The helpers only call the public setters in a documented order; a sketch can
+override any field afterwards. Raw BAP roles, CAP handover, multi-peer
+coordinated sets, custom QoS and PCM sinks/sources stay public and are
+documented in the headers and in
+[`BLEAudio/README.md`](../BLEAudio/README.md) rather than duplicated as
+examples.
+
 ## Lifecycle and ordering contract
 
 ```cpp
+#include <BLE.h>
+#include <BLEAudio.h>
+
 BLE.begin("Headset");                        // 1. host stack up
 BLEAudio audio = BLE.getAudioController();
 audio.setPresentationDelay(40000);           // 2. defaults, before creating roles
@@ -208,7 +244,7 @@ audio.begin();                               // 3. engine common_init + event br
 BLEAudioCapAcceptor cap = audio.createCapAcceptor();   // 4. create + configure roles
 cap.setSetSize(2).setRank(1);
 BLEAudioUnicastServer us = audio.createUnicastServer();
-us.setSinkStreams(1).setSourceStreams(1);
+us.configureHeadset();
 // (optionally) create/stage classic BLEServer services here too
 
 audio.start();                               // 5. run roleApplies, merged PACS, single GATT commit
@@ -448,7 +484,7 @@ preset obligations. Non-exhaustive, but these are the ones that bite:
 - **Broadcast Sink** must publish **PACS** (sink caps) and, to be remotely
   assisted, the **Scan Delegator / BASS**. The sink does not advertise by
   itself: a sketch that wants assistants to reach it advertises connectably
-  (see `LEAudio_BroadcastSink`). Auto-sync works without an assistant; with
+  (see `LEAudio_AuracastSink`). Auto-sync works without an assistant; with
   auto-sync off and the sink not started it only follows BASS requests (the
   CAP handover acceptor case). On Bluedroid, a BASS PAST request carries the
   assistant peer address through the engine event bridge; the public

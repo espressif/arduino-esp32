@@ -49,6 +49,11 @@ static constexpr uint32_t kDefaultPresets =
 
 static constexpr BLEAudioContext kDefaultContexts = BLEAudioContext::Unspecified | BLEAudioContext::Conversational | BLEAudioContext::Media;
 
+/** Presets every interoperable phone offers first: 16/24/48 kHz at 10 ms. */
+static constexpr uint32_t kMediaPresets =
+  BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_24_2_1)
+  | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_2_1);
+
 // --------------------------------------------------------------------------
 // Impl
 // --------------------------------------------------------------------------
@@ -208,6 +213,26 @@ BLEAudioUnicastServer &BLEAudioUnicastServer::setPresentationDelayRange(uint32_t
     _impl->pdMaxUs = maxUs;
   }
   return *this;
+}
+
+BLEAudioUnicastServer &BLEAudioUnicastServer::configureMediaSink() {
+  return setSinkStreams(1)
+    .setSourceStreams(0)
+    .setMaxChannelsPerStream(2)
+    .setSupportedPresets(kMediaPresets)
+    .setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational)
+    .setSinkLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight);
+}
+
+BLEAudioUnicastServer &BLEAudioUnicastServer::configureHeadset() {
+  return setSinkStreams(1)
+    .setSourceStreams(1)
+    .setMaxChannelsPerStream(2)
+    .setSupportedPresets(kMediaPresets)
+    .setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational)
+    .setSourceContexts(BLEAudioContext::Conversational | BLEAudioContext::Media)
+    .setSinkLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight)
+    .setSourceLocation(BLEAudioLocation::Mono);
 }
 
 // --------------------------------------------------------------------------

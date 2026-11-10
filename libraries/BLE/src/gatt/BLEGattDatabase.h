@@ -42,10 +42,11 @@
  *    the engine commits it from `BLEAudio::start()`.
  *
  * The coordinator does not carry a separate "audio mode" flag: `audioModeActive()`
- * is derived from the LE Audio engine's own lifecycle (`bleAudioEngineIsInitialized()`),
- * so audio mode is exactly the window between `audio.begin()` and `audio.end()`.
- * This keeps the mode single-sourced in the engine and leaves the engine itself
- * free of any GATT-coordinator (i.e. NimBLE-only) knowledge.
+ * is derived from the LE Audio engine's lifecycle through a weak hook
+ * (`bleAudioGattActive()`), so audio mode is exactly the window between
+ * `audio.begin()` and `audio.end()`. This keeps the mode single-sourced in the
+ * engine, leaves the engine itself free of any GATT-coordinator (i.e.
+ * NimBLE-only) knowledge, and lets core BLE build without linking BLEAudio.
  *
  * Required ordering in audio mode (documented in AUDIO.md):
  *   BLE.begin() -> audio.begin() (common_init) -> create/stage BLEServer
@@ -67,8 +68,8 @@ namespace BLEGattDatabase {
 /**
  * @brief Whether the LE Audio engine currently owns the GATT commit.
  *
- * Derived from `bleAudioEngineIsInitialized()` when the LE Audio engine is
- * compiled in; always false otherwise. When true, `stageServer()` must be used
+ * Derived from the `bleAudioGattActive()` weak hook when the LE Audio library
+ * is linked in; always false otherwise. When true, `stageServer()` must be used
  * (the engine performs the single commit); when false, `commitServerStandalone()`
  * performs the full rebuild.
  */

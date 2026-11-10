@@ -42,16 +42,12 @@
 #if BLE_SMP_SUPPORTED
 #include "security/BLESecurity.bluedroid.h"
 #endif
-#if BLE_AUDIO_SUPPORTED
-#include "audio/BLEAudioImpl.h"
-#include "audio/engine/BLEAudioEngine.h"
-#include "audio/engine/BLEAudioEngine.bluedroid.h"
-#endif
 #if BLE_ISO_SUPPORTED
 #include "iso/BLEIso.h"
 #include "iso/BLEIsoHost.h"
 #endif
 #include "core/BLEImplHelpers.h"
+#include "core/BLEAudioHooks.h"
 #include "core/BLEMutex.h"
 #include "core/BLETask.h"
 #include "core/BLEValidationHooks.h"
@@ -429,10 +425,8 @@ void BLEClass::end(bool releaseMemory) {
   }
 #endif
 #if BLE_AUDIO_SUPPORTED
-  if (auto hook = _impl->loadHook(_impl->audioPreEndHook)) {
-    hook();
-  }
-  if (bleAudioEngineIsInitialized()) {
+  bool audioEndOk = !bleAudioPreEndHook || bleAudioPreEndHook();
+  if (!audioEndOk) {
     log_e("BLE.end: audio teardown did not complete; host shutdown aborted");
     BLELockGuard lifecycle(_impl->lifecycleMtx);
     _impl->endTask = nullptr;
@@ -1340,39 +1334,5 @@ BLESecurity BLEClass::getSecurity() {
 }
 #endif
 
-#if BLE_AUDIO_SUPPORTED
-namespace {
-std::shared_ptr<BLEAudio::Impl> &audioControllerSlot() {
-  static std::shared_ptr<BLEAudio::Impl> slot;
-  return slot;
-}
-}  // namespace
-
-BLEAudio BLEClass::getAudioController() {
-  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-  if (!isInitialized() || _impl->ending) {
-    log_e("getAudioController: BLE not initialized");
-    return BLEAudio();
-  }
-  auto &slot = audioControllerSlot();
-  if (!slot) {
-    slot = std::make_shared<BLEAudio::Impl>();
-    _impl->storeHook(_impl->audioGapHook, BLEAudioEngine::forwardHostGapEvent);
-    _impl->storeHook(
-      _impl->audioPreEndHook,
-      +[]() {
-        auto &audio = audioControllerSlot();
-        if (audio) {
-          BTStatus status = BLEAudio(audio).end();
-          if (!status) {
-            log_e("BLE.end: audio teardown failed (%s)", status.toString());
-          }
-        }
-      }
-    );
-  }
-  return BLEAudio(slot);
-}
-#endif
 
 #endif /* BLE_BLUEDROID */
