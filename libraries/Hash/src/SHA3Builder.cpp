@@ -119,8 +119,8 @@ void SHA3Builder::pad() {
   // Add the domain separator (0x06) at the current position
   buffer[buffer_size] = 0x06;
 
-  // Set the last byte to indicate the end (0x80)
-  buffer[rate - 1] = 0x80;
+  // Preserve the domain separator when both padding markers share a byte.
+  buffer[rate - 1] |= 0x80;
 }
 
 // Constructor
@@ -185,8 +185,8 @@ void SHA3Builder::add(const uint8_t *data, size_t len) {
 
 // Add data from a stream
 bool SHA3Builder::addStream(Stream &stream, const size_t maxLen) {
-  const int buf_size = 512;
-  int maxLengthLeft = maxLen;
+  const size_t buf_size = 512;
+  size_t maxLengthLeft = maxLen;
   uint8_t *buf = (uint8_t *)malloc(buf_size);
 
   if (!buf) {
@@ -196,7 +196,7 @@ bool SHA3Builder::addStream(Stream &stream, const size_t maxLen) {
   int bytesAvailable = stream.available();
   while ((bytesAvailable > 0) && (maxLengthLeft > 0)) {
     // Determine number of bytes to read
-    int readBytes = bytesAvailable;
+    size_t readBytes = (size_t)bytesAvailable;
     if (readBytes > maxLengthLeft) {
       readBytes = maxLengthLeft;
     }
@@ -205,7 +205,7 @@ bool SHA3Builder::addStream(Stream &stream, const size_t maxLen) {
     }
 
     // Read data and check if we got something
-    int numBytesRead = stream.readBytes(buf, readBytes);
+    size_t numBytesRead = stream.readBytes(buf, readBytes);
     if (numBytesRead < 1) {
       free(buf);
       return false;

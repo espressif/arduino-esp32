@@ -26,6 +26,8 @@
 #if CFG_TUH_ENABLED
 /** Weak in core; USBHostHID provides the strong definition (HID arm after tuh_task). */
 extern "C" void arduino_usb_host_hid_service(void);
+/** Weak in core; USBHostHID aborts deferred HID INs before tuh_task(). */
+extern "C" void arduino_usb_host_hid_pre_task(void);
 /** Weak in core; USBHostHID dispatches deferred report callbacks (loop-safe). */
 extern "C" void arduino_usb_host_hid_dispatch(void);
 /** Weak in core; USBHostHID arms HID IN only after the whole device has enumerated. */

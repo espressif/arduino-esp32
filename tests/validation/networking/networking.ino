@@ -23,6 +23,12 @@
 #include <ESPmDNS.h>
 #include <lwip/inet.h>
 #include <lwip/sockets.h>
+#if CONFIG_LWIP_TCPIP_CORE_LOCKING && CONFIG_LWIP_CHECK_THREAD_SAFETY
+#include <lwip/dns.h>
+#include <lwip/ip_addr.h>
+#include <lwip/priv/tcpip_priv.h>
+#include <lwip/udp.h>
+#endif
 #include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
@@ -179,6 +185,83 @@ static bool connectWiFi() {
 }
 
 // ==================== DNS Resolution ====================
+
+#if CONFIG_LWIP_TCPIP_CORE_LOCKING && CONFIG_LWIP_CHECK_THREAD_SAFETY
+// Regression for #13055: NetworkManager::hostByName() clears the DNS cache
+// when the interface address state changes. dns_clear_cache() invokes pending
+// lookup callbacks, so it must run with the TCPIP core lock held.
+
+static volatile bool dnsClearCacheCallbackRan = false;
+
+static void dnsClearCacheCallback(const char *name, const ip_addr_t *ipaddr, void *arg) {
+  (void)name;
+  (void)ipaddr;
+  (void)arg;
+  dnsClearCacheCallbackRan = true;
+  // The SNTP DNS callback reaches udp_new_ip_type(), which asserts if the
+  // TCPIP core lock is not held.
+  struct udp_pcb *pcb = udp_new_ip_type(IPADDR_TYPE_ANY);
+  if (pcb != nullptr) {
+    udp_remove(pcb);
+  }
+}
+
+void test_dns_clear_cache_tcpip_lock(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  unsigned long start = millis();
+  while ((uint32_t)WiFi.localIP() == 0 && millis() - start < 5000) {
+    delay(50);
+  }
+  TEST_ASSERT_NOT_EQUAL_MESSAGE(0, (uint32_t)WiFi.localIP(), "WiFi has no IP address");
+
+  ip_addr_t saved[DNS_MAX_SERVERS];
+  for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+    ip_addr_copy(saved[i], *dns_getserver(i));
+  }
+
+  ip_addr_t blackhole;
+  IP_ADDR4(&blackhole, 192, 0, 2, 1);
+  dnsClearCacheCallbackRan = false;
+
+  ip_addr_t address;
+  err_t err;
+  LOCK_TCPIP_CORE();
+  for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+    dns_setserver(i, &blackhole);
+  }
+  err = dns_gethostbyname("pending.invalid", &address, dnsClearCacheCallback, nullptr);
+  UNLOCK_TCPIP_CORE();
+
+  if (err != ERR_INPROGRESS) {
+    LOCK_TCPIP_CORE();
+    for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+      dns_setserver(i, &saved[i]);
+    }
+    UNLOCK_TCPIP_CORE();
+    TEST_ASSERT_EQUAL_MESSAGE(ERR_INPROGRESS, err, "DNS lookup did not stay pending");
+  }
+
+  // The first hostByName() after the interface gets an IP changes the cached
+  // IPv4 state and clears the DNS cache. Use an over-long hostname so the
+  // following lookup is rejected without another DNS query.
+  char invalidHost[DNS_MAX_NAME_LENGTH + 8];
+  memset(invalidHost, 'a', sizeof(invalidHost) - 1);
+  invalidHost[sizeof(invalidHost) - 1] = '\0';
+
+  IPAddress result;
+  int ret = Network.hostByName(invalidHost, result);
+
+  LOCK_TCPIP_CORE();
+  for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+    dns_setserver(i, &saved[i]);
+  }
+  UNLOCK_TCPIP_CORE();
+
+  TEST_ASSERT_LESS_OR_EQUAL_MESSAGE(0, ret, "invalid hostname unexpectedly resolved");
+  TEST_ASSERT_TRUE_MESSAGE(dnsClearCacheCallbackRan, "DNS cache clear did not invoke the pending callback");
+}
+#endif
 
 void test_dns_resolve(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
@@ -865,6 +948,11 @@ void setup() {
 
   UNITY_BEGIN();
 
+#if CONFIG_LWIP_TCPIP_CORE_LOCKING && CONFIG_LWIP_CHECK_THREAD_SAFETY
+  // Must run before any other hostByName() call so the cached IPv4 state still
+  // changes and hostByName() clears the DNS cache.
+  RUN_TEST(test_dns_clear_cache_tcpip_lock);
+#endif
   RUN_TEST(test_dns_resolve);
   RUN_TEST(test_dns_resolve_invalid);
   RUN_TEST(test_tcp_connect);

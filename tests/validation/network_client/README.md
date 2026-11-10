@@ -28,6 +28,12 @@ are available to the CI runner that checks out test scripts from the base branch
 | `test_network_client_endpoints` | `remoteIP()`, `remotePort()`, `localIP()`, `localPort()` (+ `int fd` overloads) |
 | `test_network_client_operator_compare` | `operator!=` between distinct clients |
 | `test_network_client_peer_shutdown` | `connected()` after peer closes the socket |
+| `test_network_client_peer_fin_reports_disconnected` | `connected()` becomes false after an orderly FIN once unread data is drained, but stays true while data remains |
+| `test_network_client_peer_close_reports_disconnected` | `connected()` becomes false after the peer calls `close()` |
+| `test_network_client_peer_half_close_allows_reply` | `read()` reports EOF after a half-close and the client can still write the reply |
+| `test_network_client_peer_half_close_allows_reply_after_probe` | A half-closed socket remains writable after `connected()` has reported the FIN |
+| `test_network_server_accept_roundtrip` | `NetworkServer::hasClient()` / `accept()` and a bidirectional exchange on the accepted socket |
+| `test_network_server_accept_closes_socket_on_option_failure` | `accept()` closes the descriptor when its `setsockopt()` calls fail |
 
 ## Requirements
 

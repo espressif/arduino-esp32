@@ -335,6 +335,13 @@
 // UAC1 DESCRIPTOR TEMPLATES
 //--------------------------------------------------------------------+
 
+// Interface Association Descriptor (IAD) for UAC1. It groups the audio control and streaming interfaces into one
+// function. Without it, Windows splits the audio interfaces of a composite device (e.g. CDC + audio) into
+// separate devices ("TinyUSB UAC1", error code 10).
+#define TUD_AUDIO10_DESC_IAD_LEN 8
+#define TUD_AUDIO10_DESC_IAD(_firstitf, _nitfs, _stridx) \
+    TUD_AUDIO10_DESC_IAD_LEN, TUSB_DESC_INTERFACE_ASSOCIATION, _firstitf, _nitfs, TUSB_CLASS_AUDIO, 0x00, 0x00, _stridx
+
 // UAC1 entity IDs for speaker and microphone
 // Speaker path
 #define UAC1_ENTITY_SPK_INPUT_TERMINAL  0x01
@@ -346,7 +353,8 @@
 
 // Stereo Speaker + Mic(s)
 #define TUD_AUDIO10_HEADSET_STEREO_DESC_LEN(_nfreqs) (\
-    +TUD_AUDIO10_DESC_STD_AC_LEN\
+    +TUD_AUDIO10_DESC_IAD_LEN\
+    + TUD_AUDIO10_DESC_STD_AC_LEN\
     + TUD_AUDIO10_DESC_CS_AC_LEN(2)\
     + TUD_AUDIO10_DESC_INPUT_TERM_LEN\
     + TUD_AUDIO10_DESC_FEATURE_UNIT_LEN(2)\
@@ -372,6 +380,7 @@
 
 #define TUD_AUDIO10_HEADSET_STEREO_DESCRIPTOR(_itfnum, _stridx, _epout, _epin, _nMaxSampleRate, _nChannels_SPK, _nChannels_MIC, _nBytesPerSample, _nBitsUsedPerSample, ...) \
     /* Standard AC Interface Descriptor(4.3.1) */\
+    TUD_AUDIO10_DESC_IAD(/*_firstitf*/ _itfnum, /*_nitfs*/ 3, /*_stridx*/ _stridx),\
     TUD_AUDIO10_DESC_STD_AC(/*_itfnum*/ _itfnum, /*_nEPs*/ 0x00, /*_stridx*/ _stridx),\
     /* Class-Specific AC Interface Header Descriptor(4.3.2) */\
     TUD_AUDIO10_DESC_CS_AC(/*_bcdADC*/ 0x0100, /*_totallen*/ (TUD_AUDIO10_DESC_INPUT_TERM_LEN+TUD_AUDIO10_DESC_FEATURE_UNIT_LEN(2)+TUD_AUDIO10_DESC_OUTPUT_TERM_LEN+TUD_AUDIO10_DESC_INPUT_TERM_LEN+TUD_AUDIO10_DESC_OUTPUT_TERM_LEN), /*_itf*/ (uint8_t)((_itfnum)+1), (uint8_t)((_itfnum)+2)),\
@@ -412,7 +421,8 @@
 
 // Mono Speaker + Mic(s)
 #define TUD_AUDIO10_HEADSET_MONO_DESC_LEN(_nfreqs) (\
-    +TUD_AUDIO10_DESC_STD_AC_LEN\
+    +TUD_AUDIO10_DESC_IAD_LEN\
+    + TUD_AUDIO10_DESC_STD_AC_LEN\
     + TUD_AUDIO10_DESC_CS_AC_LEN(2)\
     + TUD_AUDIO10_DESC_INPUT_TERM_LEN\
     + TUD_AUDIO10_DESC_FEATURE_UNIT_LEN(1)\
@@ -438,6 +448,7 @@
 
 #define TUD_AUDIO10_HEADSET_MONO_DESCRIPTOR(_itfnum, _stridx, _epout, _epin, _nMaxSampleRate, _nChannels_SPK, _nChannels_MIC, _nBytesPerSample, _nBitsUsedPerSample, ...) \
     /* Standard AC Interface Descriptor(4.3.1) */\
+    TUD_AUDIO10_DESC_IAD(/*_firstitf*/ _itfnum, /*_nitfs*/ 3, /*_stridx*/ _stridx),\
     TUD_AUDIO10_DESC_STD_AC(/*_itfnum*/ _itfnum, /*_nEPs*/ 0x00, /*_stridx*/ _stridx),\
     /* Class-Specific AC Interface Header Descriptor(4.3.2) */\
     TUD_AUDIO10_DESC_CS_AC(/*_bcdADC*/ 0x0100, /*_totallen*/ (TUD_AUDIO10_DESC_INPUT_TERM_LEN+TUD_AUDIO10_DESC_FEATURE_UNIT_LEN(1)+TUD_AUDIO10_DESC_OUTPUT_TERM_LEN+TUD_AUDIO10_DESC_INPUT_TERM_LEN+TUD_AUDIO10_DESC_OUTPUT_TERM_LEN), /*_itf*/ (uint8_t)((_itfnum)+1), (uint8_t)((_itfnum)+2)),\
@@ -478,7 +489,8 @@
 
 // Stereo Speaker
 #define TUD_AUDIO10_SPEAKER_STEREO_DESC_LEN(_nfreqs) (\
-    +TUD_AUDIO10_DESC_STD_AC_LEN\
+    +TUD_AUDIO10_DESC_IAD_LEN\
+    + TUD_AUDIO10_DESC_STD_AC_LEN\
     + TUD_AUDIO10_DESC_CS_AC_LEN(1)\
     + TUD_AUDIO10_DESC_INPUT_TERM_LEN\
     + TUD_AUDIO10_DESC_FEATURE_UNIT_LEN(2)\
@@ -494,6 +506,7 @@
 
 #define TUD_AUDIO10_SPEAKER_STEREO_DESCRIPTOR(_itfnum, _stridx, _epout, _nMaxSampleRate, _nChannels_SPK, _nBytesPerSample, _nBitsUsedPerSample, ...) \
     /* Standard AC Interface Descriptor(4.3.1) */\
+    TUD_AUDIO10_DESC_IAD(/*_firstitf*/ _itfnum, /*_nitfs*/ 2, /*_stridx*/ _stridx),\
     TUD_AUDIO10_DESC_STD_AC(/*_itfnum*/ _itfnum, /*_nEPs*/ 0x00, /*_stridx*/ _stridx),\
     /* Class-Specific AC Interface Header Descriptor(4.3.2) */\
     TUD_AUDIO10_DESC_CS_AC(/*_bcdADC*/ 0x0100, /*_totallen*/ (TUD_AUDIO10_DESC_INPUT_TERM_LEN+TUD_AUDIO10_DESC_FEATURE_UNIT_LEN(2)+TUD_AUDIO10_DESC_OUTPUT_TERM_LEN), /*_itf*/ (uint8_t)((_itfnum)+1)),\
@@ -518,7 +531,8 @@
 
 // Mono Speaker
 #define TUD_AUDIO10_SPEAKER_MONO_DESC_LEN(_nfreqs) (\
-    +TUD_AUDIO10_DESC_STD_AC_LEN\
+    +TUD_AUDIO10_DESC_IAD_LEN\
+    + TUD_AUDIO10_DESC_STD_AC_LEN\
     + TUD_AUDIO10_DESC_CS_AC_LEN(1)\
     + TUD_AUDIO10_DESC_INPUT_TERM_LEN\
     + TUD_AUDIO10_DESC_FEATURE_UNIT_LEN(1)\
@@ -534,6 +548,7 @@
 
 #define TUD_AUDIO10_SPEAKER_MONO_DESCRIPTOR(_itfnum, _stridx, _epout, _nMaxSampleRate, _nChannels_SPK, _nBytesPerSample, _nBitsUsedPerSample, ...) \
     /* Standard AC Interface Descriptor(4.3.1) */\
+    TUD_AUDIO10_DESC_IAD(/*_firstitf*/ _itfnum, /*_nitfs*/ 2, /*_stridx*/ _stridx),\
     TUD_AUDIO10_DESC_STD_AC(/*_itfnum*/ _itfnum, /*_nEPs*/ 0x00, /*_stridx*/ _stridx),\
     /* Class-Specific AC Interface Header Descriptor(4.3.2) */\
     TUD_AUDIO10_DESC_CS_AC(/*_bcdADC*/ 0x0100, /*_totallen*/ (TUD_AUDIO10_DESC_INPUT_TERM_LEN+TUD_AUDIO10_DESC_FEATURE_UNIT_LEN(1)+TUD_AUDIO10_DESC_OUTPUT_TERM_LEN), /*_itf*/ (uint8_t)((_itfnum)+1)),\
@@ -558,7 +573,8 @@
 
 // Microphone(s)
 #define TUD_AUDIO10_MICROPHONE_DESC_LEN(_nfreqs) (\
-    +TUD_AUDIO10_DESC_STD_AC_LEN\
+    +TUD_AUDIO10_DESC_IAD_LEN\
+    + TUD_AUDIO10_DESC_STD_AC_LEN\
     + TUD_AUDIO10_DESC_CS_AC_LEN(1)\
     + TUD_AUDIO10_DESC_INPUT_TERM_LEN\
     + TUD_AUDIO10_DESC_OUTPUT_TERM_LEN\
@@ -573,6 +589,7 @@
 
 #define TUD_AUDIO10_MICROPHONE_DESCRIPTOR(_itfnum, _stridx, _epin, _nMaxSampleRate, _nChannels_MIC, _nBytesPerSample, _nBitsUsedPerSample, ...) \
     /* Standard AC Interface Descriptor(4.3.1) */\
+    TUD_AUDIO10_DESC_IAD(/*_firstitf*/ _itfnum, /*_nitfs*/ 2, /*_stridx*/ _stridx),\
     TUD_AUDIO10_DESC_STD_AC(/*_itfnum*/ _itfnum, /*_nEPs*/ 0x00, /*_stridx*/ _stridx),\
     /* Class-Specific AC Interface Header Descriptor(4.3.2) */\
     TUD_AUDIO10_DESC_CS_AC(/*_bcdADC*/ 0x0100, /*_totallen*/ (TUD_AUDIO10_DESC_INPUT_TERM_LEN+TUD_AUDIO10_DESC_OUTPUT_TERM_LEN), /*_itf*/ (uint8_t)((_itfnum)+1)),\
