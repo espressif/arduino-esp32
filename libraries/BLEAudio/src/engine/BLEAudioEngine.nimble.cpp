@@ -1,0 +1,169 @@
+/*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "core/BLEGuards.h"
+
+#if BLE_NIMBLE && BLE_AUDIO_SUPPORTED
+
+#include "engine/BLEAudioEngine.nimble.h"
+#include "engine/BLEAudioEngine.h"
+#include "BLE.h"
+#if BLE_GATT_SERVER_SUPPORTED
+#include "gatt/BLEGattDatabase.h"
+#endif
+#include "scan/BLEScan.h"
+#include "esp32-hal-log.h"
+
+#include <host/ble_gap.h>
+#include <host/ble_hs.h>
+
+/**
+ * @file BLEAudioEngine.nimble.cpp
+ * @brief NimBLE host calls used by the engine's link bring-up, and GATT event forwarding.
+ *
+ * API contract is documented on the declarations in `BLEAudioEngine.nimble.h`
+ * and `BLEAudioEngine.h`; the definitions below carry implementation notes only.
+ */
+
+// --------------------------------------------------------------------------
+// Link bring-up helpers (called from BLEAudioEngine.c)
+// --------------------------------------------------------------------------
+
+/*
+ * Implemented here because NimBLE host headers clash with the Zephyr headers of the C units.
+ * A procedure already in progress (NimBLE starts one itself when the peer sends a Security
+ * Request) counts as started: its completion arrives as the same ENC_CHANGE event.
+ */
+extern "C" int bleAudioNimbleSecure(uint16_t conn_handle) {
+  int rc = ble_gap_security_initiate(conn_handle);
+  return rc == BLE_HS_EALREADY ? 0 : rc;
+}
+
+/*
+ * An exchange already sent on this link (in progress or completed, e.g. by the library's
+ * GATT client) counts as success: every MTU event starts discovery.
+ */
+extern "C" int bleAudioNimbleExchangeMtu(uint16_t conn_handle) {
+  int rc = ble_gattc_exchange_mtu(conn_handle, nullptr, nullptr);
+  return rc == BLE_HS_EALREADY ? 0 : rc;
+}
+
+extern "C" void bleAudioAddrFromGap(uint8_t out[6], const uint8_t in[6]) {
+  memcpy(out, in, 6);
+}
+
+extern "C" int bleAudioEngineSendPast(uint8_t adv, uint16_t conn, uint16_t service_data, const uint8_t peer_addr[6], uint8_t peer_addr_type) {
+  (void)peer_addr;
+  (void)peer_addr_type;
+#if BLE_PAST_SUPPORTED
+  int rc = ble_gap_periodic_adv_sync_set_info(adv, conn, service_data);
+  return rc;
+#else
+  (void)adv;
+  (void)conn;
+  (void)service_data;
+  return ESP_ERR_NOT_SUPPORTED;
+#endif
+}
+
+extern "C" int bleAudioEngineSendPastSync(uint16_t sync_handle, uint16_t conn, uint16_t service_data, const uint8_t peer_addr[6], uint8_t peer_addr_type) {
+  (void)peer_addr;
+  (void)peer_addr_type;
+#if BLE_PAST_SUPPORTED
+  int rc = ble_gap_periodic_adv_sync_transfer(sync_handle, conn, service_data);
+  return rc;
+#else
+  (void)sync_handle;
+  (void)conn;
+  (void)service_data;
+  return ESP_ERR_NOT_SUPPORTED;
+#endif
+}
+
+extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
+  int rc = ble_gap_terminate(conn_handle, BLE_ERR_REM_USER_CONN_TERM);
+  if (rc == 0) {
+    return 0;
+  }
+  if (rc == BLE_HS_EALREADY) {
+    return 0;
+  }
+  if (rc == BLE_HS_ENOTCONN) {
+    return static_cast<int>(BTStatus::NotConnected);
+  }
+  log_e("audio link: terminate handle=%u rc=%d", (unsigned)conn_handle, rc);
+  return static_cast<int>(BTStatus::Fail);
+}
+
+extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip,
+                                                   uint16_t timeout_ms) {
+  (void)peer_addr_type;
+  if (!peer_addr) {
+    return static_cast<int>(BTStatus::InvalidParam);
+  }
+  return static_cast<int>(BLE.getScan().receivePeriodicSync(conn_handle, skip, timeout_ms));
+}
+
+extern "C" int bleAudioHostPrepareGatt(void) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BTStatus status = BLEGattDatabase::prepareAudioCommit();
+  return status ? 0 : static_cast<int>(status);
+#else
+  return 0;
+#endif
+}
+
+extern "C" void bleAudioHostFinishGatt(bool success) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLEGattDatabase::finishAudioCommit(success);
+#else
+  (void)success;
+#endif
+}
+
+extern "C" void bleAudioHostResetGatt(void) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLEGattDatabase::resetAudioStaging();
+#endif
+}
+
+namespace BLEAudioEngine {
+
+// --------------------------------------------------------------------------
+// GATT event forwarding
+// --------------------------------------------------------------------------
+
+/*
+ * Called from the BLEServer and BLEClient connection handlers, right after
+ * the ISO GAP forwarding. The engine consumes the event synchronously, so the
+ * NimBLE event can be passed as is.
+ */
+void forwardHostGattEvent(struct ble_gap_event *event) {
+  if (event == nullptr || !bleAudioEngineIsInitialized()) {
+    return;
+  }
+  switch (event->type) {
+    case BLE_GAP_EVENT_MTU:
+    case BLE_GAP_EVENT_NOTIFY_RX:
+    case BLE_GAP_EVENT_NOTIFY_TX:
+    case BLE_GAP_EVENT_SUBSCRIBE:  bleAudioEngineGattPostEvent((uint8_t)event->type, event); break;
+    default:                       break;
+  }
+}
+
+}  // namespace BLEAudioEngine
+
+#endif /* BLE_NIMBLE && BLE_AUDIO_SUPPORTED */

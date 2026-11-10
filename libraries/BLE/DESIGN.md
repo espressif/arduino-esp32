@@ -443,8 +443,8 @@ Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive
 `bleAudioEngineIsInitialized()` (false when the engine is not compiled in), so audio mode is exactly the window
 between `audio.begin()` and `audio.end()`. The dependency points one way — the NimBLE-only coordinator observes the
 host-agnostic engine. The engine's only per-backend files are the thin event forwarders
-`audio/engine/BLEAudioEngine.nimble.*` (GATT events, plus the two NimBLE calls kept out of the Zephyr-based C units) and
-`audio/engine/BLEAudioEngine.bluedroid.*` (SMP completion).
+`engine/BLEAudioEngine.nimble.*` (GATT events, plus the two NimBLE calls kept out of the Zephyr-based C units) and
+`engine/BLEAudioEngine.bluedroid.*` (SMP completion).
 
 After `audio.start()` the NimBLE table is frozen: a later `BLEServer::start()` that would add attributes returns
 `InvalidState` instead of resetting the audio-owned table. Removing an already committed classic service remains
@@ -564,7 +564,7 @@ On receive, SDUs up to a fixed 256-byte stack threshold are flattened without a 
 
 ### LE Audio
 
-LE Audio (`libraries/BLEAudio/src/audio/`) is a **separate Arduino library**
+LE Audio (`libraries/BLEAudio/src/`) is a **separate Arduino library**
 built on the host-agnostic ESP-BLE-AUDIO engine. Keeping it out of `BLE` means
 a sketch that includes only `<BLE.h>` does not compile the audio engine; a
 sketch that includes `<BLEAudio.h>` gets the whole subsystem. The only
@@ -575,7 +575,7 @@ from the `BLE` singleton (`BLE.getAudioController()`); its `create*()` factories
 value-type role handles (unicast/broadcast data plane and Broadcast Assistant;
 CAP/CSIP coordination; VCP/MICP/MCP/CCP control; TMAP/GMAP/HAS/PBP identity) whose
 audio flows through `BLEAudioStream` handles, with a turnkey LC3 player/recorder on
-top. Every engine call is isolated in C engine units (`audio/engine/BLEAudioEngine*.{h,c}`)
+top. Every engine call is isolated in C engine units (`engine/BLEAudioEngine*.{h,c}`)
 behind an `extern "C"` boundary, and engine events reach the role handles through one
 event bridge; no `esp_ble_audio_*` type ever appears in a header reachable from
 `<BLEAudio.h>`. Roles
@@ -827,7 +827,7 @@ If you are modifying this library:
 - prefer adapting backend code to the shared API rather than changing the shared API to fit one backend
 - look for existing patterns in handle ownership, callback dispatch, and `BTStatus` conversion before inventing a new one
 - treat `MIGRATION.md` as a user-facing transition guide and this document as the maintainer-facing architecture guide
-- for LE Audio work, read [`AUDIO.md`](AUDIO.md) — it is the maintainer-facing guide for the `libraries/BLEAudio/src/audio/` subsystem (vendor boundary, controller commit model, per-role guards and spec obligations)
+- for LE Audio work, read [`AUDIO.md`](AUDIO.md) — it is the maintainer-facing guide for the `libraries/BLEAudio/src/` subsystem (vendor boundary, controller commit model, per-role guards and spec obligations)
 
 If the code and this document disagree, follow the code and update this document.
 

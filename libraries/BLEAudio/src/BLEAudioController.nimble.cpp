@@ -19,9 +19,9 @@
 
 #include "BLE.h"
 #include "BLE.nimble.h"
-#include "audio/BLEAudioImpl.h"
-#include "audio/engine/BLEAudioEngine.h"
-#include "audio/engine/BLEAudioEngine.nimble.h"
+#include "BLEAudioImpl.h"
+#include "engine/BLEAudioEngine.h"
+#include "engine/BLEAudioEngine.nimble.h"
 #include "core/BLEAudioHooks.h"
 #include "core/BLEMutex.h"
 #include "esp32-hal-log.h"

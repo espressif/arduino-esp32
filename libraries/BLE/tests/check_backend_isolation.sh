@@ -20,7 +20,7 @@
 # The public surfaces are:
 #   * the core umbrella header (BLE/src/BLE.h) plus every project header it
 #     directly includes;
-#   * the LE Audio umbrella header (BLEAudio/src/audio/BLEAudio.h) plus every
+#   * the LE Audio umbrella header (BLEAudio/src/BLEAudio.h) plus every
 #     project header it directly includes.
 #
 # Those headers must never leak backend detail:
@@ -122,7 +122,7 @@ check_surface() {
 check_surface "BLE" "${BLE_SRC_DIR}/BLE.h" "${BLE_SRC_DIR}"
 
 if [ -n "${AUDIO_SRC_DIR}" ]; then
-    check_surface "BLEAudio" "${AUDIO_SRC_DIR}/audio/BLEAudio.h" "${AUDIO_SRC_DIR}"
+    check_surface "BLEAudio" "${AUDIO_SRC_DIR}/BLEAudio.h" "${AUDIO_SRC_DIR}"
 fi
 
 if [ "$status" -eq 0 ]; then

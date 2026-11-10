@@ -4,8 +4,8 @@
 
 This document is for maintainers and AI tools working on the LE Audio subsystem
 of the Arduino BLE stack. The code lives in the separate **`BLEAudio`** library
-(`libraries/BLEAudio/src/audio/`; engine C units live in
-`libraries/BLEAudio/src/audio/engine/`). Keeping it a separate Arduino library
+(`libraries/BLEAudio/src/`; engine C units live in
+`libraries/BLEAudio/src/engine/`). Keeping it a separate Arduino library
 means a sketch that only includes `<BLE.h>` does not compile the audio engine.
 This document describes the architecture, the engine
 boundary, the event and stream paths, the lifecycle contract and the per-role
@@ -152,12 +152,12 @@ for the control profiles on Bluedroid:
 
 ### File map
 
-All paths are relative to `libraries/BLEAudio/src/audio/`.
+All paths are relative to `libraries/BLEAudio/src/`.
 
 | Files | Role |
 | --- | --- |
 | `BLEAudio.{h,cpp}`, `BLEAudioImpl.h` | Controller: lifecycle, role factories, link events, the event dispatcher. |
-| `../BLEAudioController.{nimble,bluedroid}.cpp` (library root) | Core-facing entry point: `BLE.getAudioController()`, weak pre-end/GATT hooks. |
+| `BLEAudioController.{nimble,bluedroid}.cpp` | Core-facing entry point: `BLE.getAudioController()`, weak pre-end/GATT hooks. |
 | `BLEAudio<Role>.{h,cpp}` | Public role handles (UnicastServer/Client, BroadcastSource/Sink/Assistant, Cap, CoordinatedSet, Volume, Mic, Media, Call, HearingAid, Profiles). |
 | `BLEAudioStream.{h,cpp}`, `BLEAudioStreamInternal.h` | Stream handle, engine stream callbacks, public↔engine value conversions, `bleAudioStatus()` error mapping. |
 | `BLEAudioTypes.h` | Value types: codec config, QoS, presets, locations, contexts. |

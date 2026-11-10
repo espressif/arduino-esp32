@@ -19,9 +19,9 @@
 
 #include "BLE.h"
 #include "BLE.bluedroid.h"
-#include "audio/BLEAudioImpl.h"
-#include "audio/engine/BLEAudioEngine.h"
-#include "audio/engine/BLEAudioEngine.bluedroid.h"
+#include "BLEAudioImpl.h"
+#include "engine/BLEAudioEngine.h"
+#include "engine/BLEAudioEngine.bluedroid.h"
 #include "core/BLEAudioHooks.h"
 #include "core/BLEMutex.h"
 #include "esp32-hal-log.h"
