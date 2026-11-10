@@ -27,9 +27,8 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber);
 #define analogWriteResolution(pin, bits) analogWriteResolution(digitalPinToGPIONumber(pin), bits)
 
 // cores/esp32/esp32-hal-adc.h
-#if !defined(CONFIG_IDF_TARGET_ESP32S31)
 #define analogRead(pin) analogRead(digitalPinToGPIONumber(pin))
-#else
+#if defined(CONFIG_IDF_TARGET_ESP32S31)
 #define analogReadComparator(pin) analogReadComparator(digitalPinToGPIONumber(pin))
 #endif
 #define analogReadMilliVolts(pin)                 analogReadMilliVolts(digitalPinToGPIONumber(pin))

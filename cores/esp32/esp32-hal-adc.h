@@ -41,14 +41,15 @@ typedef enum {
   ADC_ATTENDB_MAX
 } adc_attenuation_t;
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S31)
 /*
- * Get ADC value for pin
+ * Get ADC value for pin.
+ * On ESP32-S31 this logs an error and returns 0. Use analogReadComparator().
  * */
 uint16_t analogRead(uint8_t pin);
-#else
+
+#if defined(CONFIG_IDF_TARGET_ESP32S31)
 /*
- * Get the ESP32-S31 17-bit comparator vector. analogRead() is not available.
+ * Get the ESP32-S31 17-bit comparator vector.
  * */
 uint32_t analogReadComparator(uint8_t pin);
 #endif

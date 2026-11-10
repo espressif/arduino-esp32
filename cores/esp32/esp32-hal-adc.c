@@ -241,7 +241,7 @@ static inline uint16_t mapResolution(uint16_t value) {
 
 void __analogSetAttenuation(adc_attenuation_t attenuation) {
 #if CONFIG_IDF_TARGET_ESP32S31
-  log_e("analogSetAttenuation() has no effect on ESP32-S31. The only range is ADC_11db (0 dB, about -2000 mV to +2000 mV).");
+  log_e("analogSetAttenuation() is not supported on ESP32-S31. The only range is ADC_11db (0 dB, about -2000 mV to +2000 mV).");
   (void)attenuation;
   return;
 #endif
@@ -299,7 +299,7 @@ esp_err_t __analogInit(uint8_t pin, adc_channel_t channel, adc_unit_t adc_unit) 
 
 void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation) {
 #if CONFIG_IDF_TARGET_ESP32S31
-  log_e("analogSetPinAttenuation() has no effect on ESP32-S31. The only range is ADC_11db (0 dB, about -2000 mV to +2000 mV).");
+  log_e("analogSetPinAttenuation() is not supported on ESP32-S31. The only range is ADC_11db (0 dB, about -2000 mV to +2000 mV).");
   (void)pin;
   (void)attenuation;
   return;
@@ -311,7 +311,7 @@ void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation) {
 
 void __analogReadResolution(uint8_t bits) {
 #if CONFIG_IDF_TARGET_ESP32S31
-  log_e("analogReadResolution() has no effect on ESP32-S31. Use analogReadComparator() or analogReadMilliVolts().");
+  log_e("analogReadResolution() is not supported on ESP32-S31. Use analogReadComparator() or analogReadMilliVolts().");
   (void)bits;
   return;
 #endif
@@ -325,32 +325,13 @@ void __analogReadResolution(uint8_t bits) {
 #endif
 }
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S31)
+#if CONFIG_IDF_TARGET_ESP32S31
 uint16_t __analogRead(uint8_t pin) {
-  int value = 0;
-  adc_channel_t channel;
-  adc_unit_t adc_unit;
-
-  esp_err_t err = ESP_OK;
-  err = adc_oneshot_io_to_channel(pin, &adc_unit, &channel);
-  if (err != ESP_OK) {
-    log_e("Pin %u is not ADC pin!", pin);
-    return value;
-  }
-
-  if (perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL) {
-    log_d("Calling __analogInit! pin = %u", pin);
-    err = __analogInit(pin, channel, adc_unit);
-    if (err != ESP_OK) {
-      log_e("Analog initialization failed!");
-      return value;
-    }
-  }
-
-  adc_oneshot_read(adc_handle[adc_unit].adc_oneshot_handle, channel, &value);
-  return mapResolution(value);
+  log_e("analogRead() is not supported on ESP32-S31. Use analogReadComparator().");
+  (void)pin;
+  return 0;
 }
-#else
+
 uint32_t __analogReadComparator(uint8_t pin) {
   int value = 0;
   adc_channel_t channel;
@@ -374,6 +355,31 @@ uint32_t __analogReadComparator(uint8_t pin) {
 
   adc_oneshot_read(adc_handle[adc_unit].adc_oneshot_handle, channel, &value);
   return (uint32_t)value;
+}
+#else
+uint16_t __analogRead(uint8_t pin) {
+  int value = 0;
+  adc_channel_t channel;
+  adc_unit_t adc_unit;
+
+  esp_err_t err = ESP_OK;
+  err = adc_oneshot_io_to_channel(pin, &adc_unit, &channel);
+  if (err != ESP_OK) {
+    log_e("Pin %u is not ADC pin!", pin);
+    return value;
+  }
+
+  if (perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL) {
+    log_d("Calling __analogInit! pin = %u", pin);
+    err = __analogInit(pin, channel, adc_unit);
+    if (err != ESP_OK) {
+      log_e("Analog initialization failed!");
+      return value;
+    }
+  }
+
+  adc_oneshot_read(adc_handle[adc_unit].adc_oneshot_handle, channel, &value);
+  return mapResolution(value);
 }
 #endif
 
@@ -431,9 +437,8 @@ int32_t __analogReadMilliVolts(uint8_t pin) {
   return value;
 }
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S31)
 extern uint16_t analogRead(uint8_t pin) __attribute__((weak, alias("__analogRead")));
-#else
+#if CONFIG_IDF_TARGET_ESP32S31
 extern uint32_t analogReadComparator(uint8_t pin) __attribute__((weak, alias("__analogReadComparator")));
 #endif
 extern int32_t analogReadMilliVolts(uint8_t pin) __attribute__((weak, alias("__analogReadMilliVolts")));
@@ -855,7 +860,7 @@ bool analogContinuousDeinit() {
 
 void analogContinuousSetAtten(adc_attenuation_t attenuation) {
 #if CONFIG_IDF_TARGET_ESP32S31
-  log_e("analogContinuousSetAtten() has no effect on ESP32-S31. The only range is ADC_11db (0 dB, about -2000 mV to +2000 mV).");
+  log_e("analogContinuousSetAtten() is not supported on ESP32-S31. The only range is ADC_11db (0 dB, about -2000 mV to +2000 mV).");
   (void)attenuation;
   return;
 #endif
@@ -864,7 +869,7 @@ void analogContinuousSetAtten(adc_attenuation_t attenuation) {
 
 void analogContinuousSetWidth(uint8_t bits) {
 #if CONFIG_IDF_TARGET_ESP32S31
-  log_e("analogContinuousSetWidth() has no effect on ESP32-S31. The width is fixed at %u bits.", SOC_ADC_DIGI_MAX_BITWIDTH);
+  log_e("analogContinuousSetWidth() is not supported on ESP32-S31. The width is fixed at %u bits.", SOC_ADC_DIGI_MAX_BITWIDTH);
   (void)bits;
   return;
 #endif
