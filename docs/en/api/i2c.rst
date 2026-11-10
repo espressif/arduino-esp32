@@ -496,6 +496,11 @@ The ``slaveWrite`` function writes on the slave response buffer before receiving
 
 .. warning:: This function is only required for the ESP32. You **don't** need to use for ESP32-S2 and ESP32-C3.
 
+.. warning:: Do not call ``Wire.slaveWrite()`` inside the ``onRequest()`` callback.
+
+   Use ``Wire.write()`` to send response data from the callback.
+
+
 .. code-block:: arduino
 
     size_t slaveWrite(const uint8_t *, size_t);

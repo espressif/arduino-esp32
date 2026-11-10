@@ -30,10 +30,12 @@
 #include "WebServer.h"
 #include "FS.h"
 #include "detail/RequestHandlersImpl.h"
-#include "MD5Builder.h"
 #include "SHA1Builder.h"
+#if WEBSERVER_DIGEST_AUTH
+#include "MD5Builder.h"
 #include "SHA2Builder.h"
 #include "HMACBuilder.h"
+#endif
 #include "base64.h"
 
 static const char AUTHORIZATION_HEADER[] = "Authorization";
@@ -57,7 +59,9 @@ WebServer::~WebServer() {
   _clearRequestHeaders();
   _clearResponseHeaders();
   delete _chain;
+#if WEBSERVER_DIGEST_AUTH
   forced_memzero(_digestSecret, sizeof(_digestSecret));
+#endif
 
   RequestHandler *handler = _firstHandler;
   while (handler) {
@@ -80,6 +84,7 @@ void WebServer::begin(uint16_t port) {
   _server.setNoDelay(true);
 }
 
+#if WEBSERVER_DIGEST_AUTH
 String WebServer::_extractParam(String &authReq, const String &param, const char delimit) {
   int _begin = authReq.indexOf(param);
   if (_begin == -1) {
@@ -95,6 +100,7 @@ static String md5str(String &in) {
   md5.calculate();
   return md5.toString();
 }
+#endif
 
 bool WebServer::authenticateBasicSHA1(const char *_username, const char *_sha1Base64orHex) {
   return WebServer::authenticate([_username, _sha1Base64orHex](HTTPAuthMethod mode, String username, String params[]) -> String * {
@@ -157,7 +163,9 @@ bool WebServer::authenticate(const char *_username, const char *_password) {
 }
 
 bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
+#if WEBSERVER_DIGEST_AUTH
   _digestNonceStale = false;
+#endif
 
   if (!hasHeader(FPSTR(AUTHORIZATION_HEADER))) {
     return false;
@@ -200,6 +208,7 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     log_v("Authentication %s", ret ? "Success" : "Failed");
     return ret;
   } else if (authReq.startsWith(AuthTypeDigest)) {
+#if WEBSERVER_DIGEST_AUTH
     log_v("Trying to authenticate using Digest Auth");
     authReq = authReq.substring(7);
     log_v("%s", authReq.c_str());
@@ -275,6 +284,10 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     _digestNonceStale = true;
     log_v("Authentication Failed (stale nonce)");
     return false;
+#else
+    log_v("Digest authentication is disabled (WEBSERVER_DIGEST_AUTH=0)");
+    goto exf;
+#endif
   } else if (authReq.length()) {
     // OTHER_AUTH
     log_v("Trying to authenticate using Other Auth, authReq=%s", authReq.c_str());
@@ -291,6 +304,7 @@ exf:
   return false;
 }
 
+#if WEBSERVER_DIGEST_AUTH
 static const size_t DIGEST_NONCE_TS_LEN = 4;
 static const size_t DIGEST_NONCE_RND_LEN = 4;
 static const size_t DIGEST_NONCE_MAC_LEN = 16;
@@ -391,6 +405,7 @@ bool WebServer::_isDigestNonceValid(const String &nonce) {
 #endif
   return true;
 }
+#endif  // WEBSERVER_DIGEST_AUTH
 
 void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, const String &authFailMsg) {
   if (realm == NULL) {
@@ -398,6 +413,7 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
   } else {
     _srealm = String(realm);
   }
+#if WEBSERVER_DIGEST_AUTH
   if (mode == BASIC_AUTH) {
     _digestNonceStale = false;
     sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeBasic + String(F(" realm=\"")) + _srealm + String(F("\"")));
@@ -410,6 +426,18 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
     }
     sendHeader(String(FPSTR(WWW_Authenticate)), header);
   }
+#else
+  if (mode != BASIC_AUTH) {
+    // Do not downgrade to Basic: it would invite the client to send the
+    // credentials in the clear for a scheme the sketch did not ask for.
+    // Without a challenge the request cannot be authenticated, so deny it.
+    log_e("Digest authentication is disabled (WEBSERVER_DIGEST_AUTH=0); refusing to send a challenge");
+    using namespace mime;
+    send(403, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
+    return;
+  }
+  sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeBasic + String(F(" realm=\"")) + _srealm + String(F("\"")));
+#endif
   using namespace mime;
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
 }
@@ -515,33 +543,34 @@ void WebServer::serveStatic(const char *uri, fs::FS &fs, const char *path, const
 
 void WebServer::handleClient() {
   if (_currentStatus == HC_NONE) {
-    _currentClient = _server.accept();
-    if (!_currentClient) {
+    NetworkClient &newClient = acceptClient();
+    if (!newClient) {
       if (_nullDelay) {
         delay(1);
       }
       return;
     }
 
-    log_v("New client: client.localIP()=%s", _currentClient.localIP().toString().c_str());
+    log_v("New client: client.localIP()=%s", newClient.localIP().toString().c_str());
 
     _currentStatus = HC_WAIT_READ;
     _statusChange = millis();
   }
 
+  NetworkClient &activeClient = client();
   bool keepCurrentClient = false;
   bool callYield = false;
 
-  if (_currentClient.connected()) {
+  if (activeClient.connected()) {
     switch (_currentStatus) {
       case HC_NONE:
         // No-op to avoid C++ compiler warning
         break;
       case HC_WAIT_READ:
         // Wait for data from client to become available
-        if (_currentClient.available()) {
-          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT); /* / 1000 removed, WifiClient setTimeout changed to ms */
-          if (_parseRequest(_currentClient)) {
+        if (activeClient.available()) {
+          activeClient.setTimeout(HTTP_MAX_SEND_WAIT); /* / 1000 removed, WifiClient setTimeout changed to ms */
+          if (_parseRequest(activeClient)) {
             _contentLength = CONTENT_LENGTH_NOT_SET;
             _responseCode = 0;
             _clearResponseHeaders();
@@ -555,7 +584,7 @@ void WebServer::handleClient() {
               _handleRequest();
             }
 
-            if (_currentClient.isSSE()) {
+            if (activeClient.isSSE()) {
               _currentStatus = HC_WAIT_CLOSE;
               _statusChange = millis();
               keepCurrentClient = true;
@@ -567,7 +596,7 @@ void WebServer::handleClient() {
             //             keepCurrentClient = true;
             //           }
           }
-        } else {  // !_currentClient.available()
+        } else {  // !activeClient.available()
           if (millis() - _statusChange <= HTTP_MAX_DATA_WAIT) {
             keepCurrentClient = true;
           }
@@ -575,7 +604,7 @@ void WebServer::handleClient() {
         }
         break;
       case HC_WAIT_CLOSE:
-        if (_currentClient.isSSE()) {
+        if (activeClient.isSSE()) {
           // Never close connection
           _statusChange = millis();
         }
@@ -588,7 +617,7 @@ void WebServer::handleClient() {
   }
 
   if (!keepCurrentClient) {
-    _currentClient = NetworkClient();
+    closeClient();
     _currentStatus = HC_NONE;
     _currentUpload.reset();
     _currentRaw.reset();
@@ -601,6 +630,7 @@ void WebServer::handleClient() {
 
 void WebServer::close() {
   _server.close();
+  closeClient();
   _currentStatus = HC_NONE;
   if (!_headerKeysCount) {
     collectHeaders(0, 0);
@@ -683,7 +713,7 @@ void WebServer::chunkResponseBegin(const char *contentType) {
   }
 
   _chunkedResponseActive = true;
-  _chunkedClient = _currentClient;
+  _chunkedClient = &client();
 
   _contentLength = CONTENT_LENGTH_UNKNOWN;
 
@@ -692,11 +722,11 @@ void WebServer::chunkResponseBegin(const char *contentType) {
   _currentClientWrite(header.c_str(), header.length());
 
   _chunkedResponseActive = true;
-  _chunkedClient = _currentClient;
+  _chunkedClient = &client();
 }
 
 void WebServer::chunkWrite(const char *data, size_t length) {
-  if (!_chunkedResponseActive) {
+  if (!_chunkedResponseActive || _chunkedClient == nullptr) {
     log_e("Chunked response has not been started");
     return;
   }
@@ -704,19 +734,19 @@ void WebServer::chunkWrite(const char *data, size_t length) {
   char chunkSize[11];
   snprintf(chunkSize, sizeof(chunkSize), "%lx\r\n", (unsigned long)length);
 
-  if (_chunkedClient.write(chunkSize) != strlen(chunkSize)) {
+  if (_chunkedClient->write(chunkSize) != strlen(chunkSize)) {
     log_e("Failed to write chunk size");
     _chunkedResponseActive = false;
     return;
   }
 
-  if (_chunkedClient.write((const uint8_t *)data, length) != length) {
+  if (_chunkedClient->write((const uint8_t *)data, length) != length) {
     log_e("Failed to write chunk data");
     _chunkedResponseActive = false;
     return;
   }
 
-  if (_chunkedClient.write("\r\n") != 2) {
+  if (_chunkedClient->write("\r\n") != 2) {
     log_e("Failed to write chunk terminator");
     _chunkedResponseActive = false;
     return;
@@ -724,19 +754,19 @@ void WebServer::chunkWrite(const char *data, size_t length) {
 }
 
 void WebServer::chunkResponseEnd() {
-  if (!_chunkedResponseActive) {
+  if (!_chunkedResponseActive || _chunkedClient == nullptr) {
     log_e("Chunked response has not been started");
     return;
   }
 
-  if (_chunkedClient.write("0\r\n\r\n", 5) != 5) {
+  if (_chunkedClient->write("0\r\n\r\n", 5) != 5) {
     log_e("Failed to write terminating chunk");
   }
 
-  _chunkedClient.clear();
+  _chunkedClient->clear();
   _chunkedResponseActive = false;
   _chunked = false;
-  _chunkedClient = NetworkClient();
+  _chunkedClient = nullptr;
 
   _clearResponseHeaders();
 }
@@ -823,7 +853,7 @@ void WebServer::send(int code, const char *content_type, Stream &stream, size_t 
   String header;
   _prepareHeader(header, code, content_type, content_length);
   _currentClientWrite(header.c_str(), header.length());
-  _currentClient.write(stream, content_length);
+  client().write(stream, content_length);
 }
 
 void WebServer::send_P(int code, PGM_P content_type, PGM_P content) {
@@ -866,7 +896,7 @@ void WebServer::sendContent(const char *content, size_t contentLength) {
   }
   _currentClientWrite(content, contentLength);
   if (_chunked) {
-    _currentClient.write(footer, 2);
+    client().write(footer, 2);
     if (contentLength == 0) {
       _chunked = false;
     }
@@ -889,7 +919,7 @@ void WebServer::sendContent_P(PGM_P content, size_t size) {
   }
   _currentClientWrite_P(content, size);
   if (_chunked) {
-    _currentClient.write(footer, 2);
+    client().write(footer, 2);
     if (size == 0) {
       _chunked = false;
     }

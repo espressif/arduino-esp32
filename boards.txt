@@ -9015,6 +9015,361 @@ sparkfun_esp32s3_thing_plus.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE
 sparkfun_esp32s3_thing_plus.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
+# SparkFun IoT RedBoard ESP32-P4 - WiFi/BLE
+
+sparkfun_esp32p4_iot_redboard_wifi.name=SparkFun IoT RedBoard - ESP32-P4 (WiFi/BLE)
+sparkfun_esp32p4_iot_redboard_wifi.bootloader.tool=esptool_py
+sparkfun_esp32p4_iot_redboard_wifi.bootloader.tool.default=esptool_py
+
+sparkfun_esp32p4_iot_redboard_wifi.upload.tool=esptool_py
+sparkfun_esp32p4_iot_redboard_wifi.upload.tool.default=esptool_py
+sparkfun_esp32p4_iot_redboard_wifi.upload.tool.network=esp_ota
+sparkfun_esp32p4_iot_redboard_wifi.upload.maximum_size=3145728
+sparkfun_esp32p4_iot_redboard_wifi.upload.maximum_data_size=327680
+sparkfun_esp32p4_iot_redboard_wifi.upload.flags=
+sparkfun_esp32p4_iot_redboard_wifi.upload.erase_cmd=
+sparkfun_esp32p4_iot_redboard_wifi.upload.extra_flags=
+sparkfun_esp32p4_iot_redboard_wifi.upload.use_1200bps_touch=false
+sparkfun_esp32p4_iot_redboard_wifi.upload.wait_for_upload_port=false
+
+sparkfun_esp32p4_iot_redboard_wifi.serial.disableDTR=false
+sparkfun_esp32p4_iot_redboard_wifi.serial.disableRTS=false
+
+sparkfun_esp32p4_iot_redboard_wifi.build.tarch=riscv32
+sparkfun_esp32p4_iot_redboard_wifi.build.target=esp
+sparkfun_esp32p4_iot_redboard_wifi.build.mcu=esp32p4
+sparkfun_esp32p4_iot_redboard_wifi.build.core=esp32
+sparkfun_esp32p4_iot_redboard_wifi.build.variant=sparkfun_esp32p4_iot_redboard_wifi
+sparkfun_esp32p4_iot_redboard_wifi.build.chip_variant=esp32p4
+sparkfun_esp32p4_iot_redboard_wifi.build.board=SPARKFUN_ESP32P4_IOT_REDBOARD_WIFI
+sparkfun_esp32p4_iot_redboard_wifi.build.bootloader_addr=0x2000
+sparkfun_esp32p4_iot_redboard_wifi.build.usb_mode=1
+sparkfun_esp32p4_iot_redboard_wifi.build.cdc_on_boot=1
+sparkfun_esp32p4_iot_redboard_wifi.build.msc_on_boot=0
+sparkfun_esp32p4_iot_redboard_wifi.build.dfu_on_boot=0
+sparkfun_esp32p4_iot_redboard_wifi.build.f_cpu=400000000L
+sparkfun_esp32p4_iot_redboard_wifi.build.flash_size=16MB
+sparkfun_esp32p4_iot_redboard_wifi.build.flash_freq=80m
+sparkfun_esp32p4_iot_redboard_wifi.build.img_freq=80m
+sparkfun_esp32p4_iot_redboard_wifi.build.flash_mode=dio
+sparkfun_esp32p4_iot_redboard_wifi.build.boot=qio
+sparkfun_esp32p4_iot_redboard_wifi.build.partitions=app3M_fat9M_16MB
+sparkfun_esp32p4_iot_redboard_wifi.build.defines=-DBOARD_HAS_PSRAM
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.ChipVariant.postv3=v3.00 or newer
+sparkfun_esp32p4_iot_redboard_wifi.menu.ChipVariant.postv3.build.chip_variant=esp32p4
+sparkfun_esp32p4_iot_redboard_wifi.menu.ChipVariant.postv3.build.f_cpu=400000000L
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.default=Disabled
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.default.build.copy_jtag_files=0
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.builtin=Integrated USB JTAG
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.builtin.build.openocdscript=esp32p4-builtin.cfg
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.external=FTDI Adapter
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.external.build.openocdscript=esp32p4-ftdi.cfg
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.external.build.copy_jtag_files=1
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.bridge=ESP USB Bridge
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.bridge.build.openocdscript=esp32p4-bridge.cfg
+sparkfun_esp32p4_iot_redboard_wifi.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.USBMode.hwcdc=Hardware CDC and JTAG
+sparkfun_esp32p4_iot_redboard_wifi.menu.USBMode.hwcdc.build.usb_mode=1
+sparkfun_esp32p4_iot_redboard_wifi.menu.USBMode.default=USB-OTG (TinyUSB)
+sparkfun_esp32p4_iot_redboard_wifi.menu.USBMode.default.build.usb_mode=0
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.CDCOnBoot.cdc=Enabled
+sparkfun_esp32p4_iot_redboard_wifi.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+sparkfun_esp32p4_iot_redboard_wifi.menu.CDCOnBoot.default=Disabled
+sparkfun_esp32p4_iot_redboard_wifi.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.MSCOnBoot.default=Disabled
+sparkfun_esp32p4_iot_redboard_wifi.menu.MSCOnBoot.default.build.msc_on_boot=0
+sparkfun_esp32p4_iot_redboard_wifi.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+sparkfun_esp32p4_iot_redboard_wifi.menu.MSCOnBoot.msc.build.msc_on_boot=1
+sparkfun_esp32p4_iot_redboard_wifi.menu.DFUOnBoot.default=Disabled
+sparkfun_esp32p4_iot_redboard_wifi.menu.DFUOnBoot.default.build.dfu_on_boot=0
+sparkfun_esp32p4_iot_redboard_wifi.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+sparkfun_esp32p4_iot_redboard_wifi.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadMode.default=UART0 / Hardware CDC
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadMode.default.upload.use_1200bps_touch=false
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadMode.default.upload.wait_for_upload_port=false
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.default.build.partitions=default
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.default.upload.maximum_size=1310720
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.defaultffat.upload.maximum_size=1310720
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.minimal.build.partitions=minimal
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.minimal.upload.maximum_size=1310720
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.no_fs.build.partitions=no_fs
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.no_ota.build.partitions=no_ota
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.huge_app.build.partitions=huge_app
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.fatflash.build.partitions=ffat
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MODEL)
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.custom=Custom
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.custom.build.partitions=
+sparkfun_esp32p4_iot_redboard_wifi.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.921600=921600
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.921600.upload.speed=921600
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.115200=115200
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.115200.upload.speed=115200
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.256000.windows=256000
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.256000.upload.speed=256000
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.230400.windows.upload.speed=256000
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.230400=230400
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.230400.upload.speed=230400
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.460800.linux=460800
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.460800.macosx=460800
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.460800.upload.speed=460800
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.512000.windows=512000
+sparkfun_esp32p4_iot_redboard_wifi.menu.UploadSpeed.512000.upload.speed=512000
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.none=None
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.none.build.code_debug=0
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.error=Error
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.error.build.code_debug=1
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.warn=Warn
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.warn.build.code_debug=2
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.info=Info
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.info.build.code_debug=3
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.debug=Debug
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.debug.build.code_debug=4
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.verbose=Verbose
+sparkfun_esp32p4_iot_redboard_wifi.menu.DebugLevel.verbose.build.code_debug=5
+
+sparkfun_esp32p4_iot_redboard_wifi.menu.EraseFlash.none=Disabled
+sparkfun_esp32p4_iot_redboard_wifi.menu.EraseFlash.all=Enabled
+sparkfun_esp32p4_iot_redboard_wifi.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+# SparkFun IoT RedBoard ESP32-P4 - POE
+
+sparkfun_esp32p4_iot_redboard_poe.name=SparkFun IoT RedBoard - ESP32-P4 (PoE)
+sparkfun_esp32p4_iot_redboard_poe.bootloader.tool=esptool_py
+sparkfun_esp32p4_iot_redboard_poe.bootloader.tool.default=esptool_py
+
+sparkfun_esp32p4_iot_redboard_poe.upload.tool=esptool_py
+sparkfun_esp32p4_iot_redboard_poe.upload.tool.default=esptool_py
+sparkfun_esp32p4_iot_redboard_poe.upload.tool.network=esp_ota
+sparkfun_esp32p4_iot_redboard_poe.upload.maximum_size=3145728
+sparkfun_esp32p4_iot_redboard_poe.upload.maximum_data_size=327680
+sparkfun_esp32p4_iot_redboard_poe.upload.flags=
+sparkfun_esp32p4_iot_redboard_poe.upload.erase_cmd=
+sparkfun_esp32p4_iot_redboard_poe.upload.extra_flags=
+sparkfun_esp32p4_iot_redboard_poe.upload.use_1200bps_touch=false
+sparkfun_esp32p4_iot_redboard_poe.upload.wait_for_upload_port=false
+
+sparkfun_esp32p4_iot_redboard_poe.serial.disableDTR=false
+sparkfun_esp32p4_iot_redboard_poe.serial.disableRTS=false
+
+sparkfun_esp32p4_iot_redboard_poe.build.tarch=riscv32
+sparkfun_esp32p4_iot_redboard_poe.build.target=esp
+sparkfun_esp32p4_iot_redboard_poe.build.mcu=esp32p4
+sparkfun_esp32p4_iot_redboard_poe.build.core=esp32
+sparkfun_esp32p4_iot_redboard_poe.build.variant=sparkfun_esp32p4_iot_redboard_poe
+sparkfun_esp32p4_iot_redboard_poe.build.chip_variant=esp32p4
+sparkfun_esp32p4_iot_redboard_poe.build.board=SPARKFUN_ESP32P4_IOT_REDBOARD_POE
+sparkfun_esp32p4_iot_redboard_poe.build.bootloader_addr=0x2000
+sparkfun_esp32p4_iot_redboard_poe.build.usb_mode=1
+sparkfun_esp32p4_iot_redboard_poe.build.cdc_on_boot=1
+sparkfun_esp32p4_iot_redboard_poe.build.msc_on_boot=0
+sparkfun_esp32p4_iot_redboard_poe.build.dfu_on_boot=0
+sparkfun_esp32p4_iot_redboard_poe.build.f_cpu=400000000L
+sparkfun_esp32p4_iot_redboard_poe.build.flash_size=16MB
+sparkfun_esp32p4_iot_redboard_poe.build.flash_freq=80m
+sparkfun_esp32p4_iot_redboard_poe.build.img_freq=80m
+sparkfun_esp32p4_iot_redboard_poe.build.flash_mode=dio
+sparkfun_esp32p4_iot_redboard_poe.build.boot=qio
+sparkfun_esp32p4_iot_redboard_poe.build.partitions=app3M_fat9M_16MB
+sparkfun_esp32p4_iot_redboard_poe.build.defines=-DBOARD_HAS_PSRAM
+
+sparkfun_esp32p4_iot_redboard_poe.menu.ChipVariant.postv3=v3.00 or newer
+sparkfun_esp32p4_iot_redboard_poe.menu.ChipVariant.postv3.build.chip_variant=esp32p4
+sparkfun_esp32p4_iot_redboard_poe.menu.ChipVariant.postv3.build.f_cpu=400000000L
+
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.default=Disabled
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.default.build.copy_jtag_files=0
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.builtin=Integrated USB JTAG
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.builtin.build.openocdscript=esp32p4-builtin.cfg
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.external=FTDI Adapter
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.external.build.openocdscript=esp32p4-ftdi.cfg
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.external.build.copy_jtag_files=1
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.bridge=ESP USB Bridge
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.bridge.build.openocdscript=esp32p4-bridge.cfg
+sparkfun_esp32p4_iot_redboard_poe.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+sparkfun_esp32p4_iot_redboard_poe.menu.USBMode.hwcdc=Hardware CDC and JTAG
+sparkfun_esp32p4_iot_redboard_poe.menu.USBMode.hwcdc.build.usb_mode=1
+sparkfun_esp32p4_iot_redboard_poe.menu.USBMode.default=USB-OTG (TinyUSB)
+sparkfun_esp32p4_iot_redboard_poe.menu.USBMode.default.build.usb_mode=0
+
+sparkfun_esp32p4_iot_redboard_poe.menu.CDCOnBoot.cdc=Enabled
+sparkfun_esp32p4_iot_redboard_poe.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+sparkfun_esp32p4_iot_redboard_poe.menu.CDCOnBoot.default=Disabled
+sparkfun_esp32p4_iot_redboard_poe.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+sparkfun_esp32p4_iot_redboard_poe.menu.MSCOnBoot.default=Disabled
+sparkfun_esp32p4_iot_redboard_poe.menu.MSCOnBoot.default.build.msc_on_boot=0
+sparkfun_esp32p4_iot_redboard_poe.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+sparkfun_esp32p4_iot_redboard_poe.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+sparkfun_esp32p4_iot_redboard_poe.menu.DFUOnBoot.default=Disabled
+sparkfun_esp32p4_iot_redboard_poe.menu.DFUOnBoot.default.build.dfu_on_boot=0
+sparkfun_esp32p4_iot_redboard_poe.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+sparkfun_esp32p4_iot_redboard_poe.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadMode.default=UART0 / Hardware CDC
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadMode.default.upload.use_1200bps_touch=false
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadMode.default.upload.wait_for_upload_port=false
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.default.build.partitions=default
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.default.upload.maximum_size=1310720
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.defaultffat.upload.maximum_size=1310720
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.minimal.build.partitions=minimal
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.minimal.upload.maximum_size=1310720
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.no_fs.build.partitions=no_fs
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.no_ota.build.partitions=no_ota
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.huge_app.build.partitions=huge_app
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.fatflash.build.partitions=ffat
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MODEL)
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.custom=Custom
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.custom.build.partitions=
+sparkfun_esp32p4_iot_redboard_poe.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.921600=921600
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.921600.upload.speed=921600
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.115200=115200
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.115200.upload.speed=115200
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.256000.windows=256000
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.256000.upload.speed=256000
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.230400.windows.upload.speed=256000
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.230400=230400
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.230400.upload.speed=230400
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.460800.linux=460800
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.460800.macosx=460800
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.460800.upload.speed=460800
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.512000.windows=512000
+sparkfun_esp32p4_iot_redboard_poe.menu.UploadSpeed.512000.upload.speed=512000
+
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.none=None
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.none.build.code_debug=0
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.error=Error
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.error.build.code_debug=1
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.warn=Warn
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.warn.build.code_debug=2
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.info=Info
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.info.build.code_debug=3
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.debug=Debug
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.debug.build.code_debug=4
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.verbose=Verbose
+sparkfun_esp32p4_iot_redboard_poe.menu.DebugLevel.verbose.build.code_debug=5
+
+sparkfun_esp32p4_iot_redboard_poe.menu.EraseFlash.none=Disabled
+sparkfun_esp32p4_iot_redboard_poe.menu.EraseFlash.all=Enabled
+sparkfun_esp32p4_iot_redboard_poe.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
 
 sparkfun_esp32c5_thing_plus.name=SparkFun ESP32-C5 Thing Plus
 
@@ -62537,3 +62892,184 @@ cytron_maker_esp32.menu.DebugLevel.verbose.build.code_debug=5
 cytron_maker_esp32.menu.EraseFlash.none=Disabled
 cytron_maker_esp32.menu.EraseFlash.all=Enabled
 cytron_maker_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+############################################################
+
+elegoo_esp32c6.name=ELEGOO-ESP32-C6
+
+elegoo_esp32c6.bootloader.tool=esptool_py
+elegoo_esp32c6.bootloader.tool.default=esptool_py
+
+elegoo_esp32c6.upload.tool=esptool_py
+elegoo_esp32c6.upload.tool.default=esptool_py
+elegoo_esp32c6.upload.tool.network=esp_ota
+
+elegoo_esp32c6.upload.maximum_size=1310720
+elegoo_esp32c6.upload.maximum_data_size=327680
+elegoo_esp32c6.upload.flags=
+elegoo_esp32c6.upload.erase_cmd=
+elegoo_esp32c6.upload.extra_flags=
+elegoo_esp32c6.upload.use_1200bps_touch=false
+elegoo_esp32c6.upload.wait_for_upload_port=false
+
+elegoo_esp32c6.serial.disableDTR=false
+elegoo_esp32c6.serial.disableRTS=false
+
+elegoo_esp32c6.build.tarch=riscv32
+elegoo_esp32c6.build.target=esp
+elegoo_esp32c6.build.mcu=esp32c6
+elegoo_esp32c6.build.core=esp32
+elegoo_esp32c6.build.variant=elegoo_esp32c6
+elegoo_esp32c6.build.board=ELEGOO_ESP32C6
+elegoo_esp32c6.build.bootloader_addr=0x0
+
+elegoo_esp32c6.build.cdc_on_boot=1
+elegoo_esp32c6.build.f_cpu=160000000L
+elegoo_esp32c6.build.flash_size=4MB
+elegoo_esp32c6.build.flash_freq=80m
+elegoo_esp32c6.build.flash_mode=dio
+elegoo_esp32c6.build.boot=dio
+elegoo_esp32c6.build.partitions=default
+elegoo_esp32c6.build.defines=
+
+elegoo_esp32c6.menu.JTAGAdapter.default=Disabled
+elegoo_esp32c6.menu.JTAGAdapter.default.build.copy_jtag_files=0
+elegoo_esp32c6.menu.JTAGAdapter.builtin=Integrated USB JTAG
+elegoo_esp32c6.menu.JTAGAdapter.builtin.build.openocdscript=esp32c6-builtin.cfg
+elegoo_esp32c6.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+elegoo_esp32c6.menu.JTAGAdapter.external=FTDI Adapter
+elegoo_esp32c6.menu.JTAGAdapter.external.build.openocdscript=esp32c6-ftdi.cfg
+elegoo_esp32c6.menu.JTAGAdapter.external.build.copy_jtag_files=1
+elegoo_esp32c6.menu.JTAGAdapter.bridge=ESP USB Bridge
+elegoo_esp32c6.menu.JTAGAdapter.bridge.build.openocdscript=esp32c6-bridge.cfg
+elegoo_esp32c6.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+elegoo_esp32c6.menu.CDCOnBoot.cdc=Enabled
+elegoo_esp32c6.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+elegoo_esp32c6.menu.CDCOnBoot.default=Disabled
+elegoo_esp32c6.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+elegoo_esp32c6.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+elegoo_esp32c6.menu.PartitionScheme.default.build.partitions=default
+elegoo_esp32c6.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+elegoo_esp32c6.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+elegoo_esp32c6.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+elegoo_esp32c6.menu.PartitionScheme.minimal.build.partitions=minimal
+elegoo_esp32c6.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+elegoo_esp32c6.menu.PartitionScheme.no_fs.build.partitions=no_fs
+elegoo_esp32c6.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+elegoo_esp32c6.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+elegoo_esp32c6.menu.PartitionScheme.no_ota.build.partitions=no_ota
+elegoo_esp32c6.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+elegoo_esp32c6.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+elegoo_esp32c6.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+elegoo_esp32c6.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+elegoo_esp32c6.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+elegoo_esp32c6.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+elegoo_esp32c6.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+elegoo_esp32c6.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+elegoo_esp32c6.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+elegoo_esp32c6.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+elegoo_esp32c6.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+elegoo_esp32c6.menu.PartitionScheme.huge_app.build.partitions=huge_app
+elegoo_esp32c6.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+elegoo_esp32c6.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+elegoo_esp32c6.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+elegoo_esp32c6.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+elegoo_esp32c6.menu.PartitionScheme.rainmaker=RainMaker 4MB
+elegoo_esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+elegoo_esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+elegoo_esp32c6.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+elegoo_esp32c6.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+elegoo_esp32c6.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+elegoo_esp32c6.menu.PartitionScheme.zigbee_2MB=Zigbee 2MB with spiffs
+elegoo_esp32c6.menu.PartitionScheme.zigbee_2MB.build.partitions=zigbee_2MB
+elegoo_esp32c6.menu.PartitionScheme.zigbee_2MB.upload.maximum_size=1310720
+elegoo_esp32c6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+elegoo_esp32c6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+elegoo_esp32c6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+elegoo_esp32c6.menu.PartitionScheme.zigbee_zczr_2MB=Zigbee ZCZR 2MB with spiffs
+elegoo_esp32c6.menu.PartitionScheme.zigbee_zczr_2MB.build.partitions=zigbee_zczr_2MB
+elegoo_esp32c6.menu.PartitionScheme.zigbee_zczr_2MB.upload.maximum_size=1310720
+elegoo_esp32c6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+elegoo_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+elegoo_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+elegoo_esp32c6.menu.PartitionScheme.custom=Custom
+elegoo_esp32c6.menu.PartitionScheme.custom.build.partitions=
+elegoo_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=4194304
+
+elegoo_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
+elegoo_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
+elegoo_esp32c6.menu.CPUFreq.120=120MHz (WiFi)
+elegoo_esp32c6.menu.CPUFreq.120.build.f_cpu=120000000L
+elegoo_esp32c6.menu.CPUFreq.80=80MHz (WiFi)
+elegoo_esp32c6.menu.CPUFreq.80.build.f_cpu=80000000L
+elegoo_esp32c6.menu.CPUFreq.40=40MHz
+elegoo_esp32c6.menu.CPUFreq.40.build.f_cpu=40000000L
+elegoo_esp32c6.menu.CPUFreq.20=20MHz
+elegoo_esp32c6.menu.CPUFreq.20.build.f_cpu=20000000L
+elegoo_esp32c6.menu.CPUFreq.10=10MHz
+elegoo_esp32c6.menu.CPUFreq.10.build.f_cpu=10000000L
+
+elegoo_esp32c6.menu.FlashMode.dio=DIO
+elegoo_esp32c6.menu.FlashMode.dio.build.flash_mode=dio
+elegoo_esp32c6.menu.FlashMode.dio.build.boot=dio
+elegoo_esp32c6.menu.FlashMode.qio=QIO
+elegoo_esp32c6.menu.FlashMode.qio.build.flash_mode=dio
+elegoo_esp32c6.menu.FlashMode.qio.build.boot=qio
+
+elegoo_esp32c6.menu.FlashFreq.80=80MHz
+elegoo_esp32c6.menu.FlashFreq.80.build.flash_freq=80m
+elegoo_esp32c6.menu.FlashFreq.40=40MHz
+elegoo_esp32c6.menu.FlashFreq.40.build.flash_freq=40m
+
+elegoo_esp32c6.menu.FlashSize.4M=4MB (32Mb)
+elegoo_esp32c6.menu.FlashSize.4M.build.flash_size=4MB
+
+elegoo_esp32c6.menu.UploadSpeed.921600=921600
+elegoo_esp32c6.menu.UploadSpeed.921600.upload.speed=921600
+elegoo_esp32c6.menu.UploadSpeed.115200=115200
+elegoo_esp32c6.menu.UploadSpeed.115200.upload.speed=115200
+elegoo_esp32c6.menu.UploadSpeed.256000.windows=256000
+elegoo_esp32c6.menu.UploadSpeed.256000.upload.speed=256000
+elegoo_esp32c6.menu.UploadSpeed.230400.windows.upload.speed=256000
+elegoo_esp32c6.menu.UploadSpeed.230400=230400
+elegoo_esp32c6.menu.UploadSpeed.230400.upload.speed=230400
+elegoo_esp32c6.menu.UploadSpeed.460800.linux=460800
+elegoo_esp32c6.menu.UploadSpeed.460800.macosx=460800
+elegoo_esp32c6.menu.UploadSpeed.460800.upload.speed=460800
+elegoo_esp32c6.menu.UploadSpeed.512000.windows=512000
+elegoo_esp32c6.menu.UploadSpeed.512000.upload.speed=512000
+
+elegoo_esp32c6.menu.DebugLevel.none=None
+elegoo_esp32c6.menu.DebugLevel.none.build.code_debug=0
+elegoo_esp32c6.menu.DebugLevel.error=Error
+elegoo_esp32c6.menu.DebugLevel.error.build.code_debug=1
+elegoo_esp32c6.menu.DebugLevel.warn=Warn
+elegoo_esp32c6.menu.DebugLevel.warn.build.code_debug=2
+elegoo_esp32c6.menu.DebugLevel.info=Info
+elegoo_esp32c6.menu.DebugLevel.info.build.code_debug=3
+elegoo_esp32c6.menu.DebugLevel.debug=Debug
+elegoo_esp32c6.menu.DebugLevel.debug.build.code_debug=4
+elegoo_esp32c6.menu.DebugLevel.verbose=Verbose
+elegoo_esp32c6.menu.DebugLevel.verbose.build.code_debug=5
+
+elegoo_esp32c6.menu.EraseFlash.none=Disabled
+elegoo_esp32c6.menu.EraseFlash.all=Enabled
+elegoo_esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
+
+elegoo_esp32c6.menu.ZigbeeMode.default=Disabled
+elegoo_esp32c6.menu.ZigbeeMode.default.build.zigbee_mode=
+elegoo_esp32c6.menu.ZigbeeMode.default.build.zigbee_libs=
+elegoo_esp32c6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+elegoo_esp32c6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+elegoo_esp32c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+elegoo_esp32c6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+elegoo_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+elegoo_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+elegoo_esp32c6.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+elegoo_esp32c6.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+elegoo_esp32c6.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+elegoo_esp32c6.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+elegoo_esp32c6.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+elegoo_esp32c6.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug

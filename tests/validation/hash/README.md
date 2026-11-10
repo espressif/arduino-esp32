@@ -58,16 +58,20 @@ Validates the Hash library including HEXBuilder, MD5Builder, SHA-1/2/3 builders,
 | `test_sha3_224_empty` | SHA3-224 of empty input |
 | `test_sha3_224_abc` | SHA3-224 of "abc" |
 | `test_sha3_224_hash_size` | SHA3-224 hash size is 28 bytes |
+| `test_sha3_224_padding_boundaries` | SHA3-224 around the rate boundary and after a full block, with single and split updates |
 | `test_sha3_256_empty` | SHA3-256 of empty input |
 | `test_sha3_256_abc` | SHA3-256 of "abc" |
 | `test_sha3_256_hash_size` | SHA3-256 hash size is 32 bytes |
 | `test_sha3_256_multi_chunk` | SHA3-256 with multi-chunk add |
+| `test_sha3_256_padding_boundaries` | SHA3-256 around the rate boundary and after a full block, with single and split updates |
 | `test_sha3_384_empty` | SHA3-384 of empty input |
 | `test_sha3_384_abc` | SHA3-384 of "abc" |
 | `test_sha3_384_hash_size` | SHA3-384 hash size is 48 bytes |
+| `test_sha3_384_padding_boundaries` | SHA3-384 around the rate boundary and after a full block, with single and split updates |
 | `test_sha3_512_empty` | SHA3-512 of empty input |
 | `test_sha3_512_abc` | SHA3-512 of "abc" |
 | `test_sha3_512_hash_size` | SHA3-512 hash size is 64 bytes |
+| `test_sha3_512_padding_boundaries` | SHA3-512 around the rate boundary and after a full block, with single and split updates |
 | `test_pbkdf2_sha1_c1` | PBKDF2-HMAC-SHA1 with 1 iteration (RFC 6070) |
 | `test_pbkdf2_sha1_c2` | PBKDF2-HMAC-SHA1 with 2 iterations |
 | `test_pbkdf2_sha256_c1` | PBKDF2-HMAC-SHA256 with 1 iteration |
@@ -108,6 +112,10 @@ Validates the Hash library including HEXBuilder, MD5Builder, SHA-1/2/3 builders,
 | `test_hmac_calculate_before_begin` | `calculate()` before `begin()` yields an empty digest |
 | `test_hmac_null_key` | `setKey(NULL)` after a successful MAC clears the cached result |
 | `test_hmac_add_stream_large_maxlen` | `addStream()` with `size_t` max length still hashes the stream |
+| `test_md5_add_stream_limits` | MD5 large/zero/partial stream limits, short reads, stalled reads, and unavailable input |
+| `test_sha1_add_stream_limits` | SHA-1 large/zero/partial stream limits, short reads, stalled reads, and unavailable input |
+| `test_sha256_add_stream_limits` | SHA-256 large/zero/partial stream limits, short reads, stalled reads, and unavailable input |
+| `test_sha3_256_add_stream_limits` | SHA3-256 large/zero/partial stream limits, short reads, stalled reads, and unavailable input |
 | `test_sha256_55bytes` | SHA-256 padding boundary at 55 bytes |
 | `test_sha256_56bytes` | SHA-256 padding boundary at 56 bytes |
 | `test_sha384_112bytes` | SHA-384 padding boundary at 112 bytes |

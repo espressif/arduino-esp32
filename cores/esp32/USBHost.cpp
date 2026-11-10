@@ -35,6 +35,8 @@ extern "C" void tuh_mount_cb(uint8_t daddr) {
  * HID provides a strong arduino_usb_host_hid_service() instead. */
 extern "C" void arduino_usb_host_hid_service(void) __attribute__((weak));
 extern "C" void arduino_usb_host_hid_service(void) {}
+extern "C" void arduino_usb_host_hid_pre_task(void) __attribute__((weak));
+extern "C" void arduino_usb_host_hid_pre_task(void) {}
 extern "C" void arduino_usb_host_hid_dispatch(void) __attribute__((weak));
 extern "C" void arduino_usb_host_hid_dispatch(void) {}
 extern "C" void arduino_usb_host_hid_device_mounted(uint8_t daddr) __attribute__((weak));
@@ -53,6 +55,7 @@ enum {
   TUH_PHASE_TASK = 1,
   TUH_PHASE_HID = 2,
   TUH_PHASE_IDLE = 3,
+  TUH_STALL_MS = 1000,
 };
 static volatile uint32_t s_tuh_iter = 0;
 static volatile uint8_t s_tuh_phase = TUH_PHASE_IDLE;
@@ -60,6 +63,8 @@ static volatile uint8_t s_tuh_phase = TUH_PHASE_IDLE;
 static void arduino_usb_host_tuh_worker(void *arg) {
   (void)arg;
   for (;;) {
+    /* Abort armed HID INs queued from an ISR attach hook before enum runs. */
+    arduino_usb_host_hid_pre_task();
     s_tuh_phase = TUH_PHASE_TASK;
     tuh_task_ext(TUH_TASK_TIMEOUT_MS, false);
     /* HID IN arm/re-arm only after tuh_task — never from loop() (DWC2 race). */
@@ -89,7 +94,7 @@ static void arduino_usb_host_worker_watch(void) {
     last_change_ms = now;
     return;
   }
-  if (!stalled && (now - last_change_ms) > 1000u) {
+  if (!stalled && (now - last_change_ms) > (uint32_t)TUH_STALL_MS) {
     stalled = true;
     log_e(
       "[USBHost] worker stalled %ums in %s (iter=%u)", (unsigned)(now - last_change_ms),
@@ -138,6 +143,7 @@ void USBHostClass::task() {
   }
   if (s_tuh_worker == NULL) {
     /* Loop fallback must not block: tuh_task() waits on the event queue forever. */
+    arduino_usb_host_hid_pre_task();
     tuh_task_ext(0, false);
     arduino_usb_host_hid_service();
     arduino_usb_host_hid_dispatch();

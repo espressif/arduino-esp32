@@ -6,6 +6,7 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 
 | Test Function | Description |
 |---|---|
+| `test_dns_clear_cache_tcpip_lock` | Start a pending DNS lookup, then trigger the `hostByName()` DNS-cache clear; the callback allocates a UDP PCB like the SNTP callback. Runs only when lwIP core locking and thread-safety checks are enabled. |
 | `test_dns_resolve` | Resolve `pool.ntp.org` via `Network.hostByName()` |
 | `test_dns_resolve_invalid` | Verify resolution fails for non-existent domain |
 | `test_tcp_connect` | TCP connect to `httpbin.org:80` |
@@ -42,6 +43,7 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 - **Wokwi**: Supported (uses `Wokwi-GUEST` network)
 - **CI Runner**: `wifi_router` (for hardware)
 - UDP loopback and DNS packet bounds checks are ignored when `CONFIG_LWIP_NETIF_LOOPBACK` is disabled; IPv6 checks are ignored when IPv6 is disabled.
+- `test_dns_clear_cache_tcpip_lock` is compiled and registered only when both `CONFIG_LWIP_TCPIP_CORE_LOCKING` and `CONFIG_LWIP_CHECK_THREAD_SAFETY` are enabled. It points the DNS servers at TEST-NET-1 (`192.0.2.1`) to keep a lookup pending, then restores them.
 
 ## Serial Protocol
 
