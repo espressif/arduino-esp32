@@ -24,9 +24,12 @@
 #include "IPAddress.h"
 
 class NetworkServer {
+protected:
+  // Exposed to subclasses so the accept() error path can be exercised.
+  int _accepted_sockfd = -1;
+
 private:
   int sockfd;
-  int _accepted_sockfd = -1;
   IPAddress _addr;
   uint16_t _port;
   uint8_t _max_clients;
@@ -37,11 +40,11 @@ public:
   void listenOnLocalhost() {}
 
   NetworkServer(uint16_t port = 80, uint8_t max_clients = 4)
-    : sockfd(-1), _accepted_sockfd(-1), _addr(), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
+    : _accepted_sockfd(-1), sockfd(-1), _addr(), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
     log_v("NetworkServer::NetworkServer(port=%u, ...)", port);
   }
   NetworkServer(const IPAddress &addr, uint16_t port = 80, uint8_t max_clients = 4)
-    : sockfd(-1), _accepted_sockfd(-1), _addr(addr), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
+    : _accepted_sockfd(-1), sockfd(-1), _addr(addr), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
     log_v("NetworkServer::NetworkServer(addr=%s, port=%u, ...)", addr.toString().c_str(), port);
   }
   ~NetworkServer() {

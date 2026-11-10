@@ -49,10 +49,12 @@ size_t File::write(const uint8_t *buf, size_t size) {
 
 int File::available() {
   if (!*this) {
-    return false;
+    return 0;
   }
 
-  return _p->size() - _p->position();
+  size_t fileSize = _p->size();
+  size_t filePosition = _p->position();
+  return filePosition < fileSize ? fileSize - filePosition : 0;
 }
 
 int File::read() {

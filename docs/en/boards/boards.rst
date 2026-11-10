@@ -109,6 +109,14 @@ LOLIN
 * |board_lolin_d32|
 * |board_lolin_d32_pro|
 
+Wireless-Tag
+************
+
+.. toctree::
+    :maxdepth: 1
+
+    Wireless-Tag TINY Boards <wireless-tag-tiny>
+
 Generic Vendor
 **************
 

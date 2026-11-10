@@ -21,6 +21,7 @@
 #if CFG_TUH_HID
 
 #include "tusb.h"
+#include "host/hcd.h"
 #include "class/hid/hid.h"
 #include "Arduino.h"
 #include "USBHost.h"
@@ -28,13 +29,14 @@
 
 USBHostHIDClass::USBHostHIDClass()
   : _num_devices(0), _start_receive_pending(false), _pending_wait_enum(false), _pending_dev_addr(0), _pending_idx(0), _rearm_peers(false), _rearm_after_ms(0),
-    _rearm_skip_addr(0), _rearm_skip_idx(0), _rearm_tries(0),
+    _rearm_skip_addr(0), _rearm_skip_idx(0), _rearm_tries(0), _sweep_ms(0),
 #if USBHOST_HID_DUMP_DESC
     _desc_dump_w(0), _desc_dump_r(0),
 #endif
-    _host_note_w(0), _host_note_r(0) {
+    _host_note_w(0), _host_note_r(0), _peer_pause_until_ms(0), _pending_abort_all(false) {
   for (size_t i = 0; i < MAX_DEVICES; i++) {
     _devices[i] = nullptr;
+    _arm_ms[i] = 0;
   }
 }
 
@@ -87,17 +89,128 @@ void USBHostHIDClass::requestPeerRearm(uint8_t new_dev_addr, uint8_t new_idx) {
   if (!hasOtherMounted(new_dev_addr, new_idx)) {
     return; /* Sole device: startReceiveIfPending is enough; aborting it crashes DWC2. */
   }
-  /* Defer the abort so it does not race hub enumeration in the same tuh_task window. */
+  /* Defer the abort so it does not race hub enumeration in the same tuh_task window.
+   * A claim must replace a 0xFF mark left by an attach abort. It must not replace an
+   * exemption already naming a real iface — an unmount passes the departing address, and
+   * overwriting that would abort the device this request was meant to protect.
+   * A new sweep stamps its own time. One already in flight, including its retries, keeps
+   * the stamp from when it started, so an IN armed for that sweep is not aborted. */
   if (!_rearm_peers) {
-    /* Keep the exemption of a request already in flight: it names the interface that claimed most
-     * recently, which is the one that must not be aborted. An unmount passes the departing
-     * interface, so losing that value costs nothing. */
+    _sweep_ms = millis();
+    if (_sweep_ms == 0) {
+      _sweep_ms = 1;
+    }
+  }
+  if (!_rearm_peers || _rearm_skip_addr == 0xFF) {
     _rearm_skip_addr = new_dev_addr;
     _rearm_skip_idx = new_idx;
   }
   _rearm_peers = true;
   _rearm_after_ms = millis() + 150;
   _rearm_tries = 0;
+}
+
+bool USBHostHIDClass::peerPauseActive(void) {
+  const uint32_t until = _peer_pause_until_ms;
+  if (until == 0) {
+    return false;
+  }
+  if ((int32_t)(millis() - until) < 0) {
+    return true;
+  }
+  /* Drop an expired deadline. A new pause scheduled since the read must stay. */
+  if (_peer_pause_until_ms == until) {
+    _peer_pause_until_ms = 0;
+  }
+  return false;
+}
+
+bool USBHostHIDClass::anyMounted(void) const {
+  for (size_t i = 0; i < _num_devices; i++) {
+    if (_devices[i] != nullptr && _devices[i]->mounted()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool USBHostHIDClass::isRearmExempt(uint8_t dev_addr, uint8_t idx) const {
+  if (_pending_dev_addr != 0 && _pending_dev_addr == dev_addr && _pending_idx == idx) {
+    return true;
+  }
+  return _rearm_skip_addr != 0xFF && _rearm_skip_addr == dev_addr && _rearm_skip_idx == idx;
+}
+
+void USBHostHIDClass::abortBusyPeers(void) {
+  if (!hidXferAbortOk()) {
+    return;
+  }
+  for (size_t i = 0; i < _num_devices; i++) {
+    USBHostHIDDevice *dev = _devices[i];
+    if (dev == nullptr || !dev->mounted()) {
+      continue;
+    }
+    const uint8_t a = dev->devAddr();
+    const uint8_t x = dev->interfaceIndex();
+    if (isRearmExempt(a, x)) {
+      continue;
+    }
+    if (!tuh_mounted(a) || !tuh_hid_mounted(a, x)) {
+      continue;
+    }
+    if (!tuh_hid_receive_ready(a, x)) {
+      /* Only an LS interrupt IN wedges SOF-park across another device's enum.
+       * An FS keyboard is busy for the whole time it waits for a key; aborting
+       * that IN is why dev=2 goes silent on MSC and mouse plug. */
+      if (tuh_speed_get(a) != TUSB_SPEED_LOW) {
+        continue;
+      }
+      (void)tuh_hid_receive_abort(a, x);
+    }
+  }
+}
+
+void USBHostHIDClass::schedulePeerRearm(uint32_t pause_ms, bool include_sole) {
+  _sweep_ms = millis();
+  if (_sweep_ms == 0) {
+    _sweep_ms = 1;
+  }
+  _peer_pause_until_ms = millis() + pause_ms;
+  /* 0xFF means "no claim to protect", so the already-mounted mouse is aborted and re-armed.
+   * Leave a real exemption alone — replacing it aborts the iface that just claimed. */
+  if (include_sole && !(_rearm_peers && _rearm_skip_addr != 0xFF)) {
+    _rearm_skip_addr = 0xFF;
+    _rearm_skip_idx = 0xFF;
+  }
+  _rearm_peers = true;
+  _rearm_after_ms = _peer_pause_until_ms;
+  _rearm_tries = 0;
+}
+
+void USBHostHIDClass::onHcdConnectionEvent(uint32_t event_id, bool in_isr) {
+  /* Armed LS interrupt IN during a later device's enum wedges DWC2 SOF-park.
+   * Only ATTACH, and only when a HID is already up: the new device is not claimed yet,
+   * so aborting mounted INs is peer-only. REMOVE is baseline Q (leave-abort + peer rearm).
+   * Abort-all on remove is the mouse+keyboard panic. */
+  if (!hidXferAbortOk() || event_id != HCD_EVENT_DEVICE_ATTACH || !anyMounted()) {
+    return;
+  }
+  schedulePeerRearm((uint32_t)USBHOST_HID_ENUM_PAUSE_MS, true);
+  if (in_isr) {
+    _pending_abort_all = true;
+    return;
+  }
+  abortBusyPeers();
+  queueHostNote(NOTE_ATTACH_ABORT, 0, 0, 0, 0, (uint16_t)USBHOST_HID_ENUM_PAUSE_MS);
+}
+
+void USBHostHIDClass::preTask() {
+  if (!_pending_abort_all) {
+    return;
+  }
+  _pending_abort_all = false;
+  abortBusyPeers();
+  queueHostNote(NOTE_ATTACH_ABORT, 0, 0, 1, 0, (uint16_t)USBHOST_HID_ENUM_PAUSE_MS);
 }
 
 bool USBHostHIDClass::addDevice(USBHostHIDDevice *dev) {
@@ -124,6 +237,17 @@ void USBHostHIDClass::startReceiveIfPending() {
   _start_receive_pending = false;
   _pending_dev_addr = 0;
   _pending_idx = 0;
+  uint32_t now = millis();
+  if (now == 0) {
+    now = 1;
+  }
+  for (size_t i = 0; i < _num_devices; i++) {
+    USBHostHIDDevice *dev = _devices[i];
+    if (dev != nullptr && dev->matches(a, x)) {
+      _arm_ms[i] = now;
+      break;
+    }
+  }
   queueHostNote(NOTE_START_RX, a, x, 0, 0);
   (void)tuh_hid_receive_report(a, x);
 }
@@ -236,7 +360,8 @@ void USBHostHIDClass::flushHostNotes() {
           hidSpeedStr(s->protocol)
         );
         break;
-      default: break;
+      case NOTE_ATTACH_ABORT: log_v("[USBHostHID] attach abort HID INs (deferred=%u enum_pause_ms=%u)", (unsigned)s->protocol, (unsigned)s->extra2); break;
+      default:                break;
     }
     _host_note_r = (uint8_t)((r + 1u) % HOST_NOTE_SLOTS);
   }
@@ -263,6 +388,12 @@ void USBHostHIDClass::releaseClaimedInterface(USBHostHIDDevice *dev, uint8_t dev
     _rearm_peers = false;
     _rearm_skip_addr = 0;
     _rearm_skip_idx = 0;
+  }
+  for (size_t i = 0; i < _num_devices; i++) {
+    if (_devices[i] == dev) {
+      _arm_ms[i] = 0;
+      break;
+    }
   }
   clearPendingIf(dev_addr, idx);
   queueHostNote(NOTE_UMOUNT_IF, dev_addr, idx, 0, 0);
@@ -318,6 +449,11 @@ void USBHostHIDClass::_onReport(uint8_t dev_addr, uint8_t idx, uint8_t const *re
     USBHostHIDDevice *dev = _devices[i];
     if (dev != nullptr && dev->matches(dev_addr, idx)) {
       dev->onReport(dev_addr, idx, report, len);
+      /* Hold only a low-speed IN across the next device's enumeration. A full-speed
+       * keyboard stays armed: aborting it is what left that iface silent. */
+      if (peerPauseActive() && tuh_speed_get(dev_addr) == TUSB_SPEED_LOW) {
+        return;
+      }
       if (tuh_hid_mounted(dev_addr, idx) && tuh_hid_receive_ready(dev_addr, idx)) {
         (void)tuh_hid_receive_report(dev_addr, idx);
       }
@@ -366,12 +502,23 @@ void arduino_usb_host_hid_service(void) {
   USBHostHID.serviceReceivesFromHostTask();
 }
 
+void arduino_usb_host_hid_pre_task(void) {
+  USBHostHID.preTask();
+}
+
 void arduino_usb_host_hid_dispatch(void) {
   USBHostHID.dispatchReportCallbacks();
 }
 
 void arduino_usb_host_hid_device_mounted(uint8_t daddr) {
   USBHostHID._onTuhMount(daddr);
+}
+
+void tuh_event_hook_cb(uint8_t rhport, uint32_t eventid, bool in_isr) {
+  (void)rhport;
+  if (eventid == HCD_EVENT_DEVICE_ATTACH || eventid == HCD_EVENT_DEVICE_REMOVE) {
+    USBHostHID.onHcdConnectionEvent(eventid, in_isr);
+  }
 }
 
 }  // extern "C"
@@ -452,10 +599,16 @@ void USBHostHIDClass::serviceReceivesFromHostTask() {
     _pending_dev_addr = 0;
     _pending_idx = 0;
   }
-  startReceiveIfPending();
+
+  /* New claim still arms during the pause (S2/S3 must not wait). The pause holds
+   * low-speed peers only; a full-speed IN keeps being re-armed below. */
+  const bool peer_paused = peerPauseActive();
+  if (!peer_paused || _start_receive_pending) {
+    startReceiveIfPending();
+  }
 
   bool rearm_peers = false;
-  if (_rearm_peers && (int32_t)(millis() - _rearm_after_ms) >= 0) {
+  if (!peer_paused && _rearm_peers && (int32_t)(millis() - _rearm_after_ms) >= 0) {
     rearm_peers = true;
     _rearm_peers = false;
   }
@@ -478,20 +631,39 @@ void USBHostHIDClass::serviceReceivesFromHostTask() {
     /* Control pipe, independent of the interrupt IN below. */
     dev->serviceFromHostTask();
 
+    if (peer_paused && tuh_speed_get(a) == TUSB_SPEED_LOW) {
+      continue;
+    }
+
     const bool is_new = (a == _rearm_skip_addr && x == _rearm_skip_idx);
+    /* A just-submitted IN is busy until the next report. Aborting it and then
+     * giving up leaves the keyboard silent: NAK wait looks the same as "stuck". */
+    const bool armed_after_sweep = _arm_ms[i] != 0 && (int32_t)(_arm_ms[i] - _sweep_ms) >= 0;
     if (!tuh_hid_receive_ready(a, x)) {
-      /* Abort only stuck peers — never the interface that just claimed/started IN. */
-      if (!rearm_peers || is_new || !hidXferAbortOk()) {
+      /* Abort only stuck peers — never the interface a claim exempted, and never
+       * one we armed for this sweep. skip 0xFF is the sole-device mark, so that
+       * mouse is not exempt. Abort once; later passes only wait until the
+       * channel is free and resubmit. A second abort restarts the wait. */
+      if (!rearm_peers || is_new || armed_after_sweep || !hidXferAbortOk() || tuh_speed_get(a) != TUSB_SPEED_LOW) {
         continue;
       }
-      queueHostNote(NOTE_PEER_REARM, a, x, 0, 0);
-      (void)tuh_hid_receive_abort(a, x);
+      if (_rearm_tries == 0) {
+        queueHostNote(NOTE_PEER_REARM, a, x, 0, 0);
+        (void)tuh_hid_receive_abort(a, x);
+      }
       if (!tuh_mounted(a) || !tuh_hid_mounted(a, x) || !tuh_hid_receive_ready(a, x)) {
         /* The abort is asynchronous, so "still busy" here means nothing yet. Come back a few times
          * before giving up, otherwise a slow abort leaves the endpoint dead for good. */
         rearm_unfinished = true;
         continue;
       }
+    }
+    {
+      uint32_t now = millis();
+      if (now == 0) {
+        now = 1;
+      }
+      _arm_ms[i] = now;
     }
     (void)tuh_hid_receive_report(a, x);
   }

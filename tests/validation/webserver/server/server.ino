@@ -20,7 +20,8 @@
 #include <uri/UriRegex.h>
 #include "esp_system.h"
 
-#define SERVER_PORT 80
+#define SERVER_PORT         80
+#define DERIVED_SERVER_PORT 8081
 
 static WebServer server(SERVER_PORT);
 static Preferences prefs;
@@ -56,6 +57,14 @@ class TestStream : public Stream {
 public:
   TestStream(const uint8_t *buf, size_t size) : _buf(buf), _size(size), _pos(0) {}
 
+  size_t size() const {
+    return _size;
+  }
+
+  const char *name() const {
+    return "test.txt";
+  }
+
   int available() override {
     return (int)(_size - _pos);
   }
@@ -78,6 +87,121 @@ public:
     return 0;
   }
 };
+
+// Forwards every write normally and counts the bytes that go through client().
+class CountingClient : public NetworkClient {
+public:
+  CountingClient() : NetworkClient() {}
+
+  void adopt(const NetworkClient &other) {
+    NetworkClient::operator=(other);
+  }
+
+  void resetStats() {
+    _bytes = 0;
+    _writes = 0;
+    _readBytes = 0;
+  }
+
+  size_t bytes() const {
+    return _bytes;
+  }
+
+  size_t writes() const {
+    return _writes;
+  }
+
+  size_t bytesRead() const {
+    return _readBytes;
+  }
+
+  int read() override {
+    int byteRead = NetworkClient::read();
+    if (byteRead >= 0) {
+      _readBytes++;
+    }
+    return byteRead;
+  }
+
+  int read(uint8_t *buf, size_t size) override {
+    int readCount = NetworkClient::read(buf, size);
+    if (readCount > 0) {
+      _readBytes += readCount;
+    }
+    return readCount;
+  }
+
+  size_t write(const uint8_t *buf, size_t size) override {
+    size_t sent = NetworkClient::write(buf, size);
+    _bytes += sent;
+    _writes++;
+    return sent;
+  }
+
+  size_t write(uint8_t b) override {
+    return write(&b, 1);
+  }
+
+private:
+  size_t _bytes = 0;
+  size_t _writes = 0;
+  size_t _readBytes = 0;
+};
+
+class CountingServer : public WebServer {
+public:
+  explicit CountingServer(uint16_t port) : WebServer(port) {}
+
+  NetworkClient &client() override {
+    return _counting;
+  }
+
+  size_t countingBytes() const {
+    return _counting.bytes();
+  }
+
+  size_t countingWrites() const {
+    return _counting.writes();
+  }
+
+  size_t countingReads() const {
+    return _counting.bytesRead();
+  }
+
+  size_t countingCloses() const {
+    return _closeCount;
+  }
+
+protected:
+  void closeClient() override {
+    _closeCount++;
+    WebServer::closeClient();
+  }
+
+  NetworkClient &acceptClient() override {
+    NetworkClient accepted = _server.accept();
+    if (!accepted) {
+      // A failed accept must return a disconnected client. Stop any leftover
+      // session so it cannot be mistaken for a newly accepted client.
+      _counting.stop();
+      return _currentClient;
+    }
+    _counting.adopt(accepted);
+    _counting.resetStats();
+    _closeCount = 0;
+    return _counting;
+  }
+
+private:
+  CountingClient _counting;
+  size_t _closeCount = 0;
+};
+
+static CountingServer derivedServer(DERIVED_SERVER_PORT);
+
+// Set by a derived-server handler; printed after handleClient() has finished
+// the response, so the final chunk from _finalizeResponse() is included.
+static const char *pendingStatsCase = nullptr;
 
 // Test data
 static const char test_body[] = "Hello from Stream!";
@@ -293,6 +417,48 @@ void registerEndpoints() {
   server.serveStatic("/root", LittleFS, "/");
 }
 
+// --- Derived WebServer endpoints ---
+// Every response byte must go through client(). The client compares the raw
+// response length with the byte count printed after each request.
+void registerDerivedEndpoints() {
+  derivedServer.on("/plain", HTTP_GET, []() {
+    derivedServer.send(200, "text/plain", "PLAIN");
+    pendingStatsCase = "derived_plain";
+  });
+
+  derivedServer.on("/sendp", HTTP_GET, []() {
+    derivedServer.send_P(200, "text/plain", PSTR("SENDP"));
+    pendingStatsCase = "derived_sendp";
+  });
+
+  derivedServer.on("/chunked", HTTP_GET, []() {
+    derivedServer.chunkResponseBegin("text/plain");
+    derivedServer.chunkWrite("CHUNK1", 6);
+    derivedServer.chunkWrite("CHUNK2", 6);
+    derivedServer.chunkResponseEnd();
+    pendingStatsCase = "derived_chunked";
+  });
+
+  derivedServer.on("/streamfile", HTTP_GET, []() {
+    TestStream stream((const uint8_t *)test_body, strlen(test_body));
+    derivedServer.streamFile(stream, "text/plain");
+    pendingStatsCase = "derived_streamfile";
+  });
+
+  derivedServer.on("/sendstream", HTTP_GET, []() {
+    TestStream stream((const uint8_t *)test_body, strlen(test_body));
+    derivedServer.send(200, "text/plain", stream, strlen(test_body));
+    pendingStatsCase = "derived_sendstream";
+  });
+
+  derivedServer.on("/sendcontent", HTTP_GET, []() {
+    derivedServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    derivedServer.send(200, "text/plain", "CHUNKBODY");
+    derivedServer.setContentLength(CONTENT_LENGTH_NOT_SET);
+    pendingStatsCase = "derived_sendcontent";
+  });
+}
+
 // True when the device just came back from a non-power-on reset and previously
 // stored valid credentials in NVS. Power-on / external / brownout resets always
 // force the serial handshake so the test runner can hand over fresh credentials.
@@ -346,11 +512,22 @@ void setup() {
   Serial.printf("[SERVER] AP started IP=%s\n", ip.toString().c_str());
 
   registerEndpoints();
+  registerDerivedEndpoints();
 
   server.begin();
+  derivedServer.begin();
   Serial.println("[SERVER] Server started");
 }
 
 void loop() {
   server.handleClient();
+  derivedServer.handleClient();
+
+  if (pendingStatsCase != nullptr) {
+    Serial.printf(
+      "[SERVER] STATS %s bytes=%u writes=%u reads=%u closes=%u\n", pendingStatsCase, (unsigned)derivedServer.countingBytes(),
+      (unsigned)derivedServer.countingWrites(), (unsigned)derivedServer.countingReads(), (unsigned)derivedServer.countingCloses()
+    );
+    pendingStatsCase = nullptr;
+  }
 }

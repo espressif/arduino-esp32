@@ -334,12 +334,16 @@ bool String::concat(const char *cstr, unsigned int length) {
   if (length == 0) {
     return true;
   }
+  // reserve() can move the buffer, including the transition out of SSO.
+  const uintptr_t sourceAddress = reinterpret_cast<uintptr_t>(cstr);
+  const uintptr_t bufferAddress = reinterpret_cast<uintptr_t>(buffer());
+  const bool isOwnBuffer = sourceAddress >= bufferAddress && sourceAddress - bufferAddress < len();
+  const unsigned int sourceOffset = isOwnBuffer ? sourceAddress - bufferAddress : 0;
   if (!reserve(newlen)) {
     return false;
   }
-  if (cstr >= wbuffer() && cstr < wbuffer() + len()) {
-    // compatible with SSO in ram #6155 (case "x += x.c_str()")
-    memmove(wbuffer() + len(), cstr, length);
+  if (isOwnBuffer) {
+    memmove(wbuffer() + len(), buffer() + sourceOffset, length);
   } else {
     // compatible with source in flash #6367
     memcpy_P(wbuffer() + len(), cstr, length);

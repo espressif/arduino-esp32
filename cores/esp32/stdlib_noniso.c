@@ -49,10 +49,14 @@ char *ltoa(long value, char *result, int base) {
   }
 
   char *out = result;
-  long quotient = labs(value);
+  // Negate the unsigned value so LONG_MIN's magnitude remains representable.
+  unsigned long quotient = value;
+  if (value < 0) {
+    quotient = 0UL - quotient;
+  }
 
   do {
-    const long tmp = quotient / base;
+    const unsigned long tmp = quotient / base;
     *out = "0123456789abcdef"[quotient - (tmp * base)];
     ++out;
     quotient = tmp;
@@ -75,10 +79,14 @@ char *lltoa(long long val, char *result, int base) {
   }
 
   char *out = result;
-  long long quotient = val > 0 ? val : -val;
+  // Negate the unsigned value so LLONG_MIN's magnitude remains representable.
+  unsigned long long quotient = val;
+  if (val < 0) {
+    quotient = 0ULL - quotient;
+  }
 
   do {
-    const long long tmp = quotient / base;
+    const unsigned long long tmp = quotient / base;
     *out = "0123456789abcdef"[quotient - (tmp * base)];
     ++out;
     quotient = tmp;

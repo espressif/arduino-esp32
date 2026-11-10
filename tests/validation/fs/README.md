@@ -15,6 +15,7 @@ Validates file system operations across SPIFFS, FFat, and LittleFS using a unifi
 | `test_binary_incremental_with_size_tracking` | Write/read 8 chunks of 64 bytes, verify position and size tracking |
 | `test_empty_file_operations` | Create empty file, verify zero size, read returns EOF |
 | `test_seek_edge_cases` | Seek to beginning, middle, end, and back; verify position and data |
+| `test_available_after_seek` | Check remaining bytes before/at EOF, accepted seeks beyond EOF, and recovery after seeking back |
 | `test_file_truncation_and_overwrite` | Overwrite large file with small content, verify truncation |
 | `test_multiple_file_handles` | Open two files simultaneously, write and read independently |
 | `test_free_space_tracking` | Write 4KB file, verify space usage increases, remove and verify freed |

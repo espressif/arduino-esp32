@@ -68,6 +68,15 @@ public:
   }
 };
 
+class NetworkServerTest : public NetworkServer {
+public:
+  NetworkServerTest(const IPAddress &addr, uint16_t port) : NetworkServer(addr, port) {}
+
+  void injectAcceptedSocket(int fd) {
+    _accepted_sockfd = fd;
+  }
+};
+
 class StalledStream : public Stream {
 public:
   int available() override {
@@ -525,6 +534,192 @@ void test_network_client_peer_shutdown(void) {
   client.stop();
 }
 
+static bool wait_connected(NetworkClient &client, bool connected, uint32_t timeout_ms = kWaitMs) {
+  uint32_t deadline = millis() + timeout_ms;
+  while (client.connected() != connected && millis() < deadline) {
+    delay(10);
+  }
+  return client.connected() == connected;
+}
+
+// An orderly close (FIN) must eventually make connected() report false once the
+// buffered payload has been drained. This is the normal case for a peer that
+// calls close() or shutdown(SHUT_WR), not an abortive reset.
+void test_network_client_peer_fin_reports_disconnected(void) {
+  int peer_fd = -1;
+  int client_fd = create_loopback_client(&peer_fd);
+  NetworkClient client(client_fd);
+
+  TEST_ASSERT_TRUE(client.connected());
+
+  peer_send(peer_fd, "bye", 3);
+  TEST_ASSERT_EQUAL(0, shutdown(peer_fd, SHUT_WR));
+  TEST_ASSERT_TRUE(wait_available(client, 3));
+  delay(20);  // let lwIP process the FIN segment that follows the payload
+
+  // A FIN does not discard unread data: connected() stays true while the
+  // payload is still available.
+  TEST_ASSERT_TRUE(client.connected());
+
+  char rx[4] = {};
+  TEST_ASSERT_EQUAL(3, client.readBytes(rx, 3));
+  TEST_ASSERT_EQUAL_STRING("bye", rx);
+  TEST_ASSERT_EQUAL(0, client.available());
+
+  // The very first probe after the buffered payload is drained must already
+  // report the FIN as disconnected. lwIP returns ERR_CLSD (recv() == 0) for
+  // that first probe, and a later probe happens to return ENOTCONN, which
+  // would hide the bug if the test only waited for a state change.
+  TEST_ASSERT_FALSE_MESSAGE(client.connected(), "connected() reported true on the first probe after an orderly FIN");
+  TEST_ASSERT_TRUE_MESSAGE(wait_connected(client, false), "connected() stayed true after an orderly FIN");
+
+  client.stop();
+  close(peer_fd);
+}
+
+void test_network_client_peer_close_reports_disconnected(void) {
+  int peer_fd = -1;
+  int client_fd = create_loopback_client(&peer_fd);
+  NetworkClient client(client_fd);
+
+  peer_send(peer_fd, "bye", 3);
+  close(peer_fd);
+  peer_fd = -1;
+
+  char rx[4] = {};
+  TEST_ASSERT_TRUE(wait_available(client, 3));
+  delay(20);  // let lwIP process the FIN segment that follows the payload
+  TEST_ASSERT_EQUAL(3, client.readBytes(rx, 3));
+  TEST_ASSERT_EQUAL_STRING("bye", rx);
+
+  TEST_ASSERT_FALSE_MESSAGE(client.connected(), "connected() reported true on the first probe after the peer closed");
+  TEST_ASSERT_TRUE_MESSAGE(wait_connected(client, false), "connected() stayed true after the peer closed");
+
+  client.stop();
+}
+
+// Reading a half-closed socket must report EOF, not an error: the peer may only
+// have shut down its write side and still be waiting for a reply.
+void test_network_client_peer_half_close_allows_reply(void) {
+  int peer_fd = -1;
+  int client_fd = create_loopback_client(&peer_fd);
+  NetworkClient client(client_fd);
+
+  peer_send(peer_fd, "req", 3);
+  TEST_ASSERT_EQUAL(0, shutdown(peer_fd, SHUT_WR));
+  TEST_ASSERT_TRUE(wait_available(client, 3));
+
+  char req[4] = {};
+  TEST_ASSERT_EQUAL(3, client.readBytes(req, 3));
+  TEST_ASSERT_EQUAL_STRING("req", req);
+
+  uint8_t byte = 0;
+  TEST_ASSERT_EQUAL(0, client.read(&byte, 1));
+  TEST_ASSERT_EQUAL(-1, client.read());
+  TEST_ASSERT_GREATER_OR_EQUAL(0, client.fd());
+
+  TEST_ASSERT_EQUAL(2, client.write(reinterpret_cast<const uint8_t *>("ok"), 2));
+  char reply[3] = {};
+  peer_recv_all(peer_fd, reply, 2);
+  TEST_ASSERT_EQUAL_STRING("ok", reply);
+
+  client.stop();
+  close(peer_fd);
+}
+
+// connected() reports that no more inbound data can arrive, but the socket is
+// still writable after a half-close. Keep that reply path working even when
+// the sketch probed connected() before writing.
+void test_network_client_peer_half_close_allows_reply_after_probe(void) {
+  int peer_fd = -1;
+  int client_fd = create_loopback_client(&peer_fd);
+  NetworkClient client(client_fd);
+
+  peer_send(peer_fd, "req", 3);
+  TEST_ASSERT_EQUAL(0, shutdown(peer_fd, SHUT_WR));
+  TEST_ASSERT_TRUE(wait_available(client, 3));
+  delay(20);  // let lwIP process the FIN segment that follows the payload
+
+  char req[4] = {};
+  TEST_ASSERT_EQUAL(3, client.readBytes(req, 3));
+  TEST_ASSERT_EQUAL_STRING("req", req);
+
+  TEST_ASSERT_FALSE(client.connected());
+  TEST_ASSERT_FALSE(client.connected());
+  TEST_ASSERT_GREATER_OR_EQUAL(0, client.fd());
+
+  TEST_ASSERT_EQUAL(2, client.write(reinterpret_cast<const uint8_t *>("ok"), 2));
+  char reply[3] = {};
+  peer_recv_all(peer_fd, reply, 2);
+  TEST_ASSERT_EQUAL_STRING("ok", reply);
+
+  client.stop();
+  close(peer_fd);
+}
+
+void test_network_server_accept_roundtrip(void) {
+  static constexpr uint16_t kPort = 39876;
+
+  NetworkServer server(IPAddress(127, 0, 0, 1), kPort);
+  server.begin();
+  TEST_ASSERT_TRUE(server);
+
+  NetworkClient client;
+  TEST_ASSERT_TRUE(client.connect(IPAddress(127, 0, 0, 1), kPort));
+
+  uint32_t deadline = millis() + kWaitMs;
+  while (!server.hasClient() && millis() < deadline) {
+    delay(10);
+  }
+  TEST_ASSERT_TRUE(server.hasClient());
+
+  NetworkClient accepted = server.accept();
+  TEST_ASSERT_TRUE(accepted.connected());
+  TEST_ASSERT_GREATER_OR_EQUAL(0, accepted.fd());
+
+  TEST_ASSERT_EQUAL(4, client.write(reinterpret_cast<const uint8_t *>("ping"), 4));
+  char request[5] = {};
+  TEST_ASSERT_TRUE(wait_available(accepted, 4));
+  TEST_ASSERT_EQUAL(4, accepted.readBytes(request, 4));
+  TEST_ASSERT_EQUAL_STRING("ping", request);
+
+  TEST_ASSERT_EQUAL(4, accepted.write(reinterpret_cast<const uint8_t *>("pong"), 4));
+  char response[5] = {};
+  TEST_ASSERT_TRUE(wait_available(client, 4));
+  TEST_ASSERT_EQUAL(4, client.readBytes(response, 4));
+  TEST_ASSERT_EQUAL_STRING("pong", response);
+
+  accepted.stop();
+  client.stop();
+  server.end();
+}
+
+void test_network_server_accept_closes_socket_on_option_failure(void) {
+  NetworkServerTest server(IPAddress(127, 0, 0, 1), 0);
+  server.begin();
+  TEST_ASSERT_TRUE(server);
+
+  // A UDP socket is a valid descriptor but TCP_NODELAY is TCP-only, so
+  // accept() takes the same setsockopt() failure path as a real client whose
+  // socket options could not be configured.
+  int non_tcp_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+  TEST_ASSERT_GREATER_OR_EQUAL(0, non_tcp_fd);
+
+  server.injectAcceptedSocket(non_tcp_fd);
+
+  NetworkClient accepted = server.accept();
+  TEST_ASSERT_FALSE(accepted);
+  TEST_ASSERT_EQUAL(-1, accepted.fd());
+
+  // The descriptor must be closed, not leaked.
+  int type = 0;
+  socklen_t type_len = sizeof(type);
+  TEST_ASSERT_EQUAL(-1, getsockopt(non_tcp_fd, SOL_SOCKET, SO_TYPE, &type, &type_len));
+  TEST_ASSERT_EQUAL(EBADF, errno);
+
+  server.end();
+}
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -553,6 +748,12 @@ void setup() {
   RUN_TEST(test_network_client_endpoints);
   RUN_TEST(test_network_client_operator_compare);
   RUN_TEST(test_network_client_peer_shutdown);
+  RUN_TEST(test_network_client_peer_fin_reports_disconnected);
+  RUN_TEST(test_network_client_peer_close_reports_disconnected);
+  RUN_TEST(test_network_client_peer_half_close_allows_reply);
+  RUN_TEST(test_network_client_peer_half_close_allows_reply_after_probe);
+  RUN_TEST(test_network_server_accept_roundtrip);
+  RUN_TEST(test_network_server_accept_closes_socket_on_option_failure);
   UNITY_END();
 }
 

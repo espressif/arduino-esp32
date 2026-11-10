@@ -15,8 +15,9 @@
 #include <WiFiClient.h>
 #include <MD5Builder.h>
 
-#define SERVER_PORT  80
-#define TEST_TIMEOUT 5000
+#define SERVER_PORT         80
+#define DERIVED_SERVER_PORT 8081
+#define TEST_TIMEOUT        5000
 // Time to let the server task settle / recover after each robustness probe.
 #define SETTLE_MS 1000
 
@@ -70,11 +71,11 @@ void readServerIP() {
   Serial.printf("[CLIENT] Server IP: %s\n", serverIP.c_str());
 }
 
-// Send an HTTP GET request and return the raw response
-String http_get(const char *path) {
+// Send an HTTP GET request to the given port and return the raw response
+String http_get(uint16_t port, const char *path) {
   WiFiClient client;
-  if (!client.connect(serverIP.c_str(), SERVER_PORT)) {
-    Serial.printf("[CLIENT] Failed to connect to %s:%d\n", serverIP.c_str(), SERVER_PORT);
+  if (!client.connect(serverIP.c_str(), port)) {
+    Serial.printf("[CLIENT] Failed to connect to %s:%u\n", serverIP.c_str(), port);
     return "";
   }
 
@@ -103,6 +104,10 @@ String http_get(const char *path) {
   }
   client.stop();
   return response;
+}
+
+String http_get(const char *path) {
+  return http_get(SERVER_PORT, path);
 }
 
 // Send an arbitrary raw request (already fully formed) and return the raw
@@ -1225,8 +1230,43 @@ void attackMultipartEof() {
   http_raw(req, TEST_TIMEOUT, true);
 }
 
+// ------------------------- derived WebServer tests -------------------------
+// The derived server on DERIVED_SERVER_PORT wraps the accepted socket and
+// counts every byte written through client(). The test runner compares the
+// response length printed here with the server's byte count.
+void reportDerived(const char *name, bool ok, const String &response, const char *detail = nullptr) {
+  Serial.printf("[CLIENT] RESULT %s len=%u\n", name, (unsigned)response.length());
+  report(name, ok, detail);
+}
+
+void runDerivedTest(const char *name, const char *path, const char *expectedBody, bool exact) {
+  String response = http_get(DERIVED_SERVER_PORT, path);
+  String body = get_body(response);
+  int status = get_status_code(response);
+
+  if (response.length() == 0) {
+    reportDerived(name, false, response, "no response");
+  } else if (status != 200) {
+    reportDerived(name, false, response, "unexpected status");
+  } else if (exact ? !body.equals(expectedBody) : body.indexOf(expectedBody) < 0) {
+    reportDerived(name, false, response, "body mismatch");
+  } else {
+    reportDerived(name, true, response);
+  }
+}
+
+void runDerivedTests() {
+  runDerivedTest("derived_plain", "/plain", "PLAIN", true);
+  runDerivedTest("derived_sendp", "/sendp", "SENDP", true);
+  runDerivedTest("derived_chunked", "/chunked", "6\r\nCHUNK1\r\n6\r\nCHUNK2\r\n0\r\n\r\n", false);
+  runDerivedTest("derived_streamfile", "/streamfile", test_body, true);
+  runDerivedTest("derived_sendstream", "/sendstream", test_body, true);
+  runDerivedTest("derived_sendcontent", "/sendcontent", "9\r\nCHUNKBODY\r\n0\r\n\r\n", false);
+}
+
 void runTests() {
   runStreamTests();
+  runDerivedTests();
 
   // Non-destructive robustness checks first (server stays responsive).
   testAuthBypass();

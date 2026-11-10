@@ -40,6 +40,12 @@
 #define USBHOST_HID_DUMP_DESC 0
 #endif
 
+/* Keep an already-armed low-speed interrupt IN down while the next device enumerates.
+ * A bInterval-1 mouse otherwise stays on the bus and the next low-speed enum dies. */
+#ifndef USBHOST_HID_ENUM_PAUSE_MS
+#define USBHOST_HID_ENUM_PAUSE_MS 500
+#endif
+
 /* TinyUSB / host-worker hooks are C linkage — declare before friend so we do not
  * introduce conflicting C++ linkage names in this header. */
 extern "C" {
@@ -48,7 +54,10 @@ void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t idx);
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len);
 void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, uint16_t len);
 void tuh_umount_cb(uint8_t daddr);
+void tuh_event_hook_cb(uint8_t rhport, uint32_t eventid, bool in_isr);
 void arduino_usb_host_hid_service(void);
+/** Run before tuh_task(): drain ISR-deferred HID aborts so enum sees a quiet bus. */
+void arduino_usb_host_hid_pre_task(void);
 void arduino_usb_host_hid_dispatch(void);
 void arduino_usb_host_hid_device_mounted(uint8_t daddr);
 }
@@ -145,9 +154,16 @@ private:
   friend void tuh_hid_report_received_cb(uint8_t, uint8_t, uint8_t const *, uint16_t);
   friend void tuh_hid_set_report_complete_cb(uint8_t, uint8_t, uint8_t, uint8_t, uint16_t);
   friend void tuh_umount_cb(uint8_t);
+  friend void tuh_event_hook_cb(uint8_t, uint32_t, bool);
   friend void arduino_usb_host_hid_service(void);
+  friend void arduino_usb_host_hid_pre_task(void);
   friend void arduino_usb_host_hid_dispatch(void);
   friend void arduino_usb_host_hid_device_mounted(uint8_t);
+
+  /** HCD attach of another device: abort already-mounted low-speed HID INs before enum. Not REMOVE. */
+  void onHcdConnectionEvent(uint32_t event_id, bool in_isr);
+  /** ISR-deferred abort drain — host worker calls via arduino_usb_host_hid_pre_task(). */
+  void preTask();
 
   void _onMount(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc, uint16_t desc_len);
   void _onUnmount(uint8_t dev_addr, uint8_t idx);
@@ -186,6 +202,7 @@ private:
     NOTE_START_RX = 5,
     NOTE_PEER_REARM = 6,
     NOTE_DEV_MOUNT = 7,
+    NOTE_ATTACH_ABORT = 8,
   };
 #if USBHOST_HID_DUMP_DESC
   struct DescDumpSlot {
@@ -216,6 +233,10 @@ private:
   uint8_t _rearm_skip_addr;
   uint8_t _rearm_skip_idx;
   uint8_t _rearm_tries;
+  /** millis() when this slot's interrupt IN was submitted. 0 = not since the last unmount. */
+  uint32_t _arm_ms[MAX_DEVICES];
+  /** millis() when the current peer sweep was scheduled. INs armed at or after this stay up. */
+  uint32_t _sweep_ms;
 #if USBHOST_HID_DUMP_DESC
   DescDumpSlot _desc_dump[DESC_DUMP_SLOTS];
   volatile uint8_t _desc_dump_w;
@@ -224,6 +245,17 @@ private:
   HostNote _host_note[HOST_NOTE_SLOTS];
   volatile uint8_t _host_note_w;
   volatile uint8_t _host_note_r;
+  /** millis() until which peer re-arm stays held. 0 means no hold. */
+  volatile uint32_t _peer_pause_until_ms;
+  volatile bool _pending_abort_all;
+
+  bool anyMounted(void) const;
+  bool isRearmExempt(uint8_t dev_addr, uint8_t idx) const;
+  /** True while a peer-rearm hold is still in the future. 0 is inactive, not a deadline. */
+  bool peerPauseActive(void);
+  void abortBusyPeers(void);
+  /** Pause peer re-arm. include_sole sets skip 0xFF only when no claim exemption is in flight. */
+  void schedulePeerRearm(uint32_t pause_ms, bool include_sole);
 };
 
 extern USBHostHIDClass USBHostHID;
