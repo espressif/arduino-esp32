@@ -1,20 +1,21 @@
 /*
  * LE Audio -- Auracast sink (receiver)
  *
- * A portable Auracast receiver / speaker: it scans for a broadcast, syncs to
- * its periodic advertising and BIG, and plays the LC3 audio on an I2S DAC.
+ * A portable Auracast speaker: it scans for a broadcast, syncs to its
+ * periodic advertising and BIG, and plays the LC3 audio on an I2S DAC.
  *
  *   - BAP Broadcast Sink with two BISes (front left + front right)
- *   - BASS Scan Delegator, so a phone or LEAudio_BroadcastAssistant can pick
- *     a source remotely
+ *   - BASS Scan Delegator, so a phone app or a BASS client can pick a source
+ *     remotely
  *   - LC3 player decoding both BISes to the DAC
  *
  * By default it syncs to the broadcast named TARGET_NAME; leave it empty to
  * join the first source found. For an encrypted broadcast set BROADCAST_CODE
  * to the same code the source uses.
  *
- * Wire an I2S DAC (e.g. PCM5102 or MAX98357A) to the pins below. Pair it with
- * LEAudio_AuracastSource or any Auracast transmitter.
+ * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
+ * (esp_audio_codec). Wire an I2S DAC (e.g. PCM5102 or MAX98357A) to the pins
+ * below. Pair it with LEAudio_AuracastSource or any Auracast transmitter.
  *
  * Licensed under the Apache License, Version 2.0
  */
@@ -22,8 +23,6 @@
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
-
-#if BLE_AUDIO_SUPPORTED
 
 // ---- I2S DAC pinout (edit for your board) ----
 #define DAC_BCLK 5  // bit clock   (BCLK / SCK)
@@ -37,10 +36,7 @@ static const uint8_t STREAMS = 2;                   // 1 = mono, 2 = stereo
 
 BLEAudio audio;
 BLEAudioBroadcastSink sink;
-
-#if BLE_AUDIO_LC3_SUPPORTED
 BLEAudioPlayer player;
-#endif
 
 void halt(const char *what, BTStatus st) {
   Serial.printf("%s failed: %s\n", what, st.toString());
@@ -91,7 +87,6 @@ void setup() {
     Serial.printf("[BIG] left (reason 0x%02X)\n", reason);
   });
 
-#if BLE_AUDIO_LC3_SUPPORTED
   BLEAudioI2sConfig dac;
   dac.bclk = DAC_BCLK;
   dac.ws = DAC_WS;
@@ -100,37 +95,27 @@ void setup() {
   if (!st) {
     halt("player.begin", st);
   }
-  BLEAudioStream left = sink.stream(0);
-  BLEAudioStream right = STREAMS == 2 ? sink.stream(1) : BLEAudioStream();
-  st = player.attach(left, right);
+  // One argument handles a mono or one stereo stream; two arguments are for
+  // two separate mono streams (left, right).
+  st = STREAMS == 2 ? player.attach(sink.stream(0), sink.stream(1)) : player.attach(sink.stream(0));
   if (!st) {
     halt("player.attach", st);
   }
-  st = player.start();
+  st = player.startPlayback();
   if (!st) {
-    halt("player.start", st);
+    halt("player.startPlayback", st);
   }
-#else
-  // Without LC3, count valid SDUs so the link can still be observed.
-  for (size_t i = 0; i < sink.streamCount(); i++) {
-    sink.stream(i).onReceive([](BLEAudioStream &, const BLEAudioSduInfo &info, const uint8_t *, uint16_t) {
-      if (info.status == BLEAudioSduInfo::Status::Valid) {
-        Serial.println("[BIS] SDU received (LC3 codec not compiled in)");
-      }
-    });
-  }
-#endif
 
   st = audio.start();
   if (!st) {
     halt("audio.start", st);
   }
 
-  // Advertise connectably so a phone or Broadcast Assistant can reach BASS.
+  // Advertise connectably so a phone app can reach BASS and change the source.
   BLEAdvertising adv = BLE.getAdvertising();
   adv.setType(BLEAdvType::ConnectableScannable);
   adv.setName(DEVICE_NAME);
-  adv.setAppearance(0x0840);  // Generic Audio Sink
+  adv.setAppearance(BLE_APPEARANCE_AUDIO_SINK_STANDALONE_SPEAKER);
   st = adv.start();
   if (!st) {
     halt("advertising", st);
@@ -149,27 +134,11 @@ void loop() {
   static uint32_t last = 0;
   if (millis() - last >= 5000) {
     last = millis();
-#if BLE_AUDIO_LC3_SUPPORTED
     if (player.sampleRate()) {
       Serial.printf("[player] %lu Hz x %u ch, %lu SDUs, %lu lost, %lu PLC, %lu underruns\n", (unsigned long)player.sampleRate(),
                     player.channels(), (unsigned long)player.sdusReceived(), (unsigned long)player.sdusLost(),
                     (unsigned long)player.plcFrames(), (unsigned long)player.underruns());
     }
-#endif
   }
   delay(100);
 }
-
-#else  // !BLE_AUDIO_SUPPORTED
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println("LEAudio_AuracastSink requires the LE Audio library (<BLEAudio.h>) in this build.");
-}
-
-void loop() {
-  delay(1000);
-}
-
-#endif /* BLE_AUDIO_SUPPORTED */

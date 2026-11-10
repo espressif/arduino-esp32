@@ -1,18 +1,19 @@
 /*
  * LE Audio -- Auracast source (transmitter)
  *
- * A venue transmitter: it announces an Auracast broadcast and streams live
- * audio from an I2S microphone pair to every receiver in range.
+ * A venue/TV transmitter: it announces an Auracast broadcast and streams live
+ * audio from an I2S input to every receiver in range.
  *
  *   - BAP Broadcast Source with two BISes (front left + front right)
  *   - Public Broadcast Announcement and Broadcast Name in the advertising
- *   - LC3 recorder encoding the I2S microphones into both BISes
+ *   - LC3 recorder encoding the I2S input into both BISes
  *
  * The broadcast is unencrypted by default. Set BROADCAST_CODE to encrypt it;
  * receivers then need the same code (see LEAudio_AuracastSink). For a mono
- * broadcast use channels = 1 and attach only source.stream(0).
+ * broadcast use CHANNELS = 1 and attach only source.stream(0).
  *
- * Wire two I2S MEMS microphones (L/R pin low on one and high on the other) to
+ * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
+ * (esp_audio_codec). Wire an I2S microphone pair or an I2S ADC line input to
  * the pins below. Listen with LEAudio_AuracastSink or any Auracast receiver.
  *
  * Licensed under the Apache License, Version 2.0
@@ -22,18 +23,14 @@
 #include <BLE.h>
 #include <BLEAudio.h>
 
-#if BLE_AUDIO_SUPPORTED
-
-// ---- I2S microphone pinout (edit for your board) ----
+// ---- I2S input pinout (edit for your board) ----
 #define MIC_BCLK 5  // bit clock   (BCLK / SCK)
 #define MIC_WS   6  // word select (LRCLK / WS)
-#define MIC_DIN  4  // data in     (SD on the microphones)
+#define MIC_DIN  4  // data in     (SD on the microphone/ADC)
 
 static const char *BROADCAST_NAME = "ESP32 Auracast";
 static const char *BROADCAST_CODE = "";  // up to 16 characters; empty = unencrypted
 static const uint8_t CHANNELS = 2;       // 1 = mono, 2 = stereo
-
-#if BLE_AUDIO_LC3_SUPPORTED
 
 BLEAudio audio;
 BLEAudioBroadcastSource source;
@@ -76,28 +73,30 @@ void setup() {
     Serial.printf("[BIG] stopped (reason 0x%02X)\n", reason);
   });
 
-  // The recorder opens the microphones at the preset's sample rate once the
-  // BISes stream; attach both channels (or only stream 0 for mono).
-  BLEAudioI2sConfig mic;
-  mic.bclk = MIC_BCLK;
-  mic.ws = MIC_WS;
-  mic.din = MIC_DIN;
-  st = recorder.begin(mic);
-  if (!st) {
-    halt("recorder.begin", st);
-  }
-  st = recorder.attach(source.stream(0), CHANNELS == 2 ? source.stream(1) : BLEAudioStream());
-  if (!st) {
-    halt("recorder.attach", st);
-  }
-  st = recorder.start();
-  if (!st) {
-    halt("recorder.start", st);
-  }
-
   st = audio.start();
   if (!st) {
     halt("audio.start", st);
+  }
+
+  // The recorder opens the input at the preset's sample rate once the BISes
+  // stream; attach both channels (or only stream 0 for mono).
+  BLEAudioI2sConfig input;
+  input.bclk = MIC_BCLK;
+  input.ws = MIC_WS;
+  input.din = MIC_DIN;
+  st = recorder.begin(input);
+  if (!st) {
+    halt("recorder.begin", st);
+  }
+  // One argument handles a mono or one stereo stream; two arguments are for
+  // two separate mono streams (left, right).
+  st = CHANNELS == 2 ? recorder.attach(source.stream(0), source.stream(1)) : recorder.attach(source.stream(0));
+  if (!st) {
+    halt("recorder.attach", st);
+  }
+  st = recorder.startCapture();
+  if (!st) {
+    halt("recorder.startCapture", st);
   }
 
   st = source.start();
@@ -119,31 +118,3 @@ void loop() {
   }
   delay(100);
 }
-
-#else  // !BLE_AUDIO_LC3_SUPPORTED
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println("LEAudio_AuracastSource requires the LC3 codec (esp_audio_codec) in this build.");
-}
-
-void loop() {
-  delay(1000);
-}
-
-#endif /* BLE_AUDIO_LC3_SUPPORTED */
-
-#else  // !BLE_AUDIO_SUPPORTED
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println("LEAudio_AuracastSource requires the LE Audio library (<BLEAudio.h>) in this build.");
-}
-
-void loop() {
-  delay(1000);
-}
-
-#endif /* BLE_AUDIO_SUPPORTED */

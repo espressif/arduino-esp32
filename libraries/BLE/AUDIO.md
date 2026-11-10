@@ -208,10 +208,12 @@ committed GATT table. See `DESIGN.md` → "Service staging and startup".
 
 ## Public examples and convenience helpers
 
-The `libraries/BLEAudio/examples/` sketches are grouped by **real use case**
-(headset, speaker, phone, Auracast source/sink, Broadcast Assistant, hearing
-aid), not one sketch per API role. They use the configuration helpers that
-cover the common device shapes:
+The `libraries/BLEAudio/examples/` sketches are grouped by **real,
+ESP32-sized products** (unicast speaker, wireless microphone, Auracast
+transmitter, Auracast speaker), not one sketch per API role. All of them show
+I2S integration: the speaker examples drive an I2S DAC, the microphone examples
+capture from an I2S microphone. They use the configuration helpers that cover
+the common device shapes:
 
 - `BLEAudioUnicastServer::configureMediaSink()` — one stereo-capable sink ASE,
   media + conversational contexts, front-left/front-right locations.
@@ -224,9 +226,9 @@ cover the common device shapes:
   ready-to-scan Auracast receiver with one or two BISes and auto-sync.
 
 The helpers only call the public setters in a documented order; a sketch can
-override any field afterwards. Raw BAP roles, CAP handover, multi-peer
-coordinated sets, custom QoS and PCM sinks/sources stay public and are
-documented in the headers and in
+override any field afterwards. Raw BAP roles, phone/PC sources, CAP handover,
+multi-peer coordinated sets, Broadcast Assistant, HAS, custom QoS and PCM
+sinks/sources stay public and are documented in the headers and in
 [`BLEAudio/README.md`](../BLEAudio/README.md) rather than duplicated as
 examples.
 

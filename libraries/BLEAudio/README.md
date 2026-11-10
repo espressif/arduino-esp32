@@ -38,25 +38,31 @@ without this library; include `<BLEAudio.h>` before using the returned handle.
 
 ## Examples
 
-The examples are grouped by real use case instead of by API role. Pick the
-device you are building and use the matching counterpart for the other end of
-the link.
+The examples are grouped by real, ESP32-sized products instead of by API role.
+Pick the device you are building and use the matching counterpart for the
+other end of the link. All of them use I2S for audio: the speaker examples
+drive an I2S DAC, and the microphone examples capture from an I2S mic (the
+pin numbers at the top of each sketch are the only board-specific part).
 
 | Example | Device | What it shows |
 | --- | --- | --- |
-| [`LEAudio_Headset`](examples/LEAudio_Headset) | Headset / earbud | CAP acceptor, unicast sink + source, VCP, MICP, MCP, CCP, TMAP/GMAP, LC3 player + recorder |
-| [`LEAudio_Speaker`](examples/LEAudio_Speaker) | Smart speaker | CAP acceptor, stereo-capable unicast sink, VCP, TMAP, LC3 player |
-| [`LEAudio_Phone`](examples/LEAudio_Phone) | Phone / PC | CAP initiator, unicast client, VCP/MICP/MCP/CCP controllers, LC3 recorder from a PCM source |
-| [`LEAudio_AuracastSource`](examples/LEAudio_AuracastSource) | Venue transmitter | Broadcast source, Public Broadcast Announcement, LC3 recorder from I2S microphones |
-| [`LEAudio_AuracastSink`](examples/LEAudio_AuracastSink) | Portable receiver | Broadcast sink, BASS Scan Delegator, LC3 player |
-| [`LEAudio_BroadcastAssistant`](examples/LEAudio_BroadcastAssistant) | Phone / remote | BASS client: remote scan, add/remove a source, Broadcast Code, PAST |
-| [`LEAudio_HearingAid`](examples/LEAudio_HearingAid) | Hearing aid | HAS presets on top of a CAP acceptor and unicast server |
+| [`LEAudio_UnicastSpeaker`](examples/LEAudio_UnicastSpeaker) | Unicast speaker | CAP acceptor, stereo-capable unicast sink, VCP volume, LC3 player -> I2S DAC |
+| [`LEAudio_WirelessMic`](examples/LEAudio_WirelessMic) | Wireless microphone | BAP unicast client, LC3 recorder from an I2S mic -> CIS |
+| [`LEAudio_AuracastSource`](examples/LEAudio_AuracastSource) | Auracast transmitter | Broadcast source, Public Broadcast Announcement, LC3 recorder from an I2S input |
+| [`LEAudio_AuracastSink`](examples/LEAudio_AuracastSink) | Auracast speaker | Broadcast sink, BASS Scan Delegator, LC3 player -> I2S DAC |
 
 Typical pairs:
 
-- `LEAudio_Phone` -> `LEAudio_Headset` or `LEAudio_Speaker`
+- `LEAudio_WirelessMic` -> `LEAudio_UnicastSpeaker`
 - `LEAudio_AuracastSource` -> `LEAudio_AuracastSink`
-- `LEAudio_BroadcastAssistant` -> `LEAudio_AuracastSink`
+- A phone/PC with LE Audio -> `LEAudio_UnicastSpeaker` (unicast)
+- A phone/PC with Auracast -> `LEAudio_AuracastSink` (broadcast)
+
+The examples require an LE Audio-capable target (ESP32-S31) and the LC3 codec
+(`esp_audio_codec`). Advertising appearance values are named constants, e.g.
+`BLE_APPEARANCE_AUDIO_SINK_STANDALONE_SPEAKER` and
+`BLE_APPEARANCE_AUDIO_SOURCE_MICROPHONE`, so a sketch does not hard-code the
+Assigned Numbers value.
 
 ## Advanced uses (documented, not separate examples)
 
@@ -68,6 +74,16 @@ of adding more sketches:
   `createUnicastClient()` expose the PACS/ASCS data plane without CAP. Use them
   when you need full control over discovery and the ASCS procedure; see
   `BLEAudioUnicastServer.h` and `BLEAudioUnicastClient.h`.
+- **Phone/PC media source.** A phone or PC is the usual unicast client: use
+  `BLEAudioUnicastClient` for the data path and `BLEAudioCapInitiator` when it
+  must start several acceptors as one set. The wireless microphone example
+  shows the same client-side stream setup with a local recorder.
+- **Broadcast Assistant (BASS client).** `audio.createBroadcastAssistant()`
+  performs a remote scan, adds/removes a source on a sink, distributes the
+  Broadcast Code and hands over PAST. See `BLEAudioBroadcastAssistant.h`.
+- **Hearing Access Service (HAS).** `audio.createHearingAidDevice()` publishes
+  named presets on top of a CAP acceptor; `createHearingAidController()` reads
+  and switches them. See `BLEAudioHearingAid.h`.
 - **CAP handover.** `BLEAudioCapInitiator::handoverToBroadcast()` and
   `handoverToUnicast()` move a running session between CIS and BIS without
   restarting the streams. The acceptor needs a unicast server plus a broadcast
@@ -89,7 +105,7 @@ of adding more sketches:
   `BLEAudioRecorder::setPcmSource()` replace the I2S endpoints with callbacks,
   which is how the validation suite checks the LC3 path without a codec board.
 - **Top-level identity only.** TMAP/GMAP publish roles; they move no audio.
-  `LEAudio_Headset` shows the usual local roles, and `discover()` reads a
+  Use `audio.createTmap()` / `audio.createGmap()` and `discover()` to read a
   peer's roles.
 
 ## Relationship to `BLE`

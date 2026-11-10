@@ -1,21 +1,21 @@
 /*
- * LE Audio -- Smart speaker
+ * LE Audio -- Unicast speaker
  *
- * A mains-powered speaker that plays unicast audio from a phone, PC or the
- * LEAudio_Phone example:
+ * A speaker that receives audio over a Connected Isochronous Stream from a
+ * phone/PC or from the LEAudio_WirelessMic example:
  *
  *   - CAP acceptor with a CSIS set member (a set of one)
  *   - BAP unicast server: one stereo-capable sink ASE
  *   - VCP volume renderer
- *   - TMAP identity: unicast media receiver
  *   - LC3 player decoding the sink stream to an I2S DAC
  *
- * One sink ASE accepts mono or interleaved stereo, so a phone can send both
- * channels over one CIS. Without the LC3 codec the speaker still publishes
- * its services and accepts streams, but does not decode them.
+ * One sink ASE accepts mono or interleaved stereo, so the source can send
+ * both channels over one CIS. The speaker advertises connectably and waits
+ * for a unicast client; it never starts a stream itself.
  *
- * Wire an I2S DAC (e.g. PCM5102 or MAX98357A) to the pins below. Pair it with
- * LEAudio_Phone on a second LE-Audio-capable board, or stream from a phone.
+ * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
+ * (esp_audio_codec). Wire an I2S DAC (e.g. PCM5102 or MAX98357A) to the pins
+ * below.
  *
  * Licensed under the Apache License, Version 2.0
  */
@@ -23,8 +23,6 @@
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
-
-#if BLE_AUDIO_SUPPORTED
 
 // ---- I2S DAC pinout (edit for your board) ----
 #define DAC_BCLK 5  // bit clock   (BCLK / SCK)
@@ -37,11 +35,7 @@ BLEAudio audio;
 BLEAudioCapAcceptor capAcceptor;
 BLEAudioUnicastServer unicastServer;
 BLEAudioVolumeRenderer volumeRenderer;
-BLEAudioTmap tmap;
-
-#if BLE_AUDIO_LC3_SUPPORTED
 BLEAudioPlayer player;
-#endif
 
 void halt(const char *what, BTStatus st) {
   Serial.printf("%s failed: %s\n", what, st.toString());
@@ -50,26 +44,25 @@ void halt(const char *what, BTStatus st) {
   }
 }
 
-// The phone configured the sink ASE: hand the stream to the decoder.
+// A client configured the sink ASE: hand the stream to the decoder.
 void onSinkConfigured(BLEAudioStream &stream) {
   BLEAudioCodecConfig codec = stream.codecConfig();
   Serial.printf("[sink] configured: %lu Hz, %u us, %u octets x %u ch\n", (unsigned long)codec.samplingRateHz, codec.frameDurationUs,
                 codec.octetsPerFrame, codec.channels());
-#if BLE_AUDIO_LC3_SUPPORTED
-  player.stop();  // no-op unless a previous stream was attached
+
+  player.stopPlayback();  // no-op unless a previous stream was attached
   BTStatus st = player.attach(stream);
   if (st) {
-    st = player.start();
+    st = player.startPlayback();
   }
   if (!st) {
     Serial.printf("player: %s\n", st.toString());
   }
-#endif
 }
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("\n=== LE Audio Smart Speaker ===");
+  Serial.println("\n=== LE Audio Unicast Speaker ===");
 
   BTStatus st = BLE.begin(DEVICE_NAME);
   if (!st) {
@@ -88,12 +81,14 @@ void setup() {
     Serial.printf("Source disconnected (link %u)\n", connHandle);
   });
 
+  // CAP ties the profiles into one audio device; this speaker is a set of one.
   capAcceptor = audio.createCapAcceptor();
   if (!capAcceptor) {
     halt("createCapAcceptor", BTStatus::NotSupported);
   }
   capAcceptor.setSetSize(1).setRank(1);
 
+  // One stereo-capable sink ASE for the incoming audio.
   unicastServer = audio.createUnicastServer();
   if (!unicastServer) {
     halt("createUnicastServer", BTStatus::NotSupported);
@@ -110,15 +105,12 @@ void setup() {
     });
   }
 
+  // The source can change volume over VCP.
   volumeRenderer = audio.createVolumeRenderer();
   volumeRenderer.setInitialVolume(160).onStateChanged([](uint8_t volume, bool muted) {
     Serial.printf("[VCP] volume=%u%s\n", volume, muted ? " (muted)" : "");
   });
 
-  tmap = audio.createTmap();
-  tmap.setRoles(BLEAudioTmapRole::UnicastMediaReceiver);
-
-#if BLE_AUDIO_LC3_SUPPORTED
   BLEAudioI2sConfig dac;
   dac.bclk = DAC_BCLK;
   dac.ws = DAC_WS;
@@ -127,10 +119,8 @@ void setup() {
   if (!st) {
     halt("player.begin", st);
   }
-#else
-  Serial.println("LC3 codec not compiled in: streams run without decode.");
-#endif
 
+  // One coordinated commit publishes CAS/CSIS, PACS/ASCS and VCS.
   st = audio.start();
   if (!st) {
     halt("audio.start", st);
@@ -139,40 +129,24 @@ void setup() {
   BLEAdvertising adv = BLE.getAdvertising();
   adv.setType(BLEAdvType::ConnectableScannable);
   adv.setName(DEVICE_NAME);
-  adv.setAppearance(0x0840);  // Generic Audio Sink
+  adv.setAppearance(BLE_APPEARANCE_AUDIO_SINK_STANDALONE_SPEAKER);
   st = adv.start();
   if (!st) {
     halt("advertising", st);
   }
 
-  Serial.printf("Ready. Connect a phone or LEAudio_Phone to \"%s\".\n", DEVICE_NAME);
+  Serial.printf("Ready. Connect a phone/PC or LEAudio_WirelessMic to \"%s\".\n", DEVICE_NAME);
 }
 
 void loop() {
   static uint32_t last = 0;
   if (millis() - last >= 5000) {
     last = millis();
-#if BLE_AUDIO_LC3_SUPPORTED
     if (player.sampleRate()) {
       Serial.printf("[player] %lu Hz x %u ch, %lu SDUs, %lu lost, %lu PLC, %lu underruns\n", (unsigned long)player.sampleRate(),
                     player.channels(), (unsigned long)player.sdusReceived(), (unsigned long)player.sdusLost(),
                     (unsigned long)player.plcFrames(), (unsigned long)player.underruns());
     }
-#endif
   }
   delay(100);
 }
-
-#else  // !BLE_AUDIO_SUPPORTED
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println("LEAudio_Speaker requires the LE Audio library (<BLEAudio.h>) in this build.");
-}
-
-void loop() {
-  delay(1000);
-}
-
-#endif /* BLE_AUDIO_SUPPORTED */
