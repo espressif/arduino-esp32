@@ -6,6 +6,7 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 
 | Test Function | Description |
 |---|---|
+| `test_dns_clear_cache_tcpip_lock` | Start a pending DNS lookup, then trigger the `hostByName()` DNS-cache clear; the callback allocates a UDP PCB like the SNTP callback. Runs only when lwIP core locking and thread-safety checks are enabled. |
 | `test_dns_resolve` | Resolve `pool.ntp.org` via `Network.hostByName()` |
 | `test_dns_resolve_invalid` | Verify resolution fails for non-existent domain |
 | `test_tcp_connect` | TCP connect to `httpbin.org:80` |
@@ -30,6 +31,9 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 | `test_udp_ipv6_with_local_bind` | Verify an explicitly bound IPv6 sender still sends successfully |
 | `test_udp_socket_family_after_stop` | Send IPv4 → IPv6 → IPv4 on one sender with `stop()` between families |
 | `test_dns_server_captive` | Start DNSServer on softAP, verify `start()` succeeds |
+| `test_dns_question_stays_within_packet` | Drop queries with a missing or late QName terminator or truncated QClass; then answer root and named queries with the terminator at the last allowed position |
+| `test_ap_invalid_subnet_preserves_dhcp` | Reject an unsupported /23 SoftAP netmask without changing the IP, subnet, gateway, or DHCP state |
+| `test_ap_malformed_subnet_preserves_dhcp` | Reject a noncontiguous SoftAP netmask while preserving the prior network configuration and DHCP service |
 | `test_mdns_begin` | Start mDNS with hostname |
 | `test_mdns_service` | Register HTTP and custom UDP services via mDNS |
 
@@ -38,7 +42,8 @@ Validates core networking APIs over Wi-Fi: DNS resolution, TCP client (connect, 
 - **Hardware**: Any ESP32 with Wi-Fi
 - **Wokwi**: Supported (uses `Wokwi-GUEST` network)
 - **CI Runner**: `wifi_router` (for hardware)
-- UDP loopback checks are ignored when `CONFIG_LWIP_NETIF_LOOPBACK` is disabled; IPv6 checks are ignored when IPv6 is disabled.
+- UDP loopback and DNS packet bounds checks are ignored when `CONFIG_LWIP_NETIF_LOOPBACK` is disabled; IPv6 checks are ignored when IPv6 is disabled.
+- `test_dns_clear_cache_tcpip_lock` is compiled and registered only when both `CONFIG_LWIP_TCPIP_CORE_LOCKING` and `CONFIG_LWIP_CHECK_THREAD_SAFETY` are enabled. It points the DNS servers at TEST-NET-1 (`192.0.2.1`) to keep a lookup pending, then restores them.
 
 ## Serial Protocol
 

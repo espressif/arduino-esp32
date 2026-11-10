@@ -77,7 +77,7 @@ dependencies:
       - if: idf_version >= 6.0
         version: "1.2.4"
       - if: idf_version < 6.0
-        version: "1.0.2"
+        version: "1.0.5"
   espressif/esp_rainmaker:
     version: ">=1.15.0"
     rules:

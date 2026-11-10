@@ -15,6 +15,7 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include <esp_netif.h>
 #include <NetworkClient.h>
 #include <NetworkUdp.h>
 #include <NetworkServer.h>
@@ -22,6 +23,12 @@
 #include <ESPmDNS.h>
 #include <lwip/inet.h>
 #include <lwip/sockets.h>
+#if CONFIG_LWIP_TCPIP_CORE_LOCKING && CONFIG_LWIP_CHECK_THREAD_SAFETY
+#include <lwip/dns.h>
+#include <lwip/ip_addr.h>
+#include <lwip/priv/tcpip_priv.h>
+#include <lwip/udp.h>
+#endif
 #include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
@@ -178,6 +185,83 @@ static bool connectWiFi() {
 }
 
 // ==================== DNS Resolution ====================
+
+#if CONFIG_LWIP_TCPIP_CORE_LOCKING && CONFIG_LWIP_CHECK_THREAD_SAFETY
+// Regression for #13055: NetworkManager::hostByName() clears the DNS cache
+// when the interface address state changes. dns_clear_cache() invokes pending
+// lookup callbacks, so it must run with the TCPIP core lock held.
+
+static volatile bool dnsClearCacheCallbackRan = false;
+
+static void dnsClearCacheCallback(const char *name, const ip_addr_t *ipaddr, void *arg) {
+  (void)name;
+  (void)ipaddr;
+  (void)arg;
+  dnsClearCacheCallbackRan = true;
+  // The SNTP DNS callback reaches udp_new_ip_type(), which asserts if the
+  // TCPIP core lock is not held.
+  struct udp_pcb *pcb = udp_new_ip_type(IPADDR_TYPE_ANY);
+  if (pcb != nullptr) {
+    udp_remove(pcb);
+  }
+}
+
+void test_dns_clear_cache_tcpip_lock(void) {
+  TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
+
+  unsigned long start = millis();
+  while ((uint32_t)WiFi.localIP() == 0 && millis() - start < 5000) {
+    delay(50);
+  }
+  TEST_ASSERT_NOT_EQUAL_MESSAGE(0, (uint32_t)WiFi.localIP(), "WiFi has no IP address");
+
+  ip_addr_t saved[DNS_MAX_SERVERS];
+  for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+    ip_addr_copy(saved[i], *dns_getserver(i));
+  }
+
+  ip_addr_t blackhole;
+  IP_ADDR4(&blackhole, 192, 0, 2, 1);
+  dnsClearCacheCallbackRan = false;
+
+  ip_addr_t address;
+  err_t err;
+  LOCK_TCPIP_CORE();
+  for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+    dns_setserver(i, &blackhole);
+  }
+  err = dns_gethostbyname("pending.invalid", &address, dnsClearCacheCallback, nullptr);
+  UNLOCK_TCPIP_CORE();
+
+  if (err != ERR_INPROGRESS) {
+    LOCK_TCPIP_CORE();
+    for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+      dns_setserver(i, &saved[i]);
+    }
+    UNLOCK_TCPIP_CORE();
+    TEST_ASSERT_EQUAL_MESSAGE(ERR_INPROGRESS, err, "DNS lookup did not stay pending");
+  }
+
+  // The first hostByName() after the interface gets an IP changes the cached
+  // IPv4 state and clears the DNS cache. Use an over-long hostname so the
+  // following lookup is rejected without another DNS query.
+  char invalidHost[DNS_MAX_NAME_LENGTH + 8];
+  memset(invalidHost, 'a', sizeof(invalidHost) - 1);
+  invalidHost[sizeof(invalidHost) - 1] = '\0';
+
+  IPAddress result;
+  int ret = Network.hostByName(invalidHost, result);
+
+  LOCK_TCPIP_CORE();
+  for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+    dns_setserver(i, &saved[i]);
+  }
+  UNLOCK_TCPIP_CORE();
+
+  TEST_ASSERT_LESS_OR_EQUAL_MESSAGE(0, ret, "invalid hostname unexpectedly resolved");
+  TEST_ASSERT_TRUE_MESSAGE(dnsClearCacheCallbackRan, "DNS cache clear did not invoke the pending callback");
+}
+#endif
 
 void test_dns_resolve(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
@@ -608,6 +692,104 @@ void test_udp_loopback_requires_configuration(void) {
 
 // ==================== DNS Server ====================
 
+#if NETWORKING_HAS_LWIP_LOOPBACK
+static constexpr uint16_t kDnsPort = 15353;
+
+static bool sendQuestion(int fd, const sockaddr_in &serverAddress, uint16_t id, const uint8_t *question, size_t questionLength) {
+  uint8_t packet[DNS_HEADER_SIZE + 32] = {};
+  if (questionLength > sizeof(packet) - DNS_HEADER_SIZE) {
+    return false;
+  }
+
+  packet[0] = id >> 8;
+  packet[1] = id & 0xff;
+  packet[2] = 0x01;  // recursion desired
+  packet[5] = 0x01;  // one question
+  memcpy(packet + DNS_HEADER_SIZE, question, questionLength);
+
+  size_t length = DNS_HEADER_SIZE + questionLength;
+  ssize_t sent = sendto(fd, packet, length, 0, reinterpret_cast<const sockaddr *>(&serverAddress), sizeof(serverAddress));
+  return sent >= 0 && static_cast<size_t>(sent) == length;
+}
+
+static void expectNoReply(int fd) {
+  uint8_t reply[64];
+  TEST_ASSERT_EQUAL(-1, recvfrom(fd, reply, sizeof(reply), 0, nullptr, nullptr));
+}
+
+void test_dns_question_stays_within_packet() {
+  DNSServer server;
+  TEST_ASSERT_TRUE(server.start(kDnsPort, "*", IPAddress(127, 0, 0, 1)));
+
+  int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  TEST_ASSERT_GREATER_OR_EQUAL(0, fd);
+
+  sockaddr_in localAddress = {};
+  localAddress.sin_family = AF_INET;
+  localAddress.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  TEST_ASSERT_EQUAL(0, bind(fd, reinterpret_cast<const sockaddr *>(&localAddress), sizeof(localAddress)));
+
+  timeval timeout = {0, 300000};
+  TEST_ASSERT_EQUAL(0, setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+
+  sockaddr_in serverAddress = {};
+  serverAddress.sin_family = AF_INET;
+  serverAddress.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  serverAddress.sin_port = htons(kDnsPort);
+
+  const uint8_t noTerminator[] = {3, 'a', 'b', 'c', 1, 1, 1, 1};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1001, noTerminator, sizeof(noTerminator)));
+  expectNoReply(fd);
+
+  const uint8_t terminatorInQType[] = {3, 'a', 'b', 'c', 0, 1, 0, 1};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1002, terminatorInQType, sizeof(terminatorInQType)));
+  expectNoReply(fd);
+
+  const uint8_t truncatedQuestion[] = {0, 0, 1, 0};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1003, truncatedQuestion, sizeof(truncatedQuestion)));
+  expectNoReply(fd);
+
+  const uint8_t terminatorAtPacketEnd[] = {3, 'a', 'b', 'c', 1, 1, 1, 0};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1005, terminatorAtPacketEnd, sizeof(terminatorAtPacketEnd)));
+  expectNoReply(fd);
+
+  timeout.tv_sec = 2;
+  timeout.tv_usec = 0;
+  TEST_ASSERT_EQUAL(0, setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+
+  const uint8_t rootQuestion[] = {0, 0, 1, 0, 1};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1004, rootQuestion, sizeof(rootQuestion)));
+
+  uint8_t reply[64];
+  int received = recvfrom(fd, reply, sizeof(reply), 0, nullptr, nullptr);
+  TEST_ASSERT_GREATER_THAN(DNS_HEADER_SIZE, received);
+  TEST_ASSERT_EQUAL_HEX8(0x10, reply[0]);
+  TEST_ASSERT_EQUAL_HEX8(0x04, reply[1]);
+  DNSHeader response;
+  memcpy(&response, reply, sizeof(response));
+  TEST_ASSERT_EQUAL(DNS_QR_RESPONSE, response.QR);
+  TEST_ASSERT_EQUAL_UINT16(1, ntohs(response.ANCount));
+
+  const uint8_t namedQuestion[] = {3, 'a', 'b', 'c', 0, 0, 1, 0, 1};
+  TEST_ASSERT_TRUE(sendQuestion(fd, serverAddress, 0x1006, namedQuestion, sizeof(namedQuestion)));
+  received = recvfrom(fd, reply, sizeof(reply), 0, nullptr, nullptr);
+  TEST_ASSERT_GREATER_OR_EQUAL(DNS_HEADER_SIZE + sizeof(namedQuestion), received);
+  TEST_ASSERT_EQUAL_HEX8(0x10, reply[0]);
+  TEST_ASSERT_EQUAL_HEX8(0x06, reply[1]);
+  TEST_ASSERT_EQUAL_MEMORY(namedQuestion, reply + DNS_HEADER_SIZE, sizeof(namedQuestion));
+  memcpy(&response, reply, sizeof(response));
+  TEST_ASSERT_EQUAL(DNS_QR_RESPONSE, response.QR);
+  TEST_ASSERT_EQUAL_UINT16(1, ntohs(response.ANCount));
+
+  close(fd);
+  server.stop();
+}
+#else
+void test_dns_question_stays_within_packet() {
+  TEST_IGNORE_MESSAGE("LwIP loopback support is disabled");
+}
+#endif
+
 void test_dns_server_captive(void) {
 #if !SOC_WIFI_SUPPORTED
   TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
@@ -626,6 +808,75 @@ void test_dns_server_captive(void) {
   dnsServer.stop();
   WiFi.AP.end();
   delay(100);
+#endif
+}
+
+#if SOC_WIFI_SUPPORTED
+static void verifyRejectedApConfig(IPAddress subnet, IPAddress leaseStart, const char *reason) {
+  if (!WiFi.AP.create("ESP32_Config_Test", "12345678")) {
+    WiFi.AP.end();
+    TEST_FAIL_MESSAGE("Failed to start SoftAP");
+    return;
+  }
+
+  // AP creation can return before esp-netif has started the DHCP server.
+  // Establish the running baseline before attempting the rejected configuration.
+  esp_netif_dhcp_status_t oldDhcpStatus = ESP_NETIF_DHCP_INIT;
+  esp_err_t oldDhcpStatusResult;
+  const unsigned long dhcpWaitStart = millis();
+  do {
+    oldDhcpStatusResult = esp_netif_dhcps_get_status(WiFi.AP.netif(), &oldDhcpStatus);
+    if (oldDhcpStatusResult != ESP_OK || oldDhcpStatus == ESP_NETIF_DHCP_STARTED) {
+      break;
+    }
+    delay(10);
+  } while (millis() - dhcpWaitStart < 3000);
+
+  if (oldDhcpStatusResult != ESP_OK || oldDhcpStatus != ESP_NETIF_DHCP_STARTED) {
+    WiFi.AP.end();
+    TEST_ASSERT_EQUAL_MESSAGE(ESP_OK, oldDhcpStatusResult, "Failed to read the initial DHCP server status");
+    TEST_ASSERT_EQUAL_MESSAGE(ESP_NETIF_DHCP_STARTED, oldDhcpStatus, "DHCP server did not start before reconfiguration");
+    return;
+  }
+
+  IPAddress oldIP = WiFi.AP.localIP();
+  IPAddress oldSubnet = WiFi.AP.subnetMask();
+  IPAddress oldGateway = WiFi.AP.gatewayIP();
+
+  bool configResult = WiFi.AP.config(IPAddress(10, 20, 30, 40), IPAddress(10, 20, 30, 40), subnet, leaseStart);
+  IPAddress currentIP = WiFi.AP.localIP();
+  IPAddress currentSubnet = WiFi.AP.subnetMask();
+  IPAddress currentGateway = WiFi.AP.gatewayIP();
+  esp_netif_dhcp_status_t currentDhcpStatus = ESP_NETIF_DHCP_INIT;
+  esp_err_t dhcpStatusResult = esp_netif_dhcps_get_status(WiFi.AP.netif(), &currentDhcpStatus);
+
+  WiFi.AP.end();
+  delay(100);
+
+  TEST_ASSERT_FALSE_MESSAGE(configResult, reason);
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldIP, (uint32_t)currentIP, "Rejected config changed the SoftAP IP");
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldSubnet, (uint32_t)currentSubnet, "Rejected config changed the SoftAP subnet");
+  TEST_ASSERT_EQUAL_MESSAGE((uint32_t)oldGateway, (uint32_t)currentGateway, "Rejected config changed the SoftAP gateway");
+  TEST_ASSERT_EQUAL(ESP_OK, dhcpStatusResult);
+  TEST_ASSERT_EQUAL_MESSAGE(ESP_NETIF_DHCP_STARTED, currentDhcpStatus, "Rejected config stopped the DHCP server");
+}
+#endif
+
+void test_ap_invalid_subnet_preserves_dhcp(void) {
+#if !SOC_WIFI_SUPPORTED
+  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
+#else
+  verifyRejectedApConfig(IPAddress(255, 255, 254, 0), IPAddress(), "SoftAP accepted an unsupported /23 netmask");
+#endif
+}
+
+void test_ap_malformed_subnet_preserves_dhcp(void) {
+#if !SOC_WIFI_SUPPORTED
+  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
+#else
+  // The old CIDR counter treated 255.255.255.1 as /24. Use an even lease start
+  // so other lease-range checks do not reject the configuration first.
+  verifyRejectedApConfig(IPAddress(255, 255, 255, 1), IPAddress(10, 20, 30, 42), "SoftAP accepted a non-contiguous netmask");
 #endif
 }
 
@@ -697,6 +948,11 @@ void setup() {
 
   UNITY_BEGIN();
 
+#if CONFIG_LWIP_TCPIP_CORE_LOCKING && CONFIG_LWIP_CHECK_THREAD_SAFETY
+  // Must run before any other hostByName() call so the cached IPv4 state still
+  // changes and hostByName() clears the DNS cache.
+  RUN_TEST(test_dns_clear_cache_tcpip_lock);
+#endif
   RUN_TEST(test_dns_resolve);
   RUN_TEST(test_dns_resolve_invalid);
   RUN_TEST(test_tcp_connect);
@@ -725,6 +981,9 @@ void setup() {
   RUN_TEST(test_udp_loopback_requires_configuration);
 #endif
   RUN_TEST(test_dns_server_captive);
+  RUN_TEST(test_dns_question_stays_within_packet);
+  RUN_TEST(test_ap_invalid_subnet_preserves_dhcp);
+  RUN_TEST(test_ap_malformed_subnet_preserves_dhcp);
   RUN_TEST(test_mdns_begin);
   RUN_TEST(test_mdns_service);
 

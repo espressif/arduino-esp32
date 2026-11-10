@@ -28,6 +28,8 @@ jobs:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Get board name
         run: bash .github/scripts/find_boards.sh new ${{ github.repository }} ${{ github.base_ref }} --output-format=matrix
@@ -50,6 +52,8 @@ jobs:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Validate board definition
         run: |

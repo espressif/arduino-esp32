@@ -107,6 +107,15 @@ enum HTTPAuthMethod {
 #define WEBSERVER_DIGEST_NONCE_TTL 300000  // ms a signed digest nonce stays valid for any client. 0 disables expiry
 #endif
 
+// Set to 0 to compile Digest authentication out of the library (Basic and
+// custom schemes keep working). This saves the MD5/SHA-2/HMAC code that a
+// Basic-only application would otherwise link because Basic and Digest share
+// the same entry points. Digest requests are rejected, and a Digest challenge
+// is refused rather than silently downgraded to Basic.
+#ifndef WEBSERVER_DIGEST_AUTH
+#define WEBSERVER_DIGEST_AUTH 1
+#endif
+
 #define CONTENT_LENGTH_UNKNOWN ((size_t) - 1)
 #define CONTENT_LENGTH_NOT_SET ((size_t) - 2)
 
@@ -211,6 +220,8 @@ public:
   HTTPMethod method() const {
     return _currentMethod;
   }
+  // The client used for the current request. A derived class can override
+  // this (together with acceptClient()) to use a wrapped connection, e.g. TLS.
   virtual NetworkClient &client() {
     return _currentClient;
   }
@@ -254,7 +265,7 @@ public:
   int headers() const;                                                          // get header count
   bool hasHeader(const String &name) const;                                     // check if header exists
 
-  int clientContentLength() const;  // return "content-length" of incoming HTTP header from "_currentClient"
+  int clientContentLength() const;  // return "content-length" of incoming HTTP header from "client()"
   const String version() const;     // get the HTTP version string
   String hostHeader() const;        // get request host header if available or empty String if not
 
@@ -295,7 +306,7 @@ public:
 
   template<typename T> size_t streamFile(T &file, const String &contentType, const int code = 200) {
     _streamFileCore(file.size(), file.name(), contentType, code);
-    return _currentClient.write(file);
+    return client().write(file);
   }
 
   bool _eTagEnabled = false;
@@ -305,14 +316,34 @@ public:
 
 private:
   bool _chunkedResponseActive = false;
-  NetworkClient _chunkedClient;  // Store by value, no dangling pointer
+  NetworkClient *_chunkedClient = nullptr;  // Points at client(); preserves the derived write()
 
 protected:
+  // Accepts the next client. A derived class that wraps the accepted socket
+  // (for example a TLS server) should override this together with client();
+  // both must return the same object. The returned object is the owner of the
+  // accepted connection: if it is not _currentClient, do not also keep the
+  // accepted client in _currentClient (use a local NetworkClient and transfer
+  // its handle, or dup the descriptor). A failed accept must return a
+  // disconnected client.
+  virtual NetworkClient &acceptClient() {
+    _currentClient = _server.accept();
+    return _currentClient;
+  }
+
+  // Called when the active connection is finished. The default stops client()
+  // and releases _currentClient. A derived class with a different ownership
+  // model can override this.
+  virtual void closeClient() {
+    client().stop();
+    _currentClient = NetworkClient();
+  }
+
   virtual size_t _currentClientWrite(const char *b, size_t l) {
-    return _currentClient.write(b, l);
+    return client().write(b, l);
   }
   virtual size_t _currentClientWrite_P(PGM_P b, size_t l) {
-    return _currentClient.write_P(b, l);
+    return client().write_P(b, l);
   }
   void _addRequestHandler(RequestHandler *handler);
   bool _removeRequestHandler(RequestHandler *handler);
@@ -329,11 +360,13 @@ protected:
 
   void _streamFileCore(const size_t fileSize, const String &fileName, const String &contentType, const int code = 200);
 
+#if WEBSERVER_DIGEST_AUTH
   void _ensureDigestAuthMaterial();
   String _makeDigestNonce();
   bool _isDigestNonceValid(const String &nonce);
   // for extracting Auth parameters
   String _extractParam(String &authReq, const String &param, const char delimit = '"');
+#endif
 
   void _clearResponseHeaders();
   void _clearRequestHeaders();
@@ -379,10 +412,12 @@ protected:
   String _hostHeader;
   bool _chunked = false;
 
+#if WEBSERVER_DIGEST_AUTH
   uint8_t _digestSecret[32] = {};
   bool _digestSecretReady = false;
   bool _digestNonceStale = false;
   String _sopaque;
+#endif
   String _srealm;  // Store the Auth realm between Calls
 
   int _responseHeaderCount = 0;

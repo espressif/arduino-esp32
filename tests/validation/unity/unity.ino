@@ -6,8 +6,11 @@
  */
 
 #include <Arduino.h>
+#include <WebServer.h>
+#include "uri_braces_tests.h"
 #include <math.h>
 #include <unity.h>
+#include "stdlib_tests.h"
 
 // Workaround for C++ until bundled Unity picks up esp-idf cast fix
 // (Unity*ToPtr returns const void*; C++ rejects implicit conversion to float*/double*).
@@ -28,6 +31,8 @@
   )
 #undef TEST_ASSERT_EACH_EQUAL_DOUBLE
 #define TEST_ASSERT_EACH_EQUAL_DOUBLE(expected, actual, num_elements) UNITY_TEST_ASSERT_EACH_EQUAL_DOUBLE((expected), (actual), (num_elements), __LINE__, NULL)
+
+#include "string_tests.h"
 
 static int setUpCallCount;
 static int tearDownCallCount;
@@ -406,6 +411,14 @@ void setup() {
   RUN_TEST(test_integers_within);
   RUN_TEST(test_bits);
   RUN_TEST(test_strings_memory_ptr);
+  RUN_TEST(test_string_concat_cstr_inline_growth);
+  RUN_TEST(test_string_concat_cstr_inline_substring);
+  RUN_TEST(test_string_concat_cstr_heap_growth);
+  RUN_TEST(test_string_concat_buffer_heap_substring);
+  RUN_TEST(test_string_concat_cstr_reserved);
+  RUN_TEST(test_string_concat_self_overloads);
+  RUN_TEST(test_string_concat_external_and_empty);
+  RUN_TEST(test_string_concat_binary_alias);
   RUN_TEST(test_each_equal);
 #ifndef UNITY_EXCLUDE_FLOAT
   RUN_TEST(test_float);
@@ -415,9 +428,23 @@ void setup() {
 #endif
   RUN_TEST(test_message_variants);
   RUN_TEST(test_esp_err_helpers);
+  RUN_TEST(test_uri_braces_suffixed_argument);
+  RUN_TEST(test_uri_braces_suffix_rejects_nested_paths);
+  RUN_TEST(test_uri_braces_multiple_arguments);
+  RUN_TEST(test_uri_braces_arguments_in_one_segment);
+  RUN_TEST(test_uri_braces_trailing_argument);
+  RUN_TEST(test_uri_braces_rejects_mismatched_literals);
+  RUN_TEST(test_uri_braces_empty_argument);
+  RUN_TEST(test_uri_braces_valid_after_rejection);
   RUN_TEST(test_hooks);
   RUN_TEST(test_pass_early);
   RUN_TEST(test_ignore);
+
+  RUN_TEST(test_ltoa_signed_limits);
+  RUN_TEST(test_lltoa_signed_limits);
+  RUN_TEST(test_signed_conversion_all_radices);
+  RUN_TEST(test_signed_conversion_invalid_radices);
+  RUN_TEST(test_string_signed_minimum_values);
 
   UNITY_END();
 }

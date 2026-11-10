@@ -406,6 +406,54 @@ void test_seek_edge_cases() {
   V.remove(path);
 }
 
+void test_available_after_seek() {
+  auto &V = gFS->vfs();
+  const char *path = "/available.dat";
+  const uint8_t data[] = {'a', 'b', 'c'};
+  {
+    File f = V.open(path, FILE_WRITE);
+    TEST_ASSERT_TRUE(f);
+    TEST_ASSERT_EQUAL_UINT(sizeof(data), f.write(data, sizeof(data)));
+    f.close();
+  }
+
+  File f = V.open(path, FILE_READ);
+  TEST_ASSERT_TRUE(f);
+  TEST_ASSERT_EQUAL_UINT(sizeof(data), f.size());
+  TEST_ASSERT_EQUAL_INT(3, f.available());
+  TEST_ASSERT_EQUAL_INT('a', f.read());
+  TEST_ASSERT_EQUAL_INT(2, f.available());
+  TEST_ASSERT_EQUAL_INT('b', f.peek());
+  TEST_ASSERT_EQUAL_INT(2, f.available());
+
+  TEST_ASSERT_TRUE(f.seek(sizeof(data)));
+  TEST_ASSERT_EQUAL_INT(0, f.available());
+  TEST_ASSERT_EQUAL_INT(-1, f.read());
+
+  for (uint32_t position : {4U, 10U}) {
+    // Some backends reject or clamp seeks beyond EOF; check accepted seeks.
+    if (f.seek(position)) {
+      TEST_ASSERT_EQUAL_UINT(sizeof(data), f.size());
+      TEST_ASSERT_EQUAL_INT(0, f.available());
+      TEST_ASSERT_EQUAL_INT(-1, f.read());
+      TEST_ASSERT_EQUAL_INT(0, f.available());
+    } else {
+      TEST_MESSAGE("Filesystem rejected a seek beyond EOF");
+    }
+  }
+
+  TEST_ASSERT_TRUE(f.seek(1));
+  TEST_ASSERT_EQUAL_INT(2, f.available());
+  TEST_ASSERT_EQUAL_INT('b', f.read());
+  TEST_ASSERT_EQUAL_INT(1, f.available());
+  TEST_ASSERT_EQUAL_INT('c', f.read());
+  TEST_ASSERT_EQUAL_INT(0, f.available());
+  TEST_ASSERT_EQUAL_INT(-1, f.read());
+  f.close();
+  TEST_ASSERT_EQUAL_INT(0, f.available());
+  TEST_ASSERT_TRUE(V.remove(path));
+}
+
 void test_file_truncation_and_overwrite() {
   auto &V = gFS->vfs();
   const char *path = "/trunc.txt";
@@ -906,6 +954,7 @@ static void run_suite_for(IFileSystem &fs) {
   RUN_TEST(test_binary_incremental_with_size_tracking);
   RUN_TEST(test_empty_file_operations);
   RUN_TEST(test_seek_edge_cases);
+  RUN_TEST(test_available_after_seek);
   RUN_TEST(test_file_truncation_and_overwrite);
   RUN_TEST(test_multiple_file_handles);
   RUN_TEST(test_free_space_tracking);

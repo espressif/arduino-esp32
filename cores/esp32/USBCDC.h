@@ -103,6 +103,7 @@ public:
     return write((uint8_t)n);
   }
   uint32_t baudRate();
+  bool notifyState(bool dcd, bool dsr, bool brk);
   void setDebugOutput(bool);
   operator bool() const;
 
@@ -138,6 +139,8 @@ protected:
 #endif
 // USBSerial is always available to be used
 extern USBCDC USBSerial;
+// Dispatches USBSerialEvent(); linked only together with USBSerial.
+extern "C" void arduinoUSBSerialEventRun(void) __attribute__((weak));
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */

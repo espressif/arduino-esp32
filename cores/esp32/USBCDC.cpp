@@ -453,6 +453,23 @@ uint32_t USBCDC::baudRate() {
   return bit_rate;
 }
 
+bool USBCDC::notifyState(bool dcd, bool dsr, bool brk) {
+#if CFG_TUD_CDC_NOTIFY
+  if (itf >= CFG_TUD_CDC || !tud_cdc_n_connected(itf)) {
+    return false;
+  }
+  cdc_notify_uart_state_t state;
+  state.value = 0;
+  state.dcd = dcd;
+  state.dsr = dsr;
+  state.brk = brk;
+  return tud_cdc_n_notify_uart_state(itf, &state);
+#else
+  log_e("CFG_TUD_CDC_NOTIFY is not enabled");
+  return false;
+#endif
+}
+
 void USBCDC::setDebugOutput(bool en) {
   if (itf) {
     return;
@@ -476,6 +493,17 @@ USBCDC::operator bool() const {
 #if !ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Native USB CDC selected
 // USBSerial is always available to be used
 USBCDC USBSerial(0);
+
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+// Used by loopTask for USB CDC events
+extern void USBSerialEvent(void) __attribute__((weak));
+
+extern "C" void arduinoUSBSerialEventRun(void) {
+  if (USBSerialEvent && USBSerial.available()) {
+    USBSerialEvent();
+  }
+}
+#endif
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */

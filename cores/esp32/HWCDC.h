@@ -31,6 +31,7 @@ typedef enum {
   ARDUINO_HW_CDC_BUS_RESET_EVENT,
   ARDUINO_HW_CDC_RX_EVENT,
   ARDUINO_HW_CDC_TX_EVENT,
+  ARDUINO_HW_CDC_DISCONNECTED_EVENT,
   ARDUINO_HW_CDC_MAX_EVENT,
 } arduino_hw_cdc_event_t;
 
@@ -112,6 +113,8 @@ public:
 #endif
 // HWCDCSerial is always available to be used
 extern HWCDC HWCDCSerial;
+// Dispatches HWCDCSerialEvent(); linked only together with HWCDCSerial.
+extern "C" void arduinoHWCDCSerialEventRun(void) __attribute__((weak));
 #endif
 
 #endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */

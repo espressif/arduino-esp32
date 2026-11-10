@@ -68,6 +68,13 @@ def test_webserver(dut, ci_job_id):
         ("stream_explicit_len", 10),
         ("stream_empty", 10),
         ("string", 10),
+        # Derived WebServer: every response byte must go through client()
+        ("derived_plain", 10),
+        ("derived_sendp", 10),
+        ("derived_chunked", 10),
+        ("derived_streamfile", 10),
+        ("derived_sendstream", 10),
+        ("derived_sendcontent", 10),
         # Request-parsing robustness / security regression checks
         ("auth_bypass", 15),  # report 2: bare Authorization username bypass
         ("digest_auth", 20),  # issue 12915: multi-client digest nonce + stale=true
@@ -78,6 +85,7 @@ def test_webserver(dut, ci_job_id):
         ("static_root", 15),  # serveStatic mapped to the filesystem root
         ("raw_body", 20),  # non-multipart body still streams to the callback
         ("many_args", 15),  # form with many fields still fully parsed
+        ("post_content_length", 15),  # trailing bytes stay outside the declared POST body
         ("long_uri", 20),  # long query served, over-long target answered 414
         ("long_line", 60),  # unterminated protocol line refused, long header accepted
         ("regex_route", 15),  # regex route still matches a normal-length path
@@ -95,12 +103,49 @@ def test_webserver(dut, ci_job_id):
 
     # Collect every case result (instead of stopping at the first failure) so a
     # run against a vulnerable build reports the full matrix of findings.
+    derived_cases = {
+        "derived_plain",
+        "derived_sendp",
+        "derived_chunked",
+        "derived_streamfile",
+        "derived_sendstream",
+        "derived_sendcontent",
+    }
     failures = []
     for name, timeout in test_cases:
+        client_len = None
+        if name in derived_cases:
+            m = client.expect(rf"\[CLIENT\] RESULT {name} len=(\d+)", timeout=timeout)
+            client_len = int(m.group(1))
+
         m = client.expect(rf"\[CLIENT\] (PASS|FAIL) {name}", timeout=timeout)
         result = m.group(1).decode()
         if result == "PASS":
             LOGGER.info(f"PASS: {name}")
+            if name in derived_cases:
+                # The server counts every byte read/written through client()
+                # and confirms closeClient() is called. The byte count must
+                # equal the raw response length the client received; otherwise
+                # some response path bypassed client().
+                m = server.expect(
+                    rf"\[SERVER\] STATS {name} bytes=(\d+) writes=(\d+) reads=(\d+) closes=(\d+)", timeout=timeout
+                )
+                server_bytes = int(m.group(1))
+                server_writes = int(m.group(2))
+                server_reads = int(m.group(3))
+                server_closes = int(m.group(4))
+                LOGGER.info(
+                    f"{name}: client_len={client_len} server_bytes={server_bytes} "
+                    f"writes={server_writes} reads={server_reads} closes={server_closes}"
+                )
+                if server_bytes != client_len:
+                    failures.append(f"{name} (server bytes {server_bytes} != client length {client_len})")
+                if server_writes == 0:
+                    failures.append(f"{name} (no writes through client())")
+                if server_reads == 0:
+                    failures.append(f"{name} (no reads through client())")
+                if server_closes == 0:
+                    failures.append(f"{name} (closeClient() was not called)")
         else:
             LOGGER.error(f"FAIL: {name}")
             failures.append(name)

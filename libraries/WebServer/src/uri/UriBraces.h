@@ -56,6 +56,9 @@ public:
           return false;
         }
         pathArgs[pathArgIndex] = requestUri.substring(requestUriIndex, uriIndex);
+        if (pathArgs[pathArgIndex].indexOf('/') != -1) {
+          return false;  // path argument may not contain a '/', even before a suffix
+        }
         requestUriIndex = (unsigned int)uriIndex;
       }
       pathArgIndex++;

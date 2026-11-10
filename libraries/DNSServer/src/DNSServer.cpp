@@ -91,17 +91,16 @@ void DNSServer::_handleUDP(AsyncUDPPacket &pkt) {
       // Each label contains a byte to describe its length and the label itself. The list of
       // labels terminates with a zero-valued byte. In "github.com", we have two labels "github" & "com"
 */
-    const char *enoflbls = strchr(reinterpret_cast<const char *>(pkt.data()) + DNS_HEADER_SIZE, 0);  // find end_of_label marker
-    ++enoflbls;                                                                                      // advance after null terminator
-    dnsQuestion.QName = pkt.data() + DNS_HEADER_SIZE;                                                // we can reference labels from the request
-    dnsQuestion.QNameLength = enoflbls - (char *)pkt.data() - DNS_HEADER_SIZE;
-    /*
-        check if we aint going out of pkt bounds
-        proper dns req should have label terminator at least 4 bytes before end of packet
-      */
-    if (dnsQuestion.QNameLength > pkt.length() - DNS_HEADER_SIZE - sizeof(dnsQuestion.QType) - sizeof(dnsQuestion.QClass)) {
-      return;  // malformed packet
+    // Leave room for QType and QClass when searching for the QName terminator.
+    const uint8_t *questionStart = pkt.data() + DNS_HEADER_SIZE;
+    const size_t nameBytes = pkt.length() - DNS_HEADER_SIZE - sizeof(dnsQuestion.QType) - sizeof(dnsQuestion.QClass);
+    const uint8_t *nameEnd = static_cast<const uint8_t *>(memchr(questionStart, 0, nameBytes));
+    if (nameEnd == nullptr) {
+      return;  // malformed packet: no QName terminator before QType and QClass
     }
+    const uint8_t *enoflbls = nameEnd + 1;
+    dnsQuestion.QName = questionStart;
+    dnsQuestion.QNameLength = enoflbls - questionStart;
 
     // Copy the QType and QClass
     memcpy(&dnsQuestion.QType, enoflbls, sizeof(dnsQuestion.QType));
