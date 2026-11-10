@@ -9,7 +9,8 @@
  *
  * The device is also a CAP acceptor with a unicast server + volume renderer, so
  * the same connection can carry a call/media stream and volume control -- the
- * usual shape of a real hearing aid. HAS itself only manages the preset list.
+ * usual shape of a real hearing aid. HAS itself only manages the preset list;
+ * the LC3 playback path is shown in LEAudio_Speaker and LEAudio_Headset.
  *
  * Requires the HAS server (CONFIG_BT_HAS with a non-zero preset count); on
  * builds without it the sketch self-reports and idles.
@@ -21,6 +22,7 @@
 
 #include <Arduino.h>
 #include <BLE.h>
+#include <BLEAudio.h>
 
 #if BLE_AUDIO_HAS_SUPPORTED
 

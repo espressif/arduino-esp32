@@ -6,7 +6,7 @@
  * it without a connection, and they all get each SDU in the same SDU interval,
  * which makes a BIG a good fit for synchronized multi-device updates (lights,
  * displays, sensor time bases) or custom broadcast audio. For Auracast (LC3
- * with BAP/PBP interoperability) use LEAudio_BroadcastSource instead.
+ * with BAP/PBP interoperability) use LEAudio_AuracastSource instead.
  *
  * The BIG rides on a periodic advertising train: this sketch starts extended
  * advertising (so receivers can find it by name) plus periodic advertising

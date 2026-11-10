@@ -9,8 +9,9 @@
  * periodic-advertising SyncInfo and this board is synced to the source, the
  * sync is handed over with PAST automatically.
  *
- * Pair it with LEAudio_BroadcastSink (the sink) and LEAudio_BroadcastSource
- * (the broadcast), each on its own LE-Audio-capable board.
+ * Pair it with LEAudio_AuracastSink (the sink) and
+ * LEAudio_AuracastSource (the broadcast), each on its own LE-Audio-capable
+ * board.
  *
  * Callback style: lambdas for discovery / results, named functions for
  * sources and receive states.
@@ -20,8 +21,9 @@
 
 #include <Arduino.h>
 #include <BLE.h>
+#include <BLEAudio.h>
 
-static const char *SINK_NAME = "Arduino Broadcast Sink";
+static const char *SINK_NAME = "LE Audio Auracast Sink";
 static const char *SOURCE_NAME = "";     // "" = first broadcast found
 static const char *BROADCAST_CODE = "";  // for encrypted sources (up to 16 characters)
 
