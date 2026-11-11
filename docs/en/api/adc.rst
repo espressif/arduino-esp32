@@ -23,10 +23,13 @@ ADC OneShot mode
 The ADC OneShot mode API is fully compatible with Arduino's ``analogRead`` function.
 When you call the ``analogRead`` or ``analogReadMilliVolts`` function, it returns the result of a single conversion on the requested pin.
 
+.. note::
+   On **ESP32-S31** ``analogRead`` logs an error and returns 0. The sample does not fit in a 16-bit linear code. Use ``analogReadComparator`` for the raw sample, or ``analogReadMilliVolts`` for the voltage.
+
 analogRead
 ^^^^^^^^^^
 
-This function is used to get the ADC raw value for a given pin/ADC channel.
+This function is used to get the ADC raw value for a given pin/ADC channel. On ESP32-S31 it logs an error and returns 0.
 
 .. code-block:: arduino
 
@@ -36,6 +39,19 @@ This function is used to get the ADC raw value for a given pin/ADC channel.
 
 This function will return analog raw value (non-calibrated).
 
+analogReadComparator
+^^^^^^^^^^^^^^^^^^^^
+
+This function is available on **ESP32-S31** only. It returns the full 17-bit comparator vector (0 to 131071).
+
+.. code-block:: arduino
+
+    uint32_t analogReadComparator(uint8_t pin);
+
+* ``pin`` GPIO pin to read the comparator vector
+
+The result is not a linear code: 0 V is not raw 0, and even and odd channels run in opposite directions. Use ``analogReadMilliVolts`` for the voltage.
+
 analogReadMilliVolts
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -43,22 +59,28 @@ This function is used to get ADC raw value for a given pin/ADC channel and conve
 
 .. code-block:: arduino
 
-    uint32_t analogReadMilliVolts(uint8_t pin);
+    int32_t analogReadMilliVolts(uint8_t pin);
 
 * ``pin`` GPIO pin to read analog value
 
-This function will return analog value in millivolts (calibrated).
+This function will return analog value in millivolts (calibrated). The result is signed, so a voltage below 0 V stays negative.
+
+.. note::
+   On **ESP32-S31** the calibrated result covers about -2000 mV to +2000 mV. A pin tied to GND reads about 0 mV. Voltages above +2000 mV clip.
 
 analogReadResolution
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095) for all chips.
+This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095).
 When different resolution is set, the values read will be shifted to match the given resolution.
 
 .. note::
    For **ESP32-S2 chip revision v0.0**, the default ADC resolution is 13 bits (0-8191) due to the `ADC-112 errata <https://docs.espressif.com/projects/esp-chip-errata/en/latest/esp32s2/03-errata-description/esp32s2/sar-adc-bit1-no-flip.html>`_. This is fixed in later revisions (v1.0+), which use the standard 12-bit resolution.
 
-Range is 1 - 16 .The default value will be used, if this function is not used.
+.. note::
+   On **ESP32-S31** ``analogReadResolution`` is not supported and logs an error. ``analogReadComparator`` always returns the full 17-bit vector. Shifting that vector would corrupt the sample.
+
+Range is 1 - 16. The default value will be used, if this function is not used.
 
 .. note:: For the ESP32, the resolution is between 9 to12 and it will change the ADC hardware resolution. Else value will be shifted.
 
@@ -75,7 +97,8 @@ This function is used to set the attenuation for all channels.
 
 Input voltages can be attenuated before being input to the ADCs.
 There are 4 available attenuation options, the higher the attenuation is, the higher the measurable input voltage could be.
-ESP32-S31 has a single attenuation option, ``ADC_11db``.
+
+ESP32-S31 has a single attenuation option, ``ADC_11db``. The name matches the other chips. Electrically it is 0 dB (``ADC_ATTEN_DB_0``), with a calibrated range of about -2000 mV to +2000 mV. ``analogSetAttenuation`` and ``analogSetPinAttenuation`` are not supported and log an error.
 
 The measurable input voltage differs for each chip, see table below for detailed information.
 
@@ -125,6 +148,14 @@ The measurable input voltage differs for each chip, see table below for detailed
       ``ADC_11db``      0 mV ~ 3100 mV
       ================  ===============================
 
+   .. tab:: ESP32-S31
+
+      ================  ===============================
+      Attenuation       Measurable input voltage range
+      ================  ===============================
+      ``ADC_11db``      -2000 mV ~ 2000 mV
+      ================  ===============================
+
 .. code-block:: arduino
 
     void analogSetAttenuation(adc_attenuation_t attenuation);
@@ -165,6 +196,9 @@ with the feature of receiving a callback upon completion of these conversions to
 This API allows you to specify the desired number of conversions per pin within a single cycle, along with its corresponding sampling rate.
 The outcome of the ``analogContinuousRead`` function is an array of ``adc_continuous_result_t`` structures.
 These structures hold both the raw average value and the average value in millivolts for each pin.
+
+.. note::
+   On **ESP32-S31** the raw field is the last comparator-vector sample. Each sample is calibrated on its own, and ``avg_read_mvolts`` is the average of those millivolt results. Averaging the raw vectors would not be the voltage of the average.
 
 analogContinuous
 ^^^^^^^^^^^^^^^^
@@ -253,15 +287,18 @@ This function is used to set the attenuation for ADC continuous peripheral. For 
 
     void analogContinuousSetAtten(adc_attenuation_t attenuation);
 
-* ``attenuation`` sets the attenuation (default is 11 dB).
+* ``attenuation`` sets the attenuation (default is ``ADC_11db``).
+
+.. note::
+   On **ESP32-S31**, ``analogContinuousSetAtten`` is not supported and logs an error. The only range is already active: ``ADC_11db``, 0 dB, about -2000 mV to +2000 mV. See `analogSetAttenuation`_.
 
 analogContinuousSetWidth
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 This function is used to set the hardware resolution bits.
-Default value for all chips is 12 bits (0 - 4095).
+Default value is 12 bits (0 - 4095), except on ESP32-S31 where it is fixed at 17 bits.
 
-.. note:: This function will take effect only for ESP32 chip, as it allows to set resolution in range 9-12 bits.
+.. note:: On ESP32, the supported range is 9 to 12 bits. On ESP32-S31 ``analogContinuousSetWidth`` is not supported and logs an error. The width stays at 17 bits.
 
 .. code-block:: arduino
 

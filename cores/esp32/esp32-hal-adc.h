@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "sdkconfig.h"
 #include "soc/soc_caps.h"
 #if SOC_ADC_SUPPORTED
 
@@ -29,29 +30,37 @@ extern "C" {
 #include "esp32-hal.h"
 
 typedef enum {
-  #if SOC_ADC_ATTEN_NUM == 1
-  ADC_11db,
-  #else
+#if SOC_ADC_ATTEN_NUM == 1
+  ADC_11db, /* value 0, ADC_ATTEN_DB_0 */
+#else
   ADC_0db,
   ADC_2_5db,
   ADC_6db,
   ADC_11db,
-  #endif
+#endif
   ADC_ATTENDB_MAX
 } adc_attenuation_t;
 
 /*
- * Get ADC value for pin
+ * Get ADC value for pin.
+ * On ESP32-S31 this logs an error and returns 0. Use analogReadComparator().
  * */
 uint16_t analogRead(uint8_t pin);
 
+#if defined(CONFIG_IDF_TARGET_ESP32S31)
 /*
- * Get MilliVolts value for pin
+ * Get the ESP32-S31 17-bit comparator vector.
  * */
-uint32_t analogReadMilliVolts(uint8_t pin);
+uint32_t analogReadComparator(uint8_t pin);
+#endif
 
 /*
- * Set the resolution of analogRead return values. Default is 12 bits (range from 0 to 4096).
+ * Get MilliVolts value for pin. Signed result.
+ * */
+int32_t analogReadMilliVolts(uint8_t pin);
+
+/*
+ * Set the resolution of analogRead return values. Default is 12 bits (range from 0 to 4095).
  * If between 9 and 12, it will equal the set hardware resolution, else value will be shifted.
  * Range is 1 - 16
  *
