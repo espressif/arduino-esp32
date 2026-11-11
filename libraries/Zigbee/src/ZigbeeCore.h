@@ -112,6 +112,8 @@ private:
 
   // Global default response callback
   void (*_global_default_response_cb)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status, uint8_t endpoint, uint16_t cluster);
+  // Parent lost callback (end device / sleepy ED keepalive failure)
+  void (*_on_parent_lost)();
 
   bool zigbeeStackInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs);
   bool zigbeeStartStack();
@@ -228,6 +230,13 @@ public:
 
   // Call global default response callback (for internal use)
   void callDefaultResponseCallback(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status, uint8_t endpoint, uint16_t cluster);
+
+  // End device: called when parent keepalive fails for a full ED timeout period (EZB_ZDO_SIGNAL_PARENT_LOST).
+  // Runs in the Zigbee stack context — keep it short. The stack still runs its default rejoin handling.
+  // connected() becomes false until the device rejoins successfully.
+  void onParentLost(void (*callback)()) {
+    _on_parent_lost = callback;
+  }
 
   // Friend function declarations to allow access to private members.
   friend bool zb_app_signal_handler(const ezb_app_signal_t *signal);
