@@ -97,8 +97,13 @@ void drainTap(const Impl &impl) {
 /** @brief Codec configured (unicast Config Codec, broadcast create or sync). */
 void onConfigured(void *owner) {
   withHandle(owner, [](Impl &impl, BLEAudioStream &h) {
-    if (impl.configuredCb) {
-      impl.configuredCb(h);
+    BLEAudioStream::Callback cb;
+    {
+      BLELockGuard lock(impl.mtx.get());
+      cb = impl.configuredCb;
+    }
+    if (cb) {
+      cb(h);
     }
   });
 }
@@ -111,8 +116,13 @@ void onStarted(void *owner) {
         t.started(t.ctx);
       }
     });
-    if (impl.startedCb) {
-      impl.startedCb(h);
+    BLEAudioStream::Callback cb;
+    {
+      BLELockGuard lock(impl.mtx.get());
+      cb = impl.startedCb;
+    }
+    if (cb) {
+      cb(h);
     }
   });
 }
@@ -125,8 +135,13 @@ void onStopped(void *owner, uint8_t reason) {
         t.stopped(t.ctx);
       }
     });
-    if (impl.stoppedCb) {
-      impl.stoppedCb(h, reason);
+    BLEAudioStream::StoppedCallback cb;
+    {
+      BLELockGuard lock(impl.mtx.get());
+      cb = impl.stoppedCb;
+    }
+    if (cb) {
+      cb(h, reason);
     }
   });
 }
@@ -140,14 +155,12 @@ void onStopped(void *owner, uint8_t reason) {
  * application already has onStopped() and gets no extra callback.
  */
 void onReleased(void *owner) {
-  auto *impl = static_cast<Impl *>(owner);
-  if (!impl) {
-    return;
-  }
-  withTap(*impl, [](const BLEAudioStreamTap &t) {
-    if (t.stopped) {
-      t.stopped(t.ctx);
-    }
+  withHandle(owner, [](Impl &impl, BLEAudioStream &) {
+    withTap(impl, [](const BLEAudioStreamTap &t) {
+      if (t.stopped) {
+        t.stopped(t.ctx);
+      }
+    });
   });
 }
 
@@ -168,7 +181,12 @@ void onRecv(void *owner, const ble_audio_recv_info_t *info, const uint8_t *data,
       t.recv(t.ctx, info, data, len);
     }
   });
-  if (!impl->receiveCb) {
+  BLEAudioStream::ReceiveCallback cb;
+  {
+    BLELockGuard lock(impl->mtx.get());
+    cb = impl->receiveCb;
+  }
+  if (!cb) {
     return;
   }
   BLEAudioSduInfo sdu;
@@ -178,8 +196,8 @@ void onRecv(void *owner, const ble_audio_recv_info_t *info, const uint8_t *data,
     sdu.status = static_cast<BLEAudioSduInfo::Status>(info->status);  // Same values (BLE_AUDIO_SDU_*).
     sdu.timestampValid = info->ts_valid;
   }
-  withHandle(owner, [&](Impl &i, BLEAudioStream &h) {
-    i.receiveCb(h, sdu, data, len);
+  withHandle(owner, [&](Impl &, BLEAudioStream &h) {
+    cb(h, sdu, data, len);
   });
 }
 
@@ -194,9 +212,14 @@ void onSent(void *owner) {
       t.sent(t.ctx);
     }
   });
-  if (impl->sentCb) {
-    withHandle(owner, [](Impl &i, BLEAudioStream &h) {
-      i.sentCb(h);
+  BLEAudioStream::Callback cb;
+  {
+    BLELockGuard lock(impl->mtx.get());
+    cb = impl->sentCb;
+  }
+  if (cb) {
+    withHandle(owner, [&](Impl &, BLEAudioStream &h) {
+      cb(h);
     });
   }
 }
@@ -264,11 +287,20 @@ BLEAudioStream::operator bool() const {
 
 /** A stream only has a direction once a codec is configured on its slot. */
 BLEAudioStream::Direction BLEAudioStream::direction() const {
-  ble_audio_codec_t c;
-  if (!_impl || !bleAudioStreamGetCodec(_impl->slot, &c)) {
+  if (!_impl) {
     return Direction::Unknown;
   }
-  return bleAudioStreamIsTx(_impl->slot) ? Direction::Tx : Direction::Rx;
+  if (bleAudioStreamIsBound(_impl->slot)) {
+    return bleAudioStreamIsTx(_impl->slot) ? Direction::Tx : Direction::Rx;
+  }
+  const uint8_t kind = bleAudioStreamKind(_impl->slot);
+  if (kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE) {
+    return Direction::Tx;
+  }
+  if (kind == BLE_AUDIO_STREAM_BROADCAST_SINK) {
+    return Direction::Rx;
+  }
+  return Direction::Unknown;
 }
 
 bool BLEAudioStream::isStreaming() const {
@@ -323,30 +355,35 @@ BTStatus BLEAudioStream::write(const uint8_t *sdu, uint16_t len) {
 
 void BLEAudioStream::onConfigured(Callback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->configuredCb = std::move(cb);
   }
 }
 
 void BLEAudioStream::onStarted(Callback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->startedCb = std::move(cb);
   }
 }
 
 void BLEAudioStream::onStopped(StoppedCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stoppedCb = std::move(cb);
   }
 }
 
 void BLEAudioStream::onReceive(ReceiveCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->receiveCb = std::move(cb);
   }
 }
 
 void BLEAudioStream::onSent(Callback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->sentCb = std::move(cb);
   }
 }
@@ -354,6 +391,7 @@ void BLEAudioStream::onSent(Callback cb) {
 /** The data-path tap is internal and is left untouched. */
 void BLEAudioStream::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->configuredCb = nullptr;
     _impl->startedCb = nullptr;
     _impl->stoppedCb = nullptr;

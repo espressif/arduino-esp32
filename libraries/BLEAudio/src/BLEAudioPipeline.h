@@ -100,8 +100,9 @@ public:
   bool open(const BLEAudioI2SConfig &pins, bool tx, uint32_t rateHz, uint8_t channels, uint16_t frameSamples, uint8_t dmaFrames);
   /** @brief Disable and delete the channel (no-op when closed). */
   void close();
-  /** @brief Enable; a TX channel is first filled with silence so the next write blocks for one frame. */
-  void start();
+  /** @brief Enable; a TX channel is first filled with silence so the next write blocks for one frame.
+   *  @return true when the channel is enabled. */
+  bool start();
   /** @brief Disable without deleting (no-op when not enabled). */
   void pause();
   /** @return Samples written (0 while paused). */
@@ -177,6 +178,7 @@ struct BLEAudioDataPath {
   };
 
   BLEAudioStream streams[2];
+  BLEAudioStream::Direction dir = BLEAudioStream::Direction::Unknown;  ///< Expected stream direction.
   Port ports[2] = {{this, 0}, {this, 1}};
   BLEAudioStreamTap taps[2];                ///< Installed on `streams` by pointer; only rewritten while detached.
   uint8_t count = 0;                        ///< Attached streams (0-2).
@@ -209,6 +211,10 @@ struct BLEAudioDataPath {
   void stop();
   bool running() const {
     return task.load() != nullptr;
+  }
+  /** @brief Whether the caller is the codec task (teardown must be deferred). */
+  bool isCurrentTask() const {
+    return task.load() == xTaskGetCurrentTaskHandle();
   }
   /** @brief Wake the codec task (from a tap or a stream event). */
   void notify();

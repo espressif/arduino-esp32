@@ -37,6 +37,7 @@
 #include <atomic>
 #include <memory>
 #include <errno.h>
+#include "core/BLEMutex.h"
 #include "esp_err.h"
 #include "BLEAudioStream.h"
 #include "engine/BLEAudioEngineBap.h"
@@ -74,6 +75,7 @@ struct BLEAudioStreamTap {
  */
 struct BLEAudioStream::Impl : std::enable_shared_from_this<BLEAudioStream::Impl> {
   ble_audio_slot_t *slot = nullptr;  ///< Engine stream slot (never null for a live handle).
+  BLESharedMutex mtx;                ///< Protects the application callbacks below.
   Callback configuredCb;             ///< Application onConfigured().
   Callback startedCb;                ///< Application onStarted().
   StoppedCallback stoppedCb;         ///< Application onStopped().

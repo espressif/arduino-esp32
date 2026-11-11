@@ -172,9 +172,12 @@ void BLEAudioI2SPort::close() {
   }
 }
 
-void BLEAudioI2SPort::start() {
-  if (!_chan || _on) {
-    return;
+bool BLEAudioI2SPort::start() {
+  if (!_chan) {
+    return false;
+  }
+  if (_on) {
+    return true;
   }
   if (_tx) {
     // Preload until the DMA ring is full: playback then starts after a known
@@ -189,6 +192,7 @@ void BLEAudioI2SPort::start() {
     } while (loaded == sizeof(kSilence));
   }
   _on = (i2s_channel_enable(_chan) == ESP_OK);
+  return _on;
 }
 
 void BLEAudioI2SPort::pause() {
@@ -237,6 +241,7 @@ BTStatus BLEAudioDataPath::attach(const BLEAudioStream &a, const BLEAudioStream 
   streams[0] = a;
   streams[1] = b;
   count = b ? 2 : 1;
+  this->dir = dir;
   // detach() above removed our taps, so taps[] is not visible to the host task here.
   for (uint8_t i = 0; i < count; i++) {
     taps[i] = tap;
@@ -267,7 +272,7 @@ void BLEAudioDataPath::entry(void *arg) {
 
 BTStatus BLEAudioDataPath::start(const char *name) {
   if (running()) {
-    return BTStatus::OK;
+    return quit.load() ? BTStatus::InvalidState : BTStatus::OK;
   }
   if (!count || !run) {
     return BTStatus::InvalidState;
@@ -319,9 +324,18 @@ int BLEAudioDataPath::primary() const {
 
 // Supported: one stream with 1 or 2 channels (blocks interleaved per BAP), or two mono streams.
 uint8_t BLEAudioDataPath::mapChannels(Channel out[2]) const {
+  if (!count) {
+    return 0;
+  }
+  for (uint8_t s = 0; s < count; s++) {
+    BLEAudioStream::Direction d = streams[s].direction();
+    if (d != BLEAudioStream::Direction::Unknown && d != dir) {
+      return 0;
+    }
+  }
   if (count == 1) {
     uint8_t c = streams[0].codecConfig().channels();
-    if (c > 2) {
+    if (c < 1 || c > 2) {
       return 0;
     }
     for (uint8_t k = 0; k < c; k++) {
@@ -329,10 +343,20 @@ uint8_t BLEAudioDataPath::mapChannels(Channel out[2]) const {
     }
     return c;
   }
+  BLEAudioCodecConfig a = streams[0].codecConfig();
+  BLEAudioCodecConfig b = streams[1].codecConfig();
+  BLEAudioQos qa = streams[0].qos();
+  BLEAudioQos qb = streams[1].qos();
+  if (a.channels() != 1 || b.channels() != 1) {
+    return 0;
+  }
+  // Two separate streams must describe the same codec/QoS; the player and
+  // recorder build one session from the first stream and map both onto it.
+  if (a.samplingRateHz != b.samplingRateHz || a.frameDurationUs != b.frameDurationUs || a.octetsPerFrame != b.octetsPerFrame
+      || a.framesPerSdu != b.framesPerSdu || qa.sduIntervalUs != qb.sduIntervalUs) {
+    return 0;
+  }
   for (uint8_t s = 0; s < 2; s++) {
-    if (streams[s].codecConfig().channels() != 1) {
-      return 0;
-    }
     out[s] = {s, 0, 1};
   }
   return 2;

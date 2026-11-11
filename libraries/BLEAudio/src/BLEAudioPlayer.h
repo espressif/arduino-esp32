@@ -72,7 +72,13 @@ public:
    *         playback is running.
    */
   BTStatus begin(int bclk, int ws, int dout, int mclk = -1, int port = 0);
-  /** @brief Stop, detach and release everything. */
+  /**
+   * @brief Stop, detach and release everything.
+   *
+   * Called from a PCM sink callback (codec task), the release is deferred:
+   * the task is asked to stop and end() must be called again from loop() to
+   * free the Impl. This avoids destroying the codec task from inside itself.
+   */
   void end();
 
   /** @brief Deliver decoded PCM to @p sink instead of I2S (before begin()). */
@@ -87,7 +93,12 @@ public:
    * channels). Use the two-argument overload for two separate mono streams.
    */
   BTStatus attach(BLEAudioStream stream);
-  /** @brief Play two separate mono Rx streams (left, right). */
+  /**
+   * @brief Play two separate mono Rx streams (left, right).
+   *
+   * Both handles must be non-empty, carry exactly one channel and describe
+   * the same codec/QoS; otherwise the data path cannot pair them.
+   */
   BTStatus attach(BLEAudioStream stream, BLEAudioStream right);
   /**
    * @brief Start the decode task; playback follows the attached streams' start/stop.

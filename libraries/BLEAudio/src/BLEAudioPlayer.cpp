@@ -55,7 +55,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
   struct Ring {
     uint8_t *base = nullptr;        // `slots` x `stride` bytes inside `mem`.
     QueueHandle_t queue = nullptr;  // Filled slot indexes, oldest first.
-    uint16_t expect = 0;            // Valid SDU length; any other length is treated as lost.
+    size_t expect = 0;              // Valid SDU length; any other length is treated as lost.
     uint8_t head = 0;               // Next slot the producer writes.
   };
 
@@ -67,7 +67,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
 
   // Jitter buffer, shared with the tap.
   Ring ring[2];
-  uint16_t stride = 0;          // Bytes per slot: header + largest SDU, 4-byte aligned.
+  size_t stride = 0;            // Bytes per slot: header + largest SDU, 4-byte aligned.
   uint8_t slots = 0;
   std::atomic<bool> ready{false};  // Rings valid; the tap drops SDUs while false.
 
@@ -174,9 +174,12 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
     depth = (depth < 2) ? 2 : (depth > kMaxDepth ? kMaxDepth : depth);
     uint8_t queueLen = (uint8_t)(depth * 2);
     slots = queueLen + 1;
-    uint16_t perStream = (uint16_t)(octets * (count == 1 ? nch : 1) * frames);
-    uint16_t slotBytes = (qos.maxSdu > perStream) ? qos.maxSdu : perStream;
-    stride = (uint16_t)((kSlotHeader + slotBytes + 3) & ~3u);
+    size_t perStream = (size_t)octets * (count == 1 ? nch : 1) * frames;
+    if (!perStream || perStream > UINT16_MAX || !cfg.samplesPerFrame()) {
+      log_e("Player: invalid stream sizes (%u octets, %u frame(s)/SDU)", octets, frames);
+      return false;
+    }
+    stride = (kSlotHeader + perStream + 3) & ~size_t(3);
     pcmCap = cfg.samplesPerFrame();
     outCh = sink ? nch : 2;
 
@@ -210,7 +213,10 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
     log_d("Player: %lu Hz, %u ch, %u frame(s)/SDU, depth %lu", (unsigned long)cfg.samplingRateHz, nch, frames, (unsigned long)depth);
 
     TickType_t wait = pdMS_TO_TICKS((intervalUs + 999) / 1000);
-    uint32_t writeMs = cfg.frameDurationUs / 1000;
+    // One I2S DMA buffer holds one LC3 frame; use the real PCM frame time,
+    // not the nominal LC3 duration (44.1 kHz is 8.16/10.88 ms on air).
+    uint32_t frameUs = (uint32_t)((uint64_t)cfg.samplesPerFrame() * 1000000u / cfg.samplingRateHz);
+    uint32_t writeMs = (frameUs + 1999u) / 1000u;
     play(p, (uint8_t)depth, wait ? wait : 1, writeMs ? writeMs : 1);
     close();
     return true;
@@ -228,20 +234,33 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
     while (!quit.load()) {
       ulTaskNotifyTake(pdTRUE, 0);
       while (uxQueueMessagesWaiting(ring[p].queue) < depth) {
-        if (quit.load() || primary() < 0) {
+        int cur = primary();
+        if (quit.load() || cur < 0 || cur != p) {
           return;
         }
         ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(100));
       }
-      i2s.start();
+      if (!i2s.start()) {
+        log_e("Player: I2S output could not be enabled");
+        return;
+      }
       // The primary stream paces the loop; after 2 x depth empty intervals, rebuffer.
       uint8_t idle = 0;
       while (!quit.load() && idle < depth * 2) {
+        // Rebuild the session when the stream that was pacing us stops; the
+        // other attached stream may still be streaming.
+        if (primary() != p) {
+          i2s.pause();
+          return;
+        }
         const uint8_t *sdu[2] = {nullptr, nullptr};
         bool got = false;
         for (uint8_t s = 0; s < count; s++) {
           uint8_t slot;
-          if (xQueueReceive(ring[s].queue, &slot, (s == p) ? wait : 0) == pdTRUE) {
+          // Wait up to one interval for every streaming stream, not only the
+          // primary: two mono streams must stay aligned.
+          TickType_t streamWait = streams[s].isStreaming() ? wait : 0;
+          if (xQueueReceive(ring[s].queue, &slot, streamWait) == pdTRUE) {
             const uint8_t *e = ring[s].base + (size_t)slot * stride;
             uint16_t n;
             memcpy(&n, e, sizeof(n));
@@ -252,6 +271,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
           }
         }
         if (!got && primary() < 0) {
+          i2s.pause();
           return;
         }
         idle = got ? 0 : idle + 1;
@@ -289,8 +309,8 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
       const int16_t *out = pcm + pcmCap;
       if (sink) {
         sink(out, n * outCh);
-      } else {
-        i2s.write(out, n * outCh, writeMs);
+      } else if (i2s.write(out, n * outCh, writeMs) < n * outCh) {
+        bleAudioBump(underruns);
       }
     }
   }
@@ -404,11 +424,20 @@ BTStatus BLEAudioPlayer::begin(int bclk, int ws, int dout, int mclk, int port) {
 }
 
 void BLEAudioPlayer::end() {
-  if (_impl) {
-    _impl->stop();
-    _impl->detach();
-    _impl.reset();
+  if (!_impl) {
+    return;
   }
+  // A PCM callback runs on the codec task; end() cannot join it or free the
+  // Impl from inside it. Request the stop and leave the release to a later
+  // call from loop()/setup().
+  if (_impl->isCurrentTask()) {
+    log_w("Player: end() from the codec task deferred; call end() from loop()");
+    _impl->stop();
+    return;
+  }
+  _impl->stop();
+  _impl->detach();
+  _impl.reset();
 }
 
 BLEAudioPlayer &BLEAudioPlayer::setPCMSink(BLEAudioPCMSink sink) {
@@ -425,12 +454,17 @@ BLEAudioPlayer &BLEAudioPlayer::setJitterDepth(uint8_t sdus) {
 }
 
 BTStatus BLEAudioPlayer::attach(BLEAudioStream stream) {
-  return attach(stream, BLEAudioStream());
+  if (!*this || !stream) {
+    return BTStatus::InvalidParam;
+  }
+  BLEAudioStreamTap tap;
+  tap.recv = Impl::onRecv;
+  return _impl->attach(stream, BLEAudioStream(), BLEAudioStream::Direction::Rx, tap);
 }
 
 BTStatus BLEAudioPlayer::attach(BLEAudioStream stream, BLEAudioStream right) {
-  if (!*this) {
-    return BTStatus::InvalidState;
+  if (!*this || !stream || !right) {
+    return BTStatus::InvalidParam;
   }
   BLEAudioStreamTap tap;
   tap.recv = Impl::onRecv;

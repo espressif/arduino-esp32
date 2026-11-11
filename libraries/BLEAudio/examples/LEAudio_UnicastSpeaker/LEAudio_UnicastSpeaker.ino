@@ -36,6 +36,8 @@ BLEAudioUnicastServer unicastServer;
 BLEAudioVolumeRenderer volumeRenderer;
 BLEAudioPlayer player;
 
+volatile bool doAttachPlayer = false;
+
 void halt(const char *what, BTStatus st) {
   Serial.printf("%s failed: %s\n", what, st.toString());
   while (true) {
@@ -43,20 +45,13 @@ void halt(const char *what, BTStatus st) {
   }
 }
 
-// A client configured the sink ASE: hand the stream to the decoder.
+// A client configured the sink ASE. This callback runs on the Bluetooth host
+// task, so only record the request; attach/start the codec task from loop().
 void onSinkConfigured(BLEAudioStream &stream) {
   BLEAudioCodecConfig codec = stream.codecConfig();
   Serial.printf("[sink] configured: %lu Hz, %u us, %u octets x %u ch\n", (unsigned long)codec.samplingRateHz, codec.frameDurationUs,
                 codec.octetsPerFrame, codec.channels());
-
-  player.stopPlayback();  // no-op unless a previous stream was attached
-  BTStatus st = player.attach(stream);
-  if (st) {
-    st = player.startPlayback();
-  }
-  if (!st) {
-    Serial.printf("player: %s\n", st.toString());
-  }
+  doAttachPlayer = true;
 }
 
 void setup() {
@@ -142,6 +137,19 @@ void setup() {
 }
 
 void loop() {
+  if (doAttachPlayer) {
+    doAttachPlayer = false;
+    BLEAudioStream sink = unicastServer.stream(BLEAudioStream::Direction::Rx);
+    player.stopPlayback();  // no-op unless a previous stream was attached
+    BTStatus st = player.attach(sink);
+    if (st) {
+      st = player.startPlayback();
+    }
+    if (!st) {
+      Serial.printf("player: %s\n", st.toString());
+    }
+  }
+
   static uint32_t last = 0;
   if (millis() - last >= 5000) {
     last = millis();

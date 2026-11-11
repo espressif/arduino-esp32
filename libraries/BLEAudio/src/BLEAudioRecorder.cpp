@@ -77,7 +77,7 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
   uint8_t *mem = nullptr;  // Backing store of pcm and both SDU buffers.
   int16_t *pcm = nullptr;  // interleaved capture frame, then a mono scratch (stereo)
   uint8_t *sdu[2] = {};    // SDU being assembled per stream.
-  uint16_t sduLen[2] = {};
+  size_t sduLen[2] = {};
   uint32_t written[2] = {};  // SDUs accepted by write(), per stream.
   uint8_t stalled = 0;       // Consecutive ticks skipped because the controller is ahead.
   uint16_t sinceExtra = 0;   // Ticks since the last catch-up SDU.
@@ -128,6 +128,9 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
     while (!quit.load()) {
       int p = primary();
       if (p < 0 || !session(p)) {
+        if (quit.load()) {
+          return;
+        }
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
       }
     }
@@ -156,14 +159,26 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
       enc[j] = bleLC3EncOpen(cfg, &pcmBytes, &outBytes);
       failed = enc[j] ? nullptr : "LC3 encoder open";
     }
+    if (!failed && (pcmBytes <= 0 || outBytes <= 0)) {
+      failed = "LC3 encoder frame size";
+    }
     if (!failed) {
       // pcm = one interleaved capture frame (+ a mono scratch for stereo),
       // followed by one SDU buffer per stream.
       samples = (uint16_t)(pcmBytes / sizeof(int16_t));
+      if (!samples) {
+        failed = "invalid PCM frame size";
+      }
+    }
+    if (!failed) {
       size_t pcmSize = (size_t)samples * (nch == 2 ? 3 : 1) * sizeof(int16_t);
       size_t total = pcmSize;
       for (uint8_t s = 0; s < count; s++) {
-        sduLen[s] = (uint16_t)(octets * (count == 1 ? nch : 1) * frames);
+        sduLen[s] = (size_t)octets * (count == 1 ? nch : 1) * frames;
+        if (!sduLen[s] || sduLen[s] > UINT16_MAX) {
+          failed = "invalid SDU size";
+          break;
+        }
         total += sduLen[s] + outBytes;  // tail room: the encoder wants a full output frame
       }
       mem = static_cast<uint8_t *>(malloc(total));
@@ -187,7 +202,9 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
       close();
       return false;
     }
-    readMs = intervalUs / 1000 ? intervalUs / 1000 : 1;
+    // One I2S read is one real PCM frame (44.1 kHz is not 7.5/10 ms exactly).
+    uint32_t frameUs = (uint32_t)((uint64_t)samples * 1000000u / cfg.samplingRateHz);
+    readMs = (frameUs + 1999u) / 1000u;
     rate.store(cfg.samplingRateHz);
     chans.store(nch);
     written[0] = written[1] = 0;
@@ -197,9 +214,21 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
     sinceExtra = kExtraGap;
     log_d("Recorder: %lu Hz, %u ch, %u frame(s)/SDU every %lu us", (unsigned long)cfg.samplingRateHz, nch, frames, (unsigned long)intervalUs);
 
-    i2s.start();
+    if (!i2s.start()) {
+      log_e("Recorder: I2S input could not be enabled");
+      quit.store(true);
+      close();
+      return false;
+    }
     ulTaskNotifyTake(pdTRUE, 0);
-    esp_timer_start_periodic(timer, intervalUs);
+    esp_err_t timerErr = esp_timer_start_periodic(timer, intervalUs);
+    if (timerErr != ESP_OK) {
+      log_e("Recorder: esp_timer_start_periodic failed (%d)", timerErr);
+      quit.store(true);
+      i2s.pause();
+      close();
+      return false;
+    }
     for (;;) {
       uint32_t ticks = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(100));
       int ref = primary();
@@ -353,11 +382,20 @@ BTStatus BLEAudioRecorder::begin(int bclk, int ws, int din, int mclk, int port) 
 }
 
 void BLEAudioRecorder::end() {
-  if (_impl) {
-    _impl->stop();
-    _impl->detach();
-    _impl.reset();
+  if (!_impl) {
+    return;
   }
+  // A PCM source runs on the codec task; end() cannot join it or free the
+  // Impl from inside it. Request the stop and leave the release to a later
+  // call from loop()/setup().
+  if (_impl->isCurrentTask()) {
+    log_w("Recorder: end() from the codec task deferred; call end() from loop()");
+    _impl->stop();
+    return;
+  }
+  _impl->stop();
+  _impl->detach();
+  _impl.reset();
 }
 
 BLEAudioRecorder &BLEAudioRecorder::setPCMSource(BLEAudioPCMSource source) {
@@ -369,12 +407,17 @@ BLEAudioRecorder &BLEAudioRecorder::setPCMSource(BLEAudioPCMSource source) {
 }
 
 BTStatus BLEAudioRecorder::attach(BLEAudioStream stream) {
-  return attach(stream, BLEAudioStream());
+  if (!*this || !stream) {
+    return BTStatus::InvalidParam;
+  }
+  BLEAudioStreamTap tap;
+  tap.sent = Impl::onSent;
+  return _impl->attach(stream, BLEAudioStream(), BLEAudioStream::Direction::Tx, tap);
 }
 
 BTStatus BLEAudioRecorder::attach(BLEAudioStream stream, BLEAudioStream right) {
-  if (!*this) {
-    return BTStatus::InvalidState;
+  if (!*this || !stream || !right) {
+    return BTStatus::InvalidParam;
   }
   BLEAudioStreamTap tap;
   tap.sent = Impl::onSent;

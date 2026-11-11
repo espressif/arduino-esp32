@@ -90,7 +90,12 @@ public:
 
   // --- State ---
 
-  /** @brief Direction of the stream; Unknown until it is configured. */
+  /** @brief Direction of the stream.
+   *
+   * Unicast streams report Unknown until the endpoint is bound; broadcast
+   * source streams are always Tx and broadcast sink streams always Rx, even
+   * before the codec is configured.
+   */
   Direction direction() const;
   /** @brief Whether the stream is in the Streaming state (SDUs may flow). */
   bool isStreaming() const;
