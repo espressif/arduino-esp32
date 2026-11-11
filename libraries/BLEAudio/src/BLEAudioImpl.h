@@ -183,7 +183,9 @@ struct BLEAudioImplCommon {
       }
       if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED && e.err == 0 && linkReady) {
         linkReady(e.conn_handle);
-      } else if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED && disconnected) {
+      } else if ((e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED || (e.type == BLE_AUDIO_EVT_ACL_CONNECTED && e.err != 0)) && disconnected) {
+        // A failed connect has no link to lose; still report it so a sketch
+        // waiting for onLinkReady()/onDisconnected() does not wait forever.
         disconnected(e.conn_handle);
       }
     } else if (groupHandler) {

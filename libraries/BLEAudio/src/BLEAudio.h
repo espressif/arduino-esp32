@@ -204,7 +204,7 @@ public:
    * @p connHandle from this point on.
    */
   BLEAudio &onLinkReady(LinkCallback cb);
-  /** @brief An ACL link used by LE Audio went down. */
+  /** @brief An ACL link used by LE Audio went down, or connect() failed. */
   BLEAudio &onDisconnected(LinkCallback cb);
   /** @brief Clear the onLinkReady() and onDisconnected() callbacks. */
   void resetCallbacks();

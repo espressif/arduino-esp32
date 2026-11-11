@@ -234,6 +234,22 @@ BTStatus BLEAudio::end() {
     }
   }
   _impl->roleStops.clear();
+  // NimBLE fallback clients are owned by audio; cancel a pending connect and
+  // drop a live ACL before the host is deinitialized. Move them out under the
+  // lock, then call into the core without holding it.
+  std::vector<std::shared_ptr<BLEClient>> clients;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    clients.swap(_impl->clients);
+  }
+  for (auto &client : clients) {
+    if (client) {
+      (void)client->cancelConnect();
+      if (client->isConnected()) {
+        (void)client->disconnect();
+      }
+    }
+  }
   bleAudioBapStopLeftover();
   if (!waitBapIdle()) {
     return BTStatus::Fail;
@@ -289,6 +305,12 @@ BTStatus BLEAudio::connect(const BTAddress &address) {
   }
   log_d("Audio: connecting to %s", address.toString().c_str());
   int err = bleAudioEngineConnect(static_cast<uint8_t>(address.type()), address.data());
+#if BLE_BLUEDROID
+  if (err == ESP_ERR_NOT_SUPPORTED) {
+    log_e("Audio: Bluedroid connect to %s reported NotSupported", address.toString().c_str());
+    return BTStatus::NotSupported;
+  }
+#endif
   if (err != ESP_ERR_NOT_SUPPORTED) {
     if (err != 0) {
       log_e("Audio: connect to %s failed (err=%d)", address.toString().c_str(), err);
