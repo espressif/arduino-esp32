@@ -52,8 +52,8 @@ constexpr uint32_t kMaxBurst = 3;    // ticks served per wake-up after a delay
 
 struct BLEAudioRecorder::Impl : BLEAudioDataPath {
   // Configuration (set before start()).
-  BLEAudioI2sConfig pins;
-  BLEAudioPcmSource source;            // When set, PCM comes from here instead of I2S.
+  BLEAudioI2SConfig pins;
+  BLEAudioPCMSource source;            // When set, PCM comes from here instead of I2S.
   bool begun = false;
   esp_timer_handle_t timer = nullptr;  // SDU-interval tick; created once, reused across runs.
 
@@ -64,7 +64,7 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
   std::atomic<uint8_t> chans{0};
 
   // Session state, codec task only.
-  BLEAudioI2sPort i2s;
+  BLEAudioI2SPort i2s;
   Channel ch[2] = {};
   void *enc[2] = {};       // One mono encoder per captured channel.
   uint8_t nch = 0;         // Captured channels (1 or 2).
@@ -153,7 +153,7 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
 
     const char *failed = nullptr;
     for (uint8_t j = 0; !failed && j < nch; j++) {
-      enc[j] = bleLc3EncOpen(cfg, &pcmBytes, &outBytes);
+      enc[j] = bleLC3EncOpen(cfg, &pcmBytes, &outBytes);
       failed = enc[j] ? nullptr : "LC3 encoder open";
     }
     if (!failed) {
@@ -269,7 +269,7 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
           in = mono;
         }
         size_t off = (size_t)(b * c.count + c.index) * octets;
-        ok = bleLc3Encode(enc[j], in, pcmBytes, sdu[c.stream] + off, sduLen[c.stream] + outBytes - off, octets) && ok;
+        ok = bleLC3Encode(enc[j], in, pcmBytes, sdu[c.stream] + off, sduLen[c.stream] + outBytes - off, octets) && ok;
       }
     }
     for (uint8_t s = 0; s < count; s++) {
@@ -291,7 +291,7 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
     chans.store(0);
     i2s.close();
     for (uint8_t j = 0; j < 2; j++) {
-      bleLc3EncClose(enc[j]);
+      bleLC3EncClose(enc[j]);
       enc[j] = nullptr;
     }
     free(mem);
@@ -328,7 +328,7 @@ BTStatus BLEAudioRecorder::begin() {
     log_e("Recorder: begin() needs a PCM source; use begin(bclk, ws, din) for I2S");
     return BTStatus::InvalidParam;
   }
-  d.pins = BLEAudioI2sConfig();
+  d.pins = BLEAudioI2SConfig();
   d.begun = true;
   return BTStatus::OK;
 }
@@ -342,7 +342,7 @@ BTStatus BLEAudioRecorder::begin(int bclk, int ws, int din, int mclk, int port) 
     log_e("Recorder: begin() needs BCLK, WS and DIN pins (or a PCM source set first)");
     return BTStatus::InvalidParam;
   }
-  d.pins = BLEAudioI2sConfig();
+  d.pins = BLEAudioI2SConfig();
   d.pins.bclk = bclk;
   d.pins.ws = ws;
   d.pins.din = din;
@@ -360,7 +360,7 @@ void BLEAudioRecorder::end() {
   }
 }
 
-BLEAudioRecorder &BLEAudioRecorder::setPcmSource(BLEAudioPcmSource source) {
+BLEAudioRecorder &BLEAudioRecorder::setPCMSource(BLEAudioPCMSource source) {
   Impl &d = ensure(_impl);
   if (!d.running()) {
     d.source = std::move(source);

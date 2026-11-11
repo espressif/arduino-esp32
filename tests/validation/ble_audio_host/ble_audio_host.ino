@@ -81,7 +81,7 @@ BLEAudioRecorder lc3Recorder;
 
 // PCM sink of the player: accumulate the decoded sample count + energy so the
 // host can assert real audio arrived (mirrors the ESP-to-ESP loopback).
-static void lc3CountPcm(const int16_t *pcm, size_t n) {
+static void lc3CountPCM(const int16_t *pcm, size_t n) {
   lc3RxSamples = lc3RxSamples + (uint32_t)n;
   uint64_t e = 0;
   for (size_t i = 0; i < n; i++) {
@@ -467,8 +467,8 @@ static void phaseUnicastAudio() {
     .setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational)
     .setSourceContexts(BLEAudioContext::Conversational);
   // PCM sink/source instead of I2S pins; set before begin().
-  lc3Player.setPcmSink(lc3CountPcm);
-  lc3Recorder.setPcmSource(lc3Tone);
+  lc3Player.setPCMSink(lc3CountPCM);
+  lc3Recorder.setPCMSource(lc3Tone);
   bool playerOk = (bool)lc3Player.begin();
   bool recOk = (bool)lc3Recorder.begin();
 
@@ -567,7 +567,7 @@ static void phaseBroadcastAudio() {
   // Encode a real 1 kHz LC3 tone onto the BIS: the recorder follows the BIS
   // (48 kHz from the preset) and paces the SDUs at its interval.
   lc3ToneRate = src.codecConfig().samplingRateHz ? src.codecConfig().samplingRateHz : 48000;
-  lc3Recorder.setPcmSource(lc3Tone);
+  lc3Recorder.setPCMSource(lc3Tone);
   BTStatus rb = lc3Recorder.begin();
   BTStatus ra = rb ? lc3Recorder.attach(src) : rb;
   BTStatus rs = ra ? lc3Recorder.startCapture() : ra;

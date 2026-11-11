@@ -36,7 +36,7 @@
 #include <memory>
 #include <cstdint>
 #include "BTStatus.h"
-#include "BLEAudioPcm.h"
+#include "BLEAudioPCM.h"
 #include "BLEAudioStream.h"
 
 class BLEAudioRecorder {
@@ -52,7 +52,7 @@ public:
   /**
    * @brief Use the built-in I2S input, or no I2S when a PCM source is set.
    *
-   * With no pins, this is only valid after setPcmSource(): the recorder then
+   * With no pins, this is only valid after setPCMSource(): the recorder then
    * takes frames from the callback and never opens an I2S port. For I2S,
    * use begin(bclk, ws, din) instead.
    *
@@ -76,7 +76,7 @@ public:
   void end();
 
   /** @brief Take PCM from @p source instead of I2S (before begin()). */
-  BLEAudioRecorder &setPcmSource(BLEAudioPcmSource source);
+  BLEAudioRecorder &setPCMSource(BLEAudioPCMSource source);
 
   /**
    * @brief Feed one Tx stream (mono or interleaved stereo).

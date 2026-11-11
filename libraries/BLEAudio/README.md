@@ -135,9 +135,14 @@ of adding more sketches:
 - **Custom QoS and codec settings.** Every role accepts `setQos()` and a
   `BLEAudioCodecPreset`; `BLEAudioCodecConfig::fromPreset()` builds a custom
   configuration when a product needs a rate/duration outside the BAP table.
-- **No I2S hardware.** `BLEAudioPlayer::setPcmSink()` and
-  `BLEAudioRecorder::setPcmSource()` replace the I2S endpoints with callbacks,
+- **No I2S hardware.** `BLEAudioPlayer::setPCMSink()` and
+  `BLEAudioRecorder::setPCMSource()` replace the I2S endpoints with callbacks,
   which is how the validation suite checks the LC3 path without a codec board.
+- **Custom I2S transports.** The built-in I2S port is internal: it sizes one
+  DMA buffer per LC3 frame, preloads the TX ring and clears on underrun so the
+  codec task stays paced. To use `I2SClass`, TDM/PDM or a codec-specific
+  driver, use `setPCMSink()`/`setPCMSource()` and drive that transport from the
+  callback.
 - **Top-level identity only.** TMAP/GMAP publish roles; they move no audio.
   Use `audio.createTmap()` / `audio.createGmap()` and `discover()` to read a
   peer's roles.

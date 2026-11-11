@@ -39,7 +39,7 @@ bool phaseIsoCisDone = false;          // iso_cis (phase 2, CIS peripheral)
 bool phaseIsoBisDone = false;          // iso_bis (phase 3, BIS broadcaster)
 bool phaseBapUnicastDone = false;      // bap_unicast (phase 4, BAP Unicast Server)
 bool phaseBapBroadcastDone = false;    // bap_broadcast (phase 5, BAP Broadcast Source)
-bool phaseLc3LoopbackDone = false;     // lc3_loopback (phase 6, LC3 decode via BLEAudioPlayer)
+bool phaseLC3LoopbackDone = false;     // lc3_loopback (phase 6, LC3 decode via BLEAudioPlayer)
 bool phaseControlProfilesDone = false; // control_profiles (phase 7, VCP/MICP/MCP/CCP server)
 bool phaseTopProfilesDone = false;     // top_profiles (phase 8, TMAP/GMAP identity server)
 bool phaseHearingAidDone = false;      // hearing_aid (phase 9, HAS presets server)
@@ -627,8 +627,8 @@ void loop() {
   // follows the codec the client configures on the ASE. Needs the LC3 codec
   // compiled in (BLE_AUDIO_LC3_SUPPORTED); self-skips otherwise. Restores a
   // normal stack afterward.
-  if (currentPhase >= 6 && !phaseLc3LoopbackDone) {
-    phaseLc3LoopbackDone = true;
+  if (currentPhase >= 6 && !phaseLC3LoopbackDone) {
+    phaseLC3LoopbackDone = true;
 #if BLE_AUDIO_LC3_SUPPORTED && BLE_AUDIO_UNICAST_SERVER_SUPPORTED
     BLE.end(false);
     delay(500);
@@ -644,7 +644,7 @@ void loop() {
 
         // PCM sink instead of I2S pins: decoded frames land here on the codec task.
         BLEAudioPlayer player;
-        player.setPcmSink([](const int16_t *pcm, size_t n) {
+        player.setPCMSink([](const int16_t *pcm, size_t n) {
           lc3RxSamples = lc3RxSamples + (uint32_t)n;
           uint64_t e = 0;
           for (size_t i = 0; i < n; i++) {
@@ -660,14 +660,14 @@ void loop() {
           BTStatus pb = player.begin();
           BTStatus pa = pb ? player.attach(us.stream(0)) : pb;
           BTStatus ps = pa ? player.startPlayback() : pa;
-          Serial.printf("[SERVER] Lc3Loopback player: %s\n", ps.toString());
+          Serial.printf("[SERVER] LC3Loopback player: %s\n", ps.toString());
           if (ps) {
             BLEAdvertising adv = BLE.getAdvertising();
             adv.reset();
             adv.setType(BLEAdvType::ConnectableScannable);
             adv.setName(serverName);
             adv.start();
-            Serial.println("[SERVER] Lc3Loopback ready");
+            Serial.println("[SERVER] LC3Loopback ready");
             unsigned long deadline = millis() + 60000;  // client worst case, as in phase 4
             while (millis() < deadline) {
               syncPhaseFromHost();
@@ -680,13 +680,13 @@ void loop() {
         audio.end();
       }
       unsigned long long avg = lc3RxSamples ? (unsigned long long)(lc3RxEnergy / lc3RxSamples) : 0ull;
-      Serial.printf("[SERVER] Lc3Loopback result samples=%lu meanamp=%llu plc=%lu\n", (unsigned long)lc3RxSamples, avg, (unsigned long)plcFrames);
+      Serial.printf("[SERVER] LC3Loopback result samples=%lu meanamp=%llu plc=%lu\n", (unsigned long)lc3RxSamples, avg, (unsigned long)plcFrames);
     }
     BLE.end(false);
     delay(500);
     (void)BLE.begin(serverName);
 #else
-    Serial.println("[SERVER] Lc3Loopback not supported");
+    Serial.println("[SERVER] LC3Loopback not supported");
 #endif
     Serial.println("[SERVER] Phase6 lc3_loopback done");
   }

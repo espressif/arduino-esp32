@@ -46,8 +46,8 @@
 static constexpr uint32_t BLE_AUDIO_CODEC_STACK = 4096;   ///< Codec task stack (bytes); LC3 state lives on the heap.
 static constexpr UBaseType_t BLE_AUDIO_CODEC_PRIO = 15;   ///< Above the Arduino loop, below the BT host tasks.
 
-/** @brief Internal I2S pin/port map used by BLEAudioI2sPort. */
-struct BLEAudioI2sConfig {
+/** @brief Internal I2S pin/port map used by BLEAudioI2SPort. */
+struct BLEAudioI2SConfig {
   int bclk = -1;  ///< Bit clock (SCLK) GPIO.
   int ws = -1;    ///< Word select (LRCLK/WS) GPIO.
   int dout = -1;  ///< Data out GPIO (player -> DAC).
@@ -65,24 +65,24 @@ inline void bleAudioBump(std::atomic<uint32_t> &counter) {
 }
 
 /** @brief Mono LC3 decoder with PLC enabled. */
-void *bleLc3DecOpen(const BLEAudioCodecConfig &cfg);
+void *bleLC3DecOpen(const BLEAudioCodecConfig &cfg);
 /**
  * @brief Decode one frame, or conceal one (PLC) when @p frame is null.
  * @return PCM bytes; -(bytes needed) when @p cap is too small; 0 on error.
  */
-int bleLc3Decode(void *dec, const uint8_t *frame, uint16_t len, int16_t *pcm, uint32_t cap);
+int bleLC3Decode(void *dec, const uint8_t *frame, uint16_t len, int16_t *pcm, uint32_t cap);
 /** @brief Close a decoder (NULL is ignored). */
-void bleLc3DecClose(void *dec);
+void bleLC3DecClose(void *dec);
 
 /** @brief Mono LC3 encoder; reports the codec's PCM input / LC3 output bytes per frame. */
-void *bleLc3EncOpen(const BLEAudioCodecConfig &cfg, int *pcmBytes, int *outBytes);
+void *bleLC3EncOpen(const BLEAudioCodecConfig &cfg, int *pcmBytes, int *outBytes);
 /** @return true when exactly @p octets were written to @p out. */
-bool bleLc3Encode(void *enc, const int16_t *pcm, int pcmBytes, uint8_t *out, uint32_t cap, uint16_t octets);
+bool bleLC3Encode(void *enc, const int16_t *pcm, int pcmBytes, uint8_t *out, uint32_t cap, uint16_t octets);
 /** @brief Close an encoder (NULL is ignored). */
-void bleLc3EncClose(void *enc);
+void bleLC3EncClose(void *enc);
 
 /** @brief 16-bit standard-mode I2S master channel with one LC3 frame per DMA buffer. */
-class BLEAudioI2sPort {
+class BLEAudioI2SPort {
 public:
   /**
    * @brief Create and configure the channel (closed first if open); it starts disabled.
@@ -91,7 +91,7 @@ public:
    * @param frameSamples Samples per channel of one LC3 frame = one DMA buffer.
    * @param dmaFrames    DMA buffers, i.e. frames of output buffering.
    */
-  bool open(const BLEAudioI2sConfig &pins, bool tx, uint32_t rateHz, uint8_t channels, uint16_t frameSamples, uint8_t dmaFrames);
+  bool open(const BLEAudioI2SConfig &pins, bool tx, uint32_t rateHz, uint8_t channels, uint16_t frameSamples, uint8_t dmaFrames);
   /** @brief Disable and delete the channel (no-op when closed). */
   void close();
   /** @brief Enable; a TX channel is first filled with silence so the next write blocks for one frame. */

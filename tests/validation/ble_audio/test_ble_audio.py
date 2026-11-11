@@ -235,10 +235,10 @@ def _phase_lc3_loopback(server, client):
     into either build; only a dual-audio esp32s31 pair with the codec runs it.
     """
     ms = server.expect(
-        r"\[SERVER\] Lc3Loopback (not supported|result samples=(\d+) meanamp=(\d+) plc=(\d+))", timeout=120
+        r"\[SERVER\] LC3Loopback (not supported|result samples=(\d+) meanamp=(\d+) plc=(\d+))", timeout=120
     )
     mc = client.expect(
-        r"\[CLIENT\] Lc3Loopback (not supported|result streaming=(\d+) sent=(\d+) errors=(\d+))", timeout=120
+        r"\[CLIENT\] LC3Loopback (not supported|result streaming=(\d+) sent=(\d+) errors=(\d+))", timeout=120
     )
     server.expect_exact("[SERVER] Phase6 lc3_loopback done", timeout=40)
     client.expect_exact("[CLIENT] Phase6 lc3_loopback done", timeout=40)

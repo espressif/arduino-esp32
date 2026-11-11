@@ -36,7 +36,7 @@
 #include <memory>
 #include <cstdint>
 #include "BTStatus.h"
-#include "BLEAudioPcm.h"
+#include "BLEAudioPCM.h"
 #include "BLEAudioStream.h"
 
 class BLEAudioPlayer {
@@ -52,7 +52,7 @@ public:
   /**
    * @brief Use the built-in I2S output, or no I2S when a PCM sink is set.
    *
-   * With no pins, this is only valid after setPcmSink(): the player then
+   * With no pins, this is only valid after setPCMSink(): the player then
    * delivers frames to the callback and never opens an I2S port. For I2S,
    * use begin(bclk, ws, dout) instead.
    *
@@ -76,7 +76,7 @@ public:
   void end();
 
   /** @brief Deliver decoded PCM to @p sink instead of I2S (before begin()). */
-  BLEAudioPlayer &setPcmSink(BLEAudioPcmSink sink);
+  BLEAudioPlayer &setPCMSink(BLEAudioPCMSink sink);
   /** @brief Jitter-buffer depth in SDUs (min 2); 0 = from the stream QoS (default). */
   BLEAudioPlayer &setJitterDepth(uint8_t sdus);
 

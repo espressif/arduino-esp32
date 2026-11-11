@@ -595,7 +595,7 @@ void setup() {
         // A deterministic 1 kHz tone (16 samples/cycle at 16 kHz) so the server
         // sees a non-silent, well-defined signal after decode.
         BLEAudioRecorder recorder;
-        recorder.setPcmSource([](int16_t *pcm, size_t maxSamples) -> size_t {
+        recorder.setPCMSource([](int16_t *pcm, size_t maxSamples) -> size_t {
           static uint32_t ph = 0;
           for (size_t i = 0; i < maxSamples; i++) {
             float s = sinf((float)ph * 2.0f * 3.14159265f / 16.0f);
@@ -611,7 +611,7 @@ void setup() {
             uint16_t h = audioConnect(audio, addr);
             if (h != 0xFFFF) {
               BTStatus bs = uc.connectAndStart(h);
-              Serial.printf("[CLIENT] Lc3Loopback setup: %s\n", bs.toString());
+              Serial.printf("[CLIENT] LC3Loopback setup: %s\n", bs.toString());
               unsigned long cdl = millis() + 15000;
               while (!bapTxStreaming && millis() < cdl) {
                 delay(50);
@@ -622,12 +622,12 @@ void setup() {
                 // recorder task then encodes + sends autonomously.
                 BTStatus ra = recorder.attach(uc.stream(BLEAudioStream::Direction::Tx));
                 BTStatus rs = ra ? recorder.startCapture() : ra;
-                Serial.printf("[CLIENT] Lc3Loopback recorder: %s\n", rs.toString());
+                Serial.printf("[CLIENT] LC3Loopback recorder: %s\n", rs.toString());
                 delay(4000);
                 encSent = recorder.sdusSent();
                 encErrors = recorder.sendErrors();
               } else {
-                Serial.println("[CLIENT] Lc3Loopback stream did not start");
+                Serial.println("[CLIENT] LC3Loopback stream did not start");
               }
               recorder.end();
               uc.stop();
@@ -635,23 +635,23 @@ void setup() {
                 delay(50);
               }
             } else {
-              Serial.println("[CLIENT] Lc3Loopback ACL connect FAILED");
+              Serial.println("[CLIENT] LC3Loopback ACL connect FAILED");
             }
           } else {
-            Serial.println("[CLIENT] Lc3Loopback target not found");
+            Serial.println("[CLIENT] LC3Loopback target not found");
           }
         }
         recorder.end();
         audio.end();
       }
-      Serial.printf("[CLIENT] Lc3Loopback result streaming=%d sent=%lu errors=%lu\n", (int)everStreamed, (unsigned long)encSent, (unsigned long)encErrors);
+      Serial.printf("[CLIENT] LC3Loopback result streaming=%d sent=%lu errors=%lu\n", (int)everStreamed, (unsigned long)encSent, (unsigned long)encErrors);
     }
     BLE.end(false);
     delay(500);
     (void)BLE.begin("BLE_CLT");
   }
 #else
-  Serial.println("[CLIENT] Lc3Loopback not supported");
+  Serial.println("[CLIENT] LC3Loopback not supported");
 #endif
   Serial.println("[CLIENT] Phase6 lc3_loopback done");
 

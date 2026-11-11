@@ -54,7 +54,7 @@ static uint8_t frameDms(const BLEAudioCodecConfig &cfg) {
 }
 
 // Constant bit rate, raw frames (no length prefix): the BAP SDU layout.
-void *bleLc3DecOpen(const BLEAudioCodecConfig &cfg) {
+void *bleLC3DecOpen(const BLEAudioCodecConfig &cfg) {
   esp_lc3_dec_cfg_t c = {};
   c.sample_rate = cfg.samplingRateHz;
   c.channel = 1;
@@ -68,7 +68,7 @@ void *bleLc3DecOpen(const BLEAudioCodecConfig &cfg) {
   return (esp_lc3_dec_open(&c, sizeof(c), &h) == ESP_AUDIO_ERR_OK) ? h : nullptr;
 }
 
-int bleLc3Decode(void *dec, const uint8_t *frame, uint16_t len, int16_t *pcm, uint32_t cap) {
+int bleLC3Decode(void *dec, const uint8_t *frame, uint16_t len, int16_t *pcm, uint32_t cap) {
   esp_audio_dec_in_raw_t raw = {};
   // The codec ignores the input for PLC; hand it a valid buffer anyway.
   raw.buffer = const_cast<uint8_t *>(frame ? frame : reinterpret_cast<const uint8_t *>(pcm));
@@ -85,13 +85,13 @@ int bleLc3Decode(void *dec, const uint8_t *frame, uint16_t len, int16_t *pcm, ui
   return (err == ESP_AUDIO_ERR_OK) ? static_cast<int>(out.decoded_size) : 0;
 }
 
-void bleLc3DecClose(void *dec) {
+void bleLC3DecClose(void *dec) {
   if (dec) {
     esp_lc3_dec_close(dec);
   }
 }
 
-void *bleLc3EncOpen(const BLEAudioCodecConfig &cfg, int *pcmBytes, int *outBytes) {
+void *bleLC3EncOpen(const BLEAudioCodecConfig &cfg, int *pcmBytes, int *outBytes) {
   esp_lc3_enc_config_t c = {};
   c.sample_rate = cfg.samplingRateHz;
   c.bits_per_sample = 16;
@@ -110,7 +110,7 @@ void *bleLc3EncOpen(const BLEAudioCodecConfig &cfg, int *pcmBytes, int *outBytes
   return h;
 }
 
-bool bleLc3Encode(void *enc, const int16_t *pcm, int pcmBytes, uint8_t *out, uint32_t cap, uint16_t octets) {
+bool bleLC3Encode(void *enc, const int16_t *pcm, int pcmBytes, uint8_t *out, uint32_t cap, uint16_t octets) {
   esp_audio_enc_in_frame_t in = {};
   in.buffer = reinterpret_cast<uint8_t *>(const_cast<int16_t *>(pcm));
   in.len = static_cast<uint32_t>(pcmBytes);
@@ -120,7 +120,7 @@ bool bleLc3Encode(void *enc, const int16_t *pcm, int pcmBytes, uint8_t *out, uin
   return esp_lc3_enc_process(enc, &in, &o) == ESP_AUDIO_ERR_OK && o.encoded_bytes == octets;
 }
 
-void bleLc3EncClose(void *enc) {
+void bleLC3EncClose(void *enc) {
   if (enc) {
     esp_lc3_enc_close(enc);
   }
@@ -130,7 +130,7 @@ void bleLc3EncClose(void *enc) {
 // I2S
 // ---------------------------------------------------------------------------
 
-bool BLEAudioI2sPort::open(const BLEAudioI2sConfig &pins, bool tx, uint32_t rateHz, uint8_t channels, uint16_t frameSamples, uint8_t dmaFrames) {
+bool BLEAudioI2SPort::open(const BLEAudioI2SConfig &pins, bool tx, uint32_t rateHz, uint8_t channels, uint16_t frameSamples, uint8_t dmaFrames) {
   close();
   i2s_chan_config_t cc = I2S_CHANNEL_DEFAULT_CONFIG(pins.port, I2S_ROLE_MASTER);
   // One LC3 frame per DMA buffer, so every write/read moves exactly one frame.
@@ -164,7 +164,7 @@ bool BLEAudioI2sPort::open(const BLEAudioI2sConfig &pins, bool tx, uint32_t rate
   return true;
 }
 
-void BLEAudioI2sPort::close() {
+void BLEAudioI2SPort::close() {
   pause();
   if (_chan) {
     i2s_del_channel(_chan);
@@ -172,7 +172,7 @@ void BLEAudioI2sPort::close() {
   }
 }
 
-void BLEAudioI2sPort::start() {
+void BLEAudioI2SPort::start() {
   if (!_chan || _on) {
     return;
   }
@@ -191,14 +191,14 @@ void BLEAudioI2sPort::start() {
   _on = (i2s_channel_enable(_chan) == ESP_OK);
 }
 
-void BLEAudioI2sPort::pause() {
+void BLEAudioI2SPort::pause() {
   if (_chan && _on) {
     i2s_channel_disable(_chan);
     _on = false;
   }
 }
 
-size_t BLEAudioI2sPort::write(const int16_t *pcm, size_t samples, uint32_t timeoutMs) {
+size_t BLEAudioI2SPort::write(const int16_t *pcm, size_t samples, uint32_t timeoutMs) {
   size_t n = 0;
   if (_on) {
     i2s_channel_write(_chan, pcm, samples * sizeof(int16_t), &n, timeoutMs);
@@ -206,7 +206,7 @@ size_t BLEAudioI2sPort::write(const int16_t *pcm, size_t samples, uint32_t timeo
   return n / sizeof(int16_t);
 }
 
-size_t BLEAudioI2sPort::read(int16_t *pcm, size_t samples, uint32_t timeoutMs) {
+size_t BLEAudioI2SPort::read(int16_t *pcm, size_t samples, uint32_t timeoutMs) {
   size_t n = 0;
   if (_on) {
     i2s_channel_read(_chan, pcm, samples * sizeof(int16_t), &n, timeoutMs);

@@ -37,7 +37,7 @@
  * @param pcm     Interleaved 16-bit PCM with `channels()` channels.
  * @param samples Total samples (frames x channels).
  */
-using BLEAudioPcmSink = std::function<void(const int16_t *pcm, size_t samples)>;
+using BLEAudioPCMSink = std::function<void(const int16_t *pcm, size_t samples)>;
 
 /**
  * @brief Producer of PCM to encode, called on the codec task once per LC3 frame.
@@ -45,6 +45,6 @@ using BLEAudioPcmSink = std::function<void(const int16_t *pcm, size_t samples)>;
  * @param samples Total samples wanted (frames x channels).
  * @return Samples produced; the rest of the frame is padded with silence.
  */
-using BLEAudioPcmSource = std::function<size_t(int16_t *pcm, size_t samples)>;
+using BLEAudioPCMSource = std::function<size_t(int16_t *pcm, size_t samples)>;
 
 #endif /* BLE_AUDIO_LC3_SUPPORTED */

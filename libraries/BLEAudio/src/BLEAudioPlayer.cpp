@@ -60,8 +60,8 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
   };
 
   // Configuration (set before start()).
-  BLEAudioI2sConfig pins;
-  BLEAudioPcmSink sink;        // When set, PCM goes here instead of I2S.
+  BLEAudioI2SConfig pins;
+  BLEAudioPCMSink sink;        // When set, PCM goes here instead of I2S.
   uint8_t depthOverride = 0;   // Jitter depth in SDUs, 0 = from the presentation delay.
   bool begun = false;
 
@@ -72,7 +72,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
   std::atomic<bool> ready{false};  // Rings valid; the tap drops SDUs while false.
 
   // Session state, codec task only.
-  BLEAudioI2sPort i2s;
+  BLEAudioI2SPort i2s;
   Channel ch[2] = {};
   void *dec[2] = {};       // One mono decoder per output channel.
   uint8_t nch = 0;         // Decoded channels (1 or 2).
@@ -192,7 +192,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
       failed = ring[s].queue ? nullptr : "queue allocation";
     }
     for (uint8_t j = 0; !failed && j < nch; j++) {
-      dec[j] = bleLc3DecOpen(cfg);
+      dec[j] = bleLC3DecOpen(cfg);
       failed = dec[j] ? nullptr : "LC3 decoder open";
     }
     // DMA: one frame per buffer, SDU frames + 2 of headroom.
@@ -314,7 +314,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
 
   /** One decode call; grows the PCM buffers once if the codec asks for more room. */
   int decodeInto(uint8_t j, const uint8_t *frame) {
-    int got = bleLc3Decode(dec[j], frame, octets, pcm, pcmCap * sizeof(int16_t));
+    int got = bleLC3Decode(dec[j], frame, octets, pcm, pcmCap * sizeof(int16_t));
     if (got < 0) {
       uint32_t need = (uint32_t)(-got) / sizeof(int16_t);
       void *grown = realloc(pcm, (size_t)need * (1 + outCh) * sizeof(int16_t));
@@ -323,7 +323,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
       }
       pcm = static_cast<int16_t *>(grown);
       pcmCap = need;
-      got = bleLc3Decode(dec[j], frame, octets, pcm, pcmCap * sizeof(int16_t));
+      got = bleLC3Decode(dec[j], frame, octets, pcm, pcmCap * sizeof(int16_t));
     }
     return got;
   }
@@ -336,7 +336,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
     chans.store(0);
     i2s.close();
     for (uint8_t j = 0; j < 2; j++) {
-      bleLc3DecClose(dec[j]);
+      bleLC3DecClose(dec[j]);
       dec[j] = nullptr;
     }
     for (uint8_t s = 0; s < 2; s++) {
@@ -379,7 +379,7 @@ BTStatus BLEAudioPlayer::begin() {
     log_e("Player: begin() needs a PCM sink; use begin(bclk, ws, dout) for I2S");
     return BTStatus::InvalidParam;
   }
-  d.pins = BLEAudioI2sConfig();
+  d.pins = BLEAudioI2SConfig();
   d.begun = true;
   return BTStatus::OK;
 }
@@ -393,7 +393,7 @@ BTStatus BLEAudioPlayer::begin(int bclk, int ws, int dout, int mclk, int port) {
     log_e("Player: begin() needs BCLK, WS and DOUT pins (or a PCM sink set first)");
     return BTStatus::InvalidParam;
   }
-  d.pins = BLEAudioI2sConfig();
+  d.pins = BLEAudioI2SConfig();
   d.pins.bclk = bclk;
   d.pins.ws = ws;
   d.pins.dout = dout;
@@ -411,7 +411,7 @@ void BLEAudioPlayer::end() {
   }
 }
 
-BLEAudioPlayer &BLEAudioPlayer::setPcmSink(BLEAudioPcmSink sink) {
+BLEAudioPlayer &BLEAudioPlayer::setPCMSink(BLEAudioPCMSink sink) {
   Impl &d = ensure(_impl);
   if (!d.running()) {
     d.sink = std::move(sink);
