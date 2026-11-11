@@ -84,8 +84,9 @@ public:
    * @brief Number of channels, one BIS each: 1 = mono (default), 2 = stereo (FL + FR).
    *
    * Clamped to 1..2 and capped by the packaged Kconfig BIS count. Ignored
-   * while streaming. Streams are (re)allocated immediately, so attach stream
-   * callbacks after calling it.
+   * while starting or streaming. A stopped engine source is deleted before
+   * the stream vector is resized, so the engine never points at freed slots.
+   * Streams are (re)allocated immediately; attach callbacks afterwards.
    */
   BLEAudioBroadcastSource &setChannels(uint8_t channels);
   /** @brief 24-bit Broadcast ID receivers use to recognise the source. Default: random. */

@@ -41,7 +41,13 @@ BTStatus commandStatus(int err, uint8_t result) {
   if (err) {
     return bleAudioStatus(err);
   }
-  return result == BLE_AUDIO_MCP_CMD_SUCCESS ? BTStatus::OK : BTStatus::Fail;
+  switch (result) {
+    case BLE_AUDIO_MCP_CMD_SUCCESS: return BTStatus::OK;
+    case 2: return BTStatus::NotSupported;  // MCS: opcode not supported.
+    case 3: return BTStatus::InvalidState;  // MCS: player inactive.
+    case 4: return BTStatus::Fail;          // MCS: cannot be completed.
+    default: return BTStatus::Fail;
+  }
 }
 
 }  // namespace

@@ -374,6 +374,12 @@ struct BLEAudioCapInitiator::Impl {
         }
         break;
       case BLE_AUDIO_EVT_CAP_UC_STOPPED:
+        if (e.err != 0) {
+          // The stack could not release the unicast group; keep the session
+          // marked running so a later stopUnicast() can retry.
+          log_e("CapInitiator: unicast stop failed (err=%d)", e.err);
+          break;
+        }
         ucRunning = false;
         ucStreaming = false;
         if (ucStoppedCb) {
@@ -418,6 +424,7 @@ struct BLEAudioCapInitiator::Impl {
           ucRunning = false;
           ucStreaming = false;
           handedOver = true;
+          bcStreaming = true;
           log_i("CapInitiator: unicast handed over to broadcast 0x%06lX", (unsigned long)broadcastId);
         } else {
           log_w("CapInitiator: handover to broadcast failed (err=%d)", e.err);
@@ -460,8 +467,12 @@ BLEAudioCapInitiator::operator bool() const {
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setPreset(BLEAudioCodecPreset preset) {
-  if (_impl) {
+  ble_audio_codec_t c;
+  ble_audio_qos_t q;
+  if (_impl && bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
     _impl->preset = preset;
+  } else if (_impl) {
+    log_e("CapInitiator: invalid preset %u", (unsigned)preset);
   }
   return *this;
 }
@@ -573,7 +584,7 @@ BTStatus BLEAudioCapInitiator::startUnicast() {
 }
 
 BTStatus BLEAudioCapInitiator::updateUnicast(BLEAudioContext context) {
-  if (!_impl || !_impl->ucRunning) {
+  if (!_impl || !_impl->ucRunning || _impl->hoBusy) {
     return BTStatus::InvalidState;
   }
   _impl->context = context;
@@ -657,12 +668,13 @@ BTStatus BLEAudioCapInitiator::stopBroadcast() {
     return BTStatus::InvalidState;
   }
   int err = bleAudioCapBroadcastStop();
-  _impl->stopAdvertising();
   if (err != 0) {
-    log_w("CapInitiator: BIG terminate failed (err=%d)", err);
-    _impl->broadcastEnded();
+    log_w("CapInitiator: BIG terminate failed (err=%d); keeping the broadcast state", err);
+    return bleAudioStatus(err);
   }
-  return bleAudioStatus(err);
+  _impl->stopAdvertising();
+  _impl->broadcastEnded();
+  return BTStatus::OK;
 }
 
 bool BLEAudioCapInitiator::isBroadcasting() const {
@@ -682,7 +694,7 @@ BTStatus BLEAudioCapInitiator::handoverToBroadcast(uint8_t advInstance) {
   }
   ble_audio_codec_t c;
   ble_audio_qos_t q;
-  bleAudioPresetGet(static_cast<uint8_t>(m.preset), true, &c, &q);
+  m.codecQos(true, c, q);
   const ble_audio_cap_adv_t adv = m.advInfo(advInstance);
   uint8_t bcode[BLE_AUDIO_BCODE_SIZE];
   int err = bleAudioCapHandoverToBroadcast(&adv, &q, broadcastCode(m.code, bcode));
@@ -934,6 +946,10 @@ BTStatus BLEAudioCapCommander::stopBroadcastReception() {
 BTStatus BLEAudioCapCommander::distributeBroadcastCode(const String &code) {
   if (!_impl) {
     return BTStatus::InvalidState;
+  }
+  if (!code.length()) {
+    log_e("CapCommander: distributeBroadcastCode() needs a non-empty code");
+    return BTStatus::InvalidParam;
   }
   uint8_t bcode[BLE_AUDIO_BCODE_SIZE];
   broadcastCode(code, bcode);

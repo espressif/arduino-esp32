@@ -130,8 +130,9 @@ public:
   /**
    * @brief Tell the sink we scan for it and start a passive extended scan.
    *
-   * Uses `BLE.getScan()` (stopping any scan in progress); each broadcast is
-   * reported once per remote scan through onSourceFound().
+   * Uses the shared `BLE.getScan()`; returns Busy instead of stealing an
+   * extended scan already started by another role. Each broadcast is reported
+   * once per remote scan through onSourceFound().
    */
   BTStatus startRemoteScan();
   /** @brief Stop the local scan and tell the sink the remote scan ended. */

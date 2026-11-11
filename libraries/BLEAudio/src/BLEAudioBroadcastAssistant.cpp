@@ -44,6 +44,7 @@
 struct BLEAudioBroadcastAssistant::Impl {
   std::weak_ptr<BLEAudio::Impl> audio;
   uint16_t conn = BLE_AUDIO_CONN_NONE;  ///< The Scan Delegator being driven.
+  bool scanStarted = false;              ///< This assistant started the shared extended scan.
 
   // Subgroup count per remote source, needed to build a Modify Source.
   struct Known {
@@ -193,8 +194,11 @@ BTStatus BLEAudioBroadcastAssistant::startRemoteScan() {
     return st;
   }
   BLEScan scan = BLE.getScan();
-  if (scan.isScanning()) {
-    scan.stop();
+  if (scan.isScanning() && !_impl->scanStarted) {
+    // The scan is a single shared session; do not steal it from another role.
+    log_e("BroadcastAssistant: another extended scan is already active");
+    bleAudioBaScanStop(_impl->conn);
+    return BTStatus::Busy;
   }
   // Passive and unfiltered: sources are reported once per remote scan by the engine.
   scan.setActiveScan(false);
@@ -203,6 +207,8 @@ BTStatus BLEAudioBroadcastAssistant::startRemoteScan() {
   if (!st) {
     log_e("BroadcastAssistant: local extended scan failed to start (%s); remote scan cancelled", st.toString());
     bleAudioBaScanStop(_impl->conn);
+  } else {
+    _impl->scanStarted = true;
   }
   return st;
 }
@@ -212,8 +218,11 @@ BTStatus BLEAudioBroadcastAssistant::stopRemoteScan() {
     return BTStatus::NotConnected;
   }
   BLEScan scan = BLE.getScan();
-  if (scan.isScanning()) {
-    scan.stopExtended();
+  if (_impl->scanStarted) {
+    _impl->scanStarted = false;
+    if (scan.isScanning()) {
+      scan.stopExtended();
+    }
   }
   return bleAudioStatus(bleAudioBaScanStop(_impl->conn));
 }
@@ -326,6 +335,11 @@ BLEAudioBroadcastAssistant BLEAudio::createBroadcastAssistant() {
   _impl->setHandler(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, [weak](const ble_audio_evt_t &e) {
     if (auto s = weak.lock()) {
       s->handle(e);
+    }
+  });
+  _impl->roleStops.push_back([weak]() {
+    if (auto s = weak.lock()) {
+      (void)BLEAudioBroadcastAssistant(s).stopRemoteScan();
     }
   });
   return BLEAudioBroadcastAssistant(ba);

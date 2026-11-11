@@ -54,6 +54,7 @@ struct BLEAudioHearingAidDevice::Impl {
   std::vector<Preset> presets;  ///< Staged until start; released once registered.
   SelectCallback selectCb;
   RenameCallback renameCb;
+  bool inited = false;
 
   /** Register one preset with the stack. */
   static int add(const Preset &p) {
@@ -62,18 +63,25 @@ struct BLEAudioHearingAidDevice::Impl {
 
   /** Deferred init run by BLEAudio::start(): register HAS, then every staged preset (stops at the first failure). */
   BTStatus apply() {
-    int err = bleAudioHasSrvInit(static_cast<uint8_t>(type), presetSync);
-    for (const Preset &p : presets) {
+    int err = 0;
+    if (!inited) {
+      err = bleAudioHasSrvInit(static_cast<uint8_t>(type), presetSync);
       if (err != 0) {
-        break;
+        return bleAudioStatus(err);
       }
-      err = add(p);
-      if (err != 0) {
-        log_e("HearingAid: registering preset %u (\"%s\") failed (err=%d)", p.index, p.name.c_str(), err);
-      }
+      inited = true;
     }
-    std::vector<Preset>().swap(presets);
-    return bleAudioStatus(err);
+    // Keep the presets that were not registered yet so a retried start()
+    // resumes instead of dropping the whole HAS preset list.
+    while (!presets.empty()) {
+      err = add(presets.front());
+      if (err != 0) {
+        log_e("HearingAid: registering preset %u (\"%s\") failed (err=%d)", presets.front().index, presets.front().name.c_str(), err);
+        return bleAudioStatus(err);
+      }
+      presets.erase(presets.begin());
+    }
+    return BTStatus::OK;
   }
 
   /** Engine event for this group: a client selected or renamed a preset. */

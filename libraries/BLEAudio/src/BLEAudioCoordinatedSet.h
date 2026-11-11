@@ -96,9 +96,10 @@ public:
   BLEAudioCoordinatedSetMember &setSetSize(uint8_t size);
   /**
    * @brief Position of this device in the set, 1..size (lock order). Default 1.
-   * @note On a running set the stack only accepts a new rank together with a new
-   *       set size: call setRank() first, then setSetSize(). Otherwise the rank
-   *       is used at the next audio.start().
+   * @note On a running set the stack only accepts a new rank together with a
+   *       different set size: call setRank() first, then setSetSize() with a
+   *       value different from the current size. Otherwise the rank is used at
+   *       the next audio.start().
    */
   BLEAudioCoordinatedSetMember &setRank(uint8_t rank);
   /** @brief Whether clients may lock the set. Default true. Only read at audio.start(). */

@@ -37,11 +37,13 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <vector>
 #include "BTStatus.h"
+#include "core/BLEMutex.h"
 #include "engine/BLEAudioEngine.h"
 #include "client/BLEClient.h"
 
@@ -54,6 +56,7 @@ struct BLEAudioImplCommon {
   // State
   // --------------------------------------------------------------------------
 
+  BLESharedMutex mtx;                    ///< Protects handlers, link callbacks and clients.
   uint32_t presentationDelayUs = 40000;  ///< Default for new roles (setPresentationDelay()).
   LinkCallback linkReadyCb;              ///< Application onLinkReady().
   LinkCallback disconnectedCb;           ///< Application onDisconnected().
@@ -72,6 +75,9 @@ struct BLEAudioImplCommon {
    */
   std::vector<std::shared_ptr<void>> roles;
 
+  /** Best-effort transport teardown for roles that own advertising/scanning. */
+  std::vector<std::function<void()>> roleStops;
+
   /**
    * NimBLE connect() fallback clients. Kept alive while the link is up and
    * released on ACL_DISCONNECTED so repeated connect/disconnect cycles do not
@@ -83,8 +89,16 @@ struct BLEAudioImplCommon {
   EventHandler handlers[BLE_AUDIO_GRP_COUNT];
 
   /** Links whose GATT discovery finished; client roles may start profile discovery on them. */
+#if defined(CONFIG_BT_MAX_CONN)
+  static constexpr size_t kMaxLinks = CONFIG_BT_MAX_CONN;
+#else
   static constexpr size_t kMaxLinks = 4;
-  uint16_t gattReady[kMaxLinks] = {BLE_AUDIO_CONN_NONE, BLE_AUDIO_CONN_NONE, BLE_AUDIO_CONN_NONE, BLE_AUDIO_CONN_NONE};
+#endif
+  std::array<uint16_t, kMaxLinks> gattReady;
+
+  BLEAudioImplCommon() {
+    gattReady.fill(BLE_AUDIO_CONN_NONE);
+  }
 
   // --------------------------------------------------------------------------
   // Helpers
@@ -92,11 +106,13 @@ struct BLEAudioImplCommon {
 
   /** @brief Register (or replace) the handler of @p group; one role per group. */
   void setHandler(ble_audio_evt_group_t group, EventHandler h) {
+    BLELockGuard lock(mtx.get());
     handlers[group] = std::move(h);
   }
 
   /** @brief Whether the GATT discovery of @p conn finished and the link is still up. */
   bool isGattReady(uint16_t conn) const {
+    BLELockGuard lock(mtx.get());
     for (uint16_t c : gattReady) {
       if (c == conn) {
         return true;
@@ -113,6 +129,7 @@ struct BLEAudioImplCommon {
    * removes it on disconnect.
    */
   void trackLink(const ble_audio_evt_t &e) {
+    BLELockGuard lock(mtx.get());
     if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED && e.err == 0 && !isGattReady(e.conn_handle)) {
       for (uint16_t &c : gattReady) {
         if (c == BLE_AUDIO_CONN_NONE) {
@@ -142,20 +159,35 @@ struct BLEAudioImplCommon {
    */
   void dispatch(const ble_audio_evt_t &e) {
     const uint8_t group = BLE_AUDIO_EVT_GROUP(e.type);
+    EventHandler coreHandlers[BLE_AUDIO_GRP_COUNT];
+    EventHandler groupHandler;
+    LinkCallback linkReady;
+    LinkCallback disconnected;
     if (group == BLE_AUDIO_GRP_CORE) {
       trackLink(e);
-      for (auto &h : handlers) {
+      BLELockGuard lock(mtx.get());
+      for (size_t i = 0; i < BLE_AUDIO_GRP_COUNT; i++) {
+        coreHandlers[i] = handlers[i];
+      }
+      linkReady = linkReadyCb;
+      disconnected = disconnectedCb;
+    } else if (group < BLE_AUDIO_GRP_COUNT) {
+      BLELockGuard lock(mtx.get());
+      groupHandler = handlers[group];
+    }
+    if (group == BLE_AUDIO_GRP_CORE) {
+      for (auto &h : coreHandlers) {
         if (h) {
           h(e);
         }
       }
-      if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED && e.err == 0 && linkReadyCb) {
-        linkReadyCb(e.conn_handle);
-      } else if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED && disconnectedCb) {
-        disconnectedCb(e.conn_handle);
+      if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED && e.err == 0 && linkReady) {
+        linkReady(e.conn_handle);
+      } else if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED && disconnected) {
+        disconnected(e.conn_handle);
       }
-    } else if (group < BLE_AUDIO_GRP_COUNT && handlers[group]) {
-      handlers[group](e);
+    } else if (groupHandler) {
+      groupHandler(e);
     }
   }
 };

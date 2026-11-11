@@ -543,6 +543,14 @@ void bleAudioBapStopLeftover(void) {
 #endif
 }
 
+bool bleAudioStreamIsBound(const ble_audio_slot_t *slot) {
+  return slot && slot->bound;
+}
+
+uint8_t bleAudioStreamKind(const ble_audio_slot_t *slot) {
+  return slot ? slot->kind : 0xFF;
+}
+
 bool bleAudioStreamIsTx(const ble_audio_slot_t *slot) {
   return slot && slot->tx;
 }
@@ -2269,6 +2277,10 @@ void bleAudioBsinkArm(uint32_t broadcast_id) {
   s_bsnk.hold = false;
 }
 
+void bleAudioBsinkDisarm(void) {
+  s_bsnk.armed = false;
+}
+
 void bleAudioBsinkSetCode(const uint8_t *code) {
   memset(s_bsnk.code, 0, sizeof(s_bsnk.code));
   s_bsnk.has_code = (code != NULL);
@@ -2312,6 +2324,7 @@ void bleAudioBsinkSetScanning(bool on) {
 void bleAudioBsinkArm(uint32_t broadcast_id) {
   (void)broadcast_id;
 }
+void bleAudioBsinkDisarm(void) {}
 void bleAudioBsinkSetCode(const uint8_t *code) {
   (void)code;
 }

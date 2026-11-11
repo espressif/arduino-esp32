@@ -125,6 +125,8 @@ void bleAudioBapStopLeftover(void);
  */
 void bleAudioNotifyBapIdle(void);
 /** @brief True when the local device transmits on this stream. */
+bool bleAudioStreamIsBound(const ble_audio_slot_t *slot);
+uint8_t bleAudioStreamKind(const ble_audio_slot_t *slot);
 bool bleAudioStreamIsTx(const ble_audio_slot_t *slot);
 /** @brief ACL of a unicast stream; BLE_AUDIO_CONN_NONE for broadcast or unbound streams. */
 uint16_t bleAudioStreamConnHandle(const ble_audio_slot_t *slot);
@@ -380,6 +382,8 @@ int bleAudioBsinkSetStreams(ble_audio_slot_t *const slots[], uint8_t count);
 void bleAudioBsinkSetScanning(bool on);
 /** @brief Expect a PA sync to @p broadcast_id; the next PA_SYNC event creates the sink. */
 void bleAudioBsinkArm(uint32_t broadcast_id);
+/** @brief Cancel a previous arm when the caller could not create the PA sync. */
+void bleAudioBsinkDisarm(void);
 /** @param code 16 octets, or NULL to clear. */
 void bleAudioBsinkSetCode(const uint8_t *code);
 /** @brief Preferred BIS indexes (BIT(index-1)); 0 = the lowest ones in the BASE. */

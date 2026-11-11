@@ -109,6 +109,10 @@ BLEAudioTmap BLEAudio::createTmap() {
     log_e("createTmap(): call after audio.begin()");
     return BLEAudioTmap();
   }
+  if (_impl->started) {
+    log_e("createTmap(): create identity roles before audio.start()");
+    return BLEAudioTmap();
+  }
   auto tmap = std::make_shared<BLEAudioTmap::Impl>();
   tmap->audio = _impl;
   _impl->roles.push_back(tmap);
@@ -216,6 +220,10 @@ BLEAudioGmap BLEAudio::createGmap() {
 #if BLE_AUDIO_GMAP_SUPPORTED
   if (!_impl || !_impl->active) {
     log_e("createGmap(): call after audio.begin()");
+    return BLEAudioGmap();
+  }
+  if (_impl->started) {
+    log_e("createGmap(): create identity roles before audio.start()");
     return BLEAudioGmap();
   }
   auto gmap = std::make_shared<BLEAudioGmap::Impl>();

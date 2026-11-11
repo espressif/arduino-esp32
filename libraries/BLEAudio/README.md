@@ -124,8 +124,9 @@ BISes (front left + front right). `LEAudio_AuracastSink` and
 `LEAudio_AuracastSource` use it when `STREAMS`/`CHANNELS` is 2.
 
 The data path checks this at stream start: one stream may carry 1–2 channels;
-two streams must both be mono. Any other combination logs `unsupported channel
-layout` and does not start playback/capture.
+two streams must both be mono and describe the same codec/QoS (rate, frame
+duration, octets, frames per SDU, SDU interval). Any other combination logs
+`unsupported channel layout` and does not start playback/capture.
 
 ## Advanced uses (documented, not separate examples)
 

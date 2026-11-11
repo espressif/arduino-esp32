@@ -320,7 +320,10 @@ public:
                                    uint16_t paInterval = 0xFFFF);
   /** @brief Ask the acceptors to stop receiving the broadcast started above. */
   BTStatus stopBroadcastReception();
-  /** @brief Send the Broadcast Code of an encrypted broadcast to the acceptors. */
+  /**
+   * @brief Send the Broadcast Code of an encrypted broadcast to the acceptors.
+   * @param code Non-empty code (up to 16 characters); an empty code is rejected.
+   */
   BTStatus distributeBroadcastCode(const String &code);
 
   // --- Callbacks (Bluetooth host task; keep them short) ---

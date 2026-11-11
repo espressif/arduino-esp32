@@ -74,6 +74,7 @@ struct BLEAudioBroadcastSink::Impl {
   bool autoSync = true;
   bool applied = false;                   ///< Sink registered by BLEAudio::start().
   bool running = false;                   ///< Between start() and stop(): keep (re)scanning.
+  bool scanStarted = false;               ///< This sink started the shared extended scan.
   bool syncPending = false;               ///< PA sync create / PAST receive in flight.
   bool synced = false;                    ///< PA sync established.
   bool streaming = false;                 ///< BIG joined.
@@ -140,6 +141,10 @@ struct BLEAudioBroadcastSink::Impl {
    * server's sink PAC when both roles exist.
    */
   BTStatus apply() {
+    if (streams.empty()) {
+      log_e("BroadcastSink: no streams available (stream pool exhausted?)");
+      return BTStatus::NoMemory;
+    }
     ble_audio_pac_t pac;
     bleAudioPacFromPresets(presets, 1, &pac);
     bleAudioPacsAdd(BLE_AUDIO_DIR_SINK, &pac, static_cast<uint32_t>(location), static_cast<uint16_t>(contexts));
@@ -174,19 +179,26 @@ struct BLEAudioBroadcastSink::Impl {
    */
   BTStatus scan(bool on) {
     BLEScan sc = BLE.getScan();
-    bleAudioBsinkSetScanning(on);
     if (!on) {
+      bleAudioBsinkSetScanning(false);
+      if (!scanStarted) {
+        return BTStatus::OK;
+      }
+      scanStarted = false;
       return sc.stopExtended();
     }
+    bleAudioBsinkSetScanning(true);
     sc.setActiveScan(false);
     sc.setFilterDuplicates(false);
     BTStatus st = sc.startExtended(0);
     if (!st) {
       log_e("BroadcastSink: scan start failed (%s)", st.toString());
-    } else {
-      log_d("BroadcastSink: scanning for broadcast sources");
+      bleAudioBsinkSetScanning(false);
+      return st;
     }
-    return st;
+    scanStarted = true;
+    log_d("BroadcastSink: scanning for broadcast sources");
+    return BTStatus::OK;
   }
 
   /**
@@ -199,6 +211,7 @@ struct BLEAudioBroadcastSink::Impl {
     bleAudioBsinkArm(broadcastId);
     BTStatus st = BLE.getScan().createPeriodicSync(addr, sid, 0, kPaSyncTimeoutMs);
     if (!st) {
+      bleAudioBsinkDisarm();
       log_w("BroadcastSink: PA sync to 0x%06lX failed (%s)", (unsigned long)broadcastId, st.toString());
     } else {
       log_d("BroadcastSink: PA syncing to 0x%06lX (%s sid=%u)", (unsigned long)broadcastId, addr.toString().c_str(), sid);
@@ -217,6 +230,9 @@ struct BLEAudioBroadcastSink::Impl {
     switch (e.type) {
       case BLE_AUDIO_EVT_BSINK_FOUND: {
         const auto *f = static_cast<const ble_audio_bsink_found_t *>(e.data);
+        if (!f) {
+          break;
+        }
         BLEAudioBroadcastSourceInfo info;
         info.address = BTAddress(f->addr, static_cast<BTAddress::Type>(f->addr_type));
         info.sid = f->sid;
@@ -249,6 +265,9 @@ struct BLEAudioBroadcastSink::Impl {
         break;
       case BLE_AUDIO_EVT_BSINK_BASE: {
         const auto *b = static_cast<const ble_audio_bsink_base_t *>(e.data);
+        if (!b) {
+          break;
+        }
         BLEAudioBroadcastBaseInfo base;
         base.bisMask = b->bis_mask;
         base.subgroups = b->subgroups;
@@ -307,6 +326,9 @@ struct BLEAudioBroadcastSink::Impl {
         // receive occupies the controller's single sync-create slot, so it is
         // only armed on request, never speculatively on connect.
         const auto *r = static_cast<const ble_audio_bsink_pa_req_t *>(e.data);
+        if (!r || !r->reply) {
+          break;
+        }
         log_d("evt PA_REQ past=%d bid=0x%06lx", r->past, (unsigned long)r->broadcast_id);
         BTStatus st;
         if (r->past) {
@@ -444,8 +466,14 @@ BTStatus BLEAudioBroadcastSink::start() {
     log_e("BroadcastSink: start() before audio.start()");
     return BTStatus::InvalidState;
   }
-  _impl->running = true;
-  return _impl->synced ? BTStatus::OK : _impl->scan(true);
+  if (_impl->running && (_impl->synced || _impl->scanStarted)) {
+    return BTStatus::OK;
+  }
+  BTStatus st = _impl->synced ? BTStatus::OK : _impl->scan(true);
+  if (st) {
+    _impl->running = true;
+  }
+  return st;
 }
 
 BTStatus BLEAudioBroadcastSink::syncTo(const BLEAudioBroadcastSourceInfo &source) {
@@ -488,6 +516,8 @@ BTStatus BLEAudioBroadcastSink::stop() {
   if (sh != 0xFFFF) {
     (void)sc.terminatePeriodicSync(sh);
   }
+  _impl->synced = false;
+  _impl->syncPending = false;
   return BTStatus::OK;
 }
 
@@ -600,6 +630,11 @@ BLEAudioBroadcastSink BLEAudio::createBroadcastSink() {
   _impl->roleApplies.push_back([weak]() -> BTStatus {
     auto s = weak.lock();
     return s ? s->apply() : BTStatus::OK;
+  });
+  _impl->roleStops.push_back([weak]() {
+    if (auto s = weak.lock()) {
+      (void)BLEAudioBroadcastSink(s).stop();
+    }
   });
   return BLEAudioBroadcastSink(sink);
 #else

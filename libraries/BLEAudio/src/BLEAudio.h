@@ -151,8 +151,11 @@ public:
    * first. After a successful end(), begin() may be called again with a new
    * set of roles. Also run by `BLE.end()`. Does not shut down the host stack.
    *
+   * Called from a Bluetooth stack/audio callback, end() is refused with Busy
+   * because it must join the ISO teardown; defer it to loop().
+   *
    * @return BTStatus::OK (also when not active); Fail/InvalidState while
-   *         streams are still up.
+   *         streams are still up; Busy from a stack callback.
    */
   BTStatus end();
 

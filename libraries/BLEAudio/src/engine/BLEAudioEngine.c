@@ -554,18 +554,18 @@ int bleAudioEngineDeinit(void) {
   if (!s_initialized) {
     return 0;
   }
-  /* PACS registration state lives in the lib across `common_deinit`; drop it
-   * here so the next `begin()` can register a different role set. A failure
-   * only affects that next registration (which reports `-EALREADY`), so it
-   * must not block releasing a host with no live ISO. */
-  int pacs = bleAudioPacsRelease();
-  if (pacs != 0) {
-    log_e("PACS release failed: %d", pacs);
-  }
+  /* Deinit first: it can refuse while an ISO channel is still connected. Do
+   * not destroy PACS staging before that check succeeds, otherwise a refused
+   * teardown leaves the live session without its PACS records. PACS state
+   * lives in the lib across `common_deinit`, so drop it after success. */
   esp_err_t err = esp_ble_audio_common_deinit(NULL);
   if (err != ESP_OK) {
     log_e("esp_ble_audio_common_deinit failed: %d (stop every stream first)", err);
     return (int)err;
+  }
+  int pacs = bleAudioPacsRelease();
+  if (pacs != 0) {
+    log_e("PACS release failed: %d", pacs);
   }
 #if BLE_BLUEDROID
   if (s_encTimer != NULL) {

@@ -76,6 +76,7 @@ struct BLEAudioBroadcastSource::Impl {
   bool publicBroadcast = true;
   bool created = false;                   ///< Engine source exists.
   bool dirty = true;                      ///< A baked-in setting changed; re-create at start().
+  bool starting = false;                  ///< start() called, BSRC_STARTED not received yet.
   bool streaming = false;                 ///< BIG up (BSRC_STARTED .. BSRC_STOPPED).
   int16_t advInstance = -1;               ///< Advertising instance in use, -1 when stopped.
   BLESync stopSync{"bsrc-stop"};
@@ -133,7 +134,10 @@ struct BLEAudioBroadcastSource::Impl {
     }
     ble_audio_codec_t c;
     ble_audio_qos_t q;
-    bleAudioPresetGet(static_cast<uint8_t>(preset), true, &c, &q);
+    if (!bleAudioPresetGet(static_cast<uint8_t>(preset), true, &c, &q)) {
+      log_e("BroadcastSource: invalid preset %u", (unsigned)preset);
+      return ESP_ERR_INVALID_ARG;
+    }
     if (customQos) {
       q = bleAudioQosToEngine(qos);
     } else {
@@ -160,9 +164,11 @@ struct BLEAudioBroadcastSource::Impl {
 
   /** @brief PBP features: High Quality for 48 kHz presets, Standard otherwise, plus Encryption. */
   uint8_t pbaFeatures() const {
-    ble_audio_codec_t c;
-    bleAudioPresetGet(static_cast<uint8_t>(preset), true, &c, nullptr);
-    uint8_t f = (c.sample_rate_hz == 48000) ? BLEAudioPublicBroadcast::HighQuality : BLEAudioPublicBroadcast::StandardQuality;
+    ble_audio_codec_t c = {};
+    uint8_t f = BLEAudioPublicBroadcast::StandardQuality;
+    if (bleAudioPresetGet(static_cast<uint8_t>(preset), true, &c, nullptr) && c.sample_rate_hz == 48000) {
+      f = BLEAudioPublicBroadcast::HighQuality;
+    }
     if (code.length()) {
       f |= BLEAudioPublicBroadcast::Encryption;
     }
@@ -242,6 +248,8 @@ struct BLEAudioBroadcastSource::Impl {
     per.addRaw(field, 2 + baseLen);
     if (!(st = adv.setPeriodicAdvData(inst, per)) || !(st = adv.startExtended(inst, 0, 0)) || !(st = adv.startPeriodicAdv(inst))) {
       log_e("BroadcastSource: advertising start failed on instance %u (%s)", inst, st.toString());
+      (void)adv.stopPeriodicAdv(inst);
+      (void)adv.stopExtended(inst);
       return st;
     }
     return BTStatus::OK;
@@ -250,12 +258,14 @@ struct BLEAudioBroadcastSource::Impl {
   /** @brief Event handler for the BROADCAST_SOURCE group (host task). */
   void handle(const ble_audio_evt_t &e) {
     if (e.type == BLE_AUDIO_EVT_BSRC_STARTED) {
+      starting = false;
       streaming = true;
       log_i("BroadcastSource: BIG up, %u BIS streaming (id 0x%06lX)", (unsigned)streams.size(), (unsigned long)broadcastId);
       if (startedCb) {
         startedCb();
       }
     } else if (e.type == BLE_AUDIO_EVT_BSRC_STOPPED) {
+      starting = false;
       streaming = false;
       log_i("BroadcastSource: BIG terminated (reason 0x%02x)", (unsigned)(uint8_t)e.err);
       stopSync.give(BTStatus::OK);
@@ -277,9 +287,13 @@ BLEAudioBroadcastSource::operator bool() const {
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setPreset(BLEAudioCodecPreset preset) {
-  if (_impl) {
+  ble_audio_codec_t c;
+  ble_audio_qos_t q;
+  if (_impl && bleAudioPresetGet(static_cast<uint8_t>(preset), true, &c, &q)) {
     _impl->preset = preset;
     _impl->dirty = true;
+  } else if (_impl) {
+    log_e("BroadcastSource: invalid preset %u", (unsigned)preset);
   }
   return *this;
 }
@@ -294,11 +308,18 @@ BLEAudioBroadcastSource &BLEAudioBroadcastSource::setQos(const BLEAudioQos &qos)
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setChannels(uint8_t channels) {
-  if (_impl && !_impl->streaming) {
+  if (_impl && !_impl->streaming && !_impl->starting) {
+    if (_impl->created) {
+      // A stopped source still owns its stream slots; delete it before the
+      // vector is resized so the engine never points at freed handles.
+      bleAudioBsrcDelete();
+      _impl->created = false;
+      _impl->dirty = true;
+    }
     _impl->channels = channels < 1 ? 1 : (channels > 2 ? 2 : channels);
     _impl->resizeStreams();
   } else if (_impl) {
-    log_w("BroadcastSource: setChannels() ignored while streaming");
+    log_w("BroadcastSource: setChannels() ignored while streaming or starting");
   }
   return *this;
 }
@@ -362,8 +383,8 @@ BTStatus BLEAudioBroadcastSource::start(uint8_t advInstance) {
     log_e("BroadcastSource: start() before audio.start()");
     return BTStatus::InvalidState;
   }
-  if (_impl->streaming) {
-    log_w("BroadcastSource: start() while already streaming");
+  if (_impl->streaming || _impl->starting) {
+    log_w("BroadcastSource: start() while already starting/streaming");
     return BTStatus::InvalidState;
   }
   if (_impl->streams.empty()) {
@@ -382,9 +403,15 @@ BTStatus BLEAudioBroadcastSource::start(uint8_t advInstance) {
     return st;
   }
   _impl->advInstance = advInstance;
+  _impl->starting = true;
   int err = bleAudioBsrcStart(advInstance);
   if (err != 0) {
     log_e("BroadcastSource: BIG creation failed on instance %u (err=%d)", advInstance, err);
+    _impl->starting = false;
+    BLEAdvertising adv = BLE.getAdvertising();
+    (void)adv.stopPeriodicAdv(advInstance);
+    (void)adv.stopExtended(advInstance);
+    _impl->advInstance = -1;
     return bleAudioStatus(err);
   }
   log_i("BroadcastSource: \"%s\" starting on adv instance %u (id 0x%06lX)", advName.c_str(), advInstance, (unsigned long)_impl->broadcastId);
@@ -393,11 +420,18 @@ BTStatus BLEAudioBroadcastSource::start(uint8_t advInstance) {
 
 /** Advertising is released only after the BIG has terminated. */
 BTStatus BLEAudioBroadcastSource::stop() {
-  if (!_impl || _impl->advInstance < 0) {
+  if (!_impl) {
     return BTStatus::InvalidState;
   }
+  if (_impl->advInstance < 0) {
+    // Already stopped is a successful stop; a live BIG without an instance is
+    // not recoverable here.
+    return _impl->streaming ? BTStatus::InvalidState : BTStatus::OK;
+  }
   int err = bleAudioBsrcStop();
-  if (err != 0) {
+  // InvalidState means the engine source is already gone (for example after a
+  // spontaneous BIG stop); continue with the advertising cleanup.
+  if (err != 0 && err != ESP_ERR_INVALID_STATE && err != -EALREADY) {
     log_w("BroadcastSource: BIG terminate failed (err=%d)", err);
     return bleAudioStatus(err);
   }
@@ -422,12 +456,13 @@ BTStatus BLEAudioBroadcastSource::updateContext(BLEAudioContext context) {
     log_e("BroadcastSource: updateContext() before start()");
     return BTStatus::InvalidState;
   }
-  _impl->context = context;
   int err = bleAudioBsrcUpdateContext(static_cast<uint16_t>(context));
   if (err != 0) {
     log_e("BroadcastSource: metadata update failed (err=%d)", err);
+    return bleAudioStatus(err);
   }
-  return bleAudioStatus(err);
+  _impl->context = context;
+  return BTStatus::OK;
 }
 
 uint32_t BLEAudioBroadcastSource::getBroadcastId() const {
@@ -489,6 +524,11 @@ BLEAudioBroadcastSource BLEAudio::createBroadcastSource() {
   _impl->setHandler(BLE_AUDIO_GRP_BROADCAST_SOURCE, [weak](const ble_audio_evt_t &e) {
     if (auto s = weak.lock()) {
       s->handle(e);
+    }
+  });
+  _impl->roleStops.push_back([weak]() {
+    if (auto s = weak.lock()) {
+      (void)BLEAudioBroadcastSource(s).stop();
     }
   });
   return BLEAudioBroadcastSource(src);

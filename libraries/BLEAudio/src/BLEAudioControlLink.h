@@ -53,7 +53,14 @@ struct BLEAudioControlLink {
     }
     conn = c;
     pending = !audio.isGattReady(c);
-    return pending ? BTStatus::OK : bleAudioStatus(fn(c));
+    if (pending) {
+      return BTStatus::OK;
+    }
+    BTStatus st = bleAudioStatus(fn(c));
+    if (!st) {
+      conn = BLE_AUDIO_CONN_NONE;
+    }
+    return st;
   }
 
   /**
@@ -74,7 +81,11 @@ struct BLEAudioControlLink {
       return 0;
     }
     pending = false;
-    return e.err ? e.err : fn(conn);
+    int err = e.err ? e.err : fn(conn);
+    if (err) {
+      conn = BLE_AUDIO_CONN_NONE;
+    }
+    return err;
   }
 };
 

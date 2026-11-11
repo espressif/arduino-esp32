@@ -73,6 +73,7 @@ struct BLEAudioUnicastClient::Impl {
   BLEAudioContext context = BLEAudioContext::Media;
   uint8_t sinkPerPeer = 1;                ///< Tx streams requested per peer.
   uint8_t sourcePerPeer = 0;              ///< Rx streams requested per peer.
+  bool starting = false;                  ///< bleAudioUcStart() call in flight.
   bool running = false;                   ///< bleAudioUcStart() accepted, not stopped yet.
   bool streaming = false;                 ///< UC_STARTED received.
   std::vector<Peer> peers;
@@ -132,7 +133,10 @@ struct BLEAudioUnicastClient::Impl {
     }
     ble_audio_codec_t codec;
     ble_audio_qos_t q;
-    bleAudioPresetGet(static_cast<uint8_t>(preset), false, &codec, &q);
+    if (!bleAudioPresetGet(static_cast<uint8_t>(preset), false, &codec, &q)) {
+      log_e("UnicastClient: invalid preset %u", (unsigned)preset);
+      return BTStatus::InvalidParam;
+    }
     if (customQos) {
       q = bleAudioQosToEngine(qos);
     } else {
@@ -185,12 +189,19 @@ struct BLEAudioUnicastClient::Impl {
     for (size_t i = 0; i < reqs.size(); i++) {
       reqs[i].slot = BLEAudioStreamAccess::slot(streams[i]);
     }
+    starting = true;
     int err = bleAudioUcStart(reqs.data(), (uint8_t)reqs.size());
     if (err != 0) {
+      starting = false;
       log_e("UnicastClient: stream setup failed to start (%u streams, err=%d)", (unsigned)reqs.size(), err);
       return bleAudioStatus(err);
     }
-    running = true;
+    // The engine can emit UC_STOPPED synchronously when a request fails. Only
+    // mark the session running if that terminal event has not arrived.
+    if (starting) {
+      running = true;
+    }
+    starting = false;
     log_d("UnicastClient: setting up %u streams", (unsigned)reqs.size());
     return BTStatus::OK;
   }
@@ -264,6 +275,7 @@ struct BLEAudioUnicastClient::Impl {
         }
         break;
       case BLE_AUDIO_EVT_UC_STOPPED:
+        starting = false;
         running = false;
         streaming = false;
         log_i("UnicastClient: streams released");
@@ -294,8 +306,12 @@ BLEAudioUnicastClient::operator bool() const {
 }
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::setPreset(BLEAudioCodecPreset preset) {
-  if (_impl) {
+  ble_audio_codec_t c;
+  ble_audio_qos_t q;
+  if (_impl && bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
     _impl->preset = preset;
+  } else if (_impl) {
+    log_e("UnicastClient: invalid preset %u", (unsigned)preset);
   }
   return *this;
 }
@@ -367,8 +383,11 @@ BTStatus BLEAudioUnicastClient::connectAndStart(uint16_t connHandle) {
 }
 
 BTStatus BLEAudioUnicastClient::stop() {
-  if (!_impl || !_impl->running) {
+  if (!_impl) {
     return BTStatus::InvalidState;
+  }
+  if (!_impl->running && !_impl->starting) {
+    return BTStatus::OK;
   }
   int err = bleAudioUcStop();
   if (err != 0) {

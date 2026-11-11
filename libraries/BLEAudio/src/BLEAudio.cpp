@@ -184,14 +184,18 @@ BTStatus BLEAudio::start() {
   if (_impl->started) {
     return BTStatus::OK;
   }
-  for (auto &apply : _impl->roleApplies) {
+  // Consume successful applies from the front. If role N fails, roles
+  // 0..N-1 stay registered and a later start() resumes at N instead of
+  // re-running non-idempotent registrations.
+  while (!_impl->roleApplies.empty()) {
+    auto &apply = _impl->roleApplies.front();
     BTStatus st = apply ? apply() : BTStatus::OK;
     if (!st) {
       log_e("Audio: role registration failed (%s)", st.toString());
       return st;
     }
+    _impl->roleApplies.erase(_impl->roleApplies.begin());
   }
-  _impl->roleApplies.clear();
   int err = bleAudioPacsCommit();
   if (err != 0) {
     log_e("Audio: PACS registration failed (err=%d)", err);
@@ -218,6 +222,18 @@ BTStatus BLEAudio::end() {
   if (!_impl || !_impl->active) {
     return BTStatus::OK;
   }
+  if (bleInStackCallbackTask()) {
+    log_e("Audio: end() cannot run from a stack callback; defer it to loop()");
+    return BTStatus::Busy;
+  }
+  // Release role-owned advertising/scans while the host is still up. The
+  // engine deinit below only releases profiles and ISO.
+  for (auto &stop : _impl->roleStops) {
+    if (stop) {
+      stop();
+    }
+  }
+  _impl->roleStops.clear();
   bleAudioBapStopLeftover();
   if (!waitBapIdle()) {
     return BTStatus::Fail;
@@ -227,15 +243,18 @@ BTStatus BLEAudio::end() {
     log_e("Audio: end() refused while streams are active; stop them first (err=%d)", err);
     return bleAudioStatus(err);
   }
-  for (auto &h : _impl->handlers) {
-    h = nullptr;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    for (auto &h : _impl->handlers) {
+      h = nullptr;
+    }
+    for (uint16_t &c : _impl->gattReady) {
+      c = BLE_AUDIO_CONN_NONE;
+    }
+    _impl->clients.clear();
   }
   _impl->roleApplies.clear();
   _impl->roles.clear();
-  _impl->clients.clear();
-  for (uint16_t &c : _impl->gattReady) {
-    c = BLE_AUDIO_CONN_NONE;
-  }
   _impl->active = false;
   _impl->started = false;
   log_i("Audio: engine released");
@@ -276,13 +295,14 @@ BTStatus BLEAudio::connect(const BTAddress &address) {
     }
     return bleAudioStatus(err);
   }
-  _impl->clients.erase(std::remove_if(_impl->clients.begin(), _impl->clients.end(), [](const std::shared_ptr<BLEClient> &client) {
-                         return !client || !client->isConnected();
-                       }),
-                       _impl->clients.end());
   auto client = std::make_shared<BLEClient>(BLE.createClient());
   BTStatus st = client->connectAsync(address);
   if (st) {
+    BLELockGuard lock(_impl->mtx.get());
+    _impl->clients.erase(std::remove_if(_impl->clients.begin(), _impl->clients.end(), [](const std::shared_ptr<BLEClient> &client) {
+                           return !client || !client->isConnected();
+                         }),
+                         _impl->clients.end());
     _impl->clients.push_back(client);
   } else {
     log_e("Audio: connect to %s failed (%s)", address.toString().c_str(), st.toString());
@@ -307,6 +327,7 @@ BTStatus BLEAudio::disconnect(uint16_t connHandle) {
 
 BLEAudio &BLEAudio::onLinkReady(LinkCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->linkReadyCb = std::move(cb);
   }
   return *this;
@@ -314,6 +335,7 @@ BLEAudio &BLEAudio::onLinkReady(LinkCallback cb) {
 
 BLEAudio &BLEAudio::onDisconnected(LinkCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->disconnectedCb = std::move(cb);
   }
   return *this;
@@ -321,6 +343,7 @@ BLEAudio &BLEAudio::onDisconnected(LinkCallback cb) {
 
 void BLEAudio::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->linkReadyCb = nullptr;
     _impl->disconnectedCb = nullptr;
   }
