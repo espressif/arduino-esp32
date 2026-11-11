@@ -23,10 +23,8 @@
 #include <BLE.h>
 #include <BLEAudio.h>
 
-// ---- I2S input pinout (edit for your board) ----
-#define MIC_BCLK 5  // bit clock   (BCLK / SCK)
-#define MIC_WS   6  // word select (LRCLK / WS)
-#define MIC_DIN  4  // data in     (SD on the microphone/ADC)
+// ESP32-S31 Function CoreBoard 1: onboard microphone -> ES8311 ADC.
+// The pin macros come from the board variant.
 
 static const char *BROADCAST_NAME = "ESP32 Auracast";
 static const char *BROADCAST_CODE = "";  // up to 16 characters; empty = unencrypted
@@ -80,7 +78,7 @@ void setup() {
 
   // The recorder opens the input at the preset's sample rate once the BISes
   // stream; attach both channels (or only stream 0 for mono).
-  st = recorder.begin(MIC_BCLK, MIC_WS, MIC_DIN);
+  st = recorder.begin(I2S_SCLK, I2S_LRCK, I2S_DIN, I2S_MCLK);
   if (!st) {
     halt("recorder.begin", st);
   }

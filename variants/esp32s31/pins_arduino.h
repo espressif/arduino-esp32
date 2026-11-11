@@ -87,14 +87,20 @@ static const uint8_t T13 = 19;
 //#define BOARD_SDMMC_POWER_PIN      39   //Korvo board power pin
 //#define BOARD_SDMMC_POWER_ON_LEVEL LOW  //Korvo board power level
 
-//I2S (ES8311)
-#define SCL1     50
-#define SDA1     51
-#define I2S_MCLK 52
-#define I2S_SCLK 53
-#define I2S_DOUT 54
-#define I2S_LRCK 55
-#define I2S_DIN  56
-#define PA_CTRL  57
+// Audio codec: ES8311 on I2C, I2S and PA control
+#define BOARD_HAS_ES8311
+#define ES8311_I2C_ADDR 0x18
+#define SCL1           50
+#define SDA1           51
+#define I2S_MCLK       52
+#define I2S_SCLK       53
+// I2S_DOUT is ESP -> codec DSDIN (playback); I2S_DIN is codec ASDOUT -> ESP (capture).
+#define I2S_DOUT       56
+#define I2S_LRCK       55
+#define I2S_DIN        54
+#define PA_CTRL        57
+#define ES8311_I2C_SDA SDA1
+#define ES8311_I2C_SCL SCL1
+#define ES8311_PA_CTRL PA_CTRL
 
 #endif /* Pins_Arduino_h */

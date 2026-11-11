@@ -40,9 +40,14 @@ without this library; include `<BLEAudio.h>` before using the returned handle.
 
 The examples are grouped by real, ESP32-sized products instead of by API role.
 Pick the device you are building and use the matching counterpart for the
-other end of the link. All of them use I2S for audio: the speaker examples
-drive an I2S DAC, and the microphone examples capture from an I2S mic (the
-pin numbers at the top of each sketch are the only board-specific part).
+other end of the link. All of them use I2S for audio and are written for the
+**ESP32-S31 Function CoreBoard 1**: the speaker examples drive its ES8311 DAC
+and NS4150B amplifier, the microphone examples capture from its onboard
+microphone through the ES8311 ADC, and the pin macros (`I2S_MCLK`, `I2S_SCLK`,
+`I2S_LRCK`, `I2S_DOUT`, `I2S_DIN`, `PA_CTRL`) come from the board variant.
+BLEAudio owns the I2S data path; the ES8311 register setup over I2C is
+board-support code. The variant exposes `ES8311_I2C_ADDR`, `SDA1`, `SCL1`,
+`I2S_*` and `PA_CTRL` for that layer.
 
 | Example | Device | What it shows |
 | --- | --- | --- |

@@ -24,10 +24,8 @@
 #include <BLE.h>
 #include <BLEAudio.h>
 
-// ---- I2S DAC pinout (edit for your board) ----
-#define DAC_BCLK 5  // bit clock   (BCLK / SCK)
-#define DAC_WS   6  // word select (LRCLK / WS)
-#define DAC_DOUT 7  // data out    (DIN on the DAC)
+// ESP32-S31 Function CoreBoard 1: ES8311 codec -> NS4150B speaker amplifier.
+// The pin macros come from the board variant.
 
 static const char *DEVICE_NAME = "LE Audio Auracast Sink";
 static const char *TARGET_NAME = "ESP32 Auracast";  // empty = first source found
@@ -87,7 +85,10 @@ void setup() {
     Serial.printf("[BIG] left (reason 0x%02X)\n", reason);
   });
 
-  st = player.begin(DAC_BCLK, DAC_WS, DAC_DOUT);
+  pinMode(PA_CTRL, OUTPUT);
+  digitalWrite(PA_CTRL, HIGH);
+
+  st = player.begin(I2S_SCLK, I2S_LRCK, I2S_DOUT, I2S_MCLK);
   if (!st) {
     halt("player.begin", st);
   }

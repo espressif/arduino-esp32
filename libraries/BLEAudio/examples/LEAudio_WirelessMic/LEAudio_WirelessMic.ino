@@ -21,10 +21,8 @@
 #include <BLE.h>
 #include <BLEAudio.h>
 
-// ---- I2S microphone pinout (edit for your board) ----
-#define MIC_BCLK 5  // bit clock   (BCLK / SCK)
-#define MIC_WS   6  // word select (LRCLK / WS)
-#define MIC_DIN  4  // data in     (SD on the microphone)
+// ESP32-S31 Function CoreBoard 1: onboard microphone -> ES8311 ADC.
+// The pin macros come from the board variant.
 
 static const char *TARGET_NAME = "LE Audio Speaker";
 static const BLEAudioCodecPreset PRESET = BLEAudioCodecPreset::LC3_16_2_1;
@@ -119,7 +117,7 @@ void setup() {
     .onError(onSetupError);
 
   // Open the microphone now; the recorder follows the stream state.
-  st = recorder.begin(MIC_BCLK, MIC_WS, MIC_DIN);
+  st = recorder.begin(I2S_SCLK, I2S_LRCK, I2S_DIN, I2S_MCLK);
   if (!st) {
     halt("recorder.begin", st);
   }
