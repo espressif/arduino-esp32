@@ -761,9 +761,7 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
         if (adc_result[j].channel == chan_num) {
 #if CONFIG_IDF_TARGET_ESP32S31
           int mv = 0;
-          esp_err_t cali_err = halAdcRawToVoltage(
-            adc_handle[ADC_UNIT_1].adc_cali_handle, (adc_channel_t)adc_result[j].channel, (int)data, &mv
-          );
+          esp_err_t cali_err = halAdcRawToVoltage(adc_handle[ADC_UNIT_1].adc_cali_handle, (adc_channel_t)adc_result[j].channel, (int)data, &mv);
           read_raw[j] = data;
           read_count[j] += 1;
           if (cali_err == ESP_OK) {
