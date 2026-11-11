@@ -119,11 +119,7 @@ void setup() {
     .onError(onSetupError);
 
   // Open the microphone now; the recorder follows the stream state.
-  BLEAudioI2sConfig mic;
-  mic.bclk = MIC_BCLK;
-  mic.ws = MIC_WS;
-  mic.din = MIC_DIN;
-  st = recorder.begin(mic);
+  st = recorder.begin(MIC_BCLK, MIC_WS, MIC_DIN);
   if (!st) {
     halt("recorder.begin", st);
   }

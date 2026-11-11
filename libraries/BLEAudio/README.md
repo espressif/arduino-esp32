@@ -64,6 +64,40 @@ The examples require an LE Audio-capable target (ESP32-S31) and the LC3 codec
 `BLE_APPEARANCE_AUDIO_SOURCE_MICROPHONE`, so a sketch does not hard-code the
 Assigned Numbers value.
 
+## Stream topologies and `attach()`
+
+`BLEAudioPlayer` and `BLEAudioRecorder` bind to `BLEAudioStream` handles, and
+BAP can deliver one stereo program in two different shapes. Pick the `attach`
+form that matches the role that created the streams:
+
+**One stream carrying one or two channels**
+
+```cpp
+// One CIS/BIS, either mono or interleaved stereo.
+player.attach(stream);
+recorder.attach(stream);
+```
+
+Use this for a single ASE or a single BIS. `LEAudio_UnicastSpeaker` uses it
+because `configureMediaSink()` publishes one sink ASE; `LEAudio_WirelessMic`
+uses it because a microphone sends one mono stream.
+
+**Two streams, each carrying one mono channel**
+
+```cpp
+// Left and right travel on separate CISes/BISes.
+player.attach(left, right);
+recorder.attach(left, right);
+```
+
+Use this for two mono ASEs/BISes, such as a stereo Auracast layout with two
+BISes (front left + front right). `LEAudio_AuracastSink` and
+`LEAudio_AuracastSource` use it when `STREAMS`/`CHANNELS` is 2.
+
+The data path checks this at stream start: one stream may carry 1–2 channels;
+two streams must both be mono. Any other combination logs `unsupported channel
+layout` and does not start playback/capture.
+
 ## Advanced uses (documented, not separate examples)
 
 The low-level roles remain public; the examples above combine them for common

@@ -162,7 +162,7 @@ All paths are relative to `libraries/BLEAudio/src/`.
 | `BLEAudioStream.{h,cpp}`, `BLEAudioStreamInternal.h` | Stream handle, engine stream callbacks, public↔engine value conversions, `bleAudioStatus()` error mapping. |
 | `BLEAudioTypes.h` | Value types: codec config, QoS, presets, locations, contexts. |
 | `BLEAudioControlLink.h` | Internal: the peer a control client role drives; defers discovery until the link is GATT-discovered. |
-| `BLEAudioPlayer`, `BLEAudioRecorder`, `BLEAudioPipeline`, `BLEAudioI2s.h` | LC3 data plane. |
+| `BLEAudioPlayer`, `BLEAudioRecorder`, `BLEAudioPipeline`, `BLEAudioPcm.h` | LC3 data plane; `BLEAudioPcm.h` holds the optional PCM sink/source callbacks. |
 | `engine/BLEAudioEngine.{h,c}` | Engine lifecycle, event bridge, GAP/GATT plumbing, link bring-up, BAP presets. |
 | `engine/BLEAudioEngineBap.{h,c}` | Stream slot pool, PACS, unicast server/client, broadcast source/sink, scan delegator. |
 | `engine/BLEAudioEngineAssistant.{h,c}` | BAP Broadcast Assistant (BASS client), PAST. |

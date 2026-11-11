@@ -87,11 +87,7 @@ void setup() {
     Serial.printf("[BIG] left (reason 0x%02X)\n", reason);
   });
 
-  BLEAudioI2sConfig dac;
-  dac.bclk = DAC_BCLK;
-  dac.ws = DAC_WS;
-  dac.dout = DAC_DOUT;
-  st = player.begin(dac);
+  st = player.begin(DAC_BCLK, DAC_WS, DAC_DOUT);
   if (!st) {
     halt("player.begin", st);
   }

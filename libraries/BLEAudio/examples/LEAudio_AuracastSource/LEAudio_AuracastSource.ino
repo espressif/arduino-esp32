@@ -80,11 +80,7 @@ void setup() {
 
   // The recorder opens the input at the preset's sample rate once the BISes
   // stream; attach both channels (or only stream 0 for mono).
-  BLEAudioI2sConfig input;
-  input.bclk = MIC_BCLK;
-  input.ws = MIC_WS;
-  input.din = MIC_DIN;
-  st = recorder.begin(input);
+  st = recorder.begin(MIC_BCLK, MIC_WS, MIC_DIN);
   if (!st) {
     halt("recorder.begin", st);
   }
