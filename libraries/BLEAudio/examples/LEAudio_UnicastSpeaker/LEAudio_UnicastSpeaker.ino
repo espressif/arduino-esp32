@@ -14,8 +14,9 @@
  * for a unicast client; it never starts a stream itself.
  *
  * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
- * (esp_audio_codec). Wire an I2S DAC (e.g. PCM5102 or MAX98357A) to the pins
- * below.
+ * (esp_audio_codec). On the ESP32-S31 Function CoreBoard 1 the onboard ES8311
+ * DAC feeds the NS4150B speaker amplifier; the board variant supplies the I2S
+ * and PA pins.
  *
  * Licensed under the Apache License, Version 2.0
  */
@@ -79,12 +80,14 @@ void setup() {
     Serial.printf("Source disconnected (link %u)\n", connHandle);
   });
 
-  // CAP ties the profiles into one audio device; this speaker is a set of one.
+  // CAP ties the profiles into one audio device. A standalone speaker is a
+  // coordinated set of one.
   capAcceptor = audio.createCapAcceptor();
   if (!capAcceptor) {
     halt("createCapAcceptor", BTStatus::NotSupported);
   }
-  capAcceptor.setSetSize(1).setRank(1);
+  capAcceptor.setSetSize(1);
+  capAcceptor.setRank(1);
 
   // One stereo-capable sink ASE for the incoming audio.
   unicastServer = audio.createUnicastServer();
@@ -105,22 +108,25 @@ void setup() {
 
   // The source can change volume over VCP.
   volumeRenderer = audio.createVolumeRenderer();
-  volumeRenderer.setInitialVolume(160).onStateChanged([](uint8_t volume, bool muted) {
+  volumeRenderer.setInitialVolume(160);
+  volumeRenderer.onStateChanged([](uint8_t volume, bool muted) {
     Serial.printf("[VCP] volume=%u%s\n", volume, muted ? " (muted)" : "");
   });
 
-  pinMode(PA_CTRL, OUTPUT);
-  digitalWrite(PA_CTRL, HIGH);
-
-  st = player.begin(I2S_SCLK, I2S_LRCK, I2S_DOUT, I2S_MCLK);
-  if (!st) {
-    halt("player.begin", st);
-  }
-
-  // One coordinated commit publishes CAS/CSIS, PACS/ASCS and VCS.
+  // audio.start() commits the roles and publishes their GATT services. It
+  // does not open I2S or start the LC3 task; those happen next.
   st = audio.start();
   if (!st) {
     halt("audio.start", st);
+  }
+
+  // The ES8311 DAC is fed by the board's I2S pins; PA_CTRL enables the
+  // NS4150B speaker amplifier.
+  pinMode(PA_CTRL, OUTPUT);
+  digitalWrite(PA_CTRL, HIGH);
+  st = player.begin(I2S_SCLK, I2S_LRCK, I2S_DOUT, I2S_MCLK);
+  if (!st) {
+    halt("player.begin", st);
   }
 
   BLEAdvertising adv = BLE.getAdvertising();

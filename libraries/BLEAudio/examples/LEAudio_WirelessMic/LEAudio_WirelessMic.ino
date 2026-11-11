@@ -12,7 +12,8 @@
  * unicast server and the microphone is the client.
  *
  * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
- * (esp_audio_codec). Wire an I2S microphone (e.g. INMP441) to the pins below.
+ * (esp_audio_codec). On the ESP32-S31 Function CoreBoard 1 the onboard
+ * microphone feeds the ES8311 ADC; the board variant supplies the I2S pins.
  *
  * Licensed under the Apache License, Version 2.0
  */
@@ -25,7 +26,6 @@
 // The pin macros come from the board variant.
 
 static const char *TARGET_NAME = "LE Audio Speaker";
-static const BLEAudioCodecPreset PRESET = BLEAudioCodecPreset::LC3_16_2_1;
 
 BLEAudio audio;
 BLEAudioUnicastClient audioClient;
@@ -107,24 +107,24 @@ void setup() {
   if (!audioClient) {
     halt("createUnicastClient", BTStatus::NotSupported);
   }
-  audioClient.setPreset(PRESET)
-    .setContext(BLEAudioContext::Conversational)
-    .setSinkStreams(1)
-    .setSourceStreams(0)
-    .onDiscovered(onPeerDiscovered)
-    .onStarted(onStreamsStarted)
-    .onStopped(onStreamsStopped)
-    .onError(onSetupError);
+  // The defaults fit a wireless microphone: one sink stream (audio sent to
+  // the speaker), no source stream, LC3 16 kHz and the Media context.
+  // Register callbacks separately so each role is easy to read.
+  audioClient.onDiscovered(onPeerDiscovered);
+  audioClient.onStarted(onStreamsStarted);
+  audioClient.onStopped(onStreamsStopped);
+  audioClient.onError(onSetupError);
 
-  // Open the microphone now; the recorder follows the stream state.
-  st = recorder.begin(I2S_SCLK, I2S_LRCK, I2S_DIN, I2S_MCLK);
-  if (!st) {
-    halt("recorder.begin", st);
-  }
-
+  // audio.start() registers the client role. The I2S input and LC3 recorder
+  // are opened afterwards, so the order is the same as in the player examples.
   st = audio.start();
   if (!st) {
     halt("audio.start", st);
+  }
+
+  st = recorder.begin(I2S_SCLK, I2S_LRCK, I2S_DIN, I2S_MCLK);
+  if (!st) {
+    halt("recorder.begin", st);
   }
 
   BLEScan scan = BLE.getScan();

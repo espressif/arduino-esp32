@@ -14,8 +14,9 @@
  * to the same code the source uses.
  *
  * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
- * (esp_audio_codec). Wire an I2S DAC (e.g. PCM5102 or MAX98357A) to the pins
- * below. Pair it with LEAudio_AuracastSource or any Auracast transmitter.
+ * (esp_audio_codec). On the ESP32-S31 Function CoreBoard 1 the onboard ES8311
+ * DAC feeds the NS4150B speaker amplifier; the board variant supplies the I2S
+ * and PA pins.
  *
  * Licensed under the Apache License, Version 2.0
  */
@@ -85,9 +86,17 @@ void setup() {
     Serial.printf("[BIG] left (reason 0x%02X)\n", reason);
   });
 
+  // audio.start() commits the roles and publishes PACS/BASS. I2S and the
+  // LC3 task are started after it; the broadcast is joined later by sink.start().
+  st = audio.start();
+  if (!st) {
+    halt("audio.start", st);
+  }
+
+  // The ES8311 DAC is fed by the board's I2S pins; PA_CTRL enables the
+  // NS4150B speaker amplifier.
   pinMode(PA_CTRL, OUTPUT);
   digitalWrite(PA_CTRL, HIGH);
-
   st = player.begin(I2S_SCLK, I2S_LRCK, I2S_DOUT, I2S_MCLK);
   if (!st) {
     halt("player.begin", st);
@@ -101,11 +110,6 @@ void setup() {
   st = player.startPlayback();
   if (!st) {
     halt("player.startPlayback", st);
-  }
-
-  st = audio.start();
-  if (!st) {
-    halt("audio.start", st);
   }
 
   // Advertise connectably so a phone app can reach BASS and change the source.

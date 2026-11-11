@@ -13,8 +13,8 @@
  * broadcast use CHANNELS = 1 and attach only source.stream(0).
  *
  * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
- * (esp_audio_codec). Wire an I2S microphone pair or an I2S ADC line input to
- * the pins below. Listen with LEAudio_AuracastSink or any Auracast receiver.
+ * (esp_audio_codec). On the ESP32-S31 Function CoreBoard 1 the onboard
+ * microphone feeds the ES8311 ADC; the board variant supplies the I2S pins.
  *
  * Licensed under the Apache License, Version 2.0
  */

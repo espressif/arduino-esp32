@@ -69,6 +69,30 @@ The examples require an LE Audio-capable target (ESP32-S31) and the LC3 codec
 `BLE_APPEARANCE_AUDIO_SOURCE_MICROPHONE`, so a sketch does not hard-code the
 Assigned Numbers value.
 
+## Lifecycle: `audio.start()` vs `startPlayback()` / `startCapture()`
+
+LE Audio has two separate starts, and the examples always use this order:
+
+1. `BLE.begin()` — bring up the Bluetooth host.
+2. `audio.begin()` — initialize the LE Audio engine.
+3. Create and configure the roles (`createCapAcceptor()`,
+   `createUnicastServer()`, `createBroadcastSink()`, …).
+4. `audio.start()` — register the roles and commit their GATT services. This
+   does **not** open I2S or start an LC3 task.
+5. Configure the PCM side **after** `audio.start()`:
+   - `player.begin(...)` then `player.attach(stream)` and
+     `player.startPlayback()`;
+   - `recorder.begin(...)` then `recorder.attach(stream)` and
+     `recorder.startCapture()`.
+6. Start the transport: advertising, `source.start()`, `sink.start()`, or
+   connect to a peer. For unicast, the stream is configured later by the
+   remote client, so `attach()`/`startPlayback()` also happen in the
+   `onConfigured()` callback.
+
+`audio.start()` is the controller/GATT commit; `startPlayback()` and
+`startCapture()` start the local LC3 codec tasks. They are deliberately
+separate because the codec task is not needed until a stream exists.
+
 ## Stream topologies and `attach()`
 
 `BLEAudioPlayer` and `BLEAudioRecorder` bind to `BLEAudioStream` handles, and
