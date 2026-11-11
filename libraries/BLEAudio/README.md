@@ -142,7 +142,9 @@ of adding more sketches:
   DMA buffer per LC3 frame, preloads the TX ring and clears on underrun so the
   codec task stays paced. To use `I2SClass`, TDM/PDM or a codec-specific
   driver, use `setPCMSink()`/`setPCMSource()` and drive that transport from the
-  callback.
+  callback. If `ESP_I2S` later exposes DMA buffer sizing, TX preload and
+  auto-clear, moving `BLEAudio` onto `I2SClass` would remove this private port;
+  worth revisiting then.
 - **Top-level identity only.** TMAP/GMAP publish roles; they move no audio.
   Use `audio.createTmap()` / `audio.createGmap()` and `discover()` to read a
   peer's roles.

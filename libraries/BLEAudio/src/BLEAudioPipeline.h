@@ -81,7 +81,13 @@ bool bleLC3Encode(void *enc, const int16_t *pcm, int pcmBytes, uint8_t *out, uin
 /** @brief Close an encoder (NULL is ignored). */
 void bleLC3EncClose(void *enc);
 
-/** @brief 16-bit standard-mode I2S master channel with one LC3 frame per DMA buffer. */
+/**
+ * @brief 16-bit standard-mode I2S master channel with one LC3 frame per DMA buffer.
+ *
+ * Kept internal because I2SClass does not expose one-frame DMA sizing, TX
+ * preload or auto-clear. If ESP_I2S grows those controls, BLEAudio could reuse
+ * I2SClass instead of this port; worth revisiting then.
+ */
 class BLEAudioI2SPort {
 public:
   /**
