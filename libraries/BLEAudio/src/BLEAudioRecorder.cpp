@@ -319,16 +319,35 @@ BLEAudioRecorder::operator bool() const {
   return _impl && _impl->begun;
 }
 
-BTStatus BLEAudioRecorder::begin(const BLEAudioI2sConfig &i2s) {
+BTStatus BLEAudioRecorder::begin() {
   Impl &d = ensure(_impl);
   if (d.running()) {
     return BTStatus::InvalidState;
   }
-  if (!d.source && (i2s.bclk < 0 || i2s.ws < 0 || i2s.din < 0)) {
+  if (!d.source) {
+    log_e("Recorder: begin() needs a PCM source; use begin(bclk, ws, din) for I2S");
+    return BTStatus::InvalidParam;
+  }
+  d.pins = BLEAudioI2sConfig();
+  d.begun = true;
+  return BTStatus::OK;
+}
+
+BTStatus BLEAudioRecorder::begin(int bclk, int ws, int din, int mclk, int port) {
+  Impl &d = ensure(_impl);
+  if (d.running()) {
+    return BTStatus::InvalidState;
+  }
+  if (!d.source && (bclk < 0 || ws < 0 || din < 0)) {
     log_e("Recorder: begin() needs BCLK, WS and DIN pins (or a PCM source set first)");
     return BTStatus::InvalidParam;
   }
-  d.pins = i2s;
+  d.pins = BLEAudioI2sConfig();
+  d.pins.bclk = bclk;
+  d.pins.ws = ws;
+  d.pins.din = din;
+  d.pins.mclk = mclk;
+  d.pins.port = port;
   d.begun = true;
   return BTStatus::OK;
 }

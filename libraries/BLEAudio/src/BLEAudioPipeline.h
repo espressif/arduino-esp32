@@ -42,10 +42,19 @@
 #include "BTStatus.h"
 #include "BLEAudioStream.h"
 #include "engine/BLEAudioStreamInternal.h"
-#include "BLEAudioI2s.h"
 
 static constexpr uint32_t BLE_AUDIO_CODEC_STACK = 4096;   ///< Codec task stack (bytes); LC3 state lives on the heap.
 static constexpr UBaseType_t BLE_AUDIO_CODEC_PRIO = 15;   ///< Above the Arduino loop, below the BT host tasks.
+
+/** @brief Internal I2S pin/port map used by BLEAudioI2sPort. */
+struct BLEAudioI2sConfig {
+  int bclk = -1;  ///< Bit clock (SCLK) GPIO.
+  int ws = -1;    ///< Word select (LRCLK/WS) GPIO.
+  int dout = -1;  ///< Data out GPIO (player -> DAC).
+  int din = -1;   ///< Data in GPIO (recorder <- ADC/mic).
+  int mclk = -1;  ///< Master clock GPIO (optional).
+  int port = 0;   ///< I2S peripheral port.
+};
 
 /** @brief Core for the codec task: the one not running the BT host (0 on single-core). */
 BaseType_t bleAudioCodecCore();

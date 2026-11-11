@@ -370,16 +370,35 @@ BLEAudioPlayer::operator bool() const {
   return _impl && _impl->begun;
 }
 
-BTStatus BLEAudioPlayer::begin(const BLEAudioI2sConfig &i2s) {
+BTStatus BLEAudioPlayer::begin() {
   Impl &d = ensure(_impl);
   if (d.running()) {
     return BTStatus::InvalidState;
   }
-  if (!d.sink && (i2s.bclk < 0 || i2s.ws < 0 || i2s.dout < 0)) {
+  if (!d.sink) {
+    log_e("Player: begin() needs a PCM sink; use begin(bclk, ws, dout) for I2S");
+    return BTStatus::InvalidParam;
+  }
+  d.pins = BLEAudioI2sConfig();
+  d.begun = true;
+  return BTStatus::OK;
+}
+
+BTStatus BLEAudioPlayer::begin(int bclk, int ws, int dout, int mclk, int port) {
+  Impl &d = ensure(_impl);
+  if (d.running()) {
+    return BTStatus::InvalidState;
+  }
+  if (!d.sink && (bclk < 0 || ws < 0 || dout < 0)) {
     log_e("Player: begin() needs BCLK, WS and DOUT pins (or a PCM sink set first)");
     return BTStatus::InvalidParam;
   }
-  d.pins = i2s;
+  d.pins = BLEAudioI2sConfig();
+  d.pins.bclk = bclk;
+  d.pins.ws = ws;
+  d.pins.dout = dout;
+  d.pins.mclk = mclk;
+  d.pins.port = port;
   d.begun = true;
   return BTStatus::OK;
 }

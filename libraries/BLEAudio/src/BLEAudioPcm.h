@@ -18,9 +18,11 @@
 
 /**
  * @file
- * @brief PCM endpoint types of BLEAudioPlayer / BLEAudioRecorder.
+ * @brief PCM endpoint callbacks of BLEAudioPlayer / BLEAudioRecorder.
  *
- * Pins are plain GPIO numbers so this header never names an I2S driver type.
+ * These callbacks let an application use any PCM transport (for example the
+ * ESP_I2S I2SClass, an ADC/DAC driver, or a synthetic source) instead of the
+ * built-in I2S port.
  */
 
 #include "core/BLEGuards.h"
@@ -29,25 +31,6 @@
 #include <functional>
 #include <cstdint>
 #include <cstddef>
-
-/** Use for any I2S GPIO field that is not wired. */
-static constexpr int BLE_AUDIO_I2S_GPIO_UNUSED = -1;
-
-/**
- * @brief Standard-mode (Philips) 16-bit I2S master pin map.
- *
- * The sample rate follows the stream's codec configuration. A player drives
- * @ref dout (always stereo; mono streams go to both slots), a recorder reads
- * @ref din (stereo when it encodes two channels, else the left slot).
- */
-struct BLEAudioI2sConfig {
-  int bclk = BLE_AUDIO_I2S_GPIO_UNUSED;  ///< Bit clock (SCLK) GPIO.
-  int ws = BLE_AUDIO_I2S_GPIO_UNUSED;    ///< Word select (LRCLK/WS) GPIO.
-  int dout = BLE_AUDIO_I2S_GPIO_UNUSED;  ///< Data out GPIO (player -> DAC).
-  int din = BLE_AUDIO_I2S_GPIO_UNUSED;   ///< Data in GPIO (recorder <- ADC/mic).
-  int mclk = BLE_AUDIO_I2S_GPIO_UNUSED;  ///< Master clock GPIO (optional).
-  int port = 0;                          ///< I2S peripheral port.
-};
 
 /**
  * @brief Consumer of decoded PCM, called on the codec task once per LC3 frame.

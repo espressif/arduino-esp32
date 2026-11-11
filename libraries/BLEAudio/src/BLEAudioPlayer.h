@@ -36,8 +36,8 @@
 #include <memory>
 #include <cstdint>
 #include "BTStatus.h"
+#include "BLEAudioPcm.h"
 #include "BLEAudioStream.h"
-#include "BLEAudioI2s.h"
 
 class BLEAudioPlayer {
 public:
@@ -50,10 +50,28 @@ public:
   explicit operator bool() const;
 
   /**
-   * @brief Select the output: an I2S DAC (needs bclk, ws, dout) unless a PCM sink is set.
-   * @return InvalidParam when the pins are missing, InvalidState while started.
+   * @brief Use the built-in I2S output, or no I2S when a PCM sink is set.
+   *
+   * With no pins, this is only valid after setPcmSink(): the player then
+   * delivers frames to the callback and never opens an I2S port. For I2S,
+   * use begin(bclk, ws, dout) instead.
+   *
+   * @return InvalidParam without a PCM sink or I2S pins, InvalidState while
+   *         playback is running.
    */
-  BTStatus begin(const BLEAudioI2sConfig &i2s = BLEAudioI2sConfig());
+  BTStatus begin();
+  /**
+   * @brief Select the I2S output pins.
+   *
+   * @param bclk Bit clock (SCLK) GPIO.
+   * @param ws   Word select (LRCLK/WS) GPIO.
+   * @param dout Data out GPIO (player -> DAC).
+   * @param mclk Master clock GPIO, or -1 when not wired.
+   * @param port I2S peripheral port (default 0).
+   * @return InvalidParam when a required pin is missing, InvalidState while
+   *         playback is running.
+   */
+  BTStatus begin(int bclk, int ws, int dout, int mclk = -1, int port = 0);
   /** @brief Stop, detach and release everything. */
   void end();
 
