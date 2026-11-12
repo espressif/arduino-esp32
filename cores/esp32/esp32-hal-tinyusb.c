@@ -588,9 +588,6 @@ static void hw_cdc_reset_handler(void *arg) {
 }
 
 static void usb_switch_to_cdc_jtag() {
-  // Stop debug because it might prevent reboot to download
-  ets_install_putc1(NULL);
-  ets_install_putc2(NULL);
   // Disable USB-OTG
   tud_disconnect();
   deinit_usb_hal();
@@ -657,6 +654,9 @@ static void usb_switch_to_cdc_jtag() {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 static void IRAM_ATTR usb_persist_shutdown_handler(void) {
   if (usb_persist_mode != RESTART_NO_PERSIST) {
+    // Stop debug because it might prevent reboot to download
+    ets_install_putc1(NULL);
+    ets_install_putc2(NULL);
     if (usb_persist_enabled) {
       usb_dc_prepare_persist();
     }
