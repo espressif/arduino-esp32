@@ -235,7 +235,7 @@ def _phase_lc3_loopback(server, client):
     into either build; only a dual-audio esp32s31 pair with the codec runs it.
     """
     ms = server.expect(
-        r"\[SERVER\] LC3Loopback (not supported|result samples=(\d+) meanamp=(\d+) plc=(\d+))", timeout=120
+        r"\[SERVER\] LC3Loopback (not supported|result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+))", timeout=120
     )
     mc = client.expect(
         r"\[CLIENT\] LC3Loopback (not supported|result streaming=(\d+) sent=(\d+) errors=(\d+))", timeout=120
@@ -249,13 +249,15 @@ def _phase_lc3_loopback(server, client):
     samples = int(ms.group(2))
     meanamp = int(ms.group(3))
     plc = int(ms.group(4))
+    underruns = int(ms.group(5))
     streaming = int(mc.group(2))
     encoded = int(mc.group(3))
     errors = int(mc.group(4))
-    LOGGER.info("lc3_loopback: sent=%d errors=%d samples=%d meanamp=%d plc=%d", encoded, errors, samples, meanamp, plc)
+    LOGGER.info("lc3_loopback: sent=%d errors=%d samples=%d meanamp=%d plc=%d underruns=%d", encoded, errors, samples, meanamp, plc, underruns)
     assert streaming == 1, "unicast stream never reached Streaming on the client"
     assert encoded > 0, f"Recorder sent no LC3 SDUs ({errors} send errors)"
     assert samples > 0, "Player decoded no PCM samples"
+    assert underruns == 0, f"Player underran {underruns} times; the PCM sink is not paced to the stream"
     # A decoded 1 kHz tone at amplitude ~8000 has a mean |amplitude| well above
     # a few hundred; a low value would mean silence / a broken codec path.
     assert meanamp > 500, f"decoded audio too quiet (meanamp={meanamp}); tone did not survive LC3"
@@ -386,19 +388,29 @@ def _phase_stereo_broadcast(server, client):
     pattern so swapped or merged channels fail. Returns False (SKIP) when the
     broadcast source or sink is not compiled into a build.
     """
-    ms = server.expect(r"\[SERVER\] Stereo (not supported|result bis=(\d+) sent=(\d+))", timeout=90)
-    mc = client.expect(r"\[CLIENT\] Stereo (not supported|result left=(\d+) right=(\d+) mismatched=(\d+))", timeout=120)
+    ms = server.expect(r"\[SERVER\] Stereo (not supported|result bis=(\d+) sent=(\d+) ms=(\d+) rate=(\d+))", timeout=90)
+    mc = client.expect(
+        r"\[CLIENT\] Stereo (not supported|result left=(\d+) right=(\d+) mismatched=(\d+) cb=(\d+) cleared=(\d+))",
+        timeout=120,
+    )
     server.expect_exact("[SERVER] Phase10 stereo done", timeout=40)
     client.expect_exact("[CLIENT] Phase10 stereo done", timeout=40)
 
     if b"not supported" in ms.group(0) or b"not supported" in mc.group(0):
         return False
 
-    bis = int(ms.group(2))
-    left, right, mismatched = int(mc.group(2)), int(mc.group(3)), int(mc.group(4))
+    bis, sent, elapsed, rate = int(ms.group(2)), int(ms.group(3)), int(ms.group(4)), int(ms.group(5))
+    left, right, mismatched, cb_hits, cleared = (int(mc.group(i)) for i in range(2, 7))
+    LOGGER.info(
+        "stereo_broadcast: bis=%d sent=%d ms=%d rate=%d/s left=%d right=%d mismatched=%d cb=%d cleared=%d",
+        bis, sent, elapsed, rate, left, right, mismatched, cb_hits, cleared,
+    )
     assert bis == 2, f"source created {bis} BIS instead of 2"
     assert left > 0 and right > 0, f"sink did not receive both channels (left={left}, right={right})"
     assert mismatched == 0, f"{mismatched} SDUs arrived on the wrong channel"
+    assert elapsed > 0 and rate >= 150, f"broadcast throughput too low: {rate} SDUs/s over {elapsed} ms"
+    assert cb_hits > 0, "the churned BIS stream callback was never invoked"
+    assert cleared == 1, "clearing callbacks from inside onStarted did not run"
     return True
 
 
@@ -415,7 +427,7 @@ def _phase_broadcast_assistant(server, client):
     ms = server.expect(r"\[SERVER\] BroadcastAssistant (not supported|result delegator=(\d+))", timeout=120)
     mc = client.expect(
         r"\[CLIENT\] BroadcastAssistant (not supported|result disc=(\d+) states=(\d+) scan=(\d+) "
-        r"added=(\d+) state=(\d+) removed=(\d+) gone=(\d+))",
+        r"added=(\d+) state=(\d+) removed=(\d+) gone=(\d+) stops=(\d+) stopfail=(\d+) again=(\d+))",
         timeout=120,
     )
     server.expect_exact("[SERVER] Phase11 broadcast_assistant done", timeout=40)
@@ -425,7 +437,7 @@ def _phase_broadcast_assistant(server, client):
         return False
 
     delegator = int(ms.group(2))
-    disc, states, scan, added, state, removed, gone = (int(mc.group(i)) for i in range(2, 9))
+    disc, states, scan, added, state, removed, gone, stops, stopfail, again = (int(mc.group(i)) for i in range(2, 12))
     assert delegator == 1, "server failed to bring up the Broadcast Sink with BASS"
     assert disc == 1, "assistant failed to discover the sink's BASS"
     assert states >= 1, "sink exposes no Broadcast Receive State characteristic"
@@ -434,6 +446,8 @@ def _phase_broadcast_assistant(server, client):
     assert state == 1, "no receive state reported the added source"
     assert removed == 1, "Remove Source write was not accepted"
     assert gone == 1, "the sink did not report the source as removed"
+    assert stops == 1 and stopfail == 0, f"stopRemoteScan() was not idempotent (results={stops}, failures={stopfail})"
+    assert again == 1, "a repeated stopRemoteScan() did not report success"
     return True
 
 
@@ -448,11 +462,11 @@ def _phase_cap_handover(server, client):
     handover (client) or the acceptor roles (server) are not compiled in.
     """
     ms = server.expect(
-        r"\[SERVER\] CapHandover (not supported|result unicast=(\d+) joined=(\d+) broadcast=(\d+))", timeout=150
+        r"\[SERVER\] CapHandover (not supported|result unicast=(\d+) joined=(\d+) broadcast=(\d+) pba=(\d+))", timeout=150
     )
     mc = client.expect(
         r"\[CLIENT\] CapHandover (not supported|result disc=(\d+) unicast=(\d+) handover=(\d+) "
-        r"ucsent=(\d+) bcsent=(\d+))",
+        r"ucsent=(\d+) bcsent=(\d+) badho=(\d+) badafter=(\d+) ucstopped=(\d+) ucrc=(-?\d+) bcrc=(-?\d+))",
         timeout=150,
     )
     server.expect_exact("[SERVER] Phase12 cap_handover done", timeout=40)
@@ -461,8 +475,8 @@ def _phase_cap_handover(server, client):
     if b"not supported" in ms.group(0) or b"not supported" in mc.group(0):
         return False
 
-    uc_rx, joined, bc_rx = int(ms.group(2)), int(ms.group(3)), int(ms.group(4))
-    disc, unicast, handover, uc_sent, bc_sent = (int(mc.group(i)) for i in range(2, 7))
+    uc_rx, joined, bc_rx, pba = int(ms.group(2)), int(ms.group(3)), int(ms.group(4)), int(ms.group(5))
+    disc, unicast, handover, uc_sent, bc_sent, badho, badafter, uc_stopped, uc_rc, bc_rc = (int(mc.group(i)) for i in range(2, 12))
     LOGGER.info(
         "cap_handover: ucsent=%d ucrx=%d bcsent=%d bcrx=%d joined=%d", uc_sent, uc_rx, bc_sent, bc_rx, joined
     )
@@ -472,6 +486,10 @@ def _phase_cap_handover(server, client):
     assert handover == 1, "handover to broadcast did not complete"
     assert joined == 1, "acceptor never joined the handed-over BIG"
     assert bc_rx > 0, f"acceptor received no broadcast SDUs after the handover (initiator sent {bc_sent})"
+    assert pba == 1, "Public Broadcast Announcement build/parse round-trip failed"
+    assert badho == 1, "handoverToBroadcast() accepted an invalid advertising instance"
+    assert badafter == 1, "a locally failed handover stopped the running unicast session"
+    LOGGER.info("cap_handover: ucstop=%d rc=%d bcstop_rc=%d", uc_stopped, uc_rc, bc_rc)
     return True
 
 

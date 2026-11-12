@@ -9,6 +9,8 @@
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
+#include <string.h>
+#include "freertos/task.h"
 #include "esp_heap_caps.h"
 
 // Phase 8 set control: CSIP coordinator lock/release plus CAP commander volume.
@@ -41,6 +43,13 @@ volatile bool audioLinkDown = false;
 
 // Phase 4: the pytest test signals after the server's unicast advertising is up.
 volatile bool phase4Go = false;
+
+// Phase 10 stress: a task churns a BIS stream callback while SDUs arrive.
+volatile uint32_t stressChurnHits = 0;
+volatile uint32_t stressRxRight = 0;
+volatile uint32_t stressMismatch = 0;
+volatile bool stressChurnStop = false;
+BLEAudioStream stressTx;
 
 // ========================= Phase coordination ================================
 
@@ -140,6 +149,36 @@ void readName() {
   }
   Serial.printf("[CLIENT] Target: %s\n", targetName.c_str());
 }
+
+#if BLE_AUDIO_SUPPORTED
+// Phase 10: replace/clear a stream callback while SDUs are being received, to
+// exercise the stream callback locking under load.
+static void stressCallbackChurn(void *) {
+  while (!stressChurnStop) {
+    if (stressTx) {
+      stressTx.onReceive([](BLEAudioStream &s, const BLEAudioSduInfo &info, const uint8_t *sdu, uint16_t len) {
+        stressChurnHits = stressChurnHits + 1;
+        if (info.status != BLEAudioSduInfo::Status::Valid || len == 0) {
+          return;
+        }
+        const bool left = static_cast<uint32_t>(s.codecConfig().channelAllocation) & static_cast<uint32_t>(BLEAudioLocation::FrontLeft);
+        if (!left) {
+          stressRxRight = stressRxRight + 1;
+          if (sdu[0] != 0x22) {
+            stressMismatch = stressMismatch + 1;
+          }
+        }
+      });
+    }
+    delay(5);
+    if (stressTx) {
+      stressTx.resetCallbacks();
+    }
+    delay(1);
+  }
+  vTaskDelete(nullptr);
+}
+#endif
 
 void setup() {
   Serial.begin(115200);
@@ -999,6 +1038,11 @@ void setup() {
     rx[0] = 0;
     rx[1] = 0;
     mismatched = 0;
+    stressChurnHits = 0;
+    stressRxRight = 0;
+    stressMismatch = 0;
+    stressChurnStop = false;
+    volatile int cbCleared = 0;
     BTStatus st = BLE.begin("BLE_CLT_STEREO");
     if (st) {
       BLEAudio audio = BLE.getAudioController();
@@ -1008,6 +1052,12 @@ void setup() {
           .setLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight)
           .setTargetName(targetName)
           .setBroadcastCode("ArduinoStereo");  // must match the server's STEREO_BROADCAST_CODE
+        sink.onStarted([&]() {
+          // Clearing every callback from inside onStarted must keep the
+          // running callable alive and must not deadlock the host task.
+          sink.resetCallbacks();
+          cbCleared = 1;
+        });
         for (size_t i = 0; i < sink.streamCount() && i < 2; i++) {
           sink.stream(i).onReceive([](BLEAudioStream &s, const BLEAudioSduInfo &info, const uint8_t *sdu, uint16_t len) {
             if (info.status != BLEAudioSduInfo::Status::Valid || len == 0) {
@@ -1021,15 +1071,24 @@ void setup() {
           });
         }
         if (audio.start() && sink.start()) {
+          stressTx = sink.stream(1);
+          if (stressTx) {
+            xTaskCreate(stressCallbackChurn, "cb-stress", 4096, nullptr, 1, nullptr);
+          }
           unsigned long deadline = millis() + 45000;
           while (millis() < deadline) {
             delay(100);
           }
+          stressChurnStop = true;
+          delay(100);
+          stressTx.resetCallbacks();
+          stressTx = BLEAudioStream();
           sink.stop();
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] Stereo result left=%lu right=%lu mismatched=%lu\n", (unsigned long)rx[0], (unsigned long)rx[1], (unsigned long)mismatched);
+      Serial.printf("[CLIENT] Stereo result left=%lu right=%lu mismatched=%lu cb=%lu cleared=%d\n", (unsigned long)rx[0],
+                    (unsigned long)(rx[1] + stressRxRight), (unsigned long)(mismatched + stressMismatch), (unsigned long)stressChurnHits, cbCleared);
     }
     BLE.end(false);
     delay(500);
@@ -1055,6 +1114,7 @@ void setup() {
     delay(500);
     static const uint32_t kTestBroadcastId = 0xA11CE5;
     volatile int discOk = 0, states = 0, scanStart = 0, scanStop = 0, addOk = 0, removeOk = 0;
+    volatile int scanStopCount = 0, scanStopFail = 0, scanAgain = 0;
     volatile int addedId = -1;
     volatile bool discDone = false, removedSeen = false;
     volatile int pending = -1;  // Op awaited by the loop below, -1 when none.
@@ -1075,7 +1135,13 @@ void setup() {
           int ok = s2 ? 1 : 0;
           switch (op) {
             case BLEAudioBroadcastAssistant::Op::ScanStart:    scanStart = ok; break;
-            case BLEAudioBroadcastAssistant::Op::ScanStop:     scanStop = ok; break;
+            case BLEAudioBroadcastAssistant::Op::ScanStop:
+              scanStop = ok;
+              scanStopCount = scanStopCount + 1;
+              if (!ok) {
+                scanStopFail = scanStopFail + 1;
+              }
+              break;
             case BLEAudioBroadcastAssistant::Op::AddSource:    addOk = ok; break;
             case BLEAudioBroadcastAssistant::Op::RemoveSource: removeOk = ok; break;
             default:                                           break;
@@ -1121,6 +1187,10 @@ void setup() {
                 if (ba.stopRemoteScan()) {
                   waitOp(3000);
                 }
+                // A second stop is a no-op: it must not send another Scan Stopped
+                // write or report a late failure.
+                scanAgain = ba.stopRemoteScan() ? 1 : 0;
+                delay(1000);
 
                 // A static random address and SID 1 for a source that need not exist.
                 static const uint8_t kSrcAddr[6] = {0x01, 0x00, 0xDE, 0xC0, 0xDE, 0xC0};
@@ -1154,8 +1224,9 @@ void setup() {
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] BroadcastAssistant result disc=%d states=%d scan=%d added=%d state=%d removed=%d gone=%d\n", discOk, states,
-                    (scanStart && scanStop) ? 1 : 0, addOk, addedId >= 0 ? 1 : 0, removeOk, removedSeen ? 1 : 0);
+      Serial.printf("[CLIENT] BroadcastAssistant result disc=%d states=%d scan=%d added=%d state=%d removed=%d gone=%d stops=%d stopfail=%d again=%d\n",
+                    discOk, states, (scanStart && scanStop) ? 1 : 0, addOk, addedId >= 0 ? 1 : 0, removeOk, removedSeen ? 1 : 0, scanStopCount,
+                    scanStopFail, scanAgain);
     }
     BLE.end(false);
     delay(500);
@@ -1178,7 +1249,7 @@ void setup() {
   {
     BLE.end(false);
     delay(500);
-    volatile int discOk = 0, ucOk = 0, hoOk = 0;
+    volatile int discOk = 0, ucOk = 0, hoOk = 0, badHoFailed = 0, badHoUcAlive = 0, ucStopped = 0, ucStopRc = 0, bcStopRc = 0;
     volatile bool discDone = false, ucDone = false, hoDone = false;
     uint32_t ucSent = 0, bcSent = 0;
     BTStatus st = BLE.begin("BLE_CLT_HO");
@@ -1201,6 +1272,9 @@ void setup() {
         initiator.onHandover([&](BTStatus s2, bool toBroadcast) {
           hoOk = (s2 && toBroadcast) ? 1 : 0;
           hoDone = true;
+        });
+        initiator.onUnicastStopped([&]() {
+          ucStopped = 1;
         });
 
         // Send one raw 40-octet SDU (the LC3_16_2_1 frame size) every 10 ms for
@@ -1236,6 +1310,11 @@ void setup() {
               }
               if (ucOk) {
                 ucSent = stream(3000, nullptr);
+                // An out-of-range advertising instance fails locally and must
+                // leave the running unicast session untouched.
+                BTStatus badHo = initiator.handoverToBroadcast(255);
+                badHoFailed = !badHo;
+                badHoUcAlive = initiator.isUnicastStreaming() ? 1 : 0;
                 BTStatus hs = initiator.handoverToBroadcast();
                 Serial.printf("[CLIENT] CapHandover handover: %s\n", hs.toString());
                 if (hs) {
@@ -1245,8 +1324,14 @@ void setup() {
                     bcSent = stream(5000, nullptr);
                   }
                 }
-                initiator.stopBroadcast();
-                initiator.stopUnicast();
+                // Release the unicast group first: stopBroadcast() clears the
+                // handed-over flag, which is what makes the group releasable.
+                ucStopRc = (int)initiator.stopUnicast().code();
+                unsigned long ucStopDeadline = millis() + 5000;
+                while (!ucStopped && millis() < ucStopDeadline) {
+                  delay(50);
+                }
+                bcStopRc = (int)initiator.stopBroadcast().code();
                 delay(500);
               }
             } else {
@@ -1258,8 +1343,9 @@ void setup() {
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] CapHandover result disc=%d unicast=%d handover=%d ucsent=%lu bcsent=%lu\n", discOk, ucOk, hoOk, (unsigned long)ucSent,
-                    (unsigned long)bcSent);
+      Serial.printf("[CLIENT] CapHandover result disc=%d unicast=%d handover=%d ucsent=%lu bcsent=%lu badho=%d badafter=%d ucstopped=%d ucrc=%d bcrc=%d\n",
+                    discOk, ucOk, hoOk, (unsigned long)ucSent, (unsigned long)bcSent, badHoFailed, badHoUcAlive, ucStopped,
+                    ucStopRc, bcStopRc);
     }
     BLE.end(false);
     delay(500);

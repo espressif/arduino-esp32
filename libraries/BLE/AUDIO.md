@@ -573,7 +573,9 @@ Audio behavior is exercised by:
 - Dual-DUT: `tests/validation/ble_audio/` (server + client): `BLEIso` CIS
   (bidirectional) / BIS, BAP
   unicast/broadcast, LC3 loopback, control profiles, TMAP/GMAP, HAS, stereo
-  broadcast, broadcast assistant, CAP handover, memory release.
+  broadcast with a measured SDU rate and churned stream callbacks, broadcast
+  assistant (including repeated scan-stop idempotency), CAP handover
+  (including PBA round-trip and a rejected handover), memory release.
 - Host-interop: `tests/validation/ble_audio_host/` (ESP DUT + Linux Bumble).
 
 Phases self-skip when a role or host tool is unavailable on general targets.

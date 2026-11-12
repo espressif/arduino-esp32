@@ -629,6 +629,7 @@ void loop() {
   // normal stack afterward.
   if (currentPhase >= 6 && !phaseLC3LoopbackDone) {
     phaseLC3LoopbackDone = true;
+    uint32_t playerUnderruns = 0;
 #if BLE_AUDIO_LC3_SUPPORTED && BLE_AUDIO_UNICAST_SERVER_SUPPORTED
     BLE.end(false);
     delay(500);
@@ -675,12 +676,14 @@ void loop() {
             }
           }
           plcFrames = player.plcFrames();
+          playerUnderruns = player.underruns();
           player.end();
         }
         audio.end();
       }
       unsigned long long avg = lc3RxSamples ? (unsigned long long)(lc3RxEnergy / lc3RxSamples) : 0ull;
-      Serial.printf("[SERVER] LC3Loopback result samples=%lu meanamp=%llu plc=%lu\n", (unsigned long)lc3RxSamples, avg, (unsigned long)plcFrames);
+      Serial.printf("[SERVER] LC3Loopback result samples=%lu meanamp=%llu plc=%lu underruns=%lu\n", (unsigned long)lc3RxSamples, avg,
+                    (unsigned long)plcFrames, (unsigned long)playerUnderruns);
     }
     BLE.end(false);
     delay(500);
@@ -904,6 +907,7 @@ void loop() {
     delay(500);
     volatile bool bcStreaming = false;
     uint32_t sent = 0;
+    unsigned long runStart = 0;
     uint8_t bis = 0;
     BTStatus s = BLE.begin(serverName);
     if (s) {
@@ -926,6 +930,9 @@ void loop() {
           unsigned long deadline = millis() + 40000;
           while (millis() < deadline) {
             if (bcStreaming && bis == 2) {
+              if (runStart == 0) {
+                runStart = millis();
+              }
               if (source.stream(0).write(left, sizeof(left)) && source.stream(1).write(right, sizeof(right))) {
                 sent++;
               }
@@ -939,7 +946,9 @@ void loop() {
         }
         audio.end();
       }
-      Serial.printf("[SERVER] Stereo result bis=%u sent=%lu\n", bis, (unsigned long)sent);
+      unsigned long elapsed = runStart ? millis() - runStart : 0;
+      uint32_t rate = elapsed ? (uint32_t)((uint64_t)sent * 2 * 1000 / elapsed) : 0;
+      Serial.printf("[SERVER] Stereo result bis=%u sent=%lu ms=%lu rate=%lu\n", bis, (unsigned long)sent, elapsed, (unsigned long)rate);
     }
     BLE.end(false);
     delay(500);
@@ -1054,8 +1063,18 @@ void loop() {
         }
         audio.end();
       }
-      Serial.printf("[SERVER] CapHandover result unicast=%lu joined=%d broadcast=%lu\n", (unsigned long)hoUnicastRx, (int)hoBigJoined,
-                    (unsigned long)hoBroadcastRx);
+      // The CAP initiator builds a PBA for its broadcast advertising; check the
+      // same PBP helper round-trips before the phase reports success.
+      uint8_t pba[32];
+      const uint8_t pbaMeta[] = {3, 0x02, 0x00, 0x00};
+      const size_t pbaLen = BLEAudioPublicBroadcast::buildAnnouncement(BLEAudioPublicBroadcast::HighQuality, pbaMeta, sizeof(pbaMeta), pba, sizeof(pba));
+      uint8_t pbaFeatures = 0;
+      const uint8_t *pbaOut = nullptr;
+      size_t pbaOutLen = 0;
+      const bool pbaOk = pbaLen > 2 && BLEAudioPublicBroadcast::parseAnnouncement(pba, pbaLen, pbaFeatures, pbaOut, pbaOutLen) &&
+                         pbaFeatures == BLEAudioPublicBroadcast::HighQuality && pbaOutLen == sizeof(pbaMeta);
+      Serial.printf("[SERVER] CapHandover result unicast=%lu joined=%d broadcast=%lu pba=%d\n", (unsigned long)hoUnicastRx, (int)hoBigJoined,
+                    (unsigned long)hoBroadcastRx, pbaOk ? 1 : 0);
     }
     BLE.end(false);
     delay(500);
