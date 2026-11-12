@@ -57,6 +57,9 @@
 #include "hal/usb_fsls_phy_ll.h"
 #endif
 #include "hal/usb_serial_jtag_ll.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/usb_wrap_ll.h"
+#endif
 #include "esp32s3/rom/usb/usb_persist.h"
 #include "esp32s3/rom/usb/usb_dc.h"
 #include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
@@ -612,8 +615,10 @@ static void usb_switch_to_cdc_jtag() {
   // Disable USB-OTG
   deinit_usb_hal();
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-  periph_ll_reset(PERIPH_MODULE_MAX);
-  periph_ll_disable_clk_set_rst(PERIPH_MODULE_MAX);
+  // Hold USB-OTG in reset so Serial/JTAG can take the PHY.
+  // PERIPH_MODULE_MAX is not the USB module and resets nothing.
+  _usb_wrap_ll_enable_bus_clock(false);
+  REG_SET_BIT(SYSTEM_PERIP_RST_EN0_REG, SYSTEM_USB_RST);
 #else
   periph_ll_reset(PERIPH_USB_MODULE);
   //periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
@@ -979,8 +984,9 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
   if (!usb_did_persist || !usb_persist_enabled) {
     // Reset USB module
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-    periph_ll_reset(PERIPH_MODULE_MAX);
-    periph_ll_enable_clk_clear_rst(PERIPH_MODULE_MAX);
+    // IDF 6 removed PERIPH_USB_MODULE. PERIPH_MODULE_MAX resets nothing.
+    _usb_wrap_ll_enable_bus_clock(true);
+    _usb_wrap_ll_reset_register();
 #else
     periph_ll_reset(PERIPH_USB_MODULE);
     periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
@@ -1012,8 +1018,9 @@ static void tinyusb_host_reset_usb_module(void) {
   REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
   REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-  periph_ll_reset(PERIPH_MODULE_MAX);
-  periph_ll_enable_clk_clear_rst(PERIPH_MODULE_MAX);
+  // IDF 6 removed PERIPH_USB_MODULE. PERIPH_MODULE_MAX resets nothing.
+  _usb_wrap_ll_enable_bus_clock(true);
+  _usb_wrap_ll_reset_register();
 #else
   periph_ll_reset(PERIPH_USB_MODULE);
   periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
