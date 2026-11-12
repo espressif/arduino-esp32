@@ -132,7 +132,10 @@ String StreamString::readString() {
   while (true) {
     const unsigned int available = length();
     if (available) {
-      result.concat(c_str(), available);
+      if (!result.concat(c_str(), available)) {
+        // Do not consume data if the result could not be extended.
+        break;
+      }
       remove(0, available);
       continue;
     }
@@ -154,7 +157,10 @@ String StreamString::readStringUntil(char terminator) {
       const char *end = (const char *)memchr(data, terminator, available);
       const size_t take = end ? (size_t)(end - data) : (size_t)available;
       if (take) {
-        result.concat(data, take);
+        if (!result.concat(data, take)) {
+          // Do not consume data if the result could not be extended.
+          break;
+        }
       }
       if (end) {
         remove(0, take + 1);
