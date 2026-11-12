@@ -79,6 +79,21 @@ typedef struct {
 
 adc_handle_t adc_handle[SOC_ADC_PERIPH_NUM];
 
+#if CONFIG_IDF_TARGET_ESP32S31
+/* Weak so an older IDF still links. S31 calibration needs the channel. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+extern esp_err_t adc_cali_chan_raw_to_voltage(adc_cali_handle_t handle, adc_channel_t channel, int raw, int *voltage) __attribute__((weak));
+#pragma GCC diagnostic pop
+
+static esp_err_t halAdcRawToVoltage(adc_cali_handle_t handle, adc_channel_t channel, int raw, int *voltage) {
+  if (adc_cali_chan_raw_to_voltage != NULL) {
+    return adc_cali_chan_raw_to_voltage(handle, channel, raw, voltage);
+  }
+  return adc_cali_raw_to_voltage(handle, raw, voltage);
+}
+#endif
+
 static bool adcDetachBus(void *pin) {
   adc_channel_t adc_channel;
   adc_unit_t adc_unit;
@@ -211,6 +226,7 @@ esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, i
   return ESP_OK;
 }
 
+#if !defined(CONFIG_IDF_TARGET_ESP32S31)
 static inline uint16_t mapResolution(uint16_t value) {
   uint8_t from = __analogWidth;
   if (from == __analogReturnedWidth) {
@@ -221,8 +237,14 @@ static inline uint16_t mapResolution(uint16_t value) {
   }
   return value << (__analogReturnedWidth - from);
 }
+#endif
 
 void __analogSetAttenuation(adc_attenuation_t attenuation) {
+#if CONFIG_IDF_TARGET_ESP32S31
+  log_e("analogSetAttenuation() is not supported on ESP32-S31. The only range is ADC_11db (0 dB, about -2000 mV to +2000 mV).");
+  (void)attenuation;
+  return;
+#endif
   if (__analogChannelConfig(__analogWidth, attenuation, -1) != ESP_OK) {
     log_e("__analogChannelConfig failed!");
   }
@@ -276,12 +298,23 @@ esp_err_t __analogInit(uint8_t pin, adc_channel_t channel, adc_unit_t adc_unit) 
 }
 
 void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation) {
+#if CONFIG_IDF_TARGET_ESP32S31
+  log_e("analogSetPinAttenuation() is not supported on ESP32-S31. The only range is ADC_11db (0 dB, about -2000 mV to +2000 mV).");
+  (void)pin;
+  (void)attenuation;
+  return;
+#endif
   if (__analogChannelConfig(__analogWidth, attenuation, pin) != ESP_OK) {
     log_e("__analogChannelConfig failed!");
   }
 }
 
 void __analogReadResolution(uint8_t bits) {
+#if CONFIG_IDF_TARGET_ESP32S31
+  log_e("analogReadResolution() is not supported on ESP32-S31. Use analogReadComparator() or analogReadMilliVolts().");
+  (void)bits;
+  return;
+#endif
   if (!bits || bits > 16) {
     return;
   }
@@ -292,6 +325,38 @@ void __analogReadResolution(uint8_t bits) {
 #endif
 }
 
+#if CONFIG_IDF_TARGET_ESP32S31
+uint16_t __analogRead(uint8_t pin) {
+  log_e("analogRead() is not supported on ESP32-S31. Use analogReadComparator().");
+  (void)pin;
+  return 0;
+}
+
+uint32_t __analogReadComparator(uint8_t pin) {
+  int value = 0;
+  adc_channel_t channel;
+  adc_unit_t adc_unit;
+
+  esp_err_t err = ESP_OK;
+  err = adc_oneshot_io_to_channel(pin, &adc_unit, &channel);
+  if (err != ESP_OK) {
+    log_e("Pin %u is not ADC pin!", pin);
+    return value;
+  }
+
+  if (perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL) {
+    log_d("Calling __analogInit! pin = %u", pin);
+    err = __analogInit(pin, channel, adc_unit);
+    if (err != ESP_OK) {
+      log_e("Analog initialization failed!");
+      return value;
+    }
+  }
+
+  adc_oneshot_read(adc_handle[adc_unit].adc_oneshot_handle, channel, &value);
+  return (uint32_t)value;
+}
+#else
 uint16_t __analogRead(uint8_t pin) {
   int value = 0;
   adc_channel_t channel;
@@ -316,8 +381,9 @@ uint16_t __analogRead(uint8_t pin) {
   adc_oneshot_read(adc_handle[adc_unit].adc_oneshot_handle, channel, &value);
   return mapResolution(value);
 }
+#endif
 
-uint32_t __analogReadMilliVolts(uint8_t pin) {
+int32_t __analogReadMilliVolts(uint8_t pin) {
   int value = 0;
   adc_channel_t channel;
   adc_unit_t adc_unit;
@@ -372,7 +438,10 @@ uint32_t __analogReadMilliVolts(uint8_t pin) {
 }
 
 extern uint16_t analogRead(uint8_t pin) __attribute__((weak, alias("__analogRead")));
-extern uint32_t analogReadMilliVolts(uint8_t pin) __attribute__((weak, alias("__analogReadMilliVolts")));
+#if CONFIG_IDF_TARGET_ESP32S31
+extern uint32_t analogReadComparator(uint8_t pin) __attribute__((weak, alias("__analogReadComparator")));
+#endif
+extern int32_t analogReadMilliVolts(uint8_t pin) __attribute__((weak, alias("__analogReadMilliVolts")));
 extern void analogReadResolution(uint8_t bits) __attribute__((weak, alias("__analogReadResolution")));
 extern void analogSetAttenuation(adc_attenuation_t attenuation) __attribute__((weak, alias("__analogSetAttenuation")));
 extern void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation) __attribute__((weak, alias("__analogSetPinAttenuation")));
@@ -638,6 +707,10 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
     uint32_t bytes_read = 0;
     uint32_t read_raw[used_adc_channels];
     uint32_t read_count[used_adc_channels];
+#if CONFIG_IDF_TARGET_ESP32S31
+    int32_t read_mv[used_adc_channels];
+    uint32_t read_mv_count[used_adc_channels];
+#endif
 
     size_t buffer_size = adc_handle[ADC_UNIT_1].conversion_frame_size;
     uint8_t *adc_read = (uint8_t *)heap_caps_aligned_alloc(ESP_ARDUINO_DMA_BUF_ALIGN, buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
@@ -650,6 +723,10 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
     memset(adc_read, 0xcc, buffer_size);
     memset(read_raw, 0, sizeof(read_raw));
     memset(read_count, 0, sizeof(read_count));
+#if CONFIG_IDF_TARGET_ESP32S31
+    memset(read_mv, 0, sizeof(read_mv));
+    memset(read_mv_count, 0, sizeof(read_mv_count));
+#endif
 
     esp_err_t err = adc_continuous_read(adc_handle[ADC_UNIT_1].adc_continuous_handle, adc_read, adc_handle[0].conversion_frame_size, &bytes_read, timeout_ms);
     if (err != ESP_OK) {
@@ -682,8 +759,19 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
 
       for (int j = 0; j < used_adc_channels; j++) {
         if (adc_result[j].channel == chan_num) {
+#if CONFIG_IDF_TARGET_ESP32S31
+          int mv = 0;
+          esp_err_t cali_err = halAdcRawToVoltage(adc_handle[ADC_UNIT_1].adc_cali_handle, (adc_channel_t)adc_result[j].channel, (int)data, &mv);
+          read_raw[j] = data;
+          read_count[j] += 1;
+          if (cali_err == ESP_OK) {
+            read_mv[j] += mv;
+            read_mv_count[j] += 1;
+          }
+#else
           read_raw[j] += data;
           read_count[j] += 1;
+#endif
           break;
         }
       }
@@ -691,8 +779,18 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
 
     for (int j = 0; j < used_adc_channels; j++) {
       if (read_count[j] != 0) {
+#if CONFIG_IDF_TARGET_ESP32S31
+        adc_result[j].avg_read_raw = (int)read_raw[j];
+        if (read_mv_count[j] != 0) {
+          adc_result[j].avg_read_mvolts = (int)(read_mv[j] / (int32_t)read_mv_count[j]);
+        } else {
+          log_e("ADC calibration failed");
+          adc_result[j].avg_read_mvolts = 0;
+        }
+#else
         adc_result[j].avg_read_raw = read_raw[j] / read_count[j];
         adc_cali_raw_to_voltage(adc_handle[ADC_UNIT_1].adc_cali_handle, adc_result[j].avg_read_raw, &adc_result[j].avg_read_mvolts);
+#endif
       } else {
         log_w("No data read for pin %u", adc_result[j].pin);
       }
@@ -759,10 +857,20 @@ bool analogContinuousDeinit() {
 }
 
 void analogContinuousSetAtten(adc_attenuation_t attenuation) {
+#if CONFIG_IDF_TARGET_ESP32S31
+  log_e("analogContinuousSetAtten() is not supported on ESP32-S31. The only range is ADC_11db (0 dB, about -2000 mV to +2000 mV).");
+  (void)attenuation;
+  return;
+#endif
   __adcContinuousAtten = attenuation;
 }
 
 void analogContinuousSetWidth(uint8_t bits) {
+#if CONFIG_IDF_TARGET_ESP32S31
+  log_e("analogContinuousSetWidth() is not supported on ESP32-S31. The width is fixed at %u bits.", SOC_ADC_DIGI_MAX_BITWIDTH);
+  (void)bits;
+  return;
+#endif
   if ((bits < SOC_ADC_DIGI_MIN_BITWIDTH) || (bits > SOC_ADC_DIGI_MAX_BITWIDTH)) {
     log_e("Selected width cannot be set. Range is from %u to %u", SOC_ADC_DIGI_MIN_BITWIDTH, SOC_ADC_DIGI_MAX_BITWIDTH);
     return;

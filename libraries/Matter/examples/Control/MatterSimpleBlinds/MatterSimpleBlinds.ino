@@ -13,7 +13,8 @@
 // limitations under the License.
 
 // Matter Simple Blinds Example
-// This is a minimal example that only controls Lift percentage using a single onGoToLiftPercentage() callback
+// Lift-only roller shade. The hub writes Target; this sketch simulates a
+// motor at 1% every 200 ms and reports Current + Opening/Closing/Stall.
 
 #include <Arduino.h>
 #include <Matter.h>
@@ -28,13 +29,85 @@ MatterWindowCovering WindowBlinds;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-// Simple callback - handles window Lift change request
-bool onBlindsLift(uint8_t liftPercent) {
-  // This example only uses lift
-  Serial.printf("Window Covering change request: Lift=%u%%\r\n", liftPercent);
+// Matter percent: 0 = fully open, 100 = fully closed. begin() starts closed.
+static const uint8_t kSimStepPercent = 1;
+static const uint32_t kSimStepMs = 200;
 
-  // Returning true will store the new Lift value into the Matter Cluster
+static volatile uint8_t simCurrent = 100;
+static volatile uint8_t simTarget = 100;
+static volatile bool simMoving = false;
+static uint32_t simLastStepMs = 0;
+
+static bool setLiftDirection(uint8_t fromPercent, uint8_t toPercent) {
+  if (toPercent > fromPercent) {
+    Serial.printf("Closing: %u%% -> %u%%\r\n", fromPercent, toPercent);
+    return WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::MOVING_DOWN_OR_CLOSE);
+  }
+  if (toPercent < fromPercent) {
+    Serial.printf("Opening: %u%% -> %u%%\r\n", fromPercent, toPercent);
+    return WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::MOVING_UP_OR_OPEN);
+  }
+  Serial.printf("Lift already %u%%\r\n", toPercent);
+  if (!WindowBlinds.setCurrentLiftPercent100ths(WindowBlinds.getTargetLiftPercent100ths())) {
+    return false;
+  }
+  simMoving = false;
+  return WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL);
+}
+
+// PRE_UPDATE: liftPercent / getTargetLiftPercent100ths() are the new request.
+// Returning true accepts Target. loop() reports Current while the shade moves.
+bool onBlindsLift(uint8_t liftPercent) {
+  Serial.printf("Window Covering change request: Lift=%u%%\r\n", liftPercent);
+  const uint8_t fromPercent = simCurrent;
+  simTarget = liftPercent;
+  if (!setLiftDirection(fromPercent, liftPercent)) {
+    return false;
+  }
+  if (fromPercent != liftPercent) {
+    simMoving = true;
+    simLastStepMs = millis();
+  }
   return true;
+}
+
+static void simulateLiftStep() {
+  if (!simMoving) {
+    return;
+  }
+  const uint32_t now = millis();
+  if ((now - simLastStepMs) < kSimStepMs) {
+    return;
+  }
+  simLastStepMs = now;
+
+  uint8_t current = simCurrent;
+  const uint8_t target = simTarget;
+  if (current < target) {
+    current = (uint8_t)(current + kSimStepPercent);
+    if (current > target) {
+      current = target;
+    }
+  } else if (current > target) {
+    current = (uint8_t)(current - kSimStepPercent);
+    if (current < target) {
+      current = target;
+    }
+  }
+  simCurrent = current;
+
+  if (!WindowBlinds.setCurrentLiftPercent100ths((uint16_t)current * 100)) {
+    return;
+  }
+  if (current != target) {
+    return;
+  }
+
+  // Last step: match Target 100ths so CHIP / Alexa leave Opening/Closing.
+  WindowBlinds.setCurrentLiftPercent100ths(WindowBlinds.getTargetLiftPercent100ths());
+  WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL);
+  simMoving = false;
+  Serial.printf("Lift reached %u%%\r\n", current);
 }
 
 void setup() {
@@ -52,11 +125,14 @@ void setup() {
   // Initialize Window Covering endpoint
   // Using ROLLERSHADE type (lift only, no tilt)
   WindowBlinds.begin(100, 0, MatterWindowCovering::ROLLERSHADE);
+  simCurrent = WindowBlinds.getLiftPercentage();
+  simTarget = simCurrent;
 
   // Set up the onGoToLiftPercentage callback - this handles all window covering changes requested by the Matter Controller
   WindowBlinds.onGoToLiftPercentage(onBlindsLift);
 
   // Start Matter
+  matterSetExampleIdentity("Window Covering");
   Matter.begin();
   matterWaitUntilReady();
   Serial.println("Matter started");
@@ -64,6 +140,5 @@ void setup() {
 
 void loop() {
   matterRestartIfNoFabric();
-
-  delay(100);
+  simulateLiftStep();
 }

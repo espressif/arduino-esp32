@@ -8,19 +8,19 @@ About
 The ``MatterWaterLeakDetector`` class provides a water leak detector endpoint for Matter networks. This endpoint implements the Matter water leak detection standard for detecting water leak conditions (detected/not detected states).
 
 **Features:**
-* Water leak detection state reporting (detected/not detected)
-* Simple boolean state
-* Read-only sensor (no control functionality)
-* Automatic state updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Water leak detection state reporting (detected/not detected).
+* Simple boolean state.
+* Read-only sensor (no control functionality).
+* Automatic state updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Water leak monitoring
-* Basement flood detection
-* Appliance leak detection
-* Smart home automation triggers
-* Preventative maintenance systems
+* Water leak monitoring.
+* Basement flood detection.
+* Appliance leak detection.
+* Smart home automation triggers.
+* Preventative maintenance systems.
 
 API Reference
 -------------
@@ -43,7 +43,7 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter water leak detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setLeak()`` after ``Matter.begin()`` with the real sensor reading.
+Initializes the Matter water leak detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setLeak()`` after the endpoint ``begin()``; a value set before ``Matter.begin()`` is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -74,13 +74,13 @@ Water Leak Detection State Control
 setLeak
 ^^^^^^^^
 
-Sets the water leak detection state. Call after ``Matter.begin()``.
+Sets the water leak detection state. Call after the endpoint ``begin()``. Before ``Matter.begin()`` the value is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
     bool setLeak(bool _leakState);
 
-* ``_leakState`` - Water leak detection state (``true`` = detected, ``false`` = not detected)
+* ``_leakState`` - Water leak detection state (``true`` = detected, ``false`` = not detected).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -120,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the water leak detection state. Same as ``setLeak()``; call after ``Matter.begin()``.
+Sets the water leak detection state. Same as ``setLeak()``.
 
 .. code-block:: arduino
 

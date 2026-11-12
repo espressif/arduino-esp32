@@ -11,7 +11,7 @@ Currently, this example supports the following targets.
 
 ## Hardware Required
 
-* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee Radio Co-processor loaded with [ot_rcp example](https://github.com/espressif/esp-idf/tree/master/examples/openthread/ot_rcp).
+* One development board (ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31) acting as Zigbee Radio Co-processor loaded with [ot_rcp example](https://github.com/espressif/esp-idf/tree/master/examples/openthread/ot_rcp).
 * A USB cable for power supply and programming.
 * Choose another board from supported targets as Zigbee coordinator/router and upload the Zigbee_Gateway example.
 
@@ -59,6 +59,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+* ESP32-C5 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c5_datasheet_en.pdf)
 * ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
 * ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
+* ESP32-S31 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s31_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)

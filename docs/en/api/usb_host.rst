@@ -2,7 +2,7 @@
 USB Host API
 ############
 
-.. note:: Supported on ESP32-S2, ESP32-S3 and ESP32-P4, the targets that have the USB OTG peripheral. Chips with only a native CDC+JTAG peripheral, such as the ESP32-C3, cannot act as a USB host.
+.. note:: Supported on ESP32-S2, ESP32-S3, ESP32-P4 and ESP32-S31, the targets that have the USB OTG peripheral. Chips with only a native CDC+JTAG peripheral, such as the ESP32-C3, cannot act as a USB host.
 
 About
 -----
@@ -21,7 +21,7 @@ On **ESP32-S3** the USB_SERIAL_JTAG and USB_OTG blocks share one PHY, so do not 
 * **Hardware CDC and JTAG** puts ``Serial`` on the native USB port.
 * **USB-OTG** with CDC on boot disabled puts ``Serial`` on UART0.
 
-On boards where the two menus are tied together, such as **ESP32-S3-USB-OTG**, either choice is fine as-is. **ESP32-P4** drives host and device from separate controllers, so any combination works there.
+On boards where the two menus are tied together, such as **ESP32-S3-USB-OTG**, either choice is fine as-is. **ESP32-P4** and **ESP32-S31** drive host and device from separate controllers, so any combination works there.
 
 A host port also has to supply VBUS. ``USBHost.begin()`` calls ``USBHostBoardInit()``, a weak hook whose default is empty; a variant overrides it to switch the bus mux and enable the 5 V supply. See ``variants/esp32s3usbotg`` for a working example.
 

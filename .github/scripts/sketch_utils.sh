@@ -136,6 +136,7 @@ function default_fqbn_for_target {
     esp32h2_opts=$(_normalize_fqbn_opts "${overrides}")
     esp32p4_opts=$(_normalize_fqbn_opts "PSRAM=enabled,USBMode=hwcdc,ChipVariant=postv3,${overrides}")
     esp32c5_opts=$(_normalize_fqbn_opts "PSRAM=enabled,${overrides}")
+    esp32s31_opts=$(_normalize_fqbn_opts "USBMode=default,${overrides}")
 
     local result=""
     case "$target" in
@@ -170,6 +171,10 @@ function default_fqbn_for_target {
         esp32c5)
             [ -n "${options_override:-$esp32c5_opts}" ] && opt=":${options_override:-$esp32c5_opts}"
             result="${pkg}:esp32c5${opt}"
+            ;;
+        esp32s31)
+            [ -n "${options_override:-$esp32s31_opts}" ] && opt=":${options_override:-$esp32s31_opts}"
+            echo "${pkg}:esp32s31${opt}"
             ;;
         *)
             echo "ERROR: Invalid chip: $target" >&2

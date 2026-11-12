@@ -68,6 +68,7 @@ void setup() {
   SimulatedTemperatureSensor.begin(-25.00);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Temperature Sensor");
   Matter.begin();
   matterWaitUntilReady();
 }
