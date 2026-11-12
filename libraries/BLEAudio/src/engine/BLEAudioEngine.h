@@ -127,6 +127,15 @@ typedef void (*ble_audio_evt_sink_fn)(const ble_audio_evt_t *evt, void *ctx);
  */
 void bleAudioEngineEmit(uint16_t type, uint16_t conn_handle, int err, const void *data);
 
+/**
+ * @brief A client role was created: discover the GATT database of peer-opened links.
+ *
+ * Without it, a peer-opened link is reported ready after the MTU exchange
+ * without running LE Audio discovery, which server-only sketches do not need.
+ * The flag lasts until engine deinit; client roles live until then too.
+ */
+void bleAudioEngineEnablePeerDiscovery(void);
+
 /* ── Codec / QoS mirrors of the public value types ──────────────────────── */
 
 /** Mirror of `BLEAudioCodecConfig` (see `BLEAudioTypes.h` for field meanings). */

@@ -21,6 +21,7 @@
 #include <vector>
 #include "BLEAudioCap.h"
 #include "BLEAudioImpl.h"
+#include "BLEAudioCallback.h"
 #include "BLEAudioProfiles.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineCap.h"
@@ -157,13 +158,13 @@ struct BLEAudioCapInitiator::Impl {
   bool hoBusy = false;                    ///< Handover procedure in flight.
   int16_t advInstance = -1;               ///< Advertising instance of the broadcast, -1 when none.
 
-  DiscoveredCallback discoveredCb;
-  StatusCallback ucStartedCb;
-  StatusCallback ucUpdatedCb;
-  Callback ucStoppedCb;
-  Callback bcStartedCb;
-  StoppedCallback bcStoppedCb;
-  HandoverCallback handoverCb;
+  BLEAudioCallback<DiscoveredCallback> discoveredCb;
+  BLEAudioCallback<StatusCallback> ucStartedCb;
+  BLEAudioCallback<StatusCallback> ucUpdatedCb;
+  BLEAudioCallback<Callback> ucStoppedCb;
+  BLEAudioCallback<Callback> bcStartedCb;
+  BLEAudioCallback<StoppedCallback> bcStoppedCb;
+  BLEAudioCallback<HandoverCallback> handoverCb;
 
   /** @return the acceptor on @p conn, or nullptr. */
   Peer *peer(uint16_t conn) {
@@ -466,6 +467,18 @@ struct BLEAudioCapInitiator::Impl {
             broadcastEnded();
           }
           stopAdvertising();
+          /* The procedure may already have stopped the unicast group. End it
+           * deterministically so startUnicast() can rebuild the session; the
+           * stack reports the release through onUnicastStopped(). */
+          int stopErr = bleAudioCapUnicastStop();
+          if (stopErr != 0) {
+            log_w("CapInitiator: unicast cleanup after the failed handover failed (err=%d); stopUnicast() can retry",
+                  stopErr);
+          } else {
+            ucRunning = false;
+            ucStreaming = false;
+          }
+          handedOver = false;
         }
         if (handoverCb) {
           handoverCb(bleAudioStatus(e.err), true);
@@ -862,9 +875,9 @@ void BLEAudioCapInitiator::resetCallbacks() {
 struct BLEAudioCapCommander::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
   std::vector<uint16_t> pending;  ///< discover() called before the link's GATT discovery finished.
-  DiscoveredCallback discoveredCb;
-  ResultCallback resultCb;
-  ReceiveStateCallback recvStateCb;
+  BLEAudioCallback<DiscoveredCallback> discoveredCb;
+  BLEAudioCallback<ResultCallback> resultCb;
+  BLEAudioCallback<ReceiveStateCallback> recvStateCb;
 
   /** Start the commander discovery (CAS, then BASS) of @p conn. */
   BTStatus start(uint16_t conn) {

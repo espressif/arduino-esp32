@@ -20,6 +20,7 @@
 #include <vector>
 #include "BLEAudioUnicastClient.h"
 #include "BLEAudioImpl.h"
+#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "esp32-hal-log.h"
 
@@ -79,10 +80,10 @@ struct BLEAudioUnicastClient::Impl {
   std::vector<Peer> peers;
   std::vector<BLEAudioStream> streams;    ///< Streams of the current setup, in request order.
 
-  DiscoveredCallback discoveredCb;
-  Callback startedCb;
-  Callback stoppedCb;
-  ErrorCallback errorCb;
+  BLEAudioCallback<DiscoveredCallback> discoveredCb;
+  BLEAudioCallback<Callback> startedCb;
+  BLEAudioCallback<Callback> stoppedCb;
+  BLEAudioCallback<ErrorCallback> errorCb;
 
   /** @brief Peer table entry of @p conn, or nullptr. */
   Peer *peer(uint16_t conn) {

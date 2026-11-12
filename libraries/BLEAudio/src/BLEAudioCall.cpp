@@ -15,6 +15,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioCall.h"
@@ -51,9 +52,9 @@ struct BLEAudioCallServer::Impl {
   String providerName = "ESP Phone";  ///< Bearer Provider Name.
   String uci = "un000";               ///< Bearer UCI ("un000" = unknown).
   String uriSchemes = "tel";          ///< Comma-separated supported URI schemes.
-  OriginateCallback originateCb;
-  TerminatedCallback terminatedCb;
-  CallControlCallback callControlCb;
+  BLEAudioCallback<OriginateCallback> originateCb;
+  BLEAudioCallback<TerminatedCallback> terminatedCb;
+  BLEAudioCallback<CallControlCallback> callControlCb;
 
   /** Apply a BLE_AUDIO_CCP_OP_* to a local call. */
   static BTStatus op(uint8_t o, uint8_t callIndex) {
@@ -71,8 +72,9 @@ struct BLEAudioCallServer::Impl {
     }
     if (e.type == BLE_AUDIO_EVT_CCP_SRV_ORIGINATE) {
       const auto *o = static_cast<const ble_audio_ccp_originate_t *>(e.data);
-      if (originateCb) {
-        *o->accept = originateCb(o->call_index, String(o->uri ? o->uri : ""));
+      auto cb = originateCb.snapshot();
+      if (cb) {
+        *o->accept = cb(o->call_index, String(o->uri ? o->uri : ""));
       }
     } else if (e.type == BLE_AUDIO_EVT_CCP_SRV_CALL) {
       const auto *c = static_cast<const ble_audio_ccp_call_t *>(e.data);
@@ -216,9 +218,9 @@ BLEAudioCallServer BLEAudio::createCallServer() {
 struct BLEAudioCallController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
   BLEAudioControlLink link;  ///< The call server (phone) being controlled.
-  DiscoveredCallback discoveredCb;
-  ResultCallback resultCb;
-  CallStateCallback callStateCb;
+  BLEAudioCallback<DiscoveredCallback> discoveredCb;
+  BLEAudioCallback<ResultCallback> resultCb;
+  BLEAudioCallback<CallStateCallback> callStateCb;
 
   /** Run a call operation on the bound peer's GTBS. */
   BTStatus op(uint8_t o, uint8_t callIndex) const {

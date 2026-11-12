@@ -20,6 +20,7 @@
 #include <vector>
 #include "BLEAudioBroadcastSink.h"
 #include "BLEAudioImpl.h"
+#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "BLE.h"
 #include "scan/BLEScan.h"
@@ -102,14 +103,14 @@ struct BLEAudioBroadcastSink::Impl {
     return BTStatus::OK;
   }
 
-  SourceFoundCallback foundCb;
-  Callback syncedCb;
-  BaseCallback baseCb;
-  Callback codeCb;
-  ReasonCallback syncLostCb;
-  ErrorCallback syncFailedCb;
-  Callback startedCb;
-  ReasonCallback stoppedCb;
+  BLEAudioCallback<SourceFoundCallback> foundCb;
+  BLEAudioCallback<Callback> syncedCb;
+  BLEAudioCallback<BaseCallback> baseCb;
+  BLEAudioCallback<Callback> codeCb;
+  BLEAudioCallback<ReasonCallback> syncLostCb;
+  BLEAudioCallback<ErrorCallback> syncFailedCb;
+  BLEAudioCallback<Callback> startedCb;
+  BLEAudioCallback<ReasonCallback> stoppedCb;
 
   /** @brief Match the owned streams to the BIS count (stops at the first pool failure). */
   void resizeStreams() {

@@ -15,6 +15,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioVolume.h"
@@ -43,7 +44,7 @@ struct BLEAudioVolumeRenderer::Impl {
   uint8_t volume = 100;  ///< Initial volume before start, then the last reported state.
   bool muted = false;    ///< Initial mute before start, then the last reported state.
   uint8_t step = 1;      ///< Volume up/down step (never 0).
-  StateCallback stateCb;
+  BLEAudioCallback<StateCallback> stateCb;
 
   /** Run a BLE_AUDIO_VCP_OP_* on the local renderer. */
   static BTStatus op(uint8_t o, uint8_t value = 0) {
@@ -172,10 +173,10 @@ struct BLEAudioVolumeController::Impl {
   BLEAudioControlLink link;  ///< The renderer being controlled.
   uint8_t volume = 0;        ///< Last state reported by the renderer.
   bool muted = false;
-  DiscoveredCallback discoveredCb;
-  StateCallback stateCb;
-  OffsetCallback offsetCb;
-  InputCallback inputCb;
+  BLEAudioCallback<DiscoveredCallback> discoveredCb;
+  BLEAudioCallback<StateCallback> stateCb;
+  BLEAudioCallback<OffsetCallback> offsetCb;
+  BLEAudioCallback<InputCallback> inputCb;
 
   /** Run a BLE_AUDIO_VCP_OP_* on the bound renderer. */
   BTStatus op(uint8_t o, uint8_t value = 0) const {

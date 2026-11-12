@@ -20,6 +20,7 @@
 #include <vector>
 #include "BLEAudioBroadcastSource.h"
 #include "BLEAudioImpl.h"
+#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "BLEAudioProfiles.h"
 #include "BLE.h"
@@ -81,8 +82,8 @@ struct BLEAudioBroadcastSource::Impl {
   int16_t advInstance = -1;               ///< Advertising instance in use, -1 when stopped.
   BLESync stopSync{"bsrc-stop"};
   std::vector<BLEAudioStream> streams;    ///< One Tx stream per BIS.
-  Callback startedCb;
-  StoppedCallback stoppedCb;
+  BLEAudioCallback<Callback> startedCb;
+  BLEAudioCallback<StoppedCallback> stoppedCb;
 
   BTStatus waitStopped() {
     if (!streaming) {

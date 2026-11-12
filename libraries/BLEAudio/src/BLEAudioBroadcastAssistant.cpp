@@ -20,6 +20,7 @@
 #include <cstring>
 #include "BLEAudioBroadcastAssistant.h"
 #include "BLEAudioImpl.h"
+#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineAssistant.h"
 #include "BLE.h"
@@ -54,10 +55,10 @@ struct BLEAudioBroadcastAssistant::Impl {
   };
   Known known[4] = {};
 
-  DiscoverCallback discoverCb;
-  SourceFoundCallback sourceFoundCb;
-  ReceiveStateCallback receiveStateCb;
-  ResultCallback resultCb;
+  BLEAudioCallback<DiscoverCallback> discoverCb;
+  BLEAudioCallback<SourceFoundCallback> sourceFoundCb;
+  BLEAudioCallback<ReceiveStateCallback> receiveStateCb;
+  BLEAudioCallback<ResultCallback> resultCb;
 
   /** @return the remembered entry for @p srcId, or nullptr. */
   Known *find(uint8_t srcId) {

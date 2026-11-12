@@ -106,6 +106,24 @@ struct BLEAudioImplCommon {
 
   /** @brief Register (or replace) the handler of @p group; one role per group. */
   void setHandler(ble_audio_evt_group_t group, EventHandler h) {
+    // Client roles discover the peer's GATT database; server-only roles do not
+    // need it, so peer-opened links are then reported ready without discovery.
+    switch (group) {
+      case BLE_AUDIO_GRP_UNICAST_CLIENT:
+      case BLE_AUDIO_GRP_BROADCAST_ASSISTANT:
+      case BLE_AUDIO_GRP_CAP_INITIATOR:
+      case BLE_AUDIO_GRP_CAP_COMMANDER:
+      case BLE_AUDIO_GRP_CAP_HANDOVER:
+      case BLE_AUDIO_GRP_CSIP_COORDINATOR:
+      case BLE_AUDIO_GRP_VCP_CONTROLLER:
+      case BLE_AUDIO_GRP_MICP_CONTROLLER:
+      case BLE_AUDIO_GRP_MCP_CLIENT:
+      case BLE_AUDIO_GRP_CCP_CLIENT:
+      case BLE_AUDIO_GRP_HAS_CLIENT:
+      case BLE_AUDIO_GRP_TMAP:
+      case BLE_AUDIO_GRP_GMAP:                bleAudioEngineEnablePeerDiscovery(); break;
+      default:                                break;
+    }
     BLELockGuard lock(mtx.get());
     handlers[group] = std::move(h);
   }

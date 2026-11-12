@@ -19,6 +19,7 @@
 
 #include "BLEAudioProfiles.h"
 #include "BLEAudioImpl.h"
+#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineProfiles.h"
 #include "esp32-hal-log.h"
@@ -57,7 +58,7 @@ bool startedWarn(const std::weak_ptr<BLEAudio::Impl> &audio, const char *what) {
 struct BLEAudioTmap::Impl {
   std::weak_ptr<BLEAudio::Impl> audio;
   BLEAudioTmapRole roles = BLEAudioTmapRole::None;  ///< Local roles; None registers no TMAS.
-  DiscoverCallback discoverCb;
+  BLEAudioCallback<DiscoverCallback> discoverCb;
 
   /** Engine event for this group: a peer's TMAP roles were read. */
   void handle(const ble_audio_evt_t &e) {
@@ -145,7 +146,7 @@ struct BLEAudioGmap::Impl {
   std::weak_ptr<BLEAudio::Impl> audio;
   BLEAudioGmapRole roles = BLEAudioGmapRole::None;  ///< Local roles; None registers no GMAS.
   BLEAudioGmapFeatures features;                    ///< Local features of those roles.
-  DiscoverCallback discoverCb;
+  BLEAudioCallback<DiscoverCallback> discoverCb;
 
   /** Engine event for this group: a peer's GMAP roles and features were read. */
   void handle(const ble_audio_evt_t &e) {

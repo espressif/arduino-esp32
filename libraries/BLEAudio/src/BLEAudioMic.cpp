@@ -15,6 +15,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioMic.h"
@@ -41,7 +42,7 @@
 struct BLEAudioMicDevice::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
   bool muted = false;  ///< Initial state before start, then the last reported state.
-  MuteCallback muteCb;
+  BLEAudioCallback<MuteCallback> muteCb;
 
   /** Engine event for this group: the mute state changed (by a client or locally). */
   void handle(const ble_audio_evt_t &e) {
@@ -132,9 +133,9 @@ struct BLEAudioMicController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
   BLEAudioControlLink link;  ///< The microphone device being controlled.
   bool muted = false;        ///< Last state reported by the device.
-  DiscoveredCallback discoveredCb;
-  MuteCallback muteCb;
-  InputCallback inputCb;
+  BLEAudioCallback<DiscoveredCallback> discoveredCb;
+  BLEAudioCallback<MuteCallback> muteCb;
+  BLEAudioCallback<InputCallback> inputCb;
 
   /**
    * Engine event: core events drive the link (deferred discovery, disconnect);

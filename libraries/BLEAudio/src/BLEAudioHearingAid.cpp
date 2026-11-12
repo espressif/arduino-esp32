@@ -15,6 +15,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include <vector>
@@ -52,8 +53,8 @@ struct BLEAudioHearingAidDevice::Impl {
   BLEHearingAidType type = BLEHearingAidType::Monaural;
   bool presetSync = false;
   std::vector<Preset> presets;  ///< Staged until start; released once registered.
-  SelectCallback selectCb;
-  RenameCallback renameCb;
+  BLEAudioCallback<SelectCallback> selectCb;
+  BLEAudioCallback<RenameCallback> renameCb;
   bool inited = false;
 
   /** Register one preset with the stack. */
@@ -212,9 +213,9 @@ struct BLEAudioHearingAidController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
   BLEAudioControlLink link;  ///< The hearing aid being controlled.
   uint8_t active = 0;        ///< Peer's active preset, 0 when unknown (reset on discover and disconnect).
-  DiscoveredCallback discoveredCb;
-  PresetCallback presetCb;
-  SwitchCallback switchCb;
+  BLEAudioCallback<DiscoveredCallback> discoveredCb;
+  BLEAudioCallback<PresetCallback> presetCb;
+  BLEAudioCallback<SwitchCallback> switchCb;
 
   /**
    * Engine event: core events drive the link (deferred discovery, disconnect);

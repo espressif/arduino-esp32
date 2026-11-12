@@ -22,6 +22,7 @@
 #include "BLEAudioCoordinatedSet.h"
 #include "BLEAudioCap.h"
 #include "BLEAudioImpl.h"
+#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineCap.h"
 #include "esp32-hal-log.h"
@@ -50,8 +51,8 @@ struct BLEAudioCoordinatedSetMember::Impl {
   uint8_t rank = 1;
   bool lockable = true;
   String name;  ///< Optional CSIS name (empty = none).
-  LockCallback lockCb;
-  SirkReadCallback sirkCb;
+  BLEAudioCallback<LockCallback> lockCb;
+  BLEAudioCallback<SirkReadCallback> sirkCb;
 
   /** Register the CSIS instance with the staged values; runs inside audio.start(). */
   BTStatus apply() {
@@ -92,11 +93,13 @@ struct BLEAudioCoordinatedSetMember::Impl {
           lockCb(static_cast<const ble_audio_csis_lock_t *>(e.data)->locked, e.conn_handle);
         }
         break;
-      case BLE_AUDIO_CSIS_EVT_SIRK_REQ:
-        if (sirkCb) {
-          *static_cast<const ble_audio_csis_sirk_req_t *>(e.data)->reply = static_cast<uint8_t>(sirkCb(e.conn_handle));
+      case BLE_AUDIO_CSIS_EVT_SIRK_REQ: {
+        auto cb = sirkCb.snapshot();
+        if (cb) {
+          *static_cast<const ble_audio_csis_sirk_req_t *>(e.data)->reply = static_cast<uint8_t>(cb(e.conn_handle));
         }
         break;
+      }
       default: break;
     }
   }
@@ -227,9 +230,9 @@ struct BLEAudioCoordinatedSetCoordinator::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
   std::vector<uint16_t> pending;  ///< discover() called before the link's GATT discovery finished.
   BLEAudioCoordinatedSetInfo set; ///< First discovered set (setCount 0 until then).
-  DiscoveredCallback discoveredCb;
-  LockCallback lockCb;
-  LockChangedCallback lockChangedCb;
+  BLEAudioCallback<DiscoveredCallback> discoveredCb;
+  BLEAudioCallback<LockCallback> lockCb;
+  BLEAudioCallback<LockChangedCallback> lockChangedCb;
 
   /** Start CSIS discovery on @p conn. */
   BTStatus start(uint16_t conn) {

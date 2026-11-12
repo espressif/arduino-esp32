@@ -15,6 +15,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioMedia.h"
@@ -61,8 +62,8 @@ struct BLEAudioMediaPlayer::Impl {
   String playerName;  ///< Kept so it can be applied at start.
   String trackTitle;  ///< Kept so it can be applied at start.
   BLEAudioMediaState state = BLEAudioMediaState::Inactive;  ///< Last state reported by the proxy.
-  StateCallback stateCb;
-  CommandCallback commandCb;
+  BLEAudioCallback<StateCallback> stateCb;
+  BLEAudioCallback<CommandCallback> commandCb;
 
   /** Store a name/title; pushed to the proxy now when started, else by apply(). */
   BTStatus setText(bool title, const String &text) {
@@ -197,11 +198,11 @@ struct BLEAudioMediaController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
   BLEAudioControlLink link;  ///< The media player being controlled.
   BLEAudioMediaState state = BLEAudioMediaState::Inactive;  ///< Last state reported by the peer.
-  DiscoveredCallback discoveredCb;
-  StateCallback stateCb;
-  CommandCallback commandCb;
-  TextCallback playerNameCb;
-  TextCallback trackTitleCb;
+  BLEAudioCallback<DiscoveredCallback> discoveredCb;
+  BLEAudioCallback<StateCallback> stateCb;
+  BLEAudioCallback<CommandCallback> commandCb;
+  BLEAudioCallback<TextCallback> playerNameCb;
+  BLEAudioCallback<TextCallback> trackTitleCb;
 
   /** Read one characteristic (BLE_AUDIO_MCP_READ_*) from the bound peer. */
   BTStatus read(uint8_t what) const {
@@ -245,7 +246,7 @@ struct BLEAudioMediaController::Impl {
         break;
       case BLE_AUDIO_EVT_MCP_CLI_PLAYER_NAME:
       case BLE_AUDIO_EVT_MCP_CLI_TRACK_TITLE: {
-        const TextCallback &cb = e.type == BLE_AUDIO_EVT_MCP_CLI_PLAYER_NAME ? playerNameCb : trackTitleCb;
+        const TextCallback cb = e.type == BLE_AUDIO_EVT_MCP_CLI_PLAYER_NAME ? playerNameCb.snapshot() : trackTitleCb.snapshot();
         if (!e.err && e.data && cb) {
           cb(String(static_cast<const char *>(e.data)));
         }

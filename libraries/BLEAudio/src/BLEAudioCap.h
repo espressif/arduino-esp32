@@ -195,6 +195,9 @@ public:
    *
    * The acceptors are told to receive the broadcast; the sink streams keep
    * their handles and go on carrying audio as BIS. Source streams stop.
+   *
+   * @note If the procedure fails, the initiator also stops the unicast
+   * session (onUnicastStopped() fires) so startUnicast() can rebuild it.
    */
   BTStatus handoverToBroadcast(uint8_t advInstance = 0);
   /** @brief Move a handed-over broadcast back to unicast on the same acceptors. */

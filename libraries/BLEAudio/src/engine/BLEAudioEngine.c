@@ -188,6 +188,8 @@ static bool s_connect_pending; /* bleAudioEngineConnect() armed; the next centra
  * central links while the audio connect is in flight. */
 static struct bt_le_addr s_connect_target;
 static bool s_connect_target_valid;
+/* A client role needs the peer's GATT database; server-only roles do not. */
+static bool s_peer_discovery;
 #if BLE_BLUEDROID
 static esp_bd_addr_t s_connect_bda; /* esp_ble_set_encryption() takes the address, not the handle. */
 /* The ACL_CONNECT event is delivered on the BTC task, where the peer is not yet
@@ -418,9 +420,13 @@ static void gatt_cb(esp_ble_audio_gatt_app_event_t *event) {
           /* Tracked link: discovery waits for the security outcome. */
           s_link_mtu_ok[idx] = true;
           link_maybe_discover(idx);
-        } else {
-          /* Link opened by the peer: the central drives its security. */
+        } else if (s_peer_discovery) {
+          /* Link opened by the peer: the central drives its security. Only a
+           * client role needs the peer's database, so server-only sketches
+           * report the link ready without discovering it. */
           bleAudioEngineGattcDiscStart(event->gatt_mtu_change.conn_handle);
+        } else {
+          bleAudioEngineEmit(BLE_AUDIO_EVT_GATT_DISCOVERED, event->gatt_mtu_change.conn_handle, 0, NULL);
         }
       } else {
         log_w("conn %u: MTU %u below the LE Audio minimum %u, not discovering", event->gatt_mtu_change.conn_handle,
@@ -553,6 +559,7 @@ static void engine_reset_local(void) {
   s_sink_ctx = NULL;
   s_connect_pending = false;
   s_connect_target_valid = false;
+  s_peer_discovery = false;
   for (int i = 0; i < MAX_LINKS; i++) {
     s_links[i] = BLE_AUDIO_CONN_NONE;
     s_link_peer_valid[i] = false;
@@ -671,6 +678,10 @@ int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]) {
 void bleAudioEngineCancelConnect(void) {
   s_connect_pending = false;
   s_connect_target_valid = false;
+}
+
+void bleAudioEngineEnablePeerDiscovery(void) {
+  s_peer_discovery = true;
 }
 
 bool bleAudioEngineLinkAddress(uint16_t conn_handle, uint8_t addr[6]) {
