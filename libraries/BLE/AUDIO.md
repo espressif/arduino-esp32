@@ -575,8 +575,14 @@ Audio behavior is exercised by:
   unicast/broadcast, LC3 loopback, control profiles, TMAP/GMAP, HAS, stereo
   broadcast with a measured SDU rate and churned stream callbacks, broadcast
   assistant (including repeated scan-stop idempotency), CAP handover
-  (including PBA round-trip and a rejected handover), memory release.
+  (including PBA round-trip, a rejected handover, and a forced asynchronous
+  failure through a test-only hook), memory release.
 - Host-interop: `tests/validation/ble_audio_host/` (ESP DUT + Linux Bumble).
+
+The dual-DUT sketches also build with `-DBLE_AUDIO_VALIDATION_HOOKS`; the
+hooks in `BLEAudioValidationHooks.h` cover the two behaviors a two-DUT bench
+cannot produce: an unrelated central ACL during `connect()` and an
+asynchronous CAP handover failure. Production builds compile them out.
 
 Phases self-skip when a role or host tool is unavailable on general targets.
 On an `esp32s31` dual-DUT job phases 1–13 are mandatory and a missing

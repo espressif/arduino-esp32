@@ -40,6 +40,7 @@
 #include "core/BLEGuards.h"
 #if BLE_AUDIO_SUPPORTED
 
+#include "BLEAudioValidationHooks.h"
 #include "engine/BLEAudioEngineCap.h"
 
 #include "esp_ble_audio_bap_api.h"
@@ -54,6 +55,10 @@
 
 #include <string.h>
 #include <errno.h>
+
+#if BLE_AUDIO_VALIDATION_HOOKS
+#include "esp_timer.h"
+#endif
 
 #define CONN_NONE BLE_AUDIO_CONN_NONE
 #define COUNT_OF(a) (sizeof(a) / sizeof((a)[0]))
@@ -1195,12 +1200,49 @@ int bleAudioCapHandoverInit(void) {
   return err;
 }
 
+#if BLE_AUDIO_VALIDATION_HOOKS
+static bool s_test_fail_handover;
+static esp_timer_handle_t s_test_handover_timer;
+
+static void test_handover_fail_cb(void *arg) {
+  (void)arg;
+  bleAudioEngineEmit(BLE_AUDIO_EVT_CAP_HO_TO_BROADCAST, BLE_AUDIO_CONN_NONE, -EIO, NULL);
+}
+
+void bleAudioValidationFailNextHandover(void) {
+  s_test_fail_handover = true;
+}
+#endif
+
 int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_audio_qos_t *qos, const uint8_t *code) {
   /* Static: the stack references it until the procedure completes. */
   static esp_ble_audio_cap_handover_unicast_to_broadcast_param_t param;
   esp_ble_audio_cap_stream_t *st[BC_MAX];
   uint32_t loc[BC_MAX];
   uint8_t n = 0;
+
+#if BLE_AUDIO_VALIDATION_HOOKS
+  if (s_test_fail_handover) {
+    s_test_fail_handover = false;
+    if (s_test_handover_timer == NULL) {
+      esp_timer_create_args_t args = {
+        .callback = test_handover_fail_cb,
+        .arg = NULL,
+        .dispatch_method = ESP_TIMER_TASK,
+        .name = "audio-test-ho",
+        .skip_unhandled_events = false,
+      };
+      if (esp_timer_create(&args, &s_test_handover_timer) != ESP_OK) {
+        s_test_handover_timer = NULL;
+        return ESP_FAIL;
+      }
+    }
+    if (esp_timer_start_once(s_test_handover_timer, 50000) != ESP_OK) {
+      return ESP_FAIL;
+    }
+    return 0;
+  }
+#endif
 
   if (adv == NULL) {
     return ESP_ERR_INVALID_ARG;
@@ -1309,6 +1351,10 @@ int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_aud
   (void)code;
   return ESP_ERR_NOT_SUPPORTED;
 }
+
+#if BLE_AUDIO_VALIDATION_HOOKS
+void bleAudioValidationFailNextHandover(void) {}
+#endif
 int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
   (void)reqs;
   (void)count;

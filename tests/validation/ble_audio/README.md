@@ -5,10 +5,9 @@ client across two DUTs: the `BLEIso` transport, the BAP unicast/broadcast
 data plane, the LC3 codec loopback, the control profiles (VCP/MICP/MCP/CCP via
 CAP), the top-level identity profiles (TMAP/GMAP), the Hearing Access Service,
 stereo broadcast, the Broadcast Assistant and the CAP handover. This is a
-**multi-DUT** test. The sketches are stack-neutral (NimBLE and Bluedroid),
-but the packaged `esp32s31` libraries enable LE Audio on NimBLE only, so CI
-runs the audio phases on NimBLE. Bluedroid needs libraries rebuilt with
-Bluedroid and LE Audio enabled.
+**multi-DUT** test. The sketches are stack-neutral (NimBLE and Bluedroid);
+the `esp32s31` libraries are built for both hosts and the suite is run against
+both.
 
 It was split out of the combined [`ble`](../ble) suite so that test stays
 focused on core GATT/GAP while this one owns the GAF stack. The core-BLE
@@ -41,16 +40,30 @@ the suite runs unchanged on non-audio silicon.
 | 1 | audio_lifecycle | LE Audio engine bring-up (`common_init`/`start`) + classic-service coexistence committed into one GATT table via `BLEGattDatabase`; removes one classic service and rejects late NimBLE restaging while the audio table is frozen; a classic read callback requests `BLE.end()`, which must defer safely, release the active controller, close retained PAST admission, and permit BLE/audio re-initialization with a different role set |
 | 2 | iso_cis | `BLEIso` CIS transport integrity: server = CIS Peripheral (`listenCis`), client = CIS Central (`connectCis`) on a bidirectional CIS (`returnSduSize`); counts transparent SDUs streamed Central->Peripheral and Peripheral->Central with channel-managed sequence numbers, then leaves the standalone transport active for `BLE.end()` to release and proves it can claim the host again after re-init |
 | 3 | iso_bis | `BLEIso` BIS transport integrity: server = BIS Broadcaster (`createBig` on ext/periodic adv), client = BIS Receiver (`syncBig` via forwarded BIGInfo); counts SDUs Broadcaster->Receiver, then leaves the BIG connected so `BLE.end()` must terminate it over HCI and prove the host can be claimed again (host ISO + BLE5) |
-| 4 | bap_unicast | BAP unicast transport integrity: server = Unicast Server (PACS/ASCS, coexisting with a classic GATT service), client = Unicast Client running the full discover->config->QoS->enable->CIS->start setup; asserts the discovered sink PACS covers the configured preset (`BLEAudioUnicastPeerInfo::sinkPresets`), that the stream reached Streaming, and counts transparent SDUs streamed Client->Server sink ASE (Unicast Server / Unicast Client) |
+| 4 | bap_unicast | BAP unicast transport integrity: server = Unicast Server (PACS/ASCS, coexisting with a classic GATT service), client = Unicast Client running the full discover->config->QoS->enable->CIS->start setup; asserts the discovered sink PACS covers the configured preset (`BLEAudioUnicastPeerInfo::sinkPresets`), that the stream reached Streaming, counts transparent SDUs streamed Client->Server sink ASE, starts and stops a second session on the same peer, and checks the target-aware connect address filter through a validation hook |
 | 5 | bap_broadcast | BAP broadcast transport integrity: server = Broadcast Source (ext/periodic adv + BASE, streaming a BIG), client = Broadcast Sink scanning + PA-syncing + BIG-syncing; asserts the BASE was parsed (`onBaseReceived`) and counts transparent SDUs sent by the Source and received by the Sink over the BIS, then leaves the BIG up so `BLE.end()` must stop leftover BAP and wait for ISO idle (Broadcast Source / Broadcast Sink) |
 | 6 | lc3_loopback | LC3 data plane end-to-end: client = Unicast Client whose stream is attached to a `BLEAudioRecorder` fed by a 1 kHz tone through a PCM source (PCM->LC3->CIS), server = Unicast Server whose sink stream is attached to a `BLEAudioPlayer` with a PCM sink (CIS->LC3->PCM); asserts the recorder sent SDUs and the decoded sample count and mean amplitude prove real audio survived the codec (LC3 codec `esp_audio_codec`) |
 | 7 | control_profiles | LE Audio control-profile round-trip over one ACL: server = acceptor exposing CAP (CAS+CSIS), VCP renderer, MICP device, MCP media player (MCS), CCP call server (GTBS); client = controller ("phone") that connects once and drives CAP discovery, VCP setVolume, MICP mute, MCP play, and CCP originate; gated on the VCP write landing on the server's renderer (VCP renderer + CAP acceptor / VCP controller + CAP initiator) |
 | 8 | top_profiles | TMAP / GMAP identity round-trip: server publishes TMAS (CallTerminal + UnicastMediaReceiver) and GMAS (UnicastGameTerminal, UGT Sink); client discovers both and asserts the role / feature bitmasks (TMAP/GMAP). On the same link, set control: the client's CSIP Set Coordinator reads the server's one-member set, locks and releases it, and its CAP Commander (CAS + VCP discovery) sets the volume to 77; the server must see both lock changes and the volume (CSIP coordinator + CAP commander + VCP controller on the client) |
 | 9 | hearing_aid | Hearing Access Service round-trip: server = binaural hearing aid publishing a 3-preset HAS list and counting select requests; client = controller that discovers the HAS, reads the preset records, and switches the active preset to index 2 (LE Audio engine + HAS server/client) |
-| 10 | stereo_broadcast | encrypted stereo Auracast: server = 2-BIS Broadcast Source (front left + front right) with a Broadcast Code sending a distinct pattern per BIS, client = 2-BIS Broadcast Sink counting SDUs per channel and checking the pattern (broadcast source/sink) |
-| 11 | broadcast_assistant | BASS control point: server = Broadcast Sink with the Scan Delegator (auto-sync off), client = Broadcast Assistant that discovers BASS, runs Remote Scan Started/Stopped, adds a source description and removes it again, confirming each step through the operation result and the receive-state notifications (scan delegator + assistant) |
-| 12 | cap_handover | CAP unicast -> broadcast handover: server = CAP acceptor with a Unicast Server sink and a delegator Broadcast Sink, client = CAP Initiator that starts unicast, streams raw SDUs, then hands the session over to a broadcast on the same stream handle; the server must receive SDUs on both transports (`CONFIG_BT_CAP_HANDOVER`) |
+| 10 | stereo_broadcast | encrypted stereo Auracast: server = 2-BIS Broadcast Source (front left + front right) with a Broadcast Code sending a distinct pattern per BIS, client = 2-BIS Broadcast Sink counting SDUs per channel and checking the pattern; also measures the achieved SDU rate and churns one stream callback from a second task (broadcast source/sink) |
+| 11 | broadcast_assistant | BASS control point: server = Broadcast Sink with the Scan Delegator (auto-sync off), client = Broadcast Assistant that discovers BASS, runs Remote Scan Started/Stopped (including a repeated stop that must be a no-op), adds a source description and removes it again, confirming each step through the operation result and the receive-state notifications (scan delegator + assistant) |
+| 12 | cap_handover | CAP unicast -> broadcast handover: server = CAP acceptor with a Unicast Server sink and a delegator Broadcast Sink, client = CAP Initiator that starts unicast, streams raw SDUs, then hands the session over to a broadcast on the same stream handle; also checks the PBA round-trip, a locally rejected handover, and a forced asynchronous failure that must release unicast so it can be restarted; the server must receive SDUs on both transports (`CONFIG_BT_CAP_HANDOVER`) |
 | 13 | memory_release | heap reclaimed on release; reinit blocked while released |
+
+## Validation hooks
+
+Both sketches build with `-DBLE_AUDIO_VALIDATION_HOOKS` in `build_opt.h`
+(`BLEAudioValidationHooks.h`). Production builds compile the hooks out. The
+hooks close two gaps that a two-DUT bench cannot exercise:
+
+- `bleAudioValidationArmConnect()` / `bleAudioValidationAcceptPeer()` check that
+  the engine adopts only the address passed to `connect()`, not another central
+  ACL that appears while the connect is pending.
+- `bleAudioValidationFailNextHandover()` makes the next CAP handover report an
+  asynchronous failure after 50 ms, so the initiator's recovery (release the
+  unicast group, report `onHandover(Fail)`, allow `startUnicast()` again) runs
+  for real.
 
 ## Requirements
 

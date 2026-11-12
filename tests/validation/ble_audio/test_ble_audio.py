@@ -178,7 +178,11 @@ def _phase_bap_unicast(server, client):
     m_pdisc_c = client.expect(r"\[CLIENT\] BapUnicast peripheralDisconnect down=([01])", timeout=20)
     assert int(m_pdisc_c.group(1)) == 1, "client did not observe the server-initiated disconnect"
     ms2 = server.expect(r"\[SERVER\] BapUnicast result received=(\d+)", timeout=120)
-    mc = client.expect(r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+))", timeout=120)
+    mc = client.expect(
+        r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+) restarted=(\d+) resent=(\d+) "
+        r"target=(\d+) other=(\d+))",
+        timeout=120,
+    )
     server.expect_exact("[SERVER] Phase4 bap_unicast done", timeout=40)
     client.expect_exact("[CLIENT] Phase4 bap_unicast done", timeout=40)
 
@@ -186,13 +190,15 @@ def _phase_bap_unicast(server, client):
         return False
 
     received = int(ms2.group(1))
-    streaming = int(mc.group(2))
-    sent = int(mc.group(3))
-    presets = int(mc.group(4))
+    streaming, sent, presets, restarted, resent, target_accept, other_reject = (int(mc.group(i)) for i in range(2, 9))
     assert presets == 1, "Unicast Client did not find LC3_16_2_1 in the server's sink PACS"
     assert streaming == 1, "unicast stream never reached Streaming on the client"
     assert sent > 0, "Unicast Client sent no SDUs"
     assert received > 0, f"Unicast Server received no SDUs (Client sent {sent})"
+    assert restarted == 1 and resent > 0, f"a second unicast session on the same peer failed (restarted={restarted}, resent={resent})"
+    assert target_accept == 1 and other_reject == 1, (
+        f"target-aware connect mismatch (target={target_accept}, other_reject={other_reject})"
+    )
     return True
 
 
@@ -466,7 +472,8 @@ def _phase_cap_handover(server, client):
     )
     mc = client.expect(
         r"\[CLIENT\] CapHandover (not supported|result disc=(\d+) unicast=(\d+) handover=(\d+) "
-        r"ucsent=(\d+) bcsent=(\d+) badho=(\d+) badafter=(\d+) ucstopped=(\d+) ucrc=(-?\d+) bcrc=(-?\d+))",
+        r"ucsent=(\d+) bcsent=(\d+) badho=(\d+) badafter=(\d+) ucstopped=(\d+) ucrc=(-?\d+) bcrc=(-?\d+) "
+        r"hofail=(\d+) horestart=(\d+))",
         timeout=150,
     )
     server.expect_exact("[SERVER] Phase12 cap_handover done", timeout=40)
@@ -476,7 +483,9 @@ def _phase_cap_handover(server, client):
         return False
 
     uc_rx, joined, bc_rx, pba = int(ms.group(2)), int(ms.group(3)), int(ms.group(4)), int(ms.group(5))
-    disc, unicast, handover, uc_sent, bc_sent, badho, badafter, uc_stopped, uc_rc, bc_rc = (int(mc.group(i)) for i in range(2, 12))
+    disc, unicast, handover, uc_sent, bc_sent, badho, badafter, uc_stopped, uc_rc, bc_rc, ho_fail, ho_restart = (
+        int(mc.group(i)) for i in range(2, 14)
+    )
     LOGGER.info(
         "cap_handover: ucsent=%d ucrx=%d bcsent=%d bcrx=%d joined=%d", uc_sent, uc_rx, bc_sent, bc_rx, joined
     )
@@ -489,7 +498,9 @@ def _phase_cap_handover(server, client):
     assert pba == 1, "Public Broadcast Announcement build/parse round-trip failed"
     assert badho == 1, "handoverToBroadcast() accepted an invalid advertising instance"
     assert badafter == 1, "a locally failed handover stopped the running unicast session"
-    LOGGER.info("cap_handover: ucstop=%d rc=%d bcstop_rc=%d", uc_stopped, uc_rc, bc_rc)
+    LOGGER.info("cap_handover: ucstop=%d rc=%d bcstop_rc=%d hofail=%d horestart=%d", uc_stopped, uc_rc, bc_rc, ho_fail, ho_restart)
+    assert ho_fail == 1, "the forced asynchronous handover failure did not report"
+    assert ho_restart == 1, "the initiator could not rebuild unicast after the forced handover failure"
     return True
 
 

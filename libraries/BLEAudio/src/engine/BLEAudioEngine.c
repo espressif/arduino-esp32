@@ -39,6 +39,7 @@
 #include "core/BLEGuards.h"
 #if BLE_AUDIO_SUPPORTED
 
+#include "BLEAudioValidationHooks.h"
 #include "engine/BLEAudioEngine.h"
 #if BLE_NIMBLE
 #include "engine/BLEAudioEngine.nimble.h"
@@ -249,6 +250,19 @@ static void link_maybe_discover(int idx) {
 
 static void link_on_security(uint16_t conn);
 
+/** @return true when @p peer is the address armed by bleAudioEngineConnect(). */
+static bool link_matches_target(const struct bt_le_addr *peer) {
+  if (!s_connect_target_valid) {
+    return true;
+  }
+  if (peer == NULL) {
+    return false;
+  }
+  struct bt_le_addr addr;
+  bleAudioAddrFromGap(addr.val, peer->val);
+  return memcmp(addr.val, s_connect_target.val, 6) == 0;
+}
+
 /**
  * @brief ACL up: adopt the first central link after bleAudioEngineConnect() and encrypt it.
  *
@@ -259,15 +273,11 @@ static void link_on_connect(uint16_t conn, uint8_t status, uint8_t role, const s
   if (!s_connect_pending || role != HCI_ROLE_CENTRAL) {
     return;
   }
-  if (s_connect_target_valid && peer != NULL) {
-    struct bt_le_addr addr;
-    bleAudioAddrFromGap(addr.val, peer->val);
-    if (memcmp(addr.val, s_connect_target.val, 6) != 0) {
-      /* Not the peer audio.connect() asked for: leave the bring-up armed so
-       * this application link is not adopted. */
-      log_d("conn %u: central ACL is not the audio target, ignoring", conn);
-      return;
-    }
+  if (!link_matches_target(peer)) {
+    /* Not the peer audio.connect() asked for: leave the bring-up armed so
+     * this application link is not adopted. */
+    log_d("conn %u: central ACL is not the audio target, ignoring", conn);
+    return;
   }
   s_connect_pending = false;
   s_connect_target_valid = false;
@@ -683,6 +693,33 @@ void bleAudioEngineCancelConnect(void) {
 void bleAudioEngineEnablePeerDiscovery(void) {
   s_peer_discovery = true;
 }
+
+#if BLE_AUDIO_VALIDATION_HOOKS
+bool bleAudioValidationArmConnect(const uint8_t addr[6], uint8_t addr_type) {
+  if (addr == NULL) {
+    return false;
+  }
+  memcpy(s_connect_target.val, addr, sizeof(s_connect_target.val));
+  s_connect_target.type = addr_type;
+  s_connect_target_valid = true;
+  s_connect_pending = true;
+  return true;
+}
+
+bool bleAudioValidationAcceptPeer(const uint8_t addr[6], uint8_t addr_type) {
+  (void)addr_type;
+  if (addr == NULL || !s_connect_target_valid) {
+    return false;
+  }
+  /* Both addresses are already in engine (LSB-first) order; do not run the
+   * GAP-event conversion again (it reverses on Bluedroid). */
+  return memcmp(addr, s_connect_target.val, 6) == 0;
+}
+
+void bleAudioValidationCancelConnect(void) {
+  bleAudioEngineCancelConnect();
+}
+#endif
 
 bool bleAudioEngineLinkAddress(uint16_t conn_handle, uint8_t addr[6]) {
   int idx = link_index(conn_handle);

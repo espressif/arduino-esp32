@@ -9,6 +9,7 @@
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
+#include "BLEAudioValidationHooks.h"
 #include <string.h>
 #include "freertos/task.h"
 #include "esp_heap_caps.h"
@@ -417,6 +418,7 @@ void setup() {
     uint32_t sent = 0;
     uint32_t restartSent = 0;
     int restarted = 0;
+    int targetAccept = 0, otherReject = 0;
     BTStatus st = BLE.begin("BLE_CLT_BAP");
     if (st) {
       BLEAudio audio = BLE.getAudioController();
@@ -441,6 +443,15 @@ void setup() {
           bapTxStreaming = false;
         });
         if (audio.start()) {
+#if BLE_AUDIO_VALIDATION_HOOKS
+          // The engine must adopt only the address passed to connect(), not
+          // any other central ACL that comes up while the connect is pending.
+          static const uint8_t kHookTarget[6] = {0x70, 0x58, 0xD0, 0x04, 0x29, 0x1C};
+          static const uint8_t kHookOther[6] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
+          targetAccept = (bleAudioValidationArmConnect(kHookTarget, 0) && bleAudioValidationAcceptPeer(kHookTarget, 0)) ? 1 : 0;
+          otherReject = bleAudioValidationAcceptPeer(kHookOther, 0) ? 0 : 1;
+          bleAudioValidationCancelConnect();
+#endif
           // The pytest test signals after the server's unicast advertising is
           // up. Scanning before that can latch the previous phase's advertising
           // and then connect to a server that is still re-initializing.
@@ -559,8 +570,9 @@ void setup() {
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] BapUnicast result streaming=%d sent=%lu presets=%d restarted=%d resent=%lu\n", (int)everStreamed,
-                    (unsigned long)sent, (int)bapPresetPublished, restarted, (unsigned long)restartSent);
+      Serial.printf("[CLIENT] BapUnicast result streaming=%d sent=%lu presets=%d restarted=%d resent=%lu target=%d other=%d\n",
+                    (int)everStreamed, (unsigned long)sent, (int)bapPresetPublished, restarted, (unsigned long)restartSent, targetAccept,
+                    otherReject);
     }
     BLE.end(false);
     delay(500);
@@ -1278,6 +1290,7 @@ void setup() {
     BLE.end(false);
     delay(500);
     volatile int discOk = 0, ucOk = 0, hoOk = 0, badHoFailed = 0, badHoUcAlive = 0, ucStopped = 0, ucStopRc = 0, bcStopRc = 0;
+    volatile int hoFail = 0, hoFailDone = 0, hoFailRecovered = 0, hoRestart = 0;
     volatile bool discDone = false, ucDone = false, hoDone = false;
     uint32_t ucSent = 0, bcSent = 0;
     BTStatus st = BLE.begin("BLE_CLT_HO");
@@ -1298,8 +1311,15 @@ void setup() {
           ucDone = true;
         });
         initiator.onHandover([&](BTStatus s2, bool toBroadcast) {
-          hoOk = (s2 && toBroadcast) ? 1 : 0;
-          hoDone = true;
+          if (toBroadcast) {
+            if (s2) {
+              hoOk = 1;
+              hoDone = true;
+            } else {
+              hoFail = 1;
+              hoFailDone = 1;
+            }
+          }
         });
         initiator.onUnicastStopped([&]() {
           ucStopped = 1;
@@ -1337,6 +1357,36 @@ void setup() {
                 }
               }
               if (ucOk) {
+#if BLE_AUDIO_VALIDATION_HOOKS
+                // Force the asynchronous handover failure and verify that the
+                // initiator releases unicast and can rebuild the session.
+                hoFail = 0;
+                hoFailDone = 0;
+                bleAudioValidationFailNextHandover();
+                BTStatus forced = initiator.handoverToBroadcast();
+                if (forced) {
+                  unsigned long fdl = millis() + 5000;
+                  while (!hoFailDone && millis() < fdl) {
+                    delay(50);
+                  }
+                }
+                hoFailRecovered = (hoFail && !initiator.isUnicastStreaming()) ? 1 : 0;
+                // The recovery initiates an asynchronous group release; wait
+                // for UC_STOPPED before rebuilding the session.
+                unsigned long stopDeadline = millis() + 5000;
+                while (!ucStopped && millis() < stopDeadline) {
+                  delay(50);
+                }
+                ucOk = 0;
+                ucDone = false;
+                if (initiator.startUnicast()) {
+                  unsigned long rdl = millis() + 15000;
+                  while (!ucDone && millis() < rdl) {
+                    delay(50);
+                  }
+                }
+                hoRestart = ucOk ? 1 : 0;
+#endif
                 ucSent = stream(3000, nullptr);
                 // An out-of-range advertising instance fails locally and must
                 // leave the running unicast session untouched.
@@ -1371,9 +1421,9 @@ void setup() {
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] CapHandover result disc=%d unicast=%d handover=%d ucsent=%lu bcsent=%lu badho=%d badafter=%d ucstopped=%d ucrc=%d bcrc=%d\n",
+      Serial.printf("[CLIENT] CapHandover result disc=%d unicast=%d handover=%d ucsent=%lu bcsent=%lu badho=%d badafter=%d ucstopped=%d ucrc=%d bcrc=%d hofail=%d horestart=%d\n",
                     discOk, ucOk, hoOk, (unsigned long)ucSent, (unsigned long)bcSent, badHoFailed, badHoUcAlive, ucStopped,
-                    ucStopRc, bcStopRc);
+                    ucStopRc, bcStopRc, hoFailRecovered, hoRestart);
     }
     BLE.end(false);
     delay(500);
