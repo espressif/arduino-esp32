@@ -169,7 +169,7 @@ of adding more sketches:
   `BLEAudioRecorder::setPCMSource()` replace the I2S endpoints with callbacks,
   which is how the validation suite checks the LC3 path without a codec board.
 - **Custom I2S transports.** The built-in I2S port is internal: it sizes one
-  DMA buffer per LC3 frame, preloads the TX ring and clears on underrun so the
+  DMA buffer per LC3 frame, primes one TX buffer and clears on underrun so the
   codec task stays paced. To use `I2SClass`, TDM/PDM or a codec-specific
   driver, use `setPCMSink()`/`setPCMSource()` and drive that transport from the
   callback. If `ESP_I2S` later exposes DMA buffer sizing, TX preload and
@@ -178,6 +178,28 @@ of adding more sketches:
 - **Top-level identity only.** TMAP/GMAP publish roles; they move no audio.
   Use `audio.createTmap()` / `audio.createGmap()` and `discover()` to read a
   peer's roles.
+
+## Errors and callbacks
+
+Configuration methods return `BTStatus` synchronously: `InvalidParam` for a
+bad value, `InvalidState` before `audio.begin()` / `audio.start()` or while a
+role is running, and the stack status when a request cannot be queued. Where a
+profile defines a completion callback (`onResult()`, `onError()`,
+`onHandover()`, `onSyncFailed()`, ...), an asynchronous failure is reported
+there.
+
+The control-profile setters (`BLEAudioVolumeController`,
+`BLEAudioMicController`, `BLEAudioMediaController`, `BLEAudioCallClient`,
+`BLEAudioHearingAidController`) return the status of the write request. A
+failure after the write is queued is logged; this version has no per-operation
+error callback for those profiles, so treat the next state notification as the
+confirmation.
+
+Role callbacks run on the Bluetooth host task. They are copied under a lock
+before invocation, so the application may set or clear them from another task,
+but keep them short and do not block. `BLEAudioPlayer`/`BLEAudioRecorder` PCM
+callbacks run on the codec task; a PCM sink is paced to the stream's real-time
+frame rate.
 
 ## Relationship to `BLE`
 
