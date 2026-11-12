@@ -24,6 +24,7 @@
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
+#include "board_audio.h"
 
 // ESP32-S31 Function CoreBoard 1: ES8311 codec -> NS4150B speaker amplifier.
 // The pin macros come from the board variant.
@@ -106,6 +107,7 @@ void setup() {
   volumeRenderer.setInitialVolume(160);
   volumeRenderer.onStateChanged([](uint8_t volume, bool muted) {
     Serial.printf("[VCP] volume=%u%s\n", volume, muted ? " (muted)" : "");
+    board_audio::es8311SetVolume(muted ? 0 : (uint8_t)((volume * 100u) / 255u));
   });
 
   // audio.start() commits the roles and publishes their GATT services. It
@@ -115,8 +117,11 @@ void setup() {
     halt("audio.start", st);
   }
 
-  // The ES8311 DAC is fed by the board's I2S pins; PA_CTRL enables the
-  // NS4150B speaker amplifier.
+  // Configure the onboard ES8311 (I2C), then enable the NS4150B amplifier.
+  // The codec follows the I2S clocks, so it works at every LC3 sample rate.
+  if (!board_audio::es8311Begin()) {
+    Serial.println("ES8311 init failed; check the codec I2C bus");
+  }
   pinMode(PA_CTRL, OUTPUT);
   digitalWrite(PA_CTRL, HIGH);
   st = player.begin(I2S_SCLK, I2S_LRCK, I2S_DOUT, I2S_MCLK);

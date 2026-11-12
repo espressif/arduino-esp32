@@ -21,6 +21,7 @@
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
+#include "board_audio.h"
 
 // ESP32-S31 Function CoreBoard 1: onboard microphone -> ES8311 ADC.
 // The pin macros come from the board variant.
@@ -122,6 +123,11 @@ void setup() {
     halt("audio.start", st);
   }
 
+  // Configure the onboard ES8311 ADC; it follows the I2S clocks, so it works
+  // at every LC3 sample rate.
+  if (!board_audio::es8311Begin()) {
+    Serial.println("ES8311 init failed; check the codec I2C bus");
+  }
   st = recorder.begin(I2S_SCLK, I2S_LRCK, I2S_DIN, I2S_MCLK);
   if (!st) {
     halt("recorder.begin", st);
