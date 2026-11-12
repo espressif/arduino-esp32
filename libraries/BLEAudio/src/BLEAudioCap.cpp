@@ -700,7 +700,9 @@ BTStatus BLEAudioCapInitiator::stopUnicast() {
   }
   {
     BLELockGuard lock(_impl->mtx.get());
-    if (!_impl->ucRunning || _impl->hoBusy) {
+    // After a handover the CIS is gone but the CAP unicast group still owns
+    // the streams; it must be releasable just like a running session.
+    if ((!_impl->ucRunning && !_impl->handedOver) || _impl->hoBusy) {
       return BTStatus::InvalidState;
     }
   }

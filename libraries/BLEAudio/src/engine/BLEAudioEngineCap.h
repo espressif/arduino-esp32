@@ -179,6 +179,8 @@ int bleAudioCapUnicastStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count
 int bleAudioCapUnicastUpdate(uint16_t context);
 /** @brief Stop and release every stream, then delete the group (UC_STOPPED). */
 int bleAudioCapUnicastStop(void);
+/** @return true while a CAP initiator unicast group exists. */
+bool bleAudioCapUnicastGroupExists(void);
 
 /** @brief Same contract as bleAudioBsrcCreate(), on the CAP broadcast source. */
 int bleAudioCapBroadcastCreate(ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec,
@@ -191,6 +193,8 @@ int bleAudioCapBroadcastStart(const ble_audio_cap_adv_t *adv);
 int bleAudioCapBroadcastUpdate(uint16_t context);
 /** @brief Terminate the BIG (BC_STOPPED); the source stays configured for Start or Delete. */
 int bleAudioCapBroadcastStop(void);
+/** @return true while a CAP initiator broadcast source exists. */
+bool bleAudioCapBroadcastExists(void);
 /** @brief Delete the stopped source and unregister the advertising set. */
 void bleAudioCapBroadcastDelete(void);
 

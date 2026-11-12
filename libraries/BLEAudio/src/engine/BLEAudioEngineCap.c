@@ -796,9 +796,16 @@ int bleAudioCapUnicastUpdate(uint16_t context) {
   return (int)esp_ble_audio_cap_initiator_unicast_audio_update(&param);
 }
 
+bool bleAudioCapUnicastGroupExists(void) {
+  return s_uc.group != NULL;
+}
+
 int bleAudioCapUnicastStop(void) {
   if (s_uc.group == NULL) {
-    return ESP_ERR_INVALID_STATE;
+    /* Already released (for example the handover consumed the group): report
+     * the terminal state so the role can clear its session. */
+    bleAudioEngineEmit(BLE_AUDIO_EVT_CAP_UC_STOPPED, CONN_NONE, 0, NULL);
+    return 0;
   }
   esp_ble_audio_cap_unicast_audio_stop_param_t param = {
     .type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC,
@@ -835,6 +842,9 @@ int bleAudioCapUnicastUpdate(uint16_t context) {
 }
 int bleAudioCapUnicastStop(void) {
   return ESP_ERR_NOT_SUPPORTED;
+}
+bool bleAudioCapUnicastGroupExists(void) {
+  return false;
 }
 
 #endif /* CAP_UC */
@@ -999,6 +1009,10 @@ int bleAudioCapBroadcastUpdate(uint16_t context) {
   return (int)esp_ble_audio_cap_initiator_broadcast_audio_update(s_bc.source, meta, sizeof(meta));
 }
 
+bool bleAudioCapBroadcastExists(void) {
+  return s_bc.source != NULL;
+}
+
 int bleAudioCapBroadcastStop(void) {
   return s_bc.source ? (int)esp_ble_audio_cap_initiator_broadcast_audio_stop(s_bc.source) : ESP_ERR_INVALID_STATE;
 }
@@ -1048,6 +1062,9 @@ int bleAudioCapBroadcastUpdate(uint16_t context) {
 }
 int bleAudioCapBroadcastStop(void) {
   return ESP_ERR_NOT_SUPPORTED;
+}
+bool bleAudioCapBroadcastExists(void) {
+  return false;
 }
 void bleAudioCapBroadcastDelete(void) {}
 

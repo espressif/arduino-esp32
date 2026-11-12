@@ -22,6 +22,7 @@
 
 static_assert(std::is_base_of<BLEAudioImplCommon, BLEAudio::Impl>::value, "BLEAudio::Impl must inherit BLEAudioImplCommon");
 #include "engine/BLEAudioEngineBap.h"
+#include "engine/BLEAudioEngineCap.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "BLE.h"
 #include "client/BLEClient.h"
@@ -249,6 +250,15 @@ BTStatus BLEAudio::end() {
         (void)client->disconnect();
       }
     }
+  }
+  // CAP initiator streams live in their own engine group, not in the BAP
+  // leftovers. Stop them before waiting so a handover session cannot keep the
+  // CIG/BIG allocated into the next BLE session.
+  if (bleAudioCapBroadcastExists()) {
+    (void)bleAudioCapBroadcastStop();
+  }
+  if (bleAudioCapUnicastGroupExists()) {
+    (void)bleAudioCapUnicastStop();
   }
   bleAudioBapStopLeftover();
   if (!waitBapIdle()) {
