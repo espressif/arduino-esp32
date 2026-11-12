@@ -1,0 +1,40 @@
+# Plumber overlay: inherits every control from the CLI's built-in
+# baseline, only the differences for this repository are written here.
+# Run 'plumber config resolve' to see the full effective config.
+extends: plumber:default
+version: '2.0'
+
+github:
+  controls:
+    githubActionMustComeFromAuthorizedSources:
+      # Keep the curated default list and trust the actions this
+      # repository uses on top of it, all pinned by commit.
+      includePlumberDefaults: true
+      trustedGithubActions:
+        - EnricoMi/publish-unit-test-result-action
+        - P-R-O-C-H-Y/compile-sketches
+        - P-R-O-C-H-Y/report-size-deltas
+        - awalsh128/cache-apt-pkgs-action
+        - dawidd6/action-download-artifact
+        - dcarbone/install-jq-action
+        - digital-blueprint/gitlab-pipeline-trigger-action
+        - jaywcjlove/generated-badges
+        - juliangruber/read-file-action
+        - pozetroninc/github-action-get-latest-release
+        - pre-commit-ci/lite-action
+        - thollander/actions-comment-pull-request
+        - tj-actions/changed-files
+        - wokwi/wokwi-ci-server-action
+    actionsMustNotExecuteMutableRemoteCode:
+      # The one finding is espressif/release-sign, the maintainers' own
+      # signing action, pinned by commit.
+      enabled: false
+    branchMustBeProtected:
+      # The release/* branches carry no protection rules upstream, master
+      # does and is the branch the workflows run on.
+      namePatterns:
+        - master
+    containerImageMustNotUseForbiddenTags:
+      # The ESP-IDF build image is tagged with the IDF version of the
+      # matrix on purpose, a digest per entry would freeze it.
+      containerImagesMustBePinnedByDigest: false
