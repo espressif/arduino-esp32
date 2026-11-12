@@ -588,7 +588,11 @@ static void hw_cdc_reset_handler(void *arg) {
 }
 
 static void usb_switch_to_cdc_jtag() {
+  // Stop debug because it might prevent reboot to download
+  ets_install_putc1(NULL);
+  ets_install_putc2(NULL);
   // Disable USB-OTG
+  tud_disconnect();
   deinit_usb_hal();
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
   periph_ll_reset(PERIPH_MODULE_MAX);
@@ -634,10 +638,7 @@ static void usb_switch_to_cdc_jtag() {
     if (esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_reset_handler, reset_sem, &intr_handle) != ESP_OK) {
       vSemaphoreDelete(reset_sem);
       reset_sem = NULL;
-      log_e("HW USB CDC failed to init interrupts");
     }
-  } else {
-    log_e("reset_sem init failed");
   }
 
   // Connect GPIOs to integrated CDC+JTAG
@@ -645,9 +646,7 @@ static void usb_switch_to_cdc_jtag() {
 
   // Wait for BUS_RESET to give us back the semaphore
   if (reset_sem) {
-    if (xSemaphoreTake(reset_sem, 1000 / portTICK_PERIOD_MS) != pdPASS) {
-      log_e("reset_sem timeout");
-    }
+    xSemaphoreTake(reset_sem, 1000 / portTICK_PERIOD_MS);
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     esp_intr_free(intr_handle);
     vSemaphoreDelete(reset_sem);
