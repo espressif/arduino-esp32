@@ -654,9 +654,6 @@ static void usb_switch_to_cdc_jtag() {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 static void IRAM_ATTR usb_persist_shutdown_handler(void) {
   if (usb_persist_mode != RESTART_NO_PERSIST) {
-    // Stop debug because it might prevent reboot to download
-    ets_install_putc1(NULL);
-    ets_install_putc2(NULL);
     if (usb_persist_enabled) {
       usb_dc_prepare_persist();
     }
@@ -696,6 +693,9 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void) {
 void usb_persist_restart(restart_type_t mode) {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   if (mode < RESTART_TYPE_MAX && esp_register_shutdown_handler(usb_persist_shutdown_handler) == ESP_OK) {
+    // Stop debug because it might prevent reboot to download
+    ets_install_putc1(NULL);
+    ets_install_putc2(NULL);
     usb_persist_mode = mode;
 #if CONFIG_IDF_TARGET_ESP32S3
     if (mode == RESTART_BOOTLOADER) {
