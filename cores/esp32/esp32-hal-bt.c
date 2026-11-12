@@ -31,6 +31,35 @@ static bool _classicMemReleased = false;
 static bool _classicMemReleased = true;  // No Classic BT on this chip
 #endif
 
+// Does this target's controller really free the memory behind these flags?
+//
+// The ESP32's monolithic BTDM controller implements esp_bt_mem_release(): the
+// freed region is really gone and that mode can no longer run.
+//
+// The split-controller targets (ESP32-S31, ESP32-H4 — CONFIG_BT_DUAL_MODE_ARCH)
+// are built from independent BLE and BR/EDR halves (libble_app + libbredr_app)
+// joined by a broker.  Which halves exist is fixed at build time (BT_MODE), and
+// esp_bt_controller_enable() enables every built half; a BTDM build cannot be
+// narrowed to one half at runtime.  The memory-release APIs are also currently
+// stubs there, but the policy below does not depend on that: in a BTDM build a
+// release is recorded as the end(true) contract only (freeing one half would
+// leave the other enable path referencing freed memory), while a single-half
+// build calls the physical API and will start freeing automatically if the
+// controller implements it.  btStartMode() must not act on the flags as
+// if memory were gone — narrowing a BTDM request to one half hands the host a
+// controller that lacks the other half (see btStartMode for the failure modes).
+//
+// Future (S31 runtime mode selection): once the controller honours the enable
+// mode and implements the release APIs, remove this gate, the
+// CONFIG_BT_DUAL_MODE_ARCH clamp in btStartMode(), and the BTDM early return in
+// btMemRelease() together. Implementing the release stubs alone is not enough.
+// See DESIGN.md, "To reclaim the unused half in a BTDM build".
+#if defined(CONFIG_BT_DUAL_MODE_ARCH)
+#define BT_MODE_MEM_RELEASE_PHYSICAL 0
+#else
+#define BT_MODE_MEM_RELEASE_PHYSICAL 1
+#endif
+
 // Default behavior: release BTDM memory (~36KB) unless a BT library is used or user overrides.
 // BT libraries include esp32-hal-alloc-ble-mem.h and esp32-hal-alloc-bt-classic-mem.h which set
 // _bleLibraryInUse and _btClassicLibraryInUse to true via constructor.
@@ -44,6 +73,9 @@ __attribute__((weak)) bool bleInUse(void) {
 }
 
 #include "esp_bt.h"
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include "esp_bt_main.h"
+#endif
 
 #ifdef CONFIG_BTDM_CONTROLLER_MODE_BTDM
 #define BT_MODE ESP_BT_MODE_BTDM
@@ -82,6 +114,102 @@ bool btStarted() {
   return (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED);
 }
 
+#if defined(CONFIG_BLUEDROID_ENABLED)
+static StaticSemaphore_t _btHostMtxBuf;
+static SemaphoreHandle_t _btHostMtx = NULL;
+static int _btHostUsers = 0;
+static bool _btHostExternal = false;
+static bool _btHostStopPending = false;
+static portMUX_TYPE _btHostMux = portMUX_INITIALIZER_UNLOCKED;
+
+static SemaphoreHandle_t btHostMutex(void) {
+  portENTER_CRITICAL(&_btHostMux);
+  if (_btHostMtx == NULL) {
+    _btHostMtx = xSemaphoreCreateMutexStatic(&_btHostMtxBuf);
+  }
+  SemaphoreHandle_t mtx = _btHostMtx;
+  portEXIT_CRITICAL(&_btHostMux);
+  return mtx;
+}
+
+bool btBluedroidHostAcquire(void) {
+  SemaphoreHandle_t mtx = btHostMutex();
+  if (mtx == NULL || xSemaphoreTake(mtx, portMAX_DELAY) != pdTRUE) {
+    return false;
+  }
+
+  bool ok = true;
+  if (_btHostUsers == 0) {
+    _btHostExternal = (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED);
+    if (!_btHostExternal) {
+      if (!btStart()) {
+        ok = false;
+      } else if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_UNINITIALIZED &&
+                 esp_bluedroid_init() != ESP_OK) {
+        btStop();
+        ok = false;
+      } else if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_INITIALIZED &&
+                 esp_bluedroid_enable() != ESP_OK) {
+        esp_bluedroid_deinit();
+        btStop();
+        ok = false;
+      }
+    }
+  }
+  if (ok) {
+    _btHostUsers++;
+  }
+
+  xSemaphoreGive(mtx);
+  return ok;
+}
+
+bt_host_release_result_t btBluedroidHostRelease(void) {
+  SemaphoreHandle_t mtx = btHostMutex();
+  if (mtx == NULL || xSemaphoreTake(mtx, portMAX_DELAY) != pdTRUE) {
+    return BT_HOST_STILL_IN_USE;
+  }
+
+  bt_host_release_result_t result = BT_HOST_STILL_IN_USE;
+  if (_btHostUsers > 0 && --_btHostUsers == 0) {
+    if (_btHostExternal) {
+      _btHostExternal = false;
+      result = BT_HOST_EXTERNAL;
+    } else {
+      esp_bluedroid_disable();
+      esp_bluedroid_deinit();
+      _btHostStopPending = true;
+      result = BT_HOST_STOPPED;
+    }
+  }
+
+  xSemaphoreGive(mtx);
+  return result;
+}
+
+void btBluedroidHostFinalize(void) {
+  SemaphoreHandle_t mtx = btHostMutex();
+  if (mtx == NULL || xSemaphoreTake(mtx, portMAX_DELAY) != pdTRUE) {
+    return;
+  }
+  if (_btHostStopPending) {
+    _btHostStopPending = false;
+    btStop();
+  }
+  xSemaphoreGive(mtx);
+}
+#else
+bool btBluedroidHostAcquire(void) {
+  return true;
+}
+
+bt_host_release_result_t btBluedroidHostRelease(void) {
+  return BT_HOST_STOPPED;
+}
+
+void btBluedroidHostFinalize(void) {}
+#endif
+
 bool btStart() {
   return btStartMode(BT_MODE);
 }
@@ -104,9 +232,11 @@ bool btStartMode(bt_mode mode) {
   }
   // esp_bt_controller_enable(MODE) This mode must be equal as the mode in “cfg” of esp_bt_controller_init().
   cfg_bt_mode = esp_bt_mode;
+#if BT_MODE_MEM_RELEASE_PHYSICAL
   if (cfg_bt_mode == ESP_BT_MODE_CLASSIC_BT) {
     btMemRelease(BT_MODE_BLE);
   }
+#endif
 #else
   esp_bt_mode = BT_MODE;
 #endif
@@ -119,14 +249,33 @@ bool btStartMode(bt_mode mode) {
   if (available != esp_bt_mode) {
 #if CONFIG_SOC_BT_CLASSIC_SUPPORTED
     if (esp_bt_mode == ESP_BT_MODE_BTDM && available != ESP_BT_MODE_IDLE) {
+#if BT_MODE_MEM_RELEASE_PHYSICAL
       esp_bt_mode = available;
       cfg_bt_mode = esp_bt_mode;
+#endif
+      // else: nothing was actually freed (see BT_MODE_MEM_RELEASE_PHYSICAL) —
+      // keep the full mode so the host stack finds every half it probes.
     } else
 #endif
     {
       return false;
     }
   }
+
+#if defined(CONFIG_BT_DUAL_MODE_ARCH)
+  // Split-controller targets: the halves that exist are chosen at build time
+  // (BTDM_CTRL_MODE → BT_MODE) and the host stacks compiled into this build
+  // probe every half they were built for — a controller missing one makes the
+  // dual-mode Bluedroid host assert at disable or hang at enable. Unlike the
+  // ESP32's monolithic controller there is no per-mode runtime narrowing, so
+  // clamp the request to the built-in mode and say so.
+  if (esp_bt_mode != BT_MODE) {
+    log_w("btStartMode(%s) not available on this controller; running %s",
+          btModeStr(esp_bt_mode), btModeStr(BT_MODE));
+    esp_bt_mode = BT_MODE;
+    cfg_bt_mode = esp_bt_mode;
+  }
+#endif
 
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED) {
     return true;
@@ -339,7 +488,24 @@ esp_err_t __wrap_esp_bt_controller_mem_release(esp_bt_mode_t mode) {
 
 bool btMemRelease(bt_mode mode) {
 #if CONFIG_BT_CONTROLLER_ENABLED
-  esp_bt_mode_t esp_mode = _btAvailableMemForMode(_btModeToEspMode(mode));
+  esp_bt_mode_t esp_mode = _btModeToEspMode(mode);
+
+#if defined(CONFIG_BT_DUAL_MODE_ARCH)
+  /* A BTDM build compiles both halves and the controller enables both, so
+   * freeing either half would leave the enable path referencing freed memory.
+   * Record the end(true) contract only. Single-half builds keep the physical
+   * path: the other half is absent, and a future controller implementation
+   * will free the requested half without any code change here.
+   * When the controller gains runtime mode selection, remove this early return
+   * together with the BT_MODE_MEM_RELEASE_PHYSICAL gate and the btStartMode
+   * clamp; see DESIGN.md, "To reclaim the unused half in a BTDM build". */
+  if (BT_MODE == ESP_BT_MODE_BTDM) {
+    _btUpdateMemReleasedFlags(esp_mode);
+    return true;
+  }
+#endif
+
+  esp_mode = _btAvailableMemForMode(esp_mode);
   if (!esp_mode) {
     return true;  // Already released
   }

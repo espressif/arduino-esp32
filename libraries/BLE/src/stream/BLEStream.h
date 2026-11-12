@@ -50,7 +50,7 @@ struct BLEStreamClientRole;
  * @code
  * BLEStream bleStream;
  * bleStream.begin("MyDevice");          // starts advertising
- * if (bleStream.connected()) {
+ * if (bleStream.isConnected()) {
  *   bleStream.println("Hello World!");
  *   if (bleStream.available()) {
  *     String s = bleStream.readStringUntil('\n');
@@ -122,7 +122,7 @@ public:
    * @note In server mode multiple centrals may be connected simultaneously;
    *       this returns true while any of them remain connected. See @ref peerCount.
    */
-  bool connected() const;
+  bool isConnected() const;
 
   /**
    * @brief Number of currently connected peers.

@@ -5,6 +5,7 @@
 
 #include <Arduino.h>
 #include <BLE.h>
+#include <algorithm>
 
 static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -13,7 +14,8 @@ String myName;
 String peerName;
 BTAddress peerAddr;
 volatile bool foundPeer = false;
-volatile bool peerWasConnected = false;
+volatile bool peerConnected = false;
+BLEConnInfo peerConnInfo;
 
 void readNames() {
   Serial.println("[DUT1] Device ready for names");
@@ -49,11 +51,13 @@ void setup() {
   // --- Server role ---
   BLEServer server = BLE.createServer();
   server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
-    Serial.println("[DUT1] Peer connected to our server");
+    peerConnected = true;
+    peerConnInfo = conn;
+    Serial.printf("[DUT1] Peer connected to our server handle=%u\n", (unsigned)conn.getHandle());
   });
   server.onDisconnect([](BLEServer s, const BLEConnInfo &conn, uint8_t reason) {
-    peerWasConnected = true;
-    Serial.println("[DUT1] Peer disconnected from our server");
+    peerConnected = false;
+    Serial.printf("[DUT1] Peer disconnected from our server handle=%u\n", (unsigned)conn.getHandle());
   });
 
   BLEService svc = server.createService(SVC_UUID);
@@ -93,47 +97,59 @@ void setup() {
   }
   Serial.println("[DUT1] Found peer");
 
-  // --- Wait for DUT0 to finish its client phase ---
-  Serial.println("[DUT1] Waiting for DUT0 to connect and disconnect first...");
+  // --- Wait for DUT0's client link, then open one or two client links back ---
+  Serial.println("[DUT1] Waiting for DUT0 client...");
   unsigned long waitStart = millis();
-  while (!peerWasConnected && (millis() - waitStart) < 30000) {
+  while (!peerConnected && (millis() - waitStart) < 30000) {
     delay(100);
   }
 
-  if (!peerWasConnected) {
-    Serial.println("[DUT1] Timeout waiting for DUT0 client phase");
+  if (!peerConnected) {
+    Serial.println("[DUT1] Timeout waiting for DUT0 client");
     return;
   }
-  Serial.println("[DUT1] DUT0 finished, now connecting as client");
+  Serial.println("[DUT1] DUT0 client connected, opening reverse client");
   delay(1000);
 
-  // --- Client role (DUT1 goes second) ---
-  BLEClient client = BLE.createClient();
-  status = client.connect(peerAddr);
-  if (!status) {
-    Serial.printf("[DUT1] Connect FAILED: %s\n", status.toString());
-    return;
-  }
-  Serial.println("[DUT1] Connected as client to DUT0");
-
-  BLERemoteService remoteSvc = client.getService(SVC_UUID);
-  if (!remoteSvc) {
-    Serial.println("[DUT1] Remote service not found");
-    client.disconnect();
-    return;
+  BLEClient reverse1 = BLE.createClient();
+  BTStatus rs1 = reverse1.connect(peerAddr);
+  int reverseClients = rs1 ? 1 : 0;
+  if (rs1) {
+    Serial.println("[DUT1] Reverse client 1 connected");
+  } else {
+    Serial.printf("[DUT1] Reverse client 1 failed: %s\n", rs1.toString());
   }
 
-  BLERemoteCharacteristic remoteChr = remoteSvc.getCharacteristic(CHR_UUID);
-  if (!remoteChr) {
-    Serial.println("[DUT1] Remote characteristic not found");
-    client.disconnect();
-    return;
+  BLEClient reverse2 = BLE.createClient();
+  BTStatus rs2 = reverseClients ? reverse2.connect(peerAddr) : BTStatus::Fail;
+  if (rs2) {
+    reverseClients++;
+    Serial.println("[DUT1] Reverse client 2 connected");
+  } else if (reverseClients) {
+    Serial.printf("[DUT1] Reverse client 2 failed: %s\n", rs2.toString());
   }
 
-  String val = remoteChr.readValue();
-  Serial.printf("[DUT1] Remote value: %s\n", val.c_str());
+  std::vector<BLEConnInfo> conns = BLE.getConnections(peerAddr);
+  int clientEntries = 0;
+  bool hasServer = false;
+  for (const auto &ci : conns) {
+    if (ci.isCentral()) {
+      clientEntries++;
+    }
+    if (ci.getHandle() == peerConnInfo.getHandle()) {
+      hasServer = true;
+    }
+  }
+  Serial.printf(
+    "[DUT1] Lookup stack=%s conns=%u clients=%d hasServer=%d\n", BLE.getStackName(), (unsigned)conns.size(), clientEntries, (int)hasServer
+  );
 
-  client.disconnect();
+  // Give DUT0 time to sample its table, then tear the reverse links down.
+  delay(2000);
+  if (reverseClients > 0) {
+    reverse2.disconnect();
+    reverse1.disconnect();
+  }
   Serial.println("[DUT1] Dual role OK");
 }
 

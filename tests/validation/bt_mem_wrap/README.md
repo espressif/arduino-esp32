@@ -15,6 +15,7 @@ Validates the `--wrap` linker intercepts on `esp_bt_mem_release` and `esp_bt_con
 | 7 | `btStartMode(BLE)` fails after `btMemRelease(BLE)` — freed memory cannot be reclaimed |
 | 8 | Full lifecycle: `btStart()` → `btMemRelease()` rejected while running → `btStop()` → `btMemRelease()` succeeds |
 | 9 | Matter-style release: `esp_bt_controller_mem_release(CLASSIC_BT)` frees Classic BT only, BLE remains usable (skipped on non-BTDM chips) |
+| 10 | Shared Bluedroid host manager: first user starts, last user stops, external host is adopted and left up, BTDM partial release stays logical-only (Bluedroid builds only) |
 
 ## Requirements
 
@@ -34,3 +35,4 @@ Validates the `--wrap` linker intercepts on `esp_bt_mem_release` and `esp_bt_con
 
 - The sketch includes both `esp32-hal-alloc-bt-classic-mem.h` and `esp32-hal-alloc-ble-mem.h` to prevent `initArduino()` from auto-releasing BT memory before the test runs.
 - Phase 9 is only active on BTDM-capable chips (ESP32) where Classic BT is supported; it is a compile-time skip on BLE-only chips.
+- **Future S31 BTDM reclaim:** implementing `esp_bt_mem_release()` alone is not enough. The controller must also honour the enable mode so it can run the surviving half. When that lands, phase 9's direct Classic release + BLE start becomes valid, and phase 10's BTDM branch should switch to the physical path and assert the unused half is freed while the surviving half still starts. The coordinated controller/core/test change list is in `libraries/BLE/DESIGN.md`, "To reclaim the unused half in a BTDM build". Until then the Arduino `btMemRelease()` never makes the partial call in a BTDM build, and the implementation must refuse a direct caller that would strand the other half.

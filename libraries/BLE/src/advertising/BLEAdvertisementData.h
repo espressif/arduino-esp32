@@ -113,6 +113,14 @@ public:
   void setName(const String &name, bool complete = true);
 
   /**
+   * @brief Set the Broadcast Name AD field (type 0x30, BAP/PBP).
+   *
+   * Auracast UIs (Galaxy Listen, etc.) display this — not Complete Local Name.
+   * BAP requires 4–128 UTF-8 octets; shorter names are space-padded to 4.
+   */
+  void setBroadcastName(const String &name);
+
+  /**
    * @brief Set the Appearance field.
    * @param appearance GAP appearance value (e.g., 0x0340 for Generic Remote Control).
    */

@@ -134,6 +134,11 @@ struct BLEAdvertising::Impl {
   // Push accumulated params to the controller only when dirty, then wait for
   // completion. Idempotent no-op (returns OK) when already configured.
   BTStatus ensureExtConfigured(uint8_t instance);
+  // When the own address type is Random, program the *set-level* random address
+  // (HCI_LE_Set_Extended_Advertising_Set_Random_Address) before the set is
+  // enabled: controllers reject the enable with 0x12 when only the device-level
+  // address is set. No-op for every other own address type. Blocking.
+  BTStatus applySetRandomAddr(uint8_t instance);
   // Configure + set data + start the reserved legacy-PDU instance. Blocking.
   BTStatus startLegacyViaExtAdv(uint32_t durationMs);
   // Stop every extended/periodic set, wait for the async completions, then

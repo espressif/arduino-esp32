@@ -747,22 +747,6 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t /*reason*/) {
   return BTStatus::OK;
 }
 
-// Blocks on connectSync until OPEN_EVT reports the result of esp_ble_gatts_open.
-BTStatus BLEServer::connect(const BTAddress &address) {
-  BLE_CHECK_IMPL(BTStatus::InvalidState);
-  esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
-  impl.connectSync.take();
-  esp_err_t err = esp_ble_gatts_open(impl.gattsIf, bda, true);
-  if (err != ESP_OK) {
-    // Release the sync we just took: no OPEN_EVT will arrive to give() it.
-    impl.connectSync.give(BTStatus::Fail);
-    log_e("Server: esp_ble_gatts_open: %s", esp_err_to_name(err));
-    return BTStatus::Fail;
-  }
-  return impl.connectSync.wait(10000);
-}
-
 BLEIndicationSend bleServerSendIndication(
   BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
 ) {
@@ -823,7 +807,7 @@ BTStatus BLEServer::updateConnParams(uint16_t connHandle, const BLEConnParams &p
   }
 
   esp_ble_conn_update_params_t connParams = {};
-  addr.toEspBdAddr(connParams.bda);
+  BLEAddress::toNative(addr, connParams.bda);
   connParams.min_int = params.minInterval;
   connParams.max_int = params.maxInterval;
   connParams.latency = params.latency;
@@ -848,7 +832,7 @@ BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
       log_w("Server: setPhy - unknown connHandle %u", connHandle);
       return BTStatus::NotConnected;
     }
-    conn->getAddress().toEspBdAddr(bda);
+    BLEAddress::toNative(conn->getAddress(), bda);
   }
   impl.phySync.take();
   esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
@@ -883,7 +867,7 @@ BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) co
       log_w("Server: getPhy - unknown connHandle %u", connHandle);
       return BTStatus::NotConnected;
     }
-    conn->getAddress().toEspBdAddr(bda);
+    BLEAddress::toNative(conn->getAddress(), bda);
   }
   impl.phySync.take();
   esp_err_t err = esp_ble_gap_read_phy(bda);
@@ -917,7 +901,7 @@ BTStatus BLEServer::setDataLen(uint16_t connHandle, uint16_t txOctets, uint16_t 
       log_w("Server: setDataLen - unknown connHandle %u", connHandle);
       return BTStatus::NotConnected;
     }
-    conn->getAddress().toEspBdAddr(bda);
+    BLEAddress::toNative(conn->getAddress(), bda);
   }
   impl.dataLenSync.take();
   esp_err_t err = esp_ble_gap_set_pkt_data_len(bda, txOctets);
@@ -1746,14 +1730,6 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       break;
     }
 
-      // ----- connect() blocking -----
-
-    case ESP_GATTS_OPEN_EVT:
-    {
-      impl->connectSync.give(param->open.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
-      break;
-    }
-
     default: break;
   }
 }
@@ -1972,11 +1948,6 @@ BTStatus BLEServer::start() {
 }
 
 BTStatus BLEServer::disconnect(uint16_t, uint8_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::connect(const BTAddress &) {
   log_w("GATT server not supported");
   return BTStatus::NotSupported;
 }

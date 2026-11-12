@@ -41,6 +41,10 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // they are atomic for well-defined concurrent access without locking across
   // callbacks (mirrors the atomic `connected` in the common base).
   std::atomic<uint16_t> connId{0xFFFF};
+  /// HCI ACL (connection) handle of this link, from the GATTC CONNECT event.
+  /// The ISO transport layers key their connection table by this handle, so
+  /// BLEIso::connectCis() translates a library conn id through it.
+  std::atomic<uint16_t> aclHandle{0xFFFF};
   esp_gatt_if_t gattcIf = ESP_GATT_IF_NONE;
   uint16_t appId = 0;
   std::atomic<uint16_t> mtu{23};

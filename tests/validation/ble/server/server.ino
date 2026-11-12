@@ -1275,8 +1275,9 @@ void loop() {
     if (bleStreamStep == 0 && bleStreamConnectCb.load() && !bleStreamConnectCallbackActive.load()) {
       Serial.println("[SERVER] BLEStream onConnect fired");
       Serial.printf("[SERVER] BLEStream callback mutation safe=%d\n", (int)bleStreamCallbackSnapshotSafe.load());
-      if (bleStream.connected()) {
+      if (bleStream.isConnected()) {
         Serial.println("[SERVER] BLEStream connected OK");
+        Serial.printf("[SERVER] BLEStream alias isConnected=%d legacy=%d\n", (int)bleStream.isConnected(), (int)bleStream.isConnected());
         Serial.printf("[SERVER] BLEStream peerCount=%u\n", bleStream.peerCount());
         auto peerList = bleStream.peers();
         Serial.printf("[SERVER] BLEStream peers=%u\n", (unsigned)peerList.size());
@@ -1422,12 +1423,17 @@ void loop() {
       static unsigned long callbackEndStart = millis();
       BTStatus callbackRestart = bleStream.begin(serverName);
       if (callbackRestart || millis() - callbackEndStart >= 8000) {
+        // Tear the transient advertising down before anything else: the peer
+        // connects by address, so leaving it up while printing would let it
+        // connect to this throwaway instance instead of the final owner.
+        if (callbackRestart) {
+          bleStream.end();
+        }
         Serial.printf(
           "[SERVER] BLEStream callback end returned=%d rebegin=%d heap=%d\n", (int)bleStreamCallbackEndReturned.load(), (int)(bool)callbackRestart,
           (int)heap_caps_check_integrity_all(true)
         );
         if (callbackRestart) {
-          bleStream.end();
           bleStreamFinalOwner = std::make_shared<BLEStream>();
           // Deterministically exercise the callback handoff fallback: one
           // worker-creation failure quarantines immediately, then enough
@@ -1689,6 +1695,14 @@ void loop() {
       while (!phase16ConnParamsSeen && (millis() - paramWait) < 10000) {
         delay(50);
       }
+      // The ATT MTU exchange is not ordered against the conn-params update:
+      // Bluedroid serialises it behind the automatic service discovery, so it
+      // can complete after the param update. Sample only once both landed (or
+      // the bound expires) so this measures the events, not the race.
+      unsigned long mtuWait = millis();
+      while (!phase16MtuSeen && (millis() - mtuWait) < 10000) {
+        delay(50);
+      }
       Serial.printf("[SERVER] MtuChanged seen=%d last=%u\n", (int)phase16MtuSeen, (unsigned)phase16LastMtu);
       Serial.printf(
         "[SERVER] ConnParamsUpdate seen=%d interval=%u latency=%u timeout=%u\n", (int)phase16ConnParamsSeen, (unsigned)phase16LastInterval,
@@ -1712,6 +1726,57 @@ void loop() {
         "[SERVER] Phase16 getConnInfo valid=%d mtu=%u timeout=%u bogusValid=%d refreshedMtu=%d refreshedParams=%d\n", (int)freshValid, (unsigned)fresh.getMTU(),
         (unsigned)fresh.getSupervisionTimeout(), (int)(bool)bogus, (int)refreshedMtu, (int)refreshedParams
       );
+
+      // PAST receive must resolve the peripheral-side connection handle the
+      // same way on both stacks.
+#if BLE_PAST_SUPPORTED
+      BLEScan pastScan = BLE.getScan();
+      BTStatus pastArm = pastScan.receivePeriodicSync(c.getHandle());
+      BTStatus pastBogus = pastScan.receivePeriodicSync(0xFFFF);
+      BTStatus pastCancel = pastScan.stopPeriodicSyncReceive(c.getHandle());
+      Serial.printf(
+        "[SERVER] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel
+      );
+#else
+      Serial.println("[SERVER] Phase16 past supported=0");
+#endif
+
+      // Connection lookup must resolve the peripheral-side handle from the
+      // peer address and include the server link in the multi-role list.
+      uint16_t byAddr = BLE.getConnHandle(c.getAddress());
+      std::vector<uint16_t> byAddrHandles = BLE.getConnHandles(c.getAddress());
+      bool hasSelf = false;
+      for (uint16_t h : byAddrHandles) {
+        if (h == c.getHandle()) {
+          hasSelf = true;
+        }
+      }
+      BLEConnInfo byAddrInfo = BLE.getConnInfo(c.getAddress());
+      bool lookupInfoOk = (bool)byAddrInfo && byAddrInfo.getHandle() == c.getHandle();
+      std::vector<BLEConnInfo> byAddrConns = BLE.getConnections(c.getAddress());
+      bool connsOk = false;
+      for (const auto &ci : byAddrConns) {
+        if (ci.getHandle() == c.getHandle() && ci.isPeripheral()) {
+          connsOk = true;
+        }
+      }
+      BTAddress bogusPeer("00:00:00:00:00:01");
+      bool bogusOk =
+        BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
+        !(bool)BLE.getConnInfo(bogusPeer);
+      Serial.printf(
+        "[SERVER] Phase16 lookup byAddr=%d handles=%u hasSelf=%d info=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == c.getHandle()),
+        (unsigned)byAddrHandles.size(), (int)hasSelf, (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
+      );
+
+#if BLE_PAST_SUPPORTED
+      BLEScan infoScan = BLE.getScan();
+      BTStatus pastInfoArm = infoScan.receivePeriodicSync(byAddrInfo);
+      BTStatus pastInfoStop = infoScan.stopPeriodicSyncReceive(byAddrInfo);
+      Serial.printf("[SERVER] Phase16 pastInfo arm=%d stop=%d\n", (int)(bool)pastInfoArm, (int)(bool)pastInfoStop);
+#else
+      Serial.println("[SERVER] Phase16 pastInfo supported=0");
+#endif
     }
     Serial.println("[SERVER] Phase16 done");
   }
@@ -2631,6 +2696,15 @@ void loop() {
   if (currentPhase >= 24 && !phase24Done) {
     phase24Done = true;
 #if BLE5_SUPPORTED
+    // Phase 23 can leave a deferred BLE.end() in flight. createServer() would
+    // then return an empty server while the stack is still ending, and the
+    // client's phase-24 connection would have no GATTS app to land on. Wait for
+    // the lifecycle to settle and re-begin if needed before creating the server.
+    for (int i = 0; i < 50 && !BLE.isInitialized(); i++) {
+      BLE.begin(serverName);
+      delay(100);
+    }
+
     BLEPhy tx = BLEPhy::PHY_1M;
     BLEPhy rx = BLEPhy::PHY_1M;
     BTStatus gd = BLE.getDefaultPhy(tx, rx);
@@ -2639,6 +2713,17 @@ void loop() {
     Serial.printf("[SERVER] Phase24 setDefaultPhy ok=%d\n", (int)(bool)sd);
 
     BLEServer srv = BLE.createServer();
+    // Phase 23's peer can still be in the list while its disconnect is in
+    // flight. Drop it explicitly and wait for the list to empty, so the
+    // dedicated phase-24 connection is the only one and conns[0] is it.
+    for (auto &c : srv.getConnections()) {
+      (void)srv.disconnect(c.getHandle());
+    }
+    unsigned long clearWait = millis() + 5000;
+    while (srv.getConnectedCount() > 0 && millis() < clearWait) {
+      delay(20);
+    }
+
     // Make sure we're advertising so the client's dedicated phase-24 connection
     // can be established, then wait for it. This exercises the per-connection
     // PHY/DLE path every run rather than only when a stale link lingers from
@@ -3851,17 +3936,17 @@ void loop() {
       // the server-side CONNECT event. Synchronize on the actual BLEStream
       // state instead of sampling it at the serial barrier.
       startWait = millis();
-      while (finalReleaseStart && phase35StreamConnected && !finalReleasePeer.connected() && millis() - startWait < 5000) {
+      while (finalReleaseStart && phase35StreamConnected && !finalReleasePeer.isConnected() && millis() - startWait < 5000) {
         delay(1);
       }
-      finalReleaseConnected = phase35StreamConnected && finalReleasePeer.connected();
+      finalReleaseConnected = phase35StreamConnected && finalReleasePeer.isConnected();
       Serial.printf("[SERVER] Phase35 BLEStream final release connected=%d\n", (int)finalReleaseConnected);
       startWait = millis();
-      while (finalReleaseConnected && finalReleasePeer.connected() && millis() - startWait < 15000) {
+      while (finalReleaseConnected && finalReleasePeer.isConnected() && millis() - startWait < 15000) {
         delay(20);
       }
       finalReleasePeer.end();
-      Serial.printf("[SERVER] Phase35 BLEStream final release done=%d\n", (int)(finalReleaseConnected && !finalReleasePeer.connected()));
+      Serial.printf("[SERVER] Phase35 BLEStream final release done=%d\n", (int)(finalReleaseConnected && !finalReleasePeer.isConnected()));
       Serial.println("[SERVER] Phase35 done");
     }
   }

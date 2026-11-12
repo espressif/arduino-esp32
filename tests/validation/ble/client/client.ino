@@ -638,7 +638,7 @@ bool phase_ble5_scan() {
       Serial.println("[CLIENT] Found target via ext scan!");
       targetAddr = dev.getAddress();
       found = true;
-      scan.createPeriodicSync(targetAddr, 1);
+      scan.createPeriodicSync(targetAddr, dev.getAdvSID());
     }
   });
 
@@ -1472,6 +1472,7 @@ void setup() {
     // event-order trace is reset here too so ORDER captures exactly this
     // pairing lifecycle (CONNECT -> MTU -> IDENTITY) for cross-stack parity.
     clientIdentityCount = 0;
+    clientMtuChanged = false;
     clientOrderN = 0;
     client = BLE.createClient();
     installClientCallbacks(client);
@@ -1481,6 +1482,24 @@ void setup() {
     } else {
       Serial.println("[CLIENT] Phase10 reconnected for pairing");
     }
+    // Exercise the explicit security procedure rather than relying on the
+    // encrypted characteristic to trigger pairing. Wait for the MTU exchange
+    // first so the CONNECT -> MTU -> IDENTITY order assertion stays valid.
+    unsigned long phase10MtuWait = millis() + 5000;
+    while (!clientMtuChanged && millis() < phase10MtuWait) {
+      checkSerial();
+      delay(20);
+    }
+    BLESecurity secStart = BLE.getSecurity();
+    BLEConnInfo secInfo = client.getConnInfo();
+    BTStatus secLive = secStart.startSecurity(secInfo);
+    unsigned long encWait = millis() + 15000;
+    while (!client.getConnInfo().isEncrypted() && millis() < encWait) {
+      checkSerial();
+      delay(50);
+    }
+    bool secEncrypted = client.getConnInfo().isEncrypted();
+    BTStatus secBogus = secStart.startSecurity(0xFFFF);
     svc = client.getService(serviceUUID);
     if (!svc) {
       Serial.println("[CLIENT] Service not found after phase10 reconnect");
@@ -1497,6 +1516,9 @@ void setup() {
     // Let any trailing identity callbacks settle, then report the dedupe count
     // and the recorded event order for cross-stack parity assertions.
     delay(500);
+    Serial.printf(
+      "[CLIENT] Phase10 startSecurity live=%d enc=%d bogus=%d\n", (int)(bool)secLive, (int)secEncrypted, (int)(secBogus == BTStatus::NotConnected)
+    );
     Serial.printf("[CLIENT] Phase10 onIdentity count=%d\n", clientIdentityCount);
     reportClientOrder("Phase10");
   }
@@ -1700,7 +1722,7 @@ void setup() {
       Serial.println("[CLIENT] BLEStream init OK");
       stream.setTimeout(10000);
 
-      if (stream.connected()) {
+      if (stream.isConnected()) {
         Serial.println("[CLIENT] BLEStream connected OK");
         auto peerList = stream.peers();
         Serial.printf("[CLIENT] BLEStream peers=%u\n", (unsigned)peerList.size());
@@ -1757,10 +1779,10 @@ void setup() {
 
       stream.println("end_now");
       unsigned long endWait = millis();
-      while (stream.connected() && millis() - endWait < 10000) {
+      while (stream.isConnected() && millis() - endWait < 10000) {
         delay(20);
       }
-      Serial.printf("[CLIENT] BLEStream server end disconnected=%d\n", (int)!stream.connected());
+      Serial.printf("[CLIENT] BLEStream server end disconnected=%d\n", (int)!stream.isConnected());
       stream_ok = bulkWriteComplete;
       stream.end();
 
@@ -1836,6 +1858,14 @@ void setup() {
       // final public owner from onConnect. The link may disappear before
       // beginClient finishes discovery; callback delivery and clean disconnect
       // are the invariant under test.
+      //
+      // Settle first: the server verifies its own re-begin between tearing down
+      // this cycle and starting the final owner, so for a short window a
+      // re-advertised instance is up. A direct by-address connect landing in
+      // that window would be counted here and dropped again by the server's
+      // teardown, leaving the server's final owner waiting for a connection
+      // that already happened. The retry loop below only needs the final owner.
+      delay(750);
       std::atomic<uint32_t> finalOwnerConnects{0};
       std::atomic<uint32_t> finalOwnerDisconnects{0};
       BLEStream finalOwnerClient;
@@ -1851,12 +1881,15 @@ void setup() {
           delay(250);
         }
       }
-      unsigned long finalOwnerDeadline = millis() + 8000;
+      // The server drops the final owner from its own onConnect, so the peer
+      // disconnect follows the deferred native teardown, which is not bounded by
+      // the connect itself (NimBLE's worker can take several seconds).
+      unsigned long finalOwnerDeadline = millis() + 15000;
       while (finalOwnerDisconnects.load() == 0 && millis() < finalOwnerDeadline) {
         delay(20);
       }
       bool finalOwnerClean =
-        finalOwnerConnects.load() > 0 && finalOwnerDisconnects.load() > 0 && !finalOwnerClient.connected() && heap_caps_check_integrity_all(true);
+        finalOwnerConnects.load() > 0 && finalOwnerDisconnects.load() > 0 && !finalOwnerClient.isConnected() && heap_caps_check_integrity_all(true);
       Serial.printf(
         "[CLIENT] BLEStream final owner callback clean=%d connects=%lu disconnects=%lu\n", (int)finalOwnerClean, (unsigned long)finalOwnerConnects.load(),
         (unsigned long)finalOwnerDisconnects.load()
@@ -2120,7 +2153,14 @@ void setup() {
       np.timeout = 400;  // 4 s
       BTStatus us = pc.updateConnParams(np);
       Serial.printf("[CLIENT] UpdateConnParams ok=%d\n", (int)(bool)us);
-      delay(2500);  // allow the controller to apply the new params
+      // Allow the controller to apply the new params, then give the ATT MTU
+      // exchange time to complete: Bluedroid serialises it behind the automatic
+      // service discovery, so CFG_MTU can land seconds after the link is up.
+      delay(2500);
+      unsigned long mtuWait = millis();
+      while (!clientMtuChanged && (millis() - mtuWait) < 8000) {
+        delay(50);
+      }
 
       Serial.printf("[CLIENT] MtuChanged seen=%d last=%u\n", (int)clientMtuChanged, (unsigned)clientMtuLast);
       // Ordering contract: when the MTU callback fired, onConnect must already
@@ -2128,7 +2168,61 @@ void setup() {
       // regression this test guards against.
       Serial.printf("[CLIENT] MtuOrder afterConnect=%d mtuSeen=%d\n", (int)clientMtuAfterConnect, (int)clientMtuChanged);
 
+      // PAST receive must accept the same public connection handle on both
+      // stacks and reject an unknown one consistently.
+#if BLE_PAST_SUPPORTED
+      BLEScan pastScan = BLE.getScan();
+      BTStatus pastArm = pastScan.receivePeriodicSync(pc.getHandle());
+      BTStatus pastBogus = pastScan.receivePeriodicSync(0xFFFF);
+      BTStatus pastCancel = pastScan.stopPeriodicSyncReceive(pc.getHandle());
+      Serial.printf(
+        "[CLIENT] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel
+      );
+#else
+      Serial.println("[CLIENT] Phase16 past supported=0");
+#endif
+
+      // Connection lookup: address -> handle(s) -> info, with a bogus address
+      // rejected and a stale entry removed after disconnect.
+      BTAddress lookupPeer = pc.getPeerAddress();
+      uint16_t byAddr = BLE.getConnHandle(lookupPeer);
+      std::vector<uint16_t> byAddrHandles = BLE.getConnHandles(lookupPeer);
+      BLEConnInfo byAddrInfo = BLE.getConnInfo(lookupPeer);
+      bool lookupInfoOk = (bool)byAddrInfo && byAddrInfo.getHandle() == pc.getHandle();
+      std::vector<BLEConnInfo> byAddrConns = BLE.getConnections(lookupPeer);
+      bool connsOk = false;
+      for (const auto &ci : byAddrConns) {
+        if (ci.getHandle() == pc.getHandle() && ci.isCentral()) {
+          connsOk = true;
+        }
+      }
+      BTAddress bogusPeer("00:00:00:00:00:01");
+      bool bogusOk =
+        BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
+        !(bool)BLE.getConnInfo(bogusPeer);
+      uint8_t nativeAddr[6];
+      BLEAddress::toNative(lookupPeer, nativeAddr);
+      bool addrRoundTrip = BLEAddress::fromNative(nativeAddr, lookupPeer.type()) == lookupPeer;
+      Serial.printf(
+        "[CLIENT] Phase16 lookup byAddr=%d handles=%u info=%d conns=%u connsOk=%d bogus=%d roundTrip=%d\n", (int)(byAddr == pc.getHandle()),
+        (unsigned)byAddrHandles.size(), (int)lookupInfoOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk, (int)addrRoundTrip
+      );
+
+#if BLE_PAST_SUPPORTED
+      // Role-aware PAST overload: uses the descriptor address, so a client/
+      // server handle collision cannot select the wrong link.
+      BLEScan infoScan = BLE.getScan();
+      BTStatus pastInfoArm = infoScan.receivePeriodicSync(byAddrInfo);
+      BTStatus pastInfoStop = infoScan.stopPeriodicSyncReceive(byAddrInfo);
+      Serial.printf("[CLIENT] Phase16 pastInfo arm=%d stop=%d\n", (int)(bool)pastInfoArm, (int)(bool)pastInfoStop);
+#else
+      Serial.println("[CLIENT] Phase16 pastInfo supported=0");
+#endif
+
       pc.disconnect();
+      delay(1000);
+      bool staleGone = BLE.getConnHandle(lookupPeer) == 0xFFFF && BLE.getConnHandles(lookupPeer).empty();
+      Serial.printf("[CLIENT] Phase16 lookup staleGone=%d\n", (int)staleGone);
       BLE.setMTU(512);
       delay(1000);
     }
@@ -3985,6 +4079,7 @@ void setup() {
     if (st) {
       volatile bool found = false;
       volatile bool synced = false;
+      volatile bool syncAddrMatches = false;
       volatile bool dataRx = false;
       volatile bool lost = false;
       volatile uint16_t syncHandle = 0;
@@ -3999,6 +4094,7 @@ void setup() {
       });
       scan.onPeriodicSync([&](uint16_t handle, uint8_t sid, const BTAddress &addr, BLEPhy phy, uint16_t interval) {
         syncPhaseFromHost();
+        syncAddrMatches = addr == targetAddr;
         synced = true;
         syncHandle = handle;
       });
@@ -4015,7 +4111,7 @@ void setup() {
       for (int i = 0; i < 150 && !(synced && dataRx); i++) {
         delay(100);
       }
-      Serial.printf("[CLIENT] Phase34 synced=%d dataRx=%d\n", (int)synced, (int)dataRx);
+      Serial.printf("[CLIENT] Phase34 synced=%d dataRx=%d addrMatch=%d\n", (int)synced, (int)dataRx, (int)syncAddrMatches);
       ble5_ok = synced && dataRx;
 
       // Observe supervision-timeout sync-lost once the server stops the train.

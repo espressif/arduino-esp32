@@ -39,6 +39,7 @@
 
 #include "BLE.h"
 
+#include "BLE.bluedroid.h"
 #include "security/BLESecurity.bluedroid.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLESync.h"
@@ -344,6 +345,14 @@ void BLESecurity::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_p
 // Stack-specific BLESecurity methods
 // --------------------------------------------------------------------------
 
+bool BLESecurity::isConfigured() const {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lock(_impl->mtx);
+  return _impl->configuredByApp;
+}
+
 void BLESecurity::setIOCapability(BLEIOCapability cap) {
   BLE_CHECK_IMPL();
   // Config fields are read on the host task during pairing (guarded by mtx there),
@@ -351,6 +360,7 @@ void BLESecurity::setIOCapability(BLEIOCapability cap) {
   // mtx; it only pushes to the native stack (no user callback).
   BLELockGuard lock(impl.mtx);
   impl.ioCap = cap;
+  impl.configuredByApp = true;
   impl.applySecurityParams();
 }
 
@@ -360,6 +370,7 @@ void BLESecurity::setAuthenticationMode(bool bond, bool mitm, bool sc) {
   impl.bonding = bond;
   impl.mitm = mitm;
   impl.secureConnection = sc;
+  impl.configuredByApp = true;
   impl.applySecurityParams();
 }
 
@@ -413,7 +424,7 @@ BTStatus BLESecurity::deleteBond(const BTAddress &address) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
+  BLEAddress::toNative(address, bda);
   // esp_ble_remove_bond_device posts work to the BTC task and completes via
   // ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT — wait so the public API is
   // synchronous (matching NimBLE's ble_gap_unpair).
@@ -488,15 +499,50 @@ std::vector<BTAddress> BLESecurity::getBondedDevices() const {
   }
 
   for (int i = 0; i < num; i++) {
-    result.push_back(BTAddress::fromEspBdAddr(devList[i].bd_addr, BTAddress::Type::Public));
+    result.push_back(BLEAddress::fromNative(devList[i].bd_addr, BTAddress::Type::Public));
   }
   return result;
 }
 
 // connHandle is unused on the Bluedroid path; security parameters are applied globally to the stack rather than per connection.
-BTStatus BLESecurity::startSecurity(uint16_t /*connHandle*/) {
+BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   impl.applySecurityParams();
+
+  BTAddress peerAddress;
+  if (!bluedroidFindPeerAddress(connHandle, peerAddress)) {
+    log_w("Security: startSecurity handle=%u is not connected", (unsigned)connHandle);
+    return BTStatus::NotConnected;
+  }
+
+  esp_bd_addr_t bda;
+  BLEAddress::toNative(peerAddress, bda);
+  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
+  if (err != ESP_OK) {
+    log_e("Security: esp_ble_set_encryption handle=%u: %s", (unsigned)connHandle, esp_err_to_name(err));
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+}
+
+BTStatus BLESecurity::startSecurity(const BLEConnInfo &peer) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  impl.applySecurityParams();
+
+  BTAddress peerAddress = peer.getAddress();
+  if (!peerAddress) {
+    return BTStatus::NotConnected;
+  }
+  esp_bd_addr_t bda;
+  BLEAddress::toNative(peerAddress, bda);
+  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
+  if (err != ESP_OK) {
+    log_e("Security: esp_ble_set_encryption address=%s: %s", peerAddress.toString().c_str(), esp_err_to_name(err));
+    return BTStatus::Fail;
+  }
   return BTStatus::OK;
 }
 
@@ -588,6 +634,11 @@ std::vector<BTAddress> BLESecurity::getBondedDevices() const {
 
 BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
   (void)connHandle;
+  log_w("SMP not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLESecurity::startSecurity(const BLEConnInfo &) {
   log_w("SMP not supported");
   return BTStatus::NotSupported;
 }

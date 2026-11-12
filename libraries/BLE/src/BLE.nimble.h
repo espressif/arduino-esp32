@@ -68,6 +68,12 @@ struct BLEClass::Impl {
   LifecycleHook scanEndHook = nullptr;
   LifecycleHook scanHostStoppedHook = nullptr;
 #endif
+#if BLE_AUDIO_SUPPORTED
+  LifecycleHook audioPreEndHook = nullptr;
+#endif
+#if BLE_ISO_SUPPORTED
+  LifecycleHook isoPreEndHook = nullptr;
+#endif
 #if BLE_GATT_SERVER_SUPPORTED
   LifecycleHook serverPreEndHook = nullptr;
   LifecycleHook serverHostStoppedHook = nullptr;

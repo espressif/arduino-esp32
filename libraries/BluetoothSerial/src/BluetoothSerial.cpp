@@ -75,6 +75,7 @@ static constexpr const char *DEFAULT_SPP_NAME = "ESP32SPP";
 static constexpr EventBits_t SPP_RUNNING = BIT0;
 static constexpr EventBits_t SPP_CONNECTED = BIT1;
 static constexpr EventBits_t SPP_DISCONNECTED = BIT2;
+static constexpr EventBits_t SPP_STOPPED = BIT3;
 
 // Event group bits for BT discovery state and bond removal
 static constexpr EventBits_t BT_DISCOVERY_RUNNING = BIT0;
@@ -112,6 +113,9 @@ struct BluetoothSerial::Impl {
   String localName;
   bool isInitiator = false;
   bool initialized = false;
+  /// True while this session holds a reference to the shared Bluedroid host.
+  /// The first user starts the host, the last one tears it down.
+  bool hostUser = false;
   bool sspEnabled = false;
   bool ioCapInput = false;
   bool ioCapOutput = false;
@@ -384,6 +388,12 @@ void BluetoothSerial::Impl::sppCallback(esp_spp_cb_event_t event, esp_spp_cb_par
       xEventGroupSetBits(s_impl->sppEventGroup, SPP_RUNNING);
       break;
 
+    case ESP_SPP_UNINIT_EVT:
+      // esp_spp_deinit() is asynchronous; end() waits for this before an
+      // immediate re-begin can race the old SPP instance.
+      xEventGroupSetBits(s_impl->sppEventGroup, SPP_STOPPED);
+      break;
+
     case ESP_SPP_SRV_OPEN_EVT:
     case ESP_SPP_OPEN_EVT:
     {
@@ -644,40 +654,46 @@ BTStatus BluetoothSerial::begin(const String &localName, bool isInitiator) {
     return BTStatus::Busy;
   }
 
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+  if (btMemReleased(BT_MODE_CLASSIC_BT)) {
+    log_e("Cannot reinitialize Classic BT: memory has been released");
+    return BTStatus::InvalidState;
+  }
+#endif
+
   _impl->localName = localName;
   _impl->isInitiator = isInitiator;
 
-  if (!btStarted() && !btStart()) {
-    log_e("btStart() failed");
+  // Bluedroid is a single host shared with BLE. The core starts it for the
+  // first user and stops it for the last; a host already enabled by an
+  // external component is adopted and left up.
+  if (!btBluedroidHostAcquire()) {
+    log_e("Bluedroid host start failed");
     return BTStatus::Fail;
   }
+  _impl->hostUser = true;
 
-  esp_err_t err = esp_bluedroid_init();
-  if (err != ESP_OK) {
-    log_e("esp_bluedroid_init: %s", esp_err_to_name(err));
-    return BTStatus::Fail;
-  }
+  esp_err_t err;
 
-  err = esp_bluedroid_enable();
-  if (err != ESP_OK) {
-    log_e("esp_bluedroid_enable: %s", esp_err_to_name(err));
-    esp_bluedroid_deinit();
-    return BTStatus::Fail;
-  }
+  // Undo a partial start without tearing down a host another user still owns.
+  auto abandonStart = [this]() {
+    if (_impl->hostUser) {
+      _impl->hostUser = false;
+      (void)btBluedroidHostRelease();
+    }
+  };
 
   err = esp_bt_gap_register_callback(Impl::gapCallback);
   if (err != ESP_OK) {
     log_e("esp_bt_gap_register_callback: %s", esp_err_to_name(err));
-    esp_bluedroid_disable();
-    esp_bluedroid_deinit();
+    abandonStart();
     return BTStatus::Fail;
   }
 
   err = esp_spp_register_callback(Impl::sppCallback);
   if (err != ESP_OK) {
     log_e("esp_spp_register_callback: %s", esp_err_to_name(err));
-    esp_bluedroid_disable();
-    esp_bluedroid_deinit();
+    abandonStart();
     return BTStatus::Fail;
   }
 
@@ -686,8 +702,7 @@ BTStatus BluetoothSerial::begin(const String &localName, bool isInitiator) {
   err = esp_spp_enhanced_init(&cfg);
   if (err != ESP_OK) {
     log_e("esp_spp_enhanced_init: %s", esp_err_to_name(err));
-    esp_bluedroid_disable();
-    esp_bluedroid_deinit();
+    abandonStart();
     return BTStatus::Fail;
   }
 
@@ -721,6 +736,7 @@ BTStatus BluetoothSerial::begin(const String &localName, bool isInitiator) {
 
   if (!_impl->createResources()) {
     log_e("Failed to allocate BluetoothSerial resources");
+    abandonStart();
     return BTStatus::NoMemory;
   }
 
@@ -732,6 +748,7 @@ BTStatus BluetoothSerial::begin(const String &localName, bool isInitiator) {
     log_e("SPP server failed to start within timeout");
     _impl->initialized = false;
     Impl::s_impl = nullptr;
+    abandonStart();
     _impl->destroyResources();
     return BTStatus::Timeout;
   }
@@ -745,16 +762,29 @@ void BluetoothSerial::end(bool releaseMemory) {
   }
 
   _impl->initialized = false;
+
+  // esp_spp_deinit() completes asynchronously. Wait for ESP_SPP_UNINIT_EVT
+  // while this session still holds the host reference, so an immediate
+  // re-begin cannot race the old SPP instance and another user cannot tear the
+  // host down under the wait.
+  xEventGroupClearBits(_impl->sppEventGroup, SPP_RUNNING | SPP_STOPPED);
+  esp_spp_deinit();
+  (void)xEventGroupWaitBits(_impl->sppEventGroup, SPP_STOPPED, pdFALSE, pdTRUE, pdMS_TO_TICKS(2000));
   Impl::s_impl = nullptr;
 
-  esp_spp_deinit();
-  esp_bluedroid_disable();
-  esp_bluedroid_deinit();
-
-  btStop();
-
-  if (releaseMemory) {
-    btMemRelease(BT_MODE_CLASSIC_BT);
+  // Release this session's reference to the shared Bluedroid host. The core
+  // stops it for the last user unless an external owner keeps it up.
+  bool hostUser = _impl->hostUser;
+  _impl->hostUser = false;
+  const bt_host_release_result_t hostResult = hostUser ? btBluedroidHostRelease() : BT_HOST_STILL_IN_USE;
+  btBluedroidHostFinalize();
+  if (releaseMemory && hostUser) {
+    if (hostResult == BT_HOST_STOPPED) {
+      btMemRelease(BT_MODE_CLASSIC_BT);
+    } else {
+      // The host is still owned by another user; record the terminal contract.
+      btMarkMemReleased(BT_MODE_CLASSIC_BT);
+    }
   }
 
   _impl->destroyResources();

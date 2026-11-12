@@ -140,6 +140,7 @@ set(ARDUINO_LIBRARY_AsyncUDP_SRCS libraries/AsyncUDP/src/AsyncUDP.cpp)
 file(GLOB ARDUINO_LIBRARY_BLE_SRCS
   libraries/BLE/src/*.cpp
   libraries/BLE/src/*/*.cpp
+  libraries/BLE/src/*/*.c
 )
 list(SORT ARDUINO_LIBRARY_BLE_SRCS)
 

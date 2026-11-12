@@ -61,6 +61,15 @@ public:
   void setIOCapability(BLEIOCapability cap);
 
   /**
+   * @brief Whether the sketch configured the association model itself.
+   *
+   * False until @ref setIOCapability or @ref setAuthenticationMode is called.
+   * The LE Audio engine uses this to apply its Just Works defaults without
+   * overriding a deliberate application choice.
+   */
+  bool isConfigured() const;
+
+  /**
    * @brief Set the authentication requirements for pairing.
    * @param bonding If true, enable bonding (persist keys across connections).
    * @param mitm If true, require MITM protection (passkey or numeric comparison).
@@ -292,6 +301,19 @@ public:
    * @return BTStatus indicating success or error.
    */
   BTStatus startSecurity(uint16_t connHandle);
+
+  /**
+   * @brief Initiate the security/pairing procedure using a connection descriptor.
+   *
+   * Role-aware variant for simultaneous client+server links: it uses the
+   * descriptor's address directly on Bluedroid, avoiding numeric handle
+   * collisions between the two roles.
+   *
+   * @param peer Connection descriptor from a client/server callback or
+   *             `BLE.getConnections()`.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus startSecurity(const BLEConnInfo &peer);
 
   /**
    * @brief Block until authentication completes or the timeout elapses.

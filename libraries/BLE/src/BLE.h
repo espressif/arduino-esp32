@@ -25,6 +25,7 @@
 #include "WString.h"
 #include "BTStatus.h"
 #include "BTAddress.h"
+#include "core/BLEAddress.h"
 #include "types/BLEAdvTypes.h"
 #include "server/BLEServer.h"
 #include "client/BLEClient.h"
@@ -44,6 +45,8 @@
 #include "hid/BLEHIDDevice.h"
 #include "stream/BLEStream.h"
 #include "l2cap/BLEL2CAP.h"
+#include "iso/BLEIso.h"
+#include "audio/BLEAudio.h"
 
 /**
  * @brief Global BLE singleton -- the entry point for all BLE operations.
@@ -118,6 +121,14 @@ public:
   bool isInitialized() const;
 
   /**
+   * @brief Whether shutdown has claimed the current BLE session.
+   *
+   * Primarily used by retained subsystem handles to reject native operations
+   * during callback-deferred teardown.
+   */
+  bool isEnding() const;
+
+  /**
    * @brief Boolean conversion — equivalent to isInitialized().
    *
    * @return true if BLE is initialized and ready.
@@ -154,6 +165,18 @@ public:
    * @return The BTAddress::Type in use.
    */
   BTAddress::Type getOwnAddressType() const;
+
+  /**
+   * @brief Random device address programmed by `setOwnAddressType(BTAddress::Random)`.
+   *
+   * @internal Used by the Bluedroid advertising backend: extended advertising
+   * sets need the set-level random address (HCI_LE_Set_Extended_Advertising_
+   * Set_Random_Address) before they can be enabled with a random own address.
+   *
+   * @param out  Receives the 6-byte address (LSB-first) when one is programmed.
+   * @return true when an address is available.
+   */
+  bool getOwnRandomAddress(uint8_t out[6]) const;
 
   /**
    * @brief Override the local Bluetooth address.
@@ -198,6 +221,20 @@ public:
    */
   BLESecurity getSecurity();
 
+#if BLE_AUDIO_SUPPORTED
+  /**
+   * @brief Get the LE Audio controller handle (GAF entry point).
+   *
+   * The first call allocates the single engine-backed implementation;
+   * subsequent calls return a handle to the same instance. Only valid after
+   * begin(). Named "controller" because it manages the audio subsystem -- it
+   * does not itself carry audio data.
+   *
+   * @return A BLEAudio handle. Check with `operator bool()` for validity.
+   */
+  BLEAudio getAudioController();
+#endif
+
   /**
    * @brief Create a new GATT client instance.
    *
@@ -207,6 +244,58 @@ public:
    * @return A BLEClient handle. Check with `operator bool()` for validity.
    */
   BLEClient createClient();
+
+  // --- Connection lookup ---
+
+  /**
+   * @brief Find the connection handle for a connected peer.
+   *
+   * This is the same handle reported by @c BLEClient::getHandle() and
+   * @c BLEConnInfo::getHandle(), and the one connection-scoped APIs take.
+   * Accepts the peer's OTA address (the one reported by
+   * @c BLEConnInfo::getAddress()); NimBLE also matches the resolved identity
+   * address.
+   *
+   * @param peerAddress Peer address.
+   * @return The connection handle, or 0xFFFF if the peer is not connected.
+   */
+  uint16_t getConnHandle(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find every live connection handle for a connected peer.
+   *
+   * A device can be both GATT client and server on the same ACL. On Bluedroid
+   * those roles may report different handles; this returns all of them. On
+   * NimBLE both roles share one ACL handle, which is returned once.
+   *
+   * @param peerAddress Peer address.
+   * @return Live handles in client-before-server order; empty when the peer is
+   *         not connected.
+   */
+  std::vector<uint16_t> getConnHandles(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find every connection descriptor for a connected peer.
+   *
+   * Unlike @ref getConnHandles(), this preserves one entry per role/link even
+   * when the backend reuses the same numeric handle for a GATT client and a
+   * GATT server link. Use `BLEConnInfo::isCentral()` / `isPeripheral()` to pick
+   * the role and `getHandle()` for the native handle.
+   *
+   * @param peerAddress Peer address.
+   * @return Valid descriptors in client-before-server order; empty when the
+   *         peer is not connected.
+   */
+  std::vector<BLEConnInfo> getConnections(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find connection information for a connected peer.
+   *
+   * @param peerAddress Peer address (OTA, or the identity address on NimBLE).
+   * @return A valid BLEConnInfo snapshot, or an invalid one when the peer is
+   *         not connected.
+   */
+  BLEConnInfo getConnInfo(const BTAddress &peerAddress) const;
 
   // --- L2CAP CoC ---
 

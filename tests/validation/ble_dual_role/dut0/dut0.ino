@@ -13,6 +13,8 @@ String myName;
 String peerName;
 BTAddress peerAddr;
 volatile bool foundPeer = false;
+volatile int reverseConns = 0;
+BLEConnInfo reverseInfo;
 
 void readNames() {
   Serial.println("[DUT0] Device ready for names");
@@ -47,6 +49,14 @@ void setup() {
 
   // --- Server role ---
   BLEServer server = BLE.createServer();
+  server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
+    reverseConns++;
+    reverseInfo = conn;
+    Serial.printf("[DUT0] Reverse client connected to our server count=%d handle=%u\n", reverseConns, (unsigned)conn.getHandle());
+  });
+  server.onDisconnect([](BLEServer s, const BLEConnInfo &conn, uint8_t reason) {
+    Serial.printf("[DUT0] Reverse client disconnected handle=%u reason=%u\n", (unsigned)conn.getHandle(), (unsigned)reason);
+  });
   BLEService svc = server.createService(SVC_UUID);
   BLECharacteristic chr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
   chr.setValue("DUT0 data");
@@ -109,7 +119,34 @@ void setup() {
   String val = remoteChr.readValue();
   Serial.printf("[DUT0] Remote value: %s\n", val.c_str());
 
+  // Keep our client link up while DUT1 opens one or more client links back to
+  // our server. This is the simultaneous client+server case.
+  Serial.println("[DUT0] Ready for reverse connect");
+  unsigned long reverseWait = millis();
+  while (reverseConns == 0 && millis() - reverseWait < 20000) {
+    delay(100);
+  }
+  delay(1500);  // let a second reverse client arrive if DUT1 opens one
+
+  BTAddress lookupAddr = (reverseConns > 0) ? reverseInfo.getAddress() : peerAddr;
+  std::vector<BLEConnInfo> conns = BLE.getConnections(lookupAddr);
+  bool hasClient = false;
+  bool hasServer = false;
+  for (const auto &ci : conns) {
+    if (ci.getHandle() == client.getHandle() && ci.isCentral()) {
+      hasClient = true;
+    }
+    if (reverseConns > 0 && ci.getHandle() == reverseInfo.getHandle()) {
+      hasServer = true;
+    }
+  }
+  Serial.printf(
+    "[DUT0] Lookup stack=%s conns=%u reverseConns=%d hasClient=%d hasServer=%d\n", BLE.getStackName(), (unsigned)conns.size(), reverseConns,
+    (int)hasClient, (int)hasServer
+  );
+
   client.disconnect();
+  delay(1000);
   Serial.println("[DUT0] Dual role OK");
 }
 

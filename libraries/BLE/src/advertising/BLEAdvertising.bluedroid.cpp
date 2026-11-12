@@ -299,8 +299,10 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
           }
         }
       }
-      inst->advSync.give(param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
 #if BLE_VALIDATION_HOOKS
+      // Run the injected event before releasing the caller: the caller observes
+      // isAdvertising() as soon as advSync.give() lands, so injecting after it
+      // would race the very state this hook is meant to pin down.
       if (BLEHooks.adv.injectStaleExtStopComplete.exchange(false, std::memory_order_acq_rel) && param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS) {
         // Leftover EXT_ADV_STOP_COMPLETE after a successful start must not
         // clear isAdvertising: stop() would then no-op while the radio is up.
@@ -311,8 +313,14 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
         handleGAP(ESP_GAP_BLE_EXT_ADV_STOP_COMPLETE_EVT, &stale);
       }
 #endif
+      inst->advSync.give(param->ext_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
     }
+
+    case ESP_GAP_BLE_EXT_ADV_SET_RAND_ADDR_COMPLETE_EVT:
+      log_d("EXT_ADV_SET_RAND_ADDR_COMPLETE status=%d instance=%u", param->ext_adv_set_rand_addr.status, param->ext_adv_set_rand_addr.instance);
+      inst->advSync.give(param->ext_adv_set_rand_addr.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
+      break;
 
     case ESP_GAP_BLE_EXT_ADV_SET_CLEAR_COMPLETE_EVT:
       log_d("EXT_ADV_SET_CLEAR_COMPLETE status=%d", param->ext_adv_clear.status);
@@ -368,8 +376,9 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
       if (param->period_adv_start.instance < kMaxExtInstances) {
         inst->extInstances[param->period_adv_start.instance].periodicAdvRunning = (param->period_adv_start.status == ESP_BT_STATUS_SUCCESS);
       }
-      inst->advSync.give(param->period_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
 #if BLE_VALIDATION_HOOKS
+      // Same ordering rule as the extended-adv stale hook: inject and record
+      // before advSync.give() releases the caller that reads the hook result.
       if (BLEHooks.adv.injectStalePeriodicStopComplete.exchange(false, std::memory_order_acq_rel) && param->period_adv_start.status == ESP_BT_STATUS_SUCCESS) {
         esp_ble_gap_cb_param_t stale = {};
         stale.period_adv_stop.status = ESP_BT_STATUS_SUCCESS;
@@ -382,6 +391,7 @@ void BLEAdvertising::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_c
         }
       }
 #endif
+      inst->advSync.give(param->period_adv_start.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
       break;
     case ESP_GAP_BLE_PERIODIC_ADV_STOP_COMPLETE_EVT:
     {
@@ -671,7 +681,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     advParams.channel_map = ADV_CHNL_ALL;
     advParams.adv_filter_policy = mapFilterPolicy(impl.scanRequestWhitelistOnly, impl.connectWhitelistOnly);
     if (bleAdvTypeIsDirected(impl.advType)) {
-      impl.directedPeer.toEspBdAddr(advParams.peer_addr);
+      BLEAddress::toNative(impl.directedPeer, advParams.peer_addr);
       advParams.peer_addr_type = static_cast<esp_ble_addr_type_t>(impl.directedPeer.type());
     } else {
       advParams.peer_addr_type = BLE_ADDR_TYPE_PUBLIC;
@@ -864,7 +874,15 @@ static esp_ble_ext_adv_type_mask_t extAdvTypeMask(BLEAdvType type) {
 static esp_ble_ext_adv_type_mask_t legacyExtAdvTypeMask(BLEAdvType type) {
   const BLEExtAdvProps props = advTypeToExtAdvProps(type, /*legacyPdu=*/true);
   if (props.directed) {
-    return props.highDutyDirected ? ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_HD_DIR : ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_LD_DIR;
+    if (props.highDutyDirected) {
+      // ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_HD_DIR is built as LEGACY|CONNECTABLE|
+      // HD_DIRECTED (0x19) and omits the Directed bit, so the controller rejects
+      // the HCI_LE_Set_Extended_Advertising_Parameters command with 0x12
+      // (Invalid HCI Command Parameters). ADV_DIRECT_IND requires Directed=1
+      // (Vol 4, Part E, Table 7.15): 0x1D, not 0x19.
+      return static_cast<esp_ble_ext_adv_type_mask_t>(ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_HD_DIR | ESP_BLE_GAP_SET_EXT_ADV_PROP_DIRECTED);
+    }
+    return ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_LD_DIR;
   }
   if (props.connectable) {  // legacy connectable undirected (ADV_IND) is always scannable
     return ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_IND;
@@ -903,6 +921,32 @@ BLEAdvertising::Impl::ExtInstance *BLEAdvertising::Impl::extInstanceAt(uint8_t i
   return extInst;
 }
 
+BTStatus BLEAdvertising::Impl::applySetRandomAddr(uint8_t instance) {
+  if (BLE.getOwnAddressType() != BTAddress::Random) {
+    return BTStatus::OK;
+  }
+  // The address is the one selected by BLE.setOwnAddressType(Random), so the
+  // advertised identity matches getOwnAddressType(). Controllers reject the
+  // enable with 0x12 (Invalid HCI Command Parameters) while the set has no
+  // random address of its own, even when the device-level one is programmed.
+  uint8_t rnd[6];
+  if (!BLE.getOwnRandomAddress(rnd)) {
+    return BTStatus::OK;
+  }
+  advSync.take();
+  esp_err_t err = esp_ble_gap_ext_adv_set_rand_addr(instance, rnd);
+  if (err != ESP_OK) {
+    log_e("esp_ble_gap_ext_adv_set_rand_addr inst %u: %s", instance, esp_err_to_name(err));
+    advSync.give(BTStatus::Fail);
+    return BTStatus::Fail;
+  }
+  BTStatus st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
+  if (!st) {
+    log_e("esp_ble_gap_ext_adv_set_rand_addr inst %u did not complete", instance);
+  }
+  return st;
+}
+
 BTStatus BLEAdvertising::Impl::ensureExtConfigured(uint8_t instance) {
   auto *extInst = extInstanceAt(instance);
   if (!extInst) {
@@ -919,6 +963,12 @@ BTStatus BLEAdvertising::Impl::ensureExtConfigured(uint8_t instance) {
     return BTStatus::Fail;
   }
   BTStatus st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
+  if (!st) {
+    return st;
+  }
+  // After the set exists, not before: the controller answers 0x42 (Unknown
+  // Advertising Identifier) for a set-level random address on an unknown set.
+  st = applySetRandomAddr(instance);
   if (st) {
     extInst->extAdvRegistered = true;
   }
@@ -946,7 +996,7 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   params.channel_map = ADV_CHNL_ALL;
   params.own_addr_type = static_cast<esp_ble_addr_type_t>(BLE.getOwnAddressType());
   if (bleAdvTypeIsDirected(advType)) {
-    directedPeer.toEspBdAddr(params.peer_addr);
+    BLEAddress::toNative(directedPeer, params.peer_addr);
     params.peer_addr_type = static_cast<esp_ble_addr_type_t>(directedPeer.type());
   } else {
     params.peer_addr_type = BLE_ADDR_TYPE_PUBLIC;
@@ -987,6 +1037,11 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
     return BTStatus::Fail;
   }
   BTStatus st = advSync.wait(ADV_SYNC_TIMEOUT_MS);
+  if (!st) {
+    return st;
+  }
+  // The set must exist before its random address can be programmed.
+  st = applySetRandomAddr(kLegacyInstance);
   if (!st) {
     return st;
   }
@@ -1281,7 +1336,7 @@ BTStatus BLEAdvertising::setExtInstanceAddress(uint8_t instance, const BTAddress
     return st;
   }
   esp_bd_addr_t bd;
-  addr.toEspBdAddr(bd);
+  BLEAddress::toNative(addr, bd);
   esp_err_t err = esp_ble_gap_ext_adv_set_rand_addr(instance, bd);
   if (err != ESP_OK) {
     log_e("ext_adv_set_rand_addr inst %u: %s", instance, esp_err_to_name(err));

@@ -27,6 +27,8 @@
 
 #include "BLE.h"
 
+#include "BLE.bluedroid.h"
+#include "core/BLEBackend.h"
 #include "scan/BLEScan.bluedroid.h"
 #include "scan/BLEAdvertisedDeviceImpl.h"
 #include "scan/BLEScanImpl.h"
@@ -46,6 +48,9 @@ BLEScan::Impl *BLEScan::Impl::s_instance = nullptr;
 #include "core/BLEValidationHooks.h"
 
 namespace {
+
+constexpr uint16_t kMaxPeriodicSyncSkip = 0x01F3;
+constexpr uint16_t kMinPeriodicSyncTimeoutMs = 100;
 
 bool duplicateKeySeen(const BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
   return std::any_of(impl.duplicateKeys.begin(), impl.duplicateKeys.end(), [&](const auto &key) {
@@ -424,6 +429,153 @@ BTStatus BLEScan::stopExtended() {
   return stop();
 }
 
+BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, uint16_t timeoutMs) {
+#if BLE_PAST_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+    return BTStatus::InvalidParam;
+  }
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
+  BTAddress peerAddress;
+  if (!bluedroidFindPeerAddress(connHandle, peerAddress)) {
+    log_w("Scan: PAST receive: no live connection for handle %u", (unsigned)connHandle);
+    return BTStatus::NotConnected;
+  }
+  return Impl::receivePeriodicSyncFromPeer(connHandle, peerAddress, skipCount, timeoutMs);
+#else
+  (void)connHandle;
+  (void)skipCount;
+  (void)timeoutMs;
+  log_w("Scan: receivePeriodicSync not supported (PAST unavailable)");
+  return BTStatus::NotSupported;
+#endif
+}
+
+BTStatus BLEScan::receivePeriodicSync(const BLEConnInfo &peer, uint16_t skipCount, uint16_t timeoutMs) {
+#if BLE_PAST_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  if (skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+    return BTStatus::InvalidParam;
+  }
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
+  return Impl::receivePeriodicSyncFromPeer(peer.getHandle(), peer.getAddress(), skipCount, timeoutMs);
+#else
+  (void)peer;
+  (void)skipCount;
+  (void)timeoutMs;
+  log_w("Scan: receivePeriodicSync not supported (PAST unavailable)");
+  return BTStatus::NotSupported;
+#endif
+}
+
+BTStatus BLEScan::Impl::setPeriodicSyncTransferParams(uint16_t connHandle, const BTAddress &peerAddress, uint8_t mode, uint16_t skipCount, uint16_t timeoutMs) {
+#if BLE_PAST_SUPPORTED
+  // The public handle-only API cannot resolve arbitrary Bluedroid ACLs, so the
+  // caller passes the peer address resolved from the live connection table.
+  BLEScan::Impl *impl = s_instance;
+  if (!impl) {
+    return BTStatus::InvalidState;
+  }
+  if (!peerAddress) {
+    return BTStatus::NotConnected;
+  }
+  if (skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+    return BTStatus::InvalidParam;
+  }
+
+  BLEAdmissionGuard admission(impl->nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
+
+  esp_ble_gap_past_params_t params = {};
+  params.mode = mode;
+  params.skip = skipCount;
+  params.sync_timeout = timeoutMs / 10;
+  params.cte_type = 0;
+
+  esp_bd_addr_t bda;
+  BLEAddress::toNative(peerAddress, bda);
+  esp_err_t err = esp_ble_gap_set_periodic_adv_sync_trans_params(bda, &params);
+  if (err != ESP_OK) {
+    log_e("esp_ble_gap_set_periodic_adv_sync_trans_params handle=%u: %s", connHandle, esp_err_to_name(err));
+    if (err == ESP_ERR_INVALID_STATE) {
+      return BTStatus::InvalidState;
+    }
+    if (err == ESP_ERR_INVALID_ARG) {
+      return BTStatus::InvalidParam;
+    }
+    if (err == ESP_ERR_NO_MEM) {
+      return BTStatus::NoMemory;
+    }
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+#else
+  (void)connHandle;
+  (void)peerAddress;
+  (void)mode;
+  (void)skipCount;
+  (void)timeoutMs;
+  return BTStatus::NotSupported;
+#endif
+}
+
+BTStatus BLEScan::Impl::receivePeriodicSyncFromPeer(uint16_t connHandle, const BTAddress &peerAddress, uint16_t skipCount, uint16_t timeoutMs) {
+  return setPeriodicSyncTransferParams(connHandle, peerAddress, ESP_BLE_GAP_PAST_MODE_DUP_FILTER_DISABLED, skipCount, timeoutMs);
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t connHandle) {
+#if BLE_PAST_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
+  BTAddress peerAddress;
+  if (!bluedroidFindPeerAddress(connHandle, peerAddress)) {
+    log_w("Scan: PAST stop: no live connection for handle %u", (unsigned)connHandle);
+    return BTStatus::NotConnected;
+  }
+  // Bluedroid has no dedicated disable command. Restore the same no-sync mode
+  // and default parameters NimBLE uses for its cancel path.
+  return Impl::setPeriodicSyncTransferParams(connHandle, peerAddress, ESP_BLE_GAP_PAST_MODE_NO_SYNC_EVT, 0, kMinPeriodicSyncTimeoutMs);
+#else
+  (void)connHandle;
+  log_w("Scan: stopPeriodicSyncReceive not supported (PAST unavailable)");
+  return BTStatus::NotSupported;
+#endif
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &peer) {
+#if BLE_PAST_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  BLEAdmissionGuard admission(impl.nativeAdmission);
+  if (!admission) {
+    return BTStatus::InvalidState;
+  }
+  return Impl::setPeriodicSyncTransferParams(
+    peer.getHandle(), peer.getAddress(), ESP_BLE_GAP_PAST_MODE_NO_SYNC_EVT, 0, kMinPeriodicSyncTimeoutMs
+  );
+#else
+  (void)peer;
+  log_w("Scan: stopPeriodicSyncReceive not supported (PAST unavailable)");
+  return BTStatus::NotSupported;
+#endif
+}
+
 BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount, uint16_t timeoutMs) {
 #if BLE_PERIODIC_ADV_SUPPORTED
   // Null-check only: the create_sync call does not touch Impl state (unlike NimBLE,
@@ -441,7 +593,7 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
   params.filter_policy = 0;  // Use SID + address
   params.sid = sid;
   params.addr_type = static_cast<esp_ble_addr_type_t>(addr.type());
-  addr.toEspBdAddr(params.addr);
+  BLEAddress::toNative(addr, params.addr);
   params.skip = skipCount;
   params.sync_timeout = timeoutMs / 10;  // units of 10 ms
 
@@ -461,7 +613,7 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
 #endif
 }
 
-BTStatus BLEScan::cancelPeriodicSync() {
+BTStatus BLEScan::cancelPeriodicSyncCreate() {
 #if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard admission(impl.nativeAdmission);
@@ -544,6 +696,12 @@ void BLEScan::beginBackendShutdown() {
   bool wasScanning = _impl->isScanning.load(std::memory_order_acquire);
   BTStatus stopStatus = stopBackend();
   if (!stopStatus && wasScanning) {
+    // A failed stop submission leaves the native scan active. Disabling the
+    // split S31 controller in that state asserts (btdm id 910), so retry the
+    // stop once before retiring the public session.
+    stopStatus = stopBackend();
+  }
+  if (!stopStatus && wasScanning) {
     // The native host will be deinitialized next, so no completion is
     // guaranteed after a failed stop submission. Retire the public session
     // and release an unlimited startBlocking() waiter deterministically.
@@ -624,7 +782,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             break;
           }
 
-          BTAddress addr = BTAddress::fromEspBdAddr(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
+          BTAddress addr = BLEAddress::fromNative(param->scan_rst.bda, static_cast<BTAddress::Type>(param->scan_rst.ble_addr_type));
           if (param->scan_rst.ble_evt_type == ESP_BLE_EVT_SCAN_RSP || (param->scan_rst.adv_data_len == 0 && param->scan_rst.scan_rsp_len > 0)) {
             BLEAdvertisedDevice merged;
             bool found = false;
@@ -816,7 +974,8 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
         break;
       }
       const esp_ble_gap_ext_adv_report_t &r = param->ext_adv_report.params;
-      BTAddress addr(r.addr, static_cast<BTAddress::Type>(r.addr_type));
+      // `r.addr` is an esp_bd_addr_t (MSB-first); BTAddress stores LSB-first.
+      BTAddress addr = BLEAddress::fromNative(r.addr, static_cast<BTAddress::Type>(r.addr_type));
 
       // Merge scan responses (which carry the Local Name) into the device from
       // the preceding advertisement.
@@ -922,11 +1081,42 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
         cb = inst->periodicSyncCb;
       }
       if (cb) {
-        BTAddress addr(e.adv_addr, static_cast<BTAddress::Type>(e.adv_addr_type));
+        BTAddress addr = BLEAddress::fromNative(e.adv_addr, static_cast<BTAddress::Type>(e.adv_addr_type));
         cb(e.sync_handle, e.sid, addr, static_cast<BLEPhy>(e.adv_phy), e.period_adv_interval);
       }
       break;
     }
+
+#if BLE_PAST_SUPPORTED
+    case ESP_GAP_BLE_SET_PAST_PARAMS_COMPLETE_EVT:
+      if (param->set_past_params.status != ESP_BT_STATUS_SUCCESS) {
+        log_w("SET_PAST_PARAMS failed status=%d", param->set_past_params.status);
+      }
+      break;
+
+    case ESP_GAP_BLE_PERIODIC_ADV_SYNC_TRANS_RECV_EVT:
+    {
+      const auto &e = param->past_received;
+      if (e.status != ESP_BT_STATUS_SUCCESS) {
+        log_w("PERIODIC_ADV_SYNC_TRANS_RECV failed status=%d", e.status);
+        break;
+      }
+      BLEScan::PeriodicSyncHandler cb;
+      {
+        BLELockGuard lock(inst->mtx);
+        auto &syncs = inst->periodicSyncs;
+        if (std::find(syncs.begin(), syncs.end(), e.sync_handle) == syncs.end()) {
+          syncs.push_back(e.sync_handle);
+        }
+        cb = inst->periodicSyncCb;
+      }
+      if (cb) {
+        BTAddress addr = BLEAddress::fromNative(e.adv_addr, static_cast<BTAddress::Type>(e.adv_addr_type));
+        cb(e.sync_handle, e.adv_sid, addr, static_cast<BLEPhy>(e.adv_phy), e.adv_interval);
+      }
+      break;
+    }
+#endif /* BLE_PAST_SUPPORTED */
 
     case ESP_GAP_BLE_PERIODIC_ADV_REPORT_EVT:
     {
@@ -941,6 +1131,10 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
       }
       break;
     }
+
+    case ESP_GAP_BLE_PERIODIC_ADV_CREATE_SYNC_COMPLETE_EVT:
+      log_w("PERIODIC_ADV_CREATE_SYNC_COMPLETE status=%d", param->period_adv_create_sync.status);
+      break;
 
     case ESP_GAP_BLE_PERIODIC_ADV_SYNC_LOST_EVT:
     {
@@ -1010,7 +1204,22 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &, uint8_t, uint16_t, uint1
   return BTStatus::NotSupported;
 }
 
-BTStatus BLEScan::cancelPeriodicSync() {
+BTStatus BLEScan::receivePeriodicSync(uint16_t, uint16_t, uint16_t) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::cancelPeriodicSyncCreate() {
   log_w("Scanning not supported");
   return BTStatus::NotSupported;
 }

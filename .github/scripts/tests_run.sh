@@ -650,6 +650,9 @@ fi
 
 source "${SCRIPTS_DIR}/tests_utils.sh"
 
+# ci.yml parsing relies on mikefarah/yq (yq-go); fail early with a clear message.
+require_yq_go || exit 1
+
 # If sketch is provided and test type is not, test type is inferred from the sketch path
 if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
     if [ ${#sketches_to_run[@]} -eq 1 ]; then

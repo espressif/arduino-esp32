@@ -71,7 +71,18 @@ struct BLEClass::Impl {
   using LifecycleHook = void (*)();
 
   uint16_t localMTU = 23;
+  /// True while this session holds a reference to the shared Bluedroid host.
+  /// The first user starts the host, the last one tears it down.
+  bool hostUser = false;
   uint8_t ownAddrType = BLE_ADDR_TYPE_PUBLIC;
+  /// Controller LL privacy state (resolvable private addresses), toggled by
+  /// @c BLEClass::setOwnAddressType for the *ID address types only.
+  bool privacyEnabled = false;
+  /// Random device address programmed for @c BTAddress::Type::Random
+  /// (esp_bd_addr_t, MSB-first). Kept so the advertising backend can mirror it
+  /// into the set-level random address the controller requires.
+  uint8_t ownRandomAddr[6] = {};
+  bool randomAddrSet = false;
   bool ending = false;
   bool endRunning = false;
   bool endReleaseMemory = false;
@@ -79,6 +90,9 @@ struct BLEClass::Impl {
   SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutex();
   portMUX_TYPE hookMux = portMUX_INITIALIZER_UNLOCKED;
   BLESync privacySync{"privacySync"};
+  /// Bridges @c esp_ble_gap_set_rand_addr (async) to @c setOwnAddressType.
+  /// Signaled from @c ESP_GAP_BLE_SET_STATIC_RAND_ADDR_EVT.
+  BLESync randAddrSync{"randAddrSync"};
   /// Bridges @c esp_ble_gap_update_whitelist (async) to the blocking public
   /// @c whiteListAdd / @c whiteListRemove APIs. Signaled from
   /// @c ESP_GAP_BLE_UPDATE_WHITELIST_COMPLETE_EVT.
@@ -95,6 +109,13 @@ struct BLEClass::Impl {
   GapHook scanGapHook = nullptr;
   LifecycleHook scanBeginHook = nullptr;
   LifecycleHook scanEndHook = nullptr;
+#endif
+#if BLE_AUDIO_SUPPORTED
+  GapHook audioGapHook = nullptr;
+  LifecycleHook audioPreEndHook = nullptr;
+#endif
+#if BLE_ISO_SUPPORTED
+  LifecycleHook isoPreEndHook = nullptr;
 #endif
 #if BLE_GATT_SERVER_SUPPORTED
   GapHook serverGapHook = nullptr;
@@ -141,5 +162,26 @@ struct BLEClass::Impl {
     }
   }
 };
+
+/**
+ * @brief Resolve a public connection handle to its peer address (Bluedroid).
+ *
+ * Searches the live client and server connection tables. Accepts the handle
+ * reported by `BLEClient::getHandle()` / `BLEConnInfo::getHandle()` and the
+ * HCI ACL handle as a fallback.
+ */
+bool bluedroidFindPeerAddress(uint16_t connHandle, BTAddress &peerAddress);
+
+/** @brief Find the public handle for a connected peer address (Bluedroid). */
+bool bluedroidFindConnHandle(const BTAddress &peerAddress, uint16_t &connHandle);
+
+/** @brief Collect every live handle for a connected peer address (Bluedroid). */
+void bluedroidFindConnHandles(const BTAddress &peerAddress, std::vector<uint16_t> &handles);
+
+/** @brief Collect one BLEConnInfo per role/link for a connected peer (Bluedroid). */
+void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnInfo> &connections);
+
+/** @brief Snapshot connection info for a connected peer address (Bluedroid). */
+bool bluedroidFindConnInfo(const BTAddress &peerAddress, BLEConnInfo &info);
 
 #endif /* BLE_BLUEDROID */

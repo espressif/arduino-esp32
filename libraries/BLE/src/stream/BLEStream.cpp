@@ -439,7 +439,7 @@ void BLEStream::end() {
   }
 }
 
-bool BLEStream::connected() const {
+bool BLEStream::isConnected() const {
   auto role = _impl ? _impl->loadRole() : nullptr;
   return role && !role->ending && role->connectedCount() > 0;
 }
