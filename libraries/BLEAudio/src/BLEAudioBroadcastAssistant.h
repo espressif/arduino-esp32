@@ -132,10 +132,17 @@ public:
    *
    * Uses the shared `BLE.getScan()`; returns Busy instead of stealing an
    * extended scan already started by another role. Each broadcast is reported
-   * once per remote scan through onSourceFound().
+   * once per remote scan through onSourceFound(). A second call while the
+   * remote scan is active is a no-op.
    */
   BTStatus startRemoteScan();
-  /** @brief Stop the local scan and tell the sink the remote scan ended. */
+  /**
+   * @brief Stop the local scan and tell the sink the remote scan ended.
+   *
+   * Only acts when startRemoteScan() is in effect, so calling it twice (or
+   * from audio.end()) sends no redundant Scan Stopped write. With no peer
+   * left it still releases the local scan and returns NotConnected.
+   */
   BTStatus stopRemoteScan();
 
   /**

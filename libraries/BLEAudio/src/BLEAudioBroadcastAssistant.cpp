@@ -44,7 +44,7 @@
 struct BLEAudioBroadcastAssistant::Impl {
   std::weak_ptr<BLEAudio::Impl> audio;
   uint16_t conn = BLE_AUDIO_CONN_NONE;  ///< The Scan Delegator being driven.
-  bool scanStarted = false;              ///< This assistant started the shared extended scan.
+  bool remoteScanning = false;          ///< startRemoteScan() is in effect (remote + local scan).
 
   // Subgroup count per remote source, needed to build a Modify Source.
   struct Known {
@@ -89,6 +89,8 @@ struct BLEAudioBroadcastAssistant::Impl {
   void handle(const ble_audio_evt_t &e) {
     if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED) {
       if (e.conn_handle == conn) {
+        // Keep remoteScanning: the local scan is released by stopRemoteScan()
+        // from the role teardown, which cannot run in a stack callback.
         conn = BLE_AUDIO_CONN_NONE;
         memset(known, 0, sizeof(known));
       }
@@ -151,9 +153,15 @@ struct BLEAudioBroadcastAssistant::Impl {
         }
         break;
       case BLE_AUDIO_EVT_BA_RESULT:
-        if (resultCb && e.data) {
+        if (e.data) {
           auto *r = static_cast<const ble_audio_ba_result_t *>(e.data);
-          resultCb(static_cast<Op>(r->op), bleAudioStatus(e.err));
+          BTStatus st = bleAudioStatus(e.err);
+          if (!st) {
+            log_e("BroadcastAssistant: control point op %u failed (%s)", r->op, st.toString());
+          }
+          if (resultCb) {
+            resultCb(static_cast<Op>(r->op), st);
+          }
         }
         break;
       default: break;
@@ -173,6 +181,8 @@ BTStatus BLEAudioBroadcastAssistant::discover(uint16_t connHandle) {
   }
   /* Source_IDs are per remote: forget them when switching peers. */
   if (connHandle != _impl->conn) {
+    /* Release a scan started for the previous peer before rebinding. */
+    (void)stopRemoteScan();
     memset(_impl->known, 0, sizeof(_impl->known));
   }
   _impl->conn = connHandle;
@@ -185,7 +195,18 @@ uint16_t BLEAudioBroadcastAssistant::getConnHandle() const {
 
 BTStatus BLEAudioBroadcastAssistant::startRemoteScan() {
   if (!_impl || _impl->conn == BLE_AUDIO_CONN_NONE) {
+    log_e("BroadcastAssistant: startRemoteScan without a peer");
     return BTStatus::NotConnected;
+  }
+  if (_impl->remoteScanning) {
+    // Repeated starts are a no-op: the remote is already scanning for us.
+    return BTStatus::OK;
+  }
+  BLEScan scan = BLE.getScan();
+  if (scan.isScanning()) {
+    // The scanner is a single shared session; do not steal another role's scan.
+    log_e("BroadcastAssistant: another extended scan is already active");
+    return BTStatus::Busy;
   }
   /* Tell the remote first (engine starts reporting), then run our own scanner for it. */
   BTStatus st = bleAudioStatus(bleAudioBaScanStart(_impl->conn, false));
@@ -193,38 +214,47 @@ BTStatus BLEAudioBroadcastAssistant::startRemoteScan() {
     log_e("BroadcastAssistant: remote scan start on conn %u failed (%s)", _impl->conn, st.toString());
     return st;
   }
-  BLEScan scan = BLE.getScan();
-  if (scan.isScanning() && !_impl->scanStarted) {
-    // The scan is a single shared session; do not steal it from another role.
-    log_e("BroadcastAssistant: another extended scan is already active");
-    bleAudioBaScanStop(_impl->conn);
-    return BTStatus::Busy;
-  }
+  _impl->remoteScanning = true;
   // Passive and unfiltered: sources are reported once per remote scan by the engine.
   scan.setActiveScan(false);
   scan.setFilterDuplicates(false);
   st = scan.startExtended(0);
   if (!st) {
     log_e("BroadcastAssistant: local extended scan failed to start (%s); remote scan cancelled", st.toString());
+    _impl->remoteScanning = false;
     bleAudioBaScanStop(_impl->conn);
-  } else {
-    _impl->scanStarted = true;
   }
   return st;
 }
 
 BTStatus BLEAudioBroadcastAssistant::stopRemoteScan() {
-  if (!_impl || _impl->conn == BLE_AUDIO_CONN_NONE) {
-    return BTStatus::NotConnected;
+  if (!_impl) {
+    return BTStatus::InvalidState;
   }
-  BLEScan scan = BLE.getScan();
-  if (_impl->scanStarted) {
-    _impl->scanStarted = false;
+  const bool wasScanning = _impl->remoteScanning;
+  if (wasScanning) {
+    // Release the shared scan first; a failed remote write must not leave it on.
+    _impl->remoteScanning = false;
+    BLEScan scan = BLE.getScan();
     if (scan.isScanning()) {
       scan.stopExtended();
     }
   }
-  return bleAudioStatus(bleAudioBaScanStop(_impl->conn));
+  if (_impl->conn == BLE_AUDIO_CONN_NONE) {
+    // The peer is gone; the local scan was still released above.
+    return BTStatus::NotConnected;
+  }
+  if (!wasScanning) {
+    // Already stopped (or never started): no redundant Scan Stopped write, so
+    // a role teardown after an explicit stop stays silent.
+    return BTStatus::OK;
+  }
+  BTStatus st = bleAudioStatus(bleAudioBaScanStop(_impl->conn));
+  if (!st) {
+    // The write never reached the sink; let a later call retry the remote scan end.
+    _impl->remoteScanning = true;
+  }
+  return st;
 }
 
 BTStatus BLEAudioBroadcastAssistant::addSource(const BLEAudioBroadcastSourceInfo &source, bool syncPa, uint32_t bisMask) {
