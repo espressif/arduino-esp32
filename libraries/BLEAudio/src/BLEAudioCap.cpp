@@ -21,6 +21,7 @@
 #include <vector>
 #include "BLEAudioCap.h"
 #include "BLEAudioImpl.h"
+#include "BLEAudioProfiles.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineCap.h"
 #include "BLE.h"
@@ -46,8 +47,12 @@
 namespace {
 
 constexpr uint16_t kBroadcastAudioAnnouncementUuid = 0x1852;
+constexpr uint16_t kPublicBroadcastAnnouncementUuid = 0x1856;
 constexpr uint8_t kAdTypeServiceData16 = 0x16;
 constexpr uint16_t kAppearanceBroadcastingDevice = 0x0885;
+constexpr uint8_t kMetaStreamingContext = 0x02;  ///< LTV type: Streaming Audio Contexts.
+constexpr uint8_t kMetaProgramInfo = 0x03;       ///< LTV type: Program Info (UTF-8).
+constexpr uint8_t kMaxPbaNameLen = 32;           ///< Broadcast Name limit (4..32 octets).
 constexpr uint16_t kPaInterval = 0x40;  ///< 80 ms; also sent to acceptors, so min = max.
 
 /** An acceptor added with addAcceptor(). */
@@ -268,6 +273,35 @@ struct BLEAudioCapInitiator::Impl {
     ext.setAppearance(kAppearanceBroadcastingDevice);
     const uint8_t id[3] = {(uint8_t)broadcastId, (uint8_t)(broadcastId >> 8), (uint8_t)(broadcastId >> 16)};
     ext.setServiceData(BLEUUID(kBroadcastAudioAnnouncementUuid), id, sizeof(id));
+#if BLE_AUDIO_PBP_SUPPORTED
+    // PBA metadata: Streaming Audio Contexts + Program Info (the name), so
+    // Auracast UIs show the same context and title as a plain broadcast source.
+    const size_t n = advName.length() < kMaxPbaNameLen ? advName.length() : kMaxPbaNameLen;
+    uint8_t meta[4 + 2 + kMaxPbaNameLen];
+    size_t m = 0;
+    const uint16_t ctx = static_cast<uint16_t>(context);
+    meta[m++] = 3;
+    meta[m++] = kMetaStreamingContext;
+    meta[m++] = (uint8_t)ctx;
+    meta[m++] = (uint8_t)(ctx >> 8);
+    meta[m++] = (uint8_t)(1 + n);
+    meta[m++] = kMetaProgramInfo;
+    memcpy(meta + m, advName.c_str(), n);
+    m += n;
+    ble_audio_codec_t c;
+    ble_audio_qos_t q;
+    codecQos(true, c, q);
+    uint8_t features = c.sample_rate_hz == 48000 ? BLEAudioPublicBroadcast::HighQuality : BLEAudioPublicBroadcast::StandardQuality;
+    if (code.length()) {
+      features |= BLEAudioPublicBroadcast::Encryption;
+    }
+    uint8_t pba[2 + 2 + sizeof(meta)];
+    const size_t pbaLen = BLEAudioPublicBroadcast::buildAnnouncement(features, meta, m, pba, sizeof(pba));
+    if (pbaLen > 2) {
+      // buildAnnouncement() starts with the UUID, which setServiceData() adds itself.
+      ext.setServiceData(BLEUUID(kPublicBroadcastAnnouncementUuid), pba + 2, pbaLen - 2);
+    }
+#endif
     ext.setBroadcastName(advName);
     ext.setName(advName);
     BTStatus st = adv.setExtAdvertisementData(inst, ext);
