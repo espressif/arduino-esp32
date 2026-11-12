@@ -59,6 +59,9 @@ static volatile bool connected = false;
 // endpoint while the COM port is open and stops when the port is closed.
 // SOF (isPlugged) keeps running either way.
 static volatile int64_t last_in_token_us = 0;
+// Last time a payload actually went into the Serial/JTAG FIFO (ISR drain or
+// task-side prime). Empty FIFO flush does not count.
+static volatile int64_t last_tx_taken_us = 0;
 // A host DTR change or SET_LINE_CODING observed after begin(). Absent on C3/S3.
 #ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
 static volatile int64_t line_event_us = 0;
@@ -67,10 +70,15 @@ static volatile int64_t line_event_us = 0;
 static int64_t burst_start_us = 0;
 static bool saw_gap_after_tokens = false;
 static bool tokens_seen = false;
-// Host poll quieter than this means the COM port is closed.
+static int64_t last_check_us = 0;
+static int64_t quiet_us = 0;
+// Host poll quieter than this means the COM port is closed (opening path).
 static const int64_t HWCDC_TOKEN_RECENT_US = 20000;
 // Unbroken polling this long means the monitor was already open across reset.
 static const int64_t HWCDC_TOKEN_STABLE_US = 100000;
+// Observed quiet (not wall-clock including flash) before closing a live TX session.
+static const int64_t HWCDC_CLOSE_GRACE_US = 250000;
+static const int64_t HWCDC_QUIET_SLICE_MAX_US = 50000;
 
 // Protects TX state shared between the producer task and the ISR (which may
 // run on the other core on dual-core SoCs). It covers:
@@ -189,13 +197,66 @@ static void hw_cdc_set_connected(bool now) {
 
 static void hw_cdc_reset_session(void) {
   last_in_token_us = 0;
+  last_tx_taken_us = 0;
 #ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
   line_event_us = 0;
 #endif
   burst_start_us = 0;
   saw_gap_after_tokens = false;
   tokens_seen = false;
+  last_check_us = 0;
+  quiet_us = 0;
   connected = false;
+}
+
+// Task-side first-packet kick. begin() clears IN_EMPTY while the FIFO is
+// already empty; enabling the IRQ then does nothing until the FIFO goes
+// non-empty and empty again. After esptool there is no BUS_RESET in the new
+// sketch to recreate that edge, so write() must load the FIFO itself.
+// This does not set connected (empty flush is not a connect probe).
+static void hw_cdc_prime_tx(void) {
+  if (tx_ring_buf == NULL) {
+    return;
+  }
+  bool wrote_anything = false;
+  uint32_t sent_size = 0;
+
+  portENTER_CRITICAL_SAFE(&hw_cdc_tx_mux);
+  if (usb_serial_jtag_ll_txfifo_writable() == 1) {
+    size_t queued_size = 0;
+    uint8_t *queued_buff = NULL;
+    bool from_stash = false;
+    if (tx_stash_len) {
+      queued_buff = tx_stash_buf;
+      queued_size = tx_stash_len;
+      from_stash = true;
+    } else {
+      queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, 64);
+    }
+    if (queued_buff != NULL && queued_size > 0) {
+      sent_size = usb_serial_jtag_ll_write_txfifo(queued_buff, queued_size);
+      usb_serial_jtag_ll_txfifo_flush();
+      wrote_anything = true;
+      last_tx_taken_us = esp_timer_get_time();
+      if (sent_size < queued_size) {
+        tx_stash_len = queued_size - sent_size;
+        memmove(tx_stash_buf, queued_buff + sent_size, tx_stash_len);
+      } else {
+        tx_stash_len = 0;
+      }
+      if (!from_stash) {
+        vRingbufferReturnItem(tx_ring_buf, queued_buff);
+      }
+    }
+  }
+  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+  portEXIT_CRITICAL_SAFE(&hw_cdc_tx_mux);
+
+  if (wrote_anything && arduino_hw_cdc_event_loop_handle != NULL) {
+    arduino_hw_cdc_event_data_t event = {0};
+    event.tx.len = sent_size;
+    esp_event_post_to(arduino_hw_cdc_event_loop_handle, ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_TX_EVENT, &event, sizeof(event), 0);
+  }
 }
 
 static void hw_cdc_isr_handler(void *arg) {
@@ -263,6 +324,7 @@ static void hw_cdc_isr_handler(void *arg) {
         sent_size = usb_serial_jtag_ll_write_txfifo(queued_buff, queued_size);
         usb_serial_jtag_ll_txfifo_flush();
         wrote_anything = true;
+        last_tx_taken_us = esp_timer_get_time();
 
         if (sent_size < queued_size) {
           tx_stash_len = queued_size - sent_size;
@@ -333,9 +395,12 @@ static void hw_cdc_isr_handler(void *arg) {
     // pre-reset burst so C3/S3 cannot reopen from it. DTR chips still require
     // an IN token newer than the stamp below.
     last_in_token_us = 0;
+    last_tx_taken_us = 0;
     burst_start_us = 0;
     saw_gap_after_tokens = false;
     tokens_seen = false;
+    last_check_us = 0;
+    quiet_us = 0;
 #ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
     line_event_us = esp_timer_get_time();
 #endif
@@ -393,13 +458,42 @@ bool HWCDC::isCDC_Connected() {
   portENTER_CRITICAL_SAFE(&hw_cdc_tx_mux);
   now = esp_timer_get_time();
   token_us = last_in_token_us;
+  const bool prev_connected = connected;
+  const bool live_tx = last_tx_taken_us != 0;
+  int64_t dt = (last_check_us == 0) ? 0 : (now - last_check_us);
+  if (dt < 0) {
+    dt = 0;
+  }
+  last_check_us = now;
   const bool recent = token_us != 0 && (now - token_us) <= HWCDC_TOKEN_RECENT_US;
   if (!recent) {
     if (tokens_seen) {
       saw_gap_after_tokens = true;
     }
     burst_start_us = 0;
+#ifdef USB_SERIAL_JTAG_DTR_CHG_INT_ENA
+    if (line_event_us != 0 && (token_us == 0 || token_us <= line_event_us)) {
+      // DTR/SET_LINE_CODING still wins immediately.
+      quiet_us = 0;
+      open = false;
+    } else
+#endif
+      // A live TX session must not snap closed across ISR-blocked stalls
+      // (flash/NVS). Cap the quiet credit per check so 1200 ms of wall-clock
+      // is one slice, not an immediate disconnect.
+      if (live_tx && prev_connected) {
+        int64_t slice = dt;
+        if (slice > HWCDC_QUIET_SLICE_MAX_US) {
+          slice = HWCDC_QUIET_SLICE_MAX_US;
+        }
+        quiet_us += slice;
+        open = quiet_us < HWCDC_CLOSE_GRACE_US;
+      } else {
+        quiet_us = 0;
+        open = false;
+      }
   } else {
+    quiet_us = 0;
     if (burst_start_us == 0) {
       burst_start_us = now;
     }
@@ -700,9 +794,9 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
   if (!isCDC_Connected()) {
     // just pop/push RingBuffer and apply FIFO policy
     flushTXBuffer(buffer, size);
-    // Re-arm IN_EMPTY so a transient unplug does not leave the ring without
-    // a wakeup. Opening the port is decided from IN tokens, not from this.
-    hw_cdc_enable_tx_intr();
+    // Load the FIFO from the ring. Enabling IN_EMPTY alone is not enough
+    // after begin() has cleared the empty status bit (esptool path).
+    hw_cdc_prime_tx();
   } else {
     size_t to_send = size, so_far = 0;
     size_t ring_max = xRingbufferGetMaxItemSize(tx_ring_buf);
@@ -738,8 +832,8 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
       // Blocking send into the TX ring buffer. The ISR drains the buffer into
       // the USB Serial/JTAG FIFO whenever the host picks up data.
       if (xRingbufferSend(tx_ring_buf, (void *)(buffer + so_far), chunk, tx_timeout_ms / portTICK_PERIOD_MS) != pdTRUE) {
-        // Kick the ISR in case it stopped draining the ring.
-        hw_cdc_enable_tx_intr();
+        // Kick TX in case IN_EMPTY never restarted after begin().
+        hw_cdc_prime_tx();
         // The monitor closed while this write was waiting. Do not finish the
         // 20-attempt backpressure budget; that budget is only for a host that
         // is still polling.
@@ -764,8 +858,9 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
       consec_timeouts = 0;
       so_far += chunk;
       to_send -= chunk;
-      // Notify the ISR that new data is ready to be moved into the TX FIFO.
-      hw_cdc_enable_tx_intr();
+      // First packet must hit the FIFO from task context. After esptool,
+      // IN_EMPTY was cleared in begin() and no BUS_RESET recreates the edge.
+      hw_cdc_prime_tx();
     }
 
     // Only dump pending bytes through the not-connected FIFO policy if we
@@ -797,9 +892,7 @@ void HWCDC::flush(void) {
     UBaseType_t uxItemsWaiting = 0;
     vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
     if (uxItemsWaiting) {
-      // Now trigger the ISR to read data from the ring buffer.
-      usb_serial_jtag_ll_txfifo_flush();
-      hw_cdc_enable_tx_intr();
+      hw_cdc_prime_tx();
     }
     uint32_t tries = tx_timeout_ms;  // waits 1ms per ISR sending data attempt, in case CDC is unplugged
     bool open = true;
@@ -810,7 +903,7 @@ void HWCDC::flush(void) {
       if (lastUxItemsWaiting == uxItemsWaiting) {
         tries--;
       }
-      hw_cdc_enable_tx_intr();
+      hw_cdc_prime_tx();
       open = isCDC_Connected();
     }
     if (!open) {
