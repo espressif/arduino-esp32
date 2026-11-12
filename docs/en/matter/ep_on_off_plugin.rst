@@ -9,8 +9,7 @@ The ``MatterOnOffPlugin`` class provides an on/off plugin unit endpoint for Matt
 
 **Features:**
 * Simple on/off control
-* State persistence support
-* Callback support for state changes
+* Callback support for state changes (persist in the sketch with Preferences or NVS if needed)
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 

@@ -171,6 +171,7 @@ void setup() {
   OnOffLight.onChange(onOffLightCallback);
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
   matterWaitUntilReady();
 }

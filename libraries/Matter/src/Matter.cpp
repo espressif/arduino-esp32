@@ -567,9 +567,22 @@ bool ArduinoMatter::isStackStarted() {
   return sLifecycle == MatterLifecycle::StackStarted;
 }
 
-void ArduinoMatter::_init() {
+static bool matterHasAccessoryEndpoint() {
+  node_t *node = node::get();
+  if (node == nullptr) {
+    return false;
+  }
+  for (endpoint_t *ep = endpoint::get_first(node); ep != nullptr; ep = endpoint::get_next(ep)) {
+    if (endpoint::get_id(ep) != 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ArduinoMatter::initNode() {
   if (sLifecycle != MatterLifecycle::Uninitialized) {
-    return;
+    return true;
   }
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
@@ -585,7 +598,7 @@ void ArduinoMatter::_init() {
   deviceNode = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
   if (deviceNode == nullptr) {
     log_e("Failed to create Matter node");
-    return;
+    return false;
   }
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
@@ -595,6 +608,7 @@ void ArduinoMatter::_init() {
 #endif
 
   sLifecycle = MatterLifecycle::NodeCreated;
+  return true;
 }
 
 void ArduinoMatter::begin() {
@@ -602,7 +616,11 @@ void ArduinoMatter::begin() {
     return;
   }
   if (sLifecycle != MatterLifecycle::NodeCreated) {
-    log_e("No Matter endpoint has been created. Please create an endpoint first.");
+    log_e("Matter node has not been created. Call at least one endpoint begin() first.");
+    return;
+  }
+  if (!matterHasAccessoryEndpoint()) {
+    log_e("No Matter accessory endpoint on the node. At least one endpoint begin() must succeed before Matter.begin().");
     return;
   }
 
@@ -642,6 +660,22 @@ void ArduinoMatter::begin() {
     return;
   }
   sLifecycle = MatterLifecycle::StackStarted;
+  {
+    node_t *node = node::get();
+    if (node != nullptr) {
+      for (endpoint_t *ep = endpoint::get_first(node); ep != nullptr; ep = endpoint::get_next(ep)) {
+        const uint16_t id = endpoint::get_id(ep);
+        if (id == 0) {
+          continue;
+        }
+        void *priv = endpoint::get_priv_data(id);
+        if (priv == nullptr) {
+          continue;
+        }
+        static_cast<MatterEndPoint *>(priv)->notifyStackStarted();
+      }
+    }
+  }
 #if CONFIG_ENABLE_MATTER_OVER_THREAD && defined(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION) && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
   bindThreadNetworkCommissioningOnRoot();
 #endif

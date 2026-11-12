@@ -9,8 +9,7 @@ The ``MatterOnOffLight`` class provides a simple on/off light endpoint for Matte
 
 **Features:**
 * Simple on/off control
-* State persistence support
-* Callback support for state changes
+* Callback support for state changes (persist on/off in the sketch with Preferences or NVS if needed)
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 
@@ -140,7 +139,7 @@ Event Handling
 onChange
 ^^^^^^^^
 
-Sets a callback function to be called when the light state changes.
+Sets a callback function to be called when the light state changes. Register after ``begin()`` (before or after ``Matter.begin()``).
 
 .. code-block:: arduino
 

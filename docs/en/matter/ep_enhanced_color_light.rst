@@ -12,8 +12,7 @@ The ``MatterEnhancedColorLight`` class provides an Extended Color Light (0x010D)
 * RGB color control with HSV color model
 * Brightness level control (0-255; Matter CurrentLevel uses 1-254, and 255 is the nullable null sentinel)
 * Color temperature control (100-500 mireds; higher mireds are warmer)
-* State persistence support
-* Callback support for all parameter changes
+* Callback support for on/off, color, brightness, and color temperature (persist in the sketch with Preferences or NVS if needed)
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 

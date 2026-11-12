@@ -200,6 +200,7 @@ void setup() {
   }
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Temp Cabinet");
   Matter.begin();
   matterWaitUntilReady();
 

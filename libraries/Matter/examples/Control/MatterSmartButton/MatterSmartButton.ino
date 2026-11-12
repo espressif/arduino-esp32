@@ -49,6 +49,7 @@ void setup() {
   SmartButton.begin();
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Smart Button");
   Matter.begin();
   matterWaitUntilReady();
 }

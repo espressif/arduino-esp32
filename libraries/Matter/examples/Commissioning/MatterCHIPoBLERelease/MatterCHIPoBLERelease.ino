@@ -107,6 +107,7 @@ void setup() {
 
   sHeapBeforeBegin = ESP.getFreeHeap();
   printHeap("Before Matter.begin()");
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
   sHeapAfterBegin = ESP.getFreeHeap();
   printHeap("After Matter.begin()");

@@ -10,8 +10,7 @@ The ``MatterDimmablePlugin`` class provides a dimmable plugin unit endpoint for 
 **Features:**
 * On/off control
 * Power level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel)
-* State persistence support
-* Callback support for state and level changes
+* Callback support for on/off and level changes (persist in the sketch with Preferences or NVS if needed)
 * Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 * Matter standard compliance
 

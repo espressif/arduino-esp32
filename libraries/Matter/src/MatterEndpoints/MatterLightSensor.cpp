@@ -44,7 +44,9 @@ MatterLightSensor::~MatterLightSensor() {
 }
 
 bool MatterLightSensor::begin(uint16_t _rawIlluminance) {
-  ArduinoMatter::_init();
+  if (!ensureMatterNode()) {
+    return false;
+  }
 
   if (getEndPointId() != 0) {
     log_e("Matter Light Sensor with Endpoint Id %d device has already been created.", getEndPointId());
