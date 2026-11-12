@@ -232,16 +232,20 @@ struct BLEAudioBroadcastSink::Impl {
    */
   BTStatus sync(const BTAddress &addr, uint8_t sid, uint32_t broadcastId) {
     bleAudioBsinkArm(broadcastId);
+    {
+      BLELockGuard lock(mtx.get());
+      // Mark pending before the call: the PA-synced event may arrive before
+      // createPeriodicSync() returns.
+      syncPending = true;
+    }
     BTStatus st = BLE.getScan().createPeriodicSync(addr, sid, 0, kPaSyncTimeoutMs);
     if (!st) {
       bleAudioBsinkDisarm();
+      BLELockGuard lock(mtx.get());
+      syncPending = false;
       log_w("BroadcastSink: PA sync to 0x%06lX failed (%s)", (unsigned long)broadcastId, st.toString());
     } else {
       log_d("BroadcastSink: PA syncing to 0x%06lX (%s sid=%u)", (unsigned long)broadcastId, addr.toString().c_str(), sid);
-    }
-    {
-      BLELockGuard lock(mtx.get());
-      syncPending = (bool)st;
     }
     return st;
   }
@@ -396,6 +400,11 @@ struct BLEAudioBroadcastSink::Impl {
           break;
         }
         log_d("evt PA_REQ past=%d bid=0x%06lx", r->past, (unsigned long)r->broadcast_id);
+        {
+          BLELockGuard lock(mtx.get());
+          // The PA-synced event may arrive before the create call returns.
+          syncPending = true;
+        }
         BTStatus st;
         if (r->past) {
           st = static_cast<BTStatus::Code>(bleAudioEngineReceivePeriodicSync(e.conn_handle, r->peer_addr_type, r->peer_addr, 0, kPaSyncTimeoutMs));
@@ -403,9 +412,9 @@ struct BLEAudioBroadcastSink::Impl {
           BLEScan sc = BLE.getScan();
           st = sc.createPeriodicSync(BTAddress(r->addr, static_cast<BTAddress::Type>(r->addr_type)), r->sid, 0, kPaSyncTimeoutMs);
         }
-        {
+        if (!st) {
           BLELockGuard lock(mtx.get());
-          syncPending = (bool)st;
+          syncPending = false;
         }
         if (!st) {
           log_w("BroadcastSink: assistant sync request for 0x%06lX failed (%s)", (unsigned long)r->broadcast_id, st.toString());

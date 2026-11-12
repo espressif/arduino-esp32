@@ -822,6 +822,8 @@ BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInsta
   while (m.bcStreams.size() < channels) {
     BLEAudioStream s = BLEAudioStreamAccess::create(BLE_AUDIO_STREAM_BROADCAST_SOURCE);
     if (!s) {
+      BLELockGuard lock(m.mtx.get());
+      m.bcStarting = false;
       return BTStatus::NoMemory;
     }
     m.bcStreams.push_back(s);
