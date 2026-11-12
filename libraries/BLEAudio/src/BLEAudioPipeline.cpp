@@ -161,6 +161,8 @@ bool BLEAudioI2SPort::open(const BLEAudioI2SConfig &pins, bool tx, uint32_t rate
     return false;
   }
   _tx = tx;
+  _frameSamples = frameSamples;
+  _channels = channels;
   return true;
 }
 
@@ -180,16 +182,19 @@ bool BLEAudioI2SPort::start() {
     return true;
   }
   if (_tx) {
-    // Preload until the DMA ring is full: playback then starts after a known
-    // amount of silence and write() paces the codec task from the first frame.
+    // Prime exactly one DMA buffer: the first write() then blocks for one
+    // frame, and the known startup latency stays at one frame instead of the
+    // whole ring.
     static const int16_t kSilence[64] = {};
-    size_t loaded;
-    do {
-      loaded = 0;
-      if (i2s_channel_preload_data(_chan, kSilence, sizeof(kSilence), &loaded) != ESP_OK) {
+    size_t left = (size_t)_frameSamples * _channels * sizeof(int16_t);
+    while (left > 0) {
+      size_t chunk = left < sizeof(kSilence) ? left : sizeof(kSilence);
+      size_t loaded = 0;
+      if (i2s_channel_preload_data(_chan, kSilence, chunk, &loaded) != ESP_OK || loaded == 0) {
         break;
       }
-    } while (loaded == sizeof(kSilence));
+      left -= loaded;
+    }
   }
   _on = (i2s_channel_enable(_chan) == ESP_OK);
   return _on;

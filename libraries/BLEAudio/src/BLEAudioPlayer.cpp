@@ -24,6 +24,7 @@
 #include <cstring>
 #include "freertos/queue.h"
 #include "esp32-hal-log.h"
+#include "esp_timer.h"
 
 /**
  * @file BLEAudioPlayer.cpp
@@ -31,8 +32,9 @@
  *
  * The stream tap (BT host task) copies each SDU into a per-stream ring; the
  * codec task waits until the ring holds the jitter depth, then decodes one SDU
- * per interval, paced by the primary stream's queue and by the blocking I2S
- * write. A session (buffers, decoders, I2S) is built when a stream starts and
+ * per interval, paced by the blocking I2S write or, for a PCM sink, by an
+ * absolute real-time deadline. A session (buffers, decoders, I2S) is built
+ * when a stream starts and
  * torn down when every stream stopped, so a codec change between sessions is
  * picked up automatically.
  *
@@ -217,7 +219,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
     // not the nominal LC3 duration (44.1 kHz is 8.16/10.88 ms on air).
     uint32_t frameUs = (uint32_t)((uint64_t)cfg.samplesPerFrame() * 1000000u / cfg.samplingRateHz);
     uint32_t writeMs = (frameUs + 1999u) / 1000u;
-    play(p, (uint8_t)depth, wait ? wait : 1, writeMs ? writeMs : 1);
+    play(p, (uint8_t)depth, wait ? wait : 1, writeMs ? writeMs : 1, frameUs * frames);
     close();
     return true;
   }
@@ -229,8 +231,12 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
    *
    * @param wait    Max wait for the primary stream's next SDU (one interval).
    * @param writeMs I2S write timeout (one frame).
+   * @param sduUs   Real-time duration of one SDU, used to pace a PCM sink.
    */
-  void play(int p, uint8_t depth, TickType_t wait, uint32_t writeMs) {
+  void play(int p, uint8_t depth, TickType_t wait, uint32_t writeMs, uint32_t sduUs) {
+    // Without the blocking I2S write, a burst of queued SDUs would reach the
+    // PCM sink back to back; pace renders to the stream's real-time rate.
+    int64_t nextRenderUs = 0;
     while (!quit.load()) {
       ulTaskNotifyTake(pdTRUE, 0);
       while (uxQueueMessagesWaiting(ring[p].queue) < depth) {
@@ -276,6 +282,19 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
         }
         idle = got ? 0 : idle + 1;
         render(sdu, writeMs);
+        if (sink) {
+          const int64_t now = esp_timer_get_time();
+          if (nextRenderUs == 0 || now > nextRenderUs + 3 * (int64_t)sduUs) {
+            // First SDU, or we fell far behind: restart the timeline instead
+            // of rendering a catch-up burst.
+            nextRenderUs = now;
+          }
+          nextRenderUs += sduUs;
+          const int64_t remaining = nextRenderUs - esp_timer_get_time();
+          if (remaining >= 2000) {
+            vTaskDelay(pdMS_TO_TICKS((remaining + 999) / 1000));
+          }
+        }
       }
       i2s.pause();
     }

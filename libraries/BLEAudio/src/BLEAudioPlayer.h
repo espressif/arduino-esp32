@@ -25,7 +25,8 @@
  * start, the player sizes its jitter buffer from the negotiated QoS (presentation delay /
  * SDU interval, at least 2 SDUs), prefills it and plays; lost, invalid or late
  * SDUs are concealed with LC3 PLC. Stereo comes from one stream carrying two
- * channels or from two mono streams (`attach(left, right)`).
+ * channels or from two mono streams (`attach(left, right)`). I2S writes pace
+ * the task; a PCM sink is paced to the stream's real-time frame rate instead.
  *
  * Only available when the LC3 codec is compiled in (BLE_AUDIO_LC3_SUPPORTED).
  */

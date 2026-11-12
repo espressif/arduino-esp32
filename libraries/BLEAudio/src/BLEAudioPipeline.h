@@ -114,6 +114,8 @@ private:
   i2s_chan_handle_t _chan = nullptr;
   bool _tx = false;
   bool _on = false;
+  uint16_t _frameSamples = 0;  ///< Samples per channel in one DMA buffer.
+  uint8_t _channels = 1;       ///< Slot count of one DMA buffer.
 };
 
 /**
