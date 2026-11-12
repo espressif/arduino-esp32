@@ -183,6 +183,11 @@ uint8_t bleAudioChannelCount(uint32_t chan_alloc) {
 #define MAX_LINKS 4
 #define HCI_ROLE_CENTRAL 0x00
 static bool s_connect_pending; /* bleAudioEngineConnect() armed; the next central ACL is ours. */
+/* Destination requested by bleAudioEngineConnect(), in engine (LSB-first) form.
+ * Only an ACL from this peer may be adopted: the application may open other
+ * central links while the audio connect is in flight. */
+static struct bt_le_addr s_connect_target;
+static bool s_connect_target_valid;
 #if BLE_BLUEDROID
 static esp_bd_addr_t s_connect_bda; /* esp_ble_set_encryption() takes the address, not the handle. */
 /* The ACL_CONNECT event is delivered on the BTC task, where the peer is not yet
@@ -252,7 +257,18 @@ static void link_on_connect(uint16_t conn, uint8_t status, uint8_t role, const s
   if (!s_connect_pending || role != HCI_ROLE_CENTRAL) {
     return;
   }
+  if (s_connect_target_valid && peer != NULL) {
+    struct bt_le_addr addr;
+    bleAudioAddrFromGap(addr.val, peer->val);
+    if (memcmp(addr.val, s_connect_target.val, 6) != 0) {
+      /* Not the peer audio.connect() asked for: leave the bring-up armed so
+       * this application link is not adopted. */
+      log_d("conn %u: central ACL is not the audio target, ignoring", conn);
+      return;
+    }
+  }
   s_connect_pending = false;
+  s_connect_target_valid = false;
   uint16_t *slot = link_find(BLE_AUDIO_CONN_NONE);
   if (status != 0) {
     log_w("connect failed (status 0x%02x)", status);
@@ -536,6 +552,7 @@ static void engine_reset_local(void) {
   s_sink = NULL;
   s_sink_ctx = NULL;
   s_connect_pending = false;
+  s_connect_target_valid = false;
   for (int i = 0; i < MAX_LINKS; i++) {
     s_links[i] = BLE_AUDIO_CONN_NONE;
     s_link_peer_valid[i] = false;
@@ -622,6 +639,10 @@ int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]) {
   if (!s_initialized) {
     return ESP_ERR_INVALID_STATE;
   }
+  /* addr is the engine's LSB-first form on both hosts. */
+  memcpy(s_connect_target.val, addr, sizeof(s_connect_target.val));
+  s_connect_target.type = addr_type;
+  s_connect_target_valid = true;
 #if BLE_BLUEDROID
   /* OPEN/CONNECT must reach the engine's GATTC interface, not the library's. */
   esp_gatt_if_t gattc_if = esp_ble_audio_bluedroid_get_gattc_if();
@@ -636,11 +657,12 @@ int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]) {
     log_e("esp_ble_gattc_aux_open failed: %d", err);
   }
   s_connect_pending = (err == ESP_OK);
+  if (!s_connect_pending) {
+    s_connect_target_valid = false;
+  }
   return err;
 #else
   /* NimBLE: the caller opens the ACL with the host GAP; arm the bring-up for it. */
-  (void)addr_type;
-  (void)addr;
   s_connect_pending = true;
   return ESP_ERR_NOT_SUPPORTED;
 #endif
@@ -648,6 +670,7 @@ int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]) {
 
 void bleAudioEngineCancelConnect(void) {
   s_connect_pending = false;
+  s_connect_target_valid = false;
 }
 
 bool bleAudioEngineLinkAddress(uint16_t conn_handle, uint8_t addr[6]) {
