@@ -21,6 +21,7 @@
 #endif
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0) && (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 #include "soc/usb_pins.h"
+#include "esp_private/periph_ctrl.h"
 #endif
 
 #include "soc/periph_defs.h"
@@ -617,8 +618,10 @@ static void usb_switch_to_cdc_jtag() {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
   // Hold USB-OTG in reset so Serial/JTAG can take the PHY.
   // PERIPH_MODULE_MAX is not the USB module and resets nothing.
-  _usb_wrap_ll_enable_bus_clock(false);
-  REG_SET_BIT(SYSTEM_PERIP_RST_EN0_REG, SYSTEM_USB_RST);
+  PERIPH_RCC_ATOMIC() {
+    usb_wrap_ll_enable_bus_clock(false);
+    REG_SET_BIT(SYSTEM_PERIP_RST_EN0_REG, SYSTEM_USB_RST);
+  }
 #else
   periph_ll_reset(PERIPH_USB_MODULE);
   //periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
@@ -696,8 +699,10 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void) {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
         // IDF 6 removed PERIPH_USB_MODULE. PERIPH_MODULE_MAX resets nothing.
         // Pulse DPORT_USB_RST and leave the clock on, same as the IDF 5 path.
-        _usb_wrap_ll_enable_bus_clock(true);
-        _usb_wrap_ll_reset_register();
+        PERIPH_RCC_ATOMIC() {
+          usb_wrap_ll_enable_bus_clock(true);
+          usb_wrap_ll_reset_register();
+        }
 #else
         periph_ll_reset(PERIPH_USB_MODULE);
         periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
@@ -985,8 +990,10 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     // Reset USB module
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
     // IDF 6 removed PERIPH_USB_MODULE. PERIPH_MODULE_MAX resets nothing.
-    _usb_wrap_ll_enable_bus_clock(true);
-    _usb_wrap_ll_reset_register();
+    PERIPH_RCC_ATOMIC() {
+      usb_wrap_ll_enable_bus_clock(true);
+      usb_wrap_ll_reset_register();
+    }
 #else
     periph_ll_reset(PERIPH_USB_MODULE);
     periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
@@ -1019,8 +1026,10 @@ static void tinyusb_host_reset_usb_module(void) {
   REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
   // IDF 6 removed PERIPH_USB_MODULE. PERIPH_MODULE_MAX resets nothing.
-  _usb_wrap_ll_enable_bus_clock(true);
-  _usb_wrap_ll_reset_register();
+  PERIPH_RCC_ATOMIC() {
+    usb_wrap_ll_enable_bus_clock(true);
+    usb_wrap_ll_reset_register();
+  }
 #else
   periph_ll_reset(PERIPH_USB_MODULE);
   periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
