@@ -58,9 +58,9 @@ static const uint8_t TOUCH_RIGHT = 6;
 
 #define LSM6DS_I2C_ADDRESS 0x6A
 
-#define PIN_NEOPIXEL  47
-#define NEOPIXEL_PIN  PIN_NEOPIXEL
-#define NEOPIXEL_NUM  25
+#define PIN_NEOPIXEL 47
+#define NEOPIXEL_PIN PIN_NEOPIXEL
+#define NEOPIXEL_NUM 25
 
 // The built-in RGB LED API and the Blink example control only the first LED
 // in the 25-pixel WS2812 matrix. Use a dedicated library to control the full matrix.
