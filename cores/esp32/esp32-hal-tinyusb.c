@@ -47,6 +47,9 @@
 #include "esp32s2/rom/usb/usb_persist.h"
 #include "esp32s2/rom/usb/usb_dc.h"
 #include "esp32s2/rom/usb/chip_usb_dw_wrapper.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/usb_wrap_ll.h"
+#endif
 #elif CONFIG_IDF_TARGET_ESP32S3
 #if defined __has_include && __has_include("hal/usb_phy_ll.h")
 #include "hal/usb_phy_ll.h"
@@ -686,8 +689,10 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void) {
 #if CONFIG_IDF_TARGET_ESP32S2
       } else {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-        periph_ll_reset(PERIPH_MODULE_MAX);
-        periph_ll_enable_clk_clear_rst(PERIPH_MODULE_MAX);
+        // IDF 6 removed PERIPH_USB_MODULE. PERIPH_MODULE_MAX resets nothing.
+        // Pulse DPORT_USB_RST and leave the clock on, same as the IDF 5 path.
+        _usb_wrap_ll_enable_bus_clock(true);
+        _usb_wrap_ll_reset_register();
 #else
         periph_ll_reset(PERIPH_USB_MODULE);
         periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
