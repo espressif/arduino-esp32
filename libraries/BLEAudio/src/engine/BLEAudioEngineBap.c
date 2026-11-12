@@ -374,8 +374,11 @@ static void op_stopped(esp_ble_audio_bap_stream_t *stream, uint8_t reason) {
 }
 
 static void op_disconnected(esp_ble_audio_bap_stream_t *stream, uint8_t reason) {
-  (void)stream;
   (void)reason;
+  ble_audio_slot_t *s = slot_of(stream);
+  if (s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
+    uc_check_released();
+  }
   bleAudioNotifyBapIdle();
 }
 
@@ -1259,6 +1262,15 @@ static void uc_check_released(void) {
   }
   for (int i = 0; i < POOL_SIZE; i++) {
     if (uc_slot_active(&s_pool[i])) {
+      return;
+    }
+  }
+  /* Deleting a CIG while its CIS is still disconnecting leaves the controller
+   * pending and the next session fails with PendingIsoExist. Wait for the
+   * native disconnect; op_disconnected() calls us again. */
+  for (int i = 0; i < POOL_SIZE; i++) {
+    const struct bt_iso_chan *iso = BAP(&s_pool[i])->iso;
+    if (s_pool[i].in_use && s_pool[i].kind == BLE_AUDIO_STREAM_UNICAST_CLIENT && iso != NULL && iso->state != BT_ISO_STATE_DISCONNECTED) {
       return;
     }
   }

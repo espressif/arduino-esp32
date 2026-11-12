@@ -415,6 +415,8 @@ void setup() {
     bapPresetPublished = false;
     bool everStreamed = false;  // bapTxStreaming is cleared again by stop()
     uint32_t sent = 0;
+    uint32_t restartSent = 0;
+    int restarted = 0;
     BTStatus st = BLE.begin("BLE_CLT_BAP");
     if (st) {
       BLEAudio audio = BLE.getAudioController();
@@ -477,6 +479,31 @@ void setup() {
               for (int i = 0; i < 60 && uc.isStreaming(); i++) {
                 delay(50);
               }
+              // A second session on the same peer must not inherit the first
+              // CIS: start again after the release completed.
+              bapTxStreaming = false;
+              if (uc.start()) {
+                unsigned long restartDeadline = millis() + 15000;
+                while (!bapTxStreaming && millis() < restartDeadline) {
+                  delay(50);
+                }
+                if (bapTxStreaming) {
+                  BLEAudioStream tx2 = uc.stream(BLEAudioStream::Direction::Tx);
+                  uint8_t sdu2[40];
+                  memset(sdu2, 0x5A, sizeof(sdu2));
+                  for (int i = 0; i < 100 && bapTxStreaming; i++) {
+                    if (tx2.write(sdu2, sizeof(sdu2))) {
+                      restartSent++;
+                    }
+                    delay(10);
+                  }
+                  restarted = 1;
+                }
+                uc.stop();
+                for (int i = 0; i < 60 && uc.isStreaming(); i++) {
+                  delay(50);
+                }
+              }
               // Exercise the per-link disconnect API while the ACL is still up.
               BTStatus disco = audio.disconnect(h);
               unsigned long discoDeadline = millis() + 5000;
@@ -532,7 +559,8 @@ void setup() {
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] BapUnicast result streaming=%d sent=%lu presets=%d\n", (int)everStreamed, (unsigned long)sent, (int)bapPresetPublished);
+      Serial.printf("[CLIENT] BapUnicast result streaming=%d sent=%lu presets=%d restarted=%d resent=%lu\n", (int)everStreamed,
+                    (unsigned long)sent, (int)bapPresetPublished, restarted, (unsigned long)restartSent);
     }
     BLE.end(false);
     delay(500);
