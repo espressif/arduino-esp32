@@ -153,7 +153,6 @@ file(GLOB ARDUINO_LIBRARY_BLEAudio_SRCS
   libraries/BLEAudio/src/*/*/*.c
 )
 list(SORT ARDUINO_LIBRARY_BLEAudio_SRCS)
-set(ARDUINO_LIBRARY_BLEAudio_REQUIRES BLE)
 
 set(ARDUINO_LIBRARY_BluetoothSerial_SRCS
   libraries/BluetoothSerial/src/BluetoothSerial.cpp)
