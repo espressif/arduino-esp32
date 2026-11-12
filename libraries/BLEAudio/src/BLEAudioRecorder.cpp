@@ -214,7 +214,7 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
     sinceExtra = kExtraGap;
     log_d("Recorder: %lu Hz, %u ch, %u frame(s)/SDU every %lu us", (unsigned long)cfg.samplingRateHz, nch, frames, (unsigned long)intervalUs);
 
-    if (!i2s.start()) {
+    if (!source && !i2s.start()) {
       log_e("Recorder: I2S input could not be enabled");
       quit.store(true);
       close();

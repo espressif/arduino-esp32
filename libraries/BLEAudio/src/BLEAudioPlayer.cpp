@@ -240,7 +240,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
         }
         ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(100));
       }
-      if (!i2s.start()) {
+      if (!sink && !i2s.start()) {
         log_e("Player: I2S output could not be enabled");
         return;
       }
