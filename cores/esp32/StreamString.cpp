@@ -57,19 +57,24 @@ size_t StreamString::readBytes(char *buffer, size_t buffLen) {
   if (!buffLen || !buffer) {
     return 0;
   }
-  const uint32_t start = millis();
+  uint32_t start = millis();
   size_t count = 0;
-  do {
-    if (this->length()) {
-      const size_t available = min(buffLen - count, (size_t)this->length());
+  while (count < buffLen) {
+    const unsigned int len = length();
+    if (len) {
+      const size_t available = min(buffLen - count, (size_t)len);
       memcpy(buffer + count, c_str(), available);
       remove(0, available);
       count += available;
+      // Match Stream::readBytes(): the timeout applies to waiting for the
+      // next byte, not to the whole call.
+      start = millis();
+      continue;
     }
-    if (count == buffLen || _timeout == 0) {
-      return count;
+    if (_timeout == 0 || millis() - start >= _timeout) {
+      break;
     }
-  } while (millis() - start < _timeout);
+  }
   return count;
 }
 
