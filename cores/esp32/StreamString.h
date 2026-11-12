@@ -31,6 +31,13 @@ public:
 
   int available() override;
   int read() override;
+  size_t readBytes(char *buffer, size_t count) override;
+  size_t readBytesUntil(char terminator, char *buffer, size_t count);
+  size_t readBytesUntil(char terminator, uint8_t *buffer, size_t count) {
+    return readBytesUntil(terminator, (char *)buffer, count);
+  }
+  String readString() override;
+  String readStringUntil(char terminator);
   int peek() override;
   void flush() override;
 };
