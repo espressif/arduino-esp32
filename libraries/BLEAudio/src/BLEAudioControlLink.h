@@ -38,11 +38,13 @@ struct BLEAudioControlLink {
   /** Engine discovery entry point of the role, e.g. bleAudioVcpCtlrDiscover. */
   using DiscoverFn = int (*)(uint16_t);
 
+  mutable BLESharedMutex mtx;           ///< Protects conn/pending (user task sets, host task clears).
   uint16_t conn = BLE_AUDIO_CONN_NONE;  ///< Bound peer, BLE_AUDIO_CONN_NONE when unbound.
   bool pending = false;                 ///< Discovery deferred until the engine's GATT discovery completes.
 
   /** @return true while a peer is bound (discovered or pending). */
   bool bound() const {
+    BLELockGuard lock(mtx.get());
     return conn != BLE_AUDIO_CONN_NONE;
   }
 
@@ -51,6 +53,7 @@ struct BLEAudioControlLink {
     if (!audio.started || c == BLE_AUDIO_CONN_NONE) {
       return BTStatus::InvalidState;
     }
+    BLELockGuard lock(mtx.get());
     conn = c;
     pending = !audio.isGattReady(c);
     if (pending) {
@@ -69,6 +72,7 @@ struct BLEAudioControlLink {
    *         a failed discovery), 0 otherwise.
    */
   int onCore(const ble_audio_evt_t &e, DiscoverFn fn) {
+    BLELockGuard lock(mtx.get());
     if (e.conn_handle != conn) {
       return 0;
     }

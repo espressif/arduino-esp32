@@ -15,7 +15,6 @@
  */
 
 #include "core/BLEGuards.h"
-#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioCall.h"
@@ -49,12 +48,13 @@ static_assert(static_cast<uint8_t>(BLEAudioCallState::Ended) == BLE_AUDIO_CCP_CA
 
 struct BLEAudioCallServer::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   String providerName = "ESP Phone";  ///< Bearer Provider Name.
   String uci = "un000";               ///< Bearer UCI ("un000" = unknown).
   String uriSchemes = "tel";          ///< Comma-separated supported URI schemes.
-  BLEAudioCallback<OriginateCallback> originateCb;
-  BLEAudioCallback<TerminatedCallback> terminatedCb;
-  BLEAudioCallback<CallControlCallback> callControlCb;
+  OriginateCallback originateCb;
+  TerminatedCallback terminatedCb;
+  CallControlCallback callControlCb;
 
   /** Apply a BLE_AUDIO_CCP_OP_* to a local call. */
   static BTStatus op(uint8_t o, uint8_t callIndex) {
@@ -72,18 +72,18 @@ struct BLEAudioCallServer::Impl {
     }
     if (e.type == BLE_AUDIO_EVT_CCP_SRV_ORIGINATE) {
       const auto *o = static_cast<const ble_audio_ccp_originate_t *>(e.data);
-      auto cb = originateCb.snapshot();
+      auto cb = bleAudioCopyCallback(*this, &Impl::originateCb);
       if (cb) {
         *o->accept = cb(o->call_index, String(o->uri ? o->uri : ""));
       }
     } else if (e.type == BLE_AUDIO_EVT_CCP_SRV_CALL) {
       const auto *c = static_cast<const ble_audio_ccp_call_t *>(e.data);
       if (c->op == BLE_AUDIO_CCP_OP_TERMINATE) {
-        if (terminatedCb) {
-          terminatedCb(c->call_index, c->reason);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::terminatedCb)) {
+          cb(c->call_index, c->reason);
         }
-      } else if (callControlCb) {
-        callControlCb(static_cast<BLEAudioCallOperation>(c->op), c->call_index);
+      } else if (auto cb = bleAudioCopyCallback(*this, &Impl::callControlCb)) {
+        cb(static_cast<BLEAudioCallOperation>(c->op), c->call_index);
       }
     }
   }
@@ -157,6 +157,7 @@ BTStatus BLEAudioCallServer::updateProviderName(const String &name) {
 
 BLEAudioCallServer &BLEAudioCallServer::onOriginate(OriginateCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->originateCb = std::move(cb);
   }
   return *this;
@@ -164,6 +165,7 @@ BLEAudioCallServer &BLEAudioCallServer::onOriginate(OriginateCallback cb) {
 
 BLEAudioCallServer &BLEAudioCallServer::onTerminated(TerminatedCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->terminatedCb = std::move(cb);
   }
   return *this;
@@ -171,6 +173,7 @@ BLEAudioCallServer &BLEAudioCallServer::onTerminated(TerminatedCallback cb) {
 
 BLEAudioCallServer &BLEAudioCallServer::onCallControl(CallControlCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->callControlCb = std::move(cb);
   }
   return *this;
@@ -178,6 +181,7 @@ BLEAudioCallServer &BLEAudioCallServer::onCallControl(CallControlCallback cb) {
 
 void BLEAudioCallServer::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->originateCb = nullptr;
     _impl->terminatedCb = nullptr;
     _impl->callControlCb = nullptr;
@@ -217,10 +221,11 @@ BLEAudioCallServer BLEAudio::createCallServer() {
 
 struct BLEAudioCallController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioControlLink link;  ///< The call server (phone) being controlled.
-  BLEAudioCallback<DiscoveredCallback> discoveredCb;
-  BLEAudioCallback<ResultCallback> resultCb;
-  BLEAudioCallback<CallStateCallback> callStateCb;
+  DiscoveredCallback discoveredCb;
+  ResultCallback resultCb;
+  CallStateCallback callStateCb;
 
   /** Run a call operation on the bound peer's GTBS. */
   BTStatus op(uint8_t o, uint8_t callIndex) const {
@@ -234,8 +239,10 @@ struct BLEAudioCallController::Impl {
   void handle(const ble_audio_evt_t &e) {
     if (BLE_AUDIO_EVT_GROUP(e.type) == BLE_AUDIO_GRP_CORE) {
       const int err = link.onCore(e, bleAudioCcpCliDiscover);
-      if (err && discoveredCb) {
-        discoveredCb(bleAudioStatus(err), false);
+      if (err) {
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          cb(bleAudioStatus(err), false);
+        }
       }
       return;
     }
@@ -244,21 +251,25 @@ struct BLEAudioCallController::Impl {
     }
     switch (e.type) {
       case BLE_AUDIO_EVT_CCP_CLI_DISCOVERED:
-        if (discoveredCb) {
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
           const auto *d = static_cast<const ble_audio_ccp_discovered_t *>(e.data);
-          discoveredCb(bleAudioStatus(e.err), d && d->gtbs);
+          cb(bleAudioStatus(e.err), d && d->gtbs);
         }
         break;
       case BLE_AUDIO_EVT_CCP_CLI_RESULT:
-        if (e.data && resultCb) {
+        if (e.data) {
           const auto *c = static_cast<const ble_audio_ccp_call_t *>(e.data);
-          resultCb(static_cast<BLEAudioCallOperation>(c->op), bleAudioStatus(e.err), c->call_index);
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::resultCb)) {
+            cb(static_cast<BLEAudioCallOperation>(c->op), bleAudioStatus(e.err), c->call_index);
+          }
         }
         break;
       case BLE_AUDIO_EVT_CCP_CLI_CALL:
-        if (!e.err && e.data && callStateCb) {
+        if (!e.err && e.data) {
           const auto *s = static_cast<const ble_audio_ccp_call_state_t *>(e.data);
-          callStateCb(s->call_index, static_cast<BLEAudioCallState>(s->state));
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::callStateCb)) {
+            cb(s->call_index, static_cast<BLEAudioCallState>(s->state));
+          }
         }
         break;
       default: break;
@@ -312,6 +323,7 @@ BTStatus BLEAudioCallController::readCalls() {
 
 BLEAudioCallController &BLEAudioCallController::onDiscovered(DiscoveredCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = std::move(cb);
   }
   return *this;
@@ -319,6 +331,7 @@ BLEAudioCallController &BLEAudioCallController::onDiscovered(DiscoveredCallback 
 
 BLEAudioCallController &BLEAudioCallController::onResult(ResultCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->resultCb = std::move(cb);
   }
   return *this;
@@ -326,6 +339,7 @@ BLEAudioCallController &BLEAudioCallController::onResult(ResultCallback cb) {
 
 BLEAudioCallController &BLEAudioCallController::onCallState(CallStateCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->callStateCb = std::move(cb);
   }
   return *this;
@@ -333,6 +347,7 @@ BLEAudioCallController &BLEAudioCallController::onCallState(CallStateCallback cb
 
 void BLEAudioCallController::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = nullptr;
     _impl->resultCb = nullptr;
     _impl->callStateCb = nullptr;

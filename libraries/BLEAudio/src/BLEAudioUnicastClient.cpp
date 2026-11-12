@@ -20,7 +20,6 @@
 #include <vector>
 #include "BLEAudioUnicastClient.h"
 #include "BLEAudioImpl.h"
-#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "esp32-hal-log.h"
 
@@ -68,6 +67,7 @@ uint32_t nthLocation(uint32_t mask, uint8_t n) {
 
 struct BLEAudioUnicastClient::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (defaults, link table).
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_16_2_1;
   BLEAudioQos qos;                        ///< Used instead of the preset QoS when customQos.
   bool customQos = false;
@@ -80,12 +80,12 @@ struct BLEAudioUnicastClient::Impl {
   std::vector<Peer> peers;
   std::vector<BLEAudioStream> streams;    ///< Streams of the current setup, in request order.
 
-  BLEAudioCallback<DiscoveredCallback> discoveredCb;
-  BLEAudioCallback<Callback> startedCb;
-  BLEAudioCallback<Callback> stoppedCb;
-  BLEAudioCallback<ErrorCallback> errorCb;
+  DiscoveredCallback discoveredCb;
+  Callback startedCb;
+  Callback stoppedCb;
+  ErrorCallback errorCb;
 
-  /** @brief Peer table entry of @p conn, or nullptr. */
+  /** @brief Peer table entry of @p conn, or nullptr. The caller holds mtx. */
   Peer *peer(uint16_t conn) {
     for (auto &p : peers) {
       if (p.info.connHandle == conn) {
@@ -101,19 +101,26 @@ struct BLEAudioUnicastClient::Impl {
    * Returns OK without doing anything while the link's GATT discovery is
    * still running; the GATT_DISCOVERED event calls it again.
    */
-  BTStatus discover(Peer &p) {
-    if (p.discovering || p.discovered || !audio->isGattReady(p.info.connHandle)) {
-      return BTStatus::OK;
+  BTStatus discover(uint16_t conn) {
+    {
+      BLELockGuard lock(mtx.get());
+      Peer *p = peer(conn);
+      if (!p || p->discovering || p->discovered || !audio->isGattReady(conn)) {
+        return BTStatus::OK;
+      }
+      p->discovering = true;
+      p->info.sinkPresets = 0;
+      p->info.sourcePresets = 0;
     }
-    p.discovering = true;
-    p.info.sinkPresets = 0;
-    p.info.sourcePresets = 0;
-    int err = bleAudioUcDiscover(p.info.connHandle);
+    int err = bleAudioUcDiscover(conn);
     if (err != 0) {
-      p.discovering = false;
-      log_e("UnicastClient: discovery of conn %u failed to start (err=%d)", p.info.connHandle, err);
+      BLELockGuard lock(mtx.get());
+      if (Peer *p = peer(conn)) {
+        p->discovering = false;
+      }
+      log_e("UnicastClient: discovery of conn %u failed to start (err=%d)", conn, err);
     } else {
-      log_d("UnicastClient: discovering conn %u", p.info.connHandle);
+      log_d("UnicastClient: discovering conn %u", conn);
     }
     return bleAudioStatus(err);
   }
@@ -128,81 +135,87 @@ struct BLEAudioUnicastClient::Impl {
    * callbacks the sketch attached survive a stop()/start() cycle.
    */
   BTStatus startStreams() {
-    if (running) {
-      log_w("UnicastClient: start() while already running");
-      return BTStatus::InvalidState;
-    }
-    ble_audio_codec_t codec;
-    ble_audio_qos_t q;
-    if (!bleAudioPresetGet(static_cast<uint8_t>(preset), false, &codec, &q)) {
-      log_e("UnicastClient: invalid preset %u", (unsigned)preset);
-      return BTStatus::InvalidParam;
-    }
-    if (customQos) {
-      q = bleAudioQosToEngine(qos);
-    } else {
-      q.pd_us = audio->presentationDelayUs;
-    }
-
     std::vector<ble_audio_uc_stream_req_t> reqs;
-    for (const auto &p : peers) {
-      if (!p.discovered) {
-        continue;
+    {
+      BLELockGuard lock(mtx.get());
+      if (running || starting) {
+        log_w("UnicastClient: start() while already running");
+        return BTStatus::InvalidState;
       }
-      const uint8_t nTx = sinkPerPeer < p.info.sinkEndpoints ? sinkPerPeer : p.info.sinkEndpoints;
-      const uint8_t nRx = sourcePerPeer < p.info.sourceEndpoints ? sourcePerPeer : p.info.sourceEndpoints;
-      // Only a hint: the server has the final word when it answers Config Codec.
-      const uint32_t bit = BLEAudioPresetBit(preset);
-      if ((nTx && !(p.info.sinkPresets & bit)) || (nRx && !(p.info.sourcePresets & bit))) {
-        log_w("UnicastClient: conn %u does not publish preset %u in its PACS; Config Codec may be rejected", p.info.connHandle, (unsigned)preset);
+      ble_audio_codec_t codec;
+      ble_audio_qos_t q;
+      if (!bleAudioPresetGet(static_cast<uint8_t>(preset), false, &codec, &q)) {
+        log_e("UnicastClient: invalid preset %u", (unsigned)preset);
+        return BTStatus::InvalidParam;
       }
-      for (uint8_t i = 0; i < nTx + nRx; i++) {
-        const bool tx = i < nTx;
-        const uint8_t idx = tx ? i : i - nTx;
-        ble_audio_uc_stream_req_t r = {};
-        r.conn_handle = p.info.connHandle;
-        r.dir = tx ? BLE_AUDIO_DIR_SINK : BLE_AUDIO_DIR_SOURCE;
-        r.ep_index = idx;
-        r.codec = codec;
-        r.codec.chan_alloc = nthLocation(static_cast<uint32_t>(tx ? p.info.sinkLocation : p.info.sourceLocation), idx);
-        r.qos = q;
-        r.qos.max_sdu = r.codec.octets_per_frame * bleAudioChannelCount(r.codec.chan_alloc) * r.codec.frames_per_sdu;
-        r.context = static_cast<uint16_t>(context);
-        reqs.push_back(r);
+      if (customQos) {
+        q = bleAudioQosToEngine(qos);
+      } else {
+        q.pd_us = audio->presentationDelayUs;
       }
-    }
-    if (reqs.empty()) {
-      log_e("UnicastClient: start() with no discovered peer endpoint matching the requested streams");
-      return BTStatus::InvalidState;
-    }
 
-    if (streams.size() != reqs.size()) {
-      streams.clear();
-      for (size_t i = 0; i < reqs.size(); i++) {
-        BLEAudioStream s = BLEAudioStreamAccess::create(BLE_AUDIO_STREAM_UNICAST_CLIENT);
-        if (!s) {
-          streams.clear();
-          return BTStatus::NoMemory;
+      for (const auto &p : peers) {
+        if (!p.discovered) {
+          continue;
         }
-        streams.push_back(s);
+        const uint8_t nTx = sinkPerPeer < p.info.sinkEndpoints ? sinkPerPeer : p.info.sinkEndpoints;
+        const uint8_t nRx = sourcePerPeer < p.info.sourceEndpoints ? sourcePerPeer : p.info.sourceEndpoints;
+        // Only a hint: the server has the final word when it answers Config Codec.
+        const uint32_t bit = BLEAudioPresetBit(preset);
+        if ((nTx && !(p.info.sinkPresets & bit)) || (nRx && !(p.info.sourcePresets & bit))) {
+          log_w("UnicastClient: conn %u does not publish preset %u in its PACS; Config Codec may be rejected", p.info.connHandle, (unsigned)preset);
+        }
+        for (uint8_t i = 0; i < nTx + nRx; i++) {
+          const bool tx = i < nTx;
+          const uint8_t idx = tx ? i : i - nTx;
+          ble_audio_uc_stream_req_t r = {};
+          r.conn_handle = p.info.connHandle;
+          r.dir = tx ? BLE_AUDIO_DIR_SINK : BLE_AUDIO_DIR_SOURCE;
+          r.ep_index = idx;
+          r.codec = codec;
+          r.codec.chan_alloc = nthLocation(static_cast<uint32_t>(tx ? p.info.sinkLocation : p.info.sourceLocation), idx);
+          r.qos = q;
+          r.qos.max_sdu = r.codec.octets_per_frame * bleAudioChannelCount(r.codec.chan_alloc) * r.codec.frames_per_sdu;
+          r.context = static_cast<uint16_t>(context);
+          reqs.push_back(r);
+        }
+      }
+      if (reqs.empty()) {
+        log_e("UnicastClient: start() with no discovered peer endpoint matching the requested streams");
+        return BTStatus::InvalidState;
+      }
+
+      if (streams.size() != reqs.size()) {
+        streams.clear();
+        for (size_t i = 0; i < reqs.size(); i++) {
+          BLEAudioStream s = BLEAudioStreamAccess::create(BLE_AUDIO_STREAM_UNICAST_CLIENT);
+          if (!s) {
+            streams.clear();
+            return BTStatus::NoMemory;
+          }
+          streams.push_back(s);
+        }
+      }
+      for (size_t i = 0; i < reqs.size(); i++) {
+        reqs[i].slot = BLEAudioStreamAccess::slot(streams[i]);
+      }
+      starting = true;
+    }
+    int err = bleAudioUcStart(reqs.data(), (uint8_t)reqs.size());
+    {
+      BLELockGuard lock(mtx.get());
+      if (err != 0) {
+        starting = false;
+      } else if (starting) {
+        // The engine can emit UC_STOPPED synchronously when a request fails.
+        running = true;
+        starting = false;
       }
     }
-    for (size_t i = 0; i < reqs.size(); i++) {
-      reqs[i].slot = BLEAudioStreamAccess::slot(streams[i]);
-    }
-    starting = true;
-    int err = bleAudioUcStart(reqs.data(), (uint8_t)reqs.size());
     if (err != 0) {
-      starting = false;
       log_e("UnicastClient: stream setup failed to start (%u streams, err=%d)", (unsigned)reqs.size(), err);
       return bleAudioStatus(err);
     }
-    // The engine can emit UC_STOPPED synchronously when a request fails. Only
-    // mark the session running if that terminal event has not arrived.
-    if (starting) {
-      running = true;
-    }
-    starting = false;
     log_d("UnicastClient: setting up %u streams", (unsigned)reqs.size());
     return BTStatus::OK;
   }
@@ -210,13 +223,20 @@ struct BLEAudioUnicastClient::Impl {
   /** @brief Event handler: core link events plus the UNICAST_CLIENT group (host task). */
   void handle(const ble_audio_evt_t &e) {
     switch (e.type) {
-      case BLE_AUDIO_EVT_GATT_DISCOVERED:
+      case BLE_AUDIO_EVT_GATT_DISCOVERED: {
+        bool known;
+        {
+          BLELockGuard lock(mtx.get());
+          known = peer(e.conn_handle) != nullptr;
+        }
         // A peer added before its GATT discovery finished can be discovered now.
-        if (Peer *p = peer(e.conn_handle)) {
-          (void)discover(*p);
+        if (known) {
+          (void)discover(e.conn_handle);
         }
         break;
-      case BLE_AUDIO_EVT_ACL_DISCONNECTED:
+      }
+      case BLE_AUDIO_EVT_ACL_DISCONNECTED: {
+        BLELockGuard lock(mtx.get());
         for (auto it = peers.begin(); it != peers.end(); ++it) {
           if (it->info.connHandle == e.conn_handle) {
             peers.erase(it);
@@ -224,71 +244,106 @@ struct BLEAudioUnicastClient::Impl {
           }
         }
         break;
+      }
       case BLE_AUDIO_EVT_UC_PAC: {
         // One per remote LC3 PAC record, before UC_DISCOVERED; a peer may publish several per direction.
-        Peer *p = peer(e.conn_handle);
-        if (!p || !e.data) {
+        if (!e.data) {
           break;
         }
         const auto *r = static_cast<const ble_audio_uc_pac_t *>(e.data);
+        BLELockGuard lock(mtx.get());
+        Peer *p = peer(e.conn_handle);
+        if (!p) {
+          break;
+        }
         uint32_t &mask = r->dir == BLE_AUDIO_DIR_SINK ? p->info.sinkPresets : p->info.sourcePresets;
         mask |= bleAudioPacPresets(&r->pac);
         break;
       }
       case BLE_AUDIO_EVT_UC_DISCOVERED: {
-        Peer *p = peer(e.conn_handle);
-        if (!p) {
+        BLEAudioUnicastPeerInfo info;
+        DiscoveredCallback cb;
+        bool autoStart = false;
+        bool report = false;
+        {
+          BLELockGuard lock(mtx.get());
+          Peer *p = peer(e.conn_handle);
+          if (!p) {
+            break;
+          }
+          p->discovering = false;
+          if (e.err != 0 || !e.data) {
+            log_w("UnicastClient: discovery of conn %u failed (err=%d)", e.conn_handle, e.err);
+            break;
+          }
+          const auto *d = static_cast<const ble_audio_uc_discovered_t *>(e.data);
+          p->discovered = true;
+          p->info.sinkEndpoints = d->sink_eps;
+          p->info.sourceEndpoints = d->source_eps;
+          p->info.sinkLocation = static_cast<BLEAudioLocation>(d->sink_loc);
+          p->info.sourceLocation = static_cast<BLEAudioLocation>(d->source_loc);
+          p->info.sinkContexts = static_cast<BLEAudioContext>(d->sink_ctx);
+          p->info.sourceContexts = static_cast<BLEAudioContext>(d->source_ctx);
+          info = p->info;
+          autoStart = p->autoStart;
+          cb = discoveredCb;
+          report = true;
+        }
+        if (!report) {
           break;
         }
-        p->discovering = false;
-        if (e.err != 0 || !e.data) {
-          log_w("UnicastClient: discovery of conn %u failed (err=%d)", e.conn_handle, e.err);
-          break;
-        }
-        const auto *d = static_cast<const ble_audio_uc_discovered_t *>(e.data);
-        p->discovered = true;
-        p->info.sinkEndpoints = d->sink_eps;
-        p->info.sourceEndpoints = d->source_eps;
-        p->info.sinkLocation = static_cast<BLEAudioLocation>(d->sink_loc);
-        p->info.sourceLocation = static_cast<BLEAudioLocation>(d->source_loc);
-        p->info.sinkContexts = static_cast<BLEAudioContext>(d->sink_ctx);
-        p->info.sourceContexts = static_cast<BLEAudioContext>(d->source_ctx);
         log_i(
-          "UnicastClient: conn %u has %u sink / %u source ASEs (presets sink 0x%04lx, source 0x%04lx)", e.conn_handle, d->sink_eps, d->source_eps,
-          (unsigned long)p->info.sinkPresets, (unsigned long)p->info.sourcePresets
+          "UnicastClient: conn %u has %u sink / %u source ASEs (presets sink 0x%04lx, source 0x%04lx)", info.connHandle, info.sinkEndpoints,
+          info.sourceEndpoints, (unsigned long)info.sinkPresets, (unsigned long)info.sourcePresets
         );
-        // Copy before the callback: it may add or remove peers and invalidate p.
-        const BLEAudioUnicastPeerInfo info = p->info;
-        const bool autoStart = p->autoStart;
-        if (discoveredCb) {
-          discoveredCb(info);
+        if (cb) {
+          cb(info);
         }
         if (autoStart) {
           (void)startStreams();
         }
         break;
       }
-      case BLE_AUDIO_EVT_UC_STARTED:
-        streaming = true;
-        log_i("UnicastClient: all %u streams streaming", (unsigned)streams.size());
-        if (startedCb) {
-          startedCb();
+      case BLE_AUDIO_EVT_UC_STARTED: {
+        Callback cb;
+        {
+          BLELockGuard lock(mtx.get());
+          streaming = true;
+          cb = startedCb;
+        }
+        log_i("UnicastClient: all streams streaming");
+        if (cb) {
+          cb();
         }
         break;
-      case BLE_AUDIO_EVT_UC_STOPPED:
-        starting = false;
-        running = false;
-        streaming = false;
+      }
+      case BLE_AUDIO_EVT_UC_STOPPED: {
+        Callback cb;
+        {
+          BLELockGuard lock(mtx.get());
+          starting = false;
+          running = false;
+          streaming = false;
+          cb = stoppedCb;
+        }
         log_i("UnicastClient: streams released");
-        if (stoppedCb) {
-          stoppedCb();
+        if (cb) {
+          cb();
         }
         break;
+      }
       case BLE_AUDIO_EVT_UC_ERROR:
         // The engine already logged the failure and is releasing the streams.
-        if (e.data && errorCb) {
+        if (e.data) {
           const auto *er = static_cast<const ble_audio_uc_error_t *>(e.data);
-          errorCb(static_cast<Step>(er->op), er->rsp_code, er->reason);
+          ErrorCallback cb;
+          {
+            BLELockGuard lock(mtx.get());
+            cb = errorCb;
+          }
+          if (cb) {
+            cb(static_cast<Step>(er->op), er->rsp_code, er->reason);
+          }
         }
         break;
       default: break;
@@ -310,6 +365,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::setPreset(BLEAudioCodecPreset pres
   ble_audio_codec_t c;
   ble_audio_qos_t q;
   if (_impl && bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->preset = preset;
   } else if (_impl) {
     log_e("UnicastClient: invalid preset %u", (unsigned)preset);
@@ -319,6 +375,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::setPreset(BLEAudioCodecPreset pres
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::setQos(const BLEAudioQos &qos) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->qos = qos;
     _impl->customQos = true;
   }
@@ -327,6 +384,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::setQos(const BLEAudioQos &qos) {
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::setContext(BLEAudioContext context) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->context = context;
   }
   return *this;
@@ -334,6 +392,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::setContext(BLEAudioContext context
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::setSinkStreams(uint8_t perPeer) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->sinkPerPeer = perPeer;
   }
   return *this;
@@ -341,6 +400,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::setSinkStreams(uint8_t perPeer) {
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::setSourceStreams(uint8_t perPeer) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->sourcePerPeer = perPeer;
   }
   return *this;
@@ -355,14 +415,15 @@ BTStatus BLEAudioUnicastClient::addPeer(uint16_t connHandle) {
     log_e("UnicastClient: addPeer() before audio.start()");
     return BTStatus::InvalidState;
   }
-  Peer *p = _impl->peer(connHandle);
-  if (!p) {
-    Peer np;
-    np.info.connHandle = connHandle;
-    _impl->peers.push_back(np);
-    p = &_impl->peers.back();
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    if (!_impl->peer(connHandle)) {
+      Peer np;
+      np.info.connHandle = connHandle;
+      _impl->peers.push_back(np);
+    }
   }
-  return _impl->discover(*p);
+  return _impl->discover(connHandle);
 }
 
 BTStatus BLEAudioUnicastClient::start() {
@@ -375,20 +436,28 @@ BTStatus BLEAudioUnicastClient::connectAndStart(uint16_t connHandle) {
   if (!st) {
     return st;
   }
-  Peer *p = _impl->peer(connHandle);
-  if (p->discovered) {
-    return _impl->startStreams();
+  bool discovered;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    Peer *p = _impl->peer(connHandle);
+    if (!p) {
+      return BTStatus::InvalidState;
+    }
+    discovered = p->discovered;
+    p->autoStart = true;
   }
-  p->autoStart = true;
-  return BTStatus::OK;
+  return discovered ? _impl->startStreams() : BTStatus::OK;
 }
 
 BTStatus BLEAudioUnicastClient::stop() {
   if (!_impl) {
     return BTStatus::InvalidState;
   }
-  if (!_impl->running && !_impl->starting) {
-    return BTStatus::OK;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    if (!_impl->running && !_impl->starting) {
+      return BTStatus::OK;
+    }
   }
   int err = bleAudioUcStop();
   if (err != 0) {
@@ -398,7 +467,11 @@ BTStatus BLEAudioUnicastClient::stop() {
 }
 
 bool BLEAudioUnicastClient::isStreaming() const {
-  return _impl && _impl->streaming;
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return _impl->streaming;
 }
 
 // --------------------------------------------------------------------------
@@ -406,17 +479,26 @@ bool BLEAudioUnicastClient::isStreaming() const {
 // --------------------------------------------------------------------------
 
 size_t BLEAudioUnicastClient::streamCount() const {
-  return _impl ? _impl->streams.size() : 0;
+  if (!_impl) {
+    return 0;
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return _impl->streams.size();
 }
 
 BLEAudioStream BLEAudioUnicastClient::stream(size_t index) const {
-  return (_impl && index < _impl->streams.size()) ? _impl->streams[index] : BLEAudioStream();
+  if (!_impl) {
+    return BLEAudioStream();
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return index < _impl->streams.size() ? _impl->streams[index] : BLEAudioStream();
 }
 
 BLEAudioStream BLEAudioUnicastClient::stream(BLEAudioStream::Direction dir, uint8_t index) const {
   if (!_impl) {
     return BLEAudioStream();
   }
+  BLELockGuard lock(_impl->mtx.get());
   for (const auto &s : _impl->streams) {
     if (s.direction() == dir && index-- == 0) {
       return s;
@@ -431,6 +513,7 @@ BLEAudioStream BLEAudioUnicastClient::stream(BLEAudioStream::Direction dir, uint
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::onDiscovered(DiscoveredCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = std::move(cb);
   }
   return *this;
@@ -438,6 +521,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::onDiscovered(DiscoveredCallback cb
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::onStarted(Callback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->startedCb = std::move(cb);
   }
   return *this;
@@ -445,6 +529,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::onStarted(Callback cb) {
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::onStopped(Callback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stoppedCb = std::move(cb);
   }
   return *this;
@@ -452,6 +537,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::onStopped(Callback cb) {
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::onError(ErrorCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->errorCb = std::move(cb);
   }
   return *this;
@@ -459,6 +545,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::onError(ErrorCallback cb) {
 
 void BLEAudioUnicastClient::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = nullptr;
     _impl->startedCb = nullptr;
     _impl->stoppedCb = nullptr;

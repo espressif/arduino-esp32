@@ -20,7 +20,6 @@
 #include <vector>
 #include "BLEAudioBroadcastSource.h"
 #include "BLEAudioImpl.h"
-#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "BLEAudioProfiles.h"
 #include "BLE.h"
@@ -66,6 +65,7 @@ constexpr uint8_t kMaxNameLen = 32;              ///< Broadcast Name limit (Assi
 
 struct BLEAudioBroadcastSource::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (defaults, role list).
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_16_2_1;
   BLEAudioQos qos;                        ///< Used instead of the preset QoS when customQos.
   bool customQos = false;
@@ -82,8 +82,8 @@ struct BLEAudioBroadcastSource::Impl {
   int16_t advInstance = -1;               ///< Advertising instance in use, -1 when stopped.
   BLESync stopSync{"bsrc-stop"};
   std::vector<BLEAudioStream> streams;    ///< One Tx stream per BIS.
-  BLEAudioCallback<Callback> startedCb;
-  BLEAudioCallback<StoppedCallback> stoppedCb;
+  Callback startedCb;
+  StoppedCallback stoppedCb;
 
   BTStatus waitStopped() {
     if (!streaming) {
@@ -262,16 +262,16 @@ struct BLEAudioBroadcastSource::Impl {
       starting = false;
       streaming = true;
       log_i("BroadcastSource: BIG up, %u BIS streaming (id 0x%06lX)", (unsigned)streams.size(), (unsigned long)broadcastId);
-      if (startedCb) {
-        startedCb();
+      if (auto cb = bleAudioCopyCallback(*this, &Impl::startedCb)) {
+        cb();
       }
     } else if (e.type == BLE_AUDIO_EVT_BSRC_STOPPED) {
       starting = false;
       streaming = false;
       log_i("BroadcastSource: BIG terminated (reason 0x%02x)", (unsigned)(uint8_t)e.err);
       stopSync.give(BTStatus::OK);
-      if (stoppedCb) {
-        stoppedCb((uint8_t)e.err);
+      if (auto cb = bleAudioCopyCallback(*this, &Impl::stoppedCb)) {
+        cb((uint8_t)e.err);
       }
     }
   }
@@ -484,6 +484,7 @@ BLEAudioStream BLEAudioBroadcastSource::stream(size_t index) const {
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::onStarted(Callback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->startedCb = std::move(cb);
   }
   return *this;
@@ -491,6 +492,7 @@ BLEAudioBroadcastSource &BLEAudioBroadcastSource::onStarted(Callback cb) {
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::onStopped(StoppedCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stoppedCb = std::move(cb);
   }
   return *this;
@@ -498,6 +500,7 @@ BLEAudioBroadcastSource &BLEAudioBroadcastSource::onStopped(StoppedCallback cb) 
 
 void BLEAudioBroadcastSource::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->startedCb = nullptr;
     _impl->stoppedCb = nullptr;
   }

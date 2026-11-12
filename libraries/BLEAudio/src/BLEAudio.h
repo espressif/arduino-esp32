@@ -197,11 +197,13 @@ public:
   // --- Link events (Bluetooth host task; keep callbacks short) ---
 
   /**
-   * @brief A peer's GATT database was discovered.
+   * @brief The link is ready for this device's roles.
    *
    * Fires for every audio link, whether opened by connect() or by the peer.
    * Client roles (unicast client, volume controller, ...) may use
-   * @p connHandle from this point on.
+   * @p connHandle from this point on. A peer-opened link is GATT-discovered
+   * only when a client role is registered; with server-only roles this fires
+   * after the MTU exchange, without discovering the central's database.
    */
   BLEAudio &onLinkReady(LinkCallback cb);
   /** @brief An ACL link used by LE Audio went down, or connect() failed. */

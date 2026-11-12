@@ -15,7 +15,6 @@
  */
 
 #include "core/BLEGuards.h"
-#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include <vector>
@@ -50,11 +49,12 @@ struct BLEAudioHearingAidDevice::Impl {
   };
 
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEHearingAidType type = BLEHearingAidType::Monaural;
   bool presetSync = false;
   std::vector<Preset> presets;  ///< Staged until start; released once registered.
-  BLEAudioCallback<SelectCallback> selectCb;
-  BLEAudioCallback<RenameCallback> renameCb;
+  SelectCallback selectCb;
+  RenameCallback renameCb;
   bool inited = false;
 
   /** Register one preset with the stack. */
@@ -92,13 +92,13 @@ struct BLEAudioHearingAidDevice::Impl {
     }
     if (e.type == BLE_AUDIO_EVT_HAS_SRV_SELECT) {
       const auto *d = static_cast<const ble_audio_has_select_t *>(e.data);
-      if (selectCb) {
-        selectCb(d->index, d->sync);
+      if (auto cb = bleAudioCopyCallback(*this, &Impl::selectCb)) {
+        cb(d->index, d->sync);
       }
     } else if (e.type == BLE_AUDIO_EVT_HAS_SRV_NAME) {
       const auto *d = static_cast<const ble_audio_has_preset_t *>(e.data);
-      if (renameCb) {
-        renameCb(d->index, String(d->name ? d->name : ""));
+      if (auto cb = bleAudioCopyCallback(*this, &Impl::renameCb)) {
+        cb(d->index, String(d->name ? d->name : ""));
       }
     }
   }
@@ -159,6 +159,7 @@ uint8_t BLEAudioHearingAidDevice::getActivePreset() const {
 
 BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::onPresetSelected(SelectCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->selectCb = std::move(cb);
   }
   return *this;
@@ -166,6 +167,7 @@ BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::onPresetSelected(SelectCallb
 
 BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::onPresetRenamed(RenameCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->renameCb = std::move(cb);
   }
   return *this;
@@ -173,6 +175,7 @@ BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::onPresetRenamed(RenameCallba
 
 void BLEAudioHearingAidDevice::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->selectCb = nullptr;
     _impl->renameCb = nullptr;
   }
@@ -211,11 +214,12 @@ BLEAudioHearingAidDevice BLEAudio::createHearingAidDevice() {
 
 struct BLEAudioHearingAidController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioControlLink link;  ///< The hearing aid being controlled.
   uint8_t active = 0;        ///< Peer's active preset, 0 when unknown (reset on discover and disconnect).
-  BLEAudioCallback<DiscoveredCallback> discoveredCb;
-  BLEAudioCallback<PresetCallback> presetCb;
-  BLEAudioCallback<SwitchCallback> switchCb;
+  DiscoveredCallback discoveredCb;
+  PresetCallback presetCb;
+  SwitchCallback switchCb;
 
   /**
    * Engine event: core events drive the link (deferred discovery, disconnect);
@@ -227,8 +231,10 @@ struct BLEAudioHearingAidController::Impl {
       if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED && !link.bound()) {
         active = 0;
       }
-      if (err && discoveredCb) {
-        discoveredCb(bleAudioStatus(err), BLEHearingAidType::Monaural);
+      if (err) {
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          cb(bleAudioStatus(err), BLEHearingAidType::Monaural);
+        }
       }
       return;
     }
@@ -237,14 +243,16 @@ struct BLEAudioHearingAidController::Impl {
     }
     switch (e.type) {
       case BLE_AUDIO_EVT_HAS_CLI_DISCOVERED:
-        if (discoveredCb) {
-          discoveredCb(bleAudioStatus(e.err), static_cast<BLEHearingAidType>(*static_cast<const uint8_t *>(e.data)));
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          cb(bleAudioStatus(e.err), static_cast<BLEHearingAidType>(*static_cast<const uint8_t *>(e.data)));
         }
         break;
       case BLE_AUDIO_EVT_HAS_CLI_PRESET:
-        if (!e.err && presetCb) {
+        if (!e.err) {
           const auto *p = static_cast<const ble_audio_has_preset_t *>(e.data);
-          presetCb(p->index, p->available, String(p->name ? p->name : ""), p->is_last);
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::presetCb)) {
+            cb(p->index, p->available, String(p->name ? p->name : ""), p->is_last);
+          }
         }
         break;
       case BLE_AUDIO_EVT_HAS_CLI_ACTIVE: {
@@ -252,8 +260,8 @@ struct BLEAudioHearingAidController::Impl {
         if (!e.err) {
           active = index;
         }
-        if (switchCb) {
-          switchCb(bleAudioStatus(e.err), index);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::switchCb)) {
+          cb(bleAudioStatus(e.err), index);
         }
         break;
       }
@@ -306,6 +314,7 @@ uint8_t BLEAudioHearingAidController::getActivePreset() const {
 
 BLEAudioHearingAidController &BLEAudioHearingAidController::onDiscovered(DiscoveredCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = std::move(cb);
   }
   return *this;
@@ -313,6 +322,7 @@ BLEAudioHearingAidController &BLEAudioHearingAidController::onDiscovered(Discove
 
 BLEAudioHearingAidController &BLEAudioHearingAidController::onPreset(PresetCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->presetCb = std::move(cb);
   }
   return *this;
@@ -320,6 +330,7 @@ BLEAudioHearingAidController &BLEAudioHearingAidController::onPreset(PresetCallb
 
 BLEAudioHearingAidController &BLEAudioHearingAidController::onPresetSwitch(SwitchCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->switchCb = std::move(cb);
   }
   return *this;
@@ -327,6 +338,7 @@ BLEAudioHearingAidController &BLEAudioHearingAidController::onPresetSwitch(Switc
 
 void BLEAudioHearingAidController::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = nullptr;
     _impl->presetCb = nullptr;
     _impl->switchCb = nullptr;

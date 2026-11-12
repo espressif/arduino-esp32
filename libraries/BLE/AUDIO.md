@@ -289,8 +289,12 @@ Central links to audio peers are opened with `audio.connect(address)`, not
 `BLEClient::connect()`: on Bluedroid the link must be opened through the
 engine's GATT client, and on both hosts the engine then encrypts the link (with
 the `BLESecurity` settings), exchanges the MTU and discovers the peer.
-`audio.onLinkReady(conn)` fires when that discovery finished, for links opened
-by either side; client roles may use `conn` from then on. `audio.disconnect(conn)`
+`audio.onLinkReady(conn)` fires when the link is usable, for links opened by
+either side; client roles may use `conn` from then on. A peer-opened link is
+GATT-discovered only when a client role is registered: with server-only roles
+the event fires after the MTU exchange without discovering the central's
+database, which no server role needs. Central links opened with `connect()` are
+always discovered, and only the requested peer address is adopted. `audio.disconnect(conn)`
 closes one audio ACL (whether the engine or the sketch opened it) and
 `onDisconnected(conn)` follows; use it instead of `BLE.end()` when only one
 peer should go away.
@@ -352,6 +356,22 @@ Rules:
 - Addresses crossing the bridge are **LSB-first** on both hosts (the order
   `BTAddress(const uint8_t *, Type)` expects). GAP event addresses keep the
   host's byte order, so units convert them with `bleAudioAddrFromGap()`.
+
+## Role callbacks and operation results
+
+Role handles follow the callback model in `DESIGN.md`: plain per-event
+`std::function` members plus `resetCallbacks()`. Each role `Impl` owns one
+recursive mutex; a setter replaces the member under it, and a host-task handler
+copies the member under it and invokes the copy unlocked. A callback may
+therefore set or clear callbacks and call back into its role.
+
+Asynchronous procedures report through one role-level completion callback, with
+an operation enum where the profile has several control-point operations
+(Broadcast Assistant, CAP Commander, Call Client). There is no callback per
+method: setters return `BTStatus` for validation and queue admission, and the
+profile's state notification is the confirmation for control-profile writes
+(volume, mute, media, call, HAS). A failure after such a write is queued is
+logged; do not add a per-method completion callback for it.
 
 ## Streams and the data path
 

@@ -15,7 +15,6 @@
  */
 
 #include "core/BLEGuards.h"
-#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioMic.h"
@@ -41,8 +40,9 @@
 
 struct BLEAudioMicDevice::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   bool muted = false;  ///< Initial state before start, then the last reported state.
-  BLEAudioCallback<MuteCallback> muteCb;
+  MuteCallback muteCb;
 
   /** Engine event for this group: the mute state changed (by a client or locally). */
   void handle(const ble_audio_evt_t &e) {
@@ -50,8 +50,8 @@ struct BLEAudioMicDevice::Impl {
       return;
     }
     muted = *static_cast<const uint8_t *>(e.data) == BLE_AUDIO_MICP_MUTED;
-    if (muteCb) {
-      muteCb(muted);
+    if (auto cb = bleAudioCopyCallback(*this, &Impl::muteCb)) {
+      cb(muted);
     }
   }
 };
@@ -87,6 +87,7 @@ bool BLEAudioMicDevice::isMuted() const {
 
 BLEAudioMicDevice &BLEAudioMicDevice::onMuteChanged(MuteCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->muteCb = std::move(cb);
   }
   return *this;
@@ -94,6 +95,7 @@ BLEAudioMicDevice &BLEAudioMicDevice::onMuteChanged(MuteCallback cb) {
 
 void BLEAudioMicDevice::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->muteCb = nullptr;
   }
 }
@@ -131,11 +133,12 @@ BLEAudioMicDevice BLEAudio::createMicDevice() {
 
 struct BLEAudioMicController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioControlLink link;  ///< The microphone device being controlled.
   bool muted = false;        ///< Last state reported by the device.
-  BLEAudioCallback<DiscoveredCallback> discoveredCb;
-  BLEAudioCallback<MuteCallback> muteCb;
-  BLEAudioCallback<InputCallback> inputCb;
+  DiscoveredCallback discoveredCb;
+  MuteCallback muteCb;
+  InputCallback inputCb;
 
   /**
    * Engine event: core events drive the link (deferred discovery, disconnect);
@@ -144,8 +147,10 @@ struct BLEAudioMicController::Impl {
   void handle(const ble_audio_evt_t &e) {
     if (BLE_AUDIO_EVT_GROUP(e.type) == BLE_AUDIO_GRP_CORE) {
       const int err = link.onCore(e, bleAudioMicpCtlrDiscover);
-      if (err && discoveredCb) {
-        discoveredCb(bleAudioStatus(err), 0);
+      if (err) {
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          cb(bleAudioStatus(err), 0);
+        }
       }
       return;
     }
@@ -154,22 +159,24 @@ struct BLEAudioMicController::Impl {
     }
     switch (e.type) {
       case BLE_AUDIO_EVT_MICP_CTLR_DISCOVERED:
-        if (discoveredCb) {
-          discoveredCb(bleAudioStatus(e.err), e.data ? *static_cast<const uint8_t *>(e.data) : 0);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          cb(bleAudioStatus(e.err), e.data ? *static_cast<const uint8_t *>(e.data) : 0);
         }
         break;
       case BLE_AUDIO_EVT_MICP_CTLR_MUTE:
         if (!e.err && e.data) {
           muted = *static_cast<const uint8_t *>(e.data) == BLE_AUDIO_MICP_MUTED;
-          if (muteCb) {
-            muteCb(muted);
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::muteCb)) {
+            cb(muted);
           }
         }
         break;
       case BLE_AUDIO_EVT_MICP_CTLR_INPUT:
-        if (!e.err && e.data && inputCb) {
+        if (!e.err && e.data) {
           const auto *a = static_cast<const ble_audio_aics_state_t *>(e.data);
-          inputCb(a->gain, a->mute);
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::inputCb)) {
+            cb(a->gain, a->mute);
+          }
         }
         break;
       default: break;
@@ -213,6 +220,7 @@ BTStatus BLEAudioMicController::setInputGain(int8_t gain) {
 
 BLEAudioMicController &BLEAudioMicController::onDiscovered(DiscoveredCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = std::move(cb);
   }
   return *this;
@@ -220,6 +228,7 @@ BLEAudioMicController &BLEAudioMicController::onDiscovered(DiscoveredCallback cb
 
 BLEAudioMicController &BLEAudioMicController::onMuteChanged(MuteCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->muteCb = std::move(cb);
   }
   return *this;
@@ -227,6 +236,7 @@ BLEAudioMicController &BLEAudioMicController::onMuteChanged(MuteCallback cb) {
 
 BLEAudioMicController &BLEAudioMicController::onInputChanged(InputCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->inputCb = std::move(cb);
   }
   return *this;
@@ -234,6 +244,7 @@ BLEAudioMicController &BLEAudioMicController::onInputChanged(InputCallback cb) {
 
 void BLEAudioMicController::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = nullptr;
     _impl->muteCb = nullptr;
     _impl->inputCb = nullptr;

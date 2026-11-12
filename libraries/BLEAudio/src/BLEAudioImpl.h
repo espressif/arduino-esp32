@@ -45,6 +45,19 @@
 #include "BTStatus.h"
 #include "core/BLEMutex.h"
 #include "engine/BLEAudioEngine.h"
+
+/**
+ * @brief Copy a role callback under the role mutex so it can be invoked unlocked.
+ *
+ * Roles keep plain `std::function` members, as the rest of the BLE library
+ * does. A setter takes the role mutex while replacing one; a host-task handler
+ * copies the member with this helper, releases the lock, then invokes the copy.
+ * That preserves the callback model in `DESIGN.md` without a wrapper type.
+ */
+template<typename T, typename Fn> Fn bleAudioCopyCallback(const T &impl, Fn T::*member) {
+  BLELockGuard lock(impl.mtx.get());
+  return impl.*member;
+}
 #include "client/BLEClient.h"
 
 struct BLEAudioImplCommon {

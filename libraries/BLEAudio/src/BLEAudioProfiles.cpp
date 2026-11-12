@@ -19,7 +19,6 @@
 
 #include "BLEAudioProfiles.h"
 #include "BLEAudioImpl.h"
-#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineProfiles.h"
 #include "esp32-hal-log.h"
@@ -57,16 +56,21 @@ bool startedWarn(const std::weak_ptr<BLEAudio::Impl> &audio, const char *what) {
 
 struct BLEAudioTmap::Impl {
   std::weak_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioTmapRole roles = BLEAudioTmapRole::None;  ///< Local roles; None registers no TMAS.
-  BLEAudioCallback<DiscoverCallback> discoverCb;
+  DiscoverCallback discoverCb;
 
   /** Engine event for this group: a peer's TMAP roles were read. */
   void handle(const ble_audio_evt_t &e) {
-    if (e.type != BLE_AUDIO_EVT_TMAP_DISCOVERED || !discoverCb) {
+    if (e.type != BLE_AUDIO_EVT_TMAP_DISCOVERED) {
+      return;
+    }
+    auto cb = bleAudioCopyCallback(*this, &Impl::discoverCb);
+    if (!cb) {
       return;
     }
     auto *d = static_cast<const ble_audio_tmap_discovered_t *>(e.data);
-    discoverCb(e.conn_handle, bleAudioStatus(e.err), static_cast<BLEAudioTmapRole>(d ? d->roles : 0));
+    cb(e.conn_handle, bleAudioStatus(e.err), static_cast<BLEAudioTmapRole>(d ? d->roles : 0));
   }
 };
 
@@ -93,6 +97,7 @@ BTStatus BLEAudioTmap::discover(uint16_t connHandle) {
 
 BLEAudioTmap &BLEAudioTmap::onDiscovered(DiscoverCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoverCb = std::move(cb);
   }
   return *this;
@@ -100,6 +105,7 @@ BLEAudioTmap &BLEAudioTmap::onDiscovered(DiscoverCallback cb) {
 
 void BLEAudioTmap::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoverCb = nullptr;
   }
 }
@@ -144,13 +150,18 @@ BLEAudioTmap BLEAudio::createTmap() {
 
 struct BLEAudioGmap::Impl {
   std::weak_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioGmapRole roles = BLEAudioGmapRole::None;  ///< Local roles; None registers no GMAS.
   BLEAudioGmapFeatures features;                    ///< Local features of those roles.
-  BLEAudioCallback<DiscoverCallback> discoverCb;
+  DiscoverCallback discoverCb;
 
   /** Engine event for this group: a peer's GMAP roles and features were read. */
   void handle(const ble_audio_evt_t &e) {
-    if (e.type != BLE_AUDIO_EVT_GMAP_DISCOVERED || !discoverCb) {
+    if (e.type != BLE_AUDIO_EVT_GMAP_DISCOVERED) {
+      return;
+    }
+    auto cb = bleAudioCopyCallback(*this, &Impl::discoverCb);
+    if (!cb) {
       return;
     }
     auto *d = static_cast<const ble_audio_gmap_discovered_t *>(e.data);
@@ -163,7 +174,7 @@ struct BLEAudioGmap::Impl {
       f.broadcastSender = d->features.bgs;
       f.broadcastReceiver = d->features.bgr;
     }
-    discoverCb(e.conn_handle, bleAudioStatus(e.err), static_cast<BLEAudioGmapRole>(r), f);
+    cb(e.conn_handle, bleAudioStatus(e.err), static_cast<BLEAudioGmapRole>(r), f);
   }
 };
 
@@ -206,6 +217,7 @@ BTStatus BLEAudioGmap::discover(uint16_t connHandle) {
 
 BLEAudioGmap &BLEAudioGmap::onDiscovered(DiscoverCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoverCb = std::move(cb);
   }
   return *this;
@@ -213,6 +225,7 @@ BLEAudioGmap &BLEAudioGmap::onDiscovered(DiscoverCallback cb) {
 
 void BLEAudioGmap::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoverCb = nullptr;
   }
 }

@@ -22,7 +22,6 @@
 #include "BLEAudioCoordinatedSet.h"
 #include "BLEAudioCap.h"
 #include "BLEAudioImpl.h"
-#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineCap.h"
 #include "esp32-hal-log.h"
@@ -51,8 +50,9 @@ struct BLEAudioCoordinatedSetMember::Impl {
   uint8_t rank = 1;
   bool lockable = true;
   String name;  ///< Optional CSIS name (empty = none).
-  BLEAudioCallback<LockCallback> lockCb;
-  BLEAudioCallback<SirkReadCallback> sirkCb;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
+  LockCallback lockCb;
+  SirkReadCallback sirkCb;
 
   /** Register the CSIS instance with the staged values; runs inside audio.start(). */
   BTStatus apply() {
@@ -89,12 +89,12 @@ struct BLEAudioCoordinatedSetMember::Impl {
     }
     switch (e.type & 0xFF) {
       case BLE_AUDIO_CSIS_EVT_LOCK:
-        if (lockCb) {
-          lockCb(static_cast<const ble_audio_csis_lock_t *>(e.data)->locked, e.conn_handle);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::lockCb)) {
+          cb(static_cast<const ble_audio_csis_lock_t *>(e.data)->locked, e.conn_handle);
         }
         break;
       case BLE_AUDIO_CSIS_EVT_SIRK_REQ: {
-        auto cb = sirkCb.snapshot();
+        auto cb = bleAudioCopyCallback(*this, &Impl::sirkCb);
         if (cb) {
           *static_cast<const ble_audio_csis_sirk_req_t *>(e.data)->reply = static_cast<uint8_t>(cb(e.conn_handle));
         }
@@ -203,6 +203,7 @@ bool BLEAudioCoordinatedSetMember::isLocked() const {
 
 BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::onLockChanged(LockCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->lockCb = std::move(cb);
   }
   return *this;
@@ -210,6 +211,7 @@ BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::onLockChanged(LockCa
 
 BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::onSirkRead(SirkReadCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->sirkCb = std::move(cb);
   }
   return *this;
@@ -217,6 +219,7 @@ BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::onSirkRead(SirkReadC
 
 void BLEAudioCoordinatedSetMember::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->lockCb = nullptr;
     _impl->sirkCb = nullptr;
   }
@@ -228,11 +231,12 @@ void BLEAudioCoordinatedSetMember::resetCallbacks() {
 
 struct BLEAudioCoordinatedSetCoordinator::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   std::vector<uint16_t> pending;  ///< discover() called before the link's GATT discovery finished.
   BLEAudioCoordinatedSetInfo set; ///< First discovered set (setCount 0 until then).
-  BLEAudioCallback<DiscoveredCallback> discoveredCb;
-  BLEAudioCallback<LockCallback> lockCb;
-  BLEAudioCallback<LockChangedCallback> lockChangedCb;
+  DiscoveredCallback discoveredCb;
+  LockCallback lockCb;
+  LockChangedCallback lockChangedCb;
 
   /** Start CSIS discovery on @p conn. */
   BTStatus start(uint16_t conn) {
@@ -276,20 +280,22 @@ struct BLEAudioCoordinatedSetCoordinator::Impl {
             set = info;
           }
         }
-        if (discoveredCb) {
-          discoveredCb(bleAudioStatus(e.err), info);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          cb(bleAudioStatus(e.err), info);
         }
         break;
       }
       case BLE_AUDIO_EVT_CSIP_LOCKED:
       case BLE_AUDIO_EVT_CSIP_RELEASED:
-        if (lockCb) {
-          lockCb(bleAudioStatus(e.err), e.type == BLE_AUDIO_EVT_CSIP_LOCKED);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::lockCb)) {
+          cb(bleAudioStatus(e.err), e.type == BLE_AUDIO_EVT_CSIP_LOCKED);
         }
         break;
       case BLE_AUDIO_EVT_CSIP_LOCK_CHANGED:
-        if (lockChangedCb && e.data) {
-          lockChangedCb(static_cast<const ble_audio_csis_lock_t *>(e.data)->locked, e.conn_handle);
+        if (e.data) {
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::lockChangedCb)) {
+            cb(static_cast<const ble_audio_csis_lock_t *>(e.data)->locked, e.conn_handle);
+          }
         }
         break;
       default: break;
@@ -336,6 +342,7 @@ BLEAudioCoordinatedSetInfo BLEAudioCoordinatedSetCoordinator::setInfo() const {
 
 BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onDiscovered(DiscoveredCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = std::move(cb);
   }
   return *this;
@@ -343,6 +350,7 @@ BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onDiscover
 
 BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onLock(LockCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->lockCb = std::move(cb);
   }
   return *this;
@@ -350,6 +358,7 @@ BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onLock(Loc
 
 BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onLockChanged(LockChangedCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->lockChangedCb = std::move(cb);
   }
   return *this;
@@ -357,6 +366,7 @@ BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onLockChan
 
 void BLEAudioCoordinatedSetCoordinator::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = nullptr;
     _impl->lockCb = nullptr;
     _impl->lockChangedCb = nullptr;

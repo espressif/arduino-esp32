@@ -20,7 +20,6 @@
 #include <vector>
 #include "BLEAudioBroadcastSink.h"
 #include "BLEAudioImpl.h"
-#include "BLEAudioCallback.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "BLE.h"
 #include "scan/BLEScan.h"
@@ -64,6 +63,7 @@ constexpr uint32_t kDefaultPresets =
 
 struct BLEAudioBroadcastSink::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (role list).
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   uint8_t streamCount = 1;                ///< BISes to join (1 or 2).
   uint32_t presets = kDefaultPresets;     ///< BLEAudioPresetBit() mask for the sink PAC.
   BLEAudioLocation location = BLEAudioLocation::Mono;
@@ -103,14 +103,14 @@ struct BLEAudioBroadcastSink::Impl {
     return BTStatus::OK;
   }
 
-  BLEAudioCallback<SourceFoundCallback> foundCb;
-  BLEAudioCallback<Callback> syncedCb;
-  BLEAudioCallback<BaseCallback> baseCb;
-  BLEAudioCallback<Callback> codeCb;
-  BLEAudioCallback<ReasonCallback> syncLostCb;
-  BLEAudioCallback<ErrorCallback> syncFailedCb;
-  BLEAudioCallback<Callback> startedCb;
-  BLEAudioCallback<ReasonCallback> stoppedCb;
+  SourceFoundCallback foundCb;
+  Callback syncedCb;
+  BaseCallback baseCb;
+  Callback codeCb;
+  ReasonCallback syncLostCb;
+  ErrorCallback syncFailedCb;
+  Callback startedCb;
+  ReasonCallback stoppedCb;
 
   /** @brief Match the owned streams to the BIS count (stops at the first pool failure). */
   void resizeStreams() {
@@ -240,8 +240,8 @@ struct BLEAudioBroadcastSink::Impl {
         info.broadcastId = f->broadcast_id;
         info.name = f->name;
         info.rssi = f->rssi;
-        if (foundCb) {
-          foundCb(info);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::foundCb)) {
+          cb(info);
         }
         if (autoSync && running && !syncPending && !synced && matches(info)) {
           (void)sync(info.address, info.sid, info.broadcastId);
@@ -254,8 +254,8 @@ struct BLEAudioBroadcastSink::Impl {
         if (synced) {
           log_i("BroadcastSink: PA synced, waiting for the BASE");
           (void)scan(false);
-          if (syncedCb) {
-            syncedCb();
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::syncedCb)) {
+            cb();
           }
         } else {
           log_w("BroadcastSink: PA sync failed (status 0x%02x)", (unsigned)(uint8_t)e.err);
@@ -278,22 +278,22 @@ struct BLEAudioBroadcastSink::Impl {
           "BroadcastSink: BASE with BIS mask 0x%08lx, %u subgroup(s), %lu Hz", (unsigned long)base.bisMask, base.subgroups,
           (unsigned long)base.codec.samplingRateHz
         );
-        if (baseCb) {
-          baseCb(base);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::baseCb)) {
+          cb(base);
         }
         break;
       }
       case BLE_AUDIO_EVT_BSINK_CODE:
         log_d("BroadcastSink: Broadcast Code received from an assistant (conn %u)", e.conn_handle);
-        if (codeCb) {
-          codeCb();
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::codeCb)) {
+          cb();
         }
         break;
       case BLE_AUDIO_EVT_BSINK_PA_LOST:
         synced = false;
         log_w("BroadcastSink: PA sync lost (reason 0x%02x)%s", (unsigned)(uint8_t)e.err, running ? ", rescanning" : "");
-        if (syncLostCb) {
-          syncLostCb((uint8_t)e.err);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::syncLostCb)) {
+          cb((uint8_t)e.err);
         }
         if (running) {
           (void)scan(true);
@@ -302,23 +302,23 @@ struct BLEAudioBroadcastSink::Impl {
       case BLE_AUDIO_EVT_BSINK_SYNC_FAILED:
         // -EACCES: the BIG is encrypted and the code is missing or wrong.
         log_w("BroadcastSink: BIG sync failed (err=%d)%s", e.err, e.err == -EACCES ? ": Broadcast Code missing or wrong" : "");
-        if (syncFailedCb) {
-          syncFailedCb(e.err == -EACCES ? BTStatus::PermissionDenied : bleAudioStatus(e.err));
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::syncFailedCb)) {
+          cb(e.err == -EACCES ? BTStatus::PermissionDenied : bleAudioStatus(e.err));
         }
         break;
       case BLE_AUDIO_EVT_BSINK_STARTED:
         streaming = true;
         log_i("BroadcastSink: BIG joined, %u streams", (unsigned)streams.size());
-        if (startedCb) {
-          startedCb();
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::startedCb)) {
+          cb();
         }
         break;
       case BLE_AUDIO_EVT_BSINK_STOPPED:
         streaming = false;
         log_i("BroadcastSink: BIG left (reason 0x%02x)", (unsigned)(uint8_t)e.err);
         stopSync.give(BTStatus::OK);
-        if (stoppedCb) {
-          stoppedCb((uint8_t)e.err);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::stoppedCb)) {
+          cb((uint8_t)e.err);
         }
         break;
       case BLE_AUDIO_EVT_BSINK_PA_REQ: {
@@ -540,6 +540,7 @@ BLEAudioStream BLEAudioBroadcastSink::stream(size_t index) const {
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::onSourceFound(SourceFoundCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->foundCb = std::move(cb);
   }
   return *this;
@@ -547,6 +548,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::onSourceFound(SourceFoundCallback 
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::onSynced(Callback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->syncedCb = std::move(cb);
   }
   return *this;
@@ -554,6 +556,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::onSynced(Callback cb) {
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::onBaseReceived(BaseCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->baseCb = std::move(cb);
   }
   return *this;
@@ -561,6 +564,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::onBaseReceived(BaseCallback cb) {
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::onBroadcastCodeReceived(Callback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->codeCb = std::move(cb);
   }
   return *this;
@@ -568,6 +572,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::onBroadcastCodeReceived(Callback c
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::onSyncLost(ReasonCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->syncLostCb = std::move(cb);
   }
   return *this;
@@ -575,6 +580,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::onSyncLost(ReasonCallback cb) {
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::onSyncFailed(ErrorCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->syncFailedCb = std::move(cb);
   }
   return *this;
@@ -582,6 +588,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::onSyncFailed(ErrorCallback cb) {
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::onStarted(Callback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->startedCb = std::move(cb);
   }
   return *this;
@@ -589,6 +596,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::onStarted(Callback cb) {
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::onStopped(ReasonCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stoppedCb = std::move(cb);
   }
   return *this;
@@ -596,6 +604,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::onStopped(ReasonCallback cb) {
 
 void BLEAudioBroadcastSink::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->foundCb = nullptr;
     _impl->syncedCb = nullptr;
     _impl->baseCb = nullptr;

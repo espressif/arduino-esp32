@@ -15,7 +15,6 @@
  */
 
 #include "core/BLEGuards.h"
-#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioMedia.h"
@@ -59,11 +58,12 @@ BTStatus commandStatus(int err, uint8_t result) {
 
 struct BLEAudioMediaPlayer::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   String playerName;  ///< Kept so it can be applied at start.
   String trackTitle;  ///< Kept so it can be applied at start.
   BLEAudioMediaState state = BLEAudioMediaState::Inactive;  ///< Last state reported by the proxy.
-  BLEAudioCallback<StateCallback> stateCb;
-  BLEAudioCallback<CommandCallback> commandCb;
+  StateCallback stateCb;
+  CommandCallback commandCb;
 
   /** Store a name/title; pushed to the proxy now when started, else by apply(). */
   BTStatus setText(bool title, const String &text) {
@@ -90,12 +90,14 @@ struct BLEAudioMediaPlayer::Impl {
   void handle(const ble_audio_evt_t &e) {
     if (e.type == BLE_AUDIO_EVT_MCP_SRV_STATE && !e.err && e.data) {
       state = static_cast<BLEAudioMediaState>(*static_cast<const uint8_t *>(e.data));
-      if (stateCb) {
-        stateCb(state);
+      if (auto cb = bleAudioCopyCallback(*this, &Impl::stateCb)) {
+        cb(state);
       }
-    } else if (e.type == BLE_AUDIO_EVT_MCP_SRV_RESULT && e.data && commandCb) {
+    } else if (e.type == BLE_AUDIO_EVT_MCP_SRV_RESULT && e.data) {
       const auto *r = static_cast<const ble_audio_mcp_result_t *>(e.data);
-      commandCb(static_cast<BLEAudioMediaCommand>(r->opcode), commandStatus(e.err, r->result));
+      if (auto cb = bleAudioCopyCallback(*this, &Impl::commandCb)) {
+        cb(static_cast<BLEAudioMediaCommand>(r->opcode), commandStatus(e.err, r->result));
+      }
     }
   }
 };
@@ -144,6 +146,7 @@ BLEAudioMediaState BLEAudioMediaPlayer::getState() const {
 
 BLEAudioMediaPlayer &BLEAudioMediaPlayer::onStateChanged(StateCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stateCb = std::move(cb);
   }
   return *this;
@@ -151,6 +154,7 @@ BLEAudioMediaPlayer &BLEAudioMediaPlayer::onStateChanged(StateCallback cb) {
 
 BLEAudioMediaPlayer &BLEAudioMediaPlayer::onCommandResult(CommandCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->commandCb = std::move(cb);
   }
   return *this;
@@ -158,6 +162,7 @@ BLEAudioMediaPlayer &BLEAudioMediaPlayer::onCommandResult(CommandCallback cb) {
 
 void BLEAudioMediaPlayer::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stateCb = nullptr;
     _impl->commandCb = nullptr;
   }
@@ -196,13 +201,14 @@ BLEAudioMediaPlayer BLEAudio::createMediaPlayer() {
 
 struct BLEAudioMediaController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioControlLink link;  ///< The media player being controlled.
   BLEAudioMediaState state = BLEAudioMediaState::Inactive;  ///< Last state reported by the peer.
-  BLEAudioCallback<DiscoveredCallback> discoveredCb;
-  BLEAudioCallback<StateCallback> stateCb;
-  BLEAudioCallback<CommandCallback> commandCb;
-  BLEAudioCallback<TextCallback> playerNameCb;
-  BLEAudioCallback<TextCallback> trackTitleCb;
+  DiscoveredCallback discoveredCb;
+  StateCallback stateCb;
+  CommandCallback commandCb;
+  TextCallback playerNameCb;
+  TextCallback trackTitleCb;
 
   /** Read one characteristic (BLE_AUDIO_MCP_READ_*) from the bound peer. */
   BTStatus read(uint8_t what) const {
@@ -216,8 +222,10 @@ struct BLEAudioMediaController::Impl {
   void handle(const ble_audio_evt_t &e) {
     if (BLE_AUDIO_EVT_GROUP(e.type) == BLE_AUDIO_GRP_CORE) {
       const int err = link.onCore(e, bleAudioMcpCliDiscover);
-      if (err && discoveredCb) {
-        discoveredCb(bleAudioStatus(err));
+      if (err) {
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          cb(bleAudioStatus(err));
+        }
       }
       return;
     }
@@ -226,27 +234,29 @@ struct BLEAudioMediaController::Impl {
     }
     switch (e.type) {
       case BLE_AUDIO_EVT_MCP_CLI_DISCOVERED:
-        if (discoveredCb) {
-          discoveredCb(bleAudioStatus(e.err));
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          cb(bleAudioStatus(e.err));
         }
         break;
       case BLE_AUDIO_EVT_MCP_CLI_STATE:
         if (!e.err && e.data) {
           state = static_cast<BLEAudioMediaState>(*static_cast<const uint8_t *>(e.data));
-          if (stateCb) {
-            stateCb(state);
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::stateCb)) {
+            cb(state);
           }
         }
         break;
       case BLE_AUDIO_EVT_MCP_CLI_RESULT:
-        if (e.data && commandCb) {
+        if (e.data) {
           const auto *r = static_cast<const ble_audio_mcp_result_t *>(e.data);
-          commandCb(static_cast<BLEAudioMediaCommand>(r->opcode), commandStatus(e.err, r->result));
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::commandCb)) {
+            cb(static_cast<BLEAudioMediaCommand>(r->opcode), commandStatus(e.err, r->result));
+          }
         }
         break;
       case BLE_AUDIO_EVT_MCP_CLI_PLAYER_NAME:
       case BLE_AUDIO_EVT_MCP_CLI_TRACK_TITLE: {
-        const TextCallback cb = e.type == BLE_AUDIO_EVT_MCP_CLI_PLAYER_NAME ? playerNameCb.snapshot() : trackTitleCb.snapshot();
+        const TextCallback cb = bleAudioCopyCallback(*this, e.type == BLE_AUDIO_EVT_MCP_CLI_PLAYER_NAME ? &Impl::playerNameCb : &Impl::trackTitleCb);
         if (!e.err && e.data && cb) {
           cb(String(static_cast<const char *>(e.data)));
         }
@@ -316,6 +326,7 @@ BLEAudioMediaState BLEAudioMediaController::getState() const {
 
 BLEAudioMediaController &BLEAudioMediaController::onDiscovered(DiscoveredCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = std::move(cb);
   }
   return *this;
@@ -323,6 +334,7 @@ BLEAudioMediaController &BLEAudioMediaController::onDiscovered(DiscoveredCallbac
 
 BLEAudioMediaController &BLEAudioMediaController::onStateChanged(StateCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stateCb = std::move(cb);
   }
   return *this;
@@ -330,6 +342,7 @@ BLEAudioMediaController &BLEAudioMediaController::onStateChanged(StateCallback c
 
 BLEAudioMediaController &BLEAudioMediaController::onCommandResult(CommandCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->commandCb = std::move(cb);
   }
   return *this;
@@ -337,6 +350,7 @@ BLEAudioMediaController &BLEAudioMediaController::onCommandResult(CommandCallbac
 
 BLEAudioMediaController &BLEAudioMediaController::onPlayerName(TextCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->playerNameCb = std::move(cb);
   }
   return *this;
@@ -344,6 +358,7 @@ BLEAudioMediaController &BLEAudioMediaController::onPlayerName(TextCallback cb) 
 
 BLEAudioMediaController &BLEAudioMediaController::onTrackTitle(TextCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->trackTitleCb = std::move(cb);
   }
   return *this;
@@ -351,6 +366,7 @@ BLEAudioMediaController &BLEAudioMediaController::onTrackTitle(TextCallback cb) 
 
 void BLEAudioMediaController::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = nullptr;
     _impl->stateCb = nullptr;
     _impl->commandCb = nullptr;

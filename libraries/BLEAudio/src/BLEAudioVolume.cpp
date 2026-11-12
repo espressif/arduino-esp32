@@ -15,7 +15,6 @@
  */
 
 #include "core/BLEGuards.h"
-#include "BLEAudioCallback.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioVolume.h"
@@ -41,10 +40,11 @@
 
 struct BLEAudioVolumeRenderer::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   uint8_t volume = 100;  ///< Initial volume before start, then the last reported state.
   bool muted = false;    ///< Initial mute before start, then the last reported state.
   uint8_t step = 1;      ///< Volume up/down step (never 0).
-  BLEAudioCallback<StateCallback> stateCb;
+  StateCallback stateCb;
 
   /** Run a BLE_AUDIO_VCP_OP_* on the local renderer. */
   static BTStatus op(uint8_t o, uint8_t value = 0) {
@@ -59,8 +59,8 @@ struct BLEAudioVolumeRenderer::Impl {
     const auto *s = static_cast<const ble_audio_vcp_state_t *>(e.data);
     volume = s->volume;
     muted = s->mute;
-    if (stateCb) {
-      stateCb(volume, muted);
+    if (auto cb = bleAudioCopyCallback(*this, &Impl::stateCb)) {
+      cb(volume, muted);
     }
   }
 };
@@ -126,6 +126,7 @@ bool BLEAudioVolumeRenderer::isMuted() const {
 
 BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::onStateChanged(StateCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stateCb = std::move(cb);
   }
   return *this;
@@ -133,6 +134,7 @@ BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::onStateChanged(StateCallback cb)
 
 void BLEAudioVolumeRenderer::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stateCb = nullptr;
   }
 }
@@ -170,13 +172,14 @@ BLEAudioVolumeRenderer BLEAudio::createVolumeRenderer() {
 
 struct BLEAudioVolumeController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioControlLink link;  ///< The renderer being controlled.
   uint8_t volume = 0;        ///< Last state reported by the renderer.
   bool muted = false;
-  BLEAudioCallback<DiscoveredCallback> discoveredCb;
-  BLEAudioCallback<StateCallback> stateCb;
-  BLEAudioCallback<OffsetCallback> offsetCb;
-  BLEAudioCallback<InputCallback> inputCb;
+  DiscoveredCallback discoveredCb;
+  StateCallback stateCb;
+  OffsetCallback offsetCb;
+  InputCallback inputCb;
 
   /** Run a BLE_AUDIO_VCP_OP_* on the bound renderer. */
   BTStatus op(uint8_t o, uint8_t value = 0) const {
@@ -190,8 +193,10 @@ struct BLEAudioVolumeController::Impl {
   void handle(const ble_audio_evt_t &e) {
     if (BLE_AUDIO_EVT_GROUP(e.type) == BLE_AUDIO_GRP_CORE) {
       const int err = link.onCore(e, bleAudioVcpCtlrDiscover);
-      if (err && discoveredCb) {
-        discoveredCb(bleAudioStatus(err), 0, 0);
+      if (err) {
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          cb(bleAudioStatus(err), 0, 0);
+        }
       }
       return;
     }
@@ -200,9 +205,11 @@ struct BLEAudioVolumeController::Impl {
     }
     switch (e.type) {
       case BLE_AUDIO_EVT_VCP_CTLR_DISCOVERED:
-        if (discoveredCb) {
+        {
           const auto *d = static_cast<const ble_audio_vcp_discovered_t *>(e.data);
-          discoveredCb(bleAudioStatus(e.err), d ? d->vocs_count : 0, d ? d->aics_count : 0);
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+            cb(bleAudioStatus(e.err), d ? d->vocs_count : 0, d ? d->aics_count : 0);
+          }
         }
         break;
       case BLE_AUDIO_EVT_VCP_CTLR_STATE:
@@ -210,20 +217,24 @@ struct BLEAudioVolumeController::Impl {
           const auto *s = static_cast<const ble_audio_vcp_state_t *>(e.data);
           volume = s->volume;
           muted = s->mute;
-          if (stateCb) {
-            stateCb(volume, muted);
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::stateCb)) {
+            cb(volume, muted);
           }
         }
         break;
       case BLE_AUDIO_EVT_VCP_CTLR_OFFSET:
-        if (!e.err && e.data && offsetCb) {
-          offsetCb(*static_cast<const int16_t *>(e.data));
+        if (!e.err && e.data) {
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::offsetCb)) {
+            cb(*static_cast<const int16_t *>(e.data));
+          }
         }
         break;
       case BLE_AUDIO_EVT_VCP_CTLR_INPUT:
-        if (!e.err && e.data && inputCb) {
+        if (!e.err && e.data) {
           const auto *a = static_cast<const ble_audio_aics_state_t *>(e.data);
-          inputCb(a->gain, a->mute);
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::inputCb)) {
+            cb(a->gain, a->mute);
+          }
         }
         break;
       default: break;
@@ -293,6 +304,7 @@ BTStatus BLEAudioVolumeController::setInputGain(int8_t gain) {
 
 BLEAudioVolumeController &BLEAudioVolumeController::onDiscovered(DiscoveredCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = std::move(cb);
   }
   return *this;
@@ -300,6 +312,7 @@ BLEAudioVolumeController &BLEAudioVolumeController::onDiscovered(DiscoveredCallb
 
 BLEAudioVolumeController &BLEAudioVolumeController::onStateChanged(StateCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->stateCb = std::move(cb);
   }
   return *this;
@@ -307,6 +320,7 @@ BLEAudioVolumeController &BLEAudioVolumeController::onStateChanged(StateCallback
 
 BLEAudioVolumeController &BLEAudioVolumeController::onOffsetChanged(OffsetCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->offsetCb = std::move(cb);
   }
   return *this;
@@ -314,6 +328,7 @@ BLEAudioVolumeController &BLEAudioVolumeController::onOffsetChanged(OffsetCallba
 
 BLEAudioVolumeController &BLEAudioVolumeController::onInputChanged(InputCallback cb) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->inputCb = std::move(cb);
   }
   return *this;
@@ -321,6 +336,7 @@ BLEAudioVolumeController &BLEAudioVolumeController::onInputChanged(InputCallback
 
 void BLEAudioVolumeController::resetCallbacks() {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->discoveredCb = nullptr;
     _impl->stateCb = nullptr;
     _impl->offsetCb = nullptr;
