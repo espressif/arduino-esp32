@@ -153,6 +153,7 @@ struct BLEAudioCapInitiator::Impl {
   bool ucStarting = false;                ///< Unicast start call in flight.
   bool ucRunning = false;                 ///< Unicast start accepted, not stopped yet.
   bool ucStreaming = false;
+  bool bcStarting = false;                ///< A broadcast start call is in flight.
   bool bcStreaming = false;
   bool plainBroadcast = false;            ///< startBroadcast() session (bcStreams).
   bool handedOver = false;                ///< The unicast sink streams run as a broadcast.
@@ -338,28 +339,38 @@ struct BLEAudioCapInitiator::Impl {
       (void)adv.stopExtended(inst);
       return st;
     }
+    BLELockGuard lock(mtx.get());
     advInstance = inst;
     return BTStatus::OK;
   }
 
   /** Stop the periodic and extended advertising started by advertise(), if any. */
   void stopAdvertising() {
-    if (advInstance < 0) {
-      return;
+    int16_t instance;
+    {
+      BLELockGuard lock(mtx.get());
+      instance = advInstance;
+      if (instance < 0) {
+        return;
+      }
+      advInstance = -1;
     }
     BLEAdvertising adv = BLE.getAdvertising();
-    (void)adv.stopPeriodicAdv((uint8_t)advInstance);
-    (void)adv.stopExtended((uint8_t)advInstance);
-    advInstance = -1;
+    (void)adv.stopPeriodicAdv((uint8_t)instance);
+    (void)adv.stopExtended((uint8_t)instance);
   }
 
   /** @brief Engine source gone: release the advertising and reset the broadcast state. */
   void broadcastEnded() {
+    {
+      BLELockGuard lock(mtx.get());
+      plainBroadcast = false;
+      handedOver = false;
+      bcStreaming = false;
+      bcStarting = false;
+    }
     bleAudioCapBroadcastDelete();
     stopAdvertising();
-    plainBroadcast = false;
-    handedOver = false;
-    bcStreaming = false;
   }
 
   /**
@@ -391,12 +402,16 @@ struct BLEAudioCapInitiator::Impl {
         break;
       }
       case BLE_AUDIO_EVT_CAP_DISCOVERED: {
-        Peer *p = peer(e.conn_handle);
-        if (!p) {
-          break;
-        }
-        p->discovering = false;
-        if (e.err == 0 && e.data) {
+        BLEAudioCapPeerInfo info;
+        DiscoveredCallback cb;
+        {
+          BLELockGuard lock(mtx.get());
+          Peer *p = peer(e.conn_handle);
+          if (!p) {
+            break;
+          }
+          p->discovering = false;
+          if (e.err == 0 && e.data) {
           const auto *d = static_cast<const ble_audio_cap_discovered_t *>(e.data);
           p->discovered = true;
           p->info.coordinatedSet = d->coordinated;
@@ -411,8 +426,10 @@ struct BLEAudioCapInitiator::Impl {
         } else {
           log_w("CapInitiator: discovery of conn %u failed (err=%d)", e.conn_handle, e.err);
         }
-        const BLEAudioCapPeerInfo info = p->info;
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+          info = p->info;
+          cb = discoveredCb;
+        }
+        if (cb) {
           cb(bleAudioStatus(e.err), info);
         }
         break;
@@ -459,45 +476,82 @@ struct BLEAudioCapInitiator::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_CAP_BC_STARTED:
-        bcStreaming = true;
+      case BLE_AUDIO_EVT_CAP_BC_STARTED: {
+        Callback cb;
+        {
+          BLELockGuard lock(mtx.get());
+          bcStarting = false;
+          bcStreaming = true;
+          cb = bcStartedCb;
+        }
         log_i("CapInitiator: broadcast 0x%06lX streaming", (unsigned long)broadcastId);
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::bcStartedCb)) {
+        if (cb) {
           cb();
         }
         break;
-      case BLE_AUDIO_EVT_CAP_BC_STOPPED:
-        if (hoBusy) {
-          bcStreaming = false;
+      }
+      case BLE_AUDIO_EVT_CAP_BC_STOPPED: {
+        bool duringHandover;
+        StoppedCallback cb;
+        {
+          BLELockGuard lock(mtx.get());
+          duringHandover = hoBusy;
+          bcStarting = false;
+          if (duringHandover) {
+            bcStreaming = false;
+          } else {
+            cb = bcStoppedCb;
+          }
+        }
+        if (duringHandover) {
           break;
         }
         broadcastEnded();
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::bcStoppedCb)) {
+        if (cb) {
           cb((uint8_t)e.err);
         }
         break;
-      case BLE_AUDIO_EVT_CAP_PAST_REQ:
-        if (advInstance >= 0 && e.data) {
-          sendPast((uint8_t)advInstance, e.conn_handle, *static_cast<const ble_audio_cap_past_req_t *>(e.data));
+      }
+      case BLE_AUDIO_EVT_CAP_PAST_REQ: {
+        int16_t instance;
+        {
+          BLELockGuard lock(mtx.get());
+          instance = advInstance;
+        }
+        if (instance >= 0 && e.data) {
+          sendPast((uint8_t)instance, e.conn_handle, *static_cast<const ble_audio_cap_past_req_t *>(e.data));
         }
         break;
+      }
       case BLE_AUDIO_EVT_CAP_HO_CREATED: {
-        BTStatus st = advInstance >= 0 ? publishBase((uint8_t)advInstance) : BTStatus::InvalidState;
+        int16_t instance;
+        {
+          BLELockGuard lock(mtx.get());
+          instance = advInstance;
+        }
+        BTStatus st = instance >= 0 ? publishBase((uint8_t)instance) : BTStatus::InvalidState;
         if (st) {
-          st = BLE.getAdvertising().startPeriodicAdv((uint8_t)advInstance);
+          st = BLE.getAdvertising().startPeriodicAdv((uint8_t)instance);
         }
         if (!st) {
           log_e("CapInitiator: periodic advertising for the handover failed (%s)", st.toString());
         }
         break;
       }
-      case BLE_AUDIO_EVT_CAP_HO_TO_BROADCAST:
-        hoBusy = false;
+      case BLE_AUDIO_EVT_CAP_HO_TO_BROADCAST: {
+        HandoverCallback cb;
+        {
+          BLELockGuard lock(mtx.get());
+          hoBusy = false;
+          if (e.err == 0) {
+            ucRunning = false;
+            ucStreaming = false;
+            handedOver = true;
+            bcStreaming = true;
+          }
+          cb = handoverCb;
+        }
         if (e.err == 0) {
-          ucRunning = false;
-          ucStreaming = false;
-          handedOver = true;
-          bcStreaming = true;
           log_i("CapInitiator: unicast handed over to broadcast 0x%06lX", (unsigned long)broadcastId);
         } else {
           log_w("CapInitiator: handover to broadcast failed (err=%d)", e.err);
@@ -509,6 +563,7 @@ struct BLEAudioCapInitiator::Impl {
            * deterministically so startUnicast() can rebuild the session; the
            * stack reports the release through onUnicastStopped(). */
           int stopErr = bleAudioCapUnicastStop();
+          BLELockGuard lock(mtx.get());
           if (stopErr != 0) {
             log_w("CapInitiator: unicast cleanup after the failed handover failed (err=%d); stopUnicast() can retry",
                   stopErr);
@@ -518,31 +573,41 @@ struct BLEAudioCapInitiator::Impl {
           }
           handedOver = false;
         }
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::handoverCb)) {
+        if (cb) {
           cb(bleAudioStatus(e.err), true);
         }
         break;
-      case BLE_AUDIO_EVT_CAP_HO_TO_UNICAST:
-        hoBusy = false;
+      }
+      case BLE_AUDIO_EVT_CAP_HO_TO_UNICAST: {
+        HandoverCallback cb;
+        {
+          BLELockGuard lock(mtx.get());
+          hoBusy = false;
+          if (e.err == 0) {
+            handedOver = false;
+            bcStreaming = false;
+            ucRunning = true;
+            ucStreaming = true;
+          }
+          cb = handoverCb;
+        }
         if (e.err == 0) {
           stopAdvertising();
-          handedOver = false;
-          bcStreaming = false;
-          ucRunning = true;
-          ucStreaming = true;
           log_i("CapInitiator: broadcast handed back to unicast");
         } else {
           log_w("CapInitiator: handover to unicast failed (err=%d)", e.err);
         }
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::handoverCb)) {
+        if (cb) {
           cb(bleAudioStatus(e.err), false);
         }
         break;
+      }
       default: break;
     }
   }
 
   const std::vector<BLEAudioStream> &streams() const {
+    BLELockGuard lock(mtx.get());
     return plainBroadcast ? bcStreams : ucStreams;
   }
 };
@@ -555,6 +620,7 @@ BLEAudioCapInitiator &BLEAudioCapInitiator::setPreset(BLEAudioCodecPreset preset
   ble_audio_codec_t c;
   ble_audio_qos_t q;
   if (_impl && bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->preset = preset;
   } else if (_impl) {
     log_e("CapInitiator: invalid preset %u", (unsigned)preset);
@@ -564,6 +630,7 @@ BLEAudioCapInitiator &BLEAudioCapInitiator::setPreset(BLEAudioCodecPreset preset
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setQos(const BLEAudioQos &qos) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->qos = qos;
     _impl->customQos = true;
   }
@@ -572,6 +639,7 @@ BLEAudioCapInitiator &BLEAudioCapInitiator::setQos(const BLEAudioQos &qos) {
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setContext(BLEAudioContext context) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->context = context;
   }
   return *this;
@@ -579,6 +647,7 @@ BLEAudioCapInitiator &BLEAudioCapInitiator::setContext(BLEAudioContext context) 
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setSinkStreams(uint8_t perPeer) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->sinkPerPeer = perPeer;
   }
   return *this;
@@ -586,6 +655,7 @@ BLEAudioCapInitiator &BLEAudioCapInitiator::setSinkStreams(uint8_t perPeer) {
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setSourceStreams(uint8_t perPeer) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->sourcePerPeer = perPeer;
   }
   return *this;
@@ -593,17 +663,23 @@ BLEAudioCapInitiator &BLEAudioCapInitiator::setSourceStreams(uint8_t perPeer) {
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastId(uint32_t broadcastId) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->broadcastId = broadcastId & 0xFFFFFF;
   }
   return *this;
 }
 
 uint32_t BLEAudioCapInitiator::getBroadcastId() const {
-  return _impl ? _impl->broadcastId : 0;
+  if (!_impl) {
+    return 0;
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return _impl->broadcastId;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastCode(const String &code) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     if (code.length() > BLE_AUDIO_BCODE_SIZE) {
       log_w("CapInitiator: Broadcast Code truncated to %u characters", BLE_AUDIO_BCODE_SIZE);
     }
@@ -614,6 +690,7 @@ BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastCode(const String &code)
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastName(const String &name) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->name = name;
   }
   return *this;
@@ -728,9 +805,13 @@ BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInsta
     return BTStatus::InvalidState;
   }
   Impl &m = *_impl;
-  if (m.advInstance >= 0 || m.hoBusy) {
-    log_w("CapInitiator: a broadcast is already running");
-    return BTStatus::InvalidState;
+  {
+    BLELockGuard lock(m.mtx.get());
+    if (m.advInstance >= 0 || m.hoBusy || m.bcStarting) {
+      log_w("CapInitiator: a broadcast is already running");
+      return BTStatus::InvalidState;
+    }
+    m.bcStarting = true;
   }
   if (channels == 0) {
     channels = 1;
@@ -759,11 +840,15 @@ BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInsta
                                        static_cast<uint16_t>(m.context), broadcastCode(m.code, bcode));
   if (err != 0) {
     log_e("CapInitiator: broadcast create failed (%u BIS, err=%d)", channels, err);
+    BLELockGuard lock(m.mtx.get());
+    m.bcStarting = false;
     return bleAudioStatus(err);
   }
   BTStatus st = m.advertise(advInstance, true);
   if (!st) {
     bleAudioCapBroadcastDelete();
+    BLELockGuard lock(m.mtx.get());
+    m.bcStarting = false;
     return st;
   }
   const ble_audio_cap_adv_t adv = m.advInfo(advInstance);
@@ -773,14 +858,21 @@ BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInsta
     m.broadcastEnded();
     return bleAudioStatus(err);
   }
+  BLELockGuard lock(m.mtx.get());
   m.plainBroadcast = true;
   return BTStatus::OK;
 }
 
 /** Without a stop the engine never reports BC_STOPPED, so a failed stop releases everything here. */
 BTStatus BLEAudioCapInitiator::stopBroadcast() {
-  if (!_impl || _impl->advInstance < 0 || _impl->hoBusy) {
+  if (!_impl) {
     return BTStatus::InvalidState;
+  }
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    if (_impl->advInstance < 0 || _impl->hoBusy) {
+      return BTStatus::InvalidState;
+    }
   }
   int err = bleAudioCapBroadcastStop();
   if (err != 0) {
@@ -793,18 +885,31 @@ BTStatus BLEAudioCapInitiator::stopBroadcast() {
 }
 
 bool BLEAudioCapInitiator::isBroadcasting() const {
-  return _impl && _impl->bcStreaming;
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return _impl->bcStreaming;
 }
 
 /** The extended advertising runs without periodic data until the engine created the source (HO_CREATED). */
 BTStatus BLEAudioCapInitiator::handoverToBroadcast(uint8_t advInstance) {
 #if BLE_AUDIO_CAP_HANDOVER_SUPPORTED
-  if (!_impl || !_impl->ucStreaming || _impl->advInstance >= 0 || _impl->hoBusy) {
+  if (!_impl) {
     return BTStatus::InvalidState;
   }
   Impl &m = *_impl;
+  {
+    BLELockGuard lock(m.mtx.get());
+    if (!m.ucStreaming || m.advInstance >= 0 || m.hoBusy) {
+      return BTStatus::InvalidState;
+    }
+    m.hoBusy = true;
+  }
   BTStatus st = m.advertise(advInstance, false);
   if (!st) {
+    BLELockGuard lock(m.mtx.get());
+    m.hoBusy = false;
     return st;
   }
   ble_audio_codec_t c;
@@ -816,9 +921,10 @@ BTStatus BLEAudioCapInitiator::handoverToBroadcast(uint8_t advInstance) {
   if (err != 0) {
     log_e("CapInitiator: handover to broadcast failed to start (err=%d)", err);
     m.stopAdvertising();
+    BLELockGuard lock(m.mtx.get());
+    m.hoBusy = false;
     return bleAudioStatus(err);
   }
-  m.hoBusy = true;
   return BTStatus::OK;
 #else
   (void)advInstance;
@@ -829,8 +935,15 @@ BTStatus BLEAudioCapInitiator::handoverToBroadcast(uint8_t advInstance) {
 /** The requests name the same sink streams, in the order startUnicast() created them. */
 BTStatus BLEAudioCapInitiator::handoverToUnicast() {
 #if BLE_AUDIO_CAP_HANDOVER_SUPPORTED
-  if (!_impl || !_impl->handedOver || _impl->hoBusy) {
+  if (!_impl) {
     return BTStatus::InvalidState;
+  }
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    if (!_impl->handedOver || _impl->hoBusy) {
+      return BTStatus::InvalidState;
+    }
+    _impl->hoBusy = true;
   }
   std::vector<ble_audio_uc_stream_req_t> reqs = _impl->requests(true);
   size_t n = 0;
@@ -841,14 +954,17 @@ BTStatus BLEAudioCapInitiator::handoverToUnicast() {
   }
   if (reqs.empty() || n != reqs.size()) {
     log_e("CapInitiator: the acceptors changed since the handover to broadcast");
+    BLELockGuard lock(_impl->mtx.get());
+    _impl->hoBusy = false;
     return BTStatus::InvalidState;
   }
   int err = bleAudioCapHandoverToUnicast(reqs.data(), (uint8_t)reqs.size());
   if (err != 0) {
     log_e("CapInitiator: handover to unicast failed to start (err=%d)", err);
+    BLELockGuard lock(_impl->mtx.get());
+    _impl->hoBusy = false;
     return bleAudioStatus(err);
   }
-  _impl->hoBusy = true;
   return BTStatus::OK;
 #else
   return BTStatus::NotSupported;

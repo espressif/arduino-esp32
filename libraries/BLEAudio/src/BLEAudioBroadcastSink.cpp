@@ -83,19 +83,26 @@ struct BLEAudioBroadcastSink::Impl {
   std::vector<BLEAudioStream> streams;    ///< One Rx stream per BIS.
 
   BTStatus waitStopped() {
-    if (!streaming) {
-      return BTStatus::OK;
+    {
+      BLELockGuard lock(mtx.get());
+      if (!streaming) {
+        return BTStatus::OK;
+      }
     }
     if (bleInStackCallbackTask()) {
       log_e("BroadcastSink: cannot wait for BIG leave from a stack callback");
       return BTStatus::InvalidState;
     }
     stopSync.take();
-    if (!streaming) {
-      stopSync.give(BTStatus::OK);
-      return BTStatus::OK;
+    {
+      BLELockGuard lock(mtx.get());
+      if (!streaming) {
+        stopSync.give(BTStatus::OK);
+        return BTStatus::OK;
+      }
     }
     BTStatus st = stopSync.wait(5000);
+    BLELockGuard lock(mtx.get());
     if (st != BTStatus::OK || streaming) {
       log_e("BroadcastSink: timed out waiting for BIG to leave");
       return st == BTStatus::OK ? BTStatus::Fail : st;
@@ -128,6 +135,7 @@ struct BLEAudioBroadcastSink::Impl {
 
   /** @brief Hand the local code to the engine (zero-padded to 16 octets; empty clears it). */
   void pushCode() {
+    BLELockGuard lock(mtx.get());
     uint8_t bcode[BLE_AUDIO_BCODE_SIZE] = {};
     const size_t n = code.length() < sizeof(bcode) ? code.length() : sizeof(bcode);
     memcpy(bcode, code.c_str(), n);
@@ -181,23 +189,37 @@ struct BLEAudioBroadcastSink::Impl {
   BTStatus scan(bool on) {
     BLEScan sc = BLE.getScan();
     if (!on) {
+      bool wasStarted;
+      {
+        BLELockGuard lock(mtx.get());
+        wasStarted = scanStarted;
+        scanStarted = false;
+      }
       bleAudioBsinkSetScanning(false);
-      if (!scanStarted) {
+      if (!wasStarted) {
         return BTStatus::OK;
       }
-      scanStarted = false;
       return sc.stopExtended();
+    }
+    {
+      BLELockGuard lock(mtx.get());
+      if (scanStarted) {
+        return BTStatus::OK;
+      }
     }
     bleAudioBsinkSetScanning(true);
     sc.setActiveScan(false);
     sc.setFilterDuplicates(false);
     BTStatus st = sc.startExtended(0);
+    {
+      BLELockGuard lock(mtx.get());
+      scanStarted = (bool)st;
+    }
     if (!st) {
       log_e("BroadcastSink: scan start failed (%s)", st.toString());
       bleAudioBsinkSetScanning(false);
       return st;
     }
-    scanStarted = true;
     log_d("BroadcastSink: scanning for broadcast sources");
     return BTStatus::OK;
   }
@@ -217,11 +239,14 @@ struct BLEAudioBroadcastSink::Impl {
     } else {
       log_d("BroadcastSink: PA syncing to 0x%06lX (%s sid=%u)", (unsigned long)broadcastId, addr.toString().c_str(), sid);
     }
-    syncPending = (bool)st;
+    {
+      BLELockGuard lock(mtx.get());
+      syncPending = (bool)st;
+    }
     return st;
   }
 
-  /** @brief Auto-sync filter: every configured criterion must match. */
+  /** @brief Auto-sync filter: every configured criterion must match. The caller holds mtx. */
   bool matches(const BLEAudioBroadcastSourceInfo &s) const {
     return (!targetId || s.broadcastId == targetId) && (!targetName.length() || s.name == targetName);
   }
@@ -240,30 +265,50 @@ struct BLEAudioBroadcastSink::Impl {
         info.broadcastId = f->broadcast_id;
         info.name = f->name;
         info.rssi = f->rssi;
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::foundCb)) {
+        SourceFoundCallback cb;
+        bool trySync;
+        {
+          BLELockGuard lock(mtx.get());
+          cb = foundCb;
+          trySync = autoSync && running && !syncPending && !synced && matches(info);
+        }
+        if (cb) {
           cb(info);
         }
-        if (autoSync && running && !syncPending && !synced && matches(info)) {
+        if (trySync) {
           (void)sync(info.address, info.sid, info.broadcastId);
         }
         break;
       }
-      case BLE_AUDIO_EVT_BSINK_PA_SYNCED:
-        syncPending = false;
-        synced = (e.err == 0);
-        if (synced) {
+      case BLE_AUDIO_EVT_BSINK_PA_SYNCED: {
+        Callback cb;
+        bool ok;
+        {
+          BLELockGuard lock(mtx.get());
+          syncPending = false;
+          synced = (e.err == 0);
+          ok = synced;
+          cb = syncedCb;
+        }
+        if (ok) {
           log_i("BroadcastSink: PA synced, waiting for the BASE");
           (void)scan(false);
-          if (auto cb = bleAudioCopyCallback(*this, &Impl::syncedCb)) {
+          if (cb) {
             cb();
           }
         } else {
           log_w("BroadcastSink: PA sync failed (status 0x%02x)", (unsigned)(uint8_t)e.err);
-          if (running) {
+          bool runningNow;
+          {
+            BLELockGuard lock(mtx.get());
+            runningNow = running;
+          }
+          if (runningNow) {
             (void)scan(true);
           }
         }
         break;
+      }
       case BLE_AUDIO_EVT_BSINK_BASE: {
         const auto *b = static_cast<const ble_audio_bsink_base_t *>(e.data);
         if (!b) {
@@ -289,16 +334,24 @@ struct BLEAudioBroadcastSink::Impl {
           cb();
         }
         break;
-      case BLE_AUDIO_EVT_BSINK_PA_LOST:
-        synced = false;
-        log_w("BroadcastSink: PA sync lost (reason 0x%02x)%s", (unsigned)(uint8_t)e.err, running ? ", rescanning" : "");
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::syncLostCb)) {
+      case BLE_AUDIO_EVT_BSINK_PA_LOST: {
+        ReasonCallback cb;
+        bool runningNow;
+        {
+          BLELockGuard lock(mtx.get());
+          synced = false;
+          cb = syncLostCb;
+          runningNow = running;
+        }
+        log_w("BroadcastSink: PA sync lost (reason 0x%02x)%s", (unsigned)(uint8_t)e.err, runningNow ? ", rescanning" : "");
+        if (cb) {
           cb((uint8_t)e.err);
         }
-        if (running) {
+        if (runningNow) {
           (void)scan(true);
         }
         break;
+      }
       case BLE_AUDIO_EVT_BSINK_SYNC_FAILED:
         // -EACCES: the BIG is encrypted and the code is missing or wrong.
         log_w("BroadcastSink: BIG sync failed (err=%d)%s", e.err, e.err == -EACCES ? ": Broadcast Code missing or wrong" : "");
@@ -306,21 +359,33 @@ struct BLEAudioBroadcastSink::Impl {
           cb(e.err == -EACCES ? BTStatus::PermissionDenied : bleAudioStatus(e.err));
         }
         break;
-      case BLE_AUDIO_EVT_BSINK_STARTED:
-        streaming = true;
+      case BLE_AUDIO_EVT_BSINK_STARTED: {
+        Callback cb;
+        {
+          BLELockGuard lock(mtx.get());
+          streaming = true;
+          cb = startedCb;
+        }
         log_i("BroadcastSink: BIG joined, %u streams", (unsigned)streams.size());
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::startedCb)) {
+        if (cb) {
           cb();
         }
         break;
-      case BLE_AUDIO_EVT_BSINK_STOPPED:
-        streaming = false;
+      }
+      case BLE_AUDIO_EVT_BSINK_STOPPED: {
+        ReasonCallback cb;
+        {
+          BLELockGuard lock(mtx.get());
+          streaming = false;
+          cb = stoppedCb;
+        }
         log_i("BroadcastSink: BIG left (reason 0x%02x)", (unsigned)(uint8_t)e.err);
         stopSync.give(BTStatus::OK);
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::stoppedCb)) {
+        if (cb) {
           cb((uint8_t)e.err);
         }
         break;
+      }
       case BLE_AUDIO_EVT_BSINK_PA_REQ: {
         // An assistant selected a source: sync to it directly, or wait for it
         // to transfer its own sync over the connection (PAST). The PAST
@@ -338,12 +403,15 @@ struct BLEAudioBroadcastSink::Impl {
           BLEScan sc = BLE.getScan();
           st = sc.createPeriodicSync(BTAddress(r->addr, static_cast<BTAddress::Type>(r->addr_type)), r->sid, 0, kPaSyncTimeoutMs);
         }
+        {
+          BLELockGuard lock(mtx.get());
+          syncPending = (bool)st;
+        }
         if (!st) {
           log_w("BroadcastSink: assistant sync request for 0x%06lX failed (%s)", (unsigned long)r->broadcast_id, st.toString());
         } else {
           log_d("BroadcastSink: assistant sync to 0x%06lX via %s", (unsigned long)r->broadcast_id, r->past ? "PAST" : "scan");
         }
-        syncPending = (bool)st;
         *r->reply = st ? 0 : -EIO;
         break;
       }
@@ -367,17 +435,21 @@ BLEAudioBroadcastSink::operator bool() const {
 }
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setStreams(uint8_t count) {
-  if (_impl && !_impl->applied) {
-    _impl->streamCount = count < 1 ? 1 : (count > 2 ? 2 : count);
-    _impl->resizeStreams();
-  } else if (_impl) {
-    log_w("BroadcastSink: setStreams() ignored after audio.start()");
+  if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
+    if (!_impl->applied) {
+      _impl->streamCount = count < 1 ? 1 : (count > 2 ? 2 : count);
+      _impl->resizeStreams();
+    } else {
+      log_w("BroadcastSink: setStreams() ignored after audio.start()");
+    }
   }
   return *this;
 }
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setSupportedPresets(uint32_t presetMask) {
   if (_impl && presetMask) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->presets = presetMask;
   }
   return *this;
@@ -385,6 +457,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setSupportedPresets(uint32_t prese
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setLocation(BLEAudioLocation location) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->location = location;
   }
   return *this;
@@ -392,6 +465,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setLocation(BLEAudioLocation locat
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setContexts(BLEAudioContext contexts) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->contexts = contexts;
   }
   return *this;
@@ -399,6 +473,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setContexts(BLEAudioContext contex
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setScanDelegator(bool enable) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->delegator = enable;
   }
   return *this;
@@ -410,11 +485,16 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setScanDelegator(bool enable) {
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setBroadcastCode(const String &code) {
   if (_impl) {
-    if (code.length() > BLE_AUDIO_BCODE_SIZE) {
-      log_w("BroadcastSink: Broadcast Code truncated to %u characters", BLE_AUDIO_BCODE_SIZE);
+    bool applied;
+    {
+      BLELockGuard lock(_impl->mtx.get());
+      if (code.length() > BLE_AUDIO_BCODE_SIZE) {
+        log_w("BroadcastSink: Broadcast Code truncated to %u characters", BLE_AUDIO_BCODE_SIZE);
+      }
+      _impl->code = code;
+      applied = _impl->applied;
     }
-    _impl->code = code;
-    if (_impl->applied) {
+    if (applied) {
       _impl->pushCode();
     }
   }
@@ -423,6 +503,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setBroadcastCode(const String &cod
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setTargetName(const String &name) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->targetName = name;
   }
   return *this;
@@ -430,6 +511,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setTargetName(const String &name) 
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setTargetBroadcastId(uint32_t broadcastId) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->targetId = broadcastId & 0xFFFFFF;
   }
   return *this;
@@ -445,6 +527,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setBisMask(uint32_t mask) {
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setAutoSync(bool enable) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->autoSync = enable;
   }
   return *this;
@@ -463,16 +546,30 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::configureAuracast(const String &ta
 // --------------------------------------------------------------------------
 
 BTStatus BLEAudioBroadcastSink::start() {
-  if (!_impl || !_impl->applied) {
-    log_e("BroadcastSink: start() before audio.start()");
+  if (!_impl) {
     return BTStatus::InvalidState;
   }
-  if (_impl->running && (_impl->synced || _impl->scanStarted)) {
+  bool already;
+  bool synced;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    if (!_impl->applied) {
+      log_e("BroadcastSink: start() before audio.start()");
+      return BTStatus::InvalidState;
+    }
+    already = _impl->running && (_impl->synced || _impl->scanStarted);
+    synced = _impl->synced;
+    if (!already) {
+      _impl->running = true;
+    }
+  }
+  if (already) {
     return BTStatus::OK;
   }
-  BTStatus st = _impl->synced ? BTStatus::OK : _impl->scan(true);
-  if (st) {
-    _impl->running = true;
+  BTStatus st = synced ? BTStatus::OK : _impl->scan(true);
+  if (!st) {
+    BLELockGuard lock(_impl->mtx.get());
+    _impl->running = false;
   }
   return st;
 }
@@ -482,9 +579,12 @@ BTStatus BLEAudioBroadcastSink::syncTo(const BLEAudioBroadcastSourceInfo &source
     log_e("BroadcastSink: syncTo() before audio.start()");
     return BTStatus::InvalidState;
   }
-  if (_impl->syncPending || _impl->synced) {
-    log_w("BroadcastSink: syncTo() while a sync is pending or established; stop() first");
-    return BTStatus::InvalidState;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    if (_impl->syncPending || _impl->synced) {
+      log_w("BroadcastSink: syncTo() while a sync is pending or established; stop() first");
+      return BTStatus::InvalidState;
+    }
   }
   return _impl->sync(source.address, source.sid, source.broadcastId);
 }
@@ -497,7 +597,10 @@ BTStatus BLEAudioBroadcastSink::stop() {
   if (!_impl) {
     return BTStatus::InvalidState;
   }
-  _impl->running = false;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    _impl->running = false;
+  }
   (void)_impl->scan(false);
   int err = bleAudioBsinkStop();
   if (err != 0) {
@@ -509,21 +612,32 @@ BTStatus BLEAudioBroadcastSink::stop() {
     return st;
   }
   BLEScan sc = BLE.getScan();
-  if (_impl->syncPending) {
+  bool pending;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    pending = _impl->syncPending;
+  }
+  if (pending) {
     (void)sc.cancelPeriodicSyncCreate();
-    _impl->syncPending = false;
   }
   const uint16_t sh = bleAudioBsinkSyncHandle();
   if (sh != 0xFFFF) {
     (void)sc.terminatePeriodicSync(sh);
   }
-  _impl->synced = false;
-  _impl->syncPending = false;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    _impl->synced = false;
+    _impl->syncPending = false;
+  }
   return BTStatus::OK;
 }
 
 bool BLEAudioBroadcastSink::isStreaming() const {
-  return _impl && _impl->streaming;
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return _impl->streaming;
 }
 
 // --------------------------------------------------------------------------
@@ -531,11 +645,19 @@ bool BLEAudioBroadcastSink::isStreaming() const {
 // --------------------------------------------------------------------------
 
 size_t BLEAudioBroadcastSink::streamCount() const {
-  return _impl ? _impl->streams.size() : 0;
+  if (!_impl) {
+    return 0;
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return _impl->streams.size();
 }
 
 BLEAudioStream BLEAudioBroadcastSink::stream(size_t index) const {
-  return (_impl && index < _impl->streams.size()) ? _impl->streams[index] : BLEAudioStream();
+  if (!_impl) {
+    return BLEAudioStream();
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return index < _impl->streams.size() ? _impl->streams[index] : BLEAudioStream();
 }
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::onSourceFound(SourceFoundCallback cb) {
