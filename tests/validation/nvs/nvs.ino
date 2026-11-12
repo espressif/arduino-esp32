@@ -2,8 +2,8 @@
  * NVS/Preferences Validation Test
  *
  * Covers: all typed put/get (Char, UChar, Short, UShort, Int, UInt, Long,
- * ULong, Long64, ULong64, Float, Double, Bool), String (String + char*),
- * Bytes/struct, isKey, getType, freeEntries, remove, clear,
+ * ULong, Long64, ULong64, Float, Double, Bool), String (String, char*, and
+ * std::string), Bytes/struct, isKey, getType, freeEntries, remove, clear,
  * multi-namespace isolation, and persistence across reboots.
  *
  * Persistence test: Python restarts the device after phase 1 and
@@ -12,6 +12,8 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
+
+#include <string>
 
 #include <unity.h>
 
@@ -142,6 +144,26 @@ void test_string_cstr(void) {
   size_t len = prefs.getString("sc", buf, sizeof(buf));
   TEST_ASSERT_GREATER_THAN(0, len);
   TEST_ASSERT_EQUAL_STRING(val, buf);
+  prefs.end();
+}
+
+void test_string_std(void) {
+  prefs.begin("test-str", false);
+  std::string val = "std::string test";
+  TEST_ASSERT_TRUE(prefs.putString("ss", val));
+  TEST_ASSERT_EQUAL(PT_STR, prefs.getType("ss"));
+
+  std::string got = prefs.getString("ss", std::string("missing"));
+  TEST_ASSERT_EQUAL_STRING(val.c_str(), got.c_str());
+  // The same NVS string is visible to the Arduino String getter.
+  TEST_ASSERT_EQUAL_STRING(val.c_str(), prefs.getString("ss", "").c_str());
+
+  std::string missing = prefs.getString("no-ss", std::string("fallback"));
+  TEST_ASSERT_EQUAL_STRING("fallback", missing.c_str());
+
+  // A string literal still selects the Arduino String overload.
+  String literal = prefs.getString("ss", "literal-default");
+  TEST_ASSERT_EQUAL_STRING(val.c_str(), literal.c_str());
   prefs.end();
 }
 
@@ -333,6 +355,7 @@ void setup() {
     RUN_TEST(test_bool);
     RUN_TEST(test_string_object);
     RUN_TEST(test_string_cstr);
+    RUN_TEST(test_string_std);
     RUN_TEST(test_bytes);
     RUN_TEST(test_struct);
     RUN_TEST(test_is_key);

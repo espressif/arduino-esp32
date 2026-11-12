@@ -29,14 +29,17 @@ void setup() {
   }
   schedule_t *schedule = (schedule_t *)buffer;  // cast the bytes into a struct ptr
   Serial.printf("%02u:%02u %u/%u\n", schedule[1].hour, schedule[1].minute, schedule[1].setting1, schedule[1].setting2);
-  schedule[2] = {8, 30, 20, 21};  // add a third entry (unsafely)
-                                  // force the struct array into a byte array
-  prefs.putBytes("schedule", schedule, 3 * sizeof(schedule_t));
+
+  schedule_t updated[3];
+  updated[0] = schedule[0];
+  updated[1] = schedule[1];
+  updated[2] = {8, 30, 20, 21};
+  prefs.putBytes("schedule", updated, sizeof(updated));
   schLen = prefs.getBytesLength("schedule");
   char buffer2[schLen];
   prefs.getBytes("schedule", buffer2, schLen);
-  for (int x = 0; x < schLen; x++) {
-    Serial.printf("%02X ", buffer[x]);
+  for (int x = 0; x < (int)schLen; x++) {
+    Serial.printf("%02X ", (unsigned)(uint8_t)buffer2[x]);
   }
   Serial.println();
 }

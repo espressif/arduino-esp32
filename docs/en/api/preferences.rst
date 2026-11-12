@@ -82,11 +82,13 @@ Preferences directly supports the following data types:
    |                   | const char*       | variable      |
    | String            +-------------------+               |
    |                   | String            |               |
+   |                   +-------------------+               |
+   |                   | std::string       |               |
    +-------------------+-------------------+---------------+
    | Bytes             | uint8_t           | variable      |
    +-------------------+-------------------+---------------+
 
-String values can be stored and retrieved either as an Arduino String or as a null terminated ``char`` array (c-string).
+String values can be stored and retrieved as an Arduino ``String``, a ``std::string``, or a null terminated ``char`` array (c-string). All three write and read the same NVS string entry. A ``std::string`` is stored through ``c_str()``, so the saved text stops at the first null character.
 
 Bytes type is used for storing and retrieving an arbitrary number of bytes in a namespace.
 
@@ -363,6 +365,7 @@ Arduino-esp32 Preferences API
 
        size_t putString(const char* key, const char* value);
        size_t putString(const char* key, String value);
+       size_t putString(const char* key, const std::string& value);
 
    ..
 
@@ -373,6 +376,7 @@ Arduino-esp32 Preferences API
       * ``value`` (Required)
          - if ``const char*``, a null-terminated (c-string) character array.
          - if ``String``, a valid Arduino String type.
+         - if ``std::string``, a standard string. The stored bytes are ``value.c_str()``.
 
    **Returns**
       * if successful: the number of bytes stored; ``0`` otherwise.
@@ -576,19 +580,49 @@ Arduino-esp32 Preferences API
 .. code-block:: arduino
 
     String getString(const char* key, String defaultValue = String());
+    String getString(const char* key, const char* defaultValue);
 
 ..
 
    **Parameters**
       * ``key`` (Required)
-      * ``defaultValue`` (Optional)
+      * ``defaultValue`` (Optional for the ``String`` overload)
+         - ``String``, or a null-terminated ``char`` array. A string literal uses the ``const char*`` overload.
 
    **Returns**
       * the value stored against ``key`` if the call if successful
       * if the method fails: it returns ``defaultValue``, if provided; ``""`` (an empty String) otherwise.
 
    **Notes**
-      * ``defaultValue`` must be of type ``String``.
+      * ``getString(key)`` returns an Arduino ``String``.
+      * ``getString(key, "literal")`` also returns an Arduino ``String``. Pass a ``std::string`` to the overload below when the result should be a ``std::string``.
+
+
+``getString``
+*************
+
+   Retrieve a ``std::string`` value stored against a given key in the currently open namespace.
+
+.. code-block:: arduino
+
+    std::string getString(const char* key, const std::string& defaultValue);
+
+..
+
+   **Parameters**
+      * ``key`` (Required)
+      * ``defaultValue`` (Required)
+         - a ``std::string``, returned when the key is missing or the call fails.
+         - pass the ``std::string`` you already have. Pass ``std::string()`` when the fallback is empty, or ``std::string("fallback")`` for other text.
+         - a string literal returns an Arduino ``String`` from the overload above.
+
+   **Returns**
+      * the stored text, as a ``std::string``, when the call succeeds
+      * ``defaultValue`` when the key is missing or the call fails
+
+   **Notes**
+      * ``name = preferences.getString("name", name);``
+      * The stored value is the same NVS string written by every ``putString`` overload.
 
 
 ``getStringLength``
