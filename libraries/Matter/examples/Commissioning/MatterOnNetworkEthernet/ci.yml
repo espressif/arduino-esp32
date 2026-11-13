@@ -1,5 +1,5 @@
 fqbn_append:
-  default: PartitionScheme=huge_app
+  default: PartitionScheme=matter
   esp32c5: MatterNetwork=wifi
 
 requires:

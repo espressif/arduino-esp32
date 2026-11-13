@@ -15,6 +15,8 @@ Do not forget to rename the `sketch_file_name.ino` to `sketch_file_name.cpp` in 
 The `main/idf_component.yml` file holds the ESP-Matter component version and Arduino Core version.\
 Edit this file to set the target versions, if necessary.
 
+This IDF project uses `partitions.csv` (`fctry` and `esp_secure_cert`, application at `0x20000`). In the Arduino IDE, select **Tools → Partition Scheme → Matter 4MB with spiffs** instead. That scheme keeps the application at `0x10000`. **Huge APP (3MB No OTA/1MB SPIFFS)** is still listed and does not reserve the factory partitions.
+
 # General Instructions:
 
 1- Install the required IDF version into your computer. It can be done following the guide in

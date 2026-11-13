@@ -66,7 +66,7 @@ Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do
 ## Setup
 
 1. Set `ETH_PHY_*` and, for SPI, `ETH_SPI_*` for your module. For an EMAC board, use a variant that defines `ETH_PHY_MDC` / `ETH_PHY_MDIO`.
-2. Partition scheme: **Huge APP**. Enable **Erase All Flash Before Sketch Upload**.
+2. Partition scheme: **Matter 4MB with spiffs**. Enable **Erase All Flash Before Sketch Upload**.
 3. Serial Monitor 115200.
 4. Do not call `MDNS.begin()`.
 

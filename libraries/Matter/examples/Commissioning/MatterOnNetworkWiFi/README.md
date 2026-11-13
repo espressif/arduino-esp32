@@ -40,7 +40,7 @@ Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do
 ## Setup
 
 1. Set `ssid` and `password` in the sketch.
-2. Partition scheme: **Huge APP**. Enable **Erase All Flash Before Sketch Upload**.
+2. Partition scheme: **Matter 4MB with spiffs**. Enable **Erase All Flash Before Sketch Upload**.
 3. Serial Monitor 115200.
 
 Long-press BOOT (>5 s) to decommission the node (`Matter.decommission()`). This removes fabrics; it is not a full flash erase.

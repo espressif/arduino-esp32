@@ -22,12 +22,7 @@ Building and Flashing Matter Examples
 
 Before uploading any Matter example sketch, it is necessary to configure the Arduino IDE with the following settings:
 
-1. **Partition Scheme**: Select **"Huge APP (3 MB No OTA / 1 MB SPIFFS)"** from **Tools > Partition Scheme** menu.
-
-  .. figure:: ../../_static/matter_partition_scheme.png
-      :align: center
-      :alt: "Partition Scheme: Huge APP (3 MB No OTA / 1 MB SPIFFS)" Arduino IDE menu option
-      :figclass: align-center
+1. **Partition Scheme**: Select **"Matter 4MB with spiffs"** from **Tools > Partition Scheme** menu. A Matter sketch is about 2.6 MB, and this scheme keeps a 3 MB application partition (about 0.4 MB free). It also reserves a 24 KB ``fctry`` NVS partition for factory data and an 8 KB ``esp_secure_cert`` partition. The shipped library still uses the example DAC, so those partitions stay empty until a factory image is flashed. On a board with 8 MB of flash, select **"Matter 8MB with spiffs"** for two 3.25 MB application slots so an OTA image of the same sketch fits. **"Huge APP (3MB No OTA/1MB SPIFFS)"** remains in the menu for a 3 MB application without the factory partitions.
 
 2. **Erase Flash**: Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
 
@@ -38,7 +33,7 @@ Before uploading any Matter example sketch, it is necessary to configure the Ard
 
 These settings are required for the following reasons:
 
-* **Partition Scheme**: Matter firmware requires a large application partition (3 MB) to accommodate the Matter stack and application code.
+* **Partition Scheme**: A Matter sketch is about 2.6 MB. **Matter 4MB with spiffs** provides a 3 MB application partition, plus ``fctry`` (factory NVS) and ``esp_secure_cert``. **Matter 8MB with spiffs** provides two 3.25 MB application slots. The operational ``nvs`` partition stays 20 KB, which is the space between the partition table and the OTA data at ``0xe000``. Certification test TC-RR-1.1 asks for 48 KB of ``nvs`` when a group cluster is used; that size does not fit this flash map.
 * **Erase Flash**: Erasing flash is necessary to remove any leftover Wi-Fi or Matter configuration from the NVS (Non-Volatile Storage) partition. Without erasing, previous network credentials, Matter fabric information, or device commissioning data may interfere with the new firmware, causing commissioning failures or connectivity issues.
 
 On a ESP32 SoC that has PSRAM and PSRAM is enabled and initialized (SPIRAM heap present), the Matter data model (endpoints, clusters, attributes) is placed in PSRAM. ``ESP.getFreeHeap()`` can stay flat while ``ESP.getFreePsram()`` drops as endpoints are created; that is expected. CHIP, AES DMA bounce buffers, and NimBLE still use internal ``malloc`` / DMA. Without a SPIRAM heap the data model stays in internal RAM.
