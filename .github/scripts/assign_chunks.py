@@ -94,6 +94,27 @@ def measured_target_count(measured: dict) -> int:
     return int(statistics.median(counts)) if counts else 1
 
 
+def family_target_counts(measured: dict) -> dict[str, int]:
+    """Median number of targets per family.
+
+    Used for sketches the packer has never seen (e.g. a new example added by a
+    PR): they have no by_target data of their own, so scale the family cost by
+    the family's typical target count instead of the global one.
+    """
+    samples: dict[str, list[int]] = {}
+    for sketch, entry in (measured.get("sketches") or {}).items():
+        if not isinstance(entry, dict):
+            continue
+        count = len(entry.get("by_target") or {})
+        if count:
+            samples.setdefault(family_of(sketch), []).append(count)
+    return {
+        family: int(statistics.median(counts))
+        for family, counts in samples.items()
+        if counts
+    }
+
+
 def family_medians(measured: dict, mode: str, fallback: dict) -> dict[str, float]:
     """Median per-target cost per library family, for the requested mode."""
     key = _mode_key(mode)
@@ -172,6 +193,7 @@ def resolve_cost(
     fallback: dict,
     family: dict[str, float] | None = None,
     target_count: int | None = None,
+    family_targets: dict[str, int] | None = None,
 ) -> tuple[float, str, str]:
     """Return (seconds, source, detail).
 
@@ -184,15 +206,20 @@ def resolve_cost(
     key = _mode_key(mode)
     other = "cold_s" if mode == "warm" else "warm_s"
     entry = (measured.get("sketches") or {}).get(sketch)
+    fam = family_of(sketch)
+    med = (family or {}).get(fam)
+    if med:
+        # Family cost wins whenever the family has samples, including sketches
+        # the packer has never seen (a new example in an existing family).
+        by_target = entry.get("by_target") if isinstance(entry, dict) else None
+        targets = (
+            len(by_target or {})
+            or (family_targets or {}).get(fam)
+            or target_count
+            or measured_target_count(measured)
+        )
+        return med * targets, "family", fam
     if isinstance(entry, dict):
-        med = (family or {}).get(family_of(sketch))
-        if med:
-            targets = (
-                len(entry.get("by_target") or {})
-                or target_count
-                or measured_target_count(measured)
-            )
-            return med * targets, "family", family_of(sketch)
         got = _positive(entry.get(key))
         if got is None:
             got = _sum_by_target(entry, key)
@@ -236,9 +263,18 @@ def sketch_cost(
     fallback: dict,
     family: dict[str, float] | None = None,
     target_count: int | None = None,
+    family_targets: dict[str, int] | None = None,
 ) -> float:
     return resolve_cost(
-        sketch, mode, measured, default, prefixes, fallback, family, target_count
+        sketch,
+        mode,
+        measured,
+        default,
+        prefixes,
+        fallback,
+        family,
+        target_count,
+        family_targets,
     )[0]
 
 
@@ -416,12 +452,21 @@ def main(argv: list[str] | None = None) -> int:
     default, prefixes = fallback_tables(fallback)
     family = family_medians(measured, args.mode, fallback)
     target_count = measured_target_count(measured)
+    family_targets = family_target_counts(measured)
     costs: dict[str, float] = {}
     sources: dict[str, str] = {}
     details: dict[str, str] = {}
     for s in sketches:
         cost, source, detail = resolve_cost(
-            s, args.mode, measured, default, prefixes, fallback, family, target_count
+            s,
+            args.mode,
+            measured,
+            default,
+            prefixes,
+            fallback,
+            family,
+            target_count,
+            family_targets,
         )
         costs[s] = cost
         sources[s] = source

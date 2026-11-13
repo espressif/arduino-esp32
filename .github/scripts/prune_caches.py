@@ -147,6 +147,10 @@ def main(argv: list[str] | None = None) -> int:
             delete_cache(args.repo, args.token, cache_id, args.base_url)
             print(f"deleted {cache_id} ({reason})")
         except HTTPError as error:
+            if error.code == 404:
+                # Already gone: another run or the LRU eviction won the race.
+                print(f"cache {cache_id} already deleted")
+                continue
             failures += 1
             print(f"failed to delete {cache_id}: {error}", file=sys.stderr)
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.error import HTTPError
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -125,3 +126,36 @@ def test_summary_reports_freed_space() -> None:
     text = format_summary(caches, reasons)
     assert "to delete: 1" in text
     assert "freeing: 1300 MB" in text
+
+
+def test_already_deleted_cache_is_not_a_failure(monkeypatch) -> None:
+    import prune_caches
+
+    caches = [
+        cache(1, f"{PREFIX}-{SHA_A}", 100),
+        cache(2, f"{PREFIX}-{SHA_B}", 10),
+    ]
+    monkeypatch.setattr(prune_caches, "list_caches", lambda *a, **k: caches)
+
+    def gone(*args, **kwargs):
+        raise HTTPError("https://api.github.com", 404, "Not Found", {}, None)
+
+    monkeypatch.setattr(prune_caches, "delete_cache", gone)
+    # 404 means another run or the LRU eviction got there first.
+    assert prune_caches.main(["--repo", "o/r", "--token", "t"]) == 0
+
+
+def test_real_delete_error_still_fails(monkeypatch) -> None:
+    import prune_caches
+
+    caches = [
+        cache(1, f"{PREFIX}-{SHA_A}", 100),
+        cache(2, f"{PREFIX}-{SHA_B}", 10),
+    ]
+    monkeypatch.setattr(prune_caches, "list_caches", lambda *a, **k: caches)
+
+    def denied(*args, **kwargs):
+        raise HTTPError("https://api.github.com", 403, "Forbidden", {}, None)
+
+    monkeypatch.setattr(prune_caches, "delete_cache", denied)
+    assert prune_caches.main(["--repo", "o/r", "--token", "t"]) == 1

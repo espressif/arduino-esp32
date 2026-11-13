@@ -483,6 +483,10 @@ jobs:
       # ref and prefix is always kept, and abandoned branches age out (7 days).
       - name: Prune older ccache generations
         if: steps.merge.outputs.has_cache == 'true' && steps.save-ccache.outcome == 'success'
+        # Cleanup only: a failed delete must not fail the run that just saved
+        # the cache. 404s are expected (LRU eviction races with the listing)
+        # and are already handled by the script.
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 .github/scripts/prune_caches.py --repo "$GITHUB_REPOSITORY" --min-age-hours 0

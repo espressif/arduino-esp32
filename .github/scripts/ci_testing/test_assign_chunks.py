@@ -13,6 +13,7 @@ from assign_chunks import (  # noqa: E402
     resolve_cost,
     fallback_tables,
     family_medians,
+    family_target_counts,
     measured_target_count,
     format_assignment_stats,
     load_affected,
@@ -371,3 +372,50 @@ def test_family_median_still_wins_over_last_sample() -> None:
     )
     # Family median (21.0) * 1 target, not the mixed 999.
     assert (cost, source) == (21.0, "family")
+
+
+def test_family_cost_applies_to_a_sketch_not_in_the_database() -> None:
+    measured = {
+        "sketches": {
+            "libraries/Matter/a/a.ino": {
+                "by_target": {"esp32": {"cold_s": 20.0}, "esp32s3": {"cold_s": 22.0}}
+            },
+            "libraries/Matter/b/b.ino": {
+                "by_target": {"esp32": {"cold_s": 18.0}, "esp32s3": {"cold_s": 19.0}}
+            },
+        }
+    }
+    family = family_medians(measured, "cold", FALLBACK)
+    targets = family_target_counts(measured)
+    cost, source, _ = resolve_cost(
+        "libraries/Matter/brand_new/brand_new.ino",
+        "cold",
+        measured,
+        DEFAULT,
+        PREFIXES,
+        FALLBACK,
+        family,
+        None,
+        targets,
+    )
+    # Family median (19.5) * the family's 2 targets, not the prefix fallback.
+    assert (cost, source) == (39.0, "family")
+
+
+def test_family_target_count_is_used_for_narrow_families() -> None:
+    measured = {
+        "sketches": {
+            "libraries/ESP_SR/a/a.ino": {"by_target": {"esp32s3": {"cold_s": 30.0}}},
+            "libraries/ESP_SR/b/b.ino": {"by_target": {"esp32s3": {"cold_s": 32.0}}},
+            "libraries/Matter/c/c.ino": {
+                "by_target": {"esp32": {"cold_s": 20.0}, "esp32s3": {"cold_s": 22.0}}
+            },
+        }
+    }
+    family = family_medians(measured, "cold", FALLBACK)
+    targets = family_target_counts(measured)
+    assert targets == {"ESP_SR": 1, "Matter": 2}
+    cost, _, _ = resolve_cost(
+        "libraries/ESP_SR/new/new.ino", "cold", measured, DEFAULT, PREFIXES, FALLBACK, family, None, targets
+    )
+    assert cost == 31.0
