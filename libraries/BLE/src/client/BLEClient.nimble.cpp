@@ -118,6 +118,7 @@ BTStatus BLEClient::connect(const BTAddress &address, uint32_t timeoutMs) {
 
   {
     BLELockGuard lock(impl.mtx);
+    impl.pendingMtuValue = 0;
     impl.nimbleRef = _impl;
   }
 #if BLE_VALIDATION_HOOKS
@@ -212,6 +213,7 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
 
   {
     BLELockGuard lock(impl.mtx);
+    impl.pendingMtuValue = 0;
     impl.nimbleRef = _impl;
   }
   int rc = ble_gap_ext_connect(
@@ -302,6 +304,7 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
 
   {
     BLELockGuard lock(impl.mtx);
+    impl.pendingMtuValue = 0;
     impl.nimbleRef = _impl;
   }
   int rc = ble_gap_ext_connect(
@@ -670,6 +673,41 @@ BTStatus BLEClient::setDataLen(uint16_t txOctets, uint16_t txTime) {
 }
 
 // --------------------------------------------------------------------------
+// MTU events
+// --------------------------------------------------------------------------
+
+/**
+ * @brief Handles a BLE_GAP_EVENT_MTU for this client.
+ *
+ * A peripheral can start the ATT MTU exchange right after the link is up, and
+ * NimBLE delivers BLE_GAP_EVENT_CONNECT only after reading the peer's LL
+ * feature set and version. The MTU event can therefore arrive before
+ * @c connHandle is published. Latch the value and replay it from the CONNECT
+ * handler after onConnect (DESIGN.md ordering contract) so onMtuChanged is not
+ * lost for that connection.
+ */
+void BLEClient::Impl::handleMtuEvent(uint16_t handle, uint16_t value) {
+  {
+    BLELockGuard lock(mtx);
+    if (handle != connHandle) {
+      if (!connected && nimbleRef) {
+        pendingMtuValue = value;
+        log_d("Client: latched pre-CONNECT MTU %u handle=%u", value, handle);
+      }
+      return;
+    }
+  }
+
+  struct ble_gap_conn_desc desc;
+  if (ble_gap_conn_find(handle, &desc) != 0) {
+    return;
+  }
+
+  log_d("Client: MTU changed, handle=%u mtu=%u", handle, value);
+  dispatchMtuChanged(BLEConnInfoImpl::fromDesc(desc), value);
+}
+
+// --------------------------------------------------------------------------
 // GAP event handler
 // --------------------------------------------------------------------------
 
@@ -710,6 +748,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           BLELockGuard lock(impl->mtx);
           impl->connected = false;
           impl->connHandle = BLE_HS_CONN_HANDLE_NONE;
+          impl->pendingMtuValue = 0;
           dying = std::move(impl->nimbleRef);
         }
         impl->connectSync.give(BTStatus::Fail);
@@ -717,6 +756,17 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         (void)dying;
         return 0;
       }
+
+#if BLE_VALIDATION_HOOKS
+      if (BLEHooks.client.injectPeerMtuBeforeConnect) {
+        // Deterministic peer-first MTU ordering for the validation suite: queue
+        // our own exchange (sets BLE_L2CAP_CHAN_F_TXED_MTU, so connect()'s later
+        // attempt gets BLE_HS_EALREADY) and latch the result as if the peer's
+        // exchange had completed before CONNECT was delivered.
+        (void)ble_gattc_exchange_mtu(event->connect.conn_handle, nullptr, nullptr);
+        impl->handleMtuEvent(event->connect.conn_handle, ble_att_preferred_mtu());
+      }
+#endif
 
       {
         BLELockGuard lock(impl->mtx);
@@ -731,10 +781,26 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       // callback has run by the time connect() returns (ordering contract in
       // DESIGN.md).
       struct ble_gap_conn_desc desc;
-      if (ble_gap_conn_find(event->connect.conn_handle, &desc) == 0) {
-        BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(desc);
+      bool haveDesc = ble_gap_conn_find(event->connect.conn_handle, &desc) == 0;
+      BLEConnInfo connInfo;
+      if (haveDesc) {
+        connInfo = BLEConnInfoImpl::fromDesc(desc);
         impl->dispatchConnect(connInfo);
       }
+
+      // A peer-initiated MTU exchange that completed before CONNECT was
+      // delivered was latched by handleMtuEvent(); replay it after onConnect.
+      uint16_t pendingMtu;
+      {
+        BLELockGuard lock(impl->mtx);
+        pendingMtu = impl->pendingMtuValue;
+        impl->pendingMtuValue = 0;
+      }
+      if (pendingMtu != 0 && haveDesc) {
+        log_d("Client: replaying pre-CONNECT MTU %u handle=%u", pendingMtu, event->connect.conn_handle);
+        impl->dispatchMtuChanged(connInfo, pendingMtu);
+      }
+
       impl->connectSync.give(BTStatus::OK);
 #if BLE_VALIDATION_HOOKS
       BLEHooks.client.nimbleRefEmptyOnConnect.store(!impl->nimbleRef, std::memory_order_relaxed);
@@ -759,6 +825,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         }
         impl->connected = false;
         impl->connHandle = BLE_HS_CONN_HANDLE_NONE;
+        impl->pendingMtuValue = 0;
         impl->clearDiscoveredServices();
         dying = std::move(impl->nimbleRef);
       }
@@ -793,23 +860,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
     case BLE_GAP_EVENT_MTU:
     {
-      {
-        BLELockGuard lock(impl->mtx);
-        if (event->mtu.conn_handle != impl->connHandle) {
-          return 0;
-        }
-      }
-
-      struct ble_gap_conn_desc desc;
-      int rc = ble_gap_conn_find(event->mtu.conn_handle, &desc);
-      if (rc != 0) {
-        return 0;
-      }
-
-      BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(desc);
-
-      log_d("Client: MTU changed, handle=%u mtu=%u", event->mtu.conn_handle, event->mtu.value);
-      impl->dispatchMtuChanged(connInfo, event->mtu.value);
+      impl->handleMtuEvent(event->mtu.conn_handle, event->mtu.value);
       return 0;
     }
 
