@@ -2224,6 +2224,42 @@ void setup() {
       Serial.printf("[CLIENT] Phase16 lookup staleGone=%d\n", (int)staleGone);
       BLE.setMTU(512);
       delay(1000);
+
+      // Peer-initiated ATT MTU exchange before CONNECT (issue #13104).
+      // NimBLE delivers BLE_GAP_EVENT_CONNECT only after the LL feature/version
+      // reads, so a peer can finish the MTU exchange first. The library must
+      // still connect and must not lose onMtuChanged (replayed after onConnect).
+      // The hook reproduces that flag/ordering deterministically on NimBLE; on
+      // Bluedroid this is a plain reconnect and the same callbacks are asserted.
+      clientMtuChanged = false;
+      clientMtuLast = 0;
+      clientConnectFired = false;
+      clientMtuAfterConnect = false;
+#if BLE_VALIDATION_HOOKS
+      BLEHooks.client.injectPeerMtuBeforeConnect.store(true, std::memory_order_release);
+#endif
+      BLEClient mc = BLE.createClient();
+      installClientCallbacks(mc);
+      mc.setMTU(247);
+      BTStatus ms = mc.connect(targetAddr);
+      unsigned long pmDeadline = millis() + 3000;
+      while (ms && mc.getMTU() != 247 && millis() < pmDeadline) {
+        checkSerial();
+        delay(20);
+      }
+#if BLE_VALIDATION_HOOKS
+      BLEHooks.client.injectPeerMtuBeforeConnect.store(false, std::memory_order_release);
+#endif
+      Serial.printf(
+        "[CLIENT] Phase16 peerMtuFirst connect=%d mtu=%u seen=%d order=%d\n", (int)(bool)ms, (unsigned)mc.getMTU(), (int)clientMtuChanged,
+        (int)clientMtuAfterConnect
+      );
+      if (ms) {
+        mc.disconnect();
+      }
+      delay(500);
+      BLE.setMTU(512);
+      delay(500);
     }
     Serial.println("[CLIENT] Phase16 done");
   }

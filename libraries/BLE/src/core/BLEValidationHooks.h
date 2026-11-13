@@ -99,6 +99,10 @@ public:
     std::atomic<bool> nimbleRefAssigned{false};
     std::atomic<bool> nimbleRefEmptyOnConnect{false};
     std::atomic<bool> resetWhileConnected{false};
+    // Queues the ATT MTU exchange inside the CONNECT event, before the client
+    // publishes the connection handle, so the library's later exchange returns
+    // BLE_HS_EALREADY with a pre-CONNECT MTU result to latch (peer-first case).
+    std::atomic<bool> injectPeerMtuBeforeConnect{false};
   } client;
 
   struct Security {

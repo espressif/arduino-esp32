@@ -694,7 +694,9 @@ def _phase_conninfo_and_params(server, client):
     m_order = client.expect(r"\[CLIENT\] MtuOrder afterConnect=([01]) mtuSeen=([01])", timeout=10)
     assert int(m_order.group(2)) == 1, "client onMtuChanged never fired — MTU exchange did not complete"
     assert int(m_order.group(1)) == 1, "onMtuChanged fired before onConnect — MTU exchange ordering contract violated"
-    m_past = client.expect(r"\[CLIENT\] Phase16 past supported=([01])(?: arm=([01]) bogus=([01]) cancel=([01]))?", timeout=10)
+    m_past = client.expect(
+        r"\[CLIENT\] Phase16 past supported=([01])(?: arm=([01]) bogus=([01]) cancel=([01]))?\r?\n", timeout=10
+    )
     if int(m_past.group(1)) == 1:
         assert int(m_past.group(2)) == 1, "client PAST receive failed for a live connection handle"
         assert int(m_past.group(3)) == 0, "client PAST receive accepted an unknown connection handle"
@@ -713,6 +715,14 @@ def _phase_conninfo_and_params(server, client):
     assert int(m_past_info.group(1)) == 1 and int(m_past_info.group(2)) == 1, "client role-aware PAST overload failed"
     m_stale = client.expect(r"\[CLIENT\] Phase16 lookup staleGone=([01])", timeout=10)
     assert int(m_stale.group(1)) == 1, "client lookup retained a stale connection after disconnect"
+    # Peer-initiated MTU exchange before CONNECT (issue #13104): the peer can
+    # finish the ATT exchange before NimBLE delivers CONNECT. connect() must
+    # succeed (BLE_HS_EALREADY is not fatal) and onMtuChanged must not be lost.
+    m_pmtu = client.expect(r"\[CLIENT\] Phase16 peerMtuFirst connect=([01]) mtu=(\d+) seen=([01]) order=([01])", timeout=15)
+    assert int(m_pmtu.group(1)) == 1, "peer-initiated MTU before CONNECT broke client connect()"
+    assert int(m_pmtu.group(2)) == 247, f"peer-initiated MTU negotiated {m_pmtu.group(2)} != 247"
+    assert int(m_pmtu.group(3)) == 1, "onMtuChanged was lost for a peer-initiated MTU completed before CONNECT"
+    assert int(m_pmtu.group(4)) == 1, "onMtuChanged fired before onConnect for a peer-initiated MTU"
     client.expect_exact("[CLIENT] Phase16 done", timeout=10)
 
     server.expect_exact("[SERVER] Phase16 waiting for peer", timeout=15)
@@ -737,7 +747,9 @@ def _phase_conninfo_and_params(server, client):
     assert int(m_gci.group(4)) == 0, "getConnInfo(bogus handle) unexpectedly returned a valid snapshot"
     assert int(m_gci.group(5)) == 1, "getConnInfo did not reflect the refreshed (post-exchange) MTU"
     assert int(m_gci.group(6)) == 1, "getConnInfo did not reflect the refreshed connection parameters"
-    m_past_s = server.expect(r"\[SERVER\] Phase16 past supported=([01])(?: arm=([01]) bogus=([01]) cancel=([01]))?", timeout=10)
+    m_past_s = server.expect(
+        r"\[SERVER\] Phase16 past supported=([01])(?: arm=([01]) bogus=([01]) cancel=([01]))?\r?\n", timeout=10
+    )
     if int(m_past_s.group(1)) == 1:
         assert int(m_past_s.group(2)) == 1, "server PAST receive failed for a live connection handle"
         assert int(m_past_s.group(3)) == 0, "server PAST receive accepted an unknown connection handle"
