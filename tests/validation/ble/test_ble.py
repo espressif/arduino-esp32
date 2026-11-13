@@ -722,11 +722,22 @@ def _phase_conninfo_and_params(server, client):
     # Peer-initiated MTU exchange before CONNECT (issue #13104): the peer can
     # finish the ATT exchange before NimBLE delivers CONNECT. connect() must
     # succeed (BLE_HS_EALREADY is not fatal) and onMtuChanged must not be lost.
-    m_pmtu = client.expect(r"\[CLIENT\] Phase16 peerMtuFirst connect=([01]) mtu=(\d+) seen=([01]) order=([01])", timeout=15)
-    assert int(m_pmtu.group(1)) == 1, "peer-initiated MTU before CONNECT broke client connect()"
-    assert int(m_pmtu.group(2)) == 247, f"peer-initiated MTU negotiated {m_pmtu.group(2)} != 247"
-    assert int(m_pmtu.group(3)) == 1, "onMtuChanged was lost for a peer-initiated MTU completed before CONNECT"
-    assert int(m_pmtu.group(4)) == 1, "onMtuChanged fired before onConnect for a peer-initiated MTU"
+    # On Bluedroid the request cannot win that race the same way, so the hook
+    # forces the connect-time MTU request to fail instead: connect() must still
+    # succeed (no onMtuChanged follows because no exchange is started).
+    m_pmtu = client.expect(
+        r"\[CLIENT\] Phase16 peerMtuFirst mode=(\S+) connect=([01]) service=([01]) mtu=(\d+) seen=([01]) order=([01])", timeout=15
+    )
+    pm_mode = m_pmtu.group(1).decode()
+    assert pm_mode in ("nimble", "bluedroid-mtu-fail"), f"unexpected peer-first MTU mode: {pm_mode}"
+    assert int(m_pmtu.group(2)) == 1, "peer-initiated MTU before CONNECT broke client connect()"
+    assert int(m_pmtu.group(3)) == 1, "service discovery failed after a peer-initiated MTU exchange"
+    if pm_mode == "nimble":
+        assert int(m_pmtu.group(4)) == 247, f"peer-initiated MTU negotiated {m_pmtu.group(4)} != 247"
+        assert int(m_pmtu.group(5)) == 1, "onMtuChanged was lost for a peer-initiated MTU completed before CONNECT"
+        assert int(m_pmtu.group(6)) == 1, "onMtuChanged fired before onConnect for a peer-initiated MTU"
+    else:
+        assert int(m_pmtu.group(5)) == 0, "forced connect-time MTU send failure must not produce onMtuChanged"
     client.expect_exact("[CLIENT] Phase16 done", timeout=10)
 
     server.expect_exact("[SERVER] Phase16 waiting for peer", timeout=15)

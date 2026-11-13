@@ -103,6 +103,10 @@ public:
     // publishes the connection handle, so the library's later exchange returns
     // BLE_HS_EALREADY with a pre-CONNECT MTU result to latch (peer-first case).
     std::atomic<bool> injectPeerMtuBeforeConnect{false};
+    // Forces the Bluedroid connect-time esp_ble_gattc_send_mtu_req() to be
+    // treated as failed, proving connect() still succeeds when the MTU
+    // exchange cannot be started (peer-first worst case).
+    std::atomic<bool> injectMtuSendFailure{false};
   } client;
 
   struct Security {

@@ -39,7 +39,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 13 | blestream | NUS ownership rejection, failed-client-begin paired connect/disconnect callbacks, writeTo/onData/peers, ping/pong, peek, bulk, full `end()` cleanup + re-begin, disconnect-race terminal handling, callback-context `end()` vs in-flight `writeChunks` handle reset, callback-context `end()` deferral/restart, final-public-owner destruction from a stack callback, deterministic worker/teardown failure recovery with admission held closed, and partial-start cleanup ownership/recovery |
 | 14 | l2cap_coc | L2CAP CoC connect + echo |
 | 15 | introspection_and_permissions | client introspection, fail-closed masking, descriptor perms |
-| 16 | conninfo_and_params | `BLEConnInfo` matrix + MTU / conn-params callbacks + ordering + **peer-initiated MTU completed before CONNECT must not break `connect()` or lose `onMtuChanged`** |
+| 16 | conninfo_and_params | `BLEConnInfo` matrix + MTU / conn-params callbacks + ordering + **peer-initiated MTU before CONNECT must not break `connect()` or lose `onMtuChanged` (NimBLE); a connect-time MTU send failure must not break `connect()` (Bluedroid)** |
 | 17 | address_types | every `BTAddress::Type` + Public/Random connect roundtrip |
 | 18 | authorization | app-level authorization approve/deny of writes |
 | 19 | encrypted_perm_enforcement | encrypted characteristic read/write over paired link |

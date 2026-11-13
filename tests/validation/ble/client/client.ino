@@ -2229,30 +2229,44 @@ void setup() {
       // NimBLE delivers BLE_GAP_EVENT_CONNECT only after the LL feature/version
       // reads, so a peer can finish the MTU exchange first. The library must
       // still connect and must not lose onMtuChanged (replayed after onConnect).
-      // The hook reproduces that flag/ordering deterministically on NimBLE; on
-      // Bluedroid this is a plain reconnect and the same callbacks are asserted.
+      // On NimBLE the hook reproduces that flag/ordering deterministically. On
+      // Bluedroid the equivalent worst case is the MTU request failing to start
+      // (for example because the peer got there first): connect() must still
+      // succeed even though no onMtuChanged can follow.
       clientMtuChanged = false;
       clientMtuLast = 0;
       clientConnectFired = false;
       clientMtuAfterConnect = false;
-#if BLE_VALIDATION_HOOKS
+      const char *pmMode = "no-hooks";
+#if BLE_VALIDATION_HOOKS && BLE_NIMBLE
       BLEHooks.client.injectPeerMtuBeforeConnect.store(true, std::memory_order_release);
+      pmMode = "nimble";
+#elif BLE_VALIDATION_HOOKS && BLE_BLUEDROID
+      BLEHooks.client.injectMtuSendFailure.store(true, std::memory_order_release);
+      pmMode = "bluedroid-mtu-fail";
 #endif
       BLEClient mc = BLE.createClient();
       installClientCallbacks(mc);
       mc.setMTU(247);
       BTStatus ms = mc.connect(targetAddr);
+#if BLE_NIMBLE
       unsigned long pmDeadline = millis() + 3000;
       while (ms && mc.getMTU() != 247 && millis() < pmDeadline) {
         checkSerial();
         delay(20);
       }
+#endif
 #if BLE_VALIDATION_HOOKS
       BLEHooks.client.injectPeerMtuBeforeConnect.store(false, std::memory_order_release);
+      BLEHooks.client.injectMtuSendFailure.store(false, std::memory_order_release);
 #endif
+      bool serviceOk = false;
+      if (ms) {
+        serviceOk = (bool)mc.getService(serviceUUID);
+      }
       Serial.printf(
-        "[CLIENT] Phase16 peerMtuFirst connect=%d mtu=%u seen=%d order=%d\n", (int)(bool)ms, (unsigned)mc.getMTU(), (int)clientMtuChanged,
-        (int)clientMtuAfterConnect
+        "[CLIENT] Phase16 peerMtuFirst mode=%s connect=%d service=%d mtu=%u seen=%d order=%d\n", pmMode, (int)(bool)ms, (int)serviceOk,
+        (unsigned)mc.getMTU(), (int)clientMtuChanged, (int)clientMtuAfterConnect
       );
       if (ms) {
         mc.disconnect();

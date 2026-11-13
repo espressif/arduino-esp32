@@ -320,7 +320,11 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
   // (DESIGN.md ordering contract).
   if (impl.connected) {
     impl.mtuSync.take();
-    if (esp_ble_gattc_send_mtu_req(impl.gattcIf, impl.connId) == ESP_OK) {
+    bool forceMtuFailure = false;
+#if BLE_VALIDATION_HOOKS
+    forceMtuFailure = BLEHooks.client.injectMtuSendFailure.load(std::memory_order_relaxed);
+#endif
+    if (!forceMtuFailure && esp_ble_gattc_send_mtu_req(impl.gattcIf, impl.connId) == ESP_OK) {
       impl.mtuSync.wait(2000);
     } else {
       impl.mtuSync.give(BTStatus::Fail);
