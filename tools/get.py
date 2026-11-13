@@ -169,10 +169,58 @@ def format_time(seconds):
     return "{:02}:{:05.2f}".format(int(minutes), seconds)
 
 
-def report_progress(block_count, block_size, total_size, start_time):
-    downloaded_size = block_count * block_size
+def _format_download_progress(active):
+    """One status line for every download currently in flight."""
+    now = time.time()
+    downloaded = 0
+    total = 0
+    totals_known = True
+    speed = 0.0
+    for got, size, started in active.values():
+        elapsed = now - started
+        if size > 0:
+            shown = got if got < size else size
+            downloaded += shown
+            total += size
+            if elapsed > 0:
+                speed += shown / elapsed
+        else:
+            totals_known = False
+            downloaded += got
+            if elapsed > 0:
+                speed += got / elapsed
+
+    count = len(active)
+    label = "file" if count == 1 else "files"
+    got_mb = downloaded / 1024.0 / 1024.0
+    speed_mb = speed / 1024.0 / 1024.0
+    if totals_known and total > 0:
+        percent = min((downloaded / float(total)) * 100.0, 100.0)
+        total_mb = total / 1024.0 / 1024.0
+        left_mb = (total - downloaded) / 1024.0 / 1024.0
+        return (
+            "Downloading {0} {1}: {2:.1f}% - {3:.1f}/{4:.1f} MB - {5:.1f} MB left - {6:.2f} MB/s".format(
+                count, label, percent, got_mb, total_mb, left_mb, speed_mb
+            )
+        )
+    return "Downloading {0} {1}: {2:.1f} MB - {3:.2f} MB/s".format(count, label, got_mb, speed_mb)
+
+
+def _clear_download_progress(name):
+    clear_progress = getattr(sys.stdout, "clear_progress", None)
+    if clear_progress is not None:
+        clear_progress(name)
+
+
+def _emit_download_progress(downloaded_size, total_size, start_time):
+    # Parallel installs share one status line. Per-file carriage returns would overwrite each other.
+    note_progress = getattr(sys.stdout, "note_progress", None)
+    if note_progress is not None:
+        note_progress(getattr(_tls, "tool", None), downloaded_size, total_size, start_time)
+        return
+
     time_elapsed = time.time() - start_time
-    current_speed = downloaded_size / (time_elapsed)
+    current_speed = downloaded_size / time_elapsed if time_elapsed > 0 else 0
 
     if sys.stdout.isatty():
         if total_size > 0:
@@ -185,6 +233,10 @@ def report_progress(block_count, block_size, total_size, start_time):
                 f"\rDownloading... {downloaded_size / 1024 / 1024:.2f} MB downloaded - Elapsed Time: {format_time(time_elapsed)} - Speed: {current_speed / 1024 / 1024:.2f} MB/s"  # noqa: E501
             )
         sys.stdout.flush()
+
+
+def report_progress(block_count, block_size, total_size, start_time):
+    _emit_download_progress(block_count * block_size, total_size, start_time)
 
 
 def print_verification_progress(total_files, i, t1):
@@ -501,27 +553,31 @@ def _get_tool(
         else:
             log("Downloading")
         sys.stdout.flush()
-        if "CYGWIN_NT" in sys_name:
-            import ssl
+        try:
+            if "CYGWIN_NT" in sys_name:
+                import ssl
 
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-            urlretrieve(url, local_path, report_progress, context=ctx)
-        elif "Windows" in sys_name:
-            r = requests.get(url)
-            with open(local_path, "wb") as f:
-                f.write(r.content)
-        else:
-            is_ci = os.environ.get("GITHUB_WORKSPACE")
-            if is_ci:
-                download_file(url, local_path)
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                urlretrieve(url, local_path, report_progress, context=ctx)
+            elif "Windows" in sys_name:
+                r = requests.get(url)
+                with open(local_path, "wb") as f:
+                    f.write(r.content)
             else:
-                try:
-                    urlretrieve(url, local_path, report_progress)
-                except:  # noqa: E722
-                    download_file_with_progress(url, local_path, start_time)
-                log("Download done")
+                is_ci = os.environ.get("GITHUB_WORKSPACE")
+                if is_ci:
+                    download_file(url, local_path)
+                else:
+                    try:
+                        urlretrieve(url, local_path, report_progress)
+                    except:  # noqa: E722
+                        download_file_with_progress(url, local_path, start_time)
+                    _clear_download_progress(archive_name)
+                    log("Download done")
+        finally:
+            _clear_download_progress(archive_name)
     else:
         log("Already downloaded")
         sys.stdout.flush()
@@ -634,17 +690,65 @@ class _LockedStdio(object):
     def __init__(self, stream):
         self._stream = stream
         self._lock = threading.Lock()
+        self._active = {}
+        self._progress_width = 0
+        self._last_draw = 0.0
+        isatty = getattr(stream, "isatty", None)
+        self._show_progress = bool(isatty()) if isatty is not None else False
 
     def write(self, data):
         with self._lock:
-            return self._stream.write(data)
+            if self._progress_width:
+                self._stream.write("\r" + (" " * self._progress_width) + "\r")
+                self._progress_width = 0
+            result = self._stream.write(data)
+            if data.endswith("\n"):
+                self._draw_progress_locked()
+            return result
 
     def flush(self):
         with self._lock:
             return self._stream.flush()
 
     def isatty(self):
+        # Keep per-file "\r" updates off. Parallel progress goes through note_progress.
         return False
+
+    def note_progress(self, name, downloaded, total, start):
+        if not self._show_progress or not name:
+            return
+        with self._lock:
+            first_seen = name not in self._active
+            self._active[name] = (downloaded, total, start)
+            now = time.time()
+            # Terminal writes are slow; keep the shared line near 10 Hz.
+            if not first_seen and (now - self._last_draw) < 0.1:
+                return
+            self._last_draw = now
+            self._draw_progress_locked()
+
+    def clear_progress(self, name):
+        if not self._show_progress:
+            return
+        with self._lock:
+            if name not in self._active:
+                return
+            self._active.pop(name, None)
+            self._last_draw = time.time()
+            self._draw_progress_locked()
+
+    def _draw_progress_locked(self):
+        if not self._active:
+            if self._progress_width:
+                self._stream.write("\r" + (" " * self._progress_width) + "\r")
+                self._stream.flush()
+                self._progress_width = 0
+            return
+        text = _format_download_progress(self._active)
+        width = max(len(text), self._progress_width)
+        self._stream.write("\r" + text + (" " * (width - len(text))))
+        self._stream.flush()
+        self._progress_width = width
 
     def __getattr__(self, name):
         return getattr(self._stream, name)
