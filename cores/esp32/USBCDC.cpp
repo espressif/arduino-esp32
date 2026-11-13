@@ -27,10 +27,21 @@ esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, i
 
 USBCDC *devices[CFG_TUD_CDC];
 
+__attribute__((weak)) bool tud_cdc_0_use_notify() {
+  return false;
+}
+
 static uint16_t load_cdc_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB CDC");
+  uint8_t ep_ntfy = 0x85;
+  if (tud_cdc_0_use_notify()) {
+    uint8_t ntfy = tinyusb_get_free_in_endpoint();
+    if (ntfy) {
+      ep_ntfy = 0x80 | ntfy;
+    }
+  }
   uint8_t descriptor[TUD_CDC_DESC_LEN] = {// Interface number, string index, EP notification address and size, EP data address (out, in) and size.
-                                          TUD_CDC_DESCRIPTOR(*itf, str_index, 0x85, CFG_TUD_ENDPOINT_SIZE, 0x03, 0x84, CFG_TUD_ENDPOINT_SIZE)
+                                          TUD_CDC_DESCRIPTOR(*itf, str_index, ep_ntfy, CFG_TUD_ENDPOINT_SIZE, 0x03, 0x84, CFG_TUD_ENDPOINT_SIZE)
   };
   *itf += 2;
   memcpy(dst, descriptor, TUD_CDC_DESC_LEN);
@@ -102,7 +113,7 @@ static void usb_unplugged_cb(void *arg, esp_event_base_t event_base, int32_t eve
 
 USBCDC::USBCDC(uint8_t itfn)
   : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false), rts(false), connected(false), reboot_enable(true), rx_queue(NULL), tx_lock(NULL),
-    tx_timeout_ms(250) {
+    tx_timeout_ms(250), notify_ignore_dtr(false) {
   if (itf < CFG_TUD_CDC) {
     if (itf == 0) {
       tinyusb_enable_interface(USB_INTERFACE_CDC, TUD_CDC_DESC_LEN, load_cdc_descriptor);
@@ -455,7 +466,10 @@ uint32_t USBCDC::baudRate() {
 
 bool USBCDC::notifyState(bool dcd, bool dsr, bool brk) {
 #if CFG_TUD_CDC_NOTIFY
-  if (itf >= CFG_TUD_CDC || !tud_cdc_n_connected(itf)) {
+  if (itf >= CFG_TUD_CDC) {
+    return false;
+  }
+  if (!notify_ignore_dtr && !tud_cdc_n_connected(itf)) {
     return false;
   }
   cdc_notify_uart_state_t state;
@@ -468,6 +482,10 @@ bool USBCDC::notifyState(bool dcd, bool dsr, bool brk) {
   log_e("CFG_TUD_CDC_NOTIFY is not enabled");
   return false;
 #endif
+}
+
+void USBCDC::notifyStateIgnoreDtr(bool ignore) {
+  notify_ignore_dtr = ignore;
 }
 
 void USBCDC::setDebugOutput(bool en) {
