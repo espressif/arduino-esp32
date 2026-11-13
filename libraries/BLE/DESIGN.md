@@ -89,7 +89,7 @@ Feature guards (derived from Kconfig / SoC capabilities):
 - `BLE_ADVERTISING_SUPPORTED`: BLE advertising available
 - `BLE_VALIDATION_HOOKS`: test-only injectors (`core/BLEValidationHooks`); off in production. The validation suite enables it with `-DBLE_VALIDATION_HOOKS`.
 - `BLE5_SUPPORTED`: BLE 5.0 features (extended advertising, PHY selection, periodic advertising)
-- `BLE_PAST_SUPPORTED`: Periodic Advertising Sync Transfer receiver feature, when enabled by the selected host configuration **and** the controller implements BLE 5.1 PAST (5.0-only silicon such as ESP32-S3/C3 reports it unsupported)
+- `BLE_PAST_SUPPORTED`: Periodic Advertising Sync Transfer receiver feature, when enabled by the selected host configuration **and** the controller implements BLE 5.1 PAST (5.0-only silicon such as ESP32-S3/C3 reports it unsupported; hosted NimBLE is assumed capable because all supported hosted companions implement PAST)
 - `BLE_L2CAP_SUPPORTED`: L2CAP CoC channels; NimBLE only, requires explicit Kconfig
 - `BLE_ISO_SUPPORTED`: host isochronous transport (CIS/BIG), exposed as the `BLEIso` API (`src/iso/`). Gates the per-role guards `BLE_ISO_CIS_CENTRAL_SUPPORTED`, `BLE_ISO_CIS_PERIPHERAL_SUPPORTED`, `BLE_ISO_BROADCASTER_SUPPORTED` and `BLE_ISO_SYNC_RECEIVER_SUPPORTED` (`CONFIG_BT_ISO_CENTRAL` / `PERIPHERAL` / `BROADCASTER` / `SYNC_RECEIVER`)
 - `BLE_AUDIO_SUPPORTED`: the LE Audio engine (GAF profiles); implies ISO. Gates a family of per-role guards (`BLE_AUDIO_UNICAST_SERVER_SUPPORTED`, `BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED`, …) documented in [`AUDIO.md`](AUDIO.md)

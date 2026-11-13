@@ -88,6 +88,8 @@ always cast-free `impl.member`.
   `BLE_PAST_SUPPORTED` is set. That guard now also requires a controller that
   implements BLE 5.1 PAST (`SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED`), so BLE 5.0
   silicon (ESP32-S3/C3) returns `NotSupported` instead of failing at runtime.
+  Hosted NimBLE builds have no local controller caps and are assumed capable,
+  since all supported hosted companions implement PAST.
   They share the retained-handle admission gate with periodic sync creation,
   validate the Core skip/timeout ranges, map invalid parameters, missing ACLs,
   allocation failures, busy and disabled states to public statuses, and reject

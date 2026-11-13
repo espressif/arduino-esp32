@@ -163,9 +163,11 @@
  * HCI commands. BLE 5.0-only controllers (ESP32-S3/C3) still expose the host
  * config, so require a controller capability as well. Current controllers with
  * the later periodic-advertising feature set (SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED)
- * are exactly the ones that implement PAST; 5.0 silicon does not.
+ * are exactly the ones that implement PAST; 5.0 silicon does not. Hosted NimBLE
+ * has no local controller caps: all supported hosted companions implement PAST,
+ * so assume it is available there.
  */
-#if BLE_PERIODIC_ADV_SUPPORTED && defined(SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED) && \
+#if BLE_PERIODIC_ADV_SUPPORTED && (defined(SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)) && \
   ((BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_SYNC_TRANSFER)) || (BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER)))
 #define BLE_PAST_SUPPORTED 1
 #else
