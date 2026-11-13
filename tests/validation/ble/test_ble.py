@@ -177,6 +177,22 @@ def test_ble(dut, ci_job_id):
     server.expect_exact("[SERVER] Heap after Write-NR burst: clean", timeout=10)
     LOGGER.info("Write-NR burst verified")
 
+    # --- Peer-initiated MTU before CONNECT (issue #13104) ---
+    # The client arms a GAP listener that queues the ATT MTU exchange before
+    # BLEClient's connect handler runs (the state a peer-first exchange leaves:
+    # BLE_L2CAP_CHAN_F_TXED_MTU set). connect() must not treat the resulting
+    # BLE_HS_EALREADY from its own exchange as a failure.
+    LOGGER.info("Testing peer-initiated MTU before CONNECT...")
+    client.expect_exact("[CLIENT] Starting peer-first MTU test", timeout=10)
+    m = client.expect(r"\[CLIENT\] Peer-first MTU pre-exchange rc=(N/A|-?\d+)", timeout=10)
+    assert m.group(1) in (b"N/A", b"0"), f"peer-first MTU pre-exchange failed: rc={m.group(1)}"
+    m = client.expect(r"\[CLIENT\] Peer-first MTU connect=([01])", timeout=20)
+    assert int(m.group(1)) == 1, "connect() failed when the peer completed the MTU exchange first (BLE_HS_EALREADY treated as fatal)"
+    m = client.expect(r"\[CLIENT\] Peer-first MTU service=([01]) mtu=(\d+)", timeout=10)
+    assert int(m.group(1)) == 1, "service discovery failed after a peer-initiated MTU exchange"
+    client.expect_exact("[CLIENT] Peer-first MTU test PASSED", timeout=10)
+    LOGGER.info("Peer-first MTU before CONNECT verified")
+
     # --- Reconnection stress test (app_id collision regression, issue #12625) ---
     # The client disconnects, pre-seeds the allocator, and reconnects in a loop.
     # We only rely on client-side messages for synchronization since server periodic
