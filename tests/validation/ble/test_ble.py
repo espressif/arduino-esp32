@@ -187,7 +187,9 @@ def test_ble(dut, ci_job_id):
     m = client.expect(r"\[CLIENT\] Peer-first MTU pre-exchange rc=(N/A|-?\d+)", timeout=10)
     assert m.group(1) in (b"N/A", b"0"), f"peer-first MTU pre-exchange failed: rc={m.group(1)}"
     m = client.expect(r"\[CLIENT\] Peer-first MTU connect=([01])", timeout=20)
-    assert int(m.group(1)) == 1, "connect() failed when the peer completed the MTU exchange first (BLE_HS_EALREADY treated as fatal)"
+    assert (
+        int(m.group(1)) == 1
+    ), "connect() failed when the peer completed the MTU exchange first (BLE_HS_EALREADY treated as fatal)"
     m = client.expect(r"\[CLIENT\] Peer-first MTU service=([01]) mtu=(\d+)", timeout=10)
     assert int(m.group(1)) == 1, "service discovery failed after a peer-initiated MTU exchange"
     client.expect_exact("[CLIENT] Peer-first MTU test PASSED", timeout=10)
