@@ -81,11 +81,23 @@ Preferences directly supports the following data types:
    |                   | const char*       | variable      |
    | String            +-------------------+               |
    |                   | String            |               |
+   |                   +-------------------+               |
+   |                   | std::string       |               |
    +-------------------+-------------------+---------------+
    | Bytes             | uint8_t           | variable      |
    +-------------------+-------------------+---------------+
 
-String values can be stored and retrieved either as an Arduino String or as a null terminated ``char`` array (C-string).
+String values can be stored and retrieved as an Arduino ``String``, a ``std::string``, or a null terminated ``char`` array (C-string). All three use the same NVS string entry.
+
+Pass a ``std::string`` to ``putString``. To read one back, pass that same ``std::string`` to ``getString``. Use ``std::string()`` when the fallback is empty. ``getString(key)`` and ``getString(key, "literal")`` return an Arduino ``String``.
+
+.. code-block:: arduino
+
+   std::string name = "arduino-esp32";
+   preferences.putString("name", name);
+   name = preferences.getString("name", name);
+
+..
 
 Bytes type is used for storing and retrieving an arbitrary number of bytes in a namespace.
 
@@ -621,6 +633,8 @@ With Preferences, the ``getX`` methods listed in Table 2 below will return a def
    +------------------+-----------------+
    | String (* buf)   | \\0             |
    +------------------+-----------------+
+
+Pass a ``std::string`` fallback yourself: ``name = preferences.getString("name", name)``. Use ``std::string()`` when that fallback is empty. A missing key or a failed call returns that object.
 
 Thus to detect an error we could compare the value returned against its default return value and if they are equal assume an error occurred and take the appropriate action.
 
