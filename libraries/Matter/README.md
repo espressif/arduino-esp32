@@ -6,6 +6,10 @@ Arduino-friendly wrapper around [ESP-Matter](https://docs.espressif.com/projects
 
 On SoCs with PSRAM initialized (SPIRAM heap present), the data model (endpoints, clusters, attributes) is allocated in PSRAM so many-endpoint nodes leave internal/DMA RAM for CHIPoBLE and AES. `ESP.getFreeHeap()` can stay flat while `ESP.getFreePsram()` drops; that is expected. CHIP, AES bounce buffers, and NimBLE still use `malloc` / DMA and are not moved to PSRAM. Without a SPIRAM heap the same objects stay in internal RAM.
 
+## Partition scheme
+
+A Matter sketch is about 2.6 MB. In the Arduino IDE select **Tools → Partition Scheme → Matter 4MB with spiffs**. That scheme keeps a 3 MB application (about 0.4 MB free) and reserves `fctry` (24 KB factory NVS) and `esp_secure_cert` (8 KB). On 8 MB flash, **Matter 8MB with spiffs** provides two 3.25 MB application slots for OTA. **Huge APP (3MB No OTA/1MB SPIFFS)** stays in the menu: same 3 MB application, without the factory partitions. Enable **Erase All Flash Before Sketch Upload** when changing Matter configuration stored in `nvs`.
+
 ## Architecture
 
 Each Matter device type is represented by a C++ class under `src/MatterEndpoints/` (e.g., `MatterOnOffLight`, `MatterTemperatureSensor`, `MatterFan`). These classes manage:

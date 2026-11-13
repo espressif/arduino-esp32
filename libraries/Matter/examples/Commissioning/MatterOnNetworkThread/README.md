@@ -57,7 +57,7 @@ Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do
 ## Setup
 
 1. Copy the border router network key into `threadNetworkKey`.
-2. Partition scheme: **Huge APP**. Enable **Erase All Flash Before Sketch Upload**.
+2. Partition scheme: **Matter 4MB with spiffs**. Enable **Erase All Flash Before Sketch Upload**.
 3. Serial Monitor 115200.
 4. Do not call `MDNS.begin()`.
 

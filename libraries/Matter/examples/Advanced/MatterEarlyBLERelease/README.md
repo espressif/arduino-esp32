@@ -41,7 +41,7 @@ Arduino IDE: C5 default is **Matter Network → Wi-Fi**. C6 has no Matter Networ
 ## Setup
 
 1. After the includes: set `MATTER_EARLY_BLE_RELEASE`. For mode **1**, set `WIFI_SSID` / `WIFI_PASSWORD`.
-2. Partition scheme: **Huge APP**. Enable **Erase All Flash Before Sketch Upload**.
+2. Partition scheme: **Matter 4MB with spiffs**. Enable **Erase All Flash Before Sketch Upload**.
 3. Serial Monitor 115200. The light drives `ledPin`. After `Matter.begin()`, the sketch waits for commissioning / CASE via `matterWaitUntilReady()`. Long-press BOOT (>5 s) to decommission. `loop()` calls `matterRestartIfNoFabric()` if the hub removed the fabric.
 
 ## Related

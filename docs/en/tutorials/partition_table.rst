@@ -113,6 +113,13 @@ For example, **the most common partition** is the ``default_8MB.csv`` (see `tool
     app1,     app,  ota_1,   0x340000,0x330000,
     spiffs,   data, spiffs,  0x670000,0x190000,
 
+Matter
+------
+
+``tools/partitions/matter.csv`` is the **Matter 4MB with spiffs** menu entry. A Matter sketch is about 2.6 MB, so the application partition stays 3 MB (about 0.4 MB free). The scheme also reserves a 24 KB ``fctry`` NVS partition and an 8 KB ``esp_secure_cert`` partition. ``matter_8MB.csv`` (**Matter 8MB with spiffs**) has two 3.25 MB application slots for OTA.
+
+**Huge APP (3MB No OTA/1MB SPIFFS)** remains a separate menu entry. It has the same 3 MB application and does not reserve ``fctry`` or ``esp_secure_cert``.
+
 Using a Custom Partition Scheme
 -------------------------------
 

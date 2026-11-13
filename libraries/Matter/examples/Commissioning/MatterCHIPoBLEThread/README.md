@@ -43,7 +43,7 @@ Change the path with `Matter.selectNetwork()` before any accessory `begin()`. Do
 
 ## Setup
 
-1. Partition scheme: **Huge APP**. Enable **Erase All Flash Before Sketch Upload**.
+1. Partition scheme: **Matter 4MB with spiffs**. Enable **Erase All Flash Before Sketch Upload**.
 2. Serial Monitor 115200.
 3. Commission with the printed code over BLE.
 
