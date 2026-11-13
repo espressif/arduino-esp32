@@ -14,13 +14,14 @@ on:
 
 permissions:
   contents: read
+  # The cross-run binary hand-off lists workflow runs and their artifacts.
+  actions: read
 
 jobs:
   build-tests:
     name: Build ${{ inputs.type }} tests for ${{ inputs.chip }}
     runs-on: ubuntu-latest
     env:
-      id: ${{ github.event.pull_request.number || github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ inputs.chip }}-${{ inputs.type }}
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_MAXSIZE: 2G
       CCACHE_COMPILERCHECK: content
@@ -30,27 +31,68 @@ jobs:
       CCACHE_DEPEND: 1
       CCACHE_SLOPPINESS: include_file_mtime,include_file_ctime,time_macros
     steps:
-      - name: Check if already built
-        id: cache-build-binaries
+      # Reuse the binaries this job already uploaded for the same PR commit
+      # instead of keeping a per-PR copy in the Actions cache. The cache shares
+      # its 10 GB quota with the compilation ccache, whose loss costs 25-40 min
+      # per run, while an artifact costs nothing there and lives for 30 days
+      # instead of 24 h. Label events (e.g. Status: Pending Merge) re-run this
+      # workflow at the same commit, so the hand-off keeps those runs rebuild-free.
+      - name: Find binaries from a previous run of this commit
+        id: find-binaries
         if: github.event.pull_request.number != null
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CURRENT_RUN: ${{ github.run_id }}
+          ARTIFACT: test-bin-${{ inputs.chip }}-${{ inputs.type }}
+          # Must match retention-days on the artifact upload below: runs older
+          # than that cannot have a live artifact, so stop scanning.
+          ARTIFACT_RETENTION_DAYS: "30"
+        run: |
+          set -euo pipefail
+          cutoff=$(python3 -c "import datetime as d; print((d.datetime.now(d.timezone.utc) - d.timedelta(days=int('$ARTIFACT_RETENTION_DAYS'))).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+          checked=0
+          # Newest first: the API returns runs by created_at descending.
+          while IFS=$'\t' read -r run created; do
+            [ -n "$run" ] || continue
+            if [[ "$created" < "$cutoff" ]]; then
+              echo "Stopping: run $run predates the ${ARTIFACT_RETENTION_DAYS}-day artifact retention"
+              break
+            fi
+            checked=$((checked + 1))
+            if [ "$checked" -gt 10 ]; then
+              echo "Stopping after 10 candidate runs without a live artifact"
+              break
+            fi
+            artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts?per_page=100" \
+              --jq ".artifacts[] | select(.name==\"$ARTIFACT\" and .expired==false) | .id")
+            if [ -n "$artifact" ]; then
+              echo "Found $ARTIFACT in run $run"
+              echo "run_id=$run" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done < <(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$HEAD_SHA&per_page=50" \
+            --jq ".workflow_runs[] | select(.path==\".github/workflows/tests.yml\") | select(.id != ($CURRENT_RUN|tonumber)) | select(.status==\"completed\") | [(.id|tostring), .created_at] | @tsv")
+          echo "No previous $ARTIFACT artifact for $HEAD_SHA"
+
+      - name: Download binaries from the previous run
+        id: download-binaries
+        if: steps.find-binaries.outputs.run_id != ''
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          key: test-${{ env.id }}-bin
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.find-binaries.outputs.run_id }}
+          name: test-bin-${{ inputs.chip }}-${{ inputs.type }}
           path: |
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.bin
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.elf
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.json
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/sdkconfig
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/ci.yml
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/flash_args
+            ~/.arduino/tests/${{ inputs.chip }}
 
       - name: Evaluate if tests should be built
         id: check-build
         run: |
-          cache_exists=${{ steps.cache-build-binaries.outputs.cache-hit == 'true' }}
           enabled=true
-
-          if [[ $cache_exists == 'true' ]]; then
+          if [[ "${{ steps.download-binaries.outcome }}" == "success" ]]; then
             echo "Already built, skipping"
             enabled=false
           fi
@@ -129,24 +171,15 @@ jobs:
           if-no-files-found: warn
           overwrite: true
 
-      - name: Upload ${{ inputs.chip }} ${{ inputs.type }} binaries as cache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: steps.check-build.outputs.enabled == 'true' && github.event.pull_request.number != null
-        with:
-          key: test-${{ env.id }}-bin
-          path: |
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.bin
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.elf
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.json
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/sdkconfig
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/ci.yml
-            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/flash_args
-
       - name: Upload ${{ inputs.chip }} ${{ inputs.type }} binaries as artifacts
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-bin-${{ inputs.chip }}-${{ inputs.type }}
           overwrite: true
+          # Kept for the cross-run hand-off (label events re-run the workflow at
+          # the same PR commit). Long enough for a pending-merge PR to be
+          # retried, short enough not to accumulate.
+          retention-days: 30
           path: |
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.bin
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.elf

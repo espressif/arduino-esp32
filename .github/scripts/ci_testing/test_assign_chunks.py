@@ -10,7 +10,10 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from assign_chunks import (  # noqa: E402
     assign_lpt,
+    resolve_cost,
     fallback_tables,
+    family_medians,
+    measured_target_count,
     format_assignment_stats,
     load_affected,
     load_json,
@@ -80,7 +83,7 @@ def test_prefix_fallback_beats_default() -> None:
     assert gpio == 17.0
 
 
-def test_measured_cost_wins_over_prefix() -> None:
+def test_measured_cost_wins_without_family_table() -> None:
     sketch = "libraries/Matter/examples/Control/MatterOnOffPlugin/MatterOnOffPlugin.ino"
     measured = {"sketches": {sketch: {"warm_s": 48.2, "cold_s": 120.0}}}
     assert (
@@ -159,7 +162,7 @@ def test_assignment_stats_show_loads_and_sources() -> None:
         None,
     )
     assert "mode=warm  sketches=2  chunks=2" in text
-    assert "cost sources: measured=0  scaled=0  prefix=1  default=1" in text
+    assert "cost sources: family=0  measured=0  scaled=0  last=0  prefix=1  default=1" in text
     assert "heaviest sketches:" in text
     assert "libraries/Matter/x/x.ino" in text
 
@@ -203,3 +206,168 @@ def test_main_lpt_when_more_sketches_than_chunks(tmp_path: Path, monkeypatch) ->
     assert len(assigned) == 20
     assert "libraries/Matter/examples/x/x.ino" in assigned
     assert "chunk_count=5\n" in out.read_text()
+
+
+def test_family_medians_ignore_first_build_outliers() -> None:
+    # One sketch per family pays for the family's static libraries; the rest
+    # are marginal. The median must not carry that one-time cost for all of them.
+    measured = {
+        "sketches": {
+            "libraries/Matter/first/first.ino": {
+                "by_target": {"esp32": {"cold_s": 80.0}, "esp32s3": {"cold_s": 90.0}}
+            },
+            "libraries/Matter/later/later.ino": {
+                "by_target": {"esp32": {"cold_s": 20.0}, "esp32s3": {"cold_s": 22.0}}
+            },
+            "libraries/Matter/other/other.ino": {
+                "by_target": {"esp32": {"cold_s": 18.0}, "esp32s3": {"cold_s": 19.0}}
+            },
+            "libraries/ESP32/gpio/gpio.ino": {"by_target": {"esp32": {"cold_s": 3.5}}},
+        }
+    }
+    family = family_medians(measured, "cold", FALLBACK)
+    assert family["Matter"] == 21.0
+    assert family["ESP32"] == 3.5
+    # 21s/target * 2 targets for every Matter sketch, the outlier included
+    for sketch in (
+        "libraries/Matter/first/first.ino",
+        "libraries/Matter/later/later.ino",
+    ):
+        cost = sketch_cost(sketch, "cold", measured, DEFAULT, PREFIXES, FALLBACK, family)
+        assert cost == 42.0
+
+
+def test_family_medians_follow_the_requested_mode() -> None:
+    measured = {
+        "sketches": {
+            "libraries/Matter/a/a.ino": {
+                "by_target": {"esp32": {"warm_s": 12.0, "cold_s": 99.0}}
+            }
+        }
+    }
+    assert family_medians(measured, "warm", FALLBACK)["Matter"] == 12.0
+    assert family_medians(measured, "cold", FALLBACK)["Matter"] == 99.0
+
+
+def test_family_cost_falls_back_to_measured_value() -> None:
+    measured = {
+        "sketches": {
+            "libraries/Matter/a/a.ino": {
+                "by_target": {"esp32": {"cold_s": 60.0}, "esp32s3": {"cold_s": 62.0}}
+            }
+        }
+    }
+    # No family table (e.g. all entries were filtered out): use the sketch value.
+    cost = sketch_cost(
+        "libraries/Matter/a/a.ino", "cold", measured, DEFAULT, PREFIXES, FALLBACK, {}
+    )
+    assert cost == 122.0
+
+
+def test_assignment_stats_show_family_costs() -> None:
+    measured = {
+        "sketches": {
+            "libraries/Matter/a/a.ino": {"by_target": {"esp32": {"cold_s": 20.0}}},
+            "libraries/Matter/b/b.ino": {"by_target": {"esp32": {"cold_s": 22.0}}},
+        }
+    }
+    family = family_medians(measured, "cold", FALLBACK)
+    costs = {"libraries/Matter/a/a.ino": 21.0, "libraries/Matter/b/b.ino": 21.0}
+    bins = assign_lpt(list(costs), costs, max_chunks=2)
+    text = format_assignment_stats(
+        bins,
+        costs,
+        {s: "family" for s in costs},
+        {s: "Matter" for s in costs},
+        "cold",
+        2,
+        measured,
+        None,
+        None,
+        family,
+    )
+    assert "family cost: Matter=21.0s" in text
+    assert "family=2" in text
+
+
+def test_target_count_comes_from_the_database() -> None:
+    measured = {
+        "sketches": {
+            "libraries/A/a.ino": {"by_target": {"esp32": {"cold_s": 1.0}, "esp32s3": {"cold_s": 1.0}}},
+            "libraries/B/b.ino": {"by_target": {"esp32": {"cold_s": 1.0}}},
+            "libraries/C/c.ino": {"by_target": {"esp32": {"cold_s": 1.0}}},
+            "libraries/D/d.ino": {"by_target": {"esp32": {"cold_s": 1.0}}},
+        }
+    }
+    # Median of 2,1,1,1 -> 1.
+    assert measured_target_count(measured) == 1
+
+
+def test_target_count_ignores_entries_without_by_target() -> None:
+    measured = {
+        "sketches": {
+            "libraries/A/a.ino": {"cold_s": 10.0},
+            "libraries/B/b.ino": {"by_target": {"esp32": {"cold_s": 1.0}}},
+            "libraries/C/c.ino": {"by_target": {"esp32": {"cold_s": 1.0}}},
+        }
+    }
+    assert measured_target_count(measured) == 1
+    assert measured_target_count({}) == 1
+
+
+def test_legacy_entry_uses_database_target_count() -> None:
+    # No by_target on the entry that needs a cost: scale the family median by
+    # the typical number of targets instead of a hardcoded constant.
+    measured = {
+        "sketches": {
+            "libraries/Matter/known/known.ino": {
+                "by_target": {"esp32": {"cold_s": 20.0}, "esp32s3": {"cold_s": 22.0}}
+            },
+            "libraries/Matter/other/other.ino": {
+                "by_target": {"esp32": {"cold_s": 18.0}, "esp32s3": {"cold_s": 19.0}}
+            },
+            "libraries/Matter/legacy/legacy.ino": {"cold_s": 900.0},
+        }
+    }
+    family = family_medians(measured, "cold", FALLBACK)
+    cost = sketch_cost(
+        "libraries/Matter/legacy/legacy.ino", "cold", measured, DEFAULT, PREFIXES, FALLBACK, family
+    )
+    # 2 targets (the database median) * 19.5 s family median.
+    assert cost == 39.0
+
+
+def test_last_sample_is_used_when_no_pure_sample_exists() -> None:
+    # Sketch only ever appeared in a mixed run: use the recorded sample instead
+    # of the in-repo fallback.
+    measured = {
+        "sketches": {
+            "libraries/NewThing/x/x.ino": {
+                "last_s": 240.0,
+                "by_target": {"esp32": {"last_s": 120.0}, "esp32s3": {"last_s": 120.0}},
+            }
+        }
+    }
+    cost, source, detail = resolve_cost(
+        "libraries/NewThing/x/x.ino", "warm", measured, DEFAULT, PREFIXES, FALLBACK
+    )
+    assert (cost, source, detail) == (240.0, "last", "last_s")
+
+
+def test_family_median_still_wins_over_last_sample() -> None:
+    measured = {
+        "sketches": {
+            "libraries/Matter/a/a.ino": {"by_target": {"esp32": {"cold_s": 20.0}}},
+            "libraries/Matter/b/b.ino": {"by_target": {"esp32": {"cold_s": 22.0}}},
+            "libraries/Matter/new/new.ino": {
+                "last_s": 999.0,
+                "by_target": {"esp32": {"last_s": 999.0}},
+            },
+        }
+    }
+    family = family_medians(measured, "cold", FALLBACK)
+    cost, source, _ = resolve_cost(
+        "libraries/Matter/new/new.ino", "cold", measured, DEFAULT, PREFIXES, FALLBACK, family
+    )
+    # Family median (21.0) * 1 target, not the mixed 999.
+    assert (cost, source) == (21.0, "family")

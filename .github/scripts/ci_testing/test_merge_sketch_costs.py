@@ -14,6 +14,7 @@ from merge_sketch_costs import (  # noqa: E402
     classify_run,
     merge_costs,
     parse_ccache_stats,
+    run_hit_ratio,
 )
 
 
@@ -124,3 +125,59 @@ def test_cli_roundtrip(tmp_path: Path) -> None:
     assert "mode" not in data
     assert data["sketches"]["libraries/A/a.ino"]["warm_s"] == 4.2
     assert data["sketches"]["libraries/A/a.ino"]["cold_s"] == 12.0
+
+
+def test_mixed_run_records_last_s_without_touching_pure_sides() -> None:
+    prev = {
+        "sketches": {
+            "libraries/Matter/x/x.ino": {
+                "warm_s": 10.0,
+                "cold_s": 80.0,
+                "by_target": {"esp32s3": {"warm_s": 10.0, "cold_s": 80.0}},
+            }
+        }
+    }
+    aggregated = aggregate_times(
+        [{"sketch": "libraries/Matter/x/x.ino", "target": "esp32s3", "wall_s": 45.0}]
+    )
+    merged = merge_costs(prev, aggregated, "mixed", sha="abc", hit_ratio=0.62)
+    entry = merged["sketches"]["libraries/Matter/x/x.ino"]
+    # The mixed sample is not representative of either regime.
+    assert entry["warm_s"] == 10.0
+    assert entry["cold_s"] == 80.0
+    # ...but it is still recorded, so new sketches are measured.
+    assert entry["last_s"] == 45.0
+    assert entry["by_target"]["esp32s3"]["last_s"] == 45.0
+    assert merged["hit_ratio"] == 0.62
+    assert merged["last_updated"] == "mixed"
+
+
+def test_pure_run_writes_side_and_last_sample() -> None:
+    aggregated = aggregate_times(
+        [{"sketch": "libraries/A/a.ino", "target": "esp32", "wall_s": 12.0}]
+    )
+    merged = merge_costs({}, aggregated, "warm", sha="abc", hit_ratio=1.0)
+    entry = merged["sketches"]["libraries/A/a.ino"]
+    assert entry["warm_s"] == 12.0
+    assert entry["last_s"] == 12.0
+    assert merged["hit_ratio"] == 1.0
+
+
+def test_new_sketch_in_mixed_run_gets_a_measured_cost() -> None:
+    aggregated = aggregate_times(
+        [{"sketch": "libraries/NewThing/x/x.ino", "target": "esp32", "wall_s": 30.0}]
+    )
+    merged = merge_costs({}, aggregated, "mixed", sha="abc", hit_ratio=0.5)
+    entry = merged["sketches"]["libraries/NewThing/x/x.ino"]
+    assert "warm_s" not in entry
+    assert "cold_s" not in entry
+    assert entry["last_s"] == 30.0
+
+
+def test_hit_ratio_from_ccache_stats() -> None:
+    assert run_hit_ratio([CCACHE_V4]) == 1.0
+    assert run_hit_ratio(["Hits: 0\nMisses: 80\n"]) == 0.0
+    assert run_hit_ratio(["cache hit (direct) 50\ncache miss 50\n"]) == 0.5
+    assert run_hit_ratio([]) is None
+    # Mode stays a pure-regime classification.
+    assert classify_run(["cache hit (direct) 50\ncache miss 50\n"]) == "mixed"
