@@ -130,6 +130,16 @@ wifi|38/38 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|
   - ESP32-S2 - Error - :fire:
   - ESP32-S3 - Error - :fire:
 
+- **stream_string**
+  - ESP32 - Error - :fire:
+  - ESP32-C3 - Error - :fire:
+  - ESP32-C5 - Error - :fire:
+  - ESP32-C6 - Error - :fire:
+  - ESP32-H2 - Error - :fire:
+  - ESP32-P4 - Error - :fire:
+  - ESP32-S2 - Error - :fire:
+  - ESP32-S3 - Error - :fire:
+
 - **superpi**
   - ESP32 - Error - :fire:
   - ESP32-C3 - Error - :fire:
@@ -142,8 +152,8 @@ wifi|38/38 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|
 
 
 
-Generated on: 2026/11/12 00:43:33 UTC
+Generated on: 2026/11/13 02:29:49 UTC
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/5e1f0e15b9ed02f429b705cb49b18b78fc083691) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/43125204563) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/43126924806) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/43128426293)
+[Commit](https://github.com/espressif/arduino-esp32/commit/3ed7b779f2b4c797b3512f3fc10a7a978a78fb18) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/43334777596) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/43349540523) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/43352155508)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/130889381050)
+[Test results](https://github.com/espressif/arduino-esp32/runs/131646853723)
