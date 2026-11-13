@@ -52,7 +52,7 @@ def parse_ccache_stats(text: str) -> tuple[int, int]:
     return 0, 0
 
 
-def classify_run(stats_texts: list[str], hit_high: float = 0.9, hit_low: float = 0.1) -> str:
+def run_hit_ratio(stats_texts: list[str]) -> float | None:
     hits = 0
     misses = 0
     for text in stats_texts:
@@ -60,9 +60,13 @@ def classify_run(stats_texts: list[str], hit_high: float = 0.9, hit_low: float =
         hits += h
         misses += m
     total = hits + misses
-    if total <= 0:
+    return (hits / total) if total > 0 else None
+
+
+def classify_run(stats_texts: list[str], hit_high: float = 0.9, hit_low: float = 0.1) -> str:
+    ratio = run_hit_ratio(stats_texts)
+    if ratio is None:
         return "mixed"
-    ratio = hits / total
     if ratio >= hit_high:
         return "warm"
     if ratio <= hit_low:
@@ -108,29 +112,51 @@ def aggregate_times(rows: list[dict]) -> dict[str, dict]:
     return out
 
 
-def merge_costs(previous: dict, aggregated: dict[str, dict], mode: str, sha: str = "") -> dict:
+def merge_costs(
+    previous: dict,
+    aggregated: dict[str, dict],
+    mode: str,
+    sha: str = "",
+    hit_ratio: float | None = None,
+) -> dict:
+    """Merge one run's samples into the cost database.
+
+    ``warm_s`` and ``cold_s`` only ever receive samples from a run that is
+    (almost) entirely warm or cold: a mixed sample is not representative of
+    either regime, and writing it to one side would bias that side. Every run
+    still stores its raw sample as ``last_s`` (plus the run's hit ratio), so a
+    sketch that only ever appeared in mixed runs is measured instead of falling
+    back to the in-repo defaults.
+    """
     sketches = dict(previous.get("sketches") or {})
-    if mode in ("warm", "cold"):
-        key = "warm_s" if mode == "warm" else "cold_s"
-        target_key = key
-        for sketch, sample in aggregated.items():
-            entry = dict(sketches.get(sketch) or {})
-            entry[key] = round(sample["total"], 3)
-            by_target = dict(entry.get("by_target") or {})
-            for target, wall in sample["by_target"].items():
-                t_entry = dict(by_target.get(target) or {})
-                t_entry[target_key] = round(wall, 3)
-                by_target[target] = t_entry
-            if by_target:
-                entry["by_target"] = by_target
-            sketches[sketch] = entry
-    return {
+    pure_key = {"warm": "warm_s", "cold": "cold_s"}.get(mode)
+    for sketch, sample in aggregated.items():
+        entry = dict(sketches.get(sketch) or {})
+        entry["last_s"] = round(sample["total"], 3)
+        by_target = dict(entry.get("by_target") or {})
+        for target, wall in sample["by_target"].items():
+            t_entry = dict(by_target.get(target) or {})
+            t_entry["last_s"] = round(wall, 3)
+            if pure_key:
+                t_entry[pure_key] = round(wall, 3)
+            by_target[target] = t_entry
+        if by_target:
+            entry["by_target"] = by_target
+        if pure_key:
+            entry[pure_key] = round(sample["total"], 3)
+        sketches[sketch] = entry
+    merged = {
         "version": 1,
         "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "sha": sha or previous.get("sha") or "",
         "last_updated": mode,
         "sketches": sketches,
     }
+    if hit_ratio is not None:
+        merged["hit_ratio"] = round(hit_ratio, 3)
+    elif previous.get("hit_ratio") is not None:
+        merged["hit_ratio"] = previous["hit_ratio"]
+    return merged
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -156,11 +182,16 @@ def main(argv: list[str] | None = None) -> int:
         if path.is_file():
             stats_texts.append(path.read_text(encoding="utf-8", errors="replace"))
     mode = classify_run(stats_texts)
+    ratio = run_hit_ratio(stats_texts)
     aggregated = aggregate_times(load_jsonl(list(args.times)))
-    merged = merge_costs(previous, aggregated, mode, sha=args.sha)
+    merged = merge_costs(previous, aggregated, mode, sha=args.sha, hit_ratio=ratio)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(merged, indent=2, sort_keys=False) + "\n", encoding="utf-8")
-    print(f"Wrote {args.out} last_updated={mode} sketches={len(merged.get('sketches') or {})}")
+    ratio_text = "n/a" if ratio is None else f"{ratio:.1%}"
+    print(
+        f"Wrote {args.out} last_updated={mode} hit_ratio={ratio_text} "
+        f"sketches={len(merged.get('sketches') or {})}"
+    )
     return 0
 
 

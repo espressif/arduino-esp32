@@ -417,6 +417,10 @@ jobs:
       needs.gen-chunks.outputs.should_build == '1' &&
       contains(fromJSON('["success", "failure"]'), needs.build-arduino-linux.result)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Deleting the superseded generation after saving the new one.
+      actions: write
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_MAXSIZE: 2G
@@ -463,12 +467,29 @@ jobs:
           echo "has_cache=true" >> "$GITHUB_OUTPUT"
 
       - name: Save ccache
+        id: save-ccache
         if: steps.merge.outputs.has_cache == 'true'
         continue-on-error: true
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ github.workspace }}/.ccache
           key: ccache-linux-${{ hashFiles('platform.txt', 'package.json', 'package/package_esp32_index.template.json', 'tools/get.py') }}-${{ github.sha }}
+
+      # Every push saves a new generation (~1.3-1.6 GB) under a fresh sha, so a
+      # week of pushes would need tens of GB. GitHub evicts above 10 GB by last
+      # access, which drops the newest generation of a branch that has been
+      # quiet for a few hours (measured: master's cache gone 3 h after saving).
+      # Delete the superseded generation right here instead; the newest one per
+      # ref and prefix is always kept, and abandoned branches age out (7 days).
+      - name: Prune older ccache generations
+        if: steps.merge.outputs.has_cache == 'true' && steps.save-ccache.outcome == 'success'
+        # Cleanup only: a failed delete must not fail the run that just saved
+        # the cache. 404s are expected (LRU eviction races with the listing)
+        # and are already handled by the script.
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/prune_caches.py --repo "$GITHUB_REPOSITORY" --min-age-hours 0
 
   # Save artifacts to gh-pages as the sizes baseline for PRs targeting this branch.
   # master -> size_test/master, release/v4.0.x -> size_test/release_v4.0.x
