@@ -120,12 +120,15 @@ buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
   event, the ISO host completes any remaining channels on ACL loss so
   `BLEIso::end()` does not retain a dead CIS.
 - **PAST receive API.** IDF keys the receive-parameter API by peer address,
-  while the public surface is keyed by a connection handle. The Bluedroid
-  implementation resolves the handle against the live `BLEClient` and
-  `BLEServer` connection tables (GATT connection id, with the HCI ACL handle as
-  a fallback), then arms mode `DUP_FILTER_DISABLED`. `stopPeriodicSyncReceive()`
-  restores `NO_SYNC_EVT` with default parameters because Bluedroid has no
-  dedicated disable command. The audio Broadcast Sink's BASS path uses the same
+  while the public surface is keyed by a connection handle. `BLE_PAST_SUPPORTED`
+  requires both the Bluedroid PAST config and a controller that implements BLE 5.1
+  PAST (`SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED`), so 5.0-only and 4.2 targets report
+  `NotSupported`. The Bluedroid implementation resolves the handle against the
+  live `BLEClient` and `BLEServer` connection tables (GATT connection id, with
+  the HCI ACL handle as a fallback), then arms mode `DUP_FILTER_DISABLED`.
+  `stopPeriodicSyncReceive()` restores `NO_SYNC_EVT` with default parameters
+  because Bluedroid has no dedicated disable command. The audio Broadcast Sink's
+  BASS path uses the same
   arming helper directly with the assistant address carried by the synchronous
   request event, and requires
   `CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER`; the GAP callback records the

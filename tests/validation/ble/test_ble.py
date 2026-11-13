@@ -697,7 +697,8 @@ def _phase_conninfo_and_params(server, client):
     m_past = client.expect(
         r"\[CLIENT\] Phase16 past supported=([01])(?: arm=([01]) bogus=([01]) cancel=([01]))?\r?\n", timeout=10
     )
-    if int(m_past.group(1)) == 1:
+    client_past_supported = int(m_past.group(1))
+    if client_past_supported == 1:
         assert int(m_past.group(2)) == 1, "client PAST receive failed for a live connection handle"
         assert int(m_past.group(3)) == 0, "client PAST receive accepted an unknown connection handle"
         assert int(m_past.group(4)) == 1, "client PAST receive cancellation failed"
@@ -711,8 +712,11 @@ def _phase_conninfo_and_params(server, client):
     assert int(m_lookup.group(5)) >= 1, "client getConnections(address) returned no connection descriptors"
     assert int(m_lookup.group(6)) == 1, "client getConnections(address) did not preserve the central role"
     assert int(m_lookup.group(7)) == 1, "client lookup accepted an unknown peer address"
-    m_past_info = client.expect(r"\[CLIENT\] Phase16 pastInfo arm=([01]) stop=([01])", timeout=10)
-    assert int(m_past_info.group(1)) == 1 and int(m_past_info.group(2)) == 1, "client role-aware PAST overload failed"
+    if client_past_supported == 1:
+        m_past_info = client.expect(r"\[CLIENT\] Phase16 pastInfo arm=([01]) stop=([01])", timeout=10)
+        assert int(m_past_info.group(1)) == 1 and int(m_past_info.group(2)) == 1, "client role-aware PAST overload failed"
+    else:
+        client.expect_exact("[CLIENT] Phase16 pastInfo supported=0", timeout=10)
     m_stale = client.expect(r"\[CLIENT\] Phase16 lookup staleGone=([01])", timeout=10)
     assert int(m_stale.group(1)) == 1, "client lookup retained a stale connection after disconnect"
     # Peer-initiated MTU exchange before CONNECT (issue #13104): the peer can
@@ -750,7 +754,8 @@ def _phase_conninfo_and_params(server, client):
     m_past_s = server.expect(
         r"\[SERVER\] Phase16 past supported=([01])(?: arm=([01]) bogus=([01]) cancel=([01]))?\r?\n", timeout=10
     )
-    if int(m_past_s.group(1)) == 1:
+    server_past_supported = int(m_past_s.group(1))
+    if server_past_supported == 1:
         assert int(m_past_s.group(2)) == 1, "server PAST receive failed for a live connection handle"
         assert int(m_past_s.group(3)) == 0, "server PAST receive accepted an unknown connection handle"
         assert int(m_past_s.group(4)) == 1, "server PAST receive cancellation failed"
@@ -766,8 +771,11 @@ def _phase_conninfo_and_params(server, client):
     assert int(m_lookup_s.group(6)) >= 1, "server getConnections(address) returned no connection descriptors"
     assert int(m_lookup_s.group(7)) == 1, "server getConnections(address) did not preserve the peripheral role"
     assert int(m_lookup_s.group(8)) == 1, "server lookup accepted an unknown peer address"
-    m_past_info_s = server.expect(r"\[SERVER\] Phase16 pastInfo arm=([01]) stop=([01])", timeout=10)
-    assert int(m_past_info_s.group(1)) == 1 and int(m_past_info_s.group(2)) == 1, "server role-aware PAST overload failed"
+    if server_past_supported == 1:
+        m_past_info_s = server.expect(r"\[SERVER\] Phase16 pastInfo arm=([01]) stop=([01])", timeout=10)
+        assert int(m_past_info_s.group(1)) == 1 and int(m_past_info_s.group(2)) == 1, "server role-aware PAST overload failed"
+    else:
+        server.expect_exact("[SERVER] Phase16 pastInfo supported=0", timeout=10)
     server.expect_exact("[SERVER] Phase16 done", timeout=10)
 
 

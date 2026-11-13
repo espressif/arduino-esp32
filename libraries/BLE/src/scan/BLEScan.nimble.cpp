@@ -100,6 +100,7 @@ void dispatchComplete(BLEScan::Impl *impl) {
 }
 
 #if BLE5_SUPPORTED
+#if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
 BTStatus periodicSyncStatus(int rc) {
   switch (rc) {
     case 0:                 return BTStatus::OK;
@@ -112,6 +113,7 @@ BTStatus periodicSyncStatus(int rc) {
     default:                return BTStatus::Fail;
   }
 }
+#endif
 
 /**
  * @brief Invokes the periodic advertising sync callback, if set.

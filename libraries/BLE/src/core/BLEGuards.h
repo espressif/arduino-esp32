@@ -155,8 +155,18 @@
 #define BLE_PERIODIC_ADV_SUPPORTED 0
 #endif
 
-/* Periodic Advertising Sync Transfer (PAST) receiver support. */
-#if BLE_PERIODIC_ADV_SUPPORTED && ((BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_SYNC_TRANSFER)) || (BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER)))
+/*
+ * Periodic Advertising Sync Transfer (PAST) receiver support.
+ *
+ * PAST is a Bluetooth 5.1 feature, but the host config symbol alone only says
+ * the host code was compiled in; the controller must also implement the 5.1
+ * HCI commands. BLE 5.0-only controllers (ESP32-S3/C3) still expose the host
+ * config, so require a controller capability as well. Current controllers with
+ * the later periodic-advertising feature set (SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED)
+ * are exactly the ones that implement PAST; 5.0 silicon does not.
+ */
+#if BLE_PERIODIC_ADV_SUPPORTED && defined(SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED) && \
+  ((BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_SYNC_TRANSFER)) || (BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER)))
 #define BLE_PAST_SUPPORTED 1
 #else
 #define BLE_PAST_SUPPORTED 0

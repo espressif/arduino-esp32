@@ -85,7 +85,9 @@ always cast-free `impl.member`.
   the audio table.
 - **PAST receive.** `BLEScan::receivePeriodicSync()` and
   `stopPeriodicSyncReceive()` use NimBLE's periodic-transfer receive API when
-  `BLE_PAST_SUPPORTED` is set.
+  `BLE_PAST_SUPPORTED` is set. That guard now also requires a controller that
+  implements BLE 5.1 PAST (`SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED`), so BLE 5.0
+  silicon (ESP32-S3/C3) returns `NotSupported` instead of failing at runtime.
   They share the retained-handle admission gate with periodic sync creation,
   validate the Core skip/timeout ranges, map invalid parameters, missing ACLs,
   allocation failures, busy and disabled states to public statuses, and reject
