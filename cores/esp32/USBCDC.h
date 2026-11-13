@@ -26,6 +26,10 @@
 #include "freertos/semphr.h"
 #include "Stream.h"
 
+// Optional: Add to top of your sketch: use a real IN endpoint for the CDC 0 notification instead of the fixed 0x85
+// (needed for notifyState() on ESP32-S2/S3; costs one IN endpoint). Default: false.
+#define TUSB_CDC_0_USE_NOTIFY() bool tud_cdc_0_use_notify() { return true; }
+
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_CDC_EVENTS);
 
 typedef enum {
@@ -104,6 +108,8 @@ public:
   }
   uint32_t baudRate();
   bool notifyState(bool dcd, bool dsr, bool brk);
+  // Optional: Send notifyState() when the host has not set DTR. Default: false.
+  void notifyStateIgnoreDtr(bool ignore);
   void setDebugOutput(bool);
   operator bool() const;
 
@@ -131,6 +137,7 @@ protected:
   QueueHandle_t rx_queue;
   SemaphoreHandle_t tx_lock;
   uint32_t tx_timeout_ms;
+  bool notify_ignore_dtr;
 };
 
 #if !ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Native USB CDC selected
