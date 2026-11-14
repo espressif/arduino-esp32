@@ -83,6 +83,8 @@ public:
   ~BLEAudioCallServer() = default;
   BLEAudioCallServer(const BLEAudioCallServer &) = default;
   BLEAudioCallServer &operator=(const BLEAudioCallServer &) = default;
+  BLEAudioCallServer(BLEAudioCallServer &&) = default;
+  BLEAudioCallServer &operator=(BLEAudioCallServer &&) = default;
 
   /** @return true when the handle refers to a created server. */
   explicit operator bool() const;
@@ -135,6 +137,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 /**
@@ -159,6 +162,8 @@ public:
   ~BLEAudioCallController() = default;
   BLEAudioCallController(const BLEAudioCallController &) = default;
   BLEAudioCallController &operator=(const BLEAudioCallController &) = default;
+  BLEAudioCallController(BLEAudioCallController &&) = default;
+  BLEAudioCallController &operator=(BLEAudioCallController &&) = default;
 
   /** @return true when the handle refers to a created controller. */
   explicit operator bool() const;
@@ -204,6 +209,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 #endif /* BLE_AUDIO_SUPPORTED */

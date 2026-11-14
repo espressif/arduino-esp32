@@ -22,7 +22,10 @@
 #include <vector>
 #include "BLEAudioCap.h"
 #include "BLEAudioAuracast.h"
-#include "BLEAudioImpl.h"
+#include "core/BLEBackend.h"
+#include "BLEAudioBackend.h"
+#include "core/BLEImplHelpers.h"
+#include "BLEAudioControlLink.h"
 #include "BLEAudioProfiles.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineCap.h"
@@ -59,24 +62,6 @@ struct Peer {
   bool discovering = false;  ///< CAP discovery in flight.
   bool discovered = false;   ///< Discovery succeeded; the peer takes part in startUnicast().
 };
-
-/** @return The @p n-th set bit of @p mask, or 0 (Mono) when there are fewer bits. */
-uint32_t nthLocation(uint32_t mask, uint8_t n) {
-  for (uint32_t bit = 1; bit; bit <<= 1) {
-    if ((mask & bit) && n-- == 0) {
-      return bit;
-    }
-  }
-  return 0;
-}
-
-/** @brief Zero-padded 16-octet Broadcast Code, or nullptr when @p code is empty. */
-const uint8_t *broadcastCode(const String &code, uint8_t out[BLE_AUDIO_BCODE_SIZE]) {
-  memset(out, 0, BLE_AUDIO_BCODE_SIZE);
-  const size_t n = code.length() < BLE_AUDIO_BCODE_SIZE ? code.length() : BLE_AUDIO_BCODE_SIZE;
-  memcpy(out, code.c_str(), n);
-  return n ? out : nullptr;
-}
 
 /** @brief Send the SyncInfo of advertising set @p adv to the acceptor on @p conn (service data = source ID). */
 void sendPast(uint8_t adv, uint16_t conn, const ble_audio_cap_past_req_t &r) {
@@ -235,7 +220,7 @@ struct BLEAudioCapInitiator::Impl {
         r.dir = tx ? BLE_AUDIO_DIR_SINK : BLE_AUDIO_DIR_SOURCE;
         r.ep_index = idx;
         r.codec = codec;
-        r.codec.chan_alloc = nthLocation(static_cast<uint32_t>(tx ? p.info.sinkLocation : p.info.sourceLocation), idx);
+        r.codec.chan_alloc = bleAudioNthLocation(static_cast<uint32_t>(tx ? p.info.sinkLocation : p.info.sourceLocation), idx);
         r.qos = q;
         r.qos.max_sdu = r.codec.octets_per_frame * bleAudioChannelCount(r.codec.chan_alloc) * r.codec.frames_per_sdu;
         r.context = static_cast<uint16_t>(context);
@@ -358,31 +343,9 @@ struct BLEAudioCapInitiator::Impl {
   }
 
   BTStatus waitStopped() {
-    {
-      BLELockGuard lock(mtx.get());
-      if (!bcStreaming && !bcStarting) {
-        return BTStatus::OK;
-      }
-    }
-    if (bleInStackCallbackTask()) {
-      log_e("CapInitiator: cannot wait for BIG terminate from a stack callback");
-      return BTStatus::InvalidState;
-    }
-    stopSync.take();
-    {
-      BLELockGuard lock(mtx.get());
-      if (!bcStreaming && !bcStarting) {
-        stopSync.give(BTStatus::OK);
-        return BTStatus::OK;
-      }
-    }
-    BTStatus st = stopSync.wait(5000);
-    BLELockGuard lock(mtx.get());
-    if (st != BTStatus::OK || bcStreaming || bcStarting) {
-      log_e("CapInitiator: timed out waiting for BIG to terminate");
-      return st == BTStatus::OK ? BTStatus::Fail : st;
-    }
-    return BTStatus::OK;
+    return bleAudioWaitUntilIdle(mtx, stopSync, "CapInitiator", [this]() {
+      return bcStreaming || bcStarting;
+    });
   }
 
   /** @brief Engine source gone: release the advertising and reset the broadcast state. */
@@ -871,7 +834,7 @@ BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInsta
     m.bcStarting = true;
   }
   uint8_t bcode[BLE_AUDIO_BCODE_SIZE];
-  int err = bleAudioCapBroadcastCreate(slots.data(), channels > 1 ? locations.data() : nullptr, channels, &c, &q, ctx, broadcastCode(cfgCode, bcode));
+  int err = bleAudioCapBroadcastCreate(slots.data(), channels > 1 ? locations.data() : nullptr, channels, &c, &q, ctx, bleAudioPackBroadcastCode(cfgCode, bcode));
   if (err != 0) {
     log_e("CapInitiator: broadcast create failed (%u BIS, err=%d)", channels, err);
     BLELockGuard lock(m.mtx.get());
@@ -991,7 +954,7 @@ BTStatus BLEAudioCapInitiator::handoverToBroadcast(uint8_t advInstance) {
   m.codecQos(true, c, q);
   const ble_audio_cap_adv_t adv = m.advInfo(advInstance);
   uint8_t bcode[BLE_AUDIO_BCODE_SIZE];
-  int err = bleAudioCapHandoverToBroadcast(&adv, &q, broadcastCode(m.code, bcode));
+  int err = bleAudioCapHandoverToBroadcast(&adv, &q, bleAudioPackBroadcastCode(m.code, bcode));
   if (err != 0) {
     log_e("CapInitiator: handover to broadcast failed to start (err=%d)", err);
     m.stopAdvertising();
@@ -1294,7 +1257,7 @@ BTStatus BLEAudioCapCommander::distributeBroadcastCode(const String &code) {
     return BTStatus::InvalidParam;
   }
   uint8_t bcode[BLE_AUDIO_BCODE_SIZE];
-  broadcastCode(code, bcode);
+  bleAudioPackBroadcastCode(code, bcode);
   return bleAudioStatus(bleAudioCapCommanderDistributeCode(bcode));
 }
 

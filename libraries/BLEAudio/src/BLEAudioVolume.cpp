@@ -21,37 +21,22 @@
 #include "BLEAudioControlLink.h"
 #include "esp32-hal-log.h"
 
-/**
- * @file BLEAudioVolume.cpp
- * @brief VCP volume renderer and volume controller role handles.
- *
- * Both roles are thin wrappers over the control engine unit
- * (BLEAudioEngineControl): the factory registers an event handler for the
- * role's group and a deferred init that runs inside BLEAudio::start(). The
- * handles cache the last reported state so getters never touch the stack.
- *
- * API contract is documented on the declarations in `BLEAudioVolume.h`; the
- * definitions below carry implementation notes only.
- */
-
 // --------------------------------------------------------------------------
 // Renderer
 // --------------------------------------------------------------------------
 
 struct BLEAudioVolumeRenderer::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
-  BLESharedMutex mtx;               ///< Protects this role's callbacks and shared state.
-  std::atomic<uint8_t> volume{100}; ///< Initial volume before start, then the last reported state.
-  std::atomic<bool> muted{false};   ///< Initial mute before start, then the last reported state.
-  std::atomic<uint8_t> step{1};     ///< Volume up/down step (never 0).
-  StateCallback stateCb;
+  BLESharedMutex mtx;
+  std::atomic<uint8_t> volume{100};
+  std::atomic<bool> muted{false};
+  std::atomic<uint8_t> step{1};
+  StateCallback onStateChangedCb;
 
-  /** Run a BLE_AUDIO_VCP_OP_* on the local renderer. */
   static BTStatus op(uint8_t o, uint8_t value = 0) {
     return bleAudioStatus(bleAudioVcpRendOp(o, value));
   }
 
-  /** Engine event for this group: the volume state changed (by a client or locally). */
   void handle(const ble_audio_evt_t &e) {
     if (e.type != BLE_AUDIO_EVT_VCP_REND_STATE || e.err || !e.data) {
       return;
@@ -59,7 +44,7 @@ struct BLEAudioVolumeRenderer::Impl {
     const auto *s = static_cast<const ble_audio_vcp_state_t *>(e.data);
     volume.store(s->volume, std::memory_order_relaxed);
     muted.store(s->mute, std::memory_order_relaxed);
-    if (auto cb = bleAudioCopyCallback(*this, &Impl::stateCb)) {
+    if (auto cb = bleAudioCopyCallback(*this, &Impl::onStateChangedCb)) {
       cb(s->volume, s->mute);
     }
   }
@@ -72,24 +57,22 @@ BLEAudioVolumeRenderer::operator bool() const {
 }
 
 BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::setInitialVolume(uint8_t volume) {
-  if (_impl) {
-    _impl->volume = volume;
-  }
+  BLE_CHECK_IMPL(*this);
+  impl.volume = volume;
   return *this;
 }
 
 BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::setInitialMute(bool muted) {
-  if (_impl) {
-    _impl->muted = muted;
-  }
+  BLE_CHECK_IMPL(*this);
+  impl.muted = muted;
   return *this;
 }
 
 BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::setVolumeStep(uint8_t step) {
-  if (_impl && step) {
-    _impl->step = step;
-    /* Before start the step is applied by the role init. */
-    if (_impl->audio->started) {
+  BLE_CHECK_IMPL(*this);
+  if (step) {
+    impl.step = step;
+    if (impl.audio->started) {
       (void)Impl::op(BLE_AUDIO_VCP_OP_SET_STEP, step);
     }
   }
@@ -97,69 +80,60 @@ BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::setVolumeStep(uint8_t step) {
 }
 
 BTStatus BLEAudioVolumeRenderer::setVolume(uint8_t volume) {
-  return _impl ? Impl::op(BLE_AUDIO_VCP_OP_SET_VOLUME, volume) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return Impl::op(BLE_AUDIO_VCP_OP_SET_VOLUME, volume);
 }
 
 BTStatus BLEAudioVolumeRenderer::mute() {
-  return _impl ? Impl::op(BLE_AUDIO_VCP_OP_MUTE) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return Impl::op(BLE_AUDIO_VCP_OP_MUTE);
 }
 
 BTStatus BLEAudioVolumeRenderer::unmute() {
-  return _impl ? Impl::op(BLE_AUDIO_VCP_OP_UNMUTE) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return Impl::op(BLE_AUDIO_VCP_OP_UNMUTE);
 }
 
 BTStatus BLEAudioVolumeRenderer::volumeUp() {
-  return _impl ? Impl::op(BLE_AUDIO_VCP_OP_UP) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return Impl::op(BLE_AUDIO_VCP_OP_UP);
 }
 
 BTStatus BLEAudioVolumeRenderer::volumeDown() {
-  return _impl ? Impl::op(BLE_AUDIO_VCP_OP_DOWN) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return Impl::op(BLE_AUDIO_VCP_OP_DOWN);
 }
 
 uint8_t BLEAudioVolumeRenderer::getVolume() const {
-  return _impl ? _impl->volume.load(std::memory_order_relaxed) : 0;
+  BLE_CHECK_IMPL(0);
+  return impl.volume.load(std::memory_order_relaxed);
 }
 
 bool BLEAudioVolumeRenderer::isMuted() const {
-  return _impl && _impl->muted.load(std::memory_order_relaxed);
+  BLE_CHECK_IMPL(false);
+  return impl.muted.load(std::memory_order_relaxed);
 }
 
 BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::onStateChanged(StateCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->stateCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.onStateChangedCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioVolumeRenderer::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->stateCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onStateChangedCb = nullptr;
 }
 
 BLEAudioVolumeRenderer BLEAudio::createVolumeRenderer() {
 #if BLE_AUDIO_VCP_RENDERER_SUPPORTED
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("createVolumeRenderer(): call between audio.begin() and audio.start()");
-    return BLEAudioVolumeRenderer();
-  }
-  auto r = std::make_shared<BLEAudioVolumeRenderer::Impl>();
-  r->audio = _impl;
-  _impl->roles.push_back(r);
-  /* `roles` owns the role until end(); strong captures here would form a cycle with Impl::audio. */
-  std::weak_ptr<BLEAudioVolumeRenderer::Impl> weak = r;
-  _impl->setHandler(BLE_AUDIO_GRP_VCP_RENDERER, [weak](const ble_audio_evt_t &e) {
-    if (auto s = weak.lock()) {
-      s->handle(e);
+  return BLEAudioImplCommon::createStagedRole<BLEAudioVolumeRenderer>(
+    _impl, "createVolumeRenderer", BLE_AUDIO_GRP_VCP_RENDERER, [](BLEAudioVolumeRenderer::Impl &s) {
+      return bleAudioStatus(bleAudioVcpRendInit(s.volume.load(), s.muted.load(), s.step.load()));
     }
-  });
-  _impl->roleApplies.push_back([weak]() -> BTStatus {
-    auto s = weak.lock();
-    return s ? bleAudioStatus(bleAudioVcpRendInit(s->volume.load(), s->muted.load(), s->step.load())) : BTStatus::OK;
-  });
-  return BLEAudioVolumeRenderer(r);
+  );
 #else
   log_e("Volume renderer is not enabled in this build (CONFIG_BT_VCP_VOL_REND)");
   return BLEAudioVolumeRenderer();
@@ -172,30 +146,25 @@ BLEAudioVolumeRenderer BLEAudio::createVolumeRenderer() {
 
 struct BLEAudioVolumeController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
-  BLESharedMutex mtx;             ///< Protects this role's callbacks and shared state.
-  BLEAudioControlLink link;       ///< The renderer being controlled.
-  std::atomic<uint8_t> volume{0}; ///< Last state reported by the renderer.
+  BLESharedMutex mtx;
+  BLEAudioControlLink link;
+  std::atomic<uint8_t> volume{0};
   std::atomic<bool> muted{false};
-  DiscoveredCallback discoveredCb;
-  StateCallback stateCb;
-  OffsetCallback offsetCb;
-  InputCallback inputCb;
+  DiscoveredCallback onDiscoveredCb;
+  StateCallback onStateChangedCb;
+  OffsetCallback onOffsetChangedCb;
+  InputCallback onInputChangedCb;
 
-  /** Run a BLE_AUDIO_VCP_OP_* on the bound renderer. */
   BTStatus op(uint8_t o, uint8_t value = 0) const {
     const uint16_t c = link.activeConn();
     return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioVcpCtlrOp(c, o, value)) : BTStatus::InvalidState;
   }
 
-  /**
-   * Engine event: core events drive the link (deferred discovery, disconnect);
-   * role events are delivered only for the bound peer.
-   */
   void handle(const ble_audio_evt_t &e) {
     if (BLE_AUDIO_EVT_GROUP(e.type) == BLE_AUDIO_GRP_CORE) {
       const int err = link.onCore(e, bleAudioVcpCtlrDiscover);
       if (err) {
-        if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::onDiscoveredCb)) {
           cb(bleAudioStatus(err), 0, 0);
         }
       }
@@ -205,27 +174,26 @@ struct BLEAudioVolumeController::Impl {
       return;
     }
     switch (e.type) {
-      case BLE_AUDIO_EVT_VCP_CTLR_DISCOVERED:
-        {
-          const auto *d = static_cast<const ble_audio_vcp_discovered_t *>(e.data);
-          if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
-            cb(bleAudioStatus(e.err), d ? d->vocs_count : 0, d ? d->aics_count : 0);
-          }
+      case BLE_AUDIO_EVT_VCP_CTLR_DISCOVERED: {
+        const auto *d = static_cast<const ble_audio_vcp_discovered_t *>(e.data);
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::onDiscoveredCb)) {
+          cb(bleAudioStatus(e.err), d ? d->vocs_count : 0, d ? d->aics_count : 0);
         }
         break;
+      }
       case BLE_AUDIO_EVT_VCP_CTLR_STATE:
         if (!e.err && e.data) {
           const auto *s = static_cast<const ble_audio_vcp_state_t *>(e.data);
           volume.store(s->volume, std::memory_order_relaxed);
           muted.store(s->mute, std::memory_order_relaxed);
-          if (auto cb = bleAudioCopyCallback(*this, &Impl::stateCb)) {
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::onStateChangedCb)) {
             cb(s->volume, s->mute);
           }
         }
         break;
       case BLE_AUDIO_EVT_VCP_CTLR_OFFSET:
         if (!e.err && e.data) {
-          if (auto cb = bleAudioCopyCallback(*this, &Impl::offsetCb)) {
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::onOffsetChangedCb)) {
             cb(*static_cast<const int16_t *>(e.data));
           }
         }
@@ -233,7 +201,7 @@ struct BLEAudioVolumeController::Impl {
       case BLE_AUDIO_EVT_VCP_CTLR_INPUT:
         if (!e.err && e.data) {
           const auto *a = static_cast<const ble_audio_aics_state_t *>(e.data);
-          if (auto cb = bleAudioCopyCallback(*this, &Impl::inputCb)) {
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::onInputChangedCb)) {
             cb(a->gain, a->mute);
           }
         }
@@ -250,123 +218,111 @@ BLEAudioVolumeController::operator bool() const {
 }
 
 BTStatus BLEAudioVolumeController::discover(uint16_t connHandle) {
-  return _impl ? _impl->link.discover(*_impl->audio, connHandle, bleAudioVcpCtlrDiscover) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.link.discover(*impl.audio, connHandle, bleAudioVcpCtlrDiscover);
 }
 
 uint16_t BLEAudioVolumeController::getConnHandle() const {
-  return _impl ? _impl->link.getConn() : BLE_AUDIO_CONN_NONE;
+  BLE_CHECK_IMPL(BLE_AUDIO_CONN_NONE);
+  return impl.link.getConn();
 }
 
 BTStatus BLEAudioVolumeController::setVolume(uint8_t volume) {
-  return _impl ? _impl->op(BLE_AUDIO_VCP_OP_SET_VOLUME, volume) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.op(BLE_AUDIO_VCP_OP_SET_VOLUME, volume);
 }
 
 BTStatus BLEAudioVolumeController::mute() {
-  return _impl ? _impl->op(BLE_AUDIO_VCP_OP_MUTE) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.op(BLE_AUDIO_VCP_OP_MUTE);
 }
 
 BTStatus BLEAudioVolumeController::unmute() {
-  return _impl ? _impl->op(BLE_AUDIO_VCP_OP_UNMUTE) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.op(BLE_AUDIO_VCP_OP_UNMUTE);
 }
 
 BTStatus BLEAudioVolumeController::volumeUp() {
-  return _impl ? _impl->op(BLE_AUDIO_VCP_OP_UP) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.op(BLE_AUDIO_VCP_OP_UP);
 }
 
 BTStatus BLEAudioVolumeController::volumeDown() {
-  return _impl ? _impl->op(BLE_AUDIO_VCP_OP_DOWN) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.op(BLE_AUDIO_VCP_OP_DOWN);
 }
 
 BTStatus BLEAudioVolumeController::readState() {
-  return _impl ? _impl->op(BLE_AUDIO_VCP_OP_READ) : BTStatus::InvalidState;
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.op(BLE_AUDIO_VCP_OP_READ);
 }
 
 uint8_t BLEAudioVolumeController::getVolume() const {
-  return _impl ? _impl->volume.load(std::memory_order_relaxed) : 0;
+  BLE_CHECK_IMPL(0);
+  return impl.volume.load(std::memory_order_relaxed);
 }
 
 bool BLEAudioVolumeController::isMuted() const {
-  return _impl && _impl->muted.load(std::memory_order_relaxed);
+  BLE_CHECK_IMPL(false);
+  return impl.muted.load(std::memory_order_relaxed);
 }
 
 BTStatus BLEAudioVolumeController::setVolumeOffset(int16_t offset) {
-  if (!_impl) {
-    return BTStatus::InvalidState;
-  }
-  const uint16_t c = _impl->link.activeConn();
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  const uint16_t c = impl.link.activeConn();
   return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioVcpCtlrSetOffset(c, offset)) : BTStatus::InvalidState;
 }
 
 BTStatus BLEAudioVolumeController::setInputGain(int8_t gain) {
-  if (!_impl) {
-    return BTStatus::InvalidState;
-  }
-  const uint16_t c = _impl->link.activeConn();
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  const uint16_t c = impl.link.activeConn();
   return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioVcpCtlrSetGain(c, gain)) : BTStatus::InvalidState;
 }
 
 BLEAudioVolumeController &BLEAudioVolumeController::onDiscovered(DiscoveredCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.onDiscoveredCb = std::move(cb);
   return *this;
 }
 
 BLEAudioVolumeController &BLEAudioVolumeController::onStateChanged(StateCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->stateCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.onStateChangedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioVolumeController &BLEAudioVolumeController::onOffsetChanged(OffsetCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->offsetCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.onOffsetChangedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioVolumeController &BLEAudioVolumeController::onInputChanged(InputCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->inputCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.onInputChangedCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioVolumeController::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = nullptr;
-    _impl->stateCb = nullptr;
-    _impl->offsetCb = nullptr;
-    _impl->inputCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onDiscoveredCb = nullptr;
+  impl.onStateChangedCb = nullptr;
+  impl.onOffsetChangedCb = nullptr;
+  impl.onInputChangedCb = nullptr;
 }
 
 BLEAudioVolumeController BLEAudio::createVolumeController() {
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("createVolumeController(): call between audio.begin() and audio.start()");
-    return BLEAudioVolumeController();
-  }
-  auto c = std::make_shared<BLEAudioVolumeController::Impl>();
-  c->audio = _impl;
-  _impl->roles.push_back(c);
-  /* `roles` owns the role until end(); a strong capture here would form a cycle with Impl::audio. */
-  std::weak_ptr<BLEAudioVolumeController::Impl> weak = c;
-  _impl->setHandler(BLE_AUDIO_GRP_VCP_CONTROLLER, [weak](const ble_audio_evt_t &e) {
-    if (auto s = weak.lock()) {
-      s->handle(e);
+  return BLEAudioImplCommon::createStagedRole<BLEAudioVolumeController>(
+    _impl, "createVolumeController", BLE_AUDIO_GRP_VCP_CONTROLLER, [](BLEAudioVolumeController::Impl &) {
+      return bleAudioStatus(bleAudioVcpCtlrInit());
     }
-  });
-  _impl->roleApplies.push_back([]() -> BTStatus {
-    return bleAudioStatus(bleAudioVcpCtlrInit());
-  });
-  return BLEAudioVolumeController(c);
+  );
 #else
   log_e("Volume controller is not enabled in this build (CONFIG_BT_VCP_VOL_CTLR)");
   return BLEAudioVolumeController();

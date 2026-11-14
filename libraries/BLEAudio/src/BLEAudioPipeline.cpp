@@ -19,7 +19,6 @@
 
 #include "BLEAudioPipeline.h"
 
-#include "sdkconfig.h"
 #include "esp_lc3_dec.h"
 #include "esp_lc3_enc.h"
 
@@ -33,12 +32,12 @@
 
 // Keep the codec off the host's core so decoding never delays ISO timing.
 BaseType_t bleAudioCodecCore() {
-#if CONFIG_FREERTOS_UNICORE
+#if BLE_HOST_PINNED_TO_CORE_DEFINED
+#if BLE_HOST_PINNED_CORE == 0
+  return portNUM_PROCESSORS > 1 ? 1 : 0;
+#else
   return 0;
-#elif defined(CONFIG_BT_NIMBLE_PINNED_TO_CORE)
-  return CONFIG_BT_NIMBLE_PINNED_TO_CORE == 0 ? 1 : 0;
-#elif defined(CONFIG_BT_BLUEDROID_PINNED_TO_CORE)
-  return CONFIG_BT_BLUEDROID_PINNED_TO_CORE == 0 ? 1 : 0;
+#endif
 #else
   return tskNO_AFFINITY;
 #endif

@@ -81,10 +81,7 @@ static struct {
 /* Per-connection PAST dedup: two sinks asking for the same Source_ID must each
  * get one answer, so the "already answered" bits cannot be a single global
  * bitmap. One row per possible conn (same limit as the engine link table). */
-#ifndef CONFIG_BT_MAX_CONN
-#define CONFIG_BT_MAX_CONN 4
-#endif
-#define BA_PAST_CONNS CONFIG_BT_MAX_CONN
+#define BA_PAST_CONNS BLE_MAX_CONN
 static struct {
   uint16_t conn;    /* CONN_NONE when free (handle 0 is a valid first ACL). */
   uint8_t sent[32]; /* 256-bit Source_ID bitmap (byte = id >> 3, bit = 1u << (id & 7)). */

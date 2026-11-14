@@ -17,31 +17,23 @@
 #pragma once
 
 /**
- * @file
- * @brief Shared implementation state of the LE Audio controller handle.
+ * @file BLEAudioImpl.h
+ * @brief Shared implementation base (`BLEAudioImplCommon`) of the LE Audio controller handle.
  *
- * The engine API is host-agnostic, so `BLEAudio::Impl` is defined once and
- * compiled into every build (NimBLE and Bluedroid alike).
- *
- * It is the one place engine events enter C++. The engine posts a tagged
- * `ble_audio_evt_t` envelope to dispatch() on the Bluetooth host task:
- *  - Core events (`BLE_AUDIO_GRP_CORE`: ACL, security, GATT discovery) update
- *    the link table, reach EVERY registered role handler (each role may care
- *    about a link), then the application's link callbacks.
- *  - Every other group reaches the single handler its role registered.
- * Stream events do not come through here; they go straight to the stream
- * (see `BLEAudioStream.cpp`).
+ * Concrete `BLEAudio::Impl` is defined per backend in `BLEAudio.nimble.h` /
+ * `BLEAudio.bluedroid.h` (matching the core BLE two-layer PIMPL model) so
+ * NimBLE-only fallback clients stay out of the shared controller state.
  */
 
 #include "BLEAudio.h"
 #if BLE_AUDIO_SUPPORTED
 
-#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <utility>
 #include <vector>
 #include "BTStatus.h"
 #include "core/BLEMutex.h"
@@ -49,79 +41,71 @@
 
 /**
  * @brief Copy a role callback under the role mutex so it can be invoked unlocked.
- *
- * Roles keep plain `std::function` members, as the rest of the BLE library
- * does. A setter takes the role mutex while replacing one; a host-task handler
- * copies the member with this helper, releases the lock, then invokes the copy.
- * That preserves the callback model in `DESIGN.md` without a wrapper type.
  */
 template<typename T, typename Fn> Fn bleAudioCopyCallback(const T &impl, Fn T::*member) {
   BLELockGuard lock(impl.mtx.get());
   return impl.*member;
 }
-#include "client/BLEClient.h"
 
 struct BLEAudioImplCommon {
-  /** @brief Role handler for one event group (host task). */
   using EventHandler = std::function<void(const ble_audio_evt_t &)>;
   using LinkCallback = std::function<void(uint16_t connHandle)>;
 
-  // --------------------------------------------------------------------------
-  // State
-  // --------------------------------------------------------------------------
-
-  BLESharedMutex mtx;                                  ///< Protects handlers, link callbacks and clients.
+  BLESharedMutex mtx;                                  ///< Protects handlers and link callbacks.
   std::atomic<uint32_t> presentationDelayUs{40000};    ///< Default for new roles (setPresentationDelay()).
-  LinkCallback linkReadyCb;                            ///< Application onLinkReady().
-  LinkCallback disconnectedCb;                         ///< Application onDisconnected().
+  LinkCallback onLinkReadyCb;                          ///< Application onLinkReady().
+  LinkCallback onDisconnectedCb;                       ///< Application onDisconnected().
   std::atomic<bool> active{false};                     ///< begin() succeeded, end() not called.
   std::atomic<bool> started{false};                    ///< start() succeeded.
 
-  /**
-   * Staged role registrations, run in creation order by BLEAudio::start()
-   * between engine init and the single GATT commit, then cleared.
-   */
   std::vector<std::function<BTStatus()>> roleApplies;
-
-  /**
-   * Keeps every role alive until end(): registered services point into their
-   * roles' streams, so a role must not die when the sketch drops its handle.
-   */
   std::vector<std::shared_ptr<void>> roles;
-
-  /** Best-effort transport teardown for roles that own advertising/scanning. */
   std::vector<std::function<void()>> roleStops;
 
-  /**
-   * NimBLE connect() fallback clients. Kept alive while the link is up and
-   * released on ACL_DISCONNECTED so repeated connect/disconnect cycles do not
-   * accumulate GATTC registrations.
-   */
-  std::vector<std::shared_ptr<BLEClient>> clients;
-
-  /** One handler per event group; roles register theirs at creation, before start(). */
   EventHandler handlers[BLE_AUDIO_GRP_COUNT];
 
-  /** Links whose GATT discovery finished; client roles may start profile discovery on them. */
-#if defined(CONFIG_BT_MAX_CONN)
-  static constexpr size_t kMaxLinks = CONFIG_BT_MAX_CONN;
-#else
-  static constexpr size_t kMaxLinks = 4;
-#endif
+  static constexpr size_t kMaxLinks = BLE_MAX_CONN;
   std::array<uint16_t, kMaxLinks> gattReady;
 
   BLEAudioImplCommon() {
     gattReady.fill(BLE_AUDIO_CONN_NONE);
   }
 
-  // --------------------------------------------------------------------------
-  // Helpers
-  // --------------------------------------------------------------------------
+  static BLEAudio makeHandle(std::shared_ptr<BLEAudio::Impl> impl) {
+    return BLEAudio(std::move(impl));
+  }
 
-  /** @brief Register (or replace) the handler of @p group; one role per group. */
+  /**
+   * @brief Shared factory helper for staging a role handle on `BLEAudio::Impl`.
+   *
+   * Enforces the "between begin() and start()" precondition, stores the strong
+   * role reference in `roles`, and binds a weak group dispatcher + apply hook.
+   */
+  template<typename Handle, typename ApplyFn>
+  static Handle createStagedRole(
+    const std::shared_ptr<BLEAudio::Impl> &audio, const char *factoryName, ble_audio_evt_group_t group, ApplyFn &&apply
+  ) {
+    if (!audio || !audio->active || audio->started) {
+      log_e("%s(): call between audio.begin() and audio.start()", factoryName);
+      return Handle();
+    }
+    auto role = std::make_shared<typename Handle::Impl>();
+    role->audio = audio;
+    audio->roles.push_back(role);
+    std::weak_ptr<typename Handle::Impl> weak = role;
+    audio->setHandler(group, [weak](const ble_audio_evt_t &e) {
+      if (auto s = weak.lock()) {
+        s->handle(e);
+      }
+    });
+    audio->roleApplies.push_back([weak, applyFn = std::forward<ApplyFn>(apply)]() mutable -> BTStatus {
+      auto s = weak.lock();
+      return s ? applyFn(*s) : BTStatus::OK;
+    });
+    return Handle(role);
+  }
+
   void setHandler(ble_audio_evt_group_t group, EventHandler h) {
-    // Client roles discover the peer's GATT database; server-only roles do not
-    // need it, so peer-opened links are then reported ready without discovery.
     switch (group) {
       case BLE_AUDIO_GRP_UNICAST_CLIENT:
       case BLE_AUDIO_GRP_BROADCAST_ASSISTANT:
@@ -142,7 +126,6 @@ struct BLEAudioImplCommon {
     handlers[group] = std::move(h);
   }
 
-  /** @brief Whether the GATT discovery of @p conn finished and the link is still up. */
   bool isGattReady(uint16_t conn) const {
     BLELockGuard lock(mtx.get());
     for (uint16_t c : gattReady) {
@@ -153,80 +136,8 @@ struct BLEAudioImplCommon {
     return false;
   }
 
-  /**
-   * @brief Maintain the link table from core events.
-   *
-   * Adds a link on a successful GATT discovery (ignored when the table is
-   * full: the link still works, isGattReady() just reports false for it) and
-   * removes it on disconnect.
-   */
-  void trackLink(const ble_audio_evt_t &e) {
-    BLELockGuard lock(mtx.get());
-    if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED && e.err == 0 && !isGattReady(e.conn_handle)) {
-      for (uint16_t &c : gattReady) {
-        if (c == BLE_AUDIO_CONN_NONE) {
-          c = e.conn_handle;
-          break;
-        }
-      }
-    } else if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED) {
-      for (uint16_t &c : gattReady) {
-        if (c == e.conn_handle) {
-          c = BLE_AUDIO_CONN_NONE;
-        }
-      }
-      clients.erase(std::remove_if(clients.begin(), clients.end(), [&](const std::shared_ptr<BLEClient> &client) {
-                      return !client || !client->isConnected() || client->getHandle() == e.conn_handle;
-                    }),
-                    clients.end());
-    }
-  }
-
-  /**
-   * @brief Route one engine event (host task).
-   *
-   * Core events: link table first, so a role handler already sees the
-   * updated isGattReady(); then every role; the application callbacks last,
-   * so roles are ready when the sketch reacts to a link.
-   */
-  void dispatch(const ble_audio_evt_t &e) {
-    const uint8_t group = BLE_AUDIO_EVT_GROUP(e.type);
-    EventHandler coreHandlers[BLE_AUDIO_GRP_COUNT];
-    EventHandler groupHandler;
-    LinkCallback linkReady;
-    LinkCallback disconnected;
-    if (group == BLE_AUDIO_GRP_CORE) {
-      trackLink(e);
-      BLELockGuard lock(mtx.get());
-      for (size_t i = 0; i < BLE_AUDIO_GRP_COUNT; i++) {
-        coreHandlers[i] = handlers[i];
-      }
-      linkReady = linkReadyCb;
-      disconnected = disconnectedCb;
-    } else if (group < BLE_AUDIO_GRP_COUNT) {
-      BLELockGuard lock(mtx.get());
-      groupHandler = handlers[group];
-    }
-    if (group == BLE_AUDIO_GRP_CORE) {
-      for (auto &h : coreHandlers) {
-        if (h) {
-          h(e);
-        }
-      }
-      if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED && e.err == 0 && linkReady) {
-        linkReady(e.conn_handle);
-      } else if ((e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED || (e.type == BLE_AUDIO_EVT_ACL_CONNECTED && e.err != 0)) && disconnected) {
-        // A failed connect has no link to lose; still report it so a sketch
-        // waiting for onLinkReady()/onDisconnected() does not wait forever.
-        disconnected(e.conn_handle);
-      }
-    } else if (groupHandler) {
-      groupHandler(e);
-    }
-  }
+  void trackLink(const ble_audio_evt_t &e);
+  void dispatch(const ble_audio_evt_t &e);
 };
-
-/** Single definition for both hosts (see the file comment). */
-struct BLEAudio::Impl : BLEAudioImplCommon {};
 
 #endif /* BLE_AUDIO_SUPPORTED */

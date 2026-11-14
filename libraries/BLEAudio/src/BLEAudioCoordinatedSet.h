@@ -84,6 +84,8 @@ public:
   ~BLEAudioCoordinatedSetMember() = default;
   BLEAudioCoordinatedSetMember(const BLEAudioCoordinatedSetMember &) = default;
   BLEAudioCoordinatedSetMember &operator=(const BLEAudioCoordinatedSetMember &) = default;
+  BLEAudioCoordinatedSetMember(BLEAudioCoordinatedSetMember &&) = default;
+  BLEAudioCoordinatedSetMember &operator=(BLEAudioCoordinatedSetMember &&) = default;
 
   /** @brief Whether this handle references a member (false when the factory failed). */
   explicit operator bool() const;
@@ -166,6 +168,8 @@ public:
   ~BLEAudioCoordinatedSetCoordinator() = default;
   BLEAudioCoordinatedSetCoordinator(const BLEAudioCoordinatedSetCoordinator &) = default;
   BLEAudioCoordinatedSetCoordinator &operator=(const BLEAudioCoordinatedSetCoordinator &) = default;
+  BLEAudioCoordinatedSetCoordinator(BLEAudioCoordinatedSetCoordinator &&) = default;
+  BLEAudioCoordinatedSetCoordinator &operator=(BLEAudioCoordinatedSetCoordinator &&) = default;
 
   /** @brief Whether this handle references a coordinator (false when the factory failed). */
   explicit operator bool() const;

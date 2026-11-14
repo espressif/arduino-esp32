@@ -73,6 +73,8 @@ public:
   ~BLEAudioCapAcceptor() = default;
   BLEAudioCapAcceptor(const BLEAudioCapAcceptor &) = default;
   BLEAudioCapAcceptor &operator=(const BLEAudioCapAcceptor &) = default;
+  BLEAudioCapAcceptor(BLEAudioCapAcceptor &&) = default;
+  BLEAudioCapAcceptor &operator=(BLEAudioCapAcceptor &&) = default;
 
   /** @brief Whether this handle references an acceptor (false when the factory failed). */
   explicit operator bool() const;
@@ -129,6 +131,8 @@ public:
   ~BLEAudioCapInitiator() = default;
   BLEAudioCapInitiator(const BLEAudioCapInitiator &) = default;
   BLEAudioCapInitiator &operator=(const BLEAudioCapInitiator &) = default;
+  BLEAudioCapInitiator(BLEAudioCapInitiator &&) = default;
+  BLEAudioCapInitiator &operator=(BLEAudioCapInitiator &&) = default;
 
   /** @brief Whether this handle references an initiator (false when the factory failed). */
   explicit operator bool() const;
@@ -286,6 +290,8 @@ public:
   ~BLEAudioCapCommander() = default;
   BLEAudioCapCommander(const BLEAudioCapCommander &) = default;
   BLEAudioCapCommander &operator=(const BLEAudioCapCommander &) = default;
+  BLEAudioCapCommander(BLEAudioCapCommander &&) = default;
+  BLEAudioCapCommander &operator=(BLEAudioCapCommander &&) = default;
 
   /** @brief Whether this handle references a commander (false when the factory failed). */
   explicit operator bool() const;

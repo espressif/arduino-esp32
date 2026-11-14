@@ -78,15 +78,8 @@ static const char *TAG = "BLEAudioBap";
 
 /* ── Little-endian helpers ──────────────────────────────────────────────── */
 
-static inline void audio_put_le16(uint8_t *p, uint16_t v) {
-  p[0] = (uint8_t)v;
-  p[1] = (uint8_t)(v >> 8);
-}
-
-static inline void audio_put_le32(uint8_t *p, uint32_t v) {
-  audio_put_le16(p, (uint16_t)v);
-  audio_put_le16(p + 2, (uint16_t)(v >> 16));
-}
+#define audio_put_le16 ble_audio_put_le16
+#define audio_put_le32 ble_audio_put_le32
 
 static inline uint16_t audio_get_le16(const uint8_t *p) {
   return (uint16_t)(p[0] | (p[1] << 8));

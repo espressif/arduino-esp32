@@ -92,15 +92,8 @@ static int cap_attach(void) {
 }
 
 /* Little-endian writers for LTV metadata and advertising payloads. */
-static inline void audio_put_le16(uint8_t *p, uint16_t v) {
-  p[0] = (uint8_t)v;
-  p[1] = (uint8_t)(v >> 8);
-}
-
-static inline void audio_put_le32(uint8_t *p, uint32_t v) {
-  audio_put_le16(p, (uint16_t)v);
-  audio_put_le16(p + 2, (uint16_t)(v >> 16));
-}
+#define audio_put_le16 ble_audio_put_le16
+#define audio_put_le32 ble_audio_put_le32
 
 static inline uint16_t handle_of(const esp_ble_conn_t *conn) {
   return conn ? conn->handle : CONN_NONE;
@@ -112,11 +105,7 @@ static inline uint16_t handle_of(const esp_ble_conn_t *conn) {
 
 #if CAP_PEERS
 
-#ifdef CONFIG_BT_MAX_CONN
-#define MAX_PEERS CONFIG_BT_MAX_CONN
-#else
-#define MAX_PEERS 2
-#endif
+#define MAX_PEERS BLE_MAX_CONN
 
 /** Stage of the initiator's discovery chain (CAS, optional BASS, then ASCS sink and source). */
 enum { D_IDLE = 0, D_CAS, D_BASS, D_SNK, D_SRC };

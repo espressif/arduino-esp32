@@ -46,6 +46,8 @@ public:
   ~BLEAudioPlayer() = default;
   BLEAudioPlayer(const BLEAudioPlayer &) = default;
   BLEAudioPlayer &operator=(const BLEAudioPlayer &) = default;
+  BLEAudioPlayer(BLEAudioPlayer &&) = default;
+  BLEAudioPlayer &operator=(BLEAudioPlayer &&) = default;
 
   /** @brief True between a successful begin() and end(). */
   explicit operator bool() const;

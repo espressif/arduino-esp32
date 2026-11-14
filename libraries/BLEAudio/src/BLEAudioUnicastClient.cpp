@@ -19,7 +19,10 @@
 
 #include <vector>
 #include "BLEAudioUnicastClient.h"
-#include "BLEAudioImpl.h"
+#include "core/BLEBackend.h"
+#include "BLEAudioBackend.h"
+#include "core/BLEImplHelpers.h"
+#include "BLEAudioControlLink.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "esp32-hal-log.h"
 
@@ -48,16 +51,6 @@ struct Peer {
   bool discovered = false;       ///< PACS/ASCS known; usable by start().
   bool autoStart = false;        ///< connect(): start() once discovered.
 };
-
-/** @return The @p n-th set bit of @p mask, or 0 (Mono) when there are fewer bits. */
-uint32_t nthLocation(uint32_t mask, uint8_t n) {
-  for (uint32_t bit = 1; bit; bit <<= 1) {
-    if ((mask & bit) && n-- == 0) {
-      return bit;
-    }
-  }
-  return 0;
-}
 
 }  // namespace
 
@@ -173,7 +166,7 @@ struct BLEAudioUnicastClient::Impl {
           r.dir = tx ? BLE_AUDIO_DIR_SINK : BLE_AUDIO_DIR_SOURCE;
           r.ep_index = idx;
           r.codec = codec;
-          r.codec.chan_alloc = nthLocation(static_cast<uint32_t>(tx ? p.info.sinkLocation : p.info.sourceLocation), idx);
+          r.codec.chan_alloc = bleAudioNthLocation(static_cast<uint32_t>(tx ? p.info.sinkLocation : p.info.sourceLocation), idx);
           r.qos = q;
           r.qos.max_sdu = r.codec.octets_per_frame * bleAudioChannelCount(r.codec.chan_alloc) * r.codec.frames_per_sdu;
           r.context = static_cast<uint16_t>(context);

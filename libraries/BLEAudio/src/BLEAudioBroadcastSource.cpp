@@ -20,7 +20,10 @@
 #include <vector>
 #include "BLEAudioBroadcastSource.h"
 #include "BLEAudioAuracast.h"
-#include "BLEAudioImpl.h"
+#include "core/BLEBackend.h"
+#include "BLEAudioBackend.h"
+#include "core/BLEImplHelpers.h"
+#include "BLEAudioControlLink.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "BLEAudioProfiles.h"
 #include "BLE.h"
@@ -81,31 +84,9 @@ struct BLEAudioBroadcastSource::Impl {
   StoppedCallback stoppedCb;
 
   BTStatus waitStopped() {
-    {
-      BLELockGuard lock(mtx.get());
-      if (!streaming && !starting) {
-        return BTStatus::OK;
-      }
-    }
-    if (bleInStackCallbackTask()) {
-      log_e("BroadcastSource: cannot wait for BIG terminate from a stack callback");
-      return BTStatus::InvalidState;
-    }
-    stopSync.take();
-    {
-      BLELockGuard lock(mtx.get());
-      if (!streaming && !starting) {
-        stopSync.give(BTStatus::OK);
-        return BTStatus::OK;
-      }
-    }
-    BTStatus st = stopSync.wait(5000);
-    BLELockGuard lock(mtx.get());
-    if (st != BTStatus::OK || streaming || starting) {
-      log_e("BroadcastSource: timed out waiting for BIG to terminate");
-      return st == BTStatus::OK ? BTStatus::Fail : st;
-    }
-    return BTStatus::OK;
+    return bleAudioWaitUntilIdle(mtx, stopSync, "BroadcastSource", [this]() {
+      return streaming || starting;
+    });
   }
 
   /** @brief Match the owned streams to the channel count (stops at the first pool failure). */
@@ -155,9 +136,7 @@ struct BLEAudioBroadcastSource::Impl {
       locations[i] = n > 1 ? static_cast<uint32_t>(i == 0 ? BLEAudioLocation::FrontLeft : BLEAudioLocation::FrontRight) : 0;
     }
     uint8_t bcode[BLE_AUDIO_BCODE_SIZE] = {};
-    const size_t codeLen = code.length() < sizeof(bcode) ? code.length() : sizeof(bcode);
-    memcpy(bcode, code.c_str(), codeLen);
-    int err = bleAudioBsrcCreate(slots, n > 1 ? locations : nullptr, n, &c, &q, static_cast<uint16_t>(context), codeLen ? bcode : nullptr);
+    int err = bleAudioBsrcCreate(slots, n > 1 ? locations : nullptr, n, &c, &q, static_cast<uint16_t>(context), bleAudioPackBroadcastCode(code, bcode));
     if (err != 0) {
       log_e("BroadcastSource: create failed (%u BIS, %lu Hz, err=%d)", n, (unsigned long)c.sample_rate_hz, err);
     }

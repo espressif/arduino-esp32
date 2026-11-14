@@ -63,6 +63,8 @@ public:
   ~BLEAudioHearingAidDevice() = default;
   BLEAudioHearingAidDevice(const BLEAudioHearingAidDevice &) = default;
   BLEAudioHearingAidDevice &operator=(const BLEAudioHearingAidDevice &) = default;
+  BLEAudioHearingAidDevice(BLEAudioHearingAidDevice &&) = default;
+  BLEAudioHearingAidDevice &operator=(BLEAudioHearingAidDevice &&) = default;
 
   /** @return true when the handle refers to a created device. */
   explicit operator bool() const;
@@ -110,6 +112,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 /**
@@ -133,6 +136,8 @@ public:
   ~BLEAudioHearingAidController() = default;
   BLEAudioHearingAidController(const BLEAudioHearingAidController &) = default;
   BLEAudioHearingAidController &operator=(const BLEAudioHearingAidController &) = default;
+  BLEAudioHearingAidController(BLEAudioHearingAidController &&) = default;
+  BLEAudioHearingAidController &operator=(BLEAudioHearingAidController &&) = default;
 
   /** @return true when the handle refers to a created controller. */
   explicit operator bool() const;
@@ -179,6 +184,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 #endif /* BLE_AUDIO_SUPPORTED */

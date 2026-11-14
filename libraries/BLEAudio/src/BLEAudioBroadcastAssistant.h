@@ -118,6 +118,8 @@ public:
   ~BLEAudioBroadcastAssistant() = default;
   BLEAudioBroadcastAssistant(const BLEAudioBroadcastAssistant &) = default;
   BLEAudioBroadcastAssistant &operator=(const BLEAudioBroadcastAssistant &) = default;
+  BLEAudioBroadcastAssistant(BLEAudioBroadcastAssistant &&) = default;
+  BLEAudioBroadcastAssistant &operator=(BLEAudioBroadcastAssistant &&) = default;
 
   /** @return true when the handle refers to a created assistant. */
   explicit operator bool() const;

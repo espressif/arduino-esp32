@@ -76,11 +76,11 @@ struct BLEAudioStreamTap {
 struct BLEAudioStream::Impl : std::enable_shared_from_this<BLEAudioStream::Impl> {
   ble_audio_slot_t *slot = nullptr;  ///< Engine stream slot (never null for a live handle).
   BLESharedMutex mtx;                ///< Protects the application callbacks below.
-  Callback configuredCb;             ///< Application onConfigured().
-  Callback startedCb;                ///< Application onStarted().
-  StoppedCallback stoppedCb;         ///< Application onStopped().
-  ReceiveCallback receiveCb;         ///< Application onReceive().
-  Callback sentCb;                   ///< Application onSent().
+  Callback onConfiguredCb;           ///< Application onConfigured().
+  Callback onStartedCb;              ///< Application onStarted().
+  StoppedCallback onStoppedCb;       ///< Application onStopped().
+  ReceiveCallback onReceiveCb;       ///< Application onReceive().
+  Callback onSentCb;                 ///< Application onSent().
   /** Internal data path (Player/Recorder); null when none. Written only through setTap()/clearTap(). */
   std::atomic<const BLEAudioStreamTap *> tap{nullptr};
   /** Tap calls in flight on the host task; setTap()/clearTap() wait for it to reach zero. */

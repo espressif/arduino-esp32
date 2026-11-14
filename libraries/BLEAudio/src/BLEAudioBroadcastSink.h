@@ -79,6 +79,8 @@ public:
   ~BLEAudioBroadcastSink() = default;
   BLEAudioBroadcastSink(const BLEAudioBroadcastSink &) = default;
   BLEAudioBroadcastSink &operator=(const BLEAudioBroadcastSink &) = default;
+  BLEAudioBroadcastSink(BLEAudioBroadcastSink &&) = default;
+  BLEAudioBroadcastSink &operator=(BLEAudioBroadcastSink &&) = default;
 
   /** @brief Whether this handle references a sink (false when the factory failed). */
   explicit operator bool() const;

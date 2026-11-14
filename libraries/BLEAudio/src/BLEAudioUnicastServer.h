@@ -60,6 +60,8 @@ public:
   ~BLEAudioUnicastServer() = default;
   BLEAudioUnicastServer(const BLEAudioUnicastServer &) = default;
   BLEAudioUnicastServer &operator=(const BLEAudioUnicastServer &) = default;
+  BLEAudioUnicastServer(BLEAudioUnicastServer &&) = default;
+  BLEAudioUnicastServer &operator=(BLEAudioUnicastServer &&) = default;
 
   /** @brief Whether this handle references a server (false when the factory failed). */
   explicit operator bool() const;

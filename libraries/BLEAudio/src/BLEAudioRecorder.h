@@ -45,6 +45,8 @@ public:
   ~BLEAudioRecorder() = default;
   BLEAudioRecorder(const BLEAudioRecorder &) = default;
   BLEAudioRecorder &operator=(const BLEAudioRecorder &) = default;
+  BLEAudioRecorder(BLEAudioRecorder &&) = default;
+  BLEAudioRecorder &operator=(BLEAudioRecorder &&) = default;
 
   /** @brief True between a successful begin() and end(). */
   explicit operator bool() const;

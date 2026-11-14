@@ -52,9 +52,7 @@ constexpr uint32_t kMaxBurst = 3;    // ticks served per wake-up after a delay
 
 struct BLEAudioRecorder::Impl : BLEAudioDataPath {
   // Configuration (set before start()).
-  BLEAudioI2SConfig pins;
   BLEAudioPCMSource source;            // When set, PCM comes from here instead of I2S.
-  bool begun = false;
   esp_timer_handle_t timer = nullptr;  // SDU-interval tick; created once, reused across runs.
 
   // Shared with the sent tap / published to the API.
@@ -347,52 +345,16 @@ BLEAudioRecorder::operator bool() const {
 
 BTStatus BLEAudioRecorder::begin() {
   Impl &d = ensure(_impl);
-  if (d.running()) {
-    return BTStatus::InvalidState;
-  }
-  if (!d.source) {
-    log_e("Recorder: begin() needs a PCM source; use begin(bclk, ws, din) for I2S");
-    return BTStatus::InvalidParam;
-  }
-  d.pins = BLEAudioI2SConfig();
-  d.begun = true;
-  return BTStatus::OK;
+  return d.beginPcm(static_cast<bool>(d.source), "Recorder", "begin(bclk, ws, din)");
 }
 
 BTStatus BLEAudioRecorder::begin(int bclk, int ws, int din, int mclk, int port) {
   Impl &d = ensure(_impl);
-  if (d.running()) {
-    return BTStatus::InvalidState;
-  }
-  if (!d.source && (bclk < 0 || ws < 0 || din < 0)) {
-    log_e("Recorder: begin() needs BCLK, WS and DIN pins (or a PCM source set first)");
-    return BTStatus::InvalidParam;
-  }
-  d.pins = BLEAudioI2SConfig();
-  d.pins.bclk = bclk;
-  d.pins.ws = ws;
-  d.pins.din = din;
-  d.pins.mclk = mclk;
-  d.pins.port = port;
-  d.begun = true;
-  return BTStatus::OK;
+  return d.beginI2S(static_cast<bool>(d.source), bclk, ws, din, /*tx=*/false, mclk, port, "Recorder");
 }
 
 void BLEAudioRecorder::end() {
-  if (!_impl) {
-    return;
-  }
-  // A PCM source runs on the codec task; end() cannot join it or free the
-  // Impl from inside it. Request the stop and leave the release to a later
-  // call from loop()/setup().
-  if (_impl->isCurrentTask()) {
-    log_w("Recorder: end() from the codec task deferred; call end() from loop()");
-    _impl->stop();
-    return;
-  }
-  _impl->stop();
-  _impl->detach();
-  _impl.reset();
+  BLEAudioDataPath::endHandle(_impl, "Recorder");
 }
 
 BLEAudioRecorder &BLEAudioRecorder::setPCMSource(BLEAudioPCMSource source) {

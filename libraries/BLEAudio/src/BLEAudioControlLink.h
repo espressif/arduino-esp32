@@ -31,8 +31,64 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioImpl.h"
+#include "core/BLEBackend.h"
+#include "BLEAudioBackend.h"
+#include "core/BLEImplHelpers.h"
+#include "core/BLESync.h"
+#include "core/BLETask.h"
+#include "esp32-hal-log.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineControl.h"
+
+/**
+ * @brief Shared 5 s `BLESync` wait helper for broadcast roles (`BroadcastSource`, `BroadcastSink`, `CapInitiator`).
+ */
+template<typename BusyFn>
+inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const char *roleName, BusyFn &&isBusy) {
+  {
+    BLELockGuard lock(mtx.get());
+    if (!isBusy()) {
+      return BTStatus::OK;
+    }
+  }
+  if (bleInStackCallbackTask()) {
+    log_e("%s: cannot wait for BIG teardown from a stack callback", roleName);
+    return BTStatus::InvalidState;
+  }
+  sync.take();
+  {
+    BLELockGuard lock(mtx.get());
+    if (!isBusy()) {
+      sync.give(BTStatus::OK);
+      return BTStatus::OK;
+    }
+  }
+  BTStatus st = sync.wait(5000);
+  BLELockGuard lock(mtx.get());
+  if (st != BTStatus::OK || isBusy()) {
+    log_e("%s: timed out waiting for BIG teardown", roleName);
+    return st == BTStatus::OK ? BTStatus::Fail : st;
+  }
+  return BTStatus::OK;
+}
+
+/** @return The @p n-th set bit of an Audio Location mask, or 0 (Mono) when there are fewer bits. */
+inline uint32_t bleAudioNthLocation(uint32_t mask, uint8_t n) {
+  for (uint32_t bit = 1; bit; bit <<= 1) {
+    if ((mask & bit) && n-- == 0) {
+      return bit;
+    }
+  }
+  return 0;
+}
+
+/** @brief Pack a Broadcast Code string into a zero-padded 16-octet buffer, returning nullptr when empty. */
+inline const uint8_t *bleAudioPackBroadcastCode(const String &code, uint8_t out[16]) {
+  memset(out, 0, 16);
+  const size_t n = code.length() < 16 ? code.length() : 16;
+  memcpy(out, code.c_str(), n);
+  return n ? out : nullptr;
+}
 
 struct BLEAudioControlLink {
   /** Engine discovery entry point of the role, e.g. bleAudioVcpCtlrDiscover. */

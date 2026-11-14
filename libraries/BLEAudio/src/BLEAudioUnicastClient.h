@@ -97,6 +97,8 @@ public:
   ~BLEAudioUnicastClient() = default;
   BLEAudioUnicastClient(const BLEAudioUnicastClient &) = default;
   BLEAudioUnicastClient &operator=(const BLEAudioUnicastClient &) = default;
+  BLEAudioUnicastClient(BLEAudioUnicastClient &&) = default;
+  BLEAudioUnicastClient &operator=(BLEAudioUnicastClient &&) = default;
 
   /** @brief Whether this handle references a client (false when the factory failed). */
   explicit operator bool() const;

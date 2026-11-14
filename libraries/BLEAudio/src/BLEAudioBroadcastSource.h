@@ -66,6 +66,8 @@ public:
   ~BLEAudioBroadcastSource() = default;
   BLEAudioBroadcastSource(const BLEAudioBroadcastSource &) = default;
   BLEAudioBroadcastSource &operator=(const BLEAudioBroadcastSource &) = default;
+  BLEAudioBroadcastSource(BLEAudioBroadcastSource &&) = default;
+  BLEAudioBroadcastSource &operator=(BLEAudioBroadcastSource &&) = default;
 
   /** @brief Whether this handle references a source (false when the factory failed). */
   explicit operator bool() const;

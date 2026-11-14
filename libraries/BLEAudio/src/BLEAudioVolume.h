@@ -51,6 +51,8 @@ public:
   ~BLEAudioVolumeRenderer() = default;
   BLEAudioVolumeRenderer(const BLEAudioVolumeRenderer &) = default;
   BLEAudioVolumeRenderer &operator=(const BLEAudioVolumeRenderer &) = default;
+  BLEAudioVolumeRenderer(BLEAudioVolumeRenderer &&) = default;
+  BLEAudioVolumeRenderer &operator=(BLEAudioVolumeRenderer &&) = default;
 
   /** @return true when the handle refers to a created renderer. */
   explicit operator bool() const;
@@ -93,6 +95,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 /**
@@ -119,6 +122,8 @@ public:
   ~BLEAudioVolumeController() = default;
   BLEAudioVolumeController(const BLEAudioVolumeController &) = default;
   BLEAudioVolumeController &operator=(const BLEAudioVolumeController &) = default;
+  BLEAudioVolumeController(BLEAudioVolumeController &&) = default;
+  BLEAudioVolumeController &operator=(BLEAudioVolumeController &&) = default;
 
   /** @return true when the handle refers to a created controller. */
   explicit operator bool() const;
@@ -174,6 +179,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 #endif /* BLE_AUDIO_SUPPORTED */

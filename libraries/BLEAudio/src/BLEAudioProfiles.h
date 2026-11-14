@@ -122,6 +122,8 @@ public:
   ~BLEAudioTmap() = default;
   BLEAudioTmap(const BLEAudioTmap &) = default;
   BLEAudioTmap &operator=(const BLEAudioTmap &) = default;
+  BLEAudioTmap(BLEAudioTmap &&) = default;
+  BLEAudioTmap &operator=(BLEAudioTmap &&) = default;
 
   /** @return true when the handle was created by BLEAudio::createTmap(). */
   explicit operator bool() const;
@@ -146,6 +148,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 /** @brief GMAP identity (GMAS server and GMAP client). */
@@ -158,6 +161,8 @@ public:
   ~BLEAudioGmap() = default;
   BLEAudioGmap(const BLEAudioGmap &) = default;
   BLEAudioGmap &operator=(const BLEAudioGmap &) = default;
+  BLEAudioGmap(BLEAudioGmap &&) = default;
+  BLEAudioGmap &operator=(BLEAudioGmap &&) = default;
 
   /** @return true when the handle was created by BLEAudio::createGmap(). */
   explicit operator bool() const;
@@ -186,6 +191,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 /**

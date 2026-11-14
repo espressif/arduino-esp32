@@ -14,45 +14,27 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLEAudio.bluedroid.cpp
+ * @brief Bluedroid backend methods of `BLEAudio::Impl`.
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_BLUEDROID && BLE_AUDIO_SUPPORTED
 
 #include "BLE.h"
 #include "BLE.bluedroid.h"
-#include "BLEAudioImpl.h"
-#include "engine/BLEAudioEngine.h"
+#include "BLEAudio.bluedroid.h"
 #include "engine/BLEAudioEngine.bluedroid.h"
-#include "core/BLEAudioHooks.h"
-#include "core/BLEMutex.h"
 #include "esp32-hal-log.h"
 
-namespace {
-BLEAudio &audioControllerSlot() {
-  static BLEAudio slot;
-  return slot;
-}
-}  // namespace
-
-extern "C" bool bleAudioPreEndHook() {
-  auto &audio = audioControllerSlot();
-  if (!audio) {
-    return true;
-  }
-  return static_cast<bool>(audio.end());
+void BLEAudio::Impl::backendOnControllerCreated(BLEClass::Impl &bleImpl) {
+  bleImpl.storeHook(bleImpl.audioGapHook, BLEAudioEngine::forwardHostGapEvent);
 }
 
-BLEAudio BLEClass::getAudioController() {
-  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-  if (!isInitialized() || _impl->ending) {
-    log_e("getAudioController: BLE not initialized");
-    return BLEAudio();
-  }
-  auto &slot = audioControllerSlot();
-  if (!slot) {
-    slot = BLEAudio(std::make_shared<BLEAudio::Impl>());
-    _impl->storeHook(_impl->audioGapHook, BLEAudioEngine::forwardHostGapEvent);
-  }
-  return BLEAudio(slot);
+BTStatus BLEAudio::Impl::backendConnect(const BTAddress &address) {
+  log_e("Audio: Bluedroid connect to %s reported NotSupported", address.toString().c_str());
+  return BTStatus::NotSupported;
 }
 
 #endif /* BLE_BLUEDROID && BLE_AUDIO_SUPPORTED */

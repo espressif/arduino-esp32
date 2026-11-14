@@ -19,27 +19,16 @@
 
 #include <vector>
 #include "BLEAudioProfiles.h"
-#include "BLEAudioImpl.h"
+#include "core/BLEBackend.h"
+#include "BLEAudioBackend.h"
+#include "core/BLEImplHelpers.h"
+#include "BLEAudioControlLink.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "engine/BLEAudioEngineProfiles.h"
 #include "esp32-hal-log.h"
 
-/**
- * @file BLEAudioProfiles.cpp
- * @brief TMAP / GMAP role handles and Public Broadcast Profile helpers.
- *
- * TMAS and GMAS are GATT services, so the local roles are registered by a
- * deferred init inside BLEAudio::start() (part of the single GATT commit).
- * A handle created after start() can still discover peers, but its local
- * roles can no longer be registered; setRoles()/setFeatures() then warn.
- *
- * API contract is documented on the declarations in `BLEAudioProfiles.h`; the
- * definitions below carry implementation notes only.
- */
-
 namespace {
 
-/** Log and return true when @p what is called after start (the GATT database is committed). */
 bool startedWarn(const std::shared_ptr<BLEAudio::Impl> &audio, const char *what) {
   if (audio && audio->started) {
     log_w("%s: ignored after audio.start() (the service is registered at start)", what);
@@ -48,39 +37,65 @@ bool startedWarn(const std::shared_ptr<BLEAudio::Impl> &audio, const char *what)
   return false;
 }
 
+struct DeferredProfileDiscovery {
+  std::shared_ptr<BLEAudio::Impl> audio;
+  BLESharedMutex mtx;
+  std::vector<uint16_t> pending;
+
+  BTStatus queueOrRun(uint16_t connHandle, const char *name, int (*discoverFn)(uint16_t)) {
+    if (!audio->started.load() || connHandle == BLE_AUDIO_CONN_NONE) {
+      log_e("%s: discover() before audio.start()", name);
+      return BTStatus::InvalidState;
+    }
+    {
+      BLELockGuard lock(mtx.get());
+      if (!audio->isGattReady(connHandle)) {
+        for (uint16_t c : pending) {
+          if (c == connHandle) {
+            return BTStatus::OK;
+          }
+        }
+        pending.push_back(connHandle);
+        return BTStatus::OK;
+      }
+    }
+    return bleAudioStatus(discoverFn(connHandle));
+  }
+
+  int handleCore(const ble_audio_evt_t &e, int (*discoverFn)(uint16_t)) {
+    bool doStart = false;
+    {
+      BLELockGuard lock(mtx.get());
+      for (auto it = pending.begin(); it != pending.end(); ++it) {
+        if (*it == e.conn_handle) {
+          pending.erase(it);
+          doStart = (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED);
+          break;
+        }
+      }
+    }
+    if (!doStart) {
+      return 0;
+    }
+    return e.err ? e.err : discoverFn(e.conn_handle);
+  }
+};
+
 }  // namespace
 
 // --------------------------------------------------------------------------
 // TMAP
 // --------------------------------------------------------------------------
 
-struct BLEAudioTmap::Impl {
-  std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (role list); same ownership as every other role.
-  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
-  std::vector<uint16_t> pending;  ///< discover() called before GATT discovery finished.
-  BLEAudioTmapRole roles = BLEAudioTmapRole::None;  ///< Local roles; None registers no TMAS.
-  DiscoverCallback discoverCb;
+struct BLEAudioTmap::Impl : DeferredProfileDiscovery {
+  BLEAudioTmapRole roles = BLEAudioTmapRole::None;
+  DiscoverCallback onDiscoveredCb;
 
-  /** Engine event: deferred discovery on GATT_DISCOVERED, plus peer TMAP role reads. */
   void handle(const ble_audio_evt_t &e) {
     if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED || e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED) {
-      bool doStart = false;
-      {
-        BLELockGuard lock(mtx.get());
-        for (auto it = pending.begin(); it != pending.end(); ++it) {
-          if (*it == e.conn_handle) {
-            pending.erase(it);
-            doStart = (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED);
-            break;
-          }
-        }
-      }
-      if (doStart) {
-        int err = e.err ? e.err : bleAudioTmapDiscover(e.conn_handle);
-        if (err) {
-          if (auto cb = bleAudioCopyCallback(*this, &Impl::discoverCb)) {
-            cb(e.conn_handle, bleAudioStatus(err), BLEAudioTmapRole::None);
-          }
+      if (int err = handleCore(e, bleAudioTmapDiscover)) {
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::onDiscoveredCb)) {
+          cb(e.conn_handle, bleAudioStatus(err), BLEAudioTmapRole::None);
         }
       }
       return;
@@ -88,12 +103,10 @@ struct BLEAudioTmap::Impl {
     if (e.type != BLE_AUDIO_EVT_TMAP_DISCOVERED) {
       return;
     }
-    auto cb = bleAudioCopyCallback(*this, &Impl::discoverCb);
-    if (!cb) {
-      return;
+    if (auto cb = bleAudioCopyCallback(*this, &Impl::onDiscoveredCb)) {
+      const auto *d = static_cast<const ble_audio_tmap_discovered_t *>(e.data);
+      cb(e.conn_handle, bleAudioStatus(e.err), static_cast<BLEAudioTmapRole>(d ? d->roles : 0));
     }
-    auto *d = static_cast<const ble_audio_tmap_discovered_t *>(e.data);
-    cb(e.conn_handle, bleAudioStatus(e.err), static_cast<BLEAudioTmapRole>(d ? d->roles : 0));
   }
 };
 
@@ -104,84 +117,50 @@ BLEAudioTmap::operator bool() const {
 }
 
 BLEAudioTmap &BLEAudioTmap::setRoles(BLEAudioTmapRole roles) {
-  if (_impl && !startedWarn(_impl->audio, "BLEAudioTmap::setRoles")) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->roles = roles;
+  BLE_CHECK_IMPL(*this);
+  if (!startedWarn(impl.audio, "BLEAudioTmap::setRoles")) {
+    BLELockGuard lock(impl.mtx.get());
+    impl.roles = roles;
   }
   return *this;
 }
 
 BLEAudioTmapRole BLEAudioTmap::getRoles() const {
-  if (!_impl) {
-    return BLEAudioTmapRole::None;
-  }
-  BLELockGuard lock(_impl->mtx.get());
-  return _impl->roles;
+  BLE_CHECK_IMPL(BLEAudioTmapRole::None);
+  BLELockGuard lock(impl.mtx.get());
+  return impl.roles;
 }
 
 BTStatus BLEAudioTmap::discover(uint16_t connHandle) {
-  if (!_impl || !_impl->audio->started.load() || connHandle == BLE_AUDIO_CONN_NONE) {
-    log_e("TMAP: discover() before audio.start()");
-    return BTStatus::InvalidState;
-  }
-  {
-    BLELockGuard lock(_impl->mtx.get());
-    if (!_impl->audio->isGattReady(connHandle)) {
-      for (uint16_t c : _impl->pending) {
-        if (c == connHandle) {
-          return BTStatus::OK;
-        }
-      }
-      _impl->pending.push_back(connHandle);
-      return BTStatus::OK;
-    }
-  }
-  return bleAudioStatus(bleAudioTmapDiscover(connHandle));
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.queueOrRun(connHandle, "TMAP", bleAudioTmapDiscover);
 }
 
 BLEAudioTmap &BLEAudioTmap::onDiscovered(DiscoverCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoverCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.onDiscoveredCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioTmap::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoverCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onDiscoveredCb = nullptr;
 }
 
 BLEAudioTmap BLEAudio::createTmap() {
 #if BLE_AUDIO_TMAP_SUPPORTED
-  if (!_impl || !_impl->active) {
-    log_e("createTmap(): call after audio.begin()");
-    return BLEAudioTmap();
-  }
-  if (_impl->started) {
-    log_e("createTmap(): create identity roles before audio.start()");
-    return BLEAudioTmap();
-  }
-  auto tmap = std::make_shared<BLEAudioTmap::Impl>();
-  tmap->audio = _impl;
-  _impl->roles.push_back(tmap);
-  /* `roles` owns the handle until end(); captures stay weak. */
-  std::weak_ptr<BLEAudioTmap::Impl> weak = tmap;
-  _impl->roleApplies.push_back([weak]() -> BTStatus {
-    auto t = weak.lock();
-    if (!t || t->roles == BLEAudioTmapRole::None) {
-      return BTStatus::OK;
+  return BLEAudioImplCommon::createStagedRole<BLEAudioTmap>(
+    _impl, "createTmap", BLE_AUDIO_GRP_TMAP, [](BLEAudioTmap::Impl &t) {
+      BLEAudioTmapRole localRoles;
+      {
+        BLELockGuard lock(t.mtx.get());
+        localRoles = t.roles;
+      }
+      return localRoles == BLEAudioTmapRole::None ? BTStatus::OK : bleAudioStatus(bleAudioTmapRegister(static_cast<uint16_t>(localRoles)));
     }
-    return bleAudioStatus(bleAudioTmapRegister(static_cast<uint16_t>(t->roles)));
-  });
-  _impl->setHandler(BLE_AUDIO_GRP_TMAP, [weak](const ble_audio_evt_t &e) {
-    if (auto t = weak.lock()) {
-      t->handle(e);
-    }
-  });
-  return BLEAudioTmap(tmap);
+  );
 #else
   log_e("TMAP is not enabled in this build (CONFIG_BT_TMAP)");
   return BLEAudioTmap();
@@ -192,34 +171,16 @@ BLEAudioTmap BLEAudio::createTmap() {
 // GMAP
 // --------------------------------------------------------------------------
 
-struct BLEAudioGmap::Impl {
-  std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (role list); same ownership as every other role.
-  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
-  std::vector<uint16_t> pending;  ///< discover() called before GATT discovery finished.
-  BLEAudioGmapRole roles = BLEAudioGmapRole::None;  ///< Local roles; None registers no GMAS.
-  BLEAudioGmapFeatures features;                    ///< Local features of those roles.
-  DiscoverCallback discoverCb;
+struct BLEAudioGmap::Impl : DeferredProfileDiscovery {
+  BLEAudioGmapRole roles = BLEAudioGmapRole::None;
+  BLEAudioGmapFeatures features;
+  DiscoverCallback onDiscoveredCb;
 
-  /** Engine event: deferred discovery on GATT_DISCOVERED, plus peer GMAP role/feature reads. */
   void handle(const ble_audio_evt_t &e) {
     if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED || e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED) {
-      bool doStart = false;
-      {
-        BLELockGuard lock(mtx.get());
-        for (auto it = pending.begin(); it != pending.end(); ++it) {
-          if (*it == e.conn_handle) {
-            pending.erase(it);
-            doStart = (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED);
-            break;
-          }
-        }
-      }
-      if (doStart) {
-        int err = e.err ? e.err : bleAudioGmapDiscover(e.conn_handle);
-        if (err) {
-          if (auto cb = bleAudioCopyCallback(*this, &Impl::discoverCb)) {
-            cb(e.conn_handle, bleAudioStatus(err), BLEAudioGmapRole::None, BLEAudioGmapFeatures{});
-          }
+      if (int err = handleCore(e, bleAudioGmapDiscover)) {
+        if (auto cb = bleAudioCopyCallback(*this, &Impl::onDiscoveredCb)) {
+          cb(e.conn_handle, bleAudioStatus(err), BLEAudioGmapRole::None, BLEAudioGmapFeatures{});
         }
       }
       return;
@@ -227,21 +188,19 @@ struct BLEAudioGmap::Impl {
     if (e.type != BLE_AUDIO_EVT_GMAP_DISCOVERED) {
       return;
     }
-    auto cb = bleAudioCopyCallback(*this, &Impl::discoverCb);
-    if (!cb) {
-      return;
+    if (auto cb = bleAudioCopyCallback(*this, &Impl::onDiscoveredCb)) {
+      const auto *d = static_cast<const ble_audio_gmap_discovered_t *>(e.data);
+      BLEAudioGmapFeatures f;
+      uint8_t r = 0;
+      if (d) {
+        r = d->roles;
+        f.unicastGateway = d->features.ugg;
+        f.unicastTerminal = d->features.ugt;
+        f.broadcastSender = d->features.bgs;
+        f.broadcastReceiver = d->features.bgr;
+      }
+      cb(e.conn_handle, bleAudioStatus(e.err), static_cast<BLEAudioGmapRole>(r), f);
     }
-    auto *d = static_cast<const ble_audio_gmap_discovered_t *>(e.data);
-    BLEAudioGmapFeatures f;
-    uint8_t r = 0;
-    if (d) {
-      r = d->roles;
-      f.unicastGateway = d->features.ugg;
-      f.unicastTerminal = d->features.ugt;
-      f.broadcastSender = d->features.bgs;
-      f.broadcastReceiver = d->features.bgr;
-    }
-    cb(e.conn_handle, bleAudioStatus(e.err), static_cast<BLEAudioGmapRole>(r), f);
   }
 };
 
@@ -252,17 +211,19 @@ BLEAudioGmap::operator bool() const {
 }
 
 BLEAudioGmap &BLEAudioGmap::setRoles(BLEAudioGmapRole roles) {
-  if (_impl && !startedWarn(_impl->audio, "BLEAudioGmap::setRoles")) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->roles = roles;
+  BLE_CHECK_IMPL(*this);
+  if (!startedWarn(impl.audio, "BLEAudioGmap::setRoles")) {
+    BLELockGuard lock(impl.mtx.get());
+    impl.roles = roles;
   }
   return *this;
 }
 
 BLEAudioGmap &BLEAudioGmap::setFeatures(const BLEAudioGmapFeatures &features) {
-  if (_impl && !startedWarn(_impl->audio, "BLEAudioGmap::setFeatures")) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->features = features;
+  BLE_CHECK_IMPL(*this);
+  if (!startedWarn(impl.audio, "BLEAudioGmap::setFeatures")) {
+    BLELockGuard lock(impl.mtx.get());
+    impl.features = features;
   }
   return *this;
 }
@@ -277,79 +238,49 @@ BLEAudioGmap &BLEAudioGmap::setFeatures(uint8_t unicastGateway, uint8_t unicastT
 }
 
 BLEAudioGmapRole BLEAudioGmap::getRoles() const {
-  if (!_impl) {
-    return BLEAudioGmapRole::None;
-  }
-  BLELockGuard lock(_impl->mtx.get());
-  return _impl->roles;
+  BLE_CHECK_IMPL(BLEAudioGmapRole::None);
+  BLELockGuard lock(impl.mtx.get());
+  return impl.roles;
 }
 
 BTStatus BLEAudioGmap::discover(uint16_t connHandle) {
-  if (!_impl || !_impl->audio->started.load() || connHandle == BLE_AUDIO_CONN_NONE) {
-    log_e("GMAP: discover() before audio.start()");
-    return BTStatus::InvalidState;
-  }
-  {
-    BLELockGuard lock(_impl->mtx.get());
-    if (!_impl->audio->isGattReady(connHandle)) {
-      for (uint16_t c : _impl->pending) {
-        if (c == connHandle) {
-          return BTStatus::OK;
-        }
-      }
-      _impl->pending.push_back(connHandle);
-      return BTStatus::OK;
-    }
-  }
-  return bleAudioStatus(bleAudioGmapDiscover(connHandle));
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  return impl.queueOrRun(connHandle, "GMAP", bleAudioGmapDiscover);
 }
 
 BLEAudioGmap &BLEAudioGmap::onDiscovered(DiscoverCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoverCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.onDiscoveredCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioGmap::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoverCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onDiscoveredCb = nullptr;
 }
 
 BLEAudioGmap BLEAudio::createGmap() {
 #if BLE_AUDIO_GMAP_SUPPORTED
-  if (!_impl || !_impl->active) {
-    log_e("createGmap(): call after audio.begin()");
-    return BLEAudioGmap();
-  }
-  if (_impl->started) {
-    log_e("createGmap(): create identity roles before audio.start()");
-    return BLEAudioGmap();
-  }
-  auto gmap = std::make_shared<BLEAudioGmap::Impl>();
-  gmap->audio = _impl;
-  _impl->roles.push_back(gmap);
-  /* `roles` owns the handle until end(); captures stay weak. */
-  std::weak_ptr<BLEAudioGmap::Impl> weak = gmap;
-  _impl->roleApplies.push_back([weak]() -> BTStatus {
-    auto g = weak.lock();
-    if (!g || g->roles == BLEAudioGmapRole::None) {
-      return BTStatus::OK;
+  return BLEAudioImplCommon::createStagedRole<BLEAudioGmap>(
+    _impl, "createGmap", BLE_AUDIO_GRP_GMAP, [](BLEAudioGmap::Impl &g) {
+      BLEAudioGmapRole localRoles;
+      BLEAudioGmapFeatures localFeatures;
+      {
+        BLELockGuard lock(g.mtx.get());
+        localRoles = g.roles;
+        localFeatures = g.features;
+      }
+      if (localRoles == BLEAudioGmapRole::None) {
+        return BTStatus::OK;
+      }
+      const ble_audio_gmap_features_t f = {
+        localFeatures.unicastGateway, localFeatures.unicastTerminal, localFeatures.broadcastSender, localFeatures.broadcastReceiver,
+      };
+      return bleAudioStatus(bleAudioGmapRegister(static_cast<uint8_t>(localRoles), &f));
     }
-    const ble_audio_gmap_features_t f = {
-      g->features.unicastGateway, g->features.unicastTerminal, g->features.broadcastSender, g->features.broadcastReceiver,
-    };
-    return bleAudioStatus(bleAudioGmapRegister(static_cast<uint8_t>(g->roles), &f));
-  });
-  _impl->setHandler(BLE_AUDIO_GRP_GMAP, [weak](const ble_audio_evt_t &e) {
-    if (auto g = weak.lock()) {
-      g->handle(e);
-    }
-  });
-  return BLEAudioGmap(gmap);
+  );
 #else
   log_e("GMAP is not enabled in this build (CONFIG_BT_GMAP)");
   return BLEAudioGmap();

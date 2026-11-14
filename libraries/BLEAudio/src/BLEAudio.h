@@ -313,10 +313,11 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEClass;
+  friend struct BLEAudioImplCommon;
 };
 
 // Audio component aggregator: pull the value types and role handles in so the
-// whole audio API reaches sketches through the <BLE.h> umbrella. Each header
+// whole audio API reaches sketches through the <BLEAudio.h> umbrella. Each header
 // guards itself on its own BLE_AUDIO_*_SUPPORTED symbol.
 #include "BLEAudioStream.h"
 #include "BLEAudioUnicastServer.h"

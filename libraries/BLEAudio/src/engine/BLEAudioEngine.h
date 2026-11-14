@@ -62,6 +62,19 @@ extern "C" {
 /** No ACL connection (broadcast streams, unbound slots, events without a link). */
 #define BLE_AUDIO_CONN_NONE 0xFFFF
 
+/** Little-endian wire encoding helpers shared across BAP and CAP engine units. */
+static inline void ble_audio_put_le16(uint8_t *dst, uint16_t v) {
+  dst[0] = (uint8_t)v;
+  dst[1] = (uint8_t)(v >> 8);
+}
+
+static inline void ble_audio_put_le32(uint8_t *dst, uint32_t v) {
+  dst[0] = (uint8_t)v;
+  dst[1] = (uint8_t)(v >> 8);
+  dst[2] = (uint8_t)(v >> 16);
+  dst[3] = (uint8_t)(v >> 24);
+}
+
 /* ── Event bridge ───────────────────────────────────────────────────────── */
 
 /**
@@ -234,28 +247,47 @@ typedef struct {
 /** @brief Install @p hooks (static storage; installing the same table twice is a no-op). */
 int bleAudioEngineRegisterUnit(const ble_audio_unit_hooks_t *hooks);
 
-/* ── Host glue ──────────────────────────────────────────────────────────── */
+/* ── Host glue (implemented in BLEAudioEngine.{nimble,bluedroid}.cpp) ───── */
 
-/** @brief NimBLE: forward a GATT event (MTU/notify/subscribe). */
-void bleAudioEngineGattPostEvent(uint8_t type, void *event);
+/** @brief Prepare host GATT/GAP state before `esp_ble_audio_common_init`. */
+int bleAudioHostPrepareInit(void);
+/** @brief Publish staged classic GATT definitions right before `common_start`. */
+int bleAudioHostPrepareGatt(void);
+/** @brief Finalize classic GATT state after `common_start`. */
+void bleAudioHostFinishGatt(bool success);
+/** @brief Reset classic GATT audio staging on deinit. */
+void bleAudioHostResetGatt(void);
+
+/** @brief Initialize / release host-side link security resources (e.g. Bluedroid SMP timer). */
+void bleAudioHostInitSecurity(void);
+void bleAudioHostDeinitSecurity(void);
+void bleAudioHostCancelSecurity(uint16_t conn_handle);
+
+/** @brief Initiate link encryption on a newly connected central link (`host_addr` is GAP event order). */
+int bleAudioHostSecureLink(uint16_t conn_handle, const uint8_t host_addr[6], uint8_t addr_type);
+
+/** @brief Start ATT MTU exchange after security settles (no-op when the host exchanges MTU at connect). */
+int bleAudioHostExchangeMtu(uint16_t conn_handle);
+
+/** @brief Open a central ACL via the host's audio GATTC path (`addr` is LSB-first). */
+int bleAudioHostOpenLink(uint8_t addr_type, const uint8_t addr[6]);
 
 /** @brief Start client-side profile discovery on a link (run on every MTU update). */
 void bleAudioEngineGattcDiscStart(uint16_t conn_handle);
 
-/** @brief Bluedroid: forward `ESP_GAP_BLE_AUTH_CMPL_EVT` (event id + param). */
+/** @brief Post a host GAP event (`ESP_GAP_BLE_AUTH_CMPL_EVT` on Bluedroid) into the engine. */
 void bleAudioEngineGapPostEvent(uint16_t type, void *param);
 
 /**
  * @brief Open an audio link as central.
  *
  * The next central ACL is then encrypted and, once secured, discovered (after
- * an MTU exchange on NimBLE). On Bluedroid the connection is opened through
- * the engine's GATTC interface so its GATT events reach the audio profiles.
+ * an MTU exchange on NimBLE).
  *
  * @param addr_type Peer address type.
  * @param addr Peer address in LSB-first order (BTAddress::data()).
- * @return ESP_ERR_NOT_SUPPORTED on NimBLE: open the link with the host GAP
- *         (BLEClient); the engine still secures and discovers it.
+ * @return 0 on Bluedroid when queued, or ESP_ERR_NOT_SUPPORTED on NimBLE
+ *         (open the link via BLEAudio::Impl::backendConnect).
  */
 int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]);
 

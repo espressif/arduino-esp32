@@ -15,10 +15,10 @@
  */
 
 #include "core/BLEGuards.h"
-#include "core/BLEAddressUtil.h"
 
 #if BLE_BLUEDROID && BLE_AUDIO_SUPPORTED
 
+#include "core/BLEAddressUtil.h"
 #include "engine/BLEAudioEngine.bluedroid.h"
 #include "engine/BLEAudioEngine.h"
 #include "BLE.h"
@@ -27,20 +27,59 @@
 #include "BTAddress.h"
 #include "esp32-hal-log.h"
 
+#include <esp_gattc_api.h>
+#include <esp_timer.h>
+#include <cstring>
+
+extern "C" uint8_t esp_ble_audio_bluedroid_get_gattc_if(void);
+
 /**
  * @file BLEAudioEngine.bluedroid.cpp
- * @brief Bluedroid SMP completion forwarding into the LE Audio engine.
- *
- * API contract is documented on the declarations in `BLEAudioEngine.bluedroid.h`;
- * the definitions below carry implementation notes only.
+ * @brief Bluedroid host hooks (GATTC open, deferred SMP start, PAST, disconnect) and SMP completion forwarding.
  */
+
+namespace {
+
+// The ACL_CONNECT event is delivered on the BTC/ISO task, where the peer may
+// not yet be registered in BTM's device list: esp_ble_set_encryption() queued
+// from there is dropped ("Device not found") and the SMP procedure then times
+// out. Defer it to the esp_timer task, like the advertising restart timer does.
+portMUX_TYPE sEncMux = portMUX_INITIALIZER_UNLOCKED;
+esp_timer_handle_t sEncTimer = nullptr;
+esp_bd_addr_t sEncBda = {};
+uint8_t sEncAddrType = 0;
+uint16_t sEncConn = BLE_AUDIO_CONN_NONE;
+
+void encTimerCb(void *) {
+  uint16_t conn;
+  esp_bd_addr_t bda;
+  uint8_t addrType;
+  portENTER_CRITICAL(&sEncMux);
+  conn = sEncConn;
+  memcpy(bda, sEncBda, sizeof(bda));
+  addrType = sEncAddrType;
+  sEncConn = BLE_AUDIO_CONN_NONE;
+  portEXIT_CRITICAL(&sEncMux);
+  if (conn == BLE_AUDIO_CONN_NONE || !bleAudioEngineIsInitialized()) {
+    return;
+  }
+  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_NO_MITM);
+  if (err != ESP_OK) {
+    log_w("conn %u: encryption failed to start (err=%d), continuing unencrypted", conn, static_cast<int>(err));
+    // Post onto iso_task instead of touching engine link tables from esp_timer.
+    esp_ble_gap_cb_param_t param = {};
+    memcpy(param.ble_security.auth_cmpl.bd_addr, bda, sizeof(bda));
+    param.ble_security.auth_cmpl.addr_type = addrType;
+    param.ble_security.auth_cmpl.success = false;
+    param.ble_security.auth_cmpl.fail_reason = 0xFF;
+    bleAudioEngineGapPostEvent(ESP_GAP_BLE_AUTH_CMPL_EVT, &param);
+  }
+}
+
+}  // namespace
 
 namespace BLEAudioEngine {
 
-/*
- * Called from the library's GAP callback for every event. The engine starts
- * GATT discovery on a link once its encryption completes.
- */
 void forwardHostGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
   if (param == nullptr) {
     return;
@@ -62,21 +101,98 @@ void forwardHostGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *p
   if (event != ESP_GAP_BLE_AUTH_CMPL_EVT) {
     return;
   }
-  // Audio links are encrypted before discovery; without this the failure only
-  // shows up later as a rejected PACS/ASCS read.
   log_d(
     "audio link: pairing complete success=%d reason=0x%02x auth_mode=%d", (int)param->ble_security.auth_cmpl.success,
     (unsigned)param->ble_security.auth_cmpl.fail_reason, (int)param->ble_security.auth_cmpl.auth_mode
   );
   if (bleAudioEngineIsInitialized()) {
-    bleAudioEngineGapPostEvent((uint16_t)event, param);
+    bleAudioEngineGapPostEvent(static_cast<uint16_t>(event), param);
   }
 }
 
 }  // namespace BLEAudioEngine
 
+extern "C" void bleAudioHostInitSecurity(void) {
+  if (sEncTimer == nullptr) {
+    esp_timer_create_args_t targs = {};
+    targs.callback = encTimerCb;
+    targs.name = "ble-audio-sec";
+    if (esp_timer_create(&targs, &sEncTimer) != ESP_OK) {
+      sEncTimer = nullptr;
+      log_w("security timer unavailable; encryption will start inside the connect callback");
+    }
+  }
+}
+
+extern "C" void bleAudioHostDeinitSecurity(void) {
+  portENTER_CRITICAL(&sEncMux);
+  sEncConn = BLE_AUDIO_CONN_NONE;
+  portEXIT_CRITICAL(&sEncMux);
+  if (sEncTimer != nullptr) {
+    (void)esp_timer_stop(sEncTimer);
+    (void)esp_timer_delete(sEncTimer);
+    sEncTimer = nullptr;
+  }
+}
+
+extern "C" void bleAudioHostCancelSecurity(uint16_t conn_handle) {
+  bool cancelEnc = false;
+  portENTER_CRITICAL(&sEncMux);
+  if (sEncConn == conn_handle) {
+    sEncConn = BLE_AUDIO_CONN_NONE;
+    cancelEnc = true;
+  }
+  portEXIT_CRITICAL(&sEncMux);
+  if (cancelEnc && sEncTimer != nullptr) {
+    (void)esp_timer_stop(sEncTimer);
+  }
+}
+
+extern "C" int bleAudioHostSecureLink(uint16_t conn_handle, const uint8_t host_addr[6], uint8_t addr_type) {
+  esp_bd_addr_t bda = {};
+  if (host_addr != nullptr) {
+    memcpy(bda, host_addr, sizeof(bda));
+  }
+  if (sEncTimer != nullptr) {
+    (void)esp_timer_stop(sEncTimer);
+    portENTER_CRITICAL(&sEncMux);
+    memcpy(sEncBda, bda, sizeof(sEncBda));
+    sEncAddrType = addr_type;
+    sEncConn = conn_handle;
+    portEXIT_CRITICAL(&sEncMux);
+    if (esp_timer_start_once(sEncTimer, 10000) == ESP_OK) {
+      return 0;
+    }
+    portENTER_CRITICAL(&sEncMux);
+    sEncConn = BLE_AUDIO_CONN_NONE;
+    portEXIT_CRITICAL(&sEncMux);
+    return ESP_FAIL;
+  }
+  return static_cast<int>(esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_NO_MITM));
+}
+
+extern "C" int bleAudioHostExchangeMtu(uint16_t) {
+  // Bluedroid exchanges the ATT MTU automatically when the engine's GATTC opens the link.
+  return 0;
+}
+
+extern "C" int bleAudioHostOpenLink(uint8_t addr_type, const uint8_t addr[6]) {
+  esp_gatt_if_t gattc_if = esp_ble_audio_bluedroid_get_gattc_if();
+  if (gattc_if == ESP_GATT_IF_NONE) {
+    log_e("engine GATTC interface not registered; cannot open the link");
+    return ESP_ERR_INVALID_STATE;
+  }
+  esp_bd_addr_t bda;
+  bleAudioAddrFromGap(bda, addr);
+  esp_err_t err = esp_ble_gattc_aux_open(gattc_if, bda, static_cast<esp_ble_addr_type_t>(addr_type), true);
+  if (err != ESP_OK) {
+    log_e("esp_ble_gattc_aux_open failed: %d", err);
+  }
+  return static_cast<int>(err);
+}
+
 extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip,
-                                                   uint16_t timeout_ms) {
+                                                 uint16_t timeout_ms) {
   if (!peer_addr) {
     return static_cast<int>(BTStatus::InvalidParam);
   }
@@ -160,7 +276,6 @@ extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
   BTAddress peer;
   uint8_t lsb[6];
   if (bleAudioEngineLinkAddress(conn_handle, lsb)) {
-    // The engine normalizes link addresses to LSB-first (BTAddress order).
     peer = BTAddress(lsb);
   } else if (!bluedroidFindPeerAddress(conn_handle, peer)) {
     return static_cast<int>(BTStatus::NotConnected);
@@ -179,8 +294,6 @@ extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
   return static_cast<int>(BTStatus::Fail);
 }
 
-// Bluedroid registers the classic server and LE Audio as separate GATTS apps,
-// so no cross-owner GATT commit coordination is required.
 extern "C" int bleAudioHostPrepareInit(void) {
   return 0;
 }

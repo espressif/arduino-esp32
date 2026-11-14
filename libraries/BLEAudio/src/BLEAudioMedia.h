@@ -78,6 +78,8 @@ public:
   ~BLEAudioMediaPlayer() = default;
   BLEAudioMediaPlayer(const BLEAudioMediaPlayer &) = default;
   BLEAudioMediaPlayer &operator=(const BLEAudioMediaPlayer &) = default;
+  BLEAudioMediaPlayer(BLEAudioMediaPlayer &&) = default;
+  BLEAudioMediaPlayer &operator=(BLEAudioMediaPlayer &&) = default;
 
   /** @return true when the handle refers to a created player. */
   explicit operator bool() const;
@@ -118,6 +120,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 /**
@@ -143,6 +146,8 @@ public:
   ~BLEAudioMediaController() = default;
   BLEAudioMediaController(const BLEAudioMediaController &) = default;
   BLEAudioMediaController &operator=(const BLEAudioMediaController &) = default;
+  BLEAudioMediaController(BLEAudioMediaController &&) = default;
+  BLEAudioMediaController &operator=(BLEAudioMediaController &&) = default;
 
   /** @return true when the handle refers to a created controller. */
   explicit operator bool() const;
@@ -200,6 +205,7 @@ private:
   std::shared_ptr<Impl> _impl;
 
   friend class BLEAudio;
+  friend struct BLEAudioImplCommon;
 };
 
 #endif /* BLE_AUDIO_SUPPORTED */

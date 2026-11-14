@@ -18,6 +18,7 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include "BLEAudioStream.h"
+#include "core/BLEImplHelpers.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -100,7 +101,7 @@ void onConfigured(void *owner) {
     BLEAudioStream::Callback cb;
     {
       BLELockGuard lock(impl.mtx.get());
-      cb = impl.configuredCb;
+      cb = impl.onConfiguredCb;
     }
     if (cb) {
       cb(h);
@@ -119,7 +120,7 @@ void onStarted(void *owner) {
     BLEAudioStream::Callback cb;
     {
       BLELockGuard lock(impl.mtx.get());
-      cb = impl.startedCb;
+      cb = impl.onStartedCb;
     }
     if (cb) {
       cb(h);
@@ -138,7 +139,7 @@ void onStopped(void *owner, uint8_t reason) {
     BLEAudioStream::StoppedCallback cb;
     {
       BLELockGuard lock(impl.mtx.get());
-      cb = impl.stoppedCb;
+      cb = impl.onStoppedCb;
     }
     if (cb) {
       cb(h, reason);
@@ -191,7 +192,7 @@ void onRecv(void *owner, const ble_audio_recv_info_t *info, const uint8_t *data,
   BLEAudioStream::ReceiveCallback cb;
   {
     BLELockGuard lock(impl->mtx.get());
-    cb = impl->receiveCb;
+    cb = impl->onReceiveCb;
   }
   if (!cb) {
     return;
@@ -225,7 +226,7 @@ void onSent(void *owner) {
   BLEAudioStream::Callback cb;
   {
     BLELockGuard lock(impl->mtx.get());
-    cb = impl->sentCb;
+    cb = impl->onSentCb;
   }
   if (cb) {
     cb(h);
@@ -293,15 +294,12 @@ BLEAudioStream::operator bool() const {
   return _impl != nullptr;
 }
 
-/** A stream only has a direction once a codec is configured on its slot. */
 BLEAudioStream::Direction BLEAudioStream::direction() const {
-  if (!_impl) {
-    return Direction::Unknown;
+  BLE_CHECK_IMPL(Direction::Unknown);
+  if (bleAudioStreamIsBound(impl.slot)) {
+    return bleAudioStreamIsTx(impl.slot) ? Direction::Tx : Direction::Rx;
   }
-  if (bleAudioStreamIsBound(_impl->slot)) {
-    return bleAudioStreamIsTx(_impl->slot) ? Direction::Tx : Direction::Rx;
-  }
-  const uint8_t kind = bleAudioStreamKind(_impl->slot);
+  const uint8_t kind = bleAudioStreamKind(impl.slot);
   if (kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE) {
     return Direction::Tx;
   }
@@ -312,49 +310,43 @@ BLEAudioStream::Direction BLEAudioStream::direction() const {
 }
 
 bool BLEAudioStream::isStreaming() const {
-  return _impl && bleAudioStreamIsStreaming(_impl->slot);
+  BLE_CHECK_IMPL(false);
+  return bleAudioStreamIsStreaming(impl.slot);
 }
 
 uint16_t BLEAudioStream::connHandle() const {
-  return _impl ? bleAudioStreamConnHandle(_impl->slot) : BLE_AUDIO_CONN_NONE;
+  BLE_CHECK_IMPL(BLE_AUDIO_CONN_NONE);
+  return bleAudioStreamConnHandle(impl.slot);
 }
 
 BLEAudioCodecConfig BLEAudioStream::codecConfig() const {
+  BLE_CHECK_IMPL(BLEAudioCodecConfig());
   ble_audio_codec_t c;
-  if (_impl && bleAudioStreamGetCodec(_impl->slot, &c)) {
-    return bleAudioCodecFromEngine(c);
-  }
-  return BLEAudioCodecConfig();
+  return bleAudioStreamGetCodec(impl.slot, &c) ? bleAudioCodecFromEngine(c) : BLEAudioCodecConfig();
 }
 
 BLEAudioQos BLEAudioStream::qos() const {
+  BLE_CHECK_IMPL(BLEAudioQos());
   ble_audio_qos_t q;
-  if (_impl && bleAudioStreamGetQos(_impl->slot, &q)) {
-    return bleAudioQosFromEngine(q);
-  }
-  return BLEAudioQos();
+  return bleAudioStreamGetQos(impl.slot, &q) ? bleAudioQosFromEngine(q) : BLEAudioQos();
 }
 
 // --------------------------------------------------------------------------
 // BLEAudioStream handle: data
 // --------------------------------------------------------------------------
 
-/**
- * Called once per SDU interval, so only misuse is logged: a write on an Rx
- * stream is a programming error, while "not streaming yet" is expected around
- * start/stop and is left to the returned status.
- */
 BTStatus BLEAudioStream::write(const uint8_t *sdu, uint16_t len) {
-  if (!_impl || !sdu || !len) {
+  BLE_CHECK_IMPL(BTStatus::InvalidParam);
+  if (!sdu || !len) {
     return BTStatus::InvalidParam;
   }
-  if (!bleAudioStreamIsTx(_impl->slot)) {
+  if (!bleAudioStreamIsTx(impl.slot)) {
     if (direction() == Direction::Rx) {
       log_e("Stream: write() on an Rx stream");
     }
     return BTStatus::InvalidState;
   }
-  return bleAudioStatus(bleAudioStreamSend(_impl->slot, sdu, len));
+  return bleAudioStatus(bleAudioStreamSend(impl.slot, sdu, len));
 }
 
 // --------------------------------------------------------------------------
@@ -362,50 +354,44 @@ BTStatus BLEAudioStream::write(const uint8_t *sdu, uint16_t len) {
 // --------------------------------------------------------------------------
 
 void BLEAudioStream::onConfigured(Callback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->configuredCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onConfiguredCb = std::move(cb);
 }
 
 void BLEAudioStream::onStarted(Callback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->startedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onStartedCb = std::move(cb);
 }
 
 void BLEAudioStream::onStopped(StoppedCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->stoppedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onStoppedCb = std::move(cb);
 }
 
 void BLEAudioStream::onReceive(ReceiveCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->receiveCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onReceiveCb = std::move(cb);
 }
 
 void BLEAudioStream::onSent(Callback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->sentCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onSentCb = std::move(cb);
 }
 
 /** The data-path tap is internal and is left untouched. */
 void BLEAudioStream::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->configuredCb = nullptr;
-    _impl->startedCb = nullptr;
-    _impl->stoppedCb = nullptr;
-    _impl->receiveCb = nullptr;
-    _impl->sentCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.onConfiguredCb = nullptr;
+  impl.onStartedCb = nullptr;
+  impl.onStoppedCb = nullptr;
+  impl.onReceiveCb = nullptr;
+  impl.onSentCb = nullptr;
 }
 
 #endif /* BLE_AUDIO_SUPPORTED */

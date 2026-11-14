@@ -39,6 +39,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/i2s_std.h"
+#include "esp32-hal-log.h"
+#include <memory>
 #include "BTStatus.h"
 #include "BLEAudioStream.h"
 #include "engine/BLEAudioStreamInternal.h"
@@ -227,6 +229,59 @@ struct BLEAudioDataPath {
 
   /** @brief Stream started/stopped tap: wake the codec task to (re)build or end its session. */
   static void onWake(void *ctx);
+
+  BLEAudioI2SConfig pins;
+  bool begun = false;
+
+  BTStatus beginPcm(bool hasCallback, const char *roleName, const char *pinHint) {
+    if (running()) {
+      return BTStatus::InvalidState;
+    }
+    if (!hasCallback) {
+      log_e("%s: begin() needs a PCM callback; use %s for I2S", roleName, pinHint);
+      return BTStatus::InvalidParam;
+    }
+    pins = BLEAudioI2SConfig();
+    begun = true;
+    return BTStatus::OK;
+  }
+
+  BTStatus beginI2S(bool hasCallback, int bclk, int ws, int dataPin, bool tx, int mclk, int port, const char *roleName) {
+    if (running()) {
+      return BTStatus::InvalidState;
+    }
+    if (!hasCallback && (bclk < 0 || ws < 0 || dataPin < 0)) {
+      log_e("%s: begin() needs BCLK, WS and %s pins (or a PCM callback set first)", roleName, tx ? "DOUT" : "DIN");
+      return BTStatus::InvalidParam;
+    }
+    pins = BLEAudioI2SConfig();
+    pins.bclk = bclk;
+    pins.ws = ws;
+    if (tx) {
+      pins.dout = dataPin;
+    } else {
+      pins.din = dataPin;
+    }
+    pins.mclk = mclk;
+    pins.port = port;
+    begun = true;
+    return BTStatus::OK;
+  }
+
+  template<typename Impl>
+  static void endHandle(std::shared_ptr<Impl> &impl, const char *roleName) {
+    if (!impl) {
+      return;
+    }
+    if (impl->isCurrentTask()) {
+      log_w("%s: end() from the codec task deferred; call end() from loop()", roleName);
+      impl->stop();
+      return;
+    }
+    impl->stop();
+    impl->detach();
+    impl.reset();
+  }
 
 private:
   static void entry(void *arg);

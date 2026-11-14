@@ -62,10 +62,8 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
   };
 
   // Configuration (set before start()).
-  BLEAudioI2SConfig pins;
   BLEAudioPCMSink sink;        // When set, PCM goes here instead of I2S.
   uint8_t depthOverride = 0;   // Jitter depth in SDUs, 0 = from the presentation delay.
-  bool begun = false;
 
   // Jitter buffer, shared with the tap.
   Ring ring[2];
@@ -399,52 +397,16 @@ BLEAudioPlayer::operator bool() const {
 
 BTStatus BLEAudioPlayer::begin() {
   Impl &d = ensure(_impl);
-  if (d.running()) {
-    return BTStatus::InvalidState;
-  }
-  if (!d.sink) {
-    log_e("Player: begin() needs a PCM sink; use begin(bclk, ws, dout) for I2S");
-    return BTStatus::InvalidParam;
-  }
-  d.pins = BLEAudioI2SConfig();
-  d.begun = true;
-  return BTStatus::OK;
+  return d.beginPcm(static_cast<bool>(d.sink), "Player", "begin(bclk, ws, dout)");
 }
 
 BTStatus BLEAudioPlayer::begin(int bclk, int ws, int dout, int mclk, int port) {
   Impl &d = ensure(_impl);
-  if (d.running()) {
-    return BTStatus::InvalidState;
-  }
-  if (!d.sink && (bclk < 0 || ws < 0 || dout < 0)) {
-    log_e("Player: begin() needs BCLK, WS and DOUT pins (or a PCM sink set first)");
-    return BTStatus::InvalidParam;
-  }
-  d.pins = BLEAudioI2SConfig();
-  d.pins.bclk = bclk;
-  d.pins.ws = ws;
-  d.pins.dout = dout;
-  d.pins.mclk = mclk;
-  d.pins.port = port;
-  d.begun = true;
-  return BTStatus::OK;
+  return d.beginI2S(static_cast<bool>(d.sink), bclk, ws, dout, /*tx=*/true, mclk, port, "Player");
 }
 
 void BLEAudioPlayer::end() {
-  if (!_impl) {
-    return;
-  }
-  // A PCM callback runs on the codec task; end() cannot join it or free the
-  // Impl from inside it. Request the stop and leave the release to a later
-  // call from loop()/setup().
-  if (_impl->isCurrentTask()) {
-    log_w("Player: end() from the codec task deferred; call end() from loop()");
-    _impl->stop();
-    return;
-  }
-  _impl->stop();
-  _impl->detach();
-  _impl.reset();
+  BLEAudioDataPath::endHandle(_impl, "Player");
 }
 
 BLEAudioPlayer &BLEAudioPlayer::setPCMSink(BLEAudioPCMSink sink) {

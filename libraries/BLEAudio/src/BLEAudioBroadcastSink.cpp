@@ -19,7 +19,10 @@
 
 #include <vector>
 #include "BLEAudioBroadcastSink.h"
-#include "BLEAudioImpl.h"
+#include "core/BLEBackend.h"
+#include "BLEAudioBackend.h"
+#include "core/BLEImplHelpers.h"
+#include "BLEAudioControlLink.h"
 #include "engine/BLEAudioStreamInternal.h"
 #include "BLE.h"
 #include "scan/BLEScan.h"
@@ -84,31 +87,9 @@ struct BLEAudioBroadcastSink::Impl {
   std::vector<BLEAudioStream> streams;    ///< One Rx stream per BIS.
 
   BTStatus waitStopped() {
-    {
-      BLELockGuard lock(mtx.get());
-      if (!streaming) {
-        return BTStatus::OK;
-      }
-    }
-    if (bleInStackCallbackTask()) {
-      log_e("BroadcastSink: cannot wait for BIG leave from a stack callback");
-      return BTStatus::InvalidState;
-    }
-    stopSync.take();
-    {
-      BLELockGuard lock(mtx.get());
-      if (!streaming) {
-        stopSync.give(BTStatus::OK);
-        return BTStatus::OK;
-      }
-    }
-    BTStatus st = stopSync.wait(5000);
-    BLELockGuard lock(mtx.get());
-    if (st != BTStatus::OK || streaming) {
-      log_e("BroadcastSink: timed out waiting for BIG to leave");
-      return st == BTStatus::OK ? BTStatus::Fail : st;
-    }
-    return BTStatus::OK;
+    return bleAudioWaitUntilIdle(mtx, stopSync, "BroadcastSink", [this]() {
+      return streaming;
+    });
   }
 
   SourceFoundCallback foundCb;
@@ -138,9 +119,7 @@ struct BLEAudioBroadcastSink::Impl {
   void pushCode() {
     BLELockGuard lock(mtx.get());
     uint8_t bcode[BLE_AUDIO_BCODE_SIZE] = {};
-    const size_t n = code.length() < sizeof(bcode) ? code.length() : sizeof(bcode);
-    memcpy(bcode, code.c_str(), n);
-    bleAudioBsinkSetCode(n ? bcode : nullptr);
+    bleAudioBsinkSetCode(bleAudioPackBroadcastCode(code, bcode));
   }
 
   /**

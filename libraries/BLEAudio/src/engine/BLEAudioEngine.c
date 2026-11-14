@@ -16,24 +16,12 @@
 
 /**
  * @file BLEAudioEngine.c
- * @brief Engine lifecycle, event bridge, link bring-up and BAP presets.
+ * @brief Host-agnostic engine lifecycle, event bridge, link bring-up and BAP presets.
  *
- * Fully shared across NimBLE and Bluedroid: the ESP-BLE-AUDIO API is
- * host-agnostic (IDF abstracts the host inside the engine), so only the few
- * places that must talk to the host directly carry a `BLE_NIMBLE` /
- * `BLE_BLUEDROID` branch.
- *
- * Responsibilities:
- *  - Lifecycle: `common_init` / `common_start` / `common_deinit`, and the
- *    hand-over of the host with the standalone ISO transport (`BLEIsoHost.h`).
- *  - Event bridge: the single C++ sink and bleAudioEngineEmit().
- *  - Unit hooks: the other engine units see GAP events and reset on deinit.
- *  - Links: the encryption -> MTU -> discovery bring-up of links opened by
- *    bleAudioEngineConnect(), and the generic MTU -> discovery rule.
- *  - Presets: the BAP LC3 preset table behind `BLEAudioCodecPreset`.
- *
- * API contract is documented in `BLEAudioEngine.h`; the definitions below
- * carry implementation notes only.
+ * Completely shared across NimBLE and Bluedroid: host-specific GAP/GATT/SMP
+ * calls live in `BLEAudioEngine.nimble.cpp` and `BLEAudioEngine.bluedroid.cpp`
+ * behind the `bleAudioHost*` / `bleAudioEngine*` C hooks declared in
+ * `BLEAudioEngine.h`.
  */
 
 #include "core/BLEGuards.h"
@@ -41,30 +29,15 @@
 
 #include "BLEAudioValidationHooks.h"
 #include "engine/BLEAudioEngine.h"
-#if BLE_NIMBLE
-#include "engine/BLEAudioEngine.nimble.h"
-#endif
 #include "iso/BLEIsoHost.h"
 
 #include "esp_ble_audio_common_api.h"
 #include "esp_ble_audio_defs.h"
 #include "esp32-hal-log.h"
-#if BLE_BLUEDROID
-#include "esp_gattc_api.h"
-#include "esp_gap_ble_api.h"
-#include "esp_timer.h"
-#include "freertos/FreeRTOS.h"
-#endif
 
 #include <errno.h>
 #include <stdatomic.h>
 #include <string.h>
-
-/* Backend GATT coordination; no-op on Bluedroid. */
-extern int bleAudioHostPrepareInit(void);
-extern int bleAudioHostPrepareGatt(void);
-extern void bleAudioHostFinishGatt(bool success);
-extern void bleAudioHostResetGatt(void);
 
 // --------------------------------------------------------------------------
 // State
@@ -173,55 +146,21 @@ uint8_t bleAudioChannelCount(uint32_t chan_alloc) {
 // Links opened by bleAudioEngineConnect()
 // --------------------------------------------------------------------------
 
-/*
- * Like the IDF central examples, the engine brings these links up itself:
- *   ACL connected (central) -> start encryption
- *   security changed        -> NimBLE: exchange MTU / Bluedroid: discover
- *   MTU changed             -> discover (gatt_cb, for every link)
- *   discovery complete      -> BLE_AUDIO_EVT_GATT_DISCOVERED -> onLinkReady()
- * Bluedroid exchanges the MTU itself when the engine's GATTC opens the link.
- * Links the peer opens (we are peripheral) are not tracked here; the central
- * drives their security, and the MTU rule still starts discovery.
- */
-/* Track as many central links as the stack allows (kMaxLinks in BLEAudioImpl.h
- * uses the same symbol); the statics are reset in engineReset() below, since an
- * initializer list cannot size to the Kconfig value. */
-#ifndef CONFIG_BT_MAX_CONN
-#define CONFIG_BT_MAX_CONN 4
-#endif
-#define MAX_LINKS CONFIG_BT_MAX_CONN
+#define MAX_LINKS BLE_MAX_CONN
 #define HCI_ROLE_CENTRAL 0x00
 static bool s_connect_pending; /* bleAudioEngineConnect() armed; the next central ACL is ours. */
-/* Destination requested by bleAudioEngineConnect(), in engine (LSB-first) form.
- * Only an ACL from this peer may be adopted: the application may open other
- * central links while the audio connect is in flight. */
 static struct bt_le_addr s_connect_target;
 static bool s_connect_target_valid;
-/* A client role needs the peer's GATT database; server-only roles do not. */
 static bool s_peer_discovery;
-#if BLE_BLUEDROID
-/* The ACL_CONNECT event is delivered on the BTC/ISO task, where the peer may
- * not yet be registered in BTM's device list: esp_ble_set_encryption() queued
- * from there is dropped ("Device not found") and the SMP procedure then times
- * out. Defer it to the esp_timer task, like the advertising restart timer does. */
-static portMUX_TYPE s_encMux = portMUX_INITIALIZER_UNLOCKED;
-static esp_timer_handle_t s_encTimer;
-static esp_bd_addr_t s_encBda;
-static uint8_t s_encAddrType;
-static uint16_t s_encConn = BLE_AUDIO_CONN_NONE;
-#endif
-static uint16_t s_links[MAX_LINKS]; /* Reset to BLE_AUDIO_CONN_NONE in engineReset(); zero-fill + reset covers boot. */
-/* Per-slot peer address, recorded from ACL_CONNECT for both central and
- * peripheral links so disconnect() works without a library server/client. */
+
+static uint16_t s_links[MAX_LINKS]; /* Reset to BLE_AUDIO_CONN_NONE in engine_reset_local(); zero-fill + reset covers boot. */
 static struct bt_le_addr s_link_peer[MAX_LINKS];
 static bool s_link_peer_valid[MAX_LINKS];
-/* Per-slot bring-up progress for central links opened by bleAudioEngineConnect(). */
 static bool s_link_central[MAX_LINKS];
 static bool s_link_mtu_ok[MAX_LINKS];
 static bool s_link_secured[MAX_LINKS];
 static bool s_link_discovered[MAX_LINKS];
 
-/** @return The slot holding @p conn (pass BLE_AUDIO_CONN_NONE to find a free one), or NULL. */
 static uint16_t *link_find(uint16_t conn) {
   for (int i = 0; i < MAX_LINKS; i++) {
     if (s_links[i] == conn) {
@@ -231,7 +170,6 @@ static uint16_t *link_find(uint16_t conn) {
   return NULL;
 }
 
-/** @return The slot index holding @p conn, or -1 when the link is not tracked. */
 static int link_index(uint16_t conn) {
   for (int i = 0; i < MAX_LINKS; i++) {
     if (s_links[i] == conn) {
@@ -241,15 +179,6 @@ static int link_index(uint16_t conn) {
   return -1;
 }
 
-/**
- * @brief Start the engine's GATT discovery once the link is safe to discover.
- *
- * PACS/ASCS and the other LE Audio services carry encrypted-only permissions on
- * Bluedroid (the NimBLE adapter does not enforce them). Discovering before the
- * security procedure settles caches an empty peer database — Bluedroid serves
- * later reads from that cache — so a tracked central link waits for both the
- * MTU exchange and the security outcome.
- */
 static void link_maybe_discover(int idx) {
   if (idx < 0 || !s_link_central[idx] || s_link_discovered[idx] || !s_link_mtu_ok[idx] || !s_link_secured[idx]) {
     return;
@@ -260,7 +189,6 @@ static void link_maybe_discover(int idx) {
 
 static void link_on_security(uint16_t conn);
 
-/** @return true when @p peer is the address armed by bleAudioEngineConnect(). */
 static bool link_matches_target(const struct bt_le_addr *peer) {
   if (!s_connect_target_valid) {
     return true;
@@ -273,7 +201,6 @@ static bool link_matches_target(const struct bt_le_addr *peer) {
   return memcmp(addr.val, s_connect_target.val, 6) == 0;
 }
 
-/** Record any live audio ACL (central or peripheral) so disconnect() can resolve its peer. */
 static int link_record(uint16_t conn, const struct bt_le_addr *peer) {
   int idx = link_index(conn);
   if (idx < 0) {
@@ -297,13 +224,6 @@ static int link_record(uint16_t conn, const struct bt_le_addr *peer) {
   return idx;
 }
 
-/**
- * @brief ACL up: record the link's peer address, and if it is the central link
- *        requested by bleAudioEngineConnect(), encrypt and discover it.
- *
- * PACS/ASCS require an encrypted link. When encryption cannot even start the
- * bring-up continues unencrypted, so peers without that requirement still work.
- */
 static void link_on_connect(uint16_t conn, uint8_t status, uint8_t role, const struct bt_le_addr *peer) {
   int idx = -1;
   if (status == 0) {
@@ -313,8 +233,6 @@ static void link_on_connect(uint16_t conn, uint8_t status, uint8_t role, const s
     return;
   }
   if (status == 0 && !link_matches_target(peer)) {
-    /* Not the peer audio.connect() asked for: leave the bring-up armed so
-     * this application link is not adopted. */
     log_d("conn %u: central ACL is not the audio target, ignoring", conn);
     return;
   }
@@ -333,92 +251,24 @@ static void link_on_connect(uint16_t conn, uint8_t status, uint8_t role, const s
   s_link_secured[idx] = false;
   s_link_discovered[idx] = false;
   log_d("conn %u: connected, starting encryption", conn);
-#if BLE_BLUEDROID
-  /*
-   * Deferred: the peer is only registered in BTM after the BTC connect path
-   * settles. peer->val is already in Bluedroid's MSB-first esp_bd_addr_t order.
-   */
-  esp_bd_addr_t bda = {0};
-  uint8_t addr_type = 0;
-  if (peer != NULL) {
-    memcpy(bda, peer->val, sizeof(bda));
-    addr_type = peer->type;
-  }
-  if (s_encTimer != NULL) {
-    (void)esp_timer_stop(s_encTimer);
-    portENTER_CRITICAL(&s_encMux);
-    memcpy(s_encBda, bda, sizeof(s_encBda));
-    s_encAddrType = addr_type;
-    s_encConn = conn;
-    portEXIT_CRITICAL(&s_encMux);
-    if (esp_timer_start_once(s_encTimer, 10000) != ESP_OK) {
-      portENTER_CRITICAL(&s_encMux);
-      s_encConn = BLE_AUDIO_CONN_NONE;
-      portEXIT_CRITICAL(&s_encMux);
-      log_w("conn %u: encryption timer start failed, continuing unencrypted", conn);
-      link_on_security(conn);
-    }
-  } else {
-    esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_NO_MITM);
-    if (err != 0) {
-      log_w("conn %u: encryption failed to start (err=%d), continuing unencrypted", conn, (int)err);
-      link_on_security(conn);
-    }
-  }
-#else
-  int err = bleAudioNimbleSecure(conn);
+  static const uint8_t kZeroAddr[6] = {0};
+  int err = bleAudioHostSecureLink(conn, peer ? peer->val : kZeroAddr, peer ? peer->type : 0);
   if (err != 0) {
     log_w("conn %u: encryption failed to start (err=%d), continuing unencrypted", conn, err);
     link_on_security(conn);
   }
-#endif
 }
 
-#if BLE_BLUEDROID
-/** @brief esp_timer task: start the SMP procedure once the connect callback returned. */
-static void encTimerCb(void *arg) {
-  (void)arg;
-  uint16_t conn;
-  esp_bd_addr_t bda;
-  uint8_t addr_type;
-  portENTER_CRITICAL(&s_encMux);
-  conn = s_encConn;
-  memcpy(bda, s_encBda, sizeof(bda));
-  addr_type = s_encAddrType;
-  s_encConn = BLE_AUDIO_CONN_NONE;
-  portEXIT_CRITICAL(&s_encMux);
-  if (conn == BLE_AUDIO_CONN_NONE || !s_initialized) {
-    return;
-  }
-  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_NO_MITM);
-  if (err != ESP_OK) {
-    log_w("conn %u: encryption failed to start (err=%d), continuing unencrypted", conn, (int)err);
-    /* Post onto iso_task instead of touching s_links[] from the timer task. */
-    esp_ble_gap_cb_param_t param = {0};
-    memcpy(param.ble_security.auth_cmpl.bd_addr, bda, sizeof(bda));
-    param.ble_security.auth_cmpl.addr_type = addr_type;
-    param.ble_security.auth_cmpl.success = false;
-    param.ble_security.auth_cmpl.fail_reason = 0xFF;
-    bleAudioEngineGapPostEvent(ESP_GAP_BLE_AUTH_CMPL_EVT, &param);
-  }
-}
-#endif
-
-/** @brief Security settled on a tracked central link: next step toward discovery. */
 static void link_on_security(uint16_t conn) {
   int idx = link_index(conn);
   if (idx < 0 || !s_link_central[idx]) {
     return;
   }
-  /* Settled either way: a peer that does not require encryption still has to
-   * reach discovery. */
   s_link_secured[idx] = true;
-#if !BLE_BLUEDROID
-  int err = bleAudioNimbleExchangeMtu(conn);
+  int err = bleAudioHostExchangeMtu(conn);
   if (err != 0) {
     log_w("conn %u: MTU exchange failed to start (err=%d)", conn, err);
   }
-#endif
   link_maybe_discover(idx);
 }
 
@@ -426,13 +276,6 @@ static void link_on_security(uint16_t conn) {
 // Engine host callbacks (Bluetooth host task)
 // --------------------------------------------------------------------------
 
-/**
- * @brief Every engine GAP event.
- *
- * Fan-out order: the ISO transport first (it tracks CIS/BIG state the audio
- * units rely on), then each unit's hook, then the link bring-up and the
- * CORE events for C++.
- */
 static void gap_cb(esp_ble_audio_gap_app_event_t *event) {
   if (event == NULL) {
     return;
@@ -459,23 +302,11 @@ static void gap_cb(esp_ble_audio_gap_app_event_t *event) {
         s_link_discovered[idx] = false;
         s_link_peer_valid[idx] = false;
       }
-#if BLE_BLUEDROID
-      bool cancel_enc = false;
-      portENTER_CRITICAL(&s_encMux);
-      if (s_encConn == event->acl_disconnect.conn_handle) {
-        s_encConn = BLE_AUDIO_CONN_NONE;
-        cancel_enc = true;
-      }
-      portEXIT_CRITICAL(&s_encMux);
-      if (cancel_enc && s_encTimer != NULL) {
-        (void)esp_timer_stop(s_encTimer);
-      }
-#endif
+      bleAudioHostCancelSecurity(event->acl_disconnect.conn_handle);
       bleAudioEngineEmit(BLE_AUDIO_EVT_ACL_DISCONNECTED, event->acl_disconnect.conn_handle, event->acl_disconnect.reason, NULL);
       break;
     }
     case ESP_BLE_AUDIO_GAP_EVENT_SECURITY_CHANGE:
-      /* Discovery continues even if encryption failed: some peers do not require it. */
       if (event->security_change.status != 0) {
         log_w("conn %u: encryption failed (status 0x%02x)", event->security_change.conn_handle, event->security_change.status);
       }
@@ -486,31 +317,25 @@ static void gap_cb(esp_ble_audio_gap_app_event_t *event) {
   }
 }
 
-/** @brief Engine GATT events: MTU drives discovery, discovery completion reaches C++. */
 static void gatt_cb(esp_ble_audio_gatt_app_event_t *event) {
   if (event == NULL) {
     return;
   }
   switch (event->type) {
     case ESP_BLE_AUDIO_GATT_EVENT_GATT_MTU_CHANGE:
-      /* Bluedroid exchanges the MTU itself on connect; both hosts report it here. */
       if (event->gatt_mtu_change.mtu >= ESP_BLE_AUDIO_ATT_MTU_MIN) {
         int idx = link_index(event->gatt_mtu_change.conn_handle);
         if (idx >= 0 && s_link_central[idx]) {
-          /* Central link opened by connect(): discovery waits for security. */
           s_link_mtu_ok[idx] = true;
           link_maybe_discover(idx);
         } else if (s_peer_discovery) {
-          /* Link opened by the peer: the central drives its security. Only a
-           * client role needs the peer's database, so server-only sketches
-           * report the link ready without discovering it. */
           bleAudioEngineGattcDiscStart(event->gatt_mtu_change.conn_handle);
         } else {
           bleAudioEngineEmit(BLE_AUDIO_EVT_GATT_DISCOVERED, event->gatt_mtu_change.conn_handle, 0, NULL);
         }
       } else {
         log_w("conn %u: MTU %u below the LE Audio minimum %u, not discovering", event->gatt_mtu_change.conn_handle,
-                 event->gatt_mtu_change.mtu, ESP_BLE_AUDIO_ATT_MTU_MIN);
+              event->gatt_mtu_change.mtu, ESP_BLE_AUDIO_ATT_MTU_MIN);
       }
       break;
     case ESP_BLE_AUDIO_GATT_EVENT_GATTC_DISC_CMPL:
@@ -529,20 +354,12 @@ static void gatt_cb(esp_ble_audio_gatt_app_event_t *event) {
 // Lifecycle
 // --------------------------------------------------------------------------
 
-/**
- * `common_init` runs the engine's GAP/GATT service init and stages the audio
- * profiles, but defers the GATT commit to common_start. On NimBLE the
- * library's GATT coordinator observes bleAudioEngineIsInitialized() to know
- * that `BLEServer` services must only be staged until then.
- */
 static void engine_reset_local(void);
 
 int bleAudioEngineInit(ble_audio_evt_sink_fn sink, void *ctx) {
   if (s_initialized) {
     return 0;
   }
-  /* Also covers boot: s_links is zero-filled and BLE_AUDIO_CONN_NONE is not 0,
-   * so the table must be reset before the first link_find(). */
   engine_reset_local();
   if (bleIsoOwnsHost()) {
     log_e("a standalone BLEIso session owns the host; call BLEIso end() before audio begin()");
@@ -562,24 +379,13 @@ int bleAudioEngineInit(ble_audio_evt_sink_fn sink, void *ctx) {
     s_sink_ctx = NULL;
     return (int)err;
   }
-  /* ISO now rides on the audio-owned host instead of initializing its own. */
   bleIsoAttachShared(true);
 #if CONFIG_BT_CSIP_SET_MEMBER
   memset(&s_start_info, 0, sizeof(s_start_info));
   s_csis_count = 0;
 #endif
   s_initialized = true;
-#if BLE_BLUEDROID
-  if (s_encTimer == NULL) {
-    esp_timer_create_args_t targs = {};
-    targs.callback = encTimerCb;
-    targs.name = "ble-audio-sec";
-    if (esp_timer_create(&targs, &s_encTimer) != ESP_OK) {
-      s_encTimer = NULL;
-      log_w("security timer unavailable; encryption will start inside the connect callback");
-    }
-  }
-#endif
+  bleAudioHostInitSecurity();
   log_d("engine initialized");
   return 0;
 }
@@ -604,7 +410,6 @@ int bleAudioEngineAddCsis(void *svc_inst, bool included_by_cas) {
 #endif
 }
 
-/* common_start performs the single GATT commit (audio + staged BLEServer services). */
 int bleAudioEngineStart(void) {
   if (!s_initialized) {
     log_e("bleAudioEngineStart() called before bleAudioEngineInit()");
@@ -658,36 +463,16 @@ static void engine_reset_local(void) {
   s_started = false;
 }
 
-/**
- * `common_deinit` releases every profile, ISO and the host callbacks, and
- * refuses while a CONNECTED channel remains. The C++ `BLEAudio::end()` waits
- * for ISO idle before calling this. On success the units reset their statics
- * and are unregistered, so the next init starts from a clean slate.
- */
 int bleAudioEngineDeinit(void) {
   if (!s_initialized) {
     return 0;
   }
-  /* common_deinit refuses while an ISO channel is still connected, then runs
-   * lib_pacs_deinit() and deletes the host mutex. Calling pacs_unregister
-   * afterwards hits BT_LE_HOST_LOCK_OR_RETURN(ESP_ERR_TIMEOUT) (logged as
-   * "PACS unregister failed: 263") every session. Local PACS staging is
-   * cleared in bap_on_deinit. */
   esp_err_t err = esp_ble_audio_common_deinit(NULL);
   if (err != ESP_OK) {
     log_e("esp_ble_audio_common_deinit failed: %d (stop every stream first)", err);
     return (int)err;
   }
-#if BLE_BLUEDROID
-  portENTER_CRITICAL(&s_encMux);
-  s_encConn = BLE_AUDIO_CONN_NONE;
-  portEXIT_CRITICAL(&s_encMux);
-  if (s_encTimer != NULL) {
-    (void)esp_timer_stop(s_encTimer);
-    (void)esp_timer_delete(s_encTimer);
-    s_encTimer = NULL;
-  }
-#endif
+  bleAudioHostDeinitSecurity();
   engine_reset_local();
   log_d("engine deinitialized");
   return 0;
@@ -705,64 +490,30 @@ bool bleAudioEngineIsStarted(void) {
 // Host glue
 // --------------------------------------------------------------------------
 
-/* NimBLE only: Bluedroid delivers GATT events to the engine's own GATT interfaces. */
-void bleAudioEngineGattPostEvent(uint8_t type, void *event) {
-#if BLE_NIMBLE
-  if (s_initialized) {
-    esp_ble_audio_gatt_app_post_event(type, event);
-  }
-#else
-  (void)type;
-  (void)event;
-#endif
-}
-
 void bleAudioEngineGattcDiscStart(uint16_t conn_handle) {
   if (s_initialized) {
     esp_err_t err = esp_ble_audio_gattc_disc_start(conn_handle);
-    /* A repeated start (MTU reported twice) is harmless. */
     if (err != ESP_OK && err != -EALREADY) {
       log_w("conn %u: esp_ble_audio_gattc_disc_start failed: %d", conn_handle, err);
     }
   }
 }
 
-/*
- * Only one connection attempt is tracked: a second call before the first ACL
- * comes up re-arms the same pending flag.
- */
 int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]) {
   if (!s_initialized) {
     return ESP_ERR_INVALID_STATE;
   }
-  /* addr is the engine's LSB-first form on both hosts. */
   memcpy(s_connect_target.val, addr, sizeof(s_connect_target.val));
   s_connect_target.type = addr_type;
   s_connect_target_valid = true;
-#if BLE_BLUEDROID
-  /* OPEN/CONNECT must reach the engine's GATTC interface, not the library's. */
-  esp_gatt_if_t gattc_if = esp_ble_audio_bluedroid_get_gattc_if();
-  if (gattc_if == ESP_GATT_IF_NONE) {
-    log_e("engine GATTC interface not registered; cannot open the link");
-    return ESP_ERR_INVALID_STATE;
-  }
-  /* BTAddress is LSB-first; esp_ble_gattc_aux_open() takes MSB-first. */
-  esp_bd_addr_t bda;
-  bleAudioAddrFromGap(bda, addr);
-  esp_err_t err = esp_ble_gattc_aux_open(gattc_if, bda, (esp_ble_addr_type_t)addr_type, true);
-  if (err != ESP_OK) {
-    log_e("esp_ble_gattc_aux_open failed: %d", err);
-  }
-  s_connect_pending = (err == ESP_OK);
-  if (!s_connect_pending) {
+  int err = bleAudioHostOpenLink(addr_type, addr);
+  if (err == ESP_OK || err == ESP_ERR_NOT_SUPPORTED) {
+    s_connect_pending = true;
+  } else {
     s_connect_target_valid = false;
+    s_connect_pending = false;
   }
   return err;
-#else
-  /* NimBLE: the caller opens the ACL with the host GAP; arm the bring-up for it. */
-  s_connect_pending = true;
-  return ESP_ERR_NOT_SUPPORTED;
-#endif
 }
 
 void bleAudioEngineCancelConnect(void) {
@@ -791,8 +542,6 @@ bool bleAudioValidationAcceptPeer(const uint8_t addr[6], uint8_t addr_type) {
   if (addr == NULL || !s_connect_target_valid) {
     return false;
   }
-  /* Both addresses are already in engine (LSB-first) order; do not run the
-   * GAP-event conversion again (it reverses on Bluedroid). */
   return memcmp(addr, s_connect_target.val, 6) == 0;
 }
 
@@ -810,7 +559,6 @@ bool bleAudioEngineLinkAddress(uint16_t conn_handle, uint8_t addr[6]) {
   return true;
 }
 
-/* Bluedroid only: the library owns the GAP callback and forwards AUTH_CMPL here. */
 void bleAudioEngineGapPostEvent(uint16_t type, void *param) {
   if (s_initialized) {
     esp_ble_audio_gap_app_post_event(type, param);

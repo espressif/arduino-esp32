@@ -27,40 +27,35 @@
 #include "scan/BLEScan.h"
 #include "esp32-hal-log.h"
 
+#include <errno.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>
 #include <services/gap/ble_svc_gap.h>
 
+extern "C" void esp_ble_audio_gatt_app_post_event(uint8_t type, void *param);
+
 /**
  * @file BLEAudioEngine.nimble.cpp
- * @brief NimBLE host calls used by the engine's link bring-up, and GATT event forwarding.
- *
- * API contract is documented on the declarations in `BLEAudioEngine.nimble.h`
- * and `BLEAudioEngine.h`; the definitions below carry implementation notes only.
+ * @brief NimBLE host hooks for the LE Audio engine and GATT event forwarding.
  */
 
-// --------------------------------------------------------------------------
-// Link bring-up helpers (called from BLEAudioEngine.c)
-// --------------------------------------------------------------------------
+extern "C" void bleAudioHostInitSecurity(void) {}
+extern "C" void bleAudioHostDeinitSecurity(void) {}
+extern "C" void bleAudioHostCancelSecurity(uint16_t) {}
 
-/*
- * Implemented here because NimBLE host headers clash with the Zephyr headers of the C units.
- * A procedure already in progress (NimBLE starts one itself when the peer sends a Security
- * Request) counts as started: its completion arrives as the same ENC_CHANGE event.
- */
-extern "C" int bleAudioNimbleSecure(uint16_t conn_handle) {
+extern "C" int bleAudioHostSecureLink(uint16_t conn_handle, const uint8_t[6], uint8_t) {
   int rc = ble_gap_security_initiate(conn_handle);
   return rc == BLE_HS_EALREADY ? 0 : rc;
 }
 
-/*
- * An exchange already sent on this link (in progress or completed, e.g. by the library's
- * GATT client) counts as success: every MTU event starts discovery.
- */
-extern "C" int bleAudioNimbleExchangeMtu(uint16_t conn_handle) {
+extern "C" int bleAudioHostExchangeMtu(uint16_t conn_handle) {
   int rc = ble_gattc_exchange_mtu(conn_handle, nullptr, nullptr);
   return rc == BLE_HS_EALREADY ? 0 : rc;
+}
+
+extern "C" int bleAudioHostOpenLink(uint8_t, const uint8_t[6]) {
+  return ESP_ERR_NOT_SUPPORTED;
 }
 
 extern "C" void bleAudioAddrFromGap(uint8_t out[6], const uint8_t in[6]) {
@@ -71,8 +66,7 @@ extern "C" int bleAudioEngineSendPast(uint8_t adv, uint16_t conn, uint16_t servi
   (void)peer_addr;
   (void)peer_addr_type;
 #if BLE_PAST_SUPPORTED
-  int rc = ble_gap_periodic_adv_sync_set_info(adv, conn, service_data);
-  return rc;
+  return ble_gap_periodic_adv_sync_set_info(adv, conn, service_data);
 #else
   (void)adv;
   (void)conn;
@@ -85,8 +79,7 @@ extern "C" int bleAudioEngineSendPastSync(uint16_t sync_handle, uint16_t conn, u
   (void)peer_addr;
   (void)peer_addr_type;
 #if BLE_PAST_SUPPORTED
-  int rc = ble_gap_periodic_adv_sync_transfer(sync_handle, conn, service_data);
-  return rc;
+  return ble_gap_periodic_adv_sync_transfer(sync_handle, conn, service_data);
 #else
   (void)sync_handle;
   (void)conn;
@@ -97,10 +90,7 @@ extern "C" int bleAudioEngineSendPastSync(uint16_t sync_handle, uint16_t conn, u
 
 extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
   int rc = ble_gap_terminate(conn_handle, BLE_ERR_REM_USER_CONN_TERM);
-  if (rc == 0) {
-    return 0;
-  }
-  if (rc == BLE_HS_EALREADY) {
+  if (rc == 0 || rc == BLE_HS_EALREADY) {
     return 0;
   }
   if (rc == BLE_HS_ENOTCONN) {
@@ -111,7 +101,7 @@ extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
 }
 
 extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip,
-                                                   uint16_t timeout_ms) {
+                                                 uint16_t timeout_ms) {
   (void)peer_addr_type;
   if (!peer_addr) {
     return static_cast<int>(BTStatus::InvalidParam);
@@ -167,15 +157,6 @@ extern "C" void bleAudioHostResetGatt(void) {
 
 namespace BLEAudioEngine {
 
-// --------------------------------------------------------------------------
-// GATT event forwarding
-// --------------------------------------------------------------------------
-
-/*
- * Called from the BLEServer and BLEClient connection handlers, right after
- * the ISO GAP forwarding. The engine consumes the event synchronously, so the
- * NimBLE event can be passed as is.
- */
 void forwardHostGattEvent(struct ble_gap_event *event) {
   if (event == nullptr || !bleAudioEngineIsInitialized()) {
     return;
@@ -184,7 +165,7 @@ void forwardHostGattEvent(struct ble_gap_event *event) {
     case BLE_GAP_EVENT_MTU:
     case BLE_GAP_EVENT_NOTIFY_RX:
     case BLE_GAP_EVENT_NOTIFY_TX:
-    case BLE_GAP_EVENT_SUBSCRIBE:  bleAudioEngineGattPostEvent((uint8_t)event->type, event); break;
+    case BLE_GAP_EVENT_SUBSCRIBE:  esp_ble_audio_gatt_app_post_event(static_cast<uint8_t>(event->type), event); break;
     default:                       break;
   }
 }
