@@ -314,7 +314,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
   }
 #endif
 #if BLE_ISO_SUPPORTED
-  _impl->storeHook(_impl->isoPreEndHook, BLEIso::end);
+  _impl->storeHook(_impl->isoPreEndHook, +[]() { (void)BLEIso::end(); });
 #endif
 #if BLE_GATT_CLIENT_SUPPORTED
   BLEClient::Impl::openTerminalCloseAdmission();

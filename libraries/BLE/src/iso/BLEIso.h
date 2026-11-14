@@ -117,7 +117,7 @@ public:
 
   /** @brief Pool slot index (stable for the channel's lifetime), or -1. */
   int slot() const {
-    return _slot;
+    return _slot.load(std::memory_order_relaxed);
   }
 
   /** @brief Whether the underlying CIS/BIS is currently established. */
@@ -160,31 +160,19 @@ public:
   BTStatus disconnect();
 
   /** @brief The CIS/BIS is up and its data path is set up. */
-  Channel &onConnected(ConnectedCb cb) {
-    _onConnected = std::move(cb);
-    return *this;
-  }
+  Channel &onConnected(ConnectedCb cb);
   /** @brief The CIS/BIS went down (or failed to come up); @p reason is the HCI reason. */
-  Channel &onDisconnected(DisconnectedCb cb) {
-    _onDisconnected = std::move(cb);
-    return *this;
-  }
+  Channel &onDisconnected(DisconnectedCb cb);
   /** @brief One SDU received; check `SduInfo::valid`, damaged SDUs are delivered too. */
-  Channel &onReceive(ReceiveCb cb) {
-    _onReceive = std::move(cb);
-    return *this;
-  }
+  Channel &onReceive(ReceiveCb cb);
   /** @brief The controller consumed one SDU passed to send(). */
-  Channel &onSent(SentCb cb) {
-    _onSent = std::move(cb);
-    return *this;
-  }
+  Channel &onSent(SentCb cb);
   /** @brief Drop every callback. */
   void resetCallbacks();
 
 private:
   friend struct ChannelAccess;
-  int _slot = -1;
+  std::atomic<int> _slot{-1};
   std::atomic<uint16_t> _nextSeq{0};  // Atomic: reset on connect (host task), advanced on send (app task).
   ConnectedCb _onConnected;
   DisconnectedCb _onDisconnected;
@@ -233,9 +221,13 @@ BTStatus begin();
  * @brief Terminate every group and release every channel.
  *
  * Also releases the host ISO layer when this transport initialized it.
- * Disconnect every CIS first: the host refuses to deinit with live channels.
+ * Called from a Bluetooth stack/ISO callback, end() is refused with Busy
+ * because it must wait for asynchronous ISO disconnect; defer it to loop().
+ *
+ * @return BTStatus::OK (also when not active); Busy from a stack callback;
+ *         Timeout/Fail when an ISO channel or group could not be released.
  */
-void end();
+BTStatus end();
 
 /** @brief Whether begin() succeeded and end() has not run. */
 bool isActive();
