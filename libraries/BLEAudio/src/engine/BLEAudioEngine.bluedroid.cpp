@@ -69,9 +69,9 @@ void encTimerCb(void *) {
     // Post onto iso_task instead of touching engine link tables from esp_timer.
     esp_ble_gap_cb_param_t param = {};
     memcpy(param.ble_security.auth_cmpl.bd_addr, bda, sizeof(bda));
-    param.ble_security.auth_cmpl.addr_type = addrType;
+    param.ble_security.auth_cmpl.addr_type = static_cast<esp_ble_addr_type_t>(addrType);
     param.ble_security.auth_cmpl.success = false;
-    param.ble_security.auth_cmpl.fail_reason = 0xFF;
+    param.ble_security.auth_cmpl.fail_reason = static_cast<esp_ble_auth_fail_rsn_t>(0xFF);
     bleAudioEngineGapPostEvent(ESP_GAP_BLE_AUTH_CMPL_EVT, &param);
   }
 }

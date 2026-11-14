@@ -264,7 +264,7 @@ void BLEAudioGmap::resetCallbacks() {
 BLEAudioGmap BLEAudio::createGmap() {
 #if BLE_AUDIO_GMAP_SUPPORTED
   return BLEAudioImplCommon::createStagedRole<BLEAudioGmap>(
-    _impl, "createGmap", BLE_AUDIO_GRP_GMAP, [](BLEAudioGmap::Impl &g) {
+    _impl, "createGmap", BLE_AUDIO_GRP_GMAP, [](BLEAudioGmap::Impl &g) -> BTStatus {
       BLEAudioGmapRole localRoles;
       BLEAudioGmapFeatures localFeatures;
       {

@@ -495,7 +495,9 @@ BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t connHandle) {
   }
   // Bluedroid has no dedicated disable command. Restore the same no-sync mode
   // and default parameters NimBLE uses for its cancel path.
-  return Impl::setPeriodicSyncTransferParams(connHandle, peerAddress, ESP_BLE_GAP_PAST_MODE_NO_SYNC_EVT, 0, kMinPeriodicSyncTimeoutMs);
+  return Impl::setPeriodicSyncTransferParams(
+    connHandle, peerAddress, ESP_BLE_GAP_PAST_MODE_NO_SYNC_EVT, 0, BLEScanImplCommon::kMinPeriodicSyncTimeoutMs
+  );
 #else
   (void)connHandle;
   log_w("Scan: stopPeriodicSyncReceive not supported (PAST unavailable)");
@@ -514,7 +516,7 @@ BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &peer) {
     return BTStatus::InvalidState;
   }
   return Impl::setPeriodicSyncTransferParams(
-    peer.getHandle(), peer.getAddress(), ESP_BLE_GAP_PAST_MODE_NO_SYNC_EVT, 0, kMinPeriodicSyncTimeoutMs
+    peer.getHandle(), peer.getAddress(), ESP_BLE_GAP_PAST_MODE_NO_SYNC_EVT, 0, BLEScanImplCommon::kMinPeriodicSyncTimeoutMs
   );
 #else
   (void)peer;

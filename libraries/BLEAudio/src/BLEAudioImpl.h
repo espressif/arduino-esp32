@@ -38,6 +38,7 @@
 #include "BTStatus.h"
 #include "core/BLEMutex.h"
 #include "engine/BLEAudioEngine.h"
+#include "esp32-hal-log.h"
 
 /**
  * @brief Copy a role callback under the role mutex so it can be invoked unlocked.
@@ -81,9 +82,9 @@ struct BLEAudioImplCommon {
    * Enforces the "between begin() and start()" precondition, stores the strong
    * role reference in `roles`, and binds a weak group dispatcher + apply hook.
    */
-  template<typename Handle, typename ApplyFn>
+  template<typename Handle, typename AudioImpl, typename ApplyFn>
   static Handle createStagedRole(
-    const std::shared_ptr<BLEAudio::Impl> &audio, const char *factoryName, ble_audio_evt_group_t group, ApplyFn &&apply
+    const std::shared_ptr<AudioImpl> &audio, const char *factoryName, ble_audio_evt_group_t group, ApplyFn &&apply
   ) {
     if (!audio || !audio->active || audio->started) {
       log_e("%s(): call between audio.begin() and audio.start()", factoryName);
