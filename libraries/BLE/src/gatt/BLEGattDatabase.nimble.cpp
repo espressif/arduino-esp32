@@ -31,6 +31,7 @@
 #include "gatt/BLEGattAttributes.nimble.h"
 #include "gatt/BLECharacteristicValidation.h"
 #include "core/BLEAudioHooks.h"
+#include "core/BLEValidationHooks.h"
 #include "esp32-hal-log.h"
 
 #include <host/ble_hs.h>
@@ -206,12 +207,24 @@ BTStatus commitServerStandalone(BLEServer::Impl &impl) {
   if (!validateServices(impl, services)) {
     return BTStatus::InvalidState;
   }
+  // ble_gatts_reset() is EBUSY while a central is connected or GAP is active
+  // (adv/scan/connect). Ignoring that and calling ble_svc_gap_init() panics
+  // inside ble_gatts_add_svcs (SYSINIT_PANIC_ASSERT rc==0).
   int rc = ble_gatts_reset();
   if (rc != 0) {
+    log_w("ble_gatts_reset: rc=%d (GATT table immutable while connected or advertising)", rc);
     return rc == BLE_HS_EBUSY ? BTStatus::Busy : BTStatus::Fail;
   }
   ble_svc_gap_init();
   ble_svc_gatt_init();
+
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.gatt.injectRebuildFails)) {
+    log_e("commitServerStandalone: injected fail after reset");
+    clearRegistration(impl, services);
+    return BTStatus::Fail;
+  }
+#endif
 
   BTStatus st = addServerServices(impl, services);
   if (st != BTStatus::OK) {

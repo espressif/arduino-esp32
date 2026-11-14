@@ -1235,54 +1235,44 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
     return 0;
   };
 
-  bool wait = !nimbleIsHostTask();
-  if (wait) {
-    chanImpl->connectSync.take();
-  }
+  chanImpl->connectSync.take();
   int rc = ble_l2cap_connect(connHandle, psm, mtu, sdu, clientEventFn, ctx.get());
   if (rc != 0) {
-    if (wait) {
-      chanImpl->connectSync.give(BTStatus::Fail);
-    }
+    chanImpl->connectSync.give(BTStatus::Fail);
     log_e("ble_l2cap_connect failed: rc=%d", rc);
     removeClientCtx(ctx.get());
     return false;
   }
 
-  if (wait) {
-    BTStatus st = chanImpl->connectSync.wait(5000);
-    if (st == BTStatus::Timeout) {
-      // Do not delete ctx: the stack still holds it as the event arg and the
-      // connect may still complete. Mark it abandoned so COC_CONNECTED
-      // schedules the orphan channel for disconnect (and so
-      // nimbleCleanupL2CAP can reclaim ctx at BLE.end()).
-      bool scheduleDisconnect = false;
-      {
-        BLELockGuard lock(sL2CAPMtx);
-        ctx->abandoned = true;
-        BLELockGuard channelLock(chanImpl->mtx);
-        if (chanImpl->connected && chanImpl->chan) {
-          ctx->abandonedChan = chanImpl->chan;
-          ctx->disconnectQueued = true;
-          ctx->disconnectStartedAt = xTaskGetTickCount();
-          scheduleDisconnect = true;
-        }
-        chanImpl->chan = nullptr;
-        chanImpl->connected = false;
+  BTStatus st = chanImpl->connectSync.wait(5000);
+  if (st == BTStatus::Timeout) {
+    // Do not delete ctx: the stack still holds it as the event arg and the
+    // connect may still complete. Mark it abandoned so COC_CONNECTED
+    // schedules the orphan channel for disconnect (and so
+    // nimbleCleanupL2CAP can reclaim ctx at BLE.end()).
+    bool scheduleDisconnect = false;
+    {
+      BLELockGuard lock(sL2CAPMtx);
+      ctx->abandoned = true;
+      BLELockGuard channelLock(chanImpl->mtx);
+      if (chanImpl->connected && chanImpl->chan) {
+        ctx->abandonedChan = chanImpl->chan;
+        ctx->disconnectQueued = true;
+        ctx->disconnectStartedAt = xTaskGetTickCount();
+        scheduleDisconnect = true;
       }
-      if (scheduleDisconnect) {
-        if (!scheduleAbandonedDisconnect()) {
-          forceAbandonedLinkCleanup(chanImpl->connHandle);
-        }
+      chanImpl->chan = nullptr;
+      chanImpl->connected = false;
+    }
+    if (scheduleDisconnect) {
+      if (!scheduleAbandonedDisconnect()) {
+        forceAbandonedLinkCleanup(chanImpl->connHandle);
       }
-      log_e("L2CAP: connect timed out; channel will be torn down if it completes");
-      return false;
     }
-    if (st != BTStatus::OK) {
-      return false;
-    }
+    log_e("L2CAP: connect timed out; channel will be torn down if it completes");
+    return false;
   }
-  return true;
+  return st == BTStatus::OK;
 }
 
 #endif /* BLE_L2CAP_SUPPORTED && BLE_NIMBLE */

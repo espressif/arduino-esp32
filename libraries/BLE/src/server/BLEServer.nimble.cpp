@@ -47,10 +47,8 @@
 
 #if BLE_GATT_SERVER_SUPPORTED
 
-#include "gatt/BLECharacteristicValidation.h"
 #include <host/ble_hs.h>
 #include <host/ble_att.h>
-#include <services/gap/ble_svc_gap.h>
 #include <services/gatt/ble_svc_gatt.h>
 #include <nimble/nimble_port.h>
 
@@ -172,22 +170,6 @@ void nimbleResetReAdvertiseEvent() {
  * @note Unlike Bluedroid, registration always uses a full @c ble_gatts_reset and re-register
  *       of all services; per-service create/delete is not used.
  */
-static void nimbleClearGattRegistration(BLEServer::Impl &impl, const std::vector<std::shared_ptr<BLEService::Impl>> &services) {
-  BLELockGuard lock(impl.mtx);
-  impl.started = false;
-  for (auto &s : services) {
-    s->started = false;
-    s->handle = 0;
-    for (auto &c : s->characteristics) {
-      c->handle = 0;
-      BLELockGuard chrLock(c->mtx);
-      for (auto &d : c->descriptors) {
-        d->handle = 0;
-      }
-    }
-  }
-}
-
 static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
   if (BLEGattDatabase::audioModeFrozen()) {
     log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
@@ -198,81 +180,7 @@ static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
     // stages its services between audio.begin() and audio.start().
     return BLEGattDatabase::stageServer(impl);
   }
-
-  // Snapshot the service tree under mtx; registration below iterates the
-  // snapshot while createCharacteristic/createDescriptor may run on user tasks.
-  std::vector<std::shared_ptr<BLEService::Impl>> services;
-  {
-    BLELockGuard lock(impl.mtx);
-    services = impl.services;
-  }
-  for (const auto &svc : services) {
-    std::vector<std::shared_ptr<BLECharacteristic::Impl>> chrs;
-    {
-      BLELockGuard lock(impl.mtx);
-      chrs = svc->characteristics;
-    }
-    for (const auto &chr : chrs) {
-      if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/true)) {
-        log_e("GATT: characteristic %s rejected by validation", chr->uuid.toString().c_str());
-        return BTStatus::InvalidState;
-      }
-    }
-  }
-
-  // ble_gatts_reset() is EBUSY while a central is connected or GAP is active
-  // (adv/scan/connect). Ignoring that and calling ble_svc_gap_init() panics
-  // inside ble_gatts_add_svcs (SYSINIT_PANIC_ASSERT rc==0).
-  int rc = ble_gatts_reset();
-  if (rc != 0) {
-    log_w("ble_gatts_reset: rc=%d (GATT table immutable while connected or advertising)", rc);
-    return rc == BLE_HS_EBUSY ? BTStatus::Busy : BTStatus::Fail;
-  }
-  ble_svc_gap_init();
-  ble_svc_gatt_init();
-
-#if BLE_VALIDATION_HOOKS
-  if (BLEValidationHooks::consumeFailure(BLEHooks.gatt.injectRebuildFails)) {
-    log_e("nimbleRebuildGattDatabase: injected fail after reset");
-    nimbleClearGattRegistration(impl, services);
-    return BTStatus::Fail;
-  }
-#endif
-
-  if (!services.empty()) {
-    rc = nimbleRegisterGattServices(services);
-    if (rc != 0) {
-      log_e("nimbleRegisterGattServices: rc=%d", rc);
-      nimbleClearGattRegistration(impl, services);
-      return BTStatus::Fail;
-    }
-    for (auto &s : services) {
-      s->started = true;
-    }
-  } else {
-    nimbleClearRetainedGattDefs();
-  }
-
-  rc = ble_gatts_start();
-  if (rc != 0) {
-    log_e("ble_gatts_start: rc=%d", rc);
-    nimbleClearGattRegistration(impl, services);
-    return BTStatus::Fail;
-  }
-
-  for (auto &s : services) {
-    if (ble_gatts_find_svc(&s->nimbleUUID.u, &s->handle) != 0) {
-      s->handle = 0;
-    }
-  }
-
-  String name = BLE.getDeviceName();
-  if (name.length() > 0) {
-    ble_svc_gap_device_name_set(name.c_str());
-  }
-
-  impl.started = true;
-  return BTStatus::OK;
+  return BLEGattDatabase::commitServerStandalone(impl);
 }
 
 // Re-registration is driven by new characteristics (handle 0); the entire GATT is rebuilt via

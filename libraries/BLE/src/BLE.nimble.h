@@ -53,7 +53,8 @@ struct BLEClass::Impl {
   bool endRunning = false;
   bool endReleaseMemory = false;
   TaskHandle_t endTask = nullptr;
-  SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutex();
+  StaticSemaphore_t lifecycleMtxStorage{};
+  SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutexStatic(&lifecycleMtxStorage);
   portMUX_TYPE hookMux = portMUX_INITIALIZER_UNLOCKED;
   ble_gap_event_listener gapListener{};
   BLEClass::RawEventHandler customGapHandler = nullptr;
@@ -67,8 +68,6 @@ struct BLEClass::Impl {
   LifecycleHook scanBeginHook = nullptr;
   LifecycleHook scanEndHook = nullptr;
   LifecycleHook scanHostStoppedHook = nullptr;
-#endif
-#if BLE_AUDIO_SUPPORTED
 #endif
 #if BLE_ISO_SUPPORTED
   LifecycleHook isoPreEndHook = nullptr;

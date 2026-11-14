@@ -87,7 +87,8 @@ struct BLEClass::Impl {
   bool endRunning = false;
   bool endReleaseMemory = false;
   TaskHandle_t endTask = nullptr;
-  SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutex();
+  StaticSemaphore_t lifecycleMtxStorage{};
+  SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutexStatic(&lifecycleMtxStorage);
   portMUX_TYPE hookMux = portMUX_INITIALIZER_UNLOCKED;
   BLESync privacySync{"privacySync"};
   /// Bridges @c esp_ble_gap_set_rand_addr (async) to @c setOwnAddressType.

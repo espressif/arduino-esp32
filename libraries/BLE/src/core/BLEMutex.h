@@ -95,6 +95,10 @@ public:
     return _mtx;
   }
 
+  operator SemaphoreHandle_t() const {
+    return _mtx;
+  }
+
 private:
   SemaphoreHandle_t _mtx;
 };
