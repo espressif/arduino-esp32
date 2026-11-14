@@ -252,7 +252,8 @@ void loop() {
             pureDown.store(true);
           });
           BTStatus pb = audio.begin();
-          BLEAudioVolumeRenderer vr = audio.createVolumeRenderer();
+          BLEAudioVolumeRenderer vrTmp = audio.createVolumeRenderer();
+          BLEAudioVolumeRenderer vr(std::move(vrTmp));
           vr.setInitialVolume(42);
           vr.onStateChanged([&pureVol](uint8_t v, bool) {
             if (v == 88) {
@@ -348,7 +349,9 @@ void loop() {
         Serial.printf("[SERVER] Audio active: %d\n", audio.isActive() ? 1 : 0);
         Serial.printf("[SERVER] Audio preset delay: %lu\n", (unsigned long)audio.getPresentationDelay());
 
-        // Codec preset value-type sanity (also forces the value-type API to compile).
+        // Codec preset value-type + move-semantics sanity.
+        BLEAudio movedAudio(std::move(audio));
+        audio = std::move(movedAudio);
         BLEAudioCodecConfig cfg = BLEAudioCodecConfig::fromPreset(BLEAudioCodecPreset::LC3_16_2_1);
         Serial.printf("[SERVER] Audio preset LC3_16_2_1 sr=%lu octets=%u\n", (unsigned long)cfg.samplingRateHz, (unsigned)cfg.octetsPerFrame);
 

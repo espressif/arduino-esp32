@@ -92,7 +92,7 @@ Feature guards (derived from Kconfig / SoC capabilities):
 - `BLE_PAST_SUPPORTED`: Periodic Advertising Sync Transfer receiver feature, when enabled by the selected host configuration **and** the controller implements BLE 5.1 PAST (5.0-only silicon such as ESP32-S3/C3 reports it unsupported; hosted NimBLE is assumed capable because all supported hosted companions implement PAST)
 - `BLE_L2CAP_SUPPORTED`: L2CAP CoC channels; NimBLE only, requires explicit Kconfig
 - `BLE_ISO_SUPPORTED`: host isochronous transport (CIS/BIG), exposed as the `BLEIso` API (`src/iso/`). Gates the per-role guards `BLE_ISO_CIS_CENTRAL_SUPPORTED`, `BLE_ISO_CIS_PERIPHERAL_SUPPORTED`, `BLE_ISO_BROADCASTER_SUPPORTED` and `BLE_ISO_SYNC_RECEIVER_SUPPORTED` (`CONFIG_BT_ISO_CENTRAL` / `PERIPHERAL` / `BROADCASTER` / `SYNC_RECEIVER`)
-- `BLE_AUDIO_SUPPORTED`: the LE Audio engine (GAF profiles); implies ISO. Gates a family of per-role guards (`BLE_AUDIO_UNICAST_SERVER_SUPPORTED`, `BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED`, …) documented in [`AUDIO.md`](AUDIO.md)
+- `BLE_AUDIO_SUPPORTED`: the LE Audio engine (GAF profiles); implies ISO. Gates a family of per-role guards (`BLE_AUDIO_UNICAST_SERVER_SUPPORTED`, `BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED`, …) documented in [`../BLEAudio/DESIGN.md`](../BLEAudio/DESIGN.md)
 
 ### Hosted BLE
 
@@ -130,9 +130,10 @@ lazy-singleton/fresh-instance split and the post-create logic genuinely differ p
 shared "one size fits all" abstraction would either need to be bypassed regularly (as Bluedroid's
 `createServer` already must be, for its asynchronous GATTS registration retry) or made generic
 enough that it stopped being easier to read than the explicit code it replaced.
-`BLEClass()`/`~BLEClass()` need a complete `BLEClass::Impl` (backend-specific), so they're defined
-once per backend `BLE.<stack>.cpp` rather than shared — 7 identical lines duplicated is cheaper than a
-shared header for this one case.
+`BLE.cpp` owns `BLEClass()`/`~BLEClass()`, `begin()`/`end()` orchestration, and feature-disabled
+factory fallbacks (`#if !BLE_*_SUPPORTED`), while enabled factories (`createServer`, `getScan`,
+`getAdvertising`, `getSecurity`) live in `BLE.<stack>.cpp` because each wires backend-specific GAP/GATT
+and teardown hooks.
 
 ### Per-instance handles
 
@@ -183,7 +184,10 @@ struct BLEServer::Impl : BLEServerImplCommon { /* NimBLE state + static handlers
 - The single sanctioned access pattern in `.cpp` code is the `BLE_CHECK_IMPL(...)` null-guard macro, which yields a cast-free `impl` reference (item 3).
 - Backends reconstruct a public handle from a raw `Impl*` via `enable_shared_from_this` and a static `*ImplCommon::makeHandle` factory, avoiding extra `friend` declarations.
 
-This shared-base split is applied wherever there is real cross-backend duplication (Server, Service, Characteristic, Descriptor, Client, the three Remote types, Security, AdvertisedDevice). Classes that are inherently per-backend with no shared state (`BLEClass`, `Scan`, `Advertising`, `BLEL2CAPServer`) define `Foo::Impl` directly with no base. All backend `Impl` layouts are pulled in through the single umbrella selector `core/BLEBackend.h`, which also `#include`s the compile-time contract check `core/BLEBackendContract.h`; a CI guard (`tests/check_backend_isolation.sh`) fails the build if a public header names a backend type or includes a backend/selector header. Backend obligations are spelled out in [Backend contract](#backend-contract) below; stack-specific notes live in `docs/backend-nimble.md` and `docs/backend-bluedroid.md`.
+`BLEClass` also uses a shared base (`BLEClassImplCommon` in `BLEImpl.h`) so `BLE.cpp` owns the
+constructor/destructor, the `begin()`/`end()` state machine and deferred worker, and all
+feature-disabled factory/PHY/hosted fallbacks. Only `BLEL2CAPServer` (NimBLE-only) has no shared base,
+and `BLEAdvertisedDevice` is 100% shared (`BLEAdvertisedDeviceImpl.h`). All backend `Impl` layouts are pulled in through the single umbrella selector `core/BLEBackend.h`, which also `#include`s the compile-time contract check `core/BLEBackendContract.h`; a CI guard (`tests/check_backend_isolation.sh`) fails the build if a public header names a backend type or includes a backend/selector header, or if a shared `.h`/`.c`/`.cpp` file leaks `BLE_NIMBLE` / `BLE_BLUEDROID`. Backend obligations are spelled out in [Backend contract](#backend-contract) below; stack-specific notes live in `docs/backend-nimble.md` and `docs/backend-bluedroid.md`.
 
 **Handle construction: `makeHandle` vs. the private constructor.**
 Every public handle's `std::shared_ptr<Impl>` constructor is **private** — handles must only be minted by the library, never fabricated by user code around an arbitrary `Impl*`. Code that needs to build a handle falls into two groups:
@@ -423,7 +427,7 @@ Creating services and characteristics builds up an in-memory GATT model.
 Code should not assume that `createService()` alone means the service already exists in the controller.
 
 On NimBLE, `BLEServer::start()` does not own the attribute-table lifecycle directly. It delegates to the
-unified coordinator `gatt/BLEGattDatabase`, which is the single owner of `ble_gatts_reset` /
+unified coordinator `gatt/BLEGattDatabase.nimble.{h,cpp}`, which is the single owner of `ble_gatts_reset` /
 `ble_svc_gap_init` / `ble_svc_gatt_init` / `ble_gatts_start`. This is required for correctness: NimBLE cannot
 support two independent GATT owners (a second `ble_gatts_start()` reallocates and wipes the first table, and the
 service-init calls are non-idempotent). The coordinator has two modes:
@@ -570,10 +574,9 @@ On receive, SDUs up to a fixed 256-byte stack threshold are flattened without a 
 LE Audio (`libraries/BLEAudio/src/`) is a **separate Arduino library**
 built on the host-agnostic ESP-BLE-AUDIO engine. Keeping it out of `BLE` means
 a sketch that includes only `<BLE.h>` does not compile the audio engine; a
-sketch that includes `<BLEAudio.h>` gets the whole subsystem. The only
-host-specific files are the thin
-`BLEAudioEngine.nimble.*` / `BLEAudioEngine.bluedroid.*` glue that forwards host
-GAP/GATT events to the engine. The `BLEAudio` controller is a shared handle minted
+sketch that includes `<BLEAudio.h>` gets the whole subsystem. The only host-specific files in `BLEAudio` are the two `.nimble.*` / `.bluedroid.*` pairs
+(`BLEAudio.{nimble,bluedroid}.*` selected by `BLEAudioBackend.h`, and
+`engine/BLEAudioEngine.{nimble,bluedroid}.*`). The `BLEAudio` controller is a shared handle minted
 from the `BLE` singleton (`BLE.getAudioController()`); its `create*()` factories mint
 value-type role handles (unicast/broadcast data plane and Broadcast Assistant;
 CAP/CSIP coordination; VCP/MICP/MCP/CCP control; TMAP/GMAP/HAS/PBP identity) whose
@@ -593,7 +596,7 @@ not a second owner of the BLE singleton lifecycle.
 
 The full audio-layer architecture, engine boundary, event and stream paths, per-role feature guards,
 and per-role spec-compliance checklist live in the dedicated maintainer doc
-[`AUDIO.md`](AUDIO.md).
+[`../BLEAudio/DESIGN.md`](../BLEAudio/DESIGN.md).
 
 ## Backend contract
 
@@ -683,8 +686,8 @@ header; the two backends are structurally identical except NimBLE-only `L2CAP`):
 
 ### What a backend must provide
 
-1. **Type definitions** — one `struct Foo::Impl` per PIMPL class, inheriting `FooImplCommon` when a shared base exists (enforced by `BLEBackendContract.h`). Baseless classes (`BLEClass`, `Scan`, `Advertising`, L2CAP) define `Foo::Impl` directly. `BLEAdvertisedDevice` is fully shared — no backend `Impl` needed.
-2. **Backend-specific public methods** — anything not already defined in `BLEFoo.cpp` that talks to the native stack. **Exception — `BLEClass`:** all lifecycle, identity, MTU/PHY/whitelist, custom handlers, **and** factory accessors live in `BLE.<stack>.cpp` only.
+1. **Type definitions** — one `struct Foo::Impl` per PIMPL class, inheriting `FooImplCommon` (`BLEBackendContract.h` verifies `BLEClass`, `Server`, `Service`, `Characteristic`, `Descriptor`, `Client`, `Remote*`, `Scan`, `Advertising`, and `Security`). `BLEAdvertisedDevice` is 100% shared; `BLEL2CAPServer` is NimBLE-only.
+2. **Backend-specific public methods** — anything not already defined in `BLEFoo.cpp` that talks to the native stack (while `BLEFoo.cpp` provides shared bodies and `#if !BLE_*_SUPPORTED` fallbacks).
 3. **Agnostic hooks** declared in the shared base / `core/` and implemented per backend (e.g. `bleServerRemoveService`). Validation helpers such as `bleValidateCharProps` are shared — consume them, do not reimplement.
 4. **Lifecycle + event routing** — init/deinit in `BLE.<stack>.cpp`; route GAP/GATT into shared handlers (`handleGAP` / `handleGATTS` / `handleGATTC`, advertising/scan/security). Fire shared `BLESecurityImplCommon` pairing hooks on the process-wide `BLESecurity::Impl::instance()`.
 5. **Resource teardown in `end()`** — the library owns cleanup of resources it created. `end()` already resets advertising and stops scanning; backends with periodic-sync must call `BLEScan::terminateAllPeriodicSyncs()` **while the host is still enabled**. Terminating after host disable races teardown.
@@ -741,7 +744,7 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
 ### Enforcement
 
 - **Compile time:** `core/BLEBackendContract.h` `static_assert`s shared-base inheritance and that baseless `Impl`s are defined.
-- **Isolation:** `tests/check_backend_isolation.sh` fails if a public `src/BLE*.h` names a backend type or includes a backend/selector header.
+- **Isolation:** `tests/check_backend_isolation.sh` fails if a public `src/BLE*.h` or `BLEAudio*.h` names a backend type or includes a backend/selector header, or if any shared (non-`.nimble.*`/non-`.bluedroid.*`) source/header leaks `BLE_NIMBLE` / `BLE_BLUEDROID`.
 - **Link time:** any public/agnostic method left undefined by the backend is a linker error.
 
 ### Known non-normalizable divergences
@@ -831,7 +834,7 @@ If you are modifying this library:
 - prefer adapting backend code to the shared API rather than changing the shared API to fit one backend
 - look for existing patterns in handle ownership, callback dispatch, and `BTStatus` conversion before inventing a new one
 - treat `MIGRATION.md` as a user-facing transition guide and this document as the maintainer-facing architecture guide
-- for LE Audio work, read [`AUDIO.md`](AUDIO.md) — it is the maintainer-facing guide for the `libraries/BLEAudio/src/` subsystem (vendor boundary, controller commit model, per-role guards and spec obligations)
+- for LE Audio work, read [`../BLEAudio/DESIGN.md`](../BLEAudio/DESIGN.md) — it is the maintainer-facing guide for the `libraries/BLEAudio/src/` subsystem (engine boundary, controller commit model, per-role guards and spec obligations)
 
 If the code and this document disagree, follow the code and update this document.
 

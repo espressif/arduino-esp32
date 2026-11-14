@@ -495,7 +495,13 @@ bool phase_basic() {
   bool abortedStayedUp = BLE.isInitialized();
   BLE.end(false);
   BTStatus afterAbortedTrue = BLE.begin(serverName + "_aborted_true");
-  bool idleAndAbortOk = (bool)afterIdleTrueEnd && abortedStayedUp && (bool)afterAbortedTrue;
+  bool rndOk = false;
+  if (afterAbortedTrue && BLE.setOwnAddressType(BTAddress::Random)) {
+    uint8_t rnd[6] = {};
+    rndOk = BLE.getOwnRandomAddress(rnd) && (rnd[5] & 0xC0) == 0xC0;
+    (void)BLE.setOwnAddressType(BTAddress::Public);
+  }
+  bool idleAndAbortOk = (bool)afterIdleTrueEnd && abortedStayedUp && (bool)afterAbortedTrue && rndOk;
   Serial.printf(
     "[SERVER] Phase1 deferredEnd during=%d failSpawn=%d idleTrue=%d afterIdle=%d heap=%d\n", (int)deferredDuring, (int)deferredFailSpawn,
     (int)(bool)afterIdleTrue, (int)idleAndAbortOk, (int)heap_caps_check_integrity_all(true)

@@ -76,11 +76,12 @@ Bluedroid has no `L2CAP` pair yet; `l2cap/BLEL2CAPImpl.h` stays available for a 
 
 ## Two-layer Impl model here
 
-Bluedroid keeps almost no stack-specific state: the attribute `Impl`s (`BLEService`,
-`BLECharacteristic`, `BLEDescriptor`) and the remote `Impl`s are empty derivations of their shared
+Bluedroid keeps minimal stack-specific state: the attribute `Impl`s (`BLEService`,
+`BLECharacteristic`, `BLEDescriptor`) and the remote `Impl`s are thin derivations of their shared
 `*ImplCommon` bases — they exist so the backend contract has a concrete per-type `Impl`.
-`BLEServer::Impl` and `BLEClient::Impl` add the Bluedroid `gatts_if`/`gattc_if`, app id, prepared-write
-buffers, and `BLESync` objects. Access is always cast-free `impl.member`.
+`BLEClass::Impl`, `BLEServer::Impl`, `BLEClient::Impl`, `BLEScan::Impl`, and `BLEAdvertising::Impl`
+inherit their `*ImplCommon` bases and add Bluedroid `gatts_if`/`gattc_if`, app id, prepared-write
+buffers, timers, and `BLESync` objects. Access is always cast-free `impl.member`.
 
 ## Stack-specific quirks
 

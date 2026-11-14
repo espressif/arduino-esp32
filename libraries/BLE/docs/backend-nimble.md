@@ -60,9 +60,10 @@ is the `BLEFoo.nimble.{h,cpp}` file inside its component folder:
 
 ## Two-layer Impl model here
 
-Every `Foo::Impl` in a `.nimble.*` file inherits its `FooImplCommon` base (when one exists) and adds
+Every `Foo::Impl` in a `.nimble.*` file inherits its `FooImplCommon` base (`BLEClass`, `Server`, `Service`,
+`Characteristic`, `Descriptor`, `Client`, `Remote*`, `Scan`, `Advertising`, `Security`) and adds
 only NimBLE-native state (e.g. `ble_uuid_any_t nimbleUUID`, per-request `BLESync` objects, connection
-handles). `BLEClass::Impl` and `BLEScan`/`BLEAdvertising`/L2CAP `Impl`s have no shared base. Access is
+handles). Only NimBLE-exclusive `BLEL2CAPServer`/`BLEL2CAPChannel` `Impl`s have no shared base. Access is
 always cast-free `impl.member`.
 
 ## Stack-specific quirks

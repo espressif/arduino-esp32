@@ -15,27 +15,20 @@
 # limitations under the License.
 #
 # --------------------------------------------------------------------------
-# Backend-isolation guard for the public BLE and BLEAudio APIs.
+# Backend-isolation guard for the BLE and BLEAudio libraries.
 #
-# The public surfaces are:
-#   * the core umbrella header (BLE/src/BLE.h) plus every project header it
-#     directly includes;
-#   * the LE Audio umbrella header (BLEAudio/src/BLEAudio.h) plus every
-#     project header it directly includes.
+# Checks two invariants:
+#   1. Public surface headers (<BLE.h>, <BLEAudio.h>, and every project header
+#      they directly include) never include a backend/selector header
+#      (BLEBackend.h, BLEAudioBackend.h, *.nimble.h, *.bluedroid.h) and never
+#      name native stack types or ::Impl in real code.
+#   2. Shared (non-*.nimble.* / non-*.bluedroid.*) source and header files
+#      under BLE/src and BLEAudio/src never branch on BLE_NIMBLE / BLE_BLUEDROID
+#      or raw CONFIG_BT_NIMBLE_* / CONFIG_BT_BLUEDROID_* macros outside the
+#      sanctioned single-point guard/selector headers (core/BLEGuards.h,
+#      core/BLEBackend.h, BLEAudioBackend.h).
 #
-# Those headers must never leak backend detail:
-#   * they must NOT include a backend selector or backend header
-#     (core/BLEBackend.h, or any *.nimble.h / *.bluedroid.h);
-#   * they must NOT name native stack types (esp_ble_*, ble_gap_*, ble_hs_*,
-#     ble_uuid_*) or per-type backend Impl structs in actual code.
-#
-# The sets are derived from the umbrella headers so they stay correct as
-# components move; the implementation layer (shared *Impl.h bases, backend
-# .nimble/.bluedroid files, and internal helpers reached only from .cpp/backend
-# files) is never scanned and is free to name backend types.
-#
-# Comment lines (// ... and Doxygen ' * ...') are ignored so the invariant can
-# be described in prose without tripping the guard.
+# Comment lines (// ... and /* ... */) are stripped before token scans.
 #
 # Exit status: 0 = clean, 1 = violation(s) found.
 # --------------------------------------------------------------------------
@@ -48,32 +41,24 @@ AUDIO_SRC_DIR="$(cd "${SCRIPT_DIR}/../../BLEAudio/src" 2>/dev/null && pwd || tru
 
 status=0
 
-# Indent a captured multi-line block so it reads as detail under its error line.
 indent() {
     printf '    %s\n' "${1//$'\n'/$'\n'    }"
 }
 
-# Strip block comments, line comments and pure Doxygen lines so the token scan
-# only sees real code. (awk keeps this dependency-free and portable.)
 strip_comments() {
     awk '
         { line = $0 }
-        # drop /* ... */ that open and close on the same line
         { gsub(/\/\*.*\*\//, "", line) }
         in_block {
             if (line ~ /\*\//) { sub(/^.*\*\//, "", line); in_block = 0 }
             else { next }
         }
         /\/\*/ { sub(/\/\*.*$/, "", line); in_block = 1 }
-        { sub(/\/\/.*$/, "", line) }         # trailing // comments
+        { sub(/\/\/.*$/, "", line) }
         { print line }
     ' "$1"
 }
 
-# check_surface <label> <umbrella> <src-dir>
-#
-# Build the public-surface header set: the umbrella header plus every project
-# header it directly includes that resolves to a file under src-dir.
 check_surface() {
     local label="$1"
     local umbrella="$2"
@@ -99,17 +84,13 @@ check_surface() {
         [ -e "$hdr" ] || continue
         name="${label}/$(basename "$hdr")"
 
-        # 1) Forbidden includes (checked on raw #include lines): the backend selector
-        #    (core/BLEBackend.h) or any backend header by suffix (*.nimble.h /
-        #    *.bluedroid.h) wherever it lives.
-        bad_inc="$(grep -nE '^[[:space:]]*#[[:space:]]*include[[:space:]]*[<"]([^">]*\.(nimble|bluedroid)\.h|[^">]*BLEBackend\.h)' "$hdr" || true)"
+        bad_inc="$(grep -nE '^[[:space:]]*#[[:space:]]*include[[:space:]]*[<"]([^">]*\.(nimble|bluedroid)\.h|[^">]*BLE(Audio)?Backend\.h)' "$hdr" || true)"
         if [ -n "$bad_inc" ]; then
             echo "ERROR: ${name} includes a backend/selector header (public API must stay backend-agnostic):"
             indent "$bad_inc"
             status=1
         fi
 
-        # 2) Forbidden tokens in real code (comments stripped first).
         bad_tok="$(strip_comments "$hdr" | grep -nE 'esp_ble_|ble_gap_|ble_hs_|ble_uuid_|::Impl\b|Nimble[A-Za-z]*Impl|Bluedroid[A-Za-z]*Impl' || true)"
         if [ -n "$bad_tok" ]; then
             echo "ERROR: ${name} names a backend-specific type in code (public API must stay backend-agnostic):"
@@ -119,14 +100,41 @@ check_surface() {
     done
 }
 
+check_shared_units() {
+    local label="$1"
+    local src_dir="$2"
+    local file rel bad_leak
+
+    while IFS= read -r -d '' file; do
+        rel="${file#${src_dir}/}"
+        case "$rel" in
+            *.nimble.h|*.nimble.cpp|*.nimble.c|*.bluedroid.h|*.bluedroid.cpp|*.bluedroid.c)
+                continue
+                ;;
+            core/BLEGuards.h|core/BLEBackend.h|BLEAudioBackend.h)
+                continue
+                ;;
+        esac
+
+        bad_leak="$(strip_comments "$file" | grep -nE '\b(BLE_NIMBLE|BLE_BLUEDROID|CONFIG_BT_NIMBLE_[A-Z0-9_]*|CONFIG_BT_BLUEDROID_[A-Z0-9_]*)\b|[<"][^">]*\.(nimble|bluedroid)\.h[">]' || true)"
+        if [ -n "$bad_leak" ]; then
+            echo "ERROR: ${label}/${rel} leaks a backend macro or header into a shared unit:"
+            indent "$bad_leak"
+            status=1
+        fi
+    done < <(find "$src_dir" -type f \( -name '*.h' -o -name '*.c' -o -name '*.cpp' \) -print0)
+}
+
 check_surface "BLE" "${BLE_SRC_DIR}/BLE.h" "${BLE_SRC_DIR}"
+check_shared_units "BLE" "${BLE_SRC_DIR}"
 
 if [ -n "${AUDIO_SRC_DIR}" ]; then
     check_surface "BLEAudio" "${AUDIO_SRC_DIR}/BLEAudio.h" "${AUDIO_SRC_DIR}"
+    check_shared_units "BLEAudio" "${AUDIO_SRC_DIR}"
 fi
 
 if [ "$status" -eq 0 ]; then
-    echo "OK: public BLE and BLEAudio headers are backend-agnostic."
+    echo "OK: BLE and BLEAudio public headers and shared units are backend-isolated."
 fi
 
 exit "$status"

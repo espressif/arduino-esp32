@@ -210,4 +210,4 @@ frame rate.
   links no audio code.
 
 The maintainer-facing architecture, per-role guards and spec obligations are in
-[`../BLE/AUDIO.md`](../BLE/AUDIO.md).
+[`DESIGN.md`](DESIGN.md) (complementing [`../BLE/DESIGN.md`](../BLE/DESIGN.md)).
