@@ -44,6 +44,7 @@
 
 #include <type_traits>
 
+#include "BLEImpl.h"
 #include "server/BLEServerImpl.h"
 #include "gatt/BLEGattAttributesImpl.h"
 #include "client/BLEClientImpl.h"
@@ -51,6 +52,7 @@
 #include "security/BLESecurityImpl.h"
 
 // --- Classes with a shared base: Foo::Impl must inherit FooImplCommon (two-layer model). ---
+static_assert(std::is_base_of<BLEClassImplCommon, BLEClass::Impl>::value, "BLEClass::Impl must inherit BLEClassImplCommon");
 static_assert(std::is_base_of<BLEServerImplCommon, BLEServer::Impl>::value, "BLEServer::Impl must inherit BLEServerImplCommon");
 static_assert(std::is_base_of<BLEServiceImplCommon, BLEService::Impl>::value, "BLEService::Impl must inherit BLEServiceImplCommon");
 static_assert(std::is_base_of<BLECharacteristicImplCommon, BLECharacteristic::Impl>::value, "BLECharacteristic::Impl must inherit BLECharacteristicImplCommon");

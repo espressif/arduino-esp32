@@ -36,6 +36,7 @@
 
 #if BLE_NIMBLE
 
+#include "BLE.nimble.h"
 #include "server/BLEServer.nimble.h"
 #include "gatt/BLEGattAttributes.nimble.h"
 #include "client/BLEClient.nimble.h"
@@ -46,6 +47,7 @@
 
 #elif BLE_BLUEDROID
 
+#include "BLE.bluedroid.h"
 #include "server/BLEServer.bluedroid.h"
 #include "gatt/BLEGattAttributes.bluedroid.h"
 #include "client/BLEClient.bluedroid.h"

@@ -18,9 +18,21 @@
 #if BLE_ENABLED
 
 #include "BLE.h"
+#include "core/BLEBackend.h"
+#include "core/BLEAudioHooks.h"
+#include "core/BLEMutex.h"
+#include "core/BLETask.h"
+#include "core/BLEValidationHooks.h"
+#if BLE_ISO_SUPPORTED
+#include "iso/BLEIso.h"
+#endif
 #include "HEXBuilder.h"
 #include "base64.h"
+#include "esp32-hal-bt.h"
+#include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
+
+#include <cstring>
 
 #if BLE_LOCAL_CONTROLLER_SUPPORTED
 #include <esp_bt.h>
@@ -30,13 +42,36 @@
 BLEClass BLE;
 #endif
 
-BLEClass::operator bool() const {
-  return isInitialized();
+bool bleInStackCallbackTask() {
+  if (bleIsHostStackTask()) {
+    return true;
+  }
+#if BLE_AUDIO_SUPPORTED || BLE_ISO_SUPPORTED
+  TaskHandle_t current = xTaskGetCurrentTaskHandle();
+  const char *name = current ? pcTaskGetName(current) : nullptr;
+  return name && strcmp(name, "iso_task") == 0;
+#else
+  return false;
+#endif
 }
 
 // --------------------------------------------------------------------------
-// Shared implementations (identical across all backends)
+// Shared lifecycle & state implementations (identical across all backends)
 // --------------------------------------------------------------------------
+
+BLEClass::BLEClass() : _impl(new Impl()) {}
+
+BLEClass::~BLEClass() {
+  if (isInitialized()) {
+    end(false);
+  }
+  delete _impl;
+  _impl = nullptr;
+}
+
+BLEClass::operator bool() const {
+  return isInitialized();
+}
 
 bool BLEClass::isInitialized() const {
   portENTER_CRITICAL(&_stateMux);
@@ -51,6 +86,247 @@ void BLEClass::setInitialized(bool initialized) {
   portEXIT_CRITICAL(&_stateMux);
 }
 
+bool BLEClass::isEnding() const {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lifecycle(_impl->lifecycleMtx);
+  return _impl->ending;
+}
+
+BTStatus BLEClass::begin(const String &deviceName) {
+  if (!_impl || !_impl->lifecycleMtx) {
+    return BTStatus::NoMemory;
+  }
+  BLELockGuard lifecycle(_impl->lifecycleMtx);
+  if (_impl->ending) {
+    return BTStatus::InvalidState;
+  }
+  if (isInitialized()) {
+    log_d("begin: BLE already initialized, keeping the current stack");
+    return BTStatus::OK;
+  }
+
+#if BLE_CONTROLLER_ENABLED
+  if (btMemReleased(BT_MODE_BLE)) {
+    log_e("Cannot reinitialize BLE: memory has been released");
+    return BTStatus::InvalidState;
+  }
+#endif
+
+  BTStatus st = _impl->backendBegin(deviceName);
+  if (!st) {
+    return st;
+  }
+
+  _impl->ending = false;
+  setInitialized(true);
+  _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
+#if BLE_SCANNING_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->scanBeginHook)) {
+    hook();
+  }
+#endif
+#if BLE_ADVERTISING_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->advBeginHook)) {
+    hook();
+  }
+#endif
+#if BLE_ISO_SUPPORTED
+  _impl->storeHook(_impl->isoPreEndHook, +[]() { (void)BLEIso::end(); });
+#endif
+  _impl->backendAfterHooks();
+#if BLE_SMP_SUPPORTED
+  // getSecurity() keeps its Impl in a function-local static that outlives an
+  // end()/begin() cycle. Re-push any retained configuration so the freshly
+  // initialized stack matches getSecurity().
+  if (auto hook = _impl->loadHook(_impl->securityBeginHook)) {
+    hook();
+  }
+#endif
+
+  _impl->backendFinishBegin();
+  return BTStatus::OK;
+}
+
+namespace {
+void bleEndWorker(void *) {
+  BLE.end(false);
+  vTaskDelete(nullptr);
+}
+
+bool bleStartEndWorker() {
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.lifecycle.endWorkerStartFailures)) {
+    return false;
+  }
+#endif
+  return xTaskCreate(bleEndWorker, "ble-end", 6144, nullptr, 1, nullptr) == pdPASS;
+}
+}  // namespace
+
+void BLEClass::end(bool releaseMemory) {
+  if (bleInStackCallbackTask()) {
+    // Claim ending before returning so begin() cannot treat the still-live
+    // stack as a successful re-init. The worker, or a later user-thread end(),
+    // runs the teardown body.
+    {
+      BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+      if (!_impl || (!isInitialized() && !_impl->endRunning)) {
+        return;
+      }
+      if (releaseMemory) {
+        _impl->endReleaseMemory = true;
+      }
+      if (_impl->ending) {
+        return;
+      }
+      _impl->ending = true;
+    }
+    if (!bleStartEndWorker()) {
+      log_e("BLE.end: cannot defer stack-task teardown");
+    }
+    return;
+  }
+
+  while (true) {
+    bool waitForWorker = false;
+    {
+      BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+      if (!_impl) {
+        return;
+      }
+      if (!isInitialized() && !_impl->endRunning) {
+        return;
+      }
+      if (releaseMemory) {
+        _impl->endReleaseMemory = true;
+      }
+      if (_impl->endRunning) {
+        if (_impl->endTask == xTaskGetCurrentTaskHandle()) {
+          return;
+        }
+        waitForWorker = true;
+      } else {
+        _impl->ending = true;
+        _impl->endRunning = true;
+        _impl->endTask = xTaskGetCurrentTaskHandle();
+      }
+    }
+    if (!waitForWorker) {
+      break;
+    }
+    vTaskDelay(1);
+  }
+
+  auto abortShutdown = [this]() {
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endReleaseMemory = false;
+    _impl->endTask = nullptr;
+    _impl->endRunning = false;
+    _impl->ending = false;
+  };
+
+  if (auto hook = _impl->loadHook(_impl->streamPreEndHook)) {
+    hook();
+  }
+
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.lifecycle.preEndAbortFailures)) {
+    abortShutdown();
+    return;
+  }
+#endif
+  // ISO groups own advertising/sync resources and both ISO and Audio need the
+  // live host to complete asynchronous stream termination.
+#if BLE_ISO_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->isoPreEndHook)) {
+    hook();
+  }
+  if (BLEIso::isActive()) {
+    log_e("BLE.end: ISO teardown did not complete; host shutdown aborted");
+    abortShutdown();
+    return;
+  }
+#endif
+#if BLE_AUDIO_SUPPORTED
+  bool audioEndOk = !bleAudioPreEndHook || bleAudioPreEndHook();
+  if (!audioEndOk) {
+    log_e("BLE.end: audio teardown did not complete; host shutdown aborted");
+    abortShutdown();
+    return;
+  }
+#endif
+
+  _impl->backendPreAdvScanEnd();
+
+#if BLE_ADVERTISING_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->advEndHook)) {
+    hook();
+  }
+#endif
+#if BLE_SCANNING_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->scanEndHook)) {
+    hook();
+  }
+#endif
+
+  _impl->backendPreSessionClose();
+
+  // Close the public session before native shutdown callbacks run. The GATT
+  // tree stays attached until host deinit, while callbacks cannot re-enter
+  // createServer() or send through a host that is stopping.
+  {
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    setInitialized(false);
+  }
+#if BLE_GATT_SERVER_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->serverDeactivateHook)) {
+    hook();
+  }
+#endif
+
+  _impl->backendStopAndDeinitHost();
+
+#if BLE_GATT_SERVER_SUPPORTED
+  if (auto hook = _impl->loadHook(_impl->serverPostEndHook)) {
+    hook();
+  }
+#endif
+  if (auto hook = _impl->loadHook(_impl->streamPostEndHook)) {
+    hook();
+  }
+
+  bool release = false;
+  {
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    release = _impl->endReleaseMemory;
+    _impl->endReleaseMemory = false;
+  }
+  _impl->backendFinalizeEnd(release);
+  {
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endTask = nullptr;
+    _impl->endRunning = false;
+    _impl->ending = false;
+  }
+}
+
+bool BLEClass::setStreamEndHooks(void (*preHook)(), void (*postHook)()) {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lifecycle(_impl->lifecycleMtx);
+  if (_impl->ending) {
+    return false;
+  }
+  portENTER_CRITICAL(&_impl->hookMux);
+  _impl->streamPreEndHook = preHook;
+  _impl->streamPostEndHook = postHook;
+  portEXIT_CRITICAL(&_impl->hookMux);
+  return true;
+}
+
 String BLEClass::getDeviceName() const {
   return _deviceName;
 }
@@ -59,8 +335,11 @@ BTAddress::Type BLEClass::getOwnAddressType() const {
   return _ownAddressType;
 }
 
+uint16_t BLEClass::getMTU() const {
+  return _impl ? _impl->localMTU : 23;
+}
+
 bool BLEClass::isOnWhiteList(const BTAddress &address) const {
-  // Linear scan of the internal whitelist vector.
   for (const auto &a : _whiteList) {
     if (a == address) {
       return true;
@@ -164,5 +443,83 @@ int8_t BLEClass::getPower() const {
   return 0;
 #endif
 }
+
+BTStatus BLEClass::getDefaultPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
+  txPhy = BLEPhy::PHY_1M;
+  rxPhy = BLEPhy::PHY_1M;
+  log_w("getDefaultPhy not supported");
+  return BTStatus::NotSupported;
+}
+
+bool BLEClass::isHostedBLE() const {
+  return BLE_HOSTED_NIMBLE != 0;
+}
+
+#if !BLE_HOSTED_NIMBLE
+BTStatus BLEClass::setPins(int8_t, int8_t, int8_t, int8_t, int8_t, int8_t, int8_t) {
+  log_w("setPins not supported (hosted NimBLE unavailable)");
+  return BTStatus::NotSupported;
+}
+#endif
+
+#if !BLE5_SUPPORTED
+BTStatus BLEClass::setDefaultPhy(BLEPhy, BLEPhy) {
+  log_w("setDefaultPhy not supported (BLE 5.0 unavailable)");
+  return BTStatus::NotSupported;
+}
+#endif
+
+#if BLE_ADVERTISING_SUPPORTED
+BTStatus BLEClass::startAdvertising() {
+  return getAdvertising().start();
+}
+
+BTStatus BLEClass::stopAdvertising() {
+  return getAdvertising().stop();
+}
+#else
+BLEAdvertising BLEClass::getAdvertising() {
+  log_w("Advertising not supported");
+  return BLEAdvertising();
+}
+
+BTStatus BLEClass::startAdvertising() {
+  log_w("Advertising not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClass::stopAdvertising() {
+  log_w("Advertising not supported");
+  return BTStatus::NotSupported;
+}
+#endif
+
+#if !BLE_SCANNING_SUPPORTED
+BLEScan BLEClass::getScan() {
+  log_w("Scanning not supported");
+  return BLEScan();
+}
+#endif
+
+#if !BLE_GATT_SERVER_SUPPORTED
+BLEServer BLEClass::createServer() {
+  log_w("GATT server not supported");
+  return BLEServer();
+}
+#endif
+
+#if !BLE_GATT_CLIENT_SUPPORTED
+BLEClient BLEClass::createClient() {
+  log_w("GATT client not supported");
+  return BLEClient();
+}
+#endif
+
+#if !BLE_SMP_SUPPORTED
+BLESecurity BLEClass::getSecurity() {
+  log_w("SMP not supported");
+  return BLESecurity();
+}
+#endif
 
 #endif /* BLE_ENABLED */

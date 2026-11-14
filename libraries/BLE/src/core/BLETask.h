@@ -27,4 +27,7 @@
  */
 bool bleInStackCallbackTask();
 
+/** @brief Backend-specific check for the native host callback task (NimBLE host / Bluedroid BTC). */
+bool bleIsHostStackTask();
+
 #endif /* BLE_ENABLED */

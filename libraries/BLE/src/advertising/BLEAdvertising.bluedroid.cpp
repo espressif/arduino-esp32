@@ -934,8 +934,12 @@ BTStatus BLEAdvertising::Impl::applySetRandomAddr(uint8_t instance) {
   if (!BLE.getOwnRandomAddress(rnd)) {
     return BTStatus::OK;
   }
+  esp_bd_addr_t bda;
+  for (int i = 0; i < 6; i++) {
+    bda[i] = rnd[5 - i];
+  }
   advSync.take();
-  esp_err_t err = esp_ble_gap_ext_adv_set_rand_addr(instance, rnd);
+  esp_err_t err = esp_ble_gap_ext_adv_set_rand_addr(instance, bda);
   if (err != ESP_OK) {
     log_e("esp_ble_gap_ext_adv_set_rand_addr inst %u: %s", instance, esp_err_to_name(err));
     advSync.give(BTStatus::Fail);

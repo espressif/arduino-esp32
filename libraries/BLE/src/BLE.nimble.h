@@ -26,9 +26,7 @@
 #include "core/BLEGuards.h"
 #if BLE_NIMBLE
 
-#include "BLE.h"
-#include "core/BLEMutex.h"
-#include "freertos/task.h"
+#include "BLEImpl.h"
 #include <host/ble_gap.h>
 #include <host/ble_hs.h>
 #include <host/ble_att.h>
@@ -38,47 +36,25 @@ struct ble_store_status_event;
 /**
  * @brief NimBLE backend state for @ref BLEClass (@c BLEClass::Impl).
  *
- * BLEClass is entirely NimBLE-specific (no cross-backend shared state), so this
- * has no common base. As a nested member of BLEClass, its static callbacks reach
- * BLE._impl / BLE._deviceName directly.
+ * Inherits @ref BLEClassImplCommon for shared lifecycle state and hook slots;
+ * as a nested member of @c BLEClass, its static callbacks reach
+ * @c BLE._impl / @c BLE._deviceName directly.
  */
-struct BLEClass::Impl {
-  using LifecycleHook = void (*)();
+struct BLEClass::Impl : BLEClassImplCommon {
   using SecurityOverflowHook = bool (*)(const BTAddress &);
 
   bool synced = false;
-  uint16_t localMTU = BLE_ATT_MTU_DFLT;
-  uint8_t ownAddrType = BLE_OWN_ADDR_PUBLIC;
-  bool ending = false;
-  bool endRunning = false;
-  bool endReleaseMemory = false;
-  TaskHandle_t endTask = nullptr;
-  StaticSemaphore_t lifecycleMtxStorage{};
-  SemaphoreHandle_t lifecycleMtx = xSemaphoreCreateRecursiveMutexStatic(&lifecycleMtxStorage);
-  portMUX_TYPE hookMux = portMUX_INITIALIZER_UNLOCKED;
   ble_gap_event_listener gapListener{};
-  BLEClass::RawEventHandler customGapHandler = nullptr;
 #if BLE_ADVERTISING_SUPPORTED
   BLEAdvertising::Impl *adv = nullptr;
-  LifecycleHook advBeginHook = nullptr;
-  LifecycleHook advEndHook = nullptr;
 #endif
 #if BLE_SCANNING_SUPPORTED
   BLEScan::Impl *scan = nullptr;
-  LifecycleHook scanBeginHook = nullptr;
-  LifecycleHook scanEndHook = nullptr;
   LifecycleHook scanHostStoppedHook = nullptr;
 #endif
-#if BLE_ISO_SUPPORTED
-  LifecycleHook isoPreEndHook = nullptr;
-#endif
 #if BLE_GATT_SERVER_SUPPORTED
-  LifecycleHook serverPreEndHook = nullptr;
   LifecycleHook serverHostStoppedHook = nullptr;
-  LifecycleHook serverPostEndHook = nullptr;
 #endif
-  LifecycleHook streamPreEndHook = nullptr;
-  LifecycleHook streamPostEndHook = nullptr;
 #if BLE_L2CAP_SUPPORTED
   LifecycleHook l2capBeginHook = nullptr;
   LifecycleHook l2capPreEndHook = nullptr;
@@ -86,22 +62,16 @@ struct BLEClass::Impl {
   LifecycleHook l2capPostEndHook = nullptr;
 #endif
 #if BLE_SMP_SUPPORTED
-  LifecycleHook securityBeginHook = nullptr;
   SecurityOverflowHook securityOverflowHook = nullptr;
 #endif
 
-  template<typename Hook> Hook loadHook(Hook &slot) {
-    portENTER_CRITICAL(&hookMux);
-    Hook hook = slot;
-    portEXIT_CRITICAL(&hookMux);
-    return hook;
-  }
-
-  template<typename Hook> void storeHook(Hook &slot, Hook hook) {
-    portENTER_CRITICAL(&hookMux);
-    slot = hook;
-    portEXIT_CRITICAL(&hookMux);
-  }
+  BTStatus backendBegin(const String &deviceName);
+  void backendAfterHooks();
+  void backendFinishBegin();
+  void backendPreAdvScanEnd();
+  void backendPreSessionClose();
+  void backendStopAndDeinitHost();
+  void backendFinalizeEnd(bool releaseMemory);
 
   /** @brief FreeRTOS task body that runs the NimBLE host until the port is stopped. */
   static void hostTask(void *param);
@@ -116,12 +86,6 @@ struct BLEClass::Impl {
    * @return 0 to consume overflow handling after bond notification, or the result of `ble_store_util_status_rr`.
    */
   static int onStoreStatus(struct ble_store_status_event *event, void *arg);
-
-  ~Impl() {
-    if (lifecycleMtx) {
-      vSemaphoreDelete(lifecycleMtx);
-    }
-  }
 };
 
 int nimbleForwardServerGapEvent(struct ble_gap_event *event);
