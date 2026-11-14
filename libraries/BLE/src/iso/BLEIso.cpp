@@ -42,7 +42,8 @@
  * role's code is behind its BLE_ISO_*_SUPPORTED guard.
  *
  * Vendor callbacks run on the ISO host task; everything else runs from the
- * application with the host idle. There is no locking.
+ * application with the host idle. The few fields both tasks touch (_nextSeq,
+ * sBigTx) are atomic; callbacks must be registered before a channel connects.
  *
  * API contract is documented on the declarations in `BLEIso.h`; the
  * definitions below carry implementation notes only.
@@ -139,7 +140,7 @@ esp_ble_iso_server_t sServer;  // Accepts incoming CIS into listenCis() slots.
 bool sServerRegistered;
 #endif
 #if BLE_ISO_BROADCASTER_SUPPORTED
-esp_ble_iso_big_t *sBigTx;  // Broadcaster BIG.
+std::atomic<esp_ble_iso_big_t *> sBigTx{nullptr};  // Broadcaster BIG (host task clears it on disconnect).
 int sBigAdv = -1;           // Advertising set registered with the ISO layer, or -1.
 #endif
 
@@ -615,10 +616,13 @@ esp_err_t bigCreate(int slot, uint8_t advHandle, const BigParams &p) {
   param.framing = p.framing;
   param.encryption = packBroadcastCode(p.broadcastCode, param.bcode) > 0;
   sBigTx = nullptr;
-  err = esp_ble_iso_big_create(advHandle, &param, &sBigTx);
+  esp_ble_iso_big_t *big = nullptr;
+  err = esp_ble_iso_big_create(advHandle, &param, &big);
   if (err != ESP_OK) {
     log_e("BLEIso: BIG create on advertising set %u (%u us, %u octets) failed: %d", advHandle, (unsigned)p.sduIntervalUs, p.sduSize, err);
     sBigTx = nullptr;
+  } else {
+    sBigTx = big;
   }
   return err;
 }
@@ -950,6 +954,12 @@ Channel *createBig(uint8_t advHandle, const BigParams &p) {
 // Sync timeout 100 x 10 ms = 1 s without a BIS PDU before the sync is lost.
 Channel *syncBig(uint8_t bisIndex, const BigParams &p) {
 #if BLE_ISO_SYNC_RECEIVER_SUPPORTED
+  if (bisIndex == 0 || bisIndex > 31) {
+    // ESP_BLE_ISO_BIS_INDEX_BIT(bisIndex) is 1UL << (bisIndex - 1); reject the
+    // reserved index 0 and anything that would shift out of range (UB).
+    log_e("BLEIso: syncBig() BIS index %u out of range (1..31)", bisIndex);
+    return nullptr;
+  }
   Channel *c = takeChannel("syncBig", Kind::BisReceiver);
   if (!c) {
     return nullptr;

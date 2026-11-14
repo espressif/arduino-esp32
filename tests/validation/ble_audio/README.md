@@ -49,7 +49,9 @@ the suite runs unchanged on non-audio silicon.
 | 10 | stereo_broadcast | encrypted stereo Auracast: server = 2-BIS Broadcast Source (front left + front right) with a Broadcast Code sending a distinct pattern per BIS, client = 2-BIS Broadcast Sink counting SDUs per channel and checking the pattern; also measures the achieved SDU rate and churns one stream callback from a second task (broadcast source/sink) |
 | 11 | broadcast_assistant | BASS control point: server = Broadcast Sink with the Scan Delegator (auto-sync off), client = Broadcast Assistant that discovers BASS, runs Remote Scan Started/Stopped (including a repeated stop that must be a no-op), adds a source description and removes it again, confirming each step through the operation result and the receive-state notifications (scan delegator + assistant) |
 | 12 | cap_handover | CAP unicast -> broadcast handover: server = CAP acceptor with a Unicast Server sink and a delegator Broadcast Sink, client = CAP Initiator that starts unicast, streams raw SDUs, then hands the session over to a broadcast on the same stream handle; also checks the PBA round-trip, a locally rejected handover, and a forced asynchronous failure that must release unicast so it can be restarted; the server must receive SDUs on both transports (`CONFIG_BT_CAP_HANDOVER`) |
-| 13 | memory_release | heap reclaimed on release; reinit blocked while released |
+| 13 | bcast_stop_race | Broadcast Source `start()` then `stop()` before `BSRC_STARTED`, five times: `stop()` must wait out the in-flight BIG, return OK, fire `onStopped`, and leave advertising released so a later clean session still streams |
+| 14 | cap_bc_interleave | CAP Initiator `startBroadcast()`/`stopBroadcast()` interleaved with a second task calling `streamCount()`/`stream()`: the by-value `streams()` snapshot must not tear, and a clean broadcast must still run afterward |
+| 15 | memory_release | heap reclaimed on release; reinit blocked while released |
 
 ## Validation hooks
 
@@ -135,9 +137,14 @@ hooks close two gaps that a two-DUT bench cannot exercise:
   the unicast server, the broadcast sink and the scan delegator on the server. The acceptor's broadcast sink
   does not scan on its own: it only syncs when the initiator adds the broadcast through
   BASS during the handover.
+- The bcast_stop_race (13) and cap_bc_interleave (14) phases are server-side
+  stress: the client only acknowledges. They self-skip without the broadcast
+  source / CAP initiator. Phase 13 races `BroadcastSource::stop()` against an
+  in-flight start; phase 14 hammers `stream()`/`streamCount()` while
+  `startBroadcast()` rebuilds the stream vector.
 - On general targets unsupported phases report `SKIP`. On `esp32s31`, both
   sketches mark audio validation as required and pytest fails if any phase
-  1–12 attempts to skip; phase 13 must also pass. Run the suite once with the
+  1–14 attempts to skip; phase 15 must also pass. Run the suite once with the
   normal NimBLE S31 libraries and once with libraries rebuilt using the
   lib-builder's temporary Bluedroid overlay.
 - Every connected audio phase opens its link with `BLEAudio::connect()` and waits for

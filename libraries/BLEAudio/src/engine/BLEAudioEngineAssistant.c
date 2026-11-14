@@ -76,8 +76,54 @@ static struct {
   uint8_t seen_next;   /* ring write index */
   uint32_t seen[MAX_SEEN]; /* broadcast IDs reported since the last scan start */
   ba_sync_t syncs[MAX_SYNCS]; /* local PA syncs, PAST candidates */
-  uint8_t past_sent[32];      /* src_id bitmap: SyncInfo request already answered */
 } s_ba;
+
+/* Per-connection PAST dedup: two sinks asking for the same Source_ID must each
+ * get one answer, so the "already answered" bits cannot be a single global
+ * bitmap. One row per possible conn (same limit as the engine link table). */
+#ifndef CONFIG_BT_MAX_CONN
+#define CONFIG_BT_MAX_CONN 4
+#endif
+#define BA_PAST_CONNS CONFIG_BT_MAX_CONN
+static struct {
+  uint16_t conn; /* 0: free (handle 0 is never a live conn for the assistant) */
+  uint8_t sent[32]; /* Source_ID bitmap, indexed like the old s_ba.past_sent */
+} s_ba_past[BA_PAST_CONNS];
+
+/** @return The bitmap row for @p conn, or NULL when it has none (not created). */
+static uint8_t *past_find(uint16_t conn) {
+  for (int i = 0; i < BA_PAST_CONNS; i++) {
+    if (s_ba_past[i].conn == conn) {
+      return s_ba_past[i].sent;
+    }
+  }
+  return NULL;
+}
+
+/** @return The bitmap row for @p conn, claiming (and clearing) a free one. */
+static uint8_t *past_claim(uint16_t conn) {
+  uint8_t *row = past_find(conn);
+  if (row) {
+    return row;
+  }
+  for (int i = 0; i < BA_PAST_CONNS; i++) {
+    if (s_ba_past[i].conn == 0) {
+      s_ba_past[i].conn = conn;
+      memset(s_ba_past[i].sent, 0, sizeof(s_ba_past[i].sent));
+      return s_ba_past[i].sent;
+    }
+  }
+  return NULL;
+}
+
+/** Forget a peer's row (on disconnect), so its handle can be reused cleanly. */
+static void past_forget(uint16_t conn) {
+  for (int i = 0; i < BA_PAST_CONNS; i++) {
+    if (s_ba_past[i].conn == conn) {
+      memset(&s_ba_past[i], 0, sizeof(s_ba_past[i]));
+    }
+  }
+}
 
 static inline uint16_t conn_of(const esp_ble_conn_t *conn) {
   return conn ? conn->handle : CONN_NONE;
@@ -100,15 +146,21 @@ static void emit_result(uint16_t conn, int err, uint8_t op, uint8_t src_id) {
 static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *st) {
   const uint8_t id = st->src_id;
   const uint8_t bit = (uint8_t)(1u << (id & 7));
-  uint8_t *slot = &s_ba.past_sent[id >> 3];
   if (st->pa_sync_state != ESP_BLE_AUDIO_BAP_PA_STATE_INFO_REQ) {
-    *slot &= (uint8_t)~bit;
+    uint8_t *slot = past_find(conn->handle);
+    if (slot) {
+      *slot &= (uint8_t)~bit;
+    }
     return;
   }
-  if (*slot & bit) {
+  /* No free row (more peers than links) degrades to serving every request. */
+  uint8_t *slot = past_claim(conn->handle);
+  if (slot && (*slot & bit)) {
     return;
   }
-  *slot |= bit;
+  if (slot) {
+    *slot |= bit;
+  }
 
   int err = -ENOENT;
   for (int i = 0; i < MAX_SYNCS; i++) {
@@ -240,6 +292,7 @@ static void ba_on_gap(const void *event) {
       }
       break;
     case ESP_BLE_AUDIO_GAP_EVENT_PA_SYNC_LOST: sync_remove(ev->pa_sync_lost.sync_handle); break;
+    case ESP_BLE_AUDIO_GAP_EVENT_ACL_DISCONNECT: past_forget(ev->acl_disconnect.conn_handle); break;
     default:                                   break;
   }
 }
@@ -247,6 +300,7 @@ static void ba_on_gap(const void *event) {
 /** Engine deinit hook; s_ba_cb_linked deliberately survives (see its comment). */
 static void ba_on_deinit(void) {
   memset(&s_ba, 0, sizeof(s_ba));
+  memset(&s_ba_past, 0, sizeof(s_ba_past));
 }
 
 static const ble_audio_unit_hooks_t s_hooks = {.on_gap = ba_on_gap, .on_deinit = ba_on_deinit};
@@ -290,7 +344,12 @@ static void ba_recv_state_cb(esp_ble_conn_t *conn, int err, const esp_ble_audio_
 
 /** The remote emptied a receive state; a reused Source_ID must be served PAST again. */
 static void ba_recv_state_removed_cb(esp_ble_conn_t *conn, uint8_t src_id) {
-  s_ba.past_sent[src_id >> 3] &= (uint8_t)~(1u << (src_id & 7));
+  if (conn) {
+    uint8_t *slot = past_find(conn_of(conn));
+    if (slot) {
+      slot[src_id >> 3] &= (uint8_t)~(1u << (src_id & 7));
+    }
+  }
   const ble_audio_ba_result_t r = {.op = BLE_AUDIO_BA_OP_REMOVE_SOURCE, .src_id = src_id};
   bleAudioEngineEmit(BLE_AUDIO_EVT_BA_RECV_STATE_REMOVED, conn_of(conn), 0, &r);
 }

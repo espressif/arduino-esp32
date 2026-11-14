@@ -42,6 +42,10 @@
 // packet MTU-sized stack allocation on the NimBLE host task.
 static const size_t kL2capRxStackBuf = 256;
 
+// How long waitForOperation() waits for the host task to acknowledge a
+// cancellation before dismantling the queued event (see the rationale there).
+static const uint32_t kCancelAckTimeoutMs = 2000;
+
 // Flatten a received SDU into contiguous bytes for the data callback. Prefers
 // the caller-provided stack buffer, spilling to @p heapBuf only when the SDU is
 // larger than the stack buffer, which avoids a heap allocation on the RX hot
@@ -212,7 +216,9 @@ static void processQueuedWrite(BLEL2CAPChannel::Impl *impl) {
     int rc = ble_l2cap_send(chan, om);
     BLELockGuard lock(sL2CAPMtx);
     if (impl->operation != BLEL2CAPChannel::Impl::Operation::Write) {
-      if (rc != 0 && rc != BLE_HS_ESTALLED) {
+      // The operation changed while the send was in flight. The stack took
+      // ownership on every path except EBADDATA/EBUSY (see writeDirectFromHost).
+      if (rc == BLE_HS_EBUSY || rc == BLE_HS_EBADDATA) {
         os_mbuf_free_chain(om);
       }
       return;
@@ -230,7 +236,12 @@ static void processQueuedWrite(BLEL2CAPChannel::Impl *impl) {
       impl->writeChunkLen = chunk;
       return;
     }
-    os_mbuf_free_chain(om);
+    // Every other failure (EINVAL, ENOMEM, HCI TX errors) already freed the
+    // mbuf inside ble_l2cap_coc_continue_tx(); only EBADDATA leaves it with the
+    // caller (unreachable here since chunk <= peer_coc_mtu, but free defensively).
+    if (rc == BLE_HS_EBADDATA) {
+      os_mbuf_free_chain(om);
+    }
     completeOperationLocked(impl, l2capStatusFromRc(rc));
     return;
   }
@@ -343,8 +354,40 @@ static BTStatus waitForOperation(BLEL2CAPChannel::Impl *impl, uint32_t timeoutMs
     }
   }
   // Keep the caller's data and channel shell alive until the host acknowledges
-  // cancellation (or shutdown removes the event and releases this waiter).
-  (void)impl->operationSync.wait(portMAX_DELAY);
+  // cancellation (or shutdown removes the event and releases this waiter), but
+  // bound the wait: the ack arrives within milliseconds on a healthy host task,
+  // so a long absence means the host is stalled and blocking forever here is
+  // worse than the residual risk below.
+  status = impl->operationSync.wait(kCancelAckTimeoutMs);
+  if (status != BTStatus::Timeout) {
+    // Acknowledged with the cancellation status.
+    return BTStatus::Timeout;
+  }
+  BLELockGuard lock(sL2CAPMtx);
+  if (impl->operation == BLEL2CAPChannel::Impl::Operation::None) {
+    return BTStatus::Timeout;  // Completed between the wait and this lock.
+  }
+  if (!impl->operationHostRunning && !ble_npl_event_is_queued(&impl->operationEvent)) {
+    // The event ran out from under us without acking (pathological): complete
+    // it here so the next operation can be queued.
+    completeOperationLocked(impl, BTStatus::Timeout);
+    return BTStatus::Timeout;
+  }
+  if (!impl->operationHostRunning) {
+    // The host task never picked the event up (stalled): it can never touch
+    // impl again, so dismantle the event, drop the registry retention and let
+    // the caller's data go. completeOperationLocked() also gives the sync, so
+    // a host that revives later cannot hand a stale token to the next waiter
+    // (take() drains it).
+    completeOperationLocked(impl, BTStatus::Timeout);
+    return BTStatus::Timeout;
+  }
+  // The callback is in flight on the host task; it completes the operation at
+  // the end of runQueuedOperation(), which gives the sync and releases the
+  // event. Leave everything in place: the registry still retains the Impl, and
+  // its eventual completeOperationLocked() frees the event. Returning now is
+  // the documented residual risk of a double-faulted host (stalled mid-callback
+  // AND past both timeouts), far better than blocking forever.
   return BTStatus::Timeout;
 }
 
@@ -375,7 +418,13 @@ static BTStatus writeDirectFromHost(BLEL2CAPChannel::Impl *impl, const uint8_t *
   if (rc == 0 || rc == BLE_HS_ESTALLED) {
     return BTStatus::OK;
   }
-  os_mbuf_free_chain(om);
+  // The stack takes ownership of the mbuf on every path except EBADDATA (data
+  // rejected before queueing) and EBUSY (another SDU already pending): on
+  // those two the caller still owns it. Every other failure (EINVAL, ENOMEM,
+  // HCI TX errors) already freed it inside ble_l2cap_coc_continue_tx().
+  if (rc == BLE_HS_EBUSY || rc == BLE_HS_EBADDATA) {
+    os_mbuf_free_chain(om);
+  }
   return l2capStatusFromRc(rc);
 }
 
@@ -715,8 +764,6 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
         return BLE_HS_ENOMEM;
       }
       event->accept.peer_sdu_size = server->mtu;
-      struct ble_l2cap_chan_info info;
-      ble_l2cap_get_chan_info(event->accept.chan, &info);
       return ble_l2cap_recv_ready(event->accept.chan, sdu) == 0 ? 0 : BLE_HS_ENOMEM;
     }
 
@@ -934,7 +981,12 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
       return false;
     }
   }
-  uint32_t alignedBufSize = OS_ALIGN(static_cast<uint32_t>(mtu) + 4U, OS_ALIGNMENT);
+  // A single block must hold the full peer SDU: os_mbuf_pool_init() reserves
+  // sizeof(struct os_mbuf) for the mbuf header and os_mbuf_get_pkthdr() then
+  // advances om_data past sizeof(struct os_mbuf_pkthdr). Sizing for mtu alone
+  // (or mtu + a small constant) makes a full-MTU SDU chain a second block,
+  // draining this bounded pool and tearing the channel down under load.
+  uint32_t alignedBufSize = OS_ALIGN(static_cast<uint32_t>(mtu) + sizeof(struct os_mbuf) + sizeof(struct os_mbuf_pkthdr), OS_ALIGNMENT);
   if (alignedBufSize > UINT16_MAX) {
     log_e("L2CAP server MTU %u exceeds allocatable SDU size", mtu);
     return false;
@@ -942,6 +994,8 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
   server->psm = psm;
   server->mtu = mtu;
 
+  // One outstanding receive buffer per channel, plus a spare so a free can
+  // always be posted while another SDU is still being consumed.
   const int numBufs = CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM + 1;
   const uint16_t bufSize = static_cast<uint16_t>(alignedBufSize);
   const size_t memSize = OS_MEMPOOL_SIZE(numBufs, bufSize) * sizeof(os_membuf_t);

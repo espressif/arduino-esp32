@@ -102,10 +102,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
 
   /** Stream tap (BT host task, once per SDU interval): gate, then push. */
   static void onRecv(void *ctx, const ble_audio_recv_info_t *info, const uint8_t *data, uint16_t len) {
-    auto *port = static_cast<Port *>(ctx);
-    if (!port) {
-      return;
-    }
+    auto *port = static_cast<Port *>(ctx);  // Never NULL by construction.
     auto *self = static_cast<Impl *>(port->owner);
     if (!self->gate.enter()) {
       return;
@@ -172,6 +169,12 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
     frames = cfg.framesPerSdu ? cfg.framesPerSdu : 1;
     octets = cfg.octetsPerFrame;
     uint32_t intervalUs = qos.sduIntervalUs ? qos.sduIntervalUs : (uint32_t)cfg.frameDurationUs * frames;
+    if (!intervalUs) {
+      // Both the QoS and the codec config carry a zero interval (a malformed
+      // custom config); the jitter-depth division below would fault.
+      log_e("Player: invalid SDU interval (0 us)");
+      return false;
+    }
     uint32_t depth = depthOverride ? depthOverride : qos.presentationDelayUs / intervalUs;
     depth = (depth < 2) ? 2 : (depth > kMaxDepth ? kMaxDepth : depth);
     uint8_t queueLen = (uint8_t)(depth * 2);

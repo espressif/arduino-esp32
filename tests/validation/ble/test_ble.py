@@ -51,7 +51,8 @@ PHASE_LABELS = {
     34: "periodic_adv_lifecycle",
     35: "pending_send_edges",
     36: "directed_adv_and_oob",
-    37: "memory_release",
+    37: "l2cap_full_mtu",
+    38: "memory_release",
 }
 
 
@@ -1921,6 +1922,62 @@ def _phase_directed_adv_and_oob(server, client):
     server.expect_exact("[SERVER] Phase36 done", timeout=15)
 
 
+def _phase_l2cap_full_mtu(server, client):
+    """Phase 37 — concurrent full-MTU writers on one L2CAP CoC channel.
+
+    Packaged NimBLE builds set CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM=1, so two
+    CoC channels cannot be open at once. Two writer tasks on the one channel
+    still regress the server SDU pool (a 512-byte SDU must fit in one block)
+    and TX mbuf ownership on the echo path. Self-skips without L2CAP.
+
+    Returns True if the phase ran, False if skipped.
+    """
+    m_s = server.expect(
+        r"\[SERVER\] Phase37 (L2CAP init OK|L2CAP not supported, skipping)",
+        timeout=40,
+    )
+    if b"not supported" in m_s.group(0):
+        server.expect_exact("[SERVER] Phase37 done", timeout=15)
+        client.expect_exact("[CLIENT] Phase37 done", timeout=40)
+        return False
+    server.expect_exact("[SERVER] Phase37 ready", timeout=15)
+
+    m_c = client.expect(
+        r"\[CLIENT\] Phase37 (?:L2CAP not supported, skipping|rescan found=([01]))",
+        timeout=40,
+    )
+    if b"not supported" in m_c.group(0):
+        client.expect_exact("[CLIENT] Phase37 done", timeout=15)
+        server.expect_exact("[SERVER] Phase37 done", timeout=40)
+        return False
+    assert int(m_c.group(1)) == 1, "client did not rediscover the full-MTU L2CAP server"
+
+    client.expect_exact("[CLIENT] Phase37 L2CAP channel connected", timeout=30)
+    m_client = client.expect(
+        r"\[CLIENT\] Phase37 result ch=(\d+) sent=(\d+) writeOk=(\d+) echoOk=(\d+) heap=([01])",
+        timeout=40,
+    )
+    assert int(m_client.group(1)) == 1, "expected 1 L2CAP channel (COC_MAX_NUM=1)"
+    assert int(m_client.group(2)) == 16, f"expected 16 full-MTU SDUs sent, got {int(m_client.group(2))}"
+    assert int(m_client.group(3)) == 16, f"{16 - int(m_client.group(3))} concurrent full-MTU writes failed"
+    assert int(m_client.group(4)) == 16, f"only {int(m_client.group(4))} echoed SDUs matched the pattern"
+    assert int(m_client.group(5)) == 1, "heap corrupted after concurrent full-MTU L2CAP traffic"
+
+    m_server = server.expect(
+        r"\[SERVER\] Phase37 result accepts=(\d+) rx=(\d+) rxOk=(\d+) echoOk=(\d+) heap=([01])",
+        timeout=20,
+    )
+    assert int(m_server.group(1)) == 1, f"server accepted {int(m_server.group(1))} channels, expected 1"
+    assert int(m_server.group(2)) == 16, f"server received {int(m_server.group(2))} SDUs, expected 16"
+    assert int(m_server.group(3)) == 16, "server rejected patterned full-MTU SDUs"
+    assert int(m_server.group(4)) == 16, "server failed to echo some full-MTU SDUs"
+    assert int(m_server.group(5)) == 1, "server heap corrupted after concurrent full-MTU L2CAP traffic"
+
+    server.expect_exact("[SERVER] Phase37 done", timeout=20)
+    client.expect_exact("[CLIENT] Phase37 done", timeout=15)
+    return True
+
+
 def _phase_memory_release(server, client):
     MIN_FREED = 10240
 
@@ -1994,7 +2051,8 @@ def test_ble(dut, ci_job_id, record_property):
         34: (_phase_periodic_adv_lifecycle, server, client),  # skip if falsy
         35: (_phase_pending_send_edges, server, client),
         36: (_phase_directed_adv_and_oob, server, client),
-        37: (_phase_memory_release, server, client),
+        37: (_phase_l2cap_full_mtu, server, client),  # skip if falsy
+        38: (_phase_memory_release, server, client),
     }
 
     SKIP_REASONS = {
@@ -2007,6 +2065,7 @@ def test_ble(dut, ci_job_id, record_property):
         28: "L2CAP not supported",
         29: "conn-params pre-accept hook not supported (Bluedroid)",
         34: "BLE5 not supported",
+        37: "L2CAP not supported",
     }
 
     passed, failed = [], []

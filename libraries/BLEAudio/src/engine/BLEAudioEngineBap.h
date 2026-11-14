@@ -191,10 +191,11 @@ void bleAudioPacsAdd(uint8_t dir, const ble_audio_pac_t *pac, uint32_t location,
 int bleAudioPacsCommit(void);
 
 /**
- * @brief Unregister PAC records and PACS before `common_deinit`.
+ * @brief Unregister PAC records and PACS while the host mutex still exists.
  *
  * Best-effort: NimBLE cannot delete a single GATT service, so native
- * unregister may fail. The cap list is still dropped.
+ * unregister may fail. The cap list is still dropped. Engine deinit does
+ * not call this — `common_deinit` already runs `lib_pacs_deinit()`.
  */
 int bleAudioPacsRelease(void);
 
@@ -309,7 +310,11 @@ int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *location
 int bleAudioBsrcGetBase(uint8_t *out, uint16_t cap, uint16_t *out_len);
 /** @brief Attach the BIG to an extended advertising set that already runs periodic advertising. */
 int bleAudioBsrcStart(uint8_t adv_handle);
-/** @brief Terminate the BIG (BLE_AUDIO_EVT_BSRC_STOPPED); the source can be started again. */
+/** @brief Terminate the BIG (BLE_AUDIO_EVT_BSRC_STOPPED); the source can be started again.
+ *
+ * Waits until the endpoint is STREAMING before source_stop() (calling it at
+ * QoS Configured stalls the start). Delete is used only when the endpoint
+ * never left QoS Configured, so the next start() recreates the source. */
 int bleAudioBsrcStop(void);
 /** @brief Replace the Streaming Audio Context in the BASE metadata. */
 int bleAudioBsrcUpdateContext(uint16_t context);

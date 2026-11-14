@@ -1,8 +1,9 @@
 // LE Audio validation test — SERVER
 // Phases: audio lifecycle, ISO CIS/BIS transport, BAP unicast/broadcast,
 //         LC3 loopback, control profiles, top-level profiles, hearing aid,
-//         stereo broadcast, broadcast assistant, CAP handover, memory
-//         release. Split out of the combined `ble` suite so that test
+//         stereo broadcast, broadcast assistant, CAP handover, broadcast
+//         stop race, CAP broadcast interleave, memory release. Split out of
+//         the combined `ble` suite so that test
 //         stays focused on core GATT/GAP while this one owns the GAF stack.
 //
 // Every phase self-contains its own BLE.end()/begin() so the audio stack is
@@ -46,7 +47,9 @@ bool phaseHearingAidDone = false;      // hearing_aid (phase 9, HAS presets serv
 bool phaseStereoDone = false;          // stereo (phase 10, 2-BIS Broadcast Source)
 bool phaseAssistantDone = false;       // broadcast_assistant (phase 11, Broadcast Sink + Scan Delegator)
 bool phaseHandoverDone = false;        // cap_handover (phase 12, CAP acceptor: unicast server + delegator sink)
-bool phaseMemoryDone = false;          // memory_release (phase 13, tail of suite)
+bool phaseStopRaceDone = false;        // bcast_stop_race (phase 13, BroadcastSource start/stop race)
+bool phaseCapBcDone = false;           // cap_bc_interleave (phase 14, CAP startBroadcast vs streams() snapshot)
+bool phaseMemoryDone = false;          // memory_release (phase 15, tail of suite)
 
 // Control-profile server-side observation counters (written from role callbacks).
 volatile uint32_t ctrlVolWrites = 0;  // VCP renderer state changes seen
@@ -145,6 +148,29 @@ void setup() {
   // live stack to tear down (each audio phase re-begins its own stack anyway).
   (void)BLE.begin(serverName);
 }
+
+// Phase 14 helper: concurrent streams() snapshot reader (see the phase 14
+// block in loop()). xTaskCreate needs a plain function, so the shared state
+// travels through this struct.
+#if BLE_AUDIO_CAP_INITIATOR_SUPPORTED
+struct CapBcReaderArg {
+  BLEAudioCapInitiator *cap;
+  volatile bool *stop;
+  volatile uint32_t *reads;
+};
+
+static void capBcSnapshotReader(void *arg) {
+  auto *p = static_cast<CapBcReaderArg *>(arg);
+  while (!*p->stop) {
+    (void)p->cap->streamCount();
+    (void)p->cap->stream(0);
+    (void)p->cap->stream(BLEAudioStream::Direction::Tx, 0);
+    (*p->reads)++;
+    vTaskDelay(1);
+  }
+  vTaskDelete(nullptr);
+}
+#endif  // BLE_AUDIO_CAP_INITIATOR_SUPPORTED
 
 void loop() {
   checkSerial();
@@ -1085,9 +1111,171 @@ void loop() {
     Serial.println("[SERVER] Phase12 cap_handover done");
   }
 
-  // Phase 13: Memory release (tail of the suite; runs after every audio phase
-  // has restored a normal stack).
-  if (currentPhase >= 13 && !phaseMemoryDone) {
+  // Phase 13: BroadcastSource start()/stop() race — stop() called immediately
+  // after start(), before the BIG is up, N times in a row. Regression for the
+  // stop()-while-starting fix: stop() must wait out the async start (stopSync),
+  // return OK every time, fire onStopped for every terminated BIG, and leave
+  // the role able to stream cleanly afterward. Server-side stress; the client
+  // only observes.
+  if (currentPhase >= 13 && !phaseStopRaceDone) {
+    phaseStopRaceDone = true;
+#if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+    BLE.end(false);
+    delay(500);
+    uint8_t races = 0, okStart = 0, okStop = 0;
+    volatile uint32_t stoppedEvents = 0;
+    volatile bool bcStreaming = false;
+    BTStatus s = BLE.begin(serverName);
+    if (s) {
+      BLEAudio audio = BLE.getAudioController();
+      if (audio.begin()) {
+        BLEAudioBroadcastSource source = audio.createBroadcastSource();
+        source.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(1).setName(serverName);
+        source.onStarted([&bcStreaming]() {
+          bcStreaming = true;
+        });
+        source.onStopped([&bcStreaming, &stoppedEvents](uint8_t) {
+          bcStreaming = false;
+          stoppedEvents++;
+        });
+        if (audio.start()) {
+          for (int i = 0; i < 5; i++) {
+            BTStatus st = source.start();
+            if (st) {
+              okStart++;
+            }
+            // No wait for onStarted: stop() must resolve the async start itself.
+            st = source.stop();
+            if (st) {
+              okStop++;
+            }
+            races++;
+            delay(300);
+            syncPhaseFromHost();
+          }
+          // A clean session must still work after the interleaved stops: this
+          // also proves the advertising instance was released every time.
+          bool clean = false;
+          bcStreaming = false;
+          if (source.start()) {
+            unsigned long deadline = millis() + 10000;
+            while (millis() < deadline && !bcStreaming) {
+              syncPhaseFromHost();
+              delay(20);
+            }
+            uint8_t payload[40];
+            memset(payload, 0x33, sizeof(payload));
+            clean = bcStreaming && source.stream(0).write(payload, sizeof(payload));
+            source.stop();
+            deadline = millis() + 6000;
+            while (millis() < deadline && bcStreaming) {
+              syncPhaseFromHost();
+              delay(20);
+            }
+          }
+          audio.end();
+          Serial.printf("[SERVER] StopRace result races=%u startOk=%u stopOk=%u stoppedEv=%lu clean=%d\n",
+                        races, okStart, okStop, (unsigned long)stoppedEvents, clean ? 1 : 0);
+        } else {
+          Serial.println("[SERVER] StopRace audio start failed");
+        }
+      }
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin(serverName);
+    } else {
+      Serial.println("[SERVER] StopRace not supported");
+    }
+#else
+    Serial.println("[SERVER] StopRace not supported");
+#endif
+    Serial.println("[SERVER] Phase13 bcast_stop_race done");
+  }
+
+  // Phase 14: CAP initiator startBroadcast()/stopBroadcast() interleave with
+  // concurrent stream()/streamCount() snapshot reads from a separate task.
+  // Regression for the by-value streams() snapshot and the atomic slot fields:
+  // no crash, torn handle or stuck state while the streams vector is rebuilt.
+  // Server-side stress; the client only observes.
+  if (currentPhase >= 14 && !phaseCapBcDone) {
+    phaseCapBcDone = true;
+#if BLE_AUDIO_CAP_INITIATOR_SUPPORTED
+    BLE.end(false);
+    delay(500);
+    uint8_t rounds = 0, okStart = 0, okStop = 0;
+    volatile uint32_t stoppedEvents = 0;
+    volatile uint32_t snapshotReads = 0;
+    volatile bool snapStop = false;
+    BTStatus s = BLE.begin(serverName);
+    if (s) {
+      BLEAudio audio = BLE.getAudioController();
+      if (audio.begin()) {
+        BLEAudioCapInitiator cap = audio.createCapInitiator();
+        cap.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setBroadcastName(serverName);
+        cap.onBroadcastStarted([]() {});
+        cap.onBroadcastStopped([&stoppedEvents](uint8_t) {
+          stoppedEvents++;
+        });
+        if (audio.start()) {
+          // Concurrent snapshot reader: hammers streamCount()/stream() while
+          // the session vectors are rebuilt by start/stop below.
+          CapBcReaderArg readerArg = {&cap, &snapStop, &snapshotReads};
+          TaskHandle_t reader = nullptr;
+          xTaskCreate(capBcSnapshotReader, "snapread", 4096, &readerArg, 5, &reader);
+          for (int i = 0; i < 5; i++) {
+            BTStatus st = cap.startBroadcast(1);
+            if (st) {
+              okStart++;
+            }
+            delay(400);
+            syncPhaseFromHost();
+            st = cap.stopBroadcast();
+            if (st) {
+              okStop++;
+            }
+            rounds++;
+            delay(200);
+            syncPhaseFromHost();
+          }
+          // A clean broadcast must still work after the interleaved stops.
+          bool clean = false;
+          if (cap.startBroadcast(1)) {
+            unsigned long deadline = millis() + 10000;
+            while (millis() < deadline && !cap.isBroadcasting()) {
+              syncPhaseFromHost();
+              delay(20);
+            }
+            clean = cap.isBroadcasting() && cap.streamCount() >= 1;
+            cap.stopBroadcast();
+          }
+          snapStop = true;
+          unsigned long deadline = millis() + 3000;
+          while (reader && millis() < deadline && eTaskGetState(reader) != eDeleted) {
+            delay(10);
+          }
+          audio.end();
+          Serial.printf("[SERVER] CapBC result rounds=%u startOk=%u stopOk=%u stoppedEv=%lu reads=%lu clean=%d\n",
+                        rounds, okStart, okStop, (unsigned long)stoppedEvents, (unsigned long)snapshotReads, clean ? 1 : 0);
+        } else {
+          snapStop = true;
+          Serial.println("[SERVER] CapBC audio start failed");
+        }
+      }
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin(serverName);
+    } else {
+      Serial.println("[SERVER] CapBC not supported");
+    }
+#else
+    Serial.println("[SERVER] CapBC not supported");
+#endif
+    Serial.println("[SERVER] Phase14 cap_bc_interleave done");
+  }
+
+  // Phase 15: Memory release (tail of the suite; runs after every audio phase
+  // has restored a normal stack, including the phase 13/14 stress rounds).
+  if (currentPhase >= 15 && !phaseMemoryDone) {
     phaseMemoryDone = true;
     delay(500);
 

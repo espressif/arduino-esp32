@@ -42,7 +42,7 @@
  */
 
 struct BLEAudioBroadcastAssistant::Impl {
-  std::weak_ptr<BLEAudio::Impl> audio;
+  std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (role list); same ownership as every other role.
   BLESharedMutex mtx;                   ///< Protects the callbacks and the state below.
   uint16_t conn = BLE_AUDIO_CONN_NONE;  ///< The Scan Delegator being driven.
   bool remoteScanning = false;          ///< startRemoteScan() is in effect (remote + local scan).

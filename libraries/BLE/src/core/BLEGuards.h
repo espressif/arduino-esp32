@@ -391,7 +391,10 @@
 #endif
 
 /* Media Control Profile (MCP) */
-#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_MCS)
+/* The engine's server surface (media_proxy_pl_*) is only linkable with
+ * CONFIG_BT_MCTL_LOCAL_PLAYER_CONTROL: gate on it too, otherwise
+ * createMediaPlayer() would attach a role whose start() always fails. */
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_MCS) && defined(CONFIG_BT_MCTL_LOCAL_PLAYER_CONTROL)
 #define BLE_AUDIO_MCP_SERVER_SUPPORTED 1
 #else
 #define BLE_AUDIO_MCP_SERVER_SUPPORTED 0

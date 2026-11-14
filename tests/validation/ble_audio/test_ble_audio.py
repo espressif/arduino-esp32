@@ -38,7 +38,9 @@ PHASE_LABELS = {
     10: "stereo_broadcast",
     11: "broadcast_assistant",
     12: "cap_handover",
-    13: "memory_release",
+    13: "bcast_stop_race",
+    14: "cap_bc_interleave",
+    15: "memory_release",
 }
 
 
@@ -504,6 +506,56 @@ def _phase_cap_handover(server, client):
     return True
 
 
+def _phase_bcast_stop_race(server, client):
+    """Phase 13 — BroadcastSource start()/stop() race (regression).
+
+    The server stops a broadcast source immediately after every start(), five
+    times, without waiting for the BIG to come up: stop() must wait out the
+    asynchronous start, return OK each round, fire onStopped for every
+    terminated BIG, and leave the role able to run one clean streaming session
+    afterward (which also proves the advertising instance was released).
+    Server-side stress; the client only observes.
+    """
+    ms = server.expect(r"\[SERVER\] StopRace (not supported|result races=(\d+) startOk=(\d+) stopOk=(\d+) stoppedEv=(\d+) clean=([01]))", timeout=90)
+    server.expect_exact("[SERVER] Phase13 bcast_stop_race done", timeout=30)
+    client.expect_exact("[CLIENT] Phase13 bcast_stop_race done", timeout=30)
+    if b"not supported" in ms.group(0):
+        return False
+    races, ok_start, ok_stop = int(ms.group(2)), int(ms.group(3)), int(ms.group(4))
+    stopped_ev, clean = int(ms.group(5)), int(ms.group(6))
+    assert races == 5, f"expected 5 start/stop rounds, got {races}"
+    assert ok_start == races, f"{races - ok_start} start() calls failed during the race"
+    assert ok_stop == races, f"{races - ok_stop} stop() calls failed during the race"
+    assert stopped_ev >= races, f"only {stopped_ev} onStopped events for {races} terminated BIGs"
+    assert clean == 1, "the source could not run a clean streaming session after the race"
+    return True
+
+
+def _phase_cap_bc_interleave(server, client):
+    """Phase 14 — CAP startBroadcast()/stopBroadcast() vs concurrent stream() (regression).
+
+    The server interleaves five start/stop rounds of a CAP initiator broadcast
+    while a separate task hammers streamCount()/stream(). Regression for the
+    by-value streams() snapshot and the atomic slot fields: no torn handle,
+    no stuck state, and one clean broadcast still runs afterward.
+    Server-side stress; the client only observes.
+    """
+    ms = server.expect(r"\[SERVER\] CapBC (not supported|result rounds=(\d+) startOk=(\d+) stopOk=(\d+) stoppedEv=(\d+) reads=(\d+) clean=([01]))", timeout=90)
+    server.expect_exact("[SERVER] Phase14 cap_bc_interleave done", timeout=30)
+    client.expect_exact("[CLIENT] Phase14 cap_bc_interleave done", timeout=30)
+    if b"not supported" in ms.group(0):
+        return False
+    rounds, ok_start, ok_stop = int(ms.group(2)), int(ms.group(3)), int(ms.group(4))
+    stopped_ev, reads, clean = int(ms.group(5)), int(ms.group(6)), int(ms.group(7))
+    assert rounds == 5, f"expected 5 start/stop rounds, got {rounds}"
+    assert ok_start == rounds, f"{rounds - ok_start} startBroadcast() calls failed during the interleave"
+    assert ok_stop == rounds, f"{rounds - ok_stop} stopBroadcast() calls failed during the interleave"
+    assert stopped_ev >= rounds, f"only {stopped_ev} onBroadcastStopped events for {rounds} stopped broadcasts"
+    assert reads > 0, "the concurrent snapshot reader never ran"
+    assert clean == 1, "the initiator could not run a clean broadcast after the interleave"
+    return True
+
+
 def _phase_memory_release(server, client):
     MIN_FREED = 10240
 
@@ -557,7 +609,9 @@ def test_ble_audio(dut, ci_job_id, record_property):
         10: (_phase_stereo_broadcast, server, client),  # skip if falsy
         11: (_phase_broadcast_assistant, server, client),  # skip if falsy
         12: (_phase_cap_handover, server, client),  # skip if falsy
-        13: (_phase_memory_release, server, client),
+        13: (_phase_bcast_stop_race, server, client),
+        14: (_phase_cap_bc_interleave, server, client),
+        15: (_phase_memory_release, server, client),
     }
 
     SKIP_REASONS = {
@@ -573,6 +627,8 @@ def test_ble_audio(dut, ci_job_id, record_property):
         10: "broadcast source/sink not supported (needs dual esp32s31)",
         11: "scan delegator / broadcast assistant not supported (needs dual esp32s31)",
         12: "CAP handover not supported (needs CONFIG_BT_CAP_HANDOVER on dual esp32s31)",
+        13: "broadcast source not supported (needs dual esp32s31)",
+        14: "CAP initiator not supported (needs dual esp32s31)",
     }
 
     passed, failed = [], []

@@ -205,11 +205,20 @@ void BLEAdvertisementData::setName(const String &name, bool complete) {
 void BLEAdvertisementData::setBroadcastName(const String &name) {
   uint8_t buf[128];
   size_t n = name.length();
+  const auto *bytes = reinterpret_cast<const uint8_t *>(name.c_str());
   if (n > sizeof(buf)) {
+    // Truncate on a UTF-8 boundary: the byte at the cut must never split a
+    // multi-byte sequence.
     n = sizeof(buf);
+    while (n > 0 && (bytes[n] & 0xC0) == 0x80) {
+      n--;  // cut lands inside a sequence: drop its continuation bytes
+    }
+    if (n > 0 && (bytes[n] & 0xC0) == 0xC0) {
+      n--;  // the lead byte's sequence no longer fits either
+    }
   }
   if (n > 0) {
-    memcpy(buf, name.c_str(), n);
+    memcpy(buf, bytes, n);
   }
   while (n < 4) {
     buf[n++] = ' ';

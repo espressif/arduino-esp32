@@ -1,8 +1,9 @@
 // LE Audio validation test — CLIENT
 // Phases: audio lifecycle (ack), ISO CIS/BIS transport, BAP unicast/broadcast,
 //         LC3 loopback, control profiles, top-level profiles, hearing aid,
-//         stereo broadcast, broadcast assistant, CAP handover, memory
-//         release. Split out of the combined `ble` suite (see the server
+//         stereo broadcast, broadcast assistant, CAP handover, broadcast
+//         stop race, CAP broadcast interleave, memory release. Split out of
+//         the combined `ble` suite (see the server
 //         sketch header). Each phase self-contains its own BLE.end()/begin()
 //         and self-skips when the relevant feature is not compiled in.
 
@@ -1434,8 +1435,16 @@ void setup() {
 #endif
   Serial.println("[CLIENT] Phase12 cap_handover done");
 
-  // ===== Phase 13: Memory release + reinit guard =====
+  // ===== Phase 13: bcast_stop_race (server-side stress; client observes) =====
   waitForPhase(13);
+  Serial.println("[CLIENT] Phase13 bcast_stop_race done");
+
+  // ===== Phase 14: cap_bc_interleave (server-side stress; client observes) =====
+  waitForPhase(14);
+  Serial.println("[CLIENT] Phase14 cap_bc_interleave done");
+
+  // ===== Phase 15: Memory release + reinit guard =====
+  waitForPhase(15);
 
   size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);
   Serial.printf("[CLIENT] Heap before release: %u\n", (unsigned)heapBeforeRelease);

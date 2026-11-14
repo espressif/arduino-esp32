@@ -161,6 +161,7 @@ All paths are relative to `libraries/BLEAudio/src/`.
 | `BLEAudio<Role>.{h,cpp}` | Public role handles (UnicastServer/Client, BroadcastSource/Sink/Assistant, Cap, CoordinatedSet, Volume, Mic, Media, Call, HearingAid, Profiles). |
 | `BLEAudioStream.{h,cpp}`, `BLEAudioStreamInternal.h` | Stream handle, engine stream callbacks, public↔engine value conversions, `bleAudioStatus()` error mapping. |
 | `BLEAudioTypes.h` | Value types: codec config, QoS, presets, locations, contexts. |
+| `BLEAudioAuracast.{h,cpp}` | Internal: the extended advertising payload shared by every Auracast broadcaster (BroadcastSource and CAP broadcast). |
 | `BLEAudioControlLink.h` | Internal: the peer a control client role drives; defers discovery until the link is GATT-discovered. |
 | `BLEAudioPlayer`, `BLEAudioRecorder`, `BLEAudioPipeline`, `BLEAudioPCM.h` | LC3 data plane; `BLEAudioPCM.h` holds the optional PCM sink/source callbacks. |
 | `engine/BLEAudioEngine.{h,c}` | Engine lifecycle, event bridge, GAP/GATT plumbing, link bring-up, BAP presets. |
@@ -170,6 +171,13 @@ All paths are relative to `libraries/BLEAudio/src/`.
 | `engine/BLEAudioEngineControl.{h,c}` | VCP, MICP, MCP, CCP, HAS. |
 | `engine/BLEAudioEngineProfiles.{h,c}` | TMAP, GMAP, PBP. |
 | `engine/BLEAudioEngine.nimble.{h,cpp}` / `.bluedroid.{h,cpp}` | Host glue: forward the host's GAP/GATT events to the engine. |
+
+**Engine error-return convention.** Engine C functions return `esp_err_t` /
+errno values that the C++ glue maps through `bleAudioStatus()`. Two documented
+exceptions return numeric `BTStatus::Codes` directly
+(`bleAudioEngineDisconnect`, `bleAudioEngineReceivePeriodicSync`); their callers
+(`BLEAudio::disconnect()` and the periodic-sync entry point) rely on that, so
+do not re-map them through `bleAudioStatus()`.
 
 The raw isochronous channel API (`BLEIso`, public through `<BLE.h>`, examples
 `ISO_*`, tests `iso_cis` / `iso_bis`) lives in `src/iso/`. It carries
@@ -269,7 +277,13 @@ Invariants:
   disconnect (`BLESync`, same 5 s bound as `BLEIso::end()` and Broadcast
   Source/Sink `stop()`) before `common_deinit`. It is refused if a CONNECTED
   ISO channel remains, and ownership is kept. After a successful `end()`,
-  `begin()` may run again.
+  `begin()` may run again. `common_deinit` already runs `lib_pacs_deinit()`
+  and deletes the host mutex, so `end()` must not call `pacs_unregister`
+  afterwards (that always fails with `ESP_ERR_TIMEOUT` / 263).
+- `CapInitiator::stopBroadcast()` waits for `CAP_BC_STOPPED` before deleting
+  the source. `source_delete` while STREAMING is refused
+  (`BapBsrcDeleteInvState[4]`) and a delete racing Terminate BIG fails HCI
+  Command Disallowed (`0x20C`).
 - `BLE.end()` is the terminal owner of the whole session. It calls
   `audio.end()` while the host is usable, then tears the host down. If audio
   or ISO teardown fails, host shutdown is aborted. If invoked
@@ -321,6 +335,12 @@ controller instance has been stored. The VCP and MICP units therefore bind the
 peer and mark the discovery in flight before calling the engine, and adopt the
 instance from the callback; the HAS client already matched on the connection
 handle for the same reason.
+
+**MICP "mute disabled" collapses to "unmuted".** MICS reports mute as a single
+bit; a device with `disableMute()` set cannot express "disabled" on the air.
+The engine emits `onMuteChanged(false)` for a disabled mute, which is
+indistinguishable from an unmuted device. A sketch that needs to know the
+difference must track its own `disableMute()` state; no separate event exists.
 
 ## Event bridge (control plane)
 
@@ -391,8 +411,9 @@ Audio of every role flows through `BLEAudioStream` handles; stream events do
 - **Callbacks.** One `ble_audio_stream_cbs_t` table serves every stream.
   Each event first feeds the internal data-path **tap**, then the application
   callback. `recv` and `sent` run once per SDU interval: the tap is called from
-  the raw owner, and a public handle is only built when the application
-  registered `onReceive()` / `onSent()`.
+  the raw owner, and both then take the stream's `weak_ptr` lock (so a teardown
+  on another task cannot free the `Impl` mid-callback) and build the public
+  handle. Every stream event is therefore safe against a concurrent `end()`.
 - **Taps.** The Player/Recorder install a `BLEAudioStreamTap` (plain function
   pointers + context) through `BLEAudioStreamAccess::setTap()`. The tap is an
   atomic pointer paired with a busy count, so removing or replacing it waits
@@ -402,6 +423,17 @@ Audio of every role flows through `BLEAudioStream` handles; stream events do
 - **Sending.** `BLEAudioStream::write()` sends one SDU. The slot keeps the
   packet sequence number: it restarts at 0 each time the stream starts and only
   advances when the send succeeds.
+
+**Task boundary.** The "host task owns the engine" rule has exactly one
+exception: the data path. `BLEAudioStream::write()` may run on the codec task
+(the pipeline pins it to the core that does not run the host), so it calls
+`esp_ble_audio_bap_stream_send()` from there. That is safe because the send
+takes the engine's host mutex (`bt_le_host_lock()`), which serializes it against
+every host-task transition — it never needs to run on the host task itself.
+Everything else stays host-task-only. The slot fields both sides touch
+(`streaming`, `seq`, `bound`, `tx`, `in_use`, `conn_handle`) are `_Atomic` in
+`ble_audio_slot_t`; every other slot field is configuration written before
+start() or only read/written by the host task.
 
 ### LC3 pipeline
 

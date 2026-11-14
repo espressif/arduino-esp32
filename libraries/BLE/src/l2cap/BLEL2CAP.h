@@ -124,7 +124,9 @@ public:
 
   /**
    * @brief Get the negotiated Maximum Transmission Unit for this channel.
-   * @return The MTU in bytes.
+   * @return The MTU in bytes; this is OUR receive MTU (the SDU size this side
+   *         accepts). Writes are split by the PEER's send MTU instead, so a
+   *         full-MTU write may still be sent in several chunks.
    */
   uint16_t getMTU() const;
 

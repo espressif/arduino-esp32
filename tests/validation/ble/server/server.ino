@@ -153,7 +153,8 @@ volatile bool phase33Continue = false;
 bool phase34Done = false;  // periodic_adv_lifecycle (HITL)
 bool phase35Done = false;  // pending_send_edges
 bool phase36Done = false;  // directed high-duty + OOB reject
-bool phase37Done = false;  // memory_release (tail of suite)
+bool phase37Done = false;  // l2cap_full_mtu
+bool phase38Done = false;  // memory_release (tail of suite)
 volatile bool phase36PeerReady = false;
 BTAddress phase36Peer;
 volatile bool serverAuthCompleteFired = false;
@@ -173,9 +174,19 @@ std::atomic<uint32_t> l2capPhase28Accepts{0};
 std::atomic<uint32_t> l2capPhase28Disconnects{0};
 #if BLE_L2CAP_SUPPORTED
 BLEL2CAPServer l2capBulkServer;
+BLEL2CAPServer l2capFullMtuServer;
 #endif
 
 static const uint32_t L2CAP_BULK_TARGET = 2000;
+static const uint16_t L2CAP_FULL_MTU = 512;
+static const uint16_t L2CAP_FULL_PSM = 0x0084;
+static const uint32_t L2CAP_FULL_SDUS = 16;  // 2 writer tasks × 8 SDUs on one CoC
+
+std::atomic<uint32_t> l2capFullAccepts{0};
+std::atomic<uint32_t> l2capFullDisconnects{0};
+volatile uint32_t l2capFullRx = 0;
+volatile uint32_t l2capFullRxOk = 0;
+volatile uint32_t l2capFullEchoOk = 0;
 
 // Phase 16 — server callback aggregation (set from BLE stack task, read from loop).
 // Without these we'd race the MTU/conn-param update events against the phase
@@ -4038,10 +4049,101 @@ void loop() {
     }
   }
 
-  // Phase 37: Memory release (tail of the suite; runs after every other phase
-  // so phases 16-36 can exercise the BLE stack while it's still alive).
+  // Phase 37: one L2CAP CoC at MTU 512 with two concurrent writer tasks
+  // exchanging patterned full-MTU SDUs. Packaged NimBLE sets
+  // CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM=1, so two channels cannot be open at
+  // once. Regression for the server SDU pool (a 512-byte SDU must fit in one
+  // block) and for TX mbuf ownership on the echo path. Rebuilds a fresh
+  // connectable stack; restores one afterward so memory_release still
+  // measures a meaningful free. Self-skips without L2CAP.
   if (currentPhase >= 37 && !phase37Done) {
     phase37Done = true;
+#if BLE_L2CAP_SUPPORTED
+    BLE.end(false);
+    delay(500);
+    BTStatus s = BLE.begin(serverName);
+    if (!s) {
+      Serial.printf("[SERVER] Phase37 init FAILED: %s\n", s.toString());
+    } else {
+      BLEServer srv = BLE.createServer();
+      srv.advertiseOnDisconnect(true);
+      BLEService svc = srv.createService(SERVICE_UUID);
+      (void)svc.createCharacteristic(RW_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+      srv.start();
+
+      l2capFullAccepts = 0;
+      l2capFullDisconnects = 0;
+      l2capFullRx = 0;
+      l2capFullRxOk = 0;
+      l2capFullEchoOk = 0;
+      l2capFullMtuServer = BLE.createL2CAPServer(L2CAP_FULL_PSM, L2CAP_FULL_MTU);
+      if (!l2capFullMtuServer) {
+        Serial.println("[SERVER] Phase37 L2CAP init FAILED");
+      } else {
+        l2capFullMtuServer.onAccept([](BLEL2CAPChannel) {
+          syncPhaseFromHost();
+          uint32_t count = l2capFullAccepts.fetch_add(1) + 1;
+          Serial.printf("[SERVER] Phase37 L2CAP channel accepted count=%lu\n", (unsigned long)count);
+        });
+        l2capFullMtuServer.onDisconnect([](BLEL2CAPChannel &) {
+          uint32_t count = l2capFullDisconnects.fetch_add(1) + 1;
+          Serial.printf("[SERVER] Phase37 L2CAP channel disconnected count=%lu\n", (unsigned long)count);
+        });
+        l2capFullMtuServer.onData([](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
+          syncPhaseFromHost();
+          l2capFullRx++;
+          bool match = (len == L2CAP_FULL_MTU && data[0] <= 1);
+          if (match) {
+            uint8_t ch = data[0];
+            uint8_t seq = data[1];
+            for (size_t i = 2; i < len; i++) {
+              if (data[i] != (uint8_t)(ch * 31u + seq + i)) {
+                match = false;
+                break;
+              }
+            }
+          }
+          if (match) {
+            l2capFullRxOk++;
+            if (channel.write(data, len)) {
+              l2capFullEchoOk++;
+            }
+          }
+        });
+        Serial.println("[SERVER] Phase37 L2CAP init OK");
+
+        BLEAdvertising adv = BLE.getAdvertising();
+        adv.reset();
+        adv.setType(BLEAdvType::ConnectableScannable);
+        adv.addServiceUUID(SERVICE_UUID);
+        adv.setName(serverName);
+        adv.start();
+        Serial.println("[SERVER] Phase37 ready");
+
+        unsigned long waitStart = millis();
+        while (l2capFullDisconnects.load() < 1 && millis() - waitStart < 30000) {
+          delay(20);
+        }
+        Serial.printf(
+          "[SERVER] Phase37 result accepts=%lu rx=%lu rxOk=%lu echoOk=%lu heap=%d\n", (unsigned long)l2capFullAccepts.load(), (unsigned long)l2capFullRx,
+          (unsigned long)l2capFullRxOk, (unsigned long)l2capFullEchoOk, (int)heap_caps_check_integrity_all(true)
+        );
+        l2capFullMtuServer = BLEL2CAPServer();
+      }
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin(serverName);
+    }
+#else
+    Serial.println("[SERVER] Phase37 L2CAP not supported, skipping");
+#endif
+    Serial.println("[SERVER] Phase37 done");
+  }
+
+  // Phase 38: Memory release (tail of the suite; runs after every other phase
+  // so phases 16-37 can exercise the BLE stack while it's still alive).
+  if (currentPhase >= 38 && !phase38Done) {
+    phase38Done = true;
     delay(500);
 
     size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);

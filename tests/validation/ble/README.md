@@ -52,6 +52,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 26 | ble5_legacy_over_ext | legacy advertising routed over the extended engine (BLE5) |
 | 27 | ble5_legacy_plus_ext | concurrent legacy + user extended set on the reserved instance |
 | 28 | l2cap_bulk_reconnect | L2CAP CoC late-connect cleanup + bulk/credit-stall reconnect + peer-disconnect operation race + 64 retained-shell event-pool churn/final-handle drops + `end()` during a stalled write and exact `NotConnected` shell status after rebegin |
+
 | 29 | conn_params_reject | central rejects the peripheral's conn-param update from its pre-accept hook (NimBLE) |
 | 30 | deletebond_roundtrip | `deleteBond` during a finite scan (completion stays near the original deadline, neither early nor fully restarted), superseded-session completion isolation → verify empty → re-pair round trip + GATT tree empty after `end()`/`begin()` |
 | 31 | nc_reject | central rejects Numeric Comparison; pairing aborts, link stays unencrypted/unbonded |
@@ -60,7 +61,8 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 34 | periodic_adv_lifecycle | periodic-adv terminate + supervision-timeout sync-lost transitions (BLE5) |
 | 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, indication confirmation not stolen by a reserved-but-unsubmitted notification, `removeService` of a service with in-flight indications returns `Busy`, concurrent long-read/service-removal parent retention, late completion isolation after read/confirmed-write/write-command timeouts, notify flood + disconnect terminal-status ordering, BlueDroid terminal-close final-owner release serialized before host deinit (including worker-start failure), and BLEStream client-role final-owner release serialized against concurrent `BLE.end()` |
 | 36 | directed_adv_and_oob | directed high-duty advertising with a non-zero InitA (`setDirectedAddress`) connects within 1.28 s; directed `start()` without a peer is `InvalidParam`; legacy OOB (`BLE_SM_IOACT_OOB`) and OOB-SC pairing are rejected (no encryption, no bond) |
-| 37 | memory_release | heap reclaimed on release; reinit blocked while released |
+| 37 | l2cap_full_mtu | one L2CAP CoC channel at MTU 512 with two concurrent writer tasks exchanging patterned full-MTU SDUs (regression for the server SDU pool sizing and TX mbuf ownership; packaged NimBLE `COC_MAX_NUM=1` cannot open two channels) |
+| 38 | memory_release | heap reclaimed on release; reinit blocked while released |
 
 Phase 20 also runs a single-device regression guard for the advertisement-data
 payload limits: a too-long complete name must degrade to a Shortened Local Name

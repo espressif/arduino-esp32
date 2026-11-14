@@ -39,9 +39,8 @@
 namespace {
 
 /** Log and return true when @p what is called after start (the GATT database is committed). */
-bool startedWarn(const std::weak_ptr<BLEAudio::Impl> &audio, const char *what) {
-  auto a = audio.lock();
-  if (a && a->started) {
+bool startedWarn(const std::shared_ptr<BLEAudio::Impl> &audio, const char *what) {
+  if (audio && audio->started) {
     log_w("%s: ignored after audio.start() (the service is registered at start)", what);
     return true;
   }
@@ -55,7 +54,7 @@ bool startedWarn(const std::weak_ptr<BLEAudio::Impl> &audio, const char *what) {
 // --------------------------------------------------------------------------
 
 struct BLEAudioTmap::Impl {
-  std::weak_ptr<BLEAudio::Impl> audio;
+  std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (role list); same ownership as every other role.
   BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioTmapRole roles = BLEAudioTmapRole::None;  ///< Local roles; None registers no TMAS.
   DiscoverCallback discoverCb;
@@ -149,7 +148,7 @@ BLEAudioTmap BLEAudio::createTmap() {
 // --------------------------------------------------------------------------
 
 struct BLEAudioGmap::Impl {
-  std::weak_ptr<BLEAudio::Impl> audio;
+  std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (role list); same ownership as every other role.
   BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   BLEAudioGmapRole roles = BLEAudioGmapRole::None;  ///< Local roles; None registers no GMAS.
   BLEAudioGmapFeatures features;                    ///< Local features of those roles.

@@ -32,8 +32,10 @@
  *  - Broadcast source and sink, including the scan delegator (BASS server).
  *
  * All callbacks run on the Bluetooth host task; the functions called from
- * C++ run on the caller's task and only touch state the host task does not
- * modify concurrently (configuration before start, flags read atomically).
+ * C++ run on the caller's task. The few slot fields both sides touch
+ * (streaming/seq/bound/tx/in_use/conn_handle) are _Atomic so `write()` on the
+ * codec task and the host-task streaming transitions cannot race; everything
+ * else is configuration-before-start or host-task-only.
  *
  * API contract is documented in `BLEAudioEngineBap.h`.
  */
@@ -50,9 +52,12 @@
 #include "esp_ble_audio_common_api.h"
 #include "esp_ble_audio_defs.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include <string.h>
 #include <errno.h>
+#include <stdatomic.h>
 
 static const char *TAG = "BLEAudioBap";
 
@@ -249,13 +254,13 @@ struct ble_audio_slot {
   esp_ble_audio_cap_stream_t cap; /* MUST stay first: its first member is the BAP stream (see slot_of). */
   void *owner;                    /* C++ stream Impl, passed back in every s_cbs call. */
   uint8_t kind;                   /* ble_audio_stream_kind_t. */
-  bool in_use;
-  bool bound;                     /* Unicast: bound to a remote ASE (server) or endpoint (client). */
-  bool tx;                        /* The local device sends on this stream. */
-  bool streaming;
+  _Atomic bool in_use;
+  _Atomic bool bound;             /* Unicast: bound to a remote ASE (server) or endpoint (client). */
+  _Atomic bool tx;                /* The local device sends on this stream. */
+  _Atomic bool streaming;
   uint8_t uc_stage;               /* Unicast client: UC_* stage. */
-  uint16_t conn_handle;           /* Unicast ACL, CONN_NONE otherwise. */
-  uint16_t seq;                   /* Next Tx sequence number; advances only on accepted sends. */
+  _Atomic uint16_t conn_handle;   /* Unicast ACL, CONN_NONE otherwise. */
+  _Atomic uint16_t seq;           /* Next Tx sequence number; advances only on accepted sends. */
   esp_ble_audio_bap_ep_t *uc_ep;  /* Unicast client: remote endpoint. */
   struct ble_audio_slot *partner; /* Opposite direction sharing the same CIS. */
   esp_ble_audio_codec_cfg_t codec_cfg;  /* Slot-owned: the engine keeps pointers to these. */
@@ -505,6 +510,12 @@ void bleAudioStreamFree(ble_audio_slot_t *slot) {
 int bleAudioStreamSend(ble_audio_slot_t *slot, const uint8_t *sdu, uint16_t len) {
   if (slot == NULL || !slot->streaming || !slot->tx) {
     return ESP_ERR_INVALID_STATE;
+  }
+  /* Bound the SDU ourselves: an oversized send reaches the controller and is
+   * then rejected per packet (or corrupts the stream timing). A zero sdu means
+   * the QoS was never populated; let the engine decide in that case. */
+  if (slot->qos_cfg.sdu && len > slot->qos_cfg.sdu) {
+    return ESP_ERR_INVALID_SIZE;
   }
   esp_err_t err = esp_ble_audio_bap_stream_send(BAP(slot), sdu, len, slot->seq);
   if (err == ESP_OK) {
@@ -845,12 +856,11 @@ int bleAudioPacsSetAvailable(uint8_t dir, uint16_t contexts) {
 }
 
 /**
- * Unregister the PACS records this engine committed so the next `begin()` can
- * register a (possibly different) role set. The lib keeps its own registration
- * state across `common_deinit`, so skipping this makes the next
- * `esp_ble_audio_pacs_register()` fail with `-EALREADY`. The published
- * supported-contexts value survives unregister too (write-once per boot); see
- * `bleAudioPacsCommit`.
+ * Unregister the PACS records this engine committed. Must run while the host
+ * mutex still exists. `bleAudioEngineDeinit()` does not call this:
+ * `common_deinit` already runs `lib_pacs_deinit()` and then deletes the mutex,
+ * so a later `pacs_unregister` always fails with ESP_ERR_TIMEOUT (263).
+ * Supported-contexts stays write-once per boot; see `bleAudioPacsCommit`.
  */
 int bleAudioPacsRelease(void) {
   if (!s_pacs_committed) {
@@ -868,7 +878,9 @@ int bleAudioPacsRelease(void) {
   memset(s_pac, 0, sizeof(s_pac));
   s_pacs_committed = false;
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "PACS unregister failed: %d", err);
+    /* NimBLE cannot delete a single GATT service; treat native unregister as
+     * best-effort. The next `common_init` rebuilds the table. */
+    ESP_LOGD(TAG, "PACS unregister returned %d (GATT service may persist until host teardown)", err);
   }
   return (int)err;
 }
@@ -1557,8 +1569,11 @@ int bleAudioUcStop(void) {
     if (!uc_slot_active(s)) {
       continue;
     }
-    /* Streams never configured on the peer have nothing to release. */
-    if (s->uc_stage <= UC_CONFIG_PENDING || esp_ble_audio_bap_stream_release(BAP(s)) != ESP_OK) {
+    /* UC_REQUESTED means "listed, nothing sent yet": nothing to release. A
+     * UC_CONFIG_PENDING stream already sent Config Codec, so its remote ASE is
+     * Codec Configured and must be released, otherwise the peer keeps a
+     * dangling configured ASE into the next setup. */
+    if (s->uc_stage <= UC_REQUESTED || esp_ble_audio_bap_stream_release(BAP(s)) != ESP_OK) {
       s->uc_stage = UC_IDLE;
       s->partner = NULL;
     }
@@ -1748,9 +1763,61 @@ int bleAudioBsrcStart(uint8_t adv_handle) {
   return (int)err;
 }
 
+/** First in-use broadcast-source endpoint state, or -1 / -2 if none. */
+static int bsrc_ep_state(void) {
+  for (int i = 0; i < POOL_SIZE; i++) {
+    ble_audio_slot_t *s = &s_pool[i];
+    if (!s->in_use || s->kind != BLE_AUDIO_STREAM_BROADCAST_SOURCE) {
+      continue;
+    }
+    if (BAP(s)->ep == NULL) {
+      return -1;
+    }
+    esp_ble_audio_bap_ep_info_t info = {0};
+    if (esp_ble_audio_bap_ep_get_info(BAP(s)->ep, &info) != ESP_OK) {
+      return -1;
+    }
+    return (int)info.state;
+  }
+  return -2;
+}
+
 int bleAudioBsrcStop(void) {
-  s_bsrc_up = false;
-  return s_bsrc.source ? (int)esp_ble_audio_bap_broadcast_source_stop(s_bsrc.source) : ESP_ERR_INVALID_STATE;
+  if (s_bsrc.source == NULL) {
+    s_bsrc_up = false;
+    return ESP_ERR_INVALID_STATE;
+  }
+  /*
+   * BSRC_STARTED can fire at QoS Configured (state 2). source_stop() is
+   * illegal there, and calling it stalls the QoS→STREAMING transition.
+   * Wait until STREAMING, then stop once. Delete only if we never left
+   * QoS Configured (legal in that state; refused once the BIG is up).
+   */
+  const TickType_t deadline = xTaskGetTickCount() + pdMS_TO_TICKS(5000);
+  int st = bsrc_ep_state();
+  while (st != ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING && xTaskGetTickCount() < deadline) {
+    vTaskDelay(pdMS_TO_TICKS(20));
+    st = bsrc_ep_state();
+  }
+  if (st == ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING) {
+    int err = (int)esp_ble_audio_bap_broadcast_source_stop(s_bsrc.source);
+    if (err == 0) {
+      s_bsrc_up = false;
+      return 0;
+    }
+    ESP_LOGW(TAG, "broadcast source: stop failed in STREAMING (err=%d)", err);
+    return err;
+  }
+  if (st >= 0 && st <= ESP_BLE_AUDIO_BAP_EP_STATE_QOS_CONFIGURED) {
+    bleAudioBsrcDelete();
+    if (s_bsrc.source == NULL) {
+      s_bsrc_up = false;
+      bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STOPPED, CONN_NONE, 0, NULL);
+      return 0;
+    }
+  }
+  ESP_LOGW(TAG, "broadcast source: stop failed (ep=%d)", st);
+  return ESP_FAIL;
 }
 
 /* Replaces the subgroup metadata; the stack refreshes the BASE in the periodic advertising. */
@@ -1850,6 +1917,9 @@ static struct {
   bool base_received;  /* BASE decoded for the current sink; later copies are ignored. */
   bool syncing;        /* BIG sync requested or established. */
   bool has_code;
+  bool failed_no_match;   /* BSINK_SYNC_FAILED(-ENOENT) latched for these inputs. */
+  uint32_t fail_mask;     /* BIS-selection inputs the latch was computed from. */
+  bool failed_no_code;    /* BSINK_SYNC_FAILED(-EACCES) latched until a code arrives. */
   uint16_t sync_handle;   /* PA sync in use, SYNC_NONE when not synced. */
   uint32_t broadcast_id;  /* 24-bit Broadcast_ID of the target. */
   uint32_t base_bis;      /* BIS indexes (bitmask, bit 0 = BIS 1) offered by the BASE. */
@@ -1876,6 +1946,8 @@ static void bsnk_create(void) {
   }
   s_bsnk.base_received = false;
   s_bsnk.syncing = false;
+  s_bsnk.failed_no_match = false;
+  s_bsnk.failed_no_code = false;
   esp_err_t err = esp_ble_audio_bap_broadcast_sink_create(s_bsnk.sync_handle, s_bsnk.broadcast_id, &s_bsnk.sink);
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "broadcast sink: create on PA sync 0x%04x (broadcast 0x%06lx) failed: %d", s_bsnk.sync_handle, (unsigned long)s_bsnk.broadcast_id, err);
@@ -2014,15 +2086,31 @@ static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_bl
   if (s_bsnk.pref_mask) {
     mask &= s_bsnk.pref_mask;
   }
+  uint32_t inputs = mask; /* The selector inputs, before the slot-count trim. */
   mask = lowest_bits(mask, s_bsnk.n_slots);
   if (mask == 0) {
+    /* BIGInfo repeats periodically: only report an empty intersection again
+     * when the inputs changed (assistant request, BASE or local preference),
+     * otherwise a permanently empty match spams the failure callback. */
+    if (s_bsnk.failed_no_match && s_bsnk.fail_mask == inputs) {
+      return;
+    }
+    s_bsnk.failed_no_match = true;
+    s_bsnk.failed_no_code = false;
+    s_bsnk.fail_mask = inputs;
     bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_SYNC_FAILED, CONN_NONE, -ENOENT, NULL);
     return;
   }
+  s_bsnk.failed_no_match = false;
   if (biginfo && biginfo->encryption && !s_bsnk.has_code) {
+    if (s_bsnk.failed_no_code) {
+      return; /* Cleared by bleAudioBsinkSetCode(). */
+    }
+    s_bsnk.failed_no_code = true;
     bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_SYNC_FAILED, CONN_NONE, -EACCES, NULL);
     return;
   }
+  s_bsnk.failed_no_code = false;
   for (uint8_t i = 0; i < s_bsnk.n_slots; i++) {
     streams[i] = BAP(s_bsnk.slots[i]);
   }
@@ -2299,6 +2387,8 @@ void bleAudioBsinkSetCode(const uint8_t *code) {
   if (code) {
     memcpy(s_bsnk.code, code, BLE_AUDIO_BCODE_SIZE);
   }
+  /* A new Broadcast Code unblocks the -EACCES latch in bsnk_syncable(). */
+  s_bsnk.failed_no_code = false;
 }
 
 void bleAudioBsinkSetBisMask(uint32_t mask) {
@@ -2392,17 +2482,13 @@ static void bap_on_deinit(void) {
   uc_reset();
 #endif
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
-  /* Drop the lib-owned source. memset alone leaked it and the next session
-   * then failed HCI Create BIG (ISO_MAX_BIG=1 still held). */
-  bleAudioBsrcDelete();
+  /* Host mutex is already gone (common_deinit). The lib source is released
+   * by lib_bap_broadcast_source_deinit(); a native delete here would only
+   * return ESP_ERR_TIMEOUT. */
   s_bsrc_up = false;
   memset(&s_bsrc, 0, sizeof(s_bsrc));
 #endif
 #if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
-  if (s_bsnk.sink) {
-    (void)esp_ble_audio_bap_broadcast_sink_delete(s_bsnk.sink);
-    s_bsnk.sink = NULL;
-  }
   s_bsnk_joined = false;
   memset(&s_bsnk, 0, sizeof(s_bsnk));
   s_bsnk.sync_handle = SYNC_NONE;

@@ -106,6 +106,13 @@ struct L2CAPRaceJob {
   volatile bool started = false;
   volatile bool done = false;
 };
+struct L2CAPFullMtuJob {
+  BLEL2CAPChannel channel;
+  uint8_t index = 0;
+  volatile uint32_t sent = 0;
+  volatile uint32_t writeOk = 0;
+  volatile bool done = false;
+};
 #endif
 // Phase 4: value the server set through a handle from a const lookup.
 static const BLEUUID constLookupCharUUID("7f3a9c2e-5b1d-4e8f-a6c4-2d9b8e1f0a39");
@@ -405,6 +412,10 @@ static void scanHostShutdownTask(void *arg) {
 #if BLE_L2CAP_SUPPORTED
 static uint8_t phase28RacePayload[4096];
 static uint8_t phase28ShutdownPayload[8192];
+static uint8_t phase37Payload[2][512];
+static const uint16_t L2CAP_FULL_MTU = 512;
+static const uint16_t L2CAP_FULL_PSM = 0x0084;
+static const int L2CAP_FULL_SDUS = 8;
 
 static void l2capRaceWriteTask(void *arg) {
   auto *job = static_cast<L2CAPRaceJob *>(arg);
@@ -426,6 +437,25 @@ static void l2capRaceDisconnectTask(void *arg) {
   auto *job = static_cast<L2CAPRaceJob *>(arg);
   job->started = true;
   job->status = job->channel.disconnect();
+  job->done = true;
+  vTaskDelete(nullptr);
+}
+
+static void l2capFullMtuWriteTask(void *arg) {
+  auto *job = static_cast<L2CAPFullMtuJob *>(arg);
+  uint8_t *buf = phase37Payload[job->index];
+  for (int seq = 0; seq < L2CAP_FULL_SDUS; seq++) {
+    buf[0] = job->index;
+    buf[1] = (uint8_t)seq;
+    for (int i = 2; i < (int)L2CAP_FULL_MTU; i++) {
+      buf[i] = (uint8_t)(job->index * 31u + seq + i);
+    }
+    BTStatus status = job->channel.write(buf, L2CAP_FULL_MTU);
+    job->sent++;
+    if (status) {
+      job->writeOk++;
+    }
+  }
   job->done = true;
   vTaskDelete(nullptr);
 }
@@ -4675,8 +4705,95 @@ void setup() {
     Serial.println("[CLIENT] Phase36 done");
   }
 
-  // ===== Phase 37: Memory release + reinit guard =====
+  // ===== Phase 37: concurrent full-MTU writers on one L2CAP CoC =====
   waitForPhase(37);
+  {
+    bool l2cap_supported = false;
+#if BLE_L2CAP_SUPPORTED
+    l2cap_supported = true;
+    delay(1500);
+    bool found = scanForServer();
+    Serial.printf("[CLIENT] Phase37 rescan found=%d\n", (int)found);
+    if (found) {
+      BLEClient fc = BLE.createClient();
+      installClientCallbacks(fc);
+      BTStatus cs = BTStatus::Fail;
+      for (int attempt = 0; attempt < 6; attempt++) {
+        cs = fc.connect(targetAddr);
+        if (cs) {
+          break;
+        }
+        delay(500);
+      }
+      if (!cs) {
+        Serial.printf("[CLIENT] Phase37 connect FAILED: %s\n", cs.toString());
+      } else {
+        BLEL2CAPChannel ch;
+        volatile uint32_t echoOk[2] = {0, 0};
+        for (int attempt = 0; attempt < 4 && !ch; attempt++) {
+          ch = BLE.connectL2CAP(fc.getHandle(), L2CAP_FULL_PSM, L2CAP_FULL_MTU);
+          if (!ch) {
+            delay(250);
+          }
+        }
+        if (!ch || !ch.isConnected()) {
+          Serial.println("[CLIENT] Phase37 L2CAP open FAILED");
+        } else {
+          Serial.println("[CLIENT] Phase37 L2CAP channel connected");
+          ch.onData([&echoOk](BLEL2CAPChannel, const uint8_t *data, size_t len) {
+            syncPhaseFromHost();
+            if (len != L2CAP_FULL_MTU || data[0] > 1) {
+              return;
+            }
+            uint8_t index = data[0];
+            uint8_t seq = data[1];
+            for (size_t n = 2; n < len; n++) {
+              if (data[n] != (uint8_t)(index * 31u + seq + n)) {
+                return;
+              }
+            }
+            echoOk[index]++;
+          });
+          // Packaged NimBLE builds set CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM=1, so
+          // concurrent CoC channels are impossible. Two writer tasks on the
+          // one channel still stress full-MTU SDU pool sizing and serialized
+          // TX mbuf ownership.
+          static L2CAPFullMtuJob jobs[2];
+          for (int i = 0; i < 2; i++) {
+            jobs[i] = L2CAPFullMtuJob{};
+            jobs[i].channel = ch;
+            jobs[i].index = (uint8_t)i;
+            xTaskCreate(l2capFullMtuWriteTask, "l2fmtu", 4096, &jobs[i], 5, nullptr);
+          }
+          unsigned long deadline = millis() + 20000;
+          while (millis() < deadline) {
+            if (jobs[0].done && jobs[1].done && echoOk[0] >= (uint32_t)L2CAP_FULL_SDUS && echoOk[1] >= (uint32_t)L2CAP_FULL_SDUS) {
+              break;
+            }
+            delay(20);
+          }
+          uint32_t sent = jobs[0].sent + jobs[1].sent;
+          uint32_t writeOk = jobs[0].writeOk + jobs[1].writeOk;
+          uint32_t echoes = echoOk[0] + echoOk[1];
+          Serial.printf(
+            "[CLIENT] Phase37 result ch=1 sent=%lu writeOk=%lu echoOk=%lu heap=%d\n", (unsigned long)sent, (unsigned long)writeOk, (unsigned long)echoes,
+            (int)heap_caps_check_integrity_all(true)
+          );
+          ch.disconnect();
+        }
+        fc.disconnect();
+        delay(300);
+      }
+    }
+#endif
+    if (!l2cap_supported) {
+      Serial.println("[CLIENT] Phase37 L2CAP not supported, skipping");
+    }
+    Serial.println("[CLIENT] Phase37 done");
+  }
+
+  // ===== Phase 38: Memory release + reinit guard =====
+  waitForPhase(38);
 
   size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);
   Serial.printf("[CLIENT] Heap before release: %u\n", (unsigned)heapBeforeRelease);

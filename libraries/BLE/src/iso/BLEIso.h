@@ -77,6 +77,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <functional>
+#include <atomic>
 #include "WString.h"
 #include "BTStatus.h"
 
@@ -184,7 +185,7 @@ public:
 private:
   friend struct ChannelAccess;
   int _slot = -1;
-  uint16_t _nextSeq = 0;
+  std::atomic<uint16_t> _nextSeq{0};  // Atomic: reset on connect (host task), advanced on send (app task).
   ConnectedCb _onConnected;
   DisconnectedCb _onDisconnected;
   ReceiveCb _onReceive;

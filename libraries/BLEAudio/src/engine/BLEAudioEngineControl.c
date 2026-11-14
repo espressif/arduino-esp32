@@ -435,8 +435,13 @@ int bleAudioVcpCtlrInit(void) {
   }
   int err = role_attach();
   if (err == ESP_OK) {
-    /* Fails only when the static table is still listed from an earlier session. */
-    (void)esp_ble_audio_vcp_vol_ctlr_cb_register(&s_vctl_cb);
+    err = esp_ble_audio_vcp_vol_ctlr_cb_register(&s_vctl_cb);
+    if (err != ESP_OK) {
+      /* Fails only when the static table is still listed from an earlier
+       * session; the role then never hears any volume event. */
+      ESP_LOGE(TAG, "volume controller: cb_register failed: %d (events will be dropped)", err);
+      err = ESP_OK;
+    }
   }
   return role_done(ROLE_VCP_CTLR, err);
 }
@@ -663,8 +668,11 @@ int bleAudioMicpCtlrInit(void) {
   }
   int err = role_attach();
   if (err == ESP_OK) {
-    /* Fails only when the static table is still listed from an earlier session. */
-    (void)esp_ble_audio_micp_mic_ctlr_cb_register(&s_mctl_cb);
+    err = esp_ble_audio_micp_mic_ctlr_cb_register(&s_mctl_cb);
+    if (err != ESP_OK) {
+      ESP_LOGE(TAG, "mic controller: cb_register failed: %d (events will be dropped)", err);
+      err = ESP_OK;
+    }
   }
   return role_done(ROLE_MICP_CTLR, err);
 }
@@ -1325,7 +1333,7 @@ int bleAudioHasSrvInit(uint8_t type, bool preset_sync) {
 
 int bleAudioHasSrvAddPreset(uint8_t index, const char *name, bool available, bool writable) {
   NEED_ROLE(ROLE_HAS_SRV);
-  if (!name) {
+  if (index == 0 || !name) {
     return ESP_ERR_INVALID_ARG;
   }
 #if HAS_KEEP_NAMES
@@ -1362,6 +1370,18 @@ int bleAudioHasSrvSetAvailable(uint8_t index, bool available) {
 
 int bleAudioHasSrvRename(uint8_t index, const char *name) {
   NEED_ROLE(ROLE_HAS_SRV);
+  if (index == 0 || !name) {
+    return ESP_ERR_INVALID_ARG;
+  }
+#if HAS_KEEP_NAMES
+  /* Like addPreset: without dynamic names the stack keeps the caller's name
+   * pointer, so hand it a copy that outlives the call. */
+  name = has_keep_name(index, name);
+  if (!name) {
+    ESP_LOGE(TAG, "hearing aid: no name slot for preset %u (CONFIG_BT_HAS_PRESET_COUNT)", index);
+    return ESP_ERR_NO_MEM;
+  }
+#endif
   return esp_ble_audio_has_preset_name_change(index, name);
 }
 
@@ -1482,8 +1502,11 @@ int bleAudioHasCliInit(void) {
   }
   int err = role_attach();
   if (err == ESP_OK) {
-    /* Fails only when the static table is still listed from an earlier session. */
-    (void)esp_ble_audio_has_client_cb_register(&s_hasc_cb);
+    err = esp_ble_audio_has_client_cb_register(&s_hasc_cb);
+    if (err != ESP_OK) {
+      ESP_LOGE(TAG, "hearing aid client: cb_register failed: %d (events will be dropped)", err);
+      err = ESP_OK;
+    }
   }
   return role_done(ROLE_HAS_CLI, err);
 }

@@ -62,7 +62,6 @@
 extern int bleAudioHostPrepareGatt(void);
 extern void bleAudioHostFinishGatt(bool success);
 extern void bleAudioHostResetGatt(void);
-extern int bleAudioPacsRelease(void);
 
 // --------------------------------------------------------------------------
 // State
@@ -181,7 +180,13 @@ uint8_t bleAudioChannelCount(uint32_t chan_alloc) {
  * Links the peer opens (we are peripheral) are not tracked here; the central
  * drives their security, and the MTU rule still starts discovery.
  */
-#define MAX_LINKS 4
+/* Track as many central links as the stack allows (kMaxLinks in BLEAudioImpl.h
+ * uses the same symbol); the statics are reset in engineReset() below, since an
+ * initializer list cannot size to the Kconfig value. */
+#ifndef CONFIG_BT_MAX_CONN
+#define CONFIG_BT_MAX_CONN 4
+#endif
+#define MAX_LINKS CONFIG_BT_MAX_CONN
 #define HCI_ROLE_CENTRAL 0x00
 static bool s_connect_pending; /* bleAudioEngineConnect() armed; the next central ACL is ours. */
 /* Destination requested by bleAudioEngineConnect(), in engine (LSB-first) form.
@@ -201,7 +206,7 @@ static esp_timer_handle_t s_encTimer;
 static esp_bd_addr_t s_encBda;
 static uint16_t s_encConn = BLE_AUDIO_CONN_NONE;
 #endif
-static uint16_t s_links[MAX_LINKS] = {BLE_AUDIO_CONN_NONE, BLE_AUDIO_CONN_NONE, BLE_AUDIO_CONN_NONE, BLE_AUDIO_CONN_NONE};
+static uint16_t s_links[MAX_LINKS]; /* Reset to BLE_AUDIO_CONN_NONE in engineReset(); zero-fill + reset covers boot. */
 /* Per-slot peer address, recorded from ACL_CONNECT so disconnect() can reach
  * links the engine opened itself (they are not in the library's client table). */
 static struct bt_le_addr s_link_peer[MAX_LINKS];
@@ -465,10 +470,15 @@ static void gatt_cb(esp_ble_audio_gatt_app_event_t *event) {
  * library's GATT coordinator observes bleAudioEngineIsInitialized() to know
  * that `BLEServer` services must only be staged until then.
  */
+static void engine_reset_local(void);
+
 int bleAudioEngineInit(ble_audio_evt_sink_fn sink, void *ctx) {
   if (s_initialized) {
     return 0;
   }
+  /* Also covers boot: s_links is zero-filled and BLE_AUDIO_CONN_NONE is not 0,
+   * so the table must be reset before the first link_find(). */
+  engine_reset_local();
   if (bleIsoOwnsHost()) {
     log_e("a standalone BLEIso session owns the host; call BLEIso end() before audio begin()");
     return ESP_ERR_INVALID_STATE;
@@ -588,18 +598,15 @@ int bleAudioEngineDeinit(void) {
   if (!s_initialized) {
     return 0;
   }
-  /* Deinit first: it can refuse while an ISO channel is still connected. Do
-   * not destroy PACS staging before that check succeeds, otherwise a refused
-   * teardown leaves the live session without its PACS records. PACS state
-   * lives in the lib across `common_deinit`, so drop it after success. */
+  /* common_deinit refuses while an ISO channel is still connected, then runs
+   * lib_pacs_deinit() and deletes the host mutex. Calling pacs_unregister
+   * afterwards hits BT_LE_HOST_LOCK_OR_RETURN(ESP_ERR_TIMEOUT) (logged as
+   * "PACS unregister failed: 263") every session. Local PACS staging is
+   * cleared in bap_on_deinit. */
   esp_err_t err = esp_ble_audio_common_deinit(NULL);
   if (err != ESP_OK) {
     log_e("esp_ble_audio_common_deinit failed: %d (stop every stream first)", err);
     return (int)err;
-  }
-  int pacs = bleAudioPacsRelease();
-  if (pacs != 0) {
-    log_e("PACS release failed: %d", pacs);
   }
 #if BLE_BLUEDROID
   if (s_encTimer != NULL) {

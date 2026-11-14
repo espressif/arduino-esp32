@@ -1592,6 +1592,21 @@ static uint8_t cmd_members(esp_ble_conn_t **out, uint8_t *src_ids, bool need_src
   return n;
 }
 
+/**
+ * Fill @p m with the command members gathered by cmd_members(). @p m is either
+ * an array of `esp_ble_audio_cap_set_member_t` or of member-param structs whose
+ * FIRST field is one (volume offset, microphone gain), so the common gathering
+ * loop works for both. @return the member count.
+ */
+static uint8_t cmd_fill_members(esp_ble_audio_cap_set_member_t *m) {
+  esp_ble_conn_t *c[MAX_PEERS];
+  const uint8_t n = cmd_members(c, NULL, false);
+  for (uint8_t i = 0; i < n; i++) {
+    m[i].member = c[i];
+  }
+  return n;
+}
+
 int bleAudioCapCommanderInit(void) {
   if (s_cmd_registered) {
     return 0;
@@ -1645,12 +1660,8 @@ int bleAudioCapCommanderDiscover(uint16_t conn_handle) {
 
 int bleAudioCapCommanderVolume(uint8_t volume) {
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
-  esp_ble_conn_t *c[MAX_PEERS];
   esp_ble_audio_cap_set_member_t m[MAX_PEERS];
-  const uint8_t n = cmd_members(c, NULL, false);
-  for (uint8_t i = 0; i < n; i++) {
-    m[i].member = c[i];
-  }
+  const uint8_t n = cmd_fill_members(m);
   esp_ble_audio_cap_commander_change_volume_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .members = m, .count = n, .volume = volume};
   return n ? (int)esp_ble_audio_cap_commander_change_volume(&param) : ESP_ERR_INVALID_STATE;
 #else
@@ -1661,12 +1672,8 @@ int bleAudioCapCommanderVolume(uint8_t volume) {
 
 int bleAudioCapCommanderVolumeMute(bool mute) {
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
-  esp_ble_conn_t *c[MAX_PEERS];
   esp_ble_audio_cap_set_member_t m[MAX_PEERS];
-  const uint8_t n = cmd_members(c, NULL, false);
-  for (uint8_t i = 0; i < n; i++) {
-    m[i].member = c[i];
-  }
+  const uint8_t n = cmd_fill_members(m);
   esp_ble_audio_cap_commander_change_volume_mute_state_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .members = m, .count = n, .mute = mute};
   return n ? (int)esp_ble_audio_cap_commander_change_volume_mute_state(&param) : ESP_ERR_INVALID_STATE;
 #else
@@ -1677,11 +1684,9 @@ int bleAudioCapCommanderVolumeMute(bool mute) {
 
 int bleAudioCapCommanderVolumeOffset(int16_t offset) {
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED && defined(CONFIG_BT_VCP_VOL_CTLR_VOCS)
-  esp_ble_conn_t *c[MAX_PEERS];
   esp_ble_audio_cap_commander_change_volume_offset_member_param_t m[MAX_PEERS];
-  const uint8_t n = cmd_members(c, NULL, false);
+  const uint8_t n = cmd_fill_members((esp_ble_audio_cap_set_member_t *)m);
   for (uint8_t i = 0; i < n; i++) {
-    m[i].member.member = c[i];
     m[i].offset = offset;
   }
   esp_ble_audio_cap_commander_change_volume_offset_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .param = m, .count = n};
@@ -1694,12 +1699,8 @@ int bleAudioCapCommanderVolumeOffset(int16_t offset) {
 
 int bleAudioCapCommanderMicMute(bool mute) {
 #if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
-  esp_ble_conn_t *c[MAX_PEERS];
   esp_ble_audio_cap_set_member_t m[MAX_PEERS];
-  const uint8_t n = cmd_members(c, NULL, false);
-  for (uint8_t i = 0; i < n; i++) {
-    m[i].member = c[i];
-  }
+  const uint8_t n = cmd_fill_members(m);
   esp_ble_audio_cap_commander_change_microphone_mute_state_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .members = m, .count = n, .mute = mute};
   return n ? (int)esp_ble_audio_cap_commander_change_microphone_mute_state(&param) : ESP_ERR_INVALID_STATE;
 #else
@@ -1710,11 +1711,9 @@ int bleAudioCapCommanderMicMute(bool mute) {
 
 int bleAudioCapCommanderMicGain(int8_t gain) {
 #if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED && defined(CONFIG_BT_MICP_MIC_CTLR_AICS)
-  esp_ble_conn_t *c[MAX_PEERS];
   esp_ble_audio_cap_commander_change_microphone_gain_setting_member_param_t m[MAX_PEERS];
-  const uint8_t n = cmd_members(c, NULL, false);
+  const uint8_t n = cmd_fill_members((esp_ble_audio_cap_set_member_t *)m);
   for (uint8_t i = 0; i < n; i++) {
-    m[i].member.member = c[i];
     m[i].gain = gain;
   }
   esp_ble_audio_cap_commander_change_microphone_gain_setting_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .param = m, .count = n};

@@ -97,10 +97,7 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
 
   /** Stream sent tap (BT host task): count one released SDU for the pacing. */
   static void onSent(void *ctx) {
-    auto *port = static_cast<Port *>(ctx);
-    if (!port) {
-      return;
-    }
+    auto *port = static_cast<Port *>(ctx);  // Never NULL by construction.
     auto *self = static_cast<Impl *>(port->owner);
     if (self->gate.enter()) {
       bleAudioBump(self->released[port->idx]);
@@ -255,7 +252,9 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
    */
   void tick(uint8_t ref) {
     uint32_t done = released[ref].load(std::memory_order_relaxed);
-    int32_t inflight = (int32_t)(written[ref] - done);
+    // Signed math: after a resync `done` can exceed `written`; unsigned
+    // subtraction would wrap and the narrowing cast back is fragile.
+    int32_t inflight = (int32_t)((int64_t)written[ref] - (int64_t)done);
     bool tracked = done != 0;
     if (sinceExtra < kExtraGap) {
       sinceExtra++;

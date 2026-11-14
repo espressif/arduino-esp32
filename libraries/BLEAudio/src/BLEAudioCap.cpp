@@ -18,8 +18,10 @@
 #if BLE_AUDIO_SUPPORTED
 
 #include <string.h>
+#include <errno.h>
 #include <vector>
 #include "BLEAudioCap.h"
+#include "BLEAudioAuracast.h"
 #include "BLEAudioImpl.h"
 #include "BLEAudioProfiles.h"
 #include "engine/BLEAudioStreamInternal.h"
@@ -29,6 +31,8 @@
 #include "advertising/BLEAdvertisementData.h"
 #include "esp_random.h"
 #include "esp32-hal-log.h"
+#include "core/BLESync.h"
+#include "core/BLETask.h"
 
 /**
  * @file BLEAudioCap.cpp
@@ -46,14 +50,8 @@
 
 namespace {
 
-constexpr uint16_t kBroadcastAudioAnnouncementUuid = 0x1852;
-constexpr uint16_t kPublicBroadcastAnnouncementUuid = 0x1856;
-constexpr uint8_t kAdTypeServiceData16 = 0x16;
-constexpr uint16_t kAppearanceBroadcastingDevice = 0x0885;
-constexpr uint8_t kMetaStreamingContext = 0x02;  ///< LTV type: Streaming Audio Contexts.
-constexpr uint8_t kMetaProgramInfo = 0x03;       ///< LTV type: Program Info (UTF-8).
-constexpr uint8_t kMaxPbaNameLen = 32;           ///< Broadcast Name limit (4..32 octets).
-constexpr uint16_t kPaInterval = 0x40;  ///< 80 ms; also sent to acceptors, so min = max.
+constexpr uint8_t kAdTypeServiceData16 = BLEAudioAuracast::kAdTypeServiceData16;
+constexpr uint16_t kPaInterval = BLEAudioAuracast::kPaInterval;  ///< 80 ms; also sent to acceptors, so min = max.
 
 /** An acceptor added with addAcceptor(). */
 struct Peer {
@@ -159,6 +157,7 @@ struct BLEAudioCapInitiator::Impl {
   bool handedOver = false;                ///< The unicast sink streams run as a broadcast.
   bool hoBusy = false;                    ///< Handover procedure in flight.
   int16_t advInstance = -1;               ///< Advertising instance of the broadcast, -1 when none.
+  BLESync stopSync{"cap-bc-stop"};        ///< Wait for CAP_BC_STARTED / CAP_BC_STOPPED.
 
   DiscoveredCallback discoveredCb;
   StatusCallback ucStartedCb;
@@ -286,42 +285,22 @@ struct BLEAudioCapInitiator::Impl {
     adv.setExtSID(inst, inst & 0x0F);
     const String advName = name.length() ? name : String(BLE.getDeviceName().c_str());
     BLEAdvertisementData ext(BLEAdvertisementData::EXTENDED_MAX_PAYLOAD);
-    ext.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
-    ext.setAppearance(kAppearanceBroadcastingDevice);
-    const uint8_t id[3] = {(uint8_t)broadcastId, (uint8_t)(broadcastId >> 8), (uint8_t)(broadcastId >> 16)};
-    ext.setServiceData(BLEUUID(kBroadcastAudioAnnouncementUuid), id, sizeof(id));
 #if BLE_AUDIO_PBP_SUPPORTED
-    // PBA metadata: Streaming Audio Contexts + Program Info (the name), so
-    // Auracast UIs show the same context and title as a plain broadcast source.
-    const size_t n = advName.length() < kMaxPbaNameLen ? advName.length() : kMaxPbaNameLen;
-    uint8_t meta[4 + 2 + kMaxPbaNameLen];
-    size_t m = 0;
-    const uint16_t ctx = static_cast<uint16_t>(context);
-    meta[m++] = 3;
-    meta[m++] = kMetaStreamingContext;
-    meta[m++] = (uint8_t)ctx;
-    meta[m++] = (uint8_t)(ctx >> 8);
-    meta[m++] = (uint8_t)(1 + n);
-    meta[m++] = kMetaProgramInfo;
-    memcpy(meta + m, advName.c_str(), n);
-    m += n;
+    // PBP features: High Quality for 48 kHz presets, Standard otherwise, plus
+    // Encryption; the PBA carries the same context and title as a plain
+    // broadcast source.
     ble_audio_codec_t c;
     ble_audio_qos_t q;
     codecQos(true, c, q);
-    uint8_t features = c.sample_rate_hz == 48000 ? BLEAudioPublicBroadcast::HighQuality : BLEAudioPublicBroadcast::StandardQuality;
+    uint8_t pbaFeatures = c.sample_rate_hz == 48000 ? BLEAudioPublicBroadcast::HighQuality : BLEAudioPublicBroadcast::StandardQuality;
     if (code.length()) {
-      features |= BLEAudioPublicBroadcast::Encryption;
+      pbaFeatures |= BLEAudioPublicBroadcast::Encryption;
     }
-    uint8_t pba[2 + 2 + sizeof(meta)];
-    const size_t pbaLen = BLEAudioPublicBroadcast::buildAnnouncement(features, meta, m, pba, sizeof(pba));
-    if (pbaLen > 2) {
-      // buildAnnouncement() starts with the UUID, which setServiceData() adds itself.
-      ext.setServiceData(BLEUUID(kPublicBroadcastAnnouncementUuid), pba + 2, pbaLen - 2);
-    }
+    BTStatus st = BLEAudioAuracast::buildExt(ext, broadcastId, advName, true, static_cast<uint16_t>(context), pbaFeatures);
+#else
+    BTStatus st = BLEAudioAuracast::buildExt(ext, broadcastId, advName, false, 0, 0);
 #endif
-    ext.setBroadcastName(advName);
-    ext.setName(advName);
-    BTStatus st = adv.setExtAdvertisementData(inst, ext);
+    st = adv.setExtAdvertisementData(inst, ext);
     if (st) {
       adv.setPeriodicAdvInterval(inst, kPaInterval, kPaInterval);
       if (withBase) {
@@ -358,6 +337,34 @@ struct BLEAudioCapInitiator::Impl {
     BLEAdvertising adv = BLE.getAdvertising();
     (void)adv.stopPeriodicAdv((uint8_t)instance);
     (void)adv.stopExtended((uint8_t)instance);
+  }
+
+  BTStatus waitStopped() {
+    {
+      BLELockGuard lock(mtx.get());
+      if (!bcStreaming && !bcStarting) {
+        return BTStatus::OK;
+      }
+    }
+    if (bleInStackCallbackTask()) {
+      log_e("CapInitiator: cannot wait for BIG terminate from a stack callback");
+      return BTStatus::InvalidState;
+    }
+    stopSync.take();
+    {
+      BLELockGuard lock(mtx.get());
+      if (!bcStreaming && !bcStarting) {
+        stopSync.give(BTStatus::OK);
+        return BTStatus::OK;
+      }
+    }
+    BTStatus st = stopSync.wait(5000);
+    BLELockGuard lock(mtx.get());
+    if (st != BTStatus::OK || bcStreaming || bcStarting) {
+      log_e("CapInitiator: timed out waiting for BIG to terminate");
+      return st == BTStatus::OK ? BTStatus::Fail : st;
+    }
+    return BTStatus::OK;
   }
 
   /** @brief Engine source gone: release the advertising and reset the broadcast state. */
@@ -485,6 +492,8 @@ struct BLEAudioCapInitiator::Impl {
           cb = bcStartedCb;
         }
         log_i("CapInitiator: broadcast 0x%06lX streaming", (unsigned long)broadcastId);
+        // A stopBroadcast() issued while start was in flight waits on this.
+        stopSync.give(BTStatus::OK);
         if (cb) {
           cb();
         }
@@ -507,6 +516,7 @@ struct BLEAudioCapInitiator::Impl {
           break;
         }
         broadcastEnded();
+        stopSync.give(BTStatus::OK);
         if (cb) {
           cb((uint8_t)e.err);
         }
@@ -606,7 +616,10 @@ struct BLEAudioCapInitiator::Impl {
     }
   }
 
-  const std::vector<BLEAudioStream> &streams() const {
+  // Returned by value: the streams vectors are mutated by startUnicast()/
+  // startBroadcast() on the caller task, so returning a reference after the
+  // lock is released would hand the caller a dangling reference.
+  std::vector<BLEAudioStream> streams() const {
     BLELockGuard lock(mtx.get());
     return plainBroadcast ? bcStreams : ucStreams;
   }
@@ -865,24 +878,60 @@ BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInsta
   return BTStatus::OK;
 }
 
-/** Without a stop the engine never reports BC_STOPPED, so a failed stop releases everything here. */
+/** Terminate the BIG, wait for CAP_BC_STOPPED, then drop the source.
+ *
+ * source_delete is refused while STREAMING (LEA_LIB BapBsrcDeleteInvState[4])
+ * and a delete racing an in-flight terminate also fails HCI Terminate BIG
+ * (0x0C Command Disallowed). Wait for STOPPED so delete is legal, matching
+ * BroadcastSource::stop(). Always unwedge the flags so a later startBroadcast()
+ * is not stuck behind leftover bcStarting/bcStreaming.
+ */
 BTStatus BLEAudioCapInitiator::stopBroadcast() {
   if (!_impl) {
     return BTStatus::InvalidState;
   }
+  bool starting;
   {
     BLELockGuard lock(_impl->mtx.get());
     if (_impl->advInstance < 0 || _impl->hoBusy) {
       return BTStatus::InvalidState;
     }
+    starting = _impl->bcStarting;
+  }
+  if (starting) {
+    if (bleInStackCallbackTask()) {
+      log_e("CapInitiator: cannot wait for start to resolve from a stack callback");
+      return BTStatus::InvalidState;
+    }
+    _impl->stopSync.take();
+    {
+      BLELockGuard lock(_impl->mtx.get());
+      if (!_impl->bcStarting) {
+        _impl->stopSync.give(BTStatus::OK);
+      }
+    }
+    (void)_impl->stopSync.wait(5000);
   }
   int err = bleAudioCapBroadcastStop();
-  if (err != 0) {
-    log_w("CapInitiator: BIG terminate failed (err=%d); keeping the broadcast state", err);
-    return bleAudioStatus(err);
+  if (err != 0 && err != ESP_ERR_INVALID_STATE && err != -EALREADY) {
+    log_w("CapInitiator: BIG terminate failed (err=%d)", err);
+  } else {
+    (void)_impl->waitStopped();
   }
-  _impl->stopAdvertising();
-  _impl->broadcastEnded();
+  // CAP_BC_STOPPED already ran broadcastEnded() on the happy path. A leftover
+  // source after a timeout or a stop that never reported STOPPED is dropped
+  // here so the next startBroadcast() can recreate it.
+  if (bleAudioCapBroadcastExists()) {
+    bleAudioCapBroadcastDelete();
+  }
+  bool leftover;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    leftover = _impl->bcStarting || _impl->bcStreaming || _impl->advInstance >= 0;
+  }
+  if (leftover) {
+    _impl->broadcastEnded();
+  }
   return BTStatus::OK;
 }
 
@@ -974,18 +1023,29 @@ BTStatus BLEAudioCapInitiator::handoverToUnicast() {
 }
 
 size_t BLEAudioCapInitiator::streamCount() const {
-  return _impl ? _impl->streams().size() : 0;
+  if (!_impl) {
+    return 0;
+  }
+  return _impl->streams().size();
 }
 
 BLEAudioStream BLEAudioCapInitiator::stream(size_t index) const {
-  return (_impl && index < _impl->streams().size()) ? _impl->streams()[index] : BLEAudioStream();
+  if (!_impl) {
+    return BLEAudioStream();
+  }
+  // Snapshot once: two stream()/size() calls would each copy the vector under
+  // the lock separately, so a concurrent start could invalidate the reference
+  // between them.
+  std::vector<BLEAudioStream> snapshot = _impl->streams();
+  return index < snapshot.size() ? snapshot[index] : BLEAudioStream();
 }
 
 BLEAudioStream BLEAudioCapInitiator::stream(BLEAudioStream::Direction dir, uint8_t index) const {
   if (!_impl) {
     return BLEAudioStream();
   }
-  for (const auto &s : _impl->streams()) {
+  std::vector<BLEAudioStream> snapshot = _impl->streams();
+  for (const auto &s : snapshot) {
     if (s.direction() == dir && index-- == 0) {
       return s;
     }

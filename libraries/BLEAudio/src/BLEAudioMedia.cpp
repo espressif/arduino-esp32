@@ -190,7 +190,7 @@ BLEAudioMediaPlayer BLEAudio::createMediaPlayer() {
   });
   return BLEAudioMediaPlayer(p);
 #else
-  log_e("Media player is not enabled in this build (CONFIG_BT_MCS)");
+  log_e("Media player is not enabled in this build (CONFIG_BT_MCS and CONFIG_BT_MCTL_LOCAL_PLAYER_CONTROL)");
   return BLEAudioMediaPlayer();
 #endif
 }

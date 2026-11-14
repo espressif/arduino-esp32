@@ -167,15 +167,22 @@ void onReleased(void *owner) {
 /**
  * @brief One received SDU (once per SDU interval per Rx stream).
  *
- * Hot path: the data-path tap is called straight from the raw owner, without
- * the shared_ptr lock, and the public handle is only built when the
- * application registered onReceive().
+ * Hot path: the data-path tap is called straight from the raw owner, without a
+ * std::function call. A shared_ptr lock is taken first so a teardown on another
+ * task cannot free the Impl (which frees its engine slot) while this host-task
+ * callback is running; that one atomic refcount increment per SDU is negligible
+ * next to the SDU copy.
  */
 void onRecv(void *owner, const ble_audio_recv_info_t *info, const uint8_t *data, uint16_t len) {
   auto *impl = static_cast<Impl *>(owner);
   if (!impl) {
     return;
   }
+  auto sp = impl->weak_from_this().lock();
+  if (!sp) {
+    return;
+  }
+  BLEAudioStream h = BLEAudioStreamAccess::wrap(std::move(sp));
   withTap(*impl, [&](const BLEAudioStreamTap &t) {
     if (t.recv) {
       t.recv(t.ctx, info, data, len);
@@ -196,9 +203,7 @@ void onRecv(void *owner, const ble_audio_recv_info_t *info, const uint8_t *data,
     sdu.status = static_cast<BLEAudioSduInfo::Status>(info->status);  // Same values (BLE_AUDIO_SDU_*).
     sdu.timestampValid = info->ts_valid;
   }
-  withHandle(owner, [&](Impl &, BLEAudioStream &h) {
-    cb(h, sdu, data, len);
-  });
+  cb(h, sdu, data, len);
 }
 
 /** @brief The controller released one SDU of a Tx stream (same hot-path rules as onRecv). */
@@ -207,6 +212,11 @@ void onSent(void *owner) {
   if (!impl) {
     return;
   }
+  auto sp = impl->weak_from_this().lock();
+  if (!sp) {
+    return;
+  }
+  BLEAudioStream h = BLEAudioStreamAccess::wrap(std::move(sp));
   withTap(*impl, [](const BLEAudioStreamTap &t) {
     if (t.sent) {
       t.sent(t.ctx);
@@ -218,9 +228,7 @@ void onSent(void *owner) {
     cb = impl->sentCb;
   }
   if (cb) {
-    withHandle(owner, [&](Impl &, BLEAudioStream &h) {
-      cb(h);
-    });
+    cb(h);
   }
 }
 

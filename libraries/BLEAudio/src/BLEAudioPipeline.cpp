@@ -368,11 +368,9 @@ uint8_t BLEAudioDataPath::mapChannels(Channel out[2]) const {
 }
 
 void BLEAudioDataPath::onWake(void *ctx) {
-  auto *port = static_cast<Port *>(ctx);
-  if (!port) {
-    return;
-  }
-  BLEAudioDataPath *self = port->owner;
+  // ctx is the registered Port (never NULL by construction; the deref below
+  // assumes it, so a null check here would be dead and inconsistent).
+  BLEAudioDataPath *self = static_cast<Port *>(ctx)->owner;
   if (self->gate.enter()) {
     self->notify();
     self->gate.leave();
