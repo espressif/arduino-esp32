@@ -39,6 +39,7 @@
 #if BLE_ISO_SUPPORTED
 #include "iso/BLEIso.h"
 #include "iso/BLEIsoHost.h"
+#include "iso/BLEIso.nimble.h"
 #endif
 #if BLE_GATT_SERVER_SUPPORTED
 #include "gatt/BLEGattDatabase.h"
@@ -139,12 +140,40 @@ void BLEClass::Impl::hostTask(void *param) {
 }
 
 int nimbleForwardServerGapEvent(struct ble_gap_event *event) {
+#if BLE_ISO_SUPPORTED
+  BLEIso::forwardHostGapEvent(event);
+#endif
+#if BLE_AUDIO_SUPPORTED
+  if (bleAudioForwardHostGattEvent) {
+    bleAudioForwardHostGattEvent(event);
+  }
+#endif
 #if BLE_GATT_SERVER_SUPPORTED
   if (auto hook = loadGapHook(s_serverGapEventHook)) {
     return hook(event);
   }
-#else
-  (void)event;
+#endif
+#if BLE_SMP_SUPPORTED
+  if (event) {
+    switch (event->type) {
+      case BLE_GAP_EVENT_ENC_CHANGE:
+        if (event->enc_change.status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
+          struct ble_gap_conn_desc desc;
+          if (ble_gap_conn_find(event->enc_change.conn_handle, &desc) == 0) {
+            ble_store_util_delete_peer(&desc.peer_id_addr);
+          }
+        }
+        return nimbleForwardSecurityGapEvent(event);
+      case BLE_GAP_EVENT_PASSKEY_ACTION:
+      case BLE_GAP_EVENT_PARING_COMPLETE:
+      case BLE_GAP_EVENT_REPEAT_PAIRING:
+#if defined(BLE_GAP_EVENT_AUTHORIZE)
+      case BLE_GAP_EVENT_AUTHORIZE:
+#endif
+        return nimbleForwardSecurityGapEvent(event);
+      default: break;
+    }
+  }
 #endif
   return 0;
 }

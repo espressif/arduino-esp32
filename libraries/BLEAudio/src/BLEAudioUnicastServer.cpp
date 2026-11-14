@@ -110,7 +110,7 @@ struct BLEAudioUnicastServer::Impl {
     if (sourceStreams) {
       bleAudioPacsAdd(BLE_AUDIO_DIR_SOURCE, &pac, static_cast<uint32_t>(sourceLocation), static_cast<uint16_t>(sourceContexts));
     }
-    const uint32_t pdMax = pdMaxUs ? pdMaxUs : audio->presentationDelayUs;
+    const uint32_t pdMax = pdMaxUs ? pdMaxUs : audio->presentationDelayUs.load();
     const uint32_t pdMin = pdMinUs < pdMax ? pdMinUs : pdMax;
     const ble_audio_qos_pref_t pref = {
       .rtn = 2,

@@ -228,13 +228,13 @@ BTStatus BLEAudio::end() {
     return BTStatus::Busy;
   }
   // Release role-owned advertising/scans while the host is still up. The
-  // engine deinit below only releases profiles and ISO.
+  // engine deinit below only releases profiles and ISO. Keep roleStops until
+  // deinit succeeds so a refused end() can retry them later.
   for (auto &stop : _impl->roleStops) {
     if (stop) {
       stop();
     }
   }
-  _impl->roleStops.clear();
   // NimBLE fallback clients are owned by audio; cancel a pending connect and
   // drop a live ACL before the host is deinitialized. Move them out under the
   // lock, then call into the core without holding it.
@@ -279,6 +279,7 @@ BTStatus BLEAudio::end() {
     }
     _impl->clients.clear();
   }
+  _impl->roleStops.clear();
   _impl->roleApplies.clear();
   _impl->roles.clear();
   _impl->active = false;
@@ -394,7 +395,7 @@ BLEAudio &BLEAudio::setPresentationDelay(uint32_t delayUs) {
 }
 
 uint32_t BLEAudio::getPresentationDelay() const {
-  return _impl ? _impl->presentationDelayUs : 40000u;
+  return _impl ? _impl->presentationDelayUs.load() : 40000u;
 }
 
 #endif /* BLE_AUDIO_SUPPORTED */

@@ -1332,6 +1332,12 @@ BLEAudioCapInitiator BLEAudio::createCapInitiator() {
 #endif
     return bleAudioStatus(err);
   });
+  _impl->roleStops.push_back([weak]() {
+    if (auto s = weak.lock()) {
+      (void)BLEAudioCapInitiator(s).stopBroadcast();
+      s->stopAdvertising();
+    }
+  });
   return BLEAudioCapInitiator(i);
 #else
   log_e("CapInitiator: not enabled in this build (CONFIG_BT_CAP_INITIATOR)");

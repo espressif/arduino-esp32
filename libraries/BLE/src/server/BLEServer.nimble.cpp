@@ -39,9 +39,6 @@
 #include "core/BLEAudioHooks.h"
 #include "core/BLEValidationHooks.h"
 #include "esp32-hal-log.h"
-#if BLE_ISO_SUPPORTED
-#include "iso/BLEIso.nimble.h"
-#endif
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
@@ -416,15 +413,6 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
   if (!impl) {
     return 0;
   }
-
-#if BLE_ISO_SUPPORTED
-  BLEIso::forwardHostGapEvent(event);
-#endif
-#if BLE_AUDIO_SUPPORTED
-  if (bleAudioForwardHostGattEvent) {
-    bleAudioForwardHostGattEvent(event);
-  }
-#endif
 
   switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:

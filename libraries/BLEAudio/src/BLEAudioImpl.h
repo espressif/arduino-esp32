@@ -38,6 +38,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -69,12 +70,12 @@ struct BLEAudioImplCommon {
   // State
   // --------------------------------------------------------------------------
 
-  BLESharedMutex mtx;                    ///< Protects handlers, link callbacks and clients.
-  uint32_t presentationDelayUs = 40000;  ///< Default for new roles (setPresentationDelay()).
-  LinkCallback linkReadyCb;              ///< Application onLinkReady().
-  LinkCallback disconnectedCb;           ///< Application onDisconnected().
-  bool active = false;                   ///< begin() succeeded, end() not called.
-  bool started = false;                  ///< start() succeeded.
+  BLESharedMutex mtx;                                  ///< Protects handlers, link callbacks and clients.
+  std::atomic<uint32_t> presentationDelayUs{40000};    ///< Default for new roles (setPresentationDelay()).
+  LinkCallback linkReadyCb;                            ///< Application onLinkReady().
+  LinkCallback disconnectedCb;                         ///< Application onDisconnected().
+  std::atomic<bool> active{false};                     ///< begin() succeeded, end() not called.
+  std::atomic<bool> started{false};                    ///< start() succeeded.
 
   /**
    * Staged role registrations, run in creation order by BLEAudio::start()

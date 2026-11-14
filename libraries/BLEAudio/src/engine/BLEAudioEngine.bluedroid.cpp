@@ -164,6 +164,10 @@ extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
 
 // Bluedroid registers the classic server and LE Audio as separate GATTS apps,
 // so no cross-owner GATT commit coordination is required.
+extern "C" int bleAudioHostPrepareInit(void) {
+  return 0;
+}
+
 extern "C" int bleAudioHostPrepareGatt(void) {
   return 0;
 }

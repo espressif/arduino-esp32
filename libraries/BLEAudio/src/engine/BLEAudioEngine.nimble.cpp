@@ -28,7 +28,9 @@
 #include "esp32-hal-log.h"
 
 #include <host/ble_gap.h>
+#include <host/ble_gatt.h>
 #include <host/ble_hs.h>
+#include <services/gap/ble_svc_gap.h>
 
 /**
  * @file BLEAudioEngine.nimble.cpp
@@ -115,6 +117,25 @@ extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t p
     return static_cast<int>(BTStatus::InvalidParam);
   }
   return static_cast<int>(BLE.getScan().receivePeriodicSync(conn_handle, skip, timeout_ms));
+}
+
+extern "C" int bleAudioHostPrepareInit(void) {
+#if BLE_GATT_SERVER_SUPPORTED
+  // NimBLE keeps ATT attributes and CCCD counts across audio.end() unless
+  // ble_gatts_reset() runs; if GAP or a connection is active, ble_svc_gap_init
+  // inside esp_ble_audio_common_init would otherwise panic on BLE_HS_EBUSY.
+  int rc = ble_gatts_reset();
+  if (rc != 0) {
+    log_e("Audio: NimBLE GATT table busy (advertising/scanning/connected, rc=%d)", rc);
+    return rc == BLE_HS_EBUSY ? -EBUSY : -EIO;
+  }
+  ble_gatts_free_svcs();
+  String name = BLE.getDeviceName();
+  if (name.length() > 0) {
+    (void)ble_svc_gap_device_name_set(name.c_str());
+  }
+#endif
+  return 0;
 }
 
 extern "C" int bleAudioHostPrepareGatt(void) {

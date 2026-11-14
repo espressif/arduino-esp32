@@ -179,21 +179,27 @@ void finishAudioCommit(bool success) {
   }
   auto services = snapshotServices(*sAudioServer);
   if (!success) {
-    BLELockGuard lock(sAudioServer->mtx);
-    sAudioServer->started = false;
+    clearRegistration(*sAudioServer, services);
     return;
   }
-  for (auto &svc : services) {
-    if (ble_gatts_find_svc(&svc->nimbleUUID.u, &svc->handle) != 0) {
-      svc->handle = 0;
+  {
+    BLELockGuard lock(sAudioServer->mtx);
+    for (auto &svc : services) {
+      svc->started = true;
+      if (ble_gatts_find_svc(&svc->nimbleUUID.u, &svc->handle) != 0) {
+        svc->handle = 0;
+      }
     }
+    sAudioServer->started = true;
   }
-  sAudioServer->started = true;
 }
 
 void resetAudioStaging() {
   if (sAudioServer != nullptr) {
     clearRegistration(*sAudioServer, snapshotServices(*sAudioServer));
+  }
+  if (sAudioDefsAdded && BLE.isInitialized()) {
+    ble_gatts_free_svcs();
   }
   sAudioServer = nullptr;
   sAudioDefsAdded = false;
