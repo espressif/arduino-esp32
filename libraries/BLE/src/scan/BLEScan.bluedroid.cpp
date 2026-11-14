@@ -50,6 +50,7 @@ BLEScan::Impl *BLEScan::Impl::s_instance = nullptr;
 
 namespace {
 
+constexpr uint8_t kMaxPeriodicAdvSid = 0x0F;
 constexpr uint16_t kMaxPeriodicSyncSkip = 0x01F3;
 constexpr uint16_t kMinPeriodicSyncTimeoutMs = 100;
 
@@ -584,6 +585,11 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
   // it would leave an unused `impl` reference under -Werror=unused-variable.
   if (!_impl) {
     return BTStatus::InvalidState;
+  }
+  // HCI Advertising_SID is 0..0x0F, Skip is 0..0x01F3, Sync_Timeout is 10-ms
+  // units >= 0x000A (Core Spec Vol 4, Part E, §7.8.67).
+  if (sid > kMaxPeriodicAdvSid || skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+    return BTStatus::InvalidParam;
   }
   BLEAdmissionGuard admission(_impl->nativeAdmission);
   if (!admission) {

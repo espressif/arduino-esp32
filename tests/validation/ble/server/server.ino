@@ -2184,6 +2184,42 @@ void loop() {
     bool extFullName = ext.length() >= (longName.length() + 2);
     Serial.printf("[SERVER] Phase20 adCap nameFit=%d oversizeRejected=%d extFullName=%d\n", (int)nameFit, (int)oversizeRejected, (int)extFullName);
 
+    // Broadcast Name (0x30) UTF-8 boundary truncation + 4-octet space padding:
+    //  - 126 ASCII + two 2-octet UTF-8 chars (130 B) cuts cleanly at 128 B
+    //    without slicing the char at [126..127];
+    //  - 125 ASCII + two 2-octet UTF-8 chars (129 B) drops the straddling char
+    //    at [127..128] without slicing the preceding char at [125..126];
+    //  - <4 octets is space-padded to 4 octets (BAP §3.7.2.1).
+    String utfBoundary;
+    utfBoundary.reserve(130);
+    for (int i = 0; i < 126; i++) {
+      utfBoundary += 'A';
+    }
+    utfBoundary += "\xC3\xA9\xC3\xA9";
+    BLEAdvertisementData bnBoundary(BLEAdvertisementData::EXTENDED_MAX_PAYLOAD);
+    bnBoundary.setBroadcastName(utfBoundary);
+    bool bnBoundaryOk = bnBoundary.length() == 130 && bnBoundary.data()[0] == 129 && bnBoundary.data()[1] == 0x30 &&
+                        bnBoundary.data()[128] == 0xC3 && bnBoundary.data()[129] == 0xA9;
+
+    String utfStraddle;
+    utfStraddle.reserve(129);
+    for (int i = 0; i < 125; i++) {
+      utfStraddle += 'A';
+    }
+    utfStraddle += "\xC3\xA9\xC3\xA9";
+    BLEAdvertisementData bnStraddle(BLEAdvertisementData::EXTENDED_MAX_PAYLOAD);
+    bnStraddle.setBroadcastName(utfStraddle);
+    bool bnStraddleOk = bnStraddle.length() == 129 && bnStraddle.data()[0] == 128 && bnStraddle.data()[1] == 0x30 &&
+                        bnStraddle.data()[127] == 0xC3 && bnStraddle.data()[128] == 0xA9;
+
+    BLEAdvertisementData bnPad;
+    bnPad.setBroadcastName("Hi");
+    bool bnPadOk = bnPad.length() == 6 && bnPad.data()[0] == 5 && bnPad.data()[1] == 0x30 &&
+                   memcmp(bnPad.data() + 2, "Hi  ", 4) == 0;
+    Serial.printf(
+      "[SERVER] Phase20 bcastName boundary=%d straddle=%d pad=%d\n", (int)bnBoundaryOk, (int)bnStraddleOk, (int)bnPadOk
+    );
+
     // Slave Connection Interval Range AD (0x12) encoding guard (no peer needed):
     // setPreferredParams must emit exactly [04 12 <min_lo min_hi> <max_lo max_hi>]
     // in little-endian 1.25 ms units. This is the field setMinPreferred /
@@ -4080,16 +4116,12 @@ void loop() {
       if (!l2capFullMtuServer) {
         Serial.println("[SERVER] Phase37 L2CAP init FAILED");
       } else {
-        l2capFullMtuServer.onAccept([](BLEL2CAPChannel) {
-          syncPhaseFromHost();
-          uint32_t count = l2capFullAccepts.fetch_add(1) + 1;
-          Serial.printf("[SERVER] Phase37 L2CAP channel accepted count=%lu\n", (unsigned long)count);
-        });
-        l2capFullMtuServer.onDisconnect([](BLEL2CAPChannel &) {
+        BLEL2CAPChannel acceptedChannel;
+        auto onServerChannelDisconnect = [](BLEL2CAPChannel &) {
           uint32_t count = l2capFullDisconnects.fetch_add(1) + 1;
           Serial.printf("[SERVER] Phase37 L2CAP channel disconnected count=%lu\n", (unsigned long)count);
-        });
-        l2capFullMtuServer.onData([](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
+        };
+        auto onServerChannelData = [](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
           syncPhaseFromHost();
           l2capFullRx++;
           bool match = (len == L2CAP_FULL_MTU && data[0] <= 1);
@@ -4109,7 +4141,15 @@ void loop() {
               l2capFullEchoOk++;
             }
           }
+        };
+        l2capFullMtuServer.onAccept([&acceptedChannel](BLEL2CAPChannel &ch) {
+          syncPhaseFromHost();
+          acceptedChannel = ch;
+          uint32_t count = l2capFullAccepts.fetch_add(1) + 1;
+          Serial.printf("[SERVER] Phase37 L2CAP channel accepted count=%lu\n", (unsigned long)count);
         });
+        l2capFullMtuServer.onDisconnect(onServerChannelDisconnect);
+        l2capFullMtuServer.onData(onServerChannelData);
         Serial.println("[SERVER] Phase37 L2CAP init OK");
 
         BLEAdvertising adv = BLE.getAdvertising();
@@ -4120,9 +4160,16 @@ void loop() {
         adv.start();
         Serial.println("[SERVER] Phase37 ready");
 
+        // Churn per-channel callbacks on the accepted server channel while
+        // full-MTU SDUs and the final disconnect arrive on the host task
+        // (regression for server-channel callback copying under chan->mtx).
         unsigned long waitStart = millis();
         while (l2capFullDisconnects.load() < 1 && millis() - waitStart < 30000) {
-          delay(20);
+          if (acceptedChannel) {
+            acceptedChannel.onData(onServerChannelData);
+            acceptedChannel.onDisconnect(onServerChannelDisconnect);
+          }
+          delay(2);
         }
         Serial.printf(
           "[SERVER] Phase37 result accepts=%lu rx=%lu rxOk=%lu echoOk=%lu heap=%d\n", (unsigned long)l2capFullAccepts.load(), (unsigned long)l2capFullRx,

@@ -4151,7 +4151,7 @@ void setup() {
   waitForPhase(34);
   {
     bool ble5_ok = false;
-#if BLE5_SUPPORTED
+#if BLE5_SUPPORTED && BLE_PERIODIC_ADV_SUPPORTED
     BLE.end(false);
     delay(500);
     BTStatus st = BLE.begin("BLE_CLT_P34");
@@ -4162,7 +4162,28 @@ void setup() {
       volatile bool dataRx = false;
       volatile bool lost = false;
       volatile uint16_t syncHandle = 0;
+      std::atomic<uint32_t> spuriousSyncs{0};
       BLEScan scan = BLE.getScan();
+
+      // HCI range validation (Core Spec Vol 4, Part E, §7.8.67) and cancelled-
+      // create callback suppression: failed/cancelled sync creation must never
+      // invoke onPeriodicSync.
+      static const uint8_t kBogusRaw[6] = {0x06, 0x05, 0x04, 0x03, 0x02, 0xC1};
+      BTAddress bogusAddr(kBogusRaw, BTAddress::Random);
+      bool invalidOk = scan.createPeriodicSync(bogusAddr, 0x10, 0, 1000) == BTStatus::InvalidParam &&
+                       scan.createPeriodicSync(bogusAddr, 1, 0x01F4, 1000) == BTStatus::InvalidParam &&
+                       scan.createPeriodicSync(bogusAddr, 1, 0, 50) == BTStatus::InvalidParam;
+      scan.onPeriodicSync([&spuriousSyncs](uint16_t, uint8_t, const BTAddress &, BLEPhy, uint16_t) {
+        spuriousSyncs.fetch_add(1);
+      });
+      BTStatus bogusCreate = scan.createPeriodicSync(bogusAddr, 1, 0, 200);
+      BTStatus bogusCancel = bogusCreate ? scan.cancelPeriodicSyncCreate() : BTStatus::Fail;
+      delay(150);
+      Serial.printf(
+        "[CLIENT] Phase34 precheck invalid=%d cancel=%d spurious=%lu\n", (int)invalidOk, (int)(bogusCreate && bogusCancel),
+        (unsigned long)spuriousSyncs.load()
+      );
+
       scan.onResult([&](BLEAdvertisedDevice dev) {
         syncPhaseFromHost();
         if (!found && dev.getName() == targetName) {

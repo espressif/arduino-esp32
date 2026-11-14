@@ -463,6 +463,7 @@ void BLEClass::end(bool releaseMemory) {
   if (BLEIso::isActive()) {
     log_e("BLE.end: ISO teardown did not complete; host shutdown aborted");
     BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endReleaseMemory = false;
     _impl->endTask = nullptr;
     _impl->endRunning = false;
     _impl->ending = false;
@@ -474,6 +475,7 @@ void BLEClass::end(bool releaseMemory) {
   if (!audioEndOk) {
     log_e("BLE.end: audio teardown did not complete; host shutdown aborted");
     BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endReleaseMemory = false;
     _impl->endTask = nullptr;
     _impl->endRunning = false;
     _impl->ending = false;

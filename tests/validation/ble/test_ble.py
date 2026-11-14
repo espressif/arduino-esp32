@@ -964,6 +964,13 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_cap.group(1)) == 1, "legacy AD overflowed the 31-octet cap on a too-long name"
     assert int(m_cap.group(2)) == 1, "an oversized AD field was not rejected whole (legacy cap)"
     assert int(m_cap.group(3)) == 1, "extended AD payload did not accept the full name"
+    m_bname = server.expect(
+        r"\[SERVER\] Phase20 bcastName boundary=([01]) straddle=([01]) pad=([01])",
+        timeout=10,
+    )
+    assert (
+        int(m_bname.group(1)) == 1 and int(m_bname.group(2)) == 1 and int(m_bname.group(3)) == 1
+    ), "setBroadcastName corrupted UTF-8 boundary truncation or 4-octet padding"
     m_pref = server.expect(r"\[SERVER\] Phase20 prefIntervalAD ok=([01])", timeout=10)
     assert (
         int(m_pref.group(1)) == 1
@@ -1676,6 +1683,18 @@ def _phase_periodic_adv_lifecycle(server, client):
         server.expect_exact("[SERVER] Phase34 done", timeout=15)
         client.expect_exact("[CLIENT] Phase34 done", timeout=40)
         return False
+
+    m_pre = client.expect(
+        r"\[CLIENT\] Phase34 (precheck invalid=([01]) cancel=([01]) spurious=(\d+)|BLE5 not supported, skipping)",
+        timeout=20,
+    )
+    if b"not supported" in m_pre.group(0):
+        client.expect_exact("[CLIENT] Phase34 done", timeout=15)
+        server.expect_exact("[SERVER] Phase34 done", timeout=45)
+        return False
+    assert int(m_pre.group(2)) == 1, "createPeriodicSync did not reject out-of-range sid/skip/timeoutMs with InvalidParam"
+    assert int(m_pre.group(3)) == 1, "createPeriodicSync + cancelPeriodicSyncCreate failed"
+    assert int(m_pre.group(4)) == 0, "cancelled createPeriodicSync erroneously fired onPeriodicSync"
 
     m_c = client.expect(
         r"\[CLIENT\] Phase34 (synced=([01]) dataRx=([01]) addrMatch=([01])|BLE5 not supported, skipping)",

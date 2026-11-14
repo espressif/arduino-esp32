@@ -51,6 +51,7 @@
 
 namespace {
 
+constexpr uint8_t kMaxPeriodicAdvSid = 0x0F;
 constexpr uint16_t kMaxPeriodicSyncSkip = 0x01F3;
 constexpr uint16_t kMinPeriodicSyncTimeoutMs = 100;
 
@@ -535,10 +536,15 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       return 0;
     }
 
+#if BLE_PERIODIC_ADV_SUPPORTED
     case BLE_GAP_EVENT_PERIODIC_SYNC:
     {
+      if (event->periodic_sync.status != 0) {
+        log_w("PERIODIC_SYNC failed status=%d", event->periodic_sync.status);
+        return 0;
+      }
       // Track successfully established syncs so BLE.end() can tear them down.
-      if (event->periodic_sync.status == 0) {
+      {
         BLELockGuard lock(impl->mtx);
         impl->periodicSyncs.push_back(event->periodic_sync.sync_handle);
       }
@@ -556,17 +562,19 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
     case BLE_GAP_EVENT_PERIODIC_TRANSFER_V2:
 #endif
     {
-      if (event->periodic_transfer.status == 0) {
+      if (event->periodic_transfer.status != 0) {
+        log_w("PERIODIC_TRANSFER failed status=%d", event->periodic_transfer.status);
+        return 0;
+      }
+      {
         BLELockGuard lock(impl->mtx);
         impl->periodicSyncs.push_back(event->periodic_transfer.sync_handle);
       }
-      if (impl->periodicSyncCb && event->periodic_transfer.status == 0) {
-        BTAddress addr(event->periodic_transfer.adv_addr.val, static_cast<BTAddress::Type>(event->periodic_transfer.adv_addr.type));
-        dispatchPeriodicSync(
-          impl, event->periodic_transfer.sync_handle, event->periodic_transfer.sid, addr,
-          static_cast<BLEPhy>(event->periodic_transfer.adv_phy), event->periodic_transfer.per_adv_itvl
-        );
-      }
+      BTAddress addr(event->periodic_transfer.adv_addr.val, static_cast<BTAddress::Type>(event->periodic_transfer.adv_addr.type));
+      dispatchPeriodicSync(
+        impl, event->periodic_transfer.sync_handle, event->periodic_transfer.sid, addr,
+        static_cast<BLEPhy>(event->periodic_transfer.adv_phy), event->periodic_transfer.per_adv_itvl
+      );
       return 0;
     }
 #endif
@@ -591,7 +599,8 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       dispatchPeriodicLost(impl, event->periodic_sync_lost.sync_handle);
       return 0;
     }
-#endif
+#endif /* BLE_PERIODIC_ADV_SUPPORTED */
+#endif /* BLE5_SUPPORTED */
 
     default: return 0;
   }
@@ -875,8 +884,13 @@ BTStatus BLEScan::stopExtended() {
 }
 
 BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount, uint16_t timeoutMs) {
-#if BLE5_SUPPORTED
+#if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  // HCI Advertising_SID is 0..0x0F, Skip is 0..0x01F3, Sync_Timeout is 10-ms
+  // units >= 0x000A (Core Spec Vol 4, Part E, §7.8.67).
+  if (sid > kMaxPeriodicAdvSid || skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+    return BTStatus::InvalidParam;
+  }
   BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
     return BTStatus::InvalidState;
@@ -905,7 +919,11 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
   }
   return BTStatus::OK;
 #else
-  log_w("Scan: createPeriodicSync not supported (BLE 5.0 unavailable)");
+  (void)addr;
+  (void)sid;
+  (void)skipCount;
+  (void)timeoutMs;
+  log_w("Scan: createPeriodicSync not supported (periodic adv unavailable)");
   return BTStatus::NotSupported;
 #endif
 }
@@ -984,7 +1002,7 @@ BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &peer) {
 }
 
 BTStatus BLEScan::cancelPeriodicSyncCreate() {
-#if BLE5_SUPPORTED
+#if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
@@ -997,13 +1015,13 @@ BTStatus BLEScan::cancelPeriodicSyncCreate() {
   }
   return BTStatus::OK;
 #else
-  log_w("Scan: cancelPeriodicSyncCreate not supported (BLE 5.0 unavailable)");
+  log_w("Scan: cancelPeriodicSyncCreate not supported (periodic adv unavailable)");
   return BTStatus::NotSupported;
 #endif
 }
 
 BTStatus BLEScan::terminatePeriodicSync(uint16_t syncHandle) {
-#if BLE5_SUPPORTED
+#if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
@@ -1021,7 +1039,8 @@ BTStatus BLEScan::terminatePeriodicSync(uint16_t syncHandle) {
   }
   return BTStatus::OK;
 #else
-  log_w("Scan: terminatePeriodicSync not supported (BLE 5.0 unavailable)");
+  (void)syncHandle;
+  log_w("Scan: terminatePeriodicSync not supported (periodic adv unavailable)");
   return BTStatus::NotSupported;
 #endif
 }
@@ -1030,7 +1049,7 @@ BTStatus BLEScan::terminatePeriodicSync(uint16_t syncHandle) {
 // NimBLE host is still enabled, so terminating here avoids the benign
 // BLE_HS_EDISABLED race that occurs if a sync is left active across host stop.
 void BLEScan::terminateAllPeriodicSyncs() {
-#if BLE5_SUPPORTED
+#if BLE_PERIODIC_ADV_SUPPORTED
   if (!_impl) {
     return;
   }

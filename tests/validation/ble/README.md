@@ -58,10 +58,10 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 31 | nc_reject | central rejects Numeric Comparison; pairing aborts, link stays unencrypted/unbonded |
 | 32 | passkey_entry | Passkey-entry pairing (peripheral DisplayOnly + static passkey, central KeyboardOnly) |
 | 33 | indication_busy_retry | Service Changed invalidates stale remote handles, client rediscovery restores subscriptions, and indications sent behind the stack indication are retried in order |
-| 34 | periodic_adv_lifecycle | periodic-adv terminate + supervision-timeout sync-lost transitions (BLE5) |
+| 34 | periodic_adv_lifecycle | periodic-adv parameter validation (`InvalidParam`), cancelled-create `onPeriodicSync` suppression, terminate + supervision-timeout sync-lost transitions (BLE5) |
 | 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, indication confirmation not stolen by a reserved-but-unsubmitted notification, `removeService` of a service with in-flight indications returns `Busy`, concurrent long-read/service-removal parent retention, late completion isolation after read/confirmed-write/write-command timeouts, notify flood + disconnect terminal-status ordering, BlueDroid terminal-close final-owner release serialized before host deinit (including worker-start failure), and BLEStream client-role final-owner release serialized against concurrent `BLE.end()` |
 | 36 | directed_adv_and_oob | directed high-duty advertising with a non-zero InitA (`setDirectedAddress`) connects within 1.28 s; directed `start()` without a peer is `InvalidParam`; legacy OOB (`BLE_SM_IOACT_OOB`) and OOB-SC pairing are rejected (no encryption, no bond) |
-| 37 | l2cap_full_mtu | one L2CAP CoC channel at MTU 512 with two concurrent writer tasks exchanging patterned full-MTU SDUs (regression for the server SDU pool sizing and TX mbuf ownership; packaged NimBLE `COC_MAX_NUM=1` cannot open two channels) |
+| 37 | l2cap_full_mtu | one L2CAP CoC channel at MTU 512 with two concurrent writer tasks exchanging patterned full-MTU SDUs while server-channel callbacks are concurrently re-bound (regression for server SDU pool sizing, TX mbuf ownership, and `chan->mtx` callback locking; packaged NimBLE `COC_MAX_NUM=1` cannot open two channels) |
 | 38 | memory_release | heap reclaimed on release; reinit blocked while released |
 
 Phase 20 also runs a single-device regression guard for the advertisement-data

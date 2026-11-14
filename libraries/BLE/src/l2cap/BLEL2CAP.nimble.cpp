@@ -699,15 +699,16 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
               BLELockGuard channelLock(discImpl->mtx);
               discImpl->connected = false;
               discImpl->chan = nullptr;
+              cb = discImpl->onDisconnectCb;
             }
-            finishOperationForDisconnect(discImpl.get());
-
-            cb = discImpl->onDisconnectCb;
             handle = BLEL2CAPChannelImplCommon::makeHandle(discImpl);
             server->channels.erase(it);
             break;
           }
         }
+      }
+      if (discImpl) {
+        finishOperationForDisconnect(discImpl.get());
       }
       if (cb) {
         cb(handle);
@@ -744,10 +745,13 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
         for (auto &ch : server->channels) {
           if (ch->chan == event->receive.chan) {
             chanImpl = ch;
-            cb = ch->onDataCb;
             break;
           }
         }
+      }
+      if (chanImpl) {
+        BLELockGuard channelLock(chanImpl->mtx);
+        cb = chanImpl->onDataCb;
       }
       if (cb && chanImpl) {
         BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(chanImpl);
