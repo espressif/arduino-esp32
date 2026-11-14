@@ -22,7 +22,7 @@
 #include "core/BLEGuards.h"
 #if BLE_NIMBLE
 
-#include "gatt/BLEGattDatabase.h"
+#include "gatt/BLEGattDatabase.nimble.h"
 
 #if BLE_GATT_SERVER_SUPPORTED
 

@@ -17,7 +17,7 @@
 #pragma once
 
 /**
- * @file
+ * @file BLEGattDatabase.nimble.h
  * @brief Unified GATT registration coordinator (NimBLE).
  *
  * NimBLE cannot support two independent GATT owners: two `ble_gatts_start()`
@@ -48,7 +48,7 @@
  * engine, leaves the engine itself free of any GATT-coordinator (i.e.
  * NimBLE-only) knowledge, and lets core BLE build without linking BLEAudio.
  *
- * Required ordering in audio mode (documented in AUDIO.md):
+ * Required ordering in audio mode (documented in BLEAudio/DESIGN.md):
  *   BLE.begin() -> audio.begin() (common_init) -> create/stage BLEServer
  *   services -> audio.start() (single add + commit).
  *

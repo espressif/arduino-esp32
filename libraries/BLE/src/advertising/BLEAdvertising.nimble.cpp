@@ -1260,7 +1260,7 @@ BTStatus BLEAdvertising::setPeriodicAdvData(uint8_t instance, const BLEAdvertise
   if (!om) {
     return BTStatus::NoMemory;
   }
-#if defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_ENH)
+#if BLE_PERIODIC_ADV_ENH_SUPPORTED
   struct ble_gap_periodic_adv_set_data_params params = {};
   rc = ble_gap_periodic_adv_set_data(instance, om, &params);
 #else
@@ -1299,7 +1299,7 @@ BTStatus BLEAdvertising::startPeriodicAdv(uint8_t instance) {
     }
     extInst->periodicAdvRegistered = true;
   }
-#if defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_ENH)
+#if BLE_PERIODIC_ADV_ENH_SUPPORTED
   struct ble_gap_periodic_adv_start_params params = {};
   rc = ble_gap_periodic_adv_start(instance, &params);
 #else

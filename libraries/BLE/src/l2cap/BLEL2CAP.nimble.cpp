@@ -1000,7 +1000,7 @@ bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server,
 
   // One outstanding receive buffer per channel, plus a spare so a free can
   // always be posted while another SDU is still being consumed.
-  const int numBufs = CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM + 1;
+  const int numBufs = BLE_L2CAP_COC_MAX_NUM + 1;
   const uint16_t bufSize = static_cast<uint16_t>(alignedBufSize);
   const size_t memSize = OS_MEMPOOL_SIZE(numBufs, bufSize) * sizeof(os_membuf_t);
 

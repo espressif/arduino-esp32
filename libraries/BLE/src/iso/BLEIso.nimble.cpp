@@ -67,4 +67,8 @@ void forwardHostGapEvent(struct ble_gap_event *event) {
 
 }  // namespace BLEIso
 
+extern "C" uint16_t bleIsoResolveAclHandle(uint16_t connHandle) {
+  return connHandle;
+}
+
 #endif /* BLE_NIMBLE && BLE_ISO_SUPPORTED */

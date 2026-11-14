@@ -36,6 +36,7 @@
 #if BLE_ISO_SUPPORTED
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +57,13 @@ void bleIsoAttachShared(bool attached);
 
 /** @brief GAP app event from the audio engine's callback (`esp_ble_iso_gap_app_event_t *`). */
 void bleIsoOnGapEvent(void *event);
+
+/**
+ * @brief Map a public connection handle onto the HCI ACL handle expected by `esp_ble_iso_chan_connect`.
+ *
+ * Identity on NimBLE; resolves `BLEClient` GATTC connection IDs on Bluedroid.
+ */
+uint16_t bleIsoResolveAclHandle(uint16_t connHandle);
 
 #ifdef __cplusplus
 }

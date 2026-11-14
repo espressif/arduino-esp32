@@ -55,7 +55,7 @@
  * Limits of this transport: one CIS as Central (a single-CIS CIG), one BIG as
  * Broadcaster and one BIG sync as Receiver at a time, each BIG with one BIS.
  * A Peripheral may listen on several channels, one per incoming CIS. Every
- * channel comes from a fixed pool of `CONFIG_BT_ISO_MAX_CHAN` entries.
+ * channel comes from a fixed pool of `BLE_ISO_MAX_CHAN` entries.
  *
  * May run alongside the LE Audio engine: when `BLEAudio` owns the host this
  * transport attaches to it instead of initializing ISO a second time.

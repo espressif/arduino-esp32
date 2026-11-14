@@ -103,11 +103,7 @@ struct BLEAdvertising::Impl {
 #endif
     }
   };
-#if defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES)
-  static constexpr uint8_t kMaxExtInstances = CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES + 1;
-#else
-  static constexpr uint8_t kMaxExtInstances = 2;  // instance 0 + one extended set
-#endif
+  static constexpr uint8_t kMaxExtInstances = BLE_MAX_EXT_ADV_INSTANCES;
   // On BLE5 builds the public "legacy" start()/stop() run over the extended
   // controller (the only path the ext-adv-enabled controller actually radiates).
   // The top controller instance is reserved for that

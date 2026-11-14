@@ -240,7 +240,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
     return BTStatus::OK;
   }
 
-#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+#if BLE_CONTROLLER_ENABLED
   if (btMemReleased(BT_MODE_BLE)) {
     log_e("Cannot reinitialize BLE: memory has been released");
     return BTStatus::InvalidState;

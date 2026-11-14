@@ -140,11 +140,7 @@ struct ChannelAccess {
 namespace {
 
 /** Concurrent ISO channels in the pool; matches the host's own channel limit. */
-#ifdef CONFIG_BT_ISO_MAX_CHAN
-constexpr int kMaxChan = CONFIG_BT_ISO_MAX_CHAN;
-#else
-constexpr int kMaxChan = 1;
-#endif
+constexpr int kMaxChan = BLE_ISO_MAX_CHAN;
 
 /** What a slot is used for; set by the operation that configured it. */
 enum class Kind : uint8_t {
@@ -510,7 +506,7 @@ Channel *takeChannel(const char *op, Kind reuse) {
     slot = allocSlot();
   }
   if (slot < 0) {
-    log_w("BLEIso: %s(): all %u ISO channels in use (CONFIG_BT_ISO_MAX_CHAN)", op, (unsigned)kMaxChan);
+    log_w("BLEIso: %s(): all %u ISO channels in use (BLE_ISO_MAX_CHAN)", op, (unsigned)kMaxChan);
     return nullptr;
   }
   ChannelAccess::bind(sChannels[slot], slot);
@@ -556,12 +552,6 @@ uint8_t packBroadcastCode(const String &code, uint8_t *out) {
  * A CIG left by a previous CIS is terminated first, so an idle Central slot
  * can reconnect with new QoS. Completion arrives via onChanConnected().
  */
-#if BLE_BLUEDROID
-/* GATTC conn ids are per-interface; esp_ble_iso_chan_connect() keys its ACL
- * table by the HCI connection handle (see bt_le_acl_conn_find()). */
-extern "C" uint16_t bleClientAclHandle(uint16_t connId);
-#endif
-
 esp_err_t cisConnect(int slot, uint16_t connHandle, const CisParams &p) {
   // The CIG holds this slot's channel from a previous CIS: free it before the slot is reset.
   if (sCig) {
@@ -595,9 +585,7 @@ esp_err_t cisConnect(int slot, uint16_t connHandle, const CisParams &p) {
 
   esp_ble_iso_connect_param_t connectParam = {};
   connectParam.iso_chan = &s.chan;
-#if BLE_BLUEDROID
-  connHandle = bleClientAclHandle(connHandle);
-#endif
+  connHandle = bleIsoResolveAclHandle(connHandle);
   err = esp_ble_iso_chan_connect(&connectParam, connHandle, 1);
   if (err != ESP_OK) {
     // Drop the CIG too: the caller releases the slot, whose channel it references.

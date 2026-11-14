@@ -1523,7 +1523,7 @@ BTStatus BLEAdvertising::setPeriodicAdvData(uint8_t instance, const BLEAdvertise
     return st;
   }
   impl.advSync.take();
-#if defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_ENH)
+#if BLE_PERIODIC_ADV_ENH_SUPPORTED
   esp_err_t err = esp_ble_gap_config_periodic_adv_data_raw(instance, data.length(), data.data(), false);
 #else
   esp_err_t err = esp_ble_gap_config_periodic_adv_data_raw(instance, data.length(), data.data());
@@ -1558,7 +1558,7 @@ BTStatus BLEAdvertising::startPeriodicAdv(uint8_t instance) {
     return st;
   }
   impl.advSync.take();
-#if defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_ENH)
+#if BLE_PERIODIC_ADV_ENH_SUPPORTED
   esp_err_t err = esp_ble_gap_periodic_adv_start(instance, false);
 #else
   esp_err_t err = esp_ble_gap_periodic_adv_start(instance);

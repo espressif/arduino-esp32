@@ -80,6 +80,53 @@
 
 /* ── Feature guards ─────────────────────────────────────────────────── */
 
+/* Local BLE controller present (false on ESP-Hosted targets such as ESP32-P4). */
+#if defined(SOC_BLE_SUPPORTED)
+#define BLE_LOCAL_CONTROLLER_SUPPORTED 1
+#else
+#define BLE_LOCAL_CONTROLLER_SUPPORTED 0
+#endif
+
+/* Local BT controller driver enabled in Kconfig. */
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+#define BLE_CONTROLLER_ENABLED 1
+#else
+#define BLE_CONTROLLER_ENABLED 0
+#endif
+
+/* NimBLE running over the ESP-Hosted co-processor transport. */
+#if BLE_NIMBLE && defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#define BLE_HOSTED_NIMBLE 1
+#else
+#define BLE_HOSTED_NIMBLE 0
+#endif
+
+/* Maximum concurrent BLE links configured in the stack. */
+#if defined(CONFIG_BT_MAX_CONN)
+#define BLE_MAX_CONN CONFIG_BT_MAX_CONN
+#elif BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_MAX_CONNECTIONS)
+#define BLE_MAX_CONN CONFIG_BT_NIMBLE_MAX_CONNECTIONS
+#elif BLE_BLUEDROID && defined(CONFIG_BT_ACL_CONNECTIONS)
+#define BLE_MAX_CONN CONFIG_BT_ACL_CONNECTIONS
+#else
+#define BLE_MAX_CONN 4
+#endif
+
+/* Core to which the active BT host task is pinned (-1 when unpinned). */
+#if defined(CONFIG_FREERTOS_UNICORE) && CONFIG_FREERTOS_UNICORE
+#define BLE_HOST_PINNED_TO_CORE_DEFINED 1
+#define BLE_HOST_PINNED_CORE 0
+#elif BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PINNED_TO_CORE)
+#define BLE_HOST_PINNED_TO_CORE_DEFINED 1
+#define BLE_HOST_PINNED_CORE CONFIG_BT_NIMBLE_PINNED_TO_CORE
+#elif BLE_BLUEDROID && defined(CONFIG_BT_BLUEDROID_PINNED_TO_CORE)
+#define BLE_HOST_PINNED_TO_CORE_DEFINED 1
+#define BLE_HOST_PINNED_CORE CONFIG_BT_BLUEDROID_PINNED_TO_CORE
+#else
+#define BLE_HOST_PINNED_TO_CORE_DEFINED 0
+#define BLE_HOST_PINNED_CORE (-1)
+#endif
+
 /*
  * GATT Server (GATTS).
  * NimBLE:    requires peripheral role + GATT server compiled in.
@@ -155,6 +202,21 @@
 #define BLE_PERIODIC_ADV_SUPPORTED 0
 #endif
 
+/* Enhanced periodic advertising API variants (ADI / extra start/data params). */
+#if BLE_PERIODIC_ADV_SUPPORTED && \
+  ((BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_ENH)) || (BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_ENH)))
+#define BLE_PERIODIC_ADV_ENH_SUPPORTED 1
+#else
+#define BLE_PERIODIC_ADV_ENH_SUPPORTED 0
+#endif
+
+/* Total extended-advertising controller instances (user sets + reserved legacy set). */
+#if BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES)
+#define BLE_MAX_EXT_ADV_INSTANCES (CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES + 1)
+#else
+#define BLE_MAX_EXT_ADV_INSTANCES 2
+#endif
+
 /*
  * Periodic Advertising Sync Transfer (PAST) receiver support.
  *
@@ -202,8 +264,10 @@
 /* L2CAP Connection-Oriented Channels (CoC) — NimBLE only, requires config */
 #if BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM) && (CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0)
 #define BLE_L2CAP_SUPPORTED 1
+#define BLE_L2CAP_COC_MAX_NUM CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
 #else
 #define BLE_L2CAP_SUPPORTED 0
+#define BLE_L2CAP_COC_MAX_NUM 0
 #endif
 
 /*
@@ -236,6 +300,13 @@
 #define BLE_ISO_SUPPORTED 1
 #else
 #define BLE_ISO_SUPPORTED 0
+#endif
+
+/* Concurrent ISO channels supported by the host pool. */
+#if BLE_ISO_SUPPORTED && defined(CONFIG_BT_ISO_MAX_CHAN)
+#define BLE_ISO_MAX_CHAN CONFIG_BT_ISO_MAX_CHAN
+#else
+#define BLE_ISO_MAX_CHAN 1
 #endif
 
 /*

@@ -30,7 +30,7 @@
 #include "BLE.nimble.h"
 #include "server/BLEServer.nimble.h"
 #include "gatt/BLEGattAttributes.nimble.h"
-#include "gatt/BLEGattDatabase.h"
+#include "gatt/BLEGattDatabase.nimble.h"
 #include "types/BLEConnInfo.nimble.h"
 #include "security/BLESecurity.h"
 #include "types/BLEConnInfoData.h"

@@ -42,13 +42,13 @@
 #include "iso/BLEIso.nimble.h"
 #endif
 #if BLE_GATT_SERVER_SUPPORTED
-#include "gatt/BLEGattDatabase.h"
+#include "gatt/BLEGattDatabase.nimble.h"
 #endif
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
 
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if BLE_HOSTED_NIMBLE
 #include "esp32-hal-hosted.h"
 #endif
 
@@ -57,7 +57,7 @@
 #include <cstring>
 #include <nvs_flash.h>
 
-#if SOC_BLE_SUPPORTED
+#if BLE_LOCAL_CONTROLLER_SUPPORTED
 #include <esp_bt.h>
 #endif
 
@@ -318,7 +318,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
     return BTStatus::OK;
   }
 
-#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+#if BLE_CONTROLLER_ENABLED
   if (btMemReleased(BT_MODE_BLE)) {
     log_e("Cannot reinitialize BLE: memory has been released");
     return BTStatus::InvalidState;
@@ -327,7 +327,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
 
   log_i("Initializing BLE stack: NimBLE");
 
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if BLE_HOSTED_NIMBLE
   if (!hostedInitBLE()) {
     log_e("Failed to initialize ESP-Hosted for BLE");
     return BTStatus::Fail;
@@ -608,7 +608,7 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if BLE_HOSTED_NIMBLE
   hostedDeinitBLE();
 #endif
 
@@ -621,7 +621,7 @@ void BLEClass::end(bool releaseMemory) {
     _impl->endRunning = false;
   }
   if (release) {
-#if SOC_BLE_SUPPORTED && CONFIG_BT_CONTROLLER_ENABLED
+#if BLE_LOCAL_CONTROLLER_SUPPORTED && BLE_CONTROLLER_ENABLED
     btMemRelease(BT_MODE_BLE);
 #endif
   }
@@ -871,7 +871,7 @@ const char *BLEClass::getStackName() const {
 
 // When true, begin/end and optional setPins call into the hosted co-processor path.
 bool BLEClass::isHostedBLE() const {
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if BLE_HOSTED_NIMBLE
   return true;
 #else
   return false;
@@ -882,9 +882,9 @@ bool BLEClass::isHostedBLE() const {
 // Hosted BLE pins
 // --------------------------------------------------------------------------
 
-// Only compiled with CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE; should be set before begin if the hosted transport needs reconfiguration.
+// Only compiled with BLE_HOSTED_NIMBLE; should be set before begin if the hosted transport needs reconfiguration.
 BTStatus BLEClass::setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst) {
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if BLE_HOSTED_NIMBLE
   bool ok = hostedSetPins(clk, cmd, d0, d1, d2, d3, rst);
   if (!ok) {
     log_e("setPins: hostedSetPins failed");

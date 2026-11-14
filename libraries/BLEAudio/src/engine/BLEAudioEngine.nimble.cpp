@@ -22,7 +22,7 @@
 #include "engine/BLEAudioEngine.h"
 #include "BLE.h"
 #if BLE_GATT_SERVER_SUPPORTED
-#include "gatt/BLEGattDatabase.h"
+#include "gatt/BLEGattDatabase.nimble.h"
 #endif
 #include "scan/BLEScan.h"
 #include "esp32-hal-log.h"

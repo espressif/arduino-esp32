@@ -124,7 +124,7 @@ struct BLEAdvertising::Impl {
 #endif
     }
   };
-  static constexpr uint8_t kMaxExtInstances = 2;  // instance 0 + reserved legacy set
+  static constexpr uint8_t kMaxExtInstances = BLE_MAX_EXT_ADV_INSTANCES;  // instance 0 + reserved legacy set
   static constexpr uint8_t kLegacyInstance = kMaxExtInstances - 1;
   ExtInstance extInstances[kMaxExtInstances];
 

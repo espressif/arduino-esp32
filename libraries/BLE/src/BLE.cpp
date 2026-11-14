@@ -22,7 +22,7 @@
 #include "base64.h"
 #include "esp32-hal-log.h"
 
-#if SOC_BLE_SUPPORTED
+#if BLE_LOCAL_CONTROLLER_SUPPORTED
 #include <esp_bt.h>
 #endif
 
@@ -118,7 +118,7 @@ void BLEClass::setPower(int8_t txPowerDbm) {
   if (!isInitialized()) {
     return;
   }
-#if SOC_BLE_SUPPORTED
+#if BLE_LOCAL_CONTROLLER_SUPPORTED
   esp_power_level_t level;
   if (txPowerDbm <= -12) {
     level = ESP_PWR_LVL_N12;
@@ -148,7 +148,7 @@ int8_t BLEClass::getPower() const {
   if (!isInitialized()) {
     return -128;
   }
-#if SOC_BLE_SUPPORTED
+#if BLE_LOCAL_CONTROLLER_SUPPORTED
   switch (esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_DEFAULT)) {
     case ESP_PWR_LVL_N12: return -12;
     case ESP_PWR_LVL_N9:  return -9;
