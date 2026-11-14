@@ -68,7 +68,7 @@ inline void bleAudioBump(std::atomic<uint32_t> &counter) {
 void *bleLC3DecOpen(const BLEAudioCodecConfig &cfg);
 /**
  * @brief Decode one frame, or conceal one (PLC) when @p frame is null.
- * @return PCM bytes; -(bytes needed) when @p cap is too small; 0 on error.
+ * @return PCM bytes written, or 0 on error.
  */
 int bleLC3Decode(void *dec, const uint8_t *frame, uint16_t len, int16_t *pcm, uint32_t cap);
 /** @brief Close a decoder (NULL is ignored). */

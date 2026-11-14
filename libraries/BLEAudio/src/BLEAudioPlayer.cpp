@@ -342,32 +342,17 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
    * A frame that fails to decode is concealed; if PLC fails too, silence.
    */
   size_t decode(uint8_t j, const uint8_t *frame) {
-    int got = frame ? decodeInto(j, frame) : 0;
+    const uint32_t cap = pcmCap * sizeof(int16_t);
+    int got = frame ? bleLC3Decode(dec[j], frame, octets, pcm, cap) : 0;
     if (got <= 0) {
       bleAudioBump(plc);
-      got = decodeInto(j, nullptr);
+      got = bleLC3Decode(dec[j], nullptr, 0, pcm, cap);
     }
     if (got <= 0) {
-      memset(pcm, 0, pcmCap * sizeof(int16_t));
+      memset(pcm, 0, cap);
       return pcmCap;
     }
     return (size_t)got / sizeof(int16_t);
-  }
-
-  /** One decode call; grows the PCM buffers once if the codec asks for more room. */
-  int decodeInto(uint8_t j, const uint8_t *frame) {
-    int got = bleLC3Decode(dec[j], frame, octets, pcm, pcmCap * sizeof(int16_t));
-    if (got < 0) {
-      uint32_t need = (uint32_t)(-got) / sizeof(int16_t);
-      void *grown = realloc(pcm, (size_t)need * (1 + outCh) * sizeof(int16_t));
-      if (!grown) {
-        return 0;
-      }
-      pcm = static_cast<int16_t *>(grown);
-      pcmCap = need;
-      got = bleLC3Decode(dec[j], frame, octets, pcm, pcmCap * sizeof(int16_t));
-    }
-    return got;
   }
 
   /** Tear the session down; the tap is fenced off first so it never touches freed rings. */

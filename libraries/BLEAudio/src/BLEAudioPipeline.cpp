@@ -79,9 +79,6 @@ int bleLC3Decode(void *dec, const uint8_t *frame, uint16_t len, int16_t *pcm, ui
   out.len = cap;
   esp_audio_dec_info_t info = {};
   esp_audio_err_t err = esp_lc3_dec_decode(dec, &raw, &out, &info);
-  if (err == ESP_AUDIO_ERR_BUFF_NOT_ENOUGH && out.needed_size > cap) {
-    return -static_cast<int>(out.needed_size);
-  }
   return (err == ESP_AUDIO_ERR_OK) ? static_cast<int>(out.decoded_size) : 0;
 }
 
@@ -269,27 +266,30 @@ void BLEAudioDataPath::detach() {
 // The task clears `task` itself right before deleting, which is what stop() waits for.
 void BLEAudioDataPath::entry(void *arg) {
   auto *self = static_cast<BLEAudioDataPath *>(arg);
-  self->task.store(xTaskGetCurrentTaskHandle());
+  // Wait until start() has published our TaskHandle_t into self->task so an
+  // early exit from run() can never clear self->task before start() stores it.
+  ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
   self->run(self);
-  self->task.store(nullptr);
+  self->task.store(nullptr, std::memory_order_release);
   vTaskDelete(nullptr);
 }
 
 BTStatus BLEAudioDataPath::start(const char *name) {
   if (running()) {
-    return quit.load() ? BTStatus::InvalidState : BTStatus::OK;
+    return quit.load(std::memory_order_acquire) ? BTStatus::InvalidState : BTStatus::OK;
   }
   if (!count || !run) {
     return BTStatus::InvalidState;
   }
-  quit.store(false);
+  quit.store(false, std::memory_order_release);
   gate.open();
   TaskHandle_t h = nullptr;
   if (xTaskCreatePinnedToCore(entry, name, BLE_AUDIO_CODEC_STACK, this, BLE_AUDIO_CODEC_PRIO, &h, bleAudioCodecCore()) != pdPASS) {
     gate.close();
     return BTStatus::NoMemory;
   }
-  task.store(h);
+  task.store(h, std::memory_order_release);
+  xTaskNotifyGive(h);
   return BTStatus::OK;
 }
 

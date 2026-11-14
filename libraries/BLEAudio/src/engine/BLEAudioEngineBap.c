@@ -265,12 +265,17 @@ struct ble_audio_slot {
   struct ble_audio_slot *partner; /* Opposite direction sharing the same CIS. */
   esp_ble_audio_codec_cfg_t codec_cfg;  /* Slot-owned: the engine keeps pointers to these. */
   esp_ble_audio_bap_qos_cfg_t qos_cfg;
+  ble_audio_codec_t snap_codec;         /* Decoded snapshot for cross-core codecConfig(). */
+  ble_audio_qos_t snap_qos;             /* Decoded snapshot for cross-core qos(). */
+  bool has_codec;
+  bool has_qos;
   uint8_t cfg_data[CFG_DATA_MAX];       /* Backing store of codec_cfg.data. */
   uint8_t cfg_meta[META_CTX_LEN];       /* Backing store of codec_cfg.meta. */
   uint8_t bis_data[6];                  /* Broadcast source: per-BIS channel allocation LTV. */
 };
 
 static ble_audio_slot_t s_pool[POOL_ALLOC];
+static portMUX_TYPE s_slot_mux = portMUX_INITIALIZER_UNLOCKED; /* Guards snap_codec / snap_qos. */
 static const uint8_t s_kind_limit[] = {POOL_US, POOL_UC, POOL_BSRC, POOL_BSNK}; /* Indexed by kind. */
 static ble_audio_stream_cbs_t s_cbs;  /* C++ stream callbacks (bleAudioStreamSetCallbacks). */
 #if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
@@ -299,9 +304,30 @@ static void uc_check_released(void);
  * unicast client sequencer when the slot belongs to it, then calls C++.
  */
 
+static void slot_refresh_snapshots(ble_audio_slot_t *s) {
+  ble_audio_codec_t c = {0};
+  ble_audio_qos_t q = {0};
+  const bool codec_ok = parse_cfg(BAP(s)->codec_cfg, &c);
+  const bool qos_ok = BAP(s)->qos != NULL;
+  if (qos_ok) {
+    qos_from_cfg(BAP(s)->qos, &q);
+  }
+  portENTER_CRITICAL(&s_slot_mux);
+  if (codec_ok) {
+    s->snap_codec = c;
+    s->has_codec = true;
+  }
+  if (qos_ok) {
+    s->snap_qos = q;
+    s->has_qos = true;
+  }
+  portEXIT_CRITICAL(&s_slot_mux);
+}
+
 static void op_configured(esp_ble_audio_bap_stream_t *stream, const esp_ble_audio_bap_qos_cfg_pref_t *pref) {
   (void)pref;
   ble_audio_slot_t *s = slot_of(stream);
+  slot_refresh_snapshots(s);
   if (s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
     uc_on_stream_event(s, UC_CONFIGURED);
   }
@@ -312,6 +338,7 @@ static void op_configured(esp_ble_audio_bap_stream_t *stream, const esp_ble_audi
 
 static void op_qos_set(esp_ble_audio_bap_stream_t *stream) {
   ble_audio_slot_t *s = slot_of(stream);
+  slot_refresh_snapshots(s);
   if (s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
     uc_on_stream_event(s, UC_QOS_SET);
   }
@@ -345,8 +372,9 @@ static void op_connected(esp_ble_audio_bap_stream_t *stream) {
 /* Streaming: the Tx sequence number restarts at 0 for every new stream instance. */
 static void op_started(esp_ble_audio_bap_stream_t *stream) {
   ble_audio_slot_t *s = slot_of(stream);
-  s->streaming = true;
+  slot_refresh_snapshots(s);
   s->seq = 0;
+  s->streaming = true;
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
   if (s->kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE && !s_bsrc_up) {
     bool all_bis_started = true;
@@ -404,6 +432,10 @@ static void op_released(esp_ble_audio_bap_stream_t *stream) {
   if (s->kind == BLE_AUDIO_STREAM_UNICAST_SERVER || s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
     s->bound = false;
     s->conn_handle = CONN_NONE;
+    portENTER_CRITICAL(&s_slot_mux);
+    s->has_codec = false;
+    s->has_qos = false;
+    portEXIT_CRITICAL(&s_slot_mux);
   }
   if (s_cbs.released) {
     s_cbs.released(s->owner);
@@ -467,12 +499,14 @@ void bleAudioStreamSetCallbacks(const ble_audio_stream_cbs_t *cbs) {
 
 /** @brief Reset @p s for a new owner; a broadcast source slot is Tx by construction. */
 static void slot_init(ble_audio_slot_t *s, ble_audio_stream_kind_t kind, void *owner) {
+  portENTER_CRITICAL(&s_slot_mux);
   memset(s, 0, sizeof(*s));
   s->in_use = true;
   s->kind = (uint8_t)kind;
   s->owner = owner;
   s->conn_handle = CONN_NONE;
   s->tx = (kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE);
+  portEXIT_CRITICAL(&s_slot_mux);
 #if USE_CAP_OPS
   esp_ble_audio_cap_stream_ops_register(&s->cap, &s_ops);
 #else
@@ -580,15 +614,31 @@ uint16_t bleAudioStreamConnHandle(const ble_audio_slot_t *slot) {
 }
 
 bool bleAudioStreamGetCodec(const ble_audio_slot_t *slot, ble_audio_codec_t *out) {
-  return slot && out && parse_cfg(slot->cap.bap_stream.codec_cfg, out);
+  if (slot == NULL || out == NULL) {
+    return false;
+  }
+  bool ok;
+  portENTER_CRITICAL(&s_slot_mux);
+  ok = slot->has_codec;
+  if (ok) {
+    *out = slot->snap_codec;
+  }
+  portEXIT_CRITICAL(&s_slot_mux);
+  return ok;
 }
 
 bool bleAudioStreamGetQos(const ble_audio_slot_t *slot, ble_audio_qos_t *out) {
-  if (slot == NULL || out == NULL || slot->cap.bap_stream.qos == NULL) {
+  if (slot == NULL || out == NULL) {
     return false;
   }
-  qos_from_cfg(slot->cap.bap_stream.qos, out);
-  return true;
+  bool ok;
+  portENTER_CRITICAL(&s_slot_mux);
+  ok = slot->has_qos;
+  if (ok) {
+    *out = slot->snap_qos;
+  }
+  portEXIT_CRITICAL(&s_slot_mux);
+  return ok;
 }
 
 void *bleAudioStreamCap(ble_audio_slot_t *slot) {
@@ -626,6 +676,11 @@ void *bleAudioStreamSetCodec(ble_audio_slot_t *slot, const ble_audio_codec_t *co
   }
   cfg->meta_len = build_ctx_meta(slot->cfg_meta, ESP_BLE_AUDIO_METADATA_TYPE_STREAM_CONTEXT, context ? context : ESP_BLE_AUDIO_CONTEXT_TYPE_UNSPECIFIED);
   cfg->meta = slot->cfg_meta;
+  portENTER_CRITICAL(&s_slot_mux);
+  slot->snap_codec = *codec;
+  slot->snap_codec.frames_per_sdu = codec->frames_per_sdu ? codec->frames_per_sdu : 1;
+  slot->has_codec = true;
+  portEXIT_CRITICAL(&s_slot_mux);
   return cfg;
 }
 
@@ -634,6 +689,11 @@ void *bleAudioStreamSetQos(ble_audio_slot_t *slot, const ble_audio_qos_t *qos) {
     return NULL;
   }
   qos_to_cfg(qos, &slot->qos_cfg);
+  portENTER_CRITICAL(&s_slot_mux);
+  slot->snap_qos = *qos;
+  slot->snap_qos.phy = qos->phy ? qos->phy : BLE_AUDIO_PHY_2M;
+  slot->has_qos = true;
+  portEXIT_CRITICAL(&s_slot_mux);
   return &slot->qos_cfg;
 }
 

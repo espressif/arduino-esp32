@@ -213,7 +213,6 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
 
     if (!source && !i2s.start()) {
       log_e("Recorder: I2S input could not be enabled");
-      quit.store(true);
       close();
       return false;
     }
@@ -221,7 +220,6 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
     esp_err_t timerErr = esp_timer_start_periodic(timer, intervalUs);
     if (timerErr != ESP_OK) {
       log_e("Recorder: esp_timer_start_periodic failed (%d)", timerErr);
-      quit.store(true);
       i2s.pause();
       close();
       return false;
