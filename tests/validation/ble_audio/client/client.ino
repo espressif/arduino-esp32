@@ -380,8 +380,8 @@ void setup() {
         });
         scan.startExtended(30000);
         unsigned long deadline = millis() + 28000;
-        while (millis() < deadline) {
-          delay(100);
+        while (millis() < deadline && !(isoBisClientSynced && isoBisRxCount >= 10)) {
+          delay(20);
         }
         // Leave the BIG sync up so BLE.end() must terminate it over HCI.
       } else {
@@ -614,8 +614,8 @@ void setup() {
         if (audio.start() && sink.start()) {
           Serial.println("[CLIENT] BapBroadcast scanning");
           unsigned long deadline = millis() + 45000;
-          while (millis() < deadline) {
-            delay(100);
+          while (millis() < deadline && !(bapBaseSeen && bapBcastRxCount >= 10)) {
+            delay(20);
           }
           // Leave the BIG up so BLE.end() must stop leftover BAP and wait for ISO idle.
         }

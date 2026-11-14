@@ -58,6 +58,15 @@ def _start_phase(server, client, phase_num):
     client.expect_exact(f"[CLIENT] Phase {phase_num} started", timeout=10)
 
 
+def _release_server(server):
+    """End the server's wait loop once the client has produced its result.
+
+    Timeouts on the DUT remain as ceilings; this only cuts idle time after
+    the client-driven work is already done.
+    """
+    server.write("PHASE_RELEASE\n")
+
+
 def _phase_audio_lifecycle(server, client):
     """LE Audio engine bring-up + classic-service coexistence (server-driven).
 
@@ -101,13 +110,14 @@ def _phase_iso_cis(server, client):
     into either build (the only rig that truly runs this is a dual-ISO
     esp32s31<->esp32s31 pair).
     """
-    ms = server.expect(
-        r"\[SERVER\] IsoCis (not supported|result connected=(\d+) received=(\d+) returned=(\d+) lifecycle=(\d+))",
-        timeout=60,
-    )
     mc = client.expect(
         r"\[CLIENT\] IsoCis (not supported|result connected=(\d+) sent=(\d+) received=(\d+) lifecycle=(\d+))",
         timeout=90,
+    )
+    _release_server(server)
+    ms = server.expect(
+        r"\[SERVER\] IsoCis (not supported|result connected=(\d+) received=(\d+) returned=(\d+) lifecycle=(\d+))",
+        timeout=60,
     )
     server.expect_exact("[SERVER] Phase2 iso_cis done", timeout=40)
     client.expect_exact("[CLIENT] Phase2 iso_cis done", timeout=40)
@@ -133,8 +143,9 @@ def _phase_iso_bis(server, client):
 
     Returns False (SKIP) when host ISO or BLE5 is not compiled into either build.
     """
-    ms = server.expect(r"\[SERVER\] IsoBis (not supported|result connected=(\d+) sent=(\d+) lifecycle=(\d+))", timeout=60)
     mc = client.expect(r"\[CLIENT\] IsoBis (not supported|result synced=(\d+) received=(\d+) lifecycle=(\d+))", timeout=90)
+    _release_server(server)
+    ms = server.expect(r"\[SERVER\] IsoBis (not supported|result connected=(\d+) sent=(\d+) lifecycle=(\d+))", timeout=60)
     server.expect_exact("[SERVER] Phase3 iso_bis done", timeout=40)
     client.expect_exact("[CLIENT] Phase3 iso_bis done", timeout=40)
 
@@ -212,8 +223,9 @@ def _phase_bap_broadcast(server, client):
     BIG, and counts SDUs received. Returns False (SKIP) when the LE Audio engine
     is not compiled into either build (only a dual-audio esp32s31 pair runs it).
     """
-    ms = server.expect(r"\[SERVER\] BapBroadcast (not supported|result sent=(\d+) lifecycle=(\d+))", timeout=90)
     mc = client.expect(r"\[CLIENT\] BapBroadcast (not supported|result received=(\d+) base=(\d+) lifecycle=(\d+))", timeout=120)
+    _release_server(server)
+    ms = server.expect(r"\[SERVER\] BapBroadcast (not supported|result sent=(\d+) lifecycle=(\d+))", timeout=90)
     server.expect_exact("[SERVER] Phase5 bap_broadcast done", timeout=40)
     client.expect_exact("[CLIENT] Phase5 bap_broadcast done", timeout=40)
 
@@ -242,11 +254,12 @@ def _phase_lc3_loopback(server, client):
     Returns False (SKIP) when the LC3 codec (esp_audio_codec) is not compiled
     into either build; only a dual-audio esp32s31 pair with the codec runs it.
     """
-    ms = server.expect(
-        r"\[SERVER\] LC3Loopback (not supported|result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+))", timeout=120
-    )
     mc = client.expect(
         r"\[CLIENT\] LC3Loopback (not supported|result streaming=(\d+) sent=(\d+) errors=(\d+))", timeout=120
+    )
+    _release_server(server)
+    ms = server.expect(
+        r"\[SERVER\] LC3Loopback (not supported|result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+))", timeout=120
     )
     server.expect_exact("[SERVER] Phase6 lc3_loopback done", timeout=40)
     client.expect_exact("[CLIENT] Phase6 lc3_loopback done", timeout=40)
@@ -287,8 +300,9 @@ def _phase_control_profiles(server, client):
     logged; their client-side discovery is asserted, but their deeper state
     machines are informational.
     """
-    ms = server.expect(r"\[SERVER\] ControlProfiles (not supported|result volwrites=(\d+) micmutes=(\d+) calls=(\d+))", timeout=120)
     mc = client.expect(r"\[CLIENT\] ControlProfiles (not supported|result cap=(\d+) vcp=(\d+) mic=(\d+) media=(\d+) call=(\d+))", timeout=120)
+    _release_server(server)
+    ms = server.expect(r"\[SERVER\] ControlProfiles (not supported|result volwrites=(\d+) micmutes=(\d+) calls=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase7 control_profiles done", timeout=40)
     client.expect_exact("[CLIENT] Phase7 control_profiles done", timeout=40)
 
@@ -318,7 +332,6 @@ def _phase_top_profiles(server, client):
     commander; the server reports the lock changes and the volume it received.
     Returns False (SKIP) when TMAP/GMAP are not compiled into either build.
     """
-    ms = server.expect(r"\[SERVER\] TopProfiles (not supported|result done locks=(\d+) volume=(\d+))", timeout=120)
     mc = client.expect(
         r"\[CLIENT\] TopProfiles (not supported|result tmap=(-?\d+) gmap=(-?\d+) ugt=(-?\d+))", timeout=120
     )
@@ -328,6 +341,8 @@ def _phase_top_profiles(server, client):
     )
     if b"SetControl" in msc.group(0):
         client.expect_exact("[CLIENT] Phase8 top_profiles done", timeout=40)
+    _release_server(server)
+    ms = server.expect(r"\[SERVER\] TopProfiles (not supported|result done locks=(\d+) volume=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase8 top_profiles done", timeout=40)
 
     if b"not supported" in ms.group(0) or b"not supported" in mc.group(0):
@@ -367,8 +382,9 @@ def _phase_hearing_aid(server, client):
     client is not compiled into a build (only a dual-audio esp32s31 pair with
     HAS + HAS client runs it).
     """
-    ms = server.expect(r"\[SERVER\] HearingAid (not supported|result presets=3 selects=(\d+) active=(\d+))", timeout=90)
     mc = client.expect(r"\[CLIENT\] HearingAid (not supported|result disc=(\d+) read=(\d+) switched=(\d+))", timeout=120)
+    _release_server(server)
+    ms = server.expect(r"\[SERVER\] HearingAid (not supported|result presets=3 selects=(\d+) active=(\d+))", timeout=90)
     server.expect_exact("[SERVER] Phase9 hearing_aid done", timeout=40)
     client.expect_exact("[CLIENT] Phase9 hearing_aid done", timeout=40)
 
@@ -432,12 +448,13 @@ def _phase_broadcast_assistant(server, client):
     waits for the removal notification. Returns False (SKIP) when the scan
     delegator or the assistant is not compiled into a build.
     """
-    ms = server.expect(r"\[SERVER\] BroadcastAssistant (not supported|result delegator=(\d+))", timeout=120)
     mc = client.expect(
         r"\[CLIENT\] BroadcastAssistant (not supported|result disc=(\d+) states=(\d+) scan=(\d+) "
         r"added=(\d+) state=(\d+) removed=(\d+) gone=(\d+) stops=(\d+) stopfail=(\d+) again=(\d+))",
         timeout=120,
     )
+    _release_server(server)
+    ms = server.expect(r"\[SERVER\] BroadcastAssistant (not supported|result delegator=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase11 broadcast_assistant done", timeout=40)
     client.expect_exact("[CLIENT] Phase11 broadcast_assistant done", timeout=40)
 
@@ -469,14 +486,15 @@ def _phase_cap_handover(server, client):
     must arrive on both sides of the handover. Returns False (SKIP) when CAP
     handover (client) or the acceptor roles (server) are not compiled in.
     """
-    ms = server.expect(
-        r"\[SERVER\] CapHandover (not supported|result unicast=(\d+) joined=(\d+) broadcast=(\d+) pba=(\d+))", timeout=150
-    )
     mc = client.expect(
         r"\[CLIENT\] CapHandover (not supported|result disc=(\d+) unicast=(\d+) handover=(\d+) "
         r"ucsent=(\d+) bcsent=(\d+) badho=(\d+) badafter=(\d+) ucstopped=(\d+) ucrc=(-?\d+) bcrc=(-?\d+) "
         r"hofail=(\d+) horestart=(\d+))",
         timeout=150,
+    )
+    _release_server(server)
+    ms = server.expect(
+        r"\[SERVER\] CapHandover (not supported|result unicast=(\d+) joined=(\d+) broadcast=(\d+) pba=(\d+))", timeout=150
     )
     server.expect_exact("[SERVER] Phase12 cap_handover done", timeout=40)
     client.expect_exact("[CLIENT] Phase12 cap_handover done", timeout=40)

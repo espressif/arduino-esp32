@@ -33,6 +33,7 @@ static const char STEREO_BROADCAST_CODE[] = "ArduinoStereo";
 
 String serverName;
 volatile int currentPhase = 0;
+volatile bool phaseRelease = false;  // pytest PHASE_RELEASE: client finished this phase
 
 // Phase completion flags (each phase fires once).
 bool phaseAudioDone = false;           // audio_lifecycle (phase 1)
@@ -95,6 +96,8 @@ void checkSerial() {
       buf.trim();
       if (buf == "SRV_DISC_GO") {
         bapSrvDisconnectReq = true;
+      } else if (buf == "PHASE_RELEASE") {
+        phaseRelease = true;
       } else if (buf.startsWith("START_PHASE_")) {
         int phase = buf.substring(12).toInt();
         if (phase > currentPhase) {
@@ -116,6 +119,24 @@ void checkSerial() {
 #if BLE_ISO_SUPPORTED || BLE_AUDIO_SUPPORTED
 static void syncPhaseFromHost() {
   checkSerial();
+}
+
+// Drain a leftover PHASE_RELEASE from the previous phase, then wait until
+// pytest says the client is done (or the ceiling). Timeouts stay as ceilings
+// so a stuck client still fails instead of hanging forever.
+static void waitForRelease(unsigned long timeoutMs) {
+  syncPhaseFromHost();
+  phaseRelease = false;
+  unsigned long deadline = millis() + timeoutMs;
+  while (millis() < deadline && !phaseRelease) {
+    syncPhaseFromHost();
+    delay(20);
+  }
+}
+
+static void beginPhaseWait() {
+  syncPhaseFromHost();
+  phaseRelease = false;
 }
 #endif
 
@@ -374,8 +395,9 @@ void loop() {
         // Let the client connect, establish the CIS, and stream SDUs; stream
         // back on the Peripheral-to-Central direction while the CIS is up.
         uint8_t sdu[120];
+        beginPhaseWait();
         unsigned long deadline = millis() + 25000;
-        while (millis() < deadline) {
+        while (millis() < deadline && !phaseRelease) {
           syncPhaseFromHost();
           if (isoCisConnected && cis->canSend()) {
             memset(sdu, (uint8_t)returned, sizeof(sdu));
@@ -452,8 +474,10 @@ void loop() {
 
         // The channel numbers the SDUs itself (send without a sequence number).
         uint8_t sdu[120];
+        beginPhaseWait();
         unsigned long deadline = millis() + 25000;
-        while (millis() < deadline) {
+        while (millis() < deadline && !phaseRelease) {
+          syncPhaseFromHost();
           if (isoBisConnected) {
             memset(sdu, (uint8_t)sent, sizeof(sdu));
             if (bis->send(sdu, sizeof(sdu))) {
@@ -537,11 +561,12 @@ void loop() {
           adv.addServiceUUID(SERVICE_UUID);
           adv.start();
           Serial.println("[SERVER] BapUnicast ready");
-          // Covers the client's worst case: 15 s scan + link + 15 s start +
-          // streaming, two extra connect/disconnect cycles and the server-
-          // initiated peripheral-link disconnect.
+          // Ceiling covers the client's worst case. Exit as soon as the
+          // peripheral-link disconnect (the last client-driven step) finishes
+          // or pytest releases the phase.
+          beginPhaseWait();
           unsigned long deadline = millis() + 120000;
-          while (millis() < deadline) {
+          while (millis() < deadline && !bapSrvDisconnectDone && !phaseRelease) {
             syncPhaseFromHost();
             if (bapSrvDisconnectReq && !bapSrvDisconnectDone) {
               if (bapSrvConn == 0xFFFF) {
@@ -605,11 +630,12 @@ void loop() {
         });
         if (audio.start() && source.start()) {
           Serial.println("[SERVER] BapBroadcast ready");
+          beginPhaseWait();
           unsigned long deadline = millis() + 40000;
           uint8_t sdu[40];
           uint8_t n = 0;
           BLEAudioStream src = source.stream(0);
-          while (millis() < deadline) {
+          while (millis() < deadline && !phaseRelease) {
             if (bcStreaming) {
               memset(sdu, n++, sizeof(sdu));
               if (src.write(sdu, sizeof(sdu))) {
@@ -695,11 +721,7 @@ void loop() {
             adv.setName(serverName);
             adv.start();
             Serial.println("[SERVER] LC3Loopback ready");
-            unsigned long deadline = millis() + 60000;  // client worst case, as in phase 4
-            while (millis() < deadline) {
-              syncPhaseFromHost();
-              delay(100);
-            }
+            waitForRelease(60000);
           }
           plcFrames = player.plcFrames();
           playerUnderruns = player.underruns();
@@ -775,11 +797,7 @@ void loop() {
           adv.setName(serverName);
           adv.start();
           Serial.println("[SERVER] ControlProfiles ready");
-          unsigned long deadline = millis() + 60000;  // client worst case: scan + link + 5 discoveries
-          while (millis() < deadline) {
-            syncPhaseFromHost();
-            delay(100);
-          }
+          waitForRelease(60000);
         }
         audio.end();
       }
@@ -847,11 +865,7 @@ void loop() {
           adv.start();
         }
         Serial.printf("[SERVER] TopProfiles ready registered=%d\n", (int)started);
-        unsigned long deadline = millis() + 60000;  // client worst case: scan + link + 4 discoveries + lock/unlock
-        while (millis() < deadline) {
-          syncPhaseFromHost();
-          delay(100);
-        }
+        waitForRelease(60000);
         audio.end();
       }
       Serial.printf("[SERVER] TopProfiles result done locks=%lu volume=%u\n", (unsigned long)topSetLocks, (unsigned)topVolume);
@@ -901,11 +915,7 @@ void loop() {
           adv.setName(serverName);
           adv.start();
           Serial.println("[SERVER] HearingAid ready");
-          unsigned long deadline = millis() + 35000;
-          while (millis() < deadline) {
-            syncPhaseFromHost();
-            delay(100);
-          }
+          waitForRelease(35000);
         }
         haActive = ha.getActivePreset();
         audio.end();
@@ -1013,11 +1023,7 @@ void loop() {
           adv.start();
           ready = true;
           Serial.println("[SERVER] BroadcastAssistant ready");
-          unsigned long deadline = millis() + 70000;  // client worst case is about 50 s
-          while (millis() < deadline) {
-            syncPhaseFromHost();
-            delay(100);
-          }
+          waitForRelease(70000);
         }
         audio.end();
       }
@@ -1080,11 +1086,7 @@ void loop() {
           adv.setName(serverName);
           adv.start();
           Serial.println("[SERVER] CapHandover ready");
-          unsigned long deadline = millis() + 100000;  // client worst case is about 80 s
-          while (millis() < deadline) {
-            syncPhaseFromHost();
-            delay(100);
-          }
+          waitForRelease(100000);
           sink.stop();
         }
         audio.end();

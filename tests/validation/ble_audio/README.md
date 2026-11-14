@@ -83,6 +83,9 @@ hooks close two gaps that a two-DUT bench cannot exercise:
 3. Each phase is gated by a `START_PHASE_<n>` handshake; the server acts as the
    audio source/acceptor and the client as the sink/controller
 4. Both devices report a per-phase result line that the host asserts
+5. After the client result is in, pytest sends `PHASE_RELEASE` so the server
+   can leave its wait loop instead of sitting on the worst-case ceiling. The
+   ceiling stays in place if the client never finishes.
 
 ## Notes
 
