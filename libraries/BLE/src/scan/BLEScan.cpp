@@ -212,4 +212,117 @@ void BLEScan::Results::dump() const {
   }
 }
 
+#if BLE_SCANNING_SUPPORTED
+
+void BLEScan::clearDuplicateCache() {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.duplicateKeys.clear();
+}
+
+BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
+  BLE_CHECK_IMPL(BLEScan::Results());
+  if (start(durationMs, false) != BTStatus::OK) {
+    log_e("Scan: startBlocking failed to start scan");
+    return BLEScan::Results();
+  }
+  uint32_t waitMs = (durationMs == 0) ? portMAX_DELAY : durationMs + 2000;
+  BTStatus waitSt = impl.scanSync.wait(waitMs);
+  if (waitSt != BTStatus::OK) {
+    log_w("Scan: startBlocking wait timed out");
+  }
+  BLELockGuard lock(impl.mtx);
+  return impl.results;
+}
+
+BTStatus BLEScan::stopExtended() {
+  return stop();
+}
+
+void BLEScan::prepareBackendStart() {
+  if (_impl) {
+    _impl->nativeAdmission.reopen();
+  }
+}
+
+#else /* !BLE_SCANNING_SUPPORTED */
+
+void BLEScan::clearDuplicateCache() {
+  log_w("Scanning not supported");
+}
+
+BTStatus BLEScan::start(uint32_t, bool) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BLEScan::Results BLEScan::startBlocking(uint32_t) {
+  log_w("Scanning not supported");
+  return BLEScan::Results();
+}
+
+BTStatus BLEScan::stop() {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::stopBackend() {
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::startExtended(uint32_t, const ExtScanConfig *, const ExtScanConfig *) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::stopExtended() {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::createPeriodicSync(const BTAddress &, uint8_t, uint16_t, uint16_t) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::receivePeriodicSync(uint16_t, uint16_t, uint16_t) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::receivePeriodicSync(const BLEConnInfo &, uint16_t, uint16_t) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::cancelPeriodicSyncCreate() {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEScan::terminatePeriodicSync(uint16_t) {
+  log_w("Scanning not supported");
+  return BTStatus::NotSupported;
+}
+
+void BLEScan::terminateAllPeriodicSyncs() {}
+
+void BLEScan::resetBackendEvents() {}
+
+void BLEScan::prepareBackendStart() {}
+
+void BLEScan::beginBackendShutdown() {}
+
+#endif /* BLE_SCANNING_SUPPORTED */
+
 #endif /* BLE_ENABLED */

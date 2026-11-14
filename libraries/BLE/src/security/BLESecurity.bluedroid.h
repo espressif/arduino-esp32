@@ -39,11 +39,6 @@
 struct BLESecurity::Impl : BLESecurityImplCommon {
   using KeyDist = BLESecurity::KeyDist;
 
-  bool bonding = true;
-  bool secureConnection = true;
-  KeyDist initiatorKeys = KeyDist::EncKey | KeyDist::IdKey;
-  KeyDist responderKeys = KeyDist::EncKey | KeyDist::IdKey;
-
   /// Bridges @c esp_ble_remove_bond_device (async) to the blocking public
   /// @c deleteBond / @c deleteAllBonds APIs. Signaled from
   /// @c ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT.

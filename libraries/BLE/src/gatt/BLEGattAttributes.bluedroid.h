@@ -32,7 +32,9 @@
 
 struct BLEService::Impl : BLEServiceImplCommon {};
 
-struct BLEDescriptor::Impl : BLEDescriptorImplCommon {};
+struct BLEDescriptor::Impl : BLEDescriptorImplCommon {
+  void backendInit(const BLEUUID &, BLEPermission) {}
+};
 
 struct BLECharacteristic::Impl : BLECharacteristicImplCommon {};
 

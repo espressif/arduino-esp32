@@ -85,34 +85,6 @@ BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t con
   return BTStatus::OK;
 }
 
-// The descriptor is only registered with the native stack when the GATT service is created/started, not here.
-BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermission perms, size_t maxLen) {
-  BLE_CHECK_IMPL(BLEDescriptor());
-
-  // Stage-1 validation — reject descriptors that would be inaccessible or
-  // violate the reserved-UUID access profile before the Impl is allocated.
-  if (!bleValidateDescProps(uuid, _impl->uuid, perms)) {
-    return BLEDescriptor();
-  }
-
-  auto desc = std::make_shared<BLEDescriptor::Impl>();
-  desc->uuid = uuid;
-  desc->chrOwner = _impl;
-  desc->permissions = perms;
-  desc->maxLen = maxLen;
-  desc->value.reserve(maxLen);
-  {
-    BLELockGuard lock(impl.mtx);
-    if (!impl.service) {
-      log_w("Characteristic %s: createDescriptor called while detached", impl.uuid.toString().c_str());
-      return BLEDescriptor();
-    }
-    desc->chr = _impl.get();
-    impl.descriptors.push_back(desc);
-  }
-  return BLEDescriptor(desc);
-}
-
 void BLEDescriptor::setPermissions(BLEPermission perms) {
   BLE_CHECK_IMPL();
   // Bluedroid applies descriptor permissions at GATT registration time
@@ -120,10 +92,6 @@ void BLEDescriptor::setPermissions(BLEPermission perms) {
   // permissions here.
   impl.permissions = perms;
 }
-
-#else /* !BLE_GATT_SERVER_SUPPORTED -- stubs */
-
-void BLEDescriptor::setPermissions(BLEPermission) {}
 
 #endif /* BLE_GATT_SERVER_SUPPORTED */
 

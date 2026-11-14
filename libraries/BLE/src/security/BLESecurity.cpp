@@ -143,6 +143,132 @@ bool BLESecurity::waitForAuthenticationComplete(uint32_t timeoutMs) {
   return status == BTStatus::OK;
 }
 
+bool BLESecurity::isConfigured() const {
+  if (!_impl) {
+    return false;
+  }
+  BLELockGuard lock(_impl->mtx);
+  return _impl->configuredByApp;
+}
+
+#if BLE_SMP_SUPPORTED
+
+void BLESecurity::setIOCapability(BLEIOCapability cap) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.ioCap = cap;
+  impl.configuredByApp = true;
+  impl.applySecurityParams();
+}
+
+void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool secureConnection) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.bonding = bonding;
+  impl.mitm = mitm;
+  impl.secureConnection = secureConnection;
+  impl.configuredByApp = true;
+  impl.applySecurityParams();
+}
+
+uint32_t BLESecurity::getPassKey() const {
+  if (!_impl) {
+    return 0;
+  }
+  BLELockGuard lock(_impl->mtx);
+  return _impl->passKey;
+}
+
+void BLESecurity::setInitiatorKeys(KeyDist keys) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.initiatorKeys = keys;
+  impl.applySecurityParams();
+}
+
+void BLESecurity::setResponderKeys(KeyDist keys) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.responderKeys = keys;
+  impl.applySecurityParams();
+}
+
+void BLESecurity::resetSecurity() {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.ioCap = BLEIOCapability::NoInputNoOutput;
+  impl.bonding = true;
+  impl.mitm = false;
+  impl.secureConnection = true;
+  impl.forceAuth = false;
+  impl.applySecurityParams();
+}
+
+#else /* !BLE_SMP_SUPPORTED */
+
+void BLESecurity::setIOCapability(BLEIOCapability) {
+  log_w("SMP not supported");
+}
+
+void BLESecurity::setAuthenticationMode(bool, bool, bool) {
+  log_w("SMP not supported");
+}
+
+void BLESecurity::setPassKey(bool, uint32_t) {
+  log_w("SMP not supported");
+}
+
+void BLESecurity::setStaticPassKey(uint32_t) {
+  log_w("SMP not supported");
+}
+
+void BLESecurity::setRandomPassKey() {
+  log_w("SMP not supported");
+}
+
+uint32_t BLESecurity::getPassKey() const {
+  return 0;
+}
+
+void BLESecurity::setInitiatorKeys(KeyDist) {
+  log_w("SMP not supported");
+}
+
+void BLESecurity::setResponderKeys(KeyDist) {
+  log_w("SMP not supported");
+}
+
+std::vector<BTAddress> BLESecurity::getBondedDevices() const {
+  log_w("SMP not supported");
+  return {};
+}
+
+BTStatus BLESecurity::deleteBond(const BTAddress &) {
+  log_w("SMP not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLESecurity::deleteAllBonds() {
+  log_w("SMP not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLESecurity::startSecurity(uint16_t) {
+  log_w("SMP not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLESecurity::startSecurity(const BLEConnInfo &) {
+  log_w("SMP not supported");
+  return BTStatus::NotSupported;
+}
+
+void BLESecurity::resetSecurity() {
+  log_w("SMP not supported");
+}
+
+#endif /* BLE_SMP_SUPPORTED */
+
 // The shared pairing/event hooks on BLESecurityImplCommon live in the
 // implementation layer: security/BLESecurityImpl.cpp.
 

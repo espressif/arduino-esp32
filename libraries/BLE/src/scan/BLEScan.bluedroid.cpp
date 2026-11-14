@@ -48,26 +48,6 @@ BLEScan::Impl *BLEScan::Impl::s_instance = nullptr;
 
 #include "core/BLEValidationHooks.h"
 
-namespace {
-
-constexpr uint8_t kMaxPeriodicAdvSid = 0x0F;
-constexpr uint16_t kMaxPeriodicSyncSkip = 0x01F3;
-constexpr uint16_t kMinPeriodicSyncTimeoutMs = 100;
-
-bool duplicateKeySeen(const BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
-  return std::any_of(impl.duplicateKeys.begin(), impl.duplicateKeys.end(), [&](const auto &key) {
-    return key.first == address && key.second == sid;
-  });
-}
-
-void markDuplicateKey(BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
-  if (!duplicateKeySeen(impl, address, sid)) {
-    impl.duplicateKeys.emplace_back(address, sid);
-  }
-}
-
-}  // namespace
-
 // One-shot expiry for fractional/sub-second legacy durations: stop the
 // (continuous) stack scan; SCAN_STOP_COMPLETE then dispatches onComplete and
 // gives scanSync because timerExpiryStop is set (see handleGAP).
@@ -86,16 +66,6 @@ void BLEScan::Impl::durationTimerCb(void *arg) {
     inst->timerExpiryStop = false;
     log_e("scan duration timer: esp_ble_gap_stop_scanning: %s", esp_err_to_name(err));
   }
-}
-
-// --------------------------------------------------------------------------
-// Configuration
-// --------------------------------------------------------------------------
-
-void BLEScan::clearDuplicateCache() {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.duplicateKeys.clear();
 }
 
 // --------------------------------------------------------------------------
@@ -268,27 +238,6 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
 #endif /* BLE5_SUPPORTED */
 }
 
-BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
-  BLE_CHECK_IMPL(BLEScan::Results());
-
-  BTStatus rc = start(durationMs, false);
-  if (rc != BTStatus::OK) {
-    log_e("Scan: startBlocking failed to start scan");
-    return BLEScan::Results();
-  }
-
-  // start() already armed scanSync before launching the scan, so the semaphore
-  // is drained and ready. Wait directly for the scan-completion or stop give().
-  uint32_t waitMs = (durationMs == 0) ? portMAX_DELAY : durationMs + 2000;
-  BTStatus waitSt = impl.scanSync.wait(waitMs);
-  if (waitSt != BTStatus::OK) {
-    log_w("Scan: startBlocking wait timed out");
-  }
-
-  BLELockGuard lock(impl.mtx);
-  return impl.results;
-}
-
 BTStatus BLEScan::stop() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard admission(impl.nativeAdmission);
@@ -427,14 +376,10 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
 #endif
 }
 
-BTStatus BLEScan::stopExtended() {
-  return stop();
-}
-
 BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, uint16_t timeoutMs) {
 #if BLE_PAST_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+  if (!BLEScanImplCommon::pastParamsValid(skipCount, timeoutMs)) {
     return BTStatus::InvalidParam;
   }
   BLEAdmissionGuard admission(impl.nativeAdmission);
@@ -462,7 +407,7 @@ BTStatus BLEScan::receivePeriodicSync(const BLEConnInfo &peer, uint16_t skipCoun
   if (!(bool)peer) {
     return BTStatus::NotConnected;
   }
-  if (skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+  if (!BLEScanImplCommon::pastParamsValid(skipCount, timeoutMs)) {
     return BTStatus::InvalidParam;
   }
   BLEAdmissionGuard admission(impl.nativeAdmission);
@@ -490,7 +435,7 @@ BTStatus BLEScan::Impl::setPeriodicSyncTransferParams(uint16_t connHandle, const
   if (!peerAddress) {
     return BTStatus::NotConnected;
   }
-  if (skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+  if (!BLEScanImplCommon::pastParamsValid(skipCount, timeoutMs)) {
     return BTStatus::InvalidParam;
   }
 
@@ -588,7 +533,7 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
   }
   // HCI Advertising_SID is 0..0x0F, Skip is 0..0x01F3, Sync_Timeout is 10-ms
   // units >= 0x000A (Core Spec Vol 4, Part E, §7.8.67).
-  if (sid > kMaxPeriodicAdvSid || skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+  if (!BLEScanImplCommon::periodicSyncParamsValid(sid, skipCount, timeoutMs)) {
     return BTStatus::InvalidParam;
   }
   BLEAdmissionGuard admission(_impl->nativeAdmission);
@@ -683,12 +628,6 @@ void BLEScan::terminateAllPeriodicSyncs() {
 }
 
 void BLEScan::resetBackendEvents() {}
-
-void BLEScan::prepareBackendStart() {
-  if (_impl) {
-    _impl->nativeAdmission.reopen();
-  }
-}
 
 void BLEScan::beginBackendShutdown() {
   if (!_impl) {
@@ -800,7 +739,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
               const uint8_t *scanRsp = param->scan_rst.ble_adv + param->scan_rst.adv_data_len;
               for (const auto &existing : inst->results) {
                 if (existing.getAddress() == addr && existing.getAdvSID() == 0xFF) {
-                  duplicate = inst->filterDuplicates && duplicateKeySeen(*inst, addr, 0xFF)
+                  duplicate = inst->filterDuplicates && inst->duplicateKeySeen(addr, 0xFF)
                               && BLEScanImplCommon::sameScanResponsePayload(existing, scanRsp, param->scan_rst.scan_rsp_len);
                   break;
                 }
@@ -808,7 +747,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
               if (!duplicate) {
                 found = BLEScanImplCommon::mergeScanResponse(inst->results, addr, 0xFF, scanRsp, param->scan_rst.scan_rsp_len, param->scan_rst.rssi, merged);
                 if (found && inst->filterDuplicates) {
-                  markDuplicateKey(*inst, addr, 0xFF);
+                  inst->markDuplicateKey(addr, 0xFF);
                 }
                 cb = inst->onResultCb;
               } else {
@@ -872,7 +811,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
               // Suppress only byte-identical reports. Same-length primary or
               // scan-response updates are fresh data, not duplicates.
               if (inst->filterDuplicates) {
-                const bool keySeen = duplicateKeySeen(*inst, dev.getAddress(), dev.getAdvSID());
+                const bool keySeen = inst->duplicateKeySeen(dev.getAddress(), dev.getAdvSID());
                 for (const auto &existing : inst->results) {
                   if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
                     isDuplicate = keySeen && BLEScanImplCommon::samePayload(existing, dev);
@@ -885,7 +824,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
                 // Dispatch the winning (possibly preserved cached) entry.
                 dev = inst->results.appendOrReplace(dev);
                 if (inst->filterDuplicates) {
-                  markDuplicateKey(*inst, dev.getAddress(), dev.getAdvSID());
+                  inst->markDuplicateKey(dev.getAddress(), dev.getAdvSID());
                 }
                 resultCb = inst->onResultCb;
               }
@@ -997,7 +936,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
           BLELockGuard lock(inst->mtx);
           for (const auto &existing : inst->results) {
             if (existing.getAddress() == addr && existing.getAdvSID() == r.sid) {
-              duplicate = inst->filterDuplicates && duplicateKeySeen(*inst, addr, r.sid)
+              duplicate = inst->filterDuplicates && inst->duplicateKeySeen(addr, r.sid)
                           && BLEScanImplCommon::sameScanResponsePayload(existing, r.adv_data, r.adv_data_len);
               break;
             }
@@ -1005,7 +944,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
           if (!duplicate) {
             found = BLEScanImplCommon::mergeScanResponse(inst->results, addr, r.sid, r.adv_data, r.adv_data_len, r.rssi, merged);
             if (found && inst->filterDuplicates) {
-              markDuplicateKey(*inst, addr, r.sid);
+              inst->markDuplicateKey(addr, r.sid);
             }
             cb = inst->onResultCb;
           } else {
@@ -1046,7 +985,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
       {
         BLELockGuard lock(inst->mtx);
         if (inst->filterDuplicates) {
-          const bool keySeen = duplicateKeySeen(*inst, dev.getAddress(), dev.getAdvSID());
+          const bool keySeen = inst->duplicateKeySeen(dev.getAddress(), dev.getAdvSID());
           // Match appendOrReplace: distinct advertising sets from one address
           // (different SIDs) are not duplicates of each other.
           for (const auto &existing : inst->results) {
@@ -1059,7 +998,7 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
         if (!isDuplicate) {
           dev = inst->results.appendOrReplace(dev);
           if (inst->filterDuplicates) {
-            markDuplicateKey(*inst, dev.getAddress(), dev.getAdvSID());
+            inst->markDuplicateKey(dev.getAddress(), dev.getAdvSID());
           }
           resultCb = inst->onResultCb;
         }
@@ -1167,82 +1106,6 @@ void BLEScan::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     default: break;
   }
 }
-
-#else /* !BLE_SCANNING_SUPPORTED -- stubs */
-
-#include "BLE.h"
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_SCANNING_SUPPORTED == 0: log; start* return NotSupported or empty results/scan.
-
-void BLEScan::clearDuplicateCache() {}
-
-BTStatus BLEScan::start(uint32_t, bool) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BLEScan::Results BLEScan::startBlocking(uint32_t) {
-  log_w("Scanning not supported");
-  return BLEScan::Results();
-}
-
-BTStatus BLEScan::stop() {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::stopBackend() {
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::startExtended(uint32_t, const ExtScanConfig *, const ExtScanConfig *) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::stopExtended() {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::createPeriodicSync(const BTAddress &, uint8_t, uint16_t, uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::receivePeriodicSync(uint16_t, uint16_t, uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::cancelPeriodicSyncCreate() {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::terminatePeriodicSync(uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-void BLEScan::terminateAllPeriodicSyncs() {}
-
-void BLEScan::resetBackendEvents() {}
-
-void BLEScan::prepareBackendStart() {}
-
-void BLEScan::beginBackendShutdown() {}
 
 #endif /* BLE_SCANNING_SUPPORTED */
 

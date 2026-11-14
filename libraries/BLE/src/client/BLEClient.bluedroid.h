@@ -60,10 +60,7 @@ struct BLEClient::Impl : BLEClientImplCommon {
   std::atomic<bool> secAuthenticated{false};
   std::atomic<bool> secBonded{false};
 
-  BLESync regSync{"regSync"};                // For blocking GATTC app registration
-  BLESync connectSync{"connectSync"};        // For blocking connect
-  BLESync disconnectSync{"disconnectSync"};  // For blocking disconnect
-  BLESync discoverSync{"discoverSync"};      // For blocking service discovery
+  BLESync regSync{"regSync"};  // For blocking GATTC app registration
   // Only one GATT read/write can be in-flight per client at a time because
   // Bluedroid delivers completions without a per-characteristic token.
   BLESync readSync{"readSync"};
@@ -74,7 +71,6 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // cannot replace the pending handle/sync state while another is waiting.
   StaticSemaphore_t gattOpMtxStorage{};
   SemaphoreHandle_t gattOpMtx = xSemaphoreCreateRecursiveMutexStatic(&gattOpMtxStorage);
-  BLESync mtuSync{"mtuSync"};    // For MTU exchange
   BLESync rssiSync{"rssiSync"};  // For RSSI read
 #if BLE5_SUPPORTED
   // Bridges async GAP PHY/DLE completions to the blocking public setPhy/getPhy/setDataLen APIs.

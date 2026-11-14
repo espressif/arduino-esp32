@@ -24,6 +24,7 @@
 #include "core/BLEImplHelpers.h"
 #include "core/BLEMutex.h"
 #include "gatt/BLEService.h"
+#include "gatt/BLECharacteristicValidation.h"
 #include "esp32-hal-log.h"
 
 /**
@@ -380,6 +381,31 @@ BTStatus BLECharacteristic::indicate(const uint8_t *data, size_t length) {
 BTStatus BLECharacteristic::indicate(uint16_t connHandle, const uint8_t *data, size_t length) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   return impl.sendToConnection(connHandle, data, length, /*indicate=*/true, sendIndicateAdapter);
+}
+
+BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermission perms, size_t maxLen) {
+  BLE_CHECK_IMPL(BLEDescriptor());
+  if (!bleValidateDescProps(uuid, impl.uuid, perms)) {
+    return BLEDescriptor();
+  }
+
+  auto desc = std::make_shared<BLEDescriptor::Impl>();
+  desc->uuid = uuid;
+  desc->chrOwner = _impl;
+  desc->permissions = perms;
+  desc->maxLen = maxLen;
+  desc->backendInit(uuid, perms);
+  desc->value.reserve(maxLen);
+  {
+    BLELockGuard lock(impl.mtx);
+    if (!impl.service) {
+      log_w("Characteristic %s: createDescriptor called while detached", impl.uuid.toString().c_str());
+      return BLEDescriptor();
+    }
+    desc->chr = &impl;
+    impl.descriptors.push_back(desc);
+  }
+  return BLEDescriptor(desc);
 }
 
 void BLECharacteristic::setDescription(const String &desc) {

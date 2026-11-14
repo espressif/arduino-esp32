@@ -822,8 +822,8 @@ BTStatus BLEServer::updateConnParams(uint16_t connHandle, const BLEConnParams &p
   return BTStatus::OK;
 }
 
-BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
 #if BLE5_SUPPORTED
+BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   esp_bd_addr_t bda;
   {
@@ -843,19 +843,11 @@ BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
     return BTStatus::Fail;
   }
   return impl.phySync.wait(2000);
-#else
-  (void)connHandle;
-  (void)txPhy;
-  (void)rxPhy;
-  log_w("%s not supported on Bluedroid (BLE 5.0 unavailable)", __func__);
-  return BTStatus::NotSupported;
-#endif
 }
 
 BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) const {
   txPhy = BLEPhy::PHY_1M;
   rxPhy = BLEPhy::PHY_1M;
-#if BLE5_SUPPORTED
   if (!_impl) {
     return BTStatus::InvalidState;
   }
@@ -883,12 +875,8 @@ BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) co
     rxPhy = impl.pendingRxPhy;
   }
   return st;
-#else
-  (void)connHandle;
-  log_w("%s not supported on Bluedroid (BLE 5.0 unavailable)", __func__);
-  return BTStatus::NotSupported;
-#endif
 }
+#endif
 
 // Bluedroid's set_pkt_data_len takes only tx octets; txTime is accepted for API parity and ignored.
 BTStatus BLEServer::setDataLen(uint16_t connHandle, uint16_t txOctets, uint16_t /*txTime*/) {
@@ -1936,52 +1924,9 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
   return BTStatus::OK;
 }
 
-#else /* !BLE_GATT_SERVER_SUPPORTED -- stubs */
+#else /* !BLE_GATT_SERVER_SUPPORTED -- backend hook stub */
 
-#include "BLE.h"
 #include "core/BLEBackend.h"
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_SERVER_SUPPORTED == 0: log; return NotSupported, 0, or empty. getPhy() may not
-// set out-parameters; check return or initialize.
-
-BTStatus BLEServer::start() {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::disconnect(uint16_t, uint8_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-uint16_t BLEServer::getPeerMTU(uint16_t) const {
-  return 0;
-}
-
-BTStatus BLEServer::updateConnParams(uint16_t, const BLEConnParams &) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::setPhy(uint16_t, BLEPhy, BLEPhy) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::getPhy(uint16_t, BLEPhy &, BLEPhy &) const {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::setDataLen(uint16_t, uint16_t, uint16_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-int BLEServer::handleGapEvent(void *) {
-  return 0;
-}
 
 BTStatus bleServerRemoveService(BLEServer::Impl *, std::shared_ptr<BLEService::Impl>) {
   return BTStatus::NotSupported;

@@ -21,20 +21,12 @@
 #include "core/BLEGuards.h"
 #if BLE_NIMBLE
 
-#include "advertising/BLEAdvertising.h"
-#include "BTAddress.h"
+#include "advertising/BLEAdvertisingImpl.h"
 
 #include <host/ble_gap.h>
-#include "core/BLEMutex.h"
-#include "core/BLEAdmission.h"
 #include <atomic>
-#include <vector>
 
-// BLEAdvertising is entirely NimBLE-specific (no cross-backend shared state), so
-// BLEAdvertising::Impl is defined directly here (a .nimble.* file) with no common base.
-struct BLEAdvertising::Impl {
-  BLEAdmissionGate nativeAdmission;
-  std::atomic<bool> isAdvertising{false};
+struct BLEAdvertising::Impl : BLEAdvertisingImplCommon {
   // Duration of the current legacy session, kept so a stack-preempted set
   // (ADV_COMPLETE / BLE_HS_EPREEMPTED) resumes with the same limit.
   uint32_t legacyDurationMs = 0;
@@ -43,44 +35,21 @@ struct BLEAdvertising::Impl {
   // pending preemption-resume cannot restart a session the app canceled.
   std::atomic<uint32_t> advSession{0};
   bool scanResponseEnabled = true;
-  bool includeTxPower = false;
-  uint16_t appearance = 0;
-  uint16_t minInterval = 0x20;
-  uint16_t maxInterval = 0x40;
-  uint16_t minPreferred = 0;
-  uint16_t maxPreferred = 0;
-  BLEAdvType advType = BLEAdvType::ConnectableScannable;
-  BTAddress directedPeer;
   uint8_t filterPolicy = 0;
 
-  std::vector<BLEUUID> serviceUUIDs;
   String deviceName;
   BLEAdvertisementData customAdvData;
   BLEAdvertisementData customScanRspData;
   bool useCustomAdvData = false;
   bool useCustomScanRsp = false;
 
-  BLEAdvertising::CompleteHandler onCompleteCb = nullptr;
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
-
-  ~Impl() {
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
-  }
-
   static int gapEventCallback(struct ble_gap_event *event, void *arg);
 
 #if BLE5_SUPPORTED
-  // --- BLE5 extended / periodic advertising (TX) per-instance state ---
-  // Setters accumulate parameters here; the controller instance is (re)configured
-  // lazily on the first data/start call after a parameter change, because NimBLE
-  // requires ble_gap_ext_adv_configure() to run before set_data()/start().
   struct ExtInstance {
     bool slotInitialized = false;
     bool extAdvRegistered = false;
     std::atomic<bool> isAdvertising{false};
-    // Session limits of the current start, for preempt resume (see Impl).
     uint32_t durationMs = 0;
     int64_t sessionDeadlineUs = 0;
     uint8_t maxEvents = 0;
@@ -104,25 +73,11 @@ struct BLEAdvertising::Impl {
     }
   };
   static constexpr uint8_t kMaxExtInstances = BLE_MAX_EXT_ADV_INSTANCES;
-  // On BLE5 builds the public "legacy" start()/stop() run over the extended
-  // controller (the only path the ext-adv-enabled controller actually radiates).
-  // The top controller instance is reserved for that
-  // legacy-PDU set so it can broadcast concurrently with user extended sets
-  // (setExt*/startExtended, which are clamped to instances below it). On S3
-  // (kMaxExtInstances == 2) this leaves instance 0 for one user extended set.
   static constexpr uint8_t kLegacyInstance = kMaxExtInstances - 1;
   ExtInstance extInstances[kMaxExtInstances];
 
-  // Returns the per-instance slot (lazily initialized with sane defaults), or
-  // nullptr when @p instance is out of range (>= kLegacyInstance, the reserved
-  // legacy set). Marks the slot dirty so the next data/start call reconfigures
-  // the controller.
   ExtInstance *extInstanceAt(uint8_t instance);
-  // Pushes the accumulated params to the controller (ble_gap_ext_adv_configure).
-  // Returns a NimBLE rc (0 == success). Idempotent: skips when already configured.
   int extEnsureConfigured(uint8_t instance);
-  // Configure + set data + start the reserved legacy-PDU instance over the
-  // extended controller API. Returns a NimBLE rc (0 == success).
   int startLegacyViaExtAdv(uint32_t durationMs);
 #endif
 };

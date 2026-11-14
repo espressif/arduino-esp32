@@ -345,36 +345,9 @@ static uint8_t mapDescriptorAttFlags(BLEPermission perms) {
   return flags;
 }
 
-BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermission perms, size_t maxLen) {
-  BLE_CHECK_IMPL(BLEDescriptor());
-
-  // Stage-1 validation before we spend memory allocating the descriptor;
-  // a rejected spec gets logged and the caller receives an empty handle.
-  if (!bleValidateDescProps(uuid, _impl->uuid, perms)) {
-    return BLEDescriptor();
-  }
-
-  auto desc = std::make_shared<BLEDescriptor::Impl>();
-  desc->uuid = uuid;
-  desc->chrOwner = _impl;
-  desc->permissions = perms;
-  desc->maxLen = maxLen;
-  nimbleUuidFromPublic(uuid, desc->nimbleUUID);
-
-  desc->attFlags = mapDescriptorAttFlags(perms);
-  desc->value.reserve(maxLen);
-
-  {
-    BLELockGuard lock(impl.mtx);
-    if (!impl.service) {
-      log_w("Characteristic %s: createDescriptor called while detached", impl.uuid.toString().c_str());
-      return BLEDescriptor();
-    }
-    desc->chr = _impl.get();
-    impl.descriptors.push_back(desc);
-  }
-
-  return BLEDescriptor(desc);
+void BLEDescriptor::Impl::backendInit(const BLEUUID &u, BLEPermission perms) {
+  nimbleUuidFromPublic(u, nimbleUUID);
+  attFlags = mapDescriptorAttFlags(perms);
 }
 
 // --------------------------------------------------------------------------
@@ -590,12 +563,6 @@ void BLEDescriptor::setPermissions(BLEPermission perms) {
   // reason about logical permissions after a post-creation mutation.
   impl.attFlags = mapDescriptorAttFlags(perms);
   impl.permissions = perms;
-}
-
-#else /* !BLE_GATT_SERVER_SUPPORTED -- stubs */
-
-void BLEDescriptor::setPermissions(BLEPermission) {
-  log_w("GATT server not supported");
 }
 
 #endif /* BLE_GATT_SERVER_SUPPORTED */

@@ -51,22 +51,6 @@
 
 namespace {
 
-constexpr uint8_t kMaxPeriodicAdvSid = 0x0F;
-constexpr uint16_t kMaxPeriodicSyncSkip = 0x01F3;
-constexpr uint16_t kMinPeriodicSyncTimeoutMs = 100;
-
-bool duplicateKeySeen(const BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
-  return std::any_of(impl.duplicateKeys.begin(), impl.duplicateKeys.end(), [&](const auto &key) {
-    return key.first == address && key.second == sid;
-  });
-}
-
-void markDuplicateKey(BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
-  if (!duplicateKeySeen(impl, address, sid)) {
-    impl.duplicateKeys.emplace_back(address, sid);
-  }
-}
-
 /**
  * @brief Invokes the per-result callback with a discovered device, if set.
  * @param impl Scan implementation that holds callbacks and state.
@@ -348,7 +332,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           // Legacy PDUs carry no ADI; match the legacy entry (SID 0xFF).
           for (const auto &existing : impl->results) {
             if (existing.getAddress() == addr && existing.getAdvSID() == 0xFF) {
-              duplicate = impl->filterDuplicates && duplicateKeySeen(*impl, addr, 0xFF)
+              duplicate = impl->filterDuplicates && impl->duplicateKeySeen(addr, 0xFF)
                           && BLEScanImplCommon::sameScanResponsePayload(existing, event->disc.data, event->disc.length_data);
               break;
             }
@@ -356,7 +340,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           if (!duplicate) {
             found = BLEScanImplCommon::mergeScanResponse(impl->results, addr, 0xFF, event->disc.data, event->disc.length_data, event->disc.rssi, merged);
             if (found && impl->filterDuplicates) {
-              markDuplicateKey(*impl, addr, 0xFF);
+              impl->markDuplicateKey(addr, 0xFF);
             }
           } else {
             found = true;
@@ -378,7 +362,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       {
         BLELockGuard lock(impl->mtx);
         if (impl->filterDuplicates) {
-          const bool keySeen = duplicateKeySeen(*impl, dev.getAddress(), dev.getAdvSID());
+          const bool keySeen = impl->duplicateKeySeen(dev.getAddress(), dev.getAdvSID());
           for (const auto &existing : impl->results) {
             if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
               duplicate = keySeen && BLEScanImplCommon::samePrimaryPayload(existing, dev);
@@ -389,7 +373,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         if (!duplicate) {
           dev = impl->results.appendOrReplace(dev);
           if (impl->filterDuplicates) {
-            markDuplicateKey(*impl, dev.getAddress(), dev.getAdvSID());
+            impl->markDuplicateKey(dev.getAddress(), dev.getAdvSID());
           }
         }
       }
@@ -485,14 +469,14 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           for (const auto &existing : impl->results) {
             if (existing.getAddress() == addr && existing.getAdvSID() == d.sid) {
               duplicate =
-                impl->filterDuplicates && duplicateKeySeen(*impl, addr, d.sid) && BLEScanImplCommon::sameScanResponsePayload(existing, d.data, d.length_data);
+                impl->filterDuplicates && impl->duplicateKeySeen(addr, d.sid) && BLEScanImplCommon::sameScanResponsePayload(existing, d.data, d.length_data);
               break;
             }
           }
           if (!duplicate) {
             found = BLEScanImplCommon::mergeScanResponse(impl->results, addr, d.sid, d.data, d.length_data, d.rssi, merged);
             if (found && impl->filterDuplicates) {
-              markDuplicateKey(*impl, addr, d.sid);
+              impl->markDuplicateKey(addr, d.sid);
             }
           } else {
             found = true;
@@ -515,7 +499,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       {
         BLELockGuard lock(impl->mtx);
         if (impl->filterDuplicates) {
-          const bool keySeen = duplicateKeySeen(*impl, dev.getAddress(), dev.getAdvSID());
+          const bool keySeen = impl->duplicateKeySeen(dev.getAddress(), dev.getAdvSID());
           for (const auto &existing : impl->results) {
             if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
               duplicate = keySeen && BLEScanImplCommon::samePrimaryPayload(existing, dev);
@@ -526,7 +510,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         if (!duplicate) {
           dev = impl->results.appendOrReplace(dev);
           if (impl->filterDuplicates) {
-            markDuplicateKey(*impl, dev.getAddress(), dev.getAdvSID());
+            impl->markDuplicateKey(dev.getAddress(), dev.getAdvSID());
           }
         }
       }
@@ -668,12 +652,6 @@ static BTStatus nimbleStartScanSession(BLEScan::Impl &impl, uint32_t durationMs,
   return BTStatus::OK;
 }
 
-void BLEScan::clearDuplicateCache() {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.duplicateKeys.clear();
-}
-
 static BTStatus nimbleStopScanSession(BLEScan::Impl &impl);
 
 BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
@@ -716,17 +694,6 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
     }
   }
   return BTStatus::OK;
-}
-
-// Blocks until the scan completes or times out; completion is gated by the internal sync object.
-BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
-  BLE_CHECK_IMPL(BLEScan::Results());
-  if (start(durationMs, false) != BTStatus::OK) {
-    return BLEScan::Results();
-  }
-  impl.scanSync.wait(durationMs == 0 ? portMAX_DELAY : durationMs + 2000);
-  BLELockGuard lock(impl.mtx);
-  return impl.results;
 }
 
 static BTStatus nimbleStopScanSession(BLEScan::Impl &impl) {
@@ -878,17 +845,12 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
 #endif
 }
 
-// Delegates to stop() on NimBLE.
-BTStatus BLEScan::stopExtended() {
-  return stop();
-}
-
 BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount, uint16_t timeoutMs) {
 #if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   // HCI Advertising_SID is 0..0x0F, Skip is 0..0x01F3, Sync_Timeout is 10-ms
   // units >= 0x000A (Core Spec Vol 4, Part E, §7.8.67).
-  if (sid > kMaxPeriodicAdvSid || skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+  if (!BLEScanImplCommon::periodicSyncParamsValid(sid, skipCount, timeoutMs)) {
     return BTStatus::InvalidParam;
   }
   BLEAdmissionGuard publisher(impl.nativeAdmission);
@@ -934,7 +896,7 @@ BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, u
   // HCI skip is at most 0x01F3; the sync timeout is 10-ms units, so reject
   // values below one valid unit before converting. uint16_t milliseconds
   // cannot exceed the HCI upper timeout bound after conversion.
-  if (skipCount > kMaxPeriodicSyncSkip || timeoutMs < kMinPeriodicSyncTimeoutMs) {
+  if (!BLEScanImplCommon::pastParamsValid(skipCount, timeoutMs)) {
     return BTStatus::InvalidParam;
   }
   BLEAdmissionGuard publisher(impl.nativeAdmission);
@@ -1097,12 +1059,6 @@ void BLEScan::resetBackendEvents() {
   }
 }
 
-void BLEScan::prepareBackendStart() {
-  if (_impl) {
-    _impl->nativeAdmission.reopen();
-  }
-}
-
 void BLEScan::beginBackendShutdown() {
   if (!_impl) {
     return;
@@ -1121,77 +1077,6 @@ void BLEScan::beginBackendShutdown() {
     _impl->scanSync.give(stopStatus);
   }
 }
-
-#else /* !BLE_SCANNING_SUPPORTED -- stubs */
-
-// Stubs for BLE_SCANNING_SUPPORTED == 0: log; start* return NotSupported or empty results/scan.
-
-void BLEScan::clearDuplicateCache() {
-  log_w("Scanning not supported");
-}
-
-BTStatus BLEScan::start(uint32_t, bool) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BLEScan::Results BLEScan::startBlocking(uint32_t) {
-  log_w("Scanning not supported");
-  return BLEScan::Results();
-}
-
-BTStatus BLEScan::stop() {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::startExtended(uint32_t, const ExtScanConfig *, const ExtScanConfig *) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::stopExtended() {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::createPeriodicSync(const BTAddress &, uint8_t, uint16_t, uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::receivePeriodicSync(uint16_t, uint16_t, uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::cancelPeriodicSyncCreate() {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::terminatePeriodicSync(uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-void BLEScan::terminateAllPeriodicSyncs() {}
-
-void BLEScan::resetBackendEvents() {}
-
-void BLEScan::prepareBackendStart() {}
-
-void BLEScan::beginBackendShutdown() {}
 
 #endif /* BLE_SCANNING_SUPPORTED */
 

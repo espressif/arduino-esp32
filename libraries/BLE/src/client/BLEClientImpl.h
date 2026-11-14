@@ -32,6 +32,7 @@
 #include "client/BLEClient.h"
 #include "remote/BLERemoteService.h"
 #include "core/BLEMutex.h"
+#include "core/BLESync.h"
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -50,6 +51,10 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   std::vector<std::shared_ptr<BLERemoteService::Impl>> discoveredServices;
   std::shared_ptr<BLESharedMutex> mtxOwner = std::make_shared<BLESharedMutex>();
   SemaphoreHandle_t mtx = mtxOwner->get();
+  BLESync connectSync{"connectSync"};
+  BLESync disconnectSync{"disconnectSync"};
+  BLESync discoverSync{"discoverSync"};
+  BLESync mtuSync{"mtuSync"};
 
   void clearDiscoveredServices();
 

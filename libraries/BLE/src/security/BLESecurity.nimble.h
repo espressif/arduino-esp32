@@ -34,13 +34,6 @@
  * NimBLE, members on @c BLESecurityImplCommon are shared.
  */
 struct BLESecurity::Impl : BLESecurityImplCommon {
-  bool bonding = true;
-  bool sc = true;
-  // Distribute both the LTK (ENC) and the IRK (ID) so a bond supports identity
-  // resolution / RPA.
-  uint8_t initKeyDist = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
-  uint8_t respKeyDist = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
-
   /// @brief NimBLE-specific: push the current SMP settings into the NimBLE host (@c ble_hs_cfg).
   void applySecurityParams() const;
 

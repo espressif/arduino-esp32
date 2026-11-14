@@ -56,6 +56,8 @@ struct BLEService::Impl : BLEServiceImplCommon {
 struct BLEDescriptor::Impl : BLEDescriptorImplCommon {
   uint8_t attFlags = 0;
   ble_uuid_any_t nimbleUUID{};
+
+  void backendInit(const BLEUUID &u, BLEPermission perms);
 };
 
 /**

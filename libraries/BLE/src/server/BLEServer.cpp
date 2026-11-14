@@ -269,4 +269,64 @@ BTStatus BLEServer::stopAdvertising() {
   return BLE.stopAdvertising();
 }
 
+#if BLE_GATT_SERVER_SUPPORTED
+
+#if !BLE5_SUPPORTED
+
+BTStatus BLEServer::setPhy(uint16_t, BLEPhy, BLEPhy) {
+  log_w("Server: setPhy not supported (BLE 5.0 unavailable)");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEServer::getPhy(uint16_t, BLEPhy &txPhy, BLEPhy &rxPhy) const {
+  txPhy = BLEPhy::PHY_1M;
+  rxPhy = BLEPhy::PHY_1M;
+  log_w("Server: getPhy not supported (BLE 5.0 unavailable)");
+  return BTStatus::NotSupported;
+}
+
+#endif /* !BLE5_SUPPORTED */
+
+#else /* !BLE_GATT_SERVER_SUPPORTED */
+
+BTStatus BLEServer::start() {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEServer::disconnect(uint16_t, uint8_t) {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+uint16_t BLEServer::getPeerMTU(uint16_t) const {
+  return 0;
+}
+
+BTStatus BLEServer::updateConnParams(uint16_t, const BLEConnParams &) {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEServer::setPhy(uint16_t, BLEPhy, BLEPhy) {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEServer::getPhy(uint16_t, BLEPhy &, BLEPhy &) const {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEServer::setDataLen(uint16_t, uint16_t, uint16_t) {
+  log_w("GATT server not supported");
+  return BTStatus::NotSupported;
+}
+
+int BLEServer::handleGapEvent(void *) {
+  return 0;
+}
+
+#endif /* BLE_GATT_SERVER_SUPPORTED */
+
 #endif /* BLE_ENABLED */

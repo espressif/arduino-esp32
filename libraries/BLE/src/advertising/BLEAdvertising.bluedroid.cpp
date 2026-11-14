@@ -446,37 +446,6 @@ void BLEAdvertising::setScanResponse(bool enable) {
   impl.scanResp = enable;
 }
 
-void BLEAdvertising::setType(BLEAdvType type) {
-  BLE_CHECK_IMPL();
-  impl.advType = type;
-}
-
-void BLEAdvertising::setInterval(uint16_t minMs, uint16_t maxMs) {
-  BLE_CHECK_IMPL();
-  impl.minInterval = bleMsToUnits0625(minMs);
-  impl.maxInterval = bleMsToUnits0625(maxMs);
-}
-
-void BLEAdvertising::setMinPreferred(uint16_t val) {
-  BLE_CHECK_IMPL();
-  impl.minPreferred = val;
-}
-
-void BLEAdvertising::setMaxPreferred(uint16_t val) {
-  BLE_CHECK_IMPL();
-  impl.maxPreferred = val;
-}
-
-void BLEAdvertising::setTxPower(bool include) {
-  BLE_CHECK_IMPL();
-  impl.includeTxPower = include;
-}
-
-void BLEAdvertising::setAppearance(uint16_t appearance) {
-  BLE_CHECK_IMPL();
-  impl.appearance = appearance;
-}
-
 void BLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWhitelistOnly) {
   BLE_CHECK_IMPL();
   impl.scanRequestWhitelistOnly = scanRequestWhitelistOnly;
@@ -1600,12 +1569,6 @@ BTStatus BLEAdvertising::stopPeriodicAdv(uint8_t instance) {
 
 #endif /* BLE5_SUPPORTED */
 
-void BLEAdvertising::prepareBackendStart() {
-  if (_impl) {
-    _impl->nativeAdmission.reopen();
-  }
-}
-
 void BLEAdvertising::beginBackendShutdown() {
   if (!_impl) {
     return;
@@ -1621,85 +1584,6 @@ void BLEAdvertising::beginBackendShutdown() {
   reset();
 }
 
-#else /* !BLE_ADVERTISING_SUPPORTED -- stubs */
-
-#include "BLE.h"
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_ADVERTISING_SUPPORTED == 0: log or no-op; start/stop return NotSupported.
-
-void BLEAdvertising::setName(const String &) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::setScanResponse(bool) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::setType(BLEAdvType) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::setInterval(uint16_t, uint16_t) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::setMinPreferred(uint16_t) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::setMaxPreferred(uint16_t) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::setTxPower(bool) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::setAppearance(uint16_t) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::setScanFilter(bool, bool) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::reset() {}
-
-void BLEAdvertising::prepareBackendStart() {}
-
-void BLEAdvertising::beginBackendShutdown() {}
-
-BTStatus BLEAdvertising::stopBackend() {
-  return BTStatus::NotSupported;
-}
-
-void BLEAdvertising::setAdvertisementData(const BLEAdvertisementData &) {
-  log_w("Advertising not supported");
-}
-
-void BLEAdvertising::setScanResponseData(const BLEAdvertisementData &) {
-  log_w("Advertising not supported");
-}
-
-BTStatus BLEAdvertising::start(uint32_t) {
-  log_w("Advertising not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEAdvertising::stop() {
-  log_w("Advertising not supported");
-  return BTStatus::NotSupported;
-}
-
-void BLEAdvertising::onComplete(CompleteHandler) {}
-
-void BLEAdvertising::resetCallbacks() {}
-
 #endif /* BLE_ADVERTISING_SUPPORTED */
-
-// BLE5 extended + periodic advertising TX are implemented above under BLE5_SUPPORTED /
-// BLE_PERIODIC_ADV_SUPPORTED. When those guards are off, the shared NotSupported
-// fallbacks in BLEAdvertising.cpp provide the public entry points.
 
 #endif /* BLE_BLUEDROID */

@@ -219,6 +219,7 @@ void BLEClass::end(bool releaseMemory) {
     vTaskDelay(1);
   }
 
+#if BLE_VALIDATION_HOOKS || BLE_ISO_SUPPORTED || BLE_AUDIO_SUPPORTED
   auto abortShutdown = [this]() {
     BLELockGuard lifecycle(_impl->lifecycleMtx);
     _impl->endReleaseMemory = false;
@@ -226,6 +227,7 @@ void BLEClass::end(bool releaseMemory) {
     _impl->endRunning = false;
     _impl->ending = false;
   };
+#endif
 
   if (auto hook = _impl->loadHook(_impl->streamPreEndHook)) {
     hook();

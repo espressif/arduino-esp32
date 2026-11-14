@@ -186,4 +186,38 @@ String BLERemoteCharacteristic::toString() const {
   return "BLERemoteCharacteristic(uuid=" + impl.uuid.toString() + ")";
 }
 
+#if !BLE_GATT_CLIENT_SUPPORTED
+
+bool BLERemoteCharacteristic::readInto(uint32_t) {
+  log_w("GATT client not supported");
+  return false;
+}
+
+BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *, size_t, bool) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLERemoteCharacteristic::subscribe(BLESubscription, NotifyCallback) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLERemoteCharacteristic::unsubscribe() {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &) const {
+  log_w("GATT client not supported");
+  return BLERemoteDescriptor();
+}
+
+std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const {
+  log_w("GATT client not supported");
+  return {};
+}
+
+#endif /* !BLE_GATT_CLIENT_SUPPORTED */
+
 #endif /* BLE_ENABLED */

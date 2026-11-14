@@ -25,6 +25,7 @@
 #include "core/BLEMutex.h"
 #include "advertising/BLEAdvertising.h"
 #include "advertising/BLEAdvertisingData.h"
+#include "advertising/BLEAdvScanHelpers.h"
 #include "BTAddress.h"
 #include "esp32-hal-log.h"
 
@@ -103,6 +104,123 @@ BTAddress BLEAdvertising::getDirectedAddress() const {
   }
   return _impl->directedPeer;
 }
+
+#if BLE_ADVERTISING_SUPPORTED
+
+void BLEAdvertising::setType(BLEAdvType type) {
+  BLE_CHECK_IMPL();
+  impl.advType = type;
+}
+
+void BLEAdvertising::setInterval(uint16_t minMs, uint16_t maxMs) {
+  BLE_CHECK_IMPL();
+  impl.minInterval = bleMsToUnits0625(minMs);
+  impl.maxInterval = bleMsToUnits0625(maxMs);
+}
+
+void BLEAdvertising::setMinPreferred(uint16_t val) {
+  BLE_CHECK_IMPL();
+  impl.minPreferred = val;
+}
+
+void BLEAdvertising::setMaxPreferred(uint16_t val) {
+  BLE_CHECK_IMPL();
+  impl.maxPreferred = val;
+}
+
+void BLEAdvertising::setTxPower(bool include) {
+  BLE_CHECK_IMPL();
+  impl.includeTxPower = include;
+}
+
+void BLEAdvertising::setAppearance(uint16_t appearance) {
+  BLE_CHECK_IMPL();
+  impl.appearance = appearance;
+}
+
+void BLEAdvertising::prepareBackendStart() {
+  if (_impl) {
+    _impl->nativeAdmission.reopen();
+  }
+}
+
+#else /* !BLE_ADVERTISING_SUPPORTED */
+
+void BLEAdvertising::setName(const String &) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::setScanResponse(bool) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::setType(BLEAdvType) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::setInterval(uint16_t, uint16_t) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::setMinPreferred(uint16_t) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::setMaxPreferred(uint16_t) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::setTxPower(bool) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::setAppearance(uint16_t) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::setScanFilter(bool, bool) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::reset() {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::prepareBackendStart() {}
+
+void BLEAdvertising::beginBackendShutdown() {}
+
+BTStatus BLEAdvertising::stopBackend() {
+  return BTStatus::NotSupported;
+}
+
+void BLEAdvertising::setAdvertisementData(const BLEAdvertisementData &) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::setScanResponseData(const BLEAdvertisementData &) {
+  log_w("Advertising not supported");
+}
+
+BTStatus BLEAdvertising::start(uint32_t) {
+  log_w("Advertising not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEAdvertising::stop() {
+  log_w("Advertising not supported");
+  return BTStatus::NotSupported;
+}
+
+void BLEAdvertising::onComplete(CompleteHandler) {
+  log_w("Advertising not supported");
+}
+
+void BLEAdvertising::resetCallbacks() {
+  log_w("Advertising not supported");
+}
+
+#endif /* BLE_ADVERTISING_SUPPORTED */
 
 // --------------------------------------------------------------------------
 // Raw AD payload builder (stack-agnostic) -- see BLEAdvertisingData.h

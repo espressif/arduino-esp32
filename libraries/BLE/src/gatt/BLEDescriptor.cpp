@@ -290,4 +290,12 @@ BLEDescriptor BLEDescriptor::createCCCD() {
   return BLEDescriptor(d);
 }
 
+#if !BLE_GATT_SERVER_SUPPORTED
+
+void BLEDescriptor::setPermissions(BLEPermission) {
+  log_w("GATT server not supported");
+}
+
+#endif /* !BLE_GATT_SERVER_SUPPORTED */
+
 #endif /* BLE_ENABLED */

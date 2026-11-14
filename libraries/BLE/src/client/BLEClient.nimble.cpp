@@ -589,9 +589,8 @@ BTStatus BLEClient::updateConnParams(const BLEConnParams &params) {
   return BTStatus::OK;
 }
 
-// Returns NotSupported when BLE5_SUPPORTED is off.
-BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
 #if BLE5_SUPPORTED
+BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
   if (!_impl) {
     log_w("Client: setPhy called but not connected");
     return BTStatus::InvalidState;
@@ -611,15 +610,9 @@ BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
     return BTStatus::Fail;
   }
   return BTStatus::OK;
-#else
-  log_w("Client: setPhy not supported (BLE 5.0 unavailable)");
-  return BTStatus::NotSupported;
-#endif
 }
 
-// Returns NotSupported when BLE5_SUPPORTED is off.
 BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
-#if BLE5_SUPPORTED
   if (!_impl) {
     log_w("Client: getPhy called but not connected");
     return BTStatus::InvalidState;
@@ -642,13 +635,8 @@ BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
   }
   log_e("Client: ble_gap_read_le_phy rc=%d", rc);
   return BTStatus::Fail;
-#else
-  txPhy = BLEPhy::PHY_1M;
-  rxPhy = BLEPhy::PHY_1M;
-  log_w("Client: getPhy not supported (BLE 5.0 unavailable)");
-  return BTStatus::NotSupported;
-#endif
 }
+#endif
 
 BTStatus BLEClient::setDataLen(uint16_t txOctets, uint16_t txTime) {
   if (!_impl) {
@@ -1030,100 +1018,7 @@ int BLEClient::Impl::mtuExchangeCb(uint16_t connHandle, const struct ble_gatt_er
   return 0;
 }
 
-#else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
-
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: log on most entry points; return NotSupported, empty, 0,
-// -128, 0xFFFF, or no-op. getPhy() does not set out-parameters; initialize or check the return.
-
-BTStatus BLEClient::connect(const BTAddress &, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connect(const BLEAdvertisedDevice &, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connect(const BTAddress &, BLEPhy, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connect(const BLEAdvertisedDevice &, BLEPhy, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connectAsync(const BTAddress &, BLEPhy) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connectAsync(const BLEAdvertisedDevice &, BLEPhy) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::cancelConnect() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::disconnect() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::secureConnection() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::discoverServices() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-void BLEClient::setMTU(uint16_t) {
-  log_w("GATT client not supported");
-}
-
-uint16_t BLEClient::getMTU() const {
-  return 0;
-}
-
-int8_t BLEClient::getRSSI() const {
-  return -128;
-}
-
-uint16_t BLEClient::getHandle() const {
-  return 0xFFFF;
-}
-
-BLEConnInfo BLEClient::getConnInfo() const {
-  return BLEConnInfo();
-}
-
-BTStatus BLEClient::updateConnParams(const BLEConnParams &) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::setPhy(BLEPhy, BLEPhy) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::getPhy(BLEPhy &, BLEPhy &) const {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::setDataLen(uint16_t, uint16_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
+#else /* !BLE_GATT_CLIENT_SUPPORTED -- NimBLE-only Impl stub */
 
 int BLEClient::Impl::gapEventHandler(struct ble_gap_event *, void *) {
   return 0;

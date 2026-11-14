@@ -346,35 +346,6 @@ void BLESecurity::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_p
 // Stack-specific BLESecurity methods
 // --------------------------------------------------------------------------
 
-bool BLESecurity::isConfigured() const {
-  if (!_impl) {
-    return false;
-  }
-  BLELockGuard lock(_impl->mtx);
-  return _impl->configuredByApp;
-}
-
-void BLESecurity::setIOCapability(BLEIOCapability cap) {
-  BLE_CHECK_IMPL();
-  // Config fields are read on the host task during pairing (guarded by mtx there),
-  // so the writers take the same lock. applySecurityParams runs under the recursive
-  // mtx; it only pushes to the native stack (no user callback).
-  BLELockGuard lock(impl.mtx);
-  impl.ioCap = cap;
-  impl.configuredByApp = true;
-  impl.applySecurityParams();
-}
-
-void BLESecurity::setAuthenticationMode(bool bond, bool mitm, bool sc) {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.bonding = bond;
-  impl.mitm = mitm;
-  impl.secureConnection = sc;
-  impl.configuredByApp = true;
-  impl.applySecurityParams();
-}
-
 void BLESecurity::setPassKey(bool isStatic, uint32_t pk) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
@@ -396,26 +367,6 @@ void BLESecurity::setRandomPassKey() {
   BLELockGuard lock(impl.mtx);
   impl.passKey = generateRandomPassKey();
   impl.passKeyIsStatic = true;
-  impl.applySecurityParams();
-}
-
-uint32_t BLESecurity::getPassKey() const {
-  if (!_impl) {
-    return 0;
-  }
-  BLELockGuard lock(_impl->mtx);
-  return _impl->passKey;
-}
-
-void BLESecurity::setInitiatorKeys(KeyDist keys) {
-  BLE_CHECK_IMPL();
-  impl.initiatorKeys = keys;
-  impl.applySecurityParams();
-}
-
-void BLESecurity::setResponderKeys(KeyDist keys) {
-  BLE_CHECK_IMPL();
-  impl.responderKeys = keys;
   impl.applySecurityParams();
 }
 
@@ -547,105 +498,8 @@ BTStatus BLESecurity::startSecurity(const BLEConnInfo &peer) {
   return BTStatus::OK;
 }
 
-void BLESecurity::resetSecurity() {
-  BLE_CHECK_IMPL();
-  impl.ioCap = BLEIOCapability::NoInputNoOutput;
-  impl.bonding = true;
-  impl.mitm = false;
-  impl.secureConnection = true;
-  impl.forceAuth = false;
-  impl.applySecurityParams();
-}
-
-// --------------------------------------------------------------------------
-// Free function for GAP security event routing from BluedroidCore.cpp
-// --------------------------------------------------------------------------
-
-/**
- * @brief Forwards a Bluedroid GAP security event to @c BLESecurity::Impl::handleGAP.
- * @param event GAP event code.
- * @param param Event payload from the Bluedroid stack.
- */
 void bluedroidSecurityHandleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
   BLESecurity::Impl::handleGAP(event, param);
-}
-
-#else /* !BLE_SMP_SUPPORTED -- stubs */
-
-#include "BLE.h"
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_SMP_SUPPORTED == 0: log where useful; return NotSupported, empty, or 0.
-
-void BLESecurity::setIOCapability(BLEIOCapability cap) {
-  (void)cap;
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setAuthenticationMode(bool bond, bool mitm, bool sc) {
-  (void)bond;
-  (void)mitm;
-  (void)sc;
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setPassKey(bool isStatic, uint32_t pk) {
-  (void)isStatic;
-  (void)pk;
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setStaticPassKey(uint32_t pk) {
-  (void)pk;
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setRandomPassKey() {
-  log_w("SMP not supported");
-}
-
-uint32_t BLESecurity::getPassKey() const {
-  return 0;
-}
-
-void BLESecurity::setInitiatorKeys(KeyDist keys) {
-  (void)keys;
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setResponderKeys(KeyDist keys) {
-  (void)keys;
-  log_w("SMP not supported");
-}
-
-BTStatus BLESecurity::deleteBond(const BTAddress &address) {
-  (void)address;
-  log_w("SMP not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLESecurity::deleteAllBonds() {
-  log_w("SMP not supported");
-  return BTStatus::NotSupported;
-}
-
-std::vector<BTAddress> BLESecurity::getBondedDevices() const {
-  return {};
-}
-
-BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
-  (void)connHandle;
-  log_w("SMP not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLESecurity::startSecurity(const BLEConnInfo &) {
-  log_w("SMP not supported");
-  return BTStatus::NotSupported;
-}
-
-void BLESecurity::resetSecurity() {
-  log_w("SMP not supported");
 }
 
 #endif /* BLE_SMP_SUPPORTED */

@@ -178,6 +178,22 @@ std::vector<BLERemoteService> BLEClient::getServices() const {
   return result;
 }
 
+#if !BLE5_SUPPORTED
+
+BTStatus BLEClient::setPhy(BLEPhy, BLEPhy) {
+  log_w("Client: setPhy not supported (BLE 5.0 unavailable)");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
+  txPhy = BLEPhy::PHY_1M;
+  rxPhy = BLEPhy::PHY_1M;
+  log_w("Client: getPhy not supported (BLE 5.0 unavailable)");
+  return BTStatus::NotSupported;
+}
+
+#endif /* !BLE5_SUPPORTED */
+
 #else /* !BLE_GATT_CLIENT_SUPPORTED */
 
 BLERemoteService BLEClient::getService(const BLEUUID &) const {
@@ -188,6 +204,96 @@ BLERemoteService BLEClient::getService(const BLEUUID &) const {
 std::vector<BLERemoteService> BLEClient::getServices() const {
   log_w("GATT client not supported");
   return {};
+}
+
+BTStatus BLEClient::connect(const BTAddress &, uint32_t) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::connect(const BLEAdvertisedDevice &, uint32_t) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::connect(const BTAddress &, BLEPhy, uint32_t) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::connect(const BLEAdvertisedDevice &, BLEPhy, uint32_t) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::connectAsync(const BTAddress &, BLEPhy) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::connectAsync(const BLEAdvertisedDevice &, BLEPhy) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::cancelConnect() {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::disconnect() {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::secureConnection() {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::discoverServices() {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+void BLEClient::setMTU(uint16_t) {
+  log_w("GATT client not supported");
+}
+
+uint16_t BLEClient::getMTU() const {
+  return 0;
+}
+
+int8_t BLEClient::getRSSI() const {
+  return -128;
+}
+
+uint16_t BLEClient::getHandle() const {
+  return 0xFFFF;
+}
+
+BLEConnInfo BLEClient::getConnInfo() const {
+  return BLEConnInfo();
+}
+
+BTStatus BLEClient::updateConnParams(const BLEConnParams &) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::setPhy(BLEPhy, BLEPhy) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::getPhy(BLEPhy &, BLEPhy &) const {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClient::setDataLen(uint16_t, uint16_t) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
 }
 
 #endif /* BLE_GATT_CLIENT_SUPPORTED */

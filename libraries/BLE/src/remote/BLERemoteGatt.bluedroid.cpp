@@ -148,20 +148,6 @@ std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() cons
   return result;
 }
 
-#else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
-
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: empty characteristic handles and lists.
-
-BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &) const {
-  return BLERemoteCharacteristic();
-}
-
-std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() const {
-  return {};
-}
-
 #endif /* BLE_GATT_CLIENT_SUPPORTED */
 
 // ==========================================================================
@@ -734,39 +720,6 @@ std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const
   return result;
 }
 
-#else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
-
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: false/empty/NotSupported as appropriate; log on side-effecting paths.
-
-bool BLERemoteCharacteristic::readInto(uint32_t) {
-  return false;
-}
-
-BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *, size_t, bool) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLERemoteCharacteristic::subscribe(BLESubscription, NotifyCallback) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLERemoteCharacteristic::unsubscribe() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &) const {
-  return BLERemoteDescriptor();
-}
-
-std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const {
-  return {};
-}
-
 #endif /* BLE_GATT_CLIENT_SUPPORTED */
 
 // ==========================================================================
@@ -815,21 +768,6 @@ BTStatus BLERemoteDescriptor::writeValue(const uint8_t *data, size_t len, bool w
   RemoteGattTarget target{service, characteristic, _impl};
   auto client = remoteClient(target);
   return performRemoteWrite(target, client, _impl ? _impl->handle : 0, true, data, len, withResponse);
-}
-
-#else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
-
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: empty read, NotSupported write.
-
-bool BLERemoteDescriptor::readInto(uint32_t) {
-  return false;
-}
-
-BTStatus BLERemoteDescriptor::writeValue(const uint8_t *, size_t, bool) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
 }
 
 #endif /* BLE_GATT_CLIENT_SUPPORTED */

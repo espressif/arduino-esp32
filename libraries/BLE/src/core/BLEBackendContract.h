@@ -49,6 +49,8 @@
 #include "gatt/BLEGattAttributesImpl.h"
 #include "client/BLEClientImpl.h"
 #include "remote/BLERemoteGattImpl.h"
+#include "scan/BLEScanImpl.h"
+#include "advertising/BLEAdvertisingImpl.h"
 #include "security/BLESecurityImpl.h"
 
 // --- Classes with a shared base: Foo::Impl must inherit FooImplCommon (two-layer model). ---
@@ -66,11 +68,9 @@ static_assert(
 static_assert(
   std::is_base_of<BLERemoteDescriptorImplCommon, BLERemoteDescriptor::Impl>::value, "BLERemoteDescriptor::Impl must inherit BLERemoteDescriptorImplCommon"
 );
+static_assert(std::is_base_of<BLEScanImplCommon, BLEScan::Impl>::value, "BLEScan::Impl must inherit BLEScanImplCommon");
+static_assert(std::is_base_of<BLEAdvertisingImplCommon, BLEAdvertising::Impl>::value, "BLEAdvertising::Impl must inherit BLEAdvertisingImplCommon");
 static_assert(std::is_base_of<BLESecurityImplCommon, BLESecurity::Impl>::value, "BLESecurity::Impl must inherit BLESecurityImplCommon");
-
-// --- Fully backend-specific classes (no common base): Foo::Impl must still be defined. ---
-static_assert(sizeof(BLEScan::Impl) > 0, "BLEScan::Impl must be defined by the active backend");
-static_assert(sizeof(BLEAdvertising::Impl) > 0, "BLEAdvertising::Impl must be defined by the active backend");
 
 
 #endif /* BLE_ENABLED */

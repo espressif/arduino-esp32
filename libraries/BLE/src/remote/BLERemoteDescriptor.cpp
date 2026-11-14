@@ -172,4 +172,18 @@ String BLERemoteDescriptor::toString() const {
   return "BLERemoteDescriptor(uuid=" + impl.uuid.toString() + ")";
 }
 
+#if !BLE_GATT_CLIENT_SUPPORTED
+
+bool BLERemoteDescriptor::readInto(uint32_t) {
+  log_w("GATT client not supported");
+  return false;
+}
+
+BTStatus BLERemoteDescriptor::writeValue(const uint8_t *, size_t, bool) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+#endif /* !BLE_GATT_CLIENT_SUPPORTED */
+
 #endif /* BLE_ENABLED */
