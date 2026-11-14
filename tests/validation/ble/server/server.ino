@@ -488,11 +488,19 @@ bool phase_basic() {
   BTStatus afterIdleTrue = BLE.begin(serverName + "_idle_true");
   BLE.end(false);
   BTStatus afterIdleTrueEnd = BLE.begin(serverName + "_idle_true_end");
+  // An aborted BLE.end(true) (e.g. live ISO/audio pre-end refusal) must clear
+  // endReleaseMemory so the following BLE.end(false) does not release memory.
+  BLEHooks.lifecycle.preEndAbortFailures.store(1, std::memory_order_relaxed);
+  BLE.end(true);
+  bool abortedStayedUp = BLE.isInitialized();
+  BLE.end(false);
+  BTStatus afterAbortedTrue = BLE.begin(serverName + "_aborted_true");
+  bool idleAndAbortOk = (bool)afterIdleTrueEnd && abortedStayedUp && (bool)afterAbortedTrue;
   Serial.printf(
     "[SERVER] Phase1 deferredEnd during=%d failSpawn=%d idleTrue=%d afterIdle=%d heap=%d\n", (int)deferredDuring, (int)deferredFailSpawn,
-    (int)(bool)afterIdleTrue, (int)(bool)afterIdleTrueEnd, (int)heap_caps_check_integrity_all(true)
+    (int)(bool)afterIdleTrue, (int)idleAndAbortOk, (int)heap_caps_check_integrity_all(true)
   );
-  if (!deferredDuring || !deferredFailSpawn || !afterIdleTrue || !afterIdleTrueEnd) {
+  if (!deferredDuring || !deferredFailSpawn || !afterIdleTrue || !idleAndAbortOk) {
     return false;
   }
 

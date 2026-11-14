@@ -93,6 +93,23 @@ extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t p
 #endif
 }
 
+extern "C" int bleAudioEngineStopPeriodicSyncReceive(uint16_t conn_handle) {
+#if BLE_SCANNING_SUPPORTED && BLE_PAST_SUPPORTED
+  (void)BLE.getScan();
+  BTAddress peer;
+  uint8_t lsb[6];
+  if (bleAudioEngineLinkAddress(conn_handle, lsb)) {
+    peer = BTAddress(lsb);
+  } else if (!bluedroidFindPeerAddress(conn_handle, peer)) {
+    return static_cast<int>(BTStatus::NotConnected);
+  }
+  return static_cast<int>(BLEScan::Impl::setPeriodicSyncTransferParams(conn_handle, peer, ESP_BLE_GAP_PAST_MODE_NO_SYNC_EVT, 0, 100));
+#else
+  (void)conn_handle;
+  return static_cast<int>(BTStatus::NotSupported);
+#endif
+}
+
 extern "C" void bleAudioAddrFromGap(uint8_t out[6], const uint8_t in[6]) {
   for (int i = 0; i < 6; i++) {
     out[i] = in[5 - i];

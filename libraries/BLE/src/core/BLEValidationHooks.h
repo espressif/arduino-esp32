@@ -35,6 +35,7 @@ class BLEValidationHooks {
 public:
   struct Lifecycle {
     std::atomic<int> endWorkerStartFailures{0};
+    std::atomic<int> preEndAbortFailures{0};
   } lifecycle;
 
   struct Stream {

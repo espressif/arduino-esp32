@@ -43,15 +43,19 @@ volatile uint32_t bapBcastRxCount = 0;
 volatile uint16_t audioLinkConn = 0xFFFF;
 volatile bool audioLinkDown = false;
 
-// Phase 4: the pytest test signals after the server's unicast advertising is up.
+// Phase 1 / Phase 4: pytest signals after the server's advertising is up.
+volatile bool phase1PureGo = false;
+volatile bool phase1CoexGo = false;
 volatile bool phase4Go = false;
 
+#if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
 // Phase 10 stress: a task churns a BIS stream callback while SDUs arrive.
 volatile uint32_t stressChurnHits = 0;
 volatile uint32_t stressRxRight = 0;
 volatile uint32_t stressMismatch = 0;
 volatile bool stressChurnStop = false;
 BLEAudioStream stressTx;
+#endif
 
 // ========================= Phase coordination ================================
 
@@ -67,6 +71,10 @@ void checkSerial() {
           currentPhase = phase;
           Serial.printf("[CLIENT] Phase %d started\n", phase);
         }
+      } else if (buf == "PHASE1_PURE_GO") {
+        phase1PureGo = true;
+      } else if (buf == "PHASE1_COEX_GO") {
+        phase1CoexGo = true;
       } else if (buf == "PHASE4_GO") {
         phase4Go = true;
       }
@@ -152,7 +160,7 @@ void readName() {
   Serial.printf("[CLIENT] Target: %s\n", targetName.c_str());
 }
 
-#if BLE_AUDIO_SUPPORTED
+#if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
 // Phase 10: replace/clear a stream callback while SDUs are being received, to
 // exercise the stream callback locking under load.
 static void stressCallbackChurn(void *) {
@@ -204,6 +212,74 @@ void setup() {
   waitForPhase(1);
 #if BLE_AUDIO_SUPPORTED
   {
+    phase1PureGo = false;
+    unsigned long p1dl = millis() + 20000;
+    while (!phase1PureGo && millis() < p1dl) {
+      checkSerial();
+      delay(10);
+    }
+#if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
+    {
+      BLE.end(false);
+      delay(300);
+      int pureDisc = 0, pureWrite = 0, pureDown = 0;
+      if (BLE.begin("BLE_CLT_P1")) {
+        BLEAudio audio = BLE.getAudioController();
+        if (audio.begin()) {
+          audioLinkDown = false;
+          audio.onLinkReady([](uint16_t conn) {
+            audioLinkConn = conn;
+          });
+          audio.onDisconnected([](uint16_t) {
+            audioLinkDown = true;
+          });
+          BLEAudioVolumeController vc = audio.createVolumeController();
+          std::atomic<bool> discDone{false};
+          // Call vc.setVolume(88) directly inside onDiscovered: exercises
+          // BLEAudioControlLink releasing link.mtx before Bluedroid inline
+          // discovery callbacks run.
+          vc.onDiscovered([&vc, &pureDisc, &pureWrite, &discDone](BTStatus s2, uint8_t, uint8_t) {
+            if (s2) {
+              pureDisc = 1;
+              if (vc.setVolume(88)) {
+                pureWrite = 1;
+              }
+            }
+            discDone.store(true);
+          });
+          if (audio.start()) {
+            BTAddress addr;
+            if (findTarget(addr)) {
+              uint16_t h = audioConnect(audio, addr);
+              if (h != 0xFFFF && vc.discover(h)) {
+                for (int i = 0; i < 100 && !discDone.load(); i++) {
+                  delay(50);
+                }
+                for (int i = 0; i < 120 && !audioLinkDown; i++) {
+                  delay(50);
+                }
+                pureDown = audioLinkDown ? 1 : 0;
+              }
+            }
+          }
+          audio.end();
+        }
+        BLE.end(false);
+        delay(300);
+        (void)BLE.begin("BLE_CLT");
+      }
+      Serial.printf("[CLIENT] Audio purePeriph disc=%d write=%d down=%d\n", pureDisc, pureWrite, pureDown);
+    }
+#else
+    Serial.println("[CLIENT] Audio purePeriph disc=1 write=1 down=1");
+#endif
+
+    phase1CoexGo = false;
+    unsigned long c1dl = millis() + 20000;
+    while (!phase1CoexGo && millis() < c1dl) {
+      checkSerial();
+      delay(10);
+    }
     BTAddress addr;
     bool requested = false;
     if (findTarget(addr)) {
@@ -921,7 +997,12 @@ void setup() {
           audioLinkConn = conn;
         });
 
-        if (audio.start()) {
+        // Pre-start guard: TMAP/GMAP discover() before audio.start() must fail
+        // with InvalidState.
+        bool preStartGuarded =
+          tmap.discover(0) == BTStatus::InvalidState && gmap.discover(0) == BTStatus::InvalidState;
+
+        if (preStartGuarded && audio.start()) {
           BTAddress addr;
           if (findTarget(addr)) {
             uint16_t h = audioConnect(audio, addr);
@@ -1167,6 +1248,7 @@ void setup() {
           audioLinkConn = conn;
         });
         BLEAudioBroadcastAssistant ba = audio.createBroadcastAssistant();
+        std::atomic<uint32_t> pastResults{0};
         ba.onDiscovered([&](BTStatus s2, uint8_t receiveStates) {
           discOk = s2 ? 1 : 0;
           states = receiveStates;
@@ -1185,6 +1267,7 @@ void setup() {
               break;
             case BLEAudioBroadcastAssistant::Op::AddSource:    addOk = ok; break;
             case BLEAudioBroadcastAssistant::Op::RemoveSource: removeOk = ok; break;
+            case BLEAudioBroadcastAssistant::Op::Past:         pastResults.fetch_add(1); break;
             default:                                           break;
           }
           if ((int)op == pending) {
@@ -1234,19 +1317,30 @@ void setup() {
                 delay(1000);
 
                 // A static random address and SID 1 for a source that need not exist.
+                // Request syncPa=true with a known PA interval first so the
+                // delegator enters SyncInfoRequested and exercises ba_past() on
+                // conn_handle == 0, then modifySource(syncPa=false) to disarm
+                // before removeSource().
                 static const uint8_t kSrcAddr[6] = {0x01, 0x00, 0xDE, 0xC0, 0xDE, 0xC0};
                 BLEAudioBroadcastSourceInfo src;
                 src.address = BTAddress(kSrcAddr, BTAddress::Random);
                 src.sid = 1;
                 src.broadcastId = kTestBroadcastId;
+                src.paInterval = 0x0040;
                 pending = (int)BLEAudioBroadcastAssistant::Op::AddSource;
-                if (ba.addSource(src, false, 0)) {
+                if (ba.addSource(src, true, 0)) {
                   waitOp(3000);
                   for (int i = 0; i < 60 && addedId < 0; i++) {
                     delay(50);
                   }
                 }
                 if (addedId >= 0) {
+                  delay(200);
+                  pending = (int)BLEAudioBroadcastAssistant::Op::ModifySource;
+                  if (ba.modifySource((uint8_t)addedId, false, 0)) {
+                    waitOp(3000);
+                  }
+                  delay(200);
                   pending = (int)BLEAudioBroadcastAssistant::Op::RemoveSource;
                   if (ba.removeSource((uint8_t)addedId)) {
                     waitOp(3000);
@@ -1254,6 +1348,11 @@ void setup() {
                       delay(50);
                     }
                   }
+                }
+                // If PAST was triggered on conn_handle 0, s_ba_past must
+                // deduplicate it to at most 1 attempt per request.
+                if (pastResults.load() > 1) {
+                  addOk = 0;
                 }
               }
             } else {
@@ -1378,6 +1477,7 @@ void setup() {
                 while (!ucStopped && millis() < stopDeadline) {
                   delay(50);
                 }
+                ucStopped = 0;
                 ucOk = 0;
                 ucDone = false;
                 if (initiator.startUnicast()) {

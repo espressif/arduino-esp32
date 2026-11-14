@@ -432,8 +432,9 @@ takes the engine's host mutex (`bt_le_host_lock()`), which serializes it against
 every host-task transition — it never needs to run on the host task itself.
 Everything else stays host-task-only. The slot fields both sides touch
 (`streaming`, `seq`, `bound`, `tx`, `in_use`, `conn_handle`) are `_Atomic` in
-`ble_audio_slot_t`; every other slot field is configuration written before
-start() or only read/written by the host task.
+`ble_audio_slot_t`, and `codecConfig()` / `qos()` read decoded snapshots cached
+under a short spinlock (`s_slot_mux`) rather than dereferencing the engine's
+`codec_cfg` / `qos` pointers off the host task.
 
 ### LC3 pipeline
 

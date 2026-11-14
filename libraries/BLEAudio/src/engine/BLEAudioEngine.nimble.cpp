@@ -119,6 +119,10 @@ extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t p
   return static_cast<int>(BLE.getScan().receivePeriodicSync(conn_handle, skip, timeout_ms));
 }
 
+extern "C" int bleAudioEngineStopPeriodicSyncReceive(uint16_t conn_handle) {
+  return static_cast<int>(BLE.getScan().stopPeriodicSyncReceive(conn_handle));
+}
+
 extern "C" int bleAudioHostPrepareInit(void) {
 #if BLE_GATT_SERVER_SUPPORTED
   // NimBLE keeps ATT attributes and CCCD counts across audio.end() unless

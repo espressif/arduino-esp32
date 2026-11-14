@@ -2290,10 +2290,12 @@ static int sd_pa_sync_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_del
   return 0;
 }
 
-/* Assistant asks us to drop the PA sync; the C++ side terminates it (BSINK_PA_TERM_REQ). */
+/* Assistant asks us to drop the PA sync; the C++ side terminates/disarms it (BSINK_PA_TERM_REQ). */
 static int sd_pa_sync_term_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *rs) {
   (void)rs;
-  if (s_bsnk.sync_handle == SYNC_NONE) {
+  const bool was_armed = s_bsnk.armed;
+  s_bsnk.armed = false;
+  if (s_bsnk.sync_handle == SYNC_NONE && !was_armed) {
     return 0;
   }
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_PA_TERM_REQ, conn ? conn->handle : CONN_NONE, 0, NULL);

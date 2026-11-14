@@ -449,7 +449,10 @@ host-agnostic engine. The engine's only per-backend files are the thin event for
 After `audio.start()` the NimBLE table is frozen: a later `BLEServer::start()` that would add attributes returns
 `InvalidState` instead of resetting the audio-owned table. Removing an already committed classic service remains
 supported; the server hides only that service's handle range and emits Service Changed. `audio.end()` clears the
-audio commit state so a later `audio.begin()` may stage a new table.
+audio commit state, and the next `audio.begin()` runs `ble_gatts_reset()` (returning `Busy` if GAP or a connection
+is active) so a new table can be staged in the same `BLE.begin()` session without duplicating ATT attributes.
+`nimbleForwardServerGapEvent` forwards ISO GAP, Audio GATT, and fallback SMP events directly before delegating to
+an optional `BLEServer`, so standalone audio/ISO peripherals work without calling `BLE.createServer()`.
 
 On Bluedroid, incremental multi-app GATTS registration already allows coexistence: the engine registers its own
 BTA GATTS/GATTC apps, so the Bluedroid server path stays thin and does not use the coordinator. Audio centrals must

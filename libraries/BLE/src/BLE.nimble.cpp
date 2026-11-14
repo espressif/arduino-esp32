@@ -483,6 +483,16 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.lifecycle.preEndAbortFailures)) {
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endReleaseMemory = false;
+    _impl->endTask = nullptr;
+    _impl->endRunning = false;
+    _impl->ending = false;
+    return;
+  }
+#endif
   // ISO groups own their advertising/sync resources and both ISO and Audio
   // need the live host to complete asynchronous stream termination.
 #if BLE_ISO_SUPPORTED

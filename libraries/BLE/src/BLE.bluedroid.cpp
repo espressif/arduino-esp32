@@ -409,6 +409,16 @@ void BLEClass::end(bool releaseMemory) {
     hook();
   }
 
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.lifecycle.preEndAbortFailures)) {
+    BLELockGuard lifecycle(_impl->lifecycleMtx);
+    _impl->endReleaseMemory = false;
+    _impl->endTask = nullptr;
+    _impl->endRunning = false;
+    _impl->ending = false;
+    return;
+  }
+#endif
   // ISO groups own advertising resources. Tear ISO and Audio down while GAP,
   // GATT and the controller can still deliver their asynchronous completions.
 #if BLE_ISO_SUPPORTED

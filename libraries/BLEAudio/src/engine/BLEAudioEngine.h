@@ -270,6 +270,9 @@ int bleAudioEngineConnect(uint8_t addr_type, const uint8_t addr[6]);
  */
 int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip, uint16_t timeout_ms);
 
+/** @brief Disarm the selected host's PAST receiver on @p conn_handle. */
+int bleAudioEngineStopPeriodicSyncReceive(uint16_t conn_handle);
+
 /**
  * @brief Send periodic advertising set info to a connected peer (PAST sender).
  * @param adv Advertising handle carrying the periodic train.

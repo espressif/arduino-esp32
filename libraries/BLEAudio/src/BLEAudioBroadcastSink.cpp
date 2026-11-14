@@ -425,10 +425,26 @@ struct BLEAudioBroadcastSink::Impl {
         *r->reply = st ? 0 : -EIO;
         break;
       }
-      case BLE_AUDIO_EVT_BSINK_PA_TERM_REQ:
+      case BLE_AUDIO_EVT_BSINK_PA_TERM_REQ: {
         log_d("BroadcastSink: assistant asked to stop the PA sync");
-        (void)BLE.getScan().terminatePeriodicSync(bleAudioBsinkSyncHandle());
+        bool wasPending;
+        {
+          BLELockGuard lock(mtx.get());
+          wasPending = syncPending;
+          syncPending = false;
+        }
+        BLEScan sc = BLE.getScan();
+        const uint16_t sh = bleAudioBsinkSyncHandle();
+        if (sh != 0xFFFF) {
+          (void)sc.terminatePeriodicSync(sh);
+        } else if (wasPending) {
+          if (e.conn_handle != BLE_AUDIO_CONN_NONE) {
+            (void)bleAudioEngineStopPeriodicSyncReceive(e.conn_handle);
+          }
+          (void)sc.cancelPeriodicSyncCreate();
+        }
         break;
+      }
       default: break;
     }
   }

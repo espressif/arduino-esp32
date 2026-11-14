@@ -72,14 +72,42 @@ def _phase_audio_lifecycle(server, client):
 
     Returns False (SKIP) when the LE Audio engine is not compiled into the build.
     """
-    mg = server.expect(r"\[SERVER\] (Audio GATT remove=(\d+) guarded=(\d+)|Audio not supported, skipping)", timeout=60)
-    if b"not supported" in mg.group(0):
+    mp = server.expect(r"\[SERVER\] (Audio purePeriph ready=([01])|Audio not supported, skipping)", timeout=30)
+    if b"not supported" in mp.group(0):
         client.expect_exact("[CLIENT] Audio not supported, skipping", timeout=20)
         server.expect_exact("[SERVER] Phase1 audio done", timeout=10)
         client.expect_exact("[CLIENT] Phase1 audio done", timeout=20)
         return False
-    assert int(mg.group(2)) == 1, "classic service removal failed while audio owned the GATT table"
-    assert int(mg.group(3)) == 1, "late GATT restaging was not guarded while audio owned the table"
+    assert int(mp.group(2)) == 1, "pure-audio peripheral failed to start advertising"
+    client.write("PHASE1_PURE_GO\n")
+    mps = server.expect(
+        r"\[SERVER\] Audio purePeriph link=([01]) vol=([01]) disc=([01]) end=([01]) busyGuard=([01])",
+        timeout=45,
+    )
+    mpc = client.expect(
+        r"\[CLIENT\] Audio purePeriph disc=([01]) write=([01]) down=([01])",
+        timeout=30,
+    )
+    assert int(mps.group(5)) == 1, "audio.begin() while advertising did not enforce the active-GAP guard"
+    assert int(mps.group(1)) == 1 and int(mpc.group(1)) == 1, "pure-audio peripheral without BLEServer failed to connect/discover"
+    assert int(mps.group(2)) == 1 and int(mpc.group(2)) == 1, "inline VCP write inside onDiscovered did not land on pure-audio peripheral"
+    assert int(mps.group(3)) == 1 and int(mpc.group(3)) == 1, "peripheral audio.disconnect() failed without BLEServer"
+    assert int(mps.group(4)) == 1, "audio.end() failed after pure-audio peripheral session"
+
+    msh = server.expect(
+        r"\[SERVER\] Audio sameHostReinit ok=([01]) badStart=([01]) fastEnd=([01]) ms=(\d+)",
+        timeout=20,
+    )
+    assert int(msh.group(1)) == 1, "same-host audio.end()->begin()->start() without BLE.end() failed"
+    assert int(msh.group(2)) == 1, "BroadcastSource::start(255) did not reject an invalid advertising instance"
+    assert int(msh.group(3)) == 1, f"audio.end() after failed BroadcastSource::start() stalled ({msh.group(4).decode()} ms)"
+
+    mg = server.expect(r"\[SERVER\] Audio GATT remove=(\d+) guarded=(\d+)", timeout=30)
+    assert int(mg.group(1)) == 1, "classic service removal failed while audio owned the GATT table"
+    assert int(mg.group(2)) == 1, "late GATT restaging was not guarded while audio owned the table"
+    mcoex = server.expect(r"\[SERVER\] Audio coex ready=([01])", timeout=15)
+    assert int(mcoex.group(1)) == 1, "coexistence advertising failed to start"
+    client.write("PHASE1_COEX_GO\n")
     me = server.expect(r"\[SERVER\] Audio callback end=(\d+) activeEnded=(\d+) admission=(\d+)", timeout=40)
     assert int(me.group(1)) == 1, "client did not enter the callback-safe BLE.end() path"
     assert int(me.group(2)) == 1, "BLE.end() did not tear down the active audio controller"
