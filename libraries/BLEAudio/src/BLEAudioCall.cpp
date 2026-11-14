@@ -97,6 +97,7 @@ BLEAudioCallServer::operator bool() const {
 
 BLEAudioCallServer &BLEAudioCallServer::setProviderName(const String &name) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->providerName = name;
   }
   return *this;
@@ -104,6 +105,7 @@ BLEAudioCallServer &BLEAudioCallServer::setProviderName(const String &name) {
 
 BLEAudioCallServer &BLEAudioCallServer::setUci(const String &uci) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->uci = uci;
   }
   return *this;
@@ -111,6 +113,7 @@ BLEAudioCallServer &BLEAudioCallServer::setUci(const String &uci) {
 
 BLEAudioCallServer &BLEAudioCallServer::setUriSchemes(const String &schemes) {
   if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->uriSchemes = schemes;
   }
   return *this;
@@ -150,6 +153,7 @@ BTStatus BLEAudioCallServer::updateProviderName(const String &name) {
   }
   BTStatus st = bleAudioStatus(bleAudioCcpSrvSetProviderName(name.c_str()));
   if (st) {
+    BLELockGuard lock(_impl->mtx.get());
     _impl->providerName = name;
   }
   return st;
@@ -206,7 +210,19 @@ BLEAudioCallServer BLEAudio::createCallServer() {
   });
   _impl->roleApplies.push_back([weak]() -> BTStatus {
     auto p = weak.lock();
-    return p ? bleAudioStatus(bleAudioCcpSrvInit(p->providerName.c_str(), p->uci.c_str(), p->uriSchemes.c_str())) : BTStatus::OK;
+    if (!p) {
+      return BTStatus::OK;
+    }
+    String provider;
+    String uci;
+    String schemes;
+    {
+      BLELockGuard lock(p->mtx.get());
+      provider = p->providerName;
+      uci = p->uci;
+      schemes = p->uriSchemes;
+    }
+    return bleAudioStatus(bleAudioCcpSrvInit(provider.c_str(), uci.c_str(), schemes.c_str()));
   });
   return BLEAudioCallServer(s);
 #else
@@ -229,7 +245,8 @@ struct BLEAudioCallController::Impl {
 
   /** Run a call operation on the bound peer's GTBS. */
   BTStatus op(uint8_t o, uint8_t callIndex) const {
-    return link.bound() ? bleAudioStatus(bleAudioCcpCliCallOp(link.conn, o, callIndex)) : BTStatus::InvalidState;
+    const uint16_t c = link.activeConn();
+    return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioCcpCliCallOp(c, o, callIndex)) : BTStatus::InvalidState;
   }
 
   /**
@@ -246,7 +263,7 @@ struct BLEAudioCallController::Impl {
       }
       return;
     }
-    if (e.conn_handle != link.conn) {
+    if (e.conn_handle != link.getConn()) {
       return;
     }
     switch (e.type) {
@@ -288,14 +305,15 @@ BTStatus BLEAudioCallController::discover(uint16_t connHandle) {
 }
 
 uint16_t BLEAudioCallController::getConnHandle() const {
-  return _impl ? _impl->link.conn : BLE_AUDIO_CONN_NONE;
+  return _impl ? _impl->link.getConn() : BLE_AUDIO_CONN_NONE;
 }
 
 BTStatus BLEAudioCallController::originate(const String &uri) {
-  if (!_impl || !_impl->link.bound()) {
+  if (!_impl) {
     return BTStatus::InvalidState;
   }
-  return bleAudioStatus(bleAudioCcpCliOriginate(_impl->link.conn, uri.c_str()));
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioCcpCliOriginate(c, uri.c_str())) : BTStatus::InvalidState;
 }
 
 BTStatus BLEAudioCallController::accept(uint8_t callIndex) {
@@ -315,10 +333,11 @@ BTStatus BLEAudioCallController::retrieve(uint8_t callIndex) {
 }
 
 BTStatus BLEAudioCallController::readCalls() {
-  if (!_impl || !_impl->link.bound()) {
+  if (!_impl) {
     return BTStatus::InvalidState;
   }
-  return bleAudioStatus(bleAudioCcpCliReadCalls(_impl->link.conn));
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioCcpCliReadCalls(c)) : BTStatus::InvalidState;
 }
 
 BLEAudioCallController &BLEAudioCallController::onDiscovered(DiscoveredCallback cb) {

@@ -65,6 +65,7 @@ struct BLEAudioBroadcastSink::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (role list).
   BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   uint8_t streamCount = 1;                ///< BISes to join (1 or 2).
+  uint8_t maxChannels = 2;                ///< Max channels per BIS advertised in the sink PAC (1 or 2).
   uint32_t presets = kDefaultPresets;     ///< BLEAudioPresetBit() mask for the sink PAC.
   BLEAudioLocation location = BLEAudioLocation::Mono;
   BLEAudioContext contexts = BLEAudioContext::Unspecified | BLEAudioContext::Media;
@@ -155,7 +156,7 @@ struct BLEAudioBroadcastSink::Impl {
       return BTStatus::NoMemory;
     }
     ble_audio_pac_t pac;
-    bleAudioPacFromPresets(presets, 1, &pac);
+    bleAudioPacFromPresets(presets, maxChannels, &pac);
     bleAudioPacsAdd(BLE_AUDIO_DIR_SINK, &pac, static_cast<uint32_t>(location), static_cast<uint16_t>(contexts));
     int err = bleAudioBsinkInit(delegator);
     if (err != 0) {
@@ -464,6 +465,14 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setSupportedPresets(uint32_t prese
   return *this;
 }
 
+BLEAudioBroadcastSink &BLEAudioBroadcastSink::setMaxChannelsPerStream(uint8_t channels) {
+  if (_impl) {
+    BLELockGuard lock(_impl->mtx.get());
+    _impl->maxChannels = channels < 1 ? 1 : (channels > 2 ? 2 : channels);
+  }
+  return *this;
+}
+
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setLocation(BLEAudioLocation location) {
   if (_impl) {
     BLELockGuard lock(_impl->mtx.get());
@@ -605,6 +614,10 @@ BTStatus BLEAudioBroadcastSink::syncTo(const BLEAudioBroadcastSourceInfo &source
 BTStatus BLEAudioBroadcastSink::stop() {
   if (!_impl) {
     return BTStatus::InvalidState;
+  }
+  if (bleInStackCallbackTask()) {
+    log_e("BroadcastSink: stop() cannot run from a stack callback; defer it to loop()");
+    return BTStatus::Busy;
   }
   {
     BLELockGuard lock(_impl->mtx.get());

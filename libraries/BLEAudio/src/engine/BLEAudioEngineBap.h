@@ -190,15 +190,6 @@ void bleAudioPacsAdd(uint8_t dir, const ble_audio_pac_t *pac, uint32_t location,
  */
 int bleAudioPacsCommit(void);
 
-/**
- * @brief Unregister PAC records and PACS while the host mutex still exists.
- *
- * Best-effort: NimBLE cannot delete a single GATT service, so native
- * unregister may fail. The cap list is still dropped. Engine deinit does
- * not call this — `common_deinit` already runs `lib_pacs_deinit()`.
- */
-int bleAudioPacsRelease(void);
-
 /** @brief Change the available contexts after start (e.g. while busy); ESP_ERR_INVALID_STATE before commit. */
 int bleAudioPacsSetAvailable(uint8_t dir, uint16_t contexts);
 

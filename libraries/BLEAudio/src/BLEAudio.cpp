@@ -120,6 +120,27 @@ extern "C" void bleAudioNotifyBapIdle(void) {
   }
 }
 
+#if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+namespace {
+BLESync sBsrcStateSync{"bsrc-state"};
+}  // namespace
+
+extern "C" void bleAudioNotifyBsrcState(void) {
+  sBsrcStateSync.give(BTStatus::OK);
+}
+
+extern "C" void bleAudioArmBsrcStateWait(void) {
+  sBsrcStateSync.take();
+}
+
+extern "C" bool bleAudioWaitBsrcState(uint32_t timeoutMs) {
+  if (bleInStackCallbackTask()) {
+    return false;
+  }
+  return sBsrcStateSync.wait(timeoutMs) == BTStatus::OK;
+}
+#endif
+
 // --------------------------------------------------------------------------
 // Lifecycle
 // --------------------------------------------------------------------------

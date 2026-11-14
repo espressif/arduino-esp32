@@ -963,9 +963,10 @@ int bleAudioCapBroadcastCreate(ble_audio_slot_t *const slots[], const uint32_t *
     return ESP_ERR_INVALID_ARG;
   }
   for (uint8_t i = 0; i < count; i++) {
-    if (slots[i] == NULL) {
+    if (slots[i] == NULL || bleAudioStreamKind(slots[i]) != BLE_AUDIO_STREAM_BROADCAST_SOURCE) {
       return ESP_ERR_INVALID_ARG;
     }
+    (void)bleAudioStreamSetQos(slots[i], qos);
     st[i] = bleAudioStreamCap(slots[i]);
   }
   bc_fill(st, locations, count, cfg, bleAudioStreamSetQos(slots[0], qos), code);

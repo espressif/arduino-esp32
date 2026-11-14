@@ -99,6 +99,8 @@ public:
    * 24 kHz (10 ms) plus every 48 kHz preset. A zero mask is ignored.
    */
   BLEAudioBroadcastSink &setSupportedPresets(uint32_t presetMask);
+  /** @brief Channels one BIS may carry in the sink PAC: 1 or 2 (default 2); clamped to that range. */
+  BLEAudioBroadcastSink &setMaxChannelsPerStream(uint8_t channels);
   /** @brief Sink Audio Locations published in PACS (default Mono). */
   BLEAudioBroadcastSink &setLocation(BLEAudioLocation location);
   /** @brief Sink contexts published in PACS (default Unspecified | Media). */

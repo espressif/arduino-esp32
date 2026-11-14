@@ -254,7 +254,10 @@ struct BLEAudioCapInitiator::Impl {
     a.addr_type = own.type() & 1;
     memcpy(a.addr, own.data(), sizeof(a.addr));
     a.pa_interval = kPaInterval;
-    a.broadcast_id = broadcastId;
+    {
+      BLELockGuard lock(mtx.get());
+      a.broadcast_id = broadcastId;
+    }
     return a;
   }
 
@@ -283,24 +286,39 @@ struct BLEAudioCapInitiator::Impl {
     adv.setExtType(inst, BLEAdvType::NonConnectable);
     adv.setExtPhy(inst, BLEPhy::PHY_1M, BLEPhy::PHY_1M);
     adv.setExtSID(inst, inst & 0x0F);
-    const String advName = name.length() ? name : String(BLE.getDeviceName().c_str());
+    String cfgName;
+    String cfgCode;
+    uint32_t bcastId;
+    uint16_t ctx;
+    ble_audio_codec_t c;
+    ble_audio_qos_t q;
+    {
+      BLELockGuard lock(mtx.get());
+      cfgName = name;
+      cfgCode = code;
+      bcastId = broadcastId;
+      ctx = static_cast<uint16_t>(context);
+      codecQos(true, c, q);
+    }
+    const String advName = cfgName.length() ? cfgName : String(BLE.getDeviceName().c_str());
     BLEAdvertisementData ext(BLEAdvertisementData::EXTENDED_MAX_PAYLOAD);
 #if BLE_AUDIO_PBP_SUPPORTED
     // PBP features: High Quality for 48 kHz presets, Standard otherwise, plus
     // Encryption; the PBA carries the same context and title as a plain
     // broadcast source.
-    ble_audio_codec_t c;
-    ble_audio_qos_t q;
-    codecQos(true, c, q);
     uint8_t pbaFeatures = c.sample_rate_hz == 48000 ? BLEAudioPublicBroadcast::HighQuality : BLEAudioPublicBroadcast::StandardQuality;
-    if (code.length()) {
+    if (cfgCode.length()) {
       pbaFeatures |= BLEAudioPublicBroadcast::Encryption;
     }
-    BTStatus st = BLEAudioAuracast::buildExt(ext, broadcastId, advName, true, static_cast<uint16_t>(context), pbaFeatures);
+    BLEAudioAuracast::buildExt(ext, bcastId, advName, true, ctx, pbaFeatures);
 #else
-    BTStatus st = BLEAudioAuracast::buildExt(ext, broadcastId, advName, false, 0, 0);
+    (void)c;
+    (void)q;
+    (void)cfgCode;
+    (void)ctx;
+    BLEAudioAuracast::buildExt(ext, bcastId, advName, false, 0, 0);
 #endif
-    st = adv.setExtAdvertisementData(inst, ext);
+    BTStatus st = adv.setExtAdvertisementData(inst, ext);
     if (st) {
       adv.setPeriodicAdvInterval(inst, kPaInterval, kPaInterval);
       if (withBase) {
@@ -719,37 +737,35 @@ BTStatus BLEAudioCapInitiator::discover(uint16_t connHandle) {
 
 /** Stream handles are reused while the request count is unchanged, so attached callbacks survive a restart. */
 BTStatus BLEAudioCapInitiator::startUnicast() {
-  if (!_impl || !_impl->audio->started) {
+  if (!_impl || !_impl->audio->started.load()) {
     return BTStatus::InvalidState;
   }
+  std::vector<ble_audio_uc_stream_req_t> reqs;
   {
     BLELockGuard lock(_impl->mtx.get());
     if (_impl->ucRunning || _impl->ucStarting || _impl->handedOver || _impl->hoBusy) {
       return BTStatus::InvalidState;
     }
-  }
-  std::vector<ble_audio_uc_stream_req_t> reqs = _impl->requests(false);
-  if (reqs.empty()) {
-    log_e("CapInitiator: startUnicast() with no discovered acceptor endpoint");
-    return BTStatus::InvalidState;
-  }
-  auto &streams = _impl->ucStreams;
-  if (streams.size() != reqs.size()) {
-    streams.clear();
-    for (size_t i = 0; i < reqs.size(); i++) {
-      BLEAudioStream s = BLEAudioStreamAccess::create(BLE_AUDIO_STREAM_UNICAST_CLIENT);
-      if (!s) {
-        streams.clear();
-        return BTStatus::NoMemory;
-      }
-      streams.push_back(s);
+    reqs = _impl->requests(false);
+    if (reqs.empty()) {
+      log_e("CapInitiator: startUnicast() with no discovered acceptor endpoint");
+      return BTStatus::InvalidState;
     }
-  }
-  for (size_t i = 0; i < reqs.size(); i++) {
-    reqs[i].slot = BLEAudioStreamAccess::slot(streams[i]);
-  }
-  {
-    BLELockGuard lock(_impl->mtx.get());
+    auto &streams = _impl->ucStreams;
+    if (streams.size() != reqs.size()) {
+      streams.clear();
+      for (size_t i = 0; i < reqs.size(); i++) {
+        BLEAudioStream s = BLEAudioStreamAccess::create(BLE_AUDIO_STREAM_UNICAST_CLIENT);
+        if (!s) {
+          streams.clear();
+          return BTStatus::NoMemory;
+        }
+        streams.push_back(s);
+      }
+    }
+    for (size_t i = 0; i < reqs.size(); i++) {
+      reqs[i].slot = BLEAudioStreamAccess::slot(streams[i]);
+    }
     _impl->ucStarting = true;
   }
   int err = bleAudioCapUnicastStart(reqs.data(), (uint8_t)reqs.size());
@@ -813,46 +829,49 @@ bool BLEAudioCapInitiator::isUnicastStreaming() const {
 
 /** Order: source (BASE) first, then advertising (needs the BASE), then the BIG (needs the train). */
 BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInstance) {
-  if (!_impl || !_impl->audio->started) {
+  if (!_impl || !_impl->audio->started.load()) {
     log_e("CapInitiator: startBroadcast() before audio.start()");
     return BTStatus::InvalidState;
   }
   Impl &m = *_impl;
+  if (channels == 0) {
+    channels = 1;
+  }
+  std::vector<ble_audio_slot_t *> slots;
+  std::vector<uint32_t> locations;
+  ble_audio_codec_t c;
+  ble_audio_qos_t q;
+  uint16_t ctx;
+  String cfgCode;
   {
     BLELockGuard lock(m.mtx.get());
     if (m.advInstance >= 0 || m.hoBusy || m.bcStarting) {
       log_w("CapInitiator: a broadcast is already running");
       return BTStatus::InvalidState;
     }
+    while (m.bcStreams.size() > channels) {
+      m.bcStreams.pop_back();
+    }
+    while (m.bcStreams.size() < channels) {
+      BLEAudioStream s = BLEAudioStreamAccess::create(BLE_AUDIO_STREAM_BROADCAST_SOURCE);
+      if (!s) {
+        return BTStatus::NoMemory;
+      }
+      m.bcStreams.push_back(s);
+    }
+    slots.reserve(channels);
+    locations.reserve(channels);
+    for (uint8_t i = 0; i < channels; i++) {
+      slots.push_back(BLEAudioStreamAccess::slot(m.bcStreams[i]));
+      locations.push_back(1u << i);
+    }
+    m.codecQos(true, c, q);
+    ctx = static_cast<uint16_t>(m.context);
+    cfgCode = m.code;
     m.bcStarting = true;
   }
-  if (channels == 0) {
-    channels = 1;
-  }
-  while (m.bcStreams.size() > channels) {
-    m.bcStreams.pop_back();
-  }
-  while (m.bcStreams.size() < channels) {
-    BLEAudioStream s = BLEAudioStreamAccess::create(BLE_AUDIO_STREAM_BROADCAST_SOURCE);
-    if (!s) {
-      BLELockGuard lock(m.mtx.get());
-      m.bcStarting = false;
-      return BTStatus::NoMemory;
-    }
-    m.bcStreams.push_back(s);
-  }
-  std::vector<ble_audio_slot_t *> slots;
-  std::vector<uint32_t> locations;
-  for (uint8_t i = 0; i < channels; i++) {
-    slots.push_back(BLEAudioStreamAccess::slot(m.bcStreams[i]));
-    locations.push_back(1u << i);
-  }
-  ble_audio_codec_t c;
-  ble_audio_qos_t q;
-  m.codecQos(true, c, q);
   uint8_t bcode[BLE_AUDIO_BCODE_SIZE];
-  int err = bleAudioCapBroadcastCreate(slots.data(), channels > 1 ? locations.data() : nullptr, channels, &c, &q,
-                                       static_cast<uint16_t>(m.context), broadcastCode(m.code, bcode));
+  int err = bleAudioCapBroadcastCreate(slots.data(), channels > 1 ? locations.data() : nullptr, channels, &c, &q, ctx, broadcastCode(cfgCode, bcode));
   if (err != 0) {
     log_e("CapInitiator: broadcast create failed (%u BIS, err=%d)", channels, err);
     BLELockGuard lock(m.mtx.get());
@@ -889,6 +908,10 @@ BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInsta
 BTStatus BLEAudioCapInitiator::stopBroadcast() {
   if (!_impl) {
     return BTStatus::InvalidState;
+  }
+  if (bleInStackCallbackTask()) {
+    log_e("CapInitiator: stopBroadcast() cannot run from a stack callback; defer it to loop()");
+    return BTStatus::Busy;
   }
   bool starting;
   {
@@ -989,25 +1012,24 @@ BTStatus BLEAudioCapInitiator::handoverToUnicast() {
   if (!_impl) {
     return BTStatus::InvalidState;
   }
+  std::vector<ble_audio_uc_stream_req_t> reqs;
+  size_t n = 0;
   {
     BLELockGuard lock(_impl->mtx.get());
     if (!_impl->handedOver || _impl->hoBusy) {
       return BTStatus::InvalidState;
     }
-    _impl->hoBusy = true;
-  }
-  std::vector<ble_audio_uc_stream_req_t> reqs = _impl->requests(true);
-  size_t n = 0;
-  for (const auto &s : _impl->ucStreams) {
-    if (s.direction() == BLEAudioStream::Direction::Tx && n < reqs.size()) {
-      reqs[n++].slot = BLEAudioStreamAccess::slot(s);
+    reqs = _impl->requests(true);
+    for (const auto &s : _impl->ucStreams) {
+      if (s.direction() == BLEAudioStream::Direction::Tx && n < reqs.size()) {
+        reqs[n++].slot = BLEAudioStreamAccess::slot(s);
+      }
     }
-  }
-  if (reqs.empty() || n != reqs.size()) {
-    log_e("CapInitiator: the acceptors changed since the handover to broadcast");
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->hoBusy = false;
-    return BTStatus::InvalidState;
+    if (reqs.empty() || n != reqs.size()) {
+      log_e("CapInitiator: the acceptors changed since the handover to broadcast");
+      return BTStatus::InvalidState;
+    }
+    _impl->hoBusy = true;
   }
   int err = bleAudioCapHandoverToUnicast(reqs.data(), (uint8_t)reqs.size());
   if (err != 0) {
@@ -1150,17 +1172,28 @@ struct BLEAudioCapCommander::Impl {
   void handle(const ble_audio_evt_t &e) {
     switch (e.type) {
       case BLE_AUDIO_EVT_GATT_DISCOVERED:
-      case BLE_AUDIO_EVT_ACL_DISCONNECTED:
-        for (auto it = pending.begin(); it != pending.end(); ++it) {
-          if (*it == e.conn_handle) {
-            pending.erase(it);
-            if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED) {
-              (void)start(e.conn_handle);
+      case BLE_AUDIO_EVT_ACL_DISCONNECTED: {
+        bool doStart = false;
+        {
+          BLELockGuard lock(mtx.get());
+          for (auto it = pending.begin(); it != pending.end(); ++it) {
+            if (*it == e.conn_handle) {
+              pending.erase(it);
+              doStart = (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED);
+              break;
             }
-            break;
+          }
+        }
+        if (doStart) {
+          BTStatus st = e.err ? bleAudioStatus(e.err) : start(e.conn_handle);
+          if (!st) {
+            if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+              cb(st, e.conn_handle, false, false);
+            }
           }
         }
         break;
+      }
       case BLE_AUDIO_EVT_CAP_CMD_DISCOVERED: {
         const auto *d = static_cast<const ble_audio_cap_cmd_discovered_t *>(e.data);
         if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
@@ -1194,20 +1227,23 @@ BLEAudioCapCommander::operator bool() const {
 }
 
 BTStatus BLEAudioCapCommander::discover(uint16_t connHandle) {
-  if (!_impl || !_impl->audio->started) {
+  if (!_impl || !_impl->audio->started.load() || connHandle == BLE_AUDIO_CONN_NONE) {
     log_e("CapCommander: discover() before audio.start()");
     return BTStatus::InvalidState;
   }
-  if (_impl->audio->isGattReady(connHandle)) {
-    return _impl->start(connHandle);
-  }
-  for (uint16_t c : _impl->pending) {
-    if (c == connHandle) {
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    if (!_impl->audio->isGattReady(connHandle)) {
+      for (uint16_t c : _impl->pending) {
+        if (c == connHandle) {
+          return BTStatus::OK;
+        }
+      }
+      _impl->pending.push_back(connHandle);
       return BTStatus::OK;
     }
   }
-  _impl->pending.push_back(connHandle);
-  return BTStatus::OK;
+  return _impl->start(connHandle);
 }
 
 BTStatus BLEAudioCapCommander::setVolume(uint8_t volume) {

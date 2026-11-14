@@ -279,6 +279,9 @@ static bool s_bsnk_joined; /* BSINK_STARTED already emitted for the current BIG.
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
 static bool s_bsrc_up; /* BSRC_STARTED already emitted for the current BIG. */
 static void bsrc_report_started(void);
+extern void bleAudioNotifyBsrcState(void);
+extern void bleAudioArmBsrcStateWait(void);
+extern bool bleAudioWaitBsrcState(uint32_t timeoutMs);
 #endif
 
 #define BAP(slot) (&(slot)->cap.bap_stream)
@@ -359,6 +362,9 @@ static void op_started(esp_ble_audio_bap_stream_t *stream) {
        * source-level started callback. The stream states are authoritative. */
       bsrc_report_started();
     }
+  }
+  if (s->kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE) {
+    bleAudioNotifyBsrcState();
   }
 #endif
   if (s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
@@ -853,36 +859,6 @@ int bleAudioPacsSetAvailable(uint8_t dir, uint16_t contexts) {
     return ESP_ERR_INVALID_STATE;
   }
   return (int)esp_ble_audio_pacs_set_available_contexts((esp_ble_audio_dir_t)dir, contexts);
-}
-
-/**
- * Unregister the PACS records this engine committed. Must run while the host
- * mutex still exists. `bleAudioEngineDeinit()` does not call this:
- * `common_deinit` already runs `lib_pacs_deinit()` and then deletes the mutex,
- * so a later `pacs_unregister` always fails with ESP_ERR_TIMEOUT (263).
- * Supported-contexts stays write-once per boot; see `bleAudioPacsCommit`.
- */
-int bleAudioPacsRelease(void) {
-  if (!s_pacs_committed) {
-    return 0;
-  }
-  for (int i = 0; i < 2; i++) {
-    pac_rec_t *r = &s_pac[i];
-    if (!r->used) {
-      continue;
-    }
-    esp_ble_audio_dir_t dir = (i == 0) ? ESP_BLE_AUDIO_DIR_SINK : ESP_BLE_AUDIO_DIR_SOURCE;
-    (void)esp_ble_audio_pacs_cap_unregister(dir, &r->cap);
-  }
-  esp_err_t err = esp_ble_audio_pacs_unregister();
-  memset(s_pac, 0, sizeof(s_pac));
-  s_pacs_committed = false;
-  if (err != ESP_OK) {
-    /* NimBLE cannot delete a single GATT service; treat native unregister as
-     * best-effort. The next `common_init` rebuilds the table. */
-    ESP_LOGD(TAG, "PACS unregister returned %d (GATT service may persist until host teardown)", err);
-  }
-  return (int)err;
 }
 
 /* ── Unicast server ─────────────────────────────────────────────────────── */
@@ -1617,7 +1593,8 @@ static void uc_check_released(void) {}
  */
 static struct {
   bool cb_registered;
-  bool adv_added;      /* The advertising set is registered with the BAP broadcast layer. */
+  bool adv_added;            /* The advertising set is registered with the BAP broadcast layer. */
+  _Atomic bool big_pending;  /* broadcast_source_start succeeded, BIG not yet STREAMING or stopped. */
   uint8_t adv_handle;
   esp_ble_audio_bap_broadcast_source_t *source;  /* NULL when no source exists. */
 } s_bsrc;
@@ -1628,11 +1605,14 @@ static bool s_bsrc_cb_linked;
 static void bsrc_started(esp_ble_audio_bap_broadcast_source_t *source) {
   (void)source;
   bsrc_report_started();
+  bleAudioNotifyBsrcState();
 }
 
 static void bsrc_stopped(esp_ble_audio_bap_broadcast_source_t *source, uint8_t reason) {
   (void)source;
+  s_bsrc.big_pending = false;
   s_bsrc_up = false;
+  bleAudioNotifyBsrcState();
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STOPPED, CONN_NONE, reason, NULL);
 }
 
@@ -1759,6 +1739,8 @@ int bleAudioBsrcStart(uint8_t adv_handle) {
   esp_err_t err = esp_ble_audio_bap_broadcast_source_start(s_bsrc.source, adv_handle);
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "broadcast source: start on advertising set %u failed: %d", adv_handle, err);
+  } else {
+    s_bsrc.big_pending = true;
   }
   return (int)err;
 }
@@ -1784,21 +1766,39 @@ static int bsrc_ep_state(void) {
 
 int bleAudioBsrcStop(void) {
   if (s_bsrc.source == NULL) {
+    s_bsrc.big_pending = false;
     s_bsrc_up = false;
     return ESP_ERR_INVALID_STATE;
   }
   /*
-   * BSRC_STARTED can fire at QoS Configured (state 2). source_stop() is
-   * illegal there, and calling it stalls the QoS→STREAMING transition.
-   * Wait until STREAMING, then stop once. Delete only if we never left
-   * QoS Configured (legal in that state; refused once the BIG is up).
+   * BSRC_STARTED can fire at QoS Configured (state 2) while Create_BIG is in
+   * flight (s_bsrc.big_pending). source_stop() is illegal at QoS Configured
+   * and stalls the QoS->STREAMING transition, so wait on BLESync until the
+   * endpoint reaches STREAMING or Create_BIG terminates. If start() was never
+   * issued (big_pending == false), delete immediately with zero delay.
    */
-  const TickType_t deadline = xTaskGetTickCount() + pdMS_TO_TICKS(5000);
+  const TickType_t start_tick = xTaskGetTickCount();
+  const TickType_t budget = pdMS_TO_TICKS(5000);
   int st = bsrc_ep_state();
-  while (st != ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING && xTaskGetTickCount() < deadline) {
-    vTaskDelay(pdMS_TO_TICKS(20));
+  while (st != ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING && s_bsrc.big_pending) {
+    const TickType_t elapsed = xTaskGetTickCount() - start_tick;
+    if (elapsed >= budget) {
+      break;
+    }
+    bleAudioArmBsrcStateWait();
+    st = bsrc_ep_state();
+    if (st == ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING || !s_bsrc.big_pending) {
+      bleAudioNotifyBsrcState();
+      break;
+    }
+    const uint32_t remain_ms = (uint32_t)((uint64_t)(budget - elapsed) * portTICK_PERIOD_MS);
+    if (!bleAudioWaitBsrcState(remain_ms ? remain_ms : 1)) {
+      bleAudioNotifyBsrcState();
+      break;
+    }
     st = bsrc_ep_state();
   }
+  s_bsrc.big_pending = false;
   if (st == ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING) {
     int err = (int)esp_ble_audio_bap_broadcast_source_stop(s_bsrc.source);
     if (err == 0) {
@@ -1839,6 +1839,7 @@ void bleAudioBsrcDelete(void) {
       return;
     }
     s_bsrc.source = NULL;
+    s_bsrc.big_pending = false;
   }
   if (s_bsrc.adv_added) {
     esp_ble_audio_bap_broadcast_adv_info_t info = {.adv_handle = s_bsrc.adv_handle};

@@ -47,13 +47,13 @@ constexpr uint8_t kAdTypeServiceData16 = 0x16;
  *
  * @param ext           Data object to fill (caller sizes it, usually EXTENDED_MAX_PAYLOAD).
  * @param broadcastId   24-bit Broadcast_ID.
- * @param advName       Broadcast Name / Complete Local Name payload.
+ * @param advName       Broadcast Name / Complete Local Name payload (Broadcast Name
+ *                      and PBA Program Info are UTF-8-truncated to 32 octets per PBP §3.1.1).
  * @param withPba       Add the PBP Public Broadcast Announcement.
  * @param audioContext  Streaming Audio Contexts LTV of the PBA (ignored without withPba).
  * @param pbaFeatures   PBP features byte (ignored without withPba).
- * @return OK on success; the first failure of the underlying setters otherwise.
  */
-BTStatus buildExt(BLEAdvertisementData &ext, uint32_t broadcastId, const String &advName, bool withPba, uint16_t audioContext, uint8_t pbaFeatures);
+void buildExt(BLEAdvertisementData &ext, uint32_t broadcastId, const String &advName, bool withPba, uint16_t audioContext, uint8_t pbaFeatures);
 
 }  // namespace BLEAudioAuracast
 

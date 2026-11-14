@@ -206,12 +206,15 @@ struct BLEAudioBroadcastSource::Impl {
     adv.setExtSID(inst, inst & 0x0F);
 
     BLEAdvertisementData ext(BLEAdvertisementData::EXTENDED_MAX_PAYLOAD);
+    {
+      BLELockGuard lock(mtx.get());
 #if BLE_AUDIO_PBP_SUPPORTED
-    BTStatus st = BLEAudioAuracast::buildExt(ext, broadcastId, advName, publicBroadcast, static_cast<uint16_t>(context), pbaFeatures());
+      BLEAudioAuracast::buildExt(ext, broadcastId, advName, publicBroadcast, static_cast<uint16_t>(context), pbaFeatures());
 #else
-    BTStatus st = BLEAudioAuracast::buildExt(ext, broadcastId, advName, false, 0, 0);
+      BLEAudioAuracast::buildExt(ext, broadcastId, advName, false, 0, 0);
 #endif
-    st = adv.setExtAdvertisementData(inst, ext);
+    }
+    BTStatus st = adv.setExtAdvertisementData(inst, ext);
     if (!st) {
       log_e("BroadcastSource: extended advertising data rejected on instance %u (%s)", inst, st.toString());
       return st;
@@ -416,10 +419,18 @@ BTStatus BLEAudioBroadcastSource::start(uint8_t advInstance) {
       return bleAudioStatus(err);
     }
   }
-  const String advName = _impl->name.length() ? _impl->name : String(BLE.getDeviceName().c_str());
+  String cfgName;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    cfgName = _impl->name;
+  }
+  const String advName = cfgName.length() ? cfgName : String(BLE.getDeviceName().c_str());
   BTStatus st = _impl->advertise(advInstance, advName);
   if (!st) {
+    bleAudioBsrcDelete();
     BLELockGuard lock(_impl->mtx.get());
+    _impl->created = false;
+    _impl->dirty = true;
     _impl->starting = false;
     _impl->advInstance = -1;
     return st;
@@ -430,12 +441,15 @@ BTStatus BLEAudioBroadcastSource::start(uint8_t advInstance) {
     BLEAdvertising adv = BLE.getAdvertising();
     (void)adv.stopPeriodicAdv(advInstance);
     (void)adv.stopExtended(advInstance);
+    bleAudioBsrcDelete();
     BLELockGuard lock(_impl->mtx.get());
+    _impl->created = false;
+    _impl->dirty = true;
     _impl->starting = false;
     _impl->advInstance = -1;
     return bleAudioStatus(err);
   }
-  log_i("BroadcastSource: \"%s\" starting on adv instance %u (id 0x%06lX)", advName.c_str(), advInstance, (unsigned long)_impl->broadcastId);
+  log_i("BroadcastSource: \"%s\" starting on adv instance %u (id 0x%06lX)", advName.c_str(), advInstance, (unsigned long)getBroadcastId());
   return BTStatus::OK;
 }
 
@@ -443,6 +457,10 @@ BTStatus BLEAudioBroadcastSource::start(uint8_t advInstance) {
 BTStatus BLEAudioBroadcastSource::stop() {
   if (!_impl) {
     return BTStatus::InvalidState;
+  }
+  if (bleInStackCallbackTask()) {
+    log_e("BroadcastSource: stop() cannot run from a stack callback; defer it to loop()");
+    return BTStatus::Busy;
   }
   int16_t instance;
   bool live;

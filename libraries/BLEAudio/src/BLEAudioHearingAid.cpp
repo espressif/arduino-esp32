@@ -214,9 +214,9 @@ BLEAudioHearingAidDevice BLEAudio::createHearingAidDevice() {
 
 struct BLEAudioHearingAidController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
-  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
-  BLEAudioControlLink link;  ///< The hearing aid being controlled.
-  uint8_t active = 0;        ///< Peer's active preset, 0 when unknown (reset on discover and disconnect).
+  BLESharedMutex mtx;             ///< Protects this role's callbacks and shared state.
+  BLEAudioControlLink link;       ///< The hearing aid being controlled.
+  std::atomic<uint8_t> active{0}; ///< Peer's active preset, 0 when unknown (reset on discover and disconnect).
   DiscoveredCallback discoveredCb;
   PresetCallback presetCb;
   SwitchCallback switchCb;
@@ -229,7 +229,7 @@ struct BLEAudioHearingAidController::Impl {
     if (BLE_AUDIO_EVT_GROUP(e.type) == BLE_AUDIO_GRP_CORE) {
       const int err = link.onCore(e, bleAudioHasCliDiscover);
       if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED && !link.bound()) {
-        active = 0;
+        active.store(0, std::memory_order_relaxed);
       }
       if (err) {
         if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
@@ -238,7 +238,7 @@ struct BLEAudioHearingAidController::Impl {
       }
       return;
     }
-    if (e.conn_handle != link.conn || !e.data) {
+    if (e.conn_handle != link.getConn() || !e.data) {
       return;
     }
     switch (e.type) {
@@ -258,7 +258,7 @@ struct BLEAudioHearingAidController::Impl {
       case BLE_AUDIO_EVT_HAS_CLI_ACTIVE: {
         const uint8_t index = *static_cast<const uint8_t *>(e.data);
         if (!e.err) {
-          active = index;
+          active.store(index, std::memory_order_relaxed);
         }
         if (auto cb = bleAudioCopyCallback(*this, &Impl::switchCb)) {
           cb(bleAudioStatus(e.err), index);
@@ -280,36 +280,56 @@ BTStatus BLEAudioHearingAidController::discover(uint16_t connHandle) {
   if (!_impl) {
     return BTStatus::InvalidState;
   }
-  _impl->active = 0;
+  _impl->active.store(0, std::memory_order_relaxed);
   return _impl->link.discover(*_impl->audio, connHandle, bleAudioHasCliDiscover);
 }
 
 uint16_t BLEAudioHearingAidController::getConnHandle() const {
-  return _impl ? _impl->link.conn : BLE_AUDIO_CONN_NONE;
+  return _impl ? _impl->link.getConn() : BLE_AUDIO_CONN_NONE;
 }
 
 BTStatus BLEAudioHearingAidController::readPresets(uint8_t startIndex, uint8_t maxCount) {
-  return _impl ? bleAudioStatus(bleAudioHasCliReadPresets(_impl->link.conn, startIndex, maxCount)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioHasCliReadPresets(c, startIndex, maxCount)) : BTStatus::InvalidState;
 }
 
 BTStatus BLEAudioHearingAidController::setActivePreset(uint8_t index, bool sync) {
-  return _impl ? bleAudioStatus(bleAudioHasCliSetActive(_impl->link.conn, index, sync)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioHasCliSetActive(c, index, sync)) : BTStatus::InvalidState;
 }
 
 BTStatus BLEAudioHearingAidController::nextPreset(bool sync) {
-  return _impl ? bleAudioStatus(bleAudioHasCliStep(_impl->link.conn, true, sync)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioHasCliStep(c, true, sync)) : BTStatus::InvalidState;
 }
 
 BTStatus BLEAudioHearingAidController::previousPreset(bool sync) {
-  return _impl ? bleAudioStatus(bleAudioHasCliStep(_impl->link.conn, false, sync)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioHasCliStep(c, false, sync)) : BTStatus::InvalidState;
 }
 
 BTStatus BLEAudioHearingAidController::renamePreset(uint8_t index, const String &name) {
-  return _impl ? bleAudioStatus(bleAudioHasCliRename(_impl->link.conn, index, name.c_str())) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioHasCliRename(c, index, name.c_str())) : BTStatus::InvalidState;
 }
 
 uint8_t BLEAudioHearingAidController::getActivePreset() const {
-  return _impl ? _impl->active : 0;
+  return _impl ? _impl->active.load(std::memory_order_relaxed) : 0;
 }
 
 BLEAudioHearingAidController &BLEAudioHearingAidController::onDiscovered(DiscoveredCallback cb) {

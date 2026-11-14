@@ -86,12 +86,22 @@ static struct {
 #endif
 #define BA_PAST_CONNS CONFIG_BT_MAX_CONN
 static struct {
-  uint16_t conn; /* 0: free (handle 0 is never a live conn for the assistant) */
-  uint8_t sent[32]; /* Source_ID bitmap, indexed like the old s_ba.past_sent */
+  uint16_t conn;    /* CONN_NONE when free (handle 0 is a valid first ACL). */
+  uint8_t sent[32]; /* 256-bit Source_ID bitmap (byte = id >> 3, bit = 1u << (id & 7)). */
 } s_ba_past[BA_PAST_CONNS];
+
+static void past_reset(void) {
+  for (int i = 0; i < BA_PAST_CONNS; i++) {
+    s_ba_past[i].conn = CONN_NONE;
+    memset(s_ba_past[i].sent, 0, sizeof(s_ba_past[i].sent));
+  }
+}
 
 /** @return The bitmap row for @p conn, or NULL when it has none (not created). */
 static uint8_t *past_find(uint16_t conn) {
+  if (conn == CONN_NONE) {
+    return NULL;
+  }
   for (int i = 0; i < BA_PAST_CONNS; i++) {
     if (s_ba_past[i].conn == conn) {
       return s_ba_past[i].sent;
@@ -102,12 +112,15 @@ static uint8_t *past_find(uint16_t conn) {
 
 /** @return The bitmap row for @p conn, claiming (and clearing) a free one. */
 static uint8_t *past_claim(uint16_t conn) {
+  if (conn == CONN_NONE) {
+    return NULL;
+  }
   uint8_t *row = past_find(conn);
   if (row) {
     return row;
   }
   for (int i = 0; i < BA_PAST_CONNS; i++) {
-    if (s_ba_past[i].conn == 0) {
+    if (s_ba_past[i].conn == CONN_NONE) {
       s_ba_past[i].conn = conn;
       memset(s_ba_past[i].sent, 0, sizeof(s_ba_past[i].sent));
       return s_ba_past[i].sent;
@@ -120,7 +133,8 @@ static uint8_t *past_claim(uint16_t conn) {
 static void past_forget(uint16_t conn) {
   for (int i = 0; i < BA_PAST_CONNS; i++) {
     if (s_ba_past[i].conn == conn) {
-      memset(&s_ba_past[i], 0, sizeof(s_ba_past[i]));
+      s_ba_past[i].conn = CONN_NONE;
+      memset(s_ba_past[i].sent, 0, sizeof(s_ba_past[i].sent));
     }
   }
 }
@@ -145,21 +159,22 @@ static void emit_result(uint16_t conn, int err, uint8_t op, uint8_t src_id) {
  */
 static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *st) {
   const uint8_t id = st->src_id;
+  const uint8_t idx = id >> 3;
   const uint8_t bit = (uint8_t)(1u << (id & 7));
   if (st->pa_sync_state != ESP_BLE_AUDIO_BAP_PA_STATE_INFO_REQ) {
     uint8_t *slot = past_find(conn->handle);
     if (slot) {
-      *slot &= (uint8_t)~bit;
+      slot[idx] &= (uint8_t)~bit;
     }
     return;
   }
   /* No free row (more peers than links) degrades to serving every request. */
   uint8_t *slot = past_claim(conn->handle);
-  if (slot && (*slot & bit)) {
+  if (slot && (slot[idx] & bit)) {
     return;
   }
   if (slot) {
-    *slot |= bit;
+    slot[idx] |= bit;
   }
 
   int err = -ENOENT;
@@ -300,7 +315,7 @@ static void ba_on_gap(const void *event) {
 /** Engine deinit hook; s_ba_cb_linked deliberately survives (see its comment). */
 static void ba_on_deinit(void) {
   memset(&s_ba, 0, sizeof(s_ba));
-  memset(&s_ba_past, 0, sizeof(s_ba_past));
+  past_reset();
 }
 
 static const ble_audio_unit_hooks_t s_hooks = {.on_gap = ba_on_gap, .on_deinit = ba_on_deinit};
@@ -389,6 +404,7 @@ int bleAudioBaInit(void) {
   if (err != 0 || s_ba.cb_registered) {
     return err;
   }
+  past_reset();
   err = esp_ble_audio_bap_broadcast_assistant_register_cb(&s_ba_cb);
   /* After a re-init the table may still be linked from the previous session; that is fine. */
   if (err != ESP_OK && !s_ba_cb_linked) {

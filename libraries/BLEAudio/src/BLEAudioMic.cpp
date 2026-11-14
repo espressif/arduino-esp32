@@ -40,8 +40,8 @@
 
 struct BLEAudioMicDevice::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
-  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
-  bool muted = false;  ///< Initial state before start, then the last reported state.
+  BLESharedMutex mtx;             ///< Protects this role's callbacks and shared state.
+  std::atomic<bool> muted{false}; ///< Initial state before start, then the last reported state.
   MuteCallback muteCb;
 
   /** Engine event for this group: the mute state changed (by a client or locally). */
@@ -49,9 +49,10 @@ struct BLEAudioMicDevice::Impl {
     if (e.type != BLE_AUDIO_EVT_MICP_DEV_MUTE || !e.data) {
       return;
     }
-    muted = *static_cast<const uint8_t *>(e.data) == BLE_AUDIO_MICP_MUTED;
+    const bool m = *static_cast<const uint8_t *>(e.data) == BLE_AUDIO_MICP_MUTED;
+    muted.store(m, std::memory_order_relaxed);
     if (auto cb = bleAudioCopyCallback(*this, &Impl::muteCb)) {
-      cb(muted);
+      cb(m);
     }
   }
 };
@@ -82,7 +83,7 @@ BTStatus BLEAudioMicDevice::disableMute() {
 }
 
 bool BLEAudioMicDevice::isMuted() const {
-  return _impl && _impl->muted;
+  return _impl && _impl->muted.load(std::memory_order_relaxed);
 }
 
 BLEAudioMicDevice &BLEAudioMicDevice::onMuteChanged(MuteCallback cb) {
@@ -118,7 +119,7 @@ BLEAudioMicDevice BLEAudio::createMicDevice() {
   });
   _impl->roleApplies.push_back([weak]() -> BTStatus {
     auto s = weak.lock();
-    return s ? bleAudioStatus(bleAudioMicpDevInit(s->muted)) : BTStatus::OK;
+    return s ? bleAudioStatus(bleAudioMicpDevInit(s->muted.load())) : BTStatus::OK;
   });
   return BLEAudioMicDevice(d);
 #else
@@ -133,9 +134,9 @@ BLEAudioMicDevice BLEAudio::createMicDevice() {
 
 struct BLEAudioMicController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
-  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
-  BLEAudioControlLink link;  ///< The microphone device being controlled.
-  bool muted = false;        ///< Last state reported by the device.
+  BLESharedMutex mtx;             ///< Protects this role's callbacks and shared state.
+  BLEAudioControlLink link;       ///< The microphone device being controlled.
+  std::atomic<bool> muted{false}; ///< Last state reported by the device.
   DiscoveredCallback discoveredCb;
   MuteCallback muteCb;
   InputCallback inputCb;
@@ -154,7 +155,7 @@ struct BLEAudioMicController::Impl {
       }
       return;
     }
-    if (e.conn_handle != link.conn) {
+    if (e.conn_handle != link.getConn()) {
       return;
     }
     switch (e.type) {
@@ -165,9 +166,10 @@ struct BLEAudioMicController::Impl {
         break;
       case BLE_AUDIO_EVT_MICP_CTLR_MUTE:
         if (!e.err && e.data) {
-          muted = *static_cast<const uint8_t *>(e.data) == BLE_AUDIO_MICP_MUTED;
+          const bool m = *static_cast<const uint8_t *>(e.data) == BLE_AUDIO_MICP_MUTED;
+          muted.store(m, std::memory_order_relaxed);
           if (auto cb = bleAudioCopyCallback(*this, &Impl::muteCb)) {
-            cb(muted);
+            cb(m);
           }
         }
         break;
@@ -195,27 +197,43 @@ BTStatus BLEAudioMicController::discover(uint16_t connHandle) {
 }
 
 uint16_t BLEAudioMicController::getConnHandle() const {
-  return _impl ? _impl->link.conn : BLE_AUDIO_CONN_NONE;
+  return _impl ? _impl->link.getConn() : BLE_AUDIO_CONN_NONE;
 }
 
 BTStatus BLEAudioMicController::mute() {
-  return _impl ? bleAudioStatus(bleAudioMicpCtlrSetMute(_impl->link.conn, true)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioMicpCtlrSetMute(c, true)) : BTStatus::InvalidState;
 }
 
 BTStatus BLEAudioMicController::unmute() {
-  return _impl ? bleAudioStatus(bleAudioMicpCtlrSetMute(_impl->link.conn, false)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioMicpCtlrSetMute(c, false)) : BTStatus::InvalidState;
 }
 
 BTStatus BLEAudioMicController::readMute() {
-  return _impl ? bleAudioStatus(bleAudioMicpCtlrReadMute(_impl->link.conn)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioMicpCtlrReadMute(c)) : BTStatus::InvalidState;
 }
 
 bool BLEAudioMicController::isMuted() const {
-  return _impl && _impl->muted;
+  return _impl && _impl->muted.load(std::memory_order_relaxed);
 }
 
 BTStatus BLEAudioMicController::setInputGain(int8_t gain) {
-  return _impl ? bleAudioStatus(bleAudioMicpCtlrSetGain(_impl->link.conn, gain)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  const uint16_t c = _impl->link.activeConn();
+  return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioMicpCtlrSetGain(c, gain)) : BTStatus::InvalidState;
 }
 
 BLEAudioMicController &BLEAudioMicController::onDiscovered(DiscoveredCallback cb) {

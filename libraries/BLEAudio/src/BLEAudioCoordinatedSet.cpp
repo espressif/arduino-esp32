@@ -255,17 +255,30 @@ struct BLEAudioCoordinatedSetCoordinator::Impl {
   void handle(const ble_audio_evt_t &e) {
     switch (e.type) {
       case BLE_AUDIO_EVT_GATT_DISCOVERED:
-      case BLE_AUDIO_EVT_ACL_DISCONNECTED:
-        for (auto it = pending.begin(); it != pending.end(); ++it) {
-          if (*it == e.conn_handle) {
-            pending.erase(it);
-            if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED) {
-              (void)start(e.conn_handle);
+      case BLE_AUDIO_EVT_ACL_DISCONNECTED: {
+        bool doStart = false;
+        {
+          BLELockGuard lock(mtx.get());
+          for (auto it = pending.begin(); it != pending.end(); ++it) {
+            if (*it == e.conn_handle) {
+              pending.erase(it);
+              doStart = (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED);
+              break;
             }
-            break;
+          }
+        }
+        if (doStart) {
+          BTStatus st = e.err ? bleAudioStatus(e.err) : start(e.conn_handle);
+          if (!st) {
+            BLEAudioCoordinatedSetInfo info;
+            info.connHandle = e.conn_handle;
+            if (auto cb = bleAudioCopyCallback(*this, &Impl::discoveredCb)) {
+              cb(st, info);
+            }
           }
         }
         break;
+      }
       case BLE_AUDIO_EVT_CSIP_DISCOVERED: {
         BLEAudioCoordinatedSetInfo info;
         info.connHandle = e.conn_handle;
@@ -276,6 +289,7 @@ struct BLEAudioCoordinatedSetCoordinator::Impl {
           info.rank = s->rank;
           info.lockable = s->lockable;
           memcpy(info.sirk, s->sirk, sizeof(info.sirk));
+          BLELockGuard lock(mtx.get());
           if (set.setCount == 0 && info.setCount) {
             set = info;
           }
@@ -308,36 +322,67 @@ BLEAudioCoordinatedSetCoordinator::operator bool() const {
 }
 
 BTStatus BLEAudioCoordinatedSetCoordinator::discover(uint16_t connHandle) {
-  if (!_impl || !_impl->audio->started) {
+  if (!_impl || !_impl->audio->started.load() || connHandle == BLE_AUDIO_CONN_NONE) {
     log_e("CoordinatedSet: discover() before audio.start()");
     return BTStatus::InvalidState;
   }
-  if (_impl->audio->isGattReady(connHandle)) {
-    return _impl->start(connHandle);
-  }
-  for (uint16_t c : _impl->pending) {
-    if (c == connHandle) {
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    if (!_impl->audio->isGattReady(connHandle)) {
+      for (uint16_t c : _impl->pending) {
+        if (c == connHandle) {
+          return BTStatus::OK;
+        }
+      }
+      _impl->pending.push_back(connHandle);
       return BTStatus::OK;
     }
   }
-  _impl->pending.push_back(connHandle);
-  return BTStatus::OK;
+  return _impl->start(connHandle);
 }
 
 bool BLEAudioCoordinatedSetCoordinator::isSetMember(const uint8_t *advPayload, size_t len) const {
-  return _impl && _impl->set.setCount && advPayload && bleAudioCsipIsSetMember(_impl->set.sirk, advPayload, (uint16_t)len);
+  if (!_impl || !advPayload) {
+    return false;
+  }
+  BLEAudioCoordinatedSetInfo s;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    s = _impl->set;
+  }
+  return s.setCount && bleAudioCsipIsSetMember(s.sirk, advPayload, (uint16_t)len);
 }
 
 BTStatus BLEAudioCoordinatedSetCoordinator::lock() {
-  return (_impl && _impl->set.setCount) ? bleAudioStatus(bleAudioCsipCoordLock(_impl->set.sirk, true)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  BLEAudioCoordinatedSetInfo s;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    s = _impl->set;
+  }
+  return s.setCount ? bleAudioStatus(bleAudioCsipCoordLock(s.sirk, true)) : BTStatus::InvalidState;
 }
 
 BTStatus BLEAudioCoordinatedSetCoordinator::unlock() {
-  return (_impl && _impl->set.setCount) ? bleAudioStatus(bleAudioCsipCoordLock(_impl->set.sirk, false)) : BTStatus::InvalidState;
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  BLEAudioCoordinatedSetInfo s;
+  {
+    BLELockGuard lock(_impl->mtx.get());
+    s = _impl->set;
+  }
+  return s.setCount ? bleAudioStatus(bleAudioCsipCoordLock(s.sirk, false)) : BTStatus::InvalidState;
 }
 
 BLEAudioCoordinatedSetInfo BLEAudioCoordinatedSetCoordinator::setInfo() const {
-  return _impl ? _impl->set : BLEAudioCoordinatedSetInfo();
+  if (!_impl) {
+    return BLEAudioCoordinatedSetInfo();
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return _impl->set;
 }
 
 BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onDiscovered(DiscoveredCallback cb) {
