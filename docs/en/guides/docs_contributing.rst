@@ -23,7 +23,7 @@ How to Collaborate
 
 Everyone with some knowledge to share is welcome to collaborate.
 
-One thing you need to consider is the fact that your contribution must be concise and assertive since it will be used by people developing projects. The information is very important for everyone, be sure you are not making the developer's life harder!
+One thing you need to consider is the fact that your contribution must be concise and assertive since it will be used by people developing projects. The information is very important for everyone, so be sure you are not making the developer's life harder!
 
 Documentation Guide
 -------------------
@@ -41,7 +41,7 @@ First Steps
 
 Before starting your collaboration, you need to get the documentation source code from the Arduino-ESP32 project.
 
-* **Step 1** - Fork the `Arduino-ESP32`_ to your GitHub account.
+* **Step 1** - Fork the `Arduino-ESP32`_ project to your GitHub account.
 * **Step 2** - Check out the recently created fork.
 * **Step 3** - Create a new branch for the changes/addition to the docs.
 * **Step 4** - Write!
@@ -56,7 +56,7 @@ your system, you may need to use a virtual environment to install the packages.
 
     pip install -r requirements.txt
 
-The requirements file is under the ``docs`` folder.
+The requirements file is in the ``docs`` folder.
 
 Using Visual Studio Code
 ************************
@@ -106,12 +106,12 @@ The HTML pages are in ``_build/en/generic/html``.
 Sections
 --------
 
-The Arduino ESP32 is structured in some sections to make it easier to maintain. Here is a brief description of this structure.
+The Arduino ESP32 documentation is structured in sections to make it easier to maintain. Here is a brief description of this structure.
 
 API
 ***
 
-In this section, you will include all the documentation about drivers, libraries, and any other related to the core.
+In this section, you will include all the documentation about drivers, libraries, and any thing else related to the core.
 
 In this section, we do not add general information. For more general information, we have sections for other related parts, like the FAQ, library builder, troubleshooting, etc.
 
@@ -139,7 +139,7 @@ If you want to add a specific tutorial related to the Arduino core for ESP32, th
 Images and Assets
 *****************
 
-All the files used on the documentation must be stored in the ``_static`` folder. Be sure that the content used is not with any copyright restriction.
+All the files used in the documentation must be stored in the ``_static`` folder. Be sure that the content used is not with any copyright restriction.
 
 Documentation Rules
 -------------------
@@ -151,7 +151,7 @@ This will help you to follow the structure as well as to get inspired.
 Espressif Manual of Style
 *************************
 
-The `Espressif Manual of Style <https://mos.espressif.com/index.html>`_ (esp-mos) describes established practices for Espressif documentation: punctuation, numbers, units, mathematical expressions, figures, color accessibility, tables, UI elements, and admonitions. Follow it when writing or editing pages here.
+The `Espressif Manual of Style <https://mos.espressif.com/>`_ (esp-mos) describes established practices for Espressif documentation: punctuation, numbers, units, mathematical expressions, figures, color accessibility, tables, UI elements, and admonitions. Follow it when writing or editing pages here.
 
 Basic Structure
 ***************
@@ -305,7 +305,7 @@ To include links to external content, you can use two ways.
 Images
 ******
 
-To include images in the docs, first, add all the files into the ``_static`` folder with a filename that makes sense for the topic.
+To include images in the docs, first add all the files into the ``_static`` folder with a filename that makes sense for the topic.
 
 After that, you can use the following structure to include the image in the docs.
 
@@ -323,7 +323,7 @@ Be sure the file size does not exceed 600 kB.
 Support
 *******
 
-If you need support on the documentation, you can ask a question in the discussion `here <https://github.com/espressif/arduino-esp32/discussions>`_.
+If you need support on the documentation, you can ask a question in `GitHub discussions <https://github.com/espressif/arduino-esp32/discussions>`_.
 
 Additional Guidelines
 ---------------------
