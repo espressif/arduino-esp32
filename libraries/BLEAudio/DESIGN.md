@@ -89,6 +89,7 @@ See [Feature guards](#feature-guards).
 | **One PA sync at a time** | The broadcast sink follows one source; an assistant request is refused while a PA sync is in use. |
 | **GATT frozen after `start()`** | Roles that register services must be created before `audio.start()`; swapping roles needs `audio.end()` → `audio.begin()`. Enforced on both backends (`InvalidState`): NimBLE freezes its single committed table, Bluedroid refuses new staging to keep the observable contract identical. |
 | **Standalone `BLEIso` CIS on Bluedroid** | The ISO transport adopts the physical ACL at GATTC CONNECT, independent of which GATTC app opened it; raw CIS may use a `BLEClient` ACL. LE Audio central links still use `audio.connect()` so the audio engine owns GATT discovery and security. |
+| **PACS supported contexts are boot-pinned** | The prebuilt stack publishes the first committed Supported Contexts value per boot and answers later sets with `-EALREADY`. Re-`begin()` with different contexts logs a warning and keeps serving the first value (available contexts stay live-updatable). |
 | **Preview status** | The LE Audio APIs are still marked preview in IDF. |
 
 ## Layering and alignment with `BLE`
