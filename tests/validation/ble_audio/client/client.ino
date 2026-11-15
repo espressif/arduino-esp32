@@ -1738,8 +1738,90 @@ void setup() {
   waitForPhase(14);
   Serial.println("[CLIENT] Phase14 cap_bc_interleave done");
 
-  // ===== Phase 15: Memory release + reinit guard =====
+  // ===== Phases 15-17: server-driven (start retry, security policy, ISO gates) =====
   waitForPhase(15);
+  Serial.println("[CLIENT] Phase15 start_retry_refused done");
+
+  waitForPhase(16);
+  Serial.println("[CLIENT] Phase16 security_policy done");
+
+  waitForPhase(17);
+  Serial.println("[CLIENT] Phase17 iso_handle_gates done");
+
+  // ===== Phase 18: mic_mute_disabled (MICS tri-state + fast unmute refusal) =====
+  waitForPhase(18);
+#if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
+  {
+    BLE.end(false);
+    delay(500);
+    int disabled = 0, unmuteRc = -99, noresult = 0, sawFalse = 0;
+    volatile bool discDone = false, sawMuted = false, sawUnmuted = false, resultFired = false;
+    BTStatus st = BLE.begin("BLE_CLT_MIC");
+    if (st) {
+      BLEAudio audio = BLE.getAudioController();
+      if (audio.begin()) {
+        BLEAudioMicController mc = audio.createMicController();
+        mc.onDiscovered([&discDone](BTStatus s2, uint8_t) {
+          discDone = (bool)s2;
+        });
+        mc.onMuteChanged([&sawMuted, &sawUnmuted, &sawFalse](bool muted) {
+          if (muted) {
+            sawMuted = true;
+          } else {
+            sawUnmuted = true;
+          }
+        });
+        mc.onResult([&resultFired](BLEAudioMicController::Operation, BTStatus) {
+          resultFired = true;
+        });
+        if (audio.start()) {
+          BTAddress addr;
+          if (findTarget(addr)) {
+            uint16_t h = audioConnect(audio, addr);
+            if (h != 0xFFFF && mc.discover(h)) {
+              for (int i = 0; i < 200 && !discDone; i++) {
+                delay(50);
+              }
+              if (discDone && mc.mute()) {
+                for (int i = 0; i < 200 && !sawMuted; i++) {
+                  delay(50);
+                }
+                if (sawMuted) {
+                  mc.readMute();
+                  for (int i = 0; i < 200 && !sawUnmuted; i++) {
+                    delay(50);
+                  }
+                  sawFalse = sawUnmuted ? 1 : 0;
+                  disabled = mc.isMuteDisabled() ? 1 : 0;
+                  unmuteRc = (int)mc.unmute().code();
+                  // A refused unmute must stay silent: no async onResult may fire.
+                  for (int i = 0; i < 20 && !resultFired; i++) {
+                    delay(50);
+                  }
+                  noresult = resultFired ? 0 : 1;
+                }
+              }
+            }
+          }
+        }
+        audio.end();
+      }
+      Serial.printf("[CLIENT] MicDisable disabled=%d unmuteRc=%d noresult=%d sawFalse=%d\n", disabled, unmuteRc,
+                    noresult, sawFalse);
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin("BLE_CLT");
+    } else {
+      Serial.println("[CLIENT] MicDisable not supported");
+    }
+  }
+#else
+  Serial.println("[CLIENT] MicDisable not supported");
+#endif
+  Serial.println("[CLIENT] Phase18 mic_mute_disabled done");
+
+  // ===== Phase 19: Memory release + reinit guard =====
+  waitForPhase(19);
 
   size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);
   Serial.printf("[CLIENT] Heap before release: %u\n", (unsigned)heapBeforeRelease);

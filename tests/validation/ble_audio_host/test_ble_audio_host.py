@@ -325,6 +325,20 @@ async def _control_gatt(dut, name, record, local_svcs):
 
             await acheck("ccp", _ccp())
 
+            async def _tbs_uri():
+                # TBS v1.0 sec 3.4: the Bearer URI Schemes Supported List is
+                # comma-separated with no trailing comma. The Arduino layer
+                # sanitizes input and the IDF patch strips its internal
+                # separator on read/notify-by-UUID; a trailing comma on air
+                # means the unwrapped notify-by-handle path leaked.
+                assert gatt.has_char(le.CHR["BEARER_URI_LIST"]), "no Bearer URI Schemes list"
+                val = await gatt.read(le.CHR["BEARER_URI_LIST"])
+                assert val, "empty Bearer URI Schemes list"
+                assert not val.endswith(b","), f"0x2BB6 has a trailing comma on air: {val!r}"
+                assert b",," not in val, f"0x2BB6 has an empty scheme token: {val!r}"
+
+            await acheck("tbs_uri_schemes", _tbs_uri())
+
             async def _csip():
                 size = await gatt.read(le.CHR["SET_SIZE"])
                 rank = await gatt.read(le.CHR["RANK"])

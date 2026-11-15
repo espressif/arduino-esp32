@@ -108,6 +108,7 @@ CHR = {
     "MEDIA_CP": uuid16(0x2BA4),
     # TBS / GTBS
     "BEARER_PROVIDER": uuid16(0x2BB3),
+    "BEARER_URI_LIST": uuid16(0x2BB6),
     "CALL_STATE": uuid16(0x2BBD),
     "CALL_CP": uuid16(0x2BBE),
     # HAS

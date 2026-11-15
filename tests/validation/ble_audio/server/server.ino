@@ -50,7 +50,11 @@ bool phaseAssistantDone = false;       // broadcast_assistant (phase 11, Broadca
 bool phaseHandoverDone = false;        // cap_handover (phase 12, CAP acceptor: unicast server + delegator sink)
 bool phaseStopRaceDone = false;        // bcast_stop_race (phase 13, BroadcastSource start/stop race)
 bool phaseCapBcDone = false;           // cap_bc_interleave (phase 14, CAP startBroadcast vs streams() snapshot)
-bool phaseMemoryDone = false;          // memory_release (phase 15, tail of suite)
+bool phaseStartRetryDone = false;      // start_retry_refused (phase 15, failed start() must not retry)
+bool phaseSecPolicyDone = false;       // security_policy (phase 16, explicit audio security policy)
+bool phaseIsoGatesDone = false;        // iso_handle_gates (phase 17, dead-handle connectCis refusal)
+bool phaseMicDisableDone = false;        // mic_mute_disabled (phase 18, MICS tri-state)
+bool phaseMemoryDone = false;          // memory_release (phase 19, tail of suite)
 
 // Control-profile server-side observation counters (written from role callbacks).
 volatile uint32_t ctrlVolWrites = 0;  // VCP renderer state changes seen
@@ -357,22 +361,15 @@ void loop() {
         Serial.printf("[SERVER] Audio preset LC3_16_2_1 sr=%lu octets=%u\n", (unsigned long)cfg.samplingRateHz, (unsigned)cfg.octetsPerFrame);
 
         // Once audio owns the committed table, service removal must hide only
-        // that range and a late NimBLE restage must not reset the whole table.
+        // that range and a late restage must be refused on both backends
+        // (NimBLE's frozen table and Bluedroid's matched InvalidState).
         BTStatus removed = srv.removeService(removeSvc);
         BLEService lateSvc = srv.createService(BLEUUID("a10c0005-0000-1000-8000-00805f9b34fb"));
         lateSvc.createCharacteristic(BLEUUID("a10c0006-0000-1000-8000-00805f9b34fb"), BLEProperty::Read, BLEPermission::ReadOpen);
         BTStatus restaged = srv.start();
-        // `removed` is true when the removal was accepted. On NimBLE the
-        // engine-owned table must additionally refuse the late restage; on
-        // Bluedroid the classic server is a separate GATTS app, so both the
-        // removal and the restage stay legal while audio owns its own table
-        // (the audio read/teardown below proves the engine survived them).
-#if BLE_NIMBLE
+        // `removed` is true when the removal was accepted; the late restage
+        // must be refused while audio owns the committed table.
         bool gattGuarded = static_cast<bool>(removed) && restaged == BTStatus::InvalidState;
-#else
-        (void)restaged;
-        bool gattGuarded = static_cast<bool>(removed);
-#endif
         Serial.printf("[SERVER] Audio GATT remove=%d guarded=%d\n", removed ? 1 : 0, gattGuarded ? 1 : 0);
 
         // Read from the peer enters through the stack callback. BLE.end() in
@@ -1438,9 +1435,176 @@ void loop() {
     Serial.println("[SERVER] Phase14 cap_bc_interleave done");
   }
 
-  // Phase 15: Memory release (tail of the suite; runs after every audio phase
+  // Phase 15: start() must refuse a retry after a mid-start failure instead of
+  // running half-registered roles again. Exhaust the broadcast-sink stream
+  // pool so a sink's apply() fails, assert the retry contract, then prove
+  // end()/begin() recovers. Server-driven; the client only observes.
+  if (currentPhase >= 15 && !phaseStartRetryDone) {
+    phaseStartRetryDone = true;
+#if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
+    BLE.end(false);
+    delay(500);
+    int firstRc = 0, retryRc = -99, recovered = 0;
+    BTStatus s = BLE.begin(serverName);
+    if (s) {
+      // Pool sizes vary by build; add sinks until one apply() fails.
+      for (int n = 2; n <= 6 && firstRc == 0; n++) {
+        BLEAudio audio = BLE.getAudioController();
+        if (!audio.begin()) {
+          firstRc = -1;  // Test setup broken; reported as failure below.
+          break;
+        }
+        for (int i = 0; i < n; i++) {
+          BLEAudioBroadcastSink sink = audio.createBroadcastSink();
+          sink.setStreams(2);
+        }
+        firstRc = (int)audio.start().code();
+        if (firstRc != 0) {
+          retryRc = (int)audio.start().code();
+        }
+        audio.end();
+      }
+      if (firstRc != 0) {
+        BLEAudio audio = BLE.getAudioController();
+        if (audio.begin()) {
+          BLEAudioBroadcastSink sink = audio.createBroadcastSink();
+          sink.setStreams(1);
+          recovered = audio.start() ? 1 : 0;
+          audio.end();
+        }
+      }
+      Serial.printf("[SERVER] StartRetry first=%d retry=%d recovered=%d\n", firstRc, retryRc, recovered);
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin(serverName);
+    } else {
+      Serial.println("[SERVER] StartRetry not supported");
+    }
+#else
+    Serial.println("[SERVER] StartRetry not supported");
+#endif
+    Serial.println("[SERVER] Phase15 start_retry_refused done");
+  }
+
+  // Phase 16: the audio security policy is explicit. Default on (existing
+  // sketches keep working), opt-out via setAutoSecurityPolicy(false) with a
+  // warning when nothing configures BLESecurity. Server-driven markers only.
+  if (currentPhase >= 16 && !phaseSecPolicyDone) {
+    phaseSecPolicyDone = true;
+#if BLE_AUDIO_SUPPORTED
+    BLE.end(false);
+    delay(500);
+    int dflt = 0, off = 0, beginOk = 0;
+    BTStatus s = BLE.begin(serverName);
+    if (s) {
+      BLEAudio audio = BLE.getAudioController();
+      dflt = audio.autoSecurityPolicy() ? 1 : 0;
+      audio.setAutoSecurityPolicy(false);
+      off = !audio.autoSecurityPolicy() ? 1 : 0;
+      if (audio.begin()) {
+        beginOk = 1;
+        audio.end();
+      }
+      audio.setAutoSecurityPolicy(true);
+      Serial.printf("[SERVER] SecPolicy default=%d setOff=%d beginOk=%d\n", dflt, off, beginOk);
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin(serverName);
+    } else {
+      Serial.println("[SERVER] SecPolicy not supported");
+    }
+#else
+    Serial.println("[SERVER] SecPolicy not supported");
+#endif
+    Serial.println("[SERVER] Phase16 security_policy done");
+  }
+
+  // Phase 17: ISO handle validation. connectCis() on 0xFFFF or a dead link
+  // must return nullptr before any CIG exists (fail closed, no HCI). Needs
+  // the CIS central role; server-driven, no link required.
+  if (currentPhase >= 17 && !phaseIsoGatesDone) {
+    phaseIsoGatesDone = true;
+#if BLE_ISO_CIS_CENTRAL_SUPPORTED
+    BLE.end(false);
+    delay(500);
+    int nullFFFF = 0, nullDead = 0;
+    BTStatus s = BLE.begin(serverName);
+    if (s && BLEIso::begin()) {
+      BLEIso::CisParams qos;
+      nullFFFF = (BLEIso::connectCis(0xFFFF, qos) == nullptr) ? 1 : 0;
+      nullDead = (BLEIso::connectCis(0x0042, qos) == nullptr) ? 1 : 0;
+      Serial.printf("[SERVER] IsoGates nullFFFF=%d nullDead=%d\n", nullFFFF, nullDead);
+      BLEIso::end();
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin(serverName);
+    } else {
+      Serial.println("[SERVER] IsoGates not supported");
+    }
+#else
+    Serial.println("[SERVER] IsoGates not supported");
+#endif
+    Serial.println("[SERVER] Phase17 iso_handle_gates done");
+  }
+
+  // Phase 18: MICS mute tri-state. The client mutes, then this side disables
+  // mute; the client must observe unmuted + disabled (not a mute change) and
+  // its unmute() must fail fast locally without firing onResult.
+  if (currentPhase >= 18 && !phaseMicDisableDone) {
+    phaseMicDisableDone = true;
+#if BLE_AUDIO_MICP_DEVICE_SUPPORTED
+    BLE.end(false);
+    delay(500);
+    int disabled = 0;
+    volatile uint32_t mutes = 0;
+    BTStatus s = BLE.begin(serverName);
+    if (s) {
+      BLEAudio audio = BLE.getAudioController();
+      if (audio.begin()) {
+        BLEAudioMicDevice mic = audio.createMicDevice();
+        mic.onMuteChanged([&mutes](bool) {
+          mutes++;
+        });
+        if (audio.start()) {
+          BLEAdvertising adv = BLE.getAdvertising();
+          adv.reset();
+          adv.setType(BLEAdvType::ConnectableScannable);
+          adv.setName(serverName);
+          adv.start();
+          // Wait for the client's mute, then disable and hold the link while
+          // the client verifies (deadline, then clean up regardless).
+          unsigned long t0 = millis();
+          while (mutes == 0 && millis() - t0 < 30000) {
+            checkSerial();
+            delay(50);
+          }
+          if (mutes > 0 && mic.disableMute()) {
+            disabled = mic.isMuteDisabled() ? 1 : 0;
+          }
+          unsigned long t1 = millis();
+          while (millis() - t1 < 15000) {
+            checkSerial();
+            delay(50);
+          }
+          audio.end();
+        }
+      }
+      Serial.printf("[SERVER] MicDisable disabled=%d mutes=%lu\n", disabled, (unsigned long)mutes);
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin(serverName);
+    } else {
+      Serial.println("[SERVER] MicDisable not supported");
+    }
+#else
+    Serial.println("[SERVER] MicDisable not supported");
+#endif
+    Serial.println("[SERVER] Phase18 mic_mute_disabled done");
+  }
+
+  // Phase 19: Memory release (tail of the suite; runs after every audio phase
   // has restored a normal stack, including the phase 13/14 stress rounds).
-  if (currentPhase >= 15 && !phaseMemoryDone) {
+  if (currentPhase >= 19 && !phaseMemoryDone) {
     phaseMemoryDone = true;
     delay(500);
 

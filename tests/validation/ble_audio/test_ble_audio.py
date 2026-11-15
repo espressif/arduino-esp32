@@ -40,7 +40,11 @@ PHASE_LABELS = {
     12: "cap_handover",
     13: "bcast_stop_race",
     14: "cap_bc_interleave",
-    15: "memory_release",
+    15: "start_retry_refused",
+    16: "security_policy",
+    17: "iso_handle_gates",
+    18: "mic_mute_disabled",
+    19: "memory_release",
 }
 
 
@@ -610,6 +614,7 @@ def _phase_cap_handover(server, client):
     assert badho == 1, "handoverToBroadcast() accepted an invalid advertising instance"
     assert badafter == 1, "a locally failed handover stopped the running unicast session"
     LOGGER.info("cap_handover: ucstop=%d rc=%d bcstop_rc=%d hofail=%d horestart=%d", uc_stopped, uc_rc, bc_rc, ho_fail, ho_restart)
+    assert bc_rc == 0, f"stopBroadcast() after the handover failed (rc={bc_rc}) — source left live instead of Fail-with-retry"
     assert ho_fail == 1, "the forced asynchronous handover failure did not report"
     assert ho_restart == 1, "the initiator could not rebuild unicast after the forced handover failure"
     return True
@@ -662,6 +667,87 @@ def _phase_cap_bc_interleave(server, client):
     assert stopped_ev >= rounds, f"only {stopped_ev} onBroadcastStopped events for {rounds} stopped broadcasts"
     assert reads > 0, "the concurrent snapshot reader never ran"
     assert clean == 1, "the initiator could not run a clean broadcast after the interleave"
+    return True
+
+
+def _phase_start_retry(server, client):
+    """Phase 15 — start() refuses a retry after a mid-start failure (regression).
+
+    The server exhausts the broadcast-sink stream pool so a sink apply()
+    fails: the first start() must fail, an immediate second start() must
+    return InvalidState (not run half-registered roles again), and
+    end()/begin() must recover to a working start().
+    """
+    ms = server.expect(r"\[SERVER\] StartRetry (not supported|first=(-?\d+) retry=(-?\d+) recovered=(\d+))", timeout=120)
+    server.expect_exact("[SERVER] Phase15 start_retry_refused done", timeout=30)
+    client.expect_exact("[CLIENT] Phase15 start_retry_refused done", timeout=30)
+    if b"not supported" in ms.group(0):
+        return False
+    first, retry, recovered = int(ms.group(2)), int(ms.group(3)), int(ms.group(4))
+    if first == 0:
+        return False  # pool bigger than the probe; nothing to refuse
+    assert first != -1, "audio.begin() failed during the pool-exhaustion setup"
+    assert first != 0, "pool exhaustion did not fail the first start()"
+    assert retry == -4, f"retry after a failed start() did not return InvalidState (rc={retry})"
+    assert recovered == 1, "end()/begin() did not recover to a working start()"
+    return True
+
+
+def _phase_security_policy(server, client):
+    """Phase 16 — the audio security policy is explicit and opt-out.
+
+    Default on, setAutoSecurityPolicy(false) sticks, and begin() still
+    succeeds unconfigured (with a warning instead of silent policy).
+    """
+    ms = server.expect(r"\[SERVER\] SecPolicy (not supported|default=(\d+) setOff=(\d+) beginOk=(\d+))", timeout=60)
+    server.expect_exact("[SERVER] Phase16 security_policy done", timeout=30)
+    client.expect_exact("[CLIENT] Phase16 security_policy done", timeout=30)
+    if b"not supported" in ms.group(0):
+        return False
+    assert int(ms.group(2)) == 1, "autoSecurityPolicy() default is not true"
+    assert int(ms.group(3)) == 1, "setAutoSecurityPolicy(false) did not stick"
+    assert int(ms.group(4)) == 1, "begin() with the policy off did not succeed"
+    return True
+
+
+def _phase_iso_gates(server, client):
+    """Phase 17 — connectCis() refuses dead handles before any CIG exists.
+
+    0xFFFF and a never-connected handle must both return nullptr (fail
+    closed, no HCI), proving the liveness gate added for the stale-ACL fix.
+    """
+    ms = server.expect(r"\[SERVER\] IsoGates (not supported|nullFFFF=(\d+) nullDead=(\d+))", timeout=60)
+    server.expect_exact("[SERVER] Phase17 iso_handle_gates done", timeout=30)
+    client.expect_exact("[CLIENT] Phase17 iso_handle_gates done", timeout=30)
+    if b"not supported" in ms.group(0):
+        return False
+    assert int(ms.group(2)) == 1, "connectCis(0xFFFF) did not return nullptr"
+    assert int(ms.group(3)) == 1, "connectCis() on a dead handle did not return nullptr"
+    return True
+
+
+def _phase_mic_disable(server, client):
+    """Phase 18 — MICS mute tri-state and fast unmute refusal.
+
+    The client mutes, the server disables mute, and the client must observe
+    unmuted + disabled (not a mute change), have unmute() fail fast with
+    InvalidState, and see no asynchronous onResult for the refused write.
+    """
+    mc = client.expect(
+        r"\[CLIENT\] MicDisable (not supported|disabled=(\d+) unmuteRc=(-?\d+) noresult=(\d+) sawFalse=(\d+))",
+        timeout=120,
+    )
+    ms = server.expect(r"\[SERVER\] MicDisable (not supported|disabled=(\d+) mutes=(\d+))", timeout=30)
+    server.expect_exact("[SERVER] Phase18 mic_mute_disabled done", timeout=30)
+    client.expect_exact("[CLIENT] Phase18 mic_mute_disabled done", timeout=30)
+    if b"not supported" in mc.group(0) or b"not supported" in ms.group(0):
+        return False
+    assert int(ms.group(2)) == 1, "server did not report mute disabled"
+    assert int(ms.group(3)) >= 1, "server saw no client mute before disabling"
+    assert int(mc.group(2)) == 1, "client did not observe mute disabled"
+    assert int(mc.group(4)) == 1, "client did not see the post-disable unmuted state"
+    assert int(mc.group(3)) == -4, f"unmute() while disabled did not fail fast with InvalidState (rc={mc.group(3)})"
+    assert int(mc.group(4)) == 1, "a refused unmute fired onResult"
     return True
 
 
@@ -720,7 +806,11 @@ def test_ble_audio(dut, ci_job_id, record_property):
         12: (_phase_cap_handover, server, client),  # skip if falsy
         13: (_phase_bcast_stop_race, server, client),
         14: (_phase_cap_bc_interleave, server, client),
-        15: (_phase_memory_release, server, client),
+        15: (_phase_start_retry, server, client),
+        16: (_phase_security_policy, server, client),
+        17: (_phase_iso_gates, server, client),
+        18: (_phase_mic_disable, server, client),
+        19: (_phase_memory_release, server, client),
     }
 
     SKIP_REASONS = {
@@ -738,6 +828,10 @@ def test_ble_audio(dut, ci_job_id, record_property):
         12: "CAP handover not supported (needs CONFIG_BT_CAP_HANDOVER on dual esp32s31)",
         13: "broadcast source not supported (needs dual esp32s31)",
         14: "CAP initiator not supported (needs dual esp32s31)",
+        15: "broadcast sink not supported (needs dual esp32s31)",
+        16: "LE Audio engine not supported (needs dual esp32s31)",
+        17: "host ISO not supported (needs dual esp32s31)",
+        18: "MICP device/controller not supported (needs dual esp32s31)",
     }
 
     passed, failed = [], []
