@@ -2243,6 +2243,11 @@ int bleAudioCapCommanderDiscover(uint16_t conn_handle) {
   return ESP_ERR_NOT_SUPPORTED;
 }
 
+int bleAudioCapCommanderSetCoordinated(bool coordinated) {
+  (void)coordinated;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
 int bleAudioCapCommanderVolume(uint8_t volume) {
   (void)volume;
   return ESP_ERR_NOT_SUPPORTED;

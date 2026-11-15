@@ -46,6 +46,10 @@ class BLEAudioVolumeRenderer {
 public:
   /** @brief Volume (0..255) and mute after a change. */
   using StateCallback = std::function<void(uint8_t volume, bool muted)>;
+  /** @brief Local control-point operation reported by onResult. */
+  enum class Operation : uint8_t { Unknown = 0, SetVolume, Mute, Unmute, VolumeUp, VolumeDown, SetStep };
+  /** @brief A queued local operation failed; the state did not change. */
+  using ResultCallback = std::function<void(Operation op, BTStatus status)>;
 
   BLEAudioVolumeRenderer();
   ~BLEAudioVolumeRenderer() = default;
@@ -85,6 +89,8 @@ public:
 
   /** @brief Every volume/mute change, local or remote. */
   BLEAudioVolumeRenderer &onStateChanged(StateCallback cb);
+  /** @brief A queued local operation failed; the state did not change. */
+  BLEAudioVolumeRenderer &onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 
@@ -103,9 +109,13 @@ private:
  *
  * Created by BLEAudio::createVolumeController() between audio.begin() and
  * audio.start(). Commands are GATT writes: a returned OK means the write was
- * queued, and the outcome arrives as onStateChanged / onOffsetChanged /
- * onInputChanged when the renderer notifies. Commands before discover()
- * return BTStatus::InvalidState.
+ * queued. Success arrives as onStateChanged / onOffsetChanged / onInputChanged
+ * when the renderer notifies; a rejected write arrives as onResult (best
+ * effort op attribution, see onResult()) and changes nothing. Cached state is
+ * cleared on disconnect. Commands before discover() return
+ * BTStatus::InvalidState. Only the first VOCS/AICS instance is driven; more
+ * instances are reported in onDiscovered and otherwise ignored. A second
+ * discover() replaces the peer.
  */
 class BLEAudioVolumeController {
 public:
@@ -117,6 +127,12 @@ public:
   using OffsetCallback = std::function<void(int16_t offset)>;
   /** @brief Gain and mute of the renderer's first AICS instance. */
   using InputCallback = std::function<void(int8_t gain, bool muted)>;
+  /** @brief Queued control-point operation reported by onResult. */
+  enum class Operation : uint8_t {
+    Unknown = 0, SetVolume, Mute, Unmute, VolumeUp, VolumeDown, ReadState, SetOffset, SetInputGain
+  };
+  /** @brief A queued operation was rejected; the state did not change. */
+  using ResultCallback = std::function<void(Operation op, BTStatus status)>;
 
   BLEAudioVolumeController();
   ~BLEAudioVolumeController() = default;
@@ -169,6 +185,14 @@ public:
   BLEAudioVolumeController &onOffsetChanged(OffsetCallback cb);
   /** @brief The renderer's audio input gain or mute changed. */
   BLEAudioVolumeController &onInputChanged(InputCallback cb);
+  /**
+   * @brief A queued operation failed; the state did not change.
+   *
+   * The op is the most recently queued one (best effort: concurrent writes
+   * share one notification channel, so with several in flight the reported op
+   * may be a sibling). Unknown when no operation was queued.
+   */
+  BLEAudioVolumeController &onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 

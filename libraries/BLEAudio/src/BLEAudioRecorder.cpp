@@ -43,10 +43,12 @@
 namespace {
 
 // Pacing keeps 1-2 SDUs queued in the controller (written minus released).
-constexpr int32_t kAhead = 3;        // skip a tick at or above this
-constexpr uint8_t kStallTicks = 8;   // no releases for this long: resynchronise
-constexpr uint16_t kExtraGap = 32;   // min ticks between catch-up SDUs
-constexpr uint32_t kMaxBurst = 3;    // ticks served per wake-up after a delay
+// Tuned for 10 ms SDU intervals; at 7.5 ms the same tick counts cover
+// proportionally less time, which only makes stall detection faster.
+constexpr int32_t kAhead = 3;        // skip a tick at or above this backlog (clock drift between timer and ISO)
+constexpr uint8_t kStallTicks = 8;   // no releases for this long (~80 ms): assume drained and resync
+constexpr uint16_t kExtraGap = 32;   // min ticks between catch-up SDUs so one late release never bursts
+constexpr uint32_t kMaxBurst = 3;    // ticks served per wake-up after the codec task was busy
 
 }  // namespace
 
