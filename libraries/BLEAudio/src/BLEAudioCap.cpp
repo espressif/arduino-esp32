@@ -1303,13 +1303,6 @@ BTStatus applyCapInitiator() {
   return bleAudioStatus(err);
 }
 
-void stopCapInitiatorRole(const std::weak_ptr<BLEAudioCapInitiator::Impl> &weak) {
-  if (auto s = weak.lock()) {
-    (void)BLEAudioCapInitiator(s).stopBroadcast();
-    s->stopAdvertising();
-  }
-}
-
 }  // namespace
 
 #if BLE_AUDIO_CAP_INITIATOR_SUPPORTED
@@ -1337,7 +1330,12 @@ BLEAudioCapInitiator BLEAudio::createCapInitiator() {
   });
 #endif
   _impl->roleApplies.push_back(applyCapInitiator);
-  _impl->roleStops.push_back([weak]() { stopCapInitiatorRole(weak); });
+  _impl->roleStops.push_back([weak]() {
+    if (auto s = weak.lock()) {
+      (void)BLEAudioCapInitiator(s).stopBroadcast();
+      s->stopAdvertising();
+    }
+  });
   return BLEAudioCapInitiator(i);
 }
 #endif

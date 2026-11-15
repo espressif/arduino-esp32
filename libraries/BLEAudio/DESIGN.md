@@ -171,6 +171,12 @@ of engine fixes in the `esp-idf` tree pointed to by the lib-builder:
   `audio.begin()` even when no PAC records are registered, so the GATTS
   read/write proxy falls back to the adapter's created-service table, matching
   NimBLE's always-published PACS.
+- **`BLEAudioEngineControl.c`, TBS URI-scheme list trailing-comma workaround**:
+  `uri_scheme_in_list()` in the prebuilt `libble_audio.a` (`tbs.c.o`) only
+  compares tokens terminated by `','` and misses the final `'\0'`-terminated
+  token, rejecting client `Originate` writes with `BT_TBS_RESULT_CODE_INVALID_URI`
+  when `uri_schemes_supported` is `"tel"`. `bleAudioCcpSrvInit()` appends a
+  trailing `','` when space permits so every configured scheme matches.
 
 ### File map
 

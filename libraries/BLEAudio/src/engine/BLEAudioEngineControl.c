@@ -972,12 +972,27 @@ int bleAudioCcpSrvInit(const char *provider_name, const char *uci, const char *u
   if (err == ESP_OK) {
     err = esp_ble_audio_tbs_register_cb(&s_tbs_cb);
   }
-  /* A single generic bearer (GTBS) that any client may control without authorization. */
+  /* A single generic bearer (GTBS) that any client may control without authorization.
+   * Workaround for prebuilt libble_audio.a (tbs.c uri_scheme_in_list): its token
+   * loop only matches schemes terminated by ',', ignoring the final '\0'-terminated
+   * entry. Ensure a trailing ',' so single-scheme ("tel") and multi-scheme ("tel,sip")
+   * lists match every configured URI scheme on client Originate writes. */
   if (err == ESP_OK) {
+    char schemes_buf[CONFIG_BT_TBS_MAX_SCHEME_LIST_LENGTH];
+    const char *schemes_arg = uri_schemes;
+    if (uri_schemes != NULL) {
+      const size_t n = strlen(uri_schemes);
+      if (n > 0 && uri_schemes[n - 1] != ',' && n + 1 < sizeof(schemes_buf)) {
+        memcpy(schemes_buf, uri_schemes, n);
+        schemes_buf[n] = ',';
+        schemes_buf[n + 1] = '\0';
+        schemes_arg = schemes_buf;
+      }
+    }
     const esp_ble_audio_tbs_register_param_t p = {
       .provider_name = (char *)provider_name,
       .uci = (char *)uci,
-      .uri_schemes_supported = (char *)uri_schemes,
+      .uri_schemes_supported = (char *)schemes_arg,
       .gtbs = true,
       .authorization_required = false,
       .technology = ESP_BLE_AUDIO_TBS_TECHNOLOGY_LTE,
