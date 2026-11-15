@@ -106,12 +106,13 @@ struct BLEAudioStreamAccess {
   /**
    * @brief Install @p tap on @p s, replacing any previous one (`nullptr` removes it).
    *
-   * Blocks until no host-task call is still inside the previous tap; must not
-   * be called from inside a tap hook.
+   * Blocks until no host-task call is still inside the previous tap. Refused
+   * (with a log) from inside a tap hook, where draining would wedge the host
+   * task; detach outside the data path instead.
    */
   static void setTap(const BLEAudioStream &s, const BLEAudioStreamTap *tap);
 
-  /** @brief Remove @p tap from @p s if still installed; waits for in-flight tap calls. */
+  /** @brief Remove @p tap from @p s if still installed; waits for in-flight tap calls. Same refusal as setTap. */
   static void clearTap(const BLEAudioStream &s, const BLEAudioStreamTap *tap);
 
   /** @brief Install the engine stream callback table; called once by `BLEAudio::begin()`. */
@@ -184,6 +185,7 @@ inline BTStatus bleAudioStatus(int err) {
   switch (err) {
     case 0:                     return BTStatus::OK;
     case ESP_ERR_INVALID_ARG:
+    case ESP_ERR_INVALID_SIZE:
     case -EINVAL:               return BTStatus::InvalidParam;
     case ESP_ERR_INVALID_STATE:
     case -EALREADY:             return BTStatus::InvalidState;
@@ -195,6 +197,7 @@ inline BTStatus bleAudioStatus(int err) {
     case ESP_ERR_TIMEOUT:       return BTStatus::Timeout;
     case -ENOTCONN:             return BTStatus::NotConnected;
     case -ENOENT:               return BTStatus::NotFound;
+    case -EACCES:               return BTStatus::PermissionDenied;
     default:                    return BTStatus::Fail;
   }
 }

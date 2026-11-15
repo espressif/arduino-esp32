@@ -61,6 +61,9 @@ typedef enum {
 /** Opaque stream slot; defined in BLEAudioEngineBap.c. */
 typedef struct ble_audio_slot ble_audio_slot_t;
 
+/** Worst-case LC3 Codec Specific Configuration length (freq 3 + dur 3 + alloc 6 + len 4 + blocks 3). */
+#define BLE_AUDIO_CODEC_DATA_MAX 19
+
 /** SDU status, same meaning as `BLEAudioSduInfo::Status`. */
 #define BLE_AUDIO_SDU_VALID   0
 #define BLE_AUDIO_SDU_INVALID 1  /*!< Received with errors; data may be partial. */
@@ -307,6 +310,8 @@ int bleAudioBsrcStart(uint8_t adv_handle);
  * QoS Configured stalls the start). Delete is used only when the endpoint
  * never left QoS Configured, so the next start() recreates the source. */
 int bleAudioBsrcStop(void);
+/** @brief bleAudioBsrcStop() with a caller-provided wait bound in milliseconds. */
+int bleAudioBsrcStopTimeout(uint32_t timeout_ms);
 /** @brief Replace the Streaming Audio Context in the BASE metadata. */
 int bleAudioBsrcUpdateContext(uint16_t context);
 /** @brief Delete the source and detach the advertising set; ignored (with a warning) while the BIG is up. */

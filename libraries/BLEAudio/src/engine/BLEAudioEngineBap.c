@@ -63,7 +63,7 @@ static const char *TAG = "BLEAudioBap";
 
 #define CONN_NONE      BLE_AUDIO_CONN_NONE
 #define SYNC_NONE      0xFFFF
-#define CFG_DATA_MAX   19 /* Codec config LTVs: freq 3 + dur 3 + alloc 6 + len 4 + blocks 3. */
+#define CFG_DATA_MAX   BLE_AUDIO_CODEC_DATA_MAX /* Codec config LTVs, see the header. */
 #define META_CTX_LEN   4  /* One Streaming/Preferred Audio Contexts LTV. */
 
 /*
@@ -247,11 +247,11 @@ struct ble_audio_slot {
   esp_ble_audio_cap_stream_t cap; /* MUST stay first: its first member is the BAP stream (see slot_of). */
   void *owner;                    /* C++ stream Impl, passed back in every s_cbs call. */
   uint8_t kind;                   /* ble_audio_stream_kind_t. */
-  _Atomic bool in_use;
+  _Atomic bool in_use;            /* Pool ownership (C++ handle or zombie, see bleAudioStreamFree). */
   _Atomic bool bound;             /* Unicast: bound to a remote ASE (server) or endpoint (client). */
   _Atomic bool tx;                /* The local device sends on this stream. */
   _Atomic bool streaming;
-  uint8_t uc_stage;               /* Unicast client: UC_* stage. */
+  _Atomic uint8_t uc_stage;       /* Unicast client: UC_* stage (caller task validates, host task advances). */
   _Atomic uint16_t conn_handle;   /* Unicast ACL, CONN_NONE otherwise. */
   _Atomic uint16_t seq;           /* Next Tx sequence number; advances only on accepted sends. */
   esp_ble_audio_bap_ep_t *uc_ep;  /* Unicast client: remote endpoint. */
@@ -291,6 +291,10 @@ static inline ble_audio_slot_t *slot_of(esp_ble_audio_bap_stream_t *stream) {
 
 static void uc_on_stream_event(ble_audio_slot_t *slot, uint8_t stage);
 static void uc_check_released(void);
+static void uc_check_released_locked(void);
+static void uc_advance(void);
+static void uc_stop_locked(void);
+static void uc_bump(void);
 
 /*
  * BAP stream ops, shared by every slot. Each one updates the slot, feeds the
@@ -343,7 +347,13 @@ static void op_enabled(esp_ble_audio_bap_stream_t *stream) {
     /* The receiver starts: a server starts its own sink ASEs once enabled. */
     esp_err_t err = esp_ble_audio_bap_stream_start(stream);
     if (err != ESP_OK) {
-      ESP_LOGE(TAG, "unicast server: Receiver Start Ready on sink ASE (conn %u) failed: %d", s->conn_handle, err);
+      /* A hung Enabling ASE is worse than a released one: the peer waits for
+       * Receiver Start Ready that will never come. Release best-effort so the
+       * peer sees Released instead of silence. */
+      ESP_LOGE(TAG, "unicast server: Receiver Start Ready on sink ASE (conn %u) failed: %d, releasing", s->conn_handle, err);
+      if (esp_ble_audio_bap_stream_release(stream) != ESP_OK) {
+        ESP_LOGE(TAG, "unicast server: release after failed start also failed (conn %u)", s->conn_handle);
+      }
     }
   } else if (s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
     uc_on_stream_event(s, UC_ENABLED);
@@ -425,11 +435,14 @@ static void op_released(esp_ble_audio_bap_stream_t *stream) {
   if (s->kind == BLE_AUDIO_STREAM_UNICAST_SERVER || s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
     s->bound = false;
     s->conn_handle = CONN_NONE;
-    portENTER_CRITICAL(&s_slot_mux);
-    s->has_codec = false;
-    s->has_qos = false;
-    portEXIT_CRITICAL(&s_slot_mux);
   }
+  /* A released endpoint carries no configuration: drop the snapshots for every
+   * kind so codecConfig()/qos() cannot report a codec that was never accepted
+   * or has since been released (a re-created source re-publishes via Set*). */
+  portENTER_CRITICAL(&s_slot_mux);
+  s->has_codec = false;
+  s->has_qos = false;
+  portEXIT_CRITICAL(&s_slot_mux);
   if (s_cbs.released) {
     s_cbs.released(s->owner);
   }
@@ -437,7 +450,13 @@ static void op_released(esp_ble_audio_bap_stream_t *stream) {
     s->uc_stage = UC_IDLE;
     s->uc_ep = NULL;
     s->partner = NULL;
+    uc_bump(); /* A pass holding the guard must re-scan: this slot just went idle. */
     uc_check_released();
+  }
+  if (s->owner == NULL) {
+    /* Zombie (freed C++ handle, see bleAudioStreamFree): the stack is done
+     * with the slot, hand it back to the pool. */
+    atomic_store(&s->in_use, false);
   }
   bleAudioNotifyBapIdle();
 }
@@ -492,19 +511,68 @@ void bleAudioStreamSetCallbacks(const ble_audio_stream_cbs_t *cbs) {
 
 /** @brief Reset @p s for a new owner; a broadcast source slot is Tx by construction. */
 static void slot_init(ble_audio_slot_t *s, ble_audio_stream_kind_t kind, void *owner) {
-  portENTER_CRITICAL(&s_slot_mux);
-  memset(s, 0, sizeof(*s));
-  s->in_use = true;
+  /* No memset over the slot: in_use/bound/tx/streaming/conn_handle/seq are
+   * _Atomic and read lock-free from other tasks (codec task, app task). A
+   * memset would tear a concurrent atomic load (C11 data race); every field
+   * is stored explicitly instead. The stack-owned cap struct has no atomics
+   * and is still zeroed in one go. New fields must be added to both halves. */
+  memset(&s->cap, 0, sizeof(s->cap));
+  atomic_store(&s->in_use, true);
   s->kind = (uint8_t)kind;
   s->owner = owner;
-  s->conn_handle = CONN_NONE;
-  s->tx = (kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE);
+  atomic_store(&s->bound, false);
+  atomic_store(&s->tx, kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE);
+  atomic_store(&s->streaming, false);
+  atomic_store(&s->uc_stage, UC_IDLE);
+  atomic_store(&s->conn_handle, CONN_NONE);
+  atomic_store(&s->seq, 0);
+  s->uc_ep = NULL;
+  s->partner = NULL;
+  memset(&s->codec_cfg, 0, sizeof(s->codec_cfg));
+  memset(&s->qos_cfg, 0, sizeof(s->qos_cfg));
+  portENTER_CRITICAL(&s_slot_mux);
+  memset(&s->snap_codec, 0, sizeof(s->snap_codec));
+  memset(&s->snap_qos, 0, sizeof(s->snap_qos));
+  s->has_codec = false;
+  s->has_qos = false;
   portEXIT_CRITICAL(&s_slot_mux);
+  memset(s->cfg_data, 0, sizeof(s->cfg_data));
+  memset(s->cfg_meta, 0, sizeof(s->cfg_meta));
+  memset(s->bis_data, 0, sizeof(s->bis_data));
 #if USE_CAP_OPS
   esp_ble_audio_cap_stream_ops_register(&s->cap, &s_ops);
 #else
   esp_ble_audio_bap_stream_cb_register(BAP(s), &s_ops);
 #endif
+}
+
+/** @brief Stack-free reset for the deinit path (the host mutex is already gone). */
+static void slot_reset_nostack(ble_audio_slot_t *s) {
+  uint8_t kind = s->kind;
+  void *owner = s->owner;
+  memset(&s->cap, 0, sizeof(s->cap));
+  atomic_store(&s->in_use, true);
+  s->kind = kind;
+  s->owner = owner;
+  atomic_store(&s->bound, false);
+  atomic_store(&s->tx, kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE);
+  atomic_store(&s->streaming, false);
+  atomic_store(&s->uc_stage, UC_IDLE);
+  atomic_store(&s->conn_handle, CONN_NONE);
+  atomic_store(&s->seq, 0);
+  s->uc_ep = NULL;
+  s->partner = NULL;
+  memset(&s->codec_cfg, 0, sizeof(s->codec_cfg));
+  memset(&s->qos_cfg, 0, sizeof(s->qos_cfg));
+  portENTER_CRITICAL(&s_slot_mux);
+  memset(&s->snap_codec, 0, sizeof(s->snap_codec));
+  memset(&s->snap_qos, 0, sizeof(s->snap_qos));
+  s->has_codec = false;
+  s->has_qos = false;
+  portEXIT_CRITICAL(&s_slot_mux);
+  memset(s->cfg_data, 0, sizeof(s->cfg_data));
+  memset(s->cfg_meta, 0, sizeof(s->cfg_meta));
+  memset(s->bis_data, 0, sizeof(s->bis_data));
 }
 
 ble_audio_slot_t *bleAudioStreamAlloc(ble_audio_stream_kind_t kind, void *owner) {
@@ -531,12 +599,30 @@ ble_audio_slot_t *bleAudioStreamAlloc(ble_audio_stream_kind_t kind, void *owner)
   return NULL;
 }
 
-/* Called from the C++ Impl destructor; the engine no longer references a released slot. */
+/* Called from the C++ Impl destructor. A slot the stack still references
+ * (streaming, bound, or mid-setup) cannot be handed out again: it becomes a
+ * zombie (owned, no callbacks) until the stack releases it, so a later event
+ * can neither reach a destroyed Impl nor be delivered to a new owner. */
 void bleAudioStreamFree(ble_audio_slot_t *slot) {
-  if (slot) {
-    slot->in_use = false;
-    slot->owner = NULL;
+  if (slot == NULL) {
+    return;
   }
+#if BLE_AUDIO_UNICAST_CLIENT_SUPPORTED
+  const uint8_t stage = atomic_load(&slot->uc_stage);
+  const bool uc_busy = slot->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT && stage != UC_IDLE;
+#else
+  const bool uc_busy = false;
+#endif
+  if (slot->streaming || slot->bound || uc_busy
+#if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+      || (slot->kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE && s_bsrc_up)
+#endif
+  ) {
+    slot->owner = NULL; /* Zombie: state updates continue, C++ callbacks are dropped. */
+    return;
+  }
+  atomic_store(&slot->in_use, false);
+  slot->owner = NULL;
 }
 
 /* Hot path: no logging; the caller reports the status. */
@@ -763,6 +849,12 @@ void bleAudioPacFromPresets(uint32_t preset_mask, uint8_t max_channels, ble_audi
   if (max_channels == 0) {
     max_channels = 1;
   }
+  /* chan_counts is BIT(n-1) per supported count: clamp to the Audio Location
+   * width (1U << 32 is UB and anything above 8 has no defined location bit). */
+  if (max_channels > 8) {
+    ESP_LOGW(TAG, "PACS capability: clamping channel count %u to 8", max_channels);
+    max_channels = 8;
+  }
   out->chan_counts = (uint8_t)((1U << max_channels) - 1U);
   out->max_frames = max_channels;
 }
@@ -788,6 +880,12 @@ uint32_t bleAudioPacPresets(const ble_audio_pac_t *pac) {
 
 void bleAudioPacsAdd(uint8_t dir, const ble_audio_pac_t *pac, uint32_t location, uint16_t contexts) {
   if ((dir != BLE_AUDIO_DIR_SINK && dir != BLE_AUDIO_DIR_SOURCE) || pac == NULL) {
+    return;
+  }
+  if (pac->freq_mask == 0 || pac->dur_mask == 0 || pac->max_octets == 0) {
+    /* An empty preset mask (or a record no preset fits) would publish an
+     * unusable LC3 PAC; refuse it loudly instead of advertising garbage. */
+    ESP_LOGE(TAG, "PACS capability: refusing empty LC3 record (no preset fits)");
     return;
   }
   pac_rec_t *r = &s_pac[dir == BLE_AUDIO_DIR_SINK ? 0 : 1];
@@ -883,14 +981,16 @@ int bleAudioPacsCommit(void) {
         /* The lib publishes the supported-contexts value of a PAC record once
          * per boot: after the first successful set it answers later sets with
          * -EALREADY and keeps serving the first value, even when the value
-         * differs from what the role set now stage (verified on hardware:
+         * differs from what the roles now stage (verified on hardware:
          * cap_register/set_location/set_available all re-accept a re-commit,
          * only set_supported does not). Failing the commit instead would also
          * abort the broadcast sink/delegator role bring-up, whose teardown
          * leaves the stack's broadcast BIG callbacks unregistered for every
-         * later broadcast sink session of the same boot. Treat the constraint
-         * as benign: the first published value stays in effect. */
-        ESP_LOGD(TAG, "PACS %s supported contexts already published this boot, keeping it",
+         * later broadcast sink session of the same boot. Keep serving the
+         * first value, but say so loudly: re-begin() with different contexts
+         * is a documented boot-pinned divergence (see DESIGN.md), and the
+         * validation suite asserts the published value after re-begin. */
+        ESP_LOGW(TAG, "PACS %s supported contexts already published this boot, keeping it",
                  i == 0 ? "sink" : "source");
         err = ESP_OK;
       }
@@ -1059,11 +1159,23 @@ typedef struct {
 
 static struct {
   bool registered;
-  bool active;           /* A setup (or the streams it produced) is in progress. */
-  bool stopping;         /* bleAudioUcStop() is releasing; ASCS errors are ignored. */
-  bool started_emitted;  /* UC_STARTED already sent for this setup. */
+  _Atomic bool active;           /* A setup (or the streams it produced) is in progress. */
+  _Atomic bool stopping;         /* bleAudioUcStop() is releasing; ASCS errors are ignored. */
+  _Atomic bool started_emitted;  /* UC_STARTED already sent for this setup. */
   esp_ble_audio_bap_unicast_group_t *group;
   uc_peer_t peers[UC_MAX_PEERS];
+  /* Sequencer guard. Setup entry points run on the caller task while stream
+   * callbacks run on the host task; without serialization two advancers can
+   * pass the "no PENDING" scan together and issue two control-point ops,
+   * violating the one-outstanding-op contract. The guard is a non-blocking
+   * CAS mutex: a loser returns and the holder re-runs its pass while gen is
+   * moving, so no wake-up is ever lost. uc_fail funnels through uc_advance
+   * (via stop_requested) instead of stopping inline, so the guard never nests
+   * across tasks. gen is bumped before every uc_advance() call made without
+   * the guard held. */
+  _Atomic bool guard;
+  _Atomic uint32_t gen;
+  _Atomic bool stop_requested;   /* uc_fail asked for a stop; serviced by the advance prologue. */
 } s_uc;
 
 /** @brief Find the peer entry for @p conn, optionally claiming (and clearing) a free one. */
@@ -1097,19 +1209,39 @@ static const char *uc_op_name(uint8_t op) {
 /**
  * @brief Abort the setup: log, emit UC_ERROR, then release every stream.
  *
- * @param op     BLE_AUDIO_UC_OP_* that failed.
- * @param rsp    ASCS response code from the peer, 0 when the call failed locally.
- * @param reason ASCS reason from the peer, 0 when the call failed locally.
+ * Never stops inline: it arms stop_requested and funnels through uc_advance()
+ * so the stop runs under the sequencer guard (uc_fail is called both from
+ * inside a pass and from host callbacks that may race a pass).
+ *
+ * @param op        BLE_AUDIO_UC_OP_* that failed.
+ * @param rsp       ASCS response code from the peer, 0 when the call failed locally.
+ * @param reason    ASCS reason from the peer, 0 when the call failed locally.
+ * @param local_err Local errno of a failed stack call, 0 for peer rejections.
  */
-static void uc_fail(uint8_t op, uint8_t rsp, uint8_t reason) {
-  ble_audio_uc_error_t e = {.op = op, .rsp_code = rsp, .reason = reason};
+static void uc_fail(uint8_t op, uint8_t rsp, uint8_t reason, int local_err) {
+  const ble_audio_uc_error_t e = {.op = op, .rsp_code = rsp, .reason = reason};
   if (rsp) {
     ESP_LOGE(TAG, "unicast client: peer rejected %s (rsp 0x%02x reason 0x%02x), stopping", uc_op_name(op), rsp, reason);
   } else {
-    ESP_LOGE(TAG, "unicast client: %s failed locally, stopping", uc_op_name(op));
+    ESP_LOGE(TAG, "unicast client: %s failed locally (err %d), stopping", uc_op_name(op), local_err);
   }
-  bleAudioEngineEmit(BLE_AUDIO_EVT_UC_ERROR, CONN_NONE, -1, &e);
-  (void)bleAudioUcStop();
+  /* err carries the local errno (0 for peer rejections); the C++ error
+   * callback reports op/rsp/reason and the stop follows asynchronously. */
+  bleAudioEngineEmit(BLE_AUDIO_EVT_UC_ERROR, CONN_NONE, local_err ? local_err : -1, &e);
+  /* Drop optimistic snapshots: SetCodec/SetQos published them during
+   * validation but the peer never accepted the configuration. */
+  for (int i = 0; i < POOL_SIZE; i++) {
+    ble_audio_slot_t *s = &s_pool[i];
+    if (s->in_use && s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
+      portENTER_CRITICAL(&s_slot_mux);
+      s->has_codec = false;
+      s->has_qos = false;
+      portEXIT_CRITICAL(&s_slot_mux);
+    }
+  }
+  atomic_store(&s_uc.stop_requested, true);
+  uc_bump();
+  uc_advance();
 }
 
 /**
@@ -1117,11 +1249,15 @@ static void uc_fail(uint8_t op, uint8_t rsp, uint8_t reason) {
  *
  * A sink and a source stream on the same peer are paired onto one CIS
  * (bidirectional); any stream left over gets a CIS of its own. The parameter
- * arrays are static to keep them off the host task stack.
+ * arrays are automatic locals: group_create() consumes them synchronously and
+ * the sequencer guard keeps two advancers from sharing them. Callers must
+ * hold the sequencer guard.
  */
 static int uc_create_group(void) {
-  static esp_ble_audio_bap_unicast_group_stream_param_t sp[POOL_UC];
-  static esp_ble_audio_bap_unicast_group_stream_pair_param_t pairs[POOL_UC];
+  /* POOL_UC is CONFIG_BT_BAP_UNICAST_CLIENT_GROUP_STREAM_COUNT (a few
+   * entries); ~32 B each, negligible on either task stack. */
+  esp_ble_audio_bap_unicast_group_stream_param_t sp[POOL_UC];
+  esp_ble_audio_bap_unicast_group_stream_pair_param_t pairs[POOL_UC];
   size_t n_sp = 0, n_pairs = 0;
 
   for (int i = 0; i < POOL_SIZE; i++) {
@@ -1167,15 +1303,38 @@ static int uc_create_group(void) {
   return (int)esp_ble_audio_bap_unicast_group_create(&param, &s_uc.group);
 }
 
+/* Non-blocking sequencer guard (see s_uc). True when the caller owns it. */
+static bool uc_guard_enter(void) {
+  return !atomic_exchange(&s_uc.guard, true);
+}
+
+static void uc_guard_exit(void) {
+  atomic_store(&s_uc.guard, false);
+}
+
+/** @brief Record a sequencer mutation made without holding the guard. */
+static void uc_bump(void) {
+  atomic_fetch_add(&s_uc.gen, 1);
+}
+
 /**
  * @brief Issue the next setup step; at most one control-point operation is outstanding.
  *
  * Steps in priority order: Config Codec any requested stream, create the group
  * once all are configured, Config QoS per peer (covers all its streams),
  * Enable each stream, then connect each CIS once both of its streams are
- * enabled. Returns early while an operation is pending.
+ * enabled. On the CIS-connect step the client does NOT wait for the server's
+ * Receiver Start Ready: the CIS may be established any time after QoS
+ * Configured (BAP v1.0 ASCS flow; the server's RSR is acked via uc_start_ack
+ * and Tx streaming starts on CIS connect). Returns early while an operation
+ * is pending. Callers must hold the sequencer guard.
  */
-static void uc_advance(void) {
+static void uc_advance_pass(void) {
+  if (atomic_exchange(&s_uc.stop_requested, false)) {
+    uc_stop_locked();
+  }
+  /* A release that lost the guard race lands here instead of double-emitting. */
+  uc_check_released_locked();
   if (!s_uc.active || s_uc.stopping) {
     return;
   }
@@ -1192,7 +1351,7 @@ static void uc_advance(void) {
       esp_err_t err = esp_ble_audio_bap_stream_config(s->conn_handle, BAP(s), s->uc_ep, &s->codec_cfg);
       if (err != ESP_OK) {
         ESP_LOGE(TAG, "unicast client: Config Codec on conn %u: %d", s->conn_handle, err);
-        uc_fail(BLE_AUDIO_UC_OP_CONFIG, 0, 0);
+        uc_fail(BLE_AUDIO_UC_OP_CONFIG, 0, 0, (int)err);
       }
       return;
     }
@@ -1201,7 +1360,7 @@ static void uc_advance(void) {
     int err = uc_create_group();
     if (err != ESP_OK) {
       ESP_LOGE(TAG, "unicast client: esp_ble_audio_bap_unicast_group_create: %d", err);
-      uc_fail(BLE_AUDIO_UC_OP_GROUP, 0, 0);
+      uc_fail(BLE_AUDIO_UC_OP_GROUP, 0, 0, err);
       return;
     }
   }
@@ -1217,7 +1376,7 @@ static void uc_advance(void) {
       esp_err_t err = esp_ble_audio_bap_stream_qos(conn, s_uc.group);
       if (err != ESP_OK) {
         ESP_LOGE(TAG, "unicast client: Config QoS on conn %u: %d", conn, err);
-        uc_fail(BLE_AUDIO_UC_OP_QOS, 0, 0);
+        uc_fail(BLE_AUDIO_UC_OP_QOS, 0, 0, (int)err);
       }
       return;
     }
@@ -1229,7 +1388,7 @@ static void uc_advance(void) {
       esp_err_t err = esp_ble_audio_bap_stream_enable(BAP(s), s->codec_cfg.meta, s->codec_cfg.meta_len);
       if (err != ESP_OK) {
         ESP_LOGE(TAG, "unicast client: Enable on conn %u: %d", s->conn_handle, err);
-        uc_fail(BLE_AUDIO_UC_OP_ENABLE, 0, 0);
+        uc_fail(BLE_AUDIO_UC_OP_ENABLE, 0, 0, (int)err);
       }
       return;
     }
@@ -1245,11 +1404,30 @@ static void uc_advance(void) {
       esp_err_t err = esp_ble_audio_bap_stream_connect(BAP(s));
       if (err != ESP_OK) {
         ESP_LOGE(TAG, "unicast client: CIS connect on conn %u: %d", s->conn_handle, err);
-        uc_fail(BLE_AUDIO_UC_OP_CONNECT, 0, 0);
+        uc_fail(BLE_AUDIO_UC_OP_CONNECT, 0, 0, (int)err);
         return;
       }
     }
   }
+}
+
+/**
+ * @brief Run sequencer passes until no mutation is pending.
+ *
+ * A pass issues at most a few stack calls and never blocks; concurrent
+ * mutations bump gen, so the holder re-runs instead of losing the wake-up.
+ * Callers must not hold the guard (uc_fail funnels here on purpose).
+ */
+static void uc_advance(void) {
+  if (!uc_guard_enter()) {
+    return;
+  }
+  uint32_t seen;
+  do {
+    seen = atomic_load(&s_uc.gen);
+    uc_advance_pass();
+  } while (atomic_load(&s_uc.gen) != seen);
+  uc_guard_exit();
 }
 
 /**
@@ -1259,27 +1437,28 @@ static void uc_advance(void) {
  * the setup is streaming.
  */
 static void uc_on_stream_event(ble_audio_slot_t *slot, uint8_t stage) {
-  if (!uc_slot_active(slot) || stage <= slot->uc_stage) {
+  if (!uc_slot_active(slot) || stage <= atomic_load(&slot->uc_stage)) {
     return;
   }
-  slot->uc_stage = stage;
+  atomic_store(&slot->uc_stage, stage);
   if (stage == UC_STREAMING) {
     for (int i = 0; i < POOL_SIZE; i++) {
-      if (uc_slot_active(&s_pool[i]) && s_pool[i].uc_stage != UC_STREAMING) {
+      if (uc_slot_active(&s_pool[i]) && atomic_load(&s_pool[i].uc_stage) != UC_STREAMING) {
         return;
       }
     }
-    if (!s_uc.started_emitted) {
-      s_uc.started_emitted = true;
+    bool expected = false;
+    if (atomic_compare_exchange_strong(&s_uc.started_emitted, &expected, true)) {
       bleAudioEngineEmit(BLE_AUDIO_EVT_UC_STARTED, CONN_NONE, 0, NULL);
     }
     return;
   }
+  uc_bump();
   uc_advance();
 }
 
-/** @brief Once the last setup stream is released: delete the group and emit UC_STOPPED. */
-static void uc_check_released(void) {
+/** @brief Once the last setup stream is released: delete the group and emit UC_STOPPED. Callers must hold the sequencer guard. */
+static void uc_check_released_locked(void) {
   if (!s_uc.active) {
     return;
   }
@@ -1309,6 +1488,22 @@ static void uc_check_released(void) {
   bleAudioEngineEmit(BLE_AUDIO_EVT_UC_STOPPED, CONN_NONE, 0, NULL);
 }
 
+/**
+ * @brief Release check from host callbacks (no guard held).
+ *
+ * Takes the guard when free; when a pass owns it, bumps gen so the holder's
+ * prologue runs the check instead of risking a double group-delete/STOPPED
+ * against a concurrent stop.
+ */
+static void uc_check_released(void) {
+  if (!uc_guard_enter()) {
+    uc_bump();
+    return;
+  }
+  uc_check_released_locked();
+  uc_guard_exit();
+}
+
 /*
  * ASCS control-point responses. Success needs no action (the matching stream
  * op advances the setup); a rejection aborts it. Responses to operations sent
@@ -1316,7 +1511,7 @@ static void uc_check_released(void) {
  */
 static void uc_ack(uint8_t op, esp_ble_audio_bap_ascs_rsp_code_t rsp, esp_ble_audio_bap_ascs_reason_t reason) {
   if (rsp != ESP_BLE_AUDIO_BAP_ASCS_RSP_CODE_SUCCESS && s_uc.active && !s_uc.stopping) {
-    uc_fail(op, (uint8_t)rsp, (uint8_t)reason);
+    uc_fail(op, (uint8_t)rsp, (uint8_t)reason, 0);
   }
 }
 
@@ -1465,8 +1660,17 @@ static void uc_reset(void) {
     }
     s_uc.group = NULL;
   }
-  memset(&s_uc, 0, sizeof(s_uc));
+  /* No memset: active/stopping/started_emitted/guard/gen are _Atomic and may
+   * be observed from the host task; store each field explicitly. */
+  s_uc.registered = false;
+  atomic_store(&s_uc.active, false);
+  atomic_store(&s_uc.stopping, false);
+  atomic_store(&s_uc.started_emitted, false);
+  atomic_store(&s_uc.guard, false);
+  atomic_store(&s_uc.gen, 0);
+  atomic_store(&s_uc.stop_requested, false);
   for (int i = 0; i < UC_MAX_PEERS; i++) {
+    memset(&s_uc.peers[i], 0, sizeof(s_uc.peers[i]));
     s_uc.peers[i].conn = CONN_NONE;
   }
 }
@@ -1520,6 +1724,12 @@ int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
   if (s_uc.active) {
     return ESP_ERR_INVALID_STATE;
   }
+  /* Serialize against host-task callbacks (and a concurrent Stop): a second
+   * advancer must not interleave validation with a release. */
+  if (!uc_guard_enter()) {
+    return -EBUSY;
+  }
+  int rc = 0;
   /* Validate every request before touching any slot, so a bad entry leaves nothing half set up. */
   for (uint8_t i = 0; i < count; i++) {
     const ble_audio_uc_stream_req_t *r = &reqs[i];
@@ -1527,11 +1737,13 @@ int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
     uc_peer_t *p = uc_peer(r->conn_handle, false);
     if (s == NULL || !s->in_use || s->kind != BLE_AUDIO_STREAM_UNICAST_CLIENT) {
       ESP_LOGE(TAG, "unicast client: request %u has no client stream", i);
-      return ESP_ERR_INVALID_ARG;
+      rc = ESP_ERR_INVALID_ARG;
+      break;
     }
     if (p == NULL) {
       ESP_LOGE(TAG, "unicast client: request %u targets conn %u, which was not discovered", i, r->conn_handle);
-      return ESP_ERR_INVALID_ARG;
+      rc = ESP_ERR_INVALID_ARG;
+      break;
     }
     esp_ble_audio_bap_ep_t *ep = NULL;
     if (r->dir == BLE_AUDIO_DIR_SINK && r->ep_index < p->n_snk) {
@@ -1541,38 +1753,45 @@ int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
     }
     if (ep == NULL) {
       ESP_LOGE(TAG, "unicast client: request %u: conn %u has no %s ASE %u", i, r->conn_handle, r->dir == BLE_AUDIO_DIR_SINK ? "sink" : "source", r->ep_index);
-      return ESP_ERR_INVALID_ARG;
+      rc = ESP_ERR_INVALID_ARG;
+      break;
     }
     if (bleAudioStreamSetCodec(s, &r->codec, r->context) == NULL) {
-      return ESP_ERR_INVALID_ARG;
+      rc = ESP_ERR_INVALID_ARG;
+      break;
     }
     bleAudioStreamSetQos(s, &r->qos);
   }
-  for (uint8_t i = 0; i < count; i++) {
-    ble_audio_slot_t *s = reqs[i].slot;
-    uc_peer_t *p = uc_peer(reqs[i].conn_handle, false);
-    s->uc_ep = (reqs[i].dir == BLE_AUDIO_DIR_SINK) ? p->snk[reqs[i].ep_index] : p->src[reqs[i].ep_index];
-    s->partner = NULL;
-    /* We send to a remote sink ASE. */
-    bleAudioStreamBind(s, reqs[i].conn_handle, reqs[i].dir == BLE_AUDIO_DIR_SINK);
-    s->uc_stage = UC_REQUESTED;
+  if (rc == 0) {
+    for (uint8_t i = 0; i < count; i++) {
+      ble_audio_slot_t *s = reqs[i].slot;
+      uc_peer_t *p = uc_peer(reqs[i].conn_handle, false);
+      s->uc_ep = (reqs[i].dir == BLE_AUDIO_DIR_SINK) ? p->snk[reqs[i].ep_index] : p->src[reqs[i].ep_index];
+      s->partner = NULL;
+      /* We send to a remote sink ASE. */
+      bleAudioStreamBind(s, reqs[i].conn_handle, reqs[i].dir == BLE_AUDIO_DIR_SINK);
+      s->uc_stage = UC_REQUESTED;
+    }
+    s_uc.active = true;
+    s_uc.stopping = false;
+    s_uc.started_emitted = false;
+    uc_bump();
+    uc_advance();
   }
-  s_uc.active = true;
-  s_uc.stopping = false;
-  s_uc.started_emitted = false;
-  uc_advance();
-  return 0;
+  uc_guard_exit();
+  return rc;
 }
 
 /*
  * Release every setup stream; UC_STOPPED follows from uc_check_released once
  * the last one is idle (immediately if none was configured on a peer).
+ * Callers must hold the sequencer guard.
  */
-int bleAudioUcStop(void) {
+static void uc_stop_locked(void) {
   if (!s_uc.active) {
-    return 0;
+    return;
   }
-  s_uc.stopping = true;
+  atomic_store(&s_uc.stopping, true);
   for (int i = 0; i < POOL_SIZE; i++) {
     ble_audio_slot_t *s = &s_pool[i];
     if (!uc_slot_active(s)) {
@@ -1585,9 +1804,24 @@ int bleAudioUcStop(void) {
     if (s->uc_stage <= UC_REQUESTED || esp_ble_audio_bap_stream_release(BAP(s)) != ESP_OK) {
       s->uc_stage = UC_IDLE;
       s->partner = NULL;
+      portENTER_CRITICAL(&s_slot_mux);
+      s->has_codec = false;
+      s->has_qos = false;
+      portEXIT_CRITICAL(&s_slot_mux);
     }
   }
-  uc_check_released();
+  uc_check_released_locked();
+}
+
+int bleAudioUcStop(void) {
+  if (!s_uc.active) {
+    return 0;
+  }
+  if (!uc_guard_enter()) {
+    return -EBUSY; /* A pass is in flight; retry (C++ maps to Busy). */
+  }
+  uc_stop_locked();
+  uc_guard_exit();
   return 0;
 }
 
@@ -1714,9 +1948,14 @@ int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *location
   return 0;
 }
 
-/* 128 bytes covers the BASE of one LC3 subgroup with up to POOL_BSRC BISes. */
+/* Worst-case BASE for one subgroup: 8 B service header + ~24 B subgroup head
+ * and metadata + ~40 B per BIS (index, codec ID, LC3 config, QoS). Sized from
+ * POOL_BSRC so raising CONFIG_BT_BAP_BROADCAST_SRC_STREAM_COUNT cannot
+ * overflow it; 128 B for the Arduino default of 2 BIS. */
+#define BSRC_BASE_MAX (32u + 48u * (unsigned)POOL_BSRC)
+
 int bleAudioBsrcGetBase(uint8_t *out, uint16_t cap, uint16_t *out_len) {
-  NET_BUF_SIMPLE_DEFINE(base_buf, 128);
+  NET_BUF_SIMPLE_DEFINE(base_buf, BSRC_BASE_MAX);
   if (s_bsrc.source == NULL || out == NULL || out_len == NULL) {
     return ESP_ERR_INVALID_STATE;
   }
@@ -1779,6 +2018,10 @@ static int bsrc_ep_state(void) {
 }
 
 int bleAudioBsrcStop(void) {
+  return bleAudioBsrcStopTimeout(5000);
+}
+
+int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
   if (s_bsrc.source == NULL) {
     s_bsrc.big_pending = false;
     s_bsrc_up = false;
@@ -1789,10 +2032,11 @@ int bleAudioBsrcStop(void) {
    * flight (s_bsrc.big_pending). source_stop() is illegal at QoS Configured
    * and stalls the QoS->STREAMING transition, so wait on BLESync until the
    * endpoint reaches STREAMING or Create_BIG terminates. If start() was never
-   * issued (big_pending == false), delete immediately with zero delay.
+   * issued (big_pending == false), delete immediately with zero delay. The
+   * bound is the caller's share of the stop budget (see BLEAudioStopBudget).
    */
   const TickType_t start_tick = xTaskGetTickCount();
-  const TickType_t budget = pdMS_TO_TICKS(5000);
+  const TickType_t budget = pdMS_TO_TICKS(timeout_ms);
   int st = bsrc_ep_state();
   while (st != ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING && s_bsrc.big_pending) {
     const TickType_t elapsed = xTaskGetTickCount() - start_tick;
@@ -2056,7 +2300,6 @@ static uint32_t lowest_bits(uint32_t mask, uint8_t n) {
  * on the next one once the cause is fixed.
  */
 static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_ble_iso_biginfo_t *biginfo) {
-  static esp_ble_audio_bap_stream_t *streams[POOL_BSNK];
   if (s_bsnk.syncing || s_bsnk.hold || !s_bsnk.base_received || s_bsnk.n_slots == 0) {
     return;
   }
@@ -2089,6 +2332,9 @@ static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_bl
     return;
   }
   s_bsnk.failed_no_code = false;
+  /* mask holds at most n_slots bits (trimmed above); the stack consumes one
+   * stream per set bit, so entries past popcount(mask) are never read. */
+  esp_ble_audio_bap_stream_t *streams[POOL_BSNK];
   for (uint8_t i = 0; i < s_bsnk.n_slots; i++) {
     streams[i] = BAP(s_bsnk.slots[i]);
   }
@@ -2378,14 +2624,17 @@ static void bap_on_gap(const void *event) {
 
 /* Engine deinit: forget every registration so the next start re-registers from scratch. */
 static void bap_on_deinit(void) {
-  /* C++ stream handles may outlive the session: keep their slots owned so a
-   * later bleAudioStreamFree() cannot release a slot another owner took.
-   * A successful end() waits for ISO idle before this runs. roles.clear()
-   * then frees the slots through the C++ destructors. */
+  /* C++ stream handles may outlive the session: keep their slots owned
+   * (in_use, kind, owner) so a later bleAudioStreamFree() cannot release a
+   * slot another owner took. The host is already down here (common_deinit ran
+   * first), so this must not call back into the stack: slot_init()'s ops
+   * registration would run without the host mutex. A successful end() waits
+   * for ISO idle before this runs; roles.clear() then frees the slots through
+   * the C++ destructors. */
   for (int i = 0; i < POOL_SIZE; i++) {
     ble_audio_slot_t *s = &s_pool[i];
     if (s->in_use) {
-      slot_init(s, (ble_audio_stream_kind_t)s->kind, s->owner);
+      slot_reset_nostack(s);
     }
   }
   memset(s_pac, 0, sizeof(s_pac));
@@ -2477,6 +2726,11 @@ int bleAudioBsrcStart(uint8_t adv_handle) {
 }
 
 int bleAudioBsrcStop(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
+  (void)timeout_ms;
   return ESP_ERR_NOT_SUPPORTED;
 }
 
