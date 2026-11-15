@@ -564,14 +564,14 @@ struct BLEAudioCapInitiator::Impl {
           log_i("CapInitiator: unicast handed over to broadcast 0x%06lX", (unsigned long)broadcastId);
         } else {
           log_w("CapInitiator: handover to broadcast failed (err=%d)", e.err);
-          if (bleAudioCapBroadcastStop() != 0) {
-            /* The BIG may never have started: a source with no BIG deletes
-             * cleanly below. */
-          }
-          (void)waitStopped();
-          if (!broadcastEndedIfGone()) {
+          // This runs on the host task, so there is no waiting here: a
+          // successful stop completes asynchronously through CAP_BC_STOPPED
+          // (hoBusy is already false, so it runs the full broadcastEnded()).
+          // Only a synchronously failed stop needs immediate cleanup, and
+          // only when the engine really let the source go.
+          if (bleAudioCapBroadcastStop() != 0 && !broadcastEndedIfGone()) {
             log_e("CapInitiator: broadcast source still live after the failed handover; retry stopBroadcast()");
-          } else {
+          } else if (!bleAudioCapBroadcastExists()) {
             stopAdvertising();
           }
           /* The procedure may already have stopped the unicast group. End it
