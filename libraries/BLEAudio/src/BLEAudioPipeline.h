@@ -43,7 +43,7 @@
 #include <memory>
 #include "BTStatus.h"
 #include "BLEAudioStream.h"
-#include "engine/BLEAudioStreamInternal.h"
+#include "BLEAudioStreamImpl.h"
 
 static constexpr uint32_t BLE_AUDIO_CODEC_STACK = 4096;   ///< Codec task stack (bytes); LC3 state lives on the heap.
 static constexpr UBaseType_t BLE_AUDIO_CODEC_PRIO = 15;   ///< Above the Arduino loop, below the BT host tasks.

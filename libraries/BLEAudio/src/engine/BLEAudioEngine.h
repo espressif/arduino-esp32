@@ -36,7 +36,8 @@
  *  - `BLEAudioEngineProfiles.c`   TMAP, GMAP, PBP
  *
  * Host-specific glue that must call NimBLE or Bluedroid headers lives in
- * `BLEAudioEngine.nimble.cpp` / `BLEAudioEngine.bluedroid.cpp`.
+ * `BLEAudio.nimble.cpp` / `BLEAudio.bluedroid.cpp` outside `src/engine/`, so
+ * `src/engine/` remains 100% pure C (`.c` and `extern "C"`-safe `.h` only).
  *
  * Control-plane events reach C++ through one sink: every unit fills a
  * `ble_audio_evt_t` whose `data` points at a payload struct declared in that
@@ -198,8 +199,8 @@ uint8_t bleAudioChannelCount(uint32_t chan_alloc);
  * MSB-first on Bluedroid, LSB-first on NimBLE. BASS receive-state addresses
  * are already LSB-first and must not be passed through this helper.
  *
- * Implemented by the active backend (BLEAudioEngine.nimble.cpp /
- * BLEAudioEngine.bluedroid.cpp).
+ * Implemented by the active backend (`BLEAudio.nimble.cpp` /
+ * `BLEAudio.bluedroid.cpp`).
  */
 void bleAudioAddrFromGap(uint8_t out[6], const uint8_t in[6]);
 

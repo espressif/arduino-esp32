@@ -42,6 +42,7 @@
 
 #include "BLEAudioValidationHooks.h"
 #include "engine/BLEAudioEngineCap.h"
+#include "engine/BLEAudioEngineControl.h"
 
 #include "esp_ble_audio_bap_api.h"
 #include "esp_ble_audio_cap_api.h"
@@ -1412,7 +1413,10 @@ static void cmd_disc_step(cap_peer_t *p) {
   if (p->cmd_stage < CMD_D_MICP) {
     p->cmd_stage = CMD_D_MICP;
     esp_ble_audio_micp_mic_ctlr_t *ctlr = NULL;
-    if (esp_ble_audio_micp_mic_ctlr_get_by_conn(p->handle) == NULL) {
+    /* Query our MICP controller tracker instead of esp_ble_audio_micp_mic_ctlr_get_by_conn(),
+     * which logs an ERROR (MicpMicCtlrConnNotAssoc) inside libble_audio whenever MICP
+     * has not been discovered on this link yet. */
+    if (!bleAudioMicpCtlrHasPeer(p->handle)) {
       p->cmd_ctlr = NULL;
       p->cmd_inline = false;
       p->cmd_discovering = true;

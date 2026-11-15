@@ -26,7 +26,7 @@
 #include "core/BLETask.h"
 #include "engine/BLEAudioEngineBap.h"
 #include "engine/BLEAudioEngineCap.h"
-#include "engine/BLEAudioStreamInternal.h"
+#include "BLEAudioStreamImpl.h"
 #include "esp32-hal-log.h"
 
 /**

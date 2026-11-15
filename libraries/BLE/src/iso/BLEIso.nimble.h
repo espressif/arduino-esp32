@@ -23,7 +23,8 @@
  * NimBLE has no global GAP callback, so the IDF host (claimed by `BLEIso` or
  * by `BLEAudio`) only sees the events the application forwards. ISO and audio
  * share one GAP sink, so every GAP event is forwarded exactly once, from here.
- * GATT events are forwarded separately by `BLEAudioEngine.nimble.h`.
+ * GATT events are forwarded separately via `core/BLEAudioHooks.h`
+ * (`bleAudioForwardHostGattEvent` in `BLEAudio.nimble.cpp`).
  */
 
 #include "core/BLEGuards.h"

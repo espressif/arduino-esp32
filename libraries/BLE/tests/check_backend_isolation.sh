@@ -131,6 +131,15 @@ check_shared_units "BLE" "${BLE_SRC_DIR}"
 if [ -n "${AUDIO_SRC_DIR}" ]; then
     check_surface "BLEAudio" "${AUDIO_SRC_DIR}/BLEAudio.h" "${AUDIO_SRC_DIR}"
     check_shared_units "BLEAudio" "${AUDIO_SRC_DIR}"
+
+    if [ -d "${AUDIO_SRC_DIR}/engine" ]; then
+        bad_engine_cpp="$(find "${AUDIO_SRC_DIR}/engine" -type f -name '*.cpp' || true)"
+        if [ -n "$bad_engine_cpp" ]; then
+            echo "ERROR: BLEAudio/src/engine must remain pure C (.c/.h only), found .cpp file(s):"
+            indent "$bad_engine_cpp"
+            status=1
+        fi
+    fi
 fi
 
 if [ "$status" -eq 0 ]; then

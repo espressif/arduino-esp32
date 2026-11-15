@@ -1094,11 +1094,14 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
           client->secBonded = false;
           conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, client->central.load());
         }
-        // When BTA already holds a server cache from an earlier connection to
-        // this BDA (indicated by open.mtu > 23 after a prior MTU exchange),
+        // Query BTA's cached DB size synchronously: when p_srcb->p_srvc_cache
+        // is already populated (or open.mtu > 23 from a prior session),
         // bta_gattc_conn() skips auto-discovery and no DIS_SRVC_CMPL_EVT will
-        // fire. Mark autoDiscDone immediately in that case.
-        if (param->open.mtu > 23) {
+        // fire. Mark autoDiscDone immediately in that case so cached reconnects
+        // (even at MTU 23) never wait on autoDiscSync.
+        uint16_t cachedCount = 0;
+        (void)esp_ble_gattc_get_attr_count(gattc_if, param->open.conn_id, ESP_GATT_DB_ALL, 1, 0xFFFF, 0, &cachedCount);
+        if (cachedCount > 0 || param->open.mtu > 23) {
           client->autoDiscDone.store(true, std::memory_order_release);
           client->autoDiscSync.give(BTStatus::OK);
         }

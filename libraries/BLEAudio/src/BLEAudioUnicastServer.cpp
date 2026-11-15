@@ -22,7 +22,7 @@
 #include "core/BLEBackend.h"
 #include "BLEAudioBackend.h"
 #include "core/BLEImplHelpers.h"
-#include "engine/BLEAudioStreamInternal.h"
+#include "BLEAudioStreamImpl.h"
 #include "esp32-hal-log.h"
 
 /**

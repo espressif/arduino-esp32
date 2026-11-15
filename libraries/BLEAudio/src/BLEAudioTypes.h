@@ -23,7 +23,7 @@
  * These mirror the LE Audio / Generic Audio Framework (GAF) values from the
  * Bluetooth Assigned Numbers so they map 1:1 onto the engine, but they NEVER
  * name an engine (`esp_ble_audio_*`) type: the translation happens only in the
- * audio implementation files (see `BLEAudioStreamInternal.h`). Audio-only value
+ * audio implementation files (see `BLEAudioStreamImpl.h`). Audio-only value
  * types live here, not in `types/`, which is reserved for types shared across
  * components.
  *

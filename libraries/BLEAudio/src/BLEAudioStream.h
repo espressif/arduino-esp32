@@ -144,7 +144,7 @@ private:
   explicit BLEAudioStream(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
   std::shared_ptr<Impl> _impl;
 
-  friend struct BLEAudioStreamAccess;  // Role handles and the data path (BLEAudioStreamInternal.h).
+  friend struct BLEAudioStreamAccess;  // Role handles and the data path (BLEAudioStreamImpl.h).
 };
 
 #endif /* BLE_AUDIO_SUPPORTED */

@@ -19,7 +19,7 @@
 
 #include "BLEAudioStream.h"
 #include "core/BLEImplHelpers.h"
-#include "engine/BLEAudioStreamInternal.h"
+#include "BLEAudioStreamImpl.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp32-hal-log.h"

@@ -125,6 +125,8 @@ enum {
 
 /** @brief Register the microphone controller callbacks. */
 int bleAudioMicpCtlrInit(void);
+/** @brief Whether MICP controller discovery has already associated @p conn_handle. */
+bool bleAudioMicpCtlrHasPeer(uint16_t conn_handle);
 /** @brief DISCOVERED is followed by a mute read. */
 int bleAudioMicpCtlrDiscover(uint16_t conn_handle);
 /** @brief Write the peer's mute state; the result arrives as MICP_CTLR_MUTE. */

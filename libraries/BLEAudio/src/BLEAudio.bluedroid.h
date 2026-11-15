@@ -19,6 +19,10 @@
 /**
  * @file BLEAudio.bluedroid.h
  * @brief Bluedroid backend definition of `BLEAudio::Impl`.
+ *
+ * The engine's Bluedroid adapter registers its own BTA GATTS/GATTC apps; only
+ * SMP completion (`ESP_GAP_BLE_AUTH_CMPL_EVT`) and PAST diagnostics arrive on
+ * the application GAP callback and are routed through `BLEClass::Impl::audioGapHook`.
  */
 
 #include "core/BLEGuards.h"

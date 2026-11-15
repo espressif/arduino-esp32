@@ -446,9 +446,8 @@ service-init calls are non-idempotent). The coordinator has two modes:
 Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive()` returns
 `bleAudioEngineIsInitialized()` (false when the engine is not compiled in), so audio mode is exactly the window
 between `audio.begin()` and `audio.end()`. The dependency points one way — the NimBLE-only coordinator observes the
-host-agnostic engine. The engine's only per-backend files are the thin event forwarders
-`engine/BLEAudioEngine.nimble.*` (GATT events, plus the two NimBLE calls kept out of the Zephyr-based C units) and
-`engine/BLEAudioEngine.bluedroid.*` (SMP completion).
+host-agnostic engine through weak hooks in `core/BLEAudioHooks.h`. In `BLEAudio`, `src/engine/` is 100% pure C, and
+all host-specific glue lives in the single backend pair `BLEAudio.nimble.{h,cpp}` and `BLEAudio.bluedroid.{h,cpp}`.
 
 After `audio.start()` the NimBLE table is frozen: a later `BLEServer::start()` that would add attributes returns
 `InvalidState` instead of resetting the audio-owned table. Removing an already committed classic service remains

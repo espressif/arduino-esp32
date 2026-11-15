@@ -27,7 +27,7 @@
 #include "core/BLEImplHelpers.h"
 #include "BLEAudioControlLink.h"
 #include "BLEAudioProfiles.h"
-#include "engine/BLEAudioStreamInternal.h"
+#include "BLEAudioStreamImpl.h"
 #include "engine/BLEAudioEngineCap.h"
 #include "BLE.h"
 #include "advertising/BLEAdvertising.h"

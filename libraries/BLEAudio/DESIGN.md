@@ -179,20 +179,19 @@ All paths are relative to `libraries/BLEAudio/src/`.
 | Files | Role |
 | --- | --- |
 | `BLEAudio.{h,cpp}`, `BLEAudioImpl.h`, `BLEAudioBackend.h` | Controller public handle, `BLEClass::getAudioController()`, `bleAudioPreEndHook()`, `BLEAudioImplCommon` (`createStagedRole`, event dispatcher), and single backend selector. |
-| `BLEAudio.{nimble,bluedroid}.{h,cpp}` | Backend `BLEAudio::Impl` pair: NimBLE `BLEClient` connect fallback + weak GATT coordinator hooks; Bluedroid `audioGapHook`. |
+| `BLEAudio.{nimble,bluedroid}.{h,cpp}` | Single backend pair for `BLEAudio`: `BLEAudio::Impl` methods, weak GATT coordinator hooks (`BLEAudioHooks.h`), Bluedroid `audioGapHook` & deferred SMP timer, central GATTC open, NimBLE GATT reset/staging hooks, PAST send/receive, and ACL disconnect. |
 | `BLEAudio<Role>.{h,cpp}` | Public role handles (UnicastServer/Client, BroadcastSource/Sink/Assistant, Cap, CoordinatedSet, Volume, Mic, Media, Call, HearingAid, Profiles). |
-| `BLEAudioStream.{h,cpp}`, `engine/BLEAudioStreamInternal.h` | Stream handle, engine stream callbacks, public↔engine value conversions, `bleAudioStatus()` error mapping. |
+| `BLEAudioStream.{h,cpp}`, `BLEAudioStreamImpl.h` | Stream handle, `BLEAudioStream::Impl`, engine stream callbacks, public↔engine value conversions, `bleAudioStatus()` error mapping. |
 | `BLEAudioTypes.h` | Value types: codec config, QoS, presets, locations, contexts. |
 | `BLEAudioAuracast.{h,cpp}` | Internal: extended advertising payload shared by `BroadcastSource` and `CapInitiator` broadcasts (including UTF-8-safe 32-octet Broadcast Name / PBA Program Info truncation). |
 | `BLEAudioControlLink.h` | Internal: peer link tracker for control client roles (lock-free engine discovery hand-off), plus shared `bleAudioWaitUntilIdle`, `bleAudioNthLocation`, and `bleAudioPackBroadcastCode` helpers. |
 | `BLEAudioPlayer.{h,cpp}`, `BLEAudioRecorder.{h,cpp}`, `BLEAudioPipeline.{h,cpp}`, `BLEAudioPCM.h` | LC3 data plane and I2S port; `BLEAudioPCM.h` holds optional PCM sink/source callbacks. |
-| `engine/BLEAudioEngine.{h,c}` | Host-agnostic engine lifecycle, event bridge, link bring-up, BAP presets, LE wire helpers. |
-| `engine/BLEAudioEngineBap.{h,c}` | Stream slot pool (with spinlock-guarded `snap_codec`/`snap_qos`), PACS, unicast server/client, broadcast source/sink, scan delegator. |
-| `engine/BLEAudioEngineAssistant.{h,c}` | BAP Broadcast Assistant (BASS client), PAST deduplication. |
-| `engine/BLEAudioEngineCap.{h,c}` | CAP acceptor/initiator/commander/handover, CSIP. |
-| `engine/BLEAudioEngineControl.{h,c}` | VCP, MICP, MCP, CCP, HAS. |
-| `engine/BLEAudioEngineProfiles.{h,c}` | TMAP, GMAP, PBP. |
-| `engine/BLEAudioEngine.{nimble,bluedroid}.{h,cpp}` | Host glue pair: GAP/GATT/SMP forwarding, Bluedroid GATTC open & deferred SMP timer, NimBLE GATT reset/staging hooks, PAST send/receive, ACL disconnect. |
+| `engine/BLEAudioEngine.{h,c}` | Pure-C host-agnostic engine lifecycle, event bridge, link bring-up, BAP presets, LE wire helpers (`src/engine/` contains `.c` and `.h` files only). |
+| `engine/BLEAudioEngineBap.{h,c}` | Pure-C stream slot pool (with spinlock-guarded `snap_codec`/`snap_qos`), PACS, unicast server/client, broadcast source/sink, scan delegator. |
+| `engine/BLEAudioEngineAssistant.{h,c}` | Pure-C BAP Broadcast Assistant (BASS client), PAST deduplication. |
+| `engine/BLEAudioEngineCap.{h,c}` | Pure-C CAP acceptor/initiator/commander/handover, CSIP. |
+| `engine/BLEAudioEngineControl.{h,c}` | Pure-C VCP, MICP, MCP, CCP, HAS. |
+| `engine/BLEAudioEngineProfiles.{h,c}` | Pure-C TMAP, GMAP, PBP. |
 
 **Engine error-return convention.** Engine C functions return `esp_err_t` /
 errno values that C++ maps through `bleAudioStatus()`. Three host-glue entry

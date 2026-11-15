@@ -24,7 +24,8 @@
  * uses `<BLE.h>` does not compile `BLEAudio`. These hooks are declared weak, so
  * the core code can call them unconditionally and the linker resolves them to
  * null when the BLEAudio library is not part of the build. BLEAudio defines
- * them in `BLEAudioController.{nimble,bluedroid}.cpp`.
+ * `bleAudioPreEndHook` in `BLEAudio.cpp` and the NimBLE GATT hooks in
+ * `BLEAudio.nimble.cpp`.
  */
 
 #include "core/BLEGuards.h"

@@ -19,6 +19,11 @@
 /**
  * @file BLEAudio.nimble.h
  * @brief NimBLE backend definition of `BLEAudio::Impl`.
+ *
+ * NimBLE GATT event forwarding (`bleAudioForwardHostGattEvent`) and GATT
+ * coordinator queries (`bleAudioGattActive`, `bleAudioGattFrozen`) are wired
+ * through weak `extern "C"` hooks in `core/BLEAudioHooks.h` and defined in
+ * `BLEAudio.nimble.cpp`.
  */
 
 #include "core/BLEGuards.h"

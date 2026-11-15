@@ -19,9 +19,8 @@
  * @brief Host-agnostic engine lifecycle, event bridge, link bring-up and BAP presets.
  *
  * Completely shared across NimBLE and Bluedroid: host-specific GAP/GATT/SMP
- * calls live in `BLEAudioEngine.nimble.cpp` and `BLEAudioEngine.bluedroid.cpp`
- * behind the `bleAudioHost*` / `bleAudioEngine*` C hooks declared in
- * `BLEAudioEngine.h`.
+ * calls live in `BLEAudio.nimble.cpp` and `BLEAudio.bluedroid.cpp` behind the
+ * `bleAudioHost*` / `bleAudioEngine*` C hooks declared in `BLEAudioEngine.h`.
  */
 
 #include "core/BLEGuards.h"

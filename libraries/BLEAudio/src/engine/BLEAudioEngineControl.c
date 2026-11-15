@@ -778,10 +778,19 @@ int bleAudioMicpCtlrSetGain(uint16_t conn_handle, int8_t gain) {
 #endif
 }
 
+bool bleAudioMicpCtlrHasPeer(uint16_t conn_handle) {
+  return conn_handle != CONN_NONE && s_mctl.conn == conn_handle && s_mctl.ctlr != NULL;
+}
+
 #else
 
 int bleAudioMicpCtlrInit(void) {
   return ESP_ERR_NOT_SUPPORTED;
+}
+
+bool bleAudioMicpCtlrHasPeer(uint16_t conn_handle) {
+  (void)conn_handle;
+  return false;
 }
 
 int bleAudioMicpCtlrDiscover(uint16_t conn_handle) {

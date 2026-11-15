@@ -17,45 +17,35 @@
 #pragma once
 
 /**
- * @file
- * @brief Stream internals shared by the role handles and the LC3 data path.
+ * @file BLEAudioStreamImpl.h
+ * @brief Stream PIMPL internals (`BLEAudioStream::Impl`, `BLEAudioStreamAccess`,
+ *        public <-> engine value conversions, and `bleAudioStatus()`).
  *
- * NOT part of the public API. This header is the single place where the
- * public stream handle meets the engine:
- *  - `BLEAudioStream::Impl`: the handle's state (engine slot + callbacks).
- *  - `BLEAudioStreamAccess`: the friend through which role handles allocate
- *    streams and reach their slot, and the data path installs its tap
- *    (synchronized with the host task, see setTap()).
- *  - Converters between the public value types (`BLEAudioTypes.h`) and the
- *    engine's plain C structs (`BLEAudioEngine.h`).
- *  - `bleAudioStatus()`: the one mapping of engine errors onto `BTStatus`.
+ * NOT part of the public API. Lives in `src/` alongside `BLEAudioStream.{h,cpp}`
+ * so `src/engine/` remains 100% pure C.
  */
 
 #include "core/BLEGuards.h"
 #if BLE_AUDIO_SUPPORTED
 
 #include <atomic>
-#include <memory>
 #include <errno.h>
-#include "core/BLEMutex.h"
+#include <memory>
 #include "esp_err.h"
+#include "core/BLEMutex.h"
 #include "BLEAudioStream.h"
 #include "engine/BLEAudioEngineBap.h"
 
-// --------------------------------------------------------------------------
-// Stream state
-// --------------------------------------------------------------------------
+// ==========================================================================
+// Data-path tap & BLEAudioStream::Impl
+// ==========================================================================
 
 /**
- * @brief Data-path tap of one stream (used by `BLEAudioPlayer`/`BLEAudioRecorder`).
+ * @brief Data-path tap of one stream (used by `BLEAudioPlayer` / `BLEAudioRecorder`).
  *
- * Plain function pointers so the per-SDU path costs no std::function call,
- * and a separate slot from the application callbacks so attaching a player
- * never overrides the user's onReceive()/onSent(). Every hook receives `ctx`.
- *
- * The struct is owned by the data path and installed by pointer with
- * BLEAudioStreamAccess::setTap(), so the host task always sees one complete
- * set of hooks and never a half-written one.
+ * Plain function pointers keep the per-SDU hot path free of `std::function`
+ * overhead, and sit in a separate slot from user callbacks so attaching a
+ * player/recorder never overrides `onReceive()` / `onSent()`.
  */
 struct BLEAudioStreamTap {
   void (*recv)(void *ctx, const ble_audio_recv_info_t *info, const uint8_t *data, uint16_t len) = nullptr;  ///< One SDU received.
@@ -68,10 +58,9 @@ struct BLEAudioStreamTap {
 /**
  * @brief State behind a `BLEAudioStream` handle.
  *
- * Owns exactly one engine slot for its whole lifetime: the slot is allocated
- * by BLEAudioStreamAccess::create() and returned to the pool by the
- * destructor, so the engine never reports an event for a destroyed Impl.
- * The raw `this` pointer is the slot's owner (see BLEAudioStream.cpp).
+ * Owns one engine slot for its whole lifetime: allocated in
+ * `BLEAudioStreamAccess::create()` and freed in `~Impl()`, so the engine never
+ * reports an event for a destroyed `Impl`.
  */
 struct BLEAudioStream::Impl : std::enable_shared_from_this<BLEAudioStream::Impl> {
   ble_audio_slot_t *slot = nullptr;  ///< Engine stream slot (never null for a live handle).
@@ -81,9 +70,9 @@ struct BLEAudioStream::Impl : std::enable_shared_from_this<BLEAudioStream::Impl>
   StoppedCallback onStoppedCb;       ///< Application onStopped().
   ReceiveCallback onReceiveCb;       ///< Application onReceive().
   Callback onSentCb;                 ///< Application onSent().
-  /** Internal data path (Player/Recorder); null when none. Written only through setTap()/clearTap(). */
+  /// Internal data path (Player/Recorder); null when none. Mutated only via setTap()/clearTap().
   std::atomic<const BLEAudioStreamTap *> tap{nullptr};
-  /** Tap calls in flight on the host task; setTap()/clearTap() wait for it to reach zero. */
+  /// Tap calls in flight on the host task; setTap()/clearTap() wait for zero.
   std::atomic<uint8_t> tapBusy{0};
 
   ~Impl() {
@@ -91,57 +80,49 @@ struct BLEAudioStream::Impl : std::enable_shared_from_this<BLEAudioStream::Impl>
   }
 };
 
-/**
- * @brief Internal access to `BLEAudioStream` (the only friend of the handle).
- *
- * Role handles create their streams here and pass the slot to the engine; the
- * data path reaches the Impl to install its tap.
- */
+// ==========================================================================
+// Internal access bridge (sole friend of BLEAudioStream)
+// ==========================================================================
+
 struct BLEAudioStreamAccess {
-  /**
-   * @brief Allocate a stream of @p kind from the engine pool.
-   * @return A handle owning the new slot, or a null handle when the pool
-   *         (sized from Kconfig) is exhausted.
-   */
+  /** @brief Allocate a stream of @p kind from the engine pool (empty handle when exhausted). */
   static BLEAudioStream create(ble_audio_stream_kind_t kind);
 
-  /** @brief Build a public handle around an existing Impl. */
+  /** @brief Build a public handle around an existing `Impl`. */
   static BLEAudioStream wrap(std::shared_ptr<BLEAudioStream::Impl> impl) {
     return BLEAudioStream(std::move(impl));
   }
 
-  /** @brief Impl behind @p s (null for a null handle). */
+  /** @brief `Impl` behind @p s (`nullptr` for an empty handle). */
   static BLEAudioStream::Impl *impl(const BLEAudioStream &s) {
     return s._impl.get();
   }
 
-  /** @brief Engine slot behind @p s (null for a null handle). */
+  /** @brief Engine slot behind @p s (`nullptr` for an empty handle). */
   static ble_audio_slot_t *slot(const BLEAudioStream &s) {
     return s._impl ? s._impl->slot : nullptr;
   }
 
   /**
-   * @brief Install @p tap on @p s, replacing any previous one (nullptr removes it).
+   * @brief Install @p tap on @p s, replacing any previous one (`nullptr` removes it).
    *
-   * @p tap must stay valid until it is removed. Returns only once no host-task
-   * call is still running inside the previous tap, so its owner may be freed
-   * right after. Must not be called from inside a tap hook (it would wait on
-   * itself).
+   * Blocks until no host-task call is still inside the previous tap; must not
+   * be called from inside a tap hook.
    */
   static void setTap(const BLEAudioStream &s, const BLEAudioStreamTap *tap);
 
-  /** @brief Remove @p tap from @p s only if it is still the installed one; waits like setTap(). */
+  /** @brief Remove @p tap from @p s if still installed; waits for in-flight tap calls. */
   static void clearTap(const BLEAudioStream &s, const BLEAudioStreamTap *tap);
 
   /** @brief Install the engine stream callback table; called once by `BLEAudio::begin()`. */
   static void installEngineCallbacks();
 };
 
-// --------------------------------------------------------------------------
+// ==========================================================================
 // Public <-> engine value conversions
-// --------------------------------------------------------------------------
+// ==========================================================================
 
-/** @brief Engine codec -> public codec config (a zero frame count means one block). */
+/** @brief Engine codec -> public codec config (0 frames_per_sdu reads as 1). */
 inline BLEAudioCodecConfig bleAudioCodecFromEngine(const ble_audio_codec_t &c) {
   BLEAudioCodecConfig out;
   out.samplingRateHz = c.sample_rate_hz;
@@ -189,20 +170,15 @@ inline ble_audio_qos_t bleAudioQosToEngine(const BLEAudioQos &q) {
   return out;
 }
 
-// --------------------------------------------------------------------------
-// Error mapping
-// --------------------------------------------------------------------------
+// ==========================================================================
+// Engine error -> BTStatus mapping
+// ==========================================================================
 
 /**
- * @brief Map an engine result onto `BTStatus`.
+ * @brief Map an engine result (`esp_err_t` or negative errno) onto `BTStatus`.
  *
- * The engine returns either an `esp_err_t` (esp_ble_audio_* API) or a
- * negative errno (Zephyr-derived host code); both families are accepted.
- * Anything unrecognised maps to `BTStatus::Fail`.
- *
- * `-EALREADY` means a no-op for some calls (stop, set-same-value) and a
- * rejection for others (start with different parameters), so callers that can
- * tell which handle it before mapping; the fallback here is `InvalidState`.
+ * `-EALREADY` is handled by specific call sites when it represents an
+ * idempotent no-op; the fallback here is `InvalidState`.
  */
 inline BTStatus bleAudioStatus(int err) {
   switch (err) {
