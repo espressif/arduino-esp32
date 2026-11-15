@@ -920,8 +920,6 @@ int bleAudioPacsSetAvailable(uint8_t dir, uint16_t contexts) {
 
 static esp_ble_audio_bap_qos_cfg_pref_t s_us_pref; /* QoS preferences returned with every config. */
 static bool s_us_registered;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_us_cb_linked;
 
 /*
  * ASCS server callbacks: a remote client drives our ASEs. The codec has
@@ -1024,11 +1022,6 @@ int bleAudioUsInit(uint8_t snk_cnt, uint8_t src_cnt, const ble_audio_qos_pref_t 
   esp_err_t err = esp_ble_audio_bap_unicast_server_register(&reg);
   if (err == ESP_OK) {
     err = esp_ble_audio_bap_unicast_server_register_cb(&s_us_cb);
-    /* After a re-init the table may still be linked from the previous session; that is fine. */
-    if (err == ESP_OK || s_us_cb_linked) {
-      s_us_cb_linked = true;
-      err = ESP_OK;
-    }
   }
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "unicast server: ASCS registration (%u sink / %u source ASEs) failed: %d", reg.snk_cnt, reg.src_cnt, err);
@@ -1072,8 +1065,6 @@ static struct {
   esp_ble_audio_bap_unicast_group_t *group;
   uc_peer_t peers[UC_MAX_PEERS];
 } s_uc;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_uc_cb_linked;
 
 /** @brief Find the peer entry for @p conn, optionally claiming (and clearing) a free one. */
 static uc_peer_t *uc_peer(uint16_t conn, bool create) {
@@ -1494,12 +1485,10 @@ int bleAudioUcInit(void) {
   }
   uc_reset();
   esp_err_t err = esp_ble_audio_bap_unicast_client_register_cb(&s_uc_cb);
-  /* After a re-init the table may still be linked from the previous session; that is fine. */
-  if (err != ESP_OK && !s_uc_cb_linked) {
+  if (err != ESP_OK) {
     ESP_LOGE(TAG, "unicast client: callback registration failed: %d", err);
     return (int)err;
   }
-  s_uc_cb_linked = true;
   s_uc.registered = true;
   return 0;
 }
@@ -1627,8 +1616,6 @@ static struct {
   uint8_t adv_handle;
   esp_ble_audio_bap_broadcast_source_t *source;  /* NULL when no source exists. */
 } s_bsrc;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_bsrc_cb_linked;
 
 /* BIG created / terminated; per-BIS state arrives through the stream ops. */
 static void bsrc_started(esp_ble_audio_bap_broadcast_source_t *source) {
@@ -1674,12 +1661,10 @@ int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *location
   }
   if (!s_bsrc.cb_registered) {
     esp_err_t err = esp_ble_audio_bap_broadcast_source_register_cb(&s_bsrc_cb);
-    /* After a re-init the table may still be linked from the previous session; that is fine. */
-    if (err != ESP_OK && !s_bsrc_cb_linked) {
+    if (err != ESP_OK) {
       ESP_LOGE(TAG, "broadcast source: callback registration failed: %d", err);
       return (int)err;
     }
-    s_bsrc_cb_linked = true;
     s_bsrc.cb_registered = true;
   }
   ble_audio_codec_t sub = *codec;
@@ -1925,8 +1910,6 @@ static struct {
   uint8_t code[BLE_AUDIO_BCODE_SIZE];
   esp_ble_audio_bap_broadcast_sink_t *sink;
 } s_bsnk;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_bsnk_cb_linked;
 
 /**
  * @brief (Re)create the BAP broadcast sink on the current PA sync.
@@ -2321,12 +2304,10 @@ int bleAudioBsinkInit(bool delegator) {
   }
   if (!s_bsnk.cb_registered) {
     esp_err_t err = esp_ble_audio_bap_broadcast_sink_register_cb(&s_bsnk_cb);
-    /* After a re-init the table may still be linked from the previous session; that is fine. */
-    if (err != ESP_OK && !s_bsnk_cb_linked) {
+    if (err != ESP_OK) {
       ESP_LOGE(TAG, "broadcast sink: callback registration failed: %d", err);
       return (int)err;
     }
-    s_bsnk_cb_linked = true;
     s_bsnk.cb_registered = true;
   }
 #if BLE_AUDIO_SCAN_DELEGATOR_SUPPORTED

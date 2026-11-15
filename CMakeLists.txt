@@ -147,10 +147,7 @@ list(SORT ARDUINO_LIBRARY_BLE_SRCS)
 
 file(GLOB ARDUINO_LIBRARY_BLEAudio_SRCS
   libraries/BLEAudio/src/*.cpp
-  libraries/BLEAudio/src/*/*.cpp
-  libraries/BLEAudio/src/*/*.c
-  libraries/BLEAudio/src/*/*/*.cpp
-  libraries/BLEAudio/src/*/*/*.c
+  libraries/BLEAudio/src/engine/*.c
 )
 list(SORT ARDUINO_LIBRARY_BLEAudio_SRCS)
 

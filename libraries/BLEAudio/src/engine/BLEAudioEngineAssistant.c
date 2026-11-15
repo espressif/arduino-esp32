@@ -65,10 +65,6 @@ typedef struct {
   uint16_t sync_handle;
 } ba_sync_t;
 
-/* Survives deinit: the stack keeps the callback node linked if bt_le_audio_deinit()
- * does not reset its list, and a second register then fails with -EALREADY. */
-static bool s_ba_cb_linked;
-
 static struct {
   bool cb_registered;  /* this session */
   bool scanning;       /* a remote scan is active: report sources */
@@ -403,12 +399,10 @@ int bleAudioBaInit(void) {
   }
   past_reset();
   err = esp_ble_audio_bap_broadcast_assistant_register_cb(&s_ba_cb);
-  /* After a re-init the table may still be linked from the previous session; that is fine. */
-  if (err != ESP_OK && !s_ba_cb_linked) {
+  if (err != ESP_OK) {
     ESP_LOGE(TAG, "broadcast assistant: callback registration failed: %d", err);
     return err;
   }
-  s_ba_cb_linked = true;
   s_ba.cb_registered = true;
   return 0;
 }

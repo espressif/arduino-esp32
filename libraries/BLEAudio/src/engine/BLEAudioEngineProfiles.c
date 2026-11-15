@@ -58,8 +58,6 @@ static const char *TAG = "BLEAudioProfiles";
 
 #if BLE_AUDIO_GMAP_SUPPORTED
 static bool s_gmap_cb_registered;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_gmap_cb_linked;
 #endif
 
 /** Engine deinit hook: the next session registers the GMAP callbacks again. */
@@ -160,14 +158,12 @@ int bleAudioGmapDiscover(uint16_t conn_handle) {
   if (err != 0) {
     return err;
   }
-  /* Registered on first use; after a re-init the stack may still hold the table (s_gmap_cb_linked). */
   if (!s_gmap_cb_registered) {
     err = esp_ble_audio_gmap_cb_register(&s_gmap_cb);
-    if (err != ESP_OK && !s_gmap_cb_linked) {
+    if (err != ESP_OK) {
       ESP_LOGE(TAG, "GMAP: callback registration failed: %d", err);
       return err;
     }
-    s_gmap_cb_linked = true;
     s_gmap_cb_registered = true;
   }
   return (int)esp_ble_audio_gmap_discover(conn_handle);

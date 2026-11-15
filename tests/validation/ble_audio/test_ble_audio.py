@@ -314,22 +314,12 @@ def _phase_lc3_loopback(server, client):
 
 
 def _phase_control_profiles(server, client):
-    """LE Audio control-profile round-trip over one ACL (server = acceptor,
-    client = controller / "phone").
+    """LE Audio control profiles over one ACL: CAP + VCP + MICP + MCP + CCP.
 
-    The server exposes CAP acceptor (CAS+CSIS), VCP renderer, MICP device, MCP
-    media player, and CCP call server; the client connects once and drives each:
-    CAP discovery, VCP setVolume, MICP mute, MCP play, CCP originate. The server
-    tallies the writes it observes. Returns False (SKIP) when the LE Audio engine
-    is not compiled into either build (only a dual-audio esp32s31 pair runs it).
-
-    Hard gates: CAP, VCP, MCP, and CCP must complete end to end (client
-    discovers + receives state/result confirmation, and the server observes the
-    VCP volume write, MCP Play command, and CCP Originate request). Note: MICP
-    on the same node as VCP exceeds the packaged AICS client pool
-    (CONFIG_BT_AICS_CLIENT_MAX_INSTANCE_COUNT=2 vs CONFIG_BT_MAX_CONN=3), so
-    MICP is exercised on its own dedicated round-trip right after if VCP
-    already consumed the AICS pool.
+    The server exposes a full headset-like control surface (CAS+CSIS, VCS,
+    MICS, MCS backed by the reference media player, GTBS); the client connects
+    once and drives every profile end-to-end. Both client and server outcomes
+    are strictly asserted for all five profiles.
     """
     mc = client.expect(r"\[CLIENT\] ControlProfiles (not supported|result cap=(\d+) vcp=(\d+) mic=(\d+) media=(\d+) call=(\d+))", timeout=120)
     _release_server(server)
@@ -356,6 +346,7 @@ def _phase_control_profiles(server, client):
 
     assert cap_disc == 1, "CAP initiator did not discover the acceptor's CAS"
     assert vcp_ok == 1 and vol_writes >= 1, f"VCP round-trip failed (client={vcp_ok}, server_writes={vol_writes})"
+    assert mic_ok == 1 and mic_mutes >= 1, f"MICP mute round-trip failed (client={mic_ok}, server_mutes={mic_mutes})"
     assert media_ok == 1 and media_cmds >= 1, f"MCP Play round-trip failed (client={media_ok}, server_cmds={media_cmds})"
     assert call_ok == 1 and call_reqs >= 1, f"CCP Originate round-trip failed (client={call_ok}, server_calls={call_reqs})"
     return True

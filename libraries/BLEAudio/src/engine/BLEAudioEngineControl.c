@@ -119,8 +119,6 @@ static struct {
   esp_ble_audio_vocs_t *vocs;           ///< Peer's first VOCS instance, NULL when absent.
   esp_ble_audio_aics_t *aics;           ///< Peer's first AICS instance, NULL when absent.
 } s_vctl = {.conn = CONN_NONE};
-/* Survives deinit: lib_vcp_vol_ctlr_deinit leaves static callback nodes linked in its sys_slist. */
-static bool s_vctl_cb_linked;
 #endif
 
 #if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
@@ -133,8 +131,6 @@ static struct {
   esp_ble_audio_micp_mic_ctlr_t *ctlr;  ///< Stack instance for the peer.
   esp_ble_audio_aics_t *aics;           ///< Peer's first microphone AICS instance, NULL when absent.
 } s_mctl = {.conn = CONN_NONE};
-/* Survives deinit: lib_micp_mic_ctlr_deinit leaves static callback nodes linked in its sys_slist. */
-static bool s_mctl_cb_linked;
 #endif
 
 #if BLE_AUDIO_MCP_CLIENT_SUPPORTED
@@ -152,8 +148,6 @@ static struct {
   bool syncing;                   ///< Discovered, waiting for the initial GTBS call-state read before releasing DISCOVERED.
   ble_audio_ccp_discovered_t disc;///< Held until the initial call-state read completes.
 } s_tbsc = {.conn = CONN_NONE};
-/* Survives deinit: lib_tbs_client_deinit leaves static callback nodes linked in its sys_slist. */
-static bool s_tbsc_cb_linked;
 #endif
 
 #if BLE_AUDIO_HAS_CLIENT_SUPPORTED
@@ -162,8 +156,6 @@ static struct {
   uint16_t conn;                        ///< Peer passed to the last Discover, CONN_NONE when idle.
   esp_ble_audio_has_t *has;             ///< Stack instance, set by the discover callback.
 } s_hasc = {.conn = CONN_NONE};
-/* Survives deinit: lib_has_client_deinit leaves static callback nodes linked in its sys_slist. */
-static bool s_hasc_cb_linked;
 #endif
 
 #if MCP_SRV && CONFIG_BT_MCTL_LOCAL_PLAYER_LOCAL_CONTROL
@@ -462,11 +454,9 @@ int bleAudioVcpCtlrInit(void) {
     return ESP_OK;
   }
   int err = role_attach();
-  if (err == ESP_OK && !s_vctl_cb_linked) {
+  if (err == ESP_OK) {
     err = esp_ble_audio_vcp_vol_ctlr_cb_register(&s_vctl_cb);
-    if (err == ESP_OK) {
-      s_vctl_cb_linked = true;
-    } else {
+    if (err != ESP_OK) {
       ESP_LOGE(TAG, "volume controller: cb_register failed: %d", err);
     }
   }
@@ -660,11 +650,9 @@ int bleAudioMicpCtlrInit(void) {
     return ESP_OK;
   }
   int err = role_attach();
-  if (err == ESP_OK && !s_mctl_cb_linked) {
+  if (err == ESP_OK) {
     err = esp_ble_audio_micp_mic_ctlr_cb_register(&s_mctl_cb);
-    if (err == ESP_OK) {
-      s_mctl_cb_linked = true;
-    } else {
+    if (err != ESP_OK) {
       ESP_LOGE(TAG, "mic controller: cb_register failed: %d", err);
     }
   }
@@ -972,27 +960,12 @@ int bleAudioCcpSrvInit(const char *provider_name, const char *uci, const char *u
   if (err == ESP_OK) {
     err = esp_ble_audio_tbs_register_cb(&s_tbs_cb);
   }
-  /* A single generic bearer (GTBS) that any client may control without authorization.
-   * Workaround for prebuilt libble_audio.a (tbs.c uri_scheme_in_list): its token
-   * loop only matches schemes terminated by ',', ignoring the final '\0'-terminated
-   * entry. Ensure a trailing ',' so single-scheme ("tel") and multi-scheme ("tel,sip")
-   * lists match every configured URI scheme on client Originate writes. */
+  /* A single generic bearer (GTBS) that any client may control without authorization. */
   if (err == ESP_OK) {
-    char schemes_buf[CONFIG_BT_TBS_MAX_SCHEME_LIST_LENGTH];
-    const char *schemes_arg = uri_schemes;
-    if (uri_schemes != NULL) {
-      const size_t n = strlen(uri_schemes);
-      if (n > 0 && uri_schemes[n - 1] != ',' && n + 1 < sizeof(schemes_buf)) {
-        memcpy(schemes_buf, uri_schemes, n);
-        schemes_buf[n] = ',';
-        schemes_buf[n + 1] = '\0';
-        schemes_arg = schemes_buf;
-      }
-    }
     const esp_ble_audio_tbs_register_param_t p = {
       .provider_name = (char *)provider_name,
       .uci = (char *)uci,
-      .uri_schemes_supported = (char *)schemes_arg,
+      .uri_schemes_supported = (char *)uri_schemes,
       .gtbs = true,
       .authorization_required = false,
       .technology = ESP_BLE_AUDIO_TBS_TECHNOLOGY_LTE,
@@ -1131,11 +1104,9 @@ int bleAudioCcpCliInit(void) {
     return ESP_OK;
   }
   int err = role_attach();
-  if (err == ESP_OK && !s_tbsc_cb_linked) {
+  if (err == ESP_OK) {
     err = esp_ble_audio_tbs_client_register_cb(&s_tbsc_cb);
-    if (err == ESP_OK) {
-      s_tbsc_cb_linked = true;
-    } else {
+    if (err != ESP_OK) {
       ESP_LOGE(TAG, "call controller: register_cb failed: %d", err);
     }
   }
@@ -1389,11 +1360,9 @@ int bleAudioHasCliInit(void) {
     return ESP_OK;
   }
   int err = role_attach();
-  if (err == ESP_OK && !s_hasc_cb_linked) {
+  if (err == ESP_OK) {
     err = esp_ble_audio_has_client_cb_register(&s_hasc_cb);
-    if (err == ESP_OK) {
-      s_hasc_cb_linked = true;
-    } else {
+    if (err != ESP_OK) {
       ESP_LOGE(TAG, "hearing aid client: cb_register failed: %d", err);
     }
   }

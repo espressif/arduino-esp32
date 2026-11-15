@@ -308,8 +308,6 @@ bool bleAudioCsisIsLocked(bool cas) {
 #if CSIP_CRD
 
 static bool s_crd_registered;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_crd_cb_linked;
 
 /**
  * CSIS discovery finished on a peer. The member object is kept for lock and
@@ -366,11 +364,9 @@ int bleAudioCsipCoordInit(void) {
   }
   cap_attach();
   esp_err_t err = esp_ble_audio_csip_set_coordinator_register_cb(&s_crd_cb);
-  /* After a re-init the table may still be linked from the previous session; that is fine. */
-  if (err != ESP_OK && !s_crd_cb_linked) {
+  if (err != ESP_OK) {
     return (int)err;
   }
-  s_crd_cb_linked = true;
   s_crd_registered = true;
   return 0;
 }
@@ -423,8 +419,6 @@ bool bleAudioCsipIsSetMember(const uint8_t sirk[BLE_AUDIO_SIRK_LEN], const uint8
 
 #if CAP_INIT
 static bool s_init_registered;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_init_cb_linked;
 #endif
 
 #if CAP_UC
@@ -975,12 +969,10 @@ int bleAudioCapInitiatorInit(void) {
     err = esp_ble_audio_bap_unicast_client_register_cb(&s_uc_cb);
   }
 #endif
-  /* After a re-init the tables may still be linked from the previous session; that is fine. */
-  if (err != ESP_OK && !s_init_cb_linked) {
+  if (err != ESP_OK) {
     ESP_LOGE(TAG, "CAP initiator: callback registration failed: %d", err);
     return (int)err;
   }
-  s_init_cb_linked = true;
   s_init_registered = true;
   return 0;
 }
@@ -992,8 +984,6 @@ int bleAudioCapInitiatorInit(void) {
 #if CAP_HO
 
 static bool s_ho_registered;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_ho_cb_linked;
 
 /*
  * Handover reuses s_uc and s_bc: the stack creates the broadcast source (or
@@ -1057,11 +1047,6 @@ int bleAudioCapHandoverInit(void) {
   int err = bass_attach();
   if (err == 0) {
     err = (int)esp_ble_audio_cap_handover_register_cb(&s_ho_cb);
-    /* After a re-init the table may still be linked from the previous session; that is fine. */
-    if (err == 0 || s_ho_cb_linked) {
-      s_ho_cb_linked = true;
-      err = 0;
-    }
   }
   s_ho_registered = (err == 0);
   return err;
@@ -1214,8 +1199,6 @@ int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t 
 #if CAP_CMD
 
 static bool s_cmd_registered;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_cmd_cb_linked;
 
 /** End the commander discovery of @p p and report it. */
 static void cmd_disc_done(cap_peer_t *p, int err) {
@@ -1462,12 +1445,6 @@ int bleAudioCapCommanderInit(void) {
   }
   cap_attach();
   int err = (int)esp_ble_audio_cap_commander_register_cb(&s_cmd_cb);
-  /* After a re-init the table may still be linked from the previous session; that is fine. */
-  if (err == 0 || s_cmd_cb_linked) {
-    s_cmd_cb_linked = true;
-    err = 0;
-  }
-  /* These fail only when the static tables are still listed from an earlier session. */
 #if CMD_VCP
   (void)esp_ble_audio_vcp_vol_ctlr_cb_register(&s_cmd_vcp_cb);
 #endif
@@ -1662,8 +1639,6 @@ int bleAudioCapCommanderDistributeCode(const uint8_t code[BLE_AUDIO_BCODE_SIZE])
  */
 
 static bool s_bass_registered;
-/* Survives deinit: a callback still set in the stack makes a second register fail. */
-static bool s_bass_cb_linked;
 
 /** BASS discovery finished: resume the initiator chain (ASCS) and/or finish the commander discovery. */
 static void bass_discover(esp_ble_conn_t *conn, int err, uint8_t recv_state_count) {
@@ -1741,11 +1716,9 @@ static int bass_attach(void) {
     return 0;
   }
   esp_err_t err = esp_ble_audio_bap_broadcast_assistant_register_cb(&s_bass_cb);
-  /* After a re-init the table may still be linked from the previous session; that is fine. */
-  if (err != ESP_OK && !s_bass_cb_linked) {
+  if (err != ESP_OK) {
     return (int)err;
   }
-  s_bass_cb_linked = true;
   s_bass_registered = true;
   return 0;
 }

@@ -171,12 +171,21 @@ of engine fixes in the `esp-idf` tree pointed to by the lib-builder:
   `audio.begin()` even when no PAC records are registered, so the GATTS
   read/write proxy falls back to the adapter's created-service table, matching
   NimBLE's always-published PACS.
-- **`BLEAudioEngineControl.c`, TBS URI-scheme list trailing-comma workaround**:
-  `uri_scheme_in_list()` in the prebuilt `libble_audio.a` (`tbs.c.o`) only
-  compares tokens terminated by `','` and misses the final `'\0'`-terminated
-  token, rejecting client `Originate` writes with `BT_TBS_RESULT_CODE_INVALID_URI`
-  when `uri_schemes_supported` is `"tel"`. `bleAudioCcpSrvInit()` appends a
-  trailing `','` when space permits so every configured scheme matches.
+- **`esp_ble_iso/host/adapter/bluedroid/iso.c`, `gatt_utils.c`, `hci_transport.c`**:
+  `bt_le_bluedroid_iso_deinit()` also checks `BTM_GetNumAclLinks() == 0` before
+  `iso_disable_cis()` so `LE Set Host Feature` (`0x2074`) is never sent while an
+  ACL link owned by another GATTC app is still active; `gatt_sr_find_i_rcb_by_app_id()`
+  logs its normal lookup hit at `DEBUG` instead of `ERROR`; and
+  `ble_host_register_rx_iso_data_cb(NULL)` does not print an "already registered"
+  warning on deinit.
+- **`esp_ble_audio/api/esp_ble_audio_*_api.c` (`le_audio_api_fixes.diff`)**:
+  TBS/CCP bearer registration and `set_uri_scheme_list` append a trailing `','`
+  so `libble_audio`'s `uri_scheme_in_list()` matches the final scheme token on
+  client `Originate` writes, and the `*_register_cb()` / `*_cb_register()`
+  wrappers treat `-EALREADY`/`-EEXIST` as `ESP_OK` across `audio.end()` /
+  `audio.begin()` re-initializations. Client VOCS (`4`) and AICS (`8`) pools in
+  `defconfig.esp32s31` are sized to `MAX_CONN` so VCP and MICP controllers
+  coexist on all links.
 
 ### File map
 
