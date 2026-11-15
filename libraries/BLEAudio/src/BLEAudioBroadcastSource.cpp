@@ -474,9 +474,9 @@ BTStatus BLEAudioBroadcastSource::stop() {
       return budget.stall("BroadcastSource", "start-resolve");
     }
   }
-  if (budget.expired()) {
-    return budget.stall("BroadcastSource", "engine-stop");
-  }
+  // No extra gate here: with an exhausted budget the calls below simply do
+  // not wait (timeout 0 fails fast); the exists-check at the end still
+  // reports a live transport as Fail and clears a torn-down one as OK.
   int err = bleAudioBsrcStopTimeout(budget.remainingMs());
   if (err != 0 && err != ESP_ERR_INVALID_STATE && err != -EALREADY) {
     log_w("BroadcastSource: BIG terminate failed (err=%d)", err);

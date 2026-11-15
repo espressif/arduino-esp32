@@ -921,9 +921,6 @@ BTStatus BLEAudioCapInitiator::stopBroadcast() {
       return budget.stall("CapInitiator", "start-resolve");
     }
   }
-  if (budget.expired()) {
-    return budget.stall("CapInitiator", "engine-stop");
-  }
   int err = bleAudioCapBroadcastStop();
   if (err != 0 && err != ESP_ERR_INVALID_STATE && err != -EALREADY) {
     log_w("CapInitiator: BIG terminate failed (err=%d)", err);
