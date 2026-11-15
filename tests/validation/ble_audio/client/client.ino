@@ -837,28 +837,47 @@ void setup() {
         });
 
         BLEAudioVolumeController vc = audio.createVolumeController();
-        volatile bool vcDisc = false;
+        volatile bool vcDisc = false, vcStateSeen = false;
         vc.onDiscovered([&vcDisc](BTStatus s2, uint8_t, uint8_t) {
           vcDisc = (bool)s2;
         });
+        vc.onStateChanged([&vcStateSeen](uint8_t v, bool) {
+          if (v == 200) {
+            vcStateSeen = true;
+          }
+        });
 
         BLEAudioMicController mc = audio.createMicController();
-        volatile bool micDisc = false;
+        volatile bool micDisc = false, micMuteSeen = false;
         mc.onDiscovered([&micDisc](BTStatus s2, uint8_t) {
           micDisc = (bool)s2;
         });
+        mc.onMuteChanged([&micMuteSeen](bool muted) {
+          if (muted) {
+            micMuteSeen = true;
+          }
+        });
 
         BLEAudioMediaController mediaCtl = audio.createMediaController();
-        volatile bool mediaDisc = false;
+        volatile bool mediaDisc = false, mediaResSeen = false;
         mediaCtl.onDiscovered([&mediaDisc](BTStatus s2) {
           mediaDisc = (bool)s2;
         });
+        mediaCtl.onCommandResult([&mediaResSeen](BLEAudioMediaCommand cmd, BTStatus s2) {
+          if (cmd == BLEAudioMediaCommand::Play && s2) {
+            mediaResSeen = true;
+          }
+        });
 
         BLEAudioCallController callCtl = audio.createCallController();
-        volatile bool callDisc = false;
+        volatile bool callDisc = false, callOriginated = false;
         callCtl.onDiscovered([&callDisc](BTStatus s2, bool gtbs) {
-          (void)gtbs;
-          callDisc = (bool)s2;
+          callDisc = (bool)s2 && gtbs;
+        });
+        callCtl.onResult([&callOriginated](BLEAudioCallOperation op, BTStatus s2, uint8_t) {
+          if (op == BLEAudioCallOperation::Originate && s2) {
+            callOriginated = true;
+          }
         });
 
         audio.onLinkReady([](uint16_t conn) {
@@ -882,19 +901,25 @@ void setup() {
                 delay(50);
               }
               if (vcDisc && vc.setVolume(200)) {
-                vcpOk = 1;
+                for (int i = 0; i < 40 && !vcStateSeen; i++) {
+                  delay(50);
+                }
+                vcpOk = vcStateSeen ? 1 : 0;
               }
-              delay(300);
 
-              // MICP: discover then mute the remote microphone.
+              // MICP: discover then mute the remote microphone. Only enable
+              // MICP AICS if capacity wasn't already claimed by VCP, or verify
+              // MICS mute round-trip when discovered.
               mc.discover(h);
               for (int i = 0; i < 60 && !micDisc; i++) {
                 delay(50);
               }
               if (micDisc && mc.mute()) {
-                micOk = 1;
+                for (int i = 0; i < 40 && !micMuteSeen; i++) {
+                  delay(50);
+                }
+                micOk = micMuteSeen ? 1 : 0;
               }
-              delay(300);
 
               // MCP: discover then send Play to the reference media player.
               mediaCtl.discover(h);
@@ -902,9 +927,11 @@ void setup() {
                 delay(50);
               }
               if (mediaDisc && mediaCtl.play()) {
-                mediaOk = 1;
+                for (int i = 0; i < 40 && !mediaResSeen; i++) {
+                  delay(50);
+                }
+                mediaOk = mediaResSeen ? 1 : 0;
               }
-              delay(300);
 
               // CCP: discover then originate a call on the peer's GTBS.
               callCtl.discover(h);
@@ -912,9 +939,12 @@ void setup() {
                 delay(50);
               }
               if (callDisc && callCtl.originate("tel:123456")) {
-                callOk = 1;
+                for (int i = 0; i < 40 && !callOriginated; i++) {
+                  delay(50);
+                }
+                callOk = callOriginated ? 1 : 0;
               }
-              delay(500);
+              delay(200);
             } else {
               Serial.println("[CLIENT] ControlProfiles ACL connect FAILED");
             }

@@ -55,6 +55,7 @@ bool phaseMemoryDone = false;          // memory_release (phase 15, tail of suit
 // Control-profile server-side observation counters (written from role callbacks).
 volatile uint32_t ctrlVolWrites = 0;  // VCP renderer state changes seen
 volatile uint32_t ctrlMicMutes = 0;   // MICP device mute changes seen
+volatile uint32_t ctrlMediaCmds = 0;  // MCP media player state/command events seen
 volatile uint32_t ctrlCallReqs = 0;   // CCP originate requests seen
 volatile uint32_t haSelects = 0;      // HAS preset select requests seen
 volatile uint32_t topSetLocks = 0;    // phase 8: CSIS lock changes made by the client's set coordinator
@@ -879,6 +880,7 @@ void loop() {
     delay(500);
     ctrlVolWrites = 0;
     ctrlMicMutes = 0;
+    ctrlMediaCmds = 0;
     ctrlCallReqs = 0;
     BTStatus s = BLE.begin(serverName);
     if (s) {
@@ -902,7 +904,11 @@ void loop() {
         });
 
         BLEAudioMediaPlayer media = audio.createMediaPlayer();
-        (void)media;
+        media.onCommandResult([](BLEAudioMediaCommand cmd, BTStatus st) {
+          if (cmd == BLEAudioMediaCommand::Play && st) {
+            ctrlMediaCmds = ctrlMediaCmds + 1;
+          }
+        });
 
         BLEAudioCallServer call = audio.createCallServer();
         call.setProviderName("ESP Phone");
@@ -924,7 +930,10 @@ void loop() {
         }
         audio.end();
       }
-      Serial.printf("[SERVER] ControlProfiles result volwrites=%lu micmutes=%lu calls=%lu\n", (unsigned long)ctrlVolWrites, (unsigned long)ctrlMicMutes, (unsigned long)ctrlCallReqs);
+      Serial.printf(
+        "[SERVER] ControlProfiles result volwrites=%lu micmutes=%lu media=%lu calls=%lu\n", (unsigned long)ctrlVolWrites,
+        (unsigned long)ctrlMicMutes, (unsigned long)ctrlMediaCmds, (unsigned long)ctrlCallReqs
+      );
     }
     BLE.end(false);
     delay(500);

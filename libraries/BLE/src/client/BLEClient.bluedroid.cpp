@@ -292,11 +292,23 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
   conn.own_addr_type = static_cast<esp_ble_addr_type_t>(GATTC_OWN_ADDR_TYPE_LOCAL_DEFAULT);
   conn.phy_mask = 0;
 
+  // Prepare autoDiscSync BEFORE enh_open: when BTA has no cached GATT database
+  // for this peer, bta_gattc_conn() starts an on-air BTA auto-discovery BEFORE
+  // delivering ESP_GATTC_OPEN_EVT. If connect() sent esp_ble_gattc_send_mtu_req
+  // while another GATTC app (e.g. the LE Audio engine) still had an ATT procedure
+  // in flight on the shared ACL, or before BTA's auto-discovery finished, GATT
+  // would log `GATTC_ConfigureMTU GATT_BUSY`. Waiting for ESP_GATTC_DIS_SRVC_CMPL_EVT
+  // when OPEN_EVT arrives with default MTU 23 (uncached) serializes the MTU
+  // exchange cleanly after BTA's initial discovery without slowing cached reconnects.
+  impl.autoDiscDone.store(false, std::memory_order_release);
+  impl.autoDiscSync.take();
   impl.connectSync.take();
   esp_err_t err = esp_ble_gattc_enh_open(impl.gattcIf, &conn);
 
   if (err != ESP_OK) {
     log_e("esp_ble_gattc_enh_open: %s", esp_err_to_name(err));
+    impl.autoDiscDone.store(true, std::memory_order_release);
+    impl.autoDiscSync.give(BTStatus::Fail);
     impl.connectSync.give(BTStatus::Fail);
     return BTStatus::Fail;
   }
@@ -307,6 +319,10 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
     // Cancel pending connection
     esp_ble_gap_disconnect(bda);
     return st;
+  }
+
+  if (!impl.autoDiscDone.load(std::memory_order_acquire)) {
+    (void)impl.autoDiscSync.wait(2000);
   }
 
   // Initial ATT MTU exchange, performed synchronously from the caller's thread
@@ -395,8 +411,12 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
   conn.own_addr_type = static_cast<esp_ble_addr_type_t>(GATTC_OWN_ADDR_TYPE_LOCAL_DEFAULT);
   conn.phy_mask = 0;
 
+  impl.autoDiscDone.store(false, std::memory_order_release);
+  impl.autoDiscSync.take();
   esp_err_t err = esp_ble_gattc_enh_open(impl.gattcIf, &conn);
   if (err != ESP_OK) {
+    impl.autoDiscDone.store(true, std::memory_order_release);
+    impl.autoDiscSync.give(BTStatus::Fail);
     log_e("Client: esp_ble_gattc_enh_open: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
@@ -470,6 +490,10 @@ BTStatus BLEClient::discoverServices() {
   if (!impl.connected) {
     log_w("Client: discoverServices called but not connected");
     return BTStatus::NotConnected;
+  }
+
+  if (!impl.autoDiscDone.load(std::memory_order_acquire)) {
+    (void)impl.autoDiscSync.wait(2000);
   }
 
   {
@@ -791,6 +815,8 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
   log_i("Client: disconnected, connId=%u reason=0x%02x", evtConnId, reason);
 
   // Release any waiting syncs
+  client->autoDiscDone.store(true, std::memory_order_release);
+  client->autoDiscSync.give(BTStatus::Fail);
   client->connectSync.give(BTStatus::Fail);
   client->discoverSync.give(BTStatus::Fail);
   client->readSync.give(BTStatus::Fail);
@@ -942,6 +968,8 @@ void BLEClient::Impl::invalidateAfterHostDeinit() {
 
     // Release any API call whose native completion disappeared with the host.
     client->regSync.give(BTStatus::Fail);
+    client->autoDiscDone.store(true, std::memory_order_release);
+    client->autoDiscSync.give(BTStatus::Fail);
     client->connectSync.give(BTStatus::Fail);
     client->disconnectSync.give(BTStatus::Fail);
     client->discoverSync.give(BTStatus::Fail);
@@ -1066,20 +1094,37 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
           client->secBonded = false;
           conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, client->central.load());
         }
+        // When BTA already holds a server cache from an earlier connection to
+        // this BDA (indicated by open.mtu > 23 after a prior MTU exchange),
+        // bta_gattc_conn() skips auto-discovery and no DIS_SRVC_CMPL_EVT will
+        // fire. Mark autoDiscDone immediately in that case.
+        if (param->open.mtu > 23) {
+          client->autoDiscDone.store(true, std::memory_order_release);
+          client->autoDiscSync.give(BTStatus::OK);
+        }
         log_i("Client: connected, connId=%u", client->connId.load());
         // The ATT MTU exchange is NOT requested here: on Bluedroid a request
         // issued at connection setup (event callback or immediately after) is
-        // silently dropped. connect() performs it from the caller thread with a
-        // retry once the link is up (see BLEClient::connect).
+        // silently dropped. connect() performs it from the caller thread once
+        // the link (and any initial BTA auto-discovery) is settled.
         // Prefer peerAddress (type latched on CONNECT) over open.remote_bda
         // (OPEN has no addr_type field).
         client->dispatchConnect(conn);
         client->connectSync.give(BTStatus::OK);
       } else {
         log_e("Client: GATTC open failed: status=%d", param->open.status);
+        client->autoDiscDone.store(true, std::memory_order_release);
+        client->autoDiscSync.give(BTStatus::Fail);
         client->dispatchConnectFail(param->open.status);
         client->connectSync.give(BTStatus::Fail);
       }
+      break;
+    }
+
+    case ESP_GATTC_DIS_SRVC_CMPL_EVT:
+    {
+      client->autoDiscDone.store(true, std::memory_order_release);
+      client->autoDiscSync.give(param->dis_srvc_cmpl.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
       break;
     }
 

@@ -119,16 +119,41 @@ static struct {
   esp_ble_audio_vocs_t *vocs;           ///< Peer's first VOCS instance, NULL when absent.
   esp_ble_audio_aics_t *aics;           ///< Peer's first AICS instance, NULL when absent.
 } s_vctl = {.conn = CONN_NONE};
+/* Survives deinit: lib_vcp_vol_ctlr_deinit leaves static callback nodes linked in its sys_slist. */
+static bool s_vctl_cb_linked;
 #endif
 
 #if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
 /** Microphone controller peer. */
 static struct {
   uint16_t conn;                        ///< Peer passed to the last Discover, CONN_NONE when idle.
+  bool syncing;                         ///< Discovered, waiting for the initial mute read before releasing DISCOVERED.
   bool discovering;                     ///< Discover call in flight; its callback may run inline.
+  uint8_t aics_count;                   ///< Held until the initial mute read completes.
   esp_ble_audio_micp_mic_ctlr_t *ctlr;  ///< Stack instance for the peer.
   esp_ble_audio_aics_t *aics;           ///< Peer's first microphone AICS instance, NULL when absent.
 } s_mctl = {.conn = CONN_NONE};
+/* Survives deinit: lib_micp_mic_ctlr_deinit leaves static callback nodes linked in its sys_slist. */
+static bool s_mctl_cb_linked;
+#endif
+
+#if BLE_AUDIO_MCP_CLIENT_SUPPORTED
+/** Media controller peer (tracks initial state read so sendCommand inside onDiscovered cannot hit EBUSY). */
+static struct {
+  uint16_t conn;  ///< Peer passed to the last Discover, CONN_NONE when idle.
+  bool syncing;   ///< Discovered, waiting for the initial media state read before releasing DISCOVERED.
+} s_mcc = {.conn = CONN_NONE};
+#endif
+
+#if BLE_AUDIO_CCP_CLIENT_SUPPORTED
+/** Call controller peer (tracks initial GTBS call-state read so originate inside onDiscovered cannot collide on ATT). */
+static struct {
+  uint16_t conn;                  ///< Peer passed to the last Discover, CONN_NONE when idle.
+  bool syncing;                   ///< Discovered, waiting for the initial GTBS call-state read before releasing DISCOVERED.
+  ble_audio_ccp_discovered_t disc;///< Held until the initial call-state read completes.
+} s_tbsc = {.conn = CONN_NONE};
+/* Survives deinit: lib_tbs_client_deinit leaves static callback nodes linked in its sys_slist. */
+static bool s_tbsc_cb_linked;
 #endif
 
 #if BLE_AUDIO_HAS_CLIENT_SUPPORTED
@@ -137,6 +162,8 @@ static struct {
   uint16_t conn;                        ///< Peer passed to the last Discover, CONN_NONE when idle.
   esp_ble_audio_has_t *has;             ///< Stack instance, set by the discover callback.
 } s_hasc = {.conn = CONN_NONE};
+/* Survives deinit: lib_has_client_deinit leaves static callback nodes linked in its sys_slist. */
+static bool s_hasc_cb_linked;
 #endif
 
 #if MCP_SRV && CONFIG_BT_MCTL_LOCAL_PLAYER_LOCAL_CONTROL
@@ -185,6 +212,16 @@ static void ctl_on_gap(const void *event) {
     PEER_RESET(s_mctl);
   }
 #endif
+#if BLE_AUDIO_MCP_CLIENT_SUPPORTED
+  if (s_mcc.conn == conn) {
+    PEER_RESET(s_mcc);
+  }
+#endif
+#if BLE_AUDIO_CCP_CLIENT_SUPPORTED
+  if (s_tbsc.conn == conn) {
+    PEER_RESET(s_tbsc);
+  }
+#endif
 #if BLE_AUDIO_HAS_CLIENT_SUPPORTED
   if (s_hasc.conn == conn) {
     PEER_RESET(s_hasc);
@@ -203,6 +240,12 @@ static void ctl_on_deinit(void) {
 #endif
 #if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
   PEER_RESET(s_mctl);
+#endif
+#if BLE_AUDIO_MCP_CLIENT_SUPPORTED
+  PEER_RESET(s_mcc);
+#endif
+#if BLE_AUDIO_CCP_CLIENT_SUPPORTED
+  PEER_RESET(s_tbsc);
 #endif
 #if BLE_AUDIO_HAS_CLIENT_SUPPORTED
   PEER_RESET(s_hasc);
@@ -434,13 +477,12 @@ int bleAudioVcpCtlrInit(void) {
     return ESP_OK;
   }
   int err = role_attach();
-  if (err == ESP_OK) {
+  if (err == ESP_OK && !s_vctl_cb_linked) {
     err = esp_ble_audio_vcp_vol_ctlr_cb_register(&s_vctl_cb);
-    if (err != ESP_OK) {
-      /* Fails only when the static table is still listed from an earlier
-       * session; the role then never hears any volume event. */
-      ESP_LOGE(TAG, "volume controller: cb_register failed: %d (events will be dropped)", err);
-      err = ESP_OK;
+    if (err == ESP_OK) {
+      s_vctl_cb_linked = true;
+    } else {
+      ESP_LOGE(TAG, "volume controller: cb_register failed: %d", err);
     }
   }
   return role_done(ROLE_VCP_CTLR, err);
@@ -607,9 +649,10 @@ static uint16_t mctl_conn(const void *inst) {
 }
 
 /**
- * Discovery finished: capture the first microphone AICS, emit DISCOVERED,
- * then read the mute state so MICP_CTLR_MUTE follows. MICS writes carry no
- * change counter, so unlike VCP nothing needs to be read before writing.
+ * Discovery finished: capture the first microphone AICS, start the initial
+ * mute-state read, and defer DISCOVERED until mctl_mute completes so the
+ * application can call mute()/unmute() immediately inside onDiscovered()
+ * without colliding with the in-flight mute_get() (-EBUSY / ATT busy).
  */
 static void mctl_discover(esp_ble_audio_micp_mic_ctlr_t *ctlr, int err, uint8_t aics_count) {
   uint16_t conn = mctl_conn(ctlr);
@@ -622,26 +665,33 @@ static void mctl_discover(esp_ble_audio_micp_mic_ctlr_t *ctlr, int err, uint8_t 
   if (conn == CONN_NONE) {
     return;
   }
-#if MCTL_AICS
+  s_mctl.aics_count = aics_count;
   if (err == 0) {
+#if MCTL_AICS
     esp_ble_audio_micp_included_t inc = {0};
     if (esp_ble_audio_micp_mic_ctlr_included_get(ctlr, &inc) == ESP_OK && inc.aics_cnt) {
       s_mctl.aics = inc.aics[0];
     }
-  }
 #endif
-  bleAudioEngineEmit(BLE_AUDIO_EVT_MICP_CTLR_DISCOVERED, conn, err, &aics_count);
-  if (err == 0) {
-    (void)esp_ble_audio_micp_mic_ctlr_mute_get(ctlr);
+    s_mctl.syncing = esp_ble_audio_micp_mic_ctlr_mute_get(ctlr) == ESP_OK;
+    if (s_mctl.syncing) {
+      return;
+    }
   }
+  bleAudioEngineEmit(BLE_AUDIO_EVT_MICP_CTLR_DISCOVERED, conn, err, &s_mctl.aics_count);
 }
 
-/** Mute state read or notified by the peer. */
+/** Mute state read or notified by the peer; the first read after discovery also releases DISCOVERED. */
 static void mctl_mute(esp_ble_audio_micp_mic_ctlr_t *ctlr, int err, uint8_t mute) {
   const uint16_t conn = mctl_conn(ctlr);
-  if (conn != CONN_NONE) {
-    bleAudioEngineEmit(BLE_AUDIO_EVT_MICP_CTLR_MUTE, conn, err, &mute);
+  if (conn == CONN_NONE) {
+    return;
   }
+  if (s_mctl.syncing) {
+    s_mctl.syncing = false;
+    bleAudioEngineEmit(BLE_AUDIO_EVT_MICP_CTLR_DISCOVERED, conn, 0, &s_mctl.aics_count);
+  }
+  bleAudioEngineEmit(BLE_AUDIO_EVT_MICP_CTLR_MUTE, conn, err, &mute);
 }
 
 #if MCTL_AICS
@@ -667,11 +717,12 @@ int bleAudioMicpCtlrInit(void) {
     return ESP_OK;
   }
   int err = role_attach();
-  if (err == ESP_OK) {
+  if (err == ESP_OK && !s_mctl_cb_linked) {
     err = esp_ble_audio_micp_mic_ctlr_cb_register(&s_mctl_cb);
-    if (err != ESP_OK) {
-      ESP_LOGE(TAG, "mic controller: cb_register failed: %d (events will be dropped)", err);
-      err = ESP_OK;
+    if (err == ESP_OK) {
+      s_mctl_cb_linked = true;
+    } else {
+      ESP_LOGE(TAG, "mic controller: cb_register failed: %d", err);
     }
   }
   return role_done(ROLE_MICP_CTLR, err);
@@ -854,20 +905,32 @@ int bleAudioMcpSrvCommand(uint8_t opcode) {
 
 #if BLE_AUDIO_MCP_CLIENT_SUPPORTED
 
-/** MCS/GMCS discovered and subscribed; follow up with a state read when that API is built in. */
+/**
+ * MCS/GMCS discovered and subscribed; read the initial media state before
+ * releasing DISCOVERED so play()/sendCommand() called immediately on discovery
+ * does not overlap the in-flight ATT read.
+ */
 static void mcc_discovered(esp_ble_conn_t *conn, int err) {
   const uint16_t h = CONN_OF(conn);
-  bleAudioEngineEmit(BLE_AUDIO_EVT_MCP_CLI_DISCOVERED, h, err, NULL);
 #if CONFIG_BT_MCC_READ_MEDIA_STATE
-  if (err == 0) {
-    (void)esp_ble_audio_mcc_read_media_state(h);
+  if (err == 0 && h == s_mcc.conn) {
+    s_mcc.syncing = esp_ble_audio_mcc_read_media_state(h) == ESP_OK;
+    if (s_mcc.syncing) {
+      return;
+    }
   }
 #endif
+  bleAudioEngineEmit(BLE_AUDIO_EVT_MCP_CLI_DISCOVERED, h, err, NULL);
 }
 
 /* Reads and notifications share these callbacks; strings are valid during the emit only. */
 static void mcc_state(esp_ble_conn_t *conn, int err, uint8_t state) {
-  bleAudioEngineEmit(BLE_AUDIO_EVT_MCP_CLI_STATE, CONN_OF(conn), err, &state);
+  const uint16_t h = CONN_OF(conn);
+  if (h == s_mcc.conn && s_mcc.syncing) {
+    s_mcc.syncing = false;
+    bleAudioEngineEmit(BLE_AUDIO_EVT_MCP_CLI_DISCOVERED, h, 0, NULL);
+  }
+  bleAudioEngineEmit(BLE_AUDIO_EVT_MCP_CLI_STATE, h, err, &state);
 }
 
 static void mcc_player_name(esp_ble_conn_t *conn, int err, const char *name) {
@@ -915,7 +978,13 @@ int bleAudioMcpCliInit(void) {
 
 int bleAudioMcpCliDiscover(uint16_t conn_handle) {
   NEED_ROLE(ROLE_MCP_CLI);
-  return esp_ble_audio_mcc_discover_mcs(conn_handle, true);
+  PEER_RESET(s_mcc);
+  s_mcc.conn = conn_handle;
+  int err = esp_ble_audio_mcc_discover_mcs(conn_handle, true);
+  if (err != ESP_OK) {
+    s_mcc.conn = CONN_NONE;
+  }
+  return err;
 }
 
 int bleAudioMcpCliCommand(uint16_t conn_handle, uint8_t opcode) {
@@ -1105,14 +1174,22 @@ int bleAudioCcpSrvSetProviderName(const char *name) {
  * instances are ignored so every call is reported exactly once.
  */
 
-/** Discovery finished; read the GTBS call list so CCP_CLI_CALL events follow. */
+/**
+ * Discovery finished; read the GTBS call list first and defer DISCOVERED until
+ * tbsc_call_states completes so an immediate originate() does not race an
+ * in-flight ATT Read Request on the connection's GATT client queue.
+ */
 static void tbsc_discovered(esp_ble_conn_t *conn, int err, uint8_t tbs_count, bool gtbs_found) {
   const uint16_t h = CONN_OF(conn);
-  const ble_audio_ccp_discovered_t d = {.tbs_count = tbs_count, .gtbs = gtbs_found};
-  bleAudioEngineEmit(BLE_AUDIO_EVT_CCP_CLI_DISCOVERED, h, err, &d);
-  if (err == 0 && gtbs_found) {
-    (void)esp_ble_audio_tbs_client_read_call_state(h, ESP_BLE_AUDIO_TBS_GTBS_INDEX);
+  s_tbsc.disc.tbs_count = tbs_count;
+  s_tbsc.disc.gtbs = gtbs_found;
+  if (err == 0 && gtbs_found && h == s_tbsc.conn) {
+    s_tbsc.syncing = esp_ble_audio_tbs_client_read_call_state(h, ESP_BLE_AUDIO_TBS_GTBS_INDEX) == ESP_OK;
+    if (s_tbsc.syncing) {
+      return;
+    }
   }
+  bleAudioEngineEmit(BLE_AUDIO_EVT_CCP_CLI_DISCOVERED, h, err, &s_tbsc.disc);
 }
 
 /** Result of a call control point write; the per-operation stack callbacks below funnel here. */
@@ -1146,14 +1223,19 @@ static void tbsc_retrieved(esp_ble_conn_t *conn, int err, uint8_t inst_index, ui
   tbsc_result(conn, err, BLE_AUDIO_CCP_OP_RETRIEVE, call_index);
 }
 
-/** Call list read or notified: one CCP_CLI_CALL per call. */
+/** Call list read or notified: releases deferred DISCOVERED, then emits one CCP_CLI_CALL per call. */
 static void tbsc_call_states(esp_ble_conn_t *conn, int err, uint8_t inst_index, uint8_t call_count, const esp_ble_audio_tbs_client_call_state_t *states) {
   if (inst_index != ESP_BLE_AUDIO_TBS_GTBS_INDEX) {
     return;
   }
+  const uint16_t h = CONN_OF(conn);
+  if (h == s_tbsc.conn && s_tbsc.syncing) {
+    s_tbsc.syncing = false;
+    bleAudioEngineEmit(BLE_AUDIO_EVT_CCP_CLI_DISCOVERED, h, 0, &s_tbsc.disc);
+  }
   for (uint8_t i = 0; i < call_count; i++) {
     const ble_audio_ccp_call_state_t d = {.call_index = states[i].index, .state = states[i].state};
-    bleAudioEngineEmit(BLE_AUDIO_EVT_CCP_CLI_CALL, CONN_OF(conn), err, &d);
+    bleAudioEngineEmit(BLE_AUDIO_EVT_CCP_CLI_CALL, h, err, &d);
   }
 }
 
@@ -1182,16 +1264,26 @@ int bleAudioCcpCliInit(void) {
     return ESP_OK;
   }
   int err = role_attach();
-  if (err == ESP_OK) {
-    /* Fails only when the static table is still listed from an earlier session. */
-    (void)esp_ble_audio_tbs_client_register_cb(&s_tbsc_cb);
+  if (err == ESP_OK && !s_tbsc_cb_linked) {
+    err = esp_ble_audio_tbs_client_register_cb(&s_tbsc_cb);
+    if (err == ESP_OK) {
+      s_tbsc_cb_linked = true;
+    } else {
+      ESP_LOGE(TAG, "call controller: register_cb failed: %d", err);
+    }
   }
   return role_done(ROLE_CCP_CLI, err);
 }
 
 int bleAudioCcpCliDiscover(uint16_t conn_handle) {
   NEED_ROLE(ROLE_CCP_CLI);
-  return esp_ble_audio_tbs_client_discover(conn_handle);
+  PEER_RESET(s_tbsc);
+  s_tbsc.conn = conn_handle;
+  int err = esp_ble_audio_tbs_client_discover(conn_handle);
+  if (err != ESP_OK) {
+    s_tbsc.conn = CONN_NONE;
+  }
+  return err;
 }
 
 int bleAudioCcpCliOriginate(uint16_t conn_handle, const char *uri) {
@@ -1501,11 +1593,12 @@ int bleAudioHasCliInit(void) {
     return ESP_OK;
   }
   int err = role_attach();
-  if (err == ESP_OK) {
+  if (err == ESP_OK && !s_hasc_cb_linked) {
     err = esp_ble_audio_has_client_cb_register(&s_hasc_cb);
-    if (err != ESP_OK) {
-      ESP_LOGE(TAG, "hearing aid client: cb_register failed: %d (events will be dropped)", err);
-      err = ESP_OK;
+    if (err == ESP_OK) {
+      s_hasc_cb_linked = true;
+    } else {
+      ESP_LOGE(TAG, "hearing aid client: cb_register failed: %d", err);
     }
   }
   return role_done(ROLE_HAS_CLI, err);

@@ -323,14 +323,17 @@ def _phase_control_profiles(server, client):
     tallies the writes it observes. Returns False (SKIP) when the LE Audio engine
     is not compiled into either build (only a dual-audio esp32s31 pair runs it).
 
-    Hard gate: the VCP path must work end to end (client discovers VCS and the
-    server observes the volume write). The other profiles are exercised and
-    logged; their client-side discovery is asserted, but their deeper state
-    machines are informational.
+    Hard gates: CAP, VCP, MCP, and CCP must complete end to end (client
+    discovers + receives state/result confirmation, and the server observes the
+    VCP volume write, MCP Play command, and CCP Originate request). Note: MICP
+    on the same node as VCP exceeds the packaged AICS client pool
+    (CONFIG_BT_AICS_CLIENT_MAX_INSTANCE_COUNT=2 vs CONFIG_BT_MAX_CONN=3), so
+    MICP is exercised on its own dedicated round-trip right after if VCP
+    already consumed the AICS pool.
     """
     mc = client.expect(r"\[CLIENT\] ControlProfiles (not supported|result cap=(\d+) vcp=(\d+) mic=(\d+) media=(\d+) call=(\d+))", timeout=120)
     _release_server(server)
-    ms = server.expect(r"\[SERVER\] ControlProfiles (not supported|result volwrites=(\d+) micmutes=(\d+) calls=(\d+))", timeout=120)
+    ms = server.expect(r"\[SERVER\] ControlProfiles (not supported|result volwrites=(\d+) micmutes=(\d+) media=(\d+) calls=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase7 control_profiles done", timeout=40)
     client.expect_exact("[CLIENT] Phase7 control_profiles done", timeout=40)
 
@@ -338,14 +341,23 @@ def _phase_control_profiles(server, client):
         return False
 
     vol_writes = int(ms.group(2))
+    mic_mutes = int(ms.group(3))
+    media_cmds = int(ms.group(4))
+    call_reqs = int(ms.group(5))
     cap_disc = int(mc.group(2))
     vcp_ok = int(mc.group(3))
+    mic_ok = int(mc.group(4))
+    media_ok = int(mc.group(5))
+    call_ok = int(mc.group(6))
+    LOGGER.info(
+        "control_profiles: cap=%d vcp=%d/%d mic=%d/%d media=%d/%d call=%d/%d",
+        cap_disc, vcp_ok, vol_writes, mic_ok, mic_mutes, media_ok, media_cmds, call_ok, call_reqs,
+    )
 
-    # VCP is the end-to-end gate: client discovered VCS + wrote volume, and the
-    # server saw the write land on its renderer.
     assert cap_disc == 1, "CAP initiator did not discover the acceptor's CAS"
-    assert vcp_ok == 1, "VCP controller failed to discover/set volume"
-    assert vol_writes >= 1, "server renderer observed no volume write from the controller"
+    assert vcp_ok == 1 and vol_writes >= 1, f"VCP round-trip failed (client={vcp_ok}, server_writes={vol_writes})"
+    assert media_ok == 1 and media_cmds >= 1, f"MCP Play round-trip failed (client={media_ok}, server_cmds={media_cmds})"
+    assert call_ok == 1 and call_reqs >= 1, f"CCP Originate round-trip failed (client={call_ok}, server_calls={call_reqs})"
     return True
 
 
