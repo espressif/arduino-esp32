@@ -390,11 +390,11 @@ BTStatus BLEAudio::disconnect(uint16_t connHandle) {
   if (connHandle == BLE_AUDIO_CONN_NONE) {
     return BTStatus::InvalidParam;
   }
-  int err = bleAudioEngineDisconnect(connHandle);
-  if (err == 0) {
-    return BTStatus::OK;
+  const BTStatus st = bleAudioEngineStatus(bleAudioEngineDisconnect(connHandle));
+  if (st == BTStatus::Fail) {
+    log_e("Audio: disconnect failed");
   }
-  return BTStatus(static_cast<BTStatus::Code>(err));
+  return st;
 }
 
 BLEAudio &BLEAudio::onLinkReady(LinkCallback cb) {

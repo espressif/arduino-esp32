@@ -390,7 +390,8 @@ struct BLEAudioBroadcastSink::Impl {
         }
         BTStatus st;
         if (r->past) {
-          st = static_cast<BTStatus::Code>(bleAudioEngineReceivePeriodicSync(e.conn_handle, r->peer_addr_type, r->peer_addr, 0, kPaSyncTimeoutMs));
+          st = bleAudioEngineStatus(
+              bleAudioEngineReceivePeriodicSync(e.conn_handle, r->peer_addr_type, r->peer_addr, 0, kPaSyncTimeoutMs));
         } else {
           BLEScan sc = BLE.getScan();
           st = sc.createPeriodicSync(BTAddress(r->addr, static_cast<BTAddress::Type>(r->addr_type)), r->sid, 0, kPaSyncTimeoutMs);

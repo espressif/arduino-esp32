@@ -176,6 +176,26 @@ inline ble_audio_qos_t bleAudioQosToEngine(const BLEAudioQos &q) {
 // ==========================================================================
 
 /**
+ * @brief Map a host-glue entry point result onto `BTStatus`.
+ *
+ * `bleAudioEngineDisconnect`, `bleAudioEngineReceivePeriodicSync` and
+ * `bleAudioEngineStopPeriodicSyncReceive` return numeric `BTStatus::Code`
+ * values directly (0 on success) instead of `esp_err_t`/errno, so callers
+ * must not run them through `bleAudioStatus()`. A native leak would
+ * reinterpret (and truncate, `Code` is `int8_t`) into garbage, so
+ * out-of-range values fail closed. Callers log the failure with context.
+ */
+inline BTStatus bleAudioEngineStatus(int err) {
+  if (err == 0) {
+    return BTStatus::OK;
+  }
+  if (err < static_cast<int>(BTStatus::NotSupported) || err > static_cast<int>(BTStatus::Fail)) {
+    return BTStatus::Fail;
+  }
+  return BTStatus(static_cast<BTStatus::Code>(err));
+}
+
+/**
  * @brief Map an engine result (`esp_err_t` or negative errno) onto `BTStatus`.
  *
  * `-EALREADY` is handled by specific call sites when it represents an
