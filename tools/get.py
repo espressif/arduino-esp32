@@ -693,16 +693,22 @@ class _LockedStdio(object):
         self._active = {}
         self._progress_width = 0
         self._last_draw = 0.0
+        # print() writes the text and the newline separately. A progress redraw
+        # between those writes would carriage-return over the unfinished line.
+        self._line_open = False
         isatty = getattr(stream, "isatty", None)
         self._show_progress = bool(isatty()) if isatty is not None else False
 
     def write(self, data):
         with self._lock:
-            if self._progress_width:
+            if not data:
+                return 0
+            if self._progress_width and not self._line_open:
                 self._stream.write("\r" + (" " * self._progress_width) + "\r")
                 self._progress_width = 0
             result = self._stream.write(data)
-            if data.endswith("\n"):
+            self._line_open = not data.endswith("\n")
+            if not self._line_open:
                 self._draw_progress_locked()
             return result
 
@@ -720,6 +726,8 @@ class _LockedStdio(object):
         with self._lock:
             first_seen = name not in self._active
             self._active[name] = (downloaded, total, start)
+            if self._line_open:
+                return
             now = time.time()
             # Terminal writes are slow; keep the shared line near 10 Hz.
             if not first_seen and (now - self._last_draw) < 0.1:
@@ -734,6 +742,8 @@ class _LockedStdio(object):
             if name not in self._active:
                 return
             self._active.pop(name, None)
+            if self._line_open:
+                return
             self._last_draw = time.time()
             self._draw_progress_locked()
 
