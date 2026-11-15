@@ -178,14 +178,23 @@ of engine fixes in the `esp-idf` tree pointed to by the lib-builder:
   logs its normal lookup hit at `DEBUG` instead of `ERROR`; and
   `ble_host_register_rx_iso_data_cb(NULL)` does not print an "already registered"
   warning on deinit.
-- **`esp_ble_audio/api/esp_ble_audio_*_api.c` (`le_audio_api_fixes.diff`)**:
-  TBS/CCP bearer registration and `set_uri_scheme_list` append a trailing `','`
-  so `libble_audio`'s `uri_scheme_in_list()` matches the final scheme token on
-  client `Originate` writes, and the `*_register_cb()` / `*_cb_register()`
-  wrappers treat `-EALREADY`/`-EEXIST` as `ESP_OK` across `audio.end()` /
-  `audio.begin()` re-initializations. Client VOCS (`4`) and AICS (`8`) pools in
-  `defconfig.esp32s31` are sized to `MAX_CONN` so VCP and MICP controllers
-  coexist on all links.
+- **`esp_ble_audio` shared API & init (`le_audio_api_fixes.diff`)**:
+  TBS/CCP bearer registration and `set_uri_scheme_list` append an internal
+  trailing `','` so `libble_audio`'s `uri_scheme_in_list()` matches the final
+  scheme token on client `Originate` writes, while `init.c` strips that
+  synthetic `','` on ATT Read/Notify of `0x2BB6` so wire PDUs conform to
+  Bluetooth TBS v1.0 sec. 3.4; `bt_le_audio_deinit()` cleans up registered
+  profile callbacks across `esp_ble_audio_common_deinit()` (while keeping
+  duplicate registration within an active session an error, using mutable
+  static callback slots for non-unregisterable profiles, and re-arming
+  `bap_broadcast_sink`'s ISO BIG callback across re-init). Client VOCS (`4`)
+  and AICS (`8`) pools in `defconfig.esp32s31` are sized to `MAX_CONN` so VCP
+  and MICP controllers coexist on all links.
+- **`esp_ble_audio/host/adapter/nimble/init.c` (`nimble_le_audio_lifecycle_discovery.diff`)**:
+  `bt_le_nimble_audio_init()` resets any started NimBLE GATTS table from an
+  earlier session on a live host (returning `-EBUSY` if GAP/GATT is active
+  rather than panicking inside `ble_svc_gap_init()`), and `bt_le_nimble_audio_deinit()`
+  clears service-registration flags so subsequent sessions rebuild the table.
 
 ### File map
 
@@ -194,7 +203,7 @@ All paths are relative to `libraries/BLEAudio/src/`.
 | Files | Role |
 | --- | --- |
 | `BLEAudio.{h,cpp}`, `BLEAudioImpl.h`, `BLEAudioBackend.h` | Controller public handle, `BLEClass::getAudioController()`, `bleAudioPreEndHook()`, `BLEAudioImplCommon` (`createStagedRole`, event dispatcher), and single backend selector. |
-| `BLEAudio.{nimble,bluedroid}.{h,cpp}` | Single backend pair for `BLEAudio`: `BLEAudio::Impl` methods, weak GATT coordinator hooks (`BLEAudioHooks.h`), Bluedroid `audioGapHook` & deferred SMP timer, central GATTC open, NimBLE GATT reset/staging hooks, PAST send/receive, and ACL disconnect. |
+| `BLEAudio.{nimble,bluedroid}.{h,cpp}` | Single backend pair for `BLEAudio`: `BLEAudio::Impl` methods, weak GATT coordinator hooks (`BLEAudioHooks.h`), Bluedroid `audioGapHook`, link encryption & central GATTC open, NimBLE GATT staging hooks, PAST send/receive, and ACL disconnect. |
 | `BLEAudio<Role>.{h,cpp}` | Public role handles (UnicastServer/Client, BroadcastSource/Sink/Assistant, Cap, CoordinatedSet, Volume, Mic, Media, Call, HearingAid, Profiles). |
 | `BLEAudioStream.{h,cpp}`, `BLEAudioStreamImpl.h` | Stream handle, `BLEAudioStream::Impl`, engine stream callbacks, public↔engine value conversions, `bleAudioStatus()` error mapping. |
 | `BLEAudioTypes.h` | Value types: codec config, QoS, presets, locations, contexts. |

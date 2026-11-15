@@ -259,11 +259,6 @@ void bleAudioHostFinishGatt(bool success);
 /** @brief Reset classic GATT audio staging on deinit. */
 void bleAudioHostResetGatt(void);
 
-/** @brief Initialize / release host-side link security resources (e.g. Bluedroid SMP timer). */
-void bleAudioHostInitSecurity(void);
-void bleAudioHostDeinitSecurity(void);
-void bleAudioHostCancelSecurity(uint16_t conn_handle);
-
 /** @brief Initiate link encryption on a newly connected central link (`host_addr` is GAP event order). */
 int bleAudioHostSecureLink(uint16_t conn_handle, const uint8_t host_addr[6], uint8_t addr_type);
 

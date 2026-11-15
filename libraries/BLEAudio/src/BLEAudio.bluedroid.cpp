@@ -17,7 +17,7 @@
 /**
  * @file BLEAudio.bluedroid.cpp
  * @brief Single Bluedroid backend unit for `BLEAudio`:
- *  1. Deferred SMP encryption timer & GAP event forwarder (`audioGapHook`).
+ *  1. Host GAP event forwarder (`audioGapHook`).
  *  2. `BLEAudio::Impl` Bluedroid methods.
  *  3. Pure-C host glue hooks (`bleAudioHost*`, `bleAudioEngine*`) consumed by `src/engine/`.
  *  4. Periodic Advertising Sync Transfer (PAST) hooks & feature stubs.
@@ -38,50 +38,14 @@
 #include <cstring>
 #include <esp_gap_ble_api.h>
 #include <esp_gattc_api.h>
-#include <esp_timer.h>
 
 extern "C" uint8_t esp_ble_audio_bluedroid_get_gattc_if(void);
 
 // ==========================================================================
-// 1. Deferred SMP encryption & host GAP event forwarder
+// 1. Host GAP event forwarder
 // ==========================================================================
 
 namespace {
-
-// The ACL_CONNECT event is delivered on the BTC/ISO task before the peer may
-// be registered in BTM's device list: esp_ble_set_encryption() queued inline is
-// dropped ("Device not found") and SMP times out. Defer it briefly via esp_timer.
-portMUX_TYPE sEncMux = portMUX_INITIALIZER_UNLOCKED;
-esp_timer_handle_t sEncTimer = nullptr;
-esp_bd_addr_t sEncBda = {};
-uint8_t sEncAddrType = 0;
-uint16_t sEncConn = BLE_AUDIO_CONN_NONE;
-
-void encTimerCb(void *) {
-  uint16_t conn;
-  esp_bd_addr_t bda;
-  uint8_t addrType;
-  portENTER_CRITICAL(&sEncMux);
-  conn = sEncConn;
-  memcpy(bda, sEncBda, sizeof(bda));
-  addrType = sEncAddrType;
-  sEncConn = BLE_AUDIO_CONN_NONE;
-  portEXIT_CRITICAL(&sEncMux);
-  if (conn == BLE_AUDIO_CONN_NONE || !bleAudioEngineIsInitialized()) {
-    return;
-  }
-  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_NO_MITM);
-  if (err != ESP_OK) {
-    log_w("conn %u: encryption failed to start (err=%d), continuing unencrypted", conn, static_cast<int>(err));
-    // Post onto iso_task instead of touching engine link tables from esp_timer.
-    esp_ble_gap_cb_param_t param = {};
-    memcpy(param.ble_security.auth_cmpl.bd_addr, bda, sizeof(bda));
-    param.ble_security.auth_cmpl.addr_type = static_cast<esp_ble_addr_type_t>(addrType);
-    param.ble_security.auth_cmpl.success = false;
-    param.ble_security.auth_cmpl.fail_reason = static_cast<esp_ble_auth_fail_rsn_t>(0xFF);
-    bleAudioEngineGapPostEvent(ESP_GAP_BLE_AUTH_CMPL_EVT, &param);
-  }
-}
 
 void bluedroidForwardAudioGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
   if (param == nullptr) {
@@ -133,62 +97,12 @@ BTStatus BLEAudio::Impl::backendConnect(const BTAddress &address) {
 // 3. Engine C host hooks (engine/BLEAudioEngine.h)
 // ==========================================================================
 
-extern "C" void bleAudioHostInitSecurity(void) {
-  if (sEncTimer == nullptr) {
-    esp_timer_create_args_t targs = {};
-    targs.callback = encTimerCb;
-    targs.name = "ble-audio-sec";
-    if (esp_timer_create(&targs, &sEncTimer) != ESP_OK) {
-      sEncTimer = nullptr;
-      log_w("security timer unavailable; encryption will start inside the connect callback");
-    }
+extern "C" int bleAudioHostSecureLink(uint16_t, const uint8_t host_addr[6], uint8_t) {
+  if (host_addr == nullptr) {
+    return ESP_ERR_INVALID_ARG;
   }
-}
-
-extern "C" void bleAudioHostDeinitSecurity(void) {
-  portENTER_CRITICAL(&sEncMux);
-  sEncConn = BLE_AUDIO_CONN_NONE;
-  portEXIT_CRITICAL(&sEncMux);
-  if (sEncTimer != nullptr) {
-    (void)esp_timer_stop(sEncTimer);
-    (void)esp_timer_delete(sEncTimer);
-    sEncTimer = nullptr;
-  }
-}
-
-extern "C" void bleAudioHostCancelSecurity(uint16_t conn_handle) {
-  bool cancelEnc = false;
-  portENTER_CRITICAL(&sEncMux);
-  if (sEncConn == conn_handle) {
-    sEncConn = BLE_AUDIO_CONN_NONE;
-    cancelEnc = true;
-  }
-  portEXIT_CRITICAL(&sEncMux);
-  if (cancelEnc && sEncTimer != nullptr) {
-    (void)esp_timer_stop(sEncTimer);
-  }
-}
-
-extern "C" int bleAudioHostSecureLink(uint16_t conn_handle, const uint8_t host_addr[6], uint8_t addr_type) {
   esp_bd_addr_t bda = {};
-  if (host_addr != nullptr) {
-    memcpy(bda, host_addr, sizeof(bda));
-  }
-  if (sEncTimer != nullptr) {
-    (void)esp_timer_stop(sEncTimer);
-    portENTER_CRITICAL(&sEncMux);
-    memcpy(sEncBda, bda, sizeof(sEncBda));
-    sEncAddrType = addr_type;
-    sEncConn = conn_handle;
-    portEXIT_CRITICAL(&sEncMux);
-    if (esp_timer_start_once(sEncTimer, 10000) == ESP_OK) {
-      return 0;
-    }
-    portENTER_CRITICAL(&sEncMux);
-    sEncConn = BLE_AUDIO_CONN_NONE;
-    portEXIT_CRITICAL(&sEncMux);
-    return ESP_FAIL;
-  }
+  memcpy(bda, host_addr, sizeof(bda));
   return static_cast<int>(esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_NO_MITM));
 }
 

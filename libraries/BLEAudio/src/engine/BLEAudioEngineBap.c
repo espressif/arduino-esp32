@@ -2110,31 +2110,6 @@ static void bsnk_started(esp_ble_audio_bap_broadcast_sink_t *sink) {
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_STARTED, CONN_NONE, 0, NULL);
 }
 
-/*
- * Upstream `bt_bap_broadcast_sink_register_cb` arms the stack's ISO BIG
- * callbacks under a once-per-boot static flag, while a sink delete
- * (`esp_ble_audio_bap_broadcast_sink_delete`) unregisters them again: after the
- * first removed sink of the boot, BIG Sync Established can no longer reach
- * `started`, so rebuilds or a later session stay silent even when the sink is
- * recreated (verified on hardware). The lib is prebuilt, so re-arm at our
- * layer: this engine-owned BIG callback travels with a live sync and fires the
- * sink `started` the delete took away. It is registered for every sink
- * session - after a stack end/init the shim's listener list is rebuilt empty -
- * and it survives every lib-owned delete because the lib only unregisters its
- * own callback pointer. `started` fires for BIG Sync Established; the
- * `syncing` gate keeps it silent on the broadcast source's own BIG and before
- * a sync request is in flight.
- */
-static void bsnk_big_started(struct bt_iso_big *big) {
-  (void)big;
-  if (!s_bsnk.syncing) {
-    return;
-  }
-  bsnk_started(NULL);
-}
-
-static struct bt_iso_big_cb s_bsnk_bigcb = {.started = bsnk_big_started};
-
 static void bsnk_stopped(esp_ble_audio_bap_broadcast_sink_t *sink, uint8_t reason) {
   (void)sink;
   s_bsnk.syncing = false;
@@ -2295,13 +2270,6 @@ static void bsnk_on_gap(const esp_ble_audio_gap_app_event_t *ev) {
 }
 
 int bleAudioBsinkInit(bool delegator) {
-  int rc = bt_iso_big_register_cb(&s_bsnk_bigcb);
-  /* -EEXIST: the shim's list still carries it from an earlier init of this
-   * stack session; the node is the same struct pointer in either case. */
-  if (rc != 0 && rc != -EEXIST) {
-    ESP_LOGE(TAG, "broadcast sink: ISO BIG started backstop registration failed: %d", rc);
-    return rc;
-  }
   if (!s_bsnk.cb_registered) {
     esp_err_t err = esp_ble_audio_bap_broadcast_sink_register_cb(&s_bsnk_cb);
     if (err != ESP_OK) {

@@ -301,7 +301,6 @@ static void gap_cb(esp_ble_audio_gap_app_event_t *event) {
         s_link_discovered[idx] = false;
         s_link_peer_valid[idx] = false;
       }
-      bleAudioHostCancelSecurity(event->acl_disconnect.conn_handle);
       bleAudioEngineEmit(BLE_AUDIO_EVT_ACL_DISCONNECTED, event->acl_disconnect.conn_handle, event->acl_disconnect.reason, NULL);
       break;
     }
@@ -384,7 +383,6 @@ int bleAudioEngineInit(ble_audio_evt_sink_fn sink, void *ctx) {
   s_csis_count = 0;
 #endif
   s_initialized = true;
-  bleAudioHostInitSecurity();
   log_d("engine initialized");
   return 0;
 }
@@ -471,7 +469,6 @@ int bleAudioEngineDeinit(void) {
     log_e("esp_ble_audio_common_deinit failed: %d (stop every stream first)", err);
     return (int)err;
   }
-  bleAudioHostDeinitSecurity();
   engine_reset_local();
   log_d("engine deinitialized");
   return 0;

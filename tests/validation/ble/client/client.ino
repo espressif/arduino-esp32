@@ -451,9 +451,9 @@ static void l2capFullMtuWriteTask(void *arg) {
       buf[i] = (uint8_t)(job->index * 31u + seq + i);
     }
     BTStatus status = job->channel.write(buf, L2CAP_FULL_MTU);
-    job->sent++;
+    job->sent = job->sent + 1;
     if (status) {
-      job->writeOk++;
+      job->writeOk = job->writeOk + 1;
     }
   }
   job->done = true;
@@ -3563,9 +3563,12 @@ void setup() {
             writeJob.status = BTStatus::Fail;
             mtuJob.mtu = 0;
             disconnectJob.status = BTStatus::Fail;
-            writeJob.started = writeJob.done = false;
-            mtuJob.started = mtuJob.done = false;
-            disconnectJob.started = disconnectJob.done = false;
+            writeJob.started = false;
+            writeJob.done = false;
+            mtuJob.started = false;
+            mtuJob.done = false;
+            disconnectJob.started = false;
+            disconnectJob.done = false;
 
             bool writeCreated = xTaskCreate(l2capRaceWriteTask, "l2cap-write", 6144, &writeJob, 1, nullptr) == pdPASS;
             unsigned long startedAt = millis();
@@ -3614,7 +3617,8 @@ void setup() {
             shutdownJob.data = phase28ShutdownPayload;
             shutdownJob.len = sizeof(phase28ShutdownPayload);
             shutdownJob.status = BTStatus::Fail;
-            shutdownJob.started = shutdownJob.done = false;
+            shutdownJob.started = false;
+            shutdownJob.done = false;
             bool shutdownCreated = shutdownChannel && xTaskCreate(l2capRaceWriteTask, "l2cap-end", 6144, &shutdownJob, 1, nullptr) == pdPASS;
             unsigned long shutdownStart = millis();
             while (shutdownCreated && !shutdownJob.started && millis() - shutdownStart < 1000) {
@@ -4773,7 +4777,7 @@ void setup() {
                 return;
               }
             }
-            echoOk[index]++;
+            echoOk[index] = echoOk[index] + 1;
           });
           // Packaged NimBLE builds set CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM=1, so
           // concurrent CoC channels are impossible. Two writer tasks on the

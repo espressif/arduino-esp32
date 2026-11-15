@@ -4137,7 +4137,7 @@ void loop() {
         };
         auto onServerChannelData = [](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
           syncPhaseFromHost();
-          l2capFullRx++;
+          l2capFullRx = l2capFullRx + 1;
           bool match = (len == L2CAP_FULL_MTU && data[0] <= 1);
           if (match) {
             uint8_t ch = data[0];
@@ -4150,9 +4150,9 @@ void loop() {
             }
           }
           if (match) {
-            l2capFullRxOk++;
+            l2capFullRxOk = l2capFullRxOk + 1;
             if (channel.write(data, len)) {
-              l2capFullEchoOk++;
+              l2capFullEchoOk = l2capFullEchoOk + 1;
             }
           }
         };

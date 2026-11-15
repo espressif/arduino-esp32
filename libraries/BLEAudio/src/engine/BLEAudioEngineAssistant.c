@@ -305,7 +305,7 @@ static void ba_on_gap(const void *event) {
   }
 }
 
-/** Engine deinit hook; s_ba_cb_linked deliberately survives (see its comment). */
+/** Engine deinit hook: clear session state so the next session re-registers callbacks. */
 static void ba_on_deinit(void) {
   memset(&s_ba, 0, sizeof(s_ba));
   past_reset();

@@ -128,12 +128,6 @@ extern "C" bool bleAudioGattFrozen() {
 // 3. Engine C host hooks (engine/BLEAudioEngine.h)
 // ==========================================================================
 
-extern "C" void bleAudioHostInitSecurity(void) {}
-
-extern "C" void bleAudioHostDeinitSecurity(void) {}
-
-extern "C" void bleAudioHostCancelSecurity(uint16_t) {}
-
 extern "C" int bleAudioHostSecureLink(uint16_t conn_handle, const uint8_t[6], uint8_t) {
   int rc = ble_gap_security_initiate(conn_handle);
   return rc == BLE_HS_EALREADY ? 0 : rc;
@@ -167,15 +161,6 @@ extern "C" int bleAudioEngineDisconnect(uint16_t conn_handle) {
 
 extern "C" int bleAudioHostPrepareInit(void) {
 #if BLE_GATT_SERVER_SUPPORTED
-  // NimBLE keeps ATT attributes and CCCD counts across audio.end() unless
-  // ble_gatts_reset() runs; if GAP or a connection is active, ble_svc_gap_init
-  // inside esp_ble_audio_common_init would otherwise panic on BLE_HS_EBUSY.
-  int rc = ble_gatts_reset();
-  if (rc != 0) {
-    log_e("Audio: NimBLE GATT table busy (advertising/scanning/connected, rc=%d)", rc);
-    return rc == BLE_HS_EBUSY ? -EBUSY : -EIO;
-  }
-  ble_gatts_free_svcs();
   String name = BLE.getDeviceName();
   if (name.length() > 0) {
     (void)ble_svc_gap_device_name_set(name.c_str());
