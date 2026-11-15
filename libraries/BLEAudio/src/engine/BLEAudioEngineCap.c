@@ -765,6 +765,12 @@ int bleAudioCapUnicastStop(void) {
 
 #if CAP_BC
 
+#if CAP_HO
+/* A handover in flight owns s_bc below; forward declaration (defined in the
+ * handover section) so a plain create can refuse instead of interleaving. */
+static bool handover_busy(void);
+#endif
+
 #define BC_MAX CONFIG_BT_BAP_BROADCAST_SRC_STREAM_COUNT
 
 /** The one CAP broadcast source; parameters are static because the stack keeps pointers into them. */
@@ -857,6 +863,13 @@ int bleAudioCapBroadcastCreate(ble_audio_slot_t *const slots[], const uint32_t *
   if (!s_init_registered || s_bc.source) {
     return ESP_ERR_INVALID_STATE;
   }
+#if CAP_HO
+  // A handover in flight owns s_bc (bc_fill writes the same parameter
+  // structs); refuse instead of interleaving two creators.
+  if (handover_busy()) {
+    return -EBUSY;
+  }
+#endif
   if (slots == NULL || count == 0 || count > BC_MAX || codec == NULL || qos == NULL) {
     return ESP_ERR_INVALID_ARG;
   }
@@ -995,6 +1008,11 @@ static bool s_ho_registered;
  * flight would corrupt the in-flight parameters. Set on start, cleared in the
  * completion callbacks (and on synchronous start failure). */
 static _Atomic bool s_ho_busy;
+
+/* Whether a handover procedure currently owns s_bc (see bleAudioCapBroadcastCreate). */
+static bool handover_busy(void) {
+  return atomic_load(&s_ho_busy);
+}
 
 /*
  * Handover reuses s_uc and s_bc: the stack creates the broadcast source (or

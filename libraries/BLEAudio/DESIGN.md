@@ -418,8 +418,13 @@ Role handles follow the `BLE` callback rules: per-event `std::function` members
 and unlocked invocation on the host task. Setters return `BTStatus` for
 validation and queue admission; multi-operation control points (`BroadcastAssistant`,
 `CapCommander`, `CallController`) report asynchronous completion through a single
-`onResult(op, status)` callback, while state-characteristic profiles confirm
-writes through their state notification callbacks.
+`onResult(op, status)` callback, while VCP/MICP state, offset and gain writes
+report rejection through their roles' `onResult()` (best-effort op attribution)
+and success through the state callbacks. Allocation rule: the SDU data path
+never allocates (plain function-pointer taps, no `String`); control-plane
+callbacks that surface text (player/track names, URIs, preset names) may
+construct short-lived `String`s on the host task — keep them out of any
+per-SDU work.
 
 ## Streams and the data path
 

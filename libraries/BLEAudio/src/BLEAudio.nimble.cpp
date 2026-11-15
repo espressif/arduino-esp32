@@ -89,9 +89,12 @@ void BLEAudio::Impl::backendPreEndTeardown() {
 }
 
 void BLEAudio::Impl::backendOnAclDisconnected(uint16_t connHandle) {
+  // Called from BLEAudioImplCommon::trackLink without the controller lock;
+  // take it here: connect() and pre-end teardown touch the same vector.
   auto matchesDisconnected = [connHandle](const std::shared_ptr<BLEClient> &client) {
     return !client || !client->isConnected() || client->getHandle() == connHandle;
   };
+  BLELockGuard lock(mtx.get());
   clients.erase(std::remove_if(clients.begin(), clients.end(), matchesDisconnected), clients.end());
 }
 
