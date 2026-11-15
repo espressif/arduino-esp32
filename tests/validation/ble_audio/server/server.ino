@@ -951,7 +951,10 @@ void loop() {
   // coordinated set and its CAP commander sets the volume. The server counts
   // lock changes and records the last volume. Needs TMAP/GMAP compiled in
   // (and CONFIG_BT_GMAP_UGT_SUPPORTED); self-skips otherwise.
-  // Restores a normal stack afterward.
+  // Both sides run the whole cycle twice without a BLE restart: the second
+  // audio.begin() must re-link every profile callback that common_deinit
+  // released, or the client's rediscovery observes nothing. Restores a normal
+  // stack afterward.
   if (currentPhase >= 8 && !phaseTopProfilesDone) {
     phaseTopProfilesDone = true;
 #if BLE_AUDIO_TMAP_SUPPORTED && BLE_AUDIO_GMAP_SUPPORTED
@@ -962,7 +965,19 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      bool reinitStarted = false;
+      for (int round = 0; round < 2; round++) {
+        // Re-begin may legitimately report Busy while the previous round's
+        // link is still tearing down (GAP busy); Busy is retryable, anything
+        // else is terminal. Bounded so a stuck stack still fails fast.
+        BTStatus bst = audio.begin();
+        for (int att = 0; att < 3 && bst == BTStatus::Busy; att++) {
+          delay(500);
+          bst = audio.begin();
+        }
+        if (!bst) {
+          break;
+        }
         // Underlying roles that back the advertised TMAP/GMAP identities.
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
         cap.setSetSize(1).setRank(1);
@@ -996,11 +1011,18 @@ void loop() {
           adv.setName(serverName);
           adv.start();
         }
-        Serial.printf("[SERVER] TopProfiles ready registered=%d\n", (int)started);
+        Serial.printf("[SERVER] TopProfiles %sready registered=%d\n", round == 0 ? "" : "reinit ", (int)started);
+        if (!started) {
+          audio.end();
+          break;
+        }
         waitForRelease(60000);
         audio.end();
+        if (round == 1) {
+          reinitStarted = true;
+        }
       }
-      Serial.printf("[SERVER] TopProfiles result done locks=%lu volume=%u\n", (unsigned long)topSetLocks, (unsigned)topVolume);
+      Serial.printf("[SERVER] TopProfiles result done locks=%lu volume=%u reinit=%d\n", (unsigned long)topSetLocks, (unsigned)topVolume, (int)reinitStarted);
     }
     BLE.end(false);
     delay(500);
@@ -1047,6 +1069,12 @@ void loop() {
           adv.setName(serverName);
           adv.start();
           Serial.println("[SERVER] HearingAid ready");
+          waitForRelease(35000);
+          // Round 2: the client cycles audio.end() -> audio.begin() and
+          // reconnects to re-verify discovery after re-registration; the
+          // server side needs no reinit for this, just re-advertise.
+          adv.start();
+          Serial.println("[SERVER] HearingAid reinit ready");
           waitForRelease(35000);
         }
         haActive = ha.getActivePreset();

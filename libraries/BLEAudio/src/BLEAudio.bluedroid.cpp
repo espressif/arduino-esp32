@@ -93,6 +93,14 @@ BTStatus BLEAudio::Impl::backendConnect(const BTAddress &address) {
   return BTStatus::NotSupported;
 }
 
+// NimBLE tears down its owned BLEClient links here; Bluedroid central links
+// are owned by the engine GATTC interface instead, so drop every tracked ACL
+// through the engine (same fire-and-forget semantics: the disconnect
+// completes asynchronously while end() proceeds to deinit).
+void BLEAudio::Impl::backendPreEndTeardown() {
+  bleAudioEngineDisconnectAll();
+}
+
 // ==========================================================================
 // 3. Engine C host hooks (engine/BLEAudioEngine.h)
 // ==========================================================================

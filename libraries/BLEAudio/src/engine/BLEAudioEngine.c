@@ -555,6 +555,14 @@ bool bleAudioEngineLinkAddress(uint16_t conn_handle, uint8_t addr[6]) {
   return true;
 }
 
+void bleAudioEngineDisconnectAll(void) {
+  for (int i = 0; i < MAX_LINKS; i++) {
+    if (s_links[i] != BLE_AUDIO_CONN_NONE) {
+      (void)bleAudioEngineDisconnect(s_links[i]);
+    }
+  }
+}
+
 void bleAudioEngineGapPostEvent(uint16_t type, void *param) {
   if (s_initialized) {
     esp_ble_audio_gap_app_post_event(type, param);

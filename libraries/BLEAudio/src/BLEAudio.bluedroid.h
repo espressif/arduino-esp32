@@ -33,7 +33,7 @@
 struct BLEAudio::Impl : BLEAudioImplCommon {
   static void backendOnControllerCreated(BLEClass::Impl &bleImpl);
   BTStatus backendConnect(const BTAddress &address);
-  void backendPreEndTeardown() {}
+  void backendPreEndTeardown();
   void backendOnAclDisconnected(uint16_t) {}
   void backendResetLinks() {}
 };

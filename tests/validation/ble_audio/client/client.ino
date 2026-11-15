@@ -1032,10 +1032,11 @@ void setup() {
         bool preStartGuarded =
           tmap.discover(0) == BTStatus::InvalidState && gmap.discover(0) == BTStatus::InvalidState;
 
+        uint16_t h = 0xFFFF;
         if (preStartGuarded && audio.start()) {
           BTAddress addr;
           if (findTarget(addr)) {
-            uint16_t h = audioConnect(audio, addr);
+            h = audioConnect(audio, addr);
             if (h != 0xFFFF) {
               tmap.discover(h);
               for (int i = 0; i < 60 && !tmapDone; i++) {
@@ -1081,12 +1082,113 @@ void setup() {
             Serial.println("[CLIENT] TopProfiles target not found");
           }
         }
-        audio.end();
-      }
-      Serial.printf("[CLIENT] TopProfiles result tmap=%d gmap=%d ugt=%d\n", tmapRoles, gmapRoles, gmapUgt);
+        Serial.printf("[CLIENT] TopProfiles result tmap=%d gmap=%d ugt=%d\n", tmapRoles, gmapRoles, gmapUgt);
 #if SET_CONTROL_TEST
-      Serial.printf("[CLIENT] SetControl result csip=%d locked=%d commander=%d\n", csipSize, csipLocked, cmdVolume);
+        Serial.printf("[CLIENT] SetControl result csip=%d locked=%d commander=%d\n", csipSize, csipLocked, cmdVolume);
 #endif
+        // Quiesce the ACL before tearing down: re-begin runs into GAP-busy
+        // while the previous link is still up, and the NimBLE GATT reset
+        // refuses a connected host. Bounded wait so a lost callback cannot
+        // hang the suite; audio.end() still runs afterwards either way.
+        volatile bool linkDown = false;
+        audio.onDisconnected([&linkDown](uint16_t) {
+          linkDown = true;
+        });
+        if (h != 0xFFFF && audio.disconnect(h)) {
+          for (int i = 0; i < 100 && !linkDown; i++) {
+            delay(50);
+          }
+        }
+        Serial.printf("[CLIENT] TopProfiles round1 down=%d\n", (int)linkDown);
+        BTStatus end1 = audio.end();
+        Serial.printf("[CLIENT] TopProfiles round1 end=%s\n", end1.toString());
+
+        // ---- round 2: same-host audio.end() -> audio.begin() must re-link
+        // every client callback (GMAP/CSIP/commander) that common_deinit
+        // released. The server re-advertises after the first release, so
+        // retry the scan until it is back.
+        int gmapRoles2 = -1, gmapUgt2 = -1;
+#if SET_CONTROL_TEST
+        int csipSize2 = -1, cmdVolume2 = 0;
+#endif
+        BTStatus rb2 = audio.begin();
+        Serial.printf("[CLIENT] TopProfiles reinit begin=%s initialized=%d\n", rb2.toString(), (int)BLE.isInitialized());
+        if (!rb2) {
+          delay(2000);
+          rb2 = audio.begin();
+          Serial.printf("[CLIENT] TopProfiles reinit retry begin=%s\n", rb2.toString());
+        }
+        if (rb2) {
+          BLEAudioGmap gmap2 = audio.createGmap();
+          volatile bool gmapDone2 = false;
+          gmap2.onDiscovered([&gmapDone2, &gmapRoles2, &gmapUgt2](uint16_t, BTStatus s2, BLEAudioGmapRole roles, const BLEAudioGmapFeatures &f) {
+            gmapRoles2 = s2 ? (int)(uint8_t)roles : -1;
+            gmapUgt2 = s2 ? f.unicastTerminal : -1;
+            gmapDone2 = true;
+          });
+#if SET_CONTROL_TEST
+          BLEAudioCoordinatedSetCoordinator csip2 = audio.createCoordinatedSetCoordinator();
+          volatile bool csipDone2 = false;
+          csip2.onDiscovered([&csipDone2, &csipSize2](BTStatus s2, const BLEAudioCoordinatedSetInfo &info) {
+            csipSize2 = s2 ? info.setSize : -1;
+            csipDone2 = true;
+          });
+          BLEAudioCapCommander commander2 = audio.createCapCommander();
+          volatile bool cmdDisc2 = false, cmdDone2 = false;
+          commander2.onDiscovered([&cmdDisc2](BTStatus s2, uint16_t, bool, bool) {
+            cmdDisc2 = (bool)s2;
+          });
+          commander2.onResult([&cmdDone2, &cmdVolume2](BLEAudioCapCommander::Operation op, BTStatus s2) {
+            if (op == BLEAudioCapCommander::Operation::Volume) {
+              cmdVolume2 = s2 ? 1 : 0;
+              cmdDone2 = true;
+            }
+          });
+#endif
+          audio.onLinkReady([](uint16_t conn) {
+            audioLinkConn = conn;
+          });
+          BTStatus rs2 = BTStatus::Fail;
+          if (audio.start()) {
+            rs2 = BTStatus::OK;
+            uint16_t h2 = 0xFFFF;
+            for (int att = 0; att < 4 && h2 == 0xFFFF; att++) {
+              BTAddress addr2;
+              if (findTarget(addr2)) {
+                h2 = audioConnect(audio, addr2);
+              }
+            }
+            Serial.printf("[CLIENT] TopProfiles reinit link=%u (0 is a valid handle) start=%s\n", (unsigned)h2, rs2.toString());
+            if (h2 != 0xFFFF) {
+              gmap2.discover(h2);
+              for (int i = 0; i < 60 && !gmapDone2; i++) {
+                delay(50);
+              }
+#if SET_CONTROL_TEST
+              csip2.discover(h2);
+              for (int i = 0; i < 100 && !csipDone2; i++) {
+                delay(50);
+              }
+              commander2.discover(h2);
+              for (int i = 0; i < 100 && !cmdDisc2; i++) {
+                delay(50);
+              }
+              if (cmdDisc2 && commander2.setVolume(77)) {
+                for (int i = 0; i < 60 && !cmdDone2; i++) {
+                  delay(50);
+                }
+              }
+#endif
+            }
+          }
+          audio.end();
+        }
+        Serial.printf("[CLIENT] TopProfiles reinit gmap=%d ugt=%d\n", gmapRoles2, gmapUgt2);
+#if SET_CONTROL_TEST
+        Serial.printf("[CLIENT] TopProfiles reinit csip=%d\n", csipSize2);
+        Serial.printf("[CLIENT] SetControl reinit commander=%d\n", cmdVolume2);
+#endif
+      }
     }
     BLE.end(false);
     delay(500);
@@ -1100,7 +1202,9 @@ void setup() {
   // ===== Phase 9: Hearing Access Service (client = controller) =====
   // Connects to the hearing-aid server, discovers its HAS, reads the preset
   // list, and switches the active preset to index 2. Records how many preset
-  // records it read and whether the switch was accepted. Needs the HAS client
+  // records it read and whether the switch was accepted. Then repeats
+  // discovery after audio.end() -> audio.begin() to prove the controller
+  // callback was re-linked. Needs the HAS client
   // (BLE_AUDIO_HAS_CLIENT_SUPPORTED); self-skips otherwise. Restores a normal
   // stack afterward.
   waitForPhase(9);
@@ -1137,10 +1241,11 @@ void setup() {
           audioLinkConn = conn;
         });
 
+        uint16_t h = 0xFFFF;
         if (audio.start()) {
           BTAddress addr;
           if (findTarget(addr)) {
-            uint16_t h = audioConnect(audio, addr);
+            h = audioConnect(audio, addr);
             if (h != 0xFFFF) {
               hac.discover(h);
               for (int i = 0; i < 60 && !discDone; i++) {
@@ -1163,9 +1268,69 @@ void setup() {
             Serial.println("[CLIENT] HearingAid target not found");
           }
         }
-        audio.end();
+        Serial.printf("[CLIENT] HearingAid result disc=%d read=%d switched=%d\n", discOk, readCount, switched);
+        // Quiesce the ACL before tearing down (see the Phase 8 note).
+        volatile bool haLinkDown = false;
+        audio.onDisconnected([&haLinkDown](uint16_t) {
+          haLinkDown = true;
+        });
+        if (h != 0xFFFF && audio.disconnect(h)) {
+          for (int i = 0; i < 100 && !haLinkDown; i++) {
+            delay(50);
+          }
+        }
+        Serial.printf("[CLIENT] HearingAid round1 down=%d\n", (int)haLinkDown);
+        BTStatus haEnd1 = audio.end();
+        Serial.printf("[CLIENT] HearingAid round1 end=%s\n", haEnd1.toString());
+
+        // ---- round 2: same-host audio.end() -> audio.begin() must re-link
+        // the controller callback that common_deinit released; the server
+        // re-advertises after the first release, so retry the scan.
+        int discOk2 = 0, readCount2 = 0;
+        BTStatus haRb2 = audio.begin();
+        Serial.printf("[CLIENT] HearingAid reinit begin=%s\n", haRb2.toString());
+        if (haRb2) {
+          BLEAudioHearingAidController hac2 = audio.createHearingAidController();
+          volatile bool discDone2 = false;
+          hac2.onDiscovered([&discDone2, &discOk2](BTStatus s2, BLEHearingAidType type) {
+            (void)type;
+            discOk2 = s2 ? 1 : 0;
+            discDone2 = true;
+          });
+          hac2.onPreset([&readCount2](uint8_t index, bool available, const String &name, bool isLast) {
+            (void)index;
+            (void)available;
+            (void)name;
+            (void)isLast;
+            readCount2 = readCount2 + 1;
+          });
+          audio.onLinkReady([](uint16_t conn) {
+            audioLinkConn = conn;
+          });
+          if (audio.start()) {
+            uint16_t h2 = 0xFFFF;
+            for (int att = 0; att < 4 && h2 == 0xFFFF; att++) {
+              BTAddress addr2;
+              if (findTarget(addr2)) {
+                h2 = audioConnect(audio, addr2);
+              }
+            }
+            Serial.printf("[CLIENT] HearingAid reinit link=%u (0 is a valid handle)\n", (unsigned)h2);
+            if (h2 != 0xFFFF) {
+              hac2.discover(h2);
+              for (int i = 0; i < 60 && !discDone2; i++) {
+                delay(50);
+              }
+              if (discOk2) {
+                hac2.readPresets(1, 255);
+                delay(1500);
+              }
+            }
+          }
+          audio.end();
+        }
+        Serial.printf("[CLIENT] HearingAid reinit disc=%d read=%d\n", discOk2, readCount2);
       }
-      Serial.printf("[CLIENT] HearingAid result disc=%d read=%d switched=%d\n", discOk, readCount, switched);
     }
     BLE.end(false);
     delay(500);

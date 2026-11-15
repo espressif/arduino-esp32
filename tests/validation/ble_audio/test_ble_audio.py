@@ -362,26 +362,55 @@ def _phase_top_profiles(server, client):
     releases the server's coordinated set and sets its volume through the
     commander; the server reports the lock changes and the volume it received.
     Returns False (SKIP) when TMAP/GMAP are not compiled into either build.
+
+    A second round then re-runs the whole cycle after audio.end() ->
+    audio.begin() on both sides without a BLE restart: the server must
+    re-register every role and the client must rediscover GMAP (plus
+    CSIP/commander when compiled in) through freshly re-linked callbacks.
     """
     mc = client.expect(
         r"\[CLIENT\] TopProfiles (not supported|result tmap=(-?\d+) gmap=(-?\d+) ugt=(-?\d+))", timeout=120
     )
-    # The set-control line is only printed by builds that have those roles.
+    if b"not supported" in mc.group(0):
+        # Neither side runs a reinit round without the roles; the server
+        # never waits in this path, so release and collect its lines as usual.
+        _release_server(server)
+        ms = server.expect(r"\[SERVER\] TopProfiles (not supported|result done locks=(\d+) volume=(\d+) reinit=(\d+))", timeout=120)
+        server.expect_exact("[SERVER] Phase8 top_profiles done", timeout=40)
+        return False
+    # The round-1 set-control line (guard-dependent) is printed before the
+    # client tears down; the quiescence barrier below it gates release #1 so
+    # the server never re-begins into a busy GAP. Every client wait loop is
+    # bounded, so a missing re-registration fails the reinit expects instead
+    # of hanging.
     msc = client.expect(
-        r"\[CLIENT\] (SetControl result csip=(-?\d+) locked=(\d+) commander=(\d+)|Phase8 top_profiles done)", timeout=40
+        r"\[CLIENT\] (SetControl result csip=(-?\d+) locked=(\d+) commander=(\d+)|TopProfiles round1 down=([01]))",
+        timeout=60,
     )
-    if b"SetControl" in msc.group(0):
-        client.expect_exact("[CLIENT] Phase8 top_profiles done", timeout=40)
+    if b"SetControl result" in msc.group(0):
+        csip_size, locked, commander = int(msc.group(2)), int(msc.group(3)), int(msc.group(4))
+        md = client.expect(r"\[CLIENT\] TopProfiles round1 down=([01])", timeout=60)
+        LOGGER.info("top_profiles round1 down=%s", md.group(1).decode())
     _release_server(server)
-    ms = server.expect(r"\[SERVER\] TopProfiles (not supported|result done locks=(\d+) volume=(\d+))", timeout=120)
+    msr = server.expect(r"\[SERVER\] TopProfiles reinit ready registered=([01])", timeout=60)
+    mc2 = client.expect(r"\[CLIENT\] TopProfiles reinit gmap=(-?\d+) ugt=(-?\d+)", timeout=180)
+    gmap_roles2, gmap_ugt2 = int(mc2.group(1)), int(mc2.group(2))
+    if b"SetControl result" in msc.group(0):
+        msc2 = client.expect(r"\[CLIENT\] TopProfiles reinit csip=(-?\d+)", timeout=40)
+        csip_size2 = int(msc2.group(1))
+        mcmd2 = client.expect(r"\[CLIENT\] SetControl reinit commander=(\d+)", timeout=40)
+        commander2 = int(mcmd2.group(1))
+    else:
+        csip_size2, commander2 = -1, -1
+    client.expect_exact("[CLIENT] Phase8 top_profiles done", timeout=40)
+    _release_server(server)
+    ms = server.expect(
+        r"\[SERVER\] TopProfiles result done locks=(\d+) volume=(\d+) reinit=(\d+)", timeout=120
+    )
     server.expect_exact("[SERVER] Phase8 top_profiles done", timeout=40)
 
-    if b"not supported" in ms.group(0) or b"not supported" in mc.group(0):
-        return False
-
-    if b"SetControl" in msc.group(0):
-        csip_size, locked, commander = int(msc.group(2)), int(msc.group(3)), int(msc.group(4))
-        locks, volume = int(ms.group(2)), int(ms.group(3))
+    if b"SetControl result" in msc.group(0):
+        locks, volume = int(ms.group(1)), int(ms.group(2))
         LOGGER.info("set_control: csip=%d locked=%d commander=%d locks=%d volume=%d", csip_size, locked, commander, locks, volume)
         assert csip_size == 1, f"CSIP coordinator read set size {csip_size}, expected 1"
         assert locked == 1, "CSIP coordinator failed to lock the set"
@@ -400,6 +429,17 @@ def _phase_top_profiles(server, client):
     assert gmap_roles & 0x02, f"peer GMAP roles 0x{gmap_roles:02x} missing UGT"
     assert gmap_ugt & 0x04, f"peer UGT features 0x{gmap_ugt:02x} missing Sink"
     LOGGER.info("top_profiles: tmap=0x%02x gmap=0x%02x ugt=0x%02x", tmap_roles, gmap_roles, gmap_ugt)
+    # Round-2 (reinit) assertions: every callback re-registered after the
+    # same-host deinit must work, or discovery observes nothing here.
+    assert int(msr.group(1)) == 1, "server failed to re-register roles after audio.end -> audio.begin"
+    assert gmap_roles2 >= 0, "GMAP rediscovery failed after client reinit (stale callback link?)"
+    assert gmap_roles2 & 0x02, f"peer GMAP roles 0x{gmap_roles2:02x} missing UGT after reinit"
+    assert gmap_ugt2 & 0x04, f"peer UGT features 0x{gmap_ugt2:02x} missing Sink after reinit"
+    assert int(ms.group(3)) == 1, "server reinit round did not complete"
+    if b"SetControl result" in msc.group(0):
+        assert csip_size2 == 1, f"CSIP coordinator re-read set size {csip_size2}, expected 1"
+        assert commander2 == 1, "CAP commander volume failed after reinit"
+    LOGGER.info("top_profiles reinit: gmap=0x%02x ugt=0x%02x", gmap_roles2, gmap_ugt2)
     return True
 
 
@@ -412,8 +452,24 @@ def _phase_hearing_aid(server, client):
     the active preset to index 2. Returns False (SKIP) when the HAS server or
     client is not compiled into a build (only a dual-audio esp32s31 pair with
     HAS + HAS client runs it).
+
+    A second round then re-runs discovery after audio.end() -> audio.begin()
+    on the client without a BLE restart: the controller callback must be
+    re-linked on re-registration, or the preset re-read observes nothing.
     """
     mc = client.expect(r"\[CLIENT\] HearingAid (not supported|result disc=(\d+) read=(\d+) switched=(\d+))", timeout=120)
+    if b"not supported" in mc.group(0):
+        _release_server(server)
+        ms = server.expect(r"\[SERVER\] HearingAid (not supported|result presets=3 selects=(\d+) active=(\d+))", timeout=90)
+        server.expect_exact("[SERVER] Phase9 hearing_aid done", timeout=40)
+        client.expect_exact("[CLIENT] Phase9 hearing_aid done", timeout=40)
+        return False
+    # Quiescence barrier like Phase 8: release only after the previous link
+    # is fully down.
+    md = client.expect(r"\[CLIENT\] HearingAid round1 down=([01])", timeout=60)
+    LOGGER.info("hearing_aid round1 down=%s", md.group(1).decode())
+    _release_server(server)
+    mc2 = client.expect(r"\[CLIENT\] HearingAid reinit disc=(\d+) read=(\d+)", timeout=120)
     _release_server(server)
     ms = server.expect(r"\[SERVER\] HearingAid (not supported|result presets=3 selects=(\d+) active=(\d+))", timeout=90)
     server.expect_exact("[SERVER] Phase9 hearing_aid done", timeout=40)
@@ -432,6 +488,10 @@ def _phase_hearing_aid(server, client):
     assert switched == 1, "client preset switch was not accepted"
     assert selects >= 1, "server observed no preset select request"
     assert active == 2, f"server active preset should be 2 after the switch, got {active}"
+    disc2, read2 = int(mc2.group(1)), int(mc2.group(2))
+    assert disc2 == 1, "client failed to rediscover the peer HAS after reinit"
+    assert read2 >= 3, f"expected >= 3 preset records re-read after reinit, got {read2}"
+    LOGGER.info("hearing_aid reinit: disc=%d read=%d", disc2, read2)
     return True
 
 

@@ -341,6 +341,16 @@ int bleAudioEngineDisconnect(uint16_t conn_handle);
  */
 bool bleAudioEngineLinkAddress(uint16_t conn_handle, uint8_t addr[6]);
 
+/**
+ * @brief Disconnect every tracked link, central or peripheral (best effort).
+ *
+ * Backends whose links are not owned `BLEClient` handles (Bluedroid opens
+ * central links through the engine GATTC interface) call this from
+ * `backendPreEndTeardown()` so `audio.end()` never leaves a live ACL behind.
+ * Disconnects are queued asynchronously; callers must not wait on them here.
+ */
+void bleAudioEngineDisconnectAll(void);
+
 #ifdef __cplusplus
 }
 #endif

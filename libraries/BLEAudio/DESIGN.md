@@ -311,12 +311,14 @@ Invariants:
   is read by `start()`; changing it afterwards does not alter the registered
   services. Available audio contexts (`setAvailableContexts`) may change at
   runtime.
-- `audio.end()` runs `roleStops`, disconnects any NimBLE fallback clients, stops
-  leftover CAP/BAP transports, and waits for ISO channels to disconnect
-  (`BLESync`, 5 s) before `common_deinit`. Called from a stack callback, `end()`
-  returns `BTStatus::Busy` immediately. If a CONNECTED ISO channel remains,
-  `end()` fails and retains ownership. After a successful `end()`, `begin()` may
-  run again in the same `BLE.begin()` session.
+- `audio.end()` runs `roleStops`, disconnects every tracked ACL (NimBLE
+  fallback clients on NimBLE, engine-owned GATTC links on Bluedroid — owning
+  no link across deinit on either backend), stops leftover CAP/BAP
+  transports, and waits for ISO channels to disconnect (`BLESync`, 5 s)
+  before `common_deinit`. Called from a stack callback, `end()` returns
+  `BTStatus::Busy` immediately. If a CONNECTED ISO channel remains,
+  `end()` fails and retains ownership. After a successful `end()`, `begin()`
+  may run again in the same `BLE.begin()` session.
 - `BroadcastSource::stop()` gates its `BLESync` wait on `big_pending` so stopping
   a source whose `Create_BIG` never started returns immediately (0 ms) rather
   than stalling for 5 s.
@@ -471,7 +473,7 @@ details live in [`../BLE/DESIGN.md`](../BLE/DESIGN.md#service-staging-and-startu
 
 ## Testing
 
-- **Dual-DUT HITL:** `tests/validation/ble_audio/` (15 phases covering pure-audio peripheral lifecycle without `BLEServer`, same-host `audio.end()`→`begin()` re-init, classic GATT coexistence & callback-deferred `BLE.end()`, `BLEIso` CIS/BIS, BAP unicast/broadcast, LC3 loopback, VCP/MICP/MCP/CCP, TMAP/GMAP/CSIP/CAP Commander, HAS, stereo broadcast with callback churn, Broadcast Assistant with PAST on handle 0, CAP handover, `BroadcastSource` start/stop race, `CapInitiator` 1/2-BIS interleave, and controller memory release).
+- **Dual-DUT HITL:** `tests/validation/ble_audio/` (15 phases covering pure-audio peripheral lifecycle without `BLEServer`, same-host `audio.end()`→`begin()` re-init, GMAP/HAS callback re-registration across re-init with quiesced links, classic GATT coexistence & callback-deferred `BLE.end()`, `BLEIso` CIS/BIS, BAP unicast/broadcast, LC3 loopback, VCP/MICP/MCP/CCP, TMAP/GMAP/CSIP/CAP Commander, HAS, stereo broadcast with callback churn, Broadcast Assistant with PAST on handle 0, CAP handover, `BroadcastSource` start/stop race, `CapInitiator` 1/2-BIS interleave, and controller memory release).
 - **Host-interop:** `tests/validation/ble_audio_host/` (ESP DUT + Linux Bumble).
 - **Static isolation check:** `libraries/BLE/tests/check_backend_isolation.sh`.
 
