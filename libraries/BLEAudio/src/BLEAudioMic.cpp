@@ -201,6 +201,7 @@ struct BLEAudioMicController::Impl {
           }
           break;
         }
+        lastOp.store((uint8_t)BLEAudioMicController::Operation::Unknown, std::memory_order_relaxed);
         {
           const auto *a = static_cast<const ble_audio_aics_state_t *>(e.data);
           if (auto cb = bleAudioCopyCallback(*this, &Impl::onInputChangedCb)) {

@@ -276,6 +276,7 @@ struct BLEAudioVolumeController::Impl {
           }
           break;
         }
+        lastOp.store((uint8_t)BLEAudioVolumeController::Operation::Unknown, std::memory_order_relaxed);
         if (auto cb = bleAudioCopyCallback(*this, &Impl::onOffsetChangedCb)) {
           cb(*static_cast<const int16_t *>(e.data));
         }
@@ -287,6 +288,7 @@ struct BLEAudioVolumeController::Impl {
           }
           break;
         }
+        lastOp.store((uint8_t)BLEAudioVolumeController::Operation::Unknown, std::memory_order_relaxed);
         {
           const auto *a = static_cast<const ble_audio_aics_state_t *>(e.data);
           if (auto cb = bleAudioCopyCallback(*this, &Impl::onInputChangedCb)) {
