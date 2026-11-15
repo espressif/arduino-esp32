@@ -1079,7 +1079,12 @@ int bleAudioCcpSrvCallOp(uint8_t op, uint8_t call_index) {
 
 int bleAudioCcpSrvSetProviderName(const char *name) {
   NEED_ROLE(ROLE_CCP_SRV);
-  return esp_ble_audio_tbs_set_bearer_provider_name(s_tbs_bearer, name);
+  if (name == NULL || name[0] == '\0') {
+    return ESP_ERR_INVALID_ARG;
+  }
+  // Own the string like the register path: the caller may pass a temporary.
+  snprintf(s_tbs_provider, sizeof(s_tbs_provider), "%s", name);
+  return esp_ble_audio_tbs_set_bearer_provider_name(s_tbs_bearer, s_tbs_provider);
 }
 
 #endif /* BLE_AUDIO_CCP_SERVER_SUPPORTED */

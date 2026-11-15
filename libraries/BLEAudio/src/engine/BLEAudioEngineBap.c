@@ -78,9 +78,6 @@ static const char *TAG = "BLEAudioBap";
 
 /* ── Little-endian helpers ──────────────────────────────────────────────── */
 
-#define audio_put_le16 ble_audio_put_le16
-#define audio_put_le32 ble_audio_put_le32
-
 static inline uint16_t audio_get_le16(const uint8_t *p) {
   return (uint16_t)(p[0] | (p[1] << 8));
 }
@@ -117,12 +114,12 @@ static size_t build_cfg_data(uint8_t *d, const ble_audio_codec_t *c) {
   if (c->chan_alloc) {
     d[n++] = 5;
     d[n++] = ESP_BLE_AUDIO_CODEC_CFG_CHAN_ALLOC;
-    audio_put_le32(&d[n], c->chan_alloc);
+    ble_audio_put_le32(&d[n], c->chan_alloc);
     n += 4;
   }
   d[n++] = 3;
   d[n++] = ESP_BLE_AUDIO_CODEC_CFG_FRAME_LEN;
-  audio_put_le16(&d[n], c->octets_per_frame);
+  ble_audio_put_le16(&d[n], c->octets_per_frame);
   n += 2;
   if (c->frames_per_sdu > 1) {
     d[n++] = 2;
@@ -136,7 +133,7 @@ static size_t build_cfg_data(uint8_t *d, const ble_audio_codec_t *c) {
 static size_t build_ctx_meta(uint8_t *m, uint8_t type, uint16_t ctx) {
   m[0] = 3;
   m[1] = type;
-  audio_put_le16(&m[2], ctx);
+  ble_audio_put_le16(&m[2], ctx);
   return META_CTX_LEN;
 }
 
@@ -916,7 +913,7 @@ static size_t build_cap_data(uint8_t *d, const ble_audio_pac_t *p) {
   size_t n = 0;
   d[n++] = 3;
   d[n++] = ESP_BLE_AUDIO_CODEC_CAP_TYPE_FREQ;
-  audio_put_le16(&d[n], p->freq_mask);
+  ble_audio_put_le16(&d[n], p->freq_mask);
   n += 2;
   d[n++] = 2;
   d[n++] = ESP_BLE_AUDIO_CODEC_CAP_TYPE_DURATION;
@@ -926,8 +923,8 @@ static size_t build_cap_data(uint8_t *d, const ble_audio_pac_t *p) {
   d[n++] = p->chan_counts;
   d[n++] = 5;
   d[n++] = ESP_BLE_AUDIO_CODEC_CAP_TYPE_FRAME_LEN;
-  audio_put_le16(&d[n], p->min_octets);
-  audio_put_le16(&d[n + 2], p->max_octets);
+  ble_audio_put_le16(&d[n], p->min_octets);
+  ble_audio_put_le16(&d[n + 2], p->max_octets);
   n += 4;
   if (p->max_frames > 1) {
     d[n++] = 2;
@@ -1929,7 +1926,7 @@ int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *location
     if (locations && locations[i]) {
       s->bis_data[0] = 5;
       s->bis_data[1] = ESP_BLE_AUDIO_CODEC_CFG_CHAN_ALLOC;
-      audio_put_le32(&s->bis_data[2], locations[i]);
+      ble_audio_put_le32(&s->bis_data[2], locations[i]);
       sp[i].data = s->bis_data;
       sp[i].data_len = sizeof(s->bis_data);
     }
