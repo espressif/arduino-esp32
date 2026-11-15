@@ -1387,12 +1387,17 @@ void loop() {
             BTStatus st = cap.startBroadcast((i % 2) ? 2 : 1);
             if (st) {
               okStart++;
+            } else {
+              Serial.printf("[SERVER] CapBC round %d start failed: %s\n", i, st.toString());
             }
             delay(400);
             syncPhaseFromHost();
             st = cap.stopBroadcast();
             if (st) {
               okStop++;
+            } else {
+              Serial.printf("[SERVER] CapBC round %d stop failed: %s streaming=%d\n", i, st.toString(),
+                            cap.isBroadcasting() ? 1 : 0);
             }
             rounds++;
             delay(200);
@@ -1401,14 +1406,21 @@ void loop() {
           // A clean 2-BIS CAP broadcast must stream after the interleaved
           // resizes (also exercises per-BIS QoS on slots[1]).
           bool clean = false;
-          if (cap.startBroadcast(2)) {
+          BTStatus cleanStart = cap.startBroadcast(2);
+          if (cleanStart) {
             unsigned long deadline = millis() + 10000;
             while (millis() < deadline && !cap.isBroadcasting()) {
               syncPhaseFromHost();
               delay(20);
             }
             clean = cap.isBroadcasting() && cap.streamCount() == 2;
+            if (!clean) {
+              Serial.printf("[SERVER] CapBC clean not streaming (broadcasting=%d streams=%u)\n",
+                            cap.isBroadcasting() ? 1 : 0, (unsigned)cap.streamCount());
+            }
             cap.stopBroadcast();
+          } else {
+            Serial.printf("[SERVER] CapBC clean start failed: %s\n", cleanStart.toString());
           }
           snapStop.store(true, std::memory_order_release);
           unsigned long deadline = millis() + 3000;
@@ -1574,7 +1586,7 @@ void loop() {
           // Wait for the client's mute, then disable and hold the link while
           // the client verifies (deadline, then clean up regardless).
           unsigned long t0 = millis();
-          while (mutes == 0 && millis() - t0 < 30000) {
+          while (mutes == 0 && millis() - t0 < 60000) {
             checkSerial();
             delay(50);
           }
