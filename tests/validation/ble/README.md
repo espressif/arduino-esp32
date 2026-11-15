@@ -149,6 +149,22 @@ payload.
 - BLE5 phases (2, 11, 24, 26, 27, 34) and L2CAP (14, 28) self-skip on targets or builds without support, so the suite runs unchanged on non-BLE5 silicon.
 - The conn-param reject phase (29) self-skips on Bluedroid, which negotiates connection-parameter updates inside L2CAP and exposes no application pre-accept hook.
 
+## Benign stack logs (expected `E` lines, not failures)
+
+Phases intentionally trigger negative paths, so NimBLE prints `E` logs while
+the suite still passes — the assertions check `BTStatus`/behavior, not log
+absence. Do not "fix" the tests to avoid these; filter them in the harness:
+
+- Phase 2 `clearWhileLive`: `ble_gap_ext_adv_clear rc=15` (`BLE_HS_EBUSY`,
+  clear-while-enabled per Vol 4 Part E §7.8.60; Arduino returns `Fail`).
+- Phase 5 malformed CCCD: `ble_gatts_clt_cfg_access_locked rc=13`
+  (`ATT_INVALID_ATTR_VALUE_LEN`, 1-byte CCCD per Vol 3 Part G §3.3.3.3).
+- Phase 36 OOB reject: `No record found ... rc=5` (`BLE_HS_ENOENT`, bond
+  cleanup with no bond).
+- Phase 37 full-MTU CoC: `ble_l2cap_coc_send rc=15` (`EBUSY`, credit
+  flow-control slot busy per Vol 3 Part A §4; Arduino parks in
+  `writePendingMbuf` and resumes on `TX_UNSTALLED`, 16/16 echoed).
+
 ## Coverage gaps (HITL-pending)
 
 The following remain to be added as multi-device cases and require extra

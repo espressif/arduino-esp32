@@ -153,3 +153,14 @@ hooks close two gaps that a two-DUT bench cannot exercise:
 - Every connected audio phase opens its link with `BLEAudio::connect()` and waits for
   `onLinkReady()`, so the engine secures and discovers the link on both NimBLE and
   Bluedroid before any profile procedure starts.
+
+## Benign stack logs (expected `E` lines, not failures)
+
+- Phase 1 Busy guard: `LEA_NINIT: [N]GattsResetFail[15]` (`BLE_HS_EBUSY`,
+  `audio.begin()` while GAP/ACL active; Arduino returns `Busy`).
+- Phase 8: `LEA_LIB: CsipSetCoordStartHdlZero` from prebuilt `libble_audio.a`
+  when the coordinator probes an optional second CSIS instance (handle 0 is a
+  valid first ACL; do not guard it out in Arduino).
+- Phase 12 forced handover failure (`badho=1`): `SetupIsoDataPathFail`,
+  `SetDataPathFail`, `BapIsoSetDataPathFail` during teardown-race recovery;
+  the test asserts `hofai1==1`/`horestart==1` and `joined==1`/`bc_rx>0`.

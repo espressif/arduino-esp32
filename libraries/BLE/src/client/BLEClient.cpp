@@ -77,7 +77,7 @@ String BLEClient::getValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID) 
 }
 
 BTStatus BLEClient::setValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID, const String &value) {
-  log_d("Client: setValue svc=%s chr=%s len=%u", serviceUUID.toString().c_str(), charUUID.toString().c_str(), value.length());
+  log_d("Client: setValue svc=%s chr=%s len=%u", serviceUUID.toString().c_str(), charUUID.toString().c_str(), (unsigned)value.length());
   BLERemoteService svc = getService(serviceUUID);
   if (!svc) {
     log_w("Client: setValue - service %s not found", serviceUUID.toString().c_str());
