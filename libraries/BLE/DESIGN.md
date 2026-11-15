@@ -458,7 +458,9 @@ is active) so a new table can be staged in the same `BLE.begin()` session withou
 an optional `BLEServer`, so standalone audio/ISO peripherals work without calling `BLE.createServer()`.
 
 On Bluedroid, incremental multi-app GATTS registration already allows coexistence: the engine registers its own
-BTA GATTS/GATTC apps, so the Bluedroid server path stays thin and does not use the coordinator. Audio centrals must
+BTA GATTS/GATTC apps, so the Bluedroid server path stays thin and does not use the coordinator. The post-`start()`
+freeze is still enforced there (`InvalidState` on new staging, via the shared `bleAudioGattFrozen()` hook) so both
+backends present one table state; removal works natively on either stack. Audio centrals must
 open links with `BLEAudio::connect()`, which goes through the engine's GATTC interface.
 
 ### Descriptor rules
@@ -500,10 +502,17 @@ Important lifecycle invariants:
   active audio controller is therefore released even when the sketch omits
   `audio.end()`, and standalone `BLEIso` ownership cannot leak into the next
   `begin()`. `BLEIso::end()`, `BLEAudio::end()`, and Broadcast Source/Sink
-  `stop()` wait on native ISO disconnect (`BLESync`, 5 s) and keep ownership
-  on failure. If ISO or audio is still live after the hook, `BLE.end()` aborts
+  `stop()` wait on native ISO disconnect and keep ownership on failure (audio
+  stops share one 5 s budget across their waits; see `../BLEAudio/DESIGN.md`).
+  If ISO or audio is still live after the hook, `BLE.end()` aborts
   host shutdown: a CONNECTED BIG must be terminated over HCI, not
-  software-reset (controller assert).
+  software-reset (controller assert). `BLEIso::begin()` after a failed `end()`
+  retries the teardown instead of reporting OK over it; `connectCis()` refuses
+  dead handles before creating the CIG (`bleIsoAclHandleLive`, both backends);
+  a peripheral `listenCis()` channel re-listens on its own (a second call
+  reserves another concurrent channel) and an never-accepted listen is
+  released by `disconnect()`; an audio-owned host drop completes attached raw
+  channels with reason `0x16` instead of losing them silently.
 - `BLE.end()` called from a host/BTC callback claims the ending state and
   defers the same ordered teardown to its worker; audio/ISO teardown must never
   bypass that callback-safe path

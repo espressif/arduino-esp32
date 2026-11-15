@@ -82,20 +82,24 @@ inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const 
  * the same budget, so the documented worst case is one budget. When a phase
  * finds the budget exhausted with the transport still live, the stop reports
  * where it stalled (Fail) with the state retained for a retry.
+ *
+ * Tick differences are used throughout so a 32-bit tick wrap cannot fake
+ * expiry (only differences shorter than half the wrap period occur here).
  */
 class BLEAudioStopBudget {
  public:
   void start(uint32_t totalMs = 5000) {
-    _deadline = xTaskGetTickCount() + pdMS_TO_TICKS(totalMs);
+    _start = xTaskGetTickCount();
+    _total = pdMS_TO_TICKS(totalMs);
   }
 
   /** @brief Milliseconds left, 0 when exhausted. */
   uint32_t remainingMs() const {
-    const TickType_t now = xTaskGetTickCount();
-    if (now >= _deadline) {
+    const TickType_t elapsed = xTaskGetTickCount() - _start;
+    if (elapsed >= _total) {
       return 0;
     }
-    return (uint32_t)((_deadline - now) * (TickType_t)portTICK_PERIOD_MS);
+    return (uint32_t)((_total - elapsed) * (TickType_t)portTICK_PERIOD_MS);
   }
 
   bool expired() const {
@@ -109,7 +113,8 @@ class BLEAudioStopBudget {
   }
 
  private:
-  TickType_t _deadline = 0;
+  TickType_t _start = 0;
+  TickType_t _total = 0;
 };
 
 /** @return The @p n-th set bit of an Audio Location mask, or 0 (Mono) when there are fewer bits. */

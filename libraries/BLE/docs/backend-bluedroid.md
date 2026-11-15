@@ -153,6 +153,12 @@ buffers, timers, and `BLESync` objects. Access is always cast-free `impl.member`
   (NimBLE reports `sec_state.key_size`).
 - **Prepared (long) writes** are buffered per connection id in `BLEServer::Impl` (a flat vector
   keyed by `conn_id`, avoiding `<unordered_map>` in every build).
+- **ACL handle latch.** The HCI ACL handle latched at GATTC CONNECT (`aclHandle`, used by
+  `bleIsoResolveAclHandle()`) is cleared on disconnect and host deinit, and the resolver
+  skips non-live clients (a `0xFFFF` query never resolves). Otherwise a disconnected or
+  never-connected `BLEClient` could hand `BLEIso::connectCis()` a dead or recycled ACL
+  handle and aim a CIS at the wrong peer; `connectCis()` additionally validates the
+  handle through `bleIsoAclHandleLive()` before creating the CIG.
 - **Service Changed invalidates the full remote tree.** Bluedroid consumes the 0x2A05 indication
   internally and exposes only the peer address, not its handle range. The backend therefore
   detaches every discovered remote handle and reports the conservative full range
