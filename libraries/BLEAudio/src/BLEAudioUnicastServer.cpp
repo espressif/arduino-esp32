@@ -293,8 +293,8 @@ BLEAudioStream BLEAudioUnicastServer::stream(BLEAudioStream::Direction dir, uint
  * The role is kept alive by the controller (`roles`) and only referenced
  * weakly by its staged apply, so the controller owns its lifetime.
  */
-BLEAudioUnicastServer BLEAudio::createUnicastServer() {
 #if BLE_AUDIO_UNICAST_SERVER_SUPPORTED
+BLEAudioUnicastServer BLEAudio::createUnicastServer() {
   if (!_impl || !_impl->active || _impl->started) {
     log_e("UnicastServer: create between audio.begin() and audio.start()");
     return BLEAudioUnicastServer();
@@ -309,10 +309,18 @@ BLEAudioUnicastServer BLEAudio::createUnicastServer() {
     return s ? s->apply() : BTStatus::OK;
   });
   return BLEAudioUnicastServer(srv);
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_UNICAST_SERVER_SUPPORTED
+BLEAudioUnicastServer BLEAudio::createUnicastServer() {
   log_e("UnicastServer: not enabled in this build (CONFIG_BT_BAP_UNICAST_SERVER)");
   return BLEAudioUnicastServer();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

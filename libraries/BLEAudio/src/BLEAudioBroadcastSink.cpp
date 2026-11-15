@@ -760,8 +760,8 @@ void BLEAudioBroadcastSink::resetCallbacks() {
 // --------------------------------------------------------------------------
 
 /** The sink registers PACS (and BASS), so it must exist before the GATT commit in start(). */
-BLEAudioBroadcastSink BLEAudio::createBroadcastSink() {
 #if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
+BLEAudioBroadcastSink BLEAudio::createBroadcastSink() {
   if (!_impl || !_impl->active || _impl->started) {
     log_e("BroadcastSink: create between audio.begin() and audio.start()");
     return BLEAudioBroadcastSink();
@@ -786,10 +786,18 @@ BLEAudioBroadcastSink BLEAudio::createBroadcastSink() {
     }
   });
   return BLEAudioBroadcastSink(sink);
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_BROADCAST_SINK_SUPPORTED
+BLEAudioBroadcastSink BLEAudio::createBroadcastSink() {
   log_e("BroadcastSink: not enabled in this build (CONFIG_BT_BAP_BROADCAST_SINK)");
   return BLEAudioBroadcastSink();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

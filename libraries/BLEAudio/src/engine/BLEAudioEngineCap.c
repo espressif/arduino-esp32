@@ -301,46 +301,6 @@ bool bleAudioCsisIsLocked(bool cas) {
   return s_csis[cas] && esp_ble_audio_csip_set_member_get_info(s_csis[cas], &info) == ESP_OK && info.locked;
 }
 
-#else
-
-int bleAudioCsisRegister(bool cas, const ble_audio_csis_cfg_t *cfg) {
-  (void)cas;
-  (void)cfg;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCsisSetSirk(bool cas, const uint8_t sirk[BLE_AUDIO_SIRK_LEN]) {
-  (void)cas;
-  (void)sirk;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCsisSetSizeRank(bool cas, uint8_t size, uint8_t rank) {
-  (void)cas;
-  (void)size;
-  (void)rank;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCsisSetName(bool cas, const uint8_t *name, uint8_t len) {
-  (void)cas;
-  (void)name;
-  (void)len;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCsisGenerateRsi(bool cas, uint8_t rsi[BLE_AUDIO_RSI_LEN]) {
-  (void)cas;
-  (void)rsi;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCsisLock(bool cas, bool lock, bool force) {
-  (void)cas;
-  (void)lock;
-  (void)force;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-bool bleAudioCsisIsLocked(bool cas) {
-  (void)cas;
-  return false;
-}
-
 #endif /* CSIS_SRV */
 
 /* ── CSIP set coordinator ───────────────────────────────────────────────── */
@@ -454,27 +414,6 @@ bool bleAudioCsipIsSetMember(const uint8_t sirk[BLE_AUDIO_SIRK_LEN], const uint8
     len -= (uint16_t)(adv[0] + 1);
     adv += adv[0] + 1;
   }
-  return false;
-}
-
-#else
-
-int bleAudioCsipCoordInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCsipCoordDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCsipCoordLock(const uint8_t sirk[BLE_AUDIO_SIRK_LEN], bool lock) {
-  (void)sirk;
-  (void)lock;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-bool bleAudioCsipIsSetMember(const uint8_t sirk[BLE_AUDIO_SIRK_LEN], const uint8_t *adv, uint16_t len) {
-  (void)sirk;
-  (void)adv;
-  (void)len;
   return false;
 }
 
@@ -820,28 +759,6 @@ int bleAudioCapUnicastStop(void) {
   return 0;
 }
 
-#else
-
-int bleAudioCapDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapUnicastStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
-  (void)reqs;
-  (void)count;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapUnicastUpdate(uint16_t context) {
-  (void)context;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapUnicastStop(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-bool bleAudioCapUnicastGroupExists(void) {
-  return false;
-}
-
 #endif /* CAP_UC */
 
 /* ── CAP initiator: broadcast ───────────────────────────────────────────── */
@@ -1029,41 +946,6 @@ void bleAudioCapBroadcastDelete(void) {
   }
 }
 
-#else
-
-int bleAudioCapBroadcastCreate(ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec,
-                               const ble_audio_qos_t *qos, uint16_t context, const uint8_t *code) {
-  (void)slots;
-  (void)locations;
-  (void)count;
-  (void)codec;
-  (void)qos;
-  (void)context;
-  (void)code;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapBroadcastGetBase(uint8_t *out, uint16_t cap, uint16_t *out_len) {
-  (void)out;
-  (void)cap;
-  (void)out_len;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapBroadcastStart(const ble_audio_cap_adv_t *adv) {
-  (void)adv;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapBroadcastUpdate(uint16_t context) {
-  (void)context;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapBroadcastStop(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-bool bleAudioCapBroadcastExists(void) {
-  return false;
-}
-void bleAudioCapBroadcastDelete(void) {}
-
 #endif /* CAP_BC */
 
 #if CAP_INIT
@@ -1101,12 +983,6 @@ int bleAudioCapInitiatorInit(void) {
   s_init_cb_linked = true;
   s_init_registered = true;
   return 0;
-}
-
-#else
-
-int bleAudioCapInitiatorInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
 }
 
 #endif /* CAP_INIT */
@@ -1329,27 +1205,6 @@ int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t 
     s_uc.count = 0;
   }
   return err;
-}
-
-#else
-
-int bleAudioCapHandoverInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_audio_qos_t *qos, const uint8_t *code) {
-  (void)adv;
-  (void)qos;
-  (void)code;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-#if BLE_AUDIO_VALIDATION_HOOKS
-void bleAudioValidationFailNextHandover(void) {}
-#endif
-int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
-  (void)reqs;
-  (void)count;
-  return ESP_ERR_NOT_SUPPORTED;
 }
 
 #endif /* CAP_HO */
@@ -1795,47 +1650,6 @@ int bleAudioCapCommanderDistributeCode(const uint8_t code[BLE_AUDIO_BCODE_SIZE])
 #endif
 }
 
-#else
-
-int bleAudioCapCommanderInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapCommanderDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapCommanderVolume(uint8_t volume) {
-  (void)volume;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapCommanderVolumeMute(bool mute) {
-  (void)mute;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapCommanderVolumeOffset(int16_t offset) {
-  (void)offset;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapCommanderMicMute(bool mute) {
-  (void)mute;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapCommanderMicGain(int8_t gain) {
-  (void)gain;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapCommanderReceptionStart(const ble_audio_cap_bcast_src_t *src) {
-  (void)src;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapCommanderReceptionStop(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioCapCommanderDistributeCode(const uint8_t code[BLE_AUDIO_BCODE_SIZE]) {
-  (void)code;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
 #endif /* CAP_CMD */
 
 /* ── Broadcast assistant callbacks (commander / handover) ───────────────── */
@@ -2008,5 +1822,225 @@ static void cap_on_deinit(void) {
 }
 
 #endif /* CAP_ANY */
+
+/* ==========================================================================
+ * Feature-disabled stubs
+ * ========================================================================== */
+
+#if !CSIS_SRV
+int bleAudioCsisRegister(bool cas, const ble_audio_csis_cfg_t *cfg) {
+  (void)cas;
+  (void)cfg;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCsisSetSirk(bool cas, const uint8_t sirk[BLE_AUDIO_SIRK_LEN]) {
+  (void)cas;
+  (void)sirk;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCsisSetSizeRank(bool cas, uint8_t size, uint8_t rank) {
+  (void)cas;
+  (void)size;
+  (void)rank;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCsisSetName(bool cas, const uint8_t *name, uint8_t len) {
+  (void)cas;
+  (void)name;
+  (void)len;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCsisGenerateRsi(bool cas, uint8_t rsi[BLE_AUDIO_RSI_LEN]) {
+  (void)cas;
+  (void)rsi;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCsisLock(bool cas, bool lock, bool force) {
+  (void)cas;
+  (void)lock;
+  (void)force;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+bool bleAudioCsisIsLocked(bool cas) {
+  (void)cas;
+  return false;
+}
+#endif /* !CSIS_SRV */
+
+#if !CSIP_CRD
+int bleAudioCsipCoordInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCsipCoordDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCsipCoordLock(const uint8_t sirk[BLE_AUDIO_SIRK_LEN], bool lock) {
+  (void)sirk;
+  (void)lock;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+bool bleAudioCsipIsSetMember(const uint8_t sirk[BLE_AUDIO_SIRK_LEN], const uint8_t *adv, uint16_t len) {
+  (void)sirk;
+  (void)adv;
+  (void)len;
+  return false;
+}
+#endif /* !CSIP_CRD */
+
+#if !CAP_UC
+int bleAudioCapDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapUnicastStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
+  (void)reqs;
+  (void)count;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapUnicastUpdate(uint16_t context) {
+  (void)context;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapUnicastStop(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+bool bleAudioCapUnicastGroupExists(void) {
+  return false;
+}
+#endif /* !CAP_UC */
+
+#if !CAP_BC
+int bleAudioCapBroadcastCreate(ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec,
+                               const ble_audio_qos_t *qos, uint16_t context, const uint8_t *code) {
+  (void)slots;
+  (void)locations;
+  (void)count;
+  (void)codec;
+  (void)qos;
+  (void)context;
+  (void)code;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapBroadcastGetBase(uint8_t *out, uint16_t cap, uint16_t *out_len) {
+  (void)out;
+  (void)cap;
+  (void)out_len;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapBroadcastStart(const ble_audio_cap_adv_t *adv) {
+  (void)adv;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapBroadcastUpdate(uint16_t context) {
+  (void)context;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapBroadcastStop(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+bool bleAudioCapBroadcastExists(void) {
+  return false;
+}
+
+void bleAudioCapBroadcastDelete(void) {}
+#endif /* !CAP_BC */
+
+#if !CAP_INIT
+int bleAudioCapInitiatorInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !CAP_INIT */
+
+#if !CAP_HO
+int bleAudioCapHandoverInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_audio_qos_t *qos, const uint8_t *code) {
+  (void)adv;
+  (void)qos;
+  (void)code;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+#if BLE_AUDIO_VALIDATION_HOOKS
+void bleAudioValidationFailNextHandover(void) {}
+#endif
+
+int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
+  (void)reqs;
+  (void)count;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !CAP_HO */
+
+#if !CAP_CMD
+int bleAudioCapCommanderInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapCommanderDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapCommanderVolume(uint8_t volume) {
+  (void)volume;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapCommanderVolumeMute(bool mute) {
+  (void)mute;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapCommanderVolumeOffset(int16_t offset) {
+  (void)offset;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapCommanderMicMute(bool mute) {
+  (void)mute;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapCommanderMicGain(int8_t gain) {
+  (void)gain;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapCommanderReceptionStart(const ble_audio_cap_bcast_src_t *src) {
+  (void)src;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapCommanderReceptionStop(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCapCommanderDistributeCode(const uint8_t code[BLE_AUDIO_BCODE_SIZE]) {
+  (void)code;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !CAP_CMD */
 
 #endif /* BLE_AUDIO_SUPPORTED */

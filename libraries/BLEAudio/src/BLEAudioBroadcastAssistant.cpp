@@ -456,8 +456,8 @@ void BLEAudioBroadcastAssistant::resetCallbacks() {
   }
 }
 
-BLEAudioBroadcastAssistant BLEAudio::createBroadcastAssistant() {
 #if BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED
+BLEAudioBroadcastAssistant BLEAudio::createBroadcastAssistant() {
   if (!_impl || !_impl->active) {
     log_e("createBroadcastAssistant(): call after audio.begin()");
     return BLEAudioBroadcastAssistant();
@@ -480,10 +480,18 @@ BLEAudioBroadcastAssistant BLEAudio::createBroadcastAssistant() {
     }
   });
   return BLEAudioBroadcastAssistant(ba);
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED
+BLEAudioBroadcastAssistant BLEAudio::createBroadcastAssistant() {
   log_e("Broadcast assistant is not enabled in this build (CONFIG_BT_BAP_BROADCAST_ASSISTANT)");
   return BLEAudioBroadcastAssistant();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

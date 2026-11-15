@@ -661,7 +661,7 @@ void BLEScan::beginBackendShutdown() {
 }
 
 // --------------------------------------------------------------------------
-// GAP event handler (called from BluedroidCore gapCallback)
+// GAP event handler (called from BLEClass::Impl::gapCallback in BLE.bluedroid.cpp)
 // --------------------------------------------------------------------------
 
 /**

@@ -17,6 +17,14 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLEAdvertising.cpp
+ * @brief Stack-agnostic `BLEAdvertising` helpers: service-UUID staging,
+ *        legacy AD payload assembly, and feature-disabled / BLE 5 TX stubs.
+ * @note Interval conversion, on-air start/stop, and BLE 5 extended/periodic
+ *       advertising TX live in the active backend (`BLEAdvertising.{nimble,bluedroid}.cpp`).
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_ENABLED
 
@@ -31,24 +39,15 @@
 
 #include <algorithm>
 
-/**
- * @file
- * @brief Stack-agnostic @ref BLEAdvertising helpers (service-UUID list + isAdvertising).
- * @note Interval conversion, AD assembly, on-air start/stop, and all BLE5
- *       extended/periodic advertising live in the active backend; keep total AD
- *       length within controller limits (31 bytes per legacy AD payload segment
- *       unless using extended adv).
- */
+// ==========================================================================
+// 1. Handle construction, service-UUID list & state queries
+// ==========================================================================
 
 BLEAdvertising::BLEAdvertising() : _impl(nullptr) {}
 
 BLEAdvertising::operator bool() const {
   return _impl != nullptr;
 }
-
-// --------------------------------------------------------------------------
-// Service UUID management (guarded by impl.mtx)
-// --------------------------------------------------------------------------
 
 void BLEAdvertising::addServiceUUID(const BLEUUID &uuid) {
   BLE_CHECK_IMPL();
@@ -71,10 +70,6 @@ void BLEAdvertising::clearServiceUUIDs() {
   BLELockGuard lock(impl.mtx);
   impl.serviceUUIDs.clear();
 }
-
-// --------------------------------------------------------------------------
-// isAdvertising
-// --------------------------------------------------------------------------
 
 bool BLEAdvertising::isAdvertising() const {
   if (!_impl) {
@@ -104,6 +99,10 @@ BTAddress BLEAdvertising::getDirectedAddress() const {
   }
   return _impl->directedPeer;
 }
+
+// ==========================================================================
+// 2. Legacy advertising parameters (BLE_ADVERTISING_SUPPORTED)
+// ==========================================================================
 
 #if BLE_ADVERTISING_SUPPORTED
 
@@ -144,7 +143,57 @@ void BLEAdvertising::prepareBackendStart() {
   }
 }
 
-#else /* !BLE_ADVERTISING_SUPPORTED */
+#endif /* BLE_ADVERTISING_SUPPORTED */
+
+// ==========================================================================
+// 3. Stack-agnostic legacy AD payload builder (BLEAdvertisingData.h)
+// ==========================================================================
+
+// Legacy AD placement follows CSS Part A §1.2/§1.3: LE-only Flags in the
+// primary AD, and the Local Name in the scan response (leaving the primary AD
+// free for service UUIDs) unless scan response is disabled.
+BLEAdvertisementData BLEAdvDataBuilder::buildLegacyAdvData(
+  const String &name, const std::vector<BLEUUID> &serviceUUIDs, uint16_t appearance, bool includeTxPower, int8_t txPower, bool nameInScanResponse,
+  uint16_t minPreferred, uint16_t maxPreferred
+) {
+  BLEAdvertisementData data;
+  // Flags (0x01): LE General Discoverable + BR/EDR Not Supported for LE-only devices.
+  data.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
+  if (!nameInScanResponse && name.length() > 0) {
+    data.setName(name, true);
+  }
+  if (includeTxPower) {
+    data.setTxPower(txPower);
+  }
+  if (appearance > 0) {
+    data.setAppearance(appearance);
+  }
+  // Slave Connection Interval Range (0x12), CSS Part A §1.9 — emit when either
+  // bound was set via setMinPreferred / setMaxPreferred; a zero side copies the other.
+  if (minPreferred != 0 || maxPreferred != 0) {
+    const uint16_t minInt = minPreferred != 0 ? minPreferred : maxPreferred;
+    const uint16_t maxInt = maxPreferred != 0 ? maxPreferred : minPreferred;
+    data.setPreferredParams(minInt, maxInt);
+  }
+  for (const auto &uuid : serviceUUIDs) {
+    data.addServiceUUID(uuid);
+  }
+  return data;
+}
+
+BLEAdvertisementData BLEAdvDataBuilder::buildLegacyScanRespData(const String &name) {
+  BLEAdvertisementData data;
+  if (name.length() > 0) {
+    data.setName(name, true);
+  }
+  return data;
+}
+
+// ==========================================================================
+// 4. Feature-disabled & capability stubs
+// ==========================================================================
+
+#if !BLE_ADVERTISING_SUPPORTED
 
 void BLEAdvertising::setName(const String &) {
   log_w("Advertising not supported");
@@ -220,75 +269,19 @@ void BLEAdvertising::resetCallbacks() {
   log_w("Advertising not supported");
 }
 
-#endif /* BLE_ADVERTISING_SUPPORTED */
+#endif /* !BLE_ADVERTISING_SUPPORTED */
 
-// --------------------------------------------------------------------------
-// Raw AD payload builder (stack-agnostic) -- see BLEAdvertisingData.h
-//
-// Legacy AD placement follows CSS Part A §1.2/§1.3: LE-only Flags in the
-// primary AD, and the Local Name in the scan response (leaving the primary AD
-// free for service UUIDs) unless scan response is disabled.
-// --------------------------------------------------------------------------
-
-BLEAdvertisementData BLEAdvDataBuilder::buildLegacyAdvData(
-  const String &name, const std::vector<BLEUUID> &serviceUUIDs, uint16_t appearance, bool includeTxPower, int8_t txPower, bool nameInScanResponse,
-  uint16_t minPreferred, uint16_t maxPreferred
-) {
-  BLEAdvertisementData data;
-  // Flags (0x01): LE General Discoverable + BR/EDR Not Supported for LE-only devices.
-  data.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
-  if (!nameInScanResponse && name.length() > 0) {
-    data.setName(name, true);
-  }
-  if (includeTxPower) {
-    data.setTxPower(txPower);
-  }
-  if (appearance > 0) {
-    data.setAppearance(appearance);
-  }
-  // Slave Connection Interval Range (0x12), CSS Part A §1.9 — emit when either
-  // bound was set via setMinPreferred / setMaxPreferred; a zero side copies the other.
-  if (minPreferred != 0 || maxPreferred != 0) {
-    const uint16_t minInt = minPreferred != 0 ? minPreferred : maxPreferred;
-    const uint16_t maxInt = maxPreferred != 0 ? maxPreferred : minPreferred;
-    data.setPreferredParams(minInt, maxInt);
-  }
-  for (const auto &uuid : serviceUUIDs) {
-    data.addServiceUUID(uuid);
-  }
-  return data;
-}
-
-BLEAdvertisementData BLEAdvDataBuilder::buildLegacyScanRespData(const String &name) {
-  BLEAdvertisementData data;
-  if (name.length() > 0) {
-    data.setName(name, true);
-  }
-  return data;
-}
-
-// --------------------------------------------------------------------------
-// BLE5 extended / periodic advertising (TX) -- shared NotSupported fallback
-//
-// The real transmit implementation is backend-specific and lives under a
-// capability guard in the active backend (NimBLE: advertising/BLEAdvertising.nimble.cpp
-// under BLE5_ADV_TX_SUPPORTED / BLE_PERIODIC_ADV_SUPPORTED). "NotSupported" is a
-// backend-agnostic default, not a Bluedroid trait, so the fallback is defined
-// once here rather than copied into each backend. It compiles only when no active
-// backend implements the feature -- including a Bluedroid build on BLE5-capable
-// silicon (BLE5_SUPPORTED == 1 but BLE5_ADV_TX_SUPPORTED == 0). Exactly one
-// definition of each method exists in every build configuration.
-// --------------------------------------------------------------------------
-
+// BLE 5 extended / periodic advertising TX fallback stubs: compiled whenever
+// the active backend does not implement extended/periodic TX (including
+// Bluedroid builds on BLE 5 silicon where BLE5_SUPPORTED == 1).
 #if !BLE5_ADV_TX_SUPPORTED || !BLE_PERIODIC_ADV_TX_SUPPORTED
 namespace {
-// Single fallback body for every BLE5 TX entry point the active backend does
-// not implement. Logs the caller's name and yields NotSupported for the
-// BTStatus-returning entry points; void entry points discard the result.
+
 BTStatus advTxNotSupported(const char *fn) {
   log_w("%s not supported in this build (no BLE 5.0 extended/periodic advertising TX backend)", fn);
   return BTStatus::NotSupported;
 }
+
 }  // namespace
 #endif
 

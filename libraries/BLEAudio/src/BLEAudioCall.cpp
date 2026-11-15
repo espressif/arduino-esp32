@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLEAudioCall.cpp
+ * @brief Call Control Profile (`BLEAudioCallServer` / `BLEAudioCallController`)
+ *        public handle implementations and feature-disabled factory stubs.
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_AUDIO_SUPPORTED
 
@@ -28,9 +34,9 @@ static_assert(static_cast<uint8_t>(BLEAudioCallOperation::Hold) == BLE_AUDIO_CCP
 static_assert(static_cast<uint8_t>(BLEAudioCallOperation::Retrieve) == BLE_AUDIO_CCP_OP_RETRIEVE, "call op mismatch");
 static_assert(static_cast<uint8_t>(BLEAudioCallState::Ended) == BLE_AUDIO_CCP_CALL_ENDED, "call state mismatch");
 
-// --------------------------------------------------------------------------
-// Server
-// --------------------------------------------------------------------------
+// ==========================================================================
+// 1. Call Control Server (TBS / GTBS)
+// ==========================================================================
 
 struct BLEAudioCallServer::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
@@ -41,6 +47,19 @@ struct BLEAudioCallServer::Impl {
   OriginateCallback onOriginateCb;
   TerminatedCallback onTerminatedCb;
   CallControlCallback onCallControlCb;
+
+  BTStatus apply() {
+    String provider;
+    String localUci;
+    String schemes;
+    {
+      BLELockGuard lock(mtx.get());
+      provider = providerName;
+      localUci = uci;
+      schemes = uriSchemes;
+    }
+    return bleAudioStatus(bleAudioCcpSrvInit(provider.c_str(), localUci.c_str(), schemes.c_str()));
+  }
 
   static BTStatus op(uint8_t o, uint8_t callIndex) {
     return bleAudioStatus(bleAudioCcpSrvCallOp(o, callIndex));
@@ -170,31 +189,17 @@ void BLEAudioCallServer::resetCallbacks() {
   impl.onCallControlCb = nullptr;
 }
 
-BLEAudioCallServer BLEAudio::createCallServer() {
 #if BLE_AUDIO_CCP_SERVER_SUPPORTED
+BLEAudioCallServer BLEAudio::createCallServer() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioCallServer>(
-    _impl, "createCallServer", BLE_AUDIO_GRP_CCP_SERVER, [](BLEAudioCallServer::Impl &p) {
-      String provider;
-      String uci;
-      String schemes;
-      {
-        BLELockGuard lock(p.mtx.get());
-        provider = p.providerName;
-        uci = p.uci;
-        schemes = p.uriSchemes;
-      }
-      return bleAudioStatus(bleAudioCcpSrvInit(provider.c_str(), uci.c_str(), schemes.c_str()));
-    }
+    _impl, "createCallServer", BLE_AUDIO_GRP_CCP_SERVER, [](BLEAudioCallServer::Impl &p) { return p.apply(); }
   );
-#else
-  log_e("Call server is not enabled in this build (CONFIG_BT_CCP_CALL_CONTROL_SERVER)");
-  return BLEAudioCallServer();
-#endif
 }
+#endif
 
-// --------------------------------------------------------------------------
-// Controller
-// --------------------------------------------------------------------------
+// ==========================================================================
+// 2. Call Control Client
+// ==========================================================================
 
 struct BLEAudioCallController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
@@ -327,17 +332,30 @@ void BLEAudioCallController::resetCallbacks() {
   impl.onCallStateCb = nullptr;
 }
 
-BLEAudioCallController BLEAudio::createCallController() {
 #if BLE_AUDIO_CCP_CLIENT_SUPPORTED
+BLEAudioCallController BLEAudio::createCallController() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioCallController>(
-    _impl, "createCallController", BLE_AUDIO_GRP_CCP_CLIENT, [](BLEAudioCallController::Impl &) {
-      return bleAudioStatus(bleAudioCcpCliInit());
-    }
+    _impl, "createCallController", BLE_AUDIO_GRP_CCP_CLIENT, [](BLEAudioCallController::Impl &) { return bleAudioStatus(bleAudioCcpCliInit()); }
   );
-#else
+}
+#endif
+
+// ==========================================================================
+// 3. Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_CCP_SERVER_SUPPORTED
+BLEAudioCallServer BLEAudio::createCallServer() {
+  log_e("Call server is not enabled in this build (CONFIG_BT_CCP_CALL_CONTROL_SERVER)");
+  return BLEAudioCallServer();
+}
+#endif
+
+#if !BLE_AUDIO_CCP_CLIENT_SUPPORTED
+BLEAudioCallController BLEAudio::createCallController() {
   log_e("Call controller is not enabled in this build (CONFIG_BT_CCP_CALL_CONTROL_CLIENT)");
   return BLEAudioCallController();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

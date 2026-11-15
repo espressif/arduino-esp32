@@ -80,6 +80,14 @@ struct BLEClassImplCommon {
     portEXIT_CRITICAL(&hookMux);
   }
 
+  void abortEnd() {
+    BLELockGuard lifecycle(lifecycleMtx);
+    endReleaseMemory = false;
+    endTask = nullptr;
+    endRunning = false;
+    ending = false;
+  }
+
   ~BLEClassImplCommon() {
     if (lifecycleMtx) {
       vSemaphoreDelete(lifecycleMtx);

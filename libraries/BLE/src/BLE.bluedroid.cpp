@@ -75,7 +75,7 @@
 #include <freertos/task.h>
 
 #if BLE_SMP_SUPPORTED
-// Defined in BluedroidSecurity.cpp
+// Defined in security/BLESecurity.bluedroid.cpp
 void bluedroidSecurityHandleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 #endif
 
@@ -87,7 +87,7 @@ bool bleIsHostStackTask() {
   return name && strcmp(name, "BTC_TASK") == 0;
 }
 
-// BLEClass::Impl (Bluedroid backend state) is declared in BluedroidCore.h.
+// BLEClass::Impl (Bluedroid backend state) is declared in BLE.bluedroid.h.
 
 /**
  * @brief Dispatches GAP events to advertising, scan, GATT, security, and custom handlers; signals local privacy completion.
@@ -205,6 +205,13 @@ void BLEClass::Impl::gattcCallback(esp_gattc_cb_event_t event, esp_gatt_if_t gat
 // BLEClass::Impl backend lifecycle hooks (called from BLE.cpp)
 // --------------------------------------------------------------------------
 
+void BLEClass::Impl::abandonStart() {
+  if (hostUser) {
+    hostUser = false;
+    (void)btBluedroidHostRelease();
+  }
+}
+
 BTStatus BLEClass::Impl::backendBegin(const String &deviceName) {
   // Bluedroid is a single host shared with Bluetooth Classic (BluetoothSerial).
   // The core starts it for the first user and stops it for the last; a host
@@ -214,13 +221,6 @@ BTStatus BLEClass::Impl::backendBegin(const String &deviceName) {
     return BTStatus::Fail;
   }
   hostUser = true;
-
-  auto abandonStart = [this]() {
-    if (hostUser) {
-      hostUser = false;
-      (void)btBluedroidHostRelease();
-    }
-  };
 
   esp_err_t err = esp_ble_gap_register_callback(BLEClass::Impl::gapCallback);
   if (err != ESP_OK) {
@@ -697,6 +697,78 @@ BLEAdvertising BLEClass::getAdvertising() {
 #endif
 
 #if BLE_GATT_SERVER_SUPPORTED
+namespace {
+
+void onBluedroidAdvRestartTimer(void *arg) {
+  auto *server = static_cast<BLEServer::Impl *>(arg);
+  if (!server) {
+    return;
+  }
+  // Hold reAdvMtx across startAdvertising() so a concurrent stop() waits
+  // for this in-flight restart to finish, then issues a native stop.
+  BLELockGuard reAdv(server->reAdvMtx);
+  const uint32_t armed = server->reAdvArmedEpoch.load(std::memory_order_acquire);
+  if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
+    return;
+  }
+  bool restart = false;
+  {
+    BLELockGuard lock(server->mtx);
+    restart = server->active && server->advertiseOnDisconnect;
+  }
+  if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
+    return;
+  }
+  if (restart && BLE.isInitialized()) {
+#if BLE_VALIDATION_HOOKS
+    if (BLEHooks.adv.holdReAdvStart.load(std::memory_order_acquire)) {
+      BLEHooks.adv.reAdvStartEntered.store(true, std::memory_order_release);
+      BLEValidationHooks::holdWhile(BLEHooks.adv.holdReAdvStart);
+    }
+#endif
+    BLE.startAdvertising();
+  }
+}
+
+void bluedroidServerPreEnd() {
+  auto *srv = BLEServer::Impl::s_instance;
+  if (!srv) {
+    return;
+  }
+  if (srv->advRestartTimer) {
+    esp_timer_stop(srv->advRestartTimer);
+  }
+  if (srv->indicationRetryTimer) {
+    esp_timer_stop(srv->indicationRetryTimer);
+  }
+}
+
+void bluedroidServerDeactivate() {
+  auto *srv = BLEServer::Impl::s_instance;
+  if (!srv) {
+    return;
+  }
+  BLELockGuard lock(srv->mtx);
+  srv->active = false;
+}
+
+void bluedroidServerPostEnd() {
+  auto *srv = BLEServer::Impl::s_instance;
+  if (!srv) {
+    return;
+  }
+  srv->gattsIf = ESP_GATT_IF_NONE;
+  srv->pendingHandle = nullptr;
+  srv->prepWrites.clear();
+  {
+    BLELockGuard lock(srv->mtx);
+    srv->pendingNotifies.clear();
+  }
+  srv->releaseGattTree();
+}
+
+}  // namespace
+
 // A successful create isn't the end of the story here -- GATTS app registration
 // with the stack is asynchronous, so an existing slot may still be waiting on
 // its `gattsIf`. Every call re-checks that and retries registration (and drops
@@ -715,36 +787,7 @@ BLEServer BLEClass::createServer() {
   if (!slot) {
     auto fresh = std::make_shared<BLEServer::Impl>();
     esp_timer_create_args_t timerArgs = {};
-    timerArgs.callback = [](void *arg) {
-      auto *server = static_cast<BLEServer::Impl *>(arg);
-      if (!server) {
-        return;
-      }
-      // Hold reAdvMtx across startAdvertising() so a concurrent stop() waits
-      // for this in-flight restart to finish, then issues a native stop.
-      BLELockGuard reAdv(server->reAdvMtx);
-      const uint32_t armed = server->reAdvArmedEpoch.load(std::memory_order_acquire);
-      if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
-        return;
-      }
-      bool restart = false;
-      {
-        BLELockGuard lock(server->mtx);
-        restart = server->active && server->advertiseOnDisconnect;
-      }
-      if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
-        return;
-      }
-      if (restart && BLE.isInitialized()) {
-#if BLE_VALIDATION_HOOKS
-        if (BLEHooks.adv.holdReAdvStart.load(std::memory_order_acquire)) {
-          BLEHooks.adv.reAdvStartEntered.store(true, std::memory_order_release);
-          BLEValidationHooks::holdWhile(BLEHooks.adv.holdReAdvStart);
-        }
-#endif
-        BLE.startAdvertising();
-      }
-    };
+    timerArgs.callback = onBluedroidAdvRestartTimer;
     timerArgs.arg = fresh.get();
     timerArgs.name = "ble_adv_restart";
     esp_err_t err = esp_timer_create(&timerArgs, &fresh->advRestartTimer);
@@ -770,49 +813,9 @@ BLEServer BLEClass::createServer() {
     BLELockGuard lock(slot->mtx);
     slot->active = true;
   }
-  _impl->storeHook(
-    _impl->serverPreEndHook,
-    +[]() {
-      auto *srv = BLEServer::Impl::s_instance;
-      if (!srv) {
-        return;
-      }
-      if (srv->advRestartTimer) {
-        esp_timer_stop(srv->advRestartTimer);
-      }
-      if (srv->indicationRetryTimer) {
-        esp_timer_stop(srv->indicationRetryTimer);
-      }
-    }
-  );
-  _impl->storeHook(
-    _impl->serverDeactivateHook,
-    +[]() {
-      auto *srv = BLEServer::Impl::s_instance;
-      if (!srv) {
-        return;
-      }
-      BLELockGuard lock(srv->mtx);
-      srv->active = false;
-    }
-  );
-  _impl->storeHook(
-    _impl->serverPostEndHook,
-    +[]() {
-      auto *srv = BLEServer::Impl::s_instance;
-      if (!srv) {
-        return;
-      }
-      srv->gattsIf = ESP_GATT_IF_NONE;
-      srv->pendingHandle = nullptr;
-      srv->prepWrites.clear();
-      {
-        BLELockGuard lock(srv->mtx);
-        srv->pendingNotifies.clear();
-      }
-      srv->releaseGattTree();
-    }
-  );
+  _impl->storeHook(_impl->serverPreEndHook, bluedroidServerPreEnd);
+  _impl->storeHook(_impl->serverDeactivateHook, bluedroidServerDeactivate);
+  _impl->storeHook(_impl->serverPostEndHook, bluedroidServerPostEnd);
   return BLEServer(slot);
 }
 #endif
@@ -914,25 +917,29 @@ bool bluedroidFindConnHandle(const BTAddress &peerAddress, uint16_t &connHandle)
   return true;
 }
 
+namespace {
+
+void appendUniqueConnection(std::vector<BLEConnInfo> &connections, const BLEConnInfo &info) {
+  if (!info) {
+    return;
+  }
+  for (const auto &existing : connections) {
+    if (existing.getAddress() == info.getAddress()) {
+      return;  // One descriptor per ACL; keep the first (client) entry.
+    }
+  }
+  BLEConnInfo copy = info;
+  BLEConnInfoImpl::clearVolatile(copy);
+  connections.push_back(copy);
+}
+
+}  // namespace
+
 void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnInfo> &connections) {
   connections.clear();
   if (!peerAddress) {
     return;
   }
-
-  auto addUnique = [&](const BLEConnInfo &info) {
-    if (!info) {
-      return;
-    }
-    for (const auto &existing : connections) {
-      if (existing.getAddress() == info.getAddress()) {
-        return;  // one descriptor per ACL; keep the first (client) entry
-      }
-    }
-    BLEConnInfo copy = info;
-    BLEConnInfoImpl::clearVolatile(copy);
-    connections.push_back(copy);
-  };
 
 #if BLE_GATT_CLIENT_SUPPORTED
   for (auto &client : BLEClient::Impl::snapshotClients()) {
@@ -940,7 +947,7 @@ void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnI
       continue;
     }
     BLEClient handle = BLEClientImplCommon::makeHandle(client.get());
-    addUnique(handle.getConnInfo());
+    appendUniqueConnection(connections, handle.getConnInfo());
   }
 #endif
 #if BLE_GATT_SERVER_SUPPORTED
@@ -950,7 +957,7 @@ void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnI
     for (auto &entry : server->connections) {
       const BLEConnInfo &info = entry.second;
       if (info.getAddress() == peerAddress || info.getIdAddress() == peerAddress) {
-        addUnique(info);
+        appendUniqueConnection(connections, info);
       }
     }
   }

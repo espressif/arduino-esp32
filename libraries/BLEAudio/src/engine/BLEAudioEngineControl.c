@@ -368,21 +368,6 @@ int bleAudioVcpRendOp(uint8_t op, uint8_t value) {
   }
 }
 
-#else
-
-int bleAudioVcpRendInit(uint8_t volume, bool mute, uint8_t step) {
-  (void)volume;
-  (void)mute;
-  (void)step;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioVcpRendOp(uint8_t op, uint8_t value) {
-  (void)op;
-  (void)value;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
 #endif /* BLE_AUDIO_VCP_RENDERER_SUPPORTED */
 
 /* ── VCP volume controller ──────────────────────────────────────────────── */
@@ -549,36 +534,6 @@ int bleAudioVcpCtlrSetGain(uint16_t conn_handle, int8_t gain) {
 #endif
 }
 
-#else
-
-int bleAudioVcpCtlrInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioVcpCtlrDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioVcpCtlrOp(uint16_t conn_handle, uint8_t op, uint8_t volume) {
-  (void)conn_handle;
-  (void)op;
-  (void)volume;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioVcpCtlrSetOffset(uint16_t conn_handle, int16_t offset) {
-  (void)conn_handle;
-  (void)offset;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioVcpCtlrSetGain(uint16_t conn_handle, int8_t gain) {
-  (void)conn_handle;
-  (void)gain;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
 #endif /* BLE_AUDIO_VCP_CONTROLLER_SUPPORTED */
 
 /* ── MICP microphone device ─────────────────────────────────────────────── */
@@ -623,18 +578,6 @@ int bleAudioMicpDevSetMute(uint8_t state) {
     case BLE_AUDIO_MICP_DISABLED: return esp_ble_audio_micp_mic_dev_mute_disable();
     default:                      return ESP_ERR_INVALID_ARG;
   }
-}
-
-#else
-
-int bleAudioMicpDevInit(bool mute) {
-  (void)mute;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioMicpDevSetMute(uint8_t state) {
-  (void)state;
-  return ESP_ERR_NOT_SUPPORTED;
 }
 
 #endif /* BLE_AUDIO_MICP_DEVICE_SUPPORTED */
@@ -782,39 +725,6 @@ bool bleAudioMicpCtlrHasPeer(uint16_t conn_handle) {
   return conn_handle != CONN_NONE && s_mctl.conn == conn_handle && s_mctl.ctlr != NULL;
 }
 
-#else
-
-int bleAudioMicpCtlrInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-bool bleAudioMicpCtlrHasPeer(uint16_t conn_handle) {
-  (void)conn_handle;
-  return false;
-}
-
-int bleAudioMicpCtlrDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioMicpCtlrSetMute(uint16_t conn_handle, bool mute) {
-  (void)conn_handle;
-  (void)mute;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioMicpCtlrReadMute(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioMicpCtlrSetGain(uint16_t conn_handle, int8_t gain) {
-  (void)conn_handle;
-  (void)gain;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
 #endif /* BLE_AUDIO_MICP_CONTROLLER_SUPPORTED */
 
 /* ── MCP media player ───────────────────────────────────────────────────── */
@@ -889,23 +799,6 @@ int bleAudioMcpSrvCommand(uint8_t opcode) {
   (void)opcode;
   return ESP_ERR_NOT_SUPPORTED;
 #endif
-}
-
-#else
-
-int bleAudioMcpSrvInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioMcpSrvSetText(bool title, const char *text) {
-  (void)title;
-  (void)text;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioMcpSrvCommand(uint8_t opcode) {
-  (void)opcode;
-  return ESP_ERR_NOT_SUPPORTED;
 }
 
 #endif /* MCP_SRV */
@@ -1023,29 +916,6 @@ int bleAudioMcpCliRead(uint16_t conn_handle, uint8_t what) {
   }
 }
 
-#else
-
-int bleAudioMcpCliInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioMcpCliDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioMcpCliCommand(uint16_t conn_handle, uint8_t opcode) {
-  (void)conn_handle;
-  (void)opcode;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioMcpCliRead(uint16_t conn_handle, uint8_t what) {
-  (void)conn_handle;
-  (void)what;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
 #endif /* BLE_AUDIO_MCP_CLIENT_SUPPORTED */
 
 /* ── CCP call control server ────────────────────────────────────────────── */
@@ -1143,33 +1013,6 @@ int bleAudioCcpSrvCallOp(uint8_t op, uint8_t call_index) {
 int bleAudioCcpSrvSetProviderName(const char *name) {
   NEED_ROLE(ROLE_CCP_SRV);
   return esp_ble_audio_tbs_set_bearer_provider_name(s_tbs_bearer, name);
-}
-
-#else
-
-int bleAudioCcpSrvInit(const char *provider_name, const char *uci, const char *uri_schemes) {
-  (void)provider_name;
-  (void)uci;
-  (void)uri_schemes;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioCcpSrvIncoming(const char *from, const char *friendly_name, uint8_t *call_index) {
-  (void)from;
-  (void)friendly_name;
-  (void)call_index;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioCcpSrvCallOp(uint8_t op, uint8_t call_index) {
-  (void)op;
-  (void)call_index;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioCcpSrvSetProviderName(const char *name) {
-  (void)name;
-  return ESP_ERR_NOT_SUPPORTED;
 }
 
 #endif /* BLE_AUDIO_CCP_SERVER_SUPPORTED */
@@ -1335,35 +1178,6 @@ int bleAudioCcpCliReadCalls(uint16_t conn_handle) {
   return esp_ble_audio_tbs_client_read_call_state(conn_handle, ESP_BLE_AUDIO_TBS_GTBS_INDEX);
 }
 
-#else
-
-int bleAudioCcpCliInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioCcpCliDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioCcpCliOriginate(uint16_t conn_handle, const char *uri) {
-  (void)conn_handle;
-  (void)uri;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioCcpCliCallOp(uint16_t conn_handle, uint8_t op, uint8_t call_index) {
-  (void)conn_handle;
-  (void)op;
-  (void)call_index;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioCcpCliReadCalls(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
 #endif /* BLE_AUDIO_CCP_CLIENT_SUPPORTED */
 
 /* ── HAS hearing aid ────────────────────────────────────────────────────── */
@@ -1495,48 +1309,6 @@ uint8_t bleAudioHasSrvGetActive(void) {
   return (s_roles & ROLE_HAS_SRV) ? esp_ble_audio_has_preset_active_get() : 0;
 }
 
-#else
-
-int bleAudioHasSrvInit(uint8_t type, bool preset_sync) {
-  (void)type;
-  (void)preset_sync;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioHasSrvAddPreset(uint8_t index, const char *name, bool available, bool writable) {
-  (void)index;
-  (void)name;
-  (void)available;
-  (void)writable;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioHasSrvRemovePreset(uint8_t index) {
-  (void)index;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioHasSrvSetAvailable(uint8_t index, bool available) {
-  (void)index;
-  (void)available;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioHasSrvRename(uint8_t index, const char *name) {
-  (void)index;
-  (void)name;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-int bleAudioHasSrvSetActive(uint8_t index) {
-  (void)index;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
-uint8_t bleAudioHasSrvGetActive(void) {
-  return 0;
-}
-
 #endif /* BLE_AUDIO_HAS_SUPPORTED */
 
 /* ── HAS hearing aid controller ─────────────────────────────────────────── */
@@ -1653,8 +1425,241 @@ int bleAudioHasCliRename(uint16_t conn_handle, uint8_t index, const char *name) 
   return has ? esp_ble_audio_has_client_preset_name_write(has, index, name) : ESP_ERR_INVALID_STATE;
 }
 
-#else
+#endif /* BLE_AUDIO_HAS_CLIENT_SUPPORTED */
 
+/* ==========================================================================
+ * Feature-disabled stubs
+ * ========================================================================== */
+
+#if !BLE_AUDIO_VCP_RENDERER_SUPPORTED
+int bleAudioVcpRendInit(uint8_t volume, bool mute, uint8_t step) {
+  (void)volume;
+  (void)mute;
+  (void)step;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioVcpRendOp(uint8_t op, uint8_t value) {
+  (void)op;
+  (void)value;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_VCP_RENDERER_SUPPORTED */
+
+#if !BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
+int bleAudioVcpCtlrInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioVcpCtlrDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioVcpCtlrOp(uint16_t conn_handle, uint8_t op, uint8_t volume) {
+  (void)conn_handle;
+  (void)op;
+  (void)volume;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioVcpCtlrSetOffset(uint16_t conn_handle, int16_t offset) {
+  (void)conn_handle;
+  (void)offset;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioVcpCtlrSetGain(uint16_t conn_handle, int8_t gain) {
+  (void)conn_handle;
+  (void)gain;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_VCP_CONTROLLER_SUPPORTED */
+
+#if !BLE_AUDIO_MICP_DEVICE_SUPPORTED
+int bleAudioMicpDevInit(bool mute) {
+  (void)mute;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioMicpDevSetMute(uint8_t state) {
+  (void)state;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_MICP_DEVICE_SUPPORTED */
+
+#if !BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
+int bleAudioMicpCtlrInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+bool bleAudioMicpCtlrHasPeer(uint16_t conn_handle) {
+  (void)conn_handle;
+  return false;
+}
+
+int bleAudioMicpCtlrDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioMicpCtlrSetMute(uint16_t conn_handle, bool mute) {
+  (void)conn_handle;
+  (void)mute;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioMicpCtlrReadMute(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioMicpCtlrSetGain(uint16_t conn_handle, int8_t gain) {
+  (void)conn_handle;
+  (void)gain;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_MICP_CONTROLLER_SUPPORTED */
+
+#if !MCP_SRV
+int bleAudioMcpSrvInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioMcpSrvSetText(bool title, const char *text) {
+  (void)title;
+  (void)text;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioMcpSrvCommand(uint8_t opcode) {
+  (void)opcode;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !MCP_SRV */
+
+#if !BLE_AUDIO_MCP_CLIENT_SUPPORTED
+int bleAudioMcpCliInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioMcpCliDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioMcpCliCommand(uint16_t conn_handle, uint8_t opcode) {
+  (void)conn_handle;
+  (void)opcode;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioMcpCliRead(uint16_t conn_handle, uint8_t what) {
+  (void)conn_handle;
+  (void)what;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_MCP_CLIENT_SUPPORTED */
+
+#if !BLE_AUDIO_CCP_SERVER_SUPPORTED
+int bleAudioCcpSrvInit(const char *provider_name, const char *uci, const char *uri_schemes) {
+  (void)provider_name;
+  (void)uci;
+  (void)uri_schemes;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCcpSrvIncoming(const char *from, const char *friendly_name, uint8_t *call_index) {
+  (void)from;
+  (void)friendly_name;
+  (void)call_index;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCcpSrvCallOp(uint8_t op, uint8_t call_index) {
+  (void)op;
+  (void)call_index;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCcpSrvSetProviderName(const char *name) {
+  (void)name;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_CCP_SERVER_SUPPORTED */
+
+#if !BLE_AUDIO_CCP_CLIENT_SUPPORTED
+int bleAudioCcpCliInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCcpCliDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCcpCliOriginate(uint16_t conn_handle, const char *uri) {
+  (void)conn_handle;
+  (void)uri;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCcpCliCallOp(uint16_t conn_handle, uint8_t op, uint8_t call_index) {
+  (void)conn_handle;
+  (void)op;
+  (void)call_index;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioCcpCliReadCalls(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_CCP_CLIENT_SUPPORTED */
+
+#if !BLE_AUDIO_HAS_SUPPORTED
+int bleAudioHasSrvInit(uint8_t type, bool preset_sync) {
+  (void)type;
+  (void)preset_sync;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioHasSrvAddPreset(uint8_t index, const char *name, bool available, bool writable) {
+  (void)index;
+  (void)name;
+  (void)available;
+  (void)writable;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioHasSrvRemovePreset(uint8_t index) {
+  (void)index;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioHasSrvSetAvailable(uint8_t index, bool available) {
+  (void)index;
+  (void)available;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioHasSrvRename(uint8_t index, const char *name) {
+  (void)index;
+  (void)name;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioHasSrvSetActive(uint8_t index) {
+  (void)index;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+uint8_t bleAudioHasSrvGetActive(void) {
+  return 0;
+}
+#endif /* !BLE_AUDIO_HAS_SUPPORTED */
+
+#if !BLE_AUDIO_HAS_CLIENT_SUPPORTED
 int bleAudioHasCliInit(void) {
   return ESP_ERR_NOT_SUPPORTED;
 }
@@ -1691,7 +1696,6 @@ int bleAudioHasCliRename(uint16_t conn_handle, uint8_t index, const char *name) 
   (void)name;
   return ESP_ERR_NOT_SUPPORTED;
 }
-
-#endif /* BLE_AUDIO_HAS_CLIENT_SUPPORTED */
+#endif /* !BLE_AUDIO_HAS_CLIENT_SUPPORTED */
 
 #endif /* BLE_AUDIO_SUPPORTED */

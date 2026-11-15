@@ -363,6 +363,38 @@ bool checkAuthorized(BLEServer::Impl *impl, uint16_t connId, uint16_t handle, BL
   return sec->notifyAuthorization(getConnInfoCopy(impl, connId), handle, isRead);
 }
 
+// Registration iterates snapshots, never the live vectors: characteristics are
+// appended under the server mtx and descriptors under each chr->mtx, while
+// native registration calls block waiting for stack events.
+std::vector<std::shared_ptr<BLECharacteristic::Impl>> snapshotCharacteristics(BLEServer::Impl &server, BLEService::Impl &svc) {
+  BLELockGuard lock(server.mtx);
+  return svc.characteristics;
+}
+
+std::vector<std::shared_ptr<BLEDescriptor::Impl>> snapshotDescriptors(BLECharacteristic::Impl &chr) {
+  BLELockGuard lock(chr.mtx);
+  return chr.descriptors;
+}
+
+std::vector<std::shared_ptr<BLEService::Impl>> snapshotIncludedServices(BLEServer::Impl &server, BLEService::Impl &svc) {
+  BLELockGuard lock(server.mtx);
+  return svc.includedServices;
+}
+
+bool serviceHasUnregisteredAttributes(BLEServer::Impl &server, BLEService::Impl &svc) {
+  for (auto &chr : snapshotCharacteristics(server, svc)) {
+    if (chr->handle == 0) {
+      return true;
+    }
+    for (auto &desc : snapshotDescriptors(*chr)) {
+      if (desc->handle == 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 // --------------------------------------------------------------------------
@@ -421,35 +453,6 @@ BTStatus BLEServer::start() {
     services = impl.services;
   }
 
-  // Registration iterates snapshots, never the live vectors: characteristics
-  // are appended under the server mtx and descriptors under each chr->mtx,
-  // while the native calls below block waiting for stack events.
-  auto snapChrs = [&impl](BLEService::Impl &svc) {
-    BLELockGuard lock(impl.mtx);
-    return svc.characteristics;
-  };
-  auto snapDescs = [](BLECharacteristic::Impl &chr) {
-    BLELockGuard lock(chr.mtx);
-    return chr.descriptors;
-  };
-  auto snapIncludes = [&impl](BLEService::Impl &svc) {
-    BLELockGuard lock(impl.mtx);
-    return svc.includedServices;
-  };
-  auto svcHasUnregistered = [&snapChrs, &snapDescs](BLEService::Impl &svc) {
-    for (auto &chr : snapChrs(svc)) {
-      if (chr->handle == 0) {
-        return true;
-      }
-      for (auto &desc : snapDescs(*chr)) {
-        if (desc->handle == 0) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
-
   // First pass: validate all unstarted services (and unregistered
   // characteristics on started ones), then create the unstarted services so
   // every service obtains a GATT handle before Included Service declarations
@@ -460,7 +463,7 @@ BTStatus BLEServer::start() {
       BLELockGuard lock(impl.mtx);
       svcStarted = svc->started;
     }
-    if (svcStarted && !svcHasUnregistered(*svc)) {
+    if (svcStarted && !serviceHasUnregisteredAttributes(impl, *svc)) {
       continue;
     }
     if (!svcStarted && svc->handle != 0) {
@@ -468,13 +471,13 @@ BTStatus BLEServer::start() {
     }
 
     // Auto-create CCCD descriptors before validation and handle counting.
-    for (auto &chr : snapChrs(*svc)) {
+    for (auto &chr : snapshotCharacteristics(impl, *svc)) {
       if (svcStarted && chr->handle != 0) {
         continue;  // Already registered; its CCCD already exists.
       }
       if ((chr->properties & BLEProperty::Notify) || (chr->properties & BLEProperty::Indicate)) {
         bool hasCCCD = false;
-        for (auto &d : snapDescs(*chr)) {
+        for (auto &d : snapshotDescriptors(*chr)) {
           if (d->uuid == BLEUUID(CCCD_UUID16)) {
             hasCCCD = true;
             break;
@@ -516,9 +519,9 @@ BTStatus BLEServer::start() {
     }
 
     // 1 (service) + 1 per include + 2 per char + 1 per descriptor.
-    uint32_t needed = 1 + static_cast<uint32_t>(snapIncludes(*svc).size());
-    for (const auto &chr : snapChrs(*svc)) {
-      needed += 2 + snapDescs(*chr).size();
+    uint32_t needed = 1 + static_cast<uint32_t>(snapshotIncludedServices(impl, *svc).size());
+    for (const auto &chr : snapshotCharacteristics(impl, *svc)) {
+      needed += 2 + snapshotDescriptors(*chr).size();
     }
     if (svc->numHandles < needed) {
       svc->numHandles = needed;
@@ -553,7 +556,7 @@ BTStatus BLEServer::start() {
       BLELockGuard lock(impl.mtx);
       wasStarted = svc->started;
     }
-    if (wasStarted && !svcHasUnregistered(*svc)) {
+    if (wasStarted && !serviceHasUnregisteredAttributes(impl, *svc)) {
       continue;
     }
     if (wasStarted) {
@@ -581,7 +584,8 @@ BTStatus BLEServer::start() {
 
     // 1. Add Included Service declarations (GATT §3.2). Already declared on a
     // service being re-registered after a stop; do not declare them twice.
-    std::vector<std::shared_ptr<BLEService::Impl>> includes = wasStarted ? std::vector<std::shared_ptr<BLEService::Impl>>{} : snapIncludes(*svc);
+    std::vector<std::shared_ptr<BLEService::Impl>> includes =
+      wasStarted ? std::vector<std::shared_ptr<BLEService::Impl>>{} : snapshotIncludedServices(impl, *svc);
     for (auto &inc : includes) {
       if (inc->handle == 0) {
         log_e("Server: included service %s has no handle", inc->uuid.toString().c_str());
@@ -608,7 +612,7 @@ BTStatus BLEServer::start() {
     // stack already has it, e.g. on a service re-registered after a stop).
     bool reregFailed = false;
     BTStatus reregSt = BTStatus::Fail;
-    for (auto &chr : snapChrs(*svc)) {
+    for (auto &chr : snapshotCharacteristics(impl, *svc)) {
       esp_err_t err = ESP_OK;
       BTStatus st = BTStatus::OK;
       if (chr->handle == 0) {
@@ -638,7 +642,7 @@ BTStatus BLEServer::start() {
       }
 
       // 3. Add descriptors for this characteristic (unregistered ones only).
-      for (auto &desc : snapDescs(*chr)) {
+      for (auto &desc : snapshotDescriptors(*chr)) {
         if (desc->handle != 0) {
           continue;
         }
@@ -1834,7 +1838,7 @@ void BLEServer::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 }
 
 // --------------------------------------------------------------------------
-// GATTS app registration (used by BLEClass::createServer in BluedroidCore.cpp)
+// GATTS app registration (used by BLEClass::createServer in BLE.bluedroid.cpp)
 // --------------------------------------------------------------------------
 
 bool bluedroidRegisterGattsApp(const std::shared_ptr<BLEServer::Impl> &server) {

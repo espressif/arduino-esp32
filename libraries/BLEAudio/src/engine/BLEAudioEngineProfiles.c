@@ -48,7 +48,9 @@
 
 #define CONN_NONE BLE_AUDIO_CONN_NONE
 
-/* ── Unit hooks ─────────────────────────────────────────────────────────── */
+/* ==========================================================================
+ * 1. Unit lifecycle hooks
+ * ========================================================================== */
 
 #if BLE_AUDIO_TMAP_SUPPORTED || BLE_AUDIO_GMAP_SUPPORTED
 
@@ -76,7 +78,9 @@ static int attach(void) {
 
 #endif /* BLE_AUDIO_TMAP_SUPPORTED || BLE_AUDIO_GMAP_SUPPORTED */
 
-/* ── TMAP ───────────────────────────────────────────────────────────────── */
+/* ==========================================================================
+ * 2. Telephony and Media Audio Profile (TMAP)
+ * ========================================================================== */
 
 #if BLE_AUDIO_TMAP_SUPPORTED
 
@@ -108,20 +112,11 @@ int bleAudioTmapDiscover(uint16_t conn_handle) {
   return err ? err : (int)esp_ble_audio_tmap_discover(conn_handle, &s_tmap_cb);
 }
 
-#else
-
-int bleAudioTmapRegister(uint16_t roles) {
-  (void)roles;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioTmapDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
 #endif /* BLE_AUDIO_TMAP_SUPPORTED */
 
-/* ── GMAP ───────────────────────────────────────────────────────────────── */
+/* ==========================================================================
+ * 3. Gaming Audio Profile (GMAP)
+ * ========================================================================== */
 
 #if BLE_AUDIO_GMAP_SUPPORTED
 
@@ -178,21 +173,11 @@ int bleAudioGmapDiscover(uint16_t conn_handle) {
   return (int)esp_ble_audio_gmap_discover(conn_handle);
 }
 
-#else
-
-int bleAudioGmapRegister(uint8_t roles, const ble_audio_gmap_features_t *features) {
-  (void)roles;
-  (void)features;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioGmapDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
 #endif /* BLE_AUDIO_GMAP_SUPPORTED */
 
-/* ── PBP ────────────────────────────────────────────────────────────────── */
+/* ==========================================================================
+ * 4. Public Broadcast Profile (PBP)
+ * ========================================================================== */
 
 #if BLE_AUDIO_PBP_SUPPORTED
 
@@ -237,8 +222,38 @@ int bleAudioPbpParse(const uint8_t *data, size_t len, uint8_t *features, const u
   return 0;
 }
 
-#else
+#endif /* BLE_AUDIO_PBP_SUPPORTED */
 
+/* ==========================================================================
+ * 5. Feature-disabled stubs
+ * ========================================================================== */
+
+#if !BLE_AUDIO_TMAP_SUPPORTED
+int bleAudioTmapRegister(uint16_t roles) {
+  (void)roles;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioTmapDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_TMAP_SUPPORTED */
+
+#if !BLE_AUDIO_GMAP_SUPPORTED
+int bleAudioGmapRegister(uint8_t roles, const ble_audio_gmap_features_t *features) {
+  (void)roles;
+  (void)features;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioGmapDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_GMAP_SUPPORTED */
+
+#if !BLE_AUDIO_PBP_SUPPORTED
 int bleAudioPbpBuild(uint8_t features, const uint8_t *meta, size_t meta_len, uint8_t *out, size_t cap, size_t *out_len) {
   (void)features;
   (void)meta;
@@ -248,6 +263,7 @@ int bleAudioPbpBuild(uint8_t features, const uint8_t *meta, size_t meta_len, uin
   (void)out_len;
   return ESP_ERR_NOT_SUPPORTED;
 }
+
 int bleAudioPbpParse(const uint8_t *data, size_t len, uint8_t *features, const uint8_t **meta, size_t *meta_len) {
   (void)data;
   (void)len;
@@ -256,7 +272,6 @@ int bleAudioPbpParse(const uint8_t *data, size_t len, uint8_t *features, const u
   (void)meta_len;
   return ESP_ERR_NOT_SUPPORTED;
 }
-
-#endif /* BLE_AUDIO_PBP_SUPPORTED */
+#endif /* !BLE_AUDIO_PBP_SUPPORTED */
 
 #endif /* BLE_AUDIO_SUPPORTED */

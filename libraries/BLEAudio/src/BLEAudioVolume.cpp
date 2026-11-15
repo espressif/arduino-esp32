@@ -127,18 +127,15 @@ void BLEAudioVolumeRenderer::resetCallbacks() {
   impl.onStateChangedCb = nullptr;
 }
 
-BLEAudioVolumeRenderer BLEAudio::createVolumeRenderer() {
 #if BLE_AUDIO_VCP_RENDERER_SUPPORTED
+BLEAudioVolumeRenderer BLEAudio::createVolumeRenderer() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioVolumeRenderer>(
     _impl, "createVolumeRenderer", BLE_AUDIO_GRP_VCP_RENDERER, [](BLEAudioVolumeRenderer::Impl &s) {
       return bleAudioStatus(bleAudioVcpRendInit(s.volume.load(), s.muted.load(), s.step.load()));
     }
   );
-#else
-  log_e("Volume renderer is not enabled in this build (CONFIG_BT_VCP_VOL_REND)");
-  return BLEAudioVolumeRenderer();
-#endif
 }
+#endif
 
 // --------------------------------------------------------------------------
 // Controller
@@ -316,17 +313,32 @@ void BLEAudioVolumeController::resetCallbacks() {
   impl.onInputChangedCb = nullptr;
 }
 
-BLEAudioVolumeController BLEAudio::createVolumeController() {
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
+BLEAudioVolumeController BLEAudio::createVolumeController() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioVolumeController>(
     _impl, "createVolumeController", BLE_AUDIO_GRP_VCP_CONTROLLER, [](BLEAudioVolumeController::Impl &) {
       return bleAudioStatus(bleAudioVcpCtlrInit());
     }
   );
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_VCP_RENDERER_SUPPORTED
+BLEAudioVolumeRenderer BLEAudio::createVolumeRenderer() {
+  log_e("Volume renderer is not enabled in this build (CONFIG_BT_VCP_VOL_REND)");
+  return BLEAudioVolumeRenderer();
+}
+#endif
+
+#if !BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
+BLEAudioVolumeController BLEAudio::createVolumeController() {
   log_e("Volume controller is not enabled in this build (CONFIG_BT_VCP_VOL_CTLR)");
   return BLEAudioVolumeController();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

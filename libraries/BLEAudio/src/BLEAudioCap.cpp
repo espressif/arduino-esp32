@@ -929,9 +929,9 @@ bool BLEAudioCapInitiator::isBroadcasting() const {
   return _impl->bcStreaming;
 }
 
+#if BLE_AUDIO_CAP_HANDOVER_SUPPORTED
 /** The extended advertising runs without periodic data until the engine created the source (HO_CREATED). */
 BTStatus BLEAudioCapInitiator::handoverToBroadcast(uint8_t advInstance) {
-#if BLE_AUDIO_CAP_HANDOVER_SUPPORTED
   if (!_impl) {
     return BTStatus::InvalidState;
   }
@@ -963,15 +963,10 @@ BTStatus BLEAudioCapInitiator::handoverToBroadcast(uint8_t advInstance) {
     return bleAudioStatus(err);
   }
   return BTStatus::OK;
-#else
-  (void)advInstance;
-  return BTStatus::NotSupported;
-#endif
 }
 
 /** The requests name the same sink streams, in the order startUnicast() created them. */
 BTStatus BLEAudioCapInitiator::handoverToUnicast() {
-#if BLE_AUDIO_CAP_HANDOVER_SUPPORTED
   if (!_impl) {
     return BTStatus::InvalidState;
   }
@@ -1002,10 +997,8 @@ BTStatus BLEAudioCapInitiator::handoverToUnicast() {
     return bleAudioStatus(err);
   }
   return BTStatus::OK;
-#else
-  return BTStatus::NotSupported;
-#endif
 }
+#endif /* BLE_AUDIO_CAP_HANDOVER_SUPPORTED */
 
 size_t BLEAudioCapInitiator::streamCount() const {
   if (!_impl) {
@@ -1294,13 +1287,34 @@ void BLEAudioCapCommander::resetCallbacks() {
   }
 }
 
-// --------------------------------------------------------------------------
-// Factories
-// --------------------------------------------------------------------------
+// ==========================================================================
+// Factories (enabled roles)
+// ==========================================================================
 
+namespace {
+
+BTStatus applyCapInitiator() {
+  int err = bleAudioCapInitiatorInit();
+#if BLE_AUDIO_CAP_HANDOVER_SUPPORTED
+  if (err == 0) {
+    err = bleAudioCapHandoverInit();
+  }
+#endif
+  return bleAudioStatus(err);
+}
+
+void stopCapInitiatorRole(const std::weak_ptr<BLEAudioCapInitiator::Impl> &weak) {
+  if (auto s = weak.lock()) {
+    (void)BLEAudioCapInitiator(s).stopBroadcast();
+    s->stopAdvertising();
+  }
+}
+
+}  // namespace
+
+#if BLE_AUDIO_CAP_INITIATOR_SUPPORTED
 /** One Impl serves both the CAP_INITIATOR and CAP_HANDOVER groups; the handover route skips core events. */
 BLEAudioCapInitiator BLEAudio::createCapInitiator() {
-#if BLE_AUDIO_CAP_INITIATOR_SUPPORTED
   if (!_impl || !_impl->active || _impl->started) {
     log_e("CapInitiator: create between audio.begin() and audio.start()");
     return BLEAudioCapInitiator();
@@ -1322,30 +1336,14 @@ BLEAudioCapInitiator BLEAudio::createCapInitiator() {
     }
   });
 #endif
-  _impl->roleApplies.push_back([]() -> BTStatus {
-    int err = bleAudioCapInitiatorInit();
-#if BLE_AUDIO_CAP_HANDOVER_SUPPORTED
-    if (err == 0) {
-      err = bleAudioCapHandoverInit();
-    }
-#endif
-    return bleAudioStatus(err);
-  });
-  _impl->roleStops.push_back([weak]() {
-    if (auto s = weak.lock()) {
-      (void)BLEAudioCapInitiator(s).stopBroadcast();
-      s->stopAdvertising();
-    }
-  });
+  _impl->roleApplies.push_back(applyCapInitiator);
+  _impl->roleStops.push_back([weak]() { stopCapInitiatorRole(weak); });
   return BLEAudioCapInitiator(i);
-#else
-  log_e("CapInitiator: not enabled in this build (CONFIG_BT_CAP_INITIATOR)");
-  return BLEAudioCapInitiator();
-#endif
 }
+#endif
 
-BLEAudioCapCommander BLEAudio::createCapCommander() {
 #if BLE_AUDIO_CAP_COMMANDER_SUPPORTED
+BLEAudioCapCommander BLEAudio::createCapCommander() {
   if (!_impl || !_impl->active || _impl->started) {
     log_e("CapCommander: create between audio.begin() and audio.start()");
     return BLEAudioCapCommander();
@@ -1359,14 +1357,37 @@ BLEAudioCapCommander BLEAudio::createCapCommander() {
       s->handle(e);
     }
   });
-  _impl->roleApplies.push_back([]() -> BTStatus {
-    return bleAudioStatus(bleAudioCapCommanderInit());
-  });
+  _impl->roleApplies.push_back([]() -> BTStatus { return bleAudioStatus(bleAudioCapCommanderInit()); });
   return BLEAudioCapCommander(c);
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled & capability stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_CAP_HANDOVER_SUPPORTED
+BTStatus BLEAudioCapInitiator::handoverToBroadcast(uint8_t) {
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEAudioCapInitiator::handoverToUnicast() {
+  return BTStatus::NotSupported;
+}
+#endif
+
+#if !BLE_AUDIO_CAP_INITIATOR_SUPPORTED
+BLEAudioCapInitiator BLEAudio::createCapInitiator() {
+  log_e("CapInitiator: not enabled in this build (CONFIG_BT_CAP_INITIATOR)");
+  return BLEAudioCapInitiator();
+}
+#endif
+
+#if !BLE_AUDIO_CAP_COMMANDER_SUPPORTED
+BLEAudioCapCommander BLEAudio::createCapCommander() {
   log_e("CapCommander: not enabled in this build (CONFIG_BT_CAP_COMMANDER)");
   return BLEAudioCapCommander();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

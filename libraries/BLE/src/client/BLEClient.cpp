@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLEClient.cpp
+ * @brief Stack-agnostic `BLEClient` implementation: handle lifecycle, callback
+ *        registration, GATT convenience shorthands, and feature-disabled stubs.
+ *
+ * Shared `BLEClient::Impl` helpers (`dispatchIdentityResolved`, `makeHandle`)
+ * live in `client/BLEClientImpl.cpp`; stack operations live in
+ * `BLEClient.{nimble,bluedroid}.cpp`.
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_ENABLED
 
@@ -21,104 +31,17 @@
 #include "remote/BLERemoteService.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEBackend.h"
-
 #include "core/BLEMutex.h"
 #include "esp32-hal-log.h"
 
-/**
- * @file
- * @brief Common @ref BLEClient implementation: callback registration, shorthands,
- *        and glue to the active GATT client backend.
- */
+// ==========================================================================
+// 1. Handle construction & connection state queries
+// ==========================================================================
 
 BLEClient::BLEClient() : _impl(nullptr) {}
 
 BLEClient::operator bool() const {
   return _impl != nullptr;
-}
-
-// Shared Impl helpers (dispatchIdentityResolved, makeHandle) live in the implementation
-// layer: client/BLEClientImpl.cpp.
-
-// Callback setters store the handler under impl.mtx and no-op with a warning on
-// builds where GATT client support is compiled out (BLE_GATT_CLIENT_SUPPORTED).
-void BLEClient::onConnect(ConnectHandler handler) {
-#if BLE_GATT_CLIENT_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onConnectCb = std::move(handler);
-#else
-  (void)handler;
-  log_w("%s not supported (GATT client disabled)", __func__);
-#endif
-}
-
-void BLEClient::onDisconnect(DisconnectHandler handler) {
-#if BLE_GATT_CLIENT_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onDisconnectCb = std::move(handler);
-#else
-  (void)handler;
-  log_w("%s not supported (GATT client disabled)", __func__);
-#endif
-}
-
-void BLEClient::onConnectFail(ConnectFailHandler handler) {
-#if BLE_GATT_CLIENT_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onConnectFailCb = std::move(handler);
-#else
-  (void)handler;
-  log_w("%s not supported (GATT client disabled)", __func__);
-#endif
-}
-
-void BLEClient::onMtuChanged(MtuChangedHandler handler) {
-#if BLE_GATT_CLIENT_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onMtuChangedCb = std::move(handler);
-#else
-  (void)handler;
-  log_w("%s not supported (GATT client disabled)", __func__);
-#endif
-}
-
-void BLEClient::onConnParamsUpdateRequest(ConnParamsReqHandler handler) {
-#if BLE_GATT_CLIENT_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onConnParamsReqCb = std::move(handler);
-#else
-  (void)handler;
-  log_w("%s not supported (GATT client disabled)", __func__);
-#endif
-}
-
-void BLEClient::onIdentity(IdentityHandler handler) {
-#if BLE_GATT_CLIENT_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onIdentityCb = std::move(handler);
-#else
-  (void)handler;
-  log_w("%s not supported (GATT client disabled)", __func__);
-#endif
-}
-
-void BLEClient::resetCallbacks() {
-#if BLE_GATT_CLIENT_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onConnectCb = nullptr;
-  impl.onDisconnectCb = nullptr;
-  impl.onConnectFailCb = nullptr;
-  impl.onMtuChangedCb = nullptr;
-  impl.onConnParamsReqCb = nullptr;
-  impl.onIdentityCb = nullptr;
-#endif
 }
 
 BTAddress BLEClient::getPeerAddress() const {
@@ -131,7 +54,90 @@ bool BLEClient::isConnected() const {
   return impl.connected;
 }
 
+String BLEClient::toString() const {
+  BLE_CHECK_IMPL("BLEClient(null)");
+  String s = "BLEClient(peer=";
+  s += impl.peerAddress.toString();
+  s += impl.connected ? ", connected)" : ", disconnected)";
+  return s;
+}
+
+// ==========================================================================
+// 2. Service lookup & value shorthands
+// ==========================================================================
+
+String BLEClient::getValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID) {
+  log_d("Client: getValue svc=%s chr=%s", serviceUUID.toString().c_str(), charUUID.toString().c_str());
+  BLERemoteService svc = getService(serviceUUID);
+  if (!svc) {
+    log_w("Client: getValue - service %s not found", serviceUUID.toString().c_str());
+    return "";
+  }
+  return svc.getValue(charUUID);
+}
+
+BTStatus BLEClient::setValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID, const String &value) {
+  log_d("Client: setValue svc=%s chr=%s len=%u", serviceUUID.toString().c_str(), charUUID.toString().c_str(), value.length());
+  BLERemoteService svc = getService(serviceUUID);
+  if (!svc) {
+    log_w("Client: setValue - service %s not found", serviceUUID.toString().c_str());
+    return BTStatus::NotFound;
+  }
+  return svc.setValue(charUUID, value);
+}
+
+// ==========================================================================
+// 3. GATT client callbacks & service discovery (BLE_GATT_CLIENT_SUPPORTED)
+// ==========================================================================
+
 #if BLE_GATT_CLIENT_SUPPORTED
+
+void BLEClient::onConnect(ConnectHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onConnectCb = std::move(handler);
+}
+
+void BLEClient::onDisconnect(DisconnectHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onDisconnectCb = std::move(handler);
+}
+
+void BLEClient::onConnectFail(ConnectFailHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onConnectFailCb = std::move(handler);
+}
+
+void BLEClient::onMtuChanged(MtuChangedHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onMtuChangedCb = std::move(handler);
+}
+
+void BLEClient::onConnParamsUpdateRequest(ConnParamsReqHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onConnParamsReqCb = std::move(handler);
+}
+
+void BLEClient::onIdentity(IdentityHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onIdentityCb = std::move(handler);
+}
+
+void BLEClient::resetCallbacks() {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onConnectCb = nullptr;
+  impl.onDisconnectCb = nullptr;
+  impl.onConnectFailCb = nullptr;
+  impl.onMtuChangedCb = nullptr;
+  impl.onConnParamsReqCb = nullptr;
+  impl.onIdentityCb = nullptr;
+}
 
 BLERemoteService BLEClient::getService(const BLEUUID &uuid) const {
   BLE_CHECK_IMPL(BLERemoteService());
@@ -178,7 +184,13 @@ std::vector<BLERemoteService> BLEClient::getServices() const {
   return result;
 }
 
-#if !BLE5_SUPPORTED
+#endif /* BLE_GATT_CLIENT_SUPPORTED */
+
+// ==========================================================================
+// 4. Feature-disabled & capability stubs
+// ==========================================================================
+
+#if BLE_GATT_CLIENT_SUPPORTED && !BLE5_SUPPORTED
 
 BTStatus BLEClient::setPhy(BLEPhy, BLEPhy) {
   log_w("Client: setPhy not supported (BLE 5.0 unavailable)");
@@ -192,9 +204,35 @@ BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
   return BTStatus::NotSupported;
 }
 
-#endif /* !BLE5_SUPPORTED */
+#endif /* BLE_GATT_CLIENT_SUPPORTED && !BLE5_SUPPORTED */
 
-#else /* !BLE_GATT_CLIENT_SUPPORTED */
+#if !BLE_GATT_CLIENT_SUPPORTED
+
+void BLEClient::onConnect(ConnectHandler) {
+  log_w("%s not supported (GATT client disabled)", __func__);
+}
+
+void BLEClient::onDisconnect(DisconnectHandler) {
+  log_w("%s not supported (GATT client disabled)", __func__);
+}
+
+void BLEClient::onConnectFail(ConnectFailHandler) {
+  log_w("%s not supported (GATT client disabled)", __func__);
+}
+
+void BLEClient::onMtuChanged(MtuChangedHandler) {
+  log_w("%s not supported (GATT client disabled)", __func__);
+}
+
+void BLEClient::onConnParamsUpdateRequest(ConnParamsReqHandler) {
+  log_w("%s not supported (GATT client disabled)", __func__);
+}
+
+void BLEClient::onIdentity(IdentityHandler) {
+  log_w("%s not supported (GATT client disabled)", __func__);
+}
+
+void BLEClient::resetCallbacks() {}
 
 BLERemoteService BLEClient::getService(const BLEUUID &) const {
   log_w("GATT client not supported");
@@ -296,34 +334,6 @@ BTStatus BLEClient::setDataLen(uint16_t, uint16_t) {
   return BTStatus::NotSupported;
 }
 
-#endif /* BLE_GATT_CLIENT_SUPPORTED */
-
-String BLEClient::getValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID) {
-  log_d("Client: getValue svc=%s chr=%s", serviceUUID.toString().c_str(), charUUID.toString().c_str());
-  BLERemoteService svc = getService(serviceUUID);
-  if (!svc) {
-    log_w("Client: getValue - service %s not found", serviceUUID.toString().c_str());
-    return "";
-  }
-  return svc.getValue(charUUID);
-}
-
-BTStatus BLEClient::setValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID, const String &value) {
-  log_d("Client: setValue svc=%s chr=%s len=%u", serviceUUID.toString().c_str(), charUUID.toString().c_str(), value.length());
-  BLERemoteService svc = getService(serviceUUID);
-  if (!svc) {
-    log_w("Client: setValue - service %s not found", serviceUUID.toString().c_str());
-    return BTStatus::NotFound;
-  }
-  return svc.setValue(charUUID, value);
-}
-
-String BLEClient::toString() const {
-  BLE_CHECK_IMPL("BLEClient(null)");
-  String s = "BLEClient(peer=";
-  s += impl.peerAddress.toString();
-  s += impl.connected ? ", connected)" : ", disconnected)";
-  return s;
-}
+#endif /* !BLE_GATT_CLIENT_SUPPORTED */
 
 #endif /* BLE_ENABLED */

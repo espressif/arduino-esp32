@@ -1041,56 +1041,42 @@ bool isActive() {
 }
 
 // --------------------------------------------------------------------------
-// Factories
+// Factories (enabled roles)
 // --------------------------------------------------------------------------
 
-Channel *connectCis(uint16_t connHandle, const CisParams &p) {
 #if BLE_ISO_CIS_CENTRAL_SUPPORTED
+Channel *connectCis(uint16_t connHandle, const CisParams &p) {
   Channel *c = takeChannel("connectCis", Kind::CisCentral);
   if (!c) {
     return nullptr;
   }
   return finish(c, cisConnect(c->slot(), connHandle, p), "CIS connect");
-#else
-  (void)connHandle;
-  (void)p;
-  log_e("BLEIso: connectCis() is not enabled in this build (CONFIG_BT_ISO_CENTRAL)");
-  return nullptr;
-#endif
 }
+#endif
 
-Channel *listenCis(const CisParams &p) {
 #if BLE_ISO_CIS_PERIPHERAL_SUPPORTED
+Channel *listenCis(const CisParams &p) {
   Channel *c = takeChannel("listenCis", Kind::None);
   if (!c) {
     return nullptr;
   }
   return finish(c, cisListen(c->slot(), p), "CIS listen");
-#else
-  (void)p;
-  log_e("BLEIso: listenCis() is not enabled in this build (CONFIG_BT_ISO_PERIPHERAL)");
-  return nullptr;
-#endif
 }
+#endif
 
-Channel *createBig(uint8_t advHandle, const BigParams &p) {
 #if BLE_ISO_BROADCASTER_SUPPORTED
+Channel *createBig(uint8_t advHandle, const BigParams &p) {
   Channel *c = takeChannel("createBig", Kind::BisBroadcaster);
   if (!c) {
     return nullptr;
   }
   return finish(c, bigCreate(c->slot(), advHandle, p), "BIG create");
-#else
-  (void)advHandle;
-  (void)p;
-  log_e("BLEIso: createBig() is not enabled in this build (CONFIG_BT_ISO_BROADCASTER)");
-  return nullptr;
-#endif
 }
+#endif
 
 // Sync timeout 100 x 10 ms = 1 s without a BIS PDU before the sync is lost.
-Channel *syncBig(uint8_t bisIndex, const BigParams &p) {
 #if BLE_ISO_SYNC_RECEIVER_SUPPORTED
+Channel *syncBig(uint8_t bisIndex, const BigParams &p) {
   if (bisIndex == 0 || bisIndex > 31) {
     // ESP_BLE_ISO_BIS_INDEX_BIT(bisIndex) is 1UL << (bisIndex - 1); reject the
     // reserved index 0 and anything that would shift out of range (UB).
@@ -1102,13 +1088,40 @@ Channel *syncBig(uint8_t bisIndex, const BigParams &p) {
     return nullptr;
   }
   return finish(c, bigSyncArm(c->slot(), bisIndex, p, /*syncTimeout=*/100), "BIG sync arm");
-#else
-  (void)bisIndex;
-  (void)p;
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_ISO_CIS_CENTRAL_SUPPORTED
+Channel *connectCis(uint16_t, const CisParams &) {
+  log_e("BLEIso: connectCis() is not enabled in this build (CONFIG_BT_ISO_CENTRAL)");
+  return nullptr;
+}
+#endif
+
+#if !BLE_ISO_CIS_PERIPHERAL_SUPPORTED
+Channel *listenCis(const CisParams &) {
+  log_e("BLEIso: listenCis() is not enabled in this build (CONFIG_BT_ISO_PERIPHERAL)");
+  return nullptr;
+}
+#endif
+
+#if !BLE_ISO_BROADCASTER_SUPPORTED
+Channel *createBig(uint8_t, const BigParams &) {
+  log_e("BLEIso: createBig() is not enabled in this build (CONFIG_BT_ISO_BROADCASTER)");
+  return nullptr;
+}
+#endif
+
+#if !BLE_ISO_SYNC_RECEIVER_SUPPORTED
+Channel *syncBig(uint8_t, const BigParams &) {
   log_e("BLEIso: syncBig() is not enabled in this build (CONFIG_BT_ISO_SYNC_RECEIVER)");
   return nullptr;
-#endif
 }
+#endif
 
 }  // namespace BLEIso
 

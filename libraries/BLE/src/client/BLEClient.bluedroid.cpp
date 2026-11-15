@@ -179,7 +179,7 @@ static uint16_t allocateAppId() {
 }
 
 // --------------------------------------------------------------------------
-// GATTC app registration (used by BLEClass::createClient in BluedroidCore.cpp)
+// GATTC app registration (used by BLEClass::createClient in BLE.bluedroid.cpp)
 // --------------------------------------------------------------------------
 
 // Registration is asynchronous: blocks up to 5 s for REG_EVT via a sync object, and removes the

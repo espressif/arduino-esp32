@@ -598,8 +598,8 @@ void BLEAudioBroadcastSource::resetCallbacks() {
  * A broadcast source registers no GATT service, so it may also be created
  * after audio.start(); it only needs the engine (begin()).
  */
-BLEAudioBroadcastSource BLEAudio::createBroadcastSource() {
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+BLEAudioBroadcastSource BLEAudio::createBroadcastSource() {
   if (!_impl || !_impl->active) {
     log_e("BroadcastSource: create after audio.begin()");
     return BLEAudioBroadcastSource();
@@ -620,10 +620,18 @@ BLEAudioBroadcastSource BLEAudio::createBroadcastSource() {
     }
   });
   return BLEAudioBroadcastSource(src);
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+BLEAudioBroadcastSource BLEAudio::createBroadcastSource() {
   log_e("BroadcastSource: not enabled in this build (CONFIG_BT_BAP_BROADCAST_SOURCE)");
   return BLEAudioBroadcastSource();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

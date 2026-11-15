@@ -623,21 +623,25 @@ BTStatus BLEClass::setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t 
 // Custom event handlers
 // --------------------------------------------------------------------------
 
+namespace {
+
+int customGapListenerCb(struct ble_gap_event *event, void *arg) {
+  auto *impl = static_cast<BLEClass::Impl *>(arg);
+  if (auto custom = impl->loadHook(impl->customGapHandler)) {
+    return custom(event, nullptr);
+  }
+  return 0;
+}
+
+}  // namespace
+
 BTStatus BLEClass::setCustomGapHandler(RawEventHandler handler) {
   if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
   _impl->storeHook(_impl->customGapHandler, handler);
 
-  auto wrapper = [](struct ble_gap_event *event, void *arg) -> int {
-    auto *impl = static_cast<BLEClass::Impl *>(arg);
-    if (auto custom = impl->loadHook(impl->customGapHandler)) {
-      return custom(event, nullptr);
-    }
-    return 0;
-  };
-
-  int rc = ble_gap_event_listener_register(&_impl->gapListener, wrapper, _impl);
+  int rc = ble_gap_event_listener_register(&_impl->gapListener, customGapListenerCb, _impl);
   if (rc == BLE_HS_EALREADY) {
     log_i("Already listening to GAP events");
   } else if (rc != 0) {

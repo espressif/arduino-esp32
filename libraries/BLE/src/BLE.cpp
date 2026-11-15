@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLE.cpp
+ * @brief Stack-agnostic `BLEClass` lifecycle orchestration (`begin()` / `end()`),
+ *        shared state accessors, IRK formatters, TX power helpers, and
+ *        feature-disabled stubs.
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_ENABLED
 
@@ -42,6 +49,10 @@
 BLEClass BLE;
 #endif
 
+// ==========================================================================
+// 1. Stack-task detection & deferred shutdown worker
+// ==========================================================================
+
 bool bleInStackCallbackTask() {
   if (bleIsHostStackTask()) {
     return true;
@@ -55,9 +66,33 @@ bool bleInStackCallbackTask() {
 #endif
 }
 
-// --------------------------------------------------------------------------
-// Shared lifecycle & state implementations (identical across all backends)
-// --------------------------------------------------------------------------
+namespace {
+
+#if BLE_ISO_SUPPORTED
+void isoPreEndTrampoline() {
+  (void)BLEIso::end();
+}
+#endif
+
+void bleEndWorker(void *) {
+  BLE.end(false);
+  vTaskDelete(nullptr);
+}
+
+bool bleStartEndWorker() {
+#if BLE_VALIDATION_HOOKS
+  if (BLEValidationHooks::consumeFailure(BLEHooks.lifecycle.endWorkerStartFailures)) {
+    return false;
+  }
+#endif
+  return xTaskCreate(bleEndWorker, "ble-end", 6144, nullptr, 1, nullptr) == pdPASS;
+}
+
+}  // namespace
+
+// ==========================================================================
+// 2. Shared lifecycle & state implementations
+// ==========================================================================
 
 BLEClass::BLEClass() : _impl(new Impl()) {}
 
@@ -133,7 +168,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
   }
 #endif
 #if BLE_ISO_SUPPORTED
-  _impl->storeHook(_impl->isoPreEndHook, +[]() { (void)BLEIso::end(); });
+  _impl->storeHook(_impl->isoPreEndHook, isoPreEndTrampoline);
 #endif
   _impl->backendAfterHooks();
 #if BLE_SMP_SUPPORTED
@@ -148,22 +183,6 @@ BTStatus BLEClass::begin(const String &deviceName) {
   _impl->backendFinishBegin();
   return BTStatus::OK;
 }
-
-namespace {
-void bleEndWorker(void *) {
-  BLE.end(false);
-  vTaskDelete(nullptr);
-}
-
-bool bleStartEndWorker() {
-#if BLE_VALIDATION_HOOKS
-  if (BLEValidationHooks::consumeFailure(BLEHooks.lifecycle.endWorkerStartFailures)) {
-    return false;
-  }
-#endif
-  return xTaskCreate(bleEndWorker, "ble-end", 6144, nullptr, 1, nullptr) == pdPASS;
-}
-}  // namespace
 
 void BLEClass::end(bool releaseMemory) {
   if (bleInStackCallbackTask()) {
@@ -219,23 +238,13 @@ void BLEClass::end(bool releaseMemory) {
     vTaskDelay(1);
   }
 
-#if BLE_VALIDATION_HOOKS || BLE_ISO_SUPPORTED || BLE_AUDIO_SUPPORTED
-  auto abortShutdown = [this]() {
-    BLELockGuard lifecycle(_impl->lifecycleMtx);
-    _impl->endReleaseMemory = false;
-    _impl->endTask = nullptr;
-    _impl->endRunning = false;
-    _impl->ending = false;
-  };
-#endif
-
   if (auto hook = _impl->loadHook(_impl->streamPreEndHook)) {
     hook();
   }
 
 #if BLE_VALIDATION_HOOKS
   if (BLEValidationHooks::consumeFailure(BLEHooks.lifecycle.preEndAbortFailures)) {
-    abortShutdown();
+    _impl->abortEnd();
     return;
   }
 #endif
@@ -247,7 +256,7 @@ void BLEClass::end(bool releaseMemory) {
   }
   if (BLEIso::isActive()) {
     log_e("BLE.end: ISO teardown did not complete; host shutdown aborted");
-    abortShutdown();
+    _impl->abortEnd();
     return;
   }
 #endif
@@ -255,7 +264,7 @@ void BLEClass::end(bool releaseMemory) {
   bool audioEndOk = !bleAudioPreEndHook || bleAudioPreEndHook();
   if (!audioEndOk) {
     log_e("BLE.end: audio teardown did not complete; host shutdown aborted");
-    abortShutdown();
+    _impl->abortEnd();
     return;
   }
 #endif
@@ -329,6 +338,10 @@ bool BLEClass::setStreamEndHooks(void (*preHook)(), void (*postHook)()) {
   return true;
 }
 
+// ==========================================================================
+// 3. Identity, MTU, whitelist, IRK, and TX power accessors
+// ==========================================================================
+
 String BLEClass::getDeviceName() const {
   return _deviceName;
 }
@@ -395,11 +408,12 @@ String BLEClass::getPeerIRKReverse(const BTAddress &peer) const {
   return HEXBuilder::bytes2hex(reversed, sizeof(reversed));
 }
 
+#if BLE_LOCAL_CONTROLLER_SUPPORTED
+
 void BLEClass::setPower(int8_t txPowerDbm) {
   if (!isInitialized()) {
     return;
   }
-#if BLE_LOCAL_CONTROLLER_SUPPORTED
   esp_power_level_t level;
   if (txPowerDbm <= -12) {
     level = ESP_PWR_LVL_N12;
@@ -420,16 +434,12 @@ void BLEClass::setPower(int8_t txPowerDbm) {
   }
   log_d("setPower: %d dBm (level=%d)", txPowerDbm, level);
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, level);
-#else
-  log_w("setPower not supported with hosted HCI");
-#endif
 }
 
 int8_t BLEClass::getPower() const {
   if (!isInitialized()) {
     return -128;
   }
-#if BLE_LOCAL_CONTROLLER_SUPPORTED
   switch (esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_DEFAULT)) {
     case ESP_PWR_LVL_N12: return -12;
     case ESP_PWR_LVL_N9:  return -9;
@@ -441,10 +451,9 @@ int8_t BLEClass::getPower() const {
     case ESP_PWR_LVL_P9:  return 9;
     default:              return -128;
   }
-#else
-  return 0;
-#endif
 }
+
+#endif /* BLE_LOCAL_CONTROLLER_SUPPORTED */
 
 BTStatus BLEClass::getDefaultPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
   txPhy = BLEPhy::PHY_1M;
@@ -457,21 +466,8 @@ bool BLEClass::isHostedBLE() const {
   return BLE_HOSTED_NIMBLE != 0;
 }
 
-#if !BLE_HOSTED_NIMBLE
-BTStatus BLEClass::setPins(int8_t, int8_t, int8_t, int8_t, int8_t, int8_t, int8_t) {
-  log_w("setPins not supported (hosted NimBLE unavailable)");
-  return BTStatus::NotSupported;
-}
-#endif
-
-#if !BLE5_SUPPORTED
-BTStatus BLEClass::setDefaultPhy(BLEPhy, BLEPhy) {
-  log_w("setDefaultPhy not supported (BLE 5.0 unavailable)");
-  return BTStatus::NotSupported;
-}
-#endif
-
 #if BLE_ADVERTISING_SUPPORTED
+
 BTStatus BLEClass::startAdvertising() {
   return getAdvertising().start();
 }
@@ -479,7 +475,48 @@ BTStatus BLEClass::startAdvertising() {
 BTStatus BLEClass::stopAdvertising() {
   return getAdvertising().stop();
 }
-#else
+
+#endif /* BLE_ADVERTISING_SUPPORTED */
+
+// ==========================================================================
+// 4. Feature-disabled & capability stubs
+// ==========================================================================
+
+#if !BLE_LOCAL_CONTROLLER_SUPPORTED
+
+void BLEClass::setPower(int8_t) {
+  if (!isInitialized()) {
+    return;
+  }
+  log_w("setPower not supported with hosted HCI");
+}
+
+int8_t BLEClass::getPower() const {
+  return isInitialized() ? 0 : -128;
+}
+
+#endif /* !BLE_LOCAL_CONTROLLER_SUPPORTED */
+
+#if !BLE_HOSTED_NIMBLE
+
+BTStatus BLEClass::setPins(int8_t, int8_t, int8_t, int8_t, int8_t, int8_t, int8_t) {
+  log_w("setPins not supported (hosted NimBLE unavailable)");
+  return BTStatus::NotSupported;
+}
+
+#endif /* !BLE_HOSTED_NIMBLE */
+
+#if !BLE5_SUPPORTED
+
+BTStatus BLEClass::setDefaultPhy(BLEPhy, BLEPhy) {
+  log_w("setDefaultPhy not supported (BLE 5.0 unavailable)");
+  return BTStatus::NotSupported;
+}
+
+#endif /* !BLE5_SUPPORTED */
+
+#if !BLE_ADVERTISING_SUPPORTED
+
 BLEAdvertising BLEClass::getAdvertising() {
   log_w("Advertising not supported");
   return BLEAdvertising();
@@ -494,34 +531,43 @@ BTStatus BLEClass::stopAdvertising() {
   log_w("Advertising not supported");
   return BTStatus::NotSupported;
 }
-#endif
+
+#endif /* !BLE_ADVERTISING_SUPPORTED */
 
 #if !BLE_SCANNING_SUPPORTED
+
 BLEScan BLEClass::getScan() {
   log_w("Scanning not supported");
   return BLEScan();
 }
-#endif
+
+#endif /* !BLE_SCANNING_SUPPORTED */
 
 #if !BLE_GATT_SERVER_SUPPORTED
+
 BLEServer BLEClass::createServer() {
   log_w("GATT server not supported");
   return BLEServer();
 }
-#endif
+
+#endif /* !BLE_GATT_SERVER_SUPPORTED */
 
 #if !BLE_GATT_CLIENT_SUPPORTED
+
 BLEClient BLEClass::createClient() {
   log_w("GATT client not supported");
   return BLEClient();
 }
-#endif
+
+#endif /* !BLE_GATT_CLIENT_SUPPORTED */
 
 #if !BLE_SMP_SUPPORTED
+
 BLESecurity BLEClass::getSecurity() {
   log_w("SMP not supported");
   return BLESecurity();
 }
-#endif
+
+#endif /* !BLE_SMP_SUPPORTED */
 
 #endif /* BLE_ENABLED */

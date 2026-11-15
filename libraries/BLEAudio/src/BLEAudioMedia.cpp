@@ -163,18 +163,13 @@ void BLEAudioMediaPlayer::resetCallbacks() {
   impl.onCommandResultCb = nullptr;
 }
 
-BLEAudioMediaPlayer BLEAudio::createMediaPlayer() {
 #if BLE_AUDIO_MCP_SERVER_SUPPORTED
+BLEAudioMediaPlayer BLEAudio::createMediaPlayer() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioMediaPlayer>(
-    _impl, "createMediaPlayer", BLE_AUDIO_GRP_MCP_SERVER, [](BLEAudioMediaPlayer::Impl &s) {
-      return s.apply();
-    }
+    _impl, "createMediaPlayer", BLE_AUDIO_GRP_MCP_SERVER, [](BLEAudioMediaPlayer::Impl &s) { return s.apply(); }
   );
-#else
-  log_e("Media player is not enabled in this build (CONFIG_BT_MCS and CONFIG_BT_MCTL_LOCAL_PLAYER_CONTROL)");
-  return BLEAudioMediaPlayer();
-#endif
 }
+#endif
 
 // --------------------------------------------------------------------------
 // Controller
@@ -352,17 +347,30 @@ void BLEAudioMediaController::resetCallbacks() {
   impl.onTrackTitleCb = nullptr;
 }
 
-BLEAudioMediaController BLEAudio::createMediaController() {
 #if BLE_AUDIO_MCP_CLIENT_SUPPORTED
+BLEAudioMediaController BLEAudio::createMediaController() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioMediaController>(
-    _impl, "createMediaController", BLE_AUDIO_GRP_MCP_CLIENT, [](BLEAudioMediaController::Impl &) {
-      return bleAudioStatus(bleAudioMcpCliInit());
-    }
+    _impl, "createMediaController", BLE_AUDIO_GRP_MCP_CLIENT, [](BLEAudioMediaController::Impl &) { return bleAudioStatus(bleAudioMcpCliInit()); }
   );
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_MCP_SERVER_SUPPORTED
+BLEAudioMediaPlayer BLEAudio::createMediaPlayer() {
+  log_e("Media player is not enabled in this build (CONFIG_BT_MCS and CONFIG_BT_MCTL_LOCAL_PLAYER_CONTROL)");
+  return BLEAudioMediaPlayer();
+}
+#endif
+
+#if !BLE_AUDIO_MCP_CLIENT_SUPPORTED
+BLEAudioMediaController BLEAudio::createMediaController() {
   log_e("Media controller is not enabled in this build (CONFIG_BT_MCC)");
   return BLEAudioMediaController();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

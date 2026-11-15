@@ -113,6 +113,7 @@ struct BLEClass::Impl : BLEClassImplCommon {
 #endif
 
   BTStatus backendBegin(const String &deviceName);
+  void abandonStart();
   void backendAfterHooks();
   void backendFinishBegin();
   void backendPreAdvScanEnd();

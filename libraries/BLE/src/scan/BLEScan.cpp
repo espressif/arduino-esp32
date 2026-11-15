@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLEScan.cpp
+ * @brief Stack-agnostic `BLEScan` implementation: handle lifecycle, result-set
+ *        management, scan parameters/callbacks, and feature-disabled stubs.
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_ENABLED
 
@@ -27,10 +33,9 @@
 
 #include <utility>
 
-/**
- * @file
- * @brief Stack-agnostic @ref BLEScan implementation.
- */
+// ==========================================================================
+// 1. Handle construction & scan result management
+// ==========================================================================
 
 BLEScan::BLEScan() : _impl(nullptr) {}
 
@@ -38,122 +43,10 @@ BLEScan::operator bool() const {
   return _impl != nullptr;
 }
 
-// Scan-parameter setters convert milliseconds to controller units ((ms * 1000)
-// / 625) and no-op when BLE_SCANNING_SUPPORTED is not defined.
-
-void BLEScan::setInterval(uint16_t intervalMs) {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  log_d("Scan: setInterval %u ms", intervalMs);
-  BLELockGuard lock(impl.mtx);
-  impl.interval = bleMsToUnits0625(intervalMs);
-#endif
-}
-
-void BLEScan::setWindow(uint16_t windowMs) {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  log_d("Scan: setWindow %u ms", windowMs);
-  BLELockGuard lock(impl.mtx);
-  impl.window = bleMsToUnits0625(windowMs);
-#endif
-}
-
-void BLEScan::setActiveScan(bool active) {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  log_d("Scan: setActiveScan=%d", active);
-  BLELockGuard lock(impl.mtx);
-  impl.activeScan = active;
-#endif
-}
-
-void BLEScan::setFilterDuplicates(bool filter) {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  log_d("Scan: setFilterDuplicates=%d", filter);
-  BLELockGuard lock(impl.mtx);
-  impl.filterDuplicates = filter;
-#endif
-}
-
 bool BLEScan::isScanning() const {
   BLE_CHECK_IMPL(false);
   return impl.isScanning;
 }
-
-// Callback setters store the handler and no-op with a warning when scanning is
-// compiled out (BLE_SCANNING_SUPPORTED).
-
-void BLEScan::onResult(ResultHandler callback) {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onResultCb = std::move(callback);
-#else
-  (void)callback;
-  log_w("%s not supported (scanning disabled)", __func__);
-#endif
-}
-
-void BLEScan::onComplete(CompleteHandler callback) {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onCompleteCb = std::move(callback);
-#else
-  (void)callback;
-  log_w("%s not supported (scanning disabled)", __func__);
-#endif
-}
-
-void BLEScan::resetCallbacks() {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onResultCb = nullptr;
-  impl.onCompleteCb = nullptr;
-  impl.periodicSyncCb = nullptr;
-  impl.periodicReportCb = nullptr;
-  impl.periodicLostCb = nullptr;
-#endif
-}
-
-void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.periodicSyncCb = std::move(handler);
-#else
-  (void)handler;
-  log_w("%s not supported (scanning disabled)", __func__);
-#endif
-}
-
-void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.periodicReportCb = std::move(handler);
-#else
-  (void)handler;
-  log_w("%s not supported (scanning disabled)", __func__);
-#endif
-}
-
-void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
-#if BLE_SCANNING_SUPPORTED
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.periodicLostCb = std::move(handler);
-#else
-  (void)handler;
-  log_w("%s not supported (scanning disabled)", __func__);
-#endif
-}
-
-// Result-management helpers are thread-safe: each acquires impl.mtx before
-// touching the shared results set.
 
 BLEScan::Results BLEScan::getResults() const {
   BLE_CHECK_IMPL(BLEScan::Results());
@@ -212,7 +105,79 @@ void BLEScan::Results::dump() const {
   }
 }
 
+// ==========================================================================
+// 2. Scan configuration, callbacks & blocking start (BLE_SCANNING_SUPPORTED)
+// ==========================================================================
+
 #if BLE_SCANNING_SUPPORTED
+
+void BLEScan::setInterval(uint16_t intervalMs) {
+  BLE_CHECK_IMPL();
+  log_d("Scan: setInterval %u ms", intervalMs);
+  BLELockGuard lock(impl.mtx);
+  impl.interval = bleMsToUnits0625(intervalMs);
+}
+
+void BLEScan::setWindow(uint16_t windowMs) {
+  BLE_CHECK_IMPL();
+  log_d("Scan: setWindow %u ms", windowMs);
+  BLELockGuard lock(impl.mtx);
+  impl.window = bleMsToUnits0625(windowMs);
+}
+
+void BLEScan::setActiveScan(bool active) {
+  BLE_CHECK_IMPL();
+  log_d("Scan: setActiveScan=%d", active);
+  BLELockGuard lock(impl.mtx);
+  impl.activeScan = active;
+}
+
+void BLEScan::setFilterDuplicates(bool filter) {
+  BLE_CHECK_IMPL();
+  log_d("Scan: setFilterDuplicates=%d", filter);
+  BLELockGuard lock(impl.mtx);
+  impl.filterDuplicates = filter;
+}
+
+void BLEScan::onResult(ResultHandler callback) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onResultCb = std::move(callback);
+}
+
+void BLEScan::onComplete(CompleteHandler callback) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onCompleteCb = std::move(callback);
+}
+
+void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.periodicSyncCb = std::move(handler);
+}
+
+void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.periodicReportCb = std::move(handler);
+}
+
+void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.periodicLostCb = std::move(handler);
+}
+
+void BLEScan::resetCallbacks() {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onResultCb = nullptr;
+  impl.onCompleteCb = nullptr;
+  impl.periodicSyncCb = nullptr;
+  impl.periodicReportCb = nullptr;
+  impl.periodicLostCb = nullptr;
+}
 
 void BLEScan::clearDuplicateCache() {
   BLE_CHECK_IMPL();
@@ -245,7 +210,43 @@ void BLEScan::prepareBackendStart() {
   }
 }
 
-#else /* !BLE_SCANNING_SUPPORTED */
+#endif /* BLE_SCANNING_SUPPORTED */
+
+// ==========================================================================
+// 3. Feature-disabled stubs (!BLE_SCANNING_SUPPORTED)
+// ==========================================================================
+
+#if !BLE_SCANNING_SUPPORTED
+
+void BLEScan::setInterval(uint16_t) {}
+
+void BLEScan::setWindow(uint16_t) {}
+
+void BLEScan::setActiveScan(bool) {}
+
+void BLEScan::setFilterDuplicates(bool) {}
+
+void BLEScan::onResult(ResultHandler) {
+  log_w("%s not supported (scanning disabled)", __func__);
+}
+
+void BLEScan::onComplete(CompleteHandler) {
+  log_w("%s not supported (scanning disabled)", __func__);
+}
+
+void BLEScan::onPeriodicSync(PeriodicSyncHandler) {
+  log_w("%s not supported (scanning disabled)", __func__);
+}
+
+void BLEScan::onPeriodicReport(PeriodicReportHandler) {
+  log_w("%s not supported (scanning disabled)", __func__);
+}
+
+void BLEScan::onPeriodicLost(PeriodicLostHandler) {
+  log_w("%s not supported (scanning disabled)", __func__);
+}
+
+void BLEScan::resetCallbacks() {}
 
 void BLEScan::clearDuplicateCache() {
   log_w("Scanning not supported");
@@ -323,6 +324,6 @@ void BLEScan::prepareBackendStart() {}
 
 void BLEScan::beginBackendShutdown() {}
 
-#endif /* BLE_SCANNING_SUPPORTED */
+#endif /* !BLE_SCANNING_SUPPORTED */
 
 #endif /* BLE_ENABLED */

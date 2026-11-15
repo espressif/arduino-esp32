@@ -829,6 +829,55 @@ static void forceAbandonedLinkCleanup(uint16_t connHandle) {
   }
 }
 
+static void onAbandonedDisconnectCallout(struct ble_npl_event *) {
+  std::vector<std::pair<std::shared_ptr<L2CAPClientCtx>, struct ble_l2cap_chan *>> pending;
+  {
+    BLELockGuard lock(sL2CAPMtx);
+    for (auto &ctx : clientContexts()) {
+      if (ctx->disconnectQueued && ctx->abandonedChan) {
+        ctx->disconnectQueued = false;
+        pending.emplace_back(ctx, ctx->abandonedChan);
+      }
+    }
+  }
+  bool retry = false;
+  std::vector<std::shared_ptr<L2CAPClientCtx>> terminateLinks;
+  for (auto &[ctx, chan] : pending) {
+    int rc = ble_l2cap_disconnect(chan);
+    if (rc != 0) {
+      BLELockGuard lock(sL2CAPMtx);
+      if (!sL2CAPStopping && xTaskGetTickCount() - ctx->disconnectStartedAt < pdMS_TO_TICKS(30000)) {
+        ctx->disconnectQueued = true;
+        retry = true;
+      } else {
+        log_e("L2CAP: deferred orphan disconnect failed: rc=%d", rc);
+        terminateLinks.push_back(ctx);
+      }
+    }
+  }
+  for (auto &ctx : terminateLinks) {
+    forceAbandonedLinkCleanup(ctx->impl->connHandle);
+  }
+  if (retry) {
+    int resetRc = ble_npl_callout_reset(&sAbandonedDisconnectCallout, ble_npl_time_ms_to_ticks32(100));
+    if (resetRc != 0) {
+      log_e("L2CAP: orphan disconnect retry scheduling failed: rc=%d", resetRc);
+      std::vector<std::shared_ptr<L2CAPClientCtx>> unscheduled;
+      {
+        BLELockGuard lock(sL2CAPMtx);
+        for (auto &ctx : clientContexts()) {
+          if (ctx->disconnectQueued) {
+            unscheduled.push_back(ctx);
+          }
+        }
+      }
+      for (auto &ctx : unscheduled) {
+        forceAbandonedLinkCleanup(ctx->impl->connHandle);
+      }
+    }
+  }
+}
+
 static bool scheduleAbandonedDisconnect() {
   BLELockGuard lock(sL2CAPMtx);
   if (sL2CAPStopping) {
@@ -836,56 +885,7 @@ static bool scheduleAbandonedDisconnect() {
   }
   if (!sAbandonedDisconnectCalloutInited) {
     int initRc = ble_npl_callout_init(
-      &sAbandonedDisconnectCallout, nimble_port_get_dflt_eventq(),
-      [](struct ble_npl_event *) {
-        std::vector<std::pair<std::shared_ptr<L2CAPClientCtx>, struct ble_l2cap_chan *>> pending;
-        {
-          BLELockGuard lock(sL2CAPMtx);
-          for (auto &ctx : clientContexts()) {
-            if (ctx->disconnectQueued && ctx->abandonedChan) {
-              ctx->disconnectQueued = false;
-              pending.emplace_back(ctx, ctx->abandonedChan);
-            }
-          }
-        }
-        bool retry = false;
-        std::vector<std::shared_ptr<L2CAPClientCtx>> terminateLinks;
-        for (auto &[ctx, chan] : pending) {
-          int rc = ble_l2cap_disconnect(chan);
-          if (rc != 0) {
-            BLELockGuard lock(sL2CAPMtx);
-            if (!sL2CAPStopping && xTaskGetTickCount() - ctx->disconnectStartedAt < pdMS_TO_TICKS(30000)) {
-              ctx->disconnectQueued = true;
-              retry = true;
-            } else {
-              log_e("L2CAP: deferred orphan disconnect failed: rc=%d", rc);
-              terminateLinks.push_back(ctx);
-            }
-          }
-        }
-        for (auto &ctx : terminateLinks) {
-          forceAbandonedLinkCleanup(ctx->impl->connHandle);
-        }
-        if (retry) {
-          int resetRc = ble_npl_callout_reset(&sAbandonedDisconnectCallout, ble_npl_time_ms_to_ticks32(100));
-          if (resetRc != 0) {
-            log_e("L2CAP: orphan disconnect retry scheduling failed: rc=%d", resetRc);
-            std::vector<std::shared_ptr<L2CAPClientCtx>> unscheduled;
-            {
-              BLELockGuard lock(sL2CAPMtx);
-              for (auto &ctx : clientContexts()) {
-                if (ctx->disconnectQueued) {
-                  unscheduled.push_back(ctx);
-                }
-              }
-            }
-            for (auto &ctx : unscheduled) {
-              forceAbandonedLinkCleanup(ctx->impl->connHandle);
-            }
-          }
-        }
-      },
-      nullptr
+      &sAbandonedDisconnectCallout, nimble_port_get_dflt_eventq(), onAbandonedDisconnectCallout, nullptr
     );
     if (initRc != 0) {
       log_e("L2CAP: orphan disconnect callout init failed: rc=%d", initRc);
@@ -1100,6 +1100,110 @@ void nimbleCleanupL2CAP() {
   }
 }
 
+static int l2capClientEvent(struct ble_l2cap_event *event, void *arg) {
+  auto *ctx = static_cast<L2CAPClientCtx *>(arg);
+  if (!ctx) {
+    return 0;
+  }
+  auto impl = ctx->impl;
+
+  switch (event->type) {
+    case BLE_L2CAP_EVENT_COC_CONNECTED:
+      if (event->connect.status == 0) {
+        bool abandoned;
+        {
+          BLELockGuard lock(sL2CAPMtx);
+          abandoned = ctx->abandoned;
+          BLELockGuard channelLock(impl->mtx);
+          if (abandoned) {
+            ctx->abandonedChan = event->connect.chan;
+            ctx->disconnectQueued = true;
+            ctx->disconnectStartedAt = xTaskGetTickCount();
+            impl->connected = false;
+            impl->chan = nullptr;
+          } else {
+            impl->chan = event->connect.chan;
+            impl->connected = true;
+            impl->connHandle = event->connect.conn_handle;
+          }
+        }
+        if (abandoned) {
+          // The user-side connect already timed out and returned an empty
+          // handle. Defer disconnect until this callback returns because
+          // NimBLE still owns its sole signaling procedure while invoking
+          // COC_CONNECTED; an inline disconnect would fail with ENOMEM.
+          log_w("L2CAP client connect completed after timeout; scheduling orphan disconnect");
+          if (!scheduleAbandonedDisconnect()) {
+            forceAbandonedLinkCleanup(impl->connHandle);
+          }
+          break;
+        }
+        impl->connectSync.give(BTStatus::OK);
+      } else {
+        log_w("L2CAP client connect failed: status=%d", event->connect.status);
+        impl->connectSync.give(BTStatus::Fail);
+        removeClientCtx(ctx);
+      }
+      break;
+
+    case BLE_L2CAP_EVENT_COC_DISCONNECTED:
+    {
+      {
+        BLELockGuard lock(sL2CAPMtx);
+        ctx->abandonedChan = nullptr;
+        ctx->disconnectQueued = false;
+        BLELockGuard channelLock(impl->mtx);
+        impl->connected = false;
+        impl->chan = nullptr;
+      }
+      finishOperationForDisconnect(impl.get());
+      BLEL2CAPChannel::DisconnectHandler cb;
+      {
+        BLELockGuard lock(impl->mtx);
+        cb = impl->onDisconnectCb;
+      }
+      if (cb) {
+        BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(impl);
+        cb(channel);
+      }
+      removeClientCtx(ctx);
+      break;
+    }
+
+    case BLE_L2CAP_EVENT_COC_DATA_RECEIVED:
+    {
+      struct os_mbuf *rxBuf = event->receive.sdu_rx;
+      if (!rxBuf) {
+        break;
+      }
+      uint8_t stackBuf[kL2capRxStackBuf];
+      std::vector<uint8_t> heapBuf;
+      uint16_t dataLen;
+      const uint8_t *data = flattenRxSdu(rxBuf, stackBuf, sizeof(stackBuf), heapBuf, dataLen);
+      os_mbuf_free_chain(rxBuf);
+
+      struct os_mbuf *nextBuf = os_msys_get_pkthdr(impl->mtu, 0);
+      if (nextBuf) {
+        ble_l2cap_recv_ready(event->receive.chan, nextBuf);
+      }
+
+      BLEL2CAPChannel::DataHandler cb;
+      {
+        BLELockGuard lock(impl->mtx);
+        cb = impl->onDataCb;
+      }
+      if (cb) {
+        BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(impl);
+        cb(channel, data, dataLen);
+      }
+      break;
+    }
+
+    case BLE_L2CAP_EVENT_COC_TX_UNSTALLED: resumeWriteOperation(impl.get(), event->tx_unstalled.status); break;
+  }
+  return 0;
+}
+
 bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanImpl, uint16_t connHandle, uint16_t psm, uint16_t mtu) {
   {
     BLELockGuard lock(sL2CAPMtx);
@@ -1135,112 +1239,8 @@ bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanI
     clientContexts().push_back(ctx);
   }
 
-  auto clientEventFn = [](struct ble_l2cap_event *event, void *arg) -> int {
-    auto *ctx = static_cast<L2CAPClientCtx *>(arg);
-    if (!ctx) {
-      return 0;
-    }
-    auto impl = ctx->impl;
-
-    switch (event->type) {
-      case BLE_L2CAP_EVENT_COC_CONNECTED:
-        if (event->connect.status == 0) {
-          bool abandoned;
-          {
-            BLELockGuard lock(sL2CAPMtx);
-            abandoned = ctx->abandoned;
-            BLELockGuard channelLock(impl->mtx);
-            if (abandoned) {
-              ctx->abandonedChan = event->connect.chan;
-              ctx->disconnectQueued = true;
-              ctx->disconnectStartedAt = xTaskGetTickCount();
-              impl->connected = false;
-              impl->chan = nullptr;
-            } else {
-              impl->chan = event->connect.chan;
-              impl->connected = true;
-              impl->connHandle = event->connect.conn_handle;
-            }
-          }
-          if (abandoned) {
-            // The user-side connect already timed out and returned an empty
-            // handle. Defer disconnect until this callback returns because
-            // NimBLE still owns its sole signaling procedure while invoking
-            // COC_CONNECTED; an inline disconnect would fail with ENOMEM.
-            log_w("L2CAP client connect completed after timeout; scheduling orphan disconnect");
-            if (!scheduleAbandonedDisconnect()) {
-              forceAbandonedLinkCleanup(impl->connHandle);
-            }
-            break;
-          }
-          impl->connectSync.give(BTStatus::OK);
-        } else {
-          log_w("L2CAP client connect failed: status=%d", event->connect.status);
-          impl->connectSync.give(BTStatus::Fail);
-          removeClientCtx(ctx);
-        }
-        break;
-
-      case BLE_L2CAP_EVENT_COC_DISCONNECTED:
-      {
-        {
-          BLELockGuard lock(sL2CAPMtx);
-          ctx->abandonedChan = nullptr;
-          ctx->disconnectQueued = false;
-          BLELockGuard channelLock(impl->mtx);
-          impl->connected = false;
-          impl->chan = nullptr;
-        }
-        finishOperationForDisconnect(impl.get());
-        BLEL2CAPChannel::DisconnectHandler cb;
-        {
-          BLELockGuard lock(impl->mtx);
-          cb = impl->onDisconnectCb;
-        }
-        if (cb) {
-          BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(impl);
-          cb(channel);
-        }
-        removeClientCtx(ctx);
-        break;
-      }
-
-      case BLE_L2CAP_EVENT_COC_DATA_RECEIVED:
-      {
-        struct os_mbuf *rxBuf = event->receive.sdu_rx;
-        if (!rxBuf) {
-          break;
-        }
-        uint8_t stackBuf[kL2capRxStackBuf];
-        std::vector<uint8_t> heapBuf;
-        uint16_t dataLen;
-        const uint8_t *data = flattenRxSdu(rxBuf, stackBuf, sizeof(stackBuf), heapBuf, dataLen);
-        os_mbuf_free_chain(rxBuf);
-
-        struct os_mbuf *nextBuf = os_msys_get_pkthdr(impl->mtu, 0);
-        if (nextBuf) {
-          ble_l2cap_recv_ready(event->receive.chan, nextBuf);
-        }
-
-        BLEL2CAPChannel::DataHandler cb;
-        {
-          BLELockGuard lock(impl->mtx);
-          cb = impl->onDataCb;
-        }
-        if (cb) {
-          BLEL2CAPChannel channel = BLEL2CAPChannelImplCommon::makeHandle(impl);
-          cb(channel, data, dataLen);
-        }
-        break;
-      }
-
-      case BLE_L2CAP_EVENT_COC_TX_UNSTALLED: resumeWriteOperation(impl.get(), event->tx_unstalled.status); break;
-    }
-    return 0;
-  };
-
   chanImpl->connectSync.take();
-  int rc = ble_l2cap_connect(connHandle, psm, mtu, sdu, clientEventFn, ctx.get());
+  int rc = ble_l2cap_connect(connHandle, psm, mtu, sdu, l2capClientEvent, ctx.get());
   if (rc != 0) {
     chanImpl->connectSync.give(BTStatus::Fail);
     log_e("ble_l2cap_connect failed: rc=%d", rc);

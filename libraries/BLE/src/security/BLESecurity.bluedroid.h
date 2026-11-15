@@ -44,7 +44,7 @@ struct BLESecurity::Impl : BLESecurityImplCommon {
   /// @c ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT.
   BLESync bondSync{"bondSync"};
 
-  /// @brief Bluedroid-specific: GAP security event dispatch (routed from BluedroidCore via
+  /// @brief Bluedroid-specific: GAP security event dispatch (routed from BLE.bluedroid.cpp via
   /// @c bluedroidSecurityHandleGAP). Static because the stack calls it by function pointer.
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 

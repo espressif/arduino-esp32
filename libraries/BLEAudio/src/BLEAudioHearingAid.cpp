@@ -160,18 +160,13 @@ void BLEAudioHearingAidDevice::resetCallbacks() {
   impl.onPresetRenamedCb = nullptr;
 }
 
-BLEAudioHearingAidDevice BLEAudio::createHearingAidDevice() {
 #if BLE_AUDIO_HAS_SUPPORTED
+BLEAudioHearingAidDevice BLEAudio::createHearingAidDevice() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioHearingAidDevice>(
-    _impl, "createHearingAidDevice", BLE_AUDIO_GRP_HAS_SERVER, [](BLEAudioHearingAidDevice::Impl &s) {
-      return s.apply();
-    }
+    _impl, "createHearingAidDevice", BLE_AUDIO_GRP_HAS_SERVER, [](BLEAudioHearingAidDevice::Impl &s) { return s.apply(); }
   );
-#else
-  log_e("Hearing aid device is not enabled in this build (CONFIG_BT_HAS)");
-  return BLEAudioHearingAidDevice();
-#endif
 }
+#endif
 
 // --------------------------------------------------------------------------
 // Controller
@@ -312,17 +307,30 @@ void BLEAudioHearingAidController::resetCallbacks() {
   impl.onPresetSwitchCb = nullptr;
 }
 
-BLEAudioHearingAidController BLEAudio::createHearingAidController() {
 #if BLE_AUDIO_HAS_CLIENT_SUPPORTED
+BLEAudioHearingAidController BLEAudio::createHearingAidController() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioHearingAidController>(
-    _impl, "createHearingAidController", BLE_AUDIO_GRP_HAS_CLIENT, [](BLEAudioHearingAidController::Impl &) {
-      return bleAudioStatus(bleAudioHasCliInit());
-    }
+    _impl, "createHearingAidController", BLE_AUDIO_GRP_HAS_CLIENT, [](BLEAudioHearingAidController::Impl &) { return bleAudioStatus(bleAudioHasCliInit()); }
   );
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_HAS_SUPPORTED
+BLEAudioHearingAidDevice BLEAudio::createHearingAidDevice() {
+  log_e("Hearing aid device is not enabled in this build (CONFIG_BT_HAS)");
+  return BLEAudioHearingAidDevice();
+}
+#endif
+
+#if !BLE_AUDIO_HAS_CLIENT_SUPPORTED
+BLEAudioHearingAidController BLEAudio::createHearingAidController() {
   log_e("Hearing aid controller is not enabled in this build (CONFIG_BT_HAS_CLIENT)");
   return BLEAudioHearingAidController();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

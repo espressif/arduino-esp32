@@ -204,7 +204,13 @@ void BLESecurity::resetSecurity() {
   impl.applySecurityParams();
 }
 
-#else /* !BLE_SMP_SUPPORTED */
+#endif /* BLE_SMP_SUPPORTED */
+
+// ==========================================================================
+// Feature-disabled stubs (!BLE_SMP_SUPPORTED)
+// ==========================================================================
+
+#if !BLE_SMP_SUPPORTED
 
 void BLESecurity::setIOCapability(BLEIOCapability) {
   log_w("SMP not supported");
@@ -267,7 +273,7 @@ void BLESecurity::resetSecurity() {
   log_w("SMP not supported");
 }
 
-#endif /* BLE_SMP_SUPPORTED */
+#endif /* !BLE_SMP_SUPPORTED */
 
 // The shared pairing/event hooks on BLESecurityImplCommon live in the
 // implementation layer: security/BLESecurityImpl.cpp.

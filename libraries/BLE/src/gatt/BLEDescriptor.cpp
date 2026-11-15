@@ -290,6 +290,10 @@ BLEDescriptor BLEDescriptor::createCCCD() {
   return BLEDescriptor(d);
 }
 
+// ==========================================================================
+// Feature-disabled stubs (!BLE_GATT_SERVER_SUPPORTED)
+// ==========================================================================
+
 #if !BLE_GATT_SERVER_SUPPORTED
 
 void BLEDescriptor::setPermissions(BLEPermission) {

@@ -88,18 +88,15 @@ void BLEAudioMicDevice::resetCallbacks() {
   impl.onMuteChangedCb = nullptr;
 }
 
-BLEAudioMicDevice BLEAudio::createMicDevice() {
 #if BLE_AUDIO_MICP_DEVICE_SUPPORTED
+BLEAudioMicDevice BLEAudio::createMicDevice() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioMicDevice>(
     _impl, "createMicDevice", BLE_AUDIO_GRP_MICP_DEVICE, [](BLEAudioMicDevice::Impl &s) {
       return bleAudioStatus(bleAudioMicpDevInit(s.muted.load()));
     }
   );
-#else
-  log_e("Microphone device is not enabled in this build (CONFIG_BT_MICP_MIC_DEV)");
-  return BLEAudioMicDevice();
-#endif
 }
+#endif
 
 // --------------------------------------------------------------------------
 // Controller
@@ -229,17 +226,32 @@ void BLEAudioMicController::resetCallbacks() {
   impl.onInputChangedCb = nullptr;
 }
 
-BLEAudioMicController BLEAudio::createMicController() {
 #if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
+BLEAudioMicController BLEAudio::createMicController() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioMicController>(
     _impl, "createMicController", BLE_AUDIO_GRP_MICP_CONTROLLER, [](BLEAudioMicController::Impl &) {
       return bleAudioStatus(bleAudioMicpCtlrInit());
     }
   );
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_MICP_DEVICE_SUPPORTED
+BLEAudioMicDevice BLEAudio::createMicDevice() {
+  log_e("Microphone device is not enabled in this build (CONFIG_BT_MICP_MIC_DEV)");
+  return BLEAudioMicDevice();
+}
+#endif
+
+#if !BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
+BLEAudioMicController BLEAudio::createMicController() {
   log_e("Microphone controller is not enabled in this build (CONFIG_BT_MICP_MIC_CTLR)");
   return BLEAudioMicController();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

@@ -555,8 +555,8 @@ void BLEAudioUnicastClient::resetCallbacks() {
  * too) and stages the engine's client init for BLEAudio::start(). Streams are
  * only allocated at start(), once the peers' endpoints are known.
  */
-BLEAudioUnicastClient BLEAudio::createUnicastClient() {
 #if BLE_AUDIO_UNICAST_CLIENT_SUPPORTED
+BLEAudioUnicastClient BLEAudio::createUnicastClient() {
   if (!_impl || !_impl->active || _impl->started) {
     log_e("UnicastClient: create between audio.begin() and audio.start()");
     return BLEAudioUnicastClient();
@@ -574,10 +574,18 @@ BLEAudioUnicastClient BLEAudio::createUnicastClient() {
     return bleAudioStatus(bleAudioUcInit());
   });
   return BLEAudioUnicastClient(cli);
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_UNICAST_CLIENT_SUPPORTED
+BLEAudioUnicastClient BLEAudio::createUnicastClient() {
   log_e("UnicastClient: not enabled in this build (CONFIG_BT_BAP_UNICAST_CLIENT)");
   return BLEAudioUnicastClient();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

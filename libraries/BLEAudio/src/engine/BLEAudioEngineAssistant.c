@@ -507,7 +507,13 @@ int bleAudioBaSetBroadcastCode(uint16_t conn_handle, uint8_t src_id, const uint8
   return err ? err : (int)esp_ble_audio_bap_broadcast_assistant_set_broadcast_code(conn_handle, src_id, code);
 }
 
-#else /* !BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED */
+#endif /* BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED */
+
+/* ==========================================================================
+ * Feature-disabled stubs (!BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED)
+ * ========================================================================== */
+
+#if !BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED
 
 int bleAudioBaInit(void) {
   return ESP_ERR_NOT_SUPPORTED;
@@ -547,6 +553,6 @@ int bleAudioBaSetBroadcastCode(uint16_t conn_handle, uint8_t src_id, const uint8
   return ESP_ERR_NOT_SUPPORTED;
 }
 
-#endif /* BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED */
+#endif /* !BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED */
 
 #endif /* BLE_AUDIO_SUPPORTED */

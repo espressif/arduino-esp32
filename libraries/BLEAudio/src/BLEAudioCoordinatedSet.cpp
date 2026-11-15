@@ -424,34 +424,28 @@ void BLEAudioCoordinatedSetCoordinator::resetCallbacks() {
 // Factories
 // --------------------------------------------------------------------------
 
-BLEAudioCoordinatedSetMember BLEAudio::createCoordinatedSetMember() {
 #if BLE_AUDIO_CSIP_MEMBER_SUPPORTED
+BLEAudioCoordinatedSetMember BLEAudio::createCoordinatedSetMember() {
   if (!_impl || !_impl->active || _impl->started) {
     log_e("CoordinatedSet: create the member between audio.begin() and audio.start()");
     return BLEAudioCoordinatedSetMember();
   }
   return BLEAudioCoordinatedSetMember(makeMember(_impl, false));
-#else
-  log_e("CoordinatedSet: member not enabled in this build (CONFIG_BT_CSIP_SET_MEMBER)");
-  return BLEAudioCoordinatedSetMember();
-#endif
 }
+#endif
 
-BLEAudioCapAcceptor BLEAudio::createCapAcceptor() {
 #if BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED
+BLEAudioCapAcceptor BLEAudio::createCapAcceptor() {
   if (!_impl || !_impl->active || _impl->started) {
     log_e("CapAcceptor: create between audio.begin() and audio.start()");
     return BLEAudioCapAcceptor();
   }
   return BLEAudioCapAcceptor(makeMember(_impl, true));
-#else
-  log_e("CapAcceptor: not enabled in this build (CONFIG_BT_CAP_ACCEPTOR_SET_MEMBER)");
-  return BLEAudioCapAcceptor();
-#endif
 }
+#endif
 
-BLEAudioCoordinatedSetCoordinator BLEAudio::createCoordinatedSetCoordinator() {
 #if BLE_AUDIO_CSIP_COORDINATOR_SUPPORTED
+BLEAudioCoordinatedSetCoordinator BLEAudio::createCoordinatedSetCoordinator() {
   if (!_impl || !_impl->active || _impl->started) {
     log_e("CoordinatedSet: create the coordinator between audio.begin() and audio.start()");
     return BLEAudioCoordinatedSetCoordinator();
@@ -470,10 +464,32 @@ BLEAudioCoordinatedSetCoordinator BLEAudio::createCoordinatedSetCoordinator() {
     return bleAudioStatus(bleAudioCsipCoordInit());
   });
   return BLEAudioCoordinatedSetCoordinator(c);
-#else
+}
+#endif
+
+// ==========================================================================
+// Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_CSIP_MEMBER_SUPPORTED
+BLEAudioCoordinatedSetMember BLEAudio::createCoordinatedSetMember() {
+  log_e("CoordinatedSet: member not enabled in this build (CONFIG_BT_CSIP_SET_MEMBER)");
+  return BLEAudioCoordinatedSetMember();
+}
+#endif
+
+#if !BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED
+BLEAudioCapAcceptor BLEAudio::createCapAcceptor() {
+  log_e("CapAcceptor: not enabled in this build (CONFIG_BT_CAP_ACCEPTOR_SET_MEMBER)");
+  return BLEAudioCapAcceptor();
+}
+#endif
+
+#if !BLE_AUDIO_CSIP_COORDINATOR_SUPPORTED
+BLEAudioCoordinatedSetCoordinator BLEAudio::createCoordinatedSetCoordinator() {
   log_e("CoordinatedSet: coordinator not enabled in this build (CONFIG_BT_CSIP_SET_COORDINATOR)");
   return BLEAudioCoordinatedSetCoordinator();
-#endif
 }
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

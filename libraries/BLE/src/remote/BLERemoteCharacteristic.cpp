@@ -186,6 +186,10 @@ String BLERemoteCharacteristic::toString() const {
   return "BLERemoteCharacteristic(uuid=" + impl.uuid.toString() + ")";
 }
 
+// ==========================================================================
+// Feature-disabled stubs (!BLE_GATT_CLIENT_SUPPORTED)
+// ==========================================================================
+
 #if !BLE_GATT_CLIENT_SUPPORTED
 
 bool BLERemoteCharacteristic::readInto(uint32_t) {

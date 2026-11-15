@@ -75,6 +75,10 @@ String BLERemoteService::toString() const {
   return "BLERemoteService(uuid=" + impl.uuid.toString() + ")";
 }
 
+// ==========================================================================
+// Feature-disabled stubs (!BLE_GATT_CLIENT_SUPPORTED)
+// ==========================================================================
+
 #if !BLE_GATT_CLIENT_SUPPORTED
 
 BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &) const {

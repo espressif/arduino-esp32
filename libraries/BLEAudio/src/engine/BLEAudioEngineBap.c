@@ -1038,15 +1038,6 @@ int bleAudioUsInit(uint8_t snk_cnt, uint8_t src_cnt, const ble_audio_qos_pref_t 
   return 0;
 }
 
-#else
-
-int bleAudioUsInit(uint8_t snk_cnt, uint8_t src_cnt, const ble_audio_qos_pref_t *pref) {
-  (void)snk_cnt;
-  (void)src_cnt;
-  (void)pref;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-
 #endif /* BLE_AUDIO_UNICAST_SERVER_SUPPORTED */
 
 /* ── Unicast client ─────────────────────────────────────────────────────── */
@@ -1611,23 +1602,8 @@ int bleAudioUcStop(void) {
   return 0;
 }
 
-#else
+#else /* !BLE_AUDIO_UNICAST_CLIENT_SUPPORTED */
 
-int bleAudioUcInit(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioUcDiscover(uint16_t conn_handle) {
-  (void)conn_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
-  (void)reqs;
-  (void)count;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioUcStop(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
 static void uc_on_stream_event(ble_audio_slot_t *slot, uint8_t stage) {
   (void)slot;
   (void)stage;
@@ -1903,41 +1879,6 @@ void bleAudioBsrcDelete(void) {
 
 void *bleAudioBsrcHandle(void) {
   return s_bsrc.source;
-}
-
-#else
-
-int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec,
-                       const ble_audio_qos_t *qos, uint16_t context, const uint8_t *code) {
-  (void)slots;
-  (void)locations;
-  (void)count;
-  (void)codec;
-  (void)qos;
-  (void)context;
-  (void)code;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioBsrcGetBase(uint8_t *out, uint16_t cap, uint16_t *out_len) {
-  (void)out;
-  (void)cap;
-  (void)out_len;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioBsrcStart(uint8_t adv_handle) {
-  (void)adv_handle;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioBsrcStop(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioBsrcUpdateContext(uint16_t context) {
-  (void)context;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-void bleAudioBsrcDelete(void) {}
-void *bleAudioBsrcHandle(void) {
-  return NULL;
 }
 
 #endif /* BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED */
@@ -2465,37 +2406,6 @@ uint16_t bleAudioBsinkSyncHandle(void) {
   return s_bsnk.sync_handle;
 }
 
-#else
-
-int bleAudioBsinkInit(bool delegator) {
-  (void)delegator;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-int bleAudioBsinkSetStreams(ble_audio_slot_t *const slots[], uint8_t count) {
-  (void)slots;
-  (void)count;
-  return ESP_ERR_NOT_SUPPORTED;
-}
-void bleAudioBsinkSetScanning(bool on) {
-  (void)on;
-}
-void bleAudioBsinkArm(uint32_t broadcast_id) {
-  (void)broadcast_id;
-}
-void bleAudioBsinkDisarm(void) {}
-void bleAudioBsinkSetCode(const uint8_t *code) {
-  (void)code;
-}
-void bleAudioBsinkSetBisMask(uint32_t mask) {
-  (void)mask;
-}
-int bleAudioBsinkStop(void) {
-  return ESP_ERR_NOT_SUPPORTED;
-}
-uint16_t bleAudioBsinkSyncHandle(void) {
-  return SYNC_NONE;
-}
-
 #endif /* BLE_AUDIO_BROADCAST_SINK_SUPPORTED */
 
 /* ── Unit hooks ─────────────────────────────────────────────────────────── */
@@ -2557,5 +2467,119 @@ static const ble_audio_unit_hooks_t s_hooks = {.on_gap = bap_on_gap, .on_deinit 
 int bleAudioBapAttach(void) {
   return bleAudioEngineRegisterUnit(&s_hooks);
 }
+
+/* ==========================================================================
+ * Feature-disabled stubs
+ * ========================================================================== */
+
+#if !BLE_AUDIO_UNICAST_SERVER_SUPPORTED
+int bleAudioUsInit(uint8_t snk_cnt, uint8_t src_cnt, const ble_audio_qos_pref_t *pref) {
+  (void)snk_cnt;
+  (void)src_cnt;
+  (void)pref;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_UNICAST_SERVER_SUPPORTED */
+
+#if !BLE_AUDIO_UNICAST_CLIENT_SUPPORTED
+int bleAudioUcInit(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioUcDiscover(uint16_t conn_handle) {
+  (void)conn_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
+  (void)reqs;
+  (void)count;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioUcStop(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* !BLE_AUDIO_UNICAST_CLIENT_SUPPORTED */
+
+#if !BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec,
+                       const ble_audio_qos_t *qos, uint16_t context, const uint8_t *code) {
+  (void)slots;
+  (void)locations;
+  (void)count;
+  (void)codec;
+  (void)qos;
+  (void)context;
+  (void)code;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioBsrcGetBase(uint8_t *out, uint16_t cap, uint16_t *out_len) {
+  (void)out;
+  (void)cap;
+  (void)out_len;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioBsrcStart(uint8_t adv_handle) {
+  (void)adv_handle;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioBsrcStop(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioBsrcUpdateContext(uint16_t context) {
+  (void)context;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+void bleAudioBsrcDelete(void) {}
+
+void *bleAudioBsrcHandle(void) {
+  return NULL;
+}
+#endif /* !BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED */
+
+#if !BLE_AUDIO_BROADCAST_SINK_SUPPORTED
+int bleAudioBsinkInit(bool delegator) {
+  (void)delegator;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+int bleAudioBsinkSetStreams(ble_audio_slot_t *const slots[], uint8_t count) {
+  (void)slots;
+  (void)count;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+void bleAudioBsinkSetScanning(bool on) {
+  (void)on;
+}
+
+void bleAudioBsinkArm(uint32_t broadcast_id) {
+  (void)broadcast_id;
+}
+
+void bleAudioBsinkDisarm(void) {}
+
+void bleAudioBsinkSetCode(const uint8_t *code) {
+  (void)code;
+}
+
+void bleAudioBsinkSetBisMask(uint32_t mask) {
+  (void)mask;
+}
+
+int bleAudioBsinkStop(void) {
+  return ESP_ERR_NOT_SUPPORTED;
+}
+
+uint16_t bleAudioBsinkSyncHandle(void) {
+  return SYNC_NONE;
+}
+#endif /* !BLE_AUDIO_BROADCAST_SINK_SUPPORTED */
 
 #endif /* BLE_AUDIO_SUPPORTED */

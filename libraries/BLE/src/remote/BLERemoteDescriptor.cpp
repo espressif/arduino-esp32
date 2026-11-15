@@ -172,6 +172,10 @@ String BLERemoteDescriptor::toString() const {
   return "BLERemoteDescriptor(uuid=" + impl.uuid.toString() + ")";
 }
 
+// ==========================================================================
+// Feature-disabled stubs (!BLE_GATT_CLIENT_SUPPORTED)
+// ==========================================================================
+
 #if !BLE_GATT_CLIENT_SUPPORTED
 
 bool BLERemoteDescriptor::readInto(uint32_t) {

@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLEAudioProfiles.cpp
+ * @brief TMAP, GMAP, and Public Broadcast Profile (`BLEAudioPublicBroadcast`)
+ *        public handle implementations and feature-disabled factory stubs.
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_AUDIO_SUPPORTED
 
@@ -83,13 +89,22 @@ struct DeferredProfileDiscovery {
 
 }  // namespace
 
-// --------------------------------------------------------------------------
-// TMAP
-// --------------------------------------------------------------------------
+// ==========================================================================
+// 1. Telephony and Media Audio Profile (TMAP)
+// ==========================================================================
 
 struct BLEAudioTmap::Impl : DeferredProfileDiscovery {
   BLEAudioTmapRole roles = BLEAudioTmapRole::None;
   DiscoverCallback onDiscoveredCb;
+
+  BTStatus apply() {
+    BLEAudioTmapRole localRoles;
+    {
+      BLELockGuard lock(mtx.get());
+      localRoles = roles;
+    }
+    return localRoles == BLEAudioTmapRole::None ? BTStatus::OK : bleAudioStatus(bleAudioTmapRegister(static_cast<uint16_t>(localRoles)));
+  }
 
   void handle(const ble_audio_evt_t &e) {
     if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED || e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED) {
@@ -149,32 +164,37 @@ void BLEAudioTmap::resetCallbacks() {
   impl.onDiscoveredCb = nullptr;
 }
 
-BLEAudioTmap BLEAudio::createTmap() {
 #if BLE_AUDIO_TMAP_SUPPORTED
-  return BLEAudioImplCommon::createStagedRole<BLEAudioTmap>(
-    _impl, "createTmap", BLE_AUDIO_GRP_TMAP, [](BLEAudioTmap::Impl &t) {
-      BLEAudioTmapRole localRoles;
-      {
-        BLELockGuard lock(t.mtx.get());
-        localRoles = t.roles;
-      }
-      return localRoles == BLEAudioTmapRole::None ? BTStatus::OK : bleAudioStatus(bleAudioTmapRegister(static_cast<uint16_t>(localRoles)));
-    }
-  );
-#else
-  log_e("TMAP is not enabled in this build (CONFIG_BT_TMAP)");
-  return BLEAudioTmap();
-#endif
+BLEAudioTmap BLEAudio::createTmap() {
+  return BLEAudioImplCommon::createStagedRole<BLEAudioTmap>(_impl, "createTmap", BLE_AUDIO_GRP_TMAP, [](BLEAudioTmap::Impl &t) { return t.apply(); });
 }
+#endif
 
-// --------------------------------------------------------------------------
-// GMAP
-// --------------------------------------------------------------------------
+// ==========================================================================
+// 2. Gaming Audio Profile (GMAP)
+// ==========================================================================
 
 struct BLEAudioGmap::Impl : DeferredProfileDiscovery {
   BLEAudioGmapRole roles = BLEAudioGmapRole::None;
   BLEAudioGmapFeatures features;
   DiscoverCallback onDiscoveredCb;
+
+  BTStatus apply() {
+    BLEAudioGmapRole localRoles;
+    BLEAudioGmapFeatures localFeatures;
+    {
+      BLELockGuard lock(mtx.get());
+      localRoles = roles;
+      localFeatures = features;
+    }
+    if (localRoles == BLEAudioGmapRole::None) {
+      return BTStatus::OK;
+    }
+    const ble_audio_gmap_features_t f = {
+      localFeatures.unicastGateway, localFeatures.unicastTerminal, localFeatures.broadcastSender, localFeatures.broadcastReceiver,
+    };
+    return bleAudioStatus(bleAudioGmapRegister(static_cast<uint8_t>(localRoles), &f));
+  }
 
   void handle(const ble_audio_evt_t &e) {
     if (e.type == BLE_AUDIO_EVT_GATT_DISCOVERED || e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED) {
@@ -261,35 +281,15 @@ void BLEAudioGmap::resetCallbacks() {
   impl.onDiscoveredCb = nullptr;
 }
 
-BLEAudioGmap BLEAudio::createGmap() {
 #if BLE_AUDIO_GMAP_SUPPORTED
-  return BLEAudioImplCommon::createStagedRole<BLEAudioGmap>(
-    _impl, "createGmap", BLE_AUDIO_GRP_GMAP, [](BLEAudioGmap::Impl &g) -> BTStatus {
-      BLEAudioGmapRole localRoles;
-      BLEAudioGmapFeatures localFeatures;
-      {
-        BLELockGuard lock(g.mtx.get());
-        localRoles = g.roles;
-        localFeatures = g.features;
-      }
-      if (localRoles == BLEAudioGmapRole::None) {
-        return BTStatus::OK;
-      }
-      const ble_audio_gmap_features_t f = {
-        localFeatures.unicastGateway, localFeatures.unicastTerminal, localFeatures.broadcastSender, localFeatures.broadcastReceiver,
-      };
-      return bleAudioStatus(bleAudioGmapRegister(static_cast<uint8_t>(localRoles), &f));
-    }
-  );
-#else
-  log_e("GMAP is not enabled in this build (CONFIG_BT_GMAP)");
-  return BLEAudioGmap();
-#endif
+BLEAudioGmap BLEAudio::createGmap() {
+  return BLEAudioImplCommon::createStagedRole<BLEAudioGmap>(_impl, "createGmap", BLE_AUDIO_GRP_GMAP, [](BLEAudioGmap::Impl &g) { return g.apply(); });
 }
+#endif
 
-// --------------------------------------------------------------------------
-// Public Broadcast Profile
-// --------------------------------------------------------------------------
+// ==========================================================================
+// 3. Public Broadcast Profile (PBP)
+// ==========================================================================
 
 size_t BLEAudioPublicBroadcast::buildAnnouncement(uint8_t features, const uint8_t *metadata, size_t metadataLen, uint8_t *out, size_t outCap) {
   size_t len = 0;
@@ -306,5 +306,23 @@ bool BLEAudioPublicBroadcast::parseAnnouncement(
 ) {
   return bleAudioPbpParse(data, dataLen, &featuresOut, &metadataOut, &metadataLenOut) == 0;
 }
+
+// ==========================================================================
+// 4. Feature-disabled factory stubs
+// ==========================================================================
+
+#if !BLE_AUDIO_TMAP_SUPPORTED
+BLEAudioTmap BLEAudio::createTmap() {
+  log_e("TMAP is not enabled in this build (CONFIG_BT_TMAP)");
+  return BLEAudioTmap();
+}
+#endif
+
+#if !BLE_AUDIO_GMAP_SUPPORTED
+BLEAudioGmap BLEAudio::createGmap() {
+  log_e("GMAP is not enabled in this build (CONFIG_BT_GMAP)");
+  return BLEAudioGmap();
+}
+#endif
 
 #endif /* BLE_AUDIO_SUPPORTED */

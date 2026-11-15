@@ -17,6 +17,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLECharacteristic.cpp
+ * @brief Stack-agnostic `BLECharacteristic` helpers, shared notify/indicate
+ *        dispatch, descriptor staging, and feature-disabled stubs.
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_ENABLED
 
@@ -27,15 +33,46 @@
 #include "gatt/BLECharacteristicValidation.h"
 #include "esp32-hal-log.h"
 
-/**
- * @file
- * @brief Stack-agnostic @ref BLECharacteristic helpers and shared notify/indicate dispatch.
- */
+// ==========================================================================
+// 1. Handle construction, value accessors & callbacks
+// ==========================================================================
 
 BLECharacteristic::BLECharacteristic() : _impl(nullptr) {}
 
 BLECharacteristic::operator bool() const {
   return _impl != nullptr;
+}
+
+void BLECharacteristic::setValue(const uint8_t *data, size_t length) {
+  BLE_CHECK_IMPL();
+  // Keep verbose logging of large payloads off hot paths - high-frequency
+  // updates can make this call costly.
+  log_d("Characteristic %s: setValue len=%u", impl.uuid.toString().c_str(), length);
+  BLELockGuard lock(impl.mtx);
+  impl.value.assign(data, data + length);
+}
+
+const uint8_t *BLECharacteristic::getValue(size_t *length) const {
+  if (!_impl) {
+    if (length) {
+      *length = 0;
+    }
+    return nullptr;
+  }
+  BLELockGuard lock(_impl->mtx);
+  if (length) {
+    *length = _impl->value.size();
+  }
+  return _impl->value.empty() ? nullptr : _impl->value.data();
+}
+
+String BLECharacteristic::getStringValue() const {
+  size_t len = 0;
+  const uint8_t *data = getValue(&len);
+  if (!data || len == 0) {
+    return "";
+  }
+  return String(reinterpret_cast<const char *>(data), len);
 }
 
 void BLECharacteristic::setValue(const String &value) {
@@ -48,6 +85,10 @@ void BLECharacteristic::setValue(uint16_t v) {
 
 void BLECharacteristic::setValue(uint32_t v) {
   setValue(reinterpret_cast<const uint8_t *>(&v), sizeof(v));
+}
+
+void BLECharacteristic::setValue(int value) {
+  setValue(static_cast<uint32_t>(value));
 }
 
 void BLECharacteristic::setValue(float v) {
@@ -97,8 +138,167 @@ std::vector<BLEDescriptor> BLECharacteristic::getDescriptors() const {
   return result;
 }
 
-void BLECharacteristic::removeDescriptor(const BLEDescriptor &desc) {
+BLEUUID BLECharacteristic::getUUID() const {
+  BLE_CHECK_IMPL(BLEUUID());
+  return impl.uuid;
+}
+
+uint16_t BLECharacteristic::getHandle() const {
+  BLE_CHECK_IMPL(0);
+  return impl.handle;
+}
+
+BLEService BLECharacteristic::getService() const {
+  BLE_CHECK_IMPL(BLEService());
+  auto service = impl.serviceOwner.lock();
+  if (!service) {
+    return BLEService();
+  }
+  BLELockGuard lock(impl.mtx);
+  return impl.service == service.get() ? BLEService(service) : BLEService();
+}
+
+String BLECharacteristic::toString() const {
+  BLE_CHECK_IMPL("BLECharacteristic(null)");
+  return "BLECharacteristic(uuid=" + impl.uuid.toString() + ")";
+}
+
+void BLECharacteristic::onRead(ReadHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onReadCb = std::move(handler);
+}
+
+void BLECharacteristic::onWrite(WriteHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onWriteCb = std::move(handler);
+}
+
+void BLECharacteristic::onNotify(NotifyHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onNotifyCb = std::move(handler);
+}
+
+void BLECharacteristic::onSubscribe(SubscribeHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onSubscribeCb = std::move(handler);
+}
+
+void BLECharacteristic::onStatus(StatusHandler handler) {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onStatusCb = std::move(handler);
+}
+
+void BLECharacteristic::resetCallbacks() {
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onReadCb = nullptr;
+  impl.onWriteCb = nullptr;
+  impl.onNotifyCb = nullptr;
+  impl.onSubscribeCb = nullptr;
+  impl.onStatusCb = nullptr;
+}
+
+// ==========================================================================
+// 2. Subscriber queries & Impl callback dispatch
+// ==========================================================================
+
+// Retain both parents before taking the server mutex. The weak links are stable
+// across detach, while the raw links are only attachment markers guarded by the
+// retained server's mutex.
+static std::pair<std::shared_ptr<BLEService::Impl>, std::shared_ptr<BLEServer::Impl>> subscriberParents(const BLECharacteristic::Impl &impl) {
+  auto service = impl.serviceOwner.lock();
+  auto server = service ? service->serverOwner.lock() : std::shared_ptr<BLEServer::Impl>();
+  return {std::move(service), std::move(server)};
+}
+
+size_t BLECharacteristic::getSubscribedCount() const {
+  BLE_CHECK_IMPL(0);
+  auto [service, server] = subscriberParents(impl);
+  if (!service || !server) {
+    return 0;
+  }
+  BLELockGuard lock(server->mtx);
+  if (service->server != server.get()) {
+    return 0;
+  }
+  return impl.subscribers.size();
+}
+
+bool BLECharacteristic::isSubscribed(uint16_t connHandle) const {
+  BLE_CHECK_IMPL(false);
+  auto [service, server] = subscriberParents(impl);
+  if (!service || !server) {
+    return false;
+  }
+  BLELockGuard lock(server->mtx);
+  if (service->server != server.get()) {
+    return false;
+  }
+  for (const auto &sub : impl.subscribers) {
+    if (sub.first == connHandle) {
+      return sub.second > 0;
+    }
+  }
+  return false;
+}
+
+std::vector<uint16_t> BLECharacteristic::getSubscribedConnections() const {
+  std::vector<uint16_t> result;
+  BLE_CHECK_IMPL(result);
+  auto [service, server] = subscriberParents(impl);
+  if (!service || !server) {
+    return result;
+  }
+  BLELockGuard lock(server->mtx);
+  if (service->server != server.get()) {
+    return result;
+  }
+  for (const auto &sub : impl.subscribers) {
+    if (sub.second > 0) {
+      result.push_back(sub.first);
+    }
+  }
+  return result;
+}
+
+void BLECharacteristicImplCommon::dispatchNotify() {
+  BLECharacteristic::NotifyHandler cb;
+  {
+    BLELockGuard lock(mtx);
+    if (!onNotifyCb) {
+      return;
+    }
+    cb = onNotifyCb;
+  }
+  BLECharacteristic chr = makeHandle(shared_from_this());
+  cb(chr);
+}
+
+void BLECharacteristicImplCommon::dispatchStatus(BLECharacteristic::NotifyStatus status, uint32_t code) {
+  BLECharacteristic::StatusHandler cb;
+  {
+    BLELockGuard lock(mtx);
+    if (!onStatusCb) {
+      return;
+    }
+    cb = onStatusCb;
+  }
+  BLECharacteristic chr = makeHandle(shared_from_this());
+  cb(chr, status, code);
+}
+
+// ==========================================================================
+// 3. Notify, indicate & descriptor staging (BLE_GATT_SERVER_SUPPORTED)
+// ==========================================================================
+
 #if BLE_GATT_SERVER_SUPPORTED
+
+void BLECharacteristic::removeDescriptor(const BLEDescriptor &desc) {
   BLE_CHECK_IMPL();
   if (!desc._impl) {
     return;
@@ -132,97 +332,7 @@ void BLECharacteristic::removeDescriptor(const BLEDescriptor &desc) {
     }
   }
   bleDetachLocalDescriptor(removed);
-#else
-  (void)desc;
-#endif
 }
-
-BLEUUID BLECharacteristic::getUUID() const {
-  BLE_CHECK_IMPL(BLEUUID());
-  return impl.uuid;
-}
-
-uint16_t BLECharacteristic::getHandle() const {
-  BLE_CHECK_IMPL(0);
-  return impl.handle;
-}
-
-BLEService BLECharacteristic::getService() const {
-  BLE_CHECK_IMPL(BLEService());
-  auto service = impl.serviceOwner.lock();
-  if (!service) {
-    return BLEService();
-  }
-  BLELockGuard lock(impl.mtx);
-  return impl.service == service.get() ? BLEService(service) : BLEService();
-}
-
-String BLECharacteristic::toString() const {
-  BLE_CHECK_IMPL("BLECharacteristic(null)");
-  return "BLECharacteristic(uuid=" + impl.uuid.toString() + ")";
-}
-
-void BLECharacteristic::setValue(int value) {
-  setValue(static_cast<uint32_t>(value));
-}
-
-void BLECharacteristic::onRead(ReadHandler handler) {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onReadCb = std::move(handler);
-}
-
-void BLECharacteristic::onWrite(WriteHandler handler) {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onWriteCb = std::move(handler);
-}
-
-void BLECharacteristic::onNotify(NotifyHandler handler) {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onNotifyCb = std::move(handler);
-}
-
-void BLECharacteristic::onSubscribe(SubscribeHandler handler) {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onSubscribeCb = std::move(handler);
-}
-
-void BLECharacteristic::onStatus(StatusHandler handler) {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onStatusCb = std::move(handler);
-}
-
-void BLECharacteristicImplCommon::dispatchNotify() {
-  BLECharacteristic::NotifyHandler cb;
-  {
-    BLELockGuard lock(mtx);
-    if (!onNotifyCb) {
-      return;
-    }
-    cb = onNotifyCb;
-  }
-  BLECharacteristic chr = makeHandle(shared_from_this());
-  cb(chr);
-}
-
-void BLECharacteristicImplCommon::dispatchStatus(BLECharacteristic::NotifyStatus status, uint32_t code) {
-  BLECharacteristic::StatusHandler cb;
-  {
-    BLELockGuard lock(mtx);
-    if (!onStatusCb) {
-      return;
-    }
-    cb = onStatusCb;
-  }
-  BLECharacteristic chr = makeHandle(shared_from_this());
-  cb(chr, status, code);
-}
-
-#if BLE_GATT_SERVER_SUPPORTED
 
 std::shared_ptr<BLEServer::Impl> BLECharacteristicImplCommon::activeServer() {
   // Weak parent links break ownership cycles but let retained child handles
@@ -421,7 +531,15 @@ void BLECharacteristic::setDescription(const String &desc) {
   }
 }
 
-#else /* !BLE_GATT_SERVER_SUPPORTED */
+#endif /* BLE_GATT_SERVER_SUPPORTED */
+
+// ==========================================================================
+// 4. Feature-disabled stubs (!BLE_GATT_SERVER_SUPPORTED)
+// ==========================================================================
+
+#if !BLE_GATT_SERVER_SUPPORTED
+
+void BLECharacteristic::removeDescriptor(const BLEDescriptor &) {}
 
 BTStatus BLECharacteristic::notify(const uint8_t *, size_t) {
   log_w("GATT server not supported");
@@ -449,104 +567,6 @@ BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &, BLEPermission
 
 void BLECharacteristic::setDescription(const String &) {}
 
-#endif /* BLE_GATT_SERVER_SUPPORTED */
-
-void BLECharacteristic::resetCallbacks() {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.onReadCb = nullptr;
-  impl.onWriteCb = nullptr;
-  impl.onNotifyCb = nullptr;
-  impl.onSubscribeCb = nullptr;
-  impl.onStatusCb = nullptr;
-}
-
-// Retain both parents before taking the server mutex. The weak links are stable
-// across detach, while the raw links are only attachment markers guarded by the
-// retained server's mutex.
-static std::pair<std::shared_ptr<BLEService::Impl>, std::shared_ptr<BLEServer::Impl>> subscriberParents(const BLECharacteristic::Impl &impl) {
-  auto service = impl.serviceOwner.lock();
-  auto server = service ? service->serverOwner.lock() : std::shared_ptr<BLEServer::Impl>();
-  return {std::move(service), std::move(server)};
-}
-
-size_t BLECharacteristic::getSubscribedCount() const {
-  BLE_CHECK_IMPL(0);
-  auto [service, server] = subscriberParents(impl);
-  if (!service || !server) {
-    return 0;
-  }
-  BLELockGuard lock(server->mtx);
-  if (service->server != server.get()) {
-    return 0;
-  }
-  return impl.subscribers.size();
-}
-
-bool BLECharacteristic::isSubscribed(uint16_t connHandle) const {
-  BLE_CHECK_IMPL(false);
-  auto [service, server] = subscriberParents(impl);
-  if (!service || !server) {
-    return false;
-  }
-  BLELockGuard lock(server->mtx);
-  if (service->server != server.get()) {
-    return false;
-  }
-  for (const auto &sub : impl.subscribers) {
-    if (sub.first == connHandle) {
-      return sub.second > 0;
-    }
-  }
-  return false;
-}
-
-std::vector<uint16_t> BLECharacteristic::getSubscribedConnections() const {
-  std::vector<uint16_t> result;
-  BLE_CHECK_IMPL(result);
-  auto [service, server] = subscriberParents(impl);
-  if (!service || !server) {
-    return result;
-  }
-  BLELockGuard lock(server->mtx);
-  if (service->server != server.get()) {
-    return result;
-  }
-  for (const auto &sub : impl.subscribers) {
-    if (sub.second > 0) {
-      result.push_back(sub.first);
-    }
-  }
-  return result;
-}
-
-void BLECharacteristic::setValue(const uint8_t *data, size_t length) {
-  BLE_CHECK_IMPL();
-  // Keep verbose logging of large payloads off hot paths - high-frequency
-  // updates can make this call costly.
-  log_d("Characteristic %s: setValue len=%u", impl.uuid.toString().c_str(), length);
-  BLELockGuard lock(impl.mtx);
-  impl.value.assign(data, data + length);
-}
-
-const uint8_t *BLECharacteristic::getValue(size_t *length) const {
-  if (!_impl) {
-    if (length) {
-      *length = 0;
-    }
-    return nullptr;
-  }
-  BLELockGuard lock(_impl->mtx);
-  if (length) {
-    *length = _impl->value.size();
-  }
-  return _impl->value.empty() ? nullptr : _impl->value.data();
-}
-
-String BLECharacteristic::getStringValue() const {
-  BLE_CHECK_IMPL("");
-  BLELockGuard lock(impl.mtx);
-  return String(reinterpret_cast<const char *>(impl.value.data()), impl.value.size());
-}
+#endif /* !BLE_GATT_SERVER_SUPPORTED */
 
 #endif /* BLE_ENABLED */
