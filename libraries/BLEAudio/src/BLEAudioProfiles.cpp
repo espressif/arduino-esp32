@@ -198,6 +198,11 @@ struct BLEAudioGmap::Impl : DeferredProfileDiscovery {
     if (localRoles == BLEAudioGmapRole::None) {
       return BTStatus::OK;
     }
+    if ((localRoles & BLEAudioGmapRole::UnicastGameTerminal)
+        && !(localFeatures.unicastTerminal & (BLEAudioGmapFeatures::UgtSource | BLEAudioGmapFeatures::UgtSink))) {
+      log_e("GMAP: UGT role needs UgtSource and/or UgtSink in unicastTerminal");
+      return BTStatus::InvalidParam;
+    }
     const ble_audio_gmap_features_t f = {
       localFeatures.unicastGateway, localFeatures.unicastTerminal, localFeatures.broadcastSender, localFeatures.broadcastReceiver,
     };
@@ -240,6 +245,10 @@ BLEAudioGmap::operator bool() const {
 
 namespace {
 
+// Roles and features are set in either order (typically chained as
+// setRoles(...).setFeatures(...)), so each setter only validates its own
+// domain here; the role↔feature combination is checked in apply(), where a
+// mismatch fails audio.start() loudly instead of publishing a broken GMAS.
 bool gmapRolesOk(BLEAudioGmapRole roles, const char *what) {
   if (static_cast<uint8_t>(roles) & ~0x0Fu) {
     log_e("%s: unknown role bits 0x%02x (valid: UGG/UGT/BGS/BGR)", what, static_cast<unsigned>(roles) & ~0x0Fu);
@@ -248,14 +257,9 @@ bool gmapRolesOk(BLEAudioGmapRole roles, const char *what) {
   return true;
 }
 
-bool gmapFeaturesOk(BLEAudioGmapRole roles, const BLEAudioGmapFeatures &f, const char *what) {
+bool gmapFeaturesOk(const BLEAudioGmapFeatures &f, const char *what) {
   if ((f.unicastGateway & ~0x07u) || (f.unicastTerminal & ~0x7Fu) || (f.broadcastSender & ~0x01u) || (f.broadcastReceiver & ~0x03u)) {
     log_e("%s: feature bits outside the known masks (UGG<=0x07 UGT<=0x7F BGS<=0x01 BGR<=0x03)", what);
-    return false;
-  }
-  if ((roles & BLEAudioGmapRole::UnicastGameTerminal)
-      && !(f.unicastTerminal & (BLEAudioGmapFeatures::UgtSource | BLEAudioGmapFeatures::UgtSink))) {
-    log_e("%s: UGT role needs UgtSource and/or UgtSink in unicastTerminal", what);
     return false;
   }
   return true;
@@ -265,15 +269,7 @@ bool gmapFeaturesOk(BLEAudioGmapRole roles, const BLEAudioGmapFeatures &f, const
 
 BLEAudioGmap &BLEAudioGmap::setRoles(BLEAudioGmapRole roles) {
   BLE_CHECK_IMPL(*this);
-  if (!startedWarn(impl.audio, "BLEAudioGmap::setRoles")) {
-    BLEAudioGmapFeatures features;
-    {
-      BLELockGuard lock(impl.mtx.get());
-      features = impl.features;
-    }
-    if (!gmapRolesOk(roles, "BLEAudioGmap::setRoles") || !gmapFeaturesOk(roles, features, "BLEAudioGmap::setRoles")) {
-      return *this;
-    }
+  if (!startedWarn(impl.audio, "BLEAudioGmap::setRoles") && gmapRolesOk(roles, "BLEAudioGmap::setRoles")) {
     BLELockGuard lock(impl.mtx.get());
     impl.roles = roles;
   }
@@ -282,15 +278,7 @@ BLEAudioGmap &BLEAudioGmap::setRoles(BLEAudioGmapRole roles) {
 
 BLEAudioGmap &BLEAudioGmap::setFeatures(const BLEAudioGmapFeatures &features) {
   BLE_CHECK_IMPL(*this);
-  if (!startedWarn(impl.audio, "BLEAudioGmap::setFeatures")) {
-    BLEAudioGmapRole roles;
-    {
-      BLELockGuard lock(impl.mtx.get());
-      roles = impl.roles;
-    }
-    if (!gmapFeaturesOk(roles, features, "BLEAudioGmap::setFeatures")) {
-      return *this;
-    }
+  if (!startedWarn(impl.audio, "BLEAudioGmap::setFeatures") && gmapFeaturesOk(features, "BLEAudioGmap::setFeatures")) {
     BLELockGuard lock(impl.mtx.get());
     impl.features = features;
   }
