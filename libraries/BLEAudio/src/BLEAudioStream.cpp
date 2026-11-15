@@ -19,6 +19,7 @@
 
 #include "BLEAudioStream.h"
 #include "core/BLEImplHelpers.h"
+#include "core/BLETask.h"
 #include "BLEAudioStreamImpl.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -79,12 +80,18 @@ template<typename F> void withHandle(void *owner, F &&f) {
  * The busy count is raised before the pointer is read, so a concurrent
  * setTap()/clearTap() either sees this call in flight (and waits for it) or
  * this call already reads the new pointer: a removed tap is never entered.
+ * s_tapDepth marks "inside a tap hook" on the host task so setTap()/clearTap()
+ * can refuse the one call context that would wedge it (draining itself).
  */
+static int s_tapDepth = 0; /* Host task only: tap hooks run there and nowhere else. */
+
 template<typename F> inline void withTap(Impl &impl, F &&f) {
   impl.tapBusy.fetch_add(1);
+  s_tapDepth++;
   if (const BLEAudioStreamTap *t = impl.tap.load()) {
     f(*t);
   }
+  s_tapDepth--;
   impl.tapBusy.fetch_sub(1);
 }
 
@@ -269,6 +276,10 @@ void BLEAudioStreamAccess::setTap(const BLEAudioStream &s, const BLEAudioStreamT
   if (!impl) {
     return;
   }
+  if (bleInStackCallbackTask() && s_tapDepth > 0) {
+    log_e("Stream: setTap() from inside a tap hook would wedge the host task; detach outside the data path");
+    return;
+  }
   impl->tap.store(tap);
   drainTap(*impl);
 }
@@ -276,6 +287,10 @@ void BLEAudioStreamAccess::setTap(const BLEAudioStream &s, const BLEAudioStreamT
 void BLEAudioStreamAccess::clearTap(const BLEAudioStream &s, const BLEAudioStreamTap *tap) {
   Impl *impl = s._impl.get();
   if (!impl || !tap) {
+    return;
+  }
+  if (bleInStackCallbackTask() && s_tapDepth > 0) {
+    log_e("Stream: clearTap() from inside a tap hook would wedge the host task; detach outside the data path");
     return;
   }
   const BLEAudioStreamTap *expected = tap;
@@ -340,13 +355,15 @@ BTStatus BLEAudioStream::write(const uint8_t *sdu, uint16_t len) {
   if (!sdu || !len) {
     return BTStatus::InvalidParam;
   }
-  if (!bleAudioStreamIsTx(impl.slot)) {
-    if (direction() == Direction::Rx) {
-      log_e("Stream: write() on an Rx stream");
-    }
-    return BTStatus::InvalidState;
+  // No Tx pre-check here: streaming can change between the check and the send
+  // (host-task stop/release), which made the old direction() log lie about
+  // torn-down Tx streams. The engine owns the authoritative check; direction()
+  // is only a post-failure hint for genuine Rx-handle misuse.
+  const BTStatus st = bleAudioStatus(bleAudioStreamSend(impl.slot, sdu, len));
+  if (st == BTStatus::InvalidState && direction() == Direction::Rx) {
+    log_e("Stream: write() on an Rx stream");
   }
-  return bleAudioStatus(bleAudioStreamSend(impl.slot, sdu, len));
+  return st;
 }
 
 // --------------------------------------------------------------------------

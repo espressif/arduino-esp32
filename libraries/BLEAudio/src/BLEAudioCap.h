@@ -306,6 +306,18 @@ public:
    */
   BTStatus discover(uint16_t connHandle);
 
+  /**
+   * @brief Run procedures with CSIP ordered access when the acceptors form one set.
+   *
+   * Off by default (AD_HOC). When on, every procedure uses the stack's CSIP
+   * set type — lock, rank-ordered execution and unlock inside the stack — if
+   * every driven acceptor belongs to one discovered coordinated set (run
+   * CSIP coordinator discovery on each link first); mixed or undiscovered
+   * sets fall back to AD_HOC with a warning. Can be toggled any time; takes
+   * effect on the next procedure. Returns NotSupported when the CSIP
+   * coordinator is compiled out.
+   */
+  BTStatus setCoordinated(bool enable);
   /** @brief Set the absolute volume (0..255) of every acceptor (VCP). */
   BTStatus setVolume(uint8_t volume);
   /** @brief Mute or unmute the rendering of every acceptor (VCP). */

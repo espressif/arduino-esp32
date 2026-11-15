@@ -93,18 +93,40 @@ BLEAudioHearingAidDevice::operator bool() const {
 
 BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::setType(BLEHearingAidType type) {
   BLE_CHECK_IMPL(*this);
+  if (impl.audio->started) {
+    log_w("HearingAidDevice::setType() ignored after audio.start() (the service is registered at start)");
+    return *this;
+  }
   impl.type = type;
   return *this;
 }
 
 BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::setPresetSync(bool enabled) {
   BLE_CHECK_IMPL(*this);
+  if (impl.audio->started) {
+    log_w("HearingAidDevice::setPresetSync() ignored after audio.start() (the service is registered at start)");
+    return *this;
+  }
   impl.presetSync = enabled;
   return *this;
 }
 
 BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::addPreset(uint8_t index, const String &name, bool available, bool writable) {
   BLE_CHECK_IMPL(*this);
+  if (index == 0) {
+    log_e("HearingAid: preset index 0 is invalid (indexes start at 1)");
+    return *this;
+  }
+  for (const Impl::Preset &q : impl.presets) {
+    if (q.index == index) {
+      log_e("HearingAid: preset index %u already staged", index);
+      return *this;
+    }
+  }
+  if (impl.presets.size() >= (size_t)CONFIG_BT_HAS_PRESET_COUNT) {
+    log_e("HearingAid: preset table full (%d entries)", CONFIG_BT_HAS_PRESET_COUNT);
+    return *this;
+  }
   Impl::Preset p{index, available, writable, name};
   if (!impl.audio->started) {
     impl.presets.push_back(std::move(p));

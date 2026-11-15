@@ -241,8 +241,15 @@ BTStatus BLEAudio::begin() {
   }
   BLESecurity sec = BLE.getSecurity();
   if (sec && !sec.isConfigured()) {
-    sec.setIOCapability(BLEIOCapability::NoInputNoOutput);
-    sec.setAuthenticationMode(true, false, true);
+    if (impl.autoSecurity.load()) {
+      sec.setIOCapability(BLEIOCapability::NoInputNoOutput);
+      sec.setAuthenticationMode(true, false, true);
+      log_i("Audio: applying default security policy (Just Works, bonding, SC, no MITM); "
+            "configure BLESecurity explicitly or call setAutoSecurityPolicy(false) to override");
+    } else {
+      log_w("Audio: automatic security policy off and BLESecurity not configured; "
+            "links stay unencrypted and audio discovery may fail");
+    }
   }
   impl.active = true;
   log_i("Audio: engine initialized");
@@ -258,11 +265,16 @@ BTStatus BLEAudio::start() {
   if (impl.started) {
     return BTStatus::OK;
   }
+  if (impl.startFailed) {
+    log_e("Audio: start() failed before; run end() then begin() again with a corrected role set");
+    return BTStatus::InvalidState;
+  }
   while (!impl.roleApplies.empty()) {
     auto &apply = impl.roleApplies.front();
     BTStatus st = apply ? apply() : BTStatus::OK;
     if (!st) {
-      log_e("Audio: role registration failed (%s)", st.toString());
+      log_e("Audio: role registration failed (%s); run end() then begin() again, do not retry start()", st.toString());
+      impl.startFailed = true;
       return st;
     }
     impl.roleApplies.erase(impl.roleApplies.begin());
@@ -270,11 +282,13 @@ BTStatus BLEAudio::start() {
   int err = bleAudioPacsCommit();
   if (err != 0) {
     log_e("Audio: PACS registration failed (err=%d)", err);
+    impl.startFailed = true;
     return bleAudioStatus(err);
   }
   err = bleAudioEngineStart();
   if (err != 0) {
     log_e("Audio: engine start / GATT commit failed (err=%d)", err);
+    impl.startFailed = true;
     return bleAudioStatus(err);
   }
   impl.started = true;
@@ -327,6 +341,7 @@ BTStatus BLEAudio::end() {
   impl.roles.clear();
   impl.active = false;
   impl.started = false;
+  impl.startFailed = false;
   log_i("Audio: engine released");
   return BTStatus::OK;
 }
@@ -416,6 +431,17 @@ BLEAudio &BLEAudio::setPresentationDelay(uint32_t delayUs) {
 uint32_t BLEAudio::getPresentationDelay() const {
   BLE_CHECK_IMPL(40000u);
   return impl.presentationDelayUs.load();
+}
+
+BLEAudio &BLEAudio::setAutoSecurityPolicy(bool enable) {
+  BLE_CHECK_IMPL(*this);
+  impl.autoSecurity.store(enable);
+  return *this;
+}
+
+bool BLEAudio::autoSecurityPolicy() const {
+  BLE_CHECK_IMPL(true);
+  return impl.autoSecurity.load();
 }
 
 #endif /* BLE_AUDIO_SUPPORTED */

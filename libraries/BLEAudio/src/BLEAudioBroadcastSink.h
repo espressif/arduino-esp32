@@ -126,6 +126,9 @@ public:
   /**
    * @brief Preferred BIS indexes as BIT(index - 1).
    * @param mask 0 (default) joins the lowest indexes in the BASE.
+   *
+   * Takes effect at the next BIG sync; safe to call any time (including on an
+   * empty handle, where it is a no-op).
    */
   BLEAudioBroadcastSink &setBisMask(uint32_t mask);
   /** @brief Sync to the first matching source automatically. Default on. */

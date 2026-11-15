@@ -52,11 +52,15 @@ struct BLEAudioMediaPlayer::Impl {
   CommandCallback onCommandResultCb;
 
   BTStatus setText(bool title, const String &text) {
-    {
-      BLELockGuard lock(mtx.get());
-      (title ? trackTitle : playerName) = text;
+    if (audio->started.load()) {
+      const BTStatus st = bleAudioStatus(bleAudioMcpSrvSetText(title, text.c_str()));
+      if (!st) {
+        return st; /* Stack refused: keep the previous text. */
+      }
     }
-    return audio->started.load() ? bleAudioStatus(bleAudioMcpSrvSetText(title, text.c_str())) : BTStatus::OK;
+    BLELockGuard lock(mtx.get());
+    (title ? trackTitle : playerName) = text;
+    return BTStatus::OK;
   }
 
   BTStatus apply() {
@@ -193,6 +197,9 @@ struct BLEAudioMediaController::Impl {
 
   void handle(const ble_audio_evt_t &e) {
     if (BLE_AUDIO_EVT_GROUP(e.type) == BLE_AUDIO_GRP_CORE) {
+      if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED && e.conn_handle == link.getConn()) {
+        state.store(BLEAudioMediaState::Inactive, std::memory_order_relaxed);
+      }
       const int err = link.onCore(e, bleAudioMcpCliDiscover);
       if (err) {
         if (auto cb = bleAudioCopyCallback(*this, &Impl::onDiscoveredCb)) {
@@ -211,7 +218,13 @@ struct BLEAudioMediaController::Impl {
         }
         break;
       case BLE_AUDIO_EVT_MCP_CLI_STATE:
-        if (!e.err && e.data) {
+        if (e.err || !e.data) {
+          if (e.err) {
+            log_w("MediaController: state read/notification failed (err=%d); keeping the last known state", e.err);
+          }
+          break;
+        }
+        {
           const auto st = static_cast<BLEAudioMediaState>(*static_cast<const uint8_t *>(e.data));
           state.store(st, std::memory_order_relaxed);
           if (auto cb = bleAudioCopyCallback(*this, &Impl::onStateChangedCb)) {

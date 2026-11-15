@@ -90,6 +90,8 @@ public:
   BTStatus setTrackTitle(const String &title);
 
   // --- Local control (after audio.start()) ---
+  // Needs CONFIG_BT_MCTL_LOCAL_PLAYER_LOCAL_CONTROL in the stack; without it
+  // the calls below return NotSupported (state reporting is unavailable too).
 
   /** @brief Run @p command on the local player; the outcome arrives through onCommandResult. */
   BTStatus sendCommand(BLEAudioMediaCommand command);
@@ -130,6 +132,13 @@ private:
  * audio.start(). Commands and reads are GATT operations: OK means the
  * request was queued, and the answer arrives through the matching
  * callback. Requests before discover() return BTStatus::InvalidState.
+ *
+ * Stack Kconfig matrix (a call returns NotSupported when its option is off):
+ * sendCommand()/play()/pause()/stop()/nextTrack()/previousTrack() need
+ * CONFIG_BT_MCC_SET_MEDIA_CONTROL_POINT; readState() needs
+ * CONFIG_BT_MCC_READ_MEDIA_STATE; readTrackTitle() needs
+ * CONFIG_BT_MCC_READ_TRACK_TITLE; readPlayerName() is always available.
+ * Only the GMCS instance is driven; discrete MCS and OTS are not exposed.
  */
 class BLEAudioMediaController {
 public:

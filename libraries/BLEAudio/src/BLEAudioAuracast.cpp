@@ -58,9 +58,10 @@ void buildExt(BLEAdvertisementData &ext, uint32_t broadcastId, const String &adv
   const uint8_t id[3] = {(uint8_t)broadcastId, (uint8_t)(broadcastId >> 8), (uint8_t)(broadcastId >> 16)};
   ext.setServiceData(BLEUUID(kBroadcastAudioAnnouncementUuid), id, sizeof(id));
 
-  // PBP v1.0 §3.1.1 (Table 3.1) limits Broadcast_Name (0x30) to 4..32 UTF-8
-  // characters; slice on a codepoint boundary so neither Program_Info nor
-  // Broadcast_Name ever splits a multi-byte UTF-8 sequence.
+  // PBP v1.0 §3.1.1 (Table 3.1) limits Broadcast_Name (0x30) to 4..32 octets;
+  // slice on a codepoint boundary so neither Program_Info nor
+  // Broadcast_Name ever splits a multi-byte UTF-8 sequence. Shorter names are
+  // space-padded to 4 octets by setBroadcastName().
   const auto *raw = reinterpret_cast<const uint8_t *>(advName.c_str());
   const size_t n = utf8TruncateLen(raw, advName.length(), kMaxNameLen);
   const String bcastName(advName.c_str(), n);

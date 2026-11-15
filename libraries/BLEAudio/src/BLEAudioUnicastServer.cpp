@@ -148,20 +148,22 @@ BLEAudioUnicastServer::operator bool() const {
 
 /** The ASE count is registered with ASCS, so it can only change before start(). */
 BLEAudioUnicastServer &BLEAudioUnicastServer::setSinkStreams(uint8_t count) {
-  if (_impl && !_impl->applied) {
-    _impl->sinkStreams = count;
-    _impl->resizeStreams();
-  } else if (_impl) {
+  BLE_CHECK_IMPL(*this);
+  if (!impl.applied) {
+    impl.sinkStreams = count;
+    impl.resizeStreams();
+  } else {
     log_w("UnicastServer: setSinkStreams() ignored after audio.start()");
   }
   return *this;
 }
 
 BLEAudioUnicastServer &BLEAudioUnicastServer::setSourceStreams(uint8_t count) {
-  if (_impl && !_impl->applied) {
-    _impl->sourceStreams = count;
-    _impl->resizeStreams();
-  } else if (_impl) {
+  BLE_CHECK_IMPL(*this);
+  if (!impl.applied) {
+    impl.sourceStreams = count;
+    impl.resizeStreams();
+  } else {
     log_w("UnicastServer: setSourceStreams() ignored after audio.start()");
   }
   return *this;
@@ -175,45 +177,39 @@ BLEAudioUnicastServer &BLEAudioUnicastServer::setSupportedPresets(uint32_t prese
 }
 
 BLEAudioUnicastServer &BLEAudioUnicastServer::setMaxChannelsPerStream(uint8_t channels) {
-  if (_impl) {
-    _impl->maxChannels = channels < 1 ? 1 : (channels > 2 ? 2 : channels);
-  }
+  BLE_CHECK_IMPL(*this);
+  impl.maxChannels = channels < 1 ? 1 : (channels > 2 ? 2 : channels);
   return *this;
 }
 
 BLEAudioUnicastServer &BLEAudioUnicastServer::setSinkContexts(BLEAudioContext contexts) {
-  if (_impl) {
-    _impl->sinkContexts = contexts;
-  }
+  BLE_CHECK_IMPL(*this);
+  impl.sinkContexts = contexts;
   return *this;
 }
 
 BLEAudioUnicastServer &BLEAudioUnicastServer::setSourceContexts(BLEAudioContext contexts) {
-  if (_impl) {
-    _impl->sourceContexts = contexts;
-  }
+  BLE_CHECK_IMPL(*this);
+  impl.sourceContexts = contexts;
   return *this;
 }
 
 BLEAudioUnicastServer &BLEAudioUnicastServer::setSinkLocation(BLEAudioLocation location) {
-  if (_impl) {
-    _impl->sinkLocation = location;
-  }
+  BLE_CHECK_IMPL(*this);
+  impl.sinkLocation = location;
   return *this;
 }
 
 BLEAudioUnicastServer &BLEAudioUnicastServer::setSourceLocation(BLEAudioLocation location) {
-  if (_impl) {
-    _impl->sourceLocation = location;
-  }
+  BLE_CHECK_IMPL(*this);
+  impl.sourceLocation = location;
   return *this;
 }
 
 BLEAudioUnicastServer &BLEAudioUnicastServer::setPresentationDelayRange(uint32_t minUs, uint32_t maxUs) {
-  if (_impl) {
-    _impl->pdMinUs = minUs;
-    _impl->pdMaxUs = maxUs;
-  }
+  BLE_CHECK_IMPL(*this);
+  impl.pdMinUs = minUs;
+  impl.pdMaxUs = maxUs;
   return *this;
 }
 

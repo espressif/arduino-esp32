@@ -415,45 +415,40 @@ BTStatus BLEAudioBroadcastAssistant::setBroadcastCode(uint8_t sourceId, const St
 }
 
 BLEAudioBroadcastAssistant &BLEAudioBroadcastAssistant::onDiscovered(DiscoverCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoverCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoverCb = std::move(cb);
   return *this;
 }
 
 BLEAudioBroadcastAssistant &BLEAudioBroadcastAssistant::onSourceFound(SourceFoundCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->sourceFoundCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.sourceFoundCb = std::move(cb);
   return *this;
 }
 
 BLEAudioBroadcastAssistant &BLEAudioBroadcastAssistant::onReceiveState(ReceiveStateCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->receiveStateCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.receiveStateCb = std::move(cb);
   return *this;
 }
 
 BLEAudioBroadcastAssistant &BLEAudioBroadcastAssistant::onResult(ResultCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->resultCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.resultCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioBroadcastAssistant::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoverCb = nullptr;
-    _impl->sourceFoundCb = nullptr;
-    _impl->receiveStateCb = nullptr;
-    _impl->resultCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoverCb = nullptr;
+  impl.sourceFoundCb = nullptr;
+  impl.receiveStateCb = nullptr;
+  impl.resultCb = nullptr;
 }
 
 #if BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED
@@ -464,9 +459,19 @@ BLEAudioBroadcastAssistant BLEAudio::createBroadcastAssistant() {
   }
   auto ba = std::make_shared<BLEAudioBroadcastAssistant::Impl>();
   ba->audio = _impl;
+  if (_impl->started) {
+    /* Created after start(): the staged apply below would never run
+     * (start() already drained roleApplies), so initialise eagerly. The
+     * engine unit also initialises lazily on first use; both are idempotent. */
+    const BTStatus st = bleAudioStatus(bleAudioBaInit());
+    if (!st) {
+      log_e("createBroadcastAssistant(): engine init failed (%s)", st.toString());
+      return BLEAudioBroadcastAssistant();
+    }
+  } else {
+    _impl->roleApplies.push_back([]() -> BTStatus { return bleAudioStatus(bleAudioBaInit()); });
+  }
   _impl->roles.push_back(ba);
-  /* Created after start too: the engine unit initialises lazily on first use. */
-  _impl->roleApplies.push_back([]() -> BTStatus { return bleAudioStatus(bleAudioBaInit()); });
   /* `roles` owns the role until end(); a strong capture here would form a cycle. */
   std::weak_ptr<BLEAudioBroadcastAssistant::Impl> weak = ba;
   _impl->setHandler(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, [weak](const ble_audio_evt_t &e) {

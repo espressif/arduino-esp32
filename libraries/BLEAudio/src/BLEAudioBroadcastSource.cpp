@@ -83,10 +83,12 @@ struct BLEAudioBroadcastSource::Impl {
   Callback startedCb;
   StoppedCallback stoppedCb;
 
-  BTStatus waitStopped() {
-    return bleAudioWaitUntilIdle(mtx, stopSync, "BroadcastSource", [this]() {
+  BTStatus waitStopped(uint32_t timeoutMs = 5000) {
+    return bleAudioWaitUntilIdle(
+        mtx, stopSync, "BroadcastSource",
+        [this]() {
       return streaming || starting;
-    });
+    }, timeoutMs);
   }
 
   /** @brief Match the owned streams to the channel count (stops at the first pool failure). */
@@ -268,89 +270,84 @@ BLEAudioBroadcastSource::operator bool() const {
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setPreset(BLEAudioCodecPreset preset) {
   ble_audio_codec_t c;
   ble_audio_qos_t q;
-  if (_impl && bleAudioPresetGet(static_cast<uint8_t>(preset), true, &c, &q)) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->preset = preset;
+  BLE_CHECK_IMPL(*this);
+  if (bleAudioPresetGet(static_cast<uint8_t>(preset), true, &c, &q)) {
+    BLELockGuard lock(impl.mtx.get());
+    impl.preset = preset;
+    impl.dirty = true;
     _impl->dirty = true;
-  } else if (_impl) {
+  } else {
     log_e("BroadcastSource: invalid preset %u", (unsigned)preset);
   }
   return *this;
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setQos(const BLEAudioQos &qos) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->qos = qos;
-    _impl->customQos = true;
-    _impl->dirty = true;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.qos = qos;
+  impl.customQos = true;
+  impl.dirty = true;
   return *this;
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setChannels(uint8_t channels) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    if (!_impl->streaming && !_impl->starting) {
-      if (_impl->created) {
-        // A stopped source still owns its stream slots; delete it before the
-        // vector is resized so the engine never points at freed handles.
-        bleAudioBsrcDelete();
-        _impl->created = false;
-        _impl->dirty = true;
-      }
-      _impl->channels = channels < 1 ? 1 : (channels > 2 ? 2 : channels);
-      _impl->resizeStreams();
-    } else {
-      log_w("BroadcastSource: setChannels() ignored while streaming or starting");
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  if (!impl.streaming && !impl.starting) {
+    if (impl.created) {
+      // A stopped source still owns its stream slots; delete it before the
+      // vector is resized so the engine never points at freed handles.
+      bleAudioBsrcDelete();
+      impl.created = false;
+      impl.dirty = true;
     }
+    impl.channels = channels < 1 ? 1 : (channels > 2 ? 2 : channels);
+    impl.resizeStreams();
+  } else {
+    log_w("BroadcastSource: setChannels() ignored while streaming or starting");
   }
   return *this;
 }
 
 /** Only advertised, not baked into the source, so no re-create is needed. */
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setBroadcastId(uint32_t broadcastId) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->broadcastId = broadcastId & 0xFFFFFF;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.broadcastId = broadcastId & 0xFFFFFF;
   return *this;
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setBroadcastCode(const String &code) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    if (code.length() > BLE_AUDIO_BCODE_SIZE) {
-      log_w("BroadcastSource: Broadcast Code truncated to %u characters", BLE_AUDIO_BCODE_SIZE);
-    }
-    _impl->code = code;
-    _impl->dirty = true;
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  if (code.length() > BLE_AUDIO_BCODE_SIZE) {
+    log_w("BroadcastSource: Broadcast Code truncated to %u characters", BLE_AUDIO_BCODE_SIZE);
   }
+  impl.code = code;
+  impl.dirty = true;
   return *this;
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setName(const String &name) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->name = name;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.name = name;
   return *this;
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setContext(BLEAudioContext context) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->context = context;
-    _impl->dirty = true;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.context = context;
+  impl.dirty = true;
   return *this;
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::setPublicBroadcast(bool enable) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->publicBroadcast = enable;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.publicBroadcast = enable;
   return *this;
 }
 
@@ -441,6 +438,8 @@ BTStatus BLEAudioBroadcastSource::stop() {
     log_e("BroadcastSource: stop() cannot run from a stack callback; defer it to loop()");
     return BTStatus::Busy;
   }
+  BLEAudioStopBudget budget;
+  budget.start();
   int16_t instance;
   bool live;
   bool starting;
@@ -471,20 +470,29 @@ BTStatus BLEAudioBroadcastSource::stop() {
         _impl->stopSync.give(BTStatus::OK);
       }
     }
-    (void)_impl->stopSync.wait(5000);
+    if (_impl->stopSync.wait(budget.remainingMs()) != BTStatus::OK) {
+      return budget.stall("BroadcastSource", "start-resolve");
+    }
   }
-  int err = bleAudioBsrcStop();
+  if (budget.expired()) {
+    return budget.stall("BroadcastSource", "engine-stop");
+  }
+  int err = bleAudioBsrcStopTimeout(budget.remainingMs());
   if (err != 0 && err != ESP_ERR_INVALID_STATE && err != -EALREADY) {
     log_w("BroadcastSource: BIG terminate failed (err=%d)", err);
-  } else {
-    (void)_impl->waitStopped();
+  } else if (!budget.expired()) {
+    (void)_impl->waitStopped(budget.remainingMs());
   }
-  // Always drop advertising and the engine source so a later start() is not
-  // wedged by leftover starting/streaming flags. NimBLE BAP may refuse
-  // source_stop() at QoS Configured and omit STOPPED after a successful stop;
-  // delete + recreate is the recoverable teardown.
+  // Drop the engine source only when it is really gone: delete is refused
+  // while the BIG streams, and clearing the flags anyway wedges the next
+  // start() behind a live source. NimBLE BAP may refuse source_stop() at QoS
+  // Configured and omit STOPPED after a successful stop; delete + recreate is
+  // the recoverable teardown.
   if (bleAudioBsrcHandle() != NULL) {
     bleAudioBsrcDelete();
+  }
+  if (bleAudioBsrcHandle() != NULL) {
+    return budget.stall("BroadcastSource", "source-delete");
   }
   StoppedCallback cb;
   {
@@ -567,27 +575,24 @@ BLEAudioStream BLEAudioBroadcastSource::stream(size_t index) const {
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::onStarted(Callback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->startedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.startedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioBroadcastSource &BLEAudioBroadcastSource::onStopped(StoppedCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->stoppedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.stoppedCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioBroadcastSource::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->startedCb = nullptr;
-    _impl->stoppedCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.startedCb = nullptr;
+  impl.stoppedCb = nullptr;
 }
 
 // --------------------------------------------------------------------------

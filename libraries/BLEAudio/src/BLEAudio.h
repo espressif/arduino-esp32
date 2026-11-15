@@ -118,11 +118,30 @@ public:
    * Does NOT commit the GATT database; that happens in start(). Calling it
    * again while active is a no-op.
    *
+   * Security: PACS/ASCS characteristics require an encrypted link, so when
+   * `BLESecurity` was not configured by the sketch, begin() applies the
+   * default audio policy (Just Works: NoInputNoOutput, bonding, Secure
+   * Connections, no MITM) and logs it. Call setAutoSecurityPolicy(false) and
+   * configure `BLESecurity` explicitly to override; with the automatic policy
+   * off and no sketch configuration, links stay unencrypted and audio
+   * discovery fails.
+   *
    * @return BTStatus::OK on success; InvalidState on a null handle or while a
    *         standalone `BLEIso` session owns the host; another error when the
    *         engine fails to initialize.
    */
   BTStatus begin();
+
+  /**
+   * @brief Whether begin() may install the default audio security policy.
+   *
+   * On by default (existing sketches keep working); turn off before begin()
+   * and configure `BLESecurity` explicitly for an opt-in policy.
+   * @return This handle, for chaining.
+   */
+  BLEAudio &setAutoSecurityPolicy(bool enable);
+  /** @brief Current setAutoSecurityPolicy() value (default true). */
+  bool autoSecurityPolicy() const;
 
   /**
    * @brief Register every configured role and commit the GATT database.
@@ -140,6 +159,9 @@ public:
    *
    * @return BTStatus::OK on success; InvalidState before begin(); the error of
    *         the first role or engine step that failed otherwise.
+   *
+   * A failed start() leaves earlier roles registered: do not retry start().
+   * Run end(), then begin() again with a corrected role set.
    */
   BTStatus start();
 

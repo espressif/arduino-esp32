@@ -45,6 +45,10 @@ class BLEAudioMicDevice {
 public:
   /** @brief Mute state after a change. */
   using MuteCallback = std::function<void(bool muted)>;
+  /** @brief Local control-point operation reported by onResult. */
+  enum class Operation : uint8_t { Unknown = 0, Mute, Unmute, DisableMute };
+  /** @brief A queued mute()/unmute()/disableMute() was rejected; the state did not change. */
+  using ResultCallback = std::function<void(Operation op, BTStatus status)>;
 
   BLEAudioMicDevice();
   ~BLEAudioMicDevice() = default;
@@ -65,11 +69,15 @@ public:
   BTStatus unmute();
   /** @brief Report mute as unavailable; controllers can no longer change it. */
   BTStatus disableMute();
-  /** @return The initial mute before start, then the last reported mute. */
+  /** @return The initial mute before start, then the last reported mute (false while disabled). */
   bool isMuted() const;
+  /** @brief Whether mute is currently reported as disabled (neither muted nor unmuted). */
+  bool isMuteDisabled() const;
 
-  /** @brief Every mute change, local or remote. */
+  /** @brief Every mute change, local or remote (disabled reports unmuted/false: see isMuteDisabled()). */
   BLEAudioMicDevice &onMuteChanged(MuteCallback cb);
+  /** @brief A queued local operation failed; the state did not change. */
+  BLEAudioMicDevice &onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 
@@ -87,9 +95,12 @@ private:
  * @brief MICP Microphone Controller (client of one device at a time).
  *
  * Created by BLEAudio::createMicController() between audio.begin() and
- * audio.start(). Commands are GATT writes: OK means the write was queued,
- * and the result arrives as onMuteChanged / onInputChanged. Commands before
- * discover() return BTStatus::InvalidState.
+ * audio.start(). Commands are GATT writes: OK means the write was queued.
+ * Success arrives as onMuteChanged / onInputChanged; a rejected write arrives
+ * as onResult and changes nothing. Cached state is cleared on disconnect.
+ * Commands before discover() return BTStatus::InvalidState. Only the first
+ * AICS instance is driven; more instances are reported in onDiscovered and
+ * otherwise ignored. A second discover() replaces the peer.
  */
 class BLEAudioMicController {
 public:
@@ -99,6 +110,10 @@ public:
   using MuteCallback = std::function<void(bool muted)>;
   /** @brief Gain and mute of the device's first microphone AICS instance. */
   using InputCallback = std::function<void(int8_t gain, bool muted)>;
+  /** @brief Queued control-point operation reported by onResult. */
+  enum class Operation : uint8_t { Unknown = 0, Mute, Unmute, ReadMute, SetInputGain };
+  /** @brief A queued mute()/unmute()/readMute()/setInputGain() was rejected; the state did not change. */
+  using ResultCallback = std::function<void(Operation op, BTStatus status)>;
 
   BLEAudioMicController();
   ~BLEAudioMicController() = default;
@@ -127,8 +142,10 @@ public:
   BTStatus unmute();
   /** @brief Re-read the peer's mute state (answered via onMuteChanged). */
   BTStatus readMute();
-  /** @brief Last mute state reported by the peer. */
+  /** @brief Last mute state reported by the peer (false while disabled; cleared on disconnect). */
   bool isMuted() const;
+  /** @brief Whether the peer currently reports mute as disabled. */
+  bool isMuteDisabled() const;
   /** @brief Gain of the peer's first microphone AICS instance. */
   BTStatus setInputGain(int8_t gain);
 
@@ -138,6 +155,14 @@ public:
   BLEAudioMicController &onMuteChanged(MuteCallback cb);
   /** @brief The device's microphone input gain or mute changed. */
   BLEAudioMicController &onInputChanged(InputCallback cb);
+  /**
+   * @brief A queued operation failed; the state did not change.
+   *
+   * The op is the most recently queued one (best effort: concurrent writes
+   * share one notification channel, so with several in flight the reported op
+   * may be a sibling). Unknown when no operation was queued.
+   */
+  BLEAudioMicController &onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 

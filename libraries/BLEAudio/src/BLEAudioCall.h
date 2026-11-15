@@ -102,10 +102,11 @@ public:
 
   /**
    * @brief Raise an incoming call (state Incoming).
-   * @param from      Caller URI, e.g. "tel:+15551234567"; also used as the caller name.
+   * @param from Caller URI, e.g. "tel:+15551234567"; also used as the caller name when @p friendlyName is empty.
    * @param callIndex Receives the index that identifies the call from now on.
+   * @param friendlyName Shown to the peer instead of the URI when non-empty.
    */
-  BTStatus incomingCall(const String &from, uint8_t &callIndex);
+  BTStatus incomingCall(const String &from, uint8_t &callIndex, const String &friendlyName = "");
   /** @brief Answer locally. */
   BTStatus accept(uint8_t callIndex);
   /** @brief Put the call on local hold. */

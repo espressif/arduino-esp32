@@ -44,6 +44,10 @@ bool startedWarn(const std::shared_ptr<BLEAudio::Impl> &audio, const char *what)
 }
 
 struct DeferredProfileDiscovery {
+  // Multi-peer variant of BLEAudioControlLink's defer-until-GATT-ready pattern
+  // (ControlLink is single-link and cannot serve TMAP/GMAP's pending vector).
+  // The engine call runs unlocked, like ControlLink::discover, so Bluedroid's
+  // inline discovery callbacks cannot deadlock against this mutex.
   std::shared_ptr<BLEAudio::Impl> audio;
   BLESharedMutex mtx;
   std::vector<uint16_t> pending;
@@ -134,6 +138,10 @@ BLEAudioTmap::operator bool() const {
 BLEAudioTmap &BLEAudioTmap::setRoles(BLEAudioTmapRole roles) {
   BLE_CHECK_IMPL(*this);
   if (!startedWarn(impl.audio, "BLEAudioTmap::setRoles")) {
+    if (static_cast<uint16_t>(roles) & ~0x003Fu) {
+      log_e("BLEAudioTmap::setRoles(): unknown role bits 0x%04x (valid: 0x0001-0x0020)", static_cast<unsigned>(roles) & ~0x3Fu);
+      return *this;
+    }
     BLELockGuard lock(impl.mtx.get());
     impl.roles = roles;
   }
@@ -230,9 +238,42 @@ BLEAudioGmap::operator bool() const {
   return _impl != nullptr;
 }
 
+namespace {
+
+bool gmapRolesOk(BLEAudioGmapRole roles, const char *what) {
+  if (static_cast<uint8_t>(roles) & ~0x0Fu) {
+    log_e("%s: unknown role bits 0x%02x (valid: UGG/UGT/BGS/BGR)", what, static_cast<unsigned>(roles) & ~0x0Fu);
+    return false;
+  }
+  return true;
+}
+
+bool gmapFeaturesOk(BLEAudioGmapRole roles, const BLEAudioGmapFeatures &f, const char *what) {
+  if ((f.unicastGateway & ~0x07u) || (f.unicastTerminal & ~0x7Fu) || (f.broadcastSender & ~0x01u) || (f.broadcastReceiver & ~0x03u)) {
+    log_e("%s: feature bits outside the known masks (UGG<=0x07 UGT<=0x7F BGS<=0x01 BGR<=0x03)", what);
+    return false;
+  }
+  if ((roles & BLEAudioGmapRole::UnicastGameTerminal)
+      && !(f.unicastTerminal & (BLEAudioGmapFeatures::UgtSource | BLEAudioGmapFeatures::UgtSink))) {
+    log_e("%s: UGT role needs UgtSource and/or UgtSink in unicastTerminal", what);
+    return false;
+  }
+  return true;
+}
+
+}  // namespace
+
 BLEAudioGmap &BLEAudioGmap::setRoles(BLEAudioGmapRole roles) {
   BLE_CHECK_IMPL(*this);
   if (!startedWarn(impl.audio, "BLEAudioGmap::setRoles")) {
+    BLEAudioGmapFeatures features;
+    {
+      BLELockGuard lock(impl.mtx.get());
+      features = impl.features;
+    }
+    if (!gmapRolesOk(roles, "BLEAudioGmap::setRoles") || !gmapFeaturesOk(roles, features, "BLEAudioGmap::setRoles")) {
+      return *this;
+    }
     BLELockGuard lock(impl.mtx.get());
     impl.roles = roles;
   }
@@ -242,6 +283,14 @@ BLEAudioGmap &BLEAudioGmap::setRoles(BLEAudioGmapRole roles) {
 BLEAudioGmap &BLEAudioGmap::setFeatures(const BLEAudioGmapFeatures &features) {
   BLE_CHECK_IMPL(*this);
   if (!startedWarn(impl.audio, "BLEAudioGmap::setFeatures")) {
+    BLEAudioGmapRole roles;
+    {
+      BLELockGuard lock(impl.mtx.get());
+      roles = impl.roles;
+    }
+    if (!gmapFeaturesOk(roles, features, "BLEAudioGmap::setFeatures")) {
+      return *this;
+    }
     BLELockGuard lock(impl.mtx.get());
     impl.features = features;
   }

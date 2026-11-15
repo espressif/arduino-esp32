@@ -115,9 +115,10 @@ BLEAudioCallServer &BLEAudioCallServer::setUriSchemes(const String &schemes) {
   return *this;
 }
 
-BTStatus BLEAudioCallServer::incomingCall(const String &from, uint8_t &callIndex) {
+BTStatus BLEAudioCallServer::incomingCall(const String &from, uint8_t &callIndex, const String &friendlyName) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  return bleAudioStatus(bleAudioCcpSrvIncoming(from.c_str(), nullptr, &callIndex));
+  return bleAudioStatus(
+      bleAudioCcpSrvIncoming(from.c_str(), friendlyName.length() ? friendlyName.c_str() : nullptr, &callIndex));
 }
 
 BTStatus BLEAudioCallServer::accept(uint8_t callIndex) {

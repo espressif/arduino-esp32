@@ -54,10 +54,12 @@ struct BLEAudioImplCommon {
 
   BLESharedMutex mtx;                                  ///< Protects handlers and link callbacks.
   std::atomic<uint32_t> presentationDelayUs{40000};    ///< Default for new roles (setPresentationDelay()).
+  std::atomic<bool> autoSecurity{true};                 ///< begin() installs the default audio policy unless disabled.
   LinkCallback onLinkReadyCb;                          ///< Application onLinkReady().
   LinkCallback onDisconnectedCb;                       ///< Application onDisconnected().
   std::atomic<bool> active{false};                     ///< begin() succeeded, end() not called.
   std::atomic<bool> started{false};                    ///< start() succeeded.
+  std::atomic<bool> startFailed{false};                ///< start() failed midway; end() + begin() required.
 
   std::vector<std::function<BTStatus()>> roleApplies;
   std::vector<std::shared_ptr<void>> roles;
@@ -81,6 +83,11 @@ struct BLEAudioImplCommon {
    *
    * Enforces the "between begin() and start()" precondition, stores the strong
    * role reference in `roles`, and binds a weak group dispatcher + apply hook.
+   * Used by the control/identity roles (VCP, MICP, MCP, CCP, TMAP, GMAP, HAS)
+   * whose events map 1:1 onto one event group. The BAP data-plane and
+   * CAP/CSIP factories (unicast, broadcast, CAP, coordinated set) stage by
+   * hand: peer tables, roles with no handler, multi-group dispatch, and
+   * post-start creation do not fit the shared shape.
    */
   template<typename Handle, typename AudioImpl, typename ApplyFn>
   static Handle createStagedRole(

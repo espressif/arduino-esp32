@@ -236,7 +236,7 @@ struct BLEAudioCapInitiator::Impl {
     a.handle = inst;
     a.sid = inst & 0x0F;
     const BTAddress own = BLE.getAddress();
-    a.addr_type = own.type() & 1;
+    a.addr_type = bleAudioAddrType(own.type());
     memcpy(a.addr, own.data(), sizeof(a.addr));
     a.pa_interval = kPaInterval;
     {
@@ -342,10 +342,12 @@ struct BLEAudioCapInitiator::Impl {
     (void)adv.stopExtended((uint8_t)instance);
   }
 
-  BTStatus waitStopped() {
-    return bleAudioWaitUntilIdle(mtx, stopSync, "CapInitiator", [this]() {
+  BTStatus waitStopped(uint32_t timeoutMs = 5000) {
+    return bleAudioWaitUntilIdle(
+        mtx, stopSync, "CapInitiator",
+        [this]() {
       return bcStreaming || bcStarting;
-    });
+    }, timeoutMs);
   }
 
   /** @brief Engine source gone: release the advertising and reset the broadcast state. */
@@ -359,6 +361,22 @@ struct BLEAudioCapInitiator::Impl {
     }
     bleAudioCapBroadcastDelete();
     stopAdvertising();
+  }
+
+  /**
+   * @brief broadcastEnded() only when the engine really let the source go.
+   *
+   * source_delete is refused while the BIG streams; clearing the C++ flags
+   * anyway wedges the next start (create refuses with the engine source still
+   * set). Callers must keep the flags and report failure when this returns
+   * false so stopBroadcast()/end() can retry.
+   */
+  bool broadcastEndedIfGone() {
+    if (bleAudioCapBroadcastExists()) {
+      return false;
+    }
+    broadcastEnded();
+    return true;
   }
 
   /**
@@ -547,9 +565,15 @@ struct BLEAudioCapInitiator::Impl {
         } else {
           log_w("CapInitiator: handover to broadcast failed (err=%d)", e.err);
           if (bleAudioCapBroadcastStop() != 0) {
-            broadcastEnded();
+            /* The BIG may never have started: a source with no BIG deletes
+             * cleanly below. */
           }
-          stopAdvertising();
+          (void)waitStopped();
+          if (!broadcastEndedIfGone()) {
+            log_e("CapInitiator: broadcast source still live after the failed handover; retry stopBroadcast()");
+          } else {
+            stopAdvertising();
+          }
           /* The procedure may already have stopped the unicast group. End it
            * deterministically so startUnicast() can rebuild the session; the
            * stack reports the release through onUnicastStopped(). */
@@ -613,53 +637,49 @@ BLEAudioCapInitiator::operator bool() const {
 BLEAudioCapInitiator &BLEAudioCapInitiator::setPreset(BLEAudioCodecPreset preset) {
   ble_audio_codec_t c;
   ble_audio_qos_t q;
-  if (_impl && bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->preset = preset;
-  } else if (_impl) {
+  BLE_CHECK_IMPL(*this);
+  if (bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
+    BLELockGuard lock(impl.mtx.get());
+    impl.preset = preset;
+  } else {
     log_e("CapInitiator: invalid preset %u", (unsigned)preset);
   }
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setQos(const BLEAudioQos &qos) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->qos = qos;
-    _impl->customQos = true;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.qos = qos;
+  impl.customQos = true;
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setContext(BLEAudioContext context) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->context = context;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.context = context;
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setSinkStreams(uint8_t perPeer) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->sinkPerPeer = perPeer;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.sinkPerPeer = perPeer;
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setSourceStreams(uint8_t perPeer) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->sourcePerPeer = perPeer;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.sourcePerPeer = perPeer;
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastId(uint32_t broadcastId) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->broadcastId = broadcastId & 0xFFFFFF;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.broadcastId = broadcastId & 0xFFFFFF;
   return *this;
 }
 
@@ -672,21 +692,19 @@ uint32_t BLEAudioCapInitiator::getBroadcastId() const {
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastCode(const String &code) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    if (code.length() > BLE_AUDIO_BCODE_SIZE) {
-      log_w("CapInitiator: Broadcast Code truncated to %u characters", BLE_AUDIO_BCODE_SIZE);
-    }
-    _impl->code = code;
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  if (code.length() > BLE_AUDIO_BCODE_SIZE) {
+    log_w("CapInitiator: Broadcast Code truncated to %u characters", BLE_AUDIO_BCODE_SIZE);
   }
+  impl.code = code;
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastName(const String &name) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->name = name;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.name = name;
   return *this;
 }
 
@@ -865,8 +883,9 @@ BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInsta
  * source_delete is refused while STREAMING (LEA_LIB BapBsrcDeleteInvState[4])
  * and a delete racing an in-flight terminate also fails HCI Terminate BIG
  * (0x0C Command Disallowed). Wait for STOPPED so delete is legal, matching
- * BroadcastSource::stop(). Always unwedge the flags so a later startBroadcast()
- * is not stuck behind leftover bcStarting/bcStreaming.
+ * BroadcastSource::stop(). Flags are cleared only when the engine really let
+ * the source go; a still-live source returns Fail with the flags retained so
+ * a retry (or role end()) can recover instead of wedging the next start.
  */
 BTStatus BLEAudioCapInitiator::stopBroadcast() {
   if (!_impl) {
@@ -877,6 +896,8 @@ BTStatus BLEAudioCapInitiator::stopBroadcast() {
     return BTStatus::Busy;
   }
   bool starting;
+  BLEAudioStopBudget budget;
+  budget.start();
   {
     BLELockGuard lock(_impl->mtx.get());
     if (_impl->advInstance < 0 || _impl->hoBusy) {
@@ -896,17 +917,24 @@ BTStatus BLEAudioCapInitiator::stopBroadcast() {
         _impl->stopSync.give(BTStatus::OK);
       }
     }
-    (void)_impl->stopSync.wait(5000);
+    if (_impl->stopSync.wait(budget.remainingMs()) != BTStatus::OK) {
+      return budget.stall("CapInitiator", "start-resolve");
+    }
+  }
+  if (budget.expired()) {
+    return budget.stall("CapInitiator", "engine-stop");
   }
   int err = bleAudioCapBroadcastStop();
   if (err != 0 && err != ESP_ERR_INVALID_STATE && err != -EALREADY) {
     log_w("CapInitiator: BIG terminate failed (err=%d)", err);
-  } else {
-    (void)_impl->waitStopped();
+  } else if (!budget.expired()) {
+    (void)_impl->waitStopped(budget.remainingMs());
   }
   // CAP_BC_STOPPED already ran broadcastEnded() on the happy path. A leftover
   // source after a timeout or a stop that never reported STOPPED is dropped
-  // here so the next startBroadcast() can recreate it.
+  // here so the next startBroadcast() can recreate it — but only when the
+  // engine really let it go (delete is refused while the BIG streams; clearing
+  // the flags anyway wedges the next start behind a live source).
   if (bleAudioCapBroadcastExists()) {
     bleAudioCapBroadcastDelete();
   }
@@ -915,8 +943,13 @@ BTStatus BLEAudioCapInitiator::stopBroadcast() {
     BLELockGuard lock(_impl->mtx.get());
     leftover = _impl->bcStarting || _impl->bcStreaming || _impl->advInstance >= 0;
   }
-  if (leftover) {
+  if (leftover && !bleAudioCapBroadcastExists()) {
     _impl->broadcastEnded();
+    return BTStatus::OK;
+  }
+  if (bleAudioCapBroadcastExists()) {
+    log_e("CapInitiator: broadcast source still live; retry stopBroadcast() or end() the role");
+    return BTStatus::Fail;
   }
   return BTStatus::OK;
 }
@@ -1032,72 +1065,64 @@ BLEAudioStream BLEAudioCapInitiator::stream(BLEAudioStream::Direction dir, uint8
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::onDiscovered(DiscoveredCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoveredCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::onUnicastStarted(StatusCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->ucStartedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.ucStartedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::onUnicastUpdated(StatusCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->ucUpdatedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.ucUpdatedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::onUnicastStopped(Callback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->ucStoppedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.ucStoppedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::onBroadcastStarted(Callback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->bcStartedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.bcStartedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::onBroadcastStopped(StoppedCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->bcStoppedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.bcStoppedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCapInitiator &BLEAudioCapInitiator::onHandover(HandoverCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->handoverCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.handoverCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioCapInitiator::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = nullptr;
-    _impl->ucStartedCb = nullptr;
-    _impl->ucUpdatedCb = nullptr;
-    _impl->ucStoppedCb = nullptr;
-    _impl->bcStartedCb = nullptr;
-    _impl->bcStoppedCb = nullptr;
-    _impl->handoverCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoveredCb = nullptr;
+  impl.ucStartedCb = nullptr;
+  impl.ucUpdatedCb = nullptr;
+  impl.ucStoppedCb = nullptr;
+  impl.bcStartedCb = nullptr;
+  impl.bcStoppedCb = nullptr;
+  impl.handoverCb = nullptr;
 }
 
 // --------------------------------------------------------------------------
@@ -1202,6 +1227,10 @@ BTStatus BLEAudioCapCommander::discover(uint16_t connHandle) {
   return _impl->start(connHandle);
 }
 
+BTStatus BLEAudioCapCommander::setCoordinated(bool enable) {
+  return _impl ? bleAudioStatus(bleAudioCapCommanderSetCoordinated(enable)) : BTStatus::InvalidState;
+}
+
 BTStatus BLEAudioCapCommander::setVolume(uint8_t volume) {
   return _impl ? bleAudioStatus(bleAudioCapCommanderVolume(volume)) : BTStatus::InvalidState;
 }
@@ -1228,7 +1257,7 @@ BTStatus BLEAudioCapCommander::startBroadcastReception(const BTAddress &source, 
     return BTStatus::InvalidState;
   }
   ble_audio_cap_bcast_src_t s = {};
-  s.addr_type = source.type() & 1;
+  s.addr_type = bleAudioAddrType(source.type());
   memcpy(s.addr, source.data(), sizeof(s.addr));
   s.sid = sid;
   s.pa_interval = paInterval;
@@ -1255,36 +1284,32 @@ BTStatus BLEAudioCapCommander::distributeBroadcastCode(const String &code) {
 }
 
 BLEAudioCapCommander &BLEAudioCapCommander::onDiscovered(DiscoveredCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoveredCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCapCommander &BLEAudioCapCommander::onResult(ResultCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->resultCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.resultCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCapCommander &BLEAudioCapCommander::onReceiveState(ReceiveStateCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->recvStateCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.recvStateCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioCapCommander::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = nullptr;
-    _impl->resultCb = nullptr;
-    _impl->recvStateCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoveredCb = nullptr;
+  impl.resultCb = nullptr;
+  impl.recvStateCb = nullptr;
 }
 
 // ==========================================================================

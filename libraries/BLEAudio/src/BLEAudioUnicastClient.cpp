@@ -357,45 +357,42 @@ BLEAudioUnicastClient::operator bool() const {
 BLEAudioUnicastClient &BLEAudioUnicastClient::setPreset(BLEAudioCodecPreset preset) {
   ble_audio_codec_t c;
   ble_audio_qos_t q;
-  if (_impl && bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->preset = preset;
-  } else if (_impl) {
+  BLE_CHECK_IMPL(*this);
+  if (bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
+    BLELockGuard lock(impl.mtx.get());
+    impl.preset = preset;
+  } else {
     log_e("UnicastClient: invalid preset %u", (unsigned)preset);
   }
   return *this;
 }
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::setQos(const BLEAudioQos &qos) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->qos = qos;
-    _impl->customQos = true;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.qos = qos;
+  impl.customQos = true;
   return *this;
 }
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::setContext(BLEAudioContext context) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->context = context;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.context = context;
   return *this;
 }
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::setSinkStreams(uint8_t perPeer) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->sinkPerPeer = perPeer;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.sinkPerPeer = perPeer;
   return *this;
 }
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::setSourceStreams(uint8_t perPeer) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->sourcePerPeer = perPeer;
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.sourcePerPeer = perPeer;
   return *this;
 }
 
@@ -505,45 +502,40 @@ BLEAudioStream BLEAudioUnicastClient::stream(BLEAudioStream::Direction dir, uint
 // --------------------------------------------------------------------------
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::onDiscovered(DiscoveredCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoveredCb = std::move(cb);
   return *this;
 }
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::onStarted(Callback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->startedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.startedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::onStopped(Callback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->stoppedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.stoppedCb = std::move(cb);
   return *this;
 }
 
 BLEAudioUnicastClient &BLEAudioUnicastClient::onError(ErrorCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->errorCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.errorCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioUnicastClient::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = nullptr;
-    _impl->startedCb = nullptr;
-    _impl->stoppedCb = nullptr;
-    _impl->errorCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoveredCb = nullptr;
+  impl.startedCb = nullptr;
+  impl.stoppedCb = nullptr;
+  impl.errorCb = nullptr;
 }
 
 // --------------------------------------------------------------------------

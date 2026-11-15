@@ -36,6 +36,7 @@
 #include "core/BLEImplHelpers.h"
 #include "core/BLESync.h"
 #include "core/BLETask.h"
+#include "freertos/task.h"
 #include "esp32-hal-log.h"
 #include "BLEAudioStreamImpl.h"
 #include "engine/BLEAudioEngineControl.h"
@@ -44,7 +45,8 @@
  * @brief Shared 5 s `BLESync` wait helper for broadcast roles (`BroadcastSource`, `BroadcastSink`, `CapInitiator`).
  */
 template<typename BusyFn>
-inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const char *roleName, BusyFn &&isBusy) {
+inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const char *roleName, BusyFn &&isBusy,
+                                      uint32_t timeoutMs = 5000) {
   {
     BLELockGuard lock(mtx.get());
     if (!isBusy()) {
@@ -63,7 +65,7 @@ inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const 
       return BTStatus::OK;
     }
   }
-  BTStatus st = sync.wait(5000);
+  BTStatus st = sync.wait(timeoutMs);
   BLELockGuard lock(mtx.get());
   if (st != BTStatus::OK || isBusy()) {
     log_e("%s: timed out waiting for BIG teardown", roleName);
@@ -71,6 +73,44 @@ inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const 
   }
   return BTStatus::OK;
 }
+
+/**
+ * @brief One deadline shared by every wait of a broadcast stop.
+ *
+ * A stop used to stack three independent 5 s waits (start-resolve, engine
+ * stop, stopped-event) for a ~15 s worst case. Every phase now consumes from
+ * the same budget, so the documented worst case is one budget. When a phase
+ * finds the budget exhausted with the transport still live, the stop reports
+ * where it stalled (Fail) with the state retained for a retry.
+ */
+class BLEAudioStopBudget {
+ public:
+  void start(uint32_t totalMs = 5000) {
+    _deadline = xTaskGetTickCount() + pdMS_TO_TICKS(totalMs);
+  }
+
+  /** @brief Milliseconds left, 0 when exhausted. */
+  uint32_t remainingMs() const {
+    const TickType_t now = xTaskGetTickCount();
+    if (now >= _deadline) {
+      return 0;
+    }
+    return (uint32_t)((_deadline - now) * (TickType_t)portTICK_PERIOD_MS);
+  }
+
+  bool expired() const {
+    return remainingMs() == 0;
+  }
+
+  /** @brief Report a stall at @p phase with the transport still live. */
+  BTStatus stall(const char *role, const char *phase) const {
+    log_e("%s: stop stalled at %s, transport still live; retry stop()", role, phase);
+    return BTStatus::Fail;
+  }
+
+ private:
+  TickType_t _deadline = 0;
+};
 
 /** @return The @p n-th set bit of an Audio Location mask, or 0 (Mono) when there are fewer bits. */
 inline uint32_t bleAudioNthLocation(uint32_t mask, uint8_t n) {
@@ -90,10 +130,27 @@ inline const uint8_t *bleAudioPackBroadcastCode(const String &code, uint8_t out[
   return n ? out : nullptr;
 }
 
+/**
+ * @brief BTAddress::Type as the numeric host address type.
+ *
+ * Passed through unmasked: identity address types use both bits, so masking
+ * with 1 corrupts PublicID (2 -> 0) and RandomID (3 -> 1) on paths that feed
+ * the stack's esp_ble_addr_type_t.
+ */
+inline uint8_t bleAudioAddrType(BTAddress::Type type) {
+  return static_cast<uint8_t>(type);
+}
+
 struct BLEAudioControlLink {
   /** Engine discovery entry point of the role, e.g. bleAudioVcpCtlrDiscover. */
   using DiscoverFn = int (*)(uint16_t);
 
+  // Single-link only: multi-peer roles (unicast client, CAP initiator /
+  // commander, TMAP/GMAP discovery) mirror this shape with their own tables
+  // instead of reusing it. Rule for all of them: mtx is released before any
+  // engine discovery call, so Bluedroid's cache-backed inline discovery
+  // callbacks can invoke controller operations without AB-BA lock inversion
+  // against bt_le_host_lock().
   mutable BLESharedMutex mtx;           ///< Protects conn/pending (never held across engine calls or callbacks).
   uint16_t conn = BLE_AUDIO_CONN_NONE;  ///< Bound peer, BLE_AUDIO_CONN_NONE when unbound.
   bool pending = false;                 ///< Discovery deferred until the engine's GATT discovery completes.

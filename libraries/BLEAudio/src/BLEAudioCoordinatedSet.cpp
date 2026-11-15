@@ -27,6 +27,7 @@
 #include "BLEAudioStreamImpl.h"
 #include "engine/BLEAudioEngineCap.h"
 #include "esp32-hal-log.h"
+#include "esp_random.h"
 
 /**
  * @file BLEAudioCoordinatedSet.cpp
@@ -45,9 +46,18 @@
 struct BLEAudioCoordinatedSetMember::Impl {
   bool cas = false;         ///< CAS-included instance (CAP acceptor).
   bool registered = false;  ///< Registered by audio.start().
-  /** Fixed default so a two-member demo pairs out of the box; products must set their own. */
-  uint8_t sirk[BLE_AUDIO_SIRK_SIZE] = {0xB8, 0x03, 0xEA, 0xC6, 0xAF, 0xBB, 0x65, 0xA2,
-                                       0x5A, 0x41, 0xF1, 0x53, 0x05, 0x68, 0x8E, 0x83};
+  /** Random per creation: a fixed demo SIRK would let unrelated units that kept
+   * the default resolve and join each other. Pair devices with setSirk() using
+   * one shared value (persist it for stable pairing across boots). */
+  uint8_t sirk[BLE_AUDIO_SIRK_SIZE];
+  bool sirkCustom = false;  ///< setSirk() called; silences the random-SIRK warning.
+
+  Impl() {
+    for (uint8_t i = 0; i < BLE_AUDIO_SIRK_SIZE; i += 4) {
+      const uint32_t r = esp_random();
+      memcpy(&sirk[i], &r, 4);
+    }
+  }
   uint8_t setSize = 2;
   uint8_t rank = 1;
   bool lockable = true;
@@ -58,6 +68,9 @@ struct BLEAudioCoordinatedSetMember::Impl {
 
   /** Register the CSIS instance with the staged values; runs inside audio.start(). */
   BTStatus apply() {
+    if (!sirkCustom) {
+      log_w("CoordinatedSet: advertising with a random SIRK; pair devices with setSirk() sharing one value");
+    }
     ble_audio_csis_cfg_t cfg = {};
     memcpy(cfg.sirk, sirk, sizeof(cfg.sirk));
     cfg.set_size = setSize;
@@ -139,6 +152,7 @@ BLEAudioCoordinatedSetMember::operator bool() const {
 BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]) {
   if (_impl && sirk) {
     memcpy(_impl->sirk, sirk, BLE_AUDIO_SIRK_SIZE);
+    _impl->sirkCustom = true;
     if (_impl->registered) {
       _impl->checkLive(bleAudioCsisSetSirk(_impl->cas, sirk), "SIRK");
     }
@@ -168,9 +182,8 @@ BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::setRank(uint8_t rank
 }
 
 BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::setLockable(bool lockable) {
-  if (_impl) {
-    _impl->lockable = lockable;
-  }
+  BLE_CHECK_IMPL(*this);
+  impl.lockable = lockable;
   return *this;
 }
 
@@ -204,27 +217,24 @@ bool BLEAudioCoordinatedSetMember::isLocked() const {
 }
 
 BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::onLockChanged(LockCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->lockCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.lockCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::onSirkRead(SirkReadCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->sirkCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.sirkCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioCoordinatedSetMember::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->lockCb = nullptr;
-    _impl->sirkCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.lockCb = nullptr;
+  impl.sirkCb = nullptr;
 }
 
 // --------------------------------------------------------------------------
@@ -388,36 +398,32 @@ BLEAudioCoordinatedSetInfo BLEAudioCoordinatedSetCoordinator::setInfo() const {
 }
 
 BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onDiscovered(DiscoveredCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoveredCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onLock(LockCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->lockCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.lockCb = std::move(cb);
   return *this;
 }
 
 BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onLockChanged(LockChangedCallback cb) {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->lockChangedCb = std::move(cb);
-  }
+  BLE_CHECK_IMPL(*this);
+  BLELockGuard lock(impl.mtx.get());
+  impl.lockChangedCb = std::move(cb);
   return *this;
 }
 
 void BLEAudioCoordinatedSetCoordinator::resetCallbacks() {
-  if (_impl) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->discoveredCb = nullptr;
-    _impl->lockCb = nullptr;
-    _impl->lockChangedCb = nullptr;
-  }
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx.get());
+  impl.discoveredCb = nullptr;
+  impl.lockCb = nullptr;
+  impl.lockChangedCb = nullptr;
 }
 
 // --------------------------------------------------------------------------
