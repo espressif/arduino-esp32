@@ -1786,20 +1786,25 @@ void setup() {
                 for (int i = 0; i < 200 && !sawMuted; i++) {
                   delay(50);
                 }
-                if (sawMuted) {
-                  mc.readMute();
-                  for (int i = 0; i < 200 && !sawUnmuted; i++) {
-                    delay(50);
-                  }
-                  sawFalse = sawUnmuted ? 1 : 0;
-                  disabled = mc.isMuteDisabled() ? 1 : 0;
-                  unmuteRc = (int)mc.unmute().code();
-                  // A refused unmute must stay silent: no async onResult may fire.
-                  for (int i = 0; i < 20 && !resultFired; i++) {
-                    delay(50);
-                  }
-                  noresult = resultFired ? 0 : 1;
+                // Wait for the server's disable to land in the cache instead
+                // of racing it: verifying too early would observe the stale
+                // unmuted state and mistake the test for the product.
+                for (int i = 0; i < 600 && !mc.isMuteDisabled(); i++) {
+                  checkSerial();
+                  delay(50);
                 }
+                disabled = mc.isMuteDisabled() ? 1 : 0;
+                mc.readMute();
+                for (int i = 0; i < 200 && !sawUnmuted; i++) {
+                  delay(50);
+                }
+                sawFalse = sawUnmuted ? 1 : 0;
+                unmuteRc = (int)mc.unmute().code();
+                // A refused unmute must stay silent: no async onResult may fire.
+                for (int i = 0; i < 20 && !resultFired; i++) {
+                  delay(50);
+                }
+                noresult = resultFired ? 0 : 1;
               }
             }
           }
