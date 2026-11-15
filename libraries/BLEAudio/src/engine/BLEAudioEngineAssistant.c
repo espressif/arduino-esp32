@@ -78,15 +78,22 @@ static struct {
  * get one answer, so the "already answered" bits cannot be a single global
  * bitmap. One row per possible conn (same limit as the engine link table). */
 #define BA_PAST_CONNS BLE_MAX_CONN
-static struct {
+/* Tracked (Source_ID, Broadcast_ID) pairs per row. Receive states per link
+ * are few; beyond BA_PAST_IDS, requests are served without dedup. */
+#define BA_PAST_IDS 8
+typedef struct {
   uint16_t conn;    /* CONN_NONE when free (handle 0 is a valid first ACL). */
   uint8_t sent[32]; /* 256-bit Source_ID bitmap (byte = id >> 3, bit = 1u << (id & 7)). */
-} s_ba_past[BA_PAST_CONNS];
+  uint8_t ids[BA_PAST_IDS];     /* Source_IDs with a recorded Broadcast_ID. */
+  uint32_t bcast[BA_PAST_IDS];  /* Broadcast_ID served for ids[] (24 bit). */
+  uint8_t next;                 /* Round-robin eviction cursor. */
+} past_row_t;
+static past_row_t s_ba_past[BA_PAST_CONNS];
 
 static void past_reset(void) {
+  memset(s_ba_past, 0, sizeof(s_ba_past));
   for (int i = 0; i < BA_PAST_CONNS; i++) {
     s_ba_past[i].conn = CONN_NONE;
-    memset(s_ba_past[i].sent, 0, sizeof(s_ba_past[i].sent));
   }
 }
 
@@ -103,6 +110,19 @@ static uint8_t *past_find(uint16_t conn) {
   return NULL;
 }
 
+/** @return The row for @p conn, or NULL when it has none. */
+static past_row_t *past_row(uint16_t conn) {
+  if (conn == CONN_NONE) {
+    return NULL;
+  }
+  for (int i = 0; i < BA_PAST_CONNS; i++) {
+    if (s_ba_past[i].conn == conn) {
+      return &s_ba_past[i];
+    }
+  }
+  return NULL;
+}
+
 /** @return The bitmap row for @p conn, claiming (and clearing) a free one. */
 static uint8_t *past_claim(uint16_t conn) {
   if (conn == CONN_NONE) {
@@ -114,8 +134,8 @@ static uint8_t *past_claim(uint16_t conn) {
   }
   for (int i = 0; i < BA_PAST_CONNS; i++) {
     if (s_ba_past[i].conn == CONN_NONE) {
+      memset(&s_ba_past[i], 0, sizeof(s_ba_past[i]));
       s_ba_past[i].conn = conn;
-      memset(s_ba_past[i].sent, 0, sizeof(s_ba_past[i].sent));
       return s_ba_past[i].sent;
     }
   }
@@ -126,8 +146,8 @@ static uint8_t *past_claim(uint16_t conn) {
 static void past_forget(uint16_t conn) {
   for (int i = 0; i < BA_PAST_CONNS; i++) {
     if (s_ba_past[i].conn == conn) {
+      memset(&s_ba_past[i], 0, sizeof(s_ba_past[i]));
       s_ba_past[i].conn = CONN_NONE;
-      memset(s_ba_past[i].sent, 0, sizeof(s_ba_past[i].sent));
     }
   }
 }
@@ -147,13 +167,16 @@ static void emit_result(uint16_t conn, int err, uint8_t op, uint8_t src_id) {
 /**
  * Answer a SyncInfo request in @p st with PAST, once per request: the
  * per-Source_ID bit is set when served and cleared as soon as the remote
- * leaves the SyncInfo Request state, so a later request is served again.
- * The outcome is reported as BLE_AUDIO_BA_OP_PAST.
+ * leaves the SyncInfo Request state, so a later request is served again. A
+ * ModifySource that swaps the Broadcast_ID under a reused Source_ID while the
+ * state stays INFO_REQ is detected through the recorded Broadcast_ID and
+ * served again. The outcome is reported as BLE_AUDIO_BA_OP_PAST.
  */
 static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *st) {
   const uint8_t id = st->src_id;
   const uint8_t idx = id >> 3;
   const uint8_t bit = (uint8_t)(1u << (id & 7));
+  const uint32_t bcast = st->broadcast_id;
   if (st->pa_sync_state != ESP_BLE_AUDIO_BAP_PA_STATE_INFO_REQ) {
     uint8_t *slot = past_find(conn->handle);
     if (slot) {
@@ -161,14 +184,38 @@ static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator
     }
     return;
   }
-  /* No free row (more peers than links) degrades to serving every request. */
-  uint8_t *slot = past_claim(conn->handle);
-  if (slot && (slot[idx] & bit)) {
-    return;
+  past_row_t *row = past_row(conn->handle);
+  if (row == NULL) {
+    if (past_claim(conn->handle) == NULL) {
+      /* No free row (more peers than links): fail closed with one result
+       * instead of re-sending PAST on every duplicate request. */
+      ESP_LOGW(TAG, "conn %u: SyncInfo request for source %u dropped, no PAST row free", conn->handle, id);
+      emit_result(conn->handle, -ENOMEM, BLE_AUDIO_BA_OP_PAST, id);
+      return;
+    }
+    row = past_row(conn->handle);
   }
-  if (slot) {
-    slot[idx] |= bit;
+  uint8_t *slot = row->sent;
+  if (slot[idx] & bit) {
+    /* Served before: re-serve only when the Source_ID now names a different
+     * broadcast (delegator reused the ID without an intervening removal). */
+    for (uint8_t i = 0; i < BA_PAST_IDS; i++) {
+      if (row->ids[i] == id) {
+        if (row->bcast[i] != bcast) {
+          row->bcast[i] = bcast;
+          slot[idx] &= (uint8_t)~bit;
+        }
+        break;
+      }
+    }
+    if (slot[idx] & bit) {
+      return;
+    }
   }
+  row->ids[row->next] = id;
+  row->bcast[row->next] = bcast;
+  row->next = (uint8_t)((row->next + 1) % BA_PAST_IDS);
+  slot[idx] |= bit;
 
   int err = -ENOENT;
   for (int i = 0; i < MAX_SYNCS; i++) {

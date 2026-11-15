@@ -149,7 +149,13 @@ enum {
   BLE_AUDIO_EVT_MCP_SRV_RESULT = BLE_AUDIO_EVT(BLE_AUDIO_GRP_MCP_SERVER, 1), /* ble_audio_mcp_result_t */
 };
 
-/** Outcome of one media control point command. */
+/** Outcome of one media control point command.
+ *
+ * Exactly one terminal event per command: a synchronously rejected write
+ * arrives immediately with err != 0, otherwise the result arrives with the
+ * control point notification (err carries a read/notification failure, 0 on
+ * success). {opcode 0, result 0} with err != 0 is the "undeliverable" sentinel
+ * and never a real notification: real MCS opcodes start at 1. */
 typedef struct {
   uint8_t opcode; /*!< MCS control point opcode. */
   uint8_t result; /*!< BLE_AUDIO_MCP_CMD_SUCCESS or an MCS result code; 0 when the write failed. */
@@ -256,9 +262,13 @@ typedef struct {
 int bleAudioCcpCliInit(void);
 /** @brief DISCOVERED is followed by a GTBS call-state read. */
 int bleAudioCcpCliDiscover(uint16_t conn_handle);
-/** @brief Ask the peer to place a call to @p uri; the result arrives as CCP_CLI_RESULT. */
+/** @brief Ask the peer to place a call to @p uri; the result arrives as CCP_CLI_RESULT.
+ * Returns NOT_SUPPORTED synchronously (with no CCP_CLI_RESULT) when the stack
+ * was built without CONFIG_BT_TBS_CLIENT_ORIGINATE_CALL. */
 int bleAudioCcpCliOriginate(uint16_t conn_handle, const char *uri);
-/** @param op ACCEPT, TERMINATE, HOLD or RETRIEVE. */
+/** @param op ACCEPT, TERMINATE, HOLD or RETRIEVE. Ops compiled out of the stack
+ * (CONFIG_BT_TBS_CLIENT_*) fail synchronously with NOT_SUPPORTED and produce
+ * no CCP_CLI_RESULT; admitted ops report exactly once, asynchronously. */
 int bleAudioCcpCliCallOp(uint16_t conn_handle, uint8_t op, uint8_t call_index);
 /** @brief Re-read the peer's call states (one CCP_CLI_CALL per call). */
 int bleAudioCcpCliReadCalls(uint16_t conn_handle);

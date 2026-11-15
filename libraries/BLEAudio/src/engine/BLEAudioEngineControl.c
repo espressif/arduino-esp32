@@ -55,6 +55,7 @@
 #include "esp_ble_audio_has_api.h"
 #include "esp_log.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define CONN_NONE  BLE_AUDIO_CONN_NONE
@@ -389,6 +390,11 @@ static void vctl_discover(esp_ble_audio_vcp_vol_ctlr_t *ctlr, int err, uint8_t v
   s_vctl.disc.vocs_count = vocs_count;
   s_vctl.disc.aics_count = aics_count;
   if (err == 0) {
+    /* Single-instance controller: only the first VOCS/AICS is driven. Say so
+     * loudly when the peer exposes more, instead of silently ignoring them. */
+    if (vocs_count > 1 || aics_count > 1) {
+      ESP_LOGW(TAG, "volume controller: peer exposes %u VOCS / %u AICS, only the first of each is driven", vocs_count, aics_count);
+    }
 #if VCTL_VOCS || VCTL_AICS
     esp_ble_audio_vcp_included_t inc = {0};
     if (esp_ble_audio_vcp_vol_ctlr_included_get(ctlr, &inc) == ESP_OK) {
@@ -600,6 +606,9 @@ static void mctl_discover(esp_ble_audio_micp_mic_ctlr_t *ctlr, int err, uint8_t 
   }
   s_mctl.aics_count = aics_count;
   if (err == 0) {
+    if (aics_count > 1) {
+      ESP_LOGW(TAG, "microphone controller: peer exposes %u AICS, only the first is driven", aics_count);
+    }
 #if MCTL_AICS
     esp_ble_audio_micp_included_t inc = {0};
     if (esp_ble_audio_micp_mic_ctlr_included_get(ctlr, &inc) == ESP_OK && inc.aics_cnt) {
@@ -911,6 +920,56 @@ int bleAudioMcpCliRead(uint16_t conn_handle, uint8_t what) {
 #if BLE_AUDIO_CCP_SERVER_SUPPORTED
 
 /**
+ * TBS register strings live here, not in the caller: the stack keeps the
+ * pointers given to `esp_ble_audio_tbs_register_bearer()` (like its own
+ * bearer table), while the C++ apply() passes pointers to its own locals.
+ * Bounded by the same Kconfig limits the stack validates, so a copy always
+ * fits. Reset on deinit (ctl_on_deinit clears s_roles; the buffers are
+ * rewritten on every init).
+ */
+static char s_tbs_provider[CONFIG_BT_TBS_MAX_PROVIDER_NAME_LENGTH];
+static char s_tbs_uci[BT_TBS_MAX_UCI_SIZE + 1];
+static char s_tbs_schemes[CONFIG_BT_TBS_MAX_SCHEME_LIST_LENGTH + 2];
+
+/**
+ * Copy a comma-separated URI scheme list, dropping whitespace, empty tokens
+ * and leading/trailing commas. The IDF patch appends one internal ',' for the
+ * prebuilt lib's list matcher and strips it on 0x2BB6 read/notify; feeding it
+ * an already-comma-terminated list would otherwise leak a wire-visible ",,"
+ * or trailing "," (TBS v1.0 sec 3.4). Returns false when nothing usable
+ * remains.
+ */
+static bool tbs_copy_schemes(char *dst, size_t cap, const char *src) {
+  size_t n = 0;
+  bool need_comma = false;
+  if (dst == NULL || cap == 0) {
+    return false;
+  }
+  for (const char *p = src; p && *p; p++) {
+    if (*p == ' ' || *p == '\t') {
+      continue;
+    }
+    if (*p == ',') {
+      need_comma = (n > 0);
+      continue;
+    }
+    if (need_comma) {
+      if (n + 1 >= cap) {
+        return n > 0;
+      }
+      dst[n++] = ',';
+      need_comma = false;
+    }
+    if (n + 1 >= cap) {
+      return n > 0;
+    }
+    dst[n++] = *p;
+  }
+  dst[n] = '\0';
+  return n > 0;
+}
+
+/**
  * A client asked GTBS to place a call. The handler runs synchronously inside
  * the emit and may clear `accept`; returning false makes the stack reject
  * the request.
@@ -956,6 +1015,17 @@ int bleAudioCcpSrvInit(const char *provider_name, const char *uci, const char *u
   if (s_roles & ROLE_CCP_SRV) {
     return ESP_OK;
   }
+  if (provider_name == NULL || provider_name[0] == '\0' || uci == NULL || uci[0] == '\0') {
+    return ESP_ERR_INVALID_ARG;
+  }
+  /* Own the strings (see the buffers above) and sanitize the scheme list so
+   * user input like "tel," can never produce a wire-visible ",," or trailing
+   * "," after the IDF patch appends its internal separator. */
+  snprintf(s_tbs_provider, sizeof(s_tbs_provider), "%s", provider_name);
+  snprintf(s_tbs_uci, sizeof(s_tbs_uci), "%s", uci);
+  if (!tbs_copy_schemes(s_tbs_schemes, sizeof(s_tbs_schemes), uri_schemes)) {
+    return ESP_ERR_INVALID_ARG;
+  }
   int err = role_attach();
   if (err == ESP_OK) {
     err = esp_ble_audio_tbs_register_cb(&s_tbs_cb);
@@ -963,9 +1033,9 @@ int bleAudioCcpSrvInit(const char *provider_name, const char *uci, const char *u
   /* A single generic bearer (GTBS) that any client may control without authorization. */
   if (err == ESP_OK) {
     const esp_ble_audio_tbs_register_param_t p = {
-      .provider_name = (char *)provider_name,
-      .uci = (char *)uci,
-      .uri_schemes_supported = (char *)uri_schemes,
+      .provider_name = s_tbs_provider,
+      .uci = s_tbs_uci,
+      .uri_schemes_supported = s_tbs_schemes,
       .gtbs = true,
       .authorization_required = false,
       .technology = ESP_BLE_AUDIO_TBS_TECHNOLOGY_LTE,
@@ -981,8 +1051,17 @@ int bleAudioCcpSrvIncoming(const char *from, const char *friendly_name, uint8_t 
   if (!from) {
     return ESP_ERR_INVALID_ARG;
   }
-  /* "tel:server" is the local (target) URI; the caller name defaults to the caller URI. */
-  return esp_ble_audio_tbs_remote_incoming(s_tbs_bearer, "tel:server", from, friendly_name ? friendly_name : from, call_index);
+  /* The local (target) URI names our side of the call ("<scheme>:server").
+   * Derive the scheme from the caller's URI so a sip:/skype: caller does not
+   * get a tel: target; fall back to tel: when the caller URI has no scheme. */
+  char target[32];
+  const char *colon = strchr(from, ':');
+  if (colon && (size_t)(colon - from) < sizeof(target) - (sizeof(":server") - 1)) {
+    snprintf(target, sizeof(target), "%.*s:server", (int)(colon - from), from);
+  } else {
+    snprintf(target, sizeof(target), "tel:server");
+  }
+  return esp_ble_audio_tbs_remote_incoming(s_tbs_bearer, target, from, friendly_name ? friendly_name : from, call_index);
 }
 
 int bleAudioCcpSrvCallOp(uint8_t op, uint8_t call_index) {
@@ -1066,6 +1145,13 @@ static void tbsc_retrieved(esp_ble_conn_t *conn, int err, uint8_t inst_index, ui
 /** Call list read or notified: releases deferred DISCOVERED, then emits one CCP_CLI_CALL per call. */
 static void tbsc_call_states(esp_ble_conn_t *conn, int err, uint8_t inst_index, uint8_t call_count, const esp_ble_audio_tbs_client_call_state_t *states) {
   if (inst_index != ESP_BLE_AUDIO_TBS_GTBS_INDEX) {
+    /* Discrete TBS instances are not driven: GTBS-only client. Say so once
+     * instead of silently dropping a dual-bearer phone's SIM2. */
+    static uint8_t warned = 0xFF;
+    if (warned != inst_index) {
+      warned = inst_index;
+      ESP_LOGW(TAG, "call controller: ignoring call states of discrete TBS instance %u (GTBS-only)", inst_index);
+    }
     return;
   }
   const uint16_t h = CONN_OF(conn);
@@ -1085,6 +1171,12 @@ static void tbsc_ended(esp_ble_conn_t *conn, int err, uint8_t inst_index, uint8_
   if (inst_index == ESP_BLE_AUDIO_TBS_GTBS_INDEX) {
     const ble_audio_ccp_call_state_t d = {.call_index = call_index, .state = BLE_AUDIO_CCP_CALL_ENDED};
     bleAudioEngineEmit(BLE_AUDIO_EVT_CCP_CLI_CALL, CONN_OF(conn), err, &d);
+  } else {
+    static uint8_t warned_end = 0xFF;
+    if (warned_end != inst_index) {
+      warned_end = inst_index;
+      ESP_LOGW(TAG, "call controller: ignoring termination of discrete TBS instance %u (GTBS-only)", inst_index);
+    }
   }
 }
 
