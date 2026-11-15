@@ -283,6 +283,17 @@ int bleAudioCapCommanderInit(void);
  *        discovered peer. CAP_CMD_DISCOVERED fires once the chain ends.
  */
 int bleAudioCapCommanderDiscover(uint16_t conn_handle);
+/**
+ * @brief Enable CSIP ordered access for the procedures below.
+ *
+ * When every driven peer belongs to one discovered coordinated set (CSIP
+ * coordinator discovery must have run on each link), procedures use the
+ * stack's CSIP set type — lock, rank-ordered execution and unlock inside the
+ * stack — instead of AD_HOC. Mixed or undiscovered sets fall back to AD_HOC
+ * with a warning. Returns NOT_SUPPORTED when the CSIP coordinator is
+ * compiled out.
+ */
+int bleAudioCapCommanderSetCoordinated(bool coordinated);
 /** @brief Set the absolute volume (0-255) on every peer's VCS. */
 int bleAudioCapCommanderVolume(uint8_t volume);
 int bleAudioCapCommanderVolumeMute(bool mute);

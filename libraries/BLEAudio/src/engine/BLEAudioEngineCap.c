@@ -54,6 +54,7 @@
 #include "esp_ble_audio_vcp_api.h"
 #include "esp_log.h"
 
+#include <stdatomic.h>
 #include <string.h>
 #include <errno.h>
 
@@ -91,10 +92,6 @@ static const ble_audio_unit_hooks_t s_hooks = {.on_gap = cap_on_gap, .on_deinit 
 static int cap_attach(void) {
   return bleAudioEngineRegisterUnit(&s_hooks);
 }
-
-/* Little-endian writers for LTV metadata and advertising payloads. */
-#define audio_put_le16 ble_audio_put_le16
-#define audio_put_le32 ble_audio_put_le32
 
 static inline uint16_t handle_of(const esp_ble_conn_t *conn) {
   return conn ? conn->handle : CONN_NONE;
@@ -136,6 +133,8 @@ typedef struct {
   const void *cmd_ctlr; ///< VCP / MICP controller instance whose discovery is in flight.
   bool cmd_discovering; ///< Controller discovery call in flight; its callback may run inline.
   bool cmd_inline;      ///< The in-flight discovery callback already ran inline.
+  bool cmd_in_call;     ///< Inside the discover() call (inline callbacks land here, not on a peer).
+  bool cmd_deferred;    ///< Controller discovery deferred: another peer's controller discovery is in flight.
 #endif
 #if CAP_BASS
   bool bass;            ///< BASS discovered on the peer.
@@ -144,6 +143,7 @@ typedef struct {
 #endif
 #if CSIP_CRD
   const esp_ble_audio_csip_set_coordinator_set_member_t *csip;  ///< Set member object from CSIP discovery.
+  uint8_t csip_sets;      ///< Set count from CSIP discovery (bounds the insts array).
 #endif
 } cap_peer_t;
 
@@ -318,6 +318,7 @@ static void crd_discover(esp_ble_conn_t *conn, const esp_ble_audio_csip_set_coor
   cap_peer_t *p = peer_of(conn);
   if (p) {
     p->csip = err ? NULL : member;
+    p->csip_sets = (err || member == NULL) ? 0 : (set_count > 255 ? 255 : (uint8_t)set_count);
   }
   if (err == 0 && member && member->insts && set_count) {
     const esp_ble_audio_csip_set_coordinator_set_info_t *info = &member->insts[0].info;
@@ -343,7 +344,9 @@ static void crd_release_set(int err) {
 static void crd_lock_changed(esp_ble_audio_csip_set_coordinator_csis_inst_t *inst, bool locked) {
   uint16_t handle = CONN_NONE;
   for (int i = 0; i < MAX_PEERS; i++) {
-    if (s_peers[i].used && s_peers[i].csip && s_peers[i].csip->insts == inst) {
+    const esp_ble_audio_csip_set_coordinator_set_member_t *m = s_peers[i].used ? s_peers[i].csip : NULL;
+    /* A multi-instance set notifies with any of its instances, not just insts[0]. */
+    if (m && m->insts && inst >= m->insts && inst < m->insts + s_peers[i].csip_sets) {
       handle = s_peers[i].handle;
     }
   }
@@ -638,6 +641,9 @@ static void uc_on_disconnect(uint16_t handle) {
   for (uint8_t i = 0; i < s_uc.count; i++) {
     if (s_uc.conns[i] == handle) {
       s_uc.conns[i] = CONN_NONE;
+      /* The stack frees the conn object: a later Update/Stop or handover must
+       * not dereference it through the in-flight start parameters. */
+      s_uc.ssp[i].member.member = NULL;
     }
     left |= (s_uc.conns[i] != CONN_NONE);
   }
@@ -711,7 +717,7 @@ int bleAudioCapUnicastUpdate(uint16_t context) {
   for (uint8_t i = 0; i < s_uc.count; i++) {
     s_uc.meta[i][0] = 3;
     s_uc.meta[i][1] = ESP_BLE_AUDIO_METADATA_TYPE_STREAM_CONTEXT;
-    audio_put_le16(&s_uc.meta[i][2], context ? context : ESP_BLE_AUDIO_CONTEXT_TYPE_UNSPECIFIED);
+    ble_audio_put_le16(&s_uc.meta[i][2], context ? context : ESP_BLE_AUDIO_CONTEXT_TYPE_UNSPECIFIED);
     s_uc.usp[i].stream = s_uc.streams[i];
     s_uc.usp[i].meta_len = META_CTX_LEN;
     s_uc.usp[i].meta = s_uc.meta[i];
@@ -786,7 +792,7 @@ static void bc_fill(esp_ble_audio_cap_stream_t *const st[], const uint32_t *loc,
     if (loc && loc[i]) {
       s_bc.bis[i][0] = 5;
       s_bc.bis[i][1] = ESP_BLE_AUDIO_CODEC_CFG_CHAN_ALLOC;
-      audio_put_le32(&s_bc.bis[i][2], loc[i]);
+      ble_audio_put_le32(&s_bc.bis[i][2], loc[i]);
       s_bc.sp[i].data = s_bc.bis[i];
       s_bc.sp[i].data_len = sizeof(s_bc.bis[i]);
     }
@@ -912,7 +918,7 @@ int bleAudioCapBroadcastUpdate(uint16_t context) {
   if (s_bc.source == NULL) {
     return ESP_ERR_INVALID_STATE;
   }
-  audio_put_le16(&meta[2], context ? context : ESP_BLE_AUDIO_CONTEXT_TYPE_UNSPECIFIED);
+  ble_audio_put_le16(&meta[2], context ? context : ESP_BLE_AUDIO_CONTEXT_TYPE_UNSPECIFIED);
   return (int)esp_ble_audio_cap_initiator_broadcast_audio_update(s_bc.source, meta, sizeof(meta));
 }
 
@@ -984,6 +990,11 @@ int bleAudioCapInitiatorInit(void) {
 #if CAP_HO
 
 static bool s_ho_registered;
+/* One handover at a time: both directions share s_uc/s_bc (and statics the
+ * stack references until completion), so a second start while one is in
+ * flight would corrupt the in-flight parameters. Set on start, cleared in the
+ * completion callbacks (and on synchronous start failure). */
+static _Atomic bool s_ho_busy;
 
 /*
  * Handover reuses s_uc and s_bc: the stack creates the broadcast source (or
@@ -1014,6 +1025,7 @@ static void ho_created(esp_ble_audio_cap_broadcast_source_t *source) {
 
 /** Unicast-to-broadcast finished; @p group / @p source are what the stack still holds. */
 static void ho_to_broadcast(int err, esp_ble_conn_t *conn, esp_ble_audio_cap_unicast_group_t *group, esp_ble_audio_cap_broadcast_source_t *source) {
+  atomic_store(&s_ho_busy, false);
   s_uc.group = group;
   s_bc.source = source;
   if (err == 0) {
@@ -1025,6 +1037,7 @@ static void ho_to_broadcast(int err, esp_ble_conn_t *conn, esp_ble_audio_cap_uni
 
 /** Broadcast-to-unicast finished; a NULL @p group means no unicast streams were started. */
 static void ho_to_unicast(int err, esp_ble_conn_t *conn, esp_ble_audio_cap_broadcast_source_t *source, esp_ble_audio_cap_unicast_group_t *group) {
+  atomic_store(&s_ho_busy, false);
   s_bc.source = source;
   s_uc.group = group;
   if (group == NULL) {
@@ -1102,6 +1115,9 @@ int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_aud
   if (!s_ho_registered || s_uc.group == NULL || s_bc.source) {
     return ESP_ERR_INVALID_STATE;
   }
+  if (atomic_exchange(&s_ho_busy, true)) {
+    return -EBUSY; /* A handover is already in flight; retry after it completes. */
+  }
   /* Only streaming sink (our TX) streams move; each becomes one BIS keeping its Audio Location. */
   for (uint8_t i = 0; i < s_uc.count && n < BC_MAX; i++) {
     ble_audio_slot_t *slot = s_uc.slots[i];
@@ -1121,6 +1137,9 @@ int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_aud
     return ESP_ERR_INVALID_STATE;
   }
   /* Same codec as the unicast streams, so acceptors do not reconfigure their decoder. */
+  /* s_bc.cfg_data (24 B) always fits the encoded config (<= BLE_AUDIO_CODEC_DATA_MAX):
+   * ltv_without() can therefore never truncate here; the assert pins the invariant. */
+  _Static_assert(sizeof(s_bc.cfg_data) >= BLE_AUDIO_CODEC_DATA_MAX, "handover codec data buffer too small");
   s_bc.cfg = *b0->codec_cfg;
   s_bc.cfg.data = s_bc.cfg_data;
   s_bc.cfg.data_len = ltv_without(s_bc.cfg_data, sizeof(s_bc.cfg_data), b0->codec_cfg->data, b0->codec_cfg->data_len, ESP_BLE_AUDIO_CODEC_CFG_CHAN_ALLOC);
@@ -1132,6 +1151,7 @@ int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_aud
   bc_fill(st, loc, n, &s_bc.cfg, &s_bc.qos, code);
   int err = bc_adv_add(adv);
   if (err) {
+    atomic_store(&s_ho_busy, false);
     return err;
   }
   memset(&param, 0, sizeof(param));
@@ -1144,6 +1164,7 @@ int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_aud
   err = (int)esp_ble_audio_cap_handover_unicast_to_broadcast(&param);
   if (err) {
     ESP_LOGE(TAG, "CAP handover to broadcast: procedure start (%u streams) failed: %d", n, err);
+    atomic_store(&s_ho_busy, false);
   }
   return err;
 }
@@ -1157,8 +1178,12 @@ int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t 
   if (!s_ho_registered || s_bc.source == NULL || s_uc.group) {
     return ESP_ERR_INVALID_STATE;
   }
+  if (atomic_exchange(&s_ho_busy, true)) {
+    return -EBUSY; /* A handover is already in flight; retry after it completes. */
+  }
   int err = uc_prepare(reqs, count);
   if (err) {
+    atomic_store(&s_ho_busy, false);
     return err;
   }
   /* Acceptors still receiving our broadcast are told to stop before the unicast streams start. */
@@ -1187,6 +1212,7 @@ int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t 
   err = esp_ble_audio_cap_handover_broadcast_to_unicast(&param);
   if (err) {
     ESP_LOGE(TAG, "CAP handover to unicast: procedure start (%u streams, %u receivers) failed: %d", count, ns, err);
+    atomic_store(&s_ho_busy, false);
     s_uc.count = 0;
   }
   return err;
@@ -1200,6 +1226,66 @@ int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t 
 
 static bool s_cmd_registered;
 
+#if CSIP_CRD
+/* Ordered access for commander procedures: when enabled and every driven peer
+ * belongs to one discovered coordinated set, the procedure runs with the
+ * stack's CSIP set type (lock + rank order + unlock inside the stack) instead
+ * of AD_HOC. Mixed or undiscovered sets fall back to AD_HOC with a warning. */
+static bool s_cmd_coordinated;
+
+int bleAudioCapCommanderSetCoordinated(bool coordinated) {
+  s_cmd_coordinated = coordinated;
+  return 0;
+}
+
+/**
+ * CSIS instances when every driven peer sits in one coordinated set, else 0.
+ * The union's CSIP variant holds a CSIS *instance* (not the member object):
+ * the first instance of each member, requiring all first instances to share
+ * a SIRK (the standard single-set case; multi-set peers need explicit
+ * per-instance selection the API does not offer).
+ */
+static uint8_t cmd_csip_members(esp_ble_conn_t *const conns[], uint8_t n,
+                                esp_ble_audio_csip_set_coordinator_csis_inst_t *out[]) {
+  const uint8_t *sirk = NULL;
+  for (uint8_t i = 0; i < n; i++) {
+    const cap_peer_t *p = peer_of(conns[i]);
+    const esp_ble_audio_csip_set_coordinator_set_member_t *m = (p && p->cmd_ready) ? p->csip : NULL;
+    if (m == NULL || m->insts == NULL) {
+      return 0;
+    }
+    if (sirk == NULL) {
+      sirk = m->insts[0].info.sirk;
+    } else if (memcmp(m->insts[0].info.sirk, sirk, BLE_AUDIO_SIRK_LEN) != 0) {
+      return 0;
+    }
+    out[i] = (esp_ble_audio_csip_set_coordinator_csis_inst_t *)&m->insts[0];
+  }
+  return n;
+}
+
+/**
+ * CSIP set type when coordinated mode can run ordered access, else AD_HOC
+ * (with a warning when coordinated mode was asked for but the set does not
+ * qualify). Fills @p csip for the CSIP path.
+ */
+static int cmd_set_type(esp_ble_conn_t *const conns[], uint8_t n,
+                        esp_ble_audio_csip_set_coordinator_csis_inst_t *csip[]) {
+  if (s_cmd_coordinated && n > 0) {
+    if (cmd_csip_members(conns, n, csip) == n) {
+      return ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP;
+    }
+    ESP_LOGW(TAG, "commander: coordinated set not ready (mixed or undiscovered members), using ad-hoc");
+  }
+  return ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC;
+}
+#else /* !CSIP_CRD */
+int bleAudioCapCommanderSetCoordinated(bool coordinated) {
+  (void)coordinated;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+#endif /* CSIP_CRD */
+
 /** End the commander discovery of @p p and report it. */
 static void cmd_disc_done(cap_peer_t *p, int err) {
   ble_audio_cap_cmd_discovered_t d = {.coordinated = p->cmd_coord};
@@ -1212,6 +1298,28 @@ static void cmd_disc_done(cap_peer_t *p, int err) {
 
 /** Steps of the commander discovery that follow CAS, in order. */
 enum { CMD_D_CAS = 0, CMD_D_VCP, CMD_D_MICP, CMD_D_BASS };
+
+#if CMD_VCP || CMD_MICP
+/**
+ * Controller discoveries attribute their callback to the single discovering
+ * peer, so two must never be in flight at once: the CAS path runs on the host
+ * task while the application may discover another peer on its own task, and an
+ * inline callback would then land on the wrong peer. A step that finds a busy
+ * peer defers; the completion path resumes exactly one deferred peer.
+ */
+static bool cmd_ctlr_busy(const cap_peer_t *self) {
+  for (int i = 0; i < MAX_PEERS; i++) {
+    const cap_peer_t *p = &s_peers[i];
+    if (p != self && p->used && p->cmd_disc && p->cmd_discovering) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Resume one deferred controller discovery, if any. Call after clearing cmd_discovering. */
+static void cmd_resume_deferred(void);
+#endif /* CMD_VCP || CMD_MICP */
 
 /**
  * Start the next discovery step after CAS, or finish. The stack refuses the
@@ -1227,21 +1335,34 @@ static void cmd_disc_step(cap_peer_t *p) {
     p->cmd_stage = CMD_D_VCP;
     esp_ble_audio_vcp_vol_ctlr_t *ctlr = NULL;
     if (esp_ble_audio_vcp_vol_ctlr_get_by_conn(p->handle) == NULL) {
+      if (cmd_ctlr_busy(p)) {
+        /* Another peer's controller discovery is in flight; its callback
+         * would be attributed here. Wait for the resume instead. */
+        p->cmd_deferred = true;
+        return;
+      }
       p->cmd_ctlr = NULL;
       p->cmd_inline = false;
       p->cmd_discovering = true;
+      p->cmd_in_call = true;
       int err = esp_ble_audio_vcp_vol_ctlr_discover(p->handle, &ctlr);
-      if (err == ESP_OK && !p->cmd_inline) {
-        /* Publish the instance before an asynchronous callback can run. */
+      p->cmd_in_call = false;
+      if (err != ESP_OK) {
+        /* Synchronous failure: this step only limits the procedures. */
+        p->cmd_discovering = false;
+        cmd_resume_deferred();
+      } else if (p->cmd_inline) {
+        /* The callback already ran inside discover(). */
+        p->cmd_inline = false;
+        p->cmd_ctlr = NULL;
+        p->cmd_discovering = false;
+        cmd_resume_deferred();
+        cmd_disc_step(p);
+        return;
+      } else {
+        /* Publish the instance before an asynchronous callback can run; the
+         * callback clears cmd_discovering and resumes us. */
         p->cmd_ctlr = ctlr;
-      }
-      p->cmd_discovering = false;
-      if (err == ESP_OK) {
-        if (p->cmd_inline) {
-          p->cmd_inline = false;
-          p->cmd_ctlr = NULL;
-          cmd_disc_step(p);
-        }
         return;
       }
     }
@@ -1255,21 +1376,30 @@ static void cmd_disc_step(cap_peer_t *p) {
      * which logs an ERROR (MicpMicCtlrConnNotAssoc) inside libble_audio whenever MICP
      * has not been discovered on this link yet. */
     if (!bleAudioMicpCtlrHasPeer(p->handle)) {
+      if (cmd_ctlr_busy(p)) {
+        p->cmd_deferred = true;
+        return;
+      }
       p->cmd_ctlr = NULL;
       p->cmd_inline = false;
       p->cmd_discovering = true;
+      p->cmd_in_call = true;
       int err = esp_ble_audio_micp_mic_ctlr_discover(p->handle, &ctlr);
-      if (err == ESP_OK && !p->cmd_inline) {
-        /* Publish the instance before an asynchronous callback can run. */
+      p->cmd_in_call = false;
+      if (err != ESP_OK) {
+        p->cmd_discovering = false;
+        cmd_resume_deferred();
+      } else if (p->cmd_inline) {
+        p->cmd_inline = false;
+        p->cmd_ctlr = NULL;
+        p->cmd_discovering = false;
+        cmd_resume_deferred();
+        cmd_disc_step(p);
+        return;
+      } else {
+        /* Publish the instance before an asynchronous callback can run; the
+         * callback clears cmd_discovering and resumes us. */
         p->cmd_ctlr = ctlr;
-      }
-      p->cmd_discovering = false;
-      if (err == ESP_OK) {
-        if (p->cmd_inline) {
-          p->cmd_inline = false;
-          p->cmd_ctlr = NULL;
-          cmd_disc_step(p);
-        }
         return;
       }
     }
@@ -1317,14 +1447,33 @@ static void cmd_ctlr_discovered(const void *ctlr) {
       continue;
     }
     if (p->cmd_discovering) {
-      /* Bluedroid can invoke this callback inline, before cmd_disc_step()
-       * stored the returned instance. */
+      /* Single in-flight peer (see cmd_ctlr_busy): this callback is ours. */
       p->cmd_ctlr = ctlr;
-      p->cmd_inline = true;
+      if (p->cmd_in_call) {
+        /* Inline inside discover(): the outer step resumes after return. */
+        p->cmd_inline = true;
+        return;
+      }
+      /* Asynchronous completion: the outer step is gone, advance here. */
+      p->cmd_discovering = false;
+      cmd_resume_deferred();
+      p->cmd_ctlr = NULL;
+      cmd_disc_step(p);
       return;
     }
     if (p->cmd_ctlr == ctlr) {
       p->cmd_ctlr = NULL;
+      cmd_disc_step(p);
+      return;
+    }
+  }
+}
+
+static void cmd_resume_deferred(void) {
+  for (int i = 0; i < MAX_PEERS; i++) {
+    cap_peer_t *p = &s_peers[i];
+    if (p->used && p->cmd_disc && p->cmd_deferred) {
+      p->cmd_deferred = false;
       cmd_disc_step(p);
       return;
     }
@@ -1424,21 +1573,6 @@ static uint8_t cmd_members(esp_ble_conn_t **out, uint8_t *src_ids, bool need_src
   return n;
 }
 
-/**
- * Fill @p m with the command members gathered by cmd_members(). @p m is either
- * an array of `esp_ble_audio_cap_set_member_t` or of member-param structs whose
- * FIRST field is one (volume offset, microphone gain), so the common gathering
- * loop works for both. @return the member count.
- */
-static uint8_t cmd_fill_members(esp_ble_audio_cap_set_member_t *m) {
-  esp_ble_conn_t *c[MAX_PEERS];
-  const uint8_t n = cmd_members(c, NULL, false);
-  for (uint8_t i = 0; i < n; i++) {
-    m[i].member = c[i];
-  }
-  return n;
-}
-
 int bleAudioCapCommanderInit(void) {
   if (s_cmd_registered) {
     return 0;
@@ -1486,10 +1620,25 @@ int bleAudioCapCommanderDiscover(uint16_t conn_handle) {
 
 int bleAudioCapCommanderVolume(uint8_t volume) {
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
+  esp_ble_conn_t *c[MAX_PEERS];
+  const uint8_t n = cmd_members(c, NULL, false);
+  if (n == 0) {
+    return ESP_ERR_INVALID_STATE;
+  }
+#if CSIP_CRD
+  esp_ble_audio_csip_set_coordinator_csis_inst_t *csip[MAX_PEERS];
+  if (cmd_set_type(c, n, csip) == ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP) {
+    esp_ble_audio_cap_commander_change_volume_param_t param = {
+      .type = ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP, .members = (esp_ble_audio_cap_set_member_t *)csip, .count = n, .volume = volume};
+    return (int)esp_ble_audio_cap_commander_change_volume(&param);
+  }
+#endif
   esp_ble_audio_cap_set_member_t m[MAX_PEERS];
-  const uint8_t n = cmd_fill_members(m);
+  for (uint8_t i = 0; i < n; i++) {
+    m[i].member = c[i];
+  }
   esp_ble_audio_cap_commander_change_volume_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .members = m, .count = n, .volume = volume};
-  return n ? (int)esp_ble_audio_cap_commander_change_volume(&param) : ESP_ERR_INVALID_STATE;
+  return (int)esp_ble_audio_cap_commander_change_volume(&param);
 #else
   (void)volume;
   return ESP_ERR_NOT_SUPPORTED;
@@ -1498,10 +1647,25 @@ int bleAudioCapCommanderVolume(uint8_t volume) {
 
 int bleAudioCapCommanderVolumeMute(bool mute) {
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
+  esp_ble_conn_t *c[MAX_PEERS];
+  const uint8_t n = cmd_members(c, NULL, false);
+  if (n == 0) {
+    return ESP_ERR_INVALID_STATE;
+  }
+#if CSIP_CRD
+  esp_ble_audio_csip_set_coordinator_csis_inst_t *csip[MAX_PEERS];
+  if (cmd_set_type(c, n, csip) == ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP) {
+    esp_ble_audio_cap_commander_change_volume_mute_state_param_t param = {
+      .type = ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP, .members = (esp_ble_audio_cap_set_member_t *)csip, .count = n, .mute = mute};
+    return (int)esp_ble_audio_cap_commander_change_volume_mute_state(&param);
+  }
+#endif
   esp_ble_audio_cap_set_member_t m[MAX_PEERS];
-  const uint8_t n = cmd_fill_members(m);
+  for (uint8_t i = 0; i < n; i++) {
+    m[i].member = c[i];
+  }
   esp_ble_audio_cap_commander_change_volume_mute_state_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .members = m, .count = n, .mute = mute};
-  return n ? (int)esp_ble_audio_cap_commander_change_volume_mute_state(&param) : ESP_ERR_INVALID_STATE;
+  return (int)esp_ble_audio_cap_commander_change_volume_mute_state(&param);
 #else
   (void)mute;
   return ESP_ERR_NOT_SUPPORTED;
@@ -1511,12 +1675,29 @@ int bleAudioCapCommanderVolumeMute(bool mute) {
 int bleAudioCapCommanderVolumeOffset(int16_t offset) {
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED && defined(CONFIG_BT_VCP_VOL_CTLR_VOCS)
   esp_ble_audio_cap_commander_change_volume_offset_member_param_t m[MAX_PEERS];
-  const uint8_t n = cmd_fill_members((esp_ble_audio_cap_set_member_t *)m);
+  esp_ble_conn_t *c[MAX_PEERS];
+  const uint8_t n = cmd_members(c, NULL, false);
+  if (n == 0) {
+    return ESP_ERR_INVALID_STATE;
+  }
+  int set_type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC;
+#if CSIP_CRD
+  esp_ble_audio_csip_set_coordinator_csis_inst_t *csip[MAX_PEERS];
+  set_type = cmd_set_type(c, n, csip);
+#endif
   for (uint8_t i = 0; i < n; i++) {
+#if CSIP_CRD
+    if (set_type == ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP) {
+      m[i].member.csip = csip[i];
+    } else
+#endif
+    {
+      m[i].member.member = c[i];
+    }
     m[i].offset = offset;
   }
-  esp_ble_audio_cap_commander_change_volume_offset_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .param = m, .count = n};
-  return n ? (int)esp_ble_audio_cap_commander_change_volume_offset(&param) : ESP_ERR_INVALID_STATE;
+  esp_ble_audio_cap_commander_change_volume_offset_param_t param = {.type = set_type, .param = m, .count = n};
+  return (int)esp_ble_audio_cap_commander_change_volume_offset(&param);
 #else
   (void)offset;
   return ESP_ERR_NOT_SUPPORTED;
@@ -1525,10 +1706,25 @@ int bleAudioCapCommanderVolumeOffset(int16_t offset) {
 
 int bleAudioCapCommanderMicMute(bool mute) {
 #if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
+  esp_ble_conn_t *c[MAX_PEERS];
+  const uint8_t n = cmd_members(c, NULL, false);
+  if (n == 0) {
+    return ESP_ERR_INVALID_STATE;
+  }
+#if CSIP_CRD
+  esp_ble_audio_csip_set_coordinator_csis_inst_t *csip[MAX_PEERS];
+  if (cmd_set_type(c, n, csip) == ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP) {
+    esp_ble_audio_cap_commander_change_microphone_mute_state_param_t param = {
+      .type = ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP, .members = (esp_ble_audio_cap_set_member_t *)csip, .count = n, .mute = mute};
+    return (int)esp_ble_audio_cap_commander_change_microphone_mute_state(&param);
+  }
+#endif
   esp_ble_audio_cap_set_member_t m[MAX_PEERS];
-  const uint8_t n = cmd_fill_members(m);
+  for (uint8_t i = 0; i < n; i++) {
+    m[i].member = c[i];
+  }
   esp_ble_audio_cap_commander_change_microphone_mute_state_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .members = m, .count = n, .mute = mute};
-  return n ? (int)esp_ble_audio_cap_commander_change_microphone_mute_state(&param) : ESP_ERR_INVALID_STATE;
+  return (int)esp_ble_audio_cap_commander_change_microphone_mute_state(&param);
 #else
   (void)mute;
   return ESP_ERR_NOT_SUPPORTED;
@@ -1538,12 +1734,29 @@ int bleAudioCapCommanderMicMute(bool mute) {
 int bleAudioCapCommanderMicGain(int8_t gain) {
 #if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED && defined(CONFIG_BT_MICP_MIC_CTLR_AICS)
   esp_ble_audio_cap_commander_change_microphone_gain_setting_member_param_t m[MAX_PEERS];
-  const uint8_t n = cmd_fill_members((esp_ble_audio_cap_set_member_t *)m);
+  esp_ble_conn_t *c[MAX_PEERS];
+  const uint8_t n = cmd_members(c, NULL, false);
+  if (n == 0) {
+    return ESP_ERR_INVALID_STATE;
+  }
+  int set_type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC;
+#if CSIP_CRD
+  esp_ble_audio_csip_set_coordinator_csis_inst_t *csip[MAX_PEERS];
+  set_type = cmd_set_type(c, n, csip);
+#endif
   for (uint8_t i = 0; i < n; i++) {
+#if CSIP_CRD
+    if (set_type == ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP) {
+      m[i].member.csip = csip[i];
+    } else
+#endif
+    {
+      m[i].member.member = c[i];
+    }
     m[i].gain = gain;
   }
-  esp_ble_audio_cap_commander_change_microphone_gain_setting_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .param = m, .count = n};
-  return n ? (int)esp_ble_audio_cap_commander_change_microphone_gain_setting(&param) : ESP_ERR_INVALID_STATE;
+  esp_ble_audio_cap_commander_change_microphone_gain_setting_param_t param = {.type = set_type, .param = m, .count = n};
+  return (int)esp_ble_audio_cap_commander_change_microphone_gain_setting(&param);
 #else
   (void)gain;
   return ESP_ERR_NOT_SUPPORTED;
@@ -1560,12 +1773,27 @@ int bleAudioCapCommanderReceptionStart(const ble_audio_cap_bcast_src_t *src) {
     return ESP_ERR_INVALID_ARG;
   }
   const uint8_t n = cmd_members(c, NULL, false);
+  if (n == 0) {
+    return ESP_ERR_INVALID_STATE;
+  }
+  int set_type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC;
+#if CSIP_CRD
+  esp_ble_audio_csip_set_coordinator_csis_inst_t *csip[MAX_PEERS];
+  set_type = cmd_set_type(c, n, csip);
+#endif
   subgroup.bis_sync = src->bis_sync ? src->bis_sync : ESP_BLE_AUDIO_BAP_BIS_SYNC_NO_PREF;
   subgroup.metadata_len = 0;
   subgroup.metadata = NULL;
   memset(m, 0, sizeof(m));
   for (uint8_t i = 0; i < n; i++) {
-    m[i].member.member = c[i];
+#if CSIP_CRD
+    if (set_type == ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP) {
+      m[i].member.csip = csip[i];
+    } else
+#endif
+    {
+      m[i].member.member = c[i];
+    }
     m[i].addr.type = src->addr_type;
     memcpy(m[i].addr.a.val, src->addr, sizeof(m[i].addr.a.val));
     m[i].adv_sid = src->sid;
@@ -1574,10 +1802,7 @@ int bleAudioCapCommanderReceptionStart(const ble_audio_cap_bcast_src_t *src) {
     m[i].subgroups = &subgroup;
     m[i].num_subgroups = 1;
   }
-  esp_ble_audio_cap_commander_broadcast_reception_start_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .param = m, .count = n};
-  if (n == 0) {
-    return ESP_ERR_INVALID_STATE;
-  }
+  esp_ble_audio_cap_commander_broadcast_reception_start_param_t param = {.type = set_type, .param = m, .count = n};
   /* Follow receive states for this broadcast so Stop and DistributeCode know each peer's Source_ID. */
   s_track_id = src->broadcast_id;
   return (int)esp_ble_audio_cap_commander_broadcast_reception_start(&param);
@@ -1593,13 +1818,28 @@ int bleAudioCapCommanderReceptionStop(void) {
   uint8_t ids[MAX_PEERS];
   esp_ble_audio_cap_commander_broadcast_reception_stop_member_param_t m[MAX_PEERS];
   const uint8_t n = cmd_members(c, ids, true);
+  if (n == 0) {
+    return ESP_ERR_INVALID_STATE;
+  }
+  int set_type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC;
+#if CSIP_CRD
+  esp_ble_audio_csip_set_coordinator_csis_inst_t *csip[MAX_PEERS];
+  set_type = cmd_set_type(c, n, csip);
+#endif
   for (uint8_t i = 0; i < n; i++) {
-    m[i].member.member = c[i];
+#if CSIP_CRD
+    if (set_type == ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP) {
+      m[i].member.csip = csip[i];
+    } else
+#endif
+    {
+      m[i].member.member = c[i];
+    }
     m[i].src_id = ids[i];
     m[i].num_subgroups = 1;
   }
-  esp_ble_audio_cap_commander_broadcast_reception_stop_param_t param = {.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC, .param = m, .count = n};
-  return n ? (int)esp_ble_audio_cap_commander_broadcast_reception_stop(&param) : ESP_ERR_INVALID_STATE;
+  esp_ble_audio_cap_commander_broadcast_reception_stop_param_t param = {.type = set_type, .param = m, .count = n};
+  return (int)esp_ble_audio_cap_commander_broadcast_reception_stop(&param);
 #else
   return ESP_ERR_NOT_SUPPORTED;
 #endif
@@ -1615,12 +1855,27 @@ int bleAudioCapCommanderDistributeCode(const uint8_t code[BLE_AUDIO_BCODE_SIZE])
     return ESP_ERR_INVALID_ARG;
   }
   param.count = cmd_members(c, ids, true);
+  if (param.count == 0) {
+    return ESP_ERR_INVALID_STATE;
+  }
+  param.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC;
+#if CSIP_CRD
+  esp_ble_audio_csip_set_coordinator_csis_inst_t *csip[MAX_PEERS];
+  param.type = cmd_set_type(c, param.count, csip);
+#endif
   for (uint8_t i = 0; i < param.count; i++) {
-    m[i].member.member = c[i];
+#if CSIP_CRD
+    if (param.type == ESP_BLE_AUDIO_CAP_SET_TYPE_CSIP) {
+      m[i].member.csip = csip[i];
+    } else
+#endif
+    {
+      m[i].member.member = c[i];
+    }
     m[i].src_id = ids[i];
   }
   memcpy(param.broadcast_code, code, BLE_AUDIO_BCODE_SIZE);
-  return param.count ? (int)esp_ble_audio_cap_commander_distribute_broadcast_code(&param) : ESP_ERR_INVALID_STATE;
+  return (int)esp_ble_audio_cap_commander_distribute_broadcast_code(&param);
 #else
   (void)code;
   return ESP_ERR_NOT_SUPPORTED;
@@ -1744,7 +1999,19 @@ static void cap_on_gap(const void *event) {
 #endif
     cap_peer_t *p = peer_get(handle, false);
     if (p) {
+#if CAP_CMD && (CMD_VCP || CMD_MICP)
+      /* A discovery that dies with its link must not pin the serialization:
+       * deferred peers would wait for a completion that never comes. */
+      const bool disc_died = p->cmd_disc && (p->cmd_discovering || p->cmd_deferred);
+#else
+      const bool disc_died = false;
+#endif
       memset(p, 0, sizeof(*p));
+#if CAP_CMD && (CMD_VCP || CMD_MICP)
+      if (disc_died) {
+        cmd_resume_deferred();
+      }
+#endif
     }
   }
 #if CAP_PAST
