@@ -124,6 +124,8 @@ public:
   uint32_t sdusSent() const;
   /** @brief SDUs that failed to encode or were refused by the stack. */
   uint32_t sendErrors() const;
+  /** @brief Resync episodes after the controller stopped releasing SDUs (TX stall). */
+  uint32_t txStalls() const;
 
   struct Impl;
 

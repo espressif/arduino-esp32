@@ -84,9 +84,16 @@ public:
    */
   void end();
 
-  /** @brief Deliver decoded PCM to @p sink instead of I2S (before begin()). */
+  /** @brief Deliver decoded PCM to @p sink instead of I2S (before begin(); ignored while running).
+   *
+   * A set sink wins over I2S: begin(pins) then only logs and keeps the sink.
+   */
   BLEAudioPlayer &setPCMSink(BLEAudioPCMSink sink);
-  /** @brief Jitter-buffer depth in SDUs (min 2); 0 = from the stream QoS (default). */
+  /** @brief Jitter-buffer depth in SDUs (min 2, max 16); 0 = from the stream QoS (default).
+   *
+   * Larger requests are clamped to 16 with a warning when the session builds;
+   * a presentation delay that needs more than 16 SDUs underruns by design.
+   */
   BLEAudioPlayer &setJitterDepth(uint8_t sdus);
 
   /**
@@ -132,6 +139,8 @@ public:
   uint32_t plcFrames() const;
   /** @brief SDU intervals in which a streaming stream had nothing queued. */
   uint32_t underruns() const;
+  /** @brief PCM-sink timeline restarts after falling behind (tick quantization, no data lost). */
+  uint32_t lateResyncs() const;
 
   struct Impl;
 

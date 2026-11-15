@@ -57,7 +57,7 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
 
   // Shared with the sent tap / published to the API.
   std::atomic<uint32_t> released[2]{};  // SDUs the controller consumed, per stream.
-  std::atomic<uint32_t> sent{0}, errors{0};
+  std::atomic<uint32_t> sent{0}, errors{0}, stalls{0};
   std::atomic<uint32_t> rate{0};
   std::atomic<uint8_t> chans{0};
 
@@ -147,7 +147,15 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
     }
     frames = cfg.framesPerSdu ? cfg.framesPerSdu : 1;
     octets = cfg.octetsPerFrame;
+    // Real SDU time (see Player::session): the negotiated QoS wins; the codec
+    // config is only the fallback for unconfigured streams. A zero interval
+    // (malformed custom config) would fault the timer below.
     uint32_t intervalUs = qos.sduIntervalUs ? qos.sduIntervalUs : (uint32_t)cfg.frameDurationUs * frames;
+    if (!intervalUs) {
+      log_e("Recorder: invalid SDU interval (0 us)");
+      close();
+      return false;
+    }
 
     const char *failed = nullptr;
     for (uint8_t j = 0; !failed && j < nch; j++) {
@@ -198,7 +206,12 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
       return false;
     }
     // One I2S read is one real PCM frame (44.1 kHz is not 7.5/10 ms exactly).
+    // When the QoS was missing above, the timer below should have used this
+    // real frame time instead of the nominal codec duration.
     uint32_t frameUs = (uint32_t)((uint64_t)samples * 1000000u / cfg.samplingRateHz);
+    if (!qos.sduIntervalUs) {
+      intervalUs = frameUs * frames;
+    }
     readMs = (frameUs + 1999u) / 1000u;
     rate.store(cfg.samplingRateHz);
     chans.store(nch);
@@ -258,6 +271,13 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
     if (tracked && inflight >= kAhead) {
       if (++stalled < kStallTicks) {
         return;
+      }
+      if (stalled == kStallTicks) {
+        // Releases stopped but the stream still runs (stalled ISO, link loss
+        // without an event): report once per episode instead of spinning
+        // silently, then assume drained and keep capturing.
+        log_w("Recorder: no controller releases for %u ticks; resyncing (TX may be stalled)", kStallTicks);
+        bleAudioBump(stalls);
       }
       written[ref] = done;
     }
@@ -359,14 +379,19 @@ void BLEAudioRecorder::end() {
 
 BLEAudioRecorder &BLEAudioRecorder::setPCMSource(BLEAudioPCMSource source) {
   Impl &d = ensure(_impl);
-  if (!d.running()) {
-    d.source = std::move(source);
+  if (d.running()) {
+    log_w("Recorder: setPCMSource() ignored while running; stopCapture() first (applies to the next run)");
+    return *this;
   }
+  d.source = std::move(source);
   return *this;
 }
 
 BTStatus BLEAudioRecorder::attach(BLEAudioStream stream) {
-  if (!*this || !stream) {
+  if (!*this) {
+    return BTStatus::InvalidState;
+  }
+  if (!stream) {
     return BTStatus::InvalidParam;
   }
   BLEAudioStreamTap tap;
@@ -375,7 +400,10 @@ BTStatus BLEAudioRecorder::attach(BLEAudioStream stream) {
 }
 
 BTStatus BLEAudioRecorder::attach(BLEAudioStream stream, BLEAudioStream right) {
-  if (!*this || !stream || !right) {
+  if (!*this) {
+    return BTStatus::InvalidState;
+  }
+  if (!stream || !right) {
     return BTStatus::InvalidParam;
   }
   BLEAudioStreamTap tap;
@@ -396,6 +424,7 @@ BTStatus BLEAudioRecorder::startCapture() {
   }
   _impl->sent.store(0);
   _impl->errors.store(0);
+  _impl->stalls.store(0);
   return _impl->start("ble_lc3_rec");
 }
 
@@ -423,6 +452,10 @@ uint32_t BLEAudioRecorder::sdusSent() const {
 
 uint32_t BLEAudioRecorder::sendErrors() const {
   return _impl ? _impl->errors.load(std::memory_order_relaxed) : 0;
+}
+
+uint32_t BLEAudioRecorder::txStalls() const {
+  return _impl ? _impl->stalls.load(std::memory_order_relaxed) : 0;
 }
 
 #endif /* BLE_AUDIO_LC3_SUPPORTED */

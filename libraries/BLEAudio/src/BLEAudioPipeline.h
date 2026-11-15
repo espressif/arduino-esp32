@@ -250,10 +250,31 @@ struct BLEAudioDataPath {
     if (running()) {
       return BTStatus::InvalidState;
     }
-    if (!hasCallback && (bclk < 0 || ws < 0 || dataPin < 0)) {
+    if (hasCallback) {
+      // A PCM callback/sink wins over I2S: keep it and ignore the pins loudly
+      // instead of silently dropping one output.
+      log_w("%s: a PCM callback is already set and wins over I2S; the pins are ignored", roleName);
+      pins = BLEAudioI2SConfig();
+      begun = true;
+      return BTStatus::OK;
+    }
+    if (bclk < 0 || ws < 0 || dataPin < 0) {
       log_e("%s: begin() needs BCLK, WS and %s pins (or a PCM callback set first)", roleName, tx ? "DOUT" : "DIN");
       return BTStatus::InvalidParam;
     }
+#ifdef SOC_I2S_NUM
+    if (port < 0 || port >= SOC_I2S_NUM) {
+      log_e("%s: I2S port %d out of range (0..%d)", roleName, port, SOC_I2S_NUM - 1);
+      return BTStatus::InvalidParam;
+    }
+#else
+    // No port-count macro on this IDF: i2s_new_channel() rejects unknown
+    // ports (I2S_NUM_AUTO (-1) selects one automatically).
+    if (port < I2S_NUM_AUTO) {
+      log_e("%s: I2S port %d invalid", roleName, port);
+      return BTStatus::InvalidParam;
+    }
+#endif
     pins = BLEAudioI2SConfig();
     pins.bclk = bclk;
     pins.ws = ws;

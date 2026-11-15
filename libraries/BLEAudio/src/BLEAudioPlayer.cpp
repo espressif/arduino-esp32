@@ -86,7 +86,7 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
   // Published to the API.
   std::atomic<uint32_t> rate{0};
   std::atomic<uint8_t> chans{0};
-  std::atomic<uint32_t> received{0}, dropped{0}, lost{0}, plc{0}, underruns{0};
+  std::atomic<uint32_t> received{0}, dropped{0}, lost{0}, plc{0}, underruns{0}, late{0};
 
   Impl() {
     run = [](BLEAudioDataPath *self) {
@@ -166,19 +166,35 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
     }
     frames = cfg.framesPerSdu ? cfg.framesPerSdu : 1;
     octets = cfg.octetsPerFrame;
-    uint32_t intervalUs = qos.sduIntervalUs ? qos.sduIntervalUs : (uint32_t)cfg.frameDurationUs * frames;
+    if (!cfg.samplesPerFrame()) {
+      log_e("Player: invalid stream sizes (%u-octet frames)", octets);
+      return false;
+    }
+    // Real SDU time, not the nominal LC3 duration: 44.1 kHz frames are
+    // 8163/10884 us on air (see samplesPerFrame()). The negotiated QoS wins;
+    // the codec config is only the fallback for unconfigured streams.
+    const uint32_t sduUs = (uint32_t)((uint64_t)cfg.samplesPerFrame() * frames * 1000000u / cfg.samplingRateHz);
+    uint32_t intervalUs = qos.sduIntervalUs ? qos.sduIntervalUs : sduUs;
     if (!intervalUs) {
       // Both the QoS and the codec config carry a zero interval (a malformed
       // custom config); the jitter-depth division below would fault.
       log_e("Player: invalid SDU interval (0 us)");
       return false;
     }
-    uint32_t depth = depthOverride ? depthOverride : qos.presentationDelayUs / intervalUs;
-    depth = (depth < 2) ? 2 : (depth > kMaxDepth ? kMaxDepth : depth);
+    const uint32_t reqDepth = depthOverride ? depthOverride : (qos.presentationDelayUs + intervalUs - 1) / intervalUs;
+    uint32_t depth = reqDepth;
+    if (depth < 2) {
+      depth = 2;
+    }
+    if (depth > kMaxDepth) {
+      log_w("Player: jitter depth %lu clamped to %u SDUs; %lu us of presentation delay do not fit and will underrun",
+            (unsigned long)reqDepth, kMaxDepth, (unsigned long)qos.presentationDelayUs);
+      depth = kMaxDepth;
+    }
     uint8_t queueLen = (uint8_t)(depth * 2);
     slots = queueLen + 1;
     size_t perStream = (size_t)octets * (count == 1 ? nch : 1) * frames;
-    if (!perStream || perStream > UINT16_MAX || !cfg.samplesPerFrame()) {
+    if (!perStream || perStream > UINT16_MAX) {
       log_e("Player: invalid stream sizes (%u octets, %u frame(s)/SDU)", octets, frames);
       return false;
     }
@@ -215,12 +231,13 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
     ready.store(true);
     log_d("Player: %lu Hz, %u ch, %u frame(s)/SDU, depth %lu", (unsigned long)cfg.samplingRateHz, nch, frames, (unsigned long)depth);
 
+    // Arrival-driven waits (a queued SDU wakes the loop at once); the bounds
+    // below only matter when the stream goes quiet. Both use the real SDU time.
     TickType_t wait = pdMS_TO_TICKS((intervalUs + 999) / 1000);
-    // One I2S DMA buffer holds one LC3 frame; use the real PCM frame time,
-    // not the nominal LC3 duration (44.1 kHz is 8.16/10.88 ms on air).
-    uint32_t frameUs = (uint32_t)((uint64_t)cfg.samplesPerFrame() * 1000000u / cfg.samplingRateHz);
+    // One I2S DMA buffer holds one LC3 frame; the write timeout is one real frame.
+    const uint32_t frameUs = sduUs / frames;
     uint32_t writeMs = (frameUs + 1999u) / 1000u;
-    play(p, (uint8_t)depth, wait ? wait : 1, writeMs ? writeMs : 1, frameUs * frames);
+    play(p, (uint8_t)depth, wait ? wait : 1, writeMs ? writeMs : 1, sduUs);
     close();
     return true;
   }
@@ -282,12 +299,16 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
           return;
         }
         idle = got ? 0 : idle + 1;
-        render(sdu, writeMs);
+        render(sdu, writeMs, sduUs);
         if (sink) {
           const int64_t now = esp_timer_get_time();
           if (nextRenderUs == 0 || now > nextRenderUs + 3 * (int64_t)sduUs) {
             // First SDU, or we fell far behind: restart the timeline instead
-            // of rendering a catch-up burst.
+            // of rendering a catch-up burst. Counted: tick quantization, not
+            // data loss (every queued SDU still renders, just late).
+            if (nextRenderUs != 0) {
+              bleAudioBump(late);
+            }
             nextRenderUs = now;
           }
           nextRenderUs += sduUs;
@@ -304,9 +325,10 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
   /**
    * Decode one SDU per stream (null = conceal) into interleaved PCM, frame by
    * frame, and hand it to the sink or I2S. For I2S a mono stream is written to
-   * both channels.
+   * both channels. A PCM sink that overruns one SDU interval starves the
+   * output exactly like an empty queue, so it counts as an underrun.
    */
-  void render(const uint8_t *const sdu[2], uint32_t writeMs) {
+  void render(const uint8_t *const sdu[2], uint32_t writeMs, uint32_t sduUs) {
     for (uint8_t b = 0; b < frames; b++) {
       size_t n = 0;
       for (uint8_t j = 0; j < nch; j++) {
@@ -328,7 +350,11 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
       }
       const int16_t *out = pcm + pcmCap;
       if (sink) {
+        const int64_t t0 = esp_timer_get_time();
         sink(out, n * outCh);
+        if (esp_timer_get_time() - t0 > (int64_t)sduUs) {
+          bleAudioBump(underruns);
+        }
       } else if (i2s.write(out, n * outCh, writeMs) < n * outCh) {
         bleAudioBump(underruns);
       }
@@ -411,19 +437,29 @@ void BLEAudioPlayer::end() {
 
 BLEAudioPlayer &BLEAudioPlayer::setPCMSink(BLEAudioPCMSink sink) {
   Impl &d = ensure(_impl);
-  if (!d.running()) {
-    d.sink = std::move(sink);
+  if (d.running()) {
+    log_w("Player: setPCMSink() ignored while running; stopPlayback() first (applies to the next run)");
+    return *this;
   }
+  d.sink = std::move(sink);
   return *this;
 }
 
 BLEAudioPlayer &BLEAudioPlayer::setJitterDepth(uint8_t sdus) {
-  ensure(_impl).depthOverride = sdus;
+  Impl &d = ensure(_impl);
+  if (d.running()) {
+    log_w("Player: setJitterDepth() ignored while running; stopPlayback() first (applies to the next run)");
+    return *this;
+  }
+  d.depthOverride = sdus;
   return *this;
 }
 
 BTStatus BLEAudioPlayer::attach(BLEAudioStream stream) {
-  if (!*this || !stream) {
+  if (!*this) {
+    return BTStatus::InvalidState;
+  }
+  if (!stream) {
     return BTStatus::InvalidParam;
   }
   BLEAudioStreamTap tap;
@@ -432,7 +468,10 @@ BTStatus BLEAudioPlayer::attach(BLEAudioStream stream) {
 }
 
 BTStatus BLEAudioPlayer::attach(BLEAudioStream stream, BLEAudioStream right) {
-  if (!*this || !stream || !right) {
+  if (!*this) {
+    return BTStatus::InvalidState;
+  }
+  if (!stream || !right) {
     return BTStatus::InvalidParam;
   }
   BLEAudioStreamTap tap;
@@ -451,6 +490,7 @@ BTStatus BLEAudioPlayer::startPlayback() {
     _impl->lost.store(0);
     _impl->plc.store(0);
     _impl->underruns.store(0);
+    _impl->late.store(0);
   }
   return _impl->start("ble_lc3_play");
 }
@@ -491,6 +531,10 @@ uint32_t BLEAudioPlayer::plcFrames() const {
 
 uint32_t BLEAudioPlayer::underruns() const {
   return _impl ? _impl->underruns.load(std::memory_order_relaxed) : 0;
+}
+
+uint32_t BLEAudioPlayer::lateResyncs() const {
+  return _impl ? _impl->late.load(std::memory_order_relaxed) : 0;
 }
 
 #endif /* BLE_AUDIO_LC3_SUPPORTED */

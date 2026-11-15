@@ -34,7 +34,18 @@
 BaseType_t bleAudioCodecCore() {
 #if BLE_HOST_PINNED_TO_CORE_DEFINED
 #if BLE_HOST_PINNED_CORE == 0
-  return portNUM_PROCESSORS > 1 ? 1 : 0;
+  if (portNUM_PROCESSORS > 1) {
+    return 1;
+  }
+  /* Single core: the codec shares the host core by construction, so a slow
+   * PCM sink/source can delay ISO timing. Said once; the sink/source budget
+   * in BLEAudioPCM.h is load-bearing here. */
+  static bool warned = false;
+  if (!warned) {
+    warned = true;
+    ESP_LOGW("BLEAudio", "codec task shares the host core (single-core target): keep PCM callbacks fast");
+  }
+  return 0;
 #else
   return 0;
 #endif
@@ -47,9 +58,14 @@ BaseType_t bleAudioCodecCore() {
 // LC3
 // ---------------------------------------------------------------------------
 
-/** @brief Frame duration in the codec's 0.1 ms units (LE Audio only uses 7.5 and 10 ms). */
+/** @brief Frame duration in the codec's 0.1 ms units.
+ *
+ * LC3 knows only 7.5 and 10 ms frames. The engine reports nominal durations
+ * (7500/10000), but custom configs may carry the real 44.1 kHz lengths
+ * (8163/10884 us on air are still 7.5/10 ms LC3 frames): split at the
+ * midpoint so both spellings map correctly. */
 static uint8_t frameDms(const BLEAudioCodecConfig &cfg) {
-  return (cfg.frameDurationUs == 7500) ? 75 : 100;
+  return (cfg.frameDurationUs < 8750) ? 75 : 100;
 }
 
 // Constant bit rate, raw frames (no length prefix): the BAP SDU layout.
@@ -67,10 +83,15 @@ void *bleLC3DecOpen(const BLEAudioCodecConfig &cfg) {
   return (esp_lc3_dec_open(&c, sizeof(c), &h) == ESP_AUDIO_ERR_OK) ? h : nullptr;
 }
 
+// PLC input: the codec ignores it, but a future codec reading input during
+// concealment must see silence, not the output buffer it is about to fill
+// (aliasing output-as-input would feed decoded audio back into the concealer).
+// Sized past the largest preset frame (155 octets) in case a codec reads a full frame of input while concealing.
+static const uint8_t kPlcSilence[160] = {};
+
 int bleLC3Decode(void *dec, const uint8_t *frame, uint16_t len, int16_t *pcm, uint32_t cap) {
   esp_audio_dec_in_raw_t raw = {};
-  // The codec ignores the input for PLC; hand it a valid buffer anyway.
-  raw.buffer = const_cast<uint8_t *>(frame ? frame : reinterpret_cast<const uint8_t *>(pcm));
+  raw.buffer = const_cast<uint8_t *>(frame ? frame : kPlcSilence);
   raw.len = len;
   raw.frame_recover = frame ? ESP_AUDIO_DEC_RECOVERY_NONE : ESP_AUDIO_DEC_RECOVERY_PLC;
   esp_audio_dec_out_frame_t out = {};
@@ -269,6 +290,9 @@ void BLEAudioDataPath::entry(void *arg) {
   // early exit from run() can never clear self->task before start() stores it.
   ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
   self->run(self);
+  // 4 KB stack (BLE_AUDIO_CODEC_STACK) holds the LC3 instances on the heap
+  // plus decode/encode/I2S call chains: report the margin for the sizing log.
+  ESP_LOGD("BLEAudio", "codec task stack high-water: %u words", (unsigned)uxTaskGetStackHighWaterMark(nullptr));
   self->task.store(nullptr, std::memory_order_release);
   vTaskDelete(nullptr);
 }
