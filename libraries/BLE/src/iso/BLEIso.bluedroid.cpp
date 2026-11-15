@@ -27,6 +27,7 @@
 
 #if BLE_GATT_CLIENT_SUPPORTED
 extern "C" uint16_t bleClientAclHandle(uint16_t connId);
+extern "C" bool bleClientConnLive(uint16_t connId);
 #endif
 
 extern "C" uint16_t bleIsoResolveAclHandle(uint16_t connHandle) {
@@ -34,6 +35,14 @@ extern "C" uint16_t bleIsoResolveAclHandle(uint16_t connHandle) {
   return bleClientAclHandle(connHandle);
 #else
   return connHandle;
+#endif
+}
+
+extern "C" bool bleIsoAclHandleLive(uint16_t connHandle) {
+#if BLE_GATT_CLIENT_SUPPORTED
+  return bleClientConnLive(connHandle);
+#else
+  return connHandle != 0xFFFF;
 #endif
 }
 

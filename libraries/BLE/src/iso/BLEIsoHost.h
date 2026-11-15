@@ -65,6 +65,16 @@ void bleIsoOnGapEvent(void *event);
  */
 uint16_t bleIsoResolveAclHandle(uint16_t connHandle);
 
+/**
+ * @brief Whether @p connHandle names a live ACL (false for 0xFFFF and for
+ * dead or never-connected links).
+ *
+ * Checked before a CIG is created so a stale handle fails closed instead of
+ * reaching the controller (where a recycled handle could address the wrong
+ * peer).
+ */
+bool bleIsoAclHandleLive(uint16_t connHandle);
+
 #ifdef __cplusplus
 }
 #endif

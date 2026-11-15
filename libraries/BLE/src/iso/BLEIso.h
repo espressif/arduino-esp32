@@ -246,8 +246,9 @@ Channel *connectCis(uint16_t connHandle, const CisParams &params = CisParams());
  * @brief Register the ISO server and accept an inbound CIS as Peripheral.
  *
  * Only `sduSize` and `returnSduSize` are used: the Central chooses the rest
- * of the QoS. The channel keeps listening after its CIS disconnects; call
- * again to accept one more CIS at a time.
+ * of the QoS. The channel keeps listening after its CIS disconnects; a
+ * second call reserves an *additional* concurrent channel, it is not a
+ * re-arm. Never-started listening is stopped with disconnect().
  * @return The channel, or nullptr on error. `onConnected` fires on acceptance.
  */
 Channel *listenCis(const CisParams &params = CisParams());

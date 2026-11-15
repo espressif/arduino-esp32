@@ -84,10 +84,10 @@ See [Feature guards](#feature-guards).
 | --- | --- |
 | **Discrete TBS / MCS** | Not exposed. `release/v6.1` builds them on both hosts when `CONFIG_BT_TBS_BEARER_COUNT` / `CONFIG_BT_MCS_INSTANCE_COUNT` is non-zero (both default to 0), but the Arduino API drives only the generic GTBS / GMCS instances. |
 | **OTS (Object Transfer)** | Not exposed (`CONFIG_BT_OTS` builds on both hosts in `release/v6.1`). MCP has no object transfer. |
-| **CSIP ordered access** | The coordinator discovers and locks set members; the CAP initiator does not run the CSIP ordered-access procedure across members. |
+| **CSIP ordered access** | The coordinator discovers and locks set members. The commander runs ordered access (stack CSIP set type: lock, rank order, unlock) when `setCoordinated(true)` is set and every driven acceptor sits in one discovered set, else AD_HOC with a warning. The CAP initiator and handover always use AD_HOC. |
 | **BASS receive-state cleanup** | The Scan Delegator does not remove stale receive states on its own; the assistant must remove them. |
 | **One PA sync at a time** | The broadcast sink follows one source; an assistant request is refused while a PA sync is in use. |
-| **GATT frozen after `start()`** | Roles that register services must be created before `audio.start()`; swapping roles needs `audio.end()` → `audio.begin()`. |
+| **GATT frozen after `start()`** | Roles that register services must be created before `audio.start()`; swapping roles needs `audio.end()` → `audio.begin()`. Enforced on both backends (`InvalidState`): NimBLE freezes its single committed table, Bluedroid refuses new staging to keep the observable contract identical. |
 | **Standalone `BLEIso` CIS on Bluedroid** | The ISO transport adopts the physical ACL at GATTC CONNECT, independent of which GATTC app opened it; raw CIS may use a `BLEClient` ACL. LE Audio central links still use `audio.connect()` so the audio engine owns GATT discovery and security. |
 | **Preview status** | The LE Audio APIs are still marked preview in IDF. |
 
@@ -182,8 +182,13 @@ of engine fixes in the `esp-idf` tree pointed to by the lib-builder:
   TBS/CCP bearer registration and `set_uri_scheme_list` append an internal
   trailing `','` so `libble_audio`'s `uri_scheme_in_list()` matches the final
   scheme token on client `Originate` writes, while `init.c` strips that
-  synthetic `','` on ATT Read/Notify of `0x2BB6` so wire PDUs conform to
-  Bluetooth TBS v1.0 sec. 3.4; `bt_le_audio_deinit()` cleans up registered
+  synthetic `','` on ATT Read and Notify-by-UUID of `0x2BB6` so wire PDUs
+  conform to Bluetooth TBS v1.0 sec. 3.4. Residual risk: notify-by-handle
+  (`_gatts_notify` → `bt_gatt_notify`) is unwrapped, so a TBS server
+  notification emitted by handle would carry the comma on air; the Arduino
+  layer additionally sanitizes user input (no `",,"`, no leading/trailing
+  commas) so the stored value is always exactly one synthetic comma, and the
+  validation suite asserts 0x2BB6 bytes on air; `bt_le_audio_deinit()` cleans up registered
   profile callbacks across `esp_ble_audio_common_deinit()` (while keeping
   duplicate registration within an active session an error, using mutable
   static callback slots for non-unregisterable profiles, and re-arming
@@ -311,20 +316,36 @@ Invariants:
   is read by `start()`; changing it afterwards does not alter the registered
   services. Available audio contexts (`setAvailableContexts`) may change at
   runtime.
+- `audio.start()` is not retried after a failure: the first failing role
+  (or PACS commit / engine start) leaves earlier registrations in place, so
+  `start()` records the failure and a second call returns `InvalidState`.
+  Run `audio.end()`, fix the role set, then `begin()` again.
 - `audio.end()` runs `roleStops`, disconnects every tracked ACL (NimBLE
   fallback clients on NimBLE, engine-owned GATTC links on Bluedroid — owning
   no link across deinit on either backend), stops leftover CAP/BAP
-  transports, and waits for ISO channels to disconnect (`BLESync`, 5 s)
-  before `common_deinit`. Called from a stack callback, `end()` returns
+  transports, and waits for ISO channels to disconnect before
+  `common_deinit`. Called from a stack callback, `end()` returns
   `BTStatus::Busy` immediately. If a CONNECTED ISO channel remains,
   `end()` fails and retains ownership. After a successful `end()`, `begin()`
   may run again in the same `BLE.begin()` session.
-- `BroadcastSource::stop()` gates its `BLESync` wait on `big_pending` so stopping
-  a source whose `Create_BIG` never started returns immediately (0 ms) rather
-  than stalling for 5 s.
+- Every broadcast stop shares one 5 s `BLEAudioStopBudget` across its waits
+  (start-resolve, engine stop, stopped event) instead of stacking three 5 s
+  waits. When the budget expires with the transport live, the stop reports
+  where it stalled (`Fail`, state retained for a retry) instead of clearing
+  flags over a live source — which would wedge the next start (create refuses
+  while the engine source exists). `BroadcastSource::stop()` additionally
+  gates its wait on `big_pending` so stopping a source whose `Create_BIG`
+  never started returns immediately (0 ms).
 - `CapInitiator::stopBroadcast()` waits for `CAP_BC_STOPPED` before deleting the
   source (`source_delete` while STREAMING is refused and racing Terminate BIG
-  fails HCI Command Disallowed `0x20C`).
+  fails HCI Command Disallowed `0x20C`). A failed unicast→broadcast handover
+  stops the BIG and only clears the broadcast state when the engine really let
+  the source go; a still-live source keeps the flags and reports failure so
+  `stopBroadcast()` can recover it.
+- `audio.end()` completes attached raw `BLEIso` channels with reason `0x16`
+  (terminated by the local host) instead of dropping them silently; `end()`
+  still waits only for engine ISO, so stop raw channels first for a clean
+  shutdown.
 - `BLE.end()` calls `audio.end()` and `BLEIso::end()` while the host is still
   usable; if either fails, host shutdown is aborted cleanly.
 
@@ -347,9 +368,15 @@ registered (`s_peer_discovery`).
 Discovery is gated on security completion as well as MTU: PACS/ASCS carry
 encrypted-only permissions on Bluedroid, so `audio.begin()` applies Just Works
 (`NoInputNoOutput`, bonding, Secure Connections, no MITM) when `BLESecurity` has
-not been configured by the sketch. On Bluedroid, `bleAudioHostSecureLink` defers
-`esp_ble_set_encryption` to `esp_timer` (`sEncTimer`, guarded by `sEncMux` and
-canceled on `ACL_DISCONNECT`) so BTM has finished registering the peer; if starting encryption fails, a synthetic failed `AUTH_CMPL` is posted back onto `iso_task` so discovery still proceeds unencrypted without touching engine state from the timer task.
+not been configured by the sketch, and logs exactly that. This is the default,
+not magic: call `setAutoSecurityPolicy(false)` before `begin()` and configure
+`BLESecurity` explicitly for an opt-in policy; with the automatic policy off
+and no sketch configuration, links stay unencrypted and discovery fails
+audibly. The Bluedroid link encryption itself is a direct
+`esp_ble_set_encryption` call from the GAP hook (no timer deferral). The BLE
+core library never configures security silently: every `BLESecurity` setter
+marks the configuration app-owned, and `resetSecurity()` only restores
+documented defaults on explicit request.
 
 Control client roles bind their peer through `BLEAudioControlLink`: `link.mtx`
 is released before calling engine discovery functions so Bluedroid's cache-backed
@@ -357,8 +384,11 @@ inline discovery callbacks can invoke controller operations (such as
 `vc.setVolume(...)` inside `onDiscovered`) without AB-BA lock inversion against
 `bt_le_host_lock()`.
 
-**MICP "mute disabled" collapses to "unmuted".** MICS reports mute as a single
-bit on air; the engine emits `onMuteChanged(false)` for a disabled mute.
+**MICP mute is tri-state.** MICS reports UNMUTED/MUTED/DISABLED; the
+`onMuteChanged(bool)` callback still reports disabled as unmuted (`false`),
+and `isMuteDisabled()` exposes the disabled state on both the device and the
+controller. A controller `unmute()` while disabled fails fast with
+`InvalidState` instead of failing at the peer with no signal.
 
 ## Event bridge (control plane)
 
@@ -482,6 +512,10 @@ details live in [`../BLE/DESIGN.md`](../BLE/DESIGN.md#service-staging-and-startu
 In addition to [`../BLE/DESIGN.md`](../BLE/DESIGN.md#maintainer-rules):
 
 1. **Zero engine types in C++ headers; zero backend macros in shared files.** Keep `esp_ble_audio_*` / `bt_*` / `<zephyr/...>` inside `engine/BLEAudioEngine*.c`, and keep `BLE_NIMBLE` / `BLE_BLUEDROID` inside `BLEAudioBackend.h`, `BLEAudio.{nimble,bluedroid}.*`, and `engine/BLEAudioEngine.{nimble,bluedroid}.*`.
+2. **The engine owns the strings the stack retains.** TBS bearer strings are
+   copied into engine statics at register time (the C++ side passes locals);
+   URI scheme lists are sanitized there too. Never pass a short-lived buffer
+   into an engine register call.
 2. **Always provide `#else` stubs** in engine C units for disabled role Kconfigs.
 3. **Stage in `roleApplies`, commit in `start()`.** Use `BLEAudioImplCommon::createStagedRole` where applicable and never commit GATT from a role factory.
 4. **Use `BLE_CHECK_IMPL`, `on<Event>Cb`, and defaulted move members** on every handle, matching `BLE`.

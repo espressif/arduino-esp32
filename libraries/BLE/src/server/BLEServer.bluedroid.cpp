@@ -23,6 +23,7 @@
 
 #include "core/BLEGuards.h"
 #include "core/BLEAddressUtil.h"
+#include "core/BLEAudioHooks.h"
 #if BLE_BLUEDROID
 
 #if BLE_GATT_SERVER_SUPPORTED
@@ -446,8 +447,22 @@ BTStatus BLEServer::start() {
       if (!hasNew) {
         return BTStatus::OK;
       }
+      // Same freeze as NimBLE (which returns InvalidState from its rebuild):
+      // roles that register services must be created before audio.start().
+      // Bluedroid could register natively, but the observable contract is
+      // one table state on both backends.
+      if (bleAudioGattFrozen && bleAudioGattFrozen()) {
+        log_e("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
+        return BTStatus::InvalidState;
+      }
       log_d("Server: registering new service(s)");
     } else {
+      // A first start after audio.start() stages classic services into a
+      // committed table, exactly like the restart path above.
+      if (!impl.services.empty() && bleAudioGattFrozen && bleAudioGattFrozen()) {
+        log_e("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
+        return BTStatus::InvalidState;
+      }
       log_d("Server: starting with %u service(s)", (unsigned)impl.services.size());
     }
     services = impl.services;

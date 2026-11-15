@@ -155,6 +155,7 @@ enum class Kind : uint8_t {
 struct Slot {
   std::atomic<bool> used{false};
   std::atomic<bool> connected{false};
+  bool accepted{false};  // A CIS was handed out to this slot (it may re-listen, but never be released while live).
   Kind kind = Kind::None;
   std::atomic<bool> hasTx{false};  // Tx QoS configured (host to controller).
   bool hasRx = false;               // Rx QoS configured (controller to host).
@@ -168,6 +169,7 @@ struct Slot {
 void clearSlot(Slot &s) {
   s.used.store(false, std::memory_order_release);
   s.connected.store(false, std::memory_order_release);
+  s.accepted = false;
   s.kind = Kind::None;
   s.hasTx.store(false, std::memory_order_relaxed);
   s.hasRx = false;
@@ -183,6 +185,7 @@ Slot sSlots[kMaxChan];
 Channel sChannels[kMaxChan];
 
 std::atomic<bool> sActive{false};      // begin() succeeded and end() has not run.
+std::atomic<bool> sEndFailed{false};   // end() refused partway; begin() must retry end() first.
 std::atomic<bool> sOwnsHost{false};    // This transport called esp_ble_iso_common_init.
 std::atomic<bool> sSharedHost{false};  // The LE Audio engine owns the host and ISO.
 
@@ -507,6 +510,10 @@ Channel *takeChannel(const char *op, Kind reuse) {
   }
   if (slot < 0) {
     log_w("BLEIso: %s(): all %u ISO channels in use (BLE_ISO_MAX_CHAN)", op, (unsigned)kMaxChan);
+    if (reuse == Kind::None) {
+      log_w("BLEIso: a listenCis() channel re-listens on its own after a disconnect; "
+            "calling listenCis() again reserves an *additional* concurrent channel");
+    }
     return nullptr;
   }
   ChannelAccess::bind(sChannels[slot], slot);
@@ -604,6 +611,7 @@ int onCisAccept(const esp_ble_iso_accept_info_t *info, esp_ble_iso_chan_t **chan
   BLELockGuard lock(isoMtx());
   for (int i = 0; i < kMaxChan; i++) {
     if (sSlots[i].used.load(std::memory_order_acquire) && sSlots[i].kind == Kind::CisPeripheral && sSlots[i].chan.iso == nullptr) {
+      sSlots[i].accepted = true;
       *chan = &sSlots[i].chan;
       return 0;
     }
@@ -842,8 +850,20 @@ BTStatus Channel::disconnect() {
   esp_err_t err = ESP_ERR_INVALID_STATE;
   switch (sSlots[slot].kind) {
 #if ISO_UNICAST
-    case Kind::CisCentral:
-    case Kind::CisPeripheral: err = esp_ble_iso_chan_disconnect(&sSlots[slot].chan); break;
+    case Kind::CisCentral: err = esp_ble_iso_chan_disconnect(&sSlots[slot].chan); break;
+    case Kind::CisPeripheral: {
+      BLELockGuard lock(isoMtx());
+      Slot &sl = sSlots[slot];
+      if (sl.chan.iso == nullptr && !sl.accepted) {
+        // Never accepted anything: stop listening and free the slot instead
+        // of erroring on an idle channel. A slot that already served (or is
+        // serving) a CIS keeps re-listening by design; see listenCis().
+        releaseSlot(slot);
+        return BTStatus::OK;
+      }
+      err = esp_ble_iso_chan_disconnect(&sl.chan);
+      break;
+    }
 #endif
 #if BLE_ISO_BROADCASTER_SUPPORTED
     case Kind::BisBroadcaster:
@@ -916,13 +936,24 @@ void Channel::resetCallbacks() {
 // Lifecycle
 // --------------------------------------------------------------------------
 
+BTStatus end(); // Defined below; begin() retries it after a failed teardown.
+
 // Claims the host unless the LE Audio engine already owns it (then ISO rides on it).
 BTStatus begin() {
   if (!BLE.isInitialized() || BLE.isEnding()) {
     return BTStatus::InvalidState;
   }
   if (sActive.load(std::memory_order_acquire)) {
-    return BTStatus::OK;
+    if (!sEndFailed.load(std::memory_order_acquire)) {
+      return BTStatus::OK;
+    }
+    // The previous end() left ISO resources behind; retry the teardown
+    // instead of reporting OK over a half-torn-down session.
+    log_w("BLEIso: retrying the incomplete end() before begin()");
+    const BTStatus st = end();
+    if (!st) {
+      return st;
+    }
   }
   if (!sSharedHost.load(std::memory_order_acquire)) {
     esp_ble_iso_init_info_t info = {};
@@ -936,6 +967,7 @@ BTStatus begin() {
   }
   resetState();
   sActive.store(true, std::memory_order_release);
+  sEndFailed.store(false, std::memory_order_release);
   log_i("BLEIso: transport up (%s host)", sOwnsHost.load(std::memory_order_relaxed) ? "own" : "shared LE Audio");
   return BTStatus::OK;
 }
@@ -990,6 +1022,7 @@ BTStatus end() {
 #endif
 
   if (!waitDisconnected()) {
+    sEndFailed.store(true, std::memory_order_release);
     return BTStatus::Timeout;
   }
 
@@ -998,6 +1031,7 @@ BTStatus end() {
     esp_err_t err = esp_ble_iso_cig_terminate(sCig);
     if (err != ESP_OK) {
       log_e("BLEIso: CIG terminate during end failed: %d", err);
+      sEndFailed.store(true, std::memory_order_release);
       return BTStatus::Fail;
     }
     sCig = nullptr;
@@ -1008,6 +1042,7 @@ BTStatus end() {
     esp_err_t err = esp_ble_iso_server_unregister(&sServer);
     if (err != ESP_OK) {
       log_e("BLEIso: server unregister during end failed: %d", err);
+      sEndFailed.store(true, std::memory_order_release);
       return BTStatus::Fail;
     }
   }
@@ -1019,6 +1054,7 @@ BTStatus end() {
     esp_err_t err = esp_ble_iso_big_ext_adv_delete(&advInfo);
     if (err != ESP_OK) {
       log_e("BLEIso: advertising set release during end failed: %d", err);
+      sEndFailed.store(true, std::memory_order_release);
       return BTStatus::Fail;
     }
   }
@@ -1027,12 +1063,14 @@ BTStatus end() {
     esp_err_t err = esp_ble_iso_common_deinit(nullptr);
     if (err != ESP_OK) {
       log_e("BLEIso: ISO deinit failed: %d (disconnect every CIS/BIS first)", err);
+      sEndFailed.store(true, std::memory_order_release);
       return BTStatus::Fail;
     }
     sOwnsHost.store(false, std::memory_order_release);
   }
   resetState();
   sActive.store(false, std::memory_order_release);
+  sEndFailed.store(false, std::memory_order_release);
   return BTStatus::OK;
 }
 
@@ -1046,6 +1084,12 @@ bool isActive() {
 
 #if BLE_ISO_CIS_CENTRAL_SUPPORTED
 Channel *connectCis(uint16_t connHandle, const CisParams &p) {
+  // Validate before the CIG exists: creating it first would waste HCI and
+  // race end(), and a recycled handle could address the wrong peer.
+  if (connHandle == 0xFFFF || !bleIsoAclHandleLive(connHandle)) {
+    log_e("BLEIso: connectCis(): no live ACL for handle %u (passed a disconnected client?)", connHandle);
+    return nullptr;
+  }
   Channel *c = takeChannel("connectCis", Kind::CisCentral);
   if (!c) {
     return nullptr;
@@ -1140,7 +1184,17 @@ bool bleIsoHostUp(void) {
 void bleIsoAttachShared(bool attached) {
   BLEIso::sSharedHost.store(attached, std::memory_order_release);
   if (!attached && BLEIso::sActive.load(std::memory_order_acquire) && !BLEIso::sOwnsHost.load(std::memory_order_acquire)) {
-    // The audio engine's deinit already released the ISO layer.
+    // The audio engine's deinit already released the ISO layer. Complete the
+    // attached raw channels with a reason first: unlike end(), which
+    // disconnects natively (real reasons), and begin(), whose documented
+    // contract drops previous-session channels, the audio-end() path would
+    // otherwise lose them silently while the app still holds the channels.
+    // 0x16 = terminated by the local host (no controller event follows).
+    for (int i = 0; i < BLEIso::kMaxChan; i++) {
+      if (BLEIso::sSlots[i].used.load(std::memory_order_acquire)) {
+        BLEIso::ChannelAccess::disconnected(BLEIso::sChannels[i], 0x16);
+      }
+    }
     BLEIso::resetState();
     BLEIso::sActive.store(false, std::memory_order_release);
   }

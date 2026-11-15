@@ -101,6 +101,17 @@ void BLEAudio::Impl::backendPreEndTeardown() {
   bleAudioEngineDisconnectAll();
 }
 
+// The freeze is an engine state, not a NimBLE one: an audio-owned GATT table
+// stays committed until audio.end() on both hosts, so the classic server
+// observes the same staging window everywhere.
+extern "C" bool bleAudioGattActive() {
+  return bleAudioEngineIsInitialized();
+}
+
+extern "C" bool bleAudioGattFrozen() {
+  return bleAudioEngineIsStarted();
+}
+
 // ==========================================================================
 // 3. Engine C host hooks (engine/BLEAudioEngine.h)
 // ==========================================================================

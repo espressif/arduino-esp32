@@ -71,4 +71,12 @@ extern "C" uint16_t bleIsoResolveAclHandle(uint16_t connHandle) {
   return connHandle;
 }
 
+extern "C" bool bleIsoAclHandleLive(uint16_t connHandle) {
+  if (connHandle == 0xFFFF) {
+    return false;
+  }
+  struct ble_gap_conn_desc desc;
+  return ble_gap_conn_find(connHandle, &desc) == 0;
+}
+
 #endif /* BLE_NIMBLE && BLE_ISO_SUPPORTED */

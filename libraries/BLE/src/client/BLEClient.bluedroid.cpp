@@ -106,9 +106,26 @@ std::vector<std::shared_ptr<BLEClient::Impl>> BLEClient::Impl::snapshotClients()
   return clients;
 }
 
-extern "C" uint16_t bleClientAclHandle(uint16_t connId) {
+extern "C" bool bleClientConnLive(uint16_t connId) {
+  if (connId == 0xFFFF) {
+    return false;
+  }
   for (auto &client : BLEClient::Impl::snapshotClients()) {
-    if (client->connId.load() == connId) {
+    if (client->connected.load() && client->connId.load() == connId) {
+      return true;
+    }
+  }
+  return false;
+}
+
+extern "C" uint16_t bleClientAclHandle(uint16_t connId) {
+  if (connId == 0xFFFF) {
+    return 0xFFFF; /* No link: never resolve a dead or never-connected client. */
+  }
+  for (auto &client : BLEClient::Impl::snapshotClients()) {
+    // Skip links that are going down: their ACL handle may already belong to
+    // nobody (or, after a controller recycle, to a different peer).
+    if (client->connected.load() && client->connId.load() == connId) {
       uint16_t h = client->aclHandle.load();
       if (h != 0xFFFF) {
         return h;
@@ -796,6 +813,7 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
     conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, client->central.load());
     client->connected = false;
     client->connId = 0xFFFF;
+    client->aclHandle = 0xFFFF;
     client->secEncrypted = false;
     client->secAuthenticated = false;
     client->secBonded = false;
@@ -944,6 +962,7 @@ void BLEClient::Impl::invalidateAfterHostDeinit() {
     client->appId = APP_ID_INVALID;
     client->connected = false;
     client->connId = UINT16_MAX;
+    client->aclHandle = 0xFFFF;
     client->mtu = 23;
     client->connectionGeneration.fetch_add(1, std::memory_order_relaxed);
     client->secEncrypted = false;
