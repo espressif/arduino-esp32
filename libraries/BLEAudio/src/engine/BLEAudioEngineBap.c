@@ -293,6 +293,7 @@ static void uc_on_stream_event(ble_audio_slot_t *slot, uint8_t stage);
 static void uc_check_released(void);
 static void uc_check_released_locked(void);
 static void uc_advance(void);
+static void uc_advance_locked(void);
 static void uc_stop_locked(void);
 static void uc_bump(void);
 
@@ -1422,12 +1423,17 @@ static void uc_advance(void) {
   if (!uc_guard_enter()) {
     return;
   }
+  uc_advance_locked();
+  uc_guard_exit();
+}
+
+/** @brief Pass loop for callers that already hold the sequencer guard. */
+static void uc_advance_locked(void) {
   uint32_t seen;
   do {
     seen = atomic_load(&s_uc.gen);
     uc_advance_pass();
   } while (atomic_load(&s_uc.gen) != seen);
-  uc_guard_exit();
 }
 
 /**
@@ -1776,7 +1782,7 @@ int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
     s_uc.stopping = false;
     s_uc.started_emitted = false;
     uc_bump();
-    uc_advance();
+    uc_advance_locked();
   }
   uc_guard_exit();
   return rc;
