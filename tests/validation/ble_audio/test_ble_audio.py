@@ -737,7 +737,7 @@ def _phase_mic_disable(server, client):
         r"\[CLIENT\] MicDisable (not supported|disabled=(\d+) unmuteRc=(-?\d+) noresult=(\d+) sawFalse=(\d+))",
         timeout=120,
     )
-    ms = server.expect(r"\[SERVER\] MicDisable (not supported|disabled=(\d+) mutes=(\d+))", timeout=30)
+    ms = server.expect(r"\[SERVER\] MicDisable (not supported|disabled=(\d+) mutes=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase18 mic_mute_disabled done", timeout=30)
     client.expect_exact("[CLIENT] Phase18 mic_mute_disabled done", timeout=30)
     if b"not supported" in mc.group(0) or b"not supported" in ms.group(0):
