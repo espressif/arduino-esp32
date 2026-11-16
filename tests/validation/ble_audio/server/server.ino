@@ -1574,8 +1574,10 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       if (audio.begin()) {
         BLEAudioMicDevice mic = audio.createMicDevice();
-        mic.onMuteChanged([&mutes](bool) {
+        mic.onMuteChanged([&mutes](bool muted) {
           mutes++;
+          Serial.printf("[SERVER] MicDisable evt muted=%d total=%lu t=%lu\n", muted ? 1 : 0, (unsigned long)mutes,
+                        (unsigned long)millis());
         });
         if (audio.start()) {
           BLEAdvertising adv = BLE.getAdvertising();
@@ -1586,12 +1588,15 @@ void loop() {
           // Wait for the client's mute, then disable and hold the link while
           // the client verifies (deadline, then clean up regardless).
           unsigned long t0 = millis();
+          Serial.printf("[SERVER] MicDisable waiting t=%lu\n", (unsigned long)t0);
           while (mutes == 0 && millis() - t0 < 60000) {
             checkSerial();
             delay(50);
           }
+          Serial.printf("[SERVER] MicDisable mute seen=%d t=%lu\n", mutes > 0 ? 1 : 0, (unsigned long)millis());
           if (mutes > 0 && mic.disableMute()) {
             disabled = mic.isMuteDisabled() ? 1 : 0;
+            Serial.printf("[SERVER] MicDisable disabled=%d t=%lu\n", disabled, (unsigned long)millis());
           }
           unsigned long t1 = millis();
           while (millis() - t1 < 15000) {
