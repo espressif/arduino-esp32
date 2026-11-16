@@ -1037,7 +1037,7 @@ static bool s_ho_registered;
 static _Atomic bool s_ho_busy;
 
 /* Whether a handover procedure currently owns s_bc (see bleAudioCapBroadcastCreate). */
-static bool handover_busy(void) {
+__attribute__((unused)) static bool handover_busy(void) {
   return atomic_load(&s_ho_busy);
 }
 
