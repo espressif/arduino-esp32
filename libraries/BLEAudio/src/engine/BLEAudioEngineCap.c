@@ -189,6 +189,7 @@ static cap_peer_t *peer_of(esp_ble_conn_t *conn) {
 #if CAP_BASS
 #define TRACK_NONE 0xFFFFFFFFu
 static uint32_t s_track_id = TRACK_NONE; /* broadcast whose receive states we follow */
+static _Atomic bool s_rx_busy; /* ReceptionStart subgroup in flight; the stack holds its pointer. */
 static int bass_attach(void);
 #endif
 
@@ -425,6 +426,10 @@ static bool s_init_registered;
 #endif
 
 #if CAP_UC
+
+#if CAP_HO
+static bool handover_busy(void);
+#endif
 
 #define UC_MAX CONFIG_BT_BAP_UNICAST_CLIENT_GROUP_STREAM_COUNT
 #define META_CTX_LEN 4  /* Streaming Audio Contexts LTV: len, type, 2-octet value. */
@@ -692,6 +697,11 @@ int bleAudioCapUnicastStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count
   if (!s_init_registered || s_uc.group) {
     return ESP_ERR_INVALID_STATE;
   }
+#if CAP_HO
+  if (handover_busy()) {
+    return -EBUSY;
+  }
+#endif
   int err = uc_prepare(reqs, count);
   if (err == 0) {
     err = esp_ble_audio_cap_unicast_group_create(&s_uc.gp, &s_uc.group);
@@ -704,6 +714,9 @@ int bleAudioCapUnicastStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count
     }
   }
   if (err) {
+    for (uint8_t i = 0; i < count && i < UC_MAX; i++) {
+      bleAudioStreamUnbind(reqs[i].slot);
+    }
     s_uc.count = 0;
   }
   return err;
@@ -1046,9 +1059,9 @@ static void ho_created(esp_ble_audio_cap_broadcast_source_t *source) {
 /** Unicast-to-broadcast finished; @p group / @p source are what the stack still holds. */
 static void ho_to_broadcast(int err, esp_ble_conn_t *conn, esp_ble_audio_cap_unicast_group_t *group, esp_ble_audio_cap_broadcast_source_t *source) {
   atomic_store(&s_ho_busy, false);
-  s_uc.group = group;
-  s_bc.source = source;
   if (err == 0) {
+    s_uc.group = group;
+    s_bc.source = source;
     /* Released streams cannot join the group b2u creates while this one holds them. */
     uc_release_group();
   }
@@ -1058,10 +1071,12 @@ static void ho_to_broadcast(int err, esp_ble_conn_t *conn, esp_ble_audio_cap_uni
 /** Broadcast-to-unicast finished; a NULL @p group means no unicast streams were started. */
 static void ho_to_unicast(int err, esp_ble_conn_t *conn, esp_ble_audio_cap_broadcast_source_t *source, esp_ble_audio_cap_unicast_group_t *group) {
   atomic_store(&s_ho_busy, false);
-  s_bc.source = source;
-  s_uc.group = group;
-  if (group == NULL) {
-    s_uc.count = 0;
+  if (err == 0) {
+    s_bc.source = source;
+    s_uc.group = group;
+    if (group == NULL) {
+      s_uc.count = 0;
+    }
   }
   bleAudioEngineEmit(BLE_AUDIO_EVT_CAP_HO_TO_UNICAST, handle_of(conn), err, NULL);
 }
@@ -1233,6 +1248,9 @@ int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t 
   if (err) {
     ESP_LOGE(TAG, "CAP handover to unicast: procedure start (%u streams, %u receivers) failed: %d", count, ns, err);
     atomic_store(&s_ho_busy, false);
+    for (uint8_t i = 0; i < count && i < UC_MAX; i++) {
+      bleAudioStreamUnbind(reqs[i].slot);
+    }
     s_uc.count = 0;
   }
   return err;
@@ -1546,6 +1564,9 @@ static void cmd_mic_gain(esp_ble_conn_t *conn, int err) {
   cmd_done(BLE_AUDIO_CAP_OP_MIC_GAIN, conn, err);
 }
 static void cmd_rx_start(esp_ble_conn_t *conn, int err) {
+#if CAP_BASS
+  atomic_store(&s_rx_busy, false);
+#endif
   cmd_done(BLE_AUDIO_CAP_OP_RECEPTION_START, conn, err);
 }
 static void cmd_rx_stop(esp_ble_conn_t *conn, int err) {
@@ -1787,6 +1808,9 @@ int bleAudioCapCommanderReceptionStart(const ble_audio_cap_bcast_src_t *src) {
 #if CAP_BASS
   /* One subgroup shared by all members; static because the stack references it during the procedure. */
   static esp_ble_audio_bap_bass_subgroup_t subgroup;
+  if (atomic_exchange(&s_rx_busy, true)) {
+    return -EBUSY;
+  }
   esp_ble_conn_t *c[MAX_PEERS];
   esp_ble_audio_cap_commander_broadcast_reception_start_member_param_t m[MAX_PEERS];
   if (src == NULL) {
@@ -1794,6 +1818,7 @@ int bleAudioCapCommanderReceptionStart(const ble_audio_cap_bcast_src_t *src) {
   }
   const uint8_t n = cmd_members(c, NULL, false);
   if (n == 0) {
+    atomic_store(&s_rx_busy, false);
     return ESP_ERR_INVALID_STATE;
   }
   int set_type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC;
@@ -1825,7 +1850,11 @@ int bleAudioCapCommanderReceptionStart(const ble_audio_cap_bcast_src_t *src) {
   esp_ble_audio_cap_commander_broadcast_reception_start_param_t param = {.type = set_type, .param = m, .count = n};
   /* Follow receive states for this broadcast so Stop and DistributeCode know each peer's Source_ID. */
   s_track_id = src->broadcast_id;
-  return (int)esp_ble_audio_cap_commander_broadcast_reception_start(&param);
+  int rx_err = (int)esp_ble_audio_cap_commander_broadcast_reception_start(&param);
+  if (rx_err != 0) {
+    atomic_store(&s_rx_busy, false);
+  }
+  return rx_err;
 #else
   (void)src;
   return ESP_ERR_NOT_SUPPORTED;
