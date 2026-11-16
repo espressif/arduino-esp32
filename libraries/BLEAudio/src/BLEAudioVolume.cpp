@@ -100,6 +100,7 @@ BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::setInitialMute(bool muted) {
 BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::setVolumeStep(uint8_t step) {
   BLE_CHECK_IMPL(*this);
   if (!step) {
+    log_e("VolumeRenderer: invalid step 0");
     return *this;
   }
   if (impl.audio->started && !impl.op(BLE_AUDIO_VCP_OP_SET_STEP, step)) {

@@ -120,9 +120,13 @@ struct BLEAudioBroadcastSink::Impl {
 
   /** @brief Hand the local code to the engine (zero-padded to 16 octets; empty clears it). */
   void pushCode() {
-    BLELockGuard lock(mtx.get());
+    String local;
+    {
+      BLELockGuard lock(mtx.get());
+      local = code;
+    }
     uint8_t bcode[BLE_AUDIO_BCODE_SIZE] = {};
-    bleAudioBsinkSetCode(bleAudioPackBroadcastCode(code, bcode));
+    bleAudioBsinkSetCode(bleAudioPackBroadcastCode(local, bcode));
   }
 
   /**
@@ -459,10 +463,13 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setStreams(uint8_t count) {
 }
 
 BLEAudioBroadcastSink &BLEAudioBroadcastSink::setSupportedPresets(uint32_t presetMask) {
-  if (_impl && presetMask) {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->presets = presetMask;
+  BLE_CHECK_IMPL(*this);
+  if (!presetMask) {
+    log_e("BroadcastSink: invalid preset mask 0");
+    return *this;
   }
+  BLELockGuard lock(impl.mtx.get());
+  impl.presets = presetMask;
   return *this;
 }
 

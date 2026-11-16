@@ -576,7 +576,9 @@ struct BLEAudioCapInitiator::Impl {
           }
           /* The procedure may already have stopped the unicast group. End it
            * deterministically so startUnicast() can rebuild the session; the
-           * stack reports the release through onUnicastStopped(). */
+           * failure is terminal for this session (UnicastStop runs with
+           * release=true), so the role is observably down as soon as the
+           * failure reports and UC_STOPPED only confirms it. */
           int stopErr = bleAudioCapUnicastStop();
           BLELockGuard lock(mtx.get());
           if (stopErr != 0) {
@@ -906,10 +908,6 @@ BTStatus BLEAudioCapInitiator::stopBroadcast() {
     starting = _impl->bcStarting;
   }
   if (starting) {
-    if (bleInStackCallbackTask()) {
-      log_e("CapInitiator: cannot wait for start to resolve from a stack callback");
-      return BTStatus::InvalidState;
-    }
     _impl->stopSync.take();
     {
       BLELockGuard lock(_impl->mtx.get());

@@ -130,7 +130,11 @@ void BLEAudioMicDevice::resetCallbacks() {
 BLEAudioMicDevice BLEAudio::createMicDevice() {
   return BLEAudioImplCommon::createStagedRole<BLEAudioMicDevice>(
     _impl, "createMicDevice", BLE_AUDIO_GRP_MICP_DEVICE, [](BLEAudioMicDevice::Impl &s) {
-      return bleAudioStatus(bleAudioMicpDevInit(s.muteState.load() != BLE_AUDIO_MICP_UNMUTED));
+      BTStatus st = bleAudioStatus(bleAudioMicpDevInit(s.muteState.load() == BLE_AUDIO_MICP_MUTED));
+      if (st && s.muteState.load() == BLE_AUDIO_MICP_DISABLED) {
+        st = bleAudioStatus(bleAudioMicpDevSetMute(BLE_AUDIO_MICP_DISABLED));
+      }
+      return st;
     }
   );
 }

@@ -275,7 +275,6 @@ BLEAudioBroadcastSource &BLEAudioBroadcastSource::setPreset(BLEAudioCodecPreset 
     BLELockGuard lock(impl.mtx.get());
     impl.preset = preset;
     impl.dirty = true;
-    _impl->dirty = true;
   } else {
     log_e("BroadcastSource: invalid preset %u", (unsigned)preset);
   }
@@ -459,10 +458,6 @@ BTStatus BLEAudioBroadcastSource::stop() {
   // no-op and the late BSRC_STARTED strands a live BIG with no advertising
   // instance (unrecoverable).
   if (starting) {
-    if (bleInStackCallbackTask()) {
-      log_e("BroadcastSource: cannot wait for start to resolve from a stack callback");
-      return BTStatus::InvalidState;
-    }
     _impl->stopSync.take();
     {
       BLELockGuard lock(_impl->mtx.get());
