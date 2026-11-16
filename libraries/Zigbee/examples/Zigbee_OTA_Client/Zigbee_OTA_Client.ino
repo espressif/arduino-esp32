@@ -45,8 +45,8 @@ uint8_t button = BOOT_PIN;
  */
 #define OTA_UPGRADE_MANUFACTURER            0x1001
 #define OTA_UPGRADE_IMAGE_TYPE              0x1011
-#define OTA_UPGRADE_RUNNING_FILE_VERSION    0x01010102  // Version of this firmware (used as OTA file version on Export)
-#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 0x01010103  // Next version attribute advertised by the client cluster
+#define OTA_UPGRADE_RUNNING_FILE_VERSION    0x01010100  // Version of this firmware (used as OTA file version on Export)
+#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 0x01010101  // Next version attribute advertised by the client cluster
 #define OTA_UPGRADE_HW_VERSION              0x0101
 
 /* Print running FW version on Serial every N ms (easy to see after OTA) */
