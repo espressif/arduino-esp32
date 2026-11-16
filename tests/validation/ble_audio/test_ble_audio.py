@@ -285,7 +285,11 @@ def _phase_lc3_loopback(server, client):
     Round 0 streams LC3_16_2_1 for ~4 s; round 1 soaks LC3_441_2_1 for ~15 s
     (framed SDUs, 10884 us interval). The client also injects a TX stall in
     round 0 (blocked controller releases must resync via txStalls and resume)
-    and checks per-round PACS preset coverage via onDiscovered.
+    and checks per-round PACS preset coverage via onDiscovered. The server
+    runs a Goertzel tone detector over the decoded PCM (the client sends a
+    sine at exactly fs/16): most of the energy must sit in the tone bin,
+    proving the received audio is the transmitted waveform and not just
+    loud noise.
 
     Returns False (SKIP) when the LC3 codec (esp_audio_codec) is not compiled
     into either build; only a dual-audio esp32s31 pair with the codec runs it.
@@ -306,7 +310,7 @@ def _phase_lc3_loopback(server, client):
     )
     _release_server(server)
     ms0 = server.expect(
-        r"\[SERVER\] LC3Loopback result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+)", timeout=120
+        r"\[SERVER\] LC3Loopback result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+) tone=(\d+)", timeout=120
     )
     mpre1 = client.expect(r"\[CLIENT\] LC3Preset round=1 ok=(\d+)", timeout=120)
     mc1 = client.expect(
@@ -314,7 +318,7 @@ def _phase_lc3_loopback(server, client):
     )
     _release_server(server)
     ms1 = server.expect(
-        r"\[SERVER\] LC3Loopback44 result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+)", timeout=120
+        r"\[SERVER\] LC3Loopback44 result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+) tone=(\d+)", timeout=120
     )
     server.expect_exact("[SERVER] Phase6 lc3_loopback done", timeout=40)
     client.expect_exact("[CLIENT] Phase6 lc3_loopback done", timeout=40)
@@ -328,15 +332,17 @@ def _phase_lc3_loopback(server, client):
         samples = int(ms.group(1))
         meanamp = int(ms.group(2))
         underruns = int(ms.group(4))
+        tone = int(ms.group(5))
         streaming = int(mc.group(1))
         encoded = int(mc.group(2))
         errors = int(mc.group(3))
-        LOGGER.info("lc3_loopback %s: sent=%d errors=%d samples=%d meanamp=%d plc=%d underruns=%d", label, encoded, errors, samples, meanamp, int(ms.group(3)), underruns)
+        LOGGER.info("lc3_loopback %s: sent=%d errors=%d samples=%d meanamp=%d plc=%d underruns=%d tone=%d/1000", label, encoded, errors, samples, meanamp, int(ms.group(3)), underruns, tone)
         assert streaming == 1, f"unicast stream never reached Streaming on the client ({label})"
         assert encoded > 0, f"Recorder sent no LC3 SDUs ({label}, {errors} send errors)"
         assert samples > 0, f"Player decoded no PCM samples ({label})"
         assert underruns == 0, f"Player underran {underruns} times ({label}); the PCM sink is not paced to the stream"
         assert meanamp > 500, f"decoded audio too quiet (meanamp={meanamp}, {label}); tone did not survive LC3"
+        assert tone >= 700, f"decoded audio is not the transmitted tone (tone-bin share {tone}/1000, {label}); waveform corrupted"
     return True
 
 

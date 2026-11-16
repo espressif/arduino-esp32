@@ -82,6 +82,18 @@ volatile bool bapSrvDisconnectDone = false;
 // the test can assert the received audio is a real tone, not silence.
 volatile uint32_t lc3RxSamples = 0;
 volatile uint64_t lc3RxEnergy = 0;
+// Goertzel tone detector on the same PCM: the client sends a sine at exactly
+// fs/16, so with a 160-sample block the tone always lands exactly on bin 10
+// (no leakage) at either sample rate. tonePower/totalPower near 1 proves the
+// decoded audio is the transmitted tone, not just loud noise.
+constexpr float kGoertzelCoeff = 1.847759065f;  // 2*cos(2*pi*10/160)
+constexpr uint32_t kGoertzelN = 160;
+volatile uint32_t goertzelCount = 0;  // samples in the current block
+volatile float goertzelS1 = 0.0f, goertzelS2 = 0.0f;
+volatile double goertzelBlockEnergy = 0.0;
+volatile double goertzelTone = 0.0;    // accumulated tone-bin power
+volatile double goertzelTotal = 0.0;   // accumulated total power
+volatile uint32_t goertzelBlocks = 0;
 
 // CAP handover (phase 12) SDU counters — written from the audio host task.
 // The acceptor receives on its unicast sink stream first and on its broadcast
@@ -820,6 +832,12 @@ void loop() {
       delay(500);
       lc3RxSamples = 0;
       lc3RxEnergy = 0;
+      goertzelCount = 0;
+      goertzelS1 = goertzelS2 = 0.0f;
+      goertzelBlockEnergy = 0.0;
+      goertzelTone = 0.0;
+      goertzelTotal = 0.0;
+      goertzelBlocks = 0;
       uint32_t plcFrames = 0;
       uint32_t playerUnderruns = 0;
       bool streamSnapOk = false;
@@ -839,6 +857,22 @@ void loop() {
             for (size_t i = 0; i < n; i++) {
               int v = pcm[i];
               e += (v < 0) ? (uint64_t)(-v) : (uint64_t)v;
+              float x = (float)v * (1.0f / 32768.0f);
+              float ws = x + kGoertzelCoeff * goertzelS1 - goertzelS2;
+              goertzelS2 = goertzelS1;
+              goertzelS1 = ws;
+              goertzelBlockEnergy = goertzelBlockEnergy + (double)x * (double)x;
+              if (++goertzelCount >= kGoertzelN) {
+                float tp = goertzelS1 * goertzelS1 + goertzelS2 * goertzelS2 - kGoertzelCoeff * goertzelS1 * goertzelS2;
+                if (tp > 0.0f) {
+                  goertzelTone = goertzelTone + (double)tp;
+                }
+                goertzelTotal = goertzelTotal + goertzelBlockEnergy;
+                goertzelBlocks = goertzelBlocks + 1;
+                goertzelS1 = goertzelS2 = 0.0f;
+                goertzelBlockEnergy = 0.0;
+                goertzelCount = 0;
+              }
             }
             lc3RxEnergy = lc3RxEnergy + e;
           });
@@ -885,12 +919,19 @@ void loop() {
           audio.end();
         }
         unsigned long long avg = (lc3RxSamples && streamSnapOk) ? (unsigned long long)(lc3RxEnergy / lc3RxSamples) : 0ull;
+        unsigned tonePermille = 0;
+        if (goertzelBlocks > 0 && goertzelTotal > 0.0) {
+          tonePermille = (unsigned)(1000.0 * goertzelTone / goertzelTotal);
+          if (tonePermille > 1000) {
+            tonePermille = 1000;
+          }
+        }
         if (lc3Round == 0) {
-          Serial.printf("[SERVER] LC3Loopback result samples=%lu meanamp=%llu plc=%lu underruns=%lu\n", (unsigned long)lc3RxSamples, avg,
-          (unsigned long)plcFrames, (unsigned long)playerUnderruns);
+          Serial.printf("[SERVER] LC3Loopback result samples=%lu meanamp=%llu plc=%lu underruns=%lu tone=%u\n", (unsigned long)lc3RxSamples, avg,
+          (unsigned long)plcFrames, (unsigned long)playerUnderruns, tonePermille);
         } else {
-          Serial.printf("[SERVER] LC3Loopback44 result samples=%lu meanamp=%llu plc=%lu underruns=%lu\n", (unsigned long)lc3RxSamples, avg,
-          (unsigned long)plcFrames, (unsigned long)playerUnderruns);
+          Serial.printf("[SERVER] LC3Loopback44 result samples=%lu meanamp=%llu plc=%lu underruns=%lu tone=%u\n", (unsigned long)lc3RxSamples, avg,
+          (unsigned long)plcFrames, (unsigned long)playerUnderruns, tonePermille);
         }
       }
     }  // end LC3 rounds
