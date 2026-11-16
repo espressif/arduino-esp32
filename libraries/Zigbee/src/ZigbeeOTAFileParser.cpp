@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "sdkconfig.h"
+#if CONFIG_ZB_ENABLED
+
 #include "ZigbeeOTAFileParser.h"
 
 #include <string.h>
@@ -140,3 +143,5 @@ esp_err_t zb_ota_file_parser_process(zb_ota_file_parser_t *parser) {
   parser->element.val = nullptr;
   return ESP_OK;
 }
+
+#endif  // CONFIG_ZB_ENABLED

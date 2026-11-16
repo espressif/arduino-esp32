@@ -7,6 +7,9 @@
  */
 #pragma once
 
+#include "sdkconfig.h"
+#if CONFIG_ZB_ENABLED
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -52,3 +55,5 @@ esp_err_t zb_ota_file_parser_check(const zb_ota_file_parser_t *parser);
 #ifdef __cplusplus
 }
 #endif
+
+#endif  // CONFIG_ZB_ENABLED
