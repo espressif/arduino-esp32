@@ -1765,6 +1765,7 @@ void setup() {
           discDone = (bool)s2;
         });
         mc.onMuteChanged([&sawMuted, &sawUnmuted, &sawFalse](bool muted) {
+          Serial.printf("[CLIENT] MicDisable evt muted=%d t=%lu\n", muted ? 1 : 0, (unsigned long)millis());
           if (muted) {
             sawMuted = true;
           } else {
@@ -1782,7 +1783,9 @@ void setup() {
               for (int i = 0; i < 200 && !discDone; i++) {
                 delay(50);
               }
+              Serial.printf("[CLIENT] MicDisable discovering done=%d t=%lu\n", discDone ? 1 : 0, (unsigned long)millis());
               if (discDone && mc.mute()) {
+                Serial.printf("[CLIENT] MicDisable mute sent t=%lu\n", (unsigned long)millis());
                 for (int i = 0; i < 200 && !sawMuted; i++) {
                   delay(50);
                 }
@@ -1799,6 +1802,8 @@ void setup() {
                   delay(50);
                 }
                 sawFalse = sawUnmuted ? 1 : 0;
+                Serial.printf("[CLIENT] MicDisable pre-unmute disabled=%d sawUnmuted=%d t=%lu\n",
+                              mc.isMuteDisabled() ? 1 : 0, sawUnmuted ? 1 : 0, (unsigned long)millis());
                 unmuteRc = (int)mc.unmute().code();
                 // A refused unmute must stay silent: no async onResult may fire.
                 for (int i = 0; i < 20 && !resultFired; i++) {
