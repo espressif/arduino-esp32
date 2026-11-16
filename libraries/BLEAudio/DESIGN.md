@@ -515,6 +515,25 @@ details live in [`../BLE/DESIGN.md`](../BLE/DESIGN.md#service-staging-and-startu
 - **Host-interop:** `tests/validation/ble_audio_host/` (ESP DUT + Linux Bumble).
 - **Static isolation check:** `libraries/BLE/tests/check_backend_isolation.sh`.
 
+> **Discrete TBS / MCS are intentionally untested on the 2-ESP rig.** The API
+> drives only the generic GTBS / GMCS instances (see the profile table above);
+> discrete bearers need a real phone (multiple bearers, call/media lists) and
+> cannot be meaningfully exercised ESP-to-ESP, so no validation phase covers
+> them.
+
+### Testability contract (log visibility)
+
+Engine C files log through ESP-IDF `ESP_LOG*` (runtime-filtered, visible in
+test output). The C++ roles log through Arduino `log_*`, which compile out
+entirely unless the sketch sets a Core Debug Level above None — deliberately,
+to keep default flash size down. Validation tests must therefore NEVER assert
+on log output. Diagnose through API-visible signals only: `BTStatus` returns,
+`onResult` callbacks (every queued control-point write ends exactly once —
+success notification or error), counters (`sdusSent`/`txStalls`/`underruns`),
+and `isStreaming()`/state getters, plus `Serial` markers the sketches print
+themselves. Keep it that way: do not "fix" diagnostics by enabling debug
+logging in test builds.
+
 ## Maintainer rules (audio-specific)
 
 In addition to [`../BLE/DESIGN.md`](../BLE/DESIGN.md#maintainer-rules):

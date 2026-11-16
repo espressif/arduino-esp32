@@ -52,6 +52,16 @@ constexpr uint32_t kMaxBurst = 3;    // ticks served per wake-up after the codec
 
 }  // namespace
 
+#if BLE_AUDIO_VALIDATION_HOOKS
+namespace {
+std::atomic<bool> s_blockReleases{false};
+}  // namespace
+
+extern "C" void bleAudioValidationBlockReleases(bool block) {
+  s_blockReleases.store(block, std::memory_order_relaxed);
+}
+#endif
+
 struct BLEAudioRecorder::Impl : BLEAudioDataPath {
   // Configuration (set before start()).
   BLEAudioPCMSource source;            // When set, PCM comes from here instead of I2S.
@@ -99,6 +109,11 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
   static void onSent(void *ctx) {
     auto *port = static_cast<Port *>(ctx);  // Never NULL by construction.
     auto *self = static_cast<Impl *>(port->owner);
+#if BLE_AUDIO_VALIDATION_HOOKS
+    if (s_blockReleases.load(std::memory_order_relaxed)) {
+      return;  // Simulated stall: releases stop arriving until unblocked.
+    }
+#endif
     if (self->gate.enter()) {
       bleAudioBump(self->released[port->idx]);
       self->gate.leave();

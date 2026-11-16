@@ -785,75 +785,85 @@ void loop() {
   if (currentPhase >= 6 && !phaseLC3LoopbackDone) {
     phaseLC3LoopbackDone = true;
 #if BLE_AUDIO_LC3_SUPPORTED && BLE_AUDIO_UNICAST_SERVER_SUPPORTED
-    BLE.end(false);
-    delay(500);
-    lc3RxSamples = 0;
-    lc3RxEnergy = 0;
-    uint32_t plcFrames = 0;
-    uint32_t playerUnderruns = 0;
-    bool streamSnapOk = false;
-    BTStatus s = BLE.begin(serverName);
-    if (s) {
-      BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
-        BLEAudioUnicastServer us = audio.createUnicastServer();
-        us.setSinkStreams(1).setSourceStreams(0).setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
+    for (int lc3Round = 0; lc3Round < 2; lc3Round++) {
+      BLE.end(false);
+      delay(500);
+      lc3RxSamples = 0;
+      lc3RxEnergy = 0;
+      uint32_t plcFrames = 0;
+      uint32_t playerUnderruns = 0;
+      bool streamSnapOk = false;
+      BTStatus s = BLE.begin(serverName);
+      if (s) {
+        BLEAudio audio = BLE.getAudioController();
+        if (audio.begin()) {
+          BLEAudioUnicastServer us = audio.createUnicastServer();
+          us.setSinkStreams(1).setSourceStreams(0).setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
+          us.setSupportedPresets(BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_441_2_1));
 
-        // PCM sink instead of I2S pins: decoded frames land here on the codec task.
-        BLEAudioPlayer player;
-        player.setPCMSink([](const int16_t *pcm, size_t n) {
-          lc3RxSamples = lc3RxSamples + (uint32_t)n;
-          uint64_t e = 0;
-          for (size_t i = 0; i < n; i++) {
-            int v = pcm[i];
-            e += (v < 0) ? (uint64_t)(-v) : (uint64_t)v;
-          }
-          lc3RxEnergy = lc3RxEnergy + e;
-        });
-
-        if (audio.start()) {
-          // Exercise immediate startPlayback()->stopPlayback()->startPlayback()
-          // handshake (regression for BLEAudioDataPath::start()/entry() race).
-          BTStatus pb = player.begin();
-          BTStatus pa = pb ? player.attach(us.stream(0)) : pb;
-          BTStatus psRapid = pa ? player.startPlayback() : pa;
-          if (psRapid) {
-            player.stopPlayback();
-          }
-          BTStatus ps = psRapid ? player.startPlayback() : psRapid;
-          Serial.printf("[SERVER] LC3Loopback player: %s\n", ps.toString());
-          if (ps) {
-            BLEAdvertising adv = BLE.getAdvertising();
-            adv.reset();
-            adv.setType(BLEAdvType::ConnectableScannable);
-            adv.setName(serverName);
-            adv.start();
-            Serial.println("[SERVER] LC3Loopback ready");
-            syncPhaseFromHost();
-            phaseRelease = false;
-            unsigned long deadline = millis() + 60000;
-            while (millis() < deadline && !phaseRelease) {
-              syncPhaseFromHost();
-              if (us.stream(0).isStreaming()) {
-                BLEAudioCodecConfig sc = us.stream(0).codecConfig();
-                BLEAudioQos sq = us.stream(0).qos();
-                if (sc.samplingRateHz == 16000 && sq.sduIntervalUs == 10000) {
-                  streamSnapOk = true;
-                }
-              }
-              delay(20);
+          // PCM sink instead of I2S pins: decoded frames land here on the codec task.
+          BLEAudioPlayer player;
+          player.setPCMSink([](const int16_t *pcm, size_t n) {
+            lc3RxSamples = lc3RxSamples + (uint32_t)n;
+            uint64_t e = 0;
+            for (size_t i = 0; i < n; i++) {
+              int v = pcm[i];
+              e += (v < 0) ? (uint64_t)(-v) : (uint64_t)v;
             }
+            lc3RxEnergy = lc3RxEnergy + e;
+          });
+
+          if (audio.start()) {
+            // Exercise immediate startPlayback()->stopPlayback()->startPlayback()
+            // handshake (regression for BLEAudioDataPath::start()/entry() race).
+            BTStatus pb = player.begin();
+            BTStatus pa = pb ? player.attach(us.stream(0)) : pb;
+            BTStatus psRapid = pa ? player.startPlayback() : pa;
+            if (psRapid) {
+              player.stopPlayback();
+            }
+            BTStatus ps = psRapid ? player.startPlayback() : psRapid;
+            Serial.printf("[SERVER] LC3Loopback player: %s\n", ps.toString());
+            if (ps) {
+              BLEAdvertising adv = BLE.getAdvertising();
+              adv.reset();
+              adv.setType(BLEAdvType::ConnectableScannable);
+              adv.setName(serverName);
+              adv.start();
+              Serial.println("[SERVER] LC3Loopback ready");
+              syncPhaseFromHost();
+              phaseRelease = false;
+              unsigned long deadline = millis() + 60000;
+              while (millis() < deadline && !phaseRelease) {
+                syncPhaseFromHost();
+                if (us.stream(0).isStreaming()) {
+                  BLEAudioCodecConfig sc = us.stream(0).codecConfig();
+                  BLEAudioQos sq = us.stream(0).qos();
+                  const bool snapOk = (lc3Round == 0) ? (sc.samplingRateHz == 16000 && sq.sduIntervalUs == 10000)
+                                                  : (sc.samplingRateHz == 44100 && sq.sduIntervalUs == 10884);
+                  if (snapOk) {
+                    streamSnapOk = true;
+                  }
+                }
+                delay(20);
+              }
+            }
+            plcFrames = player.plcFrames();
+            playerUnderruns = player.underruns();
+            player.end();
           }
-          plcFrames = player.plcFrames();
-          playerUnderruns = player.underruns();
-          player.end();
+          audio.end();
         }
-        audio.end();
+        unsigned long long avg = (lc3RxSamples && streamSnapOk) ? (unsigned long long)(lc3RxEnergy / lc3RxSamples) : 0ull;
+        if (lc3Round == 0) {
+          Serial.printf("[SERVER] LC3Loopback result samples=%lu meanamp=%llu plc=%lu underruns=%lu\n", (unsigned long)lc3RxSamples, avg,
+          (unsigned long)plcFrames, (unsigned long)playerUnderruns);
+        } else {
+          Serial.printf("[SERVER] LC3Loopback44 result samples=%lu meanamp=%llu plc=%lu underruns=%lu\n", (unsigned long)lc3RxSamples, avg,
+          (unsigned long)plcFrames, (unsigned long)playerUnderruns);
+        }
       }
-      unsigned long long avg = (lc3RxSamples && streamSnapOk) ? (unsigned long long)(lc3RxEnergy / lc3RxSamples) : 0ull;
-      Serial.printf("[SERVER] LC3Loopback result samples=%lu meanamp=%llu plc=%lu underruns=%lu\n", (unsigned long)lc3RxSamples, avg,
-                    (unsigned long)plcFrames, (unsigned long)playerUnderruns);
-    }
+    }  // end LC3 rounds
     BLE.end(false);
     delay(500);
     (void)BLE.begin(serverName);
@@ -1512,6 +1522,40 @@ void loop() {
 #else
       int pacsFirst = -1, pacsSecond = -1;
 #endif
+#if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
+      // end() contract: safe to call twice, and refused with Busy from a
+      // stack callback instead of deadlocking. The in-callback end() runs on
+      // the host task when the BIG comes up.
+      int endTwice = -1, endFromCb = -99, endRebegin = 0;
+      {
+        BLEAudio audio = BLE.getAudioController();
+        if (audio.begin()) {
+          BLEAudioBroadcastSource src = audio.createBroadcastSource();
+          src.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(1).setName(serverName);
+          volatile bool cbEntered = false;
+          src.onStarted([&]() {
+            // Host task: must refuse with Busy, never wedge the stack task.
+            endFromCb = (int)audio.end().code();
+            cbEntered = true;
+          });
+          if (audio.start() && src.start()) {
+            unsigned long t0 = millis();
+            while (!cbEntered && millis() - t0 < 15000) {
+              checkSerial();
+              delay(50);
+            }
+            (void)src.stop();
+            audio.end();
+            BTStatus second = audio.end();
+            endTwice = (second == BTStatus::OK || second == BTStatus::InvalidState) ? 1 : 0;
+            endRebegin = audio.begin() ? 1 : 0;
+            audio.end();
+          }
+        }
+      }
+#else
+      int endTwice = -1, endFromCb = -99, endRebegin = -1;
+#endif
 #if BLE_AUDIO_CCP_SERVER_SUPPORTED
       // Over-long TBS strings must fail the start instead of truncating.
       int tbsLong = 0;
@@ -1531,8 +1575,8 @@ void loop() {
 #else
       int tbsLong = -1;
 #endif
-      Serial.printf("[SERVER] StartRetry first=%d retry=%d recovered=%d pacs=%d%d tbslong=%d\n", firstRc, retryRc, recovered,
-                    pacsFirst, pacsSecond, tbsLong);
+      Serial.printf("[SERVER] StartRetry first=%d retry=%d recovered=%d pacs=%d%d tbslong=%d endtwice=%d endfromcb=%d endrebegin=%d\n",
+                    firstRc, retryRc, recovered, pacsFirst, pacsSecond, tbsLong, endTwice, endFromCb, endRebegin);
       BLE.end(false);
       delay(500);
       (void)BLE.begin(serverName);

@@ -55,6 +55,14 @@ void bleAudioValidationCancelConnect(void);
 /** Make the next CAP handover report an asynchronous failure after 50 ms. */
 void bleAudioValidationFailNextHandover(void);
 
+/**
+ * Drop (true) or deliver (false, default) the recorder's controller-release
+ * notifications, simulating a stalled ISO controller without touching the
+ * link. While blocked, the pacing logic resyncs and counts txStalls instead
+ * of spinning silently.
+ */
+void bleAudioValidationBlockReleases(bool block);
+
 #ifdef __cplusplus
 }
 #endif

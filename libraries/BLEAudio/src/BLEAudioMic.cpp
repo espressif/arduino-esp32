@@ -165,8 +165,19 @@ struct BLEAudioMicController::Impl {
   void handle(const ble_audio_evt_t &e) {
     if (BLE_AUDIO_EVT_GROUP(e.type) == BLE_AUDIO_GRP_CORE) {
       if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED && e.conn_handle == link.getConn()) {
+        // A queued write that never reported must still terminate: the peer
+        // is gone, so report it here (NotConnected) instead of leaving the
+        // application waiting for a notification that will never arrive. A
+        // late stack error for the same op is dropped below (unknown link),
+        // keeping exactly one terminal event per operation.
+        const auto pending = static_cast<BLEAudioMicController::Operation>(
+            lastOp.exchange((uint8_t)BLEAudioMicController::Operation::Unknown));
         muteState.store(BLE_AUDIO_MICP_UNMUTED, std::memory_order_relaxed);
-        lastOp.store((uint8_t)BLEAudioMicController::Operation::Unknown, std::memory_order_relaxed);
+        if (pending != BLEAudioMicController::Operation::Unknown) {
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::onResultCb)) {
+            cb(pending, BTStatus::NotConnected);
+          }
+        }
       }
       const int err = link.onCore(e, bleAudioMicpCtlrDiscover);
       if (err) {

@@ -230,9 +230,18 @@ struct BLEAudioVolumeController::Impl {
   void handle(const ble_audio_evt_t &e) {
     if (BLE_AUDIO_EVT_GROUP(e.type) == BLE_AUDIO_GRP_CORE) {
       if (e.type == BLE_AUDIO_EVT_ACL_DISCONNECTED && e.conn_handle == link.getConn()) {
+        // Same fail-fast contract as the microphone controller: a queued
+        // write reports NotConnected here so every operation ends exactly
+        // once, even when the link drops before the stack answers.
+        const auto pending = static_cast<BLEAudioVolumeController::Operation>(
+            lastOp.exchange((uint8_t)BLEAudioVolumeController::Operation::Unknown));
         volume.store(0, std::memory_order_relaxed);
         muted.store(false, std::memory_order_relaxed);
-        lastOp.store((uint8_t)BLEAudioVolumeController::Operation::Unknown, std::memory_order_relaxed);
+        if (pending != BLEAudioVolumeController::Operation::Unknown) {
+          if (auto cb = bleAudioCopyCallback(*this, &Impl::onResultCb)) {
+            cb(pending, BTStatus::NotConnected);
+          }
+        }
       }
       const int err = link.onCore(e, bleAudioVcpCtlrDiscover);
       if (err) {

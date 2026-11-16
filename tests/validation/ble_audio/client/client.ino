@@ -727,81 +727,133 @@ void setup() {
   waitForPhase(6);
 #if BLE_AUDIO_LC3_SUPPORTED && BLE_AUDIO_UNICAST_CLIENT_SUPPORTED
   {
-    BLE.end(false);
-    delay(500);
-    bapTxStreaming = false;
-    bool everStreamed = false;
-    uint32_t encSent = 0, encErrors = 0;
-    BTStatus st = BLE.begin("BLE_CLT_LC3");
-    if (st) {
-      BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
-        audio.onLinkReady([](uint16_t conn) {
-          audioLinkConn = conn;
-        });
-        BLEAudioUnicastClient uc = audio.createUnicastClient();
-        uc.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setSinkStreams(1);
-        uc.onStarted([]() {
-          bapTxStreaming = true;
-        });
-        uc.onStopped([]() {
-          bapTxStreaming = false;
-        });
+    for (int lc3Round = 0; lc3Round < 2; lc3Round++) {
+      BLE.end(false);
+      delay(500);
+      bapTxStreaming = false;
+      bool everStreamed = false;
+      uint32_t encSent = 0, encErrors = 0;
+      BTStatus st = BLE.begin("BLE_CLT_LC3");
+      if (st) {
+        BLEAudio audio = BLE.getAudioController();
+        if (audio.begin()) {
+          audio.onLinkReady([](uint16_t conn) {
+            audioLinkConn = conn;
+          });
+          BLEAudioUnicastClient uc = audio.createUnicastClient();
+          const auto wantPreset = (lc3Round == 0) ? BLEAudioCodecPreset::LC3_16_2_1 : BLEAudioCodecPreset::LC3_441_2_1;
+          volatile bool presetDisc = false;
+          volatile bool presetOk = false;
+          bool stallPrinted = false, presetPrinted = false;
+          uc.setPreset(wantPreset).setSinkStreams(1);
+          uc.onDiscovered([wantPreset, &presetDisc, &presetOk](const BLEAudioUnicastPeerInfo &peer) {
+            presetDisc = true;
+            presetOk = (peer.sinkPresets & BLEAudioPresetBit(wantPreset)) != 0;
+          });
+          uc.onStarted([]() {
+            bapTxStreaming = true;
+          });
+          uc.onStopped([]() {
+            bapTxStreaming = false;
+          });
 
-        // A deterministic 1 kHz tone (16 samples/cycle at 16 kHz) so the server
-        // sees a non-silent, well-defined signal after decode.
-        BLEAudioRecorder recorder;
-        recorder.setPCMSource([](int16_t *pcm, size_t maxSamples) -> size_t {
-          static uint32_t ph = 0;
-          for (size_t i = 0; i < maxSamples; i++) {
-            float s = sinf((float)ph * 2.0f * 3.14159265f / 16.0f);
-            pcm[i] = (int16_t)(s * 8000.0f);
-            ph++;
-          }
-          return maxSamples;
-        });
+          // A deterministic tone (16 samples/cycle: 1 kHz at 16 kHz, ~2.8 kHz
+          // at 44.1 kHz) so the server sees a non-silent signal after decode.
+          BLEAudioRecorder recorder;
+          recorder.setPCMSource([](int16_t *pcm, size_t maxSamples) -> size_t {
+            static uint32_t ph = 0;
+            for (size_t i = 0; i < maxSamples; i++) {
+              float s = sinf((float)ph * 2.0f * 3.14159265f / 16.0f);
+              pcm[i] = (int16_t)(s * 8000.0f);
+              ph++;
+            }
+            return maxSamples;
+          });
 
-        if (audio.start() && recorder.begin()) {
-          BTAddress addr;
-          if (findTarget(addr)) {
-            uint16_t h = audioConnect(audio, addr);
-            if (h != 0xFFFF) {
-              BTStatus bs = uc.connectAndStart(h);
-              Serial.printf("[CLIENT] LC3Loopback setup: %s\n", bs.toString());
-              unsigned long cdl = millis() + 15000;
-              while (!bapTxStreaming && millis() < cdl) {
-                delay(50);
-              }
-              everStreamed = bapTxStreaming;
-              if (bapTxStreaming) {
-                // The client's streams exist once the setup started; the
-                // recorder task then encodes + sends autonomously.
-                BTStatus ra = recorder.attach(uc.stream(BLEAudioStream::Direction::Tx));
-                BTStatus rs = ra ? recorder.startCapture() : ra;
-                Serial.printf("[CLIENT] LC3Loopback recorder: %s\n", rs.toString());
-                delay(4000);
-                encSent = recorder.sdusSent();
-                encErrors = recorder.sendErrors();
+          if (audio.start() && recorder.begin()) {
+            BTAddress addr;
+            if (findTarget(addr)) {
+              uint16_t h = audioConnect(audio, addr);
+              if (h != 0xFFFF) {
+                BTStatus bs = uc.connectAndStart(h);
+                Serial.printf("[CLIENT] LC3Loopback setup: %s\n", bs.toString());
+                unsigned long cdl = millis() + 15000;
+                while (!bapTxStreaming && millis() < cdl) {
+                  delay(50);
+                }
+                everStreamed = bapTxStreaming;
+                if (bapTxStreaming) {
+                  // The client's streams exist once the setup started; the
+                  // recorder task then encodes + sends autonomously.
+                  BTStatus ra = recorder.attach(uc.stream(BLEAudioStream::Direction::Tx));
+                  BTStatus rs = ra ? recorder.startCapture() : ra;
+                  Serial.printf("[CLIENT] LC3Loopback recorder: %s\n", rs.toString());
+                  delay(lc3Round == 0 ? 4000 : 15000);
+                  encSent = recorder.sdusSent();
+                  encErrors = recorder.sendErrors();
+                  if (lc3Round == 0) {
+                    // TX-stall injection: drop controller releases, verify the
+                    // pacing resyncs (txStalls advances) then resumes sending.
+                    uint32_t stallsBefore = recorder.txStalls();
+                    uint32_t sentBefore = recorder.sdusSent();
+#if BLE_AUDIO_VALIDATION_HOOKS
+                    bleAudioValidationBlockReleases(true);
+#endif
+                    delay(600);
+#if BLE_AUDIO_VALIDATION_HOOKS
+                    bleAudioValidationBlockReleases(false);
+#endif
+                    delay(500);
+                    uint32_t stallsAfter = recorder.txStalls();
+                    uint32_t sentAfter = recorder.sdusSent();
+                    int stalledOk = (stallsAfter > stallsBefore) ? 1 : 0;
+                    int resumedOk = (sentAfter > sentBefore) ? 1 : 0;
+                    Serial.printf("[CLIENT] LC3Stall result stalled=%d resumed=%d\n", stalledOk, resumedOk);
+                    stallPrinted = true;
+                  }
+                } else {
+                  Serial.println("[CLIENT] LC3Loopback stream did not start");
+                  if (lc3Round == 0) {
+                    Serial.printf("[CLIENT] LC3Stall result stalled=0 resumed=0\n");
+                    stallPrinted = true;
+                  }
+                }
+                {
+                  unsigned long pdl = millis() + 5000;
+                  while (!presetDisc && millis() < pdl) {
+                    delay(50);
+                  }
+                  Serial.printf("[CLIENT] LC3Preset round=%d ok=%d\n", lc3Round, (presetDisc && presetOk) ? 1 : 0);
+                  presetPrinted = true;
+                }
+                recorder.end();
+                uc.stop();
+                for (int i = 0; i < 60 && uc.isStreaming(); i++) {
+                  delay(50);
+                }
               } else {
-                Serial.println("[CLIENT] LC3Loopback stream did not start");
-              }
-              recorder.end();
-              uc.stop();
-              for (int i = 0; i < 60 && uc.isStreaming(); i++) {
-                delay(50);
+                Serial.println("[CLIENT] LC3Loopback ACL connect FAILED");
               }
             } else {
-              Serial.println("[CLIENT] LC3Loopback ACL connect FAILED");
+              Serial.println("[CLIENT] LC3Loopback target not found");
             }
-          } else {
-            Serial.println("[CLIENT] LC3Loopback target not found");
           }
+          if (lc3Round == 0 && !stallPrinted) {
+            Serial.printf("[CLIENT] LC3Stall result stalled=0 resumed=0\n");
+          }
+          if (!presetPrinted) {
+            Serial.printf("[CLIENT] LC3Preset round=%d ok=0\n", lc3Round);
+          }
+          recorder.end();
+          audio.end();
         }
-        recorder.end();
-        audio.end();
+        if (lc3Round == 0) {
+          Serial.printf("[CLIENT] LC3Loopback result streaming=%d sent=%lu errors=%lu\n", (int)everStreamed, (unsigned long)encSent, (unsigned long)encErrors);
+        } else {
+          Serial.printf("[CLIENT] LC3Loopback44 result streaming=%d sent=%lu errors=%lu\n", (int)everStreamed, (unsigned long)encSent, (unsigned long)encErrors);
+        }
       }
-      Serial.printf("[CLIENT] LC3Loopback result streaming=%d sent=%lu errors=%lu\n", (int)everStreamed, (unsigned long)encSent, (unsigned long)encErrors);
-    }
+    }  // end LC3 rounds
     BLE.end(false);
     delay(500);
     (void)BLE.begin("BLE_CLT");
@@ -943,6 +995,49 @@ void setup() {
                   delay(50);
                 }
                 callOk = callOriginated ? 1 : 0;
+              }
+              // Async error injection: queue one VCP and one MICP write, then
+              // drop the link immediately. Each op must terminate exactly once
+              // (success or NotConnected via the disconnect fail-fast), with no
+              // second terminal after quiescence. A late stack error for the
+              // same op is dropped by the conn-handle gate.
+              {
+                // Success arrives as a state notification, failure as onResult;
+                // either one counts as the single terminal for its op.
+                volatile int vcpTerms = 0, vcpNotConn = 0, micTerms = 0, micNotConn = 0;
+                vc.onStateChanged([&](uint8_t, bool) {
+                  vcpTerms++;
+                });
+                vc.onResult([&](BLEAudioVolumeController::Operation, BTStatus s2) {
+                  vcpTerms++;
+                  if (s2 == BTStatus::NotConnected) {
+                    vcpNotConn++;
+                  }
+                });
+                mc.onMuteChanged([&](bool) {
+                  micTerms++;
+                });
+                mc.onResult([&](BLEAudioMicController::Operation, BTStatus s2) {
+                  micTerms++;
+                  if (s2 == BTStatus::NotConnected) {
+                    micNotConn++;
+                  }
+                });
+                BTStatus vqs = vcDisc ? vc.setVolume(10) : BTStatus::InvalidState;
+                BTStatus mqs = micDisc ? mc.mute() : BTStatus::InvalidState;
+                int vcpQ = vqs ? 1 : 0;
+                int micQ = mqs ? 1 : 0;
+                (void)audio.disconnect(h);
+                unsigned long adl = millis() + 3000;
+                while (millis() < adl && (vcpTerms == 0 || micTerms == 0)) {
+                  delay(50);
+                }
+                int vcpFirst = vcpTerms, micFirst = micTerms;
+                delay(1500);
+                int vcpQuiet = (vcpTerms == vcpFirst) ? 1 : 0;
+                int micQuiet = (micTerms == micFirst) ? 1 : 0;
+                Serial.printf("[CLIENT] AsyncError result vcpQ=%d micQ=%d vcpTerms=%d vcpNotConn=%d micTerms=%d micNotConn=%d quiet=%d%d\n",
+                              vcpQ, micQ, vcpTerms, vcpNotConn, micTerms, micNotConn, vcpQuiet, micQuiet);
               }
               delay(200);
             } else {

@@ -278,42 +278,61 @@ def _phase_bap_broadcast(server, client):
 def _phase_lc3_loopback(server, client):
     """End-to-end LC3 audio path (client Recorder -> CIS -> server Player).
 
-    The client feeds a synthetic 1 kHz tone into a BLEAudioRecorder, which
-    LC3-encodes and streams it over the CIS; the server's BLEAudioPlayer decodes
-    it and reports the decoded sample count plus mean absolute amplitude. This
-    proves the whole codec + I2S-less data plane works on real hardware.
+    Round 0 streams LC3_16_2_1 for ~4 s; round 1 soaks LC3_441_2_1 for ~15 s
+    (framed SDUs, 10884 us interval). The client also injects a TX stall in
+    round 0 (blocked controller releases must resync via txStalls and resume)
+    and checks per-round PACS preset coverage via onDiscovered.
 
     Returns False (SKIP) when the LC3 codec (esp_audio_codec) is not compiled
     into either build; only a dual-audio esp32s31 pair with the codec runs it.
     """
-    mc = client.expect(
-        r"\[CLIENT\] LC3Loopback (not supported|result streaming=(\d+) sent=(\d+) errors=(\d+))", timeout=120
+    mprobe = client.expect(
+        r"\[CLIENT\] (LC3Loopback not supported|LC3Stall result stalled=(\d+) resumed=(\d+))", timeout=120
+    )
+    if b"not supported" in mprobe.group(0):
+        _release_server(server)
+        ms = server.expect(r"\[SERVER\] LC3Loopback not supported", timeout=60)
+        server.expect_exact("[SERVER] Phase6 lc3_loopback done", timeout=40)
+        client.expect_exact("[CLIENT] Phase6 lc3_loopback done", timeout=40)
+        return False
+    mstall = mprobe
+    mpre0 = client.expect(r"\[CLIENT\] LC3Preset round=0 ok=(\d+)", timeout=30)
+    mc0 = client.expect(
+        r"\[CLIENT\] LC3Loopback result streaming=(\d+) sent=(\d+) errors=(\d+)", timeout=60
     )
     _release_server(server)
-    ms = server.expect(
-        r"\[SERVER\] LC3Loopback (not supported|result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+))", timeout=120
+    ms0 = server.expect(
+        r"\[SERVER\] LC3Loopback result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+)", timeout=120
+    )
+    mpre1 = client.expect(r"\[CLIENT\] LC3Preset round=1 ok=(\d+)", timeout=120)
+    mc1 = client.expect(
+        r"\[CLIENT\] LC3Loopback44 result streaming=(\d+) sent=(\d+) errors=(\d+)", timeout=120
+    )
+    _release_server(server)
+    ms1 = server.expect(
+        r"\[SERVER\] LC3Loopback44 result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+)", timeout=120
     )
     server.expect_exact("[SERVER] Phase6 lc3_loopback done", timeout=40)
     client.expect_exact("[CLIENT] Phase6 lc3_loopback done", timeout=40)
 
-    if b"not supported" in ms.group(0) or b"not supported" in mc.group(0):
-        return False
-
-    samples = int(ms.group(2))
-    meanamp = int(ms.group(3))
-    plc = int(ms.group(4))
-    underruns = int(ms.group(5))
-    streaming = int(mc.group(2))
-    encoded = int(mc.group(3))
-    errors = int(mc.group(4))
-    LOGGER.info("lc3_loopback: sent=%d errors=%d samples=%d meanamp=%d plc=%d underruns=%d", encoded, errors, samples, meanamp, plc, underruns)
-    assert streaming == 1, "unicast stream never reached Streaming on the client"
-    assert encoded > 0, f"Recorder sent no LC3 SDUs ({errors} send errors)"
-    assert samples > 0, "Player decoded no PCM samples"
-    assert underruns == 0, f"Player underran {underruns} times; the PCM sink is not paced to the stream"
-    # A decoded 1 kHz tone at amplitude ~8000 has a mean |amplitude| well above
-    # a few hundred; a low value would mean silence / a broken codec path.
-    assert meanamp > 500, f"decoded audio too quiet (meanamp={meanamp}); tone did not survive LC3"
+    stalled, resumed = int(mstall.group(2)), int(mstall.group(3))
+    assert stalled == 1, "TX-stall injection did not resync (txStalls did not advance)"
+    assert resumed == 1, "TX stream did not resume after the stall"
+    assert int(mpre0.group(1)) == 1, "round-0 PACS preset not published by the server"
+    assert int(mpre1.group(1)) == 1, "round-1 (44.1 kHz) PACS preset not published by the server"
+    for label, mc, ms in (("16k", mc0, ms0), ("44k", mc1, ms1)):
+        samples = int(ms.group(1))
+        meanamp = int(ms.group(2))
+        underruns = int(ms.group(4))
+        streaming = int(mc.group(1))
+        encoded = int(mc.group(2))
+        errors = int(mc.group(3))
+        LOGGER.info("lc3_loopback %s: sent=%d errors=%d samples=%d meanamp=%d underruns=%d", label, encoded, errors, samples, meanamp, int(ms.group(3)), underruns)
+        assert streaming == 1, f"unicast stream never reached Streaming on the client ({label})"
+        assert encoded > 0, f"Recorder sent no LC3 SDUs ({label}, {errors} send errors)"
+        assert samples > 0, f"Player decoded no PCM samples ({label})"
+        assert underruns == 0, f"Player underran {underruns} times ({label}); the PCM sink is not paced to the stream"
+        assert meanamp > 500, f"decoded audio too quiet (meanamp={meanamp}, {label}); tone did not survive LC3"
     return True
 
 
@@ -325,7 +344,11 @@ def _phase_control_profiles(server, client):
     once and drives every profile end-to-end. Both client and server outcomes
     are strictly asserted for all five profiles.
     """
-    mc = client.expect(r"\[CLIENT\] ControlProfiles (not supported|result cap=(\d+) vcp=(\d+) mic=(\d+) media=(\d+) call=(\d+))", timeout=120)
+    ma = client.expect(r"\[CLIENT\] (AsyncError result vcpQ=(\d+) micQ=(\d+) vcpTerms=(\d+) vcpNotConn=(\d+) micTerms=(\d+) micNotConn=(\d+) quiet=(\d)(\d+)|ControlProfiles not supported)", timeout=120)
+    if b"not supported" in ma.group(0):
+        mc = ma
+    else:
+        mc = client.expect(r"\[CLIENT\] ControlProfiles (not supported|result cap=(\d+) vcp=(\d+) mic=(\d+) media=(\d+) call=(\d+))", timeout=60)
     _release_server(server)
     ms = server.expect(r"\[SERVER\] ControlProfiles (not supported|result volwrites=(\d+) micmutes=(\d+) media=(\d+) calls=(\d+))", timeout=120)
     server.expect_exact("[SERVER] Phase7 control_profiles done", timeout=40)
@@ -353,6 +376,14 @@ def _phase_control_profiles(server, client):
     assert mic_ok == 1 and mic_mutes >= 1, f"MICP mute round-trip failed (client={mic_ok}, server_mutes={mic_mutes})"
     assert media_ok == 1 and media_cmds >= 1, f"MCP Play round-trip failed (client={media_ok}, server_cmds={media_cmds})"
     assert call_ok == 1 and call_reqs >= 1, f"CCP Originate round-trip failed (client={call_ok}, server_calls={call_reqs})"
+    vcp_q, mic_q = int(ma.group(2)), int(ma.group(3))
+    vcp_terms, mic_terms = int(ma.group(4)), int(ma.group(6))
+    vcp_quiet, mic_quiet = int(ma.group(8)), int(ma.group(9))
+    LOGGER.info("async_error: vcpQ=%d micQ=%d vcpTerms=%d(vcpNotConn=%s) micTerms=%d(micNotConn=%s) quiet=%d%d",
+                vcp_q, mic_q, vcp_terms, ma.group(5).decode(), mic_terms, ma.group(7).decode(), vcp_quiet, mic_quiet)
+    assert vcp_q == 1 and mic_q == 1, "async-error injection did not queue both control writes"
+    assert vcp_terms == 1 and mic_terms == 1, "queued control write did not terminate exactly once after disconnect"
+    assert vcp_quiet == 1 and mic_quiet == 1, "duplicate terminal arrived after quiescence; exactly-once violated"
     return True
 
 
@@ -678,9 +709,10 @@ def _phase_start_retry(server, client):
     return InvalidState (not run half-registered roles again), and
     end()/begin() must recover to a working start(). Also covers the PACS
     boot-pinned re-begin (different contexts still start) and the over-long
-    TBS provider rejection.
+    TBS provider rejection, and the end() contract (Busy from a stack
+    callback, safe double-end with begin() recovery).
     """
-    ms = server.expect(r"\[SERVER\] StartRetry (not supported|first=(-?\d+) retry=(-?\d+) recovered=(\d+) pacs=(-?\d)(-?\d) tbslong=(-?\d+))", timeout=180)
+    ms = server.expect(r"\[SERVER\] StartRetry (not supported|first=(-?\d+) retry=(-?\d+) recovered=(\d+) pacs=(-?\d)(-?\d) tbslong=(-?\d+) endtwice=(-?\d+) endfromcb=(-?\d+) endrebegin=(-?\d+))", timeout=180)
     server.expect_exact("[SERVER] Phase15 start_retry_refused done", timeout=30)
     client.expect_exact("[CLIENT] Phase15 start_retry_refused done", timeout=30)
     if b"not supported" in ms.group(0):
@@ -698,6 +730,11 @@ def _phase_start_retry(server, client):
         assert pacs_second == 1, "PACS re-begin with different contexts failed (boot-pinned path)"
     if tbs_long >= 0:
         assert tbs_long == 1, "over-long TBS provider name did not fail start()"
+    end_twice, end_from_cb, end_rebegin = int(ms.group(8)), int(ms.group(9)), int(ms.group(10))
+    if end_twice >= 0:
+        assert end_from_cb == -12, f"end() from a stack callback did not refuse with Busy (rc={end_from_cb})"
+        assert end_twice == 1, "double end() did not leave a clean state"
+        assert end_rebegin == 1, "begin() after double end() did not recover"
     return True
 
 
