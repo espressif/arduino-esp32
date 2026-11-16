@@ -119,6 +119,10 @@ def _phase_audio_lifecycle(server, client):
     mr = server.expect(r"\[SERVER\] Audio reinit begin=(\d+) start=(\d+)", timeout=20)
     assert int(mr.group(1)) == 1, "audio reinit (init) failed after callback-safe BLE.end()"
     assert int(mr.group(2)) == 1, "audio reinit (commit) failed after callback-safe BLE.end()"
+    mgf = server.expect(r"\[SERVER\] Audio gattfirst live=(\d+) guard=(\d+) remove=(\d+)", timeout=30)
+    assert int(mgf.group(1)) == 1, "GATT-first classic services were not adopted into the audio commit"
+    assert int(mgf.group(2)) == 1, "late restage was not guarded after a GATT-first commit"
+    assert int(mgf.group(3)) == 1, "adopted classic service could not be removed"
     m = server.expect(
         r"\[SERVER\] (Audio lifecycle OK|Audio lifecycle FAILED begin=(\d+) end=(\d+))",
         timeout=30,

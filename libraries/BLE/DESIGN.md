@@ -440,9 +440,11 @@ service-init calls are non-idempotent). The coordinator has two modes:
   snapshots its latest tree and calls `ble_gatts_add_svcs` exactly once. Deferring publication makes repeated
   pre-commit `server.start()` calls safe when more services or characteristics are added: NimBLE never retains a
   pointer to a replaced definition array and no service is added twice. This lets an ordinary `BLEServer` service
-  and the audio profiles coexist in one committed GATT table. Required ordering: `BLE.begin()`
+  and the audio profiles coexist in one committed GATT table. Recommended ordering: `BLE.begin()`
   -> create/stage server services and audio roles -> `audio.begin()` (initializes if needed,
-  then publishes everything at once).
+  then publishes everything at once). Staging plain-GATT services *before* any audio role
+  also works: the audio commit adopts the standalone-published table and republishes it
+  once (GAP must be idle; `Busy` otherwise).
 
 Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive()` returns
 `bleAudioEngineIsInitialized()` (false when the engine is not compiled in), so audio mode is exactly the window
@@ -451,7 +453,7 @@ host-agnostic engine through weak hooks in `core/BLEAudioHooks.h`. In `BLEAudio`
 all host-specific glue lives in the single backend pair `BLEAudio.nimble.{h,cpp}` and `BLEAudio.bluedroid.{h,cpp}`.
 
 After `audio.begin()` commits, the NimBLE table is frozen: a later `BLEServer::start()` that would add attributes returns
-`InvalidState` instead of resetting the audio-owned table. Removing an already committed classic service remains
+`InvalidState` instead of resetting the audio-owned table. Removing an already committed plain-GATT service remains
 supported; the server hides only that service's handle range and emits Service Changed. `audio.end()` clears the
 audio commit state, and the next `audio.begin()` runs `ble_gatts_reset()` (returning `Busy` if GAP or a connection
 is active) so a new table can be staged in the same `BLE.begin()` session without duplicating ATT attributes.

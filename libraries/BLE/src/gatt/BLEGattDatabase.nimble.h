@@ -39,7 +39,7 @@
  *    `ble_gatts_start` (in `esp_ble_audio_common_start`). Here the coordinator
  *    must NOT reset or start. `BLEServer::start()` records the server as a
  *    contributor; its latest service tree is added once, immediately before
- *    the engine commits it from `BLEAudio::start()`.
+ *    the engine commits it from a single `BLEAudio::begin()`.
  *
  * The coordinator does not carry a separate "audio mode" flag: `audioModeActive()`
  * is derived from the LE Audio engine's lifecycle through a weak hook
@@ -48,9 +48,13 @@
  * engine, leaves the engine itself free of any GATT-coordinator (i.e.
  * NimBLE-only) knowledge, and lets core BLE build without linking BLEAudio.
  *
- * Required ordering in audio mode (documented in BLEAudio/DESIGN.md):
- *   BLE.begin() -> audio.begin() (common_init) -> create/stage BLEServer
- *   services -> audio.start() (single add + commit).
+ * Staging order does not matter. The recommended flow creates audio roles
+ * first (`BLE.begin()` -> create roles + classic services -> single
+ * `audio.begin()` commit), but staging classic services before any audio
+ * role exists works too: the standalone publish is adopted at the next
+ * audio commit, which rebuilds once (GAP must be idle; `Busy` otherwise,
+ * retryable) so the single publish covers everything, then freezes.
+ * Either way there is exactly one committed table (see BLEAudio/DESIGN.md).
  *
  * NimBLE-only: on Bluedroid, incremental multi-app GATTS registration already
  * lets audio coexist through a separate GATTS app, so the Bluedroid server
@@ -95,7 +99,7 @@ bool audioModeFrozen();
  */
 BTStatus stageServer(BLEServer::Impl &impl);
 
-/** @brief Publish the latest recorded server tree immediately before audio starts. */
+/** @brief Publish the latest recorded server tree as part of the single audio commit. */
 BTStatus prepareAudioCommit();
 
 /** @brief Resolve service handles after the audio engine's GATT commit. */

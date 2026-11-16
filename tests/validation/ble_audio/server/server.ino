@@ -428,7 +428,28 @@ void loop() {
           }
         }
         Serial.printf("[SERVER] Audio reinit begin=%d start=%d\n", rb ? 1 : 0, rs ? 1 : 0);
-        if (purePeriphOk && sameHostOk && ab && firstStage && secondStage && gattGuarded && advStart && activeEnded && admissionClosed && rb && rs && aend) {
+        Serial.printf("[SERVER] Audio reinit begin=%d start=%d\n", rb ? 1 : 0, rs ? 1 : 0);
+        // GATT-first order: stage classic services BEFORE any audio role
+        // exists, then commit once. The commit must adopt them into the same
+        // frozen table (no separate publish survives it).
+        bool gfirstOk = false;
+        {
+          BLEServer srvFirst = BLE.createServer();
+          BLEService firstSvc = srvFirst.createService(BLEUUID("a10c0007-0000-1000-8000-00805f9b34fb"));
+          auto firstChr = firstSvc.createCharacteristic(BLEUUID("a10c0008-0000-1000-8000-00805f9b34fb"), BLEProperty::Read, BLEPermission::ReadOpen);
+          firstChr.setValue("first");
+          bool firstPublished = (bool)srvFirst.start();  // standalone (no audio roles yet)
+          BTStatus firstCommit = firstPublished ? audio.begin() : BTStatus::Fail;  // adopt + single commit
+          bool firstLive = firstCommit && firstSvc.getHandle() != 0;
+          BLEService lateFirst = srvFirst.createService(BLEUUID("a10c0009-0000-1000-8000-00805f9b34fb"));
+          lateFirst.createCharacteristic(BLEUUID("a10c000a-0000-1000-8000-00805f9b34fb"), BLEProperty::Read, BLEPermission::ReadOpen);
+          bool firstGuarded = srvFirst.start() == BTStatus::InvalidState;
+          bool firstRemoved = (bool)srvFirst.removeService(firstSvc);
+          gfirstOk = (bool)firstCommit && firstLive && firstGuarded && (bool)firstRemoved;
+          Serial.printf("[SERVER] Audio gattfirst live=%d guard=%d remove=%d\n", firstLive ? 1 : 0, firstGuarded ? 1 : 0, firstRemoved ? 1 : 0);
+          audio.end();
+        }
+        if (purePeriphOk && sameHostOk && ab && firstStage && secondStage && gattGuarded && advStart && activeEnded && admissionClosed && rb && rs && aend && gfirstOk) {
           Serial.println("[SERVER] Audio lifecycle OK");
         } else {
           Serial.printf(

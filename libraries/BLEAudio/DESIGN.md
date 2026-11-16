@@ -296,8 +296,8 @@ the headers and in [`README.md`](README.md).
 BLE.begin("Headset");                        // 1. host stack up
 BLEAudio audio = BLE.getAudioController();
 audio.setPresentationDelay(40000);           // 2. defaults, before creating roles
-// (no explicit audio.begin() needed: the first create*() initializes the engine;
-// (no explicit begin() needed beforehand; the first create*() initializes lazily)
+// (no explicit begin() needed: the first create*() initializes lazily;
+// the single audio.begin() commits everything, whatever was staged first)
 
 BLEAudioCapAcceptor cap = audio.createCapAcceptor();   // 3. create + configure roles
 cap.setSetSize(2).setRank(1);
@@ -314,11 +314,14 @@ BLE.end();                                   // 7. host teardown (also runs audi
 
 Invariants:
 
-- `create*()` initializes the engine lazily on first use (explicit `begin()`
-  is optional), and returns an empty handle when initialization fails or the
-  role is disabled. Creating a service-registering role after the commit logs
-  an error and returns an empty handle (except `createBroadcastSource()`,
-  which registers no GATT service and may be created after the commit).
+- `create*()` initializes the engine lazily on first use, and returns an
+  empty handle when initialization fails or the role is disabled. Creating a
+  service-registering role after the commit logs an error and returns an
+  empty handle (except `createBroadcastSource()`, which registers no GATT
+  service and may be created after the commit). GATT-first staging is
+  adopted, not rejected: classic services published standalone while the
+  engine is down are re-published by the next commit into the same frozen
+  table (see `BLEGattDatabase::prepareAudioCommit`).
 - Server-side configuration (stream counts, presets, locations, identity roles)
   is read by `audio.begin()`; changing it afterwards does not alter the registered
   services. Available audio contexts (`setAvailableContexts`) may change at

@@ -44,6 +44,15 @@ namespace BLEGattDatabase {
 namespace {
 BLEServer::Impl *sAudioServer = nullptr;
 bool sAudioDefsAdded = false;
+/**
+ * Set when the contributor above published standalone (engine down): its
+ * services are already live in the ATT table. The next audio commit adopts
+ * them — resetting once and re-publishing everything together — instead of
+ * dropping them at the engine's single ble_gatts_start(). Cleared on the
+ * first adopted commit and on teardown. Pure-audio and already-staged flows
+ * never set it.
+ */
+bool sAdoptStandalone = false;
 
 std::vector<std::shared_ptr<BLEService::Impl>> snapshotServices(BLEServer::Impl &impl) {
   BLELockGuard lock(impl.mtx);
@@ -157,12 +166,30 @@ BTStatus stageServer(BLEServer::Impl &impl) {
 }
 
 BTStatus prepareAudioCommit() {
-  if (sAudioServer == nullptr || sAudioDefsAdded) {
-    return BTStatus::OK;
+  if (sAudioServer == nullptr) {
+    return BTStatus::OK;  // pure audio: nothing staged, nothing live
   }
   auto services = snapshotServices(*sAudioServer);
   if (!validateServices(*sAudioServer, services)) {
     return BTStatus::InvalidState;
+  }
+  if (sAdoptStandalone) {
+    // GATT-first order: classic services were published standalone while the
+    // engine was down. Rebuild once so the single audio commit publishes
+    // everything instead of dropping them at the engine's ble_gatts_start().
+    // GAP must be idle (reset is EBUSY otherwise); Busy is retryable and
+    // never poisons the commit, anything else is terminal. Validated above,
+    // so the reset cannot strand an invalid table.
+    int rc = ble_gatts_reset();
+    if (rc != 0) {
+      return rc == BLE_HS_EBUSY ? BTStatus::Busy : BTStatus::Fail;
+    }
+    ble_svc_gap_init();
+    ble_svc_gatt_init();
+    applyDeviceName();
+    sAdoptStandalone = false;
+  } else if (sAudioDefsAdded) {
+    return BTStatus::OK;
   }
   BTStatus st = addServerServices(*sAudioServer, services);
   if (st != BTStatus::OK) {
@@ -203,6 +230,7 @@ void resetAudioStaging() {
   }
   sAudioServer = nullptr;
   sAudioDefsAdded = false;
+  sAdoptStandalone = false;
   nimbleClearRetainedGattDefs();
 }
 

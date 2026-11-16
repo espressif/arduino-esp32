@@ -75,10 +75,9 @@ LE Audio separates configuration from the transport, and the examples always use
 1. `BLE.begin()` — bring up the Bluetooth host.
 2. Create and configure the roles (`createCapAcceptor()`,
    `createUnicastServer()`, `createBroadcastSink()`, …). The first factory
-   initializes the engine lazily. When mixing plain-GATT `BLEServer` services in,
-   create at least one audio role *before* staging plain-GATT services, so they
-   stage into the coordinated (audio-owned) GATT table instead of publishing
-   standalone.
+   initializes the engine lazily. Plain-GATT `BLEServer` services and audio
+   roles can be staged in any order; a single `audio.begin()` publishes
+   everything into one GATT table.
 3. `audio.begin()` — register the roles and commit their GATT services. This
    does **not** open I2S or start an LC3 task.
 4. Configure the PCM side **after** `audio.begin()`:
