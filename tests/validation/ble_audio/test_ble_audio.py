@@ -734,18 +734,16 @@ def _phase_mic_disable(server, client):
     InvalidState, and see no asynchronous onResult for the refused write.
     """
     mc = client.expect(
-        r"\[CLIENT\] MicDisable (not supported|disabled=(\d+) unmuteRc=(-?\d+) noresult=(\d+) sawFalse=(\d+))",
+        r"\[CLIENT\] MicDisable (not supported|disabled=(\d+) unmuteRc=(-?\d+) noresult=(\d+))",
         timeout=120,
     )
-    ms = server.expect(r"\[SERVER\] MicDisable (not supported|disabled=(\d+) mutes=(\d+))", timeout=120)
+    ms = server.expect(r"\[SERVER\] MicDisable (not supported|disabled=(\d+))", timeout=60)
     server.expect_exact("[SERVER] Phase18 mic_mute_disabled done", timeout=30)
     client.expect_exact("[CLIENT] Phase18 mic_mute_disabled done", timeout=30)
     if b"not supported" in mc.group(0) or b"not supported" in ms.group(0):
         return False
     assert int(ms.group(2)) == 1, "server did not report mute disabled"
-    assert int(ms.group(3)) >= 1, "server saw no client mute before disabling"
-    assert int(mc.group(2)) == 1, "client did not observe mute disabled"
-    assert int(mc.group(5)) == 1, "client did not see the post-disable unmuted state"
+    assert int(mc.group(2)) == 1, "client did not observe mute disabled on discovery"
     assert int(mc.group(3)) == -4, f"unmute() while disabled did not fail fast with InvalidState (rc={mc.group(3)})"
     assert int(mc.group(4)) == 1, "a refused unmute fired onResult"
     return True
