@@ -264,7 +264,7 @@ that `BLEAudioImplCommon::createStagedRole` and the role factories populate:
 - `handlers[]`: one event handler per event group.
 
 This "create roles, then commit once in start()" model lets audio
-profiles and a coexisting classic `BLEServer` land in **one** committed GATT
+profiles and a coexisting plain-GATT `BLEServer` land in **one** committed GATT
 table. See [`../BLE/DESIGN.md`](../BLE/DESIGN.md#service-staging-and-startup).
 
 ## Public examples and convenience helpers
@@ -303,7 +303,7 @@ BLEAudioCapAcceptor cap = audio.createCapAcceptor();   // 3. create + configure 
 cap.setSetSize(2).setRank(1);
 BLEAudioUnicastServer us = audio.createUnicastServer();
 us.configureHeadset();
-// (optionally) create/stage classic BLEServer services here too
+// (optionally) create/stage plain-GATT BLEServer services here too
 
 audio.begin();                               // 4. run roleApplies, merged PACS, single GATT commit
 BLE.getAdvertising().start();                // 5. advertise
@@ -506,7 +506,7 @@ and keep `#else` stubs in the C engine units so partial Kconfig builds link clea
 
 ## GATT coexistence
 
-Classic `BLEServer` services and LE Audio profiles share **one** committed GATT
+Plain-GATT `BLEServer` services and LE Audio profiles share **one** committed GATT
 table on NimBLE via `gatt/BLEGattDatabase.nimble.{h,cpp}` (`BLE.begin()` → create/stage `BLEServer` services and audio roles →
 `audio.begin()`), while
 Bluedroid registers separate BTA GATTS apps natively. Pure-audio and pure-ISO
@@ -515,7 +515,7 @@ details live in [`../BLE/DESIGN.md`](../BLE/DESIGN.md#service-staging-and-startu
 
 ## Testing
 
-- **Dual-DUT HITL:** `tests/validation/ble_audio/` (15 phases covering pure-audio peripheral lifecycle without `BLEServer`, same-host `audio.end()`→`begin()` re-init, GMAP/HAS callback re-registration across re-init with quiesced links, classic GATT coexistence & callback-deferred `BLE.end()`, `BLEIso` CIS/BIS, BAP unicast/broadcast, LC3 loopback, VCP/MICP/MCP/CCP, TMAP/GMAP/CSIP/CAP Commander, HAS, stereo broadcast with callback churn, Broadcast Assistant with PAST on handle 0, CAP handover, `BroadcastSource` start/stop race, `CapInitiator` 1/2-BIS interleave, and controller memory release).
+- **Dual-DUT HITL:** `tests/validation/ble_audio/` (15 phases covering pure-audio peripheral lifecycle without `BLEServer`, same-host `audio.end()`→`begin()` re-init, GMAP/HAS callback re-registration across re-init with quiesced links, plain-GATT coexistence & callback-deferred `BLE.end()`, `BLEIso` CIS/BIS, BAP unicast/broadcast, LC3 loopback, VCP/MICP/MCP/CCP, TMAP/GMAP/CSIP/CAP Commander, HAS, stereo broadcast with callback churn, Broadcast Assistant with PAST on handle 0, CAP handover, `BroadcastSource` start/stop race, `CapInitiator` 1/2-BIS interleave, and controller memory release).
 - **Host-interop:** `tests/validation/ble_audio_host/` (ESP DUT + Linux Bumble).
 - **Static isolation check:** `libraries/BLE/tests/check_backend_isolation.sh`.
 

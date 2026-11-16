@@ -21,7 +21,7 @@ static const BLEUUID RW_CHAR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 
 // Phase 1 (audio_lifecycle): a plain custom GATT service committed alongside
 // the LE Audio profiles through the unified BLEGattDatabase coordinator, to
-// prove classic-service + audio coexistence in one attribute table.
+// prove plain-GATT + audio coexistence in one attribute table.
 static const BLEUUID AUDIO_COEX_SVC_UUID("a10c0001-0000-1000-8000-00805f9b34fb");
 static const BLEUUID AUDIO_COEX_CHAR_UUID("a10c0002-0000-1000-8000-00805f9b34fb");
 static const BLEUUID AUDIO_COEX_CHAR2_UUID("a10c0007-0000-1000-8000-00805f9b34fb");
@@ -203,10 +203,10 @@ static void capBcSnapshotReader(void *arg) {
 void loop() {
   checkSerial();
 
-  // Phase 1: LE Audio lifecycle + classic-service coexistence. Tears down and
+  // Phase 1: LE Audio lifecycle + plain-GATT coexistence. Tears down and
   // re-begins BLE for a clean stack, brings up the LE Audio engine
   // (common_init), stages a plain custom GATT service, then performs the single
-  // coordinated commit (common_start via audio.begin()) so the classic service
+  // coordinated commit (common_start via audio.begin()) so the plain-GATT service
   // and the audio profiles live in one attribute table. Self-skips when the LE
   // Audio engine is not compiled in. Restores a normal stack afterward so the
   // memory_release phase still measures a meaningful free.
@@ -321,11 +321,11 @@ void loop() {
         }
 
         // 1d) Third audio.begin() in the same BLE.begin() session, now with
-        // classic BLEServer coexistence and callback-safe BLE.end().
+        // plain-GATT BLEServer coexistence and callback-safe BLE.end().
         audio.setPresentationDelay(40000);
         // (no explicit begin: the role below triggers lazy init; the single
         // audio.begin() commits everything)
-        // An audio role first: lazy engine init must precede classic staging
+        // An audio role first: lazy engine init must precede plain-GATT staging
         // so the services stage into the coordinated (audio-owned) table
         // instead of publishing standalone.
         BLEAudioVolumeRenderer coexVol = audio.createVolumeRenderer();
@@ -624,7 +624,7 @@ void loop() {
   }
 
   // Phase 4: BAP Unicast transport — the server is the BAP Unicast Server
-  // (acceptor). It runs a classic BLEServer *and* the audio Unicast Server so
+  // (acceptor). It runs a plain-GATT BLEServer *and* the audio Unicast Server so
   // both commit into one GATT table (coexistence), advertises connectably, and
   // counts the transparent SDUs the client streams to its sink ASE over a CIS.
   // Needs the LE Audio engine; self-skips otherwise (so only a dual-audio bench
@@ -650,7 +650,7 @@ void loop() {
         audio.onDisconnected([](uint16_t) {
           bapSrvLinkDown = true;
         });
-        // An audio role first: lazy engine init must precede classic staging
+        // An audio role first: lazy engine init must precede plain-GATT staging
         // so the marker service stages into the coordinated (audio-owned)
         // table instead of publishing standalone.
         BLEAudioUnicastServer us = audio.createUnicastServer();
@@ -662,7 +662,7 @@ void loop() {
             }
           });
         }
-        // Classic server contributes a marker service to the same GATT table.
+        // Plain-GATT server contributes a marker service to the same GATT table.
         BLEServer srv = BLE.createServer();
         srv.advertiseOnDisconnect(true);
         BLEService svc = srv.createService(SERVICE_UUID);

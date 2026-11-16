@@ -436,7 +436,7 @@ service-init calls are non-idempotent). The coordinator has two modes:
   rebuild, exactly as before. Non-audio behaviour is unchanged.
 - **Audio** (engine present): the LE Audio engine performs the service inits (in `esp_ble_audio_common_init`)
   and the single `ble_gatts_start` (in `esp_ble_audio_common_start`, triggered by `BLEAudio::begin()`); the
-  classic server only records itself as a contributor. Immediately before the audio commit, the coordinator
+  plain-GATT server only records itself as a contributor. Immediately before the audio commit, the coordinator
   snapshots its latest tree and calls `ble_gatts_add_svcs` exactly once. Deferring publication makes repeated
   pre-commit `server.start()` calls safe when more services or characteristics are added: NimBLE never retains a
   pointer to a replaced definition array and no service is added twice. This lets an ordinary `BLEServer` service
@@ -618,7 +618,7 @@ event bridge; no `esp_ble_audio_*` type ever appears in a header reachable from
 `<BLEAudio.h>`. Roles
 stage their registration before `audio.begin()` (the controller's
 `roleApplies` "accumulate then commit" model), and `begin()` performs the single
-coordinated `ble_gatts_start()` so audio profiles and a classic `BLEServer` coexist in
+coordinated `ble_gatts_start()` so audio profiles and a plain-GATT `BLEServer` coexist in
 one GATT table (see [Service staging and startup](#service-staging-and-startup)).
 The core forwards host GAP/GATT events to the engine through lazy hooks and runs
 audio plus standalone-ISO teardown before host shutdown. These hooks preserve the

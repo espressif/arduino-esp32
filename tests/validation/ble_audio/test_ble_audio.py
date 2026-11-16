@@ -72,7 +72,7 @@ def _release_server(server):
 
 
 def _phase_audio_lifecycle(server, client):
-    """LE Audio engine bring-up + classic-service coexistence (server-driven).
+    """LE Audio engine bring-up + plain-GATT coexistence (server-driven).
 
     Returns False (SKIP) when the LE Audio engine is not compiled into the build.
     """
@@ -107,7 +107,7 @@ def _phase_audio_lifecycle(server, client):
     assert int(msh.group(3)) == 1, f"audio.end() after failed BroadcastSource::start() stalled ({msh.group(4).decode()} ms)"
 
     mg = server.expect(r"\[SERVER\] Audio GATT remove=(\d+) guarded=(\d+)", timeout=30)
-    assert int(mg.group(1)) == 1, "classic service removal failed while audio owned the GATT table"
+    assert int(mg.group(1)) == 1, "plain-GATT service removal failed while audio owned the GATT table"
     assert int(mg.group(2)) == 1, "late GATT restaging was not guarded while audio owned the table"
     mcoex = server.expect(r"\[SERVER\] Audio coex ready=([01])", timeout=15)
     assert int(mcoex.group(1)) == 1, "coexistence advertising failed to start"
@@ -124,7 +124,7 @@ def _phase_audio_lifecycle(server, client):
         timeout=30,
     )
     cr = client.expect(r"\[CLIENT\] Audio callback read: (\d+)", timeout=30)
-    assert int(cr.group(1)) == 1, "client did not find/read the classic service committed with audio"
+    assert int(cr.group(1)) == 1, "client did not find/read the plain-GATT service committed with audio"
     client.expect(r"\[CLIENT\] (Audio lifecycle OK|Audio not supported, skipping)", timeout=20)
     assert b"FAILED" not in m.group(0), (
         f"audio lifecycle failed: begin={m.group(2)} end={m.group(3)}"

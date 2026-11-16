@@ -78,9 +78,9 @@ start the local LC3 codec tasks. They are deliberately separate because the code
 is not needed until a stream exists. ``audio.end()`` releases everything; calling it
 from a stack callback is refused with ``Busy`` — defer it to ``loop()``.
 
-GATT coexistence: audio profiles and a classic ``BLEServer`` share **one** committed GATT
+GATT coexistence: audio profiles and a plain-GATT ``BLEServer`` share **one** committed GATT
 table (``audio.begin()`` performs the single coordinated commit). Create at least one
-audio role *before* staging classic services, so they stage into the coordinated
+audio role *before* staging plain-GATT services, so they stage into the coordinated
 table instead of publishing standalone — then call ``audio.begin()`` once to commit
 everything. Afterwards the table is frozen and ``server.start()`` reports
 ``InvalidState``.

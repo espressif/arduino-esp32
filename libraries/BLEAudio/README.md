@@ -75,8 +75,8 @@ LE Audio separates configuration from the transport, and the examples always use
 1. `BLE.begin()` — bring up the Bluetooth host.
 2. Create and configure the roles (`createCapAcceptor()`,
    `createUnicastServer()`, `createBroadcastSink()`, …). The first factory
-   initializes the engine lazily. When mixing classic `BLEServer` services in,
-   create at least one audio role *before* staging classic services, so they
+   initializes the engine lazily. When mixing plain-GATT `BLEServer` services in,
+   create at least one audio role *before* staging plain-GATT services, so they
    stage into the coordinated (audio-owned) GATT table instead of publishing
    standalone.
 3. `audio.begin()` — register the roles and commit their GATT services. This

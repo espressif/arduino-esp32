@@ -125,10 +125,10 @@ public:
    * the single coordinated GATT commit, exposing the audio services and any
    * `BLEServer` services at once. This is the publish event: the table
    * freezes for the session afterwards. Create and configure every role (and
-   * any classic services) before calling it.
+   * any plain (non-audio) GATT services) before calling it.
    *
    * Calling it again after success is a no-op. The commit always runs, even
-   * with no staged audio roles: classic services and the broadcast engine
+   * with no staged audio roles: plain GATT services and the broadcast engine
    * still need the single GATT publish. Busy is transient (retryable) and
    * never poisons the controller; any other failure is terminal until end().
    *
