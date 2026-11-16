@@ -28,7 +28,10 @@
 
 // Optional: Add to top of your sketch: use a real IN endpoint for the CDC 0 notification instead of the fixed 0x85
 // (needed for notifyState() on ESP32-S2/S3; costs one IN endpoint). Default: false.
-#define TUSB_CDC_0_USE_NOTIFY() bool tud_cdc_0_use_notify() { return true; }
+#define TUSB_CDC_0_USE_NOTIFY() \
+  bool tud_cdc_0_use_notify() { \
+    return true;                \
+  }
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_CDC_EVENTS);
 
