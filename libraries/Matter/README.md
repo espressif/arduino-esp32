@@ -8,7 +8,7 @@ On SoCs with PSRAM initialized (SPIRAM heap present), the data model (endpoints,
 
 ## Partition scheme
 
-A Matter sketch is about 2.6 MB. In the Arduino IDE select **Tools → Partition Scheme → Matter 4MB with spiffs**. That scheme keeps a 3 MB application (about 0.4 MB free) and reserves `fctry` (24 KB factory NVS) and `esp_secure_cert` (8 KB). On 8 MB flash, **Matter 8MB with spiffs** provides two 3.25 MB application slots for OTA. **Huge APP (3MB No OTA/1MB SPIFFS)** stays in the menu: same 3 MB application, without the factory partitions. Enable **Erase All Flash Before Sketch Upload** when changing Matter configuration stored in `nvs`.
+A Matter sketch is about 2.6 MB. In the Arduino IDE select **Tools → Partition Scheme → Matter 4 MB with spiffs**. That scheme keeps a 3 MB application (about 0.4 MB free) and reserves `fctry` (24 KB factory NVS) and `esp_secure_cert` (8 KB). On 8 MB flash, **Matter 8 MB with spiffs** provides two 3.25 MB application slots for OTA. **Huge APP (3 MB No OTA/1 MB SPIFFS)** stays in the menu: same 3 MB application, without the factory partitions. Enable **Erase All Flash Before Sketch Upload** when changing Matter configuration stored in `nvs`.
 
 ## Architecture
 
