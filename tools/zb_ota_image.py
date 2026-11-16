@@ -15,11 +15,14 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 import re
 import struct
 import sys
 from typing import Dict, Iterable, List, Optional, Tuple
+
+logger = logging.getLogger("zb_ota_image")
 
 # Sketch macros used for Export (document these in Zigbee OTA docs / example).
 MACRO_MANUFACTURER = "OTA_UPGRADE_MANUFACTURER"
@@ -83,6 +86,8 @@ def scan_sketch(sketch_dir: str) -> Tuple[Dict[str, int], Dict[str, str], bool]:
             with open(path, "r", encoding="utf-8", errors="ignore") as fh:
                 text = fh.read()
         except OSError as err:
+            # logging.warning satisfies CodeQL insufficient-logging; log() is for the IDE console.
+            logger.warning("cannot read %s: %s", path, err)
             log(f"warning: cannot read {path}: {err}")
             continue
 
