@@ -10,6 +10,7 @@ on:
       - "tools/gen_esp32part.py"
       - "tools/gen_insights_package.py"
       - "tools/bin_signing.py"
+      - "tools/zb_ota_image.py"
 
 permissions:
   contents: write
@@ -49,6 +50,7 @@ jobs:
             tools/gen_esp32part.py
             tools/gen_insights_package.py
             tools/bin_signing.py
+            tools/zb_ota_image.py
 
       - name: List all changed files
         shell: bash

@@ -5,6 +5,7 @@
 #
 # Build a Zigbee OTA (.zigbee) image from an Arduino-ESP32 sketch firmware binary.
 # Intended for Sketch -> Export compiled Binary (see platform.txt postsavehex hook).
+# Windows uses tools/zb_ota_image.exe from build_py_tools.yml (same as espota / gen_esp32part).
 #
 # Soft-skip (exit 0) when:
 #   - Zigbee Mode is Disabled (empty --zigbee-mode)

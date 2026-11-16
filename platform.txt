@@ -25,7 +25,7 @@ tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_
 tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}\tools\gen_insights_package.exe"
 
 tools.zb_ota_image.cmd=python3 "{runtime.platform.path}/tools/zb_ota_image.py"
-tools.zb_ota_image.cmd.windows=python "{runtime.platform.path}\tools\zb_ota_image.py"
+tools.zb_ota_image.cmd.windows="{runtime.platform.path}\tools\zb_ota_image.exe"
 
 tools.configure_link_libs.cmd=/usr/bin/env bash "{runtime.platform.path}/tools/configure_link_libs.sh"
 tools.configure_link_libs.cmd.windows="{runtime.platform.path}\tools\configure_link_libs.cmd"
