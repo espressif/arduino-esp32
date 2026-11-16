@@ -1,0 +1,8 @@
+# Name,            Type, SubType, Offset,   Size,    Flags
+nvs,               data, nvs,     0x9000,   0x5000,
+otadata,           data, ota,     0xe000,   0x2000,
+app0,              app,  ota_0,   0x10000,  0x300000,
+spiffs,            data, spiffs,  0x310000, 0xD8000,
+fctry,             data, nvs,     0x3E8000, 0x6000,
+esp_secure_cert,   0x3F, 0,       0x3EE000, 0x2000, encrypted
+coredump,          data, coredump,0x3F0000, 0x10000,
