@@ -70,7 +70,11 @@ static struct {
   bool scanning;       /* a remote scan is active: report sources */
   uint8_t n_seen;      /* valid entries in seen[] */
   uint8_t seen_next;   /* ring write index */
-  uint32_t seen[MAX_SEEN]; /* broadcast IDs reported since the last scan start */
+  struct {
+    uint32_t id;
+    uint8_t addr[6];
+    uint8_t sid;
+  } seen[MAX_SEEN]; /* sources reported since the last scan start */
   ba_sync_t syncs[MAX_SYNCS]; /* local PA syncs, PAST candidates */
 } s_ba;
 
@@ -212,6 +216,21 @@ static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator
       return;
     }
   }
+  /* Evict the oldest entry: clear its served bit so a later request for the
+   * evicted Source_ID is served again instead of dropped forever. If the same
+   * ID is still tracked in another slot, keep it marked. */
+  {
+    const uint8_t evicted = row->ids[row->next];
+    const uint8_t ev_idx = evicted >> 3;
+    const uint8_t ev_bit = (uint8_t)(1u << (evicted & 7));
+    slot[ev_idx] &= (uint8_t)~ev_bit;
+    for (uint8_t i = 0; i < BA_PAST_IDS; i++) {
+      if (i != row->next && row->ids[i] == evicted) {
+        slot[ev_idx] |= ev_bit;
+        break;
+      }
+    }
+  }
   row->ids[row->next] = id;
   row->bcast[row->next] = bcast;
   row->next = (uint8_t)((row->next + 1) % BA_PAST_IDS);
@@ -245,7 +264,7 @@ static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator
   emit_result(conn->handle, err, BLE_AUDIO_BA_OP_PAST, id);
 }
 
-/** Record (or refresh) a local PA sync; silently ignored when all MAX_SYNCS slots are taken. */
+/** Record (or refresh) a local PA sync; logs and drops when all MAX_SYNCS slots are taken. */
 static void sync_add(uint16_t handle, const uint8_t addr[6], uint8_t sid) {
   ba_sync_t *free_slot = NULL;
   for (int i = 0; i < MAX_SYNCS; i++) {
@@ -263,6 +282,8 @@ static void sync_add(uint16_t handle, const uint8_t addr[6], uint8_t sid) {
     free_slot->sync_handle = handle;
     free_slot->sid = sid;
     bleAudioAddrFromGap(free_slot->addr, addr);
+  } else {
+    ESP_LOGW(TAG, "PA sync table full (%d entries); ignoring sync 0x%04x", MAX_SYNCS, handle);
   }
 }
 
@@ -298,7 +319,9 @@ static bool ba_ad_cb(uint8_t type, const uint8_t *data, uint8_t len, void *user)
 
 /**
  * Scan report: while a remote scan is active, report periodic advertisers
- * carrying a Broadcast Audio Announcement, each Broadcast_ID once.
+ * carrying a Broadcast Audio Announcement, each (address, SID, Broadcast_ID)
+ * once. The same Broadcast_ID from a different advertiser is a different
+ * source and must still be reported.
  */
 static void ba_on_scan(const esp_ble_audio_gap_app_event_t *ev) {
   if (!s_ba.scanning || ev->ext_scan_recv.data == NULL || ev->ext_scan_recv.per_adv_itvl == 0) {
@@ -310,19 +333,24 @@ static void ba_on_scan(const esp_ble_audio_gap_app_event_t *ev) {
   if (!p.has_id) {
     return;
   }
+  uint8_t addr_lsb[6];
+  bleAudioAddrFromGap(addr_lsb, ev->ext_scan_recv.addr.val);
   for (uint8_t i = 0; i < s_ba.n_seen; i++) {
-    if (s_ba.seen[i] == src.broadcast_id) {
+    if (s_ba.seen[i].id == src.broadcast_id && s_ba.seen[i].sid == ev->ext_scan_recv.sid &&
+        memcmp(s_ba.seen[i].addr, addr_lsb, 6) == 0) {
       return;
     }
   }
-  s_ba.seen[s_ba.seen_next] = src.broadcast_id;
+  s_ba.seen[s_ba.seen_next].id = src.broadcast_id;
+  memcpy(s_ba.seen[s_ba.seen_next].addr, addr_lsb, 6);
+  s_ba.seen[s_ba.seen_next].sid = ev->ext_scan_recv.sid;
   s_ba.seen_next = (uint8_t)((s_ba.seen_next + 1) % MAX_SEEN);
   if (s_ba.n_seen < MAX_SEEN) {
     s_ba.n_seen++;
   }
 
   src.addr_type = ev->ext_scan_recv.addr.type;
-  bleAudioAddrFromGap(src.addr, ev->ext_scan_recv.addr.val);
+  memcpy(src.addr, addr_lsb, 6);
   src.sid = ev->ext_scan_recv.sid;
   src.rssi = ev->ext_scan_recv.rssi;
   src.pa_interval = ev->ext_scan_recv.per_adv_itvl;

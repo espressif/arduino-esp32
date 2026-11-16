@@ -955,6 +955,7 @@ static bool tbs_copy_schemes(char *dst, size_t cap, const char *src) {
   if (dst == NULL || cap == 0) {
     return false;
   }
+  dst[0] = '\0';
   for (const char *p = src; p && *p; p++) {
     if (*p == ' ' || *p == '\t') {
       continue;
@@ -965,13 +966,15 @@ static bool tbs_copy_schemes(char *dst, size_t cap, const char *src) {
     }
     if (need_comma) {
       if (n + 1 >= cap) {
-        return n > 0;
+        dst[n] = '\0';
+        return true;
       }
       dst[n++] = ',';
       need_comma = false;
     }
     if (n + 1 >= cap) {
-      return n > 0;
+      dst[n] = '\0';
+      return true;
     }
     dst[n++] = *p;
   }
@@ -1030,7 +1033,12 @@ int bleAudioCcpSrvInit(const char *provider_name, const char *uci, const char *u
   }
   /* Own the strings (see the buffers above) and sanitize the scheme list so
    * user input like "tel," can never produce a wire-visible ",," or trailing
-   * "," after the IDF patch appends its internal separator. */
+   * "," after the IDF patch appends its internal separator. Reject over-long
+   * inputs instead of silently truncating (UCI must match exactly for
+   * discovery; a truncated provider name would misidentify the bearer). */
+  if (strlen(provider_name) >= sizeof(s_tbs_provider) || strlen(uci) >= sizeof(s_tbs_uci)) {
+    return ESP_ERR_INVALID_ARG;
+  }
   snprintf(s_tbs_provider, sizeof(s_tbs_provider), "%s", provider_name);
   snprintf(s_tbs_uci, sizeof(s_tbs_uci), "%s", uci);
   if (!tbs_copy_schemes(s_tbs_schemes, sizeof(s_tbs_schemes), uri_schemes)) {
@@ -1089,7 +1097,7 @@ int bleAudioCcpSrvCallOp(uint8_t op, uint8_t call_index) {
 
 int bleAudioCcpSrvSetProviderName(const char *name) {
   NEED_ROLE(ROLE_CCP_SRV);
-  if (name == NULL || name[0] == '\0') {
+  if (name == NULL || name[0] == '\0' || strlen(name) >= sizeof(s_tbs_provider)) {
     return ESP_ERR_INVALID_ARG;
   }
   // Own the string like the register path: the caller may pass a temporary.
