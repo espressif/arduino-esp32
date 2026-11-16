@@ -61,8 +61,8 @@ enum class BLEAudioCallState : uint8_t {
 /**
  * @brief CCP Call Control Server (the phone side, GTBS).
  *
- * Created by BLEAudio::createCallServer() between audio.begin() and
- * audio.start(). The application drives the calls (incoming call, far end
+ * Created by BLEAudio::createCallServer() while the engine is active and
+ * before audio.start(). The application drives the calls (incoming call, far end
  * answered or hung up); connected controllers see every state change.
  * Copies of the handle control the same server; an empty handle does
  * nothing, and its BTStatus calls return InvalidState.
@@ -185,8 +185,8 @@ private:
 /**
  * @brief CCP Call Control Client (the headset side), bound to one peer.
  *
- * Created by BLEAudio::createCallController() between audio.begin() and
- * audio.start(). Operations are control point writes: OK means the write
+ * Created by BLEAudio::createCallController() while the engine is active and
+ * before audio.start(). Operations are control point writes: OK means the write
  * was queued, and the server's answer arrives through onResult; the
  * resulting state changes arrive through onCallState. Operations before
  * discover() return BTStatus::InvalidState.

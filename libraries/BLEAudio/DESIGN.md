@@ -68,9 +68,10 @@ See [Feature guards](#feature-guards).
   or a PCM callback) and `BLEAudioRecorder` (I2S or a PCM callback → LC3 encode
   → Tx streams), when the `esp_audio_codec` managed component is present.
 - **Re-initialization:** `audio.end()` runs `esp_ble_audio_common_deinit`, and
-  the next `audio.begin()` prepares the host (running `ble_gatts_reset()` on
+  the next initialization (explicit `audio.begin()` or the first factory's
+  lazy init) prepares the host (running `ble_gatts_reset()` on
   NimBLE when GAP is idle, or returning `Busy` if GAP/ACL is active), so
-  `audio.begin()` may run again in the same boot with a different set of roles.
+  roles may be created again in the same boot with a different set.
 - **Core-owned terminal teardown:** `BLE.end()` invokes the audio and raw-ISO
   pre-end hooks while the host is still running. It releases an active audio
   controller even when the sketch omitted `audio.end()` and releases a
@@ -87,7 +88,7 @@ See [Feature guards](#feature-guards).
 | **CSIP ordered access** | The coordinator discovers and locks set members. The commander runs ordered access (stack CSIP set type: lock, rank order, unlock) when `setCoordinated(true)` is set and every driven acceptor sits in one discovered set, else AD_HOC with a warning. The CAP initiator and handover always use AD_HOC. |
 | **BASS receive-state cleanup** | The Scan Delegator does not remove stale receive states on its own; the assistant must remove them. |
 | **One PA sync at a time** | The broadcast sink follows one source; an assistant request is refused while a PA sync is in use. |
-| **GATT frozen after `start()`** | Roles that register services must be created before `audio.start()`; swapping roles needs `audio.end()` → `audio.begin()`. Enforced on both backends (`InvalidState`): NimBLE freezes its single committed table, Bluedroid refuses new staging to keep the observable contract identical. |
+| **GATT frozen after `start()`** | Roles that register services must be created before `audio.start()`; swapping roles needs `audio.end()` then re-creation. Enforced on both backends (`InvalidState`): NimBLE freezes its single committed table, Bluedroid refuses new staging to keep the observable contract identical. |
 | **Standalone `BLEIso` CIS on Bluedroid** | The ISO transport adopts the physical ACL at GATTC CONNECT, independent of which GATTC app opened it; raw CIS may use a `BLEClient` ACL. LE Audio central links still use `audio.connect()` so the audio engine owns GATT discovery and security. |
 | **PACS supported contexts are boot-pinned** | The prebuilt stack publishes the first committed Supported Contexts value per boot and answers later sets with `-EALREADY`. Re-`begin()` with different contexts logs a warning and keeps serving the first value (available contexts stay live-updatable). |
 | **Preview status** | The LE Audio APIs are still marked preview in IDF. |
@@ -262,7 +263,7 @@ that `BLEAudioImplCommon::createStagedRole` and the role factories populate:
   stops them.
 - `handlers[]`: one event handler per event group.
 
-This "stage between `begin()` and `start()`, then commit once" model lets audio
+This "create roles, then commit once in start()" model lets audio
 profiles and a coexisting classic `BLEServer` land in **one** committed GATT
 table. See [`../BLE/DESIGN.md`](../BLE/DESIGN.md#service-staging-and-startup).
 
@@ -295,26 +296,29 @@ the headers and in [`README.md`](README.md).
 BLE.begin("Headset");                        // 1. host stack up
 BLEAudio audio = BLE.getAudioController();
 audio.setPresentationDelay(40000);           // 2. defaults, before creating roles
-audio.begin();                               // 3. host prep + engine common_init + event bridge
+// (no explicit audio.begin() needed: the first create*() initializes the engine;
+// call audio.begin() explicitly for early, checked initialization)
 
-BLEAudioCapAcceptor cap = audio.createCapAcceptor();   // 4. create + configure roles
+BLEAudioCapAcceptor cap = audio.createCapAcceptor();   // 3. create + configure roles
 cap.setSetSize(2).setRank(1);
 BLEAudioUnicastServer us = audio.createUnicastServer();
 us.configureHeadset();
 // (optionally) create/stage classic BLEServer services here too
 
-audio.start();                               // 5. run roleApplies, merged PACS, single GATT commit
-BLE.getAdvertising().start();                // 6. advertise
+audio.start();                               // 4. run roleApplies, merged PACS, single GATT commit
+BLE.getAdvertising().start();                // 5. advertise
 // ... runtime ...
-audio.end();                                 // 7. common_deinit (host stays up)
-BLE.end();                                   // 8. host teardown (also runs audio.end())
+audio.end();                                 // 6. common_deinit (host stays up)
+BLE.end();                                   // 7. host teardown (also runs audio.end())
 ```
 
 Invariants:
 
-- `create*()` before `begin()` or after `start()` logs an error and returns an
-  empty handle (except `createBroadcastSource()`, which registers no GATT
-  service and may be created after `start()`).
+- `create*()` initializes the engine lazily on first use (explicit `begin()`
+  is optional), and returns an empty handle when initialization fails or the
+  role is disabled. Creating a service-registering role after `start()` logs
+  an error and returns an empty handle (except `createBroadcastSource()`,
+  which registers no GATT service and may be created after `start()`).
 - Server-side configuration (stream counts, presets, locations, identity roles)
   is read by `start()`; changing it afterwards does not alter the registered
   services. Available audio contexts (`setAvailableContexts`) may change at
@@ -322,15 +326,16 @@ Invariants:
 - `audio.start()` is not retried after a failure: the first failing role
   (or PACS commit / engine start) leaves earlier registrations in place, so
   `start()` records the failure and a second call returns `InvalidState`.
-  Run `audio.end()`, fix the role set, then `begin()` again.
+  Run `audio.end()`, fix the role set, then create roles and `start()` again
+  (an explicit `begin()` first is optional).
 - `audio.end()` runs `roleStops`, disconnects every tracked ACL (NimBLE
   fallback clients on NimBLE, engine-owned GATTC links on Bluedroid — owning
   no link across deinit on either backend), stops leftover CAP/BAP
   transports, and waits for ISO channels to disconnect before
   `common_deinit`. Called from a stack callback, `end()` returns
   `BTStatus::Busy` immediately. If a CONNECTED ISO channel remains,
-  `end()` fails and retains ownership. After a successful `end()`, `begin()`
-  may run again in the same `BLE.begin()` session.
+  `end()` fails and retains ownership. After a successful `end()`, roles may
+  be created again (lazy re-initialization) in the same `BLE.begin()` session.
 - Every broadcast stop shares one 5 s `BLEAudioStopBudget` across its waits
   (start-resolve, engine stop, stopped event) instead of stacking three 5 s
   waits. When the budget expires with the transport live, the stop reports

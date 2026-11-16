@@ -192,6 +192,9 @@ void BLEAudioCallServer::resetCallbacks() {
 
 #if BLE_AUDIO_CCP_SERVER_SUPPORTED
 BLEAudioCallServer BLEAudio::createCallServer() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioCallServer();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioCallServer>(
     _impl, "createCallServer", BLE_AUDIO_GRP_CCP_SERVER, [](BLEAudioCallServer::Impl &p) { return p.apply(); }
   );
@@ -335,6 +338,9 @@ void BLEAudioCallController::resetCallbacks() {
 
 #if BLE_AUDIO_CCP_CLIENT_SUPPORTED
 BLEAudioCallController BLEAudio::createCallController() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioCallController();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioCallController>(
     _impl, "createCallController", BLE_AUDIO_GRP_CCP_CLIENT, [](BLEAudioCallController::Impl &) { return bleAudioStatus(bleAudioCcpCliInit()); }
   );

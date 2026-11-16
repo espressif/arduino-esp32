@@ -59,8 +59,8 @@ public:
   /**
    * @brief Create an empty server handle.
    *
-   * Get a live one from BLEAudio::createUnicastServer() between audio.begin()
-   * and audio.start(); the empty handle ignores every setter and reports an
+   * Get a live one from BLEAudio::createUnicastServer() while the engine is active and
+ * before audio.start(); the empty handle ignores every setter and reports an
    * empty stream from every stream().
    */
   BLEAudioUnicastServer();

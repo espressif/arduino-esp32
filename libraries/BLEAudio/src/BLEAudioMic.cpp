@@ -128,6 +128,9 @@ void BLEAudioMicDevice::resetCallbacks() {
 
 #if BLE_AUDIO_MICP_DEVICE_SUPPORTED
 BLEAudioMicDevice BLEAudio::createMicDevice() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioMicDevice();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioMicDevice>(
     _impl, "createMicDevice", BLE_AUDIO_GRP_MICP_DEVICE, [](BLEAudioMicDevice::Impl &s) {
       BTStatus st = bleAudioStatus(bleAudioMicpDevInit(s.muteState.load() == BLE_AUDIO_MICP_MUTED));
@@ -353,6 +356,9 @@ void BLEAudioMicController::resetCallbacks() {
 
 #if BLE_AUDIO_MICP_CONTROLLER_SUPPORTED
 BLEAudioMicController BLEAudio::createMicController() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioMicController();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioMicController>(
     _impl, "createMicController", BLE_AUDIO_GRP_MICP_CONTROLLER, [](BLEAudioMicController::Impl &) {
       return bleAudioStatus(bleAudioMicpCtlrInit());

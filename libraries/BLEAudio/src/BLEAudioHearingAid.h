@@ -45,8 +45,8 @@ enum class BLEHearingAidType : uint8_t {
 /**
  * @brief HAP Hearing Aid (HAS server).
  *
- * Created by BLEAudio::createHearingAidDevice() between audio.begin() and
- * audio.start(). Copies of the handle control the same device; an empty
+ * Created by BLEAudio::createHearingAidDevice() while the engine is active and
+ * before audio.start(). Copies of the handle control the same device; an empty
  * handle does nothing, and its BTStatus calls return InvalidState.
  */
 class BLEAudioHearingAidDevice {
@@ -147,8 +147,8 @@ private:
 /**
  * @brief HAP Hearing Aid Unicast Client (HAS client), bound to one peer.
  *
- * Created by BLEAudio::createHearingAidController() between audio.begin()
- * and audio.start(). Requests are GATT operations: OK means the request was
+ * Created by BLEAudio::createHearingAidController() while the engine is active and
+ * before audio.start(). Requests are GATT operations: OK means the request was
  * queued, and the answer arrives through onPreset / onPresetSwitch.
  * Requests fail until discover() has bound a peer.
  */

@@ -453,9 +453,8 @@ void BLEAudioBroadcastAssistant::resetCallbacks() {
 
 #if BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED
 BLEAudioBroadcastAssistant BLEAudio::createBroadcastAssistant() {
-  if (!_impl || !_impl->active) {
-    log_e("createBroadcastAssistant(): call after audio.begin()");
-    return BLEAudioBroadcastAssistant();
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioBroadcastAssistant();  // begin() already logged the cause
   }
   auto ba = std::make_shared<BLEAudioBroadcastAssistant::Impl>();
   ba->audio = _impl;

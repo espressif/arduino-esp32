@@ -184,6 +184,9 @@ void BLEAudioHearingAidDevice::resetCallbacks() {
 
 #if BLE_AUDIO_HAS_SUPPORTED
 BLEAudioHearingAidDevice BLEAudio::createHearingAidDevice() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioHearingAidDevice();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioHearingAidDevice>(
     _impl, "createHearingAidDevice", BLE_AUDIO_GRP_HAS_SERVER, [](BLEAudioHearingAidDevice::Impl &s) { return s.apply(); }
   );
@@ -331,6 +334,9 @@ void BLEAudioHearingAidController::resetCallbacks() {
 
 #if BLE_AUDIO_HAS_CLIENT_SUPPORTED
 BLEAudioHearingAidController BLEAudio::createHearingAidController() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioHearingAidController();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioHearingAidController>(
     _impl, "createHearingAidController", BLE_AUDIO_GRP_HAS_CLIENT, [](BLEAudioHearingAidController::Impl &) { return bleAudioStatus(bleAudioHasCliInit()); }
   );

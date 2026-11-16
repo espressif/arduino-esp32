@@ -174,6 +174,9 @@ void BLEAudioTmap::resetCallbacks() {
 
 #if BLE_AUDIO_TMAP_SUPPORTED
 BLEAudioTmap BLEAudio::createTmap() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioTmap();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioTmap>(_impl, "createTmap", BLE_AUDIO_GRP_TMAP, [](BLEAudioTmap::Impl &t) { return t.apply(); });
 }
 #endif
@@ -320,6 +323,9 @@ void BLEAudioGmap::resetCallbacks() {
 
 #if BLE_AUDIO_GMAP_SUPPORTED
 BLEAudioGmap BLEAudio::createGmap() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioGmap();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioGmap>(_impl, "createGmap", BLE_AUDIO_GRP_GMAP, [](BLEAudioGmap::Impl &g) { return g.apply(); });
 }
 #endif

@@ -1328,8 +1328,11 @@ BTStatus applyCapInitiator() {
 #if BLE_AUDIO_CAP_INITIATOR_SUPPORTED
 /** One Impl serves both the CAP_INITIATOR and CAP_HANDOVER groups; the handover route skips core events. */
 BLEAudioCapInitiator BLEAudio::createCapInitiator() {
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("CapInitiator: create between audio.begin() and audio.start()");
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioCapInitiator();  // begin() already logged the cause
+  }
+  if (_impl->started) {
+    log_e("CapInitiator: create before audio.start()");
     return BLEAudioCapInitiator();
   }
   auto i = std::make_shared<BLEAudioCapInitiator::Impl>();
@@ -1362,8 +1365,11 @@ BLEAudioCapInitiator BLEAudio::createCapInitiator() {
 
 #if BLE_AUDIO_CAP_COMMANDER_SUPPORTED
 BLEAudioCapCommander BLEAudio::createCapCommander() {
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("CapCommander: create between audio.begin() and audio.start()");
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioCapCommander();  // begin() already logged the cause
+  }
+  if (_impl->started) {
+    log_e("CapCommander: create before audio.start()");
     return BLEAudioCapCommander();
   }
   auto c = std::make_shared<BLEAudioCapCommander::Impl>();

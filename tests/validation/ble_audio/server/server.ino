@@ -1548,7 +1548,16 @@ void loop() {
             audio.end();
             BTStatus second = audio.end();
             endTwice = (second == BTStatus::OK || second == BTStatus::InvalidState) ? 1 : 0;
-            endRebegin = audio.begin() ? 1 : 0;
+            // Lazy init: no begin() — the factory must initialize the engine
+            // (isActive) and start() must commit without it.
+            endRebegin = 0;
+            {
+              BLEAudioBroadcastSource lazy = audio.createBroadcastSource();
+              if (lazy && audio.isActive()) {
+                lazy.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(1).setName(serverName);
+                endRebegin = audio.start() ? 1 : 0;
+              }
+            }
             audio.end();
           }
         }

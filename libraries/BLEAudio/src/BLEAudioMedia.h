@@ -63,8 +63,8 @@ enum class BLEAudioMediaCommand : uint8_t {
 /**
  * @brief MCP Media Player (GMCS server).
  *
- * Created by BLEAudio::createMediaPlayer() between audio.begin() and
- * audio.start(). Copies of the handle control the same player; an empty
+ * Created by BLEAudio::createMediaPlayer() while the engine is active and
+ * before audio.start(). Copies of the handle control the same player; an empty
  * handle does nothing, and its BTStatus calls return InvalidState.
  */
 class BLEAudioMediaPlayer {
@@ -149,8 +149,8 @@ private:
 /**
  * @brief MCP Media Controller (client of one peer's GMCS).
  *
- * Created by BLEAudio::createMediaController() between audio.begin() and
- * audio.start(). Commands and reads are GATT operations: OK means the
+ * Created by BLEAudio::createMediaController() while the engine is active and
+ * before audio.start(). Commands and reads are GATT operations: OK means the
  * request was queued, and the answer arrives through the matching
  * callback. Requests before discover() return BTStatus::InvalidState.
  *

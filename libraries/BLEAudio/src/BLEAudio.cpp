@@ -218,6 +218,13 @@ BLEAudio::operator bool() const {
   return _impl != nullptr;
 }
 
+BTStatus BLEAudio::ensureActive() {
+  if (_impl && _impl->active) {
+    return BTStatus::OK;
+  }
+  return begin();
+}
+
 BTStatus BLEAudio::begin() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!BLE.isInitialized() || BLE.isEnding()) {
@@ -258,9 +265,10 @@ BTStatus BLEAudio::begin() {
 
 BTStatus BLEAudio::start() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!impl.active || !BLE.isInitialized() || BLE.isEnding()) {
-    log_e("Audio: start() before begin()");
-    return BTStatus::InvalidState;
+  BTStatus ens = ensureActive();
+  if (ens != BTStatus::OK) {
+    log_e("Audio: start() without an initialized engine (%s)", ens.toString());
+    return ens;
   }
   if (impl.started) {
     return BTStatus::OK;

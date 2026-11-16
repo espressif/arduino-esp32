@@ -761,8 +761,11 @@ void BLEAudioBroadcastSink::resetCallbacks() {
 /** The sink registers PACS (and BASS), so it must exist before the GATT commit in start(). */
 #if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
 BLEAudioBroadcastSink BLEAudio::createBroadcastSink() {
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("BroadcastSink: create between audio.begin() and audio.start()");
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioBroadcastSink();  // begin() already logged the cause
+  }
+  if (_impl->started) {
+    log_e("BroadcastSink: create before audio.start()");
     return BLEAudioBroadcastSink();
   }
   auto sink = std::make_shared<BLEAudioBroadcastSink::Impl>();

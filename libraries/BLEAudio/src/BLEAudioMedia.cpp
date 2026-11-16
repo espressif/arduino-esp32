@@ -169,6 +169,9 @@ void BLEAudioMediaPlayer::resetCallbacks() {
 
 #if BLE_AUDIO_MCP_SERVER_SUPPORTED
 BLEAudioMediaPlayer BLEAudio::createMediaPlayer() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioMediaPlayer();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioMediaPlayer>(
     _impl, "createMediaPlayer", BLE_AUDIO_GRP_MCP_SERVER, [](BLEAudioMediaPlayer::Impl &s) { return s.apply(); }
   );
@@ -362,6 +365,9 @@ void BLEAudioMediaController::resetCallbacks() {
 
 #if BLE_AUDIO_MCP_CLIENT_SUPPORTED
 BLEAudioMediaController BLEAudio::createMediaController() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioMediaController();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioMediaController>(
     _impl, "createMediaController", BLE_AUDIO_GRP_MCP_CLIENT, [](BLEAudioMediaController::Impl &) { return bleAudioStatus(bleAudioMcpCliInit()); }
   );

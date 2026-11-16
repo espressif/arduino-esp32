@@ -38,7 +38,7 @@ Requirements
 Lifecycle: two starts
 ----------------------
 
-LE Audio has two separate starts, and sketches always use this order:
+LE Audio separates configuration from the transport, and sketches always use this order:
 
 .. code-block:: cpp
 
@@ -48,7 +48,6 @@ LE Audio has two separate starts, and sketches always use this order:
     void setup() {
         BLE.begin("My speaker");
         BLEAudio audio = BLE.getAudioController();
-        audio.begin();
 
         BLEAudioUnicastServer server = audio.createUnicastServer();
         server.configureMediaSink();
@@ -60,17 +59,17 @@ LE Audio has two separate starts, and sketches always use this order:
     }
 
 1. ``BLE.begin()`` -- bring up the Bluetooth host.
-2. ``audio.begin()`` -- initialize the LE Audio engine.
-3. Create and configure roles (``createUnicastServer()``, ``createCapAcceptor()``,
-   ``createBroadcastSink()``, ...). All factories must be called between
-   ``audio.begin()`` and ``audio.start()`` and return an empty handle when the role
-   is disabled or creation failed — check with ``if (server)``.
-4. ``audio.start()`` -- register the roles and commit their GATT services. This does
+2. Create and configure roles (``createUnicastServer()``, ``createCapAcceptor()``,
+   ``createBroadcastSink()``, ...). The first factory initializes the engine
+   lazily; call ``audio.begin()`` explicitly beforehand for early, checked
+   initialization. Factories return an empty handle when the engine cannot
+   initialize or the role is disabled — check with ``if (server)``.
+3. ``audio.start()`` -- register the roles and commit their GATT services. This does
    **not** open I2S or start an LC3 task.
-5. Configure the PCM side **after** ``audio.start()``: ``player.begin(...)`` then
+4. Configure the PCM side **after** ``audio.start()``: ``player.begin(...)`` then
    ``player.attach(stream)`` and ``player.startPlayback()`` (or ``recorder.begin(...)``,
    ``recorder.attach(stream)`` and ``recorder.startCapture()``).
-6. Start the transport: advertising, ``source.start()``, ``sink.start()``, or connect
+5. Start the transport: advertising, ``source.start()``, ``sink.start()``, or connect
    to a peer. For unicast, the stream is configured later by the remote client, so
    ``attach()``/``startPlayback()`` also happen in the stream's ``onConfigured()``
    callback.
@@ -257,7 +256,8 @@ Errors and callbacks
 --------------------
 
 Configuration methods return ``BTStatus`` synchronously: ``InvalidParam`` for a bad value,
-``InvalidState`` before ``audio.begin()``/``audio.start()`` or while a role is running, and
+``InvalidState`` when the engine cannot initialize, before ``audio.start()`` or while a
+role is running, and
 the stack status when a request cannot be queued. Where a profile defines a completion
 callback (``onResult()``, ``onError()``, ``onHandover()``, ``onSyncFailed()``, ...), an
 asynchronous failure is reported there.

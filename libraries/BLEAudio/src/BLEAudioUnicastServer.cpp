@@ -291,8 +291,11 @@ BLEAudioStream BLEAudioUnicastServer::stream(BLEAudioStream::Direction dir, uint
  */
 #if BLE_AUDIO_UNICAST_SERVER_SUPPORTED
 BLEAudioUnicastServer BLEAudio::createUnicastServer() {
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("UnicastServer: create between audio.begin() and audio.start()");
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioUnicastServer();  // begin() already logged the cause
+  }
+  if (_impl->started) {
+    log_e("UnicastServer: create before audio.start()");
     return BLEAudioUnicastServer();
   }
   auto srv = std::make_shared<BLEAudioUnicastServer::Impl>();

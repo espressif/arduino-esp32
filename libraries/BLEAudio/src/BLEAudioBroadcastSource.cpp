@@ -600,9 +600,8 @@ void BLEAudioBroadcastSource::resetCallbacks() {
  */
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
 BLEAudioBroadcastSource BLEAudio::createBroadcastSource() {
-  if (!_impl || !_impl->active) {
-    log_e("BroadcastSource: create after audio.begin()");
-    return BLEAudioBroadcastSource();
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioBroadcastSource();  // begin() already logged the cause
   }
   auto src = std::make_shared<BLEAudioBroadcastSource::Impl>();
   src->audio = _impl;

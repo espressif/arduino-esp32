@@ -432,8 +432,11 @@ void BLEAudioCoordinatedSetCoordinator::resetCallbacks() {
 
 #if BLE_AUDIO_CSIP_MEMBER_SUPPORTED
 BLEAudioCoordinatedSetMember BLEAudio::createCoordinatedSetMember() {
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("CoordinatedSet: create the member between audio.begin() and audio.start()");
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioCoordinatedSetMember();  // begin() already logged the cause
+  }
+  if (_impl->started) {
+    log_e("CoordinatedSet: create before audio.start()");
     return BLEAudioCoordinatedSetMember();
   }
   return BLEAudioCoordinatedSetMember(makeMember(_impl, false));
@@ -442,8 +445,11 @@ BLEAudioCoordinatedSetMember BLEAudio::createCoordinatedSetMember() {
 
 #if BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED
 BLEAudioCapAcceptor BLEAudio::createCapAcceptor() {
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("CapAcceptor: create between audio.begin() and audio.start()");
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioCapAcceptor();  // begin() already logged the cause
+  }
+  if (_impl->started) {
+    log_e("CapAcceptor: create before audio.start()");
     return BLEAudioCapAcceptor();
   }
   return BLEAudioCapAcceptor(makeMember(_impl, true));
@@ -452,8 +458,11 @@ BLEAudioCapAcceptor BLEAudio::createCapAcceptor() {
 
 #if BLE_AUDIO_CSIP_COORDINATOR_SUPPORTED
 BLEAudioCoordinatedSetCoordinator BLEAudio::createCoordinatedSetCoordinator() {
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("CoordinatedSet: create the coordinator between audio.begin() and audio.start()");
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioCoordinatedSetCoordinator();  // begin() already logged the cause
+  }
+  if (_impl->started) {
+    log_e("CoordinatedSet: create before audio.start()");
     return BLEAudioCoordinatedSetCoordinator();
   }
   auto c = std::make_shared<BLEAudioCoordinatedSetCoordinator::Impl>();

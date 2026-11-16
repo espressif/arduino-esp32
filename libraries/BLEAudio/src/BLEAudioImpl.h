@@ -94,7 +94,7 @@ struct BLEAudioImplCommon {
     const std::shared_ptr<AudioImpl> &audio, const char *factoryName, ble_audio_evt_group_t group, ApplyFn &&apply
   ) {
     if (!audio || !audio->active || audio->started) {
-      log_e("%s(): call between audio.begin() and audio.start()", factoryName);
+      log_e("%s(): call before audio.start() with an inactive engine", factoryName);
       return Handle();
     }
     auto role = std::make_shared<typename Handle::Impl>();

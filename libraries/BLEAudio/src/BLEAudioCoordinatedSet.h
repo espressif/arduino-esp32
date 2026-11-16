@@ -62,8 +62,8 @@ static constexpr size_t BLE_AUDIO_RSI_SIZE = 6;    ///< Octets in an RSI.
 /**
  * @brief CSIP Set Member (CSIS server).
  *
- * Created by BLEAudio::createCoordinatedSetMember() between audio.begin()
- * and audio.start(), which registers it.
+ * Created by BLEAudio::createCoordinatedSetMember() while the engine is active and
+ * before audio.start(), which registers it.
  */
 class BLEAudioCoordinatedSetMember {
 public:
@@ -169,8 +169,8 @@ struct BLEAudioCoordinatedSetInfo {
 /**
  * @brief CSIP Set Coordinator (CSIP client).
  *
- * Created by BLEAudio::createCoordinatedSetCoordinator() between
- * audio.begin() and audio.start().
+ * Created by BLEAudio::createCoordinatedSetCoordinator() while the engine
+ * is active and before audio.start().
  */
 class BLEAudioCoordinatedSetCoordinator {
 public:

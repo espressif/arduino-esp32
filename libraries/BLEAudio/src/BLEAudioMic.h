@@ -37,8 +37,8 @@ class BLEAudio;
 /**
  * @brief MICP Microphone Device (Microphone Control Service server).
  *
- * Created by BLEAudio::createMicDevice() between audio.begin() and
- * audio.start(). Copies of the handle control the same device; an empty
+ * Created by BLEAudio::createMicDevice() while the engine is active and
+ * before audio.start(). Copies of the handle control the same device; an empty
  * handle does nothing, and its BTStatus calls return InvalidState.
  */
 class BLEAudioMicDevice {
@@ -116,8 +116,8 @@ private:
 /**
  * @brief MICP Microphone Controller (client of one device at a time).
  *
- * Created by BLEAudio::createMicController() between audio.begin() and
- * audio.start(). Commands are GATT writes: OK means the write was queued.
+ * Created by BLEAudio::createMicController() while the engine is active and
+ * before audio.start(). Commands are GATT writes: OK means the write was queued.
  * Success arrives as onMuteChanged / onInputChanged; a rejected write arrives
  * as onResult and changes nothing. Cached state is cleared on disconnect.
  * Commands before discover() return BTStatus::InvalidState. Only the first

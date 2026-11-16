@@ -168,6 +168,9 @@ void BLEAudioVolumeRenderer::resetCallbacks() {
 
 #if BLE_AUDIO_VCP_RENDERER_SUPPORTED
 BLEAudioVolumeRenderer BLEAudio::createVolumeRenderer() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioVolumeRenderer();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioVolumeRenderer>(
     _impl, "createVolumeRenderer", BLE_AUDIO_GRP_VCP_RENDERER, [](BLEAudioVolumeRenderer::Impl &s) {
       return bleAudioStatus(bleAudioVcpRendInit(s.volume.load(), s.muted.load(), s.step.load()));
@@ -442,6 +445,9 @@ void BLEAudioVolumeController::resetCallbacks() {
 
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
 BLEAudioVolumeController BLEAudio::createVolumeController() {
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioVolumeController();  // begin() already logged the cause
+  }
   return BLEAudioImplCommon::createStagedRole<BLEAudioVolumeController>(
     _impl, "createVolumeController", BLE_AUDIO_GRP_VCP_CONTROLLER, [](BLEAudioVolumeController::Impl &) {
       return bleAudioStatus(bleAudioVcpCtlrInit());

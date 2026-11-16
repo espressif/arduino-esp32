@@ -63,8 +63,8 @@ class BLEAudio;
 /**
  * @brief CAP Acceptor: CAS with an included CSIS instance.
  *
- * Created by BLEAudio::createCapAcceptor() between audio.begin() and
- * audio.start(); the set configuration is registered by start(). The audio
+ * Created by BLEAudio::createCapAcceptor() while the engine is active and
+ * before audio.start(); the set configuration is registered by start(). The audio
  * itself flows through the BAP roles the sketch creates next to it.
  */
 class BLEAudioCapAcceptor {

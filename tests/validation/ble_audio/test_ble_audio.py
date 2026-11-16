@@ -734,7 +734,7 @@ def _phase_start_retry(server, client):
     if end_twice >= 0:
         assert end_from_cb == -12, f"end() from a stack callback did not refuse with Busy (rc={end_from_cb})"
         assert end_twice == 1, "double end() did not leave a clean state"
-        assert end_rebegin == 1, "begin() after double end() did not recover"
+        assert end_rebegin == 1, "lazy init after double end() did not recover (factory + start without begin)"
     return True
 
 

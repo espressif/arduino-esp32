@@ -549,8 +549,11 @@ void BLEAudioUnicastClient::resetCallbacks() {
  */
 #if BLE_AUDIO_UNICAST_CLIENT_SUPPORTED
 BLEAudioUnicastClient BLEAudio::createUnicastClient() {
-  if (!_impl || !_impl->active || _impl->started) {
-    log_e("UnicastClient: create between audio.begin() and audio.start()");
+  if (ensureActive() != BTStatus::OK) {
+    return BLEAudioUnicastClient();  // begin() already logged the cause
+  }
+  if (_impl->started) {
+    log_e("UnicastClient: create before audio.start()");
     return BLEAudioUnicastClient();
   }
   auto cli = std::make_shared<BLEAudioUnicastClient::Impl>();
