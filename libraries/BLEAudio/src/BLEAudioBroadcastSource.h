@@ -39,7 +39,7 @@
  * @code
  * BLEAudioBroadcastSource source = audio.createBroadcastSource();
  * source.setPreset(BLEAudioCodecPreset::LC3_48_4_1).setChannels(2).setName("Living room");
- * audio.start();
+ * audio.begin();
  * source.start();
  * @endcode
  */
@@ -160,14 +160,14 @@ public:
    * @param preset   Codec/QoS preset. Default LC3_48_2_1: 48 kHz music, the
    *                 usual Auracast quality.
    *
-   * Call it before start(). Encryption stays opt-in: call
+   * Call it before the commit (audio.begin()). Encryption stays opt-in: call
    * setBroadcastCode() separately. Individual setters can still override any
    * field afterwards.
    */
   BLEAudioBroadcastSource &configureAuracast(const String &name, uint8_t channels = 2,
                                              BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_48_2_1);
 
-  // --- Control (after audio.start()) ---
+  // --- Control (after audio.begin()) ---
 
   /**
    * @brief Start advertising and create the BIG (non-blocking; onStarted() follows).
@@ -180,7 +180,7 @@ public:
    *                    legacy instance). Default 0 is the first user set;
    *                    1 is the legacy instance on targets with only two
    *                    extended slots (e.g. ESP32-S31).
-   * @return BTStatus::OK when started; InvalidState before audio.start(),
+   * @return BTStatus::OK when started; InvalidState before audio.begin(),
    *         while streaming or without streams; another error when creating
    *         the source or the advertising failed.
    */

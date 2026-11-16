@@ -206,7 +206,7 @@ void loop() {
   // Phase 1: LE Audio lifecycle + classic-service coexistence. Tears down and
   // re-begins BLE for a clean stack, brings up the LE Audio engine
   // (common_init), stages a plain custom GATT service, then performs the single
-  // coordinated commit (common_start via audio.start()) so the classic service
+  // coordinated commit (common_start via audio.begin()) so the classic service
   // and the audio profiles live in one attribute table. Self-skips when the LE
   // Audio engine is not compiled in. Restores a normal stack afterward so the
   // memory_release phase still measures a meaningful free.
@@ -256,8 +256,7 @@ void loop() {
           audio.onDisconnected([&pureDown](uint16_t) {
             pureDown.store(true);
           });
-          BTStatus pb = audio.begin();
-          BLEAudioVolumeRenderer vrTmp = audio.createVolumeRenderer();
+          BLEAudioVolumeRenderer vrTmp = audio.createVolumeRenderer();  // lazy init
           BLEAudioVolumeRenderer vr(std::move(vrTmp));
           vr.setInitialVolume(42);
           vr.onStateChanged([&pureVol](uint8_t v, bool) {
@@ -265,7 +264,7 @@ void loop() {
               pureVol.fetch_add(1);
             }
           });
-          BTStatus ps = pb ? audio.start() : BTStatus::Fail;
+          BTStatus ps = vr ? audio.begin() : BTStatus::Fail;
           preAdv.reset();
           preAdv.setType(BLEAdvType::ConnectableScannable);
           preAdv.setName(serverName);
@@ -297,16 +296,16 @@ void loop() {
         Serial.printf("[SERVER] Audio purePeriph link=1 vol=1 disc=1 end=1 busyGuard=%d\n", (int)busyGuardOk);
 #endif
 
-        // 1c) Same-host audio.end() -> audio.begin() -> audio.start() without
+        // 1c) Same-host audio.end() -> re-create -> audio.begin() without
         // BLE.end(), plus fast audio.end() (< 1 s, no 5 s stall) after a
         // locally rejected BroadcastSource::start(255).
         bool sameHostOk = false;
         {
-          BTStatus sb = audio.begin();
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
-          BLEAudioBroadcastSource failSrc = audio.createBroadcastSource();
+          BLEAudioBroadcastSource failSrc = audio.createBroadcastSource();  // lazy init
 #endif
-          BTStatus ss = sb ? audio.start() : BTStatus::Fail;
+          BTStatus sb = audio.isActive() ? BTStatus::OK : BTStatus::Fail;
+          BTStatus ss = sb ? audio.begin() : BTStatus::Fail;
           bool badStartRejected = true;
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
           badStartRejected = ss && !failSrc.start(255);
@@ -324,11 +323,16 @@ void loop() {
         // 1d) Third audio.begin() in the same BLE.begin() session, now with
         // classic BLEServer coexistence and callback-safe BLE.end().
         audio.setPresentationDelay(40000);
-        BTStatus ab = audio.begin();
-        Serial.printf("[SERVER] Audio begin: %s\n", ab.toString());
+        // (no explicit begin: the role below triggers lazy init; the single
+        // audio.begin() commits everything)
+        // An audio role first: lazy engine init must precede classic staging
+        // so the services stage into the coordinated (audio-owned) table
+        // instead of publishing standalone.
+        BLEAudioVolumeRenderer coexVol = audio.createVolumeRenderer();
+        coexVol.setInitialVolume(100);
 
         // Coexistence: a plain custom service staged alongside the audio
-        // profiles; both are committed by the single audio.start() below.
+        // profiles; both are committed by the single audio.begin() below.
         BLEServer srv = BLE.createServer();
         BLEService coexSvc = srv.createService(AUDIO_COEX_SVC_UUID);
         BLECharacteristic coexChr =
@@ -349,8 +353,8 @@ void loop() {
         BTStatus secondStage = srv.start();
         Serial.printf("[SERVER] Audio GATT staging first=%d second=%d\n", firstStage ? 1 : 0, secondStage ? 1 : 0);
 
-        BTStatus astart = audio.start();  // single coordinated ble_gatts_start()
-        Serial.printf("[SERVER] Audio start: %s\n", astart.toString());
+        BTStatus ab = audio.begin();  // single coordinated ble_gatts_start()
+        Serial.printf("[SERVER] Audio begin: %s\n", ab.toString());
         Serial.printf("[SERVER] Audio active: %d\n", audio.isActive() ? 1 : 0);
         Serial.printf("[SERVER] Audio preset delay: %lu\n", (unsigned long)audio.getPresentationDelay());
 
@@ -411,21 +415,24 @@ void loop() {
         // Re-initialize both BLE and audio after callback-safe terminal
         // teardown, using a different role set.
         BTStatus bleRebegin = BLE.begin(serverName);
-        BTStatus rb = bleRebegin ? audio.begin() : BTStatus::Fail;
+        BTStatus rb = BTStatus::Fail;
         BTStatus rs = BTStatus::Fail;
         BTStatus aend = BTStatus::Fail;
-        if (rb) {
-          BLEAudioBroadcastSource reSrc = audio.createBroadcastSource();
+        if (bleRebegin) {
+          BLEAudioBroadcastSource reSrc = audio.createBroadcastSource();  // lazy init
           reSrc.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
-          rs = audio.start();
-          aend = audio.end();
+          rb = (reSrc && audio.isActive()) ? BTStatus::OK : BTStatus::Fail;
+          if (rb) {
+            rs = audio.begin();  // commit
+            aend = audio.end();
+          }
         }
         Serial.printf("[SERVER] Audio reinit begin=%d start=%d\n", rb ? 1 : 0, rs ? 1 : 0);
-        if (purePeriphOk && sameHostOk && ab && firstStage && secondStage && astart && gattGuarded && advStart && activeEnded && admissionClosed && rb && rs && aend) {
+        if (purePeriphOk && sameHostOk && ab && firstStage && secondStage && gattGuarded && advStart && activeEnded && admissionClosed && rb && rs && aend) {
           Serial.println("[SERVER] Audio lifecycle OK");
         } else {
           Serial.printf(
-            "[SERVER] Audio lifecycle FAILED begin=%d start=%d end=%d\n", ab ? 1 : 0, astart ? 1 : 0, aend ? 1 : 0
+            "[SERVER] Audio lifecycle FAILED begin=%d end=%d\n", ab ? 1 : 0, aend ? 1 : 0
           );
         }
       }
@@ -635,7 +642,7 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         audio.onLinkReady([](uint16_t conn) {
           bapSrvConn = conn;
           bapSrvLinkDown = false;
@@ -643,14 +650,9 @@ void loop() {
         audio.onDisconnected([](uint16_t) {
           bapSrvLinkDown = true;
         });
-        // Classic server contributes a marker service to the same GATT table.
-        BLEServer srv = BLE.createServer();
-        srv.advertiseOnDisconnect(true);
-        BLEService svc = srv.createService(SERVICE_UUID);
-        auto ch = svc.createCharacteristic(RW_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
-        ch.setValue("bap");
-        srv.start();  // stages in audio mode
-
+        // An audio role first: lazy engine init must precede classic staging
+        // so the marker service stages into the coordinated (audio-owned)
+        // table instead of publishing standalone.
         BLEAudioUnicastServer us = audio.createUnicastServer();
         us.setSinkStreams(1).setSourceStreams(1).setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
         for (size_t i = 0; i < us.streamCount(); i++) {
@@ -660,8 +662,15 @@ void loop() {
             }
           });
         }
+        // Classic server contributes a marker service to the same GATT table.
+        BLEServer srv = BLE.createServer();
+        srv.advertiseOnDisconnect(true);
+        BLEService svc = srv.createService(SERVICE_UUID);
+        auto ch = svc.createCharacteristic(RW_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+        ch.setValue("bap");
+        srv.start();  // stages in audio mode
 
-        if (audio.start()) {
+        if (audio.begin()) {
           BLEAdvertising adv = BLE.getAdvertising();
           adv.reset();
           adv.setType(BLEAdvType::ConnectableScannable);
@@ -722,7 +731,7 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
         source.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setBroadcastId(0x123456).setName(serverName);
         source.onStarted([&bcStreaming]() {
@@ -731,7 +740,7 @@ void loop() {
         source.onStopped([&bcStreaming](uint8_t) {
           bcStreaming = false;
         });
-        if (audio.start() && source.start()) {
+        if (audio.begin() && source.start()) {
           Serial.println("[SERVER] BapBroadcast ready");
           beginPhaseWait();
           unsigned long deadline = millis() + 40000;
@@ -796,7 +805,7 @@ void loop() {
       BTStatus s = BLE.begin(serverName);
       if (s) {
         BLEAudio audio = BLE.getAudioController();
-        if (audio.begin()) {
+        {
           BLEAudioUnicastServer us = audio.createUnicastServer();
           us.setSinkStreams(1).setSourceStreams(0).setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
           us.setSupportedPresets(BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_441_2_1));
@@ -813,7 +822,7 @@ void loop() {
             lc3RxEnergy = lc3RxEnergy + e;
           });
 
-          if (audio.start()) {
+          if (audio.begin()) {
             // Exercise immediate startPlayback()->stopPlayback()->startPlayback()
             // handshake (regression for BLEAudioDataPath::start()/entry() race).
             BTStatus pb = player.begin();
@@ -892,7 +901,7 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
         cap.setSetSize(2).setRank(1);
 
@@ -926,7 +935,7 @@ void loop() {
           return true;
         });
 
-        if (audio.start()) {
+        if (audio.begin()) {
           BLEAdvertising adv = BLE.getAdvertising();
           adv.reset();
           adv.setType(BLEAdvType::ConnectableScannable);
@@ -959,7 +968,7 @@ void loop() {
   // lock changes and records the last volume. Needs TMAP/GMAP compiled in
   // (and CONFIG_BT_GMAP_UGT_SUPPORTED); self-skips otherwise.
   // Both sides run the whole cycle twice without a BLE restart: the second
-  // audio.begin() must re-link every profile callback that common_deinit
+  // re-creation must re-link every profile callback that common_deinit
   // released, or the client's rediscovery observes nothing. Restores a normal
   // stack afterward.
   if (currentPhase >= 8 && !phaseTopProfilesDone) {
@@ -974,17 +983,10 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       bool reinitStarted = false;
       for (int round = 0; round < 2; round++) {
-        // Re-begin may legitimately report Busy while the previous round's
-        // link is still tearing down (GAP busy); Busy is retryable, anything
-        // else is terminal. Bounded so a stuck stack still fails fast.
-        BTStatus bst = audio.begin();
-        for (int att = 0; att < 3 && bst == BTStatus::Busy; att++) {
-          delay(500);
-          bst = audio.begin();
-        }
-        if (!bst) {
-          break;
-        }
+        // Create roles first (lazy engine init); the commit below may
+        // legitimately report Busy while the previous round's link is still
+        // tearing down (GAP busy). Busy is retryable, anything else is
+        // terminal. Bounded so a stuck stack still fails fast.
         // Underlying roles that back the advertised TMAP/GMAP identities.
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
         cap.setSetSize(1).setRank(1);
@@ -1010,7 +1012,16 @@ void loop() {
         gf.unicastTerminal = BLEAudioGmapFeatures::UgtSink;
         gmap.setRoles(BLEAudioGmapRole::UnicastGameTerminal).setFeatures(gf);
 
-        bool started = (bool)audio.start();
+        BTStatus bst = audio.begin();  // commit
+        for (int att = 0; att < 3 && bst == BTStatus::Busy; att++) {
+          delay(500);
+          bst = audio.begin();
+        }
+        if (!bst) {
+          audio.end();
+          break;
+        }
+        bool started = (bool)bst;
         if (started) {
           BLEAdvertising adv = BLE.getAdvertising();
           adv.reset();
@@ -1055,7 +1066,7 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         BLEAudioHearingAidDevice ha = audio.createHearingAidDevice();
         ha.setType(BLEHearingAidType::Binaural)
           .setPresetSync(false)
@@ -1068,7 +1079,7 @@ void loop() {
           haSelects = haSelects + 1;
         });
 
-        if (audio.start()) {
+        if (audio.begin()) {
           ha.setActivePreset(1);
           BLEAdvertising adv = BLE.getAdvertising();
           adv.reset();
@@ -1077,7 +1088,7 @@ void loop() {
           adv.start();
           Serial.println("[SERVER] HearingAid ready");
           waitForRelease(35000);
-          // Round 2: the client cycles audio.end() -> audio.begin() and
+          // Round 2: the client cycles audio.end() -> re-create roles and
           // reconnects to re-verify discovery after re-registration; the
           // server side needs no reinit for this, just re-advertise.
           adv.start();
@@ -1115,7 +1126,7 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
         source.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(2).setName(serverName).setBroadcastCode(STEREO_BROADCAST_CODE);
         source.onStarted([&bcStreaming]() {
@@ -1124,7 +1135,7 @@ void loop() {
         source.onStopped([&bcStreaming](uint8_t) {
           bcStreaming = false;
         });
-        if (audio.start() && source.start()) {
+        if (audio.begin() && source.start()) {
           bis = (uint8_t)source.streamCount();
           Serial.printf("[SERVER] Stereo ready bis=%u\n", bis);
           uint8_t left[40], right[40];
@@ -1178,10 +1189,10 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         BLEAudioBroadcastSink sink = audio.createBroadcastSink();
         sink.setScanDelegator(true).setAutoSync(false);
-        if (sink && audio.start()) {
+        if (sink && audio.begin()) {
           BLEAdvertising adv = BLE.getAdvertising();
           adv.reset();
           adv.setType(BLEAdvType::ConnectableScannable);
@@ -1224,7 +1235,7 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
         cap.setSetSize(1).setRank(1);
 
@@ -1246,7 +1257,7 @@ void loop() {
           }
         });
 
-        if (cap && sink && audio.start()) {
+        if (cap && sink && audio.begin()) {
           BLEAdvertising adv = BLE.getAdvertising();
           adv.reset();
           adv.setType(BLEAdvType::ConnectableScannable);
@@ -1297,7 +1308,7 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
         source.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(1).setName(serverName);
         source.onStarted([&bcStreaming]() {
@@ -1307,7 +1318,7 @@ void loop() {
           bcStreaming = false;
           stoppedEvents.fetch_add(1, std::memory_order_relaxed);
         });
-        if (audio.start()) {
+        if (audio.begin()) {
           for (int i = 0; i < 5; i++) {
             BTStatus st = source.start();
             if (st) {
@@ -1348,7 +1359,7 @@ void loop() {
           Serial.printf("[SERVER] StopRace result races=%u startOk=%u stopOk=%u stoppedEv=%lu clean=%d\n",
                         races, okStart, okStop, (unsigned long)stoppedEvents.load(), clean ? 1 : 0);
         } else {
-          Serial.println("[SERVER] StopRace audio start failed");
+          Serial.println("[SERVER] StopRace audio begin failed");
         }
       }
       BLE.end(false);
@@ -1380,14 +1391,14 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         BLEAudioCapInitiator cap = audio.createCapInitiator();
         cap.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setBroadcastName(serverName);
         cap.onBroadcastStarted([]() {});
         cap.onBroadcastStopped([&stoppedEvents](uint8_t) {
           stoppedEvents.fetch_add(1, std::memory_order_relaxed);
         });
-        if (audio.start()) {
+        if (audio.begin()) {
           // Concurrent snapshot reader: hammers streamCount()/stream() while
           // the session vectors are resized between 1 and 2 BIS channels below.
           CapBcReaderArg readerArg = {&cap, &snapStop, &snapshotReads};
@@ -1442,7 +1453,7 @@ void loop() {
                         rounds, okStart, okStop, (unsigned long)stoppedEvents.load(), (unsigned long)snapshotReads.load(), clean ? 1 : 0);
         } else {
           snapStop.store(true, std::memory_order_release);
-          Serial.println("[SERVER] CapBC audio start failed");
+          Serial.println("[SERVER] CapBC audio begin failed");
         }
       }
       BLE.end(false);
@@ -1472,27 +1483,29 @@ void loop() {
       // Pool sizes vary by build; add sinks until one apply() fails.
       for (int n = 2; n <= 6 && firstRc == 0; n++) {
         BLEAudio audio = BLE.getAudioController();
-        if (!audio.begin()) {
+        for (int i = 0; i < n; i++) {
+          BLEAudioBroadcastSink sink = audio.createBroadcastSink();  // lazy init
+          sink.setStreams(2);
+        }
+        if (!audio.isActive()) {
           firstRc = -1;  // Test setup broken; reported as failure below.
           break;
         }
-        for (int i = 0; i < n; i++) {
-          BLEAudioBroadcastSink sink = audio.createBroadcastSink();
-          sink.setStreams(2);
-        }
-        firstRc = (int)audio.start().code();
+        firstRc = (int)audio.begin().code();
         if (firstRc != 0) {
-          retryRc = (int)audio.start().code();
+          retryRc = (int)audio.begin().code();
         }
         audio.end();
       }
       if (firstRc != 0) {
         BLEAudio audio = BLE.getAudioController();
-        if (audio.begin()) {
-          BLEAudioBroadcastSink sink = audio.createBroadcastSink();
+        {
+          BLEAudioBroadcastSink sink = audio.createBroadcastSink();  // lazy init
           sink.setStreams(1);
-          recovered = audio.start() ? 1 : 0;
-          audio.end();
+          if (audio.isActive()) {
+            recovered = audio.begin() ? 1 : 0;
+            audio.end();
+          }
         }
       }
 #if BLE_AUDIO_UNICAST_SERVER_SUPPORTED
@@ -1501,21 +1514,21 @@ void loop() {
       int pacsFirst = 0, pacsSecond = 0;
       {
         BLEAudio audio = BLE.getAudioController();
-        if (audio.begin()) {
+        {
           BLEAudioUnicastServer us = audio.createUnicastServer();
           us.setSinkStreams(1).setSourceStreams(0);
           us.setSinkContexts(BLEAudioContext::Media);
-          pacsFirst = audio.start() ? 1 : 0;
+          pacsFirst = audio.begin() ? 1 : 0;
           audio.end();
         }
       }
       {
         BLEAudio audio = BLE.getAudioController();
-        if (audio.begin()) {
+        {
           BLEAudioUnicastServer us = audio.createUnicastServer();
           us.setSinkStreams(1).setSourceStreams(0);
           us.setSinkContexts(BLEAudioContext::Conversational);
-          pacsSecond = audio.start() ? 1 : 0;
+          pacsSecond = audio.begin() ? 1 : 0;
           audio.end();
         }
       }
@@ -1529,7 +1542,7 @@ void loop() {
       int endTwice = -1, endFromCb = -99, endRebegin = 0;
       {
         BLEAudio audio = BLE.getAudioController();
-        if (audio.begin()) {
+        {
           BLEAudioBroadcastSource src = audio.createBroadcastSource();
           src.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(1).setName(serverName);
           volatile bool cbEntered = false;
@@ -1538,7 +1551,7 @@ void loop() {
             endFromCb = (int)audio.end().code();
             cbEntered = true;
           });
-          if (audio.start() && src.start()) {
+          if (audio.begin() && src.start()) {
             unsigned long t0 = millis();
             while (!cbEntered && millis() - t0 < 15000) {
               checkSerial();
@@ -1549,13 +1562,13 @@ void loop() {
             BTStatus second = audio.end();
             endTwice = (second == BTStatus::OK || second == BTStatus::InvalidState) ? 1 : 0;
             // Lazy init: no begin() — the factory must initialize the engine
-            // (isActive) and start() must commit without it.
+            // (isActive) and begin() must commit without it.
             endRebegin = 0;
             {
               BLEAudioBroadcastSource lazy = audio.createBroadcastSource();
               if (lazy && audio.isActive()) {
                 lazy.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(1).setName(serverName);
-                endRebegin = audio.start() ? 1 : 0;
+                endRebegin = audio.begin() ? 1 : 0;
               }
             }
             audio.end();
@@ -1570,14 +1583,14 @@ void loop() {
       int tbsLong = 0;
       {
         BLEAudio audio = BLE.getAudioController();
-        if (audio.begin()) {
+        {
           BLEAudioCallServer call = audio.createCallServer();
           String big;
           for (int i = 0; i < 100; i++) {
             big += 'P';
           }
           call.setProviderName(big);
-          tbsLong = audio.start() ? 0 : 1;
+          tbsLong = audio.begin() ? 0 : 1;
           audio.end();
         }
       }
@@ -1673,9 +1686,9 @@ void loop() {
     BTStatus s = BLE.begin(serverName);
     if (s) {
       BLEAudio audio = BLE.getAudioController();
-      if (audio.begin()) {
+      {
         BLEAudioMicDevice mic = audio.createMicDevice();
-        if (audio.start() && mic.disableMute()) {
+        if (audio.begin() && mic.disableMute()) {
           disabled = mic.isMuteDisabled() ? 1 : 0;
           BLEAdvertising adv = BLE.getAdvertising();
           adv.reset();

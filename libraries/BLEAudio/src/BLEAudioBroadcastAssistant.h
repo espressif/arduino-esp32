@@ -88,7 +88,7 @@ struct BLEAudioReceiveState {
  * @brief BAP Broadcast Assistant (BASS client), bound to one sink at a time.
  *
  * Created by BLEAudio::createBroadcastAssistant() while the engine is active (also
- * accepted after audio.start(); the engine unit then inits eagerly).
+ * accepted after audio.begin(); the engine unit then inits eagerly).
  * Control point operations return once the write is queued; their outcome
  * arrives through onResult and the sink's state through onReceiveState.
  * Calls before discover() return BTStatus::NotConnected. Results run on the

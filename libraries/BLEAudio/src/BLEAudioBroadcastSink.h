@@ -38,7 +38,7 @@
  * sink.setStreams(2).setTargetName("Living room");
  * sink.stream(0).onReceive(onLeft);
  * sink.stream(1).onReceive(onRight);
- * audio.start();
+ * audio.begin();
  * sink.start();
  * @endcode
  */
@@ -101,12 +101,12 @@ public:
   /** @brief Whether this handle references a sink (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (before audio.start(); every setter returns this handle) ---
+  // --- Configuration (before audio.begin(); every setter returns this handle) ---
   //
   // Setters are no-op chain links on an empty handle. Only setStreams() is
   // gated on start() (ignored with a warning afterwards); the other staged
   // values have no effect once registered — use the live source-selection
-  // setters below for changes after start().
+  // setters below for changes after the commit.
 
   /**
    * @brief Number of BISes to join: 1 = mono (default), 2 = stereo.
@@ -157,7 +157,7 @@ public:
    * @brief Broadcast Code (up to 16 characters) for encrypted broadcasts.
    *
    * Empty (default): only unencrypted broadcasts can be joined, unless an
-   * assistant provides the code. Takes effect immediately after audio.start().
+   * assistant provides the code. Takes effect immediately after audio.begin().
    * @param code Longer codes are truncated with a warning and zero-padded per spec.
    * @return This handle, for chaining.
    */
@@ -207,14 +207,14 @@ public:
    *                   ignores other broadcasts in range.
    * @param streams    1 = mono (one BIS), 2 = stereo (two BISes). Default 2.
    *
-   * Call it after createBroadcastSink() and before audio.start(), then
+   * Call it after createBroadcastSink() and before audio.begin(), then
    * start() to begin scanning. The Scan Delegator stays enabled when
    * compiled in, so a phone or Broadcast Assistant can also select a source.
    * Encryption stays opt-in: call setBroadcastCode() separately.
    */
   BLEAudioBroadcastSink &configureAuracast(const String &targetName = "", uint8_t streams = 2);
 
-  // --- Control (after audio.start()) ---
+  // --- Control (after audio.begin()) ---
 
   /**
    * @brief Start scanning for sources (no-op when already synced).
@@ -222,7 +222,7 @@ public:
    * Scanning continues until a PA sync is established and restarts on its
    * own when the sync is lost, until stop().
    *
-   * @return BTStatus::OK when scanning; InvalidState before audio.start();
+   * @return BTStatus::OK when scanning; InvalidState before audio.begin();
    *         another error when the scan could not start.
    */
   BTStatus start();
@@ -230,7 +230,7 @@ public:
    * @brief Sync to @p source (from onSourceFound()); use with setAutoSync(false).
    * @param source Source report to sync to (address, SID and Broadcast ID are used).
    * @return BTStatus::OK when the PA sync is being created; InvalidState
-   *         before audio.start() or while a sync is pending or established.
+   *         before audio.begin() or while a sync is pending or established.
    */
   BTStatus syncTo(const BLEAudioBroadcastSourceInfo &source);
   /**

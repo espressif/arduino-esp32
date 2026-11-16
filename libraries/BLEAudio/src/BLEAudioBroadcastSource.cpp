@@ -365,7 +365,7 @@ BLEAudioBroadcastSource &BLEAudioBroadcastSource::configureAuracast(const String
 /** Order: source (BASE) first, then advertising (needs the BASE), then the BIG (needs the train). */
 BTStatus BLEAudioBroadcastSource::start(uint8_t advInstance) {
   if (!_impl || !_impl->audio->started) {
-    log_e("BroadcastSource: start() before audio.start()");
+    log_e("BroadcastSource: start() before audio.begin()");
     return BTStatus::InvalidState;
   }
   bool dirty;
@@ -596,7 +596,7 @@ void BLEAudioBroadcastSource::resetCallbacks() {
 
 /**
  * A broadcast source registers no GATT service, so it may also be created
- * after audio.start(); it only needs the engine (begin()).
+ * after audio.begin(); it only needs the engine (begin()).
  */
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
 BLEAudioBroadcastSource BLEAudio::createBroadcastSource() {

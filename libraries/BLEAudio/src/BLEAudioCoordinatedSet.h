@@ -63,7 +63,7 @@ static constexpr size_t BLE_AUDIO_RSI_SIZE = 6;    ///< Octets in an RSI.
  * @brief CSIP Set Member (CSIS server).
  *
  * Created by BLEAudio::createCoordinatedSetMember() while the engine is active and
- * before audio.start(), which registers it.
+ * before audio.begin(), which registers it.
  */
 class BLEAudioCoordinatedSetMember {
 public:
@@ -98,7 +98,7 @@ public:
   /** @brief Whether this handle references a member (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (read at audio.start(); SIRK, size, rank and name also update a running set) ---
+  // --- Configuration (read at audio.begin(); SIRK, size, rank and name also update a running set) ---
 
   /** @brief Set Identity Resolving Key shared by every member. Default: a fixed demo SIRK; products must set their own. */
   BLEAudioCoordinatedSetMember &setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
@@ -109,29 +109,29 @@ public:
    * @note On a running set the stack only accepts a new rank together with a
    *       different set size: call setRank() first, then setSetSize() with a
    *       value different from the current size. Otherwise the rank is used at
-   *       the next audio.start().
+   *       the next audio.begin().
    */
   BLEAudioCoordinatedSetMember &setRank(uint8_t rank);
-  /** @brief Whether clients may lock the set. Default true. Only read at audio.start(). */
+  /** @brief Whether clients may lock the set. Default true. Only read at audio.begin(). */
   BLEAudioCoordinatedSetMember &setLockable(bool lockable);
   /** @brief Optional set name exposed to clients. */
   BLEAudioCoordinatedSetMember &setName(const String &name);
 
-  // --- Runtime (after audio.start()) ---
+  // --- Runtime (after audio.begin()) ---
 
   /** @brief Generate a fresh Resolvable Set Identifier to advertise (AD type 0x2E).
    * @param rsi Destination buffer of BLE_AUDIO_RSI_SIZE octets.
-   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for a null @p rsi;
+   * @return BTStatus::InvalidState when the handle is empty, before audio.begin(), or for a null @p rsi;
    *         otherwise the stack status.
    */
   BTStatus generateRsi(uint8_t rsi[BLE_AUDIO_RSI_SIZE]) const;
   /** @brief Lock the set locally, as a client would.
-   * @return BTStatus::InvalidState when the handle is empty or before audio.start(); otherwise the stack status.
+   * @return BTStatus::InvalidState when the handle is empty or before audio.begin(); otherwise the stack status.
    */
   BTStatus lock();
   /** @brief Release the lock; @p force also releases a lock held by a client.
    * @param force True to release a client-held lock as well.
-   * @return BTStatus::InvalidState when the handle is empty or before audio.start(); otherwise the stack status.
+   * @return BTStatus::InvalidState when the handle is empty or before audio.begin(); otherwise the stack status.
    */
   BTStatus unlock(bool force = false);
   /** @return true while the set is locked, locally or by a client. */
@@ -170,7 +170,7 @@ struct BLEAudioCoordinatedSetInfo {
  * @brief CSIP Set Coordinator (CSIP client).
  *
  * Created by BLEAudio::createCoordinatedSetCoordinator() while the engine
- * is active and before audio.start().
+ * is active and before audio.begin().
  */
 class BLEAudioCoordinatedSetCoordinator {
 public:
@@ -203,7 +203,7 @@ public:
   /** @brief Whether this handle references a coordinator (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Procedures (after audio.start()) ---
+  // --- Procedures (after audio.begin()) ---
 
   /**
    * @brief Read the set information of a connected member.
@@ -212,7 +212,7 @@ public:
    * result is reported by onDiscovered(). The first member discovered
    * defines the set used by isSetMember(), lock() and unlock().
    * @param connHandle ACL connection handle of the member.
-   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   * @return BTStatus::InvalidState when the handle is empty, before audio.begin(), or for BLE_AUDIO_CONN_NONE;
    *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
    */
   BTStatus discover(uint16_t connHandle);

@@ -23,7 +23,7 @@
  * TMAP and GMAP move no audio themselves (CAP, BAP and the control profiles
  * do): a device publishes which top-level roles it implements in a small
  * identity service (TMAS / GMAS), and a client reads the roles of a peer.
- * Set the local roles before `audio.start()`; discover a connected peer after
+ * Set the local roles before `audio.begin()`; discover a connected peer after
  * its GATT discovery. A pure client sets no roles and publishes nothing.
  *
  * `BLEAudioPublicBroadcast` builds and parses the Public Broadcast
@@ -69,7 +69,7 @@ inline bool operator&(BLEAudioTmapRole a, BLEAudioTmapRole b) {
  * @brief GMAP roles (GMAP Role characteristic bits).
  *
  * Each role also needs its CONFIG_BT_GMAP_<role>_SUPPORTED option in the
- * packaged libraries; otherwise `audio.start()` fails with InvalidParam.
+ * packaged libraries; otherwise `audio.begin()` fails with InvalidParam.
  */
 enum class BLEAudioGmapRole : uint8_t {
   None = 0x00,
@@ -142,14 +142,14 @@ public:
   /** @return true when the handle was created by BLEAudio::createTmap(). */
   explicit operator bool() const;
 
-  /** @brief Roles published by TMAS (before `audio.start()`). */
+  /** @brief Roles published by TMAS (before `audio.begin()`). */
   BLEAudioTmap &setRoles(BLEAudioTmapRole roles);
   /** @return The local roles set with setRoles(). */
   BLEAudioTmapRole getRoles() const;
 
   /** @brief Read the TMAP roles of a connected peer (result in onDiscovered()).
    * @param connHandle ACL connection handle of the peer.
-   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   * @return BTStatus::InvalidState when the handle is empty, before audio.begin(), or for BLE_AUDIO_CONN_NONE;
    *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
    */
   BTStatus discover(uint16_t connHandle);
@@ -193,9 +193,9 @@ public:
   /** @return true when the handle was created by BLEAudio::createGmap(). */
   explicit operator bool() const;
 
-  /** @brief Roles published by GMAS (before `audio.start()`). */
+  /** @brief Roles published by GMAS (before `audio.begin()`). */
   BLEAudioGmap &setRoles(BLEAudioGmapRole roles);
-  /** @brief Features of the published roles (before `audio.start()`). */
+  /** @brief Features of the published roles (before `audio.begin()`). */
   BLEAudioGmap &setFeatures(const BLEAudioGmapFeatures &features);
   /** @brief Same as setFeatures(const BLEAudioGmapFeatures &), one bitfield per role. */
   BLEAudioGmap &setFeatures(uint8_t unicastGateway, uint8_t unicastTerminal, uint8_t broadcastSender, uint8_t broadcastReceiver);
@@ -204,7 +204,7 @@ public:
 
   /** @brief Read the GMAP roles and features of a connected peer (result in onDiscovered()).
    * @param connHandle ACL connection handle of the peer.
-   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   * @return BTStatus::InvalidState when the handle is empty, before audio.begin(), or for BLE_AUDIO_CONN_NONE;
    *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
    */
   BTStatus discover(uint16_t connHandle);

@@ -94,7 +94,7 @@ BLEAudioHearingAidDevice::operator bool() const {
 BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::setType(BLEHearingAidType type) {
   BLE_CHECK_IMPL(*this);
   if (impl.audio->started) {
-    log_w("HearingAidDevice::setType() ignored after audio.start() (the service is registered at start)");
+    log_w("HearingAidDevice::setType() ignored after audio.begin() (the service is registered at start)");
     return *this;
   }
   impl.type = type;
@@ -104,7 +104,7 @@ BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::setType(BLEHearingAidType ty
 BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::setPresetSync(bool enabled) {
   BLE_CHECK_IMPL(*this);
   if (impl.audio->started) {
-    log_w("HearingAidDevice::setPresetSync() ignored after audio.start() (the service is registered at start)");
+    log_w("HearingAidDevice::setPresetSync() ignored after audio.begin() (the service is registered at start)");
     return *this;
   }
   impl.presetSync = enabled;

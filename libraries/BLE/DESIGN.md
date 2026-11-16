@@ -435,21 +435,22 @@ service-init calls are non-idempotent). The coordinator has two modes:
 - **Standalone** (no LE Audio): the coordinator performs the full `reset -> svc init -> add_svcs -> start`
   rebuild, exactly as before. Non-audio behaviour is unchanged.
 - **Audio** (engine present): the LE Audio engine performs the service inits (in `esp_ble_audio_common_init`)
-  and the single `ble_gatts_start` (in `esp_ble_audio_common_start`, triggered by `BLEAudio::start()`); the
+  and the single `ble_gatts_start` (in `esp_ble_audio_common_start`, triggered by `BLEAudio::begin()`); the
   classic server only records itself as a contributor. Immediately before the audio commit, the coordinator
   snapshots its latest tree and calls `ble_gatts_add_svcs` exactly once. Deferring publication makes repeated
   pre-commit `server.start()` calls safe when more services or characteristics are added: NimBLE never retains a
   pointer to a replaced definition array and no service is added twice. This lets an ordinary `BLEServer` service
-  and the audio profiles coexist in one committed GATT table. Required ordering: `BLE.begin()` -> `audio.begin()`
-  -> create/stage server services -> `audio.start()`.
+  and the audio profiles coexist in one committed GATT table. Required ordering: `BLE.begin()`
+  -> create/stage server services and audio roles -> `audio.begin()` (initializes if needed,
+  then publishes everything at once).
 
 Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive()` returns
 `bleAudioEngineIsInitialized()` (false when the engine is not compiled in), so audio mode is exactly the window
-between `audio.begin()` and `audio.end()`. The dependency points one way — the NimBLE-only coordinator observes the
+between `audio.begin()` (engine init) and `audio.end()`. The dependency points one way — the NimBLE-only coordinator observes the
 host-agnostic engine through weak hooks in `core/BLEAudioHooks.h`. In `BLEAudio`, `src/engine/` is 100% pure C, and
 all host-specific glue lives in the single backend pair `BLEAudio.nimble.{h,cpp}` and `BLEAudio.bluedroid.{h,cpp}`.
 
-After `audio.start()` the NimBLE table is frozen: a later `BLEServer::start()` that would add attributes returns
+After `audio.begin()` commits, the NimBLE table is frozen: a later `BLEServer::start()` that would add attributes returns
 `InvalidState` instead of resetting the audio-owned table. Removing an already committed classic service remains
 supported; the server hides only that service's handle range and emits Service Changed. `audio.end()` clears the
 audio commit state, and the next `audio.begin()` runs `ble_gatts_reset()` (returning `Busy` if GAP or a connection
@@ -615,8 +616,8 @@ top. Every engine call is isolated in C engine units (`engine/BLEAudioEngine*.{h
 behind an `extern "C"` boundary, and engine events reach the role handles through one
 event bridge; no `esp_ble_audio_*` type ever appears in a header reachable from
 `<BLEAudio.h>`. Roles
-stage their registration between `audio.begin()` and `audio.start()` (the controller's
-`roleApplies` "accumulate then commit" model), and `start()` performs the single
+stage their registration before `audio.begin()` (the controller's
+`roleApplies` "accumulate then commit" model), and `begin()` performs the single
 coordinated `ble_gatts_start()` so audio profiles and a classic `BLEServer` coexist in
 one GATT table (see [Service staging and startup](#service-staging-and-startup)).
 The core forwards host GAP/GATT events to the engine through lazy hooks and runs

@@ -58,8 +58,8 @@ struct BLEAudioImplCommon {
   LinkCallback onLinkReadyCb;                          ///< Application onLinkReady().
   LinkCallback onDisconnectedCb;                       ///< Application onDisconnected().
   std::atomic<bool> active{false};                     ///< begin() succeeded, end() not called.
-  std::atomic<bool> started{false};                    ///< start() succeeded.
-  std::atomic<bool> startFailed{false};                ///< start() failed midway; end() + begin() required.
+  std::atomic<bool> started{false};                    ///< begin() committed the roles and GATT.
+  std::atomic<bool> beginFailed{false};                ///< begin() failed midway; end() + begin() required.
 
   std::vector<std::function<BTStatus()>> roleApplies;
   std::vector<std::shared_ptr<void>> roles;
@@ -94,7 +94,7 @@ struct BLEAudioImplCommon {
     const std::shared_ptr<AudioImpl> &audio, const char *factoryName, ble_audio_evt_group_t group, ApplyFn &&apply
   ) {
     if (!audio || !audio->active || audio->started) {
-      log_e("%s(): call before audio.start() with an inactive engine", factoryName);
+      log_e("%s(): create before audio.begin() commits", factoryName);
       return Handle();
     }
     auto role = std::make_shared<typename Handle::Impl>();

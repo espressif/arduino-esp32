@@ -402,7 +402,7 @@ BLEAudioUnicastClient &BLEAudioUnicastClient::setSourceStreams(uint8_t perPeer) 
 
 BTStatus BLEAudioUnicastClient::addPeer(uint16_t connHandle) {
   if (!_impl || !_impl->audio->started) {
-    log_e("UnicastClient: addPeer() before audio.start()");
+    log_e("UnicastClient: addPeer() before audio.begin()");
     return BTStatus::InvalidState;
   }
   {
@@ -544,7 +544,7 @@ void BLEAudioUnicastClient::resetCallbacks() {
 
 /**
  * The role registers for the UNICAST_CLIENT group (core link events reach it
- * too) and stages the engine's client init for BLEAudio::start(). Streams are
+ * too) and stages the engine's client init for BLEAudio::begin(). Streams are
  * only allocated at start(), once the peers' endpoints are known.
  */
 #if BLE_AUDIO_UNICAST_CLIENT_SUPPORTED
@@ -553,7 +553,7 @@ BLEAudioUnicastClient BLEAudio::createUnicastClient() {
     return BLEAudioUnicastClient();  // begin() already logged the cause
   }
   if (_impl->started) {
-    log_e("UnicastClient: create before audio.start()");
+    log_e("UnicastClient: create before audio.begin() commits");
     return BLEAudioUnicastClient();
   }
   auto cli = std::make_shared<BLEAudioUnicastClient::Impl>();

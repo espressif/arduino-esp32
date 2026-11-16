@@ -88,7 +88,7 @@ See [Feature guards](#feature-guards).
 | **CSIP ordered access** | The coordinator discovers and locks set members. The commander runs ordered access (stack CSIP set type: lock, rank order, unlock) when `setCoordinated(true)` is set and every driven acceptor sits in one discovered set, else AD_HOC with a warning. The CAP initiator and handover always use AD_HOC. |
 | **BASS receive-state cleanup** | The Scan Delegator does not remove stale receive states on its own; the assistant must remove them. |
 | **One PA sync at a time** | The broadcast sink follows one source; an assistant request is refused while a PA sync is in use. |
-| **GATT frozen after `start()`** | Roles that register services must be created before `audio.start()`; swapping roles needs `audio.end()` then re-creation. Enforced on both backends (`InvalidState`): NimBLE freezes its single committed table, Bluedroid refuses new staging to keep the observable contract identical. |
+| **GATT frozen after the commit** | Roles that register services must be created before `audio.begin()`; swapping roles needs `audio.end()` then re-creation. Enforced on both backends (`InvalidState`): NimBLE freezes its single committed table, Bluedroid refuses new staging to keep the observable contract identical. |
 | **Standalone `BLEIso` CIS on Bluedroid** | The ISO transport adopts the physical ACL at GATTC CONNECT, independent of which GATTC app opened it; raw CIS may use a `BLEClient` ACL. LE Audio central links still use `audio.connect()` so the audio engine owns GATT discovery and security. |
 | **PACS supported contexts are boot-pinned** | The prebuilt stack publishes the first committed Supported Contexts value per boot and answers later sets with `-EALREADY`. Re-`begin()` with different contexts logs a warning and keeps serving the first value (available contexts stay live-updatable). |
 | **Preview status** | The LE Audio APIs are still marked preview in IDF. |
@@ -249,7 +249,7 @@ that `BLEAudioImplCommon::createStagedRole` and the role factories populate:
 
 - `roleApplies`: each `create*()` pushes an "apply" lambda that performs the
   role's engine registration (PACS records, ASCS, BASS, CAS/CSIS, VCS, …).
-  `audio.start()` consumes them from the front in creation order, registers the
+  `audio.begin()` consumes them from the front in creation order, registers the
   **merged PACS records** (a unicast server and a broadcast sink share one sink
   PAC), then performs the **single coordinated GATT commit** through the core
   GATT coordinator.
@@ -297,7 +297,7 @@ BLE.begin("Headset");                        // 1. host stack up
 BLEAudio audio = BLE.getAudioController();
 audio.setPresentationDelay(40000);           // 2. defaults, before creating roles
 // (no explicit audio.begin() needed: the first create*() initializes the engine;
-// call audio.begin() explicitly for early, checked initialization)
+// (no explicit begin() needed beforehand; the first create*() initializes lazily)
 
 BLEAudioCapAcceptor cap = audio.createCapAcceptor();   // 3. create + configure roles
 cap.setSetSize(2).setRank(1);
@@ -305,7 +305,7 @@ BLEAudioUnicastServer us = audio.createUnicastServer();
 us.configureHeadset();
 // (optionally) create/stage classic BLEServer services here too
 
-audio.start();                               // 4. run roleApplies, merged PACS, single GATT commit
+audio.begin();                               // 4. run roleApplies, merged PACS, single GATT commit
 BLE.getAdvertising().start();                // 5. advertise
 // ... runtime ...
 audio.end();                                 // 6. common_deinit (host stays up)
@@ -316,18 +316,17 @@ Invariants:
 
 - `create*()` initializes the engine lazily on first use (explicit `begin()`
   is optional), and returns an empty handle when initialization fails or the
-  role is disabled. Creating a service-registering role after `start()` logs
+  role is disabled. Creating a service-registering role after the commit logs
   an error and returns an empty handle (except `createBroadcastSource()`,
-  which registers no GATT service and may be created after `start()`).
+  which registers no GATT service and may be created after the commit).
 - Server-side configuration (stream counts, presets, locations, identity roles)
-  is read by `start()`; changing it afterwards does not alter the registered
+  is read by `audio.begin()`; changing it afterwards does not alter the registered
   services. Available audio contexts (`setAvailableContexts`) may change at
   runtime.
-- `audio.start()` is not retried after a failure: the first failing role
+- `audio.begin()` is not retried after a failed commit: the first failing role
   (or PACS commit / engine start) leaves earlier registrations in place, so
-  `start()` records the failure and a second call returns `InvalidState`.
-  Run `audio.end()`, fix the role set, then create roles and `start()` again
-  (an explicit `begin()` first is optional).
+  `begin()` records the failure and a second call returns `InvalidState`.
+  Run `audio.end()`, fix the role set, then create roles and `begin()` again.
 - `audio.end()` runs `roleStops`, disconnects every tracked ACL (NimBLE
   fallback clients on NimBLE, engine-owned GATTC links on Bluedroid — owning
   no link across deinit on either backend), stops leftover CAP/BAP
@@ -508,8 +507,8 @@ and keep `#else` stubs in the C engine units so partial Kconfig builds link clea
 ## GATT coexistence
 
 Classic `BLEServer` services and LE Audio profiles share **one** committed GATT
-table on NimBLE via `gatt/BLEGattDatabase.nimble.{h,cpp}` (`BLE.begin()` →
-`audio.begin()` → create/stage `BLEServer` services → `audio.start()`), while
+table on NimBLE via `gatt/BLEGattDatabase.nimble.{h,cpp}` (`BLE.begin()` → create/stage `BLEServer` services and audio roles →
+`audio.begin()`), while
 Bluedroid registers separate BTA GATTS apps natively. Pure-audio and pure-ISO
 peripherals also work without calling `BLE.createServer()` on both stacks. Full
 details live in [`../BLE/DESIGN.md`](../BLE/DESIGN.md#service-staging-and-startup).

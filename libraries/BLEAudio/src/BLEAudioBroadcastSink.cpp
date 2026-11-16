@@ -78,7 +78,7 @@ struct BLEAudioBroadcastSink::Impl {
   uint32_t targetId = 0;                  ///< Auto-sync filter; 0 = any.
   uint32_t bisMask = 0;                   ///< Preferred BIS indexes; 0 = lowest ones in the BASE.
   bool autoSync = true;
-  bool applied = false;                   ///< Sink registered by BLEAudio::start().
+  bool applied = false;                   ///< Sink registered by BLEAudio::begin().
   bool running = false;                   ///< Between start() and stop(): keep (re)scanning.
   bool scanStarted = false;               ///< This sink started the shared extended scan.
   bool syncPending = false;               ///< PA sync create / PAST receive in flight.
@@ -130,7 +130,7 @@ struct BLEAudioBroadcastSink::Impl {
   }
 
   /**
-   * @brief Staged registration, run by BLEAudio::start().
+   * @brief Staged registration, run by BLEAudio::begin().
    *
    * The sink PAC is required: the stack only reports BIS indexes of subgroups
    * whose codec matches a registered sink PAC. It is merged with a unicast
@@ -457,7 +457,7 @@ BLEAudioBroadcastSink &BLEAudioBroadcastSink::setStreams(uint8_t count) {
     impl.streamCount = count < 1 ? 1 : (count > 2 ? 2 : count);
     impl.resizeStreams();
   } else {
-    log_w("BroadcastSink: setStreams() ignored after audio.start()");
+    log_w("BroadcastSink: setStreams() ignored after audio.begin()");
   }
   return *this;
 }
@@ -575,7 +575,7 @@ BTStatus BLEAudioBroadcastSink::start() {
   {
     BLELockGuard lock(_impl->mtx.get());
     if (!_impl->applied) {
-      log_e("BroadcastSink: start() before audio.start()");
+      log_e("BroadcastSink: start() before audio.begin()");
       return BTStatus::InvalidState;
     }
     already = _impl->running && (_impl->synced || _impl->scanStarted);
@@ -597,7 +597,7 @@ BTStatus BLEAudioBroadcastSink::start() {
 
 BTStatus BLEAudioBroadcastSink::syncTo(const BLEAudioBroadcastSourceInfo &source) {
   if (!_impl || !_impl->applied) {
-    log_e("BroadcastSink: syncTo() before audio.start()");
+    log_e("BroadcastSink: syncTo() before audio.begin()");
     return BTStatus::InvalidState;
   }
   {
@@ -765,7 +765,7 @@ BLEAudioBroadcastSink BLEAudio::createBroadcastSink() {
     return BLEAudioBroadcastSink();  // begin() already logged the cause
   }
   if (_impl->started) {
-    log_e("BroadcastSink: create before audio.start()");
+    log_e("BroadcastSink: create before audio.begin() commits");
     return BLEAudioBroadcastSink();
   }
   auto sink = std::make_shared<BLEAudioBroadcastSink::Impl>();

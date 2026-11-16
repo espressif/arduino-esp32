@@ -29,7 +29,7 @@
  * @file BLEAudioUnicastServer.cpp
  * @brief BAP Unicast Server role on top of the BAP engine unit.
  *
- * Configuration is staged in the Impl and applied once by BLEAudio::start():
+ * Configuration is staged in the Impl and applied once by BLEAudio::begin():
  * apply() merges the server's PAC records into the shared PACS staging
  * (`bleAudioPacsAdd`) and registers ASCS (`bleAudioUsInit`). From then on the
  * engine binds client-configured ASEs to the server's pool slots and reports
@@ -97,7 +97,7 @@ struct BLEAudioUnicastServer::Impl {
   }
 
   /**
-   * @brief Staged registration, run by BLEAudio::start().
+   * @brief Staged registration, run by BLEAudio::begin().
    *
    * Both directions publish the same capability record (the presets are
    * symmetric); a direction with no ASE publishes nothing. The ASCS QoS
@@ -153,7 +153,7 @@ BLEAudioUnicastServer &BLEAudioUnicastServer::setSinkStreams(uint8_t count) {
     impl.sinkStreams = count;
     impl.resizeStreams();
   } else {
-    log_w("UnicastServer: setSinkStreams() ignored after audio.start()");
+    log_w("UnicastServer: setSinkStreams() ignored after audio.begin()");
   }
   return *this;
 }
@@ -164,7 +164,7 @@ BLEAudioUnicastServer &BLEAudioUnicastServer::setSourceStreams(uint8_t count) {
     impl.sourceStreams = count;
     impl.resizeStreams();
   } else {
-    log_w("UnicastServer: setSourceStreams() ignored after audio.start()");
+    log_w("UnicastServer: setSourceStreams() ignored after audio.begin()");
   }
   return *this;
 }
@@ -240,7 +240,7 @@ BLEAudioUnicastServer &BLEAudioUnicastServer::configureHeadset() {
 /** Only the directions that have ASEs are updated; PACS has no record for the others. */
 BTStatus BLEAudioUnicastServer::setAvailableContexts(BLEAudioContext sink, BLEAudioContext source) {
   if (!_impl || !_impl->applied) {
-    log_e("UnicastServer: setAvailableContexts() before audio.start()");
+    log_e("UnicastServer: setAvailableContexts() before audio.begin()");
     return BTStatus::InvalidState;
   }
   int err = 0;
@@ -295,7 +295,7 @@ BLEAudioUnicastServer BLEAudio::createUnicastServer() {
     return BLEAudioUnicastServer();  // begin() already logged the cause
   }
   if (_impl->started) {
-    log_e("UnicastServer: create before audio.start()");
+    log_e("UnicastServer: create before audio.begin() commits");
     return BLEAudioUnicastServer();
   }
   auto srv = std::make_shared<BLEAudioUnicastServer::Impl>();

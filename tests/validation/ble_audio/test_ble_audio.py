@@ -117,17 +117,17 @@ def _phase_audio_lifecycle(server, client):
     assert int(me.group(2)) == 1, "BLE.end() did not tear down the active audio controller"
     assert int(me.group(3)) == 1, "retained PAST calls were not rejected after BLE.end()"
     mr = server.expect(r"\[SERVER\] Audio reinit begin=(\d+) start=(\d+)", timeout=20)
-    assert int(mr.group(1)) == 1, "audio.begin() failed after callback-safe BLE.end()"
-    assert int(mr.group(2)) == 1, "audio.start() failed after callback-safe BLE.end()"
+    assert int(mr.group(1)) == 1, "audio reinit (init) failed after callback-safe BLE.end()"
+    assert int(mr.group(2)) == 1, "audio reinit (commit) failed after callback-safe BLE.end()"
     m = server.expect(
-        r"\[SERVER\] (Audio lifecycle OK|Audio lifecycle FAILED begin=(\d+) start=(\d+) end=(\d+))",
+        r"\[SERVER\] (Audio lifecycle OK|Audio lifecycle FAILED begin=(\d+) end=(\d+))",
         timeout=30,
     )
     cr = client.expect(r"\[CLIENT\] Audio callback read: (\d+)", timeout=30)
     assert int(cr.group(1)) == 1, "client did not find/read the classic service committed with audio"
     client.expect(r"\[CLIENT\] (Audio lifecycle OK|Audio not supported, skipping)", timeout=20)
     assert b"FAILED" not in m.group(0), (
-        f"audio lifecycle failed: begin={m.group(2)} start={m.group(3)} end={m.group(4)}"
+        f"audio lifecycle failed: begin={m.group(2)} end={m.group(3)}"
     )
     server.expect_exact("[SERVER] Phase1 audio done", timeout=20)
     client.expect_exact("[CLIENT] Phase1 audio done", timeout=10)
@@ -398,7 +398,7 @@ def _phase_top_profiles(server, client):
     commander; the server reports the lock changes and the volume it received.
     Returns False (SKIP) when TMAP/GMAP are not compiled into either build.
 
-    A second round then re-runs the whole cycle after audio.end() ->
+    A second round then re-runs the whole cycle after audio.end() -> re-create ->
     audio.begin() on both sides without a BLE restart: the server must
     re-register every role and the client must rediscover GMAP (plus
     CSIP/commander when compiled in) through freshly re-linked callbacks.
@@ -488,8 +488,8 @@ def _phase_hearing_aid(server, client):
     client is not compiled into a build (only a dual-audio esp32s31 pair with
     HAS + HAS client runs it).
 
-    A second round then re-runs discovery after audio.end() -> audio.begin()
-    on the client without a BLE restart: the controller callback must be
+    A second round then re-runs discovery after audio.end() -> re-create ->
+    audio.begin() on the client without a BLE restart: the controller callback must be
     re-linked on re-registration, or the preset re-read observes nothing.
     """
     mc = client.expect(r"\[CLIENT\] HearingAid (not supported|result disc=(\d+) read=(\d+) switched=(\d+))", timeout=120)

@@ -64,7 +64,7 @@ class BLEAudio;
  * @brief CAP Acceptor: CAS with an included CSIS instance.
  *
  * Created by BLEAudio::createCapAcceptor() while the engine is active and
- * before audio.start(); the set configuration is registered by start(). The audio
+ * before audio.begin(); the set configuration is registered by start(). The audio
  * itself flows through the BAP roles the sketch creates next to it.
  */
 class BLEAudioCapAcceptor {
@@ -214,7 +214,7 @@ public:
    */
   BLEAudioCapInitiator &setBroadcastName(const String &name);
 
-  // --- Discovery (after audio.start()) ---
+  // --- Discovery (after audio.begin()) ---
 
   /**
    * @brief Discover CAS, PACS and ASCS on a connected acceptor.
@@ -226,7 +226,7 @@ public:
    * the in-flight discovery.
    * @param connHandle ACL connection of the acceptor.
    * @return BTStatus::OK when discovery started, is in flight, or the acceptor
-   *         is already discovered; InvalidState before audio.start(); another
+   *         is already discovered; InvalidState before audio.begin(); another
    *         error when the engine refused the discovery.
    */
   BTStatus discover(uint16_t connHandle);
@@ -422,7 +422,7 @@ public:
    * @param connHandle ACL connection of the acceptor; GATT discovery of the
    *        link gates the start (deferred until onLinkReady() when pending).
    * @return BTStatus::OK when discovery started or is deferred to the link's
-   *         GATT discovery; InvalidState before audio.start() or for an invalid
+   *         GATT discovery; InvalidState before audio.begin() or for an invalid
    *         handle; another error when the engine refused the discovery.
    */
   BTStatus discover(uint16_t connHandle);

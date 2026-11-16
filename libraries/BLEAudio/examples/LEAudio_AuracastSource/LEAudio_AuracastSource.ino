@@ -52,9 +52,8 @@ void setup() {
   }
 
   audio = BLE.getAudioController();
-  // No audio.begin(): the engine initializes lazily on the first create*()
-  // or audio.start() below. Call audio.begin() explicitly instead for early,
-  // checked initialization.
+  // No explicit init: the engine initializes lazily on the first create*()
+  // below. Create every role first, then call audio.begin() once to commit.
 
   source = audio.createBroadcastSource();
   if (!source) {
@@ -71,9 +70,9 @@ void setup() {
     Serial.printf("[BIG] stopped (reason 0x%02X)\n", reason);
   });
 
-  st = audio.start();
+  st = audio.begin();
   if (!st) {
-    halt("audio.start", st);
+    halt("audio.begin", st);
   }
 
   // The recorder opens the input at the preset's sample rate once the BISes

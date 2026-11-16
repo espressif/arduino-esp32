@@ -222,10 +222,10 @@ BTStatus BLEAudio::ensureActive() {
   if (_impl && _impl->active) {
     return BTStatus::OK;
   }
-  return begin();
+  return initEngine();
 }
 
-BTStatus BLEAudio::begin() {
+BTStatus BLEAudio::initEngine() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!BLE.isInitialized() || BLE.isEnding()) {
     log_e("Audio: begin() requires an active BLE session");
@@ -263,41 +263,56 @@ BTStatus BLEAudio::begin() {
   return BTStatus::OK;
 }
 
-BTStatus BLEAudio::start() {
+BTStatus BLEAudio::begin() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BTStatus ens = ensureActive();
   if (ens != BTStatus::OK) {
-    log_e("Audio: start() without an initialized engine (%s)", ens.toString());
+    log_e("Audio: begin() without an initialized engine (%s)", ens.toString());
     return ens;
   }
   if (impl.started) {
     return BTStatus::OK;
   }
-  if (impl.startFailed) {
-    log_e("Audio: start() failed before; run end() then begin() again with a corrected role set");
+  if (impl.beginFailed) {
+    log_e("Audio: begin() failed before; run end(), fix the role set, then begin() again");
     return BTStatus::InvalidState;
   }
+  // The commit always runs — even with no staged audio roles, classic
+  // services and the broadcast engine still need the single GATT publish.
+  // Busy is transient (retryable) and never poisons begin(); anything else
+  // is terminal until end().
   while (!impl.roleApplies.empty()) {
     auto &apply = impl.roleApplies.front();
     BTStatus st = apply ? apply() : BTStatus::OK;
+    if (st == BTStatus::Busy) {
+      return st;
+    }
     if (!st) {
-      log_e("Audio: role registration failed (%s); run end() then begin() again, do not retry start()", st.toString());
-      impl.startFailed = true;
+      log_e("Audio: role registration failed (%s); run end(), fix the role set, then begin() again", st.toString());
+      impl.beginFailed = true;
       return st;
     }
     impl.roleApplies.erase(impl.roleApplies.begin());
   }
   int err = bleAudioPacsCommit();
   if (err != 0) {
-    log_e("Audio: PACS registration failed (err=%d)", err);
-    impl.startFailed = true;
-    return bleAudioStatus(err);
+    BTStatus pst = bleAudioStatus(err);
+    if (pst == BTStatus::Busy) {
+      return pst;
+    }
+    log_e("Audio: PACS registration failed (%s)", pst.toString());
+    impl.beginFailed = true;
+    return pst;
   }
   err = bleAudioEngineStart();
   if (err != 0) {
-    log_e("Audio: engine start / GATT commit failed (err=%d)", err);
-    impl.startFailed = true;
-    return bleAudioStatus(err);
+    BTStatus est = bleAudioStatus(err);
+    if (est == BTStatus::Busy) {
+      return est;
+    }
+    log_e("Audio: engine start / GATT commit failed (%s)", est.toString());
+    impl.beginFailed = true;
+    return est;
   }
   impl.started = true;
   log_i("Audio: started (%u roles)", (unsigned)impl.roles.size());
@@ -349,7 +364,7 @@ BTStatus BLEAudio::end() {
   impl.roles.clear();
   impl.active = false;
   impl.started = false;
-  impl.startFailed = false;
+  impl.beginFailed = false;
   log_i("Audio: engine released");
   return BTStatus::OK;
 }
@@ -371,7 +386,7 @@ bool BLEAudio::isStarted() const {
 BTStatus BLEAudio::connect(const BTAddress &address) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!impl.started || !BLE.isInitialized() || BLE.isEnding()) {
-    log_e("Audio: connect() before start()");
+    log_e("Audio: connect() before the commit (audio.begin())");
     return BTStatus::InvalidState;
   }
   log_d("Audio: connecting to %s", address.toString().c_str());

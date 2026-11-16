@@ -38,7 +38,7 @@ class BLEAudio;
  * @brief VCP Volume Renderer (Volume Control Service server).
  *
  * Created by BLEAudio::createVolumeRenderer() while the engine is active and
- * before audio.start(). The handle is a cheap shared reference; copies control the
+ * before audio.begin(). The handle is a cheap shared reference; copies control the
  * same renderer. A default-constructed (or failed) handle is empty: calls on
  * it do nothing, and those returning BTStatus return InvalidState.
  */
@@ -69,7 +69,7 @@ public:
   /** @return true when the handle refers to a created renderer. */
   explicit operator bool() const;
 
-  // --- Configuration (before audio.start()) ---
+  // --- Configuration (before audio.begin()) ---
 
   /** @brief Default 100. */
   BLEAudioVolumeRenderer &setInitialVolume(uint8_t volume);
@@ -78,7 +78,7 @@ public:
   /** @brief Step used by volumeUp()/volumeDown() and remote relative writes; 1..255, default 1. Also at runtime. */
   BLEAudioVolumeRenderer &setVolumeStep(uint8_t step);
 
-  // --- Local control (after audio.start()); connected controllers are notified ---
+  // --- Local control (after audio.begin()); connected controllers are notified ---
 
   /**
    * @brief Set the absolute volume, 0..255.
@@ -144,7 +144,7 @@ private:
  * @brief VCP Volume Controller (client of one renderer at a time).
  *
  * Created by BLEAudio::createVolumeController() while the engine is active and
- * before audio.start(). Commands are GATT writes: a returned OK means the write was
+ * before audio.begin(). Commands are GATT writes: a returned OK means the write was
  * queued. Success arrives as onStateChanged / onOffsetChanged / onInputChanged
  * when the renderer notifies; a rejected write arrives as onResult (best
  * effort op attribution, see onResult()) and changes nothing. Cached state is
@@ -189,7 +189,7 @@ public:
   explicit operator bool() const;
 
   /**
-   * @brief Discover the renderer on @p connHandle (after audio.start()).
+   * @brief Discover the renderer on @p connHandle (after audio.begin()).
    *
    * Waits for the engine's GATT discovery of the link if needed. onDiscovered
    * fires once the peer's current volume is known (followed by onStateChanged);

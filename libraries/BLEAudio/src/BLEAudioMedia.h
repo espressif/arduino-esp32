@@ -64,7 +64,7 @@ enum class BLEAudioMediaCommand : uint8_t {
  * @brief MCP Media Player (GMCS server).
  *
  * Created by BLEAudio::createMediaPlayer() while the engine is active and
- * before audio.start(). Copies of the handle control the same player; an empty
+ * before audio.begin(). Copies of the handle control the same player; an empty
  * handle does nothing, and its BTStatus calls return InvalidState.
  */
 class BLEAudioMediaPlayer {
@@ -85,7 +85,7 @@ public:
   explicit operator bool() const;
 
   /**
-   * @brief Player name; applied at audio.start(), or immediately (and notified) once running.
+   * @brief Player name; applied at audio.begin(), or immediately (and notified) once running.
    * @param name New player name.
    * @return BTStatus::OK when the name was staged (before start) or applied (once running);
    *         InvalidState when the handle is empty;
@@ -101,7 +101,7 @@ public:
    */
   BTStatus setTrackTitle(const String &title);
 
-  // --- Local control (after audio.start()) ---
+  // --- Local control (after audio.begin()) ---
   // Needs CONFIG_BT_MCTL_LOCAL_PLAYER_LOCAL_CONTROL in the stack; without it
   // the calls below return NotSupported (state reporting is unavailable too).
 
@@ -150,7 +150,7 @@ private:
  * @brief MCP Media Controller (client of one peer's GMCS).
  *
  * Created by BLEAudio::createMediaController() while the engine is active and
- * before audio.start(). Commands and reads are GATT operations: OK means the
+ * before audio.begin(). Commands and reads are GATT operations: OK means the
  * request was queued, and the answer arrives through the matching
  * callback. Requests before discover() return BTStatus::InvalidState.
  *
@@ -184,7 +184,7 @@ public:
 
   /**
    * @brief Discover the peer's media player on @p connHandle and subscribe to
-   *        it (after audio.start()).
+   *        it (after audio.begin()).
    *
    * Waits for the engine's GATT discovery of the link if needed; the media
    * state is read right after onDiscovered. Every call below targets this peer.

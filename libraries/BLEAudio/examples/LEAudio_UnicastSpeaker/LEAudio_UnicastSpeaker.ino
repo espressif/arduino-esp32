@@ -65,9 +65,8 @@ void setup() {
   }
 
   audio = BLE.getAudioController();
-  // No audio.begin(): the engine initializes lazily on the first create*()
-  // or audio.start() below. Call audio.begin() explicitly instead for early,
-  // checked initialization.
+  // No explicit init: the engine initializes lazily on the first create*()
+  // below. Create every role first, then call audio.begin() once to commit.
   audio.onLinkReady([](uint16_t connHandle) {
     Serial.printf("Source connected (link %u)\n", connHandle);
   });
@@ -109,11 +108,11 @@ void setup() {
     board_audio::es8311SetVolume(muted ? 0 : (uint8_t)((volume * 100u) / 255u));
   });
 
-  // audio.start() commits the roles and publishes their GATT services. It
+  // audio.begin() commits the roles and publishes their GATT services. It
   // does not open I2S or start the LC3 task; those happen next.
-  st = audio.start();
+  st = audio.begin();
   if (!st) {
-    halt("audio.start", st);
+    halt("audio.begin", st);
   }
 
   // Configure the onboard ES8311 (I2C), then enable the NS4150B amplifier.

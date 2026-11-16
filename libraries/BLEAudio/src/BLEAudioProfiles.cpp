@@ -37,7 +37,7 @@ namespace {
 
 bool startedWarn(const std::shared_ptr<BLEAudio::Impl> &audio, const char *what) {
   if (audio && audio->started) {
-    log_w("%s: ignored after audio.start() (the service is registered at start)", what);
+    log_w("%s: ignored after audio.begin() (the service registers at commit)", what);
     return true;
   }
   return false;
@@ -54,7 +54,7 @@ struct DeferredProfileDiscovery {
 
   BTStatus queueOrRun(uint16_t connHandle, const char *name, int (*discoverFn)(uint16_t)) {
     if (!audio->started.load() || connHandle == BLE_AUDIO_CONN_NONE) {
-      log_e("%s: discover() before audio.start()", name);
+      log_e("%s: discover() before audio.begin()", name);
       return BTStatus::InvalidState;
     }
     {
@@ -251,7 +251,7 @@ namespace {
 // Roles and features are set in either order (typically chained as
 // setRoles(...).setFeatures(...)), so each setter only validates its own
 // domain here; the role↔feature combination is checked in apply(), where a
-// mismatch fails audio.start() loudly instead of publishing a broken GMAS.
+// mismatch fails audio.begin() loudly instead of publishing a broken GMAS.
 bool gmapRolesOk(BLEAudioGmapRole roles, const char *what) {
   if (static_cast<uint8_t>(roles) & ~0x0Fu) {
     log_e("%s: unknown role bits 0x%02x (valid: UGG/UGT/BGS/BGR)", what, static_cast<unsigned>(roles) & ~0x0Fu);

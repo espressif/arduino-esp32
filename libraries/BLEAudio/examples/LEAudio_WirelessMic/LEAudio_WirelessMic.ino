@@ -97,9 +97,8 @@ void setup() {
   }
 
   audio = BLE.getAudioController();
-  // No audio.begin(): the engine initializes lazily on the first create*()
-  // or audio.start() below. Call audio.begin() explicitly instead for early,
-  // checked initialization.
+  // No explicit init: the engine initializes lazily on the first create*()
+  // below. Create every role first, then call audio.begin() once to commit.
   audio.onLinkReady(onLinkReady);
   audio.onDisconnected(onLinkLost);
 
@@ -115,11 +114,11 @@ void setup() {
   audioClient.onStopped(onStreamsStopped);
   audioClient.onError(onSetupError);
 
-  // audio.start() registers the client role. The I2S input and LC3 recorder
+  // audio.begin() registers the client role. The I2S input and LC3 recorder
   // are opened afterwards, so the order is the same as in the player examples.
-  st = audio.start();
+  st = audio.begin();
   if (!st) {
-    halt("audio.start", st);
+    halt("audio.begin", st);
   }
 
   // Configure the onboard ES8311 ADC; it follows the I2S clocks, so it works

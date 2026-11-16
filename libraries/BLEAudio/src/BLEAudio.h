@@ -45,20 +45,18 @@
  * BLE.begin("Headset");
  * BLEAudio audio = BLE.getAudioController();  // handle to the single engine
  * audio.setPresentationDelay(40000);          // defaults, before creating roles
- * audio.begin();                              // engine init + event bridge
  * auto server = audio.createUnicastServer();  // create and configure roles
- * server.configureHeadset();
- * audio.start();                              // register roles, single GATT commit
+ * server.configureHeadset();                  // (engine inits lazily here)
+ * audio.begin();                              // register roles, single GATT commit
  * // ... stream ...
  * audio.end();                                // or BLE.end()
  * @endcode
  *
  * Every role factory is compiled only when the matching Kconfig role is
  * enabled in the packaged libraries (see the `BLE_AUDIO_*_SUPPORTED` guards in
- * `core/BLEGuards.h`). Create roles before start(); the engine initializes
- * lazily on first use, so an explicit begin() is optional (call it for early,
- * checked initialization). A role that registers services is never registered
- * when created after start(). The broadcast source, which has no service, is
+ * `core/BLEGuards.h`). Create roles before `begin()`; the engine initializes
+ * lazily on first use. A role that registers services is never registered
+ * when created after the commit. The broadcast source, which has no service, is
  * the exception.
  */
 
@@ -118,28 +116,42 @@ public:
   // --- Lifecycle ---
 
   /**
-   * @brief Initialize the LE Audio engine and the event bridge.
+   * @brief Make the controller ready: initialize the engine and commit every role.
    *
-   * Explicit initialization is optional: creating a role or calling start()
-   * with an inactive engine initializes it lazily with the same errors.
-   * Call this explicitly for early, checked initialization (idempotent).
+   * First use initializes the engine (common init, which takes over the host
+   * GAP/GATT callbacks; the rest of the library keeps working through
+   * forwarding). Then it runs each role's staged registration
+   * (PACS/ASCS/BASS/VCS/...), registers the merged PACS records, and performs
+   * the single coordinated GATT commit, exposing the audio services and any
+   * `BLEServer` services at once. This is the publish event: the table
+   * freezes for the session afterwards. Create and configure every role (and
+   * any classic services) before calling it.
    *
-   * Runs the engine's common init, which takes over the host GAP/GATT
-   * callbacks; the rest of the library keeps working through forwarding.
-   * Does NOT commit the GATT database; that happens in start(). Calling it
-   * again while active is a no-op.
+   * Calling it again after success is a no-op. The commit always runs, even
+   * with no staged audio roles: classic services and the broadcast engine
+   * still need the single GATT publish. Busy is transient (retryable) and
+   * never poisons the controller; any other failure is terminal until end().
+   *
+   * This is the controller commit, not the LC3 data path: it does not start
+   * decoding or encoding. Attach the streams and call
+   * `BLEAudioPlayer::startPlayback()` / `BLEAudioRecorder::startCapture()`
+   * separately when the streams are configured.
    *
    * Security: PACS/ASCS characteristics require an encrypted link, so when
-   * `BLESecurity` was not configured by the sketch, begin() applies the
-   * default audio policy (Just Works: NoInputNoOutput, bonding, Secure
+   * `BLESecurity` was not configured by the sketch, the engine init applies
+   * the default audio policy (Just Works: NoInputNoOutput, bonding, Secure
    * Connections, no MITM) and logs it. Call setAutoSecurityPolicy(false) and
    * configure `BLESecurity` explicitly to override; with the automatic policy
    * off and no sketch configuration, links stay unencrypted and audio
    * discovery fails.
    *
-   * @return BTStatus::OK on success; InvalidState on a null handle or while a
-   *         standalone `BLEIso` session owns the host; another error when the
-   *         engine fails to initialize.
+   * @return BTStatus::OK on success; InvalidState on a null handle, while a
+   *         standalone `BLEIso` session owns the host, or after a failed
+   *         begin() (end, fix the role set, begin again); another error from
+   *         the first role, engine or stack step that failed.
+   *
+   * A failed begin() leaves earlier roles registered: do not retry begin().
+   * Run end(), fix the role set, then begin() again.
    */
   BTStatus begin();
 
@@ -154,39 +166,15 @@ public:
   /** @brief Current setAutoSecurityPolicy() value (default true). */
   bool autoSecurityPolicy() const;
 
-  /**
-   * @brief Register every configured role and commit the GATT database.
-   *
-   * Runs each role's staged registration (PACS/ASCS/BASS/VCS/...), registers
-   * the merged PACS records, then performs the single coordinated GATT
-   * commit, exposing the audio services and any `BLEServer` services at once.
-   * Create and configure every role before calling it. Calling it again
-   * after success is a no-op. With an inactive engine it initializes lazily
-   * first (like the factories), so an explicit begin() is optional here too.
-   *
-   * This is the controller commit, not the LC3 data path: it does not start
-   * decoding or encoding. Attach the streams and call
-   * `BLEAudioPlayer::startPlayback()` / `BLEAudioRecorder::startCapture()`
-   * separately when the streams are configured.
-   *
-   * @return BTStatus::OK on success; InvalidState after a failed start()
-   *         (end, fix the role set, begin again); the error of the first
-   *         role or engine step that failed otherwise (including lazy
-   *         initialization).
-   *
-   * A failed start() leaves earlier roles registered: do not retry start().
-   * Run end(), fix the role set, then create roles and start() again
-   * (an explicit begin() first is optional).
-   */
-  BTStatus start();
 
   /**
    * @brief Release every audio profile, ISO resource and all engine state.
    *
    * Stops leftover BAP transports and waits for ISO idle before native
    * deinit. Refused while a CONNECTED ISO channel remains: stop the streams
-   * first. After a successful end(), begin() may be called again with a new
-   * set of roles. Also run by `BLE.end()`. Does not shut down the host stack.
+   * first. After a successful end(), roles may be created and begin() may run
+   * again with a new set of roles. Also run by `BLE.end()`. Does not shut
+   * down the host stack.
    *
    * Called from a Bluetooth stack/audio callback, end() is refused with Busy
    * because it must join the ISO teardown; defer it to loop().
@@ -196,9 +184,9 @@ public:
    */
   BTStatus end();
 
-  /** @brief Whether begin() succeeded and end() has not been called (false on a null handle). */
+  /** @brief Whether the engine is initialized and end() has not been called (false on a null handle). */
   bool isActive() const;
-  /** @brief Whether start() succeeded and the roles are registered (false on a null handle). */
+  /** @brief Whether begin() committed the roles and the GATT table (false on a null handle). */
   bool isStarted() const;
 
   /**
@@ -212,7 +200,7 @@ public:
    *
    * @param address Peer address (type included).
    * @return BTStatus::OK when the connection attempt started; InvalidState
-   *         before start(); another error when the host refused the attempt.
+   *         before the commit; another error when the host refused the attempt.
    * @note One connection attempt at a time: wait for onLinkReady() or
    *       onDisconnected() before connecting to the next peer.
    */
@@ -227,7 +215,7 @@ public:
    *
    * @param connHandle Connection handle reported by onLinkReady().
    * @return BTStatus::OK when the disconnect was issued; NotConnected when no
-   *         live link matches; InvalidState before start() or during shutdown.
+   *         live link matches; InvalidState before the commit or during shutdown.
    */
   BTStatus disconnect(uint16_t connHandle);
 
@@ -276,20 +264,20 @@ public:
    */
   uint32_t getPresentationDelay() const;
 
-  // --- BAP roles (before start(); the engine initializes lazily) ---
+  // --- BAP roles (before the commit; the engine initializes lazily) ---
   //
   // Ordering: every factory below returns an empty handle (and logs) when the
   // engine cannot initialize or its Kconfig role is disabled in the build.
   // Roles that register GATT services must also be created before
-  // audio.start(); the broadcast source (no service) and the broadcast
-  // assistant (eager engine init) additionally accept creation after start().
+  // audio.begin(); the broadcast source (no service) and the broadcast
+  // assistant (eager engine init) additionally accept creation after the commit.
 
   /**
    * @brief BAP Unicast Server (ASCS + PACS): accepts unicast streams from a client.
    *
-   * Configure the ASE counts, capabilities and contexts before start(); the
+   * Configure the ASE counts, capabilities and contexts before the commit; the
    * peer then configures the server's streams (see `BLEAudioStream::onConfigured`).
-   * @return The configured server handle, or an empty handle when the engine cannot initialize, when called after start(),
+   * @return The configured server handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()),
    *         or when the role is disabled in Kconfig.
    */
   BLEAudioUnicastServer createUnicastServer();
@@ -297,7 +285,7 @@ public:
    * @brief BAP Unicast Client: discovers a connected server and sets up streams on it.
    *
    * Connect with connect(), then configure streams once onLinkReady() fires.
-   * @return The configured client handle, or an empty handle when the engine cannot initialize, when called after start(),
+   * @return The configured client handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()),
    *         or when the role is disabled in Kconfig.
    */
   BLEAudioUnicastClient createUnicastClient();
@@ -307,7 +295,7 @@ public:
    * Configure the preset, channels and broadcast metadata; the source's own
    * start() brings up the extended/periodic advertising and the BIG.
    * @return The configured source handle, or an empty handle when the engine cannot initialize or the role is disabled
-   *         in Kconfig. Unlike service roles it may also be created after start().
+   *         in Kconfig. Unlike service roles it may also be created after the commit (audio.begin()).
    */
   BLEAudioBroadcastSource createBroadcastSource();
   /**
@@ -315,7 +303,7 @@ public:
    *
    * Scans for announcements and syncs to a source; with the delegator enabled
    * a Broadcast Assistant can drive it remotely.
-   * @return The configured sink handle, or an empty handle when the engine cannot initialize, when called after start(),
+   * @return The configured sink handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()),
    *         or when the role is disabled in Kconfig.
    */
   BLEAudioBroadcastSink createBroadcastSink();
@@ -325,74 +313,74 @@ public:
    * Scans for broadcast sources and adds, modifies or removes them on a
    * connected Scan Delegator, including the Broadcast Code and PAST.
    * @return The configured assistant handle, or an empty handle when the engine cannot initialize or the role is disabled
-   *         in Kconfig. Unlike service roles it may also be created after start()
+   *         in Kconfig. Unlike service roles it may also be created after the commit (audio.begin())
    *         (engine unit inits eagerly then).
    */
   BLEAudioBroadcastAssistant createBroadcastAssistant();
 
-  // --- CAP / CSIP (after begin(), before start()) ---
+  // --- CAP / CSIP (before the commit) ---
 
   /** @brief CAP Acceptor: publishes CAS (with an included CSIS when part of a set).
-   *  @return The configured acceptor handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured acceptor handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioCapAcceptor createCapAcceptor();
   /** @brief CAP Initiator: starts, updates and stops audio on one or more acceptors.
-   *  @return The configured initiator handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured initiator handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioCapInitiator createCapInitiator();
   /** @brief CAP Commander: coordinated volume, mute and broadcast reception control.
-   *  @return The configured commander handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured commander handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioCapCommander createCapCommander();
   /** @brief CSIP Set Member: publishes CSIS (SIRK, set size, rank, lock).
-   *  @return The configured member handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured member handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioCoordinatedSetMember createCoordinatedSetMember();
   /** @brief CSIP Set Coordinator: discovers and locks the members of a coordinated set.
-   *  @return The configured coordinator handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured coordinator handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioCoordinatedSetCoordinator createCoordinatedSetCoordinator();
 
-  // --- Control profiles (after begin(), before start()) ---
+  // --- Control profiles (before the commit) ---
 
   /** @brief VCP Volume Renderer: publishes VCS (plus the compiled-in VOCS/AICS).
-   *  @return The configured renderer handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured renderer handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioVolumeRenderer createVolumeRenderer();
   /** @brief VCP Volume Controller: drives a connected renderer's volume and mute.
-   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioVolumeController createVolumeController();
   /** @brief MICP Microphone Device: publishes MICS (plus its AICS).
-   *  @return The configured device handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured device handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioMicDevice createMicDevice();
   /** @brief MICP Microphone Controller: drives a connected device's mute state.
-   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioMicController createMicController();
   /** @brief MCP Media Player: publishes the engine's media player as MCS/GMCS.
-   *  @return The configured player handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured player handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioMediaPlayer createMediaPlayer();
   /** @brief MCP Media Controller: drives playback on a connected media player.
-   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioMediaController createMediaController();
   /** @brief CCP Call Server: publishes a Generic Telephone Bearer (GTBS).
-   *  @return The configured server handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured server handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioCallServer createCallServer();
   /** @brief CCP Call Controller: observes and drives calls on a connected call server.
-   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioCallController createCallController();
   /** @brief HAP Hearing Aid: publishes HAS with named presets.
-   *  @return The configured device handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured device handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioHearingAidDevice createHearingAidDevice();
   /** @brief HAP Hearing Aid Controller: reads and switches a connected hearing aid's presets.
-   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured controller handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioHearingAidController createHearingAidController();
 
-  // --- Top-level profiles (after begin(), before start()) ---
+  // --- Top-level profiles (before the commit) ---
 
   /**
    * @brief TMAP identity: publishes TMAS with the local roles, or discovers a peer's.
    *
    * The audio itself still flows through CAP, BAP and the control profiles.
-   * @return The configured TMAP handle, or an empty handle when the engine cannot initialize, when called after start(),
+   * @return The configured TMAP handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()),
    *         or when the role is disabled in Kconfig.
    */
   BLEAudioTmap createTmap();
   /** @brief GMAP identity: publishes GMAS with the local gaming roles, or discovers a peer's.
-   *  @return The configured GMAP handle, or an empty handle when the engine cannot initialize, when called after start(), or when disabled. */
+   *  @return The configured GMAP handle, or an empty handle when the engine cannot initialize, when called after the commit (audio.begin()), or when disabled. */
   BLEAudioGmap createGmap();
 
   struct Impl;
@@ -400,15 +388,21 @@ public:
 private:
   explicit BLEAudio(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
   /**
-   * @brief Initialize the engine on first use (lazy begin()).
+   * @brief Initialize the engine on first use (lazy init).
    *
-   * Factories and start() call this, so an explicit begin() is optional:
-   * creating a role or starting with an inactive engine initializes it with
-   * the same errors begin() reports. Call begin() explicitly for early,
-   * checked initialization (it is idempotent).
+   * Factories call this, so creating a role with an inactive engine
+   * initializes it with the same errors begin() would report.
    * @return BTStatus::OK when the engine is active; begin()'s error otherwise.
    */
   BTStatus ensureActive();
+  /**
+   * @brief Engine-only initialization (common init, event bridge, BAP attach).
+   *
+   * Runs the begin() prologue without committing anything. Called by
+   * ensureActive(); begin() then commits the staged roles on top.
+   * @return BTStatus::OK on success; begin()'s error otherwise.
+   */
+  BTStatus initEngine();
   std::shared_ptr<Impl> _impl;
 
   friend class BLEClass;

@@ -46,7 +46,7 @@ enum class BLEHearingAidType : uint8_t {
  * @brief HAP Hearing Aid (HAS server).
  *
  * Created by BLEAudio::createHearingAidDevice() while the engine is active and
- * before audio.start(). Copies of the handle control the same device; an empty
+ * before audio.begin(). Copies of the handle control the same device; an empty
  * handle does nothing, and its BTStatus calls return InvalidState.
  */
 class BLEAudioHearingAidDevice {
@@ -74,7 +74,7 @@ public:
   /** @return true when the handle refers to a created device. */
   explicit operator bool() const;
 
-  // --- Configuration (before audio.start()) ---
+  // --- Configuration (before audio.begin()) ---
 
   /** @brief Default Monaural. */
   BLEAudioHearingAidDevice &setType(BLEHearingAidType type);
@@ -84,7 +84,7 @@ public:
   /**
    * @brief Add a preset (index >= 1, unique).
    *
-   * Presets added before audio.start() are registered by start(); later ones
+   * Presets added before audio.begin() are registered by start(); later ones
    * are registered at once. At most CONFIG_BT_HAS_PRESET_COUNT presets;
    * @p writable needs CONFIG_BT_HAS_PRESET_NAME_DYNAMIC.
    * @param index Preset index (>= 1, unique; 0 is logged and ignored).
@@ -94,7 +94,7 @@ public:
    */
   BLEAudioHearingAidDevice &addPreset(uint8_t index, const String &name, bool available = true, bool writable = false);
 
-  // --- Runtime (after audio.start()); connected controllers are notified ---
+  // --- Runtime (after audio.begin()); connected controllers are notified ---
 
   /**
    * @brief Unregister preset @p index.
@@ -148,7 +148,7 @@ private:
  * @brief HAP Hearing Aid Unicast Client (HAS client), bound to one peer.
  *
  * Created by BLEAudio::createHearingAidController() while the engine is active and
- * before audio.start(). Requests are GATT operations: OK means the request was
+ * before audio.begin(). Requests are GATT operations: OK means the request was
  * queued, and the answer arrives through onPreset / onPresetSwitch.
  * Requests fail until discover() has bound a peer.
  */
@@ -186,12 +186,12 @@ public:
   explicit operator bool() const;
 
   /**
-   * @brief Discover the peer's HAS on @p connHandle (after audio.start()).
+   * @brief Discover the peer's HAS on @p connHandle (after audio.begin()).
    *
    * Waits for the engine's GATT discovery of the link if needed. Only one
    * peer is driven at a time: discovering another one replaces it.
    * @param connHandle ACL connection handle of the peer.
-   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   * @return BTStatus::InvalidState when the handle is empty, before audio.begin(), or for BLE_AUDIO_CONN_NONE;
    *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
    */
   BTStatus discover(uint16_t connHandle);

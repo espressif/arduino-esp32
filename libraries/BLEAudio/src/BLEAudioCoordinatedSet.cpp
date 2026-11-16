@@ -45,7 +45,7 @@
 
 struct BLEAudioCoordinatedSetMember::Impl {
   bool cas = false;         ///< CAS-included instance (CAP acceptor).
-  bool registered = false;  ///< Registered by audio.start().
+  bool registered = false;  ///< Registered by audio.begin().
   /** Random per creation: a fixed demo SIRK would let unrelated units that kept
    * the default resolve and join each other. Pair devices with setSirk() using
    * one shared value (persist it for stable pairing across boots). */
@@ -66,7 +66,7 @@ struct BLEAudioCoordinatedSetMember::Impl {
   LockCallback lockCb;
   SirkReadCallback sirkCb;
 
-  /** Register the CSIS instance with the staged values; runs inside audio.start(). */
+  /** Register the CSIS instance with the staged values; runs inside audio.begin(). */
   BTStatus apply() {
     if (!sirkCustom) {
       log_w("CoordinatedSet: advertising with a random SIRK; pair devices with setSirk() sharing one value");
@@ -335,7 +335,7 @@ BLEAudioCoordinatedSetCoordinator::operator bool() const {
 
 BTStatus BLEAudioCoordinatedSetCoordinator::discover(uint16_t connHandle) {
   if (!_impl || !_impl->audio->started.load() || connHandle == BLE_AUDIO_CONN_NONE) {
-    log_e("CoordinatedSet: discover() before audio.start()");
+    log_e("CoordinatedSet: discover() before audio.begin()");
     return BTStatus::InvalidState;
   }
   {
@@ -436,7 +436,7 @@ BLEAudioCoordinatedSetMember BLEAudio::createCoordinatedSetMember() {
     return BLEAudioCoordinatedSetMember();  // begin() already logged the cause
   }
   if (_impl->started) {
-    log_e("CoordinatedSet: create before audio.start()");
+    log_e("CoordinatedSet: create before audio.begin() commits");
     return BLEAudioCoordinatedSetMember();
   }
   return BLEAudioCoordinatedSetMember(makeMember(_impl, false));
@@ -449,7 +449,7 @@ BLEAudioCapAcceptor BLEAudio::createCapAcceptor() {
     return BLEAudioCapAcceptor();  // begin() already logged the cause
   }
   if (_impl->started) {
-    log_e("CapAcceptor: create before audio.start()");
+    log_e("CapAcceptor: create before audio.begin() commits");
     return BLEAudioCapAcceptor();
   }
   return BLEAudioCapAcceptor(makeMember(_impl, true));
@@ -462,7 +462,7 @@ BLEAudioCoordinatedSetCoordinator BLEAudio::createCoordinatedSetCoordinator() {
     return BLEAudioCoordinatedSetCoordinator();  // begin() already logged the cause
   }
   if (_impl->started) {
-    log_e("CoordinatedSet: create before audio.start()");
+    log_e("CoordinatedSet: create before audio.begin() commits");
     return BLEAudioCoordinatedSetCoordinator();
   }
   auto c = std::make_shared<BLEAudioCoordinatedSetCoordinator::Impl>();

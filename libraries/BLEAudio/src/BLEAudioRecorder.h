@@ -104,7 +104,7 @@ public:
   /**
    * @brief Start the encode task; sending follows the attached streams' start/stop.
    *
-   * This is not BLEAudio::start(): the controller commits the roles and GATT
+   * This is not BLEAudio::begin(): the controller commits the roles and GATT
    * table, while this method starts the LC3 task that produces the streams.
    */
   BTStatus startCapture();

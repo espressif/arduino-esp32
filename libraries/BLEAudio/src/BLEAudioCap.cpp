@@ -712,7 +712,7 @@ BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastName(const String &name)
 
 BTStatus BLEAudioCapInitiator::discover(uint16_t connHandle) {
   if (!_impl || !_impl->audio->started) {
-    log_e("CapInitiator: discover() before audio.start()");
+    log_e("CapInitiator: discover() before audio.begin()");
     return BTStatus::InvalidState;
   }
   return _impl->discover(connHandle);
@@ -813,7 +813,7 @@ bool BLEAudioCapInitiator::isUnicastStreaming() const {
 /** Order: source (BASE) first, then advertising (needs the BASE), then the BIG (needs the train). */
 BTStatus BLEAudioCapInitiator::startBroadcast(uint8_t channels, uint8_t advInstance) {
   if (!_impl || !_impl->audio->started.load()) {
-    log_e("CapInitiator: startBroadcast() before audio.start()");
+    log_e("CapInitiator: startBroadcast() before audio.begin()");
     return BTStatus::InvalidState;
   }
   Impl &m = *_impl;
@@ -1204,7 +1204,7 @@ BLEAudioCapCommander::operator bool() const {
 
 BTStatus BLEAudioCapCommander::discover(uint16_t connHandle) {
   if (!_impl || !_impl->audio->started.load() || connHandle == BLE_AUDIO_CONN_NONE) {
-    log_e("CapCommander: discover() before audio.start()");
+    log_e("CapCommander: discover() before audio.begin()");
     return BTStatus::InvalidState;
   }
   {
@@ -1332,7 +1332,7 @@ BLEAudioCapInitiator BLEAudio::createCapInitiator() {
     return BLEAudioCapInitiator();  // begin() already logged the cause
   }
   if (_impl->started) {
-    log_e("CapInitiator: create before audio.start()");
+    log_e("CapInitiator: create before audio.begin() commits");
     return BLEAudioCapInitiator();
   }
   auto i = std::make_shared<BLEAudioCapInitiator::Impl>();
@@ -1369,7 +1369,7 @@ BLEAudioCapCommander BLEAudio::createCapCommander() {
     return BLEAudioCapCommander();  // begin() already logged the cause
   }
   if (_impl->started) {
-    log_e("CapCommander: create before audio.start()");
+    log_e("CapCommander: create before audio.begin() commits");
     return BLEAudioCapCommander();
   }
   auto c = std::make_shared<BLEAudioCapCommander::Impl>();

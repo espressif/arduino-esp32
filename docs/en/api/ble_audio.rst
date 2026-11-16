@@ -52,8 +52,8 @@ LE Audio separates configuration from the transport, and sketches always use thi
         BLEAudioUnicastServer server = audio.createUnicastServer();
         server.configureMediaSink();
 
-        audio.start();              // 1. controller/GATT commit
-        // 2. PCM side, AFTER audio.start():
+        audio.begin();              // 1. controller/GATT commit
+        // 2. PCM side, AFTER audio.begin():
         //    player.begin(...) -> player.attach(stream) -> player.startPlayback()
         BLE.getAdvertising().start();
     }
@@ -61,12 +61,11 @@ LE Audio separates configuration from the transport, and sketches always use thi
 1. ``BLE.begin()`` -- bring up the Bluetooth host.
 2. Create and configure roles (``createUnicastServer()``, ``createCapAcceptor()``,
    ``createBroadcastSink()``, ...). The first factory initializes the engine
-   lazily; call ``audio.begin()`` explicitly beforehand for early, checked
-   initialization. Factories return an empty handle when the engine cannot
+   lazily. Factories return an empty handle when the engine cannot
    initialize or the role is disabled — check with ``if (server)``.
-3. ``audio.start()`` -- register the roles and commit their GATT services. This does
+3. ``audio.begin()`` -- register the roles and commit their GATT services. This does
    **not** open I2S or start an LC3 task.
-4. Configure the PCM side **after** ``audio.start()``: ``player.begin(...)`` then
+4. Configure the PCM side **after** ``audio.begin()``: ``player.begin(...)`` then
    ``player.attach(stream)`` and ``player.startPlayback()`` (or ``recorder.begin(...)``,
    ``recorder.attach(stream)`` and ``recorder.startCapture()``).
 5. Start the transport: advertising, ``source.start()``, ``sink.start()``, or connect
@@ -74,14 +73,16 @@ LE Audio separates configuration from the transport, and sketches always use thi
    ``attach()``/``startPlayback()`` also happen in the stream's ``onConfigured()``
    callback.
 
-``audio.start()`` is the controller/GATT commit; ``startPlayback()``/``startCapture()``
+``audio.begin()`` is the controller/GATT commit; ``startPlayback()``/``startCapture()``
 start the local LC3 codec tasks. They are deliberately separate because the codec task
 is not needed until a stream exists. ``audio.end()`` releases everything; calling it
 from a stack callback is refused with ``Busy`` — defer it to ``loop()``.
 
 GATT coexistence: audio profiles and a classic ``BLEServer`` share **one** committed GATT
-table (``audio.start()`` performs the single coordinated commit). Create classic services
-before ``audio.start()`` — afterwards the table is frozen and ``server.start()`` reports
+table (``audio.begin()`` performs the single coordinated commit). Create at least one
+audio role *before* staging classic services, so they stage into the coordinated
+table instead of publishing standalone — then call ``audio.begin()`` once to commit
+everything. Afterwards the table is frozen and ``server.start()`` reports
 ``InvalidState``.
 
 Controller and roles
@@ -256,7 +257,7 @@ Errors and callbacks
 --------------------
 
 Configuration methods return ``BTStatus`` synchronously: ``InvalidParam`` for a bad value,
-``InvalidState`` when the engine cannot initialize, before ``audio.start()`` or while a
+``InvalidState`` when the engine cannot initialize, before ``audio.begin()`` or while a
 role is running, and
 the stack status when a request cannot be queued. Where a profile defines a completion
 callback (``onResult()``, ``onError()``, ``onHandover()``, ``onSyncFailed()``, ...), an

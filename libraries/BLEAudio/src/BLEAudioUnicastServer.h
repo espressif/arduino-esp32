@@ -40,7 +40,7 @@
  * for (size_t i = 0; i < server.streamCount(); i++) {
  *   server.stream(i).onReceive(onAudio);
  * }
- * audio.start();
+ * audio.begin();
  * @endcode
  */
 
@@ -60,7 +60,7 @@ public:
    * @brief Create an empty server handle.
    *
    * Get a live one from BLEAudio::createUnicastServer() while the engine is active and
- * before audio.start(); the empty handle ignores every setter and reports an
+ * before audio.begin(); the empty handle ignores every setter and reports an
    * empty stream from every stream().
    */
   BLEAudioUnicastServer();
@@ -77,10 +77,10 @@ public:
   /** @brief Whether this handle references a server (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (before audio.start(); later calls are ignored) ---
+  // --- Configuration (before audio.begin(); later calls are ignored) ---
   //
   // Every setter below returns this handle for chaining; on an empty handle it
-  // is a no-op. Calls after audio.start() have no effect on the registered
+  // is a no-op. Calls after audio.begin() have no effect on the registered
   // services (the ASE counts additionally log a warning).
 
   /**
@@ -160,7 +160,7 @@ public:
    *
    * The single ASE accepts mono or stereo, so a phone can send one
    * interleaved stream instead of one stream per speaker. Call it after
-   * createUnicastServer() and before audio.start(); individual setters can
+   * createUnicastServer() and before audio.begin(); individual setters can
    * still override any field afterwards.
    */
   BLEAudioUnicastServer &configureMediaSink();
@@ -181,12 +181,12 @@ public:
    *
    * The sink ASE renders phone media and call audio; the source ASE carries
    * the headset microphone back to the phone. Call it after
-   * createUnicastServer() and before audio.start(); individual setters can
+   * createUnicastServer() and before audio.begin(); individual setters can
    * still override any field afterwards.
    */
   BLEAudioUnicastServer &configureHeadset();
 
-  // --- Runtime (after audio.start()) ---
+  // --- Runtime (after audio.begin()) ---
 
   /**
    * @brief Change the contexts currently available (PACS "Available Audio Contexts").
@@ -195,7 +195,7 @@ public:
    * `Prohibited` while busy (e.g. in a call on another link).
    * @param sink Contexts currently available on the sink ASEs.
    * @param source Contexts currently available on the source ASEs.
-   * @return BTStatus::OK on success; InvalidState before audio.start().
+   * @return BTStatus::OK on success; InvalidState before audio.begin().
    */
   BTStatus setAvailableContexts(BLEAudioContext sink, BLEAudioContext source);
 

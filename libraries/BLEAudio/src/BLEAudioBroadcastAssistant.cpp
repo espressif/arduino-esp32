@@ -459,7 +459,7 @@ BLEAudioBroadcastAssistant BLEAudio::createBroadcastAssistant() {
   auto ba = std::make_shared<BLEAudioBroadcastAssistant::Impl>();
   ba->audio = _impl;
   if (_impl->started) {
-    /* Created after start(): the staged apply below would never run
+    /* Created after the commit: the staged apply below would never run
      * (start() already drained roleApplies), so initialise eagerly. The
      * engine unit also initialises lazily on first use; both are idempotent. */
     const BTStatus st = bleAudioStatus(bleAudioBaInit());

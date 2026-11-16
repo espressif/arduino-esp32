@@ -62,7 +62,7 @@ enum class BLEAudioCallState : uint8_t {
  * @brief CCP Call Control Server (the phone side, GTBS).
  *
  * Created by BLEAudio::createCallServer() while the engine is active and
- * before audio.start(). The application drives the calls (incoming call, far end
+ * before audio.begin(). The application drives the calls (incoming call, far end
  * answered or hung up); connected controllers see every state change.
  * Copies of the handle control the same server; an empty handle does
  * nothing, and its BTStatus calls return InvalidState.
@@ -99,7 +99,7 @@ public:
   /** @return true when the handle refers to a created server. */
   explicit operator bool() const;
 
-  // --- Configuration (before audio.start()) ---
+  // --- Configuration (before audio.begin()) ---
 
   /** @brief Default "ESP Phone". */
   BLEAudioCallServer &setProviderName(const String &name);
@@ -108,7 +108,7 @@ public:
   /** @brief Comma-separated URI schemes, e.g. "tel,skype". Default "tel". */
   BLEAudioCallServer &setUriSchemes(const String &schemes);
 
-  // --- Calls (after audio.start()) ---
+  // --- Calls (after audio.begin()) ---
 
   /**
    * @brief Raise an incoming call (state Incoming).
@@ -186,7 +186,7 @@ private:
  * @brief CCP Call Control Client (the headset side), bound to one peer.
  *
  * Created by BLEAudio::createCallController() while the engine is active and
- * before audio.start(). Operations are control point writes: OK means the write
+ * before audio.begin(). Operations are control point writes: OK means the write
  * was queued, and the server's answer arrives through onResult; the
  * resulting state changes arrive through onCallState. Operations before
  * discover() return BTStatus::InvalidState.
@@ -225,13 +225,13 @@ public:
 
   /**
    * @brief Discover the peer's telephone bearers on @p connHandle (after
-   *        audio.start()).
+   *        audio.begin()).
    *
    * Waits for the engine's GATT discovery of the link if needed; the current
    * calls are read right after onDiscovered. Every call below acts on the
    * peer's GTBS.
    * @param connHandle ACL connection handle of the peer.
-   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   * @return BTStatus::InvalidState when the handle is empty, before audio.begin(), or for BLE_AUDIO_CONN_NONE;
    *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
    */
   BTStatus discover(uint16_t connHandle);

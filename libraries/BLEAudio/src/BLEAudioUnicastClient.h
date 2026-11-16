@@ -149,7 +149,7 @@ public:
    */
   BLEAudioUnicastClient &setSourceStreams(uint8_t perPeer);
 
-  // --- Procedures (after audio.start()) ---
+  // --- Procedures (after audio.begin()) ---
 
   /**
    * @brief Add a connected server and discover its PACS and ASCS.
@@ -159,7 +159,7 @@ public:
    * reported by onDiscovered(). Adding a known peer again is a no-op.
    *
    * @return BTStatus::OK when discovery started or is pending; InvalidState
-   *         before audio.start(); another error when discovery failed to start.
+   *         before audio.begin(); another error when discovery failed to start.
    */
   BTStatus addPeer(uint16_t connHandle);
   /**

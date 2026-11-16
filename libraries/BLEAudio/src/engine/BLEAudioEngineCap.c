@@ -241,7 +241,7 @@ int bleAudioCsisRegister(bool cas, const ble_audio_csis_cfg_t *cfg) {
     return ESP_ERR_INVALID_ARG;
   }
   if (s_csis[cas]) {
-    // Already registered by this session; a retried audio.start() must not
+    // Already registered by this session; a retried audio.begin() must not
     // fail before the roles that still need registration are applied.
     return 0;
   }

@@ -38,7 +38,7 @@ class BLEAudio;
  * @brief MICP Microphone Device (Microphone Control Service server).
  *
  * Created by BLEAudio::createMicDevice() while the engine is active and
- * before audio.start(). Copies of the handle control the same device; an empty
+ * before audio.begin(). Copies of the handle control the same device; an empty
  * handle does nothing, and its BTStatus calls return InvalidState.
  */
 class BLEAudioMicDevice {
@@ -65,11 +65,11 @@ public:
   /** @return true when the handle refers to a created device. */
   explicit operator bool() const;
 
-  /** @brief Default unmuted. Before audio.start(). */
+  /** @brief Default unmuted. Before audio.begin(). */
   BLEAudioMicDevice &setInitialMute(bool muted);
 
   /**
-   * @brief Mute locally (after audio.start()); connected controllers are notified.
+   * @brief Mute locally (after audio.begin()); connected controllers are notified.
    * @return BTStatus::OK when the change was queued (reported via onMuteChanged, or via onResult on failure);
    *         InvalidState when the handle is empty or audio is not started;
    *         another error when the stack refused the request.
@@ -117,7 +117,7 @@ private:
  * @brief MICP Microphone Controller (client of one device at a time).
  *
  * Created by BLEAudio::createMicController() while the engine is active and
- * before audio.start(). Commands are GATT writes: OK means the write was queued.
+ * before audio.begin(). Commands are GATT writes: OK means the write was queued.
  * Success arrives as onMuteChanged / onInputChanged; a rejected write arrives
  * as onResult and changes nothing. Cached state is cleared on disconnect.
  * Commands before discover() return BTStatus::InvalidState. Only the first
@@ -154,7 +154,7 @@ public:
   explicit operator bool() const;
 
   /**
-   * @brief Discover the microphone device on @p connHandle (after audio.start()).
+   * @brief Discover the microphone device on @p connHandle (after audio.begin()).
    *
    * Waits for the engine's GATT discovery of the link if needed; the peer's
    * mute state is read right after onDiscovered. Every call below targets

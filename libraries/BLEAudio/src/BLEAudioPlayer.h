@@ -113,7 +113,7 @@ public:
   /**
    * @brief Start the decode task; playback follows the attached streams' start/stop.
    *
-   * This is not BLEAudio::start(): the controller commits the roles and GATT
+   * This is not BLEAudio::begin(): the controller commits the roles and GATT
    * table, while this method starts the LC3 task that consumes the streams.
    */
   BTStatus startPlayback();

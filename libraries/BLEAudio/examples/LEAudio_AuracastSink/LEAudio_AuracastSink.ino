@@ -55,9 +55,8 @@ void setup() {
   }
 
   audio = BLE.getAudioController();
-  // No audio.begin(): the engine initializes lazily on the first create*()
-  // or audio.start() below. Call audio.begin() explicitly instead for early,
-  // checked initialization.
+  // No explicit init: the engine initializes lazily on the first create*()
+  // below. Create every role first, then call audio.begin() once to commit.
 
   sink = audio.createBroadcastSink();
   if (!sink) {
@@ -86,11 +85,11 @@ void setup() {
     Serial.printf("[BIG] left (reason 0x%02X)\n", reason);
   });
 
-  // audio.start() commits the roles and publishes PACS/BASS. I2S and the
+  // audio.begin() commits the roles and publishes PACS/BASS. I2S and the
   // LC3 task are started after it; the broadcast is joined later by sink.start().
-  st = audio.start();
+  st = audio.begin();
   if (!st) {
-    halt("audio.start", st);
+    halt("audio.begin", st);
   }
 
   // Configure the onboard ES8311 (I2C), then enable the NS4150B amplifier.

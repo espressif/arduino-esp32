@@ -27,7 +27,7 @@ void setup() {
   BLEAudioUnicastServer server = audio.createUnicastServer();
   server.configureMediaSink();
 
-  audio.start();
+  audio.begin();
   BLE.getAdvertising().start();
 }
 ```
@@ -68,18 +68,20 @@ The examples require an LE Audio-capable target (ESP32-S31) and the LC3 codec
 `BLE_APPEARANCE_AUDIO_SOURCE_MICROPHONE`, so a sketch does not hard-code the
 Assigned Numbers value.
 
-## Lifecycle: `audio.start()` vs `startPlayback()` / `startCapture()`
+## Lifecycle: `audio.begin()` vs `startPlayback()` / `startCapture()`
 
-LE Audio has two separate starts, and the examples always use this order:
+LE Audio separates configuration from the transport, and the examples always use this order:
 
 1. `BLE.begin()` — bring up the Bluetooth host.
 2. Create and configure the roles (`createCapAcceptor()`,
    `createUnicastServer()`, `createBroadcastSink()`, …). The first factory
-   initializes the engine lazily; call `audio.begin()` explicitly beforehand
-   for early, checked initialization.
-3. `audio.start()` — register the roles and commit their GATT services. This
+   initializes the engine lazily. When mixing classic `BLEServer` services in,
+   create at least one audio role *before* staging classic services, so they
+   stage into the coordinated (audio-owned) GATT table instead of publishing
+   standalone.
+3. `audio.begin()` — register the roles and commit their GATT services. This
    does **not** open I2S or start an LC3 task.
-4. Configure the PCM side **after** `audio.start()`:
+4. Configure the PCM side **after** `audio.begin()`:
    - `player.begin(...)` then `player.attach(stream)` and
      `player.startPlayback()`;
    - `recorder.begin(...)` then `recorder.attach(stream)` and
@@ -89,7 +91,7 @@ LE Audio has two separate starts, and the examples always use this order:
    remote client, so `attach()`/`startPlayback()` also happen in the
    `onConfigured()` callback.
 
-`audio.start()` is the controller/GATT commit; `startPlayback()` and
+`audio.begin()` is the controller/GATT commit; `startPlayback()` and
 `startCapture()` start the local LC3 codec tasks. They are deliberately
 separate because the codec task is not needed until a stream exists.
 
@@ -183,7 +185,7 @@ of adding more sketches:
 
 Configuration methods return `BTStatus` synchronously: `InvalidParam` for a
 bad value, `InvalidState` when the engine cannot initialize, before
-`audio.start()`, or while a role is running, and the stack status when a request cannot be queued. Where a
+`audio.begin()`, or while a role is running, and the stack status when a request cannot be queued. Where a
 profile defines a completion callback (`onResult()`, `onError()`,
 `onHandover()`, `onSyncFailed()`, ...), an asynchronous failure is reported
 there.
