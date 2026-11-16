@@ -1,6 +1,6 @@
 # NVS / Preferences Validation Test
 
-Validates the `Preferences` library covering all typed put/get operations, string and byte/struct storage, key queries, namespace isolation, read-only mode, default values, and data persistence across reboots.
+Validates the `Preferences` library covering all typed put/get operations, string and byte/struct storage (including `std::string`), key queries, namespace isolation, read-only mode, default values, and data persistence across reboots.
 
 ## Test Cases
 
@@ -21,6 +21,7 @@ Validates the `Preferences` library covering all typed put/get operations, strin
 | `test_bool` | `putBool` / `getBool` for true and false |
 | `test_string_object` | `putString` / `getString` with Arduino `String` |
 | `test_string_cstr` | `putString` / `getString` with C-string and char buffer |
+| `test_string_std` | `putString` / `getString` with `std::string`, shared NVS entry with Arduino `String`, missing-key default, and string-literal overload |
 | `test_bytes` | `putBytes` / `getBytes` raw byte array |
 | `test_struct` | `putBytes` / `getBytes` with a struct |
 | `test_is_key` | `isKey()` returns false for missing key, true after write |
