@@ -242,8 +242,8 @@ enum {
 /** One stream of the pool. */
 struct ble_audio_slot {
   esp_ble_audio_cap_stream_t cap; /* MUST stay first: its first member is the BAP stream (see slot_of). */
-  void *owner;                    /* C++ stream Impl, passed back in every s_cbs call. */
-  uint8_t kind;                   /* ble_audio_stream_kind_t. */
+  _Atomic(void *) owner;          /* C++ stream Impl, passed back in every s_cbs call. */
+  _Atomic(uint8_t) kind;          /* ble_audio_stream_kind_t. */
   _Atomic bool in_use;            /* Pool ownership (C++ handle or zombie, see bleAudioStreamFree). */
   _Atomic bool bound;             /* Unicast: bound to a remote ASE (server) or endpoint (client). */
   _Atomic bool tx;                /* The local device sends on this stream. */
@@ -251,8 +251,8 @@ struct ble_audio_slot {
   _Atomic uint8_t uc_stage;       /* Unicast client: UC_* stage (caller task validates, host task advances). */
   _Atomic uint16_t conn_handle;   /* Unicast ACL, CONN_NONE otherwise. */
   _Atomic uint16_t seq;           /* Next Tx sequence number; advances only on accepted sends. */
-  esp_ble_audio_bap_ep_t *uc_ep;  /* Unicast client: remote endpoint. */
-  struct ble_audio_slot *partner; /* Opposite direction sharing the same CIS. */
+  _Atomic(esp_ble_audio_bap_ep_t *) uc_ep;  /* Unicast client: remote endpoint. */
+  _Atomic(struct ble_audio_slot *) partner; /* Opposite direction sharing the same CIS. */
   esp_ble_audio_codec_cfg_t codec_cfg;  /* Slot-owned: the engine keeps pointers to these. */
   esp_ble_audio_bap_qos_cfg_t qos_cfg;
   ble_audio_codec_t snap_codec;         /* Decoded snapshot for cross-core codecConfig(). */
@@ -592,7 +592,8 @@ ble_audio_slot_t *bleAudioStreamAlloc(ble_audio_stream_kind_t kind, void *owner)
   }
   for (int i = 0; i < POOL_SIZE; i++) {
     ble_audio_slot_t *s = &s_pool[i];
-    if (!s->in_use) {
+    bool expected = false;
+    if (atomic_compare_exchange_strong(&s->in_use, &expected, true)) {
       slot_init(s, kind, owner);
       return s;
     }
@@ -728,7 +729,7 @@ void *bleAudioStreamCap(ble_audio_slot_t *slot) {
 /* Range check so a BAP stream that is not ours (e.g. from another stack user) maps to NULL. */
 ble_audio_slot_t *bleAudioStreamFromBap(const void *bap) {
   const ble_audio_slot_t *s = (const ble_audio_slot_t *)bap;
-  if (s < &s_pool[0] || s >= &s_pool[POOL_ALLOC]) {
+  if (s < &s_pool[0] || s >= &s_pool[POOL_SIZE]) {
     return NULL;
   }
   return (ble_audio_slot_t *)s;
@@ -779,9 +780,17 @@ void *bleAudioStreamSetQos(ble_audio_slot_t *slot, const ble_audio_qos_t *qos) {
 
 void bleAudioStreamBind(ble_audio_slot_t *slot, uint16_t conn_handle, bool tx) {
   if (slot) {
-    slot->bound = true;
-    slot->conn_handle = conn_handle;
-    slot->tx = tx;
+    atomic_store(&slot->bound, true);
+    atomic_store(&slot->conn_handle, conn_handle);
+    atomic_store(&slot->tx, tx);
+  }
+}
+
+/** @brief Release a CAP-driven unicast stream binding (slot stays owned). */
+void bleAudioStreamUnbind(ble_audio_slot_t *slot) {
+  if (slot) {
+    atomic_store(&slot->bound, false);
+    atomic_store(&slot->conn_handle, CONN_NONE);
   }
 }
 
@@ -804,6 +813,7 @@ typedef struct {
 } pac_rec_t;
 
 static pac_rec_t s_pac[2]; /* [0] sink, [1] source */
+static uint16_t s_pacs_supported[2]; /* First published supported contexts, per direction. */
 static bool s_pacs_committed;
 
 /* Rate / duration / octets of each BLEAudioCodecPreset (index order). */
@@ -994,6 +1004,11 @@ int bleAudioPacsCommit(void) {
         ESP_LOGW(TAG, "PACS %s supported contexts already published this boot, keeping it",
                  i == 0 ? "sink" : "source");
         err = ESP_OK;
+        /* Available must stay a subset of the pinned supported value; clamp
+         * newly staged bits that the stack will never publish as supported. */
+        ctx &= (uint16_t)(s_pacs_supported[i] | ESP_BLE_AUDIO_CONTEXT_TYPE_UNSPECIFIED);
+      } else if (err == ESP_OK) {
+        s_pacs_supported[i] = ctx;
       }
     }
     if (err == ESP_OK) {
@@ -1011,6 +1026,10 @@ int bleAudioPacsCommit(void) {
 int bleAudioPacsSetAvailable(uint8_t dir, uint16_t contexts) {
   if (!s_pacs_committed) {
     return ESP_ERR_INVALID_STATE;
+  }
+  const int idx = (dir == BLE_AUDIO_DIR_SINK) ? 0 : 1;
+  if (s_pacs_supported[idx] != 0) {
+    contexts &= (uint16_t)(s_pacs_supported[idx] | ESP_BLE_AUDIO_CONTEXT_TYPE_UNSPECIFIED);
   }
   return (int)esp_ble_audio_pacs_set_available_contexts((esp_ble_audio_dir_t)dir, contexts);
 }
@@ -1340,18 +1359,18 @@ static void uc_advance_pass(void) {
     return;
   }
   for (int i = 0; i < POOL_SIZE; i++) {
-    uint8_t st = s_pool[i].uc_stage;
-    if (uc_slot_active(&s_pool[i]) && (st == UC_CONFIG_PENDING || st == UC_QOS_PENDING || st == UC_ENABLE_PENDING)) {
+    uint8_t st = atomic_load(&s_pool[i].uc_stage);
+    if (uc_slot_active(&s_pool[i]) && (st == UC_CONFIG_PENDING || st == UC_QOS_PENDING || st == UC_ENABLE_PENDING || st == UC_CONNECTING)) {
       return;
     }
   }
   for (int i = 0; i < POOL_SIZE; i++) {
     ble_audio_slot_t *s = &s_pool[i];
-    if (uc_slot_active(s) && s->uc_stage == UC_REQUESTED) {
-      s->uc_stage = UC_CONFIG_PENDING;
-      esp_err_t err = esp_ble_audio_bap_stream_config(s->conn_handle, BAP(s), s->uc_ep, &s->codec_cfg);
+    if (uc_slot_active(s) && atomic_load(&s->uc_stage) == UC_REQUESTED) {
+      atomic_store(&s->uc_stage, UC_CONFIG_PENDING);
+      esp_err_t err = esp_ble_audio_bap_stream_config(atomic_load(&s->conn_handle), BAP(s), atomic_load(&s->uc_ep), &s->codec_cfg);
       if (err != ESP_OK) {
-        ESP_LOGE(TAG, "unicast client: Config Codec on conn %u: %d", s->conn_handle, err);
+        ESP_LOGE(TAG, "unicast client: Config Codec on conn %u: %d", atomic_load(&s->conn_handle), err);
         uc_fail(BLE_AUDIO_UC_OP_CONFIG, 0, 0, (int)err);
       }
       return;
@@ -1367,11 +1386,11 @@ static void uc_advance_pass(void) {
   }
   for (int i = 0; i < POOL_SIZE; i++) {
     ble_audio_slot_t *s = &s_pool[i];
-    if (uc_slot_active(s) && s->uc_stage == UC_CONFIGURED) {
-      uint16_t conn = s->conn_handle;
+    if (uc_slot_active(s) && atomic_load(&s->uc_stage) == UC_CONFIGURED) {
+      uint16_t conn = atomic_load(&s->conn_handle);
       for (int j = 0; j < POOL_SIZE; j++) {
-        if (uc_slot_active(&s_pool[j]) && s_pool[j].conn_handle == conn && s_pool[j].uc_stage == UC_CONFIGURED) {
-          s_pool[j].uc_stage = UC_QOS_PENDING;
+        if (uc_slot_active(&s_pool[j]) && atomic_load(&s_pool[j].conn_handle) == conn && atomic_load(&s_pool[j].uc_stage) == UC_CONFIGURED) {
+          atomic_store(&s_pool[j].uc_stage, UC_QOS_PENDING);
         }
       }
       esp_err_t err = esp_ble_audio_bap_stream_qos(conn, s_uc.group);
@@ -1384,11 +1403,11 @@ static void uc_advance_pass(void) {
   }
   for (int i = 0; i < POOL_SIZE; i++) {
     ble_audio_slot_t *s = &s_pool[i];
-    if (uc_slot_active(s) && s->uc_stage == UC_QOS_SET) {
-      s->uc_stage = UC_ENABLE_PENDING;
+    if (uc_slot_active(s) && atomic_load(&s->uc_stage) == UC_QOS_SET) {
+      atomic_store(&s->uc_stage, UC_ENABLE_PENDING);
       esp_err_t err = esp_ble_audio_bap_stream_enable(BAP(s), s->codec_cfg.meta, s->codec_cfg.meta_len);
       if (err != ESP_OK) {
-        ESP_LOGE(TAG, "unicast client: Enable on conn %u: %d", s->conn_handle, err);
+        ESP_LOGE(TAG, "unicast client: Enable on conn %u: %d", atomic_load(&s->conn_handle), err);
         uc_fail(BLE_AUDIO_UC_OP_ENABLE, 0, 0, (int)err);
       }
       return;
@@ -1396,19 +1415,26 @@ static void uc_advance_pass(void) {
   }
   for (int i = 0; i < POOL_SIZE; i++) {
     ble_audio_slot_t *s = &s_pool[i];
-    if (uc_slot_active(s) && s->uc_stage == UC_ENABLED && (s->partner == NULL || s->partner->uc_stage == UC_ENABLED)) {
-      s->uc_stage = UC_CONNECTING;
-      if (s->partner) {
-        s->partner->uc_stage = UC_CONNECTING;
-      }
-      /* One connect per CIS; the paired stream rides on it. */
-      esp_err_t err = esp_ble_audio_bap_stream_connect(BAP(s));
-      if (err != ESP_OK) {
-        ESP_LOGE(TAG, "unicast client: CIS connect on conn %u: %d", s->conn_handle, err);
-        uc_fail(BLE_AUDIO_UC_OP_CONNECT, 0, 0, (int)err);
-        return;
-      }
+    if (!uc_slot_active(s) || atomic_load(&s->uc_stage) != UC_ENABLED) {
+      continue;
     }
+    ble_audio_slot_t *partner = atomic_load(&s->partner);
+    if (partner != NULL && atomic_load(&partner->uc_stage) != UC_ENABLED) {
+      continue;
+    }
+    atomic_store(&s->uc_stage, UC_CONNECTING);
+    if (partner) {
+      atomic_store(&partner->uc_stage, UC_CONNECTING);
+    }
+    /* One connect per CIS; the paired stream rides on it. One outstanding
+     * control-point operation: return after the first connect so a second
+     * CIS waits for the next pass (after its stream callback). */
+    esp_err_t err = esp_ble_audio_bap_stream_connect(BAP(s));
+    if (err != ESP_OK) {
+      ESP_LOGE(TAG, "unicast client: CIS connect on conn %u: %d", atomic_load(&s->conn_handle), err);
+      uc_fail(BLE_AUDIO_UC_OP_CONNECT, 0, 0, (int)err);
+    }
+    return;
   }
 }
 
@@ -1855,7 +1881,15 @@ void bleAudioBroadcastSlotsDown(ble_audio_stream_kind_t kind) {
       continue;
     }
     atomic_store(&s->streaming, false);
+    /* A released endpoint carries no configuration: drop the snapshots so
+     * codecConfig()/qos() cannot report a stale codec after the BIG went
+     * down (matches op_released for unicast). */
+    portENTER_CRITICAL(&s_slot_mux);
+    s->has_codec = false;
+    s->has_qos = false;
+    portEXIT_CRITICAL(&s_slot_mux);
     if (s->owner == NULL) {
+      atomic_store(&s->bound, false);
       atomic_store(&s->in_use, false);
     }
   }
@@ -2587,6 +2621,10 @@ int bleAudioBsinkSetStreams(ble_audio_slot_t *const slots[], uint8_t count) {
       return ESP_ERR_INVALID_ARG;
     }
     s_bsnk.slots[i] = slots[i];
+    /* Mark assigned while the delegator/sink may reference the slot; the
+     * free path zombies while bound so a later BIG sync cannot use a slot
+     * whose C++ handle is gone (reclaimed on BIG teardown / deinit). */
+    atomic_store(&slots[i]->bound, true);
   }
   s_bsnk.n_slots = count;
   return 0;
@@ -2690,6 +2728,12 @@ static void bap_on_deinit(void) {
   s_bsnk_joined = false;
   memset(&s_bsnk, 0, sizeof(s_bsnk));
   s_bsnk.sync_handle = SYNC_NONE;
+  for (int i = 0; i < POOL_SIZE; i++) {
+    ble_audio_slot_t *s = &s_pool[i];
+    if (s->in_use && s->kind == BLE_AUDIO_STREAM_BROADCAST_SINK) {
+      atomic_store(&s->bound, false);
+    }
+  }
 #endif
 }
 

@@ -163,6 +163,8 @@ void *bleAudioStreamSetCodec(ble_audio_slot_t *slot, const ble_audio_codec_t *co
 void *bleAudioStreamSetQos(ble_audio_slot_t *slot, const ble_audio_qos_t *qos);
 /** @brief Mark a CAP-driven unicast stream as bound to @p conn_handle / direction. */
 void bleAudioStreamBind(ble_audio_slot_t *slot, uint16_t conn_handle, bool tx);
+/** @brief Release a CAP-driven unicast stream binding (slot stays owned). */
+void bleAudioStreamUnbind(ble_audio_slot_t *slot);
 
 /* ── PACS ───────────────────────────────────────────────────────────────── */
 
