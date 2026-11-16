@@ -198,10 +198,8 @@ def _format_download_progress(active):
         percent = min((downloaded / float(total)) * 100.0, 100.0)
         total_mb = total / 1024.0 / 1024.0
         left_mb = (total - downloaded) / 1024.0 / 1024.0
-        return (
-            "Downloading {0} {1}: {2:.1f}% - {3:.1f}/{4:.1f} MB - {5:.1f} MB left - {6:.2f} MB/s".format(
-                count, label, percent, got_mb, total_mb, left_mb, speed_mb
-            )
+        return "Downloading {0} {1}: {2:.1f}% - {3:.1f}/{4:.1f} MB - {5:.1f} MB left - {6:.2f} MB/s".format(
+            count, label, percent, got_mb, total_mb, left_mb, speed_mb
         )
     return "Downloading {0} {1}: {2:.1f} MB - {3:.2f} MB/s".format(count, label, got_mb, speed_mb)
 
