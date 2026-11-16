@@ -52,10 +52,9 @@ void setup() {
   }
 
   audio = BLE.getAudioController();
-  st = audio.begin();
-  if (!st) {
-    halt("audio.begin", st);
-  }
+  // No audio.begin(): the engine initializes lazily on the first create*()
+  // or audio.start() below. Call audio.begin() explicitly instead for early,
+  // checked initialization.
 
   source = audio.createBroadcastSource();
   if (!source) {
