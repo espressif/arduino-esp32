@@ -187,7 +187,12 @@ public:
    *        instance @p advInstance (onBroadcastStarted() follows).
    */
   BTStatus startBroadcast(uint8_t channels = 1, uint8_t advInstance = 0);
-  /** @brief Stop and delete the broadcast source (onBroadcastStopped() follows). */
+  /** @brief Stop and delete the broadcast source (onBroadcastStopped() follows).
+   *
+   * Refused with InvalidState while a handover owns the broadcast (hoBusy);
+   * wait for its completion instead. Returns Fail (state retained for a
+   * retry) when the source is still live after the teardown wait.
+   */
   BTStatus stopBroadcast();
   /** @return true while a broadcast (plain or handed over) is streaming. */
   bool isBroadcasting() const;
