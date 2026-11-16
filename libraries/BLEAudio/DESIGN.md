@@ -185,7 +185,9 @@ of engine fixes in the `esp-idf` tree pointed to by the lib-builder:
   scheme token on client `Originate` writes, while `init.c` strips that
   synthetic `','` on ATT Read, Notify-by-UUID and Notify-by-handle of `0x2BB6`
   so wire PDUs conform to Bluetooth TBS v1.0 sec. 3.4 (the handle path is
-  derived from the attribute UUID). The Arduino layer additionally sanitizes
+  derived from the attribute UUID; it takes effect on the next lib rebuild —
+  the currently published prebuilt libs predate it, and 0x2BB6 notifications
+  are rare in practice). The Arduino layer additionally sanitizes
   user input (no `",,"`, no leading/trailing commas) and rejects over-long
   provider/UCI strings instead of truncating, so the stored value is always
   exactly one synthetic comma, and the validation suite asserts 0x2BB6 bytes

@@ -634,8 +634,11 @@ static void uc_release_group(void) {
       ESP_LOGW(TAG, "CAP initiator: unicast group delete failed (%d), keeping it for a retry", err);
       esp_ble_audio_cap_unicast_group_t *expected = NULL;
       if (!atomic_compare_exchange_strong(&s_uc.group, &expected, group)) {
-        /* A concurrent path adopted a new group meanwhile; ours is gone. */
-        (void)esp_ble_audio_cap_unicast_group_delete(group);
+        /* A concurrent path adopted a new group meanwhile; ours is detached.
+         * Retry the delete once so a transient refusal does not leak it. */
+        if (esp_ble_audio_cap_unicast_group_delete(group) != ESP_OK) {
+          ESP_LOGE(TAG, "CAP initiator: retry of group delete failed, leaking one group");
+        }
       }
     }
   }
