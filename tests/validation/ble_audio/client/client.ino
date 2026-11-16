@@ -1659,6 +1659,7 @@ void setup() {
                 hoFailDone = 0;
                 bleAudioValidationFailNextHandover();
                 BTStatus forced = initiator.handoverToBroadcast();
+                Serial.printf("[CLIENT] CapHandover forced=%d\n", (int)forced.code());
                 if (forced) {
                   unsigned long fdl = millis() + 5000;
                   while (!hoFailDone && millis() < fdl) {

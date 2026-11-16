@@ -676,20 +676,28 @@ def _phase_start_retry(server, client):
     The server exhausts the broadcast-sink stream pool so a sink apply()
     fails: the first start() must fail, an immediate second start() must
     return InvalidState (not run half-registered roles again), and
-    end()/begin() must recover to a working start().
+    end()/begin() must recover to a working start(). Also covers the PACS
+    boot-pinned re-begin (different contexts still start) and the over-long
+    TBS provider rejection.
     """
-    ms = server.expect(r"\[SERVER\] StartRetry (not supported|first=(-?\d+) retry=(-?\d+) recovered=(\d+))", timeout=120)
+    ms = server.expect(r"\[SERVER\] StartRetry (not supported|first=(-?\d+) retry=(-?\d+) recovered=(\d+) pacs=(-?\d)(-?\d) tbslong=(-?\d+))", timeout=180)
     server.expect_exact("[SERVER] Phase15 start_retry_refused done", timeout=30)
     client.expect_exact("[CLIENT] Phase15 start_retry_refused done", timeout=30)
     if b"not supported" in ms.group(0):
         return False
     first, retry, recovered = int(ms.group(2)), int(ms.group(3)), int(ms.group(4))
+    pacs_first, pacs_second, tbs_long = int(ms.group(5)), int(ms.group(6)), int(ms.group(7))
     if first == 0:
         return False  # pool bigger than the probe; nothing to refuse
     assert first != -1, "audio.begin() failed during the pool-exhaustion setup"
     assert first != 0, "pool exhaustion did not fail the first start()"
     assert retry == -4, f"retry after a failed start() did not return InvalidState (rc={retry})"
     assert recovered == 1, "end()/begin() did not recover to a working start()"
+    if pacs_first >= 0:
+        assert pacs_first == 1, "PACS first begin/start failed"
+        assert pacs_second == 1, "PACS re-begin with different contexts failed (boot-pinned path)"
+    if tbs_long >= 0:
+        assert tbs_long == 1, "over-long TBS provider name did not fail start()"
     return True
 
 

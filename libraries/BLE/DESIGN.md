@@ -508,11 +508,20 @@ Important lifecycle invariants:
   host shutdown: a CONNECTED BIG must be terminated over HCI, not
   software-reset (controller assert). `BLEIso::begin()` after a failed `end()`
   retries the teardown instead of reporting OK over it; `connectCis()` refuses
-  dead handles before creating the CIG (`bleIsoAclHandleLive`, both backends);
+  dead handles before creating the CIG (`bleIsoAclHandleLive`, both backends:
+  Bluedroid accepts the CONNECT→OPEN window via the latched ACL and treats an
+  unknown handle as a raw ACL, matching NimBLE's host-live check, with the
+  stack as the final arbiter); channel liveness for `end()`/`isIdle()` is
+  tracked with atomic `connected`/`accepted` only (the stack-owned
+  `chan.state`/`iso` is never read off-task); CIS connect and BIG create mark
+  the slot busy before the async call so a racing `end()` cannot report idle;
   a peripheral `listenCis()` channel re-listens on its own (a second call
-  reserves another concurrent channel) and an never-accepted listen is
-  released by `disconnect()`; an audio-owned host drop completes attached raw
-  channels with reason `0x16` instead of losing them silently.
+  reserves another concurrent channel) and a never-accepted listen is
+  released by `disconnect()`; the accept flag is cleared on disconnect so a
+  dropped CIS never wedges a later `end()` (a second call still reserves
+  another channel); an audio-owned host drop completes only attached
+  (connected/accepted) raw channels with reason `0x16` instead of losing them
+  silently.
 - `BLE.end()` called from a host/BTC callback claims the ending state and
   defers the same ordered teardown to its worker; audio/ISO teardown must never
   bypass that callback-safe path

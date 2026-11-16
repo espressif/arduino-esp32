@@ -1485,7 +1485,54 @@ void loop() {
           audio.end();
         }
       }
-      Serial.printf("[SERVER] StartRetry first=%d retry=%d recovered=%d\n", firstRc, retryRc, recovered);
+#if BLE_AUDIO_UNICAST_SERVER_SUPPORTED
+      // PACS boot-pinning: re-begin with different supported contexts must
+      // still start (keeps serving the first value, clamps available).
+      int pacsFirst = 0, pacsSecond = 0;
+      {
+        BLEAudio audio = BLE.getAudioController();
+        if (audio.begin()) {
+          BLEAudioUnicastServer us = audio.createUnicastServer();
+          us.setSinkStreams(1).setSourceStreams(0);
+          us.setSinkContexts(BLEAudioContext::Media);
+          pacsFirst = audio.start() ? 1 : 0;
+          audio.end();
+        }
+      }
+      {
+        BLEAudio audio = BLE.getAudioController();
+        if (audio.begin()) {
+          BLEAudioUnicastServer us = audio.createUnicastServer();
+          us.setSinkStreams(1).setSourceStreams(0);
+          us.setSinkContexts(BLEAudioContext::Conversational);
+          pacsSecond = audio.start() ? 1 : 0;
+          audio.end();
+        }
+      }
+#else
+      int pacsFirst = -1, pacsSecond = -1;
+#endif
+#if BLE_AUDIO_CCP_SERVER_SUPPORTED
+      // Over-long TBS strings must fail the start instead of truncating.
+      int tbsLong = 0;
+      {
+        BLEAudio audio = BLE.getAudioController();
+        if (audio.begin()) {
+          BLEAudioCallServer call = audio.createCallServer();
+          String big;
+          for (int i = 0; i < 100; i++) {
+            big += 'P';
+          }
+          call.setProviderName(big);
+          tbsLong = audio.start() ? 0 : 1;
+          audio.end();
+        }
+      }
+#else
+      int tbsLong = -1;
+#endif
+      Serial.printf("[SERVER] StartRetry first=%d retry=%d recovered=%d pacs=%d%d tbslong=%d\n", firstRc, retryRc, recovered,
+                    pacsFirst, pacsSecond, tbsLong);
       BLE.end(false);
       delay(500);
       (void)BLE.begin(serverName);

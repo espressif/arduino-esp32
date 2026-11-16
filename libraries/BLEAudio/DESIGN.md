@@ -183,13 +183,13 @@ of engine fixes in the `esp-idf` tree pointed to by the lib-builder:
   TBS/CCP bearer registration and `set_uri_scheme_list` append an internal
   trailing `','` so `libble_audio`'s `uri_scheme_in_list()` matches the final
   scheme token on client `Originate` writes, while `init.c` strips that
-  synthetic `','` on ATT Read and Notify-by-UUID of `0x2BB6` so wire PDUs
-  conform to Bluetooth TBS v1.0 sec. 3.4. Residual risk: notify-by-handle
-  (`_gatts_notify` → `bt_gatt_notify`) is unwrapped, so a TBS server
-  notification emitted by handle would carry the comma on air; the Arduino
-  layer additionally sanitizes user input (no `",,"`, no leading/trailing
-  commas) so the stored value is always exactly one synthetic comma, and the
-  validation suite asserts 0x2BB6 bytes on air; `bt_le_audio_deinit()` cleans up registered
+  synthetic `','` on ATT Read, Notify-by-UUID and Notify-by-handle of `0x2BB6`
+  so wire PDUs conform to Bluetooth TBS v1.0 sec. 3.4 (the handle path is
+  derived from the attribute UUID). The Arduino layer additionally sanitizes
+  user input (no `",,"`, no leading/trailing commas) and rejects over-long
+  provider/UCI strings instead of truncating, so the stored value is always
+  exactly one synthetic comma, and the validation suite asserts 0x2BB6 bytes
+  on air; `bt_le_audio_deinit()` cleans up registered
   profile callbacks across `esp_ble_audio_common_deinit()` (while keeping
   duplicate registration within an active session an error, using mutable
   static callback slots for non-unregisterable profiles, and re-arming

@@ -339,6 +339,21 @@ async def _control_gatt(dut, name, record, local_svcs):
 
             await acheck("tbs_uri_schemes", _tbs_uri())
 
+            async def _pacs_ctx():
+                # PACS: Available Audio Contexts (0x2BCD) must stay a subset of
+                # Supported (0x2BCE). The stack pins supported per boot and the
+                # engine clamps available to the pinned value on re-begin.
+                import struct
+                supp = await gatt.read(le.CHR["SUPP_CTX"])
+                avail = await gatt.read(le.CHR["AVAIL_CTX"])
+                assert len(supp) == 4 and len(avail) == 4, f"PACS contexts wrong length: supp={supp.hex()} avail={avail.hex()}"
+                s_snk, s_src = struct.unpack("<HH", supp)
+                a_snk, a_src = struct.unpack("<HH", avail)
+                assert (a_snk & ~s_snk) == 0, f"available sink {a_snk:#06x} not subset of supported {s_snk:#06x}"
+                assert (a_src & ~s_src) == 0, f"available source {a_src:#06x} not subset of supported {s_src:#06x}"
+
+            await acheck("pacs_ctx_subset", _pacs_ctx())
+
             async def _csip():
                 size = await gatt.read(le.CHR["SET_SIZE"])
                 rank = await gatt.read(le.CHR["RANK"])
