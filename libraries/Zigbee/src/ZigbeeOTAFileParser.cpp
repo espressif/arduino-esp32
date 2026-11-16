@@ -85,11 +85,17 @@ esp_err_t zb_ota_file_parser_process(zb_ota_file_parser_t *parser) {
     return parser->in_length ? ESP_ERR_NOT_FINISHED : ESP_OK;
   }
 
-  /* Optional header fields */
+  /* Optional header fields — cap to sizeof(optional); never trust hdr_length as dst capacity. */
   if (parser->header.mandatory.hdr_length > parser->total_offset) {
+    if (parser->header.mandatory.hdr_length < sizeof(parser->header.mandatory)) {
+      return ESP_ERR_INVALID_SIZE;
+    }
+    uint32_t optional_len = parser->header.mandatory.hdr_length - sizeof(parser->header.mandatory);
+    if (optional_len > sizeof(parser->header.optional)) {
+      return ESP_ERR_INVALID_SIZE;
+    }
     written = ota_file_stream_format(
-      (uint8_t *)&parser->header.optional, (uint16_t)parser->offset,
-      (uint16_t)(parser->header.mandatory.hdr_length - sizeof(parser->header.mandatory)), parser->in, parser->in_length
+      (uint8_t *)&parser->header.optional, (uint16_t)parser->offset, (uint16_t)optional_len, parser->in, parser->in_length
     );
     ota_file_parser_refresh(parser, written);
     if (parser->total_offset >= parser->header.mandatory.hdr_length) {

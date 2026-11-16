@@ -107,8 +107,11 @@ def scan_sketch(sketch_dir: str) -> Tuple[Dict[str, int], Dict[str, str], bool]:
             if "(" in name:
                 continue
             # Whole RHS (comments already stripped by DEFINE_RE) must be one literal.
-            rhs = raw.split()[0] if raw else ""
-            if not rhs or any(op in rhs for op in ("+", "*", "/", "(", ")")):
+            # Reject expressions (e.g. "0x01010100 + 1") — do not take only the first token.
+            if not raw or len(raw.split()) != 1:
+                continue
+            rhs = raw.split()[0]
+            if any(op in rhs for op in ("+", "*", "/", "(", ")")):
                 continue
             # Allow a leading minus for signed literals only.
             if "-" in rhs[1:]:
