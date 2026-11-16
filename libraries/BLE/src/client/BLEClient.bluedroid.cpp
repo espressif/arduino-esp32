@@ -111,11 +111,20 @@ extern "C" bool bleClientConnLive(uint16_t connId) {
     return false;
   }
   for (auto &client : BLEClient::Impl::snapshotClients()) {
-    if (client->connected.load() && client->connId.load() == connId) {
-      return true;
+    if (client->connId.load() == connId) {
+      /* ACL is latched on CONNECT_EVT before OPEN_EVT sets connected; accept
+       * either so a link coming up is not refused in the window. Disconnect
+       * clears both, so a dead link still fails. */
+      if (client->connected.load() || client->aclHandle.load() != 0xFFFF) {
+        return true;
+      }
+      return false;
     }
   }
-  return false;
+  /* Not one of ours: likely already an ACL handle (see bleClientAclHandle
+   * fallback). Accept optimistically like NimBLE's host-live check and let
+   * the stack reject it if invalid, instead of refusing a valid raw ACL. */
+  return true;
 }
 
 extern "C" uint16_t bleClientAclHandle(uint16_t connId) {
@@ -123,13 +132,18 @@ extern "C" uint16_t bleClientAclHandle(uint16_t connId) {
     return 0xFFFF; /* No link: never resolve a dead or never-connected client. */
   }
   for (auto &client : BLEClient::Impl::snapshotClients()) {
-    // Skip links that are going down: their ACL handle may already belong to
-    // nobody (or, after a controller recycle, to a different peer).
-    if (client->connected.load() && client->connId.load() == connId) {
-      uint16_t h = client->aclHandle.load();
-      if (h != 0xFFFF) {
-        return h;
+    if (client->connId.load() == connId) {
+      // Skip links that are going down: their ACL handle may already belong to
+      // nobody (or, after a controller recycle, to a different peer). Accept
+      // the CONNECT->OPEN window where the ACL is latched but OPEN hasn't set
+      // connected yet; disconnect clears both so dead links still miss.
+      if (client->connected.load() || client->aclHandle.load() != 0xFFFF) {
+        uint16_t h = client->aclHandle.load();
+        if (h != 0xFFFF) {
+          return h;
+        }
       }
+      return connId;
     }
   }
   return connId; /* Not one of ours (already an ACL handle). */

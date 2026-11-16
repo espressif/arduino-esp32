@@ -452,7 +452,7 @@ BTStatus BLEServer::start() {
       // Bluedroid could register natively, but the observable contract is
       // one table state on both backends.
       if (bleAudioGattFrozen && bleAudioGattFrozen()) {
-        log_e("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
+        log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
         return BTStatus::InvalidState;
       }
       log_d("Server: registering new service(s)");
@@ -460,7 +460,7 @@ BTStatus BLEServer::start() {
       // A first start after audio.start() stages classic services into a
       // committed table, exactly like the restart path above.
       if (!impl.services.empty() && bleAudioGattFrozen && bleAudioGattFrozen()) {
-        log_e("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
+        log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
         return BTStatus::InvalidState;
       }
       log_d("Server: starting with %u service(s)", (unsigned)impl.services.size());
