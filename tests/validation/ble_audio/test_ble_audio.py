@@ -327,7 +327,7 @@ def _phase_lc3_loopback(server, client):
         streaming = int(mc.group(1))
         encoded = int(mc.group(2))
         errors = int(mc.group(3))
-        LOGGER.info("lc3_loopback %s: sent=%d errors=%d samples=%d meanamp=%d underruns=%d", label, encoded, errors, samples, meanamp, int(ms.group(3)), underruns)
+        LOGGER.info("lc3_loopback %s: sent=%d errors=%d samples=%d meanamp=%d plc=%d underruns=%d", label, encoded, errors, samples, meanamp, int(ms.group(3)), underruns)
         assert streaming == 1, f"unicast stream never reached Streaming on the client ({label})"
         assert encoded > 0, f"Recorder sent no LC3 SDUs ({label}, {errors} send errors)"
         assert samples > 0, f"Player decoded no PCM samples ({label})"
