@@ -152,16 +152,16 @@ public:
    * @brief Add OTA client to the Zigbee endpoint.
    *
    * @param file_version The current file version of the OTA client.
-   * @param downloaded_file_ver The version of the downloaded file.
+   * @param downloaded_file_ver DownloadedFileVersion (0xFFFFFFFF = none). Must not equal the offered OTA image version.
    * @param hw_version The hardware version of the device.
    * @param manufacturer The manufacturer code (default: 0x1001).
    * @param image_type The image type code (default: 0x1011).
-   * @param max_data_size The maximum data size for OTA transfer (default and recommended: 223).
+   * @param max_data_size Max Image Block size. Use the stack default (48) for ZHA; 223 suits Espressif ota_server.
    * @return true if the OTA client was added successfully, false otherwise.
    */
   bool addOTAClient(
     uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011,
-    uint8_t max_data_size = 223
+    uint8_t max_data_size = 48
   );
   /**
    * @brief Discover the OTA Upgrade server (Match Desc on the coordinator) and query for a new image.
@@ -323,7 +323,7 @@ protected:
   uint32_t _ota_current_file_version;     // CurrentFileVersion, not in OTA client cluster config
   uint32_t _ota_downloaded_file_version;  // DownloadedFileVersion, not in OTA client cluster config
   uint16_t _ota_hw_version = 0;           // Applied via ezb_zcl_ota_upgrade_set_hw_version after begin
-  uint8_t _ota_max_data_size = 223;       // Applied via ezb_zcl_ota_upgrade_set_download_block_size after begin
+  uint8_t _ota_max_data_size = 48;  // Applied via ezb_zcl_ota_upgrade_set_download_block_size after begin (stack default)
   bool _ota_client_added = false;
   bool _ota_runtime_configured = false;
   bool _ota_in_progress = false;  // true while download/apply is active (skip periodic queries)

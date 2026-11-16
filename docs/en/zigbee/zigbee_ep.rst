@@ -352,14 +352,14 @@ Adds OTA client to the endpoint for firmware updates. Call before ``Zigbee.addEn
 
 .. code-block:: arduino
 
-    bool addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, uint8_t max_data_size = 223);
+    bool addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, uint8_t max_data_size = 48);
 
 * ``file_version`` - Current firmware version (``CurrentFileVersion``)
-* ``downloaded_file_ver`` - Downloaded file version attribute
+* ``downloaded_file_ver`` - ``DownloadedFileVersion`` (``0xFFFFFFFF`` = none stored). Must not equal the image version offered by the OTA server or the stack will skip the download after Query approve.
 * ``hw_version`` - Hardware version (passed in Query Next Image when non-zero)
 * ``manufacturer`` - Manufacturer code (default: 0x1001)
 * ``image_type`` - Image type code (default: 0x1011)
-* ``max_data_size`` - Maximum Image Block size (default and recommended: 223)
+* ``max_data_size`` - Maximum Image Block size (default: 48, the stack default; use 223 with Espressif ``ota_server``)
 
 After ``Zigbee.begin()``, ``requestOTAUpdate()`` applies ``hw_version`` and ``max_data_size``
 via the stack APIs.
@@ -430,7 +430,11 @@ OTA with Home Assistant ZHA
                    I understand I can *destroy* my devices by enabling OTA updates from files.
                    Some OTA updates can be mistakenly applied to the wrong device, breaking it.
                    I am consciously using this at my own risk.
-5. Restart ZHA, join the Arduino end device, open the device page and use
+5. After copying or replacing the ``.zigbee`` file, open
+   **Settings → Devices & services → Zigbee Home Automation**, click the **⋮**
+   (three dots) on the ZHA integration card, and choose **Reload** so the OTA
+   provider picks up the new file (a full Home Assistant restart also works).
+6. Join the Arduino end device if needed, open the device page and use
    **Update** to start the firmware upgrade. Wait until the device reboots on
    the new image.
 

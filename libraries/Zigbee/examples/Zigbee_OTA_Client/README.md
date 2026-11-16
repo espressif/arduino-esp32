@@ -29,10 +29,10 @@ OTA identifiers used by this sketch (must match the OTA image and the coordinato
 * `OTA_UPGRADE_MANUFACTURER` (`0x1001`)
 * `OTA_UPGRADE_IMAGE_TYPE` (`0x1011`)
 * `OTA_UPGRADE_RUNNING_FILE_VERSION` — version of this firmware (also used as the OTA file version on Export)
-* `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` — next version attribute on the client cluster
+* `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` — version already stored on the client (`0xFFFFFFFF` = none). Do **not** set this to the next OTA file version; the stack rejects an offered image that matches this attribute and never starts the download.
 * `OTA_UPGRADE_HW_VERSION` — optional hardware version filter in the OTA header
 
-Bump `OTA_UPGRADE_RUNNING_FILE_VERSION` for each new image you export for the coordinator.
+Bump `OTA_UPGRADE_RUNNING_FILE_VERSION` for each new image you export for the coordinator. Leave `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` at `0xFFFFFFFF` unless you intentionally track a stored image.
 
 #### Using Arduino IDE
 
@@ -50,10 +50,8 @@ To get more information about the Espressif boards see [Espressif Development Ki
 
 Typical first test:
 
-1. Flash this example via USB with `OTA_UPGRADE_RUNNING_FILE_VERSION` `0x01010100` and join the device to ZHA. Serial should print `Running FW version: 0x01010100`.
-2. **Do not USB-flash the next build.** Only bump the sketch macros for the update image, for example:
-   * `OTA_UPGRADE_RUNNING_FILE_VERSION` → `0x01010101` (this becomes the OTA file version on Export)
-   * `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` → `0x01010102`
+1. Flash this example via USB with `OTA_UPGRADE_RUNNING_FILE_VERSION` `0x01010100`, `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` `0xFFFFFFFF`, and join the device to ZHA. Serial should print `Running FW version: 0x01010100`.
+2. **Do not USB-flash the next build.** Only bump `OTA_UPGRADE_RUNNING_FILE_VERSION` → `0x01010101` for the update image (this becomes the OTA file version on Export). Keep `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` as `0xFFFFFFFF`.
 3. Keep **Tools → Zigbee Mode** enabled (ED), then **Sketch → Export compiled Binary**.
 4. The core runs `tools/zb_ota_image.py` and writes a Zigbee OTA file next to the `.bin`, for example:
 
@@ -87,7 +85,7 @@ zha:
             I am consciously using this at my own risk.
 ```
 
-8. Restart Home Assistant (or reload ZHA) after adding/replacing OTA files.
+8. After copying (or replacing) the `.zigbee` file into `/config/zigpy_ota`, open **Settings → Devices & services → Zigbee Home Automation**, click the **⋮** (three dots) on the ZHA integration card, and choose **Reload**. This reloads the OTA provider so ZHA picks up the new file (a full Home Assistant restart also works).
 9. Open the end device in ZHA and click **Update**. Wait until the transfer finishes and the board reboots; Serial should then print the new version (e.g. `0x01010101`).
 
 `requestOTAUpdate()` after join discovers the OTA server on the coordinator and sends Query Next Image (then every hour). ZHA can also start the flow with Image Notify when you press Update.
@@ -113,7 +111,7 @@ To open the network you have 2 options:
 * **LED not blinking:** Check the wiring connection and the IO selection.
 * **Programming Fail:** If the programming/flash procedure fails, try reducing the serial connection speed.
 * **COM port not detected:** Check the USB cable and the USB to Serial driver installation.
-* **OTA does not start:** Confirm manufacturer / image type / file version match the OTA file, the partition scheme is Zigbee with OTA slots, and ZHA can see the OTA provider path.
+* **OTA does not start:** Confirm manufacturer / image type / file version match the OTA file, the partition scheme is Zigbee with OTA slots, and ZHA can see the OTA provider path. If Serial shows `Approving OTA image upgrade` but never `OTA upgrade start`, check that `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` is `0xFFFFFFFF` (or at least not equal to the offered image version).
 
 If the error persists, you can ask for help at the official [ESP32 forum](https://esp32.com) or see [Contribute](#contribute).
 

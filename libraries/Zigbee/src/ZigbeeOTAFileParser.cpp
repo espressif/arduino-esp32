@@ -113,9 +113,16 @@ esp_err_t zb_ota_file_parser_process(zb_ota_file_parser_t *parser) {
     return parser->in_length ? ESP_ERR_NOT_FINISHED : ESP_OK;
   }
 
-  /* Sub-element value (firmware bytes) */
+  /* Sub-element value (firmware bytes).
+   * Do not cast (total - offset) to uint16_t before MIN — remaining can be > 64 KiB; a
+   * truncated 0 makes written=0 with in_length>0 and spins forever in the RECEIVING loop.
+   */
   if (parser->offset < parser->element.total) {
-    parser->element.length = MIN((uint16_t)(parser->element.total - parser->offset), parser->in_length);
+    uint32_t chunk = parser->element.total - parser->offset;
+    if (chunk > parser->in_length) {
+      chunk = parser->in_length;
+    }
+    parser->element.length = (uint16_t)chunk;
     parser->element.val = parser->in;
     written = parser->element.length;
     ota_file_parser_refresh(parser, written);

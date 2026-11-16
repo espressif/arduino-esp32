@@ -1021,7 +1021,7 @@ bool ZigbeeEP::addOTAClient(
   _ota_current_file_version = file_version;
   _ota_downloaded_file_version = downloaded_file_ver;
   _ota_hw_version = hw_version;
-  _ota_max_data_size = max_data_size ? max_data_size : 223;
+  _ota_max_data_size = max_data_size ? max_data_size : EZB_ZCL_OTA_UPGRADE_DEFAULT_BLOCK_SIZE_DEFAULT;
   _ota_runtime_configured = false;
 
   ezb_zcl_cluster_desc_t ota_cluster = ezb_zcl_ota_upgrade_create_cluster_desc(&_ota_client_cfg, EZB_ZCL_CLUSTER_CLIENT);
@@ -1060,9 +1060,19 @@ bool ZigbeeEP::applyOTAClientRuntimeConfig() {
     log_e("Failed to acquire Zigbee lock for OTA runtime config");
     return false;
   }
-  ezb_err_t ret = ezb_zcl_ota_upgrade_set_download_block_size(_endpoint, _ota_max_data_size);
+  // Use stack default block size (48) unless the sketch overrides it. ZHA often fails to
+  // serve large MaximumDataSize values (e.g. 223); the last working Arduino OTA path never
+  // called set_download_block_size and kept the default.
+  ezb_err_t ret = EZB_ERR_NONE;
+  if (_ota_max_data_size != EZB_ZCL_OTA_UPGRADE_DEFAULT_BLOCK_SIZE_DEFAULT) {
+    ret = ezb_zcl_ota_upgrade_set_download_block_size(_endpoint, _ota_max_data_size);
+  }
   if (ret == EZB_ERR_NONE && _ota_hw_version != 0) {
     ret = ezb_zcl_ota_upgrade_set_hw_version(_endpoint, _ota_hw_version);
+  }
+  // Give ZHA more time than the 5s stack default before the first Image Block exchange.
+  if (ret == EZB_ERR_NONE) {
+    ret = ezb_zcl_ota_upgrade_set_download_retry(_endpoint, 5, 30000);
   }
   esp_zigbee_lock_release();
   if (ret != EZB_ERR_NONE) {
