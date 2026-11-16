@@ -439,7 +439,7 @@ static bool handover_busy(void);
  * because the stack keeps pointers into them until the procedure completes.
  */
 static struct {
-  esp_ble_audio_cap_unicast_group_t *group;  ///< NULL when no group exists.
+  _Atomic(esp_ble_audio_cap_unicast_group_t *) group;  ///< NULL when no group exists.
   uint8_t count;                             ///< Streams in the group.
   ble_audio_slot_t *slots[UC_MAX];           ///< Engine slot per stream.
   uint16_t conns[UC_MAX];                    ///< Peer per stream.
@@ -625,12 +625,18 @@ static int uc_prepare(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
 
 /** Delete the group; on failure keep the pointer so a later Stop can retry. */
 static void uc_release_group(void) {
-  if (s_uc.group) {
-    esp_err_t err = esp_ble_audio_cap_unicast_group_delete(s_uc.group);
-    if (err == ESP_OK) {
-      s_uc.group = NULL;
-    } else {
+  /* Claim the group with an exchange so a concurrent release (e.g. a sync
+   * stop failure racing an async completion) cannot double-delete it. */
+  esp_ble_audio_cap_unicast_group_t *group = atomic_exchange(&s_uc.group, NULL);
+  if (group) {
+    esp_err_t err = esp_ble_audio_cap_unicast_group_delete(group);
+    if (err != ESP_OK) {
       ESP_LOGW(TAG, "CAP initiator: unicast group delete failed (%d), keeping it for a retry", err);
+      esp_ble_audio_cap_unicast_group_t *expected = NULL;
+      if (!atomic_compare_exchange_strong(&s_uc.group, &expected, group)) {
+        /* A concurrent path adopted a new group meanwhile; ours is gone. */
+        (void)esp_ble_audio_cap_unicast_group_delete(group);
+      }
     }
   }
   s_uc.count = 0;
@@ -694,7 +700,7 @@ int bleAudioCapDiscover(uint16_t conn_handle) {
 }
 
 int bleAudioCapUnicastStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
-  if (!s_init_registered || s_uc.group) {
+  if (!s_init_registered || atomic_load(&s_uc.group)) {
     return ESP_ERR_INVALID_STATE;
   }
 #if CAP_HO
@@ -704,13 +710,19 @@ int bleAudioCapUnicastStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count
 #endif
   int err = uc_prepare(reqs, count);
   if (err == 0) {
-    err = esp_ble_audio_cap_unicast_group_create(&s_uc.gp, &s_uc.group);
+    /* Create into a local first: &s_uc.group cannot be passed directly as the
+     * out-param (different pointer type for the atomic). */
+    esp_ble_audio_cap_unicast_group_t *created = NULL;
+    err = esp_ble_audio_cap_unicast_group_create(&s_uc.gp, &created);
     if (err != ESP_OK) {
       ESP_LOGE(TAG, "CAP unicast start: group create (%u streams) failed: %d", count, err);
-      s_uc.group = NULL;
-    } else if ((err = esp_ble_audio_cap_initiator_unicast_audio_start(&s_uc.sp)) != ESP_OK) {
-      ESP_LOGE(TAG, "CAP unicast start: audio start procedure failed: %d", err);
-      uc_release_group();
+    } else {
+      atomic_store(&s_uc.group, created);
+      err = esp_ble_audio_cap_initiator_unicast_audio_start(&s_uc.sp);
+      if (err != ESP_OK) {
+        ESP_LOGE(TAG, "CAP unicast start: audio start procedure failed: %d", err);
+        uc_release_group();
+      }
     }
   }
   if (err) {
@@ -723,7 +735,7 @@ int bleAudioCapUnicastStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count
 }
 
 int bleAudioCapUnicastUpdate(uint16_t context) {
-  if (s_uc.group == NULL || s_uc.count == 0) {
+  if (atomic_load(&s_uc.group) == NULL || s_uc.count == 0) {
     return ESP_ERR_INVALID_STATE;
   }
   /* Every stream gets the same Streaming Audio Contexts LTV; 0 maps to Unspecified. */
@@ -744,11 +756,11 @@ int bleAudioCapUnicastUpdate(uint16_t context) {
 }
 
 bool bleAudioCapUnicastGroupExists(void) {
-  return s_uc.group != NULL;
+  return atomic_load(&s_uc.group) != NULL;
 }
 
 int bleAudioCapUnicastStop(void) {
-  if (s_uc.group == NULL) {
+  if (atomic_load(&s_uc.group) == NULL) {
     /* Already released (for example the handover consumed the group): report
      * the terminal state so the role can clear its session. */
     bleAudioEngineEmit(BLE_AUDIO_EVT_CAP_UC_STOPPED, CONN_NONE, 0, NULL);
@@ -764,7 +776,7 @@ int bleAudioCapUnicastStop(void) {
   if (err != ESP_OK) {
     /* Nothing left to stop (start failed or streams already released): drop the group. */
     uc_release_group();
-    if (s_uc.group) {
+    if (atomic_load(&s_uc.group)) {
       return (int)err;
     }
     bleAudioEngineEmit(BLE_AUDIO_EVT_CAP_UC_STOPPED, CONN_NONE, 0, NULL);
@@ -1060,7 +1072,7 @@ static void ho_created(esp_ble_audio_cap_broadcast_source_t *source) {
 static void ho_to_broadcast(int err, esp_ble_conn_t *conn, esp_ble_audio_cap_unicast_group_t *group, esp_ble_audio_cap_broadcast_source_t *source) {
   atomic_store(&s_ho_busy, false);
   if (err == 0) {
-    s_uc.group = group;
+    atomic_store(&s_uc.group, group);
     s_bc.source = source;
     /* Released streams cannot join the group b2u creates while this one holds them. */
     uc_release_group();
@@ -1073,7 +1085,7 @@ static void ho_to_unicast(int err, esp_ble_conn_t *conn, esp_ble_audio_cap_broad
   atomic_store(&s_ho_busy, false);
   if (err == 0) {
     s_bc.source = source;
-    s_uc.group = group;
+    atomic_store(&s_uc.group, group);
     if (group == NULL) {
       s_uc.count = 0;
     }
@@ -1147,7 +1159,7 @@ int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_aud
   if (adv == NULL) {
     return ESP_ERR_INVALID_ARG;
   }
-  if (!s_ho_registered || s_uc.group == NULL || s_bc.source) {
+  if (!s_ho_registered || atomic_load(&s_uc.group) == NULL || s_bc.source) {
     return ESP_ERR_INVALID_STATE;
   }
   if (atomic_exchange(&s_ho_busy, true)) {
@@ -1191,7 +1203,7 @@ int bleAudioCapHandoverToBroadcast(const ble_audio_cap_adv_t *adv, const ble_aud
   }
   memset(&param, 0, sizeof(param));
   param.type = ESP_BLE_AUDIO_CAP_SET_TYPE_AD_HOC;
-  param.unicast_group = s_uc.group;
+  param.unicast_group = atomic_load(&s_uc.group);
   param.adv_handle = adv->handle;
   param.pa_interval = adv->pa_interval;
   param.broadcast_id = adv->broadcast_id;
@@ -1210,7 +1222,7 @@ int bleAudioCapHandoverToUnicast(const ble_audio_uc_stream_req_t *reqs, uint8_t 
   static esp_ble_audio_cap_commander_broadcast_reception_stop_param_t stop;
   static esp_ble_audio_cap_handover_broadcast_to_unicast_param_t param;
 
-  if (!s_ho_registered || s_bc.source == NULL || s_uc.group) {
+  if (!s_ho_registered || s_bc.source == NULL || atomic_load(&s_uc.group)) {
     return ESP_ERR_INVALID_STATE;
   }
   if (atomic_exchange(&s_ho_busy, true)) {
@@ -2043,6 +2055,16 @@ static void cap_on_gap(const void *event) {
   const esp_ble_audio_gap_app_event_t *ev = (const esp_ble_audio_gap_app_event_t *)event;
   if (ev->type == ESP_BLE_AUDIO_GAP_EVENT_ACL_DISCONNECT) {
     const uint16_t handle = ev->acl_disconnect.conn_handle;
+#if CAP_HO
+    /* A dropped link aborts any in-flight handover stack-side without a
+     * completion; release the guard so a retry fails cleanly instead of
+     * wedging on Busy. */
+    atomic_store(&s_ho_busy, false);
+#endif
+#if CAP_BASS
+    /* Same for an in-flight reception start (shared static subgroup). */
+    atomic_store(&s_rx_busy, false);
+#endif
 #if CAP_UC
     uc_on_disconnect(handle);
 #endif
@@ -2090,6 +2112,9 @@ static void cap_on_deinit(void) {
   s_init_registered = false;
 #endif
 #if CAP_UC
+  /* Whole-struct reset is safe here: the host is already down (no callbacks in
+   * flight) and end() is caller-serialized, so nothing observes the _Atomic
+   * group mid-teardown; zero bits are its valid NULL state. */
   memset(&s_uc, 0, sizeof(s_uc));
 #endif
 #if CAP_BC
@@ -2097,6 +2122,7 @@ static void cap_on_deinit(void) {
 #endif
 #if CAP_HO
   s_ho_registered = false;
+  atomic_store(&s_ho_busy, false);
 #endif
 #if CAP_CMD
   s_cmd_registered = false;
@@ -2104,6 +2130,7 @@ static void cap_on_deinit(void) {
 #if CAP_BASS
   s_bass_registered = false;
   s_track_id = TRACK_NONE;
+  atomic_store(&s_rx_busy, false);
 #endif
 #if CAP_PEERS
   memset(s_peers, 0, sizeof(s_peers));

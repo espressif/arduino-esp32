@@ -269,10 +269,10 @@ static portMUX_TYPE s_slot_mux = portMUX_INITIALIZER_UNLOCKED; /* Guards snap_co
 static const uint8_t s_kind_limit[] = {POOL_US, POOL_UC, POOL_BSRC, POOL_BSNK}; /* Indexed by kind. */
 static ble_audio_stream_cbs_t s_cbs;  /* C++ stream callbacks (bleAudioStreamSetCallbacks). */
 #if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
-static bool s_bsnk_joined; /* BSINK_STARTED already emitted for the current BIG. */
+static _Atomic bool s_bsnk_joined; /* BSINK_STARTED already emitted for the current BIG. */
 #endif
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
-static bool s_bsrc_up; /* BSRC_STARTED already emitted for the current BIG. */
+static _Atomic bool s_bsrc_up; /* BSRC_STARTED already emitted for the current BIG. */
 static void bsrc_report_started(void);
 extern void bleAudioNotifyBsrcState(void);
 extern void bleAudioArmBsrcStateWait(void);
@@ -377,7 +377,7 @@ static void op_started(esp_ble_audio_bap_stream_t *stream) {
   s->seq = 0;
   s->streaming = true;
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
-  if (s->kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE && !s_bsrc_up) {
+  if (s->kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE && !atomic_load(&s_bsrc_up)) {
     bool all_bis_started = true;
     for (int i = 0; i < POOL_SIZE; i++) {
       const ble_audio_slot_t *candidate = &s_pool[i];
@@ -617,7 +617,7 @@ void bleAudioStreamFree(ble_audio_slot_t *slot) {
 #endif
   if (slot->streaming || slot->bound || uc_busy
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
-      || (slot->kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE && s_bsrc_up)
+      || (slot->kind == BLE_AUDIO_STREAM_BROADCAST_SOURCE && atomic_load(&s_bsrc_up))
 #endif
   ) {
     slot->owner = NULL; /* Zombie: state updates continue, C++ callbacks are dropped. */
@@ -1925,7 +1925,7 @@ static void bsrc_stopped(esp_ble_audio_bap_broadcast_source_t *source, uint8_t r
     bleAudioBroadcastSlotsDown(BLE_AUDIO_STREAM_BROADCAST_SOURCE);
   }
   s_bsrc.big_pending = false;
-  s_bsrc_up = false;
+  atomic_store(&s_bsrc_up, false);
   bleAudioNotifyBsrcState();
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STOPPED, CONN_NONE, reason, NULL);
 }
@@ -1936,10 +1936,10 @@ static esp_ble_audio_bap_broadcast_source_cb_t s_bsrc_cb = {
 };
 
 static void bsrc_report_started(void) {
-  if (s_bsrc_up) {
+  if (atomic_load(&s_bsrc_up)) {
     return;
   }
-  s_bsrc_up = true;
+  atomic_store(&s_bsrc_up, true);
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STARTED, CONN_NONE, 0, NULL);
 }
 
@@ -2044,7 +2044,7 @@ int bleAudioBsrcStart(uint8_t adv_handle) {
   if (s_bsrc.source == NULL) {
     return ESP_ERR_INVALID_STATE;
   }
-  s_bsrc_up = false;
+  atomic_store(&s_bsrc_up, false);
   esp_ble_audio_bap_broadcast_adv_info_t info = {.adv_handle = adv_handle};
   if (!s_bsrc.adv_added) {
     esp_err_t err = esp_ble_audio_bap_broadcast_adv_add(&info);
@@ -2090,7 +2090,7 @@ int bleAudioBsrcStop(void) {
 int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
   if (s_bsrc.source == NULL) {
     s_bsrc.big_pending = false;
-    s_bsrc_up = false;
+    atomic_store(&s_bsrc_up, false);
     return ESP_ERR_INVALID_STATE;
   }
   /*
@@ -2126,7 +2126,7 @@ int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
   if (st == ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING) {
     int err = (int)esp_ble_audio_bap_broadcast_source_stop(s_bsrc.source);
     if (err == 0) {
-      s_bsrc_up = false;
+      atomic_store(&s_bsrc_up, false);
       return 0;
     }
     ESP_LOGW(TAG, "broadcast source: stop failed in STREAMING (err=%d)", err);
@@ -2135,7 +2135,7 @@ int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
   if (st >= 0 && st <= ESP_BLE_AUDIO_BAP_EP_STATE_QOS_CONFIGURED) {
     bleAudioBsrcDelete();
     if (s_bsrc.source == NULL) {
-      s_bsrc_up = false;
+      atomic_store(&s_bsrc_up, false);
       bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STOPPED, CONN_NONE, 0, NULL);
       return 0;
     }
@@ -2415,10 +2415,10 @@ static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_bl
 
 static void bsnk_started(esp_ble_audio_bap_broadcast_sink_t *sink) {
   (void)sink;
-  if (s_bsnk_joined) {
+  if (atomic_load(&s_bsnk_joined)) {
     return;
   }
-  s_bsnk_joined = true;
+  atomic_store(&s_bsnk_joined, true);
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_STARTED, CONN_NONE, 0, NULL);
 }
 
@@ -2427,7 +2427,7 @@ static void bsnk_stopped(esp_ble_audio_bap_broadcast_sink_t *sink, uint8_t reaso
     bleAudioBroadcastSlotsDown(BLE_AUDIO_STREAM_BROADCAST_SINK);
   }
   s_bsnk.syncing = false;
-  s_bsnk_joined = false;
+  atomic_store(&s_bsnk_joined, false);
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_STOPPED, CONN_NONE, reason, NULL);
   /* Delete here, after BASS bis_sync was cleared, then keep a fresh sink on
    * the PA so BASE/BIGInfo keep arriving for a later resync. */
@@ -2721,11 +2721,11 @@ static void bap_on_deinit(void) {
   /* Host mutex is already gone (common_deinit). The lib source is released
    * by lib_bap_broadcast_source_deinit(); a native delete here would only
    * return ESP_ERR_TIMEOUT. */
-  s_bsrc_up = false;
+  atomic_store(&s_bsrc_up, false);
   memset(&s_bsrc, 0, sizeof(s_bsrc));
 #endif
 #if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
-  s_bsnk_joined = false;
+  atomic_store(&s_bsnk_joined, false);
   memset(&s_bsnk, 0, sizeof(s_bsnk));
   s_bsnk.sync_handle = SYNC_NONE;
   for (int i = 0; i < POOL_SIZE; i++) {

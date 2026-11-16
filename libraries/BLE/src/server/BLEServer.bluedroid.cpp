@@ -450,19 +450,24 @@ BTStatus BLEServer::start() {
       // Same freeze as NimBLE (which returns InvalidState from its rebuild):
       // roles that register services must be created before audio.start().
       // Bluedroid could register natively, but the observable contract is
-      // one table state on both backends.
+      // one table state on both backends. Without the audio engine compiled
+      // in there is nothing to freeze, so the check compiles out.
+#if BLE_AUDIO_SUPPORTED
       if (bleAudioGattFrozen && bleAudioGattFrozen()) {
         log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
         return BTStatus::InvalidState;
       }
+#endif
       log_d("Server: registering new service(s)");
     } else {
       // A first start after audio.start() stages classic services into a
       // committed table, exactly like the restart path above.
+#if BLE_AUDIO_SUPPORTED
       if (!impl.services.empty() && bleAudioGattFrozen && bleAudioGattFrozen()) {
         log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
         return BTStatus::InvalidState;
       }
+#endif
       log_d("Server: starting with %u service(s)", (unsigned)impl.services.size());
     }
     services = impl.services;
