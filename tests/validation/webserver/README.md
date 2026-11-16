@@ -49,6 +49,17 @@ Each case first confirms the endpoint behaves correctly for a well-formed reques
 | `slow_line` | A client trickling bytes into a header line it never terminates must be dropped on a deadline (`408`), not kept alive one byte at a time ([#12788](https://github.com/espressif/arduino-esp32/issues/12788)). |
 | `slow_headers` | A client sending an endless stream of complete but tiny headers must be dropped by the header-phase deadline, which per-line deadlines cannot catch. |
 
+### SSE regression (PR #13089 compat)
+
+The `WebServer::client()` refactor must not break Server-Sent Events: held SSE connections, recovery after close, and pushes through a saved client copy.
+
+| Test Function | Property verified |
+|---|---|
+| `sse_hold` | A handler-set `setSSE(true)` keeps the connection open across `handleClient()` loops and the client receives pushed events. |
+| `sse_recovery` | After the SSE socket closes, the server returns to `HC_NONE` and serves the next normal request (which also starts with `isSSE()==false`). |
+| `sse_copy_push` | Pushes through a sketch-kept `NetworkClient` copy survive server-side teardown and interleaved normal requests. |
+| `sse_copied_flag` | A flag set on a copy is observed through `server.client()`, proving the marker is shared per-connection. |
+
 ### Compatibility (limits must not refuse legitimate requests)
 
 The checks above introduce bounds on request size and shape. These cases pin down the request shapes that must keep working, so a future tightening cannot silently break applications.

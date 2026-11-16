@@ -222,6 +222,8 @@ public:
   }
   // The client used for the current request. A derived class can override
   // this (together with acceptClient()) to use a wrapped connection, e.g. TLS.
+  // All response paths go through this hook, so an override observes every
+  // byte written to the active connection.
   virtual NetworkClient &client() {
     return _currentClient;
   }
@@ -331,12 +333,17 @@ protected:
     return _currentClient;
   }
 
-  // Called when the active connection is finished. The default stops client()
-  // and releases _currentClient. A derived class with a different ownership
-  // model can override this.
+  // Called when the active connection is finished. The default releases the
+  // server's reference to the connection and resets any in-progress chunked
+  // session. It deliberately does not stop the client: other holders of the
+  // same connection (e.g. a sketch-kept copy pushing Server-Sent Events) keep
+  // working until they release it. A derived class that owns the connection
+  // separately instead of sharing the accepted handle must stop its own
+  // wrapper here.
   virtual void closeClient() {
-    client().stop();
     _currentClient = NetworkClient();
+    _chunkedResponseActive = false;
+    _chunkedClient = nullptr;
   }
 
   virtual size_t _currentClientWrite(const char *b, size_t l) {

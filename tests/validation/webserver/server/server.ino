@@ -23,6 +23,15 @@
 #define SERVER_PORT         80
 #define DERIVED_SERVER_PORT 8081
 
+// --- SSE regression state (validates PR #13089 compat) ---
+#define SSE_PUSH_INTERVAL_MS 250
+static unsigned long sseLastPush = 0;
+static unsigned long sseCopyLastPush = 0;
+static unsigned sseEventId = 0;
+static unsigned sseCopyEventId = 0;
+static NetworkClient sseCopy;
+static bool sseCopyActive = false;
+
 static WebServer server(SERVER_PORT);
 static Preferences prefs;
 
@@ -175,6 +184,9 @@ public:
 protected:
   void closeClient() override {
     _closeCount++;
+    // The default closeClient() only releases the server's reference; a
+    // derived server that owns the connection wrapper stops it here.
+    _counting.stop();
     WebServer::closeClient();
   }
 
@@ -324,6 +336,34 @@ void registerEndpoints() {
   server.on("/string", HTTP_GET, []() {
     server.send(200, "text/plain", "OK");
     Serial.println("[SERVER] Served /string");
+  });
+
+  // --- SSE regression endpoints (PR #13089 compat) ---
+  server.on("/sse", HTTP_GET, []() {
+    server.client().setSSE(true);
+    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server.send(200, "text/event-stream", "");
+    Serial.println("[SERVER] Served /sse");
+  });
+
+  server.on("/ssecopy", HTTP_GET, []() {
+    // Deliberately keeps only a copy, without setSSE: pre-PR teardown only
+    // dropped the server's reference, so pushes through the copy survived.
+    sseCopy = server.client();
+    sseCopyActive = true;
+    sseCopyEventId = 0;
+    sseCopyLastPush = 0;
+    server.send(200, "text/event-stream", "");
+    Serial.println("[SERVER] Served /ssecopy");
+  });
+
+  server.on("/ssecopyflag", HTTP_GET, []() {
+    // Sets the flag on a copy only. Held open only when the flag is shared
+    // per-connection rather than per wrapper object.
+    NetworkClient flagged = server.client();
+    flagged.setSSE(true);
+    server.send(200, "text/event-stream", "");
+    Serial.println("[SERVER] Served /ssecopyflag");
   });
 
   // --- Liveness probe: used to confirm the server task survives each attack ---
@@ -529,5 +569,19 @@ void loop() {
       (unsigned)derivedServer.countingWrites(), (unsigned)derivedServer.countingReads(), (unsigned)derivedServer.countingCloses()
     );
     pendingStatsCase = nullptr;
+  }
+
+  // SSE event pumps (regression probes for PR #13089).
+  unsigned long now = millis();
+  if (server.client().isSSE() && server.client().connected() && now - sseLastPush >= SSE_PUSH_INTERVAL_MS) {
+    sseLastPush = now;
+    server.client().printf("data: %u\n\n", (unsigned)++sseEventId);
+  }
+  if (sseCopyActive && sseCopy.connected() && now - sseCopyLastPush >= SSE_PUSH_INTERVAL_MS) {
+    sseCopyLastPush = now;
+    sseCopy.printf("data: %u\n\n", (unsigned)++sseCopyEventId);
+  }
+  if (sseCopyActive && !sseCopy.connected()) {
+    sseCopyActive = false;
   }
 }
