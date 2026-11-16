@@ -46,7 +46,12 @@ public:
   /** @brief Mute state after a change. */
   using MuteCallback = std::function<void(bool muted)>;
   /** @brief Local control-point operation reported by onResult. */
-  enum class Operation : uint8_t { Unknown = 0, Mute, Unmute, DisableMute };
+  enum class Operation : uint8_t {
+    Unknown = 0,  ///< No operation in flight.
+    Mute,         ///< mute().
+    Unmute,       ///< unmute().
+    DisableMute,  ///< disableMute().
+  };
   /** @brief A queued mute()/unmute()/disableMute() was rejected; the state did not change. */
   using ResultCallback = std::function<void(Operation op, BTStatus status)>;
 
@@ -63,16 +68,33 @@ public:
   /** @brief Default unmuted. Before audio.start(). */
   BLEAudioMicDevice &setInitialMute(bool muted);
 
-  /** @brief Mute locally (after audio.start()); connected controllers are notified. */
+  /**
+   * @brief Mute locally (after audio.start()); connected controllers are notified.
+   * @return BTStatus::OK when the change was queued (reported via onMuteChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or audio is not started;
+   *         another error when the stack refused the request.
+   */
   BTStatus mute();
-  /** @brief Unmute; also re-enables a disabled mute. */
+  /**
+   * @brief Unmute; also re-enables a disabled mute.
+   * @return BTStatus::OK when the change was queued (reported via onMuteChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or audio is not started;
+   *         another error when the stack refused the request.
+   */
   BTStatus unmute();
-  /** @brief Report mute as unavailable; controllers can no longer change it. */
+  /**
+   * @brief Report mute as unavailable; controllers can no longer change it.
+   * @return BTStatus::OK when the change was queued (reported via onMuteChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or audio is not started;
+   *         another error when the stack refused the request.
+   */
   BTStatus disableMute();
   /** @return The initial mute before start, then the last reported mute (false while disabled). */
   bool isMuted() const;
   /** @brief Whether mute is currently reported as disabled (neither muted nor unmuted). */
   bool isMuteDisabled() const;
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Every mute change, local or remote (disabled reports unmuted/false: see isMuteDisabled()). */
   BLEAudioMicDevice &onMuteChanged(MuteCallback cb);
@@ -111,7 +133,13 @@ public:
   /** @brief Gain and mute of the device's first microphone AICS instance. */
   using InputCallback = std::function<void(int8_t gain, bool muted)>;
   /** @brief Queued control-point operation reported by onResult. */
-  enum class Operation : uint8_t { Unknown = 0, Mute, Unmute, ReadMute, SetInputGain };
+  enum class Operation : uint8_t {
+    Unknown = 0,  ///< No operation in flight.
+    Mute,         ///< mute().
+    Unmute,       ///< unmute().
+    ReadMute,     ///< readMute().
+    SetInputGain,  ///< setInputGain().
+  };
   /** @brief A queued mute()/unmute()/readMute()/setInputGain() was rejected; the state did not change. */
   using ResultCallback = std::function<void(Operation op, BTStatus status)>;
 
@@ -131,23 +159,52 @@ public:
    * Waits for the engine's GATT discovery of the link if needed; the peer's
    * mute state is read right after onDiscovered. Every call below targets
    * this peer.
+   * @param connHandle ACL connection of the microphone device.
+   * @return BTStatus::OK when discovery started (or was deferred until the engine's GATT discovery finishes);
+   *         InvalidState when the handle is empty, audio is not started, or @p connHandle is BLE_AUDIO_CONN_NONE;
+   *         another error when the stack refused discovery.
    */
   BTStatus discover(uint16_t connHandle);
   /** @return The connection passed to discover(), or BLE_AUDIO_CONN_NONE. */
   uint16_t getConnHandle() const;
 
-  /** @brief Mute the device's microphone. */
+  /**
+   * @brief Mute the device's microphone.
+   * @return BTStatus::OK when the write was queued (reported via onMuteChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         another error when the stack refused the write.
+   */
   BTStatus mute();
-  /** @brief Unmute the device's microphone (fails at the peer while its mute is disabled). */
+  /**
+   * @brief Unmute the device's microphone (fails at the peer while its mute is disabled).
+   * @return BTStatus::OK when the write was queued (reported via onMuteChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty, no peer is discovered (also while discovery is still deferred),
+   *         or the peer currently reports mute as disabled;
+   *         another error when the stack refused the write.
+   */
   BTStatus unmute();
-  /** @brief Re-read the peer's mute state (answered via onMuteChanged). */
+  /**
+   * @brief Re-read the peer's mute state (answered via onMuteChanged).
+   * @return BTStatus::OK when the read was queued;
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         another error when the stack refused the read.
+   */
   BTStatus readMute();
   /** @brief Last mute state reported by the peer (false while disabled; cleared on disconnect). */
   bool isMuted() const;
   /** @brief Whether the peer currently reports mute as disabled. */
   bool isMuteDisabled() const;
-  /** @brief Gain of the peer's first microphone AICS instance. */
+  /**
+   * @brief Gain of the peer's first microphone AICS instance.
+   * @param gain New gain, in the peer's gain units.
+   * @return BTStatus::OK when the write was queued (reported via onInputChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty, no peer is discovered, or the peer exposed no AICS instance;
+   *         NotSupported when this build has no AICS controller support;
+   *         another error when the stack refused the write.
+   */
   BTStatus setInputGain(int8_t gain);
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
   BLEAudioMicController &onDiscovered(DiscoveredCallback cb);
@@ -161,6 +218,7 @@ public:
    * The op is the most recently queued one (best effort: concurrent writes
    * share one notification channel, so with several in flight the reported op
    * may be a sibling). Unknown when no operation was queued.
+   * NotConnected when the link dropped while an operation was in flight.
    */
   BLEAudioMicController &onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */

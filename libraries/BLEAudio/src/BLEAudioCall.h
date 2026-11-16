@@ -48,14 +48,14 @@ enum class BLEAudioCallOperation : uint8_t {
 
 /** Telephone Bearer call states, plus Ended once a call is gone. */
 enum class BLEAudioCallState : uint8_t {
-  Incoming = 0,
-  Dialing = 1,
-  Alerting = 2,
-  Active = 3,
-  LocallyHeld = 4,
-  RemotelyHeld = 5,
-  LocallyAndRemotelyHeld = 6,
-  Ended = 0xFF,
+  Incoming = 0,               ///< Incoming call ringing locally.
+  Dialing = 1,                ///< Outgoing call being dialed.
+  Alerting = 2,               ///< Far end is being alerted.
+  Active = 3,                 ///< Call is active.
+  LocallyHeld = 4,            ///< Call held locally.
+  RemotelyHeld = 5,           ///< Call held by the far end.
+  LocallyAndRemotelyHeld = 6, ///< Call held on both ends.
+  Ended = 0xFF,               ///< Call is gone; reported once via onCallState.
 };
 
 /**
@@ -70,13 +70,23 @@ enum class BLEAudioCallState : uint8_t {
 class BLEAudioCallServer {
 public:
   /**
-   * @brief A controller asked to call @p uri; the call already has @p callIndex.
+   * @brief A controller asked to place an outgoing call.
+   * @param callIndex Index already assigned to the new call.
+   * @param uri Requested destination URI.
    * @return true to accept the outgoing call request.
    */
   using OriginateCallback = std::function<bool(uint8_t callIndex, const String &uri)>;
-  /** @brief @p callIndex ended; @p reason is the TBS termination reason code. */
+  /**
+   * @brief A controller ended a call.
+   * @param callIndex Index of the ended call.
+   * @param reason TBS termination reason code.
+   */
   using TerminatedCallback = std::function<void(uint8_t callIndex, uint8_t reason)>;
-  /** @brief A controller accepted, held or retrieved @p callIndex. */
+  /**
+   * @brief A controller accepted, held or retrieved a call.
+   * @param operation The requested operation (Accept, Hold or Retrieve).
+   * @param callIndex Index of the affected call.
+   */
   using CallControlCallback = std::function<void(BLEAudioCallOperation operation, uint8_t callIndex)>;
 
   BLEAudioCallServer();
@@ -105,22 +115,53 @@ public:
    * @param from Caller URI, e.g. "tel:+15551234567"; also used as the caller name when @p friendlyName is empty.
    * @param callIndex Receives the index that identifies the call from now on.
    * @param friendlyName Shown to the peer instead of the URI when non-empty.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status (OK when the call was raised).
    */
   BTStatus incomingCall(const String &from, uint8_t &callIndex, const String &friendlyName = "");
-  /** @brief Answer locally. */
+  /**
+   * @brief Answer locally.
+   * @param callIndex Index from incomingCall() or onOriginate().
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus accept(uint8_t callIndex);
-  /** @brief Put the call on local hold. */
+  /**
+   * @brief Put the call on local hold.
+   * @param callIndex Index of the call to hold.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus hold(uint8_t callIndex);
-  /** @brief Resume a locally held call. */
+  /**
+   * @brief Resume a locally held call.
+   * @param callIndex Index of the held call.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus retrieve(uint8_t callIndex);
-  /** @brief Hang up locally. */
+  /**
+   * @brief Hang up locally.
+   * @param callIndex Index of the call to end.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus terminate(uint8_t callIndex);
-  /** @brief The far end answered an outgoing call. */
+  /**
+   * @brief The far end answered an outgoing call.
+   * @param callIndex Index of the outgoing call.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus remoteAnswered(uint8_t callIndex);
-  /** @brief The far end hung up. */
+  /**
+   * @brief The far end hung up.
+   * @param callIndex Index of the ended call.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus remoteTerminated(uint8_t callIndex);
-  /** @brief Change the bearer provider name at runtime; controllers are notified. */
+  /**
+   * @brief Change the bearer provider name at runtime; controllers are notified.
+   * @param name New provider name.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus updateProviderName(const String &name);
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief A controller asked to place a call. Default: accept. */
   BLEAudioCallServer &onOriginate(OriginateCallback cb);
@@ -152,11 +193,24 @@ private:
  */
 class BLEAudioCallController {
 public:
-  /** @brief Discovery result; @p gtbsFound is false when the peer has no GTBS. */
+  /**
+   * @brief Discovery result.
+   * @param status OK when discovery finished; error status when it failed.
+   * @param gtbsFound True when the peer exposes GTBS.
+   */
   using DiscoveredCallback = std::function<void(BTStatus status, bool gtbsFound)>;
-  /** @brief The server's answer to @p operation on @p callIndex. */
+  /**
+   * @brief The server's answer to a call operation.
+   * @param operation The operation the answer refers to.
+   * @param status OK when the server accepted the operation; error status otherwise.
+   * @param callIndex Index of the affected call.
+   */
   using ResultCallback = std::function<void(BLEAudioCallOperation operation, BTStatus status, uint8_t callIndex)>;
-  /** @brief State of one call. */
+  /**
+   * @brief State of one call.
+   * @param callIndex Index of the call.
+   * @param state Current call state (Ended once the call is gone).
+   */
   using CallStateCallback = std::function<void(uint8_t callIndex, BLEAudioCallState state)>;
 
   BLEAudioCallController();
@@ -176,23 +230,57 @@ public:
    * Waits for the engine's GATT discovery of the link if needed; the current
    * calls are read right after onDiscovered. Every call below acts on the
    * peer's GTBS.
+   * @param connHandle ACL connection handle of the peer.
+   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
    */
   BTStatus discover(uint16_t connHandle);
   /** @return The connection passed to discover(), or BLE_AUDIO_CONN_NONE. */
   uint16_t getConnHandle() const;
 
-  /** @brief Ask the server to call @p uri (a scheme it lists, e.g. "tel:+15551234567"). */
+  /**
+   * @brief Ask the server to call @p uri (a scheme it lists, e.g. "tel:+15551234567").
+   * @param uri Destination URI to dial.
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the control-point write was queued (answer via onResult); another status when the write failed to start.
+   */
   BTStatus originate(const String &uri);
-  /** @brief Answer an incoming call. */
+  /**
+   * @brief Answer an incoming call.
+   * @param callIndex Index reported by onCallState().
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the control-point write was queued (answer via onResult); another status when the write failed to start.
+   */
   BTStatus accept(uint8_t callIndex);
-  /** @brief End a call. */
+  /**
+   * @brief End a call.
+   * @param callIndex Index reported by onCallState().
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the control-point write was queued (answer via onResult); another status when the write failed to start.
+   */
   BTStatus terminate(uint8_t callIndex);
-  /** @brief Put a call on local hold. */
+  /**
+   * @brief Put a call on local hold.
+   * @param callIndex Index reported by onCallState().
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the control-point write was queued (answer via onResult); another status when the write failed to start.
+   */
   BTStatus hold(uint8_t callIndex);
-  /** @brief Resume a locally held call. */
+  /**
+   * @brief Resume a locally held call.
+   * @param callIndex Index reported by onCallState().
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the control-point write was queued (answer via onResult); another status when the write failed to start.
+   */
   BTStatus retrieve(uint8_t callIndex);
-  /** @brief Re-read the call list (answered via onCallState, one call each). */
+  /**
+   * @brief Re-read the call list (answered via onCallState, one call each).
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the read was queued; another status when the read failed to start.
+   */
   BTStatus readCalls();
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
   BLEAudioCallController &onDiscovered(DiscoveredCallback cb);

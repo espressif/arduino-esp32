@@ -26,8 +26,7 @@
 #include "iso/BLEIso.bluedroid.h"
 
 #if BLE_GATT_CLIENT_SUPPORTED
-extern "C" uint16_t bleClientAclHandle(uint16_t connId);
-extern "C" bool bleClientConnLive(uint16_t connId);
+#include "client/BLEClient.bluedroid.h"
 #endif
 
 extern "C" uint16_t bleIsoResolveAclHandle(uint16_t connHandle) {

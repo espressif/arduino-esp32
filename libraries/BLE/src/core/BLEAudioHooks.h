@@ -53,7 +53,7 @@ void bleAudioForwardHostGattEvent(struct ble_gap_event *event) __attribute__((we
 /** @brief Whether the audio engine currently owns the NimBLE GATT commit. */
 bool bleAudioGattActive() __attribute__((weak));
 
-/** @brief Whether the audio engine has already committed the NimBLE GATT table. */
+/** @brief Whether the audio engine has already committed the GATT table (freeze). Enforced on both NimBLE and Bluedroid: classic services cannot restage while frozen. */
 bool bleAudioGattFrozen() __attribute__((weak));
 
 }  // extern "C"

@@ -40,24 +40,24 @@ class BLEAudio;
 /** Media State characteristic values. */
 enum class BLEAudioMediaState : uint8_t {
   Inactive = 0,  ///< No current track.
-  Playing = 1,
-  Paused = 2,
+  Playing = 1,   ///< Playback in progress.
+  Paused = 2,    ///< Playback paused.
   Seeking = 3,   ///< Fast forward or fast rewind in progress.
 };
 
 /** Media Control Point opcodes. */
 enum class BLEAudioMediaCommand : uint8_t {
-  Play = 0x01,
-  Pause = 0x02,
-  FastRewind = 0x03,
-  FastForward = 0x04,
-  Stop = 0x05,
-  PreviousTrack = 0x30,
-  NextTrack = 0x31,
-  FirstTrack = 0x32,
-  LastTrack = 0x33,
-  PreviousGroup = 0x40,
-  NextGroup = 0x41,
+  Play = 0x01,          ///< Start playback.
+  Pause = 0x02,         ///< Pause playback.
+  FastRewind = 0x03,    ///< Fast rewind.
+  FastForward = 0x04,   ///< Fast forward.
+  Stop = 0x05,          ///< Stop playback.
+  PreviousTrack = 0x30,  ///< Skip to the previous track.
+  NextTrack = 0x31,      ///< Skip to the next track.
+  FirstTrack = 0x32,     ///< Skip to the first track.
+  LastTrack = 0x33,      ///< Skip to the last track.
+  PreviousGroup = 0x40,  ///< Skip to the previous group.
+  NextGroup = 0x41,      ///< Skip to the next group.
 };
 
 /**
@@ -84,29 +84,50 @@ public:
   /** @return true when the handle refers to a created player. */
   explicit operator bool() const;
 
-  /** @brief Player name; applied at audio.start(), or immediately (and notified) once running. */
+  /**
+   * @brief Player name; applied at audio.start(), or immediately (and notified) once running.
+   * @param name New player name.
+   * @return BTStatus::OK when the name was staged (before start) or applied (once running);
+   *         InvalidState when the handle is empty;
+   *         another error when the stack refused the new text (the previous text is kept).
+   */
   BTStatus setPlayerName(const String &name);
-  /** @brief Current track title; same timing as setPlayerName(). */
+  /**
+   * @brief Current track title; same timing as setPlayerName().
+   * @param title New track title.
+   * @return BTStatus::OK when the title was staged (before start) or applied (once running);
+   *         InvalidState when the handle is empty;
+   *         another error when the stack refused the new text (the previous text is kept).
+   */
   BTStatus setTrackTitle(const String &title);
 
   // --- Local control (after audio.start()) ---
   // Needs CONFIG_BT_MCTL_LOCAL_PLAYER_LOCAL_CONTROL in the stack; without it
   // the calls below return NotSupported (state reporting is unavailable too).
 
-  /** @brief Run @p command on the local player; the outcome arrives through onCommandResult. */
+  /**
+   * @brief Run @p command on the local player; the outcome arrives through onCommandResult.
+   * @param command Media Control Point opcode to run.
+   * @return BTStatus::OK when the command was sent (the outcome arrives via onCommandResult);
+   *         InvalidState when the handle is empty or the player is not running yet;
+   *         NotSupported without CONFIG_BT_MCTL_LOCAL_PLAYER_LOCAL_CONTROL;
+   *         another error when the stack refused the command.
+   */
   BTStatus sendCommand(BLEAudioMediaCommand command);
-  /** @brief sendCommand(Play). */
+  /** @brief sendCommand(Play). @return As sendCommand(). */
   BTStatus play();
-  /** @brief sendCommand(Pause). */
+  /** @brief sendCommand(Pause). @return As sendCommand(). */
   BTStatus pause();
-  /** @brief sendCommand(Stop). */
+  /** @brief sendCommand(Stop). @return As sendCommand(). */
   BTStatus stop();
-  /** @brief sendCommand(NextTrack). */
+  /** @brief sendCommand(NextTrack). @return As sendCommand(). */
   BTStatus nextTrack();
-  /** @brief sendCommand(PreviousTrack). */
+  /** @brief sendCommand(PreviousTrack). @return As sendCommand(). */
   BTStatus previousTrack();
   /** @brief Last state reported by the player. */
   BLEAudioMediaState getState() const;
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Player state changes, whoever caused them. */
   BLEAudioMediaPlayer &onStateChanged(StateCallback cb);
@@ -167,32 +188,62 @@ public:
    *
    * Waits for the engine's GATT discovery of the link if needed; the media
    * state is read right after onDiscovered. Every call below targets this peer.
+   * @param connHandle ACL connection of the peer's media player.
+   * @return BTStatus::OK when discovery started (or was deferred until the engine's GATT discovery finishes);
+   *         InvalidState when the handle is empty, audio is not started, or @p connHandle is BLE_AUDIO_CONN_NONE;
+   *         another error when the stack refused discovery.
    */
   BTStatus discover(uint16_t connHandle);
   /** @return The connection passed to discover(), or BLE_AUDIO_CONN_NONE. */
   uint16_t getConnHandle() const;
 
-  /** @brief Write @p command to the peer's Media Control Point (answered via onCommandResult). */
+  /**
+   * @brief Write @p command to the peer's Media Control Point (answered via onCommandResult).
+   * @param command Media Control Point opcode to write.
+   * @return BTStatus::OK when the write was queued (the answer arrives via onCommandResult);
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         NotSupported without CONFIG_BT_MCC_SET_MEDIA_CONTROL_POINT;
+   *         another error when the stack refused the write.
+   */
   BTStatus sendCommand(BLEAudioMediaCommand command);
-  /** @brief sendCommand(Play). */
+  /** @brief sendCommand(Play). @return As sendCommand(). */
   BTStatus play();
-  /** @brief sendCommand(Pause). */
+  /** @brief sendCommand(Pause). @return As sendCommand(). */
   BTStatus pause();
-  /** @brief sendCommand(Stop). */
+  /** @brief sendCommand(Stop). @return As sendCommand(). */
   BTStatus stop();
-  /** @brief sendCommand(NextTrack). */
+  /** @brief sendCommand(NextTrack). @return As sendCommand(). */
   BTStatus nextTrack();
-  /** @brief sendCommand(PreviousTrack). */
+  /** @brief sendCommand(PreviousTrack). @return As sendCommand(). */
   BTStatus previousTrack();
 
-  /** @brief Read the media state (answered via onStateChanged). */
+  /**
+   * @brief Read the media state (answered via onStateChanged).
+   * @return BTStatus::OK when the read was queued;
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         NotSupported without CONFIG_BT_MCC_READ_MEDIA_STATE;
+   *         another error when the stack refused the read.
+   */
   BTStatus readState();
-  /** @brief Read the player name (answered via onPlayerName). */
+  /**
+   * @brief Read the player name (answered via onPlayerName).
+   * @return BTStatus::OK when the read was queued;
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         another error when the stack refused the read.
+   */
   BTStatus readPlayerName();
-  /** @brief Read the track title (answered via onTrackTitle). */
+  /**
+   * @brief Read the track title (answered via onTrackTitle).
+   * @return BTStatus::OK when the read was queued;
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         NotSupported without CONFIG_BT_MCC_READ_TRACK_TITLE;
+   *         another error when the stack refused the read.
+   */
   BTStatus readTrackTitle();
-  /** @brief Last state reported by the peer. */
+  /** @brief Last state reported by the peer (Inactive after disconnect). */
   BLEAudioMediaState getState() const;
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
   BLEAudioMediaController &onDiscovered(DiscoveredCallback cb);

@@ -213,7 +213,9 @@ struct BigParams {
  * @brief Bring the transport up (idempotent). Call after `BLE.begin()`.
  *
  * Initializes ISO on the host, or attaches to it when the LE Audio engine
- * already owns it. Every channel from a previous session is dropped.
+ * already owns it. Every channel from a previous session is dropped. When a
+ * previous end() failed partway (channels left behind), begin() retries the
+ * release instead of reporting a clean start over a wedged session.
  */
 BTStatus begin();
 
@@ -238,6 +240,9 @@ bool isActive();
  * Only one Central CIS at a time: after it went down, calling this again
  * reconnects the same channel (possibly with new QoS).
  * @param connHandle ACL connection handle (e.g. `BLEClient::getHandle()`).
+ *   Stale handles (0xFFFF, dead or recycled links) are refused before any CIG
+ *   is created: a CIG/CIS over a dead link wastes HCI commands and could bind
+ *   the channel to the wrong peer after a controller recycle.
  * @return The channel, or nullptr on error. `onConnected` fires when the CIS is up.
  */
 Channel *connectCis(uint16_t connHandle, const CisParams &params = CisParams());

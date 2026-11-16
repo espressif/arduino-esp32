@@ -61,6 +61,11 @@ struct BLEClient::Impl : BLEClientImplCommon {
   std::atomic<bool> secBonded{false};
 
   BLESync regSync{"regSync"};              // For blocking GATTC app registration
+  // Bluedroid BTA runs its own GATT auto-discovery on uncached (re)connects
+  // (DIS_SRVC_CMPL_EVT), racing our MTU exchange and service search. The sync
+  // below serializes them: armed (take + done=false) before enh_open, signaled
+  // by DIS_SRVC_CMPL_EVT. Cached reconnects skip the wait (see the
+  // get_attr_count cache probe). Best effort with a 2 s budget — see DESIGN.md.
   BLESync autoDiscSync{"autoDiscSync"};    // Waits for Bluedroid BTA auto-discovery (DIS_SRVC_CMPL_EVT) when uncached
   std::atomic<bool> autoDiscDone{true};    // True when BTA already held a server cache at OPEN_EVT or auto-discovery finished
   // Only one GATT read/write can be in-flight per client at a time because
@@ -127,5 +132,36 @@ struct BLEClient::Impl : BLEClientImplCommon {
  * @return true on successful registration; false on allocation or registration failure.
  */
 bool bluedroidRegisterClient(const std::shared_ptr<BLEClient::Impl> &impl);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief Whether @p connId names a live library link.
+ *
+ * Accepts the CONNECT→OPEN window (ACL latched on CONNECT_EVT before OPEN_EVT
+ * sets connected) as live; disconnect clears both, so a dead link still fails.
+ * A @p connId that is not one of ours is likely already a raw ACL handle, so it
+ * is accepted optimistically like NimBLE's host-live check and the stack
+ * arbitrates: it rejects the call if the handle is invalid, instead of this
+ * layer refusing a valid raw ACL. 0xFFFF is never live.
+ */
+bool bleClientConnLive(uint16_t connId);
+
+/**
+ * @brief Resolve a library connection id to its HCI ACL handle.
+ *
+ * @param connId Library conn id, or 0xFFFF when there is no link.
+ * @return The latched ACL handle when the link is live (including the
+ *         CONNECT→OPEN window); @p connId itself for a dead link miss or when
+ *         it is already a raw ACL handle (the stack arbitrates); 0xFFFF when
+ *         @p connId is 0xFFFF.
+ */
+uint16_t bleClientAclHandle(uint16_t connId);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* BLE_BLUEDROID */

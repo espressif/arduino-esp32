@@ -44,7 +44,7 @@ class BLEAudio;
 
 /** @brief TMAP roles (TMAP Role characteristic bits). */
 enum class BLEAudioTmapRole : uint16_t {
-  None = 0x0000,
+  None = 0x0000,               ///< No TMAP role.
   CallGateway = 0x0001,             //!< CG: places / controls calls
   CallTerminal = 0x0002,            //!< CT: the headset end of a call
   UnicastMediaSender = 0x0004,      //!< UMS
@@ -93,18 +93,27 @@ inline bool operator&(BLEAudioGmapRole a, BLEAudioGmapRole b) {
 
 /** @brief GMAP feature bitfields, one per role; a role's field is ignored unless the role is set. */
 struct BLEAudioGmapFeatures {
-  enum : uint8_t { UggMultiplex = 0x01, Ugg96kbpsSource = 0x02, UggMultisink = 0x04 };
   enum : uint8_t {
-    UgtSource = 0x01,
-    Ugt80kbpsSource = 0x02,
-    UgtSink = 0x04,
-    Ugt64kbpsSink = 0x08,
-    UgtMultiplex = 0x10,
-    UgtMultisink = 0x20,
-    UgtMultisource = 0x40,
+    UggMultiplex = 0x01,    ///< UGG supports multiplex.
+    Ugg96kbpsSource = 0x02, ///< UGG supports 96 kbps source.
+    UggMultisink = 0x04,    ///< UGG supports multisink.
   };
-  enum : uint8_t { Bgs96kbps = 0x01 };
-  enum : uint8_t { BgrMultisink = 0x01, BgrMultiplex = 0x02 };
+  enum : uint8_t {
+    UgtSource = 0x01,      ///< UGT supports source.
+    Ugt80kbpsSource = 0x02, ///< UGT supports 80 kbps source.
+    UgtSink = 0x04,        ///< UGT supports sink.
+    Ugt64kbpsSink = 0x08,  ///< UGT supports 64 kbps sink.
+    UgtMultiplex = 0x10,   ///< UGT supports multiplex.
+    UgtMultisink = 0x20,   ///< UGT supports multisink.
+    UgtMultisource = 0x40, ///< UGT supports multisource.
+  };
+  enum : uint8_t {
+    Bgs96kbps = 0x01, ///< BGS supports 96 kbps.
+  };
+  enum : uint8_t {
+    BgrMultisink = 0x01, ///< BGR supports multisink.
+    BgrMultiplex = 0x02, ///< BGR supports multiplex.
+  };
 
   uint8_t unicastGateway = 0;     //!< Ugg* bits
   uint8_t unicastTerminal = 0;    //!< Ugt* bits; UGT needs UgtSource and/or UgtSink
@@ -115,7 +124,12 @@ struct BLEAudioGmapFeatures {
 /** @brief TMAP identity (TMAS server and TMAP client). */
 class BLEAudioTmap {
 public:
-  /** @brief Roles read from the peer on @p connHandle (None when @p status is an error). */
+  /**
+   * @brief Roles read from the peer.
+   * @param connHandle ACL connection handle the roles were read from.
+   * @param status OK when the read finished; error status when it failed.
+   * @param peerRoles Roles published by the peer (None when @p status is an error).
+   */
   using DiscoverCallback = std::function<void(uint16_t connHandle, BTStatus status, BLEAudioTmapRole peerRoles)>;
 
   BLEAudioTmap();
@@ -133,8 +147,14 @@ public:
   /** @return The local roles set with setRoles(). */
   BLEAudioTmapRole getRoles() const;
 
-  /** @brief Read the TMAP roles of a connected peer (result in onDiscovered()). */
+  /** @brief Read the TMAP roles of a connected peer (result in onDiscovered()).
+   * @param connHandle ACL connection handle of the peer.
+   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
+   */
   BTStatus discover(uint16_t connHandle);
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Result of each discover(). */
   BLEAudioTmap &onDiscovered(DiscoverCallback cb);
@@ -154,7 +174,13 @@ private:
 /** @brief GMAP identity (GMAS server and GMAP client). */
 class BLEAudioGmap {
 public:
-  /** @brief Roles and features read from the peer on @p connHandle (zero when @p status is an error). */
+  /**
+   * @brief Roles and features read from the peer.
+   * @param connHandle ACL connection handle the roles were read from.
+   * @param status OK when the read finished; error status when it failed.
+   * @param peerRoles Roles published by the peer.
+   * @param peerFeatures Features published by the peer (zero when @p status is an error).
+   */
   using DiscoverCallback = std::function<void(uint16_t connHandle, BTStatus status, BLEAudioGmapRole peerRoles, const BLEAudioGmapFeatures &peerFeatures)>;
 
   BLEAudioGmap();
@@ -176,8 +202,14 @@ public:
   /** @return The local roles set with setRoles(). */
   BLEAudioGmapRole getRoles() const;
 
-  /** @brief Read the GMAP roles and features of a connected peer (result in onDiscovered()). */
+  /** @brief Read the GMAP roles and features of a connected peer (result in onDiscovered()).
+   * @param connHandle ACL connection handle of the peer.
+   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
+   */
   BTStatus discover(uint16_t connHandle);
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Result of each discover(). */
   BLEAudioGmap &onDiscovered(DiscoverCallback cb);
@@ -214,14 +246,22 @@ public:
    *
    * @p out receives the 0x1856 UUID (2 bytes, little-endian), the features,
    * the metadata length and the metadata.
+   * @param features Feature bits (Feature values combined with `|`).
    * @param metadata LTV metadata to embed (may be null when @p metadataLen is 0).
+   * @param metadataLen Octets in @p metadata.
+   * @param out Destination buffer for the announcement.
+   * @param outCap Capacity of @p out in octets.
    * @return Bytes written (4 + @p metadataLen), or 0 on error.
    */
   static size_t buildAnnouncement(uint8_t features, const uint8_t *metadata, size_t metadataLen, uint8_t *out, size_t outCap);
 
   /**
    * @brief Parse a Service Data 16-bit AD value (starting with its UUID).
+   * @param data Announcement bytes starting with the 16-bit UUID.
+   * @param dataLen Octets in @p data.
+   * @param featuresOut Receives the feature bits.
    * @param metadataOut Points into @p data (null when there is no metadata).
+   * @param metadataLenOut Receives the octets in @p metadataOut.
    * @return false if @p data is not a Public Broadcast Announcement.
    */
   static bool parseAnnouncement(const uint8_t *data, size_t dataLen, uint8_t &featuresOut, const uint8_t *&metadataOut, size_t &metadataLenOut);

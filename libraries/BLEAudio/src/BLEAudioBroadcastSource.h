@@ -58,6 +58,11 @@ class BLEAudio;
 
 class BLEAudioBroadcastSource {
 public:
+  /**
+   * @brief The BIG is up: every stream is streaming.
+   *
+   * Runs on the Bluetooth host task; keep it short.
+   */
   using Callback = std::function<void()>;
   /** @brief The BIG was terminated; @p reason is the HCI reason (0x16 after stop()). */
   using StoppedCallback = std::function<void(uint8_t reason)>;
@@ -72,14 +77,24 @@ public:
   /** @brief Whether this handle references a source (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (applied by the next start()) ---
+  // --- Configuration (applied by the next start(); every setter returns this handle) ---
+  //
+  // Setters are no-op chain links on an empty handle. Codec, QoS, channels,
+  // code and context mark the engine source dirty so start() re-creates it;
+  // the Broadcast ID, name and PBP flag only change the advertising.
 
-  /** @brief Codec and QoS from a BAP preset (broadcast table). Default LC3_16_2_1. */
+  /**
+   * @brief Codec and QoS from a BAP preset (broadcast table). Default LC3_16_2_1.
+   * @param preset Preset to use; an unknown preset is logged and ignored.
+   * @return This handle, for chaining.
+   */
   BLEAudioBroadcastSource &setPreset(BLEAudioCodecPreset preset);
   /**
    * @brief Replace the preset's QoS with a custom one.
    *
    * Without it, the preset QoS is used with the controller's presentation delay.
+   * @param qos Custom QoS applied instead of the preset one from the next start().
+   * @return This handle, for chaining.
    */
   BLEAudioBroadcastSource &setQos(const BLEAudioQos &qos);
   /**
@@ -89,25 +104,43 @@ public:
    * while starting or streaming. A stopped engine source is deleted before
    * the stream vector is resized, so the engine never points at freed slots.
    * Streams are (re)allocated immediately; attach callbacks afterwards.
+   * @param channels 1 = mono (one BIS), 2 = stereo (two BISes).
+   * @return This handle, for chaining.
    */
   BLEAudioBroadcastSource &setChannels(uint8_t channels);
-  /** @brief 24-bit Broadcast ID receivers use to recognise the source. Default: random. */
+  /**
+   * @brief 24-bit Broadcast ID receivers use to recognise the source. Default: random.
+   * @param broadcastId Only the low 24 bits are kept; advertised, not baked into the source.
+   * @return This handle, for chaining.
+   */
   BLEAudioBroadcastSource &setBroadcastId(uint32_t broadcastId);
   /**
    * @brief Broadcast Code (up to 16 characters) that encrypts the BIG.
    *
    * Empty (default) = unencrypted. Receivers need the same code to decode.
+   * @param code Longer codes are truncated with a warning and zero-padded per spec.
+   * @return This handle, for chaining.
    */
   BLEAudioBroadcastSource &setBroadcastCode(const String &code);
-  /** @brief Broadcast Name shown by scanners (truncated to 32 characters). Default: the device name. */
+  /**
+   * @brief Broadcast Name shown by scanners (truncated to 32 characters). Default: the device name.
+   * @param name Name advertised in the extended advertising.
+   * @return This handle, for chaining.
+   */
   BLEAudioBroadcastSource &setName(const String &name);
-  /** @brief Streaming context in the BASE metadata. Default Media. */
+  /**
+   * @brief Streaming context in the BASE metadata. Default Media.
+   * @param context Context announced in the BASE.
+   * @return This handle, for chaining.
+   */
   BLEAudioBroadcastSource &setContext(BLEAudioContext context);
   /**
    * @brief Advertise a Public Broadcast Announcement (Auracast, PBP builds only).
    *
    * Lets phones list the broadcast with its quality and encryption flags.
    * Default on; ignored when PBP is not compiled in.
+   * @param enable True to advertise the PBA alongside the announcement.
+   * @return This handle, for chaining.
    */
   BLEAudioBroadcastSource &setPublicBroadcast(bool enable);
 
@@ -157,31 +190,54 @@ public:
    *
    * Blocks until the BIG is down (or 5 s) so a following `audio.end()` /
    * `BLE.end()` does not tear the host down over a live ISO channel.
-   * @return BTStatus::OK on success; InvalidState when not started.
+   * Called from a Bluetooth stack/audio callback, stop() is refused with Busy
+   * because it must wait for the asynchronous BIG terminate; defer it to loop().
+   * @return BTStatus::OK on success (also when already stopped); InvalidState
+   *         when not started or on an empty handle; Busy from a stack callback;
+   *         another error when the teardown stalled (retry stop()).
    */
   BTStatus stop();
-  /** @brief Whether the BIG is up (between onStarted() and onStopped()). */
+  /**
+   * @brief Whether the BIG is up (between onStarted() and onStopped()).
+   * @return True while the BIG streams; false on an empty handle.
+   */
   bool isStreaming() const;
   /**
    * @brief Change the streaming context in the BASE while running.
-   * @return BTStatus::OK on success; InvalidState before the first start().
+   * @param context Context written into the existing source metadata in place.
+   * @return BTStatus::OK on success; InvalidState before the first start() or on
+   *         an empty handle; another error when the engine refused the update.
    */
   BTStatus updateContext(BLEAudioContext context);
-  /** @brief Broadcast ID in use (random unless set). */
+  /**
+   * @brief Broadcast ID in use (random unless set).
+   * @return The staged ID (masked to 24 bits); 0 on an empty handle.
+   */
   uint32_t getBroadcastId() const;
 
   // --- Streams (one Tx stream per BIS; valid after setChannels()) ---
 
   /** @brief Number of streams (= channels, fewer if the pool ran out). */
   size_t streamCount() const;
-  /** @brief Stream @p index: 0 = mono or front left, 1 = front right. Empty when out of range. */
+  /**
+   * @brief Stream @p index: 0 = mono or front left, 1 = front right. Empty when out of range.
+   * @param index BIS position (0 = mono/front left, 1 = front right).
+   * @return The stream, or an empty handle when @p index is out of range.
+   */
   BLEAudioStream stream(size_t index) const;
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
+  //
+  // Every setter below takes the callback in @p cb and returns this handle for
+  // chaining; a no-op chain link on an empty handle.
 
-  /** @brief The BIG is up: every stream is streaming. */
+  /** @brief The BIG is up: every stream is streaming.
+   *  @param cb Callback fired once the BIG streams.
+   *  @return This handle, for chaining. */
   BLEAudioBroadcastSource &onStarted(Callback cb);
-  /** @brief The BIG was terminated. */
+  /** @brief The BIG was terminated.
+   *  @param cb Callback receiving the HCI termination @p reason.
+   *  @return This handle, for chaining. */
   BLEAudioBroadcastSource &onStopped(StoppedCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();

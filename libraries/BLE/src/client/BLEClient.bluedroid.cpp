@@ -442,6 +442,8 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
   conn.own_addr_type = static_cast<esp_ble_addr_type_t>(GATTC_OWN_ADDR_TYPE_LOCAL_DEFAULT);
   conn.phy_mask = 0;
 
+  // Same BTA auto-discovery gate as connect(): arm the sync before enh_open
+  // so an uncached peer's DIS_SRVC_CMPL_EVT is not missed.
   impl.autoDiscDone.store(false, std::memory_order_release);
   impl.autoDiscSync.take();
   esp_err_t err = esp_ble_gattc_enh_open(impl.gattcIf, &conn);
@@ -524,6 +526,11 @@ BTStatus BLEClient::discoverServices() {
   }
 
   if (!impl.autoDiscDone.load(std::memory_order_acquire)) {
+    // Best effort: when BTA is mid-auto-discovery, wait up to 2 s for
+    // DIS_SRVC_CMPL_EVT so the search runs on the discovered database; on
+    // timeout the search runs anyway and reports whatever BTA has (the wait
+    // result is intentionally ignored — a stuck discovery must not wedge this
+    // call forever).
     (void)impl.autoDiscSync.wait(2000);
   }
 
@@ -1159,6 +1166,9 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
 
     case ESP_GATTC_DIS_SRVC_CMPL_EVT:
     {
+      // BTA auto-discovery finished: unblock the connect()/discoverServices()
+      // gate armed before enh_open. Uncached reconnects wait on this; cached
+      // ones never armed it (autoDiscDone stayed true from the cache probe).
       client->autoDiscDone.store(true, std::memory_order_release);
       client->autoDiscSync.give(param->dis_srvc_cmpl.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
       break;

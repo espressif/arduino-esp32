@@ -80,14 +80,35 @@ public:
   explicit operator bool() const;
 
   // --- Coordinated set (same rules as BLEAudioCoordinatedSetMember) ---
+  //
+  // Every setter returns this handle for chaining; values are read when a
+  // session starts (the context is also re-sent by updateUnicast()). On an
+  // empty handle each setter is a no-op.
 
-  /** @brief See BLEAudioCoordinatedSetMember::setSirk(). */
+  /**
+   * @brief See BLEAudioCoordinatedSetMember::setSirk().
+   * @param sirk 16-octet Set Identity Resolving Key shared by the set; null is ignored.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapAcceptor &setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
-  /** @brief See BLEAudioCoordinatedSetMember::setSetSize(). */
+  /**
+   * @brief See BLEAudioCoordinatedSetMember::setSetSize().
+   * @param size Total devices in the set. Only a changed size re-registers a running set.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapAcceptor &setSetSize(uint8_t size);
-  /** @brief See BLEAudioCoordinatedSetMember::setRank(). */
+  /**
+   * @brief See BLEAudioCoordinatedSetMember::setRank().
+   * @param rank 1-based rank of this device. A running set only takes it with a new
+   *             set size (setSetSize()) or at the next start().
+   * @return This handle, for chaining.
+   */
   BLEAudioCapAcceptor &setRank(uint8_t rank);
-  /** @brief See BLEAudioCoordinatedSetMember::setLockable(). */
+  /**
+   * @brief See BLEAudioCoordinatedSetMember::setLockable().
+   * @param lockable Whether a coordinator may lock this device for ordered access.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapAcceptor &setLockable(bool lockable);
   /** @brief The CAS-included CSIS instance: RSI, lock state and callbacks. */
   BLEAudioCoordinatedSetMember coordinatedSet() const;
@@ -137,25 +158,60 @@ public:
   /** @brief Whether this handle references an initiator (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (read when a session starts) ---
+  // --- Configuration (read when a session starts; every setter returns this handle) ---
 
-  /** @brief Codec and QoS of every stream, from a BAP preset. Default LC3_16_2_1. */
+  /**
+   * @brief Codec and QoS of every stream, from a BAP preset. Default LC3_16_2_1.
+   * @param preset Preset to use; an unknown preset is logged and ignored.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapInitiator &setPreset(BLEAudioCodecPreset preset);
-  /** @brief Replace the preset QoS; `maxSdu` is recomputed per stream. */
+  /**
+   * @brief Replace the preset QoS; `maxSdu` is recomputed per stream.
+   * @param qos Custom QoS applied instead of the preset one from the next session.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapInitiator &setQos(const BLEAudioQos &qos);
-  /** @brief Streaming context of unicast and broadcast streams. Default Media. */
+  /**
+   * @brief Streaming context of unicast and broadcast streams. Default Media.
+   * @param context Context sent with Enable and in the BASE metadata.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapInitiator &setContext(BLEAudioContext context);
-  /** @brief Unicast streams this device sends, per acceptor. Default 1. */
+  /**
+   * @brief Unicast streams this device sends, per acceptor. Default 1.
+   * @param perPeer Requested sink ASEs per acceptor, capped by what the acceptor has.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapInitiator &setSinkStreams(uint8_t perPeer);
-  /** @brief Unicast streams this device receives, per acceptor. Default 0. */
+  /**
+   * @brief Unicast streams this device receives, per acceptor. Default 0.
+   * @param perPeer Requested source ASEs per acceptor, capped by what the acceptor has.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapInitiator &setSourceStreams(uint8_t perPeer);
-  /** @brief 24-bit Broadcast ID. Default random. */
+  /**
+   * @brief 24-bit Broadcast ID. Default random.
+   * @param broadcastId Only the low 24 bits are kept.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapInitiator &setBroadcastId(uint32_t broadcastId);
-  /** @return The Broadcast ID used by startBroadcast() and handovers. */
+  /**
+   * @brief The Broadcast ID used by startBroadcast() and handovers.
+   * @return The staged ID (masked to 24 bits); 0 on an empty handle.
+   */
   uint32_t getBroadcastId() const;
-  /** @brief Broadcast Code (up to 16 characters); empty = unencrypted. */
+  /**
+   * @brief Broadcast Code (up to 16 characters); empty = unencrypted.
+   * @param code Longer codes are truncated with a warning and zero-padded per spec.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapInitiator &setBroadcastCode(const String &code);
-  /** @brief Broadcast Name; empty = device name. */
+  /**
+   * @brief Broadcast Name; empty = device name.
+   * @param name Name advertised in the extended advertising.
+   * @return This handle, for chaining.
+   */
   BLEAudioCapInitiator &setBroadcastName(const String &name);
 
   // --- Discovery (after audio.start()) ---
@@ -165,17 +221,33 @@ public:
    *
    * Starts once `BLEAudio::onLinkReady()` fired for @p connHandle; the
    * result is reported by onDiscovered(). Discovered acceptors take part in
-   * every following unicast session and handover.
+   * every following unicast session and handover. Calling it again for a
+   * known acceptor, or before its link is GATT-ready, defers to (or reports)
+   * the in-flight discovery.
+   * @param connHandle ACL connection of the acceptor.
+   * @return BTStatus::OK when discovery started, is in flight, or the acceptor
+   *         is already discovered; InvalidState before audio.start(); another
+   *         error when the engine refused the discovery.
    */
   BTStatus discover(uint16_t connHandle);
 
   // --- Unicast ---
 
-  /** @brief Start streams on every discovered acceptor (onUnicastStarted() follows). */
+  /** @brief Start streams on every discovered acceptor (onUnicastStarted() follows).
+   *  @return BTStatus::OK when the setup started; InvalidState when already
+   *          running/starting, handed over, a handover is busy, or no discovered
+   *          acceptor has a usable endpoint; NoMemory when the stream pool is
+   *          exhausted; another error when the engine refused the start. */
   BTStatus startUnicast();
-  /** @brief Change the streaming context of the running streams (onUnicastUpdated()). */
+  /** @brief Change the streaming context of the running streams (onUnicastUpdated()).
+   *  @param context Context applied to the running session.
+   *  @return BTStatus::OK when the update started; InvalidState when no unicast
+   *          session is running or a handover is busy; another error otherwise. */
   BTStatus updateUnicast(BLEAudioContext context);
-  /** @brief Release every unicast stream (onUnicastStopped() follows). */
+  /** @brief Release every unicast stream (onUnicastStopped() follows).
+   *  @return BTStatus::OK when the release started; InvalidState when no session
+   *          (running or handed-over) exists or a handover is busy; another error
+   *          when the engine refused the stop. */
   BTStatus stopUnicast();
   /** @return true while the unicast streams carry audio (after a successful start or a handover back). */
   bool isUnicastStreaming() const;
@@ -207,35 +279,74 @@ public:
    *
    * @note If the procedure fails, the initiator also stops the unicast
    * session (onUnicastStopped() fires) so startUnicast() can rebuild it.
+   * @param advInstance Extended advertising instance for the broadcast.
+   * @return BTStatus::OK when the handover started (onHandover() follows);
+   *         InvalidState when no unicast session streams, a broadcast already
+   *         runs, or a handover is busy; NotSupported when handover is disabled
+   *         (CONFIG_BT_CAP_HANDOVER); another error when the engine or the
+   *         advertising refused the start.
    */
   BTStatus handoverToBroadcast(uint8_t advInstance = 0);
-  /** @brief Move a handed-over broadcast back to unicast on the same acceptors. */
+  /**
+   * @brief Move a handed-over broadcast back to unicast on the same acceptors.
+   * @return BTStatus::OK when the handover started (onHandover() follows);
+   *         InvalidState when no handover is in effect, a handover is busy, or
+   *         the acceptors changed since the handover to broadcast; NotSupported
+   *         when handover is disabled (CONFIG_BT_CAP_HANDOVER); another error
+   *         when the engine refused the start.
+   */
   BTStatus handoverToUnicast();
 
   // --- Streams ---
 
   /** @brief Streams of the current session: unicast (also after a handover) or broadcast. */
   size_t streamCount() const;
-  /** @return Stream @p index of the current session, or an empty stream. */
+  /**
+   * @brief Stream @p index of the current session, or an empty stream.
+   * @param index Position in request order (per acceptor: sink streams, then source).
+   * @return The stream, or an empty handle when @p index is out of range.
+   */
   BLEAudioStream stream(size_t index) const;
-  /** @return The @p index-th stream of direction @p dir in the current session, or an empty stream. */
+  /**
+   * @brief The @p index-th stream of direction @p dir in the current session, or an empty stream.
+   * @param dir Tx = streams this device sends; Rx = streams it receives.
+   * @param index Position among the streams of @p dir.
+   * @return The stream, or an empty handle when fewer streams exist in @p dir.
+   */
   BLEAudioStream stream(BLEAudioStream::Direction dir, uint8_t index = 0) const;
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
+  //
+  // Every setter below takes the callback in @p cb and returns this handle for
+  // chaining; a no-op chain link on an empty handle.
 
-  /** @brief CAP discovery of an acceptor finished. */
+  /** @brief CAP discovery of an acceptor finished.
+   *  @param cb Callback receiving the discovery @p status and the acceptor @p peer.
+   *  @return This handle, for chaining. */
   BLEAudioCapInitiator &onDiscovered(DiscoveredCallback cb);
-  /** @brief startUnicast() finished; the streams carry audio on success. */
+  /** @brief startUnicast() finished; the streams carry audio on success.
+   *  @param cb Callback receiving the procedure @p status.
+   *  @return This handle, for chaining. */
   BLEAudioCapInitiator &onUnicastStarted(StatusCallback cb);
-  /** @brief updateUnicast() finished. */
+  /** @brief updateUnicast() finished.
+   *  @param cb Callback receiving the procedure @p status.
+   *  @return This handle, for chaining. */
   BLEAudioCapInitiator &onUnicastUpdated(StatusCallback cb);
-  /** @brief The unicast streams were released. */
+  /** @brief The unicast streams were released.
+   *  @param cb Callback fired after the release.
+   *  @return This handle, for chaining. */
   BLEAudioCapInitiator &onUnicastStopped(Callback cb);
-  /** @brief The broadcast source is streaming. */
+  /** @brief The broadcast source is streaming.
+   *  @param cb Callback fired once the broadcast streams.
+   *  @return This handle, for chaining. */
   BLEAudioCapInitiator &onBroadcastStarted(Callback cb);
-  /** @brief The broadcast stopped. */
+  /** @brief The broadcast stopped.
+   *  @param cb Callback receiving the HCI @p reason (0 after stopBroadcast()).
+   *  @return This handle, for chaining. */
   BLEAudioCapInitiator &onBroadcastStopped(StoppedCallback cb);
-  /** @brief A handover procedure finished. */
+  /** @brief A handover procedure finished.
+   *  @param cb Callback receiving the @p status and the @p toBroadcast direction.
+   *  @return This handle, for chaining. */
   BLEAudioCapInitiator &onHandover(HandoverCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();
@@ -308,6 +419,11 @@ public:
    * procedure below then acts on all discovered acceptors at once; each
    * reports through onResult(). NotSupported when the matching controller
    * profile (VCP, VOCS, MICP, AICS, BAP assistant) is not in the build.
+   * @param connHandle ACL connection of the acceptor; GATT discovery of the
+   *        link gates the start (deferred until onLinkReady() when pending).
+   * @return BTStatus::OK when discovery started or is deferred to the link's
+   *         GATT discovery; InvalidState before audio.start() or for an invalid
+   *         handle; another error when the engine refused the discovery.
    */
   BTStatus discover(uint16_t connHandle);
 
@@ -321,17 +437,43 @@ public:
    * sets fall back to AD_HOC with a warning. Can be toggled any time; takes
    * effect on the next procedure. Returns NotSupported when the CSIP
    * coordinator is compiled out.
+   * @param enable True for rank-ordered execution with CSIP lock/unlock, false for AD_HOC.
+   * @return BTStatus::OK when queued; InvalidState on an empty handle; NotSupported
+   *         when the CSIP coordinator is compiled out; another error when the engine refused.
    */
   BTStatus setCoordinated(bool enable);
-  /** @brief Set the absolute volume (0..255) of every acceptor (VCP). */
+  /**
+   * @brief Set the absolute volume (0..255) of every acceptor (VCP).
+   * @param volume Absolute volume step.
+   * @return BTStatus::OK when queued; InvalidState on an empty handle; another
+   *         error (including NotSupported with no VCP controller in the build) otherwise.
+   */
   BTStatus setVolume(uint8_t volume);
-  /** @brief Mute or unmute the rendering of every acceptor (VCP). */
+  /**
+   * @brief Mute or unmute the rendering of every acceptor (VCP).
+   * @param mute True to mute, false to unmute.
+   * @return BTStatus::OK when queued; InvalidState on an empty handle; another error otherwise.
+   */
   BTStatus setMute(bool mute);
-  /** @brief Set the volume offset (-255..255) of every acceptor's first VOCS instance. */
+  /**
+   * @brief Set the volume offset (-255..255) of every acceptor's first VOCS instance.
+   * @param offset Offset step.
+   * @return BTStatus::OK when queued; InvalidState on an empty handle; another
+   *         error (including NotSupported with no VOCS in the build) otherwise.
+   */
   BTStatus setVolumeOffset(int16_t offset);
-  /** @brief Mute or unmute the microphone of every acceptor (MICP). */
+  /**
+   * @brief Mute or unmute the microphone of every acceptor (MICP).
+   * @param mute True to mute, false to unmute.
+   * @return BTStatus::OK when queued; InvalidState on an empty handle; another error otherwise.
+   */
   BTStatus setMicMute(bool mute);
-  /** @brief Set the gain of every acceptor's first microphone AICS instance. */
+  /**
+   * @brief Set the gain of every acceptor's first microphone AICS instance.
+   * @param gain Gain step.
+   * @return BTStatus::OK when queued; InvalidState on an empty handle; another
+   *         error (including NotSupported with no AICS in the build) otherwise.
+   */
   BTStatus setMicGain(int8_t gain);
 
   /**
@@ -341,24 +483,41 @@ public:
    * @param broadcastId 24-bit Broadcast ID of the source.
    * @param bisSync     BIS indexes to sync (bit n-1 = BIS n); 0 = no preference.
    * @param paInterval  PA interval in 1.25 ms units; 0xFFFF = unknown.
+   * @return BTStatus::OK when queued; InvalidState on an empty handle; another
+   *         error (including NotSupported with no BASS client in the build) otherwise.
    */
   BTStatus startBroadcastReception(const BTAddress &source, uint8_t sid, uint32_t broadcastId, uint32_t bisSync = 0,
                                    uint16_t paInterval = 0xFFFF);
-  /** @brief Ask the acceptors to stop receiving the broadcast started above. */
+  /**
+   * @brief Ask the acceptors to stop receiving the broadcast started above.
+   * @return BTStatus::OK when queued; InvalidState on an empty handle; another error otherwise.
+   */
   BTStatus stopBroadcastReception();
   /**
    * @brief Send the Broadcast Code of an encrypted broadcast to the acceptors.
    * @param code Non-empty code (up to 16 characters); an empty code is rejected.
+   * @return BTStatus::OK when queued; InvalidParam for an empty code; InvalidState
+   *         on an empty handle; another error otherwise.
    */
   BTStatus distributeBroadcastCode(const String &code);
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
+  //
+  // Every setter below takes the callback in @p cb and returns this handle for
+  // chaining; a no-op chain link on an empty handle.
 
-  /** @brief Commander discovery of an acceptor finished. */
+  /** @brief Commander discovery of an acceptor finished.
+   *  @param cb Callback receiving the @p status, the acceptor @p connHandle, and
+   *            whether it is @p coordinatedSet / @p broadcastReception capable.
+   *  @return This handle, for chaining. */
   BLEAudioCapCommander &onDiscovered(DiscoveredCallback cb);
-  /** @brief A procedure finished. */
+  /** @brief A procedure finished.
+   *  @param cb Callback receiving the finished @p op and its @p status.
+   *  @return This handle, for chaining. */
   BLEAudioCapCommander &onResult(ResultCallback cb);
-  /** @brief Acceptor receive states. */
+  /** @brief Acceptor receive states.
+   *  @param cb Callback receiving each read/notified receive @p state.
+   *  @return This handle, for chaining. */
   BLEAudioCapCommander &onReceiveState(ReceiveStateCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();

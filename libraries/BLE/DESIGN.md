@@ -578,13 +578,26 @@ In **server mode**, multiple centrals may connect at once. As a single Arduino `
 While active, server-mode `BLEStream` exclusively owns the NUS service, legacy advertising configuration, and the server's callback slots. `begin()` returns `Busy` if another owner already registered NUS. `end()` stops advertising, disconnects the server ACL peers, removes only NUS, and leaves the BLE stack and unrelated GATT services initialized.
 
 ### L2CAP CoC
-
 L2CAP CoC is guarded by `BLE_L2CAP_SUPPORTED` and only available when the backend and Kconfig support it.
 This is an accepted exception because capability depends on both backend and build configuration.
 Even so, the public API remains generic and does not expose backend types.
 `BLE.connectL2CAP()` blocks via `BLESync` until `BLE_L2CAP_EVENT_COC_CONNECTED` completes (or returns an empty `BLEL2CAPChannel` on failure/timeout). Channel-native `write()`, `getMTU()`, and `disconnect()` calls from application tasks are submitted through a per-channel event on the NimBLE host queue; this serializes native channel-pointer access with `COC_DISCONNECTED`, which owns pointer invalidation. Each whole public channel operation is also serialized so one operation cannot consume another operation's `BLESync` wakeup. Calls already on the host task execute directly and never wait for flow-control events: a write that would need a later `COC_TX_UNSTALLED` returns `Busy`.
 `write()` splits payloads larger than the peer CoC MTU into MTU-sized SDUs and application-task calls may block briefly between chunks while waiting for peer credits (`COC_TX_UNSTALLED`). NimBLE itself does not segment oversized SDUs — that is done in the Arduino wrapper. A channel allocates NPL event backing only while an operation is queued or in flight and returns it to the bounded ESP-IDF pool before waking the caller; retained detached shells therefore consume no event slots. The active-operation registry holds a strong Impl reference, and the queued callback takes its own strong copy before running, so waking the caller and dropping the final public handle cannot free callback state. L2CAP shutdown closes an enqueue gate before stopping the host; after `nimble_port_stop()` and before `nimble_port_deinit()`, every still-active tracked event is removed/deinitialized and all operation waiters are released. Client channel contexts are then cleaned up by `nimbleCleanupL2CAP()`. Operations on a detached non-null channel shell return `NotConnected` (including after `end()` and a later `begin()`); only an empty handle returns `InvalidState`. Detached `getMTU()` returns zero without queueing host work.
 On receive, SDUs up to a fixed 256-byte stack threshold are flattened without a heap allocation; larger SDUs (when the channel MTU is bigger) spill to a heap vector. Channel MTU itself is whatever the caller configured (128, 256, 512, …) and is independent of that RX threshold. After flatten, the received `sdu_rx` mbuf is freed and a fresh buffer is posted via `ble_l2cap_recv_ready` — omitting the free drains the CoC pool and stalls peer credits.
+
+### Bluedroid BTA auto-discovery gate
+
+On uncached (re)connects, Bluedroid BTA runs its own GATT auto-discovery
+before delivering `ESP_GATTC_OPEN_EVT`. The client arms `autoDiscSync` (with
+`autoDiscDone=false`) before `enh_open` and the `DIS_SRVC_CMPL_EVT` handler
+signals it; `connect()` then waits for it (only when OPEN arrived with the
+default MTU 23, i.e. uncached) before the MTU exchange, and
+`discoverServices()` waits up to 2 s when a discovery is in flight. Both waits
+are best effort: a timeout runs the operation on whatever BTA has rather than
+wedging the caller. Cached reconnects are detected with a `get_attr_count`
+probe and skip the wait. Observable ordering (connect → MTU → discovery) is
+identical on both backends; this gate only serializes Bluedroid-internal
+events.
 
 ### LE Audio
 

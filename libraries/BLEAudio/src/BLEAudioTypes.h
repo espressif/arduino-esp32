@@ -65,11 +65,21 @@ enum class BLEAudioContext : uint16_t {
   EmergencyAlarm = 0x0800,   ///< Emergency sounds (e.g. fire alarm).
 };
 
-/** @brief Combine two context sets. */
+/**
+ * @brief Combine two context sets.
+ * @param a Left set.
+ * @param b Right set.
+ * @return The union of @p a and @p b.
+ */
 inline constexpr BLEAudioContext operator|(BLEAudioContext a, BLEAudioContext b) {
   return static_cast<BLEAudioContext>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
 }
-/** @brief Add @p b to the context set @p a. */
+/**
+ * @brief Add @p b to the context set @p a.
+ * @param a Set to extend.
+ * @param b Bits to add.
+ * @return Reference to @p a.
+ */
 inline BLEAudioContext &operator|=(BLEAudioContext &a, BLEAudioContext b) {
   a = a | b;
   return a;
@@ -96,11 +106,21 @@ enum class BLEAudioLocation : uint32_t {
   SideRight = 0x00000800,
 };
 
-/** @brief Combine two location sets. */
+/**
+ * @brief Combine two location sets.
+ * @param a Left set.
+ * @param b Right set.
+ * @return The union of @p a and @p b.
+ */
 inline constexpr BLEAudioLocation operator|(BLEAudioLocation a, BLEAudioLocation b) {
   return static_cast<BLEAudioLocation>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
 }
-/** @brief Add @p b to the location set @p a. */
+/**
+ * @brief Add @p b to the location set @p a.
+ * @param a Set to extend.
+ * @param b Bits to add.
+ * @return Reference to @p a.
+ */
 inline BLEAudioLocation &operator|=(BLEAudioLocation &a, BLEAudioLocation b) {
   a = a | b;
   return a;
@@ -145,6 +165,8 @@ enum class BLEAudioCodecPreset : uint8_t {
  *
  * Used by the roles that publish capabilities, e.g.
  * `server.setSupportedPresets(BLEAudioPresetBit(LC3_16_2_1) | BLEAudioPresetBit(LC3_48_2_1))`.
+ * @param p Preset whose mask bit to return.
+ * @return 1 shifted by the preset enumerator (bit @p p).
  */
 inline constexpr uint32_t BLEAudioPresetBit(BLEAudioCodecPreset p) {
   return 1UL << static_cast<uint8_t>(p);
@@ -165,10 +187,18 @@ struct BLEAudioCodecConfig {
   uint8_t framesPerSdu = 1;          ///< Codec frame blocks packed into one SDU.
   BLEAudioLocation channelAllocation = BLEAudioLocation::Mono;  ///< One channel per set bit.
 
-  /** @brief Build the configuration of a standard BAP preset (mono). */
+  /**
+   * @brief Build the configuration of a standard BAP preset (mono).
+   * @param preset Preset whose codec configuration to return.
+   * @return The preset configuration; a default configuration (with an error log)
+   *         when @p preset is unknown.
+   */
   static BLEAudioCodecConfig fromPreset(BLEAudioCodecPreset preset);
 
-  /** @brief Channels carried by one stream: set bits of channelAllocation, 1 for Mono. */
+  /**
+   * @brief Channels carried by one stream: set bits of channelAllocation, 1 for Mono.
+   * @return The channel count (at least 1).
+   */
   uint8_t channels() const;
 
   /**
@@ -183,7 +213,10 @@ struct BLEAudioCodecConfig {
     return static_cast<uint16_t>((uint64_t)rate * frameDurationUs / 1000000);
   }
 
-  /** @brief Octets in one SDU: octets per frame x channels x frame blocks. */
+  /**
+   * @brief Octets in one SDU: octets per frame x channels x frame blocks.
+   * @return The SDU payload size in octets.
+   */
   uint16_t sduOctets() const {
     return static_cast<uint16_t>(octetsPerFrame * channels() * framesPerSdu);
   }
@@ -215,6 +248,7 @@ struct BLEAudioQos {
    * @param preset    Preset whose QoS to return.
    * @param broadcast Use the broadcast table (BAP Table 6.4), whose RTN differs
    *                  from unicast at 44.1 and 48 kHz.
+   * @return The preset QoS; a default QoS (with an error log) when @p preset is unknown.
    */
   static BLEAudioQos fromPreset(BLEAudioCodecPreset preset, bool broadcast = false);
 };

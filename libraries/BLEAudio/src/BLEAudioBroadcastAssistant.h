@@ -87,14 +87,16 @@ struct BLEAudioReceiveState {
 /**
  * @brief BAP Broadcast Assistant (BASS client), bound to one sink at a time.
  *
- * Created by BLEAudio::createBroadcastAssistant() after audio.begin().
+ * Created by BLEAudio::createBroadcastAssistant() after audio.begin() (also
+ * accepted after audio.start(); the engine unit then inits eagerly).
  * Control point operations return once the write is queued; their outcome
  * arrives through onResult and the sink's state through onReceiveState.
- * Calls before discover() return BTStatus::NotConnected.
+ * Calls before discover() return BTStatus::NotConnected. Results run on the
+ * Bluetooth host task; keep callbacks short.
  */
 class BLEAudioBroadcastAssistant {
 public:
-  /** Operation reported by onResult. */
+  /** Operation reported by onResult; runs on the Bluetooth host task. */
   enum class Op : uint8_t {
     ScanStart,      //!< Remote Scan Started write
     ScanStop,       //!< Remote Scan Stopped write
@@ -105,13 +107,27 @@ public:
     Past,           //!< SyncInfo transfer requested by the sink
   };
 
-  /** @brief Discovery result, with the number of Broadcast Receive State characteristics. */
+  /**
+   * @brief Discovery result, with the number of Broadcast Receive State characteristics.
+   * @param status Engine discovery status.
+   * @param receiveStates BASS Broadcast Receive State count on the sink.
+   */
   using DiscoverCallback = std::function<void(BTStatus status, uint8_t receiveStates)>;
-  /** @brief A broadcast found by the remote scan. */
+  /**
+   * @brief A broadcast found by the remote scan.
+   * @param source Advertiser, SID, Broadcast ID, name, RSSI and PA interval.
+   */
   using SourceFoundCallback = std::function<void(const BLEAudioBroadcastSourceInfo &source)>;
-  /** @brief A Broadcast Receive State was read or notified. */
+  /**
+   * @brief A Broadcast Receive State was read or notified.
+   * @param state Sink state for one source (@p removed set when the sink forgot it).
+   */
   using ReceiveStateCallback = std::function<void(const BLEAudioReceiveState &state)>;
-  /** @brief Outcome of @p op. */
+  /**
+   * @brief Outcome of @p op.
+   * @param op Control point operation the @p status belongs to.
+   * @param status Engine status of the write.
+   */
   using ResultCallback = std::function<void(Op op, BTStatus status)>;
 
   BLEAudioBroadcastAssistant();
@@ -121,12 +137,27 @@ public:
   BLEAudioBroadcastAssistant(BLEAudioBroadcastAssistant &&) = default;
   BLEAudioBroadcastAssistant &operator=(BLEAudioBroadcastAssistant &&) = default;
 
-  /** @return true when the handle refers to a created assistant. */
+  /**
+   * @brief Whether this handle references a created assistant.
+   * @return True after createBroadcastAssistant(); false on an empty handle.
+   */
   explicit operator bool() const;
 
-  /** @brief Discover the sink's BASS on @p connHandle; later calls act on this link. */
+  /**
+   * @brief Discover the sink's BASS on @p connHandle; later calls act on this link.
+   *
+   * Switching peers stops the previous remote scan and forgets its Source_IDs;
+   * a disconnect of the bound peer unbinds it (getConnHandle() then reports none).
+   * @param connHandle ACL connection of the Scan Delegator.
+   * @return BTStatus::OK when discovery started; InvalidState on an empty handle;
+   *         another error when the engine refused the discovery.
+   */
   BTStatus discover(uint16_t connHandle);
-  /** @return The connection passed to discover(), or BLE_AUDIO_CONN_NONE. */
+  /**
+   * @brief The connection passed to discover(), or BLE_AUDIO_CONN_NONE.
+   * @return The bound peer, or BLE_AUDIO_CONN_NONE before discover() or after
+   *         its disconnect; also BLE_AUDIO_CONN_NONE on an empty handle.
+   */
   uint16_t getConnHandle() const;
 
   /**
@@ -149,29 +180,62 @@ public:
 
   /**
    * @brief Ask the sink to receive @p source.
+   * @param source Source report from onSourceFound() (address, SID, Broadcast ID, PA interval).
    * @param syncPa Sync to the source's periodic advertising.
    * @param bisMask BIS indexes to sync (bit n = BIS n+1); 0xFFFFFFFF lets the sink choose.
+   * @return BTStatus::OK when queued (onResult(AddSource) follows); InvalidState on
+   *         an empty handle; NotConnected with no bound peer; another error when the
+   *         engine refused the write.
    */
   BTStatus addSource(const BLEAudioBroadcastSourceInfo &source, bool syncPa = true, uint32_t bisMask = 0xFFFFFFFF);
-  /** @brief Change PA / BIS sync of a source (e.g. syncPa = false, bisMask = 0 to pause). */
+  /**
+   * @brief Change PA / BIS sync of a source (e.g. syncPa = false, bisMask = 0 to pause).
+   * @param sourceId Source_ID assigned by the sink.
+   * @param syncPa Whether the sink stays synced to the periodic advertising.
+   * @param bisMask BIS indexes to sync (bit n = BIS n+1), applied to every subgroup
+   *        unless it names BISes of the first subgroup only; 0 = none, 0xFFFFFFFF = no preference.
+   * @return BTStatus::OK when queued (onResult(ModifySource) follows); InvalidState on
+   *         an empty handle; NotConnected with no bound peer; another error when the
+   *         engine refused the write.
+   */
   BTStatus modifySource(uint8_t sourceId, bool syncPa, uint32_t bisMask);
   /**
    * @brief Ask the sink to forget @p sourceId.
    *
    * BASS lets the sink refuse while it is still synced; unsync first with
    * modifySource(sourceId, false, 0).
+   * @param sourceId Source_ID assigned by the sink.
+   * @return BTStatus::OK when queued (onResult(RemoveSource) follows); InvalidState on
+   *         an empty handle; NotConnected with no bound peer; another error (including
+   *         the sink's refusal) when the engine refused the write.
    */
   BTStatus removeSource(uint8_t sourceId);
-  /** @brief Send the Broadcast Code (up to 16 characters) of an encrypted source. */
+  /**
+   * @brief Send the Broadcast Code (up to 16 characters) of an encrypted source.
+   * @param sourceId Source_ID assigned by the sink.
+   * @param code Broadcast Code; longer than 16 characters is rejected. Shorter codes
+   *        are zero-padded to 16 octets as BAP requires.
+   * @return BTStatus::OK when queued (onResult(BroadcastCode) follows); InvalidState on
+   *         an empty handle; NotConnected with no bound peer; InvalidParam for an
+   *         overlong code; another error when the engine refused the write.
+   */
   BTStatus setBroadcastCode(uint8_t sourceId, const String &code);
 
-  /** @brief BASS discovery finished. */
+  /** @brief BASS discovery finished.
+   *  @param cb Callback receiving the discovery @p status and @p receiveStates count.
+   *  @return This handle, for chaining. */
   BLEAudioBroadcastAssistant &onDiscovered(DiscoverCallback cb);
-  /** @brief A broadcast was found during the remote scan. */
+  /** @brief A broadcast was found during the remote scan.
+   *  @param cb Callback receiving each matching @p source.
+   *  @return This handle, for chaining. */
   BLEAudioBroadcastAssistant &onSourceFound(SourceFoundCallback cb);
-  /** @brief The sink's receive state for a source changed (or was read at discovery). */
+  /** @brief The sink's receive state for a source changed (or was read at discovery).
+   *  @param cb Callback receiving each @p state.
+   *  @return This handle, for chaining. */
   BLEAudioBroadcastAssistant &onReceiveState(ReceiveStateCallback cb);
-  /** @brief Outcome of each control point operation. */
+  /** @brief Outcome of each control point operation.
+   *  @param cb Callback receiving the finished @p op and its @p status.
+   *  @return This handle, for chaining. */
   BLEAudioBroadcastAssistant &onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();

@@ -55,7 +55,12 @@
 
 class BLEAudio;
 
-/** @brief What a unicast server exposes, as discovered by the client (PACS + ASCS). */
+  /** @brief What a unicast server exposes, as discovered by the client (PACS + ASCS).
+   *
+   * Reported per peer through onDiscovered() after addPeer()/connectAndStart();
+   * sinkPresets/sourcePresets accumulate one BLEAudioPresetBit() per remote LC3
+   * PAC record as they arrive.
+   */
 struct BLEAudioUnicastPeerInfo {
   uint16_t connHandle = 0xFFFF;  ///< ACL connection of the server.
   uint8_t sinkEndpoints = 0;     ///< Remote sink ASEs: streams this device can send.
@@ -84,6 +89,11 @@ public:
 
   /** @brief A peer finished discovery; @p peer lists what it supports. */
   using DiscoveredCallback = std::function<void(const BLEAudioUnicastPeerInfo &peer)>;
+  /**
+   * @brief A setup-wide event with no payload (all streams streaming / released).
+   *
+   * Runs on the Bluetooth host task; keep it short.
+   */
   using Callback = std::function<void()>;
   /**
    * @brief Stream setup failed at @p step; the client then releases every stream.
@@ -103,22 +113,40 @@ public:
   /** @brief Whether this handle references a client (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (read at start(); change it while stopped) ---
+  // --- Configuration (read at start(); change it while stopped; every setter returns this handle) ---
 
-  /** @brief Codec and QoS of every stream, from a BAP preset. Default LC3_16_2_1. */
+  /**
+   * @brief Codec and QoS of every stream, from a BAP preset. Default LC3_16_2_1.
+   * @param preset Preset to use; an unknown preset is logged and ignored.
+   * @return This handle, for chaining.
+   */
   BLEAudioUnicastClient &setPreset(BLEAudioCodecPreset preset);
   /**
    * @brief Replace the preset's QoS with a custom one.
    *
    * Without it, the preset QoS is used with the controller's presentation
    * delay. `maxSdu` is always recomputed per stream from its codec.
+   * @param qos Custom QoS applied instead of the preset one from the next start().
+   * @return This handle, for chaining.
    */
   BLEAudioUnicastClient &setQos(const BLEAudioQos &qos);
-  /** @brief Streaming context sent with Enable. Default Media. */
+  /**
+   * @brief Streaming context sent with Enable. Default Media.
+   * @param context Context announced when the streams are enabled.
+   * @return This handle, for chaining.
+   */
   BLEAudioUnicastClient &setContext(BLEAudioContext context);
-  /** @brief Streams this device sends, per peer (remote sink ASEs). Default 1. */
+  /**
+   * @brief Streams this device sends, per peer (remote sink ASEs). Default 1.
+   * @param perPeer Requested Tx streams per peer, capped by the peer's sink endpoints.
+   * @return This handle, for chaining.
+   */
   BLEAudioUnicastClient &setSinkStreams(uint8_t perPeer);
-  /** @brief Streams this device receives, per peer (remote source ASEs). Default 0. */
+  /**
+   * @brief Streams this device receives, per peer (remote source ASEs). Default 0.
+   * @param perPeer Requested Rx streams per peer, capped by the peer's source endpoints.
+   * @return This handle, for chaining.
+   */
   BLEAudioUnicastClient &setSourceStreams(uint8_t perPeer);
 
   // --- Procedures (after audio.start()) ---
@@ -149,7 +177,11 @@ public:
   /**
    * @brief addPeer(), then start() as soon as the peer is discovered.
    *
-   * Clearer name for @ref connect(uint16_t); both are equivalent.
+   * Clearer name for @ref connect(uint16_t); both are equivalent. A peer that
+   * is already discovered starts immediately, otherwise on discovery.
+   * @param connHandle ACL connection of the server.
+   * @return BTStatus::OK when discovery is pending or the setup started; the
+   *         addPeer() error when discovery failed to start.
    */
   BTStatus connectAndStart(uint16_t connHandle);
   /**
@@ -157,30 +189,50 @@ public:
    * @return BTStatus::OK when the release started; InvalidState when not running.
    */
   BTStatus stop();
-  /** @brief Whether every requested stream is streaming (between onStarted() and onStopped()). */
+  /**
+   * @brief Whether every requested stream is streaming (between onStarted() and onStopped()).
+   * @return True while the UC_STARTED state holds; false on an empty handle.
+   */
   bool isStreaming() const;
 
   // --- Streams (valid once start() returned OK) ---
 
   /** @brief Streams of the current setup, in request order (per peer: sink streams, then source). */
   size_t streamCount() const;
-  /** @brief Stream @p index in [0, streamCount()); empty handle when out of range. */
+  /**
+   * @brief Stream @p index in [0, streamCount()); empty handle when out of range.
+   * @param index Position in request order (per peer: sink streams, then source).
+   * @return The stream, or an empty handle when @p index is out of range.
+   */
   BLEAudioStream stream(size_t index) const;
   /**
    * @brief The @p index-th stream in direction @p dir (Tx = to a remote sink).
+   * @param dir Tx = streams this device sends; Rx = streams it receives.
+   * @param index Position among the streams of @p dir.
    * @return An empty handle when there are fewer streams in @p dir.
    */
   BLEAudioStream stream(BLEAudioStream::Direction dir, uint8_t index = 0) const;
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
+  //
+  // Every setter below takes the callback in @p cb and returns this handle for
+  // chaining; a no-op chain link on an empty handle.
 
-  /** @brief A peer finished PACS/ASCS discovery. */
+  /** @brief A peer finished PACS/ASCS discovery.
+   *  @param cb Callback receiving the discovered @p peer info.
+   *  @return This handle, for chaining. */
   BLEAudioUnicastClient &onDiscovered(DiscoveredCallback cb);
-  /** @brief Every stream of the setup is streaming. */
+  /** @brief Every stream of the setup is streaming.
+   *  @param cb Callback fired once all streams stream.
+   *  @return This handle, for chaining. */
   BLEAudioUnicastClient &onStarted(Callback cb);
-  /** @brief Every stream was released (after stop() or a failure). */
+  /** @brief Every stream was released (after stop() or a failure).
+   *  @param cb Callback fired once the streams are released.
+   *  @return This handle, for chaining. */
   BLEAudioUnicastClient &onStopped(Callback cb);
-  /** @brief A setup step failed; onStopped() follows once the streams are released. */
+  /** @brief A setup step failed; onStopped() follows once the streams are released.
+   *  @param cb Callback receiving the failed @p step, @p responseCode and @p reason.
+   *  @return This handle, for chaining. */
   BLEAudioUnicastClient &onError(ErrorCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();

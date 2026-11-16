@@ -95,7 +95,13 @@ class BLEAudioHearingAidController;
 
 class BLEAudio {
 public:
-  /** @brief Link event for the ACL connection @p connHandle. */
+  /**
+   * @brief Link event for the ACL connection @p connHandle.
+   * @param connHandle ACL connection handle the event refers to.
+   *
+   * Runs on the Bluetooth host task; keep callbacks short and never call
+   * end() from them (Busy; defer it to loop()).
+   */
   using LinkCallback = std::function<void(uint16_t connHandle)>;
 
   BLEAudio();
@@ -181,9 +187,9 @@ public:
    */
   BTStatus end();
 
-  /** @brief Whether begin() succeeded and end() has not been called. */
+  /** @brief Whether begin() succeeded and end() has not been called (false on a null handle). */
   bool isActive() const;
-  /** @brief Whether start() succeeded (roles registered, GATT committed). */
+  /** @brief Whether start() succeeded and the roles are registered (false on a null handle). */
   bool isStarted() const;
 
   /**
@@ -226,11 +232,23 @@ public:
    * @p connHandle from this point on. A peer-opened link is GATT-discovered
    * only when a client role is registered; with server-only roles this fires
    * after the MTU exchange, without discovering the central's database.
+   * @param cb Callback receiving the ready link's @p connHandle. Runs on the
+   *           Bluetooth host task; keep it short.
+   * @return This handle, for chaining.
    */
   BLEAudio &onLinkReady(LinkCallback cb);
-  /** @brief An ACL link used by LE Audio went down, or connect() failed. */
+  /**
+   * @brief An ACL link used by LE Audio went down, or connect() failed.
+   * @param cb Callback receiving the lost link's @p connHandle. Runs on the
+   *           Bluetooth host task; keep it short.
+   * @return This handle, for chaining.
+   */
   BLEAudio &onDisconnected(LinkCallback cb);
-  /** @brief Clear the onLinkReady() and onDisconnected() callbacks. */
+  /**
+   * @brief Clear the onLinkReady() and onDisconnected() callbacks.
+   *
+   * Safe to call on any task; a no-op on a null handle.
+   */
   void resetCallbacks();
 
   // --- Defaults (before creating roles) ---
@@ -238,25 +256,40 @@ public:
   /**
    * @brief Presentation delay the roles advertise (servers) or request (clients, sources).
    * @param delayUs Delay in microseconds (default 40000; BAP presets use 40 ms).
+   *                Stored as-is (no range check); applied to the preset QoS of
+   *                roles started afterwards.
    * @return This handle, for chaining.
    */
   BLEAudio &setPresentationDelay(uint32_t delayUs);
-  /** @brief Current default presentation delay in microseconds. */
+  /**
+   * @brief Current default presentation delay in microseconds.
+   * @return The setPresentationDelay() value (default 40000; also 40000 on a null handle).
+   */
   uint32_t getPresentationDelay() const;
 
   // --- BAP roles (after begin(), before start()) ---
+  //
+  // Ordering: every factory below returns an empty handle (and logs) when
+  // called before audio.begin(), or when its Kconfig role is disabled in the
+  // build. Roles that register GATT services must also be created before
+  // audio.start(); the broadcast source (no service) and the broadcast
+  // assistant (eager engine init) additionally accept creation after start().
 
   /**
    * @brief BAP Unicast Server (ASCS + PACS): accepts unicast streams from a client.
    *
    * Configure the ASE counts, capabilities and contexts before start(); the
    * peer then configures the server's streams (see `BLEAudioStream::onConfigured`).
+   * @return The configured server handle, or an empty handle when called outside
+   *         begin()/start() or the role is disabled in Kconfig.
    */
   BLEAudioUnicastServer createUnicastServer();
   /**
    * @brief BAP Unicast Client: discovers a connected server and sets up streams on it.
    *
    * Connect with connect(), then configure streams once onLinkReady() fires.
+   * @return The configured client handle, or an empty handle when called outside
+   *         begin()/start() or the role is disabled in Kconfig.
    */
   BLEAudioUnicastClient createUnicastClient();
   /**
@@ -264,6 +297,9 @@ public:
    *
    * Configure the preset, channels and broadcast metadata; the source's own
    * start() brings up the extended/periodic advertising and the BIG.
+   * @return The configured source handle, or an empty handle when called before
+   *         begin() or the role is disabled in Kconfig. Unlike service roles it
+   *         may also be created after start().
    */
   BLEAudioBroadcastSource createBroadcastSource();
   /**
@@ -271,6 +307,8 @@ public:
    *
    * Scans for announcements and syncs to a source; with the delegator enabled
    * a Broadcast Assistant can drive it remotely.
+   * @return The configured sink handle, or an empty handle when called outside
+   *         begin()/start() or the role is disabled in Kconfig.
    */
   BLEAudioBroadcastSink createBroadcastSink();
   /**
@@ -278,43 +316,61 @@ public:
    *
    * Scans for broadcast sources and adds, modifies or removes them on a
    * connected Scan Delegator, including the Broadcast Code and PAST.
+   * @return The configured assistant handle, or an empty handle when called before
+   *         begin() or the role is disabled in Kconfig. Unlike service roles it
+   *         may also be created after start() (engine unit inits eagerly then).
    */
   BLEAudioBroadcastAssistant createBroadcastAssistant();
 
   // --- CAP / CSIP (after begin(), before start()) ---
 
-  /** @brief CAP Acceptor: publishes CAS (with an included CSIS when part of a set). */
+  /** @brief CAP Acceptor: publishes CAS (with an included CSIS when part of a set).
+   *  @return The configured acceptor handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioCapAcceptor createCapAcceptor();
-  /** @brief CAP Initiator: starts, updates and stops audio on one or more acceptors. */
+  /** @brief CAP Initiator: starts, updates and stops audio on one or more acceptors.
+   *  @return The configured initiator handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioCapInitiator createCapInitiator();
-  /** @brief CAP Commander: coordinated volume, mute and broadcast reception control. */
+  /** @brief CAP Commander: coordinated volume, mute and broadcast reception control.
+   *  @return The configured commander handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioCapCommander createCapCommander();
-  /** @brief CSIP Set Member: publishes CSIS (SIRK, set size, rank, lock). */
+  /** @brief CSIP Set Member: publishes CSIS (SIRK, set size, rank, lock).
+   *  @return The configured member handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioCoordinatedSetMember createCoordinatedSetMember();
-  /** @brief CSIP Set Coordinator: discovers and locks the members of a coordinated set. */
+  /** @brief CSIP Set Coordinator: discovers and locks the members of a coordinated set.
+   *  @return The configured coordinator handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioCoordinatedSetCoordinator createCoordinatedSetCoordinator();
 
   // --- Control profiles (after begin(), before start()) ---
 
-  /** @brief VCP Volume Renderer: publishes VCS (plus the compiled-in VOCS/AICS). */
+  /** @brief VCP Volume Renderer: publishes VCS (plus the compiled-in VOCS/AICS).
+   *  @return The configured renderer handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioVolumeRenderer createVolumeRenderer();
-  /** @brief VCP Volume Controller: drives a connected renderer's volume and mute. */
+  /** @brief VCP Volume Controller: drives a connected renderer's volume and mute.
+   *  @return The configured controller handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioVolumeController createVolumeController();
-  /** @brief MICP Microphone Device: publishes MICS (plus its AICS). */
+  /** @brief MICP Microphone Device: publishes MICS (plus its AICS).
+   *  @return The configured device handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioMicDevice createMicDevice();
-  /** @brief MICP Microphone Controller: drives a connected device's mute state. */
+  /** @brief MICP Microphone Controller: drives a connected device's mute state.
+   *  @return The configured controller handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioMicController createMicController();
-  /** @brief MCP Media Player: publishes the engine's media player as MCS/GMCS. */
+  /** @brief MCP Media Player: publishes the engine's media player as MCS/GMCS.
+   *  @return The configured player handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioMediaPlayer createMediaPlayer();
-  /** @brief MCP Media Controller: drives playback on a connected media player. */
+  /** @brief MCP Media Controller: drives playback on a connected media player.
+   *  @return The configured controller handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioMediaController createMediaController();
-  /** @brief CCP Call Server: publishes a Generic Telephone Bearer (GTBS). */
+  /** @brief CCP Call Server: publishes a Generic Telephone Bearer (GTBS).
+   *  @return The configured server handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioCallServer createCallServer();
-  /** @brief CCP Call Controller: observes and drives calls on a connected call server. */
+  /** @brief CCP Call Controller: observes and drives calls on a connected call server.
+   *  @return The configured controller handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioCallController createCallController();
-  /** @brief HAP Hearing Aid: publishes HAS with named presets. */
+  /** @brief HAP Hearing Aid: publishes HAS with named presets.
+   *  @return The configured device handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioHearingAidDevice createHearingAidDevice();
-  /** @brief HAP Hearing Aid Controller: reads and switches a connected hearing aid's presets. */
+  /** @brief HAP Hearing Aid Controller: reads and switches a connected hearing aid's presets.
+   *  @return The configured controller handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioHearingAidController createHearingAidController();
 
   // --- Top-level profiles (after begin(), before start()) ---
@@ -323,9 +379,12 @@ public:
    * @brief TMAP identity: publishes TMAS with the local roles, or discovers a peer's.
    *
    * The audio itself still flows through CAP, BAP and the control profiles.
+   * @return The configured TMAP handle, or an empty handle when called outside
+   *         begin()/start() or the role is disabled in Kconfig.
    */
   BLEAudioTmap createTmap();
-  /** @brief GMAP identity: publishes GMAS with the local gaming roles, or discovers a peer's. */
+  /** @brief GMAP identity: publishes GMAS with the local gaming roles, or discovers a peer's.
+   *  @return The configured GMAP handle, or an empty handle when called outside begin()/start() or disabled. */
   BLEAudioGmap createGmap();
 
   struct Impl;

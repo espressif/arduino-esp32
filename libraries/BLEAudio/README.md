@@ -189,11 +189,12 @@ profile defines a completion callback (`onResult()`, `onError()`,
 there.
 
 The control-profile setters (`BLEAudioVolumeController`,
-`BLEAudioMicController`, `BLEAudioMediaController`, `BLEAudioCallClient`,
+`BLEAudioMicController`, `BLEAudioMediaController`, `BLEAudioCallController`,
 `BLEAudioHearingAidController`) return the status of the write request. A
-failure after the write is queued is logged; this version has no per-operation
-error callback for those profiles, so treat the next state notification as the
-confirmation.
+queued write always terminates exactly once: success arrives as the next state
+notification, a rejected write as `onResult()` (best-effort op attribution when
+several writes share the notification channel). A pending write whose link drops
+first is reported as `NotConnected`, so no operation waits forever.
 
 Role callbacks run on the Bluetooth host task. They are copied under a lock
 before invocation, so the application may set or clear them from another task,

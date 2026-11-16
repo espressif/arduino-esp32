@@ -56,27 +56,44 @@ class BLEAudio;
 
 class BLEAudioUnicastServer {
 public:
+  /**
+   * @brief Create an empty server handle.
+   *
+   * Get a live one from BLEAudio::createUnicastServer() between audio.begin()
+   * and audio.start(); the empty handle ignores every setter and reports an
+   * empty stream from every stream().
+   */
   BLEAudioUnicastServer();
   ~BLEAudioUnicastServer() = default;
+  /** @brief Share the referenced server (copying never duplicates the engine registration). */
   BLEAudioUnicastServer(const BLEAudioUnicastServer &) = default;
+  /** @brief Share the referenced server (copying never duplicates the engine registration). */
   BLEAudioUnicastServer &operator=(const BLEAudioUnicastServer &) = default;
+  /** @brief Move the server reference. */
   BLEAudioUnicastServer(BLEAudioUnicastServer &&) = default;
+  /** @brief Move the server reference. */
   BLEAudioUnicastServer &operator=(BLEAudioUnicastServer &&) = default;
 
   /** @brief Whether this handle references a server (false when the factory failed). */
   explicit operator bool() const;
 
   // --- Configuration (before audio.start(); later calls are ignored) ---
+  //
+  // Every setter below returns this handle for chaining; on an empty handle it
+  // is a no-op. Calls after audio.start() have no effect on the registered
+  // services (the ASE counts additionally log a warning).
 
   /**
    * @brief Number of sink ASEs to publish (streams the client sends to).
    * @param count 0 disables the sink direction. Default 1; capped by the
    *              packaged Kconfig ASE count (the stream pool logs when full).
+   * @return This handle, for chaining.
    */
   BLEAudioUnicastServer &setSinkStreams(uint8_t count);
   /**
    * @brief Number of source ASEs to publish (streams the client receives).
    * @param count 0 disables the source direction. Default 1; same cap as setSinkStreams().
+   * @return This handle, for chaining.
    */
   BLEAudioUnicastServer &setSourceStreams(uint8_t count);
   /**
@@ -86,23 +103,46 @@ public:
    * (rates, durations, octet range), so a client may pick any combination
    * inside it. Default: every 10 ms preset at 16, 24, 32 and 48 kHz. A zero
    * mask is ignored.
+   * @param presetMask OR of BLEAudioPresetBit() values; 0 keeps the current mask.
+   * @return This handle, for chaining.
    */
   BLEAudioUnicastServer &setSupportedPresets(uint32_t presetMask);
-  /** @brief Channels one ASE may carry: 1 (default) or 2; clamped to that range. */
+  /**
+   * @brief Channels one ASE may carry: 1 (default) or 2; clamped to that range.
+   * @param channels 1 = mono, 2 = mono or stereo per ASE.
+   * @return This handle, for chaining.
+   */
   BLEAudioUnicastServer &setMaxChannelsPerStream(uint8_t channels);
-  /** @brief Contexts the sink supports (PACS "Supported Audio Contexts"); also the initial available set. */
+  /**
+   * @brief Contexts the sink supports (PACS "Supported Audio Contexts"); also the initial available set.
+   * @param contexts Bitfield of BLEAudioContext values the sink renders.
+   * @return This handle, for chaining.
+   */
   BLEAudioUnicastServer &setSinkContexts(BLEAudioContext contexts);
-  /** @brief Contexts the source supports; also the initial available set. */
+  /**
+   * @brief Contexts the source supports; also the initial available set.
+   * @param contexts Bitfield of BLEAudioContext values the source captures.
+   * @return This handle, for chaining.
+   */
   BLEAudioUnicastServer &setSourceContexts(BLEAudioContext contexts);
-  /** @brief Sink Audio Locations published in PACS (default Mono). */
+  /**
+   * @brief Sink Audio Locations published in PACS (default Mono).
+   * @param location Union of the speaker positions the sink renders.
+   * @return This handle, for chaining.
+   */
   BLEAudioUnicastServer &setSinkLocation(BLEAudioLocation location);
-  /** @brief Source Audio Locations published in PACS (default Mono). */
+  /**
+   * @brief Source Audio Locations published in PACS (default Mono).
+   * @param location Union of the positions the source captures.
+   * @return This handle, for chaining.
+   */
   BLEAudioUnicastServer &setSourceLocation(BLEAudioLocation location);
   /**
    * @brief Presentation delay range the server supports (ASCS QoS preferences).
    * @param minUs Minimum delay (default 20000 us); clamped to @p maxUs.
    * @param maxUs Maximum delay; 0 (default) uses the controller's
    *              BLEAudio::setPresentationDelay() value.
+   * @return This handle, for chaining.
    */
   BLEAudioUnicastServer &setPresentationDelayRange(uint32_t minUs, uint32_t maxUs);
 
@@ -153,7 +193,8 @@ public:
    *
    * A client only enables streams for an available context; publish
    * `Prohibited` while busy (e.g. in a call on another link).
-   *
+   * @param sink Contexts currently available on the sink ASEs.
+   * @param source Contexts currently available on the source ASEs.
    * @return BTStatus::OK on success; InvalidState before audio.start().
    */
   BTStatus setAvailableContexts(BLEAudioContext sink, BLEAudioContext source);
@@ -162,10 +203,17 @@ public:
 
   /** @brief Streams owned by the server (sink + source count, fewer if the pool ran out). */
   size_t streamCount() const;
-  /** @brief Stream @p index in [0, streamCount()); empty handle when out of range. */
+  /**
+   * @brief Stream @p index in [0, streamCount()); empty handle when out of range.
+   * @param index Position in allocation order (sink streams first, then source).
+   * @return The stream, or an empty handle when @p index is out of range.
+   */
   BLEAudioStream stream(size_t index) const;
   /**
    * @brief The @p index-th stream a client configured in direction @p dir.
+   * @param dir Tx = stream the client receives from here (source ASE); Rx = stream
+   *            the client sends to here (sink ASE).
+   * @param index Position among the streams configured in @p dir.
    * @return An empty handle when fewer streams are configured in @p dir.
    */
   BLEAudioStream stream(BLEAudioStream::Direction dir, uint8_t index = 0) const;

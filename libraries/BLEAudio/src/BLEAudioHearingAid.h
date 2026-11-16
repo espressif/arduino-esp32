@@ -52,11 +52,16 @@ enum class BLEHearingAidType : uint8_t {
 class BLEAudioHearingAidDevice {
 public:
   /**
-   * @brief A controller selected @p index; the stack has already activated it.
-   *        @p sync is set when the controller asked for the pair to follow.
+   * @brief A controller selected a preset.
+   * @param index Selected preset index.
+   * @param sync True when the controller asked the binaural pair to follow.
    */
   using SelectCallback = std::function<void(uint8_t index, bool sync)>;
-  /** @brief New name of preset @p index. */
+  /**
+   * @brief A controller renamed a preset.
+   * @param index Renamed preset index.
+   * @param name New preset name.
+   */
   using RenameCallback = std::function<void(uint8_t index, const String &name)>;
 
   BLEAudioHearingAidDevice();
@@ -82,21 +87,45 @@ public:
    * Presets added before audio.start() are registered by start(); later ones
    * are registered at once. At most CONFIG_BT_HAS_PRESET_COUNT presets;
    * @p writable needs CONFIG_BT_HAS_PRESET_NAME_DYNAMIC.
+   * @param index Preset index (>= 1, unique; 0 is logged and ignored).
+   * @param name Preset name shown to controllers.
+   * @param available Whether controllers may select the preset.
+   * @param writable Whether controllers may rename the preset.
    */
   BLEAudioHearingAidDevice &addPreset(uint8_t index, const String &name, bool available = true, bool writable = false);
 
   // --- Runtime (after audio.start()); connected controllers are notified ---
 
-  /** @brief Unregister preset @p index. */
+  /**
+   * @brief Unregister preset @p index.
+   * @param index Preset index to remove.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus removePreset(uint8_t index);
-  /** @brief Mark preset @p index (un)available; controllers cannot select an unavailable one. */
+  /**
+   * @brief Mark preset @p index (un)available; controllers cannot select an unavailable one.
+   * @param index Preset index to update.
+   * @param available True to make the preset selectable.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus setPresetAvailable(uint8_t index, bool available);
-  /** @brief Rename preset @p index locally. */
+  /**
+   * @brief Rename preset @p index locally.
+   * @param index Preset index to rename.
+   * @param name New preset name.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus renamePreset(uint8_t index, const String &name);
-  /** @brief Activate preset @p index locally. */
+  /**
+   * @brief Activate preset @p index locally.
+   * @param index Preset index to activate.
+   * @return BTStatus::InvalidState when the handle is empty; otherwise the stack status.
+   */
   BTStatus setActivePreset(uint8_t index);
   /** @return the active preset index, 0 when none. */
   uint8_t getActivePreset() const;
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief A controller selected a preset. */
   BLEAudioHearingAidDevice &onPresetSelected(SelectCallback cb);
@@ -125,11 +154,25 @@ private:
  */
 class BLEAudioHearingAidController {
 public:
-  /** @brief Discovery result, with the peer's hearing aid type. */
+  /**
+   * @brief Discovery result.
+   * @param status OK when discovery finished; error status when it failed.
+   * @param type The peer's hearing aid type.
+   */
   using DiscoveredCallback = std::function<void(BTStatus status, BLEHearingAidType type)>;
-  /** @brief One preset record, from readPresets() or a peer notification. */
+  /**
+   * @brief One preset record, from readPresets() or a peer notification.
+   * @param index Preset index.
+   * @param available Whether the preset is selectable.
+   * @param name Preset name.
+   * @param isLast True for the last record of a readPresets() batch.
+   */
   using PresetCallback = std::function<void(uint8_t index, bool available, const String &name, bool isLast)>;
-  /** @brief The peer's active preset is now @p index (or the switch failed with @p status). */
+  /**
+   * @brief The peer's active preset changed.
+   * @param status OK when the switch succeeded; error status when it failed.
+   * @param index New active preset index.
+   */
   using SwitchCallback = std::function<void(BTStatus status, uint8_t index)>;
 
   BLEAudioHearingAidController();
@@ -147,26 +190,56 @@ public:
    *
    * Waits for the engine's GATT discovery of the link if needed. Only one
    * peer is driven at a time: discovering another one replaces it.
+   * @param connHandle ACL connection handle of the peer.
+   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
    */
   BTStatus discover(uint16_t connHandle);
   /** @return The connection passed to discover(), or BLE_AUDIO_CONN_NONE. */
   uint16_t getConnHandle() const;
 
-  /** @brief Read up to @p maxCount presets from @p startIndex (one onPreset each, the last with isLast). */
+  /**
+   * @brief Read presets from the peer (one onPreset each, the last with isLast).
+   * @param startIndex First preset index to read.
+   * @param maxCount Maximum number of presets to read.
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the request was queued (answers via onPreset); another status when the request failed to start.
+   */
   BTStatus readPresets(uint8_t startIndex = 1, uint8_t maxCount = 255);
   /**
    * @brief Activate preset @p index on the peer.
+   * @param index Preset index to activate.
    * @param sync Ask the peer to switch its binaural partner too (needs preset sync support on the peer).
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the request was queued (answer via onPresetSwitch); another status when the request failed to start.
    */
   BTStatus setActivePreset(uint8_t index, bool sync = false);
-  /** @brief Activate the peer's next available preset; @p sync as in setActivePreset(). */
+  /**
+   * @brief Activate the peer's next available preset.
+   * @param sync As in setActivePreset().
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the request was queued (answer via onPresetSwitch); another status when the request failed to start.
+   */
   BTStatus nextPreset(bool sync = false);
-  /** @brief Activate the peer's previous available preset; @p sync as in setActivePreset(). */
+  /**
+   * @brief Activate the peer's previous available preset.
+   * @param sync As in setActivePreset().
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the request was queued (answer via onPresetSwitch); another status when the request failed to start.
+   */
   BTStatus previousPreset(bool sync = false);
-  /** @brief Rename a writable preset on the peer. */
+  /**
+   * @brief Rename a writable preset on the peer.
+   * @param index Preset index to rename.
+   * @param name New preset name.
+   * @return BTStatus::InvalidState when the handle is empty or no peer is discovered/active;
+   *         OK when the request was queued; another status when the request failed to start.
+   */
   BTStatus renamePreset(uint8_t index, const String &name);
   /** @return the peer's last reported active preset, 0 when unknown. */
   uint8_t getActivePreset() const;
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
   BLEAudioHearingAidController &onDiscovered(DiscoveredCallback cb);

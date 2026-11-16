@@ -71,19 +71,39 @@ public:
    */
   using ReceiveCallback = std::function<void(BLEAudioStream &stream, const BLEAudioSduInfo &info, const uint8_t *sdu, uint16_t len)>;
 
+  /**
+   * @brief Create an empty stream handle.
+   *
+   * Get a live one from a role's stream(); the empty handle reports Unknown /
+   * defaults for state, refuses write() with InvalidParam and ignores every
+   * callback setter.
+   */
   BLEAudioStream();
   ~BLEAudioStream() = default;
+  /** @brief Share the referenced stream (copying never duplicates the engine slot). */
   BLEAudioStream(const BLEAudioStream &) = default;
+  /** @brief Share the referenced stream (copying never duplicates the engine slot). */
   BLEAudioStream &operator=(const BLEAudioStream &) = default;
+  /** @brief Move the stream reference. */
   BLEAudioStream(BLEAudioStream &&) = default;
+  /** @brief Move the stream reference. */
   BLEAudioStream &operator=(BLEAudioStream &&) = default;
 
   /** @brief Whether this handle references a stream (false for the handles returned on error). */
   explicit operator bool() const;
-  /** @brief Two handles are equal when they reference the same stream. */
+  /**
+   * @brief Two handles are equal when they reference the same stream.
+   * @param other Handle to compare with.
+   * @return True when both reference the same engine slot (two empty handles compare equal).
+   */
   bool operator==(const BLEAudioStream &other) const {
     return _impl == other._impl;
   }
+  /**
+   * @brief Two handles differ when they reference different streams.
+   * @param other Handle to compare with.
+   * @return True when the handles reference different engine slots.
+   */
   bool operator!=(const BLEAudioStream &other) const {
     return _impl != other._impl;
   }
@@ -97,13 +117,26 @@ public:
    * before the codec is configured.
    */
   Direction direction() const;
-  /** @brief Whether the stream is in the Streaming state (SDUs may flow). */
+  /**
+   * @brief Whether the stream is in the Streaming state (SDUs may flow).
+   * @return True while streaming; false on an empty handle.
+   */
   bool isStreaming() const;
-  /** @brief ACL connection of a unicast stream; 0xFFFF for broadcast or unbound streams. */
+  /**
+   * @brief ACL connection of a unicast stream; 0xFFFF for broadcast or unbound streams.
+   * @return The connection handle, or BLE_AUDIO_CONN_NONE (0xFFFF) for broadcast,
+   *         unbound or empty handles.
+   */
   uint16_t connHandle() const;
-  /** @brief Codec configuration in use; defaults until the stream is configured. */
+  /**
+   * @brief Codec configuration in use; defaults until the stream is configured.
+   * @return The negotiated codec, or a default BLEAudioCodecConfig on an empty handle.
+   */
   BLEAudioCodecConfig codecConfig() const;
-  /** @brief QoS in use; defaults until QoS is configured. */
+  /**
+   * @brief QoS in use; defaults until QoS is configured.
+   * @return The negotiated QoS, or a default BLEAudioQos on an empty handle.
+   */
   BLEAudioQos qos() const;
 
   // --- Data ---
@@ -124,18 +157,39 @@ public:
   BTStatus write(const uint8_t *sdu, uint16_t len);
 
   // --- Callbacks (run on the Bluetooth host task; keep them short) ---
+  //
+  // Every setter below ignores a null handle; a later call replaces the callback.
 
-  /** @brief Codec configured: by the peer (unicast), at create (broadcast source) or at sync (broadcast sink). */
+  /**
+   * @brief Codec configured: by the peer (unicast), at create (broadcast source) or at sync (broadcast sink).
+   * @param cb Callback receiving the configured @p stream.
+   */
   void onConfigured(Callback cb);
-  /** @brief The stream entered the Streaming state. */
+  /**
+   * @brief The stream entered the Streaming state.
+   * @param cb Callback receiving the started @p stream.
+   */
   void onStarted(Callback cb);
-  /** @brief The stream left the Streaming state (disable, release, CIS/BIG loss). */
+  /**
+   * @brief The stream left the Streaming state (disable, release, CIS/BIG loss).
+   * @param cb Callback receiving the stopped @p stream and the HCI/ASCS @p reason.
+   */
   void onStopped(StoppedCallback cb);
-  /** @brief An SDU arrived on an Rx stream. */
+  /**
+   * @brief An SDU arrived on an Rx stream.
+   * @param cb Callback receiving the @p stream, @p info, @p sdu and @p len.
+   */
   void onReceive(ReceiveCallback cb);
-  /** @brief The controller released a queued SDU of a Tx stream (one call per write()). */
+  /**
+   * @brief The controller released a queued SDU of a Tx stream (one call per write()).
+   * @param cb Callback receiving the @p stream whose SDU was released.
+   */
   void onSent(Callback cb);
-  /** @brief Clear every callback of this stream. */
+  /**
+   * @brief Clear every callback of this stream.
+   *
+   * Leaves the data-path tap (BLEAudioPlayer/BLEAudioRecorder) untouched.
+   */
   void resetCallbacks();
 
   struct Impl;

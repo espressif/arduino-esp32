@@ -47,7 +47,15 @@ public:
   /** @brief Volume (0..255) and mute after a change. */
   using StateCallback = std::function<void(uint8_t volume, bool muted)>;
   /** @brief Local control-point operation reported by onResult. */
-  enum class Operation : uint8_t { Unknown = 0, SetVolume, Mute, Unmute, VolumeUp, VolumeDown, SetStep };
+  enum class Operation : uint8_t {
+    Unknown = 0,  ///< No operation in flight.
+    SetVolume,    ///< setVolume().
+    Mute,         ///< mute().
+    Unmute,       ///< unmute().
+    VolumeUp,     ///< volumeUp().
+    VolumeDown,   ///< volumeDown().
+    SetStep,      ///< setVolumeStep() applied at runtime.
+  };
   /** @brief A queued local operation failed; the state did not change. */
   using ResultCallback = std::function<void(Operation op, BTStatus status)>;
 
@@ -72,20 +80,48 @@ public:
 
   // --- Local control (after audio.start()); connected controllers are notified ---
 
-  /** @brief Set the absolute volume, 0..255. */
+  /**
+   * @brief Set the absolute volume, 0..255.
+   * @param volume New volume (0..255).
+   * @return BTStatus::OK when the change was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or audio is not started;
+   *         another error when the stack refused the request.
+   */
   BTStatus setVolume(uint8_t volume);
-  /** @brief Mute; the volume setting is kept. */
+  /**
+   * @brief Mute; the volume setting is kept.
+   * @return BTStatus::OK when the change was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or audio is not started;
+   *         another error when the stack refused the request.
+   */
   BTStatus mute();
-  /** @brief Unmute. */
+  /**
+   * @brief Unmute.
+   * @return BTStatus::OK when the change was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or audio is not started;
+   *         another error when the stack refused the request.
+   */
   BTStatus unmute();
-  /** @brief Raise the volume by the step (saturates at 255). */
+  /**
+   * @brief Raise the volume by the step (saturates at 255).
+   * @return BTStatus::OK when the change was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or audio is not started;
+   *         another error when the stack refused the request.
+   */
   BTStatus volumeUp();
-  /** @brief Lower the volume by the step (saturates at 0). */
+  /**
+   * @brief Lower the volume by the step (saturates at 0).
+   * @return BTStatus::OK when the change was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or audio is not started;
+   *         another error when the stack refused the request.
+   */
   BTStatus volumeDown();
   /** @return The initial volume before start, then the last reported volume. */
   uint8_t getVolume() const;
   /** @return The initial mute before start, then the last reported mute. */
   bool isMuted() const;
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Every volume/mute change, local or remote. */
   BLEAudioVolumeRenderer &onStateChanged(StateCallback cb);
@@ -129,7 +165,15 @@ public:
   using InputCallback = std::function<void(int8_t gain, bool muted)>;
   /** @brief Queued control-point operation reported by onResult. */
   enum class Operation : uint8_t {
-    Unknown = 0, SetVolume, Mute, Unmute, VolumeUp, VolumeDown, ReadState, SetOffset, SetInputGain
+    Unknown = 0,  ///< No operation in flight.
+    SetVolume,    ///< setVolume().
+    Mute,         ///< mute().
+    Unmute,       ///< unmute().
+    VolumeUp,     ///< volumeUp().
+    VolumeDown,   ///< volumeDown().
+    ReadState,    ///< readState().
+    SetOffset,    ///< setVolumeOffset().
+    SetInputGain,  ///< setInputGain().
   };
   /** @brief A queued operation was rejected; the state did not change. */
   using ResultCallback = std::function<void(Operation op, BTStatus status)>;
@@ -150,32 +194,83 @@ public:
    * Waits for the engine's GATT discovery of the link if needed. onDiscovered
    * fires once the peer's current volume is known (followed by onStateChanged);
    * every other call below targets this peer.
+   * @param connHandle ACL connection of the renderer.
+   * @return BTStatus::OK when discovery started (or was deferred until the engine's GATT discovery finishes);
+   *         InvalidState when the handle is empty, audio is not started, or @p connHandle is BLE_AUDIO_CONN_NONE;
+   *         another error when the stack refused discovery.
    */
   BTStatus discover(uint16_t connHandle);
   /** @return The connection passed to discover(), or BLE_AUDIO_CONN_NONE. */
   uint16_t getConnHandle() const;
 
-  /** @brief Write an absolute volume, 0..255. */
+  /**
+   * @brief Write an absolute volume, 0..255.
+   * @param volume New volume (0..255).
+   * @return BTStatus::OK when the write was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         another error when the stack refused the write.
+   */
   BTStatus setVolume(uint8_t volume);
-  /** @brief Mute the renderer. */
+  /**
+   * @brief Mute the renderer.
+   * @return BTStatus::OK when the write was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         another error when the stack refused the write.
+   */
   BTStatus mute();
-  /** @brief Unmute the renderer. */
+  /**
+   * @brief Unmute the renderer.
+   * @return BTStatus::OK when the write was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         another error when the stack refused the write.
+   */
   BTStatus unmute();
-  /** @brief Relative volume up by the renderer's own step. */
+  /**
+   * @brief Relative volume up by the renderer's own step.
+   * @return BTStatus::OK when the write was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         another error when the stack refused the write.
+   */
   BTStatus volumeUp();
-  /** @brief Relative volume down by the renderer's own step. */
+  /**
+   * @brief Relative volume down by the renderer's own step.
+   * @return BTStatus::OK when the write was queued (reported via onStateChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         another error when the stack refused the write.
+   */
   BTStatus volumeDown();
-  /** @brief Re-read the peer's volume state (answered via onStateChanged). */
+  /**
+   * @brief Re-read the peer's volume state (answered via onStateChanged).
+   * @return BTStatus::OK when the read was queued;
+   *         InvalidState when the handle is empty or no peer is discovered (also while discovery is still deferred);
+   *         another error when the stack refused the read.
+   */
   BTStatus readState();
   /** @brief Last volume reported by the peer. */
   uint8_t getVolume() const;
   /** @brief Last mute state reported by the peer. */
   bool isMuted() const;
 
-  /** @brief Volume offset of the peer's first VOCS instance, -255..255. */
+  /**
+   * @brief Volume offset of the peer's first VOCS instance, -255..255.
+   * @param offset New offset (-255..255).
+   * @return BTStatus::OK when the write was queued (reported via onOffsetChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty, no peer is discovered, or the peer exposed no VOCS instance;
+   *         NotSupported when this build has no VOCS controller support;
+   *         another error when the stack refused the write.
+   */
   BTStatus setVolumeOffset(int16_t offset);
-  /** @brief Gain of the peer's first AICS instance, in the peer's gain units. */
+  /**
+   * @brief Gain of the peer's first AICS instance, in the peer's gain units.
+   * @param gain New gain, in the peer's gain units.
+   * @return BTStatus::OK when the write was queued (reported via onInputChanged, or via onResult on failure);
+   *         InvalidState when the handle is empty, no peer is discovered, or the peer exposed no AICS instance;
+   *         NotSupported when this build has no AICS controller support;
+   *         another error when the stack refused the write.
+   */
   BTStatus setInputGain(int8_t gain);
+
+  // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
   BLEAudioVolumeController &onDiscovered(DiscoveredCallback cb);
@@ -191,6 +286,7 @@ public:
    * The op is the most recently queued one (best effort: concurrent writes
    * share one notification channel, so with several in flight the reported op
    * may be a sibling). Unknown when no operation was queued.
+   * NotConnected when the link dropped while an operation was in flight.
    */
   BLEAudioVolumeController &onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */

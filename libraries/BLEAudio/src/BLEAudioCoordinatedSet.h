@@ -75,9 +75,17 @@ public:
     OobOnly,          ///< The SIRK is only available out of band.
   };
 
-  /** @brief The set lock changed; @p connHandle is the client that (un)locked it. */
+  /**
+   * @brief The set lock changed.
+   * @param locked True when the set is now locked.
+   * @param connHandle Client that (un)locked the set.
+   */
   using LockCallback = std::function<void(bool locked, uint16_t connHandle)>;
-  /** @brief A client reads the SIRK; return how to answer. */
+  /**
+   * @brief A client reads the SIRK.
+   * @param connHandle Client requesting the SIRK.
+   * @return How to answer the read.
+   */
   using SirkReadCallback = std::function<SirkAccess(uint16_t connHandle)>;
 
   BLEAudioCoordinatedSetMember() = default;
@@ -111,11 +119,20 @@ public:
 
   // --- Runtime (after audio.start()) ---
 
-  /** @brief Generate a fresh Resolvable Set Identifier to advertise (AD type 0x2E). */
+  /** @brief Generate a fresh Resolvable Set Identifier to advertise (AD type 0x2E).
+   * @param rsi Destination buffer of BLE_AUDIO_RSI_SIZE octets.
+   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for a null @p rsi;
+   *         otherwise the stack status.
+   */
   BTStatus generateRsi(uint8_t rsi[BLE_AUDIO_RSI_SIZE]) const;
-  /** @brief Lock the set locally, as a client would. */
+  /** @brief Lock the set locally, as a client would.
+   * @return BTStatus::InvalidState when the handle is empty or before audio.start(); otherwise the stack status.
+   */
   BTStatus lock();
-  /** @brief Release the lock; @p force also releases a lock held by a client. */
+  /** @brief Release the lock; @p force also releases a lock held by a client.
+   * @param force True to release a client-held lock as well.
+   * @return BTStatus::InvalidState when the handle is empty or before audio.start(); otherwise the stack status.
+   */
   BTStatus unlock(bool force = false);
   /** @return true while the set is locked, locally or by a client. */
   bool isLocked() const;
@@ -157,11 +174,23 @@ struct BLEAudioCoordinatedSetInfo {
  */
 class BLEAudioCoordinatedSetCoordinator {
 public:
-  /** @brief Set information read from one member (setCount 0 when @p status is an error). */
+  /**
+   * @brief Set information read from one member.
+   * @param status OK when discovery finished; error status when it failed.
+   * @param info Set information (setCount 0 when @p status is an error).
+   */
   using DiscoveredCallback = std::function<void(BTStatus status, const BLEAudioCoordinatedSetInfo &info)>;
-  /** @brief lock() (@p locked true) or unlock() finished on every member. */
+  /**
+   * @brief lock() (@p locked true) or unlock() finished on every member.
+   * @param status OK when the procedure finished; error status when it failed.
+   * @param locked True when the set is now locked.
+   */
   using LockCallback = std::function<void(BTStatus status, bool locked)>;
-  /** @brief A member reported a lock change made by another client. */
+  /**
+   * @brief A member reported a lock change made by another client.
+   * @param locked True when the set is now locked.
+   * @param connHandle Member that reported the change.
+   */
   using LockChangedCallback = std::function<void(bool locked, uint16_t connHandle)>;
 
   BLEAudioCoordinatedSetCoordinator() = default;
@@ -182,13 +211,25 @@ public:
    * Starts once `BLEAudio::onLinkReady()` fired for @p connHandle; the
    * result is reported by onDiscovered(). The first member discovered
    * defines the set used by isSetMember(), lock() and unlock().
+   * @param connHandle ACL connection handle of the member.
+   * @return BTStatus::InvalidState when the handle is empty, before audio.start(), or for BLE_AUDIO_CONN_NONE;
+   *         OK when discovery started or was deferred until GATT discovery; another status when discovery failed to start.
    */
   BTStatus discover(uint16_t connHandle);
-  /** @brief Whether an advertising payload carries an RSI of the discovered set. */
+  /**
+   * @brief Whether an advertising payload carries an RSI of the discovered set.
+   * @param advPayload Advertising payload to scan for an RSI.
+   * @param len Octets in @p advPayload.
+   * @return True when an RSI of the discovered set was found; false otherwise (including no discovered set yet).
+   */
   bool isSetMember(const uint8_t *advPayload, size_t len) const;
-  /** @brief Lock every connected, discovered member of the set, in rank order. */
+  /** @brief Lock every connected, discovered member of the set, in rank order.
+   * @return BTStatus::InvalidState when the handle is empty or no set was discovered yet; otherwise the stack status (OK when the procedure started, result via onLock).
+   */
   BTStatus lock();
-  /** @brief Release the lock on every member. */
+  /** @brief Release the lock on every member.
+   * @return BTStatus::InvalidState when the handle is empty or no set was discovered yet; otherwise the stack status (OK when the procedure started, result via onLock).
+   */
   BTStatus unlock();
   /** @brief The set of the first discovered member (setCount 0 before). */
   BLEAudioCoordinatedSetInfo setInfo() const;

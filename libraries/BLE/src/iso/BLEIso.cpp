@@ -220,6 +220,9 @@ constexpr uint32_t kIdleTimeoutMs = 5000;
 BLESync sIdleSync{"iso-idle"};
 
 bool allDisconnected() {
+  // Runs on waitDisconnected()'s waiter and on notifyIsoIdle() from the host
+  // task; isoMtx() serializes both against slot teardown. An armed-but-never-
+  // synced Receiver still holds periodic-sync resources, so it counts as busy.
   BLELockGuard lock(isoMtx());
   for (int i = 0; i < kMaxChan; i++) {
     if (sSlots[i].used.load(std::memory_order_acquire) &&
@@ -318,6 +321,9 @@ void onChanDisconnected(esp_ble_iso_chan_t *chan, uint8_t reason) {
   }
   Slot &s = sSlots[slot];
   s.connected.store(false, std::memory_order_release);
+  // Clear the accept flag alongside connected: otherwise end() would keep
+  // treating a disconnected-but-accepted Peripheral slot as live and wedge
+  // waiting for a release that never comes.
   s.accepted.store(false, std::memory_order_release);
   // A Central CIS keeps its handle and data path across disconnection (Core
   // 6.0 Vol 4 Part E 7.7.5); remove it or the next setup returns Command
@@ -707,6 +713,9 @@ esp_err_t bigCreate(int slot, uint8_t advHandle, const BigParams &p) {
     sBigTx = nullptr;
   } else {
     sBigTx = big;
+    // Mark busy before any async completion runs: until onDisconnected clears
+    // it, end()/allDisconnected() treat the BIG as live. Cleared on failure
+    // (no BIG) and on disconnect, mirroring the CIS connect window.
     s.connected.store(true, std::memory_order_release);
   }
   return err;
@@ -869,6 +878,9 @@ BTStatus Channel::disconnect() {
     case Kind::CisPeripheral: {
       bool neverAccepted = false;
       {
+        // Probe under the lock, act outside it: the ISO contract forbids
+        // holding isoMtx() across esp_ble_iso_* calls, so the disconnect
+        // below runs unlocked (see "Never held across esp_ble_iso_*" above).
         BLELockGuard lock(isoMtx());
         Slot &sl = sSlots[slot];
         if (sl.chan.iso == nullptr && !sl.accepted.load(std::memory_order_acquire)) {
@@ -1004,6 +1016,9 @@ BTStatus end() {
 
 #if ISO_UNICAST
   for (int i = 0; i < kMaxChan; i++) {
+    // Atomics only: stack-owned chan.state/iso cannot be read safely from this
+    // (user) task while the host task may mutate them; connected/accepted are
+    // the cross-task liveness bits (see isIdle()).
     if (!sSlots[i].used.load(std::memory_order_acquire)
         || (sSlots[i].kind != Kind::CisCentral && sSlots[i].kind != Kind::CisPeripheral)
         || (!sSlots[i].connected.load(std::memory_order_acquire) && !sSlots[i].accepted.load(std::memory_order_acquire))) {
