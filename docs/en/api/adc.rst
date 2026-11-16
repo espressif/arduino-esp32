@@ -11,7 +11,7 @@ to a digital form so that it can be read and processed by a microcontroller.
 ADCs are very useful in control and monitoring applications since most sensors
 (e.g., temperature, pressure, force) produce analog output voltages.
 
-.. note:: Each SoC or module has a different number of ADC's with a different number of channels and pins available. Refer to datasheet of each board for more info.
+.. note:: Each SoC or module has a different number of ADCs with a different number of channels and pins available. Refer to the datasheet of each board for more info.
 
 Arduino-ESP32 ADC API
 ---------------------
@@ -55,7 +55,7 @@ The result is not a linear code: 0 V is not raw 0, and even and odd channels run
 analogReadMilliVolts
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to get ADC raw value for a given pin/ADC channel and convert it to calibrated result in millivolts.
+This function is used to get the ADC raw value for a given pin/ADC channel and convert it to a calibrated result in millivolts.
 
 .. code-block:: arduino
 
@@ -63,7 +63,7 @@ This function is used to get ADC raw value for a given pin/ADC channel and conve
 
 * ``pin`` GPIO pin to read analog value
 
-This function will return analog value in millivolts (calibrated). The result is signed, so a voltage below 0 V stays negative.
+This function will return an analog value in millivolts (calibrated). The result is signed, so a voltage below 0 V stays negative.
 
 .. note::
    On **ESP32-S31** the calibrated result covers about -2000 mV to +2000 mV. A pin tied to GND reads about 0 mV. Voltages above +2000 mV clip.
@@ -71,8 +71,8 @@ This function will return analog value in millivolts (calibrated). The result is
 analogReadResolution
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095).
-When different resolution is set, the values read will be shifted to match the given resolution.
+This function is used to set the resolution of an ``analogRead`` return value. The default is 12 bits (range from 0 to 4095).
+When a different resolution is set, the values read will be shifted to match the given resolution.
 
 .. note::
    For **ESP32-S2 chip revision v0.0**, the default ADC resolution is 13 bits (0-8191) due to the `ADC-112 errata <https://docs.espressif.com/projects/esp-chip-errata/en/latest/esp32s2/03-errata-description/esp32s2/sar-adc-bit1-no-flip.html>`_. This is fixed in later revisions (v1.0+), which use the standard 12-bit resolution.
@@ -82,7 +82,7 @@ When different resolution is set, the values read will be shifted to match the g
 
 Range is 1 - 16. The default value will be used, if this function is not used.
 
-.. note:: For the ESP32, the resolution is between 9 to12 and it will change the ADC hardware resolution. Else value will be shifted.
+.. note:: For the ESP32, the resolution is between 9 to 12 and it will change the ADC hardware resolution. Else the value will be shifted.
 
 .. code-block:: arduino
 
@@ -96,11 +96,11 @@ analogSetAttenuation
 This function is used to set the attenuation for all channels.
 
 Input voltages can be attenuated before being input to the ADCs.
-There are 4 available attenuation options, the higher the attenuation is, the higher the measurable input voltage could be.
+There are 4 available attenuation options; the higher the attenuation is, the higher the measurable input voltage could be.
 
 ESP32-S31 has a single attenuation option, ``ADC_11db``. The name matches the other chips. Electrically it is 0 dB (``ADC_ATTEN_DB_0``), with a calibrated range of about -2000 mV to +2000 mV. ``analogSetAttenuation`` and ``analogSetPinAttenuation`` are not supported and log an error.
 
-The measurable input voltage differs for each chip, see table below for detailed information.
+The measurable input voltage differs for each chip. See the table below for detailed information.
 
 .. tabs::
 
@@ -171,7 +171,7 @@ This function is used to set the attenuation for a specific pin/ADC channel. For
 
     void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation);
 
-* ``pin`` selects specific pin for attenuation settings.
+* ``pin`` selects the specific pin for attenuation settings.
 * ``attenuation`` sets the attenuation.
 
 analogSetWidth

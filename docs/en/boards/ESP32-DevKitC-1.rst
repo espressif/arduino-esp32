@@ -110,7 +110,7 @@ Pin Layout
 Strapping Pins
 --------------
 
-Some of the GPIO's have important features during the booting process. Here is the list of the strapping pins on the `ESP32`_.
+Some of the GPIOs have important features during the booting process. Here is the list of the strapping pins on the `ESP32`_.
 
 ====  =========  =====================================================================  ============  ==============
 GPIO   Default    Function                                                               Pull-up       Pull-down
@@ -124,10 +124,10 @@ IO5   Pull-up    Timing of SDIO Slave                                           
 
 Be aware when choosing which pins to use.
 
-Restricted Usage GPIO's
------------------------
+Restricted Usage GPIOs
+----------------------
 
-Some of the GPIO's are used for the external flash and PSRAM. These GPIO's cannot be used:
+Some of the GPIOs are used for the external flash and PSRAM. These GPIOs cannot be used:
 
 ====  ===================
 GPIO   Shared Function
@@ -140,7 +140,7 @@ IO10  External SPI Flash
 IO11  External SPI Flash
 ====  ===================
 
-Other GPIO's are `INPUT ONLY` and cannot be used as output pin:
+Other GPIOs are `INPUT ONLY` and cannot be used as output pins:
 
 ====  =========================
 GPIO   Function
