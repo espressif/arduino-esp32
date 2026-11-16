@@ -43,6 +43,11 @@ static void zb_ota_notify_state(bool active) {
 }
 
 static void zb_ota_reset_receive_state() {
+  if (s_ota_handle) {
+    esp_ota_abort(s_ota_handle);
+    s_ota_handle = 0;
+  }
+  s_ota_partition = NULL;
   s_ota_file_parser_active = false;
   memset(&s_ota_file_parser, 0, sizeof(s_ota_file_parser));
 }
@@ -483,6 +488,10 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
     case EZB_ZCL_OTA_UPGRADE_PROGRESS_CHECK:
       ret = s_ota_file_parser_active ? zb_ota_file_parser_check(&s_ota_file_parser) : ESP_FAIL;
       log_i("Zigbee - OTA upgrade check status: %s", esp_err_to_name(ret));
+      if (ret != ESP_OK) {
+        zb_ota_reset_receive_state();
+        zb_ota_notify_state(false);
+      }
       break;
 
     case EZB_ZCL_OTA_UPGRADE_PROGRESS_APPLY:
@@ -494,11 +503,17 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
 #endif
       if (ret != ESP_OK) {
         log_e("Zigbee - Failed to end OTA partition, status: %s", esp_err_to_name(ret));
+        zb_ota_reset_receive_state();
+        zb_ota_notify_state(false);
         break;
       }
+      // esp_ota_end() closed the session; do not abort on later FINISH/reset.
+      s_ota_handle = 0;
       ret = esp_ota_set_boot_partition(s_ota_partition);
       if (ret != ESP_OK) {
         log_e("Zigbee - Failed to set OTA boot partition, status: %s", esp_err_to_name(ret));
+        zb_ota_reset_receive_state();
+        zb_ota_notify_state(false);
       }
       break;
 
@@ -515,10 +530,6 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
 
     case EZB_ZCL_OTA_UPGRADE_PROGRESS_ABORT:
       log_w("Zigbee - OTA upgrade aborted");
-      if (s_ota_handle) {
-        esp_ota_abort(s_ota_handle);
-        s_ota_handle = 0;
-      }
       zb_ota_reset_receive_state();
       zb_ota_notify_state(false);
       break;

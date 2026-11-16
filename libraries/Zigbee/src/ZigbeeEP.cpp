@@ -790,6 +790,7 @@ bool ZigbeeEP::identifyQuery(uint16_t short_addr, uint8_t dst_endpoint) {
 }
 
 void ZigbeeEP::zbOTAState(bool otaActive) {
+  _ota_in_progress = otaActive;
   if (_on_ota_state_change != NULL) {
     _on_ota_state_change(otaActive);
   }
@@ -1106,6 +1107,10 @@ void ZigbeeEP::queryOTAServer(uint16_t short_addr, uint8_t endpoint) {
 void ZigbeeEP::otaQueryTimerCb(void *arg) {
   ZigbeeEP *ep = static_cast<ZigbeeEP *>(arg);
   if (ep == nullptr || ep->_ota_server_addr == 0xffff || ep->_ota_server_ep == 0xff) {
+    return;
+  }
+  if (ep->_ota_in_progress) {
+    log_d("Skip periodic OTA query: download in progress");
     return;
   }
   if (!Zigbee.connected()) {

@@ -326,6 +326,7 @@ protected:
   uint8_t _ota_max_data_size = 223;       // Applied via ezb_zcl_ota_upgrade_set_download_block_size after begin
   bool _ota_client_added = false;
   bool _ota_runtime_configured = false;
+  bool _ota_in_progress = false;  // true while download/apply is active (skip periodic queries)
   uint16_t _ota_server_addr = 0xffff;
   uint8_t _ota_server_ep = 0xff;
   esp_timer_handle_t _ota_query_timer = nullptr;

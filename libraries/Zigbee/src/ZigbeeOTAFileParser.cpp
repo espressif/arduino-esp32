@@ -104,7 +104,10 @@ esp_err_t zb_ota_file_parser_process(zb_ota_file_parser_t *parser) {
     written =
       ota_file_stream_format((uint8_t *)&parser->element, (uint16_t)parser->offset, ZB_OTA_ELEMENT_HEADER_LEN, parser->in, parser->in_length);
     ota_file_parser_refresh(parser, written);
-    parser->element.total += ZB_OTA_ELEMENT_HEADER_LEN;
+    // Inflate total only once the full 6-byte header is present (length field complete).
+    if (parser->offset >= ZB_OTA_ELEMENT_HEADER_LEN) {
+      parser->element.total += ZB_OTA_ELEMENT_HEADER_LEN;
+    }
     parser->element.length = 0;
     parser->element.val = nullptr;
     return parser->in_length ? ESP_ERR_NOT_FINISHED : ESP_OK;
