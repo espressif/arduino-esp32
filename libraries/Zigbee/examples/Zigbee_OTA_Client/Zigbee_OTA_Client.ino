@@ -38,10 +38,19 @@
 uint8_t led = RGB_BUILTIN;
 uint8_t button = BOOT_PIN;
 
-/* Zigbee OTA configuration */
-#define OTA_UPGRADE_RUNNING_FILE_VERSION    0x01010100  // Increment this value when the running image is updated
-#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 0x01010101  // Increment this value when the downloaded image is updated
-#define OTA_UPGRADE_HW_VERSION              0x0101      // The hardware version, this can be used to differentiate between different hardware versions
+/* Zigbee OTA configuration
+ * These #defines are also read by tools/zb_ota_image.py when you use
+ * Sketch -> Export compiled Binary (with Tools -> Zigbee Mode enabled).
+ * Bump OTA_UPGRADE_RUNNING_FILE_VERSION for each new image you export for ZHA.
+ */
+#define OTA_UPGRADE_MANUFACTURER            0x1001
+#define OTA_UPGRADE_IMAGE_TYPE              0x1011
+#define OTA_UPGRADE_RUNNING_FILE_VERSION    0x01010102  // Version of this firmware (used as OTA file version on Export)
+#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 0x01010103  // Next version attribute advertised by the client cluster
+#define OTA_UPGRADE_HW_VERSION              0x0101
+
+/* Print running FW version on Serial every N ms (easy to see after OTA) */
+#define FW_VERSION_PRINT_INTERVAL_MS        10000
 
 ZigbeeLight zbLight = ZigbeeLight(ZIGBEE_LIGHT_ENDPOINT);
 
@@ -88,7 +97,9 @@ void setup() {
   zbLight.onLightChange(setLED);
 
   // Add OTA client to the light bulb
-  zbLight.addOTAClient(OTA_UPGRADE_RUNNING_FILE_VERSION, OTA_UPGRADE_DOWNLOADED_FILE_VERSION, OTA_UPGRADE_HW_VERSION);
+  zbLight.addOTAClient(
+    OTA_UPGRADE_RUNNING_FILE_VERSION, OTA_UPGRADE_DOWNLOADED_FILE_VERSION, OTA_UPGRADE_HW_VERSION, OTA_UPGRADE_MANUFACTURER, OTA_UPGRADE_IMAGE_TYPE
+  );
 
   // Optional: Register callback for OTA state change
   zbLight.onOTAStateChange(otaActiveCallback);
@@ -117,6 +128,12 @@ void setup() {
 }
 
 void loop() {
+  static uint32_t last_fw_print_ms = 0;
+  if (millis() - last_fw_print_ms >= FW_VERSION_PRINT_INTERVAL_MS) {
+    last_fw_print_ms = millis();
+    Serial.printf("Running FW version: 0x%08lX\n", (unsigned long)OTA_UPGRADE_RUNNING_FILE_VERSION);
+  }
+
   // Checking button for factory reset
   if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling

@@ -21,10 +21,11 @@
 
 #include <Arduino.h>
 #include <ColorFormat.h>
+#include "esp_timer.h"
 
 /* Useful defines */
 #define ZB_CMD_TIMEOUT             10000     // 10 seconds
-#define OTA_UPGRADE_QUERY_INTERVAL (1 * 60)  // 1 hour = 60 minutes
+#define OTA_UPGRADE_QUERY_INTERVAL_S (60 * 60)  // Automatic re-query period in seconds (1 hour)
 
 #define ZB_ARRAY_LENGHT(arr) (sizeof(arr) / sizeof(arr[0]))
 
@@ -163,8 +164,12 @@ public:
     uint8_t max_data_size = 223
   );
   /**
-   * @brief Request OTA update from the server, first request is within a minute and the next requests are sent every hour automatically.
-  */
+   * @brief Discover the OTA Upgrade server (Match Desc on the coordinator) and query for a new image.
+   *
+   * Call after Zigbee.begin() once connected. The first Query Next Image is sent when the server is found;
+   * further queries are sent every OTA_UPGRADE_QUERY_INTERVAL_S automatically. ZHA / a coordinator can also
+   * start an upgrade with Image Notify without calling this.
+   */
   void requestOTAUpdate();
 
   // Register a privilege command to intercept standard cluster commands before the stack processes them
@@ -317,6 +322,19 @@ protected:
   ezb_zcl_ota_upgrade_cluster_client_config_t _ota_client_cfg;
   uint32_t _ota_current_file_version;     // CurrentFileVersion, not in OTA client cluster config
   uint32_t _ota_downloaded_file_version;  // DownloadedFileVersion, not in OTA client cluster config
+  uint16_t _ota_hw_version = 0;           // Applied via ezb_zcl_ota_upgrade_set_hw_version after begin
+  uint8_t _ota_max_data_size = 223;       // Applied via ezb_zcl_ota_upgrade_set_download_block_size after begin
+  bool _ota_client_added = false;
+  bool _ota_runtime_configured = false;
+  uint16_t _ota_server_addr = 0xffff;
+  uint8_t _ota_server_ep = 0xff;
+  esp_timer_handle_t _ota_query_timer = nullptr;
+
+  bool applyOTAClientRuntimeConfig();
+  void queryOTAServer(uint16_t short_addr, uint8_t endpoint);
+  void startOTAQueryTimer();
+  static void findOTAServerCb(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx);
+  static void otaQueryTimerCb(void *arg);
 
   // Friend class declaration to allow access to protected members
   friend class ZigbeeCore;
