@@ -111,6 +111,15 @@ int bleAudioStreamSend(ble_audio_slot_t *slot, const uint8_t *sdu, uint16_t len)
 /** @brief True between the started and stopped callbacks. */
 bool bleAudioStreamIsStreaming(const ble_audio_slot_t *slot);
 /**
+ * @brief Mark every pool slot of @p kind not-streaming; free the zombies.
+ *
+ * BIG-level stops carry no per-stream callbacks. Call with the stopped BIG's
+ * own object matched (stale events must not clear a newer session).
+ */
+#if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED || BLE_AUDIO_BROADCAST_SINK_SUPPORTED
+void bleAudioBroadcastSlotsDown(ble_audio_stream_kind_t kind);
+#endif
+/**
  * @brief True while any pool stream is still streaming or its ISO channel
  *        is not DISCONNECTED.
  */

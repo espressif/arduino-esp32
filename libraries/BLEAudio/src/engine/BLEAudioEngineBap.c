@@ -1841,6 +1841,27 @@ static void uc_check_released(void) {}
 
 #endif /* BLE_AUDIO_UNICAST_CLIENT_SUPPORTED */
 
+#if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED || BLE_AUDIO_BROADCAST_SINK_SUPPORTED
+/* A BIG going down ends every stream on it. The stack reports BIG-level stops
+ * without per-stream stopped/released callbacks, so mark the pool here: a
+ * C++-owned slot stops streaming, and a zombie (freed C++ handle, see
+ * bleAudioStreamFree()) returns to the pool now that nothing references it.
+ * Only the slots of the stopped BIG's own kind are touched. Shared with the
+ * CAP unit, whose broadcast stop reports the same way. */
+void bleAudioBroadcastSlotsDown(ble_audio_stream_kind_t kind) {
+  for (int i = 0; i < POOL_SIZE; i++) {
+    ble_audio_slot_t *s = &s_pool[i];
+    if (!s->in_use || s->kind != (uint8_t)kind) {
+      continue;
+    }
+    atomic_store(&s->streaming, false);
+    if (s->owner == NULL) {
+      atomic_store(&s->in_use, false);
+    }
+  }
+}
+#endif
+
 /* ── Broadcast source ───────────────────────────────────────────────────── */
 
 #if BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
@@ -1865,7 +1886,10 @@ static void bsrc_started(esp_ble_audio_bap_broadcast_source_t *source) {
 }
 
 static void bsrc_stopped(esp_ble_audio_bap_broadcast_source_t *source, uint8_t reason) {
-  (void)source;
+  (void)reason;
+  if (source == s_bsrc.source) {
+    bleAudioBroadcastSlotsDown(BLE_AUDIO_STREAM_BROADCAST_SOURCE);
+  }
   s_bsrc.big_pending = false;
   s_bsrc_up = false;
   bleAudioNotifyBsrcState();
@@ -2365,7 +2389,9 @@ static void bsnk_started(esp_ble_audio_bap_broadcast_sink_t *sink) {
 }
 
 static void bsnk_stopped(esp_ble_audio_bap_broadcast_sink_t *sink, uint8_t reason) {
-  (void)sink;
+  if (sink == s_bsnk.sink) {
+    bleAudioBroadcastSlotsDown(BLE_AUDIO_STREAM_BROADCAST_SINK);
+  }
   s_bsnk.syncing = false;
   s_bsnk_joined = false;
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_STOPPED, CONN_NONE, reason, NULL);

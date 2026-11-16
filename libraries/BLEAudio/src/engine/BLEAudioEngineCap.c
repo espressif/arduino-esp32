@@ -852,7 +852,9 @@ static void init_bc_started(esp_ble_audio_cap_broadcast_source_t *source) {
 
 /** BIG terminated; @p reason is the HCI reason, reported as the event's err. */
 static void init_bc_stopped(esp_ble_audio_cap_broadcast_source_t *source, uint8_t reason) {
-  (void)source;
+  if (source == s_bc.source) {
+    bleAudioBroadcastSlotsDown(BLE_AUDIO_STREAM_BROADCAST_SOURCE);
+  }
   bleAudioEngineEmit(BLE_AUDIO_EVT_CAP_BC_STOPPED, CONN_NONE, reason, NULL);
 }
 
