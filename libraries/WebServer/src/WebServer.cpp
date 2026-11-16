@@ -555,6 +555,7 @@ void WebServer::handleClient() {
 
     _currentStatus = HC_WAIT_READ;
     _statusChange = millis();
+    _sseActive = false;
   }
 
   NetworkClient &activeClient = client();
@@ -584,7 +585,7 @@ void WebServer::handleClient() {
               _handleRequest();
             }
 
-            if (activeClient.isSSE()) {
+            if (isSSE()) {
               _currentStatus = HC_WAIT_CLOSE;
               _statusChange = millis();
               keepCurrentClient = true;
@@ -604,7 +605,7 @@ void WebServer::handleClient() {
         }
         break;
       case HC_WAIT_CLOSE:
-        if (activeClient.isSSE()) {
+        if (isSSE()) {
           // Never close connection
           _statusChange = millis();
         }
@@ -626,6 +627,15 @@ void WebServer::handleClient() {
   if (callYield) {
     yield();
   }
+}
+
+bool WebServer::isSSE() {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  // The server-owned marker covers enableSSE(); the client-side marker covers
+  // legacy sketches still calling client().setSSE(true).
+  return _sseActive || client().isSSE();
+#pragma GCC diagnostic pop
 }
 
 void WebServer::close() {
