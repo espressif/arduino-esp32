@@ -1169,13 +1169,26 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
         client->m_conn_id = event->connect.conn_handle;
 
         rc = ble_gattc_exchange_mtu(client->m_conn_id, nullptr, nullptr);
-        if (rc != 0) {
-          log_e("BLEClient", "MTU exchange error; rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
+        // A peripheral may start the ATT MTU exchange as soon as the link is up.
+        // NimBLE answers it (setting BLE_L2CAP_CHAN_F_TXED_MTU) before it delivers
+        // BLE_GAP_EVENT_CONNECT, because CONNECT waits for the remote feature and
+        // version reads. Our request then returns BLE_HS_EALREADY, which means the
+        // MTU was already exchanged - not an error. The BLE_GAP_EVENT_MTU that
+        // normally releases connect() was raised before m_conn_id was set and was
+        // dropped, so release the waiter here instead.
+        bool mtuAlreadyExchanged = (rc == BLE_HS_EALREADY);
+        if (rc != 0 && !mtuAlreadyExchanged) {
+          log_e("MTU exchange error; rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
           break;
         }
+        rc = 0;
 
         if (BLESecurity::m_securityEnabled && BLESecurity::m_forceSecurity) {
           BLESecurity::startSecurity(client->m_conn_id);
+        }
+
+        if (mtuAlreadyExchanged) {
+          break;  // release connect() with rc = 0
         }
 
         // In the case of a multiconnecting device we ignore this device when

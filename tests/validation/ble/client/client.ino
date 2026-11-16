@@ -3,6 +3,10 @@
 #include "BLESecurity.h"
 #include "nvs_flash.h"
 #include <esp_heap_caps.h>
+#if defined(CONFIG_NIMBLE_ENABLED)
+#include <host/ble_gap.h>
+#include <host/ble_gatt.h>
+#endif
 
 static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static BLEUUID insecureCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -288,6 +292,76 @@ void runAdPhase2Scan() {
   }
 }
 
+// --- Peer-initiated MTU before CONNECT (issue #13104) ---
+// A peripheral can finish the ATT MTU exchange before NimBLE delivers
+// BLE_GAP_EVENT_CONNECT. This listener runs before BLEClient's own handler and
+// queues the exchange, deterministically producing BLE_HS_EALREADY in connect().
+#if defined(CONFIG_NIMBLE_ENABLED)
+static struct ble_gap_event_listener mtuFirstListener;
+static bool mtuFirstArmed = false;
+
+static int mtuFirstGapListener(struct ble_gap_event *event, void *arg) {
+  if (mtuFirstArmed && event->type == BLE_GAP_EVENT_CONNECT && event->connect.status == 0) {
+    int rc = ble_gattc_exchange_mtu(event->connect.conn_handle, nullptr, nullptr);
+    Serial.printf("[CLIENT] Peer-first MTU pre-exchange rc=%d\n", rc);
+  }
+  return 0;
+}
+#endif
+
+bool runPeerMtuFirstTest() {
+  // Drop the main connection so the server is free to accept this one.
+  if (pClient != nullptr && pClient->isConnected()) {
+    pClient->disconnect();
+    delay(1000);
+  }
+
+  Serial.println("[CLIENT] Starting peer-first MTU test");
+#if defined(CONFIG_NIMBLE_ENABLED)
+  mtuFirstArmed = true;
+  int lrc = ble_gap_event_listener_register(&mtuFirstListener, mtuFirstGapListener, nullptr);
+  Serial.printf("[CLIENT] Peer-first MTU listener rc=%d\n", lrc);
+#else
+  Serial.println("[CLIENT] Peer-first MTU pre-exchange rc=N/A");
+#endif
+
+  if (myDevice == nullptr) {
+    Serial.println("[CLIENT] Peer-first MTU client create FAILED: no advertised device");
+#if defined(CONFIG_NIMBLE_ENABLED)
+    mtuFirstArmed = false;
+    ble_gap_event_listener_unregister(&mtuFirstListener);
+#endif
+    return false;
+  }
+
+  BLEClient *pMtuClient = BLEDevice::createClient();
+  if (pMtuClient == nullptr) {
+    Serial.println("[CLIENT] Peer-first MTU client create FAILED");
+#if defined(CONFIG_NIMBLE_ENABLED)
+    mtuFirstArmed = false;
+    ble_gap_event_listener_unregister(&mtuFirstListener);
+#endif
+    return false;
+  }
+
+  bool connectedOk = pMtuClient->connect(myDevice->getAddress(), myDevice->getAddressType(), 10000);
+  Serial.printf("[CLIENT] Peer-first MTU connect=%d\n", (int)connectedOk);
+
+  bool serviceOk = false;
+  if (connectedOk) {
+    serviceOk = pMtuClient->getService(serviceUUID) != nullptr;
+    Serial.printf("[CLIENT] Peer-first MTU service=%d mtu=%u\n", (int)serviceOk, (unsigned)pMtuClient->getMTU());
+    pMtuClient->disconnect();
+  }
+  delete pMtuClient;
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  mtuFirstArmed = false;
+  ble_gap_event_listener_unregister(&mtuFirstListener);
+#endif
+  return connectedOk && serviceOk;
+}
+
 bool runReconnectPhase(uint16_t preseed, const char *label) {
   Serial.printf("[CLIENT] Reconnect phase: crossing %s (preseed=%u)\n", label, preseed);
   BLEDevice::m_appId = preseed;
@@ -545,6 +619,13 @@ void loop() {
       Serial.println("[CLIENT] ERROR: Write-NR characteristic missing or cannot write without response");
     }
     delay(1000);
+
+    // --- Peer-initiated MTU before CONNECT (issue #13104) ---
+    // A peripheral can complete the ATT MTU exchange before NimBLE delivers
+    // BLE_GAP_EVENT_CONNECT. connect() must treat the resulting
+    // BLE_HS_EALREADY from its own exchange as success, not as a failure.
+    bool mtuFirstPassed = runPeerMtuFirstTest();
+    Serial.printf("[CLIENT] Peer-first MTU test %s\n", mtuFirstPassed ? "PASSED" : "FAILED");
 
     // --- Reconnection stress test (app_id collision regression) ---
     // Disconnect from the current connection first

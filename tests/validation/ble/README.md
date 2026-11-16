@@ -46,6 +46,7 @@ Validates BLE secure connection between a server and client using both MITM pair
 | IRK retrieval | Retrieve and print the peer's Identity Resolving Key after authentication |
 | Write/read operations | Write and read back values on both secure and insecure characteristics |
 | Write-NR burst | Three back-to-back Write-Without-Response packets (`AA`, `BB`, `CC`) with no delay (issue #12815) |
+| Peer-initiated MTU | NimBLE: a GAP listener queues the ATT MTU exchange before `connect()`'s own handler, so `ble_gattc_exchange_mtu()` returns `BLE_HS_EALREADY`; `connect()` must still succeed and discover services (issue #13104) |
 | Heap integrity | `heap_caps_check_integrity_all()` before and after `BLEDevice::init()` (issue #12821) |
 | Advertisement parsing | Verify malformed AD structures are rejected instead of turned into fields (`ADCHK1` / `ADCHK2`) |
 
