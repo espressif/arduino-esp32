@@ -470,6 +470,9 @@ static void op_recv(esp_ble_audio_bap_stream_t *stream, const esp_ble_iso_recv_i
     ri.ts = info->ts;
     ri.seq = info->seq_num;
     ri.ts_valid = (info->flags & ESP_BLE_ISO_FLAGS_TS) != 0;
+    /* BT_ISO flags (esp_ble_iso_common_api.h mirrors Zephyr): every interval
+     * is either delivered (VALID, possibly with ERROR) or LOST. Anything else
+     * (no VALID without LOST) is not a defined benign state, so conceal it. */
     if (info->flags & ESP_BLE_ISO_FLAGS_LOST) {
       ri.status = BLE_AUDIO_SDU_LOST;
     } else if ((info->flags & ESP_BLE_ISO_FLAGS_ERROR) || !(info->flags & ESP_BLE_ISO_FLAGS_VALID)) {
@@ -1888,8 +1891,10 @@ int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *location
    * The subgroup codec config and the QoS are stored in slots[0]; every BIS
    * shares them. With per-BIS locations the subgroup carries no channel
    * allocation and each BIS gets its own (e.g. front-left / front-right).
+   * Automatic locals: broadcast_source_create() consumes them synchronously,
+   * like the unicast group_create() (see uc_create_group()).
    */
-  static esp_ble_audio_bap_broadcast_source_stream_param_t sp[POOL_BSRC];
+  esp_ble_audio_bap_broadcast_source_stream_param_t sp[POOL_BSRC];
   esp_ble_audio_bap_broadcast_source_subgroup_param_t subgroup = {0};
   esp_ble_audio_bap_broadcast_source_param_t param = {0};
 

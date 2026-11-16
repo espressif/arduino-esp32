@@ -72,6 +72,16 @@
 #define VCTL_AICS  (BLE_AUDIO_VCP_CONTROLLER_SUPPORTED && CONFIG_BT_VCP_VOL_CTLR_AICS)
 #define MCTL_AICS  (BLE_AUDIO_MICP_CONTROLLER_SUPPORTED && CONFIG_BT_MICP_MIC_CTLR_AICS)
 
+/* Client instance pools must cover every link or Nth-link discovery fails
+ * with an opaque error (see defconfig.esp32s31 for the sizing math: one VCP
+ * VOCS plus one VCP AICS plus one MICP AICS per link). */
+#if VCTL_VOCS && defined(CONFIG_BT_VOCS_CLIENT_MAX_INSTANCE_COUNT)
+_Static_assert(CONFIG_BT_VOCS_CLIENT_MAX_INSTANCE_COUNT >= BLE_MAX_CONN, "VOCS client pool smaller than BLE_MAX_CONN");
+#endif
+#if (VCTL_AICS || MCTL_AICS) && defined(CONFIG_BT_AICS_CLIENT_MAX_INSTANCE_COUNT)
+_Static_assert(CONFIG_BT_AICS_CLIENT_MAX_INSTANCE_COUNT >= 2 * BLE_MAX_CONN, "AICS client pool smaller than 2 * BLE_MAX_CONN");
+#endif
+
 /* True when at least one role is compiled in; gates the shared state and hooks. */
 #define CTL_ANY                                                                                                                        \
   (BLE_AUDIO_VCP_RENDERER_SUPPORTED || BLE_AUDIO_VCP_CONTROLLER_SUPPORTED || BLE_AUDIO_MICP_DEVICE_SUPPORTED                           \
