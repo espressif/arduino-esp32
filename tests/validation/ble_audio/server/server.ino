@@ -1603,7 +1603,6 @@ void loop() {
 #endif
     Serial.println("[SERVER] Phase18 mic_mute_disabled done");
   }
-  }
 
   // Phase 19: Memory release (tail of the suite; runs after every audio phase
   // has restored a normal stack, including the phase 13/14 stress rounds).
