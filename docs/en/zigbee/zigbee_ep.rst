@@ -378,6 +378,19 @@ start an upgrade with Image Notify without this call.
 
     void requestOTAUpdate();
 
+onOTAStateChange / onOTAComplete
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional callbacks for OTA transfer lifecycle:
+
+.. code-block:: arduino
+
+    void onOTAStateChange(void (*callback)(bool active));
+    void onOTAComplete(void (*callback)(bool success));
+
+* ``onOTAStateChange`` - ``true`` when download/apply becomes active, ``false`` when inactive
+* ``onOTAComplete`` - ``true`` on successful FINISH (before reboot), ``false`` on abort/failure
+
 Creating a Zigbee OTA image (Export)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -406,6 +419,12 @@ Manual alternative: Espressif's
 
 OTA with Home Assistant ZHA
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Until you place any matching ``.zigbee`` file in the Home Assistant OTA folder
+(``zigpy_ota``), ZHA shows the device firmware as **Unknown** — it has nothing
+to compare against. Upload an image with the **same** version as the firmware
+already on the device to see **Up-to-date**, or a **newer** version when you want
+an Update available.
 
 1. USB-flash a build that is already joined to ZHA (note the running
    ``OTA_UPGRADE_RUNNING_FILE_VERSION`` on Serial).

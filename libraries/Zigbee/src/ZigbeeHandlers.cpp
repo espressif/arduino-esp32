@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Arduino.h"
-
 /* Zigbee Common Functions */
 #include "ZigbeeCore.h"
 #include "Arduino.h"
@@ -31,7 +29,8 @@ static esp_ota_handle_t s_ota_handle = 0;
 static zb_ota_file_parser_t s_ota_file_parser;
 static bool s_ota_file_parser_active = false;
 static bool s_ota_notify_active = false;
-static uint32_t s_ota_approved_image_size = 0;  // from Query Next Image Response; used if RECEIVING races START
+static bool s_ota_receive_failed = false;          // flash/parse failed; wait for stack ABORT
+static uint32_t s_ota_approved_image_size = 0;      // Query image size; used if RECEIVING races START
 
 static void zb_ota_notify_state(bool active) {
   if (s_ota_notify_active == active) {
@@ -43,6 +42,13 @@ static void zb_ota_notify_state(bool active) {
   }
 }
 
+static void zb_ota_notify_complete(bool success) {
+  zb_ota_notify_state(false);
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    (*it)->zbOTAComplete(success);
+  }
+}
+
 static void zb_ota_reset_receive_state() {
   if (s_ota_handle) {
     esp_ota_abort(s_ota_handle);
@@ -50,13 +56,35 @@ static void zb_ota_reset_receive_state() {
   }
   s_ota_partition = NULL;
   s_ota_file_parser_active = false;
+  s_ota_receive_failed = false;
   s_ota_approved_image_size = 0;
   memset(&s_ota_file_parser, 0, sizeof(s_ota_file_parser));
 }
 
-// Prepare flash + parser as soon as an image is approved. Idempotent so START/RECEIVING
-// can arrive in either order without silently ABORT-ing the transfer.
+// Close the flash session after a mid-transfer error. Keep approved size so a trailing
+// Image Block (stack may already have queued one) does not try to re-prepare. Full cleanup
+// and user notify happen in PROGRESS_ABORT (stack nests ABORT when out.result is ABORT).
+static void zb_ota_fail_receive() {
+  if (s_ota_handle) {
+    esp_ota_abort(s_ota_handle);
+    s_ota_handle = 0;
+  }
+  s_ota_partition = NULL;
+  s_ota_file_parser_active = false;
+  s_ota_receive_failed = true;
+  memset(&s_ota_file_parser, 0, sizeof(s_ota_file_parser));
+}
+
+// Open the OTA partition and init the streaming parser. Called from START (and from
+// RECEIVING if START was missed). Do not call from the Query approve callback — flash
+// work there delays Image Block Request and ZHA times out.
+//
+// esp_ota_* runs on the ZCL task (same as esp-zigbee-sdk ota_client). Sequential writes
+// avoid a full erase in START; keep RECEIVING work short (throttled logs, no Serial spam).
 static esp_err_t zb_ota_prepare_receive(uint32_t image_size) {
+  if (s_ota_receive_failed) {
+    return ESP_ERR_INVALID_STATE;
+  }
   if (s_ota_file_parser_active && s_ota_handle != 0) {
     return ESP_OK;
   }
@@ -64,11 +92,9 @@ static esp_err_t zb_ota_prepare_receive(uint32_t image_size) {
     zb_ota_reset_receive_state();
   }
 
-  zb_ota_notify_state(true);
   s_ota_partition = esp_ota_get_next_update_partition(NULL);
   if (s_ota_partition == NULL) {
     log_e("Zigbee - No OTA partition found");
-    zb_ota_notify_state(false);
     return ESP_ERR_NOT_FOUND;
   }
 
@@ -76,17 +102,17 @@ static esp_err_t zb_ota_prepare_receive(uint32_t image_size) {
 #if CONFIG_ZB_DELTA_OTA
   esp_err_t ret = esp_delta_ota_begin(s_ota_partition, 0, &s_ota_handle);
 #else
-  // Same as esp-zigbee-sdk ota_client / last working Arduino path. Prefer sequential writes so
-  // a full partition erase does not run before the first Image Block Request (ZHA ~30s stall).
+  // Sequential writes: avoid a full-partition erase in START before the first Image Block
+  // Request (ZHA aborts if that stalls ~30s). esp-zigbee-sdk ota_client uses size 0 instead.
   esp_err_t ret = esp_ota_begin(s_ota_partition, OTA_WITH_SEQUENTIAL_WRITES, &s_ota_handle);
 #endif
   if (ret != ESP_OK) {
     log_e("Zigbee - Failed to begin OTA partition, status: %s", esp_err_to_name(ret));
     zb_ota_reset_receive_state();
-    zb_ota_notify_state(false);
     return ret;
   }
   s_ota_file_parser_active = true;
+  zb_ota_notify_state(true);
   return ESP_OK;
 }
 
@@ -452,11 +478,18 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
         message->in.start.image_type, message->in.start.file_version, message->in.start.image_size
       );
       start_time = esp_timer_get_time();
+      s_ota_receive_failed = false;
       ret = zb_ota_prepare_receive(message->in.start.image_size);
       break;
 
     case EZB_ZCL_OTA_UPGRADE_PROGRESS_RECEIVING:
     {
+      // Stack may still deliver a block after a prior ABORT out.result (next request was
+      // queued before the app callback). Refuse without re-opening flash.
+      if (s_ota_receive_failed) {
+        ret = ESP_ERR_INVALID_STATE;
+        break;
+      }
       if (!s_ota_file_parser_active || s_ota_handle == 0) {
         if (s_ota_approved_image_size == 0) {
           log_e("Zigbee - OTA RECEIVING before START and no approved image size");
@@ -516,23 +549,31 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
         ret = ESP_OK;
       }
       if (ret != ESP_OK) {
-        zb_ota_reset_receive_state();
-        zb_ota_notify_state(false);
+        zb_ota_fail_receive();
       }
       break;
     }
 
     case EZB_ZCL_OTA_UPGRADE_PROGRESS_CHECK:
-      ret = s_ota_file_parser_active ? zb_ota_file_parser_check(&s_ota_file_parser) : ESP_FAIL;
+      if (s_ota_receive_failed || !s_ota_file_parser_active) {
+        ret = ESP_FAIL;
+      } else {
+        ret = zb_ota_file_parser_check(&s_ota_file_parser);
+      }
       log_i("Zigbee - OTA upgrade check status: %s", esp_err_to_name(ret));
       if (ret != ESP_OK) {
-        zb_ota_reset_receive_state();
-        zb_ota_notify_state(false);
+        zb_ota_fail_receive();
       }
       break;
 
     case EZB_ZCL_OTA_UPGRADE_PROGRESS_APPLY:
       log_i("Zigbee - OTA upgrade apply");
+      if (s_ota_receive_failed || s_ota_handle == 0 || s_ota_partition == NULL) {
+        log_e("Zigbee - OTA apply with no active receive session");
+        ret = ESP_ERR_INVALID_STATE;
+        zb_ota_fail_receive();
+        break;
+      }
 #if CONFIG_ZB_DELTA_OTA
       ret = esp_delta_ota_end(s_ota_handle);
 #else
@@ -540,8 +581,7 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
 #endif
       if (ret != ESP_OK) {
         log_e("Zigbee - Failed to end OTA partition, status: %s", esp_err_to_name(ret));
-        zb_ota_reset_receive_state();
-        zb_ota_notify_state(false);
+        zb_ota_fail_receive();
         break;
       }
       // esp_ota_end() closed the session; do not abort on later FINISH/reset.
@@ -549,8 +589,7 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
       ret = esp_ota_set_boot_partition(s_ota_partition);
       if (ret != ESP_OK) {
         log_e("Zigbee - Failed to set OTA boot partition, status: %s", esp_err_to_name(ret));
-        zb_ota_reset_receive_state();
-        zb_ota_notify_state(false);
+        zb_ota_fail_receive();
       }
       break;
 
@@ -560,7 +599,7 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
         (int32_t)((esp_timer_get_time() - start_time) / 1000)
       );
       zb_ota_reset_receive_state();
-      zb_ota_notify_state(false);
+      zb_ota_notify_complete(true);
       log_w("Zigbee - Prepare to restart system");
       esp_restart();
       break;
@@ -568,12 +607,14 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
     case EZB_ZCL_OTA_UPGRADE_PROGRESS_ABORT:
       log_w("Zigbee - OTA upgrade aborted");
       zb_ota_reset_receive_state();
-      zb_ota_notify_state(false);
+      zb_ota_notify_complete(false);
       break;
 
     default: log_i("Zigbee - OTA progress: %d", message->in.progress); break;
   }
 
+  // ABORT makes the stack nest PROGRESS_ABORT (resets download status). CHECK/RECEIVING
+  // returns are otherwise ignored for the already-queued next request / Upgrade End.
   message->out.result = (ret == ESP_OK) ? EZB_ZCL_STATUS_SUCCESS : EZB_ZCL_STATUS_ABORT;
   return ret;
 }
@@ -597,7 +638,8 @@ static esp_err_t zb_ota_upgrade_query_image_resp_handler(ezb_zcl_ota_upgrade_que
       return ESP_FAIL;
     }
     s_ota_approved_image_size = image->size;
-    log_i("Zigbee - Approving OTA image upgrade");
+    // App accept only — stack still skips if version equals Current or DownloadedFileVersion.
+    log_i("Zigbee - Accepting OTA image for download");
   } else {
     log_i("Zigbee - No OTA image available (status 0x%02x)", message->in.image.status);
   }

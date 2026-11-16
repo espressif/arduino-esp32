@@ -107,6 +107,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _on_identify = nullptr;
   _on_identify_query_response = nullptr;
   _on_ota_state_change = nullptr;
+  _on_ota_complete = nullptr;
   _on_default_response = nullptr;
   _on_privilege_command = nullptr;
   _on_custom_cluster_command = nullptr;
@@ -793,6 +794,12 @@ void ZigbeeEP::zbOTAState(bool otaActive) {
   _ota_in_progress = otaActive;
   if (_on_ota_state_change != NULL) {
     _on_ota_state_change(otaActive);
+  }
+}
+
+void ZigbeeEP::zbOTAComplete(bool success) {
+  if (_on_ota_complete != NULL) {
+    _on_ota_complete(success);
   }
 }
 

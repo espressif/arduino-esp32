@@ -48,6 +48,8 @@ To get more information about the Espressif boards see [Espressif Development Ki
 
 **Version rule:** the `.zigbee` file version must be **greater than** the version running on the device. ZHA returns `NO_IMAGE_AVAILABLE` (0x98) if the file is missing, unreadable, or not newer.
 
+**Firmware status in ZHA:** until you place any matching `.zigbee` file in the Home Assistant OTA folder (`zigpy_ota`), ZHA shows the device firmware as **Unknown** — it has nothing to compare against. After you upload an image with the **same** version as the currently flashed firmware, ZHA can show **Up-to-date**. Upload a **newer** version when you want an Update available.
+
 Typical first test:
 
 1. Flash this example via USB with `OTA_UPGRADE_RUNNING_FILE_VERSION` `0x01010100`, `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` `0xFFFFFFFF`, and join the device to ZHA. Serial should print `Running FW version: 0x01010100`.
@@ -111,7 +113,7 @@ To open the network you have 2 options:
 * **LED not blinking:** Check the wiring connection and the IO selection.
 * **Programming Fail:** If the programming/flash procedure fails, try reducing the serial connection speed.
 * **COM port not detected:** Check the USB cable and the USB to Serial driver installation.
-* **OTA does not start:** Confirm manufacturer / image type / file version match the OTA file, the partition scheme is Zigbee with OTA slots, and ZHA can see the OTA provider path. If Serial shows `Approving OTA image upgrade` but never `OTA upgrade start`, check that `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` is `0xFFFFFFFF` (or at least not equal to the offered image version).
+* **OTA does not start:** Confirm manufacturer / image type / file version match the OTA file, the partition scheme is Zigbee with OTA slots, and ZHA can see the OTA provider path. If Serial shows `Accepting OTA image for download` but never `OTA upgrade start`, check that `OTA_UPGRADE_DOWNLOADED_FILE_VERSION` is `0xFFFFFFFF` (or at least not equal to the offered image version).
 
 If the error persists, you can ask for help at the official [ESP32 forum](https://esp32.com) or see [Contribute](#contribute).
 

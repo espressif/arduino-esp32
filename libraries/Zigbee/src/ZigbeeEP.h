@@ -194,6 +194,7 @@ public:
   virtual void zbIdentify(const ezb_zcl_set_attr_value_message_t *message);
   virtual void zbIdentifyQueryResponse(const ezb_zcl_identify_query_rsp_message_t *message);
   virtual void zbOTAState(bool otaActive);
+  virtual void zbOTAComplete(bool success);
   virtual void zbWindowCoveringMovementCmd(const ezb_zcl_window_covering_movement_message_t *message) {};
   virtual void zbDoorLockCmd(ezb_zcl_door_lock_lock_door_message_t *message, bool lock) {};
   virtual void zbDoorLockSetPinCode(ezb_zcl_door_lock_set_pin_code_message_t *message) {};
@@ -237,8 +238,14 @@ public:
   // Devices that are identifying reply with Identify Query Response (see onIdentifyQueryResponse).
   bool identifyQuery(uint16_t short_addr = 0xFFFF, uint8_t dst_endpoint = EZB_AF_ENDPOINT_BROADCAST_ID);
 
-  void onOTAStateChange(void (*callback)(bool state)) {
+  // Called with true when an OTA download/apply becomes active, false when it is no longer active.
+  void onOTAStateChange(void (*callback)(bool active)) {
     _on_ota_state_change = callback;
+  }
+
+  // Called when an OTA transfer ends: success=true before reboot on FINISH, false on abort/failure.
+  void onOTAComplete(void (*callback)(bool success)) {
+    _on_ota_complete = callback;
   }
 
   void onDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status)) {
@@ -260,7 +267,8 @@ private:
   char *_read_model;
   void (*_on_identify)(uint16_t time);
   void (*_on_identify_query_response)(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address);
-  void (*_on_ota_state_change)(bool state);
+  void (*_on_ota_state_change)(bool active);
+  void (*_on_ota_complete)(bool success);
   void (*_on_default_response)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status);
   void (*_on_privilege_command)(const ezb_zcl_manuf_spec_cmd_message_t *message);
   void (*_on_custom_cluster_command)(const ezb_zcl_manuf_spec_cmd_message_t *message);

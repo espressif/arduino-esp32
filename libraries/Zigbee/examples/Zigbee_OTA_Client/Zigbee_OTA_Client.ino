@@ -63,9 +63,11 @@ void otaActiveCallback(bool otaActive) {
   otaRunning = otaActive;
   if (otaActive) {
     Serial.println("OTA started");
-  } else {
-    Serial.println("OTA finished");
   }
+}
+
+void otaCompleteCallback(bool success) {
+  Serial.println(success ? "OTA finished" : "OTA aborted");
 }
 
 /********************* RGB LED functions **************************/
@@ -103,8 +105,9 @@ void setup() {
     OTA_UPGRADE_RUNNING_FILE_VERSION, OTA_UPGRADE_DOWNLOADED_FILE_VERSION, OTA_UPGRADE_HW_VERSION, OTA_UPGRADE_MANUFACTURER, OTA_UPGRADE_IMAGE_TYPE
   );
 
-  // Optional: Register callback for OTA state change
+  // Optional: OTA active flag + distinct finished vs aborted
   zbLight.onOTAStateChange(otaActiveCallback);
+  zbLight.onOTAComplete(otaCompleteCallback);
 
   // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbLight);
@@ -125,7 +128,7 @@ void setup() {
   }
   Serial.println();
 
-  // Start Zigbee OTA client query, first request is within a minute and the next requests are sent every hour automatically
+  // Discover the OTA server and Query Next Image; further queries every hour. ZHA Update also works via Image Notify.
   zbLight.requestOTAUpdate();
 }
 
