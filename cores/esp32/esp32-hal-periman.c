@@ -140,6 +140,9 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
     case ESP32_BUS_TYPE_VIDEO_CAM_RESET:  return "VIDEO_CAM_RESET";
     case ESP32_BUS_TYPE_VIDEO_CAM_PWDN:   return "VIDEO_CAM_PWDN";
 #endif
+#if SOC_PARLIO_SUPPORTED
+    case ESP32_BUS_TYPE_PARLIO_TX: return "PARLIO_TX";
+#endif
     default: return "UNKNOWN";
   }
 }
