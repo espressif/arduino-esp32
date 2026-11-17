@@ -138,6 +138,10 @@ typedef enum {
   ESP32_BUS_TYPE_VIDEO_CAM_RESET,   // IO is used as ESP Video camera RESET pin
   ESP32_BUS_TYPE_VIDEO_CAM_PWDN,    // IO is used as ESP Video camera PWDN pin
 #endif
+#if SOC_PARLIO_SUPPORTED
+  ESP32_BUS_TYPE_PARLIO_TX,  // IO is used as PARLIO TX data pin
+  ESP32_BUS_TYPE_PARLIO_RX,  // IO is used as PARLIO RX data pin
+#endif
   ESP32_BUS_TYPE_MAX
 } peripheral_bus_type_t;
 
