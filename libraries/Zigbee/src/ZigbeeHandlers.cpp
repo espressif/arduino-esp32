@@ -29,8 +29,8 @@ static esp_ota_handle_t s_ota_handle = 0;
 static zb_ota_file_parser_t s_ota_file_parser;
 static bool s_ota_file_parser_active = false;
 static bool s_ota_notify_active = false;
-static bool s_ota_receive_failed = false;          // flash/parse failed; wait for stack ABORT
-static uint32_t s_ota_approved_image_size = 0;      // Query image size; used if RECEIVING races START
+static bool s_ota_receive_failed = false;       // flash/parse failed; wait for stack ABORT
+static uint32_t s_ota_approved_image_size = 0;  // Query image size; used if RECEIVING races START
 
 static void zb_ota_notify_state(bool active) {
   if (s_ota_notify_active == active) {
@@ -468,7 +468,8 @@ template<typename T> static void zb_door_lock_user_cmd_handler(T *message, void 
 // OTA client progress: start / receiving / check / apply / finish / abort.
 // Parses the full Zigbee OTA file (header + sub-element) like esp-zigbee-sdk ota_client.
 static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progress_message_t *message) {
-  [[maybe_unused]] static int64_t start_time = 0;
+  [[maybe_unused]]
+  static int64_t start_time = 0;
   esp_err_t ret = ESP_OK;
 
   switch (message->in.progress) {
@@ -510,8 +511,8 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
       {
         uint32_t received = (uint32_t)(message->in.receiving.file_offset + message->in.receiving.block_size);
         // Avoid logging every 48-byte block (~15k lines) — Serial can stall the ZCL task.
-        if (received == message->in.receiving.block_size || (received % 4096u) < message->in.receiving.block_size ||
-            received >= s_ota_file_parser.total_image_size) {
+        if (received == message->in.receiving.block_size || (received % 4096u) < message->in.receiving.block_size
+            || received >= s_ota_file_parser.total_image_size) {
           log_i("Zigbee - OTA Client receives data: progress [%" PRIu32 "/%" PRIu32 "]", received, s_ota_file_parser.total_image_size);
         }
       }
@@ -595,8 +596,7 @@ static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progre
 
     case EZB_ZCL_OTA_UPGRADE_PROGRESS_FINISH:
       log_i(
-        "Zigbee - OTA Finish (total %" PRIu32 " bytes, %" PRId32 " ms)", s_ota_file_parser.total_offset,
-        (int32_t)((esp_timer_get_time() - start_time) / 1000)
+        "Zigbee - OTA Finish (total %" PRIu32 " bytes, %" PRId32 " ms)", s_ota_file_parser.total_offset, (int32_t)((esp_timer_get_time() - start_time) / 1000)
       );
       zb_ota_reset_receive_state();
       zb_ota_notify_complete(true);

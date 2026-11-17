@@ -33,8 +33,7 @@ esp_err_t zb_ota_file_parser_check(const zb_ota_file_parser_t *parser) {
     return ESP_FAIL;
   }
   /* Header must be fully present in the advertised image. */
-  if (parser->header.mandatory.hdr_length < sizeof(parser->header.mandatory) ||
-      parser->total_image_size < parser->header.mandatory.hdr_length) {
+  if (parser->header.mandatory.hdr_length < sizeof(parser->header.mandatory) || parser->total_image_size < parser->header.mandatory.hdr_length) {
     return ESP_FAIL;
   }
   /* Not truncated mid-header / mid-element (offset resets only on section complete). */
@@ -42,8 +41,8 @@ esp_err_t zb_ota_file_parser_check(const zb_ota_file_parser_t *parser) {
     return ESP_FAIL;
   }
   /* Completed upgrade element that fits after the file header. */
-  if (parser->element.type != ZB_OTA_ELEMENT_UPGRADE_IMAGE || parser->element.total <= ZB_OTA_ELEMENT_HEADER_LEN ||
-      parser->element.total > parser->total_image_size - parser->header.mandatory.hdr_length) {
+  if (parser->element.type != ZB_OTA_ELEMENT_UPGRADE_IMAGE || parser->element.total <= ZB_OTA_ELEMENT_HEADER_LEN
+      || parser->element.total > parser->total_image_size - parser->header.mandatory.hdr_length) {
     return ESP_FAIL;
   }
   return ESP_OK;
@@ -97,9 +96,8 @@ esp_err_t zb_ota_file_parser_process(zb_ota_file_parser_t *parser) {
 
   /* Mandatory OTA file header */
   if (sizeof(parser->header.mandatory) > parser->total_offset) {
-    written = ota_file_stream_format(
-      (uint8_t *)&parser->header.mandatory, (uint16_t)parser->offset, sizeof(parser->header.mandatory), parser->in, parser->in_length
-    );
+    written =
+      ota_file_stream_format((uint8_t *)&parser->header.mandatory, (uint16_t)parser->offset, sizeof(parser->header.mandatory), parser->in, parser->in_length);
     ota_file_parser_refresh(parser, written);
     parser->offset = parser->total_offset >= sizeof(parser->header.mandatory) ? 0 : parser->offset;
     return parser->in_length ? ESP_ERR_NOT_FINISHED : ESP_OK;
@@ -114,9 +112,7 @@ esp_err_t zb_ota_file_parser_process(zb_ota_file_parser_t *parser) {
     if (optional_len > sizeof(parser->header.optional)) {
       return ESP_ERR_INVALID_SIZE;
     }
-    written = ota_file_stream_format(
-      (uint8_t *)&parser->header.optional, (uint16_t)parser->offset, (uint16_t)optional_len, parser->in, parser->in_length
-    );
+    written = ota_file_stream_format((uint8_t *)&parser->header.optional, (uint16_t)parser->offset, (uint16_t)optional_len, parser->in, parser->in_length);
     ota_file_parser_refresh(parser, written);
     if (parser->total_offset >= parser->header.mandatory.hdr_length) {
       parser->offset = 0;
@@ -127,15 +123,14 @@ esp_err_t zb_ota_file_parser_process(zb_ota_file_parser_t *parser) {
 
   /* Sub-element header (type + length) */
   if (parser->offset < ZB_OTA_ELEMENT_HEADER_LEN) {
-    written =
-      ota_file_stream_format((uint8_t *)&parser->element, (uint16_t)parser->offset, ZB_OTA_ELEMENT_HEADER_LEN, parser->in, parser->in_length);
+    written = ota_file_stream_format((uint8_t *)&parser->element, (uint16_t)parser->offset, ZB_OTA_ELEMENT_HEADER_LEN, parser->in, parser->in_length);
     ota_file_parser_refresh(parser, written);
     // Inflate total only once the full 6-byte header is present (length field complete).
     if (parser->offset >= ZB_OTA_ELEMENT_HEADER_LEN) {
       parser->element.total += ZB_OTA_ELEMENT_HEADER_LEN;
       uint32_t element_start = parser->total_offset - ZB_OTA_ELEMENT_HEADER_LEN;
-      if (parser->element.total < ZB_OTA_ELEMENT_HEADER_LEN || element_start > parser->total_image_size ||
-          parser->element.total > parser->total_image_size - element_start) {
+      if (parser->element.total < ZB_OTA_ELEMENT_HEADER_LEN || element_start > parser->total_image_size
+          || parser->element.total > parser->total_image_size - element_start) {
         return ESP_ERR_INVALID_SIZE;
       }
     }

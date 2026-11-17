@@ -38,12 +38,8 @@ MACRO_HEADER_STRING = "OTA_UPGRADE_HEADER_STRING"
 DEFAULT_MANUFACTURER = 0x1001
 DEFAULT_IMAGE_TYPE = 0x1011
 
-DEFINE_RE = re.compile(
-    r"^\s*#\s*define\s+([A-Za-z_][A-Za-z0-9_]*)\s+(.+?)(?:\s*/\*.*?\*/\s*)?(?://.*)?$"
-)
-STRING_DEFINE_RE = re.compile(
-    r'^\s*#\s*define\s+([A-Za-z_][A-Za-z0-9_]*)\s+"([^"]*)"'
-)
+DEFINE_RE = re.compile(r"^\s*#\s*define\s+([A-Za-z_][A-Za-z0-9_]*)\s+(.+?)(?:\s*/\*.*?\*/\s*)?(?://.*)?$")
+STRING_DEFINE_RE = re.compile(r'^\s*#\s*define\s+([A-Za-z_][A-Za-z0-9_]*)\s+"([^"]*)"')
 ADD_OTA_CLIENT_RE = re.compile(r"\baddOTAClient\s*\(")
 
 
@@ -123,9 +119,7 @@ def scan_sketch(sketch_dir: str) -> Tuple[Dict[str, int], Dict[str, str], bool]:
     return ints, strings, has_add_ota
 
 
-def resolve_ota_params(
-    ints: Dict[str, int], strings: Dict[str, str], has_add_ota: bool
-) -> Optional[Dict[str, object]]:
+def resolve_ota_params(ints: Dict[str, int], strings: Dict[str, str], has_add_ota: bool) -> Optional[Dict[str, object]]:
     has_version = MACRO_FILE_VERSION in ints or MACRO_RUNNING_VERSION in ints
     if not has_add_ota and not has_version:
         log("skip: no addOTAClient() and no OTA version #define in sketch")
@@ -275,10 +269,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         destinations.append(sketch)
 
     write_outputs(data, out_name, destinations)
-    log(
-        f"OTA image OK (manuf=0x{manuf:04X} type=0x{image_type:04X} ver=0x{file_version:08X}, "
-        f"{len(data)} bytes)"
-    )
+    log(f"OTA image OK (manuf=0x{manuf:04X} type=0x{image_type:04X} ver=0x{file_version:08X}, " f"{len(data)} bytes)")
     return 0
 
 

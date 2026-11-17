@@ -24,7 +24,7 @@
 #include "esp_timer.h"
 
 /* Useful defines */
-#define ZB_CMD_TIMEOUT             10000     // 10 seconds
+#define ZB_CMD_TIMEOUT               10000      // 10 seconds
 #define OTA_UPGRADE_QUERY_INTERVAL_S (60 * 60)  // Automatic re-query period in seconds (1 hour)
 
 #define ZB_ARRAY_LENGHT(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -331,7 +331,7 @@ protected:
   uint32_t _ota_current_file_version;     // CurrentFileVersion, not in OTA client cluster config
   uint32_t _ota_downloaded_file_version;  // DownloadedFileVersion, not in OTA client cluster config
   uint16_t _ota_hw_version = 0;           // Applied via ezb_zcl_ota_upgrade_set_hw_version after begin
-  uint8_t _ota_max_data_size = 48;  // Applied via ezb_zcl_ota_upgrade_set_download_block_size after begin (stack default)
+  uint8_t _ota_max_data_size = 48;        // Applied via ezb_zcl_ota_upgrade_set_download_block_size after begin (stack default)
   bool _ota_client_added = false;
   bool _ota_runtime_configured = false;
   bool _ota_in_progress = false;  // true while download/apply is active (skip periodic queries)
