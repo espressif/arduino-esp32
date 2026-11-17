@@ -12,7 +12,7 @@ are available to the CI runner that checks out test scripts from the base branch
 
 | Test Function | API coverage |
 |---|---|
-| `test_network_client_default_disconnected` | Default ctor, `connected()`, `operator bool`, `fd()`, `available()`, `read()`, `write()`, `setSSE()` / `isSSE()`, `flush()` |
+| `test_network_client_default_disconnected` | Default ctor, `connected()`, `operator bool`, `fd()`, `available()`, `read()`, `write()`, `flush()` |
 | `test_network_client_fd_constructor_and_stop` | `NetworkClient(int fd)`, `connected()`, `fd()`, `stop()` |
 | `test_network_client_available_read_peek_clear` | `available()`, `peek()`, `read()`, `read(buf)`, `clear()` |
 | `test_network_client_read_bytes_large_payload` | `readBytes()` across multiple RX buffer fills (>1436 bytes) |

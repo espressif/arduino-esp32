@@ -75,6 +75,12 @@ def test_webserver(dut, ci_job_id):
         ("derived_streamfile", 10),
         ("derived_sendstream", 10),
         ("derived_sendcontent", 10),
+        # SSE regression (PR #13089 compat)
+        ("sse_hold", 20),
+        ("sse_recovery", 10),
+        ("sse_copy_push", 30),
+        ("sse_copy_write", 20),
+        ("sse_legacy", 20),
         # Request-parsing robustness / security regression checks
         ("auth_bypass", 15),  # report 2: bare Authorization username bypass
         ("digest_auth", 20),  # issue 12915: multi-client digest nonce + stale=true

@@ -1,0 +1,51 @@
+#########################
+Migration from 3.x to 4.0
+#########################
+
+Introduction
+------------
+
+This is a guide to highlight **breaking changes** in the API to help the migration of projects from versions 3.X to version 4.0 of the Arduino ESP32 core.
+
+WebServer
+---------
+
+Server-Sent Events (SSE) state moved from the client to the server
+*******************************************************************
+
+The SSE hold marker is a directive to the server ("do not close this connection"), not a property of the TCP socket, so it is now owned by
+``WebServer`` instead of ``NetworkClient``. The marker is reset for every new connection and is independent of which client wrapper is used
+to reach the connection.
+
+Deprecated APIs (still functional, removal planned for 5.0)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``NetworkClient::setSSE`` — use ``WebServer::enableSSE()`` instead.
+* ``NetworkClient::isSSE`` — use ``WebServer::isSSE()`` instead. Note that ``NetworkClient::isSSE()`` only reflects the legacy marker, while ``WebServer::isSSE()`` reflects both.
+
+New APIs
+^^^^^^^^
+
+* ``WebServer::enableSSE`` — call it from the request handler to keep the connection open as an SSE stream (replaces ``server.client().setSSE(true)``).
+* ``WebServer::isSSE`` — query whether the current connection is a held SSE stream (replaces ``server.client().isSSE()``).
+
+Migration example
+^^^^^^^^^^^^^^^^^
+
+.. code-block:: cpp
+
+    // 3.x
+    server.on("/events", HTTP_GET, []() {
+      server.client().setSSE(true);
+      server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+      server.send(200, "text/event-stream", "");
+      // then push "data: ...\n\n" lines from loop() via server.client()
+    });
+
+    // 4.0
+    server.on("/events", HTTP_GET, []() {
+      server.enableSSE();
+      server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+      server.send(200, "text/event-stream", "");
+      // then push "data: ...\n\n" lines from loop() via server.client()
+    });

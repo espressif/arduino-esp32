@@ -23,6 +23,19 @@
 #define SERVER_PORT         80
 #define DERIVED_SERVER_PORT 8081
 
+// --- SSE regression state (validates PR #13089 compat) ---
+#define SSE_PUSH_INTERVAL_MS 250
+static unsigned long sseLastPush = 0;
+static unsigned long sseCopyLastPush = 0;
+static unsigned long sseWriteCopyLastPush = 0;
+static unsigned sseEventId = 0;
+static unsigned sseCopyEventId = 0;
+static unsigned sseWriteCopyEventId = 0;
+static NetworkClient sseCopy;
+static bool sseCopyActive = false;
+static NetworkClient sseWriteCopy;
+static bool sseWriteCopyActive = false;
+
 static WebServer server(SERVER_PORT);
 static Preferences prefs;
 
@@ -175,6 +188,9 @@ public:
 protected:
   void closeClient() override {
     _closeCount++;
+    // The default closeClient() only releases the server's reference; a
+    // derived server that owns the connection wrapper stops it here.
+    _counting.stop();
     WebServer::closeClient();
   }
 
@@ -324,6 +340,50 @@ void registerEndpoints() {
   server.on("/string", HTTP_GET, []() {
     server.send(200, "text/plain", "OK");
     Serial.println("[SERVER] Served /string");
+  });
+
+  // --- SSE regression endpoints (PR #13089 compat) ---
+  server.on("/sse", HTTP_GET, []() {
+    server.enableSSE();
+    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server.send(200, "text/event-stream", "");
+    Serial.println("[SERVER] Served /sse");
+  });
+
+  server.on("/ssecopy", HTTP_GET, []() {
+    // Deliberately keeps only a copy, without setSSE: pre-PR teardown only
+    // dropped the server's reference, so pushes through the copy survived.
+    sseCopy = server.client();
+    sseCopyActive = true;
+    sseCopyEventId = 0;
+    sseCopyLastPush = 0;
+    server.send(200, "text/event-stream", "");
+    Serial.println("[SERVER] Served /ssecopy");
+  });
+
+  server.on("/ssecopywrite", HTTP_GET, []() {
+    // 4.0 API: the flag is server-owned. Enable the stream, then push through
+    // a saved copy to prove the data path does not depend on which wrapper
+    // writes. (The pre-4.0 variant set the flag on the copy itself.)
+    server.enableSSE();
+    sseWriteCopy = server.client();
+    sseWriteCopyActive = true;
+    sseWriteCopyEventId = 0;
+    sseWriteCopyLastPush = 0;
+    server.send(200, "text/event-stream", "");
+    Serial.println("[SERVER] Served /ssecopywrite");
+  });
+
+  server.on("/sselegacy", HTTP_GET, []() {
+  // Deprecated pre-4.0 API: must keep holding the connection exactly as
+  // server.enableSSE() does. Guarded against -Werror in the harness build.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    server.client().setSSE(true);
+#pragma GCC diagnostic pop
+    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server.send(200, "text/event-stream", "");
+    Serial.println("[SERVER] Served /sselegacy");
   });
 
   // --- Liveness probe: used to confirm the server task survives each attack ---
@@ -529,5 +589,27 @@ void loop() {
       (unsigned)derivedServer.countingWrites(), (unsigned)derivedServer.countingReads(), (unsigned)derivedServer.countingCloses()
     );
     pendingStatsCase = nullptr;
+  }
+
+  // SSE event pumps (regression probes for PR #13089). Payloads are tagged by
+  // source so tests can tell main-pump events apart from saved-copy events.
+  unsigned long now = millis();
+  if (server.isSSE() && server.client().connected() && now - sseLastPush >= SSE_PUSH_INTERVAL_MS) {
+    sseLastPush = now;
+    server.client().printf("data: main-%u\n\n", (unsigned)++sseEventId);
+  }
+  if (sseWriteCopyActive && sseWriteCopy.connected() && now - sseWriteCopyLastPush >= SSE_PUSH_INTERVAL_MS) {
+    sseWriteCopyLastPush = now;
+    sseWriteCopy.printf("data: copy-%u\n\n", (unsigned)++sseWriteCopyEventId);
+  }
+  if (sseWriteCopyActive && !sseWriteCopy.connected()) {
+    sseWriteCopyActive = false;
+  }
+  if (sseCopyActive && sseCopy.connected() && now - sseCopyLastPush >= SSE_PUSH_INTERVAL_MS) {
+    sseCopyLastPush = now;
+    sseCopy.printf("data: copy-%u\n\n", (unsigned)++sseCopyEventId);
+  }
+  if (sseCopyActive && !sseCopy.connected()) {
+    sseCopyActive = false;
   }
 }

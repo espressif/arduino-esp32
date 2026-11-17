@@ -1264,9 +1264,176 @@ void runDerivedTests() {
   runDerivedTest("derived_sendcontent", "/sendcontent", "9\r\nCHUNKBODY\r\n0\r\n\r\n", false);
 }
 
+// ------------------------- SSE regression tests (PR #13089) -------------------------
+
+// Open a persistent SSE connection, verify headers, and count data events.
+// Outputs: HTTP status, whether Content-Type is text/event-stream, events seen.
+// Only lines starting with eventTag are counted, so a test can require events
+// from a specific pump. Returns false if the socket could not be connected.
+bool sse_get(uint16_t port, const char *path, int minEvents, unsigned long timeoutMs, int &status, bool &eventStream, int &events, const char *eventTag) {
+  status = -1;
+  eventStream = false;
+  events = 0;
+  WiFiClient sock;
+  if (!sock.connect(serverIP.c_str(), port)) {
+    return false;
+  }
+  sock.printf("GET %s HTTP/1.1\r\nHost: %s\r\nAccept: text/event-stream\r\n\r\n", path, serverIP.c_str());
+
+  String headers;
+  unsigned long start = millis();
+  while (headers.indexOf("\r\n\r\n") < 0 && (millis() - start < timeoutMs)) {
+    while (sock.available()) {
+      headers += (char)sock.read();
+    }
+    if (!sock.connected() && !sock.available()) {
+      break;
+    }
+    delay(1);
+  }
+  int idx = headers.indexOf(' ');
+  status = idx < 0 ? -1 : headers.substring(idx + 1).toInt();
+  eventStream = headers.indexOf("text/event-stream") >= 0;
+
+  String line;
+  start = millis();
+  while (events < minEvents && (millis() - start < timeoutMs)) {
+    while (sock.available()) {
+      char c = (char)sock.read();
+      line += c;
+      if (c == '\n') {
+        if (line.startsWith(eventTag)) {
+          events++;
+        }
+        line = "";
+        start = millis();
+      }
+    }
+    if (!sock.connected() && !sock.available()) {
+      break;
+    }
+    delay(1);
+  }
+  sock.stop();
+  return true;
+}
+
+// Count further data events on an already-open SSE socket.
+int sse_wait_events(WiFiClient &sock, int target, unsigned long timeoutMs) {
+  int events = 0;
+  String line;
+  unsigned long start = millis();
+  while (events < target && (millis() - start < timeoutMs)) {
+    while (sock.available()) {
+      char c = (char)sock.read();
+      line += c;
+      if (c == '\n') {
+        if (line.startsWith("data:")) {
+          events++;
+        }
+        line = "";
+        start = millis();
+      }
+    }
+    if (!sock.connected() && !sock.available()) {
+      break;
+    }
+    delay(1);
+  }
+  return events;
+}
+
+void testSseHold() {
+  int status = -1;
+  bool eventStream = false;
+  int events = 0;
+  sse_get(SERVER_PORT, "/sse", 2, 10000, status, eventStream, events, "data:");
+  char detail[64];
+  snprintf(detail, sizeof(detail), "status=%d event_stream=%d events=%d", status, (int)eventStream, events);
+  report("sse_hold", status == 200 && eventStream && events >= 2, detail);
+}
+
+void testSseRecovery() {
+  delay(SETTLE_MS);
+  String body = get_body(http_get("/string"));
+  report("sse_recovery", body == "OK", body.c_str());
+}
+
+void testSseCopyWrite() {
+  // 4.0 API: the flag is server-owned (enableSSE). Events pushed through a
+  // saved copy must flow while the server holds the stream. Only "data: copy"
+  // lines count, so main-pump events cannot mask a broken copy path.
+  int status = -1;
+  bool eventStream = false;
+  int events = 0;
+  sse_get(SERVER_PORT, "/ssecopywrite", 2, 10000, status, eventStream, events, "data: copy");
+  delay(SETTLE_MS);
+  char detail[64];
+  snprintf(detail, sizeof(detail), "status=%d event_stream=%d events=%d", status, (int)eventStream, events);
+  report("sse_copy_write", status == 200 && eventStream && events >= 2, detail);
+}
+
+void testSseCopyPush() {
+  // The /ssecopy handler keeps only a copy of the client without setSSE, so
+  // the server closes its side. Pushes through the surviving copy must keep
+  // flowing, even across intervening normal requests (new accepts/teardowns).
+  WiFiClient sse;
+  bool ok = false;
+  char detail[64] = "";
+  if (!sse.connect(serverIP.c_str(), SERVER_PORT)) {
+    snprintf(detail, sizeof(detail), "connect failed");
+    report("sse_copy_push", false, detail);
+    return;
+  }
+  sse.printf("GET /ssecopy HTTP/1.1\r\nHost: %s\r\nAccept: text/event-stream\r\n\r\n", serverIP.c_str());
+  if (sse_wait_events(sse, 1, 6000) < 1) {
+    snprintf(detail, sizeof(detail), "no first event");
+    sse.stop();
+    report("sse_copy_push", false, detail);
+    return;
+  }
+  for (int i = 0; i < 2; i++) {
+    if (get_body(http_get("/string")) != "OK") {
+      snprintf(detail, sizeof(detail), "interleaved request %d failed", i);
+      sse.stop();
+      report("sse_copy_push", false, detail);
+      return;
+    }
+    delay(200);
+  }
+  int rest = sse_wait_events(sse, 2, 8000);
+  sse.stop();
+  snprintf(detail, sizeof(detail), "events_after_interleave=%d", rest);
+  ok = rest >= 2;
+  report("sse_copy_push", ok, ok ? nullptr : detail);
+}
+
+void testSseLegacy() {
+  // Deprecated pre-4.0 API: server.client().setSSE(true) must hold the stream
+  // exactly like server.enableSSE(). Pushes go out through the main pump,
+  // which also proves server.isSSE() sees the legacy marker.
+  int status = -1;
+  bool eventStream = false;
+  int events = 0;
+  sse_get(SERVER_PORT, "/sselegacy", 2, 10000, status, eventStream, events, "data:");
+  delay(SETTLE_MS);
+  char detail[64];
+  snprintf(detail, sizeof(detail), "status=%d event_stream=%d events=%d", status, (int)eventStream, events);
+  report("sse_legacy", status == 200 && eventStream && events >= 2, detail);
+}
+
+void runSseTests() {
+  testSseHold();
+  testSseRecovery();
+  testSseCopyPush();
+  testSseCopyWrite();
+  testSseLegacy();
+}
+
 void runTests() {
   runStreamTests();
   runDerivedTests();
+  runSseTests();
 
   // Non-destructive robustness checks first (server stays responsive).
   testAuthBypass();

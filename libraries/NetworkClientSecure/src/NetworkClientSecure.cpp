@@ -105,6 +105,7 @@ void NetworkClientSecure::stop() {
   stop_ssl_socket(sslclient.get());
 
   _connected = false;
+  _sse = false;
   sslclient->peek_buf = -1;
   _lastReadTimeout = 0;
   _lastWriteTimeout = 0;
