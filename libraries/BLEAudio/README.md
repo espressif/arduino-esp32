@@ -54,6 +54,8 @@ board-support code. The variant exposes `ES8311_I2C_ADDR`, `SDA1`, `SCL1`,
 | [`LEAudio_WirelessMic`](examples/LEAudio_WirelessMic) | Wireless microphone | BAP unicast client, LC3 recorder from an I2S mic -> CIS |
 | [`LEAudio_AuracastSource`](examples/LEAudio_AuracastSource) | Auracast transmitter | Broadcast source, Public Broadcast Announcement, LC3 recorder from an I2S input |
 | [`LEAudio_AuracastSink`](examples/LEAudio_AuracastSink) | Auracast speaker | Broadcast sink, BASS Scan Delegator, LC3 player -> I2S DAC |
+| [`LEAudio_UnicastUSBReceiver`](examples/LEAudio_UnicastUSBReceiver) | USB microphone | Unicast sink like the speaker, but LC3 decodes to a PCM callback and the audio goes to the PC as a USB microphone (no I2S hardware needed) |
+| [`LEAudio_UnicastUSBTransmitter`](examples/LEAudio_UnicastUSBTransmitter) | USB speaker | Unicast client like the wireless mic, but the LC3 recorder is fed from a USB speaker instead of an I2S mic (no I2S hardware needed) |
 
 Typical pairs:
 
@@ -61,6 +63,8 @@ Typical pairs:
 - `LEAudio_AuracastSource` -> `LEAudio_AuracastSink`
 - A phone/PC with LE Audio -> `LEAudio_UnicastSpeaker` (unicast)
 - A phone/PC with Auracast -> `LEAudio_AuracastSink` (broadcast)
+- A phone/PC with LE Audio -> `LEAudio_UnicastUSBReceiver` (unicast); the PC records or listens to the USB microphone
+- A PC playing audio -> `LEAudio_UnicastUSBTransmitter` (USB speaker) -> `LEAudio_UnicastUSBReceiver` over LE Audio (unicast); all-USB end-to-end test with two boards and no I2S hardware (point the transmitter at `LE Audio Speaker` instead to use a DAC speaker)
 
 The examples require an LE Audio-capable target (ESP32-S31) and the LC3 codec
 (`esp_audio_codec`). Advertising appearance values are named constants, e.g.
