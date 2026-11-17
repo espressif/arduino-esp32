@@ -168,7 +168,7 @@ void setup() {
     halt("createUnicastServer", BTStatus::NotSupported);
   }
   unicastServer.configureMediaSink();
-  unicastServer.setSupportedPresets(BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_1_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_2_1));
+  unicastServer.setSupportedPresets(BLEAudioCodecPreset::LC3_48_1_1 | BLEAudioCodecPreset::LC3_48_2_1);
   for (size_t i = 0; i < unicastServer.streamCount(); i++) {
     BLEAudioStream stream = unicastServer.stream(i);
     stream.onConfigured(onSinkConfigured);

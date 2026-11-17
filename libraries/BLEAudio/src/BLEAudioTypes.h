@@ -164,12 +164,47 @@ enum class BLEAudioCodecPreset : uint8_t {
  * @brief Bit of preset @p p in a preset mask.
  *
  * Used by the roles that publish capabilities, e.g.
- * `server.setSupportedPresets(BLEAudioPresetBit(LC3_16_2_1) | BLEAudioPresetBit(LC3_48_2_1))`.
+ * `server.setSupportedPresets(LC3_16_2_1 | LC3_48_2_1)` (plain presets may
+ * be OR-ed directly; wrapping single presets in BLEAudioPresetBit() works too).
  * @param p Preset whose mask bit to return.
  * @return 1 shifted by the preset enumerator (bit @p p).
  */
 inline constexpr uint32_t BLEAudioPresetBit(BLEAudioCodecPreset p) {
   return 1UL << static_cast<uint8_t>(p);
+}
+
+/**
+ * @brief Combine presets (or a mask and presets) into a preset mask.
+ *
+ * Lets call sites write `LC3_16_2_1 | LC3_48_2_1` instead of wrapping every
+ * preset in BLEAudioPresetBit(). Mixing with an existing mask works too:
+ * `mask | LC3_48_1_1`. Fully backward compatible: plain
+ * `BLEAudioPresetBit(...)` expressions are unchanged `uint32_t` arithmetic.
+ */
+inline constexpr uint32_t operator|(BLEAudioCodecPreset a, BLEAudioCodecPreset b) {
+  return BLEAudioPresetBit(a) | BLEAudioPresetBit(b);
+}
+/** @overload */
+inline constexpr uint32_t operator|(uint32_t a, BLEAudioCodecPreset b) {
+  return a | BLEAudioPresetBit(b);
+}
+/** @overload */
+inline constexpr uint32_t operator|(BLEAudioCodecPreset a, uint32_t b) {
+  return BLEAudioPresetBit(a) | b;
+}
+
+/**
+ * @brief Test whether a preset mask contains @p b.
+ *
+ * Lets call sites write `(peer.sinkPresets & LC3_48_2_1)` instead of
+ * wrapping the preset in BLEAudioPresetBit().
+ */
+inline constexpr uint32_t operator&(uint32_t a, BLEAudioCodecPreset b) {
+  return a & BLEAudioPresetBit(b);
+}
+/** @overload */
+inline constexpr uint32_t operator&(BLEAudioCodecPreset a, uint32_t b) {
+  return BLEAudioPresetBit(a) & b;
 }
 
 /**
