@@ -140,15 +140,10 @@ typedef enum {
 #endif
 #if SOC_PARLIO_SUPPORTED
   ESP32_BUS_TYPE_PARLIO_TX,  // IO is used as PARLIO TX data pin
+  ESP32_BUS_TYPE_PARLIO_RX,  // IO is used as PARLIO RX data pin
 #endif
   ESP32_BUS_TYPE_MAX
 } peripheral_bus_type_t;
-
-#if SOC_PARLIO_SUPPORTED
-// Enum constants are invisible to the preprocessor. Define the name as itself so
-// libraries can detect the bus type with #ifdef.
-#define ESP32_BUS_TYPE_PARLIO_TX ESP32_BUS_TYPE_PARLIO_TX
-#endif
 
 typedef bool (*peripheral_bus_deinit_cb_t)(void *bus);
 

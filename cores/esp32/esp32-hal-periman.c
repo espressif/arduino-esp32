@@ -142,6 +142,7 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
 #endif
 #if SOC_PARLIO_SUPPORTED
     case ESP32_BUS_TYPE_PARLIO_TX: return "PARLIO_TX";
+    case ESP32_BUS_TYPE_PARLIO_RX: return "PARLIO_RX";
 #endif
     default: return "UNKNOWN";
   }
