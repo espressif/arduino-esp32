@@ -375,8 +375,8 @@ void registerEndpoints() {
   });
 
   server.on("/sselegacy", HTTP_GET, []() {
-    // Deprecated pre-4.0 API: must keep holding the connection exactly as
-    // server.enableSSE() does. Guarded against -Werror in the harness build.
+  // Deprecated pre-4.0 API: must keep holding the connection exactly as
+  // server.enableSSE() does. Guarded against -Werror in the harness build.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     server.client().setSSE(true);

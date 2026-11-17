@@ -76,8 +76,10 @@ public:
   void clear();  // clear rx
   void stop();
   uint8_t connected();
-  [[deprecated("Use WebServer::enableSSE() instead")]] void setSSE(bool sse);
-  [[deprecated("Use WebServer::isSSE() instead")]] bool isSSE();
+  [[deprecated("Use WebServer::enableSSE() instead")]]
+  void setSSE(bool sse);
+  [[deprecated("Use WebServer::isSSE() instead")]]
+  bool isSSE();
   operator bool() {
     return connected();
   }
