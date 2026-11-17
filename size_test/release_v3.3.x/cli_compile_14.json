@@ -2,76 +2,52 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
-{"name": "libraries/BLE/examples/Client_Server",
+{"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 1146328,
+                        "flash_bytes": 1134296,
                         "flash_percentage": 36,
-                        "ram_bytes": 41572,
+                        "ram_bytes": 41548,
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/BLE/examples/Server_Gamepad",
+{"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 1136596,
+                        "flash_bytes": 1129256,
                         "flash_percentage": 36,
-                        "ram_bytes": 41508,
+                        "ram_bytes": 41500,
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/EEPROM/examples/eeprom_class",
+{"name": "libraries/BluetoothSerial/examples/SerialToSerialBT_Legacy",
                 "sizes": [{
-                        "flash_bytes": 299649,
-                        "flash_percentage": 10,
-                        "ram_bytes": 22332,
-                        "ram_percentage": 7
+                        "flash_bytes": 1094817,
+                        "flash_percentage": 35,
+                        "ram_bytes": 42048,
+                        "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
                 "sizes": [{
-                        "flash_bytes": 269997,
+                        "flash_bytes": 290652,
                         "flash_percentage": 9,
-                        "ram_bytes": 22012,
+                        "ram_bytes": 22368,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/DeepSleep/SmoothBlink_ULP_Code",
+{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 300881,
-                        "flash_percentage": 23,
-                        "ram_bytes": 22324,
+                        "flash_bytes": 307200,
+                        "flash_percentage": 10,
+                        "ram_bytes": 23028,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
+{"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
                 "sizes": [{
-                        "flash_bytes": 290565,
-                        "flash_percentage": 22,
-                        "ram_bytes": 22236,
+                        "flash_bytes": 291101,
+                        "flash_percentage": 9,
+                        "ram_bytes": 22252,
                         "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                "sizes": [{
-                        "flash_bytes": 309392,
-                        "flash_percentage": 24,
-                        "ram_bytes": 23092,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
-                "sizes": [{
-                        "flash_bytes": 290537,
-                        "flash_percentage": 22,
-                        "ram_bytes": 22268,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/Ethernet/examples/ETH_TLK110",
-                "sizes": [{
-                        "flash_bytes": 519553,
-                        "flash_percentage": 40,
-                        "ram_bytes": 27660,
-                        "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/Ethernet/examples/ETH_WIFI_BRIDGE",
@@ -80,30 +56,6 @@
                         "flash_percentage": 77,
                         "ram_bytes": 47204,
                         "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/Authorization",
-                "sizes": [{
-                        "flash_bytes": 1087440,
-                        "flash_percentage": 83,
-                        "ram_bytes": 49400,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
-                "sizes": [{
-                        "flash_bytes": 1012965,
-                        "flash_percentage": 77,
-                        "ram_bytes": 50240,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
-                "sizes": [{
-                        "flash_bytes": 1055277,
-                        "flash_percentage": 81,
-                        "ram_bytes": 49536,
-                        "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/Matter/examples/Control/MatterThermostat",
@@ -122,33 +74,57 @@
                         "ram_percentage": 32
                         }]
                 },
-{"name": "libraries/SimpleBLE/examples/SimpleBleDevice",
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                 "sizes": [{
-                        "flash_bytes": 1085913,
-                        "flash_percentage": 83,
-                        "ram_bytes": 41032,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/WebServer/examples/FSBrowser",
-                "sizes": [{
-                        "flash_bytes": 1037805,
-                        "flash_percentage": 79,
-                        "ram_bytes": 49992,
+                        "flash_bytes": 1028445,
+                        "flash_percentage": 78,
+                        "ram_bytes": 47984,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/WebServer/examples/WebUpdate",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/web",
                 "sizes": [{
-                        "flash_bytes": 1009509,
+                        "flash_bytes": 1004293,
                         "flash_percentage": 77,
-                        "ram_bytes": 50200,
+                        "ram_bytes": 50344,
                         "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/Preferences/examples/StartCounter",
+                "sizes": [{
+                        "flash_bytes": 297765,
+                        "flash_percentage": 23,
+                        "ram_bytes": 22260,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/SD_MMC/examples/SDMMC_time",
+                "sizes": [{
+                        "flash_bytes": 1007022,
+                        "flash_percentage": 77,
+                        "ram_bytes": 48244,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
+                "sizes": [{
+                        "flash_bytes": 979096,
+                        "flash_percentage": 75,
+                        "ram_bytes": 49080,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+                "sizes": [{
+                        "flash_bytes": 1027148,
+                        "flash_percentage": 78,
+                        "ram_bytes": 52420,
+                        "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiClient",
                 "sizes": [{
-                        "flash_bytes": 924481,
+                        "flash_bytes": 924501,
                         "flash_percentage": 71,
                         "ram_bytes": 47408,
                         "ram_percentage": 14
@@ -162,6 +138,14 @@
                         "ram_percentage": 15
                         }]
                 },
+{"name": "libraries/WiFiProv/examples/WiFiProv",
+                "sizes": [{
+                        "flash_bytes": 1756161,
+                        "flash_percentage": 56,
+                        "ram_bytes": 61288,
+                        "ram_percentage": 19
+                        }]
+                },
 {"name": "libraries/Wire/examples/WireSlave",
                 "sizes": [{
                         "flash_bytes": 316005,
@@ -169,73 +153,49 @@
                         "ram_bytes": 23628,
                         "ram_percentage": 7
                         }]
-                },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Switch",
-                "sizes": [{
-                        "flash_bytes": 638681,
-                        "flash_percentage": 49,
-                        "ram_bytes": 38908,
-                        "ram_percentage": 12
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
-{"name": "libraries/BLE/examples/Client_Server",
+{"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 670771,
+                        "flash_bytes": 661191,
                         "flash_percentage": 21,
-                        "ram_bytes": 17852,
+                        "ram_bytes": 17828,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/BLE/examples/Server_Gamepad",
+{"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 637077,
+                        "flash_bytes": 630457,
                         "flash_percentage": 20,
-                        "ram_bytes": 17796,
+                        "ram_bytes": 17772,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/EEPROM/examples/eeprom_class",
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
                 "sizes": [{
-                        "flash_bytes": 293094,
+                        "flash_bytes": 281910,
                         "flash_percentage": 9,
-                        "ram_bytes": 13392,
+                        "ram_bytes": 13320,
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 260290,
-                        "flash_percentage": 8,
-                        "ram_bytes": 13152,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
-                "sizes": [{
-                        "flash_bytes": 282036,
-                        "flash_percentage": 9,
-                        "ram_bytes": 13304,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                "sizes": [{
-                        "flash_bytes": 305462,
+                        "flash_bytes": 302842,
                         "flash_percentage": 10,
-                        "ram_bytes": 14528,
+                        "ram_bytes": 14472,
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
+{"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
                 "sizes": [{
-                        "flash_bytes": 282044,
+                        "flash_bytes": 282594,
                         "flash_percentage": 9,
-                        "ram_bytes": 13328,
+                        "ram_bytes": 13312,
                         "ram_percentage": 4
                         }]
                 },
@@ -245,30 +205,6 @@
                         "flash_percentage": 81,
                         "ram_bytes": 36948,
                         "ram_percentage": 11
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/Authorization",
-                "sizes": [{
-                        "flash_bytes": 1135407,
-                        "flash_percentage": 87,
-                        "ram_bytes": 37836,
-                        "ram_percentage": 12
-                        }]
-                },
-{"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
-                "sizes": [{
-                        "flash_bytes": 1079991,
-                        "flash_percentage": 82,
-                        "ram_bytes": 40692,
-                        "ram_percentage": 12
-                        }]
-                },
-{"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
-                "sizes": [{
-                        "flash_bytes": 1104749,
-                        "flash_percentage": 84,
-                        "ram_bytes": 39204,
-                        "ram_percentage": 12
                         }]
                 },
 {"name": "libraries/Matter/examples/Control/MatterThermostat",
@@ -287,25 +223,49 @@
                         "ram_percentage": 26
                         }]
                 },
-{"name": "libraries/WebServer/examples/FSBrowser",
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                 "sizes": [{
-                        "flash_bytes": 1088835,
-                        "flash_percentage": 83,
-                        "ram_bytes": 39660,
+                        "flash_bytes": 1072059,
+                        "flash_percentage": 82,
+                        "ram_bytes": 37652,
+                        "ram_percentage": 11
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/web",
+                "sizes": [{
+                        "flash_bytes": 1052507,
+                        "flash_percentage": 80,
+                        "ram_bytes": 40004,
                         "ram_percentage": 12
                         }]
                 },
-{"name": "libraries/WebServer/examples/WebUpdate",
+{"name": "libraries/Preferences/examples/StartCounter",
                 "sizes": [{
-                        "flash_bytes": 1076149,
-                        "flash_percentage": 82,
-                        "ram_bytes": 40652,
+                        "flash_bytes": 290462,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13320,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
+                "sizes": [{
+                        "flash_bytes": 1037105,
+                        "flash_percentage": 79,
+                        "ram_bytes": 38276,
                         "ram_percentage": 12
+                        }]
+                },
+{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+                "sizes": [{
+                        "flash_bytes": 1096377,
+                        "flash_percentage": 84,
+                        "ram_bytes": 42764,
+                        "ram_percentage": 13
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiClient",
                 "sizes": [{
-                        "flash_bytes": 961503,
+                        "flash_bytes": 961515,
                         "flash_percentage": 73,
                         "ram_bytes": 37068,
                         "ram_percentage": 11
@@ -319,6 +279,14 @@
                         "ram_percentage": 11
                         }]
                 },
+{"name": "libraries/WiFiProv/examples/WiFiProv",
+                "sizes": [{
+                        "flash_bytes": 1343947,
+                        "flash_percentage": 43,
+                        "ram_bytes": 37836,
+                        "ram_percentage": 12
+                        }]
+                },
 {"name": "libraries/Wire/examples/WireSlave",
                 "sizes": [{
                         "flash_bytes": 308844,
@@ -326,73 +294,49 @@
                         "ram_bytes": 14008,
                         "ram_percentage": 4
                         }]
-                },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Switch",
-                "sizes": [{
-                        "flash_bytes": 677946,
-                        "flash_percentage": 52,
-                        "ram_bytes": 30032,
-                        "ram_percentage": 9
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
-{"name": "libraries/BLE/examples/Client_Server",
+{"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 841931,
-                        "flash_percentage": 27,
-                        "ram_bytes": 22668,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/BLE/examples/Server_Gamepad",
-                "sizes": [{
-                        "flash_bytes": 808593,
+                        "flash_bytes": 832335,
                         "flash_percentage": 26,
-                        "ram_bytes": 22604,
+                        "ram_bytes": 22644,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/EEPROM/examples/eeprom_class",
+{"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 313950,
+                        "flash_bytes": 801973,
+                        "flash_percentage": 25,
+                        "ram_bytes": 22588,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
+                "sizes": [{
+                        "flash_bytes": 302758,
                         "flash_percentage": 10,
-                        "ram_bytes": 17184,
+                        "ram_bytes": 17112,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 279546,
-                        "flash_percentage": 9,
-                        "ram_bytes": 16864,
+                        "flash_bytes": 322144,
+                        "flash_percentage": 10,
+                        "ram_bytes": 17660,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
+{"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
                 "sizes": [{
-                        "flash_bytes": 302892,
+                        "flash_bytes": 303480,
                         "flash_percentage": 10,
-                        "ram_bytes": 17096,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                "sizes": [{
-                        "flash_bytes": 324764,
-                        "flash_percentage": 10,
-                        "ram_bytes": 17716,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
-                "sizes": [{
-                        "flash_bytes": 302856,
-                        "flash_percentage": 10,
-                        "ram_bytes": 17120,
+                        "ram_bytes": 17104,
                         "ram_percentage": 5
                         }]
                 },
@@ -402,30 +346,6 @@
                         "flash_percentage": 87,
                         "ram_bytes": 48704,
                         "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/Authorization",
-                "sizes": [{
-                        "flash_bytes": 1214659,
-                        "flash_percentage": 93,
-                        "ram_bytes": 50132,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
-                "sizes": [{
-                        "flash_bytes": 1157965,
-                        "flash_percentage": 88,
-                        "ram_bytes": 52736,
-                        "ram_percentage": 16
-                        }]
-                },
-{"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
-                "sizes": [{
-                        "flash_bytes": 1184855,
-                        "flash_percentage": 90,
-                        "ram_bytes": 51492,
-                        "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/Matter/examples/Control/MatterThermostat",
@@ -444,49 +364,73 @@
                         "ram_percentage": 29
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode",
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                 "sizes": [{
-                        "flash_bytes": 1192337,
+                        "flash_bytes": 1151129,
+                        "flash_percentage": 88,
+                        "ram_bytes": 49924,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/StackShutdown",
+                "sizes": [{
+                        "flash_bytes": 1193141,
                         "flash_percentage": 91,
                         "ram_bytes": 64320,
                         "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_server",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet/client",
                 "sizes": [{
-                        "flash_bytes": 1093251,
+                        "flash_bytes": 1084481,
                         "flash_percentage": 83,
-                        "ram_bytes": 63800,
-                        "ram_percentage": 19
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/switch",
-                "sizes": [{
-                        "flash_bytes": 1101183,
-                        "flash_percentage": 84,
-                        "ram_bytes": 64776,
+                        "ram_bytes": 64368,
                         "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/WebServer/examples/FSBrowser",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/web",
                 "sizes": [{
-                        "flash_bytes": 1170807,
-                        "flash_percentage": 89,
-                        "ram_bytes": 52468,
+                        "flash_bytes": 1131959,
+                        "flash_percentage": 86,
+                        "ram_bytes": 52652,
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/WebServer/examples/WebUpdate",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async",
                 "sizes": [{
-                        "flash_bytes": 1154117,
-                        "flash_percentage": 88,
-                        "ram_bytes": 52688,
-                        "ram_percentage": 16
+                        "flash_bytes": 1080725,
+                        "flash_percentage": 82,
+                        "ram_bytes": 63752,
+                        "ram_percentage": 19
+                        }]
+                },
+{"name": "libraries/Preferences/examples/StartCounter",
+                "sizes": [{
+                        "flash_bytes": 311326,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17112,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
+                "sizes": [{
+                        "flash_bytes": 1114687,
+                        "flash_percentage": 85,
+                        "ram_bytes": 49992,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+                "sizes": [{
+                        "flash_bytes": 1174335,
+                        "flash_percentage": 90,
+                        "ram_bytes": 54792,
+                        "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiClient",
                 "sizes": [{
-                        "flash_bytes": 1040475,
+                        "flash_bytes": 1040487,
                         "flash_percentage": 79,
                         "ram_bytes": 49348,
                         "ram_percentage": 15
@@ -500,6 +444,14 @@
                         "ram_percentage": 15
                         }]
                 },
+{"name": "libraries/WiFiProv/examples/WiFiProv",
+                "sizes": [{
+                        "flash_bytes": 1558707,
+                        "flash_percentage": 50,
+                        "ram_bytes": 49832,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/Wire/examples/WireSlave",
                 "sizes": [{
                         "flash_bytes": 331184,
@@ -508,20 +460,12 @@
                         "ram_percentage": 6
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Illuminance_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Temperature_Sensor",
                 "sizes": [{
-                        "flash_bytes": 671291,
-                        "flash_percentage": 51,
-                        "ram_bytes": 36872,
+                        "flash_bytes": 683539,
+                        "flash_percentage": 52,
+                        "ram_bytes": 36784,
                         "ram_percentage": 11
-                        }]
-                },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Switch",
-                "sizes": [{
-                        "flash_bytes": 779579,
-                        "flash_percentage": 59,
-                        "ram_bytes": 40492,
-                        "ram_percentage": 12
                         }]
                 }
 ]
@@ -529,59 +473,43 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/BLE/examples/Client_Server",
+{"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 757407,
+                        "flash_bytes": 747807,
                         "flash_percentage": 24,
-                        "ram_bytes": 18028,
-                        "ram_percentage": 6
-                        }]
-                },
-{"name": "libraries/BLE/examples/Server_Gamepad",
-                "sizes": [{
-                        "flash_bytes": 742231,
-                        "flash_percentage": 24,
-                        "ram_bytes": 17956,
+                        "ram_bytes": 17996,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/EEPROM/examples/eeprom_class",
+{"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 271098,
-                        "flash_percentage": 9,
-                        "ram_bytes": 13656,
-                        "ram_percentage": 4
+                        "flash_bytes": 735581,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17948,
+                        "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
                 "sizes": [{
-                        "flash_bytes": 236426,
+                        "flash_bytes": 259758,
                         "flash_percentage": 8,
-                        "ram_bytes": 13328,
+                        "ram_bytes": 13592,
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
+{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 260022,
+                        "flash_bytes": 280358,
+                        "flash_percentage": 9,
+                        "ram_bytes": 14728,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
+                "sizes": [{
+                        "flash_bytes": 260592,
                         "flash_percentage": 8,
                         "ram_bytes": 13576,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                "sizes": [{
-                        "flash_bytes": 282998,
-                        "flash_percentage": 9,
-                        "ram_bytes": 14784,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
-                "sizes": [{
-                        "flash_bytes": 260030,
-                        "flash_percentage": 8,
-                        "ram_bytes": 13600,
                         "ram_percentage": 4
                         }]
                 },
@@ -591,30 +519,6 @@
                         "flash_percentage": 84,
                         "ram_bytes": 42464,
                         "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/Authorization",
-                "sizes": [{
-                        "flash_bytes": 1154447,
-                        "flash_percentage": 88,
-                        "ram_bytes": 43344,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
-                "sizes": [{
-                        "flash_bytes": 1106665,
-                        "flash_percentage": 84,
-                        "ram_bytes": 46200,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
-                "sizes": [{
-                        "flash_bytes": 1150657,
-                        "flash_percentage": 88,
-                        "ram_bytes": 44712,
-                        "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/Matter/examples/Control/MatterThermostat",
@@ -633,49 +537,73 @@
                         "ram_percentage": 42
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode",
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                 "sizes": [{
-                        "flash_bytes": 1133591,
-                        "flash_percentage": 86,
+                        "flash_bytes": 1099381,
+                        "flash_percentage": 84,
+                        "ram_bytes": 43152,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/StackShutdown",
+                "sizes": [{
+                        "flash_bytes": 1134395,
+                        "flash_percentage": 87,
                         "ram_bytes": 59732,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_server",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet/client",
                 "sizes": [{
-                        "flash_bytes": 1034551,
-                        "flash_percentage": 79,
-                        "ram_bytes": 59212,
+                        "flash_bytes": 1025725,
+                        "flash_percentage": 78,
+                        "ram_bytes": 59780,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/switch",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/web",
                 "sizes": [{
-                        "flash_bytes": 1042345,
-                        "flash_percentage": 80,
-                        "ram_bytes": 60196,
+                        "flash_bytes": 1079499,
+                        "flash_percentage": 82,
+                        "ram_bytes": 45512,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async",
+                "sizes": [{
+                        "flash_bytes": 1021975,
+                        "flash_percentage": 78,
+                        "ram_bytes": 59164,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/WebServer/examples/FSBrowser",
+{"name": "libraries/Preferences/examples/StartCounter",
                 "sizes": [{
-                        "flash_bytes": 1119011,
-                        "flash_percentage": 85,
-                        "ram_bytes": 45360,
-                        "ram_percentage": 14
+                        "flash_bytes": 268440,
+                        "flash_percentage": 20,
+                        "ram_bytes": 13584,
+                        "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/WebServer/examples/WebUpdate",
+{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1102811,
-                        "flash_percentage": 84,
-                        "ram_bytes": 46152,
-                        "ram_percentage": 14
+                        "flash_bytes": 1058199,
+                        "flash_percentage": 81,
+                        "ram_bytes": 43808,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+                "sizes": [{
+                        "flash_bytes": 1123071,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48256,
+                        "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiClient",
                 "sizes": [{
-                        "flash_bytes": 988515,
+                        "flash_bytes": 988527,
                         "flash_percentage": 75,
                         "ram_bytes": 42576,
                         "ram_percentage": 13
@@ -689,6 +617,14 @@
                         "ram_percentage": 13
                         }]
                 },
+{"name": "libraries/WiFiProv/examples/WiFiProv",
+                "sizes": [{
+                        "flash_bytes": 1482507,
+                        "flash_percentage": 47,
+                        "ram_bytes": 42980,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/Wire/examples/WireSlave",
                 "sizes": [{
                         "flash_bytes": 288266,
@@ -697,20 +633,12 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Illuminance_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Temperature_Sensor",
                 "sizes": [{
-                        "flash_bytes": 612417,
-                        "flash_percentage": 47,
-                        "ram_bytes": 32324,
+                        "flash_bytes": 607207,
+                        "flash_percentage": 46,
+                        "ram_bytes": 32220,
                         "ram_percentage": 10
-                        }]
-                },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Switch",
-                "sizes": [{
-                        "flash_bytes": 719247,
-                        "flash_percentage": 55,
-                        "ram_bytes": 35944,
-                        "ram_percentage": 11
                         }]
                 }
 ]
@@ -718,59 +646,43 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/BLE/examples/Client_Server",
+{"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 788919,
+                        "flash_bytes": 779323,
                         "flash_percentage": 25,
-                        "ram_bytes": 16404,
+                        "ram_bytes": 16372,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/BLE/examples/Server_Gamepad",
+{"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 755507,
+                        "flash_bytes": 748887,
                         "flash_percentage": 24,
-                        "ram_bytes": 16332,
+                        "ram_bytes": 16324,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/EEPROM/examples/eeprom_class",
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
                 "sizes": [{
-                        "flash_bytes": 295344,
+                        "flash_bytes": 284146,
                         "flash_percentage": 9,
-                        "ram_bytes": 13388,
+                        "ram_bytes": 13308,
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 262404,
-                        "flash_percentage": 8,
-                        "ram_bytes": 13148,
+                        "flash_bytes": 304646,
+                        "flash_percentage": 10,
+                        "ram_bytes": 14460,
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
+{"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
                 "sizes": [{
-                        "flash_bytes": 284288,
+                        "flash_bytes": 284862,
                         "flash_percentage": 9,
                         "ram_bytes": 13292,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                "sizes": [{
-                        "flash_bytes": 307270,
-                        "flash_percentage": 10,
-                        "ram_bytes": 14516,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
-                "sizes": [{
-                        "flash_bytes": 284302,
-                        "flash_percentage": 9,
-                        "ram_bytes": 13316,
                         "ram_percentage": 4
                         }]
                 },
@@ -790,28 +702,36 @@
                         "ram_percentage": 30
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode",
+{"name": "libraries/OpenThread/examples/CLI/StackShutdown",
                 "sizes": [{
-                        "flash_bytes": 1137983,
+                        "flash_bytes": 1138791,
                         "flash_percentage": 87,
                         "ram_bytes": 58040,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_server",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet/client",
                 "sizes": [{
-                        "flash_bytes": 1038875,
+                        "flash_bytes": 1030105,
                         "flash_percentage": 79,
-                        "ram_bytes": 57528,
+                        "ram_bytes": 58096,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/switch",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async",
                 "sizes": [{
-                        "flash_bytes": 1047473,
-                        "flash_percentage": 80,
-                        "ram_bytes": 58512,
+                        "flash_bytes": 1026353,
+                        "flash_percentage": 78,
+                        "ram_bytes": 57472,
                         "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/Preferences/examples/StartCounter",
+                "sizes": [{
+                        "flash_bytes": 292720,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13316,
+                        "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/Wire/examples/WireSlave",
@@ -822,20 +742,12 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Illuminance_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Temperature_Sensor",
                 "sizes": [{
-                        "flash_bytes": 606229,
-                        "flash_percentage": 46,
-                        "ram_bytes": 30560,
+                        "flash_bytes": 618139,
+                        "flash_percentage": 47,
+                        "ram_bytes": 30504,
                         "ram_percentage": 9
-                        }]
-                },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Switch",
-                "sizes": [{
-                        "flash_bytes": 713559,
-                        "flash_percentage": 54,
-                        "ram_bytes": 34188,
-                        "ram_percentage": 10
                         }]
                 }
 ]
@@ -843,68 +755,44 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
-{"name": "libraries/BLE/examples/Client_Server",
+{"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 879170,
+                        "flash_bytes": 869582,
                         "flash_percentage": 28,
-                        "ram_bytes": 26880,
+                        "ram_bytes": 26848,
                         "ram_percentage": 8
                         }]
                 },
-{"name": "libraries/BLE/examples/Server_Gamepad",
+{"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 845190,
+                        "flash_bytes": 838592,
                         "flash_percentage": 27,
-                        "ram_bytes": 26816,
+                        "ram_bytes": 26800,
                         "ram_percentage": 8
                         }]
                 },
-{"name": "libraries/EEPROM/examples/eeprom_class",
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
                 "sizes": [{
-                        "flash_bytes": 358580,
+                        "flash_bytes": 347406,
                         "flash_percentage": 11,
-                        "ram_bytes": 22200,
+                        "ram_bytes": 22120,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 322598,
-                        "flash_percentage": 10,
-                        "ram_bytes": 21632,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
-                "sizes": [{
-                        "flash_bytes": 347546,
-                        "flash_percentage": 11,
-                        "ram_bytes": 22104,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                "sizes": [{
-                        "flash_bytes": 376858,
+                        "flash_bytes": 374212,
                         "flash_percentage": 12,
-                        "ram_bytes": 22724,
+                        "ram_bytes": 22668,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
+{"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
                 "sizes": [{
-                        "flash_bytes": 347518,
+                        "flash_bytes": 348124,
                         "flash_percentage": 11,
-                        "ram_bytes": 22128,
+                        "ram_bytes": 22112,
                         "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/Ethernet/examples/ETH_TLK110",
-                "sizes": [{
-                        "flash_bytes": 595296,
-                        "flash_percentage": 45,
-                        "ram_bytes": 27656,
-                        "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/Ethernet/examples/ETH_WIFI_BRIDGE",
@@ -915,23 +803,39 @@
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/HTTPClient/examples/Authorization",
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                 "sizes": [{
-                        "flash_bytes": 1091044,
-                        "flash_percentage": 83,
-                        "ram_bytes": 31112,
+                        "flash_bytes": 1066698,
+                        "flash_percentage": 81,
+                        "ram_bytes": 31128,
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/web",
                 "sizes": [{
-                        "flash_bytes": 972330,
-                        "flash_percentage": 74,
-                        "ram_bytes": 33512,
+                        "flash_bytes": 958326,
+                        "flash_percentage": 73,
+                        "ram_bytes": 33520,
                         "ram_percentage": 10
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/Preferences/examples/StartCounter",
+                "sizes": [{
+                        "flash_bytes": 355954,
+                        "flash_percentage": 27,
+                        "ram_bytes": 22128,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/SD_MMC/examples/SDMMC_time",
+                "sizes": [{
+                        "flash_bytes": 920408,
+                        "flash_percentage": 70,
+                        "ram_bytes": 30536,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/USB/examples/CompositeDevice",
                 "sizes": [{
                         "flash_bytes": 321856,
                         "flash_percentage": 25,
@@ -939,25 +843,33 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/WebServer/examples/FSBrowser",
+{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
                 "sizes": [{
-                        "flash_bytes": 998366,
-                        "flash_percentage": 76,
-                        "ram_bytes": 33632,
-                        "ram_percentage": 10
+                        "flash_bytes": 321856,
+                        "flash_percentage": 25,
+                        "ram_bytes": 21888,
+                        "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/WebServer/examples/WebUpdate",
+{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 968484,
-                        "flash_percentage": 74,
-                        "ram_bytes": 33448,
-                        "ram_percentage": 10
+                        "flash_bytes": 926146,
+                        "flash_percentage": 71,
+                        "ram_bytes": 30728,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+                "sizes": [{
+                        "flash_bytes": 988746,
+                        "flash_percentage": 75,
+                        "ram_bytes": 35576,
+                        "ram_percentage": 11
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiClient",
                 "sizes": [{
-                        "flash_bytes": 865672,
+                        "flash_bytes": 865684,
                         "flash_percentage": 66,
                         "ram_bytes": 30264,
                         "ram_percentage": 9
@@ -984,43 +896,27 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "libraries/EEPROM/examples/eeprom_class",
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
                 "sizes": [{
-                        "flash_bytes": 252140,
-                        "flash_percentage": 19,
-                        "ram_bytes": 16740,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
-                "sizes": [{
-                        "flash_bytes": 223700,
-                        "flash_percentage": 17,
-                        "ram_bytes": 16492,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
-                "sizes": [{
-                        "flash_bytes": 243316,
-                        "flash_percentage": 19,
-                        "ram_bytes": 16644,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                "sizes": [{
-                        "flash_bytes": 263185,
-                        "flash_percentage": 20,
-                        "ram_bytes": 17264,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
-                "sizes": [{
-                        "flash_bytes": 243344,
+                        "flash_bytes": 243352,
                         "flash_percentage": 19,
                         "ram_bytes": 16652,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
+                "sizes": [{
+                        "flash_bytes": 260993,
+                        "flash_percentage": 20,
+                        "ram_bytes": 17216,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
+                "sizes": [{
+                        "flash_bytes": 243916,
+                        "flash_percentage": 19,
+                        "ram_bytes": 16644,
                         "ram_percentage": 5
                         }]
                 },
@@ -1030,30 +926,6 @@
                         "flash_percentage": 71,
                         "ram_bytes": 41804,
                         "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/Authorization",
-                "sizes": [{
-                        "flash_bytes": 990755,
-                        "flash_percentage": 76,
-                        "ram_bytes": 43160,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
-                "sizes": [{
-                        "flash_bytes": 934768,
-                        "flash_percentage": 71,
-                        "ram_bytes": 45768,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
-                "sizes": [{
-                        "flash_bytes": 963143,
-                        "flash_percentage": 73,
-                        "ram_bytes": 44536,
-                        "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/Matter/examples/Control/MatterThermostat",
@@ -1072,33 +944,65 @@
                         "ram_percentage": 27
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                 "sizes": [{
-                        "flash_bytes": 322924,
-                        "flash_percentage": 25,
-                        "ram_bytes": 49932,
+                        "flash_bytes": 934715,
+                        "flash_percentage": 71,
+                        "ram_bytes": 43008,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/web",
+                "sizes": [{
+                        "flash_bytes": 910367,
+                        "flash_percentage": 69,
+                        "ram_bytes": 45680,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/Preferences/examples/StartCounter",
+                "sizes": [{
+                        "flash_bytes": 250288,
+                        "flash_percentage": 19,
+                        "ram_bytes": 16668,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/USB/examples/CompositeDevice",
+                "sizes": [{
+                        "flash_bytes": 357688,
+                        "flash_percentage": 27,
+                        "ram_bytes": 50388,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/WebServer/examples/FSBrowser",
+{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
                 "sizes": [{
-                        "flash_bytes": 942375,
-                        "flash_percentage": 72,
-                        "ram_bytes": 45360,
-                        "ram_percentage": 14
+                        "flash_bytes": 319268,
+                        "flash_percentage": 24,
+                        "ram_bytes": 49548,
+                        "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/WebServer/examples/WebUpdate",
+{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 931244,
-                        "flash_percentage": 71,
-                        "ram_bytes": 45728,
-                        "ram_percentage": 14
+                        "flash_bytes": 900976,
+                        "flash_percentage": 69,
+                        "ram_bytes": 43056,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+                "sizes": [{
+                        "flash_bytes": 949020,
+                        "flash_percentage": 72,
+                        "ram_bytes": 47832,
+                        "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiClient",
                 "sizes": [{
-                        "flash_bytes": 832707,
+                        "flash_bytes": 832723,
                         "flash_percentage": 64,
                         "ram_bytes": 42392,
                         "ram_percentage": 13
@@ -1112,6 +1016,14 @@
                         "ram_percentage": 13
                         }]
                 },
+{"name": "libraries/WiFiProv/examples/WiFiProv",
+                "sizes": [{
+                        "flash_bytes": 947787,
+                        "flash_percentage": 30,
+                        "ram_bytes": 41152,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/Wire/examples/WireSlave",
                 "sizes": [{
                         "flash_bytes": 268616,
@@ -1119,73 +1031,49 @@
                         "ram_bytes": 18084,
                         "ram_percentage": 6
                         }]
-                },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Switch",
-                "sizes": [{
-                        "flash_bytes": 589644,
-                        "flash_percentage": 45,
-                        "ram_bytes": 33756,
-                        "ram_percentage": 10
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
-{"name": "libraries/BLE/examples/Client_Server",
+{"name": "libraries/BLE/examples/Client",
                 "sizes": [{
-                        "flash_bytes": 619128,
-                        "flash_percentage": 20,
-                        "ram_bytes": 28076,
-                        "ram_percentage": 9
-                        }]
-                },
-{"name": "libraries/BLE/examples/Server_Gamepad",
-                "sizes": [{
-                        "flash_bytes": 589068,
+                        "flash_bytes": 611568,
                         "flash_percentage": 19,
-                        "ram_bytes": 28004,
+                        "ram_bytes": 28044,
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/EEPROM/examples/eeprom_class",
+{"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 290017,
+                        "flash_bytes": 583916,
+                        "flash_percentage": 19,
+                        "ram_bytes": 27996,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
+                "sizes": [{
+                        "flash_bytes": 281137,
                         "flash_percentage": 9,
-                        "ram_bytes": 22316,
+                        "ram_bytes": 22244,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
                 "sizes": [{
-                        "flash_bytes": 262025,
-                        "flash_percentage": 8,
-                        "ram_bytes": 21972,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
-                "sizes": [{
-                        "flash_bytes": 281329,
-                        "flash_percentage": 9,
-                        "ram_bytes": 22220,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                "sizes": [{
-                        "flash_bytes": 307890,
+                        "flash_bytes": 305678,
                         "flash_percentage": 10,
-                        "ram_bytes": 22860,
+                        "ram_bytes": 22796,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
+{"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
                 "sizes": [{
-                        "flash_bytes": 281313,
+                        "flash_bytes": 281757,
                         "flash_percentage": 9,
-                        "ram_bytes": 22252,
+                        "ram_bytes": 22236,
                         "ram_percentage": 7
                         }]
                 },
@@ -1195,30 +1083,6 @@
                         "flash_percentage": 74,
                         "ram_bytes": 46128,
                         "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/Authorization",
-                "sizes": [{
-                        "flash_bytes": 1024508,
-                        "flash_percentage": 78,
-                        "ram_bytes": 47468,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
-                "sizes": [{
-                        "flash_bytes": 975637,
-                        "flash_percentage": 74,
-                        "ram_bytes": 50068,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
-                "sizes": [{
-                        "flash_bytes": 997832,
-                        "flash_percentage": 76,
-                        "ram_bytes": 48828,
-                        "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/Matter/examples/Control/MatterThermostat",
@@ -1237,33 +1101,73 @@
                         "ram_percentage": 33
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                 "sizes": [{
-                        "flash_bytes": 385514,
-                        "flash_percentage": 29,
-                        "ram_bytes": 55700,
+                        "flash_bytes": 968280,
+                        "flash_percentage": 74,
+                        "ram_bytes": 47300,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/web",
+                "sizes": [{
+                        "flash_bytes": 945188,
+                        "flash_percentage": 72,
+                        "ram_bytes": 49972,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/Preferences/examples/StartCounter",
+                "sizes": [{
+                        "flash_bytes": 288133,
+                        "flash_percentage": 22,
+                        "ram_bytes": 22244,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/SD_MMC/examples/SDMMC_time",
+                "sizes": [{
+                        "flash_bytes": 970961,
+                        "flash_percentage": 74,
+                        "ram_bytes": 47476,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/USB/examples/CompositeDevice",
+                "sizes": [{
+                        "flash_bytes": 420930,
+                        "flash_percentage": 32,
+                        "ram_bytes": 56140,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/WebServer/examples/FSBrowser",
+{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
                 "sizes": [{
-                        "flash_bytes": 979564,
-                        "flash_percentage": 75,
-                        "ram_bytes": 49820,
-                        "ram_percentage": 15
+                        "flash_bytes": 386334,
+                        "flash_percentage": 29,
+                        "ram_bytes": 55676,
+                        "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/WebServer/examples/WebUpdate",
+{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 972333,
-                        "flash_percentage": 74,
-                        "ram_bytes": 50028,
-                        "ram_percentage": 15
+                        "flash_bytes": 943101,
+                        "flash_percentage": 72,
+                        "ram_bytes": 47364,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+                "sizes": [{
+                        "flash_bytes": 989057,
+                        "flash_percentage": 75,
+                        "ram_bytes": 52132,
+                        "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiClient",
                 "sizes": [{
-                        "flash_bytes": 867976,
+                        "flash_bytes": 867992,
                         "flash_percentage": 66,
                         "ram_bytes": 46684,
                         "ram_percentage": 14
@@ -1277,20 +1181,20 @@
                         "ram_percentage": 14
                         }]
                 },
+{"name": "libraries/WiFiProv/examples/WiFiProv",
+                "sizes": [{
+                        "flash_bytes": 1206820,
+                        "flash_percentage": 38,
+                        "ram_bytes": 47432,
+                        "ram_percentage": 14
+                        }]
+                },
 {"name": "libraries/Wire/examples/WireSlave",
                 "sizes": [{
                         "flash_bytes": 308049,
                         "flash_percentage": 24,
                         "ram_bytes": 23652,
                         "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Switch",
-                "sizes": [{
-                        "flash_bytes": 625717,
-                        "flash_percentage": 48,
-                        "ram_bytes": 39348,
-                        "ram_percentage": 12
                         }]
                 }
 ]
