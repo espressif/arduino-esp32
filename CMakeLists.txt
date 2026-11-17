@@ -346,6 +346,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ZigbeeCore.cpp
   libraries/Zigbee/src/ZigbeeEP.cpp
   libraries/Zigbee/src/ZigbeeHandlers.cpp
+  libraries/Zigbee/src/ZigbeeOTAFileParser.cpp
   libraries/Zigbee/src/ep/ZigbeeColorDimmableLight.cpp
   libraries/Zigbee/src/ep/ZigbeeColorDimmerSwitch.cpp
   libraries/Zigbee/src/ep/ZigbeeDimmableLight.cpp

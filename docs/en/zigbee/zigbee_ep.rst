@@ -339,32 +339,123 @@ This function will return GMT offset in seconds.
 OTA Support
 ***********
 
+The OTA Upgrade client cluster receives a **full** Zigbee OTA image (not Delta OTA).
+Use a dual-OTA partition scheme (for example ``Zigbee 4MB with spiffs``).
+
+Manufacturer code, image type and file version must match the OTA image header and the
+coordinator policy (ZHA / Zigbee2MQTT / ESP Zigbee ``ota_server``).
+
 addOTAClient
 ^^^^^^^^^^^^
 
-Adds OTA client to the endpoint for firmware updates.
+Adds OTA client to the endpoint for firmware updates. Call before ``Zigbee.addEndpoint()``.
 
 .. code-block:: arduino
 
-    bool addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, uint8_t max_data_size = 223);
+    bool addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, uint8_t max_data_size = 48);
 
-* ``file_version`` - Current firmware version
-* ``downloaded_file_ver`` - Downloaded file version
-* ``hw_version`` - Hardware version
+* ``file_version`` - Current firmware version (``CurrentFileVersion``)
+* ``downloaded_file_ver`` - ``DownloadedFileVersion`` (``0xFFFFFFFF`` = none stored). Must not equal the image version offered by the OTA server or the stack will skip the download after Query approve.
+* ``hw_version`` - Hardware version (passed in Query Next Image when non-zero)
 * ``manufacturer`` - Manufacturer code (default: 0x1001)
 * ``image_type`` - Image type code (default: 0x1011)
-* ``max_data_size`` - Maximum data size for OTA transfer (default: 223)
+* ``max_data_size`` - Maximum Image Block size (default: 48, the stack default; use 223 with Espressif ``ota_server``)
+
+After ``Zigbee.begin()``, ``requestOTAUpdate()`` applies ``hw_version`` and ``max_data_size``
+via the stack APIs.
 
 This function will return ``true`` if added successfully, ``false`` otherwise.
 
 requestOTAUpdate
 ^^^^^^^^^^^^^^^^
 
-Requests OTA update from the server.
+Discovers an OTA Upgrade server on the coordinator (Match Descriptor) and sends
+Query Next Image. Call after the device is connected. Further queries are sent
+every hour automatically. A coordinator (for example Home Assistant ZHA) can also
+start an upgrade with Image Notify without this call.
 
 .. code-block:: arduino
 
     void requestOTAUpdate();
+
+onOTAStateChange / onOTAComplete
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional callbacks for OTA transfer lifecycle:
+
+.. code-block:: arduino
+
+    void onOTAStateChange(void (*callback)(bool active));
+    void onOTAComplete(void (*callback)(bool success));
+
+* ``onOTAStateChange`` - ``true`` when download/apply becomes active, ``false`` when inactive
+* ``onOTAComplete`` - ``true`` on successful FINISH (before reboot), ``false`` on abort/failure
+
+Creating a Zigbee OTA image (Export)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With **Tools → Zigbee Mode** enabled and OTA macros / ``addOTAClient()`` in the
+sketch, **Sketch → Export compiled Binary** runs ``tools/zb_ota_image.py`` and
+writes ``MMMM-TTTT-VVVVVVVV-ota-file.zigbee`` beside the ``.bin`` (build folder
+and ``sketch/build/<fqbn>/``).
+
+Sketch ``#define`` literals the tool reads:
+
+* ``OTA_UPGRADE_MANUFACTURER`` (default ``0x1001`` if omitted but OTA is detected)
+* ``OTA_UPGRADE_IMAGE_TYPE`` (default ``0x1011``)
+* ``OTA_UPGRADE_FILE_VERSION`` or ``OTA_UPGRADE_RUNNING_FILE_VERSION`` (required;
+  must be **greater than** the version running on the device for ZHA to offer it)
+* Optional: ``OTA_UPGRADE_MIN_HW_VERSION`` + ``OTA_UPGRADE_MAX_HW_VERSION`` (only if
+  you need hardware filtering; omit for ZHA local-file testing), and
+  ``OTA_UPGRADE_HEADER_STRING``
+
+The hook soft-skips (does not fail Export) when Zigbee Mode is Disabled, the
+sketch has no OTA intent, or required macros are missing.
+
+Manual alternative: Espressif's
+`image_builder_tool <https://github.com/espressif/esp-zigbee-sdk/tree/main/tools/image_builder_tool>`_
+(see
+`Generate and apply OTA upgrade image <https://docs.espressif.com/projects/esp-zigbee-sdk/en/latest/esp32/user-guide/zcl_ota_upgrade.html>`_).
+
+OTA with Home Assistant ZHA
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Until you place any matching ``.zigbee`` file in the Home Assistant OTA folder
+(``zigpy_ota``), ZHA shows the device firmware as **Unknown** — it has nothing
+to compare against. Upload an image with the **same** version as the firmware
+already on the device to see **Up-to-date**, or a **newer** version when you want
+an Update available.
+
+1. USB-flash a build that is already joined to ZHA (note the running
+   ``OTA_UPGRADE_RUNNING_FILE_VERSION`` on Serial).
+2. Bump ``OTA_UPGRADE_RUNNING_FILE_VERSION`` to a **higher** value (do not USB-flash
+   that build), keep Zigbee Mode enabled, and use **Sketch → Export compiled Binary**
+   to produce the ``.zigbee`` file (or wrap the ``.bin`` with ``image_builder_tool``).
+   ZHA only offers images newer than the device's current file version.
+3. On Home Assistant, install the **Samba share** add-on (or another way to reach
+   the ``config`` folder). Create ``config/zigpy_ota/`` and copy the ``.zigbee``
+   file there.
+4. Add Zigpy OTA config to ``configuration.yaml``. The ``advanced`` provider
+   requires the exact ``warning`` text below (do not paraphrase — zigpy rejects
+   any other string)::
+
+       zha:
+         zigpy_config:
+           ota:
+             extra_providers:
+               - type: advanced
+                 path: /config/zigpy_ota
+                 warning: >-
+                   I understand I can *destroy* my devices by enabling OTA updates from files.
+                   Some OTA updates can be mistakenly applied to the wrong device, breaking it.
+                   I am consciously using this at my own risk.
+5. After copying or replacing the ``.zigbee`` file, open
+   **Settings → Devices & services → Zigbee Home Automation**, click the **⋮**
+   (three dots) on the ZHA integration card, and choose **Reload** so the OTA
+   provider picks up the new file (a full Home Assistant restart also works).
+6. Join the Arduino end device if needed, open the device page and use
+   **Update** to start the firmware upgrade. Wait until the device reboots on
+   the new image.
 
 Device Discovery
 ****************

@@ -1413,9 +1413,11 @@ bash .github/scripts/ci_testing/release_validation.sh 3.3.10
   - `.github/workflows/build_py_tools.yml`
   - `tools/get.py`
   - `tools/espota.py`
+  - `tools/flasher.py`
   - `tools/gen_esp32part.py`
   - `tools/gen_insights_package.py`
   - `tools/bin_signing.py`
+  - `tools/zb_ota_image.py`
 
 **Purpose:**
 Automatically build cross-platform executables for Python tools when they're modified in a PR. This ensures the pre-compiled binaries stay in sync with source code changes.

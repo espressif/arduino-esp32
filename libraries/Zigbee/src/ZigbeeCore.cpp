@@ -100,6 +100,7 @@ ZigbeeCore::ZigbeeCore() {
   _debug = false;
   _allow_multi_endpoint_binding = false;
   _global_default_response_cb = NULL;  // Initialize global callback to NULL
+  _on_parent_lost = NULL;
   lock = xSemaphoreCreateBinary();
   if (lock == NULL) {
     log_e("Semaphore creation failed");
@@ -647,6 +648,16 @@ bool zb_app_signal_handler(const ezb_app_signal_t *signal) {
         } else {  // Leave with rejoin -> Rejoin the network, only reboot the device
           log_i("Leave with rejoin, only reboot the device");
           ESP.restart();
+        }
+      }
+      break;
+    case EZB_ZDO_SIGNAL_PARENT_LOST:  // End Device
+      // Keepalive failed for a full ED timeout; stack will attempt rejoin by default.
+      if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_END_DEVICE) {
+        log_w("Parent lost (keepalive timeout)");
+        Zigbee._connected = false;
+        if (Zigbee._on_parent_lost) {
+          Zigbee._on_parent_lost();
         }
       }
       break;

@@ -99,6 +99,7 @@ setDebugMode	KEYWORD2
 getDebugMode	KEYWORD2
 allowMultiEndpointBinding	KEYWORD2
 onGlobalDefaultResponse	KEYWORD2
+onParentLost	KEYWORD2
 formatIEEEAddress	KEYWORD2
 formatShortAddress	KEYWORD2
 
@@ -132,6 +133,7 @@ getTimezone	KEYWORD2
 addOTAClient	KEYWORD2
 requestOTAUpdate	KEYWORD2
 onOTAStateChange	KEYWORD2
+onOTAComplete	KEYWORD2
 addPrivilegeCommand	KEYWORD2
 onPrivilegeCommand	KEYWORD2
 onCustomClusterCommand	KEYWORD2

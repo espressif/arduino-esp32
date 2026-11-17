@@ -24,6 +24,9 @@ tools.gen_esp32part.cmd.windows="{runtime.platform.path}\tools\gen_esp32part.exe
 tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_package.py
 tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}\tools\gen_insights_package.exe"
 
+tools.zb_ota_image.cmd=python3 "{runtime.platform.path}/tools/zb_ota_image.py"
+tools.zb_ota_image.cmd.windows="{runtime.platform.path}\tools\zb_ota_image.exe"
+
 tools.configure_link_libs.cmd=/usr/bin/env bash "{runtime.platform.path}/tools/configure_link_libs.sh"
 tools.configure_link_libs.cmd.windows="{runtime.platform.path}\tools\configure_link_libs.cmd"
 
@@ -252,6 +255,12 @@ recipe.hooks.savehex.postsavehex.4.pattern.windows=powershell -Command "{recipe.
 ## Export build.options.json
 recipe.hooks.savehex.postsavehex.5.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp -f '{build.path}/build.options.json' '{sketch_path}/build/'$FQBN_DIR'/build.options.json' 2>/dev/null || true"
 recipe.hooks.savehex.postsavehex.5.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -Force -ErrorAction SilentlyContinue '{build.path}\build.options.json' ($dest + '\build.options.json')"
+
+## Zigbee OTA image (.zigbee) from sketch #defines when Zigbee Mode is enabled and OTA macros / addOTAClient are present
+## Soft-skips (does not fail Export) when Zigbee is Disabled, OTA is unused, or required macros are missing
+# Use --zigbee-mode=VALUE so values like -DZIGBEE_MODE_ED are not parsed as flags
+recipe.hooks.savehex.postsavehex.6.pattern={tools.zb_ota_image.cmd} --zigbee-mode={build.zigbee_mode} --sketch "{sketch_path}" --bin "{build.path}/{build.project_name}.bin" --fqbn "{build.fqbn}" --build-path "{build.path}"
+recipe.hooks.savehex.postsavehex.6.pattern.windows={tools.zb_ota_image.cmd} --zigbee-mode={build.zigbee_mode} --sketch "{sketch_path}" --bin "{build.path}\{build.project_name}.bin" --fqbn "{build.fqbn}" --build-path "{build.path}"
 
 ## Required discoveries and monitors
 ## ---------------------------------

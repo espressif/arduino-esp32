@@ -46,7 +46,7 @@ void printScannedNetworks(uint16_t networksFound) {
     Serial.println("\nScan done");
     Serial.print(networksFound);
     Serial.println(" networks found:");
-    Serial.println("Nr | PAN ID | CH | Permit Joining | Router Capacity | End Device Capacity | Extended PAN ID");
+    Serial.println("Nr | PAN ID | CH | LQA | RSSI | Permit Joining | Router Capacity | End Device Capacity | Extended PAN ID");
     for (int i = 0; i < networksFound; ++i) {
       // Print all available info for each network found
       Serial.printf("%2d", i + 1);
@@ -54,6 +54,10 @@ void printScannedNetworks(uint16_t networksFound) {
       Serial.printf("0x%04x", scan_result[i].panid);
       Serial.print(" | ");
       Serial.printf("%2u", scan_result[i].channel_number);
+      Serial.print(" | ");
+      Serial.printf("%3u", scan_result[i].lqa);
+      Serial.print(" | ");
+      Serial.printf("%4d", scan_result[i].rssi);
       Serial.print(" | ");
       Serial.printf("%-14.14s", scan_result[i].permit_join ? "Yes" : "No");
       Serial.print(" | ");

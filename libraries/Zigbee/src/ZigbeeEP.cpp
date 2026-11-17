@@ -20,9 +20,13 @@
 
 #if CONFIG_ZB_ENABLED
 
+#include <inttypes.h>
+
 #include "esp_zigbee.h"
 #include "ezbee/zcl/zcl_desc.h"
 #include "ezbee/zcl/cluster/time.h"
+#include "ezbee/zcl/cluster/ota_upgrade.h"
+#include "ezbee/zdo/zdo_dev_srv_disc.h"
 
 /* ZigBee ZCL UTCTime: seconds since 2000-01-01 00:00:00 UTC (not Unix 1970 epoch). */
 static constexpr int64_t ZIGBEE_UTCTIME_UNIX_OFFSET_SEC = 946684800LL;
@@ -103,6 +107,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _on_identify = nullptr;
   _on_identify_query_response = nullptr;
   _on_ota_state_change = nullptr;
+  _on_ota_complete = nullptr;
   _on_default_response = nullptr;
   _on_privilege_command = nullptr;
   _on_custom_cluster_command = nullptr;
@@ -786,8 +791,15 @@ bool ZigbeeEP::identifyQuery(uint16_t short_addr, uint8_t dst_endpoint) {
 }
 
 void ZigbeeEP::zbOTAState(bool otaActive) {
+  _ota_in_progress = otaActive;
   if (_on_ota_state_change != NULL) {
     _on_ota_state_change(otaActive);
+  }
+}
+
+void ZigbeeEP::zbOTAComplete(bool success) {
+  if (_on_ota_complete != NULL) {
+    _on_ota_complete(success);
   }
 }
 
@@ -1000,8 +1012,6 @@ void ZigbeeEP::zbReadTimeCluster(const ezb_zcl_attribute_t *attribute) {
 bool ZigbeeEP::addOTAClient(
   uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer, uint16_t image_type, uint8_t max_data_size
 ) {
-  (void)hw_version;
-  (void)max_data_size;
   if (!requireBeforeAddEndpoint("addOTAClient")) {
     return false;
   }
@@ -1017,6 +1027,9 @@ bool ZigbeeEP::addOTAClient(
   _ota_client_cfg.image_type_id = image_type;
   _ota_current_file_version = file_version;
   _ota_downloaded_file_version = downloaded_file_ver;
+  _ota_hw_version = hw_version;
+  _ota_max_data_size = max_data_size ? max_data_size : EZB_ZCL_OTA_UPGRADE_DEFAULT_BLOCK_SIZE_DEFAULT;
+  _ota_runtime_configured = false;
 
   ezb_zcl_cluster_desc_t ota_cluster = ezb_zcl_ota_upgrade_create_cluster_desc(&_ota_client_cfg, EZB_ZCL_CLUSTER_CLIENT);
   if (ota_cluster == nullptr) {
@@ -1034,12 +1047,174 @@ bool ZigbeeEP::addOTAClient(
     log_e("Failed to add OTA cluster: 0x%x", ret);
     return false;
   }
+  _ota_client_added = true;
   return true;
 }
 
+bool ZigbeeEP::applyOTAClientRuntimeConfig() {
+  if (!_ota_client_added) {
+    log_e("OTA client was not added with addOTAClient()");
+    return false;
+  }
+  if (_ota_runtime_configured) {
+    return true;
+  }
+  if (!Zigbee.started()) {
+    log_e("OTA runtime config requires Zigbee.begin() first");
+    return false;
+  }
+  if (!esp_zigbee_lock_acquire(portMAX_DELAY)) {
+    log_e("Failed to acquire Zigbee lock for OTA runtime config");
+    return false;
+  }
+  // Use stack default block size (48) unless the sketch overrides it. ZHA often fails to
+  // serve large MaximumDataSize values (e.g. 223); the last working Arduino OTA path never
+  // called set_download_block_size and kept the default.
+  ezb_err_t ret = EZB_ERR_NONE;
+  if (_ota_max_data_size != EZB_ZCL_OTA_UPGRADE_DEFAULT_BLOCK_SIZE_DEFAULT) {
+    ret = ezb_zcl_ota_upgrade_set_download_block_size(_endpoint, _ota_max_data_size);
+  }
+  if (ret == EZB_ERR_NONE && _ota_hw_version != 0) {
+    ret = ezb_zcl_ota_upgrade_set_hw_version(_endpoint, _ota_hw_version);
+  }
+  // Give ZHA more time than the 5s stack default before the first Image Block exchange.
+  if (ret == EZB_ERR_NONE) {
+    ret = ezb_zcl_ota_upgrade_set_download_retry(_endpoint, 5, 30000);
+  }
+  esp_zigbee_lock_release();
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to apply OTA client runtime config: 0x%x", ret);
+    return false;
+  }
+  _ota_runtime_configured = true;
+  log_d("OTA client runtime config: block_size=%u hw_version=0x%04x", _ota_max_data_size, _ota_hw_version);
+  return true;
+}
+
+void ZigbeeEP::queryOTAServer(uint16_t short_addr, uint8_t endpoint) {
+  if (!applyOTAClientRuntimeConfig()) {
+    return;
+  }
+  ezb_zcl_ota_upgrade_query_next_image_req_cmd_t query = {};
+  query.cmd_ctrl.dst_ep = endpoint;
+  query.cmd_ctrl.src_ep = _endpoint;
+  query.cmd_ctrl.dst_addr.addr_mode = EZB_ADDR_MODE_SHORT;
+  query.cmd_ctrl.dst_addr.u.short_addr = short_addr;
+  query.payload.fc = (_ota_hw_version != 0) ? EZB_ZCL_OTA_UPGRADE_QUERY_NEXT_IMAGE_FC_HW_VERSION_PRESENT : 0;
+  query.payload.manuf_code = _ota_client_cfg.manufacturer_id;
+  query.payload.image_type = _ota_client_cfg.image_type_id;
+  query.payload.file_version = _ota_current_file_version;
+  query.payload.hw_version = _ota_hw_version;
+
+  if (!acquireCommandLock()) {
+    return;
+  }
+  ezb_err_t ret = ezb_zcl_ota_upgrade_query_next_image_cmd_req(&query);
+  releaseCommandLock();
+  if (ret != EZB_ERR_NONE) {
+    log_e("Query Next Image failed: 0x%x", ret);
+    return;
+  }
+  log_i(
+    "Queried OTA upgrade from 0x%04x ep %u (manuf 0x%04x type 0x%04x ver 0x%08" PRIx32 ")", short_addr, endpoint, _ota_client_cfg.manufacturer_id,
+    _ota_client_cfg.image_type_id, _ota_current_file_version
+  );
+}
+
+void ZigbeeEP::otaQueryTimerCb(void *arg) {
+  ZigbeeEP *ep = static_cast<ZigbeeEP *>(arg);
+  if (ep == nullptr || ep->_ota_server_addr == 0xffff || ep->_ota_server_ep == 0xff) {
+    return;
+  }
+  if (ep->_ota_in_progress) {
+    log_d("Skip periodic OTA query: download in progress");
+    return;
+  }
+  if (!Zigbee.connected()) {
+    log_d("Skip periodic OTA query: not connected");
+    return;
+  }
+  ep->queryOTAServer(ep->_ota_server_addr, ep->_ota_server_ep);
+}
+
+void ZigbeeEP::startOTAQueryTimer() {
+  if (_ota_query_timer != nullptr) {
+    esp_timer_stop(_ota_query_timer);
+    esp_timer_start_periodic(_ota_query_timer, (uint64_t)OTA_UPGRADE_QUERY_INTERVAL_S * 1000000ULL);
+    return;
+  }
+  const esp_timer_create_args_t args = {
+    .callback = &ZigbeeEP::otaQueryTimerCb,
+    .arg = this,
+    .dispatch_method = ESP_TIMER_TASK,
+    .name = "zb_ota_query",
+    .skip_unhandled_events = true,
+  };
+  if (esp_timer_create(&args, &_ota_query_timer) != ESP_OK) {
+    log_e("Failed to create OTA query timer");
+    return;
+  }
+  esp_timer_start_periodic(_ota_query_timer, (uint64_t)OTA_UPGRADE_QUERY_INTERVAL_S * 1000000ULL);
+}
+
+void ZigbeeEP::findOTAServerCb(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx) {
+  ZigbeeEP *ep = static_cast<ZigbeeEP *>(user_ctx);
+  if (ep == nullptr) {
+    return;
+  }
+  if (result == nullptr || result->error != EZB_ERR_NONE || result->rsp == nullptr) {
+    log_w("No OTA server found");
+    return;
+  }
+  ezb_zdp_match_desc_rsp_field_t *rsp = result->rsp;
+  if (rsp->status != EZB_ZDP_STATUS_SUCCESS || rsp->match_length == 0 || rsp->match_list == nullptr) {
+    log_w("No OTA server endpoint found");
+    return;
+  }
+
+  ep->_ota_server_addr = rsp->nwk_addr_of_interest;
+  ep->_ota_server_ep = rsp->match_list[0];
+  log_i("OTA server found: short 0x%04x ep %u", ep->_ota_server_addr, ep->_ota_server_ep);
+  ep->queryOTAServer(ep->_ota_server_addr, ep->_ota_server_ep);
+  ep->startOTAQueryTimer();
+}
+
 void ZigbeeEP::requestOTAUpdate() {
-  // TODO: wire OTA server discovery (ZDO Match_Desc) and the OTA client query API.
-  log_w("requestOTAUpdate() is not yet implemented");
+  if (!_ota_client_added) {
+    log_e("requestOTAUpdate(): call addOTAClient() first");
+    return;
+  }
+  if (!Zigbee.started()) {
+    log_e("requestOTAUpdate(): Zigbee.begin() must be called first");
+    return;
+  }
+  if (!Zigbee.connected()) {
+    log_w("requestOTAUpdate(): not connected yet, Match Desc may fail");
+  }
+  if (!applyOTAClientRuntimeConfig()) {
+    return;
+  }
+
+  // Match the OTA Upgrade server cluster on the coordinator (typical ZHA / HAOUS location).
+  static uint16_t cluster_list[] = {EZB_ZCL_CLUSTER_ID_OTA_UPGRADE};
+  ezb_zdo_match_desc_req_t req = {};
+  req.dst_nwk_addr = 0x0000;
+  req.field.nwk_addr_of_interest = 0x0000;
+  req.field.profile_id = EZB_AF_HA_PROFILE_ID;
+  req.field.num_in_clusters = 1;
+  req.field.num_out_clusters = 0;
+  req.field.cluster_list = cluster_list;
+  req.cb = ZigbeeEP::findOTAServerCb;
+  req.user_ctx = this;
+
+  if (!acquireCommandLock()) {
+    return;
+  }
+  ezb_err_t ret = ezb_zdo_match_desc_req(&req);
+  releaseCommandLock();
+  if (ret != EZB_ERR_NONE) {
+    log_e("OTA Match Desc request failed: 0x%x", ret);
+  }
 }
 
 void ZigbeeEP::removeBoundDevice(uint8_t endpoint, const uint8_t *ieee_addr) {

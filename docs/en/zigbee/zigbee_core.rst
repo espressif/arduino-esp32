@@ -251,6 +251,9 @@ Gets the scan results.
 
 This function will return pointer to scan results, or ``NULL`` if no results.
 
+Each result includes network identity fields (PAN ID, channel, capacities, extended PAN ID)
+plus link quality from the received beacon: ``lqa`` (0–255, higher is better) and ``rssi`` (dBm).
+
 scanDelete
 ^^^^^^^^^^
 
@@ -404,6 +407,20 @@ Sets a global callback for default response messages.
 * ``callback`` - Function pointer to the callback function
 
 This callback will be called for all endpoints when a default response is received.
+
+onParentLost
+^^^^^^^^^^^^
+
+Sets a callback for end-device parent loss (keepalive failed for a full ED timeout).
+
+.. code-block:: arduino
+
+    void onParentLost(void (*callback)());
+
+* ``callback`` - Function pointer to the callback function
+
+The callback runs in the Zigbee stack context — keep it short. ``connected()`` becomes
+``false`` until the device rejoins. The stack still performs its default rejoin handling.
 
 Utility Functions
 *****************

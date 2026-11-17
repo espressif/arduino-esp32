@@ -21,10 +21,11 @@
 
 #include <Arduino.h>
 #include <ColorFormat.h>
+#include "esp_timer.h"
 
 /* Useful defines */
-#define ZB_CMD_TIMEOUT             10000     // 10 seconds
-#define OTA_UPGRADE_QUERY_INTERVAL (1 * 60)  // 1 hour = 60 minutes
+#define ZB_CMD_TIMEOUT               10000      // 10 seconds
+#define OTA_UPGRADE_QUERY_INTERVAL_S (60 * 60)  // Automatic re-query period in seconds (1 hour)
 
 #define ZB_ARRAY_LENGHT(arr) (sizeof(arr) / sizeof(arr[0]))
 
@@ -151,20 +152,24 @@ public:
    * @brief Add OTA client to the Zigbee endpoint.
    *
    * @param file_version The current file version of the OTA client.
-   * @param downloaded_file_ver The version of the downloaded file.
+   * @param downloaded_file_ver DownloadedFileVersion (0xFFFFFFFF = none). Must not equal the offered OTA image version.
    * @param hw_version The hardware version of the device.
    * @param manufacturer The manufacturer code (default: 0x1001).
    * @param image_type The image type code (default: 0x1011).
-   * @param max_data_size The maximum data size for OTA transfer (default and recommended: 223).
+   * @param max_data_size Max Image Block size. Use the stack default (48) for ZHA; 223 suits Espressif ota_server.
    * @return true if the OTA client was added successfully, false otherwise.
    */
   bool addOTAClient(
     uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011,
-    uint8_t max_data_size = 223
+    uint8_t max_data_size = 48
   );
   /**
-   * @brief Request OTA update from the server, first request is within a minute and the next requests are sent every hour automatically.
-  */
+   * @brief Discover the OTA Upgrade server (Match Desc on the coordinator) and query for a new image.
+   *
+   * Call after Zigbee.begin() once connected. The first Query Next Image is sent when the server is found;
+   * further queries are sent every OTA_UPGRADE_QUERY_INTERVAL_S automatically. ZHA / a coordinator can also
+   * start an upgrade with Image Notify without calling this.
+   */
   void requestOTAUpdate();
 
   // Register a privilege command to intercept standard cluster commands before the stack processes them
@@ -189,6 +194,7 @@ public:
   virtual void zbIdentify(const ezb_zcl_set_attr_value_message_t *message);
   virtual void zbIdentifyQueryResponse(const ezb_zcl_identify_query_rsp_message_t *message);
   virtual void zbOTAState(bool otaActive);
+  virtual void zbOTAComplete(bool success);
   virtual void zbWindowCoveringMovementCmd(const ezb_zcl_window_covering_movement_message_t *message) {};
   virtual void zbDoorLockCmd(ezb_zcl_door_lock_lock_door_message_t *message, bool lock) {};
   virtual void zbDoorLockSetPinCode(ezb_zcl_door_lock_set_pin_code_message_t *message) {};
@@ -232,8 +238,14 @@ public:
   // Devices that are identifying reply with Identify Query Response (see onIdentifyQueryResponse).
   bool identifyQuery(uint16_t short_addr = 0xFFFF, uint8_t dst_endpoint = EZB_AF_ENDPOINT_BROADCAST_ID);
 
-  void onOTAStateChange(void (*callback)(bool state)) {
+  // Called with true when an OTA download/apply becomes active, false when it is no longer active.
+  void onOTAStateChange(void (*callback)(bool active)) {
     _on_ota_state_change = callback;
+  }
+
+  // Called when an OTA transfer ends: success=true before reboot on FINISH, false on abort/failure.
+  void onOTAComplete(void (*callback)(bool success)) {
+    _on_ota_complete = callback;
   }
 
   void onDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status)) {
@@ -255,7 +267,8 @@ private:
   char *_read_model;
   void (*_on_identify)(uint16_t time);
   void (*_on_identify_query_response)(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address);
-  void (*_on_ota_state_change)(bool state);
+  void (*_on_ota_state_change)(bool active);
+  void (*_on_ota_complete)(bool success);
   void (*_on_default_response)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status);
   void (*_on_privilege_command)(const ezb_zcl_manuf_spec_cmd_message_t *message);
   void (*_on_custom_cluster_command)(const ezb_zcl_manuf_spec_cmd_message_t *message);
@@ -317,6 +330,20 @@ protected:
   ezb_zcl_ota_upgrade_cluster_client_config_t _ota_client_cfg;
   uint32_t _ota_current_file_version;     // CurrentFileVersion, not in OTA client cluster config
   uint32_t _ota_downloaded_file_version;  // DownloadedFileVersion, not in OTA client cluster config
+  uint16_t _ota_hw_version = 0;           // Applied via ezb_zcl_ota_upgrade_set_hw_version after begin
+  uint8_t _ota_max_data_size = 48;        // Applied via ezb_zcl_ota_upgrade_set_download_block_size after begin (stack default)
+  bool _ota_client_added = false;
+  bool _ota_runtime_configured = false;
+  bool _ota_in_progress = false;  // true while download/apply is active (skip periodic queries)
+  uint16_t _ota_server_addr = 0xffff;
+  uint8_t _ota_server_ep = 0xff;
+  esp_timer_handle_t _ota_query_timer = nullptr;
+
+  bool applyOTAClientRuntimeConfig();
+  void queryOTAServer(uint16_t short_addr, uint8_t endpoint);
+  void startOTAQueryTimer();
+  static void findOTAServerCb(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx);
+  static void otaQueryTimerCb(void *arg);
 
   // Friend class declaration to allow access to protected members
   friend class ZigbeeCore;

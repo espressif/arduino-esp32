@@ -74,6 +74,11 @@ void onResponse(zb_cmd_type_t command, ezb_zcl_status_t status) {
 }
 #endif
 
+// Keepalive to the parent failed for a full ED timeout. The stack will try to rejoin by itself.
+void onParentLost() {
+  Serial.println("Parent lost — Zigbee.connected() is now false until rejoin");
+}
+
 /************************ Temp sensor *****************************/
 static void meausureAndSleep(void *arg) {
   // Measure temperature sensor value
@@ -170,6 +175,9 @@ void setup() {
   // Callback specified for endpoint
   zbTempSensor.onDefaultResponse(onResponse);
 #endif
+
+  // Optional: notified when parent keepalive fails (stack still attempts rejoin)
+  Zigbee.onParentLost(onParentLost);
 
   // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
