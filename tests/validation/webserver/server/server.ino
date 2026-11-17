@@ -591,22 +591,23 @@ void loop() {
     pendingStatsCase = nullptr;
   }
 
-  // SSE event pumps (regression probes for PR #13089).
+  // SSE event pumps (regression probes for PR #13089). Payloads are tagged by
+  // source so tests can tell main-pump events apart from saved-copy events.
   unsigned long now = millis();
   if (server.isSSE() && server.client().connected() && now - sseLastPush >= SSE_PUSH_INTERVAL_MS) {
     sseLastPush = now;
-    server.client().printf("data: %u\n\n", (unsigned)++sseEventId);
+    server.client().printf("data: main-%u\n\n", (unsigned)++sseEventId);
   }
   if (sseWriteCopyActive && sseWriteCopy.connected() && now - sseWriteCopyLastPush >= SSE_PUSH_INTERVAL_MS) {
     sseWriteCopyLastPush = now;
-    sseWriteCopy.printf("data: %u\n\n", (unsigned)++sseWriteCopyEventId);
+    sseWriteCopy.printf("data: copy-%u\n\n", (unsigned)++sseWriteCopyEventId);
   }
   if (sseWriteCopyActive && !sseWriteCopy.connected()) {
     sseWriteCopyActive = false;
   }
   if (sseCopyActive && sseCopy.connected() && now - sseCopyLastPush >= SSE_PUSH_INTERVAL_MS) {
     sseCopyLastPush = now;
-    sseCopy.printf("data: %u\n\n", (unsigned)++sseCopyEventId);
+    sseCopy.printf("data: copy-%u\n\n", (unsigned)++sseCopyEventId);
   }
   if (sseCopyActive && !sseCopy.connected()) {
     sseCopyActive = false;

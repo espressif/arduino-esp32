@@ -1268,8 +1268,9 @@ void runDerivedTests() {
 
 // Open a persistent SSE connection, verify headers, and count data events.
 // Outputs: HTTP status, whether Content-Type is text/event-stream, events seen.
-// Returns false if the socket could not be connected at all.
-bool sse_get(uint16_t port, const char *path, int minEvents, unsigned long timeoutMs, int &status, bool &eventStream, int &events) {
+// Only lines starting with eventTag are counted, so a test can require events
+// from a specific pump. Returns false if the socket could not be connected.
+bool sse_get(uint16_t port, const char *path, int minEvents, unsigned long timeoutMs, int &status, bool &eventStream, int &events, const char *eventTag) {
   status = -1;
   eventStream = false;
   events = 0;
@@ -1301,7 +1302,7 @@ bool sse_get(uint16_t port, const char *path, int minEvents, unsigned long timeo
       char c = (char)sock.read();
       line += c;
       if (c == '\n') {
-        if (line.startsWith("data:")) {
+        if (line.startsWith(eventTag)) {
           events++;
         }
         line = "";
@@ -1346,7 +1347,7 @@ void testSseHold() {
   int status = -1;
   bool eventStream = false;
   int events = 0;
-  sse_get(SERVER_PORT, "/sse", 2, 10000, status, eventStream, events);
+  sse_get(SERVER_PORT, "/sse", 2, 10000, status, eventStream, events, "data:");
   char detail[64];
   snprintf(detail, sizeof(detail), "status=%d event_stream=%d events=%d", status, (int)eventStream, events);
   report("sse_hold", status == 200 && eventStream && events >= 2, detail);
@@ -1360,11 +1361,12 @@ void testSseRecovery() {
 
 void testSseCopyWrite() {
   // 4.0 API: the flag is server-owned (enableSSE). Events pushed through a
-  // saved copy must flow while the server holds the stream.
+  // saved copy must flow while the server holds the stream. Only "data: copy"
+  // lines count, so main-pump events cannot mask a broken copy path.
   int status = -1;
   bool eventStream = false;
   int events = 0;
-  sse_get(SERVER_PORT, "/ssecopywrite", 2, 10000, status, eventStream, events);
+  sse_get(SERVER_PORT, "/ssecopywrite", 2, 10000, status, eventStream, events, "data: copy");
   delay(SETTLE_MS);
   char detail[64];
   snprintf(detail, sizeof(detail), "status=%d event_stream=%d events=%d", status, (int)eventStream, events);
@@ -1413,7 +1415,7 @@ void testSseLegacy() {
   int status = -1;
   bool eventStream = false;
   int events = 0;
-  sse_get(SERVER_PORT, "/sselegacy", 2, 10000, status, eventStream, events);
+  sse_get(SERVER_PORT, "/sselegacy", 2, 10000, status, eventStream, events, "data:");
   delay(SETTLE_MS);
   char detail[64];
   snprintf(detail, sizeof(detail), "status=%d event_stream=%d events=%d", status, (int)eventStream, events);

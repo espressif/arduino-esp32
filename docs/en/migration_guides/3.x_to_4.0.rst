@@ -37,11 +37,15 @@ Migration example
     // 3.x
     server.on("/events", HTTP_GET, []() {
       server.client().setSSE(true);
+      server.setContentLength(CONTENT_LENGTH_UNKNOWN);
       server.send(200, "text/event-stream", "");
+      // then push "data: ...\n\n" lines from loop() via server.client()
     });
 
     // 4.0
     server.on("/events", HTTP_GET, []() {
       server.enableSSE();
+      server.setContentLength(CONTENT_LENGTH_UNKNOWN);
       server.send(200, "text/event-stream", "");
+      // then push "data: ...\n\n" lines from loop() via server.client()
     });
