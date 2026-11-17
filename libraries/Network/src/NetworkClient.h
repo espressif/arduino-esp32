@@ -40,6 +40,10 @@ protected:
   std::shared_ptr<NetworkClientRxBuffer> _rxBuffer = nullptr;
   bool _connected = false;
   bool _readEOF = false;
+  // SSE marker fallback used only when there is no socket handle (e.g.
+  // NetworkClientSecure, which owns its fd outside NetworkClientSocketHandle).
+  // Whenever a handle is present the flag lives on the handle instead, so all
+  // copies sharing a connection observe a single per-connection flag.
   bool _sse = false;
   int _timeout;
   int _lastWriteTimeout = 0;
