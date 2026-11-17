@@ -111,7 +111,7 @@ The Arduino ESP32 documentation is structured in sections to make it easier to m
 API
 ***
 
-In this section, you will include all the documentation about drivers, libraries, and any thing else related to the core.
+In this section, you will include all the documentation about drivers, libraries, and anything else related to the core.
 
 In this section, we do not add general information. For more general information, we have sections for other related parts, like the FAQ, library builder, troubleshooting, etc.
 
