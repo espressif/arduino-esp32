@@ -478,20 +478,20 @@ bool HWCDC::isCDC_Connected() {
       open = false;
     } else
 #endif
-    // A live TX session must not snap closed across ISR-blocked stalls
-    // (flash/NVS). Cap the quiet credit per check so 1200 ms of wall-clock
-    // is one slice, not an immediate disconnect.
-    if (live_tx && prev_connected) {
-      int64_t slice = dt;
-      if (slice > HWCDC_QUIET_SLICE_MAX_US) {
-        slice = HWCDC_QUIET_SLICE_MAX_US;
+      // A live TX session must not snap closed across ISR-blocked stalls
+      // (flash/NVS). Cap the quiet credit per check so 1200 ms of wall-clock
+      // is one slice, not an immediate disconnect.
+      if (live_tx && prev_connected) {
+        int64_t slice = dt;
+        if (slice > HWCDC_QUIET_SLICE_MAX_US) {
+          slice = HWCDC_QUIET_SLICE_MAX_US;
+        }
+        quiet_us += slice;
+        open = quiet_us < HWCDC_CLOSE_GRACE_US;
+      } else {
+        quiet_us = 0;
+        open = false;
       }
-      quiet_us += slice;
-      open = quiet_us < HWCDC_CLOSE_GRACE_US;
-    } else {
-      quiet_us = 0;
-      open = false;
-    }
   } else {
     quiet_us = 0;
     if (burst_start_us == 0) {

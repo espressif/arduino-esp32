@@ -53,12 +53,132 @@ int StreamString::read() {
   return -1;
 }
 
+size_t StreamString::readBytes(char *buffer, size_t buffLen) {
+  if (!buffLen || !buffer) {
+    return 0;
+  }
+  uint32_t start = millis();
+  size_t count = 0;
+  while (count < buffLen) {
+    const unsigned int len = length();
+    if (len) {
+      const size_t available = min(buffLen - count, (size_t)len);
+      memcpy(buffer + count, c_str(), available);
+      remove(0, available);
+      count += available;
+      // Match Stream::readBytes(): the timeout applies to waiting for the
+      // next byte, not to the whole call.
+      start = millis();
+      continue;
+    }
+    if (_timeout == 0 || millis() - start >= _timeout) {
+      break;
+    }
+  }
+  return count;
+}
+
 int StreamString::peek() {
   if (length()) {
     char c = charAt(0);
     return c;
   }
   return -1;
+}
+
+size_t StreamString::readBytesUntil(char terminator, char *buffer, size_t size) {
+  if (!buffer || !size) {
+    return 0;
+  }
+  size_t count = 0;
+  while (count < size) {
+    const unsigned int available = length();
+    if (available) {
+      const char *data = c_str();
+      const size_t remaining = size - count;
+      const size_t chunk = min((size_t)available, remaining);
+      const char *end = (const char *)memchr(data, terminator, chunk);
+      const size_t take = end ? (size_t)(end - data) : chunk;
+      if (take) {
+        memcpy(buffer + count, data, take);
+        count += take;
+      }
+      if (end && take < remaining) {
+        // The terminator was read before the buffer limit: consume it too.
+        remove(0, take + 1);
+        break;
+      }
+      remove(0, take);
+      if (take == remaining) {
+        // Buffer limit reached: leave the terminator (if any) in the stream.
+        break;
+      }
+      continue;
+    }
+    const int c = timedRead();
+    if (c < 0) {
+      break;
+    }
+    if ((char)c == terminator) {
+      break;
+    }
+    buffer[count++] = (char)c;
+  }
+  return count;
+}
+
+String StreamString::readString() {
+  String result;
+  while (true) {
+    const unsigned int available = length();
+    if (available) {
+      if (!result.concat(c_str(), available)) {
+        // Do not consume data if the result could not be extended.
+        break;
+      }
+      remove(0, available);
+      continue;
+    }
+    const int c = timedRead();
+    if (c < 0) {
+      break;
+    }
+    result += (char)c;
+  }
+  return result;
+}
+
+String StreamString::readStringUntil(char terminator) {
+  String result;
+  while (true) {
+    const unsigned int available = length();
+    if (available) {
+      const char *data = c_str();
+      const char *end = (const char *)memchr(data, terminator, available);
+      const size_t take = end ? (size_t)(end - data) : (size_t)available;
+      if (take) {
+        if (!result.concat(data, take)) {
+          // Do not consume data if the result could not be extended.
+          break;
+        }
+      }
+      if (end) {
+        remove(0, take + 1);
+        break;
+      }
+      remove(0, take);
+      continue;
+    }
+    const int c = timedRead();
+    if (c < 0) {
+      break;
+    }
+    if ((char)c == terminator) {
+      break;
+    }
+    result += (char)c;
+  }
+  return result;
 }
 
 void StreamString::flush() {}

@@ -166,7 +166,7 @@ Workflows source the configuration in their setup steps and use the arrays to dy
    - Build forward/reverse dependency graphs
    - Determine affected sketches from changed files
 6. **Lookup Linux ccache** - `actions/cache/restore` with `lookup-only` on the same `ccache-linux-{platform-hash}-` key the build jobs restore. Hit (exact SHA or prefix) → `--mode warm`; miss → `--mode cold`.
-7. **Assign chunks** - `assign_chunks.py` packs the affected list with LPT using that mode's costs from `size_test/<branch>/sketch_costs.json` on gh-pages (in-repo `fallback_costs.json` if that file is missing). Writes `chunk_N.txt`.
+7. **Assign chunks** - `assign_chunks.py` packs the affected list with LPT. Costs come from `size_test/<branch>/sketch_costs.json` on gh-pages (in-repo `fallback_costs.json` if that file is missing) and are aggregated **per library family** (median per-target time of that family's sketches), not taken per sketch: a single measured sketch is dominated by whether it happened to be the first one built for its target in the run that sampled it, since that build pays for the family's static libraries. Family-level costs track the marginal work the packer actually controls. Per-sketch values are only used when a family has no samples. Writes `chunk_N.txt`.
 8. Upload `affected_sketches.txt`, `chunk_*.txt`, and debug artifacts
 
 **Outputs:**
@@ -285,6 +285,13 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 - **Dependency tracking**: Uses ctags for accurate change detection
 - **Size reports**: Generates JSON with sketch sizes for comparison
 - **Caching**: Libraries and tools cached between runs. Linux compile jobs restore a 2 GB `ccache` (content-hashed, depend mode, no `CCACHE_BASEDIR` — Ninja runs in `~/.arduino/build.tmp`). On master/release, `merge-ccache` unions every chunk's store and saves one key. Merged-cache warm vs fill (fork runs 40210957855 / 40207997338): Linux wall 34.3 → 27.7 min (−19%), average 23.5 → 14.7 min (−37%), 100% hits, store 1.1 GB. Windows (~35 min) was the wall before Windows ccache.
+- **Cache budget**: the repository has a 10 GB Actions cache quota and evicts least-recently-used entries above it. A warm run is ~2-4 min per chunk, a cold one ~25-50 min, so losing the merged `ccache-linux-*` entry costs an order of magnitude more than any chunking refinement. Keeping the ccache large matters more than bounding it: a 512 M cap measured in a fork gave 2% hits and 26 min average chunks, against 100% hits and 12 min with 2 G — and the cap is not even enforced on the merged union, which came back at 1.1-1.3 GB. Free quota by pruning, not by shrinking.
+
+#### Cache pruning (inside `merge-ccache`)
+
+Every push saves a new `ccache-<family>-<prefix>-<sha>` generation (~1.3-1.6 GB). Restore keys always resolve to the newest generation, and every generation is a complete build (pushes rebuild all sketches), so older generations are dead weight. GitHub only deletes caches unused for 7 days and, above 10 GB, evicts by last access — a branch that has been quiet for a few hours loses its newest generation to the churn (measured: master's 1.3 GB cache saved at 23:18 was gone by 02:36 while toolchain caches kept being written).
+
+`merge-ccache` therefore runs `.github/scripts/prune_caches.py` right after a successful save: it keeps exactly one generation per `(ref, key prefix)` and deletes the superseded one. The newest generation is never deleted, nothing younger than `--min-age-hours` (0 for this call), and no key outside `ccache-*` is touched. Abandoned branches and legacy `test-*-bin` caches need no handling — the 7-day inactivity cleanup takes them. Run the script with `--dry-run` to inspect the plan; `GITHUB_TOKEN` needs `actions: write`.
 
 #### 3. `build-arduino-win-mac`
 **Runs on:** Windows-latest, macOS-latest
@@ -337,7 +344,7 @@ The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_
 **Steps:**
 1. Load previous `size_test/<branch>/sketch_costs.json` from gh-pages (kept aside so a fill does not wipe warm times)
 2. Download `pr_cli_compile_*` and `sketch_times_*`
-3. `merge_sketch_costs.py` updates `warm_s` or `cold_s` from that run's ccache hit rate (~100% hits → warm, ~0% → cold; mixed leaves both sides unchanged) and stamps `last_updated`
+3. `merge_sketch_costs.py` updates `warm_s` or `cold_s` from that run's ccache hit rate (~100% hits → warm, ~0% → cold) and stamps `last_updated`. Every run also stores its raw per-target sample as `last_s` and the run's `hit_ratio`: a mixed run (10–90% hits) must not bias either pure side, but its samples are still what a sketch introduced by a large merge has until a pure run happens, and assignment uses `last_s` when no pure sample exists
 4. Replace `size_test/<branch>/` size JSON (`cli_compile_*.json`) and write sibling `sketch_costs.json` (`/` in the branch name becomes `_`)
 5. Commit and push to gh-pages (rebases and retries if another branch pushed first)
 6. Size comments read only `cli_compile_*.json`; chunk assignment reads `sketch_costs.json`
@@ -377,6 +384,9 @@ tests.yml (Orchestrator - GitHub Actions)
     │
     ├─→ Calls: tests_build.yml
     │       Compiles test binaries for all SoCs
+    │       Reuses the artifacts of a previous run at the same PR commit
+    │       (label events re-run this workflow without recompiling; the
+    │       lookup stops at the 30-day artifact retention boundary)
     │       Uploads artifacts to GitHub
     │
     └─→ Calls: tests_qemu.yml (disabled by default)

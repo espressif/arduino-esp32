@@ -7,6 +7,8 @@
 // Number of selected pins can be from 1 to ALL ADC1 pins.
 #ifdef CONFIG_IDF_TARGET_ESP32
 uint8_t adc_pins[] = {36, 39, 34, 35};  //some of ADC1 pins for ESP32
+#elif CONFIG_IDF_TARGET_ESP32S31
+uint8_t adc_pins[] = {42, 43, 44, 45};  //ADC1 pins for ESP32-S31
 #else
 uint8_t adc_pins[] = {1, 2, 3, 4};  //ADC1 common pins for ESP32S2/S3 + ESP32C3/C6 + ESP32H2
 #endif
@@ -29,11 +31,11 @@ void setup() {
   // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
 
-  // Optional for ESP32: Set the resolution to 9-12 bits (default is 12 bits)
+  // Optional: resolution and attenuation. ESP32-S31 keeps its fixed defaults.
+#if !defined(CONFIG_IDF_TARGET_ESP32S31)
   analogContinuousSetWidth(12);
-
-  // Optional: Set different attenaution (default is ADC_11db)
   analogContinuousSetAtten(ADC_11db);
+#endif
 
   // Setup ADC Continuous with following input:
   // array of pins, count of the pins, how many conversions per pin in one cycle will happen, sampling frequency, callback function
