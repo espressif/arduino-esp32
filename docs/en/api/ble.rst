@@ -5,6 +5,13 @@ BLE API
 About
 -----
 
+.. warning::
+
+    The BLE library was rewritten for Arduino Core 4.0 and the API might not
+    be stable yet. While breaking changes will be avoided where possible, they
+    may still happen in future releases. Pin your core version if you need a
+    frozen API.
+
 The BLE (Bluetooth Low Energy) library provides a unified, stack-agnostic API for Bluetooth Low Energy on ESP32 family chips.
 It supports both the **NimBLE** and **Bluedroid** host stacks transparently -- the same application code compiles and runs
 on either backend without ``#ifdef`` guards.

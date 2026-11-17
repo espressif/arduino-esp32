@@ -1,39 +1,28 @@
 /*
- * LE Audio -- Auracast sink (receiver)
+ * LE Audio Auracast Sink (receiver)
  *
- * A portable Auracast speaker: it scans for a broadcast, syncs to its
- * periodic advertising and BIG, and plays the LC3 audio on an I2S DAC.
+ * Scans for a broadcast, syncs to it and plays the audio on the speaker.
+ * A phone app can also steer this sink remotely (BASS Scan Delegator).
  *
- *   - BAP Broadcast Sink with two BISes (front left + front right)
- *   - BASS Scan Delegator, so a phone app or a BASS client can pick a source
- *     remotely
- *   - LC3 player decoding both BISes to the DAC
- *
- * By default it syncs to the broadcast named TARGET_NAME; leave it empty to
- * join the first source found. For an encrypted broadcast set BROADCAST_CODE
- * to the same code the source uses.
- *
- * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
- * (esp_audio_codec). On the ESP32-S31 Function CoreBoard 1 the onboard ES8311
- * DAC feeds the NS4150B speaker amplifier; the board variant supplies the I2S
- * and PA pins.
- *
- * Licensed under the Apache License, Version 2.0
+ * Pair with: LEAudio_AuracastSource, or any Auracast transmitter / phone.
+ * Hardware: ESP32-S31 Function CoreBoard 1 (ES8311 DAC + NS4150B amp).
+ * The I2S and PA_CTRL pins plus es8311Begin()/es8311SetVolume() come from the board variant (no include needed).
  */
 
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
-#include "board_audio.h"
 
-// ESP32-S31 Function CoreBoard 1: ES8311 codec -> NS4150B speaker amplifier.
-// The pin macros come from the board variant.
+#ifndef I2S_SCLK
+#error "This example requires the I2S pins defined in the board files."
+#endif
 
-static const char *DEVICE_NAME = "LE Audio Auracast Sink";
-static const char *TARGET_NAME = "ESP32 Auracast";  // empty = first source found
-static const char *BROADCAST_CODE = "";             // up to 16 characters; empty = unencrypted
-static const uint8_t STREAMS = 2;                   // 1 = mono, 2 = stereo
+// --- Tweakables -----------------------------------------------------------
+static const char *TARGET_NAME = "ESP32 Auracast";  // empty = join the first broadcast found
+static const char *BROADCAST_CODE = "";             // same code as the source, if encrypted
+static const uint8_t CHANNELS = 2;                  // 1 = mono (1 BIS), 2 = stereo (2 BIS)
 
+// --- LE Audio roles -------------------------------------------------------
 BLEAudio audio;
 BLEAudioBroadcastSink sink;
 BLEAudioPlayer player;
@@ -49,99 +38,117 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\n=== LE Audio Auracast Sink ===");
 
-  BTStatus st = BLE.begin(DEVICE_NAME);
+  // 1. Bring up the Bluetooth host.
+
+  // BLE.begin() powers up the controller + host and sets the GAP device name.
+  BTStatus st = BLE.begin("LE Audio Auracast Sink");
   if (!st) {
     halt("BLE.begin", st);
   }
 
-  audio = BLE.getAudioController();
-  // No explicit init: the engine initializes lazily on the first create*()
-  // below. Create every role first, then call audio.begin() once to commit.
+  // 2. Create the receiver: scan for TARGET_NAME and auto-join it.
 
+  // getAudioController() returns the handle to the shared LE Audio engine.
+  audio = BLE.getAudioController();
+
+  // createBroadcastSink() makes the receiver role: scan + PA sync + BIG sync (BASS Scan Delegator included).
   sink = audio.createBroadcastSink();
-  if (!sink) {
-    halt("createBroadcastSink", BTStatus::NotSupported);
-  }
-  sink.configureAuracast(TARGET_NAME, STREAMS);
+
+  // configureAuracast() helper: auto-join broadcasts named targetName with 1-2 BISes, Media context.
+  sink.configureAuracast(TARGET_NAME, CHANNELS);
   if (BROADCAST_CODE[0] != '\0') {
+    // setBroadcastCode() is the decode key for encrypted broadcasts. empty = open only.
     sink.setBroadcastCode(BROADCAST_CODE);
   }
-  sink.onSourceFound([](const BLEAudioBroadcastSourceInfo &source) {
-    Serial.printf("[scan] found \"%s\" id 0x%06lX (sid %u, %d dBm)\n", source.name.c_str(), (unsigned long)source.broadcastId,
-                  source.sid, source.rssi);
-  });
-  sink.onBaseReceived([](const BLEAudioBroadcastBaseInfo &base) {
-    Serial.printf("[BASE] %u subgroup(s), %lu us, %lu Hz, %u octets x %u ch\n", base.subgroups,
-                  (unsigned long)base.presentationDelayUs, (unsigned long)base.codec.samplingRateHz, base.codec.octetsPerFrame,
-                  base.codec.channels());
-  });
-  sink.onSyncFailed([](BTStatus status) {
-    Serial.printf("[sync] failed: %s\n", status.toString());
-  });
-  sink.onStarted([]() {
-    Serial.println("[BIG] joined, audio is streaming");
-  });
-  sink.onStopped([](uint8_t reason) {
-    Serial.printf("[BIG] left (reason 0x%02X)\n", reason);
+
+  // onSourceFound() fires per matching advertising report while scanning (repeats, so keep it short).
+  sink.onSourceFound([](const BLEAudioBroadcastSourceInfo &info) {
+    Serial.printf("Found \"%s\" (%d dBm)\n", info.name.c_str(), info.rssi);
   });
 
-  // audio.begin() commits the roles and publishes PACS/BASS. I2S and the
-  // LC3 task are started after it; the broadcast is joined later by sink.start().
+  // onStarted() fires once the BIG is joined and the streams carry audio.
+  sink.onStarted([] { Serial.println("Joined: playing"); });
+
+  // onStopped() fires when we leave the BIG (stop(), source gone, or sync lost). Reason is the HCI code.
+  sink.onStopped([](uint8_t reason) { Serial.printf("Left (reason 0x%02X)\n", reason); });
+
+  // onSyncFailed() fires when the BIG cannot be joined: NotFound (no BIS fits our PAC) or
+  // PermissionDenied (encrypted and no/wrong Broadcast Code).
+  sink.onSyncFailed([](BTStatus status) { Serial.printf("Join failed: %s\n", status.toString()); });
+
+  // 3. Commit the roles (starts no audio by itself).
+
+  // audio.begin() commits the staged roles (PACS/BASS) and freezes the GATT table for this session.
   st = audio.begin();
   if (!st) {
     halt("audio.begin", st);
   }
 
-  // Configure the onboard ES8311 (I2C), then enable the NS4150B amplifier.
-  // The codec follows the I2S clocks, so it works at every LC3 sample rate.
-  if (!board_audio::es8311Begin()) {
-    Serial.println("ES8311 init failed; check the codec I2C bus");
+  // 4. Open the local audio output and bind it to the broadcast streams.
+
+  // One BIS carries mono. Two BISes carry left + right as separate mono streams.
+  if (!es8311Begin()) {
+    Serial.println("ES8311 init failed. Check the codec I2C bus");
   }
+
+  // Enable the speaker amplifier
   pinMode(PA_CTRL, OUTPUT);
   digitalWrite(PA_CTRL, HIGH);
+
+  // player.begin() opens I2S output. The LC3 task is still stopped.
   st = player.begin(I2S_SCLK, I2S_LRCK, I2S_DOUT, I2S_MCLK);
   if (!st) {
     halt("player.begin", st);
   }
-  // One argument handles a mono or one stereo stream; two arguments are for
-  // two separate mono streams (left, right).
-  st = STREAMS == 2 ? player.attach(sink.stream(0), sink.stream(1)) : player.attach(sink.stream(0));
+
+  // stream(i) is BIS i in join order: 0 = mono/front left, 1 = front right.
+  if (CHANNELS == 2) {
+    // attach(left, right) plays two mono Rx streams: left BIS + right BIS.
+    st = player.attach(sink.stream(0), sink.stream(1));
+  } else {
+    // attach(stream) plays one Rx stream carrying mono (or interleaved stereo).
+    st = player.attach(sink.stream(0));
+  }
+
   if (!st) {
     halt("player.attach", st);
   }
+
+  // startPlayback() spawns the LC3 decode task. Playback follows the BIG's start/stop.
   st = player.startPlayback();
   if (!st) {
     halt("player.startPlayback", st);
   }
 
-  // Advertise connectably so a phone app can reach BASS and change the source.
+  // 5. Stay connectable so a phone can steer us, and start scanning.
+
+  // getAdvertising() returns the handle to the legacy advertising instance.
   BLEAdvertising adv = BLE.getAdvertising();
+
+  // ConnectableScannable = a phone can connect (to reach BASS) and read scan-response data.
   adv.setType(BLEAdvType::ConnectableScannable);
-  adv.setName(DEVICE_NAME);
+
+  // setName() puts the name in the advertising payload.
+  adv.setName("LE Audio Auracast Sink");
+
+  // setAppearance() publishes the Assigned Number: a standalone speaker.
   adv.setAppearance(BLE_APPEARANCE_AUDIO_SINK_STANDALONE_SPEAKER);
+
+  // Start advertising.
   st = adv.start();
   if (!st) {
     halt("advertising", st);
   }
 
+  // sink.start() begins scanning. PA sync and BIG join then happen automatically.
   st = sink.start();
   if (!st) {
     halt("sink.start", st);
   }
 
-  Serial.printf("Scanning for \"%s\" (%s).\n", TARGET_NAME[0] ? TARGET_NAME : "any broadcast",
-                BROADCAST_CODE[0] ? "encrypted" : "open");
+  Serial.printf("Scanning for \"%s\"...\n", TARGET_NAME[0] ? TARGET_NAME : "any broadcast");
 }
 
 void loop() {
-  static uint32_t last = 0;
-  if (millis() - last >= 5000) {
-    last = millis();
-    if (player.sampleRate()) {
-      Serial.printf("[player] %lu Hz x %u ch, %lu SDUs, %lu lost, %lu PLC, %lu underruns\n", (unsigned long)player.sampleRate(),
-                    player.channels(), (unsigned long)player.sdusReceived(), (unsigned long)player.sdusLost(),
-                    (unsigned long)player.plcFrames(), (unsigned long)player.underruns());
-    }
-  }
-  delay(100);
+  delay(1000);  // nothing to do: the player follows the broadcast on its own
 }

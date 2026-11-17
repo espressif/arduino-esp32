@@ -35,6 +35,26 @@ void setup() {
 `BLE.getAudioController()` is declared in `<BLE.h>` so the core can build
 without this library; include `<BLEAudio.h>` before using the returned handle.
 
+## Object model for sketch authors
+
+Three kinds of objects, three rules:
+
+- **Controller** — `BLEAudio audio = BLE.getAudioController();` is a cheap
+  shared handle to the single LE Audio engine, valid after `BLE.begin()`.
+  There is no second `BLE`-style global on purpose (see `DESIGN.md`): one
+  engine, one handle type, no static-init ordering to reason about.
+- **Roles** — `audio.createUnicastServer()`, `createBroadcastSink()`,
+  `createVolumeRenderer()`, … are the *only* way to a live role. A
+  default-constructed role (`BLEAudioBroadcastSink sink;`) is an empty
+  handle (`operator bool` is false) that exists so sketches can hold roles
+  as globals and assign them in `setup()`; every method on it reports
+  `InvalidState` until the factory fills it. Handles are copyable values —
+  copies reference the same role.
+- **Endpoints** — `BLEAudioPlayer` and `BLEAudioRecorder` are constructed
+  directly like Arduino `Serial`, then `begin()` / `attach()` /
+  `startPlayback()` / `startCapture()`. They own the local LC3 + I2S (or
+  PCM-callback) data path, not a radio resource, so they need no factory.
+
 ## Examples
 
 The examples are grouped by real, ESP32-sized products instead of by API role.
@@ -45,8 +65,9 @@ and NS4150B amplifier, the microphone examples capture from its onboard
 microphone through the ES8311 ADC, and the pin macros (`I2S_MCLK`, `I2S_SCLK`,
 `I2S_LRCK`, `I2S_DOUT`, `I2S_DIN`, `PA_CTRL`) come from the board variant.
 BLEAudio owns the I2S data path; the ES8311 register setup over I2C is
-board-support code. The variant exposes `ES8311_I2C_ADDR`, `SDA1`, `SCL1`,
-`I2S_*` and `PA_CTRL` for that layer.
+board-support code. The variant provides `es8311Begin()` and
+`es8311SetVolume()` for that layer (plus the `ES8311_I2C_ADDR`, `SDA1`,
+`SCL1`, `I2S_*` and `PA_CTRL` macros), callable with no extra include.
 
 | Example | Device | What it shows |
 | --- | --- | --- |
@@ -71,6 +92,57 @@ The examples require an LE Audio-capable target (ESP32-S31) and the LC3 codec
 `BLE_APPEARANCE_AUDIO_SINK_STANDALONE_SPEAKER` and
 `BLE_APPEARANCE_AUDIO_SOURCE_MICROPHONE`, so a sketch does not hard-code the
 Assigned Numbers value.
+
+## Profiles and acronyms
+
+LE Audio names are dense. This is every abbreviation a sketch meets, grouped
+by the job it does. The per-role headers (`BLEAudioUnicastServer.h`, …) carry
+the exact API; here is what the words mean.
+
+**BAP — the audio data plane** (everything streams through this):
+
+| Term | What it is |
+| --- | --- |
+| `PACS` | Published Audio Capabilities Service. What a device *can* do: sink/source PAC records (codec, rates, channels), supported/available audio *contexts* (`Media`, `Conversational`, …) and sink/source audio *locations* (`FrontLeft`, `FrontRight`, …). Read by the peer before configuring. |
+| `ASCS` | Audio Stream Control Service. The control point of unicast: the client walks each **ASE** through Codec Configured → QoS Configured → Enabling → Streaming (and back via Disable/Release). |
+| `ASE` | Audio Stream Endpoint: one configurable unicast endpoint. A sink ASE carries audio the client sends; a source ASE carries audio the client receives. Bound to one CIS when streaming. |
+| `CIS` / `CIG` | Connected Isochronous Stream / Group. The actual over-the-air audio packets (SDUs) of a unicast link; a group keeps its streams (e.g. left + right) in sync. |
+| `SDU` | Service Data Unit: one chunk of audio per interval (e.g. 10 ms of LC3), the unit the codec tasks produce/consume. |
+| `QoS` | Per-stream transport contract: SDU interval, max SDU size (framed or not), retransmission number (RTN), max transport latency, PHY. `BLEAudioCodecPreset` bundles codec + low-latency QoS; `setQos()` overrides it. |
+| Presentation delay | Microseconds between the SDU reference anchor and rendering. Every device of a group renders at the same instant because of it (`audio.setPresentationDelay()` default 40 ms). |
+
+**Broadcast (Auracast)** — one transmitter, any number of receivers, no connection:
+
+| Term | What it is |
+| --- | --- |
+| `BIS` / `BIG` | Broadcast Isochronous Stream / Group. Mono = one BIS; stereo = two BISes (front left + front right), each one `BLEAudioStream`. |
+| Announcement | Extended-advertising payload receivers scan for: Broadcast Audio Announcement (the Broadcast ID) plus, for Auracast, the Public Broadcast Announcement (`PBP`) and the Broadcast Name. |
+| `BASE` | Broadcast Audio Source Endpoint, carried in periodic advertising: codec, subgroups, BIS layout, streaming context, encryption flag. The sink reads it after PA sync to pick BISes. |
+| Broadcast Code | Up to 16 characters that encrypt the BIG (zero-padded per spec; empty = open). Receivers need the same code; it can arrive preconfigured, from a Broadcast Assistant, or over PAST. |
+| `BASS` / Scan Delegator | Broadcast Audio Scan Service on the sink: receive states the assistant adds, modifies, and removes remotely, including code distribution. |
+| `PAST` | Periodic Advertising Sync Transfer: the assistant hands its PA sync to the sink so the sink skips scanning. |
+
+**CAP / CSIP — coordination** (several devices acting as one):
+
+| Term | What it is |
+| --- | --- |
+| `CAS` | Common Audio Profile Service, published by a CAP acceptor with an included CSIS. It is what makes a device drivable by a phone's CAP initiator. Optional: raw BAP links work without it. |
+| `CSIS` | Coordinated Set Identification Service: the set identity of one member. |
+| `SIRK` | Set Identity Resolving Key: the 16-octet secret shared by every member of a set. The library ships a fixed demo value — products must call `setSirk()` with their own. |
+| `RSI` | Resolvable Set Identifier, derived from the SIRK and advertised, so a coordinator finds members without connecting first. |
+| Size / Rank | `setSetSize()` = total devices in the set; `setRank()` = this device's 1-based position. A standalone speaker is a set of one. |
+| Lock | A coordinator can lock a set for ordered access (`setLockable()`); the CAP commander uses it when every driven acceptor sits in one discovered set. |
+
+**Control and top-level profiles** — no audio flows through these; they observe and drive it:
+
+| Term | What it is |
+| --- | --- |
+| `VCP` (`VCS` + `VOCS` + `AICS`) | Volume Control: absolute volume 0–255 and mute (`VCS`), plus the first Volume Offset and Audio Input instances the controller can drive. |
+| `MICP` (`MICS` + `AICS`) | Microphone mute, tri-state: unmuted / muted / disabled. |
+| `MCP` (`MCS`/`GMCS`) | Media control: playback state, track info, play/pause/seek on the generic player. |
+| `CCP` (`TBS`/`GTBS`) | Call control: incoming/dialing/active calls on the generic telephone bearer. |
+| `TMAP` (`TMAS`) / `GMAP` (`GMAS`) | Telephony / Gaming role badges: "I am a headset" so peers pick compatible behavior. Identity only. |
+| `HAS` | Hearing Access Service: named presets on a hearing aid, read and switched remotely. |
 
 ## Lifecycle: `audio.begin()` vs `startPlayback()` / `startCapture()`
 
@@ -100,7 +172,14 @@ separate because the codec task is not needed until a stream exists.
 
 ## Stream topologies and `attach()`
 
-`BLEAudioPlayer` and `BLEAudioRecorder` bind to `BLEAudioStream` handles, and
+`BLEAudioPlayer` is the speaker side: it plays **Rx streams** (audio this
+device receives) through LC3 decode to I2S or a PCM sink. `BLEAudioRecorder`
+is the microphone side: it encodes I2S or PCM-source audio into **Tx streams**
+(audio this device sends), one SDU per SDU interval. The lifecycle is always
+`begin()` (endpoint) → `attach()` (streams) → `startPlayback()` /
+`startCapture()` (codec task, follows the streams; stopping keeps the
+attachments, `end()` releases everything).
+
 BAP can deliver one stereo program in two different shapes. Pick the `attach`
 form that matches the role that created the streams:
 
@@ -126,7 +205,7 @@ recorder.attach(left, right);
 
 Use this for two mono ASEs/BISes, such as a stereo Auracast layout with two
 BISes (front left + front right). `LEAudio_AuracastSink` and
-`LEAudio_AuracastSource` use it when `STREAMS`/`CHANNELS` is 2.
+`LEAudio_AuracastSource` use it when `CHANNELS` is 2.
 
 The data path checks this at stream start: one stream may carry 1–2 channels;
 two streams must both be mono and describe the same codec/QoS (rate, frame

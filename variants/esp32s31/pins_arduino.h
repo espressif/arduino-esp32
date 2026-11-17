@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "soc/soc_caps.h"
 
 #define USB_VID 0x303a
@@ -102,5 +103,13 @@ static const uint8_t T13 = 19;
 #define ES8311_I2C_SDA SDA1
 #define ES8311_I2C_SCL SCL1
 #define ES8311_PA_CTRL PA_CTRL
+
+// Onboard ES8311 helpers (implemented in variant.cpp): power up and configure
+// the codec for I2S slave playback and capture (MCLK = 256 * sample rate, so
+// one setup covers every rate), and set the DAC volume 0 (mute) to 100.
+// Each returns true when every I2C write was acknowledged. Callable from any
+// sketch on this board with no extra include (Arduino.h pulls this header in).
+bool es8311Begin(void);
+bool es8311SetVolume(uint8_t percent);
 
 #endif /* Pins_Arduino_h */

@@ -84,6 +84,9 @@ public:
    * @return BTStatus::OK on success, BTStatus::InvalidState if already started,
    *         BTStatus::Busy if another owner already registered NUS, or a
    *         backend error status on failure.
+   * @note NUS has a single owner at a time: idle BLEStream instances may
+   *       coexist, but a second begin()/beginClient() while one owns NUS
+   *       returns Busy. end() releases ownership.
    * @note Initializes BLE if not already done, reconfigures advertising to include
    *       the NUS service UUID, and enables auto-advertise on disconnect. While
    *       active it owns NUS, legacy advertising, and server callback slots.
@@ -97,6 +100,7 @@ public:
    * @param address BLE address of the remote NUS server
    * @param timeoutMs Connection timeout in milliseconds
    * @return BTStatus::OK on success, BTStatus::InvalidState if already started,
+   *         BTStatus::Busy if another owner already registered NUS,
    *         BTStatus::NotFound if the NUS service or characteristics are missing,
    *         or a backend error status on connection failure.
    * @note Blocks until the connection completes or times out, then discovers the

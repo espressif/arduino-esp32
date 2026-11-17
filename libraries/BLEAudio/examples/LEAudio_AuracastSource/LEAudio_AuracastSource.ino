@@ -1,36 +1,29 @@
 /*
- * LE Audio -- Auracast source (transmitter)
+ * LE Audio Auracast Source (transmitter)
  *
- * A venue/TV transmitter: it announces an Auracast broadcast and streams live
- * audio from an I2S input to every receiver in range.
+ * Announces a public broadcast and streams the onboard mic to every receiver
+ * in range. No connections: receivers just sync to the periodic advertising
+ * and join the BIG.
  *
- *   - BAP Broadcast Source with two BISes (front left + front right)
- *   - Public Broadcast Announcement and Broadcast Name in the advertising
- *   - LC3 recorder encoding the I2S input into both BISes
- *
- * The broadcast is unencrypted by default. Set BROADCAST_CODE to encrypt it;
- * receivers then need the same code (see LEAudio_AuracastSink). For a mono
- * broadcast use CHANNELS = 1 and attach only source.stream(0).
- *
- * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
- * (esp_audio_codec). On the ESP32-S31 Function CoreBoard 1 the onboard
- * microphone feeds the ES8311 ADC; the board variant supplies the I2S pins.
- *
- * Licensed under the Apache License, Version 2.0
+ * Pair with: LEAudio_AuracastSink, or a phone/PC with Auracast.
+ * Hardware: ESP32-S31 Function CoreBoard 1 (onboard mic -> ES8311 ADC).
+ * The I2S_* pins and es8311Begin() come from the board variant (no include needed).
  */
 
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
-#include "board_audio.h"
 
-// ESP32-S31 Function CoreBoard 1: onboard microphone -> ES8311 ADC.
-// The pin macros come from the board variant.
+#ifndef I2S_SCLK
+#error "This example requires the I2S pins defined in the board files."
+#endif
 
-static const char *BROADCAST_NAME = "ESP32 Auracast";
-static const char *BROADCAST_CODE = "";  // up to 16 characters; empty = unencrypted
-static const uint8_t CHANNELS = 2;       // 1 = mono, 2 = stereo
+// --- Tweakables -----------------------------------------------------------
+static const char *BROADCAST_NAME = "ESP32 Auracast";  // shown by receivers
+static const char *BROADCAST_CODE = "";                // empty = open, else up to 16 chars
+static const uint8_t CHANNELS = 2;                     // 1 = mono (1 BIS), 2 = stereo (2 BIS)
 
+// --- LE Audio roles -------------------------------------------------------
 BLEAudio audio;
 BLEAudioBroadcastSource source;
 BLEAudioRecorder recorder;
@@ -46,73 +39,86 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\n=== LE Audio Auracast Source ===");
 
+  // 1. Bring up the Bluetooth host.
+
+  // BLE.begin() powers up the controller + host and sets the GAP device name.
   BTStatus st = BLE.begin("LE Audio Auracast Source");
   if (!st) {
     halt("BLE.begin", st);
   }
 
-  audio = BLE.getAudioController();
-  // No explicit init: the engine initializes lazily on the first create*()
-  // below. Create every role first, then call audio.begin() once to commit.
+  // 2. Create the broadcast: name + PBA announcement + 48 kHz stereo preset.
 
+  // getAudioController() returns the handle to the shared LE Audio engine.
+  audio = BLE.getAudioController();
+
+  // createBroadcastSource() makes the transmitter role: no connections, one BIG with 1-2 BISes.
   source = audio.createBroadcastSource();
-  if (!source) {
-    halt("createBroadcastSource", BTStatus::NotSupported);
-  }
+
+  // configureAuracast() helper: Broadcast Name + public broadcast announcement + LC3_48_2_1 preset.
   source.configureAuracast(BROADCAST_NAME, CHANNELS);
   if (BROADCAST_CODE[0] != '\0') {
+    // setBroadcastCode() encrypts the BIG. Receivers need the same code. Empty (default) = open.
     source.setBroadcastCode(BROADCAST_CODE);
   }
-  source.onStarted([]() {
-    Serial.printf("[BIG] streaming \"%s\" (id 0x%06lX)\n", BROADCAST_NAME, (unsigned long)source.getBroadcastId());
-  });
-  source.onStopped([](uint8_t reason) {
-    Serial.printf("[BIG] stopped (reason 0x%02X)\n", reason);
-  });
 
+  // onStarted() fires once the BIG is up and the BISes carry audio.
+  source.onStarted([] { Serial.printf("Broadcasting \"%s\"\n", BROADCAST_NAME); });
+
+  // onStopped() fires when the BIG ends. Reason is the HCI code (0x16 after stop()).
+  source.onStopped([](uint8_t reason) { Serial.printf("Broadcast stopped (reason 0x%02X)\n", reason); });
+
+  // 3. Commit the roles (starts no audio by itself).
+
+  // audio.begin() commits the staged roles and freezes the GATT table for this session.
   st = audio.begin();
   if (!st) {
     halt("audio.begin", st);
   }
 
-  // The recorder opens the input at the preset's sample rate once the BISes
-  // stream; attach both channels (or only stream 0 for mono).
-  // Configure the onboard ES8311 ADC; it follows the I2S clocks, so it works
-  // at every LC3 sample rate.
-  if (!board_audio::es8311Begin()) {
-    Serial.println("ES8311 init failed; check the codec I2C bus");
+  // 4. Open the local audio input and bind it to the broadcast streams.
+
+  // One BIS carries mono. Two BISes carry left + right as separate mono streams.
+  if (!es8311Begin()) {
+    Serial.println("ES8311 init failed. Check the codec I2C bus");
   }
+
+  // recorder.begin(bclk, ws, din, mclk) opens I2S input. The LC3 task is still stopped.
   st = recorder.begin(I2S_SCLK, I2S_LRCK, I2S_DIN, I2S_MCLK);
   if (!st) {
     halt("recorder.begin", st);
   }
-  // One argument handles a mono or one stereo stream; two arguments are for
-  // two separate mono streams (left, right).
-  st = CHANNELS == 2 ? recorder.attach(source.stream(0), source.stream(1)) : recorder.attach(source.stream(0));
+
+  // stream(i) is BIS i: 0 = mono/front left, 1 = front right.
+  if (CHANNELS == 2) {
+    // attach(left, right) feeds two mono Tx streams: left BIS + right BIS.
+    st = recorder.attach(source.stream(0), source.stream(1));
+  } else {
+    // attach(stream) feeds one Tx stream carrying mono (or interleaved stereo).
+    st = recorder.attach(source.stream(0));
+  }
+
   if (!st) {
     halt("recorder.attach", st);
   }
+
+  // startCapture() spawns the LC3 encode task. Sending follows the BIG's start/stop.
   st = recorder.startCapture();
   if (!st) {
     halt("recorder.startCapture", st);
   }
 
+  // 5. Go on air.
+
+  // source.start() brings up extended advertising (announcement + name), periodic advertising (BASE) and the BIG.
   st = source.start();
   if (!st) {
     halt("source.start", st);
   }
 
-  Serial.printf("Broadcasting \"%s\" (%u channel(s), %s).\n", BROADCAST_NAME, CHANNELS, BROADCAST_CODE[0] ? "encrypted" : "open");
+  Serial.printf("\"%s\" on air (%u channel(s), %s).\n", BROADCAST_NAME, CHANNELS, BROADCAST_CODE[0] ? "encrypted" : "open");
 }
 
 void loop() {
-  static uint32_t last = 0;
-  if (millis() - last >= 5000) {
-    last = millis();
-    if (recorder.sampleRate()) {
-      Serial.printf("[recorder] %lu Hz x %u ch, %lu SDUs sent, %lu errors\n", (unsigned long)recorder.sampleRate(), recorder.channels(),
-                    (unsigned long)recorder.sdusSent(), (unsigned long)recorder.sendErrors());
-    }
-  }
-  delay(100);
+  delay(1000);  // nothing to do: the recorder feeds the BIG on its own
 }

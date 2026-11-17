@@ -1,43 +1,36 @@
 /*
- * LE Audio -- Unicast speaker
+ * LE Audio Unicast Speaker
  *
- * A speaker that receives audio over a Connected Isochronous Stream from a
- * phone/PC or from the LEAudio_WirelessMic example:
+ * A speaker that plays audio sent by a phone/PC or by LEAudio_WirelessMic.
+ * The remote side (unicast client) finds this speaker, configures one stream
+ * and starts it. This sketch never starts a stream itself.
  *
- *   - CAP acceptor with a CSIS set member (a set of one)
- *   - BAP unicast server: one stereo-capable sink ASE
- *   - VCP volume renderer
- *   - LC3 player decoding the sink stream to an I2S DAC
- *
- * One sink ASE accepts mono or interleaved stereo, so the source can send
- * both channels over one CIS. The speaker advertises connectably and waits
- * for a unicast client; it never starts a stream itself.
- *
- * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
- * (esp_audio_codec). On the ESP32-S31 Function CoreBoard 1 the onboard ES8311
- * DAC feeds the NS4150B speaker amplifier; the board variant supplies the I2S
- * and PA pins.
- *
- * Licensed under the Apache License, Version 2.0
+ * Pair with: LEAudio_WirelessMic, or a phone/PC with LE Audio.
+ * Hardware: ESP32-S31 Function CoreBoard 1 (ES8311 DAC + NS4150B amp).
+ * The I2S and PA_CTRL pins plus es8311Begin()/es8311SetVolume() come from the board variant (no include needed).
  */
 
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
-#include "board_audio.h"
 
-// ESP32-S31 Function CoreBoard 1: ES8311 codec -> NS4150B speaker amplifier.
-// The pin macros come from the board variant.
+#ifndef I2S_SCLK
+#error "This example requires the I2S pins defined in the board files."
+#endif
 
-static const char *DEVICE_NAME = "LE Audio Speaker";
+// --- Tweakables -----------------------------------------------------------
+static const char *DEVICE_NAME = "LE Audio Speaker";  // BLE device + adv name
 
+// --- LE Audio roles -------------------------------------------------------
 BLEAudio audio;
 BLEAudioCapAcceptor capAcceptor;
 BLEAudioUnicastServer unicastServer;
 BLEAudioVolumeRenderer volumeRenderer;
 BLEAudioPlayer player;
 
-volatile bool doAttachPlayer = false;
+// Set on the Bluetooth task when the client configures our sink stream.
+// The LC3 task is attached/started from loop(), never from the callback.
+static volatile bool sinkReady = false;
 
 void halt(const char *what, BTStatus st) {
   Serial.printf("%s failed: %s\n", what, st.toString());
@@ -46,120 +39,137 @@ void halt(const char *what, BTStatus st) {
   }
 }
 
-// A client configured the sink ASE. This callback runs on the Bluetooth host
-// task, so only record the request; attach/start the codec task from loop().
+// Runs on the Bluetooth task: just remember the stream is ready.
 void onSinkConfigured(BLEAudioStream &stream) {
+  // codecConfig() = the LC3 codec the client picked for this stream.
   BLEAudioCodecConfig codec = stream.codecConfig();
-  Serial.printf("[sink] configured: %lu Hz, %u us, %u octets x %u ch\n", (unsigned long)codec.samplingRateHz, codec.frameDurationUs,
-                codec.octetsPerFrame, codec.channels());
-  doAttachPlayer = true;
+  Serial.printf("Sender configured %lu Hz, %u ch\n", (unsigned long)codec.samplingRateHz, codec.channels());
+  sinkReady = true;
 }
 
 void setup() {
   Serial.begin(115200);
   Serial.println("\n=== LE Audio Unicast Speaker ===");
 
+  // 1. Bring up the Bluetooth host.
+
+  // BLE.begin() powers up the controller + host and sets the GAP device name.
   BTStatus st = BLE.begin(DEVICE_NAME);
   if (!st) {
     halt("BLE.begin", st);
   }
 
+  // 2. Create the roles (engine starts lazily on the first create*()).
+
+  // getAudioController() returns the handle to the shared LE Audio engine.
   audio = BLE.getAudioController();
-  // No explicit init: the engine initializes lazily on the first create*()
-  // below. Create every role first, then call audio.begin() once to commit.
-  audio.onLinkReady([](uint16_t connHandle) {
-    Serial.printf("Source connected (link %u)\n", connHandle);
-  });
-  audio.onDisconnected([](uint16_t connHandle) {
-    Serial.printf("Source disconnected (link %u)\n", connHandle);
-  });
 
-  // CAP ties the profiles into one audio device. A standalone speaker is a
-  // coordinated set of one.
+  // onLinkReady() fires on the Bluetooth task once a peer link is encrypted and usable.
+  audio.onLinkReady([](uint16_t conn) { Serial.printf("Sender connected (link %u)\n", conn); });
+
+  // onDisconnected() fires when the link drops (or a connect() attempt fails).
+  audio.onDisconnected([](uint16_t conn) { Serial.printf("Sender disconnected (link %u)\n", conn); });
+
+  // A standalone speaker is a coordinated set of one. Publishing CAS (+ CSIS)
+  // lets a phone's CAP initiator discover and drive it like any set member.
+  // Without it, only raw BAP works and phones drive through CAP.
+
+  // createCapAcceptor() publishes CAS (+ included CSIS): the CAP identity of this device.
   capAcceptor = audio.createCapAcceptor();
-  if (!capAcceptor) {
-    halt("createCapAcceptor", BTStatus::NotSupported);
-  }
-  capAcceptor.setSetSize(1);
-  capAcceptor.setRank(1);
 
-  // One stereo-capable sink ASE for the incoming audio.
-  unicastServer = audio.createUnicastServer();
-  if (!unicastServer) {
-    halt("createUnicastServer", BTStatus::NotSupported);
-  }
+  // setSetSize()/setRank() publish our coordinated-set identity: a set of 1, we are rank 1.
+  // Rank is 1-based (1..set size).
+  capAcceptor.setSetSize(1).setRank(1);
+
+  // One sink stream: the sender puts mono or stereo on a single CIS.
+  // createUnicastServer() publishes PACS + ASCS: it accepts streams a client configures.
+
+  // configureMediaSink() helper: 1 stereo-capable sink ASE, media + conversational contexts.
   unicastServer.configureMediaSink();
-  for (size_t i = 0; i < unicastServer.streamCount(); i++) {
-    BLEAudioStream stream = unicastServer.stream(i);
-    stream.onConfigured(onSinkConfigured);
-    stream.onStarted([](BLEAudioStream &s) {
-      Serial.printf("[sink] streaming on conn %u\n", s.connHandle());
-    });
-    stream.onStopped([](BLEAudioStream &, uint8_t reason) {
-      Serial.printf("[sink] stopped (reason 0x%02X)\n", reason);
-    });
-  }
 
-  // The source can change volume over VCP.
+  // stream(0) is our only ASE. onConfigured() fires when the client picks a codec for it.
+  unicastServer.stream(0).onConfigured(onSinkConfigured);
+
+  // onStarted() fires when the CIS starts streaming. connHandle() is the ACL link it runs on.
+  unicastServer.stream(0).onStarted([](BLEAudioStream &s) { Serial.printf("Playing (link %u)\n", s.connHandle()); });
+
+  // onStopped() fires when streaming ends. Reason is the HCI/ASCS code.
+  unicastServer.stream(0).onStopped([](BLEAudioStream &, uint8_t reason) { Serial.printf("Stopped (reason 0x%02X)\n", reason); });
+
+  // Let the sender change our volume over VCP.
+  // createVolumeRenderer() publishes VCS: the volume service the peer drives.
   volumeRenderer = audio.createVolumeRenderer();
+
+  // setInitialVolume() sets the volume 0..255 advertised before any peer connects.
   volumeRenderer.setInitialVolume(160);
+
+  // onStateChanged() fires on every volume/mute change, local or from the peer.
   volumeRenderer.onStateChanged([](uint8_t volume, bool muted) {
-    Serial.printf("[VCP] volume=%u%s\n", volume, muted ? " (muted)" : "");
-    board_audio::es8311SetVolume(muted ? 0 : (uint8_t)((volume * 100u) / 255u));
+    Serial.printf("Volume %u%s\n", volume, muted ? " (muted)" : "");
+    es8311SetVolume(muted ? 0 : (uint8_t)((volume * 100u) / 255u));
   });
 
-  // audio.begin() commits the roles and publishes their GATT services. It
-  // does not open I2S or start the LC3 task; those happen next.
+  // 3. Publish all roles into one GATT table (starts no audio by itself).
+
+  // audio.begin() commits the staged roles and freezes the GATT table for this session.
   st = audio.begin();
   if (!st) {
     halt("audio.begin", st);
   }
 
-  // Configure the onboard ES8311 (I2C), then enable the NS4150B amplifier.
-  // The codec follows the I2S clocks, so it works at every LC3 sample rate.
-  if (!board_audio::es8311Begin()) {
-    Serial.println("ES8311 init failed; check the codec I2C bus");
+  // 4. Open the local audio output: ES8311 codec + I2S fed by the player.
+
+  if (!es8311Begin()) {
+    Serial.println("ES8311 init failed. Check the codec I2C bus");
   }
+
+  // Enable the speaker amplifier
   pinMode(PA_CTRL, OUTPUT);
-  digitalWrite(PA_CTRL, HIGH);
+  digitalWrite(PA_CTRL, HIGH);  // enable the speaker amplifier
+
+  // player.begin() opens I2S output. The LC3 task is still stopped.
   st = player.begin(I2S_SCLK, I2S_LRCK, I2S_DOUT, I2S_MCLK);
   if (!st) {
     halt("player.begin", st);
   }
 
+  // 5. Advertise so a sender can find and connect to us.
+
+  // getAdvertising() returns the handle to the legacy advertising instance.
   BLEAdvertising adv = BLE.getAdvertising();
+
+  // ConnectableScannable = peers may connect to us and read scan-response data.
   adv.setType(BLEAdvType::ConnectableScannable);
+
+  // setName() puts DEVICE_NAME in the advertising payload.
   adv.setName(DEVICE_NAME);
+
+  // setAppearance() publishes the Assigned Number: a standalone speaker.
   adv.setAppearance(BLE_APPEARANCE_AUDIO_SINK_STANDALONE_SPEAKER);
+
+  // Start advertising.
   st = adv.start();
   if (!st) {
     halt("advertising", st);
   }
 
-  Serial.printf("Ready. Connect a phone/PC or LEAudio_WirelessMic to \"%s\".\n", DEVICE_NAME);
+  Serial.printf("Ready. Connect to \"%s\" to play audio.\n", DEVICE_NAME);
 }
 
 void loop() {
-  if (doAttachPlayer) {
-    doAttachPlayer = false;
-    BLEAudioStream sink = unicastServer.stream(BLEAudioStream::Direction::Rx);
+  // The sink stream was configured on the Bluetooth task: bind it to the
+  // player here. Direction reminder: Rx = we receive audio on this stream.
+  if (sinkReady) {
+    sinkReady = false;
     player.stopPlayback();  // no-op unless a previous stream was attached
-    BTStatus st = player.attach(sink);
+    // attach() binds the Rx stream: the player will decode whatever the client sends on it.
+    BTStatus st = player.attach(unicastServer.stream(BLEAudioStream::Direction::Rx));
     if (st) {
+      // startPlayback() spawns the LC3 decode task. Playback follows the stream's start/stop.
       st = player.startPlayback();
     }
     if (!st) {
       Serial.printf("player: %s\n", st.toString());
-    }
-  }
-
-  static uint32_t last = 0;
-  if (millis() - last >= 5000) {
-    last = millis();
-    if (player.sampleRate()) {
-      Serial.printf("[player] %lu Hz x %u ch, %lu SDUs, %lu lost, %lu PLC, %lu underruns\n", (unsigned long)player.sampleRate(),
-                    player.channels(), (unsigned long)player.sdusReceived(), (unsigned long)player.sdusLost(),
-                    (unsigned long)player.plcFrames(), (unsigned long)player.underruns());
     }
   }
   delay(100);

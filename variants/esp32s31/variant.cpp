@@ -1,22 +1,29 @@
 /*
- * ESP32-S31 Function CoreBoard 1 board audio helpers.
+ * ESP32-S31 Function CoreBoard 1 onboard audio helpers.
  *
  * The onboard ES8311 codec is wired to the I2C bus on SDA1/SCL1 and to the
  * I2S port whose pins the variant defines. It runs as an I2S slave: the ESP32
  * supplies BCLK, LRCK and MCLK (MCLK = 256 * sample rate), so one register
- * setup covers every LE Audio sample rate.
+ * setup covers every sample rate.
+ *
+ * The prototypes live in pins_arduino.h (pulled in by Arduino.h), so these
+ * are callable from any sketch on this board with no extra include.
+ *
+ * This runs on the same I2C HAL as Arduino Wire (bus 0), so a sketch that
+ * later calls Wire.begin() on these pins shares the bus instead of
+ * conflicting with it.
  *
  * Licensed under the Apache License, Version 2.0.
  */
 
-#pragma once
+#include "Arduino.h"
+#include "esp32-hal-i2c.h"
+#include "pins_arduino.h"
 
-#ifdef __cplusplus
+#define ES8311_I2C_BUS        0
+#define ES8311_I2C_TIMEOUT_MS 100
 
-#include <Arduino.h>
-#include <Wire.h>
-
-namespace board_audio {
+namespace {
 
 /** ES8311 register addresses used by the setup below. */
 enum : uint8_t {
@@ -43,27 +50,18 @@ enum : uint8_t {
   ES8311_REG_DAC37 = 0x37,
 };
 
-inline bool es8311Write(uint8_t reg, uint8_t value) {
-  Wire.beginTransmission(ES8311_I2C_ADDR);
-  Wire.write(reg);
-  Wire.write(value);
-  return Wire.endTransmission() == 0;
+bool es8311Write(uint8_t reg, uint8_t value) {
+  const uint8_t buf[2] = {reg, value};
+  return i2cWrite(ES8311_I2C_BUS, ES8311_I2C_ADDR, buf, sizeof(buf), ES8311_I2C_TIMEOUT_MS) == ESP_OK;
 }
 
-inline bool es8311Read(uint8_t reg, uint8_t &value) {
-  Wire.beginTransmission(ES8311_I2C_ADDR);
-  Wire.write(reg);
-  if (Wire.endTransmission(false) != 0) {
-    return false;
-  }
-  if (Wire.requestFrom((int)ES8311_I2C_ADDR, 1) != 1) {
-    return false;
-  }
-  value = (uint8_t)Wire.read();
-  return true;
+bool es8311Read(uint8_t reg, uint8_t &value) {
+  size_t got = 0;
+  return i2cWriteReadNonStop(ES8311_I2C_BUS, ES8311_I2C_ADDR, &reg, 1, &value, 1, ES8311_I2C_TIMEOUT_MS, &got) == ESP_OK
+         && got == 1;
 }
 
-inline bool es8311Update(uint8_t reg, uint8_t mask, uint8_t value) {
+bool es8311Update(uint8_t reg, uint8_t mask, uint8_t value) {
   uint8_t current;
   if (!es8311Read(reg, current)) {
     return false;
@@ -71,18 +69,15 @@ inline bool es8311Update(uint8_t reg, uint8_t mask, uint8_t value) {
   return es8311Write(reg, (uint8_t)((current & ~mask) | value));
 }
 
-/**
- * @brief Power up and configure the onboard ES8311 for I2S slave playback and capture.
- *
- * MCLK comes from the ESP32 at 256 * sample rate, so the same clock setup is
- * valid for 8/16/24/32/48 kHz. Both the DAC and the ADC are enabled; call
- * es8311SetVolume() to control the speaker.
- *
- * @return true when every I2C write was acknowledged.
- */
-inline bool es8311Begin() {
-  Wire.begin(ES8311_I2C_SDA, ES8311_I2C_SCL);
-  Wire.setClock(100000);
+}  // namespace
+
+bool es8311Begin() {
+  // Share the bus when Wire (or anything else) already owns it.
+  if (!i2cIsInit(ES8311_I2C_BUS)) {
+    if (i2cInit(ES8311_I2C_BUS, ES8311_I2C_SDA, ES8311_I2C_SCL, 100000) != ESP_OK) {
+      return false;
+    }
+  }
 
   bool ok = true;
   // Reset, then power on.
@@ -124,15 +119,10 @@ inline bool es8311Begin() {
   return ok;
 }
 
-/** @brief Set the DAC volume, 0 (mute) to 100 (full scale). */
-inline bool es8311SetVolume(uint8_t percent) {
+bool es8311SetVolume(uint8_t percent) {
   if (percent > 100) {
     percent = 100;
   }
   const uint8_t value = percent == 0 ? 0 : (uint8_t)((percent * 256u) / 100u - 1u);
   return es8311Write(ES8311_REG_DAC32, value);
 }
-
-}  // namespace board_audio
-
-#endif /* __cplusplus */

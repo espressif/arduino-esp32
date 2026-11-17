@@ -246,18 +246,6 @@ BTStatus BLEAudio::initEngine() {
     (void)bleAudioEngineDeinit();
     return bleAudioStatus(err);
   }
-  BLESecurity sec = BLE.getSecurity();
-  if (sec && !sec.isConfigured()) {
-    if (impl.autoSecurity.load()) {
-      sec.setIOCapability(BLEIOCapability::NoInputNoOutput);
-      sec.setAuthenticationMode(true, false, true);
-      log_i("Audio: applying default security policy (Just Works, bonding, SC, no MITM); "
-            "configure BLESecurity explicitly or call setAutoSecurityPolicy(false) to override");
-    } else {
-      log_w("Audio: automatic security policy off and BLESecurity not configured; "
-            "links stay unencrypted and audio discovery may fail");
-    }
-  }
   impl.active = true;
   log_i("Audio: engine initialized");
   return BTStatus::OK;
@@ -276,6 +264,22 @@ BTStatus BLEAudio::begin() {
   if (impl.beginFailed) {
     log_e("Audio: begin() failed before; run end(), fix the role set, then begin() again");
     return BTStatus::InvalidState;
+  }
+  // Security is settled here, not at the first create*(): explicit BLESecurity
+  // setup and setAutoSecurityPolicy() may come in any order before begin().
+  // Afterwards the setters just overwrite these defaults (last writer wins
+  // until the first pairing), but the flag itself is no longer consulted.
+  BLESecurity sec = BLE.getSecurity();
+  if (sec && !sec.isConfigured()) {
+    if (impl.autoSecurity.load()) {
+      sec.setIOCapability(BLEIOCapability::NoInputNoOutput);
+      sec.setAuthenticationMode(true, false, true);
+      log_i("Audio: applying default security policy (Just Works, bonding, SC, no MITM); "
+            "configure BLESecurity explicitly or call setAutoSecurityPolicy(false) to override");
+    } else {
+      log_w("Audio: automatic security policy off and BLESecurity not configured; "
+            "links stay unencrypted and audio discovery may fail");
+    }
   }
   // The commit always runs — even with no staged audio roles, classic
   // services and the broadcast engine still need the single GATT publish.

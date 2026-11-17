@@ -1,41 +1,36 @@
 /*
- * LE Audio -- Wireless microphone
+ * LE Audio Wireless Microphone
  *
- * An ESP32 microphone that sends mono LC3 audio over a unicast CIS to a
- * speaker (LEAudio_UnicastSpeaker) or any BAP unicast server.
+ * Captures the onboard mic and sends it over one unicast stream to a speaker.
+ * This is the client side: it scans for the speaker, connects, and asks the
+ * speaker to open one sink stream, then feeds it from the LC3 recorder.
  *
- *   - BAP unicast client: scans, connects and starts one sink stream
- *   - LC3 recorder: I2S microphone -> LC3 -> CIS
- *
- * This is the source side of a wireless microphone link. It does not render
- * audio and does not need CAP or the control profiles: the speaker is the
- * unicast server and the microphone is the client.
- *
- * Requires an LE Audio-capable target (ESP32-S31) and the LC3 codec
- * (esp_audio_codec). On the ESP32-S31 Function CoreBoard 1 the onboard
- * microphone feeds the ES8311 ADC; the board variant supplies the I2S pins.
- *
- * Licensed under the Apache License, Version 2.0
+ * Pair with: LEAudio_UnicastSpeaker, or any BAP unicast server (e.g. phone/PC).
+ * Hardware: ESP32-S31 Function CoreBoard 1 (onboard mic -> ES8311 ADC).
+ * The I2S_* pins and es8311Begin() come from the board variant (no include needed).
  */
 
 #include <Arduino.h>
 #include <BLE.h>
 #include <BLEAudio.h>
-#include "board_audio.h"
 
-// ESP32-S31 Function CoreBoard 1: onboard microphone -> ES8311 ADC.
-// The pin macros come from the board variant.
+#ifndef I2S_SCLK
+#error "This example requires the I2S pins defined in the board files."
+#endif
 
-static const char *TARGET_NAME = "LE Audio Speaker";
+// --- Tweakables -----------------------------------------------------------
+static const char *TARGET_NAME = "LE Audio Speaker";  // speaker to connect to
 
+// --- LE Audio roles -------------------------------------------------------
 BLEAudio audio;
 BLEAudioUnicastClient audioClient;
 BLEAudioRecorder recorder;
 
-BTAddress peerAddress;
-volatile bool doConnect = false;
-volatile bool doStartRecorder = false;
-volatile bool doStopRecorder = false;
+static BTAddress peerAddress;
+// Bluetooth-task callbacks only set these. loop() does the real work.
+static volatile bool pendingConnect = false;
+static volatile bool pendingStart = false;
+static volatile bool pendingStop = false;
 
 void halt(const char *what, BTStatus st) {
   Serial.printf("%s failed: %s\n", what, st.toString());
@@ -44,115 +39,131 @@ void halt(const char *what, BTStatus st) {
   }
 }
 
+// Scan result (Bluetooth task): remember the speaker, connect from loop().
 void onDeviceFound(BLEAdvertisedDevice device) {
+  // getName() is the GAP/advertised name of the scanned device. Ignore the rest.
   if (device.getName() != TARGET_NAME) {
     return;
   }
-  Serial.printf("Found \"%s\" at %s\n", TARGET_NAME, device.getAddress().toString().c_str());
+  Serial.printf("Found \"%s\"\n", TARGET_NAME);
+  // getAddress() is the peer address audio.connect() needs.
   peerAddress = device.getAddress();
-  doConnect = true;
+  pendingConnect = true;
+  // Stop scanning: we found our peer (restarts on link loss).
   BLE.getScan().stop();
 }
 
-// The engine secured the link and its GATT database is known: start BAP.
+// Link is encrypted and its GATT table is known: start the audio setup.
 void onLinkReady(uint16_t connHandle) {
-  Serial.printf("Link %u ready, starting the audio stream\n", connHandle);
+  Serial.printf("Link %u ready, opening the stream...\n", connHandle);
+  // connectAndStart() discovers the server's PACS/ASCS on this link, then runs
+  // the ASCS setup (Config Codec/QoS, Enable, Receiver Start Ready) for our streams.
   BTStatus st = audioClient.connectAndStart(connHandle);
   if (!st) {
-    Serial.printf("connectAndStart failed: %s\n", st.toString());
+    Serial.printf("connectAndStart: %s\n", st.toString());
   }
 }
 
 void onLinkLost(uint16_t connHandle) {
   Serial.printf("Link %u lost, scanning again\n", connHandle);
-  doStopRecorder = true;
+  pendingStop = true;
+  // start(0) scans until stopped. 0 = no timeout.
   BLE.getScan().start(0);
-}
-
-void onPeerDiscovered(const BLEAudioUnicastPeerInfo &peer) {
-  Serial.printf("Speaker has %u sink / %u source ASEs\n", peer.sinkEndpoints, peer.sourceEndpoints);
-}
-
-void onStreamsStarted() {
-  Serial.println("Stream is up");
-  doStartRecorder = true;
-}
-
-void onStreamsStopped() {
-  Serial.println("Stream released");
-  doStopRecorder = true;
-}
-
-void onSetupError(BLEAudioUnicastClient::Step step, uint8_t responseCode, uint8_t reason) {
-  Serial.printf("ASCS step %u failed: rsp 0x%02X reason 0x%02X\n", (unsigned)step, responseCode, reason);
 }
 
 void setup() {
   Serial.begin(115200);
   Serial.println("\n=== LE Audio Wireless Microphone ===");
 
+  // 1. Bring up the Bluetooth host.
+
+  // BLE.begin() powers up the controller + host and sets the GAP device name.
   BTStatus st = BLE.begin("LE Audio Wireless Mic");
   if (!st) {
     halt("BLE.begin", st);
   }
 
+  // 2. Create the roles (engine starts lazily on the first create*()).
+  // Defaults fit a mic: 1 stream we send (Tx), 16 kHz LC3, Media context.
+
+  // getAudioController() returns the handle to the shared LE Audio engine.
   audio = BLE.getAudioController();
-  // No explicit init: the engine initializes lazily on the first create*()
-  // below. Create every role first, then call audio.begin() once to commit.
+
+  // onLinkReady() fires on the Bluetooth task once a peer link is encrypted and usable.
   audio.onLinkReady(onLinkReady);
+
+  // onDisconnected() fires when the link drops (or a connect() attempt fails).
   audio.onDisconnected(onLinkLost);
 
+  // createUnicastClient() makes the initiator side: it discovers the server and sets up streams on it.
   audioClient = audio.createUnicastClient();
-  if (!audioClient) {
-    halt("createUnicastClient", BTStatus::NotSupported);
-  }
-  // The defaults fit a wireless microphone: one sink stream (audio sent to
-  // the speaker), no source stream, LC3 16 kHz and the Media context.
-  // Register callbacks separately so each role is easy to read.
-  audioClient.onDiscovered(onPeerDiscovered);
-  audioClient.onStarted(onStreamsStarted);
-  audioClient.onStopped(onStreamsStopped);
-  audioClient.onError(onSetupError);
 
-  // audio.begin() registers the client role. The I2S input and LC3 recorder
-  // are opened afterwards, so the order is the same as in the player examples.
+  // onStarted() fires once every requested stream is streaming.
+  audioClient.onStarted([] { Serial.println("Streaming to the speaker"); pendingStart = true; });
+
+  // onStopped() fires once all streams are released (after stop() or a failure).
+  audioClient.onStopped([] { Serial.println("Stream released"); pendingStop = true; });
+
+  // onError() reports the failed ASCS setup step plus the server's response/reason codes.
+  audioClient.onError([](BLEAudioUnicastClient::Step step, uint8_t rsp, uint8_t reason) {
+    Serial.printf("Stream setup failed at step %u (0x%02X/0x%02X)\n", (unsigned)step, rsp, reason);
+  });
+
+  // 3. Publish the roles (starts no audio by itself).
+
+  // audio.begin() commits the staged roles and freezes the GATT table for this session.
   st = audio.begin();
   if (!st) {
     halt("audio.begin", st);
   }
 
-  // Configure the onboard ES8311 ADC; it follows the I2S clocks, so it works
-  // at every LC3 sample rate.
-  if (!board_audio::es8311Begin()) {
-    Serial.println("ES8311 init failed; check the codec I2C bus");
+  // 4. Open the local audio input: ES8311 ADC + I2S fed into the recorder.
+
+  if (!es8311Begin()) {
+    Serial.println("ES8311 init failed. Check the codec I2C bus");
   }
+
+  // recorder.begin() opens I2S input. The LC3 task is still stopped.
   st = recorder.begin(I2S_SCLK, I2S_LRCK, I2S_DIN, I2S_MCLK);
   if (!st) {
     halt("recorder.begin", st);
   }
 
+  // 5. Find the speaker to send to.
+
+  // getScan() returns the handle to the scanner.
   BLEScan scan = BLE.getScan();
+
+  // Active scan: also ask each advertiser for scan-response data.
   scan.setActiveScan(true);
+
+  // onResult() fires per advertising report, on the Bluetooth task.
   scan.onResult(onDeviceFound);
+
+  // start(0) scans until stopped. 0 = no timeout.
   scan.start(0);
   Serial.printf("Scanning for \"%s\"...\n", TARGET_NAME);
 }
 
 void loop() {
-  if (doConnect) {
-    doConnect = false;
-    BTStatus st = audio.connect(peerAddress);
-    if (!st) {
-      Serial.printf("connect failed: %s\n", st.toString());
+  // Connect from loop(): the scan callback runs on the Bluetooth task.
+  if (pendingConnect) {
+    pendingConnect = false;
+    // audio.connect() opens the ACL through the audio engine (not BLEClient):
+    // the engine then encrypts the link and discovers the peer's GATT table.
+    if (!audio.connect(peerAddress)) {
+      Serial.println("connect failed, scanning again");
       BLE.getScan().start(0);
     }
   }
 
-  if (doStartRecorder) {
-    doStartRecorder = false;
-    BLEAudioStream tx = audioClient.stream(BLEAudioStream::Direction::Tx);
-    BTStatus st = recorder.attach(tx);
+  // Direction reminder: Tx = we send audio on this stream.
+  if (pendingStart) {
+    pendingStart = false;
+    // attach() binds the Tx stream: the recorder will encode mic PCM into it.
+    BTStatus st = recorder.attach(audioClient.stream(BLEAudioStream::Direction::Tx));
     if (st) {
+      // startCapture() spawns the LC3 encode task. Sending follows the stream's start/stop.
       st = recorder.startCapture();
     }
     if (!st) {
@@ -160,18 +171,10 @@ void loop() {
     }
   }
 
-  if (doStopRecorder) {
-    doStopRecorder = false;
+  if (pendingStop) {
+    pendingStop = false;
+    // stopCapture() stops encoding. The attachment is kept so startCapture() can resume.
     recorder.stopCapture();
-  }
-
-  static uint32_t last = 0;
-  if (millis() - last >= 5000) {
-    last = millis();
-    if (recorder.sampleRate()) {
-      Serial.printf("[mic] %lu Hz x %u ch, %lu SDUs sent, %lu errors\n", (unsigned long)recorder.sampleRate(), recorder.channels(),
-                    (unsigned long)recorder.sdusSent(), (unsigned long)recorder.sendErrors());
-    }
   }
   delay(100);
 }

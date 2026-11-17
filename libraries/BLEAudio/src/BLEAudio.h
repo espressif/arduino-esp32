@@ -138,12 +138,13 @@ public:
    * separately when the streams are configured.
    *
    * Security: PACS/ASCS characteristics require an encrypted link, so when
-   * `BLESecurity` was not configured by the sketch, the engine init applies
+   * `BLESecurity` was not configured by the sketch, begin() applies
    * the default audio policy (Just Works: NoInputNoOutput, bonding, Secure
-   * Connections, no MITM) and logs it. Call setAutoSecurityPolicy(false) and
-   * configure `BLESecurity` explicitly to override; with the automatic policy
-   * off and no sketch configuration, links stay unencrypted and audio
-   * discovery fails.
+   * Connections, no MITM) and logs it. Explicit `BLESecurity` setup and
+   * setAutoSecurityPolicy() may come in any order before begin(); call
+   * setAutoSecurityPolicy(false) and configure `BLESecurity` explicitly to
+   * override. With the automatic policy off and no sketch configuration,
+   * links stay unencrypted and audio discovery fails.
    *
    * @return BTStatus::OK on success; InvalidState on a null handle, while a
    *         standalone `BLEIso` session owns the host, or after a failed

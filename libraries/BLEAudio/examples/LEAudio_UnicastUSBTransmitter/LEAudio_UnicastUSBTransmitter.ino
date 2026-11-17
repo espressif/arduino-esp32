@@ -1,25 +1,16 @@
 /*
- * LE Audio unicast transmitter fed by a USB speaker.
+ * LE Audio Unicast Transmitter fed by a USB speaker
  *
- * The LE Audio TRANSMITTER side of a unicast link: the board shows up on the
- * PC as a USB speaker (UAC, 16-bit, 48 kHz). Audio the PC plays is captured
- * through USB, downmixed to mono, and streamed over a Connected Isochronous
- * Stream to a unicast server (LEAudio_UnicastUSBReceiver,
- * LEAudio_UnicastSpeaker, or any BAP unicast server):
+ * The TRANSMITTER side of a unicast link: this board shows up on the PC as a
+ * USB speaker, and whatever the PC plays is streamed over LE Audio to a
+ * unicast server (LEAudio_UnicastUSBReceiver, LEAudio_UnicastSpeaker, or any
+ * BAP server). No I2S hardware needed.
  *
- *   - BAP unicast client: scans, connects and starts one sink stream
- *   - USB Audio speaker (host -> device): PCM captured via onData
- *   - LC3 recorder: USB PCM -> LC3 -> CIS (mono)
- *
- * The USB side runs at a fixed 48 kHz, so the client requests the
- * LC3_48_2_1 preset; peers that cannot do 48 kHz cannot be used.
- * This mirrors LEAudio_WirelessMic, with the I2S microphone replaced by USB.
- *
- * Wiring: connect the board's native USB port (not the UART bridge) to the
- * PC and select it as the playback device. Requires an LE Audio-capable
- * target with native USB (ESP32-S31) and the LC3 codec (esp_audio_codec).
- *
- * Licensed under the Apache License, Version 2.0
+ * Pair with: LEAudio_UnicastUSBReceiver (all-USB loopback with two boards),
+ * or LEAudio_UnicastSpeaker to hear PC audio on a DAC speaker.
+ * Hardware: any LE Audio-capable board with native USB (e.g. ESP32-S31).
+ * Wiring: connect the board's native USB port (not the UART bridge) to the PC
+ * and pick it as the playback device.
  */
 
 #include <Arduino.h>
@@ -28,28 +19,31 @@
 #include "USB.h"
 #include "USBAudioCard.h"
 
-// Playback target: a board running a unicast sink. Defaults to the matching
-// receiver example for the all-USB loopback (PC -> USB speaker -> LE Audio ->
-// USB mic -> PC); use "LE Audio Speaker" to play through a DAC speaker instead.
+// --- Tweakables -----------------------------------------------------------
+// Default target is the matching receiver example (PC -> USB -> LE Audio ->
+// USB mic -> PC loopback). Use "LE Audio Speaker" to play on a DAC speaker.
 static const char *TARGET_NAME = "LE Audio USB Rx";
 
+// USB runs at a fixed rate, so request the matching 48 kHz LC3 preset.
 static constexpr uint32_t kUsbRateHz = 48000;
 static constexpr uint32_t kUsbRingBytes = 32768;
 static constexpr uint32_t kUsbRingMask = kUsbRingBytes - 1;
 
+// --- LE Audio roles -------------------------------------------------------
 BLEAudio audio;
 BLEAudioUnicastClient audioClient;
 BLEAudioRecorder recorder;
+// USBAudioCard() declares the USB device: 48 kHz, 16-bit, stereo speaker from the PC, no mic.
 USBAudioCard uac(kUsbRateHz, UAC_BPS_16, UAC_SPK_STEREO, UAC_MIC_NONE);
 
-BTAddress peerAddress;
-volatile bool doConnect = false;
-volatile bool doStartRecorder = false;
-volatile bool doStopRecorder = false;
+static BTAddress peerAddress;
+// Bluetooth-task callbacks only set these. loop() does the real work.
+static volatile bool pendingConnect = false;
+static volatile bool pendingStart = false;
+static volatile bool pendingStop = false;
 
-// Single-producer (USB task) / single-consumer (codec task) byte ring holding
-// interleaved stereo int16 PCM from the host. Overruns drop the oldest data;
-// underruns are zero-filled by the PCM source below.
+// Byte ring: USB task writes stereo int16 PCM, codec task reads it.
+// Single producer / single consumer. overruns drop the oldest data.
 static uint8_t usbRing[kUsbRingBytes];
 static volatile uint32_t usbRingRead = 0;
 static volatile uint32_t usbRingWrite = 0;
@@ -61,8 +55,7 @@ void halt(const char *what, BTStatus st) {
   }
 }
 
-// Host playback data lands here (USB task). Never blocks: drops oldest data
-// instead of stalling the USB stack when the recorder cannot keep up.
+// PC playback data (USB task). Never blocks: drops oldest audio when full.
 void onUsbPlayback(void *data, uint16_t len) {
   if (data == nullptr || len == 0) {
     return;
@@ -71,16 +64,11 @@ void onUsbPlayback(void *data, uint16_t len) {
   uint32_t w = usbRingWrite;
   uint32_t r = usbRingRead;
   if (len >= kUsbRingBytes) {
-    // Larger than the whole ring: keep only the newest window.
-    src += len - (kUsbRingBytes - 1);
+    src += len - (kUsbRingBytes - 1);  // keep only the newest window
     len = kUsbRingBytes - 1;
     r = w;
-  } else {
-    uint32_t used = (w - r) & kUsbRingMask;
-    if (len > (kUsbRingBytes - 1 - used)) {
-      // Full: drop oldest to make room (lowest latency).
-      r = (w + len - (kUsbRingBytes - 1));
-    }
+  } else if (len > (kUsbRingBytes - 1 - ((w - r) & kUsbRingMask))) {
+    r = w + len - (kUsbRingBytes - 1);  // full: drop oldest, keep latency low
   }
   uint32_t wp = w & kUsbRingMask;
   uint32_t first = kUsbRingBytes - wp;
@@ -93,12 +81,12 @@ void onUsbPlayback(void *data, uint16_t len) {
   usbRingRead = r;
 }
 
-// Recorder PCM source (codec task): downmix one stereo USB frame to mono.
-// Always returns a full buffer; missing frames are silence.
+// Recorder PCM source (codec task): downmix stereo USB frames to mono.
+// Always returns a full buffer. Missing frames are silence.
 size_t onUsbPcmSource(int16_t *pcm, size_t maxSamples) {
   uint32_t r = usbRingRead;
-  uint32_t w = usbRingWrite;
-  uint32_t availFrames = ((w - r) & kUsbRingMask) / 4;
+  // 4 bytes per stereo frame. availFrames = buffered frames the recorder may consume.
+  uint32_t availFrames = ((usbRingWrite - r) & kUsbRingMask) / 4;
   size_t n = maxSamples < availFrames ? maxSamples : (size_t)availFrames;
   for (size_t i = 0; i < n; i++) {
     uint32_t o = (r + i * 4) & kUsbRingMask;
@@ -107,69 +95,60 @@ size_t onUsbPcmSource(int16_t *pcm, size_t maxSamples) {
     pcm[i] = (int16_t)(((int32_t)left + (int32_t)right) / 2);
   }
   if (n < maxSamples) {
+    // Underrun: pad with silence so the LC3 frame is always full.
     memset(pcm + n, 0, (maxSamples - n) * sizeof(int16_t));
   }
   usbRingRead = r + (uint32_t)(n * 4);
+  // Always report full: the recorder encodes maxSamples every frame.
   return maxSamples;
 }
 
+// Scan result (Bluetooth task): remember the sink, connect from loop().
 void onDeviceFound(BLEAdvertisedDevice device) {
+  // getName() is the GAP/advertised name of the scanned device. Ignore the rest.
   if (device.getName() != TARGET_NAME) {
     return;
   }
-  Serial.printf("Found \"%s\" at %s\n", TARGET_NAME, device.getAddress().toString().c_str());
+  Serial.printf("Found \"%s\"\n", TARGET_NAME);
+  // getAddress() is the peer address audio.connect() needs.
   peerAddress = device.getAddress();
-  doConnect = true;
+  pendingConnect = true;
+  // Stop scanning: we found our peer (restarts on link loss).
   BLE.getScan().stop();
 }
 
-// The engine secured the link and its GATT database is known: start BAP.
+// Link is encrypted and its GATT table is known: start the audio setup.
 void onLinkReady(uint16_t connHandle) {
-  Serial.printf("Link %u ready, starting the audio stream\n", connHandle);
+  Serial.printf("Link %u ready, opening the stream...\n", connHandle);
+  // connectAndStart() discovers the sink's PACS/ASCS on this link, then runs
+  // the ASCS setup (Config Codec/QoS, Enable, Receiver Start Ready) for our streams.
   BTStatus st = audioClient.connectAndStart(connHandle);
   if (!st) {
-    Serial.printf("connectAndStart failed: %s\n", st.toString());
+    Serial.printf("connectAndStart: %s\n", st.toString());
   }
 }
 
 void onLinkLost(uint16_t connHandle) {
   Serial.printf("Link %u lost, scanning again\n", connHandle);
-  doStopRecorder = true;
+  pendingStop = true;
+  // start(0) scans until stopped. 0 = no timeout.
   BLE.getScan().start(0);
-}
-
-void onPeerDiscovered(const BLEAudioUnicastPeerInfo &peer) {
-  Serial.printf("Sink has %u sink / %u source ASEs\n", peer.sinkEndpoints, peer.sourceEndpoints);
-}
-
-void onStreamsStarted() {
-  Serial.println("Stream is up");
-  doStartRecorder = true;
-}
-
-void onStreamsStopped() {
-  Serial.println("Stream released");
-  doStopRecorder = true;
-}
-
-void onSetupError(BLEAudioUnicastClient::Step step, uint8_t responseCode, uint8_t reason) {
-  Serial.printf("ASCS step %u failed: rsp 0x%02X reason 0x%02X\n", (unsigned)step, responseCode, reason);
 }
 
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   (void)arg;
+  (void)event_data;
   if (event_base == ARDUINO_USB_EVENTS) {
     if (event_id == ARDUINO_USB_STARTED_EVENT) {
-      Serial.println("[USB] plugged");
+      Serial.println("USB plugged");
     } else if (event_id == ARDUINO_USB_STOPPED_EVENT) {
-      Serial.println("[USB] unplugged");
+      Serial.println("USB unplugged");
     }
   } else if (event_base == ARDUINO_USB_AUDIO_CARD_EVENTS) {
-    arduino_usb_audio_card_event_data_t *data = (arduino_usb_audio_card_event_data_t *)event_data;
+    auto *data = (arduino_usb_audio_card_event_data_t *)event_data;
+    // Track whether the PC opened our speaker interface (Informational. The ring absorbs gaps).
     if (event_id == ARDUINO_USB_AUDIO_CARD_INTERFACE_ENABLE_EVENT && data->interface_enable.interface == UAC_INTERFACE_SPK) {
-      Serial.printf("[USB] speaker stream %s\n", data->interface_enable.enable ? "opened" : "closed");
-    } else if (event_id == ARDUINO_USB_AUDIO_CARD_SAMPLE_RATE_EVENT) {
-      Serial.printf("[USB] host sample rate: %lu Hz\n", (unsigned long)data->sample_rate.rate);
+      Serial.printf("USB speaker %s\n", data->interface_enable.enable ? "opened by PC" : "closed");
     }
   }
 }
@@ -178,74 +157,113 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\n=== LE Audio Unicast USB Speaker ===");
 
+  // 1. Bring up the Bluetooth host.
+
+  // BLE.begin() powers up the controller + host and sets the GAP device name.
   BTStatus st = BLE.begin("LE Audio USB Tx");
   if (!st) {
     halt("BLE.begin", st);
   }
 
+  // 2. Create the roles (engine starts lazily on the first create*()).
+  // Fixed 48 kHz to match USB (no resampling): one stream we send (Tx).
+
+  // getAudioController() returns the handle to the shared LE Audio engine.
   audio = BLE.getAudioController();
-  // No explicit init: the engine initializes lazily on the first create*()
-  // below. Create every role first, then call audio.begin() once to commit.
+
+  // onLinkReady() fires on the Bluetooth task once a peer link is encrypted and usable.
   audio.onLinkReady(onLinkReady);
+
+  // onDisconnected() fires when the link drops (or a connect() attempt fails).
   audio.onDisconnected(onLinkLost);
 
+  // createUnicastClient() makes the initiator side: it discovers the sink and sets up streams on it.
   audioClient = audio.createUnicastClient();
-  if (!audioClient) {
-    halt("createUnicastClient", BTStatus::NotSupported);
-  }
-  // Fixed 48 kHz to match the USB side (no resampling): one sink stream,
-  // 10 ms LC3 frames.
-  audioClient.setPreset(BLEAudioCodecPreset::LC3_48_2_1).setSinkStreams(1);
-  audioClient.onDiscovered(onPeerDiscovered);
-  audioClient.onStarted(onStreamsStarted);
-  audioClient.onStopped(onStreamsStopped);
-  audioClient.onError(onSetupError);
 
-  // audio.begin() commits the client role. The USB PCM source is attached
-  // afterwards, mirroring the player/recorder examples' ordering.
+  // setPreset() fixes the LC3 codec + QoS of our streams: 48 kHz, 10 ms frames (matches USB).
+  // setSinkStreams(1) requests one stream we send, per sink (capped by the sink's ASE count).
+  audioClient.setPreset(BLEAudioCodecPreset::LC3_48_2_1).setSinkStreams(1);
+
+  // onStarted() fires once every requested stream is streaming.
+  audioClient.onStarted([] { Serial.println("Streaming to the sink"); pendingStart = true; });
+
+  // onStopped() fires once all streams are released (after stop() or a failure).
+  audioClient.onStopped([] { Serial.println("Stream released"); pendingStop = true; });
+
+  // onError() reports the failed ASCS setup step plus the sink's response/reason codes.
+  audioClient.onError([](BLEAudioUnicastClient::Step step, uint8_t rsp, uint8_t reason) {
+    Serial.printf("Stream setup failed at step %u (0x%02X/0x%02X)\n", (unsigned)step, rsp, reason);
+  });
+
+  // 3. Publish the roles (starts no audio by itself).
+
+  // audio.begin() commits the staged roles and freezes the GATT table for this session.
   st = audio.begin();
   if (!st) {
     halt("audio.begin", st);
   }
 
-  // USB PCM feeds the recorder instead of I2S; onUsbPcmSource drains the
-  // ring buffer filled by onUsbPlayback and zero-fills underruns.
+  // 4. Feed the recorder from USB instead of I2S: no I2S hardware needed.
+
+  // setPCMSource() takes PCM from our callback instead of I2S pins (before begin()).
   recorder.setPCMSource(onUsbPcmSource);
+
+  // recorder.begin() with no pins is only valid after setPCMSource(). The LC3 task is still stopped.
   st = recorder.begin();
   if (!st) {
     halt("recorder.begin", st);
   }
 
+  // uac.onEvent() registers for USB audio events (interface open/close, sample rate).
   uac.onEvent(usbEventCallback);
+
+  // uac.onData() registers the callback receiving each PC playback packet (USB task).
   uac.onData(onUsbPlayback);
+
+  // uac.begin() starts the USB audio device (descriptors + endpoints).
   if (!uac.begin()) {
-    Serial.println("USB audio begin failed; check USB-OTG support");
+    Serial.println("USB audio begin failed. Check USB-OTG support");
   }
+
+  // USB.onEvent()/USB.begin() register stack events and start the native USB stack.
   USB.onEvent(usbEventCallback);
   USB.begin();
 
+  // 5. Find the sink to send to.
+
+  // getScan() returns the handle to the scanner.
   BLEScan scan = BLE.getScan();
+
+  // Active scan: also ask each advertiser for scan-response data.
   scan.setActiveScan(true);
+
+  // onResult() fires per advertising report, on the Bluetooth task.
   scan.onResult(onDeviceFound);
+
+  // start(0) scans until stopped. 0 = no timeout.
   scan.start(0);
   Serial.printf("Scanning for \"%s\"...\n", TARGET_NAME);
 }
 
 void loop() {
-  if (doConnect) {
-    doConnect = false;
-    BTStatus st = audio.connect(peerAddress);
-    if (!st) {
-      Serial.printf("connect failed: %s\n", st.toString());
+  // Connect from loop(): the scan callback runs on the Bluetooth task.
+  if (pendingConnect) {
+    pendingConnect = false;
+    // audio.connect() opens the ACL through the audio engine (not BLEClient):
+    // the engine then encrypts the link and discovers the peer's GATT table.
+    if (!audio.connect(peerAddress)) {
+      Serial.println("connect failed, scanning again");
       BLE.getScan().start(0);
     }
   }
 
-  if (doStartRecorder) {
-    doStartRecorder = false;
-    BLEAudioStream tx = audioClient.stream(BLEAudioStream::Direction::Tx);
-    BTStatus st = recorder.attach(tx);
+  // Direction reminder: Tx = we send audio on this stream.
+  if (pendingStart) {
+    pendingStart = false;
+    // attach() binds the Tx stream: the recorder will encode USB PCM into it.
+    BTStatus st = recorder.attach(audioClient.stream(BLEAudioStream::Direction::Tx));
     if (st) {
+      // startCapture() spawns the LC3 encode task. Sending follows the stream's start/stop.
       st = recorder.startCapture();
     }
     if (!st) {
@@ -253,18 +271,10 @@ void loop() {
     }
   }
 
-  if (doStopRecorder) {
-    doStopRecorder = false;
+  if (pendingStop) {
+    pendingStop = false;
+    // stopCapture() stops encoding. The attachment is kept so startCapture() can resume.
     recorder.stopCapture();
-  }
-
-  static uint32_t last = 0;
-  if (millis() - last >= 5000) {
-    last = millis();
-    if (recorder.sampleRate()) {
-      Serial.printf("[usb] %lu Hz in, %lu Hz x %u ch out, %lu SDUs sent, %lu errors\n", (unsigned long)uac.sampleRate(),
-                    (unsigned long)recorder.sampleRate(), recorder.channels(), (unsigned long)recorder.sdusSent(), (unsigned long)recorder.sendErrors());
-    }
   }
   delay(100);
 }
