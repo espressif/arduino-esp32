@@ -117,6 +117,29 @@ void loop() {
       channelReady = true;
     } else {
       Serial.println("Retrying scan...");
+      if (!BLE.getScan().isScanning()) {
+        BLE.getScan().start(0);
+      }
+    }
+  }
+
+  // The ACL can drop under a live channel and the channel can close under a
+  // live ACL; handle both independently so neither state strands the sketch.
+  // A scan that is already running is never restarted.
+  if (client && !client.isConnected()) {
+    if (channelReady) {
+      Serial.println("ACL lost, rescanning...");
+      channelReady = false;
+    }
+    client.disconnect();
+    if (!BLE.getScan().isScanning()) {
+      BLE.getScan().start(0);
+    }
+  } else if (channelReady && !channel.isConnected()) {
+    Serial.println("L2CAP channel closed, reopening...");
+    channelReady = false;
+    client.disconnect();
+    if (!BLE.getScan().isScanning()) {
       BLE.getScan().start(0);
     }
   }
@@ -131,12 +154,6 @@ void loop() {
     } else {
       Serial.printf("Send failed: %s\n", s.toString());
     }
-  }
-
-  if (channelReady && client && !client.isConnected()) {
-    Serial.println("ACL lost, rescanning...");
-    channelReady = false;
-    BLE.getScan().start(0);
   }
 
   delay(2000);

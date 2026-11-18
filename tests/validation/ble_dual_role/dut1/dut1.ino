@@ -167,8 +167,13 @@ void setup() {
   );
 
   // Give DUT0 time to sample its table, then tear the reverse links down and
-  // run the original DUT1-as-client phase on every backend.
-  delay(1000);
+  // run the original DUT1-as-client phase on every backend. The reverse links
+  // stay up until the harness confirms DUT0 sampled them (REVERSE_GO), so a
+  // fast teardown cannot drop a link under DUT0's lookup.
+  if (!waitForToken("REVERSE_GO", 30000)) {
+    Serial.println("[DUT1] Timeout waiting for reverse-sample ack");
+    return;
+  }
   if (reverseClients > 0) {
     reverse2.disconnect();
     reverse1.disconnect();

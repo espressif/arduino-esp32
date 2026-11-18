@@ -343,6 +343,23 @@ static void phase_10() {
   btBluedroidHostFinalize();
   check(!btStarted(), "controller stopped after finalize");
 
+  // Interleaved acquire/finalize: a new session that acquires between the
+  // last release and its deferred finalize owns the controller now. The
+  // stale finalize must not stop the controller under the new session.
+  // Fails without the acquire-cancels-pending-stop / finalize-checks-users
+  // guards in the shared host manager.
+  check(btBluedroidHostAcquire(), "interleave: acquire starts the host");
+  check(btStarted(), "interleave: controller up after acquire");
+  check(btBluedroidHostRelease() == BT_HOST_STOPPED, "interleave: last release stops the host");
+  check(btBluedroidHostAcquire(), "interleave: re-acquire before finalize adopts the controller");
+  check(btStarted(), "interleave: controller still up after re-acquire");
+  btBluedroidHostFinalize();
+  check(btStarted(), "interleave: stale finalize leaves the re-acquired controller up");
+  check(esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED, "interleave: host still enabled for new session");
+  check(btBluedroidHostRelease() == BT_HOST_STOPPED, "interleave: final release stops the host");
+  btBluedroidHostFinalize();
+  check(!btStarted(), "interleave: controller stopped after final finalize");
+
   // External owner: the host is already enabled outside the manager. Acquire
   // adopts it; release must leave it running for that owner.
   check(btStart(), "external btStart succeeds");

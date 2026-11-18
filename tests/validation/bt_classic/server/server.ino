@@ -231,22 +231,30 @@ void setup() {
 
   // BLE alongside the live SPP link. BLE started first (phase 1), so it owns
   // the shared Bluedroid host; ending it must leave the host up for Classic.
+  // The link is latched via onConnect (not polling alone) so a fast
+  // teardown cannot fall between two polls and report connected=0.
+  // The server sends COEX_BLE_SEEN over SPP once observed; the client waits
+  // for it before ending BLE, closing the race deterministically.
   {
     BTStatus bs = BLE.begin(serverName + "_ble");
     BLEServer srv = BLE.createServer();
+    static volatile bool coexBleSeen = false;
+    coexBleSeen = false;
+    srv.onConnect([](BLEServer, const BLEConnInfo &) { coexBleSeen = true; });
     BLEAdvertising adv = BLE.getAdvertising();
     adv.setType(BLEAdvType::ConnectableScannable);
     adv.setName(serverName + "_ble");
     BTStatus as = adv.start();
     unsigned long coexDl = millis() + 30000;
-    while (srv.getConnectedCount() == 0 && millis() < coexDl) {
+    while (!coexBleSeen && srv.getConnectedCount() == 0 && millis() < coexDl) {
       checkSerial();
       delay(20);
     }
-    bool bleConn = srv.getConnectedCount() > 0;
+    bool bleConn = coexBleSeen || srv.getConnectedCount() > 0;
     Serial.printf(
       "[SERVER] Coex ble=%d adv=%d connected=%d spp=%d\n", (int)(bool)bs, (int)(bool)as, (int)bleConn, (int)SerialBT.hasClient()
     );
+    SerialBT.print("COEX_BLE_SEEN");
     BLE.end(false);
     Serial.printf("[SERVER] Coex teardown spp=%d\n", (int)SerialBT.hasClient());
 

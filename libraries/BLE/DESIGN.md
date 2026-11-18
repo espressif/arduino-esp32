@@ -534,6 +534,9 @@ Important lifecycle invariants:
   host already enabled by an external component is adopted and never stopped.
   `end(true)` on a session that is not the last user records the terminal
   contract without a physical release; the last user performs the teardown.
+  An acquire that lands between the last release and its deferred controller
+  stop cancels that stop and takes ownership; a stale finalize never stops a
+  re-acquired controller (covered by the bt_mem_wrap phase-10 interleave test).
 
 ### Design rule
 

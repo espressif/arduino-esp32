@@ -140,6 +140,10 @@ bool btBluedroidHostAcquire(void) {
 
   bool ok = true;
   if (_btHostUsers == 0) {
+    // A previous last-user release may have disabled Bluedroid while leaving
+    // the controller stop deferred (pending finalize). Reusing the still-up
+    // controller here cancels that deferred stop; the new session now owns it.
+    _btHostStopPending = false;
     _btHostExternal = (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED);
     if (!_btHostExternal) {
       if (!btStart()) {
@@ -192,8 +196,12 @@ void btBluedroidHostFinalize(void) {
   if (mtx == NULL || xSemaphoreTake(mtx, portMAX_DELAY) != pdTRUE) {
     return;
   }
-  if (_btHostStopPending) {
-    _btHostStopPending = false;
+  // Only the still-last user may stop the controller. An acquire that landed
+  // between the last release and this finalize owns the controller now; leave
+  // it up and drop the stale pending stop.
+  const bool stop = _btHostStopPending && _btHostUsers == 0;
+  _btHostStopPending = false;
+  if (stop) {
     btStop();
   }
   xSemaphoreGive(mtx);

@@ -161,7 +161,9 @@ void setup() {
   Serial.printf("[DUT0] Remote value: %s\n", val.c_str());
 
   // Keep our client link up while DUT1 opens one or more client links back to
-  // our server. This is the simultaneous client+server case.
+  // our server. This is the simultaneous client+server case. DUT1 holds its
+  // reverse links until the harness confirms this sample (REVERSE_GO), so no
+  // fixed delay can drop a link under the lookup below.
   Serial.println("[DUT0] Ready for reverse connect");
   const bool isBluedroid = strcmp(BLE.getStackName(), "Bluedroid") == 0;
   unsigned long reverseWait = millis();
@@ -169,7 +171,7 @@ void setup() {
     while (reverseConns == 0 && millis() - reverseWait < 20000) {
       delay(100);
     }
-    delay(1500);  // let a second reverse client arrive if DUT1 opens one
+    delay(500);  // let a second reverse client arrive if DUT1 opens one
   }
 
   BTAddress lookupAddr = (reverseConns > 0) ? reverseInfo.getAddress() : peerAddr;
@@ -179,6 +181,9 @@ void setup() {
     "[DUT0] Lookup stack=%s conns=%u reverseConns=%d central=%d\n", BLE.getStackName(), (unsigned)conns.size(), reverseConns, (int)lookupCentral
   );
 
+  // The lookup above sampled while DUT1 holds the reverse links open (it only
+  // tears them down after the harness sends REVERSE_GO), so the sample cannot
+  // race a teardown.
   if (!waitForToken("DISC_GO", 20000)) {
     Serial.println("[DUT0] Timeout waiting for disconnect token");
     return;

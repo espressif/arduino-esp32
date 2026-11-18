@@ -113,6 +113,9 @@ def test_ble_dual_role(dut, ci_job_id):
         assert reverse_conns == 0, "NimBLE reverse phase should be skipped"
     assert stack0 == stack1, f"DUT stack mismatch: DUT0={stack0}, DUT1={stack1}"
 
+    # Both sides sampled while the reverse links were up. Release DUT1's
+    # reverse links now, then run the sequential phase.
+    dut1.write("REVERSE_GO\n")
     dut0.write("DISC_GO\n")
     dut0.expect_exact("[DUT0] Ready for sequential client", timeout=20)
     dut1.expect_exact("[DUT1] Reverse cleanup done", timeout=20)

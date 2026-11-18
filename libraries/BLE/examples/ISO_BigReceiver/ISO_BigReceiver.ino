@@ -92,6 +92,11 @@ void setup() {
     });
 
   BLEScan scan = BLE.getScan();
+  // Delivery of every report matters here: after a periodic-sync loss the
+  // re-sync is triggered by the next report from the same broadcaster. With
+  // duplicate filtering enabled, an unchanged payload is suppressed and the
+  // recovery below would never fire.
+  scan.setFilterDuplicates(false);
   scan.onResult([](const BLEAdvertisedDevice &dev) {
     if (paSyncRequested || dev.getName() != TARGET_NAME) {
       return;

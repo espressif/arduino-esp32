@@ -180,9 +180,13 @@ void setup() {
 
   // BLE alongside the live SPP link (see the server side). BLE started first
   // (phase 1), so ending it must leave the shared host up for Classic.
+  // Wait for the server's COEX_BLE_SEEN over SPP before tearing BLE down;
+  // otherwise a fast teardown can fall between the server's polls and report
+  // connected=0. Timeout proceeds anyway (the server latches via callback).
   {
     BTStatus bs = BLE.begin(clientName + "_ble");
     bool bleConn = false;
+    BLEClient cli;
     BLEScan scn = BLE.getScan();
     scn.setActiveScan(true);
     unsigned long coexDl = millis() + 20000;
@@ -190,7 +194,7 @@ void setup() {
       for (const auto &dev : scn.startBlocking(3000)) {
         BLEAdvertisedDevice d = dev;
         if (d.getName() == serverName + "_ble") {
-          BLEClient cli = BLE.createClient();
+          cli = BLE.createClient();
           bleConn = static_cast<bool>(cli.connect(d.getAddress()));
           break;
         }
@@ -198,6 +202,19 @@ void setup() {
       scn.clearResults();
     }
     Serial.printf("[CLIENT] Coex ble=%d spp=%d\n", (int)((bool)bs && bleConn), (int)SerialBT.connected());
+    if (bleConn) {
+      String coexAck;
+      unsigned long ackDl = millis() + 10000;
+      while (millis() < ackDl) {
+        while (SerialBT.available()) {
+          coexAck += (char)SerialBT.read();
+        }
+        if (coexAck.indexOf("COEX_BLE_SEEN") >= 0) {
+          break;
+        }
+        delay(20);
+      }
+    }
     BLE.end(false);
     Serial.printf("[CLIENT] Coex teardown spp=%d\n", (int)SerialBT.connected());
 

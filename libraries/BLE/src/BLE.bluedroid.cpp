@@ -210,6 +210,8 @@ void BLEClass::Impl::abandonStart() {
     hostUser = false;
     (void)btBluedroidHostRelease();
   }
+  // A failed begin has no later end() to run the deferred controller stop.
+  btBluedroidHostFinalize();
 }
 
 BTStatus BLEClass::Impl::backendBegin(const String &deviceName) {
