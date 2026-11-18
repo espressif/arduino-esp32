@@ -72,21 +72,21 @@ board-support code. The variant provides `es8311Begin()` and
 
 | Example | Device | What it shows |
 | --- | --- | --- |
-| [`LEAudio_UnicastSpeaker`](examples/LEAudio_UnicastSpeaker) | Unicast speaker | CAP acceptor, stereo-capable unicast sink, VCP volume, LC3 player -> I2S DAC |
-| [`LEAudio_WirelessMic`](examples/LEAudio_WirelessMic) | Wireless microphone | BAP unicast client, LC3 recorder from an I2S mic -> CIS |
-| [`LEAudio_AuracastSource`](examples/LEAudio_AuracastSource) | Auracast transmitter | Broadcast source, Public Broadcast Announcement, LC3 recorder from an I2S input |
-| [`LEAudio_AuracastSink`](examples/LEAudio_AuracastSink) | Auracast speaker | Broadcast sink, BASS Scan Delegator, LC3 player -> I2S DAC |
-| [`LEAudio_UnicastUSBReceiver`](examples/LEAudio_UnicastUSBReceiver) | USB microphone | Unicast sink like the speaker, but LC3 decodes to a PCM callback and the audio goes to the PC as a USB microphone (no I2S hardware needed) |
-| [`LEAudio_UnicastUSBTransmitter`](examples/LEAudio_UnicastUSBTransmitter) | USB speaker | Unicast client like the wireless mic, but the LC3 recorder is fed from a USB speaker instead of an I2S mic (no I2S hardware needed) |
+| [`UnicastSpeaker`](examples/UnicastSpeaker) | Unicast speaker | CAP acceptor, stereo-capable unicast sink, VCP volume, LC3 player -> I2S DAC |
+| [`UnicastMic`](examples/UnicastMic) | Unicast microphone | BAP unicast client, LC3 recorder from an I2S mic -> CIS |
+| [`AuracastSource`](examples/AuracastSource) | Auracast transmitter | Broadcast source, Public Broadcast Announcement, LC3 recorder from an I2S input |
+| [`AuracastSink`](examples/AuracastSink) | Auracast speaker | Broadcast sink, BASS Scan Delegator, LC3 player -> I2S DAC |
+| [`UnicastUSBReceiver`](examples/UnicastUSBReceiver) | USB microphone | Unicast sink like the speaker, but LC3 decodes to a PCM callback and the audio goes to the PC as a USB microphone (no I2S hardware needed) |
+| [`UnicastUSBTransmitter`](examples/UnicastUSBTransmitter) | USB speaker | Unicast client like the wireless mic, but the LC3 recorder is fed from a USB speaker instead of an I2S mic (no I2S hardware needed) |
 
 Typical pairs:
 
-- `LEAudio_WirelessMic` -> `LEAudio_UnicastSpeaker`
-- `LEAudio_AuracastSource` -> `LEAudio_AuracastSink`
-- A phone/PC with LE Audio -> `LEAudio_UnicastSpeaker` (unicast)
-- A phone/PC with Auracast -> `LEAudio_AuracastSink` (broadcast)
-- A phone/PC with LE Audio -> `LEAudio_UnicastUSBReceiver` (unicast); the PC records or listens to the USB microphone
-- A PC playing audio -> `LEAudio_UnicastUSBTransmitter` (USB speaker) -> `LEAudio_UnicastUSBReceiver` over LE Audio (unicast); all-USB end-to-end test with two boards and no I2S hardware (point the transmitter at `LE Audio Speaker` instead to use a DAC speaker)
+- `UnicastMic` -> `UnicastSpeaker`
+- `AuracastSource` -> `AuracastSink`
+- A phone/PC with LE Audio -> `UnicastSpeaker` (unicast)
+- A phone/PC with Auracast -> `AuracastSink` (broadcast)
+- A phone/PC with LE Audio -> `UnicastUSBReceiver` (unicast). The PC records or listens to the USB microphone
+- A PC playing audio -> `UnicastUSBTransmitter` (USB speaker) -> `UnicastUSBReceiver` over LE Audio (unicast). All-USB end-to-end test with two boards and no I2S hardware (point the transmitter at `LE Audio Speaker` instead to use a DAC speaker)
 
 The examples require an LE Audio-capable target (ESP32-S31) and the LC3 codec
 (`esp_audio_codec`). Advertising appearance values are named constants, e.g.
@@ -192,8 +192,8 @@ player.attach(stream);
 recorder.attach(stream);
 ```
 
-Use this for a single ASE or a single BIS. `LEAudio_UnicastSpeaker` uses it
-because `configureMediaSink()` publishes one sink ASE; `LEAudio_WirelessMic`
+Use this for a single ASE or a single BIS. `UnicastSpeaker` uses it
+because `configureMediaSink()` publishes one sink ASE. `UnicastMic`
 uses it because a microphone sends one mono stream.
 
 **Two streams, each carrying one mono channel**
@@ -205,8 +205,8 @@ recorder.attach(left, right);
 ```
 
 Use this for two mono ASEs/BISes, such as a stereo Auracast layout with two
-BISes (front left + front right). `LEAudio_AuracastSink` and
-`LEAudio_AuracastSource` use it when `CHANNELS` is 2.
+BISes (front left + front right). `AuracastSink` and
+`AuracastSource` use it when `CHANNELS` is 2.
 
 The data path checks this at stream start: one stream may carry 1–2 channels;
 two streams must both be mono and describe the same codec/QoS (rate, frame

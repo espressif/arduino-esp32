@@ -4,7 +4,7 @@ Broadcast receiver. Scans, PA-syncs, joins the BIG, and plays it on the speaker.
 
 ## Pair with
 
-`LEAudio_AuracastSource`, or any Auracast transmitter / phone.
+`AuracastSource`, or any Auracast transmitter / phone.
 
 ## Hardware
 

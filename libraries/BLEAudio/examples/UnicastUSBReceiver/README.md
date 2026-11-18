@@ -1,10 +1,10 @@
 # LE Audio Unicast USB Receiver
 
-Unicast sink like `LEAudio_UnicastSpeaker`, but decoded audio goes to the PC as a USB microphone. No I2S hardware needed.
+Unicast sink like `UnicastSpeaker`, but decoded audio goes to the PC as a USB microphone. No I2S hardware needed.
 
 ## Pair with
 
-`LEAudio_UnicastUSBTransmitter`, or a phone/PC with LE Audio. The PC records or listens to the USB microphone.
+`UnicastUSBTransmitter`, or a phone/PC with LE Audio. The PC records or listens to the USB microphone.
 
 ## Hardware
 

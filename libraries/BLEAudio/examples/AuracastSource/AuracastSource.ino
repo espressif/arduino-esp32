@@ -5,7 +5,7 @@
  * in range. No connections: receivers just sync to the periodic advertising
  * and join the BIG.
  *
- * Pair with: LEAudio_AuracastSink, or a phone/PC with Auracast.
+ * Pair with: AuracastSink, or a phone/PC with Auracast.
  * Hardware: ESP32-S31 Function CoreBoard 1 (onboard mic -> ES8311 ADC).
  * The I2S_* pins and es8311Begin() come from the board variant (no include needed).
  */

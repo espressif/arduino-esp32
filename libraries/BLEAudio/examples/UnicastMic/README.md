@@ -4,7 +4,7 @@ Unicast client that captures the onboard mic and sends it to a speaker. It scans
 
 ## Pair with
 
-`LEAudio_UnicastSpeaker` (`TARGET_NAME = "LE Audio Speaker"` in `LEAudio_WirelessMic.ino:22`), or any BAP unicast server such as a phone/PC.
+`UnicastSpeaker` (`TARGET_NAME = "LE Audio Speaker"` in `UnicastMic.ino:22`), or any BAP unicast server such as a phone/PC.
 
 ## Hardware
 

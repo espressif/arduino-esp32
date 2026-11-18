@@ -6,12 +6,12 @@
  * one SDU per SDU interval (here 10 ms) with a bounded latency and a sequence
  * number, which suits time-synchronized sensor data, control loops or custom
  * audio formats. For LC3 audio with BAP/CAP interoperability use the
- * LEAudio_* examples instead.
+ * BLEAudio examples instead.
  *
  * Flow: advertise connectably, let the Central open the ACL link, then the
  * Central creates the CIS on that link and this side accepts it.
  *
- * Every SDU received from the Central carries its send counter; this side
+ * Every SDU received from the Central carries its send counter. This side
  * answers every SDU interval with its own counter and the last value it got.
  *
  * Pair with the ISO_CisCentral example on another board with LE isochronous

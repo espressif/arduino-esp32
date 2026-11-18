@@ -3,11 +3,11 @@
  *
  * The TRANSMITTER side of a unicast link: this board shows up on the PC as a
  * USB speaker, and whatever the PC plays is streamed over LE Audio to a
- * unicast server (LEAudio_UnicastUSBReceiver, LEAudio_UnicastSpeaker, or any
+ * unicast server (UnicastUSBReceiver, UnicastSpeaker, or any
  * BAP server). No I2S hardware needed.
  *
- * Pair with: LEAudio_UnicastUSBReceiver (all-USB loopback with two boards),
- * or LEAudio_UnicastSpeaker to hear PC audio on a DAC speaker.
+ * Pair with: UnicastUSBReceiver (all-USB loopback with two boards),
+ * or UnicastSpeaker to hear PC audio on a DAC speaker.
  * Hardware: any LE Audio-capable board with native USB (e.g. ESP32-S31).
  * Wiring: connect the board's native USB port (not the UART bridge) to the PC
  * and pick it as the playback device.

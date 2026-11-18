@@ -5,7 +5,7 @@
  * This is the client side: it scans for the speaker, connects, and asks the
  * speaker to open one sink stream, then feeds it from the LC3 recorder.
  *
- * Pair with: LEAudio_UnicastSpeaker, or any BAP unicast server (e.g. phone/PC).
+ * Pair with: UnicastSpeaker, or any BAP unicast server (e.g. phone/PC).
  * Hardware: ESP32-S31 Function CoreBoard 1 (onboard mic -> ES8311 ADC).
  * The I2S_* pins and es8311Begin() come from the board variant (no include needed).
  */

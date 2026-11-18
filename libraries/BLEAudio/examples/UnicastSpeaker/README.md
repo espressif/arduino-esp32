@@ -4,7 +4,7 @@ Stereo-capable unicast sink that plays audio sent by a unicast client. This sket
 
 ## Pair with
 
-`LEAudio_WirelessMic`, or a phone/PC with LE Audio.
+`UnicastMic`, or a phone/PC with LE Audio.
 
 ## Hardware
 
@@ -14,7 +14,7 @@ ESP32-S31 Function CoreBoard 1 (ES8311 DAC + NS4150B amp). The `I2S_*` and `PA_C
 
 1. **Board:** `esp32s31`, **PartitionScheme:** `huge_app`.
 2. Flash this sketch, open Serial at 115200.
-3. Flash `LEAudio_WirelessMic` on a second board (or connect a phone). The speaker advertises as `LE Audio Speaker` (`DEVICE_NAME` in `LEAudio_UnicastSpeaker.ino:22`).
+3. Flash `UnicastMic` on a second board (or connect a phone). The speaker advertises as `LE Audio Speaker` (`DEVICE_NAME` in `UnicastSpeaker.ino:22`).
 4. Expected log: `Ready. Connect to "LE Audio Speaker"...`, then `Sender connected`, `Sender configured <Hz>, <ch>`, `Playing (link X)`.
 
 ## Sketch options

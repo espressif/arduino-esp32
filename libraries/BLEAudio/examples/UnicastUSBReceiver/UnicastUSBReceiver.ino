@@ -2,10 +2,10 @@
  * LE Audio Unicast Receiver with USB microphone output
  *
  * The RECEIVER side of a unicast link: accepts one stream from a phone/PC (or
- * LEAudio_UnicastUSBTransmitter) and forwards the decoded audio to the PC over
+ * UnicastUSBTransmitter) and forwards the decoded audio to the PC over
  * USB, where this board shows up as a USB microphone. No I2S hardware needed.
  *
- * Pair with: a phone/PC with LE Audio, or LEAudio_UnicastUSBTransmitter.
+ * Pair with: a phone/PC with LE Audio, or UnicastUSBTransmitter.
  * Hardware: any LE Audio-capable board with native USB (e.g. ESP32-S31).
  * Wiring: connect the board's native USB port (not the UART bridge) to the PC
  * and open the "USB Audio" microphone in a recorder (or set it to "listen").

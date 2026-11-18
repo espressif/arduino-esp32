@@ -4,7 +4,7 @@ Public broadcast transmitter. Streams the onboard mic to every receiver in range
 
 ## Pair with
 
-`LEAudio_AuracastSink`, or a phone/PC with Auracast.
+`AuracastSink`, or a phone/PC with Auracast.
 
 ## Hardware
 

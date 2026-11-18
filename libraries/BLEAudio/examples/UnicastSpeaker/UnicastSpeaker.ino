@@ -1,11 +1,11 @@
 /*
  * LE Audio Unicast Speaker
  *
- * A speaker that plays audio sent by a phone/PC or by LEAudio_WirelessMic.
+ * A speaker that plays audio sent by a phone/PC or by UnicastMic.
  * The remote side (unicast client) finds this speaker, configures one stream
  * and starts it. This sketch never starts a stream itself.
  *
- * Pair with: LEAudio_WirelessMic, or a phone/PC with LE Audio.
+ * Pair with: UnicastMic, or a phone/PC with LE Audio.
  * Hardware: ESP32-S31 Function CoreBoard 1 (ES8311 DAC + NS4150B amp).
  * The I2S and PA_CTRL pins plus es8311Begin()/es8311SetVolume() come from the board variant (no include needed).
  */

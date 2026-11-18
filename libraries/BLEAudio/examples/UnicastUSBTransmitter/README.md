@@ -1,10 +1,10 @@
 # LE Audio Unicast USB Transmitter
 
-Unicast client like `LEAudio_WirelessMic`, but fed by a USB speaker instead of an I2S mic. Whatever the PC plays is streamed over LE Audio. No I2S hardware needed.
+Unicast client like `UnicastMic`, but fed by a USB speaker instead of an I2S mic. Whatever the PC plays is streamed over LE Audio. No I2S hardware needed.
 
 ## Pair with
 
-`LEAudio_UnicastUSBReceiver` (`TARGET_NAME = "LE Audio USB Rx"` in `LEAudio_UnicastUSBTransmitter.ino:25`) for all-USB loopback with two boards. Point at `"LE Audio Speaker"` to drive the I2S DAC speaker instead.
+`UnicastUSBReceiver` (`TARGET_NAME = "LE Audio USB Rx"` in `UnicastUSBTransmitter.ino:25`) for all-USB loopback with two boards. Point at `"LE Audio Speaker"` to drive the I2S DAC speaker instead.
 
 ## Hardware
 

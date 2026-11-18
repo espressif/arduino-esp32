@@ -6,14 +6,14 @@
  * it without a connection, and they all get each SDU in the same SDU interval,
  * which makes a BIG a good fit for synchronized multi-device updates (lights,
  * displays, sensor time bases) or custom broadcast audio. For Auracast (LC3
- * with BAP/PBP interoperability) use LEAudio_AuracastSource instead.
+ * with BAP/PBP interoperability) use AuracastSource instead.
  *
  * The BIG rides on a periodic advertising train: this sketch starts extended
  * advertising (so receivers can find it by name) plus periodic advertising
  * on the same set, then creates the BIG on that set. Each SDU carries a
  * counter and the sender's millis().
  *
- * Set BROADCAST_CODE to encrypt the BIG; receivers then need the same code.
+ * Set BROADCAST_CODE to encrypt the BIG. Receivers then need the same code.
  *
  * Pair with the ISO_BigReceiver example on one or more boards with LE
  * isochronous channel support (e.g. ESP32-S31).
@@ -31,7 +31,7 @@
 static const char *DEVICE_NAME = "ISO BIG Broadcaster";
 static const uint8_t ADV_INSTANCE = 0;  // advertising set that carries the BIG
 static const uint8_t ADV_SID = 1;       // receivers sync to this SID
-static const char *BROADCAST_CODE = "";  // up to 16 characters; empty = unencrypted
+static const char *BROADCAST_CODE = "";  // up to 16 characters. empty = unencrypted
 static const uint16_t SDU_SIZE = 8;
 
 BLEIso::Channel *bis = nullptr;
@@ -53,7 +53,7 @@ void setup() {
     halt("BLE.begin", st);
   }
 
-  // Extended advertising carries the name; the periodic train carries the BIGInfo.
+  // Extended advertising carries the name. The periodic train carries the BIGInfo.
   BLEAdvertising adv = BLE.getAdvertising();
   adv.setExtType(ADV_INSTANCE, BLEAdvType::NonConnectable);
   adv.setExtPhy(ADV_INSTANCE, BLEPhy::PHY_1M, BLEPhy::PHY_2M);

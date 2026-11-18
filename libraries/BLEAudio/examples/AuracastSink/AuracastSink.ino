@@ -4,7 +4,7 @@
  * Scans for a broadcast, syncs to it and plays the audio on the speaker.
  * A phone app can also steer this sink remotely (BASS Scan Delegator).
  *
- * Pair with: LEAudio_AuracastSource, or any Auracast transmitter / phone.
+ * Pair with: AuracastSource, or any Auracast transmitter / phone.
  * Hardware: ESP32-S31 Function CoreBoard 1 (ES8311 DAC + NS4150B amp).
  * The I2S and PA_CTRL pins plus es8311Begin()/es8311SetVolume() come from the board variant (no include needed).
  */

@@ -369,12 +369,12 @@ Examples
 The ``BLEAudio`` examples are grouped by product, not by API role, and are written for
 the ESP32-S31 Function CoreBoard 1 (ES8311 DAC/ADC + NS4150B amplifier):
 
-* ``LEAudio_UnicastSpeaker`` — CAP acceptor, stereo-capable unicast sink, VCP volume,
+* ``UnicastSpeaker`` — CAP acceptor, stereo-capable unicast sink, VCP volume,
   LC3 player to I2S DAC.
-* ``LEAudio_WirelessMic`` — BAP unicast client, LC3 recorder from an I2S mic to CIS.
-* ``LEAudio_AuracastSource`` — broadcast source, Public Broadcast Announcement, LC3
+* ``UnicastMic`` — BAP unicast client, LC3 recorder from an I2S mic to CIS.
+* ``AuracastSource`` — broadcast source, Public Broadcast Announcement, LC3
   recorder from an I2S input.
-* ``LEAudio_AuracastSink`` — broadcast sink, BASS Scan Delegator, LC3 player to I2S DAC.
+* ``AuracastSink`` — broadcast sink, BASS Scan Delegator, LC3 player to I2S DAC.
 
 Typical pairs: WirelessMic → UnicastSpeaker, AuracastSource → AuracastSink, or a
 phone/PC with LE Audio ↔ UnicastSpeaker and a phone/PC with Auracast ↔ AuracastSink.
