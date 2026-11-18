@@ -172,6 +172,13 @@ bool BLEAudioI2SPort::open(const BLEAudioI2SConfig &pins, bool tx, uint32_t rate
       .invert_flags = {0, 0, 0},
     },
   };
+  // Newer I2S hardware (S3/S31/P4) leaves slot_mask = BOTH even in mono, so
+  // DMA delivers both slots and a mono read spans half the expected audio
+  // time (deep + crackling). Same fix as ESP_I2S: force LEFT for true mono,
+  // one sample per LRCK period.
+  if (sc.slot_cfg.slot_mode == I2S_SLOT_MODE_MONO) {
+    sc.slot_cfg.slot_mask = I2S_STD_SLOT_LEFT;
+  }
   if (i2s_channel_init_std_mode(_chan, &sc) != ESP_OK) {
     i2s_del_channel(_chan);
     _chan = nullptr;
