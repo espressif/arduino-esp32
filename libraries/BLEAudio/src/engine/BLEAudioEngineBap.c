@@ -447,7 +447,16 @@ static void op_released(esp_ble_audio_bap_stream_t *stream) {
   if (s->kind == BLE_AUDIO_STREAM_UNICAST_CLIENT) {
     s->uc_stage = UC_IDLE;
     s->uc_ep = NULL;
-    s->partner = NULL;
+    /* Unpair both ways: leaving the mate's pointer at this now-idle slot
+     * would skip it in group creation and stall its CIS connect forever. The
+     * CAS only clears a pointer that still names this slot, so a concurrent
+     * re-pairing on another task is never clobbered. */
+    ble_audio_slot_t *mate = atomic_load(&s->partner);
+    atomic_store(&s->partner, NULL);
+    if (mate != NULL) {
+      ble_audio_slot_t *expected = s;
+      atomic_compare_exchange_strong(&mate->partner, &expected, NULL);
+    }
     uc_bump(); /* A pass holding the guard must re-scan: this slot just went idle. */
     uc_check_released();
   }
@@ -1909,7 +1918,7 @@ static struct {
   bool adv_added;            /* The advertising set is registered with the BAP broadcast layer. */
   _Atomic bool big_pending;  /* broadcast_source_start succeeded, BIG not yet STREAMING or stopped. */
   uint8_t adv_handle;
-  esp_ble_audio_bap_broadcast_source_t *source;  /* NULL when no source exists. */
+  _Atomic(esp_ble_audio_bap_broadcast_source_t *) source;  /* NULL when no source exists; set by the caller task, compared by the host task. */
 } s_bsrc;
 
 /* BIG created / terminated; per-BIS state arrives through the stream ops. */
@@ -1921,10 +1930,10 @@ static void bsrc_started(esp_ble_audio_bap_broadcast_source_t *source) {
 
 static void bsrc_stopped(esp_ble_audio_bap_broadcast_source_t *source, uint8_t reason) {
   (void)reason;
-  if (source == s_bsrc.source) {
+  if (source == atomic_load(&s_bsrc.source)) {
     bleAudioBroadcastSlotsDown(BLE_AUDIO_STREAM_BROADCAST_SOURCE);
   }
-  s_bsrc.big_pending = false;
+  atomic_store(&s_bsrc.big_pending, false);
   atomic_store(&s_bsrc_up, false);
   bleAudioNotifyBsrcState();
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STOPPED, CONN_NONE, reason, NULL);
@@ -1956,7 +1965,7 @@ int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *location
   esp_ble_audio_bap_broadcast_source_subgroup_param_t subgroup = {0};
   esp_ble_audio_bap_broadcast_source_param_t param = {0};
 
-  if (s_bsrc.source || slots == NULL || count == 0 || count > POOL_BSRC || codec == NULL || qos == NULL) {
+  if (atomic_load(&s_bsrc.source) || slots == NULL || count == 0 || count > POOL_BSRC || codec == NULL || qos == NULL) {
     return ESP_ERR_INVALID_ARG;
   }
   if (!s_bsrc.cb_registered) {
@@ -2005,12 +2014,13 @@ int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *location
   if (code) {
     memcpy(param.broadcast_code, code, BLE_AUDIO_BCODE_SIZE);
   }
-  esp_err_t err = esp_ble_audio_bap_broadcast_source_create(&param, &s_bsrc.source);
+  esp_ble_audio_bap_broadcast_source_t *created = NULL;
+  esp_err_t err = esp_ble_audio_bap_broadcast_source_create(&param, &created);
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "broadcast source: create (%u BIS, %s) failed: %d", count, code ? "encrypted" : "open", err);
-    s_bsrc.source = NULL;
     return (int)err;
   }
+  atomic_store(&s_bsrc.source, created);
   return 0;
 }
 
@@ -2022,10 +2032,10 @@ int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *location
 
 int bleAudioBsrcGetBase(uint8_t *out, uint16_t cap, uint16_t *out_len) {
   NET_BUF_SIMPLE_DEFINE(base_buf, BSRC_BASE_MAX);
-  if (s_bsrc.source == NULL || out == NULL || out_len == NULL) {
+  if (atomic_load(&s_bsrc.source) == NULL || out == NULL || out_len == NULL) {
     return ESP_ERR_INVALID_STATE;
   }
-  esp_err_t err = esp_ble_audio_bap_broadcast_source_get_base(s_bsrc.source, &base_buf);
+  esp_err_t err = esp_ble_audio_bap_broadcast_source_get_base(atomic_load(&s_bsrc.source), &base_buf);
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "broadcast source: BASE encoding failed: %d", err);
     return (int)err;
@@ -2041,7 +2051,7 @@ int bleAudioBsrcGetBase(uint8_t *out, uint16_t cap, uint16_t *out_len) {
 
 /* The advertising set is registered once and reused across stop/start cycles. */
 int bleAudioBsrcStart(uint8_t adv_handle) {
-  if (s_bsrc.source == NULL) {
+  if (atomic_load(&s_bsrc.source) == NULL) {
     return ESP_ERR_INVALID_STATE;
   }
   atomic_store(&s_bsrc_up, false);
@@ -2055,11 +2065,11 @@ int bleAudioBsrcStart(uint8_t adv_handle) {
     s_bsrc.adv_added = true;
     s_bsrc.adv_handle = adv_handle;
   }
-  esp_err_t err = esp_ble_audio_bap_broadcast_source_start(s_bsrc.source, adv_handle);
+  esp_err_t err = esp_ble_audio_bap_broadcast_source_start(atomic_load(&s_bsrc.source), adv_handle);
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "broadcast source: start on advertising set %u failed: %d", adv_handle, err);
   } else {
-    s_bsrc.big_pending = true;
+    atomic_store(&s_bsrc.big_pending, true);
   }
   return (int)err;
 }
@@ -2088,8 +2098,8 @@ int bleAudioBsrcStop(void) {
 }
 
 int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
-  if (s_bsrc.source == NULL) {
-    s_bsrc.big_pending = false;
+  if (atomic_load(&s_bsrc.source) == NULL) {
+    atomic_store(&s_bsrc.big_pending, false);
     atomic_store(&s_bsrc_up, false);
     return ESP_ERR_INVALID_STATE;
   }
@@ -2104,14 +2114,14 @@ int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
   const TickType_t start_tick = xTaskGetTickCount();
   const TickType_t budget = pdMS_TO_TICKS(timeout_ms);
   int st = bsrc_ep_state();
-  while (st != ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING && s_bsrc.big_pending) {
+  while (st != ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING && atomic_load(&s_bsrc.big_pending)) {
     const TickType_t elapsed = xTaskGetTickCount() - start_tick;
     if (elapsed >= budget) {
       break;
     }
     bleAudioArmBsrcStateWait();
     st = bsrc_ep_state();
-    if (st == ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING || !s_bsrc.big_pending) {
+    if (st == ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING || !atomic_load(&s_bsrc.big_pending)) {
       bleAudioNotifyBsrcState();
       break;
     }
@@ -2122,9 +2132,9 @@ int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
     }
     st = bsrc_ep_state();
   }
-  s_bsrc.big_pending = false;
+  atomic_store(&s_bsrc.big_pending, false);
   if (st == ESP_BLE_AUDIO_BAP_EP_STATE_STREAMING) {
-    int err = (int)esp_ble_audio_bap_broadcast_source_stop(s_bsrc.source);
+    int err = (int)esp_ble_audio_bap_broadcast_source_stop(atomic_load(&s_bsrc.source));
     if (err == 0) {
       atomic_store(&s_bsrc_up, false);
       return 0;
@@ -2134,7 +2144,7 @@ int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
   }
   if (st >= 0 && st <= ESP_BLE_AUDIO_BAP_EP_STATE_QOS_CONFIGURED) {
     bleAudioBsrcDelete();
-    if (s_bsrc.source == NULL) {
+    if (atomic_load(&s_bsrc.source) == NULL) {
       atomic_store(&s_bsrc_up, false);
       bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STOPPED, CONN_NONE, 0, NULL);
       return 0;
@@ -2146,24 +2156,25 @@ int bleAudioBsrcStopTimeout(uint32_t timeout_ms) {
 
 /* Replaces the subgroup metadata; the stack refreshes the BASE in the periodic advertising. */
 int bleAudioBsrcUpdateContext(uint16_t context) {
-  if (s_bsrc.source == NULL) {
+  if (atomic_load(&s_bsrc.source) == NULL) {
     return ESP_ERR_INVALID_STATE;
   }
   uint8_t meta[META_CTX_LEN];
   size_t len = build_ctx_meta(meta, ESP_BLE_AUDIO_METADATA_TYPE_STREAM_CONTEXT, context);
-  return (int)esp_ble_audio_bap_broadcast_source_update_metadata(s_bsrc.source, meta, len);
+  return (int)esp_ble_audio_bap_broadcast_source_update_metadata(atomic_load(&s_bsrc.source), meta, len);
 }
 
 /* Deletion is refused while the BIG is up; the source and its advertising set are then kept. */
 void bleAudioBsrcDelete(void) {
-  if (s_bsrc.source) {
-    esp_err_t err = esp_ble_audio_bap_broadcast_source_delete(s_bsrc.source);
+  esp_ble_audio_bap_broadcast_source_t *gone = atomic_load(&s_bsrc.source);
+  if (gone) {
+    esp_err_t err = esp_ble_audio_bap_broadcast_source_delete(gone);
     if (err != ESP_OK) {
       ESP_LOGW(TAG, "broadcast source: delete refused (%d), stop the broadcast first", err);
       return;
     }
-    s_bsrc.source = NULL;
-    s_bsrc.big_pending = false;
+    atomic_store(&s_bsrc.source, NULL);
+    atomic_store(&s_bsrc.big_pending, false);
   }
   if (s_bsrc.adv_added) {
     esp_ble_audio_bap_broadcast_adv_info_t info = {.adv_handle = s_bsrc.adv_handle};
@@ -2173,7 +2184,7 @@ void bleAudioBsrcDelete(void) {
 }
 
 void *bleAudioBsrcHandle(void) {
-  return s_bsrc.source;
+  return atomic_load(&s_bsrc.source);
 }
 
 #endif /* BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED */
@@ -2201,24 +2212,30 @@ static struct {
   bool enabled;        /* bleAudioBsinkInit() ran; GAP events are routed here. */
   bool cb_registered;
   bool delegator;      /* Scan delegator (BASS) registered. */
-  bool scanning;       /* Report Broadcast Audio announcements (BSINK_FOUND). */
-  bool armed;          /* The next PA sync belongs to the sink. */
-  bool hold;           /* Stopped on request: do not resync until re-armed. */
+  /* Cross-task state (caller task API vs. host-task stack callbacks): plain
+   * readers/writers on different cores are a data race, so every flag,
+   * handle and ID below is _Atomic (same convention as the stream slots and
+   * s_uc.group). n_slots/slots[]/code[] are causally ordered instead:
+   * SetStreams/SetCode run at apply time, strictly before any host event can
+   * reference them, and deinit clears them while the host is down. */
+  _Atomic bool scanning;       /* Report Broadcast Audio announcements (BSINK_FOUND). */
+  _Atomic bool armed;          /* The next PA sync belongs to the sink. */
+  _Atomic bool hold;           /* Stopped on request: do not resync until re-armed. */
   bool base_received;  /* BASE decoded for the current sink; later copies are ignored. */
-  bool syncing;        /* BIG sync requested or established. */
-  bool has_code;
+  _Atomic bool syncing;        /* BIG sync requested or established. */
+  _Atomic bool has_code;
   bool failed_no_match;   /* BSINK_SYNC_FAILED(-ENOENT) latched for these inputs. */
   uint32_t fail_mask;     /* BIS-selection inputs the latch was computed from. */
   bool failed_no_code;    /* BSINK_SYNC_FAILED(-EACCES) latched until a code arrives. */
-  uint16_t sync_handle;   /* PA sync in use, SYNC_NONE when not synced. */
-  uint32_t broadcast_id;  /* 24-bit Broadcast_ID of the target. */
+  _Atomic uint16_t sync_handle;   /* PA sync in use, SYNC_NONE when not synced. */
+  _Atomic uint32_t broadcast_id;  /* 24-bit Broadcast_ID of the target. */
   uint32_t base_bis;      /* BIS indexes (bitmask, bit 0 = BIS 1) offered by the BASE. */
   uint32_t pref_mask;     /* Local BIS preference, 0 = any. */
   uint32_t requested;     /* Assistant BIS request, BIS_SYNC_NO_PREF = any. */
   uint8_t n_slots;
   ble_audio_slot_t *slots[POOL_BSNK];  /* Streams the chosen BISes are bound to, in order. */
   uint8_t code[BLE_AUDIO_BCODE_SIZE];
-  esp_ble_audio_bap_broadcast_sink_t *sink;
+  _Atomic(esp_ble_audio_bap_broadcast_sink_t *) sink;  /* Claimed PA sync's sink; host task creates/deletes, C++ stops. */
 } s_bsnk;
 
 /**
@@ -2228,18 +2245,19 @@ static struct {
  * scratch. A failure is reported as BSINK_SYNC_FAILED.
  */
 static void bsnk_create(void) {
-  if (s_bsnk.sink) {
-    (void)esp_ble_audio_bap_broadcast_sink_delete(s_bsnk.sink);
-    s_bsnk.sink = NULL;
+  if (atomic_load(&s_bsnk.sink)) {
+    (void)esp_ble_audio_bap_broadcast_sink_delete(atomic_load(&s_bsnk.sink));
+    atomic_store(&s_bsnk.sink, NULL);
   }
   s_bsnk.base_received = false;
-  s_bsnk.syncing = false;
+  atomic_store(&s_bsnk.syncing, false);
   s_bsnk.failed_no_match = false;
   s_bsnk.failed_no_code = false;
-  esp_err_t err = esp_ble_audio_bap_broadcast_sink_create(s_bsnk.sync_handle, s_bsnk.broadcast_id, &s_bsnk.sink);
+  esp_ble_audio_bap_broadcast_sink_t *sink = NULL;
+  esp_err_t err = esp_ble_audio_bap_broadcast_sink_create(atomic_load(&s_bsnk.sync_handle), atomic_load(&s_bsnk.broadcast_id), &sink);
+  atomic_store(&s_bsnk.sink, sink);
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "broadcast sink: create on PA sync 0x%04x (broadcast 0x%06lx) failed: %d", s_bsnk.sync_handle, (unsigned long)s_bsnk.broadcast_id, err);
-    s_bsnk.sink = NULL;
+    ESP_LOGE(TAG, "broadcast sink: create on PA sync 0x%04x (broadcast 0x%06lx) failed: %d", atomic_load(&s_bsnk.sync_handle), (unsigned long)atomic_load(&s_bsnk.broadcast_id), err);
     bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_SYNC_FAILED, CONN_NONE, (int)err, NULL);
   }
 }
@@ -2276,7 +2294,7 @@ static bool bsnk_ad_cb(uint8_t type, const uint8_t *data, uint8_t len, void *use
 
 /* Only extended advertisers with periodic advertising can be Broadcast Sources. */
 static void bsnk_on_scan(const esp_ble_audio_gap_app_event_t *ev) {
-  if (!s_bsnk.scanning || ev->ext_scan_recv.per_adv_itvl == 0 || ev->ext_scan_recv.data == NULL) {
+  if (!atomic_load(&s_bsnk.scanning) || ev->ext_scan_recv.per_adv_itvl == 0 || ev->ext_scan_recv.data == NULL) {
     return;
   }
   ble_audio_bsink_found_t found = {0};
@@ -2298,15 +2316,15 @@ static void bsnk_on_scan(const esp_ble_audio_gap_app_event_t *ev) {
  * @param conn ACL that sent the PAST, CONN_NONE for a locally created sync.
  */
 static void bsnk_on_pa_sync(uint8_t status, uint16_t sync_handle, uint16_t conn) {
-  if (!s_bsnk.armed) {
+  if (!atomic_load(&s_bsnk.armed)) {
     return;
   }
-  s_bsnk.armed = false;
+  atomic_store(&s_bsnk.armed, false);
   if (status) {
     bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_PA_SYNCED, conn, status, NULL);
     return;
   }
-  s_bsnk.sync_handle = sync_handle;
+  atomic_store(&s_bsnk.sync_handle, sync_handle);
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_PA_SYNCED, conn, 0, NULL);
   bsnk_create();
 }
@@ -2366,7 +2384,7 @@ static uint32_t lowest_bits(uint32_t mask, uint8_t n) {
  * on the next one once the cause is fixed.
  */
 static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_ble_iso_biginfo_t *biginfo) {
-  if (s_bsnk.syncing || s_bsnk.hold || !s_bsnk.base_received || s_bsnk.n_slots == 0) {
+  if (atomic_load(&s_bsnk.syncing) || atomic_load(&s_bsnk.hold) || !s_bsnk.base_received || s_bsnk.n_slots == 0) {
     return;
   }
   uint32_t mask = s_bsnk.base_bis & s_bsnk.requested;
@@ -2389,7 +2407,7 @@ static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_bl
     return;
   }
   s_bsnk.failed_no_match = false;
-  if (biginfo && biginfo->encryption && !s_bsnk.has_code) {
+  if (biginfo && biginfo->encryption && !atomic_load(&s_bsnk.has_code)) {
     if (s_bsnk.failed_no_code) {
       return; /* Cleared by bleAudioBsinkSetCode(). */
     }
@@ -2410,7 +2428,7 @@ static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_bl
     bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_SYNC_FAILED, CONN_NONE, (int)err, NULL);
     return;
   }
-  s_bsnk.syncing = true;
+  atomic_store(&s_bsnk.syncing, true);
 }
 
 static void bsnk_started(esp_ble_audio_bap_broadcast_sink_t *sink) {
@@ -2423,19 +2441,20 @@ static void bsnk_started(esp_ble_audio_bap_broadcast_sink_t *sink) {
 }
 
 static void bsnk_stopped(esp_ble_audio_bap_broadcast_sink_t *sink, uint8_t reason) {
-  if (sink == s_bsnk.sink) {
+  if (sink == atomic_load(&s_bsnk.sink)) {
     bleAudioBroadcastSlotsDown(BLE_AUDIO_STREAM_BROADCAST_SINK);
   }
-  s_bsnk.syncing = false;
+  atomic_store(&s_bsnk.syncing, false);
   atomic_store(&s_bsnk_joined, false);
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_STOPPED, CONN_NONE, reason, NULL);
   /* Delete here, after BASS bis_sync was cleared, then keep a fresh sink on
    * the PA so BASE/BIGInfo keep arriving for a later resync. */
-  if (s_bsnk.sink) {
-    (void)esp_ble_audio_bap_broadcast_sink_delete(s_bsnk.sink);
-    s_bsnk.sink = NULL;
+  esp_ble_audio_bap_broadcast_sink_t *stopped = atomic_load(&s_bsnk.sink);
+  if (stopped) {
+    (void)esp_ble_audio_bap_broadcast_sink_delete(stopped);
+    atomic_store(&s_bsnk.sink, NULL);
   }
-  if (s_bsnk.sync_handle != SYNC_NONE) {
+  if (atomic_load(&s_bsnk.sync_handle) != SYNC_NONE) {
     bsnk_create();
   }
 }
@@ -2462,7 +2481,7 @@ static esp_ble_audio_bap_broadcast_sink_cb_t s_bsnk_cb = {
  * reply is set on return. Rejected while a PA sync is already in use.
  */
 static int sd_pa_sync_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *rs, bool past, uint16_t pa_interval) {
-  if (s_bsnk.sync_handle != SYNC_NONE || s_bsnk.armed) {
+  if (atomic_load(&s_bsnk.sync_handle) != SYNC_NONE || atomic_load(&s_bsnk.armed)) {
     return -EALREADY;
   }
   int reply = -ENOTSUP;
@@ -2483,9 +2502,9 @@ static int sd_pa_sync_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_del
   if (reply != 0) {
     return reply;
   }
-  s_bsnk.broadcast_id = rs->broadcast_id;
-  s_bsnk.armed = true;
-  s_bsnk.hold = false;
+  atomic_store(&s_bsnk.broadcast_id, rs->broadcast_id);
+  atomic_store(&s_bsnk.armed, true);
+  atomic_store(&s_bsnk.hold, false);
   if (past) {
     /* Tell the assistant we are waiting for its PAST. */
     esp_err_t err = esp_ble_audio_bap_scan_delegator_set_pa_state(rs->src_id, ESP_BLE_AUDIO_BAP_PA_STATE_INFO_REQ);
@@ -2499,9 +2518,9 @@ static int sd_pa_sync_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_del
 /* Assistant asks us to drop the PA sync; the C++ side terminates/disarms it (BSINK_PA_TERM_REQ). */
 static int sd_pa_sync_term_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *rs) {
   (void)rs;
-  const bool was_armed = s_bsnk.armed;
-  s_bsnk.armed = false;
-  if (s_bsnk.sync_handle == SYNC_NONE && !was_armed) {
+  const bool was_armed = atomic_load(&s_bsnk.armed);
+  atomic_store(&s_bsnk.armed, false);
+  if (atomic_load(&s_bsnk.sync_handle) == SYNC_NONE && !was_armed) {
     return 0;
   }
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_PA_TERM_REQ, conn ? conn->handle : CONN_NONE, 0, NULL);
@@ -2513,7 +2532,7 @@ static void sd_broadcast_code(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan
                               const uint8_t code[ESP_BLE_ISO_BROADCAST_CODE_SIZE]) {
   (void)rs;
   memcpy(s_bsnk.code, code, BLE_AUDIO_BCODE_SIZE);
-  s_bsnk.has_code = true;
+  atomic_store(&s_bsnk.has_code, true);
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_CODE, conn ? conn->handle : CONN_NONE, 0, NULL);
 }
 
@@ -2538,13 +2557,13 @@ static int sd_bis_sync_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_de
     req = bis_sync_req[i];
   }
   if (req == 0) {
-    s_bsnk.hold = true;
-    if (s_bsnk.sink && s_bsnk.syncing) {
-      (void)esp_ble_audio_bap_broadcast_sink_stop(s_bsnk.sink);
+    atomic_store(&s_bsnk.hold, true);
+    if (atomic_load(&s_bsnk.sink) && atomic_load(&s_bsnk.syncing)) {
+      (void)esp_ble_audio_bap_broadcast_sink_stop(atomic_load(&s_bsnk.sink));
     }
   } else {
     s_bsnk.requested = req;
-    s_bsnk.hold = false;
+    atomic_store(&s_bsnk.hold, false);
   }
   return 0;
 }
@@ -2569,12 +2588,13 @@ static void bsnk_on_gap(const esp_ble_audio_gap_app_event_t *ev) {
     case ESP_BLE_AUDIO_GAP_EVENT_PA_SYNC:       bsnk_on_pa_sync(ev->pa_sync.status, ev->pa_sync.sync_handle, CONN_NONE); break;
     case ESP_BLE_AUDIO_GAP_EVENT_PA_SYNC_PAST:  bsnk_on_pa_sync(ev->pa_sync_past.status, ev->pa_sync_past.sync_handle, ev->pa_sync_past.conn_handle); break;
     case ESP_BLE_AUDIO_GAP_EVENT_PA_SYNC_LOST:
-      if (ev->pa_sync_lost.sync_handle == s_bsnk.sync_handle) {
-        s_bsnk.sync_handle = SYNC_NONE;
+      if (ev->pa_sync_lost.sync_handle == atomic_load(&s_bsnk.sync_handle)) {
+        atomic_store(&s_bsnk.sync_handle, SYNC_NONE);
         s_bsnk.base_received = false;
-        if (s_bsnk.sink && !s_bsnk.syncing) {
-          (void)esp_ble_audio_bap_broadcast_sink_delete(s_bsnk.sink);
-          s_bsnk.sink = NULL;
+        esp_ble_audio_bap_broadcast_sink_t *lost = atomic_load(&s_bsnk.sink);
+        if (lost && !atomic_load(&s_bsnk.syncing)) {
+          (void)esp_ble_audio_bap_broadcast_sink_delete(lost);
+          atomic_store(&s_bsnk.sink, NULL);
         }
         bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_PA_LOST, CONN_NONE, ev->pa_sync_lost.reason, NULL);
       }
@@ -2607,7 +2627,7 @@ int bleAudioBsinkInit(bool delegator) {
   }
 #endif
   s_bsnk.enabled = true;
-  s_bsnk.sync_handle = SYNC_NONE;
+  atomic_store(&s_bsnk.sync_handle, SYNC_NONE);
   s_bsnk.requested = ESP_BLE_AUDIO_BAP_BIS_SYNC_NO_PREF;
   return 0;
 }
@@ -2631,26 +2651,29 @@ int bleAudioBsinkSetStreams(ble_audio_slot_t *const slots[], uint8_t count) {
 }
 
 void bleAudioBsinkSetScanning(bool on) {
-  s_bsnk.scanning = on;
+  atomic_store(&s_bsnk.scanning, on);
 }
 
 /* Called by C++ right before it creates a PA sync, so bsnk_on_pa_sync claims it. */
 void bleAudioBsinkArm(uint32_t broadcast_id) {
-  s_bsnk.broadcast_id = broadcast_id & 0xFFFFFF;
-  s_bsnk.armed = true;
-  s_bsnk.hold = false;
+  /* Paired stores, same task; the host side reads armed first and only trusts broadcast_id when armed. */
+  atomic_store(&s_bsnk.broadcast_id, broadcast_id & 0xFFFFFF);
+  atomic_store(&s_bsnk.armed, true);
+  atomic_store(&s_bsnk.hold, false);
 }
 
 void bleAudioBsinkDisarm(void) {
-  s_bsnk.armed = false;
+  atomic_store(&s_bsnk.armed, false);
 }
 
 void bleAudioBsinkSetCode(const uint8_t *code) {
+  /* Publish the bytes before the flag: readers that observe has_code set see
+   * a complete code. */
   memset(s_bsnk.code, 0, sizeof(s_bsnk.code));
-  s_bsnk.has_code = (code != NULL);
   if (code) {
     memcpy(s_bsnk.code, code, BLE_AUDIO_BCODE_SIZE);
   }
+  atomic_store(&s_bsnk.has_code, code != NULL);
   /* A new Broadcast Code unblocks the -EACCES latch in bsnk_syncable(). */
   s_bsnk.failed_no_code = false;
 }
@@ -2661,16 +2684,16 @@ void bleAudioBsinkSetBisMask(uint32_t mask) {
 
 /* Leaves the BIG but keeps the PA sync; hold blocks the automatic resync on the next BIGInfo. */
 int bleAudioBsinkStop(void) {
-  s_bsnk.armed = false;
-  if (s_bsnk.sink && s_bsnk.syncing) {
-    s_bsnk.hold = true;
-    return (int)esp_ble_audio_bap_broadcast_sink_stop(s_bsnk.sink);
+  atomic_store(&s_bsnk.armed, false);
+  if (atomic_load(&s_bsnk.sink) && atomic_load(&s_bsnk.syncing)) {
+    atomic_store(&s_bsnk.hold, true);
+    return (int)esp_ble_audio_bap_broadcast_sink_stop(atomic_load(&s_bsnk.sink));
   }
   return 0;
 }
 
 uint16_t bleAudioBsinkSyncHandle(void) {
-  return s_bsnk.sync_handle;
+  return atomic_load(&s_bsnk.sync_handle);
 }
 
 #endif /* BLE_AUDIO_BROADCAST_SINK_SUPPORTED */
@@ -2722,12 +2745,35 @@ static void bap_on_deinit(void) {
    * by lib_bap_broadcast_source_deinit(); a native delete here would only
    * return ESP_ERR_TIMEOUT. */
   atomic_store(&s_bsrc_up, false);
-  memset(&s_bsrc, 0, sizeof(s_bsrc));
+  s_bsrc.cb_registered = false;
+  s_bsrc.adv_added = false;
+  atomic_store(&s_bsrc.big_pending, false);
+  s_bsrc.adv_handle = 0;
+  atomic_store(&s_bsrc.source, NULL);
 #endif
 #if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
   atomic_store(&s_bsnk_joined, false);
-  memset(&s_bsnk, 0, sizeof(s_bsnk));
-  s_bsnk.sync_handle = SYNC_NONE;
+  s_bsnk.enabled = false;
+  s_bsnk.cb_registered = false;
+  s_bsnk.delegator = false;
+  atomic_store(&s_bsnk.scanning, false);
+  atomic_store(&s_bsnk.armed, false);
+  atomic_store(&s_bsnk.hold, false);
+  s_bsnk.base_received = false;
+  atomic_store(&s_bsnk.syncing, false);
+  atomic_store(&s_bsnk.has_code, false);
+  s_bsnk.failed_no_match = false;
+  s_bsnk.fail_mask = 0;
+  s_bsnk.failed_no_code = false;
+  atomic_store(&s_bsnk.sync_handle, SYNC_NONE);
+  atomic_store(&s_bsnk.broadcast_id, 0);
+  s_bsnk.base_bis = 0;
+  s_bsnk.pref_mask = 0;
+  s_bsnk.requested = 0;
+  s_bsnk.n_slots = 0;
+  memset(s_bsnk.slots, 0, sizeof(s_bsnk.slots));
+  memset(s_bsnk.code, 0, sizeof(s_bsnk.code));
+  atomic_store(&s_bsnk.sink, NULL);
   for (int i = 0; i < POOL_SIZE; i++) {
     ble_audio_slot_t *s = &s_pool[i];
     if (s->in_use && s->kind == BLE_AUDIO_STREAM_BROADCAST_SINK) {

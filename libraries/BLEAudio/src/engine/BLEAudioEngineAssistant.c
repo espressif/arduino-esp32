@@ -216,26 +216,10 @@ static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator
       return;
     }
   }
-  /* Evict the oldest entry: clear its served bit so a later request for the
-   * evicted Source_ID is served again instead of dropped forever. If the same
-   * ID is still tracked in another slot, keep it marked. */
-  {
-    const uint8_t evicted = row->ids[row->next];
-    const uint8_t ev_idx = evicted >> 3;
-    const uint8_t ev_bit = (uint8_t)(1u << (evicted & 7));
-    slot[ev_idx] &= (uint8_t)~ev_bit;
-    for (uint8_t i = 0; i < BA_PAST_IDS; i++) {
-      if (i != row->next && row->ids[i] == evicted) {
-        slot[ev_idx] |= ev_bit;
-        break;
-      }
-    }
-  }
-  row->ids[row->next] = id;
-  row->bcast[row->next] = bcast;
-  row->next = (uint8_t)((row->next + 1) % BA_PAST_IDS);
-  slot[idx] |= bit;
-
+  /* Attempt first: the served bit is only set on success (below), so a
+   * failed attempt (no local PA sync, no PAST support, send failure) leaves
+   * no trace and the sink's next SyncInfo request retries instead of hitting
+   * the served short-circuit above forever. */
   int err = -ENOENT;
   for (int i = 0; i < MAX_SYNCS; i++) {
     const ba_sync_t *s = &s_ba.syncs[i];
@@ -257,7 +241,27 @@ static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator
 #endif
     break;
   }
-  if (err != 0) {
+  if (err == 0) {
+    /* Served: evict the oldest entry and record this one, so a duplicate
+     * request for the same Source_ID is dropped instead of re-sending PAST
+     * on every duplicate request. */
+    {
+      const uint8_t evicted = row->ids[row->next];
+      const uint8_t ev_idx = evicted >> 3;
+      const uint8_t ev_bit = (uint8_t)(1u << (evicted & 7));
+      slot[ev_idx] &= (uint8_t)~ev_bit;
+      for (uint8_t i = 0; i < BA_PAST_IDS; i++) {
+        if (i != row->next && row->ids[i] == evicted) {
+          slot[ev_idx] |= ev_bit;
+          break;
+        }
+      }
+    }
+    row->ids[row->next] = id;
+    row->bcast[row->next] = bcast;
+    row->next = (uint8_t)((row->next + 1) % BA_PAST_IDS);
+    slot[idx] |= bit;
+  } else {
     ESP_LOGW(TAG, "conn %u: SyncInfo request for source %u not served (%s): %d", conn->handle, id,
              err == -ENOENT ? "no local PA sync to it" : err == -ENOTSUP ? "host built without PAST" : "PAST send failed", err);
   }

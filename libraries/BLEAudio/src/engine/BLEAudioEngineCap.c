@@ -213,7 +213,8 @@ static void csis_lock_changed(esp_ble_conn_t *conn, esp_ble_audio_csip_set_membe
 /**
  * A client reads the SIRK: let the application choose the response through
  * the synchronous emit, then map BLE_AUDIO_SIRK_* to the stack value
- * (out-of-range replies fall back to ACCEPT).
+ * (out-of-range replies fail closed to REJECT so a buggy handler can never
+ * disclose the key).
  */
 static uint8_t csis_sirk_req(esp_ble_conn_t *conn, esp_ble_audio_csip_set_member_svc_inst_t *svc) {
   static const uint8_t rsp[] = {
@@ -225,7 +226,7 @@ static uint8_t csis_sirk_req(esp_ble_conn_t *conn, esp_ble_audio_csip_set_member
   uint8_t reply = BLE_AUDIO_SIRK_ACCEPT;
   ble_audio_csis_sirk_req_t r = {.reply = &reply};
   bleAudioEngineEmit(csis_evt(svc, BLE_AUDIO_CSIS_EVT_SIRK_REQ), handle_of(conn), 0, &r);
-  return rsp[reply < COUNT_OF(rsp) ? reply : 0];
+  return rsp[reply < COUNT_OF(rsp) ? reply : BLE_AUDIO_SIRK_REJECT];
 }
 
 static esp_ble_audio_csip_set_member_cb_t s_csis_cb = {
@@ -694,6 +695,9 @@ int bleAudioCapDiscover(uint16_t conn_handle) {
   }
   p->n_snk = p->n_src = 0;
   memset(&p->info, 0, sizeof(p->info));
+  /* A re-discover must re-probe BASS: a stale true would skip it below and
+   * break handover, which needs BASS on the peer. */
+  p->bass = false;
   p->disc = D_CAS;
   esp_err_t err = esp_ble_audio_cap_initiator_unicast_discover(conn_handle);
   if (err != ESP_OK) {
@@ -1660,6 +1664,10 @@ int bleAudioCapCommanderDiscover(uint16_t conn_handle) {
     return ESP_ERR_NO_MEM;
   }
   p->cmd_disc = true;
+  /* A re-discover must not serve procedures from the previous round: clear
+   * the verdict flags now; the completion chain below re-establishes them. */
+  p->cmd_ready = false;
+  p->cmd_coord = false;
   esp_err_t err = esp_ble_audio_cap_commander_discover(conn_handle);
   if (err != ESP_OK) {
     p->cmd_disc = false;
@@ -1829,6 +1837,7 @@ int bleAudioCapCommanderReceptionStart(const ble_audio_cap_bcast_src_t *src) {
   esp_ble_conn_t *c[MAX_PEERS];
   esp_ble_audio_cap_commander_broadcast_reception_start_member_param_t m[MAX_PEERS];
   if (src == NULL) {
+    atomic_store(&s_rx_busy, false);
     return ESP_ERR_INVALID_ARG;
   }
   const uint8_t n = cmd_members(c, NULL, false);
