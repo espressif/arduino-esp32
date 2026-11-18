@@ -103,7 +103,9 @@ bool openLinkAndCis() {
     client.disconnect();
     return false;
   }
-  cis.onConnected(onCisConnected).onDisconnected(onCisDisconnected).onReceive(onCisReceive);
+  cis.onConnected(onCisConnected);
+  cis.onDisconnected(onCisDisconnected);
+  cis.onReceive(onCisReceive);
 
   // The CIS is established asynchronously.
   unsigned long deadline = millis() + 5000;

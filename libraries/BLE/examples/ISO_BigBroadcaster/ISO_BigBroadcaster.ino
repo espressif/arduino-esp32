@@ -99,13 +99,13 @@ void setup() {
     halt("iso.createBig", BTStatus::Fail);
   }
   bis.onConnected([](BLEIso::Channel &ch) {
-       Serial.printf("BIG up (BIS on channel %d)%s\n", ch.slot(), BROADCAST_CODE[0] ? ", encrypted" : "");
-       bisUp = true;
-     })
-    .onDisconnected([](BLEIso::Channel &, uint8_t reason) {
-      Serial.printf("BIG terminated (reason 0x%02X)\n", reason);
-      bisUp = false;
-    });
+    Serial.printf("BIG up (BIS on channel %d)%s\n", ch.slot(), BROADCAST_CODE[0] ? ", encrypted" : "");
+    bisUp = true;
+  });
+  bis.onDisconnected([](BLEIso::Channel &, uint8_t reason) {
+    Serial.printf("BIG terminated (reason 0x%02X)\n", reason);
+    bisUp = false;
+  });
   Serial.printf("Broadcasting \"%s\" (SID %u)\n", DEVICE_NAME, ADV_SID);
 }
 

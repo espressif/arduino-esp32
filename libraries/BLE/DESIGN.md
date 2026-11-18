@@ -526,7 +526,9 @@ Important lifecycle invariants:
   dropped CIS never wedges a later `end()` (a second call still reserves
   another channel); an audio-owned host drop completes only attached
   (connected/accepted) raw channels with reason `0x16` instead of losing them
-  silently.
+  silently, and drops every group handle it retained (CIG, BIG, sync state), so
+  the next `connectCis()` cannot terminate a group the released host already
+  freed.
 - `BLE.end()` called from a host/BTC callback claims the ending state and
   defers the same ordered teardown to its worker; audio/ISO teardown must never
   bypass that callback-safe path

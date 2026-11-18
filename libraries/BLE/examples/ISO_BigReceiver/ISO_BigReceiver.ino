@@ -76,24 +76,24 @@ void setup() {
     halt("iso.syncBig", BTStatus::Fail);
   }
   bis.onConnected([](BLEIso::Channel &) {
-       Serial.println("Synced to the BIG");
-       bisUp = true;
-     })
-    .onDisconnected([](BLEIso::Channel &, uint8_t reason) {
-      Serial.printf("BIG sync lost (reason 0x%02X). Waiting for the next BIGInfo\n", reason);
-      bisUp = false;
-    })
-    .onReceive([](BLEIso::Channel &, const BLEIso::SduInfo &info, const uint8_t *sdu, uint16_t len) {
-      // ISO host task, once per SDU interval: keep it short.
-      if (!info.valid || len < 4) {
-        rxLost = rxLost + 1;
-        return;
-      }
-      uint32_t counter;
-      memcpy(&counter, sdu, sizeof(counter));
-      lastCounter = counter;
-      rxCount = rxCount + 1;
-    });
+    Serial.println("Synced to the BIG");
+    bisUp = true;
+  });
+  bis.onDisconnected([](BLEIso::Channel &, uint8_t reason) {
+    Serial.printf("BIG sync lost (reason 0x%02X). Waiting for the next BIGInfo\n", reason);
+    bisUp = false;
+  });
+  bis.onReceive([](BLEIso::Channel &, const BLEIso::SduInfo &info, const uint8_t *sdu, uint16_t len) {
+    // ISO host task, once per SDU interval: keep it short.
+    if (!info.valid || len < 4) {
+      rxLost = rxLost + 1;
+      return;
+    }
+    uint32_t counter;
+    memcpy(&counter, sdu, sizeof(counter));
+    lastCounter = counter;
+    rxCount = rxCount + 1;
+  });
 
   BLEScan scan = BLE.getScan();
   // Delivery of every report matters here: after a periodic-sync loss the

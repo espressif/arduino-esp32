@@ -2773,8 +2773,8 @@ interoperability use ``BLEAudio`` instead (see :doc:`ble_audio`); both can run i
     iso.begin();
     BLEIso::CisParams qos;
     BLEIso::Channel ch = iso.connectCis(client.getHandle(), qos);
-    ch.onConnected([](BLEIso::Channel &c) { /* CIS up */ })
-      .onDisconnected([](BLEIso::Channel &c, uint8_t reason) { /* CIS down */ });
+    ch.onConnected([](BLEIso::Channel &c) { /* CIS up */ });
+    ch.onDisconnected([](BLEIso::Channel &c, uint8_t reason) { /* CIS down */ });
 
 Roles, each guarded by its own ``BLE_ISO_*_SUPPORTED`` flag (the factory logs and returns
 an empty handle when its role is not compiled in):

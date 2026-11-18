@@ -115,7 +115,9 @@ void setup() {
   if (!cis) {
     halt("iso.listenCis", BTStatus::Fail);
   }
-  cis.onConnected(onCisConnected).onDisconnected(onCisDisconnected).onReceive(onCisReceive);
+  cis.onConnected(onCisConnected);
+  cis.onDisconnected(onCisDisconnected);
+  cis.onReceive(onCisReceive);
 
   BLEAdvertising adv = BLE.getAdvertising();
   adv.addServiceUUID(SVC_UUID);

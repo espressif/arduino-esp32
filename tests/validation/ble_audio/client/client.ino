@@ -362,14 +362,14 @@ void setup() {
           BLEIso::Channel cis = iso.connectCis(client.getHandle(), params);
           if (cis) {
             cis.onConnected([](BLEIso::Channel &) {
-                 syncPhaseFromHost();
-                 isoCisClientConnected = true;
-               })
-              .onReceive([](BLEIso::Channel &, const BLEIso::SduInfo &info, const uint8_t *, uint16_t) {
-                if (info.valid) {
-                  isoCisClientRxCount = isoCisClientRxCount + 1;
-                }
-              });
+              syncPhaseFromHost();
+              isoCisClientConnected = true;
+            });
+            cis.onReceive([](BLEIso::Channel &, const BLEIso::SduInfo &info, const uint8_t *, uint16_t) {
+              if (info.valid) {
+                isoCisClientRxCount = isoCisClientRxCount + 1;
+              }
+            });
             unsigned long cdl = millis() + 15000;
             while (!isoCisClientConnected && millis() < cdl) {
               delay(50);

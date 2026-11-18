@@ -342,6 +342,13 @@ struct BLEIso::Impl {
       clearSlot(slots[i]);
     }
 
+    // The host no longer references the CIG: end() terminated it, or the LE
+    // Audio engine released the shared ISO host with it. Clearing the pointer
+    // is what makes the dropped group really dropped; leaving it behind would
+    // make the next connectCis() terminate a freed CIG.
+#if BLE_ISO_CIS_CENTRAL_SUPPORTED
+    cig = nullptr;
+#endif
 #if BLE_ISO_CIS_PERIPHERAL_SUPPORTED
     serverRegistered = false;
 #endif
@@ -1099,36 +1106,32 @@ BTStatus BLEIso::Channel::disconnect() {
   return BTStatus::OK;
 }
 
-BLEIso::Channel &BLEIso::Channel::onConnected(ConnectedCb cb) {
+void BLEIso::Channel::onConnected(ConnectedCb cb) {
   if (_impl) {
     BLELockGuard lock(isoMtx());
     _impl->onConnected = std::move(cb);
   }
-  return *this;
 }
 
-BLEIso::Channel &BLEIso::Channel::onDisconnected(DisconnectedCb cb) {
+void BLEIso::Channel::onDisconnected(DisconnectedCb cb) {
   if (_impl) {
     BLELockGuard lock(isoMtx());
     _impl->onDisconnected = std::move(cb);
   }
-  return *this;
 }
 
-BLEIso::Channel &BLEIso::Channel::onReceive(ReceiveCb cb) {
+void BLEIso::Channel::onReceive(ReceiveCb cb) {
   if (_impl) {
     BLELockGuard lock(isoMtx());
     _impl->onReceive = std::move(cb);
   }
-  return *this;
 }
 
-BLEIso::Channel &BLEIso::Channel::onSent(SentCb cb) {
+void BLEIso::Channel::onSent(SentCb cb) {
   if (_impl) {
     BLELockGuard lock(isoMtx());
     _impl->onSent = std::move(cb);
   }
-  return *this;
 }
 
 void BLEIso::Channel::resetCallbacks() {

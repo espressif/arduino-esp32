@@ -75,8 +75,8 @@
  * iso.begin();
  * BLEIso::CisParams qos;                      // 10 ms, 120-octet SDUs, 2M
  * BLEIso::Channel ch = iso.connectCis(client.getHandle(), qos);
- * ch.onConnected([](BLEIso::Channel &c) { ... })
- *   .onDisconnected([](BLEIso::Channel &c, uint8_t reason) { ... });
+ * ch.onConnected([](BLEIso::Channel &c) { ... });
+ * ch.onDisconnected([](BLEIso::Channel &c, uint8_t reason) { ... });
  * ...
  * ch.send(sdu, sizeof(sdu));                   // once per SDU interval
  * @endcode
@@ -195,13 +195,13 @@ public:
     BTStatus disconnect();
 
     /** @brief The CIS/BIS is up and its data path is set up. */
-    Channel &onConnected(ConnectedCb cb);
+    void onConnected(ConnectedCb cb);
     /** @brief The CIS/BIS went down (or failed to come up); @p reason is the HCI reason. */
-    Channel &onDisconnected(DisconnectedCb cb);
+    void onDisconnected(DisconnectedCb cb);
     /** @brief One SDU received; check `SduInfo::valid`, damaged SDUs are delivered too. */
-    Channel &onReceive(ReceiveCb cb);
+    void onReceive(ReceiveCb cb);
     /** @brief The controller consumed one SDU passed to send(). */
-    Channel &onSent(SentCb cb);
+    void onSent(SentCb cb);
     /** @brief Drop every callback. */
     void resetCallbacks();
 
