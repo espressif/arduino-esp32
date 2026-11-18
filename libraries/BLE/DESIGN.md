@@ -628,7 +628,14 @@ stage their registration before `audio.begin()` (the controller's
 coordinated `ble_gatts_start()` so audio profiles and a plain-GATT `BLEServer` coexist in
 one GATT table (see [Service staging and startup](#service-staging-and-startup)).
 The core forwards host GAP/GATT events to the engine through lazy hooks and runs
-audio plus standalone-ISO teardown before host shutdown. These hooks preserve the
+audio plus standalone-ISO teardown before host shutdown. Dispatch order is
+inherently backend-specific and is *not* normalized: NimBLE fans one GAP event
+out as ISO → audio → server → SMP (`nimbleForwardServerGapEvent`), while
+Bluedroid routes each component through its own BTA callback and notifies the
+audio engine after server/adv/scan/client, just before security. The engine
+does not depend on the core's server/client hooks (it owns its own GATT
+registration on both hosts), so the relative order is unobservable to
+sketches; do not "align" the two chains. These hooks preserve the
 normal callback-safe `BLE.end()` worker and lifecycle admission rules; audio is
 not a second owner of the BLE singleton lifecycle.
 

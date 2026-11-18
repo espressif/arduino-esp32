@@ -78,8 +78,11 @@ template<typename F> void withHandle(void *owner, F &&f) {
  * @brief Run @p f on the installed data-path tap, if any.
  *
  * The busy count is raised before the pointer is read, so a concurrent
- * setTap()/clearTap() either sees this call in flight (and waits for it) or
- * this call already reads the new pointer: a removed tap is never entered.
+ * setTap()/clearTap() either sees this call in flight (and waits for it to
+ * finish before returning) or this call already reads the new pointer. A
+ * removed tap may still be entered when the call was already in flight, but
+ * setTap()/clearTap() never return while it is: the tap storage (owned by
+ * the data path) is always alive for the duration of the call.
  * s_tapDepth marks "inside a tap hook" on the host task so setTap()/clearTap()
  * can refuse the one call context that would wedge it (draining itself).
  */
